@@ -1,8 +1,8 @@
 model User {
-  id       Int    @id @default(autoincrement())
-  email    String @unique
-  name     String
-  password String
+  userId       Int    @id @default(autoincrement())
+  userEmail    String @unique
+  userName     String
+  userPassword String
 
   @@map("users")
 }
