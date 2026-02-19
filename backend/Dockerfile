@@ -1,40 +1,42 @@
-# ─── Stage 1: Install dependencies ─────────────────────────────
-FROM node:22-alpine AS deps
-
+# ─── Stage 1: Base ─────────────────────────────────────────────
+FROM node:22-alpine AS base
 WORKDIR /app
-
 COPY package.json package-lock.json* ./
+
+# ─── Stage 2: Dependencies ────────────────────────────────────
+FROM base AS deps
 RUN npm ci
 
-# ─── Stage 2: Build ───────────────────────────────────────────
-FROM node:22-alpine AS build
-
-WORKDIR /app
-
+# ─── Stage 3: Development (hot-reload) ────────────────────────
+FROM base AS development
+ENV NODE_ENV=development
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-
-# Generate Prisma Client
 RUN npx prisma generate
+EXPOSE 3000
+CMD ["npm", "run", "start:dev"]
 
-# Build NestJS
+# ─── Stage 4: Build ───────────────────────────────────────────
+FROM base AS build
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+RUN npx prisma generate
 RUN npm run build
 
-# ─── Stage 3: Production ──────────────────────────────────────
+# ─── Stage 5: Production ──────────────────────────────────────
 FROM node:22-alpine AS production
-
 WORKDIR /app
-
 ENV NODE_ENV=production
 
-# Copy only what's needed for production
-COPY --from=build /app/dist ./dist
-COPY --from=build /app/node_modules ./node_modules
+# Only production dependencies
 COPY --from=build /app/package.json ./package.json
-COPY --from=build /app/prisma ./prisma
-COPY --from=build /app/prisma.config.ts ./prisma.config.ts
+COPY --from=build /app/package-lock.json ./package-lock.json
+RUN npm ci --omit=dev
+
+# Copy built app + prisma generated client + schema (for migrations)
+COPY --from=build /app/dist ./dist
 COPY --from=build /app/src/generated ./src/generated
+COPY --from=build /app/prisma ./prisma
 
 EXPOSE 3000
-
 CMD ["node", "dist/main"]

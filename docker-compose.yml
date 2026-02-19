@@ -26,11 +26,11 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+      target: production
     container_name: jasrapo-backend
-    env_file:
-      - .env
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      NODE_ENV: production
       PORT: 3000
     ports:
       - "${BACKEND_PORT:-3000}:3000"
