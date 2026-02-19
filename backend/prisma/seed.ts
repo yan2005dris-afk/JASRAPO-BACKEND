@@ -1,6 +1,6 @@
-import "dotenv/config";
-import { PrismaClient } from "../src/generated/prisma/client";
-import { PrismaPg } from "@prisma/adapter-pg";
+import 'dotenv/config';
+import { PrismaClient } from '../src/generated/prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
 
 const adapter = new PrismaPg({
   connectionString: process.env.DATABASE_URL!,
@@ -8,28 +8,28 @@ const adapter = new PrismaPg({
 
 const prisma = new PrismaClient({
   adapter,
-  log: ["query", "error", "warn"],
+  log: ['query', 'error', 'warn'],
 });
 
 async function main() {
-  console.log("🌱 Seeding database...");
+  console.log('🌱 Seeding database...');
 
   const usersCount = await prisma.user.count();
 
   if (usersCount > 0) {
-    console.log("⚠️ Database already seeded. Skipping...");
+    console.log('⚠️ Database already seeded. Skipping...');
     return;
   }
 
   await prisma.user.create({
     data: {
-      email: "admin@test.com",
-      name: "Admin",
-      password: "123456",
+      userEmail: 'admin@test.com',
+      userName: 'Admin',
+      userPassword: '123456',
     },
   });
 
-  console.log("✅ Seed completed");
+  console.log('✅ Seed completed');
 }
 
 main()
