@@ -21,16 +21,16 @@ export class UserController {
   create(@Body() createUserDto: CreateUserDto) {
     return this.userService.createUser({
       userEmail: createUserDto.userEmail,
-      userName: createUserDto.userName ?? '',
+      userName: createUserDto.userName,
       userPassword: createUserDto.userPassword,
     });
   }
 
   @Get('/')
-  findAll(@Query('skip') skip?: string, @Query('take') take?: string) {
+  findAll(@Query('skip') skip?: number, @Query('take') take?: number) {
     return this.userService.users({
-      skip: skip ? Number(skip) : undefined,
-      take: take ? Number(take) : undefined,
+      skip: skip ?? undefined,
+      take: take ?? undefined,
     });
   }
 

@@ -1,18 +1,24 @@
 import { Injectable } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from 'src/database/prisma.service';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import { Prisma, User } from 'src/generated/prisma/client';
+import { CreateUserDto } from './dto/create-user.dto';
+
+// Campos seguros para devolver en respuestas (sin password)
+const safeUserSelect = {
+  userId: true,
+  userEmail: true,
+  userName: true,
+} satisfies Prisma.UserSelect;
+
 @Injectable()
 export class UserService {
   constructor(private prisma: PrismaService) {}
 
-  async user(
-    userWhereUniqueInput: Prisma.UserWhereUniqueInput,
-  ): Promise<User | null> {
+  async user(userWhereUniqueInput: Prisma.UserWhereUniqueInput) {
     return this.prisma.user.findUnique({
       where: userWhereUniqueInput,
+      select: safeUserSelect,
     });
   }
 
@@ -22,30 +28,52 @@ export class UserService {
     cursor?: Prisma.UserWhereUniqueInput;
     where?: Prisma.UserWhereInput;
     orderBy?: Prisma.UserOrderByWithRelationInput;
-  }): Promise<User[]> {
+  }) {
     const { skip, take, cursor, where, orderBy } = params;
-    return this.prisma.user.findMany({ skip, take, cursor, where, orderBy });
+    return this.prisma.user.findMany({
+      skip,
+      take,
+      cursor,
+      where,
+      orderBy,
+      select: safeUserSelect,
+    });
   }
 
-  async createUser(data: Prisma.UserCreateInput): Promise<User> {
+  async createUser(dto: Prisma.UserCreateInput) {
     return this.prisma.user.create({
-      data,
+      data: {
+        userEmail: dto.userEmail,
+        userName: dto.userName,
+        userPassword: dto.userPassword,
+      },
+      select: safeUserSelect,
     });
   }
 
   async updateUser(params: {
     where: Prisma.UserWhereUniqueInput;
     data: Prisma.UserUpdateInput;
-  }): Promise<User> {
-    const { where, data } = params;
+  }) {
+    const updateData = { ...params.data };
+
+    if (updateData.userPassword) {
+      updateData.userPassword = await bcrypt.hash(
+        updateData.userPassword as string,
+        10,
+      );
+    }
     return this.prisma.user.update({
-      where,
-      data,
+      where: params.where,
+      data: updateData,
+      select: safeUserSelect,
     });
   }
-  async deleteUser(where: Prisma.UserWhereUniqueInput): Promise<User> {
+
+  async deleteUser(where: Prisma.UserWhereUniqueInput) {
     return this.prisma.user.delete({
       where,
+      select: safeUserSelect,
     });
   }
 }
