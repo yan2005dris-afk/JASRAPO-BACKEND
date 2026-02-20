@@ -10,7 +10,14 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       NODE_ENV: development
       PORT: 3000
+    ports:
+      - "${BACKEND_PORT:-3000}:3000"
     volumes:
       - ./backend/src:/app/src
       - ./backend/prisma:/app/prisma
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - jasrapo-network
     restart: "no"
