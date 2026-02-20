@@ -1,8 +1,12 @@
-model User {
-  userId       Int    @id @default(autoincrement())
-  userEmail    String @unique
+model user {
+  userId       Int       @id @default(autoincrement())
   userName     String
+  userEmail    String    @unique
   userPassword String
+  createdAt    DateTime  @default(now()) @map("created_at")
+  deletedAt    DateTime? @map("deleted_at")
 
-  @@map("users")
-}
+    @@map("User")
+  }
+  
+  
