@@ -19,7 +19,7 @@ $ docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build
 
 Esto permitira que el docker levante el proyecto para desarollo.
 
-> [!Warmin]
+> [!WARMING]
 > Si intenta usar el comando usual para desplegar docker no funcionara, esto levantara para producción y esto deben tener otras configuraciones: el comando es: docker compose up -d --build
 
 Una vez hecho todo esto se desplegara la base de datos en postgres y se iniciara el node en version 22, para el desarollo.
