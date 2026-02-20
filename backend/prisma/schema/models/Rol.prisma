@@ -1,0 +1,6 @@
+model Rol{
+    rolId   Int    @id @default(autoincrement())
+    rolName String 
+    perfil Perfil?
+    @@map("Rol")
+}

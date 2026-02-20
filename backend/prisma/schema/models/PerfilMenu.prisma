@@ -1,0 +1,9 @@
+model PerfilMenu{
+    perfilMenuId Int @id @default(autoincrement())
+    perfilId     Int
+    menuId       Int
+    perfil       Perfil @relation(fields: [perfilId], references: [perfilId])
+    menu         Menu   @relation(fields: [menuId], references: [menuId])
+
+    @@map("Perfil_Menu")
+}

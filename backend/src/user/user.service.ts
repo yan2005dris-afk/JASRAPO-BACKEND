@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/database/prisma.service';
 import * as bcrypt from 'bcryptjs';
-import { Prisma, User } from 'src/generated/prisma/client';
+import { PrismaService } from 'src/database/prisma.service';
+import { Prisma } from 'src/generated/prisma/client';
 import { CreateUserDto } from './dto/create-user.dto';
 
 // Campos seguros para devolver en respuestas (sin password)
@@ -40,12 +40,15 @@ export class UserService {
     });
   }
 
-  async createUser(dto: Prisma.UserCreateInput) {
+  async createUser(dto: CreateUserDto) {
     return this.prisma.user.create({
       data: {
         userEmail: dto.userEmail,
         userName: dto.userName,
         userPassword: dto.userPassword,
+        perfil: {
+          connect: { perfilId: dto.perfilId }
+        },
       },
       select: safeUserSelect,
     });

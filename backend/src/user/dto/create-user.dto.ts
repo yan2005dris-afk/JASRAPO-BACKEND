@@ -1,4 +1,5 @@
-import { IsEmail, IsString, Matches, MinLength } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsEmail, IsNotEmpty, IsNumber, IsString, Matches, MinLength } from 'class-validator';
 
 export class CreateUserDto {
   @IsEmail()
@@ -14,4 +15,9 @@ export class CreateUserDto {
       'La contraseña debe tener al menos una mayúscula, un número y un carácter especial (!@#$%^&*)',
   })
   userPassword: string;
+
+  @Type(() => Number)
+  @IsNumber()
+  @IsNotEmpty()
+  perfilId:number;
 }

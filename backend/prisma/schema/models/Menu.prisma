@@ -1,0 +1,15 @@
+model Menu{
+    menuId   Int    @id @default(autoincrement())
+    menuName String 
+    menuUrl  String
+    menusParentId Int?
+
+    parent   Menu?  @relation("MenuToMenu", fields: [menusParentId], references: [menuId])
+    children Menu[] @relation("MenuToMenu")
+    
+    createdAt DateTime @default(now())
+    active    Boolean @default(true)
+    
+    perfilMenu PerfilMenu[]
+    @@map("menu")
+}

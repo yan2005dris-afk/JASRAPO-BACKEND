@@ -3,6 +3,8 @@ model User {
   userEmail    String @unique
   userName     String
   userPassword String
-
-  @@map("users")
+  deletedAt    DateTime?
+  perfilId     Int
+  perfil       Perfil @relation(fields: [perfilId], references: [perfilId])
+  @@map("User")
 }
