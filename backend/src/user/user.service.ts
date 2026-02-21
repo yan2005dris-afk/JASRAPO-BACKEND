@@ -5,18 +5,19 @@ import { Prisma } from 'src/generated/prisma/client';
 import { CreateUserDto } from './dto/create-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
 
+
 // Campos seguros para devolver en respuestas (sin password)
 const safeUserSelect = {
   userId: true,
   userEmail: true,
   userName: true,
-} satisfies Prisma.UserSelect;
+} satisfies Prisma.userSelect;
 
 @Injectable()
 export class UserService {
   constructor(private prisma: PrismaService) {}
 
-  async user(userWhereUniqueInput: Prisma.UserWhereUniqueInput) {
+  async user(userWhereUniqueInput: Prisma.userWhereUniqueInput) {
     return this.prisma.user.findUnique({
       where: userWhereUniqueInput,
       select: safeUserSelect,
@@ -26,9 +27,9 @@ export class UserService {
   async users(params: {
     skip?: number;
     take?: number;
-    cursor?: Prisma.UserWhereUniqueInput;
-    where?: Prisma.UserWhereInput;
-    orderBy?: Prisma.UserOrderByWithRelationInput;
+    cursor?: Prisma.userWhereUniqueInput;
+    where?: Prisma.userWhereInput;
+    orderBy?: Prisma.userOrderByWithRelationInput;
   }) {
     const { skip, take, cursor, where, orderBy } = params;
     return this.prisma.user.findMany({
@@ -41,7 +42,9 @@ export class UserService {
     });
   }
 
-  async createUser(dto: CreateUserDto) {
+
+  async createUser(dto: Prisma.userCreateInput) {
+
     return this.prisma.user.create({
       data: {
         userEmail: dto.userEmail,
@@ -56,8 +59,8 @@ export class UserService {
   }
 
   async updateUser(params: {
-    where: Prisma.UserWhereUniqueInput;
-    data: Prisma.UserUpdateInput;
+    where: Prisma.userWhereUniqueInput;
+    data: Prisma.userUpdateInput;
   }) {
     const updateData = { ...params.data };
 
@@ -74,7 +77,7 @@ export class UserService {
     });
   }
 
-  async deleteUser(where: Prisma.UserWhereUniqueInput) {
+  async deleteUser(where: Prisma.userWhereUniqueInput) {
     return this.prisma.user.delete({
       where,
       select: safeUserSelect,

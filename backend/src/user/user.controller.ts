@@ -22,7 +22,7 @@ export class UserController {
   create(@Body() createUserDto: CreateUserDto) {
     return this.userService.createUser({
       userEmail: createUserDto.userEmail,
-      userName: createUserDto.userName,
+      userName: createUserDto.userName ?? '',
       userPassword: createUserDto.userPassword,
       perfilId: createUserDto.perfilId,
     });
@@ -50,7 +50,7 @@ export class UserController {
       where: { userId: id },
       data: {
         userEmail: updateUserDto.userEmail,
-        userName: updateUserDto.userName,
+        userName: updateUserDto.userName ?? '',
         userPassword: updateUserDto.userPassword,
       },
     });

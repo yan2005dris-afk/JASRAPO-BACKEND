@@ -1,7 +1,7 @@
-model User {
-  userId       Int    @id @default(autoincrement())
-  userEmail    String @unique
+model user {
+  userId       Int       @id @default(autoincrement())
   userName     String
+  userEmail    String    @unique
   userPassword String
   deletedAt    DateTime?
   perfilId     Int
