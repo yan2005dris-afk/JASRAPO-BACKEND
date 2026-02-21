@@ -11,7 +11,7 @@ export class AuthService {
     private readonly userService: UserService,
     private readonly prisma: PrismaService,
   ) {}
-  async register({ name, email, password }: RegisterDto) {
+  async register({ name, email, password, perfilId }: RegisterDto) {
     const user = await this.userService.user({ userEmail: email });
 
     if (user) {
@@ -22,6 +22,7 @@ export class AuthService {
       userName: name,
       userEmail: email,
       userPassword: await bcrypt.hash(password, 10),
+      perfilId,
     });
     if (newUser) {
       return 'El registro fue exitoso';
@@ -44,19 +45,12 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    //Validación sin encriptar SOLO PARA PRUEBAS
-    if (user.userPassword !== userPassword) {
-      throw new UnauthorizedException('Invalid password');
-    }
-
-    // Validación con bcrypt descomentar al implementar
-    /*
+    // Validación con bcrypt
     //Se encrypta la contraseña ingresada y se compara con la contraseña hasheada almacenada en la base de datos
     const isPasswordValid = await bcrypt.compare(userPassword, user.userPassword);
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid credentials');
     }
-    */
 
     //Extraer usuario seguro sin password para devolver en la respuesta
     const { userPassword: _, ...safeUser } = user; // Excluye el password del objeto de usuario
