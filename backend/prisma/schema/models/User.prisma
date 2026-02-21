@@ -1,10 +1,11 @@
 model User {
-  userId       Int    @id @default(autoincrement())
-  userEmail    String @unique
+  userId       Int       @id @default(autoincrement())
   userName     String
+  userEmail    String    @unique
   userPassword String
-  deletedAt    DateTime?
+  createdAt    DateTime  @default(now()) @map("created_at")
+  deletedAt    DateTime? @map("deleted_at")
   perfilId     Int
   perfil       Perfil @relation(fields: [perfilId], references: [perfilId])
-  @@map("User")
-}
+    @@map("User")
+  }

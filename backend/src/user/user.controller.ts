@@ -10,7 +10,6 @@ import {
   Query,
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
-import { LoginUserDto } from './dto/login-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserService } from './user.service';
 
@@ -22,7 +21,7 @@ export class UserController {
   create(@Body() createUserDto: CreateUserDto) {
     return this.userService.createUser({
       userEmail: createUserDto.userEmail,
-      userName: createUserDto.userName,
+      userName: createUserDto.userName ?? '',
       userPassword: createUserDto.userPassword,
       perfilId: createUserDto.perfilId,
     });
@@ -50,7 +49,7 @@ export class UserController {
       where: { userId: id },
       data: {
         userEmail: updateUserDto.userEmail,
-        userName: updateUserDto.userName,
+        userName: updateUserDto.userName ?? '',
         userPassword: updateUserDto.userPassword,
       },
     });
@@ -61,9 +60,4 @@ export class UserController {
     return this.userService.deleteUser({ userId: id });
   }
 
-  @Post('/login')
-  async login(@Body() loginUserDto: LoginUserDto) {
-    const result = await this.userService.login(loginUserDto);
-    return result;
-  }
 }
