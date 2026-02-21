@@ -1,0 +1,12 @@
+model UserRoles{
+    usersRolesId            Int     @id @default(autoincrement())       @map("users_roles_id")
+    usersId                  Int                                         @map("user_id")
+    rolesId                  Int                                         @map("role_id")
+    
+    deletedAt               DateTime?                                   @map("deleted_at")
+
+    user                    Users   @relation(fields: [usersId], references: [usersId])
+    roles                   Roles   @relation(fields: [rolesId], references: [rolesId])
+
+    @@map("users_roles")
+}

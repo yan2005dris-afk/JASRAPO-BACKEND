@@ -1,0 +1,12 @@
+model RolMenus{
+    rolMenusId         Int        @id @default(autoincrement()) @map("rol_menus_id")
+    rolesId              Int                                      @map("rol_id")
+    menusId             Int                                     @map("menu_id")
+
+    roles              Roles      @relation(fields: [rolesId], references: [rolesId])
+    menus              Menus      @relation(fields: [menusId], references: [menusId])
+
+    deletedAt          DateTime?  @map("deleted_at")
+
+    @@map("rol_menus")
+}

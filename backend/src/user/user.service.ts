@@ -1,21 +1,21 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/database/prisma.service';
 import * as bcrypt from 'bcryptjs';
-import { Prisma, user } from 'src/generated/prisma/client';
+import { PrismaService } from 'src/database/prisma.service';
+import { Prisma } from 'src/generated/prisma/client';
+import { CreateUserDto } from './dto/create-user.dto';
 
 // Campos seguros para devolver en respuestas (sin password)
 const safeUserSelect = {
-  userId: true,
-  userEmail: true,
-  userName: true,
-} satisfies Prisma.userSelect;
+  usersId: true,
+  email: true,
+} satisfies Prisma.UsersSelect;
 
 @Injectable()
 export class UserService {
   constructor(private prisma: PrismaService) {}
 
-  async user(userWhereUniqueInput: Prisma.userWhereUniqueInput) {
-    return this.prisma.user.findUnique({
+  async user(userWhereUniqueInput: Prisma.UsersWhereUniqueInput) {
+    return this.prisma.users.findUnique({
       where: userWhereUniqueInput,
       select: safeUserSelect,
     });
@@ -24,12 +24,12 @@ export class UserService {
   async users(params: {
     skip?: number;
     take?: number;
-    cursor?: Prisma.userWhereUniqueInput;
-    where?: Prisma.userWhereInput;
-    orderBy?: Prisma.userOrderByWithRelationInput;
+    cursor?: Prisma.UsersWhereUniqueInput;
+    where?: Prisma.UsersWhereInput;
+    orderBy?: Prisma.UsersOrderByWithRelationInput;
   }) {
     const { skip, take, cursor, where, orderBy } = params;
-    return this.prisma.user.findMany({
+    return this.prisma.users.findMany({
       skip,
       take,
       cursor,
@@ -39,38 +39,40 @@ export class UserService {
     });
   }
 
-  async createUser(dto: Prisma.userCreateInput) {
-    return this.prisma.user.create({
+  async createUser(createUsersDto: CreateUserDto) {
+    return this.prisma.users.create({
       data: {
-        userEmail: dto.userEmail,
-        userName: dto.userName,
-        userPassword: dto.userPassword,
+        email: createUsersDto.email,
+        password: createUsersDto.password,
+        userRoles: {
+          connect: { usersRolesId: createUsersDto.usersRolesId },
+        },
       },
       select: safeUserSelect,
     });
   }
 
   async updateUser(params: {
-    where: Prisma.userWhereUniqueInput;
-    data: Prisma.userUpdateInput;
+    where: Prisma.UsersWhereUniqueInput;
+    data: Prisma.UsersUpdateInput;
   }) {
     const updateData = { ...params.data };
 
-    if (updateData.userPassword) {
-      updateData.userPassword = await bcrypt.hash(
-        updateData.userPassword as string,
+    if (updateData.password) {
+      updateData.password = await bcrypt.hash(
+        updateData.password as string,
         10,
       );
     }
-    return this.prisma.user.update({
+    return this.prisma.users.update({
       where: params.where,
       data: updateData,
       select: safeUserSelect,
     });
   }
 
-  async deleteUser(where: Prisma.userWhereUniqueInput) {
-    return this.prisma.user.delete({
+  async deleteUser(where: Prisma.UsersWhereUniqueInput) {
+    return this.prisma.users.delete({
       where,
       select: safeUserSelect,
     });

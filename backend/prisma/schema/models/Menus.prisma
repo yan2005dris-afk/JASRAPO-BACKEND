@@ -1,0 +1,17 @@
+model Menus{
+    menusId                  Int      @id @default(autoincrement())    @map("menus_id")
+    menusParentId           Int?                                      @map("menus_parent_id")
+    
+    name                    String                                   
+    route                   String  
+    
+    active                  Boolean  @default(true)
+    deletedAt               DateTime?                                 @map("deleted_at")
+
+    parent   Menus?  @relation("MenuToMenu", fields: [menusParentId], references: [menusId])
+    children Menus[] @relation("MenuToMenu")
+    rolMenus RolMenus[]
+
+
+    @@map("menus")
+}
