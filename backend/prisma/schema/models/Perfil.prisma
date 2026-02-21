@@ -1,8 +1,0 @@
-model Perfil{
-    perfilId   Int    @id @default(autoincrement())
-    rolId      Int   @unique
-    users     User[]
-    rol Rol @relation(fields: [rolId], references: [rolId])
-    perfilMenu PerfilMenu[]
-    @@map("Perfil")
-}

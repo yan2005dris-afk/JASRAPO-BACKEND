@@ -1,0 +1,13 @@
+model Roles{
+    rolesId               Int             @id @default(autoincrement())     @map("roles_id")
+    
+    name                String                                              @map("name")
+    deletedAt           DateTime?                                           @map("deleted_at")
+
+
+    rolPermissions      RolPermissions []                                   
+    userRoles          UserRoles []                                      
+    rolMenus            RolMenus []                                         
+
+    @@map("roles")
+}

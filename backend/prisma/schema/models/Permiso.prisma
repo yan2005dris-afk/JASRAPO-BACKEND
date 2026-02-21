@@ -1,7 +1,0 @@
-model Permiso{
-    permisoId Int @id @default(autoincrement())
-    resource String
-    action String
-    rolPermiso RolPermiso []
-    @@map("Permiso")
-}

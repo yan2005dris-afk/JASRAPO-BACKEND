@@ -1,8 +1,0 @@
-model RolPermiso {
-    rolId Int @id @default(autoincrement())
-    idRol Int
-    idPermiso Int
-    rol Rol @relation(fields: [idRol], references: [rolId])
-    permiso Permiso @relation(fields: [idPermiso], references: [permisoId])
-    @@map("RolPermiso")
-}

@@ -1,0 +1,10 @@
+model RolPermissions {
+    rolPermissionsId            Int         @id @default(autoincrement())       @map("rol_permissions_id")
+    rolesId                    Int                                               @map("roles_id")
+    permissionsId               Int                                             @map("permissions_id")
+
+    roles                    Roles          @relation(fields: [rolesId], references: [rolesId])
+    permissions              Permissions    @relation(fields: [permissionsId], references: [permissionsId])
+    
+    @@map("rol_permissions")
+}
