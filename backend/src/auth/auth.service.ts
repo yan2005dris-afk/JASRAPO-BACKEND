@@ -1,7 +1,11 @@
-import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { PrismaService } from 'src/database/prisma.service';
-import { UserService } from 'src/user/user.service';
+import { UserService } from 'src/models/user/user.service';
 import { LoginUserDto } from './dto/login-user.dto';
 import { RegisterDto } from './dto/register.dto';
 
@@ -47,7 +51,10 @@ export class AuthService {
 
     // Validación con bcrypt
     //Se encrypta la contraseña ingresada y se compara con la contraseña hasheada almacenada en la base de datos
-    const isPasswordValid = await bcrypt.compare(userPassword, user.userPassword);
+    const isPasswordValid = await bcrypt.compare(
+      userPassword,
+      user.userPassword,
+    );
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid credentials');
     }
@@ -61,7 +68,7 @@ export class AuthService {
     const token = this.jwtService.sign(payload);
     return { accessToken: token, user: safeUser };
     */
-    
+
     //Retornar sin JWT SOLO PARA PRUEBAS
     return { message: 'Login successful', user: safeUser };
   }
