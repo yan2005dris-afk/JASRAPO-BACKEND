@@ -8,25 +8,25 @@ import { PrismaService } from 'src/database/prisma.service';
 import { UserService } from 'src/models/user/user.service';
 import { LoginUserDto } from './dto/login-user.dto';
 import { RegisterDto } from './dto/register.dto';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly userService: UserService,
     private readonly prisma: PrismaService,
+    private readonly jwtService: JwtService,
   ) {}
-  async register({ name, email, password, perfilId }: RegisterDto) {
-    const user = await this.userService.user({ userEmail: email });
+  async register({ email, password }: RegisterDto) {
+    const user = await this.userService.user({ email: email });
 
     if (user) {
       throw new BadRequestException('El correo ya está registrado');
     }
 
     const newUser = await this.userService.createUser({
-      userName: name,
-      userEmail: email,
-      userPassword: await bcrypt.hash(password, 10),
-      perfilId,
+      email: email,
+      password: await bcrypt.hash(password, 10),
     });
     if (newUser) {
       return 'El registro fue exitoso';
@@ -35,41 +35,132 @@ export class AuthService {
     }
   }
 
-  async login(loginUserDto: LoginUserDto) {
-    //Extraer email y password del DTO
-    const { userEmail, userPassword } = loginUserDto;
+  async login(loginUserDto: LoginUserDto, ip?: string, userAgent?: string) {
+    const users = await this.validateUser(loginUserDto);
 
-    //Buscar el usuario por email en la base de datos
-    const user = await this.prisma.user.findUnique({
-      where: { userEmail },
+    if (!users || users.deletedAt) {
+      throw new UnauthorizedException('Usuario eliminado');
+    }
+
+    //Extraer email y password del DTO
+    const session = await this.prisma.sessions.create({
+      data: {
+        usersId: users.usersId,
+        refreshToken: '',
+        ipAddress: ip ?? 'unknown',
+        userAgent: userAgent ?? 'unknown',
+        isRevoked: false,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 días
+      },
     });
 
-    //Si no se encuentra el usuario, lanzar una excepción de credenciales inválidas
+    const { accessToken, refreshToken } = await this.generateJwtToken(
+      users.usersId,
+      session.sessionsId,
+    );
+
+    const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
+
+    await this.prisma.sessions.update({
+      where: { sessionsId: session.sessionsId },
+      data: { refreshToken: hashedRefreshToken },
+    });
+
+    return {
+      message: 'Sesión iniciada exitosamente',
+      users,
+      accessToken,
+      refreshToken,
+    };
+  }
+
+  /**
+   * Generar el token jwt
+   */
+  private async generateJwtToken(userId: number, sessionId: number) {
+    const payload = {
+      sub: userId,
+      sid: sessionId,
+    };
+
+    const accessToken = await this.jwtService.signAsync(payload, {
+      secret: process.env.JWT_ACCESS_SECRET,
+      expiresIn: '1h',
+    });
+
+    const refreshToken = await this.jwtService.signAsync(payload, {
+      secret: process.env.JWT_REFRESH_SECRET,
+      expiresIn: '7d',
+    });
+
+    return { accessToken, refreshToken };
+  }
+
+  async refreshToken(sessionId: number, refreshToeken: string) {
+    const session = await this.prisma.sessions.findUnique({
+      where: { sessionsId: sessionId },
+    });
+
+    if (!session) {
+      throw new UnauthorizedException('Session not found');
+    }
+
+    if (session.isRevoked) {
+      throw new UnauthorizedException('Session revoked');
+    }
+
+    if (session.expiresAt < new Date()) {
+      throw new UnauthorizedException('Session expired');
+    }
+    const isValid = await bcrypt.compare(refreshToeken, session.refreshToken);
+
+    if (isValid) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+
+    const tokens = await this.generateJwtToken(
+      session.usersId,
+      session.sessionsId,
+    );
+
+    const newHash = await bcrypt.hash(tokens.refreshToken, 10);
+
+    await this.prisma.sessions.update({
+      where: { sessionsId: session.sessionsId },
+      data: { refreshToken: newHash },
+    });
+  }
+
+  async logout(sessionId: number) {
+    await this.prisma.sessions.update({
+      where: { sessionsId: sessionId },
+      data: { isRevoked: true },
+    });
+  }
+
+  async validateUser(loginUserDto: LoginUserDto) {
+    const { email, password } = loginUserDto;
+
+    const user = await this.prisma.users.findUnique({
+      where: { email },
+    });
+
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    // Validación con bcrypt
-    //Se encrypta la contraseña ingresada y se compara con la contraseña hasheada almacenada en la base de datos
-    const isPasswordValid = await bcrypt.compare(
-      userPassword,
-      user.userPassword,
-    );
+    if (user.deletedAt) {
+      throw new UnauthorizedException('Usuario eliminado');
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    //Extraer usuario seguro sin password para devolver en la respuesta
-    const { userPassword: _, ...safeUser } = user; // Excluye el password del objeto de usuario
+    const { password: _, ...safeUser } = user;
 
-    //Retornar JWT DESCOMENTAR AL IMPLEMENTAR
-    /* 
-    const payload = { sub: user.userId, email: user.userEmail };
-    const token = this.jwtService.sign(payload);
-    return { accessToken: token, user: safeUser };
-    */
-
-    //Retornar sin JWT SOLO PARA PRUEBAS
-    return { message: 'Login successful', user: safeUser };
+    return safeUser;
   }
 }

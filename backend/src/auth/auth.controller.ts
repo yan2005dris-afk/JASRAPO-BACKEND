@@ -1,11 +1,9 @@
-import {
-  Body,
-  Controller,
-  Post
-} from '@nestjs/common';
+import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginUserDto } from './dto/login-user.dto';
 import { RegisterDto } from './dto/register.dto';
+import type { Request } from 'express';
+import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -17,8 +15,20 @@ export class AuthController {
   }
 
   @Post('/login')
-  async login(@Body() loginUserDto: LoginUserDto) {
-    const result = await this.authService.login(loginUserDto);
-    return result;
+  async login(@Body() loginUserDto: LoginUserDto, @Req() req: Request) {
+    const ip = req.ip;
+    const userAgent = req.headers['user-agent'];
+    return this.authService.login(loginUserDto, ip, userAgent);
+  }
+
+  @UseGuards(JwtRefreshGuard)
+  @Post('refresh')
+  async refresh(@Req() req: any) {
+    const user = req.user;
+    // Aquí puedes llamar a tu AuthService para generar nuevos tokens
+    return this.authService.refreshToken(
+      user.sessionsId,
+      req.headers['authorization']?.replace('Bearer ', ''),
+    );
   }
 }

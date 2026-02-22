@@ -6,7 +6,10 @@ services:
       dockerfile: Dockerfile
       target: development
     container_name: jasrapo-backend-dev
+    env_file:
+      - ./backend/.env
     environment:
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       NODE_ENV: development
       PORT: 3000
