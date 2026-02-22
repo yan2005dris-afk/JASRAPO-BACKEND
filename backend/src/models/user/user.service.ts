@@ -40,16 +40,36 @@ export class UserService {
   }
 
   async createUser(createUsersDto: CreateUserDto) {
-    return this.prisma.users.create({
+    // Buscar el rol 'user' por nombre
+    const userRole = await this.prisma.roles.findFirst({
+      where: { name: 'user' },
+    });
+
+    if (!userRole) {
+      throw new Error('No existe el rol por defecto "user".');
+    }
+
+    // Crear el usuario
+    const newUser = await this.prisma.users.create({
       data: {
         email: createUsersDto.email,
         password: createUsersDto.password,
-        userRoles: {
-          connect: { usersRolesId: createUsersDto.usersRolesId },
-        },
       },
-      select: safeUserSelect,
     });
+
+    // Asignar el rol 'user' al usuario recién creado
+    await this.prisma.userRoles.create({
+      data: {
+        usersId: newUser.usersId,
+        rolesId: userRole.rolesId,
+      },
+    });
+
+    // Retornar el usuario seguro
+    return {
+      usersId: newUser.usersId,
+      email: newUser.email,
+    };
   }
 
   async updateUser(params: {
@@ -68,6 +88,20 @@ export class UserService {
       where: params.where,
       data: updateData,
       select: safeUserSelect,
+    });
+  }
+
+  async updateUserRole(params: {
+    usersRolesId: number;
+    rolesId: number;
+    deletedAt?: Date;
+  }) {
+    return this.prisma.userRoles.update({
+      where: { usersRolesId: params.usersRolesId },
+      data: {
+        rolesId: params.rolesId,
+        deletedAt: params.deletedAt ?? undefined,
+      },
     });
   }
 

@@ -8,24 +8,29 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdateUserRoleDto } from './dto/update-user-role.dto';
 import { UserService } from './user.service';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { PermissionsGuard } from 'src/auth/guards/permissions.guard';
+import { RequiredPermission } from 'src/auth/decorators/require-permission.decorator';
 
+@UseGuards(PermissionsGuard)
+@UseGuards(JwtAuthGuard)
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
+  @RequiredPermission('user', 'create')
   @Post('/')
   create(@Body() createUserDto: CreateUserDto) {
-    return this.userService.createUser({
-      email: createUserDto.email,
-      password: createUserDto.password,
-      usersRolesId: createUserDto.usersRolesId,
-    });
+    return this.userService.createUser(createUserDto);
   }
 
+  @RequiredPermission('user', 'read')
   @Get('/')
   findAll(@Query('skip') skip?: number, @Query('take') take?: number) {
     return this.userService.users({
@@ -53,6 +58,18 @@ export class UserController {
         email: updateUserDto.email,
         password: updateUserDto.password,
       },
+    });
+  }
+
+  @Patch(':id/role')
+  updateUserRole(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateUserRoleDto: UpdateUserRoleDto,
+  ) {
+    return this.userService.updateUserRole({
+      usersRolesId: updateUserRoleDto.usersRolesId,
+      rolesId: updateUserRoleDto.rolesId,
+      deletedAt: updateUserRoleDto.deletedAt,
     });
   }
 
