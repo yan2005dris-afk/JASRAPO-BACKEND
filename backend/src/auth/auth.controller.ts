@@ -26,7 +26,7 @@ export class AuthController {
   async refresh(@Req() req: any) {
     const user = req.user;
     // Aquí puedes llamar a tu AuthService para generar nuevos tokens
-    return this.authService.refreshToken(
+    return this.authService.refreshAccessToken(
       user.sessionsId,
       req.headers['authorization']?.replace('Bearer ', ''),
     );

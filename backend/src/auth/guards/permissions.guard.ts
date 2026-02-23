@@ -5,7 +5,6 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { PrismaService } from 'src/database/prisma.service';
 import {
   PERMISSION_KEY,
   PermissionConfig,
@@ -13,10 +12,7 @@ import {
 
 @Injectable()
 export class PermissionsGuard implements CanActivate {
-  constructor(
-    private readonly reflector: Reflector,
-    private readonly prisma: PrismaService,
-  ) {}
+  constructor(private readonly reflector: Reflector) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const required = this.reflector.get<PermissionConfig>(
@@ -28,29 +24,16 @@ export class PermissionsGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const user = request.user;
 
-    if (!user || !user.usersId) {
-      throw new ForbiddenException('Usuario no identificado');
+    if (!user || !user.permissions) {
+      throw new ForbiddenException('Usuario no identificado o sin permisos');
     }
 
-    const hasPermissions = await this.prisma.userRoles.findFirst({
-      where: {
-        usersId: user.usersId,
-        roles: {
-          rolPermissions: {
-            some: {
-              permissions: {
-                resource: required.resource,
-                action: required.action,
-                deletedAt: null,
-              },
-            },
-          },
-        },
-      },
-    });
-    if (!hasPermissions) {
+    const hasPermission = user.permissions.some(
+      (p) => p.resource === required.resource && p.action === required.action,
+    );
+    if (!hasPermission) {
       throw new ForbiddenException(
-        `Usuario no tiene permisos la acción ${required.action} en  ${required.resource}`,
+        `Tu Usuario no tiene permisos la acción ${required.action} en  ${required.resource}`,
       );
     }
     return true;

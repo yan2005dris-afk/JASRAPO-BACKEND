@@ -11,7 +11,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     private readonly config: ConfigService,
   ) {
     const secret = config.get<string>('JWT_ACCESS_SECRET');
-    console.log('JWT Access Secret:', secret); // Agrega este log para verificar el valor de la variable de entorno
     if (!secret) {
       throw new UnauthorizedException('Session invalida');
     }
@@ -33,14 +32,21 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
 
     if (!session || session.isRevoked || session.expiresAt < new Date()) {
-      throw new Error('Invalid session');
+      throw new UnauthorizedException('Invalid session');
     }
+    // Cargar usuario, roles y permisos
     const user = await this.prisma.users.findUnique({
       where: { usersId },
       include: {
         userRoles: {
           include: {
-            roles: true,
+            roles: {
+              include: {
+                rolPermissions: {
+                  include: { permissions: true },
+                },
+              },
+            },
           },
         },
       },
@@ -54,10 +60,20 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException('Usuario eliminado');
     }
 
+    // Extraer permisos únicos
+    const permissions = user.userRoles
+      .flatMap((ur) => ur.roles.rolPermissions)
+      .filter((rp) => rp.permissions && !rp.permissions.deletedAt)
+      .map((rp) => ({
+        resource: rp.permissions.resource,
+        action: rp.permissions.action,
+      }));
+
     return {
       usersId: user.usersId,
       email: user.email,
       roles: user.userRoles.map((ur) => ur.roles.name),
+      permissions,
       sessionId: sessionsId,
     };
   }

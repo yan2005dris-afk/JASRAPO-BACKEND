@@ -13,7 +13,7 @@ export class RefreshTokenStrategy extends PassportStrategy(
     private readonly prisma: PrismaService,
     private readonly config: ConfigService,
   ) {
-    const secret = config.get<string>('JWT_ACCESS_SECRET');
+    const secret = config.get<string>('JWT_REFRESH_SECRET');
     console.log('JWT Access Secret:', secret); // Agrega este log para verificar el valor de la variable de entorno
     if (!secret) {
       throw new UnauthorizedException('Session invalida');
