@@ -42,7 +42,6 @@ export class AuthService {
       throw new UnauthorizedException('Usuario eliminado');
     }
 
-    //Extraer email y password del DTO
     const session = await this.prisma.sessions.create({
       data: {
         usersId: users.usersId,
@@ -96,7 +95,7 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
 
-  async refreshToken(sessionId: number, refreshToeken: string) {
+  async refreshAccessToken(sessionId: number, refreshToken: string) {
     const session = await this.prisma.sessions.findUnique({
       where: { sessionsId: sessionId },
     });
@@ -112,9 +111,9 @@ export class AuthService {
     if (session.expiresAt < new Date()) {
       throw new UnauthorizedException('Session expired');
     }
-    const isValid = await bcrypt.compare(refreshToeken, session.refreshToken);
+    const isValid = await bcrypt.compare(refreshToken, session.refreshToken);
 
-    if (isValid) {
+    if (!isValid) {
       throw new UnauthorizedException('Invalid refresh token');
     }
 
@@ -129,6 +128,7 @@ export class AuthService {
       where: { sessionsId: session.sessionsId },
       data: { refreshToken: newHash },
     });
+    return tokens;
   }
 
   async logout(sessionId: number) {
