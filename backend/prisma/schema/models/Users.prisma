@@ -6,5 +6,6 @@ model Users {
   
   sessions              Sessions[]
   userRoles             UserRoles[]
+  userPermissions       UserPermissions[]
   @@map("users")
 }

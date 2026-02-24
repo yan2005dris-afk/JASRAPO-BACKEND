@@ -6,8 +6,7 @@ model Roles{
 
 
     rolPermissions      RolPermissions []                                   
-    userRoles          UserRoles []                                      
-    rolMenus            RolMenus []                                         
+    userRoles          UserRoles []                                                                            
 
     @@map("roles")
 }
