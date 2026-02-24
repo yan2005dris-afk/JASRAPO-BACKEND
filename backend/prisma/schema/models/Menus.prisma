@@ -10,7 +10,7 @@ model Menus{
 
     parent   Menus?  @relation("MenuToMenu", fields: [menusParentId], references: [menusId])
     children Menus[] @relation("MenuToMenu")
-    rolMenus RolMenus[]
+    menuPermissions MenuPermissions[]
 
 
     @@map("menus")

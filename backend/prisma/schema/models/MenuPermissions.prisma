@@ -1,0 +1,12 @@
+model MenuPermissions{
+    rolMenusId          Int        @id @default(autoincrement())    @map("rol_menus_id")
+    permissionsId       Int                                         @map("permissions_id")
+    menusId             Int                                         @map("menu_id")
+
+    permissions        Permissions  @relation(fields: [permissionsId], references: [permissionsId])
+    menus              Menus        @relation(fields: [menusId], references: [menusId])
+
+    deletedAt          DateTime?    @map("deleted_at")
+
+    @@map("menu_permissions")
+}

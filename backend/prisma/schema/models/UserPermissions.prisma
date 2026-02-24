@@ -1,0 +1,12 @@
+model UserPermissions{
+    idUserPermissions           Int        @id @default(autoincrement())    @map("id_user_permissions")
+    usersId                     Int                                         @map("user_id")
+    permissionsId               Int                                         @map("permissions_id")
+    allow                       Boolean                                     @map("allow")
+    deteledAt                   DateTime?                                   @map("detelted_at")
+
+    users                       Users        @relation(fields: [usersId], references: [usersId]) 
+    Permissions                 Permissions @relation(fields: [permissionsId], references: [permissionsId])
+
+    @@map("user_permissions")
+}

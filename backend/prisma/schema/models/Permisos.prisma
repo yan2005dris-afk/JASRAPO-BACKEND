@@ -6,6 +6,7 @@ model Permissions{
     deletedAt               DateTime?                                      @map("deleted_at")
 
     rolPermissions          RolPermissions []
-
+    menuPermissions         MenuPermissions []
+    userPermissions         UserPermissions []
     @@map("permissions")
 }
