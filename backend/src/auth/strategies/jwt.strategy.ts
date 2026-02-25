@@ -15,7 +15,12 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException('Session invalida');
     }
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: (req) => {
+        if (req && req.cookies && req.cookies.accessToken) {
+          return req.cookies.accessToken;
+        }
+        return ExtractJwt.fromAuthHeaderAsBearerToken()(req);
+      },
       secretOrKey: secret,
       ignoreExpiration: false,
     });

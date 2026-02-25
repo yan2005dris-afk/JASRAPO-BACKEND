@@ -9,10 +9,14 @@ import {
   PERMISSION_KEY,
   PermissionConfig,
 } from '../decorators/require-permission.decorator';
+import { UserService } from 'src/models/user/user.service';
 
 @Injectable()
 export class PermissionsGuard implements CanActivate {
-  constructor(private readonly reflector: Reflector) {}
+  constructor(
+    private readonly reflector: Reflector,
+    private readonly userService: UserService,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const required = this.reflector.get<PermissionConfig>(
@@ -24,16 +28,21 @@ export class PermissionsGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const user = request.user;
 
-    if (!user || !user.permissions) {
-      throw new ForbiddenException('Usuario no identificado o sin permisos');
+    if (!user || !user.usersId) {
+      throw new ForbiddenException('Usuario no identificado');
     }
 
-    const hasPermission = user.permissions.some(
+    // Obtener permisos efectivos
+    const effectivePermissions = await this.userService.getEffectivePermissions(
+      user.usersId,
+    );
+
+    const hasPermission = effectivePermissions.some(
       (p) => p.resource === required.resource && p.action === required.action,
     );
     if (!hasPermission) {
       throw new ForbiddenException(
-        `Tu Usuario no tiene permisos la acción ${required.action} en  ${required.resource}`,
+        `${request.user.email} no tiene permisos la acción ${required.action} en ${required.resource}`,
       );
     }
     return true;

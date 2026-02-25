@@ -1,15 +1,15 @@
-import { Controller, Get, Req, UseGuards } from '@nestjs/common';
+import { Controller, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
-import { MenusService } from './menus.service';
+import { PrismaService } from 'src/database/prisma.service';
 
 @UseGuards(JwtAuthGuard)
 @Controller('menus')
 export class MenusController {
-  constructor(private readonly menusService: MenusService) {}
-
+  constructor(private readonly prisma: PrismaService) {}
+  /*
   @Get('my')
   async getMyMenus(@Req() req) {
     return this.menusService.getMyMenus(req.user.userId);
   }
-
+    */
 }

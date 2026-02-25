@@ -19,17 +19,17 @@ import { PermissionsGuard } from 'src/auth/guards/permissions.guard';
 import { RequiredPermission } from 'src/auth/decorators/require-permission.decorator';
 
 @UseGuards(JwtAuthGuard, PermissionsGuard)
-@Controller('user')
+@Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @RequiredPermission('user', 'create')
+  @RequiredPermission('users', 'create')
   @Post('/')
   create(@Body() createUserDto: CreateUserDto) {
     return this.userService.createUser(createUserDto);
   }
 
-  @RequiredPermission('user', 'read')
+  @RequiredPermission('users', 'read')
   @Get('/')
   findAll(@Query('skip') skip?: number, @Query('take') take?: number) {
     return this.userService.users({
@@ -75,5 +75,10 @@ export class UserController {
   @Delete(':id')
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.userService.deleteUser({ usersId: id });
+  }
+
+  @Get('getEffectivePermissions/:usersId')
+  getEffectivePermissions(@Param('usersId') usersId: number) {
+    return this.userService.getEffectivePermissions(usersId);
   }
 }
