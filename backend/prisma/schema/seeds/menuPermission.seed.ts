@@ -70,11 +70,11 @@ export async function seedMenuPermissions(
             permissionKeys: [{ resource: 'readings', action: 'read' }],
         },
         {
-            menuName: 'Registrar Lecturas',
+            menuName: 'Registrar Lectura',
             permissionKeys: [{ resource: 'readings', action: 'create' }],
         },
         {
-            menuName: 'Historial Lecturas',
+            menuName: 'Historial de Lecturas',
             permissionKeys: [{ resource: 'readings', action: 'read' }],
         },
     ];
@@ -91,13 +91,21 @@ export async function seedMenuPermissions(
             if (!dbPermission) {
                 throw new Error(`Permission ${permissionKey.resource}:${permissionKey.action} not found`);
             }
-
-            await prisma.menuPermissions.create({
-                data: {
+            // Verificar si la relación ya existe antes de crearla
+            const exists = await prisma.menuPermissions.findFirst({
+                where: {
                     menusId: dbMenu.menusId,
                     permissionsId: dbPermission.permissionsId,
-                }
+                },
             });
+            if (!exists) {
+                await prisma.menuPermissions.create({
+                    data: {
+                        menusId: dbMenu.menusId,
+                        permissionsId: dbPermission.permissionsId,
+                    }
+                });
+            }
         }
     }
 
