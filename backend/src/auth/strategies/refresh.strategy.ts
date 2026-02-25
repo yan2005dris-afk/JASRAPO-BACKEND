@@ -14,13 +14,17 @@ export class RefreshTokenStrategy extends PassportStrategy(
     private readonly config: ConfigService,
   ) {
     const secret = config.get<string>('JWT_REFRESH_SECRET');
-    console.log('JWT Access Secret:', secret); // Agrega este log para verificar el valor de la variable de entorno
     if (!secret) {
       throw new UnauthorizedException('Session invalida');
     }
 
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: (req) => {
+        if (req && req.cookies && req.cookies.refreshToken) {
+          return req.cookies.refreshToken;
+        }
+        return ExtractJwt.fromAuthHeaderAsBearerToken()(req);
+      },
       secretOrKey: secret,
       ignoreExpiration: false,
       passReqToCallback: false,
