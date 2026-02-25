@@ -16,7 +16,7 @@ interface Menu {
 @Controller('menus')
 export class MenusController {
   constructor(private readonly prisma: PrismaService) {}
-
+  /*
   @Get('my')
   async getMyMenus(@Req() req) {
     const roles = req.user.roles;
@@ -56,4 +56,5 @@ export class MenusController {
 
     return buildMenuTree(menus);
   }
+    */
 }
