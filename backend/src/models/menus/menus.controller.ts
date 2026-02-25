@@ -9,7 +9,7 @@ export class MenusController {
   
   @Get('my')
   async getMyMenus(@Req() req) {
-    const userId = req.user.userId;
+    const userId = req.user.usersId;
     return this.menusService.getMyMenus(userId);
   }
 }
