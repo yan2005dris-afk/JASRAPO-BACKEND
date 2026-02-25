@@ -9,13 +9,14 @@ import { UserService } from 'src/models/user/user.service';
 import { LoginUserDto } from './dto/login-user.dto';
 import { RegisterDto } from './dto/register.dto';
 import { JwtService } from '@nestjs/jwt';
-
+import { ConfigService } from '@nestjs/config';
 @Injectable()
 export class AuthService {
   constructor(
     private readonly userService: UserService,
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
+    private readonly config: ConfigService,
   ) {}
   async register({ email, password }: RegisterDto) {
     const user = await this.userService.user({ email: email });
@@ -83,13 +84,13 @@ export class AuthService {
     };
 
     const accessToken = await this.jwtService.signAsync(payload, {
-      secret: process.env.JWT_ACCESS_SECRET,
-      expiresIn: '1h',
+      secret: this.config.get<string>('JWT_ACCESS_SECRET'),
+      expiresIn: this.config.get<any>('JWT_ACCESS_EXPIRES_IN'),
     });
 
     const refreshToken = await this.jwtService.signAsync(payload, {
-      secret: process.env.JWT_REFRESH_SECRET,
-      expiresIn: '7d',
+      secret: this.config.getOrThrow<string>('JWT_REFRESH_SECRET'),
+      expiresIn: this.config.getOrThrow<any>('JWT_REFRESH_EXPIRES_IN'),
     });
 
     return { accessToken, refreshToken };

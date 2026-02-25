@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginUserDto } from './dto/login-user.dto';
 import { RegisterDto } from './dto/register.dto';
@@ -15,20 +15,71 @@ export class AuthController {
   }
 
   @Post('/login')
-  async login(@Body() loginUserDto: LoginUserDto, @Req() req: Request) {
+  async login(
+    @Body() loginUserDto: LoginUserDto,
+    @Req() req: Request,
+    @Res() res: any,
+  ) {
     const ip = req.ip;
     const userAgent = req.headers['user-agent'];
-    return this.authService.login(loginUserDto, ip, userAgent);
+    const result = await this.authService.login(loginUserDto, ip, userAgent);
+    // Configuración de cookies
+    const cookieOptions = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 1000, // 1 hora para accessToken
+    };
+    const refreshCookieOptions = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 días para refreshToken
+    };
+    res.cookie('accessToken', result.accessToken, cookieOptions);
+    res.cookie('refreshToken', result.refreshToken, refreshCookieOptions);
+    res.json({ message: result.message, users: result.users });
   }
 
   @UseGuards(JwtRefreshGuard)
   @Post('refresh')
-  async refresh(@Req() req: any) {
+  async refresh(@Req() req: any, @Res() res: any) {
     const user = req.user;
-    // Aquí puedes llamar a tu AuthService para generar nuevos tokens
-    return this.authService.refreshAccessToken(
+    // Obtener refreshToken de la cookie
+    const refreshToken =
+      req.cookies?.refreshToken ||
+      req.headers['authorization']?.replace('Bearer ', '');
+    const tokens = await this.authService.refreshAccessToken(
       user.sessionsId,
-      req.headers['authorization']?.replace('Bearer ', ''),
+      refreshToken,
     );
+    // Opcional: setear nuevas cookies si quieres rotar el refreshToken
+    res.cookie('accessToken', tokens.accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 1000,
+    });
+    res.cookie('refreshToken', tokens.refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+    res.json({ message: 'Token refrescado correctamente' });
+  }
+  @Post('logout')
+  async logout(@Res() res: any) {
+    res.clearCookie('accessToken', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+    });
+    res.clearCookie('refreshToken', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+    });
+    res.json({ message: 'Sesión cerrada correctamente' });
   }
 }
