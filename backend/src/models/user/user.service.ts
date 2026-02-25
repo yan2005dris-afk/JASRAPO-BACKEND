@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { PrismaService } from 'src/database/prisma.service';
 import { Prisma } from 'src/generated/prisma/client';
@@ -110,5 +114,113 @@ export class UserService {
       where,
       select: safeUserSelect,
     });
+  }
+
+  async softDeleteUser(where: Prisma.UsersWhereUniqueInput) {
+    return this.prisma.users.update({
+      where,
+      data: { deletedAt: new Date() },
+      select: safeUserSelect,
+    });
+  }
+
+  /**
+   * Obtiene los permisos efectivos de un usuario combinando roles y user_permissions
+   */
+  async getEffectivePermissions(usersId: number) {
+    const user = await this.prisma.users.findUnique({
+      where: { usersId },
+      include: {
+        userRoles: {
+          include: {
+            roles: {
+              include: {
+                rolPermissions: {
+                  include: {
+                    permissions: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        userPermissions: {
+          include: {
+            Permissions: true,
+          },
+        },
+      },
+    });
+
+    if (!user || user.deletedAt) {
+      throw new NotFoundException('usuario elimiando o no encontrado');
+    }
+    // Permisos por roles
+    const rolPermissions =
+      user?.userRoles
+        .flatMap((userRol) => userRol.roles.rolPermissions)
+        .filter(
+          (rolPermiso) =>
+            rolPermiso.permissions && !rolPermiso.permissions.deletedAt,
+        )
+        .map((rolPermiso) => ({
+          resource: rolPermiso.permissions.resource,
+          action: rolPermiso.permissions.action,
+        })) ?? [];
+
+    //Permisos sin duplicados
+    const rolPermisoSinDuplicados = rolPermissions.reduce(
+      (acum, permiso) => {
+        const existePermiso = acum.some(
+          (permisoAcumulador) =>
+            permisoAcumulador.resource === permiso.resource &&
+            permisoAcumulador.action === permiso.action,
+        );
+        if (!existePermiso) {
+          acum.push(permiso);
+        }
+        return acum;
+      },
+      [] as { resource: string; action: string }[],
+    );
+
+    // Permisos por usuario.
+    const userPermissions =
+      user?.userPermissions
+        .filter(
+          (userPermiso) =>
+            userPermiso.Permissions && !userPermiso.Permissions.deletedAt,
+        )
+        .map((userPermiso) => ({
+          resource: userPermiso.Permissions.resource,
+          action: userPermiso.Permissions.action,
+          allow: userPermiso.allow,
+        })) ?? [];
+
+    // Combinar: los userPerms pueden agregar (allow=true) o revocar (allow=false) permisos
+
+    let rolPermissionsSinDuplicados_copy = [...rolPermisoSinDuplicados];
+    for (const userPerm of userPermissions) {
+      const index = rolPermissionsSinDuplicados_copy.findIndex(
+        (permiso) =>
+          userPerm.action === permiso.action &&
+          userPerm.resource === permiso.resource,
+      );
+
+      if (userPerm.allow) {
+        if (index === -1) {
+          rolPermissionsSinDuplicados_copy.push({
+            resource: userPerm.resource,
+            action: userPerm.action,
+          });
+        }
+      } else {
+        if (index !== -1) {
+          rolPermissionsSinDuplicados_copy.splice(index, 1);
+        }
+      }
+    }
+
+    return rolPermissionsSinDuplicados_copy;
   }
 }
