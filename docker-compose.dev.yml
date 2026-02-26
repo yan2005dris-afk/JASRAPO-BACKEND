@@ -1,5 +1,6 @@
 # docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
 services:
+  # ─── Backend en Desarrollo ───────────────────────────────────
   backend:
     build:
       context: ./backend
@@ -24,3 +25,26 @@ services:
     networks:
       - jasrapo-network
     restart: "no"
+    command: npm run start:dev
+  
+  # ─── Frontend en Desarrollo ───────────────────────────────────
+  frontend:
+    build:
+      context: ./FRONT
+      dockerfile: Dockerfile
+      target: development
+    container_name: jasrapo-frontend-dev
+    environment:
+      - NODE_ENV=development
+      # URL del backen para desarrollo
+      - API_URL=http://backend:3000
+    ports:
+      - "8080:4200"
+    volumes:
+      - ./FRONT/src:/app/src
+    depends_on:
+      - backend
+    networks:
+      - jasrapo-network
+    restart: "no"
+    command: npm run start -- --host 0.0.0.0
