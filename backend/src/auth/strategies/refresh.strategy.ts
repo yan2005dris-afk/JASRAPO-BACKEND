@@ -19,12 +19,7 @@ export class RefreshTokenStrategy extends PassportStrategy(
     }
 
     super({
-      jwtFromRequest: (req) => {
-        if (req && req.cookies && req.cookies.refreshToken) {
-          return req.cookies.refreshToken;
-        }
-        return ExtractJwt.fromAuthHeaderAsBearerToken()(req);
-      },
+      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       secretOrKey: secret,
       ignoreExpiration: false,
       passReqToCallback: false,

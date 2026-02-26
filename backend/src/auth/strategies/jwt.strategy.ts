@@ -15,12 +15,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException('Session invalida');
     }
     super({
-      jwtFromRequest: (req) => {
-        if (req && req.cookies && req.cookies.accessToken) {
-          return req.cookies.accessToken;
-        }
-        return ExtractJwt.fromAuthHeaderAsBearerToken()(req);
-      },
+      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       secretOrKey: secret,
       ignoreExpiration: false,
     });
@@ -75,11 +70,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       }));
 
     return {
-      usersId: user.usersId,
-      email: user.email,
-      roles: user.userRoles.map((ur) => ur.roles.name),
-      permissions,
-      sessionId: sessionsId,
+      sub: usersId,
+      sid: sessionsId,
     };
   }
 }

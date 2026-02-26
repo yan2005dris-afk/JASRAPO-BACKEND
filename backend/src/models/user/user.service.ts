@@ -124,6 +124,26 @@ export class UserService {
     });
   }
 
+  async getRolesByUserId(usersId: number) {
+    const user = await this.prisma.users.findUnique({
+      where: { usersId },
+      select: {
+        userRoles: {
+          select: {
+            roles: {
+              select: { name: true },
+            },
+          },
+        },
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException('Usuario no encontrado');
+    }
+    // Filtrar roles nulos y devolver solo los nombres
+    return user.userRoles.filter((ur) => ur.roles).map((ur) => ur.roles.name);
+  }
   /**
    * Obtiene los permisos efectivos de un usuario combinando roles y user_permissions
    */
