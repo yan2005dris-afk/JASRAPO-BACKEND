@@ -11,7 +11,7 @@ export async function seedRoles(prisma: PrismaClient) {
     const secretariaRol = await prisma.roles.upsert({
         where: { rolesId: 2 },
         update: {},
-        create: { rolesId: 2, name: 'secretaria' },
+        create: { rolesId: 2, name: 'secretary' },
     });
 
     const userRol = await prisma.roles.upsert({
@@ -23,7 +23,7 @@ export async function seedRoles(prisma: PrismaClient) {
     const clienteRol = await prisma.roles.upsert({
         where: { rolesId: 4 },
         update: {},
-        create: { rolesId: 4, name: 'cliente' },
+        create: { rolesId: 4, name: 'client' },
     });
 
     return {adminRol, secretariaRol, userRol, clienteRol};
