@@ -10,6 +10,7 @@ import { LoginUserDto } from './dto/login-user.dto';
 import { RegisterDto } from './dto/register.dto';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { EcuadorTimezoneUtil } from '../util/ecuador-timezone-backend.util';
 @Injectable()
 export class AuthService {
   constructor(
@@ -66,11 +67,42 @@ export class AuthService {
       data: { refreshToken: hashedRefreshToken },
     });
 
+    // Decodificar accessToken y refreshToken para obtener iat y exp
+    const decodedAccess: any = this.jwtService.decode(accessToken);
+    const decodedRefresh: any = this.jwtService.decode(refreshToken);
     return {
-      message: 'Sesión iniciada exitosamente',
-      users,
+      sub: users.usersId,
+      sid: session.sessionsId,
       accessToken,
       refreshToken,
+      accessTokenInfo: {
+        iat: decodedAccess?.iat,
+        exp: decodedAccess?.exp,
+        iatDate: decodedAccess?.iat
+          ? EcuadorTimezoneUtil.formatAsEcuadorISO(
+              new Date(decodedAccess.iat * 1000),
+            )
+          : null,
+        expDate: decodedAccess?.exp
+          ? EcuadorTimezoneUtil.formatAsEcuadorISO(
+              new Date(decodedAccess.exp * 1000),
+            )
+          : null,
+      },
+      refreshTokenInfo: {
+        iat: decodedRefresh?.iat,
+        exp: decodedRefresh?.exp,
+        iatDate: decodedRefresh?.iat
+          ? EcuadorTimezoneUtil.formatAsEcuadorISO(
+              new Date(decodedRefresh.iat * 1000),
+            )
+          : null,
+        expDate: decodedRefresh?.exp
+          ? EcuadorTimezoneUtil.formatAsEcuadorISO(
+              new Date(decodedRefresh.exp * 1000),
+            )
+          : null,
+      },
     };
   }
 
