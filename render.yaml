@@ -6,7 +6,6 @@ services:
     # Render buscará el Dockerfile dentro de este subdirectorio
     dockerfilePath: ./backend/Dockerfile
     dockerContext: ./backend
-    dockerCommand: node dist/main
     plan: free            # Cambia a "starter" o superior para producción real
     healthCheckPath: /api/v1/health   # Opcional: crea un endpoint /api/v1/health en NestJS
     envVars:
