@@ -41,5 +41,5 @@ COPY --from=build /app/prisma ./prisma
 COPY --from=build /app/prisma.config.ts ./prisma.config.ts
 
 EXPOSE 3000
-# Ejecuta las migraciones pendientes y luego inicia el servidor (ahora carga la URL del prisma.config.ts automáticamente)
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/src/main"]
+# Ejecuta las migraciones pendientes, siembra la base de datos (seeds) y luego inicia el servidor
+CMD ["sh", "-c", "npx prisma migrate deploy && npx prisma db seed && node dist/src/main"]
