@@ -1,0 +1,40 @@
+services:
+  # ─── Backend NestJS ──────────────────────────────────────────
+  - type: web
+    name: jasrapo-backend
+    runtime: docker
+    # Render buscará el Dockerfile dentro de este subdirectorio
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    dockerCommand: node dist/main
+    plan: free            # Cambia a "starter" o superior para producción real
+    healthCheckPath: /api/v1/health   # Opcional: crea un endpoint /api/v1/health en NestJS
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      # La DATABASE_URL la vinculamos automáticamente desde la BD de abajo
+      - key: DATABASE_URL
+        fromDatabase:
+          name: jasrapo-db
+          property: connectionString
+      # ¡CAMBIA ESTOS VALORES EN EL DASHBOARD DE RENDER! No los dejes con estos defaults.
+      - key: JWT_ACCESS_SECRET
+        generateValue: true       # Render genera un valor aleatorio seguro
+      - key: JWT_ACCESS_EXPIRES_IN
+        value: 15m
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_EXPIRES_IN
+        value: 7d
+      # URL de tu frontend en producción (ej: https://jasrapo.vercel.app)
+      - key: CORS_ORIGIN
+        value: https://your-frontend-url.com   # <-- CAMBIA ESTO
+
+databases:
+  # ─── PostgreSQL gestionado por Render ────────────────────────
+  - name: jasrapo-db
+    plan: free             # Cambia a "starter" para persistencia y más recursos
+    databaseName: appdb
+    user: appuser

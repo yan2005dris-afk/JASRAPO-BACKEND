@@ -39,4 +39,5 @@ COPY --from=build /app/src/generated ./src/generated
 COPY --from=build /app/prisma ./prisma
 
 EXPOSE 3000
-CMD ["node", "dist/main"]
+# Ejecuta las migraciones pendientes y luego inicia el servidor
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/main"]
