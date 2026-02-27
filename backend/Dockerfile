@@ -41,5 +41,5 @@ COPY --from=build /app/prisma ./prisma
 COPY --from=build /app/prisma.config.ts ./prisma.config.ts
 
 EXPOSE 3000
-# Ejecuta las migraciones pendientes y luego inicia el servidor
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/main"]
+# Usa --schema para apuntar directo al directorio del schema (no depende de prisma.config.ts en runtime)
+CMD ["sh", "-c", "npx prisma migrate deploy --schema ./prisma/schema && node dist/main"]
