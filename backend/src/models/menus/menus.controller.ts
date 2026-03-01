@@ -5,11 +5,11 @@ import { MenusService } from './menus.service';
 @UseGuards(JwtAuthGuard)
 @Controller('menus')
 export class MenusController {
-  constructor(private readonly menusService: MenusService) {}
-  
+  constructor(private readonly menusService: MenusService) { }
+
   @Get('my')
   async getMyMenus(@Req() req) {
-    const userId = req.user.usersId;
+    const userId = req.user.sub;
     return this.menusService.getMyMenus(userId);
   }
 }

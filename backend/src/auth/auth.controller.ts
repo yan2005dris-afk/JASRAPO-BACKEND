@@ -30,7 +30,6 @@ export class AuthController {
       sameSite: 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 días para refreshToken
     };
-
     res.cookie('refreshToken', result.refreshToken, refreshCookieOptions);
     res.json({
       "accessToken": result.accessToken,
@@ -49,8 +48,8 @@ export class AuthController {
   @Post('refresh')
   async refresh(@Req() req: any, @Res() res: any) {
     const user = req.user;
-    // Obtener refreshToken del header Authorization
-    const refreshToken = req.headers['authorization']?.replace('Bearer ', '');
+    // Obtener refreshToken de la cookie
+    const refreshToken = req.cookies?.refreshToken;
     const tokens = await this.authService.refreshAccessToken(
       user.sessionsId,
       refreshToken,

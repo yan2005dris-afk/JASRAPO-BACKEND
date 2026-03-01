@@ -5,15 +5,15 @@ import { MenuResponseDto } from './dto/response-menu.dto';
 
 @Injectable()
 export class MenusService {
-  constructor(private readonly prisma: PrismaService, private readonly userService: UserService) {}
+  constructor(private readonly prisma: PrismaService, private readonly userService: UserService) { }
 
   async getMyMenus(userId: number): Promise<MenuResponseDto[]> {
     //Obtener permisos efectivos del usuario (roles + overrides)
-    const permissions =  await this.userService.getEffectivePermissions(userId);
+    const permissions = await this.userService.getEffectivePermissions(userId);
 
     //Convertir permisos a formato DB
-    const permissionConditions = permissions.map(p => ({resource : p.resource, action: p.action}));
-    
+    const permissionConditions = permissions.map(p => ({ resource: p.resource, action: p.action }));
+
     //Obtener menus asociados a esos permisos
     const menus = await this.prisma.menus.findMany({
       where: {
