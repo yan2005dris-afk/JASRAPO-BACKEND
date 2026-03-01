@@ -18,7 +18,7 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
-  ) {}
+  ) { }
   async register({ email, password }: RegisterDto) {
     const user = await this.userService.user({ email: email });
 
@@ -70,9 +70,21 @@ export class AuthService {
     // Decodificar accessToken y refreshToken para obtener iat y exp
     const decodedAccess: any = this.jwtService.decode(accessToken);
     const decodedRefresh: any = this.jwtService.decode(refreshToken);
+
+    const roles = await this.prisma.userRoles.findMany({
+      where: { usersId: users.usersId },
+      select: {
+        rolesId: true,
+      }
+    });
+
     return {
       sub: users.usersId,
       sid: session.sessionsId,
+      name: null,
+      avatar: null,
+      email: users.email,
+      roles: roles.map((role) => role.rolesId),
       accessToken,
       refreshToken,
       accessTokenInfo: {
@@ -80,13 +92,13 @@ export class AuthService {
         exp: decodedAccess?.exp,
         iatDate: decodedAccess?.iat
           ? EcuadorTimezoneUtil.formatAsEcuadorISO(
-              new Date(decodedAccess.iat * 1000),
-            )
+            new Date(decodedAccess.iat * 1000),
+          )
           : null,
         expDate: decodedAccess?.exp
           ? EcuadorTimezoneUtil.formatAsEcuadorISO(
-              new Date(decodedAccess.exp * 1000),
-            )
+            new Date(decodedAccess.exp * 1000),
+          )
           : null,
       },
       refreshTokenInfo: {
@@ -94,13 +106,13 @@ export class AuthService {
         exp: decodedRefresh?.exp,
         iatDate: decodedRefresh?.iat
           ? EcuadorTimezoneUtil.formatAsEcuadorISO(
-              new Date(decodedRefresh.iat * 1000),
-            )
+            new Date(decodedRefresh.iat * 1000),
+          )
           : null,
         expDate: decodedRefresh?.exp
           ? EcuadorTimezoneUtil.formatAsEcuadorISO(
-              new Date(decodedRefresh.exp * 1000),
-            )
+            new Date(decodedRefresh.exp * 1000),
+          )
           : null,
       },
     };

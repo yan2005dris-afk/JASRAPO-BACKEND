@@ -7,7 +7,7 @@ import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService) { }
 
   @Post('register')
   async register(@Body() registerDto: RegisterDto) {
@@ -30,13 +30,18 @@ export class AuthController {
       sameSite: 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 días para refreshToken
     };
+
     res.cookie('refreshToken', result.refreshToken, refreshCookieOptions);
     res.json({
-      sub: result.sub,
-      sid: result.sid,
-      iat: result.accessTokenInfo.iatDate,
-      exp: result.accessTokenInfo.expDate,
-      accessToken: result.accessToken,
+      "accessToken": result.accessToken,
+      "sid": result.sid,
+      "sub": result.sub,
+      "email": result.email,
+      "name": result.name,
+      "role": result.roles,
+      "avatar": result.avatar,
+      "createdAt": result.accessTokenInfo.iatDate,
+      "expiresAt": result.accessTokenInfo.expDate
     });
   }
 
