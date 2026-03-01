@@ -1,99 +1,37 @@
 import { Permissions, PrismaClient, Roles } from "src/generated/prisma/client";
 
-
 export async function seedRolePermissions(
     prisma: PrismaClient,
     roles: {adminRol: Roles, secretariaRol: Roles, userRol: Roles,clienteRol: Roles},
     permissions: Permissions[]
 ) {
+    await prisma.rolPermissions.deleteMany();
 
-  // Asignar TODOS los permisos al Admin
+    // 1. ADMIN: TODOS LOS PERMISOS
     for (const perm of permissions) {
-        const exists = await prisma.rolPermissions.findFirst({
-            where: {
-                rolesId: roles.adminRol.rolesId,
-                permissionsId: perm.permissionsId,
-            },
+        await prisma.rolPermissions.create({
+            data: { rolesId: roles.adminRol.rolesId, permissionsId: perm.permissionsId },
         });
-
-        if (!exists) {
-            await prisma.rolPermissions.create({
-                data: {
-                    rolesId: roles.adminRol.rolesId,
-                    permissionsId: perm.permissionsId,
-                },
-            });
-        }
     }
 
-    // Asignar solo permiso de lectura de usuarios al rol 'user'
-    const readPerm = permissions.find(
-        (p) => p.resource === 'users' && p.action === 'read',
-    );
-
-    if (readPerm) {
-        const exists = await prisma.rolPermissions.findFirst({
-            where: {
-                rolesId: roles.userRol.rolesId,
-                permissionsId: readPerm.permissionsId,
-            },
-        });
-
-        if (!exists) {
-            await prisma.rolPermissions.create({
-                data: {
-                    rolesId: roles.userRol.rolesId,
-                    permissionsId: readPerm.permissionsId,
-                },
-            });
-        }
-    }
-
-    //Asignar permisos sobre clientes y lecturas a secretaria
-    const secretaryPerms = permissions.filter(p =>
-        (p.resource === 'clients' && (p.action === 'create' || p.action === 'read')) ||
-        (p.resource === 'readings' && (p.action === 'create' || p.action === 'read'))
-    );
-    
+    // 2. SECRETARIA: SOLO CONTRATOS
+    const contratosResources = ['clientes', 'contratos', 'medidores', 'tarifas', 'lecturas', 'convenios'];
+    const secretaryPerms = permissions.filter(p => contratosResources.includes(p.resource));
     for (const perm of secretaryPerms) {
-        const exists = await prisma.rolPermissions.findFirst({
-            where: {
-                rolesId: roles.secretariaRol.rolesId,
-                permissionsId: perm.permissionsId,
-            },
+        await prisma.rolPermissions.create({
+            data: { rolesId: roles.secretariaRol.rolesId, permissionsId: perm.permissionsId },
         });
-
-        if (!exists) {
-            await prisma.rolPermissions.create({
-                data: {
-                    rolesId: roles.secretariaRol.rolesId,
-                    permissionsId: perm.permissionsId,
-                },
-            });
-        }
     }
 
-    //Asignar permisos de lectura de su cuenta y facturas a cliente
-    const clientePerms = permissions.filter(p =>
-        (p.resource === 'account' && p.action === 'read') ||
-        (p.resource === 'invoices' && p.action === 'read')
-    );
+    // 3. CLIENTE: SOLO REPORTES
+    const reportesResources = ['estado_cuenta', 'recaudacion_morosidad', 'consumo_zonas', 'dashboard'];
+    const clientePerms = permissions.filter(p => reportesResources.includes(p.resource));
     for (const perm of clientePerms) {
-        const exists = await prisma.rolPermissions.findFirst({
-            where: {
-                rolesId: roles.clienteRol.rolesId,
-                permissionsId: perm.permissionsId,
-            },
+        await prisma.rolPermissions.create({
+            data: { rolesId: roles.clienteRol.rolesId, permissionsId: perm.permissionsId },
         });
-        if (!exists) {
-            await prisma.rolPermissions.create({
-                data: {
-                    rolesId: roles.clienteRol.rolesId,
-                    permissionsId: perm.permissionsId,
-                },
-            });
-        }
     }
 
+    // 4. USER: NADA
     console.log('✅ Roles-Permisos asignados correctamente.');
 }

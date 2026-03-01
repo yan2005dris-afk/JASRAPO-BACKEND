@@ -14,6 +14,7 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       NODE_ENV: development
       PORT: 3000
+      CORS_ORIGIN: "*"
     ports:
       - "${BACKEND_PORT:-3000}:3000"
     volumes:
@@ -26,7 +27,7 @@ services:
       - jasrapo-network
     restart: "no"
     command: npm run start:dev
-  
+
   # ─── Frontend en Desarrollo ───────────────────────────────────
   frontend:
     build:

@@ -1,120 +1,402 @@
 import { PrismaClient } from "src/generated/prisma/client";
 
-export async function seedMenus(prisma:PrismaClient) {
-    //Menus para admin
-    const usuariosMenu = await prisma.menus.upsert({
-        where: { menusId: 1 },
-        update: {},
-        create: { menusId: 1, name: 'Usuarios', route: '/menu-usuarios' },
-    });
-
-    const crearUsuarioMenu = await prisma.menus.upsert({
-        where: { menusId: 2 },
-        update: {},
-        create: { menusId: 2, name: 'Crear Usuario', route: '/menu-usuarios/crear-usuario', menusParentId: usuariosMenu.menusId },
-    });
-
-    const listarUsuariosMenu = await prisma.menus.upsert({
-        where: { menusId: 3 },
-        update: {},
-        create: { menusId: 3, name: 'Listar Usuarios', route: '/menu-usuarios/listar-suarios', menusParentId: usuariosMenu.menusId },
-    });
-
-    const configMenu= await prisma.menus.upsert({
-        where: { menusId: 4 },
-        update: {},
-        create: { menusId: 4, name: 'Configuración', route: '/configuracion' },
-    });
-    
-    const asignarRolesMenu = await prisma.menus.upsert({
-        where: { menusId: 5 },
-        update: {},
-        create: { menusId: 5, name: 'Asignar Roles', route: '/configuracion/roles', menusParentId: configMenu.menusId },
-    });
-
-    const asignarPermisosMenu = await prisma.menus.upsert({
-        where: { menusId: 6 },
-        update: {},
-        create: { menusId: 6, name: 'Asignar Permisos', route: '/configuracion/permisos', menusParentId: configMenu.menusId },
-    });
-
-    //Menus para secretaria
-    const clientesMenu = await prisma.menus.upsert({
-        where: { menusId: 7 },
-        update: {},
-        create: { menusId: 7, name: 'Clientes', route: '/menu-clientes' },
-    });
-
-    const registrarClienteMenu = await prisma.menus.upsert({
-        where: { menusId: 8 },
-        update: {},
-        create: { menusId: 8, name: 'Registrar Cliente', route: '/menu-clientes/registrar-cliente', menusParentId: clientesMenu.menusId },
-    });
-
-    const buscarClientesMenu = await prisma.menus.upsert({
-        where: { menusId: 9 },
-        update: {},
-        create: { menusId: 9, name: 'Buscar Clientes', route: '/menu-clientes/buscar-cliente', menusParentId: clientesMenu.menusId },
-    });
-
-    const lecturasMenu = await prisma.menus.upsert({
-        where: { menusId: 10 },
-        update: {},
-        create: { menusId: 10, name: 'Lecturas', route: '/lecturas' },
-    });
-
-    const registrarLecturaMenu = await prisma.menus.upsert({
-        where: { menusId: 11 },
-        update: {},
-        create: { menusId: 11, name: 'Registrar Lectura', route: '/lecturas/registrar-lectura', menusParentId: lecturasMenu.menusId },
-    });
-
-    const historialLecturasMenu = await prisma.menus.upsert({
-        where: { menusId: 12 },
-        update: {},
-        create: { menusId: 12, name: 'Historial de Lecturas', route: '/lecturas/historial-lecturas', menusParentId: lecturasMenu.menusId },
-    });
-
-    //Menus para Cliente}
-    const miCuentaMenu = await prisma.menus.upsert({
-        where: { menusId: 13 },
-        update: {},
-        create: { menusId: 13, name: 'Mi Cuenta', route: '/mi-cuenta' },
-    });
-
-    const misDatosMenu = await prisma.menus.upsert({
-        where: { menusId: 14 },
-        update: {},
-        create: { menusId: 14, name: 'Mis datos', route: '/mi-cuenta/datos', menusParentId: miCuentaMenu.menusId },
-    });
-
-    const miMedidorMenu = await prisma.menus.upsert({
-        where: { menusId: 15 },
-        update: {},
-        create: { menusId: 15, name: 'Mi medidor', route: '/mi-cuenta/medidor', menusParentId: miCuentaMenu.menusId },
-    });
-
-    const facturasMenu = await prisma.menus.upsert({
-        where: { menusId: 16 },
-        update: {},
-        create: { menusId: 16, name: 'Facturas', route: '/facturas' },
-    });
-
-    const misFacturasMenu = await prisma.menus.upsert({
-        where: { menusId: 17 },
-        update: {},
-        create: { menusId: 17, name: 'Mis facturas', route: '/facturas/mis-facturas', menusParentId: facturasMenu.menusId },
-    });
-
-    const estadoCuentaMenu = await prisma.menus.upsert({
-        where: { menusId: 18 },
-        update: {},
-        create: { menusId: 18, name: 'Estado de cuenta', route: '/facturas/estado-cuenta', menusParentId: facturasMenu.menusId },
-    });
-    
-    return prisma.menus.findMany({
-        orderBy: {
-            name: 'asc',
+export async function seedMenus(prisma: PrismaClient) {
+    const menusToCreate = [
+        { menusId: 1, menusParentId: null, name: 'Contratos', route: '/Contratos' },
+        { menusId: 2, menusParentId: 1, name: 'Cliente', route: '/Contratos/Cliente' },
+        { menusId: 3, menusParentId: 1, name: 'Contratos de Servicios', route: '/Contratos/ContratosDeServicios' },
+        { menusId: 4, menusParentId: 1, name: 'Medidores', route: '/Contratos/Medidores' },
+        { menusId: 5, menusParentId: 1, name: 'Tarifas y Categorias', route: '/Contratos/TarifasYCategorias' },
+        { menusId: 6, menusParentId: 1, name: 'Lectura de Consumo', route: '/Contratos/LecturaDeConsumo' },
+        { menusId: 7, menusParentId: 1, name: 'Convenios de pago', route: '/Contratos/ConveniosDePago' },
+        { menusId: 8, menusParentId: null, name: 'Facturacion', route: '/Facturacion' },
+        { menusId: 9, menusParentId: 8, name: 'Generacion de Planillas', route: '/Facturacion/GeneracionPlanilla' },
+        { menusId: 10, menusParentId: 8, name: 'Facturacion Electronica', route: '/Facturacion/FacturacionElectronica' },
+        { menusId: 11, menusParentId: 8, name: 'Recaudación y pagos', route: '/Facturacion/RecaudacionYPagos' },
+        { menusId: 12, menusParentId: 8, name: 'Notas de Credito o Debito', route: '/Facturacion/NotasDeCreditoDebito' },
+        { menusId: 13, menusParentId: 8, name: 'Envio de Facturas', route: '/Facturacion/EnvioDeFacturacion' },
+        { menusId: 14, menusParentId: null, name: 'Reportes', route: '/Reportes' },
+        { menusId: 15, menusParentId: 14, name: 'Estado de cuenta Cliente', route: '/Reportes/EstadoCuentaCliente' },
+        { menusId: 16, menusParentId: 14, name: 'Recaudación y Morosida', route: '/Reportes/RecaudacionMorosida' },
+        { menusId: 17, menusParentId: 14, name: 'ConsumoPorZonas', route: '/Reportes/ConsumoZonas' },
+        { menusId: 18, menusParentId: 14, name: 'DashboardKpi', route: '/Reportes/DashboardKpi' },
+        ...[
+        {
+                "menusId": 19,
+                "menusParentId": 2,
+                "name": "Listar Cliente",
+                "route": "/Contratos/Cliente/Listar"
         },
+        {
+                "menusId": 20,
+                "menusParentId": 2,
+                "name": "Crear Cliente",
+                "route": "/Contratos/Cliente/Crear"
+        },
+        {
+                "menusId": 21,
+                "menusParentId": 2,
+                "name": "Actualizar Cliente",
+                "route": "/Contratos/Cliente/Actualizar"
+        },
+        {
+                "menusId": 22,
+                "menusParentId": 2,
+                "name": "Eliminar Cliente",
+                "route": "/Contratos/Cliente/Eliminar"
+        },
+        {
+                "menusId": 23,
+                "menusParentId": 3,
+                "name": "Listar Contratos de Servicios",
+                "route": "/Contratos/ContratosDeServicios/Listar"
+        },
+        {
+                "menusId": 24,
+                "menusParentId": 3,
+                "name": "Crear Contratos de Servicios",
+                "route": "/Contratos/ContratosDeServicios/Crear"
+        },
+        {
+                "menusId": 25,
+                "menusParentId": 3,
+                "name": "Actualizar Contratos de Servicios",
+                "route": "/Contratos/ContratosDeServicios/Actualizar"
+        },
+        {
+                "menusId": 26,
+                "menusParentId": 3,
+                "name": "Eliminar Contratos de Servicios",
+                "route": "/Contratos/ContratosDeServicios/Eliminar"
+        },
+        {
+                "menusId": 27,
+                "menusParentId": 4,
+                "name": "Listar Medidores",
+                "route": "/Contratos/Medidores/Listar"
+        },
+        {
+                "menusId": 28,
+                "menusParentId": 4,
+                "name": "Crear Medidores",
+                "route": "/Contratos/Medidores/Crear"
+        },
+        {
+                "menusId": 29,
+                "menusParentId": 4,
+                "name": "Actualizar Medidores",
+                "route": "/Contratos/Medidores/Actualizar"
+        },
+        {
+                "menusId": 30,
+                "menusParentId": 4,
+                "name": "Eliminar Medidores",
+                "route": "/Contratos/Medidores/Eliminar"
+        },
+        {
+                "menusId": 31,
+                "menusParentId": 5,
+                "name": "Listar Tarifas y Categorias",
+                "route": "/Contratos/TarifasYCategorias/Listar"
+        },
+        {
+                "menusId": 32,
+                "menusParentId": 5,
+                "name": "Crear Tarifas y Categorias",
+                "route": "/Contratos/TarifasYCategorias/Crear"
+        },
+        {
+                "menusId": 33,
+                "menusParentId": 5,
+                "name": "Actualizar Tarifas y Categorias",
+                "route": "/Contratos/TarifasYCategorias/Actualizar"
+        },
+        {
+                "menusId": 34,
+                "menusParentId": 5,
+                "name": "Eliminar Tarifas y Categorias",
+                "route": "/Contratos/TarifasYCategorias/Eliminar"
+        },
+        {
+                "menusId": 35,
+                "menusParentId": 6,
+                "name": "Listar Lectura de Consumo",
+                "route": "/Contratos/LecturaDeConsumo/Listar"
+        },
+        {
+                "menusId": 36,
+                "menusParentId": 6,
+                "name": "Crear Lectura de Consumo",
+                "route": "/Contratos/LecturaDeConsumo/Crear"
+        },
+        {
+                "menusId": 37,
+                "menusParentId": 6,
+                "name": "Actualizar Lectura de Consumo",
+                "route": "/Contratos/LecturaDeConsumo/Actualizar"
+        },
+        {
+                "menusId": 38,
+                "menusParentId": 6,
+                "name": "Eliminar Lectura de Consumo",
+                "route": "/Contratos/LecturaDeConsumo/Eliminar"
+        },
+        {
+                "menusId": 39,
+                "menusParentId": 7,
+                "name": "Listar Convenios de pago",
+                "route": "/Contratos/ConveniosDePago/Listar"
+        },
+        {
+                "menusId": 40,
+                "menusParentId": 7,
+                "name": "Crear Convenios de pago",
+                "route": "/Contratos/ConveniosDePago/Crear"
+        },
+        {
+                "menusId": 41,
+                "menusParentId": 7,
+                "name": "Actualizar Convenios de pago",
+                "route": "/Contratos/ConveniosDePago/Actualizar"
+        },
+        {
+                "menusId": 42,
+                "menusParentId": 7,
+                "name": "Eliminar Convenios de pago",
+                "route": "/Contratos/ConveniosDePago/Eliminar"
+        },
+        {
+                "menusId": 43,
+                "menusParentId": 9,
+                "name": "Listar Generacion de Planillas",
+                "route": "/Facturacion/GeneracionPlanilla/Listar"
+        },
+        {
+                "menusId": 44,
+                "menusParentId": 9,
+                "name": "Crear Generacion de Planillas",
+                "route": "/Facturacion/GeneracionPlanilla/Crear"
+        },
+        {
+                "menusId": 45,
+                "menusParentId": 9,
+                "name": "Actualizar Generacion de Planillas",
+                "route": "/Facturacion/GeneracionPlanilla/Actualizar"
+        },
+        {
+                "menusId": 46,
+                "menusParentId": 9,
+                "name": "Eliminar Generacion de Planillas",
+                "route": "/Facturacion/GeneracionPlanilla/Eliminar"
+        },
+        {
+                "menusId": 47,
+                "menusParentId": 10,
+                "name": "Listar Facturacion Electronica",
+                "route": "/Facturacion/FacturacionElectronica/Listar"
+        },
+        {
+                "menusId": 48,
+                "menusParentId": 10,
+                "name": "Crear Facturacion Electronica",
+                "route": "/Facturacion/FacturacionElectronica/Crear"
+        },
+        {
+                "menusId": 49,
+                "menusParentId": 10,
+                "name": "Actualizar Facturacion Electronica",
+                "route": "/Facturacion/FacturacionElectronica/Actualizar"
+        },
+        {
+                "menusId": 50,
+                "menusParentId": 10,
+                "name": "Eliminar Facturacion Electronica",
+                "route": "/Facturacion/FacturacionElectronica/Eliminar"
+        },
+        {
+                "menusId": 51,
+                "menusParentId": 11,
+                "name": "Listar Recaudación y pagos",
+                "route": "/Facturacion/RecaudacionYPagos/Listar"
+        },
+        {
+                "menusId": 52,
+                "menusParentId": 11,
+                "name": "Crear Recaudación y pagos",
+                "route": "/Facturacion/RecaudacionYPagos/Crear"
+        },
+        {
+                "menusId": 53,
+                "menusParentId": 11,
+                "name": "Actualizar Recaudación y pagos",
+                "route": "/Facturacion/RecaudacionYPagos/Actualizar"
+        },
+        {
+                "menusId": 54,
+                "menusParentId": 11,
+                "name": "Eliminar Recaudación y pagos",
+                "route": "/Facturacion/RecaudacionYPagos/Eliminar"
+        },
+        {
+                "menusId": 55,
+                "menusParentId": 12,
+                "name": "Listar Notas de Credito o Debito",
+                "route": "/Facturacion/NotasDeCreditoDebito/Listar"
+        },
+        {
+                "menusId": 56,
+                "menusParentId": 12,
+                "name": "Crear Notas de Credito o Debito",
+                "route": "/Facturacion/NotasDeCreditoDebito/Crear"
+        },
+        {
+                "menusId": 57,
+                "menusParentId": 12,
+                "name": "Actualizar Notas de Credito o Debito",
+                "route": "/Facturacion/NotasDeCreditoDebito/Actualizar"
+        },
+        {
+                "menusId": 58,
+                "menusParentId": 12,
+                "name": "Eliminar Notas de Credito o Debito",
+                "route": "/Facturacion/NotasDeCreditoDebito/Eliminar"
+        },
+        {
+                "menusId": 59,
+                "menusParentId": 13,
+                "name": "Listar Envio de Facturas",
+                "route": "/Facturacion/EnvioDeFacturacion/Listar"
+        },
+        {
+                "menusId": 60,
+                "menusParentId": 13,
+                "name": "Crear Envio de Facturas",
+                "route": "/Facturacion/EnvioDeFacturacion/Crear"
+        },
+        {
+                "menusId": 61,
+                "menusParentId": 13,
+                "name": "Actualizar Envio de Facturas",
+                "route": "/Facturacion/EnvioDeFacturacion/Actualizar"
+        },
+        {
+                "menusId": 62,
+                "menusParentId": 13,
+                "name": "Eliminar Envio de Facturas",
+                "route": "/Facturacion/EnvioDeFacturacion/Eliminar"
+        },
+        {
+                "menusId": 63,
+                "menusParentId": 15,
+                "name": "Listar Estado de cuenta Cliente",
+                "route": "/Reportes/EstadoCuentaCliente/Listar"
+        },
+        {
+                "menusId": 64,
+                "menusParentId": 15,
+                "name": "Crear Estado de cuenta Cliente",
+                "route": "/Reportes/EstadoCuentaCliente/Crear"
+        },
+        {
+                "menusId": 65,
+                "menusParentId": 15,
+                "name": "Actualizar Estado de cuenta Cliente",
+                "route": "/Reportes/EstadoCuentaCliente/Actualizar"
+        },
+        {
+                "menusId": 66,
+                "menusParentId": 15,
+                "name": "Eliminar Estado de cuenta Cliente",
+                "route": "/Reportes/EstadoCuentaCliente/Eliminar"
+        },
+        {
+                "menusId": 67,
+                "menusParentId": 16,
+                "name": "Listar Recaudación y Morosida",
+                "route": "/Reportes/RecaudacionMorosida/Listar"
+        },
+        {
+                "menusId": 68,
+                "menusParentId": 16,
+                "name": "Crear Recaudación y Morosida",
+                "route": "/Reportes/RecaudacionMorosida/Crear"
+        },
+        {
+                "menusId": 69,
+                "menusParentId": 16,
+                "name": "Actualizar Recaudación y Morosida",
+                "route": "/Reportes/RecaudacionMorosida/Actualizar"
+        },
+        {
+                "menusId": 70,
+                "menusParentId": 16,
+                "name": "Eliminar Recaudación y Morosida",
+                "route": "/Reportes/RecaudacionMorosida/Eliminar"
+        },
+        {
+                "menusId": 71,
+                "menusParentId": 17,
+                "name": "Listar ConsumoPorZonas",
+                "route": "/Reportes/ConsumoZonas/Listar"
+        },
+        {
+                "menusId": 72,
+                "menusParentId": 17,
+                "name": "Crear ConsumoPorZonas",
+                "route": "/Reportes/ConsumoZonas/Crear"
+        },
+        {
+                "menusId": 73,
+                "menusParentId": 17,
+                "name": "Actualizar ConsumoPorZonas",
+                "route": "/Reportes/ConsumoZonas/Actualizar"
+        },
+        {
+                "menusId": 74,
+                "menusParentId": 17,
+                "name": "Eliminar ConsumoPorZonas",
+                "route": "/Reportes/ConsumoZonas/Eliminar"
+        },
+        {
+                "menusId": 75,
+                "menusParentId": 18,
+                "name": "Listar DashboardKpi",
+                "route": "/Reportes/DashboardKpi/Listar"
+        },
+        {
+                "menusId": 76,
+                "menusParentId": 18,
+                "name": "Crear DashboardKpi",
+                "route": "/Reportes/DashboardKpi/Crear"
+        },
+        {
+                "menusId": 77,
+                "menusParentId": 18,
+                "name": "Actualizar DashboardKpi",
+                "route": "/Reportes/DashboardKpi/Actualizar"
+        },
+        {
+                "menusId": 78,
+                "menusParentId": 18,
+                "name": "Eliminar DashboardKpi",
+                "route": "/Reportes/DashboardKpi/Eliminar"
+        }
+]
+    ];
+
+    for (const menu of menusToCreate) {
+        await prisma.menus.upsert({
+            where: { menusId: menu.menusId },
+            update: {
+                name: menu.name,
+                route: menu.route,
+                menusParentId: menu.menusParentId
+            },
+            create: menu,
+        });
+    }
+
+    return prisma.menus.findMany({
+        orderBy: { menusId: 'asc' },
     });
 }

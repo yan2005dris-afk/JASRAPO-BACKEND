@@ -9,6 +9,7 @@ import { MenusModule } from './models/menus/menus.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: '../.env',
       ignoreEnvFile: process.env.NODE_ENV === 'production',
     }),
     DatabaseModule,
@@ -19,4 +20,4 @@ import { MenusModule } from './models/menus/menus.module';
   controllers: [],
   providers: [],
 })
-export class AppModule {}
+export class AppModule { }

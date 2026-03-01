@@ -8,7 +8,11 @@ async function bootstrap() {
   app.setGlobalPrefix('api/v1');
   app.use(cookieParser());
   app.enableCors({
-    origin: process.env.CORS_ORIGIN ?? '*',
+    origin: process.env.CORS_ORIGIN === '*'
+      ? true
+      : process.env.CORS_ORIGIN
+        ? process.env.CORS_ORIGIN.split(',')
+        : true, // Refleja dinámicamente si es '*' o si está ausente
     credentials: true,
   });
   app.useGlobalPipes(
