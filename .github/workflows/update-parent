@@ -1,20 +1,31 @@
-- name: Checkout del Repo Padre (JASRAPO)
-  uses: actions/checkout@v4
-  with:
-    repository: Brydyan/JASRAPO
-    token: ${{ secrets.PERSONAL_TOKEN }}
-    submodules: true
-    fetch-depth: 0
+name: Actualizar Repo Unificado
 
-- name: Init and Update Submodules
-  run: |
-    git submodule init
-    git submodule update --remote --recursive
+on:
+  push:
+    branches:
+      - 'develop'
 
-- name: Update backend submodule
-  run: |
-    git config user.name "github-actions"
-    git config user.email "actions@github.com"
-    git add .
-    git commit -m "Auto update backend from develop" || echo "Nothing to commit"
-    git push
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del Repo Padre (JASRAPO)
+        uses: actions/checkout@v4
+        with:
+          repository: Brydyan/JASRAPO
+          token: ${{ secrets.PERSONAL_TOKEN }}
+          submodules: true
+          fetch-depth: 0
+
+      - name: Init and Update Submodules
+        run: |
+          git submodule sync --recursive
+          git submodule update --init --recursive
+
+      - name: Commit and Push Changes
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add . || true
+          git diff-index --quiet HEAD || git commit -m "Auto update backend from ${{ github.ref }}"
+          git push || echo "Nothing to push"
