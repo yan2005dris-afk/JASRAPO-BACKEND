@@ -2,13 +2,13 @@ name: Update submodule in main repo (Backend)
 
 on:
   push:
-    branches: [ develop ]   # rama que uses en backend
+    branches: [ develop ]
 
 jobs:
   update-submodule:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout backend repo
+      - name: Checkout backend repo (opcional, para usar su código/fetch SHA)
         uses: actions/checkout@v4
         with:
           path: backend
@@ -21,21 +21,21 @@ jobs:
           path: main-repo
           submodules: false
 
-      - name: Update backend submodule
+      - name: Inicializa el submódulo backend en JASRAPO
         run: |
           cd main-repo
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
+          git submodule update --init --recursive
+          ls -lAh
           
-          cd backend
-          git fetch origin
-          git checkout develop
-          git pull origin develop
+      - name: Update backend submodule reference
+        run: |
+          cd main-repo/backend
+          git fetch origin develop
+          git checkout origin/develop
           cd ..
-          
           git add backend
-          if git diff --staged --quiet; then
-            echo "No hay cambios en el submodulo backend"
+          if git diff --cached --quiet; then
+            echo "No hay cambios en el submódulo backend"
           else
             git commit -m "Actualizar submódulo backend a ${{ github.sha }}"
             git push origin develop
