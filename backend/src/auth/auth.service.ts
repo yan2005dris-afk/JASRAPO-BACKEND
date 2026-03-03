@@ -4,15 +4,14 @@ import {
   Logger,
   UnauthorizedException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
+import { EcuadorTimezoneUtil } from 'src/common/util/ecuador-timezone-backend.util';
 import { PrismaService } from 'src/database/prisma.service';
 import { UserService } from 'src/models/user/user.service';
 import { LoginUserDto } from './dto/login-user.dto';
 import { RegisterDto } from './dto/register.dto';
-import { JwtService } from '@nestjs/jwt';
-import { ConfigService } from '@nestjs/config';
-import { EcuadorTimezoneUtil } from '../common/util/ecuador-timezone-backend.util';
-
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);

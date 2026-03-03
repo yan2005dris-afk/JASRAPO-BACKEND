@@ -2,24 +2,24 @@ import { PrismaClient } from "src/generated/prisma/client";
 
 export async function seedMenus(prisma: PrismaClient) {
     const menusToCreate = [
-        { menusId: 1, menusParentId: null, name: 'Contratos', route: '/Contratos' },
-        { menusId: 2, menusParentId: 1, name: 'Cliente', route: '/Contratos/Cliente' },
-        { menusId: 3, menusParentId: 1, name: 'Contratos de Servicios', route: '/Contratos/ContratosDeServicios' },
-        { menusId: 4, menusParentId: 1, name: 'Medidores', route: '/Contratos/Medidores' },
-        { menusId: 5, menusParentId: 1, name: 'Tarifas y Categorias', route: '/Contratos/TarifasYCategorias' },
-        { menusId: 6, menusParentId: 1, name: 'Lectura de Consumo', route: '/Contratos/LecturaDeConsumo' },
-        { menusId: 7, menusParentId: 1, name: 'Convenios de pago', route: '/Contratos/ConveniosDePago' },
-        { menusId: 8, menusParentId: null, name: 'Facturacion', route: '/Facturacion' },
-        { menusId: 9, menusParentId: 8, name: 'Generacion de Planillas', route: '/Facturacion/GeneracionPlanilla' },
-        { menusId: 10, menusParentId: 8, name: 'Facturacion Electronica', route: '/Facturacion/FacturacionElectronica' },
-        { menusId: 11, menusParentId: 8, name: 'Recaudación y pagos', route: '/Facturacion/RecaudacionYPagos' },
-        { menusId: 12, menusParentId: 8, name: 'Notas de Credito o Debito', route: '/Facturacion/NotasDeCreditoDebito' },
-        { menusId: 13, menusParentId: 8, name: 'Envio de Facturas', route: '/Facturacion/EnvioDeFacturacion' },
-        { menusId: 14, menusParentId: null, name: 'Reportes', route: '/Reportes' },
-        { menusId: 15, menusParentId: 14, name: 'Estado de cuenta Cliente', route: '/Reportes/EstadoCuentaCliente' },
-        { menusId: 16, menusParentId: 14, name: 'Recaudación y Morosida', route: '/Reportes/RecaudacionMorosida' },
-        { menusId: 17, menusParentId: 14, name: 'ConsumoPorZonas', route: '/Reportes/ConsumoZonas' },
-        { menusId: 18, menusParentId: 14, name: 'DashboardKpi', route: '/Reportes/DashboardKpi' },
+        { menusId: 1, menusParentId: null, name: 'Contratos', route: '/Contratos' , icon: 'contract' },
+        { menusId: 2, menusParentId: 1, name: 'Cliente', route: '/Contratos/Cliente' , icon: 'inbox_text_person'},
+        { menusId: 3, menusParentId: 1, name: 'Contratos de Servicios', route: '/Contratos/ContratosDeServicios' , icon: 'clean_hands'},
+        { menusId: 4, menusParentId: 1, name: 'Medidores', route: '/Contratos/Medidores', icon:'valve' },
+        { menusId: 5, menusParentId: 1, name: 'Tarifas y Categorias', route: '/Contratos/TarifasYCategorias', icon:'price_change' },
+        { menusId: 6, menusParentId: 1, name: 'Lectura de Consumo', route: '/Contratos/LecturaDeConsumo', icon: 'dishwasher_gen' },
+        { menusId: 7, menusParentId: 1, name: 'Convenios de pago', route: '/Contratos/ConveniosDePago' , icon: 'handshake' },
+        { menusId: 8, menusParentId: null, name: 'Facturacion', route: '/Facturacion' , icon: 'receipt' },
+        { menusId: 9, menusParentId: 8, name: 'Generacion de Planillas', route: '/Facturacion/GeneracionPlanilla', icon:'assignment' },
+        { menusId: 10, menusParentId: 8, name: 'Facturacion Electronica', route: '/Facturacion/FacturacionElectronica', icon: 'receipt_long' },
+        { menusId: 11, menusParentId: 8, name: 'Recaudación y pagos', route: '/Facturacion/RecaudacionYPagos' , icon: 'point_of_sale'},
+        { menusId: 12, menusParentId: 8, name: 'Notas de Credito o Debito', route: '/Facturacion/NotasDeCreditoDebito', icon: 'universal_currency' },
+        { menusId: 13, menusParentId: 8, name: 'Envio de Facturas', route: '/Facturacion/EnvioDeFacturacion' , icon: 'export_notes'},
+        { menusId: 14, menusParentId: null, name: 'Reportes', route: '/Reportes', icon: 'menu_book' },
+        { menusId: 15, menusParentId: 14, name: 'Estado de cuenta Cliente', route: '/Reportes/EstadoCuentaCliente' , icon:'article_person'},
+        { menusId: 16, menusParentId: 14, name: 'Recaudación y Morosida', route: '/Reportes/RecaudacionMorosida', icon:'money_off' },
+        { menusId: 17, menusParentId: 14, name: 'ConsumoPorZonas', route: '/Reportes/ConsumoZonas', icon:'location_on' },
+        { menusId: 18, menusParentId: 14, name: 'DashboardKpi', route: '/Reportes/DashboardKpi' , icon :'dashboard'},
         ...[
         {
                 "menusId": 19,
@@ -390,9 +390,16 @@ export async function seedMenus(prisma: PrismaClient) {
             update: {
                 name: menu.name,
                 route: menu.route,
-                menusParentId: menu.menusParentId
+                menusParentId: menu.menusParentId,
+                icon: menu.icon ?? null
             },
-            create: menu,
+            create: {
+                menusId: menu.menusId,
+                menusParentId: menu.menusParentId,
+                name: menu.name,
+                route: menu.route,
+                icon: menu.icon ?? null
+            }
         });
     }
 
