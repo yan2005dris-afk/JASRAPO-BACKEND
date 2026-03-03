@@ -1,14 +1,16 @@
 import { ConfigService } from '@nestjs/config';
-import { ExtractJwt, Strategy, StrategyOptions } from 'passport-jwt';
+import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PassportStrategy } from '@nestjs/passport';
 import { PrismaService } from 'src/database/prisma.service';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { UserService } from 'src/models/user/user.service';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
     private readonly prisma: PrismaService,
     private readonly config: ConfigService,
+    private readonly userService: UserService,
   ) {
     const secret = config.get<string>('JWT_ACCESS_SECRET');
     if (!secret) {
@@ -22,56 +24,29 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: any) {
-    const { sub: usersId, sid: sessionsId } = payload;
+    const { sub: usersId, sid: sessionsId, email } = payload;
 
     if (!usersId || !sessionsId) {
       throw new UnauthorizedException('Session invalida');
     }
+
     const session = await this.prisma.sessions.findUnique({
       where: { sessionsId },
     });
 
     if (!session || session.isRevoked || session.expiresAt < new Date()) {
-      throw new UnauthorizedException('Invalid session');
-    }
-    // Cargar usuario, roles y permisos
-    const user = await this.prisma.users.findUnique({
-      where: { usersId },
-      include: {
-        userRoles: {
-          include: {
-            roles: {
-              include: {
-                rolPermissions: {
-                  include: { permissions: true },
-                },
-              },
-            },
-          },
-        },
-      },
-    });
-
-    if (!user) {
-      throw new UnauthorizedException('Usuario no encontrado');
+      throw new UnauthorizedException('Sesión inválida o expirada');
     }
 
-    if (user.deletedAt) {
-      throw new UnauthorizedException('Usuario eliminado');
-    }
-
-    // Extraer permisos únicos
-    const permissions = user.userRoles
-      .flatMap((ur) => ur.roles.rolPermissions)
-      .filter((rp) => rp.permissions && !rp.permissions.deletedAt)
-      .map((rp) => ({
-        resource: rp.permissions.resource,
-        action: rp.permissions.action,
-      }));
+    // getEffectivePermissions valida existencia, deleted, roles y permisos individuales
+    const permissions = await this.userService.getEffectivePermissions(usersId);
 
     return {
       sub: usersId,
+      usersId,
       sid: sessionsId,
+      email,   // viene del payload JWT — sin query extra a BD
+      permissions,
     };
   }
 }
