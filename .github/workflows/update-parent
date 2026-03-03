@@ -10,37 +10,29 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout del Repo Padre (JASRAPO)
+      - name: Checkout JASRAPO en carpeta separada
         uses: actions/checkout@v4
         with:
           repository: Brydyan/JASRAPO
           token: ${{ secrets.PERSONAL_TOKEN }}
+          path: jasrapo
           submodules: true
           fetch-depth: 0
 
-      - name: Update backend submodule
+      - name: Actualizar submódulo backend
         run: |
+          cd jasrapo
+
           git submodule update --remote backend
+
           git config user.name "github-actions"
           git config user.email "actions@github.com"
-          git add .
-          git commit -m "Auto update backend from develop"
-          git push
 
+          git add backend
 
-      - name: Actualizar Referencia del Submódulo
-        run: |
-          git config user.name "GitHub Action Bot"
-          git config user.email "action@github.com"
-          
-          # Actualizar el submódulo específico (ajusta el nombre de la carpeta si es diferente)
-          git submodule update --remote backend
-          
-          # Verificar si hay cambios para confirmar
           if [[ -n $(git status -s) ]]; then
-            git add backend
-            git commit -m "Auto-update: Sincronizando cambios desde JASRAPO-BACKEND"
+            git commit -m "Auto-update backend desde develop"
             git push origin develop
           else
-            echo "No hay cambios detectados en el puntero del submódulo."
+            echo "No hay cambios en el submódulo."
           fi
