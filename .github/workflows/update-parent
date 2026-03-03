@@ -3,7 +3,7 @@ name: Actualizar Repo Unificado
 on:
   push:
     branches:
-      - 'develop'
+      - develop
 
 jobs:
   update:
@@ -26,6 +26,6 @@ jobs:
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
-          git add . || true
-          git diff-index --quiet HEAD || git commit -m "Auto update backend from ${{ github.ref }}"
+          git add backend || true
+          git diff-index --quiet HEAD || git commit -m "Auto update submodule backend: ${{ github.sha }}"
           git push || echo "Nothing to push"
