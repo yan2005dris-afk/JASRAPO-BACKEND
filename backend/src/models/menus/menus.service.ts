@@ -90,6 +90,7 @@ export class MenusService {
         parent_menu_id: menu.menusParentId,
         name: menu.name, // El frontend necesita el nombre ('label')
         route: menu.route, // El frontend necesita la ruta
+        icon:menu.icon ?? null, // El frontend necesita el icono
         is_active: menu.active,
         created_at: null, // Puedes enviar 'createdAt' si está en el modelo
         children: [],

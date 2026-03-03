@@ -1,7 +1,7 @@
 model Menus{
     menusId                  Int      @id @default(autoincrement())    @map("menus_id")
     menusParentId           Int?                                      @map("menus_parent_id")
-    
+    icon                   String?
     name                    String                                   
     route                   String  
     
