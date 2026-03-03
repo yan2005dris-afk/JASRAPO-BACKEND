@@ -139,7 +139,7 @@ export class AuthService {
     const nameParts = [profile?.firstName, profile?.lastName].filter(Boolean);
     const fullName = nameParts.length > 0 ? nameParts.join(' ') : null;
 
-    // Primer rol del usuario (ID y nombre)
+    // Primer rol del usuario
     const firstRole = userRoles[0] ?? null;
 
     const toDate = (ts?: number) => ts ? EcuadorTimezoneUtil.formatAsEcuadorISO(new Date(ts * 1000)) : null;
