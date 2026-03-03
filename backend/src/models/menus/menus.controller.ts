@@ -1,7 +1,9 @@
 import { Controller, Get, Req, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { MenusService } from './menus.service';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('menus')
 @UseGuards(JwtAuthGuard)
 @Controller('menus')
 export class MenusController {

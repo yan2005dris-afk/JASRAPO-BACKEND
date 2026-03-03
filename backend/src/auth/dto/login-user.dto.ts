@@ -16,6 +16,6 @@ export class LoginUserDto {
   @IsNotEmpty()
   @IsString()
   @MinLength(6)
-  @Matches(/^\S+$/, { message: 'Password cannot contain spaces' }) // Asegura que la contraseña no contenga espacios
+  @Matches(/^\S+$/, { message: 'La contraseña no puede contener espacios' }) // Asegura que la contraseña no contenga espacios
   password: string;
 }

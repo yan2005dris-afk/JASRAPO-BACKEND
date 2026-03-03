@@ -38,7 +38,7 @@ services:
     environment:
       - NODE_ENV=development
       # URL del backen para desarrollo
-      - API_URL=http://backend:3000
+      - API_URL=http://localhost:3000
     ports:
       - "8080:4200"
     volumes:
