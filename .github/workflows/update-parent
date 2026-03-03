@@ -18,29 +18,22 @@ jobs:
           submodules: true
           fetch-depth: 0
 
-      - name: Update backend submodule
+      - name: Actualizar submódulo backend
         run: |
-          git submodule update --remote backend
+          cd backend
+          git fetch origin develop
+          git checkout develop
+          git pull origin develop
+          cd ..
+
           git config user.name "github-actions"
           git config user.email "actions@github.com"
-          git add .
-          git commit -m "Auto update backend from develop"
-          git push
 
+          git add backend
 
-      - name: Actualizar Referencia del Submódulo
-        run: |
-          git config user.name "GitHub Action Bot"
-          git config user.email "action@github.com"
-          
-          # Actualizar el submódulo específico (ajusta el nombre de la carpeta si es diferente)
-          git submodule update --remote backend
-          
-          # Verificar si hay cambios para confirmar
           if [[ -n $(git status -s) ]]; then
-            git add backend
-            git commit -m "Auto-update: Sincronizando cambios desde JASRAPO-BACKEND"
+            git commit -m "Auto-update: backend actualizado desde develop"
             git push origin develop
           else
-            echo "No hay cambios detectados en el puntero del submódulo."
+            echo "No hay cambios en el submódulo."
           fi
