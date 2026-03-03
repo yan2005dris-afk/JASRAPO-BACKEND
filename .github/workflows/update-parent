@@ -1,0 +1,46 @@
+name: Actualizar Repo Unificado
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout del Repo Padre (JASRAPO)
+        uses: actions/checkout@v4
+        with:
+          repository: Brydyan/JASRAPO
+          token: ${{ secrets.PERSONAL_TOKEN }}
+          submodules: true
+          fetch-depth: 0
+
+      - name: Update backend submodule
+        run: |
+          git submodule update --remote backend
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add .
+          git commit -m "Auto update backend from develop"
+          git push
+
+
+      - name: Actualizar Referencia del Submódulo
+        run: |
+          git config user.name "GitHub Action Bot"
+          git config user.email "action@github.com"
+          
+          # Actualizar el submódulo específico (ajusta el nombre de la carpeta si es diferente)
+          git submodule update --remote backend
+          
+          # Verificar si hay cambios para confirmar
+          if [[ -n $(git status -s) ]]; then
+            git add backend
+            git commit -m "Auto-update: Sincronizando cambios desde JASRAPO-BACKEND"
+            git push origin develop
+          else
+            echo "No hay cambios detectados en el puntero del submódulo."
+          fi
