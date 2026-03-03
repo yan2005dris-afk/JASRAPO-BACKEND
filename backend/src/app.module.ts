@@ -4,6 +4,7 @@ import { DatabaseModule } from './database/prisma.module';
 import { UserModule } from './models/user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { MenusModule } from './models/menus/menus.module';
+import { ProfileModule } from './models/profile/profile.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { MenusModule } from './models/menus/menus.module';
     UserModule,
     AuthModule,
     MenusModule,
+    ProfileModule,
   ],
   controllers: [],
   providers: [],

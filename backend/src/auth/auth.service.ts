@@ -120,20 +120,39 @@ export class AuthService {
     const decodedAccess: any = this.jwtService.decode(accessToken);
     const decodedRefresh: any = this.jwtService.decode(refreshToken);
 
-    const roles = await this.prisma.userRoles.findMany({
-      where: { usersId: users.usersId },
-      select: { rolesId: true },
-    });
+    // Ejecutar en paralelo: roles (con nombre) y perfil del usuario
+    const [userRoles, profile] = await Promise.all([
+      this.prisma.userRoles.findMany({
+        where: { usersId: users.usersId },
+        select: {
+          rolesId: true,
+          roles: { select: { name: true } },
+        },
+      }),
+      this.prisma.profiles.findUnique({
+        where: { usersId: users.usersId },
+        select: { firstName: true, lastName: true, avatar: true },
+      }),
+    ]);
+
+    // Construir nombre completo a partir del perfil (null si no tiene perfil aún)
+    const nameParts = [profile?.firstName, profile?.lastName].filter(Boolean);
+    const fullName = nameParts.length > 0 ? nameParts.join(' ') : null;
+
+    // Primer rol del usuario (ID y nombre)
+    const firstRole = userRoles[0] ?? null;
 
     const toDate = (ts?: number) => ts ? EcuadorTimezoneUtil.formatAsEcuadorISO(new Date(ts * 1000)) : null;
 
     return {
       sub: users.usersId,
       sid: sessionsId,
-      name: null,
-      avatar: null,
+      name: fullName,
+      avatar: profile?.avatar ?? null,
       email: users.email,
-      roles: roles.map((r) => r.rolesId),
+      roleId: firstRole?.rolesId ?? null,
+      roleName: firstRole?.roles?.name ?? null,
+      roles: userRoles.map((r) => r.rolesId),
       accessToken,
       refreshToken,
       accessTokenInfo: {

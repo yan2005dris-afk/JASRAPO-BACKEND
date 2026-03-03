@@ -1,11 +1,13 @@
 model Users {
-  usersId               Int         @id @default(autoincrement())   @map("users_id")
-  email                 String      @unique                         @map("email")
-  password              String                                      @map("password")
-  deletedAt             DateTime?                                   @map("deleted_at")
-  
-  sessions              Sessions[]
-  userRoles             UserRoles[]
-  userPermissions       UserPermissions[]
+  usersId   Int       @id @default(autoincrement()) @map("users_id")
+  email     String    @unique @map("email")
+  password  String    @map("password")
+  deletedAt DateTime? @map("deleted_at")
+
+  sessions        Sessions[]
+  userRoles       UserRoles[]
+  userPermissions UserPermissions[]
+  profile         Profiles?
+
   @@map("users")
 }

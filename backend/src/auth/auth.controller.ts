@@ -51,7 +51,7 @@ export class AuthController {
       "sub": result.sub,
       "email": result.email,
       "name": result.name,
-      "role": result.roles,
+      "role": result.roles?.[0] ?? null,
       "avatar": result.avatar,
       "createdAt": result.accessTokenInfo.iatDate,
       "expiresAt": result.accessTokenInfo.expDate
