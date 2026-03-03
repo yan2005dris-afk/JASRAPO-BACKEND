@@ -1,0 +1,14 @@
+model Convenios {
+    convenioId BigInt  @id @default(autoincrement()) @map("convenio_id")
+    clienteId  BigInt? @map("cliente_id")
+
+    fechaInicio  DateTime  @map("fecha_inicio") @db.Date
+    fechaFin     DateTime? @map("fecha_fin") @db.Date
+    numeroCuotas Int?      @map("numero_cuotas")
+    montoCuota   Decimal?  @map("monto_cuota")
+    estado       String?   @map("estado")
+
+    cliente Clientes? @relation(fields: [clienteId], references: [clienteId])
+
+    @@map("convenios")
+}

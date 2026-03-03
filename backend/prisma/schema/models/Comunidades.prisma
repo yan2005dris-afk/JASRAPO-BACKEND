@@ -1,0 +1,9 @@
+model Comunidades {
+    comunidadId BigInt @id @default(autoincrement()) @map("comunidad_id")
+
+    nombre String @map("nombre")
+
+    clientes Clientes[]
+
+    @@map("comunidades")
+}

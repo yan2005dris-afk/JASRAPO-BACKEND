@@ -1,0 +1,13 @@
+model DetalleFactura {
+    detalleFacturaId BigInt  @id @default(autoincrement()) @map("detalle_factura_id")
+    facturaId        BigInt? @map("factura_id")
+
+    descripcion    String  @map("descripcion")
+    cantidad       Decimal @map("cantidad")
+    precioUnitario Decimal @map("precio_unitario")
+    total          Decimal @map("total")
+
+    factura Facturas? @relation(fields: [facturaId], references: [facturaId])
+
+    @@map("detalle_factura")
+}

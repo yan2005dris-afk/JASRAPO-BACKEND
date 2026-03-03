@@ -1,0 +1,20 @@
+model Facturas {
+    facturaId BigInt  @id @default(autoincrement()) @map("factura_id")
+    clienteId BigInt? @map("cliente_id")
+    lecturaId BigInt? @map("lectura_id")
+
+    fecha       DateTime @map("fecha") @db.Date
+    mes         String   @map("mes")
+    consumo     Decimal? @map("consumo")
+    tarifa      Decimal? @map("tarifa")
+    interesMora Decimal? @map("interes_mora")
+    abono       Decimal? @map("abono")
+    saldo       Decimal? @map("saldo")
+
+    cliente        Clientes?        @relation(fields: [clienteId], references: [clienteId])
+    lectura        Lecturas?        @relation(fields: [lecturaId], references: [lecturaId])
+    detalleFactura DetalleFactura[]
+    pagos          Pagos[]
+
+    @@map("facturas")
+}

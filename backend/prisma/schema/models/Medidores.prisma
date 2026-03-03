@@ -1,0 +1,11 @@
+model Medidores {
+    medidorId BigInt @id @default(autoincrement()) @map("medidor_id")
+
+    codigo    String   @unique @map("codigo")
+    estado    String   @map("estado")
+    createdAt DateTime @default(now()) @map("created_at")
+
+    clientesMedidores ClientesMedidores[]
+
+    @@map("medidores")
+}
