@@ -1,4 +1,4 @@
-name: Update submodule in main repo (Backend)
+name: Actualiza submódulo 'backend' en JASRAPO develop si cambia develop de backend
 
 on:
   push:
@@ -8,35 +8,41 @@ jobs:
   update-submodule:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout backend repo (opcional, para usar su código/fetch SHA)
-        uses: actions/checkout@v4
-        with:
-          path: backend
-
-      - name: Checkout main repo (JASRAPO)
+      - name: Configura autenticación para submódulos privados
+        run: |
+          git config --global url."https://${{ secrets.PERSONAL_TOKEN }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
+      
+      - name: Clona repo padre (JASRAPO) con submódulos
         uses: actions/checkout@v4
         with:
           repository: Brydyan/JASRAPO
+          ref: develop
           token: ${{ secrets.PERSONAL_TOKEN }}
-          path: main-repo
-          submodules: false
+          submodules: 'recursive'
+          fetch-depth: 0
+          path: jasrapo
 
-      - name: Inicializa el submódulo backend en JASRAPO
+      - name: Actualiza submódulo backend a última de develop
         run: |
-          cd main-repo
+          cd jasrapo
           git submodule update --init --recursive
-          ls -lAh
-          
-      - name: Update backend submodule reference
-        run: |
-          cd main-repo/backend
+          cd backend
           git fetch origin develop
           git checkout origin/develop
           cd ..
           git add backend
-          if git diff --cached --quiet; then
-            echo "No hay cambios en el submódulo backend"
-          else
-            git commit -m "Actualizar submódulo backend a ${{ github.sha }}"
+          git status
+
+      - name: Commit y push en JASRAPO develop
+        working-directory: jasrapo
+        env:
+          GIT_AUTHOR_NAME: github-actions
+          GIT_AUTHOR_EMAIL: actions@github.com
+        run: |
+          git config user.name "$GIT_AUTHOR_NAME"
+          git config user.email "$GIT_AUTHOR_EMAIL"
+          if ! git diff --cached --quiet; then
+            git commit -m "Auto-update submodule backend: develop actualizado a ${{ github.sha }}"
             git push origin develop
-          fi
+          else
+            echo "No hay cambios en el submódulo para commitear."
