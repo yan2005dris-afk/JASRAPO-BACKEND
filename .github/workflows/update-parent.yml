@@ -8,47 +8,57 @@ on:
 jobs:
   actualizar-backend:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Configura autenticación para submódulos privados
-        run: |
-          git config --global url."https://${{ secrets.PERSONAL_TOKEN }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
-      - name: Clona repo padre (JASRAPO) con submódulos
-        uses: actions/checkout@v4
-        with:
-          repository: Brydyan/JASRAPO
-          token: ${{ secrets.PERSONAL_TOKEN }}
-          submodules: 'recursive'
-          fetch-depth: 0
-      - name: Inicializa y actualiza submódulos
-        run: |
-          git submodule sync --recursive
-          git submodule update --init --recursive
-      - name: Lista contenido del workspace
-        run: |
-          ls -lAh
-          ls -lAh backend || true
-      - name: Actualiza referencia del submódulo backend a develop
-        run: |
-          if [ -d "backend" ]; then
-            cd backend
-            git fetch origin develop
-            git checkout origin/develop
-            cd ..
-            git add backend
-          else
-            echo "::error::No existe el submódulo backend, revisa .gitmodules y la inicialización."
-            exit 1
-          fi
-      - name: Commit y Push de cambios en submódulo backend
-        env:
-          GIT_AUTHOR_NAME: github-actions
-          GIT_AUTHOR_EMAIL: actions@github.com
-        run: |
-          git config user.name "$GIT_AUTHOR_NAME"
-          git config user.email "$GIT_AUTHOR_EMAIL"
-          if ! git diff --cached --quiet; then
-            git commit -m "Auto-update submodule backend: sincronizado con develop"
-            git push origin main
-          else
-            echo "No hay cambios en el submódulo para commitear."
-          fi
+    - name: Configura autenticación para submódulos privados
+      run: |
+        git config --global url."https://${{ secrets.PERSONAL_TOKEN }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
+
+    - name: Clona repo padre (JASRAPO) con submódulos
+      uses: actions/checkout@v4
+      with:
+        repository: Brydyan/JASRAPO
+        token: ${{ secrets.PERSONAL_TOKEN }}
+        submodules: 'recursive'
+        fetch-depth: 0
+
+    - name: Inicializa y actualiza submódulos
+      run: |
+        git submodule sync --recursive
+        git submodule update --init --recursive
+
+    - name: Lista contenido real del workspace (debug)
+      run: |
+        echo "# Contenido del workspace:"
+        ls -lAh
+        echo "# Subcarpetas:"
+        find . -maxdepth 2 -type d
+        echo "# Estado de submódulos:"
+        git submodule status
+
+    - name: Actualiza referencia del submódulo backend a develop
+      run: |
+        if [ -d "backend" ]; then
+          cd backend
+          git fetch origin develop
+          git checkout origin/develop
+          cd ..
+          git add backend
+        else
+          echo "::error::No existe el submódulo backend, revisa .gitmodules y la inicialización."
+          exit 1
+        fi
+
+    - name: Commit y Push de cambios en submódulo backend
+      env:
+        GIT_AUTHOR_NAME: github-actions
+        GIT_AUTHOR_EMAIL: actions@github.com
+      run: |
+        git config user.name "$GIT_AUTHOR_NAME"
+        git config user.email "$GIT_AUTHOR_EMAIL"
+        if ! git diff --cached --quiet; then
+          git commit -m "Auto-update submodule backend: sincronizado con develop"
+          git push origin main  # Cambia 'main' por la rama correcta del repo padre si es necesario
+        else
+          echo "No hay cambios en el submódulo para commitear."
+        fi
