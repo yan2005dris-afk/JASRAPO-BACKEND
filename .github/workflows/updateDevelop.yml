@@ -39,7 +39,7 @@ jobs:
           # Verificar si hay cambios para confirmar
           if [[ -n $(git status -s) ]]; then
             git add backend
-            git commit -m "Auto-update: Sincronizando cambios desde JAPO-FRONTEND"
+            git commit -m "Auto-update: Sincronizando cambios desde JASRAPO-BACKEND"
             git push origin develop
           else
             echo "No hay cambios detectados en el puntero del submódulo."
