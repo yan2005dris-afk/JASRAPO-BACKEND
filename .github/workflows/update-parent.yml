@@ -46,3 +46,4 @@ jobs:
             git push origin develop
           else
             echo "No hay cambios en el submódulo para commitear."
+          fi
