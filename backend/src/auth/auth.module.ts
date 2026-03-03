@@ -5,6 +5,8 @@ import { UserModule } from 'src/models/user/user.module';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { JwtModule } from '@nestjs/jwt';
 import { RefreshTokenStrategy } from './strategies/refresh.strategy';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { PermissionsGuard } from './guards/permissions.guard';
 
 @Module({
   imports: [
@@ -17,7 +19,7 @@ import { RefreshTokenStrategy } from './strategies/refresh.strategy';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, RefreshTokenStrategy],
+  providers: [AuthService, JwtStrategy, RefreshTokenStrategy, JwtAuthGuard, PermissionsGuard],
   exports: [JwtModule],
 })
-export class AuthModule {}
+export class AuthModule { }
