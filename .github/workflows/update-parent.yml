@@ -17,7 +17,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: Brydyan/JASRAPO
-          token: ${{ secrets.MAIN_REPO_TOKEN }}
+          token: ${{ secrets.PERSONAL_TOKEN }}
           path: main-repo
           submodules: false
 
