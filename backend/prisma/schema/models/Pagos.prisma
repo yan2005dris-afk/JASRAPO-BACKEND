@@ -1,0 +1,14 @@
+model Pagos {
+    pagoId    BigInt  @id @default(autoincrement()) @map("pago_id")
+    clienteId BigInt? @map("cliente_id")
+    facturaId BigInt? @map("factura_id")
+
+    fecha      DateTime @map("fecha") @db.Date
+    monto      Decimal  @map("monto")
+    metodoPago String?  @map("metodo_pago")
+
+    cliente Clientes? @relation(fields: [clienteId], references: [clienteId])
+    factura Facturas? @relation(fields: [facturaId], references: [facturaId])
+
+    @@map("pagos")
+}

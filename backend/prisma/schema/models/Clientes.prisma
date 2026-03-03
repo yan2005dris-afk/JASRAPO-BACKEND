@@ -1,0 +1,16 @@
+model Clientes {
+    clienteId   BigInt  @id @default(autoincrement()) @map("cliente_id")
+    comunidadId BigInt? @map("comunidad_id")
+
+    nombre    String   @map("nombre")
+    createdAt DateTime @default(now()) @map("created_at")
+
+    comunidad         Comunidades?        @relation(fields: [comunidadId], references: [comunidadId])
+    clientesMedidores ClientesMedidores[]
+    facturas          Facturas[]
+    pagos             Pagos[]
+    convenios         Convenios[]
+    solicitudes       Solicitudes[]
+
+    @@map("clientes")
+}

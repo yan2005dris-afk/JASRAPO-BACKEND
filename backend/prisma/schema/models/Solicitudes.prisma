@@ -1,0 +1,13 @@
+model Solicitudes {
+    solicitudId BigInt  @id @default(autoincrement()) @map("solicitud_id")
+    clienteId   BigInt? @map("cliente_id")
+
+    tipoSolicitud   String    @map("tipo_solicitud")
+    estado          String?   @map("estado")
+    fechaSolicitud  DateTime  @map("fecha_solicitud") @db.Date
+    fechaResolucion DateTime? @map("fecha_resolucion") @db.Date
+
+    cliente Clientes? @relation(fields: [clienteId], references: [clienteId])
+
+    @@map("solicitudes")
+}
