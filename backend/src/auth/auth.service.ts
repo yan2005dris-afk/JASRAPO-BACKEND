@@ -115,11 +115,7 @@ export class AuthService {
   /**
    * Construye el objeto de respuesta estándar del login.
    */
-  private async buildLoginResponse(
-    users: { usersId: number; email: string },
-    sessionsId: number,
-    tokens: { accessToken: string; refreshToken: string },
-  ) {
+  private async buildLoginResponse(users: { usersId: number; email: string }, sessionsId: number, tokens: { accessToken: string; refreshToken: string },) {
     const { accessToken, refreshToken } = tokens;
     const decodedAccess: any = this.jwtService.decode(accessToken);
     const decodedRefresh: any = this.jwtService.decode(refreshToken);
@@ -129,8 +125,7 @@ export class AuthService {
       select: { rolesId: true },
     });
 
-    const toDate = (ts?: number) =>
-      ts ? EcuadorTimezoneUtil.formatAsEcuadorISO(new Date(ts * 1000)) : null;
+    const toDate = (ts?: number) => ts ? EcuadorTimezoneUtil.formatAsEcuadorISO(new Date(ts * 1000)) : null;
 
     return {
       sub: users.usersId,
@@ -162,10 +157,7 @@ export class AuthService {
    * @param session   - Objeto con { usersId, sessionsId }
    * @param extraData - Campos adicionales a actualizar (ej: ipAddress)
    */
-  private async actualizarSesionTokens(
-    session: { usersId: number; sessionsId: number; email?: string },
-    extraData: Record<string, any> = {},
-  ): Promise<{ accessToken: string; refreshToken: string }> {
+  private async actualizarSesionTokens(session: { usersId: number; sessionsId: number; email?: string }, extraData: Record<string, any> = {},): Promise<{ accessToken: string; refreshToken: string }> {
     const tokens = await this.generateJwtToken(session.usersId, session.sessionsId, session.email ?? '');
     const newHash = await bcrypt.hash(tokens.refreshToken, 10);
     await this.prisma.sessions.update({
@@ -205,13 +197,7 @@ export class AuthService {
    * @param ip           - IP actual del cliente (req.ip)
    * @param userAgent    - User-Agent actual del cliente
    */
-  async refreshAccessToken(
-    sessionId: number,
-    refreshToken: string,
-    ip: string = 'unknown',
-    userAgent: string = 'unknown',
-    email: string = '',
-  ) {
+  async refreshAccessToken(sessionId: number, refreshToken: string, ip: string = 'unknown', userAgent: string = 'unknown', email: string = '') {
     const session = await this.prisma.sessions.findUnique({
       where: { sessionsId: sessionId },
     });
@@ -232,14 +218,6 @@ export class AuthService {
     if (!isValid) {
       throw new UnauthorizedException('Refresh token inválido');
     }
-
-    if (session.ipAddress !== ip) {
-      this.logger.warn(`[REFRESH] IP cambió: "${session.ipAddress}" → "${ip}" (sessionsId=${sessionId})`);
-    }
-    if (session.userAgent !== userAgent) {
-      this.logger.warn(`[REFRESH] UserAgent cambió: "${session.userAgent}" → "${userAgent}" (sessionsId=${sessionId})`);
-    }
-
     return this.actualizarSesionTokens({ ...session, email }, { ipAddress: ip, userAgent });
   }
 
