@@ -3,13 +3,13 @@ model Facturas {
     clienteId BigInt? @map("cliente_id")
     lecturaId BigInt? @map("lectura_id")
 
-    fecha       DateTime @map("fecha") @db.Date
+    fecha       DateTime @map("fecha")
     mes         String   @map("mes")
-    consumo     Decimal? @map("consumo")
-    tarifa      Decimal? @map("tarifa")
-    interesMora Decimal? @map("interes_mora")
-    abono       Decimal? @map("abono")
-    saldo       Decimal? @map("saldo")
+    consumo     Float?   @map("consumo")
+    tarifa      Float?   @map("tarifa")
+    interesMora Float?   @map("interes_mora")
+    abono       Float?   @map("abono")
+    saldo       Float?   @map("saldo")
 
     cliente        Clientes?        @relation(fields: [clienteId], references: [clienteId])
     lectura        Lecturas?        @relation(fields: [lecturaId], references: [lecturaId])

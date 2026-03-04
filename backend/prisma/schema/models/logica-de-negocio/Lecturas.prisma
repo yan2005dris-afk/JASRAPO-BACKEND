@@ -1,0 +1,17 @@
+model Lecturas {
+    lecturaId        BigInt  @id @default(autoincrement()) @map("lectura_id")
+    clienteMedidorId BigInt? @map("cliente_medidor_id")
+
+    fecha            DateTime @map("fecha")
+    lecturaAnterior  Float    @map("lectura_anterior")
+    lecturaActual    Float    @map("lectura_actual")
+    consumoCalculado Float?   @map("consumo_calculado")
+    valorMonetario   Float?   @map("valor_monetario")
+    abono            Float?   @map("abono")
+    saldoPendiente   Float?   @map("saldo_pendiente")
+
+    clienteMedidor ClientesMedidores? @relation(fields: [clienteMedidorId], references: [clienteMedidorId])
+    facturas       Facturas[]
+
+    @@map("lecturas")
+}

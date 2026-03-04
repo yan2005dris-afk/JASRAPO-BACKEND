@@ -3,8 +3,8 @@ model Pagos {
     clienteId BigInt? @map("cliente_id")
     facturaId BigInt? @map("factura_id")
 
-    fecha      DateTime @map("fecha") @db.Date
-    monto      Decimal  @map("monto")
+    fecha      DateTime @map("fecha")
+    monto      Float    @map("monto")
     metodoPago String?  @map("metodo_pago")
 
     cliente Clientes? @relation(fields: [clienteId], references: [clienteId])

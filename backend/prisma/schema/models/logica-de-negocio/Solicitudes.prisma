@@ -4,8 +4,8 @@ model Solicitudes {
 
     tipoSolicitud   String    @map("tipo_solicitud")
     estado          String?   @map("estado")
-    fechaSolicitud  DateTime  @map("fecha_solicitud") @db.Date
-    fechaResolucion DateTime? @map("fecha_resolucion") @db.Date
+    fechaSolicitud  DateTime  @map("fecha_solicitud")
+    fechaResolucion DateTime? @map("fecha_resolucion")
 
     cliente Clientes? @relation(fields: [clienteId], references: [clienteId])
 
