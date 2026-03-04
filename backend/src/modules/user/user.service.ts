@@ -14,6 +14,23 @@ const safeUserSelect = {
   email: true,
 } satisfies Prisma.UsersSelect;
 
+const userWithRolesSelect = {
+  usersId: true,
+  email: true,
+  userRoles: {
+    where: { deletedAt: null },
+    select: {
+      roles: {
+        select: {
+          rolesId: true,
+          name: true,
+          deletedAt: true,
+        },
+      },
+    },
+  },
+} satisfies Prisma.UsersSelect;
+
 @Injectable()
 export class UserService {
   constructor(private prisma: PrismaService) {}
@@ -33,14 +50,25 @@ export class UserService {
     orderBy?: Prisma.UsersOrderByWithRelationInput;
   }) {
     const { skip, take, cursor, where, orderBy } = params;
-    return this.prisma.users.findMany({
+    const users = await this.prisma.users.findMany({
       skip,
       take,
       cursor,
       where,
       orderBy,
-      select: safeUserSelect,
+      select: userWithRolesSelect,
     });
+
+    return users.map((user) => ({
+      usersId: user.usersId,
+      email: user.email,
+      roles: user.userRoles
+        .filter((userRole) => userRole.roles && !userRole.roles.deletedAt)
+        .map((userRole) => ({
+          rolesId: userRole.roles.rolesId,
+          name: userRole.roles.name,
+        })),
+    }));
   }
 
   async createUser(createUsersDto: CreateUserDto) {
@@ -127,6 +155,38 @@ export class UserService {
       .map((ur) => ur.roles.name);
   }
 
+  async getRoleAssignmentsByUserId(usersId: number) {
+    const user = await this.prisma.users.findUnique({ where: { usersId } });
+    if (!user || user.deletedAt) {
+      throw new NotFoundException('Usuario no encontrado o eliminado');
+    }
+
+    const assignments = await this.prisma.userRoles.findMany({
+      where: {
+        usersId,
+        deletedAt: null,
+        roles: {
+          deletedAt: null,
+        },
+      },
+      orderBy: [{ roles: { name: 'asc' } }],
+      include: {
+        roles: {
+          select: {
+            rolesId: true,
+            name: true,
+          },
+        },
+      },
+    });
+
+    return assignments.map((assignment) => ({
+      usersRolesId: assignment.usersRolesId,
+      rolesId: assignment.rolesId,
+      name: assignment.roles.name,
+    }));
+  }
+
   /**
    * Asigna un rol nuevo a un usuario existente.
    * Valida que el usuario y el rol existan y que no tenga ya ese rol activo.
@@ -170,6 +230,116 @@ export class UserService {
       data: { deletedAt: new Date() },
     });
   }
+
+  async listAllPermissions() {
+    return this.prisma.permissions.findMany({
+      where: { deletedAt: null },
+      orderBy: [{ resource: 'asc' }, { action: 'asc' }],
+      select: {
+        permissionsId: true,
+        resource: true,
+        action: true,
+      },
+    });
+  }
+
+  async getDirectPermissionsByUserId(usersId: number) {
+    const user = await this.prisma.users.findUnique({ where: { usersId } });
+    if (!user || user.deletedAt) {
+      throw new NotFoundException('Usuario no encontrado o eliminado');
+    }
+
+    const assignments = await this.prisma.userPermissions.findMany({
+      where: {
+        usersId,
+        deteledAt: null,
+        Permissions: {
+          deletedAt: null,
+        },
+      },
+      orderBy: [
+        { Permissions: { resource: 'asc' } },
+        { Permissions: { action: 'asc' } },
+      ],
+      include: {
+        Permissions: {
+          select: {
+            permissionsId: true,
+            resource: true,
+            action: true,
+          },
+        },
+      },
+    });
+
+    return assignments.map((assignment) => ({
+      idUserPermissions: assignment.idUserPermissions,
+      permissionsId: assignment.permissionsId,
+      resource: assignment.Permissions.resource,
+      action: assignment.Permissions.action,
+      allow: assignment.allow,
+    }));
+  }
+
+  async assignPermissionToUser(
+    usersId: number,
+    permissionsId: number,
+    allow = true,
+  ) {
+    const user = await this.prisma.users.findUnique({ where: { usersId } });
+    if (!user || user.deletedAt) {
+      throw new NotFoundException('Usuario no encontrado o eliminado');
+    }
+
+    const permission = await this.prisma.permissions.findUnique({
+      where: { permissionsId },
+    });
+    if (!permission || permission.deletedAt) {
+      throw new NotFoundException('Permiso no encontrado o eliminado');
+    }
+
+    const existing = await this.prisma.userPermissions.findFirst({
+      where: {
+        usersId,
+        permissionsId,
+        deteledAt: null,
+      },
+    });
+
+    if (existing) {
+      return this.prisma.userPermissions.update({
+        where: { idUserPermissions: existing.idUserPermissions },
+        data: { allow },
+      });
+    }
+
+    return this.prisma.userPermissions.create({
+      data: {
+        usersId,
+        permissionsId,
+        allow,
+      },
+    });
+  }
+
+  async revokePermissionFromUser(idUserPermissions: number) {
+    const userPermission = await this.prisma.userPermissions.findUnique({
+      where: { idUserPermissions },
+    });
+
+    if (!userPermission) {
+      throw new NotFoundException('Asignacion de permiso no encontrada');
+    }
+
+    if (userPermission.deteledAt) {
+      throw new ConflictException('Este permiso ya fue revocado previamente');
+    }
+
+    return this.prisma.userPermissions.update({
+      where: { idUserPermissions },
+      data: { deteledAt: new Date() },
+    });
+  }
   /**
    * Obtiene los permisos efectivos de un usuario combinando roles y user_permissions
    */
@@ -178,6 +348,12 @@ export class UserService {
       where: { usersId },
       include: {
         userRoles: {
+          where: {
+            deletedAt: null,
+            roles: {
+              deletedAt: null,
+            },
+          },
           include: {
             roles: {
               include: {
@@ -191,6 +367,9 @@ export class UserService {
           },
         },
         userPermissions: {
+          where: {
+            deteledAt: null,
+          },
           include: {
             Permissions: true,
           },
@@ -235,7 +414,9 @@ export class UserService {
       user?.userPermissions
         .filter(
           (userPermiso) =>
-            userPermiso.Permissions && !userPermiso.Permissions.deletedAt,
+            userPermiso.Permissions &&
+            !userPermiso.Permissions.deletedAt &&
+            !userPermiso.deteledAt,
         )
         .map((userPermiso) => ({
           resource: userPermiso.Permissions.resource,

@@ -10,6 +10,7 @@ import {
 import { RolesService } from './roles.service';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
+import { AssignRolePermissionDto } from './dto/assign-role-permission.dto';
 
 @Controller('roles')
 export class RolesController {
@@ -38,5 +39,29 @@ export class RolesController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.rolesService.remove(+id);
+  }
+
+  @Get(':id/permissions')
+  getRolePermissions(@Param('id') id: string) {
+    return this.rolesService.getRolePermissions(+id);
+  }
+
+  @Post(':id/permissions')
+  assignPermission(
+    @Param('id') id: string,
+    @Body() assignRolePermissionDto: AssignRolePermissionDto,
+  ) {
+    return this.rolesService.assignPermission(
+      +id,
+      assignRolePermissionDto.permissionsId,
+    );
+  }
+
+  @Delete(':id/permissions/:permissionId')
+  removePermission(
+    @Param('id') id: string,
+    @Param('permissionId') permissionId: string,
+  ) {
+    return this.rolesService.removePermission(+id, +permissionId);
   }
 }

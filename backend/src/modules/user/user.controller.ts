@@ -13,6 +13,7 @@ import {
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { AssignRoleDto } from './dto/assign-role.dto';
+import { AssignPermissionDto } from './dto/assign-permission.dto';
 import { UserService } from './user.service';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/common/guards/permissions.guard';
@@ -46,6 +47,18 @@ export class UserController {
     return this.userService.user({ usersId: id });
   }
 
+  @RequiredPermission('users', 'read')
+  @Get(':id/roles')
+  getUserRoles(@Param('id', ParseIntPipe) id: number) {
+    return this.userService.getRolesByUserId(id);
+  }
+
+  @RequiredPermission('users', 'read')
+  @Get(':id/role-assignments')
+  getUserRoleAssignments(@Param('id', ParseIntPipe) id: number) {
+    return this.userService.getRoleAssignmentsByUserId(id);
+  }
+
   /**
    * TODO revisar el updateUser en el user.service.ts, porque o si deberia actualizar directamente un userRoles o si deberia actualizar el user y luego actualizar el userRoles, porque en el DTO de updateUser no se incluye el usersRolesId, entonces no se puede actualizar el userRoles directamente desde el updateUser, entonces revisar si se debe incluir el usersRolesId en el DTO de updateUser o si se debe crear un endpoint separado para actualizar el userRoles, o si se debe actualizar el user y luego actualizar el userRoles en el mismo endpoint, revisar cual es la mejor opción para mantener la integridad de los datos y la simplicidad del código.
    */
@@ -76,6 +89,25 @@ export class UserController {
     return this.userService.assignRoleToUser(id, assignRoleDto.rolesId);
   }
 
+  @RequiredPermission('users', 'read')
+  @Get(':id/permissions')
+  getUserPermissions(@Param('id', ParseIntPipe) id: number) {
+    return this.userService.getDirectPermissionsByUserId(id);
+  }
+
+  @RequiredPermission('users', 'update')
+  @Post(':id/permissions')
+  assignPermission(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() assignPermissionDto: AssignPermissionDto,
+  ) {
+    return this.userService.assignPermissionToUser(
+      id,
+      assignPermissionDto.permissionsId,
+      assignPermissionDto.allow ?? true,
+    );
+  }
+
   /**
    * Revoca (soft delete) un rol asignado a un usuario.
    * El :userRoleId es el ID de la relación en users_roles, no el ID del rol.
@@ -92,8 +124,16 @@ export class UserController {
     return this.userService.softDeleteUser({ usersId: id });
   }
 
+  @RequiredPermission('users', 'delete')
+  @Delete(':id/permissions/:userPermissionId')
+  revokePermission(
+    @Param('userPermissionId', ParseIntPipe) userPermissionId: number,
+  ) {
+    return this.userService.revokePermissionFromUser(userPermissionId);
+  }
+
   @Get('getEffectivePermissions/:usersId')
-  getEffectivePermissions(@Param('usersId') usersId: number) {
+  getEffectivePermissions(@Param('usersId', ParseIntPipe) usersId: number) {
     return this.userService.getEffectivePermissions(usersId);
   }
 }

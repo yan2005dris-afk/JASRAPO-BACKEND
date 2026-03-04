@@ -38,7 +38,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException('Sesión inválida o expirada');
     }
 
-    // getEffectivePermissions valida existencia, deleted, roles y permisos individuales
+    // Recalcula permisos en cada request autenticada para reflejar cambios de inmediato.
     const permissions = await this.userService.getEffectivePermissions(usersId);
 
     return {
