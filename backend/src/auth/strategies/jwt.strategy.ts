@@ -3,7 +3,7 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PassportStrategy } from '@nestjs/passport';
 import { PrismaService } from 'src/database/prisma.service';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { UserService } from 'src/models/user/user.service';
+import { UserService } from 'src/modules/user/user.service';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -45,7 +45,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       sub: usersId,
       usersId,
       sid: sessionsId,
-      email,   // viene del payload JWT — sin query extra a BD
+      email, // viene del payload JWT — sin query extra a BD
       permissions,
     };
   }

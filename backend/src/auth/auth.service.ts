@@ -9,7 +9,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { EcuadorTimezoneUtil } from 'src/common/util/ecuador-timezone-backend.util';
 import { PrismaService } from 'src/database/prisma.service';
-import { UserService } from 'src/models/user/user.service';
+import { UserService } from 'src/modules/user/user.service';
 import { LoginUserDto } from './dto/login-user.dto';
 import { RegisterDto } from './dto/register.dto';
 @Injectable()
@@ -21,7 +21,7 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
-  ) { }
+  ) {}
 
   /**
    * Registra un nuevo usuario
@@ -69,7 +69,9 @@ export class AuthService {
 
     // ── ¿Hay cookie con refreshToken? Intentar reutilizar sesión existente ──
     if (existingRefreshToken) {
-      this.logger.debug(`[LOGIN] cookie refreshToken (primeros 20 chars): "${existingRefreshToken.substring(0, 20)}..."`);
+      this.logger.debug(
+        `[LOGIN] cookie refreshToken (primeros 20 chars): "${existingRefreshToken.substring(0, 20)}..."`,
+      );
       this.logger.debug(`[LOGIN] userAgent buscado: "${safeAgent}"`);
 
       const existingSession = await this.prisma.sessions.findFirst({
@@ -83,14 +85,21 @@ export class AuthService {
       });
 
       if (existingSession) {
-        const isValid = await bcrypt.compare(existingRefreshToken, existingSession.refreshToken);
+        const isValid = await bcrypt.compare(
+          existingRefreshToken,
+          existingSession.refreshToken,
+        );
 
         if (isValid) {
           const tokens = await this.actualizarSesionTokens(
             { ...existingSession, email: users.email },
             { ipAddress: safeIp, userAgent: safeAgent },
           );
-          return this.buildLoginResponse(users, existingSession.sessionsId, tokens);
+          return this.buildLoginResponse(
+            users,
+            existingSession.sessionsId,
+            tokens,
+          );
         }
       }
     }
@@ -107,14 +116,21 @@ export class AuthService {
       },
     });
 
-    const tokens = await this.actualizarSesionTokens({ ...session, email: users.email });
+    const tokens = await this.actualizarSesionTokens({
+      ...session,
+      email: users.email,
+    });
     return this.buildLoginResponse(users, session.sessionsId, tokens);
   }
 
   /**
    * Construye el objeto de respuesta estándar del login.
    */
-  private async buildLoginResponse(users: { usersId: number; email: string }, sessionsId: number, tokens: { accessToken: string; refreshToken: string },) {
+  private async buildLoginResponse(
+    users: { usersId: number; email: string },
+    sessionsId: number,
+    tokens: { accessToken: string; refreshToken: string },
+  ) {
     const { accessToken, refreshToken } = tokens;
     const decodedAccess: any = this.jwtService.decode(accessToken);
     const decodedRefresh: any = this.jwtService.decode(refreshToken);
@@ -141,7 +157,8 @@ export class AuthService {
     // Primer rol del usuario
     const firstRole = userRoles[0] ?? null;
 
-    const toDate = (ts?: number) => ts ? EcuadorTimezoneUtil.formatAsEcuadorISO(new Date(ts * 1000)) : null;
+    const toDate = (ts?: number) =>
+      ts ? EcuadorTimezoneUtil.formatAsEcuadorISO(new Date(ts * 1000)) : null;
 
     return {
       sub: users.usersId,
@@ -175,8 +192,15 @@ export class AuthService {
    * @param session   - Objeto con { usersId, sessionsId }
    * @param extraData - Campos adicionales a actualizar (ej: ipAddress)
    */
-  private async actualizarSesionTokens(session: { usersId: number; sessionsId: number; email?: string }, extraData: Record<string, any> = {},): Promise<{ accessToken: string; refreshToken: string }> {
-    const tokens = await this.generateJwtToken(session.usersId, session.sessionsId, session.email ?? '');
+  private async actualizarSesionTokens(
+    session: { usersId: number; sessionsId: number; email?: string },
+    extraData: Record<string, any> = {},
+  ): Promise<{ accessToken: string; refreshToken: string }> {
+    const tokens = await this.generateJwtToken(
+      session.usersId,
+      session.sessionsId,
+      session.email ?? '',
+    );
     const newHash = await bcrypt.hash(tokens.refreshToken, 10);
     await this.prisma.sessions.update({
       where: { sessionsId: session.sessionsId },
@@ -188,7 +212,11 @@ export class AuthService {
   /**
    * Genera el par de tokens JWT (accessToken + refreshToken).
    */
-  private async generateJwtToken(userId: number, sessionId: number, email: string) {
+  private async generateJwtToken(
+    userId: number,
+    sessionId: number,
+    email: string,
+  ) {
     const payload = { sub: userId, sid: sessionId, email };
 
     const accessToken = await this.jwtService.signAsync(payload, {
@@ -215,7 +243,13 @@ export class AuthService {
    * @param ip           - IP actual del cliente (req.ip)
    * @param userAgent    - User-Agent actual del cliente
    */
-  async refreshAccessToken(sessionId: number, refreshToken: string, ip: string = 'unknown', userAgent: string = 'unknown', email: string = '') {
+  async refreshAccessToken(
+    sessionId: number,
+    refreshToken: string,
+    ip: string = 'unknown',
+    userAgent: string = 'unknown',
+    email: string = '',
+  ) {
     const session = await this.prisma.sessions.findUnique({
       where: { sessionsId: sessionId },
     });
@@ -236,9 +270,11 @@ export class AuthService {
     if (!isValid) {
       throw new UnauthorizedException('Refresh token inválido');
     }
-    return this.actualizarSesionTokens({ ...session, email }, { ipAddress: ip, userAgent });
+    return this.actualizarSesionTokens(
+      { ...session, email },
+      { ipAddress: ip, userAgent },
+    );
   }
-
 
   /**
    * Revoca una sesión en BD (logout).
