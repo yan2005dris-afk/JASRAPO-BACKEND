@@ -1,7 +1,7 @@
 import {
   Injectable,
   NotFoundException,
-  UnauthorizedException,
+  ConflictException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { PrismaService } from 'src/database/prisma.service';
@@ -16,7 +16,7 @@ const safeUserSelect = {
 
 @Injectable()
 export class UserService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async user(userWhereUniqueInput: Prisma.UsersWhereUniqueInput) {
     return this.prisma.users.findUnique({
@@ -95,27 +95,6 @@ export class UserService {
     });
   }
 
-  async updateUserRole(params: {
-    usersRolesId: number;
-    rolesId: number;
-    deletedAt?: Date;
-  }) {
-    return this.prisma.userRoles.update({
-      where: { usersRolesId: params.usersRolesId },
-      data: {
-        rolesId: params.rolesId,
-        deletedAt: params.deletedAt ?? undefined,
-      },
-    });
-  }
-
-  async deleteUser(where: Prisma.UsersWhereUniqueInput) {
-    return this.prisma.users.delete({
-      where,
-      select: safeUserSelect,
-    });
-  }
-
   async softDeleteUser(where: Prisma.UsersWhereUniqueInput) {
     return this.prisma.users.update({
       where,
@@ -130,6 +109,7 @@ export class UserService {
       select: {
         userRoles: {
           select: {
+            deletedAt: true,
             roles: {
               select: { name: true },
             },
@@ -141,8 +121,54 @@ export class UserService {
     if (!user) {
       throw new NotFoundException('Usuario no encontrado');
     }
-    // Filtrar roles nulos y devolver solo los nombres
-    return user.userRoles.filter((ur) => ur.roles).map((ur) => ur.roles.name);
+    // Filtra roles nulos Y roles revocados (deletedAt != null)
+    return user.userRoles
+      .filter((ur) => ur.roles && !ur.deletedAt)
+      .map((ur) => ur.roles.name);
+  }
+
+  /**
+   * Asigna un rol nuevo a un usuario existente.
+   * Valida que el usuario y el rol existan y que no tenga ya ese rol activo.
+   */
+  async assignRoleToUser(usersId: number, rolesId: number) {
+    const user = await this.prisma.users.findUnique({ where: { usersId } });
+    if (!user || user.deletedAt)
+      throw new NotFoundException('Usuario no encontrado o eliminado');
+
+    const role = await this.prisma.roles.findUnique({ where: { rolesId } });
+    if (!role || role.deletedAt)
+      throw new NotFoundException('Rol no encontrado o eliminado');
+
+    // Verificar que no tenga ese rol ya asignado y activo
+    const existing = await this.prisma.userRoles.findFirst({
+      where: { usersId, rolesId, deletedAt: null },
+    });
+    if (existing)
+      throw new ConflictException('El usuario ya tiene ese rol activo');
+
+    return this.prisma.userRoles.create({
+      data: { usersId, rolesId },
+    });
+  }
+
+  /**
+   * Revoca (soft delete) un rol asignado a un usuario.
+   * Usa el ID de la relación UserRoles, no el ID del rol.
+   */
+  async revokeRoleFromUser(usersRolesId: number) {
+    const userRole = await this.prisma.userRoles.findUnique({
+      where: { usersRolesId },
+    });
+    if (!userRole)
+      throw new NotFoundException('Asignación de rol no encontrada');
+    if (userRole.deletedAt)
+      throw new ConflictException('Este rol ya fue revocado previamente');
+
+    return this.prisma.userRoles.update({
+      where: { usersRolesId },
+      data: { deletedAt: new Date() },
+    });
   }
   /**
    * Obtiene los permisos efectivos de un usuario combinando roles y user_permissions

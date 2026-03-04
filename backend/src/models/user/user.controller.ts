@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { UpdateUserRoleDto } from './dto/update-user-role.dto';
+import { AssignRoleDto } from './dto/assign-role.dto';
 import { UserService } from './user.service';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/auth/guards/permissions.guard';
@@ -63,21 +63,33 @@ export class UserController {
     });
   }
 
-  @Patch(':id/role')
-  updateUserRole(
+  /**
+   * Asigna un rol adicional a un usuario existente.
+   * No elimina los roles anteriores.
+   */
+  @RequiredPermission('users', 'update')
+  @Post(':id/roles')
+  assignRole(
     @Param('id', ParseIntPipe) id: number,
-    @Body() updateUserRoleDto: UpdateUserRoleDto,
+    @Body() assignRoleDto: AssignRoleDto,
   ) {
-    return this.userService.updateUserRole({
-      usersRolesId: updateUserRoleDto.usersRolesId,
-      rolesId: updateUserRoleDto.rolesId,
-      deletedAt: updateUserRoleDto.deletedAt,
-    });
+    return this.userService.assignRoleToUser(id, assignRoleDto.rolesId);
   }
 
+  /**
+   * Revoca (soft delete) un rol asignado a un usuario.
+   * El :userRoleId es el ID de la relación en users_roles, no el ID del rol.
+   */
+  @RequiredPermission('users', 'delete')
+  @Delete(':id/roles/:userRoleId')
+  revokeRole(@Param('userRoleId', ParseIntPipe) userRolesId: number) {
+    return this.userService.revokeRoleFromUser(userRolesId);
+  }
+
+  @RequiredPermission('users', 'delete')
   @Delete(':id')
   remove(@Param('id', ParseIntPipe) id: number) {
-    return this.userService.deleteUser({ usersId: id });
+    return this.userService.softDeleteUser({ usersId: id });
   }
 
   @Get('getEffectivePermissions/:usersId')
