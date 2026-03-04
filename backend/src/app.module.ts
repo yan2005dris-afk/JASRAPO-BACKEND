@@ -5,6 +5,7 @@ import { UserModule } from './models/user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { MenusModule } from './models/menus/menus.module';
 import { ProfileModule } from './models/profile/profile.module';
+import { ClientModule } from './models/client/client.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { ProfileModule } from './models/profile/profile.module';
     AuthModule,
     MenusModule,
     ProfileModule,
+    ClientModule,
   ],
   controllers: [],
   providers: [],
