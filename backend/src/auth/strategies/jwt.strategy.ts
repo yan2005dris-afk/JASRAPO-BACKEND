@@ -3,7 +3,7 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PassportStrategy } from '@nestjs/passport';
 import { PrismaService } from 'src/database/prisma.service';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { UserService } from 'src/models/user/user.service';
+import { UserService } from 'src/modules/user/user.service';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -38,14 +38,14 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException('Sesión inválida o expirada');
     }
 
-    // getEffectivePermissions valida existencia, deleted, roles y permisos individuales
+    // Recalcula permisos en cada request autenticada para reflejar cambios de inmediato.
     const permissions = await this.userService.getEffectivePermissions(usersId);
 
     return {
       sub: usersId,
       usersId,
       sid: sessionsId,
-      email,   // viene del payload JWT — sin query extra a BD
+      email, // viene del payload JWT — sin query extra a BD
       permissions,
     };
   }

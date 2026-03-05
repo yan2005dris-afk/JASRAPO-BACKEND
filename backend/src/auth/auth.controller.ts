@@ -4,14 +4,14 @@ import { LoginUserDto } from './dto/login-user.dto';
 import { RegisterDto } from './dto/register.dto';
 import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
-import { PermissionsGuard } from './guards/permissions.guard';
-import { RequiredPermission } from './decorators/require-permission.decorator';
+import { PermissionsGuard } from '../common/guards/permissions.guard';
+import { RequiredPermission } from '../common/decorators/require-permission.decorator';
 import { ApiTags } from '@nestjs/swagger';
 
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) { }
+  constructor(private readonly authService: AuthService) {}
 
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @RequiredPermission('users', 'create')
@@ -33,9 +33,16 @@ export class AuthController {
   ) {
     const ip = req.ip as string;
     const userAgent = req.headers['user-agent'] as string;
-    const existingRefreshToken = req.cookies?.refreshToken as string | undefined;
+    const existingRefreshToken = req.cookies?.refreshToken as
+      | string
+      | undefined;
 
-    const result = await this.authService.login(loginUserDto, ip, userAgent, existingRefreshToken);
+    const result = await this.authService.login(
+      loginUserDto,
+      ip,
+      userAgent,
+      existingRefreshToken,
+    );
 
     // Solo guardar refreshToken en cookie, accessToken va en el payload
     const refreshCookieOptions = {
@@ -46,16 +53,16 @@ export class AuthController {
     };
     res.cookie('refreshToken', result.refreshToken, refreshCookieOptions);
     res.json({
-      "accessToken": result.accessToken,
-      "sid": result.sid,
-      "sub": result.sub,
-      "email": result.email,
-      "name": result.name,
-      "roleId": result.roleId,
-      "roleName": result.roleName,
-      "avatar": result.avatar,
-      "createdAt": result.accessTokenInfo.iatDate,
-      "expiresAt": result.accessTokenInfo.expDate
+      accessToken: result.accessToken,
+      sid: result.sid,
+      sub: result.sub,
+      email: result.email,
+      name: result.name,
+      roleId: result.roleId,
+      roleName: result.roleName,
+      avatar: result.avatar,
+      createdAt: result.accessTokenInfo.iatDate,
+      expiresAt: result.accessTokenInfo.expDate,
     });
   }
 
@@ -64,8 +71,8 @@ export class AuthController {
   async refresh(@Req() req: any, @Res() res: any) {
     const { sessionsId } = req.user;
     const refreshToken = req.cookies?.refreshToken as string;
-    const ip = req.ip as string ?? 'unknown';
-    const userAgent = req.headers['user-agent'] as string ?? 'unknown';
+    const ip = (req.ip as string) ?? 'unknown';
+    const userAgent = (req.headers['user-agent'] as string) ?? 'unknown';
 
     const tokens = await this.authService.refreshAccessToken(
       sessionsId,

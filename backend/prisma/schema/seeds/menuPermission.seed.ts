@@ -1,584 +1,624 @@
-import { Menus, Permissions, PrismaClient } from "src/generated/prisma/client";
+import { Menus, Permissions, PrismaClient } from 'src/generated/prisma/client';
 
 export async function seedMenuPermissions(
-    prisma: PrismaClient,
-    menus: Menus[],
-    permissions: Permissions[]
+  prisma: PrismaClient,
+  menus: Menus[],
+  permissions: Permissions[],
 ) {
-    await prisma.menuPermissions.deleteMany();
+  await prisma.menuPermissions.deleteMany();
 
-    const menuPermissionMap = [
+  const menuPermissionMap = [
+    {
+      menuName: 'Listar Cliente',
+      permissionKeys: [
         {
-                "menuName": "Listar Cliente",
-                "permissionKeys": [
-                        {
-                                "resource": "clientes",
-                                "action": "read"
-                        }
-                ]
+          resource: 'clientes',
+          action: 'read',
         },
+      ],
+    },
+    {
+      menuName: 'Crear Cliente',
+      permissionKeys: [
         {
-                "menuName": "Crear Cliente",
-                "permissionKeys": [
-                        {
-                                "resource": "clientes",
-                                "action": "create"
-                        }
-                ]
+          resource: 'clientes',
+          action: 'create',
         },
+      ],
+    },
+    {
+      menuName: 'Actualizar Cliente',
+      permissionKeys: [
         {
-                "menuName": "Actualizar Cliente",
-                "permissionKeys": [
-                        {
-                                "resource": "clientes",
-                                "action": "update"
-                        }
-                ]
+          resource: 'clientes',
+          action: 'update',
         },
+      ],
+    },
+    {
+      menuName: 'Eliminar Cliente',
+      permissionKeys: [
         {
-                "menuName": "Eliminar Cliente",
-                "permissionKeys": [
-                        {
-                                "resource": "clientes",
-                                "action": "delete"
-                        }
-                ]
+          resource: 'clientes',
+          action: 'delete',
         },
+      ],
+    },
+    {
+      menuName: 'Listar Contratos de Servicios',
+      permissionKeys: [
         {
-                "menuName": "Listar Contratos de Servicios",
-                "permissionKeys": [
-                        {
-                                "resource": "contratos",
-                                "action": "read"
-                        }
-                ]
+          resource: 'contratos',
+          action: 'read',
         },
+      ],
+    },
+    {
+      menuName: 'Crear Contratos de Servicios',
+      permissionKeys: [
         {
-                "menuName": "Crear Contratos de Servicios",
-                "permissionKeys": [
-                        {
-                                "resource": "contratos",
-                                "action": "create"
-                        }
-                ]
+          resource: 'contratos',
+          action: 'create',
         },
+      ],
+    },
+    {
+      menuName: 'Actualizar Contratos de Servicios',
+      permissionKeys: [
         {
-                "menuName": "Actualizar Contratos de Servicios",
-                "permissionKeys": [
-                        {
-                                "resource": "contratos",
-                                "action": "update"
-                        }
-                ]
+          resource: 'contratos',
+          action: 'update',
         },
+      ],
+    },
+    {
+      menuName: 'Eliminar Contratos de Servicios',
+      permissionKeys: [
         {
-                "menuName": "Eliminar Contratos de Servicios",
-                "permissionKeys": [
-                        {
-                                "resource": "contratos",
-                                "action": "delete"
-                        }
-                ]
+          resource: 'contratos',
+          action: 'delete',
         },
+      ],
+    },
+    {
+      menuName: 'Listar Medidores',
+      permissionKeys: [
         {
-                "menuName": "Listar Medidores",
-                "permissionKeys": [
-                        {
-                                "resource": "medidores",
-                                "action": "read"
-                        }
-                ]
+          resource: 'medidores',
+          action: 'read',
         },
+      ],
+    },
+    {
+      menuName: 'Crear Medidores',
+      permissionKeys: [
         {
-                "menuName": "Crear Medidores",
-                "permissionKeys": [
-                        {
-                                "resource": "medidores",
-                                "action": "create"
-                        }
-                ]
+          resource: 'medidores',
+          action: 'create',
         },
+      ],
+    },
+    {
+      menuName: 'Actualizar Medidores',
+      permissionKeys: [
         {
-                "menuName": "Actualizar Medidores",
-                "permissionKeys": [
-                        {
-                                "resource": "medidores",
-                                "action": "update"
-                        }
-                ]
+          resource: 'medidores',
+          action: 'update',
         },
+      ],
+    },
+    {
+      menuName: 'Eliminar Medidores',
+      permissionKeys: [
         {
-                "menuName": "Eliminar Medidores",
-                "permissionKeys": [
-                        {
-                                "resource": "medidores",
-                                "action": "delete"
-                        }
-                ]
+          resource: 'medidores',
+          action: 'delete',
         },
+      ],
+    },
+    {
+      menuName: 'Listar Tarifas y Categorias',
+      permissionKeys: [
         {
-                "menuName": "Listar Tarifas y Categorias",
-                "permissionKeys": [
-                        {
-                                "resource": "tarifas",
-                                "action": "read"
-                        }
-                ]
+          resource: 'tarifas',
+          action: 'read',
         },
+      ],
+    },
+    {
+      menuName: 'Crear Tarifas y Categorias',
+      permissionKeys: [
         {
-                "menuName": "Crear Tarifas y Categorias",
-                "permissionKeys": [
-                        {
-                                "resource": "tarifas",
-                                "action": "create"
-                        }
-                ]
+          resource: 'tarifas',
+          action: 'create',
         },
+      ],
+    },
+    {
+      menuName: 'Actualizar Tarifas y Categorias',
+      permissionKeys: [
         {
-                "menuName": "Actualizar Tarifas y Categorias",
-                "permissionKeys": [
-                        {
-                                "resource": "tarifas",
-                                "action": "update"
-                        }
-                ]
+          resource: 'tarifas',
+          action: 'update',
         },
+      ],
+    },
+    {
+      menuName: 'Eliminar Tarifas y Categorias',
+      permissionKeys: [
         {
-                "menuName": "Eliminar Tarifas y Categorias",
-                "permissionKeys": [
-                        {
-                                "resource": "tarifas",
-                                "action": "delete"
-                        }
-                ]
+          resource: 'tarifas',
+          action: 'delete',
         },
+      ],
+    },
+    {
+      menuName: 'Listar Lectura de Consumo',
+      permissionKeys: [
         {
-                "menuName": "Listar Lectura de Consumo",
-                "permissionKeys": [
-                        {
-                                "resource": "lecturas",
-                                "action": "read"
-                        }
-                ]
+          resource: 'lecturas',
+          action: 'read',
         },
+      ],
+    },
+    {
+      menuName: 'Crear Lectura de Consumo',
+      permissionKeys: [
         {
-                "menuName": "Crear Lectura de Consumo",
-                "permissionKeys": [
-                        {
-                                "resource": "lecturas",
-                                "action": "create"
-                        }
-                ]
+          resource: 'lecturas',
+          action: 'create',
         },
+      ],
+    },
+    {
+      menuName: 'Actualizar Lectura de Consumo',
+      permissionKeys: [
         {
-                "menuName": "Actualizar Lectura de Consumo",
-                "permissionKeys": [
-                        {
-                                "resource": "lecturas",
-                                "action": "update"
-                        }
-                ]
+          resource: 'lecturas',
+          action: 'update',
         },
+      ],
+    },
+    {
+      menuName: 'Eliminar Lectura de Consumo',
+      permissionKeys: [
         {
-                "menuName": "Eliminar Lectura de Consumo",
-                "permissionKeys": [
-                        {
-                                "resource": "lecturas",
-                                "action": "delete"
-                        }
-                ]
+          resource: 'lecturas',
+          action: 'delete',
         },
+      ],
+    },
+    {
+      menuName: 'Listar Convenios de pago',
+      permissionKeys: [
         {
-                "menuName": "Listar Convenios de pago",
-                "permissionKeys": [
-                        {
-                                "resource": "convenios",
-                                "action": "read"
-                        }
-                ]
+          resource: 'convenios',
+          action: 'read',
         },
+      ],
+    },
+    {
+      menuName: 'Crear Convenios de pago',
+      permissionKeys: [
         {
-                "menuName": "Crear Convenios de pago",
-                "permissionKeys": [
-                        {
-                                "resource": "convenios",
-                                "action": "create"
-                        }
-                ]
+          resource: 'convenios',
+          action: 'create',
         },
+      ],
+    },
+    {
+      menuName: 'Actualizar Convenios de pago',
+      permissionKeys: [
         {
-                "menuName": "Actualizar Convenios de pago",
-                "permissionKeys": [
-                        {
-                                "resource": "convenios",
-                                "action": "update"
-                        }
-                ]
+          resource: 'convenios',
+          action: 'update',
         },
+      ],
+    },
+    {
+      menuName: 'Eliminar Convenios de pago',
+      permissionKeys: [
         {
-                "menuName": "Eliminar Convenios de pago",
-                "permissionKeys": [
-                        {
-                                "resource": "convenios",
-                                "action": "delete"
-                        }
-                ]
+          resource: 'convenios',
+          action: 'delete',
         },
+      ],
+    },
+    {
+      menuName: 'Listar Generacion de Planillas',
+      permissionKeys: [
         {
-                "menuName": "Listar Generacion de Planillas",
-                "permissionKeys": [
-                        {
-                                "resource": "planillas",
-                                "action": "read"
-                        }
-                ]
+          resource: 'planillas',
+          action: 'read',
         },
+      ],
+    },
+    {
+      menuName: 'Crear Generacion de Planillas',
+      permissionKeys: [
         {
-                "menuName": "Crear Generacion de Planillas",
-                "permissionKeys": [
-                        {
-                                "resource": "planillas",
-                                "action": "create"
-                        }
-                ]
+          resource: 'planillas',
+          action: 'create',
         },
+      ],
+    },
+    {
+      menuName: 'Actualizar Generacion de Planillas',
+      permissionKeys: [
         {
-                "menuName": "Actualizar Generacion de Planillas",
-                "permissionKeys": [
-                        {
-                                "resource": "planillas",
-                                "action": "update"
-                        }
-                ]
+          resource: 'planillas',
+          action: 'update',
         },
+      ],
+    },
+    {
+      menuName: 'Eliminar Generacion de Planillas',
+      permissionKeys: [
         {
-                "menuName": "Eliminar Generacion de Planillas",
-                "permissionKeys": [
-                        {
-                                "resource": "planillas",
-                                "action": "delete"
-                        }
-                ]
+          resource: 'planillas',
+          action: 'delete',
         },
+      ],
+    },
+    {
+      menuName: 'Listar Facturacion Electronica',
+      permissionKeys: [
         {
-                "menuName": "Listar Facturacion Electronica",
-                "permissionKeys": [
-                        {
-                                "resource": "facturacion_electronica",
-                                "action": "read"
-                        }
-                ]
+          resource: 'facturacion_electronica',
+          action: 'read',
         },
+      ],
+    },
+    {
+      menuName: 'Crear Facturacion Electronica',
+      permissionKeys: [
         {
-                "menuName": "Crear Facturacion Electronica",
-                "permissionKeys": [
-                        {
-                                "resource": "facturacion_electronica",
-                                "action": "create"
-                        }
-                ]
+          resource: 'facturacion_electronica',
+          action: 'create',
         },
+      ],
+    },
+    {
+      menuName: 'Actualizar Facturacion Electronica',
+      permissionKeys: [
         {
-                "menuName": "Actualizar Facturacion Electronica",
-                "permissionKeys": [
-                        {
-                                "resource": "facturacion_electronica",
-                                "action": "update"
-                        }
-                ]
+          resource: 'facturacion_electronica',
+          action: 'update',
         },
+      ],
+    },
+    {
+      menuName: 'Eliminar Facturacion Electronica',
+      permissionKeys: [
         {
-                "menuName": "Eliminar Facturacion Electronica",
-                "permissionKeys": [
-                        {
-                                "resource": "facturacion_electronica",
-                                "action": "delete"
-                        }
-                ]
+          resource: 'facturacion_electronica',
+          action: 'delete',
         },
+      ],
+    },
+    {
+      menuName: 'Listar Recaudación y pagos',
+      permissionKeys: [
         {
-                "menuName": "Listar Recaudación y pagos",
-                "permissionKeys": [
-                        {
-                                "resource": "recaudacion",
-                                "action": "read"
-                        }
-                ]
+          resource: 'recaudacion',
+          action: 'read',
         },
+      ],
+    },
+    {
+      menuName: 'Crear Recaudación y pagos',
+      permissionKeys: [
         {
-                "menuName": "Crear Recaudación y pagos",
-                "permissionKeys": [
-                        {
-                                "resource": "recaudacion",
-                                "action": "create"
-                        }
-                ]
+          resource: 'recaudacion',
+          action: 'create',
         },
+      ],
+    },
+    {
+      menuName: 'Actualizar Recaudación y pagos',
+      permissionKeys: [
         {
-                "menuName": "Actualizar Recaudación y pagos",
-                "permissionKeys": [
-                        {
-                                "resource": "recaudacion",
-                                "action": "update"
-                        }
-                ]
+          resource: 'recaudacion',
+          action: 'update',
         },
+      ],
+    },
+    {
+      menuName: 'Eliminar Recaudación y pagos',
+      permissionKeys: [
         {
-                "menuName": "Eliminar Recaudación y pagos",
-                "permissionKeys": [
-                        {
-                                "resource": "recaudacion",
-                                "action": "delete"
-                        }
-                ]
+          resource: 'recaudacion',
+          action: 'delete',
         },
+      ],
+    },
+    {
+      menuName: 'Listar Notas de Credito o Debito',
+      permissionKeys: [
         {
-                "menuName": "Listar Notas de Credito o Debito",
-                "permissionKeys": [
-                        {
-                                "resource": "notas_credito",
-                                "action": "read"
-                        }
-                ]
+          resource: 'notas_credito',
+          action: 'read',
         },
+      ],
+    },
+    {
+      menuName: 'Crear Notas de Credito o Debito',
+      permissionKeys: [
         {
-                "menuName": "Crear Notas de Credito o Debito",
-                "permissionKeys": [
-                        {
-                                "resource": "notas_credito",
-                                "action": "create"
-                        }
-                ]
+          resource: 'notas_credito',
+          action: 'create',
         },
+      ],
+    },
+    {
+      menuName: 'Actualizar Notas de Credito o Debito',
+      permissionKeys: [
         {
-                "menuName": "Actualizar Notas de Credito o Debito",
-                "permissionKeys": [
-                        {
-                                "resource": "notas_credito",
-                                "action": "update"
-                        }
-                ]
+          resource: 'notas_credito',
+          action: 'update',
         },
+      ],
+    },
+    {
+      menuName: 'Eliminar Notas de Credito o Debito',
+      permissionKeys: [
         {
-                "menuName": "Eliminar Notas de Credito o Debito",
-                "permissionKeys": [
-                        {
-                                "resource": "notas_credito",
-                                "action": "delete"
-                        }
-                ]
+          resource: 'notas_credito',
+          action: 'delete',
         },
+      ],
+    },
+    {
+      menuName: 'Listar Envio de Facturas',
+      permissionKeys: [
         {
-                "menuName": "Listar Envio de Facturas",
-                "permissionKeys": [
-                        {
-                                "resource": "envio_facturas",
-                                "action": "read"
-                        }
-                ]
+          resource: 'envio_facturas',
+          action: 'read',
         },
+      ],
+    },
+    {
+      menuName: 'Crear Envio de Facturas',
+      permissionKeys: [
         {
-                "menuName": "Crear Envio de Facturas",
-                "permissionKeys": [
-                        {
-                                "resource": "envio_facturas",
-                                "action": "create"
-                        }
-                ]
+          resource: 'envio_facturas',
+          action: 'create',
         },
+      ],
+    },
+    {
+      menuName: 'Actualizar Envio de Facturas',
+      permissionKeys: [
         {
-                "menuName": "Actualizar Envio de Facturas",
-                "permissionKeys": [
-                        {
-                                "resource": "envio_facturas",
-                                "action": "update"
-                        }
-                ]
+          resource: 'envio_facturas',
+          action: 'update',
         },
+      ],
+    },
+    {
+      menuName: 'Eliminar Envio de Facturas',
+      permissionKeys: [
         {
-                "menuName": "Eliminar Envio de Facturas",
-                "permissionKeys": [
-                        {
-                                "resource": "envio_facturas",
-                                "action": "delete"
-                        }
-                ]
+          resource: 'envio_facturas',
+          action: 'delete',
         },
+      ],
+    },
+    {
+      menuName: 'Listar Estado de cuenta Cliente',
+      permissionKeys: [
         {
-                "menuName": "Listar Estado de cuenta Cliente",
-                "permissionKeys": [
-                        {
-                                "resource": "estado_cuenta",
-                                "action": "read"
-                        }
-                ]
+          resource: 'estado_cuenta',
+          action: 'read',
         },
+      ],
+    },
+    {
+      menuName: 'Crear Estado de cuenta Cliente',
+      permissionKeys: [
         {
-                "menuName": "Crear Estado de cuenta Cliente",
-                "permissionKeys": [
-                        {
-                                "resource": "estado_cuenta",
-                                "action": "create"
-                        }
-                ]
+          resource: 'estado_cuenta',
+          action: 'create',
         },
+      ],
+    },
+    {
+      menuName: 'Actualizar Estado de cuenta Cliente',
+      permissionKeys: [
         {
-                "menuName": "Actualizar Estado de cuenta Cliente",
-                "permissionKeys": [
-                        {
-                                "resource": "estado_cuenta",
-                                "action": "update"
-                        }
-                ]
+          resource: 'estado_cuenta',
+          action: 'update',
         },
+      ],
+    },
+    {
+      menuName: 'Eliminar Estado de cuenta Cliente',
+      permissionKeys: [
         {
-                "menuName": "Eliminar Estado de cuenta Cliente",
-                "permissionKeys": [
-                        {
-                                "resource": "estado_cuenta",
-                                "action": "delete"
-                        }
-                ]
+          resource: 'estado_cuenta',
+          action: 'delete',
         },
+      ],
+    },
+    {
+      menuName: 'Listar Recaudación y Morosida',
+      permissionKeys: [
         {
-                "menuName": "Listar Recaudación y Morosida",
-                "permissionKeys": [
-                        {
-                                "resource": "recaudacion_morosidad",
-                                "action": "read"
-                        }
-                ]
+          resource: 'recaudacion_morosidad',
+          action: 'read',
         },
+      ],
+    },
+    {
+      menuName: 'Crear Recaudación y Morosida',
+      permissionKeys: [
         {
-                "menuName": "Crear Recaudación y Morosida",
-                "permissionKeys": [
-                        {
-                                "resource": "recaudacion_morosidad",
-                                "action": "create"
-                        }
-                ]
+          resource: 'recaudacion_morosidad',
+          action: 'create',
         },
+      ],
+    },
+    {
+      menuName: 'Actualizar Recaudación y Morosida',
+      permissionKeys: [
         {
-                "menuName": "Actualizar Recaudación y Morosida",
-                "permissionKeys": [
-                        {
-                                "resource": "recaudacion_morosidad",
-                                "action": "update"
-                        }
-                ]
+          resource: 'recaudacion_morosidad',
+          action: 'update',
         },
+      ],
+    },
+    {
+      menuName: 'Eliminar Recaudación y Morosida',
+      permissionKeys: [
         {
-                "menuName": "Eliminar Recaudación y Morosida",
-                "permissionKeys": [
-                        {
-                                "resource": "recaudacion_morosidad",
-                                "action": "delete"
-                        }
-                ]
+          resource: 'recaudacion_morosidad',
+          action: 'delete',
         },
+      ],
+    },
+    {
+      menuName: 'Listar ConsumoPorZonas',
+      permissionKeys: [
         {
-                "menuName": "Listar ConsumoPorZonas",
-                "permissionKeys": [
-                        {
-                                "resource": "consumo_zonas",
-                                "action": "read"
-                        }
-                ]
+          resource: 'consumo_zonas',
+          action: 'read',
         },
+      ],
+    },
+    {
+      menuName: 'Crear ConsumoPorZonas',
+      permissionKeys: [
         {
-                "menuName": "Crear ConsumoPorZonas",
-                "permissionKeys": [
-                        {
-                                "resource": "consumo_zonas",
-                                "action": "create"
-                        }
-                ]
+          resource: 'consumo_zonas',
+          action: 'create',
         },
+      ],
+    },
+    {
+      menuName: 'Actualizar ConsumoPorZonas',
+      permissionKeys: [
         {
-                "menuName": "Actualizar ConsumoPorZonas",
-                "permissionKeys": [
-                        {
-                                "resource": "consumo_zonas",
-                                "action": "update"
-                        }
-                ]
+          resource: 'consumo_zonas',
+          action: 'update',
         },
+      ],
+    },
+    {
+      menuName: 'Eliminar ConsumoPorZonas',
+      permissionKeys: [
         {
-                "menuName": "Eliminar ConsumoPorZonas",
-                "permissionKeys": [
-                        {
-                                "resource": "consumo_zonas",
-                                "action": "delete"
-                        }
-                ]
+          resource: 'consumo_zonas',
+          action: 'delete',
         },
+      ],
+    },
+    {
+      menuName: 'Listar DashboardKpi',
+      permissionKeys: [
         {
-                "menuName": "Listar DashboardKpi",
-                "permissionKeys": [
-                        {
-                                "resource": "dashboard",
-                                "action": "read"
-                        }
-                ]
+          resource: 'dashboard',
+          action: 'read',
         },
+      ],
+    },
+    {
+      menuName: 'Crear DashboardKpi',
+      permissionKeys: [
         {
-                "menuName": "Crear DashboardKpi",
-                "permissionKeys": [
-                        {
-                                "resource": "dashboard",
-                                "action": "create"
-                        }
-                ]
+          resource: 'dashboard',
+          action: 'create',
         },
+      ],
+    },
+    {
+      menuName: 'Actualizar DashboardKpi',
+      permissionKeys: [
         {
-                "menuName": "Actualizar DashboardKpi",
-                "permissionKeys": [
-                        {
-                                "resource": "dashboard",
-                                "action": "update"
-                        }
-                ]
+          resource: 'dashboard',
+          action: 'update',
         },
+      ],
+    },
+    {
+      menuName: 'Eliminar DashboardKpi',
+      permissionKeys: [
         {
-                "menuName": "Eliminar DashboardKpi",
-                "permissionKeys": [
-                        {
-                                "resource": "dashboard",
-                                "action": "delete"
-                        }
-                ]
-        }
-];
+          resource: 'dashboard',
+          action: 'delete',
+        },
+      ],
+    },
+    {
+      menuName: 'Lectura Usuarios',
+      permissionKeys: [
+        {
+          resource: 'users',
+          action: 'read',
+        },
+      ],
+    },
+    {
+      menuName: 'Escritura Usuarios',
+      permissionKeys: [
+        {
+          resource: 'users',
+          action: 'create',
+        },
+      ],
+    },
+    {
+      menuName: 'Actualizacion Usuarios',
+      permissionKeys: [
+        {
+          resource: 'users',
+          action: 'update',
+        },
+      ],
+    },
+    {
+      menuName: 'Eliminacion Usuarios',
+      permissionKeys: [
+        {
+          resource: 'users',
+          action: 'delete',
+        },
+      ],
+    },
+  ];
 
-    for (const menu of menuPermissionMap) {
-        const dbMenu = menus.find(m => m.name === menu.menuName);
-        if (!dbMenu) {
-            continue;
-        }
-
-        for (const permissionKey of menu.permissionKeys) {
-            const dbPermission = permissions.find(p => p.resource === permissionKey.resource && p.action === permissionKey.action);
-            if (!dbPermission) {
-                continue;
-            }
-
-            const exists = await prisma.menuPermissions.findFirst({
-                where: {
-                    menusId: dbMenu.menusId,
-                    permissionsId: dbPermission.permissionsId,
-                },
-            });
-
-            if (!exists) {
-                await prisma.menuPermissions.create({
-                    data: {
-                        menusId: dbMenu.menusId,
-                        permissionsId: dbPermission.permissionsId,
-                    }
-                });
-            }
-        }
+  for (const menu of menuPermissionMap) {
+    const dbMenu = menus.find((m) => m.name === menu.menuName);
+    if (!dbMenu) {
+      continue;
     }
 
-    console.log('✅ Menu-Permissions asignados correctamente.');
+    for (const permissionKey of menu.permissionKeys) {
+      const dbPermission = permissions.find(
+        (p) =>
+          p.resource === permissionKey.resource &&
+          p.action === permissionKey.action,
+      );
+      if (!dbPermission) {
+        continue;
+      }
+
+      const exists = await prisma.menuPermissions.findFirst({
+        where: {
+          menusId: dbMenu.menusId,
+          permissionsId: dbPermission.permissionsId,
+        },
+      });
+
+      if (!exists) {
+        await prisma.menuPermissions.create({
+          data: {
+            menusId: dbMenu.menusId,
+            permissionsId: dbPermission.permissionsId,
+          },
+        });
+      }
+    }
+  }
+
+  console.log('✅ Menu-Permissions asignados correctamente.');
 }

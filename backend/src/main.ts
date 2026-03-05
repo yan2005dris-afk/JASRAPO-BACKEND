@@ -13,11 +13,12 @@ async function bootstrap() {
   app.getHttpAdapter().getInstance().set('trust proxy', 1);
   app.use(cookieParser());
   app.enableCors({
-    origin: process.env.CORS_ORIGIN === '*'
-      ? true
-      : process.env.CORS_ORIGIN
-        ? process.env.CORS_ORIGIN.split(',')
-        : true, // Refleja dinámicamente si es '*' o si está ausente
+    origin:
+      process.env.CORS_ORIGIN === '*'
+        ? true
+        : process.env.CORS_ORIGIN
+          ? process.env.CORS_ORIGIN.split(',')
+          : true, // Refleja dinámicamente si es '*' o si está ausente
     credentials: true,
   });
   app.useGlobalPipes(
@@ -32,7 +33,6 @@ async function bootstrap() {
     }),
   );
 
-
   const config = new DocumentBuilder()
     .setTitle('JASRAPO API')
     .setDescription('Documentación de la API de JASRAPO')
@@ -45,6 +45,5 @@ async function bootstrap() {
 
   await app.listen(process.env.PORT ?? 3000);
 }
-
 
 bootstrap();
