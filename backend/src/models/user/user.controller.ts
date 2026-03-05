@@ -17,21 +17,39 @@ import { UserService } from './user.service';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/auth/guards/permissions.guard';
 import { RequiredPermission } from 'src/auth/decorators/require-permission.decorator';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('users')
-@ApiBearerAuth()
+@ApiBearerAuth('JWT-auth')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) { }
 
+  @ApiOperation({ 
+    summary: 'Crear un nuevo usuario', 
+    description: 'Crea un usuario en el sistema. Requiere permiso de creación de usuarios.' 
+  })
+  @ApiResponse({ status: 201, description: 'Usuario creado exitosamente' })
+  @ApiResponse({ status: 400, description: 'Datos inválidos' })
+  @ApiResponse({ status: 401, description: 'No autorizado' })
+  @ApiResponse({ status: 403, description: 'Sin permisos suficientes' })
+  @ApiResponse({ status: 409, description: 'El usuario ya existe' })
+  @ApiBody({ type: CreateUserDto })
   @RequiredPermission('users', 'create')
   @Post('/')
   create(@Body() createUserDto: CreateUserDto) {
     return this.userService.createUser(createUserDto);
   }
 
+  @ApiOperation({ 
+    summary: 'Obtener todos los usuarios', 
+    description: 'Retorna una lista paginada de usuarios. Soporta paginación con skip y take.' 
+  })
+  @ApiResponse({ status: 200, description: 'Lista de usuarios obtenida exitosamente' })
+  @ApiResponse({ status: 401, description: 'No autorizado' })
+  @ApiQuery({ name: 'skip', description: 'Número de registros a omitir (para paginación)', required: false, type: Number })
+  @ApiQuery({ name: 'take', description: 'Número de registros a retornar (para paginación)', required: false, type: Number })
   @RequiredPermission('users', 'read')
   @Get('/')
   findAll(@Query('skip') skip?: number, @Query('take') take?: number) {
@@ -41,14 +59,29 @@ export class UserController {
     });
   }
 
+  @ApiOperation({ 
+    summary: 'Obtener un usuario por ID', 
+    description: 'Retorna los datos de un usuario específico' 
+  })
+  @ApiResponse({ status: 200, description: 'Usuario encontrado' })
+  @ApiResponse({ status: 401, description: 'No autorizado' })
+  @ApiResponse({ status: 404, description: 'Usuario no encontrado' })
+  @ApiParam({ name: 'id', description: 'ID del usuario', type: 'integer' })
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.userService.user({ usersId: id });
   }
 
-  /**
-   * TODO revisar el updateUser en el user.service.ts, porque o si deberia actualizar directamente un userRoles o si deberia actualizar el user y luego actualizar el userRoles, porque en el DTO de updateUser no se incluye el usersRolesId, entonces no se puede actualizar el userRoles directamente desde el updateUser, entonces revisar si se debe incluir el usersRolesId en el DTO de updateUser o si se debe crear un endpoint separado para actualizar el userRoles, o si se debe actualizar el user y luego actualizar el userRoles en el mismo endpoint, revisar cual es la mejor opción para mantener la integridad de los datos y la simplicidad del código.
-   */
+  @ApiOperation({ 
+    summary: 'Actualizar un usuario', 
+    description: 'Actualiza los datos de un usuario existente (email y/o contraseña)' 
+  })
+  @ApiResponse({ status: 200, description: 'Usuario actualizado exitosamente' })
+  @ApiResponse({ status: 400, description: 'Datos inválidos' })
+  @ApiResponse({ status: 401, description: 'No autorizado' })
+  @ApiResponse({ status: 404, description: 'Usuario no encontrado' })
+  @ApiParam({ name: 'id', description: 'ID del usuario a actualizar', type: 'integer' })
+  @ApiBody({ type: UpdateUserDto })
   @Patch(':id')
   update(
     @Param('id', ParseIntPipe) id: number,
@@ -63,6 +96,16 @@ export class UserController {
     });
   }
 
+  @ApiOperation({ 
+    summary: 'Actualizar el rol de un usuario', 
+    description: 'Asigna o cambia el rol de un usuario específico' 
+  })
+  @ApiResponse({ status: 200, description: 'Rol de usuario actualizado exitosamente' })
+  @ApiResponse({ status: 400, description: 'Datos inválidos' })
+  @ApiResponse({ status: 401, description: 'No autorizado' })
+  @ApiResponse({ status: 404, description: 'Usuario o relación no encontrada' })
+  @ApiParam({ name: 'id', description: 'ID del usuario', type: 'integer' })
+  @ApiBody({ type: UpdateUserRoleDto })
   @Patch(':id/role')
   updateUserRole(
     @Param('id', ParseIntPipe) id: number,
@@ -75,13 +118,30 @@ export class UserController {
     });
   }
 
+  @ApiOperation({ 
+    summary: 'Eliminar un usuario', 
+    description: 'Elimina (soft delete) un usuario del sistema' 
+  })
+  @ApiResponse({ status: 200, description: 'Usuario eliminado exitosamente' })
+  @ApiResponse({ status: 401, description: 'No autorizado' })
+  @ApiResponse({ status: 404, description: 'Usuario no encontrado' })
+  @ApiParam({ name: 'id', description: 'ID del usuario a eliminar', type: 'integer' })
   @Delete(':id')
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.userService.deleteUser({ usersId: id });
   }
 
+  @ApiOperation({ 
+    summary: 'Obtener permisos efectivos del usuario', 
+    description: 'Retorna todos los permisos efectivos de un usuario (directos y heredados por rol)' 
+  })
+  @ApiResponse({ status: 200, description: 'Permisos obtenidos exitosamente' })
+  @ApiResponse({ status: 401, description: 'No autorizado' })
+  @ApiResponse({ status: 404, description: 'Usuario no encontrado' })
+  @ApiParam({ name: 'usersId', description: 'ID del usuario', type: 'integer' })
   @Get('getEffectivePermissions/:usersId')
   getEffectivePermissions(@Param('usersId') usersId: number) {
     return this.userService.getEffectivePermissions(usersId);
   }
 }
+

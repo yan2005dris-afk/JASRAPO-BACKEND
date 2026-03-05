@@ -6,25 +6,36 @@ import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { PermissionsGuard } from './guards/permissions.guard';
 import { RequiredPermission } from './decorators/require-permission.decorator';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) { }
 
+  @ApiBearerAuth('JWT-auth')
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @RequiredPermission('users', 'create')
+  @ApiOperation({ summary: 'Registrar un nuevo usuario', description: 'Crea un nuevo usuario en el sistema. Requiere permisos de creación de usuarios.' })
+  @ApiResponse({ status: 201, description: 'Usuario creado exitosamente' })
+  @ApiResponse({ status: 400, description: 'Datos inválidos' })
+  @ApiResponse({ status: 401, description: 'No autorizado - Token inválido o expirado' })
+  @ApiResponse({ status: 403, description: 'Prohibido - Sin permisos suficientes' })
+  @ApiResponse({ status: 409, description: 'Conflicto - El usuario ya existe' })
+  @ApiBody({ type: RegisterDto })
   @Post('register')
   async register(@Body() registerDto: RegisterDto) {
     return this.authService.register(registerDto);
   }
-  /**
-   * Metodo para iniciar sesion
-   * @param loginUserDto dto que contiene email y contraseña
-   * @param req objeto que contiene la peticion viene informacion del navegador y la ip del cliente
-   * @param res objeto que contiene la respuesta
-   */
+
+  @ApiOperation({ 
+    summary: 'Iniciar sesión', 
+    description: 'Autentica al usuario y retorna el token de acceso JWT. El refresh token se almacena en una cookie segura.'
+  })
+  @ApiResponse({ status: 200, description: 'Login exitoso - Retorna accessToken y datos del usuario' })
+  @ApiResponse({ status: 400, description: 'Datos inválidos' })
+  @ApiResponse({ status: 401, description: 'Credenciales incorrectas' })
+  @ApiBody({ type: LoginUserDto })
   @Post('/login')
   async login(
     @Body() loginUserDto: LoginUserDto,
@@ -59,7 +70,14 @@ export class AuthController {
     });
   }
 
+  @ApiBearerAuth('JWT-auth')
   @UseGuards(JwtRefreshGuard)
+  @ApiOperation({ 
+    summary: 'Refrescar token de acceso', 
+    description: 'Utiliza el refresh token de la cookie para obtener un nuevo access token.'
+  })
+  @ApiResponse({ status: 200, description: 'Token refrescado exitosamente' })
+  @ApiResponse({ status: 401, description: 'Refresh token inválido o expirado' })
   @Post('refresh')
   async refresh(@Req() req: any, @Res() res: any) {
     const { sessionsId } = req.user;
@@ -88,7 +106,14 @@ export class AuthController {
     });
   }
 
+  @ApiBearerAuth('JWT-auth')
   @UseGuards(JwtRefreshGuard)
+  @ApiOperation({ 
+    summary: 'Cerrar sesión', 
+    description: 'Invalida el refresh token y cierra la sesión del usuario.'
+  })
+  @ApiResponse({ status: 200, description: 'Sesión cerrada exitosamente' })
+  @ApiResponse({ status: 401, description: 'No autorizado' })
   @Post('logout')
   async logout(@Req() req: any, @Res() res: any) {
     const { sessionsId } = req.user;
@@ -104,3 +129,4 @@ export class AuthController {
     res.json({ message: 'Sesión cerrada correctamente' });
   }
 }
+
