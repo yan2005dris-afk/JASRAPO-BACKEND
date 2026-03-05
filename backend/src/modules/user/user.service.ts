@@ -35,6 +35,33 @@ const userWithRolesSelect = {
 export class UserService {
   constructor(private prisma: PrismaService) {}
 
+  /**
+   * Verifica que un valor dado tenga formato de hash bcrypt. Esto es útil para evitar re-hashear contraseñas que ya están hasheadas, por ejemplo al actualizar un usuario.
+   * @param value
+   * @returns
+   */
+  private isBcryptHash(value: string): boolean {
+    // bcrypt hash format: $2a$10$... (60 chars total)
+    return /^\$2[aby]\$\d{2}\$[./A-Za-z0-9]{53}$/.test(value);
+  }
+
+  /**
+   * asegura que la contraseña proporcionada esté hasheada. Si ya tiene formato de hash bcrypt, se devuelve tal cual. Si no, se hashea con bcrypt antes de devolver.
+   * @param password
+   * @returns
+   */
+  private async ensureHashedPassword(password: string): Promise<string> {
+    if (this.isBcryptHash(password)) {
+      return password;
+    }
+
+    return bcrypt.hash(password, 10);
+  }
+  /**
+   * Encuentra un usuario por su identificador único, devolviendo solo campos seguros (sin password) y sin incluir relaciones.
+   * @param userWhereUniqueInput
+   * @returns
+   */
   async user(userWhereUniqueInput: Prisma.UsersWhereUniqueInput) {
     return this.prisma.users.findUnique({
       where: userWhereUniqueInput,
@@ -42,6 +69,11 @@ export class UserService {
     });
   }
 
+  /**
+   * Encuentra múltiples usuarios según criterios de búsqueda, con soporte para paginación, filtrado y ordenamiento. Devuelve solo campos seguros (sin password) y sin incluir relaciones.
+   * @param params
+   * @returns
+   */
   async users(params: {
     skip?: number;
     take?: number;
@@ -71,21 +103,29 @@ export class UserService {
     }));
   }
 
+  /**
+   * Crea un nuevo usuario con el email y contraseña proporcionados en el CreateUserDto. Asigna automáticamente el rol 'user' al nuevo usuario. Devuelve los datos del usuario creado sin incluir la contraseña.
+   * @param createUsersDto
+   * @returns
+   */
   async createUser(createUsersDto: CreateUserDto) {
     // Buscar el rol 'user' por nombre
     const userRole = await this.prisma.roles.findFirst({
       where: { name: 'user' },
     });
-
     if (!userRole) {
       throw new Error('No existe el rol por defecto "user".');
     }
+
+    const safePassword = await this.ensureHashedPassword(
+      createUsersDto.password,
+    );
 
     // Crear el usuario
     const newUser = await this.prisma.users.create({
       data: {
         email: createUsersDto.email,
-        password: createUsersDto.password,
+        password: safePassword,
       },
     });
 
@@ -96,14 +136,17 @@ export class UserService {
         rolesId: userRole.rolesId,
       },
     });
-
-    // Retornar el usuario seguro
     return {
       usersId: newUser.usersId,
       email: newUser.email,
     };
   }
 
+  /**
+   * Actualiza los datos básicos de un usuario, como email o contraseña. Si se proporciona una nueva contraseña, se hash antes de guardarla en la base de datos. Devuelve los datos actualizados del usuario sin incluir la contraseña.
+   * @param params
+   * @returns
+   */
   async updateUser(params: {
     where: Prisma.UsersWhereUniqueInput;
     data: Prisma.UsersUpdateInput;
@@ -123,6 +166,11 @@ export class UserService {
     });
   }
 
+  /**
+   * Realiza un borrado lógico (soft delete) de un usuario, estableciendo la fecha de eliminación en el campo deletedAt. No elimina físicamente el registro de la base de datos. Devuelve los datos del usuario actualizado sin incluir la contraseña.
+   * @param where
+   * @returns
+   */
   async softDeleteUser(where: Prisma.UsersWhereUniqueInput) {
     return this.prisma.users.update({
       where,
@@ -130,6 +178,12 @@ export class UserService {
       select: safeUserSelect,
     });
   }
+
+  /**
+   * Obtiene los roles asignados a un usuario específico, sin incluir información de la relación (users_roles).
+   * @param usersId
+   * @returns
+   */
 
   async getRolesByUserId(usersId: number) {
     const user = await this.prisma.users.findUnique({
@@ -155,10 +209,15 @@ export class UserService {
       .map((ur) => ur.roles.name);
   }
 
+  /**
+   * Obtiene los roles asignados a un usuario específico, incluyendo información de la relación (users_roles) como el userRolesId, que es necesario para revocar el rol posteriormente.
+   * @param usersId
+   * @returns
+   */
   async getRoleAssignmentsByUserId(usersId: number) {
     const user = await this.prisma.users.findUnique({ where: { usersId } });
     if (!user || user.deletedAt) {
-      throw new NotFoundException('Usuario no encontrado o eliminado');
+      throw new NotFoundException('Usuario eliminado o no encontrado');
     }
 
     const assignments = await this.prisma.userRoles.findMany({
@@ -231,18 +290,11 @@ export class UserService {
     });
   }
 
-  async listAllPermissions() {
-    return this.prisma.permissions.findMany({
-      where: { deletedAt: null },
-      orderBy: [{ resource: 'asc' }, { action: 'asc' }],
-      select: {
-        permissionsId: true,
-        resource: true,
-        action: true,
-      },
-    });
-  }
-
+  /**
+   * Obtiene los permisos asignados directamente a un usuario, sin incluir los permisos heredados a través de roles.
+   * @param usersId
+   * @returns
+   */
   async getDirectPermissionsByUserId(usersId: number) {
     const user = await this.prisma.users.findUnique({ where: { usersId } });
     if (!user || user.deletedAt) {
@@ -281,6 +333,13 @@ export class UserService {
     }));
   }
 
+  /**
+   * Asigna un permiso directo a un usuario, sin pasar por un rol.
+   * @param usersId
+   * @param permissionsId
+   * @param allow
+   * @returns
+   */
   async assignPermissionToUser(
     usersId: number,
     permissionsId: number,
@@ -322,6 +381,12 @@ export class UserService {
     });
   }
 
+  /**
+   * Revoca (soft delete) un permiso asignado directamente a un usuario.
+   * Usa el ID de la relación userPermissions, no el ID del permiso.
+   * @param idUserPermissions
+   * @returns
+   */
   async revokePermissionFromUser(idUserPermissions: number) {
     const userPermission = await this.prisma.userPermissions.findUnique({
       where: { idUserPermissions },

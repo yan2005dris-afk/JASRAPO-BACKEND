@@ -27,12 +27,23 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
+  /**
+   * Crea un nuevo usuario con los datos proporcionados en el CreateUserDto.
+   * @param createUserDto
+   * @returns
+   */
   @RequiredPermission('users', 'create')
   @Post('/')
   create(@Body() createUserDto: CreateUserDto) {
     return this.userService.createUser(createUserDto);
   }
 
+  /**
+   * Obtiene a todos los usuarios, con paginación opcional a través de query params skip y take.
+   * @param skip
+   * @param take
+   * @returns
+   */
   @RequiredPermission('users', 'read')
   @Get('/')
   findAll(@Query('skip') skip?: number, @Query('take') take?: number) {
@@ -42,17 +53,32 @@ export class UserController {
     });
   }
 
+  /**
+   * Obtiene un usuario por su ID, incluyendo sus roles y permisos asignados.
+   * @param id
+   * @returns
+   */
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.userService.user({ usersId: id });
   }
 
+  /**
+   * Obtiene los roles asignados a un usuario específico, sin incluir información de la relación (users_roles).
+   * @param id
+   * @returns
+   */
   @RequiredPermission('users', 'read')
   @Get(':id/roles')
   getUserRoles(@Param('id', ParseIntPipe) id: number) {
     return this.userService.getRolesByUserId(id);
   }
 
+  /**
+   * Obtiene los roles asignados a un usuario específico, incluyendo información de la relación (users_roles) como el userRolesId, que es necesario para revocar el rol posteriormente.
+   * @param id
+   * @returns
+   */
   @RequiredPermission('users', 'read')
   @Get(':id/role-assignments')
   getUserRoleAssignments(@Param('id', ParseIntPipe) id: number) {
@@ -60,10 +86,15 @@ export class UserController {
   }
 
   /**
-   * TODO revisar el updateUser en el user.service.ts, porque o si deberia actualizar directamente un userRoles o si deberia actualizar el user y luego actualizar el userRoles, porque en el DTO de updateUser no se incluye el usersRolesId, entonces no se puede actualizar el userRoles directamente desde el updateUser, entonces revisar si se debe incluir el usersRolesId en el DTO de updateUser o si se debe crear un endpoint separado para actualizar el userRoles, o si se debe actualizar el user y luego actualizar el userRoles en el mismo endpoint, revisar cual es la mejor opción para mantener la integridad de los datos y la simplicidad del código.
+   * Actualiza los datos básicos de un usuario, como email o contraseña.
+   * @param id
+   * @param updateUserDto
+   * @returns
    */
+
+  @RequiredPermission('users', 'update')
   @Patch(':id')
-  update(
+  updateUser(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateUserDto: UpdateUserDto,
   ) {
@@ -89,11 +120,24 @@ export class UserController {
     return this.userService.assignRoleToUser(id, assignRoleDto.rolesId);
   }
 
+  /**
+   * Obtiene la lista de permisos asignados directamente a un usuario, sin incluir los permisos heredados a través de roles.
+   * @param id
+   * @returns
+   */
   @RequiredPermission('users', 'read')
   @Get(':id/permissions')
   getUserPermissions(@Param('id', ParseIntPipe) id: number) {
     return this.userService.getDirectPermissionsByUserId(id);
   }
+
+  /**
+   * Asigna un permiso directo a un usuario, sin pasar por un rol.
+   * Esto es útil para casos donde se necesita un permiso específico para un usuario sin crear un rol nuevo.
+   * @param id
+   * @param assignPermissionDto
+   * @returns
+   */
 
   @RequiredPermission('users', 'update')
   @Post(':id/permissions')
@@ -118,12 +162,23 @@ export class UserController {
     return this.userService.revokeRoleFromUser(userRolesId);
   }
 
+  /**
+   * Revoca (soft delete) un usuario completo, incluyendo sus roles y permisos.
+   * @param id
+   * @returns
+   */
   @RequiredPermission('users', 'delete')
   @Delete(':id')
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.userService.softDeleteUser({ usersId: id });
   }
 
+  /**
+   * Revoca (soft delete) un permiso asignado directamente a un usuario.
+   * El :userPermissionId es el ID de la relación en users_permissions, no el ID del permiso.
+   * @param userPermissionId
+   * @returns
+   */
   @RequiredPermission('users', 'delete')
   @Delete(':id/permissions/:userPermissionId')
   revokePermission(
@@ -132,7 +187,13 @@ export class UserController {
     return this.userService.revokePermissionFromUser(userPermissionId);
   }
 
-  @Get('getEffectivePermissions/:usersId')
+  /**
+   * Obtiene la lista de permisos efectivos de un usuario, incluyendo los permisos directos y los heredados a través de roles.
+   * @param usersId
+   * @returns
+   */
+  @RequiredPermission('users', 'read')
+  @Get('getEffectivePermissions:id/effective-permissions')
   getEffectivePermissions(@Param('usersId', ParseIntPipe) usersId: number) {
     return this.userService.getEffectivePermissions(usersId);
   }

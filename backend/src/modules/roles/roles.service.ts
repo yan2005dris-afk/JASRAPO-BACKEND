@@ -2,10 +2,13 @@ import {
   ConflictException,
   Injectable,
   NotFoundException,
+  UseGuards,
 } from '@nestjs/common';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
 import { PrismaService } from 'src/database/prisma.service';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { PermissionsGuard } from 'src/common/guards/permissions.guard';
 
 @Injectable()
 export class RolesService {
@@ -108,14 +111,6 @@ export class RolesService {
     });
   }
 
-  remove(id: number) {
-    return this.prisma.roles.delete({
-      where: {
-        rolesId: id,
-      },
-    });
-  }
-
   async getRolePermissions(rolesId: number) {
     const role = await this.prisma.roles.findUnique({ where: { rolesId } });
     if (!role || role.deletedAt) {
@@ -190,9 +185,10 @@ export class RolesService {
       throw new NotFoundException('Permiso no asignado a este rol');
     }
 
-    return this.prisma.rolPermissions.delete({
-      where: {
-        rolPermissionsId: assignment.rolPermissionsId,
+    return this.prisma.rolPermissions.update({
+      where: { rolPermissionsId: assignment.rolPermissionsId },
+      data: {
+        deletedAt: new Date(),
       },
     });
   }
