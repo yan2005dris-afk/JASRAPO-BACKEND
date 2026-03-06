@@ -45,8 +45,8 @@ export declare class AuthService {
     }>;
     logout(sessionId: number): Promise<void>;
     validateUser(loginUserDto: LoginUserDto): Promise<{
-        email: string;
-        usersId: number;
         deletedAt: Date | null;
+        usersId: number;
+        email: string;
     }>;
 }

@@ -37,14 +37,14 @@ export declare class RolesController {
     }[]>;
     assignPermission(id: string, assignRolePermissionDto: AssignRolePermissionDto): Promise<{
         deletedAt: Date | null;
+        permissionsId: number;
         rolesId: number;
         rolPermissionsId: number;
-        permissionsId: number;
     }>;
     removePermission(id: string, permissionId: string): Promise<{
         deletedAt: Date | null;
+        permissionsId: number;
         rolesId: number;
         rolPermissionsId: number;
-        permissionsId: number;
     }>;
 }

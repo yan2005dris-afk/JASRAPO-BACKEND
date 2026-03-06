@@ -87,32 +87,29 @@ let AuthController = class AuthController {
 };
 exports.AuthController = AuthController;
 __decorate([
-    (0, swagger_1.ApiBearerAuth)(),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, permissions_guard_1.PermissionsGuard),
-    (0, require_permission_decorator_1.RequiredPermission)('users', 'create'),
     (0, swagger_1.ApiOperation)({
-        summary: 'Registrar un nuevo usuario',
-        description: 'Crea un nuevo usuario en el sistema. Requiere permisos de creación de usuarios.',
+        summary: 'Registrar nuevo usuario',
+        description: 'Crea un nuevo usuario en el sistema. Requiere permiso users:create.',
     }),
+    (0, swagger_1.ApiBody)({ type: register_dto_1.RegisterDto, description: 'Datos del usuario a registrar' }),
     (0, swagger_1.ApiResponse)({
         status: 201,
         description: 'Usuario registrado exitosamente',
         schema: {
             example: {
-                id: 1,
-                email: 'juan.perez@ejemplo.com',
-                createdAt: '2024-01-01T00:00:00Z',
+                usersId: 1,
+                email: 'nuevo@jasrapo.com',
+                createdAt: '2024-01-15T10:30:00Z',
             },
         },
     }),
-    (0, swagger_1.ApiResponse)({
-        status: 400,
-        description: 'Datos inválidos o email ya existe',
-    }),
-    (0, swagger_1.ApiResponse)({
-        status: 401,
-        description: 'No autorizado - Token requerido o permisos insuficientes',
-    }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Datos inválidos' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'No autorizado' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Prohibido - Sin permiso users:create' }),
+    (0, swagger_1.ApiResponse)({ status: 409, description: 'El correo electrónico ya existe' }),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, permissions_guard_1.PermissionsGuard),
+    (0, require_permission_decorator_1.RequiredPermission)('users', 'create'),
     (0, common_1.Post)('register'),
     openapi.ApiResponse({ status: 201, type: String }),
     __param(0, (0, common_1.Body)()),
@@ -123,7 +120,11 @@ __decorate([
 __decorate([
     (0, swagger_1.ApiOperation)({
         summary: 'Iniciar sesión',
-        description: 'Autentica al usuario y retorna tokens de acceso. El refreshToken se almacena en una cookie segura.',
+        description: 'Autentica al usuario y retorna un token de acceso JWT. El refreshToken se almacena en una cookie httpOnly.',
+    }),
+    (0, swagger_1.ApiBody)({
+        type: login_user_dto_1.LoginUserDto,
+        description: 'Credenciales del usuario (email y contraseña)',
     }),
     (0, swagger_1.ApiResponse)({
         status: 200,
@@ -133,20 +134,18 @@ __decorate([
                 accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
                 sid: 'session-id-123',
                 sub: 1,
-                email: 'juan.perez@ejemplo.com',
-                name: 'Juan Pérez',
+                email: 'admin@jasrapo.com',
+                name: 'Admin',
                 roleId: 1,
-                roleName: 'admin',
+                roleName: 'Administrador',
                 avatar: 'https://example.com/avatar.png',
-                createdAt: '2024-01-01T00:00:00Z',
-                expiresAt: '2024-01-01T00:15:00Z',
+                createdAt: '2024-01-15T10:30:00Z',
+                expiresAt: '2024-01-15T11:30:00Z',
             },
         },
     }),
-    (0, swagger_1.ApiResponse)({
-        status: 401,
-        description: 'Credenciales inválidas',
-    }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Credenciales inválidas' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Autenticación fallida' }),
     (0, common_1.Post)('/login'),
     openapi.ApiResponse({ status: 201 }),
     __param(0, (0, common_1.Body)()),
@@ -157,12 +156,11 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "login", null);
 __decorate([
-    (0, swagger_1.ApiBearerAuth)(),
-    (0, common_1.UseGuards)(jwt_refresh_guard_1.JwtRefreshGuard),
     (0, swagger_1.ApiOperation)({
         summary: 'Refrescar token de acceso',
-        description: 'Renueva el token de acceso usando el refreshToken almacenado en cookies.',
+        description: 'Genera un nuevo token de acceso usando el refreshToken almacenado en cookies.',
     }),
+    (0, swagger_1.ApiCookieAuth)('refreshToken'),
     (0, swagger_1.ApiResponse)({
         status: 200,
         description: 'Token refrescado exitosamente',
@@ -173,10 +171,8 @@ __decorate([
             },
         },
     }),
-    (0, swagger_1.ApiResponse)({
-        status: 401,
-        description: 'Refresh token inválido o expirado',
-    }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Refresh token inválido o expirado' }),
+    (0, common_1.UseGuards)(jwt_refresh_guard_1.JwtRefreshGuard),
     (0, common_1.Post)('refresh'),
     openapi.ApiResponse({ status: 201 }),
     __param(0, (0, common_1.Req)()),
@@ -186,12 +182,11 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "refresh", null);
 __decorate([
-    (0, swagger_1.ApiBearerAuth)(),
-    (0, common_1.UseGuards)(jwt_refresh_guard_1.JwtRefreshGuard),
     (0, swagger_1.ApiOperation)({
         summary: 'Cerrar sesión',
-        description: 'Revoca la sesión actual del usuario y elimina el refreshToken de las cookies.',
+        description: 'Cierra la sesión actual del usuario y elimina el refreshToken de la cookie.',
     }),
+    (0, swagger_1.ApiCookieAuth)('refreshToken'),
     (0, swagger_1.ApiResponse)({
         status: 200,
         description: 'Sesión cerrada exitosamente',
@@ -201,10 +196,8 @@ __decorate([
             },
         },
     }),
-    (0, swagger_1.ApiResponse)({
-        status: 401,
-        description: 'No autorizado',
-    }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'No autorizado' }),
+    (0, common_1.UseGuards)(jwt_refresh_guard_1.JwtRefreshGuard),
     (0, common_1.Post)('logout'),
     openapi.ApiResponse({ status: 201 }),
     __param(0, (0, common_1.Req)()),

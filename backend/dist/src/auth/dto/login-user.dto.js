@@ -25,8 +25,9 @@ exports.LoginUserDto = LoginUserDto;
 __decorate([
     (0, swagger_1.ApiProperty)({
         description: 'Correo electrónico del usuario',
-        example: 'juan.perez@ejemplo.com',
+        example: 'admin@jasrapo.com',
         format: 'email',
+        required: true,
     }),
     (0, class_transformer_1.Transform)(({ value }) => value.trim().toLowerCase()),
     (0, class_validator_1.IsNotEmpty)(),
@@ -35,9 +36,11 @@ __decorate([
 ], LoginUserDto.prototype, "email", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
-        description: 'Contraseña del usuario',
+        description: 'Contraseña del usuario (mínimo 6 caracteres, sin espacios)',
         example: 'Password123!',
         minLength: 6,
+        required: true,
+        format: 'password',
     }),
     (0, class_validator_1.IsNotEmpty)(),
     (0, class_validator_1.IsString)(),

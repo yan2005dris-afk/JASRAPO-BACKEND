@@ -80,19 +80,34 @@ let UserController = class UserController {
 };
 exports.UserController = UserController;
 __decorate([
-    (0, require_permission_decorator_1.RequiredPermission)('users', 'create'),
     (0, swagger_1.ApiOperation)({
-        summary: 'Crear un nuevo usuario',
-        description: 'Crea un nuevo usuario en el sistema con email y contraseña.',
+        summary: 'Crear usuario',
+        description: 'Crea un nuevo usuario con email y contraseña. El email debe ser único en el sistema.',
+    }),
+    (0, swagger_1.ApiBody)({
+        type: create_user_dto_1.CreateUserDto,
+        description: 'Datos del usuario a crear',
     }),
     (0, swagger_1.ApiResponse)({
         status: 201,
         description: 'Usuario creado exitosamente',
+        schema: {
+            example: {
+                usersId: 1,
+                email: 'nuevo@jasrapo.com',
+                createdAt: '2024-01-15T10:30:00Z',
+                updatedAt: '2024-01-15T10:30:00Z',
+            },
+        },
     }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Datos inválidos' }),
     (0, swagger_1.ApiResponse)({
-        status: 400,
-        description: 'Datos inválidos o email ya existe',
+        status: 401,
+        description: 'No autorizado - Token inválido o expirado',
     }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Prohibido - Sin permiso users:create' }),
+    (0, swagger_1.ApiResponse)({ status: 409, description: 'Conflicto - El email ya existe' }),
+    (0, require_permission_decorator_1.RequiredPermission)('users', 'create'),
     (0, common_1.Post)('/'),
     openapi.ApiResponse({ status: 201 }),
     __param(0, (0, common_1.Body)()),
@@ -101,27 +116,31 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], UserController.prototype, "create", null);
 __decorate([
-    (0, require_permission_decorator_1.RequiredPermission)('users', 'read'),
     (0, swagger_1.ApiOperation)({
-        summary: 'Obtener todos los usuarios',
-        description: 'Retorna una lista paginada de usuarios.',
+        summary: 'Listar usuarios',
+        description: 'Retorna una lista paginada de usuarios. Si no se especifican parámetros de paginación, retorna todos los usuarios.',
     }),
     (0, swagger_1.ApiQuery)({
         name: 'skip',
-        description: 'Número de registros a omitir (paginación)',
+        description: 'Número de registros a omitir (para paginación)',
         required: false,
+        example: 0,
         type: Number,
     }),
     (0, swagger_1.ApiQuery)({
         name: 'take',
-        description: 'Límite de registros a retornar',
+        description: 'Número máximo de registros a retornar',
         required: false,
+        example: 10,
         type: Number,
     }),
     (0, swagger_1.ApiResponse)({
         status: 200,
-        description: 'Lista de usuarios',
+        description: 'Lista de usuarios obtenida exitosamente',
     }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'No autorizado' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Prohibido - Sin permiso users:read' }),
+    (0, require_permission_decorator_1.RequiredPermission)('users', 'read'),
     (0, common_1.Get)('/'),
     openapi.ApiResponse({ status: 200 }),
     __param(0, (0, common_1.Query)('skip')),
@@ -133,21 +152,21 @@ __decorate([
 __decorate([
     (0, swagger_1.ApiOperation)({
         summary: 'Obtener usuario por ID',
-        description: 'Retorna un usuario específico por su ID.',
+        description: 'Retorna los datos de un usuario específico, incluyendo sus roles y permisos asignados.',
     }),
     (0, swagger_1.ApiParam)({
         name: 'id',
         description: 'ID único del usuario',
         type: Number,
+        example: 1,
     }),
     (0, swagger_1.ApiResponse)({
         status: 200,
-        description: 'Usuario encontrado',
+        description: 'Usuario encontrado exitosamente',
     }),
-    (0, swagger_1.ApiResponse)({
-        status: 404,
-        description: 'Usuario no encontrado',
-    }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'No autorizado' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Prohibido - Sin permiso users:read' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Usuario no encontrado' }),
     (0, common_1.Get)(':id'),
     openapi.ApiResponse({ status: 200, type: Object }),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
@@ -156,20 +175,24 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], UserController.prototype, "findOne", null);
 __decorate([
-    (0, require_permission_decorator_1.RequiredPermission)('users', 'read'),
     (0, swagger_1.ApiOperation)({
         summary: 'Obtener roles de usuario',
-        description: 'Retorna los roles asignados a un usuario específico.',
+        description: 'Retorna los roles asignados a un usuario específico, sin incluir información de la relación.',
     }),
     (0, swagger_1.ApiParam)({
         name: 'id',
         description: 'ID único del usuario',
         type: Number,
+        example: 1,
     }),
     (0, swagger_1.ApiResponse)({
         status: 200,
-        description: 'Lista de roles del usuario',
+        description: 'Roles del usuario obtenidos exitosamente',
     }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'No autorizado' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Prohibido - Sin permiso users:read' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Usuario no encontrado' }),
+    (0, require_permission_decorator_1.RequiredPermission)('users', 'read'),
     (0, common_1.Get)(':id/roles'),
     openapi.ApiResponse({ status: 200, type: [String] }),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
@@ -178,20 +201,24 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], UserController.prototype, "getUserRoles", null);
 __decorate([
-    (0, require_permission_decorator_1.RequiredPermission)('users', 'read'),
     (0, swagger_1.ApiOperation)({
-        summary: 'Obtener asignaciones de rol',
-        description: 'Retorna los roles asignados con información de la relación (userRolesId).',
+        summary: 'Obtener asignaciones de rol de usuario',
+        description: 'Retorna los roles asignados a un usuario con información de la relación (userRolesId), necesario para revocar roles.',
     }),
     (0, swagger_1.ApiParam)({
         name: 'id',
         description: 'ID único del usuario',
         type: Number,
+        example: 1,
     }),
     (0, swagger_1.ApiResponse)({
         status: 200,
-        description: 'Lista de asignaciones de rol',
+        description: 'Asignaciones de rol obtenidas exitosamente',
     }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'No autorizado' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Prohibido - Sin permiso users:read' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Usuario no encontrado' }),
+    (0, require_permission_decorator_1.RequiredPermission)('users', 'read'),
     (0, common_1.Get)(':id/role-assignments'),
     openapi.ApiResponse({ status: 200 }),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
@@ -200,24 +227,29 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], UserController.prototype, "getUserRoleAssignments", null);
 __decorate([
-    (0, require_permission_decorator_1.RequiredPermission)('users', 'update'),
     (0, swagger_1.ApiOperation)({
         summary: 'Actualizar usuario',
-        description: 'Actualiza los datos de un usuario (email o contraseña).',
+        description: 'Actualiza los datos básicos de un usuario (email o contraseña).',
     }),
     (0, swagger_1.ApiParam)({
         name: 'id',
-        description: 'ID único del usuario',
+        description: 'ID único del usuario a actualizar',
         type: Number,
+        example: 1,
+    }),
+    (0, swagger_1.ApiBody)({
+        type: update_user_dto_1.UpdateUserDto,
+        description: 'Datos a actualizar (email y/o password)',
     }),
     (0, swagger_1.ApiResponse)({
         status: 200,
-        description: 'Usuario actualizado',
+        description: 'Usuario actualizado exitosamente',
     }),
-    (0, swagger_1.ApiResponse)({
-        status: 404,
-        description: 'Usuario no encontrado',
-    }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Datos inválidos' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'No autorizado' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Prohibido - Sin permiso users:update' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Usuario no encontrado' }),
+    (0, require_permission_decorator_1.RequiredPermission)('users', 'update'),
     (0, common_1.Patch)(':id'),
     openapi.ApiResponse({ status: 200 }),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
@@ -227,24 +259,35 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], UserController.prototype, "updateUser", null);
 __decorate([
-    (0, require_permission_decorator_1.RequiredPermission)('users', 'update'),
     (0, swagger_1.ApiOperation)({
         summary: 'Asignar rol a usuario',
-        description: 'Asigna un rol adicional a un usuario existente.',
+        description: 'Asigna un rol adicional a un usuario existente. No elimina los roles anteriores.',
     }),
     (0, swagger_1.ApiParam)({
         name: 'id',
         description: 'ID único del usuario',
         type: Number,
+        example: 1,
+    }),
+    (0, swagger_1.ApiBody)({
+        type: assign_role_dto_1.AssignRoleDto,
+        description: 'ID del rol a asignar',
+        examples: {
+            ejemplo1: {
+                value: { rolesId: 2 },
+                summary: 'Asignar rol de Editor',
+            },
+        },
     }),
     (0, swagger_1.ApiResponse)({
         status: 201,
         description: 'Rol asignado exitosamente',
     }),
-    (0, swagger_1.ApiResponse)({
-        status: 404,
-        description: 'Usuario o rol no encontrado',
-    }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Datos inválidos' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'No autorizado' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Prohibido - Sin permiso users:update' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Usuario o rol no encontrado' }),
+    (0, require_permission_decorator_1.RequiredPermission)('users', 'update'),
     (0, common_1.Post)(':id/roles'),
     openapi.ApiResponse({ status: 201 }),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
@@ -254,20 +297,24 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], UserController.prototype, "assignRole", null);
 __decorate([
-    (0, require_permission_decorator_1.RequiredPermission)('users', 'read'),
     (0, swagger_1.ApiOperation)({
         summary: 'Obtener permisos directos del usuario',
-        description: 'Retorna los permisos asignados directamente al usuario (no heredados).',
+        description: 'Retorna los permisos asignados directamente al usuario, sin incluir los heredados por roles.',
     }),
     (0, swagger_1.ApiParam)({
         name: 'id',
         description: 'ID único del usuario',
         type: Number,
+        example: 1,
     }),
     (0, swagger_1.ApiResponse)({
         status: 200,
-        description: 'Lista de permisos directos',
+        description: 'Permisos directos del usuario obtenidos exitosamente',
     }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'No autorizado' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Prohibido - Sin permiso users:read' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Usuario no encontrado' }),
+    (0, require_permission_decorator_1.RequiredPermission)('users', 'read'),
     (0, common_1.Get)(':id/permissions'),
     openapi.ApiResponse({ status: 200 }),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
@@ -276,24 +323,39 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], UserController.prototype, "getUserPermissions", null);
 __decorate([
-    (0, require_permission_decorator_1.RequiredPermission)('users', 'update'),
     (0, swagger_1.ApiOperation)({
         summary: 'Asignar permiso directo a usuario',
-        description: 'Asigna un permiso directo a un usuario sin pasar por un rol.',
+        description: 'Asigna un permiso directo a un usuario sin pasar por un rol. Útil para permisos específicos.',
     }),
     (0, swagger_1.ApiParam)({
         name: 'id',
         description: 'ID único del usuario',
         type: Number,
+        example: 1,
+    }),
+    (0, swagger_1.ApiBody)({
+        type: assign_permission_dto_1.AssignPermissionDto,
+        description: 'ID del permiso a asignar y opción allow',
+        examples: {
+            ejemplo1: {
+                value: { permissionsId: 1, allow: true },
+                summary: 'Permitir permiso',
+            },
+            ejemplo2: {
+                value: { permissionsId: 1, allow: false },
+                summary: 'Revocar permiso',
+            },
+        },
     }),
     (0, swagger_1.ApiResponse)({
         status: 201,
         description: 'Permiso asignado exitosamente',
     }),
-    (0, swagger_1.ApiResponse)({
-        status: 404,
-        description: 'Usuario o permiso no encontrado',
-    }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Datos inválidos' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'No autorizado' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Prohibido - Sin permiso users:update' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Usuario o permiso no encontrado' }),
+    (0, require_permission_decorator_1.RequiredPermission)('users', 'update'),
     (0, common_1.Post)(':id/permissions'),
     openapi.ApiResponse({ status: 201 }),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
@@ -303,24 +365,30 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], UserController.prototype, "assignPermission", null);
 __decorate([
-    (0, require_permission_decorator_1.RequiredPermission)('users', 'delete'),
     (0, swagger_1.ApiOperation)({
         summary: 'Revocar rol de usuario',
-        description: 'Revoca (soft delete) un rol asignado a un usuario. El userRoleId es el ID de la relación.',
+        description: 'Revoca (soft delete) un rol asignado a un usuario. El userRoleId es el ID de la relación en users_roles.',
+    }),
+    (0, swagger_1.ApiParam)({
+        name: 'id',
+        description: 'ID único del usuario',
+        type: Number,
+        example: 1,
     }),
     (0, swagger_1.ApiParam)({
         name: 'userRoleId',
-        description: 'ID de la relación usuario-rol',
+        description: 'ID de la relación usuario-rol (users_roles)',
         type: Number,
+        example: 1,
     }),
     (0, swagger_1.ApiResponse)({
         status: 200,
         description: 'Rol revocado exitosamente',
     }),
-    (0, swagger_1.ApiResponse)({
-        status: 404,
-        description: 'Asignación de rol no encontrada',
-    }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'No autorizado' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Prohibido - Sin permiso users:delete' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Relación usuario-rol no encontrada' }),
+    (0, require_permission_decorator_1.RequiredPermission)('users', 'delete'),
     (0, common_1.Delete)(':id/roles/:userRoleId'),
     openapi.ApiResponse({ status: 200 }),
     __param(0, (0, common_1.Param)('userRoleId', common_1.ParseIntPipe)),
@@ -329,24 +397,24 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], UserController.prototype, "revokeRole", null);
 __decorate([
-    (0, require_permission_decorator_1.RequiredPermission)('users', 'delete'),
     (0, swagger_1.ApiOperation)({
         summary: 'Eliminar usuario',
-        description: 'Revoca (soft delete) un usuario completo, incluyendo sus roles y permisos.',
+        description: 'Marca un usuario como eliminado (soft delete). El usuario no se borra permanentemente de la base de datos.',
     }),
     (0, swagger_1.ApiParam)({
         name: 'id',
-        description: 'ID único del usuario',
+        description: 'ID único del usuario a eliminar',
         type: Number,
+        example: 1,
     }),
     (0, swagger_1.ApiResponse)({
         status: 200,
         description: 'Usuario eliminado exitosamente',
     }),
-    (0, swagger_1.ApiResponse)({
-        status: 404,
-        description: 'Usuario no encontrado',
-    }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'No autorizado' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Prohibido - Sin permiso users:delete' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Usuario no encontrado' }),
+    (0, require_permission_decorator_1.RequiredPermission)('users', 'delete'),
     (0, common_1.Delete)(':id'),
     openapi.ApiResponse({ status: 200 }),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
@@ -355,24 +423,30 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], UserController.prototype, "remove", null);
 __decorate([
-    (0, require_permission_decorator_1.RequiredPermission)('users', 'delete'),
     (0, swagger_1.ApiOperation)({
         summary: 'Revocar permiso directo de usuario',
-        description: 'Revoca (soft delete) un permiso asignado directamente a un usuario.',
+        description: 'Revoca (soft delete) un permiso asignado directamente a un usuario. El userPermissionId es el ID de la relación.',
+    }),
+    (0, swagger_1.ApiParam)({
+        name: 'id',
+        description: 'ID único del usuario',
+        type: Number,
+        example: 1,
     }),
     (0, swagger_1.ApiParam)({
         name: 'userPermissionId',
-        description: 'ID de la relación usuario-permiso',
+        description: 'ID de la relación usuario-permiso (users_permissions)',
         type: Number,
+        example: 1,
     }),
     (0, swagger_1.ApiResponse)({
         status: 200,
         description: 'Permiso revocado exitosamente',
     }),
-    (0, swagger_1.ApiResponse)({
-        status: 404,
-        description: 'Permiso no encontrado',
-    }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'No autorizado' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Prohibido - Sin permiso users:delete' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Relación usuario-permiso no encontrada' }),
+    (0, require_permission_decorator_1.RequiredPermission)('users', 'delete'),
     (0, common_1.Delete)(':id/permissions/:userPermissionId'),
     openapi.ApiResponse({ status: 200 }),
     __param(0, (0, common_1.Param)('userPermissionId', common_1.ParseIntPipe)),
@@ -381,20 +455,24 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], UserController.prototype, "revokePermission", null);
 __decorate([
-    (0, require_permission_decorator_1.RequiredPermission)('users', 'read'),
     (0, swagger_1.ApiOperation)({
         summary: 'Obtener permisos efectivos del usuario',
-        description: 'Retorna todos los permisos efectivos (directos + heredados de roles).',
+        description: 'Retorna la lista de permisos efectivos de un usuario, incluyendo permisos directos y heredados por roles.',
     }),
     (0, swagger_1.ApiParam)({
         name: 'usersId',
         description: 'ID único del usuario',
         type: Number,
+        example: 1,
     }),
     (0, swagger_1.ApiResponse)({
         status: 200,
-        description: 'Lista de permisos efectivos',
+        description: 'Permisos efectivos obtenidos exitosamente',
     }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'No autorizado' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Prohibido - Sin permiso users:read' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Usuario no encontrado' }),
+    (0, require_permission_decorator_1.RequiredPermission)('users', 'read'),
     (0, common_1.Get)('getEffectivePermissions:id/effective-permissions'),
     openapi.ApiResponse({ status: 200 }),
     __param(0, (0, common_1.Param)('usersId', common_1.ParseIntPipe)),

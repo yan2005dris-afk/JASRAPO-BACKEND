@@ -23,18 +23,21 @@ class RegisterDto {
 exports.RegisterDto = RegisterDto;
 __decorate([
     (0, swagger_1.ApiProperty)({
-        description: 'Correo electrónico del usuario',
-        example: 'juan.perez@ejemplo.com',
+        description: 'Correo electrónico del nuevo usuario',
+        example: 'nuevo@jasrapo.com',
         format: 'email',
+        required: true,
     }),
     (0, class_validator_1.IsEmail)(),
     __metadata("design:type", String)
 ], RegisterDto.prototype, "email", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
-        description: 'Contraseña del usuario. Debe tener al menos 6 caracteres, una mayúscula, un número y un carácter especial',
-        example: 'Password123!',
+        description: 'Contraseña segura (mínimo 6 caracteres, debe contener al menos una mayúscula, un número y un carácter especial)',
+        example: 'SecurePass123!',
         minLength: 6,
+        required: true,
+        format: 'password',
     }),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.MinLength)(6),

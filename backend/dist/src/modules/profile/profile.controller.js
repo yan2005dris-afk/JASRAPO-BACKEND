@@ -42,15 +42,31 @@ exports.ProfileController = ProfileController;
 __decorate([
     (0, swagger_1.ApiOperation)({
         summary: 'Crear perfil del usuario autenticado',
-        description: 'Crea el perfil del usuario autenticado. Solo se puede crear una vez.',
+        description: 'Crea el perfil para el usuario actualmente autenticado. Solo se permite crear un perfil por usuario.',
+    }),
+    (0, swagger_1.ApiBody)({
+        type: create_profile_dto_1.CreateProfileDto,
+        description: 'Datos del perfil a crear',
     }),
     (0, swagger_1.ApiResponse)({
         status: 201,
         description: 'Perfil creado exitosamente',
+        schema: {
+            example: {
+                profileId: 1,
+                usersId: 1,
+                name: 'Juan Pérez',
+                phone: '+593999999999',
+                address: 'Quito, Ecuador',
+                createdAt: '2024-01-15T10:30:00Z',
+            },
+        },
     }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Datos inválidos' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'No autorizado' }),
     (0, swagger_1.ApiResponse)({
         status: 409,
-        description: 'El perfil ya existe',
+        description: 'Conflicto - El usuario ya tiene un perfil creado',
     }),
     (0, common_1.Post)(),
     openapi.ApiResponse({ status: 201 }),
@@ -63,16 +79,24 @@ __decorate([
 __decorate([
     (0, swagger_1.ApiOperation)({
         summary: 'Obtener mi perfil',
-        description: 'Retorna el perfil del usuario autenticado.',
+        description: 'Retorna el perfil del usuario actualmente autenticado.',
     }),
     (0, swagger_1.ApiResponse)({
         status: 200,
-        description: 'Perfil del usuario',
+        description: 'Perfil obtenido exitosamente',
+        schema: {
+            example: {
+                profileId: 1,
+                usersId: 1,
+                name: 'Juan Pérez',
+                phone: '+593999999999',
+                address: 'Quito, Ecuador',
+                createdAt: '2024-01-15T10:30:00Z',
+            },
+        },
     }),
-    (0, swagger_1.ApiResponse)({
-        status: 404,
-        description: 'Perfil no encontrado',
-    }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'No autorizado' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Perfil no encontrado' }),
     (0, common_1.Get)('me'),
     openapi.ApiResponse({ status: 200 }),
     __param(0, (0, common_1.Req)()),
@@ -83,16 +107,29 @@ __decorate([
 __decorate([
     (0, swagger_1.ApiOperation)({
         summary: 'Actualizar mi perfil',
-        description: 'Actualiza el perfil del usuario autenticado.',
+        description: 'Actualiza los datos del perfil del usuario actualmente autenticado.',
+    }),
+    (0, swagger_1.ApiBody)({
+        type: update_profile_dto_1.UpdateProfileDto,
+        description: 'Datos a actualizar en el perfil',
     }),
     (0, swagger_1.ApiResponse)({
         status: 200,
         description: 'Perfil actualizado exitosamente',
+        schema: {
+            example: {
+                profileId: 1,
+                usersId: 1,
+                name: 'Juan Pérez Actualizado',
+                phone: '+593988888888',
+                address: 'Guayaquil, Ecuador',
+                updatedAt: '2024-01-15T12:00:00Z',
+            },
+        },
     }),
-    (0, swagger_1.ApiResponse)({
-        status: 404,
-        description: 'Perfil no encontrado',
-    }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Datos inválidos' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'No autorizado' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Perfil no encontrado' }),
     (0, common_1.Patch)(),
     openapi.ApiResponse({ status: 200 }),
     __param(0, (0, common_1.Req)()),
