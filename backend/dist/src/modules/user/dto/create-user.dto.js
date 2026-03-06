@@ -23,9 +23,10 @@ class CreateUserDto {
 exports.CreateUserDto = CreateUserDto;
 __decorate([
     (0, swagger_1.ApiProperty)({
-        description: 'Correo electrónico único del usuario',
-        example: 'juan.perez@ejemplo.com',
+        description: 'Correo electrónico del usuario (debe ser único)',
+        example: 'usuario@jasrapo.com',
         format: 'email',
+        required: true,
     }),
     (0, class_validator_1.IsEmail)(),
     (0, class_validator_1.IsNotEmpty)(),
@@ -36,6 +37,8 @@ __decorate([
         description: 'Contraseña del usuario (mínimo 6 caracteres)',
         example: 'Password123!',
         minLength: 6,
+        required: true,
+        format: 'password',
     }),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)(),

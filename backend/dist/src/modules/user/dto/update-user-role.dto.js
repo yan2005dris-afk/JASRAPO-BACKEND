@@ -11,6 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UpdateUserRoleDto = void 0;
 const openapi = require("@nestjs/swagger");
+const swagger_1 = require("@nestjs/swagger");
 const class_validator_1 = require("class-validator");
 class UpdateUserRoleDto {
     usersRolesId;
@@ -22,14 +23,29 @@ class UpdateUserRoleDto {
 }
 exports.UpdateUserRoleDto = UpdateUserRoleDto;
 __decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'ID de la relación usuario-rol (users_roles)',
+        example: 1,
+        required: true,
+    }),
     (0, class_validator_1.IsInt)(),
     __metadata("design:type", Number)
 ], UpdateUserRoleDto.prototype, "usersRolesId", void 0);
 __decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'ID del nuevo rol a asignar',
+        example: 2,
+        required: true,
+    }),
     (0, class_validator_1.IsInt)(),
     __metadata("design:type", Number)
 ], UpdateUserRoleDto.prototype, "rolesId", void 0);
 __decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Fecha de eliminación (soft delete)',
+        example: null,
+        nullable: true,
+    }),
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Date)
 ], UpdateUserRoleDto.prototype, "deletedAt", void 0);

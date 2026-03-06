@@ -7,31 +7,31 @@ export declare class ProfileController {
     create(req: any, createProfileDto: CreateProfileDto): Promise<{
         usersId: number;
         createdAt: Date;
-        profileId: number;
         firstName: string | null;
         lastName: string | null;
         phone: string | null;
         avatar: string | null;
         updatedAt: Date;
+        profileId: number;
     }>;
     findMe(req: any): Promise<{
         usersId: number;
         createdAt: Date;
-        profileId: number;
         firstName: string | null;
         lastName: string | null;
         phone: string | null;
         avatar: string | null;
         updatedAt: Date;
+        profileId: number;
     }>;
     update(req: any, updateProfileDto: UpdateProfileDto): Promise<{
         usersId: number;
         createdAt: Date;
-        profileId: number;
         firstName: string | null;
         lastName: string | null;
         phone: string | null;
         avatar: string | null;
         updatedAt: Date;
+        profileId: number;
     }>;
 }

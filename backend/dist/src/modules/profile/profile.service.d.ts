@@ -7,31 +7,31 @@ export declare class ProfileService {
     create(usersId: number, createProfileDto: CreateProfileDto): Promise<{
         usersId: number;
         createdAt: Date;
-        profileId: number;
         firstName: string | null;
         lastName: string | null;
         phone: string | null;
         avatar: string | null;
         updatedAt: Date;
+        profileId: number;
     }>;
     findMyProfile(usersId: number): Promise<{
         usersId: number;
         createdAt: Date;
-        profileId: number;
         firstName: string | null;
         lastName: string | null;
         phone: string | null;
         avatar: string | null;
         updatedAt: Date;
+        profileId: number;
     }>;
     update(usersId: number, updateProfileDto: UpdateProfileDto): Promise<{
         usersId: number;
         createdAt: Date;
-        profileId: number;
         firstName: string | null;
         lastName: string | null;
         phone: string | null;
         avatar: string | null;
         updatedAt: Date;
+        profileId: number;
     }>;
 }

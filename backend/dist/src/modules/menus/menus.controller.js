@@ -32,18 +32,36 @@ let MenusController = class MenusController {
 exports.MenusController = MenusController;
 __decorate([
     (0, swagger_1.ApiOperation)({
-        summary: 'Obtener menús del usuario',
-        description: 'Retorna los menús disponibles para el usuario autenticado, basados en sus roles y permisos.',
+        summary: 'Obtener menús del usuario autenticado',
+        description: 'Retorna los menús disponibles para el usuario actual, basados en sus roles y permisos. El user.sub se obtiene del JWT.',
     }),
     (0, swagger_1.ApiResponse)({
         status: 200,
-        description: 'Lista de menús disponibles para el usuario',
+        description: 'Menús obtenidos exitosamente',
         type: [response_menu_dto_1.MenuResponseDto],
+        schema: {
+            example: [
+                {
+                    id: 1,
+                    name: 'Dashboard',
+                    path: '/dashboard',
+                    icon: 'dashboard',
+                    children: [],
+                },
+                {
+                    id: 2,
+                    name: 'Usuarios',
+                    path: '/users',
+                    icon: 'people',
+                    children: [
+                        { id: 3, name: 'Listar Usuarios', path: '/users/list', icon: null },
+                        { id: 4, name: 'Crear Usuario', path: '/users/create', icon: null },
+                    ],
+                },
+            ],
+        },
     }),
-    (0, swagger_1.ApiResponse)({
-        status: 401,
-        description: 'No autorizado',
-    }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'No autorizado - Token inválido o expirado' }),
     (0, common_1.Get)('my'),
     openapi.ApiResponse({ status: 200, type: [require("./dto/response-menu.dto").MenuResponseDto] }),
     __param(0, (0, common_1.Req)()),
