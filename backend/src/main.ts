@@ -108,7 +108,7 @@ Gestión de perfiles de usuario.
 ## 📞 Soporte
 Para consultas o soporte, contacta al equipo de desarrollo del Backend.
     `)
-    .setVersion('1.0')
+    .setVersion('2.0')
     .addBearerAuth(
       {
         type: 'http',
