@@ -5,8 +5,8 @@ FRONT.rar
 
 # --- Persistencia de Datos (Docker) ---
 backend-db/postgres-data/
-backend-db/minio-data/
 backend-db/postgres/
+/backend-db/minio-data
 
 # --- Backend (NestJS & Node) ---
 node_modules/
@@ -21,3 +21,4 @@ backend/postgres/.env
 # --- Otros ---
 *.log
 .DS_Store
+
