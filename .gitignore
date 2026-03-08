@@ -2,3 +2,11 @@
 FRONT/
 FRONT.rar
 .agents
+
+# Ingorar carpetas de persistencia de base de datos
+backend-db/postgres/postgres-data/
+backend-db/minio/minio-data/
+
+# Ignorar dependencias y directorios de compilacion del backend
+backend/node_modules/
+backend/dist/
