@@ -22,3 +22,4 @@ backend/postgres/.env
 *.log
 .DS_Store
 
+*.zip
