@@ -16,10 +16,10 @@ export declare class AuthService {
         sub: number;
         sid: number;
         name: string | null;
-        avatar: string | null;
+        avatar: any;
         email: string;
-        roleId: number;
-        roleName: string;
+        roleId: number | null;
+        roleName: string | null;
         roles: number[];
         accessToken: string;
         refreshToken: string;
@@ -46,6 +46,7 @@ export declare class AuthService {
     logout(sessionId: number): Promise<void>;
     validateUser(loginUserDto: LoginUserDto): Promise<{
         deletedAt: Date | null;
+        rolesId: number | null;
         usersId: number;
         email: string;
     }>;

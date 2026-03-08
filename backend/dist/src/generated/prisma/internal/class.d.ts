@@ -43,6 +43,9 @@ export interface PrismaClient<in LogOpts extends Prisma.LogLevel = never, in out
     get rolPermissions(): Prisma.RolPermissionsDelegate<ExtArgs, {
         omit: OmitOpts;
     }>;
+    get rolesHeredados(): Prisma.RolesHeredadosDelegate<ExtArgs, {
+        omit: OmitOpts;
+    }>;
     get roles(): Prisma.RolesDelegate<ExtArgs, {
         omit: OmitOpts;
     }>;
@@ -50,9 +53,6 @@ export interface PrismaClient<in LogOpts extends Prisma.LogLevel = never, in out
         omit: OmitOpts;
     }>;
     get userPermissions(): Prisma.UserPermissionsDelegate<ExtArgs, {
-        omit: OmitOpts;
-    }>;
-    get userRoles(): Prisma.UserRolesDelegate<ExtArgs, {
         omit: OmitOpts;
     }>;
     get users(): Prisma.UsersDelegate<ExtArgs, {

@@ -16,10 +16,10 @@ export declare const ModelName: {
     readonly Permissions: "Permissions";
     readonly Profiles: "Profiles";
     readonly RolPermissions: "RolPermissions";
+    readonly RolesHeredados: "RolesHeredados";
     readonly Roles: "Roles";
     readonly Sessions: "Sessions";
     readonly UserPermissions: "UserPermissions";
-    readonly UserRoles: "UserRoles";
     readonly Users: "Users";
     readonly Clientes: "Clientes";
     readonly ClientesMedidores: "ClientesMedidores";
@@ -82,6 +82,13 @@ export declare const RolPermissionsScalarFieldEnum: {
     readonly deletedAt: "deletedAt";
 };
 export type RolPermissionsScalarFieldEnum = (typeof RolPermissionsScalarFieldEnum)[keyof typeof RolPermissionsScalarFieldEnum];
+export declare const RolesHeredadosScalarFieldEnum: {
+    readonly roleHierarchyId: "roleHierarchyId";
+    readonly parentRoleId: "parentRoleId";
+    readonly childRoleId: "childRoleId";
+    readonly deletedAt: "deletedAt";
+};
+export type RolesHeredadosScalarFieldEnum = (typeof RolesHeredadosScalarFieldEnum)[keyof typeof RolesHeredadosScalarFieldEnum];
 export declare const RolesScalarFieldEnum: {
     readonly rolesId: "rolesId";
     readonly name: "name";
@@ -107,17 +114,11 @@ export declare const UserPermissionsScalarFieldEnum: {
     readonly deteledAt: "deteledAt";
 };
 export type UserPermissionsScalarFieldEnum = (typeof UserPermissionsScalarFieldEnum)[keyof typeof UserPermissionsScalarFieldEnum];
-export declare const UserRolesScalarFieldEnum: {
-    readonly usersRolesId: "usersRolesId";
-    readonly usersId: "usersId";
-    readonly rolesId: "rolesId";
-    readonly deletedAt: "deletedAt";
-};
-export type UserRolesScalarFieldEnum = (typeof UserRolesScalarFieldEnum)[keyof typeof UserRolesScalarFieldEnum];
 export declare const UsersScalarFieldEnum: {
     readonly usersId: "usersId";
     readonly email: "email";
     readonly password: "password";
+    readonly rolesId: "rolesId";
     readonly deletedAt: "deletedAt";
 };
 export type UsersScalarFieldEnum = (typeof UsersScalarFieldEnum)[keyof typeof UsersScalarFieldEnum];
@@ -215,6 +216,11 @@ export declare const SortOrder: {
     readonly desc: "desc";
 };
 export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder];
+export declare const NullableJsonNullValueInput: {
+    readonly DbNull: import("@prisma/client-runtime-utils").DbNullClass;
+    readonly JsonNull: import("@prisma/client-runtime-utils").JsonNullClass;
+};
+export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput];
 export declare const NullsOrder: {
     readonly first: "first";
     readonly last: "last";
@@ -225,3 +231,9 @@ export declare const QueryMode: {
     readonly insensitive: "insensitive";
 };
 export type QueryMode = (typeof QueryMode)[keyof typeof QueryMode];
+export declare const JsonNullValueFilter: {
+    readonly DbNull: import("@prisma/client-runtime-utils").DbNullClass;
+    readonly JsonNull: import("@prisma/client-runtime-utils").JsonNullClass;
+    readonly AnyNull: import("@prisma/client-runtime-utils").AnyNullClass;
+};
+export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter];

@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.QueryMode = exports.NullsOrder = exports.SortOrder = exports.SolicitudesScalarFieldEnum = exports.PagosScalarFieldEnum = exports.MedidoresScalarFieldEnum = exports.LecturasScalarFieldEnum = exports.FacturasScalarFieldEnum = exports.DetalleFacturaScalarFieldEnum = exports.ConveniosScalarFieldEnum = exports.ComunidadesScalarFieldEnum = exports.ClientesMedidoresScalarFieldEnum = exports.ClientesScalarFieldEnum = exports.UsersScalarFieldEnum = exports.UserRolesScalarFieldEnum = exports.UserPermissionsScalarFieldEnum = exports.SessionsScalarFieldEnum = exports.RolesScalarFieldEnum = exports.RolPermissionsScalarFieldEnum = exports.ProfilesScalarFieldEnum = exports.PermissionsScalarFieldEnum = exports.MenusScalarFieldEnum = exports.MenuPermissionsScalarFieldEnum = exports.TransactionIsolationLevel = exports.ModelName = exports.AnyNull = exports.JsonNull = exports.DbNull = exports.NullTypes = exports.Decimal = void 0;
+exports.JsonNullValueFilter = exports.QueryMode = exports.NullsOrder = exports.NullableJsonNullValueInput = exports.SortOrder = exports.SolicitudesScalarFieldEnum = exports.PagosScalarFieldEnum = exports.MedidoresScalarFieldEnum = exports.LecturasScalarFieldEnum = exports.FacturasScalarFieldEnum = exports.DetalleFacturaScalarFieldEnum = exports.ConveniosScalarFieldEnum = exports.ComunidadesScalarFieldEnum = exports.ClientesMedidoresScalarFieldEnum = exports.ClientesScalarFieldEnum = exports.UsersScalarFieldEnum = exports.UserPermissionsScalarFieldEnum = exports.SessionsScalarFieldEnum = exports.RolesScalarFieldEnum = exports.RolesHeredadosScalarFieldEnum = exports.RolPermissionsScalarFieldEnum = exports.ProfilesScalarFieldEnum = exports.PermissionsScalarFieldEnum = exports.MenusScalarFieldEnum = exports.MenuPermissionsScalarFieldEnum = exports.TransactionIsolationLevel = exports.ModelName = exports.AnyNull = exports.JsonNull = exports.DbNull = exports.NullTypes = exports.Decimal = void 0;
 const runtime = __importStar(require("@prisma/client/runtime/index-browser"));
 exports.Decimal = runtime.Decimal;
 exports.NullTypes = {
@@ -50,10 +50,10 @@ exports.ModelName = {
     Permissions: 'Permissions',
     Profiles: 'Profiles',
     RolPermissions: 'RolPermissions',
+    RolesHeredados: 'RolesHeredados',
     Roles: 'Roles',
     Sessions: 'Sessions',
     UserPermissions: 'UserPermissions',
-    UserRoles: 'UserRoles',
     Users: 'Users',
     Clientes: 'Clientes',
     ClientesMedidores: 'ClientesMedidores',
@@ -109,6 +109,12 @@ exports.RolPermissionsScalarFieldEnum = {
     permissionsId: 'permissionsId',
     deletedAt: 'deletedAt'
 };
+exports.RolesHeredadosScalarFieldEnum = {
+    roleHierarchyId: 'roleHierarchyId',
+    parentRoleId: 'parentRoleId',
+    childRoleId: 'childRoleId',
+    deletedAt: 'deletedAt'
+};
 exports.RolesScalarFieldEnum = {
     rolesId: 'rolesId',
     name: 'name',
@@ -131,16 +137,11 @@ exports.UserPermissionsScalarFieldEnum = {
     allow: 'allow',
     deteledAt: 'deteledAt'
 };
-exports.UserRolesScalarFieldEnum = {
-    usersRolesId: 'usersRolesId',
-    usersId: 'usersId',
-    rolesId: 'rolesId',
-    deletedAt: 'deletedAt'
-};
 exports.UsersScalarFieldEnum = {
     usersId: 'usersId',
     email: 'email',
     password: 'password',
+    rolesId: 'rolesId',
     deletedAt: 'deletedAt'
 };
 exports.ClientesScalarFieldEnum = {
@@ -226,6 +227,10 @@ exports.SortOrder = {
     asc: 'asc',
     desc: 'desc'
 };
+exports.NullableJsonNullValueInput = {
+    DbNull: exports.DbNull,
+    JsonNull: exports.JsonNull
+};
 exports.NullsOrder = {
     first: 'first',
     last: 'last'
@@ -233,5 +238,10 @@ exports.NullsOrder = {
 exports.QueryMode = {
     default: 'default',
     insensitive: 'insensitive'
+};
+exports.JsonNullValueFilter = {
+    DbNull: exports.DbNull,
+    JsonNull: exports.JsonNull,
+    AnyNull: exports.AnyNull
 };
 //# sourceMappingURL=prismaNamespaceBrowser.js.map

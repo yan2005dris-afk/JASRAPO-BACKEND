@@ -18,19 +18,68 @@ let RolesService = class RolesService {
         this.prisma = prisma;
     }
     async create(createRoleDto) {
+        const { childRoleIds = [], ...roleData } = createRoleDto;
+        const normalizedChildRoleIds = Array.from(new Set(childRoleIds
+            .map((id) => Number(id))
+            .filter((id) => Number.isInteger(id) && id > 0)));
+        if (normalizedChildRoleIds.length > 0) {
+            await this.assertChildRolesExist(normalizedChildRoleIds);
+        }
         try {
-            return await this.prisma.roles.create({
-                data: createRoleDto,
+            return await this.prisma.$transaction(async (tx) => {
+                const createdRole = await tx.roles.create({
+                    data: roleData,
+                });
+                if (normalizedChildRoleIds.length > 0) {
+                    const safeChildIds = normalizedChildRoleIds.filter((childRoleId) => childRoleId !== createdRole.rolesId);
+                    if (safeChildIds.length > 0) {
+                        await tx.rolesHeredados.createMany({
+                            data: safeChildIds.map((childRoleId) => ({
+                                parentRoleId: createdRole.rolesId,
+                                childRoleId,
+                            })),
+                        });
+                    }
+                }
+                return createdRole;
             });
         }
         catch (error) {
             if (this.isRolesIdUniqueConstraintError(error)) {
                 await this.syncRolesIdSequence();
-                return this.prisma.roles.create({
-                    data: createRoleDto,
+                return this.prisma.$transaction(async (tx) => {
+                    const createdRole = await tx.roles.create({
+                        data: roleData,
+                    });
+                    if (normalizedChildRoleIds.length > 0) {
+                        const safeChildIds = normalizedChildRoleIds.filter((childRoleId) => childRoleId !== createdRole.rolesId);
+                        if (safeChildIds.length > 0) {
+                            await tx.rolesHeredados.createMany({
+                                data: safeChildIds.map((childRoleId) => ({
+                                    parentRoleId: createdRole.rolesId,
+                                    childRoleId,
+                                })),
+                            });
+                        }
+                    }
+                    return createdRole;
                 });
             }
             throw error;
+        }
+    }
+    async assertChildRolesExist(childRoleIds) {
+        const validRoles = await this.prisma.roles.findMany({
+            where: {
+                rolesId: { in: childRoleIds },
+                deletedAt: null,
+            },
+            select: { rolesId: true },
+        });
+        const validRoleIds = new Set(validRoles.map((role) => role.rolesId));
+        const missing = childRoleIds.filter((id) => !validRoleIds.has(id));
+        if (missing.length > 0) {
+            throw new common_1.NotFoundException(`No se encontraron roles hijos válidos: ${missing.join(', ')}`);
         }
     }
     isRolesIdUniqueConstraintError(error) {
@@ -88,9 +137,11 @@ let RolesService = class RolesService {
         if (!role || role.deletedAt) {
             throw new common_1.NotFoundException('Rol no encontrado o eliminado');
         }
+        const allRoleIds = await this.resolveRoleHierarchy([rolesId]);
         const assignments = await this.prisma.rolPermissions.findMany({
             where: {
-                rolesId,
+                rolesId: { in: allRoleIds },
+                deletedAt: null,
                 permissions: {
                     deletedAt: null,
                 },
@@ -109,12 +160,52 @@ let RolesService = class RolesService {
                 },
             },
         });
-        return assignments.map((assignment) => ({
+        const seen = new Set();
+        return assignments
+            .filter((a) => {
+            if (seen.has(a.permissionsId))
+                return false;
+            seen.add(a.permissionsId);
+            return true;
+        })
+            .map((assignment) => ({
             rolPermissionsId: assignment.rolPermissionsId,
             permissionsId: assignment.permissionsId,
             resource: assignment.permissions.resource,
             action: assignment.permissions.action,
         }));
+    }
+    async resolveRoleHierarchy(initialRoleIds) {
+        if (initialRoleIds.length === 0)
+            return [];
+        const edges = await this.prisma.rolesHeredados.findMany({
+            where: {
+                deletedAt: null,
+                parentRole: { deletedAt: null },
+                childRole: { deletedAt: null },
+            },
+            select: { parentRoleId: true, childRoleId: true },
+        });
+        const childrenByParent = new Map();
+        for (const edge of edges) {
+            const current = childrenByParent.get(edge.parentRoleId) ?? [];
+            current.push(edge.childRoleId);
+            childrenByParent.set(edge.parentRoleId, current);
+        }
+        const visited = new Set();
+        const stack = [...initialRoleIds];
+        while (stack.length > 0) {
+            const roleId = stack.pop();
+            if (visited.has(roleId))
+                continue;
+            visited.add(roleId);
+            const children = childrenByParent.get(roleId) ?? [];
+            for (const childId of children) {
+                if (!visited.has(childId))
+                    stack.push(childId);
+            }
+        }
+        return Array.from(visited);
     }
     async assignPermission(rolesId, permissionsId) {
         const role = await this.prisma.roles.findUnique({ where: { rolesId } });
@@ -131,7 +222,15 @@ let RolesService = class RolesService {
             where: { rolesId, permissionsId },
         });
         if (existing) {
-            throw new common_1.ConflictException('El rol ya tiene ese permiso asignado');
+            if (existing.deletedAt) {
+                return this.prisma.rolPermissions.update({
+                    where: { rolPermissionsId: existing.rolPermissionsId },
+                    data: { deletedAt: null },
+                });
+            }
+            else {
+                throw new common_1.ConflictException('El rol ya tiene ese permiso asignado');
+            }
         }
         return this.prisma.rolPermissions.create({
             data: {
@@ -152,6 +251,83 @@ let RolesService = class RolesService {
             data: {
                 deletedAt: new Date(),
             },
+        });
+    }
+    async getRoleChildren(rolesId) {
+        const role = await this.prisma.roles.findUnique({ where: { rolesId } });
+        if (!role || role.deletedAt) {
+            throw new common_1.NotFoundException('Rol no encontrado o eliminado');
+        }
+        const links = await this.prisma.rolesHeredados.findMany({
+            where: {
+                parentRoleId: rolesId,
+                deletedAt: null,
+                childRole: { deletedAt: null },
+            },
+            select: {
+                roleHierarchyId: true,
+                childRoleId: true,
+                childRole: { select: { name: true } },
+            },
+            orderBy: { childRoleId: 'asc' },
+        });
+        return links.map((link) => ({
+            roleHierarchyId: link.roleHierarchyId,
+            childRoleId: link.childRoleId,
+            childRoleName: link.childRole.name,
+        }));
+    }
+    async setRoleChildren(rolesId, dto) {
+        const role = await this.prisma.roles.findUnique({ where: { rolesId } });
+        if (!role || role.deletedAt) {
+            throw new common_1.NotFoundException('Rol no encontrado o eliminado');
+        }
+        const normalizedChildRoleIds = Array.from(new Set(dto.childRoleIds
+            .map((id) => Number(id))
+            .filter((id) => Number.isInteger(id) && id > 0 && id !== rolesId)));
+        if (normalizedChildRoleIds.length > 0) {
+            await this.assertChildRolesExist(normalizedChildRoleIds);
+        }
+        return this.prisma.$transaction(async (tx) => {
+            await tx.rolesHeredados.updateMany({
+                where: {
+                    parentRoleId: rolesId,
+                    deletedAt: null,
+                    childRoleId: { notIn: normalizedChildRoleIds },
+                },
+                data: { deletedAt: new Date() },
+            });
+            for (const childRoleId of normalizedChildRoleIds) {
+                const existing = await tx.rolesHeredados.findFirst({
+                    where: { parentRoleId: rolesId, childRoleId },
+                    select: { roleHierarchyId: true, deletedAt: true },
+                });
+                if (!existing) {
+                    await tx.rolesHeredados.create({
+                        data: { parentRoleId: rolesId, childRoleId },
+                    });
+                    continue;
+                }
+                if (existing.deletedAt) {
+                    await tx.rolesHeredados.update({
+                        where: { roleHierarchyId: existing.roleHierarchyId },
+                        data: { deletedAt: null },
+                    });
+                }
+            }
+            return tx.rolesHeredados.findMany({
+                where: {
+                    parentRoleId: rolesId,
+                    deletedAt: null,
+                    childRole: { deletedAt: null },
+                },
+                select: {
+                    roleHierarchyId: true,
+                    childRoleId: true,
+                    childRole: { select: { name: true } },
+                },
+                orderBy: { childRoleId: 'asc' },
+            });
         });
     }
 };

@@ -1,5 +1,6 @@
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
+import { SetRoleChildrenDto } from './dto/set-role-children.dto';
 import { PrismaService } from 'src/database/prisma.service';
 export declare class RolesService {
     private readonly prisma;
@@ -9,6 +10,7 @@ export declare class RolesService {
         deletedAt: Date | null;
         rolesId: number;
     }>;
+    private assertChildRolesExist;
     private isRolesIdUniqueConstraintError;
     private syncRolesIdSequence;
     findAll(): import("../../generated/prisma/internal/prismaNamespace").PrismaPromise<{
@@ -36,16 +38,29 @@ export declare class RolesService {
         resource: string;
         action: string;
     }[]>;
+    private resolveRoleHierarchy;
     assignPermission(rolesId: number, permissionsId: number): Promise<{
         deletedAt: Date | null;
-        permissionsId: number;
         rolesId: number;
         rolPermissionsId: number;
+        permissionsId: number;
     }>;
     removePermission(rolesId: number, permissionsId: number): Promise<{
         deletedAt: Date | null;
-        permissionsId: number;
         rolesId: number;
         rolPermissionsId: number;
+        permissionsId: number;
     }>;
+    getRoleChildren(rolesId: number): Promise<{
+        roleHierarchyId: number;
+        childRoleId: number;
+        childRoleName: string;
+    }[]>;
+    setRoleChildren(rolesId: number, dto: SetRoleChildrenDto): Promise<{
+        roleHierarchyId: number;
+        childRoleId: number;
+        childRole: {
+            name: string;
+        };
+    }[]>;
 }

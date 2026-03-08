@@ -9,8 +9,8 @@ const menuPermission_seed_1 = require("./seeds/menuPermission.seed");
 const permission_seed_1 = require("./seeds/permission.seed");
 const role_seed_1 = require("./seeds/role.seed");
 const rolePermission_seed_1 = require("./seeds/rolePermission.seed");
+const roleHierarchy_seed_1 = require("./seeds/roleHierarchy.seed");
 const user_seed_1 = require("./seeds/user.seed");
-const userRoles_seed_1 = require("./seeds/userRoles.seed");
 const pool = new pg_1.Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new adapter_pg_1.PrismaPg(pool);
 const prisma = new client_1.PrismaClient({
@@ -37,15 +37,14 @@ async function main() {
     }
     const roles = await (0, role_seed_1.seedRoles)(prisma);
     console.log('✅ Roles creados correctamente.');
+    await (0, roleHierarchy_seed_1.seedRoleHierarchy)(prisma, roles);
+    console.log('✅ Jerarquia de Roles creada correctamente.');
     const permissions = await (0, permission_seed_1.seedPermissions)(prisma);
     console.log('✅ Permisos creados correctamente.');
     await (0, rolePermission_seed_1.seedRolePermissions)(prisma, roles, permissions);
     console.log('✅ Roles y Permisos asignados correctamente.');
-    const users = await (0, user_seed_1.seedUSers)(prisma);
+    await (0, user_seed_1.seedUSers)(prisma, roles);
     console.log('✅ Usuarios creados correctamente.');
-    await (0, userRoles_seed_1.seedUserRoles)(prisma, users, roles);
-    console.log('✅ Roles asignados a Usuarios correctamente.');
-    ;
     const menus = await (0, menu_seed_1.seedMenus)(prisma);
     console.log('✅ Menus creados correctamente.');
     await (0, menuPermission_seed_1.seedMenuPermissions)(prisma, menus, permissions);

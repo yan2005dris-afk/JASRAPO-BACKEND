@@ -53,16 +53,11 @@ const safeUserSelect = {
 const userWithRolesSelect = {
     usersId: true,
     email: true,
-    userRoles: {
-        where: { deletedAt: null },
+    role: {
         select: {
-            roles: {
-                select: {
-                    rolesId: true,
-                    name: true,
-                    deletedAt: true,
-                },
-            },
+            rolesId: true,
+            name: true,
+            deletedAt: true,
         },
     },
 };
@@ -99,12 +94,14 @@ let UserService = class UserService {
         return users.map((user) => ({
             usersId: user.usersId,
             email: user.email,
-            roles: user.userRoles
-                .filter((userRole) => userRole.roles && !userRole.roles.deletedAt)
-                .map((userRole) => ({
-                rolesId: userRole.roles.rolesId,
-                name: userRole.roles.name,
-            })),
+            roles: user.role && !user.role.deletedAt
+                ? [
+                    {
+                        rolesId: user.role.rolesId,
+                        name: user.role.name,
+                    },
+                ]
+                : [],
         }));
     }
     async createUser(createUsersDto) {
@@ -119,13 +116,11 @@ let UserService = class UserService {
             data: {
                 email: createUsersDto.email,
                 password: safePassword,
-            },
-        });
-        await this.prisma.userRoles.create({
-            data: {
-                usersId: newUser.usersId,
                 rolesId: userRole.rolesId,
             },
+        });
+        await this.prisma.profiles.create({
+            data: { usersId: newUser.usersId },
         });
         return {
             usersId: newUser.usersId,
@@ -154,12 +149,10 @@ let UserService = class UserService {
         const user = await this.prisma.users.findUnique({
             where: { usersId },
             select: {
-                userRoles: {
+                role: {
                     select: {
+                        name: true,
                         deletedAt: true,
-                        roles: {
-                            select: { name: true },
-                        },
                     },
                 },
             },
@@ -167,38 +160,40 @@ let UserService = class UserService {
         if (!user) {
             throw new common_1.NotFoundException('Usuario no encontrado');
         }
-        return user.userRoles
-            .filter((ur) => ur.roles && !ur.deletedAt)
-            .map((ur) => ur.roles.name);
+        if (!user.role || user.role.deletedAt) {
+            return [];
+        }
+        return [user.role.name];
     }
     async getRoleAssignmentsByUserId(usersId) {
-        const user = await this.prisma.users.findUnique({ where: { usersId } });
-        if (!user || user.deletedAt) {
-            throw new common_1.NotFoundException('Usuario eliminado o no encontrado');
-        }
-        const assignments = await this.prisma.userRoles.findMany({
-            where: {
-                usersId,
-                deletedAt: null,
-                roles: {
-                    deletedAt: null,
-                },
-            },
-            orderBy: [{ roles: { name: 'asc' } }],
-            include: {
-                roles: {
+        const user = await this.prisma.users.findUnique({
+            where: { usersId },
+            select: {
+                usersId: true,
+                deletedAt: true,
+                rolesId: true,
+                role: {
                     select: {
                         rolesId: true,
                         name: true,
+                        deletedAt: true,
                     },
                 },
             },
         });
-        return assignments.map((assignment) => ({
-            usersRolesId: assignment.usersRolesId,
-            rolesId: assignment.rolesId,
-            name: assignment.roles.name,
-        }));
+        if (!user || user.deletedAt) {
+            throw new common_1.NotFoundException('Usuario eliminado o no encontrado');
+        }
+        if (!user.role || user.role.deletedAt || !user.rolesId) {
+            return [];
+        }
+        return [
+            {
+                usersId: user.usersId,
+                rolesId: user.rolesId,
+                name: user.role.name,
+            },
+        ];
     }
     async assignRoleToUser(usersId, rolesId) {
         const user = await this.prisma.users.findUnique({ where: { usersId } });
@@ -207,26 +202,27 @@ let UserService = class UserService {
         const role = await this.prisma.roles.findUnique({ where: { rolesId } });
         if (!role || role.deletedAt)
             throw new common_1.NotFoundException('Rol no encontrado o eliminado');
-        const existing = await this.prisma.userRoles.findFirst({
-            where: { usersId, rolesId, deletedAt: null },
-        });
-        if (existing)
+        if (user.rolesId === rolesId)
             throw new common_1.ConflictException('El usuario ya tiene ese rol activo');
-        return this.prisma.userRoles.create({
-            data: { usersId, rolesId },
+        return this.prisma.users.update({
+            where: { usersId },
+            data: { rolesId },
         });
     }
-    async revokeRoleFromUser(usersRolesId) {
-        const userRole = await this.prisma.userRoles.findUnique({
-            where: { usersRolesId },
+    async revokeRoleFromUser(usersId) {
+        const user = await this.prisma.users.findUnique({
+            where: { usersId },
+            select: { usersId: true, deletedAt: true, rolesId: true },
         });
-        if (!userRole)
-            throw new common_1.NotFoundException('Asignación de rol no encontrada');
-        if (userRole.deletedAt)
-            throw new common_1.ConflictException('Este rol ya fue revocado previamente');
-        return this.prisma.userRoles.update({
-            where: { usersRolesId },
-            data: { deletedAt: new Date() },
+        if (!user || user.deletedAt) {
+            throw new common_1.NotFoundException('Usuario no encontrado o eliminado');
+        }
+        if (!user.rolesId) {
+            throw new common_1.ConflictException('El usuario ya no tiene rol asignado');
+        }
+        return this.prisma.users.update({
+            where: { usersId },
+            data: { rolesId: null },
         });
     }
     async getDirectPermissionsByUserId(usersId) {
@@ -315,23 +311,10 @@ let UserService = class UserService {
         const user = await this.prisma.users.findUnique({
             where: { usersId },
             include: {
-                userRoles: {
-                    where: {
-                        deletedAt: null,
-                        roles: {
-                            deletedAt: null,
-                        },
-                    },
-                    include: {
-                        roles: {
-                            include: {
-                                rolPermissions: {
-                                    include: {
-                                        permissions: true,
-                                    },
-                                },
-                            },
-                        },
+                role: {
+                    select: {
+                        rolesId: true,
+                        deletedAt: true,
                     },
                 },
                 userPermissions: {
@@ -347,13 +330,31 @@ let UserService = class UserService {
         if (!user || user.deletedAt) {
             throw new common_1.NotFoundException('usuario elimiando o no encontrado');
         }
-        const rolPermissions = user?.userRoles
-            .flatMap((userRol) => userRol.roles.rolPermissions)
-            .filter((rolPermiso) => rolPermiso.permissions && !rolPermiso.permissions.deletedAt)
-            .map((rolPermiso) => ({
+        const directRoleIds = user.role && !user.role.deletedAt ? [user.role.rolesId] : [];
+        const allRoleIds = await this.resolveRoleHierarchy(directRoleIds);
+        const rolePermissionAssignments = allRoleIds.length === 0
+            ? []
+            : await this.prisma.rolPermissions.findMany({
+                where: {
+                    deletedAt: null,
+                    rolesId: { in: allRoleIds },
+                    permissions: {
+                        deletedAt: null,
+                    },
+                },
+                include: {
+                    permissions: {
+                        select: {
+                            resource: true,
+                            action: true,
+                        },
+                    },
+                },
+            });
+        const rolPermissions = rolePermissionAssignments.map((rolPermiso) => ({
             resource: rolPermiso.permissions.resource,
             action: rolPermiso.permissions.action,
-        })) ?? [];
+        }));
         const rolPermisoSinDuplicados = rolPermissions.reduce((acum, permiso) => {
             const existePermiso = acum.some((permisoAcumulador) => permisoAcumulador.resource === permiso.resource &&
                 permisoAcumulador.action === permiso.action);
@@ -390,6 +391,48 @@ let UserService = class UserService {
             }
         }
         return rolPermissionsSinDuplicados_copy;
+    }
+    async resolveRoleHierarchy(initialRoleIds) {
+        if (initialRoleIds.length === 0) {
+            return [];
+        }
+        const edges = await this.prisma.rolesHeredados.findMany({
+            where: {
+                deletedAt: null,
+                parentRole: {
+                    deletedAt: null,
+                },
+                childRole: {
+                    deletedAt: null,
+                },
+            },
+            select: {
+                parentRoleId: true,
+                childRoleId: true,
+            },
+        });
+        const childrenByParent = new Map();
+        for (const edge of edges) {
+            const current = childrenByParent.get(edge.parentRoleId) ?? [];
+            current.push(edge.childRoleId);
+            childrenByParent.set(edge.parentRoleId, current);
+        }
+        const visited = new Set();
+        const stack = [...initialRoleIds];
+        while (stack.length > 0) {
+            const roleId = stack.pop();
+            if (visited.has(roleId)) {
+                continue;
+            }
+            visited.add(roleId);
+            const children = childrenByParent.get(roleId) ?? [];
+            for (const childId of children) {
+                if (!visited.has(childId)) {
+                    stack.push(childId);
+                }
+            }
+        }
+        return Array.from(visited);
     }
 };
 exports.UserService = UserService;

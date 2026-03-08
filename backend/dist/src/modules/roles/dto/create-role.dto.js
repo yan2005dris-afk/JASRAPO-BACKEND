@@ -13,10 +13,12 @@ exports.CreateRoleDto = void 0;
 const openapi = require("@nestjs/swagger");
 const class_validator_1 = require("class-validator");
 const swagger_1 = require("@nestjs/swagger");
+const class_transformer_1 = require("class-transformer");
 class CreateRoleDto {
     name;
+    childRoleIds;
     static _OPENAPI_METADATA_FACTORY() {
-        return { name: { required: true, type: () => String } };
+        return { name: { required: true, type: () => String }, childRoleIds: { required: false, type: () => [Number], uniqueItems: true } };
     }
 }
 exports.CreateRoleDto = CreateRoleDto;
@@ -29,4 +31,17 @@ __decorate([
     (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)
 ], CreateRoleDto.prototype, "name", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Lista de IDs de roles hijos que este rol heredará',
+        example: [2, 3],
+        type: [Number],
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsArray)(),
+    (0, class_validator_1.ArrayUnique)(),
+    (0, class_transformer_1.Type)(() => Number),
+    (0, class_validator_1.IsInt)({ each: true }),
+    __metadata("design:type", Array)
+], CreateRoleDto.prototype, "childRoleIds", void 0);
 //# sourceMappingURL=create-role.dto.js.map

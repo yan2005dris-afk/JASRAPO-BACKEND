@@ -21,7 +21,6 @@ export type ProfilesMinAggregateOutputType = {
     firstName: string | null;
     lastName: string | null;
     phone: string | null;
-    avatar: string | null;
     createdAt: Date | null;
     updatedAt: Date | null;
     usersId: number | null;
@@ -31,7 +30,6 @@ export type ProfilesMaxAggregateOutputType = {
     firstName: string | null;
     lastName: string | null;
     phone: string | null;
-    avatar: string | null;
     createdAt: Date | null;
     updatedAt: Date | null;
     usersId: number | null;
@@ -60,7 +58,6 @@ export type ProfilesMinAggregateInputType = {
     firstName?: true;
     lastName?: true;
     phone?: true;
-    avatar?: true;
     createdAt?: true;
     updatedAt?: true;
     usersId?: true;
@@ -70,7 +67,6 @@ export type ProfilesMaxAggregateInputType = {
     firstName?: true;
     lastName?: true;
     phone?: true;
-    avatar?: true;
     createdAt?: true;
     updatedAt?: true;
     usersId?: true;
@@ -119,7 +115,7 @@ export type ProfilesGroupByOutputType = {
     firstName: string | null;
     lastName: string | null;
     phone: string | null;
-    avatar: string | null;
+    avatar: runtime.JsonValue | null;
     createdAt: Date;
     updatedAt: Date;
     usersId: number;
@@ -140,7 +136,7 @@ export type ProfilesWhereInput = {
     firstName?: Prisma.StringNullableFilter<"Profiles"> | string | null;
     lastName?: Prisma.StringNullableFilter<"Profiles"> | string | null;
     phone?: Prisma.StringNullableFilter<"Profiles"> | string | null;
-    avatar?: Prisma.StringNullableFilter<"Profiles"> | string | null;
+    avatar?: Prisma.JsonNullableFilter<"Profiles">;
     createdAt?: Prisma.DateTimeFilter<"Profiles"> | Date | string;
     updatedAt?: Prisma.DateTimeFilter<"Profiles"> | Date | string;
     usersId?: Prisma.IntFilter<"Profiles"> | number;
@@ -166,7 +162,7 @@ export type ProfilesWhereUniqueInput = Prisma.AtLeast<{
     firstName?: Prisma.StringNullableFilter<"Profiles"> | string | null;
     lastName?: Prisma.StringNullableFilter<"Profiles"> | string | null;
     phone?: Prisma.StringNullableFilter<"Profiles"> | string | null;
-    avatar?: Prisma.StringNullableFilter<"Profiles"> | string | null;
+    avatar?: Prisma.JsonNullableFilter<"Profiles">;
     createdAt?: Prisma.DateTimeFilter<"Profiles"> | Date | string;
     updatedAt?: Prisma.DateTimeFilter<"Profiles"> | Date | string;
     user?: Prisma.XOR<Prisma.UsersScalarRelationFilter, Prisma.UsersWhereInput>;
@@ -194,7 +190,7 @@ export type ProfilesScalarWhereWithAggregatesInput = {
     firstName?: Prisma.StringNullableWithAggregatesFilter<"Profiles"> | string | null;
     lastName?: Prisma.StringNullableWithAggregatesFilter<"Profiles"> | string | null;
     phone?: Prisma.StringNullableWithAggregatesFilter<"Profiles"> | string | null;
-    avatar?: Prisma.StringNullableWithAggregatesFilter<"Profiles"> | string | null;
+    avatar?: Prisma.JsonNullableWithAggregatesFilter<"Profiles">;
     createdAt?: Prisma.DateTimeWithAggregatesFilter<"Profiles"> | Date | string;
     updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Profiles"> | Date | string;
     usersId?: Prisma.IntWithAggregatesFilter<"Profiles"> | number;
@@ -203,7 +199,7 @@ export type ProfilesCreateInput = {
     firstName?: string | null;
     lastName?: string | null;
     phone?: string | null;
-    avatar?: string | null;
+    avatar?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue;
     createdAt?: Date | string;
     updatedAt?: Date | string;
     user: Prisma.UsersCreateNestedOneWithoutProfileInput;
@@ -213,7 +209,7 @@ export type ProfilesUncheckedCreateInput = {
     firstName?: string | null;
     lastName?: string | null;
     phone?: string | null;
-    avatar?: string | null;
+    avatar?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue;
     createdAt?: Date | string;
     updatedAt?: Date | string;
     usersId: number;
@@ -222,7 +218,7 @@ export type ProfilesUpdateInput = {
     firstName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
-    avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    avatar?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     user?: Prisma.UsersUpdateOneRequiredWithoutProfileNestedInput;
@@ -232,7 +228,7 @@ export type ProfilesUncheckedUpdateInput = {
     firstName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
-    avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    avatar?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     usersId?: Prisma.IntFieldUpdateOperationsInput | number;
@@ -242,7 +238,7 @@ export type ProfilesCreateManyInput = {
     firstName?: string | null;
     lastName?: string | null;
     phone?: string | null;
-    avatar?: string | null;
+    avatar?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue;
     createdAt?: Date | string;
     updatedAt?: Date | string;
     usersId: number;
@@ -251,7 +247,7 @@ export type ProfilesUpdateManyMutationInput = {
     firstName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
-    avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    avatar?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
 };
@@ -260,7 +256,7 @@ export type ProfilesUncheckedUpdateManyInput = {
     firstName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
-    avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    avatar?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     usersId?: Prisma.IntFieldUpdateOperationsInput | number;
@@ -284,7 +280,6 @@ export type ProfilesMaxOrderByAggregateInput = {
     firstName?: Prisma.SortOrder;
     lastName?: Prisma.SortOrder;
     phone?: Prisma.SortOrder;
-    avatar?: Prisma.SortOrder;
     createdAt?: Prisma.SortOrder;
     updatedAt?: Prisma.SortOrder;
     usersId?: Prisma.SortOrder;
@@ -294,7 +289,6 @@ export type ProfilesMinOrderByAggregateInput = {
     firstName?: Prisma.SortOrder;
     lastName?: Prisma.SortOrder;
     phone?: Prisma.SortOrder;
-    avatar?: Prisma.SortOrder;
     createdAt?: Prisma.SortOrder;
     updatedAt?: Prisma.SortOrder;
     usersId?: Prisma.SortOrder;
@@ -342,7 +336,7 @@ export type ProfilesCreateWithoutUserInput = {
     firstName?: string | null;
     lastName?: string | null;
     phone?: string | null;
-    avatar?: string | null;
+    avatar?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue;
     createdAt?: Date | string;
     updatedAt?: Date | string;
 };
@@ -351,7 +345,7 @@ export type ProfilesUncheckedCreateWithoutUserInput = {
     firstName?: string | null;
     lastName?: string | null;
     phone?: string | null;
-    avatar?: string | null;
+    avatar?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue;
     createdAt?: Date | string;
     updatedAt?: Date | string;
 };
@@ -372,7 +366,7 @@ export type ProfilesUpdateWithoutUserInput = {
     firstName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
-    avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    avatar?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
 };
@@ -381,7 +375,7 @@ export type ProfilesUncheckedUpdateWithoutUserInput = {
     firstName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
     phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
-    avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+    avatar?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue;
     createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
 };
@@ -448,7 +442,7 @@ export type $ProfilesPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
         firstName: string | null;
         lastName: string | null;
         phone: string | null;
-        avatar: string | null;
+        avatar: runtime.JsonValue | null;
         createdAt: Date;
         updatedAt: Date;
         usersId: number;
@@ -514,7 +508,7 @@ export interface ProfilesFieldRefs {
     readonly firstName: Prisma.FieldRef<"Profiles", 'String'>;
     readonly lastName: Prisma.FieldRef<"Profiles", 'String'>;
     readonly phone: Prisma.FieldRef<"Profiles", 'String'>;
-    readonly avatar: Prisma.FieldRef<"Profiles", 'String'>;
+    readonly avatar: Prisma.FieldRef<"Profiles", 'Json'>;
     readonly createdAt: Prisma.FieldRef<"Profiles", 'DateTime'>;
     readonly updatedAt: Prisma.FieldRef<"Profiles", 'DateTime'>;
     readonly usersId: Prisma.FieldRef<"Profiles", 'Int'>;

@@ -12,12 +12,13 @@ const profile_service_1 = require("./profile.service");
 const profile_controller_1 = require("./profile.controller");
 const prisma_service_1 = require("../../database/prisma.service");
 const auth_module_1 = require("../../auth/auth.module");
+const storage_module_1 = require("../storage/storage.module");
 let ProfileModule = class ProfileModule {
 };
 exports.ProfileModule = ProfileModule;
 exports.ProfileModule = ProfileModule = __decorate([
     (0, common_1.Module)({
-        imports: [auth_module_1.AuthModule],
+        imports: [auth_module_1.AuthModule, storage_module_1.StorageModule],
         controllers: [profile_controller_1.ProfileController],
         providers: [profile_service_1.ProfileService, prisma_service_1.PrismaService],
     })

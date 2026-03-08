@@ -41,21 +41,23 @@ export declare class UserService {
     }>;
     getRolesByUserId(usersId: number): Promise<string[]>;
     getRoleAssignmentsByUserId(usersId: number): Promise<{
-        usersRolesId: number;
+        usersId: number;
         rolesId: number;
         name: string;
     }[]>;
     assignRoleToUser(usersId: number, rolesId: number): Promise<{
         deletedAt: Date | null;
-        rolesId: number;
+        rolesId: number | null;
         usersId: number;
-        usersRolesId: number;
+        email: string;
+        password: string;
     }>;
-    revokeRoleFromUser(usersRolesId: number): Promise<{
+    revokeRoleFromUser(usersId: number): Promise<{
         deletedAt: Date | null;
-        rolesId: number;
+        rolesId: number | null;
         usersId: number;
-        usersRolesId: number;
+        email: string;
+        password: string;
     }>;
     getDirectPermissionsByUserId(usersId: number): Promise<{
         idUserPermissions: number;
@@ -67,19 +69,20 @@ export declare class UserService {
     assignPermissionToUser(usersId: number, permissionsId: number, allow?: boolean): Promise<{
         permissionsId: number;
         usersId: number;
+        idUserPermissions: number;
         allow: boolean;
         deteledAt: Date | null;
-        idUserPermissions: number;
     }>;
     revokePermissionFromUser(idUserPermissions: number): Promise<{
         permissionsId: number;
         usersId: number;
+        idUserPermissions: number;
         allow: boolean;
         deteledAt: Date | null;
-        idUserPermissions: number;
     }>;
     getEffectivePermissions(usersId: number): Promise<{
         resource: string;
         action: string;
     }[]>;
+    private resolveRoleHierarchy;
 }

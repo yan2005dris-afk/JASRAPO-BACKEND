@@ -2,6 +2,7 @@ import { RolesService } from './roles.service';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
 import { AssignRolePermissionDto } from './dto/assign-role-permission.dto';
+import { SetRoleChildrenDto } from './dto/set-role-children.dto';
 export declare class RolesController {
     private readonly rolesService;
     constructor(rolesService: RolesService);
@@ -35,16 +36,28 @@ export declare class RolesController {
         resource: string;
         action: string;
     }[]>;
+    getRoleChildren(id: string): Promise<{
+        roleHierarchyId: number;
+        childRoleId: number;
+        childRoleName: string;
+    }[]>;
+    setRoleChildren(id: string, dto: SetRoleChildrenDto): Promise<{
+        roleHierarchyId: number;
+        childRoleId: number;
+        childRole: {
+            name: string;
+        };
+    }[]>;
     assignPermission(id: string, assignRolePermissionDto: AssignRolePermissionDto): Promise<{
         deletedAt: Date | null;
-        permissionsId: number;
         rolesId: number;
         rolPermissionsId: number;
+        permissionsId: number;
     }>;
     removePermission(id: string, permissionId: string): Promise<{
         deletedAt: Date | null;
-        permissionsId: number;
         rolesId: number;
         rolPermissionsId: number;
+        permissionsId: number;
     }>;
 }

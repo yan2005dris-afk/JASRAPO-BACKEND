@@ -24,7 +24,7 @@ export declare class UserController {
     } | null>;
     getUserRoles(id: number): Promise<string[]>;
     getUserRoleAssignments(id: number): Promise<{
-        usersRolesId: number;
+        usersId: number;
         rolesId: number;
         name: string;
     }[]>;
@@ -34,9 +34,10 @@ export declare class UserController {
     }>;
     assignRole(id: number, assignRoleDto: AssignRoleDto): Promise<{
         deletedAt: Date | null;
-        rolesId: number;
+        rolesId: number | null;
         usersId: number;
-        usersRolesId: number;
+        email: string;
+        password: string;
     }>;
     getUserPermissions(id: number): Promise<{
         idUserPermissions: number;
@@ -48,15 +49,16 @@ export declare class UserController {
     assignPermission(id: number, assignPermissionDto: AssignPermissionDto): Promise<{
         permissionsId: number;
         usersId: number;
+        idUserPermissions: number;
         allow: boolean;
         deteledAt: Date | null;
-        idUserPermissions: number;
     }>;
-    revokeRole(userRolesId: number): Promise<{
+    revokeRole(id: number): Promise<{
         deletedAt: Date | null;
-        rolesId: number;
+        rolesId: number | null;
         usersId: number;
-        usersRolesId: number;
+        email: string;
+        password: string;
     }>;
     remove(id: number): Promise<{
         usersId: number;
@@ -65,9 +67,9 @@ export declare class UserController {
     revokePermission(userPermissionId: number): Promise<{
         permissionsId: number;
         usersId: number;
+        idUserPermissions: number;
         allow: boolean;
         deteledAt: Date | null;
-        idUserPermissions: number;
     }>;
     getEffectivePermissions(usersId: number): Promise<{
         resource: string;

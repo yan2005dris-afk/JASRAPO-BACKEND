@@ -3,6 +3,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.seedMenuPermissions = seedMenuPermissions;
 async function seedMenuPermissions(prisma, menus, permissions) {
     await prisma.menuPermissions.deleteMany();
+    const normalize = (value) => value
+        .normalize('NFD')
+        .replace(/\p{Diacritic}/gu, '')
+        .trim()
+        .toLowerCase();
+    const menuByName = new Map(menus.map((m) => [normalize(m.name), m]));
+    const permissionByKey = new Map(permissions.map((p) => [`${p.resource}:${p.action}`, p]));
     const menuPermissionMap = [
         {
             menuName: 'Listar Cliente',
@@ -582,15 +589,14 @@ async function seedMenuPermissions(prisma, menus, permissions) {
         },
     ];
     for (const menu of menuPermissionMap) {
-        const dbMenu = menus.find((m) => m.name === menu.menuName);
+        const dbMenu = menuByName.get(normalize(menu.menuName));
         if (!dbMenu) {
-            continue;
+            throw new Error(`Menu no encontrado para la asignacion de permisos: ${menu.menuName}`);
         }
         for (const permissionKey of menu.permissionKeys) {
-            const dbPermission = permissions.find((p) => p.resource === permissionKey.resource &&
-                p.action === permissionKey.action);
+            const dbPermission = permissionByKey.get(`${permissionKey.resource}:${permissionKey.action}`);
             if (!dbPermission) {
-                continue;
+                throw new Error(`Permiso no encontrado para menu ${menu.menuName}: ${permissionKey.resource}:${permissionKey.action}`);
             }
             const exists = await prisma.menuPermissions.findFirst({
                 where: {

@@ -124,12 +124,12 @@ let AuthService = AuthService_1 = class AuthService {
         const { accessToken, refreshToken } = tokens;
         const decodedAccess = this.jwtService.decode(accessToken);
         const decodedRefresh = this.jwtService.decode(refreshToken);
-        const [userRoles, profile] = await Promise.all([
-            this.prisma.userRoles.findMany({
+        const [userWithRole, profile] = await Promise.all([
+            this.prisma.users.findUnique({
                 where: { usersId: users.usersId },
                 select: {
                     rolesId: true,
-                    roles: { select: { name: true } },
+                    role: { select: { name: true, deletedAt: true } },
                 },
             }),
             this.prisma.profiles.findUnique({
@@ -139,17 +139,21 @@ let AuthService = AuthService_1 = class AuthService {
         ]);
         const nameParts = [profile?.firstName, profile?.lastName].filter(Boolean);
         const fullName = nameParts.length > 0 ? nameParts.join(' ') : null;
-        const firstRole = userRoles[0] ?? null;
+        const avatarMeta = profile?.avatar;
+        const avatarKey = avatarMeta?.key ?? null;
+        const firstRole = userWithRole?.role && !userWithRole.role.deletedAt
+            ? { rolesId: userWithRole.rolesId, name: userWithRole.role.name }
+            : null;
         const toDate = (ts) => ts ? ecuador_timezone_backend_util_1.EcuadorTimezoneUtil.formatAsEcuadorISO(new Date(ts * 1000)) : null;
         return {
             sub: users.usersId,
             sid: sessionsId,
             name: fullName,
-            avatar: profile?.avatar ?? null,
+            avatar: avatarKey,
             email: users.email,
             roleId: firstRole?.rolesId ?? null,
-            roleName: firstRole?.roles?.name ?? null,
-            roles: userRoles.map((r) => r.rolesId),
+            roleName: firstRole?.name ?? null,
+            roles: firstRole?.rolesId ? [firstRole.rolesId] : [],
             accessToken,
             refreshToken,
             accessTokenInfo: {

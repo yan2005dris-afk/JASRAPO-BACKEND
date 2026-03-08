@@ -16,6 +16,7 @@ const menus_module_1 = require("./modules/menus/menus.module");
 const profile_module_1 = require("./modules/profile/profile.module");
 const roles_module_1 = require("./modules/roles/roles.module");
 const permissions_module_1 = require("./modules/permissions/permissions.module");
+const storage_module_1 = require("./modules/storage/storage.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -34,6 +35,7 @@ exports.AppModule = AppModule = __decorate([
             profile_module_1.ProfileModule,
             roles_module_1.RolesModule,
             permissions_module_1.PermissionsModule,
+            storage_module_1.StorageModule,
         ],
         controllers: [],
         providers: [],

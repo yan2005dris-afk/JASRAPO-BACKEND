@@ -10,12 +10,27 @@ export declare function seedRoles(prisma: PrismaClient): Promise<{
         deletedAt: Date | null;
         rolesId: number;
     };
-    userRol: {
+    recaudacionRol: {
         name: string;
         deletedAt: Date | null;
         rolesId: number;
     };
-    clienteRol: {
+    presidenciaRol: {
+        name: string;
+        deletedAt: Date | null;
+        rolesId: number;
+    };
+    operadoresRol: {
+        name: string;
+        deletedAt: Date | null;
+        rolesId: number;
+    };
+    contabilidadRol: {
+        name: string;
+        deletedAt: Date | null;
+        rolesId: number;
+    };
+    userRol: {
         name: string;
         deletedAt: Date | null;
         rolesId: number;

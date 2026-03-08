@@ -65,8 +65,8 @@ let UserController = class UserController {
     assignPermission(id, assignPermissionDto) {
         return this.userService.assignPermissionToUser(id, assignPermissionDto.permissionsId, assignPermissionDto.allow ?? true);
     }
-    revokeRole(userRolesId) {
-        return this.userService.revokeRoleFromUser(userRolesId);
+    revokeRole(id) {
+        return this.userService.revokeRoleFromUser(id);
     }
     remove(id) {
         return this.userService.softDeleteUser({ usersId: id });
@@ -203,7 +203,7 @@ __decorate([
 __decorate([
     (0, swagger_1.ApiOperation)({
         summary: 'Obtener asignaciones de rol de usuario',
-        description: 'Retorna los roles asignados a un usuario con información de la relación (userRolesId), necesario para revocar roles.',
+        description: 'Retorna la asignacion actual de rol del usuario.',
     }),
     (0, swagger_1.ApiParam)({
         name: 'id',
@@ -261,7 +261,7 @@ __decorate([
 __decorate([
     (0, swagger_1.ApiOperation)({
         summary: 'Asignar rol a usuario',
-        description: 'Asigna un rol adicional a un usuario existente. No elimina los roles anteriores.',
+        description: 'Asigna o reemplaza el rol actual del usuario.',
     }),
     (0, swagger_1.ApiParam)({
         name: 'id',
@@ -367,17 +367,11 @@ __decorate([
 __decorate([
     (0, swagger_1.ApiOperation)({
         summary: 'Revocar rol de usuario',
-        description: 'Revoca (soft delete) un rol asignado a un usuario. El userRoleId es el ID de la relación en users_roles.',
+        description: 'Quita el rol actual del usuario (deja role_id en null).',
     }),
     (0, swagger_1.ApiParam)({
         name: 'id',
         description: 'ID único del usuario',
-        type: Number,
-        example: 1,
-    }),
-    (0, swagger_1.ApiParam)({
-        name: 'userRoleId',
-        description: 'ID de la relación usuario-rol (users_roles)',
         type: Number,
         example: 1,
     }),
@@ -387,11 +381,11 @@ __decorate([
     }),
     (0, swagger_1.ApiResponse)({ status: 401, description: 'No autorizado' }),
     (0, swagger_1.ApiResponse)({ status: 403, description: 'Prohibido - Sin permiso users:delete' }),
-    (0, swagger_1.ApiResponse)({ status: 404, description: 'Relación usuario-rol no encontrada' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Usuario no encontrado' }),
     (0, require_permission_decorator_1.RequiredPermission)('users', 'delete'),
-    (0, common_1.Delete)(':id/roles/:userRoleId'),
+    (0, common_1.Delete)(':id/roles'),
     openapi.ApiResponse({ status: 200 }),
-    __param(0, (0, common_1.Param)('userRoleId', common_1.ParseIntPipe)),
+    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Number]),
     __metadata("design:returntype", void 0)

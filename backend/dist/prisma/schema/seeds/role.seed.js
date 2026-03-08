@@ -10,18 +10,41 @@ async function seedRoles(prisma) {
     const secretariaRol = await prisma.roles.upsert({
         where: { rolesId: 2 },
         update: {},
-        create: { rolesId: 2, name: 'secretary' },
+        create: { rolesId: 2, name: 'secretaria' },
     });
-    const userRol = await prisma.roles.upsert({
+    const recaudacionRol = await prisma.roles.upsert({
         where: { rolesId: 3 },
         update: {},
-        create: { rolesId: 3, name: 'user' },
+        create: { rolesId: 3, name: 'recaudacion' },
     });
-    const clienteRol = await prisma.roles.upsert({
+    const presidenciaRol = await prisma.roles.upsert({
         where: { rolesId: 4 },
         update: {},
-        create: { rolesId: 4, name: 'client' },
+        create: { rolesId: 4, name: 'presidencia' },
     });
-    return { adminRol, secretariaRol, userRol, clienteRol };
+    const operadoresRol = await prisma.roles.upsert({
+        where: { rolesId: 5 },
+        update: {},
+        create: { rolesId: 5, name: 'operadores' },
+    });
+    const contabilidadRol = await prisma.roles.upsert({
+        where: { rolesId: 6 },
+        update: {},
+        create: { rolesId: 6, name: 'contabilidad' },
+    });
+    const userRol = await prisma.roles.upsert({
+        where: { rolesId: 7 },
+        update: {},
+        create: { rolesId: 7, name: 'user' },
+    });
+    return {
+        adminRol,
+        secretariaRol,
+        recaudacionRol,
+        presidenciaRol,
+        operadoresRol,
+        contabilidadRol,
+        userRol,
+    };
 }
 //# sourceMappingURL=role.seed.js.map

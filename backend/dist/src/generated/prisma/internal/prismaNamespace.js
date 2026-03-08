@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.defineExtension = exports.QueryMode = exports.NullsOrder = exports.SortOrder = exports.SolicitudesScalarFieldEnum = exports.PagosScalarFieldEnum = exports.MedidoresScalarFieldEnum = exports.LecturasScalarFieldEnum = exports.FacturasScalarFieldEnum = exports.DetalleFacturaScalarFieldEnum = exports.ConveniosScalarFieldEnum = exports.ComunidadesScalarFieldEnum = exports.ClientesMedidoresScalarFieldEnum = exports.ClientesScalarFieldEnum = exports.UsersScalarFieldEnum = exports.UserRolesScalarFieldEnum = exports.UserPermissionsScalarFieldEnum = exports.SessionsScalarFieldEnum = exports.RolesScalarFieldEnum = exports.RolPermissionsScalarFieldEnum = exports.ProfilesScalarFieldEnum = exports.PermissionsScalarFieldEnum = exports.MenusScalarFieldEnum = exports.MenuPermissionsScalarFieldEnum = exports.TransactionIsolationLevel = exports.ModelName = exports.AnyNull = exports.JsonNull = exports.DbNull = exports.NullTypes = exports.prismaVersion = exports.getExtensionContext = exports.Decimal = exports.Sql = exports.raw = exports.join = exports.empty = exports.sql = exports.PrismaClientValidationError = exports.PrismaClientInitializationError = exports.PrismaClientRustPanicError = exports.PrismaClientUnknownRequestError = exports.PrismaClientKnownRequestError = void 0;
+exports.defineExtension = exports.JsonNullValueFilter = exports.QueryMode = exports.NullsOrder = exports.NullableJsonNullValueInput = exports.SortOrder = exports.SolicitudesScalarFieldEnum = exports.PagosScalarFieldEnum = exports.MedidoresScalarFieldEnum = exports.LecturasScalarFieldEnum = exports.FacturasScalarFieldEnum = exports.DetalleFacturaScalarFieldEnum = exports.ConveniosScalarFieldEnum = exports.ComunidadesScalarFieldEnum = exports.ClientesMedidoresScalarFieldEnum = exports.ClientesScalarFieldEnum = exports.UsersScalarFieldEnum = exports.UserPermissionsScalarFieldEnum = exports.SessionsScalarFieldEnum = exports.RolesScalarFieldEnum = exports.RolesHeredadosScalarFieldEnum = exports.RolPermissionsScalarFieldEnum = exports.ProfilesScalarFieldEnum = exports.PermissionsScalarFieldEnum = exports.MenusScalarFieldEnum = exports.MenuPermissionsScalarFieldEnum = exports.TransactionIsolationLevel = exports.ModelName = exports.AnyNull = exports.JsonNull = exports.DbNull = exports.NullTypes = exports.prismaVersion = exports.getExtensionContext = exports.Decimal = exports.Sql = exports.raw = exports.join = exports.empty = exports.sql = exports.PrismaClientValidationError = exports.PrismaClientInitializationError = exports.PrismaClientRustPanicError = exports.PrismaClientUnknownRequestError = exports.PrismaClientKnownRequestError = void 0;
 const runtime = __importStar(require("@prisma/client/runtime/client"));
 exports.PrismaClientKnownRequestError = runtime.PrismaClientKnownRequestError;
 exports.PrismaClientUnknownRequestError = runtime.PrismaClientUnknownRequestError;
@@ -48,8 +48,8 @@ exports.Sql = runtime.Sql;
 exports.Decimal = runtime.Decimal;
 exports.getExtensionContext = runtime.Extensions.getExtensionContext;
 exports.prismaVersion = {
-    client: "7.4.0",
-    engine: "ab56fe763f921d033a6c195e7ddeb3e255bdbb57"
+    client: "7.4.2",
+    engine: "94a226be1cf2967af2541cca5529f0f7ba866919"
 };
 exports.NullTypes = {
     DbNull: runtime.NullTypes.DbNull,
@@ -65,10 +65,10 @@ exports.ModelName = {
     Permissions: 'Permissions',
     Profiles: 'Profiles',
     RolPermissions: 'RolPermissions',
+    RolesHeredados: 'RolesHeredados',
     Roles: 'Roles',
     Sessions: 'Sessions',
     UserPermissions: 'UserPermissions',
-    UserRoles: 'UserRoles',
     Users: 'Users',
     Clientes: 'Clientes',
     ClientesMedidores: 'ClientesMedidores',
@@ -124,6 +124,12 @@ exports.RolPermissionsScalarFieldEnum = {
     permissionsId: 'permissionsId',
     deletedAt: 'deletedAt'
 };
+exports.RolesHeredadosScalarFieldEnum = {
+    roleHierarchyId: 'roleHierarchyId',
+    parentRoleId: 'parentRoleId',
+    childRoleId: 'childRoleId',
+    deletedAt: 'deletedAt'
+};
 exports.RolesScalarFieldEnum = {
     rolesId: 'rolesId',
     name: 'name',
@@ -146,16 +152,11 @@ exports.UserPermissionsScalarFieldEnum = {
     allow: 'allow',
     deteledAt: 'deteledAt'
 };
-exports.UserRolesScalarFieldEnum = {
-    usersRolesId: 'usersRolesId',
-    usersId: 'usersId',
-    rolesId: 'rolesId',
-    deletedAt: 'deletedAt'
-};
 exports.UsersScalarFieldEnum = {
     usersId: 'usersId',
     email: 'email',
     password: 'password',
+    rolesId: 'rolesId',
     deletedAt: 'deletedAt'
 };
 exports.ClientesScalarFieldEnum = {
@@ -241,6 +242,10 @@ exports.SortOrder = {
     asc: 'asc',
     desc: 'desc'
 };
+exports.NullableJsonNullValueInput = {
+    DbNull: exports.DbNull,
+    JsonNull: exports.JsonNull
+};
 exports.NullsOrder = {
     first: 'first',
     last: 'last'
@@ -248,6 +253,11 @@ exports.NullsOrder = {
 exports.QueryMode = {
     default: 'default',
     insensitive: 'insensitive'
+};
+exports.JsonNullValueFilter = {
+    DbNull: exports.DbNull,
+    JsonNull: exports.JsonNull,
+    AnyNull: exports.AnyNull
 };
 exports.defineExtension = runtime.Extensions.defineExtension;
 //# sourceMappingURL=prismaNamespace.js.map

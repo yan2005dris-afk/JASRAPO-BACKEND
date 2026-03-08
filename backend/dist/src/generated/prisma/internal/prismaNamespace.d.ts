@@ -162,10 +162,10 @@ export declare const ModelName: {
     readonly Permissions: "Permissions";
     readonly Profiles: "Profiles";
     readonly RolPermissions: "RolPermissions";
+    readonly RolesHeredados: "RolesHeredados";
     readonly Roles: "Roles";
     readonly Sessions: "Sessions";
     readonly UserPermissions: "UserPermissions";
-    readonly UserRoles: "UserRoles";
     readonly Users: "Users";
     readonly Clientes: "Clientes";
     readonly ClientesMedidores: "ClientesMedidores";
@@ -189,7 +189,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         omit: GlobalOmitOptions;
     };
     meta: {
-        modelProps: "menuPermissions" | "menus" | "permissions" | "profiles" | "rolPermissions" | "roles" | "sessions" | "userPermissions" | "userRoles" | "users" | "clientes" | "clientesMedidores" | "comunidades" | "convenios" | "detalleFactura" | "facturas" | "lecturas" | "medidores" | "pagos" | "solicitudes";
+        modelProps: "menuPermissions" | "menus" | "permissions" | "profiles" | "rolPermissions" | "rolesHeredados" | "roles" | "sessions" | "userPermissions" | "users" | "clientes" | "clientesMedidores" | "comunidades" | "convenios" | "detalleFactura" | "facturas" | "lecturas" | "medidores" | "pagos" | "solicitudes";
         txIsolationLevel: TransactionIsolationLevel;
     };
     model: {
@@ -563,6 +563,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
                 };
             };
         };
+        RolesHeredados: {
+            payload: Prisma.$RolesHeredadosPayload<ExtArgs>;
+            fields: Prisma.RolesHeredadosFieldRefs;
+            operations: {
+                findUnique: {
+                    args: Prisma.RolesHeredadosFindUniqueArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$RolesHeredadosPayload> | null;
+                };
+                findUniqueOrThrow: {
+                    args: Prisma.RolesHeredadosFindUniqueOrThrowArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$RolesHeredadosPayload>;
+                };
+                findFirst: {
+                    args: Prisma.RolesHeredadosFindFirstArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$RolesHeredadosPayload> | null;
+                };
+                findFirstOrThrow: {
+                    args: Prisma.RolesHeredadosFindFirstOrThrowArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$RolesHeredadosPayload>;
+                };
+                findMany: {
+                    args: Prisma.RolesHeredadosFindManyArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$RolesHeredadosPayload>[];
+                };
+                create: {
+                    args: Prisma.RolesHeredadosCreateArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$RolesHeredadosPayload>;
+                };
+                createMany: {
+                    args: Prisma.RolesHeredadosCreateManyArgs<ExtArgs>;
+                    result: BatchPayload;
+                };
+                createManyAndReturn: {
+                    args: Prisma.RolesHeredadosCreateManyAndReturnArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$RolesHeredadosPayload>[];
+                };
+                delete: {
+                    args: Prisma.RolesHeredadosDeleteArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$RolesHeredadosPayload>;
+                };
+                update: {
+                    args: Prisma.RolesHeredadosUpdateArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$RolesHeredadosPayload>;
+                };
+                deleteMany: {
+                    args: Prisma.RolesHeredadosDeleteManyArgs<ExtArgs>;
+                    result: BatchPayload;
+                };
+                updateMany: {
+                    args: Prisma.RolesHeredadosUpdateManyArgs<ExtArgs>;
+                    result: BatchPayload;
+                };
+                updateManyAndReturn: {
+                    args: Prisma.RolesHeredadosUpdateManyAndReturnArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$RolesHeredadosPayload>[];
+                };
+                upsert: {
+                    args: Prisma.RolesHeredadosUpsertArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$RolesHeredadosPayload>;
+                };
+                aggregate: {
+                    args: Prisma.RolesHeredadosAggregateArgs<ExtArgs>;
+                    result: runtime.Types.Utils.Optional<Prisma.AggregateRolesHeredados>;
+                };
+                groupBy: {
+                    args: Prisma.RolesHeredadosGroupByArgs<ExtArgs>;
+                    result: runtime.Types.Utils.Optional<Prisma.RolesHeredadosGroupByOutputType>[];
+                };
+                count: {
+                    args: Prisma.RolesHeredadosCountArgs<ExtArgs>;
+                    result: runtime.Types.Utils.Optional<Prisma.RolesHeredadosCountAggregateOutputType> | number;
+                };
+            };
+        };
         Roles: {
             payload: Prisma.$RolesPayload<ExtArgs>;
             fields: Prisma.RolesFieldRefs;
@@ -782,80 +856,6 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
                 count: {
                     args: Prisma.UserPermissionsCountArgs<ExtArgs>;
                     result: runtime.Types.Utils.Optional<Prisma.UserPermissionsCountAggregateOutputType> | number;
-                };
-            };
-        };
-        UserRoles: {
-            payload: Prisma.$UserRolesPayload<ExtArgs>;
-            fields: Prisma.UserRolesFieldRefs;
-            operations: {
-                findUnique: {
-                    args: Prisma.UserRolesFindUniqueArgs<ExtArgs>;
-                    result: runtime.Types.Utils.PayloadToResult<Prisma.$UserRolesPayload> | null;
-                };
-                findUniqueOrThrow: {
-                    args: Prisma.UserRolesFindUniqueOrThrowArgs<ExtArgs>;
-                    result: runtime.Types.Utils.PayloadToResult<Prisma.$UserRolesPayload>;
-                };
-                findFirst: {
-                    args: Prisma.UserRolesFindFirstArgs<ExtArgs>;
-                    result: runtime.Types.Utils.PayloadToResult<Prisma.$UserRolesPayload> | null;
-                };
-                findFirstOrThrow: {
-                    args: Prisma.UserRolesFindFirstOrThrowArgs<ExtArgs>;
-                    result: runtime.Types.Utils.PayloadToResult<Prisma.$UserRolesPayload>;
-                };
-                findMany: {
-                    args: Prisma.UserRolesFindManyArgs<ExtArgs>;
-                    result: runtime.Types.Utils.PayloadToResult<Prisma.$UserRolesPayload>[];
-                };
-                create: {
-                    args: Prisma.UserRolesCreateArgs<ExtArgs>;
-                    result: runtime.Types.Utils.PayloadToResult<Prisma.$UserRolesPayload>;
-                };
-                createMany: {
-                    args: Prisma.UserRolesCreateManyArgs<ExtArgs>;
-                    result: BatchPayload;
-                };
-                createManyAndReturn: {
-                    args: Prisma.UserRolesCreateManyAndReturnArgs<ExtArgs>;
-                    result: runtime.Types.Utils.PayloadToResult<Prisma.$UserRolesPayload>[];
-                };
-                delete: {
-                    args: Prisma.UserRolesDeleteArgs<ExtArgs>;
-                    result: runtime.Types.Utils.PayloadToResult<Prisma.$UserRolesPayload>;
-                };
-                update: {
-                    args: Prisma.UserRolesUpdateArgs<ExtArgs>;
-                    result: runtime.Types.Utils.PayloadToResult<Prisma.$UserRolesPayload>;
-                };
-                deleteMany: {
-                    args: Prisma.UserRolesDeleteManyArgs<ExtArgs>;
-                    result: BatchPayload;
-                };
-                updateMany: {
-                    args: Prisma.UserRolesUpdateManyArgs<ExtArgs>;
-                    result: BatchPayload;
-                };
-                updateManyAndReturn: {
-                    args: Prisma.UserRolesUpdateManyAndReturnArgs<ExtArgs>;
-                    result: runtime.Types.Utils.PayloadToResult<Prisma.$UserRolesPayload>[];
-                };
-                upsert: {
-                    args: Prisma.UserRolesUpsertArgs<ExtArgs>;
-                    result: runtime.Types.Utils.PayloadToResult<Prisma.$UserRolesPayload>;
-                };
-                aggregate: {
-                    args: Prisma.UserRolesAggregateArgs<ExtArgs>;
-                    result: runtime.Types.Utils.Optional<Prisma.AggregateUserRoles>;
-                };
-                groupBy: {
-                    args: Prisma.UserRolesGroupByArgs<ExtArgs>;
-                    result: runtime.Types.Utils.Optional<Prisma.UserRolesGroupByOutputType>[];
-                };
-                count: {
-                    args: Prisma.UserRolesCountArgs<ExtArgs>;
-                    result: runtime.Types.Utils.Optional<Prisma.UserRolesCountAggregateOutputType> | number;
                 };
             };
         };
@@ -1746,6 +1746,13 @@ export declare const RolPermissionsScalarFieldEnum: {
     readonly deletedAt: "deletedAt";
 };
 export type RolPermissionsScalarFieldEnum = (typeof RolPermissionsScalarFieldEnum)[keyof typeof RolPermissionsScalarFieldEnum];
+export declare const RolesHeredadosScalarFieldEnum: {
+    readonly roleHierarchyId: "roleHierarchyId";
+    readonly parentRoleId: "parentRoleId";
+    readonly childRoleId: "childRoleId";
+    readonly deletedAt: "deletedAt";
+};
+export type RolesHeredadosScalarFieldEnum = (typeof RolesHeredadosScalarFieldEnum)[keyof typeof RolesHeredadosScalarFieldEnum];
 export declare const RolesScalarFieldEnum: {
     readonly rolesId: "rolesId";
     readonly name: "name";
@@ -1771,17 +1778,11 @@ export declare const UserPermissionsScalarFieldEnum: {
     readonly deteledAt: "deteledAt";
 };
 export type UserPermissionsScalarFieldEnum = (typeof UserPermissionsScalarFieldEnum)[keyof typeof UserPermissionsScalarFieldEnum];
-export declare const UserRolesScalarFieldEnum: {
-    readonly usersRolesId: "usersRolesId";
-    readonly usersId: "usersId";
-    readonly rolesId: "rolesId";
-    readonly deletedAt: "deletedAt";
-};
-export type UserRolesScalarFieldEnum = (typeof UserRolesScalarFieldEnum)[keyof typeof UserRolesScalarFieldEnum];
 export declare const UsersScalarFieldEnum: {
     readonly usersId: "usersId";
     readonly email: "email";
     readonly password: "password";
+    readonly rolesId: "rolesId";
     readonly deletedAt: "deletedAt";
 };
 export type UsersScalarFieldEnum = (typeof UsersScalarFieldEnum)[keyof typeof UsersScalarFieldEnum];
@@ -1879,6 +1880,11 @@ export declare const SortOrder: {
     readonly desc: "desc";
 };
 export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder];
+export declare const NullableJsonNullValueInput: {
+    readonly DbNull: runtime.DbNullClass;
+    readonly JsonNull: runtime.JsonNullClass;
+};
+export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput];
 export declare const NullsOrder: {
     readonly first: "first";
     readonly last: "last";
@@ -1889,6 +1895,12 @@ export declare const QueryMode: {
     readonly insensitive: "insensitive";
 };
 export type QueryMode = (typeof QueryMode)[keyof typeof QueryMode];
+export declare const JsonNullValueFilter: {
+    readonly DbNull: runtime.DbNullClass;
+    readonly JsonNull: runtime.JsonNullClass;
+    readonly AnyNull: runtime.AnyNullClass;
+};
+export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter];
 export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>;
 export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>;
 export type DateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime'>;
@@ -1896,6 +1908,8 @@ export type ListDateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaM
 export type StringFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'String'>;
 export type ListStringFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'String[]'>;
 export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>;
+export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Json'>;
+export type EnumQueryModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QueryMode'>;
 export type BigIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BigInt'>;
 export type ListBigIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BigInt[]'>;
 export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>;
@@ -1929,10 +1943,10 @@ export type GlobalOmitConfig = {
     permissions?: Prisma.PermissionsOmit;
     profiles?: Prisma.ProfilesOmit;
     rolPermissions?: Prisma.RolPermissionsOmit;
+    rolesHeredados?: Prisma.RolesHeredadosOmit;
     roles?: Prisma.RolesOmit;
     sessions?: Prisma.SessionsOmit;
     userPermissions?: Prisma.UserPermissionsOmit;
-    userRoles?: Prisma.UserRolesOmit;
     users?: Prisma.UsersOmit;
     clientes?: Prisma.ClientesOmit;
     clientesMedidores?: Prisma.ClientesMedidoresOmit;

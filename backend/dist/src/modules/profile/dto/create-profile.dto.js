@@ -17,9 +17,8 @@ class CreateProfileDto {
     firstName;
     lastName;
     phone;
-    avatar;
     static _OPENAPI_METADATA_FACTORY() {
-        return { firstName: { required: false, type: () => String, maxLength: 100 }, lastName: { required: false, type: () => String, maxLength: 100 }, phone: { required: false, type: () => String, maxLength: 20 }, avatar: { required: false, type: () => String, maxLength: 500 } };
+        return { firstName: { required: false, type: () => String, maxLength: 100 }, lastName: { required: false, type: () => String, maxLength: 100 }, phone: { required: false, type: () => String, maxLength: 20 } };
     }
 }
 exports.CreateProfileDto = CreateProfileDto;
@@ -50,14 +49,4 @@ __decorate([
     (0, class_validator_1.MaxLength)(20),
     __metadata("design:type", String)
 ], CreateProfileDto.prototype, "phone", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({
-        description: 'URL del avatar del usuario',
-        example: 'https://example.com/avatar.png',
-    }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.MaxLength)(500),
-    __metadata("design:type", String)
-], CreateProfileDto.prototype, "avatar", void 0);
 //# sourceMappingURL=create-profile.dto.js.map

@@ -5,23 +5,42 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.seedUSers = seedUSers;
 const bcrypt_1 = __importDefault(require("bcrypt"));
-async function seedUSers(prisma) {
+async function seedUSers(prisma, roles) {
     const usersToCreate = [
         {
             email: 'admin@jasrapo.com',
             password: 'Admin123#',
+            rolesId: roles.adminRol.rolesId,
         },
         {
-            email: 'secretary@jasrapo.com',
-            password: 'Secretary123#',
+            email: 'secretaria@jasrapo.com',
+            password: 'Secretaria123#',
+            rolesId: roles.secretariaRol.rolesId,
+        },
+        {
+            email: 'recaudacion@jasrapo.com',
+            password: 'Recaudacion123#',
+            rolesId: roles.recaudacionRol.rolesId,
+        },
+        {
+            email: 'presidencia@jasrapo.com',
+            password: 'Presidencia123#',
+            rolesId: roles.presidenciaRol.rolesId,
+        },
+        {
+            email: 'operadores@jasrapo.com',
+            password: 'Operadores123#',
+            rolesId: roles.operadoresRol.rolesId,
+        },
+        {
+            email: 'contabilidad@jasrapo.com',
+            password: 'Contabilidad123#',
+            rolesId: roles.contabilidadRol.rolesId,
         },
         {
             email: 'user@jasrapo.com',
             password: 'User123#',
-        },
-        {
-            email: 'client@jasrapo.com',
-            password: 'Client123#',
+            rolesId: roles.userRol.rolesId,
         },
     ];
     const createdUsers = [];
@@ -33,6 +52,7 @@ async function seedUSers(prisma) {
             create: {
                 email: u.email,
                 password: hashedPassword,
+                rolesId: u.rolesId,
             },
         });
         createdUsers.push(user);
