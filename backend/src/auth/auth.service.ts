@@ -135,13 +135,13 @@ export class AuthService {
     const decodedAccess: any = this.jwtService.decode(accessToken);
     const decodedRefresh: any = this.jwtService.decode(refreshToken);
 
-    // Ejecutar en paralelo: roles (con nombre) y perfil del usuario
-    const [userRoles, profile] = await Promise.all([
-      this.prisma.userRoles.findMany({
+    // Ejecutar en paralelo: rol principal (con nombre) y perfil del usuario
+    const [userWithRole, profile] = await Promise.all([
+      this.prisma.users.findUnique({
         where: { usersId: users.usersId },
         select: {
           rolesId: true,
-          roles: { select: { name: true } },
+          role: { select: { name: true, deletedAt: true } },
         },
       }),
       this.prisma.profiles.findUnique({
@@ -154,8 +154,14 @@ export class AuthService {
     const nameParts = [profile?.firstName, profile?.lastName].filter(Boolean);
     const fullName = nameParts.length > 0 ? nameParts.join(' ') : null;
 
-    // Primer rol del usuario
-    const firstRole = userRoles[0] ?? null;
+    // Extraer key del avatar (ahora es JSON con metadata)
+    const avatarMeta = profile?.avatar as Record<string, any> | null;
+    const avatarKey = avatarMeta?.key ?? null;
+
+    const firstRole =
+      userWithRole?.role && !userWithRole.role.deletedAt
+        ? { rolesId: userWithRole.rolesId, name: userWithRole.role.name }
+        : null;
 
     const toDate = (ts?: number) =>
       ts ? EcuadorTimezoneUtil.formatAsEcuadorISO(new Date(ts * 1000)) : null;
@@ -164,11 +170,11 @@ export class AuthService {
       sub: users.usersId,
       sid: sessionsId,
       name: fullName,
-      avatar: profile?.avatar ?? null,
+      avatar: avatarKey,
       email: users.email,
       roleId: firstRole?.rolesId ?? null,
-      roleName: firstRole?.roles?.name ?? null,
-      roles: userRoles.map((r) => r.rolesId),
+      roleName: firstRole?.name ?? null,
+      roles: firstRole?.rolesId ? [firstRole.rolesId] : [],
       accessToken,
       refreshToken,
       accessTokenInfo: {

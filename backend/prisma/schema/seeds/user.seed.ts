@@ -1,23 +1,53 @@
 import bcrypt from 'bcrypt';
-import { PrismaClient, Users } from "src/generated/prisma/client";
+import { PrismaClient, Roles, Users } from "src/generated/prisma/client";
 
-export async function seedUSers(prisma:PrismaClient) {
+export async function seedUSers(
+  prisma: PrismaClient,
+  roles: {
+    adminRol: Roles;
+    secretariaRol: Roles;
+    recaudacionRol: Roles;
+    presidenciaRol: Roles;
+    operadoresRol: Roles;
+    contabilidadRol: Roles;
+    userRol: Roles;
+  },
+) {
     const usersToCreate = [
         {
             email:'admin@jasrapo.com',
             password:'Admin123#',
+            rolesId: roles.adminRol.rolesId,
         },
         {
-            email:'secretary@jasrapo.com',
-            password:'Secretary123#',
+            email:'secretaria@jasrapo.com',
+            password:'Secretaria123#',
+            rolesId: roles.secretariaRol.rolesId,
+        },
+        {
+            email:'recaudacion@jasrapo.com',
+            password:'Recaudacion123#',
+            rolesId: roles.recaudacionRol.rolesId,
+        },
+        {
+            email:'presidencia@jasrapo.com',
+            password:'Presidencia123#',
+            rolesId: roles.presidenciaRol.rolesId,
+        },
+        {
+            email:'operadores@jasrapo.com',
+            password:'Operadores123#',
+            rolesId: roles.operadoresRol.rolesId,
+        },
+        {
+            email:'contabilidad@jasrapo.com',
+            password:'Contabilidad123#',
+            rolesId: roles.contabilidadRol.rolesId,
         },
         {
             email:'user@jasrapo.com',
             password:'User123#',
-        },
-        {
-            email:'client@jasrapo.com',
-            password:'Client123#',
+            rolesId: roles.userRol.rolesId,
         },
     ];
     
@@ -32,6 +62,7 @@ export async function seedUSers(prisma:PrismaClient) {
             create: {
                 email: u.email,
                 password: hashedPassword,
+                rolesId: u.rolesId,
             },
         });
         createdUsers.push(user);

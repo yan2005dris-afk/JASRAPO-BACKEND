@@ -105,6 +105,12 @@ Obtención de menús basados en permisos del usuario.
 ### Profile (Perfiles)
 Gestión de perfiles de usuario.
 
+### Files (Archivos)
+Subida, descarga, listado y eliminación de archivos mediante MinIO (S3-compatible).
+- Soporta subida individual y múltiple
+- Genera URLs temporales presigned (24 horas)
+- Buckets se crean automáticamente
+
 ## 📞 Soporte
 Para consultas o soporte, contacta al equipo de desarrollo del Backend.
     `)
@@ -134,6 +140,7 @@ Para consultas o soporte, contacta al equipo de desarrollo del Backend.
     .addTag('permissions', 'Gestión de permisos')
     .addTag('menus', 'Menús y navegación basados en permisos')
     .addTag('profile', 'Gestión de perfiles de usuario')
+    .addTag('files', 'Subida, descarga y gestión de archivos (MinIO)')
     .addServer('http://localhost:3000', 'Servidor de desarrollo')
     .setContact('Equipo Jasrapo', 'https://jasrapo.com', 'soporte@jasrapo.com')
     .setLicense('MIT', 'https://opensource.org/licenses/MIT')

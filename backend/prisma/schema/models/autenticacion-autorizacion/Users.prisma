@@ -2,12 +2,13 @@ model Users {
   usersId   Int       @id @default(autoincrement()) @map("users_id")
   email     String    @unique @map("email")
   password  String    @map("password")
+  rolesId   Int?      @map("role_id")
   deletedAt DateTime? @map("deleted_at")
 
   sessions        Sessions[]
-  userRoles       UserRoles[]
   userPermissions UserPermissions[]
   profile         Profiles?
+  role            Roles?             @relation(fields: [rolesId], references: [rolesId])
 
   @@map("users")
 }

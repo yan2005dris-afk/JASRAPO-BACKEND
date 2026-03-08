@@ -25,13 +25,4 @@ export class CreateProfileDto {
   @IsString()
   @MaxLength(20)
   phone?: string;
-
-  @ApiPropertyOptional({
-    description: 'URL del avatar del usuario',
-    example: 'https://example.com/avatar.png',
-  })
-  @IsOptional()
-  @IsString()
-  @MaxLength(500)
-  avatar?: string;
 }

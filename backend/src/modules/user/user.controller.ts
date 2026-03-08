@@ -173,7 +173,7 @@ export class UserController {
   @ApiOperation({
     summary: 'Obtener asignaciones de rol de usuario',
     description:
-      'Retorna los roles asignados a un usuario con información de la relación (userRolesId), necesario para revocar roles.',
+      'Retorna la asignacion actual de rol del usuario.',
   })
   @ApiParam({
     name: 'id',
@@ -242,7 +242,7 @@ export class UserController {
   @ApiOperation({
     summary: 'Asignar rol a usuario',
     description:
-      'Asigna un rol adicional a un usuario existente. No elimina los roles anteriores.',
+      'Asigna o reemplaza el rol actual del usuario.',
   })
   @ApiParam({
     name: 'id',
@@ -362,17 +362,11 @@ export class UserController {
   @ApiOperation({
     summary: 'Revocar rol de usuario',
     description:
-      'Revoca (soft delete) un rol asignado a un usuario. El userRoleId es el ID de la relación en users_roles.',
+      'Quita el rol actual del usuario (deja role_id en null).',
   })
   @ApiParam({
     name: 'id',
     description: 'ID único del usuario',
-    type: Number,
-    example: 1,
-  })
-  @ApiParam({
-    name: 'userRoleId',
-    description: 'ID de la relación usuario-rol (users_roles)',
     type: Number,
     example: 1,
   })
@@ -382,11 +376,13 @@ export class UserController {
   })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({ status: 403, description: 'Prohibido - Sin permiso users:delete' })
-  @ApiResponse({ status: 404, description: 'Relación usuario-rol no encontrada' })
+  @ApiResponse({ status: 404, description: 'Usuario no encontrado' })
   @RequiredPermission('users', 'delete')
-  @Delete(':id/roles/:userRoleId')
-  revokeRole(@Param('userRoleId', ParseIntPipe) userRolesId: number) {
-    return this.userService.revokeRoleFromUser(userRolesId);
+  @Delete(':id/roles')
+  revokeRole(
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.userService.revokeRoleFromUser(id);
   }
 
   /**

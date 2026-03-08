@@ -7,6 +7,7 @@ import { MenusModule } from './modules/menus/menus.module';
 import { ProfileModule } from './modules/profile/profile.module';
 import { RolesModule } from './modules/roles/roles.module';
 import { PermissionsModule } from './modules/permissions/permissions.module';
+import { StorageModule } from './modules/storage/storage.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { PermissionsModule } from './modules/permissions/permissions.module';
     ProfileModule,
     RolesModule,
     PermissionsModule,
+    StorageModule,
   ],
   controllers: [],
   providers: [],

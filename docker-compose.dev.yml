@@ -14,15 +14,22 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       NODE_ENV: development
       PORT: 3000
+      MINIO_ENDPOINT: minio
+      MINIO_PORT: 9000
+      MINIO_USE_SSL: "false"
+      MINIO_ACCESS_KEY: admin
+      MINIO_SECRET_KEY: password123
       CORS_ORIGIN: "*"
     ports:
       - "${BACKEND_PORT:-3000}:3000"
     volumes:
-      - ./backend/src:/app/src
-      - ./backend/prisma:/app/prisma
+      - ./backend/src:/app/src:Z
+      - ./backend/prisma:/app/prisma:Z
     depends_on:
       postgres:
         condition: service_healthy
+      minio:
+        condition: service_started
     networks:
       - jasrapo-network
     restart: "no"
@@ -42,7 +49,7 @@ services:
     ports:
       - "8080:4200"
     volumes:
-      - ./FRONT/src:/app/src
+      - ./FRONT/src:/app/src:Z
     depends_on:
       - backend
     networks:

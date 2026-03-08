@@ -7,8 +7,8 @@ import { seedMenuPermissions } from './seeds/menuPermission.seed';
 import { seedPermissions } from './seeds/permission.seed';
 import { seedRoles } from './seeds/role.seed';
 import { seedRolePermissions } from './seeds/rolePermission.seed';
+import { seedRoleHierarchy } from './seeds/roleHierarchy.seed';
 import { seedUSers } from './seeds/user.seed';
-import { seedUserRoles } from './seeds/userRoles.seed';
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
@@ -48,6 +48,10 @@ async function main() {
   const roles = await seedRoles(prisma);
   console.log('✅ Roles creados correctamente.');
 
+  //Jerarquia de roles
+  await seedRoleHierarchy(prisma, roles);
+  console.log('✅ Jerarquia de Roles creada correctamente.');
+
   //Permisos
   const permissions = await seedPermissions(prisma);
   console.log('✅ Permisos creados correctamente.');
@@ -57,14 +61,8 @@ async function main() {
   console.log('✅ Roles y Permisos asignados correctamente.')
 
   //Usuarios
-  const users = await seedUSers(prisma);
+  await seedUSers(prisma, roles);
   console.log('✅ Usuarios creados correctamente.');
-
-  //Usuarios-Roles
-  await seedUserRoles(prisma, users, roles);
-  console.log('✅ Roles asignados a Usuarios correctamente.');
-
-  ;
 
   //Menus
   const menus = await seedMenus(prisma);
