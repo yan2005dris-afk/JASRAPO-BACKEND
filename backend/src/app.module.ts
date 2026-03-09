@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { AuthModule } from './auth/auth.module';
 import { DatabaseModule } from './database/prisma.module';
+import { ClientModule } from './models/client/client.module';
 import { MenusModule } from './modules/menus/menus.module';
 import { PermissionsModule } from './modules/permissions/permissions.module';
 import { ProfileModule } from './modules/profile/profile.module';
@@ -34,6 +35,7 @@ import { UserModule } from './modules/user/user.module';
     RolesModule,
     PermissionsModule,
     StorageModule,
+    ClientModule,
   ],
   controllers: [],
   providers: [],
