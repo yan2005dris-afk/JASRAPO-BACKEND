@@ -22,3 +22,5 @@ backend/postgres/.env
 *.log
 .DS_Store
 
+*.zip
+backend/package-lock.json

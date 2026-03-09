@@ -51,63 +51,14 @@ export class ProfileService {
     let profile = await this.prisma.profiles.findUnique({
       where: { usersId },
     });
-
     if (!profile) {
       profile = await this.prisma.profiles.create({
         data: { usersId },
       });
     }
-
-    // Auto-recuperar avatar desde MinIO si la BD no tiene referencia
-    if (!profile.avatar) {
-      profile = await this.tryRecoverAvatar(usersId, profile);
-    }
-
     return profile;
   }
-
-  /**
-   * Busca archivos de avatar existentes en MinIO para este usuario y
-   * recupera el más reciente vinculándolo de nuevo al perfil.
-   */
-  private async tryRecoverAvatar(usersId: number, profile: any) {
-    try {
-      const allFiles = await this.minioService.listFiles('avatars');
-      if (!allFiles.length) return profile;
-
-      // Buscar por patrón viejo (avatar_profile_{usersId}_) o cualquier archivo
-      const userFiles = allFiles.filter(f =>
-        f.startsWith(`avatar_profile_${usersId}_`),
-      );
-
-      const targetFile = userFiles.length > 0
-        ? userFiles[userFiles.length - 1] // último subido (más reciente por timestamp en nombre)
-        : null;
-
-      if (!targetFile) return profile;
-
-      // Obtener metadata del archivo en MinIO
-      const meta = await this.minioService.getFileMetadata('avatars', targetFile);
-
-      const avatarMeta = {
-        uuid: targetFile.split('.')[0],
-        key: targetFile,
-        originalName: targetFile,
-        mimeType: meta?.contentType || 'image/png',
-        size: meta?.size || 0,
-        bucket: 'avatars',
-        uploadedAt: meta?.lastModified?.toISOString() || new Date().toISOString(),
-      };
-
-      return this.prisma.profiles.update({
-        where: { usersId },
-        data: { avatar: avatarMeta },
-      });
-    } catch {
-      return profile;
-    }
-  }
-
+  
   /**
    * Actualiza el perfil del usuario autenticado.
    * Si no existe, lo crea con los datos proporcionados.

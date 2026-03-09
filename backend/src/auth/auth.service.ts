@@ -276,6 +276,7 @@ export class AuthService {
     if (!isValid) {
       throw new UnauthorizedException('Refresh token inválido');
     }
+    
     return this.actualizarSesionTokens(
       { ...session, email },
       { ipAddress: ip, userAgent },

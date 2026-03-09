@@ -61,7 +61,7 @@ export class PermissionsController {
   @ApiResponse({ status: 409, description: 'Conflicto - El permiso ya existe' })
   @RequiredPermission('permissions', 'create')
   @Post()
-  create(@Body() createPermissionDto: CreatePermissionDto) {
+  createPermissions(@Body() createPermissionDto: CreatePermissionDto) {
     return this.permissionsService.create(createPermissionDto);
   }
 
@@ -81,7 +81,7 @@ export class PermissionsController {
   @ApiResponse({ status: 403, description: 'Prohibido - Sin permiso permissions:read' })
   @RequiredPermission('permissions', 'read')
   @Get()
-  findAll() {
+  findAllPermissions() {
     return this.permissionsService.findAll();
   }
 
@@ -108,7 +108,7 @@ export class PermissionsController {
   @ApiResponse({ status: 404, description: 'Permiso no encontrado' })
   @RequiredPermission('permissions', 'read')
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: string) {
+  findOnePermissions(@Param('id', ParseIntPipe) id: string) {
     return this.permissionsService.findOne(+id);
   }
 
@@ -140,7 +140,7 @@ export class PermissionsController {
   @ApiResponse({ status: 404, description: 'Permiso no encontrado' })
   @RequiredPermission('permissions', 'update')
   @Patch(':id')
-  update(
+  updatePermissions(
     @Param('id', ParseIntPipe) id: string,
     @Body() updatePermissionDto: UpdatePermissionDto,
   ) {
@@ -170,7 +170,7 @@ export class PermissionsController {
   @ApiResponse({ status: 404, description: 'Permiso no encontrado' })
   @RequiredPermission('permissions', 'delete')
   @Delete(':id')
-  SoftDelete(@Param('id', ParseIntPipe) id: string) {
+  SoftDeletePermissions(@Param('id', ParseIntPipe) id: string) {
     return this.permissionsService.remove(+id);
   }
 }

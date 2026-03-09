@@ -72,7 +72,7 @@ export class ProfileController {
     description: 'Conflicto - El usuario ya tiene un perfil creado',
   })
   @Post()
-  create(@Req() req: any, @Body() createProfileDto: CreateProfileDto) {
+  createProfile(@Req() req: any, @Body() createProfileDto: CreateProfileDto) {
     const usersId: number = req.user.usersId;
     return this.profileService.create(usersId, createProfileDto);
   }
@@ -101,7 +101,7 @@ export class ProfileController {
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({ status: 404, description: 'Perfil no encontrado' })
   @Get('me')
-  findMe(@Req() req: any) {
+  findMeProfile(@Req() req: any) {
     const usersId: number = req.user.usersId;
     return this.profileService.findMyProfile(usersId);
   }
@@ -135,8 +135,8 @@ export class ProfileController {
   @ApiResponse({ status: 400, description: 'Datos inválidos' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({ status: 404, description: 'Perfil no encontrado' })
-  @Patch()
-  update(@Req() req: any, @Body() updateProfileDto: UpdateProfileDto) {
+  @Patch('me')
+  updateProfile(@Req() req: any, @Body() updateProfileDto: UpdateProfileDto) {
     const usersId: number = req.user.usersId;
     return this.profileService.update(usersId, updateProfileDto);
   }
@@ -195,6 +195,31 @@ export class ProfileController {
       },
     },
   })
+  
+  /**
+   * Lista los avatares disponibles en MinIO para el usuario autenticado.
+   */
+  @ApiOperation({
+    summary: 'Seleccionar avatar existente',
+    description:
+      'Permite seleccionar una imagen que ya existe en MinIO como avatar del usuario. ' +
+      'No es necesario volver a subir el archivo.',
+  })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['key'],
+      properties: {
+        key: {
+          type: 'string',
+          description: 'Nombre del archivo en MinIO',
+          example: 'avatar_profile_1_1709834567890.png',
+        },
+      },
+    },
+  })
+  @ApiResponse({ status: 200, description: 'Avatar vinculado exitosamente' })
+  @ApiResponse({ status: 404, description: 'El archivo no existe en MinIO' })
   @Get('avatars/available')
   async listAvailableAvatars(@Req() req: any) {
     const usersId: number = req.user.usersId;
