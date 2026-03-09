@@ -3,14 +3,15 @@ import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
-
-(BigInt.prototype as any).toJSON = function () {
-  return this.toString();
-};
+import { BigIntInterceptor } from './common/interceptors/bigint.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.setGlobalPrefix('api/v1');
+
+  //Interceptor BigInt
+  app.useGlobalInterceptors(new BigIntInterceptor());
+
   // Con Nginx como reverse proxy, la IP real del cliente viene en el
   // header X-Forwarded-For. "trust proxy = 1" le dice a Express que
   // confíe en un nivel de proxy y use ese header para req.ip.
