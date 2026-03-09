@@ -1,13 +1,14 @@
-import { IsNumberString, IsOptional, IsString, Length } from "class-validator";
+import { Type } from "class-transformer";
+import { IsInt, IsNumberString, IsString, Length } from "class-validator";
 
 export class CreateClientDto {
     @IsString()
     nombre: string;
 
     //BigInt se recibe como string en HTTP
-    @IsOptional()
-    @IsNumberString()
-    comunidadId?: string;
+    @IsInt()
+    @Type(() => Number)
+    comunidadId: number;
 
     //Cedula es un string unico
     @IsNumberString()

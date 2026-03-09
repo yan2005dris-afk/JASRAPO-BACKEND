@@ -27,31 +27,31 @@ export class ClientController {
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, PermissionsGuard)
 
-  @RequiredPermission('clients', 'create')
+  @RequiredPermission('clientes', 'create')
   @Post()
   create(@Body() createClientDto: CreateClientDto) {
     return this.clientService.create(createClientDto);
   }
 
-  @RequiredPermission('clients', 'read')
+  @RequiredPermission('clientes', 'read')
   @Get()
   findAll() {
     return this.clientService.findAll();
   }
 
-  @RequiredPermission('clients', 'read')
+  @RequiredPermission('clientes', 'read')
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.clientService.findOne(id);
   }
 
-  @RequiredPermission('clients', 'update')
+  @RequiredPermission('clientes', 'update')
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateClientDto: UpdateClientDto) {
     return this.clientService.update(id, updateClientDto);
   }
 
-  @RequiredPermission('clients', 'delete')
+  @RequiredPermission('clientes', 'delete')
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.clientService.remove(id);
