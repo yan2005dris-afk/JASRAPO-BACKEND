@@ -195,10 +195,10 @@ export class UserService {
       throw new NotFoundException('Usuario no encontrado');
     }
     if (!user.role || user.role.deletedAt) {
-      return [];
+      return null;
     }
 
-    return [user.role.name];
+    return user.role.name;
   }
 
   /**
