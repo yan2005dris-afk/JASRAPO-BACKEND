@@ -139,13 +139,12 @@ export class UserController {
   }
 
   /**
-   * Obtiene los roles asignados a un usuario.
+   * Obtiene el nombre del rol asignado actualmente a un usuario.
    * Requiere permiso: users:read
    */
   @ApiOperation({
-    summary: 'Obtener roles de usuario',
-    description:
-      'Retorna los roles asignados a un usuario específico, sin incluir información de la relación.',
+    summary: 'Obtener rol actual de usuario',
+    description: 'Retorna el nombre del rol asignado actualmente al usuario.'
   })
   @ApiParam({
     name: 'id',
@@ -155,25 +154,26 @@ export class UserController {
   })
   @ApiResponse({
     status: 200,
-    description: 'Roles del usuario obtenidos exitosamente',
+    description: 'Rol del usuario obtenido exitosamente',
   })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({ status: 403, description: 'Prohibido - Sin permiso users:read' })
   @ApiResponse({ status: 404, description: 'Usuario no encontrado' })
   @RequiredPermission('users', 'read')
-  @Get(':id/roles')
-  getUserRoles(@Param('id', ParseIntPipe) id: number) {
+  @Get(':id/role')
+  getUserRole(@Param('id', ParseIntPipe) id: number) {
     return this.userService.getRolesByUserId(id);
   }
 
   /**
-   * Obtiene las asignaciones de rol de un usuario.
+   * Obtiene la asignación de rol actual de un usuario.
+   * Devuelve un objeto con usersId, rolesId y name, o null si no tiene rol.
    * Requiere permiso: users:read
    */
   @ApiOperation({
-    summary: 'Obtener asignaciones de rol de usuario',
+    summary: 'Obtener asignación de rol de usuario',
     description:
-      'Retorna la asignacion actual de rol del usuario.',
+      'Retorna la asignación actual de rol del usuario como un objeto único (o null si no tiene rol).',
   })
   @ApiParam({
     name: 'id',
@@ -183,14 +183,21 @@ export class UserController {
   })
   @ApiResponse({
     status: 200,
-    description: 'Asignaciones de rol obtenidas exitosamente',
+    description: 'Asignación de rol obtenida exitosamente',
+    schema: {
+      example: {
+        usersId: 1,
+        rolesId: 2,
+        name: 'admin',
+      },
+    },
   })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({ status: 403, description: 'Prohibido - Sin permiso users:read' })
   @ApiResponse({ status: 404, description: 'Usuario no encontrado' })
   @RequiredPermission('users', 'read')
-  @Get(':id/role-assignments')
-  getUserRoleAssignments(@Param('id', ParseIntPipe) id: number) {
+  @Get(':id/role-assignment')
+  getUserRoleAssignment(@Param('id', ParseIntPipe) id: number) {
     return this.userService.getRoleAssignmentsByUserId(id);
   }
 
