@@ -8,6 +8,7 @@ import { ProfileModule } from './modules/profile/profile.module';
 import { RolesModule } from './modules/roles/roles.module';
 import { PermissionsModule } from './modules/permissions/permissions.module';
 import { StorageModule } from './modules/storage/storage.module';
+import { RedisModule } from './redis/redis.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { StorageModule } from './modules/storage/storage.module';
     RolesModule,
     PermissionsModule,
     StorageModule,
+    RedisModule,
   ],
   controllers: [],
   providers: [],
