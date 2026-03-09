@@ -62,7 +62,7 @@ export class RolesController {
   @ApiResponse({ status: 409, description: 'Conflicto - El rol ya existe' })
   @RequiredPermission('roles', 'create')
   @Post()
-  create(@Body() createRoleDto: CreateRoleDto) {
+  createRol(@Body() createRoleDto: CreateRoleDto) {
     return this.rolesService.create(createRoleDto);
   }
 
@@ -82,7 +82,7 @@ export class RolesController {
   @ApiResponse({ status: 403, description: 'Prohibido - Sin permiso roles:read' })
   @RequiredPermission('roles', 'read')
   @Get()
-  findAll() {
+  findAllRoles() {
     return this.rolesService.findAll();
   }
 
@@ -109,7 +109,7 @@ export class RolesController {
   @ApiResponse({ status: 404, description: 'Rol no encontrado' })
   @RequiredPermission('roles', 'read')
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: string) {
+  findOneRol(@Param('id', ParseIntPipe) id: string) {
     return this.rolesService.findOne(+id);
   }
 
@@ -141,7 +141,7 @@ export class RolesController {
   @ApiResponse({ status: 404, description: 'Rol no encontrado' })
   @RequiredPermission('roles', 'update')
   @Patch(':id')
-  update(@Param('id', ParseIntPipe) id: string, @Body() updateRoleDto: UpdateRoleDto) {
+  updateRol(@Param('id', ParseIntPipe) id: string, @Body() updateRoleDto: UpdateRoleDto) {
     return this.rolesService.update(+id, updateRoleDto);
   }
 

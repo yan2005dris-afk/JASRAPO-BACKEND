@@ -2,21 +2,25 @@ import {
   ConflictException,
   Injectable,
   NotFoundException,
-  UseGuards,
 } from '@nestjs/common';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
 import { SetRoleChildrenDto } from './dto/set-role-children.dto';
 import { PrismaService } from 'src/database/prisma.service';
-import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
-import { PermissionsGuard } from 'src/common/guards/permissions.guard';
 
 @Injectable()
 export class RolesService {
   constructor(private readonly prisma: PrismaService) {}
 
+  /**
+   * Crea un nuevo rol y, si se especifican, asigna roles hijos (herencia).
+   * - Valida que los roles hijos existan.
+   * - Crea el rol y las relaciones en una transacción.
+   * - Si hay error de secuencia, la corrige y reintenta.
+   */
   async create(createRoleDto: CreateRoleDto) {
     const { childRoleIds = [], ...roleData } = createRoleDto;
+    // Normaliza los IDs de roles hijos: convierte a número, filtra enteros positivos y elimina duplicados
     const normalizedChildRoleIds = Array.from(
       new Set(
         childRoleIds
@@ -25,16 +29,19 @@ export class RolesService {
       ),
     );
 
+    // Si hay roles hijos, valida que existan en la base de datos
     if (normalizedChildRoleIds.length > 0) {
       await this.assertChildRolesExist(normalizedChildRoleIds);
     }
 
     try {
+      // Transacción: crea el rol y las relaciones de herencia
       return await this.prisma.$transaction(async (tx) => {
         const createdRole = await tx.roles.create({
           data: roleData,
         });
 
+        // Si hay roles hijos válidos (y no es el mismo rol), crea las relaciones en rolesHeredados
         if (normalizedChildRoleIds.length > 0) {
           const safeChildIds = normalizedChildRoleIds.filter(
             (childRoleId) => childRoleId !== createdRole.rolesId,
@@ -53,6 +60,7 @@ export class RolesService {
         return createdRole;
       });
     } catch (error: unknown) {
+      // Si hay error de clave única (rolesId duplicado), corrige la secuencia y reintenta
       if (this.isRolesIdUniqueConstraintError(error)) {
         await this.syncRolesIdSequence();
         return this.prisma.$transaction(async (tx) => {
@@ -79,10 +87,15 @@ export class RolesService {
         });
       }
 
+      // Si el error no es de clave única, lo relanza
       throw error;
     }
   }
 
+  /**
+   * Valida que todos los roles hijos existan y no estén eliminados.
+   * Lanza excepción si falta alguno.
+   */
   private async assertChildRolesExist(childRoleIds: number[]): Promise<void> {
     const validRoles = await this.prisma.roles.findMany({
       where: {
@@ -102,6 +115,9 @@ export class RolesService {
     }
   }
 
+  /**
+   * Detecta si el error es por restricción de unicidad en roles_id (clave duplicada).
+   */
   private isRolesIdUniqueConstraintError(error: unknown): boolean {
     if (typeof error !== 'object' || error === null) {
       return false;
@@ -142,6 +158,10 @@ export class RolesService {
     return false;
   }
 
+  /**
+   * Sincroniza la secuencia de IDs de la tabla roles con el valor máximo actual.
+   * Soluciona problemas de clave duplicada por desfase en la secuencia.
+   */
   private async syncRolesIdSequence(): Promise<void> {
     const sequenceResult = await this.prisma.$queryRaw<
       { seq: string | null }[]
@@ -161,10 +181,16 @@ export class RolesService {
     `);
   }
 
+  /**
+   * Devuelve todos los roles (sin filtrar eliminados).
+   */
   findAll() {
     return this.prisma.roles.findMany();
   }
 
+  /**
+   * Busca un rol por su ID.
+   */
   findOne(id: number) {
     return this.prisma.roles.findUnique({
       where: {
@@ -173,6 +199,9 @@ export class RolesService {
     });
   }
 
+  /**
+   * Actualiza los datos de un rol por su ID.
+   */
   update(id: number, updateRoleDto: UpdateRoleDto) {
     return this.prisma.roles.update({
       where: {
@@ -182,6 +211,10 @@ export class RolesService {
     });
   }
 
+  /**
+   * Obtiene los permisos de un rol (incluyendo herencia).
+   * Devuelve permisos únicos, sin repetidos.
+   */
   async getRolePermissions(rolesId: number) {
     const role = await this.prisma.roles.findUnique({ where: { rolesId } });
     if (!role || role.deletedAt) {
@@ -231,8 +264,8 @@ export class RolesService {
   }
 
   /**
-   * Resolves the full role hierarchy tree from initial role IDs,
-   * returning all role IDs including transitive children.
+   * Resuelve toda la jerarquía de roles hijos (transitiva) a partir de IDs iniciales.
+   * Devuelve todos los IDs de roles relacionados.
    */
   private async resolveRoleHierarchy(
     initialRoleIds: number[],
@@ -272,6 +305,9 @@ export class RolesService {
     return Array.from(visited);
   }
 
+  /**
+   * Asigna un permiso a un rol. Si ya existe y está eliminado, lo reactiva.
+   */
   async assignPermission(rolesId: number, permissionsId: number) {
     const role = await this.prisma.roles.findUnique({ where: { rolesId } });
     if (!role || role.deletedAt) {
@@ -309,6 +345,9 @@ export class RolesService {
     });
   }
 
+  /**
+   * Elimina un permiso de un rol.
+   */
   async removePermission(rolesId: number, permissionsId: number) {
     const assignment = await this.prisma.rolPermissions.findFirst({
       where: { rolesId, permissionsId },
@@ -326,6 +365,9 @@ export class RolesService {
     });
   }
 
+  /**
+   * Obtiene los roles hijos directos de un rol.
+   */
   async getRoleChildren(rolesId: number) {
     const role = await this.prisma.roles.findUnique({ where: { rolesId } });
     if (!role || role.deletedAt) {
@@ -353,6 +395,10 @@ export class RolesService {
     }));
   }
 
+  /**
+   * Actualiza la lista de roles hijos de un rol (herencia).
+   * Elimina los que ya no están y agrega los nuevos.
+   */
   async setRoleChildren(rolesId: number, dto: SetRoleChildrenDto) {
     const role = await this.prisma.roles.findUnique({ where: { rolesId } });
     if (!role || role.deletedAt) {

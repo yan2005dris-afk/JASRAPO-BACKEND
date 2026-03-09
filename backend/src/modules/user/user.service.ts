@@ -2,7 +2,6 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
-  BadRequestException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { PrismaService } from 'src/database/prisma.service';
@@ -151,10 +150,7 @@ export class UserService {
     const updateData = { ...params.data };
 
     if (updateData.password) {
-      updateData.password = await bcrypt.hash(
-        updateData.password as string,
-        10,
-      );
+      updateData.password = await this.ensureHashedPassword(updateData.password as string);
     }
     return this.prisma.users.update({
       where: params.where,
@@ -303,7 +299,7 @@ export class UserService {
     const assignments = await this.prisma.userPermissions.findMany({
       where: {
         usersId,
-        deteledAt: null,
+        deletedAt: null,
         Permissions: {
           deletedAt: null,
         },
@@ -360,7 +356,7 @@ export class UserService {
       where: {
         usersId,
         permissionsId,
-        deteledAt: null,
+        deletedAt: null,
       },
     });
 
@@ -395,13 +391,13 @@ export class UserService {
       throw new NotFoundException('Asignacion de permiso no encontrada');
     }
 
-    if (userPermission.deteledAt) {
+    if (userPermission.deletedAt) {
       throw new ConflictException('Este permiso ya fue revocado previamente');
     }
 
     return this.prisma.userPermissions.update({
       where: { idUserPermissions },
-      data: { deteledAt: new Date() },
+      data: { deletedAt: new Date() },
     });
   }
   /**
@@ -419,7 +415,7 @@ export class UserService {
         },
         userPermissions: {
           where: {
-            deteledAt: null,
+            deletedAt: null,
           },
           include: {
             Permissions: true,
@@ -486,7 +482,7 @@ export class UserService {
           (userPermiso) =>
             userPermiso.Permissions &&
             !userPermiso.Permissions.deletedAt &&
-            !userPermiso.deteledAt,
+            !userPermiso.deletedAt,
         )
         .map((userPermiso) => ({
           resource: userPermiso.Permissions.resource,

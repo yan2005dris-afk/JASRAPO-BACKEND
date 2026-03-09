@@ -23,3 +23,4 @@ backend/postgres/.env
 .DS_Store
 
 *.zip
+backend/package-lock.json
