@@ -9,6 +9,8 @@ import { seedRoles } from './seeds/role.seed';
 import { seedRolePermissions } from './seeds/rolePermission.seed';
 import { seedRoleHierarchy } from './seeds/roleHierarchy.seed';
 import { seedUSers } from './seeds/user.seed';
+import { seedClients } from './seeds/client.seed';
+import { seedComunidades } from './seeds/comunidad.seed';
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
@@ -63,6 +65,14 @@ async function main() {
   //Usuarios
   await seedUSers(prisma, roles);
   console.log('✅ Usuarios creados correctamente.');
+
+  //Comunidades
+  await seedComunidades(prisma);
+  console.log('✅ Comunidades creadas correctamente.');
+
+  //Clientes
+  await seedClients(prisma);
+  console.log('✅ Clientes creados correctamente.');
 
   //Menus
   const menus = await seedMenus(prisma);
