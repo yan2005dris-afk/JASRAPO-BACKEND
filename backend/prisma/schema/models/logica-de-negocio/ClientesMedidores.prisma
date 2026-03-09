@@ -2,13 +2,17 @@ model ClientesMedidores {
     clienteMedidorId BigInt  @id @default(autoincrement()) @map("cliente_medidor_id")
     clienteId        BigInt? @map("cliente_id")
     medidorId        BigInt? @map("medidor_id")
-
+    
+    contrato String @unique @map("contrato")
     fechaAsignacion DateTime  @map("fecha_asignacion")
     fechaRetiro     DateTime? @map("fecha_retiro")
 
     cliente  Clientes?  @relation(fields: [clienteId], references: [clienteId])
     medidor  Medidores? @relation(fields: [medidorId], references: [medidorId])
     lecturas Lecturas[]
+
+    @@index([clienteId])
+    @@index([fechaRetiro])
 
     @@map("clientes_medidores")
 }
