@@ -1,7 +1,7 @@
 services:
   # ─── Base de datos PostgreSQL ────────────────────────────────
   postgres:
-    build: ./backend-db/postgres
+    image: postgres:16-alpine
     container_name: jasrapo-postgres
     env_file:
       - .env
@@ -12,7 +12,7 @@ services:
     ports:
       - "${POSTGRES_PORT:-5433}:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - ./backend-db/postgres-data:/var/lib/postgresql/data:Z
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
       interval: 10s
@@ -20,6 +20,23 @@ services:
       retries: 5
     networks:
       - jasrapo-network
+
+  # ─── MinIO Object Storage ────────────────────────────────────
+  minio:
+    image: minio/minio
+    container_name: minio-server
+    ports:
+      - "9000:9000" # API
+      - "9001:9001" # Console
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: password123
+      MINIO_DEFAULT_BUCKETS: avatars
+    volumes:
+      - ./backend-db/minio-data:/data:Z
+    networks:
+      - jasrapo-network
+    command: server /data --console-address ":9001"
 
   # ─── Backend NestJS ──────────────────────────────────────────
   backend:
@@ -34,6 +51,11 @@ services:
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       NODE_ENV: production
+      MINIO_ENDPOINT: minio
+      MINIO_PORT: 9000
+      MINIO_USE_SSL: "false"
+      MINIO_ACCESS_KEY: admin
+      MINIO_SECRET_KEY: password123
       PORT: 3000
       CORS_ORIGIN: "*"
     ports:
@@ -41,6 +63,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      minio:
+        condition: service_started
     networks:
       - jasrapo-network
     restart: unless-stopped
@@ -62,10 +86,6 @@ services:
     networks:
       - jasrapo-network
     restart: unless-stopped
-
-volumes:
-  postgres_data:
-
 
 networks:
   jasrapo-network:

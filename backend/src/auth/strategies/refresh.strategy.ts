@@ -31,7 +31,7 @@ export class RefreshTokenStrategy extends PassportStrategy(
   }
 
   async validate(payload: any) {
-    const { sub: usersId, sid: sessionsId } = payload;
+    const { sub: usersId, sid: sessionsId, email } = payload;
     if (!usersId || !sessionsId) {
       throw new UnauthorizedException('Session invalida');
     }
@@ -41,6 +41,6 @@ export class RefreshTokenStrategy extends PassportStrategy(
     if (!session || session.isRevoked || session.expiresAt < new Date()) {
       throw new UnauthorizedException('Refresh token inválido o expirado');
     }
-    return { usersId, sessionsId };
+    return { usersId, sessionsId, email };
   }
 }

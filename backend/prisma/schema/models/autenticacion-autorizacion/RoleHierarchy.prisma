@@ -1,0 +1,14 @@
+model RolesHeredados {
+    roleHierarchyId      Int       @id @default(autoincrement())  @map("roles_heredados_id")
+    parentRoleId         Int       @map("parent_role_id")
+    childRoleId          Int       @map("child_role_id")
+    deletedAt            DateTime? @map("deleted_at")
+
+    parentRole           Roles     @relation("RoleParent", fields: [parentRoleId], references: [rolesId])
+    childRole            Roles     @relation("RoleChild", fields: [childRoleId], references: [rolesId])
+
+    @@unique([parentRoleId, childRoleId])
+    @@index([parentRoleId])
+    @@index([childRoleId])
+    @@map("roles_heredados")
+}

@@ -3,7 +3,7 @@ model Profiles {
     firstName String?  @map("first_name")
     lastName  String?  @map("last_name")
     phone     String?  @map("phone")
-    avatar    String?  @map("avatar")
+    avatar    Json?    @map("avatar")
     createdAt DateTime @default(now()) @map("created_at")
     updatedAt DateTime @updatedAt @map("updated_at")
 

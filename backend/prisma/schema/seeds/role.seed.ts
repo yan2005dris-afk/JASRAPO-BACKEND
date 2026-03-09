@@ -11,20 +11,46 @@ export async function seedRoles(prisma: PrismaClient) {
     const secretariaRol = await prisma.roles.upsert({
         where: { rolesId: 2 },
         update: {},
-        create: { rolesId: 2, name: 'secretary' },
+        create: { rolesId: 2, name: 'secretaria' },
+    });
+
+    const recaudacionRol = await prisma.roles.upsert({
+        where: { rolesId: 3 },
+        update: {},
+        create: { rolesId: 3, name: 'recaudacion' },
+    });
+
+    const presidenciaRol = await prisma.roles.upsert({
+        where: { rolesId: 4 },
+        update: {},
+        create: { rolesId: 4, name: 'presidencia' },
+    });
+
+    const operadoresRol = await prisma.roles.upsert({
+        where: { rolesId: 5 },
+        update: {},
+        create: { rolesId: 5, name: 'operadores' },
+    });
+
+    const contabilidadRol = await prisma.roles.upsert({
+        where: { rolesId: 6 },
+        update: {},
+        create: { rolesId: 6, name: 'contabilidad' },
     });
 
     const userRol = await prisma.roles.upsert({
-        where: { rolesId: 3 },
+        where: { rolesId: 7 },
         update: {},
-        create: { rolesId: 3, name: 'user' },
+        create: { rolesId: 7, name: 'user' },
     });
 
-    const clienteRol = await prisma.roles.upsert({
-        where: { rolesId: 4 },
-        update: {},
-        create: { rolesId: 4, name: 'client' },
-    });
-
-    return {adminRol, secretariaRol, userRol, clienteRol};
+    return {
+        adminRol,
+        secretariaRol,
+        recaudacionRol,
+        presidenciaRol,
+        operadoresRol,
+        contabilidadRol,
+        userRol,
+    };
 }

@@ -1,11 +1,13 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { DatabaseModule } from './database/prisma.module';
-import { UserModule } from './models/user/user.module';
 import { AuthModule } from './auth/auth.module';
-import { MenusModule } from './models/menus/menus.module';
-import { ProfileModule } from './models/profile/profile.module';
-import { ClientModule } from './models/client/client.module';
+import { DatabaseModule } from './database/prisma.module';
+import { MenusModule } from './modules/menus/menus.module';
+import { PermissionsModule } from './modules/permissions/permissions.module';
+import { ProfileModule } from './modules/profile/profile.module';
+import { RolesModule } from './modules/roles/roles.module';
+import { StorageModule } from './modules/storage/storage.module';
+import { UserModule } from './modules/user/user.module';
 
 @Module({
   imports: [
@@ -19,9 +21,11 @@ import { ClientModule } from './models/client/client.module';
     AuthModule,
     MenusModule,
     ProfileModule,
-    ClientModule,
+    RolesModule,
+    PermissionsModule,
+    StorageModule,
   ],
   controllers: [],
   providers: [],
 })
-export class AppModule { }
+export class AppModule {}

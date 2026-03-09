@@ -4,7 +4,8 @@ export class EcuadorTimezoneUtil {
   /**
    * Zona horaria de Ecuador
    */
-  private static readonly ECUADOR_TIMEZONE = process.env.TZ || 'America/Guayaquil';
+  private static readonly ECUADOR_TIMEZONE =
+    process.env.TZ || 'America/Guayaquil';
 
   /**
    * Convierte una fecha UTC a zona horaria de Ecuador
@@ -50,6 +51,10 @@ export class EcuadorTimezoneUtil {
    * @returns String ISO con offset de Ecuador (YYYY-MM-DDTHH:mm:ss-05:00)
    */
   public static formatAsEcuadorISO(fecha: Date): string {
-    return formatInTimeZone(fecha, this.ECUADOR_TIMEZONE, "yyyy-MM-dd'T'HH:mm:ssXXX");
+    return formatInTimeZone(
+      fecha,
+      this.ECUADOR_TIMEZONE,
+      "yyyy-MM-dd'T'HH:mm:ssXXX",
+    );
   }
 }

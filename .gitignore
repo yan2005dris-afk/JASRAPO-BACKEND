@@ -1,3 +1,25 @@
-./FRONT/
+# --- Frontend ---
 FRONT/
 FRONT.rar
+.agents
+
+# --- Persistencia de Datos (Docker) ---
+backend-db/postgres-data/
+backend-db/postgres/
+/backend-db/minio-data
+
+# --- Backend (NestJS & Node) ---
+node_modules/
+backend/node_modules/
+backend/dist/
+
+# --- Variables de Entorno ---
+.env
+backend/.env
+backend/postgres/.env
+
+# --- Otros ---
+*.log
+.DS_Store
+
+*.zip
