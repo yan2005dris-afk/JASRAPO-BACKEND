@@ -1,4 +1,4 @@
-import { IsNumberString, IsOptional, IsString } from "class-validator";
+import { IsNumberString, IsOptional, IsString, Length } from "class-validator";
 
 export class CreateClientDto {
     @IsString()
@@ -8,4 +8,9 @@ export class CreateClientDto {
     @IsOptional()
     @IsNumberString()
     comunidadId?: string;
+
+    //Cedula es un string unico
+    @IsNumberString()
+    @Length(10, 10) // Asumiendo que la cédula tiene exactamente 10 dígitos
+    cedula: string;
 }

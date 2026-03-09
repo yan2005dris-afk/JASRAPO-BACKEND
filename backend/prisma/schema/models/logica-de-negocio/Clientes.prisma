@@ -2,8 +2,10 @@ model Clientes {
     clienteId   BigInt  @id @default(autoincrement()) @map("cliente_id")
     comunidadId BigInt? @map("comunidad_id")
 
+    cedula String   @map("cedula") @unique
     nombre    String   @map("nombre")
     createdAt DateTime @default(now()) @map("created_at")
+    deletedAt DateTime? @map("deleted_at")
 
     comunidad         Comunidades?        @relation(fields: [comunidadId], references: [comunidadId])
     clientesMedidores ClientesMedidores[]
@@ -11,6 +13,9 @@ model Clientes {
     pagos             Pagos[]
     convenios         Convenios[]
     solicitudes       Solicitudes[]
+
+    @@index([nombre])
+    @@index([deletedAt])
 
     @@map("clientes")
 }

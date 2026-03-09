@@ -1,18 +1,31 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { RequiredPermission } from 'src/auth/decorators/require-permission.decorator';
+import { Throttle } from '@nestjs/throttler';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
-import { PermissionsGuard } from 'src/auth/guards/permissions.guard';
+import { RequiredPermission } from 'src/common/decorators/require-permission.decorator';
+import { PermissionsGuard } from 'src/common/guards/permissions.guard';
 import { ClientService } from './client.service';
 import { CreateClientDto } from './dto/create-client.dto';
 import { UpdateClientDto } from './dto/update-client.dto';
 
 @ApiTags('client')
-@ApiBearerAuth()
-@UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('client')
 export class ClientController {
   constructor(private readonly clientService: ClientService) {}
+
+  // PUBLICO
+  @Get('search')
+  @Throttle({ default: { limit: 10, ttl: 60000 } }) // Limitar a 10 peticiones por minuto
+  search(
+    @Query('tipo') tipo: string,
+    @Query('valor') valor: string,
+  ) {
+    return this.clientService.search(tipo, valor);
+  }
+
+  // PRIVADO
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
 
   @RequiredPermission('clients', 'create')
   @Post()

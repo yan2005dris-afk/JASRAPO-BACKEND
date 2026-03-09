@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { AuthModule } from './auth/auth.module';
 import { DatabaseModule } from './database/prisma.module';
 import { MenusModule } from './modules/menus/menus.module';
@@ -16,6 +17,15 @@ import { UserModule } from './modules/user/user.module';
       envFilePath: '../.env',
       ignoreEnvFile: process.env.NODE_ENV === 'production',
     }),
+
+    // Limitar peticiones
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000, // en milisegundos
+        limit: 20,
+      },
+    ]),
+
     DatabaseModule,
     UserModule,
     AuthModule,
