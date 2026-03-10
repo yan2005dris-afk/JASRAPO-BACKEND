@@ -9,6 +9,7 @@ import { PermissionsModule } from './modules/permissions/permissions.module';
 import { ProfileModule } from './modules/profile/profile.module';
 import { RolesModule } from './modules/roles/roles.module';
 import { StorageModule } from './modules/storage/storage.module';
+import { RedisModule } from './redis/redis.module';
 import { UserModule } from './modules/user/user.module';
 
 @Module({
@@ -35,6 +36,7 @@ import { UserModule } from './modules/user/user.module';
     RolesModule,
     PermissionsModule,
     StorageModule,
+    RedisModule,
     ClientModule,
   ],
   controllers: [],

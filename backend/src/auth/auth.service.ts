@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
   Logger,
   UnauthorizedException,
@@ -12,16 +13,23 @@ import { PrismaService } from 'src/database/prisma.service';
 import { UserService } from 'src/modules/user/user.service';
 import { LoginUserDto } from './dto/login-user.dto';
 import { RegisterDto } from './dto/register.dto';
+import { RedisSessionService } from '../redis/redis-session.service';
+const REDIS_SESSION_TTL = process.env.REDIS_SESSION_TTL ? Number(process.env.REDIS_SESSION_TTL) : 60 * 60 * 24 * 7; // 7 días en segundos
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
 
+  // Log Redis connection status at service startup
   constructor(
     private readonly userService: UserService,
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
-  ) {}
+    // cacheManager eliminado, solo ioredis
+    private readonly redisSessionService: RedisSessionService,
+  ) {
+    this.logger.log('[REDIS] RedisSessionService inyectado. Listo para sesiones en Redis.');
+  }
 
   /**
    * Registra un nuevo usuario
@@ -61,66 +69,24 @@ export class AuthService {
     existingRefreshToken?: string,
   ) {
     const users = await this.validateUser(loginUserDto);
-
     const safeIp = ip ?? 'unknown';
     const safeAgent = userAgent ?? 'unknown';
-
     this.logger.log(`[LOGIN] user=${users.usersId} | ip="${safeIp}"`);
 
-    // ── ¿Hay cookie con refreshToken? Intentar reutilizar sesión existente ──
-    if (existingRefreshToken) {
-      this.logger.debug(
-        `[LOGIN] cookie refreshToken (primeros 20 chars): "${existingRefreshToken.substring(0, 20)}..."`,
-      );
-      this.logger.debug(`[LOGIN] userAgent buscado: "${safeAgent}"`);
-
-      const existingSession = await this.prisma.sessions.findFirst({
-        where: {
-          usersId: users.usersId,
-          userAgent: safeAgent,
-          isRevoked: false,
-          expiresAt: { gt: new Date() },
-        },
-        orderBy: { sessionsId: 'desc' },
-      });
-
-      if (existingSession) {
-        const isValid = await bcrypt.compare(
-          existingRefreshToken,
-          existingSession.refreshToken,
-        );
-
-        if (isValid) {
-          const tokens = await this.actualizarSesionTokens(
-            { ...existingSession, email: users.email },
-            { ipAddress: safeIp, userAgent: safeAgent },
-          );
-          return this.buildLoginResponse(
-            users,
-            existingSession.sessionsId,
-            tokens,
-          );
-        }
-      }
-    }
-
-    // ── Crear sesión nueva ──
-    const session = await this.prisma.sessions.create({
-      data: {
-        usersId: users.usersId,
-        refreshToken: '',
-        ipAddress: safeIp,
-        userAgent: safeAgent,
-        isRevoked: false,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-      },
-    });
-
-    const tokens = await this.actualizarSesionTokens({
-      ...session,
-      email: users.email,
-    });
-    return this.buildLoginResponse(users, session.sessionsId, tokens);
+    // ── Siempre crear sesión nueva ──
+    const sessionsId = Date.now(); // o usa uuid si prefieres
+    const sessionKey = `session:${users.usersId}:${sessionsId}`;
+    const expiresAt = Date.now() + 7 * 24 * 60 * 60 * 1000;
+    const session = {
+      sessionsId,
+      usersId: users.usersId,
+      ipAddress: safeIp,
+      userAgent: safeAgent,
+      isRevoked: false,
+      expiresAt,
+    };
+    const tokens = await this.actualizarSesionTokensRedis({ ...session, email: users.email }, {}, sessionKey);
+    return this.buildLoginResponse(users, sessionsId, tokens);
   }
 
   /**
@@ -198,9 +164,10 @@ export class AuthService {
    * @param session   - Objeto con { usersId, sessionsId }
    * @param extraData - Campos adicionales a actualizar (ej: ipAddress)
    */
-  private async actualizarSesionTokens(
+  private async actualizarSesionTokensRedis(
     session: { usersId: number; sessionsId: number; email?: string },
     extraData: Record<string, any> = {},
+    sessionKey: string,
   ): Promise<{ accessToken: string; refreshToken: string }> {
     const tokens = await this.generateJwtToken(
       session.usersId,
@@ -208,10 +175,24 @@ export class AuthService {
       session.email ?? '',
     );
     const newHash = await bcrypt.hash(tokens.refreshToken, 10);
-    await this.prisma.sessions.update({
-      where: { sessionsId: session.sessionsId },
-      data: { refreshToken: newHash, ...extraData },
-    });
+    const updatedSession = {
+      ...session,
+      refreshToken: newHash,
+      ...extraData,
+      isRevoked: false,
+      createdAt: (session as any).createdAt ?? Date.now(),
+      expiresAt:
+        typeof (session as any).expiresAt === 'number' && !isNaN((session as any).expiresAt)
+          ? (session as any).expiresAt
+          : (Date.now() + REDIS_SESSION_TTL * 1000),
+    };
+    this.logger.log(`[REDIS] [IOREDIS] Intentando guardar sesión en Redis: ${sessionKey}`);
+    try {
+      await this.redisSessionService.setSession(updatedSession, REDIS_SESSION_TTL);
+      this.logger.log(`[REDIS] [IOREDIS] Sesión guardada correctamente en Redis: ${sessionKey}`);
+    } catch (err) {
+      this.logger.error(`[REDIS] [IOREDIS] Error al guardar sesión en Redis: ${sessionKey} | ${err}`);
+    }
     return tokens;
   }
 
@@ -254,43 +235,42 @@ export class AuthService {
     refreshToken: string,
     ip: string = 'unknown',
     userAgent: string = 'unknown',
-    email: string = '',
+    userId: number,
   ) {
-    const session = await this.prisma.sessions.findUnique({
-      where: { sessionsId: sessionId },
-    });
-
-    if (!session) {
+    // Buscar sesión en Redis usando ioredis (clave: session:userId:sessionId)
+    let session = await this.redisSessionService.getSession(userId, sessionId);
+    if (!session || typeof session !== 'object' || Object.keys(session).length === 0) {
       throw new UnauthorizedException('Sesión no encontrada');
     }
-
     if (session.isRevoked) {
       throw new UnauthorizedException('La sesión ha sido revocada');
     }
-
-    if (session.expiresAt < new Date()) {
+    if (session.expiresAt < Date.now()) {
       throw new UnauthorizedException('La sesión ha expirado');
     }
-
     const isValid = await bcrypt.compare(refreshToken, session.refreshToken);
     if (!isValid) {
       throw new UnauthorizedException('Refresh token inválido');
     }
-    
-    return this.actualizarSesionTokens(
-      { ...session, email },
+    // Construir la clave manualmente porque getSessionKey es privado
+    const sessionKey = `session:${userId}:${sessionId}`;
+    return this.actualizarSesionTokensRedis(
+      { ...session, usersId: userId },
       { ipAddress: ip, userAgent },
+      sessionKey,
     );
   }
 
   /**
    * Revoca una sesión en BD (logout).
    */
-  async logout(sessionId: number) {
-    await this.prisma.sessions.update({
-      where: { sessionsId: sessionId },
-      data: { isRevoked: true },
-    });
+  async logout(sessionId: number, userId: number) {
+    // Borrado lógico: solo marcar como revocada, no eliminar de Redis
+    const session = await this.redisSessionService.getSession(userId, sessionId);
+    if (session) {
+      session.isRevoked = true;
+      await this.redisSessionService.setSession(session, Math.floor((session.expiresAt - Date.now()) / 1000));
+    }
   }
 
   /**

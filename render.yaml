@@ -1,35 +1,65 @@
 services:
-  # ─── Backend NestJS ──────────────────────────────────────────
+  # ─── Backend NestJS ─────────────────────────────
   - type: web
     name: jasrapo-backend
     runtime: docker
-    # Render buscará el Dockerfile dentro de este subdirectorio
     dockerfilePath: ./backend/Dockerfile
     dockerContext: ./backend
-    plan: free            # Cambia a "starter" o superior para producción real
-    healthCheckPath: /api/v1/health   # Opcional: crea un endpoint /api/v1/health en NestJS
+    plan: free
     envVars:
       - key: NODE_ENV
         value: production
       - key: PORT
         value: 3000
-      # La DATABASE_URL la vinculamos automáticamente desde la BD de abajo
+      - key: MINIO_ENDPOINT
+        value: jasrapo-minio
+      - key: MINIO_PORT
+        value: 9000
+      - key: MINIO_USE_SSL
+        value: "false"
+      - key: MINIO_ACCESS_KEY
+        value: admin
+      - key: MINIO_SECRET_KEY
+        value: password123
+      - key: REDIS_HOST
+        value: jasrapo-redis
+      - key: REDIS_PORT
+        value: 6379
+      - key: CORS_ORIGIN
+        value: "*"
       - key: DATABASE_URL
         fromDatabase:
           name: jasrapo-db
           property: connectionString
-      # ¡CAMBIA ESTOS VALORES EN EL DASHBOARD DE RENDER! No los dejes con estos defaults.
       - key: JWT_ACCESS_SECRET
-        generateValue: true       # Render genera un valor aleatorio seguro
+        generateValue: true
       - key: JWT_ACCESS_EXPIRES_IN
         value: 15m
       - key: JWT_REFRESH_SECRET
         generateValue: true
       - key: JWT_REFRESH_EXPIRES_IN
         value: 7d
-      # URL de tu frontend en producción (ej: https://jasrapo.vercel.app)
-      - key: CORS_ORIGIN
-        value: https://your-frontend-url.com   # <-- CAMBIA ESTO
+
+  # ─── MinIO ──────────────────────────────────────
+  - type: worker
+    name: jasrapo-minio
+    runtime: image
+    image: minio/minio:latest
+    plan: free
+    envVars:
+      - key: MINIO_ROOT_USER
+        value: admin
+      - key: MINIO_ROOT_PASSWORD
+        value: password123
+    startCommand: minio server /data --console-address ":9001"
+
+  # ─── Redis ──────────────────────────────────────
+  - type: worker
+    name: jasrapo-redis
+    runtime: image
+    image: redis:alpine
+    plan: free
+    startCommand: redis-server
 
 databases:
   # ─── PostgreSQL gestionado por Render ────────────────────────

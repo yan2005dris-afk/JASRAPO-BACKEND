@@ -7,10 +7,12 @@ import { JwtModule } from '@nestjs/jwt';
 import { RefreshTokenStrategy } from './strategies/refresh.strategy';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { PermissionsGuard } from '../common/guards/permissions.guard';
+import { RedisModule } from 'src/redis/redis.module';
 
 @Module({
   imports: [
     UserModule,
+    RedisModule,
     JwtModule.register({
       secret: process.env.JWT_ACCESS_SECRET as string,
       signOptions: {

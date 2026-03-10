@@ -151,17 +151,19 @@ export class AuthController {
   @UseGuards(JwtRefreshGuard)
   @Post('refresh')
   async refresh(@Req() req: any, @Res() res: any) {
-    const { sessionsId } = req.user;
+    const { sessionsId, usersId, sub } = req.user;
     const refreshToken = req.cookies?.refreshToken as string;
     const ip = (req.ip as string) ?? 'unknown';
     const userAgent = (req.headers['user-agent'] as string) ?? 'unknown';
 
+    // Usa usersId si existe, si no sub (por compatibilidad)
+    const userId = typeof usersId !== 'undefined' ? usersId : sub;
     const tokens = await this.authService.refreshAccessToken(
       sessionsId,
       refreshToken,
       ip,
       userAgent,
-      req.user?.email ?? '',
+      userId,
     );
 
     const refreshCookieOptions = {
@@ -200,10 +202,10 @@ export class AuthController {
   @UseGuards(JwtRefreshGuard)
   @Post('logout')
   async logout(@Req() req: any, @Res() res: any) {
-    const { sessionsId } = req.user;
+    const { sessionsId, sub: userId } = req.user;
 
     // Marcar la sesión como revocada en BD
-    await this.authService.logout(sessionsId);
+    await this.authService.logout(sessionsId, userId);
 
     res.clearCookie('refreshToken', {
       httpOnly: true,
