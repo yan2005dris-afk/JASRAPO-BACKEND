@@ -5,7 +5,6 @@ import {
   Param,
   Patch,
   Post,
-  Req,
   Res,
   UseGuards,
   UseInterceptors,
@@ -27,6 +26,8 @@ import { UpdateProfileDto } from './dto/update-profile.dto';
 import { ProfileService } from './profile.service';
 import { MinioService } from '../storage/minio.service';
 import { Public } from 'src/common/decorators/public.decorator';
+import type { Response } from 'express';
+import { AuthUserId } from 'src/common/decorators/auth-user-id.decorator';
 
 @ApiTags('profile')
 @ApiBearerAuth()
@@ -72,8 +73,10 @@ export class ProfileController {
     description: 'Conflicto - El usuario ya tiene un perfil creado',
   })
   @Post()
-  createProfile(@Req() req: any, @Body() createProfileDto: CreateProfileDto) {
-    const usersId: number = req.user.usersId;
+  createProfile(
+    @AuthUserId() usersId: number,
+    @Body() createProfileDto: CreateProfileDto,
+  ) {
     return this.profileService.create(usersId, createProfileDto);
   }
 
@@ -101,8 +104,7 @@ export class ProfileController {
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({ status: 404, description: 'Perfil no encontrado' })
   @Get('me')
-  findMeProfile(@Req() req: any) {
-    const usersId: number = req.user.usersId;
+  findMeProfile(@AuthUserId() usersId: number) {
     return this.profileService.findMyProfile(usersId);
   }
 
@@ -112,7 +114,8 @@ export class ProfileController {
    */
   @ApiOperation({
     summary: 'Actualizar mi perfil',
-    description: 'Actualiza los datos del perfil del usuario actualmente autenticado.',
+    description:
+      'Actualiza los datos del perfil del usuario actualmente autenticado.',
   })
   @ApiBody({
     type: UpdateProfileDto,
@@ -136,8 +139,10 @@ export class ProfileController {
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({ status: 404, description: 'Perfil no encontrado' })
   @Patch('me')
-  updateProfile(@Req() req: any, @Body() updateProfileDto: UpdateProfileDto) {
-    const usersId: number = req.user.usersId;
+  updateProfile(
+    @AuthUserId() usersId: number,
+    @Body() updateProfileDto: UpdateProfileDto,
+  ) {
     return this.profileService.update(usersId, updateProfileDto);
   }
 
@@ -146,7 +151,8 @@ export class ProfileController {
    */
   @ApiOperation({
     summary: 'Subir foto de perfil',
-    description: 'Sube una imagen a MinIO y actualiza el campo de avatar del perfil del usuario.',
+    description:
+      'Sube una imagen a MinIO y actualiza el campo de avatar del perfil del usuario.',
   })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
@@ -160,17 +166,19 @@ export class ProfileController {
       },
     },
   })
-  @ApiResponse({ status: 200, description: 'Foto de perfil subida exitosamente' })
+  @ApiResponse({
+    status: 200,
+    description: 'Foto de perfil subida exitosamente',
+  })
   @ApiResponse({ status: 400, description: 'No se envió ninguna imagen' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({ status: 404, description: 'Perfil no encontrado' })
   @Post('avatar')
   @UseInterceptors(FileInterceptor('file'))
   uploadAvatar(
-    @Req() req: any,
+    @AuthUserId() usersId: number,
     @UploadedFile() file: Express.Multer.File,
   ) {
-    const usersId: number = req.user.usersId;
     return this.profileService.uploadAvatar(usersId, file);
   }
 
@@ -195,7 +203,7 @@ export class ProfileController {
       },
     },
   })
-  
+
   /**
    * Lista los avatares disponibles en MinIO para el usuario autenticado.
    */
@@ -221,8 +229,7 @@ export class ProfileController {
   @ApiResponse({ status: 200, description: 'Avatar vinculado exitosamente' })
   @ApiResponse({ status: 404, description: 'El archivo no existe en MinIO' })
   @Get('avatars/available')
-  async listAvailableAvatars(@Req() req: any) {
-    const usersId: number = req.user.usersId;
+  async listAvailableAvatars(@AuthUserId() usersId: number) {
     return this.profileService.listAvailableAvatars(usersId);
   }
 
@@ -252,10 +259,9 @@ export class ProfileController {
   @ApiResponse({ status: 404, description: 'El archivo no existe en MinIO' })
   @Patch('avatar/select')
   async selectExistingAvatar(
-    @Req() req: any,
+    @AuthUserId() usersId: number,
     @Body('key') key: string,
   ) {
-    const usersId: number = req.user.usersId;
     return this.profileService.selectExistingAvatar(usersId, key);
   }
 
@@ -274,29 +280,30 @@ export class ProfileController {
     description: 'Nombre del archivo de avatar almacenado en MinIO',
     example: 'avatar_profile_1_1709834567890.png',
   })
-  @ApiResponse({ status: 302, description: 'Redirige a la URL temporal del avatar' })
+  @ApiResponse({
+    status: 302,
+    description: 'Redirige a la URL temporal del avatar',
+  })
   @ApiResponse({ status: 404, description: 'Avatar no encontrado' })
   @Public()
   @Get('avatar/:fileName')
-  async getAvatar(
-    @Param('fileName') fileName: string,
-    @Res() res: any,
-  ) {
+  async getAvatar(@Param('fileName') fileName: string, @Res() res: Response) {
     const exists = await this.minioService.fileExists('avatars', fileName);
     if (!exists) {
       return res.status(404).json({
         statusCode: 404,
-        message: 'La imagen ha sido removida o cambiada de lugar por eso no la encuentra',
+        message:
+          'La imagen ha sido removida o cambiada de lugar por eso no la encuentra',
       });
     }
 
     try {
       const meta = await this.minioService.getFileMetadata('avatars', fileName);
       const stream = await this.minioService.getFileStream('avatars', fileName);
-      
+
       res.setHeader('Content-Type', meta?.contentType || 'image/png');
       stream.pipe(res);
-    } catch (error) {
+    } catch (_error) {
       return res.status(500).json({
         statusCode: 500,
         message: 'Error al recuperar la imagen del servidor de almacenamiento',
@@ -304,4 +311,3 @@ export class ProfileController {
     }
   }
 }
-

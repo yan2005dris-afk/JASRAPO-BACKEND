@@ -2,11 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
 import { UserService } from '../user/user.service';
 import { MenuResponseDto } from './dto/response-menu.dto';
-import {
-  EffectivePermission,
-  MenuRecord,
-  PermissionCondition,
-} from './types/menu.types';
+import { EffectivePermission, MenuRecord } from './types/menu.types';
 
 @Injectable()
 export class MenusService {
@@ -90,7 +86,9 @@ export class MenusService {
         });
       }
     });
-    this.logger.log('Árbol de menús final para el usuario: ' + JSON.stringify(fullTree));
+    this.logger.log(
+      'Árbol de menús final para el usuario: ' + JSON.stringify(fullTree),
+    );
     return fullTree;
   }
 

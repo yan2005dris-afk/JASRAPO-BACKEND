@@ -1,12 +1,26 @@
 import { ValidationPipe } from '@nestjs/common';
+import type { INestApplication } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 import { BigIntInterceptor } from './common/interceptors/bigint.interceptor';
+import { TRUST_PROXY_HOPS, TRUST_PROXY_KEY } from './constants/app.constants';
+
+type ProxyAwareHttpApp = {
+  set: (key: typeof TRUST_PROXY_KEY, value: number) => void;
+};
+
+type CookieParserMiddleware = (
+  req: unknown,
+  res: unknown,
+  next: () => void,
+) => void;
+
+type CookieParserFactory = () => CookieParserMiddleware;
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app: INestApplication = await NestFactory.create(AppModule);
   app.setGlobalPrefix('api/v1');
 
   //Interceptor BigInt
@@ -15,8 +29,18 @@ async function bootstrap() {
   // Con Nginx como reverse proxy, la IP real del cliente viene en el
   // header X-Forwarded-For. "trust proxy = 1" le dice a Express que
   // confíe en un nivel de proxy y use ese header para req.ip.
-  app.getHttpAdapter().getInstance().set('trust proxy', 1);
-  app.use(cookieParser());
+  const httpInstance: unknown = app.getHttpAdapter().getInstance();
+  if (httpInstance && typeof httpInstance === 'object') {
+    const maybeSet = (httpInstance as { set?: unknown }).set;
+    if (typeof maybeSet === 'function') {
+      (httpInstance as ProxyAwareHttpApp).set(
+        TRUST_PROXY_KEY,
+        TRUST_PROXY_HOPS,
+      );
+    }
+  }
+  const createCookieParser = cookieParser as unknown as CookieParserFactory;
+  app.use(createCookieParser());
   app.enableCors({
     origin:
       process.env.CORS_ORIGIN === '*'
@@ -40,7 +64,8 @@ async function bootstrap() {
 
   const config = new DocumentBuilder()
     .setTitle('JASRAPO API')
-    .setDescription(`
+    .setDescription(
+      `
 # API REST de JASRAPO - Sistema de Gestión
 
 ## 📋 Descripción
@@ -118,7 +143,8 @@ Subida, descarga, listado y eliminación de archivos mediante MinIO (S3-compatib
 
 ## 📞 Soporte
 Para consultas o soporte, contacta al equipo de desarrollo del Backend.
-    `)
+    `,
+    )
     .setVersion('2.0')
     .addBearerAuth(
       {
@@ -139,7 +165,10 @@ Para consultas o soporte, contacta al equipo de desarrollo del Backend.
       },
       'refresh-cookie',
     )
-    .addTag('auth', 'Endpoints de autenticación (login, register, refresh, logout)')
+    .addTag(
+      'auth',
+      'Endpoints de autenticación (login, register, refresh, logout)',
+    )
     .addTag('users', 'Gestión de usuarios del sistema')
     .addTag('roles', 'Administración de roles')
     .addTag('permissions', 'Gestión de permisos')
@@ -157,4 +186,4 @@ Para consultas o soporte, contacta al equipo de desarrollo del Backend.
   await app.listen(process.env.PORT ?? 3000);
 }
 
-bootstrap();
+void bootstrap();

@@ -8,5 +8,5 @@ export interface SessionRedis {
   refreshToken: string;
   createdAt: number;
   expiresAt: number;
-  [key: string]: any;
+  [key: string]: unknown;
 }

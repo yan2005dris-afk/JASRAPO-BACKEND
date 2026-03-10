@@ -1,6 +1,7 @@
 import * as Minio from 'minio';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Readable } from 'stream';
 
 @Injectable()
 export class MinioService implements OnModuleInit {
@@ -11,12 +12,30 @@ export class MinioService implements OnModuleInit {
   private readonly defaultBuckets = ['avatars', 'documents', 'uploads'];
 
   constructor(private configService: ConfigService) {
+    const rawPort = this.configService.getOrThrow<string>('MINIO_PORT');
+    const minioPort = Number(rawPort);
+    if (!Number.isInteger(minioPort) || minioPort < 1 || minioPort > 65535) {
+      throw new Error(
+        `MINIO_PORT invalido: "${rawPort}". Debe ser un entero entre 1 y 65535.`,
+      );
+    }
+
+    const rawUseSSL = this.configService
+      .getOrThrow<string>('MINIO_USE_SSL')
+      .trim()
+      .toLowerCase();
+    if (rawUseSSL !== 'true' && rawUseSSL !== 'false') {
+      throw new Error(
+        `MINIO_USE_SSL invalido: "${rawUseSSL}". Usa "true" o "false".`,
+      );
+    }
+
     this.minioClient = new Minio.Client({
-      endPoint: this.configService.get<string>('MINIO_ENDPOINT') || 'localhost',
-      port: parseInt(this.configService.get<string>('MINIO_PORT') || '9000', 10),
-      useSSL: this.configService.get<string>('MINIO_USE_SSL') === 'true',
-      accessKey: this.configService.get<string>('MINIO_ACCESS_KEY') || 'admin',
-      secretKey: this.configService.get<string>('MINIO_SECRET_KEY') || 'password123',
+      endPoint: this.configService.getOrThrow<string>('MINIO_ENDPOINT'),
+      port: minioPort,
+      useSSL: rawUseSSL === 'true',
+      accessKey: this.configService.getOrThrow<string>('MINIO_ACCESS_KEY'),
+      secretKey: this.configService.getOrThrow<string>('MINIO_SECRET_KEY'),
     });
   }
 
@@ -25,6 +44,15 @@ export class MinioService implements OnModuleInit {
    *  Esto asegura que el sistema tenga los buckets necesarios para funcionar sin requerir configuración manual.
    */
   async onModuleInit() {
+    try {
+      await this.minioClient.listBuckets();
+      this.logger.log('[MINIO:UP] Conexion a MinIO establecida correctamente');
+    } catch (error) {
+      const trace = error instanceof Error ? error.stack : String(error);
+      this.logger.error('[MINIO:DOWN] No se pudo conectar a MinIO', trace);
+      throw error;
+    }
+
     for (const bucket of this.defaultBuckets) {
       try {
         const exists = await this.minioClient.bucketExists(bucket);
@@ -33,7 +61,9 @@ export class MinioService implements OnModuleInit {
           this.logger.log(`Bucket "${bucket}" creado`);
         }
       } catch (error) {
-        this.logger.warn(`No se pudo verificar/crear bucket "${bucket}": ${error}`);
+        this.logger.warn(
+          `No se pudo verificar/crear bucket "${bucket}": ${error}`,
+        );
       }
     }
   }
@@ -45,9 +75,13 @@ export class MinioService implements OnModuleInit {
    * @param buffer  Contenido del archivo en formato Buffer
    * @returns El nombre del archivo subido (con prefijo si se proporcionó)
    * @throws Error si la subida falla por cualquier motivo
-   * @returns 
+   * @returns
    */
-  async uploadFile(bucketName: string, fileName: string, buffer: Buffer): Promise<string> {
+  async uploadFile(
+    bucketName: string,
+    fileName: string,
+    buffer: Buffer,
+  ): Promise<string> {
     await this.ensureBucket(bucketName);
     await this.minioClient.putObject(bucketName, fileName, buffer);
     return fileName;
@@ -57,9 +91,9 @@ export class MinioService implements OnModuleInit {
    *  Elimina un archivo de un bucket específico.
    * @param bucketName  Nombre del bucket del que se eliminará el archivo
    * @param fileName  Nombre del archivo a eliminar (con prefijo si se proporcionó al subir)
-   * @returns void 
+   * @returns void
    * @throws Error si la eliminación falla por cualquier motivo, como que el archivo no exista o problemas de conexión
-   */ 
+   */
   async deleteFile(bucketName: string, fileName: string): Promise<void> {
     await this.minioClient.removeObject(bucketName, fileName);
   }
@@ -85,12 +119,23 @@ export class MinioService implements OnModuleInit {
    * @param fileName  Nombre del archivo del que se desea obtener la metadata (con prefijo si se proporcionó al subir)
    * @returns  Un objeto con la metadata del archivo o null si el archivo no existe o si ocurre un error al obtener la metadata
    */
-  async getFileMetadata(bucketName: string, fileName: string): Promise<{ size: number; contentType: string; lastModified: Date } | null> {
+  async getFileMetadata(
+    bucketName: string,
+    fileName: string,
+  ): Promise<{ size: number; contentType: string; lastModified: Date } | null> {
     try {
       const stat = await this.minioClient.statObject(bucketName, fileName);
+      const rawMeta = stat.metaData as unknown;
+      const contentTypeRaw =
+        rawMeta && typeof rawMeta === 'object'
+          ? (rawMeta as Record<string, unknown>)['content-type']
+          : undefined;
       return {
         size: stat.size,
-        contentType: stat.metaData?.['content-type'] || 'application/octet-stream',
+        contentType:
+          typeof contentTypeRaw === 'string'
+            ? contentTypeRaw
+            : 'application/octet-stream',
         lastModified: stat.lastModified,
       };
     } catch {
@@ -105,7 +150,11 @@ export class MinioService implements OnModuleInit {
    * @returns Una URL presigned que permite acceder al archivo directamente desde MinIO sin necesidad de autenticación adicional, válida por 24 horas. Si ocurre un error al generar la URL, se lanzará una excepción.
    */
   async getPresignedUrl(bucketName: string, fileName: string): Promise<string> {
-    return await this.minioClient.presignedGetObject(bucketName, fileName, 24 * 60 * 60);
+    return await this.minioClient.presignedGetObject(
+      bucketName,
+      fileName,
+      24 * 60 * 60,
+    );
   }
 
   /**
@@ -114,7 +163,7 @@ export class MinioService implements OnModuleInit {
    * @param fileName  Nombre del archivo del cual se desea obtener el stream (con prefijo si se proporcionó al subir)
    * @returns  Un stream de lectura del archivo solicitado. Si el archivo no existe o si ocurre un error al obtener el stream, se lanzará una excepción.
    */
-  async getFileStream(bucketName: string, fileName: string): Promise<any> {
+  async getFileStream(bucketName: string, fileName: string): Promise<Readable> {
     return await this.minioClient.getObject(bucketName, fileName);
   }
 
@@ -128,7 +177,11 @@ export class MinioService implements OnModuleInit {
     await this.ensureBucket(bucketName);
     return new Promise((resolve, reject) => {
       const files: string[] = [];
-      const stream = this.minioClient.listObjects(bucketName, prefix || '', true);
+      const stream = this.minioClient.listObjects(
+        bucketName,
+        prefix || '',
+        true,
+      );
       stream.on('data', (obj) => {
         if (obj.name) files.push(obj.name);
       });

@@ -1,4 +1,9 @@
-import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
 import { CreateClientDto } from './dto/create-client.dto';
 import { UpdateClientDto } from './dto/update-client.dto';
@@ -22,7 +27,7 @@ export class ClientService {
     let coeficiente = 2;
 
     for (let i = 0; i < 9; i++) {
-      let valor = parseInt(cedula.substring(i, i + 1)) * coeficiente;
+      const valor = parseInt(cedula.substring(i, i + 1)) * coeficiente;
       total += valor >= 10 ? valor - 9 : valor;
       coeficiente = coeficiente === 2 ? 1 : 2;
     }
@@ -69,43 +74,43 @@ export class ClientService {
 
   async findAll() {
     return this.prisma.clientes.findMany({
-      where:{
-        deletedAt: null
+      where: {
+        deletedAt: null,
       },
-      include:{
-        comunidad:true,
-        clientesMedidores:{
-          where:{
-            fechaRetiro:null
+      include: {
+        comunidad: true,
+        clientesMedidores: {
+          where: {
+            fechaRetiro: null,
           },
-          include:{
-            medidor:true
-          }
-        }
-      }
+          include: {
+            medidor: true,
+          },
+        },
+      },
     });
   }
 
   async findOne(id: string) {
     const cliente = await this.prisma.clientes.findFirst({
-      where:{
+      where: {
         clienteId: BigInt(id),
-        deletedAt: null
+        deletedAt: null,
       },
-      include:{
+      include: {
         comunidad: true,
-        clientesMedidores:{
-          where:{
-            fechaRetiro:null
+        clientesMedidores: {
+          where: {
+            fechaRetiro: null,
           },
-          include:{
-            medidor:true
-          }
-        }
+          include: {
+            medidor: true,
+          },
+        },
       },
     });
 
-    if(!cliente){
+    if (!cliente) {
       throw new NotFoundException('Cliente no encontrado');
     }
 
@@ -161,33 +166,32 @@ export class ClientService {
   }
 
   async remove(id: string) {
-
     const cliente = await this.prisma.clientes.findFirst({
-      where:{
+      where: {
         clienteId: BigInt(id),
-        deletedAt: null
-      }
+        deletedAt: null,
+      },
     });
 
-    if(!cliente){
+    if (!cliente) {
       throw new NotFoundException('Cliente no encontrado');
     }
 
     return this.prisma.clientes.update({
-      where:{
-        clienteId: BigInt(id)
+      where: {
+        clienteId: BigInt(id),
       },
-      data:{
-        deletedAt: new Date()
-      }
+      data: {
+        deletedAt: new Date(),
+      },
     });
-
   }
 
   async search(tipo: string, valor: string) {
-
     if (!tipo || !valor) {
-      throw new BadRequestException('Debe enviar tipo y valor para la búsqueda');
+      throw new BadRequestException(
+        'Debe enviar tipo y valor para la búsqueda',
+      );
     }
 
     const tiposValidos = ['cedula', 'nombre', 'contrato'];
@@ -197,9 +201,7 @@ export class ClientService {
     }
 
     switch (tipo) {
-
       case 'cedula':
-
         if (!this.validarCedula(valor)) {
           throw new BadRequestException('Cédula inválida');
         }
@@ -207,55 +209,53 @@ export class ClientService {
         return this.prisma.clientes.findMany({
           where: {
             cedula: valor,
-            deletedAt: null
+            deletedAt: null,
           },
           include: {
             comunidad: true,
             clientesMedidores: {
               where: { fechaRetiro: null },
-              include: { medidor: true }
-            }
-          }
+              include: { medidor: true },
+            },
+          },
         });
 
       case 'nombre':
-
         return this.prisma.clientes.findMany({
           where: {
             nombre: {
               contains: valor,
-              mode: 'insensitive'
+              mode: 'insensitive',
             },
-            deletedAt: null
+            deletedAt: null,
           },
           include: {
             comunidad: true,
             clientesMedidores: {
               where: { fechaRetiro: null },
-              include: { medidor: true }
-            }
-          }
+              include: { medidor: true },
+            },
+          },
         });
 
       case 'contrato':
-
         return this.prisma.clientes.findMany({
           where: {
             deletedAt: null,
             clientesMedidores: {
               some: {
                 contrato: valor,
-                fechaRetiro: null
-              }
-            }
+                fechaRetiro: null,
+              },
+            },
           },
           include: {
             comunidad: true,
             clientesMedidores: {
               where: { contrato: valor },
-              include: { medidor: true }
-            }
-          }
+              include: { medidor: true },
+            },
+          },
         });
     }
   }

@@ -1,15 +1,22 @@
-import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  OnModuleDestroy,
+  OnModuleInit,
+} from '@nestjs/common';
 import { PrismaClient } from '../generated/prisma/client.js';
 import { PrismaPg } from '@prisma/adapter-pg';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class PrismaService
   extends PrismaClient
   implements OnModuleInit, OnModuleDestroy
 {
-  constructor() {
+  private readonly logger = new Logger(PrismaService.name);
+  constructor(private readonly configService: ConfigService) {
     const adapter = new PrismaPg({
-      connectionString: process.env.DATABASE_URL as string,
+      connectionString: configService.getOrThrow<string>('DATABASE_URL'),
     });
     super({ adapter });
   }
@@ -17,14 +24,21 @@ export class PrismaService
   async onModuleInit() {
     try {
       await this.$connect(); // Falla rápido si la DB no está disponible
-      console.log('Conexión a la base de datos exitosa');
+      this.logger.log(
+        '[POSTGRES:UP] Conexion a PostgreSQL establecida correctamente',
+      );
     } catch (error) {
-      console.error('Error al conectar a la base de datos:', error);
+      const trace = error instanceof Error ? error.stack : String(error);
+      this.logger.error(
+        '[POSTGRES:DOWN] No se pudo conectar a PostgreSQL',
+        trace,
+      );
       throw error;
     }
   }
 
   async onModuleDestroy() {
     await this.$disconnect(); // Limpia conexiones al cerrar
+    this.logger.log('[POSTGRES:DOWN] Conexion a PostgreSQL cerrada');
   }
 }

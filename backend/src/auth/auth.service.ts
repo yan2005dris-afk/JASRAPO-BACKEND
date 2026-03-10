@@ -1,6 +1,5 @@
 import {
   BadRequestException,
-  Inject,
   Injectable,
   Logger,
   UnauthorizedException,
@@ -14,7 +13,14 @@ import { UserService } from 'src/modules/user/user.service';
 import { LoginUserDto } from './dto/login-user.dto';
 import { RegisterDto } from './dto/register.dto';
 import { RedisSessionService } from '../redis/redis-session.service';
-const REDIS_SESSION_TTL = process.env.REDIS_SESSION_TTL ? Number(process.env.REDIS_SESSION_TTL) : 60 * 60 * 24 * 7; // 7 días en segundos
+import type { SessionRedis } from 'src/common/types/session-redis.interface';
+import type { DecodedJwt, SessionBase } from './types/auth-service.types';
+import {
+  REDIS_SESSION_TTL_SECONDS,
+  REFRESH_TOKEN_MAX_AGE_MS,
+} from 'src/constants/app.constants';
+import type { StringValue } from 'ms';
+
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
@@ -28,7 +34,9 @@ export class AuthService {
     // cacheManager eliminado, solo ioredis
     private readonly redisSessionService: RedisSessionService,
   ) {
-    this.logger.log('[REDIS] RedisSessionService inyectado. Listo para sesiones en Redis.');
+    this.logger.log(
+      '[REDIS] RedisSessionService inyectado. Listo para sesiones en Redis.',
+    );
   }
 
   /**
@@ -66,7 +74,7 @@ export class AuthService {
     loginUserDto: LoginUserDto,
     ip?: string,
     userAgent?: string,
-    existingRefreshToken?: string,
+    _existingRefreshToken?: string,
   ) {
     const users = await this.validateUser(loginUserDto);
     const safeIp = ip ?? 'unknown';
@@ -76,7 +84,7 @@ export class AuthService {
     // ── Siempre crear sesión nueva ──
     const sessionsId = Date.now(); // o usa uuid si prefieres
     const sessionKey = `session:${users.usersId}:${sessionsId}`;
-    const expiresAt = Date.now() + 7 * 24 * 60 * 60 * 1000;
+    const expiresAt = Date.now() + REFRESH_TOKEN_MAX_AGE_MS;
     const session = {
       sessionsId,
       usersId: users.usersId,
@@ -85,7 +93,11 @@ export class AuthService {
       isRevoked: false,
       expiresAt,
     };
-    const tokens = await this.actualizarSesionTokensRedis({ ...session, email: users.email }, {}, sessionKey);
+    const tokens = await this.actualizarSesionTokensRedis(
+      { ...session, email: users.email },
+      {},
+      sessionKey,
+    );
     return this.buildLoginResponse(users, sessionsId, tokens);
   }
 
@@ -98,8 +110,12 @@ export class AuthService {
     tokens: { accessToken: string; refreshToken: string },
   ) {
     const { accessToken, refreshToken } = tokens;
-    const decodedAccess: any = this.jwtService.decode(accessToken);
-    const decodedRefresh: any = this.jwtService.decode(refreshToken);
+    const decodedAccess = this.decodeJwtClaims(
+      this.jwtService.decode(accessToken),
+    );
+    const decodedRefresh = this.decodeJwtClaims(
+      this.jwtService.decode(refreshToken),
+    );
 
     // Ejecutar en paralelo: rol principal (con nombre) y perfil del usuario
     const [userWithRole, profile] = await Promise.all([
@@ -121,8 +137,7 @@ export class AuthService {
     const fullName = nameParts.length > 0 ? nameParts.join(' ') : null;
 
     // Extraer key del avatar (ahora es JSON con metadata)
-    const avatarMeta = profile?.avatar as Record<string, any> | null;
-    const avatarKey = avatarMeta?.key ?? null;
+    const avatarKey = this.getAvatarKey(profile?.avatar);
 
     const firstRole =
       userWithRole?.role && !userWithRole.role.deletedAt
@@ -165,8 +180,8 @@ export class AuthService {
    * @param extraData - Campos adicionales a actualizar (ej: ipAddress)
    */
   private async actualizarSesionTokensRedis(
-    session: { usersId: number; sessionsId: number; email?: string },
-    extraData: Record<string, any> = {},
+    session: SessionBase,
+    extraData: Record<string, unknown> = {},
     sessionKey: string,
   ): Promise<{ accessToken: string; refreshToken: string }> {
     const tokens = await this.generateJwtToken(
@@ -180,18 +195,27 @@ export class AuthService {
       refreshToken: newHash,
       ...extraData,
       isRevoked: false,
-      createdAt: (session as any).createdAt ?? Date.now(),
+      createdAt: session.createdAt ?? Date.now(),
       expiresAt:
-        typeof (session as any).expiresAt === 'number' && !isNaN((session as any).expiresAt)
-          ? (session as any).expiresAt
-          : (Date.now() + REDIS_SESSION_TTL * 1000),
-    };
-    this.logger.log(`[REDIS] [IOREDIS] Intentando guardar sesión en Redis: ${sessionKey}`);
+        typeof session.expiresAt === 'number' && !isNaN(session.expiresAt)
+          ? session.expiresAt
+          : Date.now() + REDIS_SESSION_TTL_SECONDS * 1000,
+    } as SessionRedis;
+    this.logger.log(
+      `[REDIS] [IOREDIS] Intentando guardar sesión en Redis: ${sessionKey}`,
+    );
     try {
-      await this.redisSessionService.setSession(updatedSession, REDIS_SESSION_TTL);
-      this.logger.log(`[REDIS] [IOREDIS] Sesión guardada correctamente en Redis: ${sessionKey}`);
+      await this.redisSessionService.setSession(
+        updatedSession,
+        REDIS_SESSION_TTL_SECONDS,
+      );
+      this.logger.log(
+        `[REDIS] [IOREDIS] Sesión guardada correctamente en Redis: ${sessionKey}`,
+      );
     } catch (err) {
-      this.logger.error(`[REDIS] [IOREDIS] Error al guardar sesión en Redis: ${sessionKey} | ${err}`);
+      this.logger.error(
+        `[REDIS] [IOREDIS] Error al guardar sesión en Redis: ${sessionKey} | ${err}`,
+      );
     }
     return tokens;
   }
@@ -205,15 +229,19 @@ export class AuthService {
     email: string,
   ) {
     const payload = { sub: userId, sid: sessionId, email };
+    const accessSecret = this.config.getOrThrow<string>('JWT_ACCESS_SECRET');
+    const refreshSecret = this.config.getOrThrow<string>('JWT_REFRESH_SECRET');
+    const accessExpiresIn = this.getJwtExpiresIn('JWT_ACCESS_EXPIRES_IN');
+    const refreshExpiresIn = this.getJwtExpiresIn('JWT_REFRESH_EXPIRES_IN');
 
     const accessToken = await this.jwtService.signAsync(payload, {
-      secret: this.config.get<string>('JWT_ACCESS_SECRET'),
-      expiresIn: this.config.get<any>('JWT_ACCESS_EXPIRES_IN'),
+      secret: accessSecret,
+      expiresIn: accessExpiresIn,
     });
 
     const refreshToken = await this.jwtService.signAsync(payload, {
-      secret: this.config.getOrThrow<string>('JWT_REFRESH_SECRET'),
-      expiresIn: this.config.getOrThrow<any>('JWT_REFRESH_EXPIRES_IN'),
+      secret: refreshSecret,
+      expiresIn: refreshExpiresIn,
     });
 
     return { accessToken, refreshToken };
@@ -238,8 +266,15 @@ export class AuthService {
     userId: number,
   ) {
     // Buscar sesión en Redis usando ioredis (clave: session:userId:sessionId)
-    let session = await this.redisSessionService.getSession(userId, sessionId);
-    if (!session || typeof session !== 'object' || Object.keys(session).length === 0) {
+    const session = await this.redisSessionService.getSession(
+      userId,
+      sessionId,
+    );
+    if (
+      !session ||
+      typeof session !== 'object' ||
+      Object.keys(session).length === 0
+    ) {
       throw new UnauthorizedException('Sesión no encontrada');
     }
     if (session.isRevoked) {
@@ -266,10 +301,16 @@ export class AuthService {
    */
   async logout(sessionId: number, userId: number) {
     // Borrado lógico: solo marcar como revocada, no eliminar de Redis
-    const session = await this.redisSessionService.getSession(userId, sessionId);
+    const session = await this.redisSessionService.getSession(
+      userId,
+      sessionId,
+    );
     if (session) {
       session.isRevoked = true;
-      await this.redisSessionService.setSession(session, Math.floor((session.expiresAt - Date.now()) / 1000));
+      await this.redisSessionService.setSession(
+        session,
+        Math.floor((session.expiresAt - Date.now()) / 1000),
+      );
     }
   }
 
@@ -298,5 +339,33 @@ export class AuthService {
 
     const { password: _, ...safeUser } = user;
     return safeUser;
+  }
+
+  private decodeJwtClaims(value: unknown): DecodedJwt {
+    if (!value || typeof value !== 'object') {
+      return {};
+    }
+
+    const maybeClaims = value as Record<string, unknown>;
+    const iat =
+      typeof maybeClaims.iat === 'number' ? maybeClaims.iat : undefined;
+    const exp =
+      typeof maybeClaims.exp === 'number' ? maybeClaims.exp : undefined;
+    return { iat, exp };
+  }
+
+  private getAvatarKey(avatar: unknown): string | null {
+    if (!avatar || typeof avatar !== 'object') {
+      return null;
+    }
+
+    const maybeKey = (avatar as Record<string, unknown>).key;
+    return typeof maybeKey === 'string' ? maybeKey : null;
+  }
+
+  private getJwtExpiresIn(
+    key: 'JWT_ACCESS_EXPIRES_IN' | 'JWT_REFRESH_EXPIRES_IN',
+  ): StringValue {
+    return this.config.getOrThrow<StringValue>(key);
   }
 }

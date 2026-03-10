@@ -1,23 +1,41 @@
-import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
+import {
+  CallHandler,
+  ExecutionContext,
+  Injectable,
+  NestInterceptor,
+} from '@nestjs/common';
+import type { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
 @Injectable()
 export class BigIntInterceptor implements NestInterceptor {
-    intercept(context: ExecutionContext, next: CallHandler) {
-        return next.handle().pipe(
-            map((data) => {
-                // Algunos handlers escriben la respuesta manualmente con @Res() y retornan undefined.
-                // Evitamos JSON.parse(undefined), que dispara SyntaxError.
-                if (data === undefined || data === null) {
-                    return data;
-                }
+  intercept(
+    _context: ExecutionContext,
+    next: CallHandler<unknown>,
+  ): Observable<unknown> {
+    return next.handle().pipe(map((data: unknown) => this.convertBigInt(data)));
+  }
 
-                const serialized = JSON.stringify(data, (_, value) =>
-                    typeof value === 'bigint' ? value.toString() : value,
-                );
-
-                return serialized === undefined ? data : JSON.parse(serialized);
-            }),
-        );
+  private convertBigInt(value: unknown): unknown {
+    if (typeof value === 'bigint') {
+      return value.toString();
     }
+
+    if (Array.isArray(value)) {
+      return value.map((item) => this.convertBigInt(item));
+    }
+
+    if (value && typeof value === 'object') {
+      const source = value as Record<string, unknown>;
+      const converted: Record<string, unknown> = {};
+
+      for (const key of Object.keys(source)) {
+        converted[key] = this.convertBigInt(source[key]);
+      }
+
+      return converted;
+    }
+
+    return value;
+  }
 }

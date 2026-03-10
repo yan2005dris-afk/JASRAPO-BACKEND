@@ -81,7 +81,10 @@ export class FilesController {
       },
     },
   })
-  @ApiResponse({ status: 400, description: 'No se envió ningún archivo o bucket inválido' })
+  @ApiResponse({
+    status: 400,
+    description: 'No se envió ningún archivo o bucket inválido',
+  })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @Post('upload')
   @UseInterceptors(FileInterceptor('file'))
@@ -158,13 +161,22 @@ export class FilesController {
         message: '3 archivo(s) subidos exitosamente',
         bucket: 'documents',
         files: [
-          { fileName: 'facturas/marzo/1709834567890_factura1.pdf', originalName: 'factura1.pdf' },
-          { fileName: 'facturas/marzo/1709834567891_factura2.pdf', originalName: 'factura2.pdf' },
+          {
+            fileName: 'facturas/marzo/1709834567890_factura1.pdf',
+            originalName: 'factura1.pdf',
+          },
+          {
+            fileName: 'facturas/marzo/1709834567891_factura2.pdf',
+            originalName: 'factura2.pdf',
+          },
         ],
       },
     },
   })
-  @ApiResponse({ status: 400, description: 'No se enviaron archivos o bucket inválido' })
+  @ApiResponse({
+    status: 400,
+    description: 'No se enviaron archivos o bucket inválido',
+  })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @Post('upload-multiple')
   @UseInterceptors(FilesInterceptor('files', 10))
@@ -185,12 +197,19 @@ export class FilesController {
 
     for (const file of files) {
       const timestamp = Date.now();
-      const safeOriginalName = file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const safeOriginalName = file.originalname.replace(
+        /[^a-zA-Z0-9._-]/g,
+        '_',
+      );
       const fileName = folder
         ? `${folder.replace(/\/+$/, '')}/${timestamp}_${safeOriginalName}`
         : `${timestamp}_${safeOriginalName}`;
 
-      await this.minioService.uploadFile(sanitizedBucket, fileName, file.buffer);
+      await this.minioService.uploadFile(
+        sanitizedBucket,
+        fileName,
+        file.buffer,
+      );
       uploaded.push({ fileName, originalName: file.originalname });
     }
 

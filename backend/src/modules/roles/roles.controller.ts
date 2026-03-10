@@ -5,7 +5,6 @@ import {
   Body,
   Patch,
   Param,
-  Delete,
   UseGuards,
   ParseIntPipe,
 } from '@nestjs/common';
@@ -58,7 +57,10 @@ export class RolesController {
   })
   @ApiResponse({ status: 400, description: 'Datos inválidos' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
-  @ApiResponse({ status: 403, description: 'Prohibido - Sin permiso roles:create' })
+  @ApiResponse({
+    status: 403,
+    description: 'Prohibido - Sin permiso roles:create',
+  })
   @ApiResponse({ status: 409, description: 'Conflicto - El rol ya existe' })
   @RequiredPermission('roles', 'create')
   @Post()
@@ -79,7 +81,10 @@ export class RolesController {
     description: 'Lista de roles obtenida exitosamente',
   })
   @ApiResponse({ status: 401, description: 'No autorizado' })
-  @ApiResponse({ status: 403, description: 'Prohibido - Sin permiso roles:read' })
+  @ApiResponse({
+    status: 403,
+    description: 'Prohibido - Sin permiso roles:read',
+  })
   @RequiredPermission('roles', 'read')
   @Get()
   findAllRoles() {
@@ -105,7 +110,10 @@ export class RolesController {
     description: 'Rol encontrado exitosamente',
   })
   @ApiResponse({ status: 401, description: 'No autorizado' })
-  @ApiResponse({ status: 403, description: 'Prohibido - Sin permiso roles:read' })
+  @ApiResponse({
+    status: 403,
+    description: 'Prohibido - Sin permiso roles:read',
+  })
   @ApiResponse({ status: 404, description: 'Rol no encontrado' })
   @RequiredPermission('roles', 'read')
   @Get(':id')
@@ -137,11 +145,17 @@ export class RolesController {
   })
   @ApiResponse({ status: 400, description: 'Datos inválidos' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
-  @ApiResponse({ status: 403, description: 'Prohibido - Sin permiso roles:update' })
+  @ApiResponse({
+    status: 403,
+    description: 'Prohibido - Sin permiso roles:update',
+  })
   @ApiResponse({ status: 404, description: 'Rol no encontrado' })
   @RequiredPermission('roles', 'update')
   @Patch(':id')
-  updateRol(@Param('id', ParseIntPipe) id: string, @Body() updateRoleDto: UpdateRoleDto) {
+  updateRol(
+    @Param('id', ParseIntPipe) id: string,
+    @Body() updateRoleDto: UpdateRoleDto,
+  ) {
     return this.rolesService.update(+id, updateRoleDto);
   }
 
@@ -166,7 +180,10 @@ export class RolesController {
     description: 'Permisos del rol obtenidos exitosamente',
   })
   @ApiResponse({ status: 401, description: 'No autorizado' })
-  @ApiResponse({ status: 403, description: 'Prohibido - Sin permiso roles:read' })
+  @ApiResponse({
+    status: 403,
+    description: 'Prohibido - Sin permiso roles:read',
+  })
   @ApiResponse({ status: 404, description: 'Rol no encontrado' })
   @RequiredPermission('roles', 'read')
   @Get(':id/permissions')
@@ -197,7 +214,10 @@ export class RolesController {
     },
   })
   @ApiResponse({ status: 401, description: 'No autorizado' })
-  @ApiResponse({ status: 403, description: 'Prohibido - Sin permiso roles:read' })
+  @ApiResponse({
+    status: 403,
+    description: 'Prohibido - Sin permiso roles:read',
+  })
   @ApiResponse({ status: 404, description: 'Rol no encontrado' })
   @RequiredPermission('roles', 'read')
   @Get(':id/children')
@@ -237,15 +257,29 @@ export class RolesController {
     description: 'Roles hijos actualizados exitosamente',
     schema: {
       example: [
-        { roleHierarchyId: 1, childRoleId: 5, childRole: { name: 'operadores' } },
-        { roleHierarchyId: 2, childRoleId: 6, childRole: { name: 'contabilidad' } },
+        {
+          roleHierarchyId: 1,
+          childRoleId: 5,
+          childRole: { name: 'operadores' },
+        },
+        {
+          roleHierarchyId: 2,
+          childRoleId: 6,
+          childRole: { name: 'contabilidad' },
+        },
       ],
     },
   })
   @ApiResponse({ status: 400, description: 'Datos inválidos' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
-  @ApiResponse({ status: 403, description: 'Prohibido - Sin permiso roles:update' })
-  @ApiResponse({ status: 404, description: 'Rol padre o algún rol hijo no encontrado' })
+  @ApiResponse({
+    status: 403,
+    description: 'Prohibido - Sin permiso roles:update',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Rol padre o algún rol hijo no encontrado',
+  })
   @RequiredPermission('roles', 'update')
   @Patch(':id/children')
   setRoleChildren(
@@ -285,7 +319,10 @@ export class RolesController {
   })
   @ApiResponse({ status: 400, description: 'Datos inválidos' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
-  @ApiResponse({ status: 403, description: 'Prohibido - Sin permiso roles:update' })
+  @ApiResponse({
+    status: 403,
+    description: 'Prohibido - Sin permiso roles:update',
+  })
   @ApiResponse({ status: 404, description: 'Rol o permiso no encontrado' })
   @RequiredPermission('roles', 'update')
   @Post(':id/permissions')
@@ -324,8 +361,14 @@ export class RolesController {
     description: 'Permiso revocado exitosamente del rol',
   })
   @ApiResponse({ status: 401, description: 'No autorizado' })
-  @ApiResponse({ status: 403, description: 'Prohibido - Sin permiso roles:delete' })
-  @ApiResponse({ status: 404, description: 'Relación rol-permiso no encontrada' })
+  @ApiResponse({
+    status: 403,
+    description: 'Prohibido - Sin permiso roles:delete',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Relación rol-permiso no encontrada',
+  })
   @RequiredPermission('roles', 'delete')
   @Patch(':id/permissions/:permissionId')
   removePermission(
@@ -335,4 +378,3 @@ export class RolesController {
     return this.rolesService.removePermission(+id, +permissionId);
   }
 }
-

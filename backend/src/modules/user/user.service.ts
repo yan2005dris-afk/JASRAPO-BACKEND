@@ -89,14 +89,15 @@ export class UserService {
     return users.map((user) => ({
       usersId: user.usersId,
       email: user.email,
-      roles: user.role && !user.role.deletedAt
-        ? [
-            {
-              rolesId: user.role.rolesId,
-              name: user.role.name,
-            },
-          ]
-        : [],
+      roles:
+        user.role && !user.role.deletedAt
+          ? [
+              {
+                rolesId: user.role.rolesId,
+                name: user.role.name,
+              },
+            ]
+          : [],
     }));
   }
 
@@ -150,7 +151,9 @@ export class UserService {
     const updateData = { ...params.data };
 
     if (updateData.password) {
-      updateData.password = await this.ensureHashedPassword(updateData.password as string);
+      updateData.password = await this.ensureHashedPassword(
+        updateData.password as string,
+      );
     }
     return this.prisma.users.update({
       where: params.where,
@@ -517,7 +520,9 @@ export class UserService {
     return rolPermissionsSinDuplicados_copy;
   }
 
-  private async resolveRoleHierarchy(initialRoleIds: number[]): Promise<number[]> {
+  private async resolveRoleHierarchy(
+    initialRoleIds: number[],
+  ): Promise<number[]> {
     if (initialRoleIds.length === 0) {
       return [];
     }

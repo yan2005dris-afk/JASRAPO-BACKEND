@@ -15,7 +15,9 @@ export class LoginUserDto {
     format: 'email',
     required: true,
   })
-  @Transform(({ value }) => value.trim().toLowerCase()) //Elimina espacios en blanco al inicio y final, además convierte a minúsculas antes de la validación
+  @Transform(({ value }: { value: unknown }) =>
+    typeof value === 'string' ? value.trim().toLowerCase() : value,
+  ) // Elimina espacios al inicio/final y convierte a minúsculas si llega string
   @IsNotEmpty()
   @IsEmail()
   email: string;

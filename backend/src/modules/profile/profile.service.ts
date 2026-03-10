@@ -9,13 +9,14 @@ import { PrismaService } from 'src/database/prisma.service';
 import { CreateProfileDto } from './dto/create-profile.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { MinioService } from '../storage/minio.service';
+import type { AvatarMeta } from './types/profile-avatar.types';
 
 @Injectable()
 export class ProfileService {
   constructor(
     private readonly prisma: PrismaService,
     private minioService: MinioService,
-  ) { }
+  ) {}
 
   /**
    * Crea el perfil del usuario autenticado.
@@ -58,7 +59,7 @@ export class ProfileService {
     }
     return profile;
   }
-  
+
   /**
    * Actualiza el perfil del usuario autenticado.
    * Si no existe, lo crea con los datos proporcionados.
@@ -149,7 +150,7 @@ export class ProfileService {
     const allFiles = await this.minioService.listFiles('avatars');
 
     // Filtrar archivos de este usuario (formato viejo) + obtener presigned URLs
-    const userFiles = allFiles.filter(f =>
+    const userFiles = allFiles.filter((f) =>
       f.startsWith(`avatar_profile_${usersId}_`),
     );
 
@@ -157,9 +158,9 @@ export class ProfileService {
     const profile = await this.prisma.profiles.findUnique({
       where: { usersId },
     });
-    const currentMeta = profile?.avatar as Record<string, any> | null;
-    if (currentMeta?.key && !userFiles.includes(currentMeta.key)) {
-      userFiles.push(currentMeta.key);
+    const currentAvatarKey = this.getAvatarKey(profile?.avatar);
+    if (currentAvatarKey && !userFiles.includes(currentAvatarKey)) {
+      userFiles.push(currentAvatarKey);
     }
 
     const avatars = await Promise.all(
@@ -220,5 +221,14 @@ export class ProfileService {
       message: 'Avatar vinculado exitosamente',
       avatar: avatarMeta,
     };
+  }
+
+  private getAvatarKey(avatar: unknown): string | null {
+    if (!avatar || typeof avatar !== 'object') {
+      return null;
+    }
+
+    const meta = avatar as AvatarMeta;
+    return typeof meta.key === 'string' ? meta.key : null;
   }
 }
