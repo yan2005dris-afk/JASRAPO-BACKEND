@@ -8,6 +8,8 @@ import { ProfileModule } from './modules/profile/profile.module';
 import { RolesModule } from './modules/roles/roles.module';
 import { PermissionsModule } from './modules/permissions/permissions.module';
 import { StorageModule } from './modules/storage/storage.module';
+import { LecturaModule } from './models/lectura/lectura.module';
+
 
 @Module({
   imports: [
@@ -24,6 +26,7 @@ import { StorageModule } from './modules/storage/storage.module';
     RolesModule,
     PermissionsModule,
     StorageModule,
+   LecturaModule
   ],
   controllers: [],
   providers: [],

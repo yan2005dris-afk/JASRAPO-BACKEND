@@ -9,9 +9,10 @@ model Lecturas {
     valorMonetario   Float?   @map("valor_monetario")
     abono            Float?   @map("abono")
     saldoPendiente   Float?   @map("saldo_pendiente")
-
+    deletedAt        DateTime? @map("deleted_at")
     clienteMedidor ClientesMedidores? @relation(fields: [clienteMedidorId], references: [clienteMedidorId])
     facturas       Facturas[]
 
     @@map("lecturas")
 }
+
