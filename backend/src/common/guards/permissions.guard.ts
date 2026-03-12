@@ -10,6 +10,10 @@ import {
   PERMISSION_KEY,
   PermissionConfig,
 } from '../decorators/require-permission.decorator';
+import type {
+  AuthPermission,
+  AuthenticatedRequest,
+} from '../types/auth-request.types';
 
 @Injectable()
 export class PermissionsGuard implements CanActivate {
@@ -24,7 +28,7 @@ export class PermissionsGuard implements CanActivate {
     );
     if (!required) return true;
 
-    const request = context.switchToHttp().getRequest();
+    const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
     const user = request.user;
 
     if (!user || !user.usersId) {
@@ -33,8 +37,7 @@ export class PermissionsGuard implements CanActivate {
     }
 
     // Permisos cargados por JwtStrategy — sin query extra a BD
-    const permissions: { resource: string; action: string }[] =
-      user.permissions ?? [];
+    const permissions: AuthPermission[] = user.permissions ?? [];
 
     const hasPermission = permissions.some(
       (p) => p.resource === required.resource && p.action === required.action,

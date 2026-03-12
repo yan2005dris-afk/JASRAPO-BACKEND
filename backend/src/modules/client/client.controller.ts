@@ -1,4 +1,14 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
@@ -16,17 +26,13 @@ export class ClientController {
   // PUBLICO
   @Get('search')
   @Throttle({ default: { limit: 10, ttl: 60000 } }) // Limitar a 10 peticiones por minuto
-  search(
-    @Query('tipo') tipo: string,
-    @Query('valor') valor: string,
-  ) {
+  search(@Query('tipo') tipo: string, @Query('valor') valor: string) {
     return this.clientService.search(tipo, valor);
   }
 
   // PRIVADO
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, PermissionsGuard)
-
   @RequiredPermission('clientes', 'create')
   @Post()
   create(@Body() createClientDto: CreateClientDto) {

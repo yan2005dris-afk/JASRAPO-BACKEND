@@ -14,6 +14,14 @@ import {
   ApiBody,
   ApiCookieAuth,
 } from '@nestjs/swagger';
+import type { CookieOptions, Response } from 'express';
+import type {
+  LoginRequest,
+  RefreshRequest,
+} from './types/auth-controller.types';
+import { REFRESH_TOKEN_MAX_AGE_MS } from 'src/constants/app.constants';
+import { CookieValue } from 'src/common/decorators/cookie-value.decorator';
+import { RequiredStringPipe } from 'src/common/pipes/required-string.pipe';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -43,7 +51,10 @@ export class AuthController {
   })
   @ApiResponse({ status: 400, description: 'Datos inválidos' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
-  @ApiResponse({ status: 403, description: 'Prohibido - Sin permiso users:create' })
+  @ApiResponse({
+    status: 403,
+    description: 'Prohibido - Sin permiso users:create',
+  })
   @ApiResponse({ status: 409, description: 'El correo electrónico ya existe' })
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, PermissionsGuard)
@@ -89,14 +100,18 @@ export class AuthController {
   @Post('/login')
   async login(
     @Body() loginUserDto: LoginUserDto,
-    @Req() req: any,
-    @Res() res: any,
+    @Req() req: LoginRequest,
+    @CookieValue('refreshToken') existingRefreshTokenValue: unknown,
+    @Res() res: Response,
   ) {
-    const ip = req.ip as string;
-    const userAgent = req.headers['user-agent'] as string;
-    const existingRefreshToken = req.cookies?.refreshToken as
-      | string
-      | undefined;
+    const ip = req.ip ?? 'unknown';
+    const userAgentHeader = req.headers['user-agent'];
+    const userAgent =
+      typeof userAgentHeader === 'string' ? userAgentHeader : 'unknown';
+    const existingRefreshToken =
+      typeof existingRefreshTokenValue === 'string'
+        ? existingRefreshTokenValue
+        : undefined;
 
     const result = await this.authService.login(
       loginUserDto,
@@ -106,11 +121,11 @@ export class AuthController {
     );
 
     // Solo guardar refreshToken en cookie, accessToken va en el payload
-    const refreshCookieOptions = {
+    const refreshCookieOptions: CookieOptions = {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 días para refreshToken
+      maxAge: REFRESH_TOKEN_MAX_AGE_MS,
     };
     res.cookie('refreshToken', result.refreshToken, refreshCookieOptions);
     res.json({
@@ -147,14 +162,23 @@ export class AuthController {
       },
     },
   })
-  @ApiResponse({ status: 401, description: 'Refresh token inválido o expirado' })
+  @ApiResponse({
+    status: 401,
+    description: 'Refresh token inválido o expirado',
+  })
   @UseGuards(JwtRefreshGuard)
   @Post('refresh')
-  async refresh(@Req() req: any, @Res() res: any) {
+  async refresh(
+    @Req() req: RefreshRequest,
+    @CookieValue('refreshToken', new RequiredStringPipe('refreshToken'))
+    refreshToken: string,
+    @Res() res: Response,
+  ) {
     const { sessionsId, usersId, sub } = req.user;
-    const refreshToken = req.cookies?.refreshToken as string;
-    const ip = (req.ip as string) ?? 'unknown';
-    const userAgent = (req.headers['user-agent'] as string) ?? 'unknown';
+    const ip = req.ip ?? 'unknown';
+    const userAgentHeader = req.headers['user-agent'];
+    const userAgent =
+      typeof userAgentHeader === 'string' ? userAgentHeader : 'unknown';
 
     // Usa usersId si existe, si no sub (por compatibilidad)
     const userId = typeof usersId !== 'undefined' ? usersId : sub;
@@ -166,11 +190,11 @@ export class AuthController {
       userId,
     );
 
-    const refreshCookieOptions = {
+    const refreshCookieOptions: CookieOptions = {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      maxAge: REFRESH_TOKEN_MAX_AGE_MS,
     };
     res.cookie('refreshToken', tokens.refreshToken, refreshCookieOptions);
     res.json({
@@ -201,7 +225,7 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @UseGuards(JwtRefreshGuard)
   @Post('logout')
-  async logout(@Req() req: any, @Res() res: any) {
+  async logout(@Req() req: RefreshRequest, @Res() res: Response) {
     const { sessionsId, sub: userId } = req.user;
 
     // Marcar la sesión como revocada en BD
@@ -215,4 +239,3 @@ export class AuthController {
     res.json({ message: 'Sesión cerrada correctamente' });
   }
 }
-

@@ -5,6 +5,8 @@ import { PrismaService } from 'src/database/prisma.service';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { UserService } from 'src/modules/user/user.service';
 import { RedisSessionService } from '../../redis/redis-session.service';
+import { SessionRedis } from 'src/common/types/session-redis.interface';
+import type { JwtAccessPayload } from '../types/JwtRequest.types';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -25,16 +27,16 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(payload: any) {
+  async validate(payload: JwtAccessPayload) {
     const { sub: usersId, sid: sessionsId, email } = payload;
     if (!usersId || !sessionsId) {
       throw new UnauthorizedException('Session invalida');
     }
     // Buscar sesión en Redis usando RedisSessionService
-    let session: any = null;
+    let session: SessionRedis | null = null;
     try {
       session = await this.redisSessionService.getSession(usersId, sessionsId);
-    } catch (err) {
+    } catch (_err) {
       throw new UnauthorizedException('Error accediendo a Redis para sesión');
     }
     if (!session || session.isRevoked || session.expiresAt < Date.now()) {

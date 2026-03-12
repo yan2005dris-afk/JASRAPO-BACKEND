@@ -43,7 +43,7 @@
     "cookie-parser": "1.4.7",
     "date-fns-tz": "3.2.0",
     "dotenv": "^17.3.1",
-    "ioredis": "^5.10.0",
+    "ioredis": "5.10.0",
     "minio": "^8.0.7",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
@@ -91,6 +91,10 @@
     "testRegex": ".*\\.spec\\.ts$",
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
+    },
+    "moduleNameMapper": {
+      "^src/(.*)$": "<rootDir>/$1",
+      "^(\\.{1,2}/.*)\\.js$": "$1"
     },
     "collectCoverageFrom": [
       "**/*.(t|j)s"

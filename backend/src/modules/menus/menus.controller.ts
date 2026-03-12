@@ -52,11 +52,13 @@ export class MenusController {
       ],
     },
   })
-  @ApiResponse({ status: 401, description: 'No autorizado - Token inválido o expirado' })
+  @ApiResponse({
+    status: 401,
+    description: 'No autorizado - Token inválido o expirado',
+  })
   @Get('my')
   async getMyMenus(@Req() req: JwtRequest): Promise<MenuResponseDto[]> {
     const userId = req.user.sub;
     return this.menusService.getMyMenus(userId);
   }
 }
-
