@@ -65,7 +65,10 @@ export class UserController {
     status: 401,
     description: 'No autorizado - Token inválido o expirado',
   })
-  @ApiResponse({ status: 403, description: 'Prohibido - Sin permiso users:create' })
+  @ApiResponse({
+    status: 403,
+    description: 'Prohibido - Sin permiso users:create',
+  })
   @ApiResponse({ status: 409, description: 'Conflicto - El email ya existe' })
   @RequiredPermission('users', 'create')
   @Post('/')
@@ -101,7 +104,10 @@ export class UserController {
     description: 'Lista de usuarios obtenida exitosamente',
   })
   @ApiResponse({ status: 401, description: 'No autorizado' })
-  @ApiResponse({ status: 403, description: 'Prohibido - Sin permiso users:read' })
+  @ApiResponse({
+    status: 403,
+    description: 'Prohibido - Sin permiso users:read',
+  })
   @RequiredPermission('users', 'read')
   @Get('/')
   findAll(@Query('skip') skip?: number, @Query('take') take?: number) {
@@ -131,7 +137,10 @@ export class UserController {
     description: 'Usuario encontrado exitosamente',
   })
   @ApiResponse({ status: 401, description: 'No autorizado' })
-  @ApiResponse({ status: 403, description: 'Prohibido - Sin permiso users:read' })
+  @ApiResponse({
+    status: 403,
+    description: 'Prohibido - Sin permiso users:read',
+  })
   @ApiResponse({ status: 404, description: 'Usuario no encontrado' })
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
@@ -139,13 +148,12 @@ export class UserController {
   }
 
   /**
-   * Obtiene los roles asignados a un usuario.
+   * Obtiene el nombre del rol asignado actualmente a un usuario.
    * Requiere permiso: users:read
    */
   @ApiOperation({
-    summary: 'Obtener roles de usuario',
-    description:
-      'Retorna los roles asignados a un usuario específico, sin incluir información de la relación.',
+    summary: 'Obtener rol actual de usuario',
+    description: 'Retorna el nombre del rol asignado actualmente al usuario.',
   })
   @ApiParam({
     name: 'id',
@@ -155,25 +163,29 @@ export class UserController {
   })
   @ApiResponse({
     status: 200,
-    description: 'Roles del usuario obtenidos exitosamente',
+    description: 'Rol del usuario obtenido exitosamente',
   })
   @ApiResponse({ status: 401, description: 'No autorizado' })
-  @ApiResponse({ status: 403, description: 'Prohibido - Sin permiso users:read' })
+  @ApiResponse({
+    status: 403,
+    description: 'Prohibido - Sin permiso users:read',
+  })
   @ApiResponse({ status: 404, description: 'Usuario no encontrado' })
   @RequiredPermission('users', 'read')
-  @Get(':id/roles')
-  getUserRoles(@Param('id', ParseIntPipe) id: number) {
+  @Get(':id/role')
+  getUserRole(@Param('id', ParseIntPipe) id: number) {
     return this.userService.getRolesByUserId(id);
   }
 
   /**
-   * Obtiene las asignaciones de rol de un usuario.
+   * Obtiene la asignación de rol actual de un usuario.
+   * Devuelve un objeto con usersId, rolesId y name, o null si no tiene rol.
    * Requiere permiso: users:read
    */
   @ApiOperation({
-    summary: 'Obtener asignaciones de rol de usuario',
+    summary: 'Obtener asignación de rol de usuario',
     description:
-      'Retorna la asignacion actual de rol del usuario.',
+      'Retorna la asignación actual de rol del usuario como un objeto único (o null si no tiene rol).',
   })
   @ApiParam({
     name: 'id',
@@ -183,14 +195,24 @@ export class UserController {
   })
   @ApiResponse({
     status: 200,
-    description: 'Asignaciones de rol obtenidas exitosamente',
+    description: 'Asignación de rol obtenida exitosamente',
+    schema: {
+      example: {
+        usersId: 1,
+        rolesId: 2,
+        name: 'admin',
+      },
+    },
   })
   @ApiResponse({ status: 401, description: 'No autorizado' })
-  @ApiResponse({ status: 403, description: 'Prohibido - Sin permiso users:read' })
+  @ApiResponse({
+    status: 403,
+    description: 'Prohibido - Sin permiso users:read',
+  })
   @ApiResponse({ status: 404, description: 'Usuario no encontrado' })
   @RequiredPermission('users', 'read')
-  @Get(':id/role-assignments')
-  getUserRoleAssignments(@Param('id', ParseIntPipe) id: number) {
+  @Get(':id/role-assignment')
+  getUserRoleAssignment(@Param('id', ParseIntPipe) id: number) {
     return this.userService.getRoleAssignmentsByUserId(id);
   }
 
@@ -200,7 +222,8 @@ export class UserController {
    */
   @ApiOperation({
     summary: 'Actualizar usuario',
-    description: 'Actualiza los datos básicos de un usuario (email o contraseña).',
+    description:
+      'Actualiza los datos básicos de un usuario (email o contraseña).',
   })
   @ApiParam({
     name: 'id',
@@ -218,7 +241,10 @@ export class UserController {
   })
   @ApiResponse({ status: 400, description: 'Datos inválidos' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
-  @ApiResponse({ status: 403, description: 'Prohibido - Sin permiso users:update' })
+  @ApiResponse({
+    status: 403,
+    description: 'Prohibido - Sin permiso users:update',
+  })
   @ApiResponse({ status: 404, description: 'Usuario no encontrado' })
   @RequiredPermission('users', 'update')
   @Patch(':id')
@@ -241,8 +267,7 @@ export class UserController {
    */
   @ApiOperation({
     summary: 'Asignar rol a usuario',
-    description:
-      'Asigna o reemplaza el rol actual del usuario.',
+    description: 'Asigna o reemplaza el rol actual del usuario.',
   })
   @ApiParam({
     name: 'id',
@@ -266,7 +291,10 @@ export class UserController {
   })
   @ApiResponse({ status: 400, description: 'Datos inválidos' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
-  @ApiResponse({ status: 403, description: 'Prohibido - Sin permiso users:update' })
+  @ApiResponse({
+    status: 403,
+    description: 'Prohibido - Sin permiso users:update',
+  })
   @ApiResponse({ status: 404, description: 'Usuario o rol no encontrado' })
   @RequiredPermission('users', 'update')
   @Post(':id/roles')
@@ -297,7 +325,10 @@ export class UserController {
     description: 'Permisos directos del usuario obtenidos exitosamente',
   })
   @ApiResponse({ status: 401, description: 'No autorizado' })
-  @ApiResponse({ status: 403, description: 'Prohibido - Sin permiso users:read' })
+  @ApiResponse({
+    status: 403,
+    description: 'Prohibido - Sin permiso users:read',
+  })
   @ApiResponse({ status: 404, description: 'Usuario no encontrado' })
   @RequiredPermission('users', 'read')
   @Get(':id/permissions')
@@ -340,7 +371,10 @@ export class UserController {
   })
   @ApiResponse({ status: 400, description: 'Datos inválidos' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
-  @ApiResponse({ status: 403, description: 'Prohibido - Sin permiso users:update' })
+  @ApiResponse({
+    status: 403,
+    description: 'Prohibido - Sin permiso users:update',
+  })
   @ApiResponse({ status: 404, description: 'Usuario o permiso no encontrado' })
   @RequiredPermission('users', 'update')
   @Post(':id/permissions')
@@ -361,8 +395,7 @@ export class UserController {
    */
   @ApiOperation({
     summary: 'Revocar rol de usuario',
-    description:
-      'Quita el rol actual del usuario (deja role_id en null).',
+    description: 'Quita el rol actual del usuario (deja role_id en null).',
   })
   @ApiParam({
     name: 'id',
@@ -375,13 +408,14 @@ export class UserController {
     description: 'Rol revocado exitosamente',
   })
   @ApiResponse({ status: 401, description: 'No autorizado' })
-  @ApiResponse({ status: 403, description: 'Prohibido - Sin permiso users:delete' })
+  @ApiResponse({
+    status: 403,
+    description: 'Prohibido - Sin permiso users:delete',
+  })
   @ApiResponse({ status: 404, description: 'Usuario no encontrado' })
   @RequiredPermission('users', 'delete')
   @Delete(':id/roles')
-  revokeRole(
-    @Param('id', ParseIntPipe) id: number,
-  ) {
+  revokeRole(@Param('id', ParseIntPipe) id: number) {
     return this.userService.revokeRoleFromUser(id);
   }
 
@@ -405,7 +439,10 @@ export class UserController {
     description: 'Usuario eliminado exitosamente',
   })
   @ApiResponse({ status: 401, description: 'No autorizado' })
-  @ApiResponse({ status: 403, description: 'Prohibido - Sin permiso users:delete' })
+  @ApiResponse({
+    status: 403,
+    description: 'Prohibido - Sin permiso users:delete',
+  })
   @ApiResponse({ status: 404, description: 'Usuario no encontrado' })
   @RequiredPermission('users', 'delete')
   @Delete(':id')
@@ -439,8 +476,14 @@ export class UserController {
     description: 'Permiso revocado exitosamente',
   })
   @ApiResponse({ status: 401, description: 'No autorizado' })
-  @ApiResponse({ status: 403, description: 'Prohibido - Sin permiso users:delete' })
-  @ApiResponse({ status: 404, description: 'Relación usuario-permiso no encontrada' })
+  @ApiResponse({
+    status: 403,
+    description: 'Prohibido - Sin permiso users:delete',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Relación usuario-permiso no encontrada',
+  })
   @RequiredPermission('users', 'delete')
   @Delete(':id/permissions/:userPermissionId')
   revokePermission(
@@ -469,7 +512,10 @@ export class UserController {
     description: 'Permisos efectivos obtenidos exitosamente',
   })
   @ApiResponse({ status: 401, description: 'No autorizado' })
-  @ApiResponse({ status: 403, description: 'Prohibido - Sin permiso users:read' })
+  @ApiResponse({
+    status: 403,
+    description: 'Prohibido - Sin permiso users:read',
+  })
   @ApiResponse({ status: 404, description: 'Usuario no encontrado' })
   @RequiredPermission('users', 'read')
   @Get('getEffectivePermissions:id/effective-permissions')
@@ -477,4 +523,3 @@ export class UserController {
     return this.userService.getEffectivePermissions(usersId);
   }
 }
-

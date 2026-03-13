@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { RolesController } from './roles.controller';
 import { RolesService } from './roles.service';
 
@@ -8,7 +9,21 @@ describe('RolesController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [RolesController],
-      providers: [RolesService],
+      providers: [
+        {
+          provide: RolesService,
+          useValue: {
+            create: jest.fn(),
+            findAll: jest.fn(),
+            findOne: jest.fn(),
+            update: jest.fn(),
+            remove: jest.fn(),
+            getRolePermissions: jest.fn(),
+            getRoleChildren: jest.fn(),
+            setRoleChildren: jest.fn(),
+          },
+        },
+      ],
     }).compile();
 
     controller = module.get<RolesController>(RolesController);

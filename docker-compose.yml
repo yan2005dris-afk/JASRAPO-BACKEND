@@ -56,6 +56,8 @@ services:
       MINIO_USE_SSL: "false"
       MINIO_ACCESS_KEY: admin
       MINIO_SECRET_KEY: password123
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
       PORT: 3000
       CORS_ORIGIN: "*"
     ports:
@@ -64,6 +66,8 @@ services:
       postgres:
         condition: service_healthy
       minio:
+        condition: service_started
+      redis:
         condition: service_started
     networks:
       - jasrapo-network
@@ -83,6 +87,18 @@ services:
       - "${FRONTED_PORT:-4200}:80"
     depends_on:
       - backend
+    networks:
+      - jasrapo-network
+    restart: unless-stopped
+
+  # ─── Redis Cache/Sessions ───────────────────────────────────
+  redis:
+    image: redis:alpine
+    container_name: jasrapo-redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - ./backend-db/redis-data:/data:Z
     networks:
       - jasrapo-network
     restart: unless-stopped

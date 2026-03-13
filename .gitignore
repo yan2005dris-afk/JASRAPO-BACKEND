@@ -7,7 +7,7 @@ FRONT.rar
 backend-db/postgres-data/
 backend-db/postgres/
 /backend-db/minio-data
-
+/backend-db/redis-data
 # --- Backend (NestJS & Node) ---
 node_modules/
 backend/node_modules/
@@ -22,3 +22,4 @@ backend/postgres/.env
 *.log
 .DS_Store
 
+*.zip

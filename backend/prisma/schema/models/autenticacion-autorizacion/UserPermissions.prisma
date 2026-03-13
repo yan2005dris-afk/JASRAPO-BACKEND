@@ -3,7 +3,7 @@ model UserPermissions{
     usersId                     Int                                         @map("user_id")
     permissionsId               Int                                         @map("permissions_id")
     allow                       Boolean                                     @map("allow")
-    deteledAt                   DateTime?                                   @map("detelted_at")
+    deletedAt                   DateTime?                                   @map("deleted_at")
 
     users                       Users        @relation(fields: [usersId], references: [usersId]) 
     Permissions                 Permissions @relation(fields: [permissionsId], references: [permissionsId])

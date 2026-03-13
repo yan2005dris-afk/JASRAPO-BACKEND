@@ -1,22 +1,19 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
 import { UserService } from '../user/user.service';
 import { MenuResponseDto } from './dto/response-menu.dto';
-import {
-  EffectivePermission,
-  MenuRecord,
-  PermissionCondition,
-} from './types/menu.types';
+import { EffectivePermission, MenuRecord } from './types/menu.types';
 
 @Injectable()
 export class MenusService {
+  private readonly logger = new Logger(MenusService.name);
   constructor(
     private readonly prisma: PrismaService,
     private readonly userService: UserService,
   ) {}
 
   async getMyMenus(userId: number): Promise<MenuResponseDto[]> {
-    //Obtener permisos efectivos del usuario (roles + overrides)
+    //Obtener permisos efectivos del usuario (roles + permisos directos)
     const permissions = (await this.userService.getEffectivePermissions(
       userId,
     )) as EffectivePermission[];
@@ -24,22 +21,14 @@ export class MenusService {
     if (permissions.length === 0) {
       return [];
     }
-
-    //Convertir permisos a formato DB
-    const permissionConditions: PermissionCondition[] = permissions.map(
-      (p) => ({
-        resource: p.resource,
-        action: p.action,
-      }),
-    );
-
-    // 1. Obtener los menús a los que el usuario tiene acceso directo
+    //Construir condiciones OR para la consulta de menús
+    // 1. Obtener los acciones que el usuario tiene acceso directo
     const directMenus = await this.prisma.menus.findMany({
       where: {
         menuPermissions: {
           some: {
             permissions: {
-              OR: permissionConditions,
+              OR: permissions,
             },
           },
         },
@@ -97,7 +86,9 @@ export class MenusService {
         });
       }
     });
-
+    this.logger.log(
+      'Árbol de menús final para el usuario: ' + JSON.stringify(fullTree),
+    );
     return fullTree;
   }
 

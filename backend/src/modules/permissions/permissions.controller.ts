@@ -37,7 +37,8 @@ export class PermissionsController {
    */
   @ApiOperation({
     summary: 'Crear permiso',
-    description: 'Crea un nuevo permiso en el sistema (ej: users:read, users:create).',
+    description:
+      'Crea un nuevo permiso en el sistema (ej: users:read, users:create).',
   })
   @ApiBody({
     type: CreatePermissionDto,
@@ -57,11 +58,14 @@ export class PermissionsController {
   })
   @ApiResponse({ status: 400, description: 'Datos inválidos' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
-  @ApiResponse({ status: 403, description: 'Prohibido - Sin permiso permissions:create' })
+  @ApiResponse({
+    status: 403,
+    description: 'Prohibido - Sin permiso permissions:create',
+  })
   @ApiResponse({ status: 409, description: 'Conflicto - El permiso ya existe' })
   @RequiredPermission('permissions', 'create')
   @Post()
-  create(@Body() createPermissionDto: CreatePermissionDto) {
+  createPermissions(@Body() createPermissionDto: CreatePermissionDto) {
     return this.permissionsService.create(createPermissionDto);
   }
 
@@ -78,10 +82,13 @@ export class PermissionsController {
     description: 'Lista de permisos obtenida exitosamente',
   })
   @ApiResponse({ status: 401, description: 'No autorizado' })
-  @ApiResponse({ status: 403, description: 'Prohibido - Sin permiso permissions:read' })
+  @ApiResponse({
+    status: 403,
+    description: 'Prohibido - Sin permiso permissions:read',
+  })
   @RequiredPermission('permissions', 'read')
   @Get()
-  findAll() {
+  findAllPermissions() {
     return this.permissionsService.findAll();
   }
 
@@ -104,11 +111,14 @@ export class PermissionsController {
     description: 'Permiso encontrado exitosamente',
   })
   @ApiResponse({ status: 401, description: 'No autorizado' })
-  @ApiResponse({ status: 403, description: 'Prohibido - Sin permiso permissions:read' })
+  @ApiResponse({
+    status: 403,
+    description: 'Prohibido - Sin permiso permissions:read',
+  })
   @ApiResponse({ status: 404, description: 'Permiso no encontrado' })
   @RequiredPermission('permissions', 'read')
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: string) {
+  findOnePermissions(@Param('id', ParseIntPipe) id: string) {
     return this.permissionsService.findOne(+id);
   }
 
@@ -136,11 +146,14 @@ export class PermissionsController {
   })
   @ApiResponse({ status: 400, description: 'Datos inválidos' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
-  @ApiResponse({ status: 403, description: 'Prohibido - Sin permiso permissions:update' })
+  @ApiResponse({
+    status: 403,
+    description: 'Prohibido - Sin permiso permissions:update',
+  })
   @ApiResponse({ status: 404, description: 'Permiso no encontrado' })
   @RequiredPermission('permissions', 'update')
   @Patch(':id')
-  update(
+  updatePermissions(
     @Param('id', ParseIntPipe) id: string,
     @Body() updatePermissionDto: UpdatePermissionDto,
   ) {
@@ -166,12 +179,14 @@ export class PermissionsController {
     description: 'Permiso eliminado exitosamente',
   })
   @ApiResponse({ status: 401, description: 'No autorizado' })
-  @ApiResponse({ status: 403, description: 'Prohibido - Sin permiso permissions:delete' })
+  @ApiResponse({
+    status: 403,
+    description: 'Prohibido - Sin permiso permissions:delete',
+  })
   @ApiResponse({ status: 404, description: 'Permiso no encontrado' })
   @RequiredPermission('permissions', 'delete')
   @Delete(':id')
-  SoftDelete(@Param('id', ParseIntPipe) id: string) {
+  SoftDeletePermissions(@Param('id', ParseIntPipe) id: string) {
     return this.permissionsService.remove(+id);
   }
 }
-
