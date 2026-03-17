@@ -78,7 +78,7 @@ ALTER TABLE "roles_heredados" DROP CONSTRAINT "roles_heredados_child_role_id_fke
 ALTER TABLE "roles_heredados" DROP CONSTRAINT "roles_heredados_parent_role_id_fkey";
 
 -- DropForeignKey
-ALTER TABLE "sessions" DROP CONSTRAINT "sessions_users_id_fkey";
+
 
 -- DropForeignKey
 ALTER TABLE "solicitudes" DROP CONSTRAINT "solicitudes_cliente_id_fkey";
@@ -141,7 +141,6 @@ DROP TABLE "roles";
 DROP TABLE "roles_heredados";
 
 -- DropTable
-DROP TABLE "sessions";
 
 -- DropTable
 DROP TABLE "solicitudes";
