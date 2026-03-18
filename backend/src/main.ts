@@ -1,9 +1,10 @@
-import { ValidationPipe } from '@nestjs/common';
 import type { INestApplication } from '@nestjs/common';
+import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
+import { ThrottlerExceptionFilter } from './common/filters/throttler-exception.filter';
 import { BigIntInterceptor } from './common/interceptors/bigint.interceptor';
 import { TRUST_PROXY_HOPS, TRUST_PROXY_KEY } from './constants/app.constants';
 
@@ -25,6 +26,9 @@ async function bootstrap() {
 
   //Interceptor BigInt
   app.useGlobalInterceptors(new BigIntInterceptor());
+
+  // filtro para throttler
+  app.useGlobalFilters(new ThrottlerExceptionFilter());
 
   // Con Nginx como reverse proxy, la IP real del cliente viene en el
   // header X-Forwarded-For. "trust proxy = 1" le dice a Express que
