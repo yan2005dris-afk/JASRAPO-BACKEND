@@ -5,7 +5,7 @@ export type DecodedJwt = {
 
 export type SessionBase = {
   usersId: number;
-  sessionsId: number;
+  sessionsId: string;
   email?: string;
   createdAt?: number;
   expiresAt?: number;

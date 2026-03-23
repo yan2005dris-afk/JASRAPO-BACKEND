@@ -26,14 +26,14 @@ export class RedisSessionService implements OnModuleInit {
 
   async getSession(
     usersId: number,
-    sessionsId: number,
+    sessionsId: string,
   ): Promise<SessionRedis | null> {
     const key = this.getSessionKey(usersId, sessionsId);
     const data = await this.redis.get(key);
     return data ? (JSON.parse(data) as SessionRedis) : null;
   }
 
-  async delSession(usersId: number, sessionsId: number) {
+  async delSession(usersId: number, sessionsId: string) {
     const key = this.getSessionKey(usersId, sessionsId);
     await this.redis.del(key);
   }
@@ -49,7 +49,7 @@ export class RedisSessionService implements OnModuleInit {
     return sessions.filter(Boolean) as SessionRedis[];
   }
 
-  private getSessionKey(usersId: number, sessionsId: number) {
+  private getSessionKey(usersId: number, sessionsId: string) {
     return `session:${usersId}:${sessionsId}`;
   }
 }

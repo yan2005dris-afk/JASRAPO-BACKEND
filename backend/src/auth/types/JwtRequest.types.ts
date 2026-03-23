@@ -2,13 +2,13 @@ import type { Request } from 'express';
 
 export type JwtAccessPayload = {
   sub: number;
-  sid: number;
+  sid: string;
   email?: string;
 };
 
 export type JwtRefreshPayload = {
   sub: number;
-  sid: number;
+  sid: string;
   email?: string;
 };
 

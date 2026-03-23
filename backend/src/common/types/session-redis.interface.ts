@@ -1,5 +1,5 @@
 export interface SessionRedis {
-  sessionsId: number;
+  sessionsId: string;
   usersId: number;
   email?: string;
   ipAddress?: string;

@@ -24,13 +24,13 @@ import { RedisModule } from './redis/redis.module';
 
     // Limitar peticiones
     ThrottlerModule.forRoot({
-  throttlers: [
-    {
-      ttl: 60000,
-      limit: 20,
-    },
-  ],
-}),
+      throttlers: [
+        {
+          ttl: 60000,
+          limit: 20,
+        },
+      ],
+    }),
 
     DatabaseModule,
     UserModule,
