@@ -1,4 +1,4 @@
-import {Injectable,NotFoundException,} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
 import { Prisma } from 'src/generated/prisma/client';
 import { CreateLecturaDto } from './dto/create-lectura.dto';
@@ -126,4 +126,3 @@ export class LecturaService {
     return { message: `Lectura con ID ${id} eliminada correctamente` };
   }
 }
-

@@ -1,4 +1,13 @@
-import {Controller, Get,Post,Body,Patch, Param,Delete,Query,} from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+} from '@nestjs/common';
 import { LecturaService } from './lectura.service';
 import { CreateLecturaDto } from './dto/create-lectura.dto';
 import { UpdateLecturaDto } from './dto/update-lectura.dto';
@@ -13,7 +22,9 @@ export class LecturaController {
    * Recibe los datos del DTO y delega la lógica de creación al servicio.
    */
   @Post()
-  async create(@Body() createLecturaDto: CreateLecturaDto): Promise<LecturaEntity> {
+  async create(
+    @Body() createLecturaDto: CreateLecturaDto,
+  ): Promise<LecturaEntity> {
     return this.lecturaService.create(createLecturaDto);
   }
 

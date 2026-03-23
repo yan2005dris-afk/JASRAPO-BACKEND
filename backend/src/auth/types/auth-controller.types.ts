@@ -2,7 +2,7 @@ import type { Response } from 'express';
 import type { RequestWithCookies } from './JwtRequest.types';
 
 export type RefreshAuthUser = {
-  sessionsId: number;
+  sessionsId: string;
   usersId?: number;
   sub: number;
 };

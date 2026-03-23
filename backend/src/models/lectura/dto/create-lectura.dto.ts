@@ -1,14 +1,13 @@
-import { Type } from "class-transformer";
-import { 
-  IsInt, 
-  IsNumber, 
-  IsOptional, 
-  IsDateString, 
-  Min 
-} from "class-validator";
+import { Type } from 'class-transformer';
+import {
+  IsInt,
+  IsNumber,
+  IsOptional,
+  IsDateString,
+  Min,
+} from 'class-validator';
 
 export class CreateLecturaDto {
-  
   @IsInt()
   @Type(() => Number)
   clienteMedidorId: number;

@@ -7,6 +7,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
+import { randomUUID } from 'crypto';
 import { EcuadorTimezoneUtil } from 'src/common/util/ecuador-timezone-backend.util';
 import { PrismaService } from 'src/database/prisma.service';
 import { UserService } from 'src/modules/user/user.service';
@@ -82,7 +83,7 @@ export class AuthService {
     this.logger.log(`[LOGIN] user=${users.usersId} | ip="${safeIp}"`);
 
     // ── Siempre crear sesión nueva ──
-    const sessionsId = Date.now(); // o usa uuid si prefieres
+    const sessionsId = randomUUID();
     const sessionKey = `session:${users.usersId}:${sessionsId}`;
     const expiresAt = Date.now() + REFRESH_TOKEN_MAX_AGE_MS;
     const session = {
@@ -106,7 +107,7 @@ export class AuthService {
    */
   private async buildLoginResponse(
     users: { usersId: number; email: string },
-    sessionsId: number,
+    sessionsId: string,
     tokens: { accessToken: string; refreshToken: string },
   ) {
     const { accessToken, refreshToken } = tokens;
@@ -225,7 +226,7 @@ export class AuthService {
    */
   private async generateJwtToken(
     userId: number,
-    sessionId: number,
+    sessionId: string,
     email: string,
   ) {
     const payload = { sub: userId, sid: sessionId, email };
@@ -259,7 +260,7 @@ export class AuthService {
    * @param userAgent    - User-Agent actual del cliente
    */
   async refreshAccessToken(
-    sessionId: number,
+    sessionId: string,
     refreshToken: string,
     ip: string = 'unknown',
     userAgent: string = 'unknown',
@@ -299,7 +300,7 @@ export class AuthService {
   /**
    * Revoca una sesión en BD (logout).
    */
-  async logout(sessionId: number, userId: number) {
+  async logout(sessionId: string, userId: number) {
     // Borrado lógico: solo marcar como revocada, no eliminar de Redis
     const session = await this.redisSessionService.getSession(
       userId,
