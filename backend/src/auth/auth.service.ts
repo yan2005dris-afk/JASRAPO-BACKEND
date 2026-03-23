@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  InternalServerErrorException,
   Logger,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -216,6 +217,9 @@ export class AuthService {
     } catch (err) {
       this.logger.error(
         `[REDIS] [IOREDIS] Error al guardar sesión en Redis: ${sessionKey} | ${err}`,
+      );
+      throw new InternalServerErrorException(
+        'Error al crear sesión. Intente nuevamente.',
       );
     }
     return tokens;
