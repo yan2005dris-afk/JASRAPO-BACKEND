@@ -1,13 +1,16 @@
 model DetalleFactura {
     detalleFacturaId BigInt  @id @default(autoincrement()) @map("detalle_factura_id")
-    facturaId        BigInt? @map("factura_id")
-
-    descripcion    String @map("descripcion")
+    facturaId        BigInt @map("factura_id")
+    rubroId          Int @map("rubro_id")
     cantidad       Float  @map("cantidad")
     precioUnitario Float  @map("precio_unitario")
-    total          Float  @map("total")
+    descuento Float @default(0) @map("descuento")
+    subtotal          Float  @map("subtotal")
+    createdAt DateTime @default(now()) @map("created_at")
+    deletedAt DateTime? @map("deleted_at")
 
     factura Facturas? @relation(fields: [facturaId], references: [facturaId])
+    rubro Rubros? @relation(fields: [rubroId], references: [rubroId])
 
     @@map("detalle_factura")
 }
