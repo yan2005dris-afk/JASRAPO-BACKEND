@@ -13,10 +13,20 @@ describe('AuthController', () => {
         {
           provide: AuthService,
           useValue: {
-            register: jest.fn(),
-            login: jest.fn(),
-            refreshToken: jest.fn(),
-            logout: jest.fn(),
+            register: jest.fn().mockResolvedValue({
+              accessToken: 'token',
+              user: { usersId: 1 },
+            }),
+            login: jest.fn().mockResolvedValue({
+              accessToken: 'token',
+              refreshToken: 'refresh',
+              user: { usersId: 1 },
+            }),
+            refreshAccessToken: jest.fn().mockResolvedValue({
+              accessToken: 'newToken',
+              refreshToken: 'newRefresh',
+            }),
+            logout: jest.fn().mockResolvedValue(undefined),
           },
         },
       ],
