@@ -40,6 +40,5 @@ COPY --from=build /app/prisma ./prisma
 # Necesario para que Prisma encuentre el schema en prisma/schema/ (no el default schema.prisma)
 COPY --from=build /app/prisma.config.ts ./prisma.config.ts
 
-EXPOSE 3000
-# Ejecuta las migraciones pendientes, siembra la base de datos (seeds) y luego inicia el servidor
-CMD ["sh", "-c", "npx prisma migrate deploy && npx prisma db seed && node dist/src/main"]
+EXPOSE ${PORT:-3000}
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/src/main.js"]
