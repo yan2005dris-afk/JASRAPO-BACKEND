@@ -1,17 +1,25 @@
 model Lecturas {
     lecturaId        BigInt  @id @default(autoincrement()) @map("lectura_id")
-    clienteMedidorId BigInt? @map("cliente_medidor_id")
+    contratoId       BigInt @map("contrato_id")
 
+    periodo String  @map("periodo")
     fecha            DateTime @map("fecha")
     lecturaAnterior  Float    @map("lectura_anterior")
     lecturaActual    Float    @map("lectura_actual")
-    consumoCalculado Float?   @map("consumo_calculado")
-    valorMonetario   Float?   @map("valor_monetario")
-    abono            Float?   @map("abono")
-    saldoPendiente   Float?   @map("saldo_pendiente")
-    deletedAt        DateTime? @map("deleted_at")
-    clienteMedidor ClientesMedidores? @relation(fields: [clienteMedidorId], references: [clienteMedidorId])
-    facturas       Facturas[]
+    lecturaInicial   Float    @map("lectura_inicial")
+    consumoCalculado Float   @map("consumo_calculado")
+    fotoUrlMinIo     String?   @map("foto_url_minio")
+    tieneAnomalia    Boolean @default(false) @map("tiene_anomalia") 
+    descripcionAnomalia String? @map("descripcion_anomalia")
+    isValidada       Boolean @default(false) @map("is_validada") 
+    //validadaPor      
+    fechaValidacion  DateTime? @map("fecha_validacion")
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+    deletedAt DateTime? @map("deleted_at")
+
+    contrato Contratos? @relation(fields: [contratoId], references: [contratoId])
+    novedadesOperativas NovedadOperativa[]
 
     @@map("lecturas")
 }

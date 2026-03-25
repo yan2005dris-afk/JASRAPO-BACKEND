@@ -1,20 +1,36 @@
 model Facturas {
     facturaId BigInt  @id @default(autoincrement()) @map("factura_id")
-    clienteId BigInt? @map("cliente_id")
-    lecturaId BigInt? @map("lectura_id")
+    emisionId BigInt @map("emision_id")
 
-    fecha       DateTime @map("fecha")
-    mes         String   @map("mes")
-    consumo     Float?   @map("consumo")
-    tarifa      Float?   @map("tarifa")
-    interesMora Float?   @map("interes_mora")
-    abono       Float?   @map("abono")
-    saldo       Float?   @map("saldo")
+    numeroSri String  @map("numero_sri")
+    claveAccesoSri String @map("clave_acceso_sri")
+    fechaEmision DateTime @default(now()) @map("fecha_emision")
+    fechaVencimiento DateTime @map("fecha_vencimiento")
+    subtotal Float @map("subtotal")
+    descuentoTotal Float @map("descuento_total")
+    iva Float @map("iva")
+    totalPagar Float @map("total_pagar")
+    estado EstadoFactura @map("estado")
+    xmlSri String? @map("xml_sri")
+    pdfUrl String? @map("pdf_url")
+    enviadoSri Boolean @default(false) @map("enviado_sri") 
+    fechaEnvioSri DateTime? @map("fecha_enviado_sri")
+    respuestaSri String? @map("respuesta_sri")
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+    deletedAt DateTime? @map("deleted_at")
 
-    cliente        Clientes?        @relation(fields: [clienteId], references: [clienteId])
-    lectura        Lecturas?        @relation(fields: [lecturaId], references: [lecturaId])
     detalleFactura DetalleFactura[]
-    pagos          Pagos[]
+    detallePago    DetallePago[]
+
+    emisionMensual EmisionMensual? @relation(fields: [emisionId], references: [emisionId])
 
     @@map("facturas")
+}
+
+enum EstadoFactura {
+    BORRADOR
+    EMITIDA
+    AUTORIZADA
+    ANULADA
 }

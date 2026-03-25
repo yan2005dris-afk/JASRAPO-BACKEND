@@ -1,0 +1,21 @@
+model Rubros{
+    rubroId Int  @id @default(autoincrement()) @map("rubro_id")
+    codigoSri String @map("codigo_sri") @unique
+    descripcion String @map("descripcion")
+    valorUnitario Float @map("valor_unitario")
+    tipoRubro TipoRubro @map("tipo_rubro")
+    gravaIva Boolean @default(true) @map("grava_iva")
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+    deletedAt DateTime? @map("deleted_at")
+
+    detalleFactura DetalleFactura[]
+    @@map("rubros")
+}
+
+enum TipoRubro {
+    FIJO
+    VARIABLE
+    MULTA
+    OTRO
+}

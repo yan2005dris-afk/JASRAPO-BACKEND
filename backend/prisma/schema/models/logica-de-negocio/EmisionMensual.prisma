@@ -1,0 +1,29 @@
+model EmisionMensual{
+    emisionId BigInt @id @default(autoincrement()) @map("emision_id")
+    contratoId BigInt @map("contrato_id")
+    periodo String @map("periodo")
+    montoConsumaAgua Float @map("monto_consumo_agua")
+    montoInteresMora Float @map("monto_interes_mora")
+    montoTotal Float @map("monto_total")
+    estadoPago EstadoPago @map("estado_pago")
+    fechaPrimerRecordatorio DateTime? @map("fecha_primer_recordatorio")
+    fechaUltimoRecordatorio DateTime? @map("fecha_ultimo_recordatorio")
+    cantidadRecordatoriosEnviados Int @default(0) @map("cantidad_recordatorios_enviados")
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+    deletedAt DateTime? @map("deleted_at")
+
+    factura Facturas[]
+    contrato Contratos? @relation(fields: [contratoId], references: [contratoId])
+
+    @@map("emision_mensual")
+}
+
+enum EstadoPago {
+    PENDIENTE
+    PAGADO
+    PARCIAL
+    VENCIDO
+    EN_CONVENIO
+    CONVENIO_PAGADO
+}

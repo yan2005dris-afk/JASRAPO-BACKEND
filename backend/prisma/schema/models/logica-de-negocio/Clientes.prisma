@@ -1,21 +1,34 @@
 model Clientes {
     clienteId   BigInt  @id @default(autoincrement()) @map("cliente_id")
-    comunidadId BigInt? @map("comunidad_id")
+    tipoIdentificacion TipoIdentificacion @map("tipo_identificacion")
+    identificacion String   @map("identificacion") @unique
+    nombres    String   @map("nombres")
+    apellidos  String   @map("apellidos")
+    razonSocial String?  @map("razon_social")
+    email      String?  @map("email")
+    telefono   String?  @map("telefono")
+    telefonoSecundario String?  @map("telefono_secundario")
+    aplicaTerceraEdadDiscapacidad Boolean @default(false) @map("aplica_terceraedad_discapacidad")
+    isPerfilValidado Boolean @map("is_perfil_validado") @default(false)
+    direccionDomicilio String?  @map("direccion_domicilio")
 
-    cedula String   @map("cedula") @unique
-    nombre    String   @map("nombre")
     createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
     deletedAt DateTime? @map("deleted_at")
 
-    comunidad         Comunidades?        @relation(fields: [comunidadId], references: [comunidadId])
-    clientesMedidores ClientesMedidores[]
-    facturas          Facturas[]
-    pagos             Pagos[]
-    convenios         Convenios[]
-    solicitudes       Solicitudes[]
+    abonosClientes AbonoCliente[]
+    contratos Contratos[]
 
-    @@index([nombre])
+    @@index([nombres])
     @@index([deletedAt])
 
     @@map("clientes")
+}
+
+enum TipoIdentificacion {
+    CEDULA
+    RUC
+    PASAPORTE
+    CONSUMIDOR_FINAL
+    IDENTIFICACION_EXTRANJERA
 }

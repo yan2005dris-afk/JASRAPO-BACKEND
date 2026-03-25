@@ -1,9 +1,14 @@
 model Comunidades {
-    comunidadId BigInt @id @default(autoincrement()) @map("comunidad_id")
+    comunidadId Int @id @default(autoincrement()) @map("comunidad_id")
 
     nombre String @map("nombre")
-
-    clientes Clientes[]
+    porcentajeTasaSeguridad Float @map("porcentaje_tasa_seguridad")
+    codigo String @map("codigo") @unique
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+    deletedAt DateTime? @map("deleted_at")
+    
+    sector Sectores[]
 
     @@map("comunidades")
 }

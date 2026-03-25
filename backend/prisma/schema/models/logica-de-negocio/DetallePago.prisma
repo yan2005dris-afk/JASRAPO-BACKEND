@@ -1,0 +1,22 @@
+model DetallePago{
+    detallePagoId BigInt  @id @default(autoincrement()) @map("detalle_pago_id")
+    pagoId BigInt @map("pago_id")
+    facturaId BigInt? @map("factura_id")
+    cuotaConvenioId BigInt? @map("cuota_convenio_id")
+    tipoPago TipoDetallePago @map("tipo_pago")
+    montoAbonado Float @map("monto_abonado")
+    createdAt DateTime @default(now()) @map("created_at")
+    deletedAt DateTime? @map("deleted_at")
+
+    pago Pagos? @relation(fields: [pagoId], references: [pagoId])
+    cuotaConvenio CuotaConvenio? @relation(fields: [cuotaConvenioId], references: [cuotaConvenioId])
+    factura Facturas? @relation(fields: [facturaId], references: [facturaId])
+
+    @@map("detalle_pago")
+}
+
+enum TipoDetallePago {
+    FACTURA
+    CUOTA_CONVENIO
+    PAGO_LIBRE
+}
