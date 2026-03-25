@@ -8,6 +8,7 @@ model Users {
   userPermissions UserPermissions[]
   profile         Profiles?
   role            Roles?             @relation(fields: [rolesId], references: [rolesId])
+  sessions        Sessions[]
 
   pagos Pagos[]
   cajaSesion CajaSesion[]

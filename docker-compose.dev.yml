@@ -14,11 +14,7 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       NODE_ENV: development
       PORT: 3000
-      MINIO_ENDPOINT: minio
-      MINIO_PORT: 9000
-      MINIO_USE_SSL: "false"
-      MINIO_ACCESS_KEY: admin
-      MINIO_SECRET_KEY: password123
+      MINIO_ENABLED: "false"
       CORS_ORIGIN: "*"
     ports:
       - "${BACKEND_PORT:-3000}:3000"
@@ -28,8 +24,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      minio:
-        condition: service_started
     networks:
       - jasrapo-network
     restart: "no"
