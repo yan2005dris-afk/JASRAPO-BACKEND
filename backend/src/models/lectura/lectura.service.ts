@@ -7,14 +7,18 @@ import { LecturaEntity } from './entities/lectura.entity';
 
 const lecturaSelect = {
   lecturaId: true,
-  clienteMedidorId: true,
+  contratoId: true,
+  periodo: true,
   fecha: true,
   lecturaAnterior: true,
   lecturaActual: true,
+  lecturaInicial: true,
   consumoCalculado: true,
-  valorMonetario: true,
-  abono: true,
-  saldoPendiente: true,
+  fotoUrlMinIo: true,
+  tieneAnomalia: true,
+  descripcionAnomalia: true,
+  isValidada: true,
+  fechaValidacion: true,
   deletedAt: true,
 } satisfies Prisma.LecturasSelect;
 
@@ -29,14 +33,17 @@ export class LecturaService {
   async create(createLecturaDto: CreateLecturaDto): Promise<LecturaEntity> {
     const lectura = await this.prisma.lecturas.create({
       data: {
-        clienteMedidorId: BigInt(createLecturaDto.clienteMedidorId),
+        contratoId: BigInt(createLecturaDto.contratoId),
+        periodo: createLecturaDto.periodo,
         fecha: new Date(createLecturaDto.fecha),
         lecturaAnterior: createLecturaDto.lecturaAnterior,
         lecturaActual: createLecturaDto.lecturaActual,
-        consumoCalculado: createLecturaDto.consumoCalculado,
-        valorMonetario: createLecturaDto.valorMonetario,
-        abono: createLecturaDto.abono,
-        saldoPendiente: createLecturaDto.saldoPendiente,
+        lecturaInicial: createLecturaDto.lecturaInicial,
+        consumoCalculado: createLecturaDto.consumoCalculado ?? 0,
+        fotoUrlMinIo: createLecturaDto.fotoUrlMinIo,
+        tieneAnomalia: createLecturaDto.tieneAnomalia ?? false,
+        descripcionAnomalia: createLecturaDto.descripcionAnomalia,
+        isValidada: createLecturaDto.isValidada ?? false,
       },
       select: lecturaSelect,
     });
