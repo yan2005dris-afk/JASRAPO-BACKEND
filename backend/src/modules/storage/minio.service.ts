@@ -21,28 +21,23 @@ export class MinioService implements OnModuleInit {
       return;
     }
 
-    const rawPort = this.configService.getOrThrow<string>('MINIO_PORT');
-    const minioPort = Number(rawPort);
-    if (!Number.isInteger(minioPort) || minioPort < 1 || minioPort > 65535) {
-      this.logger.warn(`[MINIO:DISABLED] MINIO_PORT inválido: "${rawPort}"`);
-      return;
-    }
+    const endpoint = this.configService.get<string>('MINIO_ENDPOINT', 'localhost');
+    const port = this.configService.get<number>('MINIO_PORT', 9000);
+    const useSsl = this.configService.get<string>('MINIO_USE_SSL', 'false') === 'true';
+    const accessKey = this.configService.get<string>('MINIO_ACCESS_KEY', 'admin');
+    const secretKey = this.configService.get<string>('MINIO_SECRET_KEY', 'password123');
 
-    const rawUseSSL = this.configService
-      .getOrThrow<string>('MINIO_USE_SSL')
-      .trim()
-      .toLowerCase();
-    if (rawUseSSL !== 'true' && rawUseSSL !== 'false') {
-      this.logger.warn(`[MINIO:DISABLED] MINIO_USE_SSL inválido: "${rawUseSSL}"`);
+    if (!port || port < 1 || port > 65535) {
+      this.logger.warn(`[MINIO:DISABLED] MINIO_PORT inválido: "${port}"`);
       return;
     }
 
     this.minioClient = new Minio.Client({
-      endPoint: this.configService.getOrThrow<string>('MINIO_ENDPOINT'),
-      port: minioPort,
-      useSSL: rawUseSSL === 'true',
-      accessKey: this.configService.getOrThrow<string>('MINIO_ACCESS_KEY'),
-      secretKey: this.configService.getOrThrow<string>('MINIO_SECRET_KEY'),
+      endPoint: endpoint,
+      port,
+      useSSL: useSsl,
+      accessKey,
+      secretKey,
     });
 
     try {
