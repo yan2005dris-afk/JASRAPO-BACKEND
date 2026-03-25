@@ -12,7 +12,6 @@ import { UpdateClientDto } from './dto/update-client.dto';
 export class ClientService {
   constructor(private prisma: PrismaService) {}
 
-  //Validar cédula
   private validarCedula(cedula: string): boolean {
     if (cedula.length !== 10 || !/^\d+$/.test(cedula)) {
       return false;
@@ -39,35 +38,29 @@ export class ClientService {
   }
 
   async create(createClientDto: CreateClientDto) {
-    const { nombre, cedula, comunidadId } = createClientDto;
+    const { nombres, apellidos, identificacion, tipoIdentificacion, email, telefono, aplicaTerceraEdadDiscapacidad } = createClientDto;
 
-    if (!this.validarCedula(cedula)) {
+    if (identificacion && !this.validarCedula(identificacion)) {
       throw new BadRequestException('La cédula ingresada no es válida');
     }
 
     const clienteExistente = await this.prisma.clientes.findUnique({
-      where: { cedula },
+      where: { identificacion },
     });
 
     if (clienteExistente) {
-      throw new ConflictException('La cédula ya está registrada');
-    }
-
-    if (comunidadId) {
-      const comunidadExistente = await this.prisma.comunidades.findUnique({
-        where: { comunidadId: BigInt(comunidadId) },
-      });
-
-      if (!comunidadExistente) {
-        throw new NotFoundException('La comunidad no existe');
-      }
+      throw new ConflictException('La identificación ya está registrada');
     }
 
     return this.prisma.clientes.create({
       data: {
-        nombre,
-        cedula,
-        comunidadId: comunidadId ? BigInt(comunidadId) : null,
+        identificacion,
+        tipoIdentificacion: tipoIdentificacion || 'CEDULA',
+        nombres,
+        apellidos,
+        email,
+        telefono,
+        aplicaTerceraEdadDiscapacidad: aplicaTerceraEdadDiscapacidad || false,
       },
     });
   }
@@ -77,17 +70,6 @@ export class ClientService {
       where: {
         deletedAt: null,
       },
-      include: {
-        comunidad: true,
-        clientesMedidores: {
-          where: {
-            fechaRetiro: null,
-          },
-          include: {
-            medidor: true,
-          },
-        },
-      },
     });
   }
 
@@ -96,17 +78,6 @@ export class ClientService {
       where: {
         clienteId: BigInt(id),
         deletedAt: null,
-      },
-      include: {
-        comunidad: true,
-        clientesMedidores: {
-          where: {
-            fechaRetiro: null,
-          },
-          include: {
-            medidor: true,
-          },
-        },
       },
     });
 
@@ -120,16 +91,16 @@ export class ClientService {
   async update(id: string, updateClientDto: UpdateClientDto) {
     await this.findOne(id);
 
-    const { nombre, cedula, comunidadId } = updateClientDto;
+    const { nombres, apellidos, identificacion, email, telefono, aplicaTerceraEdadDiscapacidad } = updateClientDto;
 
-    if (cedula) {
-      if (!this.validarCedula(cedula)) {
+    if (identificacion) {
+      if (!this.validarCedula(identificacion)) {
         throw new BadRequestException('Cédula inválida');
       }
 
       const clienteExistente = await this.prisma.clientes.findFirst({
         where: {
-          cedula,
+          identificacion,
           NOT: {
             clienteId: BigInt(id),
           },
@@ -137,17 +108,7 @@ export class ClientService {
       });
 
       if (clienteExistente) {
-        throw new ConflictException('La cédula ya está registrada');
-      }
-    }
-
-    if (comunidadId) {
-      const comunidadExistente = await this.prisma.comunidades.findUnique({
-        where: { comunidadId: BigInt(comunidadId) },
-      });
-
-      if (!comunidadExistente) {
-        throw new NotFoundException('La comunidad no existe');
+        throw new ConflictException('La identificación ya está registrada');
       }
     }
 
@@ -156,11 +117,12 @@ export class ClientService {
         clienteId: BigInt(id),
       },
       data: {
-        ...(nombre && { nombre }),
-        ...(cedula && { cedula }),
-        ...(comunidadId !== undefined && {
-          comunidadId: comunidadId ? BigInt(comunidadId) : null,
-        }),
+        ...(nombres && { nombres }),
+        ...(apellidos && { apellidos }),
+        ...(identificacion && { identificacion }),
+        ...(email !== undefined && { email }),
+        ...(telefono !== undefined && { telefono }),
+        ...(aplicaTerceraEdadDiscapacidad !== undefined && { aplicaTerceraEdadDiscapacidad }),
       },
     });
   }
@@ -194,67 +156,44 @@ export class ClientService {
       );
     }
 
-    const tiposValidos = ['cedula', 'nombre', 'contrato'];
+    const tiposValidos = ['identificacion', 'nombres', 'apellidos'];
 
     if (!tiposValidos.includes(tipo)) {
       throw new BadRequestException('Tipo de búsqueda inválido');
     }
 
     switch (tipo) {
-      case 'cedula':
+      case 'identificacion':
         if (!this.validarCedula(valor)) {
           throw new BadRequestException('Cédula inválida');
         }
 
         return this.prisma.clientes.findMany({
           where: {
-            cedula: valor,
+            identificacion: valor,
             deletedAt: null,
-          },
-          include: {
-            comunidad: true,
-            clientesMedidores: {
-              where: { fechaRetiro: null },
-              include: { medidor: true },
-            },
           },
         });
 
-      case 'nombre':
+      case 'nombres':
         return this.prisma.clientes.findMany({
           where: {
-            nombre: {
+            nombres: {
               contains: valor,
               mode: 'insensitive',
             },
             deletedAt: null,
           },
-          include: {
-            comunidad: true,
-            clientesMedidores: {
-              where: { fechaRetiro: null },
-              include: { medidor: true },
-            },
-          },
         });
 
-      case 'contrato':
+      case 'apellidos':
         return this.prisma.clientes.findMany({
           where: {
+            apellidos: {
+              contains: valor,
+              mode: 'insensitive',
+            },
             deletedAt: null,
-            clientesMedidores: {
-              some: {
-                contrato: valor,
-                fechaRetiro: null,
-              },
-            },
-          },
-          include: {
-            comunidad: true,
-            clientesMedidores: {
-              where: { contrato: valor },
-              include: { medidor: true },
-            },
           },
         });
     }

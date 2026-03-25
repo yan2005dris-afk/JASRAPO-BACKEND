@@ -4,13 +4,17 @@ import {
   IsNumber,
   IsOptional,
   IsDateString,
+  IsString,
   Min,
 } from 'class-validator';
 
 export class CreateLecturaDto {
   @IsInt()
   @Type(() => Number)
-  clienteMedidorId: number;
+  contratoId: number;
+
+  @IsString()
+  periodo: string;
 
   @IsDateString()
   fecha: string;
@@ -25,6 +29,11 @@ export class CreateLecturaDto {
   @Type(() => Number)
   lecturaActual: number;
 
+  @IsNumber()
+  @Min(0)
+  @Type(() => Number)
+  lecturaInicial: number;
+
   @IsOptional()
   @IsNumber()
   @Min(0)
@@ -32,20 +41,22 @@ export class CreateLecturaDto {
   consumoCalculado?: number;
 
   @IsOptional()
-  @IsNumber()
-  @Min(0)
-  @Type(() => Number)
-  valorMonetario?: number;
+  @IsString()
+  fotoUrlMinIo?: string;
 
   @IsOptional()
   @IsNumber()
   @Min(0)
   @Type(() => Number)
-  abono?: number;
+  tieneAnomalia?: boolean;
+
+  @IsOptional()
+  @IsString()
+  descripcionAnomalia?: string;
 
   @IsOptional()
   @IsNumber()
   @Min(0)
   @Type(() => Number)
-  saldoPendiente?: number;
+  isValidada?: boolean;
 }
