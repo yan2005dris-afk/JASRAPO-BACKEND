@@ -14,11 +14,9 @@ import { PrismaService } from 'src/database/prisma.service';
 import { UserService } from 'src/modules/user/user.service';
 import { LoginUserDto } from './dto/login-user.dto';
 import { RegisterDto } from './dto/register.dto';
-import { RedisSessionService } from '../redis/redis-session.service';
-import type { SessionRedis } from 'src/common/types/session-redis.interface';
-import type { DecodedJwt, SessionBase } from './types/auth-service.types';
+import { SessionsService } from '../modules/sessions/sessions.service';
+import type { DecodedJwt } from './types/auth-service.types';
 import {
-  REDIS_SESSION_TTL_SECONDS,
   REFRESH_TOKEN_MAX_AGE_MS,
 } from 'src/constants/app.constants';
 import type { StringValue } from 'ms';
@@ -27,19 +25,13 @@ import type { StringValue } from 'ms';
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
 
-  // Log Redis connection status at service startup
   constructor(
     private readonly userService: UserService,
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
-    // cacheManager eliminado, solo ioredis
-    private readonly redisSessionService: RedisSessionService,
-  ) {
-    this.logger.log(
-      '[REDIS] RedisSessionService inyectado. Listo para sesiones en Redis.',
-    );
-  }
+    private readonly sessionsService: SessionsService,
+  ) {}
 
   /**
    * Registra un nuevo usuario
@@ -83,22 +75,13 @@ export class AuthService {
     const safeAgent = userAgent ?? 'unknown';
     this.logger.log(`[LOGIN] user=${users.usersId} | ip="${safeIp}"`);
 
-    // ── Siempre crear sesión nueva ──
     const sessionsId = randomUUID();
-    const sessionKey = `session:${users.usersId}:${sessionsId}`;
-    const expiresAt = Date.now() + REFRESH_TOKEN_MAX_AGE_MS;
-    const session = {
+    const tokens = await this.createOrUpdateSession(
+      users.usersId,
       sessionsId,
-      usersId: users.usersId,
-      ipAddress: safeIp,
-      userAgent: safeAgent,
-      isRevoked: false,
-      expiresAt,
-    };
-    const tokens = await this.actualizarSesionTokensRedis(
-      { ...session, email: users.email },
-      {},
-      sessionKey,
+      users.email,
+      safeIp,
+      safeAgent,
     );
     return this.buildLoginResponse(users, sessionsId, tokens);
   }
@@ -177,46 +160,50 @@ export class AuthService {
 
   /**
    * Genera nuevos JWT (access + refresh), hashea el refreshToken y
-   * actualiza la sesión en BD en una sola operación.
-   * @param session   - Objeto con { usersId, sessionsId }
-   * @param extraData - Campos adicionales a actualizar (ej: ipAddress)
+   * crea/actualiza la sesión en PostgreSQL.
    */
-  private async actualizarSesionTokensRedis(
-    session: SessionBase,
-    extraData: Record<string, unknown> = {},
-    sessionKey: string,
+  private async createOrUpdateSession(
+    usersId: number,
+    sessionsId: string,
+    email: string,
+    ipAddress?: string,
+    userAgent?: string,
+    existingSessionId?: string,
   ): Promise<{ accessToken: string; refreshToken: string }> {
-    const tokens = await this.generateJwtToken(
-      session.usersId,
-      session.sessionsId,
-      session.email ?? '',
-    );
+    const tokens = await this.generateJwtToken(usersId, sessionsId, email);
     const newHash = await bcrypt.hash(tokens.refreshToken, 10);
-    const updatedSession = {
-      ...session,
-      refreshToken: newHash,
-      ...extraData,
-      isRevoked: false,
-      createdAt: session.createdAt ?? Date.now(),
-      expiresAt:
-        typeof session.expiresAt === 'number' && !isNaN(session.expiresAt)
-          ? session.expiresAt
-          : Date.now() + REDIS_SESSION_TTL_SECONDS * 1000,
-    } as SessionRedis;
+    const expiresAt = new Date(Date.now() + REFRESH_TOKEN_MAX_AGE_MS);
+
     this.logger.log(
-      `[REDIS] [IOREDIS] Intentando guardar sesión en Redis: ${sessionKey}`,
+      `[SESSIONS] Guardando sesión en PostgreSQL: usersId=${usersId}, sessionsId=${sessionsId}`,
     );
+
     try {
-      await this.redisSessionService.setSession(
-        updatedSession,
-        REDIS_SESSION_TTL_SECONDS,
-      );
+      if (existingSessionId) {
+        await this.sessionsService.updateSession(existingSessionId, {
+          refreshTokenHash: newHash,
+          ipAddress,
+          userAgent,
+          isRevoked: false,
+          expiresAt,
+        });
+      } else {
+        await this.sessionsService.createSession({
+          sessionsId,
+          refreshTokenHash: newHash,
+          ipAddress: ipAddress ?? 'unknown',
+          userAgent: userAgent ?? 'unknown',
+          isRevoked: false,
+          expiresAt,
+          user: { connect: { usersId } },
+        });
+      }
       this.logger.log(
-        `[REDIS] [IOREDIS] Sesión guardada correctamente en Redis: ${sessionKey}`,
+        `[SESSIONS] Sesión guardada correctamente: sessionsId=${sessionsId}`,
       );
     } catch (err) {
       this.logger.error(
-        `[REDIS] [IOREDIS] Error al guardar sesión en Redis: ${sessionKey} | ${err}`,
+        `[SESSIONS] Error al guardar sesión: sessionsId=${sessionsId} | ${err}`,
       );
       throw new InternalServerErrorException(
         'Error al crear sesión. Intente nuevamente.',
@@ -270,34 +257,33 @@ export class AuthService {
     userAgent: string = 'unknown',
     userId: number,
   ) {
-    // Buscar sesión en Redis usando ioredis (clave: session:userId:sessionId)
-    const session = await this.redisSessionService.getSession(
-      userId,
-      sessionId,
-    );
-    if (
-      !session ||
-      typeof session !== 'object' ||
-      Object.keys(session).length === 0
-    ) {
+    const session = await this.sessionsService.getSession(userId, sessionId);
+    if (!session) {
       throw new UnauthorizedException('Sesión no encontrada');
     }
     if (session.isRevoked) {
       throw new UnauthorizedException('La sesión ha sido revocada');
     }
-    if (session.expiresAt < Date.now()) {
+    if (session.expiresAt < new Date()) {
       throw new UnauthorizedException('La sesión ha expirado');
     }
-    const isValid = await bcrypt.compare(refreshToken, session.refreshToken);
+    const isValid = await bcrypt.compare(refreshToken, session.refreshTokenHash);
     if (!isValid) {
       throw new UnauthorizedException('Refresh token inválido');
     }
-    // Construir la clave manualmente porque getSessionKey es privado
-    const sessionKey = `session:${userId}:${sessionId}`;
-    return this.actualizarSesionTokensRedis(
-      { ...session, usersId: userId },
-      { ipAddress: ip, userAgent },
-      sessionKey,
+    
+    const user = await this.prisma.users.findUnique({
+      where: { usersId: userId },
+      select: { email: true },
+    });
+    
+    return this.createOrUpdateSession(
+      userId,
+      sessionId,
+      user?.email ?? '',
+      ip,
+      userAgent,
+      sessionId,
     );
   }
 
@@ -305,18 +291,7 @@ export class AuthService {
    * Revoca una sesión en BD (logout).
    */
   async logout(sessionId: string, userId: number) {
-    // Borrado lógico: solo marcar como revocada, no eliminar de Redis
-    const session = await this.redisSessionService.getSession(
-      userId,
-      sessionId,
-    );
-    if (session) {
-      session.isRevoked = true;
-      await this.redisSessionService.setSession(
-        session,
-        Math.floor((session.expiresAt - Date.now()) / 1000),
-      );
-    }
+    await this.sessionsService.revokeSession(sessionId);
   }
 
   /**

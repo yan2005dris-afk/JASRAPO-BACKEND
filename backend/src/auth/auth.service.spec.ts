@@ -9,7 +9,7 @@ import { UserService } from 'src/modules/user/user.service';
 import { PrismaService } from 'src/database/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { RedisSessionService } from 'src/redis/redis-session.service';
+import { SessionsService } from 'src/modules/sessions/sessions.service';
 import * as bcrypt from 'bcryptjs';
 
 jest.mock('bcryptjs');
@@ -20,7 +20,7 @@ jest.mock('crypto', () => ({
 
 describe('AuthService', () => {
   let service: AuthService;
-  let redisSessionService: jest.Mocked<RedisSessionService>;
+  let sessionsService: jest.Mocked<SessionsService>;
   let prismaService: jest.Mocked<PrismaService>;
   let jwtService: jest.Mocked<JwtService>;
 
@@ -76,19 +76,19 @@ describe('AuthService', () => {
           },
         },
         {
-          provide: RedisSessionService,
+          provide: SessionsService,
           useValue: {
-            setSession: jest.fn(),
+            createSession: jest.fn(),
             getSession: jest.fn(),
-            delSession: jest.fn(),
-            listSessionsByUser: jest.fn(),
+            updateSession: jest.fn(),
+            revokeSession: jest.fn(),
           },
         },
       ],
     }).compile();
 
     service = module.get<AuthService>(AuthService);
-    redisSessionService = module.get(RedisSessionService);
+    sessionsService = module.get(SessionsService);
     prismaService = module.get(PrismaService);
     jwtService = module.get(JwtService);
   });
@@ -158,7 +158,7 @@ describe('AuthService', () => {
   });
 
   describe('login', () => {
-    it('should login successfully and create session in Redis', async () => {
+    it('should login successfully and create session in PostgreSQL', async () => {
       prismaService.users.findUnique.mockResolvedValue({
         usersId: 1,
         email: 'test@jasrapo.com',
@@ -173,7 +173,16 @@ describe('AuthService', () => {
         .mockReturnValueOnce({ iat: 1000, exp: 2000 })
         .mockReturnValueOnce({ iat: 1000, exp: 2000 });
       prismaService.profiles.findUnique.mockResolvedValue(null);
-      redisSessionService.setSession.mockResolvedValue();
+      sessionsService.createSession.mockResolvedValue({
+        sessionsId: 'test-uuid-1234-5678',
+        usersId: 1,
+        refreshTokenHash: 'hashedToken',
+        ipAddress: '127.0.0.1',
+        userAgent: 'Chrome',
+        isRevoked: false,
+        expiresAt: new Date(),
+        createdAt: new Date(),
+      });
 
       const result = await service.login(
         { email: 'test@jasrapo.com', password: 'Password123!' },
@@ -182,7 +191,7 @@ describe('AuthService', () => {
       );
 
       expect(result.accessToken).toBe('access-token');
-      expect(redisSessionService.setSession).toHaveBeenCalled();
+      expect(sessionsService.createSession).toHaveBeenCalled();
     });
 
     it('should throw UnauthorizedException when credentials are invalid', async () => {
@@ -193,7 +202,7 @@ describe('AuthService', () => {
       ).rejects.toThrow(UnauthorizedException);
     });
 
-    it('should throw InternalServerErrorException when Redis fails', async () => {
+    it('should throw InternalServerErrorException when PostgreSQL fails', async () => {
       prismaService.users.findUnique.mockResolvedValue({
         usersId: 1,
         email: 'test@jasrapo.com',
@@ -204,8 +213,8 @@ describe('AuthService', () => {
       jwtService.signAsync
         .mockResolvedValueOnce('access-token')
         .mockResolvedValueOnce('refresh-token');
-      redisSessionService.setSession.mockRejectedValue(
-        new Error('Redis connection failed'),
+      sessionsService.createSession.mockRejectedValue(
+        new Error('Database connection failed'),
       );
 
       await expect(
@@ -219,39 +228,42 @@ describe('AuthService', () => {
   });
 
   describe('logout', () => {
-    it('should revoke session in Redis', async () => {
-      redisSessionService.getSession.mockResolvedValue({
+    it('should revoke session in PostgreSQL', async () => {
+      sessionsService.revokeSession.mockResolvedValue({
         sessionsId: 'test-uuid-1234-5678',
         usersId: 1,
-        isRevoked: false,
-        expiresAt: Date.now() + 86400000,
-      } as any);
-      redisSessionService.setSession.mockResolvedValue();
+        refreshTokenHash: 'hashedToken',
+        ipAddress: '127.0.0.1',
+        userAgent: 'Chrome',
+        isRevoked: true,
+        expiresAt: new Date(),
+        createdAt: new Date(),
+      });
 
       await service.logout('test-uuid-1234-5678', 1);
 
-      expect(redisSessionService.setSession).toHaveBeenCalled();
-    });
-
-    it('should handle when session not found', async () => {
-      redisSessionService.getSession.mockResolvedValue(null);
-
-      await service.logout('test-uuid-1234-5678', 1);
-
-      expect(redisSessionService.setSession).not.toHaveBeenCalled();
+      expect(sessionsService.revokeSession).toHaveBeenCalledWith('test-uuid-1234-5678');
     });
   });
 
   describe('refreshAccessToken', () => {
     it('should refresh token successfully', async () => {
-      redisSessionService.getSession.mockResolvedValue({
+      sessionsService.getSession.mockResolvedValue({
         sessionsId: 'test-uuid-1234-5678',
         usersId: 1,
-        email: 'test@jasrapo.com',
+        refreshTokenHash: 'hashedRefreshToken',
+        ipAddress: '127.0.0.1',
+        userAgent: 'Chrome',
         isRevoked: false,
-        refreshToken: 'hashedRefreshToken',
-        expiresAt: Date.now() + 86400000,
-      } as any);
+        expiresAt: new Date(Date.now() + 86400000),
+        createdAt: new Date(),
+      });
+      prismaService.users.findUnique.mockResolvedValue({
+        usersId: 1,
+        email: 'test@jasrapo.com',
+        password: 'hashedPassword',
+        deletedAt: null,
+      });
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
       (bcrypt.hash as jest.Mock).mockResolvedValue('newHashedToken');
       jwtService.signAsync
@@ -260,7 +272,16 @@ describe('AuthService', () => {
       jwtService.decode
         .mockReturnValueOnce({ iat: 1000, exp: 2000 })
         .mockReturnValueOnce({ iat: 1000, exp: 2000 });
-      redisSessionService.setSession.mockResolvedValue();
+      sessionsService.updateSession.mockResolvedValue({
+        sessionsId: 'test-uuid-1234-5678',
+        usersId: 1,
+        refreshTokenHash: 'newHashedToken',
+        ipAddress: '127.0.0.1',
+        userAgent: 'Chrome',
+        isRevoked: false,
+        expiresAt: new Date(),
+        createdAt: new Date(),
+      });
       prismaService.profiles.findUnique.mockResolvedValue(null);
 
       const result = await service.refreshAccessToken(
@@ -275,7 +296,7 @@ describe('AuthService', () => {
     });
 
     it('should throw when session not found', async () => {
-      redisSessionService.getSession.mockResolvedValue(null);
+      sessionsService.getSession.mockResolvedValue(null);
 
       await expect(
         service.refreshAccessToken(
@@ -289,13 +310,16 @@ describe('AuthService', () => {
     });
 
     it('should throw when session is revoked', async () => {
-      redisSessionService.getSession.mockResolvedValue({
+      sessionsService.getSession.mockResolvedValue({
         sessionsId: 'test-uuid-1234-5678',
         usersId: 1,
+        refreshTokenHash: 'hashedToken',
+        ipAddress: '127.0.0.1',
+        userAgent: 'Chrome',
         isRevoked: true,
-        refreshToken: 'hashedToken',
-        expiresAt: Date.now() + 86400000,
-      } as any);
+        expiresAt: new Date(Date.now() + 86400000),
+        createdAt: new Date(),
+      });
 
       await expect(
         service.refreshAccessToken(
@@ -309,13 +333,16 @@ describe('AuthService', () => {
     });
 
     it('should throw when session is expired', async () => {
-      redisSessionService.getSession.mockResolvedValue({
+      sessionsService.getSession.mockResolvedValue({
         sessionsId: 'test-uuid-1234-5678',
         usersId: 1,
+        refreshTokenHash: 'hashedToken',
+        ipAddress: '127.0.0.1',
+        userAgent: 'Chrome',
         isRevoked: false,
-        refreshToken: 'hashedToken',
-        expiresAt: Date.now() - 1000,
-      } as any);
+        expiresAt: new Date(Date.now() - 1000),
+        createdAt: new Date(),
+      });
 
       await expect(
         service.refreshAccessToken(

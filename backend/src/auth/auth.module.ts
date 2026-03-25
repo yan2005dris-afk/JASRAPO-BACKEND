@@ -2,17 +2,17 @@ import { Module } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { UserModule } from 'src/modules/user/user.module';
+import { SessionsModule } from 'src/modules/sessions/sessions.module';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { JwtModule } from '@nestjs/jwt';
 import { RefreshTokenStrategy } from './strategies/refresh.strategy';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { PermissionsGuard } from '../common/guards/permissions.guard';
-import { RedisModule } from 'src/redis/redis.module';
 
 @Module({
   imports: [
     UserModule,
-    RedisModule,
+    SessionsModule,
     JwtModule.register({
       secret: process.env.JWT_ACCESS_SECRET as string,
       signOptions: {

@@ -3,17 +3,7 @@
   "typescript.enablePromptUseWorkspaceTsdk": true,
   "typescript.preferences.includePackageJsonAutoImports": "on",
   "eslint.workingDirectories": [
-    "backend",
-    "FRONT"
+    "backend"
   ],
-  "terminal.integrated.defaultProfile.linux": "bash",
-  "terminal.integrated.profiles.linux": {
-    "bash": {
-      "path": "/bin/bash",
-      "args": [
-        "-l"
-      ]
-    }
-  },
   "terminal.integrated.fontFamily": "MesloLGS NF, MesloLGM Nerd Font, JetBrainsMono Nerd Font, CaskaydiaCove Nerd Font Mono, monospace"
 }

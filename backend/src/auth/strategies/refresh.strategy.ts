@@ -1,10 +1,9 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { PrismaService } from 'src/database/prisma.service'; // (Unused, kept for DI compatibility if needed)
+import { PrismaService } from 'src/database/prisma.service';
 import { ConfigService } from '@nestjs/config';
-import { RedisSessionService } from '../../redis/redis-session.service';
-import { SessionRedis } from 'src/common/types/session-redis.interface';
+import { SessionsService } from '../../modules/sessions/sessions.service';
 import type {
   JwtRefreshPayload,
   RequestWithCookies,
@@ -16,9 +15,9 @@ export class RefreshTokenStrategy extends PassportStrategy(
   'jwt-refresh',
 ) {
   constructor(
-    private readonly prisma: PrismaService, // (Unused, kept for DI compatibility if needed)
+    private readonly prisma: PrismaService,
     private readonly config: ConfigService,
-    private readonly redisSessionService: RedisSessionService,
+    private readonly sessionsService: SessionsService,
   ) {
     const secret = config.get<string>('JWT_REFRESH_SECRET');
     if (!secret) {
@@ -40,13 +39,8 @@ export class RefreshTokenStrategy extends PassportStrategy(
     if (!usersId || !sessionsId) {
       throw new UnauthorizedException('Session invalida');
     }
-    let session: SessionRedis | null = null;
-    try {
-      session = await this.redisSessionService.getSession(usersId, sessionsId);
-    } catch (_err) {
-      throw new UnauthorizedException('Error accediendo a Redis para sesión');
-    }
-    if (!session || session.isRevoked || session.expiresAt < Date.now()) {
+    const session = await this.sessionsService.getSession(usersId, sessionsId);
+    if (!session || session.isRevoked || session.expiresAt < new Date()) {
       throw new UnauthorizedException('Refresh token inválido o expirado');
     }
     return { sub: usersId, sessionsId, email };
