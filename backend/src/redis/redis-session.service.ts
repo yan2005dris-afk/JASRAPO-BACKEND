@@ -39,14 +39,29 @@ export class RedisSessionService implements OnModuleInit {
   }
 
   async listSessionsByUser(usersId: number): Promise<SessionRedis[]> {
-    const keys = await this.redis.keys(`session:${usersId}:*`);
-    const sessions = await Promise.all(
+    const pattern = `session:${usersId}:*`;
+    const sessions: SessionRedis[] = [];
+
+    const scanStream = this.redis.scanStream({
+      match: pattern,
+      count: 100,
+    });
+
+    const keys: string[] = [];
+    for await (const keysChunk of scanStream) {
+      keys.push(...keysChunk);
+    }
+
+    if (keys.length === 0) return [];
+
+    const results = await Promise.all(
       keys.map(async (key) => {
         const data = await this.redis.get(key);
         return data ? (JSON.parse(data) as SessionRedis) : null;
       }),
     );
-    return sessions.filter(Boolean) as SessionRedis[];
+
+    return results.filter(Boolean) as SessionRedis[];
   }
 
   private getSessionKey(usersId: number, sessionsId: string) {

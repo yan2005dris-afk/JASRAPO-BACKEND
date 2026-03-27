@@ -9,22 +9,8 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
-      - key: PORT
-        value: 3000
-      - key: MINIO_ENDPOINT
-        value: jasrapo-minio
-      - key: MINIO_PORT
-        value: 9000
-      - key: MINIO_USE_SSL
+      - key: MINIO_ENABLED
         value: "false"
-      - key: MINIO_ACCESS_KEY
-        value: admin
-      - key: MINIO_SECRET_KEY
-        value: password123
-      - key: REDIS_HOST
-        value: jasrapo-redis
-      - key: REDIS_PORT
-        value: 6379
       - key: CORS_ORIGIN
         value: "*"
       - key: DATABASE_URL
@@ -40,30 +26,9 @@ services:
       - key: JWT_REFRESH_EXPIRES_IN
         value: 7d
 
-  # ─── MinIO ──────────────────────────────────────
-  - type: worker
-    name: jasrapo-minio
-    runtime: image
-    image: minio/minio:latest
-    plan: free
-    envVars:
-      - key: MINIO_ROOT_USER
-        value: admin
-      - key: MINIO_ROOT_PASSWORD
-        value: password123
-    startCommand: minio server /data --console-address ":9001"
-
-  # ─── Redis ──────────────────────────────────────
-  - type: worker
-    name: jasrapo-redis
-    runtime: image
-    image: redis:alpine
-    plan: free
-    startCommand: redis-server
-
 databases:
-  # ─── PostgreSQL gestionado por Render ────────────────────────
+  # ─── PostgreSQL gestionado por Render ─────────────────────────────
   - name: jasrapo-db
-    plan: free             # Cambia a "starter" para persistencia y más recursos
+    plan: free
     databaseName: appdb
     user: appuser

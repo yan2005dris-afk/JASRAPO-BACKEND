@@ -12,7 +12,7 @@ import { ProfileModule } from './modules/profile/profile.module';
 import { RolesModule } from './modules/roles/roles.module';
 import { StorageModule } from './modules/storage/storage.module';
 import { UserModule } from './modules/user/user.module';
-import { RedisModule } from './redis/redis.module';
+import { SessionsModule } from './modules/sessions/sessions.module';
 
 @Module({
   imports: [
@@ -40,8 +40,7 @@ import { RedisModule } from './redis/redis.module';
     RolesModule,
     PermissionsModule,
     StorageModule,
-    LecturaModule,
-    RedisModule,
+    SessionsModule,
     ClientModule,
   ],
   controllers: [],

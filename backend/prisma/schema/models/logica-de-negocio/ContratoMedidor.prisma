@@ -1,0 +1,15 @@
+model ContratoMedidor{
+    contratoMedidorId BigInt @id @default(autoincrement()) @map("contrato_medidor_id")
+    contratoId BigInt @map("contrato_id")
+    medidorId BigInt @map("medidor_id")
+
+    fechaInicio DateTime @default(now()) @map("fecha_inicio")
+    fechaFin DateTime? @map("fecha_fin")
+    motivoCambio String? @map("motivo_cambio")
+    createdAt DateTime @default(now()) @map("created_at")
+    deletedAt DateTime? @map("deleted_at")
+    medidor Medidores? @relation(fields: [medidorId], references: [medidorId])
+    contrato Contratos? @relation(fields: [contratoId], references: [contratoId])
+
+    @@map("contrato_medidor")
+}

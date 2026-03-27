@@ -1,14 +1,23 @@
 model Convenios {
     convenioId BigInt  @id @default(autoincrement()) @map("convenio_id")
-    clienteId  BigInt? @map("cliente_id")
+    contratoId BigInt @map("contrato_id")
+    deudaTotal Float @map("deuda_total")
+    abonoInicial Float @map("abono_inicial")
+    numeroCuotas Int @map("numero_cuotas")
+    estado       EstadoConvenio @map("estado_convenio")
+    fechaPrimerPago  DateTime  @map("fecha_primer_pago")
+    fechaProximoPago DateTime? @map("fecha_proximo_pago")
+    montoPagadoActual Float @map("monto_pagado_actual")
+    diasMoraActual Int @map("dias_mora_actual")
+    motivo String? @map("motivo")
+    //aprobadoPor
+    fechaAprobacion DateTime? @map("fecha_aprobacion")
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+    deletedAt DateTime? @map("deleted_at")
 
-    fechaInicio  DateTime  @map("fecha_inicio")
-    fechaFin     DateTime? @map("fecha_fin")
-    numeroCuotas Int?      @map("numero_cuotas")
-    montoCuota   Float?    @map("monto_cuota")
-    estado       String?   @map("estado")
-
-    cliente Clientes? @relation(fields: [clienteId], references: [clienteId])
+    cuotaConvenio CuotaConvenio[]
+    contrato Contratos? @relation(fields: [contratoId], references: [contratoId])
 
     @@map("convenios")
 }

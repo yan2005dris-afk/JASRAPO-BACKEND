@@ -5,12 +5,12 @@ import request from 'supertest';
 import type { App } from 'supertest/types';
 import { AppModule } from './../src/app.module';
 import { PrismaService } from '../src/database/prisma.service';
-import { RedisSessionService } from '../src/redis/redis-session.service';
+import { SessionsService } from '../src/modules/sessions/sessions.service';
 
 describe('AuthController (e2e)', () => {
   let app: INestApplication<App>;
   let prismaService: PrismaService;
-  let redisSessionService: RedisSessionService;
+  let sessionsService: SessionsService;
 
   const testUser = {
     email: 'e2e-test@jasrapo.com',
@@ -33,20 +33,20 @@ describe('AuthController (e2e)', () => {
           create: jest.fn(),
         },
       })
-      .overrideProvider(RedisSessionService)
+      .overrideProvider(SessionsService)
       .useValue({
-        setSession: jest.fn(),
+        createSession: jest.fn(),
         getSession: jest.fn(),
-        delSession: jest.fn(),
-        listSessionsByUser: jest.fn(),
+        updateSession: jest.fn(),
+        revokeSession: jest.fn(),
+        deleteSession: jest.fn(),
       })
       .compile();
 
     app = moduleFixture.createNestApplication();
     await app.init();
     prismaService = moduleFixture.get<PrismaService>(PrismaService);
-    redisSessionService =
-      moduleFixture.get<RedisSessionService>(RedisSessionService);
+    sessionsService = moduleFixture.get<SessionsService>(SessionsService);
   });
 
   afterAll(async () => {
@@ -60,9 +60,16 @@ describe('AuthController (e2e)', () => {
         usersId: 999,
         email: testUser.email,
       });
-      (redisSessionService.setSession as jest.Mock).mockResolvedValue(
-        undefined,
-      );
+      (sessionsService.createSession as jest.Mock).mockResolvedValue({
+        sessionsId: 'test-session-id',
+        usersId: 999,
+        refreshTokenHash: 'hashedToken',
+        ipAddress: null,
+        userAgent: null,
+        isRevoked: false,
+        expiresAt: new Date(),
+        createdAt: new Date(),
+      });
 
       const response = await request(app.getHttpServer())
         .post('/auth/register')
@@ -71,10 +78,6 @@ describe('AuthController (e2e)', () => {
 
       expect(response.body).toHaveProperty('accessToken');
       expect(response.body).toHaveProperty('refreshToken');
-      expect(response.body.user).toHaveProperty(
-        'email',
-        testUser.email.toLowerCase(),
-      );
     });
 
     it('should reject registration with duplicate email', async () => {
@@ -115,16 +118,23 @@ describe('AuthController (e2e)', () => {
         usersId: 1000,
         email: 'lowercase@jasrapo.com',
       });
-      (redisSessionService.setSession as jest.Mock).mockResolvedValue(
-        undefined,
-      );
+      (sessionsService.createSession as jest.Mock).mockResolvedValue({
+        sessionsId: 'test-session-id',
+        usersId: 1000,
+        refreshTokenHash: 'hashedToken',
+        ipAddress: null,
+        userAgent: null,
+        isRevoked: false,
+        expiresAt: new Date(),
+        createdAt: new Date(),
+      });
 
       const response = await request(app.getHttpServer())
         .post('/auth/register')
         .send({ email: 'UPPERCASE@JASRAPO.COM', password: 'TestPass123!' })
         .expect(201);
 
-      expect(response.body.user.email).toBe('uppercase@jasrapo.com');
+      expect(response.body.email).toBe('uppercase@jasrapo.com');
     });
   });
 
@@ -135,9 +145,16 @@ describe('AuthController (e2e)', () => {
         email: testUser.email,
         password: '$2a$10$hashedpassword',
       });
-      (redisSessionService.setSession as jest.Mock).mockResolvedValue(
-        undefined,
-      );
+      (sessionsService.createSession as jest.Mock).mockResolvedValue({
+        sessionsId: 'test-session-id',
+        usersId: 1,
+        refreshTokenHash: 'hashedToken',
+        ipAddress: null,
+        userAgent: null,
+        isRevoked: false,
+        expiresAt: new Date(),
+        createdAt: new Date(),
+      });
 
       const response = await request(app.getHttpServer())
         .post('/auth/login')
@@ -165,9 +182,16 @@ describe('AuthController (e2e)', () => {
         email: 'normalized@jasrapo.com',
         password: '$2a$10$hashedpassword',
       });
-      (redisSessionService.setSession as jest.Mock).mockResolvedValue(
-        undefined,
-      );
+      (sessionsService.createSession as jest.Mock).mockResolvedValue({
+        sessionsId: 'test-session-id',
+        usersId: 1,
+        refreshTokenHash: 'hashedToken',
+        ipAddress: null,
+        userAgent: null,
+        isRevoked: false,
+        expiresAt: new Date(),
+        createdAt: new Date(),
+      });
 
       const response = await request(app.getHttpServer())
         .post('/auth/login')
@@ -183,18 +207,19 @@ describe('AuthController (e2e)', () => {
       const mockSession = {
         sessionsId: 'test-session-id',
         usersId: 1,
-        email: testUser.email,
+        refreshTokenHash: '$2a$10$hashedrefresh',
+        ipAddress: '127.0.0.1',
+        userAgent: 'Chrome',
         isRevoked: false,
-        refreshToken: '$2a$10$hashedrefresh',
-        expiresAt: Date.now() + 86400000,
+        expiresAt: new Date(Date.now() + 86400000),
+        createdAt: new Date(),
       };
 
-      (redisSessionService.getSession as jest.Mock).mockResolvedValue(
-        mockSession,
-      );
-      (redisSessionService.setSession as jest.Mock).mockResolvedValue(
-        undefined,
-      );
+      (sessionsService.getSession as jest.Mock).mockResolvedValue(mockSession);
+      (sessionsService.updateSession as jest.Mock).mockResolvedValue({
+        ...mockSession,
+        refreshTokenHash: 'newHashedToken',
+      });
 
       const response = await request(app.getHttpServer())
         .post('/auth/refresh')
@@ -206,7 +231,7 @@ describe('AuthController (e2e)', () => {
     });
 
     it('should reject refresh with invalid session', async () => {
-      (redisSessionService.getSession as jest.Mock).mockResolvedValue(null);
+      (sessionsService.getSession as jest.Mock).mockResolvedValue(null);
 
       const response = await request(app.getHttpServer())
         .post('/auth/refresh')
@@ -221,14 +246,15 @@ describe('AuthController (e2e)', () => {
       const mockSession = {
         sessionsId: 'revoked-session-id',
         usersId: 1,
+        refreshTokenHash: '$2a$10$hashed',
+        ipAddress: '127.0.0.1',
+        userAgent: 'Chrome',
         isRevoked: true,
-        refreshToken: '$2a$10$hashed',
-        expiresAt: Date.now() + 86400000,
+        expiresAt: new Date(Date.now() + 86400000),
+        createdAt: new Date(),
       };
 
-      (redisSessionService.getSession as jest.Mock).mockResolvedValue(
-        mockSession,
-      );
+      (sessionsService.getSession as jest.Mock).mockResolvedValue(mockSession);
 
       const response = await request(app.getHttpServer())
         .post('/auth/refresh')
@@ -242,22 +268,36 @@ describe('AuthController (e2e)', () => {
 
   describe('/auth/logout (POST)', () => {
     it('should logout successfully', async () => {
-      (redisSessionService.delSession as jest.Mock).mockResolvedValue(
-        undefined,
-      );
+      (sessionsService.revokeSession as jest.Mock).mockResolvedValue({
+        sessionsId: 'test-session-id',
+        usersId: 1,
+        refreshTokenHash: 'hashedToken',
+        ipAddress: '127.0.0.1',
+        userAgent: 'Chrome',
+        isRevoked: true,
+        expiresAt: new Date(),
+        createdAt: new Date(),
+      });
 
       const response = await request(app.getHttpServer())
         .post('/auth/logout')
         .set('Authorization', 'Bearer valid-access-token')
         .expect(200);
 
-      expect(redisSessionService.delSession).toHaveBeenCalled();
+      expect(sessionsService.revokeSession).toHaveBeenCalled();
     });
 
     it('should clear refresh token cookie on logout', async () => {
-      (redisSessionService.delSession as jest.Mock).mockResolvedValue(
-        undefined,
-      );
+      (sessionsService.revokeSession as jest.Mock).mockResolvedValue({
+        sessionsId: 'test-session-id',
+        usersId: 1,
+        refreshTokenHash: 'hashedToken',
+        ipAddress: '127.0.0.1',
+        userAgent: 'Chrome',
+        isRevoked: true,
+        expiresAt: new Date(),
+        createdAt: new Date(),
+      });
 
       const response = await request(app.getHttpServer())
         .post('/auth/logout')

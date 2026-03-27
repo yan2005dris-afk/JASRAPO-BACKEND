@@ -1,0 +1,30 @@
+model Contratos{
+    contratoId BigInt @id @default(autoincrement()) @map("contrato_id")
+    clienteId BigInt @map("cliente_id")
+    sectorId Int @map("sector_id")
+    categoriaTarifaId Int @map("categoria_tarifa_id")
+
+    numeroGuia String  @map("numero_guia") @unique
+    fechaInicio DateTime @default(now()) @map("fecha_inicio")
+    direccionSuministro String @map("direccion_suministro")
+    estado EstadoGenerico @map("estado")
+    codigoInterno String @map("codigo_interno") @unique
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+    deletedAt DateTime? @map("deleted_at")
+
+    categoriaTarifa  CategoriaTarifa?  @relation(fields: [categoriaTarifaId], references: [categoriaTarifaId])
+    cliente  Clientes?  @relation(fields: [clienteId], references: [clienteId])
+    sector  Sectores?  @relation(fields: [sectorId], references: [sectorId])
+    contratosMedidores ContratoMedidor[]
+    lecturas Lecturas[]
+    convenios Convenios[]
+    emisiones EmisionMensual[]
+    @@map("contratos")
+}
+
+enum EstadoGenerico {
+    ACTIVO
+    INACTIVO
+    SUSPENDIDO
+}

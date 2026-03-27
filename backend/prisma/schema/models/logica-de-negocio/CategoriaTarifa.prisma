@@ -1,0 +1,16 @@
+model CategoriaTarifa{
+    categoriaTarifaId Int  @id @default(autoincrement()) @map("categoria_id")
+    nombre String @map("nombre")
+    descripcion String? @map("descripcion")
+    costoBaseMensual Float @map("costo_base_mensual")
+    limiteBaseMetros Float @map("limite_base")
+    costoPorExcedente Float @map("costo_excedente")
+    activo Boolean  @map("activo") @default(true)
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+    deletedAt DateTime? @map("deleted_at")
+
+    contratos Contratos[]
+
+    @@map("categoria_tarifa")
+}
