@@ -1,18 +1,16 @@
-model AbonoCliente{
-    abonoClienteId BigInt @id @default(autoincrement()) @map("abono_cliente_id")
-    clienteId BigInt @map("cliente_id")
-    pagoId BigInt? @map("pago_id")
-    montoAbono Float @map("monto_abono")
-    origenAbono String @map("origen_abono")
-    disponibleParaAplicar Boolean @map("disponible_para_aplicar") @default(true)
-    createdAt DateTime @default(now()) @map("created_at")
-    deletedAt DateTime? @map("deleted_at")
+model AbonoCliente {
+  abonoClienteId        BigInt    @id @default(autoincrement()) @map("abono_cliente_id")
+  clienteId             BigInt    @map("cliente_id")
+  pagoId                BigInt?   @map("pago_id")
+  montoAbono            Float     @map("monto_abono")
+  origenAbono           String    @map("origen_abono")
+  disponibleParaAplicar Boolean   @default(true) @map("disponible_para_aplicar")
+  createdAt             DateTime  @default(now()) @map("created_at")
+  deletedAt             DateTime? @map("deleted_at")
+  cliente               Clientes  @relation(fields: [clienteId], references: [clienteId])
+  pago                  Pagos?    @relation(fields: [pagoId], references: [pagoId])
 
-    cliente  Clientes?  @relation(fields: [clienteId], references: [clienteId])
-    pago Pagos? @relation(fields: [pagoId], references: [pagoId])
-
-    @@index([clienteId])
-    @@index([deletedAt])
-
-    @@map("abono_cliente")
+  @@index([clienteId])
+  @@index([deletedAt])
+  @@map("abono_cliente")
 }

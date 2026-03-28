@@ -1,13 +1,13 @@
-model ParametroTasainteres{
-    parametroId Int @id @default(autoincrement()) @map("parametro_id")
-    tasa Float @map("tasa")
-    vigenteDesde DateTime @default(now()) @map("vigente_desde")
-    vigenteHasta DateTime? @map("vigente_hasta")
-    descripcion String? @map("descripcion")
-    activo Boolean @map("activo") @default(true)
-    createdAt DateTime @default(now()) @map("created_at")
-    updatedAt DateTime @updatedAt @map("updated_at")
-    deletedAt DateTime? @map("deleted_at")
+model ParametroTasainteres {
+  parametroId  Int       @id @default(autoincrement()) @map("parametro_id")
+  tasa         Float     @map("tasa")
+  vigenteDesde DateTime  @default(now()) @map("vigente_desde")
+  vigenteHasta DateTime? @map("vigente_hasta")
+  descripcion  String?   @map("descripcion")
+  activo       Boolean   @default(true) @map("activo")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  deletedAt    DateTime? @map("deleted_at")
 
-    @@map("parametro_tasa_interes")
+  @@map("parametro_tasa_interes")
 }
