@@ -1,28 +1,27 @@
-model CuotaConvenio{
-    cuotaConvenioId BigInt  @id @default(autoincrement()) @map("cuota_convenio_id")
-    convenioId BigInt @map("convenio_id")
-    numeroCuota Int @map("numero_cuota")
-    valorCuota Float @map("valor_cuota")
-    fechaVencimiento DateTime @map("fecha_vencimiento")
-    estado EstadoConvenio @map("estado_convenio")
-    fechaPago DateTime? @map("fecha_pago")
-    montoPagado Float @map("monto_pagado")
-    diasRetraso Int @map("dias_retraso")
-    interesMoraAplicado Float @map("interes_mora_aplicado")
-    pagoCompleto Boolean @map("pago_completo") @default(false)
-    fechaPagoAnticipado DateTime? @map("fecha_pago_anticipado")
-    createdAt DateTime @default(now()) @map("created_at")
-    updatedAt DateTime @updatedAt @map("updated_at")
-    deletedAt DateTime? @map("deleted_at")
+model CuotaConvenio {
+  cuotaConvenioId     BigInt         @id @default(autoincrement()) @map("cuota_convenio_id")
+  convenioId          BigInt         @map("convenio_id")
+  numeroCuota         Int            @map("numero_cuota")
+  valorCuota          Float          @map("valor_cuota")
+  fechaVencimiento    DateTime       @map("fecha_vencimiento")
+  estado              EstadoConvenio @map("estado_convenio")
+  fechaPago           DateTime?      @map("fecha_pago")
+  montoPagado         Float          @map("monto_pagado")
+  diasRetraso         Int            @map("dias_retraso")
+  interesMoraAplicado Float          @map("interes_mora_aplicado")
+  pagoCompleto        Boolean        @default(false) @map("pago_completo")
+  fechaPagoAnticipado DateTime?      @map("fecha_pago_anticipado")
+  createdAt           DateTime       @default(now()) @map("created_at")
+  updatedAt           DateTime       @updatedAt @map("updated_at")
+  deletedAt           DateTime?      @map("deleted_at")
+  convenio            Convenios      @relation(fields: [convenioId], references: [convenioId])
+  detallePago         DetallePago[]
 
-    detallePago DetallePago[]
-    convenio Convenios? @relation(fields: [convenioId], references: [convenioId])
-
-    @@map("cuota_convenio")
+  @@map("cuota_convenio")
 }
 
 enum EstadoConvenio {
-    VIGENTE
-    PAGADO
-    INCUMPLIDO
+  VIGENTE
+  PAGADO
+  INCUMPLIDO
 }

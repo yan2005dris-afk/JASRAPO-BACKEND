@@ -1,14 +1,11 @@
-model Roles{
-    rolesId               Int             @id @default(autoincrement())     @map("roles_id")
-    
-    name                String             @unique                           @map("name")
-    deletedAt           DateTime?                                           @map("deleted_at")
+model Roles {
+  rolesId         Int              @id @default(autoincrement()) @map("roles_id")
+  name            String           @unique @map("name")
+  deletedAt       DateTime?        @map("deleted_at")
+  rolPermissions  RolPermissions[]
+  childRoleLinks  RolesHeredados[] @relation("RoleChild")
+  parentRoleLinks RolesHeredados[] @relation("RoleParent")
+  users           Users[]
 
-
-    rolPermissions      RolPermissions []                                   
-    users              Users[]                                                                            
-    parentRoleLinks    RolesHeredados[]     @relation("RoleParent")
-    childRoleLinks     RolesHeredados[]     @relation("RoleChild")
-
-    @@map("roles")
+  @@map("roles")
 }

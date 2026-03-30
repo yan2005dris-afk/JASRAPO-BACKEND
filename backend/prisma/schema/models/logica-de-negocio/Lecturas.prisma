@@ -1,26 +1,22 @@
 model Lecturas {
-    lecturaId        BigInt  @id @default(autoincrement()) @map("lectura_id")
-    contratoId       BigInt @map("contrato_id")
+  lecturaId           BigInt             @id @default(autoincrement()) @map("lectura_id")
+  fecha               DateTime           @map("fecha")
+  lecturaAnterior     Float              @map("lectura_anterior")
+  lecturaActual       Float              @map("lectura_actual")
+  consumoCalculado    Float              @map("consumo_calculado")
+  deletedAt           DateTime?          @map("deleted_at")
+  contratoId          BigInt             @map("contrato_id")
+  createdAt           DateTime           @default(now()) @map("created_at")
+  descripcionAnomalia String?            @map("descripcion_anomalia")
+  fechaValidacion     DateTime?          @map("fecha_validacion")
+  fotoUrlMinIo        String?            @map("foto_url_minio")
+  isValidada          Boolean            @default(false) @map("is_validada")
+  lecturaInicial      Float              @map("lectura_inicial")
+  periodo             String             @map("periodo")
+  tieneAnomalia       Boolean            @default(false) @map("tiene_anomalia")
+  updatedAt           DateTime           @updatedAt @map("updated_at")
+  contrato            Contratos          @relation(fields: [contratoId], references: [contratoId])
+  novedadesOperativas NovedadOperativa[]
 
-    periodo String  @map("periodo")
-    fecha            DateTime @map("fecha")
-    lecturaAnterior  Float    @map("lectura_anterior")
-    lecturaActual    Float    @map("lectura_actual")
-    lecturaInicial   Float    @map("lectura_inicial")
-    consumoCalculado Float   @map("consumo_calculado")
-    fotoUrlMinIo     String?   @map("foto_url_minio")
-    tieneAnomalia    Boolean @default(false) @map("tiene_anomalia") 
-    descripcionAnomalia String? @map("descripcion_anomalia")
-    isValidada       Boolean @default(false) @map("is_validada") 
-    //validadaPor      
-    fechaValidacion  DateTime? @map("fecha_validacion")
-    createdAt DateTime @default(now()) @map("created_at")
-    updatedAt DateTime @updatedAt @map("updated_at")
-    deletedAt DateTime? @map("deleted_at")
-
-    contrato Contratos? @relation(fields: [contratoId], references: [contratoId])
-    novedadesOperativas NovedadOperativa[]
-
-    @@map("lecturas")
+  @@map("lecturas")
 }
-

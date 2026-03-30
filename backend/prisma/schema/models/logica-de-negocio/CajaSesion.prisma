@@ -1,24 +1,22 @@
-model CajaSesion{
-    cajaId BigInt @id @default(autoincrement()) @map("caja_id")
-    usersId Int @map("users_id")
-    fechaApertura DateTime @default(now()) @map("fechaApertura")
-    montoApertura Float  @map("monto_apertura")
-    montoCierreSistema Float? @map("monto_cierre_sistema")
-    montoCierreReal Float? @map("monto_cierre_real")
-    novedadCierre String? @map("novedad_cierre")
-    estado EstadoCaja @map("estado")
+model CajaSesion {
+  cajaId             BigInt     @id @default(autoincrement()) @map("caja_id")
+  usersId            Int        @map("users_id")
+  fechaApertura      DateTime   @default(now()) @map("fechaApertura")
+  montoApertura      Float      @map("monto_apertura")
+  montoCierreSistema Float?     @map("monto_cierre_sistema")
+  montoCierreReal    Float?     @map("monto_cierre_real")
+  novedadCierre      String?    @map("novedad_cierre")
+  estado             EstadoCaja @map("estado")
+  createdAt          DateTime   @default(now()) @map("created_at")
+  updatedAt          DateTime   @updatedAt @map("updated_at")
+  user               Users      @relation(fields: [usersId], references: [usersId])
+  pagos              Pagos[]
 
-    createdAt DateTime @default(now()) @map("created_at")
-    updatedAt DateTime @updatedAt @map("updated_at")
-
-    pagos Pagos[]
-    user  Users?  @relation(fields: [usersId], references: [usersId])
-
-    @@map("caja_sesion")
+  @@map("caja_sesion")
 }
 
 enum EstadoCaja {
-    ABIERTA
-    CERRADA
-    DESCUADRADA
+  ABIERTA
+  CERRADA
+  DESCUADRADA
 }
