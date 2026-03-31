@@ -13,6 +13,7 @@ import { RolesModule } from './modules/roles/roles.module';
 import { StorageModule } from './modules/storage/storage.module';
 import { UserModule } from './modules/user/user.module';
 import { SessionsModule } from './modules/sessions/sessions.module';
+import { CategoriaTarifaModule } from './modules/categoria-tarifa/categoria-tarifa.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { SessionsModule } from './modules/sessions/sessions.module';
     StorageModule,
     SessionsModule,
     ClientModule,
+    CategoriaTarifaModule,
   ],
   controllers: [],
   providers: [

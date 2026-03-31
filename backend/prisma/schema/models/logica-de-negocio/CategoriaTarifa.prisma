@@ -3,7 +3,7 @@ model CategoriaTarifa {
   nombre             String      @map("nombre")
   descripcion        String?     @map("descripcion")
   valorBase          Decimal?    @default(0) @map("valor_base") @db.Decimal(18, 6)
-  limiteBaseM3       Int?        @default(0) @map("limite_base_m3")
+  consumoMinimoMensual       Int?        @default(0) @map("limite_base_m3")
   valorExcedenteM3   Decimal?    @default(0) @map("valor_excedente_m3") @db.Decimal(18, 6)
   fechaVigenciaDesde DateTime?   @map("fecha_vigencia_desde") @db.Date
   fechaVigenciaHasta DateTime?   @map("fecha_vigencia_hasta") @db.Date
