@@ -22,7 +22,7 @@ export async function seedSectores(prisma: PrismaClient) {
         { sectorId: 21, comunidadId: 10, codigo: "SEC-CURIA-RURAL", nombre: "Sector Rural" },
     ];
 
-    const result = [];
+    const result: any[] = [];
     for (const s of sectores) {
         const created = await prisma.sectores.upsert({
             where: { sectorId: s.sectorId },

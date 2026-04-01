@@ -7,7 +7,7 @@ export async function seedCategoriaTarifa(prisma: PrismaClient) {
         { categoriaTarifaId: 5, nombre: "Tipo 3", descripcion: "Tarifa tipo 3", valorBase: 15.0, limiteBaseM3: 10, valorExcedenteM3: 1.50, activo: true },
     ];
 
-    const result = [];
+    const result: any[] = [];
     for (const c of categorias) {
         const created = await prisma.categoriaTarifa.upsert({
             where: { categoriaTarifaId: c.categoriaTarifaId },

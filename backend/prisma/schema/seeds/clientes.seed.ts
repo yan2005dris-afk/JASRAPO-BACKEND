@@ -1,10 +1,10 @@
-import { PrismaClient } from "src/generated/prisma/client";
+import { Clientes, PrismaClient } from "src/generated/prisma/client";
 
 export async function seedClientes(prisma: PrismaClient) {
-    const clientes = [];
+    const clientes: any[] = [];
     
     // Clientes originales
-    const clientesBase = [
+    const clientesBase  = [
         { clienteId: 7, tipoIdentificacion: "CEDULA" as const, identificacion: "1234567890", nombres: "Juan", apellidos: "Perez", email: "juan@test.com" },
         { clienteId: 8, tipoIdentificacion: "CEDULA" as const, identificacion: "1234567891", nombres: "Maria", apellidos: "Gonzalez", email: "maria@test.com" },
         { clienteId: 9, tipoIdentificacion: "CEDULA" as const, identificacion: "1234567892", nombres: "Pedro", apellidos: "Lopez", email: "pedro@test.com" },

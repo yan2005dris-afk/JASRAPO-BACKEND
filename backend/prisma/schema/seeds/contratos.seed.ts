@@ -1,12 +1,12 @@
 import { PrismaClient } from "src/generated/prisma/client";
 
 export async function seedContratos(prisma: PrismaClient) {
-    const contratos = [];
+    const contratos: any[] = [];
     const sectores = [1, 2, 3, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21];
     const categorias = [1, 4, 5];
 
     // Contratos originales
-    const contratosBase = [
+    const contratosBase: any[] = [
         { contratoId: 13, clienteId: 7, sectorId: 1, categoriaTarifaId: 1, numeroGuia: "GUIA-001", codigoInterno: "INT-0007" },
         { contratoId: 14, clienteId: 8, sectorId: 1, categoriaTarifaId: 1, numeroGuia: "GUIA-002", codigoInterno: "INT-0008" },
         { contratoId: 15, clienteId: 9, sectorId: 2, categoriaTarifaId: 1, numeroGuia: "GUIA-003", codigoInterno: "INT-0009" },
