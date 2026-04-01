@@ -1,17 +1,17 @@
 import { PrismaClient } from "src/generated/prisma/client";
 
 export async function seedContratos(prisma: PrismaClient) {
-    const contratos = [];
-    const sectores = [1, 2, 3, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21];
-    const categorias = [1, 4, 5];
+    const contratos: Awaited<ReturnType<typeof prisma.contratos.findUnique>>[] = [];
+    const sectores = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
+    const categorias = [1, 2, 3];
 
     // Contratos originales
     const contratosBase = [
-        { contratoId: 13, clienteId: 7, sectorId: 1, categoriaTarifaId: 1, numeroGuia: "GUIA-001", codigoInterno: "INT-0007" },
-        { contratoId: 14, clienteId: 8, sectorId: 1, categoriaTarifaId: 1, numeroGuia: "GUIA-002", codigoInterno: "INT-0008" },
-        { contratoId: 15, clienteId: 9, sectorId: 2, categoriaTarifaId: 1, numeroGuia: "GUIA-003", codigoInterno: "INT-0009" },
-        { contratoId: 16, clienteId: 8, sectorId: 3, categoriaTarifaId: 4, numeroGuia: "GUIA-NUÑEZ-001", codigoInterno: "INT-NUÑEZ-001" },
-        { contratoId: 17, clienteId: 9, sectorId: 3, categoriaTarifaId: 5, numeroGuia: "GUIA-NUÑEZ-002", codigoInterno: "INT-NUÑEZ-002" },
+        { contratoId: 1, clienteId: 1, sectorId: 1, categoriaTarifaId: 1, numeroGuia: "GUIA-001", codigoInterno: "INT-0001" },
+        { contratoId: 2, clienteId: 2, sectorId: 1, categoriaTarifaId: 1, numeroGuia: "GUIA-002", codigoInterno: "INT-0002" },
+        { contratoId: 3, clienteId: 3, sectorId: 2, categoriaTarifaId: 1, numeroGuia: "GUIA-003", codigoInterno: "INT-0003" },
+        { contratoId: 4, clienteId: 2, sectorId: 3, categoriaTarifaId: 2, numeroGuia: "GUIA-NUÑEZ-001", codigoInterno: "INT-NUÑEZ-001" },
+        { contratoId: 5, clienteId: 3, sectorId: 3, categoriaTarifaId: 3, numeroGuia: "GUIA-NUÑEZ-002", codigoInterno: "INT-NUÑEZ-002" },
     ];
 
     for (const c of contratosBase) {
@@ -28,8 +28,8 @@ export async function seedContratos(prisma: PrismaClient) {
     }
 
     // Generar 100 contratos adicionales
-    let contratoId = 18;
-    for (let clienteId = 10; clienteId <= 109; clienteId++) {
+    let contratoId = 6;
+    for (let clienteId = 4; clienteId <= 103; clienteId++) {
         const sectorId = sectores[Math.floor(Math.random() * sectores.length)];
         const categoriaTarifaId = categorias[Math.floor(Math.random() * categorias.length)];
         
