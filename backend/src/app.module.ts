@@ -13,6 +13,10 @@ import { RolesModule } from './modules/roles/roles.module';
 import { StorageModule } from './modules/storage/storage.module';
 import { UserModule } from './modules/user/user.module';
 import { SessionsModule } from './modules/sessions/sessions.module';
+import { ComunidadesModule } from './comunidades/comunidades.module';
+import { ComunidadModule } from './comunidad/comunidad.module';
+import { SectorModule } from './sector/sector.module';
+import { PrismaService } from './prisma/prisma.service';
 
 @Module({
   imports: [
@@ -42,6 +46,9 @@ import { SessionsModule } from './modules/sessions/sessions.module';
     StorageModule,
     SessionsModule,
     ClientModule,
+    ComunidadesModule,
+    ComunidadModule,
+    SectorModule,
   ],
   controllers: [],
   providers: [
@@ -49,6 +56,7 @@ import { SessionsModule } from './modules/sessions/sessions.module';
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
     },
+    PrismaService,
   ],
 })
 export class AppModule {}
