@@ -1,6 +1,6 @@
 import { IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 
-export class CreateLecturaDto {
+export class CrearLecturaDto {
   @IsNotEmpty() fecha: string;
   @IsNotEmpty() @IsNumber() lecturaAnterior: number;
   @IsNotEmpty() @IsNumber() lecturaActual: number;

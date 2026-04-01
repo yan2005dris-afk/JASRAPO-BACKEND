@@ -1,8 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
 import { Prisma } from 'src/generated/prisma/client';
-import { CreateNovedadOperativaDto } from './dto/create-novedad-operativa.dto';
-import { UpdateNovedadOperativaDto } from './dto/update-novedad-operativa.dto';
+import {  CrearNovedadOperativaDto } from './dto/create-novedad-operativa.dto';
+import { ActualizarNovedadOperativaDto } from './dto/update-novedad-operativa.dto';
 import { NovedadOperativaEntity } from './entities/novedad-operativa.entity';
 
 const novedadSelect = {
@@ -20,7 +20,7 @@ const novedadSelect = {
 export class NovedadOperativaService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(createDto: CreateNovedadOperativaDto): Promise<NovedadOperativaEntity> {
+  async crearNovedadOperativa(createDto: CrearNovedadOperativaDto): Promise<NovedadOperativaEntity> {
     const novedad = await this.prisma.novedadOperativa.create({
       data: {
         lecturaId: BigInt(createDto.lecturaId),
@@ -33,7 +33,7 @@ export class NovedadOperativaService {
     return new NovedadOperativaEntity(novedad);
   }
 
-  async findAll(params: { skip?: number; take?: number; where?: Prisma.NovedadOperativaWhereInput }): Promise<NovedadOperativaEntity[]> {
+  async buscarNovedades(params: { skip?: number; take?: number; where?: Prisma.NovedadOperativaWhereInput }): Promise<NovedadOperativaEntity[]> {
     const { skip, take, where } = params;
     const novedades = await this.prisma.novedadOperativa.findMany({
       skip,
@@ -45,14 +45,14 @@ export class NovedadOperativaService {
     return novedades.map((n) => new NovedadOperativaEntity(n));
   }
 
-  async findOne(id: bigint): Promise<NovedadOperativaEntity> {
+  async buscarNovedad(id: bigint): Promise<NovedadOperativaEntity> {
     const novedad = await this.prisma.novedadOperativa.findUnique({ where: { novedadId: id }, select: novedadSelect });
     if (!novedad || novedad.deletedAt) throw new NotFoundException(`Novedad con ID ${id} no encontrada`);
     return new NovedadOperativaEntity(novedad);
   }
 
-  async update(id: bigint, updateDto: UpdateNovedadOperativaDto): Promise<NovedadOperativaEntity> {
-    await this.findOne(id); 
+  async actualizarNovedad(id: bigint, updateDto: ActualizarNovedadOperativaDto): Promise<NovedadOperativaEntity> {
+    await this.buscarNovedad(id); 
     const dataToUpdate: any = { ...updateDto };
     if (updateDto.lecturaId) dataToUpdate.lecturaId = BigInt(updateDto.lecturaId);
 
@@ -64,8 +64,8 @@ export class NovedadOperativaService {
     return new NovedadOperativaEntity(novedad);
   }
 
-  async remove(id: bigint): Promise<{ message: string }> {
-    await this.findOne(id); 
+  async eliminarNovedad(id: bigint): Promise<{ message: string }> {
+    await this.buscarNovedad(id); 
     await this.prisma.novedadOperativa.update({ where: { novedadId: id }, data: { deletedAt: new Date() } });
     return { message: `Novedad Operativa con ID ${id} eliminada` };
   }

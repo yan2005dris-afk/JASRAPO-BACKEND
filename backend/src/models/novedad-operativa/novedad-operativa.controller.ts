@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { NovedadOperativaService } from './novedad-operativa.service';
-import { CreateNovedadOperativaDto } from './dto/create-novedad-operativa.dto';
-import { UpdateNovedadOperativaDto } from './dto/update-novedad-operativa.dto';
+import {  CrearNovedadOperativaDto } from './dto/create-novedad-operativa.dto';
+import { ActualizarNovedadOperativaDto } from './dto/update-novedad-operativa.dto';
 import { NovedadOperativaEntity } from './entities/novedad-operativa.entity';
 import { TipoNovedad, EstadoNovedad } from 'src/generated/prisma/client';
 
@@ -10,12 +10,12 @@ export class NovedadOperativaController {
   constructor(private readonly novedadOperativaService: NovedadOperativaService) {}
 
   @Post()
-  async create(@Body() createDto: CreateNovedadOperativaDto): Promise<NovedadOperativaEntity> {
-    return this.novedadOperativaService.create(createDto);
+  async crearNovedadOperativa(@Body() createDto: CrearNovedadOperativaDto): Promise<NovedadOperativaEntity> {
+    return this.novedadOperativaService.crearNovedadOperativa(createDto);
   }
 
   @Get()
-  async findAll(
+  async buscarNovedades(
     @Query('skip') skip?: number,
     @Query('take') take?: number,
     @Query('lecturaId') lecturaId?: string,
@@ -27,7 +27,7 @@ export class NovedadOperativaController {
     if (tipo) where.tipo = tipo;
     if (estado) where.estado = estado;
 
-    return this.novedadOperativaService.findAll({
+    return this.novedadOperativaService.buscarNovedades({
       skip: skip ? Number(skip) : undefined,
       take: take ? Number(take) : undefined,
       where,
@@ -35,17 +35,17 @@ export class NovedadOperativaController {
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string): Promise<NovedadOperativaEntity> {
-    return this.novedadOperativaService.findOne(BigInt(id));
+  async buscarNovedad(@Param('id') id: string): Promise<NovedadOperativaEntity> {
+    return this.novedadOperativaService.buscarNovedad(BigInt(id));
   }
 
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() updateDto: UpdateNovedadOperativaDto): Promise<NovedadOperativaEntity> {
-    return this.novedadOperativaService.update(BigInt(id), updateDto);
+  async actualizarNovedad(@Param('id') id: string, @Body() updateDto: ActualizarNovedadOperativaDto): Promise<NovedadOperativaEntity> {
+    return this.novedadOperativaService.actualizarNovedad(BigInt(id), updateDto);
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: string) {
-    return this.novedadOperativaService.remove(BigInt(id));
+  async eliminarNovedad(@Param('id') id: string) {
+    return this.novedadOperativaService.eliminarNovedad(BigInt(id));
   }
 }

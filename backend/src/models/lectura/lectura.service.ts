@@ -1,8 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
 import { Prisma } from 'src/generated/prisma/client';
-import { CreateLecturaDto } from './dto/create-lectura.dto';
-import { UpdateLecturaDto } from './dto/update-lectura.dto';
+import { CrearLecturaDto } from './dto/create-lectura.dto';
+import { ActualizarLecturaDto } from './dto/update-lectura.dto';
 import { LecturaEntity } from './entities/lectura.entity';
 
 const lecturaSelect = {
@@ -28,7 +28,7 @@ const lecturaSelect = {
 export class LecturaService {
   constructor(private prisma: PrismaService) {}
 
-  async create(createDto: CreateLecturaDto): Promise<LecturaEntity> {
+  async crearLectura(createDto: CrearLecturaDto): Promise<LecturaEntity> {
     const lectura = await this.prisma.lecturas.create({
       data: {
         fecha: new Date(createDto.fecha),
@@ -48,7 +48,7 @@ export class LecturaService {
     return new LecturaEntity(lectura);
   }
 
-  async findAll(params: {
+  async buscarLecturas(params: {
     skip?: number;
     take?: number;
     where?: Prisma.LecturasWhereInput;
@@ -64,7 +64,7 @@ export class LecturaService {
     return lecturas.map((l) => new LecturaEntity(l));
   }
 
-  async findOne(id: bigint): Promise<LecturaEntity> {
+  async buscarLectura(id: bigint): Promise<LecturaEntity> {
     const lectura = await this.prisma.lecturas.findUnique({
       where: { lecturaId: id },
       select: lecturaSelect,
@@ -73,8 +73,8 @@ export class LecturaService {
     return new LecturaEntity(lectura);
   }
 
-  async update(id: bigint, updateDto: UpdateLecturaDto): Promise<LecturaEntity> {
-    await this.findOne(id); 
+  async actualizarLectura(id: bigint, updateDto: ActualizarLecturaDto): Promise<LecturaEntity> {
+    await this.buscarLectura(id); 
     
     const dataToUpdate: any = { ...updateDto };
     if (updateDto.contratoId) dataToUpdate.contratoId = BigInt(updateDto.contratoId);
@@ -88,8 +88,8 @@ export class LecturaService {
     return new LecturaEntity(lectura);
   }
 
-  async remove(id: bigint): Promise<{ message: string }> {
-    await this.findOne(id); 
+  async eliminarLectura(id: bigint): Promise<{ message: string }> {
+    await this.buscarLectura(id); 
     await this.prisma.lecturas.update({
       where: { lecturaId: id },
       data: { deletedAt: new Date() },

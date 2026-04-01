@@ -1,4 +1,4 @@
 import { PartialType } from '@nestjs/mapped-types';
-import { CreateLecturaDto } from './create-lectura.dto';
+import { CrearLecturaDto } from './create-lectura.dto';
 
-export class UpdateLecturaDto extends PartialType(CreateLecturaDto) {}
+export class ActualizarLecturaDto extends PartialType(CrearLecturaDto) {}
