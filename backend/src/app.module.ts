@@ -14,6 +14,7 @@ import { StorageModule } from './modules/storage/storage.module';
 import { UserModule } from './modules/user/user.module';
 import { SessionsModule } from './modules/sessions/sessions.module';
 import { CategoriaTarifaModule } from './modules/categoria-tarifa/categoria-tarifa.module';
+import { NovedadOperativaModule } from './models/novedad-operativa/novedad-operativa.module';
 
 @Module({
   imports: [
@@ -44,6 +45,8 @@ import { CategoriaTarifaModule } from './modules/categoria-tarifa/categoria-tari
     SessionsModule,
     ClientModule,
     CategoriaTarifaModule,
+    LecturaModule,
+    NovedadOperativaModule,
   ],
   controllers: [],
   providers: [

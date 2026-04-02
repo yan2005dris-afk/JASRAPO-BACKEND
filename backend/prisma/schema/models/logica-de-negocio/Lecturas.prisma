@@ -11,7 +11,7 @@ model Lecturas {
   fechaValidacion     DateTime?          @map("fecha_validacion")
   fotoUrlMinIo        String?            @map("foto_url_minio")
   isValidada          Boolean            @default(false) @map("is_validada")
-  lecturaInicial      Float              @map("lectura_inicial")
+  lecturaInicial      Boolean           @map("lectura_inicial")
   periodo             String             @map("periodo")
   tieneAnomalia       Boolean            @default(false) @map("tiene_anomalia")
   updatedAt           DateTime           @updatedAt @map("updated_at")

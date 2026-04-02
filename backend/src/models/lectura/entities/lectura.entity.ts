@@ -1,24 +1,28 @@
-import { Type } from 'class-transformer';
+import { Prisma } from 'src/generated/prisma/client';
 
 export class LecturaEntity {
-  @Type(() => String)
-  lecturaId: bigint;
-
-  @Type(() => String)
-  clienteMedidorId: bigint | null;
-
+  lecturaId: string;
   fecha: Date;
   lecturaAnterior: number;
   lecturaActual: number;
-  consumoCalculado: number | null;
-  valorMonetario: number | null;
-  abono: number | null;
-  saldoPendiente: number | null;
-
-  @Type(() => Date)
+  consumoCalculado: number;
+  contratoId: string;
+  createdAt: Date;
+  descripcionAnomalia: string | null;
+  fechaValidacion: Date | null;
+  fotoUrlMinIo: string | null;
+  isValidada: boolean;
+  lecturaInicial: boolean;
+  periodo: string;
+  tieneAnomalia: boolean;
+  updatedAt: Date;
   deletedAt: Date | null;
 
-  constructor(partial: Partial<LecturaEntity>) {
-    Object.assign(this, partial);
+  constructor(partial: Partial<Prisma.LecturasGetPayload<{}>>) {
+    if (partial) {
+      Object.assign(this, partial);
+      if (partial.lecturaId) this.lecturaId = partial.lecturaId.toString();
+      if (partial.contratoId) this.contratoId = partial.contratoId.toString();
+    }
   }
 }
