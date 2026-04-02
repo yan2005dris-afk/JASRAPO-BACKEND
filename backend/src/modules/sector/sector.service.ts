@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { NotFoundException } from '@nestjs/common';
 import { CreateSectorDto } from './dto/create-sector.dto';
 import { UpdateSectorDto } from './dto/update-sector.dto';
 import { PrismaService } from 'src/database/prisma.service' ;
@@ -9,8 +10,18 @@ export class SectorService {
   constructor(private prisma: PrismaService){}
 
 
-  create(createSectorDto: CreateSectorDto) {
-    return 'This action adds a new sector';
+  async create(createSectorDto: CreateSectorDto) {
+    const comunidad = await this.prisma.comunidades.findUnique({
+      where: { comunidadId: createSectorDto.comunidadId }
+    });
+
+    if (!comunidad){
+      throw new NotFoundException('La comunidad no existe');
+    }
+    
+    return this.prisma.sectores.create({
+      data: createSectorDto
+    });
   }
 
   findAll() {
@@ -26,10 +37,19 @@ export class SectorService {
   }
 
   update(id: number, updateSectorDto: UpdateSectorDto) {
-    return `This action updates a #${id} sector`;
+    return this.prisma.sectores.update({
+      where: {
+        sectorId: id
+      },
+      data: updateSectorDto
+    });
   }
 
   remove(id: number) {
-    return `This action removes a #${id} sector`;
+    return this.prisma.sectores.delete({
+      where: {
+        sectorId: id
+      }
+    });
   }
 }

@@ -1,4 +1,5 @@
 import { PrismaClient } from "src/generated/prisma/client";
+import { Comunidad } from "src/modules/comunidad/entities/comunidad.entity";
 
 export async function seedComunidades(prisma: PrismaClient) {
     const comunidades = [
@@ -9,7 +10,7 @@ export async function seedComunidades(prisma: PrismaClient) {
         { comunidadId: 10, nombre: "Curia", codigo: "005", porcentajeTasaSeguridad: 0 },
     ];
 
-    const result = [];
+    const result: Comunidad[] = [];
     for (const c of comunidades) {
         const created = await prisma.comunidades.upsert({
             where: { comunidadId: c.comunidadId },

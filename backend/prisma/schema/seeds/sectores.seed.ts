@@ -1,4 +1,5 @@
 import { PrismaClient } from "src/generated/prisma/client";
+import { Sector } from "src/modules/sector/entities/sector.entity";
 
 export async function seedSectores(prisma: PrismaClient) {
     const sectores = [
@@ -22,7 +23,7 @@ export async function seedSectores(prisma: PrismaClient) {
         { sectorId: 21, comunidadId: 10, codigo: "SEC-CURIA-RURAL", nombre: "Sector Rural" },
     ];
 
-    const result = [];
+    const result:Sector[] = [];
     for (const s of sectores) {
         const created = await prisma.sectores.upsert({
             where: { sectorId: s.sectorId },

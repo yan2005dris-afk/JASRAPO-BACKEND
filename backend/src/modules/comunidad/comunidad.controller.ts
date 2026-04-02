@@ -2,7 +2,6 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { ComunidadService } from './comunidad.service';
 import { CreateComunidadeDto } from './dto/create-comunidad.dto';
 import { UpdateComunidadDto } from './dto/update-comunidad.dto';
-import { PrismaService } from 'src/database/prisma.service';
 
 @Controller('comunidades')
 export class ComunidadesController {
