@@ -1,23 +1,22 @@
 model Medidores {
-    medidorId BigInt @id @default(autoincrement()) @map("medidor_id")
-    serie String @map("serie") @unique
-    marca String @map("marca")
-    modelo String @map("modelo")
-    lecturaInicial Float @map("lectura_inicial_medidor")
-    estado    EstadoMedidor   @map("estado")
-    fechaBaja DateTime? @map("fecha_baja")
-    motivoBaja String? @map("motivo_baja")
-    createdAt DateTime @default(now()) @map("created_at")
-    updatedAt DateTime @updatedAt @map("updated_at")
-    deletedAt DateTime? @map("deleted_at")
+  medidorId          BigInt            @id @default(autoincrement()) @map("medidor_id")
+  fechaBaja          DateTime?         @map("fecha_baja")
+  lecturaInicial     Float             @map("lectura_inicial_medidor")
+  marca              String            @map("marca")
+  modelo             String            @map("modelo")
+  motivoBaja         String?           @map("motivo_baja")
+  serie              String            @unique @map("serie")
+  updatedAt          DateTime          @updatedAt @map("updated_at")
+  createdAt          DateTime          @default(now()) @map("created_at")
+  deletedAt          DateTime?         @map("deleted_at")
+  estado             EstadoMedidor     @map("estado")
+  contratosMedidores ContratoMedidor[]
 
-    contratosMedidores ContratoMedidor[]
-
-    @@map("medidores")
+  @@map("medidores")
 }
 
 enum EstadoMedidor {
-    ACTIVO
-    DADO_DE_BAJA
-    DANADO
+  ACTIVO
+  DADO_DE_BAJA
+  DANADO
 }

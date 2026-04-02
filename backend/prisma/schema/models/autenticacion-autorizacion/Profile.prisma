@@ -1,14 +1,13 @@
 model Profiles {
-    profileId Int      @id @default(autoincrement()) @map("profile_id")
-    firstName String?  @map("first_name")
-    lastName  String?  @map("last_name")
-    phone     String?  @map("phone")
-    avatar    Json?    @map("avatar")
-    createdAt DateTime @default(now()) @map("created_at")
-    updatedAt DateTime @updatedAt @map("updated_at")
+  profileId Int      @id @default(autoincrement()) @map("profile_id")
+  firstName String?  @map("first_name")
+  lastName  String?  @map("last_name")
+  phone     String?  @map("phone")
+  avatar    Json?    @map("avatar")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  usersId   Int      @unique @map("users_id")
+  user      Users    @relation(fields: [usersId], references: [usersId])
 
-    usersId Int   @unique @map("users_id")
-    user    Users @relation(fields: [usersId], references: [usersId])
-
-    @@map("profiles")
+  @@map("profiles")
 }

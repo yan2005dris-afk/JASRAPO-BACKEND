@@ -1,0 +1,26 @@
+model LoteFacturacion {
+  loteId         BigInt       @id @default(autoincrement()) @map("lote_id")
+  comunidadId    Int          @map("comunidad_id")
+  anio           Int          @map("anio")
+  mes            Int          @map("mes")
+  periodo        String       @map("periodo")
+  estado         EstadoLote   @default(BORRADOR) @map("estado")
+  totalMonto     Decimal      @default(0) @map("total_monto")
+  notas          String?      @map("notas")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+  createdBy      Int?         @map("created_by")
+  totalEmisiones Int          @default(0) @map("total_emisiones")
+  comunidad      Comunidades  @relation(fields: [comunidadId], references: [comunidadId])
+  users          Users?       @relation(fields: [createdBy], references: [usersId])
+  prefacturas    Prefactura[]
+
+  @@unique([comunidadId, anio, mes], name: "uk_lote_comunidad_periodo")
+  @@map("lote_facturacion")
+}
+
+enum EstadoLote {
+  BORRADOR
+  DEFINITIVO
+  ENVIADO
+}

@@ -1,34 +1,32 @@
 model Clientes {
-    clienteId   BigInt  @id @default(autoincrement()) @map("cliente_id")
-    tipoIdentificacion TipoIdentificacion @map("tipo_identificacion")
-    identificacion String   @map("identificacion") @unique
-    nombres    String   @map("nombres")
-    apellidos  String   @map("apellidos")
-    razonSocial String?  @map("razon_social")
-    email      String?  @map("email")
-    telefono   String?  @map("telefono")
-    telefonoSecundario String?  @map("telefono_secundario")
-    aplicaTerceraEdadDiscapacidad Boolean @default(false) @map("aplica_terceraedad_discapacidad")
-    isPerfilValidado Boolean @map("is_perfil_validado") @default(false)
-    direccionDomicilio String?  @map("direccion_domicilio")
-
-    createdAt DateTime @default(now()) @map("created_at")
-    updatedAt DateTime @updatedAt @map("updated_at")
-    deletedAt DateTime? @map("deleted_at")
-
-    abonosClientes AbonoCliente[]
-    contratos Contratos[]
-
-    @@index([nombres])
-    @@index([deletedAt])
-
-    @@map("clientes")
+  clienteId                     BigInt             @id @default(autoincrement()) @map("cliente_id")
+  apellidos                     String             @map("apellidos")
+  aplicaTerceraEdadDiscapacidad Boolean            @default(false) @map("aplica_terceraedad_discapacidad")
+  direccionDomicilio            String?            @map("direccion_domicilio")
+  email                         String?            @map("email")
+  identificacion                String             @unique @map("identificacion")
+  isPerfilValidado              Boolean            @default(false) @map("is_perfil_validado")
+  nombres                       String             @map("nombres")
+  razonSocial                   String?            @map("razon_social")
+  telefono                      String?            @map("telefono")
+  telefonoSecundario            String?            @map("telefono_secundario")
+  tipoIdentificacion            TipoIdentificacion @map("tipo_identificacion")
+  updatedAt                     DateTime           @updatedAt @map("updated_at")
+  createdAt                     DateTime           @default(now()) @map("created_at")
+  deletedAt                     DateTime?          @map("deleted_at")
+  abonosClientes                AbonoCliente[]
+  contratos                     Contratos[]
+  facturas                      Facturas[]
+  
+  @@index([nombres])
+  @@index([deletedAt])
+  @@map("clientes")
 }
 
 enum TipoIdentificacion {
-    CEDULA
-    RUC
-    PASAPORTE
-    CONSUMIDOR_FINAL
-    IDENTIFICACION_EXTRANJERA
+  CEDULA
+  RUC
+  PASAPORTE
+  CONSUMIDOR_FINAL
+  IDENTIFICACION_EXTRANJERA
 }

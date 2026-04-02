@@ -1,36 +1,35 @@
 model Pagos {
-    pagoId    BigInt  @id @default(autoincrement()) @map("pago_id")
-    cajaId BigInt? @map("caja_id")
-    usersId Int @map("users_id")
-    montoTotalRecibido Float @map("monto_total_recibido")
-    cambio Float @map("cambio")
-    fechaPago      DateTime @map("fecha_pago")
-    metodoPago MetodoPago @map("metodo_pago")
-    comprobanteUrlMinIo String? @map("comprobante_url_minio")
-    referenciaBanco String? @map("referencia_banco")
-    numeroOperacion String? @map("numero_operacion")
-    observaciones String? @map("observaciones")
-    estadoConciliacion EstadoConciliacion @map("estado_conciliacion")
-    createdAt DateTime @default(now()) @map("created_at")
-    updatedAt DateTime @updatedAt @map("updated_at")
-    deletedAt DateTime? @map("deleted_at")
+  pagoId              BigInt             @id @default(autoincrement()) @map("pago_id")
+  cajaId              BigInt?            @map("caja_id")
+  cambio              Float              @map("cambio")
+  comprobanteUrlMinIo String?            @map("comprobante_url_minio")
+  estadoConciliacion  EstadoConciliacion @map("estado_conciliacion")
+  fechaPago           DateTime           @map("fecha_pago")
+  montoTotalRecibido  Float              @map("monto_total_recibido")
+  numeroOperacion     String?            @map("numero_operacion")
+  observaciones       String?            @map("observaciones")
+  referenciaBanco     String?            @map("referencia_banco")
+  updatedAt           DateTime           @updatedAt @map("updated_at")
+  createdAt           DateTime           @default(now()) @map("created_at")
+  deletedAt           DateTime?          @map("deleted_at")
+  usersId             Int                @map("users_id")
+  metodoPago          MetodoPago         @map("metodo_pago")
+  abonoCliente        AbonoCliente[]
+  detallePago         DetallePago[]
+  cajaSesion          CajaSesion?        @relation(fields: [cajaId], references: [cajaId])
+  user                Users              @relation(fields: [usersId], references: [usersId])
 
-    detallePago DetallePago[]
-    abonoCliente AbonoCliente[]
-    user  Users?  @relation(fields: [usersId], references: [usersId])
-    cajaSesion CajaSesion? @relation(fields: [cajaId], references: [cajaId])
-
-    @@map("pagos")
+  @@map("pagos")
 }
 
 enum MetodoPago {
-    EFECTIVO
-    TRANSFERENCIA
-    TARJETA
+  EFECTIVO
+  TRANSFERENCIA
+  TARJETA
 }
 
 enum EstadoConciliacion {
-    PENDIENTE
-    CONCILIADO
-    RECHAZADO
+  PENDIENTE
+  CONCILIADO
+  RECHAZADO
 }

@@ -1,0 +1,15 @@
+model Servicio {
+  servicioId        BigInt              @id @default(autoincrement()) @map("servicio_id")
+  nombre            String              @map("nombre")
+  descripcion       String?             @map("descripcion")
+  precioUnitario    Float               @default(0) @map("precio_unitario")
+  iva               Float               @default(0) @map("iva")
+  activo            Boolean             @default(true) @map("activo")
+  createdAt         DateTime            @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt         DateTime            @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
+  deletedAt         DateTime?           @map("deleted_at") @db.Timestamp(6)
+  detalleFactura    DetalleFactura[]
+  prefacturaDetalle PrefacturaDetalle[]
+
+  @@map("servicio")
+}

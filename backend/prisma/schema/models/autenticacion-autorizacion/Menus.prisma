@@ -1,17 +1,14 @@
-model Menus{
-    menusId                  Int      @id @default(autoincrement())    @map("menus_id")
-    menusParentId           Int?                                      @map("menus_parent_id")
-    icon                   String?
-    name                    String                                   
-    route                   String  
-    
-    active                  Boolean  @default(true)
-    deletedAt               DateTime?                                 @map("deleted_at")
+model Menus {
+  menusId         Int               @id @default(autoincrement()) @map("menus_id")
+  menusParentId   Int?              @map("menus_parent_id")
+  icon            String?
+  name            String
+  route           String
+  active          Boolean           @default(true)
+  deletedAt       DateTime?         @map("deleted_at")
+  menuPermissions MenuPermissions[]
+  parent          Menus?            @relation("MenuToMenu", fields: [menusParentId], references: [menusId])
+  children        Menus[]           @relation("MenuToMenu")
 
-    parent   Menus?  @relation("MenuToMenu", fields: [menusParentId], references: [menusId])
-    children Menus[] @relation("MenuToMenu")
-    menuPermissions MenuPermissions[]
-
-
-    @@map("menus")
+  @@map("menus")
 }
