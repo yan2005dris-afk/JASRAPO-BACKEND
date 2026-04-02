@@ -9,12 +9,12 @@ import { TipoNovedad, EstadoNovedad } from 'src/generated/prisma/client';
 export class NovedadOperativaController {
   constructor(private readonly novedadOperativaService: NovedadOperativaService) {}
 
-  @Post('crearNovedad')
+  @Post()
   async crearNovedadOperativa(@Body() createDto: CrearNovedadOperativaDto): Promise<NovedadOperativaEntity> {
     return this.novedadOperativaService.crearNovedadOperativa(createDto);
   }
 
-  @Get('buscarNovedades')
+  @Get()
   async buscarNovedades(
     @Query('skip') skip?: number,
     @Query('take') take?: number,
@@ -34,17 +34,17 @@ export class NovedadOperativaController {
     });
   }
 
-  @Get('buscarNovedad/:id')
+  @Get(':id')
   async buscarNovedad(@Param('id') id: string): Promise<NovedadOperativaEntity> {
     return this.novedadOperativaService.buscarNovedad(BigInt(id));
   }
 
-  @Patch('actualizarNovedad/:id')
+  @Patch(':id')
   async actualizarNovedad(@Param('id') id: string, @Body() updateDto: ActualizarNovedadOperativaDto): Promise<NovedadOperativaEntity> {
     return this.novedadOperativaService.actualizarNovedad(BigInt(id), updateDto);
   }
 
-  @Delete('eliminarNovedad/:id')
+  @Delete(':id')
   async eliminarNovedad(@Param('id') id: string) {
     return this.novedadOperativaService.eliminarNovedad(BigInt(id));
   }
