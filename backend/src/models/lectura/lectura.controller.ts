@@ -8,12 +8,12 @@ import { LecturaEntity } from './entities/lectura.entity';
 export class LecturaController {
   constructor(private readonly lecturaService: LecturaService) {}
 
-  @Post()
+  @Post( 'crearLectura')
   async CrearLectura(@Body() crearLecturaDto: CrearLecturaDto): Promise<LecturaEntity> {
     return this.lecturaService.crearLectura(crearLecturaDto);
   }
 
-  @Get()
+  @Get( 'buscarLecturas')
   async buscarLecturas(
     @Query('skip') skip?: number,
     @Query('take') take?: number,
@@ -28,17 +28,17 @@ export class LecturaController {
     });
   }
 
-  @Get(':id')
+  @Get( 'buscarLectura/:id')
   async buscarLectura(@Param('id') id: string): Promise<LecturaEntity> {
     return this.lecturaService.buscarLectura(BigInt(id));
   }
 
-  @Patch(':id')
+  @Patch( 'actualizarLectura/:id')
   async actualizarLectura(@Param('id') id: string, @Body() updateLecturaDto: ActualizarLecturaDto): Promise<LecturaEntity> {
     return this.lecturaService.actualizarLectura(BigInt(id), updateLecturaDto);
   }
 
-  @Delete(':id')
+  @Delete( 'eliminarLectura/:id')
   async eliminarLectura(@Param('id') id: string) {
     return this.lecturaService.eliminarLectura(BigInt(id));
   }
