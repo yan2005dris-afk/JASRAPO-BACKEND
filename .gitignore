@@ -14,7 +14,7 @@ backend/node_modules/
 backend/dist/
 
 # --- Variables de Entorno ---
-.env
+
 backend/.env
 backend/postgres/.env
 
