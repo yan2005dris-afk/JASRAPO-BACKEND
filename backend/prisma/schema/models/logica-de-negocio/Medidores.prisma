@@ -16,7 +16,9 @@ model Medidores {
 }
 
 enum EstadoMedidor {
-  ACTIVO
-  DADO_DE_BAJA
+  BODEGA
+  INSTALADO
   DANADO
+  ESTIMADO
+  BAJA
 }
