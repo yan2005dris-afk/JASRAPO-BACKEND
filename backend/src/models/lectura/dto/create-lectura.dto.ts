@@ -1,62 +1,15 @@
-import { Type } from 'class-transformer';
-import {
-  IsInt,
-  IsNumber,
-  IsOptional,
-  IsDateString,
-  IsString,
-  Min,
-} from 'class-validator';
+import { IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 
-export class CreateLecturaDto {
-  @IsInt()
-  @Type(() => Number)
-  contratoId: number;
-
-  @IsString()
-  periodo: string;
-
-  @IsDateString()
-  fecha: string;
-
-  @IsNumber()
-  @Min(0)
-  @Type(() => Number)
-  lecturaAnterior: number;
-
-  @IsNumber()
-  @Min(0)
-  @Type(() => Number)
-  lecturaActual: number;
-
-  @IsNumber()
-  @Min(0)
-  @Type(() => Number)
-  lecturaInicial: number;
-
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  @Type(() => Number)
-  consumoCalculado?: number;
-
-  @IsOptional()
-  @IsString()
-  fotoUrlMinIo?: string;
-
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  @Type(() => Number)
-  tieneAnomalia?: boolean;
-
-  @IsOptional()
-  @IsString()
-  descripcionAnomalia?: string;
-
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  @Type(() => Number)
-  isValidada?: boolean;
+export class CrearLecturaDto {
+  @IsNotEmpty() fecha: string;
+  @IsNotEmpty() @IsNumber() lecturaAnterior: number;
+  @IsNotEmpty() @IsNumber() lecturaActual: number;
+  @IsOptional() @IsNumber() consumoCalculado?: number; 
+  @IsNotEmpty() contratoId: string | number;
+  @IsOptional() @IsString() descripcionAnomalia?: string;
+  @IsOptional() @IsString() fotoUrlMinIo?: string; 
+  @IsOptional() @IsBoolean() isValidada?: boolean; 
+  @IsNotEmpty() @IsBoolean() lecturaInicial: boolean;
+  @IsNotEmpty() @IsString() periodo: string;
+  @IsOptional() @IsBoolean() tieneAnomalia?: boolean; 
 }

@@ -29,7 +29,7 @@ export async function seedLecturas(prisma: PrismaClient) {
                     lecturaActual,
                     consumoCalculado: consumo,
                     isValidada: true,
-                    lecturaInicial: Math.floor(Math.random() * 50) + 10,
+                    lecturaInicial: Math.random() > 0.5,
                     tieneAnomalia: false,
                 },
             });

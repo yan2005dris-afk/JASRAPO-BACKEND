@@ -1,24 +1,26 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
 import { Prisma } from 'src/generated/prisma/client';
-import { CreateLecturaDto } from './dto/create-lectura.dto';
-import { UpdateLecturaDto } from './dto/update-lectura.dto';
+import { CrearLecturaDto } from './dto/create-lectura.dto';
+import { ActualizarLecturaDto } from './dto/update-lectura.dto';
 import { LecturaEntity } from './entities/lectura.entity';
 
 const lecturaSelect = {
   lecturaId: true,
-  contratoId: true,
-  periodo: true,
   fecha: true,
   lecturaAnterior: true,
   lecturaActual: true,
-  lecturaInicial: true,
   consumoCalculado: true,
-  fotoUrlMinIo: true,
-  tieneAnomalia: true,
+  contratoId: true,
+  createdAt: true,
   descripcionAnomalia: true,
-  isValidada: true,
   fechaValidacion: true,
+  fotoUrlMinIo: true,
+  isValidada: true,
+  lecturaInicial: true,
+  periodo: true,
+  tieneAnomalia: true,
+  updatedAt: true,
   deletedAt: true,
 } satisfies Prisma.LecturasSelect;
 
@@ -26,110 +28,72 @@ const lecturaSelect = {
 export class LecturaService {
   constructor(private prisma: PrismaService) {}
 
-  /**
-   * Crear una nueva lectura, luego se debe actualizar el consumoCalculado, valorMonetario, abono y saldoPendiente con base en la lecturaAnterior y lecturaActual
-   * para que sean calculados correctamente, esto se puede hacer con un trigger en la base de datos o con lógica adicional en el servicio.
-   */
-  async create(createLecturaDto: CreateLecturaDto): Promise<LecturaEntity> {
+  async crearLectura(createDto: CrearLecturaDto): Promise<LecturaEntity> {
     const lectura = await this.prisma.lecturas.create({
       data: {
-        contratoId: BigInt(createLecturaDto.contratoId),
-        periodo: createLecturaDto.periodo,
-        fecha: new Date(createLecturaDto.fecha),
-        lecturaAnterior: createLecturaDto.lecturaAnterior,
-        lecturaActual: createLecturaDto.lecturaActual,
-        lecturaInicial: createLecturaDto.lecturaInicial,
-        consumoCalculado: createLecturaDto.consumoCalculado ?? 0,
-        fotoUrlMinIo: createLecturaDto.fotoUrlMinIo,
-        tieneAnomalia: createLecturaDto.tieneAnomalia ?? false,
-        descripcionAnomalia: createLecturaDto.descripcionAnomalia,
-        isValidada: createLecturaDto.isValidada ?? false,
+        fecha: new Date(createDto.fecha),
+        lecturaAnterior: createDto.lecturaAnterior,
+        lecturaActual: createDto.lecturaActual,
+        consumoCalculado: createDto.consumoCalculado ?? 0,
+        contratoId: BigInt(createDto.contratoId),
+        descripcionAnomalia: createDto.descripcionAnomalia,
+        fotoUrlMinIo: createDto.fotoUrlMinIo,
+        isValidada: createDto.isValidada ?? false,
+        lecturaInicial: createDto.lecturaInicial,
+        periodo: createDto.periodo,
+        tieneAnomalia: createDto.tieneAnomalia ?? false,
       },
       select: lecturaSelect,
     });
-
     return new LecturaEntity(lectura);
   }
 
-  /**
-   * Todas la lecturas, con paginación opcional y filtros por clienteMedidorId y fecha (rango de fechas)
-   */
-  async findAll(params: {
+  async buscarLecturas(params: {
     skip?: number;
     take?: number;
     where?: Prisma.LecturasWhereInput;
-    orderBy?: Prisma.LecturasOrderByWithRelationInput;
   }): Promise<LecturaEntity[]> {
-    const { skip, take, where, orderBy } = params;
-
+    const { skip, take, where } = params;
     const lecturas = await this.prisma.lecturas.findMany({
       skip,
       take,
       where: { ...where, deletedAt: null },
-      orderBy: orderBy || { fecha: 'desc' },
+      orderBy: { fecha: 'desc' },
       select: lecturaSelect,
     });
-
-    return lecturas.map((lectura) => new LecturaEntity(lectura));
+    return lecturas.map((l) => new LecturaEntity(l));
   }
 
-  /**
-   * Obtiene una lectura por ID, si no existe o está eliminada (deletedAt no es null) lanza una excepción NotFoundException
-   */
-  async findOne(id: bigint): Promise<LecturaEntity> {
+  async buscarLectura(id: bigint): Promise<LecturaEntity> {
     const lectura = await this.prisma.lecturas.findUnique({
       where: { lecturaId: id },
       select: lecturaSelect,
     });
-
-    if (!lectura || lectura.deletedAt) {
-      throw new NotFoundException(`Lectura con ID ${id} no encontrada`);
-    }
-
+    if (!lectura || lectura.deletedAt) throw new NotFoundException(`Lectura con ID ${id} no encontrada`);
     return new LecturaEntity(lectura);
   }
 
-  /**
-   * Actualiza una lectura por ID, si no existe o está eliminada (deletedAt no es null) lanza una excepción NotFoundException
-   */
-  async update(
-    id: bigint,
-    updateLecturaDto: UpdateLecturaDto,
-  ): Promise<LecturaEntity> {
-    const lecturaExistente = await this.prisma.lecturas.findUnique({
-      where: { lecturaId: id },
-    });
-
-    if (!lecturaExistente || lecturaExistente.deletedAt) {
-      throw new NotFoundException(`Lectura con ID ${id} no encontrada`);
-    }
+  async actualizarLectura(id: bigint, updateDto: ActualizarLecturaDto): Promise<LecturaEntity> {
+    await this.buscarLectura(id); 
+    
+    const dataToUpdate: any = { ...updateDto };
+    if (updateDto.contratoId) dataToUpdate.contratoId = BigInt(updateDto.contratoId);
+    if (updateDto.fecha) dataToUpdate.fecha = new Date(updateDto.fecha);
 
     const lectura = await this.prisma.lecturas.update({
       where: { lecturaId: id },
-      data: updateLecturaDto,
+      data: dataToUpdate,
       select: lecturaSelect,
     });
-
     return new LecturaEntity(lectura);
   }
 
-  /**
-   * Elimina una lectura (soft delete), si no existe o ya está eliminada (deletedAt no es null) lanza una excepción NotFoundException
-   */
-  async remove(id: bigint): Promise<{ message: string }> {
-    const lectura = await this.prisma.lecturas.findUnique({
-      where: { lecturaId: id },
-    });
-
-    if (!lectura || lectura.deletedAt) {
-      throw new NotFoundException(`Lectura con ID ${id} no encontrada`);
-    }
-
+  async eliminarLectura(id: bigint): Promise<{ message: string }> {
+    await this.buscarLectura(id); 
     await this.prisma.lecturas.update({
       where: { lecturaId: id },
       data: { deletedAt: new Date() },
     });
-
-    return { message: `Lectura con ID ${id} eliminada correctamente` };
+    return { message: `Lectura con ID ${id} eliminada` };
   }
 }

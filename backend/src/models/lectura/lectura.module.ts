@@ -1,12 +1,11 @@
 import { Module } from '@nestjs/common';
 import { LecturaService } from './lectura.service';
 import { LecturaController } from './lectura.controller';
-import { DatabaseModule } from 'src/database/prisma.module';
+import { PrismaService } from 'src/database/prisma.service';
 
 @Module({
-  imports: [DatabaseModule],
   controllers: [LecturaController],
-  providers: [LecturaService],
+  providers: [LecturaService, PrismaService],
   exports: [LecturaService],
 })
 export class LecturaModule {}

@@ -13,6 +13,9 @@ import { RolesModule } from './modules/roles/roles.module';
 import { StorageModule } from './modules/storage/storage.module';
 import { UserModule } from './modules/user/user.module';
 import { SessionsModule } from './modules/sessions/sessions.module';
+import { NovedadOperativaModule } from './models/novedad-operativa/novedad-operativa.module';
+import { MedidorModule } from './models/medidor/medidor.module';
+import { ContratoMedidorModule } from './models/contrato-medidor/contrato-medidor.module';
 
 @Module({
   imports: [
@@ -42,6 +45,10 @@ import { SessionsModule } from './modules/sessions/sessions.module';
     StorageModule,
     SessionsModule,
     ClientModule,
+    LecturaModule,
+    NovedadOperativaModule,
+    MedidorModule,
+    ContratoMedidorModule,
   ],
   controllers: [],
   providers: [
