@@ -14,6 +14,8 @@ import { StorageModule } from './modules/storage/storage.module';
 import { UserModule } from './modules/user/user.module';
 import { SessionsModule } from './modules/sessions/sessions.module';
 import { NovedadOperativaModule } from './models/novedad-operativa/novedad-operativa.module';
+import { ComunidadModule } from './modules/comunidad/comunidad.module';
+import { SectorModule } from './modules/sector/sector.module';
 
 @Module({
   imports: [
@@ -45,6 +47,8 @@ import { NovedadOperativaModule } from './models/novedad-operativa/novedad-opera
     ClientModule,
     LecturaModule,
     NovedadOperativaModule,
+    ComunidadModule,
+    SectorModule,
   ],
   controllers: [],
   providers: [
