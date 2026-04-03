@@ -12,8 +12,8 @@ export class ContratoMedidorController {
 
    }
 
-  @Get('buscarTodos')
-  buscarTodos(
+  @Get('')
+  buscarContratos(
     @Query('skip') skip?: string, @Query('take') take?: string,
     @Query('contratoId') contratoId?: string, @Query('medidorId') medidorId?: string,
   ) {
@@ -23,18 +23,18 @@ export class ContratoMedidorController {
     return this.contratoMedidorService.buscarContratos({ skip: skip ? +skip : undefined, take: take ? +take : undefined, where });
   }
 
-  @Get('buscarUno/:id')
-  buscarUno(@Param('id') id: string) {
+  @Get(':id')
+  buscarContrato(@Param('id') id: string) {
      return this.contratoMedidorService.buscarContrato(BigInt(id)); }
 
-  @Patch('actualizar/:id')
-  actualizar(@Param('id') id: string, @Body() updateDto: ActualizarContratoMedidorDto) {
+  @Patch(':id')
+  actualizarContrato(@Param('id') id: string, @Body() updateDto: ActualizarContratoMedidorDto) {
      return this.contratoMedidorService.actualizar(BigInt(id), updateDto); }
 
-  @Post('finalizar/:id')
+  @Post(':id')
   finalizarVinculo(@Param('id') id: string, @Body('motivoCambio') motivoCambio?: string) { 
   return this.contratoMedidorService.finalizarVinculo(BigInt(id), motivoCambio); }
 
-  @Delete('eliminar/:id')
-  eliminar(@Param('id') id: string) { return this.contratoMedidorService.eliminar(BigInt(id)); }
+  @Delete(':id')
+  eliminarContrato(@Param('id') id: string) { return this.contratoMedidorService.eliminar(BigInt(id)); }
 }

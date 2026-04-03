@@ -7,40 +7,40 @@ import { ActualizarMedidorDto } from './dto/update-medidor.dto';
 export class MedidorController {
   constructor(private readonly medidoresService: MedidorService) {}
 
-  @Post('crearMedidor')
+  @Post('')
   crear(@Body() createDto: CrearMedidorDto) { return this.medidoresService.crearMedidor(createDto); }
 
-  @Get('buscarMedidores')
+  @Get('')
   buscarTodos(@Query('skip') skip?: string, @Query('take') take?: string) 
   {
     return this.medidoresService.buscarMedidores({ skip: skip ? +skip : undefined, take: take ? +take : undefined });
   }
 
-  @Get('buscarMedidor/:id')
+  @Get(':id')
   buscarUno(@Param('id') id: string) { 
     return this.medidoresService.buscarMedidor(BigInt(id)); }
 
-  @Patch('actualizarMedidor/:id')
+  @Patch(':id')
   actualizar(@Param('id') id: string, @Body() updateDto: ActualizarMedidorDto) { 
     return this.medidoresService.actualizarMedidor(BigInt(id), updateDto); }
 
-  @Delete('eliminarMedidor/:id')
+  @Delete(':id')
   eliminar(@Param('id') id: string) { 
     return this.medidoresService.eliminarMedidor(BigInt(id)); }
 
-  @Post('instalarMedidor/:id')
+  @Post(':id')
   instalar(@Param('id') id: string, @Body('contratoId') contratoId: string) { 
     return this.medidoresService.instalarMedidor(BigInt(id), BigInt(contratoId)); }
 
-  @Post('reportarDano/:id')
+  @Post(':id')
   reportarDano(@Param('id') id: string) {
      return this.medidoresService.reportarDano(BigInt(id)); }
 
-  @Post('facturar-promedio/:id')
+  @Post(':id')
   facturarPorPromedio(@Param('id') id: string) {
      return this.medidoresService.facturarPorPromedio(BigInt(id)); }
 
-  @Post('dar-de-baja/:id')
+  @Post(':id')
   darDeBaja(@Param('id') id: string, @Body('motivoBaja') motivoBaja: string) { 
     return this.medidoresService.darDeBaja(BigInt(id), motivoBaja); }
 }
