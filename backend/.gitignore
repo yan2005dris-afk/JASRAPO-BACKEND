@@ -2,11 +2,11 @@
 /dist
 /node_modules
 /build
-
+/package-lock.json
 # Logs
 logs
 *.log
-npm-debug.log*
+npm-debug.log*g
 pnpm-debug.log*
 yarn-debug.log*
 yarn-error.log*

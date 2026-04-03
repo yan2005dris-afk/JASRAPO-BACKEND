@@ -7,12 +7,12 @@ import { ActualizarContratoMedidorDto } from './dto/update-contrato-medidor.dto'
 export class ContratoMedidorController {
   constructor(private readonly contratoMedidorService: ContratoMedidorService) {}
 
-  @Post('crearcontrato')
+  @Post()
   crear(@Body() createDto: CrearContratoMedidorDto) { return this.contratoMedidorService.crearContrato(createDto);
 
    }
 
-  @Get('')
+  @Get()
   buscarContratos(
     @Query('skip') skip?: string, @Query('take') take?: string,
     @Query('contratoId') contratoId?: string, @Query('medidorId') medidorId?: string,

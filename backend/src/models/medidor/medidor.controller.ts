@@ -7,10 +7,10 @@ import { ActualizarMedidorDto } from './dto/update-medidor.dto';
 export class MedidorController {
   constructor(private readonly medidoresService: MedidorService) {}
 
-  @Post('')
+  @Post()
   crear(@Body() createDto: CrearMedidorDto) { return this.medidoresService.crearMedidor(createDto); }
 
-  @Get('')
+  @Get()
   buscarTodos(@Query('skip') skip?: string, @Query('take') take?: string) 
   {
     return this.medidoresService.buscarMedidores({ skip: skip ? +skip : undefined, take: take ? +take : undefined });
