@@ -5,7 +5,7 @@ import { CrearMedidorDto } from './dto/create-medidor.dto';
 import { ActualizarMedidorDto } from './dto/update-medidor.dto';
 
 @Injectable()
-export class MedidoresService {
+export class MedidorService {
   constructor(private readonly prisma: PrismaService) {}
 
   async crearMedidor(createDto: CrearMedidorDto): Promise<Medidores> {

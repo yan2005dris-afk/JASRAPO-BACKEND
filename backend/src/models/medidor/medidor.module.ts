@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
-import { MedidoresService } from './medidor.service';
-import { MedidoresController } from './medidor.controller';
+import { MedidorService } from './medidor.service';
+import { MedidorController } from './medidor.controller';
 import { PrismaService } from 'src/database/prisma.service';
 
 @Module({
-  controllers: [MedidoresController],
-  providers: [MedidoresService, PrismaService],
-  exports: [MedidoresService],
+  controllers: [MedidorController],
+  providers: [MedidorService, PrismaService],
+  exports: [MedidorService],
 })
-export class MedidoresModule {}
+export class MedidorModule {}
