@@ -8,7 +8,7 @@ export class CategoriaTarifaService {
   constructor(private prisma: PrismaService) {}
   
   //CREATE
-  async create(dto: CreateCategoriaTarifaDto) {
+  async createCategoria(dto: CreateCategoriaTarifaDto) {
     const existing = await this.prisma.categoriaTarifa.findFirst({
         where: {
           nombre: dto.nombre,
@@ -36,57 +36,98 @@ export class CategoriaTarifaService {
     });
   }
 
-  //FIND ALL busca activos e inactivos
-  async findAll() {
+  //Obtener todas las categorías 
+  // LISTADO GENERAL
+  async getCategorias(params: {
+    includeInactive?: boolean;
+    nombre?: string;
+    canViewInactive: boolean;
+  }) {
+    const { includeInactive, nombre, canViewInactive } = params;
+
+    if (!canViewInactive) {
+      // Usuario normal → solo activos
+      return this.prisma.categoriaTarifa.findMany({
+        where: {
+          activo: true,
+          deletedAt: null,
+          ...(nombre && {
+            nombre: {
+              contains: nombre,
+              mode: 'insensitive',
+            },
+          }),
+        },
+        orderBy: { createdAt: 'desc' },
+      });
+    }
+
+    // Admin → puede ver activos + inactivos según botón
     return this.prisma.categoriaTarifa.findMany({
       where: {
         deletedAt: null,
+        ...(includeInactive ? {} : { activo: true }),
+        ...(nombre && {
+          nombre: {
+            contains: nombre,
+            mode: 'insensitive',
+          },
+        }),
       },
-      orderBy: {
-        createdAt: 'desc',
-      },
+      orderBy: { createdAt: 'desc' },
     });
   }
 
-  async findOneByNombreAll(nombre: string) {
-    const data = await this.prisma.categoriaTarifa.findFirst({
+  // BUSCAR POR NOMBRE (SAME LOGIC)
+  async buscarCategoriaPorNombre(params: {
+    nombre: string;
+    includeInactive?: boolean;
+    canViewInactive: boolean;
+  }) {
+    const { nombre, includeInactive, canViewInactive } = params;
+
+    if (!canViewInactive) {
+      // Usuario normal → solo activos
+      const data = await this.prisma.categoriaTarifa.findMany({
+        where: {
+          nombre: {
+            contains: nombre,
+            mode: 'insensitive',
+          },
+          activo: true,
+          deletedAt: null,
+        },
+        orderBy: { createdAt: 'desc' },
+      });
+
+      if (data.length === 0) {
+        throw new NotFoundException('No se encontró ninguna categoría activa con ese nombre');
+      }
+
+      return data;
+    }
+
+    // Admin → activos + inactivos según botón
+    const data = await this.prisma.categoriaTarifa.findMany({
       where: {
-        nombre,
+        nombre: {
+          contains: nombre,
+          mode: 'insensitive',
+        },
         deletedAt: null,
+        ...(includeInactive ? {} : { activo: true }),
       },
-      orderBy: {
-        createdAt: 'desc',
-      },
+      orderBy: { createdAt: 'desc' },
     });
 
-    if (!data) {
-      throw new NotFoundException('Categoría no encontrada');
+    if (data.length === 0) {
+      throw new NotFoundException('No se encontró ninguna categoría con ese nombre');
     }
 
     return data;
   }
 
-  // ✅ FIND ONE por nombre SOLO activos
-  async findOneByNombre(nombre: string) {
-    const data = await this.prisma.categoriaTarifa.findFirst({
-      where: {
-        nombre,
-        activo: true,
-        deletedAt: null,
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
-
-    if (!data) {
-      throw new NotFoundException('Categoría activa no encontrada');
-    }
-
-    return data;
-  }
-
-  async update(id: number, dto: UpdateCategoriaTarifaDto) {
+  async updateCategoria(id: number, dto: UpdateCategoriaTarifaDto) {
     const current = await this.prisma.categoriaTarifa.findFirst({
       where: {
         categoriaTarifaId: id,
@@ -149,7 +190,7 @@ export class CategoriaTarifaService {
     });
   }
 
-  async remove(id: number) {
+  async deleteCategoria(id: number) {
     const current = await this.prisma.categoriaTarifa.findFirst({
       where: {
         categoriaTarifaId: id,

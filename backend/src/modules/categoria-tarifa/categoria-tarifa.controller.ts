@@ -3,6 +3,7 @@ import { CategoriaTarifaService } from './categoria-tarifa.service';
 import { CreateCategoriaTarifaDto } from './dto/create-categoria-tarifa.dto';
 import { UpdateCategoriaTarifaDto } from './dto/update-categoria-tarifa.dto';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { AuthUserId } from 'src/common/decorators/auth-user-id.decorator';
 
 @Controller('categoria-tarifa')
 export class CategoriaTarifaController {
@@ -12,49 +13,51 @@ export class CategoriaTarifaController {
   @ApiResponse({ status: 201, description: 'Creada correctamente' })
   @Post()
   create(@Body() dto: CreateCategoriaTarifaDto) {
-    return this.service.create(dto);
+    return this.service.createCategoria(dto);
   }
 
-  @ApiOperation({
-    summary: 'Obtener todas las categorías (activas e inactivas)',
-  })
+  // LISTADO PRINCIPAL → incluye logica de permisos
+  @ApiOperation({ summary: 'Obtener todas las categorías (activas e inactivas para admin)' })
   @Get()
-  findAll() {
-    return this.service.findAll();
-  }
-
-  @ApiOperation({
-    summary: 'Buscar categoría activa por nombre',
-  })
-  @Get('nombre')
-  findOneByNombre(@Query('nombre') nombre: string) {
-    return this.service.findOneByNombre(nombre);
-  }
-
-  @ApiOperation({
-    summary: 'Buscar categoría por nombre (activa o inactiva)',
-  })
-  @Get('nombre-all')
-  findOneByNombreAll(@Query('nombre') nombre: string) {
-    return this.service.findOneByNombreAll(nombre);
-  }
-
-  @ApiOperation({
-    summary: 'Actualizar categoría (crea nueva versión)',
-  })
-  @Patch(':id')
-  update(
-    @Param('id') id: string,
-    @Body() dto: UpdateCategoriaTarifaDto,
+  async findAll(
+    @Query('includeInactive') includeInactive: string, // valor 'true' o 'false' desde frontend
+    @AuthUserId() userId: number, // opcional si quieres usar permisos
   ) {
-    return this.service.update(+id, dto);
+    // Ejemplo: verificar permisos de admin
+    const canViewInactive = true; // aquí podrías usar tu PermissionsGuard para chequear
+
+    return this.service.getCategorias({
+      includeInactive: includeInactive === 'true',
+      canViewInactive,
+    });
   }
 
-  @ApiOperation({
-    summary: 'Eliminar categoría (soft delete)',
-  })
+  // BÚSQUEDA POR NOMBRE → aplica mismo control de permisos y botón
+  @ApiOperation({ summary: 'Buscar categoría por nombre (aplica includeInactive para admin)' })
+  @Get('buscar')
+  async buscar(
+    @Query('nombre') nombre: string,
+    @Query('includeInactive') includeInactive: string,
+    @AuthUserId() userId: number,
+  ) {
+    const canViewInactive = true; // validar permisos de admin
+
+    return this.service.buscarCategoriaPorNombre({
+      nombre,
+      includeInactive: includeInactive === 'true',
+      canViewInactive,
+    });
+  }
+
+  @ApiOperation({ summary: 'Actualizar categoría (crea nueva versión)' })
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() dto: UpdateCategoriaTarifaDto) {
+    return this.service.updateCategoria(+id, dto);
+  }
+
+  @ApiOperation({ summary: 'Eliminar categoría (soft delete)' })
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.service.remove(+id);
+    return this.service.deleteCategoria(+id);
   }
 }
