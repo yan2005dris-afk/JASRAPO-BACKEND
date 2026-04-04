@@ -9,7 +9,7 @@ export class SectorController {
 
   @Post()
   create(@Body() createSectorDto: CreateSectorDto) {
-    return this.sectorService.create(createSectorDto);
+    return this.sectorService.crearSector(createSectorDto);
   }
 
   @Get()
@@ -24,11 +24,11 @@ export class SectorController {
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateSectorDto: UpdateSectorDto) {
-    return this.sectorService.update(+id, updateSectorDto);
+    return this.sectorService.actualizarSector(+id, updateSectorDto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.sectorService.remove(+id);
+    return this.sectorService.eliminarSector(+id);
   }
 }

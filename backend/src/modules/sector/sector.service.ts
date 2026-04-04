@@ -8,7 +8,7 @@ export class SectorService {
  
   constructor(private prisma: PrismaService){}
   
-  async create(createSectorDto: CreateSectorDto) {
+  async crearSector(createSectorDto: CreateSectorDto) {
     const comunidad = await this.prisma.comunidades.findUnique({
       where: { comunidadId: createSectorDto.comunidadId }
     });
@@ -34,7 +34,7 @@ export class SectorService {
     });
   }
 
-  update(id: number, updateSectorDto: UpdateSectorDto) {
+  actualizarSector(id: number, updateSectorDto: UpdateSectorDto) {
      return this.prisma.sectores.update({
       where: {
         sectorId: id
@@ -43,7 +43,7 @@ export class SectorService {
     });
   }
 
-  remove(id: number) {
+  eliminarSector(id: number) {
     return this.prisma.sectores.delete({
       where: {
         sectorId: id

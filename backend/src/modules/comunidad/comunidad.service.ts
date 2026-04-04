@@ -8,7 +8,7 @@ export class ComunidadService {
  
   constructor(private prisma: PrismaService){}
   
-  create(CreateComunidadDto: CreateComunidadDto) {
+  crearComunidad(CreateComunidadDto: CreateComunidadDto) {
     return this.prisma.comunidades.create({
       data: CreateComunidadDto
     });
@@ -26,7 +26,7 @@ export class ComunidadService {
     });
   }
 
-  update(id: number, updateComunidadDto: UpdateComunidadDto) {
+  actualizarComunidad(id: number, updateComunidadDto: UpdateComunidadDto) {
       return this.prisma.comunidades.update({
       where:{
         comunidadId: id
@@ -35,7 +35,7 @@ export class ComunidadService {
     });
   }
 
-  remove(id: number) {
+  eliminarActualizar(id: number) {
     return this.prisma.comunidades.delete({
       where: {
         comunidadId: id
