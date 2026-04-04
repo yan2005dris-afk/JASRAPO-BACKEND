@@ -7,6 +7,7 @@ import {
   Patch,
   Post,
   Query,
+  Request,
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -47,6 +48,26 @@ export class ClientController {
   // =====================
   // Endpoints privados
   // =====================
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequiredPermission('clientes', 'read')
+  @Get('search-private')
+  searchPrivate(
+    @Query('tipo') tipo: 'identificacion' | 'nombreCompleto',
+    @Query('valor') valor: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    const pageNumber = page ? parseInt(page, 10) : 1;
+    const limitNumber = limit ? parseInt(limit, 10) : 10;
+
+    return this.clientService.searchPrivate(
+      tipo,
+      valor,
+      pageNumber,
+      limitNumber,
+    );
+  }
 
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, PermissionsGuard)

@@ -37,36 +37,11 @@ export class CategoriaTarifaService {
   }
 
   //Obtener todas las categorías 
-  // LISTADO GENERAL
-  async getCategorias(params: {
-    includeInactive?: boolean;
-    nombre?: string;
-    canViewInactive: boolean;
-  }) {
-    const { includeInactive, nombre, canViewInactive } = params;
-
-    if (!canViewInactive) {
-      // Usuario normal → solo activos
-      return this.prisma.categoriaTarifa.findMany({
-        where: {
-          activo: true,
-          deletedAt: null,
-          ...(nombre && {
-            nombre: {
-              contains: nombre,
-              mode: 'insensitive',
-            },
-          }),
-        },
-        orderBy: { createdAt: 'desc' },
-      });
-    }
-
-    // Admin → puede ver activos + inactivos según botón
+  async getCategorias(nombre?: string) {
     return this.prisma.categoriaTarifa.findMany({
       where: {
+        activo: true,
         deletedAt: null,
-        ...(includeInactive ? {} : { activo: true }),
         ...(nombre && {
           nombre: {
             contains: nombre,
@@ -78,50 +53,25 @@ export class CategoriaTarifaService {
     });
   }
 
-  // BUSCAR POR NOMBRE (SAME LOGIC)
-  async buscarCategoriaPorNombre(params: {
-    nombre: string;
-    includeInactive?: boolean;
-    canViewInactive: boolean;
-  }) {
-    const { nombre, includeInactive, canViewInactive } = params;
 
-    if (!canViewInactive) {
-      // Usuario normal → solo activos
-      const data = await this.prisma.categoriaTarifa.findMany({
-        where: {
-          nombre: {
-            contains: nombre,
-            mode: 'insensitive',
-          },
-          activo: true,
-          deletedAt: null,
-        },
-        orderBy: { createdAt: 'desc' },
-      });
-
-      if (data.length === 0) {
-        throw new NotFoundException('No se encontró ninguna categoría activa con ese nombre');
-      }
-
-      return data;
-    }
-
-    // Admin → activos + inactivos según botón
+  // BUSCAR POR NOMBRE 
+  async buscarCategoriaPorNombre(nombre: string) {
     const data = await this.prisma.categoriaTarifa.findMany({
       where: {
         nombre: {
           contains: nombre,
           mode: 'insensitive',
         },
+        activo: true,
         deletedAt: null,
-        ...(includeInactive ? {} : { activo: true }),
       },
       orderBy: { createdAt: 'desc' },
     });
 
-    if (data.length === 0) {
-      throw new NotFoundException('No se encontró ninguna categoría con ese nombre');
+    if (!data.length) {
+      throw new NotFoundException(
+        'No se encontró ninguna categoría activa con ese nombre',
+      );
     }
 
     return data;

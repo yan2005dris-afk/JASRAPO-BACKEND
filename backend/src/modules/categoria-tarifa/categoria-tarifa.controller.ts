@@ -17,36 +17,17 @@ export class CategoriaTarifaController {
   }
 
   // LISTADO PRINCIPAL → incluye logica de permisos
-  @ApiOperation({ summary: 'Obtener todas las categorías (activas e inactivas para admin)' })
+  @ApiOperation({ summary: 'Obtener todas las categorías activas' })
   @Get()
-  async findAll(
-    @Query('includeInactive') includeInactive: string, // valor 'true' o 'false' desde frontend
-    @AuthUserId() userId: number, // opcional si quieres usar permisos
-  ) {
-    // Ejemplo: verificar permisos de admin
-    const canViewInactive = true; // aquí podrías usar tu PermissionsGuard para chequear
-
-    return this.service.getCategorias({
-      includeInactive: includeInactive === 'true',
-      canViewInactive,
-    });
+  findAll(@Query('nombre') nombre?: string) {
+    return this.service.getCategorias(nombre);
   }
 
   // BÚSQUEDA POR NOMBRE → aplica mismo control de permisos y botón
-  @ApiOperation({ summary: 'Buscar categoría por nombre (aplica includeInactive para admin)' })
+  @ApiOperation({ summary: 'Buscar categoría por nombre (solo activos)' })
   @Get('buscar')
-  async buscar(
-    @Query('nombre') nombre: string,
-    @Query('includeInactive') includeInactive: string,
-    @AuthUserId() userId: number,
-  ) {
-    const canViewInactive = true; // validar permisos de admin
-
-    return this.service.buscarCategoriaPorNombre({
-      nombre,
-      includeInactive: includeInactive === 'true',
-      canViewInactive,
-    });
+  buscar(@Query('nombre') nombre: string) {
+    return this.service.buscarCategoriaPorNombre(nombre);
   }
 
   @ApiOperation({ summary: 'Actualizar categoría (crea nueva versión)' })
