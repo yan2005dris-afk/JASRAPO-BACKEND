@@ -7,6 +7,7 @@ import {
   Patch,
   Post,
   Query,
+  Request,
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -23,14 +24,51 @@ import { UpdateClientDto } from './dto/update-client.dto';
 export class ClientController {
   constructor(private readonly clientService: ClientService) {}
 
-  // PUBLICO
+  /**
+   * Búsqueda pública de clientes
+   * Query params:
+   *  - tipo: identificacion | nombres | apellidos | nombreCompleto
+   *  - valor: texto a buscar
+   *  - page: opcional, página de resultados (default 1)
+   *  - limit: opcional, cantidad de resultados por página (default 10)
+   */
   @Get('search')
-  @Throttle({ default: { limit: 10, ttl: 60000 } }) // Limitar a 10 peticiones por minuto
-  search(@Query('tipo') tipo: string, @Query('valor') valor: string) {
-    return this.clientService.search(tipo, valor);
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
+  search(
+    @Query('tipo') tipo: 'identificacion' | 'nombres' | 'apellidos' | 'nombreCompleto',
+    @Query('valor') valor: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    const pageNumber = page ? parseInt(page, 10) : 1;
+    const limitNumber = limit ? parseInt(limit, 10) : 10;
+    return this.clientService.search(tipo, valor, pageNumber, limitNumber);
   }
 
-  // PRIVADO
+  // =====================
+  // Endpoints privados
+  // =====================
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequiredPermission('clientes', 'read')
+  @Get('search-private')
+  searchPrivate(
+    @Query('tipo') tipo: 'identificacion' | 'nombreCompleto',
+    @Query('valor') valor: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    const pageNumber = page ? parseInt(page, 10) : 1;
+    const limitNumber = limit ? parseInt(limit, 10) : 10;
+
+    return this.clientService.searchPrivate(
+      tipo,
+      valor,
+      pageNumber,
+      limitNumber,
+    );
+  }
+
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @RequiredPermission('clientes', 'create')
@@ -39,24 +77,32 @@ export class ClientController {
     return this.clientService.create(createClientDto);
   }
 
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @RequiredPermission('clientes', 'read')
   @Get()
   findAll() {
     return this.clientService.findAll();
   }
 
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @RequiredPermission('clientes', 'read')
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.clientService.findOne(id);
   }
 
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @RequiredPermission('clientes', 'update')
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateClientDto: UpdateClientDto) {
     return this.clientService.update(id, updateClientDto);
   }
 
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @RequiredPermission('clientes', 'delete')
   @Delete(':id')
   remove(@Param('id') id: string) {
