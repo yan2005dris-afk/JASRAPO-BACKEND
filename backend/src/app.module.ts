@@ -15,8 +15,11 @@ import { UserModule } from './modules/user/user.module';
 import { SessionsModule } from './modules/sessions/sessions.module';
 import { CategoriaTarifaModule } from './modules/categoria-tarifa/categoria-tarifa.module';
 import { NovedadOperativaModule } from './models/novedad-operativa/novedad-operativa.module';
+import { ComunidadModule } from './modules/comunidad/comunidad.module';
+import { SectorModule } from './modules/sector/sector.module';
 import { MedidorModule } from './models/medidor/medidor.module';
 import { ContratoMedidorModule } from './models/contrato-medidor/contrato-medidor.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -48,8 +51,11 @@ import { ContratoMedidorModule } from './models/contrato-medidor/contrato-medido
     CategoriaTarifaModule,
     LecturaModule,
     NovedadOperativaModule,
+    ComunidadModule,
+    SectorModule,
     MedidorModule,
     ContratoMedidorModule,
+
   ],
   controllers: [],
   providers: [
