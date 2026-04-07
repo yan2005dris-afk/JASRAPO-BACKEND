@@ -1,13 +1,13 @@
-import { IsNumber } from "class-validator";
-import { IsString } from "class-validator/types/decorator/typechecker/IsString";
+import { IsNumber, IsString } from "class-validator";
 
 export class CreateSectorDto {
+    
     @IsNumber()
-    comunidadId: number;
+    comunidadId!: number;
 
     @IsString()
-    codigo: string;
+    codigo!: string;
 
     @IsString()
-    nombre: string
+    nombre!: string;
 }
