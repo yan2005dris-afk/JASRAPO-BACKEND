@@ -19,6 +19,7 @@ import { ComunidadModule } from './modules/comunidad/comunidad.module';
 import { SectorModule } from './modules/sector/sector.module';
 import { MedidorModule } from './models/medidor/medidor.module';
 import { ContratoMedidorModule } from './models/contrato-medidor/contrato-medidor.module';
+import { BusquedaPublicaModule } from './modules/busqueda-publica/busqueda-publica.module';
 
 @Module({
   imports: [
@@ -55,6 +56,7 @@ import { ContratoMedidorModule } from './models/contrato-medidor/contrato-medido
     SectorModule,
     MedidorModule,
     ContratoMedidorModule,
+    BusquedaPublicaModule,
 
   ],
   controllers: [],

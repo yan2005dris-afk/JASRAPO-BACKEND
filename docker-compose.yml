@@ -69,22 +69,22 @@ services:
     restart: unless-stopped
 
   # ─── Frontend Angular + Nginx ─────────────────────────────────
-  frontend:
-    build:
-      context: ./FRONT
-      dockerfile: Dockerfile
-      target: production
-    container_name: jasrapo-frontend
-    environment:
-      - NGINX_HOST=localhost
-      - NGINX_PORT=80
-    ports:
-      - "${FRONTED_PORT:-4200}:80"
-    depends_on:
-      - backend
-    networks:
-      - jasrapo-network
-    restart: unless-stopped
+#  frontend:
+#    build:
+#      context: ./FRONT
+#      dockerfile: Dockerfile
+#      target: production
+#    container_name: jasrapo-frontend
+#    environment:
+#      - NGINX_HOST=localhost
+#      - NGINX_PORT=80
+#    ports:
+#      - "${FRONTED_PORT:-4200}:80"
+#    depends_on:
+#      - backend
+#    networks:
+#      - jasrapo-network
+#    restart: unless-stopped
 
 networks:
   jasrapo-network:
