@@ -1,14 +1,14 @@
 model CajaSesion {
   cajaId             BigInt     @id @default(autoincrement()) @map("caja_id")
-  usersId            Int        @map("users_id")
-  fechaApertura      DateTime   @default(now()) @map("fechaApertura")
+  usersId            Int        @map("usuario_id")
+  fechaApertura      DateTime   @default(now()) @map("fecha_apertura")
   montoApertura      Float      @map("monto_apertura")
   montoCierreSistema Float?     @map("monto_cierre_sistema")
   montoCierreReal    Float?     @map("monto_cierre_real")
   novedadCierre      String?    @map("novedad_cierre")
   estado             EstadoCaja @map("estado")
-  createdAt          DateTime   @default(now()) @map("created_at")
-  updatedAt          DateTime   @updatedAt @map("updated_at")
+  createdAt          DateTime   @default(now()) @map("creado_en")
+  updatedAt          DateTime   @updatedAt @map("actualizado_en")
   user               Users      @relation(fields: [usersId], references: [usersId])
   pagos              Pagos[]
 

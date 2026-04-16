@@ -7,9 +7,9 @@ model Producto {
   stock             Int                 @default(0) @map("stock")
   categoria         String?             @map("categoria")
   activo            Boolean             @default(true) @map("activo")
-  createdAt         DateTime            @default(now()) @map("created_at") @db.Timestamp(6)
-  updatedAt         DateTime            @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
-  deletedAt         DateTime?           @map("deleted_at") @db.Timestamp(6)
+  createdAt         DateTime            @default(now()) @map("creado_en") @db.Timestamp(6)
+  updatedAt         DateTime            @default(now()) @updatedAt @map("actualizado_en") @db.Timestamp(6)
+  deletedAt         DateTime?           @map("borrado_en") @db.Timestamp(6)
   detalleFactura    DetalleFactura[]
   prefacturaDetalle PrefacturaDetalle[]
 

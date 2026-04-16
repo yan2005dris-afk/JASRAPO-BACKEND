@@ -17,14 +17,14 @@ model Prefactura {
   fechaVencimiento              DateTime?           @map("fecha_vencimiento") @db.Date
   abono                         Decimal             @default(0) @map("abono") @db.Decimal
   saldoActual                   Decimal             @default(0) @map("saldo_actual") @db.Decimal
-  estadoPago                    String              @default("PENDIENTE") @map("estado_pago")
-  estadoPrefactura              String              @default("BORRADOR") @map("estado_prefactura")
+  estadoPago                    EstadoPago          @default(PENDIENTE) @map("estado_pago")
+  estadoPrefactura              EstadoPrefactura    @default(BORRADOR) @map("estado_prefactura")
   fechaPrimerRecordatorio       DateTime?           @map("fecha_primer_recordatorio") @db.Timestamp(6)
   fechaUltimoRecordatorio       DateTime?           @map("fecha_ultimo_recordatorio") @db.Timestamp(6)
   cantidadRecordatoriosEnviados Int                 @default(0) @map("cantidad_recordatorios_enviados")
-  createdAt                     DateTime            @default(now()) @map("created_at") @db.Timestamp(6)
-  updatedAt                     DateTime            @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
-  deletedAt                     DateTime?           @map("deleted_at") @db.Timestamp(6)
+  createdAt                     DateTime            @default(now()) @map("creado_en") @db.Timestamp(6)
+  updatedAt                     DateTime            @default(now()) @updatedAt @map("actualizado_en") @db.Timestamp(6)
+  deletedAt                     DateTime?           @map("borrado_en") @db.Timestamp(6)
   factura                       Facturas[]
   contrato                      Contratos           @relation(fields: [contratoId], references: [contratoId], onUpdate: NoAction)
   lote                          LoteFacturacion?    @relation(fields: [loteId], references: [loteId], onUpdate: NoAction)
@@ -40,4 +40,12 @@ enum EstadoPago {
   VENCIDO
   EN_CONVENIO
   CONVENIO_PAGADO
+}
+
+enum EstadoPrefactura {
+  BORRADOR      
+  EMITIDA       
+  ACEPTADA      
+  RECHAZADA  
+  ANULADA       
 }

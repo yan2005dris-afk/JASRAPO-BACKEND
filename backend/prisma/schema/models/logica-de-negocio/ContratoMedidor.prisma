@@ -5,8 +5,8 @@ model ContratoMedidor {
   fechaInicio       DateTime  @default(now()) @map("fecha_inicio")
   fechaFin          DateTime? @map("fecha_fin")
   motivoCambio      String?   @map("motivo_cambio")
-  createdAt         DateTime  @default(now()) @map("created_at")
-  deletedAt         DateTime? @map("deleted_at")
+  createdAt         DateTime  @default(now()) @map("creado_en")
+  deletedAt         DateTime? @map("borrado_en")
   contrato          Contratos @relation(fields: [contratoId], references: [contratoId])
   medidor           Medidores @relation(fields: [medidorId], references: [medidorId])
 

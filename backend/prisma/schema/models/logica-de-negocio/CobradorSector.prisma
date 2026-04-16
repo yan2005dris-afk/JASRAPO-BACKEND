@@ -1,12 +1,12 @@
 model CobradorSector {
   cobradorId      BigInt    @id @default(autoincrement()) @map("cobrador_id")
   sectorId        Int?      @map("sector_id")
-  usersId         Int       @map("users_id")
+  usersId         Int       @map("usuario_id")
   fechaAsignacion DateTime? @map("fecha_asignacion")
   fechaFin        DateTime? @map("fecha_fin")
   activo          Boolean   @default(true) @map("activo")
-  createdAt       DateTime  @default(now()) @map("created_at")
-  deletedAt       DateTime? @map("deleted_at")
+  createdAt       DateTime  @default(now()) @map("creado_en")
+  deletedAt       DateTime? @map("borrado_en")
   sector          Sectores? @relation(fields: [sectorId], references: [sectorId])
   user            Users     @relation(fields: [usersId], references: [usersId])
 

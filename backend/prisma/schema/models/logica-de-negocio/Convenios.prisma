@@ -11,9 +11,9 @@ model Convenios {
   fechaProximoPago  DateTime?       @map("fecha_proximo_pago")
   montoPagadoActual Float           @map("monto_pagado_actual")
   motivo            String?         @map("motivo")
-  updatedAt         DateTime        @updatedAt @map("updated_at")
-  createdAt         DateTime        @default(now()) @map("created_at")
-  deletedAt         DateTime?       @map("deleted_at")
+  updatedAt         DateTime        @updatedAt @map("actualizado_en")
+  createdAt         DateTime        @default(now()) @map("creado_en")
+  deletedAt         DateTime?       @map("borrado_en")
   contrato          Contratos       @relation(fields: [contratoId], references: [contratoId])
   cuotaConvenio     CuotaConvenio[]
 

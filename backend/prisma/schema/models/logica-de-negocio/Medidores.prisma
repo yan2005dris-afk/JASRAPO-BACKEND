@@ -6,9 +6,9 @@ model Medidores {
   modelo             String            @map("modelo")
   motivoBaja         String?           @map("motivo_baja")
   serie              String            @unique @map("serie")
-  updatedAt          DateTime          @updatedAt @map("updated_at")
-  createdAt          DateTime          @default(now()) @map("created_at")
-  deletedAt          DateTime?         @map("deleted_at")
+  updatedAt          DateTime          @updatedAt @map("actualizado_en")
+  createdAt          DateTime          @default(now()) @map("creado_en")
+  deletedAt          DateTime?         @map("borrado_en")
   estado             EstadoMedidor     @map("estado")
   contratosMedidores ContratoMedidor[]
 

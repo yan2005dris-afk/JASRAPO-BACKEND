@@ -1,9 +1,9 @@
 model Users {
-  usersId         Int               @id @default(autoincrement()) @map("users_id")
+  usersId         Int               @id @default(autoincrement()) @map("usuario_id")
   email           String            @unique @map("email")
-  password        String            @map("password")
-  rolesId         Int?              @map("role_id")
-  deletedAt       DateTime?         @map("deleted_at")
+  password        String            @map("contrasenia")
+  rolesId         Int?              @map("rol_id")
+  deletedAt       DateTime?         @map("borrado_en")
   cajaSesion      CajaSesion[]
   cobradorSector  CobradorSector[]
   loteFacturacion LoteFacturacion[]
@@ -13,5 +13,5 @@ model Users {
   userPermissions UserPermissions[]
   role            Roles?            @relation(fields: [rolesId], references: [rolesId])
 
-  @@map("users")
+  @@map("usuarios")
 }

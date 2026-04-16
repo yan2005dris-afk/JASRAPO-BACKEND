@@ -9,10 +9,10 @@ model Pagos {
   numeroOperacion     String?            @map("numero_operacion")
   observaciones       String?            @map("observaciones")
   referenciaBanco     String?            @map("referencia_banco")
-  updatedAt           DateTime           @updatedAt @map("updated_at")
-  createdAt           DateTime           @default(now()) @map("created_at")
-  deletedAt           DateTime?          @map("deleted_at")
-  usersId             Int                @map("users_id")
+  updatedAt           DateTime           @updatedAt @map("actualizado_en")
+  createdAt           DateTime           @default(now()) @map("creado_en")
+  deletedAt           DateTime?          @map("borrado_en")
+  usersId             Int                @map("usuario_id")
   metodoPago          MetodoPago         @map("metodo_pago")
   abonoCliente        AbonoCliente[]
   detallePago         DetallePago[]

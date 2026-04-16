@@ -3,9 +3,9 @@ model Comunidades {
   nombre                  String            @map("nombre")
   codigo                  String            @unique @map("codigo")
   porcentajeTasaSeguridad Float             @map("porcentaje_tasa_seguridad")
-  updatedAt               DateTime          @updatedAt @map("updated_at")
-  createdAt               DateTime          @default(now()) @map("created_at")
-  deletedAt               DateTime?         @map("deleted_at")
+  updatedAt               DateTime          @updatedAt @map("actualizado_en")
+  createdAt               DateTime          @default(now()) @map("creado_en")
+  deletedAt               DateTime?         @map("borrado_en")
   loteFacturacion         LoteFacturacion[]
   sector                  Sectores[]
 
