@@ -3,40 +3,67 @@ import { IsOptional, IsString, Length, IsEnum, ValidateIf, IsEmail, IsBoolean, I
 import { TipoIdentificacion } from 'src/generated/prisma/enums';
 
 export class CreateClientDto {
-  @ApiProperty({enum: TipoIdentificacion})
+  @ApiProperty({ enum: TipoIdentificacion })
   @IsEnum(TipoIdentificacion)
   tipoIdentificacion!: TipoIdentificacion;
 
+  // =========================
+  // IDENTIFICACIÓN
+  // =========================
   @ApiPropertyOptional({
-    description: 'Identificación del cliente. Obligatorio para todos los tipos excepto CONSUMIDOR FINAL',
+    description:
+      'Identificación del cliente. Obligatoria excepto para CONSUMIDOR_FINAL (SRI: 9999999999999)',
   })
-  @ValidateIf((o) => o.tipoIdentificacion !== TipoIdentificacion.CONSUMIDOR_FINAL)
-  @IsNotEmpty()
+  @ValidateIf(
+    (o) => o.tipoIdentificacion !== TipoIdentificacion.CONSUMIDOR_FINAL,
+  )
+  @IsOptional()
   @IsString()
   @Length(6, 20, {
     message: 'La identificación debe tener entre 6 y 20 caracteres',
   })
-  identificacion?:string
+  identificacion?: string;
 
-  @ValidateIf((o) => o.tipoIdentificacion !== TipoIdentificacion.CONSUMIDOR_FINAL)
+  // =========================
+  // NOMBRES
+  // =========================
   @ApiPropertyOptional({ description: 'Nombres del cliente' })
+  @ValidateIf(
+    (o) => o.tipoIdentificacion !== TipoIdentificacion.CONSUMIDOR_FINAL,
+  )
+  @IsOptional()
   @IsNotEmpty()
   @IsString()
   nombres?: string;
 
-  @ApiPropertyOptional()
-  @ValidateIf((o) => o.tipoIdentificacion !== TipoIdentificacion.CONSUMIDOR_FINAL)
+  // =========================
+  // APELLIDOS
+  // =========================
+  @ApiPropertyOptional({ description: 'Apellidos del cliente' })
+  @ValidateIf(
+    (o) => o.tipoIdentificacion !== TipoIdentificacion.CONSUMIDOR_FINAL,
+  )
+  @IsOptional()
   @IsNotEmpty()
   @IsString()
   apellidos?: string;
 
-  @ApiPropertyOptional()
+  // =========================
+  // RAZÓN SOCIAL (solo RUC)
+  // =========================
+  @ApiPropertyOptional({
+    description: 'Razón social (solo aplica para RUC)',
+  })
   @ValidateIf((o) => o.tipoIdentificacion === TipoIdentificacion.RUC)
+  @IsOptional()
   @IsNotEmpty()
   @IsString()
   @Length(2, 100)
   razonSocial?: string;
 
+  // =========================
+  // CONTACTO
+  // =========================
   @ApiPropertyOptional()
   @IsOptional()
   @IsEmail()
@@ -54,11 +81,17 @@ export class CreateClientDto {
   @Length(9, 10)
   telefonoSecundario?: string;
 
+  // =========================
+  // BENEFICIOS
+  // =========================
   @ApiPropertyOptional()
   @IsOptional()
   @IsBoolean()
   aplicaTerceraEdadDiscapacidad?: boolean;
 
+  // =========================
+  // DIRECCIÓN
+  // =========================
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()

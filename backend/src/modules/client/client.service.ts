@@ -15,15 +15,24 @@ import { Prisma } from 'src/generated/prisma/client';
 export class ClientService {
   constructor(private prisma: PrismaService) {}
 
-  // ============================
-  // Normalización de datos
-  // ============================
-  private normalizar(text?: string): string | undefined {
-    return text?.trim().toUpperCase();
+  // =========================
+  // NORMALIZACIÓN
+  // =========================
+  private normalizar(text?: string | null): string | undefined {
+    if (text === null || text === undefined) return undefined;
+    return text.trim().toUpperCase();
   }
 
-  private normalizarEmail(email?: string): string | undefined {
-    return email?.trim().toLowerCase();
+  private normalizarEmail(email?: string | null): string | undefined {
+    if (email === null || email === undefined) return undefined;
+    return email.trim().toLowerCase();
+  }
+
+  private normalizarIdentificacion(identificacion?: string): string {
+    if (!identificacion) {
+      throw new BadRequestException('Identificación requerida');
+    }
+    return identificacion.trim();
   }
 
   private parseId(id: string): bigint {
@@ -33,86 +42,186 @@ export class ClientService {
     return BigInt(id);
   }
 
-  private getPagination(page = 1, limit = 10) {
-    const safeLimit = Math.min(limit, 50);
-    const safePage = page < 1 ? 1 : page;
-
-    return {
-      skip: (safePage - 1) * safeLimit,
-      take: safeLimit,
-    };
-  }
-  // ============================
-  // CREATE
-  // ============================
-  async create(createClientDto: CreateClientDto) {
-    const {
-      nombres,
-      apellidos,
-      identificacion,
-      tipoIdentificacion,
-      email,
-      telefono,
-      telefonoSecundario,
-      aplicaTerceraEdadDiscapacidad,
-      razonSocial,
-      direccionDomicilio,
-    } = createClientDto;
-
-    if (!tipoIdentificacion) {
+  // =========================
+  // VALIDACIONES
+  // =========================
+  private validarIdentificacion(
+    tipo: TipoIdentificacion,
+    identificacion: string,
+  ) {
+    if (!tipo) {
       throw new BadRequestException('Tipo de identificación requerido');
     }
 
-    let dataFinal: Prisma.ClientesCreateInput;
+    if (
+      tipo !== TipoIdentificacion.CONSUMIDOR_FINAL &&
+      !TipoIdentificacionUtil.validar(tipo, identificacion)
+    ) {
+      throw new BadRequestException('Identificación inválida');
+    }
+  }
 
-    // CONSUMIDOR FINAL
-    if (tipoIdentificacion === TipoIdentificacion.CONSUMIDOR_FINAL) {
-      const existeCF = await this.prisma.clientes.findFirst({
-        where: { tipoIdentificacion: TipoIdentificacion.CONSUMIDOR_FINAL },
-      });
+  private validarCamposBasicos(
+    tipo: TipoIdentificacion,
+    nombres?: string,
+    apellidos?: string,
+  ) {
+    if (
+      tipo !== TipoIdentificacion.CONSUMIDOR_FINAL &&
+      (!nombres || !apellidos)
+    ) {
+      throw new BadRequestException(
+        'Nombres y apellidos son requeridos',
+      );
+    }
+  }
 
-      if (existeCF) {
-        throw new ConflictException('Ya existe un consumidor final registrado');
+  // =========================
+  // HELPERS DB
+  // =========================
+  private async findByIdentificacion(identificacion: string) {
+    return this.prisma.clientes.findUnique({
+      where: { identificacion },
+    });
+  }
+
+  private async ensureNotActive(cliente: any) {
+    if (cliente && cliente.deletedAt === null) {
+      throw new ConflictException('La identificación ya está registrada');
+    }
+  }
+
+  private async reactivateCliente(
+    clienteId: bigint,
+    data: Prisma.ClientesUpdateInput,
+  ) {
+    return this.prisma.clientes.update({
+      where: { clienteId },
+      data: {
+        ...data,
+        deletedAt: null,
+      },
+    });
+  }
+
+  // =========================
+  // BUILD DATA
+  // =========================
+  private buildCreateData(
+    dto: CreateClientDto,
+    identificacion: string,
+  ): Prisma.ClientesCreateInput {
+    return {
+      identificacion,
+      tipoIdentificacion: dto.tipoIdentificacion,
+      nombres: this.normalizar(dto.nombres)!,
+      apellidos: this.normalizar(dto.apellidos)!,
+      razonSocial: this.normalizar(dto.razonSocial),
+      email: this.normalizarEmail(dto.email),
+      telefono: dto.telefono,
+      telefonoSecundario: dto.telefonoSecundario,
+      direccionDomicilio: dto.direccionDomicilio,
+      aplicaTerceraEdadDiscapacidad:
+        dto.aplicaTerceraEdadDiscapacidad ?? false,
+    };
+  }
+
+  // =========================
+  // CONSUMIDOR FINAL
+  // =========================
+  private async handleConsumidorFinal(dto: CreateClientDto) {
+    const consumidores = await this.prisma.clientes.findMany({
+      where: {
+        tipoIdentificacion: TipoIdentificacion.CONSUMIDOR_FINAL,
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    const principal = consumidores[0];
+
+    // Si ya existe → reutilizar y avisar
+    if (principal) {
+      if (consumidores.length > 1) {
+        const duplicados = consumidores.slice(1);
+
+        await this.prisma.clientes.updateMany({
+          where: {
+            clienteId: { in: duplicados.map(c => c.clienteId) },
+          },
+          data: { deletedAt: new Date() },
+        });
       }
 
-      dataFinal = {
+      const updated = await this.reactivateCliente(principal.clienteId, {
         identificacion: '9999999999999',
-        tipoIdentificacion: 'CONSUMIDOR_FINAL',
         nombres: 'CONSUMIDOR',
         apellidos: 'FINAL',
         razonSocial: 'CONSUMIDOR FINAL',
-        email: this.normalizarEmail(email),
-        telefono,
-        telefonoSecundario,
-        direccionDomicilio,
-        aplicaTerceraEdadDiscapacidad: false,
-      };
-    } else {
-      // VALIDACIÓN SRI
-      if (
-        !identificacion ||
-        !TipoIdentificacionUtil.validar(tipoIdentificacion, identificacion)
-      ) {
-        throw new BadRequestException('Identificación inválida o requerida');
-      }
+        email: this.normalizarEmail(dto.email),
+        telefono: dto.telefono,
+        telefonoSecundario: dto.telefonoSecundario,
+        direccionDomicilio: dto.direccionDomicilio,
+      });
 
-      dataFinal = {
-        identificacion,
-        tipoIdentificacion,
-        nombres: this.normalizar(nombres)!,
-        apellidos: this.normalizar(apellidos)!,
-        razonSocial: this.normalizar(razonSocial),
-        email: this.normalizarEmail(email),
-        telefono,
-        telefonoSecundario,
-        direccionDomicilio,
-        aplicaTerceraEdadDiscapacidad:
-          aplicaTerceraEdadDiscapacidad ?? false,
+      return {
+        message: 'Ya existe un Consumidor Final. Se reutilizó el registro existente.',
+        data: updated,
       };
     }
 
+    // Crear nuevo
+    const created = await this.prisma.clientes.create({
+      data: {
+        identificacion: '9999999999999',
+        tipoIdentificacion: TipoIdentificacion.CONSUMIDOR_FINAL,
+        nombres: 'CONSUMIDOR',
+        apellidos: 'FINAL',
+        razonSocial: 'CONSUMIDOR FINAL',
+        email: this.normalizarEmail(dto.email),
+        telefono: dto.telefono,
+        telefonoSecundario: dto.telefonoSecundario,
+        direccionDomicilio: dto.direccionDomicilio,
+        aplicaTerceraEdadDiscapacidad: false,
+      },
+    });
+
+    return {
+      message: 'Consumidor Final creado correctamente.',
+      data: created,
+    };
+  }
+
+  // =========================
+  // CREATE
+  // =========================
+  async create(dto: CreateClientDto) {
+    // PRIMERO validar si es consumidor final
+    if (dto.tipoIdentificacion === TipoIdentificacion.CONSUMIDOR_FINAL) {
+      return this.handleConsumidorFinal(dto);
+    }
+
+    // SOLO para los demás casos
+    const identificacion = this.normalizarIdentificacion(dto.identificacion);
+
+    this.validarIdentificacion(dto.tipoIdentificacion, identificacion);
+    this.validarCamposBasicos(
+      dto.tipoIdentificacion,
+      dto.nombres,
+      dto.apellidos,
+    );
+
+    const existente = await this.findByIdentificacion(identificacion);
+
+    const data = this.buildCreateData(dto, identificacion);
+
+    if (existente && existente.deletedAt !== null) {
+      return this.reactivateCliente(existente.clienteId, data);
+    }
+
+    await this.ensureNotActive(existente);
+
     try {
-      return await this.prisma.clientes.create({ data: dataFinal });
+      return await this.prisma.clientes.create({ data });
     } catch (error: any) {
       if (error.code === 'P2002') {
         throw new ConflictException('La identificación ya está registrada');
@@ -121,9 +230,9 @@ export class ClientService {
     }
   }
 
-  // ============================
+  // =========================
   // FIND ALL
-  // ============================
+  // =========================
   async findAll() {
     return this.prisma.clientes.findMany({
       where: { deletedAt: null },
@@ -131,6 +240,9 @@ export class ClientService {
     });
   }
 
+  // =========================
+  // FIND ONE
+  // =========================
   async findOne(id: string) {
     const clienteId = this.parseId(id);
 
@@ -148,90 +260,65 @@ export class ClientService {
     return cliente;
   }
 
-  // ============================
+  // =========================
   // UPDATE
-  // ============================
-  async update(id: string, updateClientDto: UpdateClientDto) {
+  // =========================
+  async update(id: string, dto: UpdateClientDto) {
     const clienteId = this.parseId(id);
     const cliente = await this.findOne(id);
 
-    const {
-      tipoIdentificacion,
-      identificacion,
-      nombres,
-      apellidos,
-      razonSocial,
-      email,
-      telefono,
-      telefonoSecundario,
-      direccionDomicilio,
-      aplicaTerceraEdadDiscapacidad,
-    } = updateClientDto;
+    const tipoFinal = dto.tipoIdentificacion ?? cliente.tipoIdentificacion;
+    const identificacionFinal = this.normalizarIdentificacion(
+      dto.identificacion ?? cliente.identificacion,
+    );
 
-    const tipoFinal = tipoIdentificacion ?? cliente.tipoIdentificacion;
-    const identificacionFinal = identificacion ?? cliente.identificacion;
+    this.validarIdentificacion(tipoFinal, identificacionFinal);
 
-    if (!TipoIdentificacionUtil.validar(tipoFinal, identificacionFinal)) {
-      throw new BadRequestException('Identificación inválida');
-    }
+    // Validar duplicado
+    if (dto.identificacion) {
+      const existente = await this.findByIdentificacion(identificacionFinal);
 
-    if (identificacion) {
-      const existe = await this.prisma.clientes.findFirst({
-        where: {
-          identificacion,
-          NOT: { clienteId },
-        },
-      });
-
-      if (existe) {
-        throw new ConflictException('La identificación ya está registrada');
+      if (existente && existente.clienteId !== clienteId) {
+        throw new ConflictException(
+          'La identificación ya está registrada',
+        );
       }
     }
 
-    const nombresFinal = nombres ?? cliente.nombres;
-    const apellidosFinal = apellidos ?? cliente.apellidos;
-
-    if (
-      tipoFinal !== TipoIdentificacion.CONSUMIDOR_FINAL &&
-      (!nombresFinal || !apellidosFinal)
-    ) {
-      throw new BadRequestException(
-        'Nombres y apellidos son requeridos para clientes que no son CONSUMIDOR_FINAL',
-      );
-    }
+    this.validarCamposBasicos(
+      tipoFinal,
+      dto.nombres ?? cliente.nombres,
+      dto.apellidos ?? cliente.apellidos,
+    );
 
     return this.prisma.clientes.update({
       where: { clienteId },
       data: {
-        ...(tipoIdentificacion && { tipoIdentificacion }),
-        ...(identificacion && { identificacion }),
-        nombres: this.normalizar(nombresFinal)!,
-        apellidos: this.normalizar(apellidosFinal)!,
-        ...(razonSocial && { razonSocial: this.normalizar(razonSocial) }),
-        ...(email !== undefined && { email: this.normalizarEmail(email) }),
-        ...(telefono !== undefined && { telefono }),
-        ...(telefonoSecundario !== undefined && { telefonoSecundario }),
-        ...(direccionDomicilio !== undefined && { direccionDomicilio }),
-        ...(aplicaTerceraEdadDiscapacidad !== undefined && {
-          aplicaTerceraEdadDiscapacidad,
-        }),
+        tipoIdentificacion: tipoFinal,
+        identificacion: identificacionFinal,
+        nombres: this.normalizar(dto.nombres ?? cliente.nombres)!,
+        apellidos: this.normalizar(dto.apellidos ?? cliente.apellidos)!,
+        razonSocial: this.normalizar(dto.razonSocial),
+        email: this.normalizarEmail(dto.email),
+        telefono: dto.telefono ?? cliente.telefono,
+        telefonoSecundario:
+          dto.telefonoSecundario ?? cliente.telefonoSecundario,
+        direccionDomicilio:
+          dto.direccionDomicilio ?? cliente.direccionDomicilio,
+        aplicaTerceraEdadDiscapacidad:
+          dto.aplicaTerceraEdadDiscapacidad ??
+          cliente.aplicaTerceraEdadDiscapacidad,
       },
     });
   }
 
+  // =========================
+  // REMOVE (SOFT DELETE)
+  // =========================
   async remove(id: string) {
     const clienteId = this.parseId(id);
 
-    const cliente = await this.prisma.clientes.findFirst({
-      where: {
-        clienteId,
-        deletedAt: null,
-      },
-    });
-
-    if (!cliente) {
-      throw new NotFoundException('Cliente no encontrado');
-    }
+    const cliente = await this.findOne(id);
 
     return this.prisma.clientes.update({
       where: { clienteId },
@@ -239,58 +326,18 @@ export class ClientService {
     });
   }
 
-  async search(
-    tipo: 'identificacion' | 'nombres' | 'apellidos' | 'nombreCompleto',
-    valor: string,
-    page = 1,
-    limit = 10,
-  ) {
-    if (!tipo || !valor) {
-      throw new BadRequestException('Debe enviar tipo y valor');
-    }
-
-    const { skip, take } = this.getPagination(page, limit);
-
-    switch (tipo) {
-      case 'identificacion':
-        if (valor.length < 6) {
-          throw new BadRequestException('Identificación inválida');
-        }
-        return this.prisma.clientes.findMany({
-          where: { identificacion: valor, deletedAt: null },
-          skip,
-          take,
-        });
-
-      case 'nombres':
-      case 'apellidos':
-        return this.prisma.clientes.findMany({
-          where: {
-            [tipo]: { contains: valor, mode: 'insensitive' },
-            deletedAt: null,
-          },
-          skip,
-          take,
-        });
-
-      case 'nombreCompleto':
-        return this.prisma.clientes.findMany({
-          where: {
-            OR: [
-              { nombres: { contains: valor, mode: 'insensitive' } },
-              { apellidos: { contains: valor, mode: 'insensitive' } },
-            ],
-            deletedAt: null,
-          },
-          skip,
-          take,
-        });
-
-      default:
-        throw new BadRequestException('Tipo inválido');
-    }
+  private normalizarBusqueda(valor: string): string[] {
+    return valor
+      .trim()
+      .toUpperCase()
+      .replace(/\s+/g, ' ')
+      .split(' ')
+      .filter(Boolean);
   }
 
+  // =========================
+  // SEARCH
+  // =========================
   async searchPrivate(
     tipo: 'identificacion' | 'nombreCompleto',
     valor: string,
@@ -301,39 +348,58 @@ export class ClientService {
       throw new BadRequestException('Debe enviar tipo y valor');
     }
 
-    const { skip, take } = this.getPagination(page, limit);
+    const skip = (page - 1) * limit;
 
     let results;
 
     switch (tipo) {
-      case 'identificacion':
-        if (valor.length < 6) {
-          throw new BadRequestException('Identificación inválida');
-        }
-
+      case 'identificacion': {
         results = await this.prisma.clientes.findMany({
           where: {
-            identificacion: valor,
+            identificacion: this.normalizarIdentificacion(valor),
             deletedAt: null,
           },
           skip,
-          take,
+          take: limit,
+          orderBy: {
+            createdAt: 'desc',
+          },
         });
         break;
+      }
 
-      case 'nombreCompleto':
+      case 'nombreCompleto': {
+        const tokens = this.normalizarBusqueda(valor);
+
         results = await this.prisma.clientes.findMany({
           where: {
-            OR: [
-              { nombres: { contains: valor, mode: 'insensitive' } },
-              { apellidos: { contains: valor, mode: 'insensitive' } },
-            ],
+            AND: tokens.map((t) => ({
+              OR: [
+                {
+                  nombres: {
+                    contains: t,
+                    mode: 'insensitive',
+                  },
+                },
+                {
+                  apellidos: {
+                    contains: t,
+                    mode: 'insensitive',
+                  },
+                },
+              ],
+            })),
             deletedAt: null,
           },
           skip,
-          take,
+          take: limit,
+          orderBy: {
+            createdAt: 'desc',
+          },
         });
+
         break;
+      }
 
       default:
         throw new BadRequestException('Tipo inválido');
