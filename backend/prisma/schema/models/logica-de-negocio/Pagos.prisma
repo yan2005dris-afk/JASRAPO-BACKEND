@@ -1,11 +1,11 @@
 model Pagos {
   pagoId              BigInt             @id @default(autoincrement()) @map("pago_id")
   cajaId              BigInt?            @map("caja_id")
-  cambio              Float              @map("cambio")
+  cambio              Decimal            @map("cambio") @db.Decimal
   comprobanteUrlMinIo String?            @map("comprobante_url_minio")
   estadoConciliacion  EstadoConciliacion @map("estado_conciliacion")
   fechaPago           DateTime           @map("fecha_pago")
-  montoTotalRecibido  Float              @map("monto_total_recibido")
+  montoTotalRecibido  Decimal            @map("monto_total_recibido") @db.Decimal
   numeroOperacion     String?            @map("numero_operacion")
   observaciones       String?            @map("observaciones")
   referenciaBanco     String?            @map("referencia_banco")
@@ -19,6 +19,8 @@ model Pagos {
   cajaSesion          CajaSesion?        @relation(fields: [cajaId], references: [cajaId])
   user                Users              @relation(fields: [usersId], references: [usersId])
 
+  @@index([usersId])
+  @@index([cajaId])
   @@map("pagos")
 }
 

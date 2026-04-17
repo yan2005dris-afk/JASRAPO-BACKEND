@@ -7,5 +7,6 @@ model UserPermissions {
   Permissions       Permissions @relation(fields: [permissionsId], references: [permissionsId])
   users             Users       @relation(fields: [usersId], references: [usersId])
 
+  @@unique([usersId, permissionsId])
   @@map("usuario_permisos")
 }

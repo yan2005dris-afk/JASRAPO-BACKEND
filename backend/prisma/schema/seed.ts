@@ -15,6 +15,7 @@ import { seedCategoriaTarifa } from './seeds/categoriaTarifa.seed';
 import { seedClientes } from './seeds/clientes.seed';
 import { seedContratos } from './seeds/contratos.seed';
 import { seedLecturas } from './seeds/lecturas.seed';
+import { seedSriCatalogs } from './seeds/sri.seed';
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
@@ -75,44 +76,25 @@ async function main() {
   await seedMenuPermissions(prisma, menus, permissions);
   console.log('✅ Permisos asignados a Menus correctamente.');
 
+  // SRI Catalogs
+  console.log('🏛️ Cargando catálogos SRI...');
+  await seedSriCatalogs(prisma);
+  console.log('✅ Catálogos SRI cargados.');
+
   // === DATOS PARA PROBAR SP DE FACTURACIÓN ===
   console.log('📦 Creando datos de facturación...');
 
   // Rubros
   await prisma.rubros.createMany({
     data: [
-      { codigoSri: '001', descripcion: 'Consumo Agua', valorUnitario: 0.50, tipoRubro: 'VARIABLE', gravaIva: true },
-      { codigoSri: '002', descripcion: 'Cargo Fijo', valorUnitario: 5.00, tipoRubro: 'FIJO', gravaIva: true },
-      { codigoSri: '003', descripcion: 'Interés Mora', valorUnitario: 0.10, tipoRubro: 'MULTA', gravaIva: false },
-      { codigoSri: '004', descripcion: 'Tasa Seguridad', valorUnitario: 0, tipoRubro: 'VARIABLE', gravaIva: false },
+      { codigoSri: '001', nombre: 'Consumo Agua', descripcion: 'Consumo Agua', precioUnitario: 0.50, tipoRubro: 'VARIABLE' as any, impuestoId: 2 },
+      { codigoSri: '002', nombre: 'Cargo Fijo', descripcion: 'Cargo Fijo', precioUnitario: 5.00, tipoRubro: 'FIJO' as any, impuestoId: 2 },
+      { codigoSri: '003', nombre: 'Interés Mora', descripcion: 'Interés Mora', precioUnitario: 0.10, tipoRubro: 'MULTA' as any, impuestoId: 1 },
+      { codigoSri: '004', nombre: 'Tasa Seguridad', descripcion: 'Tasa Seguridad', precioUnitario: 0, tipoRubro: 'VARIABLE' as any, impuestoId: 1 },
     ],
     skipDuplicates: true,
   });
   console.log('✅ Rubros creados');
-
-  // Comunidades
-  await seedComunidades(prisma);
-  console.log('✅ Comunidades creadas');
-
-  // Sectores
-  await seedSectores(prisma);
-  console.log('✅ Sectores creados');
-
-  // Categorías Tarifa
-  await seedCategoriaTarifa(prisma);
-  console.log('✅ Categorías de tarifa creadas');
-
-  // Clientes
-  await seedClientes(prisma);
-  console.log('✅ Clientes creados');
-
-  // Contratos
-  await seedContratos(prisma);
-  console.log('✅ Contratos creados');
-
-  // Lecturas (12 meses)
-  await seedLecturas(prisma);
-  console.log('✅ Lecturas creadas (12 meses)');
 
   console.log('✅ Seed de facturación completado.');
 }

@@ -2,7 +2,7 @@ model AbonoCliente {
   abonoClienteId        BigInt    @id @default(autoincrement()) @map("abono_cliente_id")
   clienteId             BigInt    @map("cliente_id")
   pagoId                BigInt?   @map("pago_id")
-  montoAbono            Float     @map("monto_abono")
+  montoAbono            Decimal   @map("monto_abono") @db.Decimal
   origenAbono           String    @map("origen_abono")
   disponibleParaAplicar Boolean   @default(true) @map("disponible_para_aplicar")
   createdAt             DateTime  @default(now()) @map("creado_en")
@@ -11,6 +11,7 @@ model AbonoCliente {
   pago                  Pagos?    @relation(fields: [pagoId], references: [pagoId])
 
   @@index([clienteId])
+  @@index([pagoId])
   @@index([deletedAt])
   @@map("abono_cliente")
 }

@@ -1,15 +1,15 @@
 model Convenios {
   convenioId        BigInt          @id @default(autoincrement()) @map("convenio_id")
   numeroCuotas      Int             @map("numero_cuotas")
-  abonoInicial      Float           @map("abono_inicial")
+  abonoInicial      Decimal         @map("abono_inicial") @db.Decimal
   contratoId        BigInt          @map("contrato_id")
-  deudaTotal        Float           @map("deuda_total")
+  deudaTotal        Decimal         @map("deuda_total") @db.Decimal
   diasMoraActual    Int             @map("dias_mora_actual")
   estado            EstadoConvenio  @map("estado_convenio")
   fechaAprobacion   DateTime?       @map("fecha_aprobacion")
   fechaPrimerPago   DateTime        @map("fecha_primer_pago")
   fechaProximoPago  DateTime?       @map("fecha_proximo_pago")
-  montoPagadoActual Float           @map("monto_pagado_actual")
+  montoPagadoActual Decimal         @map("monto_pagado_actual") @db.Decimal
   motivo            String?         @map("motivo")
   updatedAt         DateTime        @updatedAt @map("actualizado_en")
   createdAt         DateTime        @default(now()) @map("creado_en")
@@ -17,5 +17,6 @@ model Convenios {
   contrato          Contratos       @relation(fields: [contratoId], references: [contratoId])
   cuotaConvenio     CuotaConvenio[]
 
+  @@index([contratoId])
   @@map("convenios")
 }

@@ -4,13 +4,16 @@ model DetallePago {
   facturaId       BigInt?         @map("factura_id")
   cuotaConvenioId BigInt?         @map("cuota_convenio_id")
   tipoPago        TipoDetallePago @map("tipo_pago")
-  montoAbonado    Float           @map("monto_abonado")
+  montoAbonado    Decimal         @map("monto_abonado") @db.Decimal
   createdAt       DateTime        @default(now()) @map("creado_en")
   deletedAt       DateTime?       @map("borrado_en")
   cuotaConvenio   CuotaConvenio?  @relation(fields: [cuotaConvenioId], references: [cuotaConvenioId])
   factura         Facturas?       @relation(fields: [facturaId], references: [facturaId])
   pago            Pagos           @relation(fields: [pagoId], references: [pagoId])
 
+  @@index([pagoId])
+  @@index([facturaId])
+  @@index([cuotaConvenioId])
   @@map("detalle_pago")
 }
 

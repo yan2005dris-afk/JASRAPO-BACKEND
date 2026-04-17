@@ -1,0 +1,29 @@
+model PeriodosFacturacion {
+  periodoId        Int              @id @default(autoincrement()) @map("periodo_id")
+  nombre           String           @unique @map("nombre") // Ej: "2024-01"
+  fechaInicio      DateTime         @map("fecha_inicio")
+  fechaFin         DateTime         @map("fecha_fin")
+  fechaVencimiento DateTime         @map("fecha_vencimiento")
+  estado           EstadoPeriodo    @default(ABIERTO) @map("estado")
+  
+  // Auditoría
+  createdAt        DateTime         @default(now()) @map("creado_en")
+  updatedAt        DateTime         @updatedAt @map("actualizado_en")
+
+  // Relaciones
+  prefacturas      Prefacturas[]
+  facturas         Facturas[]
+  notasCredito     NotasCredito[]
+  notasDebito      NotasDebito[]
+  retenciones      Retenciones[]
+  lecturas         Lecturas[]
+  lotesFacturacion LoteFacturacion[]
+
+  @@map("periodos_facturacion")
+}
+
+enum EstadoPeriodo {
+  ABIERTO
+  CERRADO
+  PROCESANDO
+}

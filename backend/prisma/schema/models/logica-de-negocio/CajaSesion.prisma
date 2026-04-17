@@ -2,9 +2,9 @@ model CajaSesion {
   cajaId             BigInt     @id @default(autoincrement()) @map("caja_id")
   usersId            Int        @map("usuario_id")
   fechaApertura      DateTime   @default(now()) @map("fecha_apertura")
-  montoApertura      Float      @map("monto_apertura")
-  montoCierreSistema Float?     @map("monto_cierre_sistema")
-  montoCierreReal    Float?     @map("monto_cierre_real")
+  montoApertura      Decimal    @map("monto_apertura") @db.Decimal
+  montoCierreSistema Decimal?   @map("monto_cierre_sistema") @db.Decimal
+  montoCierreReal    Decimal?   @map("monto_cierre_real") @db.Decimal
   novedadCierre      String?    @map("novedad_cierre")
   estado             EstadoCaja @map("estado")
   createdAt          DateTime   @default(now()) @map("creado_en")
@@ -12,6 +12,7 @@ model CajaSesion {
   user               Users      @relation(fields: [usersId], references: [usersId])
   pagos              Pagos[]
 
+  @@index([usersId])
   @@map("caja_sesion")
 }
 

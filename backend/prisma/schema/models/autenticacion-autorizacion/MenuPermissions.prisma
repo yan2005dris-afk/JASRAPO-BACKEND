@@ -6,5 +6,6 @@ model MenuPermissions {
   menus         Menus       @relation(fields: [menusId], references: [menusId])
   permissions   Permissions @relation(fields: [permissionsId], references: [permissionsId])
 
+  @@unique([menusId, permissionsId])
   @@map("menu_permisos")
 }

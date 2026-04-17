@@ -1,16 +1,20 @@
 model Rubros {
   rubroId           Int                 @id @default(autoincrement()) @map("rubro_id")
-  codigoSri         String              @unique @map("codigo_sri")
+  codigoSri         String?             @unique @map("codigo_sri")
+  nombre            String              @default("") @map("nombre")
   descripcion       String              @map("descripcion")
-  valorUnitario     Float               @map("valor_unitario")
-  tipoRubro         TipoRubro           @map("tipo_rubro")
-  gravaIva          Boolean             @default(true) @map("grava_iva")
-  createdAt         DateTime            @default(now()) @map("creado_en")
-  updatedAt         DateTime            @updatedAt @map("actualizado_en")
-  deletedAt         DateTime?           @map("borrado_en")
-  detalleFactura    DetalleFactura[]
+  precioUnitario    Decimal             @map("precio_unitario") @db.Decimal
+  tipoRubro      TipoRubro           @map("tipo_rubro")
+  impuestoId     Int                 @map("impuesto_id")
+  activo         Boolean             @default(true) @map("activo")
+  createdAt      DateTime            @default(now()) @map("creado_en")
+  updatedAt      DateTime            @updatedAt @map("actualizado_en")
+  deletedAt      DateTime?           @map("borrado_en")
   prefacturaDetalle PrefacturaDetalle[]
+  facturaDetalle    FacturaDetalle[]
+  impuesto       SriImpuesto         @relation(fields: [impuestoId], references: [id])
 
+  @@index([impuestoId])
   @@map("rubros")
 }
 
@@ -19,7 +23,7 @@ enum TipoRubro {
   VARIABLE
   MULTA
   OTRO
-  PRODUCTO
+  BIEN
   SERVICIO
   IMPUESTO
 }

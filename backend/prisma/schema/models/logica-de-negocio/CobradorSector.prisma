@@ -10,5 +10,6 @@ model CobradorSector {
   sector          Sectores? @relation(fields: [sectorId], references: [sectorId])
   user            Users     @relation(fields: [usersId], references: [usersId])
 
+  @@unique([usersId, sectorId])
   @@map("cobrador_sector")
 }

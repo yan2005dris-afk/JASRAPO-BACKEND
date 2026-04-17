@@ -1,0 +1,80 @@
+model Facturas {
+  facturaId BigInt @id @default(autoincrement()) @map("factura_id")
+  uuid      String @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  // Relaciones Base
+  prefacturaId      BigInt @map("prefactura_id")
+  puntoEmisionId    Int    @map("punto_emision_id")
+  periodoId         Int    @map("periodo_id")
+  tipoComprobanteId Int    @map("tipo_comprobante_id")
+  formaPagoId       Int    @map("forma_pago_id")
+
+  // Montos y Totales Finales
+  subtotal       Decimal @map("subtotal") @db.Decimal
+  iva            Decimal @map("iva") @db.Decimal
+  descuentoTotal Decimal @map("descuento_total") @db.Decimal
+  totalPagar     Decimal @map("total_pagar") @db.Decimal
+  abono          Decimal @default(0) @map("abono") @db.Decimal
+  saldoPendiente Decimal @default(0) @map("saldo_pendiente") @db.Decimal
+  
+  // Datos Fiscales (SRI)
+  claveAcceso        String?   @unique @map("clave_acceso") @db.VarChar(49)
+  secuencial         String    @map("secuencial") @db.VarChar(9)
+  numeroAutorizacion String?   @map("numero_autorizacion")
+  enviadoSri         Boolean   @default(false) @map("enviado_sri")
+  fechaEnvioSri      DateTime? @map("fecha_enviado_sri")
+  xmlFirmado         String?   @map("xml_firmado")
+  xmlAutorizado      String?   @map("xml_autorizado")
+  pdfUrl             String?   @map("pdf_url")
+  respuestaSri       String?   @map("respuesta_sri")
+  estadoSri          EstadoSri @default(BORRADOR) @map("estado_sri")
+
+  // Control y Proceso
+  estado           EstadoFactura @map("estado")
+  estadoPago       EstadoPago    @default(PENDIENTE) @map("estado_pago")
+  fechaEmision     DateTime      @default(now()) @map("fecha_emision")
+  fechaVencimiento DateTime      @map("fecha_vencimiento")
+
+  // Auditoría Base
+  createdBy String?   @map("creado_por")
+  updatedBy String?   @map("actualizado_por")
+  createdAt DateTime  @default(now()) @map("creado_en")
+  updatedAt DateTime  @updatedAt @map("actualizado_en")
+  deletedAt DateTime? @map("borrado_en")
+
+  // Relaciones
+  detalleFactura  FacturaDetalle[]
+  detallePago     DetallePago[]
+  prefactura      Prefacturas         @relation(fields: [prefacturaId], references: [prefacturaId], onUpdate: NoAction)
+  periodo         PeriodosFacturacion @relation(fields: [periodoId], references: [periodoId], onUpdate: NoAction)
+  puntoEmision    PuntosEmision       @relation(fields: [puntoEmisionId], references: [puntoEmisionId], onUpdate: NoAction)
+  tipoComprobante SriTipoComprobante @relation(fields: [tipoComprobanteId], references: [id], onUpdate: NoAction)
+  formaPago       SriFormaPago       @relation(fields: [formaPagoId], references: [id], onUpdate: NoAction)
+  notasCredito    NotasCredito[]
+  notasDebito     NotasDebito[]
+
+  @@index([prefacturaId])
+  @@index([periodoId])
+  @@index([puntoEmisionId])
+  @@index([tipoComprobanteId])
+  @@index([formaPagoId])
+  @@index([secuencial])
+  @@unique([puntoEmisionId, tipoComprobanteId, secuencial], name: "uk_factura_secuencial")
+  @@map("facturas")
+}
+
+enum EstadoFactura {
+  PENDIENTE_AUTORIZACION
+  EMITIDA
+  AUTORIZADA
+  ANULADA
+}
+
+enum EstadoPago {
+  PENDIENTE
+  PAGADO
+  PARCIAL
+  VENCIDO
+  EN_CONVENIO
+  CONVENIO_PAGADO
+}

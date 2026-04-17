@@ -6,5 +6,6 @@ model RolPermissions {
   permissions      Permissions @relation(fields: [permissionsId], references: [permissionsId])
   roles            Roles       @relation(fields: [rolesId], references: [rolesId])
 
+  @@unique([rolesId, permissionsId])
   @@map("rol_permisos")
 }

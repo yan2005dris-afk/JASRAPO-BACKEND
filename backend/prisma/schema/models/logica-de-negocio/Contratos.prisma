@@ -11,14 +11,17 @@ model Contratos {
   createdAt           DateTime          @default(now()) @map("creado_en")
   updatedAt           DateTime          @updatedAt @map("actualizado_en")
   deletedAt           DateTime?         @map("borrado_en")
-  contratosMedidores  ContratoMedidor[]
+  medidores           Medidores[]
   categoriaTarifa     CategoriaTarifa   @relation(fields: [categoriaTarifaId], references: [categoriaTarifaId])
   cliente             Clientes          @relation(fields: [clienteId], references: [clienteId])
   sector              Sectores          @relation(fields: [sectorId], references: [sectorId])
   convenios           Convenios[]
   lecturas            Lecturas[]
-  prefacturas         Prefactura[]
+  prefacturas         Prefacturas[]
 
+  @@index([clienteId])
+  @@index([sectorId])
+  @@index([categoriaTarifaId])
   @@map("contratos")
 }
 
