@@ -9,6 +9,7 @@ model PrefacturaDetalle {
   // Cantidades y Precios
   cantidad       Decimal @map("cantidad") @db.Decimal
   precioUnitario Decimal @map("precio_unitario") @db.Decimal
+  descuento      Decimal @default(0) @map("descuento") @db.Decimal
   subtotal       Decimal @map("subtotal") @db.Decimal
   iva            Decimal @map("iva") @db.Decimal
   total          Decimal @map("total") @db.Decimal
@@ -23,8 +24,9 @@ model PrefacturaDetalle {
   updatedAt DateTime @updatedAt @map("actualizado_en")
 
   // Relaciones
-  prefactura Prefacturas @relation(fields: [prefacturaId], references: [prefacturaId], onDelete: Cascade)
-  rubro      Rubros      @relation(fields: [rubroId], references: [rubroId])
+  prefactura        Prefacturas        @relation(fields: [prefacturaId], references: [prefacturaId], onDelete: Cascade)
+  rubro             Rubros             @relation(fields: [rubroId], references: [rubroId])
+  descuentosDetalle DescuentoDetalle[]
 
   @@map("prefactura_detalle")
 }

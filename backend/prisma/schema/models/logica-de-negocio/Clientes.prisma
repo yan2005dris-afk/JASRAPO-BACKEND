@@ -16,8 +16,8 @@ model Clientes {
   deletedAt                     DateTime?          @map("borrado_en")
   abonosClientes                AbonoCliente[]
   contratos                     Contratos[]
-  prefacturas                   Prefacturas[]
-  
+  pagos                         Pagos[]
+
   @@index([nombres])
   @@index([deletedAt])
   @@map("clientes")

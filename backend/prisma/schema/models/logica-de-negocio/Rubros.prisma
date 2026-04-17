@@ -11,8 +11,8 @@ model Rubros {
   updatedAt      DateTime            @updatedAt @map("actualizado_en")
   deletedAt      DateTime?           @map("borrado_en")
   prefacturaDetalle PrefacturaDetalle[]
-  facturaDetalle    FacturaDetalle[]
-  impuesto       SriImpuesto         @relation(fields: [impuestoId], references: [id])
+  catalogoDescuento CatalogoDescuento[]
+  impuesto       SriImpuesto         @relation(fields: [impuestoId], references: [id], onUpdate: Cascade, onDelete: Restrict)
 
   @@index([impuestoId])
   @@map("rubros")

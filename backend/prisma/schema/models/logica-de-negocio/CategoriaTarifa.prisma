@@ -11,7 +11,7 @@ model CategoriaTarifa {
   createdAt          DateTime    @default(now()) @map("creado_en")
   updatedAt          DateTime    @updatedAt @map("actualizado_en")
   deletedAt          DateTime?   @map("borrado_en")
-  contratos          Contratos[]  
+  contratos          Contratos[]
   
   @@map("categoria_tarifa")
 }

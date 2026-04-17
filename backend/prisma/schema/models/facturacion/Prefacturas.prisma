@@ -3,20 +3,26 @@ model Prefacturas {
   uuid         String @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
 
   // Relaciones Base
-  contratoId      BigInt  @map("contrato_id")
-  clienteId       BigInt? @map("cliente_id")
-  loteId          BigInt? @map("lote_id")
-  periodoId       Int     @map("periodo_id")
-  puntoEmisionId  Int     @map("punto_emision_id")
+  contratoId     BigInt  @map("contrato_id")
+  loteId         BigInt? @map("lote_id")
+  periodoId      Int     @map("periodo_id")
+  puntoEmisionId Int     @map("punto_emision_id")
 
   // Datos Operativos (Lecturas y Consumo)
   lecturaAnterior Decimal? @map("lectura_anterior") @db.Decimal
   lecturaActual   Decimal? @map("lectura_actual") @db.Decimal
   consumoM3       Decimal? @map("consumo_m3") @db.Decimal
 
+  // Datos del Cliente (Snapshot Histórico para Inmutabilidad)
+  clienteNombre         String? @map("cliente_nombre")
+  clienteIdentificacion String? @map("cliente_identificacion")
+  clienteDireccion      String? @map("cliente_direccion")
+  clienteEmail          String? @map("cliente_email")
+
   // Montos y Totales
   subtotal       Decimal @map("subtotal") @db.Decimal
   iva            Decimal @map("iva") @db.Decimal
+  interesMora    Decimal @default(0) @map("interes_mora") @db.Decimal
   descuentoTotal Decimal @map("descuento_total") @db.Decimal
   totalPagar     Decimal @map("total_pagar") @db.Decimal
 
@@ -28,10 +34,10 @@ model Prefacturas {
   mesesAtrasado Int     @default(0) @map("meses_atrasado")
 
   // Control de Proceso
-  estado      EstadoPrefactura @default(GENERADA) @map("estado")
-  aprobadaPor String?          @map("aprobada_por")
-  fechaAprobacion DateTime?    @map("fecha_aprobacion")
-  motivoRechazo   String?      @map("motivo_rechazo")
+  estado          EstadoPrefactura @default(GENERADA) @map("estado")
+  aprobadaPor     String?          @map("aprobada_por")
+  fechaAprobacion DateTime?        @map("fecha_aprobacion")
+  motivoRechazo   String?          @map("motivo_rechazo")
 
   // Auditoría Base
   createdBy String?   @map("creado_por")
@@ -43,7 +49,6 @@ model Prefacturas {
   // Relaciones
   facturas          Facturas[]
   prefacturaDetalle PrefacturaDetalle[]
-  cliente           Clientes?           @relation(fields: [clienteId], references: [clienteId], onDelete: NoAction, onUpdate: NoAction)
   contrato          Contratos           @relation(fields: [contratoId], references: [contratoId], onUpdate: NoAction)
   lote              LoteFacturacion?    @relation(fields: [loteId], references: [loteId], onUpdate: NoAction)
   periodoRel        PeriodosFacturacion @relation(fields: [periodoId], references: [periodoId], onUpdate: NoAction)
@@ -52,7 +57,6 @@ model Prefacturas {
   @@unique([contratoId, periodoId])
   @@index([periodoId])
   @@index([contratoId])
-  @@index([clienteId])
   @@index([puntoEmisionId])
   @@map("prefacturas")
 }
@@ -61,6 +65,7 @@ enum EstadoPrefactura {
   GENERADA
   EN_REVISION
   APROBADA
+  PAGADA
   RECHAZADA
   ANULADA
 }

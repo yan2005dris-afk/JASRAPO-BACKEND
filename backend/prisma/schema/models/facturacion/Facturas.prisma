@@ -2,22 +2,17 @@ model Facturas {
   facturaId BigInt @id @default(autoincrement()) @map("factura_id")
   uuid      String @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
 
-  // Relaciones Base
+  // Relación única al origen (La Prefactura tiene los montos, cliente y periodos)
   prefacturaId      BigInt @map("prefactura_id")
-  puntoEmisionId    Int    @map("punto_emision_id")
-  periodoId         Int    @map("periodo_id")
+  
+  // Datos específicos de la emisión fiscal
   tipoComprobanteId Int    @map("tipo_comprobante_id")
-  formaPagoId       Int    @map("forma_pago_id")
-
-  // Montos y Totales Finales
-  subtotal       Decimal @map("subtotal") @db.Decimal
-  iva            Decimal @map("iva") @db.Decimal
-  descuentoTotal Decimal @map("descuento_total") @db.Decimal
-  totalPagar     Decimal @map("total_pagar") @db.Decimal
+  
+  // Saldos al momento de facturar (Por si hay pagos parciales)
   abono          Decimal @default(0) @map("abono") @db.Decimal
   saldoPendiente Decimal @default(0) @map("saldo_pendiente") @db.Decimal
   
-  // Datos Fiscales (SRI)
+  // Datos Fiscales (SRI) - Estos son UNICOS de la factura
   claveAcceso        String?   @unique @map("clave_acceso") @db.VarChar(49)
   secuencial         String    @map("secuencial") @db.VarChar(9)
   numeroAutorizacion String?   @map("numero_autorizacion")
@@ -43,23 +38,16 @@ model Facturas {
   deletedAt DateTime? @map("borrado_en")
 
   // Relaciones
-  detalleFactura  FacturaDetalle[]
-  detallePago     DetallePago[]
-  prefactura      Prefacturas         @relation(fields: [prefacturaId], references: [prefacturaId], onUpdate: NoAction)
-  periodo         PeriodosFacturacion @relation(fields: [periodoId], references: [periodoId], onUpdate: NoAction)
-  puntoEmision    PuntosEmision       @relation(fields: [puntoEmisionId], references: [puntoEmisionId], onUpdate: NoAction)
-  tipoComprobante SriTipoComprobante @relation(fields: [tipoComprobanteId], references: [id], onUpdate: NoAction)
-  formaPago       SriFormaPago       @relation(fields: [formaPagoId], references: [id], onUpdate: NoAction)
+  detallePago      DetallePago[]
+  prefactura      Prefacturas         @relation(fields: [prefacturaId], references: [prefacturaId], onUpdate: Cascade, onDelete: Restrict)
+  tipoComprobante SriTipoComprobante @relation(fields: [tipoComprobanteId], references: [id], onUpdate: Cascade, onDelete: Restrict)
   notasCredito    NotasCredito[]
   notasDebito     NotasDebito[]
 
   @@index([prefacturaId])
-  @@index([periodoId])
-  @@index([puntoEmisionId])
   @@index([tipoComprobanteId])
-  @@index([formaPagoId])
   @@index([secuencial])
-  @@unique([puntoEmisionId, tipoComprobanteId, secuencial], name: "uk_factura_secuencial")
+  @@unique([tipoComprobanteId, secuencial], name: "uk_factura_secuencial")
   @@map("facturas")
 }
 

@@ -5,8 +5,8 @@ model SriFormaPago {
   activo      Boolean  @default(true) @map("activo")
   
   // Relaciones
-  facturas    Facturas[]
-  notasDebito NotasDebito[]
+  notasDebito         NotasDebito[]
+  pagoMetodoDetalles  PagoMetodoDetalle[]
 
   @@map("sri_forma_pago")
 }

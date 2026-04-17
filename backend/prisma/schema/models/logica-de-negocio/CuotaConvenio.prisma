@@ -14,7 +14,7 @@ model CuotaConvenio {
   createdAt           DateTime       @default(now()) @map("creado_en")
   updatedAt           DateTime       @updatedAt @map("actualizado_en")
   deletedAt           DateTime?      @map("borrado_en")
-  convenio            Convenios      @relation(fields: [convenioId], references: [convenioId])
+  convenio            Convenios      @relation(fields: [convenioId], references: [convenioId], onUpdate: Cascade, onDelete: Restrict)
   detallePago         DetallePago[]
 
   @@index([convenioId])

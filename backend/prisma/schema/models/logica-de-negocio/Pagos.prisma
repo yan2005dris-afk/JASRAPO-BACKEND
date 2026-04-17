@@ -1,5 +1,6 @@
 model Pagos {
   pagoId              BigInt             @id @default(autoincrement()) @map("pago_id")
+  clienteId           BigInt             @map("cliente_id")
   cajaId              BigInt?            @map("caja_id")
   cambio              Decimal            @map("cambio") @db.Decimal
   comprobanteUrlMinIo String?            @map("comprobante_url_minio")
@@ -13,21 +14,17 @@ model Pagos {
   createdAt           DateTime           @default(now()) @map("creado_en")
   deletedAt           DateTime?          @map("borrado_en")
   usersId             Int                @map("usuario_id")
-  metodoPago          MetodoPago         @map("metodo_pago")
   abonoCliente        AbonoCliente[]
   detallePago         DetallePago[]
-  cajaSesion          CajaSesion?        @relation(fields: [cajaId], references: [cajaId])
-  user                Users              @relation(fields: [usersId], references: [usersId])
+  metodosPago         PagoMetodoDetalle[]
+  cajaSesion          CajaSesion?        @relation(fields: [cajaId], references: [cajaId], onUpdate: Cascade, onDelete: Restrict)
+  cliente             Clientes           @relation(fields: [clienteId], references: [clienteId], onUpdate: Cascade, onDelete: Restrict)
+  user                Users              @relation(fields: [usersId], references: [usersId], onUpdate: Cascade, onDelete: Restrict)
 
   @@index([usersId])
+  @@index([clienteId])
   @@index([cajaId])
   @@map("pagos")
-}
-
-enum MetodoPago {
-  EFECTIVO
-  TRANSFERENCIA
-  TARJETA
 }
 
 enum EstadoConciliacion {

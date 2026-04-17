@@ -9,8 +9,8 @@ model LoteFacturacion {
   updatedAt      DateTime    @updatedAt @map("actualizado_en")
   createdBy      Int?        @map("creado_por")
   totalEmisiones Int         @default(0) @map("total_emisiones")
-  comunidad      Comunidades @relation(fields: [comunidadId], references: [comunidadId])
-  periodoRel     PeriodosFacturacion @relation(fields: [periodoId], references: [periodoId])
+  comunidad      Comunidades @relation(fields: [comunidadId], references: [comunidadId], onUpdate: Cascade, onDelete: Restrict)
+  periodoRel     PeriodosFacturacion @relation(fields: [periodoId], references: [periodoId], onUpdate: Cascade, onDelete: Restrict)
   users          Users?      @relation(fields: [createdBy], references: [usersId])
   prefacturas    Prefacturas[]
 

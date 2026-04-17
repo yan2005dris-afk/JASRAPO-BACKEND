@@ -12,7 +12,6 @@ model PeriodosFacturacion {
 
   // Relaciones
   prefacturas      Prefacturas[]
-  facturas         Facturas[]
   notasCredito     NotasCredito[]
   notasDebito      NotasDebito[]
   retenciones      Retenciones[]

@@ -1,0 +1,16 @@
+model PagoMetodoDetalle {
+  id               Int          @id @default(autoincrement()) @map("id")
+  pagoId           BigInt       @map("pago_id")
+  formaPagoId      Int          @map("forma_pago_id")
+  monto            Decimal      @map("monto") @db.Decimal(12, 4)
+  referencia       String?      @map("referencia") // Número de transferencia, cheque, voucher
+  fechaTransaccion DateTime?    @map("fecha_transaccion")
+  
+  // Relaciones
+  pago             Pagos        @relation(fields: [pagoId], references: [pagoId], onDelete: Cascade)
+  formaPago        SriFormaPago @relation(fields: [formaPagoId], references: [id])
+
+  @@index([pagoId])
+  @@index([formaPagoId])
+  @@map("pago_metodo_detalle")
+}
