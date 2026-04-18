@@ -54,14 +54,8 @@ export class ContratoMedidorController {
   }
 
   @Post(':id')
-  finalizarVinculo(
-    @Param('id') id: string,
-    @Body('motivoCambio') motivoCambio?: string,
-  ) {
-    return this.contratoMedidorService.finalizarVinculo(
-      BigInt(id),
-      motivoCambio,
-    );
+  finalizarVinculo(@Param('id') id: string) {
+    return this.contratoMedidorService.finalizarVinculo(BigInt(id));
   }
 
   @Delete(':id')

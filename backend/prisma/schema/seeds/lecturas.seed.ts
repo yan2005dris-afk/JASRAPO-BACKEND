@@ -7,16 +7,16 @@ export async function seedLecturas(prisma: PrismaClient) {
     ];
 
     // Primero creamos los periodos si no existen para que las lecturas tengan a qué apuntar
-    const periodosDb = [];
+    const periodosDb: any[] = [];
     for (const p of periodos) {
         const pDb = await prisma.periodosFacturacion.upsert({
-            where: { codigo: p },
+            where: { nombre: p },
             update: {},
             create: {
-                codigo: p,
-                nombre: `Periodo ${p}`,
+                nombre: p,
                 fechaInicio: new Date(`${p}-01`),
                 fechaFin: new Date(`${p}-28`),
+                fechaVencimiento: new Date(`${p}-30`),
                 estado: "ABIERTO" as any,
             }
         });
@@ -38,9 +38,9 @@ export async function seedLecturas(prisma: PrismaClient) {
 
             await prisma.lecturas.create({
                 data: {
-                    lecturaId,
+                    lecturaId: BigInt(lecturaId),
                     contratoId: contrato.contratoId,
-                    periodoId: pDb.periodoId, // Usamos el ID real
+                    periodoId: pDb.periodoId,
                     fecha: new Date(),
                     lecturaAnterior,
                     lecturaActual,
