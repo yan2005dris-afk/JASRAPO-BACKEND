@@ -1,6 +1,7 @@
-export class BusquedaPublicaMapper{
+export class BusquedaPublicaMapper {
   static cliente(cliente: any) {
-    const nombre = `${cliente?.nombres ?? ''} ${cliente?.apellidos ?? ''}`.trim();
+    const nombre =
+      `${cliente?.nombres ?? ''} ${cliente?.apellidos ?? ''}`.trim();
 
     return {
       tipo: 'cliente',

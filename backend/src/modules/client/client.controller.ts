@@ -8,7 +8,7 @@ import {
   ParseIntPipe,
   Patch,
   Post,
-  Query
+  Query,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
@@ -22,7 +22,7 @@ import { SearchClientDto } from './dto/search.client.dto';
 
 @ApiTags('client')
 @ApiBearerAuth()
-//@UseGuards(JwtAuthGuard, PermissionsGuard) 
+//@UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('client')
 export class ClientController {
   constructor(private readonly clientService: ClientService) {}
@@ -96,10 +96,7 @@ export class ClientController {
   // =====================
   @RequiredPermission('clientes', 'update')
   @Patch(':id')
-  update(
-    @Param('id') id: string,
-    @Body() updateClientDto: UpdateClientDto,
-  ) {
+  update(@Param('id') id: string, @Body() updateClientDto: UpdateClientDto) {
     return this.clientService.update(id, updateClientDto);
   }
 
@@ -111,5 +108,4 @@ export class ClientController {
   remove(@Param('id') id: string) {
     return this.clientService.remove(id);
   }
-
 }

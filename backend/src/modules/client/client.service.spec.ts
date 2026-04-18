@@ -131,7 +131,9 @@ describe('ClientService', () => {
     });
 
     it('should throw BadRequestException when tipoIdentificacion is missing', async () => {
-      await expect(service.create({} as any)).rejects.toThrow(BadRequestException);
+      await expect(service.create({} as any)).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should throw ConflictException on duplicate identificacion', async () => {

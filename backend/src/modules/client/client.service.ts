@@ -70,9 +70,7 @@ export class ClientService {
       tipo !== TipoIdentificacion.CONSUMIDOR_FINAL &&
       (!nombres || !apellidos)
     ) {
-      throw new BadRequestException(
-        'Nombres y apellidos son requeridos',
-      );
+      throw new BadRequestException('Nombres y apellidos son requeridos');
     }
   }
 
@@ -121,8 +119,7 @@ export class ClientService {
       telefono: dto.telefono,
       telefonoSecundario: dto.telefonoSecundario,
       direccionDomicilio: dto.direccionDomicilio,
-      aplicaTerceraEdadDiscapacidad:
-        dto.aplicaTerceraEdadDiscapacidad ?? false,
+      aplicaTerceraEdadDiscapacidad: dto.aplicaTerceraEdadDiscapacidad ?? false,
     };
   }
 
@@ -146,7 +143,7 @@ export class ClientService {
 
         await this.prisma.clientes.updateMany({
           where: {
-            clienteId: { in: duplicados.map(c => c.clienteId) },
+            clienteId: { in: duplicados.map((c) => c.clienteId) },
           },
           data: { deletedAt: new Date() },
         });
@@ -280,9 +277,7 @@ export class ClientService {
       const existente = await this.findByIdentificacion(identificacionFinal);
 
       if (existente && existente.clienteId !== clienteId) {
-        throw new ConflictException(
-          'La identificación ya está registrada',
-        );
+        throw new ConflictException('La identificación ya está registrada');
       }
     }
 
@@ -350,7 +345,9 @@ export class ClientService {
     }
 
     if (tipo === 'identificacion' && valor.length < 3) {
-      throw new BadRequestException('La identificación debe tener al menos 3 caracteres');
+      throw new BadRequestException(
+        'La identificación debe tener al menos 3 caracteres',
+      );
     }
 
     const skip = (page - 1) * limit;
