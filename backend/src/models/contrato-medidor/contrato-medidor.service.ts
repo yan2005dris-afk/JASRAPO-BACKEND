@@ -8,9 +8,7 @@ import { ActualizarContratoMedidorDto } from './dto/update-contrato-medidor.dto'
 export class ContratoMedidorService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async crearContrato(
-    createDto: CrearContratoMedidorDto,
-  ): Promise<any> {
+  async crearContrato(createDto: CrearContratoMedidorDto): Promise<any> {
     // Vinculamos el medidor al contrato en el modelo Medidores
     return await this.prisma.medidores.update({
       where: { medidorId: BigInt(createDto.medidorId) },
@@ -52,10 +50,7 @@ export class ContratoMedidorService {
     });
   }
 
-  async finalizarVinculo(
-    id: bigint,
-    _motivoCambio?: string,
-  ): Promise<any> {
+  async finalizarVinculo(id: bigint): Promise<any> {
     // Desvinculamos el medidor del contrato
     return await this.prisma.medidores.update({
       where: { medidorId: id }, // Aquí el ID debería ser del medidor

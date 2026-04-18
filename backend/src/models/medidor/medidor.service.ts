@@ -76,9 +76,9 @@ export class MedidorService {
     // Actualizamos el medidor con el contrato vinculado
     return await this.prisma.medidores.update({
       where: { medidorId },
-      data: { 
+      data: {
         estado: EstadoMedidor.INSTALADO,
-        contratoId: BigInt(contratoId)
+        contratoId: BigInt(contratoId),
       },
     });
   }
