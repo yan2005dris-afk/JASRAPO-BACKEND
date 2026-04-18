@@ -5,12 +5,11 @@ import { PrismaService } from 'src/database/prisma.service';
 
 @Injectable()
 export class ComunidadService {
- 
-  constructor(private prisma: PrismaService){}
-  
+  constructor(private prisma: PrismaService) {}
+
   crearComunidad(CreateComunidadDto: CreateComunidadDto) {
     return this.prisma.comunidades.create({
-      data: CreateComunidadDto
+      data: CreateComunidadDto,
     });
   }
 
@@ -21,25 +20,25 @@ export class ComunidadService {
   findOne(id: number) {
     return this.prisma.comunidades.findUnique({
       where: {
-        comunidadId: id
-      }
+        comunidadId: id,
+      },
     });
   }
 
   actualizarComunidad(id: number, updateComunidadDto: UpdateComunidadDto) {
-      return this.prisma.comunidades.update({
-      where:{
-        comunidadId: id
+    return this.prisma.comunidades.update({
+      where: {
+        comunidadId: id,
       },
-      data: updateComunidadDto
+      data: updateComunidadDto,
     });
   }
 
   eliminarActualizar(id: number) {
     return this.prisma.comunidades.delete({
       where: {
-        comunidadId: id
-      }
+        comunidadId: id,
+      },
     });
   }
 }

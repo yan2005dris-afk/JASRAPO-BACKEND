@@ -1,12 +1,12 @@
-import { IsNumber, IsString } from "class-validator";
+import { IsNumber, IsString } from 'class-validator';
 
 export class CreateComunidadDto {
-    @IsString()
-    nombre: string
+  @IsString()
+  nombre: string;
 
-    @IsString()
-    codigo: string;
+  @IsString()
+  codigo: string;
 
-    @IsNumber()
-    porcentajeTasaSeguridad: number;
+  @IsNumber()
+  porcentajeTasaSeguridad: number;
 }

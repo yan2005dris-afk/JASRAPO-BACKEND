@@ -24,7 +24,9 @@ describe('ContratoMedidorController', () => {
       ],
     }).compile();
 
-    controller = module.get<ContratoMedidorController>(ContratoMedidorController);
+    controller = module.get<ContratoMedidorController>(
+      ContratoMedidorController,
+    );
   });
 
   it('should be defined', () => {

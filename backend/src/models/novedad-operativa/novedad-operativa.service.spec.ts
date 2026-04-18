@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { NovedadOperativaService } from './novedad-operativa.service';
 import { PrismaService } from 'src/database/prisma.service';
 import { NotFoundException } from '@nestjs/common';
@@ -219,7 +220,9 @@ describe('NovedadOperativaService', () => {
       mockPrismaService.novedadOperativa.findUnique.mockResolvedValue(null);
 
       await expect(
-        service.actualizarNovedad(BigInt(999), { estado: EstadoNovedad.RESUELTA }),
+        service.actualizarNovedad(BigInt(999), {
+          estado: EstadoNovedad.RESUELTA,
+        }),
       ).rejects.toThrow(NotFoundException);
     });
 
@@ -227,7 +230,9 @@ describe('NovedadOperativaService', () => {
       mockPrismaService.novedadOperativa.findUnique.mockResolvedValue(
         mockNovedadData,
       );
-      mockPrismaService.novedadOperativa.update.mockResolvedValue(mockNovedadData);
+      mockPrismaService.novedadOperativa.update.mockResolvedValue(
+        mockNovedadData,
+      );
 
       await service.actualizarNovedad(BigInt(1), {
         lecturaId: '2',

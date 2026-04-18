@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { CategoriaTarifaService } from './categoria-tarifa.service';
 import { PrismaService } from 'src/database/prisma.service';
 import { ConflictException, NotFoundException } from '@nestjs/common';
@@ -152,9 +153,9 @@ describe('CategoriaTarifaService', () => {
     it('should throw NotFoundException when no categoria found', async () => {
       mockPrismaService.categoriaTarifa.findMany.mockResolvedValue([]);
 
-      await expect(
-        service.buscarCategoriaPorNombre('NoExist'),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.buscarCategoriaPorNombre('NoExist')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should search case-insensitively', async () => {
@@ -189,7 +190,7 @@ describe('CategoriaTarifaService', () => {
       mockPrismaService.categoriaTarifa.findFirst.mockResolvedValue(
         mockCategoriaTarifa,
       );
-      
+
       // Setup transaction mock
       const txMock = {
         categoriaTarifa: {
@@ -235,7 +236,7 @@ describe('CategoriaTarifaService', () => {
           create: jest.fn(),
         },
       };
-      
+
       mockPrismaService.$transaction.mockImplementation(async (callback) => {
         try {
           return await callback(txMock);

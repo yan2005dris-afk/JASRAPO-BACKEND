@@ -6,37 +6,33 @@ describe('MinioService', () => {
   const minioUpMsg = '[MINIO:UP] Conexion a MinIO establecida correctamente';
   const minioDownMsg = '[MINIO:DOWN] No se pudo conectar a MinIO';
 
-  const makeConfigService = () =>
-    ({
+  const makeConfigService = (overrides?: Record<string, string>) => {
+    const values: Record<string, string> = {
+      MINIO_ENDPOINT: 'localhost',
+      MINIO_PORT: '9000',
+      MINIO_USE_SSL: 'false',
+      MINIO_ACCESS_KEY: 'minio',
+      MINIO_SECRET_KEY: 'minio123',
+      MINIO_ENABLED: 'true',
+      ...overrides,
+    };
+    return {
       getOrThrow: jest.fn((key: string) => {
-        const values: Record<string, string> = {
-          MINIO_ENDPOINT: 'localhost',
-          MINIO_PORT: '9000',
-          MINIO_USE_SSL: 'false',
-          MINIO_ACCESS_KEY: 'minio',
-          MINIO_SECRET_KEY: 'minio123',
-        };
+        if (!values[key]) throw new Error(`Missing key: ${key}`);
         return values[key];
       }),
-    }) as unknown as ConfigService;
+      get: jest.fn((key: string, defaultValue?: string) => {
+        return values[key] ?? defaultValue;
+      }),
+    } as unknown as ConfigService;
+  };
 
   beforeEach(() => {
     jest.restoreAllMocks();
   });
 
   it('throws when MINIO_PORT is invalid', () => {
-    const configService = {
-      getOrThrow: jest.fn((key: string) => {
-        const values: Record<string, string> = {
-          MINIO_ENDPOINT: 'localhost',
-          MINIO_PORT: 'abc',
-          MINIO_USE_SSL: 'false',
-          MINIO_ACCESS_KEY: 'minio',
-          MINIO_SECRET_KEY: 'minio123',
-        };
-        return values[key];
-      }),
-    } as unknown as ConfigService;
+    const configService = makeConfigService({ MINIO_PORT: 'abc' });
 
     expect(() => new MinioService(configService)).toThrow(
       'MINIO_PORT invalido: "abc". Debe ser un entero entre 1 y 65535.',
@@ -44,18 +40,7 @@ describe('MinioService', () => {
   });
 
   it('throws when MINIO_USE_SSL is invalid', () => {
-    const configService = {
-      getOrThrow: jest.fn((key: string) => {
-        const values: Record<string, string> = {
-          MINIO_ENDPOINT: 'localhost',
-          MINIO_PORT: '9000',
-          MINIO_USE_SSL: '1',
-          MINIO_ACCESS_KEY: 'minio',
-          MINIO_SECRET_KEY: 'minio123',
-        };
-        return values[key];
-      }),
-    } as unknown as ConfigService;
+    const configService = makeConfigService({ MINIO_USE_SSL: '1' });
 
     expect(() => new MinioService(configService)).toThrow(
       'MINIO_USE_SSL invalido: "1". Usa "true" o "false".',
@@ -63,18 +48,7 @@ describe('MinioService', () => {
   });
 
   it('accepts MINIO_USE_SSL when value has extra spaces', () => {
-    const configService = {
-      getOrThrow: jest.fn((key: string) => {
-        const values: Record<string, string> = {
-          MINIO_ENDPOINT: 'localhost',
-          MINIO_PORT: '9000',
-          MINIO_USE_SSL: ' TRUE ',
-          MINIO_ACCESS_KEY: 'minio',
-          MINIO_SECRET_KEY: 'minio123',
-        };
-        return values[key];
-      }),
-    } as unknown as ConfigService;
+    const configService = makeConfigService({ MINIO_USE_SSL: ' TRUE ' });
 
     expect(() => new MinioService(configService)).not.toThrow();
   });

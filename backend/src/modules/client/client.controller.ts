@@ -35,7 +35,8 @@ export class ClientController {
   @Get('search')
   @Throttle({ default: { limit: 10, ttl: 60000 } })
   search(
-    @Query('tipo') tipo: 'identificacion' | 'nombres' | 'apellidos' | 'nombreCompleto',
+    @Query('tipo')
+    tipo: 'identificacion' | 'nombres' | 'apellidos' | 'nombreCompleto',
     @Query('valor') valor: string,
     @Query('page') page?: string,
     @Query('limit') limit?: string,

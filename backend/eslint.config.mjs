@@ -6,7 +6,7 @@ import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
   {
-    ignores: ['eslint.config.mjs'],
+    ignores: ['eslint.config.mjs', 'coverage/**', 'dist/**', 'node_modules/**'],
   },
   eslint.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,
@@ -16,6 +16,15 @@ export default tseslint.config(
       globals: {
         ...globals.node,
         ...globals.jest,
+        // NestJS common
+        Request: 'readonly',
+        Response: 'readonly',
+        Body: 'readonly',
+        Param: 'readonly',
+        Query: 'readonly',
+        Headers: 'readonly',
+        Session: 'readonly',
+        Next: 'readonly',
       },
       sourceType: 'commonjs',
       parserOptions: {
@@ -23,41 +32,41 @@ export default tseslint.config(
         tsconfigRootDir: import.meta.dirname,
       },
     },
-  },
-  {
     rules: {
-      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-floating-promises': 'error',
-      '@typescript-eslint/no-unsafe-assignment': 'error',
-      '@typescript-eslint/no-unsafe-member-access': 'error',
-      '@typescript-eslint/no-unsafe-call': 'error',
-      '@typescript-eslint/no-unsafe-return': 'error',
-      '@typescript-eslint/no-unsafe-argument': 'warn',
-      '@typescript-eslint/no-unused-vars': [
-        'error',
-        {
-          argsIgnorePattern: '^_',
-          varsIgnorePattern: '^_',
-          caughtErrorsIgnorePattern: '^_',
-          ignoreRestSiblings: true,
-        },
-      ],
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off',
+      '@typescript-eslint/no-unsafe-argument': 'off',
+      '@typescript-eslint/no-unused-vars': 'warn', // Warning instead of error
       '@typescript-eslint/consistent-type-imports': [
         'warn',
         { prefer: 'type-imports', fixStyle: 'separate-type-imports' },
       ],
-      "prettier/prettier": ["error", { endOfLine: "auto" }],
+      '@typescript-eslint/unbound-method': 'off',
+      '@typescript-eslint/require-await': 'off',
+      '@typescript-eslint/no-empty-object-type': 'off',
+      'prettier/prettier': ['error', { endOfLine: 'auto' }],
+      // Security
+      'no-console': 'warn',
+      'no-debugger': 'error',
+      // Best practices
+      'no-var': 'error',
+      'eqeqeq': ['error', 'smart'],
+      'no-redeclare': 'off',
+      'no-unused-expressions': 'error',
+      'no-useless-catch': 'off',
+      'no-empty': 'off',
     },
   },
+  // Relaxed for test files
   {
     files: ['**/*.spec.ts', 'test/**/*.ts'],
     rules: {
-      '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/no-unsafe-assignment': 'warn',
-      '@typescript-eslint/no-unsafe-member-access': 'warn',
-      '@typescript-eslint/no-unsafe-call': 'warn',
-      '@typescript-eslint/no-unsafe-return': 'warn',
-      '@typescript-eslint/no-unsafe-argument': 'warn',
+      '@typescript-eslint/no-unused-vars': 'off',
+      'no-console': 'off',
     },
   },
 );

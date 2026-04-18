@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { ContratoMedidorService } from './contrato-medidor.service';
 import { PrismaService } from 'src/database/prisma.service';
 import { NotFoundException } from '@nestjs/common';

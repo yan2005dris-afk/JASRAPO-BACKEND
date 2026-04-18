@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { LecturaController } from './lectura.controller';
 import { LecturaService } from './lectura.service';
 import { LecturaEntity } from './entities/lectura.entity';

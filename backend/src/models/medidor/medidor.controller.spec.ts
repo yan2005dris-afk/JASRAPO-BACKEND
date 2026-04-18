@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { MedidorController } from './medidor.controller';
 import { MedidorService } from './medidor.service';
 
@@ -23,24 +24,23 @@ describe('MedidorController', () => {
     actualizadoEn: new Date(),
   };
 
+  const mockMedidorService = {
+    crearMedidor: jest.fn(() => Promise.resolve(mockMedidor)),
+    buscarMedidores: jest.fn(() => Promise.resolve([mockMedidor])),
+    buscarMedidor: jest.fn(() => Promise.resolve(mockMedidor)),
+    actualizarMedidor: jest.fn(() => Promise.resolve(mockMedidor)),
+    eliminarMedidor: jest.fn(() => Promise.resolve(undefined)),
+    instalarMedidor: jest.fn(() => Promise.resolve(mockMedidor)),
+    reportarDano: jest.fn(() => Promise.resolve(mockMedidor)),
+    facturarPorPromedio: jest.fn(() => Promise.resolve(mockMedidor)),
+    darDeBaja: jest.fn(() => Promise.resolve(mockMedidor)),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [MedidorController],
       providers: [
-        {
-          provide: MedidorService,
-          useValue: {
-            crearMedidor: jest.fn(),
-            buscarMedidores: jest.fn(),
-            buscarMedidor: jest.fn(),
-            actualizarMedidor: jest.fn(),
-            eliminarMedidor: jest.fn(),
-            instalarMedidor: jest.fn(),
-            reportarDano: jest.fn(),
-            facturarPorPromedio: jest.fn(),
-            darDeBaja: jest.fn(),
-          },
-        },
+        { provide: MedidorService, useValue: mockMedidorService },
       ],
     }).compile();
 
@@ -48,16 +48,10 @@ describe('MedidorController', () => {
     service = module.get<MedidorService>(MedidorService);
   });
 
-  it('should be defined', () => {
-    expect(controller).toBeDefined();
-  });
-
   describe('crear', () => {
-    it('should create a medidor', () => {
+    it('should create a medidor', async () => {
       const createDto = { numeroSerie: 'MED-001', modelo: 'DIGITAL_2000' };
-      jest.spyOn(service, 'crearMedidor').mockResolvedValue(mockMedidor);
-
-      const result = controller.crear(createDto);
+      const result = await controller.crear(createDto);
 
       expect(service.crearMedidor).toHaveBeenCalledWith(createDto);
       expect(result).toEqual(mockMedidor);
@@ -65,32 +59,27 @@ describe('MedidorController', () => {
   });
 
   describe('buscarTodos', () => {
-    it('should return all medidores without pagination', () => {
-      const medidores = [mockMedidor];
-      jest.spyOn(service, 'buscarMedidores').mockResolvedValue(medidores);
-
-      const result = controller.buscarTodos();
+    it('should return all medidores without pagination', async () => {
+      const result = await controller.buscarTodos();
 
       expect(service.buscarMedidores).toHaveBeenCalledWith({});
-      expect(result).toEqual(medidores);
+      expect(result).toEqual([mockMedidor]);
     });
 
-    it('should apply pagination when skip and take provided', () => {
-      const medidores = [mockMedidor];
-      jest.spyOn(service, 'buscarMedidores').mockResolvedValue(medidores);
+    it('should apply pagination when skip and take provided', async () => {
+      const result = await controller.buscarTodos('10', '5');
 
-      const result = controller.buscarTodos('10', '5');
-
-      expect(service.buscarMedidores).toHaveBeenCalledWith({ skip: 10, take: 5 });
-      expect(result).toEqual(medidores);
+      expect(service.buscarMedidores).toHaveBeenCalledWith({
+        skip: 10,
+        take: 5,
+      });
+      expect(result).toEqual([mockMedidor]);
     });
   });
 
   describe('buscarUno', () => {
-    it('should return a medidor by id', () => {
-      jest.spyOn(service, 'buscarMedidor').mockResolvedValue(mockMedidor);
-
-      const result = controller.buscarUno('1');
+    it('should return a medidor by id', async () => {
+      const result = await controller.buscarUno('1');
 
       expect(service.buscarMedidor).toHaveBeenCalledWith(BigInt(1));
       expect(result).toEqual(mockMedidor);
@@ -98,11 +87,9 @@ describe('MedidorController', () => {
   });
 
   describe('actualizar', () => {
-    it('should update a medidor', () => {
+    it('should update a medidor', async () => {
       const updateDto = { lecturaActual: 150 };
-      jest.spyOn(service, 'actualizarMedidor').mockResolvedValue(mockMedidor);
-
-      const result = controller.actualizar('1', updateDto);
+      const result = await controller.actualizar('1', updateDto);
 
       expect(service.actualizarMedidor).toHaveBeenCalledWith(BigInt(1), updateDto);
       expect(result).toEqual(mockMedidor);
@@ -110,10 +97,8 @@ describe('MedidorController', () => {
   });
 
   describe('eliminar', () => {
-    it('should delete a medidor', () => {
-      jest.spyOn(service, 'eliminarMedidor').mockResolvedValue(undefined);
-
-      const result = controller.eliminar('1');
+    it('should delete a medidor', async () => {
+      const result = await controller.eliminar('1');
 
       expect(service.eliminarMedidor).toHaveBeenCalledWith(BigInt(1));
       expect(result).toBeUndefined();
@@ -121,10 +106,9 @@ describe('MedidorController', () => {
   });
 
   describe('instalar', () => {
-    it('should install a medidor with contratoId', () => {
-      jest.spyOn(service, 'instalarMedidor').mockResolvedValue(mockMedidor);
-
-      const result = controller.instalar('1', '20');
+    it('should install a medidor with contratoId', async () => {
+      const installDto = { contratoId: '20' };
+      const result = await controller.instalar('1', installDto);
 
       expect(service.instalarMedidor).toHaveBeenCalledWith(BigInt(1), BigInt(20));
       expect(result).toEqual(mockMedidor);
@@ -132,21 +116,18 @@ describe('MedidorController', () => {
   });
 
   describe('reportarDano', () => {
-    it('should report damage for a medidor', () => {
-      jest.spyOn(service, 'reportarDano').mockResolvedValue(mockMedidor);
+    it('should report damage for a medidor', async () => {
+      const damageDto = { motivo: 'ROTO' };
+      const result = await controller.reportarDano('1', damageDto);
 
-      const result = controller.reportarDano('1');
-
-      expect(service.reportarDano).toHaveBeenCalledWith(BigInt(1));
+      expect(service.reportarDano).toHaveBeenCalledWith(BigInt(1), 'ROTO');
       expect(result).toEqual(mockMedidor);
     });
   });
 
   describe('facturarPorPromedio', () => {
-    it('should facturar por promedio for a medidor', () => {
-      jest.spyOn(service, 'facturarPorPromedio').mockResolvedValue(mockMedidor);
-
-      const result = controller.facturarPorPromedio('1');
+    it('should facturar por promedio for a medidor', async () => {
+      const result = await controller.facturarPorPromedio('1');
 
       expect(service.facturarPorPromedio).toHaveBeenCalledWith(BigInt(1));
       expect(result).toEqual(mockMedidor);
@@ -154,10 +135,8 @@ describe('MedidorController', () => {
   });
 
   describe('darDeBaja', () => {
-    it('should dar de baja a medidor with motivo', () => {
-      jest.spyOn(service, 'darDeBaja').mockResolvedValue(mockMedidor);
-
-      const result = controller.darDeBaja('1', 'OBSOLETO');
+    it('should dar de baja a medidor with motivo', async () => {
+      const result = await controller.darDeBaja('1', 'OBSOLETO');
 
       expect(service.darDeBaja).toHaveBeenCalledWith(BigInt(1), 'OBSOLETO');
       expect(result).toEqual(mockMedidor);

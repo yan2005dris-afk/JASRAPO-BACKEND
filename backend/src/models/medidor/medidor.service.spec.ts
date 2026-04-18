@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { MedidorService } from './medidor.service';
 import { PrismaService } from 'src/database/prisma.service';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
@@ -228,7 +229,9 @@ describe('MedidorService', () => {
         estado: EstadoMedidor.INSTALADO,
       };
 
-      mockPrismaService.medidores.findUnique.mockResolvedValue(estimatedMedidor);
+      mockPrismaService.medidores.findUnique.mockResolvedValue(
+        estimatedMedidor,
+      );
       mockPrismaService.$transaction.mockImplementation(async (promises) => {
         const results = await Promise.all(promises);
         return results;
@@ -247,7 +250,9 @@ describe('MedidorService', () => {
         estado: EstadoMedidor.INSTALADO,
       };
 
-      mockPrismaService.medidores.findUnique.mockResolvedValue(installedMedidor);
+      mockPrismaService.medidores.findUnique.mockResolvedValue(
+        installedMedidor,
+      );
 
       await expect(
         service.instalarMedidor(BigInt(1), BigInt(1)),
@@ -266,7 +271,9 @@ describe('MedidorService', () => {
         estado: EstadoMedidor.DANADO,
       };
 
-      mockPrismaService.medidores.findUnique.mockResolvedValue(installedMedidor);
+      mockPrismaService.medidores.findUnique.mockResolvedValue(
+        installedMedidor,
+      );
       mockPrismaService.medidores.update.mockResolvedValue(damagedMedidor);
 
       const result = await service.reportarDano(BigInt(1));
@@ -305,9 +312,9 @@ describe('MedidorService', () => {
     it('should throw BadRequestException when medidor is not DANADO', async () => {
       mockPrismaService.medidores.findUnique.mockResolvedValue(mockMedidor);
 
-      await expect(
-        service.facturarPorPromedio(BigInt(1)),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.facturarPorPromedio(BigInt(1))).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 

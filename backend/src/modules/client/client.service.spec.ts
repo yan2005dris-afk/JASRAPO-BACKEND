@@ -1,7 +1,12 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { ClientService } from './client.service';
 import { PrismaService } from 'src/database/prisma.service';
-import { ConflictException, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  ConflictException,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { TipoIdentificacion } from 'src/generated/prisma/enums';
 
 describe('ClientService', () => {
@@ -70,7 +75,9 @@ describe('ClientService', () => {
         tipoIdentificacion: TipoIdentificacion.CONSUMIDOR_FINAL,
       });
 
-      expect(result.tipoIdentificacion).toBe(TipoIdentificacion.CONSUMIDOR_FINAL);
+      expect(result.tipoIdentificacion).toBe(
+        TipoIdentificacion.CONSUMIDOR_FINAL,
+      );
       expect(mockPrismaService.clientes.create).toHaveBeenCalled();
     });
 
@@ -81,7 +88,9 @@ describe('ClientService', () => {
       });
 
       await expect(
-        service.create({ tipoIdentificacion: TipoIdentificacion.CONSUMIDOR_FINAL }),
+        service.create({
+          tipoIdentificacion: TipoIdentificacion.CONSUMIDOR_FINAL,
+        }),
       ).rejects.toThrow(ConflictException);
     });
 
@@ -113,15 +122,13 @@ describe('ClientService', () => {
     });
 
     it('should throw BadRequestException when tipoIdentificacion is missing', async () => {
-      await expect(
-        service.create({}),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.create({})).rejects.toThrow(BadRequestException);
     });
 
     it('should throw ConflictException on duplicate identificacion', async () => {
       // First call finds no existing CONSUMIDOR_FINAL
       mockPrismaService.clientes.findFirst.mockResolvedValue(null);
-      
+
       // Second call returns existing (simulating race condition)
       mockPrismaService.clientes.findFirst.mockResolvedValueOnce({
         clienteId: BigInt(2),
@@ -205,14 +212,20 @@ describe('ClientService', () => {
       mockPrismaService.clientes.findFirst.mockResolvedValue(mockCliente);
 
       await expect(
-        service.update('1', { tipoIdentificacion: TipoIdentificacion.RUC, identificacion: '123' }),
+        service.update('1', {
+          tipoIdentificacion: TipoIdentificacion.RUC,
+          identificacion: '123',
+        }),
       ).rejects.toThrow(BadRequestException);
     });
 
     it('should throw ConflictException on duplicate identificacion', async () => {
       mockPrismaService.clientes.findFirst
         .mockResolvedValueOnce(mockCliente)
-        .mockResolvedValueOnce({ clienteId: BigInt(2), identificacion: '0999999999001' });
+        .mockResolvedValueOnce({
+          clienteId: BigInt(2),
+          identificacion: '0999999999001',
+        });
 
       await expect(
         service.update('1', { identificacion: '0999999999001' }),
@@ -250,15 +263,15 @@ describe('ClientService', () => {
     });
 
     it('should throw BadRequestException for invalid tipo', async () => {
-      await expect(
-        service.search('invalid' as any, 'value'),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.search('invalid' as any, 'value')).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should throw BadRequestException when identificacion is too short', async () => {
-      await expect(
-        service.search('identificacion', '123'),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.search('identificacion', '123')).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should search by nombres with pagination', async () => {
@@ -281,7 +294,10 @@ describe('ClientService', () => {
     it('should search private and return results', async () => {
       mockPrismaService.clientes.findMany.mockResolvedValue([mockCliente]);
 
-      const result = await service.searchPrivate('nombreCompleto', 'JUAN PEREZ');
+      const result = await service.searchPrivate(
+        'nombreCompleto',
+        'JUAN PEREZ',
+      );
 
       expect(result).toEqual([mockCliente]);
     });

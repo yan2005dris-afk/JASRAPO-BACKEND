@@ -15,17 +15,27 @@ export class MinioService implements OnModuleInit {
 
   async onModuleInit() {
     const enabled = this.configService.get<string>('MINIO_ENABLED', 'true');
-    
+
     if (enabled.toLowerCase() === 'false') {
       this.logger.warn('[MINIO:DISABLED] MinIO está deshabilitado');
       return;
     }
 
-    const endpoint = this.configService.get<string>('MINIO_ENDPOINT', 'localhost');
+    const endpoint = this.configService.get<string>(
+      'MINIO_ENDPOINT',
+      'localhost',
+    );
     const port = this.configService.get<number>('MINIO_PORT', 9000);
-    const useSsl = this.configService.get<string>('MINIO_USE_SSL', 'false') === 'true';
-    const accessKey = this.configService.get<string>('MINIO_ACCESS_KEY', 'admin');
-    const secretKey = this.configService.get<string>('MINIO_SECRET_KEY', 'password123');
+    const useSsl =
+      this.configService.get<string>('MINIO_USE_SSL', 'false') === 'true';
+    const accessKey = this.configService.get<string>(
+      'MINIO_ACCESS_KEY',
+      'admin',
+    );
+    const secretKey = this.configService.get<string>(
+      'MINIO_SECRET_KEY',
+      'password123',
+    );
 
     if (!port || port < 1 || port > 65535) {
       this.logger.warn(`[MINIO:DISABLED] MINIO_PORT inválido: "${port}"`);
@@ -46,7 +56,9 @@ export class MinioService implements OnModuleInit {
       this.logger.log('[MINIO:UP] Conexión a MinIO establecida correctamente');
     } catch (error) {
       this.minioClient = null;
-      this.logger.warn('[MINIO:DOWN] No se pudo conectar a MinIO. Storage deshabilitado.');
+      this.logger.warn(
+        '[MINIO:DOWN] No se pudo conectar a MinIO. Storage deshabilitado.',
+      );
       return;
     }
 
@@ -58,14 +70,18 @@ export class MinioService implements OnModuleInit {
           this.logger.log(`Bucket "${bucket}" creado`);
         }
       } catch (error) {
-        this.logger.warn(`No se pudo verificar/crear bucket "${bucket}": ${error}`);
+        this.logger.warn(
+          `No se pudo verificar/crear bucket "${bucket}": ${error}`,
+        );
       }
     }
   }
 
   private ensureAvailable(): void {
     if (!this.isAvailable || !this.minioClient) {
-      throw new Error('MinIO no está disponible. Configure MINIO_ENABLED=true para habilitar.');
+      throw new Error(
+        'MinIO no está disponible. Configure MINIO_ENABLED=true para habilitar.',
+      );
     }
   }
 
@@ -122,7 +138,11 @@ export class MinioService implements OnModuleInit {
 
   async getPresignedUrl(bucketName: string, fileName: string): Promise<string> {
     this.ensureAvailable();
-    return this.minioClient!.presignedGetObject(bucketName, fileName, 24 * 60 * 60);
+    return this.minioClient!.presignedGetObject(
+      bucketName,
+      fileName,
+      24 * 60 * 60,
+    );
   }
 
   async getFileStream(bucketName: string, fileName: string): Promise<Readable> {
@@ -135,7 +155,11 @@ export class MinioService implements OnModuleInit {
     await this.ensureBucket(bucketName);
     return new Promise((resolve, reject) => {
       const files: string[] = [];
-      const stream = this.minioClient!.listObjects(bucketName, prefix || '', true);
+      const stream = this.minioClient!.listObjects(
+        bucketName,
+        prefix || '',
+        true,
+      );
       stream.on('data', (obj) => {
         if (obj.name) files.push(obj.name);
       });

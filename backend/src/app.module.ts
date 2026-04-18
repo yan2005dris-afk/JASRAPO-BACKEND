@@ -55,7 +55,6 @@ import { ContratoMedidorModule } from './models/contrato-medidor/contrato-medido
     SectorModule,
     MedidorModule,
     ContratoMedidorModule,
-
   ],
   controllers: [],
   providers: [

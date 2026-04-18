@@ -69,15 +69,20 @@ export class LecturaService {
       where: { lecturaId: id },
       select: lecturaSelect,
     });
-    if (!lectura || lectura.deletedAt) throw new NotFoundException(`Lectura con ID ${id} no encontrada`);
+    if (!lectura || lectura.deletedAt)
+      throw new NotFoundException(`Lectura con ID ${id} no encontrada`);
     return new LecturaEntity(lectura);
   }
 
-  async actualizarLectura(id: bigint, updateDto: ActualizarLecturaDto): Promise<LecturaEntity> {
-    await this.buscarLectura(id); 
-    
+  async actualizarLectura(
+    id: bigint,
+    updateDto: ActualizarLecturaDto,
+  ): Promise<LecturaEntity> {
+    await this.buscarLectura(id);
+
     const dataToUpdate: any = { ...updateDto };
-    if (updateDto.contratoId) dataToUpdate.contratoId = BigInt(updateDto.contratoId);
+    if (updateDto.contratoId)
+      dataToUpdate.contratoId = BigInt(updateDto.contratoId);
     if (updateDto.fecha) dataToUpdate.fecha = new Date(updateDto.fecha);
 
     const lectura = await this.prisma.lecturas.update({
@@ -89,7 +94,7 @@ export class LecturaService {
   }
 
   async eliminarLectura(id: bigint): Promise<{ message: string }> {
-    await this.buscarLectura(id); 
+    await this.buscarLectura(id);
     await this.prisma.lecturas.update({
       where: { lecturaId: id },
       data: { deletedAt: new Date() },

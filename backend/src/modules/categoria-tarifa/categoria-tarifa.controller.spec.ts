@@ -23,7 +23,9 @@ describe('CategoriaTarifaController', () => {
       ],
     }).compile();
 
-    controller = module.get<CategoriaTarifaController>(CategoriaTarifaController);
+    controller = module.get<CategoriaTarifaController>(
+      CategoriaTarifaController,
+    );
   });
 
   it('should be defined', () => {

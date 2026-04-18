@@ -23,7 +23,9 @@ describe('NovedadOperativaController', () => {
       ],
     }).compile();
 
-    controller = module.get<NovedadOperativaController>(NovedadOperativaController);
+    controller = module.get<NovedadOperativaController>(
+      NovedadOperativaController,
+    );
   });
 
   it('should be defined', () => {

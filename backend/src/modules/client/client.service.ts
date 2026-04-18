@@ -106,8 +106,7 @@ export class ClientService {
         telefono,
         telefonoSecundario,
         direccionDomicilio,
-        aplicaTerceraEdadDiscapacidad:
-          aplicaTerceraEdadDiscapacidad ?? false,
+        aplicaTerceraEdadDiscapacidad: aplicaTerceraEdadDiscapacidad ?? false,
       };
     }
 

@@ -62,7 +62,7 @@ export class SessionsService {
     });
   }
 
-/*   async deleteSession(sessionsId: string): Promise<void> {
+  /*   async deleteSession(sessionsId: string): Promise<void> {
     await this.prisma.sessions.delete({ where: { sessionsId } });
   } */
 
@@ -77,7 +77,7 @@ export class SessionsService {
     });
   }
 
-/*   async deleteExpiredSessions(): Promise<number> {
+  /*   async deleteExpiredSessions(): Promise<number> {
     const result = await this.prisma.sessions.deleteMany({
       where: {
         expiresAt: { lt: new Date() },
@@ -86,7 +86,7 @@ export class SessionsService {
     return result.count;
   }
  */
-/*   async deleteAllUserSessions(usersId: number): Promise<void> {
+  /*   async deleteAllUserSessions(usersId: number): Promise<void> {
     await this.prisma.sessions.deleteMany({
       where: { usersId },
     });

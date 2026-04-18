@@ -45,7 +45,12 @@ describe('MenusController', () => {
           route: '/users',
           icon: 'people',
           children: [
-            { id: 3, name: 'Listar Usuarios', route: '/users/list', icon: null },
+            {
+              id: 3,
+              name: 'Listar Usuarios',
+              route: '/users/list',
+              icon: null,
+            },
           ],
         },
       ];

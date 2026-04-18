@@ -13,12 +13,16 @@ describe('ClientController', () => {
         {
           provide: ClientService,
           useValue: {
-            search: jest.fn().mockResolvedValue([
-              { clienteId: 1, nombres: 'JUAN', identificacion: '1234567890' },
-            ]),
-            searchPrivate: jest.fn().mockResolvedValue([
-              { clienteId: 1, nombres: 'JUAN', identificacion: '1234567890' },
-            ]),
+            search: jest
+              .fn()
+              .mockResolvedValue([
+                { clienteId: 1, nombres: 'JUAN', identificacion: '1234567890' },
+              ]),
+            searchPrivate: jest
+              .fn()
+              .mockResolvedValue([
+                { clienteId: 1, nombres: 'JUAN', identificacion: '1234567890' },
+              ]),
             create: jest.fn().mockResolvedValue({
               clienteId: 1,
               nombres: 'JUAN',

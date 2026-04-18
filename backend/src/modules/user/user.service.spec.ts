@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { UserService } from './user.service';
 import { PrismaService } from 'src/database/prisma.service';
 import { NotFoundException, ConflictException } from '@nestjs/common';
@@ -291,15 +292,26 @@ describe('UserService', () => {
     it('should throw NotFoundException for non-existent user', async () => {
       mockPrismaService.users.findUnique.mockResolvedValue(null);
 
-      await expect(service.getRolesByUserId(999)).rejects.toThrow(NotFoundException);
+      await expect(service.getRolesByUserId(999)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
   describe('assignRoleToUser', () => {
     it('should assign role to user', async () => {
-      mockPrismaService.users.findUnique.mockResolvedValue({ usersId: 1, deletedAt: null });
-      mockPrismaService.roles.findUnique.mockResolvedValue({ rolesId: 2, deletedAt: null });
-      mockPrismaService.users.update.mockResolvedValue({ usersId: 1, rolesId: 2 });
+      mockPrismaService.users.findUnique.mockResolvedValue({
+        usersId: 1,
+        deletedAt: null,
+      });
+      mockPrismaService.roles.findUnique.mockResolvedValue({
+        rolesId: 2,
+        deletedAt: null,
+      });
+      mockPrismaService.users.update.mockResolvedValue({
+        usersId: 1,
+        rolesId: 2,
+      });
 
       await service.assignRoleToUser(1, 2);
 
@@ -309,14 +321,25 @@ describe('UserService', () => {
     it('should throw NotFoundException for non-existent user', async () => {
       mockPrismaService.users.findUnique.mockResolvedValue(null);
 
-      await expect(service.assignRoleToUser(999, 1)).rejects.toThrow(NotFoundException);
+      await expect(service.assignRoleToUser(999, 1)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw ConflictException when user already has role', async () => {
-      mockPrismaService.users.findUnique.mockResolvedValue({ usersId: 1, deletedAt: null, rolesId: 2 });
-      mockPrismaService.roles.findUnique.mockResolvedValue({ rolesId: 2, deletedAt: null });
+      mockPrismaService.users.findUnique.mockResolvedValue({
+        usersId: 1,
+        deletedAt: null,
+        rolesId: 2,
+      });
+      mockPrismaService.roles.findUnique.mockResolvedValue({
+        rolesId: 2,
+        deletedAt: null,
+      });
 
-      await expect(service.assignRoleToUser(1, 2)).rejects.toThrow(ConflictException);
+      await expect(service.assignRoleToUser(1, 2)).rejects.toThrow(
+        ConflictException,
+      );
     });
   });
 
@@ -327,7 +350,10 @@ describe('UserService', () => {
         deletedAt: null,
         rolesId: 1,
       });
-      mockPrismaService.users.update.mockResolvedValue({ usersId: 1, rolesId: null });
+      mockPrismaService.users.update.mockResolvedValue({
+        usersId: 1,
+        rolesId: null,
+      });
 
       await service.revokeRoleFromUser(1);
 
@@ -337,7 +363,9 @@ describe('UserService', () => {
     it('should throw NotFoundException for non-existent user', async () => {
       mockPrismaService.users.findUnique.mockResolvedValue(null);
 
-      await expect(service.revokeRoleFromUser(999)).rejects.toThrow(NotFoundException);
+      await expect(service.revokeRoleFromUser(999)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw ConflictException when user has no role', async () => {
@@ -347,13 +375,18 @@ describe('UserService', () => {
         rolesId: null,
       });
 
-      await expect(service.revokeRoleFromUser(1)).rejects.toThrow(ConflictException);
+      await expect(service.revokeRoleFromUser(1)).rejects.toThrow(
+        ConflictException,
+      );
     });
   });
 
   describe('getDirectPermissionsByUserId', () => {
     it('should return user permissions', async () => {
-      mockPrismaService.users.findUnique.mockResolvedValue({ usersId: 1, deletedAt: null });
+      mockPrismaService.users.findUnique.mockResolvedValue({
+        usersId: 1,
+        deletedAt: null,
+      });
       mockPrismaService.userPermissions.findMany.mockResolvedValue([
         {
           idUserPermissions: 1,
@@ -387,7 +420,10 @@ describe('UserService', () => {
 
   describe('assignPermissionToUser', () => {
     it('should create new permission assignment', async () => {
-      mockPrismaService.users.findUnique.mockResolvedValue({ usersId: 1, deletedAt: null });
+      mockPrismaService.users.findUnique.mockResolvedValue({
+        usersId: 1,
+        deletedAt: null,
+      });
       mockPrismaService.permissions.findUnique.mockResolvedValue({
         permissionsId: 1,
         deletedAt: null,
@@ -403,7 +439,10 @@ describe('UserService', () => {
     });
 
     it('should update existing permission', async () => {
-      mockPrismaService.users.findUnique.mockResolvedValue({ usersId: 1, deletedAt: null });
+      mockPrismaService.users.findUnique.mockResolvedValue({
+        usersId: 1,
+        deletedAt: null,
+      });
       mockPrismaService.permissions.findUnique.mockResolvedValue({
         permissionsId: 1,
         deletedAt: null,
@@ -453,7 +492,9 @@ describe('UserService', () => {
         deletedAt: new Date(),
       });
 
-      await expect(service.revokePermissionFromUser(1)).rejects.toThrow(ConflictException);
+      await expect(service.revokePermissionFromUser(1)).rejects.toThrow(
+        ConflictException,
+      );
     });
   });
 

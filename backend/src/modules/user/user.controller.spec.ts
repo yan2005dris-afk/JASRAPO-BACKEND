@@ -42,10 +42,15 @@ describe('UserController', () => {
 
   describe('create', () => {
     it('should call userService.createUser with correct data', async () => {
-      const createUserDto = { email: 'test@example.com', password: 'password123' };
+      const createUserDto = {
+        email: 'test@example.com',
+        password: 'password123',
+      };
       const mockUser = { usersId: 1, email: 'test@example.com' };
 
-      jest.spyOn(userService, 'createUser').mockResolvedValue(mockUser as never);
+      jest
+        .spyOn(userService, 'createUser')
+        .mockResolvedValue(mockUser as never);
 
       const result = await controller.create(createUserDto);
 
@@ -97,7 +102,9 @@ describe('UserController', () => {
       const userId = 1;
       const mockRoles = [{ name: 'admin' }];
 
-      jest.spyOn(userService, 'getRolesByUserId').mockResolvedValue(mockRoles as never);
+      jest
+        .spyOn(userService, 'getRolesByUserId')
+        .mockResolvedValue(mockRoles as never);
 
       const result = await controller.getUserRole(userId);
 
@@ -111,11 +118,15 @@ describe('UserController', () => {
       const userId = 1;
       const mockAssignment = { usersId: userId, rolesId: 2, name: 'admin' };
 
-      jest.spyOn(userService, 'getRoleAssignmentsByUserId').mockResolvedValue(mockAssignment as never);
+      jest
+        .spyOn(userService, 'getRoleAssignmentsByUserId')
+        .mockResolvedValue(mockAssignment as never);
 
       const result = await controller.getUserRoleAssignment(userId);
 
-      expect(userService.getRoleAssignmentsByUserId).toHaveBeenCalledWith(userId);
+      expect(userService.getRoleAssignmentsByUserId).toHaveBeenCalledWith(
+        userId,
+      );
       expect(result).toEqual(mockAssignment);
     });
   });
@@ -124,9 +135,14 @@ describe('UserController', () => {
     it('should call userService.updateUser with correct data', async () => {
       const userId = 1;
       const updateUserDto = { email: 'newemail@example.com' };
-      const mockUpdatedUser = { usersId: userId, email: 'newemail@example.com' };
+      const mockUpdatedUser = {
+        usersId: userId,
+        email: 'newemail@example.com',
+      };
 
-      jest.spyOn(userService, 'updateUser').mockResolvedValue(mockUpdatedUser as never);
+      jest
+        .spyOn(userService, 'updateUser')
+        .mockResolvedValue(mockUpdatedUser as never);
 
       const result = await controller.updateUser(userId, updateUserDto);
 
@@ -144,11 +160,16 @@ describe('UserController', () => {
       const assignRoleDto = { rolesId: 2 };
       const mockResult = { usersId: userId, rolesId: 2, name: 'editor' };
 
-      jest.spyOn(userService, 'assignRoleToUser').mockResolvedValue(mockResult as never);
+      jest
+        .spyOn(userService, 'assignRoleToUser')
+        .mockResolvedValue(mockResult as never);
 
       const result = await controller.assignRole(userId, assignRoleDto);
 
-      expect(userService.assignRoleToUser).toHaveBeenCalledWith(userId, assignRoleDto.rolesId);
+      expect(userService.assignRoleToUser).toHaveBeenCalledWith(
+        userId,
+        assignRoleDto.rolesId,
+      );
       expect(result).toEqual(mockResult);
     });
   });
@@ -158,11 +179,15 @@ describe('UserController', () => {
       const userId = 1;
       const mockPermissions = [{ name: 'users:read' }];
 
-      jest.spyOn(userService, 'getDirectPermissionsByUserId').mockResolvedValue(mockPermissions as never);
+      jest
+        .spyOn(userService, 'getDirectPermissionsByUserId')
+        .mockResolvedValue(mockPermissions as never);
 
       const result = await controller.getUserPermissions(userId);
 
-      expect(userService.getDirectPermissionsByUserId).toHaveBeenCalledWith(userId);
+      expect(userService.getDirectPermissionsByUserId).toHaveBeenCalledWith(
+        userId,
+      );
       expect(result).toEqual(mockPermissions);
     });
   });
@@ -173,11 +198,20 @@ describe('UserController', () => {
       const assignPermissionDto = { permissionsId: 1, allow: true };
       const mockResult = { allowed: true };
 
-      jest.spyOn(userService, 'assignPermissionToUser').mockResolvedValue(mockResult as never);
+      jest
+        .spyOn(userService, 'assignPermissionToUser')
+        .mockResolvedValue(mockResult as never);
 
-      const result = await controller.assignPermission(userId, assignPermissionDto);
+      const result = await controller.assignPermission(
+        userId,
+        assignPermissionDto,
+      );
 
-      expect(userService.assignPermissionToUser).toHaveBeenCalledWith(userId, assignPermissionDto.permissionsId, true);
+      expect(userService.assignPermissionToUser).toHaveBeenCalledWith(
+        userId,
+        assignPermissionDto.permissionsId,
+        true,
+      );
       expect(result).toEqual(mockResult);
     });
   });
@@ -187,7 +221,9 @@ describe('UserController', () => {
       const userId = 1;
       const mockResult = { revoked: true };
 
-      jest.spyOn(userService, 'revokeRoleFromUser').mockResolvedValue(mockResult as never);
+      jest
+        .spyOn(userService, 'revokeRoleFromUser')
+        .mockResolvedValue(mockResult as never);
 
       const result = await controller.revokeRole(userId);
 
@@ -201,11 +237,15 @@ describe('UserController', () => {
       const userId = 1;
       const mockResult = { deleted: true };
 
-      jest.spyOn(userService, 'softDeleteUser').mockResolvedValue(mockResult as never);
+      jest
+        .spyOn(userService, 'softDeleteUser')
+        .mockResolvedValue(mockResult as never);
 
       const result = await controller.remove(userId);
 
-      expect(userService.softDeleteUser).toHaveBeenCalledWith({ usersId: userId });
+      expect(userService.softDeleteUser).toHaveBeenCalledWith({
+        usersId: userId,
+      });
       expect(result).toEqual(mockResult);
     });
   });
@@ -215,11 +255,15 @@ describe('UserController', () => {
       const userPermissionId = 1;
       const mockResult = { revoked: true };
 
-      jest.spyOn(userService, 'revokePermissionFromUser').mockResolvedValue(mockResult as never);
+      jest
+        .spyOn(userService, 'revokePermissionFromUser')
+        .mockResolvedValue(mockResult as never);
 
       const result = await controller.revokePermission(userPermissionId);
 
-      expect(userService.revokePermissionFromUser).toHaveBeenCalledWith(userPermissionId);
+      expect(userService.revokePermissionFromUser).toHaveBeenCalledWith(
+        userPermissionId,
+      );
       expect(result).toEqual(mockResult);
     });
   });
@@ -227,9 +271,14 @@ describe('UserController', () => {
   describe('getEffectivePermissions', () => {
     it('should call userService.getEffectivePermissions with correct id', async () => {
       const userId = 1;
-      const mockPermissions = [{ name: 'users:read' }, { name: 'users:create' }];
+      const mockPermissions = [
+        { name: 'users:read' },
+        { name: 'users:create' },
+      ];
 
-      jest.spyOn(userService, 'getEffectivePermissions').mockResolvedValue(mockPermissions as never);
+      jest
+        .spyOn(userService, 'getEffectivePermissions')
+        .mockResolvedValue(mockPermissions as never);
 
       const result = await controller.getEffectivePermissions(userId);
 

@@ -1,4 +1,8 @@
-import { TipoNovedad, EstadoNovedad, Prisma } from 'src/generated/prisma/client';
+import type {
+  TipoNovedad,
+  EstadoNovedad,
+  Prisma,
+} from 'src/generated/prisma/client';
 
 export class NovedadOperativaEntity {
   novedadId: string;

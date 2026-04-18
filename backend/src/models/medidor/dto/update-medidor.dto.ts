@@ -1,4 +1,10 @@
-import { IsDateString, IsEnum, IsNumber, IsOptional, IsString } from 'class-validator';
+import {
+  IsDateString,
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 import { EstadoMedidor } from 'src/generated/prisma/client';
 
 export class ActualizarMedidorDto {
@@ -23,7 +29,7 @@ export class ActualizarMedidorDto {
   estado?: EstadoMedidor;
 
   @IsOptional()
-  @IsDateString() 
+  @IsDateString()
   fechaBaja?: string | Date;
 
   @IsOptional()

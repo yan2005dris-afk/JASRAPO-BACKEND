@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { MenusService } from './menus.service';
 import { PrismaService } from 'src/database/prisma.service';
 import { UserService } from '../user/user.service';
@@ -67,11 +68,11 @@ describe('MenusService', () => {
     });
 
     it('should return menu tree when user has permissions', async () => {
-      const mockPermissions = [
-        { resource: 'dashboard', action: 'read' },
-      ];
+      const mockPermissions = [{ resource: 'dashboard', action: 'read' }];
 
-      mockUserService.getEffectivePermissions.mockResolvedValue(mockPermissions);
+      mockUserService.getEffectivePermissions.mockResolvedValue(
+        mockPermissions,
+      );
       mockPrismaService.menus.findMany.mockResolvedValue([mockMenuRecord]);
 
       const result = await service.getMyMenus(1);
@@ -81,7 +82,9 @@ describe('MenusService', () => {
 
     it('should throw when menuPermissions query fails', async () => {
       const mockPermissions = [{ resource: 'test', action: 'read' }];
-      mockUserService.getEffectivePermissions.mockResolvedValue(mockPermissions);
+      mockUserService.getEffectivePermissions.mockResolvedValue(
+        mockPermissions,
+      );
       mockPrismaService.menus.findMany.mockRejectedValue(new Error('DB Error'));
 
       await expect(service.getMyMenus(1)).rejects.toThrow();

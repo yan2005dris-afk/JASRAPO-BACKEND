@@ -242,7 +242,9 @@ describe('AuthService', () => {
 
       await service.logout('test-uuid-1234-5678', 1);
 
-      expect(sessionsService.revokeSession).toHaveBeenCalledWith('test-uuid-1234-5678');
+      expect(sessionsService.revokeSession).toHaveBeenCalledWith(
+        'test-uuid-1234-5678',
+      );
     });
   });
 

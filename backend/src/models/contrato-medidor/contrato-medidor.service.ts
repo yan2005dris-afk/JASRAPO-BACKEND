@@ -8,7 +8,9 @@ import { ActualizarContratoMedidorDto } from './dto/update-contrato-medidor.dto'
 export class ContratoMedidorService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async crearContrato(createDto: CrearContratoMedidorDto): Promise<ContratoMedidor> {
+  async crearContrato(
+    createDto: CrearContratoMedidorDto,
+  ): Promise<ContratoMedidor> {
     return await this.prisma.contratoMedidor.create({
       data: {
         contratoId: BigInt(createDto.contratoId),
@@ -19,7 +21,11 @@ export class ContratoMedidorService {
     });
   }
 
-  async buscarContratos(params: { skip?: number; take?: number; where?: Prisma.ContratoMedidorWhereInput }): Promise<ContratoMedidor[]> {
+  async buscarContratos(params: {
+    skip?: number;
+    take?: number;
+    where?: Prisma.ContratoMedidorWhereInput;
+  }): Promise<ContratoMedidor[]> {
     return await this.prisma.contratoMedidor.findMany({
       ...params,
       where: { ...params.where, deletedAt: null },
@@ -28,27 +34,45 @@ export class ContratoMedidorService {
   }
 
   async buscarContrato(id: bigint): Promise<ContratoMedidor> {
-    const registro = await this.prisma.contratoMedidor.findUnique({ where: { contratoMedidorId: id } });
-    if (!registro || registro.deletedAt) throw new NotFoundException(`Registro con ID ${id} no encontrado`);
+    const registro = await this.prisma.contratoMedidor.findUnique({
+      where: { contratoMedidorId: id },
+    });
+    if (!registro || registro.deletedAt)
+      throw new NotFoundException(`Registro con ID ${id} no encontrado`);
     return registro;
   }
 
-  async actualizar(id: bigint, updateDto: ActualizarContratoMedidorDto): Promise<ContratoMedidor> {
-    await this.buscarContrato(id);
-    return await this.prisma.contratoMedidor.update({ where: { contratoMedidorId: id }, data: updateDto });
-  }
-
-  async finalizarVinculo(id: bigint, motivoCambio?: string): Promise<ContratoMedidor> {
+  async actualizar(
+    id: bigint,
+    updateDto: ActualizarContratoMedidorDto,
+  ): Promise<ContratoMedidor> {
     await this.buscarContrato(id);
     return await this.prisma.contratoMedidor.update({
       where: { contratoMedidorId: id },
-      data: { fechaFin: new Date(), motivoCambio: motivoCambio || 'Cambio de equipo o fin de contrato' },
+      data: updateDto,
+    });
+  }
+
+  async finalizarVinculo(
+    id: bigint,
+    motivoCambio?: string,
+  ): Promise<ContratoMedidor> {
+    await this.buscarContrato(id);
+    return await this.prisma.contratoMedidor.update({
+      where: { contratoMedidorId: id },
+      data: {
+        fechaFin: new Date(),
+        motivoCambio: motivoCambio || 'Cambio de equipo o fin de contrato',
+      },
     });
   }
 
   async eliminar(id: bigint): Promise<{ message: string }> {
     await this.buscarContrato(id);
-    await this.prisma.contratoMedidor.update({ where: { contratoMedidorId: id }, data: { deletedAt: new Date() } });
+    await this.prisma.contratoMedidor.update({
+      where: { contratoMedidorId: id },
+      data: { deletedAt: new Date() },
+    });
     return { message: `Registro con ID ${id} eliminado` };
   }
 }

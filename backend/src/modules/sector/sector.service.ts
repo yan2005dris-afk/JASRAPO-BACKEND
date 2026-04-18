@@ -5,20 +5,19 @@ import { PrismaService } from 'src/database/prisma.service';
 
 @Injectable()
 export class SectorService {
- 
-  constructor(private prisma: PrismaService){}
-  
+  constructor(private prisma: PrismaService) {}
+
   async crearSector(createSectorDto: CreateSectorDto) {
     const comunidad = await this.prisma.comunidades.findUnique({
-      where: { comunidadId: createSectorDto.comunidadId }
+      where: { comunidadId: createSectorDto.comunidadId },
     });
 
-    if (!comunidad){
+    if (!comunidad) {
       throw new NotFoundException('La comunidad no existe');
     }
-    
+
     return this.prisma.sectores.create({
-      data: createSectorDto
+      data: createSectorDto,
     });
   }
 
@@ -29,25 +28,25 @@ export class SectorService {
   findOne(id: number) {
     return this.prisma.sectores.findUnique({
       where: {
-        sectorId: id
-      }
+        sectorId: id,
+      },
     });
   }
 
   actualizarSector(id: number, updateSectorDto: UpdateSectorDto) {
-     return this.prisma.sectores.update({
+    return this.prisma.sectores.update({
       where: {
-        sectorId: id
+        sectorId: id,
       },
-      data: updateSectorDto
+      data: updateSectorDto,
     });
   }
 
   eliminarSector(id: number) {
     return this.prisma.sectores.delete({
       where: {
-        sectorId: id
-      }
+        sectorId: id,
+      },
     });
   }
 }
