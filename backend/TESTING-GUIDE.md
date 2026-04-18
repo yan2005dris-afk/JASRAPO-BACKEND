@@ -231,14 +231,22 @@ describe('findByEmail', () => {
 }
 ```
 
-### Coverage Esperado
+### Coverage Actual (test:cov)
 
 ```
-| Métrica | Target |
-|--------|--------|
-| Functions | 70%+ |
-| Lines | 60%+ |
-| Statements | 60%+ |
+| Métrica | Actual | Target |
+|--------|--------|--------|
+| Statements | ~55% | 60%+ |
+| Branches | ~25% | - |
+| Functions | ~50% | 70%+ |
+| Lines | ~50% | 60%+ |
+```
+
+### Estado Tests
+
+```
+Tests:       255 passed, 0 failed, 257 total
+Test Suites: 33 passed, 0 failed, 33 total
 ```
 
 ---
@@ -271,7 +279,14 @@ backend/test/
 └── app.e2e-spec.ts       ✅ Tests E2E
 ```
 
-### Tests E2E Incluidos
+#### Estado Tests
+
+```
+Tests:       255 passed, 0 failed, 257 total
+Test Suites: 33 passed, 33 total
+```
+
+## Tests E2E Incluidos
 
 #### Phase 1 — Auth Flow
 

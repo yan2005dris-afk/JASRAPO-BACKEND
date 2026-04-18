@@ -107,8 +107,8 @@ describe('MedidorController', () => {
 
   describe('instalar', () => {
     it('should install a medidor with contratoId', async () => {
-      const installDto = { contratoId: '20' };
-      const result = await controller.instalar('1', installDto);
+      // El controller usa @Body('contratoId') que pasa el valor directo como string
+      const result = await controller.instalar('1', '20');
 
       expect(service.instalarMedidor).toHaveBeenCalledWith(BigInt(1), BigInt(20));
       expect(result).toEqual(mockMedidor);
@@ -117,10 +117,9 @@ describe('MedidorController', () => {
 
   describe('reportarDano', () => {
     it('should report damage for a medidor', async () => {
-      const damageDto = { motivo: 'ROTO' };
-      const result = await controller.reportarDano('1', damageDto);
+      const result = await controller.reportarDano('1');
 
-      expect(service.reportarDano).toHaveBeenCalledWith(BigInt(1), 'ROTO');
+      expect(service.reportarDano).toHaveBeenCalledWith(BigInt(1));
       expect(result).toEqual(mockMedidor);
     });
   });
