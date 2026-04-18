@@ -27,9 +27,10 @@ jobs:
 
       - name: Run ESLint
         run: npm run lint
+        working-directory: backend
 
   test:
-    name: Tests
+    name: Tests + Coverage
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -46,15 +47,22 @@ jobs:
         run: npm ci
         working-directory: backend
 
-      - name: Run tests
+      - name: Run tests with coverage
         run: npm run test:cov
         working-directory: backend
 
-      - name: Upload coverage
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          directory: ./backend/coverage
+          flags: unittests
+          name: jasrapo-backend
+
+      - name: Upload coverage artifact
         uses: actions/upload-artifact@v4
         with:
           name: coverage
-          path: coverage
+          path: backend/coverage
           retention-days: 7
 
   build:
