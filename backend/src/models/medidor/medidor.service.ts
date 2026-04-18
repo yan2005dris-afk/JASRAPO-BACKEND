@@ -73,16 +73,14 @@ export class MedidorService {
       );
     }
 
-    const [medidorActualizado] = await this.prisma.$transaction([
-      this.prisma.medidores.update({
-        where: { medidorId },
-        data: { estado: EstadoMedidor.INSTALADO },
-      }),
-      this.prisma.contratoMedidor.create({
-        data: { medidorId, contratoId: BigInt(contratoId) },
-      }),
-    ]);
-    return medidorActualizado;
+    // Actualizamos el medidor con el contrato vinculado
+    return await this.prisma.medidores.update({
+      where: { medidorId },
+      data: { 
+        estado: EstadoMedidor.INSTALADO,
+        contratoId: BigInt(contratoId)
+      },
+    });
   }
 
   async reportarDano(medidorId: bigint): Promise<Medidores> {

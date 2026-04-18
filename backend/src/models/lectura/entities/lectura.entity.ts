@@ -13,7 +13,7 @@ export class LecturaEntity {
   fotoUrlMinIo: string | null;
   isValidada: boolean;
   lecturaInicial: boolean;
-  periodo: string;
+  periodoId: number;
   tieneAnomalia: boolean;
   updatedAt: Date;
   deletedAt: Date | null;

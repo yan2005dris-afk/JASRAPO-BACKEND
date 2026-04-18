@@ -16,6 +16,6 @@ export class CrearLecturaDto {
   @IsOptional() @IsString() fotoUrlMinIo?: string;
   @IsOptional() @IsBoolean() isValidada?: boolean;
   @IsNotEmpty() @IsBoolean() lecturaInicial: boolean;
-  @IsNotEmpty() @IsString() periodo: string;
+  @IsNotEmpty() @IsNumber() periodoId: number;
   @IsOptional() @IsBoolean() tieneAnomalia?: boolean;
 }

@@ -6,6 +6,23 @@ export async function seedLecturas(prisma: PrismaClient) {
         '2025-10', '2025-11', '2025-12', '2026-01', '2026-02', '2026-03'
     ];
 
+    // Primero creamos los periodos si no existen para que las lecturas tengan a qué apuntar
+    const periodosDb = [];
+    for (const p of periodos) {
+        const pDb = await prisma.periodosFacturacion.upsert({
+            where: { codigo: p },
+            update: {},
+            create: {
+                codigo: p,
+                nombre: `Periodo ${p}`,
+                fechaInicio: new Date(`${p}-01`),
+                fechaFin: new Date(`${p}-28`),
+                estado: "ABIERTO" as any,
+            }
+        });
+        periodosDb.push(pDb);
+    }
+
     const contratos = await prisma.contratos.findMany({
         where: { estado: "ACTIVO" },
         select: { contratoId: true },
@@ -14,7 +31,7 @@ export async function seedLecturas(prisma: PrismaClient) {
     let lecturaId = 1;
 
     for (const contrato of contratos) {
-        for (const periodo of periodos) {
+        for (const pDb of periodosDb) {
             const lecturaAnterior = Math.floor(Math.random() * 100) + 50;
             const consumo = Math.floor(Math.random() * 30) + 5;
             const lecturaActual = lecturaAnterior + consumo;
@@ -23,7 +40,7 @@ export async function seedLecturas(prisma: PrismaClient) {
                 data: {
                     lecturaId,
                     contratoId: contrato.contratoId,
-                    periodo,
+                    periodoId: pDb.periodoId, // Usamos el ID real
                     fecha: new Date(),
                     lecturaAnterior,
                     lecturaActual,
@@ -37,5 +54,5 @@ export async function seedLecturas(prisma: PrismaClient) {
         }
     }
 
-    return { contratosProcesados: contratos.length, periodos };
+    return { contratosProcesados: contratos.length, periodos: periodos.length };
 }

@@ -1,24 +1,19 @@
 import {
   Body,
   Controller,
-  DefaultValuePipe,
   Delete,
   Get,
   Param,
-  ParseIntPipe,
   Patch,
   Post,
   Query,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
-import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RequiredPermission } from 'src/common/decorators/require-permission.decorator';
-import { PermissionsGuard } from 'src/common/guards/permissions.guard';
 import { ClientService } from './client.service';
 import { CreateClientDto } from './dto/create-client.dto';
 import { UpdateClientDto } from './dto/update-client.dto';
-import { SearchClientDto } from './dto/search.client.dto';
 
 @ApiTags('client')
 @ApiBearerAuth()
@@ -28,7 +23,7 @@ export class ClientController {
   constructor(private readonly clientService: ClientService) {}
 
   /**
-   * Búsqueda pública de clientes
+   * Búsqueda de clientes (Pública y Privada unificada)
    * Query params:
    *  - tipo: identificacion | nombres | apellidos | nombreCompleto
    *  - valor: texto a buscar
@@ -47,21 +42,6 @@ export class ClientController {
     const pageNumber = page ? parseInt(page, 10) : 1;
     const limitNumber = limit ? parseInt(limit, 10) : 10;
     return this.clientService.search(tipo, valor, pageNumber, limitNumber);
-  }
-
-  // =====================
-  // SEARCH
-  // =====================
-  @RequiredPermission('clientes', 'read')
-  @Get('search')
-  @Throttle({ default: { limit: 10, ttl: 60000 } })
-  searchPrivate(@Query() query: SearchClientDto) {
-    return this.clientService.searchPrivate(
-      query.tipo,
-      query.valor,
-      query.page,
-      query.limit,
-    );
   }
 
   // =====================

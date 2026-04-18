@@ -1,4 +1,4 @@
-import { PrismaClient, TipoDescuento } from './src/generated/prisma/client';
+import { PrismaClient } from '../src/generated/prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import 'dotenv/config';
 import { Pool } from 'pg';
@@ -11,7 +11,7 @@ async function validateDiscounts() {
   console.log('🔍 Iniciando validación de descuentos (Arquitectura Híbrida)...');
 
   // 1. Obtener prefacturas con sus detalles y auditoría de descuentos
-  const prefacturas = await prisma.prefacturas.findMany({
+  const prefacturas = await (prisma as any).prefacturas.findMany({
     include: {
       prefacturaDetalle: {
         include: {
