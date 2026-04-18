@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { BusquedaPublicaController } from './busqueda-publica.controller';
 import { BusquedaPublicaService } from './busqueda-publica.service';
 import { PrismaService } from 'src/database/prisma.service';
