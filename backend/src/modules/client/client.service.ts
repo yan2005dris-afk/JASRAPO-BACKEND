@@ -161,19 +161,12 @@ export class ClientService {
         telefono: dto.telefono,
         telefonoSecundario: dto.telefonoSecundario,
         direccionDomicilio: dto.direccionDomicilio,
+        aplicaTerceraEdadDiscapacidad: false,
       });
 
-      dataFinal = {
-        identificacion,
-        tipoIdentificacion,
-        nombres: this.normalizar(nombres)!,
-        apellidos: this.normalizar(apellidos)!,
-        razonSocial: this.normalizar(razonSocial),
-        email: this.normalizarEmail(email),
-        telefono,
-        telefonoSecundario,
-        direccionDomicilio,
-        aplicaTerceraEdadDiscapacidad: aplicaTerceraEdadDiscapacidad ?? false,
+      return {
+        message: 'Consumidor Final reactivado correctamente.',
+        data: updated,
       };
     }
 
@@ -346,14 +339,18 @@ export class ClientService {
   // =========================
   // SEARCH
   // =========================
-  async searchPrivate(
-    tipo: 'identificacion' | 'nombreCompleto',
+  async search(
+    tipo: 'identificacion' | 'nombres' | 'apellidos' | 'nombreCompleto',
     valor: string,
     page = 1,
     limit = 10,
   ) {
     if (!tipo || !valor) {
       throw new BadRequestException('Debe enviar tipo y valor');
+    }
+
+    if (tipo === 'identificacion' && valor.length < 3) {
+      throw new BadRequestException('La identificación debe tener al menos 3 caracteres');
     }
 
     const skip = (page - 1) * limit;
@@ -364,7 +361,29 @@ export class ClientService {
       case 'identificacion': {
         results = await this.prisma.clientes.findMany({
           where: {
-            identificacion: this.normalizarIdentificacion(valor),
+            identificacion: {
+              contains: valor,
+              mode: 'insensitive',
+            },
+            deletedAt: null,
+          },
+          skip,
+          take: limit,
+          orderBy: {
+            createdAt: 'desc',
+          },
+        });
+        break;
+      }
+
+      case 'nombres':
+      case 'apellidos': {
+        results = await this.prisma.clientes.findMany({
+          where: {
+            [tipo]: {
+              contains: valor,
+              mode: 'insensitive',
+            },
             deletedAt: null,
           },
           skip,
@@ -411,10 +430,6 @@ export class ClientService {
 
       default:
         throw new BadRequestException('Tipo inválido');
-    }
-
-    if (!results.length) {
-      throw new NotFoundException('Cliente no encontrado');
     }
 
     return results;

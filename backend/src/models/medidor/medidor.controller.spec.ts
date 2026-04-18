@@ -39,9 +39,7 @@ describe('MedidorController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [MedidorController],
-      providers: [
-        { provide: MedidorService, useValue: mockMedidorService },
-      ],
+      providers: [{ provide: MedidorService, useValue: mockMedidorService }],
     }).compile();
 
     controller = module.get<MedidorController>(MedidorController);
@@ -91,7 +89,10 @@ describe('MedidorController', () => {
       const updateDto = { lecturaActual: 150 };
       const result = await controller.actualizar('1', updateDto);
 
-      expect(service.actualizarMedidor).toHaveBeenCalledWith(BigInt(1), updateDto);
+      expect(service.actualizarMedidor).toHaveBeenCalledWith(
+        BigInt(1),
+        updateDto,
+      );
       expect(result).toEqual(mockMedidor);
     });
   });
@@ -110,7 +111,10 @@ describe('MedidorController', () => {
       // El controller usa @Body('contratoId') que pasa el valor directo como string
       const result = await controller.instalar('1', '20');
 
-      expect(service.instalarMedidor).toHaveBeenCalledWith(BigInt(1), BigInt(20));
+      expect(service.instalarMedidor).toHaveBeenCalledWith(
+        BigInt(1),
+        BigInt(20),
+      );
       expect(result).toEqual(mockMedidor);
     });
   });
