@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+} from '@nestjs/common';
 import { BusquedaPublicaService } from './busqueda-publica.service';
 import { CreateBusquedaPublicaDto } from './dto/create-busqueda-publica.dto';
 import { UpdateBusquedaPublicaDto } from './dto/update-busqueda-publica.dto';
@@ -22,5 +31,4 @@ export class BusquedaPublicaController {
       query.limit ?? 10,
     );
   }
-
 }

@@ -70,9 +70,7 @@ export class ClientService {
       tipo !== TipoIdentificacion.CONSUMIDOR_FINAL &&
       (!nombres || !apellidos)
     ) {
-      throw new BadRequestException(
-        'Nombres y apellidos son requeridos',
-      );
+      throw new BadRequestException('Nombres y apellidos son requeridos');
     }
   }
 
@@ -121,8 +119,7 @@ export class ClientService {
       telefono: dto.telefono,
       telefonoSecundario: dto.telefonoSecundario,
       direccionDomicilio: dto.direccionDomicilio,
-      aplicaTerceraEdadDiscapacidad:
-        dto.aplicaTerceraEdadDiscapacidad ?? false,
+      aplicaTerceraEdadDiscapacidad: dto.aplicaTerceraEdadDiscapacidad ?? false,
     };
   }
 
@@ -146,7 +143,7 @@ export class ClientService {
 
         await this.prisma.clientes.updateMany({
           where: {
-            clienteId: { in: duplicados.map(c => c.clienteId) },
+            clienteId: { in: duplicados.map((c) => c.clienteId) },
           },
           data: { deletedAt: new Date() },
         });
@@ -161,10 +158,11 @@ export class ClientService {
         telefono: dto.telefono,
         telefonoSecundario: dto.telefonoSecundario,
         direccionDomicilio: dto.direccionDomicilio,
+        aplicaTerceraEdadDiscapacidad: false,
       });
 
       return {
-        message: 'Ya existe un Consumidor Final. Se reutilizó el registro existente.',
+        message: 'Consumidor Final reactivado correctamente.',
         data: updated,
       };
     }
@@ -279,9 +277,7 @@ export class ClientService {
       const existente = await this.findByIdentificacion(identificacionFinal);
 
       if (existente && existente.clienteId !== clienteId) {
-        throw new ConflictException(
-          'La identificación ya está registrada',
-        );
+        throw new ConflictException('La identificación ya está registrada');
       }
     }
 
@@ -338,14 +334,20 @@ export class ClientService {
   // =========================
   // SEARCH
   // =========================
-  async searchPrivate(
-    tipo: 'identificacion' | 'nombreCompleto',
+  async search(
+    tipo: 'identificacion' | 'nombres' | 'apellidos' | 'nombreCompleto',
     valor: string,
     page = 1,
     limit = 10,
   ) {
     if (!tipo || !valor) {
       throw new BadRequestException('Debe enviar tipo y valor');
+    }
+
+    if (tipo === 'identificacion' && valor.length < 3) {
+      throw new BadRequestException(
+        'La identificación debe tener al menos 3 caracteres',
+      );
     }
 
     const skip = (page - 1) * limit;
@@ -356,7 +358,29 @@ export class ClientService {
       case 'identificacion': {
         results = await this.prisma.clientes.findMany({
           where: {
-            identificacion: this.normalizarIdentificacion(valor),
+            identificacion: {
+              contains: valor,
+              mode: 'insensitive',
+            },
+            deletedAt: null,
+          },
+          skip,
+          take: limit,
+          orderBy: {
+            createdAt: 'desc',
+          },
+        });
+        break;
+      }
+
+      case 'nombres':
+      case 'apellidos': {
+        results = await this.prisma.clientes.findMany({
+          where: {
+            [tipo]: {
+              contains: valor,
+              mode: 'insensitive',
+            },
             deletedAt: null,
           },
           skip,
@@ -403,10 +427,6 @@ export class ClientService {
 
       default:
         throw new BadRequestException('Tipo inválido');
-    }
-
-    if (!results.length) {
-      throw new NotFoundException('Cliente no encontrado');
     }
 
     return results;

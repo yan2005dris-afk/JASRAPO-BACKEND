@@ -1,16 +1,29 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+} from '@nestjs/common';
 import { NovedadOperativaService } from './novedad-operativa.service';
-import {  CrearNovedadOperativaDto } from './dto/create-novedad-operativa.dto';
+import { CrearNovedadOperativaDto } from './dto/create-novedad-operativa.dto';
 import { ActualizarNovedadOperativaDto } from './dto/update-novedad-operativa.dto';
 import { NovedadOperativaEntity } from './entities/novedad-operativa.entity';
 import { TipoNovedad, EstadoNovedad } from 'src/generated/prisma/client';
 
 @Controller('novedades-operativas')
 export class NovedadOperativaController {
-  constructor(private readonly novedadOperativaService: NovedadOperativaService) {}
+  constructor(
+    private readonly novedadOperativaService: NovedadOperativaService,
+  ) {}
 
   @Post()
-  async crearNovedadOperativa(@Body() createDto: CrearNovedadOperativaDto): Promise<NovedadOperativaEntity> {
+  async crearNovedadOperativa(
+    @Body() createDto: CrearNovedadOperativaDto,
+  ): Promise<NovedadOperativaEntity> {
     return this.novedadOperativaService.crearNovedadOperativa(createDto);
   }
 
@@ -35,13 +48,21 @@ export class NovedadOperativaController {
   }
 
   @Get(':id')
-  async buscarNovedad(@Param('id') id: string): Promise<NovedadOperativaEntity> {
+  async buscarNovedad(
+    @Param('id') id: string,
+  ): Promise<NovedadOperativaEntity> {
     return this.novedadOperativaService.buscarNovedad(BigInt(id));
   }
 
   @Patch(':id')
-  async actualizarNovedad(@Param('id') id: string, @Body() updateDto: ActualizarNovedadOperativaDto): Promise<NovedadOperativaEntity> {
-    return this.novedadOperativaService.actualizarNovedad(BigInt(id), updateDto);
+  async actualizarNovedad(
+    @Param('id') id: string,
+    @Body() updateDto: ActualizarNovedadOperativaDto,
+  ): Promise<NovedadOperativaEntity> {
+    return this.novedadOperativaService.actualizarNovedad(
+      BigInt(id),
+      updateDto,
+    );
   }
 
   @Delete(':id')

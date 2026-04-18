@@ -1,0 +1,32 @@
+model PrefacturaDetalle {
+  prefacturaDetalleId BigInt @id @default(autoincrement()) @map("prefactura_detalle_id")
+  prefacturaId        BigInt @map("prefactura_id")
+
+  // Rubro y Concepto
+  rubroId     Int    @map("rubro_id")
+  descripcion String @map("descripcion")
+
+  // Cantidades y Precios
+  cantidad       Decimal @map("cantidad") @db.Decimal
+  precioUnitario Decimal @map("precio_unitario") @db.Decimal
+  descuento      Decimal @default(0) @map("descuento") @db.Decimal
+  subtotal       Decimal @map("subtotal") @db.Decimal
+  iva            Decimal @map("iva") @db.Decimal
+  total          Decimal @map("total") @db.Decimal
+
+  // Control
+  gravaIva Boolean @default(true) @map("grava_iva")
+  porcentajeIva    Decimal     @default(0) @map("porcentaje_iva") @db.Decimal
+  codigoImpuestoSri String?    @map("codigo_impuesto_sri")
+
+  // Auditoría
+  createdAt DateTime @default(now()) @map("creado_en")
+  updatedAt DateTime @updatedAt @map("actualizado_en")
+
+  // Relaciones
+  prefactura        Prefacturas        @relation(fields: [prefacturaId], references: [prefacturaId], onDelete: Cascade)
+  rubro             Rubros             @relation(fields: [rubroId], references: [rubroId])
+  descuentosDetalle DescuentoDetalle[]
+
+  @@map("prefactura_detalle")
+}

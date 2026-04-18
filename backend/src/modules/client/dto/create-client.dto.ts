@@ -1,5 +1,14 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, Length, IsEnum, ValidateIf, IsEmail, IsBoolean, IsNotEmpty } from 'class-validator';
+import {
+  IsOptional,
+  IsString,
+  Length,
+  IsEnum,
+  ValidateIf,
+  IsEmail,
+  IsBoolean,
+  IsNotEmpty,
+} from 'class-validator';
 import { TipoIdentificacion } from 'src/generated/prisma/enums';
 
 export class CreateClientDto {
@@ -12,21 +21,21 @@ export class CreateClientDto {
   // =========================
   @ApiPropertyOptional({
     description:
-      'Identificación del cliente. Obligatoria excepto para CONSUMIDOR_FINAL (SRI: 9999999999999)',
+      'Identificación del cliente. Obligatorio para todos los tipos excepto CONSUMIDOR FINAL',
   })
   @ValidateIf(
     (o) => o.tipoIdentificacion !== TipoIdentificacion.CONSUMIDOR_FINAL,
   )
-  @IsOptional()
+  @IsNotEmpty()
   @IsString()
   @Length(6, 20, {
     message: 'La identificación debe tener entre 6 y 20 caracteres',
   })
   identificacion?: string;
 
-  // =========================
-  // NOMBRES
-  // =========================
+  @ValidateIf(
+    (o) => o.tipoIdentificacion !== TipoIdentificacion.CONSUMIDOR_FINAL,
+  )
   @ApiPropertyOptional({ description: 'Nombres del cliente' })
   @ValidateIf(
     (o) => o.tipoIdentificacion !== TipoIdentificacion.CONSUMIDOR_FINAL,
@@ -36,14 +45,10 @@ export class CreateClientDto {
   @IsString()
   nombres?: string;
 
-  // =========================
-  // APELLIDOS
-  // =========================
-  @ApiPropertyOptional({ description: 'Apellidos del cliente' })
+  @ApiPropertyOptional()
   @ValidateIf(
     (o) => o.tipoIdentificacion !== TipoIdentificacion.CONSUMIDOR_FINAL,
   )
-  @IsOptional()
   @IsNotEmpty()
   @IsString()
   apellidos?: string;

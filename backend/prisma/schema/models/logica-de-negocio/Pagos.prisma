@@ -1,31 +1,30 @@
 model Pagos {
   pagoId              BigInt             @id @default(autoincrement()) @map("pago_id")
+  clienteId           BigInt             @map("cliente_id")
   cajaId              BigInt?            @map("caja_id")
-  cambio              Float              @map("cambio")
+  cambio              Decimal            @map("cambio") @db.Decimal
   comprobanteUrlMinIo String?            @map("comprobante_url_minio")
   estadoConciliacion  EstadoConciliacion @map("estado_conciliacion")
   fechaPago           DateTime           @map("fecha_pago")
-  montoTotalRecibido  Float              @map("monto_total_recibido")
+  montoTotalRecibido  Decimal            @map("monto_total_recibido") @db.Decimal
   numeroOperacion     String?            @map("numero_operacion")
   observaciones       String?            @map("observaciones")
   referenciaBanco     String?            @map("referencia_banco")
-  updatedAt           DateTime           @updatedAt @map("updated_at")
-  createdAt           DateTime           @default(now()) @map("created_at")
-  deletedAt           DateTime?          @map("deleted_at")
-  usersId             Int                @map("users_id")
-  metodoPago          MetodoPago         @map("metodo_pago")
+  updatedAt           DateTime           @updatedAt @map("actualizado_en")
+  createdAt           DateTime           @default(now()) @map("creado_en")
+  deletedAt           DateTime?          @map("borrado_en")
+  usersId             Int                @map("usuario_id")
   abonoCliente        AbonoCliente[]
   detallePago         DetallePago[]
-  cajaSesion          CajaSesion?        @relation(fields: [cajaId], references: [cajaId])
-  user                Users              @relation(fields: [usersId], references: [usersId])
+  metodosPago         PagoMetodoDetalle[]
+  cajaSesion          CajaSesion?        @relation(fields: [cajaId], references: [cajaId], onUpdate: Cascade, onDelete: Restrict)
+  cliente             Clientes           @relation(fields: [clienteId], references: [clienteId], onUpdate: Cascade, onDelete: Restrict)
+  user                Users              @relation(fields: [usersId], references: [usersId], onUpdate: Cascade, onDelete: Restrict)
 
+  @@index([usersId])
+  @@index([clienteId])
+  @@index([cajaId])
   @@map("pagos")
-}
-
-enum MetodoPago {
-  EFECTIVO
-  TRANSFERENCIA
-  TARJETA
 }
 
 enum EstadoConciliacion {

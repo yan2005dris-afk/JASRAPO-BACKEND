@@ -20,7 +20,7 @@ export class PrismaService
     });
     super({ adapter });
   }
-  
+
   async onModuleInit() {
     try {
       await this.$connect(); // Falla rápido si la DB no está disponible
@@ -46,11 +46,11 @@ export class PrismaService
   get extendedClient() {
     return this.$extends({
       query: {
-        lecturas: { 
+        lecturas: {
           // Cuando alguien intente un .delete(), lo flitramos para que en vez de eliminar el registro, le pongamos una fecha en deletedAt
           //El registro nunca se elimina
           async delete({ args }) {
-            return (this as any).update({
+            return this.update({
               ...args,
               data: { deletedAt: new Date() },
             });
@@ -58,12 +58,12 @@ export class PrismaService
 
           // Lo mismo de arriba pero por si tiran un delete masivo
           async deleteMany({ args }) {
-            return (this as any).updateMany({
+            return this.updateMany({
               ...args,
               data: { deletedAt: new Date() },
             });
           },
-          // Cuando hagan un .findMany(), usamos el filtro deletedAt: null 
+          // Cuando hagan un .findMany(), usamos el filtro deletedAt: null
           // Así, los registros "eliminados" no aparecerán en las consultas normales
           async findMany({ args, query }) {
             args.where = { ...args.where, deletedAt: null };

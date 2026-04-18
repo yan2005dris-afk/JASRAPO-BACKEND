@@ -1,7 +1,7 @@
-import { TipoIdentificacion } from "src/generated/prisma/enums";
+import type { TipoIdentificacion } from 'src/generated/prisma/enums';
 
-export class TipoIdentificacionUtil{
-    // =========================
+export class TipoIdentificacionUtil {
+  // =========================
   // VALIDACIÓN DE CÉDULA
   // =========================
   private static esCedula(cedula: string): boolean {
@@ -39,7 +39,7 @@ export class TipoIdentificacionUtil{
   private static validarRucPrivado(ruc: string): boolean {
     if (!ruc.endsWith('001')) return false;
 
-    const coeficientes = [4,3,2,7,6,5,4,3,2];
+    const coeficientes = [4, 3, 2, 7, 6, 5, 4, 3, 2];
     let suma = 0;
 
     for (let i = 0; i < 9; i++) {
@@ -61,7 +61,7 @@ export class TipoIdentificacionUtil{
   private static validarRucPublico(ruc: string): boolean {
     if (!ruc.endsWith('0001')) return false;
 
-    const coeficientes = [3,2,7,6,5,4,3,2];
+    const coeficientes = [3, 2, 7, 6, 5, 4, 3, 2];
     let suma = 0;
 
     for (let i = 0; i < 8; i++) {

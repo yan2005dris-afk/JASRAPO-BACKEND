@@ -1,5 +1,13 @@
-import { Transform, Type } from "class-transformer";
-import { IsIn, IsInt, IsNumber, IsOptional, IsString, Min, MinLength } from "class-validator";
+import { Transform, Type } from 'class-transformer';
+import {
+  IsIn,
+  IsInt,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Min,
+  MinLength,
+} from 'class-validator';
 
 export class CreateBusquedaPublicaDto {
   @IsIn(['cliente', 'contrato', 'global'])

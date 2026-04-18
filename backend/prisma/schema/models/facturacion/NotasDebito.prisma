@@ -1,0 +1,54 @@
+model NotasDebito {
+  id               BigInt         @id @default(autoincrement()) @map("id")
+  uuid             String         @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  facturaId        BigInt         @map("factura_id")
+  puntoEmisionId   Int            @map("punto_emision_id")
+  periodoId        Int            @map("periodo_id")
+  tipoComprobanteId Int           @map("tipo_comprobante_id")
+  formaPagoId      Int            @map("forma_pago_id")
+  
+  // Datos Fiscales
+  claveAcceso      String?        @unique @map("clave_acceso")
+  secuencial       String         @map("secuencial")
+  numeroAutorizacion String?      @map("numero_autorizacion")
+  fechaEmision     DateTime       @default(now()) @map("fecha_emision")
+  
+  // Totales
+  subtotal         Decimal        @map("subtotal") @db.Decimal
+  iva              Decimal        @map("iva") @db.Decimal
+  total            Decimal        @map("total") @db.Decimal
+  
+  // Archivos y Estados
+  xmlFirmado       String?        @map("xml_firmado")
+  xmlAutorizado    String?        @map("xml_autorizado")
+  estadoSri        EstadoSri      @default(BORRADOR) @map("estado_sri")
+  
+  // Auditoría
+  createdAt        DateTime       @default(now()) @map("creado_en")
+  updatedAt        DateTime       @updatedAt @map("actualizado_en")
+
+  // Relaciones
+  factura          Facturas           @relation(fields: [facturaId], references: [facturaId])
+  puntoEmision     PuntosEmision      @relation(fields: [puntoEmisionId], references: [puntoEmisionId])
+  periodo          PeriodosFacturacion @relation(fields: [periodoId], references: [periodoId])
+  tipoComprobante  SriTipoComprobante @relation(fields: [tipoComprobanteId], references: [id])
+  formaPago        SriFormaPago       @relation(fields: [formaPagoId], references: [id])
+  motivos          NotasDebitoMotivo[]
+
+  @@index([facturaId])
+  @@index([puntoEmisionId])
+  @@index([periodoId])
+  @@map("notas_debito")
+}
+
+model NotasDebitoMotivo {
+  id               BigInt      @id @default(autoincrement()) @map("id")
+  notaDebitoId     BigInt      @map("nota_debito_id")
+  razon            String      @map("razon")
+  valor            Decimal     @map("valor") @db.Decimal
+
+  // Relaciones
+  notaDebito       NotasDebito @relation(fields: [notaDebitoId], references: [id])
+
+  @@map("notas_debito_motivo")
+}

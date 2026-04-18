@@ -1,13 +1,12 @@
-import { IsNumber, IsString } from "class-validator";
+import { IsNumber, IsString } from 'class-validator';
 
 export class CreateSectorDto {
-    
-    @IsNumber()
-    comunidadId!: number;
+  @IsNumber()
+  comunidadId!: number;
 
-    @IsString()
-    codigo!: string;
+  @IsString()
+  codigo!: string;
 
-    @IsString()
-    nombre!: string;
+  @IsString()
+  nombre!: string;
 }

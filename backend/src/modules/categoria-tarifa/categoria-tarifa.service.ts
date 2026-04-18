@@ -1,4 +1,8 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateCategoriaTarifaDto } from './dto/create-categoria-tarifa.dto';
 import { UpdateCategoriaTarifaDto } from './dto/update-categoria-tarifa.dto';
 import { PrismaService } from 'src/database/prisma.service';
@@ -6,15 +10,15 @@ import { PrismaService } from 'src/database/prisma.service';
 @Injectable()
 export class CategoriaTarifaService {
   constructor(private prisma: PrismaService) {}
-  
+
   //CREATE
   async createCategoria(dto: CreateCategoriaTarifaDto) {
     const existing = await this.prisma.categoriaTarifa.findFirst({
-        where: {
-          nombre: dto.nombre,
-          activo: true,
-          deletedAt: null,
-        },
+      where: {
+        nombre: dto.nombre,
+        activo: true,
+        deletedAt: null,
+      },
     });
 
     if (existing) {
@@ -36,7 +40,7 @@ export class CategoriaTarifaService {
     });
   }
 
-  //Obtener todas las categorías 
+  //Obtener todas las categorías
   async getCategorias(nombre?: string) {
     return this.prisma.categoriaTarifa.findMany({
       where: {
@@ -53,8 +57,7 @@ export class CategoriaTarifaService {
     });
   }
 
-
-  // BUSCAR POR NOMBRE 
+  // BUSCAR POR NOMBRE
   async buscarCategoriaPorNombre(nombre: string) {
     const data = await this.prisma.categoriaTarifa.findMany({
       where: {
@@ -128,8 +131,7 @@ export class CategoriaTarifaService {
           valorBase: dto.valorBase ?? current.valorBase,
           consumoMinimoMensual:
             dto.consumoMinimoMensual ?? current.consumoMinimoMensual,
-          valorExcedenteM3:
-            dto.valorExcedenteM3 ?? current.valorExcedenteM3,
+          valorExcedenteM3: dto.valorExcedenteM3 ?? current.valorExcedenteM3,
 
           fechaVigenciaDesde: now,
           fechaVigenciaHasta: null,

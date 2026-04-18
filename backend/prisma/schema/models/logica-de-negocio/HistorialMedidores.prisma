@@ -1,0 +1,26 @@
+model HistorialMedidores {
+  historialId      BigInt    @id @default(autoincrement()) @map("historial_id")
+  medidorId        BigInt    @map("medidor_id")
+  contratoId       BigInt    @map("contrato_id")
+  
+  fechaDesde       DateTime  @default(now()) @map("fecha_desde")
+  fechaHasta       DateTime? @map("fecha_hasta")
+  
+  lecturaInicial   Decimal   @map("lectura_inicial_historial") @db.Decimal
+  lecturaFinal     Decimal?  @map("lectura_final_historial") @db.Decimal
+  
+  motivo           String?   @map("motivo")
+  observacion      String?   @map("observacion")
+
+  // Auditoría
+  createdAt        DateTime  @default(now()) @map("creado_en")
+  updatedAt        DateTime  @updatedAt @map("actualizado_en")
+
+  // Relaciones
+  medidor          Medidores @relation(fields: [medidorId], references: [medidorId], onUpdate: Cascade, onDelete: Restrict)
+  contrato         Contratos @relation(fields: [contratoId], references: [contratoId], onUpdate: Cascade, onDelete: Restrict)
+
+  @@index([medidorId])
+  @@index([contratoId])
+  @@map("historial_medidores")
+}

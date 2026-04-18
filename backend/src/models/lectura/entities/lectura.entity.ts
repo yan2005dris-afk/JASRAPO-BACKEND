@@ -1,4 +1,4 @@
-import { Prisma } from 'src/generated/prisma/client';
+import type { Prisma } from 'src/generated/prisma/client';
 
 export class LecturaEntity {
   lecturaId: string;
@@ -13,7 +13,7 @@ export class LecturaEntity {
   fotoUrlMinIo: string | null;
   isValidada: boolean;
   lecturaInicial: boolean;
-  periodo: string;
+  periodoId: number;
   tieneAnomalia: boolean;
   updatedAt: Date;
   deletedAt: Date | null;

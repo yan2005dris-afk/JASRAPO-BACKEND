@@ -16,9 +16,7 @@ import { LoginUserDto } from './dto/login-user.dto';
 import { RegisterDto } from './dto/register.dto';
 import { SessionsService } from '../modules/sessions/sessions.service';
 import type { DecodedJwt } from './types/auth-service.types';
-import {
-  REFRESH_TOKEN_MAX_AGE_MS,
-} from 'src/constants/app.constants';
+import { REFRESH_TOKEN_MAX_AGE_MS } from 'src/constants/app.constants';
 import type { StringValue } from 'ms';
 
 @Injectable()
@@ -267,16 +265,19 @@ export class AuthService {
     if (session.expiresAt < new Date()) {
       throw new UnauthorizedException('La sesión ha expirado');
     }
-    const isValid = await bcrypt.compare(refreshToken, session.refreshTokenHash);
+    const isValid = await bcrypt.compare(
+      refreshToken,
+      session.refreshTokenHash,
+    );
     if (!isValid) {
       throw new UnauthorizedException('Refresh token inválido');
     }
-    
+
     const user = await this.prisma.users.findUnique({
       where: { usersId: userId },
       select: { email: true },
     });
-    
+
     return this.createOrUpdateSession(
       userId,
       sessionId,

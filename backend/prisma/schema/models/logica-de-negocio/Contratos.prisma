@@ -8,17 +8,21 @@ model Contratos {
   direccionSuministro String            @map("direccion_suministro")
   estado              EstadoGenerico    @map("estado")
   codigoInterno       String            @unique @map("codigo_interno")
-  createdAt           DateTime          @default(now()) @map("created_at")
-  updatedAt           DateTime          @updatedAt @map("updated_at")
-  deletedAt           DateTime?         @map("deleted_at")
-  contratosMedidores  ContratoMedidor[]
-  categoriaTarifa     CategoriaTarifa   @relation(fields: [categoriaTarifaId], references: [categoriaTarifaId])
-  cliente             Clientes          @relation(fields: [clienteId], references: [clienteId])
-  sector              Sectores          @relation(fields: [sectorId], references: [sectorId])
+  createdAt           DateTime          @default(now()) @map("creado_en")
+  updatedAt           DateTime          @updatedAt @map("actualizado_en")
+  deletedAt           DateTime?         @map("borrado_en")
+  medidor             Medidores?
+  historialMedidores  HistorialMedidores[]
+  categoriaTarifa     CategoriaTarifa   @relation(fields: [categoriaTarifaId], references: [categoriaTarifaId], onUpdate: Cascade, onDelete: Restrict)
+  cliente             Clientes          @relation(fields: [clienteId], references: [clienteId], onUpdate: Cascade, onDelete: Restrict)
+  sector              Sectores          @relation(fields: [sectorId], references: [sectorId], onUpdate: Cascade, onDelete: Restrict)
   convenios           Convenios[]
   lecturas            Lecturas[]
-  prefacturas         Prefactura[]
+  prefacturas         Prefacturas[]
 
+  @@index([clienteId])
+  @@index([sectorId])
+  @@index([categoriaTarifaId])
   @@map("contratos")
 }
 

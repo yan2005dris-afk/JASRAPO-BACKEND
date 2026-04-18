@@ -1,0 +1,16 @@
+model CatalogoDescuento {
+  id              Int            @id @default(autoincrement()) @map("catalogo_descuento_id")
+  nombre          String         @map("nombre")
+  descripcion     String?        @map("descripcion")
+  tipoDescuento   TipoDescuento  @map("tipo_descuento")
+  valor           Decimal        @map("valor") @db.Decimal(12, 4)
+  esPorcentaje    Boolean        @default(true) @map("es_porcentaje")
+  rubroId         Int?           @map("rubro_id")
+  activo          Boolean        @default(true) @map("activo")
+  
+  // Relaciones
+  rubro           Rubros?        @relation(fields: [rubroId], references: [rubroId], onUpdate: Cascade, onDelete: SetNull)
+  descuentos      DescuentoDetalle[]
+
+  @@map("catalogo_descuento")
+}

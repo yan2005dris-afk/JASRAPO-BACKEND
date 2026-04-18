@@ -1,16 +1,28 @@
 model Medidores {
   medidorId          BigInt            @id @default(autoincrement()) @map("medidor_id")
-  fechaBaja          DateTime?         @map("fecha_baja")
-  lecturaInicial     Float             @map("lectura_inicial_medidor")
+  contratoId         BigInt?           @unique @map("contrato_id")
+  
+  // Datos Técnicos
   marca              String            @map("marca")
   modelo             String            @map("modelo")
-  motivoBaja         String?           @map("motivo_baja")
   serie              String            @unique @map("serie")
-  updatedAt          DateTime          @updatedAt @map("updated_at")
-  createdAt          DateTime          @default(now()) @map("created_at")
-  deletedAt          DateTime?         @map("deleted_at")
+  lecturaInicial     Decimal           @map("lectura_inicial_medidor") @db.Decimal
+  
+  // Estado y Baja
   estado             EstadoMedidor     @map("estado")
-  contratosMedidores ContratoMedidor[]
+  fechaInstalacion   DateTime          @default(now()) @map("fecha_instalacion")
+  fechaBaja          DateTime?         @map("fecha_baja")
+  motivoBaja         String?           @map("motivo_baja")
+  motivoCambio       String?           @map("motivo_cambio")
+
+  // Auditoría
+  createdAt          DateTime          @default(now()) @map("creado_en")
+  updatedAt          DateTime          @updatedAt @map("actualizado_en")
+  deletedAt          DateTime?         @map("borrado_en")
+
+  // Relaciones
+  contrato           Contratos?           @relation(fields: [contratoId], references: [contratoId], onUpdate: NoAction, onDelete: Restrict)
+  historial          HistorialMedidores[]
 
   @@map("medidores")
 }

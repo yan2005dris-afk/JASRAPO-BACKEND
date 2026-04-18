@@ -1,14 +1,13 @@
 model Sectores {
-  sectorId       Int              @id @default(autoincrement()) @map("sector_id")
-  comunidadId    Int?             @map("comunidad_id")
-  codigo         String           @map("codigo")
-  nombre         String           @map("nombre")
-  createdAt      DateTime         @default(now()) @map("created_at")
-  updatedAt      DateTime         @updatedAt @map("updated_at")
-  deletedAt      DateTime?        @map("deleted_at")
-  cobradorSector CobradorSector[]
-  contratos      Contratos[]
-  comunidades    Comunidades?     @relation(fields: [comunidadId], references: [comunidadId])
+  sectorId    Int          @id @default(autoincrement()) @map("sector_id")
+  comunidadId Int?         @map("comunidad_id")
+  codigo      String       @map("codigo")
+  nombre      String       @map("nombre")
+  createdAt   DateTime     @default(now()) @map("creado_en")
+  updatedAt   DateTime     @updatedAt @map("actualizado_en")
+  deletedAt   DateTime?    @map("borrado_en")
+  contratos   Contratos[]
+  comunidades Comunidades? @relation(fields: [comunidadId], references: [comunidadId])
 
   @@map("sectores")
 }

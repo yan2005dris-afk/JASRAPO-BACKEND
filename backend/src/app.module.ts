@@ -56,8 +56,6 @@ import { BusquedaPublicaModule } from './modules/busqueda-publica/busqueda-publi
     SectorModule,
     MedidorModule,
     ContratoMedidorModule,
-    BusquedaPublicaModule,
-
   ],
   controllers: [],
   providers: [

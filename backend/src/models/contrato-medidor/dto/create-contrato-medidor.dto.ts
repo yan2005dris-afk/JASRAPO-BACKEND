@@ -1,4 +1,9 @@
-import { IsDateString, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import {
+  IsDateString,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
 export class CrearContratoMedidorDto {
   @IsNotEmpty() contratoId: string | number;

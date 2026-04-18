@@ -1,0 +1,18 @@
+model Establecimientos {
+  establecimientoId Int              @id @default(autoincrement()) @map("establecimiento_id")
+  empresaId         Int              @map("empresa_id")
+  codigo            String           @map("codigo") @db.VarChar(3) // Ej: "001"
+  nombre            String           @map("nombre")
+  direccion         String           @map("direccion")
+  
+  // Auditoría
+  createdAt         DateTime         @default(now()) @map("creado_en")
+  updatedAt         DateTime         @updatedAt @map("actualizado_en")
+
+  // Relaciones
+  empresa           Empresa          @relation(fields: [empresaId], references: [empresaId])
+  puntosEmision     PuntosEmision[]
+
+  @@unique([empresaId, codigo])
+  @@map("establecimientos")
+}

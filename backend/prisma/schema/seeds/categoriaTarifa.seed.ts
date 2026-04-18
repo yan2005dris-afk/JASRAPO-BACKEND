@@ -1,20 +1,20 @@
 import { PrismaClient } from "src/generated/prisma/client";
 
 export async function seedCategoriaTarifa(prisma: PrismaClient) {
-    const categorias = [
+  const categorias = [
     {
       categoriaTarifaId: 1,
-      nombre: "Tipo 1",
-      descripcion: "Tarifa tipo 1",
+      nombre: "RESIDENCIAL",
+      descripcion: "Tarifa para consumo doméstico estándar",
       valorBase: 4.0,
       valorExcedenteM3: 0.4,
       activo: true,
-      consumoMinimoMensual: 0, // opcional, evita null
+      consumoMinimoMensual: 0,
     },
     {
       categoriaTarifaId: 2,
-      nombre: "Tipo 2",
-      descripcion: "Tarifa tipo 2",
+      nombre: "COMERCIAL",
+      descripcion: "Tarifa para locales comerciales y negocios",
       valorBase: 7.5,
       valorExcedenteM3: 0.75,
       activo: true,
@@ -22,21 +22,47 @@ export async function seedCategoriaTarifa(prisma: PrismaClient) {
     },
     {
       categoriaTarifaId: 3,
-      nombre: "Tipo 3",
-      descripcion: "Tarifa tipo 3",
+      nombre: "INDUSTRIAL",
+      descripcion: "Tarifa para industrias y grandes consumidores",
       valorBase: 15.0,
       valorExcedenteM3: 1.5,
       activo: true,
       consumoMinimoMensual: 0,
     },
+    {
+      categoriaTarifaId: 4,
+      nombre: "TERCERA EDAD",
+      descripcion: "Tarifa subsidiada para adultos mayores",
+      valorBase: 4.0,
+      valorExcedenteM3: 0.4,
+      activo: true,
+      consumoMinimoMensual: 0,
+    },
+    {
+      categoriaTarifaId: 5,
+      nombre: "DISCAPACIDAD",
+      descripcion: "Tarifa subsidiada para personas con discapacidad",
+      valorBase: 4.0,
+      valorExcedenteM3: 0.4,
+      activo: true,
+      consumoMinimoMensual: 0,
+    },
   ];
 
-  const result: Awaited<ReturnType<typeof prisma.categoriaTarifa.findUnique>>[] = [];
+  const result: any[] = [];
   for (const c of categorias) {
     const created = await prisma.categoriaTarifa.upsert({
       where: { categoriaTarifaId: c.categoriaTarifaId },
-      update: {}, // no update para este seed
+      update: {
+        nombre: c.nombre,
+        descripcion: c.descripcion,
+        valorBase: c.valorBase,
+        consumoMinimoMensual: c.consumoMinimoMensual,
+        valorExcedenteM3: c.valorExcedenteM3,
+        activo: c.activo,
+      },
       create: {
+        categoriaTarifaId: c.categoriaTarifaId,
         nombre: c.nombre,
         descripcion: c.descripcion,
         valorBase: c.valorBase,

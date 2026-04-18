@@ -1,0 +1,21 @@
+model PuntosEmision {
+  puntoEmisionId    Int              @id @default(autoincrement()) @map("punto_emision_id")
+  establecimientoId Int              @map("establecimiento_id")
+  codigo            String           @map("codigo") @db.VarChar(3) // Ej: "001"
+  nombre            String           @map("nombre")
+  secuencialActual  Int              @default(1) @map("secuencial_actual")
+  
+  // Auditoría
+  createdAt         DateTime         @default(now()) @map("creado_en")
+  updatedAt         DateTime         @updatedAt @map("actualizado_en")
+
+  // Relaciones
+  establecimiento   Establecimientos @relation(fields: [establecimientoId], references: [establecimientoId])
+  prefacturas       Prefacturas[]
+  notasCredito      NotasCredito[]
+  notasDebito       NotasDebito[]
+  retenciones       Retenciones[]
+
+  @@unique([establecimientoId, codigo])
+  @@map("puntos_emision")
+}

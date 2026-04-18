@@ -1,0 +1,29 @@
+model DescuentoDetalle {
+  descuentoDetalleId Int            @id @default(autoincrement()) @map("descuento_detalle_id")
+  prefacturaDetalleId BigInt?       @map("prefactura_detalle_id")
+  catalogoDescuentoId Int?          @map("catalogo_descuento_id")
+  tipoDescuento      TipoDescuento  @map("tipo_descuento")
+  montoDescontado    Decimal        @map("monto_descontado") @db.Decimal(12, 4)
+  motivo             String?        @map("motivo")
+  autorizadoPor      Int?           @map("autorizado_por")
+  fechaCreacion      DateTime       @default(now()) @map("creado_en")
+  
+  // Relación única a la línea de origen (Prefactura)
+  prefacturaDetalle  PrefacturaDetalle? @relation(fields: [prefacturaDetalleId], references: [prefacturaDetalleId], onUpdate: Cascade, onDelete: SetNull)
+  catalogo           CatalogoDescuento? @relation(fields: [catalogoDescuentoId], references: [id], onUpdate: Cascade, onDelete: SetNull)
+  usuarioAutoriza    Users?            @relation("AutorizadoPor", fields: [autorizadoPor], references: [usersId], onUpdate: Cascade, onDelete: SetNull)
+
+  @@index([prefacturaDetalleId])
+  @@index([catalogoDescuentoId])
+  @@index([autorizadoPor])
+  @@map("descuento_detalle")
+}
+
+enum TipoDescuento {
+  TERCERA_EDAD
+  DISCAPACIDAD
+  INTERES_MORA
+  EXENCION_TASA
+  CONVENIO
+  OTROS
+}

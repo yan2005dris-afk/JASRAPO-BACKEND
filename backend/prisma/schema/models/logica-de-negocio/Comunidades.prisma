@@ -2,12 +2,29 @@ model Comunidades {
   comunidadId             Int               @id @default(autoincrement()) @map("comunidad_id")
   nombre                  String            @map("nombre")
   codigo                  String            @unique @map("codigo")
-  porcentajeTasaSeguridad Float             @map("porcentaje_tasa_seguridad")
-  updatedAt               DateTime          @updatedAt @map("updated_at")
-  createdAt               DateTime          @default(now()) @map("created_at")
-  deletedAt               DateTime?         @map("deleted_at")
+  porcentajeTasaSeguridad Decimal           @map("porcentaje_tasa_seguridad") @db.Decimal
+  updatedAt               DateTime          @updatedAt @map("actualizado_en")
+  createdAt               DateTime          @default(now()) @map("creado_en")
+  deletedAt               DateTime?         @map("borrado_en")
   loteFacturacion         LoteFacturacion[]
   sector                  Sectores[]
 
   @@map("comunidades")
+}
+
+model SriHistorialComprobante {
+  id               BigInt    @id @default(autoincrement()) @map("id")
+  comprobanteId    BigInt    @map("comprobante_id")
+  tipoComprobante  String    @map("tipo_comprobante") // FACTURA, NOTA_CREDITO, etc.
+  estadoAnterior   String?   @map("estado_anterior")
+  estadoNuevo      String    @map("estado_nuevo")
+  mensajeSri       String?   @map("mensaje_sri")
+  detalleError     String?   @map("detalle_error")
+  xmlAsociado      String?   @map("xml_asociado")
+  fechaRegistro    DateTime  @default(now()) @map("fecha_registro")
+  usuarioId        Int?      @map("usuario_id")
+
+  @@index([comprobanteId])
+  @@index([fechaRegistro])
+  @@map("sri_historial_comprobante")
 }
