@@ -1,26 +1,23 @@
-name: Deploy to Self-Hosted Server
+name: Deploy Backend Only
 
 on:
   push:
     branches:
-      - develop  # Se dispara cuando actualizás develop
+      - develop
 
 jobs:
   deploy:
-    runs-on: self-hosted  # Tu server Debian con el Runner
+    runs-on: self-hosted
     
     steps:
-      - name: Checkout del código
+      - name: Checkout Backend
         uses: actions/checkout@v4
 
-      - name: Deploy con Docker Compose
+      - name: Deploy Backend Containers
         run: |
-          # Re-buildeamos y levantamos los contenedores
-          # --build asegura que tome los cambios en el código/Dockerfile
-          # -d corre en segundo plano
+          # Levanta solo Postgres, MinIO y el Backend
           docker compose up -d --build
           
-      - name: Limpieza de imágenes huérfanas
+      - name: Limpieza
         run: |
-          # Borra imágenes viejas "dangling" para no saturar el disco de 910GB
           docker image prune -f
