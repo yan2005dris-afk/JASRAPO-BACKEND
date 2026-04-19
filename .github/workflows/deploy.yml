@@ -1,0 +1,23 @@
+name: Deploy Backend Only
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    
+    steps:
+      - name: Checkout Backend
+        uses: actions/checkout@v4
+
+      - name: Deploy Backend Containers
+        run: |
+          # Levanta solo Postgres, MinIO y el Backend
+          docker compose up -d --build
+          
+      - name: Limpieza
+        run: |
+          docker image prune -f
