@@ -1,0 +1,26 @@
+name: Deploy to Self-Hosted Server
+
+on:
+  push:
+    branches:
+      - develop  # Se dispara cuando actualizás develop
+
+jobs:
+  deploy:
+    runs-on: self-hosted  # Tu server Debian con el Runner
+    
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      - name: Deploy con Docker Compose
+        run: |
+          # Re-buildeamos y levantamos los contenedores
+          # --build asegura que tome los cambios en el código/Dockerfile
+          # -d corre en segundo plano
+          docker compose up -d --build
+          
+      - name: Limpieza de imágenes huérfanas
+        run: |
+          # Borra imágenes viejas "dangling" para no saturar el disco de 910GB
+          docker image prune -f
