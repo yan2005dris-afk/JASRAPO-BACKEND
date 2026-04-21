@@ -47,10 +47,14 @@ async function bootstrap() {
   const createCookieParser = cookieParser as unknown as CookieParserFactory;
   app.use(createCookieParser());
   const configService = app.get(ConfigService);
-  const corsOrigin = configService.get<string>('CORS_ORIGIN', 'http://localhost:4200');
+  const corsOrigin = configService.get<string>(
+    'CORS_ORIGIN',
+    'http://localhost:4200',
+  );
 
   app.enableCors({
-    origin: corsOrigin === '*' ? true : corsOrigin.split(',').map((o) => o.trim()),
+    origin:
+      corsOrigin === '*' ? true : corsOrigin.split(',').map((o) => o.trim()),
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
     allowedHeaders: 'Content-Type, Accept, Authorization, X-Requested-With',
