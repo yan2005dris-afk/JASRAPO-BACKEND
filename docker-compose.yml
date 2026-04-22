@@ -10,9 +10,10 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-appuser}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-apppass}
     ports:
-      - "5432:5432" # Puerto solicitado: 5432 (Estándar)
+      - "5432:5432"
     volumes:
-      - ./backend-db/postgres-data:/var/lib/postgresql/data:Z
+      # Se cambia la ruta relativa por un volumen gestionado por Docker
+      - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-appuser} -d ${POSTGRES_DB:-appdb}"]
       interval: 10s
@@ -38,7 +39,8 @@ services:
       MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-admin}
       MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-password123}
     volumes:
-      - ./backend-db/minio-data:/data:Z
+      # Se cambia la ruta relativa por un volumen gestionado por Docker
+      - minio_data:/data
     command: server /data --console-address ":9001"
     deploy:
       resources:
@@ -58,7 +60,6 @@ services:
     restart: unless-stopped
     env_file: .env
     environment:
-      # Conexión interna siempre al 5432 del contenedor
       DATABASE_URL: postgresql://${POSTGRES_USER:-appuser}:${POSTGRES_PASSWORD:-apppass}@postgres:5432/${POSTGRES_DB:-appdb}
       MINIO_ENDPOINT: minio
       NODE_ENV: production
@@ -67,7 +68,7 @@ services:
       - "${BACKEND_PORT:-3000}:3000"
     depends_on:
       postgres:
-        condition: service_healthy
+        condition: service_healthy  
     deploy:
       resources:
         limits:
@@ -79,3 +80,8 @@ services:
 networks:
   jasrapo-network:
     driver: bridge
+
+# Definición de volúmenes persistentes fuera del árbol de directorios del repo
+volumes:
+  postgres_data:
+  minio_data:
