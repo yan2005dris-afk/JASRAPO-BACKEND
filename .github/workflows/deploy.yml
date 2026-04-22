@@ -10,22 +10,13 @@ jobs:
     runs-on: self-hosted
 
     steps:
-      - name: Pre-checkout cleanup (Fix Permissions)
-        run: |
-          if [ -d "${{ github.workspace }}" ]; then
-            sudo chown -R $USER:$USER ${{ github.workspace }}
-          fi
-
       - name: Checkout Backend
         uses: actions/checkout@v4
 
       - name: Deploy Backend Containers
         run: |
-          # Usamos --remove-orphans para mantener limpio el entorno
           docker compose up -d --build --remove-orphans
 
       - name: Limpieza de Docker
         run: |
-          # Elimina imágenes sin usar y volúmenes locales huérfanos
           docker image prune -f
-          docker volume prune -f
