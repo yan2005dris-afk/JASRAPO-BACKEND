@@ -46,14 +46,18 @@ async function bootstrap() {
   }
   const createCookieParser = cookieParser as unknown as CookieParserFactory;
   app.use(createCookieParser());
+  const configService = app.get(ConfigService);
+  const corsOrigin = configService.get<string>(
+    'CORS_ORIGIN',
+    'http://localhost:4200',
+  );
+
   app.enableCors({
     origin:
-      process.env.CORS_ORIGIN === '*'
-        ? true
-        : process.env.CORS_ORIGIN
-          ? process.env.CORS_ORIGIN.split(',')
-          : true, // Refleja dinámicamente si es '*' o si está ausente
+      corsOrigin === '*' ? true : corsOrigin.split(',').map((o) => o.trim()),
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
+    allowedHeaders: 'Content-Type, Accept, Authorization, X-Requested-With',
   });
   app.useGlobalPipes(
     new ValidationPipe({
@@ -188,7 +192,6 @@ Para consultas o soporte, contacta al equipo de desarrollo del Backend.
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('docs', app, document);
 
-  const configService = app.get(ConfigService);
   const port = configService.get<number>('PORT', 3000);
   await app.listen(port);
 }
