@@ -3,11 +3,16 @@ import { CreateSectorDto } from './dto/create-sector.dto';
 import { UpdateSectorDto } from './dto/update-sector.dto';
 import { PrismaService } from 'src/database/prisma.service';
 
+export interface IRespuestaSector {
+  message: string;
+  statusCode: number;
+}
+
 @Injectable()
 export class SectorService {
   constructor(private prisma: PrismaService) {}
 
-  async crearSector(createSectorDto: CreateSectorDto) {
+  async crearSector(createSectorDto: CreateSectorDto): Promise<IRespuestaSector> {
     const comunidad = await this.prisma.comunidades.findUnique({
       where: { comunidadId: createSectorDto.comunidadId },
     });
@@ -16,9 +21,14 @@ export class SectorService {
       throw new NotFoundException('La comunidad no existe');
     }
 
-    return this.prisma.sectores.create({
+    await this.prisma.sectores.create({
       data: createSectorDto,
     });
+
+    return {
+      message: 'Sector creado exitosamente',
+      statusCode: 201,
+    };
   }
 
   findAll() {

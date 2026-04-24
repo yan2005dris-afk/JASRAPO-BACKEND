@@ -16,6 +16,7 @@ import { seedClientes } from './seeds/clientes.seed';
 import { seedContratos } from './seeds/contratos.seed';
 import { seedLecturas } from './seeds/lecturas.seed';
 import { seedSriCatalogs } from './seeds/sri.seed';
+import { syncSequences } from './seeds/sync-sequences';
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
@@ -81,6 +82,26 @@ async function main() {
   await seedSriCatalogs(prisma);
   console.log('✅ Catálogos SRI cargados.');
 
+  // === SEEDS DE LÓGICA DE NEGOCIO ===
+  console.log('🏗️ Cargando datos de lógica de negocio...');
+  await seedComunidades(prisma);
+  console.log('✅ Comunidades creadas.');
+
+  await seedSectores(prisma);
+  console.log('✅ Sectores creados.');
+
+  await seedCategoriaTarifa(prisma);
+  console.log('✅ Categorías de tarifa creadas.');
+
+  await seedClientes(prisma);
+  console.log('✅ Clientes creados.');
+
+  await seedContratos(prisma);
+  console.log('✅ Contratos creados.');
+
+  await seedLecturas(prisma);
+  console.log('✅ Lecturas creadas.');
+
   // === DATOS PARA PROBAR SP DE FACTURACIÓN ===
   console.log('📦 Creando datos de facturación...');
 
@@ -96,7 +117,11 @@ async function main() {
   });
   console.log('✅ Rubros creados');
 
-  console.log('✅ Seed de facturación completado.');
+  // === SINCRONIZACIÓN FINAL ===
+  // Esto asegura que los autoincrementales empiecen después de los IDs manuales del seed
+  await syncSequences(prisma);
+
+  console.log('✅ Seed completado exitosamente.');
 }
 
 main()
@@ -107,3 +132,4 @@ main()
   .finally(async () => {
     await prisma.$disconnect();
   });
+
