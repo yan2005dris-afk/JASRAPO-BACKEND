@@ -303,7 +303,7 @@ export class ProfileController {
 
       res.setHeader('Content-Type', meta?.contentType || 'image/png');
       stream.pipe(res);
-    } catch (_error) {
+    } catch {
       return res.status(500).json({
         statusCode: 500,
         message: 'Error al recuperar la imagen del servidor de almacenamiento',

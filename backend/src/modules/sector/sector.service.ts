@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { CreateSectorDto } from './dto/create-sector.dto';
 import { UpdateSectorDto } from './dto/update-sector.dto';
 import { PrismaService } from 'src/database/prisma.service';
@@ -12,23 +16,34 @@ export interface IRespuestaSector {
 export class SectorService {
   constructor(private prisma: PrismaService) {}
 
-  async crearSector(createSectorDto: CreateSectorDto): Promise<IRespuestaSector> {
+  async crearSector(
+    createSectorDto: CreateSectorDto,
+  ): Promise<IRespuestaSector> {
     const comunidad = await this.prisma.comunidades.findUnique({
       where: { comunidadId: createSectorDto.comunidadId },
     });
 
     if (!comunidad) {
-      throw new NotFoundException('La comunidad no existe');
+      throw new NotFoundException('La comunidad especificada no existe.');
     }
 
-    await this.prisma.sectores.create({
-      data: createSectorDto,
-    });
+    try {
+      await this.prisma.sectores.create({
+        data: createSectorDto,
+      });
 
-    return {
-      message: 'Sector creado exitosamente',
-      statusCode: 201,
-    };
+      return {
+        message: 'Sector creado exitosamente.',
+        statusCode: 201,
+      };
+    } catch (error: any) {
+      if (error.code === 'P2002') {
+        throw new ConflictException(
+          'El sector ya existe (código o ID duplicado).',
+        );
+      }
+      throw error;
+    }
   }
 
   findAll() {

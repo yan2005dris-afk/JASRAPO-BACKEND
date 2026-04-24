@@ -54,7 +54,7 @@ export class MinioService implements OnModuleInit {
       await this.minioClient.listBuckets();
       this.isAvailable = true;
       this.logger.log('[MINIO:UP] Conexión a MinIO establecida correctamente');
-    } catch (error) {
+    } catch {
       this.minioClient = null;
       this.logger.warn(
         '[MINIO:DOWN] No se pudo conectar a MinIO. Storage deshabilitado.',

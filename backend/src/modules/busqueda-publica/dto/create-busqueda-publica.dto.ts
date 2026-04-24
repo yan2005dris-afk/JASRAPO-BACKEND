@@ -2,7 +2,6 @@ import { Transform, Type } from 'class-transformer';
 import {
   IsIn,
   IsInt,
-  IsNumber,
   IsOptional,
   IsString,
   Min,
