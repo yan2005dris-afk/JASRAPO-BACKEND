@@ -314,7 +314,7 @@ export class ClientService {
   async remove(id: string) {
     const clienteId = this.parseId(id);
 
-    const cliente = await this.findOne(id);
+    await this.findOne(id);
 
     return this.prisma.clientes.update({
       where: { clienteId },
