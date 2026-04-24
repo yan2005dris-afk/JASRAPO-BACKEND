@@ -12,7 +12,9 @@ export interface IRespuestaSector {
 export class SectorService {
   constructor(private prisma: PrismaService) {}
 
-  async crearSector(createSectorDto: CreateSectorDto): Promise<IRespuestaSector> {
+  async crearSector(
+    createSectorDto: CreateSectorDto,
+  ): Promise<IRespuestaSector> {
     const comunidad = await this.prisma.comunidades.findUnique({
       where: { comunidadId: createSectorDto.comunidadId },
     });
