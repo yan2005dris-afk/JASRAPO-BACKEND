@@ -41,7 +41,7 @@ export class CategoriaTarifaController {
   @ApiOperation({ summary: 'Obtener todas las categorías activas' })
   @RequiredPermission('tarifas', 'read')
   @Get()
-  findAll(@Query('nombre') nombre?: string) {
+  findAll(@Query('nombre') esto es intencional nombre?: string) {
     return this.service.getCategorias(nombre);
   }
 
