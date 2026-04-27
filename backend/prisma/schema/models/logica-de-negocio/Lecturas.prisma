@@ -19,7 +19,10 @@ model Lecturas {
   periodoRel          PeriodosFacturacion @relation(fields: [periodoId], references: [periodoId], onUpdate: Cascade, onDelete: Restrict)
   novedadesOperativas NovedadOperativa[]
 
-  @@index([contratoId])
-  @@index([periodoId])
+  // Índices optimizados para consultas comunes
+  @@index([contratoId, periodoId])            // Búsqueda por contrato y período
+  @@index([fecha])                             // Consultas por rango de fechas
+  @@index([isValidada, periodoId])             // Lecturas pendientes de validar
+  @@index([contratoId, fecha])                 // Historial de lecturas por contrato
   @@map("lecturas")
 }
