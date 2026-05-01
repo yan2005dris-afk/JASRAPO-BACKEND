@@ -69,9 +69,8 @@ export class UpdateCustomerUseCase {
           dto.telefonoSecundario ?? cliente.telefonoSecundario,
         direccionDomicilio:
           dto.direccionDomicilio ?? cliente.direccionDomicilio,
-        aplicaTerceraEdadDiscapacidad:
-          dto.aplicaTerceraEdadDiscapacidad ??
-          cliente.aplicaTerceraEdadDiscapacidad,
+        aplicaTerceraEdad: dto.aplicaTerceraEdad ?? cliente.aplicaTerceraEdad,
+        aplicaDiscapacidad: dto.aplicaDiscapacidad ?? cliente.aplicaDiscapacidad,
       },
     });
   }

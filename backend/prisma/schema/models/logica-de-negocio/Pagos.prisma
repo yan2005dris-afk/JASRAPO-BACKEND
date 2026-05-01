@@ -1,25 +1,26 @@
 model Pagos {
-  pagoId              BigInt             @id @default(autoincrement()) @map("pago_id")
-  clienteId           BigInt             @map("cliente_id")
-  cajaId              BigInt?            @map("caja_id")
-  cambio              Decimal            @map("cambio") @db.Decimal
-  comprobanteUrlMinIo String?            @map("comprobante_url_minio")
-  estadoConciliacion  EstadoConciliacion @map("estado_conciliacion")
-  fechaPago           DateTime           @map("fecha_pago")
-  montoTotalRecibido  Decimal            @map("monto_total_recibido") @db.Decimal
-  numeroOperacion     String?            @map("numero_operacion")
-  observaciones       String?            @map("observaciones")
-  referenciaBanco     String?            @map("referencia_banco")
-  updatedAt           DateTime           @updatedAt @map("actualizado_en")
-  createdAt           DateTime           @default(now()) @map("creado_en")
-  deletedAt           DateTime?          @map("borrado_en")
-  usersId             Int                @map("usuario_id")
-  abonoCliente        AbonoCliente[]
+  pagoId              BigInt               @id @default(autoincrement()) @map("pago_id")
+  cajaId              BigInt?              @map("caja_id")
+  comprobanteUrlMinIo String?              @map("comprobante_url_minio")
+  fechaPago           DateTime             @map("fecha_pago")
+  montoTotalRecibido  Decimal              @map("monto_total_recibido") @db.Decimal
+  numeroOperacion     String?              @map("numero_operacion")
+  observaciones       String?              @map("observaciones")
+  referenciaBanco     String?              @map("referencia_banco")
+  updatedAt           DateTime             @updatedAt @map("actualizado_en")
+  createdAt           DateTime             @default(now()) @map("creado_en")
+  deletedAt           DateTime?            @map("borrado_en")
+  usersId             Int                  @map("usuario_id")
+  clienteId           BigInt               @map("cliente_id")
+  anuladoPor          String?              @map("anulado_por")
+  estadoValidacion    EstadoValidacionPago @default(APROBADO) @map("estado_validacion")
+  fechaAnulacion      DateTime?            @map("fecha_anulacion")
+  motivoAnulacion     String?              @map("motivo_anulacion")
   detallePago         DetallePago[]
-  metodosPago         PagoMetodoDetalle[]
-  cajaSesion          CajaSesion?        @relation(fields: [cajaId], references: [cajaId], onUpdate: Cascade, onDelete: Restrict)
-  cliente             Clientes           @relation(fields: [clienteId], references: [clienteId], onUpdate: Cascade, onDelete: Restrict)
-  user                Users              @relation(fields: [usersId], references: [usersId], onUpdate: Cascade, onDelete: Restrict)
+  cajaSesion          CajaSesion?          @relation(fields: [cajaId], references: [cajaId], onDelete: Restrict)
+  cliente             Clientes             @relation(fields: [clienteId], references: [clienteId])
+  user                Users                @relation(fields: [usersId], references: [usersId])
+  saldosFavor         SaldoFavorCliente[]
 
   @@index([usersId])
   @@index([clienteId])
@@ -27,8 +28,10 @@ model Pagos {
   @@map("pagos")
 }
 
-enum EstadoConciliacion {
-  PENDIENTE
-  CONCILIADO
+enum EstadoValidacionPago {
+  REPORTADO
+  VALIDANDO
+  APROBADO
   RECHAZADO
+  CONCILIADO
 }

@@ -1,27 +1,21 @@
 model Empresa {
-  empresaId           Int              @id @default(autoincrement()) @map("empresa_id")
-  ruc                 String           @unique @map("ruc")
-  razonSocial         String           @map("razon_social")
-  nombreComercial     String?          @map("nombre_comercial")
-  direccionMatriz     String           @map("direccion_matriz")
-  obligadoContabilidad Boolean          @default(false) @map("obligado_contabilidad")
-  contribuyenteEspecial String?          @map("contribuyente_especial")
-  agenteRetencion     String?          @map("agente_retencion")
-  regimen             String?          @map("regimen")
-  logotipoUrl         String?          @map("logotipo_url")
-  
-  // Configuración Fiscal (SRI)
-  ambiente            AmbienteSri      @default(PRUEBAS) @map("ambiente")
-  tipoEmision         String           @default("1") @map("tipo_emision") // 1: Normal
-  certificadoP12      String?          @map("certificado_p12") // Base64 o Path
-  passwordCertificado String?          @map("password_certificado") // Encriptado
-  
-  // Auditoría
-  createdAt           DateTime         @default(now()) @map("creado_en")
-  updatedAt           DateTime         @updatedAt @map("actualizado_en")
-
-  // Relaciones
-  establecimientos    Establecimientos[]
+  empresaId             Int                @id @default(autoincrement()) @map("empresa_id")
+  ruc                   String             @unique @map("ruc")
+  razonSocial           String             @map("razon_social")
+  nombreComercial       String?            @map("nombre_comercial")
+  direccionMatriz       String             @map("direccion_matriz")
+  obligadoContabilidad  Boolean            @default(false) @map("obligado_contabilidad")
+  contribuyenteEspecial String?            @map("contribuyente_especial")
+  agenteRetencion       String?            @map("agente_retencion")
+  regimen               String?            @map("regimen")
+  logotipoUrl           String?            @map("logotipo_url")
+  ambiente              AmbienteSri        @default(PRUEBAS) @map("ambiente")
+  tipoEmision           String             @default("1") @map("tipo_emision")
+  certificadoP12        String?            @map("certificado_p12")
+  passwordCertificado   String?            @map("password_certificado")
+  createdAt             DateTime           @default(now()) @map("creado_en")
+  updatedAt             DateTime           @updatedAt @map("actualizado_en")
+  establecimientos      Establecimientos[]
 
   @@map("empresa")
 }

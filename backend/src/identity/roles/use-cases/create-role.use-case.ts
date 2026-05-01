@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { CreateRoleDto } from '../dto/create-role.dto';
 
@@ -7,77 +7,16 @@ export class CreateRoleUseCase {
   constructor(private readonly prisma: PrismaService) {}
 
   async execute(createRoleDto: CreateRoleDto) {
-    const { childRoleIds = [], ...roleData } = createRoleDto;
-    const normalizedChildRoleIds = Array.from(
-      new Set(
-        childRoleIds
-          .map((id) => Number(id))
-          .filter((id) => Number.isInteger(id) && id > 0),
-      ),
-    );
-
-    if (normalizedChildRoleIds.length > 0) {
-      await this.assertChildRolesExist(normalizedChildRoleIds);
-    }
+    const { ...roleData } = createRoleDto;
 
     try {
-      return await this.prisma.$transaction(async (tx) => {
-        const createdRole = await tx.roles.create({ data: roleData });
-
-        if (normalizedChildRoleIds.length > 0) {
-          const safeChildIds = normalizedChildRoleIds.filter(
-            (childRoleId) => childRoleId !== createdRole.rolesId,
-          );
-
-          if (safeChildIds.length > 0) {
-            await tx.rolesHeredados.createMany({
-              data: safeChildIds.map((childRoleId) => ({
-                parentRoleId: createdRole.rolesId,
-                childRoleId,
-              })),
-            });
-          }
-        }
-
-        return createdRole;
-      });
+      return await this.prisma.roles.create({ data: roleData });
     } catch (error: any) {
       if (this.isRolesIdUniqueConstraintError(error)) {
         await this.syncRolesIdSequence();
-        // Re-try after sync
-        return this.prisma.$transaction(async (tx) => {
-          const createdRole = await tx.roles.create({ data: roleData });
-          if (normalizedChildRoleIds.length > 0) {
-            const safeChildIds = normalizedChildRoleIds.filter(
-              (childRoleId) => childRoleId !== createdRole.rolesId,
-            );
-            if (safeChildIds.length > 0) {
-              await tx.rolesHeredados.createMany({
-                data: safeChildIds.map((childRoleId) => ({
-                  parentRoleId: createdRole.rolesId,
-                  childRoleId,
-                })),
-              });
-            }
-          }
-          return createdRole;
-        });
+        return await this.prisma.roles.create({ data: roleData });
       }
       throw error;
-    }
-  }
-
-  private async assertChildRolesExist(childRoleIds: number[]) {
-    const validRoles = await this.prisma.roles.findMany({
-      where: { rolesId: { in: childRoleIds }, deletedAt: null },
-      select: { rolesId: true },
-    });
-    const validRoleIds = new Set(validRoles.map((role) => role.rolesId));
-    const missing = childRoleIds.filter((id) => !validRoleIds.has(id));
-    if (missing.length > 0) {
-      throw new NotFoundException(
-        `No se encontraron roles hijos válidos: ${missing.join(', ')}`,
-      );
     }
   }
 

@@ -1,0 +1,13 @@
+model CajaArqueoDetalle {
+  id           Int        @id @default(autoincrement()) @map("id")
+  cajaId       BigInt     @map("caja_id")
+  denominacion Decimal    @map("denominacion") @db.Decimal(10, 2)
+  cantidad     Int        @map("cantidad")
+  subtotal     Decimal    @map("subtotal") @db.Decimal(12, 2)
+  esMoneda     Boolean    @default(false) @map("es_moneda")
+  createdAt    DateTime   @default(now()) @map("creado_en")
+  cajaSesion   CajaSesion @relation(fields: [cajaId], references: [cajaId])
+
+  @@index([cajaId])
+  @@map("caja_arqueo_detalle")
+}

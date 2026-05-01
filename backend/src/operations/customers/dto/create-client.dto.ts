@@ -92,7 +92,12 @@ export class CreateClientDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsBoolean()
-  aplicaTerceraEdadDiscapacidad?: boolean;
+  aplicaTerceraEdad?: boolean;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  aplicaDiscapacidad?: boolean;
 
   // =========================
   // DIRECCIÓN

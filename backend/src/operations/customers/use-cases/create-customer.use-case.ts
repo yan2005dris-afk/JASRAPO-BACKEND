@@ -85,7 +85,8 @@ export class CreateCustomerUseCase {
           telefono: dto.telefono,
           telefonoSecundario: dto.telefonoSecundario,
           direccionDomicilio: dto.direccionDomicilio,
-          aplicaTerceraEdadDiscapacidad: false,
+          aplicaTerceraEdad: false,
+          aplicaDiscapacidad: false,
           deletedAt: null,
         },
       });
@@ -107,7 +108,8 @@ export class CreateCustomerUseCase {
         telefono: dto.telefono,
         telefonoSecundario: dto.telefonoSecundario,
         direccionDomicilio: dto.direccionDomicilio,
-        aplicaTerceraEdadDiscapacidad: false,
+        aplicaTerceraEdad: false,
+        aplicaDiscapacidad: false,
       },
     });
 
@@ -155,7 +157,8 @@ export class CreateCustomerUseCase {
       telefono: dto.telefono,
       telefonoSecundario: dto.telefonoSecundario,
       direccionDomicilio: dto.direccionDomicilio,
-      aplicaTerceraEdadDiscapacidad: dto.aplicaTerceraEdadDiscapacidad ?? false,
+      aplicaTerceraEdad: dto.aplicaTerceraEdad ?? false,
+      aplicaDiscapacidad: dto.aplicaDiscapacidad ?? false,
     };
   }
 }

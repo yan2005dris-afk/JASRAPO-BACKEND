@@ -1,33 +1,42 @@
 model Contratos {
-  contratoId          BigInt            @id @default(autoincrement()) @map("contrato_id")
-  clienteId           BigInt            @map("cliente_id")
-  sectorId            Int               @map("sector_id")
-  categoriaTarifaId   Int               @map("categoria_tarifa_id")
-  numeroGuia          String            @unique @map("numero_guia")
-  fechaInicio         DateTime          @default(now()) @map("fecha_inicio")
-  direccionSuministro String            @map("direccion_suministro")
-  estado              EstadoGenerico    @map("estado")
-  codigoInterno       String            @unique @map("codigo_interno")
-  createdAt           DateTime          @default(now()) @map("creado_en")
-  updatedAt           DateTime          @updatedAt @map("actualizado_en")
-  deletedAt           DateTime?         @map("borrado_en")
-  medidor             Medidores?
-  historialMedidores  HistorialMedidores[]
-  categoriaTarifa     CategoriaTarifa   @relation(fields: [categoriaTarifaId], references: [categoriaTarifaId], onUpdate: Cascade, onDelete: Restrict)
-  cliente             Clientes          @relation(fields: [clienteId], references: [clienteId], onUpdate: Cascade, onDelete: Restrict)
-  sector              Sectores          @relation(fields: [sectorId], references: [sectorId], onUpdate: Cascade, onDelete: Restrict)
+  contratoId          BigInt               @id @default(autoincrement()) @map("contrato_id")
+  clienteId           BigInt               @map("cliente_id")
+  sectorId            Int?                 @map("sector_id")
+  categoriaTarifaId   Int                  @map("categoria_tarifa_id")
+  numeroGuia          String               @unique @map("numero_guia")
+  fechaInicio         DateTime             @default(now()) @map("fecha_inicio")
+  direccionSuministro String               @map("direccion_suministro")
+  estado              EstadoGenerico       @map("estado")
+  createdAt           DateTime             @default(now()) @map("creado_en")
+  updatedAt           DateTime             @updatedAt @map("actualizado_en")
+  deletedAt           DateTime?            @map("borrado_en")
+  creadoPor           String?              @map("creado_por")
+  comunidadId         Int                  @map("comunidad_id")
+  categoriaTarifa     CategoriaTarifa      @relation(fields: [categoriaTarifaId], references: [categoriaTarifaId])
+  cliente             Clientes             @relation(fields: [clienteId], references: [clienteId])
+  comunidad           Comunidades          @relation(fields: [comunidadId], references: [comunidadId])
+  sector              Sectores?            @relation(fields: [sectorId], references: [sectorId], onDelete: Restrict)
   convenios           Convenios[]
+  historialMedidores  HistorialMedidores[]
   lecturas            Lecturas[]
+  medidor             Medidores?
   prefacturas         Prefacturas[]
 
   @@index([clienteId])
+  @@index([comunidadId])
   @@index([sectorId])
   @@index([categoriaTarifaId])
   @@map("contratos")
 }
 
 enum EstadoGenerico {
+  SOLICITUD
+  PENDIENTE_PAGO
+  PENDIENTE_INSTALACION
   ACTIVO
-  INACTIVO
+  EN_MORA
+  ORDEN_CORTE
   SUSPENDIDO
+  EN_CONVENIO
+  RETIRADO
 }

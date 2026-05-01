@@ -4,15 +4,15 @@ model Rubros {
   nombre            String              @default("") @map("nombre")
   descripcion       String              @map("descripcion")
   precioUnitario    Decimal             @map("precio_unitario") @db.Decimal
-  tipoRubro      TipoRubro           @map("tipo_rubro")
-  impuestoId     Int                 @map("impuesto_id")
-  activo         Boolean             @default(true) @map("activo")
-  createdAt      DateTime            @default(now()) @map("creado_en")
-  updatedAt      DateTime            @updatedAt @map("actualizado_en")
-  deletedAt      DateTime?           @map("borrado_en")
-  prefacturaDetalle PrefacturaDetalle[]
+  tipoRubro         TipoRubro           @map("tipo_rubro")
+  impuestoId        Int                 @map("impuesto_id")
+  activo            Boolean             @default(true) @map("activo")
+  createdAt         DateTime            @default(now()) @map("creado_en")
+  updatedAt         DateTime            @updatedAt @map("actualizado_en")
+  deletedAt         DateTime?           @map("borrado_en")
   catalogoDescuento CatalogoDescuento[]
-  impuesto       SriImpuesto         @relation(fields: [impuestoId], references: [id], onUpdate: Cascade, onDelete: Restrict)
+  prefacturaDetalle PrefacturaDetalle[]
+  impuesto          SriImpuesto         @relation(fields: [impuestoId], references: [id])
 
   @@index([impuestoId])
   @@map("rubros")
@@ -25,5 +25,4 @@ enum TipoRubro {
   OTRO
   BIEN
   SERVICIO
-  IMPUESTO
 }

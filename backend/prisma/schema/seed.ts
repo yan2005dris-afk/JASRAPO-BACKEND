@@ -7,7 +7,6 @@ import { seedMenuPermissions } from './seeds/menuPermission.seed';
 import { seedPermissions } from './seeds/permission.seed';
 import { seedRoles } from './seeds/role.seed';
 import { seedRolePermissions } from './seeds/rolePermission.seed';
-import { seedRoleHierarchy } from './seeds/roleHierarchy.seed';
 import { seedUSers } from './seeds/user.seed';
 import { seedComunidades } from './seeds/comunidades.seed';
 import { seedSectores } from './seeds/sectores.seed';
@@ -15,6 +14,8 @@ import { seedCategoriaTarifa } from './seeds/categoriaTarifa.seed';
 import { seedClientes } from './seeds/clientes.seed';
 import { seedContratos } from './seeds/contratos.seed';
 import { seedLecturas } from './seeds/lecturas.seed';
+import { seedCatalogoDescuento } from './seeds/catalogoDescuento.seed';
+import { seedFacturacion } from './seeds/facturacion.seed';
 import { seedSriCatalogs } from './seeds/sri.seed';
 import { syncSequences } from './seeds/sync-sequences';
 
@@ -52,10 +53,6 @@ async function main() {
   // Roles
   const roles = await seedRoles(prisma);
   console.log('✅ Roles creados correctamente.');
-
-  // Jerarquia de roles
-  await seedRoleHierarchy(prisma, roles);
-  console.log('✅ Jerarquia de Roles creada correctamente.');
 
   // Permisos
   const permissions = await seedPermissions(prisma);
@@ -105,17 +102,26 @@ async function main() {
   // === DATOS PARA PROBAR SP DE FACTURACIÓN ===
   console.log('📦 Creando datos de facturación...');
 
+  // Catálogo de Descuentos
+  await seedCatalogoDescuento(prisma);
+  console.log('✅ Catálogo de descuentos creado.');
+
   // Rubros
   await prisma.rubros.createMany({
     data: [
-      { codigoSri: '001', nombre: 'Consumo Agua', descripcion: 'Consumo Agua', precioUnitario: 0.50, tipoRubro: 'VARIABLE' as any, impuestoId: 2 },
-      { codigoSri: '002', nombre: 'Cargo Fijo', descripcion: 'Cargo Fijo', precioUnitario: 5.00, tipoRubro: 'FIJO' as any, impuestoId: 2 },
-      { codigoSri: '003', nombre: 'Interés Mora', descripcion: 'Interés Mora', precioUnitario: 0.10, tipoRubro: 'MULTA' as any, impuestoId: 1 },
-      { codigoSri: '004', nombre: 'Tasa Seguridad', descripcion: 'Tasa Seguridad', precioUnitario: 0, tipoRubro: 'VARIABLE' as any, impuestoId: 1 },
+      { codigoSri: '001', nombre: 'Consumo Agua', descripcion: 'Consumo de agua potable m3', precioUnitario: 0.50, tipoRubro: 'VARIABLE' as any, impuestoId: 2 },
+      { codigoSri: '002', nombre: 'Cargo Fijo', descripcion: 'Mantenimiento básico de conexión', precioUnitario: 5.00, tipoRubro: 'FIJO' as any, impuestoId: 2 },
+      { codigoSri: '003', nombre: 'Interés Mora', descripcion: 'Interés por falta de pago puntual', precioUnitario: 0.10, tipoRubro: 'MULTA' as any, impuestoId: 1 },
+      { codigoSri: '004', nombre: 'Tasa Seguridad Olón', descripcion: 'Tasa de seguridad comunitaria (Solo Olón)', precioUnitario: 2.00, tipoRubro: 'FIJO' as any, impuestoId: 1 },
+      { codigoSri: '005', nombre: 'Instalación Medidor', descripcion: 'Costo de nueva acometida e instalación', precioUnitario: 150.00, tipoRubro: 'SERVICIO' as any, impuestoId: 2 },
     ],
     skipDuplicates: true,
   });
   console.log('✅ Rubros creados');
+
+  // === FACTURACIÓN ===
+  await seedFacturacion(prisma);
+  console.log('✅ Datos de facturación creados.');
 
   // === SINCRONIZACIÓN FINAL ===
   // Esto asegura que los autoincrementales empiecen después de los IDs manuales del seed

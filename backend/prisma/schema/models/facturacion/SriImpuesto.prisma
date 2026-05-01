@@ -1,16 +1,12 @@
 model SriImpuesto {
   id               Int      @id @default(autoincrement()) @map("id")
-  codigo           String   @map("codigo") // Ej: "2" (IVA), "3" (ICE)
-  codigoPorcentaje String   @map("codigo_porcentaje") // Ej: "0", "2", "3", "4"
-  nombre           String   @map("nombre") // Ej: "IVA 12%", "IVA 0%"
-  tarifa           Decimal  @map("tarifa") @db.Decimal // Ej: 12.00, 0.00
+  codigo           String   @map("codigo")
+  codigoPorcentaje String   @map("codigo_porcentaje")
+  nombre           String   @map("nombre")
+  tarifa           Decimal  @map("tarifa") @db.Decimal
   activo           Boolean  @default(true) @map("activo")
-  
-  // Auditoría
   createdAt        DateTime @default(now()) @map("creado_en")
   updatedAt        DateTime @updatedAt @map("actualizado_en")
-
-  // Relaciones
   rubros           Rubros[]
 
   @@unique([codigo, codigoPorcentaje])

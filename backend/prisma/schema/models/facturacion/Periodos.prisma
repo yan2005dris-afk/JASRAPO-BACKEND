@@ -1,0 +1,24 @@
+model Periodos {
+  periodoId        Int               @id @default(autoincrement()) @map("periodo_id")
+  nombre           String            @unique @map("nombre")
+  fechaInicio      DateTime          @map("fecha_inicio")
+  fechaFin         DateTime          @map("fecha_fin")
+  fechaVencimiento DateTime          @map("fecha_vencimiento")
+  estado           EstadoPeriodo     @default(ABIERTO) @map("estado")
+  createdAt        DateTime          @default(now()) @map("creado_en")
+  updatedAt        DateTime          @updatedAt @map("actualizado_en")
+  lecturas         Lecturas[]
+  lotes            LoteFacturacion[]
+  notasCredito     NotasCredito[]
+  notasDebito      NotasDebito[]
+  prefacturas      Prefacturas[]
+  retenciones      Retenciones[]
+
+  @@map("periodos")
+}
+
+enum EstadoPeriodo {
+  ABIERTO
+  CERRADO
+  PROCESANDO
+}

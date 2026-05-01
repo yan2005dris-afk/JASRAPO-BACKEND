@@ -1,0 +1,23 @@
+model SaldoFavorCliente {
+  saldoFavorId          BigInt          @id @default(autoincrement()) @map("saldo_favor_id")
+  clienteId             BigInt          @map("cliente_id")
+  pagoId                BigInt?         @map("pago_id")
+  montoSaldo            Decimal         @map("monto_saldo") @db.Decimal
+  tipoOrigen            TipoOrigenAbono @map("tipo_origen")
+  disponibleParaAplicar Boolean         @default(true) @map("disponible_para_aplicar")
+  createdAt             DateTime        @default(now()) @map("creado_en")
+  deletedAt             DateTime?       @map("borrado_en")
+  cliente               Clientes        @relation(fields: [clienteId], references: [clienteId])
+  pago                  Pagos?          @relation(fields: [pagoId], references: [pagoId])
+
+  @@index([clienteId])
+  @@index([pagoId])
+  @@index([deletedAt])
+  @@map("saldo_favor_cliente")
+}
+
+enum TipoOrigenAbono {
+  PAGO_EXCESO
+  AJUSTE_RECLAMO
+  OTROS
+}

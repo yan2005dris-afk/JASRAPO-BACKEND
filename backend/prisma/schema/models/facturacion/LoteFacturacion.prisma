@@ -1,22 +1,22 @@
 model LoteFacturacion {
-  loteId         BigInt      @id @default(autoincrement()) @map("lote_id")
-  comunidadId    Int         @map("comunidad_id")
-  periodoId      Int         @map("periodo_id")
-  estado         EstadoLote  @default(BORRADOR) @map("estado")
-  totalMonto     Decimal     @default(0) @map("total_monto")
-  notas          String?     @map("notas")
-  createdAt      DateTime    @default(now()) @map("creado_en")
-  updatedAt      DateTime    @updatedAt @map("actualizado_en")
-  createdBy      Int?        @map("creado_por")
-  totalEmisiones Int         @default(0) @map("total_emisiones")
-  comunidad      Comunidades @relation(fields: [comunidadId], references: [comunidadId], onUpdate: Cascade, onDelete: Restrict)
-  periodoRel     PeriodosFacturacion @relation(fields: [periodoId], references: [periodoId], onUpdate: Cascade, onDelete: Restrict)
-  users          Users?      @relation(fields: [createdBy], references: [usersId])
+  loteId         BigInt        @id @default(autoincrement()) @map("lote_id")
+  comunidadId    Int           @map("comunidad_id")
+  periodoId      Int           @map("periodo_id")
+  estado         EstadoLote    @default(BORRADOR) @map("estado")
+  totalMonto     Decimal       @default(0) @map("total_monto") @db.Decimal
+  notas          String?       @map("notas")
+  createdAt      DateTime      @default(now()) @map("creado_en")
+  updatedAt      DateTime      @updatedAt @map("actualizado_en")
+  createdBy      Int?          @map("creado_por")
+  totalEmisiones Int           @default(0) @map("total_emisiones")
+  comunidad      Comunidades   @relation(fields: [comunidadId], references: [comunidadId])
+  users          Users?        @relation(fields: [createdBy], references: [usersId])
+  periodoRel     Periodos      @relation(fields: [periodoId], references: [periodoId])
   prefacturas    Prefacturas[]
 
+  @@unique([comunidadId, periodoId], name: "uk_lote_comunidad_periodo")
   @@index([comunidadId])
   @@index([periodoId])
-  @@unique([comunidadId, periodoId], name: "uk_lote_comunidad_periodo")
   @@map("lote_facturacion")
 }
 

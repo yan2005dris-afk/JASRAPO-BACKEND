@@ -1,12 +1,9 @@
 model SriFormaPago {
-  id          Int      @id @default(autoincrement()) @map("id")
-  codigo      String   @unique @map("codigo") // Ej: "01", "16", "19", "20"
-  nombre      String   @map("nombre") // Ej: "Sin utilización del sistema financiero"
-  activo      Boolean  @default(true) @map("activo")
-  
-  // Relaciones
-  notasDebito         NotasDebito[]
-  pagoMetodoDetalles  PagoMetodoDetalle[]
+  id           Int           @id @default(autoincrement()) @map("id")
+  codigo       String        @unique @map("codigo")
+  nombre       String        @map("nombre")
+  activo       Boolean       @default(true) @map("activo")
+  detallePagos DetallePago[]
 
   @@map("sri_forma_pago")
 }

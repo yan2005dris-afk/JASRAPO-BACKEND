@@ -1,65 +1,45 @@
 model Facturas {
-  facturaId BigInt @id @default(autoincrement()) @map("factura_id")
-  uuid      String @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  facturaId          BigInt             @id @default(autoincrement()) @map("factura_id")
+  uuid               String             @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  prefacturaId       BigInt             @unique @map("prefactura_id")
+  tipoComprobanteId  Int                @map("tipo_comprobante_id")
+  saldoPendiente     Decimal            @default(0) @map("saldo_pendiente") @db.Decimal
+  claveAcceso        String?            @unique @map("clave_acceso") @db.VarChar(49)
+  secuencial         String             @map("secuencial") @db.VarChar(9)
+  numeroAutorizacion String?            @map("numero_autorizacion")
+  enviadoSri         Boolean            @default(false) @map("enviado_sri")
+  fechaEnvioSri      DateTime?          @map("fecha_enviado_sri")
+  pdfUrl             String?            @map("pdf_url")
+  respuestaSri       String?            @map("respuesta_sri")
+  estadoSri          EstadoSri          @default(BORRADOR) @map("estado_sri")
+  estadoPago         EstadoPago         @default(PENDIENTE) @map("estado_pago")
+  fechaEmision       DateTime           @default(now()) @map("fecha_emision")
+  fechaVencimiento   DateTime           @map("fecha_vencimiento")
+  createdBy          String?            @map("creado_por")
+  updatedBy          String?            @map("actualizado_por")
+  createdAt          DateTime           @default(now()) @map("creado_en")
+  updatedAt          DateTime           @updatedAt @map("actualizado_en")
+  deletedAt          DateTime?          @map("borrado_en")
+  xmlAutorizadoUrl   String?            @map("xml_autorizado_url")
+  xmlFirmadoUrl      String?            @map("xml_firmado_url")
+  anuladoPor         String?            @map("anulado_por")
+  fechaAnulacion     DateTime?          @map("fecha_anulacion")
+  motivoAnulacion    String?            @map("motivo_anulacion")
+  total              Decimal            @map("total") @db.Decimal
+  detallePago        DetallePago[]
+  prefactura         Prefacturas        @relation(fields: [prefacturaId], references: [prefacturaId])
+  tipoComprobante    SriTipoComprobante @relation(fields: [tipoComprobanteId], references: [id])
+  notasCredito       NotasCredito[]
+  notasDebito        NotasDebito[]
 
-  // Relación única al origen (La Prefactura tiene los montos, cliente y periodos)
-  prefacturaId      BigInt @map("prefactura_id")
-  
-  // Datos específicos de la emisión fiscal
-  tipoComprobanteId Int    @map("tipo_comprobante_id")
-  
-  // Saldos al momento de facturar (Por si hay pagos parciales)
-  abono          Decimal @default(0) @map("abono") @db.Decimal
-  saldoPendiente Decimal @default(0) @map("saldo_pendiente") @db.Decimal
-  
-  // Datos Fiscales (SRI) - Estos son UNICOS de la factura
-  // NOTA: xmlFirmado y xmlAutorizado ahora apuntan a URLs en MinIO (optimización)
-  claveAcceso        String?   @unique @map("clave_acceso") @db.VarChar(49)
-  secuencial         String    @map("secuencial") @db.VarChar(9)
-  numeroAutorizacion String?   @map("numero_autorizacion")
-  enviadoSri         Boolean   @default(false) @map("enviado_sri")
-  fechaEnvioSri      DateTime? @map("fecha_enviado_sri")
-  xmlFirmadoUrl      String?   @map("xml_firmado_url")      // URL a MinIO en lugar de texto
-  xmlAutorizadoUrl   String?   @map("xml_autorizado_url")   // URL a MinIO en lugar de texto
-  pdfUrl             String?   @map("pdf_url")
-  respuestaSri       String?   @map("respuesta_sri")
-  estadoSri          EstadoSri @default(BORRADOR) @map("estado_sri")
-
-  // Control y Proceso
-  estado           EstadoFactura @map("estado")
-  estadoPago       EstadoPago    @default(PENDIENTE) @map("estado_pago")
-  fechaEmision     DateTime      @default(now()) @map("fecha_emision")
-  fechaVencimiento DateTime      @map("fecha_vencimiento")
-
-  // Auditoría Base
-  createdBy String?   @map("creado_por")
-  updatedBy String?   @map("actualizado_por")
-  createdAt DateTime  @default(now()) @map("creado_en")
-  updatedAt DateTime  @updatedAt @map("actualizado_en")
-  deletedAt DateTime? @map("borrado_en")
-
-  // Relaciones
-  detallePago      DetallePago[]
-  prefactura      Prefacturas         @relation(fields: [prefacturaId], references: [prefacturaId], onUpdate: Cascade, onDelete: Restrict)
-  tipoComprobante SriTipoComprobante @relation(fields: [tipoComprobanteId], references: [id], onUpdate: Cascade, onDelete: Restrict)
-  notasCredito    NotasCredito[]
-  notasDebito     NotasDebito[]
-
+  @@unique([tipoComprobanteId, secuencial], name: "uk_factura_secuencial")
   @@index([prefacturaId])
   @@index([tipoComprobanteId])
   @@index([secuencial])
   @@index([fechaEmision])
   @@index([estadoPago])
   @@index([estadoSri])
-  @@unique([tipoComprobanteId, secuencial], name: "uk_factura_secuencial")
   @@map("facturas")
-}
-
-enum EstadoFactura {
-  PENDIENTE_AUTORIZACION
-  EMITIDA
-  AUTORIZADA
-  ANULADA
 }
 
 enum EstadoPago {
@@ -69,4 +49,15 @@ enum EstadoPago {
   VENCIDO
   EN_CONVENIO
   CONVENIO_PAGADO
+  ANULADO
+}
+
+enum EstadoSri {
+  BORRADOR
+  FIRMADO
+  ENVIADO
+  AUTORIZADO
+  RECHAZADO
+  ERROR
+  ANULADA
 }

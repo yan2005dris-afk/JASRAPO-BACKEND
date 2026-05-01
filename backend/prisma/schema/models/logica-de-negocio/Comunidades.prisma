@@ -6,25 +6,9 @@ model Comunidades {
   updatedAt               DateTime          @updatedAt @map("actualizado_en")
   createdAt               DateTime          @default(now()) @map("creado_en")
   deletedAt               DateTime?         @map("borrado_en")
+  contratos               Contratos[]
   loteFacturacion         LoteFacturacion[]
   sector                  Sectores[]
 
   @@map("comunidades")
-}
-
-model SriHistorialComprobante {
-  id               BigInt    @id @default(autoincrement()) @map("id")
-  comprobanteId    BigInt    @map("comprobante_id")
-  tipoComprobante  String    @map("tipo_comprobante") // FACTURA, NOTA_CREDITO, etc.
-  estadoAnterior   String?   @map("estado_anterior")
-  estadoNuevo      String    @map("estado_nuevo")
-  mensajeSri       String?   @map("mensaje_sri")
-  detalleError     String?   @map("detalle_error")
-  xmlAsociado      String?   @map("xml_asociado")
-  fechaRegistro    DateTime  @default(now()) @map("fecha_registro")
-  usuarioId        Int?      @map("usuario_id")
-
-  @@index([comprobanteId])
-  @@index([fechaRegistro])
-  @@map("sri_historial_comprobante")
 }

@@ -22,11 +22,16 @@ export class PermissionsGuard implements CanActivate {
   constructor(private readonly reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const required = this.reflector.get<PermissionConfig>(
+    // 1. Intentar obtener el permiso explícito del decorador
+    let required = this.reflector.get<PermissionConfig>(
       PERMISSION_KEY,
       context.getHandler(),
     );
-    if (!required) return true;
+
+    // 2. Si no hay decorador, aplicamos "Seguridad por Convención"
+    if (!required) {
+      required = this.inferPermission(context);
+    }
 
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
     const user = request.user;
@@ -36,7 +41,7 @@ export class PermissionsGuard implements CanActivate {
       throw new ForbiddenException('Usuario no identificado');
     }
 
-    // Permisos cargados por JwtStrategy — sin query extra a BD
+    // Permisos cargados por JwtStrategy (fuente de verdad)
     const permissions: AuthPermission[] = user.permissions ?? [];
 
     const hasPermission = permissions.some(
@@ -44,11 +49,45 @@ export class PermissionsGuard implements CanActivate {
     );
 
     if (!hasPermission) {
+      this.logger.warn(
+        `Acceso denegado: Usuario ${user.email} intentó ${required.action} en ${required.resource}`,
+      );
       throw new ForbiddenException(
-        `${user.email} no tiene permiso para la acción "${required.action}" en "${required.resource}"`,
+        `No tienes permiso para la acción "${required.action}" en "${required.resource}"`,
       );
     }
 
     return true;
+  }
+
+  /**
+   * Infiere el permiso basado en el nombre del controlador y el método HTTP.
+   * Ej: ClientesController + POST -> resource: "clientes", action: "create"
+   */
+  private inferPermission(context: ExecutionContext): PermissionConfig {
+    const controller = context.getClass().name;
+    const request = context.switchToHttp().getRequest();
+    const method = request.method;
+
+    // Limpiar nombre del controlador: ClientesController -> clientes
+    const resource = controller
+      .replace('Controller', '')
+      .replace('Module', '')
+      .toLowerCase();
+
+    // Mapeo de métodos HTTP a acciones estándar
+    const actionMap: Record<string, string> = {
+      GET: 'read',
+      POST: 'create',
+      PUT: 'update',
+      PATCH: 'update',
+      DELETE: 'delete',
+    };
+
+    const action = actionMap[method] || 'read';
+
+    this.logger.debug(`Permiso inferido por convención: ${resource}:${action}`);
+
+    return { resource, action };
   }
 }

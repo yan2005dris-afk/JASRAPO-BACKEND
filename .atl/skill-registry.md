@@ -7,69 +7,29 @@
 - **Stack**: NestJS + TypeScript + Prisma + PostgreSQL
 - **Testing**: Jest (unit/integration/E2E), testcontainers
 - **Quality**: ESLint, Prettier, TypeScript
+- **Architecture**: Screaming Architecture / Bounded Contexts
 
 ## User Skills (Auto-trigger)
 
 | Trigger | Skill | When to use |
 |---------|-------|-------------|
-| Go tests, testing NestJS services | `go-testing` | Patterns for NestJS unit/integration tests |
-| "código limpio", "refactorizar" | `clean-code` | Enforce best practices |
-| Code review request | `code-reviewer` | Pre-push validation |
-| "schema", "relaciones", "tablas" | `database-architect` | Schema design |
-| "lento", "optimizar", "índice" | `database-optimizer` | Query optimization |
-| Bugs, errors, "no funciona" | `debugger` | Systematic debugging |
+| Go tests, Bubbletea TUI testing | `go-testing` | Patterns for NestJS unit/integration tests |
+| Node.js backend development | `nodejs-backend-patterns` | Best practices for APIs |
+| Node.js principles | `nodejs-best-practices` | Architecture decisions |
+| Creating new AI skills | `skill-creator` | Add new skills |
 | "PR", "pull request" | `branch-pr` | PR workflow |
 | "issue", "bug report" | `issue-creation` | Issue creation |
 | "judgment day", "doble review" | `judgment-day` | Adversarial review |
-| "recordar", "qué hicimos" | `memory-search` | Past decisions |
 
 ## SDD Skills (Orchestrator only)
 
 These are invoked by the orchestrator, not directly:
 
-- `sdd-apply` — Implement tasks
-- `sdd-archive` — Archive completed changes
-- `sdd-design` — Technical design
-- `sdd-explore` — Investigation
-- `sdd-propose` — Create proposals
-- `sdd-spec` — Write specifications
-- `sdd-tasks` — Break into tasks
-- `sdd-verify` — Validate implementation
-- `sdd-onboard` — SDD walkthrough
-- `skill-registry` — Update this registry
+- `sdd-apply`, `sdd-archive`, `sdd-design`, `sdd-explore`, `sdd-propose`, `sdd-spec`, `sdd-tasks`, `sdd-verify`, `sdd-onboard`, `skill-registry`.
 
 ## Compact Rules
 
 ### NestJS/TypeScript
-
-```typescript
-// Service pattern
-@Injectable()
-export class UserService {
-  constructor(private prisma: PrismaService) {}
-
-  async findByEmail(email: string) {
-    const user = await this.prisma.users.findUnique({
-      where: { email: email.toLowerCase() },
-    });
-    if (!user) throw new NotFoundException('User not found');
-    return user;
-  }
-}
-
-// Controller pattern
-@Controller('users')
-export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
-
-  @Get(':id')
-  async findOne(@Param('id') id: string) {
-    return this.usersService.findById(BigInt(id));
-  }
-}
-```
-
-### Prisma
 
 ```typescript
 // Always use BigInt for IDs in NestJS
@@ -81,33 +41,12 @@ where: { email: email.toLowerCase() }
 
 ### Testing
 
-```typescript
-// Unit test with mocks
-describe('UserService', () => {
-  let service: UserService;
-  let prismaService: jest.Mocked<PrismaService>;
-
-  beforeEach(async () => {
-    const mockPrisma = {
-      users: { findUnique: jest.fn() }
-    } as any;
-
-    const module = await Test.createTestingModule({
-      providers: [
-        UserService,
-        { provide: PrismaService, useValue: mockPrisma },
-      ],
-    }).compile();
-
-    service = module.get(UserService);
-    prismaService = module.get(PrismaService);
-  });
-});
-```
+- Unit tests alongside source as `*.spec.ts`.
+- E2E tests in `backend/test/`.
+- Strict TDD Mode is ACTIVE.
 
 ## Notes
 
 - Project uses Screaming Architecture (contexts: identity, metering, billing, operations, public-portal)
-- Tests live alongside source as `*.spec.ts`
 - E2E tests use testcontainers with PostgreSQL
 - Run tests from `backend/` directory

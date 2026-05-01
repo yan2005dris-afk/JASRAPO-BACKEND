@@ -17,10 +17,8 @@ export class CreateReadingUseCase {
         contratoId: BigInt(createDto.contratoId),
         descripcionAnomalia: createDto.descripcionAnomalia,
         fotoUrlMinIo: createDto.fotoUrlMinIo,
-        isValidada: createDto.isValidada ?? false,
         lecturaInicial: createDto.lecturaInicial,
         periodoId: createDto.periodoId,
-        tieneAnomalia: createDto.tieneAnomalia ?? false,
       },
     });
     return new LecturaEntity(lectura);

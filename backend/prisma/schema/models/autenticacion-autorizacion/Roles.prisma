@@ -1,11 +1,9 @@
 model Roles {
-  rolesId         Int              @id @default(autoincrement()) @map("rol_id")
-  name            String           @unique @map("nombre")
-  deletedAt       DateTime?        @map("borrado_en")
-  rolPermissions  RolPermissions[]
-  childRoleLinks  RolesHeredados[] @relation("RolHijo")
-  parentRoleLinks RolesHeredados[] @relation("RolPadre")
-  users           Users[]
+  rolesId        Int              @id @default(autoincrement()) @map("rol_id")
+  name           String           @unique @map("nombre")
+  deletedAt      DateTime?        @map("borrado_en")
+  rolPermissions RolPermissions[]
+  users          Users[]
 
   @@map("roles")
 }

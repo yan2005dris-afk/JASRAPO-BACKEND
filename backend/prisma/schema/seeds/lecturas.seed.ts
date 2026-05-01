@@ -9,7 +9,7 @@ export async function seedLecturas(prisma: PrismaClient) {
     // Primero creamos los periodos si no existen para que las lecturas tengan a qué apuntar
     const periodosDb: any[] = [];
     for (const p of periodos) {
-        const pDb = await prisma.periodosFacturacion.upsert({
+        const pDb = await prisma.periodos.upsert({
             where: { nombre: p },
             update: {},
             create: {
@@ -31,8 +31,8 @@ export async function seedLecturas(prisma: PrismaClient) {
     let lecturaId = 1;
 
     for (const contrato of contratos) {
+        let lecturaAnterior = 0;
         for (const pDb of periodosDb) {
-            const lecturaAnterior = Math.floor(Math.random() * 100) + 50;
             const consumo = Math.floor(Math.random() * 30) + 5;
             const lecturaActual = lecturaAnterior + consumo;
 
@@ -45,11 +45,11 @@ export async function seedLecturas(prisma: PrismaClient) {
                     lecturaAnterior,
                     lecturaActual,
                     consumoCalculado: consumo,
-                    isValidada: true,
-                    lecturaInicial: Math.random() > 0.5,
-                    tieneAnomalia: false,
+                    estado: "APROBADA",
+                    lecturaInicial: lecturaAnterior === 0,
                 },
             });
+            lecturaAnterior = lecturaActual;
             lecturaId++;
         }
     }

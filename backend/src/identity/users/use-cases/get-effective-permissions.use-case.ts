@@ -21,17 +21,14 @@ export class GetEffectivePermissionsUseCase {
       throw new NotFoundException('Usuario eliminado o no encontrado');
     }
 
-    const directRoleIds =
-      user.role && !user.role.deletedAt ? [user.role.rolesId] : [];
-    const allRoleIds = await this.resolveRoleHierarchy(directRoleIds);
+    const roleId = user.role && !user.role.deletedAt ? user.role.rolesId : null;
 
-    const rolePermissionAssignments =
-      allRoleIds.length === 0
+    const rolePermissionAssignments = !roleId
         ? []
         : await this.prisma.rolPermissions.findMany({
             where: {
               deletedAt: null,
-              rolesId: { in: allRoleIds },
+              rolesId: roleId,
               permissions: { deletedAt: null },
             },
             include: {
@@ -63,39 +60,5 @@ export class GetEffectivePermissionsUseCase {
       const [resource, action] = key.split(':');
       return { resource, action };
     });
-  }
-
-  private async resolveRoleHierarchy(
-    initialRoleIds: number[],
-  ): Promise<number[]> {
-    if (initialRoleIds.length === 0) return [];
-    const edges = await this.prisma.rolesHeredados.findMany({
-      where: {
-        deletedAt: null,
-        parentRole: { deletedAt: null },
-        childRole: { deletedAt: null },
-      },
-      select: { parentRoleId: true, childRoleId: true },
-    });
-
-    const childrenByParent = new Map<number, number[]>();
-    for (const edge of edges) {
-      const current = childrenByParent.get(edge.parentRoleId) ?? [];
-      current.push(edge.childRoleId);
-      childrenByParent.set(edge.parentRoleId, current);
-    }
-
-    const visited = new Set<number>();
-    const stack = [...initialRoleIds];
-    while (stack.length > 0) {
-      const roleId = stack.pop()!;
-      if (visited.has(roleId)) continue;
-      visited.add(roleId);
-      const children = childrenByParent.get(roleId) ?? [];
-      for (const childId of children) {
-        if (!visited.has(childId)) stack.push(childId);
-      }
-    }
-    return Array.from(visited);
   }
 }

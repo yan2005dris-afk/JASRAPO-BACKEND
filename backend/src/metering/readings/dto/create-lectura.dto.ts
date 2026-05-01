@@ -14,8 +14,6 @@ export class CrearLecturaDto {
   @IsNotEmpty() contratoId: string | number;
   @IsOptional() @IsString() descripcionAnomalia?: string;
   @IsOptional() @IsString() fotoUrlMinIo?: string;
-  @IsOptional() @IsBoolean() isValidada?: boolean;
   @IsNotEmpty() @IsBoolean() lecturaInicial: boolean;
   @IsNotEmpty() @IsNumber() periodoId: number;
-  @IsOptional() @IsBoolean() tieneAnomalia?: boolean;
 }

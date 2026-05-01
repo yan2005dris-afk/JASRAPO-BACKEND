@@ -7,22 +7,34 @@ model Lecturas {
   deletedAt           DateTime?          @map("borrado_en")
   contratoId          BigInt             @map("contrato_id")
   createdAt           DateTime           @default(now()) @map("creado_en")
-  descripcionAnomalia String?            @map("descripcion_anomalia")
   fechaValidacion     DateTime?          @map("fecha_validacion")
   fotoUrlMinIo        String?            @map("foto_url_minio")
-  isValidada          Boolean            @default(false) @map("es_validada")
-  lecturaInicial      Boolean           @map("lectura_inicial")
+  lecturaInicial      Boolean            @default(false) @map("lectura_inicial")
   periodoId           Int                @map("periodo_id")
-  tieneAnomalia       Boolean            @default(false) @map("tiene_anomalia")
+  descripcionAnomalia String?            @map("descripcion_anomalia")
   updatedAt           DateTime           @updatedAt @map("actualizado_en")
-  contrato            Contratos           @relation(fields: [contratoId], references: [contratoId], onUpdate: Cascade, onDelete: Restrict)
-  periodoRel          PeriodosFacturacion @relation(fields: [periodoId], references: [periodoId], onUpdate: Cascade, onDelete: Restrict)
-  novedadesOperativas NovedadOperativa[]
 
-  // Índices optimizados para consultas comunes
-  @@index([contratoId, periodoId])            // Búsqueda por contrato y período
-  @@index([fecha])                             // Consultas por rango de fechas
-  @@index([isValidada, periodoId])             // Lecturas pendientes de validar
-  @@index([contratoId, fecha])                 // Historial de lecturas por contrato
+  medidorId           BigInt?            @map("medidor_id")
+  estado              EstadoLectura      @default(PENDIENTE) @map("estado")
+  contrato            Contratos          @relation(fields: [contratoId], references: [contratoId])
+  medidor             Medidores?         @relation(fields: [medidorId], references: [medidorId], onDelete: Restrict)
+  periodoRel          Periodos           @relation(fields: [periodoId], references: [periodoId])
+  novedadesOperativas NovedadOperativa[]
+  prefacturas         Prefacturas[]
+
+  @@index([contratoId, periodoId])
+  @@index([medidorId])
+  @@index([fecha])
+  @@index([estado, periodoId])
+  @@index([contratoId, fecha])
   @@map("lecturas")
+}
+
+enum EstadoLectura {
+  PENDIENTE
+  POR_REVISION
+  APROBADA
+  RECHAZADA_VERIFICACION
+  ESTIMADA
+  PLANILLADA
 }

@@ -1,8 +1,8 @@
 model Convenios {
   convenioId        BigInt          @id @default(autoincrement()) @map("convenio_id")
-  contratoId        BigInt          @map("contrato_id")
   numeroCuotas      Int             @map("numero_cuotas")
   abonoInicial      Decimal         @map("abono_inicial") @db.Decimal
+  contratoId        BigInt          @map("contrato_id")
   deudaTotal        Decimal         @map("deuda_total") @db.Decimal
   diasMoraActual    Int             @map("dias_mora_actual")
   estado            EstadoConvenio  @map("estado_convenio")
@@ -14,7 +14,7 @@ model Convenios {
   updatedAt         DateTime        @updatedAt @map("actualizado_en")
   createdAt         DateTime        @default(now()) @map("creado_en")
   deletedAt         DateTime?       @map("borrado_en")
-  contrato          Contratos       @relation(fields: [contratoId], references: [contratoId], onUpdate: Cascade, onDelete: Restrict)
+  contrato          Contratos       @relation(fields: [contratoId], references: [contratoId])
   cuotaConvenio     CuotaConvenio[]
 
   @@index([contratoId])

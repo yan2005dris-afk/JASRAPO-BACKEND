@@ -12,7 +12,6 @@ import { RolesService } from './roles.service';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
 import { AssignRolePermissionDto } from './dto/assign-role-permission.dto';
-import { SetRoleChildrenDto } from './dto/set-role-children.dto';
 import { JwtAuthGuard } from 'src/identity/auth/guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
@@ -165,9 +164,7 @@ export class RolesController {
    */
   @ApiOperation({
     summary: 'Obtener permisos efectivos de un rol',
-    description:
-      'Retorna todos los permisos efectivos de un rol, incluyendo los heredados de roles hijos (jerarquía completa). ' +
-      'Los permisos se deduplicado automáticamente.',
+    description: 'Retorna todos los permisos efectivos de un rol.',
   })
   @ApiParam({
     name: 'id',
@@ -189,104 +186,6 @@ export class RolesController {
   @Get(':id/permissions')
   getRolePermissions(@Param('id', ParseIntPipe) id: string) {
     return this.rolesService.getRolePermissions(+id);
-  }
-
-  @ApiOperation({
-    summary: 'Obtener roles hijos de un rol',
-    description:
-      'Lista los roles hijos heredados directamente por el rol padre. ' +
-      'Útil para visualizar la jerarquía de herencia de permisos.',
-  })
-  @ApiParam({
-    name: 'id',
-    description: 'ID del rol padre',
-    type: Number,
-    example: 1,
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Lista de roles hijos obtenida exitosamente',
-    schema: {
-      example: [
-        { roleHierarchyId: 1, childRoleId: 5, childRoleName: 'operadores' },
-        { roleHierarchyId: 2, childRoleId: 6, childRoleName: 'contabilidad' },
-      ],
-    },
-  })
-  @ApiResponse({ status: 401, description: 'No autorizado' })
-  @ApiResponse({
-    status: 403,
-    description: 'Prohibido - Sin permiso roles:read',
-  })
-  @ApiResponse({ status: 404, description: 'Rol no encontrado' })
-  @RequiredPermission('roles', 'read')
-  @Get(':id/children')
-  getRoleChildren(@Param('id', ParseIntPipe) id: string) {
-    return this.rolesService.getRoleChildren(+id);
-  }
-
-  @ApiOperation({
-    summary: 'Configurar roles hijos de un rol',
-    description:
-      'Reemplaza la lista de roles hijos heredados por el rol padre. ' +
-      'Los enlaces que ya no estén en la lista se eliminan lógicamente (soft delete) ' +
-      'y los nuevos se crean. El rol padre heredará los permisos de todos sus hijos.',
-  })
-  @ApiParam({
-    name: 'id',
-    description: 'ID del rol padre',
-    type: Number,
-    example: 1,
-  })
-  @ApiBody({
-    type: SetRoleChildrenDto,
-    description: 'Lista de IDs de roles hijos a asignar',
-    examples: {
-      ejemplo1: {
-        value: { childRoleIds: [5, 6] },
-        summary: 'Asignar operadores y contabilidad como hijos',
-      },
-      ejemplo2: {
-        value: { childRoleIds: [] },
-        summary: 'Remover todos los roles hijos',
-      },
-    },
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Roles hijos actualizados exitosamente',
-    schema: {
-      example: [
-        {
-          roleHierarchyId: 1,
-          childRoleId: 5,
-          childRole: { name: 'operadores' },
-        },
-        {
-          roleHierarchyId: 2,
-          childRoleId: 6,
-          childRole: { name: 'contabilidad' },
-        },
-      ],
-    },
-  })
-  @ApiResponse({ status: 400, description: 'Datos inválidos' })
-  @ApiResponse({ status: 401, description: 'No autorizado' })
-  @ApiResponse({
-    status: 403,
-    description: 'Prohibido - Sin permiso roles:update',
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Rol padre o algún rol hijo no encontrado',
-  })
-  @RequiredPermission('roles', 'update')
-  @Patch(':id/children')
-  setRoleChildren(
-    @Param('id', ParseIntPipe) id: string,
-    @Body() dto: SetRoleChildrenDto,
-  ) {
-    return this.rolesService.setRoleChildren(+id, dto);
   }
 
   /**

@@ -1,13 +1,14 @@
 model NovedadOperativa {
-  novedadId      BigInt        @id @default(autoincrement()) @map("novedad_id")
-  lecturaId      BigInt        @map("lectura_id")
-  observacion    String?       @map("observacion")
-  tipo           TipoNovedad   @map("tipo")
-  estado EstadoNovedad @map("estado") 
-  createdAt      DateTime      @default(now()) @map("creado_en")
-  updatedAt      DateTime      @updatedAt @map("actualizado_en")
-  deletedAt      DateTime?     @map("borrado_en")
-  lectura        Lecturas      @relation(fields: [lecturaId], references: [lecturaId])
+  novedadId    BigInt        @id @default(autoincrement()) @map("novedad_id")
+  lecturaId    BigInt        @map("lectura_id")
+  observacion  String?       @map("observacion")
+  tipo         TipoNovedad   @map("tipo")
+  estado       EstadoNovedad @map("estado")
+  createdAt    DateTime      @default(now()) @map("creado_en")
+  updatedAt    DateTime      @updatedAt @map("actualizado_en")
+  deletedAt    DateTime?     @map("borrado_en")
+  fotoUrlMinIo String?       @map("foto_url_minio")
+  lectura      Lecturas      @relation(fields: [lecturaId], references: [lecturaId])
 
   @@map("novedad_operativa")
 }
@@ -18,6 +19,7 @@ enum TipoNovedad {
   LECTURA_ERRONEA
   OTRO
 }
+
 enum EstadoNovedad {
   PENDIENTE
   EN_REVISION
