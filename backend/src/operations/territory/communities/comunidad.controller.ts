@@ -26,7 +26,10 @@ import { RequiredPermission } from 'src/infrastructure/common/decorators/require
 export class ComunidadController {
   constructor(private readonly comunidadService: ComunidadService) {}
 
-  @ApiOperation({ summary: 'Crear comunidad', description: 'Crea una nueva comunidad' })
+  @ApiOperation({
+    summary: 'Crear comunidad',
+    description: 'Crea una nueva comunidad',
+  })
   @ApiBody({ type: CreateComunidadDto, description: 'Datos de la comunidad' })
   @ApiResponse({ status: 201, description: 'Comunidad creada' })
   @ApiResponse({ status: 400, description: 'Datos inválidos' })
@@ -38,7 +41,10 @@ export class ComunidadController {
     return this.comunidadService.crearComunidad(createComunidadDto);
   }
 
-  @ApiOperation({ summary: 'Listar comunidades', description: 'Retorna todas las comunidades' })
+  @ApiOperation({
+    summary: 'Listar comunidades',
+    description: 'Retorna todas las comunidades',
+  })
   @ApiResponse({ status: 200, description: 'Lista de comunidades' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @RequiredPermission('comunidades', 'read')
@@ -47,8 +53,16 @@ export class ComunidadController {
     return this.comunidadService.findAll();
   }
 
-  @ApiOperation({ summary: 'Obtener comunidad', description: 'Retorna una comunidad por ID' })
-  @ApiParam({ name: 'id', description: 'ID de la comunidad', type: Number, example: 1 })
+  @ApiOperation({
+    summary: 'Obtener comunidad',
+    description: 'Retorna una comunidad por ID',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'ID de la comunidad',
+    type: Number,
+    example: 1,
+  })
   @ApiResponse({ status: 200, description: 'Comunidad encontrada' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({ status: 404, description: 'Comunidad no encontrada' })
@@ -58,8 +72,16 @@ export class ComunidadController {
     return this.comunidadService.findOne(+id);
   }
 
-  @ApiOperation({ summary: 'Actualizar comunidad', description: 'Actualiza una comunidad' })
-  @ApiParam({ name: 'id', description: 'ID de la comunidad', type: Number, example: 1 })
+  @ApiOperation({
+    summary: 'Actualizar comunidad',
+    description: 'Actualiza una comunidad',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'ID de la comunidad',
+    type: Number,
+    example: 1,
+  })
   @ApiBody({ type: UpdateComunidadDto, description: 'Datos a actualizar' })
   @ApiResponse({ status: 200, description: 'Comunidad actualizada' })
   @ApiResponse({ status: 400, description: 'Datos inválidos' })
@@ -75,8 +97,16 @@ export class ComunidadController {
     return this.comunidadService.actualizarComunidad(+id, updateComunidadDto);
   }
 
-  @ApiOperation({ summary: 'Eliminar comunidad', description: 'Elimina una comunidad (soft delete)' })
-  @ApiParam({ name: 'id', description: 'ID de la comunidad', type: Number, example: 1 })
+  @ApiOperation({
+    summary: 'Eliminar comunidad',
+    description: 'Elimina una comunidad (soft delete)',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'ID de la comunidad',
+    type: Number,
+    example: 1,
+  })
   @ApiResponse({ status: 200, description: 'Comunidad eliminada' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({ status: 403, description: 'Sin permiso comunidades:delete' })

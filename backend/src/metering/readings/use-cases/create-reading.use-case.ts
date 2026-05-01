@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
-import { Prisma } from 'src/generated/prisma/client';
 import { CrearLecturaDto } from '../dto/create-lectura.dto';
 import { LecturaEntity } from '../entities/lectura.entity';
 

@@ -99,26 +99,41 @@ export class PublicSearchUseCase {
   }
 
   private normalizarBusqueda(valor: string): string[] {
-    return valor.trim().toUpperCase().replace(/\s+/g, ' ').split(' ').filter(Boolean);
+    return valor
+      .trim()
+      .toUpperCase()
+      .replace(/\s+/g, ' ')
+      .split(' ')
+      .filter(Boolean);
   }
 
   private getPagination(page = 1, limit = 10) {
     const safeLimit = Math.min(limit, 50);
     const safePage = page < 1 ? 1 : page;
-    return { skip: (safePage - 1) * safeLimit, take: safeLimit, page: safePage };
+    return {
+      skip: (safePage - 1) * safeLimit,
+      take: safeLimit,
+      page: safePage,
+    };
   }
 
-  private buildWhereCliente(isIdent: boolean, valor: string, tokens: string[]): Prisma.ClientesWhereInput {
+  private buildWhereCliente(
+    isIdent: boolean,
+    valor: string,
+    tokens: string[],
+  ): Prisma.ClientesWhereInput {
     if (isIdent) {
       return { identificacion: valor.trim(), deletedAt: null };
     }
     return {
-      AND: tokens.map((t): Prisma.ClientesWhereInput => ({
-        OR: [
-          { nombres: { contains: t, mode: 'insensitive' } },
-          { apellidos: { contains: t, mode: 'insensitive' } },
-        ],
-      })),
+      AND: tokens.map(
+        (t): Prisma.ClientesWhereInput => ({
+          OR: [
+            { nombres: { contains: t, mode: 'insensitive' } },
+            { apellidos: { contains: t, mode: 'insensitive' } },
+          ],
+        }),
+      ),
       deletedAt: null,
     };
   }

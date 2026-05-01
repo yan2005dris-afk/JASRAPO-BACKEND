@@ -7,14 +7,20 @@ import { LecturaEntity } from '../entities/lectura.entity';
 export class UpdateReadingUseCase {
   constructor(private readonly prisma: PrismaService) {}
 
-  async execute(id: bigint, updateDto: ActualizarLecturaDto): Promise<LecturaEntity> {
-    const existing = await this.prisma.lecturas.findUnique({ where: { lecturaId: id } });
+  async execute(
+    id: bigint,
+    updateDto: ActualizarLecturaDto,
+  ): Promise<LecturaEntity> {
+    const existing = await this.prisma.lecturas.findUnique({
+      where: { lecturaId: id },
+    });
     if (!existing || existing.deletedAt) {
       throw new NotFoundException(`Lectura con ID ${id} no encontrada`);
     }
 
     const dataToUpdate: any = { ...updateDto };
-    if (updateDto.contratoId) dataToUpdate.contratoId = BigInt(updateDto.contratoId);
+    if (updateDto.contratoId)
+      dataToUpdate.contratoId = BigInt(updateDto.contratoId);
     if (updateDto.fecha) dataToUpdate.fecha = new Date(updateDto.fecha);
 
     const lectura = await this.prisma.lecturas.update({

@@ -7,11 +7,20 @@ export class GetRoleChildrenUseCase {
 
   async execute(rolesId: number) {
     const role = await this.prisma.roles.findUnique({ where: { rolesId } });
-    if (!role || role.deletedAt) throw new NotFoundException('Rol no encontrado o eliminado');
+    if (!role || role.deletedAt)
+      throw new NotFoundException('Rol no encontrado o eliminado');
 
     const links = await this.prisma.rolesHeredados.findMany({
-      where: { parentRoleId: rolesId, deletedAt: null, childRole: { deletedAt: null } },
-      select: { roleHierarchyId: true, childRoleId: true, childRole: { select: { name: true } } },
+      where: {
+        parentRoleId: rolesId,
+        deletedAt: null,
+        childRole: { deletedAt: null },
+      },
+      select: {
+        roleHierarchyId: true,
+        childRoleId: true,
+        childRole: { select: { name: true } },
+      },
       orderBy: { childRoleId: 'asc' },
     });
 

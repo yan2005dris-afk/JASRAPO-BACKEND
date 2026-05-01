@@ -35,7 +35,10 @@ export class LecturaService {
     return this.findOneUseCase.execute(id);
   }
 
-  async actualizarLectura(id: bigint, updateDto: ActualizarLecturaDto): Promise<LecturaEntity> {
+  async actualizarLectura(
+    id: bigint,
+    updateDto: ActualizarLecturaDto,
+  ): Promise<LecturaEntity> {
     return this.updateUseCase.execute(id, updateDto);
   }
 

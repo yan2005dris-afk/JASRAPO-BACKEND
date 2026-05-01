@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { FinalizeMeterLinkUseCase } from './finalize-meter-link.use-case';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 
@@ -35,7 +36,10 @@ describe('FinalizeMeterLinkUseCase', () => {
 
   it('should update medidor to set contratoId to null', async () => {
     const medidorId = BigInt(1);
-    mockPrismaService.medidores.update.mockResolvedValue({ medidorId, contratoId: null });
+    mockPrismaService.medidores.update.mockResolvedValue({
+      medidorId,
+      contratoId: null,
+    });
 
     const result = await useCase.execute(medidorId);
 

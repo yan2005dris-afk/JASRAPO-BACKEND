@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { CreateDeviceUseCase } from './create-device.use-case';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { EstadoMedidor } from 'src/generated/prisma/client';
@@ -43,7 +44,9 @@ describe('CreateDeviceUseCase', () => {
       estado: EstadoMedidor.BODEGA,
     };
 
-    mockPrismaService.medidores.create.mockResolvedValue(expectedMedidor as any);
+    mockPrismaService.medidores.create.mockResolvedValue(
+      expectedMedidor as any,
+    );
 
     const result = await useCase.execute(dto);
 

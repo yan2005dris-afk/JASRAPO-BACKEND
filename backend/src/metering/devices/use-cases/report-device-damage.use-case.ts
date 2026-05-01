@@ -7,12 +7,17 @@ export class ReportDeviceDamageUseCase {
   constructor(private readonly prisma: PrismaService) {}
 
   async execute(medidorId: bigint): Promise<Medidores> {
-    const medidor = await this.prisma.medidores.findUnique({ where: { medidorId } });
+    const medidor = await this.prisma.medidores.findUnique({
+      where: { medidorId },
+    });
 
-    if (!medidor || medidor.deletedAt) throw new BadRequestException('Medidor no encontrado');
+    if (!medidor || medidor.deletedAt)
+      throw new BadRequestException('Medidor no encontrado');
 
     if (medidor.estado !== EstadoMedidor.INSTALADO) {
-      throw new BadRequestException(`Solo medidores INSTALADOS pueden reportarse como dañados`);
+      throw new BadRequestException(
+        `Solo medidores INSTALADOS pueden reportarse como dañados`,
+      );
     }
 
     return await this.prisma.medidores.update({

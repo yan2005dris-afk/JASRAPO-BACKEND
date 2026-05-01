@@ -1,4 +1,6 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
+import type { Response } from 'express';
 import { MetricsController } from './metrics.controller';
 import { MetricsService } from './metrics.service';
 
@@ -38,7 +40,7 @@ http_requests_total{method="GET",status="200",route="/"} 100`,
       const mockResponse = {
         set: jest.fn(),
         send: jest.fn(),
-      } as unknown as import('express').Response;
+      } as unknown as Response;
 
       await controller.getMetrics(mockResponse);
 

@@ -35,7 +35,10 @@ export class RolesService {
   }
 
   update(id: number, updateRoleDto: UpdateRoleDto) {
-    return this.prisma.roles.update({ where: { rolesId: id }, data: updateRoleDto });
+    return this.prisma.roles.update({
+      where: { rolesId: id },
+      data: updateRoleDto,
+    });
   }
 
   async getRolePermissions(rolesId: number) {

@@ -1,6 +1,5 @@
-import pino from 'pino';
-import { ConfigService } from '@nestjs/config';
-import http from 'http';
+import type pino from 'pino';
+import type { ConfigService } from '@nestjs/config';
 
 export interface LoggerConfigOptions {
   level: string;
@@ -16,59 +15,9 @@ export function createLoggerConfig(
   return { level, pretty };
 }
 
-// Stream para Loki - envía logs al servidor de Loki
-function createLokiStream(lokiUrl: string, labels: Record<string, string>) {
-  const stream = {
-    write: (chunk: string) => {
-      try {
-        const logEntry = JSON.parse(chunk);
-        
-        // Formato para Loki
-        const payload = {
-          streams: [
-            {
-              stream: {
-                ...labels,
-                level: logEntry.level || 'info',
-              },
-              values: [
-                [
-                  Date.now() * 1000000, // nano segundos
-                  chunk,
-                ],
-              ],
-            },
-          ],
-        };
-
-        // Enviar a Loki
-        const req = http.request(
-          `${lokiUrl}/loki/api/v1/push`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          },
-          (res) => {
-            if (res.statusCode && res.statusCode >= 400) {
-              console.error('Loki error:', res.statusCode);
-            }
-          },
-        );
-        
-        req.on('error', () => {}); // Silenciar errores de red
-        req.write(JSON.stringify(payload));
-        req.end();
-      } catch {
-        // Si no es JSON válido, ignorar
-      }
-    },
-  };
-  return stream;
-}
-
-export function buildPinoOptions(configService: ConfigService): pino.LoggerOptions {
+export function buildPinoOptions(
+  configService: ConfigService,
+): pino.LoggerOptions {
   const { level, pretty } = createLoggerConfig(configService);
 
   const baseOptions: pino.LoggerOptions = {
@@ -85,14 +34,8 @@ export function buildPinoOptions(configService: ConfigService): pino.LoggerOptio
 
   // En producción, agregar stream de Loki
   const isProduction = process.env.NODE_ENV === 'production';
-  const lokiUrl = process.env.LOKI_URL || 'http://jasrapo-loki:3100';
-  
-  if (isProduction) {
-    const lokiStream = createLokiStream(lokiUrl, {
-      app: 'jasrapo-backend',
-      environment: process.env.NODE_ENV || 'production',
-    });
 
+  if (isProduction) {
     return {
       ...baseOptions,
       // Combinar streams: consola + Loki

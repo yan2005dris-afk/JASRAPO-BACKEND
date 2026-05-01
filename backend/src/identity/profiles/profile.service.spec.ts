@@ -50,11 +50,16 @@ describe('ProfileService', () => {
 
     service = module.get<ProfileService>(ProfileService);
     createUseCase = module.get<CreateProfileUseCase>(CreateProfileUseCase);
-    findMyProfileUseCase = module.get<FindMyProfileUseCase>(FindMyProfileUseCase);
+    findMyProfileUseCase =
+      module.get<FindMyProfileUseCase>(FindMyProfileUseCase);
     updateUseCase = module.get<UpdateProfileUseCase>(UpdateProfileUseCase);
     uploadAvatarUseCase = module.get<UploadAvatarUseCase>(UploadAvatarUseCase);
-    listAvatarsUseCase = module.get<ListAvailableAvatarsUseCase>(ListAvailableAvatarsUseCase);
-    selectAvatarUseCase = module.get<SelectExistingAvatarUseCase>(SelectExistingAvatarUseCase);
+    listAvatarsUseCase = module.get<ListAvailableAvatarsUseCase>(
+      ListAvailableAvatarsUseCase,
+    );
+    selectAvatarUseCase = module.get<SelectExistingAvatarUseCase>(
+      SelectExistingAvatarUseCase,
+    );
   });
 
   it('should be defined', () => {

@@ -40,7 +40,10 @@ export class MedidorService {
     return this.findOneUseCase.execute(id);
   }
 
-  async actualizarMedidor(id: bigint, updateDto: ActualizarMedidorDto): Promise<Medidores> {
+  async actualizarMedidor(
+    id: bigint,
+    updateDto: ActualizarMedidorDto,
+  ): Promise<Medidores> {
     await this.findOneUseCase.execute(id);
     return await this.prisma.medidores.update({
       where: { medidorId: id },
@@ -57,7 +60,10 @@ export class MedidorService {
     return { message: `Medidor con ID ${id} eliminado lógicamente` };
   }
 
-  async instalarMedidor(medidorId: bigint, contratoId: bigint): Promise<Medidores> {
+  async instalarMedidor(
+    medidorId: bigint,
+    contratoId: bigint,
+  ): Promise<Medidores> {
     return this.installUseCase.execute(medidorId, contratoId);
   }
 
@@ -69,7 +75,7 @@ export class MedidorService {
     // Esta lógica de transición de estado también podría ser un Use Case si crece
     return await this.prisma.medidores.update({
       where: { medidorId },
-      data: { estado: 'ESTIMADO' as any }, 
+      data: { estado: 'ESTIMADO' as any },
     });
   }
 

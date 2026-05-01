@@ -7,7 +7,9 @@ export class RemoveCustomerUseCase {
 
   async execute(id: string) {
     const clienteId = BigInt(id);
-    const cliente = await this.prisma.clientes.findFirst({ where: { clienteId, deletedAt: null } });
+    const cliente = await this.prisma.clientes.findFirst({
+      where: { clienteId, deletedAt: null },
+    });
     if (!cliente) throw new NotFoundException('Cliente no encontrado');
 
     return this.prisma.clientes.update({

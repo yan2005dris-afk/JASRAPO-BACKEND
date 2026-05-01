@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { RemoveTariffCategoryUseCase } from './remove-tariff-category.use-case';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { NotFoundException } from '@nestjs/common';
@@ -25,7 +26,9 @@ describe('RemoveTariffCategoryUseCase', () => {
       ],
     }).compile();
 
-    useCase = module.get<RemoveTariffCategoryUseCase>(RemoveTariffCategoryUseCase);
+    useCase = module.get<RemoveTariffCategoryUseCase>(
+      RemoveTariffCategoryUseCase,
+    );
     prisma = module.get<PrismaService>(PrismaService);
   });
 
@@ -39,10 +42,18 @@ describe('RemoveTariffCategoryUseCase', () => {
 
   it('should soft delete a tariff category', async () => {
     const id = 1;
-    const current = { categoriaTarifaId: id, nombre: 'Residencial', activo: true };
+    const current = {
+      categoriaTarifaId: id,
+      nombre: 'Residencial',
+      activo: true,
+    };
 
     mockPrismaService.categoriaTarifa.findFirst.mockResolvedValue(current);
-    mockPrismaService.categoriaTarifa.update.mockResolvedValue({ ...current, activo: false, deletedAt: new Date() });
+    mockPrismaService.categoriaTarifa.update.mockResolvedValue({
+      ...current,
+      activo: false,
+      deletedAt: new Date(),
+    });
 
     const result = await useCase.execute(id);
 

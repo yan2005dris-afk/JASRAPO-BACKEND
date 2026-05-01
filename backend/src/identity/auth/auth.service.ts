@@ -30,10 +30,16 @@ export class AuthService {
     userAgent: string = 'unknown',
     userId: number,
   ) {
-    return this.refreshUseCase.execute(sessionId, refreshToken, ip, userAgent, userId);
+    return this.refreshUseCase.execute(
+      sessionId,
+      refreshToken,
+      ip,
+      userAgent,
+      userId,
+    );
   }
 
-  async logout(sessionId: string, _userId: number) {
+  async logout(sessionId: string) {
     await this.logoutUseCase.execute(sessionId);
   }
 }

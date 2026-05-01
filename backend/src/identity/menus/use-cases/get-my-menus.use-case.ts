@@ -48,7 +48,9 @@ export class GetMyMenusUseCase {
         ...new Set(
           currentMenus
             .map((m) => m.menusParentId)
-            .filter((id) => id !== null && id !== undefined && !menuMap.has(id)),
+            .filter(
+              (id) => id !== null && id !== undefined && !menuMap.has(id),
+            ),
         ),
       ];
 
@@ -106,7 +108,11 @@ export class GetMyMenusUseCase {
 
     for (const menu of menuMap.values()) {
       const parentId = menu.parent_menu_id;
-      if (parentId !== null && parentId !== undefined && menuMap.has(parentId)) {
+      if (
+        parentId !== null &&
+        parentId !== undefined &&
+        menuMap.has(parentId)
+      ) {
         menuMap.get(parentId)!.children!.push(menu);
       } else {
         tree.push(menu);

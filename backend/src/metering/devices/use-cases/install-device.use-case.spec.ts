@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { InstallDeviceUseCase } from './install-device.use-case';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { EstadoMedidor } from 'src/generated/prisma/client';
@@ -37,7 +38,9 @@ describe('InstallDeviceUseCase', () => {
   });
 
   it('should install device from BODEGA status', async () => {
-    mockPrismaService.medidores.findUnique.mockResolvedValue(mockMedidor as any);
+    mockPrismaService.medidores.findUnique.mockResolvedValue(
+      mockMedidor as any,
+    );
     mockPrismaService.medidores.update.mockResolvedValue({
       ...mockMedidor,
       estado: EstadoMedidor.INSTALADO,
@@ -67,8 +70,9 @@ describe('InstallDeviceUseCase', () => {
   it('should throw BadRequestException when medidor not found', async () => {
     mockPrismaService.medidores.findUnique.mockResolvedValue(null);
 
-    await expect(useCase.execute(BigInt(999), BigInt(123)))
-      .rejects.toThrow(BadRequestException);
+    await expect(useCase.execute(BigInt(999), BigInt(123))).rejects.toThrow(
+      BadRequestException,
+    );
   });
 
   it('should throw BadRequestException when medidor is deleted', async () => {
@@ -77,8 +81,9 @@ describe('InstallDeviceUseCase', () => {
       deletedAt: new Date(),
     } as any);
 
-    await expect(useCase.execute(BigInt(1), BigInt(123)))
-      .rejects.toThrow(BadRequestException);
+    await expect(useCase.execute(BigInt(1), BigInt(123))).rejects.toThrow(
+      BadRequestException,
+    );
   });
 
   it('should throw BadRequestException when medidor already installed', async () => {
@@ -87,7 +92,8 @@ describe('InstallDeviceUseCase', () => {
       estado: EstadoMedidor.INSTALADO,
     } as any);
 
-    await expect(useCase.execute(BigInt(1), BigInt(123)))
-      .rejects.toThrow(BadRequestException);
+    await expect(useCase.execute(BigInt(1), BigInt(123))).rejects.toThrow(
+      BadRequestException,
+    );
   });
 });

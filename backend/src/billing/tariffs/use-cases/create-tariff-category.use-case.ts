@@ -16,7 +16,9 @@ export class CreateTariffCategoryUseCase {
     });
 
     if (existing) {
-      throw new ConflictException('Ya existe una categoría activa con ese nombre');
+      throw new ConflictException(
+        'Ya existe una categoría activa con ese nombre',
+      );
     }
 
     const now = new Date();

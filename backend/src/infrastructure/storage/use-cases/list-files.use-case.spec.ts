@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { ListFilesUseCase } from './list-files.use-case';
 import { MinioService } from '../minio.service';
 

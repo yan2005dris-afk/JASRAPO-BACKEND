@@ -7,14 +7,20 @@ import { NovedadOperativaEntity } from '../entities/novedad-operativa.entity';
 export class UpdateFieldWorkUseCase {
   constructor(private readonly prisma: PrismaService) {}
 
-  async execute(id: bigint, updateDto: ActualizarNovedadOperativaDto): Promise<NovedadOperativaEntity> {
-    const existing = await this.prisma.novedadOperativa.findUnique({ where: { novedadId: id } });
+  async execute(
+    id: bigint,
+    updateDto: ActualizarNovedadOperativaDto,
+  ): Promise<NovedadOperativaEntity> {
+    const existing = await this.prisma.novedadOperativa.findUnique({
+      where: { novedadId: id },
+    });
     if (!existing || existing.deletedAt) {
       throw new NotFoundException(`Novedad con ID ${id} no encontrada`);
     }
 
     const dataToUpdate: any = { ...updateDto };
-    if (updateDto.lecturaId) dataToUpdate.lecturaId = BigInt(updateDto.lecturaId);
+    if (updateDto.lecturaId)
+      dataToUpdate.lecturaId = BigInt(updateDto.lecturaId);
 
     const novedad = await this.prisma.novedadOperativa.update({
       where: { novedadId: id },

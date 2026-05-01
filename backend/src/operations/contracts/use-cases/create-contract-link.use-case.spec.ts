@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { CreateContractLinkUseCase } from './create-contract-link.use-case';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 
@@ -35,7 +36,10 @@ describe('CreateContractLinkUseCase', () => {
 
   it('should update medidor with contratoId', async () => {
     const dto = { medidorId: '1', contratoId: '2' };
-    mockPrismaService.medidores.update.mockResolvedValue({ medidorId: BigInt(1), contratoId: BigInt(2) });
+    mockPrismaService.medidores.update.mockResolvedValue({
+      medidorId: BigInt(1),
+      contratoId: BigInt(2),
+    });
 
     const result = await useCase.execute(dto);
 

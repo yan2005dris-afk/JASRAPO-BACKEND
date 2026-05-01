@@ -1,4 +1,8 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { MinioService } from '../../../infrastructure/storage/minio.service';
 
@@ -30,12 +34,19 @@ export class SelectExistingAvatarUseCase {
       uploadedAt: meta?.lastModified?.toISOString() || new Date().toISOString(),
     };
 
-    let profile = await this.prisma.profiles.findUnique({ where: { usersId } });
+    const profile = await this.prisma.profiles.findUnique({
+      where: { usersId },
+    });
 
     if (!profile) {
-      await this.prisma.profiles.create({ data: { usersId, avatar: avatarMeta } });
+      await this.prisma.profiles.create({
+        data: { usersId, avatar: avatarMeta },
+      });
     } else {
-      await this.prisma.profiles.update({ where: { usersId }, data: { avatar: avatarMeta } });
+      await this.prisma.profiles.update({
+        where: { usersId },
+        data: { avatar: avatarMeta },
+      });
     }
 
     return { message: 'Avatar vinculado exitosamente', avatar: avatarMeta };

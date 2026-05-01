@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { RemoveCustomerUseCase } from './remove-customer.use-case';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { NotFoundException } from '@nestjs/common';
@@ -39,15 +40,20 @@ describe('RemoveCustomerUseCase', () => {
     it('should soft delete a customer if found', async () => {
       const mockCliente = { clienteId: BigInt(1), deletedAt: null };
       mockPrismaService.clientes.findFirst.mockResolvedValue(mockCliente);
-      mockPrismaService.clientes.update.mockResolvedValue({ ...mockCliente, deletedAt: new Date() });
+      mockPrismaService.clientes.update.mockResolvedValue({
+        ...mockCliente,
+        deletedAt: new Date(),
+      });
 
       const result = await useCase.execute('1');
 
       expect(result.deletedAt).toBeDefined();
-      expect(mockPrismaService.clientes.update).toHaveBeenCalledWith(expect.objectContaining({
-        where: { clienteId: BigInt(1) },
-        data: expect.objectContaining({ deletedAt: expect.any(Date) })
-      }));
+      expect(mockPrismaService.clientes.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { clienteId: BigInt(1) },
+          data: expect.objectContaining({ deletedAt: expect.any(Date) }),
+        }),
+      );
     });
 
     it('should throw NotFoundException if customer not found', async () => {

@@ -6,7 +6,9 @@ export class RemoveFieldWorkUseCase {
   constructor(private readonly prisma: PrismaService) {}
 
   async execute(id: bigint): Promise<{ message: string }> {
-    const existing = await this.prisma.novedadOperativa.findUnique({ where: { novedadId: id } });
+    const existing = await this.prisma.novedadOperativa.findUnique({
+      where: { novedadId: id },
+    });
     if (!existing || existing.deletedAt) {
       throw new NotFoundException(`Novedad con ID ${id} no encontrada`);
     }

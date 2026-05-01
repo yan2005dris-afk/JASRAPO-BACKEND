@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { UserService } from '../../users/user.service';
 import { GetMyMenusUseCase } from './get-my-menus.use-case';
@@ -69,7 +70,7 @@ describe('GetMyMenusUseCase', () => {
   it('should build menu tree when user has permissions', async () => {
     const mockPermissions = [{ resource: 'dashboard', action: 'read' }];
     mockUserService.getEffectivePermissions.mockResolvedValue(mockPermissions);
-    
+
     // First findMany for direct menus
     mockPrismaService.menus.findMany.mockResolvedValueOnce([mockMenuRecord]);
 
@@ -98,7 +99,7 @@ describe('GetMyMenusUseCase', () => {
     };
 
     mockUserService.getEffectivePermissions.mockResolvedValue(mockPermissions);
-    
+
     // First call: find child menu
     mockPrismaService.menus.findMany.mockResolvedValueOnce([childMenu]);
     // Second call (while loop): find parent menu

@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { CreateReadingUseCase } from './create-reading.use-case';
 import { FindAllReadingsUseCase } from './find-all-readings.use-case';
@@ -89,21 +90,30 @@ describe('Readings Use Cases', () => {
 
     it('should throw NotFoundException if not found', async () => {
       mockPrismaService.lecturas.findUnique.mockResolvedValue(null);
-      await expect(findOneUseCase.execute(BigInt(1))).rejects.toThrow(NotFoundException);
+      await expect(findOneUseCase.execute(BigInt(1))).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
   describe('UpdateReadingUseCase', () => {
     it('should update a reading', async () => {
       mockPrismaService.lecturas.findUnique.mockResolvedValue(mockLectura);
-      mockPrismaService.lecturas.update.mockResolvedValue({ ...mockLectura, lecturaActual: 200 });
-      const result = await updateUseCase.execute(BigInt(1), { lecturaActual: 200 });
+      mockPrismaService.lecturas.update.mockResolvedValue({
+        ...mockLectura,
+        lecturaActual: 200,
+      });
+      const result = await updateUseCase.execute(BigInt(1), {
+        lecturaActual: 200,
+      });
       expect(result.lecturaActual).toBe(200);
     });
 
     it('should throw NotFoundException if not found', async () => {
       mockPrismaService.lecturas.findUnique.mockResolvedValue(null);
-      await expect(updateUseCase.execute(BigInt(1), {})).rejects.toThrow(NotFoundException);
+      await expect(updateUseCase.execute(BigInt(1), {})).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 

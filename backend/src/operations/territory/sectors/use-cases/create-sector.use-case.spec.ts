@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { CreateSectorUseCase } from './create-sector.use-case';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { NotFoundException, ConflictException } from '@nestjs/common';
@@ -38,8 +39,13 @@ describe('CreateSectorUseCase', () => {
 
   it('should create a sector successfully', async () => {
     const dto = { nombre: 'Sector A', comunidadId: 1 };
-    mockPrismaService.comunidades.findUnique.mockResolvedValue({ comunidadId: 1 });
-    mockPrismaService.sectores.create.mockResolvedValue({ sectorId: 1, ...dto });
+    mockPrismaService.comunidades.findUnique.mockResolvedValue({
+      comunidadId: 1,
+    });
+    mockPrismaService.sectores.create.mockResolvedValue({
+      sectorId: 1,
+      ...dto,
+    });
 
     const result = await useCase.execute(dto as any);
 
@@ -66,7 +72,9 @@ describe('CreateSectorUseCase', () => {
 
   it('should throw ConflictException if sector already exists (P2002)', async () => {
     const dto = { nombre: 'Sector A', comunidadId: 1 };
-    mockPrismaService.comunidades.findUnique.mockResolvedValue({ comunidadId: 1 });
+    mockPrismaService.comunidades.findUnique.mockResolvedValue({
+      comunidadId: 1,
+    });
     const error = new Error();
     (error as any).code = 'P2002';
     mockPrismaService.sectores.create.mockRejectedValue(error);
@@ -78,7 +86,9 @@ describe('CreateSectorUseCase', () => {
 
   it('should rethrow other errors', async () => {
     const dto = { nombre: 'Sector A', comunidadId: 1 };
-    mockPrismaService.comunidades.findUnique.mockResolvedValue({ comunidadId: 1 });
+    mockPrismaService.comunidades.findUnique.mockResolvedValue({
+      comunidadId: 1,
+    });
     const error = new Error('Database error');
     mockPrismaService.sectores.create.mockRejectedValue(error);
 

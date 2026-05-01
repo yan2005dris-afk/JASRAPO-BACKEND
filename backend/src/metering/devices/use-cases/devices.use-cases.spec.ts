@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { CreateDeviceUseCase } from './create-device.use-case';
 import { FindOneDeviceUseCase } from './find-one-device.use-case';
@@ -46,8 +47,12 @@ describe('Devices Use Cases', () => {
     createUseCase = module.get<CreateDeviceUseCase>(CreateDeviceUseCase);
     findOneUseCase = module.get<FindOneDeviceUseCase>(FindOneDeviceUseCase);
     installUseCase = module.get<InstallDeviceUseCase>(InstallDeviceUseCase);
-    reportDamageUseCase = module.get<ReportDeviceDamageUseCase>(ReportDeviceDamageUseCase);
-    decommissionUseCase = module.get<DecommissionDeviceUseCase>(DecommissionDeviceUseCase);
+    reportDamageUseCase = module.get<ReportDeviceDamageUseCase>(
+      ReportDeviceDamageUseCase,
+    );
+    decommissionUseCase = module.get<DecommissionDeviceUseCase>(
+      DecommissionDeviceUseCase,
+    );
     prisma = module.get<PrismaService>(PrismaService);
   });
 
@@ -69,49 +74,81 @@ describe('Devices Use Cases', () => {
 
     it('should throw NotFoundException if not found', async () => {
       mockPrismaService.medidores.findUnique.mockResolvedValue(null);
-      await expect(findOneUseCase.execute(BigInt(1))).rejects.toThrow(NotFoundException);
+      await expect(findOneUseCase.execute(BigInt(1))).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
   describe('InstallDeviceUseCase', () => {
     it('should install a device', async () => {
       mockPrismaService.medidores.findUnique.mockResolvedValue(mockMedidor);
-      mockPrismaService.medidores.update.mockResolvedValue({ ...mockMedidor, estado: EstadoMedidor.INSTALADO });
+      mockPrismaService.medidores.update.mockResolvedValue({
+        ...mockMedidor,
+        estado: EstadoMedidor.INSTALADO,
+      });
       const result = await installUseCase.execute(BigInt(1), BigInt(1));
       expect(result.estado).toBe(EstadoMedidor.INSTALADO);
     });
 
     it('should throw BadRequestException if not in BODEGA or ESTIMADO', async () => {
-      mockPrismaService.medidores.findUnique.mockResolvedValue({ ...mockMedidor, estado: EstadoMedidor.INSTALADO });
-      await expect(installUseCase.execute(BigInt(1), BigInt(1))).rejects.toThrow(BadRequestException);
+      mockPrismaService.medidores.findUnique.mockResolvedValue({
+        ...mockMedidor,
+        estado: EstadoMedidor.INSTALADO,
+      });
+      await expect(
+        installUseCase.execute(BigInt(1), BigInt(1)),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 
   describe('ReportDeviceDamageUseCase', () => {
     it('should report damage', async () => {
-      mockPrismaService.medidores.findUnique.mockResolvedValue({ ...mockMedidor, estado: EstadoMedidor.INSTALADO });
-      mockPrismaService.medidores.update.mockResolvedValue({ ...mockMedidor, estado: EstadoMedidor.DANADO });
+      mockPrismaService.medidores.findUnique.mockResolvedValue({
+        ...mockMedidor,
+        estado: EstadoMedidor.INSTALADO,
+      });
+      mockPrismaService.medidores.update.mockResolvedValue({
+        ...mockMedidor,
+        estado: EstadoMedidor.DANADO,
+      });
       const result = await reportDamageUseCase.execute(BigInt(1));
       expect(result.estado).toBe(EstadoMedidor.DANADO);
     });
 
     it('should throw BadRequestException if not INSTALADO', async () => {
-      mockPrismaService.medidores.findUnique.mockResolvedValue({ ...mockMedidor, estado: EstadoMedidor.BODEGA });
-      await expect(reportDamageUseCase.execute(BigInt(1))).rejects.toThrow(BadRequestException);
+      mockPrismaService.medidores.findUnique.mockResolvedValue({
+        ...mockMedidor,
+        estado: EstadoMedidor.BODEGA,
+      });
+      await expect(reportDamageUseCase.execute(BigInt(1))).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 
   describe('DecommissionDeviceUseCase', () => {
     it('should decommission a device', async () => {
-      mockPrismaService.medidores.findUnique.mockResolvedValue({ ...mockMedidor, estado: EstadoMedidor.DANADO });
-      mockPrismaService.medidores.update.mockResolvedValue({ ...mockMedidor, estado: EstadoMedidor.BAJA });
+      mockPrismaService.medidores.findUnique.mockResolvedValue({
+        ...mockMedidor,
+        estado: EstadoMedidor.DANADO,
+      });
+      mockPrismaService.medidores.update.mockResolvedValue({
+        ...mockMedidor,
+        estado: EstadoMedidor.BAJA,
+      });
       const result = await decommissionUseCase.execute(BigInt(1), 'Broken');
       expect(result.estado).toBe(EstadoMedidor.BAJA);
     });
 
     it('should throw BadRequestException if not DANADO', async () => {
-      mockPrismaService.medidores.findUnique.mockResolvedValue({ ...mockMedidor, estado: EstadoMedidor.INSTALADO });
-      await expect(decommissionUseCase.execute(BigInt(1), 'Broken')).rejects.toThrow(BadRequestException);
+      mockPrismaService.medidores.findUnique.mockResolvedValue({
+        ...mockMedidor,
+        estado: EstadoMedidor.INSTALADO,
+      });
+      await expect(
+        decommissionUseCase.execute(BigInt(1), 'Broken'),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 });

@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { UpdateFieldWorkUseCase } from './update-field-work.use-case';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { NovedadOperativaEntity } from '../entities/novedad-operativa.entity';
@@ -51,7 +52,9 @@ describe('UpdateFieldWorkUseCase', () => {
 
     const mockUpdated = { ...mockExisting, ...dto };
 
-    mockPrismaService.novedadOperativa.findUnique.mockResolvedValue(mockExisting);
+    mockPrismaService.novedadOperativa.findUnique.mockResolvedValue(
+      mockExisting,
+    );
     mockPrismaService.novedadOperativa.update.mockResolvedValue(mockUpdated);
 
     const result = await useCase.execute(id, dto);
@@ -66,14 +69,22 @@ describe('UpdateFieldWorkUseCase', () => {
 
   it('should throw NotFoundException if not found', async () => {
     mockPrismaService.novedadOperativa.findUnique.mockResolvedValue(null);
-    await expect(useCase.execute(BigInt(1), {})).rejects.toThrow(NotFoundException);
+    await expect(useCase.execute(BigInt(1), {})).rejects.toThrow(
+      NotFoundException,
+    );
   });
 
   it('should handle BigInt conversion for lecturaId', async () => {
     const id = BigInt(1);
     const dto = { lecturaId: '2' };
-    mockPrismaService.novedadOperativa.findUnique.mockResolvedValue({ novedadId: id, deletedAt: null });
-    mockPrismaService.novedadOperativa.update.mockResolvedValue({ novedadId: id, lecturaId: BigInt(2) });
+    mockPrismaService.novedadOperativa.findUnique.mockResolvedValue({
+      novedadId: id,
+      deletedAt: null,
+    });
+    mockPrismaService.novedadOperativa.update.mockResolvedValue({
+      novedadId: id,
+      lecturaId: BigInt(2),
+    });
 
     await useCase.execute(id, dto);
 

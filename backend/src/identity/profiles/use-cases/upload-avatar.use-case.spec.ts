@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { UploadAvatarUseCase } from './upload-avatar.use-case';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { MinioService } from '../../../infrastructure/storage/minio.service';
@@ -46,7 +47,10 @@ describe('UploadAvatarUseCase', () => {
       size: 4,
     } as any;
 
-    (prisma.profiles.findUnique as jest.Mock).mockResolvedValue({ id: 1, usersId: userId });
+    (prisma.profiles.findUnique as jest.Mock).mockResolvedValue({
+      id: 1,
+      usersId: userId,
+    });
     (minio.uploadFile as jest.Mock).mockResolvedValue(undefined);
 
     const result = await useCase.execute(userId, file);
@@ -57,6 +61,8 @@ describe('UploadAvatarUseCase', () => {
   });
 
   it('should throw BadRequestException if no file is provided', async () => {
-    await expect(useCase.execute(1, null as any)).rejects.toThrow(BadRequestException);
+    await expect(useCase.execute(1, null as any)).rejects.toThrow(
+      BadRequestException,
+    );
   });
 });

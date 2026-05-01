@@ -36,10 +36,14 @@ export class LoginUseCase {
     this.logger.log(`[LOGIN] user=${user.usersId} | ip="${ip}"`);
 
     const sessionsId = randomUUID();
-    
+
     // Generar tokens
-    const tokens = await this.generateJwtToken(user.usersId, sessionsId, user.email);
-    
+    const tokens = await this.generateJwtToken(
+      user.usersId,
+      sessionsId,
+      user.email,
+    );
+
     // Guardar sesión
     const refreshTokenHash = await bcrypt.hash(tokens.refreshToken, 10);
     const expiresAt = new Date(Date.now() + REFRESH_TOKEN_MAX_AGE_MS);
@@ -55,8 +59,12 @@ export class LoginUseCase {
         user: { connect: { usersId: user.usersId } },
       });
     } catch (err) {
-      this.logger.error(`[SESSIONS] Error al guardar sesión: sessionsId=${sessionsId} | ${err}`);
-      throw new InternalServerErrorException('Error al crear sesión. Intente nuevamente.');
+      this.logger.error(
+        `[SESSIONS] Error al guardar sesión: sessionsId=${sessionsId} | ${err}`,
+      );
+      throw new InternalServerErrorException(
+        'Error al crear sesión. Intente nuevamente.',
+      );
     }
 
     return this.buildLoginResponse(user, sessionsId, tokens);
@@ -78,17 +86,31 @@ export class LoginUseCase {
     return user;
   }
 
-  private async generateJwtToken(userId: number, sessionId: string, email: string) {
+  private async generateJwtToken(
+    userId: number,
+    sessionId: string,
+    email: string,
+  ) {
     const payload = { sub: userId, sid: sessionId, email };
     const accessSecret = this.config.getOrThrow<string>('JWT_ACCESS_SECRET');
     const refreshSecret = this.config.getOrThrow<string>('JWT_REFRESH_SECRET');
-    
-    const accessExpiresIn = this.config.getOrThrow<StringValue>('JWT_ACCESS_EXPIRES_IN');
-    const refreshExpiresIn = this.config.getOrThrow<StringValue>('JWT_REFRESH_EXPIRES_IN');
+
+    const accessExpiresIn = this.config.getOrThrow<StringValue>(
+      'JWT_ACCESS_EXPIRES_IN',
+    );
+    const refreshExpiresIn = this.config.getOrThrow<StringValue>(
+      'JWT_REFRESH_EXPIRES_IN',
+    );
 
     const [accessToken, refreshToken] = await Promise.all([
-      this.jwtService.signAsync(payload, { secret: accessSecret, expiresIn: accessExpiresIn }),
-      this.jwtService.signAsync(payload, { secret: refreshSecret, expiresIn: refreshExpiresIn }),
+      this.jwtService.signAsync(payload, {
+        secret: accessSecret,
+        expiresIn: accessExpiresIn,
+      }),
+      this.jwtService.signAsync(payload, {
+        secret: refreshSecret,
+        expiresIn: refreshExpiresIn,
+      }),
     ]);
 
     return { accessToken, refreshToken };
@@ -99,8 +121,12 @@ export class LoginUseCase {
     sessionsId: string,
     tokens: { accessToken: string; refreshToken: string },
   ) {
-    const decodedAccess = this.decodeJwtClaims(this.jwtService.decode(tokens.accessToken));
-    const decodedRefresh = this.decodeJwtClaims(this.jwtService.decode(tokens.refreshToken));
+    const decodedAccess = this.decodeJwtClaims(
+      this.jwtService.decode(tokens.accessToken),
+    );
+    const decodedRefresh = this.decodeJwtClaims(
+      this.jwtService.decode(tokens.refreshToken),
+    );
 
     const [userWithRole, profile] = await Promise.all([
       this.prisma.users.findUnique({
@@ -116,7 +142,8 @@ export class LoginUseCase {
       }),
     ]);
 
-    const fullName = [profile?.firstName, profile?.lastName].filter(Boolean).join(' ') || null;
+    const fullName =
+      [profile?.firstName, profile?.lastName].filter(Boolean).join(' ') || null;
     const avatarKey = (profile?.avatar as any)?.key || null;
 
     const firstRole =

@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { CreateFieldWorkUseCase } from './create-field-work.use-case';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { TipoNovedad, EstadoNovedad } from 'src/generated/prisma/enums';

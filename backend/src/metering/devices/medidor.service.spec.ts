@@ -41,8 +41,14 @@ describe('MedidorService', () => {
         { provide: CreateDeviceUseCase, useValue: { execute: jest.fn() } },
         { provide: FindOneDeviceUseCase, useValue: { execute: jest.fn() } },
         { provide: InstallDeviceUseCase, useValue: { execute: jest.fn() } },
-        { provide: ReportDeviceDamageUseCase, useValue: { execute: jest.fn() } },
-        { provide: DecommissionDeviceUseCase, useValue: { execute: jest.fn() } },
+        {
+          provide: ReportDeviceDamageUseCase,
+          useValue: { execute: jest.fn() },
+        },
+        {
+          provide: DecommissionDeviceUseCase,
+          useValue: { execute: jest.fn() },
+        },
       ],
     }).compile();
 
@@ -51,8 +57,12 @@ describe('MedidorService', () => {
     createUseCase = module.get<CreateDeviceUseCase>(CreateDeviceUseCase);
     findOneUseCase = module.get<FindOneDeviceUseCase>(FindOneDeviceUseCase);
     installUseCase = module.get<InstallDeviceUseCase>(InstallDeviceUseCase);
-    reportDamageUseCase = module.get<ReportDeviceDamageUseCase>(ReportDeviceDamageUseCase);
-    decommissionUseCase = module.get<DecommissionDeviceUseCase>(DecommissionDeviceUseCase);
+    reportDamageUseCase = module.get<ReportDeviceDamageUseCase>(
+      ReportDeviceDamageUseCase,
+    );
+    decommissionUseCase = module.get<DecommissionDeviceUseCase>(
+      DecommissionDeviceUseCase,
+    );
   });
 
   it('should be defined', () => {

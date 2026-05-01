@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { FindAllTariffCategoriesUseCase } from './find-all-tariff-categories.use-case';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 
@@ -23,7 +24,9 @@ describe('FindAllTariffCategoriesUseCase', () => {
       ],
     }).compile();
 
-    useCase = module.get<FindAllTariffCategoriesUseCase>(FindAllTariffCategoriesUseCase);
+    useCase = module.get<FindAllTariffCategoriesUseCase>(
+      FindAllTariffCategoriesUseCase,
+    );
     prisma = module.get<PrismaService>(PrismaService);
   });
 
@@ -36,7 +39,9 @@ describe('FindAllTariffCategoriesUseCase', () => {
   });
 
   it('should return all active tariff categories', async () => {
-    mockPrismaService.categoriaTarifa.findMany.mockResolvedValue([{ categoriaTarifaId: 1, nombre: 'Residencial' }]);
+    mockPrismaService.categoriaTarifa.findMany.mockResolvedValue([
+      { categoriaTarifaId: 1, nombre: 'Residencial' },
+    ]);
 
     const result = await useCase.execute();
 
@@ -51,7 +56,9 @@ describe('FindAllTariffCategoriesUseCase', () => {
   });
 
   it('should filter by name if provided', async () => {
-    mockPrismaService.categoriaTarifa.findMany.mockResolvedValue([{ categoriaTarifaId: 1, nombre: 'Residencial' }]);
+    mockPrismaService.categoriaTarifa.findMany.mockResolvedValue([
+      { categoriaTarifaId: 1, nombre: 'Residencial' },
+    ]);
 
     await useCase.execute('residencial');
 

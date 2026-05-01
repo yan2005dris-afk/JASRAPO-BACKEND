@@ -26,7 +26,10 @@ import { RequiredPermission } from 'src/infrastructure/common/decorators/require
 export class SectorController {
   constructor(private readonly sectorService: SectorService) {}
 
-  @ApiOperation({ summary: 'Crear sector', description: 'Crea un nuevo sector territorial' })
+  @ApiOperation({
+    summary: 'Crear sector',
+    description: 'Crea un nuevo sector territorial',
+  })
   @ApiBody({ type: CreateSectorDto, description: 'Datos del sector' })
   @ApiResponse({ status: 201, description: 'Sector creado' })
   @ApiResponse({ status: 400, description: 'Datos inválidos' })
@@ -38,7 +41,10 @@ export class SectorController {
     return this.sectorService.crearSector(createSectorDto);
   }
 
-  @ApiOperation({ summary: 'Listar sectores', description: 'Retorna todos los sectores' })
+  @ApiOperation({
+    summary: 'Listar sectores',
+    description: 'Retorna todos los sectores',
+  })
   @ApiResponse({ status: 200, description: 'Lista de sectores' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @RequiredPermission('sectores', 'read')
@@ -47,8 +53,16 @@ export class SectorController {
     return this.sectorService.findAll();
   }
 
-  @ApiOperation({ summary: 'Obtener sector', description: 'Retorna un sector por ID' })
-  @ApiParam({ name: 'id', description: 'ID del sector', type: Number, example: 1 })
+  @ApiOperation({
+    summary: 'Obtener sector',
+    description: 'Retorna un sector por ID',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'ID del sector',
+    type: Number,
+    example: 1,
+  })
   @ApiResponse({ status: 200, description: 'Sector encontrado' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({ status: 404, description: 'Sector no encontrado' })
@@ -58,8 +72,16 @@ export class SectorController {
     return this.sectorService.findOne(+id);
   }
 
-  @ApiOperation({ summary: 'Actualizar sector', description: 'Actualiza un sector' })
-  @ApiParam({ name: 'id', description: 'ID del sector', type: Number, example: 1 })
+  @ApiOperation({
+    summary: 'Actualizar sector',
+    description: 'Actualiza un sector',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'ID del sector',
+    type: Number,
+    example: 1,
+  })
   @ApiBody({ type: UpdateSectorDto, description: 'Datos a actualizar' })
   @ApiResponse({ status: 200, description: 'Sector actualizado' })
   @ApiResponse({ status: 400, description: 'Datos inválidos' })
@@ -72,8 +94,16 @@ export class SectorController {
     return this.sectorService.actualizarSector(+id, updateSectorDto);
   }
 
-  @ApiOperation({ summary: 'Eliminar sector', description: 'Elimina un sector (soft delete)' })
-  @ApiParam({ name: 'id', description: 'ID del sector', type: Number, example: 1 })
+  @ApiOperation({
+    summary: 'Eliminar sector',
+    description: 'Elimina un sector (soft delete)',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'ID del sector',
+    type: Number,
+    example: 1,
+  })
   @ApiResponse({ status: 200, description: 'Sector eliminado' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({ status: 403, description: 'Sin permiso sectores:delete' })

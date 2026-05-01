@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { FindAllPermissionsUseCase } from './find-all-permissions.use-case';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 
@@ -25,7 +26,9 @@ describe('FindAllPermissionsUseCase', () => {
   });
 
   it('should return all permissions', async () => {
-    mockPrisma.permissions.findMany.mockResolvedValue([{ permissionsId: 1, resource: 'Users', action: 'Read' }]);
+    mockPrisma.permissions.findMany.mockResolvedValue([
+      { permissionsId: 1, resource: 'Users', action: 'Read' },
+    ]);
 
     const result = await useCase.execute();
 

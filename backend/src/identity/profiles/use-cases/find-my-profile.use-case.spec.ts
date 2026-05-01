@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { FindMyProfileUseCase } from './find-my-profile.use-case';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 
@@ -33,7 +34,9 @@ describe('FindMyProfileUseCase', () => {
 
     const result = await useCase.execute(userId);
 
-    expect(prisma.profiles.findUnique).toHaveBeenCalledWith({ where: { usersId: userId } });
+    expect(prisma.profiles.findUnique).toHaveBeenCalledWith({
+      where: { usersId: userId },
+    });
     expect(result).toEqual(profile);
   });
 
@@ -46,7 +49,9 @@ describe('FindMyProfileUseCase', () => {
     const result = await useCase.execute(userId);
 
     expect(prisma.profiles.findUnique).toHaveBeenCalled();
-    expect(prisma.profiles.create).toHaveBeenCalledWith({ data: { usersId: userId } });
+    expect(prisma.profiles.create).toHaveBeenCalledWith({
+      data: { usersId: userId },
+    });
     expect(result).toEqual(profile);
   });
 });

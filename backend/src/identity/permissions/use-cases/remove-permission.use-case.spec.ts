@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { RemovePermissionUseCase } from './remove-permission.use-case';
 
@@ -31,8 +32,14 @@ describe('RemovePermissionUseCase', () => {
 
   it('should soft delete a permission', async () => {
     const id = 1;
-    const expectedResult = { permissionsId: id, resource: 'test', action: 'test' };
-    (prismaService.permissions.update as jest.fn).mockResolvedValue(expectedResult);
+    const expectedResult = {
+      permissionsId: id,
+      resource: 'test',
+      action: 'test',
+    };
+    (prismaService.permissions.update as jest.fn).mockResolvedValue(
+      expectedResult,
+    );
 
     const result = await useCase.execute(id);
 

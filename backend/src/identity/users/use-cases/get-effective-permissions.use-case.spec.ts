@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { GetEffectivePermissionsUseCase } from './get-effective-permissions.use-case';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { NotFoundException } from '@nestjs/common';
@@ -27,7 +28,9 @@ describe('GetEffectivePermissionsUseCase', () => {
       ],
     }).compile();
 
-    useCase = module.get<GetEffectivePermissionsUseCase>(GetEffectivePermissionsUseCase);
+    useCase = module.get<GetEffectivePermissionsUseCase>(
+      GetEffectivePermissionsUseCase,
+    );
     prisma = module.get<PrismaService>(PrismaService);
   });
 
@@ -66,7 +69,11 @@ describe('GetEffectivePermissionsUseCase', () => {
       userPermissions: [
         {
           allow: false,
-          Permissions: { resource: 'role-perm', action: 'read', deletedAt: null },
+          Permissions: {
+            resource: 'role-perm',
+            action: 'read',
+            deletedAt: null,
+          },
         },
       ],
     });
@@ -77,7 +84,10 @@ describe('GetEffectivePermissionsUseCase', () => {
 
     const result = await useCase.execute(1);
 
-    expect(result).not.toContainEqual({ resource: 'role-perm', action: 'read' });
+    expect(result).not.toContainEqual({
+      resource: 'role-perm',
+      action: 'read',
+    });
   });
 
   it('should throw NotFoundException if user not found or deleted', async () => {

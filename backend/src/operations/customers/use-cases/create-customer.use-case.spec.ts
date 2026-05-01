@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { CreateCustomerUseCase } from './create-customer.use-case';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { TipoIdentificacion } from 'src/generated/prisma/enums';
@@ -34,7 +35,7 @@ describe('CreateCustomerUseCase', () => {
 
     useCase = module.get<CreateCustomerUseCase>(CreateCustomerUseCase);
     prisma = module.get<PrismaService>(PrismaService);
-    
+
     (TipoIdentificacionUtil.validar as jest.Mock).mockReturnValue(true);
   });
 
@@ -56,7 +57,10 @@ describe('CreateCustomerUseCase', () => {
       };
 
       mockPrismaService.clientes.findUnique.mockResolvedValue(null);
-      mockPrismaService.clientes.create.mockResolvedValue({ ...dto, clienteId: BigInt(1) });
+      mockPrismaService.clientes.create.mockResolvedValue({
+        ...dto,
+        clienteId: BigInt(1),
+      });
 
       const result = await useCase.execute(dto);
 
@@ -78,7 +82,10 @@ describe('CreateCustomerUseCase', () => {
         apellidos: 'Doe',
       };
 
-      mockPrismaService.clientes.findUnique.mockResolvedValue({ clienteId: BigInt(1), deletedAt: null });
+      mockPrismaService.clientes.findUnique.mockResolvedValue({
+        clienteId: BigInt(1),
+        deletedAt: null,
+      });
 
       await expect(useCase.execute(dto)).rejects.toThrow(ConflictException);
     });
@@ -91,12 +98,16 @@ describe('CreateCustomerUseCase', () => {
         apellidos: 'Doe',
       };
 
-      mockPrismaService.clientes.findUnique.mockResolvedValue({ 
-        clienteId: BigInt(1), 
+      mockPrismaService.clientes.findUnique.mockResolvedValue({
+        clienteId: BigInt(1),
         identificacion: '0926715658',
-        deletedAt: new Date() 
+        deletedAt: new Date(),
       });
-      mockPrismaService.clientes.update.mockResolvedValue({ ...dto, clienteId: BigInt(1), deletedAt: null });
+      mockPrismaService.clientes.update.mockResolvedValue({
+        ...dto,
+        clienteId: BigInt(1),
+        deletedAt: null,
+      });
 
       const result = await useCase.execute(dto);
 
@@ -110,7 +121,10 @@ describe('CreateCustomerUseCase', () => {
       };
 
       mockPrismaService.clientes.findMany.mockResolvedValue([]);
-      mockPrismaService.clientes.create.mockResolvedValue({ clienteId: BigInt(1), identificacion: '9999999999999' });
+      mockPrismaService.clientes.create.mockResolvedValue({
+        clienteId: BigInt(1),
+        identificacion: '9999999999999',
+      });
 
       const result = await useCase.execute(dto);
 
@@ -124,8 +138,16 @@ describe('CreateCustomerUseCase', () => {
       };
 
       const mockConsumidores = [
-        { clienteId: BigInt(1), tipoIdentificacion: TipoIdentificacion.CONSUMIDOR_FINAL, createdAt: new Date() },
-        { clienteId: BigInt(2), tipoIdentificacion: TipoIdentificacion.CONSUMIDOR_FINAL, createdAt: new Date() },
+        {
+          clienteId: BigInt(1),
+          tipoIdentificacion: TipoIdentificacion.CONSUMIDOR_FINAL,
+          createdAt: new Date(),
+        },
+        {
+          clienteId: BigInt(2),
+          tipoIdentificacion: TipoIdentificacion.CONSUMIDOR_FINAL,
+          createdAt: new Date(),
+        },
       ];
 
       mockPrismaService.clientes.findMany.mockResolvedValue(mockConsumidores);
@@ -136,9 +158,11 @@ describe('CreateCustomerUseCase', () => {
 
       expect(result.message).toContain('reactivado correctamente');
       expect(mockPrismaService.clientes.updateMany).toHaveBeenCalled();
-      expect(mockPrismaService.clientes.update).toHaveBeenCalledWith(expect.objectContaining({
-        where: { clienteId: BigInt(1) }
-      }));
+      expect(mockPrismaService.clientes.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { clienteId: BigInt(1) },
+        }),
+      );
     });
 
     it('should throw BadRequestException if identification is invalid', async () => {

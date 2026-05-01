@@ -24,7 +24,16 @@ describe('RolesService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         RolesService,
-        { provide: PrismaService, useValue: { roles: { findMany: jest.fn(), findUnique: jest.fn(), update: jest.fn() } } },
+        {
+          provide: PrismaService,
+          useValue: {
+            roles: {
+              findMany: jest.fn(),
+              findUnique: jest.fn(),
+              update: jest.fn(),
+            },
+          },
+        },
         { provide: CreateRoleUseCase, useValue: mockUseCase },
         { provide: GetRolePermissionsUseCase, useValue: mockUseCase },
         { provide: AssignPermissionToRoleUseCase, useValue: mockUseCase },
@@ -36,11 +45,21 @@ describe('RolesService', () => {
 
     service = module.get<RolesService>(RolesService);
     createUseCase = module.get<CreateRoleUseCase>(CreateRoleUseCase);
-    getPermissionsUseCase = module.get<GetRolePermissionsUseCase>(GetRolePermissionsUseCase);
-    assignPermissionUseCase = module.get<AssignPermissionToRoleUseCase>(AssignPermissionToRoleUseCase);
-    removePermissionUseCase = module.get<RemovePermissionFromRoleUseCase>(RemovePermissionFromRoleUseCase);
-    getChildrenUseCase = module.get<GetRoleChildrenUseCase>(GetRoleChildrenUseCase);
-    setChildrenUseCase = module.get<SetRoleChildrenUseCase>(SetRoleChildrenUseCase);
+    getPermissionsUseCase = module.get<GetRolePermissionsUseCase>(
+      GetRolePermissionsUseCase,
+    );
+    assignPermissionUseCase = module.get<AssignPermissionToRoleUseCase>(
+      AssignPermissionToRoleUseCase,
+    );
+    removePermissionUseCase = module.get<RemovePermissionFromRoleUseCase>(
+      RemovePermissionFromRoleUseCase,
+    );
+    getChildrenUseCase = module.get<GetRoleChildrenUseCase>(
+      GetRoleChildrenUseCase,
+    );
+    setChildrenUseCase = module.get<SetRoleChildrenUseCase>(
+      SetRoleChildrenUseCase,
+    );
   });
 
   it('should delegate create to CreateRoleUseCase', async () => {

@@ -30,7 +30,10 @@ export class ContratoMedidorController {
     private readonly contratoMedidorService: ContratoMedidorService,
   ) {}
 
-  @ApiOperation({ summary: 'Crear contrato', description: 'Registra un nuevo contrato con medidor' })
+  @ApiOperation({
+    summary: 'Crear contrato',
+    description: 'Registra un nuevo contrato con medidor',
+  })
   @ApiBody({ type: CrearContratoMedidorDto, description: 'Datos del contrato' })
   @ApiResponse({ status: 201, description: 'Contrato creado' })
   @ApiResponse({ status: 400, description: 'Datos inválidos' })
@@ -42,11 +45,34 @@ export class ContratoMedidorController {
     return this.contratoMedidorService.crearContrato(createDto);
   }
 
-  @ApiOperation({ summary: 'Listar contratos', description: 'Retorna lista de contratos' })
-  @ApiQuery({ name: 'skip', description: 'Registros a omitir', required: false, type: Number })
-  @ApiQuery({ name: 'take', description: 'Límite de registros', required: false, type: Number })
-  @ApiQuery({ name: 'contratoId', description: 'Filtrar por ID de contrato', required: false, type: String })
-  @ApiQuery({ name: 'medidorId', description: 'Filtrar por ID de medidor', required: false, type: String })
+  @ApiOperation({
+    summary: 'Listar contratos',
+    description: 'Retorna lista de contratos',
+  })
+  @ApiQuery({
+    name: 'skip',
+    description: 'Registros a omitir',
+    required: false,
+    type: Number,
+  })
+  @ApiQuery({
+    name: 'take',
+    description: 'Límite de registros',
+    required: false,
+    type: Number,
+  })
+  @ApiQuery({
+    name: 'contratoId',
+    description: 'Filtrar por ID de contrato',
+    required: false,
+    type: String,
+  })
+  @ApiQuery({
+    name: 'medidorId',
+    description: 'Filtrar por ID de medidor',
+    required: false,
+    type: String,
+  })
   @ApiResponse({ status: 200, description: 'Lista de contratos' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @RequiredPermission('contracts', 'read')
@@ -67,8 +93,16 @@ export class ContratoMedidorController {
     });
   }
 
-  @ApiOperation({ summary: 'Obtener contrato', description: 'Retorna un contrato por ID' })
-  @ApiParam({ name: 'id', description: 'ID del contrato', type: String, example: '1' })
+  @ApiOperation({
+    summary: 'Obtener contrato',
+    description: 'Retorna un contrato por ID',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'ID del contrato',
+    type: String,
+    example: '1',
+  })
   @ApiResponse({ status: 200, description: 'Contrato encontrado' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({ status: 404, description: 'Contrato no encontrado' })
@@ -78,9 +112,20 @@ export class ContratoMedidorController {
     return this.contratoMedidorService.buscarContrato(BigInt(id));
   }
 
-  @ApiOperation({ summary: 'Actualizar contrato', description: 'Actualiza un contrato' })
-  @ApiParam({ name: 'id', description: 'ID del contrato', type: String, example: '1' })
-  @ApiBody({ type: ActualizarContratoMedidorDto, description: 'Datos a actualizar' })
+  @ApiOperation({
+    summary: 'Actualizar contrato',
+    description: 'Actualiza un contrato',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'ID del contrato',
+    type: String,
+    example: '1',
+  })
+  @ApiBody({
+    type: ActualizarContratoMedidorDto,
+    description: 'Datos a actualizar',
+  })
   @ApiResponse({ status: 200, description: 'Contrato actualizado' })
   @ApiResponse({ status: 400, description: 'Datos inválidos' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
@@ -95,8 +140,16 @@ export class ContratoMedidorController {
     return this.contratoMedidorService.actualizar(BigInt(id), updateDto);
   }
 
-  @ApiOperation({ summary: 'Finalizar vínculo', description: 'Finaliza el vínculo entre contrato y medidor' })
-  @ApiParam({ name: 'id', description: 'ID del contrato', type: String, example: '1' })
+  @ApiOperation({
+    summary: 'Finalizar vínculo',
+    description: 'Finaliza el vínculo entre contrato y medidor',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'ID del contrato',
+    type: String,
+    example: '1',
+  })
   @ApiResponse({ status: 200, description: 'Vínculo finalizado' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({ status: 404, description: 'Contrato no encontrado' })
@@ -106,8 +159,16 @@ export class ContratoMedidorController {
     return this.contratoMedidorService.finalizarVinculo(BigInt(id));
   }
 
-  @ApiOperation({ summary: 'Eliminar contrato', description: 'Elimina un contrato (soft delete)' })
-  @ApiParam({ name: 'id', description: 'ID del contrato', type: String, example: '1' })
+  @ApiOperation({
+    summary: 'Eliminar contrato',
+    description: 'Elimina un contrato (soft delete)',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'ID del contrato',
+    type: String,
+    example: '1',
+  })
   @ApiResponse({ status: 200, description: 'Contrato eliminado' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({ status: 403, description: 'Sin permiso contracts:delete' })

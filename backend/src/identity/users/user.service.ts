@@ -77,7 +77,10 @@ export class UserService {
     return users.map((user) => ({
       usersId: user.usersId,
       email: user.email,
-      roles: user.role && !user.role.deletedAt ? [{ rolesId: user.role.rolesId, name: user.role.name }] : [],
+      roles:
+        user.role && !user.role.deletedAt
+          ? [{ rolesId: user.role.rolesId, name: user.role.name }]
+          : [],
     }));
   }
 
@@ -91,7 +94,9 @@ export class UserService {
   }) {
     const updateData = { ...params.data };
     if (updateData.password) {
-      updateData.password = await this.ensureHashedPassword(updateData.password as string);
+      updateData.password = await this.ensureHashedPassword(
+        updateData.password as string,
+      );
     }
     return this.prisma.users.update({
       where: params.where,
@@ -128,9 +133,12 @@ export class UserService {
         role: { select: { rolesId: true, name: true, deletedAt: true } },
       },
     });
-    if (!user || user.deletedAt) throw new NotFoundException('Usuario eliminado o no encontrado');
+    if (!user || user.deletedAt)
+      throw new NotFoundException('Usuario eliminado o no encontrado');
     if (!user.role || user.role.deletedAt || !user.rolesId) return [];
-    return [{ usersId: user.usersId, rolesId: user.rolesId, name: user.role.name }];
+    return [
+      { usersId: user.usersId, rolesId: user.rolesId, name: user.role.name },
+    ];
   }
 
   async assignRoleToUser(usersId: number, rolesId: number) {
@@ -142,19 +150,32 @@ export class UserService {
       where: { usersId },
       select: { usersId: true, deletedAt: true, rolesId: true },
     });
-    if (!user || user.deletedAt) throw new NotFoundException('Usuario no encontrado o eliminado');
-    if (!user.rolesId) throw new ConflictException('El usuario ya no tiene rol asignado');
-    return this.prisma.users.update({ where: { usersId }, data: { rolesId: null } });
+    if (!user || user.deletedAt)
+      throw new NotFoundException('Usuario no encontrado o eliminado');
+    if (!user.rolesId)
+      throw new ConflictException('El usuario ya no tiene rol asignado');
+    return this.prisma.users.update({
+      where: { usersId },
+      data: { rolesId: null },
+    });
   }
 
   async getDirectPermissionsByUserId(usersId: number) {
     const user = await this.prisma.users.findUnique({ where: { usersId } });
-    if (!user || user.deletedAt) throw new NotFoundException('Usuario no encontrado o eliminado');
+    if (!user || user.deletedAt)
+      throw new NotFoundException('Usuario no encontrado o eliminado');
 
     const assignments = await this.prisma.userPermissions.findMany({
       where: { usersId, deletedAt: null, Permissions: { deletedAt: null } },
-      orderBy: [{ Permissions: { resource: 'asc' } }, { Permissions: { action: 'asc' } }],
-      include: { Permissions: { select: { permissionsId: true, resource: true, action: true } } },
+      orderBy: [
+        { Permissions: { resource: 'asc' } },
+        { Permissions: { action: 'asc' } },
+      ],
+      include: {
+        Permissions: {
+          select: { permissionsId: true, resource: true, action: true },
+        },
+      },
     });
 
     return assignments.map((assignment) => ({
@@ -166,7 +187,11 @@ export class UserService {
     }));
   }
 
-  async assignPermissionToUser(usersId: number, permissionsId: number, allow = true) {
+  async assignPermissionToUser(
+    usersId: number,
+    permissionsId: number,
+    allow = true,
+  ) {
     return this.assignPermissionUseCase.execute(usersId, permissionsId, allow);
   }
 

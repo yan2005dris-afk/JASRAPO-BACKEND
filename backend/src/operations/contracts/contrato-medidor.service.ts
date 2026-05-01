@@ -36,7 +36,10 @@ export class ContratoMedidorService {
     return this.findOneUseCase.execute(id);
   }
 
-  async actualizar(id: bigint, updateDto: ActualizarContratoMedidorDto): Promise<any> {
+  async actualizar(
+    id: bigint,
+    updateDto: ActualizarContratoMedidorDto,
+  ): Promise<any> {
     return this.updateUseCase.execute(id, updateDto);
   }
 

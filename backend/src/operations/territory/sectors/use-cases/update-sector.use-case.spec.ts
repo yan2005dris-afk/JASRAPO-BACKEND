@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { UpdateSectorUseCase } from './update-sector.use-case';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 
@@ -34,7 +35,11 @@ describe('UpdateSectorUseCase', () => {
 
   it('should update a sector successfully', async () => {
     const dto = { nombre: 'Sector Updated' };
-    const mockUpdatedSector = { sectorId: 1, nombre: 'Sector Updated', comunidadId: 1 };
+    const mockUpdatedSector = {
+      sectorId: 1,
+      nombre: 'Sector Updated',
+      comunidadId: 1,
+    };
     mockPrismaService.sectores.update.mockResolvedValue(mockUpdatedSector);
 
     const result = await useCase.execute(1, dto as any);

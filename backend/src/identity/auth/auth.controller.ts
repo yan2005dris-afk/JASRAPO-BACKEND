@@ -108,11 +108,6 @@ export class AuthController {
     const userAgentHeader = req.headers['user-agent'];
     const userAgent =
       typeof userAgentHeader === 'string' ? userAgentHeader : 'unknown';
-    const existingRefreshToken =
-      typeof existingRefreshTokenValue === 'string'
-        ? existingRefreshTokenValue
-        : undefined;
-
     const result = await this.authService.login(loginUserDto, ip, userAgent);
 
     // Solo guardar refreshToken en cookie, accessToken va en el payload
@@ -221,10 +216,10 @@ export class AuthController {
   @UseGuards(JwtRefreshGuard)
   @Post('logout')
   async logout(@Req() req: RefreshRequest, @Res() res: Response) {
-    const { sessionsId, sub: userId } = req.user;
+    const { sessionsId } = req.user;
 
     // Marcar la sesión como revocada en BD
-    await this.authService.logout(sessionsId, userId);
+    await this.authService.logout(sessionsId);
 
     res.clearCookie('refreshToken', {
       httpOnly: true,

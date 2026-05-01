@@ -34,7 +34,12 @@ describe('BusquedaPublicaService', () => {
       const page = 1;
       const limit = 10;
       await service.search(tipo, valor, page, limit);
-      expect(publicSearchUseCase.execute).toHaveBeenCalledWith(tipo, valor, page, limit);
+      expect(publicSearchUseCase.execute).toHaveBeenCalledWith(
+        tipo,
+        valor,
+        page,
+        limit,
+      );
     });
   });
 });

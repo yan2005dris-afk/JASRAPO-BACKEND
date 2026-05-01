@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { UpdateProfileUseCase } from './update-profile.use-case';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 
@@ -30,7 +31,10 @@ describe('UpdateProfileUseCase', () => {
   it('should update existing profile', async () => {
     const userId = 1;
     const dto = { firstName: 'Jane' };
-    (prisma.profiles.findUnique as jest.Mock).mockResolvedValue({ id: 1, usersId: userId });
+    (prisma.profiles.findUnique as jest.Mock).mockResolvedValue({
+      id: 1,
+      usersId: userId,
+    });
     (prisma.profiles.update as jest.Mock).mockResolvedValue({ id: 1, ...dto });
 
     const result = await useCase.execute(userId, dto as any);

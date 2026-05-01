@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { ComunidadService } from './comunidad.service';
 import { CreateCommunityUseCase } from './use-cases/create-community.use-case';
 import { UpdateCommunityUseCase } from './use-cases/update-community.use-case';
@@ -44,7 +45,9 @@ describe('ComunidadService', () => {
     service = module.get<ComunidadService>(ComunidadService);
     createUseCase = module.get<CreateCommunityUseCase>(CreateCommunityUseCase);
     updateUseCase = module.get<UpdateCommunityUseCase>(UpdateCommunityUseCase);
-    getAllUseCase = module.get<GetAllCommunitiesUseCase>(GetAllCommunitiesUseCase);
+    getAllUseCase = module.get<GetAllCommunitiesUseCase>(
+      GetAllCommunitiesUseCase,
+    );
     getOneUseCase = module.get<GetCommunityUseCase>(GetCommunityUseCase);
     deleteUseCase = module.get<DeleteCommunityUseCase>(DeleteCommunityUseCase);
   });

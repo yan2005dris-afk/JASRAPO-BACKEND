@@ -21,24 +21,31 @@ export class GetEffectivePermissionsUseCase {
       throw new NotFoundException('Usuario eliminado o no encontrado');
     }
 
-    const directRoleIds = user.role && !user.role.deletedAt ? [user.role.rolesId] : [];
+    const directRoleIds =
+      user.role && !user.role.deletedAt ? [user.role.rolesId] : [];
     const allRoleIds = await this.resolveRoleHierarchy(directRoleIds);
 
-    const rolePermissionAssignments = allRoleIds.length === 0
-      ? []
-      : await this.prisma.rolPermissions.findMany({
-          where: {
-            deletedAt: null,
-            rolesId: { in: allRoleIds },
-            permissions: { deletedAt: null },
-          },
-          include: { permissions: { select: { resource: true, action: true } } },
-        });
+    const rolePermissionAssignments =
+      allRoleIds.length === 0
+        ? []
+        : await this.prisma.rolPermissions.findMany({
+            where: {
+              deletedAt: null,
+              rolesId: { in: allRoleIds },
+              permissions: { deletedAt: null },
+            },
+            include: {
+              permissions: { select: { resource: true, action: true } },
+            },
+          });
 
     const effectivePermissionsMap = new Map<string, boolean>();
 
     rolePermissionAssignments.forEach((rp) => {
-      effectivePermissionsMap.set(`${rp.permissions.resource}:${rp.permissions.action}`, true);
+      effectivePermissionsMap.set(
+        `${rp.permissions.resource}:${rp.permissions.action}`,
+        true,
+      );
     });
 
     user.userPermissions.forEach((up) => {
@@ -58,10 +65,16 @@ export class GetEffectivePermissionsUseCase {
     });
   }
 
-  private async resolveRoleHierarchy(initialRoleIds: number[]): Promise<number[]> {
+  private async resolveRoleHierarchy(
+    initialRoleIds: number[],
+  ): Promise<number[]> {
     if (initialRoleIds.length === 0) return [];
     const edges = await this.prisma.rolesHeredados.findMany({
-      where: { deletedAt: null, parentRole: { deletedAt: null }, childRole: { deletedAt: null } },
+      where: {
+        deletedAt: null,
+        parentRole: { deletedAt: null },
+        childRole: { deletedAt: null },
+      },
       select: { parentRoleId: true, childRoleId: true },
     });
 

@@ -6,7 +6,10 @@ import { ActualizarContratoMedidorDto } from '../dto/update-contrato-medidor.dto
 export class UpdateContractUseCase {
   constructor(private readonly prisma: PrismaService) {}
 
-  async execute(id: bigint, updateDto: ActualizarContratoMedidorDto): Promise<any> {
+  async execute(
+    id: bigint,
+    updateDto: ActualizarContratoMedidorDto,
+  ): Promise<any> {
     const registro = await this.prisma.contratos.findUnique({
       where: { contratoId: id },
     });

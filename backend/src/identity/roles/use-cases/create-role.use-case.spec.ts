@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { CreateRoleUseCase } from './create-role.use-case';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { NotFoundException } from '@nestjs/common';
@@ -46,7 +47,10 @@ describe('CreateRoleUseCase', () => {
 
   it('should create a role with children', async () => {
     const dto = { name: 'Manager', childRoleIds: [2, 3] };
-    mockPrisma.roles.findMany.mockResolvedValue([{ rolesId: 2 }, { rolesId: 3 }]);
+    mockPrisma.roles.findMany.mockResolvedValue([
+      { rolesId: 2 },
+      { rolesId: 3 },
+    ]);
     mockPrisma.roles.create.mockResolvedValue({ rolesId: 1, name: 'Manager' });
 
     const result = await useCase.execute(dto);

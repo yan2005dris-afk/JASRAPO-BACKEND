@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { ListAvailableAvatarsUseCase } from './list-available-avatars.use-case';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { MinioService } from '../../../infrastructure/storage/minio.service';
@@ -30,15 +31,22 @@ describe('ListAvailableAvatarsUseCase', () => {
       ],
     }).compile();
 
-    useCase = module.get<ListAvailableAvatarsUseCase>(ListAvailableAvatarsUseCase);
+    useCase = module.get<ListAvailableAvatarsUseCase>(
+      ListAvailableAvatarsUseCase,
+    );
     prisma = module.get<PrismaService>(PrismaService);
     minio = module.get<MinioService>(MinioService);
   });
 
   it('should list available avatars', async () => {
     const userId = 1;
-    (minio.listFiles as jest.Mock).mockResolvedValue(['avatar_profile_1_abc.png']);
-    (prisma.profiles.findUnique as jest.Mock).mockResolvedValue({ id: 1, avatar: { key: 'current.png' } });
+    (minio.listFiles as jest.Mock).mockResolvedValue([
+      'avatar_profile_1_abc.png',
+    ]);
+    (prisma.profiles.findUnique as jest.Mock).mockResolvedValue({
+      id: 1,
+      avatar: { key: 'current.png' },
+    });
     (minio.getPresignedUrl as jest.Mock).mockResolvedValue('http://url');
 
     const result = await useCase.execute(userId);

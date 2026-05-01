@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { IdentityModule } from './identity/identity.module';
 import { DatabaseModule } from './infrastructure/database/prisma.module';
@@ -10,7 +10,6 @@ import { BillingModule } from './billing/billing.module';
 import { OperationsModule } from './operations/operations.module';
 import { PublicPortalModule } from './public-portal/public-portal.module';
 import { ObservabilityModule } from './infrastructure/observability/observability.module';
-import { LoggingInterceptor } from './infrastructure/observability/interceptors/logging.interceptor';
 
 @Module({
   imports: [

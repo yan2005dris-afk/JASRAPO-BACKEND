@@ -39,7 +39,8 @@ export class ClientController {
   })
   @ApiQuery({
     name: 'tipo',
-    description: 'Tipo de búsqueda: identificacion, nombres, apellidos, nombreCompleto',
+    description:
+      'Tipo de búsqueda: identificacion, nombres, apellidos, nombreCompleto',
     enum: ['identificacion', 'nombres', 'apellidos', 'nombreCompleto'],
     required: true,
     example: 'identificacion',
@@ -84,7 +85,10 @@ export class ClientController {
   /**
    * Crear un nuevo cliente
    */
-  @ApiOperation({ summary: 'Crear cliente', description: 'Registra un nuevo cliente en el sistema' })
+  @ApiOperation({
+    summary: 'Crear cliente',
+    description: 'Registra un nuevo cliente en el sistema',
+  })
   @ApiBody({ type: CreateClientDto, description: 'Datos del cliente' })
   @ApiResponse({ status: 201, description: 'Cliente creado' })
   @ApiResponse({ status: 400, description: 'Datos inválidos' })
@@ -99,7 +103,10 @@ export class ClientController {
   /**
    * Listar todos los clientes
    */
-  @ApiOperation({ summary: 'Listar clientes', description: 'Retorna todos los clientes' })
+  @ApiOperation({
+    summary: 'Listar clientes',
+    description: 'Retorna todos los clientes',
+  })
   @ApiResponse({ status: 200, description: 'Lista de clientes' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({ status: 403, description: 'Sin permiso clientes:read' })
@@ -112,8 +119,16 @@ export class ClientController {
   /**
    * Obtener un cliente por ID
    */
-  @ApiOperation({ summary: 'Obtener cliente', description: 'Retorna los datos de un cliente específico' })
-  @ApiParam({ name: 'id', description: 'ID único del cliente', type: String, example: '1' })
+  @ApiOperation({
+    summary: 'Obtener cliente',
+    description: 'Retorna los datos de un cliente específico',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'ID único del cliente',
+    type: String,
+    example: '1',
+  })
   @ApiResponse({ status: 200, description: 'Cliente encontrado' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({ status: 403, description: 'Sin permiso clientes:read' })
@@ -127,8 +142,16 @@ export class ClientController {
   /**
    * Actualizar un cliente
    */
-  @ApiOperation({ summary: 'Actualizar cliente', description: 'Actualiza los datos de un cliente' })
-  @ApiParam({ name: 'id', description: 'ID único del cliente', type: String, example: '1' })
+  @ApiOperation({
+    summary: 'Actualizar cliente',
+    description: 'Actualiza los datos de un cliente',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'ID único del cliente',
+    type: String,
+    example: '1',
+  })
   @ApiBody({ type: UpdateClientDto, description: 'Datos a actualizar' })
   @ApiResponse({ status: 200, description: 'Cliente actualizado' })
   @ApiResponse({ status: 400, description: 'Datos inválidos' })
@@ -144,8 +167,16 @@ export class ClientController {
   /**
    * Eliminar un cliente (Soft Delete)
    */
-  @ApiOperation({ summary: 'Eliminar cliente', description: 'Marca un cliente como eliminado (soft delete)' })
-  @ApiParam({ name: 'id', description: 'ID único del cliente', type: String, example: '1' })
+  @ApiOperation({
+    summary: 'Eliminar cliente',
+    description: 'Marca un cliente como eliminado (soft delete)',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'ID único del cliente',
+    type: String,
+    example: '1',
+  })
   @ApiResponse({ status: 200, description: 'Cliente eliminado' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({ status: 403, description: 'Sin permiso clientes:delete' })

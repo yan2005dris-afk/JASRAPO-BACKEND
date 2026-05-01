@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { UpdatePermissionUseCase } from './update-permission.use-case';
 
@@ -33,7 +34,9 @@ describe('UpdatePermissionUseCase', () => {
     const id = 1;
     const dto = { resource: 'test', action: 'test' };
     const expectedResult = { permissionsId: id, ...dto };
-    (prismaService.permissions.update as jest.fn).mockResolvedValue(expectedResult);
+    (prismaService.permissions.update as jest.fn).mockResolvedValue(
+      expectedResult,
+    );
 
     const result = await useCase.execute(id, dto);
 

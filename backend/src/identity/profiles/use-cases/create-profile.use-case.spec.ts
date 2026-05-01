@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { CreateProfileUseCase } from './create-profile.use-case';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { ConflictException } from '@nestjs/common';
@@ -30,13 +31,19 @@ describe('CreateProfileUseCase', () => {
   it('should create a profile if it does not exist', async () => {
     const userId = 1;
     const dto = { firstName: 'John', lastName: 'Doe', phone: '123456' };
-    
+
     (prisma.profiles.findUnique as jest.Mock).mockResolvedValue(null);
-    (prisma.profiles.create as jest.Mock).mockResolvedValue({ id: 1, ...dto, usersId: userId });
+    (prisma.profiles.create as jest.Mock).mockResolvedValue({
+      id: 1,
+      ...dto,
+      usersId: userId,
+    });
 
     const result = await useCase.execute(userId, dto);
 
-    expect(prisma.profiles.findUnique).toHaveBeenCalledWith({ where: { usersId: userId } });
+    expect(prisma.profiles.findUnique).toHaveBeenCalledWith({
+      where: { usersId: userId },
+    });
     expect(prisma.profiles.create).toHaveBeenCalledWith({
       data: {
         usersId: userId,
@@ -52,10 +59,15 @@ describe('CreateProfileUseCase', () => {
   it('should throw ConflictException if profile already exists', async () => {
     const userId = 1;
     const dto = { firstName: 'John', lastName: 'Doe' };
-    
-    (prisma.profiles.findUnique as jest.Mock).mockResolvedValue({ id: 1, usersId: userId });
 
-    await expect(useCase.execute(userId, dto as any)).rejects.toThrow(ConflictException);
+    (prisma.profiles.findUnique as jest.Mock).mockResolvedValue({
+      id: 1,
+      usersId: userId,
+    });
+
+    await expect(useCase.execute(userId, dto as any)).rejects.toThrow(
+      ConflictException,
+    );
     expect(prisma.profiles.create).not.toHaveBeenCalled();
   });
 });

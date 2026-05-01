@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { FindAllReadingsUseCase } from './find-all-readings.use-case';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 
@@ -40,7 +41,9 @@ describe('FindAllReadingsUseCase', () => {
   });
 
   it('should apply pagination', async () => {
-    mockPrismaService.lecturas.findMany.mockResolvedValue([mockReadings[0]] as any);
+    mockPrismaService.lecturas.findMany.mockResolvedValue([
+      mockReadings[0],
+    ] as any);
 
     const result = await useCase.execute({ skip: 0, take: 1 });
 

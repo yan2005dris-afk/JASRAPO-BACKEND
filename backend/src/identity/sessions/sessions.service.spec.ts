@@ -57,7 +57,9 @@ describe('SessionsService', () => {
     getUseCase = module.get<GetSessionUseCase>(GetSessionUseCase);
     updateUseCase = module.get<UpdateSessionUseCase>(UpdateSessionUseCase);
     revokeUseCase = module.get<RevokeSessionUseCase>(RevokeSessionUseCase);
-    listByUserUseCase = module.get<ListSessionsByUserUseCase>(ListSessionsByUserUseCase);
+    listByUserUseCase = module.get<ListSessionsByUserUseCase>(
+      ListSessionsByUserUseCase,
+    );
     prisma = module.get<PrismaService>(PrismaService);
   });
 
@@ -78,7 +80,9 @@ describe('SessionsService', () => {
 
   it('should directly call prisma for getSessionById', async () => {
     await service.getSessionById('abc');
-    expect(prisma.sessions.findUnique).toHaveBeenCalledWith({ where: { sessionsId: 'abc' } });
+    expect(prisma.sessions.findUnique).toHaveBeenCalledWith({
+      where: { sessionsId: 'abc' },
+    });
   });
 
   it('should delegate updateSession', async () => {

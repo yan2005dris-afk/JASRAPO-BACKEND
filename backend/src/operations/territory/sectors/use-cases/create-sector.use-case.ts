@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { CreateSectorDto } from '../dto/create-sector.dto';
 
@@ -26,7 +30,9 @@ export class CreateSectorUseCase {
       };
     } catch (error: any) {
       if (error.code === 'P2002') {
-        throw new ConflictException('El sector ya existe (código o ID duplicado).');
+        throw new ConflictException(
+          'El sector ya existe (código o ID duplicado).',
+        );
       }
       throw error;
     }

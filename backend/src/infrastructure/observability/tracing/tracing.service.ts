@@ -1,4 +1,9 @@
-import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  OnModuleInit,
+  OnModuleDestroy,
+  Logger,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
@@ -18,10 +23,15 @@ export class TracingService implements OnModuleInit, OnModuleDestroy {
   constructor(private readonly configService: ConfigService) {}
 
   async onModuleInit(): Promise<void> {
-    const metricsEnabled = this.configService.get<boolean>('OTEL_METRICS_ENABLED', false);
-    
+    const metricsEnabled = this.configService.get<boolean>(
+      'OTEL_METRICS_ENABLED',
+      false,
+    );
+
     if (!metricsEnabled) {
-      this.logger.warn('OpenTelemetry tracing is disabled. Set OTEL_METRICS_ENABLED=true to enable.');
+      this.logger.warn(
+        'OpenTelemetry tracing is disabled. Set OTEL_METRICS_ENABLED=true to enable.',
+      );
       return;
     }
 
@@ -36,7 +46,9 @@ export class TracingService implements OnModuleInit, OnModuleDestroy {
     const config = getTracingConfig(this.configService);
     const sampler = createSampler(this.configService);
 
-    this.logger.log(`Initializing OpenTelemetry with endpoint: ${config.otlpEndpoint}`);
+    this.logger.log(
+      `Initializing OpenTelemetry with endpoint: ${config.otlpEndpoint}`,
+    );
 
     const traceExporter = new OTLPTraceExporter({
       url: `${config.otlpEndpoint}/v1/traces`,
@@ -45,7 +57,8 @@ export class TracingService implements OnModuleInit, OnModuleDestroy {
     this.sdk = new NodeSDK({
       resource: resourceFromAttributes({
         [SemanticResourceAttributes.SERVICE_NAME]: config.serviceName,
-        [SemanticResourceAttributes.DEPLOYMENT_ENVIRONMENT]: this.configService.get<string>('NODE_ENV', 'development'),
+        [SemanticResourceAttributes.DEPLOYMENT_ENVIRONMENT]:
+          this.configService.get<string>('NODE_ENV', 'development'),
       }),
       traceExporter,
       sampler,
@@ -63,7 +76,7 @@ export class TracingService implements OnModuleInit, OnModuleDestroy {
       ],
     });
 
-    await this.sdk.start();
+    this.sdk.start();
     this.logger.log('OpenTelemetry SDK started successfully');
   }
 
@@ -75,6 +88,9 @@ export class TracingService implements OnModuleInit, OnModuleDestroy {
   }
 
   isEnabled(): boolean {
-    return this.configService.get<boolean>('OTEL_METRICS_ENABLED', false) && this.sdk !== null;
+    return (
+      this.configService.get<boolean>('OTEL_METRICS_ENABLED', false) &&
+      this.sdk !== null
+    );
   }
 }

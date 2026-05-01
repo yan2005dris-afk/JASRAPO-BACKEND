@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { CreateTariffCategoryUseCase } from './create-tariff-category.use-case';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { ConflictException } from '@nestjs/common';
@@ -25,7 +26,9 @@ describe('CreateTariffCategoryUseCase', () => {
       ],
     }).compile();
 
-    useCase = module.get<CreateTariffCategoryUseCase>(CreateTariffCategoryUseCase);
+    useCase = module.get<CreateTariffCategoryUseCase>(
+      CreateTariffCategoryUseCase,
+    );
     prisma = module.get<PrismaService>(PrismaService);
   });
 
@@ -63,9 +66,14 @@ describe('CreateTariffCategoryUseCase', () => {
 
   it('should throw ConflictException if category with same name exists', async () => {
     const dto = { nombre: 'Residencial' };
-    mockPrismaService.categoriaTarifa.findFirst.mockResolvedValue({ categoriaTarifaId: 1, nombre: 'Residencial' });
+    mockPrismaService.categoriaTarifa.findFirst.mockResolvedValue({
+      categoriaTarifaId: 1,
+      nombre: 'Residencial',
+    });
 
-    await expect(useCase.execute(dto as any)).rejects.toThrow(ConflictException);
+    await expect(useCase.execute(dto as any)).rejects.toThrow(
+      ConflictException,
+    );
     expect(mockPrismaService.categoriaTarifa.create).not.toHaveBeenCalled();
   });
 });

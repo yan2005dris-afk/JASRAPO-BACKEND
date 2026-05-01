@@ -7,10 +7,11 @@ import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 import { ThrottlerExceptionFilter } from './infrastructure/common/filters/throttler-exception.filter';
 import { BigIntInterceptor } from './infrastructure/common/interceptors/bigint.interceptor';
-import { TRUST_PROXY_HOPS, TRUST_PROXY_KEY } from './infrastructure/config/app.constants';
-import { ObservabilityModule } from './infrastructure/observability/observability.module';
+import {
+  TRUST_PROXY_HOPS,
+  TRUST_PROXY_KEY,
+} from './infrastructure/config/app.constants';
 import { LoggingInterceptor } from './infrastructure/observability/interceptors/logging.interceptor';
-import { MetricsService } from './infrastructure/observability/metrics/metrics.service';
 import { TracingService } from './infrastructure/observability/tracing/tracing.service';
 import { LoggerService } from './infrastructure/observability/logger/logger.service';
 
@@ -35,13 +36,9 @@ async function bootstrap() {
   const logger = app.get(LoggerService);
   app.useLogger(logger);
   const tracingService = app.get(TracingService);
-  const metricsService = app.get(MetricsService);
 
   logger.log('Observability initialized', 'Bootstrap');
-  logger.log(
-    `Tracing enabled: ${tracingService.isEnabled()}`,
-    'Bootstrap',
-  );
+  logger.log(`Tracing enabled: ${tracingService.isEnabled()}`, 'Bootstrap');
 
   app.setGlobalPrefix('api/v1');
 

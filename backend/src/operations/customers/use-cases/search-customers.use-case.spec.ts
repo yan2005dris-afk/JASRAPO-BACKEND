@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { SearchCustomersUseCase } from './search-customers.use-case';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { BadRequestException } from '@nestjs/common';
@@ -39,40 +40,45 @@ describe('SearchCustomersUseCase', () => {
       mockPrismaService.clientes.findMany.mockResolvedValue([]);
       await useCase.execute('identificacion', '092');
 
-      expect(mockPrismaService.clientes.findMany).toHaveBeenCalledWith(expect.objectContaining({
-        where: expect.objectContaining({
-          identificacion: { contains: '092', mode: 'insensitive' }
-        })
-      }));
+      expect(mockPrismaService.clientes.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            identificacion: { contains: '092', mode: 'insensitive' },
+          }),
+        }),
+      );
     });
 
     it('should throw BadRequestException if identification search term is too short', async () => {
-      await expect(useCase.execute('identificacion', '09')).rejects.toThrow(BadRequestException);
+      await expect(useCase.execute('identificacion', '09')).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should search by name', async () => {
       mockPrismaService.clientes.findMany.mockResolvedValue([]);
       await useCase.execute('nombres', 'John');
 
-      expect(mockPrismaService.clientes.findMany).toHaveBeenCalledWith(expect.objectContaining({
-        where: expect.objectContaining({
-          nombres: { contains: 'John', mode: 'insensitive' }
-        })
-      }));
+      expect(mockPrismaService.clientes.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            nombres: { contains: 'John', mode: 'insensitive' },
+          }),
+        }),
+      );
     });
 
     it('should search by full name', async () => {
       mockPrismaService.clientes.findMany.mockResolvedValue([]);
       await useCase.execute('nombreCompleto', 'John Doe');
 
-      expect(mockPrismaService.clientes.findMany).toHaveBeenCalledWith(expect.objectContaining({
-        where: expect.objectContaining({
-          AND: [
-            expect.any(Object),
-            expect.any(Object),
-          ]
-        })
-      }));
+      expect(mockPrismaService.clientes.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            AND: [expect.any(Object), expect.any(Object)],
+          }),
+        }),
+      );
     });
   });
 });

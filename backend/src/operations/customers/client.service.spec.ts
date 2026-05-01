@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { ClientService } from './client.service';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { CreateCustomerUseCase } from './use-cases/create-customer.use-case';
@@ -52,7 +53,10 @@ describe('ClientService', () => {
   });
 
   it('create should delegate to CreateCustomerUseCase', async () => {
-    const dto = { tipoIdentificacion: TipoIdentificacion.CEDULA, identificacion: '123' } as any;
+    const dto = {
+      tipoIdentificacion: TipoIdentificacion.CEDULA,
+      identificacion: '123',
+    } as any;
     await service.create(dto);
     expect(createUseCase.execute).toHaveBeenCalledWith(dto);
   });
@@ -81,6 +85,11 @@ describe('ClientService', () => {
 
   it('search should delegate to SearchCustomersUseCase', async () => {
     await service.search('identificacion', '123', 1, 10);
-    expect(searchUseCase.execute).toHaveBeenCalledWith('identificacion', '123', 1, 10);
+    expect(searchUseCase.execute).toHaveBeenCalledWith(
+      'identificacion',
+      '123',
+      1,
+      10,
+    );
   });
 });

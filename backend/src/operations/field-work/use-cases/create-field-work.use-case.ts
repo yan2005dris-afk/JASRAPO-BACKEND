@@ -7,7 +7,9 @@ import { NovedadOperativaEntity } from '../entities/novedad-operativa.entity';
 export class CreateFieldWorkUseCase {
   constructor(private readonly prisma: PrismaService) {}
 
-  async execute(createDto: CrearNovedadOperativaDto): Promise<NovedadOperativaEntity> {
+  async execute(
+    createDto: CrearNovedadOperativaDto,
+  ): Promise<NovedadOperativaEntity> {
     const novedad = await this.prisma.novedadOperativa.create({
       data: {
         lecturaId: BigInt(createDto.lecturaId),

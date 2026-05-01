@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 
 @Injectable()
@@ -10,8 +14,10 @@ export class RevokePermissionFromUserUseCase {
       where: { idUserPermissions },
     });
 
-    if (!userPermission) throw new NotFoundException('Asignación de permiso no encontrada');
-    if (userPermission.deletedAt) throw new ConflictException('Este permiso ya fue revocado previamente');
+    if (!userPermission)
+      throw new NotFoundException('Asignación de permiso no encontrada');
+    if (userPermission.deletedAt)
+      throw new ConflictException('Este permiso ya fue revocado previamente');
 
     return this.prisma.userPermissions.update({
       where: { idUserPermissions },

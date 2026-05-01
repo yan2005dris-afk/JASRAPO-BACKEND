@@ -29,11 +29,16 @@ export class SessionsService {
     private readonly listByUserUseCase: ListSessionsByUserUseCase,
   ) {}
 
-  async createSession(data: Prisma.SessionsCreateInput): Promise<SessionPostgres> {
+  async createSession(
+    data: Prisma.SessionsCreateInput,
+  ): Promise<SessionPostgres> {
     return this.createUseCase.execute(data);
   }
 
-  async getSession(usersId: number, sessionsId: string): Promise<SessionPostgres | null> {
+  async getSession(
+    usersId: number,
+    sessionsId: string,
+  ): Promise<SessionPostgres | null> {
     return this.getUseCase.execute(usersId, sessionsId);
   }
 
@@ -43,7 +48,10 @@ export class SessionsService {
     });
   }
 
-  async updateSession(sessionsId: string, data: Prisma.SessionsUpdateInput): Promise<SessionPostgres> {
+  async updateSession(
+    sessionsId: string,
+    data: Prisma.SessionsUpdateInput,
+  ): Promise<SessionPostgres> {
     return this.updateUseCase.execute(sessionsId, data);
   }
 

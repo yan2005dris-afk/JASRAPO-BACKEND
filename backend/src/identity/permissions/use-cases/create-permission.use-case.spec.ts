@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { CreatePermissionUseCase } from './create-permission.use-case';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 
@@ -26,7 +27,10 @@ describe('CreatePermissionUseCase', () => {
 
   it('should create a permission', async () => {
     const dto = { resource: 'Users', action: 'Read' };
-    mockPrisma.permissions.create.mockResolvedValue({ permissionsId: 1, ...dto });
+    mockPrisma.permissions.create.mockResolvedValue({
+      permissionsId: 1,
+      ...dto,
+    });
 
     const result = await useCase.execute(dto);
 

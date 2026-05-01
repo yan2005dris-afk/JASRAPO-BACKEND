@@ -7,12 +7,17 @@ export class DecommissionDeviceUseCase {
   constructor(private readonly prisma: PrismaService) {}
 
   async execute(medidorId: bigint, motivoBaja: string): Promise<Medidores> {
-    const medidor = await this.prisma.medidores.findUnique({ where: { medidorId } });
+    const medidor = await this.prisma.medidores.findUnique({
+      where: { medidorId },
+    });
 
-    if (!medidor || medidor.deletedAt) throw new BadRequestException('Medidor no encontrado');
+    if (!medidor || medidor.deletedAt)
+      throw new BadRequestException('Medidor no encontrado');
 
     if (medidor.estado !== EstadoMedidor.DANADO) {
-      throw new BadRequestException(`Un medidor debe estar DAÑADO antes de darse de baja`);
+      throw new BadRequestException(
+        `Un medidor debe estar DAÑADO antes de darse de baja`,
+      );
     }
 
     return await this.prisma.medidores.update({

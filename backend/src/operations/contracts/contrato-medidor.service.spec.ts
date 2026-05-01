@@ -27,7 +27,10 @@ describe('ContratoMedidorService', () => {
         { provide: FindOneContractUseCase, useValue: mockFindOneUseCase },
         { provide: UpdateContractUseCase, useValue: mockUpdateUseCase },
         { provide: RemoveContractUseCase, useValue: mockRemoveUseCase },
-        { provide: FinalizeMeterLinkUseCase, useValue: mockFinalizeLinkUseCase },
+        {
+          provide: FinalizeMeterLinkUseCase,
+          useValue: mockFinalizeLinkUseCase,
+        },
       ],
     }).compile();
 
@@ -46,9 +49,9 @@ describe('ContratoMedidorService', () => {
     it('should delegate to CreateContractLinkUseCase', async () => {
       const dto = { contratoId: '1', medidorId: '1' };
       mockCreateLinkUseCase.execute.mockResolvedValue({ id: 1 });
-      
+
       const result = await service.crearContrato(dto);
-      
+
       expect(result).toEqual({ id: 1 });
       expect(mockCreateLinkUseCase.execute).toHaveBeenCalledWith(dto);
     });
@@ -58,9 +61,9 @@ describe('ContratoMedidorService', () => {
     it('should delegate to FindAllContractsUseCase', async () => {
       const params = { skip: 0, take: 10 };
       mockFindAllUseCase.execute.mockResolvedValue([]);
-      
+
       const result = await service.buscarContratos(params);
-      
+
       expect(result).toEqual([]);
       expect(mockFindAllUseCase.execute).toHaveBeenCalledWith(params);
     });
@@ -70,9 +73,9 @@ describe('ContratoMedidorService', () => {
     it('should delegate to FindOneContractUseCase', async () => {
       const id = BigInt(1);
       mockFindOneUseCase.execute.mockResolvedValue({ id: 1 });
-      
+
       const result = await service.buscarContrato(id);
-      
+
       expect(result).toEqual({ id: 1 });
       expect(mockFindOneUseCase.execute).toHaveBeenCalledWith(id);
     });
@@ -83,9 +86,9 @@ describe('ContratoMedidorService', () => {
       const id = BigInt(1);
       const dto = { numeroGuia: 'NEW-GUIA' };
       mockUpdateUseCase.execute.mockResolvedValue({ id: 1 });
-      
+
       const result = await service.actualizar(id, dto);
-      
+
       expect(result).toEqual({ id: 1 });
       expect(mockUpdateUseCase.execute).toHaveBeenCalledWith(id, dto);
     });
@@ -95,9 +98,9 @@ describe('ContratoMedidorService', () => {
     it('should delegate to FinalizeMeterLinkUseCase', async () => {
       const id = BigInt(1);
       mockFinalizeLinkUseCase.execute.mockResolvedValue({ id: 1 });
-      
+
       const result = await service.finalizarVinculo(id);
-      
+
       expect(result).toEqual({ id: 1 });
       expect(mockFinalizeLinkUseCase.execute).toHaveBeenCalledWith(id);
     });
@@ -107,9 +110,9 @@ describe('ContratoMedidorService', () => {
     it('should delegate to RemoveContractUseCase', async () => {
       const id = BigInt(1);
       mockRemoveUseCase.execute.mockResolvedValue({ message: 'Deleted' });
-      
+
       const result = await service.eliminar(id);
-      
+
       expect(result).toEqual({ message: 'Deleted' });
       expect(mockRemoveUseCase.execute).toHaveBeenCalledWith(id);
     });

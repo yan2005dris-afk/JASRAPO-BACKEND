@@ -12,7 +12,9 @@ export class ListAvailableAvatarsUseCase {
 
   async execute(usersId: number) {
     const allFiles = await this.minioService.listFiles('avatars');
-    const userFiles = allFiles.filter((f) => f.startsWith(`avatar_profile_${usersId}_`));
+    const userFiles = allFiles.filter((f) =>
+      f.startsWith(`avatar_profile_${usersId}_`),
+    );
 
     const profile = await this.prisma.profiles.findUnique({
       where: { usersId },

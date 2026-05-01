@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { AssignRoleToUserUseCase } from './assign-role-to-user.use-case';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { NotFoundException, ConflictException } from '@nestjs/common';
@@ -34,8 +35,15 @@ describe('AssignRoleToUserUseCase', () => {
   });
 
   it('should assign role to user', async () => {
-    mockPrisma.users.findUnique.mockResolvedValue({ usersId: 1, deletedAt: null, rolesId: 2 });
-    mockPrisma.roles.findUnique.mockResolvedValue({ rolesId: 3, deletedAt: null });
+    mockPrisma.users.findUnique.mockResolvedValue({
+      usersId: 1,
+      deletedAt: null,
+      rolesId: 2,
+    });
+    mockPrisma.roles.findUnique.mockResolvedValue({
+      rolesId: 3,
+      deletedAt: null,
+    });
     mockPrisma.users.update.mockResolvedValue({ usersId: 1, rolesId: 3 });
 
     const result = await useCase.execute(1, 3);
@@ -54,15 +62,25 @@ describe('AssignRoleToUserUseCase', () => {
   });
 
   it('should throw NotFoundException if role not found', async () => {
-    mockPrisma.users.findUnique.mockResolvedValue({ usersId: 1, deletedAt: null });
+    mockPrisma.users.findUnique.mockResolvedValue({
+      usersId: 1,
+      deletedAt: null,
+    });
     mockPrisma.roles.findUnique.mockResolvedValue(null);
 
     await expect(useCase.execute(1, 3)).rejects.toThrow(NotFoundException);
   });
 
   it('should throw ConflictException if user already has the role', async () => {
-    mockPrisma.users.findUnique.mockResolvedValue({ usersId: 1, deletedAt: null, rolesId: 3 });
-    mockPrisma.roles.findUnique.mockResolvedValue({ rolesId: 3, deletedAt: null });
+    mockPrisma.users.findUnique.mockResolvedValue({
+      usersId: 1,
+      deletedAt: null,
+      rolesId: 3,
+    });
+    mockPrisma.roles.findUnique.mockResolvedValue({
+      rolesId: 3,
+      deletedAt: null,
+    });
 
     await expect(useCase.execute(1, 3)).rejects.toThrow(ConflictException);
   });

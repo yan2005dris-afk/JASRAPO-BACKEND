@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { SelectExistingAvatarUseCase } from './select-existing-avatar.use-case';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { MinioService } from '../../../infrastructure/storage/minio.service';
@@ -33,7 +34,9 @@ describe('SelectExistingAvatarUseCase', () => {
       ],
     }).compile();
 
-    useCase = module.get<SelectExistingAvatarUseCase>(SelectExistingAvatarUseCase);
+    useCase = module.get<SelectExistingAvatarUseCase>(
+      SelectExistingAvatarUseCase,
+    );
     prisma = module.get<PrismaService>(PrismaService);
     minio = module.get<MinioService>(MinioService);
   });
@@ -42,8 +45,14 @@ describe('SelectExistingAvatarUseCase', () => {
     const userId = 1;
     const key = 'existing.png';
     (minio.fileExists as jest.Mock).mockResolvedValue(true);
-    (minio.getFileMetadata as jest.Mock).mockResolvedValue({ contentType: 'image/png', size: 100 });
-    (prisma.profiles.findUnique as jest.Mock).mockResolvedValue({ id: 1, usersId: userId });
+    (minio.getFileMetadata as jest.Mock).mockResolvedValue({
+      contentType: 'image/png',
+      size: 100,
+    });
+    (prisma.profiles.findUnique as jest.Mock).mockResolvedValue({
+      id: 1,
+      usersId: userId,
+    });
 
     const result = await useCase.execute(userId, key);
 
@@ -53,7 +62,9 @@ describe('SelectExistingAvatarUseCase', () => {
 
   it('should throw NotFoundException if file does not exist in Minio', async () => {
     (minio.fileExists as jest.Mock).mockResolvedValue(false);
-    await expect(useCase.execute(1, 'non-existent.png')).rejects.toThrow(NotFoundException);
+    await expect(useCase.execute(1, 'non-existent.png')).rejects.toThrow(
+      NotFoundException,
+    );
   });
 
   it('should throw BadRequestException if key is not provided', async () => {

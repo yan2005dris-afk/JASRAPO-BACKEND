@@ -106,11 +106,7 @@ export class MetricsService {
   }
 
   // Helper methods for common operations
-  incrementHttpRequest(
-    method: string,
-    status: string,
-    route: string,
-  ): void {
+  incrementHttpRequest(method: string, status: string, route: string): void {
     this.httpRequestsTotal.inc({ method, status, route });
   }
 

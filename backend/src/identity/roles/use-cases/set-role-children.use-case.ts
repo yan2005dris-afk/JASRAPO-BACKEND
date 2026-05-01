@@ -8,7 +8,8 @@ export class SetRoleChildrenUseCase {
 
   async execute(rolesId: number, dto: SetRoleChildrenDto) {
     const role = await this.prisma.roles.findUnique({ where: { rolesId } });
-    if (!role || role.deletedAt) throw new NotFoundException('Rol no encontrado o eliminado');
+    if (!role || role.deletedAt)
+      throw new NotFoundException('Rol no encontrado o eliminado');
 
     const normalizedChildRoleIds = Array.from(
       new Set(
@@ -24,7 +25,11 @@ export class SetRoleChildrenUseCase {
 
     return this.prisma.$transaction(async (tx) => {
       await tx.rolesHeredados.updateMany({
-        where: { parentRoleId: rolesId, deletedAt: null, childRoleId: { notIn: normalizedChildRoleIds } },
+        where: {
+          parentRoleId: rolesId,
+          deletedAt: null,
+          childRoleId: { notIn: normalizedChildRoleIds },
+        },
         data: { deletedAt: new Date() },
       });
 
@@ -35,7 +40,9 @@ export class SetRoleChildrenUseCase {
         });
 
         if (!existing) {
-          await tx.rolesHeredados.create({ data: { parentRoleId: rolesId, childRoleId } });
+          await tx.rolesHeredados.create({
+            data: { parentRoleId: rolesId, childRoleId },
+          });
           continue;
         }
 
@@ -48,8 +55,16 @@ export class SetRoleChildrenUseCase {
       }
 
       return tx.rolesHeredados.findMany({
-        where: { parentRoleId: rolesId, deletedAt: null, childRole: { deletedAt: null } },
-        select: { roleHierarchyId: true, childRoleId: true, childRole: { select: { name: true } } },
+        where: {
+          parentRoleId: rolesId,
+          deletedAt: null,
+          childRole: { deletedAt: null },
+        },
+        select: {
+          roleHierarchyId: true,
+          childRoleId: true,
+          childRole: { select: { name: true } },
+        },
         orderBy: { childRoleId: 'asc' },
       });
     });
@@ -63,7 +78,9 @@ export class SetRoleChildrenUseCase {
     const validRoleIds = new Set(validRoles.map((role) => role.rolesId));
     const missing = childRoleIds.filter((id) => !validRoleIds.has(id));
     if (missing.length > 0) {
-      throw new NotFoundException(`No se encontraron roles hijos válidos: ${missing.join(', ')}`);
+      throw new NotFoundException(
+        `No se encontraron roles hijos válidos: ${missing.join(', ')}`,
+      );
     }
   }
 }

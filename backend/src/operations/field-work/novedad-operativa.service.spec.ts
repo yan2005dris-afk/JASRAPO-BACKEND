@@ -34,8 +34,12 @@ describe('NovedadOperativaService', () => {
 
     service = module.get<NovedadOperativaService>(NovedadOperativaService);
     createUseCase = module.get<CreateFieldWorkUseCase>(CreateFieldWorkUseCase);
-    findAllUseCase = module.get<FindAllFieldWorksUseCase>(FindAllFieldWorksUseCase);
-    findOneUseCase = module.get<FindOneFieldWorkUseCase>(FindOneFieldWorkUseCase);
+    findAllUseCase = module.get<FindAllFieldWorksUseCase>(
+      FindAllFieldWorksUseCase,
+    );
+    findOneUseCase = module.get<FindOneFieldWorkUseCase>(
+      FindOneFieldWorkUseCase,
+    );
     updateUseCase = module.get<UpdateFieldWorkUseCase>(UpdateFieldWorkUseCase);
     removeUseCase = module.get<RemoveFieldWorkUseCase>(RemoveFieldWorkUseCase);
   });
@@ -49,7 +53,12 @@ describe('NovedadOperativaService', () => {
   });
 
   it('crearNovedadOperativa should delegate to CreateFieldWorkUseCase', async () => {
-    const dto = { lecturaId: '1', observacion: 'test', tipo: TipoNovedad.FUGA, estado: EstadoNovedad.PENDIENTE };
+    const dto = {
+      lecturaId: '1',
+      observacion: 'test',
+      tipo: TipoNovedad.FUGA,
+      estado: EstadoNovedad.PENDIENTE,
+    };
     await service.crearNovedadOperativa(dto);
     expect(createUseCase.execute).toHaveBeenCalledWith(dto);
   });

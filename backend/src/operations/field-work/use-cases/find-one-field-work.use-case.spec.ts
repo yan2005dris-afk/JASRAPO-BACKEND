@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { FindOneFieldWorkUseCase } from './find-one-field-work.use-case';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { NovedadOperativaEntity } from '../entities/novedad-operativa.entity';
@@ -46,7 +47,9 @@ describe('FindOneFieldWorkUseCase', () => {
       deletedAt: null,
     };
 
-    mockPrismaService.novedadOperativa.findUnique.mockResolvedValue(mockNovedad);
+    mockPrismaService.novedadOperativa.findUnique.mockResolvedValue(
+      mockNovedad,
+    );
 
     const result = await useCase.execute(BigInt(1));
 

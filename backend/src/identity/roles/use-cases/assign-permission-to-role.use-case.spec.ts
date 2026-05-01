@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { AssignPermissionToRoleUseCase } from './assign-permission-to-role.use-case';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { NotFoundException, ConflictException } from '@nestjs/common';
@@ -29,7 +30,9 @@ describe('AssignPermissionToRoleUseCase', () => {
       ],
     }).compile();
 
-    useCase = module.get<AssignPermissionToRoleUseCase>(AssignPermissionToRoleUseCase);
+    useCase = module.get<AssignPermissionToRoleUseCase>(
+      AssignPermissionToRoleUseCase,
+    );
     prisma = module.get<PrismaService>(PrismaService);
     jest.clearAllMocks();
   });
@@ -38,7 +41,9 @@ describe('AssignPermissionToRoleUseCase', () => {
     mockPrisma.roles.findUnique.mockResolvedValue({ rolesId: 1 });
     mockPrisma.permissions.findUnique.mockResolvedValue({ permissionsId: 10 });
     mockPrisma.rolPermissions.findFirst.mockResolvedValue(null);
-    mockPrisma.rolPermissions.create.mockResolvedValue({ rolPermissionsId: 100 });
+    mockPrisma.rolPermissions.create.mockResolvedValue({
+      rolPermissionsId: 100,
+    });
 
     const result = await useCase.execute(1, 10);
 
@@ -51,7 +56,10 @@ describe('AssignPermissionToRoleUseCase', () => {
   it('should throw ConflictException if already assigned', async () => {
     mockPrisma.roles.findUnique.mockResolvedValue({ rolesId: 1 });
     mockPrisma.permissions.findUnique.mockResolvedValue({ permissionsId: 10 });
-    mockPrisma.rolPermissions.findFirst.mockResolvedValue({ rolPermissionsId: 100, deletedAt: null });
+    mockPrisma.rolPermissions.findFirst.mockResolvedValue({
+      rolPermissionsId: 100,
+      deletedAt: null,
+    });
 
     await expect(useCase.execute(1, 10)).rejects.toThrow(ConflictException);
   });
@@ -59,8 +67,14 @@ describe('AssignPermissionToRoleUseCase', () => {
   it('should restore if previously deleted', async () => {
     mockPrisma.roles.findUnique.mockResolvedValue({ rolesId: 1 });
     mockPrisma.permissions.findUnique.mockResolvedValue({ permissionsId: 10 });
-    mockPrisma.rolPermissions.findFirst.mockResolvedValue({ rolPermissionsId: 100, deletedAt: new Date() });
-    mockPrisma.rolPermissions.update.mockResolvedValue({ rolPermissionsId: 100, deletedAt: null });
+    mockPrisma.rolPermissions.findFirst.mockResolvedValue({
+      rolPermissionsId: 100,
+      deletedAt: new Date(),
+    });
+    mockPrisma.rolPermissions.update.mockResolvedValue({
+      rolPermissionsId: 100,
+      deletedAt: null,
+    });
 
     const result = await useCase.execute(1, 10);
 

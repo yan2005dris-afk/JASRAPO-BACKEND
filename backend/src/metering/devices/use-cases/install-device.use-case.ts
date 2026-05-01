@@ -7,14 +7,21 @@ export class InstallDeviceUseCase {
   constructor(private readonly prisma: PrismaService) {}
 
   async execute(medidorId: bigint, contratoId: bigint): Promise<Medidores> {
-    const medidor = await this.prisma.medidores.findUnique({ where: { medidorId } });
-    
+    const medidor = await this.prisma.medidores.findUnique({
+      where: { medidorId },
+    });
+
     if (!medidor || medidor.deletedAt) {
-        throw new BadRequestException('Medidor no encontrado');
+      throw new BadRequestException('Medidor no encontrado');
     }
 
-    if (medidor.estado !== EstadoMedidor.BODEGA && medidor.estado !== EstadoMedidor.ESTIMADO) {
-      throw new BadRequestException(`El medidor no puede ser instalado desde el estado ${medidor.estado}`);
+    if (
+      medidor.estado !== EstadoMedidor.BODEGA &&
+      medidor.estado !== EstadoMedidor.ESTIMADO
+    ) {
+      throw new BadRequestException(
+        `El medidor no puede ser instalado desde el estado ${medidor.estado}`,
+      );
     }
 
     return await this.prisma.medidores.update({

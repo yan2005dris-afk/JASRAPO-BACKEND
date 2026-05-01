@@ -70,7 +70,10 @@ export class LoggingInterceptor implements NestInterceptor {
   private getRouteLabel(url: string): string {
     // Normalize route to handle dynamic IDs
     const normalized = url
-      .replace(/\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, '/:id')
+      .replace(
+        /\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi,
+        '/:id',
+      )
       .replace(/\/\d+/g, '/:id')
       .split('?')[0];
 

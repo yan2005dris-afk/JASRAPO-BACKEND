@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { UploadFileUseCase } from './upload-file.use-case';
 import { MinioService } from '../minio.service';
 import { BadRequestException } from '@nestjs/common';
@@ -36,21 +37,28 @@ describe('UploadFileUseCase', () => {
     const result = await useCase.execute(bucket, fileName, buffer);
 
     expect(result).toBe(expectedPath);
-    expect(mockMinioService.uploadFile).toHaveBeenCalledWith(bucket, fileName, buffer);
+    expect(mockMinioService.uploadFile).toHaveBeenCalledWith(
+      bucket,
+      fileName,
+      buffer,
+    );
   });
 
   it('should throw BadRequestException when bucket is missing', async () => {
-    await expect(useCase.execute('', 'test.pdf', Buffer.from('content')))
-      .rejects.toThrow(BadRequestException);
+    await expect(
+      useCase.execute('', 'test.pdf', Buffer.from('content')),
+    ).rejects.toThrow(BadRequestException);
   });
 
   it('should throw BadRequestException when fileName is missing', async () => {
-    await expect(useCase.execute('bucket', '', Buffer.from('content')))
-      .rejects.toThrow(BadRequestException);
+    await expect(
+      useCase.execute('bucket', '', Buffer.from('content')),
+    ).rejects.toThrow(BadRequestException);
   });
 
   it('should throw BadRequestException when buffer is missing', async () => {
-    await expect(useCase.execute('bucket', 'test.pdf', undefined as any))
-      .rejects.toThrow(BadRequestException);
+    await expect(
+      useCase.execute('bucket', 'test.pdf', undefined as any),
+    ).rejects.toThrow(BadRequestException);
   });
 });

@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { AssignPermissionToUserUseCase } from './assign-permission-to-user.use-case';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { NotFoundException } from '@nestjs/common';
@@ -29,7 +30,9 @@ describe('AssignPermissionToUserUseCase', () => {
       ],
     }).compile();
 
-    useCase = module.get<AssignPermissionToUserUseCase>(AssignPermissionToUserUseCase);
+    useCase = module.get<AssignPermissionToUserUseCase>(
+      AssignPermissionToUserUseCase,
+    );
     prisma = module.get<PrismaService>(PrismaService);
   });
 
@@ -38,10 +41,18 @@ describe('AssignPermissionToUserUseCase', () => {
   });
 
   it('should create new permission assignment if not exists', async () => {
-    mockPrisma.users.findUnique.mockResolvedValue({ usersId: 1, deletedAt: null });
-    mockPrisma.permissions.findUnique.mockResolvedValue({ permissionsId: 2, deletedAt: null });
+    mockPrisma.users.findUnique.mockResolvedValue({
+      usersId: 1,
+      deletedAt: null,
+    });
+    mockPrisma.permissions.findUnique.mockResolvedValue({
+      permissionsId: 2,
+      deletedAt: null,
+    });
     mockPrisma.userPermissions.findFirst.mockResolvedValue(null);
-    mockPrisma.userPermissions.create.mockResolvedValue({ idUserPermissions: 10 });
+    mockPrisma.userPermissions.create.mockResolvedValue({
+      idUserPermissions: 10,
+    });
 
     const result = await useCase.execute(1, 2, true);
 
@@ -52,10 +63,22 @@ describe('AssignPermissionToUserUseCase', () => {
   });
 
   it('should update existing permission assignment', async () => {
-    mockPrisma.users.findUnique.mockResolvedValue({ usersId: 1, deletedAt: null });
-    mockPrisma.permissions.findUnique.mockResolvedValue({ permissionsId: 2, deletedAt: null });
-    mockPrisma.userPermissions.findFirst.mockResolvedValue({ idUserPermissions: 10, allow: false });
-    mockPrisma.userPermissions.update.mockResolvedValue({ idUserPermissions: 10, allow: true });
+    mockPrisma.users.findUnique.mockResolvedValue({
+      usersId: 1,
+      deletedAt: null,
+    });
+    mockPrisma.permissions.findUnique.mockResolvedValue({
+      permissionsId: 2,
+      deletedAt: null,
+    });
+    mockPrisma.userPermissions.findFirst.mockResolvedValue({
+      idUserPermissions: 10,
+      allow: false,
+    });
+    mockPrisma.userPermissions.update.mockResolvedValue({
+      idUserPermissions: 10,
+      allow: true,
+    });
 
     const result = await useCase.execute(1, 2, true);
 

@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { RemovePermissionFromRoleUseCase } from './remove-permission-from-role.use-case';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { NotFoundException } from '@nestjs/common';
@@ -22,13 +23,17 @@ describe('RemovePermissionFromRoleUseCase', () => {
       ],
     }).compile();
 
-    useCase = module.get<RemovePermissionFromRoleUseCase>(RemovePermissionFromRoleUseCase);
+    useCase = module.get<RemovePermissionFromRoleUseCase>(
+      RemovePermissionFromRoleUseCase,
+    );
     prisma = module.get<PrismaService>(PrismaService);
     jest.clearAllMocks();
   });
 
   it('should remove a permission from a role', async () => {
-    mockPrisma.rolPermissions.findFirst.mockResolvedValue({ rolPermissionsId: 100 });
+    mockPrisma.rolPermissions.findFirst.mockResolvedValue({
+      rolPermissionsId: 100,
+    });
     mockPrisma.rolPermissions.update.mockResolvedValue({ permissionsId: 10 });
 
     const result = await useCase.execute(1, 10);

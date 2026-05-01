@@ -1,10 +1,14 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { RefreshAccessTokenUseCase } from './refresh-access-token.use-case';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { SessionsService } from '../../sessions/sessions.service';
-import { UnauthorizedException, InternalServerErrorException } from '@nestjs/common';
+import {
+  UnauthorizedException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 
 jest.mock('bcryptjs');
@@ -78,30 +82,44 @@ describe('RefreshAccessTokenUseCase', () => {
 
       sessionsService.getSession.mockResolvedValue(mockSession as any);
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
-      (prismaService.users.findUnique as jest.Mock).mockResolvedValue({ email: 'test@test.com' });
+      (prismaService.users.findUnique as jest.Mock).mockResolvedValue({
+        email: 'test@test.com',
+      });
       jwtService.signAsync.mockResolvedValue('new-token');
       (bcrypt.hash as jest.Mock).mockResolvedValue('new-hash');
 
       const result = await useCase.execute('sid', 'rt', 'ip', 'ua', 1);
 
-      expect(result).toEqual({ accessToken: 'new-token', refreshToken: 'new-token' });
+      expect(result).toEqual({
+        accessToken: 'new-token',
+        refreshToken: 'new-token',
+      });
       expect(sessionsService.updateSession).toHaveBeenCalled();
     });
 
     it('should throw UnauthorizedException if session not found', async () => {
       sessionsService.getSession.mockResolvedValue(null);
-      await expect(useCase.execute('sid', 'rt', 'ip', 'ua', 1)).rejects.toThrow(UnauthorizedException);
+      await expect(useCase.execute('sid', 'rt', 'ip', 'ua', 1)).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('should throw UnauthorizedException if session revoked', async () => {
       sessionsService.getSession.mockResolvedValue({ isRevoked: true } as any);
-      await expect(useCase.execute('sid', 'rt', 'ip', 'ua', 1)).rejects.toThrow(UnauthorizedException);
+      await expect(useCase.execute('sid', 'rt', 'ip', 'ua', 1)).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('should throw UnauthorizedException if token invalid', async () => {
-      sessionsService.getSession.mockResolvedValue({ isRevoked: false, expiresAt: new Date(Date.now() + 1000) } as any);
+      sessionsService.getSession.mockResolvedValue({
+        isRevoked: false,
+        expiresAt: new Date(Date.now() + 1000),
+      } as any);
       (bcrypt.compare as jest.Mock).mockResolvedValue(false);
-      await expect(useCase.execute('sid', 'rt', 'ip', 'ua', 1)).rejects.toThrow(UnauthorizedException);
+      await expect(useCase.execute('sid', 'rt', 'ip', 'ua', 1)).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
   });
 });

@@ -19,9 +19,14 @@ export class GetRolePermissionsUseCase {
         deletedAt: null,
         permissions: { deletedAt: null },
       },
-      orderBy: [{ permissions: { resource: 'asc' } }, { permissions: { action: 'asc' } }],
+      orderBy: [
+        { permissions: { resource: 'asc' } },
+        { permissions: { action: 'asc' } },
+      ],
       include: {
-        permissions: { select: { permissionsId: true, resource: true, action: true } },
+        permissions: {
+          select: { permissionsId: true, resource: true, action: true },
+        },
       },
     });
 
@@ -40,10 +45,16 @@ export class GetRolePermissionsUseCase {
       }));
   }
 
-  private async resolveRoleHierarchy(initialRoleIds: number[]): Promise<number[]> {
+  private async resolveRoleHierarchy(
+    initialRoleIds: number[],
+  ): Promise<number[]> {
     if (initialRoleIds.length === 0) return [];
     const edges = await this.prisma.rolesHeredados.findMany({
-      where: { deletedAt: null, parentRole: { deletedAt: null }, childRole: { deletedAt: null } },
+      where: {
+        deletedAt: null,
+        parentRole: { deletedAt: null },
+        childRole: { deletedAt: null },
+      },
       select: { parentRoleId: true, childRoleId: true },
     });
 

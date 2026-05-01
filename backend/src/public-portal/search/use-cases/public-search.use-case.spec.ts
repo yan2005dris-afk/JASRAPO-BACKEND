@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { PublicSearchUseCase } from './public-search.use-case';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { BadRequestException } from '@nestjs/common';
@@ -41,14 +42,23 @@ describe('PublicSearchUseCase', () => {
 
   it('should throw BadRequestException if tipo or valor are missing', async () => {
     await expect(useCase.execute('', '')).rejects.toThrow(BadRequestException);
-    await expect(useCase.execute('cliente', '')).rejects.toThrow(BadRequestException);
-    await expect(useCase.execute('', 'valor')).rejects.toThrow(BadRequestException);
+    await expect(useCase.execute('cliente', '')).rejects.toThrow(
+      BadRequestException,
+    );
+    await expect(useCase.execute('', 'valor')).rejects.toThrow(
+      BadRequestException,
+    );
   });
 
   describe('search by cliente', () => {
     it('should return paginated clients by identification', async () => {
       const mockClientes = [
-        { clienteId: 1, nombres: 'John', apellidos: 'Doe', identificacion: '1234567890' },
+        {
+          clienteId: 1,
+          nombres: 'John',
+          apellidos: 'Doe',
+          identificacion: '1234567890',
+        },
       ];
       mockPrismaService.$transaction.mockResolvedValue([mockClientes, 1]);
 
@@ -61,7 +71,12 @@ describe('PublicSearchUseCase', () => {
 
     it('should return paginated clients by name tokens', async () => {
       const mockClientes = [
-        { clienteId: 1, nombres: 'John', apellidos: 'Doe', identificacion: '1234567890' },
+        {
+          clienteId: 1,
+          nombres: 'John',
+          apellidos: 'Doe',
+          identificacion: '1234567890',
+        },
       ];
       mockPrismaService.$transaction.mockResolvedValue([mockClientes, 1]);
 
@@ -93,7 +108,9 @@ describe('PublicSearchUseCase', () => {
 
   describe('global search', () => {
     it('should return mixed results from both clients and contracts', async () => {
-      const mockClientes = [{ clienteId: 1, nombres: 'John', apellidos: 'Doe' }];
+      const mockClientes = [
+        { clienteId: 1, nombres: 'John', apellidos: 'Doe' },
+      ];
       const mockContratos = [
         {
           contratoId: 1,

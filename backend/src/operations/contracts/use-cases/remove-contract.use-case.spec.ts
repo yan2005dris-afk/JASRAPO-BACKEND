@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { RemoveContractUseCase } from './remove-contract.use-case';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { NotFoundException } from '@nestjs/common';
@@ -37,8 +38,14 @@ describe('RemoveContractUseCase', () => {
 
   it('should soft delete a contract if it exists', async () => {
     const id = BigInt(1);
-    mockPrismaService.contratos.findUnique.mockResolvedValue({ contratoId: id, deletedAt: null });
-    mockPrismaService.contratos.update.mockResolvedValue({ contratoId: id, deletedAt: new Date() });
+    mockPrismaService.contratos.findUnique.mockResolvedValue({
+      contratoId: id,
+      deletedAt: null,
+    });
+    mockPrismaService.contratos.update.mockResolvedValue({
+      contratoId: id,
+      deletedAt: new Date(),
+    });
 
     const result = await useCase.execute(id);
 

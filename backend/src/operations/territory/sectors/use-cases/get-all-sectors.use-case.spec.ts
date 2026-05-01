@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { GetAllSectorsUseCase } from './get-all-sectors.use-case';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 

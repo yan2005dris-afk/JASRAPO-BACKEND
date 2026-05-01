@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { RegisterUseCase } from './register.use-case';
 import { UserService } from 'src/identity/users/user.service';
 import { BadRequestException } from '@nestjs/common';
@@ -38,7 +39,10 @@ describe('RegisterUseCase', () => {
       userService.createUser.mockResolvedValue({ usersId: 1 } as any);
       (bcrypt.hash as jest.Mock).mockResolvedValue('hash');
 
-      const result = await useCase.execute({ email: 'test@test.com', password: 'pass' });
+      const result = await useCase.execute({
+        email: 'test@test.com',
+        password: 'pass',
+      });
 
       expect(result).toBe('El registro fue exitoso');
       expect(userService.createUser).toHaveBeenCalled();
@@ -46,13 +50,17 @@ describe('RegisterUseCase', () => {
 
     it('should throw BadRequestException if user exists', async () => {
       userService.user.mockResolvedValue({ usersId: 1 } as any);
-      await expect(useCase.execute({ email: 'test@test.com', password: 'pass' })).rejects.toThrow(BadRequestException);
+      await expect(
+        useCase.execute({ email: 'test@test.com', password: 'pass' }),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('should throw BadRequestException if creation fails', async () => {
       userService.user.mockResolvedValue(null);
       userService.createUser.mockResolvedValue(null);
-      await expect(useCase.execute({ email: 'test@test.com', password: 'pass' })).rejects.toThrow(BadRequestException);
+      await expect(
+        useCase.execute({ email: 'test@test.com', password: 'pass' }),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 });

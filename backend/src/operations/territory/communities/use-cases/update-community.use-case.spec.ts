@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { UpdateCommunityUseCase } from './update-community.use-case';
 
@@ -27,7 +28,10 @@ describe('UpdateCommunityUseCase', () => {
   it('should update a community', async () => {
     const id = 1;
     const dto = { nombre: 'Comunidad Updated' };
-    mockPrismaService.comunidades.update.mockResolvedValue({ comunidadId: id, ...dto });
+    mockPrismaService.comunidades.update.mockResolvedValue({
+      comunidadId: id,
+      ...dto,
+    });
 
     const result = await useCase.execute(id, dto);
 

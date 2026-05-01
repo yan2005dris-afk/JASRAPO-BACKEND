@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { UpdateReadingUseCase } from './update-reading.use-case';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { NotFoundException } from '@nestjs/common';
@@ -49,8 +50,9 @@ describe('UpdateReadingUseCase', () => {
   it('should throw NotFoundException when reading not found', async () => {
     mockPrismaService.lecturas.findUnique.mockResolvedValue(null);
 
-    await expect(useCase.execute(BigInt(999), { lecturaActual: 200 }))
-      .rejects.toThrow(NotFoundException);
+    await expect(
+      useCase.execute(BigInt(999), { lecturaActual: 200 }),
+    ).rejects.toThrow(NotFoundException);
   });
 
   it('should throw NotFoundException when reading is deleted', async () => {
@@ -59,7 +61,8 @@ describe('UpdateReadingUseCase', () => {
       deletedAt: new Date(),
     } as any);
 
-    await expect(useCase.execute(BigInt(1), { lecturaActual: 200 }))
-      .rejects.toThrow(NotFoundException);
+    await expect(
+      useCase.execute(BigInt(1), { lecturaActual: 200 }),
+    ).rejects.toThrow(NotFoundException);
   });
 });

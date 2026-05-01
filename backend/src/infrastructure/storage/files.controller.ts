@@ -115,7 +115,11 @@ export class FilesController {
       ? `${folder.replace(/\/+$/, '')}/${timestamp}_${safeOriginalName}`
       : `${timestamp}_${safeOriginalName}`;
 
-    await this.uploadFileUseCase.execute(sanitizedBucket, fileName, file.buffer);
+    await this.uploadFileUseCase.execute(
+      sanitizedBucket,
+      fileName,
+      file.buffer,
+    );
 
     return {
       message: 'Archivo subido exitosamente',

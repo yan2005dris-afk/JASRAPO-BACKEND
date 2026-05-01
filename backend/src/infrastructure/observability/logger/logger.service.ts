@@ -1,5 +1,6 @@
 import { Injectable, LoggerService as NestLoggerService } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import * as http from 'http';
 import pino, { Logger } from 'pino';
 import { buildPinoOptions } from './logger.config';
 
@@ -10,7 +11,10 @@ export class LoggerService implements NestLoggerService {
   private labels: Record<string, string>;
 
   constructor(private readonly configService: ConfigService) {
-    this.lokiUrl = this.configService.get<string>('LOKI_URL', 'http://jasrapo-loki:3100');
+    this.lokiUrl = this.configService.get<string>(
+      'LOKI_URL',
+      'http://jasrapo-loki:3100',
+    );
     this.labels = {
       app: 'jasrapo-backend',
       environment: this.configService.get<string>('NODE_ENV', 'development'),
@@ -19,7 +23,12 @@ export class LoggerService implements NestLoggerService {
     this.logger = pino(buildPinoOptions(configService));
   }
 
-  private sendToLoki(level: string, message: string, context?: string, metadata?: Record<string, unknown>): void {
+  private sendToLoki(
+    level: string,
+    message: string,
+    context?: string,
+    metadata?: Record<string, unknown>,
+  ): void {
     // Solo enviar a Loki en producción
     if (process.env.NODE_ENV !== 'production') return;
 
@@ -32,19 +41,22 @@ export class LoggerService implements NestLoggerService {
             context: context || 'unknown',
           },
           values: [
-            [`${Date.now() * 1000000}`, JSON.stringify({
-              level,
-              message,
-              context,
-              ...metadata,
-              timestamp: new Date().toISOString(),
-            })],
+            [
+              `${Date.now() * 1000000}`,
+              JSON.stringify({
+                level,
+                message,
+                context,
+                ...metadata,
+                timestamp: new Date().toISOString(),
+              }),
+            ],
           ],
         },
       ],
     };
 
-    const req = require('http').request(
+    const req = http.request(
       `${this.lokiUrl}/loki/api/v1/push`,
       {
         method: 'POST',

@@ -32,9 +32,16 @@ export class NovedadOperativaController {
     private readonly novedadOperativaService: NovedadOperativaService,
   ) {}
 
-  @ApiOperation({ summary: 'Crear nota de campo', description: 'Registra una nueva nota operativa' })
+  @ApiOperation({
+    summary: 'Crear nota de campo',
+    description: 'Registra una nueva nota operativa',
+  })
   @ApiBody({ type: CrearNovedadOperativaDto, description: 'Datos de la nota' })
-  @ApiResponse({ status: 201, description: 'Nota creada', type: NovedadOperativaEntity })
+  @ApiResponse({
+    status: 201,
+    description: 'Nota creada',
+    type: NovedadOperativaEntity,
+  })
   @ApiResponse({ status: 400, description: 'Datos inválidos' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({ status: 403, description: 'Sin permiso field-notes:create' })
@@ -46,13 +53,45 @@ export class NovedadOperativaController {
     return this.novedadOperativaService.crearNovedadOperativa(createDto);
   }
 
-  @ApiOperation({ summary: 'Listar notas de campo', description: 'Retorna lista de notas con filtros' })
-  @ApiQuery({ name: 'skip', description: 'Registros a omitir', required: false, type: Number })
-  @ApiQuery({ name: 'take', description: 'Límite de registros', required: false, type: Number })
-  @ApiQuery({ name: 'lecturaId', description: 'Filtrar por ID de lectura', required: false, type: String })
-  @ApiQuery({ name: 'tipo', description: 'Filtrar por tipo', enum: TipoNovedad, required: false })
-  @ApiQuery({ name: 'estado', description: 'Filtrar por estado', enum: EstadoNovedad, required: false })
-  @ApiResponse({ status: 200, description: 'Lista de notas', type: [NovedadOperativaEntity] })
+  @ApiOperation({
+    summary: 'Listar notas de campo',
+    description: 'Retorna lista de notas con filtros',
+  })
+  @ApiQuery({
+    name: 'skip',
+    description: 'Registros a omitir',
+    required: false,
+    type: Number,
+  })
+  @ApiQuery({
+    name: 'take',
+    description: 'Límite de registros',
+    required: false,
+    type: Number,
+  })
+  @ApiQuery({
+    name: 'lecturaId',
+    description: 'Filtrar por ID de lectura',
+    required: false,
+    type: String,
+  })
+  @ApiQuery({
+    name: 'tipo',
+    description: 'Filtrar por tipo',
+    enum: TipoNovedad,
+    required: false,
+  })
+  @ApiQuery({
+    name: 'estado',
+    description: 'Filtrar por estado',
+    enum: EstadoNovedad,
+    required: false,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de notas',
+    type: [NovedadOperativaEntity],
+  })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @RequiredPermission('field-notes', 'read')
   @Get()
@@ -75,9 +114,21 @@ export class NovedadOperativaController {
     });
   }
 
-  @ApiOperation({ summary: 'Obtener nota de campo', description: 'Retorna una nota por ID' })
-  @ApiParam({ name: 'id', description: 'ID de la nota', type: String, example: '1' })
-  @ApiResponse({ status: 200, description: 'Nota encontrada', type: NovedadOperativaEntity })
+  @ApiOperation({
+    summary: 'Obtener nota de campo',
+    description: 'Retorna una nota por ID',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'ID de la nota',
+    type: String,
+    example: '1',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Nota encontrada',
+    type: NovedadOperativaEntity,
+  })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({ status: 404, description: 'Nota no encontrada' })
   @RequiredPermission('field-notes', 'read')
@@ -88,10 +139,25 @@ export class NovedadOperativaController {
     return this.novedadOperativaService.buscarNovedad(BigInt(id));
   }
 
-  @ApiOperation({ summary: 'Actualizar nota de campo', description: 'Actualiza una nota' })
-  @ApiParam({ name: 'id', description: 'ID de la nota', type: String, example: '1' })
-  @ApiBody({ type: ActualizarNovedadOperativaDto, description: 'Datos a actualizar' })
-  @ApiResponse({ status: 200, description: 'Nota actualizada', type: NovedadOperativaEntity })
+  @ApiOperation({
+    summary: 'Actualizar nota de campo',
+    description: 'Actualiza una nota',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'ID de la nota',
+    type: String,
+    example: '1',
+  })
+  @ApiBody({
+    type: ActualizarNovedadOperativaDto,
+    description: 'Datos a actualizar',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Nota actualizada',
+    type: NovedadOperativaEntity,
+  })
   @ApiResponse({ status: 400, description: 'Datos inválidos' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({ status: 403, description: 'Sin permiso field-notes:update' })
@@ -108,8 +174,16 @@ export class NovedadOperativaController {
     );
   }
 
-  @ApiOperation({ summary: 'Eliminar nota de campo', description: 'Elimina una nota (soft delete)' })
-  @ApiParam({ name: 'id', description: 'ID de la nota', type: String, example: '1' })
+  @ApiOperation({
+    summary: 'Eliminar nota de campo',
+    description: 'Elimina una nota (soft delete)',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'ID de la nota',
+    type: String,
+    example: '1',
+  })
   @ApiResponse({ status: 200, description: 'Nota eliminada' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({ status: 403, description: 'Sin permiso field-notes:delete' })

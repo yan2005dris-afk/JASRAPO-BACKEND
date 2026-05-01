@@ -1,4 +1,8 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { UpdateCategoriaTarifaDto } from '../dto/update-categoria-tarifa.dto';
 
@@ -43,7 +47,9 @@ export class UpdateTariffCategoryUseCase {
         });
 
         if (existing) {
-          throw new ConflictException('Ya existe una categoría activa con ese nombre');
+          throw new ConflictException(
+            'Ya existe una categoría activa con ese nombre',
+          );
         }
       }
 
@@ -53,7 +59,8 @@ export class UpdateTariffCategoryUseCase {
           nombre: dto.nombre ?? current.nombre,
           descripcion: dto.descripcion ?? current.descripcion,
           valorBase: dto.valorBase ?? current.valorBase,
-          consumoMinimoMensual: dto.consumoMinimoMensual ?? current.consumoMinimoMensual,
+          consumoMinimoMensual:
+            dto.consumoMinimoMensual ?? current.consumoMinimoMensual,
           valorExcedenteM3: dto.valorExcedenteM3 ?? current.valorExcedenteM3,
           fechaVigenciaDesde: now,
           fechaVigenciaHasta: null,

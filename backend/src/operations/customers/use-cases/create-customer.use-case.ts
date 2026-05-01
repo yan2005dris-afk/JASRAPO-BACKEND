@@ -1,4 +1,8 @@
-import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+} from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { CreateClientDto } from '../dto/create-client.dto';
 import { TipoIdentificacion } from 'src/generated/prisma/enums';
@@ -15,14 +19,22 @@ export class CreateCustomerUseCase {
     }
 
     if (!dto.identificacion) {
-      throw new BadRequestException('La identificación es requerida para este tipo de cliente');
+      throw new BadRequestException(
+        'La identificación es requerida para este tipo de cliente',
+      );
     }
 
     const identificacion = dto.identificacion.trim();
     this.validarIdentificacion(dto.tipoIdentificacion, identificacion);
-    this.validarCamposBasicos(dto.tipoIdentificacion, dto.nombres, dto.apellidos);
+    this.validarCamposBasicos(
+      dto.tipoIdentificacion,
+      dto.nombres,
+      dto.apellidos,
+    );
 
-    const existente = await this.prisma.clientes.findUnique({ where: { identificacion } });
+    const existente = await this.prisma.clientes.findUnique({
+      where: { identificacion },
+    });
 
     const data = this.buildCreateData(dto, identificacion);
 
@@ -39,7 +51,8 @@ export class CreateCustomerUseCase {
     try {
       return await this.prisma.clientes.create({ data });
     } catch (error: any) {
-      if (error.code === 'P2002') throw new ConflictException('La identificación ya está registrada');
+      if (error.code === 'P2002')
+        throw new ConflictException('La identificación ya está registrada');
       throw error;
     }
   }
@@ -77,7 +90,10 @@ export class CreateCustomerUseCase {
         },
       });
 
-      return { message: 'Consumidor Final reactivado correctamente.', data: updated };
+      return {
+        message: 'Consumidor Final reactivado correctamente.',
+        data: updated,
+      };
     }
 
     const created = await this.prisma.clientes.create({
@@ -98,25 +114,42 @@ export class CreateCustomerUseCase {
     return { message: 'Consumidor Final creado correctamente.', data: created };
   }
 
-  private validarIdentificacion(tipo: TipoIdentificacion, identificacion: string) {
-    if (!tipo) throw new BadRequestException('Tipo de identificación requerido');
-    if (tipo !== TipoIdentificacion.CONSUMIDOR_FINAL && !TipoIdentificacionUtil.validar(tipo, identificacion)) {
+  private validarIdentificacion(
+    tipo: TipoIdentificacion,
+    identificacion: string,
+  ) {
+    if (!tipo)
+      throw new BadRequestException('Tipo de identificación requerido');
+    if (
+      tipo !== TipoIdentificacion.CONSUMIDOR_FINAL &&
+      !TipoIdentificacionUtil.validar(tipo, identificacion)
+    ) {
       throw new BadRequestException('Identificación inválida');
     }
   }
 
-  private validarCamposBasicos(tipo: TipoIdentificacion, nombres?: string, apellidos?: string) {
-    if (tipo !== TipoIdentificacion.CONSUMIDOR_FINAL && (!nombres || !apellidos)) {
+  private validarCamposBasicos(
+    tipo: TipoIdentificacion,
+    nombres?: string,
+    apellidos?: string,
+  ) {
+    if (
+      tipo !== TipoIdentificacion.CONSUMIDOR_FINAL &&
+      (!nombres || !apellidos)
+    ) {
       throw new BadRequestException('Nombres y apellidos son requeridos');
     }
   }
 
-  private buildCreateData(dto: CreateClientDto, identificacion: string): Prisma.ClientesCreateInput {
+  private buildCreateData(
+    dto: CreateClientDto,
+    identificacion: string,
+  ): Prisma.ClientesCreateInput {
     return {
       identificacion,
       tipoIdentificacion: dto.tipoIdentificacion,
-      nombres: dto.nombres?.trim().toUpperCase()!,
-      apellidos: dto.apellidos?.trim().toUpperCase()!,
+      nombres: dto.nombres?.trim().toUpperCase() ?? '',
+      apellidos: dto.apellidos?.trim().toUpperCase() ?? '',
       razonSocial: dto.razonSocial?.trim().toUpperCase(),
       email: dto.email?.trim().toLowerCase(),
       telefono: dto.telefono,

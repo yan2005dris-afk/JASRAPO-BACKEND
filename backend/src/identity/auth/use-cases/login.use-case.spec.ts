@@ -1,10 +1,14 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { LoginUseCase } from './login.use-case';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { SessionsService } from '../../sessions/sessions.service';
-import { UnauthorizedException, InternalServerErrorException } from '@nestjs/common';
+import {
+  UnauthorizedException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 
 jest.mock('bcryptjs');
@@ -86,7 +90,8 @@ describe('LoginUseCase', () => {
 
       (prismaService.users.findUnique as jest.Mock)
         .mockResolvedValueOnce(mockUser) // Initial validateUser
-        .mockResolvedValueOnce({ // buildLoginResponse
+        .mockResolvedValueOnce({
+          // buildLoginResponse
           rolesId: 1,
           role: { name: 'ADMIN', deletedAt: null },
         });
@@ -153,7 +158,7 @@ describe('LoginUseCase', () => {
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
       jwtService.signAsync.mockResolvedValue('token');
       (bcrypt.hash as jest.Mock).mockResolvedValue('hash');
-      
+
       sessionsService.createSession.mockRejectedValue(new Error('DB Error'));
 
       await expect(

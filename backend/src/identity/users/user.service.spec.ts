@@ -45,10 +45,18 @@ describe('UserService', () => {
 
     service = module.get<UserService>(UserService);
     createUserUseCase = module.get<CreateUserUseCase>(CreateUserUseCase);
-    getEffectivePermissionsUseCase = module.get<GetEffectivePermissionsUseCase>(GetEffectivePermissionsUseCase);
-    assignRoleUseCase = module.get<AssignRoleToUserUseCase>(AssignRoleToUserUseCase);
-    assignPermissionUseCase = module.get<AssignPermissionToUserUseCase>(AssignPermissionToUserUseCase);
-    revokePermissionUseCase = module.get<RevokePermissionFromUserUseCase>(RevokePermissionFromUserUseCase);
+    getEffectivePermissionsUseCase = module.get<GetEffectivePermissionsUseCase>(
+      GetEffectivePermissionsUseCase,
+    );
+    assignRoleUseCase = module.get<AssignRoleToUserUseCase>(
+      AssignRoleToUserUseCase,
+    );
+    assignPermissionUseCase = module.get<AssignPermissionToUserUseCase>(
+      AssignPermissionToUserUseCase,
+    );
+    revokePermissionUseCase = module.get<RevokePermissionFromUserUseCase>(
+      RevokePermissionFromUserUseCase,
+    );
   });
 
   afterEach(() => {
@@ -78,7 +86,11 @@ describe('UserService', () => {
   describe('users', () => {
     it('should return users from prisma and map roles', async () => {
       mockPrismaService.users.findMany.mockResolvedValue([
-        { usersId: 1, email: 't@t.com', role: { rolesId: 1, name: 'admin', deletedAt: null } }
+        {
+          usersId: 1,
+          email: 't@t.com',
+          role: { rolesId: 1, name: 'admin', deletedAt: null },
+        },
       ]);
       const result = await service.users({});
       expect(result[0].roles).toEqual([{ rolesId: 1, name: 'admin' }]);
@@ -88,7 +100,10 @@ describe('UserService', () => {
   describe('updateUser', () => {
     it('should hash password and update via prisma', async () => {
       mockPrismaService.users.update.mockResolvedValue({ usersId: 1 });
-      await service.updateUser({ where: { usersId: 1 }, data: { password: 'new' } });
+      await service.updateUser({
+        where: { usersId: 1 },
+        data: { password: 'new' },
+      });
       expect(mockPrismaService.users.update).toHaveBeenCalled();
       const updateCall = mockPrismaService.users.update.mock.calls[0][0];
       expect(updateCall.data.password).toMatch(/^\$2[aby]\$\d{2}\$/);
@@ -99,7 +114,7 @@ describe('UserService', () => {
     it('should update deletedAt via prisma', async () => {
       await service.softDeleteUser({ usersId: 1 });
       expect(mockPrismaService.users.update).toHaveBeenCalledWith(
-        expect.objectContaining({ data: { deletedAt: expect.any(Date) } })
+        expect.objectContaining({ data: { deletedAt: expect.any(Date) } }),
       );
     });
   });
@@ -135,7 +150,7 @@ describe('UserService', () => {
   describe('getRolesByUserId', () => {
     it('should return role name from prisma', async () => {
       mockPrismaService.users.findUnique.mockResolvedValue({
-        role: { name: 'admin', deletedAt: null }
+        role: { name: 'admin', deletedAt: null },
       });
       const result = await service.getRolesByUserId(1);
       expect(result).toBe('admin');
@@ -143,7 +158,9 @@ describe('UserService', () => {
 
     it('should throw NotFoundException if user not found', async () => {
       mockPrismaService.users.findUnique.mockResolvedValue(null);
-      await expect(service.getRolesByUserId(1)).rejects.toThrow(NotFoundException);
+      await expect(service.getRolesByUserId(1)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 });

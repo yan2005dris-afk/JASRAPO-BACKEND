@@ -49,7 +49,12 @@ describe('AuthService', () => {
 
   describe('register', () => {
     it('should delegate to RegisterUseCase', async () => {
-      const dto = { email: 'test@test.com', password: 'Password123!', firstName: 'Test', lastName: 'User' } as any;
+      const dto = {
+        email: 'test@test.com',
+        password: 'Password123!',
+        firstName: 'Test',
+        lastName: 'User',
+      } as any;
       await service.register(dto);
       expect(registerUseCase.execute).toHaveBeenCalledWith(dto);
     });
@@ -66,13 +71,19 @@ describe('AuthService', () => {
   describe('refreshAccessToken', () => {
     it('should delegate to RefreshAccessTokenUseCase', async () => {
       await service.refreshAccessToken('sid', 'rt', 'ip', 'ua', 1);
-      expect(refreshUseCase.execute).toHaveBeenCalledWith('sid', 'rt', 'ip', 'ua', 1);
+      expect(refreshUseCase.execute).toHaveBeenCalledWith(
+        'sid',
+        'rt',
+        'ip',
+        'ua',
+        1,
+      );
     });
   });
 
   describe('logout', () => {
     it('should delegate to LogoutUseCase', async () => {
-      await service.logout('sid', 1);
+      await service.logout('sid');
       expect(logoutUseCase.execute).toHaveBeenCalledWith('sid');
     });
   });

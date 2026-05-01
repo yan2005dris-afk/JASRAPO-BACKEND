@@ -75,7 +75,9 @@ export class CreateRoleUseCase {
     const validRoleIds = new Set(validRoles.map((role) => role.rolesId));
     const missing = childRoleIds.filter((id) => !validRoleIds.has(id));
     if (missing.length > 0) {
-      throw new NotFoundException(`No se encontraron roles hijos válidos: ${missing.join(', ')}`);
+      throw new NotFoundException(
+        `No se encontraron roles hijos válidos: ${missing.join(', ')}`,
+      );
     }
   }
 
@@ -83,17 +85,27 @@ export class CreateRoleUseCase {
     if (!error || typeof error !== 'object') return false;
     if (error.code !== 'P2002') return false;
     const target = error.meta?.target;
-    if (Array.isArray(target) && target.some((field) => field === 'roles_id')) return true;
-    const driverFields = error.meta?.driverAdapterError?.cause?.constraint?.fields;
-    if (Array.isArray(driverFields) && driverFields.some((field) => field === 'roles_id')) return true;
+    if (Array.isArray(target) && target.some((field) => field === 'roles_id'))
+      return true;
+    const driverFields =
+      error.meta?.driverAdapterError?.cause?.constraint?.fields;
+    if (
+      Array.isArray(driverFields) &&
+      driverFields.some((field) => field === 'roles_id')
+    )
+      return true;
     return false;
   }
 
   private async syncRolesIdSequence() {
-    const sequenceResult = await this.prisma.$queryRaw<{ seq: string | null }[]>`SELECT pg_get_serial_sequence('roles', 'roles_id') AS seq`;
+    const sequenceResult = await this.prisma.$queryRaw<
+      { seq: string | null }[]
+    >`SELECT pg_get_serial_sequence('roles', 'roles_id') AS seq`;
     const sequenceName = sequenceResult[0]?.seq;
     if (!sequenceName) return;
     const escapedSequenceName = sequenceName.replace(/'/g, "''");
-    await this.prisma.$executeRawUnsafe(`SELECT setval('${escapedSequenceName}', COALESCE((SELECT MAX(roles_id) FROM roles), 0) + 1, false)`);
+    await this.prisma.$executeRawUnsafe(
+      `SELECT setval('${escapedSequenceName}', COALESCE((SELECT MAX(roles_id) FROM roles), 0) + 1, false)`,
+    );
   }
 }

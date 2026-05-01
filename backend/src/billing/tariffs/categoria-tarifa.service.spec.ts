@@ -48,7 +48,10 @@ describe('CategoriaTarifaService', () => {
         CategoriaTarifaService,
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: CreateTariffCategoryUseCase, useValue: mockCreateUseCase },
-        { provide: FindAllTariffCategoriesUseCase, useValue: mockFindAllUseCase },
+        {
+          provide: FindAllTariffCategoriesUseCase,
+          useValue: mockFindAllUseCase,
+        },
         { provide: UpdateTariffCategoryUseCase, useValue: mockUpdateUseCase },
         { provide: RemoveTariffCategoryUseCase, useValue: mockRemoveUseCase },
       ],

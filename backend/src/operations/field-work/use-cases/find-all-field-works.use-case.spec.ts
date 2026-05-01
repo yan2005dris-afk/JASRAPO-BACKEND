@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { FindAllFieldWorksUseCase } from './find-all-field-works.use-case';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { NovedadOperativaEntity } from '../entities/novedad-operativa.entity';
@@ -47,7 +48,9 @@ describe('FindAllFieldWorksUseCase', () => {
       },
     ];
 
-    mockPrismaService.novedadOperativa.findMany.mockResolvedValue(mockNovedades);
+    mockPrismaService.novedadOperativa.findMany.mockResolvedValue(
+      mockNovedades,
+    );
 
     const result = await useCase.execute({});
 
@@ -64,7 +67,11 @@ describe('FindAllFieldWorksUseCase', () => {
   it('should apply filters and pagination', async () => {
     mockPrismaService.novedadOperativa.findMany.mockResolvedValue([]);
 
-    await useCase.execute({ skip: 0, take: 10, where: { tipo: TipoNovedad.FUGA } });
+    await useCase.execute({
+      skip: 0,
+      take: 10,
+      where: { tipo: TipoNovedad.FUGA },
+    });
 
     expect(mockPrismaService.novedadOperativa.findMany).toHaveBeenCalledWith({
       skip: 0,

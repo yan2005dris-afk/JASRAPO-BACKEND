@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { RemoveFieldWorkUseCase } from './remove-field-work.use-case';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { NotFoundException } from '@nestjs/common';
@@ -35,8 +36,14 @@ describe('RemoveFieldWorkUseCase', () => {
 
   it('should soft delete a field work', async () => {
     const id = BigInt(1);
-    mockPrismaService.novedadOperativa.findUnique.mockResolvedValue({ novedadId: id, deletedAt: null });
-    mockPrismaService.novedadOperativa.update.mockResolvedValue({ novedadId: id, deletedAt: new Date() });
+    mockPrismaService.novedadOperativa.findUnique.mockResolvedValue({
+      novedadId: id,
+      deletedAt: null,
+    });
+    mockPrismaService.novedadOperativa.update.mockResolvedValue({
+      novedadId: id,
+      deletedAt: new Date(),
+    });
 
     const result = await useCase.execute(id);
 

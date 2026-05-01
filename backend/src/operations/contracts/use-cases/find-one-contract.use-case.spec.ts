@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { FindOneContractUseCase } from './find-one-contract.use-case';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { NotFoundException } from '@nestjs/common';
@@ -56,7 +57,10 @@ describe('FindOneContractUseCase', () => {
 
   it('should throw NotFoundException if contract is deleted', async () => {
     const id = BigInt(1);
-    mockPrismaService.contratos.findUnique.mockResolvedValue({ contratoId: id, deletedAt: new Date() });
+    mockPrismaService.contratos.findUnique.mockResolvedValue({
+      contratoId: id,
+      deletedAt: new Date(),
+    });
 
     await expect(useCase.execute(id)).rejects.toThrow(NotFoundException);
   });

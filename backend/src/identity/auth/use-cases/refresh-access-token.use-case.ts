@@ -31,12 +31,15 @@ export class RefreshAccessTokenUseCase {
     userId: number,
   ) {
     const session = await this.sessionsService.getSession(userId, sessionId);
-    
+
     if (!session || session.isRevoked || session.expiresAt < new Date()) {
       throw new UnauthorizedException('Sesión inválida o expirada');
     }
 
-    const isValid = await bcrypt.compare(refreshToken, session.refreshTokenHash);
+    const isValid = await bcrypt.compare(
+      refreshToken,
+      session.refreshTokenHash,
+    );
     if (!isValid) {
       throw new UnauthorizedException('Refresh token inválido');
     }
@@ -64,24 +67,40 @@ export class RefreshAccessTokenUseCase {
         expiresAt,
       });
     } catch (err) {
-      this.logger.error(`[SESSIONS] Error al rotar sesión: sessionsId=${sessionId} | ${err}`);
+      this.logger.error(
+        `[SESSIONS] Error al rotar sesión: sessionsId=${sessionId} | ${err}`,
+      );
       throw new InternalServerErrorException('Error al actualizar sesión.');
     }
 
     return tokens;
   }
 
-  private async generateJwtToken(userId: number, sessionId: string, email: string) {
+  private async generateJwtToken(
+    userId: number,
+    sessionId: string,
+    email: string,
+  ) {
     const payload = { sub: userId, sid: sessionId, email };
     const accessSecret = this.config.getOrThrow<string>('JWT_ACCESS_SECRET');
     const refreshSecret = this.config.getOrThrow<string>('JWT_REFRESH_SECRET');
-    
-    const accessExpiresIn = this.config.getOrThrow<StringValue>('JWT_ACCESS_EXPIRES_IN');
-    const refreshExpiresIn = this.config.getOrThrow<StringValue>('JWT_REFRESH_EXPIRES_IN');
+
+    const accessExpiresIn = this.config.getOrThrow<StringValue>(
+      'JWT_ACCESS_EXPIRES_IN',
+    );
+    const refreshExpiresIn = this.config.getOrThrow<StringValue>(
+      'JWT_REFRESH_EXPIRES_IN',
+    );
 
     const [accessToken, refreshToken] = await Promise.all([
-      this.jwtService.signAsync(payload, { secret: accessSecret, expiresIn: accessExpiresIn }),
-      this.jwtService.signAsync(payload, { secret: refreshSecret, expiresIn: refreshExpiresIn }),
+      this.jwtService.signAsync(payload, {
+        secret: accessSecret,
+        expiresIn: accessExpiresIn,
+      }),
+      this.jwtService.signAsync(payload, {
+        secret: refreshSecret,
+        expiresIn: refreshExpiresIn,
+      }),
     ]);
 
     return { accessToken, refreshToken };

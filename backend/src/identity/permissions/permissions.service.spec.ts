@@ -43,11 +43,21 @@ describe('PermissionsService', () => {
     }).compile();
 
     service = module.get<PermissionsService>(PermissionsService);
-    createUseCase = module.get<CreatePermissionUseCase>(CreatePermissionUseCase);
-    findAllUseCase = module.get<FindAllPermissionsUseCase>(FindAllPermissionsUseCase);
-    findOneUseCase = module.get<FindOnePermissionUseCase>(FindOnePermissionUseCase);
-    updateUseCase = module.get<UpdatePermissionUseCase>(UpdatePermissionUseCase);
-    removeUseCase = module.get<RemovePermissionUseCase>(RemovePermissionUseCase);
+    createUseCase = module.get<CreatePermissionUseCase>(
+      CreatePermissionUseCase,
+    );
+    findAllUseCase = module.get<FindAllPermissionsUseCase>(
+      FindAllPermissionsUseCase,
+    );
+    findOneUseCase = module.get<FindOnePermissionUseCase>(
+      FindOnePermissionUseCase,
+    );
+    updateUseCase = module.get<UpdatePermissionUseCase>(
+      UpdatePermissionUseCase,
+    );
+    removeUseCase = module.get<RemovePermissionUseCase>(
+      RemovePermissionUseCase,
+    );
   });
 
   it('should be defined', () => {
