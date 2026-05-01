@@ -489,36 +489,101 @@ bootstrap();
 
 ## 📋 Checklist de Documentación
 
-### DTOs por Documentar
+### DTOs Documentados
 
 | DTO | Archivo | Estado |
 |-----|---------|--------|
-| LoginUserDto | `src/auth/dto/login-user.dto.ts` | ⚠️ Falta documentación |
-| RegisterDto | `src/auth/dto/register.dto.ts` | ⚠️ Falta documentación |
-| CreateUserDto | `src/modules/user/dto/create-user.dto.ts` | ⚠️ Falta documentación |
-| UpdateUserDto | `src/modules/user/dto/update-user.dto.ts` | ❓ Por verificar |
-| AssignRoleDto | `src/modules/user/dto/assign-role.dto.ts` | ✅ Documentado |
-| AssignPermissionDto | `src/modules/user/dto/assign-permission.dto.ts` | ❓ Por verificar |
-| CreateRoleDto | `src/modules/roles/dto/create-role.dto.ts` | ✅ Documentado |
-| UpdateRoleDto | `src/modules/roles/dto/update-role.dto.ts` | ❓ Por verificar |
-| AssignRolePermissionDto | `src/modules/roles/dto/assign-role-permission.dto.ts` | ❓ Por verificar |
-| CreateMenuDto | `src/modules/menus/dto/create-menu.dto.ts` | ❓ Por verificar |
-| UpdateMenuDto | `src/modules/menus/dto/update-menu.dto.ts` | ❓ Por verificar |
-| CreateProfileDto | `src/modules/profile/dto/create-profile.dto.ts` | ❓ Por verificar |
-| UpdateProfileDto | `src/modules/profile/dto/update-profile.dto.ts` | ❓ Por verificar |
-| CreatePermissionDto | `src/modules/permissions/dto/create-permission.dto.ts` | ❓ Por verificar |
-| UpdatePermissionDto | `src/modules/permissions/dto/update-permission.dto.ts` | ❓ Por verificar |
+| LoginUserDto | `src/identity/auth/dto/login-user.dto.ts` | ✅ Documentado |
+| RegisterDto | `src/identity/auth/dto/register.dto.ts` | ✅ Documentado |
+| CreateUserDto | `src/identity/users/dto/create-user.dto.ts` | ✅ Documentado |
+| UpdateUserDto | `src/identity/users/dto/update-user.dto.ts` | ✅ Partial |
+| AssignRoleDto | `src/identity/users/dto/assign-role.dto.ts` | ✅ Documentado |
+| AssignPermissionDto | `src/identity/users/dto/assign-permission.dto.ts` | ✅ Documentado |
+| CreateRoleDto | `src/identity/roles/dto/create-role.dto.ts` | ✅ Documentado |
+| UpdateRoleDto | `src/identity/roles/dto/update-role.dto.ts` | ✅ Partial |
+| AssignRolePermissionDto | `src/identity/roles/dto/assign-role-permission.dto.ts` | ✅ Documentado |
+| CreateMenuDto | `src/identity/menus/dto/create-menu.dto.ts` | ✅ Documentado |
+| UpdateMenuDto | `src/identity/menus/dto/update-menu.dto.ts` | ✅ Partial |
+| CreateProfileDto | `src/identity/profiles/dto/create-profile.dto.ts` | ✅ Documentado |
+| UpdateProfileDto | `src/identity/profiles/dto/update-profile.dto.ts` | ✅ Partial |
+| CreatePermissionDto | `src/identity/permissions/dto/create-permission.dto.ts` | ✅ Documentado |
+| UpdatePermissionDto | `src/identity/permissions/dto/update-permission.dto.ts` | ✅ Partial |
+| CrearMedidorDto | `src/metering/devices/dto/create-medidor.dto.ts` | ✅ Documentado |
+| ActualizarMedidorDto | `src/metering/devices/dto/update-medidor.dto.ts` | ✅ Partial |
+| CrearLecturaDto | `src/metering/readings/dto/create-lectura.dto.ts` | ✅ Documentado |
+| CreateClientDto | `src/operations/customers/dto/create-client.dto.ts` | ✅ Documentado |
+| UpdateClientDto | `src/operations/customers/dto/update-client.dto.ts` | ✅ Partial |
 
-### Controladores por Documentar
+### Controladores Documentados (Actualizado)
 
-| Controlador | Archivo | Estado |
-|-------------|---------|--------|
-| AuthController | `src/auth/auth.controller.ts` | ⚠️ Falta @ApiOperation, @ApiResponse |
-| UserController | `src/modules/user/user.controller.ts` | ⚠️ Falta @ApiOperation, @ApiResponse, @ApiParam |
-| RolesController | `src/modules/roles/roles.controller.ts` | ⚠️ Falta decoradores |
-| PermissionsController | `src/modules/permissions/permissions.controller.ts` | ❓ Por verificar |
-| MenusController | `src/modules/menus/menus.controller.ts` | ❓ Por verificar |
-| ProfileController | `src/modules/profile/profile.controller.ts` | ❓ Por verificar |
+| Controlador | Endpoint | Estado |
+|-------------|----------|--------|
+| AuthController | `/auth` | ✅ Completo |
+| UserController | `/users` | ✅ Documentado |
+| RolesController | `/roles` | ✅ Documentado |
+| PermissionsController | `/permissions` | ✅ Documentado |
+| MenusController | `/menus` | ✅ Documentado |
+| ProfileController | `/profile` | ✅ Documentado |
+| FilesController | `/files` | ✅ Documentado |
+| ClientController | `/clients` | ✅ Actualizado (ingles + plural) |
+| SectorController | `/sectors` | ✅ Actualizado (plural) |
+| ComunidadController | `/communities` | ✅ Actualizado (ingles + plural) |
+| MedidorController | `/meters` | ✅ Actualizado (ingles + plural) |
+| LecturaController | `/readings` | ✅ Actualizado (ingles + plural) |
+| BusquedaPublicaController | `/search` | ✅ Actualizado (ingles) |
+| NovedadOperativaController | `/field-notes` | ✅ Actualizado (ingles) |
+| ContratoMedidorController | `/contracts` | ✅ Actualizado (ingles + plural) |
+| CategoriaTarifaController | `/tariff-categories` | ✅ Actualizado (kebab-case) |
+
+---
+
+## 📐 Estándares de Naming (Conventions)
+
+Siguiendo el documento de **API Design Standards & Naming Conventions**, todos los endpoints deben cumplir:
+
+### Reglas Aplicadas
+
+| Regla | Ejemplo |
+|-------|---------|
+| **Plural** | ✅ `/users` ❌ `/user` |
+| **Kebab-case** | ✅ `/tariff-categories` ❌ `/tariffCategories` |
+| **Inglés** | ✅ `/meters` ❌ `/medidores` |
+| **Sin verbos** | ✅ `GET /clients` ❌ `GET /getClients` |
+
+### Endpoints Actualizados
+
+| Anterior (Español) | Nuevo (Estándar) |
+|-------------------|------------------|
+| `/sector` | `/sectors` |
+| `/comunidad` | `/communities` |
+| `/client` | `/clients` |
+| `/medidores` | `/meters` |
+| `/lecturas` | `/readings` |
+| `/busqueda-publica` | `/search` |
+| `/novedades-operativas` | `/field-notes` |
+| `/contrato-medidor` | `/contracts` |
+| `/categoria-tarifa` | `/tariff-categories` |
+
+### Tags de Swagger (main.ts)
+
+```typescript
+.addTag('auth', 'Endpoints de autenticación')
+.addTag('users', 'Gestión de usuarios del sistema')
+.addTag('roles', 'Administración de roles')
+.addTag('permissions', 'Gestión de permisos')
+.addTag('menus', 'Menús y navegación basados en permisos')
+.addTag('profile', 'Gestión de perfiles de usuario')
+.addTag('files', 'Subida, descarga y gestión de archivos (MinIO)')
+.addTag('clients', 'Gestión de clientes')
+.addTag('sectors', 'Gestión de sectores territoriales')
+.addTag('communities', 'Gestión de comunidades')
+.addTag('field-notes', 'Notas operativas de campo')
+.addTag('contracts', 'Gestión de contratos y medidores')
+.addTag('tariffs', 'Categorías tarifarias')
+.addTag('meters', 'Gestión de medidores')
+.addTag('readings', 'Lecturas de medidores')
+.addTag('search', 'Búsqueda pública de información')
+```
 
 ---
 

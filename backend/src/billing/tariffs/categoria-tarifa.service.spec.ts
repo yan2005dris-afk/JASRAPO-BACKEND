@@ -1,0 +1,226 @@
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
+import { CategoriaTarifaService } from './categoria-tarifa.service';
+import { PrismaService } from 'src/infrastructure/database/prisma.service';
+import { ConflictException, NotFoundException } from '@nestjs/common';
+import { CreateTariffCategoryUseCase } from './use-cases/create-tariff-category.use-case';
+import { FindAllTariffCategoriesUseCase } from './use-cases/find-all-tariff-categories.use-case';
+import { UpdateTariffCategoryUseCase } from './use-cases/update-tariff-category.use-case';
+import { RemoveTariffCategoryUseCase } from './use-cases/remove-tariff-category.use-case';
+
+describe('CategoriaTarifaService', () => {
+  let service: CategoriaTarifaService;
+  let prismaService: PrismaService;
+
+  const mockCategoriaTarifa = {
+    categoriaTarifaId: 1,
+    nombre: 'Residencial',
+    descripcion: 'Categoría residencial estándar',
+    valorBase: 10.0,
+    consumoMinimoMensual: 10,
+    valorExcedenteM3: 0.5,
+    fechaVigenciaDesde: new Date(),
+    fechaVigenciaHasta: null,
+    activo: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    deletedAt: null,
+  };
+
+  const mockPrismaService = {
+    categoriaTarifa: {
+      findFirst: jest.fn(),
+      findMany: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+    },
+    $transaction: jest.fn(),
+  };
+
+  const mockCreateUseCase = { execute: jest.fn() };
+  const mockFindAllUseCase = { execute: jest.fn() };
+  const mockUpdateUseCase = { execute: jest.fn() };
+  const mockRemoveUseCase = { execute: jest.fn() };
+
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        CategoriaTarifaService,
+        { provide: PrismaService, useValue: mockPrismaService },
+        { provide: CreateTariffCategoryUseCase, useValue: mockCreateUseCase },
+        { provide: FindAllTariffCategoriesUseCase, useValue: mockFindAllUseCase },
+        { provide: UpdateTariffCategoryUseCase, useValue: mockUpdateUseCase },
+        { provide: RemoveTariffCategoryUseCase, useValue: mockRemoveUseCase },
+      ],
+    }).compile();
+
+    service = module.get<CategoriaTarifaService>(CategoriaTarifaService);
+    prismaService = module.get<PrismaService>(PrismaService);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('should be defined', () => {
+    expect(service).toBeDefined();
+  });
+
+  describe('createCategoria', () => {
+    it('should create categoria with default values', async () => {
+      mockCreateUseCase.execute.mockResolvedValue(mockCategoriaTarifa);
+
+      const result = await service.createCategoria({
+        nombre: 'Residencial',
+        descripcion: 'Descripción',
+        valorBase: 10.0,
+        consumoMinimoMensual: 10,
+        valorExcedenteM3: 0.5,
+      });
+
+      expect(result.nombre).toBe('Residencial');
+      expect(result.activo).toBe(true);
+    });
+
+    it('should throw ConflictException when categoria with same name exists', async () => {
+      mockCreateUseCase.execute.mockRejectedValue(
+        new ConflictException('Ya existe una categoría con ese nombre'),
+      );
+
+      await expect(
+        service.createCategoria({
+          nombre: 'Residencial',
+        }),
+      ).rejects.toThrow(ConflictException);
+    });
+  });
+
+  describe('getCategorias', () => {
+    it('should return all active categorias', async () => {
+      mockFindAllUseCase.execute.mockResolvedValue([mockCategoriaTarifa]);
+
+      const result = await service.getCategorias();
+
+      expect(result).toHaveLength(1);
+      expect(result[0].activo).toBe(true);
+    });
+
+    it('should return empty array when no categorias exist', async () => {
+      mockFindAllUseCase.execute.mockResolvedValue([]);
+
+      const result = await service.getCategorias();
+
+      expect(result).toEqual([]);
+    });
+
+    it('should filter by nombre with case-insensitive search', async () => {
+      mockFindAllUseCase.execute.mockResolvedValue([mockCategoriaTarifa]);
+
+      await service.getCategorias('residencial');
+
+      expect(mockFindAllUseCase.execute).toHaveBeenCalledWith('residencial');
+    });
+  });
+
+  describe('buscarCategoriaPorNombre', () => {
+    it('should return categoria by nombre search', async () => {
+      mockFindAllUseCase.execute.mockResolvedValue([mockCategoriaTarifa]);
+
+      const result = await service.buscarCategoriaPorNombre('Residencial');
+
+      expect(result).toHaveLength(1);
+      expect(result[0].nombre).toBe('Residencial');
+    });
+
+    it('should throw NotFoundException when no categoria found', async () => {
+      mockFindAllUseCase.execute.mockRejectedValue(
+        new NotFoundException('No se encontraron categorías'),
+      );
+
+      await expect(service.buscarCategoriaPorNombre('NoExist')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('should search case-insensitively', async () => {
+      mockFindAllUseCase.execute.mockResolvedValue([mockCategoriaTarifa]);
+
+      await service.buscarCategoriaPorNombre('RESIDENCIAL');
+
+      expect(mockFindAllUseCase.execute).toHaveBeenCalledWith('RESIDENCIAL');
+    });
+  });
+
+  describe('updateCategoria', () => {
+    it('should update categoria with transaction', async () => {
+      const updatedCategoria = {
+        ...mockCategoriaTarifa,
+        nombre: 'Residencial Actualizado',
+      };
+
+      mockUpdateUseCase.execute.mockResolvedValue(updatedCategoria);
+
+      const result = await service.updateCategoria(1, {
+        nombre: 'Residencial Actualizado',
+      });
+
+      expect(result.nombre).toBe('Residencial Actualizado');
+    });
+
+    it('should throw NotFoundException when categoria not found', async () => {
+      mockUpdateUseCase.execute.mockRejectedValue(
+        new NotFoundException('Categoría no encontrada'),
+      );
+
+      await expect(
+        service.updateCategoria(999, { nombre: 'New Name' }),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw ConflictException when new nombre already exists', async () => {
+      mockUpdateUseCase.execute.mockRejectedValue(
+        new ConflictException('Ya existe una categoría activa con ese nombre'),
+      );
+
+      await expect(
+        service.updateCategoria(1, { nombre: 'Comercial' }),
+      ).rejects.toThrow(ConflictException);
+    });
+  });
+
+  describe('deleteCategoria', () => {
+    it('should soft delete categoria', async () => {
+      const deletedCategoria = {
+        ...mockCategoriaTarifa,
+        activo: false,
+        deletedAt: new Date(),
+      };
+      mockRemoveUseCase.execute.mockResolvedValue(deletedCategoria);
+
+      const result = await service.deleteCategoria(1);
+
+      expect(result.activo).toBe(false);
+      expect(result.deletedAt).toBeDefined();
+    });
+
+    it('should throw NotFoundException when categoria not found', async () => {
+      mockRemoveUseCase.execute.mockRejectedValue(
+        new NotFoundException('Categoría no encontrada'),
+      );
+
+      await expect(service.deleteCategoria(999)).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('should throw NotFoundException when categoria already deleted', async () => {
+      mockRemoveUseCase.execute.mockRejectedValue(
+        new NotFoundException('Categoría no encontrada'),
+      );
+
+      await expect(service.deleteCategoria(1)).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+  });
+});

@@ -5,9 +5,14 @@ import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
-import { ThrottlerExceptionFilter } from './common/filters/throttler-exception.filter';
-import { BigIntInterceptor } from './common/interceptors/bigint.interceptor';
-import { TRUST_PROXY_HOPS, TRUST_PROXY_KEY } from './constants/app.constants';
+import { ThrottlerExceptionFilter } from './infrastructure/common/filters/throttler-exception.filter';
+import { BigIntInterceptor } from './infrastructure/common/interceptors/bigint.interceptor';
+import { TRUST_PROXY_HOPS, TRUST_PROXY_KEY } from './infrastructure/config/app.constants';
+import { ObservabilityModule } from './infrastructure/observability/observability.module';
+import { LoggingInterceptor } from './infrastructure/observability/interceptors/logging.interceptor';
+import { MetricsService } from './infrastructure/observability/metrics/metrics.service';
+import { TracingService } from './infrastructure/observability/tracing/tracing.service';
+import { LoggerService } from './infrastructure/observability/logger/logger.service';
 
 type ProxyAwareHttpApp = {
   set: (key: typeof TRUST_PROXY_KEY, value: number) => void;
@@ -22,11 +27,29 @@ type CookieParserMiddleware = (
 type CookieParserFactory = () => CookieParserMiddleware;
 
 async function bootstrap() {
-  const app: INestApplication = await NestFactory.create(AppModule);
+  const app: INestApplication = await NestFactory.create(AppModule, {
+    bufferLogs: true,
+  });
+
+  // Initialize observability
+  const logger = app.get(LoggerService);
+  app.useLogger(logger);
+  const tracingService = app.get(TracingService);
+  const metricsService = app.get(MetricsService);
+
+  logger.log('Observability initialized', 'Bootstrap');
+  logger.log(
+    `Tracing enabled: ${tracingService.isEnabled()}`,
+    'Bootstrap',
+  );
+
   app.setGlobalPrefix('api/v1');
 
   //Interceptor BigInt
   app.useGlobalInterceptors(new BigIntInterceptor());
+
+  // Logging and Metrics Interceptor
+  app.useGlobalInterceptors(app.get(LoggingInterceptor));
 
   // filtro para throttler
   app.useGlobalFilters(new ThrottlerExceptionFilter());
@@ -184,6 +207,16 @@ Para consultas o soporte, contacta al equipo de desarrollo del Backend.
     .addTag('menus', 'Menús y navegación basados en permisos')
     .addTag('profile', 'Gestión de perfiles de usuario')
     .addTag('files', 'Subida, descarga y gestión de archivos (MinIO)')
+    .addTag('clients', 'Gestión de clientes')
+    .addTag('sectors', 'Gestión de sectores territoriales')
+    .addTag('communities', 'Gestión de comunidades')
+    .addTag('field-notes', 'Notas operativas de campo')
+    .addTag('contracts', 'Gestión de contratos y medidores')
+    .addTag('tariffs', 'Categorías tarifarias')
+    .addTag('meters', 'Gestión de medidores')
+    .addTag('readings', 'Lecturas de medidores')
+    .addTag('search', 'Búsqueda pública de información')
+    .addTag('metrics', 'Métricas para Prometheus (scraping)')
     .addServer('http://localhost:3000', 'Servidor de desarrollo')
     .setContact('Equipo Jasrapo', 'https://jasrapo.com', 'soporte@jasrapo.com')
     .setLicense('MIT', 'https://opensource.org/licenses/MIT')

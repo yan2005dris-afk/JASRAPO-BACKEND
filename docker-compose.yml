@@ -1,61 +1,73 @@
+# ============================================================
+# JASRAPO BACKEND - STACK COMPLETO
+# Incluye: PostgreSQL, MinIO, Backend + Observabilidad
+#
+# Puertos alternativos para observabilidad (evitar conflictos):
+# - Prometheus: 9091
+# - Tempo: 3201, 4319, 4320, 16687
+# - Loki: 3101
+# - Grafana: 3002
+# ============================================================
+
 services:
-  # ─── Base de datos PostgreSQL ────────────────────────────────
+  # ─── PostgreSQL Database ───────────────────────────────────────
   postgres:
     image: postgres:16-alpine
     container_name: jasrapo-postgres
     restart: unless-stopped
-    env_file: .env
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-appdb}
       POSTGRES_USER: ${POSTGRES_USER:-appuser}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-apppass}
+      POSTGRES_DB: ${POSTGRES_DB:-appdb}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
-    volumes:
-      # Se cambia la ruta relativa por un volumen gestionado por Docker
-      - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-appuser} -d ${POSTGRES_DB:-appdb}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-appuser}"]
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - jasrapo-network
     deploy:
       resources:
         limits:
-          cpus: '0.50'
-          memory: 512M
-    networks:
-      - jasrapo-network
+          cpus: '1.0'
+          memory: 1G
 
-  # ─── MinIO Object Storage ────────────────────────────────────
+  # ─── MinIO Storage ───────────────────────────────────────────────
   minio:
-    image: minio/minio
+    image: minio/minio:latest
     container_name: minio-server
     restart: unless-stopped
-    ports:
-      - "${MINIO_PORT:-9000}:9000"
-      - "9001:9001"
     environment:
-      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-admin}
-      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-password123}
+      MINIO_ROOT_USER: ${MINIO_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD:-minioadmin}
     volumes:
-      # Se cambia la ruta relativa por un volumen gestionado por Docker
       - minio_data:/data
+    ports:
+      - "9000:9000"
+      - "9001:9001"
     command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    networks:
+      - jasrapo-network
     deploy:
       resources:
         limits:
-          cpus: '0.25'
-          memory: 256M
-    networks:
-      - jasrapo-network
+          cpus: '0.5'
+          memory: 512M
 
-  # ─── Backend NestJS ──────────────────────────────────────────
+  # ─── Backend API (NestJS) ───────────────────────────────────────
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-      target: production
     container_name: jasrapo-backend
     restart: unless-stopped
     env_file: .env
@@ -64,24 +76,131 @@ services:
       MINIO_ENDPOINT: minio
       NODE_ENV: production
       PORT: 3000
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://tempo:4318
+      OTEL_METRICS_ENABLED: "true"
     ports:
-      - "${BACKEND_PORT:-3000}:3000"
+      - "3000:3000"
     depends_on:
       postgres:
-        condition: service_healthy  
+        condition: service_healthy
+    networks:
+      - jasrapo-network
     deploy:
       resources:
         limits:
-          cpus: '0.50'
-          memory: 512M
+          cpus: '1.0'
+          memory: 1G
+
+  # ─── Prometheus Metrics ───────────────────────────────────────
+  prometheus:
+    image: prom/prometheus:v2.45.0
+    container_name: jasrapo-prometheus
+    restart: unless-stopped
+    ports:
+      - "9091:9090"
+    volumes:
+      - ./observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=15d'
     networks:
       - jasrapo-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  # ─── Tempo Traces ──────────────────────────────────────────────
+  tempo:
+    image: grafana/tempo:2.2.3
+    container_name: jasrapo-tempo
+    restart: unless-stopped
+    ports:
+      - "4319:4318"   # OTLP HTTP
+      - "4320:4317"   # OTLP gRPC
+      - "3201:3200"   # Tempo HTTP API
+      - "16687:16686" # Jaeger UI
+    volumes:
+      - tempo_data:/var/tempo
+      - ./observability/tempo/tempo-dist.yaml:/etc/tempo/tempo-dist.yaml:ro
+    command: --config.file=/etc/tempo/tempo-dist.yaml
+    environment:
+      - TEMPO_SINK_OTLP_ENDPOINT=tempo:4318
+    networks:
+      - jasrapo-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  # ─── Loki Logs ─────────────────────────────────────────────────
+  loki:
+    image: grafana/loki:2.8.0
+    container_name: jasrapo-loki
+    restart: unless-stopped
+    ports:
+      - "3101:3100"
+    volumes:
+      - loki_data:/loki
+    networks:
+      - jasrapo-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+
+  # ─── Grafana Dashboards ────────────────────────────────────────
+  grafana:
+    image: grafana/grafana:10.1.0
+    container_name: jasrapo-grafana
+    restart: unless-stopped
+    ports:
+      - "3002:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+      - tempo
+      - loki
+    networks:
+      - jasrapo-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
 
 networks:
   jasrapo-network:
+    name: jasrapo-network
     driver: bridge
+    external: true
 
-# Definición de volúmenes persistentes fuera del árbol de directorios del repo
 volumes:
   postgres_data:
   minio_data:
+  prometheus_data:
+  tempo_data:
+  loki_data:
+  grafana_data:
