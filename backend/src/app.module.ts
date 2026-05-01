@@ -2,24 +2,14 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
-import { AuthModule } from './auth/auth.module';
-import { DatabaseModule } from './database/prisma.module';
-import { LecturaModule } from './models/lectura/lectura.module';
-import { ClientModule } from './modules/client/client.module';
-import { MenusModule } from './modules/menus/menus.module';
-import { PermissionsModule } from './modules/permissions/permissions.module';
-import { ProfileModule } from './modules/profile/profile.module';
-import { RolesModule } from './modules/roles/roles.module';
-import { StorageModule } from './modules/storage/storage.module';
-import { UserModule } from './modules/user/user.module';
-import { SessionsModule } from './modules/sessions/sessions.module';
-import { CategoriaTarifaModule } from './modules/categoria-tarifa/categoria-tarifa.module';
-import { NovedadOperativaModule } from './models/novedad-operativa/novedad-operativa.module';
-import { ComunidadModule } from './modules/comunidad/comunidad.module';
-import { SectorModule } from './modules/sector/sector.module';
-import { MedidorModule } from './models/medidor/medidor.module';
-import { ContratoMedidorModule } from './models/contrato-medidor/contrato-medidor.module';
-import { BusquedaPublicaModule } from './modules/busqueda-publica/busqueda-publica.module';
+import { IdentityModule } from './identity/identity.module';
+import { DatabaseModule } from './infrastructure/database/prisma.module';
+import { MeteringModule } from './metering/metering.module';
+import { StorageModule } from './infrastructure/storage/storage.module';
+import { BillingModule } from './billing/billing.module';
+import { OperationsModule } from './operations/operations.module';
+import { PublicPortalModule } from './public-portal/public-portal.module';
+import { ObservabilityModule } from './infrastructure/observability/observability.module';
 
 @Module({
   imports: [
@@ -39,23 +29,14 @@ import { BusquedaPublicaModule } from './modules/busqueda-publica/busqueda-publi
       ],
     }),
 
+    ObservabilityModule,
     DatabaseModule,
-    UserModule,
-    AuthModule,
-    MenusModule,
-    ProfileModule,
-    RolesModule,
-    PermissionsModule,
+    IdentityModule,
+    MeteringModule,
+    BillingModule,
+    OperationsModule,
+    PublicPortalModule,
     StorageModule,
-    SessionsModule,
-    ClientModule,
-    CategoriaTarifaModule,
-    LecturaModule,
-    NovedadOperativaModule,
-    ComunidadModule,
-    SectorModule,
-    MedidorModule,
-    ContratoMedidorModule,
   ],
   controllers: [],
   providers: [

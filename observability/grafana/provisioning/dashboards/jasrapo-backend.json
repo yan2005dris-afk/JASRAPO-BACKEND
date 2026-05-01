@@ -1,0 +1,69 @@
+{
+  "dashboard": {
+    "id": null,
+    "uid": "jasrapo-backend-overview",
+    "title": "JASRAPO Backend Overview",
+    "tags": ["jasrapo", "backend"],
+    "timezone": "browser",
+    "schemaVersion": 16,
+    "version": 0,
+    "refresh": "10s",
+    "panels": [
+      {
+        "id": 1,
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+        "type": "graph",
+        "title": "HTTP Request Duration",
+        "targets": [
+          {
+            "expr": "rate(http_request_duration_seconds_sum[5m]) / rate(http_request_duration_seconds_count[5m])",
+            "legendFormat": "{{route}}",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+        "type": "graph",
+        "title": "HTTP Requests Total",
+        "targets": [
+          {
+            "expr": "sum by (status) (rate(http_requests_total[5m]))",
+            "legendFormat": "{{status}}",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+        "type": "graph",
+        "title": "Active Connections",
+        "targets": [
+          {
+            "expr": "active_connections",
+            "legendFormat": "{{type}}",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+        "type": "graph",
+        "title": "Errors",
+        "targets": [
+          {
+            "expr": "sum by (code) (rate(error_total[5m]))",
+            "legendFormat": "{{code}}",
+            "refId": "A"
+          }
+        ]
+      }
+    ],
+    "templating": {"list": []},
+    "time": {"from": "now-1h", "to": "now"},
+    "timepicker": {"refresh_intervals": ["5s", "10s", "30s", "1m"]}
+  }
+}

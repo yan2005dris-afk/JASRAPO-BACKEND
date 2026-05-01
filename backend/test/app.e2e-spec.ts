@@ -16,7 +16,7 @@ import {
 } from './setup';
 
 import { AppModule } from '../src/app.module';
-import { PrismaService } from '../src/database/prisma.service';
+import { PrismaService } from '../src/infrastructure/database/prisma.service';
 
 // Test configuration
 const TEST_USER = {

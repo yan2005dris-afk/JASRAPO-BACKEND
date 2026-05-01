@@ -1,0 +1,43 @@
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
+import { GetSessionUseCase } from './get-session.use-case';
+import { PrismaService } from 'src/infrastructure/database/prisma.service';
+
+describe('GetSessionUseCase', () => {
+  let useCase: GetSessionUseCase;
+  let prisma: PrismaService;
+
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        GetSessionUseCase,
+        {
+          provide: PrismaService,
+          useValue: {
+            sessions: {
+              findFirst: jest.fn(),
+            },
+          },
+        },
+      ],
+    }).compile();
+
+    useCase = module.get<GetSessionUseCase>(GetSessionUseCase);
+    prisma = module.get<PrismaService>(PrismaService);
+  });
+
+  it('should find an active session', async () => {
+    (prisma.sessions.findFirst as jest.Mock).mockResolvedValue({ id: 1 });
+
+    await useCase.execute(1, 'abc');
+
+    expect(prisma.sessions.findFirst).toHaveBeenCalledWith({
+      where: {
+        usersId: 1,
+        sessionsId: 'abc',
+        isRevoked: false,
+        expiresAt: { gt: expect.any(Date) },
+      },
+    });
+  });
+});
