@@ -6,8 +6,6 @@ import { CreateRoleUseCase } from './use-cases/create-role.use-case';
 import { GetRolePermissionsUseCase } from './use-cases/get-role-permissions.use-case';
 import { AssignPermissionToRoleUseCase } from './use-cases/assign-permission-to-role.use-case';
 import { RemovePermissionFromRoleUseCase } from './use-cases/remove-permission-from-role.use-case';
-import { GetRoleChildrenUseCase } from './use-cases/get-role-children.use-case';
-import { SetRoleChildrenUseCase } from './use-cases/set-role-children.use-case';
 
 describe('RolesService', () => {
   let service: RolesService;
@@ -15,8 +13,6 @@ describe('RolesService', () => {
   let getPermissionsUseCase: GetRolePermissionsUseCase;
   let assignPermissionUseCase: AssignPermissionToRoleUseCase;
   let removePermissionUseCase: RemovePermissionFromRoleUseCase;
-  let getChildrenUseCase: GetRoleChildrenUseCase;
-  let setChildrenUseCase: SetRoleChildrenUseCase;
 
   const mockUseCase = { execute: jest.fn() };
 
@@ -38,8 +34,6 @@ describe('RolesService', () => {
         { provide: GetRolePermissionsUseCase, useValue: mockUseCase },
         { provide: AssignPermissionToRoleUseCase, useValue: mockUseCase },
         { provide: RemovePermissionFromRoleUseCase, useValue: mockUseCase },
-        { provide: GetRoleChildrenUseCase, useValue: mockUseCase },
-        { provide: SetRoleChildrenUseCase, useValue: mockUseCase },
       ],
     }).compile();
 
@@ -53,12 +47,6 @@ describe('RolesService', () => {
     );
     removePermissionUseCase = module.get<RemovePermissionFromRoleUseCase>(
       RemovePermissionFromRoleUseCase,
-    );
-    getChildrenUseCase = module.get<GetRoleChildrenUseCase>(
-      GetRoleChildrenUseCase,
-    );
-    setChildrenUseCase = module.get<SetRoleChildrenUseCase>(
-      SetRoleChildrenUseCase,
     );
   });
 
@@ -81,16 +69,5 @@ describe('RolesService', () => {
   it('should delegate removePermission to RemovePermissionFromRoleUseCase', async () => {
     await service.removePermission(1, 10);
     expect(removePermissionUseCase.execute).toHaveBeenCalledWith(1, 10);
-  });
-
-  it('should delegate getRoleChildren to GetRoleChildrenUseCase', async () => {
-    await service.getRoleChildren(1);
-    expect(getChildrenUseCase.execute).toHaveBeenCalledWith(1);
-  });
-
-  it('should delegate setRoleChildren to SetRoleChildrenUseCase', async () => {
-    const dto = { childRoleIds: [2] } as any;
-    await service.setRoleChildren(1, dto);
-    expect(setChildrenUseCase.execute).toHaveBeenCalledWith(1, dto);
   });
 });

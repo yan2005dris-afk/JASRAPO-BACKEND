@@ -125,6 +125,8 @@
     "testEnvironment": "node",
     "extensionsToTreatAsEsm": [
       ".ts"
-    ]
+    ],
+    "maxWorkers": "50%",
+    "workerIdleMemoryLimit": "512MB"
   }
 }

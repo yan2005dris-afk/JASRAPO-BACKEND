@@ -24,17 +24,17 @@ export class GetEffectivePermissionsUseCase {
     const roleId = user.role && !user.role.deletedAt ? user.role.rolesId : null;
 
     const rolePermissionAssignments = !roleId
-        ? []
-        : await this.prisma.rolPermissions.findMany({
-            where: {
-              deletedAt: null,
-              rolesId: roleId,
-              permissions: { deletedAt: null },
-            },
-            include: {
-              permissions: { select: { resource: true, action: true } },
-            },
-          });
+      ? []
+      : await this.prisma.rolPermissions.findMany({
+          where: {
+            deletedAt: null,
+            rolesId: roleId,
+            permissions: { deletedAt: null },
+          },
+          include: {
+            permissions: { select: { resource: true, action: true } },
+          },
+        });
 
     const effectivePermissionsMap = new Map<string, boolean>();
 

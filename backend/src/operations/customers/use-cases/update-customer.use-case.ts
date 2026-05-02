@@ -70,7 +70,8 @@ export class UpdateCustomerUseCase {
         direccionDomicilio:
           dto.direccionDomicilio ?? cliente.direccionDomicilio,
         aplicaTerceraEdad: dto.aplicaTerceraEdad ?? cliente.aplicaTerceraEdad,
-        aplicaDiscapacidad: dto.aplicaDiscapacidad ?? cliente.aplicaDiscapacidad,
+        aplicaDiscapacidad:
+          dto.aplicaDiscapacidad ?? cliente.aplicaDiscapacidad,
       },
     });
   }

@@ -19,8 +19,6 @@ describe('RolesController', () => {
             update: jest.fn(),
             remove: jest.fn(),
             getRolePermissions: jest.fn(),
-            getRoleChildren: jest.fn(),
-            setRoleChildren: jest.fn(),
           },
         },
       ],

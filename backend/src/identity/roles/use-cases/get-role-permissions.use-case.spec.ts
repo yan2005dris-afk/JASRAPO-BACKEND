@@ -12,9 +12,6 @@ describe('GetRolePermissionsUseCase', () => {
     roles: {
       findUnique: jest.fn(),
     },
-    rolesHeredados: {
-      findMany: jest.fn(),
-    },
     rolPermissions: {
       findMany: jest.fn(),
     },
@@ -33,11 +30,8 @@ describe('GetRolePermissionsUseCase', () => {
     jest.clearAllMocks();
   });
 
-  it('should return permissions for a role and its children', async () => {
+  it('should return permissions for a role (flat model)', async () => {
     mockPrisma.roles.findUnique.mockResolvedValue({ rolesId: 1 });
-    mockPrisma.rolesHeredados.findMany.mockResolvedValue([
-      { parentRoleId: 1, childRoleId: 2 },
-    ]);
     mockPrisma.rolPermissions.findMany.mockResolvedValue([
       {
         rolPermissionsId: 1,

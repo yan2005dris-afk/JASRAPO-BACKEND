@@ -2,7 +2,6 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { CreateRoleUseCase } from './create-role.use-case';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
-import { NotFoundException } from '@nestjs/common';
 
 describe('CreateRoleUseCase', () => {
   let useCase: CreateRoleUseCase;
@@ -12,9 +11,6 @@ describe('CreateRoleUseCase', () => {
     roles: {
       create: jest.fn(),
       findMany: jest.fn(),
-    },
-    rolesHeredados: {
-      createMany: jest.fn(),
     },
     $transaction: jest.fn((callback) => callback(mockPrisma)),
     $queryRaw: jest.fn(),
@@ -34,7 +30,7 @@ describe('CreateRoleUseCase', () => {
     jest.clearAllMocks();
   });
 
-  it('should create a role without children', async () => {
+  it('should create a role without children (flat roles model)', async () => {
     const dto = { name: 'Admin', description: 'Admin role' };
     mockPrisma.roles.create.mockResolvedValue({ rolesId: 1, ...dto });
 
@@ -42,32 +38,15 @@ describe('CreateRoleUseCase', () => {
 
     expect(result).toEqual({ rolesId: 1, ...dto });
     expect(prisma.roles.create).toHaveBeenCalledWith({ data: dto });
-    expect(prisma.rolesHeredados.createMany).not.toHaveBeenCalled();
   });
 
-  it('should create a role with children', async () => {
-    const dto = { name: 'Manager', childRoleIds: [2, 3] };
-    mockPrisma.roles.findMany.mockResolvedValue([
-      { rolesId: 2 },
-      { rolesId: 3 },
-    ]);
-    mockPrisma.roles.create.mockResolvedValue({ rolesId: 1, name: 'Manager' });
+  it('should create a role with only name (no hierarchy)', async () => {
+    const dto = { name: 'Operador' };
+    mockPrisma.roles.create.mockResolvedValue({ rolesId: 5, name: 'Operador' });
 
     const result = await useCase.execute(dto);
 
-    expect(result).toEqual({ rolesId: 1, name: 'Manager' });
-    expect(prisma.rolesHeredados.createMany).toHaveBeenCalledWith({
-      data: [
-        { parentRoleId: 1, childRoleId: 2 },
-        { parentRoleId: 1, childRoleId: 3 },
-      ],
-    });
-  });
-
-  it('should throw NotFoundException if children do not exist', async () => {
-    const dto = { name: 'Manager', childRoleIds: [2, 3] };
-    mockPrisma.roles.findMany.mockResolvedValue([{ rolesId: 2 }]);
-
-    await expect(useCase.execute(dto)).rejects.toThrow(NotFoundException);
+    expect(result).toEqual({ rolesId: 5, name: 'Operador' });
+    expect(prisma.roles.create).toHaveBeenCalledWith({ data: dto });
   });
 });
