@@ -1,5 +1,6 @@
 import type { INestApplication } from '@nestjs/common';
 import { ValidationPipe } from '@nestjs/common';
+import { GlobalExceptionFilter } from './infrastructure/common/filters/global-exception.filter';
 import { NestFactory } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
@@ -90,6 +91,9 @@ async function bootstrap() {
       },
     }),
   );
+
+  // Filtro global de excepciones
+  app.useGlobalFilters(new GlobalExceptionFilter());
 
   const config = new DocumentBuilder()
     .setTitle('JASRAPO API')

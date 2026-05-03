@@ -5,10 +5,9 @@ model Medidores {
   modelo           String               @map("modelo")
   serie            String               @unique @map("serie")
   estado           EstadoMedidor        @map("estado")
-  fechaInstalacion DateTime             @default(now()) @map("fecha_instalacion")
+  fechaInstalacion DateTime?            @default(now()) @map("fecha_instalacion")
   fechaBaja        DateTime?            @map("fecha_baja")
-  motivoBaja       String?              @map("motivo_baja")
-  motivoCambio     String?              @map("motivo_cambio")
+  motivo           String?              @map("motivo")
   createdAt        DateTime             @default(now()) @map("creado_en")
   updatedAt        DateTime             @updatedAt @map("actualizado_en")
   deletedAt        DateTime?            @map("borrado_en")
@@ -25,6 +24,6 @@ enum EstadoMedidor {
   BODEGA
   INSTALADO
   DANADO
-  ESTIMADO
+  PENDIENTE
   BAJA
 }

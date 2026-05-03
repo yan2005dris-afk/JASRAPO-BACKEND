@@ -1,0 +1,97 @@
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { EstadoMedidor } from 'src/generated/prisma/client';
+
+/**
+ * DTO de respuesta para medidor
+ * Representa los campos públicos que se devuelven en la API
+ * No incluye campos internos como deletedAt
+ */
+export class MeterResponseDto {
+  @ApiProperty({
+    description: 'ID único del medidor',
+    example: '1',
+  })
+  medidorId: bigint;
+
+  @ApiPropertyOptional({
+    description: 'ID del contrato asociado',
+    example: '1',
+  })
+  contratoId: bigint | null;
+
+  @ApiProperty({
+    description: 'Marca del medidor',
+    example: 'Itron',
+  })
+  marca: string;
+
+  @ApiProperty({
+    description: 'Modelo del medidor',
+    example: 'CX1000',
+  })
+  modelo: string;
+
+  @ApiProperty({
+    description: 'Número de serie único del medidor',
+    example: 'SN-2024-001234',
+  })
+  serie: string;
+
+  @ApiProperty({
+    description: 'Estado actual del medidor',
+    enum: EstadoMedidor,
+    example: 'BODEGA',
+  })
+  estado: EstadoMedidor;
+
+  @ApiPropertyOptional({
+    description: 'Fecha de instalación del medidor',
+    example: '2024-01-15T00:00:00Z',
+  })
+  fechaInstalacion: Date | null;
+
+  @ApiPropertyOptional({
+    description: 'Fecha de baja del medidor',
+    example: null,
+  })
+  fechaBaja: Date | null;
+
+  @ApiPropertyOptional({
+    description: 'Motivo de la baja',
+    example: 'Obsoleto',
+  })
+  motivo: string | null;
+
+  @ApiPropertyOptional({
+    description: 'Latitud de ubicación',
+    example: -33.4489,
+  })
+  latitud: number | null;
+
+  @ApiPropertyOptional({
+    description: 'Longitud de ubicación',
+    example: -70.6693,
+  })
+  longitud: number | null;
+
+  constructor(partial: Partial<MeterResponseDto>) {
+    Object.assign(this, partial);
+  }
+}
+
+/**
+ * Ejemplo de respuesta para Swagger
+ */
+export const MeterResponseExample = {
+  medidorId: '1',
+  contratoId: null,
+  marca: 'Itron',
+  modelo: 'CX1000',
+  serie: 'SN-2024-001234',
+  estado: 'BODEGA',
+  fechaInstalacion: null,
+  fechaBaja: null,
+  motivo: null,
+  latitud: -33.4489,
+  longitud: -70.6693,
+};

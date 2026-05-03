@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { CrearLecturaDto } from '../dto/create-lectura.dto';
 import { LecturaEntity } from '../entities/lectura.entity';
+import { EstadoLectura } from 'src/generated/prisma/enums';
 
 @Injectable()
 export class CreateReadingUseCase {
@@ -19,6 +20,7 @@ export class CreateReadingUseCase {
         fotoUrlMinIo: createDto.fotoUrlMinIo,
         lecturaInicial: createDto.lecturaInicial,
         periodoId: createDto.periodoId,
+        estado: EstadoLectura.PENDIENTE,
       },
     });
     return new LecturaEntity(lectura);

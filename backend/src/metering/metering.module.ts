@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
-import { LecturaModule } from './readings/lectura.module';
-import { MedidorModule } from './devices/medidor.module';
+import { ReadingModule } from './readings/reading.module';
+import { MeterModule } from './meters/meter.module';
 
 @Module({
-  imports: [LecturaModule, MedidorModule],
-  exports: [LecturaModule, MedidorModule],
+  imports: [ReadingModule, MeterModule],
+  exports: [ReadingModule, MeterModule],
 })
 export class MeteringModule {}

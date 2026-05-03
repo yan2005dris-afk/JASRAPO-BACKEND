@@ -1,0 +1,28 @@
+model LecturaAnomalia {
+  anomaliaId     BigInt          @id @default(autoincrement()) @map("anomalia_id")
+  lecturaId      BigInt          @map("lectura_id")
+  observacion    String?         @map("observacion")
+  tipo           TipoAnomalia    @map("tipo")
+  estado         EstadoAnomalia  @map("estado")
+  createdAt      DateTime        @default(now()) @map("creado_en")
+  updatedAt      DateTime        @updatedAt @map("actualizado_en")
+  deletedAt      DateTime?        @map("borrado_en")
+  fotoUrlMinIo   String?         @map("foto_url_minio")
+  lectura        Lecturas        @relation(fields: [lecturaId], references: [lecturaId])
+
+  @@map("lectura_anomalia")
+}
+
+enum TipoAnomalia {
+  FUGA
+  MEDIDOR_DAÑADO
+  LECTURA_ERRONEA
+  OTRO
+}
+
+enum EstadoAnomalia {
+  PENDIENTE
+  EN_REVISION
+  RESUELTA
+  DESCARTADA
+}

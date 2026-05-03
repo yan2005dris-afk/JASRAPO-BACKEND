@@ -548,21 +548,54 @@ Siguiendo el documento de **API Design Standards & Naming Conventions**, todos l
 | **Plural** | ✅ `/users` ❌ `/user` |
 | **Kebab-case** | ✅ `/tariff-categories` ❌ `/tariffCategories` |
 | **Inglés** | ✅ `/meters` ❌ `/medidores` |
-| **Sin verbos** | ✅ `GET /clients` ❌ `GET /getClients` |
+| **Sin verbos** | ✅ `GET /meters` ❌ `GET /get-meters` |
+| **HTTP Methods** | ✅ `POST /meters`, `GET /meters/:id` ❌ `POST /meters/create` |
+
+### Patrón RESTful Estándar
+
+```text
+Método HTTP  Endpoint              Descripción
+-----------  -------------------  -----------------------
+GET          /meters              Listar todos los medidores
+GET          /meters/:id          Obtener un medidor específico
+POST         /meters              Crear un nuevo medidor
+PATCH        /meters/:id          Actualizar un medidor
+DELETE      /meters/:id           Eliminar un medidor (soft delete)
+```
+
+### Acciones de Negocio (sub-recursos)
+
+```text
+POST         /meters/:id/install      Instalar medidor en contrato
+POST         /meters/:id/decommission   Dar de baja medidor
+GET          /meters/search           Búsqueda avanzada
+```
 
 ### Endpoints Actualizados
 
-| Anterior (Español) | Nuevo (Estándar) |
-|-------------------|------------------|
-| `/sector` | `/sectors` |
-| `/comunidad` | `/communities` |
-| `/client` | `/clients` |
-| `/medidores` | `/meters` |
-| `/lecturas` | `/readings` |
-| `/busqueda-publica` | `/search` |
-| `/novedades-operativas` | `/field-notes` |
-| `/contrato-medidor` | `/contracts` |
-| `/categoria-tarifa` | `/tariff-categories` |
+| Anterior (Español) | Nuevo (Estándar RESTful) |
+|-------------------|-------------------------|
+| `/medidores/create` | `POST /meters` |
+| `/medidores/get-all` | `GET /meters` |
+| `/medidores/get-one/:id` | `GET /meters/:id` |
+| `/medidores/update` | `PATCH /meters/:id` |
+| `/medidores/remove/:id` | `DELETE /meters/:id` |
+| `/lecturas/create` | `POST /readings` |
+| `/lecturas/get-all` | `GET /readings` |
+| `/lecturas/get-one/:id` | `GET /readings/:id` |
+
+### Excepciones Válidas
+
+Estos patrones NO requieren migración porque son excepciones legítimas:
+
+| Endpoint | Razón |
+|----------|-------|
+| `/auth/login`, `/auth/register`, `/auth/logout` | Autenticación (no es recurso) |
+| `/profile` | Singleton por usuario |
+| `/search` | Búsqueda avanzada con query params |
+| `/files/upload`, `/files/upload-multiple` | Acciones de negocio específicas |
+| `/menus/my` | Sub-recurso del usuario actual |
+| `/meters/:id/install`, `/meters/:id/decommission` | Acciones de negocio |
 
 ### Tags de Swagger (main.ts)
 
