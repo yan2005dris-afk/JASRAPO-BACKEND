@@ -7,6 +7,7 @@ import {
 import { PrismaClient } from '../../generated/prisma/client.js';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { ConfigService } from '@nestjs/config';
+import { createSoftDeleteExtension } from './soft-delete.middleware';
 
 @Injectable()
 export class PrismaService
@@ -42,47 +43,9 @@ export class PrismaService
     this.logger.log('[POSTGRES:DOWN] Conexion a PostgreSQL cerrada');
   }
 
-  // Extensión para implementar "soft deletes" en la tabla lecturas
+  // Middleware de soft delete - aplica a todos los modelos con deletedAt
+  // Elimina la posibilidad de hacer delete físico
   get extendedClient() {
-    return this.$extends({
-      query: {
-        lecturas: {
-          // Cuando alguien intente un .delete(), lo flitramos para que en vez de eliminar el registro, le pongamos una fecha en deletedAt
-          //El registro nunca se elimina
-          async delete({ args }) {
-            return this.update({
-              ...args,
-              data: { deletedAt: new Date() },
-            });
-          },
-
-          // Lo mismo de arriba pero por si tiran un delete masivo
-          async deleteMany({ args }) {
-            return this.updateMany({
-              ...args,
-              data: { deletedAt: new Date() },
-            });
-          },
-          // Cuando hagan un .findMany(), usamos el filtro deletedAt: null
-          // Así, los registros "eliminados" no aparecerán en las consultas normales
-          async findMany({ args, query }) {
-            args.where = { ...args.where, deletedAt: null };
-            return query(args);
-          },
-
-          // Lo mismo si buscan solo el primero
-          async findFirst({ args, query }) {
-            args.where = { ...args.where, deletedAt: null };
-            return query(args);
-          },
-
-          // Y si buscan por ID, también filtramos para que no encuentren registros "eliminados"
-          async findUnique({ args, query }) {
-            args.where = { ...args.where, deletedAt: null };
-            return query(args);
-          },
-        },
-      },
-    });
+    return this.$extends(createSoftDeleteExtension() as any);
   }
 }
