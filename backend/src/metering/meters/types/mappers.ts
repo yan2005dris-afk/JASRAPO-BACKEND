@@ -1,5 +1,5 @@
 import type { Decimal } from '@prisma/client/runtime/wasm-compiler-edge';
-import { MeterResponseDto } from '../dto/meter-response.dto';
+import type { MeterResponseDto } from '../dto/meter-response.dto';
 import { DateUtil } from 'src/infrastructure/common/util/date.util';
 
 /**

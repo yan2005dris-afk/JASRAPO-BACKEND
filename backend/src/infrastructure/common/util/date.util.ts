@@ -9,12 +9,12 @@ export class DateUtil {
    * Formatos aceptados del frontend
    */
   private static readonly PARSE_FORMATS = [
-    'yyyy-MM-dd',        // 2026-05-03
-    'dd-MM-yyyy',        // 03-05-2026
-    'dd/MM/yyyy',        // 03/05/2026
-    'yyyy/MM/dd',        // 2026/05/03
-    'MM-dd-yyyy',        // 05-03-2026
-    'MM/dd/yyyy',        // 05/03/2026
+    'yyyy-MM-dd', // 2026-05-03
+    'dd-MM-yyyy', // 03-05-2026
+    'dd/MM/yyyy', // 03/05/2026
+    'yyyy/MM/dd', // 2026/05/03
+    'MM-dd-yyyy', // 05-03-2026
+    'MM/dd/yyyy', // 05/03/2026
   ] as const;
 
   /**
@@ -23,7 +23,9 @@ export class DateUtil {
    * @returns Date válido o null si no se puede parsear
    * @throws Error si el formato no es válido
    */
-  public static parseFrontendDate(value: string | Date | null | undefined): Date | null {
+  public static parseFrontendDate(
+    value: string | Date | null | undefined,
+  ): Date | null {
     // Si ya es Date, retornarlo directamente
     if (value instanceof Date) {
       return isValid(value) ? value : null;
@@ -61,10 +63,13 @@ export class DateUtil {
    * @returns Date válido
    * @throws Error si el formato no es válido
    */
-  public static parseFrontendDateStrict(value: string | Date | null | undefined): Date {
+  public static parseFrontendDateStrict(
+    value: string | Date | null | undefined,
+  ): Date {
     const parsed = this.parseFrontendDate(value);
     if (!parsed) {
-      throw new Error(`Fecha inválida: ${value}`);
+      const valueStr = typeof value === 'string' ? value : String(value);
+      throw new Error(`Fecha inválida: ${valueStr}`);
     }
     return parsed;
   }
@@ -74,7 +79,9 @@ export class DateUtil {
    * @param date Fecha a formatear
    * @returns String en formato YYYY-MM-DD
    */
-  public static formatForFrontend(date: Date | null | undefined): string | null {
+  public static formatForFrontend(
+    date: Date | null | undefined,
+  ): string | null {
     if (!date || !isValid(date)) {
       return null;
     }
