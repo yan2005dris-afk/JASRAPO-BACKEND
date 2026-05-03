@@ -90,8 +90,8 @@ describe('ClientService', () => {
     expect(updateUseCase.execute).toHaveBeenCalledWith('1', dto);
   });
 
-  it('remove should delegate to RemoveCustomerUseCase', async () => {
-    await service.remove('1');
+  it('delete should delegate to RemoveCustomerUseCase', async () => {
+    await service.delete('1');
     expect(removeUseCase.execute).toHaveBeenCalledWith('1');
   });
 });
