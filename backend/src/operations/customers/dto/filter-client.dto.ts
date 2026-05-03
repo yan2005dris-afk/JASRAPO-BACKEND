@@ -1,44 +1,40 @@
 import { IsOptional, IsString, IsBoolean } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 
 export class FilterClientDto {
-  @ApiPropertyOptional({
-    description: 'Filtrar por número de identificación',
-    example: '1234567890',
-  })
+  @ApiPropertyOptional()
   @IsOptional()
   @IsString()
+  @Transform(({ value }) => (value === '' ? undefined : value))
   identificacion?: string;
 
-  @ApiPropertyOptional({
-    description: 'Filtrar por nombres (búsqueda parcial)',
-    example: 'Juan',
-  })
+  @ApiPropertyOptional()
   @IsOptional()
   @IsString()
+  @Transform(({ value }) => (value === '' ? undefined : value))
   nombres?: string;
 
-  @ApiPropertyOptional({
-    description: 'Filtrar por apellidos (búsqueda parcial)',
-    example: 'Pérez',
-  })
+  @ApiPropertyOptional()
   @IsOptional()
   @IsString()
+  @Transform(({ value }) => (value === '' ? undefined : value))
   apellidos?: string;
 
-  @ApiPropertyOptional({
-    description: 'Filtrar por nombre completo (búsqueda parcial)',
-    example: 'Juan Pérez',
-  })
+  @ApiPropertyOptional()
   @IsOptional()
   @IsString()
+  @Transform(({ value }) => (value === '' ? undefined : value))
   nombreCompleto?: string;
 
-  @ApiPropertyOptional({
-    description: 'Filtrar por estado activo (true=activos, false=inactivos)',
-    example: true,
-  })
+  @ApiPropertyOptional()
   @IsOptional()
+  @Transform(({ value }) => {
+    if (value === '' || value === undefined) return undefined;
+    if (value === 'true' || value === true) return true;
+    if (value === 'false' || value === false) return false;
+    return value;
+  })
   @IsBoolean()
   activo?: boolean;
 }
