@@ -1,54 +1,251 @@
-# JASRAPO-BACKEND
+# JASRAPO - Sistema de Gestión de Medición y Facturación
 
-> [!IMPORTANT]
-> Es importante este apartado sino no se podra desplegar el proyecto o mantener un versionado correcto.
+> Sistema integral para la gestión de medidores, lecturas, facturación y cobranza de servicios de agua potable.
 
-## Prerequisitos
+## URLs del Sistema
 
-- Necesitamos tener docker desktop instalado y tenerlo ejecutando en segundo plano.
-- Se usara docker para el control de versiones y no tener problemas que en una computadora pueda desplegar y en otra no.
+| Ambiente | URL |
+|----------|-----|
+| **API (Producción)** | https://api.dihm-muertos.site/ |
+| **App Web (Producción)** | https://app.dihm-muertos.site/ |
+| **API (Local)** | http://localhost:3000/api/v1 |
+| **Swagger UI** | http://localhost:3000/api/docs |
 
-> [!NOTE]
-> Las siguientes instrucciones tienen que posicionarse sobre backend/
+## Tecnologías
 
-## Para levantar el documento en desarrollo necesitamos usar el siguiente comando:
+| Capa | Tecnología |
+|------|-------------|
+| **Framework** | NestJS (Node.js 20+) |
+| **Lenguaje** | TypeScript |
+| **Base de datos** | PostgreSQL 14+ |
+| **ORM** | Prisma |
+| **API Docs** | Swagger (OpenAPI) |
+| **Autenticación** | JWT + Roles + Permisos |
+| **Caché** | Redis |
+| **Almacenamiento** | MinIO (S3 compatible) |
+| **Contenedores** | Docker + Docker Compose |
+| **Testing** | Jest |
+| **Observabilidad** | Prometheus + Grafana + OpenTelemetry |
 
-```bash
-$ docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build
+## Estructura del Proyecto
+
+```
+JASRAPO-BACKEND/
+├── backend/                 # Aplicación NestJS
+│   ├── src/
+│   │   ├── billing/        # Módulo de facturación
+│   │   ├── identity/        # Usuarios, roles, permisos
+│   │   ├── metering/        # Medidores, lecturas, anomalías
+│   │   ├── operations/      # Clientes, contratos, territorio
+│   │   ├── public-portal/    # Portal público (búsqueda)
+│   │   └── infrastructure/   # Configuración común
+│   │       ├── database/    # Prisma service, soft-delete
+│   │       ├── common/      # Interceptors, filtros, DTOs
+│   │       └── observability/ # Logging, métricas, tracing
+│   ├── prisma/             # Schema de DB y migraciones
+│   ├── STANDARDS.md        # Convenciones del código
+│   └── SWAGGER_GUIDE.md    # Guía de documentación API
+├── backend-db/             # Datos iniciales de PostgreSQL
+├── observability/          # Config de Prometheus + Grafana
+├── docker-compose.yml      # Producción
+├── docker-compose.dev.yml  # Desarrollo
+└── .env                    # Variables de entorno
 ```
 
-Esto permitira que el docker levante el proyecto para desarollo.
+### Estructura de Carpetas del Backend ( src/ )
 
-> [!WARMING]
-> Si intenta usar el comando usual para desplegar docker no funcionara, esto levantara para producción y esto deben tener otras configuraciones: el comando es: docker compose up -d --build
+```
+src/
+├── metering/              # Gestión de medidores y lecturas
+│   ├── meters/           # CRUD medidores
+│   ├── readings/         # Lecturas de medidores
+│   └── reading-anomaly/  # Anomalías (fugas, daños)
+├── operations/            # Operaciones comerciales
+│   ├── customers/        # Clientes
+│   ├── contracts/        # Contratos
+│   └── territory/        # Comunidades y sectores
+├── identity/             # Autenticación y autorización
+│   ├── users/
+│   ├── roles/
+│   └── permissions/
+├── billing/             # Facturación
+├── public-portal/        # Portal público
+└── infrastructure/
+    ├── database/        # Prisma service, soft-delete
+    ├── common/
+    │   ├── interceptors/ # BigInt, Decimal transform
+    │   ├── filters/      # Excepciones globales
+    │   └── decorators/   # Permisos
+    └── observability/
+        ├── logging/      # Logs estructurados
+        ├── metrics/      # Prometheus
+        └── tracing/     # OpenTelemetry
+```
 
-Una vez hecho todo esto se desplegara la base de datos en postgres y se iniciara el node en version 22, para el desarollo.
+## Conventions de Código
 
-## Acceso a Redis y MinIO
+- **Código**: Inglés (clases, métodos, variables)
+- **Base de datos**: Español (tablas, campos)
+- **Swagger**: Español (descripciones, resúmenes)
+- **API**: RESTful endpoints
+  - `GET /recurso` → listar
+  - `GET /recurso/:id` → obtener uno
+  - `POST /recurso` → crear
+  - `PATCH /recurso/:id` → actualizar
+  - `DELETE /recurso/:id` → eliminar (soft delete)
+- **Nombres**: singular para clases, plural para endpoints
 
-- **Redis** corre por defecto en `localhost:6379`.
-  - Puedes conectarte con:
-    ```bash
-    redis-cli -h localhost -p 6379
-    ```
-  - En desarrollo, no tiene contraseña y acepta conexiones locales.
-  - **En producción:**
-    - Configura una contraseña en el archivo docker-compose (agrega `requirepass TU_PASSWORD` en la sección de Redis o usa la variable REDIS_PASSWORD).
-    - Limita el acceso solo a la red interna de Docker o a IPs seguras.
-    - No expongas el puerto 6379 a internet.
+Ver [STANDARDS.md](./backend/STANDARDS.md) para más detalles.
 
-- **MinIO** corre en `localhost:9000` (API) y `localhost:9001` (consola web).
-  - Acceso web: http://localhost:9001
-  - Usuario y contraseña por defecto: admin / password123 (cámbialos en producción).
-  - **En producción:**
-    - Cambia las variables de entorno `MINIO_ROOT_USER` y `MINIO_ROOT_PASSWORD`.
-    - Usa HTTPS si expones MinIO fuera de la red local.
-    - No expongas los puertos a internet sin firewall o autenticación fuerte.
+## Variables de Entorno
 
-## Seguridad recomendada en producción
+```bash
+# Copiar de .env.example y configurar
+DATABASE_URL=postgresql://user:password@localhost:5432/jasrapo
+JWT_SECRET=tu-secret-aqui
+REDIS_PASSWORD=tu-redis-password
+MINIO_ROOT_USER=admin
+MINIO_ROOT_PASSWORD=password123
+```
 
-- Usa contraseñas fuertes y diferentes para cada servicio.
-- No expongas puertos de bases de datos, Redis ni MinIO directamente a internet.
-- Usa redes privadas de Docker para la comunicación entre servicios.
-- Considera usar un firewall o reglas de red para restringir el acceso.
-- Haz backups regulares de los volúmenes de backend-db.
+## Desarrollo Local
+
+### Prerrequisitos
+
+- Docker Desktop + Docker Compose
+- Node.js 20+ (para desarrollo sin Docker)
+
+### Con Docker (Recomendado)
+
+```bash
+# Desarrollo con hot-reload
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build
+
+# Ver logs
+docker compose logs -f api
+
+# Acceder a la API
+curl http://localhost:3000/api/v1
+```
+
+### Sin Docker
+
+```bash
+cd backend
+npm install
+npm run start:dev
+```
+
+### Comandos Disponibles
+
+```bash
+# Tests
+npm test              # Todos los tests
+npm run test:cov      # Con coverage
+
+# Linting
+npm run lint          # Ver errores
+npm run lint:fix      # Auto-arreglar
+
+# Build
+npm run build         # Compilar producción
+```
+
+## Servicios Externos
+
+| Servicio | Local | Producción |
+|----------|-------|------------|
+| **PostgreSQL** | localhost:5432 | interno (Docker) |
+| **Redis** | localhost:6379 | interno (Docker) |
+| **MinIO (API)** | localhost:9000 | interno (Docker) |
+| **MinIO (Console)** | localhost:9001 | interno (Docker) |
+| **Prometheus** | localhost:9090 | interno (Docker) |
+| **Grafana** | localhost:3001 | interno (Docker) |
+
+## Despliegue en Servidor (Docker)
+
+### Production Build
+
+```bash
+# Construir y levantar producción
+docker compose up -d --build
+
+# Ver estado de servicios
+docker compose ps
+
+# Ver logs
+docker compose logs -f api
+```
+
+### Configuración de Producción
+
+1. Editar `.env` con valores de producción
+2. Asegurar que los puertos no estén expuestos a internet
+3. Usar redes privadas de Docker entre servicios
+
+## Observabilidad
+
+### Métricas Prometheus
+
+- Endpoint: `http://localhost:9090`
+- Métricas automáticas: HTTP requests, memoria, CPU, latencia
+
+### Logs Estructurados
+
+- Formato JSON con contexto (correlation ID, usuario, IP)
+- Nivel de log configurable por entorno
+
+### Tracing (OpenTelemetry)
+
+- Integración con Jaeger o compatible
+- Rastreo de requests distribuidos
+
+### Dashboard Grafana
+
+- localhost:3001 (default: admin/admin)
+
+## Base de Datos
+
+### Schema Prisma
+
+El schema está en `backend/prisma/schema/`. Cada modelo tiene:
+
+- `deletedAt` para soft delete
+- Índices para consultas frecuentes
+- Relaciones con cascade appropriate
+
+### Migraciones
+
+```bash
+# Crear migración
+cd backend
+npx prisma migrate dev --name nombre_migracion
+
+# Aplicar en producción
+npx prisma migrate deploy
+
+# Resetear DB local
+npx prisma migrate reset
+```
+
+## API Documentation
+
+Una vez iniciado el servidor:
+
+- **Swagger UI**: http://localhost:3000/api/docs
+- **OpenAPI JSON**: http://localhost:3000/api/docs-json
+
+Ver [SWAGGER_GUIDE.md](./backend/SWAGGER_GUIDE.md) para ejemplos de documentación.
+
+## Seguridad
+
+- JWT con refresh tokens
+- Roles y permisos granulares
+- Soft delete en todas las entidades
+- Validación de inputs con class-validator
+- Rate limiting con Throttler
+- Headers de seguridad (Helmet)
+
+## Licencia
+
+MIT
