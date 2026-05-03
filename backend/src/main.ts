@@ -227,8 +227,38 @@ Para consultas o soporte, contacta al equipo de desarrollo del Backend.
     .setLicense('MIT', 'https://opensource.org/licenses/MIT')
     .build();
 
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('docs', app, document);
+  // Intentar cargar metadata del plugin de swagger (generado en build)
+  // El plugin genera metadata.json que se carga como funcion
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const metadataFn = require('../metadata');
+    if (typeof metadataFn === 'function') {
+      await SwaggerModule.loadPluginMetadata(metadataFn);
+    }
+  } catch {
+    // La metadata se genera durante el build con el plugin
+    // Si no existe, se usa la documentacion manual con decorators
+  }
+
+  const document = SwaggerModule.createDocument(app, config, {
+    deepScanRoutes: true,
+  });
+  SwaggerModule.setup('docs', app, document, {
+    swaggerOptions: {
+      persistAuthorization: true,
+      displayRequestDuration: true,
+      docExpansion: 'none',
+      filter: true,
+      showExtensions: true,
+      showCommonExtensions: true,
+    },
+    customCss: `
+      .swagger-ui .topbar { display: none }
+      .swagger-ui .info { margin: 30px 0 }
+      .swagger-ui .info .title { font-size: 40px }
+    `,
+    customSiteTitle: 'JASRAPO API Documentation',
+  });
 
   const port = configService.get<number>('PORT', 3000);
   await app.listen(port);
