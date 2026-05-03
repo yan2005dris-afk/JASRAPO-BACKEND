@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { ComunidadService } from './comunidad.service';
 import { CreateComunidadDto } from './dto/create-comunidad.dto';
@@ -17,6 +18,7 @@ import {
   ApiResponse,
   ApiParam,
   ApiBody,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
 
@@ -38,12 +40,12 @@ export class ComunidadController {
   @RequiredPermission('comunidades', 'create')
   @Post()
   create(@Body() createComunidadDto: CreateComunidadDto) {
-    return this.comunidadService.crearComunidad(createComunidadDto);
+    return this.comunidadService.create(createComunidadDto);
   }
 
   @ApiOperation({
     summary: 'Listar comunidades',
-    description: 'Retorna todas las comunidades',
+    description: 'Retorna todas las comunidades sin sectores',
   })
   @ApiResponse({ status: 200, description: 'Lista de comunidades' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
@@ -51,6 +53,29 @@ export class ComunidadController {
   @Get()
   findAll() {
     return this.comunidadService.findAll();
+  }
+
+  @ApiOperation({
+    summary: 'Listar comunidades con sectores',
+    description: 'Retorna comunidades con sus sectores relacionados',
+  })
+  @ApiQuery({
+    name: 'sectorId',
+    description: 'Filtrar comunidades por sector ID',
+    required: false,
+    type: Number,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de comunidades con sectores',
+  })
+  @ApiResponse({ status: 401, description: 'No autorizado' })
+  @RequiredPermission('comunidades', 'read')
+  @Get('with-sector')
+  findAllWithSector(@Query('sectorId') sectorId?: string) {
+    return this.comunidadService.findAllWithSector(
+      sectorId ? { sectorId: +sectorId } : undefined,
+    );
   }
 
   @ApiOperation({
@@ -94,7 +119,7 @@ export class ComunidadController {
     @Param('id') id: string,
     @Body() updateComunidadDto: UpdateComunidadDto,
   ) {
-    return this.comunidadService.actualizarComunidad(+id, updateComunidadDto);
+    return this.comunidadService.update(+id, updateComunidadDto);
   }
 
   @ApiOperation({
@@ -113,7 +138,7 @@ export class ComunidadController {
   @ApiResponse({ status: 404, description: 'Comunidad no encontrada' })
   @RequiredPermission('comunidades', 'delete')
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.comunidadService.eliminarActualizar(+id);
+  delete(@Param('id') id: string) {
+    return this.comunidadService.delete(+id);
   }
 }

@@ -1,28 +1,22 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
-import { UpdateComunidadDto } from '../dto/update-comunidad.dto';
 import { safeCommunitiesSelect } from '../types/IResponseCommunities';
 import { toComunidadResponse } from '../types/communitiesMapper';
 
 @Injectable()
-export class UpdateCommunityUseCase {
+export class FindOneCommunityUseCase {
   constructor(private readonly prisma: PrismaService) {}
 
-  async execute(id: number, dto: UpdateComunidadDto) {
-    const existing = await this.prisma.comunidades.findUnique({
+  async execute(id: number) {
+    const comunidad = await this.prisma.comunidades.findUnique({
       where: { comunidadId: id, deletedAt: null },
-    });
-
-    if (!existing) {
-      throw new NotFoundException(`Comunidad con ID ${id} no encontrada`);
-    }
-
-    const updated = await this.prisma.comunidades.update({
-      where: { comunidadId: id },
-      data: dto,
       select: safeCommunitiesSelect,
     });
 
-    return toComunidadResponse(updated);
+    if (!comunidad) {
+      throw new NotFoundException(`Comunidad con ID ${id} no encontrada`);
+    }
+
+    return toComunidadResponse(comunidad);
   }
 }

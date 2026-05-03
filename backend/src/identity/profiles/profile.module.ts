@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ProfileService } from './profile.service';
 import { ProfileController } from './profile.controller';
-import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { AuthModule } from 'src/identity/auth/auth.module';
 import { StorageModule } from '../../infrastructure/storage/storage.module';
 import { CreateProfileUseCase } from './use-cases/create-profile.use-case';
@@ -16,7 +15,6 @@ import { SelectExistingAvatarUseCase } from './use-cases/select-existing-avatar.
   controllers: [ProfileController],
   providers: [
     ProfileService,
-    PrismaService,
     CreateProfileUseCase,
     FindMyProfileUseCase,
     UpdateProfileUseCase,

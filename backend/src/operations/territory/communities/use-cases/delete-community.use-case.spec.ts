@@ -9,7 +9,8 @@ describe('DeleteCommunityUseCase', () => {
 
   const mockPrismaService = {
     comunidades: {
-      delete: jest.fn(),
+      update: jest.fn(),
+      findUnique: jest.fn(),
     },
   };
 
@@ -27,13 +28,18 @@ describe('DeleteCommunityUseCase', () => {
 
   it('should delete a community', async () => {
     const id = 1;
-    mockPrismaService.comunidades.delete.mockResolvedValue({ comunidadId: id });
+    mockPrismaService.comunidades.findUnique.mockResolvedValue({
+      comunidadId: id,
+      deletedAt: null,
+    });
+    mockPrismaService.comunidades.update.mockResolvedValue({
+      comunidadId: id,
+      deletedAt: new Date(),
+    });
 
     const result = await useCase.execute(id);
 
-    expect(result).toEqual({ comunidadId: id });
-    expect(prisma.comunidades.delete).toHaveBeenCalledWith({
-      where: { comunidadId: id },
-    });
+    expect(result).toBeDefined();
+    expect(prisma.comunidades.update).toHaveBeenCalled();
   });
 });

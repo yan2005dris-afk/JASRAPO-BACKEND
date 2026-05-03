@@ -10,7 +10,7 @@ import { FindOneMeterUseCase } from './use-cases/find-one-meter.use-case';
 import { InstallMeterUseCase } from './use-cases/install-meter.use-case';
 import { DecommissionMeterUseCase } from './use-cases/decommission-meter.use-case';
 import { safeMeterSelect } from './types/IResponseMeters';
-import { toMeterResponse } from './types/mappers';
+import { toMeterResponse } from './types/metersMapper';
 import { DateUtil } from 'src/infrastructure/common/util/date.util';
 
 @Injectable()
