@@ -40,7 +40,7 @@ export class ClientService {
     return this.updateUseCase.execute(id, dto);
   }
 
-  async remove(id: string) {
+  async delete(id: string) {
     return this.removeUseCase.execute(id);
   }
 }
