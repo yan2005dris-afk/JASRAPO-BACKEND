@@ -8,6 +8,7 @@ import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 import { ThrottlerExceptionFilter } from './infrastructure/common/filters/throttler-exception.filter';
 import { BigIntInterceptor } from './infrastructure/common/interceptors/bigint.interceptor';
+import { DecimalToNumberInterceptor } from './infrastructure/common/interceptors/decimal-to-number.interceptor';
 import {
   TRUST_PROXY_HOPS,
   TRUST_PROXY_KEY,
@@ -45,6 +46,9 @@ async function bootstrap() {
 
   //Interceptor BigInt
   app.useGlobalInterceptors(new BigIntInterceptor());
+
+  //Interceptor Decimal -> Number (para JSON)
+  app.useGlobalInterceptors(new DecimalToNumberInterceptor());
 
   // Logging and Metrics Interceptor
   app.useGlobalInterceptors(app.get(LoggingInterceptor));

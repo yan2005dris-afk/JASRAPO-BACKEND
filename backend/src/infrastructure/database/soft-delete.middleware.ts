@@ -31,7 +31,13 @@ const SOFT_DELETE_MODELS = [
 ] as const;
 
 // Métodos que interceptamos
-const methods = ['delete', 'deleteMany', 'findMany', 'findFirst', 'findUnique'] as const;
+const methods = [
+  'delete',
+  'deleteMany',
+  'findMany',
+  'findFirst',
+  'findUnique',
+] as const;
 
 // Lógica base de soft delete
 const createSoftDeleteHandlers = () => {
@@ -41,17 +47,17 @@ const createSoftDeleteHandlers = () => {
     for (const method of methods) {
       if (method === 'delete' || method === 'deleteMany') {
         // Convertir delete en update con deletedAt
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
         handlers[`${model}.${method}`] = async function ({ args }: any) {
           const data = { deletedAt: new Date() };
           if (method === 'delete') {
-            return (this as any).update(args, data);
+            return this.update(args, data);
           }
-          return (this as any).updateMany(args, data);
+          return this.updateMany(args, data);
         };
       } else {
         // Agregar filtro deletedAt: null en consultas
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
         handlers[`${model}.${method}`] = async function ({ args, query }: any) {
           if (args?.where && args.where.deletedAt === undefined) {
             args.where = { ...args.where, deletedAt: null };
@@ -71,11 +77,9 @@ export function createSoftDeleteExtension(): unknown {
 
   return {
     query: {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       $allModels: function ({ model, method, args, query }: any) {
         const key = `${model}.${method}`;
         if (handlers[key]) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           return (handlers[key] as any)({ model, method, args, query });
         }
         return query(args);
