@@ -40,21 +40,21 @@ export class MeterResponseDto {
   @ApiProperty({
     description: 'Estado actual del medidor',
     enum: EstadoMedidor,
-    example: 'BODEGA',
+    example: 'PENDIENTE/BODEGA/INSTALADO/DANADO',
   })
   estado: EstadoMedidor;
 
   @ApiPropertyOptional({
-    description: 'Fecha de instalación del medidor',
-    example: '2024-01-15T00:00:00Z',
+    description: 'Fecha de instalación del medidor (YYYY-MM-DD)',
+    example: '2024-01-15',
   })
-  fechaInstalacion: Date | null;
+  fechaInstalacion: string | null;
 
   @ApiPropertyOptional({
-    description: 'Fecha de baja del medidor',
+    description: 'Fecha de baja del medidor (YYYY-MM-DD)',
     example: null,
   })
-  fechaBaja: Date | null;
+  fechaBaja: string | null;
 
   @ApiPropertyOptional({
     description: 'Motivo de la baja',
@@ -89,7 +89,7 @@ export const MeterResponseExample = {
   modelo: 'CX1000',
   serie: 'SN-2024-001234',
   estado: 'BODEGA',
-  fechaInstalacion: null,
+  fechaInstalacion: '2024-01-15',
   fechaBaja: null,
   motivo: null,
   latitud: -33.4489,

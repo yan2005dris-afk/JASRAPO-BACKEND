@@ -1,53 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from 'src/generated/prisma/client';
+import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { CreateMeterDto } from './dto/create-meter.dto';
 import { UpdateMeterDto } from './dto/update-meter.dto';
 import { MeterResponseDto } from './dto/meter-response.dto';
-import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { CreateMeterUseCase } from './use-cases/create-meter.use-case';
 import { ReportDefectUseCase } from './use-cases/report-defect.use-case';
 import { FindOneMeterUseCase } from './use-cases/find-one-meter.use-case';
 import { InstallMeterUseCase } from './use-cases/install-meter.use-case';
 import { DecommissionMeterUseCase } from './use-cases/decommission-meter.use-case';
-
-/**
- * Safe select: filtra campos a nivel SQL
- * - Excluye: deletedAt, createdAt, updatedAt (internal)
- * - Incluye: campos públicos del medidor
- */
-const safeMeterSelect = {
-  medidorId: true,
-  contratoId: true,
-  marca: true,
-  modelo: true,
-  serie: true,
-  estado: true,
-  fechaInstalacion: true,
-  fechaBaja: true,
-  motivo: true,
-  latitud: true,
-  longitud: true,
-} satisfies Prisma.MedidoresSelect;
-
-/**
- * Mapea resultado de Prisma a DTO de response
- * Convierte Decimal a number para JSON
- */
-function toMeterResponse(meter: any): MeterResponseDto {
-  return {
-    medidorId: meter.medidorId,
-    contratoId: meter.contratoId,
-    marca: meter.marca,
-    modelo: meter.modelo,
-    serie: meter.serie,
-    estado: meter.estado,
-    fechaInstalacion: meter.fechaInstalacion,
-    fechaBaja: meter.fechaBaja,
-    motivo: meter.motivo,
-    latitud: meter.latitud ? Number(meter.latitud) : null,
-    longitud: meter.longitud ? Number(meter.longitud) : null,
-  };
-}
+import { safeMeterSelect } from './types/IResponseMeters';
+import { toMeterResponse } from './types/mappers';
+import { DateUtil } from 'src/infrastructure/common/util/date.util';
 
 @Injectable()
 export class MeterService {
@@ -90,9 +54,21 @@ export class MeterService {
     updateDto: UpdateMeterDto,
   ): Promise<MeterResponseDto> {
     await this.findOneUseCase.execute(id);
+
+    // Parsear fechas incoming del frontend
+    const dataToUpdate = {
+      ...updateDto,
+      fechaInstalacion: updateDto.fechaInstalacion
+        ? DateUtil.parseFrontendDateStrict(updateDto.fechaInstalacion)
+        : undefined,
+      fechaBaja: updateDto.fechaBaja
+        ? DateUtil.parseFrontendDateStrict(updateDto.fechaBaja)
+        : undefined,
+    };
+
     const updated = await this.prisma.medidores.update({
       where: { medidorId: id },
-      data: updateDto as any,
+      data: dataToUpdate as any,
     });
     return toMeterResponse(updated);
   }

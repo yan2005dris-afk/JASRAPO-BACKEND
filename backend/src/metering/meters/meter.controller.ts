@@ -11,6 +11,7 @@ import {
 import { MeterService } from './meter.service';
 import { CreateMeterDto } from './dto/create-meter.dto';
 import { UpdateMeterDto } from './dto/update-meter.dto';
+import { InstallMeterDto } from './dto/install-meter.dto';
 import { MeterResponseDto } from './dto/meter-response.dto';
 import {
   ApiTags,
@@ -213,13 +214,14 @@ export class MeterController {
     description: 'Datos inválidos - el medidor debe estar en estado BODEGA',
   })
   @ApiResponse({ status: 404, description: 'Medidor o contrato no encontrado' })
+  @ApiBody({ type: InstallMeterDto, description: 'Datos para instalar el medidor' })
   @RequiredPermission('meters', 'update')
   @Post(':id/install')
   async install(
     @Param('id') id: string,
-    @Body('contratoId') contratoId: string,
+    @Body() installDto: InstallMeterDto,
   ): Promise<MeterResponseDto> {
-    return this.meterService.install(BigInt(id), BigInt(contratoId));
+    return this.meterService.install(BigInt(id), BigInt(installDto.contratoId));
   }
 
   /**
