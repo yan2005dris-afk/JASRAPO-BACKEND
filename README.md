@@ -15,17 +15,18 @@
 
 | Capa | Tecnología |
 |------|-------------|
-| **Framework** | NestJS (Node.js 20+) |
+| **Framework** | NestJS (Node.js 22) |
 | **Lenguaje** | TypeScript |
-| **Base de datos** | PostgreSQL 14+ |
+| **Base de datos** | PostgreSQL 16 |
 | **ORM** | Prisma |
 | **API Docs** | Swagger (OpenAPI) |
 | **Autenticación** | JWT + Roles + Permisos |
-| **Caché** | Redis |
 | **Almacenamiento** | MinIO (S3 compatible) |
 | **Contenedores** | Docker + Docker Compose |
 | **Testing** | Jest |
 | **Observabilidad** | Prometheus + Grafana + OpenTelemetry |
+
+> **Nota**: Redis no está en uso actualmente en el proyecto.
 
 ## Estructura del Proyecto
 
@@ -82,7 +83,7 @@ src/
         └── tracing/     # OpenTelemetry
 ```
 
-## Conventions de Código
+## Convenciones de Código
 
 - **Código**: Inglés (clases, métodos, variables)
 - **Base de datos**: Español (tablas, campos)
@@ -99,21 +100,40 @@ Ver [STANDARDS.md](./backend/STANDARDS.md) para más detalles.
 
 ## Variables de Entorno
 
+### Archivo .env.example
+
 ```bash
-# Copiar de .env.example y configurar
-DATABASE_URL=postgresql://user:password@localhost:5432/jasrapo
-JWT_SECRET=tu-secret-aqui
-REDIS_PASSWORD=tu-redis-password
-MINIO_ROOT_USER=admin
-MINIO_ROOT_PASSWORD=password123
+# ─── PostgreSQL ─────────────────────────────────
+POSTGRES_DB=appdb
+POSTGRES_USER=appuser
+POSTGRES_PASSWORD=apppass
+POSTGRES_PORT=5432
+
+# ─── JWT ───────────────────────────────────────
+JWT_ACCESS_SECRET=access_super_secret_key
+JWT_ACCESS_EXPIRES_IN=1m
+JWT_REFRESH_SECRET=refresh_super_secret_key
+JWT_REFRESH_EXPIRES_IN=7d
+
+# ─── Backend ───────────────────────────────────
+# DATABASE_URL para uso local (Prisma fuera de Docker)
+DATABASE_URL=postgresql://appuser:apppass@localhost:5432/appdb
+BACKEND_PORT=3000
+
+# ─── MinIO ─────────────────────────────────────
+MINIO_PORT=9000
+MINIO_ACCESS_KEY=admin
+MINIO_SECRET_KEY=password123
 ```
+
+> Copiar `.env.example` a `.env` y configurar según el entorno.
 
 ## Desarrollo Local
 
 ### Prerrequisitos
 
 - Docker Desktop + Docker Compose
-- Node.js 20+ (para desarrollo sin Docker)
+- Node.js 22 (para desarrollo sin Docker)
 
 ### Con Docker (Recomendado)
 
@@ -139,16 +159,23 @@ npm run start:dev
 ### Comandos Disponibles
 
 ```bash
-# Tests
-npm test              # Todos los tests
-npm run test:cov      # Con coverage
+# Formateo de código
+npm run format           # Prettier: formatea todos los archivos TS
 
 # Linting
-npm run lint          # Ver errores
-npm run lint:fix      # Auto-arreglar
+npm run lint            # Ver errores de ESLint
+npm run lint:fix        # Auto-arreglar errores de ESLint
+
+# Tests
+npm test                # Todos los tests
+npm run test:watch      # Tests en modo watch
+npm run test:cov        # Tests con coverage
+
+# Fix completo (format + lint + test)
+npm run fix:all
 
 # Build
-npm run build         # Compilar producción
+npm run build           # Compilar producción
 ```
 
 ## Servicios Externos
@@ -156,7 +183,6 @@ npm run build         # Compilar producción
 | Servicio | Local | Producción |
 |----------|-------|------------|
 | **PostgreSQL** | localhost:5432 | interno (Docker) |
-| **Redis** | localhost:6379 | interno (Docker) |
 | **MinIO (API)** | localhost:9000 | interno (Docker) |
 | **MinIO (Console)** | localhost:9001 | interno (Docker) |
 | **Prometheus** | localhost:9090 | interno (Docker) |
@@ -241,10 +267,11 @@ Ver [SWAGGER_GUIDE.md](./backend/SWAGGER_GUIDE.md) para ejemplos de documentaci�
 
 - JWT con refresh tokens
 - Roles y permisos granulares
-- Soft delete en todas las entidades
+- Soft delete en todas las entidades (interceptor Prisma)
 - Validación de inputs con class-validator
 - Rate limiting con Throttler
 - Headers de seguridad (Helmet)
+- Interceptors para BigInt y Decimal a números
 
 ## Licencia
 
