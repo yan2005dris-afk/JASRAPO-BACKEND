@@ -120,8 +120,16 @@ JWT_REFRESH_EXPIRES_IN=7d
 DATABASE_URL=postgresql://appuser:apppass@localhost:5432/appdb
 BACKEND_PORT=3000
 
-# ─── MinIO ─────────────────────────────────────
+# ─── MinIO (Almacenamiento de archivos) ───────
+# Habilitar/deshabilitar MinIO (true/false)
+MINIO_ENABLED=true
+# Endpoint de MinIO (servidor o localhost)
+MINIO_ENDPOINT=localhost
+# Puerto de MinIO
 MINIO_PORT=9000
+# Usar SSL (https)
+MINIO_USE_SSL=false
+# Credenciales
 MINIO_ACCESS_KEY=admin
 MINIO_SECRET_KEY=password123
 ```
@@ -187,6 +195,8 @@ npm run build           # Compilar producción
 | **MinIO (Console)** | localhost:9001 | interno (Docker) |
 | **Prometheus** | localhost:9090 | interno (Docker) |
 | **Grafana** | localhost:3001 | interno (Docker) |
+
+> **Nota**: Redis no está en uso actualmente en el proyecto.
 
 ## Despliegue en Servidor (Docker)
 
