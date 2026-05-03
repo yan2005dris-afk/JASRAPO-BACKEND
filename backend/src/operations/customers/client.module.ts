@@ -5,7 +5,6 @@ import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { CreateCustomerUseCase } from './use-cases/create-customer.use-case';
 import { UpdateCustomerUseCase } from './use-cases/update-customer.use-case';
 import { FindOneCustomerUseCase } from './use-cases/find-one-customer.use-case';
-import { SearchCustomersUseCase } from './use-cases/search-customers.use-case';
 import { RemoveCustomerUseCase } from './use-cases/remove-customer.use-case';
 
 @Module({
@@ -16,7 +15,6 @@ import { RemoveCustomerUseCase } from './use-cases/remove-customer.use-case';
     CreateCustomerUseCase,
     UpdateCustomerUseCase,
     FindOneCustomerUseCase,
-    SearchCustomersUseCase,
     RemoveCustomerUseCase,
   ],
   exports: [
@@ -24,7 +22,6 @@ import { RemoveCustomerUseCase } from './use-cases/remove-customer.use-case';
     CreateCustomerUseCase,
     UpdateCustomerUseCase,
     FindOneCustomerUseCase,
-    SearchCustomersUseCase,
     RemoveCustomerUseCase,
   ],
 })

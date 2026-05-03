@@ -2,6 +2,7 @@
 FRONT/
 FRONT.rar
 .agents
+.atl
 
 # --- Persistencia de Datos (Docker) ---
 backend-db/postgres-data/

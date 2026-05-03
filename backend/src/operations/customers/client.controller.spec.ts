@@ -21,7 +21,6 @@ describe('ClientController', () => {
     findOne: jest.fn(),
     update: jest.fn(),
     remove: jest.fn(),
-    search: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -46,28 +45,27 @@ describe('ClientController', () => {
     expect(controller).toBeDefined();
   });
 
-  describe('search', () => {
-    it('should be defined', () => {
-      expect(controller.search).toBeDefined();
+  describe('findAll', () => {
+    it('should call service.findAll with filters', async () => {
+      mockClientService.findAll.mockResolvedValue([mockClient]);
+
+      const result = await controller.findAll({
+        identificacion: '0999999999001',
+      });
+
+      expect(result).toEqual([mockClient]);
+      expect(mockClientService.findAll).toHaveBeenCalledWith({
+        identificacion: '0999999999001',
+      });
     });
 
-    it('should call clientService.search with correct params', async () => {
-      mockClientService.search.mockResolvedValue([mockClient]);
+    it('should call service.findAll without filters', async () => {
+      mockClientService.findAll.mockResolvedValue([mockClient]);
 
-      const result = await controller.search(
-        'nombreCompleto',
-        'JUAN',
-        '1',
-        '10',
-      );
+      const result = await controller.findAll({});
 
-      expect(result).toHaveLength(1);
-      expect(mockClientService.search).toHaveBeenCalledWith(
-        'nombreCompleto',
-        'JUAN',
-        1,
-        10,
-      );
+      expect(result).toEqual([mockClient]);
+      expect(mockClientService.findAll).toHaveBeenCalledWith({});
     });
   });
 

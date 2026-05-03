@@ -1,21 +1,21 @@
 import { Injectable } from '@nestjs/common';
 import { CreateClientDto } from './dto/create-client.dto';
 import { UpdateClientDto } from './dto/update-client.dto';
+import { FilterClientDto } from './dto/filter-client.dto';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { CreateCustomerUseCase } from './use-cases/create-customer.use-case';
 import { UpdateCustomerUseCase } from './use-cases/update-customer.use-case';
 import { FindOneCustomerUseCase } from './use-cases/find-one-customer.use-case';
-import { SearchCustomersUseCase } from './use-cases/search-customers.use-case';
 import { RemoveCustomerUseCase } from './use-cases/remove-customer.use-case';
+import { buildClientWhere } from './types/filters';
 
 @Injectable()
 export class ClientService {
   constructor(
-    private prisma: PrismaService,
+    private readonly prisma: PrismaService,
     private readonly createUseCase: CreateCustomerUseCase,
     private readonly updateUseCase: UpdateCustomerUseCase,
     private readonly findOneUseCase: FindOneCustomerUseCase,
-    private readonly searchUseCase: SearchCustomersUseCase,
     private readonly removeUseCase: RemoveCustomerUseCase,
   ) {}
 
@@ -23,9 +23,11 @@ export class ClientService {
     return this.createUseCase.execute(dto);
   }
 
-  async findAll() {
+  async findAll(filters?: FilterClientDto) {
+    const where = filters ? buildClientWhere(filters) : { deletedAt: null };
+
     return this.prisma.clientes.findMany({
-      where: { deletedAt: null },
+      where,
       orderBy: { createdAt: 'desc' },
     });
   }
@@ -40,14 +42,5 @@ export class ClientService {
 
   async remove(id: string) {
     return this.removeUseCase.execute(id);
-  }
-
-  async search(
-    tipo: 'identificacion' | 'nombres' | 'apellidos' | 'nombreCompleto',
-    valor: string,
-    page = 1,
-    limit = 10,
-  ) {
-    return this.searchUseCase.execute(tipo, valor, page, limit);
   }
 }

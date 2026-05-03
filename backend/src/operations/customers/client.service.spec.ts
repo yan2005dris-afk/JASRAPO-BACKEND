@@ -5,7 +5,6 @@ import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { CreateCustomerUseCase } from './use-cases/create-customer.use-case';
 import { UpdateCustomerUseCase } from './use-cases/update-customer.use-case';
 import { FindOneCustomerUseCase } from './use-cases/find-one-customer.use-case';
-import { SearchCustomersUseCase } from './use-cases/search-customers.use-case';
 import { RemoveCustomerUseCase } from './use-cases/remove-customer.use-case';
 import { TipoIdentificacion } from 'src/generated/prisma/enums';
 
@@ -14,11 +13,8 @@ describe('ClientService', () => {
   let createUseCase: CreateCustomerUseCase;
   let updateUseCase: UpdateCustomerUseCase;
   let findOneUseCase: FindOneCustomerUseCase;
-  let searchUseCase: SearchCustomersUseCase;
   let removeUseCase: RemoveCustomerUseCase;
   let prisma: PrismaService;
-
-  const mockUseCase = { execute: jest.fn() };
 
   const mockPrismaService = {
     clientes: {
@@ -34,7 +30,6 @@ describe('ClientService', () => {
         { provide: CreateCustomerUseCase, useValue: { execute: jest.fn() } },
         { provide: UpdateCustomerUseCase, useValue: { execute: jest.fn() } },
         { provide: FindOneCustomerUseCase, useValue: { execute: jest.fn() } },
-        { provide: SearchCustomersUseCase, useValue: { execute: jest.fn() } },
         { provide: RemoveCustomerUseCase, useValue: { execute: jest.fn() } },
       ],
     }).compile();
@@ -43,7 +38,6 @@ describe('ClientService', () => {
     createUseCase = module.get<CreateCustomerUseCase>(CreateCustomerUseCase);
     updateUseCase = module.get<UpdateCustomerUseCase>(UpdateCustomerUseCase);
     findOneUseCase = module.get<FindOneCustomerUseCase>(FindOneCustomerUseCase);
-    searchUseCase = module.get<SearchCustomersUseCase>(SearchCustomersUseCase);
     removeUseCase = module.get<RemoveCustomerUseCase>(RemoveCustomerUseCase);
     prisma = module.get<PrismaService>(PrismaService);
   });
@@ -61,10 +55,28 @@ describe('ClientService', () => {
     expect(createUseCase.execute).toHaveBeenCalledWith(dto);
   });
 
-  it('findAll should call prisma directly', async () => {
+  it('findAll should call prisma with filters', async () => {
     mockPrismaService.clientes.findMany.mockResolvedValue([]);
     await service.findAll();
-    expect(mockPrismaService.clientes.findMany).toHaveBeenCalled();
+    expect(mockPrismaService.clientes.findMany).toHaveBeenCalledWith({
+      where: { deletedAt: null },
+      orderBy: { createdAt: 'desc' },
+    });
+  });
+
+  it('findAll should apply filters when provided', async () => {
+    mockPrismaService.clientes.findMany.mockResolvedValue([]);
+    await service.findAll({ identificacion: '123' });
+    expect(mockPrismaService.clientes.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          AND: expect.arrayContaining([
+            { deletedAt: null },
+            { identificacion: { contains: '123', mode: 'insensitive' } },
+          ]),
+        }),
+      }),
+    );
   });
 
   it('findOne should delegate to FindOneCustomerUseCase', async () => {
@@ -81,15 +93,5 @@ describe('ClientService', () => {
   it('remove should delegate to RemoveCustomerUseCase', async () => {
     await service.remove('1');
     expect(removeUseCase.execute).toHaveBeenCalledWith('1');
-  });
-
-  it('search should delegate to SearchCustomersUseCase', async () => {
-    await service.search('identificacion', '123', 1, 10);
-    expect(searchUseCase.execute).toHaveBeenCalledWith(
-      'identificacion',
-      '123',
-      1,
-      10,
-    );
   });
 });

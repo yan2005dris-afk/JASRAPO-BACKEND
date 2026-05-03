@@ -16,9 +16,6 @@ export class CreateClientDto {
   @IsEnum(TipoIdentificacion)
   tipoIdentificacion!: TipoIdentificacion;
 
-  // =========================
-  // IDENTIFICACIÓN
-  // =========================
   @ApiPropertyOptional({
     description:
       'Identificación del cliente. Obligatorio para todos los tipos excepto CONSUMIDOR FINAL',
@@ -53,9 +50,6 @@ export class CreateClientDto {
   @IsString()
   apellidos?: string;
 
-  // =========================
-  // RAZÓN SOCIAL (solo RUC)
-  // =========================
   @ApiPropertyOptional({
     description: 'Razón social (solo aplica para RUC)',
   })
@@ -66,9 +60,6 @@ export class CreateClientDto {
   @Length(2, 100)
   razonSocial?: string;
 
-  // =========================
-  // CONTACTO
-  // =========================
   @ApiPropertyOptional()
   @IsOptional()
   @IsEmail()
@@ -86,9 +77,6 @@ export class CreateClientDto {
   @Length(9, 10)
   telefonoSecundario?: string;
 
-  // =========================
-  // BENEFICIOS
-  // =========================
   @ApiPropertyOptional()
   @IsOptional()
   @IsBoolean()
@@ -99,9 +87,6 @@ export class CreateClientDto {
   @IsBoolean()
   aplicaDiscapacidad?: boolean;
 
-  // =========================
-  // DIRECCIÓN
-  // =========================
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()

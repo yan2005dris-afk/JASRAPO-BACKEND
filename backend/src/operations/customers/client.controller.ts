@@ -17,70 +17,17 @@ import {
   ApiParam,
   ApiBody,
 } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
 import { ClientService } from './client.service';
 import { CreateClientDto } from './dto/create-client.dto';
 import { UpdateClientDto } from './dto/update-client.dto';
+import { FilterClientDto } from './dto/filter-client.dto';
 
 @ApiTags('clients')
 @ApiBearerAuth()
 @Controller('clients')
 export class ClientController {
   constructor(private readonly clientService: ClientService) {}
-
-  /**
-   * Búsqueda de clientes (Pública y Privada unificada)
-   */
-  @ApiOperation({
-    summary: 'Buscar clientes',
-    description:
-      'Busca clientes por tipo de identificación. Retorna resultados paginados.',
-  })
-  @ApiQuery({
-    name: 'tipo',
-    description:
-      'Tipo de búsqueda: identificacion, nombres, apellidos, nombreCompleto',
-    enum: ['identificacion', 'nombres', 'apellidos', 'nombreCompleto'],
-    required: true,
-    example: 'identificacion',
-  })
-  @ApiQuery({
-    name: 'valor',
-    description: 'Texto a buscar',
-    required: true,
-    example: '12345678',
-  })
-  @ApiQuery({
-    name: 'page',
-    description: 'Número de página (default 1)',
-    required: false,
-    type: Number,
-  })
-  @ApiQuery({
-    name: 'limit',
-    description: 'Resultados por página (default 10)',
-    required: false,
-    type: Number,
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Resultados de búsqueda',
-  })
-  @ApiResponse({ status: 400, description: 'Parámetros inválidos' })
-  @Get('search')
-  @Throttle({ default: { limit: 10, ttl: 60000 } })
-  search(
-    @Query('tipo')
-    tipo: 'identificacion' | 'nombres' | 'apellidos' | 'nombreCompleto',
-    @Query('valor') valor: string,
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
-  ) {
-    const pageNumber = page ? parseInt(page, 10) : 1;
-    const limitNumber = limit ? parseInt(limit, 10) : 10;
-    return this.clientService.search(tipo, valor, pageNumber, limitNumber);
-  }
 
   /**
    * Crear un nuevo cliente
@@ -102,18 +49,50 @@ export class ClientController {
 
   /**
    * Listar todos los clientes
+   * Soporta filtros: identificacion, nombres, apellidos, nombreCompleto
    */
   @ApiOperation({
     summary: 'Listar clientes',
-    description: 'Retorna todos los clientes',
+    description: 'Retorna clientes con filtros opcionales',
+  })
+  @ApiQuery({
+    name: 'identificacion',
+    description: 'Filtrar por número de identificación',
+    required: false,
+    example: '1234567890',
+  })
+  @ApiQuery({
+    name: 'nombres',
+    description: 'Filtrar por nombres (búsqueda parcial)',
+    required: false,
+    example: 'Juan',
+  })
+  @ApiQuery({
+    name: 'apellidos',
+    description: 'Filtrar por apellidos (búsqueda parcial)',
+    required: false,
+    example: 'Pérez',
+  })
+  @ApiQuery({
+    name: 'nombreCompleto',
+    description: 'Filtrar por nombre completo (búsqueda parcial)',
+    required: false,
+    example: 'Juan Pérez',
+  })
+  @ApiQuery({
+    name: 'activo',
+    description: 'Filtrar por estado: true=activos, false=inactivos',
+    required: false,
+    type: Boolean,
+    example: true,
   })
   @ApiResponse({ status: 200, description: 'Lista de clientes' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({ status: 403, description: 'Sin permiso clientes:read' })
   @RequiredPermission('clientes', 'read')
   @Get()
-  findAll() {
-    return this.clientService.findAll();
+  findAll(@Query() filters: FilterClientDto) {
+    return this.clientService.findAll(filters);
   }
 
   /**
@@ -183,7 +162,7 @@ export class ClientController {
   @ApiResponse({ status: 404, description: 'Cliente no encontrado' })
   @RequiredPermission('clientes', 'delete')
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.clientService.remove(id);
+  delete(@Param('id') id: string) {
+    return this.clientService.delete(id);
   }
 }
