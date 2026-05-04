@@ -11,8 +11,8 @@ export class CreateMeterUseCase {
 
   async execute(createDto: CreateMeterDto): Promise<MeterResponseDto> {
     const meter = await this.prisma.medidores.create({
-      data: { 
-        ...createDto, 
+      data: {
+        ...createDto,
         estadoId: BigInt(1), // BODEGA
       },
       select: safeMeterSelect,

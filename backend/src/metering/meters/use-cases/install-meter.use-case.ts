@@ -12,7 +12,10 @@ import { MeterResponseDto } from '../dto/meter-response.dto';
 export class InstallMeterUseCase {
   constructor(private readonly prisma: PrismaService) {}
 
-  async execute(medidorId: bigint, contratoId: bigint): Promise<MeterResponseDto> {
+  async execute(
+    medidorId: bigint,
+    contratoId: bigint,
+  ): Promise<MeterResponseDto> {
     const medidor = await this.prisma.medidores.findUnique({
       where: { medidorId },
       include: { estado: true },

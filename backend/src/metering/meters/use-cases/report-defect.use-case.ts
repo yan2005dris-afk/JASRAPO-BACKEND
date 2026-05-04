@@ -29,7 +29,7 @@ export class ReportDefectUseCase {
 
     const updated = await this.prisma.medidores.update({
       where: { medidorId },
-      data: { 
+      data: {
         estadoId: BigInt(3), // DANADO
       },
       select: safeMeterSelect,

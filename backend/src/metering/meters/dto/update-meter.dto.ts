@@ -1,10 +1,5 @@
 import { PartialType } from '@nestjs/swagger';
-import {
-  IsDateString,
-  IsNumber,
-  IsOptional,
-  IsString,
-} from 'class-validator';
+import { IsDateString, IsNumber, IsOptional, IsString } from 'class-validator';
 import { CreateMeterDto } from './create-meter.dto';
 
 export class UpdateMeterDto extends PartialType(CreateMeterDto) {

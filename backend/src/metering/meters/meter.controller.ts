@@ -38,8 +38,8 @@ export class MeterController {
     summary: 'Catálogo de estados de medidor',
     description: 'Retorna lista de estados disponibles para medidores',
   })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiResponse({
+    status: 200,
     description: 'Lista de estados',
     type: [EstadoMedidorResponseDto],
   })

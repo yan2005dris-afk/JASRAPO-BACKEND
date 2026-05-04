@@ -2,7 +2,6 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { InstallMeterUseCase } from './install-meter.use-case';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
-import { EstadoMedidor } from 'src/generated/prisma/client';
 import { BadRequestException } from '@nestjs/common';
 
 describe('InstallMeterUseCase', () => {
@@ -15,10 +14,12 @@ describe('InstallMeterUseCase', () => {
     },
   };
 
+  // FK pattern: estadoId instead of enum
   const mockMedidor = {
     medidorId: BigInt(1),
-    numeroSerie: 'MED-001',
-    estado: EstadoMedidor.BODEGA,
+    serie: 'MED-001',
+    estadoId: BigInt(1), // BODEGA
+    estado: { codigo: 'BODEGA', nombre: 'En Bodega' },
     deletedAt: null,
   };
 
@@ -43,19 +44,21 @@ describe('InstallMeterUseCase', () => {
     );
     mockPrismaService.medidores.update.mockResolvedValue({
       ...mockMedidor,
-      estado: EstadoMedidor.INSTALADO,
+      estadoId: BigInt(2), // INSTALADO
+      estado: { codigo: 'INSTALADO', nombre: 'Instalado' },
       contratoId: BigInt(123),
     } as any);
 
     const result = await useCase.execute(BigInt(1), BigInt(123));
 
-    expect(result.estado).toBe(EstadoMedidor.INSTALADO);
+    expect(result.estado).toBe('INSTALADO');
   });
 
-  it('should throw BadRequestException when medidor is not in BODEGA status (ESTIMADO)', async () => {
+  it('should throw BadRequestException when medidor is not in BODEGA status', async () => {
     mockPrismaService.medidores.findUnique.mockResolvedValue({
       ...mockMedidor,
-      estado: EstadoMedidor.ESTIMADO,
+      estadoId: BigInt(2), // INSTALADO
+      estado: { codigo: 'INSTALADO', nombre: 'Instalado' },
     } as any);
 
     await expect(useCase.execute(BigInt(1), BigInt(123))).rejects.toThrow(
@@ -85,7 +88,8 @@ describe('InstallMeterUseCase', () => {
   it('should throw BadRequestException when medidor already installed', async () => {
     mockPrismaService.medidores.findUnique.mockResolvedValue({
       ...mockMedidor,
-      estado: EstadoMedidor.INSTALADO,
+      estadoId: BigInt(2),
+      estado: { codigo: 'INSTALADO', nombre: 'Instalado' },
     } as any);
 
     await expect(useCase.execute(BigInt(1), BigInt(123))).rejects.toThrow(

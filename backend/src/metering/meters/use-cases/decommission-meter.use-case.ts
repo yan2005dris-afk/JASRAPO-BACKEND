@@ -25,10 +25,10 @@ export class DecommissionMeterUseCase {
 
     const updated = await this.prisma.medidores.update({
       where: { medidorId },
-      data: { 
+      data: {
         estadoId: BigInt(5), // BAJA
-        fechaBaja: new Date(), 
-        motivo 
+        fechaBaja: new Date(),
+        motivo,
       },
       select: safeMeterSelect,
     });

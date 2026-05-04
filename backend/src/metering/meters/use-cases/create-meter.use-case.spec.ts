@@ -2,7 +2,6 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { CreateMeterUseCase } from './create-meter.use-case';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
-import { EstadoMedidor } from 'src/generated/prisma/client';
 
 describe('CreateMeterUseCase', () => {
   let useCase: CreateMeterUseCase;
@@ -30,18 +29,20 @@ describe('CreateMeterUseCase', () => {
 
   it('should create device with BODEGA status', async () => {
     const dto = {
-      numeroSerie: 'MED-001',
+      serie: 'MED-001',
       modelo: 'Digital-2000',
-      marca: ' Siemens',
+      marca: 'Siemens',
       lecturaInicial: 0,
-      serie: 'SERIAL-001',
     };
+
+    // FK pattern: estadoId + estado relation
     const expectedMedidor = {
       medidorId: BigInt(1),
-      numeroSerie: dto.numeroSerie,
+      serie: dto.serie,
       modelo: dto.modelo,
       marca: dto.marca,
-      estado: EstadoMedidor.BODEGA,
+      estadoId: BigInt(1),
+      estado: { codigo: 'BODEGA', nombre: 'En Bodega' },
     };
 
     mockPrismaService.medidores.create.mockResolvedValue(
@@ -50,7 +51,7 @@ describe('CreateMeterUseCase', () => {
 
     const result = await useCase.execute(dto);
 
-    expect(result.numeroSerie).toBe(dto.numeroSerie);
-    expect(result.estado).toBe(EstadoMedidor.BODEGA);
+    expect(result.serie).toBe(dto.serie);
+    expect(result.estado).toBe('BODEGA');
   });
 });

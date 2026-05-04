@@ -8,8 +8,6 @@ import { InstallMeterUseCase } from './use-cases/install-meter.use-case';
 import { ReportDefectUseCase } from './use-cases/report-defect.use-case';
 import { DecommissionMeterUseCase } from './use-cases/decommission-meter.use-case';
 
-import { EstadoMedidor } from 'src/generated/prisma/enums';
-
 describe('MeterService', () => {
   let service: MeterService;
   let prisma: PrismaService;
@@ -19,12 +17,14 @@ describe('MeterService', () => {
   let reportDamageUseCase: ReportDefectUseCase;
   let decommissionUseCase: DecommissionMeterUseCase;
 
+  // Prisma result (raw DB)
   const mockPrismaResult = {
     medidorId: BigInt(1),
     serie: 'MED-001',
     modelo: 'CX1000',
     marca: 'Itron',
-    estado: EstadoMedidor.BODEGA,
+    estadoId: BigInt(1),
+    estado: { codigo: 'BODEGA', nombre: 'En Bodega' },
     contratoId: null,
     fechaInstalacion: null,
     fechaBaja: null,
@@ -34,12 +34,13 @@ describe('MeterService', () => {
     deletedAt: null,
   };
 
+  // DTO shape (what the service returns after mapping)
   const expectedResponse = {
     medidorId: BigInt(1),
     serie: 'MED-001',
     modelo: 'CX1000',
     marca: 'Itron',
-    estado: EstadoMedidor.BODEGA,
+    estado: 'BODEGA',
     contratoId: null,
     fechaInstalacion: null,
     fechaBaja: null,
@@ -92,9 +93,11 @@ describe('MeterService', () => {
 
   it('create should delegate to CreateMeterUseCase and map response', async () => {
     const dto = { serie: 'MED-001' } as any;
-    jest.spyOn(createUseCase, 'execute').mockResolvedValue(mockPrismaResult);
+    jest
+      .spyOn(createUseCase, 'execute')
+      .mockResolvedValue(mockPrismaResult as any);
     const result = await service.create(dto);
-    expect(result.medidorId).toBe(expectedResponse.medidorId);
+    expect(result.medidorId).toEqual(expectedResponse.medidorId);
     expect(result.serie).toBe(expectedResponse.serie);
     expect(result.marca).toBe(expectedResponse.marca);
     expect(createUseCase.execute).toHaveBeenCalledWith(dto);
@@ -102,9 +105,11 @@ describe('MeterService', () => {
 
   it('findOne should delegate to FindOneMeterUseCase and map response', async () => {
     const id = BigInt(1);
-    jest.spyOn(findOneUseCase, 'execute').mockResolvedValue(mockPrismaResult);
+    jest
+      .spyOn(findOneUseCase, 'execute')
+      .mockResolvedValue(mockPrismaResult as any);
     const result = await service.findOne(id);
-    expect(result.medidorId).toBe(expectedResponse.medidorId);
+    expect(result.medidorId).toEqual(expectedResponse.medidorId);
     expect(result.serie).toBe(expectedResponse.serie);
     expect(findOneUseCase.execute).toHaveBeenCalledWith(id);
   });
@@ -115,7 +120,7 @@ describe('MeterService', () => {
       .spyOn(prisma.medidores, 'findMany')
       .mockResolvedValue([mockPrismaResult]);
     const result = await service.findAll(params);
-    expect(result[0].medidorId).toBe(expectedResponse.medidorId);
+    expect(result[0].medidorId).toEqual(expectedResponse.medidorId);
     expect(result[0].serie).toBe(expectedResponse.serie);
     expect(prisma.medidores.findMany).toHaveBeenCalled();
   });
