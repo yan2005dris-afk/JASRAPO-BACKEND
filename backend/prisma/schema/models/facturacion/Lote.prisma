@@ -1,9 +1,9 @@
-model LoteFacturacion {
+model Lote {
   loteId         BigInt        @id @default(autoincrement()) @map("lote_id")
   comunidadId    Int           @map("comunidad_id")
   periodoId      Int           @map("periodo_id")
   estado         EstadoLote    @default(BORRADOR) @map("estado")
-  totalMonto     Decimal       @default(0) @map("total_monto") @db.Decimal
+  totalMonto     Decimal       @default(0) @map("total_monto") @db.Decimal(18, 2)
   notas          String?       @map("notas")
   createdAt      DateTime      @default(now()) @map("creado_en")
   updatedAt      DateTime      @updatedAt @map("actualizado_en")
@@ -17,7 +17,7 @@ model LoteFacturacion {
   @@unique([comunidadId, periodoId], name: "uk_lote_comunidad_periodo")
   @@index([comunidadId])
   @@index([periodoId])
-  @@map("lote_facturacion")
+  @@map("lote")
 }
 
 enum EstadoLote {

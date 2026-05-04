@@ -6,7 +6,7 @@ model Users {
   deletedAt         DateTime?          @map("borrado_en")
   cajaSesion        CajaSesion[]
   descuentosDetalle DescuentoDetalle[] @relation("AutorizadoPor")
-  loteFacturacion   LoteFacturacion[]
+  lote              Lote[]
   pagos             Pagos[]
   profile           Profiles?
   sessions          Sessions[]

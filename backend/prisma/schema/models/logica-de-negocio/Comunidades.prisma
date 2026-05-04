@@ -2,12 +2,12 @@ model Comunidades {
   comunidadId             Int               @id @default(autoincrement()) @map("comunidad_id")
   nombre                  String            @map("nombre")
   codigo                  String            @unique @map("codigo")
-  porcentajeTasaSeguridad Decimal           @map("porcentaje_tasa_seguridad") @db.Decimal
+  porcentajeTasaSeguridad Decimal           @map("porcentaje_tasa_seguridad") @db.Decimal(18, 2)
   updatedAt               DateTime          @updatedAt @map("actualizado_en")
   createdAt               DateTime          @default(now()) @map("creado_en")
   deletedAt               DateTime?         @map("borrado_en")
   contratos               Contratos[]
-  loteFacturacion         LoteFacturacion[]
+  lote                    Lote[]
   sector                  Sectores[]
 
   @@map("comunidades")

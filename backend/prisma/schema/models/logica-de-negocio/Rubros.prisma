@@ -3,7 +3,7 @@ model Rubros {
   codigoSri         String?             @unique @map("codigo_sri")
   nombre            String              @default("") @map("nombre")
   descripcion       String              @map("descripcion")
-  precioUnitario    Decimal             @map("precio_unitario") @db.Decimal
+  precioUnitario    Decimal             @map("precio_unitario") @db.Decimal(18, 2)
   tipoRubro         TipoRubro           @map("tipo_rubro")
   impuestoId        Int                 @map("impuesto_id")
   activo            Boolean             @default(true) @map("activo")
