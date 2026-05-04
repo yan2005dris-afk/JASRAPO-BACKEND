@@ -2,17 +2,21 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { ClientController } from './client.controller';
 import { ClientService } from './client.service';
-import { TipoIdentificacion } from 'src/generated/prisma/enums';
 
 describe('ClientController', () => {
   let controller: ClientController;
 
   const mockClient = {
-    clienteId: '1',
+    clienteId: BigInt(1),
     identificacion: '0999999999001',
-    tipoIdentificacion: TipoIdentificacion.RUC,
+    tipoIdentificacionId: BigInt(2),
     nombres: 'JUAN',
     apellidos: 'PEREZ',
+    tipoIdentificacion: {
+      identificacionId: BigInt(2),
+      codigo: 'RUC',
+      nombre: 'RUC',
+    },
   };
 
   const mockClientService = {
@@ -20,7 +24,8 @@ describe('ClientController', () => {
     findAll: jest.fn(),
     findOne: jest.fn(),
     update: jest.fn(),
-    remove: jest.fn(),
+    delete: jest.fn(),
+    findAllIdentificaciones: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -74,7 +79,7 @@ describe('ClientController', () => {
       mockClientService.create.mockResolvedValue(mockClient);
       const dto = {
         identificacion: '0999999999001',
-        tipoIdentificacion: TipoIdentificacion.RUC,
+        tipoIdentificacionId: 2,
         nombres: 'JUAN',
         apellidos: 'PEREZ',
       };
@@ -83,6 +88,28 @@ describe('ClientController', () => {
 
       expect(result).toEqual(mockClient);
       expect(mockClientService.create).toHaveBeenCalledWith(dto);
+    });
+  });
+
+  describe('findAllIdentificaciones', () => {
+    it('should call service.findAllIdentificaciones', async () => {
+      const mockIdentificaciones = [
+        {
+          identificacionId: BigInt(1),
+          codigo: 'CEDULA',
+          nombre: 'Cédula',
+          activo: true,
+          orden: 1,
+        },
+      ];
+      mockClientService.findAllIdentificaciones.mockResolvedValue(
+        mockIdentificaciones,
+      );
+
+      const result = await controller.findAllIdentificaciones();
+
+      expect(result).toEqual(mockIdentificaciones);
+      expect(mockClientService.findAllIdentificaciones).toHaveBeenCalled();
     });
   });
 });

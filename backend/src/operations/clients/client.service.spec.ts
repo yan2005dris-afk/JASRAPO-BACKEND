@@ -2,18 +2,17 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { ClientService } from './client.service';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
-import { CreateCustomerUseCase } from './use-cases/create-customer.use-case';
-import { UpdateCustomerUseCase } from './use-cases/update-customer.use-case';
-import { FindOneCustomerUseCase } from './use-cases/find-one-customer.use-case';
-import { RemoveCustomerUseCase } from './use-cases/remove-customer.use-case';
-import { TipoIdentificacion } from 'src/generated/prisma/enums';
+import { CreateClientUseCase } from './use-cases/create-client.use-case';
+import { UpdateClientUseCase } from './use-cases/update-client.use-case';
+import { FindOneClientUseCase } from './use-cases/find-one-client.use-case';
+import { RemoveClientUseCase } from './use-cases/remove-client.use-case';
 
 describe('ClientService', () => {
   let service: ClientService;
-  let createUseCase: CreateCustomerUseCase;
-  let updateUseCase: UpdateCustomerUseCase;
-  let findOneUseCase: FindOneCustomerUseCase;
-  let removeUseCase: RemoveCustomerUseCase;
+  let createUseCase: CreateClientUseCase;
+  let updateUseCase: UpdateClientUseCase;
+  let findOneUseCase: FindOneClientUseCase;
+  let removeUseCase: RemoveClientUseCase;
   let prisma: PrismaService;
 
   const mockPrismaService = {
@@ -27,18 +26,18 @@ describe('ClientService', () => {
       providers: [
         ClientService,
         { provide: PrismaService, useValue: mockPrismaService },
-        { provide: CreateCustomerUseCase, useValue: { execute: jest.fn() } },
-        { provide: UpdateCustomerUseCase, useValue: { execute: jest.fn() } },
-        { provide: FindOneCustomerUseCase, useValue: { execute: jest.fn() } },
-        { provide: RemoveCustomerUseCase, useValue: { execute: jest.fn() } },
+        { provide: CreateClientUseCase, useValue: { execute: jest.fn() } },
+        { provide: UpdateClientUseCase, useValue: { execute: jest.fn() } },
+        { provide: FindOneClientUseCase, useValue: { execute: jest.fn() } },
+        { provide: RemoveClientUseCase, useValue: { execute: jest.fn() } },
       ],
     }).compile();
 
     service = module.get<ClientService>(ClientService);
-    createUseCase = module.get<CreateCustomerUseCase>(CreateCustomerUseCase);
-    updateUseCase = module.get<UpdateCustomerUseCase>(UpdateCustomerUseCase);
-    findOneUseCase = module.get<FindOneCustomerUseCase>(FindOneCustomerUseCase);
-    removeUseCase = module.get<RemoveCustomerUseCase>(RemoveCustomerUseCase);
+    createUseCase = module.get<CreateClientUseCase>(CreateClientUseCase);
+    updateUseCase = module.get<UpdateClientUseCase>(UpdateClientUseCase);
+    findOneUseCase = module.get<FindOneClientUseCase>(FindOneClientUseCase);
+    removeUseCase = module.get<RemoveClientUseCase>(RemoveClientUseCase);
     prisma = module.get<PrismaService>(PrismaService);
   });
 
@@ -46,9 +45,9 @@ describe('ClientService', () => {
     expect(service).toBeDefined();
   });
 
-  it('create should delegate to CreateCustomerUseCase', async () => {
+  it('create should delegate to CreateClientUseCase', async () => {
     const dto = {
-      tipoIdentificacion: TipoIdentificacion.CEDULA,
+      tipoIdentificacionId: 1,
       identificacion: '123',
     } as any;
     await service.create(dto);
@@ -61,6 +60,7 @@ describe('ClientService', () => {
     expect(mockPrismaService.clientes.findMany).toHaveBeenCalledWith({
       where: { deletedAt: null },
       orderBy: { createdAt: 'desc' },
+      select: expect.anything(),
     });
   });
 
@@ -79,18 +79,18 @@ describe('ClientService', () => {
     );
   });
 
-  it('findOne should delegate to FindOneCustomerUseCase', async () => {
+  it('findOne should delegate to FindOneClientUseCase', async () => {
     await service.findOne('1');
     expect(findOneUseCase.execute).toHaveBeenCalledWith('1');
   });
 
-  it('update should delegate to UpdateCustomerUseCase', async () => {
+  it('update should delegate to UpdateClientUseCase', async () => {
     const dto = { nombres: 'Test' } as any;
     await service.update('1', dto);
     expect(updateUseCase.execute).toHaveBeenCalledWith('1', dto);
   });
 
-  it('delete should delegate to RemoveCustomerUseCase', async () => {
+  it('delete should delegate to RemoveClientUseCase', async () => {
     await service.delete('1');
     expect(removeUseCase.execute).toHaveBeenCalledWith('1');
   });

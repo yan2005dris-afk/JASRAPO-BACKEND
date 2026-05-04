@@ -34,22 +34,16 @@ export class CreateClientDto {
   })
   identificacion?: string;
 
-  @ValidateIf(
-    (o) => o.tipoIdentificacionId !== 4,
-  )
+  @ValidateIf((o) => o.tipoIdentificacionId !== 4)
   @ApiPropertyOptional({ description: 'Nombres del cliente' })
-  @ValidateIf(
-    (o) => o.tipoIdentificacionId !== 4,
-  )
+  @ValidateIf((o) => o.tipoIdentificacionId !== 4)
   @IsOptional()
   @IsNotEmpty()
   @IsString()
   nombres?: string;
 
   @ApiPropertyOptional()
-  @ValidateIf(
-    (o) => o.tipoIdentificacionId !== 4,
-  )
+  @ValidateIf((o) => o.tipoIdentificacionId !== 4)
   @IsNotEmpty()
   @IsString()
   apellidos?: string;

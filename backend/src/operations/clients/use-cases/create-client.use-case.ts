@@ -28,12 +28,12 @@ export class CreateClientUseCase {
     }
 
     const identificacion = dto.identificacion.trim();
-    
+
     // Obtener el código del tipo de identificación para validar
     const catalogo = await this.prisma.identificacion.findUnique({
       where: { identificacionId: tipoId },
     });
-    
+
     if (!catalogo) {
       throw new BadRequestException('Tipo de identificación inválido');
     }
@@ -59,7 +59,10 @@ export class CreateClientUseCase {
     }
 
     try {
-      return await this.prisma.clientes.create({ data, select: safeClientesSelect });
+      return await this.prisma.clientes.create({
+        data,
+        select: safeClientesSelect,
+      });
     } catch (error: any) {
       if (error.code === 'P2002')
         throw new ConflictException('La identificación ya está registrada');
@@ -141,11 +144,12 @@ export class CreateClientUseCase {
     }
   }
 
-  private validarCamposBasicos(codigo: string, nombres?: string, apellidos?: string) {
-    if (
-      codigo !== 'CONSUMIDOR_FINAL' &&
-      (!nombres || !apellidos)
-    ) {
+  private validarCamposBasicos(
+    codigo: string,
+    nombres?: string,
+    apellidos?: string,
+  ) {
+    if (codigo !== 'CONSUMIDOR_FINAL' && (!nombres || !apellidos)) {
       throw new BadRequestException('Nombres y apellidos son requeridos');
     }
   }

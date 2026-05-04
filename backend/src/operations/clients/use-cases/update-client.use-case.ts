@@ -22,8 +22,8 @@ export class UpdateClientUseCase {
 
     if (!cliente) throw new NotFoundException('Cliente no encontrado');
 
-    const tipoId = dto.tipoIdentificacionId 
-      ? BigInt(dto.tipoIdentificacionId) 
+    const tipoId = dto.tipoIdentificacionId
+      ? BigInt(dto.tipoIdentificacionId)
       : cliente.tipoIdentificacionId!;
     const identificacionFinal = (
       dto.identificacion ?? cliente.identificacion
@@ -59,10 +59,7 @@ export class UpdateClientUseCase {
       ?.trim()
       .toUpperCase();
 
-    if (
-      catalogo.codigo !== 'CONSUMIDOR_FINAL' &&
-      (!nombres || !apellidos)
-    ) {
+    if (catalogo.codigo !== 'CONSUMIDOR_FINAL' && (!nombres || !apellidos)) {
       throw new BadRequestException('Nombres y apellidos son requeridos');
     }
 
