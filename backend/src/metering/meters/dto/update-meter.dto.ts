@@ -1,18 +1,16 @@
 import { PartialType } from '@nestjs/swagger';
 import {
   IsDateString,
-  IsEnum,
   IsNumber,
   IsOptional,
   IsString,
 } from 'class-validator';
-import { EstadoMedidor } from 'src/generated/prisma/client';
 import { CreateMeterDto } from './create-meter.dto';
 
 export class UpdateMeterDto extends PartialType(CreateMeterDto) {
   @IsOptional()
-  @IsEnum(EstadoMedidor)
-  estado?: EstadoMedidor;
+  @IsNumber()
+  estadoId?: number;
 
   @IsOptional()
   @IsString()

@@ -1,6 +1,4 @@
-import type { Decimal } from '@prisma/client/runtime/wasm-compiler-edge';
 import type { Prisma } from 'src/generated/prisma/client';
-import type { EstadoMedidor } from 'src/generated/prisma/enums';
 
 export interface IResponseMeters {
   medidorId: bigint;
@@ -8,12 +6,16 @@ export interface IResponseMeters {
   marca: string;
   modelo: string;
   serie: string;
-  estado: EstadoMedidor;
+  estado: {
+    estadoId: bigint;
+    codigo: string;
+    nombre: string;
+  } | null;
   fechaInstalacion: Date | null;
   fechaBaja: Date | null;
   motivo: string | null;
-  latitud: Decimal | null;
-  longitud: Decimal | null;
+  latitud: number | null;
+  longitud: number | null;
 }
 
 export const safeMeterSelect = {
@@ -22,7 +24,13 @@ export const safeMeterSelect = {
   marca: true,
   modelo: true,
   serie: true,
-  estado: true,
+  estado: {
+    select: {
+      estadoId: true,
+      codigo: true,
+      nombre: true,
+    },
+  },
   fechaInstalacion: true,
   fechaBaja: true,
   motivo: true,
@@ -36,7 +44,13 @@ export const safeMeterSelectWithDelete = {
   marca: true,
   modelo: true,
   serie: true,
-  estado: true,
+  estado: {
+    select: {
+      estadoId: true,
+      codigo: true,
+      nombre: true,
+    },
+  },
   fechaInstalacion: true,
   fechaBaja: true,
   motivo: true,

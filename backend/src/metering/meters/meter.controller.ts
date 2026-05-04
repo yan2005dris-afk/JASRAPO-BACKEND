@@ -13,6 +13,7 @@ import { CreateMeterDto } from './dto/create-meter.dto';
 import { UpdateMeterDto } from './dto/update-meter.dto';
 import { InstallMeterDto } from './dto/install-meter.dto';
 import { MeterResponseDto } from './dto/meter-response.dto';
+import { EstadoMedidorResponseDto } from './dto/estado-medidor-response.dto';
 import {
   ApiTags,
   ApiBearerAuth,
@@ -23,13 +24,29 @@ import {
   ApiBody,
 } from '@nestjs/swagger';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
-import { EstadoMedidor } from 'src/generated/prisma/client';
 
 @ApiTags('meters')
 @ApiBearerAuth()
 @Controller('meters')
 export class MeterController {
   constructor(private readonly meterService: MeterService) {}
+
+  /**
+   * Obtener catálogo de estados de medidor
+   */
+  @ApiOperation({
+    summary: 'Catálogo de estados de medidor',
+    description: 'Retorna lista de estados disponibles para medidores',
+  })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Lista de estados',
+    type: [EstadoMedidorResponseDto],
+  })
+  @Get('status')
+  findAllEstados(): Promise<EstadoMedidorResponseDto[]> {
+    return this.meterService.findAllEstados();
+  }
 
   /**
    * Crear un nuevo medidor
@@ -78,9 +95,10 @@ export class MeterController {
   })
   @ApiQuery({
     name: 'estado',
-    description: 'Filtrar por estado del medidor',
+    description: 'Filtrar por estado del medidor (codigo)',
     required: false,
-    enum: EstadoMedidor,
+    type: String,
+    example: 'BODEGA',
   })
   @ApiResponse({
     status: 200,
@@ -93,12 +111,12 @@ export class MeterController {
   async findAll(
     @Query('skip') skip?: string,
     @Query('take') take?: string,
-    @Query('estado') estado?: EstadoMedidor,
+    @Query('estado') estado?: string,
   ): Promise<MeterResponseDto[]> {
     return this.meterService.findAll({
       skip: skip ? +skip : undefined,
       take: take ? +take : undefined,
-      where: estado ? { estado } : undefined,
+      where: estado ? { estado: { codigo: estado } } : undefined,
     });
   }
 

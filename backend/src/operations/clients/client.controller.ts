@@ -33,11 +33,11 @@ export class ClientController {
    * Obtener identificaciones
    */
   @ApiOperation({
-    summary: 'Catálogo de identificaciones',
+    summary: 'Catálogo de tipos de identificación',
     description: 'Retorna lista de tipos de identificación para formularios',
   })
   @ApiResponse({ status: 200, description: 'Lista de identificaciones' })
-  @Get('identificaciones')
+  @Get('identification-types')
   findAllIdentificaciones() {
     return this.clientService.findAllIdentificaciones();
   }

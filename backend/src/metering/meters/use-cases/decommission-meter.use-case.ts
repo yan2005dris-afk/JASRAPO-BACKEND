@@ -1,28 +1,37 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
-import { EstadoMedidor, Medidores } from 'src/generated/prisma/client';
+import { safeMeterSelect } from '../types/IResponseMeters';
+import { toMeterResponse } from '../types/metersMapper';
+import { MeterResponseDto } from '../dto/meter-response.dto';
 
 @Injectable()
 export class DecommissionMeterUseCase {
   constructor(private readonly prisma: PrismaService) {}
 
-  async execute(medidorId: bigint, motivo: string): Promise<Medidores> {
+  async execute(medidorId: bigint, motivo: string): Promise<MeterResponseDto> {
     const medidor = await this.prisma.medidores.findUnique({
       where: { medidorId },
+      include: { estado: true },
     });
 
     if (!medidor || medidor.deletedAt)
       throw new BadRequestException('Medidor no encontrado');
 
-    if (medidor.estado !== EstadoMedidor.DANADO) {
+    if (medidor.estado?.codigo !== 'DANADO') {
       throw new BadRequestException(
-        `Un medidor debe estar DAÑADO antes de darse de baja`,
+        `Un medidor debe estar DANADO antes de darse de baja`,
       );
     }
 
-    return await this.prisma.medidores.update({
+    const updated = await this.prisma.medidores.update({
       where: { medidorId },
-      data: { estado: EstadoMedidor.BAJA, fechaBaja: new Date(), motivo },
+      data: { 
+        estadoId: BigInt(5), // BAJA
+        fechaBaja: new Date(), 
+        motivo 
+      },
+      select: safeMeterSelect,
     });
+    return toMeterResponse(updated);
   }
 }

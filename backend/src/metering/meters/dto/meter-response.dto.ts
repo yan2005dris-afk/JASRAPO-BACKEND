@@ -1,11 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { EstadoMedidor } from 'src/generated/prisma/client';
 
-/**
- * DTO de respuesta para medidor
- * Representa los campos públicos que se devuelven en la API
- * No incluye campos internos como deletedAt
- */
 export class MeterResponseDto {
   @ApiProperty({
     description: 'ID único del medidor',
@@ -39,10 +33,9 @@ export class MeterResponseDto {
 
   @ApiProperty({
     description: 'Estado actual del medidor',
-    enum: EstadoMedidor,
-    example: 'PENDIENTE/BODEGA/INSTALADO/DANADO',
+    example: 'BODEGA',
   })
-  estado: EstadoMedidor;
+  estado: string;
 
   @ApiPropertyOptional({
     description: 'Fecha de instalación del medidor (YYYY-MM-DD)',

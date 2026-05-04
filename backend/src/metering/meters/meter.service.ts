@@ -4,6 +4,7 @@ import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { CreateMeterDto } from './dto/create-meter.dto';
 import { UpdateMeterDto } from './dto/update-meter.dto';
 import { MeterResponseDto } from './dto/meter-response.dto';
+import { EstadoMedidorResponseDto } from './dto/estado-medidor-response.dto';
 import { CreateMeterUseCase } from './use-cases/create-meter.use-case';
 import { ReportDefectUseCase } from './use-cases/report-defect.use-case';
 import { FindOneMeterUseCase } from './use-cases/find-one-meter.use-case';
@@ -101,5 +102,20 @@ export class MeterService {
   ): Promise<MeterResponseDto> {
     const meter = await this.decommissionUseCase.execute(medidorId, motivoBaja);
     return toMeterResponse(meter);
+  }
+
+  /**
+   * Obtener catálogo de estados de medidor
+   */
+  async findAllEstados(): Promise<EstadoMedidorResponseDto[]> {
+    const estados = await this.prisma.estadoMedidor.findMany({
+      orderBy: { orden: 'asc' },
+    });
+    return estados.map((e) => ({
+      estadoId: Number(e.estadoId),
+      codigo: e.codigo,
+      nombre: e.nombre,
+      orden: Number(e.orden),
+    }));
   }
 }

@@ -12,6 +12,8 @@ import { seedComunidades } from './seeds/comunidades.seed';
 import { seedSectores } from './seeds/sectores.seed';
 import { seedCategoriaTarifa } from './seeds/categoriaTarifa.seed';
 import { seedIdentificacion } from './seeds/identificacion.seed';
+import { seedEstadoMedidor } from './seeds/estadoMedidor.seed';
+import { seedMedidores } from './seeds/medidores.seed';
 import { seedClientes } from './seeds/clientes.seed';
 import { seedContratos } from './seeds/contratos.seed';
 import { seedLecturas } from './seeds/lecturas.seed';
@@ -94,6 +96,14 @@ async function main() {
   // Identificaciones
   await seedIdentificacion(prisma);
   console.log('✅ Identificaciones creadas.');
+
+  // Estados de Medidor
+  await seedEstadoMedidor(prisma);
+  console.log('✅ Estados de medidor creados.');
+
+  // Medidores
+  await seedMedidores(prisma);
+  console.log('✅ Medidores creados.');
 
   await seedClientes(prisma);
   console.log('✅ Clientes creados.');

@@ -1,36 +1,18 @@
-import type { Decimal } from '@prisma/client/runtime/wasm-compiler-edge';
 import type { MeterResponseDto } from '../dto/meter-response.dto';
 import { DateUtil } from 'src/infrastructure/common/util/date.util';
-
-/**
- * Tipo de entrada desde Prisma (antes de conversión de Decimal)
- */
-export type MeterPrismaRaw = {
-  medidorId: bigint;
-  contratoId: bigint | null;
-  marca: string;
-  modelo: string;
-  serie: string;
-  estado: string;
-  fechaInstalacion: Date | null;
-  fechaBaja: Date | null;
-  motivo: string | null;
-  latitud: Decimal | null;
-  longitud: Decimal | null;
-};
 
 /**
  * Mapea resultado de Prisma a DTO de response
  * Convierte Decimal a number y fechas a formato frontend (YYYY-MM-DD)
  */
-export function toMeterResponse(meter: MeterPrismaRaw): MeterResponseDto {
+export function toMeterResponse(meter: any): MeterResponseDto {
   return {
     medidorId: meter.medidorId,
     contratoId: meter.contratoId,
     marca: meter.marca,
     modelo: meter.modelo,
     serie: meter.serie,
-    estado: meter.estado as any,
+    estado: meter.estado?.codigo,
     fechaInstalacion: DateUtil.formatForFrontend(meter.fechaInstalacion),
     fechaBaja: DateUtil.formatForFrontend(meter.fechaBaja),
     motivo: meter.motivo,
