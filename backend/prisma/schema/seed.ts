@@ -11,6 +11,7 @@ import { seedUSers } from './seeds/user.seed';
 import { seedComunidades } from './seeds/comunidades.seed';
 import { seedSectores } from './seeds/sectores.seed';
 import { seedCategoriaTarifa } from './seeds/categoriaTarifa.seed';
+import { seedIdentificacion } from './seeds/identificacion.seed';
 import { seedClientes } from './seeds/clientes.seed';
 import { seedContratos } from './seeds/contratos.seed';
 import { seedLecturas } from './seeds/lecturas.seed';
@@ -89,6 +90,10 @@ async function main() {
 
   await seedCategoriaTarifa(prisma);
   console.log('✅ Categorías de tarifa creadas.');
+
+  // Identificaciones
+  await seedIdentificacion(prisma);
+  console.log('✅ Identificaciones creadas.');
 
   await seedClientes(prisma);
   console.log('✅ Clientes creados.');

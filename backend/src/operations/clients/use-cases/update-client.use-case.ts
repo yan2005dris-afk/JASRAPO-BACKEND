@@ -6,29 +6,41 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { UpdateClientDto } from '../dto/update-client.dto';
-import { TipoIdentificacion } from 'src/generated/prisma/enums';
 import { TipoIdentificacionUtil } from 'src/infrastructure/common/util/tipo-identificacion.util';
+import { safeClientesSelect } from '../types/IResponseClient';
 
 @Injectable()
-export class UpdateCustomerUseCase {
+export class UpdateClientUseCase {
   constructor(private readonly prisma: PrismaService) {}
 
   async execute(id: string, dto: UpdateClientDto) {
     const clienteId = BigInt(id);
     const cliente = await this.prisma.clientes.findFirst({
       where: { clienteId, deletedAt: null },
+      include: { tipoIdentificacion: true },
     });
 
     if (!cliente) throw new NotFoundException('Cliente no encontrado');
 
-    const tipoFinal = dto.tipoIdentificacion ?? cliente.tipoIdentificacion;
+    const tipoId = dto.tipoIdentificacionId 
+      ? BigInt(dto.tipoIdentificacionId) 
+      : cliente.tipoIdentificacionId!;
     const identificacionFinal = (
       dto.identificacion ?? cliente.identificacion
     ).trim();
 
+    // Obtener el código del tipo de identificación
+    const catalogo = await this.prisma.identificacion.findUnique({
+      where: { identificacionId: tipoId },
+    });
+
+    if (!catalogo) {
+      throw new BadRequestException('Tipo de identificación inválido');
+    }
+
     if (
-      tipoFinal !== TipoIdentificacion.CONSUMIDOR_FINAL &&
-      !TipoIdentificacionUtil.validar(tipoFinal, identificacionFinal)
+      catalogo.codigo !== 'CONSUMIDOR_FINAL' &&
+      !TipoIdentificacionUtil.validar(catalogo.codigo, identificacionFinal)
     ) {
       throw new BadRequestException('Identificación inválida');
     }
@@ -48,7 +60,7 @@ export class UpdateCustomerUseCase {
       .toUpperCase();
 
     if (
-      tipoFinal !== TipoIdentificacion.CONSUMIDOR_FINAL &&
+      catalogo.codigo !== 'CONSUMIDOR_FINAL' &&
       (!nombres || !apellidos)
     ) {
       throw new BadRequestException('Nombres y apellidos son requeridos');
@@ -57,7 +69,9 @@ export class UpdateCustomerUseCase {
     return this.prisma.clientes.update({
       where: { clienteId },
       data: {
-        tipoIdentificacion: tipoFinal,
+        tipoIdentificacion: {
+          connect: { identificacionId: tipoId },
+        },
         identificacion: identificacionFinal,
         nombres,
         apellidos,
@@ -73,6 +87,7 @@ export class UpdateCustomerUseCase {
         aplicaDiscapacidad:
           dto.aplicaDiscapacidad ?? cliente.aplicaDiscapacidad,
       },
+      select: safeClientesSelect,
     });
   }
 }

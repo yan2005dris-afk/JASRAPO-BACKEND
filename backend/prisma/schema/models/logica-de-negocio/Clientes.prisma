@@ -8,7 +8,8 @@ model Clientes {
   razonSocial        String?             @map("razon_social")
   telefono           String?             @map("telefono")
   telefonoSecundario String?             @map("telefono_secundario")
-  tipoIdentificacion TipoIdentificacion  @map("tipo_identificacion")
+  tipoIdentificacion   Identificacion?   @relation(fields: [tipoIdentificacionId], references: [identificacionId])
+  tipoIdentificacionId BigInt?             @map("tipo_identificacion_id")
   updatedAt          DateTime            @updatedAt @map("actualizado_en")
   createdAt          DateTime            @default(now()) @map("creado_en")
   deletedAt          DateTime?           @map("borrado_en")
@@ -22,12 +23,4 @@ model Clientes {
   @@index([nombres])
   @@index([deletedAt])
   @@map("clientes")
-}
-
-enum TipoIdentificacion {
-  CEDULA
-  RUC
-  PASAPORTE
-  CONSUMIDOR_FINAL
-  IDENTIFICACION_EXTRANJERA
 }

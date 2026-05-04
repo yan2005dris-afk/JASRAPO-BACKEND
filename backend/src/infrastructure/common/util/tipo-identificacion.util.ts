@@ -1,5 +1,3 @@
-import type { TipoIdentificacion } from 'src/generated/prisma/enums';
-
 export class TipoIdentificacionUtil {
   // =========================
   // VALIDACIÓN DE CÉDULA
@@ -110,7 +108,7 @@ export class TipoIdentificacionUtil {
   // OTROS DOCUMENTOS
   // =========================
   private static esPasaporteEcuatoriano(pasaporte: string): boolean {
-    return /^[A-Za-z0-9]{6,15}$/.test(pasaporte); // más flexible para producción
+    return /^[A-Za-z0-9]{6,15}$/.test(pasaporte);
   }
 
   private static esIdentificacionExtranjera(doc: string): boolean {
@@ -120,8 +118,8 @@ export class TipoIdentificacionUtil {
   // =========================
   // MÉTODO PRINCIPAL
   // =========================
-  static validar(tipo: TipoIdentificacion, valor: string): boolean {
-    switch (tipo) {
+  static validar(tipoCodigo: string, valor: string): boolean {
+    switch (tipoCodigo) {
       case 'CEDULA':
         return this.esCedula(valor);
       case 'RUC':

@@ -5,9 +5,9 @@ export async function seedClientes(prisma: PrismaClient) {
     
     // Clientes originales
     const clientesBase = [
-        { clienteId: 1, tipoIdentificacion: "CEDULA" as const, identificacion: "1234567890", nombres: "Juan", apellidos: "Perez", email: "juan@test.com" },
-        { clienteId: 2, tipoIdentificacion: "CEDULA" as const, identificacion: "1234567891", nombres: "Maria", apellidos: "Gonzalez", email: "maria@test.com" },
-        { clienteId: 3, tipoIdentificacion: "CEDULA" as const, identificacion: "1234567892", nombres: "Pedro", apellidos: "Lopez", email: "pedro@test.com" },
+        { clienteId: 1, tipoIdentificacionId: 1, identificacion: "1234567890", nombres: "Juan", apellidos: "Perez", email: "juan@test.com" },
+        { clienteId: 2, tipoIdentificacionId: 1, identificacion: "1234567891", nombres: "Maria", apellidos: "Gonzalez", email: "maria@test.com" },
+        { clienteId: 3, tipoIdentificacionId: 1, identificacion: "1234567892", nombres: "Pedro", apellidos: "Lopez", email: "pedro@test.com" },
     ];
 
     for (const c of clientesBase) {
@@ -24,7 +24,7 @@ export async function seedClientes(prisma: PrismaClient) {
         const created = await prisma.clientes.create({
             data: {
                 clienteId: i,
-                tipoIdentificacion: "CEDULA",
+                tipoIdentificacionId: 1, // CEDULA
                 identificacion: `1310000${i.toString().padStart(4, '0')}`,
                 nombres: `Cliente ${i}`,
                 apellidos: `Apellido ${i}`,

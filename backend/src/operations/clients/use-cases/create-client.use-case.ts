@@ -5,16 +5,19 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { CreateClientDto } from '../dto/create-client.dto';
-import { TipoIdentificacion } from 'src/generated/prisma/enums';
 import { TipoIdentificacionUtil } from 'src/infrastructure/common/util/tipo-identificacion.util';
+import { safeClientesSelect } from '../types/IResponseClient';
 import { Prisma } from 'src/generated/prisma/client';
 
 @Injectable()
-export class CreateCustomerUseCase {
+export class CreateClientUseCase {
   constructor(private readonly prisma: PrismaService) {}
 
   async execute(dto: CreateClientDto) {
-    if (dto.tipoIdentificacion === TipoIdentificacion.CONSUMIDOR_FINAL) {
+    const tipoId = BigInt(dto.tipoIdentificacionId);
+
+    // CONSUMIDOR_FINAL tiene ID 4
+    if (dto.tipoIdentificacionId === 4) {
       return this.handleConsumidorFinal(dto);
     }
 
@@ -25,12 +28,18 @@ export class CreateCustomerUseCase {
     }
 
     const identificacion = dto.identificacion.trim();
-    this.validarIdentificacion(dto.tipoIdentificacion, identificacion);
-    this.validarCamposBasicos(
-      dto.tipoIdentificacion,
-      dto.nombres,
-      dto.apellidos,
-    );
+    
+    // Obtener el código del tipo de identificación para validar
+    const catalogo = await this.prisma.identificacion.findUnique({
+      where: { identificacionId: tipoId },
+    });
+    
+    if (!catalogo) {
+      throw new BadRequestException('Tipo de identificación inválido');
+    }
+
+    this.validarIdentificacion(catalogo.codigo, identificacion);
+    this.validarCamposBasicos(catalogo.codigo, dto.nombres, dto.apellidos);
 
     const existente = await this.prisma.clientes.findUnique({
       where: { identificacion },
@@ -43,13 +52,14 @@ export class CreateCustomerUseCase {
         return this.prisma.clientes.update({
           where: { clienteId: existente.clienteId },
           data: { ...data, deletedAt: null },
+          select: safeClientesSelect,
         });
       }
       throw new ConflictException('La identificación ya está registrada');
     }
 
     try {
-      return await this.prisma.clientes.create({ data });
+      return await this.prisma.clientes.create({ data, select: safeClientesSelect });
     } catch (error: any) {
       if (error.code === 'P2002')
         throw new ConflictException('La identificación ya está registrada');
@@ -59,7 +69,7 @@ export class CreateCustomerUseCase {
 
   private async handleConsumidorFinal(dto: CreateClientDto) {
     const consumidores = await this.prisma.clientes.findMany({
-      where: { tipoIdentificacion: TipoIdentificacion.CONSUMIDOR_FINAL },
+      where: { tipoIdentificacionId: BigInt(4) }, // CONSUMIDOR_FINAL
       orderBy: { createdAt: 'asc' },
     });
 
@@ -89,6 +99,7 @@ export class CreateCustomerUseCase {
           aplicaDiscapacidad: false,
           deletedAt: null,
         },
+        select: safeClientesSelect,
       });
 
       return {
@@ -100,7 +111,9 @@ export class CreateCustomerUseCase {
     const created = await this.prisma.clientes.create({
       data: {
         identificacion: '9999999999999',
-        tipoIdentificacion: TipoIdentificacion.CONSUMIDOR_FINAL,
+        tipoIdentificacion: {
+          connect: { identificacionId: BigInt(4) },
+        }, // CONSUMIDOR_FINAL
         nombres: 'CONSUMIDOR',
         apellidos: 'FINAL',
         razonSocial: 'CONSUMIDOR FINAL',
@@ -111,32 +124,26 @@ export class CreateCustomerUseCase {
         aplicaTerceraEdad: false,
         aplicaDiscapacidad: false,
       },
+      select: safeClientesSelect,
     });
 
     return { message: 'Consumidor Final creado correctamente.', data: created };
   }
 
-  private validarIdentificacion(
-    tipo: TipoIdentificacion,
-    identificacion: string,
-  ) {
-    if (!tipo)
+  private validarIdentificacion(codigo: string, identificacion: string) {
+    if (!codigo)
       throw new BadRequestException('Tipo de identificación requerido');
     if (
-      tipo !== TipoIdentificacion.CONSUMIDOR_FINAL &&
-      !TipoIdentificacionUtil.validar(tipo, identificacion)
+      codigo !== 'CONSUMIDOR_FINAL' &&
+      !TipoIdentificacionUtil.validar(codigo, identificacion)
     ) {
       throw new BadRequestException('Identificación inválida');
     }
   }
 
-  private validarCamposBasicos(
-    tipo: TipoIdentificacion,
-    nombres?: string,
-    apellidos?: string,
-  ) {
+  private validarCamposBasicos(codigo: string, nombres?: string, apellidos?: string) {
     if (
-      tipo !== TipoIdentificacion.CONSUMIDOR_FINAL &&
+      codigo !== 'CONSUMIDOR_FINAL' &&
       (!nombres || !apellidos)
     ) {
       throw new BadRequestException('Nombres y apellidos son requeridos');
@@ -149,7 +156,9 @@ export class CreateCustomerUseCase {
   ): Prisma.ClientesCreateInput {
     return {
       identificacion,
-      tipoIdentificacion: dto.tipoIdentificacion,
+      tipoIdentificacion: {
+        connect: { identificacionId: BigInt(dto.tipoIdentificacionId) },
+      },
       nombres: dto.nombres?.trim().toUpperCase() ?? '',
       apellidos: dto.apellidos?.trim().toUpperCase() ?? '',
       razonSocial: dto.razonSocial?.trim().toUpperCase(),

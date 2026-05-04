@@ -2,26 +2,30 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsOptional,
   IsString,
-  Length,
-  IsEnum,
+  IsNumber,
   ValidateIf,
   IsEmail,
   IsBoolean,
   IsNotEmpty,
+  Min,
+  Length,
 } from 'class-validator';
-import { TipoIdentificacion } from 'src/generated/prisma/enums';
 
 export class CreateClientDto {
-  @ApiProperty({ enum: TipoIdentificacion })
-  @IsEnum(TipoIdentificacion)
-  tipoIdentificacion!: TipoIdentificacion;
+  @ApiProperty({
+    description: 'ID del tipo de identificación del catálogo',
+    example: 1,
+  })
+  @IsNumber()
+  @Min(1)
+  tipoIdentificacionId!: number;
 
   @ApiPropertyOptional({
     description:
       'Identificación del cliente. Obligatorio para todos los tipos excepto CONSUMIDOR FINAL',
   })
   @ValidateIf(
-    (o) => o.tipoIdentificacion !== TipoIdentificacion.CONSUMIDOR_FINAL,
+    (o) => o.tipoIdentificacionId !== 4, // CONSUMIDOR_FINAL tiene ID 4
   )
   @IsNotEmpty()
   @IsString()
@@ -31,11 +35,11 @@ export class CreateClientDto {
   identificacion?: string;
 
   @ValidateIf(
-    (o) => o.tipoIdentificacion !== TipoIdentificacion.CONSUMIDOR_FINAL,
+    (o) => o.tipoIdentificacionId !== 4,
   )
   @ApiPropertyOptional({ description: 'Nombres del cliente' })
   @ValidateIf(
-    (o) => o.tipoIdentificacion !== TipoIdentificacion.CONSUMIDOR_FINAL,
+    (o) => o.tipoIdentificacionId !== 4,
   )
   @IsOptional()
   @IsNotEmpty()
@@ -44,7 +48,7 @@ export class CreateClientDto {
 
   @ApiPropertyOptional()
   @ValidateIf(
-    (o) => o.tipoIdentificacion !== TipoIdentificacion.CONSUMIDOR_FINAL,
+    (o) => o.tipoIdentificacionId !== 4,
   )
   @IsNotEmpty()
   @IsString()
@@ -53,7 +57,7 @@ export class CreateClientDto {
   @ApiPropertyOptional({
     description: 'Razón social (solo aplica para RUC)',
   })
-  @ValidateIf((o) => o.tipoIdentificacion === TipoIdentificacion.RUC)
+  @ValidateIf((o) => o.tipoIdentificacionId === 2) // RUC tiene ID 2
   @IsOptional()
   @IsNotEmpty()
   @IsString()

@@ -30,6 +30,19 @@ export class ClientController {
   constructor(private readonly clientService: ClientService) {}
 
   /**
+   * Obtener identificaciones
+   */
+  @ApiOperation({
+    summary: 'Catálogo de identificaciones',
+    description: 'Retorna lista de tipos de identificación para formularios',
+  })
+  @ApiResponse({ status: 200, description: 'Lista de identificaciones' })
+  @Get('identificaciones')
+  findAllIdentificaciones() {
+    return this.clientService.findAllIdentificaciones();
+  }
+
+  /**
    * Crear un nuevo cliente
    */
   @ApiOperation({
