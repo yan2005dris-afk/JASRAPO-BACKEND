@@ -72,10 +72,7 @@ describe('CreateUserUseCase', () => {
     });
 
     const createCall = mockPrisma.usuarios.create.mock.calls[0][0];
-    const isMatch = await bcrypt.compare(
-      'password123',
-      createCall.data.clave,
-    );
+    const isMatch = await bcrypt.compare('password123', createCall.data.clave);
     expect(isMatch).toBe(true);
   });
 

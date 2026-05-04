@@ -6,7 +6,7 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 export default defineConfig({
-  schema: 'prisma/schema.prisma',
+  schema: 'prisma/schema',
   migrations: {
     path: 'prisma/migrations',
     seed: 'tsx prisma/schema/seed.ts',

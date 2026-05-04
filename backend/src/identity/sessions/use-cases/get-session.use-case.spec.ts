@@ -27,7 +27,9 @@ describe('GetSessionUseCase', () => {
   });
 
   it('should find an active session', async () => {
-    (prisma.sesiones.findFirst as jest.Mock).mockResolvedValue({ sesionId: 'abc' });
+    (prisma.sesiones.findFirst as jest.Mock).mockResolvedValue({
+      sesionId: 'abc',
+    });
 
     await useCase.execute(1, 'abc');
 

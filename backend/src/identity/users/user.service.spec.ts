@@ -36,10 +36,19 @@ describe('UserService', () => {
         UserService,
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: CreateUserUseCase, useValue: { execute: jest.fn() } },
-        { provide: GetEffectivePermissionsUseCase, useValue: { execute: jest.fn() } },
+        {
+          provide: GetEffectivePermissionsUseCase,
+          useValue: { execute: jest.fn() },
+        },
         { provide: AssignRoleToUserUseCase, useValue: { execute: jest.fn() } },
-        { provide: AssignPermissionToUserUseCase, useValue: { execute: jest.fn() } },
-        { provide: RevokePermissionFromUserUseCase, useValue: { execute: jest.fn() } },
+        {
+          provide: AssignPermissionToUserUseCase,
+          useValue: { execute: jest.fn() },
+        },
+        {
+          provide: RevokePermissionFromUserUseCase,
+          useValue: { execute: jest.fn() },
+        },
       ],
     }).compile();
 

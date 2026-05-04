@@ -37,7 +37,9 @@ describe('CreateRoleUseCase', () => {
     const result = await useCase.execute(dto);
 
     expect(result).toEqual({ rolId: 1, nombre: 'Admin' });
-    expect(prisma.roles.create).toHaveBeenCalledWith({ data: { nombre: 'Admin' } });
+    expect(prisma.roles.create).toHaveBeenCalledWith({
+      data: { nombre: 'Admin' },
+    });
   });
 
   it('should create a role with only name (no hierarchy)', async () => {
@@ -47,6 +49,8 @@ describe('CreateRoleUseCase', () => {
     const result = await useCase.execute(dto);
 
     expect(result).toEqual({ rolId: 5, nombre: 'Operador' });
-    expect(prisma.roles.create).toHaveBeenCalledWith({ data: { nombre: 'Operador' } });
+    expect(prisma.roles.create).toHaveBeenCalledWith({
+      data: { nombre: 'Operador' },
+    });
   });
 });

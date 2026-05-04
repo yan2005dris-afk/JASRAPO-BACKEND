@@ -6,8 +6,7 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "prisma:schema": "node scripts/build-prisma-schema.mjs",
-    "prisma:generate": "npm run prisma:schema && prisma generate",
+    "prisma:generate": "prisma generate",
     "prebuild": "npm run prisma:generate",
     "prestart": "npm run prisma:generate",
     "prestart:dev": "npm run prisma:generate",
