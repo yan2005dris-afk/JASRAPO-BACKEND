@@ -31,7 +31,7 @@ export class LoteService {
   }
 
   async findAll() {
-    return this.prisma.lote.findMany({
+    return await this.prisma.lote.findMany({
       include: {
         comunidad: true,
         periodoRel: true,
@@ -43,7 +43,7 @@ export class LoteService {
   }
 
   async findOne(id: number) {
-    return this.prisma.lote.findUnique({
+    return await this.prisma.lote.findUnique({
       where: { loteId: BigInt(id) },
       include: {
         prefacturas: {

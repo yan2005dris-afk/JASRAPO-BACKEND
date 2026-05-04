@@ -10,8 +10,8 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { GenerarLoteDto } from './dto/generar-lote.dto';
 import { LoteService } from './lote.service';
 
-@ApiTags('Billing - Lotes')
-@Controller('billing/lotes')
+@ApiTags('Lotes')
+@Controller('lotes')
 export class LoteController {
   constructor(private readonly loteService: LoteService) {}
 
