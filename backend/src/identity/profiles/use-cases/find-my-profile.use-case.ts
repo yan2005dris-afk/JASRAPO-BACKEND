@@ -5,13 +5,13 @@ import { PrismaService } from 'src/infrastructure/database/prisma.service';
 export class FindMyProfileUseCase {
   constructor(private readonly prisma: PrismaService) {}
 
-  async execute(usersId: number) {
-    let profile = await this.prisma.profiles.findUnique({
-      where: { usersId },
+  async execute(usuarioId: number) {
+    let profile = await this.prisma.perfiles.findUnique({
+      where: { usuarioId },
     });
     if (!profile) {
-      profile = await this.prisma.profiles.create({
-        data: { usersId },
+      profile = await this.prisma.perfiles.create({
+        data: { usuarioId },
       });
     }
     return profile;

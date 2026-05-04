@@ -7,7 +7,7 @@ export class AssignPermissionDto {
     example: 1,
   })
   @IsInt()
-  permissionsId: number;
+  permisoId: number;
 
   @ApiPropertyOptional({
     description:
@@ -17,5 +17,5 @@ export class AssignPermissionDto {
   })
   @IsOptional()
   @IsBoolean()
-  allow?: boolean;
+  permitido?: boolean;
 }

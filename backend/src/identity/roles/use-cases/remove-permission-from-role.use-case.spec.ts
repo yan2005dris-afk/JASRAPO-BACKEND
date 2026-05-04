@@ -9,7 +9,7 @@ describe('RemovePermissionFromRoleUseCase', () => {
   let prisma: PrismaService;
 
   const mockPrisma = {
-    rolPermissions: {
+    rolPermisos: {
       findFirst: jest.fn(),
       update: jest.fn(),
     },
@@ -31,19 +31,19 @@ describe('RemovePermissionFromRoleUseCase', () => {
   });
 
   it('should remove a permission from a role', async () => {
-    mockPrisma.rolPermissions.findFirst.mockResolvedValue({
-      rolPermissionsId: 100,
+    mockPrisma.rolPermisos.findFirst.mockResolvedValue({
+      rolPermisoId: 100,
     });
-    mockPrisma.rolPermissions.update.mockResolvedValue({ permissionsId: 10 });
+    mockPrisma.rolPermisos.update.mockResolvedValue({ permisoId: 10 });
 
     const result = await useCase.execute(1, 10);
 
-    expect(result).toEqual({ permissionsId: 10 });
-    expect(prisma.rolPermissions.update).toHaveBeenCalled();
+    expect(result).toEqual({ permisoId: 10 });
+    expect(prisma.rolPermisos.update).toHaveBeenCalled();
   });
 
   it('should throw NotFoundException if not assigned', async () => {
-    mockPrisma.rolPermissions.findFirst.mockResolvedValue(null);
+    mockPrisma.rolPermisos.findFirst.mockResolvedValue(null);
 
     await expect(useCase.execute(1, 10)).rejects.toThrow(NotFoundException);
   });

@@ -32,21 +32,21 @@ describe('CreateRoleUseCase', () => {
 
   it('should create a role without children (flat roles model)', async () => {
     const dto = { name: 'Admin', description: 'Admin role' };
-    mockPrisma.roles.create.mockResolvedValue({ rolesId: 1, ...dto });
+    mockPrisma.roles.create.mockResolvedValue({ rolId: 1, nombre: 'Admin' });
 
     const result = await useCase.execute(dto);
 
-    expect(result).toEqual({ rolesId: 1, ...dto });
-    expect(prisma.roles.create).toHaveBeenCalledWith({ data: dto });
+    expect(result).toEqual({ rolId: 1, nombre: 'Admin' });
+    expect(prisma.roles.create).toHaveBeenCalledWith({ data: { nombre: 'Admin' } });
   });
 
   it('should create a role with only name (no hierarchy)', async () => {
     const dto = { name: 'Operador' };
-    mockPrisma.roles.create.mockResolvedValue({ rolesId: 5, name: 'Operador' });
+    mockPrisma.roles.create.mockResolvedValue({ rolId: 5, nombre: 'Operador' });
 
     const result = await useCase.execute(dto);
 
-    expect(result).toEqual({ rolesId: 5, name: 'Operador' });
-    expect(prisma.roles.create).toHaveBeenCalledWith({ data: dto });
+    expect(result).toEqual({ rolId: 5, nombre: 'Operador' });
+    expect(prisma.roles.create).toHaveBeenCalledWith({ data: { nombre: 'Operador' } });
   });
 });

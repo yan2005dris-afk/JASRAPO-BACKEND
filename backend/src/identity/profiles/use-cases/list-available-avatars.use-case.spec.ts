@@ -16,7 +16,7 @@ describe('ListAvailableAvatarsUseCase', () => {
         {
           provide: PrismaService,
           useValue: {
-            profiles: {
+            perfiles: {
               findUnique: jest.fn(),
             },
           },
@@ -43,7 +43,7 @@ describe('ListAvailableAvatarsUseCase', () => {
     (minio.listFiles as jest.Mock).mockResolvedValue([
       'avatar_profile_1_abc.png',
     ]);
-    (prisma.profiles.findUnique as jest.Mock).mockResolvedValue({
+    (prisma.perfiles.findUnique as jest.Mock).mockResolvedValue({
       id: 1,
       avatar: { key: 'current.png' },
     });

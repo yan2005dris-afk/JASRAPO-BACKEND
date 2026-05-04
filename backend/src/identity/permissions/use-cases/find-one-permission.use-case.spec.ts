@@ -9,7 +9,7 @@ describe('FindOnePermissionUseCase', () => {
   let prisma: PrismaService;
 
   const mockPrisma = {
-    permissions: {
+    permisos: {
       findUnique: jest.fn(),
     },
   };
@@ -27,32 +27,28 @@ describe('FindOnePermissionUseCase', () => {
   });
 
   it('should return a permission', async () => {
-    mockPrisma.permissions.findUnique.mockResolvedValue({
-      permissionsId: 1,
-      resource: 'Users',
-      action: 'Read',
+    const mockPermission = {
+      permisoId: 1,
+      recurso: 'Users',
+      accion: 'Read',
       deletedAt: null,
-    });
+    };
+    mockPrisma.permisos.findUnique.mockResolvedValue(mockPermission);
 
     const result = await useCase.execute(1);
 
-    expect(result).toEqual({
-      permissionsId: 1,
-      resource: 'Users',
-      action: 'Read',
-      deletedAt: null,
-    });
+    expect(result).toEqual(mockPermission);
   });
 
   it('should throw NotFoundException if permission does not exist', async () => {
-    mockPrisma.permissions.findUnique.mockResolvedValue(null);
+    mockPrisma.permisos.findUnique.mockResolvedValue(null);
 
     await expect(useCase.execute(1)).rejects.toThrow(NotFoundException);
   });
 
   it('should throw NotFoundException if permission is deleted', async () => {
-    mockPrisma.permissions.findUnique.mockResolvedValue({
-      permissionsId: 1,
+    mockPrisma.permisos.findUnique.mockResolvedValue({
+      permisoId: 1,
       deletedAt: new Date(),
     });
 

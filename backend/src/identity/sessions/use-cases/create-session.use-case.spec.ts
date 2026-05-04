@@ -14,7 +14,7 @@ describe('CreateSessionUseCase', () => {
         {
           provide: PrismaService,
           useValue: {
-            sessions: {
+            sesiones: {
               create: jest.fn(),
             },
           },
@@ -28,14 +28,14 @@ describe('CreateSessionUseCase', () => {
 
   it('should create a session', async () => {
     const data = {
-      usersId: 1,
-      refreshTokenHash: 'hash',
-      expiresAt: new Date(),
+      usuarioId: 1,
+      hashRefreshToken: 'hash',
+      expiraEn: new Date(),
     } as any;
-    (prisma.sessions.create as jest.Mock).mockResolvedValue({ id: 1, ...data });
+    (prisma.sesiones.create as jest.Mock).mockResolvedValue({ id: 1, ...data });
 
     await useCase.execute(data);
 
-    expect(prisma.sessions.create).toHaveBeenCalledWith({ data });
+    expect(prisma.sesiones.create).toHaveBeenCalledWith({ data });
   });
 });

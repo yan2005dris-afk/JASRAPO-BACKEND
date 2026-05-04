@@ -6,6 +6,12 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
+    "prisma:schema": "node scripts/build-prisma-schema.mjs",
+    "prisma:generate": "npm run prisma:schema && prisma generate",
+    "prebuild": "npm run prisma:generate",
+    "prestart": "npm run prisma:generate",
+    "prestart:dev": "npm run prisma:generate",
+    "prestart:debug": "npm run prisma:generate",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",

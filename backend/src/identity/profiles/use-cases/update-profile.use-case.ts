@@ -6,28 +6,28 @@ import { UpdateProfileDto } from '../dto/update-profile.dto';
 export class UpdateProfileUseCase {
   constructor(private readonly prisma: PrismaService) {}
 
-  async execute(usersId: number, updateProfileDto: UpdateProfileDto) {
-    const existing = await this.prisma.profiles.findUnique({
-      where: { usersId },
+  async execute(usuarioId: number, updateProfileDto: UpdateProfileDto) {
+    const existing = await this.prisma.perfiles.findUnique({
+      where: { usuarioId },
     });
 
     if (!existing) {
-      return this.prisma.profiles.create({
+      return this.prisma.perfiles.create({
         data: {
-          usersId,
-          firstName: updateProfileDto.firstName,
-          lastName: updateProfileDto.lastName,
-          phone: updateProfileDto.phone,
+          usuarioId,
+          nombres: updateProfileDto.firstName,
+          apellidos: updateProfileDto.lastName,
+          telefono: updateProfileDto.phone,
         },
       });
     }
 
-    return this.prisma.profiles.update({
-      where: { usersId },
+    return this.prisma.perfiles.update({
+      where: { usuarioId },
       data: {
-        firstName: updateProfileDto.firstName,
-        lastName: updateProfileDto.lastName,
-        phone: updateProfileDto.phone,
+        nombres: updateProfileDto.firstName,
+        apellidos: updateProfileDto.lastName,
+        telefono: updateProfileDto.phone,
       },
     });
   }

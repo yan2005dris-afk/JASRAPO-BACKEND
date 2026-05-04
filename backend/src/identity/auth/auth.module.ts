@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { UserModule } from 'src/identity/users/user.module';
@@ -12,16 +13,22 @@ import { RegisterUseCase } from './use-cases/register.use-case';
 import { LogoutUseCase } from './use-cases/logout.use-case';
 import { LoginUseCase } from './use-cases/login.use-case';
 import { RefreshAccessTokenUseCase } from './use-cases/refresh-access-token.use-case';
+import type { StringValue } from 'ms';
 
 @Module({
   imports: [
     UserModule,
     SessionsModule,
-    JwtModule.register({
-      secret: process.env.JWT_ACCESS_SECRET as string,
-      signOptions: {
-        expiresIn: Number(process.env.JWT_ACCESS_EXPIRES_IN),
-      },
+    JwtModule.registerAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.getOrThrow<string>('JWT_ACCESS_SECRET'),
+        signOptions: {
+          expiresIn: configService.getOrThrow<StringValue>(
+            'JWT_ACCESS_EXPIRES_IN',
+          ),
+        },
+      }),
     }),
   ],
   controllers: [AuthController],

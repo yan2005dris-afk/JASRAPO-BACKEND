@@ -14,7 +14,7 @@ describe('GetSessionUseCase', () => {
         {
           provide: PrismaService,
           useValue: {
-            sessions: {
+            sesiones: {
               findFirst: jest.fn(),
             },
           },
@@ -27,16 +27,16 @@ describe('GetSessionUseCase', () => {
   });
 
   it('should find an active session', async () => {
-    (prisma.sessions.findFirst as jest.Mock).mockResolvedValue({ id: 1 });
+    (prisma.sesiones.findFirst as jest.Mock).mockResolvedValue({ sesionId: 'abc' });
 
     await useCase.execute(1, 'abc');
 
-    expect(prisma.sessions.findFirst).toHaveBeenCalledWith({
+    expect(prisma.sesiones.findFirst).toHaveBeenCalledWith({
       where: {
-        usersId: 1,
-        sessionsId: 'abc',
-        isRevoked: false,
-        expiresAt: { gt: expect.any(Date) },
+        usuarioId: 1,
+        sesionId: 'abc',
+        revocado: false,
+        expiraEn: { gt: expect.any(Date) },
       },
     });
   });

@@ -7,5 +7,5 @@ export class AssignRoleDto {
     example: 2,
   })
   @IsInt()
-  rolesId: number;
+  rolId: number;
 }

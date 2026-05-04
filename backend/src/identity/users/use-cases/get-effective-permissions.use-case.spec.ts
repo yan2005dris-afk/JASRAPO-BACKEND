@@ -9,13 +9,10 @@ describe('GetEffectivePermissionsUseCase', () => {
   let prisma: PrismaService;
 
   const mockPrisma = {
-    users: {
+    usuarios: {
       findUnique: jest.fn(),
     },
-    rolPermissions: {
-      findMany: jest.fn(),
-    },
-    rolesHeredados: {
+    rolPermisos: {
       findMany: jest.fn(),
     },
   };
@@ -39,20 +36,19 @@ describe('GetEffectivePermissionsUseCase', () => {
   });
 
   it('should combine role and direct permissions', async () => {
-    mockPrisma.users.findUnique.mockResolvedValue({
-      usersId: 1,
+    mockPrisma.usuarios.findUnique.mockResolvedValue({
+      usuarioId: 1,
       deletedAt: null,
-      role: { rolesId: 1, deletedAt: null },
-      userPermissions: [
+      rol: { rolId: 1, deletedAt: null },
+      permisosUsuario: [
         {
-          allow: true,
-          Permissions: { resource: 'extra', action: 'read', deletedAt: null },
+          permitido: true,
+          permiso: { recurso: 'extra', accion: 'read', deletedAt: null },
         },
       ],
     });
-    mockPrisma.rolesHeredados.findMany.mockResolvedValue([]);
-    mockPrisma.rolPermissions.findMany.mockResolvedValue([
-      { permissions: { resource: 'role-perm', action: 'read' } },
+    mockPrisma.rolPermisos.findMany.mockResolvedValue([
+      { permiso: { recurso: 'role-perm', accion: 'read' } },
     ]);
 
     const result = await useCase.execute(1);
@@ -62,24 +58,23 @@ describe('GetEffectivePermissionsUseCase', () => {
   });
 
   it('should exclude revoked permissions', async () => {
-    mockPrisma.users.findUnique.mockResolvedValue({
-      usersId: 1,
+    mockPrisma.usuarios.findUnique.mockResolvedValue({
+      usuarioId: 1,
       deletedAt: null,
-      role: { rolesId: 1, deletedAt: null },
-      userPermissions: [
+      rol: { rolId: 1, deletedAt: null },
+      permisosUsuario: [
         {
-          allow: false,
-          Permissions: {
-            resource: 'role-perm',
-            action: 'read',
+          permitido: false,
+          permiso: {
+            recurso: 'role-perm',
+            accion: 'read',
             deletedAt: null,
           },
         },
       ],
     });
-    mockPrisma.rolesHeredados.findMany.mockResolvedValue([]);
-    mockPrisma.rolPermissions.findMany.mockResolvedValue([
-      { permissions: { resource: 'role-perm', action: 'read' } },
+    mockPrisma.rolPermisos.findMany.mockResolvedValue([
+      { permiso: { recurso: 'role-perm', accion: 'read' } },
     ]);
 
     const result = await useCase.execute(1);
@@ -91,7 +86,7 @@ describe('GetEffectivePermissionsUseCase', () => {
   });
 
   it('should throw NotFoundException if user not found or deleted', async () => {
-    mockPrisma.users.findUnique.mockResolvedValue(null);
+    mockPrisma.usuarios.findUnique.mockResolvedValue(null);
 
     await expect(useCase.execute(1)).rejects.toThrow(NotFoundException);
   });

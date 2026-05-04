@@ -1,11 +1,11 @@
-model Permissions {
-  permissionsId   Int               @id @default(autoincrement()) @map("permiso_id")
-  resource        String            @map("recurso")
-  action          String            @map("accion")
+model Permisos {
+  permisoId       Int               @id @default(autoincrement()) @map("permiso_id")
+  recurso         String            @map("recurso")
+  accion          String            @map("accion")
   deletedAt       DateTime?         @map("borrado_en")
-  menuPermissions MenuPermissions[]
-  rolPermissions  RolPermissions[]
-  userPermissions UserPermissions[]
+  menuPermisos    MenuPermisos[]
+  rolPermisos     RolPermisos[]
+  usuarioPermisos UsuarioPermisos[]
 
   @@map("permisos")
 }

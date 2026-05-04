@@ -53,7 +53,7 @@ export class UserController {
     description: 'Usuario creado exitosamente',
     schema: {
       example: {
-        usersId: 1,
+        usuarioId: 1,
         email: 'nuevo@jasrapo.com',
         createdAt: '2024-01-15T10:30:00Z',
         updatedAt: '2024-01-15T10:30:00Z',
@@ -144,7 +144,7 @@ export class UserController {
   @ApiResponse({ status: 404, description: 'Usuario no encontrado' })
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.userService.user({ usersId: id });
+    return this.userService.user({ usuarioId: id });
   }
 
   /**
@@ -179,7 +179,7 @@ export class UserController {
 
   /**
    * Obtiene la asignación de rol actual de un usuario.
-   * Devuelve un objeto con usersId, rolesId y name, o null si no tiene rol.
+   * Devuelve un objeto con usuarioId, rolId y nombre, o null si no tiene rol.
    * Requiere permiso: users:read
    */
   @ApiOperation({
@@ -198,9 +198,9 @@ export class UserController {
     description: 'Asignación de rol obtenida exitosamente',
     schema: {
       example: {
-        usersId: 1,
-        rolesId: 2,
-        name: 'admin',
+        usuarioId: 1,
+        rolId: 2,
+        nombre: 'admin',
       },
     },
   })
@@ -233,7 +233,7 @@ export class UserController {
   })
   @ApiBody({
     type: UpdateUserDto,
-    description: 'Datos a actualizar (email y/o password)',
+    description: 'Datos a actualizar (email y/o clave)',
   })
   @ApiResponse({
     status: 200,
@@ -253,10 +253,10 @@ export class UserController {
     @Body() updateUserDto: UpdateUserDto,
   ) {
     return this.userService.updateUser({
-      where: { usersId: id },
+      where: { usuarioId: id },
       data: {
         email: updateUserDto.email,
-        password: updateUserDto.password,
+        clave: updateUserDto.clave,
       },
     });
   }
@@ -280,7 +280,7 @@ export class UserController {
     description: 'ID del rol a asignar',
     examples: {
       ejemplo1: {
-        value: { rolesId: 2 },
+        value: { rolId: 2 },
         summary: 'Asignar rol de Editor',
       },
     },
@@ -302,7 +302,7 @@ export class UserController {
     @Param('id', ParseIntPipe) id: number,
     @Body() assignRoleDto: AssignRoleDto,
   ) {
-    return this.userService.assignRoleToUser(id, assignRoleDto.rolesId);
+    return this.userService.assignRoleToUser(id, assignRoleDto.rolId);
   }
 
   /**
@@ -353,14 +353,14 @@ export class UserController {
   })
   @ApiBody({
     type: AssignPermissionDto,
-    description: 'ID del permiso a asignar y opción allow',
+    description: 'ID del permiso a asignar y opción permitido',
     examples: {
       ejemplo1: {
-        value: { permissionsId: 1, allow: true },
+        value: { permisoId: 1, permitido: true },
         summary: 'Permitir permiso',
       },
       ejemplo2: {
-        value: { permissionsId: 1, allow: false },
+        value: { permisoId: 1, permitido: false },
         summary: 'Revocar permiso',
       },
     },
@@ -384,8 +384,8 @@ export class UserController {
   ) {
     return this.userService.assignPermissionToUser(
       id,
-      assignPermissionDto.permissionsId,
-      assignPermissionDto.allow ?? true,
+      assignPermissionDto.permisoId,
+      assignPermissionDto.permitido ?? true,
     );
   }
 
@@ -447,7 +447,7 @@ export class UserController {
   @RequiredPermission('users', 'delete')
   @Delete(':id')
   remove(@Param('id', ParseIntPipe) id: number) {
-    return this.userService.softDeleteUser({ usersId: id });
+    return this.userService.softDeleteUser({ usuarioId: id });
   }
 
   /**
@@ -457,7 +457,7 @@ export class UserController {
   @ApiOperation({
     summary: 'Revocar permiso directo de usuario',
     description:
-      'Revoca (soft delete) un permiso asignado directamente a un usuario. El userPermissionId es el ID de la relación.',
+      'Revoca (soft delete) un permiso asignado directamente a un usuario. El usuarioPermisoId es el ID de la relación.',
   })
   @ApiParam({
     name: 'id',
@@ -466,8 +466,8 @@ export class UserController {
     example: 1,
   })
   @ApiParam({
-    name: 'userPermissionId',
-    description: 'ID de la relación usuario-permiso (users_permissions)',
+    name: 'usuarioPermisoId',
+    description: 'ID de la relación usuario-permiso (usuario_permisos)',
     type: Number,
     example: 1,
   })
@@ -485,11 +485,11 @@ export class UserController {
     description: 'Relación usuario-permiso no encontrada',
   })
   @RequiredPermission('users', 'delete')
-  @Delete(':id/permissions/:userPermissionId')
+  @Delete(':id/permissions/:usuarioPermisoId')
   revokePermission(
-    @Param('userPermissionId', ParseIntPipe) userPermissionId: number,
+    @Param('usuarioPermisoId', ParseIntPipe) usuarioPermisoId: number,
   ) {
-    return this.userService.revokePermissionFromUser(userPermissionId);
+    return this.userService.revokePermissionFromUser(usuarioPermisoId);
   }
 
   /**
@@ -502,7 +502,7 @@ export class UserController {
       'Retorna la lista de permisos efectivos de un usuario, incluyendo permisos directos y heredados por roles.',
   })
   @ApiParam({
-    name: 'usersId',
+    name: 'usuarioId',
     description: 'ID único del usuario',
     type: Number,
     example: 1,

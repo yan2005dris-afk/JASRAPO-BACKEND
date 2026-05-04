@@ -5,30 +5,32 @@ import { PrismaService } from 'src/infrastructure/database/prisma.service';
 export class AssignPermissionToUserUseCase {
   constructor(private readonly prisma: PrismaService) {}
 
-  async execute(usersId: number, permissionsId: number, allow = true) {
-    const user = await this.prisma.users.findUnique({ where: { usersId } });
-    if (!user || user.deletedAt)
+  async execute(usuarioId: number, permisoId: number, permitido = true) {
+    const usuario = await this.prisma.usuarios.findUnique({
+      where: { usuarioId },
+    });
+    if (!usuario || usuario.deletedAt)
       throw new NotFoundException('Usuario no encontrado o eliminado');
 
-    const permission = await this.prisma.permissions.findUnique({
-      where: { permissionsId },
+    const permiso = await this.prisma.permisos.findUnique({
+      where: { permisoId },
     });
-    if (!permission || permission.deletedAt)
+    if (!permiso || permiso.deletedAt)
       throw new NotFoundException('Permiso no encontrado o eliminado');
 
-    const existing = await this.prisma.userPermissions.findFirst({
-      where: { usersId, permissionsId, deletedAt: null },
+    const existing = await this.prisma.usuarioPermisos.findFirst({
+      where: { usuarioId, permisoId, deletedAt: null },
     });
 
     if (existing) {
-      return this.prisma.userPermissions.update({
-        where: { idUserPermissions: existing.idUserPermissions },
-        data: { allow },
+      return this.prisma.usuarioPermisos.update({
+        where: { usuarioPermisoId: existing.usuarioPermisoId },
+        data: { permitido },
       });
     }
 
-    return this.prisma.userPermissions.create({
-      data: { usersId, permissionsId, allow },
+    return this.prisma.usuarioPermisos.create({
+      data: { usuarioId, permisoId, permitido },
     });
   }
 }

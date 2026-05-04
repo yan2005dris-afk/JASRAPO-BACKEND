@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt';
-import { PrismaClient, Roles, Users } from "src/generated/prisma/client";
+import { PrismaClient, Roles, Usuarios } from "src/generated/prisma/client";
 
 export async function seedUSers(
   prisma: PrismaClient,
@@ -17,52 +17,52 @@ export async function seedUSers(
         {
             email:'admin@jasrapo.com',
             password:'Admin123#',
-            rolesId: roles.adminRol.rolesId,
+            rolId: roles.adminRol.rolId,
         },
         {
             email:'secretaria@jasrapo.com',
             password:'Secretaria123#',
-            rolesId: roles.secretariaRol.rolesId,
+            rolId: roles.secretariaRol.rolId,
         },
         {
             email:'recaudacion@jasrapo.com',
             password:'Recaudacion123#',
-            rolesId: roles.recaudacionRol.rolesId,
+            rolId: roles.recaudacionRol.rolId,
         },
         {
             email:'presidencia@jasrapo.com',
             password:'Presidencia123#',
-            rolesId: roles.presidenciaRol.rolesId,
+            rolId: roles.presidenciaRol.rolId,
         },
         {
             email:'operadores@jasrapo.com',
             password:'Operadores123#',
-            rolesId: roles.operadoresRol.rolesId,
+            rolId: roles.operadoresRol.rolId,
         },
         {
             email:'contabilidad@jasrapo.com',
             password:'Contabilidad123#',
-            rolesId: roles.contabilidadRol.rolesId,
+            rolId: roles.contabilidadRol.rolId,
         },
         {
             email:'user@jasrapo.com',
             password:'User123#',
-            rolesId: roles.userRol.rolesId,
+            rolId: roles.userRol.rolId,
         },
     ];
     
-    const createdUsers:Users[] = [];
+    const createdUsers:Usuarios[] = [];
 
     for (const u of usersToCreate) {
         const hashedPassword = await bcrypt.hash(u.password, 10);
 
-        const user = await prisma.users.upsert({
+        const user = await prisma.usuarios.upsert({
             where: { email: u.email },
             update: {},
             create: {
                 email: u.email,
-                password: hashedPassword,
-                rolesId: u.rolesId,
+                clave: hashedPassword,
+                rolId: u.rolId,
             },
         });
         createdUsers.push(user);

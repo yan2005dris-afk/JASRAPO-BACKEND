@@ -8,7 +8,7 @@ model DescuentoDetalle {
   esPorcentaje        Boolean           @default(true) @map("es_porcentaje")
   valorAplicado       Decimal           @default(0) @map("valor_applied") @db.Decimal(12, 4)
   prefacturaDetalleId BigInt            @map("prefactura_detalle_id")
-  usuarioAutoriza     Users?            @relation("AutorizadoPor", fields: [autorizadoPor], references: [usersId])
+  usuarioAutoriza     Usuarios?         @relation("AutorizadoPor", fields: [autorizadoPor], references: [usuarioId])
   catalogo            CatalogoDescuento @relation(fields: [catalogoDescuentoId], references: [id])
   prefacturaDetalle   PrefacturaDetalle @relation(fields: [prefacturaDetalleId], references: [prefacturaDetalleId], onDelete: Cascade)
 

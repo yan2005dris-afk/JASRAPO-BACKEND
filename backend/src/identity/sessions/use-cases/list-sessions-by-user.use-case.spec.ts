@@ -14,7 +14,7 @@ describe('ListSessionsByUserUseCase', () => {
         {
           provide: PrismaService,
           useValue: {
-            sessions: {
+            sesiones: {
               findMany: jest.fn(),
             },
           },
@@ -27,15 +27,15 @@ describe('ListSessionsByUserUseCase', () => {
   });
 
   it('should list active sessions for user', async () => {
-    (prisma.sessions.findMany as jest.Mock).mockResolvedValue([]);
+    (prisma.sesiones.findMany as jest.Mock).mockResolvedValue([]);
 
     await useCase.execute(1);
 
-    expect(prisma.sessions.findMany).toHaveBeenCalledWith({
+    expect(prisma.sesiones.findMany).toHaveBeenCalledWith({
       where: {
-        usersId: 1,
-        isRevoked: false,
-        expiresAt: { gt: expect.any(Date) },
+        usuarioId: 1,
+        revocado: false,
+        expiraEn: { gt: expect.any(Date) },
       },
       orderBy: { createdAt: 'desc' },
     });

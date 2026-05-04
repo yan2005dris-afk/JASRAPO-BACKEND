@@ -26,25 +26,25 @@ export class RolesService {
   }
 
   findOne(id: number) {
-    return this.prisma.roles.findUnique({ where: { rolesId: id } });
+    return this.prisma.roles.findUnique({ where: { rolId: id } });
   }
 
   update(id: number, updateRoleDto: UpdateRoleDto) {
     return this.prisma.roles.update({
-      where: { rolesId: id },
-      data: updateRoleDto,
+      where: { rolId: id },
+      data: { nombre: updateRoleDto.name },
     });
   }
 
-  async getRolePermissions(rolesId: number) {
-    return this.getRolePermissionsUseCase.execute(rolesId);
+  async getRolePermissions(rolId: number) {
+    return this.getRolePermissionsUseCase.execute(rolId);
   }
 
-  async assignPermission(rolesId: number, permissionsId: number) {
-    return this.assignPermissionUseCase.execute(rolesId, permissionsId);
+  async assignPermission(rolId: number, permisoId: number) {
+    return this.assignPermissionUseCase.execute(rolId, permisoId);
   }
 
-  async removePermission(rolesId: number, permissionsId: number) {
-    return this.removePermissionUseCase.execute(rolesId, permissionsId);
+  async removePermission(rolId: number, permisoId: number) {
+    return this.removePermissionUseCase.execute(rolId, permisoId);
   }
 }

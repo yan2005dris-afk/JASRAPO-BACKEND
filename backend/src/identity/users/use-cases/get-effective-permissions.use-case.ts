@@ -5,34 +5,35 @@ import { PrismaService } from 'src/infrastructure/database/prisma.service';
 export class GetEffectivePermissionsUseCase {
   constructor(private readonly prisma: PrismaService) {}
 
-  async execute(usersId: number) {
-    const user = await this.prisma.users.findUnique({
-      where: { usersId },
+  async execute(usuarioId: number) {
+    const usuario = await this.prisma.usuarios.findUnique({
+      where: { usuarioId },
       include: {
-        role: { select: { rolesId: true, deletedAt: true } },
-        userPermissions: {
+        rol: { select: { rolId: true, deletedAt: true } },
+        permisosUsuario: {
           where: { deletedAt: null },
-          include: { Permissions: true },
+          include: { permiso: true },
         },
       },
     });
 
-    if (!user || user.deletedAt) {
+    if (!usuario || usuario.deletedAt) {
       throw new NotFoundException('Usuario eliminado o no encontrado');
     }
 
-    const roleId = user.role && !user.role.deletedAt ? user.role.rolesId : null;
+    const rolId =
+      usuario.rol && !usuario.rol.deletedAt ? usuario.rol.rolId : null;
 
-    const rolePermissionAssignments = !roleId
+    const rolePermissionAssignments = !rolId
       ? []
-      : await this.prisma.rolPermissions.findMany({
+      : await this.prisma.rolPermisos.findMany({
           where: {
             deletedAt: null,
-            rolesId: roleId,
-            permissions: { deletedAt: null },
+            rolId: rolId,
+            permiso: { deletedAt: null },
           },
           include: {
-            permissions: { select: { resource: true, action: true } },
+            permiso: { select: { recurso: true, accion: true } },
           },
         });
 
@@ -40,15 +41,15 @@ export class GetEffectivePermissionsUseCase {
 
     rolePermissionAssignments.forEach((rp) => {
       effectivePermissionsMap.set(
-        `${rp.permissions.resource}:${rp.permissions.action}`,
+        `${rp.permiso.recurso}:${rp.permiso.accion}`,
         true,
       );
     });
 
-    user.userPermissions.forEach((up) => {
-      if (up.Permissions && !up.Permissions.deletedAt) {
-        const key = `${up.Permissions.resource}:${up.Permissions.action}`;
-        if (up.allow) {
+    usuario.permisosUsuario.forEach((up) => {
+      if (up.permiso && !up.permiso.deletedAt) {
+        const key = `${up.permiso.recurso}:${up.permiso.accion}`;
+        if (up.permitido) {
           effectivePermissionsMap.set(key, true);
         } else {
           effectivePermissionsMap.delete(key);

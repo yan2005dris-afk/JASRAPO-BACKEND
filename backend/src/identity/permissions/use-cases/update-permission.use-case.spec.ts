@@ -14,7 +14,7 @@ describe('UpdatePermissionUseCase', () => {
         {
           provide: PrismaService,
           useValue: {
-            permissions: {
+            permisos: {
               update: jest.fn(),
             },
           },
@@ -33,23 +33,23 @@ describe('UpdatePermissionUseCase', () => {
   it('should update a permission', async () => {
     const id = 1;
     const dto = { resource: 'test', action: 'test' };
-    const expectedResult = { permissionsId: id, ...dto };
-    (prismaService.permissions.update as jest.fn).mockResolvedValue(
+    const expectedResult = { permisoId: id, recurso: dto.resource, accion: dto.action };
+    (prismaService.permisos.update as jest.fn).mockResolvedValue(
       expectedResult,
     );
 
     const result = await useCase.execute(id, dto);
 
-    expect(prismaService.permissions.update).toHaveBeenCalledWith({
-      where: { permissionsId: id },
+    expect(prismaService.permisos.update).toHaveBeenCalledWith({
+      where: { permisoId: id },
       data: {
-        resource: dto.resource,
-        action: dto.action,
+        recurso: dto.resource,
+        accion: dto.action,
       },
       select: {
-        permissionsId: true,
-        resource: true,
-        action: true,
+        permisoId: true,
+        recurso: true,
+        accion: true,
       },
     });
     expect(result).toEqual(expectedResult);

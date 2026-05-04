@@ -44,9 +44,9 @@ describe('UserController', () => {
     it('should call userService.createUser with correct data', async () => {
       const createUserDto = {
         email: 'test@example.com',
-        password: 'password123',
+        clave: 'password123',
       };
-      const mockUser = { usersId: 1, email: 'test@example.com' };
+      const mockUser = { usuarioId: 1, email: 'test@example.com' };
 
       jest
         .spyOn(userService, 'createUser')
@@ -61,7 +61,7 @@ describe('UserController', () => {
 
   describe('findAll', () => {
     it('should call userService.users without pagination', async () => {
-      const mockUsers = [{ usersId: 1, email: 'test@example.com' }];
+      const mockUsers = [{ usuarioId: 1, email: 'test@example.com' }];
 
       jest.spyOn(userService, 'users').mockResolvedValue(mockUsers as never);
 
@@ -72,7 +72,7 @@ describe('UserController', () => {
     });
 
     it('should call userService.users with pagination params', async () => {
-      const mockUsers = [{ usersId: 1, email: 'test@example.com' }];
+      const mockUsers = [{ usuarioId: 1, email: 'test@example.com' }];
 
       jest.spyOn(userService, 'users').mockResolvedValue(mockUsers as never);
 
@@ -86,13 +86,13 @@ describe('UserController', () => {
   describe('findOne', () => {
     it('should call userService.user with correct id', async () => {
       const userId = 1;
-      const mockUser = { usersId: userId, email: 'test@example.com' };
+      const mockUser = { usuarioId: userId, email: 'test@example.com' };
 
       jest.spyOn(userService, 'user').mockResolvedValue(mockUser as never);
 
       const result = await controller.findOne(userId);
 
-      expect(userService.user).toHaveBeenCalledWith({ usersId: userId });
+      expect(userService.user).toHaveBeenCalledWith({ usuarioId: userId });
       expect(result).toEqual(mockUser);
     });
   });
@@ -100,7 +100,7 @@ describe('UserController', () => {
   describe('getUserRole', () => {
     it('should call userService.getRolesByUserId with correct id', async () => {
       const userId = 1;
-      const mockRoles = [{ name: 'admin' }];
+      const mockRoles = [{ nombre: 'admin' }];
 
       jest
         .spyOn(userService, 'getRolesByUserId')
@@ -116,7 +116,7 @@ describe('UserController', () => {
   describe('getUserRoleAssignment', () => {
     it('should call userService.getRoleAssignmentsByUserId with correct id', async () => {
       const userId = 1;
-      const mockAssignment = { usersId: userId, rolesId: 2, name: 'admin' };
+      const mockAssignment = { usuarioId: userId, rolId: 2, nombre: 'admin' };
 
       jest
         .spyOn(userService, 'getRoleAssignmentsByUserId')
@@ -134,9 +134,9 @@ describe('UserController', () => {
   describe('updateUser', () => {
     it('should call userService.updateUser with correct data', async () => {
       const userId = 1;
-      const updateUserDto = { email: 'newemail@example.com' };
+      const updateUserDto = { email: 'newemail@example.com', clave: 'secret' };
       const mockUpdatedUser = {
-        usersId: userId,
+        usuarioId: userId,
         email: 'newemail@example.com',
       };
 
@@ -147,8 +147,8 @@ describe('UserController', () => {
       const result = await controller.updateUser(userId, updateUserDto);
 
       expect(userService.updateUser).toHaveBeenCalledWith({
-        where: { usersId: userId },
-        data: { email: updateUserDto.email, password: updateUserDto.password },
+        where: { usuarioId: userId },
+        data: { email: updateUserDto.email, clave: updateUserDto.clave },
       });
       expect(result).toEqual(mockUpdatedUser);
     });
@@ -157,8 +157,8 @@ describe('UserController', () => {
   describe('assignRole', () => {
     it('should call userService.assignRoleToUser with correct data', async () => {
       const userId = 1;
-      const assignRoleDto = { rolesId: 2 };
-      const mockResult = { usersId: userId, rolesId: 2, name: 'editor' };
+      const assignRoleDto = { rolId: 2 };
+      const mockResult = { usuarioId: userId, rolId: 2, nombre: 'editor' };
 
       jest
         .spyOn(userService, 'assignRoleToUser')
@@ -168,7 +168,7 @@ describe('UserController', () => {
 
       expect(userService.assignRoleToUser).toHaveBeenCalledWith(
         userId,
-        assignRoleDto.rolesId,
+        assignRoleDto.rolId,
       );
       expect(result).toEqual(mockResult);
     });
@@ -177,7 +177,7 @@ describe('UserController', () => {
   describe('getUserPermissions', () => {
     it('should call userService.getDirectPermissionsByUserId with correct id', async () => {
       const userId = 1;
-      const mockPermissions = [{ name: 'users:read' }];
+      const mockPermissions = [{ nombre: 'users:read' }];
 
       jest
         .spyOn(userService, 'getDirectPermissionsByUserId')
@@ -195,8 +195,8 @@ describe('UserController', () => {
   describe('assignPermission', () => {
     it('should call userService.assignPermissionToUser with correct data', async () => {
       const userId = 1;
-      const assignPermissionDto = { permissionsId: 1, allow: true };
-      const mockResult = { allowed: true };
+      const assignPermissionDto = { permisoId: 1, permitido: true };
+      const mockResult = { permitido: true };
 
       jest
         .spyOn(userService, 'assignPermissionToUser')
@@ -209,7 +209,7 @@ describe('UserController', () => {
 
       expect(userService.assignPermissionToUser).toHaveBeenCalledWith(
         userId,
-        assignPermissionDto.permissionsId,
+        assignPermissionDto.permisoId,
         true,
       );
       expect(result).toEqual(mockResult);
@@ -244,7 +244,7 @@ describe('UserController', () => {
       const result = await controller.remove(userId);
 
       expect(userService.softDeleteUser).toHaveBeenCalledWith({
-        usersId: userId,
+        usuarioId: userId,
       });
       expect(result).toEqual(mockResult);
     });
@@ -272,8 +272,8 @@ describe('UserController', () => {
     it('should call userService.getEffectivePermissions with correct id', async () => {
       const userId = 1;
       const mockPermissions = [
-        { name: 'users:read' },
-        { name: 'users:create' },
+        { nombre: 'users:read' },
+        { nombre: 'users:create' },
       ];
 
       jest

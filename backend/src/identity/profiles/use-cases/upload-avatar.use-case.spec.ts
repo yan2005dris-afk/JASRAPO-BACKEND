@@ -17,7 +17,7 @@ describe('UploadAvatarUseCase', () => {
         {
           provide: PrismaService,
           useValue: {
-            profiles: {
+            perfiles: {
               findUnique: jest.fn(),
               create: jest.fn(),
               update: jest.fn(),
@@ -47,16 +47,16 @@ describe('UploadAvatarUseCase', () => {
       size: 4,
     } as any;
 
-    (prisma.profiles.findUnique as jest.Mock).mockResolvedValue({
-      id: 1,
-      usersId: userId,
+    (prisma.perfiles.findUnique as jest.Mock).mockResolvedValue({
+      perfilId: 1,
+      usuarioId: userId,
     });
     (minio.uploadFile as jest.Mock).mockResolvedValue(undefined);
 
     const result = await useCase.execute(userId, file);
 
     expect(minio.uploadFile).toHaveBeenCalled();
-    expect(prisma.profiles.update).toHaveBeenCalled();
+    expect(prisma.perfiles.update).toHaveBeenCalled();
     expect(result.message).toBe('Foto de perfil actualizada exitosamente');
   });
 

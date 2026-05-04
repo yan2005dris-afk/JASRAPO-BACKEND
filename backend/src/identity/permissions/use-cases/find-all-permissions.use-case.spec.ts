@@ -8,7 +8,7 @@ describe('FindAllPermissionsUseCase', () => {
   let prisma: PrismaService;
 
   const mockPrisma = {
-    permissions: {
+    permisos: {
       findMany: jest.fn(),
     },
   };
@@ -26,13 +26,13 @@ describe('FindAllPermissionsUseCase', () => {
   });
 
   it('should return all permissions', async () => {
-    mockPrisma.permissions.findMany.mockResolvedValue([
-      { permissionsId: 1, resource: 'Users', action: 'Read' },
+    mockPrisma.permisos.findMany.mockResolvedValue([
+      { permisoId: 1, recurso: 'Users', accion: 'Read' },
     ]);
 
     const result = await useCase.execute();
 
     expect(result).toHaveLength(1);
-    expect(prisma.permissions.findMany).toHaveBeenCalled();
+    expect(mockPrisma.permisos.findMany).toHaveBeenCalled();
   });
 });

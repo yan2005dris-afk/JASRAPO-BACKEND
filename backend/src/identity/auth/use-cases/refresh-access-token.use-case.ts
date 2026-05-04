@@ -24,28 +24,28 @@ export class RefreshAccessTokenUseCase {
   ) {}
 
   async execute(
-    sessionId: string,
+    sesionId: string,
     refreshToken: string,
     ip: string = 'unknown',
     userAgent: string = 'unknown',
-    userId: number,
+    usuarioId: number,
   ) {
-    const session = await this.sessionsService.getSession(userId, sessionId);
+    const session = await this.sessionsService.getSession(usuarioId, sesionId);
 
-    if (!session || session.isRevoked || session.expiresAt < new Date()) {
+    if (!session || session.revocado || session.expiraEn < new Date()) {
       throw new UnauthorizedException('Sesión inválida o expirada');
     }
 
     const isValid = await bcrypt.compare(
       refreshToken,
-      session.refreshTokenHash,
+      session.hashRefreshToken,
     );
     if (!isValid) {
       throw new UnauthorizedException('Refresh token inválido');
     }
 
-    const user = await this.prisma.users.findUnique({
-      where: { usersId: userId },
+    const user = await this.prisma.usuarios.findUnique({
+      where: { usuarioId },
       select: { email: true },
     });
 
@@ -54,21 +54,21 @@ export class RefreshAccessTokenUseCase {
     }
 
     // Rotar tokens
-    const tokens = await this.generateJwtToken(userId, sessionId, user.email);
+    const tokens = await this.generateJwtToken(usuarioId, sesionId, user.email);
     const newHash = await bcrypt.hash(tokens.refreshToken, 10);
-    const expiresAt = new Date(Date.now() + REFRESH_TOKEN_MAX_AGE_MS);
+    const expiraEn = new Date(Date.now() + REFRESH_TOKEN_MAX_AGE_MS);
 
     try {
-      await this.sessionsService.updateSession(sessionId, {
-        refreshTokenHash: newHash,
-        ipAddress: ip,
-        userAgent: userAgent,
-        isRevoked: false,
-        expiresAt,
+      await this.sessionsService.updateSession(sesionId, {
+        hashRefreshToken: newHash,
+        direccionIp: ip,
+        usuarioAgente: userAgent,
+        revocado: false,
+        expiraEn,
       });
     } catch (err) {
       this.logger.error(
-        `[SESSIONS] Error al rotar sesión: sessionsId=${sessionId} | ${err}`,
+        `[SESSIONS] Error al rotar sesión: sesionId=${sesionId} | ${err}`,
       );
       throw new InternalServerErrorException('Error al actualizar sesión.');
     }

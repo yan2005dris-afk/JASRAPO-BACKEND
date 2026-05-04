@@ -12,7 +12,7 @@ describe('GetRolePermissionsUseCase', () => {
     roles: {
       findUnique: jest.fn(),
     },
-    rolPermissions: {
+    rolPermisos: {
       findMany: jest.fn(),
     },
   };
@@ -31,17 +31,17 @@ describe('GetRolePermissionsUseCase', () => {
   });
 
   it('should return permissions for a role (flat model)', async () => {
-    mockPrisma.roles.findUnique.mockResolvedValue({ rolesId: 1 });
-    mockPrisma.rolPermissions.findMany.mockResolvedValue([
+    mockPrisma.roles.findUnique.mockResolvedValue({ rolId: 1 });
+    mockPrisma.rolPermisos.findMany.mockResolvedValue([
       {
-        rolPermissionsId: 1,
-        permissionsId: 10,
-        permissions: { permissionsId: 10, resource: 'Users', action: 'Read' },
+        rolPermisoId: 1,
+        permisoId: 10,
+        permiso: { permisoId: 10, recurso: 'Users', accion: 'Read' },
       },
       {
-        rolPermissionsId: 2,
-        permissionsId: 11,
-        permissions: { permissionsId: 11, resource: 'Users', action: 'Write' },
+        rolPermisoId: 2,
+        permisoId: 11,
+        permiso: { permisoId: 11, recurso: 'Users', accion: 'Write' },
       },
     ]);
 
@@ -49,10 +49,10 @@ describe('GetRolePermissionsUseCase', () => {
 
     expect(result).toHaveLength(2);
     expect(result[0]).toEqual({
-      rolPermissionsId: 1,
-      permissionsId: 10,
-      resource: 'Users',
-      action: 'Read',
+      rolPermisoId: 1,
+      permisoId: 10,
+      recurso: 'Users',
+      accion: 'Read',
     });
     expect(prisma.roles.findUnique).toHaveBeenCalled();
   });

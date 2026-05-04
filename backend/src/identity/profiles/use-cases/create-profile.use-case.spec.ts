@@ -15,7 +15,7 @@ describe('CreateProfileUseCase', () => {
         {
           provide: PrismaService,
           useValue: {
-            profiles: {
+            perfiles: {
               findUnique: jest.fn(),
               create: jest.fn(),
             },
@@ -32,42 +32,44 @@ describe('CreateProfileUseCase', () => {
     const userId = 1;
     const dto = { firstName: 'John', lastName: 'Doe', phone: '123456' };
 
-    (prisma.profiles.findUnique as jest.Mock).mockResolvedValue(null);
-    (prisma.profiles.create as jest.Mock).mockResolvedValue({
-      id: 1,
-      ...dto,
-      usersId: userId,
+    (prisma.perfiles.findUnique as jest.Mock).mockResolvedValue(null);
+    (prisma.perfiles.create as jest.Mock).mockResolvedValue({
+      perfilId: 1,
+      nombres: dto.firstName,
+      apellidos: dto.lastName,
+      telefono: dto.phone,
+      usuarioId: userId,
     });
 
     const result = await useCase.execute(userId, dto);
 
-    expect(prisma.profiles.findUnique).toHaveBeenCalledWith({
-      where: { usersId: userId },
+    expect(prisma.perfiles.findUnique).toHaveBeenCalledWith({
+      where: { usuarioId: userId },
     });
-    expect(prisma.profiles.create).toHaveBeenCalledWith({
+    expect(prisma.perfiles.create).toHaveBeenCalledWith({
       data: {
-        usersId: userId,
-        firstName: dto.firstName,
-        lastName: dto.lastName,
-        phone: dto.phone,
+        usuarioId: userId,
+        nombres: dto.firstName,
+        apellidos: dto.lastName,
+        telefono: dto.phone,
       },
     });
     expect(result).toBeDefined();
-    expect(result.usersId).toBe(userId);
+    expect(result.usuarioId).toBe(userId);
   });
 
   it('should throw ConflictException if profile already exists', async () => {
     const userId = 1;
     const dto = { firstName: 'John', lastName: 'Doe' };
 
-    (prisma.profiles.findUnique as jest.Mock).mockResolvedValue({
-      id: 1,
-      usersId: userId,
+    (prisma.perfiles.findUnique as jest.Mock).mockResolvedValue({
+      perfilId: 1,
+      usuarioId: userId,
     });
 
     await expect(useCase.execute(userId, dto as any)).rejects.toThrow(
       ConflictException,
     );
-    expect(prisma.profiles.create).not.toHaveBeenCalled();
+    expect(prisma.perfiles.create).not.toHaveBeenCalled();
   });
 });

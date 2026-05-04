@@ -33,52 +33,52 @@ export class LoginUseCase {
     userAgent: string = 'unknown',
   ) {
     const user = await this.validateUser(loginUserDto);
-    this.logger.log(`[LOGIN] user=${user.usersId} | ip="${ip}"`);
+    this.logger.log(`[LOGIN] user=${user.usuarioId} | ip="${ip}"`);
 
-    const sessionsId = randomUUID();
+    const sesionId = randomUUID();
 
     // Generar tokens
     const tokens = await this.generateJwtToken(
-      user.usersId,
-      sessionsId,
+      user.usuarioId,
+      sesionId,
       user.email,
     );
 
     // Guardar sesión
-    const refreshTokenHash = await bcrypt.hash(tokens.refreshToken, 10);
-    const expiresAt = new Date(Date.now() + REFRESH_TOKEN_MAX_AGE_MS);
+    const hashRefreshToken = await bcrypt.hash(tokens.refreshToken, 10);
+    const expiraEn = new Date(Date.now() + REFRESH_TOKEN_MAX_AGE_MS);
 
     try {
       await this.sessionsService.createSession({
-        sessionsId,
-        refreshTokenHash,
-        ipAddress: ip,
-        userAgent: userAgent,
-        isRevoked: false,
-        expiresAt,
-        user: { connect: { usersId: user.usersId } },
+        sesionId,
+        hashRefreshToken,
+        direccionIp: ip,
+        usuarioAgente: userAgent,
+        revocado: false,
+        expiraEn,
+        usuario: { connect: { usuarioId: user.usuarioId } },
       });
     } catch (err) {
       this.logger.error(
-        `[SESSIONS] Error al guardar sesión: sessionsId=${sessionsId} | ${err}`,
+        `[SESSIONS] Error al guardar sesión: sesionId=${sesionId} | ${err}`,
       );
       throw new InternalServerErrorException(
         'Error al crear sesión. Intente nuevamente.',
       );
     }
 
-    return this.buildLoginResponse(user, sessionsId, tokens);
+    return this.buildLoginResponse(user, sesionId, tokens);
   }
 
   private async validateUser(loginUserDto: LoginUserDto) {
     const { email, password } = loginUserDto;
-    const user = await this.prisma.users.findUnique({ where: { email } });
+    const user = await this.prisma.usuarios.findUnique({ where: { email } });
 
     if (!user || user.deletedAt) {
       throw new UnauthorizedException('Credenciales inválidas');
     }
 
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const isPasswordValid = await bcrypt.compare(password, user.clave);
     if (!isPasswordValid) {
       throw new UnauthorizedException('Credenciales inválidas');
     }
@@ -117,8 +117,8 @@ export class LoginUseCase {
   }
 
   private async buildLoginResponse(
-    user: { usersId: number; email: string },
-    sessionsId: string,
+    user: { usuarioId: number; email: string },
+    sesionId: string,
     tokens: { accessToken: string; refreshToken: string },
   ) {
     const decodedAccess = this.decodeJwtClaims(
@@ -129,40 +129,40 @@ export class LoginUseCase {
     );
 
     const [userWithRole, profile] = await Promise.all([
-      this.prisma.users.findUnique({
-        where: { usersId: user.usersId },
+      this.prisma.usuarios.findUnique({
+        where: { usuarioId: user.usuarioId },
         select: {
-          rolesId: true,
-          role: { select: { name: true, deletedAt: true } },
+          rolId: true,
+          rol: { select: { nombre: true, deletedAt: true } },
         },
       }),
-      this.prisma.profiles.findUnique({
-        where: { usersId: user.usersId },
-        select: { firstName: true, lastName: true, avatar: true },
+      this.prisma.perfiles.findUnique({
+        where: { usuarioId: user.usuarioId },
+        select: { nombres: true, apellidos: true, avatar: true },
       }),
     ]);
 
     const fullName =
-      [profile?.firstName, profile?.lastName].filter(Boolean).join(' ') || null;
+      [profile?.nombres, profile?.apellidos].filter(Boolean).join(' ') || null;
     const avatarKey = (profile?.avatar as any)?.key || null;
 
     const firstRole =
-      userWithRole?.role && !userWithRole.role.deletedAt
-        ? { rolesId: userWithRole.rolesId, name: userWithRole.role.name }
+      userWithRole?.rol && !userWithRole.rol.deletedAt
+        ? { rolId: userWithRole.rolId, nombre: userWithRole.rol.nombre }
         : null;
 
     const toDate = (ts?: number) =>
       ts ? EcuadorTimezoneUtil.formatAsEcuadorISO(new Date(ts * 1000)) : null;
 
     return {
-      sub: user.usersId,
-      sid: sessionsId,
+      sub: user.usuarioId,
+      sid: sesionId,
       name: fullName,
       avatar: avatarKey,
       email: user.email,
-      roleId: firstRole?.rolesId ?? null,
-      roleName: firstRole?.name ?? null,
-      roles: firstRole?.rolesId ? [firstRole.rolesId] : [],
+      roleId: firstRole?.rolId ?? null,
+      roleName: firstRole?.nombre ?? null,
+      roles: firstRole?.rolId ? [firstRole.rolId] : [],
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
       accessTokenInfo: {

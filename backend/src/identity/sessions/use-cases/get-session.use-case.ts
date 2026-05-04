@@ -5,13 +5,13 @@ import { PrismaService } from 'src/infrastructure/database/prisma.service';
 export class GetSessionUseCase {
   constructor(private readonly prisma: PrismaService) {}
 
-  async execute(usersId: number, sessionsId: string) {
-    return this.prisma.sessions.findFirst({
+  async execute(usuarioId: number, sesionId: string) {
+    return this.prisma.sesiones.findFirst({
       where: {
-        usersId,
-        sessionsId,
-        isRevoked: false,
-        expiresAt: { gt: new Date() },
+        usuarioId,
+        sesionId,
+        revocado: false,
+        expiraEn: { gt: new Date() },
       },
     });
   }

@@ -1,0 +1,12 @@
+model UsuarioPermisos {
+  usuarioPermisoId Int         @id @default(autoincrement()) @map("id_usuario_permiso")
+  usuarioId        Int         @map("usuario_id")
+  permisoId        Int         @map("permiso_id")
+  permitido        Boolean     @map("permitir")
+  deletedAt        DateTime?   @map("borrado_en")
+  permiso          Permisos    @relation(fields: [permisoId], references: [permisoId])
+  usuario          Usuarios    @relation(fields: [usuarioId], references: [usuarioId])
+
+  @@unique([usuarioId, permisoId])
+  @@map("usuario_permisos")
+}

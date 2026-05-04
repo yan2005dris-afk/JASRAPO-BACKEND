@@ -30,10 +30,10 @@ describe('LoginUseCase', () => {
         {
           provide: PrismaService,
           useValue: {
-            users: {
+            usuarios: {
               findUnique: jest.fn(),
             },
-            profiles: {
+            perfiles: {
               findUnique: jest.fn(),
             },
           },
@@ -82,18 +82,18 @@ describe('LoginUseCase', () => {
     it('should login successfully and return response', async () => {
       const loginDto = { email: 'test@jasrapo.com', password: 'Password123!' };
       const mockUser = {
-        usersId: 1,
+        usuarioId: 1,
         email: 'test@jasrapo.com',
-        password: 'hashedPassword',
+        clave: 'hashedPassword',
         deletedAt: null,
       };
 
-      (prismaService.users.findUnique as jest.Mock)
+      (prismaService.usuarios.findUnique as jest.Mock)
         .mockResolvedValueOnce(mockUser) // Initial validateUser
         .mockResolvedValueOnce({
           // buildLoginResponse
-          rolesId: 1,
-          role: { name: 'ADMIN', deletedAt: null },
+          rolId: 1,
+          rol: { nombre: 'ADMIN', deletedAt: null },
         });
 
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
@@ -107,9 +107,9 @@ describe('LoginUseCase', () => {
         .mockReturnValueOnce({ iat: 1000, exp: 2000 })
         .mockReturnValueOnce({ iat: 1000, exp: 2000 });
 
-      prismaService.profiles.findUnique.mockResolvedValue({
-        firstName: 'Test',
-        lastName: 'User',
+      prismaService.perfiles.findUnique.mockResolvedValue({
+        nombres: 'Test',
+        apellidos: 'User',
         avatar: { key: 'avatar-key' },
       } as any);
 
@@ -127,7 +127,7 @@ describe('LoginUseCase', () => {
     });
 
     it('should throw UnauthorizedException when user not found', async () => {
-      (prismaService.users.findUnique as jest.Mock).mockResolvedValue(null);
+      (prismaService.usuarios.findUnique as jest.Mock).mockResolvedValue(null);
 
       await expect(
         useCase.execute({ email: 'notfound@test.com', password: 'any' }),
@@ -135,10 +135,10 @@ describe('LoginUseCase', () => {
     });
 
     it('should throw UnauthorizedException when password invalid', async () => {
-      (prismaService.users.findUnique as jest.Mock).mockResolvedValue({
-        usersId: 1,
+      (prismaService.usuarios.findUnique as jest.Mock).mockResolvedValue({
+        usuarioId: 1,
         email: 'test@test.com',
-        password: 'hashed',
+        clave: 'hashed',
         deletedAt: null,
       });
       (bcrypt.compare as jest.Mock).mockResolvedValue(false);
@@ -149,10 +149,10 @@ describe('LoginUseCase', () => {
     });
 
     it('should throw InternalServerErrorException when session creation fails', async () => {
-      (prismaService.users.findUnique as jest.Mock).mockResolvedValue({
-        usersId: 1,
+      (prismaService.usuarios.findUnique as jest.Mock).mockResolvedValue({
+        usuarioId: 1,
         email: 'test@test.com',
-        password: 'hashed',
+        clave: 'hashed',
         deletedAt: null,
       });
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);

@@ -7,7 +7,6 @@ import { ConfigService } from '@nestjs/config';
 import { SessionsService } from '../../sessions/sessions.service';
 import {
   UnauthorizedException,
-  InternalServerErrorException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 
@@ -26,7 +25,7 @@ describe('RefreshAccessTokenUseCase', () => {
         {
           provide: PrismaService,
           useValue: {
-            users: {
+            usuarios: {
               findUnique: jest.fn(),
             },
           },
@@ -74,15 +73,15 @@ describe('RefreshAccessTokenUseCase', () => {
   describe('execute', () => {
     it('should refresh tokens successfully', async () => {
       const mockSession = {
-        sessionsId: 'sid',
-        refreshTokenHash: 'hash',
-        isRevoked: false,
-        expiresAt: new Date(Date.now() + 100000),
+        sesionId: 'sid',
+        hashRefreshToken: 'hash',
+        revocado: false,
+        expiraEn: new Date(Date.now() + 100000),
       };
 
       sessionsService.getSession.mockResolvedValue(mockSession as any);
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
-      (prismaService.users.findUnique as jest.Mock).mockResolvedValue({
+      (prismaService.usuarios.findUnique as jest.Mock).mockResolvedValue({
         email: 'test@test.com',
       });
       jwtService.signAsync.mockResolvedValue('new-token');
@@ -105,7 +104,7 @@ describe('RefreshAccessTokenUseCase', () => {
     });
 
     it('should throw UnauthorizedException if session revoked', async () => {
-      sessionsService.getSession.mockResolvedValue({ isRevoked: true } as any);
+      sessionsService.getSession.mockResolvedValue({ revocado: true } as any);
       await expect(useCase.execute('sid', 'rt', 'ip', 'ua', 1)).rejects.toThrow(
         UnauthorizedException,
       );
@@ -113,8 +112,8 @@ describe('RefreshAccessTokenUseCase', () => {
 
     it('should throw UnauthorizedException if token invalid', async () => {
       sessionsService.getSession.mockResolvedValue({
-        isRevoked: false,
-        expiresAt: new Date(Date.now() + 1000),
+        revocado: false,
+        expiraEn: new Date(Date.now() + 1000),
       } as any);
       (bcrypt.compare as jest.Mock).mockResolvedValue(false);
       await expect(useCase.execute('sid', 'rt', 'ip', 'ua', 1)).rejects.toThrow(

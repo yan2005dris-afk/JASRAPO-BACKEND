@@ -1,11 +1,11 @@
-model RolPermissions {
-  rolPermissionsId Int         @id @default(autoincrement()) @map("rol_permiso_id")
-  rolesId          Int         @map("rol_id")
-  permissionsId    Int         @map("permiso_id")
-  deletedAt        DateTime?   @map("borrado_en")
-  permissions      Permissions @relation(fields: [permissionsId], references: [permissionsId])
-  roles            Roles       @relation(fields: [rolesId], references: [rolesId])
+model RolPermisos {
+  rolPermisoId Int         @id @default(autoincrement()) @map("rol_permiso_id")
+  rolId        Int         @map("rol_id")
+  permisoId    Int         @map("permiso_id")
+  deletedAt    DateTime?   @map("borrado_en")
+  permiso      Permisos    @relation(fields: [permisoId], references: [permisoId])
+  rol          Roles       @relation(fields: [rolId], references: [rolId])
 
-  @@unique([rolesId, permissionsId])
+  @@unique([rolId, permisoId])
   @@map("rol_permisos")
 }

@@ -17,7 +17,7 @@ describe('SelectExistingAvatarUseCase', () => {
         {
           provide: PrismaService,
           useValue: {
-            profiles: {
+            perfiles: {
               findUnique: jest.fn(),
               create: jest.fn(),
               update: jest.fn(),
@@ -49,14 +49,14 @@ describe('SelectExistingAvatarUseCase', () => {
       contentType: 'image/png',
       size: 100,
     });
-    (prisma.profiles.findUnique as jest.Mock).mockResolvedValue({
-      id: 1,
-      usersId: userId,
+    (prisma.perfiles.findUnique as jest.Mock).mockResolvedValue({
+      perfilId: 1,
+      usuarioId: userId,
     });
 
     const result = await useCase.execute(userId, key);
 
-    expect(prisma.profiles.update).toHaveBeenCalled();
+    expect(prisma.perfiles.update).toHaveBeenCalled();
     expect(result.message).toBe('Avatar vinculado exitosamente');
   });
 

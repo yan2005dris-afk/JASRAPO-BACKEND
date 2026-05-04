@@ -14,7 +14,7 @@ describe('UpdateProfileUseCase', () => {
         {
           provide: PrismaService,
           useValue: {
-            profiles: {
+            perfiles: {
               findUnique: jest.fn(),
               create: jest.fn(),
               update: jest.fn(),
@@ -31,31 +31,37 @@ describe('UpdateProfileUseCase', () => {
   it('should update existing profile', async () => {
     const userId = 1;
     const dto = { firstName: 'Jane' };
-    (prisma.profiles.findUnique as jest.Mock).mockResolvedValue({
-      id: 1,
-      usersId: userId,
+    (prisma.perfiles.findUnique as jest.Mock).mockResolvedValue({
+      perfilId: 1,
+      usuarioId: userId,
     });
-    (prisma.profiles.update as jest.Mock).mockResolvedValue({ id: 1, ...dto });
+    (prisma.perfiles.update as jest.Mock).mockResolvedValue({
+      perfilId: 1,
+      nombres: dto.firstName,
+    });
 
     const result = await useCase.execute(userId, dto as any);
 
-    expect(prisma.profiles.update).toHaveBeenCalledWith({
-      where: { usersId: userId },
-      data: expect.objectContaining(dto),
+    expect(prisma.perfiles.update).toHaveBeenCalledWith({
+      where: { usuarioId: userId },
+      data: expect.objectContaining({ nombres: dto.firstName }),
     });
-    expect(result.firstName).toBe('Jane');
+    expect(result.nombres).toBe('Jane');
   });
 
   it('should create profile if it does not exist during update', async () => {
     const userId = 1;
-    const dto = { firstName: 'Jane' };
-    (prisma.profiles.findUnique as jest.Mock).mockResolvedValue(null);
-    (prisma.profiles.create as jest.Mock).mockResolvedValue({ id: 1, ...dto });
+    const dto = { nombres: 'Jane' };
+    (prisma.perfiles.findUnique as jest.Mock).mockResolvedValue(null);
+    (prisma.perfiles.create as jest.Mock).mockResolvedValue({
+      perfilId: 1,
+      nombres: 'Jane',
+    });
 
-    await useCase.execute(userId, dto as any);
+    await useCase.execute(userId, { firstName: 'Jane' } as any);
 
-    expect(prisma.profiles.create).toHaveBeenCalledWith({
-      data: expect.objectContaining({ usersId: userId, firstName: 'Jane' }),
+    expect(prisma.perfiles.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ usuarioId: userId, nombres: 'Jane' }),
     });
   });
 });

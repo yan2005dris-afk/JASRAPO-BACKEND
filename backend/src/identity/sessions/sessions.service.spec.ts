@@ -24,7 +24,7 @@ describe('SessionsService', () => {
         {
           provide: PrismaService,
           useValue: {
-            sessions: {
+            sesiones: {
               findUnique: jest.fn(),
             },
           },
@@ -80,8 +80,8 @@ describe('SessionsService', () => {
 
   it('should directly call prisma for getSessionById', async () => {
     await service.getSessionById('abc');
-    expect(prisma.sessions.findUnique).toHaveBeenCalledWith({
-      where: { sessionsId: 'abc' },
+    expect(prisma.sesiones.findUnique).toHaveBeenCalledWith({
+      where: { sesionId: 'abc' },
     });
   });
 

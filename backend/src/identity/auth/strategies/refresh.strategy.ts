@@ -35,15 +35,15 @@ export class RefreshTokenStrategy extends PassportStrategy(
   }
 
   async validate(payload: JwtRefreshPayload) {
-    const { sub: usersId, sid: sessionsId, email } = payload;
-    if (!usersId || !sessionsId) {
+    const { sub: usuarioId, sid: sesionId, email } = payload;
+    if (!usuarioId || !sesionId) {
       throw new UnauthorizedException('Session invalida');
     }
-    const session = await this.sessionsService.getSession(usersId, sessionsId);
-    if (!session || session.isRevoked || session.expiresAt < new Date()) {
+    const session = await this.sessionsService.getSession(usuarioId, sesionId);
+    if (!session || session.revocado || session.expiraEn < new Date()) {
       throw new UnauthorizedException('Refresh token inválido o expirado');
     }
-    return { sub: usersId, sessionsId, email };
+    return { sub: usuarioId, sessionsId: sesionId, email };
   }
 
   private getRefreshToken(
