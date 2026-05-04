@@ -9,15 +9,17 @@ export class LoteService {
   constructor(private readonly prisma: PrismaService) {}
 
   async generarLote(dto: GenerarLoteDto) {
-    this.logger.log(`Iniciando generación de lote para periodo ${dto.periodoId}`);
-    
+    this.logger.log(
+      `Iniciando generación de lote para periodo ${dto.periodoId}`,
+    );
+
     // Ejecutar el Stored Procedure
     // Nota: BigInt se devuelve como string en el resultado de queryRaw
     const result = await this.prisma.$queryRawUnsafe<any[]>(
       `SELECT generar_prefacturas_lote($1, $2, $3) as "loteId"`,
       dto.periodoId,
       dto.comunidadId ?? null,
-      dto.creadoPor ?? 'SYSTEM'
+      dto.creadoPor ?? 'SYSTEM',
     );
 
     const loteId = result[0]?.loteId;

@@ -50,7 +50,7 @@ export async function seedFacturacion(prisma: PrismaClient) {
             saldoVencido: 0,
             abono: 0,
             saldoActual: 12.50,
-            mesesAtrasado: 0
+            meses_atrasado: 0
         }
     });
 

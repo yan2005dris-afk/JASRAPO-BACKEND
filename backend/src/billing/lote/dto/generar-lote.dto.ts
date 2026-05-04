@@ -6,12 +6,20 @@ export class GenerarLoteDto {
   @IsInt()
   periodoId: number;
 
-  @ApiProperty({ description: 'ID de la comunidad (opcional, si es null factura todo)', example: 1, required: false })
+  @ApiProperty({
+    description: 'ID de la comunidad (opcional, si es null factura todo)',
+    example: 1,
+    required: false,
+  })
   @IsOptional()
   @IsInt()
   comunidadId?: number;
 
-  @ApiProperty({ description: 'Usuario que genera el lote', example: 'admin', required: false })
+  @ApiProperty({
+    description: 'Usuario que genera el lote',
+    example: 'admin',
+    required: false,
+  })
   @IsOptional()
   @IsString()
   creadoPor?: string;
