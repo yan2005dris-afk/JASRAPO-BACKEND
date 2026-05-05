@@ -221,24 +221,18 @@ docker compose logs -f api
 
 ## Observabilidad
 
-### Métricas Prometheus
+### Stack Completa
 
-- Endpoint: `http://localhost:9090`
-- Métricas automáticas: HTTP requests, memoria, CPU, latencia
+El proyecto incluye una stack completa de observabilidad:
 
-### Logs Estructurados
+| Servicio | Puerto Local | Propósito |
+|----------|-------------|----------|
+| **Prometheus** | 9091 | Métricas |
+| **Grafana** | 3002 | Dashboards |
+| **Loki** | 3101 | Logs |
+| **Tempo** | 3201 | Trazas |
 
-- Formato JSON con contexto (correlation ID, usuario, IP)
-- Nivel de log configurable por entorno
-
-### Tracing (OpenTelemetry)
-
-- Integración con Jaeger o compatible
-- Rastreo de requests distribuidos
-
-### Dashboard Grafana
-
-- localhost:3001 (default: admin/admin)
+Consulta [OBSERVABILITY.md](./OBSERVABILITY.md) para la guía completa.
 
 ## Base de Datos
 
