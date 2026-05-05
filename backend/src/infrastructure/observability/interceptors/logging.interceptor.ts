@@ -46,25 +46,29 @@ export class LoggingInterceptor implements NestInterceptor {
           this.metricsService.incrementHttpRequest(method, status, route);
           this.metricsService.observeHttpDuration(method, route, durationSec);
         },
-        error: (error: Error | HttpException | any) => {
+        error: (error: unknown) => {
           const durationMs = Date.now() - startTime;
           const durationSec = durationMs / 1000;
-          
-          // Extract status code safely
+
+          // Extract status code safely using unknown type patterns
           let status = '500';
+          let message = 'Unknown error';
+
           if (error instanceof HttpException) {
             status = error.getStatus().toString();
-          } else if (error?.status) {
-            status = error.status.toString();
-          } else if (error?.response?.statusCode) {
-            status = error.response.statusCode.toString();
+            message = error.message;
+          } else if (error instanceof Error) {
+            message = error.message;
+            // Check if it has a status property (common in many Node.js libs)
+            if ('status' in error && typeof error.status === 'number') {
+              status = error.status.toString();
+            }
           }
 
           // Log error
           this.logger.error(
-            `${method} ${originalUrl} ${status} ${durationMs}ms - ${error.message || 'Unknown error'}`,
+            `${method} ${originalUrl} ${status} ${durationMs}ms - ${message}`,
           );
-
           // Record metrics
           this.metricsService.incrementHttpRequest(method, status, route);
           this.metricsService.observeHttpDuration(method, route, durationSec);
