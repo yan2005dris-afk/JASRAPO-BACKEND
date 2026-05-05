@@ -1,28 +1,76 @@
-# 💰 Billing Context (Facturación)
+# Billing (Facturación)
 
-Este contexto se encarga de transformar la medición (`metering`) y las reglas de negocio en documentos financieros y fiscales.
+## Descripción
 
-## 🏛️ Consideraciones Arquitectónicas (Decisiones de Diseño)
+Módulo de facturación y cobranza. Transforma la medición en economía.
 
-### 1. Desnormalización por Performance (Redundancia Controlada)
-En los modelos `Facturas` y `Prefacturas` mantenemos campos redundantes como `abono`, `saldo_pendiente` y `total_pagar` a pesar de que estos podrían calcularse sumando los `DetallePago`.
-- **Razón**: Optimización masiva de lectura para reportes de cartera y procesos de corte. Evitamos `JOINs` y agregaciones pesadas en tablas de millones de registros.
-- **Contrato**: Los `Use Cases` de pago (Interactors) son los únicos responsables de mantener la atomicidad y actualizar estos saldos en la misma transacción.
+## Sub-dominios
 
-### 2. Inmutabilidad vía Snapshots
-Las prefacturas y facturas almacenan una copia (snapshot) de los datos del cliente, tarifas e intereses al momento de la creación.
-- **Razón**: Los documentos financieros deben ser históricos. Si un cliente cambia su RUC o una tarifa sube, los documentos emitidos anteriormente NO deben cambiar.
-- **Auditoría**: Permite reconstruir exactamente qué se le cobró al usuario y bajo qué reglas de ese momento.
+### Tarifas
 
-### 3. Prefactura como "Fuente de Verdad" Operativa
-La `Prefactura` es el paso previo a la `Factura` fiscal. 
-- Contiene el cálculo de `deuda_anterior`, `interes_mora` y consumos.
-- Permite correcciones antes de la emisión al SRI, evitando anulaciones masivas de facturas electrónicas.
+- Gestión de categorías de tarifa
+- Ubicación: `tariffs/` ✅ Existe
 
-## 🗂️ Estructura del Contexto
-- **`tariffs/`**: Definición de categorías tarifarias y reglas de cálculo.
-- **`facturas/`**: (En desarrollo) Emisión y gestión de comprobantes fiscales.
-- **`pagos/`**: (En desarrollo) Recaudación y gestión de saldos.
+### Lote
 
-## ⚙️ Screaming Architecture
-Define el modelo económico del negocio. Se comunica con `metering` para obtener los consumos pero mantiene su propia lógica de precios y regulaciones.
+- Generación de lotes de prefacturación
+- Ubicación: `lote/` ✅ Existe
+
+### Facturación
+
+- Facturas electrónicas
+- Prefacturas
+- Ubicación: `invoices/` (pendiente), `prefacturas/` (pendiente)
+
+### Cobranza
+
+- Convenios de pago
+- Pagos y cobros
+- Ubicación: `collectionsconvenios/`, `collections/pagos/`
+
+### SRI
+
+- Catálogos del SRI (formas de pago, impuestos, tipos de comprobante)
+- Ubicación: `sri/`
+
+## Modelos Prisma
+
+| Modelo | Carpeta Prisma | Descripción |
+|--------|--------------|-------------|
+| Facturas | facturacion/ | Facturas electrónicas |
+| Prefacturas | facturacion/ | Pre-facturas |
+| NotasCredito | facturacion/ | Notas de crédito |
+| NotasDebito | facturacion/ | Notas de débito |
+| Retenciones | facturacion/ | Retenciones |
+| Periodos | facturacion/ | Períodos |
+| PuntosEmision | facturacion/ | Sucursales/puntos de emisión |
+| Establecimientos | facturacion/ | Establecimientos |
+| Empresa | facturacion/ | Datos de empresa |
+| Lote | facturacion/ | Lotes de facturación |
+| CatalogoDescuento | facturacion/ | Descuentos |
+| DescuentoDetalle | facturacion/ | Detalle de descuentos |
+| Convenios | logica-de-negocio/ | Convenios de pago |
+| CuotaConvenio | logica-de-negocio/ | Cuotas de convenios |
+| Pagos | logica-de-negocio/ | Pagos |
+| DetallePago | logica-de-negocio/ | Detalle de pagos |
+| SaldoFavorCliente | logica-de-negocio/ | Saldo a favor |
+| CajaSesion | logica-de-negocio/ | Sesiones de caja |
+| CategoriaTarifa | logica-de-negocio/ | Tarifas |
+| Rubros | logica-de-negocio/ | Rubros |
+| ParametroTasainteres | logica-de-negocio/ | Tasa de interés |
+
+## Conceptos Clave
+
+- **Prefactura**: Factura en revisión antes de ser generada
+- **Factura**: Documento electrónico autorizado por el SRI
+- **Convenio**: Acuerdo de pago cuando hay mora
+- **Cuota**: Pago individual de un convenio
+
+## Referencias
+
+- Documentación: `tariffs/tariffs.md`
+- Documentación: `lote/lote.md`
+- Documentación: `invoices/invoices.md`
+- Documentación: `prefacturas/prefacturas.md`
+- Documentación: `collections/collections.md`
+- Documentación: `sri/sri.md`
