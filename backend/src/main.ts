@@ -223,6 +223,7 @@ Para consultas o soporte, contacta al equipo de desarrollo del Backend.
     .addTag('search', 'Búsqueda pública de información')
     .addTag('metrics', 'Métricas para Prometheus (scraping)')
     .addServer('http://localhost:3000', 'Servidor de desarrollo')
+    .addServer('https://api.dihm-muertos.site/', 'Servidor de pruebas')
     .setContact('Equipo Jasrapo', 'https://jasrapo.com', 'soporte@jasrapo.com')
     .setLicense('MIT', 'https://opensource.org/licenses/MIT')
     .build();
