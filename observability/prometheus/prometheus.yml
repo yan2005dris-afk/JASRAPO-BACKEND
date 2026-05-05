@@ -5,10 +5,10 @@ global:
 scrape_configs:
   - job_name: 'prometheus'
     static_configs:
-      - targets: ['localhost:9091']
+      - targets: ['localhost:9090']
 
   - job_name: 'jasrapo-backend'
     static_configs:
-      - targets: ['jasrapo-backend:3000']
+      - targets: ['backend:3000']
     metrics_path: '/api/v1/metrics'
     scrape_interval: 10s
