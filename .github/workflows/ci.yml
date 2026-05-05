@@ -21,6 +21,13 @@ jobs:
           cache: 'npm'
           cache-dependency-path: backend/package-lock.json
 
+      - name: Clean caches
+        run: |
+          rm -rf backend/node_modules
+          rm -rf backend/src/generated
+          npm cache clean --force
+        working-directory: .
+
       - name: Install dependencies
         run: npm ci
         working-directory: backend
@@ -46,6 +53,13 @@ jobs:
           node-version: '20'
           cache: 'npm'
           cache-dependency-path: backend/package-lock.json
+
+      - name: Clean caches
+        run: |
+          rm -rf backend/node_modules
+          rm -rf backend/src/generated
+          npm cache clean --force
+        working-directory: .
 
       - name: Install dependencies
         run: npm ci
@@ -87,6 +101,13 @@ jobs:
           node-version: '20'
           cache: 'npm'
           cache-dependency-path: backend/package-lock.json
+
+      - name: Clean caches
+        run: |
+          rm -rf backend/node_modules
+          rm -rf backend/src/generated
+          npm cache clean --force
+        working-directory: .
 
       - name: Install dependencies
         run: npm ci
