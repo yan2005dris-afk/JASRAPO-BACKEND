@@ -6,6 +6,11 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
+    "prisma:generate": "prisma generate",
+    "prebuild": "npm run prisma:generate",
+    "prestart": "npm run prisma:generate",
+    "prestart:dev": "npm run prisma:generate",
+    "prestart:debug": "npm run prisma:generate",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
