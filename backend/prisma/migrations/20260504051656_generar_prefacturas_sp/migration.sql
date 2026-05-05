@@ -84,11 +84,12 @@ BEGIN
     FROM rubros r JOIN sri_impuesto i ON r.impuesto_id = i.id WHERE r.rubro_id = RUBRO_TASA_SEGURIDAD;
 
     -- 2. Crear el lote (Nombre de tabla corregido a 'lote', conversión segura de p_creado_por)
+    -- Los enums creados por Prisma requieren comillas dobles para respetar mayúsculas en Postgres
     INSERT INTO lote (comunidad_id, periodo_id, estado, total_monto, notas, creado_por)
     VALUES (
         COALESCE(p_comunidad_id, 1),
         p_periodo_id,
-        'BORRADOR'::EstadoLote,
+        'BORRADOR'::"EstadoLote",
         0,
         'Generando...',
         (CASE WHEN p_creado_por ~ '^[0-9]+$' THEN p_creado_por::INTEGER ELSE NULL END)
@@ -113,7 +114,7 @@ BEGIN
         FROM contratos c
         JOIN categoria_tarifa ct ON c.categoria_tarifa_id = ct.categoria_tarifa_id
         JOIN clientes cl ON c.cliente_id = cl.cliente_id
-        WHERE c.estado = 'ACTIVO'::EstadoGenerico
+        WHERE c.estado = 'ACTIVO'::"EstadoGenerico"
           AND c.borrado_en IS NULL
           AND cl.borrado_en IS NULL
           AND (p_comunidad_id IS NULL OR c.comunidad_id = p_comunidad_id)
@@ -124,7 +125,7 @@ BEGIN
         FROM lecturas
         WHERE contrato_id = contrato_row.contrato_id
           AND periodo_id = p_periodo_id
-          AND estado = 'APROBADA'::EstadoLectura
+          AND estado = 'APROBADA'::"EstadoLectura"
           AND borrado_en IS NULL;
         
         IF NOT FOUND THEN
@@ -150,7 +151,7 @@ BEGIN
         INTO v_saldo_vencido, v_meses_atrasado
         FROM prefacturas
         WHERE contrato_id = contrato_row.contrato_id
-          AND estado NOT IN ('PAGADA'::EstadoPrefactura, 'ANULADA'::EstadoPrefactura)
+          AND estado NOT IN ('PAGADA'::"EstadoPrefactura", 'ANULADA'::"EstadoPrefactura")
           AND periodo_id < p_periodo_id
           AND borrado_en IS NULL;
           
@@ -160,7 +161,7 @@ BEGIN
         FROM prefacturas
         WHERE contrato_id = contrato_row.contrato_id
           AND periodo_id < p_periodo_id
-          AND estado NOT IN ('PAGADA'::EstadoPrefactura, 'ANULADA'::EstadoPrefactura)
+          AND estado NOT IN ('PAGADA'::"EstadoPrefactura", 'ANULADA'::"EstadoPrefactura")
           AND borrado_en IS NULL
         ORDER BY periodo_id DESC
         LIMIT 1;
@@ -206,7 +207,7 @@ BEGIN
             v_lectura_anterior, v_lectura_actual, v_consumo,
             v_subtotal, v_iva_total, v_descuento, v_total_pagar_periodo,
             v_deuda_anterior, v_saldo_vencido, v_total_pagar_periodo + v_saldo_vencido, v_meses_atrasado,
-            v_interes_mora, (v_cargo_fijo / 12), 'GENERADA'::EstadoPrefactura,
+            v_interes_mora, (v_cargo_fijo / 12), 'GENERADA'::"EstadoPrefactura",
             contrato_row.direccion_suministro, contrato_row.email, contrato_row.cliente_identificacion, contrato_row.cliente_nombre,
             v_cargo_fijo, contrato_row.valor_excedente_m3, v_lectura_id, p_creado_por
         )
@@ -265,7 +266,7 @@ CREATE OR REPLACE FUNCTION aprobar_lote_facturacion(
 RETURNS VOID AS $$
 BEGIN
     UPDATE lote 
-    SET estado = 'DEFINITIVO'::EstadoLote,
+    SET estado = 'DEFINITIVO'::"EstadoLote",
         notas = COALESCE(notas, '') || E'\n' || 'Aprobado por: ' || p_aprobado_por || ' Fecha: ' || CURRENT_TIMESTAMP,
         actualizado_en = CURRENT_TIMESTAMP
     WHERE lote_id = p_lote_id;
@@ -291,7 +292,7 @@ BEGIN
         MAX(p.creado_en) AS ultima_fecha_pago
     FROM prefacturas p
     WHERE p.contrato_id = p_contrato_id
-      AND p.estado NOT IN ('PAGADA'::EstadoPrefactura, 'ANULADA'::EstadoPrefactura)
+      AND p.estado NOT IN ('PAGADA'::"EstadoPrefactura", 'ANULADA'::"EstadoPrefactura")
       AND p.borrado_en IS NULL;
 END;
 $$ LANGUAGE plpgsql;
