@@ -4,9 +4,10 @@ import {
   ExecutionContext,
   CallHandler,
   Logger,
+  HttpException,
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { tap, finalize } from 'rxjs/operators';
 import { Request, Response } from 'express';
 import { MetricsService } from '../metrics/metrics.service';
 
@@ -32,37 +33,47 @@ export class LoggingInterceptor implements NestInterceptor {
     return next.handle().pipe(
       tap({
         next: () => {
-          const duration = (Date.now() - startTime) / 1000;
+          const durationMs = Date.now() - startTime;
+          const durationSec = durationMs / 1000;
           const status = response.statusCode.toString();
 
           // Log request completion
           this.logger.log(
-            `${method} ${originalUrl} ${status} ${duration}ms - ${ip} ${userAgent}`,
+            `${method} ${originalUrl} ${status} ${durationMs}ms - ${ip} ${userAgent}`,
           );
 
           // Record metrics
           this.metricsService.incrementHttpRequest(method, status, route);
-          this.metricsService.observeHttpDuration(method, route, duration);
+          this.metricsService.observeHttpDuration(method, route, durationSec);
         },
-        error: (error: Error) => {
-          const duration = (Date.now() - startTime) / 500;
-          const status = (response.statusCode || 500).toString();
+        error: (error: Error | HttpException | any) => {
+          const durationMs = Date.now() - startTime;
+          const durationSec = durationMs / 1000;
+          
+          // Extract status code safely
+          let status = '500';
+          if (error instanceof HttpException) {
+            status = error.getStatus().toString();
+          } else if (error?.status) {
+            status = error.status.toString();
+          } else if (error?.response?.statusCode) {
+            status = error.response.statusCode.toString();
+          }
 
           // Log error
           this.logger.error(
-            `${method} ${originalUrl} ${status} ${duration}ms - ${error.message}`,
+            `${method} ${originalUrl} ${status} ${durationMs}ms - ${error.message || 'Unknown error'}`,
           );
 
           // Record metrics
           this.metricsService.incrementHttpRequest(method, status, route);
-          this.metricsService.observeHttpDuration(method, route, duration);
+          this.metricsService.observeHttpDuration(method, route, durationSec);
           this.metricsService.incrementError('http', status);
         },
       }),
-      tap({
-        complete: () => {
-          this.metricsService.decrementHttpInProgress(method, route);
-        },
+      finalize(() => {
+        // This ensures the counter always decrements, even on error or cancellation
+        this.metricsService.decrementHttpInProgress(method, route);
       }),
     );
   }
