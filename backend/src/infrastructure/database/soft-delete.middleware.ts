@@ -25,9 +25,9 @@ const SOFT_DELETE_MODELS = [
   'detallesPago',
   'saldoFavorCliente',
   'parametrosTasaInteres',
-  'userPermissions',
+  'usuarioPermisos',
   'rolPermisos',
-  'menuPermissions',
+  'menuPermisos',
 ] as const;
 
 // Métodos que interceptamos

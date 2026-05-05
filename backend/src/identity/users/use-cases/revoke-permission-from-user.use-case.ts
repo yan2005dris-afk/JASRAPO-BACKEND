@@ -9,18 +9,18 @@ import { PrismaService } from 'src/infrastructure/database/prisma.service';
 export class RevokePermissionFromUserUseCase {
   constructor(private readonly prisma: PrismaService) {}
 
-  async execute(idUserPermissions: number) {
-    const userPermission = await this.prisma.userPermissions.findUnique({
-      where: { idUserPermissions },
+  async execute(usuarioPermisoId: number) {
+    const usuarioPermiso = await this.prisma.usuarioPermisos.findUnique({
+      where: { usuarioPermisoId },
     });
 
-    if (!userPermission)
+    if (!usuarioPermiso)
       throw new NotFoundException('Asignación de permiso no encontrada');
-    if (userPermission.deletedAt)
+    if (usuarioPermiso.deletedAt)
       throw new ConflictException('Este permiso ya fue revocado previamente');
 
-    return this.prisma.userPermissions.update({
-      where: { idUserPermissions },
+    return this.prisma.usuarioPermisos.update({
+      where: { usuarioPermisoId },
       data: { deletedAt: new Date() },
     });
   }

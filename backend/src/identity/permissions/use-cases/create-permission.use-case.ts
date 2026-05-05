@@ -7,10 +7,10 @@ export class CreatePermissionUseCase {
   constructor(private readonly prisma: PrismaService) {}
 
   async execute(createPermissionDto: CreatePermissionDto) {
-    return this.prisma.permissions.create({
+    return this.prisma.permisos.create({
       data: {
-        resource: createPermissionDto.resource,
-        action: createPermissionDto.action,
+        recurso: createPermissionDto.resource,
+        accion: createPermissionDto.action,
       },
     });
   }

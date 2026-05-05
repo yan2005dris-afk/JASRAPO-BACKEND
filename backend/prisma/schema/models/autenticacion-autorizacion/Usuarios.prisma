@@ -1,0 +1,17 @@
+model Usuarios {
+  usuarioId         Int                @id @default(autoincrement()) @map("usuario_id")
+  email             String             @unique @map("email")
+  clave             String             @map("contrasenia")
+  rolId             Int?               @map("rol_id")
+  deletedAt         DateTime?          @map("borrado_en")
+  cajaSesion        CajaSesion[]
+  descuentosDetalle DescuentoDetalle[] @relation("AutorizadoPor")
+  lote              Lote[]
+  pagos             Pagos[]
+  perfil            Perfiles?
+  sesiones          Sesiones[]
+  permisosUsuario   UsuarioPermisos[]
+  rol               Roles?             @relation(fields: [rolId], references: [rolId])
+
+  @@map("usuarios")
+}

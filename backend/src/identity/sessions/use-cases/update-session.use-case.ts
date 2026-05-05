@@ -6,9 +6,9 @@ import { Prisma } from 'src/generated/prisma/client';
 export class UpdateSessionUseCase {
   constructor(private readonly prisma: PrismaService) {}
 
-  async execute(sessionsId: string, data: Prisma.SessionsUpdateInput) {
-    return this.prisma.sessions.update({
-      where: { sessionsId },
+  async execute(sesionId: string, data: Prisma.SesionesUpdateInput) {
+    return this.prisma.sesiones.update({
+      where: { sesionId },
       data,
     });
   }

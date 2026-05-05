@@ -1,0 +1,11 @@
+model MenuPermisos {
+  menuPermisoId Int       @id @default(autoincrement()) @map("menu_permiso_id")
+  permisoId     Int       @map("permiso_id")
+  menuId        Int       @map("menu_id")
+  deletedAt     DateTime? @map("borrado_en")
+  menu          Menus     @relation(fields: [menuId], references: [menuId])
+  permiso       Permisos  @relation(fields: [permisoId], references: [permisoId])
+
+  @@unique([menuId, permisoId])
+  @@map("menu_permisos")
+}

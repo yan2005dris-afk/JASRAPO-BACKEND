@@ -9,28 +9,28 @@ export class CreateUserUseCase {
 
   async execute(createUsersDto: CreateUserDto) {
     const userRole = await this.prisma.roles.findFirst({
-      where: { name: 'user' },
+      where: { nombre: 'user' },
     });
     if (!userRole) {
       throw new Error('No existe el rol por defecto "user".');
     }
 
-    const hashedPassword = await bcrypt.hash(createUsersDto.password, 10);
+    const hashedPassword = await bcrypt.hash(createUsersDto.clave, 10);
 
-    const newUser = await this.prisma.users.create({
+    const newUser = await this.prisma.usuarios.create({
       data: {
         email: createUsersDto.email,
-        password: hashedPassword,
-        rolesId: userRole.rolesId,
+        clave: hashedPassword,
+        rolId: userRole.rolId,
       },
     });
 
-    await this.prisma.profiles.create({
-      data: { usersId: newUser.usersId },
+    await this.prisma.perfiles.create({
+      data: { usuarioId: newUser.usuarioId },
     });
 
     return {
-      usersId: newUser.usersId,
+      usuarioId: newUser.usuarioId,
       email: newUser.email,
     };
   }

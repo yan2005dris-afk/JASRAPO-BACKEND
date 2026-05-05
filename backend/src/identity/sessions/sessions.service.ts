@@ -8,13 +8,13 @@ import { ListSessionsByUserUseCase } from './use-cases/list-sessions-by-user.use
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 
 export interface SessionPostgres {
-  sessionsId: string;
-  usersId: number;
-  refreshTokenHash: string;
-  ipAddress: string | null;
-  userAgent: string | null;
-  isRevoked: boolean;
-  expiresAt: Date;
+  sesionId: string;
+  usuarioId: number;
+  hashRefreshToken: string;
+  direccionIp: string | null;
+  usuarioAgente: string | null;
+  revocado: boolean;
+  expiraEn: Date;
   createdAt: Date;
 }
 
@@ -30,36 +30,36 @@ export class SessionsService {
   ) {}
 
   async createSession(
-    data: Prisma.SessionsCreateInput,
+    data: Prisma.SesionesCreateInput,
   ): Promise<SessionPostgres> {
     return this.createUseCase.execute(data);
   }
 
   async getSession(
-    usersId: number,
-    sessionsId: string,
+    usuarioId: number,
+    sesionId: string,
   ): Promise<SessionPostgres | null> {
-    return this.getUseCase.execute(usersId, sessionsId);
+    return this.getUseCase.execute(usuarioId, sesionId);
   }
 
-  async getSessionById(sessionsId: string): Promise<SessionPostgres | null> {
-    return this.prisma.sessions.findUnique({
-      where: { sessionsId },
+  async getSessionById(sesionId: string): Promise<SessionPostgres | null> {
+    return this.prisma.sesiones.findUnique({
+      where: { sesionId },
     });
   }
 
   async updateSession(
-    sessionsId: string,
-    data: Prisma.SessionsUpdateInput,
+    sesionId: string,
+    data: Prisma.SesionesUpdateInput,
   ): Promise<SessionPostgres> {
-    return this.updateUseCase.execute(sessionsId, data);
+    return this.updateUseCase.execute(sesionId, data);
   }
 
-  async revokeSession(sessionsId: string): Promise<SessionPostgres> {
-    return this.revokeUseCase.execute(sessionsId);
+  async revokeSession(sesionId: string): Promise<SessionPostgres> {
+    return this.revokeUseCase.execute(sesionId);
   }
 
-  async listSessionsByUser(usersId: number): Promise<SessionPostgres[]> {
-    return this.listByUserUseCase.execute(usersId);
+  async listSessionsByUser(usuarioId: number): Promise<SessionPostgres[]> {
+    return this.listByUserUseCase.execute(usuarioId);
   }
 }

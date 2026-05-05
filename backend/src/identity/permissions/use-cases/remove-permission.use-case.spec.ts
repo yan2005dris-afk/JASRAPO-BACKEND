@@ -14,7 +14,7 @@ describe('RemovePermissionUseCase', () => {
         {
           provide: PrismaService,
           useValue: {
-            permissions: {
+            permisos: {
               update: jest.fn(),
             },
           },
@@ -33,23 +33,23 @@ describe('RemovePermissionUseCase', () => {
   it('should soft delete a permission', async () => {
     const id = 1;
     const expectedResult = {
-      permissionsId: id,
-      resource: 'test',
-      action: 'test',
+      permisoId: id,
+      recurso: 'test',
+      accion: 'test',
     };
-    (prismaService.permissions.update as jest.fn).mockResolvedValue(
+    (prismaService.permisos.update as jest.fn).mockResolvedValue(
       expectedResult,
     );
 
     const result = await useCase.execute(id);
 
-    expect(prismaService.permissions.update).toHaveBeenCalledWith({
-      where: { permissionsId: id },
+    expect(prismaService.permisos.update).toHaveBeenCalledWith({
+      where: { permisoId: id },
       data: { deletedAt: expect.any(Date) },
       select: {
-        permissionsId: true,
-        resource: true,
-        action: true,
+        permisoId: true,
+        recurso: true,
+        accion: true,
       },
     });
     expect(result).toEqual(expectedResult);

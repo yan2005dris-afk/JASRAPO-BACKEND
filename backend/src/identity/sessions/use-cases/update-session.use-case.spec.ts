@@ -14,7 +14,7 @@ describe('UpdateSessionUseCase', () => {
         {
           provide: PrismaService,
           useValue: {
-            sessions: {
+            sesiones: {
               update: jest.fn(),
             },
           },
@@ -27,11 +27,11 @@ describe('UpdateSessionUseCase', () => {
   });
 
   it('should update a session', async () => {
-    const data = { ipAddress: '1.1.1.1' } as any;
+    const data = { direccionIp: '1.1.1.1' } as any;
     await useCase.execute('abc', data);
 
-    expect(prisma.sessions.update).toHaveBeenCalledWith({
-      where: { sessionsId: 'abc' },
+    expect(prisma.sesiones.update).toHaveBeenCalledWith({
+      where: { sesionId: 'abc' },
       data,
     });
   });

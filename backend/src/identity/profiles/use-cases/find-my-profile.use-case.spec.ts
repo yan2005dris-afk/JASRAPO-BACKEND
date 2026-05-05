@@ -14,7 +14,7 @@ describe('FindMyProfileUseCase', () => {
         {
           provide: PrismaService,
           useValue: {
-            profiles: {
+            perfiles: {
               findUnique: jest.fn(),
               create: jest.fn(),
             },
@@ -29,28 +29,28 @@ describe('FindMyProfileUseCase', () => {
 
   it('should return existing profile', async () => {
     const userId = 1;
-    const profile = { id: 1, usersId: userId };
-    (prisma.profiles.findUnique as jest.Mock).mockResolvedValue(profile);
+    const profile = { perfilId: 1, usuarioId: userId };
+    (prisma.perfiles.findUnique as jest.Mock).mockResolvedValue(profile);
 
     const result = await useCase.execute(userId);
 
-    expect(prisma.profiles.findUnique).toHaveBeenCalledWith({
-      where: { usersId: userId },
+    expect(prisma.perfiles.findUnique).toHaveBeenCalledWith({
+      where: { usuarioId: userId },
     });
     expect(result).toEqual(profile);
   });
 
   it('should create and return profile if it does not exist', async () => {
     const userId = 1;
-    const profile = { id: 1, usersId: userId };
-    (prisma.profiles.findUnique as jest.Mock).mockResolvedValue(null);
-    (prisma.profiles.create as jest.Mock).mockResolvedValue(profile);
+    const profile = { perfilId: 1, usuarioId: userId };
+    (prisma.perfiles.findUnique as jest.Mock).mockResolvedValue(null);
+    (prisma.perfiles.create as jest.Mock).mockResolvedValue(profile);
 
     const result = await useCase.execute(userId);
 
-    expect(prisma.profiles.findUnique).toHaveBeenCalled();
-    expect(prisma.profiles.create).toHaveBeenCalledWith({
-      data: { usersId: userId },
+    expect(prisma.perfiles.findUnique).toHaveBeenCalled();
+    expect(prisma.perfiles.create).toHaveBeenCalledWith({
+      data: { usuarioId: userId },
     });
     expect(result).toEqual(profile);
   });

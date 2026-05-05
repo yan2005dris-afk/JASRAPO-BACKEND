@@ -13,7 +13,7 @@ export class SelectExistingAvatarUseCase {
     private readonly minioService: MinioService,
   ) {}
 
-  async execute(usersId: number, key: string) {
+  async execute(usuarioId: number, key: string) {
     if (!key) {
       throw new BadRequestException('Debe indicar el key del archivo');
     }
@@ -34,17 +34,17 @@ export class SelectExistingAvatarUseCase {
       uploadedAt: meta?.lastModified?.toISOString() || new Date().toISOString(),
     };
 
-    const profile = await this.prisma.profiles.findUnique({
-      where: { usersId },
+    const profile = await this.prisma.perfiles.findUnique({
+      where: { usuarioId },
     });
 
     if (!profile) {
-      await this.prisma.profiles.create({
-        data: { usersId, avatar: avatarMeta },
+      await this.prisma.perfiles.create({
+        data: { usuarioId, avatar: avatarMeta },
       });
     } else {
-      await this.prisma.profiles.update({
-        where: { usersId },
+      await this.prisma.perfiles.update({
+        where: { usuarioId },
         data: { avatar: avatarMeta },
       });
     }

@@ -10,12 +10,12 @@ describe('GetMyMenusUseCase', () => {
   let userService: UserService;
 
   const mockMenuRecord = {
-    menusId: 1,
-    menusParentId: null,
-    name: 'Dashboard',
-    route: '/dashboard',
-    icon: 'dashboard',
-    active: true,
+    menuId: 1,
+    menuPadreId: null,
+    nombre: 'Dashboard',
+    ruta: '/dashboard',
+    icono: 'dashboard',
+    activo: true,
     createdAt: new Date(),
     deletedAt: null,
   };
@@ -84,18 +84,18 @@ describe('GetMyMenusUseCase', () => {
   it('should include parent menus recursively', async () => {
     const mockPermissions = [{ resource: 'child', action: 'read' }];
     const childMenu = {
-      menusId: 2,
-      menusParentId: 1,
-      name: 'Child',
-      route: '/child',
-      active: true,
+      menuId: 2,
+      menuPadreId: 1,
+      nombre: 'Child',
+      ruta: '/child',
+      activo: true,
     };
     const parentMenu = {
-      menusId: 1,
-      menusParentId: null,
-      name: 'Parent',
-      route: '/parent',
-      active: true,
+      menuId: 1,
+      menuPadreId: null,
+      nombre: 'Parent',
+      ruta: '/parent',
+      activo: true,
     };
 
     mockUserService.getEffectivePermissions.mockResolvedValue(mockPermissions);

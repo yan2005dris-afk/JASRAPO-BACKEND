@@ -9,7 +9,7 @@ describe('AssignRoleToUserUseCase', () => {
   let prisma: PrismaService;
 
   const mockPrisma = {
-    users: {
+    usuarios: {
       findUnique: jest.fn(),
       update: jest.fn(),
     },
@@ -35,35 +35,35 @@ describe('AssignRoleToUserUseCase', () => {
   });
 
   it('should assign role to user', async () => {
-    mockPrisma.users.findUnique.mockResolvedValue({
-      usersId: 1,
+    mockPrisma.usuarios.findUnique.mockResolvedValue({
+      usuarioId: 1,
       deletedAt: null,
-      rolesId: 2,
+      rolId: 2,
     });
     mockPrisma.roles.findUnique.mockResolvedValue({
-      rolesId: 3,
+      rolId: 3,
       deletedAt: null,
     });
-    mockPrisma.users.update.mockResolvedValue({ usersId: 1, rolesId: 3 });
+    mockPrisma.usuarios.update.mockResolvedValue({ usuarioId: 1, rolId: 3 });
 
     const result = await useCase.execute(1, 3);
 
-    expect(result.rolesId).toBe(3);
-    expect(mockPrisma.users.update).toHaveBeenCalledWith({
-      where: { usersId: 1 },
-      data: { rolesId: 3 },
+    expect(result.rolId).toBe(3);
+    expect(mockPrisma.usuarios.update).toHaveBeenCalledWith({
+      where: { usuarioId: 1 },
+      data: { rolId: 3 },
     });
   });
 
   it('should throw NotFoundException if user not found', async () => {
-    mockPrisma.users.findUnique.mockResolvedValue(null);
+    mockPrisma.usuarios.findUnique.mockResolvedValue(null);
 
     await expect(useCase.execute(1, 3)).rejects.toThrow(NotFoundException);
   });
 
   it('should throw NotFoundException if role not found', async () => {
-    mockPrisma.users.findUnique.mockResolvedValue({
-      usersId: 1,
+    mockPrisma.usuarios.findUnique.mockResolvedValue({
+      usuarioId: 1,
       deletedAt: null,
     });
     mockPrisma.roles.findUnique.mockResolvedValue(null);
@@ -72,13 +72,13 @@ describe('AssignRoleToUserUseCase', () => {
   });
 
   it('should throw ConflictException if user already has the role', async () => {
-    mockPrisma.users.findUnique.mockResolvedValue({
-      usersId: 1,
+    mockPrisma.usuarios.findUnique.mockResolvedValue({
+      usuarioId: 1,
       deletedAt: null,
-      rolesId: 3,
+      rolId: 3,
     });
     mockPrisma.roles.findUnique.mockResolvedValue({
-      rolesId: 3,
+      rolId: 3,
       deletedAt: null,
     });
 

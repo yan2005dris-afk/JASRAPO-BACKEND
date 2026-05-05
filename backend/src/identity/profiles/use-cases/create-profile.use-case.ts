@@ -6,21 +6,21 @@ import { CreateProfileDto } from '../dto/create-profile.dto';
 export class CreateProfileUseCase {
   constructor(private readonly prisma: PrismaService) {}
 
-  async execute(usersId: number, createProfileDto: CreateProfileDto) {
-    const existing = await this.prisma.profiles.findUnique({
-      where: { usersId },
+  async execute(usuarioId: number, createProfileDto: CreateProfileDto) {
+    const existing = await this.prisma.perfiles.findUnique({
+      where: { usuarioId },
     });
 
     if (existing) {
       throw new ConflictException('El usuario ya tiene un perfil creado');
     }
 
-    return this.prisma.profiles.create({
+    return this.prisma.perfiles.create({
       data: {
-        usersId,
-        firstName: createProfileDto.firstName,
-        lastName: createProfileDto.lastName,
-        phone: createProfileDto.phone,
+        usuarioId,
+        nombres: createProfileDto.firstName,
+        apellidos: createProfileDto.lastName,
+        telefono: createProfileDto.phone,
       },
     });
   }

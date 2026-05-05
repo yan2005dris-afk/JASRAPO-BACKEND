@@ -1,4 +1,4 @@
-import { Permissions, PrismaClient } from "src/generated/prisma/client";
+import { Permisos, PrismaClient } from "src/generated/prisma/client";
 
 export async function seedPermissions(prisma: PrismaClient) {
     const permissionsToCreate = [
@@ -292,18 +292,18 @@ export async function seedPermissions(prisma: PrismaClient) {
         }
 ];
     
-    const savedPermissions: Permissions[] = [];
+    const savedPermissions: Permisos[] = [];
 
     for (const p of permissionsToCreate) {
-        let perm = await prisma.permissions.findFirst({
-            where: { resource: p.resource, action: p.action },
+        let perm = await prisma.permisos.findFirst({
+            where: { recurso: p.resource, accion: p.action },
         });
 
         if (!perm) {
-            perm = await prisma.permissions.create({
+            perm = await prisma.permisos.create({
             data: {
-                resource: p.resource,
-                action: p.action,
+                recurso: p.resource,
+                accion: p.action,
             },
         });
         }

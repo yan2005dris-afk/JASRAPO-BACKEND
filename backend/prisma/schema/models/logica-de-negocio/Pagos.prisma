@@ -10,7 +10,7 @@ model Pagos {
   updatedAt           DateTime             @updatedAt @map("actualizado_en")
   createdAt           DateTime             @default(now()) @map("creado_en")
   deletedAt           DateTime?            @map("borrado_en")
-  usersId             Int                  @map("usuario_id")
+  usuarioId             Int                  @map("usuario_id")
   clienteId           BigInt               @map("cliente_id")
   anuladoPor          String?              @map("anulado_por")
   estadoValidacion    EstadoValidacionPago @default(APROBADO) @map("estado_validacion")
@@ -19,10 +19,10 @@ model Pagos {
   detallePago         DetallePago[]
   cajaSesion          CajaSesion?          @relation(fields: [cajaId], references: [cajaId], onDelete: Restrict)
   cliente             Clientes             @relation(fields: [clienteId], references: [clienteId])
-  user                Users                @relation(fields: [usersId], references: [usersId])
+  usuario                Usuarios             @relation(fields: [usuarioId], references: [usuarioId])
   saldosFavor         SaldoFavorCliente[]
 
-  @@index([usersId])
+  @@index([usuarioId])
   @@index([clienteId])
   @@index([cajaId])
   @@map("pagos")

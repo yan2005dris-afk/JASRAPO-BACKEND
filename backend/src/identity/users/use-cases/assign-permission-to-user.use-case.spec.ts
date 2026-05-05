@@ -9,13 +9,13 @@ describe('AssignPermissionToUserUseCase', () => {
   let prisma: PrismaService;
 
   const mockPrisma = {
-    users: {
+    usuarios: {
       findUnique: jest.fn(),
     },
-    permissions: {
+    permisos: {
       findUnique: jest.fn(),
     },
-    userPermissions: {
+    usuarioPermisos: {
       findFirst: jest.fn(),
       update: jest.fn(),
       create: jest.fn(),
@@ -41,56 +41,56 @@ describe('AssignPermissionToUserUseCase', () => {
   });
 
   it('should create new permission assignment if not exists', async () => {
-    mockPrisma.users.findUnique.mockResolvedValue({
-      usersId: 1,
+    mockPrisma.usuarios.findUnique.mockResolvedValue({
+      usuarioId: 1,
       deletedAt: null,
     });
-    mockPrisma.permissions.findUnique.mockResolvedValue({
-      permissionsId: 2,
+    mockPrisma.permisos.findUnique.mockResolvedValue({
+      permisoId: 2,
       deletedAt: null,
     });
-    mockPrisma.userPermissions.findFirst.mockResolvedValue(null);
-    mockPrisma.userPermissions.create.mockResolvedValue({
-      idUserPermissions: 10,
+    mockPrisma.usuarioPermisos.findFirst.mockResolvedValue(null);
+    mockPrisma.usuarioPermisos.create.mockResolvedValue({
+      usuarioPermisoId: 10,
     });
 
     const result = await useCase.execute(1, 2, true);
 
-    expect(result.idUserPermissions).toBe(10);
-    expect(mockPrisma.userPermissions.create).toHaveBeenCalledWith({
-      data: { usersId: 1, permissionsId: 2, allow: true },
+    expect(result.usuarioPermisoId).toBe(10);
+    expect(mockPrisma.usuarioPermisos.create).toHaveBeenCalledWith({
+      data: { usuarioId: 1, permisoId: 2, permitido: true },
     });
   });
 
   it('should update existing permission assignment', async () => {
-    mockPrisma.users.findUnique.mockResolvedValue({
-      usersId: 1,
+    mockPrisma.usuarios.findUnique.mockResolvedValue({
+      usuarioId: 1,
       deletedAt: null,
     });
-    mockPrisma.permissions.findUnique.mockResolvedValue({
-      permissionsId: 2,
+    mockPrisma.permisos.findUnique.mockResolvedValue({
+      permisoId: 2,
       deletedAt: null,
     });
-    mockPrisma.userPermissions.findFirst.mockResolvedValue({
-      idUserPermissions: 10,
-      allow: false,
+    mockPrisma.usuarioPermisos.findFirst.mockResolvedValue({
+      usuarioPermisoId: 10,
+      permitido: false,
     });
-    mockPrisma.userPermissions.update.mockResolvedValue({
-      idUserPermissions: 10,
-      allow: true,
+    mockPrisma.usuarioPermisos.update.mockResolvedValue({
+      usuarioPermisoId: 10,
+      permitido: true,
     });
 
     const result = await useCase.execute(1, 2, true);
 
-    expect(result.allow).toBe(true);
-    expect(mockPrisma.userPermissions.update).toHaveBeenCalledWith({
-      where: { idUserPermissions: 10 },
-      data: { allow: true },
+    expect(result.permitido).toBe(true);
+    expect(mockPrisma.usuarioPermisos.update).toHaveBeenCalledWith({
+      where: { usuarioPermisoId: 10 },
+      data: { permitido: true },
     });
   });
 
   it('should throw NotFoundException if user not found', async () => {
-    mockPrisma.users.findUnique.mockResolvedValue(null);
+    mockPrisma.usuarios.findUnique.mockResolvedValue(null);
 
     await expect(useCase.execute(1, 2)).rejects.toThrow(NotFoundException);
   });

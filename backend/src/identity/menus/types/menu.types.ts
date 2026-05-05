@@ -9,11 +9,11 @@ export interface PermissionCondition {
 }
 
 export interface MenuRecord {
-  menusId: number;
-  menusParentId: number | null;
-  name: string;
-  route: string;
-  icon: string | null;
-  active: boolean;
+  menuId: number;
+  menuPadreId: number | null;
+  nombre: string;
+  ruta: string;
+  icono: string | null;
+  activo: boolean;
   createdAt?: Date | null;
 }

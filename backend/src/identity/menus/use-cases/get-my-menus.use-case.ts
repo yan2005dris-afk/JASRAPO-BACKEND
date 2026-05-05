@@ -23,31 +23,36 @@ export class GetMyMenusUseCase {
       return [];
     }
 
+    const filtrosPermisos = permissions.map((permission) => ({
+      recurso: permission.resource,
+      accion: permission.action,
+    }));
+
     // 1. Obtener los acciones que el usuario tiene acceso directo
     const directMenus = await this.prisma.menus.findMany({
       where: {
-        menuPermissions: {
+        permisosMenu: {
           some: {
-            permissions: {
-              OR: permissions,
+            permiso: {
+              OR: filtrosPermisos,
             },
           },
         },
-        active: true,
+        activo: true,
         deletedAt: null,
       },
     });
 
     // 2. Recorrer recurrentemente para incluir a los padres en caso de que falten
     const menuMap = new Map<number, MenuRecord>();
-    directMenus.forEach((m) => menuMap.set(m.menusId, m));
+    directMenus.forEach((m) => menuMap.set(m.menuId, m));
 
     let currentMenus: MenuRecord[] = directMenus;
     while (currentMenus.length > 0) {
       const missingParentIds = [
         ...new Set(
           currentMenus
-            .map((m) => m.menusParentId)
+            .map((m) => m.menuPadreId)
             .filter(
               (id) => id !== null && id !== undefined && !menuMap.has(id),
             ),
@@ -58,19 +63,19 @@ export class GetMyMenusUseCase {
 
       const parentMenus = await this.prisma.menus.findMany({
         where: {
-          menusId: { in: missingParentIds as number[] },
-          active: true,
+          menuId: { in: missingParentIds as number[] },
+          activo: true,
           deletedAt: null,
         },
       });
 
-      parentMenus.forEach((m) => menuMap.set(m.menusId, m));
+      parentMenus.forEach((m) => menuMap.set(m.menuId, m));
       currentMenus = parentMenus;
     }
 
     // Ordenar y construir árbol
     const finalMenus: MenuRecord[] = Array.from(menuMap.values()).sort(
-      (a, b) => a.menusId - b.menusId,
+      (a, b) => a.menuId - b.menuId,
     );
 
     const fullTree = this.buildMenuTree(finalMenus);
@@ -94,16 +99,16 @@ export class GetMyMenusUseCase {
 
     menuList.forEach((menu) => {
       const mappedMenu: MenuResponseDto = {
-        id: menu.menusId,
-        parent_menu_id: menu.menusParentId,
-        name: menu.name,
-        route: menu.route,
-        icon: menu.icon ?? null,
-        is_active: menu.active,
+        id: menu.menuId,
+        parent_menu_id: menu.menuPadreId,
+        name: menu.nombre,
+        route: menu.ruta,
+        icon: menu.icono ?? null,
+        is_active: menu.activo,
         created_at: menu.createdAt ? new Date(menu.createdAt) : null,
         children: [],
       };
-      menuMap.set(menu.menusId, mappedMenu);
+      menuMap.set(menu.menuId, mappedMenu);
     });
 
     for (const menu of menuMap.values()) {

@@ -22,7 +22,7 @@ export class RegisterUseCase {
 
     const newUser = await this.userService.createUser({
       email,
-      password: await bcrypt.hash(password, 10),
+      clave: await bcrypt.hash(password, 10),
     });
 
     if (newUser) {

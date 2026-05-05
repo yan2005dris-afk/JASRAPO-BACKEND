@@ -14,7 +14,7 @@ describe('RevokeSessionUseCase', () => {
         {
           provide: PrismaService,
           useValue: {
-            sessions: {
+            sesiones: {
               update: jest.fn(),
             },
           },
@@ -29,9 +29,9 @@ describe('RevokeSessionUseCase', () => {
   it('should revoke a session', async () => {
     await useCase.execute('abc');
 
-    expect(prisma.sessions.update).toHaveBeenCalledWith({
-      where: { sessionsId: 'abc' },
-      data: { isRevoked: true },
+    expect(prisma.sesiones.update).toHaveBeenCalledWith({
+      where: { sesionId: 'abc' },
+      data: { revocado: true },
     });
   });
 });

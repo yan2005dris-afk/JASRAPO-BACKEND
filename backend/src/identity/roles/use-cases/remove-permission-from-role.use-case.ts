@@ -5,19 +5,19 @@ import { PrismaService } from 'src/infrastructure/database/prisma.service';
 export class RemovePermissionFromRoleUseCase {
   constructor(private readonly prisma: PrismaService) {}
 
-  async execute(rolesId: number, permissionsId: number) {
-    const assignment = await this.prisma.rolPermissions.findFirst({
-      where: { rolesId, permissionsId },
+  async execute(rolId: number, permisoId: number) {
+    const assignment = await this.prisma.rolPermisos.findFirst({
+      where: { rolId, permisoId },
     });
 
     if (!assignment) {
       throw new NotFoundException('Permiso no asignado a este rol');
     }
 
-    return this.prisma.rolPermissions.update({
-      where: { rolPermissionsId: assignment.rolPermissionsId },
+    return this.prisma.rolPermisos.update({
+      where: { rolPermisoId: assignment.rolPermisoId },
       data: { deletedAt: new Date() },
-      select: { permissionsId: true },
+      select: { permisoId: true },
     });
   }
 }

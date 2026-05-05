@@ -12,7 +12,7 @@ FROM base AS development
 ENV NODE_ENV=development
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-RUN npx prisma generate
+RUN npm run prisma:generate
 EXPOSE 3000
 CMD ["npm", "run", "start:dev"]
 
@@ -20,7 +20,7 @@ CMD ["npm", "run", "start:dev"]
 FROM base AS build
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-RUN npx prisma generate
+RUN npm run prisma:generate
 RUN npm run build
 
 # ─── Stage 5: Production ──────────────────────────────────────

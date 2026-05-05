@@ -10,18 +10,18 @@ export class UploadAvatarUseCase {
     private readonly minioService: MinioService,
   ) {}
 
-  async execute(usersId: number, file: Express.Multer.File) {
+  async execute(usuarioId: number, file: Express.Multer.File) {
     if (!file) {
       throw new BadRequestException('No se envió ninguna imagen');
     }
 
-    let profile = await this.prisma.profiles.findUnique({
-      where: { usersId },
+    let profile = await this.prisma.perfiles.findUnique({
+      where: { usuarioId },
     });
 
     if (!profile) {
-      profile = await this.prisma.profiles.create({
-        data: { usersId },
+      profile = await this.prisma.perfiles.create({
+        data: { usuarioId },
       });
     }
 
@@ -42,8 +42,8 @@ export class UploadAvatarUseCase {
       uploadedAt: new Date().toISOString(),
     };
 
-    await this.prisma.profiles.update({
-      where: { usersId },
+    await this.prisma.perfiles.update({
+      where: { usuarioId },
       data: { avatar: avatarMeta },
     });
 

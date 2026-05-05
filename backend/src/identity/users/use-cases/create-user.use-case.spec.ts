@@ -12,10 +12,10 @@ describe('CreateUserUseCase', () => {
     roles: {
       findFirst: jest.fn(),
     },
-    users: {
+    usuarios: {
       create: jest.fn(),
     },
-    profiles: {
+    perfiles: {
       create: jest.fn(),
     },
   };
@@ -37,45 +37,42 @@ describe('CreateUserUseCase', () => {
   });
 
   it('should create user with profile', async () => {
-    mockPrisma.roles.findFirst.mockResolvedValue({ rolesId: 1, name: 'user' });
-    mockPrisma.users.create.mockResolvedValue({
-      usersId: 1,
+    mockPrisma.roles.findFirst.mockResolvedValue({ rolId: 1, nombre: 'user' });
+    mockPrisma.usuarios.create.mockResolvedValue({
+      usuarioId: 1,
       email: 'test@example.com',
     });
-    mockPrisma.profiles.create.mockResolvedValue({});
+    mockPrisma.perfiles.create.mockResolvedValue({});
 
     const result = await useCase.execute({
       email: 'test@example.com',
-      password: 'password123',
+      clave: 'password123',
     });
 
-    expect(result).toEqual({ usersId: 1, email: 'test@example.com' });
+    expect(result).toEqual({ usuarioId: 1, email: 'test@example.com' });
     expect(mockPrisma.roles.findFirst).toHaveBeenCalledWith({
-      where: { name: 'user' },
+      where: { nombre: 'user' },
     });
-    expect(mockPrisma.users.create).toHaveBeenCalled();
-    expect(mockPrisma.profiles.create).toHaveBeenCalledWith({
-      data: { usersId: 1 },
+    expect(mockPrisma.usuarios.create).toHaveBeenCalled();
+    expect(mockPrisma.perfiles.create).toHaveBeenCalledWith({
+      data: { usuarioId: 1 },
     });
   });
 
   it('should hash the password', async () => {
-    mockPrisma.roles.findFirst.mockResolvedValue({ rolesId: 1, name: 'user' });
-    mockPrisma.users.create.mockResolvedValue({
-      usersId: 1,
+    mockPrisma.roles.findFirst.mockResolvedValue({ rolId: 1, nombre: 'user' });
+    mockPrisma.usuarios.create.mockResolvedValue({
+      usuarioId: 1,
       email: 'test@example.com',
     });
 
     await useCase.execute({
       email: 'test@example.com',
-      password: 'password123',
+      clave: 'password123',
     });
 
-    const createCall = mockPrisma.users.create.mock.calls[0][0];
-    const isMatch = await bcrypt.compare(
-      'password123',
-      createCall.data.password,
-    );
+    const createCall = mockPrisma.usuarios.create.mock.calls[0][0];
+    const isMatch = await bcrypt.compare('password123', createCall.data.clave);
     expect(isMatch).toBe(true);
   });
 
@@ -85,7 +82,7 @@ describe('CreateUserUseCase', () => {
     await expect(
       useCase.execute({
         email: 'test@example.com',
-        password: 'password123',
+        clave: 'password123',
       }),
     ).rejects.toThrow('No existe el rol por defecto "user".');
   });

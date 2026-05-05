@@ -1,14 +1,14 @@
 model Menus {
-  menusId         Int               @id @default(autoincrement()) @map("menu_id")
-  menusParentId   Int?              @map("menu_padre_id")
-  icon            String?           @map("icono")
-  name            String            @map("nombre")
-  route           String            @map("ruta")
-  active          Boolean           @default(true) @map("activo")
+  menuId          Int               @id @default(autoincrement()) @map("menu_id")
+  menuPadreId     Int?              @map("menu_padre_id")
+  icono           String?           @map("icono")
+  nombre          String            @map("nombre")
+  ruta            String            @map("ruta")
+  activo          Boolean           @default(true) @map("activo")
   deletedAt       DateTime?         @map("borrado_en")
-  menuPermissions MenuPermissions[]
-  parent          Menus?            @relation("MenuAMenu", fields: [menusParentId], references: [menusId])
-  children        Menus[]           @relation("MenuAMenu")
+  permisosMenu    MenuPermisos[]
+  padre           Menus?            @relation("MenuAMenu", fields: [menuPadreId], references: [menuId])
+  hijos           Menus[]           @relation("MenuAMenu")
 
   @@map("menus")
 }

@@ -5,34 +5,34 @@ import { PrismaService } from 'src/infrastructure/database/prisma.service';
 export class GetRolePermissionsUseCase {
   constructor(private readonly prisma: PrismaService) {}
 
-  async execute(rolesId: number) {
-    const role = await this.prisma.roles.findUnique({ where: { rolesId } });
+  async execute(rolId: number) {
+    const role = await this.prisma.roles.findUnique({ where: { rolId } });
     if (!role || role.deletedAt) {
       throw new NotFoundException('Rol no encontrado o eliminado');
     }
 
-    const assignments = await this.prisma.rolPermissions.findMany({
+    const assignments = await this.prisma.rolPermisos.findMany({
       where: {
-        rolesId: rolesId,
+        rolId,
         deletedAt: null,
-        permissions: { deletedAt: null },
+        permiso: { deletedAt: null },
       },
       orderBy: [
-        { permissions: { resource: 'asc' } },
-        { permissions: { action: 'asc' } },
+        { permiso: { recurso: 'asc' } },
+        { permiso: { accion: 'asc' } },
       ],
       include: {
-        permissions: {
-          select: { permissionsId: true, resource: true, action: true },
+        permiso: {
+          select: { permisoId: true, recurso: true, accion: true },
         },
       },
     });
 
     return assignments.map((assignment) => ({
-      rolPermissionsId: assignment.rolPermissionsId,
-      permissionsId: assignment.permissionsId,
-      resource: assignment.permissions.resource,
-      action: assignment.permissions.action,
+      rolPermisoId: assignment.rolPermisoId,
+      permisoId: assignment.permisoId,
+      recurso: assignment.permiso.recurso,
+      accion: assignment.permiso.accion,
     }));
   }
 }

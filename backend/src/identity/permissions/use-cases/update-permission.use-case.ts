@@ -7,16 +7,16 @@ export class UpdatePermissionUseCase {
   constructor(private readonly prisma: PrismaService) {}
 
   async execute(id: number, updatePermissionDto: UpdatePermissionDto) {
-    return this.prisma.permissions.update({
-      where: { permissionsId: id },
+    return this.prisma.permisos.update({
+      where: { permisoId: id },
       data: {
-        resource: updatePermissionDto.resource,
-        action: updatePermissionDto.action,
+        recurso: updatePermissionDto.resource,
+        accion: updatePermissionDto.action,
       },
       select: {
-        permissionsId: true,
-        resource: true,
-        action: true,
+        permisoId: true,
+        recurso: true,
+        accion: true,
       },
     });
   }

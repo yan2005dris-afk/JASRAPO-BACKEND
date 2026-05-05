@@ -6,7 +6,7 @@ import { Prisma } from 'src/generated/prisma/client';
 export class CreateSessionUseCase {
   constructor(private readonly prisma: PrismaService) {}
 
-  async execute(data: Prisma.SessionsCreateInput) {
-    return this.prisma.sessions.create({ data });
+  async execute(data: Prisma.SesionesCreateInput) {
+    return this.prisma.sesiones.create({ data });
   }
 }

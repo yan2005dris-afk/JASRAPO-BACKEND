@@ -8,7 +8,7 @@ model Periodos {
   createdAt        DateTime          @default(now()) @map("creado_en")
   updatedAt        DateTime          @updatedAt @map("actualizado_en")
   lecturas         Lecturas[]
-  lotes            LoteFacturacion[]
+  lotes            Lote[]
   notasCredito     NotasCredito[]
   notasDebito      NotasDebito[]
   prefacturas      Prefacturas[]

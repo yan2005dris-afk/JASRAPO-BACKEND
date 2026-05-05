@@ -7,7 +7,7 @@ export class CreateRoleUseCase {
   constructor(private readonly prisma: PrismaService) {}
 
   async execute(createRoleDto: CreateRoleDto) {
-    const { ...roleData } = createRoleDto;
+    const roleData = { nombre: createRoleDto.name };
 
     try {
       return await this.prisma.roles.create({ data: roleData });
@@ -39,12 +39,12 @@ export class CreateRoleUseCase {
   private async syncRolesIdSequence() {
     const sequenceResult = await this.prisma.$queryRaw<
       { seq: string | null }[]
-    >`SELECT pg_get_serial_sequence('roles', 'roles_id') AS seq`;
+    >`SELECT pg_get_serial_sequence('roles', 'rol_id') AS seq`;
     const sequenceName = sequenceResult[0]?.seq;
     if (!sequenceName) return;
     const escapedSequenceName = sequenceName.replace(/'/g, "''");
     await this.prisma.$executeRawUnsafe(
-      `SELECT setval('${escapedSequenceName}', COALESCE((SELECT MAX(roles_id) FROM roles), 0) + 1, false)`,
+      `SELECT setval('${escapedSequenceName}', COALESCE((SELECT MAX(rol_id) FROM roles), 0) + 1, false)`,
     );
   }
 }

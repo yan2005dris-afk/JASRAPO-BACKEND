@@ -25,19 +25,20 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: JwtAccessPayload) {
-    const { sub: usersId, sid: sessionsId, email } = payload;
-    if (!usersId || !sessionsId) {
+    const { sub: usuarioId, sid: sesionId, email } = payload;
+    if (!usuarioId || !sesionId) {
       throw new UnauthorizedException('Session invalida');
     }
-    const session = await this.sessionsService.getSession(usersId, sessionsId);
-    if (!session || session.isRevoked || session.expiresAt < new Date()) {
+    const session = await this.sessionsService.getSession(usuarioId, sesionId);
+    if (!session || session.revocado || session.expiraEn < new Date()) {
       throw new UnauthorizedException('Sesión inválida o expirada');
     }
-    const permissions = await this.userService.getEffectivePermissions(usersId);
+    const permissions =
+      await this.userService.getEffectivePermissions(usuarioId);
     return {
-      sub: usersId,
-      usersId,
-      sid: sessionsId,
+      sub: usuarioId,
+      usersId: usuarioId,
+      sid: sesionId,
       email,
       permissions,
     };

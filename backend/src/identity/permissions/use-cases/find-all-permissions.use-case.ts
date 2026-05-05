@@ -6,13 +6,13 @@ export class FindAllPermissionsUseCase {
   constructor(private readonly prisma: PrismaService) {}
 
   async execute() {
-    return this.prisma.permissions.findMany({
+    return this.prisma.permisos.findMany({
       where: { deletedAt: null },
-      orderBy: [{ resource: 'asc' }, { action: 'asc' }],
+      orderBy: [{ recurso: 'asc' }, { accion: 'asc' }],
       select: {
-        permissionsId: true,
-        resource: true,
-        action: true,
+        permisoId: true,
+        recurso: true,
+        accion: true,
       },
     });
   }

@@ -3,18 +3,18 @@ model PrefacturaDetalle {
   prefacturaId        BigInt             @map("prefactura_id")
   rubroId             Int                @map("rubro_id")
   descripcion         String             @map("descripcion")
-  cantidad            Decimal            @map("cantidad") @db.Decimal
-  precioUnitario      Decimal            @map("precio_unitario") @db.Decimal
-  subtotal            Decimal            @map("subtotal") @db.Decimal
-  iva                 Decimal            @map("iva") @db.Decimal
-  total               Decimal            @map("total") @db.Decimal
+  cantidad            Decimal            @map("cantidad") @db.Decimal(18, 2)
+  precioUnitario      Decimal            @map("precio_unitario") @db.Decimal(18, 2)
+  subtotal            Decimal            @map("subtotal") @db.Decimal(18, 2)
+  iva                 Decimal            @map("iva") @db.Decimal(18, 2)
+  total               Decimal            @map("total") @db.Decimal(18, 2)
   codigoImpuestoSri   String?            @map("codigo_impuesto_sri")
   createdAt           DateTime           @default(now()) @map("creado_en")
   updatedAt           DateTime           @updatedAt @map("actualizado_en")
-  descuento           Decimal            @default(0) @map("descuento") @db.Decimal
+  descuento           Decimal            @default(0) @map("descuento") @db.Decimal(18, 2)
   cuotaConvenioId     BigInt?            @map("cuota_convenio_id")
   codigoPorcentajeSri String?            @map("codigo_porcentaje_sri")
-  tarifaImpuesto      Decimal            @default(0) @map("tarifa_impuesto") @db.Decimal
+  tarifaImpuesto      Decimal            @default(0) @map("tarifa_impuesto") @db.Decimal(18, 2)
   descuentoDetalles   DescuentoDetalle[]
   cuotaConvenio       CuotaConvenio?     @relation(fields: [cuotaConvenioId], references: [cuotaConvenioId])
   prefactura          Prefacturas        @relation(fields: [prefacturaId], references: [prefacturaId], onDelete: Cascade)

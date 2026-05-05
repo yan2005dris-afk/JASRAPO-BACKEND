@@ -14,21 +14,21 @@ import { AssignPermissionToUserUseCase } from './use-cases/assign-permission-to-
 import { RevokePermissionFromUserUseCase } from './use-cases/revoke-permission-from-user.use-case';
 
 const safeUserSelect = {
-  usersId: true,
+  usuarioId: true,
   email: true,
-} satisfies Prisma.UsersSelect;
+} satisfies Prisma.UsuariosSelect;
 
 const userWithRolesSelect = {
-  usersId: true,
+  usuarioId: true,
   email: true,
-  role: {
+  rol: {
     select: {
-      rolesId: true,
-      name: true,
+      rolId: true,
+      nombre: true,
       deletedAt: true,
     },
   },
-} satisfies Prisma.UsersSelect;
+} satisfies Prisma.UsuariosSelect;
 
 @Injectable()
 export class UserService {
@@ -50,8 +50,8 @@ export class UserService {
     return bcrypt.hash(password, 10);
   }
 
-  async user(userWhereUniqueInput: Prisma.UsersWhereUniqueInput) {
-    return this.prisma.users.findUnique({
+  async user(userWhereUniqueInput: Prisma.UsuariosWhereUniqueInput) {
+    return this.prisma.usuarios.findUnique({
       where: userWhereUniqueInput,
       select: safeUserSelect,
     });
@@ -60,12 +60,12 @@ export class UserService {
   async users(params: {
     skip?: number;
     take?: number;
-    cursor?: Prisma.UsersWhereUniqueInput;
-    where?: Prisma.UsersWhereInput;
-    orderBy?: Prisma.UsersOrderByWithRelationInput;
+    cursor?: Prisma.UsuariosWhereUniqueInput;
+    where?: Prisma.UsuariosWhereInput;
+    orderBy?: Prisma.UsuariosOrderByWithRelationInput;
   }) {
     const { skip, take, cursor, where, orderBy } = params;
-    const users = await this.prisma.users.findMany({
+    const users = await this.prisma.usuarios.findMany({
       skip,
       take,
       cursor,
@@ -75,11 +75,11 @@ export class UserService {
     });
 
     return users.map((user) => ({
-      usersId: user.usersId,
+      usuarioId: user.usuarioId,
       email: user.email,
       roles:
-        user.role && !user.role.deletedAt
-          ? [{ rolesId: user.role.rolesId, name: user.role.name }]
+        user.rol && !user.rol.deletedAt
+          ? [{ rolId: user.rol.rolId, nombre: user.rol.nombre }]
           : [],
     }));
   }
@@ -89,117 +89,123 @@ export class UserService {
   }
 
   async updateUser(params: {
-    where: Prisma.UsersWhereUniqueInput;
-    data: Prisma.UsersUpdateInput;
+    where: Prisma.UsuariosWhereUniqueInput;
+    data: Prisma.UsuariosUpdateInput;
   }) {
     const updateData = { ...params.data };
-    if (updateData.password) {
-      updateData.password = await this.ensureHashedPassword(
-        updateData.password as string,
+    if (updateData.clave) {
+      updateData.clave = await this.ensureHashedPassword(
+        updateData.clave as string,
       );
     }
-    return this.prisma.users.update({
+    return this.prisma.usuarios.update({
       where: params.where,
       data: updateData,
       select: safeUserSelect,
     });
   }
 
-  async softDeleteUser(where: Prisma.UsersWhereUniqueInput) {
-    return this.prisma.users.update({
+  async softDeleteUser(where: Prisma.UsuariosWhereUniqueInput) {
+    return this.prisma.usuarios.update({
       where,
       data: { deletedAt: new Date() },
       select: safeUserSelect,
     });
   }
 
-  async getRolesByUserId(usersId: number) {
-    const user = await this.prisma.users.findUnique({
-      where: { usersId },
-      select: { role: { select: { name: true, deletedAt: true } } },
+  async getRolesByUserId(usuarioId: number) {
+    const user = await this.prisma.usuarios.findUnique({
+      where: { usuarioId },
+      select: { rol: { select: { nombre: true, deletedAt: true } } },
     });
     if (!user) throw new NotFoundException('Usuario no encontrado');
-    if (!user.role || user.role.deletedAt) return null;
-    return user.role.name;
+    if (!user.rol || user.rol.deletedAt) return null;
+    return user.rol.nombre;
   }
 
-  async getRoleAssignmentsByUserId(usersId: number) {
-    const user = await this.prisma.users.findUnique({
-      where: { usersId },
+  async getRoleAssignmentsByUserId(usuarioId: number) {
+    const user = await this.prisma.usuarios.findUnique({
+      where: { usuarioId },
       select: {
-        usersId: true,
+        usuarioId: true,
         deletedAt: true,
-        rolesId: true,
-        role: { select: { rolesId: true, name: true, deletedAt: true } },
+        rolId: true,
+        rol: { select: { rolId: true, nombre: true, deletedAt: true } },
       },
     });
     if (!user || user.deletedAt)
       throw new NotFoundException('Usuario eliminado o no encontrado');
-    if (!user.role || user.role.deletedAt || !user.rolesId) return [];
+    if (!user.rol || user.rol.deletedAt || !user.rolId) return [];
     return [
-      { usersId: user.usersId, rolesId: user.rolesId, name: user.role.name },
+      { usuarioId: user.usuarioId, rolId: user.rolId, nombre: user.rol.nombre },
     ];
   }
 
-  async assignRoleToUser(usersId: number, rolesId: number) {
-    return this.assignRoleUseCase.execute(usersId, rolesId);
+  async assignRoleToUser(usuarioId: number, rolId: number) {
+    return this.assignRoleUseCase.execute(usuarioId, rolId);
   }
 
-  async revokeRoleFromUser(usersId: number) {
-    const user = await this.prisma.users.findUnique({
-      where: { usersId },
-      select: { usersId: true, deletedAt: true, rolesId: true },
+  async revokeRoleFromUser(usuarioId: number) {
+    const user = await this.prisma.usuarios.findUnique({
+      where: { usuarioId },
+      select: { usuarioId: true, deletedAt: true, rolId: true },
     });
     if (!user || user.deletedAt)
       throw new NotFoundException('Usuario no encontrado o eliminado');
-    if (!user.rolesId)
+    if (!user.rolId)
       throw new ConflictException('El usuario ya no tiene rol asignado');
-    return this.prisma.users.update({
-      where: { usersId },
-      data: { rolesId: null },
+    return this.prisma.usuarios.update({
+      where: { usuarioId },
+      data: { rolId: null },
     });
   }
 
-  async getDirectPermissionsByUserId(usersId: number) {
-    const user = await this.prisma.users.findUnique({ where: { usersId } });
+  async getDirectPermissionsByUserId(usuarioId: number) {
+    const user = await this.prisma.usuarios.findUnique({
+      where: { usuarioId },
+    });
     if (!user || user.deletedAt)
       throw new NotFoundException('Usuario no encontrado o eliminado');
 
-    const assignments = await this.prisma.userPermissions.findMany({
-      where: { usersId, deletedAt: null, Permissions: { deletedAt: null } },
+    const assignments = await this.prisma.usuarioPermisos.findMany({
+      where: { usuarioId, deletedAt: null, permiso: { deletedAt: null } },
       orderBy: [
-        { Permissions: { resource: 'asc' } },
-        { Permissions: { action: 'asc' } },
+        { permiso: { recurso: 'asc' } },
+        { permiso: { accion: 'asc' } },
       ],
       include: {
-        Permissions: {
-          select: { permissionsId: true, resource: true, action: true },
+        permiso: {
+          select: { permisoId: true, recurso: true, accion: true },
         },
       },
     });
 
     return assignments.map((assignment) => ({
-      idUserPermissions: assignment.idUserPermissions,
-      permissionsId: assignment.permissionsId,
-      resource: assignment.Permissions.resource,
-      action: assignment.Permissions.action,
-      allow: assignment.allow,
+      usuarioPermisoId: assignment.usuarioPermisoId,
+      permisoId: assignment.permisoId,
+      recurso: assignment.permiso.recurso,
+      accion: assignment.permiso.accion,
+      permitido: assignment.permitido,
     }));
   }
 
   async assignPermissionToUser(
-    usersId: number,
-    permissionsId: number,
-    allow = true,
+    usuarioId: number,
+    permisoId: number,
+    permitido = true,
   ) {
-    return this.assignPermissionUseCase.execute(usersId, permissionsId, allow);
+    return this.assignPermissionUseCase.execute(
+      usuarioId,
+      permisoId,
+      permitido,
+    );
   }
 
-  async revokePermissionFromUser(idUserPermissions: number) {
-    return this.revokePermissionUseCase.execute(idUserPermissions);
+  async revokePermissionFromUser(usuarioPermisoId: number) {
+    return this.revokePermissionUseCase.execute(usuarioPermisoId);
   }
 
-  async getEffectivePermissions(usersId: number) {
-    return this.getEffectivePermissionsUseCase.execute(usersId);
+  async getEffectivePermissions(usuarioId: number) {
+    return this.getEffectivePermissionsUseCase.execute(usuarioId);
   }
 }

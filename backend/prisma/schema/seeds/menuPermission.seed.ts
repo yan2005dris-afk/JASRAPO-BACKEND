@@ -1,11 +1,11 @@
-import { Menus, Permissions, PrismaClient } from 'src/generated/prisma/client';
+import { Menus, Permisos, PrismaClient } from 'src/generated/prisma/client';
 
 export async function seedMenuPermissions(
   prisma: PrismaClient,
   menus: Menus[],
-  permissions: Permissions[],
+  permissions: Permisos[],
 ) {
-  await prisma.menuPermissions.deleteMany();
+  await prisma.menuPermisos.deleteMany();
 
   const normalize = (value: string) =>
     value
@@ -14,9 +14,9 @@ export async function seedMenuPermissions(
       .trim()
       .toLowerCase();
 
-  const menuByName = new Map(menus.map((m) => [normalize(m.name), m]));
+  const menuByName = new Map(menus.map((m) => [normalize(m.nombre), m]));
   const permissionByKey = new Map(
-    permissions.map((p) => [`${p.resource}:${p.action}`, p]),
+    permissions.map((p) => [`${p.recurso}:${p.accion}`, p]),
   );
 
   const menuPermissionMap = [
@@ -24,8 +24,8 @@ export async function seedMenuPermissions(
       menuName: 'Listar Cliente',
       permissionKeys: [
         {
-          resource: 'clientes',
-          action: 'read',
+          recurso: 'clientes',
+          accion: 'read',
         },
       ],
     },
@@ -33,8 +33,8 @@ export async function seedMenuPermissions(
       menuName: 'Crear Cliente',
       permissionKeys: [
         {
-          resource: 'clientes',
-          action: 'create',
+          recurso: 'clientes',
+          accion: 'create',
         },
       ],
     },
@@ -42,8 +42,8 @@ export async function seedMenuPermissions(
       menuName: 'Actualizar Cliente',
       permissionKeys: [
         {
-          resource: 'clientes',
-          action: 'update',
+          recurso: 'clientes',
+          accion: 'update',
         },
       ],
     },
@@ -51,8 +51,8 @@ export async function seedMenuPermissions(
       menuName: 'Eliminar Cliente',
       permissionKeys: [
         {
-          resource: 'clientes',
-          action: 'delete',
+          recurso: 'clientes',
+          accion: 'delete',
         },
       ],
     },
@@ -60,8 +60,8 @@ export async function seedMenuPermissions(
       menuName: 'Listar Contratos de Servicios',
       permissionKeys: [
         {
-          resource: 'contratos',
-          action: 'read',
+          recurso: 'contratos',
+          accion: 'read',
         },
       ],
     },
@@ -69,8 +69,8 @@ export async function seedMenuPermissions(
       menuName: 'Crear Contratos de Servicios',
       permissionKeys: [
         {
-          resource: 'contratos',
-          action: 'create',
+          recurso: 'contratos',
+          accion: 'create',
         },
       ],
     },
@@ -78,8 +78,8 @@ export async function seedMenuPermissions(
       menuName: 'Actualizar Contratos de Servicios',
       permissionKeys: [
         {
-          resource: 'contratos',
-          action: 'update',
+          recurso: 'contratos',
+          accion: 'update',
         },
       ],
     },
@@ -87,8 +87,8 @@ export async function seedMenuPermissions(
       menuName: 'Eliminar Contratos de Servicios',
       permissionKeys: [
         {
-          resource: 'contratos',
-          action: 'delete',
+          recurso: 'contratos',
+          accion: 'delete',
         },
       ],
     },
@@ -96,8 +96,8 @@ export async function seedMenuPermissions(
       menuName: 'Listar Medidores',
       permissionKeys: [
         {
-          resource: 'medidores',
-          action: 'read',
+          recurso: 'medidores',
+          accion: 'read',
         },
       ],
     },
@@ -105,8 +105,8 @@ export async function seedMenuPermissions(
       menuName: 'Crear Medidores',
       permissionKeys: [
         {
-          resource: 'medidores',
-          action: 'create',
+          recurso: 'medidores',
+          accion: 'create',
         },
       ],
     },
@@ -114,8 +114,8 @@ export async function seedMenuPermissions(
       menuName: 'Actualizar Medidores',
       permissionKeys: [
         {
-          resource: 'medidores',
-          action: 'update',
+          recurso: 'medidores',
+          accion: 'update',
         },
       ],
     },
@@ -123,8 +123,8 @@ export async function seedMenuPermissions(
       menuName: 'Eliminar Medidores',
       permissionKeys: [
         {
-          resource: 'medidores',
-          action: 'delete',
+          recurso: 'medidores',
+          accion: 'delete',
         },
       ],
     },
@@ -132,8 +132,8 @@ export async function seedMenuPermissions(
       menuName: 'Listar Tarifas y Categorias',
       permissionKeys: [
         {
-          resource: 'tarifas',
-          action: 'read',
+          recurso: 'tarifas',
+          accion: 'read',
         },
       ],
     },
@@ -141,8 +141,8 @@ export async function seedMenuPermissions(
       menuName: 'Crear Tarifas y Categorias',
       permissionKeys: [
         {
-          resource: 'tarifas',
-          action: 'create',
+          recurso: 'tarifas',
+          accion: 'create',
         },
       ],
     },
@@ -150,8 +150,8 @@ export async function seedMenuPermissions(
       menuName: 'Actualizar Tarifas y Categorias',
       permissionKeys: [
         {
-          resource: 'tarifas',
-          action: 'update',
+          recurso: 'tarifas',
+          accion: 'update',
         },
       ],
     },
@@ -159,8 +159,8 @@ export async function seedMenuPermissions(
       menuName: 'Eliminar Tarifas y Categorias',
       permissionKeys: [
         {
-          resource: 'tarifas',
-          action: 'delete',
+          recurso: 'tarifas',
+          accion: 'delete',
         },
       ],
     },
@@ -168,8 +168,8 @@ export async function seedMenuPermissions(
       menuName: 'Listar Lectura de Consumo',
       permissionKeys: [
         {
-          resource: 'lecturas',
-          action: 'read',
+          recurso: 'lecturas',
+          accion: 'read',
         },
       ],
     },
@@ -177,8 +177,8 @@ export async function seedMenuPermissions(
       menuName: 'Crear Lectura de Consumo',
       permissionKeys: [
         {
-          resource: 'lecturas',
-          action: 'create',
+          recurso: 'lecturas',
+          accion: 'create',
         },
       ],
     },
@@ -186,8 +186,8 @@ export async function seedMenuPermissions(
       menuName: 'Actualizar Lectura de Consumo',
       permissionKeys: [
         {
-          resource: 'lecturas',
-          action: 'update',
+          recurso: 'lecturas',
+          accion: 'update',
         },
       ],
     },
@@ -195,8 +195,8 @@ export async function seedMenuPermissions(
       menuName: 'Eliminar Lectura de Consumo',
       permissionKeys: [
         {
-          resource: 'lecturas',
-          action: 'delete',
+          recurso: 'lecturas',
+          accion: 'delete',
         },
       ],
     },
@@ -204,8 +204,8 @@ export async function seedMenuPermissions(
       menuName: 'Listar Convenios de pago',
       permissionKeys: [
         {
-          resource: 'convenios',
-          action: 'read',
+          recurso: 'convenios',
+          accion: 'read',
         },
       ],
     },
@@ -213,8 +213,8 @@ export async function seedMenuPermissions(
       menuName: 'Crear Convenios de pago',
       permissionKeys: [
         {
-          resource: 'convenios',
-          action: 'create',
+          recurso: 'convenios',
+          accion: 'create',
         },
       ],
     },
@@ -222,8 +222,8 @@ export async function seedMenuPermissions(
       menuName: 'Actualizar Convenios de pago',
       permissionKeys: [
         {
-          resource: 'convenios',
-          action: 'update',
+          recurso: 'convenios',
+          accion: 'update',
         },
       ],
     },
@@ -231,8 +231,8 @@ export async function seedMenuPermissions(
       menuName: 'Eliminar Convenios de pago',
       permissionKeys: [
         {
-          resource: 'convenios',
-          action: 'delete',
+          recurso: 'convenios',
+          accion: 'delete',
         },
       ],
     },
@@ -240,8 +240,8 @@ export async function seedMenuPermissions(
       menuName: 'Listar Generacion de Planillas',
       permissionKeys: [
         {
-          resource: 'planillas',
-          action: 'read',
+          recurso: 'planillas',
+          accion: 'read',
         },
       ],
     },
@@ -249,8 +249,8 @@ export async function seedMenuPermissions(
       menuName: 'Crear Generacion de Planillas',
       permissionKeys: [
         {
-          resource: 'planillas',
-          action: 'create',
+          recurso: 'planillas',
+          accion: 'create',
         },
       ],
     },
@@ -258,8 +258,8 @@ export async function seedMenuPermissions(
       menuName: 'Actualizar Generacion de Planillas',
       permissionKeys: [
         {
-          resource: 'planillas',
-          action: 'update',
+          recurso: 'planillas',
+          accion: 'update',
         },
       ],
     },
@@ -267,8 +267,8 @@ export async function seedMenuPermissions(
       menuName: 'Eliminar Generacion de Planillas',
       permissionKeys: [
         {
-          resource: 'planillas',
-          action: 'delete',
+          recurso: 'planillas',
+          accion: 'delete',
         },
       ],
     },
@@ -276,8 +276,8 @@ export async function seedMenuPermissions(
       menuName: 'Listar Facturacion Electronica',
       permissionKeys: [
         {
-          resource: 'facturacion_electronica',
-          action: 'read',
+          recurso: 'facturacion_electronica',
+          accion: 'read',
         },
       ],
     },
@@ -285,8 +285,8 @@ export async function seedMenuPermissions(
       menuName: 'Crear Facturacion Electronica',
       permissionKeys: [
         {
-          resource: 'facturacion_electronica',
-          action: 'create',
+          recurso: 'facturacion_electronica',
+          accion: 'create',
         },
       ],
     },
@@ -294,8 +294,8 @@ export async function seedMenuPermissions(
       menuName: 'Actualizar Facturacion Electronica',
       permissionKeys: [
         {
-          resource: 'facturacion_electronica',
-          action: 'update',
+          recurso: 'facturacion_electronica',
+          accion: 'update',
         },
       ],
     },
@@ -303,8 +303,8 @@ export async function seedMenuPermissions(
       menuName: 'Eliminar Facturacion Electronica',
       permissionKeys: [
         {
-          resource: 'facturacion_electronica',
-          action: 'delete',
+          recurso: 'facturacion_electronica',
+          accion: 'delete',
         },
       ],
     },
@@ -312,8 +312,8 @@ export async function seedMenuPermissions(
       menuName: 'Listar Recaudación y pagos',
       permissionKeys: [
         {
-          resource: 'recaudacion',
-          action: 'read',
+          recurso: 'recaudacion',
+          accion: 'read',
         },
       ],
     },
@@ -321,8 +321,8 @@ export async function seedMenuPermissions(
       menuName: 'Crear Recaudación y pagos',
       permissionKeys: [
         {
-          resource: 'recaudacion',
-          action: 'create',
+          recurso: 'recaudacion',
+          accion: 'create',
         },
       ],
     },
@@ -330,8 +330,8 @@ export async function seedMenuPermissions(
       menuName: 'Actualizar Recaudación y pagos',
       permissionKeys: [
         {
-          resource: 'recaudacion',
-          action: 'update',
+          recurso: 'recaudacion',
+          accion: 'update',
         },
       ],
     },
@@ -339,8 +339,8 @@ export async function seedMenuPermissions(
       menuName: 'Eliminar Recaudación y pagos',
       permissionKeys: [
         {
-          resource: 'recaudacion',
-          action: 'delete',
+          recurso: 'recaudacion',
+          accion: 'delete',
         },
       ],
     },
@@ -348,8 +348,8 @@ export async function seedMenuPermissions(
       menuName: 'Listar Notas de Credito o Debito',
       permissionKeys: [
         {
-          resource: 'notas_credito',
-          action: 'read',
+          recurso: 'notas_credito',
+          accion: 'read',
         },
       ],
     },
@@ -357,8 +357,8 @@ export async function seedMenuPermissions(
       menuName: 'Crear Notas de Credito o Debito',
       permissionKeys: [
         {
-          resource: 'notas_credito',
-          action: 'create',
+          recurso: 'notas_credito',
+          accion: 'create',
         },
       ],
     },
@@ -366,8 +366,8 @@ export async function seedMenuPermissions(
       menuName: 'Actualizar Notas de Credito o Debito',
       permissionKeys: [
         {
-          resource: 'notas_credito',
-          action: 'update',
+          recurso: 'notas_credito',
+          accion: 'update',
         },
       ],
     },
@@ -375,8 +375,8 @@ export async function seedMenuPermissions(
       menuName: 'Eliminar Notas de Credito o Debito',
       permissionKeys: [
         {
-          resource: 'notas_credito',
-          action: 'delete',
+          recurso: 'notas_credito',
+          accion: 'delete',
         },
       ],
     },
@@ -384,8 +384,8 @@ export async function seedMenuPermissions(
       menuName: 'Listar Envio de Facturas',
       permissionKeys: [
         {
-          resource: 'envio_facturas',
-          action: 'read',
+          recurso: 'envio_facturas',
+          accion: 'read',
         },
       ],
     },
@@ -393,8 +393,8 @@ export async function seedMenuPermissions(
       menuName: 'Crear Envio de Facturas',
       permissionKeys: [
         {
-          resource: 'envio_facturas',
-          action: 'create',
+          recurso: 'envio_facturas',
+          accion: 'create',
         },
       ],
     },
@@ -402,8 +402,8 @@ export async function seedMenuPermissions(
       menuName: 'Actualizar Envio de Facturas',
       permissionKeys: [
         {
-          resource: 'envio_facturas',
-          action: 'update',
+          recurso: 'envio_facturas',
+          accion: 'update',
         },
       ],
     },
@@ -411,8 +411,8 @@ export async function seedMenuPermissions(
       menuName: 'Eliminar Envio de Facturas',
       permissionKeys: [
         {
-          resource: 'envio_facturas',
-          action: 'delete',
+          recurso: 'envio_facturas',
+          accion: 'delete',
         },
       ],
     },
@@ -420,8 +420,8 @@ export async function seedMenuPermissions(
       menuName: 'Listar Estado de cuenta Cliente',
       permissionKeys: [
         {
-          resource: 'estado_cuenta',
-          action: 'read',
+          recurso: 'estado_cuenta',
+          accion: 'read',
         },
       ],
     },
@@ -429,8 +429,8 @@ export async function seedMenuPermissions(
       menuName: 'Crear Estado de cuenta Cliente',
       permissionKeys: [
         {
-          resource: 'estado_cuenta',
-          action: 'create',
+          recurso: 'estado_cuenta',
+          accion: 'create',
         },
       ],
     },
@@ -438,8 +438,8 @@ export async function seedMenuPermissions(
       menuName: 'Actualizar Estado de cuenta Cliente',
       permissionKeys: [
         {
-          resource: 'estado_cuenta',
-          action: 'update',
+          recurso: 'estado_cuenta',
+          accion: 'update',
         },
       ],
     },
@@ -447,8 +447,8 @@ export async function seedMenuPermissions(
       menuName: 'Eliminar Estado de cuenta Cliente',
       permissionKeys: [
         {
-          resource: 'estado_cuenta',
-          action: 'delete',
+          recurso: 'estado_cuenta',
+          accion: 'delete',
         },
       ],
     },
@@ -456,8 +456,8 @@ export async function seedMenuPermissions(
       menuName: 'Listar Recaudación y Morosida',
       permissionKeys: [
         {
-          resource: 'recaudacion_morosidad',
-          action: 'read',
+          recurso: 'recaudacion_morosidad',
+          accion: 'read',
         },
       ],
     },
@@ -465,8 +465,8 @@ export async function seedMenuPermissions(
       menuName: 'Crear Recaudación y Morosida',
       permissionKeys: [
         {
-          resource: 'recaudacion_morosidad',
-          action: 'create',
+          recurso: 'recaudacion_morosidad',
+          accion: 'create',
         },
       ],
     },
@@ -474,8 +474,8 @@ export async function seedMenuPermissions(
       menuName: 'Actualizar Recaudación y Morosida',
       permissionKeys: [
         {
-          resource: 'recaudacion_morosidad',
-          action: 'update',
+          recurso: 'recaudacion_morosidad',
+          accion: 'update',
         },
       ],
     },
@@ -483,8 +483,8 @@ export async function seedMenuPermissions(
       menuName: 'Eliminar Recaudación y Morosida',
       permissionKeys: [
         {
-          resource: 'recaudacion_morosidad',
-          action: 'delete',
+          recurso: 'recaudacion_morosidad',
+          accion: 'delete',
         },
       ],
     },
@@ -492,8 +492,8 @@ export async function seedMenuPermissions(
       menuName: 'Listar ConsumoPorZonas',
       permissionKeys: [
         {
-          resource: 'consumo_zonas',
-          action: 'read',
+          recurso: 'consumo_zonas',
+          accion: 'read',
         },
       ],
     },
@@ -501,8 +501,8 @@ export async function seedMenuPermissions(
       menuName: 'Crear ConsumoPorZonas',
       permissionKeys: [
         {
-          resource: 'consumo_zonas',
-          action: 'create',
+          recurso: 'consumo_zonas',
+          accion: 'create',
         },
       ],
     },
@@ -510,8 +510,8 @@ export async function seedMenuPermissions(
       menuName: 'Actualizar ConsumoPorZonas',
       permissionKeys: [
         {
-          resource: 'consumo_zonas',
-          action: 'update',
+          recurso: 'consumo_zonas',
+          accion: 'update',
         },
       ],
     },
@@ -519,8 +519,8 @@ export async function seedMenuPermissions(
       menuName: 'Eliminar ConsumoPorZonas',
       permissionKeys: [
         {
-          resource: 'consumo_zonas',
-          action: 'delete',
+          recurso: 'consumo_zonas',
+          accion: 'delete',
         },
       ],
     },
@@ -528,8 +528,8 @@ export async function seedMenuPermissions(
       menuName: 'Listar DashboardKpi',
       permissionKeys: [
         {
-          resource: 'dashboard',
-          action: 'read',
+          recurso: 'dashboard',
+          accion: 'read',
         },
       ],
     },
@@ -537,8 +537,8 @@ export async function seedMenuPermissions(
       menuName: 'Crear DashboardKpi',
       permissionKeys: [
         {
-          resource: 'dashboard',
-          action: 'create',
+          recurso: 'dashboard',
+          accion: 'create',
         },
       ],
     },
@@ -546,8 +546,8 @@ export async function seedMenuPermissions(
       menuName: 'Actualizar DashboardKpi',
       permissionKeys: [
         {
-          resource: 'dashboard',
-          action: 'update',
+          recurso: 'dashboard',
+          accion: 'update',
         },
       ],
     },
@@ -555,8 +555,8 @@ export async function seedMenuPermissions(
       menuName: 'Eliminar DashboardKpi',
       permissionKeys: [
         {
-          resource: 'dashboard',
-          action: 'delete',
+          recurso: 'dashboard',
+          accion: 'delete',
         },
       ],
     },
@@ -564,8 +564,8 @@ export async function seedMenuPermissions(
       menuName: 'Lectura Usuarios',
       permissionKeys: [
         {
-          resource: 'users',
-          action: 'read',
+          recurso: 'users',
+          accion: 'read',
         },
       ],
     },
@@ -573,8 +573,8 @@ export async function seedMenuPermissions(
       menuName: 'Escritura Usuarios',
       permissionKeys: [
         {
-          resource: 'users',
-          action: 'create',
+          recurso: 'users',
+          accion: 'create',
         },
       ],
     },
@@ -582,8 +582,8 @@ export async function seedMenuPermissions(
       menuName: 'Actualizacion Usuarios',
       permissionKeys: [
         {
-          resource: 'users',
-          action: 'update',
+          recurso: 'users',
+          accion: 'update',
         },
       ],
     },
@@ -591,8 +591,8 @@ export async function seedMenuPermissions(
       menuName: 'Eliminacion Usuarios',
       permissionKeys: [
         {
-          resource: 'users',
-          action: 'delete',
+          recurso: 'users',
+          accion: 'delete',
         },
       ],
     },
@@ -608,31 +608,31 @@ export async function seedMenuPermissions(
 
     for (const permissionKey of menu.permissionKeys) {
       const dbPermission = permissionByKey.get(
-        `${permissionKey.resource}:${permissionKey.action}`,
+        `${permissionKey.recurso}:${permissionKey.accion}`,
       );
       if (!dbPermission) {
         throw new Error(
-          `Permiso no encontrado para menu ${menu.menuName}: ${permissionKey.resource}:${permissionKey.action}`,
+          `Permiso no encontrado para menu ${menu.menuName}: ${permissionKey.recurso}:${permissionKey.accion}`,
         );
       }
 
-      const exists = await prisma.menuPermissions.findFirst({
+      const exists = await prisma.menuPermisos.findFirst({
         where: {
-          menusId: dbMenu.menusId,
-          permissionsId: dbPermission.permissionsId,
+          menuId: dbMenu.menuId,
+          permisoId: dbPermission.permisoId,
         },
       });
 
       if (!exists) {
-        await prisma.menuPermissions.create({
+        await prisma.menuPermisos.create({
           data: {
-            menusId: dbMenu.menusId,
-            permissionsId: dbPermission.permissionsId,
+            menuId: dbMenu.menuId,
+            permisoId: dbPermission.permisoId,
           },
         });
       }
     }
   }
 
-  console.log('✅ Menu-Permissions asignados correctamente.');
+  console.log('✅ Menu-Permisos asignados correctamente.');
 }

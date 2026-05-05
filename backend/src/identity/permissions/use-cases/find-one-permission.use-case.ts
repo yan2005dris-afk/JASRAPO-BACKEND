@@ -6,12 +6,12 @@ export class FindOnePermissionUseCase {
   constructor(private readonly prisma: PrismaService) {}
 
   async execute(id: number) {
-    const permission = await this.prisma.permissions.findUnique({
-      where: { permissionsId: id },
+    const permission = await this.prisma.permisos.findUnique({
+      where: { permisoId: id },
       select: {
-        permissionsId: true,
-        resource: true,
-        action: true,
+        permisoId: true,
+        recurso: true,
+        accion: true,
         deletedAt: true,
       },
     });
