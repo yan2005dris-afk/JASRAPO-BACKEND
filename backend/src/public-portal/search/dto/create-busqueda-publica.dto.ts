@@ -9,8 +9,8 @@ import {
 } from 'class-validator';
 
 export class CreateBusquedaPublicaDto {
-  @IsIn(['cliente', 'contrato', 'global'])
-  tipo!: 'cliente' | 'contrato' | 'global';
+  @IsIn(['identificacion', 'nombres', 'apellidos', 'nombreCompleto'])
+  tipo!: 'identificacion' | 'nombres' | 'apellidos' | 'nombreCompleto';
 
   @Transform(({ value }) => value?.trim())
   @IsString()
