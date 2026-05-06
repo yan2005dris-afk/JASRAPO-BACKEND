@@ -101,6 +101,24 @@ async function main() {
   await seedEstadoMedidor(prisma);
   console.log('✅ Estados de medidor creados.');
 
+  // Estados de Lote
+  await prisma.estadoLote.upsert({
+    where: { estadoId: 1 },
+    update: {},
+    create: { estadoId: 1, codigo: 'BORRADOR', nombre: 'Borrador', orden: 1, activo: true },
+  });
+  await prisma.estadoLote.upsert({
+    where: { estadoId: 2 },
+    update: {},
+    create: { estadoId: 2, codigo: 'DEFINITIVO', nombre: 'Definitivo', orden: 2, activo: true },
+  });
+  await prisma.estadoLote.upsert({
+    where: { estadoId: 3 },
+    update: {},
+    create: { estadoId: 3, codigo: 'ENVIADO', nombre: 'Enviado', orden: 3, activo: true },
+  });
+  console.log('✅ Estados de lote creados.');
+
   // Medidores
   await seedMedidores(prisma);
   console.log('✅ Medidores creados.');

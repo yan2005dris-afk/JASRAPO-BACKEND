@@ -83,16 +83,17 @@ BEGIN
     SELECT COALESCE(i.tarifa, 0) / 100, i.codigo, i.codigo_porcentaje INTO v_iva_tasa_seguridad, v_cod_imp_seg, v_por_imp_seg 
     FROM rubros r JOIN sri_impuesto i ON r.impuesto_id = i.id WHERE r.rubro_id = RUBRO_TASA_SEGURIDAD;
 
-    -- 2. Crear el lote (Nombre de tabla corregido a 'lote', conversión segura de p_creado_por)
-    -- Los enums creados por Prisma requieren comillas dobles para respetar mayúsculas en Postgres
-    INSERT INTO lote (comunidad_id, periodo_id, estado, total_monto, notas, creado_por)
+    -- 2. Crear el lote (usando FK a estado_lote en lugar de ENUM)
+    INSERT INTO lote (comunidad_id, periodo_id, estado_id, total_monto, notas, creado_por, actualizado_en, creado_en)
     VALUES (
         COALESCE(p_comunidad_id, 1),
         p_periodo_id,
-        'BORRADOR'::"EstadoLote",
+        1,  -- FK a estado_lote donde codigo = 'BORRADOR' (asumimos que es el ID 1)
         0,
         'Generando...',
-        (CASE WHEN p_creado_por ~ '^[0-9]+$' THEN p_creado_por::INTEGER ELSE NULL END)
+        (CASE WHEN p_creado_por ~ '^[0-9]+$' THEN p_creado_por::INTEGER ELSE NULL END),
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
     )
     RETURNING lote_id INTO v_lote_id;
     
@@ -165,6 +166,11 @@ BEGIN
           AND borrado_en IS NULL
         ORDER BY periodo_id DESC
         LIMIT 1;
+        
+        -- Si es NULL (no hay deuda), asignar 0
+        IF v_deuda_anterior IS NULL THEN
+            v_deuda_anterior := 0;
+        END IF;
 
         -- Fórmula de Interés de Mora: (saldo vencido) * (cargo fijo / 12) * (meses atrasados)
         IF v_meses_atrasado >= 3 THEN
@@ -201,7 +207,8 @@ BEGIN
             deuda_anterior, saldo_vencido, saldo_actual, meses_atrasado,
             interes_mora, tasa_interes_usada, estado,
             cliente_direccion, cliente_email, cliente_identificacion, cliente_nombre,
-            tarifa_valor_base, tarifa_valor_excedente, lectura_id, creado_por
+            tarifa_valor_base, tarifa_valor_excedente, lectura_id, creado_por,
+            abono, creado_en, actualizado_en
         ) VALUES (
             contrato_row.contrato_id, v_lote_id, p_periodo_id, 1,
             v_lectura_anterior, v_lectura_actual, v_consumo,
@@ -209,37 +216,38 @@ BEGIN
             v_deuda_anterior, v_saldo_vencido, v_total_pagar_periodo + v_saldo_vencido, v_meses_atrasado,
             v_interes_mora, (v_cargo_fijo / 12), 'GENERADA'::"EstadoPrefactura",
             contrato_row.direccion_suministro, contrato_row.email, contrato_row.cliente_identificacion, contrato_row.cliente_nombre,
-            v_cargo_fijo, contrato_row.valor_excedente_m3, v_lectura_id, p_creado_por
+            v_cargo_fijo, contrato_row.valor_excedente_m3, v_lectura_id, p_creado_por,
+            0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
         )
         RETURNING prefactura_id INTO v_prefactura_id;
         
         -- Insertar Detalles (Con códigos SRI e impuestos correctos)
         -- Detalle: Cargo Fijo
-        INSERT INTO prefactura_detalle (prefactura_id, rubro_id, descripcion, cantidad, precio_unitario, subtotal, iva, total, tarifa_impuesto, codigo_impuesto_sri, codigo_porcentaje_sri)
-        VALUES (v_prefactura_id, RUBRO_CARGO_FIJO, 'Cargo Fijo', 1, v_cargo_fijo, v_cargo_fijo, v_cargo_fijo * v_iva_cargo_fijo, v_cargo_fijo * (1 + v_iva_cargo_fijo), v_iva_cargo_fijo * 100, v_cod_imp_fijo, v_por_imp_fijo);
+        INSERT INTO prefactura_detalle (prefactura_id, rubro_id, descripcion, cantidad, precio_unitario, subtotal, iva, total, tarifa_impuesto, codigo_impuesto_sri, codigo_porcentaje_sri, creado_en, actualizado_en)
+        VALUES (v_prefactura_id, RUBRO_CARGO_FIJO, 'Cargo Fijo', 1, v_cargo_fijo, v_cargo_fijo, v_cargo_fijo * v_iva_cargo_fijo, v_cargo_fijo * (1 + v_iva_cargo_fijo), v_iva_cargo_fijo * 100, v_cod_imp_fijo, v_por_imp_fijo, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
         
         -- Detalle: Excedente
         IF v_excedente > 0 THEN
-            INSERT INTO prefactura_detalle (prefactura_id, rubro_id, descripcion, cantidad, precio_unitario, subtotal, iva, total, tarifa_impuesto, codigo_impuesto_sri, codigo_porcentaje_sri)
-            VALUES (v_prefactura_id, RUBRO_CONSUMO, 'Excedente Consumo', GREATEST(0, v_consumo - contrato_row.consumo_minimo_mensual), contrato_row.valor_excedente_m3, v_excedente, v_excedente * v_iva_consumo, v_excedente * (1 + v_iva_consumo), v_iva_consumo * 100, v_cod_imp_consumo, v_por_imp_consumo);
+            INSERT INTO prefactura_detalle (prefactura_id, rubro_id, descripcion, cantidad, precio_unitario, subtotal, iva, total, tarifa_impuesto, codigo_impuesto_sri, codigo_porcentaje_sri, creado_en, actualizado_en)
+            VALUES (v_prefactura_id, RUBRO_CONSUMO, 'Excedente Consumo', GREATEST(0, v_consumo - contrato_row.consumo_minimo_mensual), contrato_row.valor_excedente_m3, v_excedente, v_excedente * v_iva_consumo, v_excedente * (1 + v_iva_consumo), v_iva_consumo * 100, v_cod_imp_consumo, v_por_imp_consumo, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
         END IF;
         
         -- Detalle: Tasa Seguridad
         IF v_tasa_seguridad > 0 THEN
-            INSERT INTO prefactura_detalle (prefactura_id, rubro_id, descripcion, cantidad, precio_unitario, subtotal, iva, total, tarifa_impuesto, codigo_impuesto_sri, codigo_porcentaje_sri)
-            VALUES (v_prefactura_id, RUBRO_TASA_SEGURIDAD, 'Tasa Seguridad', 1, v_tasa_seguridad, v_tasa_seguridad, v_tasa_seguridad * v_iva_tasa_seguridad, v_tasa_seguridad * (1 + v_iva_tasa_seguridad), v_iva_tasa_seguridad * 100, v_cod_imp_seg, v_por_imp_seg);
+            INSERT INTO prefactura_detalle (prefactura_id, rubro_id, descripcion, cantidad, precio_unitario, subtotal, iva, total, tarifa_impuesto, codigo_impuesto_sri, codigo_porcentaje_sri, creado_en, actualizado_en)
+            VALUES (v_prefactura_id, RUBRO_TASA_SEGURIDAD, 'Tasa Seguridad', 1, v_tasa_seguridad, v_tasa_seguridad, v_tasa_seguridad * v_iva_tasa_seguridad, v_tasa_seguridad * (1 + v_iva_tasa_seguridad), v_iva_tasa_seguridad * 100, v_cod_imp_seg, v_por_imp_seg, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
         END IF;
         
         -- Detalle: Interés Mora
         IF v_interes_mora > 0 THEN
-            INSERT INTO prefactura_detalle (prefactura_id, rubro_id, descripcion, cantidad, precio_unitario, subtotal, iva, total, tarifa_impuesto, codigo_impuesto_sri, codigo_porcentaje_sri)
-            VALUES (v_prefactura_id, RUBRO_INTERES, 'Interés Mora', v_meses_atrasado, v_interes_mora / NULLIF(v_meses_atrasado, 0), v_interes_mora, v_interes_mora * v_iva_interes, v_interes_mora * (1 + v_iva_interes), v_iva_interes * 100, v_cod_imp_interes, v_por_imp_interes);
+            INSERT INTO prefactura_detalle (prefactura_id, rubro_id, cantidad, precio_unitario, subtotal, iva, total, descuento, tarifa_impuesto, codigo_impuesto_sri, codigo_porcentaje_sri, creado_en, actualizado_en)
+            VALUES (v_prefactura_id, RUBRO_INTERES, v_meses_atrasado, v_interes_mora / NULLIF(v_meses_atrasado, 0), v_interes_mora, v_interes_mora * v_iva_interes, v_interes_mora * (1 + v_iva_interes), 0, v_iva_interes * 100, v_cod_imp_interes, v_por_imp_interes, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
         END IF;
         
         -- Detalle: Descuento
         IF v_descuento > 0 THEN
-            INSERT INTO prefactura_detalle (prefactura_id, rubro_id, descripcion, cantidad, precio_unitario, subtotal, iva, total, descuento, tarifa_impuesto, codigo_impuesto_sri, codigo_porcentaje_sri)
-            VALUES (v_prefactura_id, RUBRO_CARGO_FIJO, 'Descuento Ley (Tercera Edad/Disc.)', 1, -v_descuento, -v_descuento, 0, -v_descuento, v_descuento, 0, '2', '0');
+            INSERT INTO prefactura_detalle (prefactura_id, rubro_id, descripcion, cantidad, precio_unitario, subtotal, iva, total, descuento, tarifa_impuesto, codigo_impuesto_sri, codigo_porcentaje_sri, creado_en, actualizado_en)
+            VALUES (v_prefactura_id, RUBRO_CARGO_FIJO, 'Descuento Ley (Tercera Edad/Disc.)', 1, -v_descuento, -v_descuento, 0, -v_descuento, v_descuento, 0, '2', '0', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
         END IF;
         
         v_count := v_count + 1;
@@ -258,7 +266,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- SP 3: Aprobar lote (Nombre de tabla corregido)
+-- SP 3: Aprobar lote (usando FK a estado_lote)
 CREATE OR REPLACE FUNCTION aprobar_lote_facturacion(
     p_lote_id BIGINT,
     p_aprobado_por TEXT
@@ -266,7 +274,7 @@ CREATE OR REPLACE FUNCTION aprobar_lote_facturacion(
 RETURNS VOID AS $$
 BEGIN
     UPDATE lote 
-    SET estado = 'DEFINITIVO'::"EstadoLote",
+    SET estado_id = 2,  -- FK a estado_lote donde codigo = 'DEFINITIVO'
         notas = COALESCE(notas, '') || E'\n' || 'Aprobado por: ' || p_aprobado_por || ' Fecha: ' || CURRENT_TIMESTAMP,
         actualizado_en = CURRENT_TIMESTAMP
     WHERE lote_id = p_lote_id;
