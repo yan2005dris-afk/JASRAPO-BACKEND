@@ -29,8 +29,8 @@ export class LoggerService implements NestLoggerService {
     context?: string,
     metadata?: Record<string, unknown>,
   ): void {
-    // Solo enviar a Loki en producción
-    if (process.env.NODE_ENV !== 'production') return;
+    // Solo enviar a Loki si está configurada la URL
+    if (!this.lokiUrl || this.lokiUrl === '') return;
 
     const logEntry = {
       streams: [
