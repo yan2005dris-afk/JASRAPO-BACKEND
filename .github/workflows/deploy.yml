@@ -15,9 +15,6 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Setup Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
       - name: Build Backend only
         run: docker compose build backend
 
