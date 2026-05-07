@@ -7,7 +7,6 @@
   "license": "UNLICENSED",
   "scripts": {
     "prisma:generate": "prisma generate",
-    "prebuild": "npm run prisma:generate",
     "prestart": "npm run prisma:generate",
     "prestart:dev": "npm run prisma:generate",
     "prestart:debug": "npm run prisma:generate",
