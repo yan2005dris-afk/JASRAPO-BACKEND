@@ -19,4 +19,4 @@ jobs:
         run: docker compose build backend
 
       - name: Deploy
-        run: docker compose up -d
+        run: docker compose up -d backend
