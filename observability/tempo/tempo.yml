@@ -7,9 +7,7 @@ distributor:
     otlp:
       protocols:
         http:
-          endpoint: 0.0.0.0:4318
         grpc:
-          endpoint: 0.0.0.0:4317
 
 ingester:
   max_block_duration: 5m
@@ -28,6 +26,3 @@ storage:
 
 overrides:
   max_bytes_per_trace: 5000000
-
-metrics_generator:
-  enabled: false
