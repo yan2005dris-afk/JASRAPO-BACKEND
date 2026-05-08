@@ -15,12 +15,6 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Setup Docker Buildx (reuse builder)
-        uses: docker/setup-buildx-action@v3
-        with:
-          driver: docker-container
-          name: ci-builder
-
       - name: Build Backend only
         run: docker compose build backend
 
