@@ -7,11 +7,6 @@ import { GetAllSectorsUseCase } from './use-cases/get-all-sectors.use-case';
 import { GetSectorUseCase } from './use-cases/get-sector.use-case';
 import { DeleteSectorUseCase } from './use-cases/delete-sector.use-case';
 
-export interface IRespuestaSector {
-  message: string;
-  statusCode: number;
-}
-
 @Injectable()
 export class SectorService {
   constructor(
@@ -22,7 +17,7 @@ export class SectorService {
     private readonly deleteUseCase: DeleteSectorUseCase,
   ) {}
 
-  async crearSector(dto: CreateSectorDto): Promise<IRespuestaSector> {
+  async crearSector(dto: CreateSectorDto) {
     return this.createUseCase.execute(dto);
   }
 
