@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { Prisma } from 'src/generated/prisma/client';
+import { safeContractsSelect } from '../types/IResponseContract';
 
 @Injectable()
 export class FindAllContractsUseCase {
@@ -14,6 +15,7 @@ export class FindAllContractsUseCase {
     return await this.prisma.contratos.findMany({
       ...params,
       where: { ...params.where, deletedAt: null },
+      select: safeContractsSelect,
       orderBy: { createdAt: 'desc' },
     });
   }
