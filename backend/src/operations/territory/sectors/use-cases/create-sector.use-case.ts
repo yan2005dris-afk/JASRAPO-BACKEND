@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { CreateSectorDto } from '../dto/create-sector.dto';
+import { safeSectoresSelect } from '../types/IResponseSector';
 
 @Injectable()
 export class CreateSectorUseCase {
@@ -20,13 +21,15 @@ export class CreateSectorUseCase {
     }
 
     try {
-      await this.prisma.sectores.create({
+      const newSector = await this.prisma.sectores.create({
         data: dto,
+        select: safeSectoresSelect,
       });
 
       return {
         message: 'Sector creado exitosamente.',
         statusCode: 201,
+        data: newSector,
       };
     } catch (error: any) {
       if (error.code === 'P2002') {
