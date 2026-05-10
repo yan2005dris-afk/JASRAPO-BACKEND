@@ -1,7 +1,7 @@
 model Sectores {
   sectorId    Int          @id @default(autoincrement()) @map("sector_id")
   comunidadId Int?         @map("comunidad_id")
-  codigo      String       @map("codigo")
+  codigo      String       @unique @map("codigo")
   nombre      String       @map("nombre")
   createdAt   DateTime     @default(now()) @map("creado_en")
   updatedAt   DateTime     @updatedAt @map("actualizado_en")
