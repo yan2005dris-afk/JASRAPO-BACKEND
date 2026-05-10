@@ -20,7 +20,7 @@ export class RemoveTariffCategoryUseCase {
 
     const now = new Date();
 
-    return this.prisma.categoriaTarifa.update({
+    await this.prisma.categoriaTarifa.update({
       where: { categoriaTarifaId: id },
       data: {
         activo: false,
@@ -29,5 +29,10 @@ export class RemoveTariffCategoryUseCase {
         updatedAt: now,
       },
     });
+
+    return {
+      message: 'Categoría de tarifa eliminada exitosamente',
+      statusCode: 200,
+    };
   }
 }
