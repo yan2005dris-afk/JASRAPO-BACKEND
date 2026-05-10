@@ -46,7 +46,9 @@ async function main() {
       .join(', ');
 
     if (tables.length > 0) {
-      await prisma.$executeRawUnsafe(`TRUNCATE TABLE ${tables} RESTART IDENTITY CASCADE;`);
+      await prisma.$executeRawUnsafe(
+        `TRUNCATE TABLE ${tables} RESTART IDENTITY CASCADE;`,
+      );
     }
     console.log('✅ Base de datos limpiada correctamente desde 0.');
   } catch (error) {
@@ -63,7 +65,7 @@ async function main() {
 
   // Roles-Permisos
   await seedRolePermissions(prisma, roles, permissions);
-  console.log('✅ Roles y Permisos asignados correctamente.')
+  console.log('✅ Roles y Permisos asignados correctamente.');
 
   // Usuarios
   await seedUSers(prisma, roles);
@@ -105,17 +107,35 @@ async function main() {
   await prisma.estadoLote.upsert({
     where: { estadoId: 1 },
     update: {},
-    create: { estadoId: 1, codigo: 'BORRADOR', nombre: 'Borrador', orden: 1, activo: true },
+    create: {
+      estadoId: 1,
+      codigo: 'BORRADOR',
+      nombre: 'Borrador',
+      orden: 1,
+      activo: true,
+    },
   });
   await prisma.estadoLote.upsert({
     where: { estadoId: 2 },
     update: {},
-    create: { estadoId: 2, codigo: 'DEFINITIVO', nombre: 'Definitivo', orden: 2, activo: true },
+    create: {
+      estadoId: 2,
+      codigo: 'DEFINITIVO',
+      nombre: 'Definitivo',
+      orden: 2,
+      activo: true,
+    },
   });
   await prisma.estadoLote.upsert({
     where: { estadoId: 3 },
     update: {},
-    create: { estadoId: 3, codigo: 'ENVIADO', nombre: 'Enviado', orden: 3, activo: true },
+    create: {
+      estadoId: 3,
+      codigo: 'ENVIADO',
+      nombre: 'Enviado',
+      orden: 3,
+      activo: true,
+    },
   });
   console.log('✅ Estados de lote creados.');
 
@@ -142,11 +162,46 @@ async function main() {
   // Rubros
   await prisma.rubros.createMany({
     data: [
-      { codigoSri: '001', nombre: 'Consumo Agua', descripcion: 'Consumo de agua potable m3', precioUnitario: 0.50, tipoRubro: 'VARIABLE' as any, impuestoId: 2 },
-      { codigoSri: '002', nombre: 'Cargo Fijo', descripcion: 'Mantenimiento básico de conexión', precioUnitario: 5.00, tipoRubro: 'FIJO' as any, impuestoId: 2 },
-      { codigoSri: '003', nombre: 'Interés Mora', descripcion: 'Interés por falta de pago puntual', precioUnitario: 0.10, tipoRubro: 'MULTA' as any, impuestoId: 1 },
-      { codigoSri: '004', nombre: 'Tasa Seguridad Olón', descripcion: 'Tasa de seguridad comunitaria (Solo Olón)', precioUnitario: 2.00, tipoRubro: 'FIJO' as any, impuestoId: 1 },
-      { codigoSri: '005', nombre: 'Instalación Medidor', descripcion: 'Costo de nueva acometida e instalación', precioUnitario: 150.00, tipoRubro: 'SERVICIO' as any, impuestoId: 2 },
+      {
+        codigoSri: '001',
+        nombre: 'Consumo Agua',
+        descripcion: 'Consumo de agua potable m3',
+        precioUnitario: 0.5,
+        tipoRubro: 'VARIABLE' as any,
+        impuestoId: 2,
+      },
+      {
+        codigoSri: '002',
+        nombre: 'Cargo Fijo',
+        descripcion: 'Mantenimiento básico de conexión',
+        precioUnitario: 5.0,
+        tipoRubro: 'FIJO' as any,
+        impuestoId: 2,
+      },
+      {
+        codigoSri: '003',
+        nombre: 'Interés Mora',
+        descripcion: 'Interés por falta de pago puntual',
+        precioUnitario: 0.1,
+        tipoRubro: 'MULTA' as any,
+        impuestoId: 1,
+      },
+      {
+        codigoSri: '004',
+        nombre: 'Tasa Seguridad Olón',
+        descripcion: 'Tasa de seguridad comunitaria (Solo Olón)',
+        precioUnitario: 2.0,
+        tipoRubro: 'FIJO' as any,
+        impuestoId: 1,
+      },
+      {
+        codigoSri: '005',
+        nombre: 'Instalación Medidor',
+        descripcion: 'Costo de nueva acometida e instalación',
+        precioUnitario: 150.0,
+        tipoRubro: 'SERVICIO' as any,
+        impuestoId: 2,
+      },
     ],
     skipDuplicates: true,
   });
@@ -171,4 +226,3 @@ main()
   .finally(async () => {
     await prisma.$disconnect();
   });
-

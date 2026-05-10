@@ -1,8 +1,8 @@
-import { PrismaClient } from "src/generated/prisma/client";
+import type { PrismaClient } from 'src/generated/prisma/client';
 
 export async function syncSequences(prisma: PrismaClient) {
   console.log('🔄 Sincronizando secuencias...');
-  
+
   const tablenames = await prisma.$queryRaw<
     Array<{ tablename: string }>
   >`SELECT tablename FROM pg_tables WHERE schemaname='public'`;

@@ -1,39 +1,61 @@
-import { Clientes, PrismaClient } from "src/generated/prisma/client";
+import type { PrismaClient } from 'src/generated/prisma/client';
+import { Clientes } from 'src/generated/prisma/client';
 
 export async function seedClientes(prisma: PrismaClient) {
-    const clientes: Awaited<ReturnType<typeof prisma.clientes.findUnique>>[] = [];
-    
-    // Clientes originales
-    const clientesBase = [
-        { clienteId: 1, tipoIdentificacionId: 1, identificacion: "1234567890", nombres: "Juan", apellidos: "Perez", email: "juan@test.com" },
-        { clienteId: 2, tipoIdentificacionId: 1, identificacion: "1234567891", nombres: "Maria", apellidos: "Gonzalez", email: "maria@test.com" },
-        { clienteId: 3, tipoIdentificacionId: 1, identificacion: "1234567892", nombres: "Pedro", apellidos: "Lopez", email: "pedro@test.com" },
-    ];
+  const clientes: Awaited<ReturnType<typeof prisma.clientes.findUnique>>[] = [];
 
-    for (const c of clientesBase) {
-        const created = await prisma.clientes.upsert({
-            where: { clienteId: c.clienteId },
-            update: {},
-            create: c,
-        });
-        clientes.push(created);
-    }
+  // Clientes originales
+  const clientesBase = [
+    {
+      clienteId: 1,
+      tipoIdentificacionId: 1,
+      identificacion: '1234567890',
+      nombres: 'Juan',
+      apellidos: 'Perez',
+      email: 'juan@test.com',
+    },
+    {
+      clienteId: 2,
+      tipoIdentificacionId: 1,
+      identificacion: '1234567891',
+      nombres: 'Maria',
+      apellidos: 'Gonzalez',
+      email: 'maria@test.com',
+    },
+    {
+      clienteId: 3,
+      tipoIdentificacionId: 1,
+      identificacion: '1234567892',
+      nombres: 'Pedro',
+      apellidos: 'Lopez',
+      email: 'pedro@test.com',
+    },
+  ];
 
-    // Generar 100 clientes adicionales
-    for (let i = 4; i <= 103; i++) {
-        const created = await prisma.clientes.create({
-            data: {
-                clienteId: i,
-                tipoIdentificacionId: 1, // CEDULA
-                identificacion: `1310000${i.toString().padStart(4, '0')}`,
-                nombres: `Cliente ${i}`,
-                apellidos: `Apellido ${i}`,
-                email: `cliente${i}@test.com`,
-                telefono: `099000${i.toString().padStart(4, '0')}`,
-            },
-        });
-        clientes.push(created);
-    }
+  for (const c of clientesBase) {
+    const created = await prisma.clientes.upsert({
+      where: { clienteId: c.clienteId },
+      update: {},
+      create: c,
+    });
+    clientes.push(created);
+  }
 
-    return clientes;
+  // Generar 100 clientes adicionales
+  for (let i = 4; i <= 103; i++) {
+    const created = await prisma.clientes.create({
+      data: {
+        clienteId: i,
+        tipoIdentificacionId: 1, // CEDULA
+        identificacion: `1310000${i.toString().padStart(4, '0')}`,
+        nombres: `Cliente ${i}`,
+        apellidos: `Apellido ${i}`,
+        email: `cliente${i}@test.com`,
+        telefono: `099000${i.toString().padStart(4, '0')}`,
+      },
+    });
+    clientes.push(created);
+  }
+
+  return clientes;
 }

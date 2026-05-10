@@ -1,56 +1,55 @@
-import { PrismaClient } from "src/generated/prisma/client";
-
+import type { PrismaClient } from 'src/generated/prisma/client';
 
 export async function seedRoles(prisma: PrismaClient) {
-    const adminRol = await prisma.roles.upsert({
-        where: { rolId: 1 },
-        update: {},
-        create: { rolId: 1, nombre: 'admin' },
-    });
+  const adminRol = await prisma.roles.upsert({
+    where: { rolId: 1 },
+    update: {},
+    create: { rolId: 1, nombre: 'admin' },
+  });
 
-    const secretariaRol = await prisma.roles.upsert({
-        where: { rolId: 2 },
-        update: {},
-        create: { rolId: 2, nombre: 'secretaria' },
-    });
+  const secretariaRol = await prisma.roles.upsert({
+    where: { rolId: 2 },
+    update: {},
+    create: { rolId: 2, nombre: 'secretaria' },
+  });
 
-    const recaudacionRol = await prisma.roles.upsert({
-        where: { rolId: 3 },
-        update: {},
-        create: { rolId: 3, nombre: 'recaudacion' },
-    });
+  const recaudacionRol = await prisma.roles.upsert({
+    where: { rolId: 3 },
+    update: {},
+    create: { rolId: 3, nombre: 'recaudacion' },
+  });
 
-    const presidenciaRol = await prisma.roles.upsert({
-        where: { rolId: 4 },
-        update: {},
-        create: { rolId: 4, nombre: 'presidencia' },
-    });
+  const presidenciaRol = await prisma.roles.upsert({
+    where: { rolId: 4 },
+    update: {},
+    create: { rolId: 4, nombre: 'presidencia' },
+  });
 
-    const operadoresRol = await prisma.roles.upsert({
-        where: { rolId: 5 },
-        update: {},
-        create: { rolId: 5, nombre: 'operadores' },
-    });
+  const operadoresRol = await prisma.roles.upsert({
+    where: { rolId: 5 },
+    update: {},
+    create: { rolId: 5, nombre: 'operadores' },
+  });
 
-    const contabilidadRol = await prisma.roles.upsert({
-        where: { rolId: 6 },
-        update: {},
-        create: { rolId: 6, nombre: 'contabilidad' },
-    });
+  const contabilidadRol = await prisma.roles.upsert({
+    where: { rolId: 6 },
+    update: {},
+    create: { rolId: 6, nombre: 'contabilidad' },
+  });
 
-    const userRol = await prisma.roles.upsert({
-        where: { rolId: 7 },
-        update: {},
-        create: { rolId: 7, nombre: 'user' },
-    });
+  const userRol = await prisma.roles.upsert({
+    where: { rolId: 7 },
+    update: {},
+    create: { rolId: 7, nombre: 'user' },
+  });
 
-    return {
-        adminRol,
-        secretariaRol,
-        recaudacionRol,
-        presidenciaRol,
-        operadoresRol,
-        contabilidadRol,
-        userRol,
-    };
+  return {
+    adminRol,
+    secretariaRol,
+    recaudacionRol,
+    presidenciaRol,
+    operadoresRol,
+    contabilidadRol,
+    userRol,
+  };
 }
