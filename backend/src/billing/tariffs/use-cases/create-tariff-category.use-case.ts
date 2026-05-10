@@ -1,6 +1,8 @@
 import { ConflictException, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { CreateCategoriaTarifaDto } from '../dto/create-categoria-tarifa.dto';
+import { safeTariffCategoriesSelect } from '../types/IResponseTariffCategory';
+import { toTariffCategoryResponse } from '../types/tariffCategoryMapper';
 
 @Injectable()
 export class CreateTariffCategoryUseCase {
@@ -23,7 +25,7 @@ export class CreateTariffCategoryUseCase {
 
     const now = new Date();
 
-    return this.prisma.categoriaTarifa.create({
+    const newTariff = await this.prisma.categoriaTarifa.create({
       data: {
         ...dto,
         fechaVigenciaDesde: now,
@@ -31,6 +33,9 @@ export class CreateTariffCategoryUseCase {
         activo: true,
         createdAt: now,
       },
+      select: safeTariffCategoriesSelect,
     });
+
+    return toTariffCategoryResponse(newTariff);
   }
 }

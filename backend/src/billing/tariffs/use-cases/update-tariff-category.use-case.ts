@@ -5,6 +5,8 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { UpdateCategoriaTarifaDto } from '../dto/update-categoria-tarifa.dto';
+import { safeTariffCategoriesSelect } from '../types/IResponseTariffCategory';
+import { toTariffCategoryResponse } from '../types/tariffCategoryMapper';
 
 @Injectable()
 export class UpdateTariffCategoryUseCase {
@@ -25,7 +27,7 @@ export class UpdateTariffCategoryUseCase {
 
     const now = new Date();
 
-    return this.prisma.$transaction(async (tx) => {
+    const newTariff = await this.prisma.$transaction(async (tx) => {
       // cerrar vigencia actual
       await tx.categoriaTarifa.update({
         where: { categoriaTarifaId: id },
@@ -67,7 +69,10 @@ export class UpdateTariffCategoryUseCase {
           activo: true,
           createdAt: now,
         },
+        select: safeTariffCategoriesSelect,
       });
     });
+
+    return toTariffCategoryResponse(newTariff);
   }
 }
