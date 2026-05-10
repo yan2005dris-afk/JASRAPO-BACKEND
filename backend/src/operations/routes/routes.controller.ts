@@ -116,7 +116,7 @@ export class RoutesController {
    */
   @ApiOperation({
     summary: 'Obtener ruta por ID',
-    description: 'Retorna una ruta específica con sus lecturas asignadas',
+    description: 'Retorna una ruta específica',
   })
   @ApiParam({
     name: 'id',
