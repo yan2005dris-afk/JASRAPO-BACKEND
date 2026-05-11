@@ -41,4 +41,26 @@ describe('DeleteRouteUseCase', () => {
     prismaService.rutas.findUnique.mockResolvedValue(null);
     await expect(useCase.execute(1n)).rejects.toThrow(NotFoundException);
   });
+
+  it('should soft delete the route and unassign readings inside the transaction', async () => {
+    prismaService.rutas.findUnique.mockResolvedValue({ id: 1n });
+    prismaService.rutas.update.mockResolvedValue({ id: 1n });
+    prismaService.lecturas.updateMany.mockResolvedValue({ count: 2 });
+
+    await useCase.execute(1n);
+
+    expect(prismaService.$transaction).toHaveBeenCalled();
+    expect(prismaService.rutas.update).toHaveBeenCalledWith({
+      where: { id: 1n },
+      data: expect.objectContaining({
+        deletedAt: expect.any(Date),
+      }),
+    });
+    expect(prismaService.lecturas.updateMany).toHaveBeenCalledWith({
+      where: { rutaId: 1n },
+      data: expect.objectContaining({
+        rutaId: null,
+      }),
+    });
+  });
 });
