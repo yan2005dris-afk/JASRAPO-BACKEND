@@ -42,7 +42,10 @@ describe('UpdateRouteUseCase', () => {
 
   it('should update route successfully with defined fields', async () => {
     prismaService.rutas.findUnique.mockResolvedValue({ rutaId: 1n });
-    prismaService.rutas.update.mockResolvedValue({ rutaId: 1n, nombre: 'New Name' });
+    prismaService.rutas.update.mockResolvedValue({
+      rutaId: 1n,
+      nombre: 'New Name',
+    });
 
     await useCase.execute(1n, { nombre: 'New Name', descripcion: 'New Desc' });
 
@@ -59,7 +62,10 @@ describe('UpdateRouteUseCase', () => {
     prismaService.rutas.findUnique.mockResolvedValue({ rutaId: 1n });
     prismaService.rutas.update.mockResolvedValue({ rutaId: 1n });
 
-    await useCase.execute(1n, { fechaPlanificada: null, nombre: undefined } as any);
+    await useCase.execute(1n, {
+      fechaPlanificada: null,
+      nombre: undefined,
+    } as any);
 
     expect(prismaService.rutas.update).toHaveBeenCalledWith({
       where: { rutaId: 1n },

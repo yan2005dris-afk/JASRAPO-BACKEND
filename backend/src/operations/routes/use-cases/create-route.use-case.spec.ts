@@ -13,7 +13,11 @@ describe('CreateRouteUseCase', () => {
       usuarios: { findUnique: jest.fn() },
       comunidades: { findUnique: jest.fn() },
       sectores: { findUnique: jest.fn() },
-      lecturas: { findMany: jest.fn(), updateMany: jest.fn() },
+      lecturas: {
+        findMany: jest.fn(),
+        updateMany: jest.fn(),
+        count: jest.fn(),
+      },
       rutas: { create: jest.fn() },
       $transaction: jest.fn((callback) => callback(prismaService)),
     };
@@ -166,6 +170,7 @@ describe('CreateRouteUseCase', () => {
       tipoRuta: 'TOMA_LECTURA',
     };
     prismaService.rutas.create.mockResolvedValue(mockCreatedRoute);
+    prismaService.lecturas.count.mockResolvedValue(1);
     prismaService.lecturas.updateMany.mockResolvedValue({ count: 1 });
 
     const result = await useCase.execute({
@@ -180,12 +185,12 @@ describe('CreateRouteUseCase', () => {
     expect(prismaService.rutas.create).toHaveBeenCalled();
     expect(prismaService.lecturas.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: {
+        where: expect.objectContaining({
           lecturaId: { in: [10n] },
           estadoAsignacion: 'NO_ASIGNADA',
           estado: { in: ['PENDIENTE', 'POR_REVISION'] },
           deletedAt: null,
-        },
+        }),
         data: { rutaAsignadaId: 100n, estadoAsignacion: 'ASIGNADA' },
       }),
     );
@@ -205,6 +210,7 @@ describe('CreateRouteUseCase', () => {
     ]);
 
     prismaService.rutas.create.mockResolvedValue({ rutaId: 100n });
+    prismaService.lecturas.count.mockResolvedValue(1);
     prismaService.lecturas.updateMany.mockResolvedValue({ count: 0 });
 
     await expect(

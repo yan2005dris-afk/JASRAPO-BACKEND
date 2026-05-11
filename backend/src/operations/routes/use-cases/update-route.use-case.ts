@@ -3,7 +3,6 @@ import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { UpdateRouteDto } from '../dto/update-route.dto';
 import { RouteEntity } from '../types/route.entity';
 import { RouteMapper } from '../types/mappers';
-import { EstadoRuta } from 'src/generated/prisma/client';
 
 @Injectable()
 export class UpdateRouteUseCase {
@@ -29,7 +28,7 @@ export class UpdateRouteUseCase {
           descripcion: updateDto.descripcion,
         }),
         ...(updateDto.estado !== undefined && {
-          estado: updateDto.estado as EstadoRuta,
+          estado: updateDto.estado,
         }),
         ...(updateDto.fechaPlanificada !== undefined && {
           fechaPlanificada: updateDto.fechaPlanificada

@@ -38,8 +38,12 @@ describe('FindOneRouteUseCase', () => {
   });
 
   it('should return mapped RouteEntity if route is found', async () => {
-    prismaService.rutas.findUnique.mockResolvedValue({ rutaId: 1n, nombre: 'Route 1', deletedAt: null });
-    
+    prismaService.rutas.findUnique.mockResolvedValue({
+      rutaId: 1n,
+      nombre: 'Route 1',
+      deletedAt: null,
+    });
+
     const result = await useCase.execute(1n);
 
     expect(prismaService.rutas.findUnique).toHaveBeenCalledWith({

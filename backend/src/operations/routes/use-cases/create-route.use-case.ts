@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
-import { EstadoGenerico } from 'src/generated/prisma/client';
+import { EstadoGenerico, Prisma } from 'src/generated/prisma/client';
 import { CreateRouteDto } from '../dto/create-route.dto';
 import { RouteEntity } from '../types/route.entity';
 import { RouteMapper } from '../types/mappers';
@@ -117,7 +117,7 @@ export class CreateRouteUseCase {
         },
       });
 
-      const lecturasDisponiblesWhere = {
+      const lecturasDisponiblesWhere: Prisma.LecturasWhereInput = {
         lecturaId: { in: lecturaIds },
         estadoAsignacion: 'NO_ASIGNADA',
         estado: {
@@ -128,6 +128,7 @@ export class CreateRouteUseCase {
           estado: estadoContratoEsperado,
           comunidadId: createDto.comunidadId,
           ...(createDto.sectorId ? { sectorId: createDto.sectorId } : {}),
+          deletedAt: null,
         },
       };
 
@@ -143,7 +144,14 @@ export class CreateRouteUseCase {
 
       // Asignar lecturas
       const updateResult = await tx.lecturas.updateMany({
-        where: lecturasDisponiblesWhere,
+        where: {
+          lecturaId: { in: lecturaIds },
+          estadoAsignacion: 'NO_ASIGNADA',
+          estado: {
+            in: ['PENDIENTE', 'POR_REVISION'],
+          },
+          deletedAt: null,
+        },
         data: {
           rutaAsignadaId: rutaCreada.rutaId,
           estadoAsignacion: 'ASIGNADA',

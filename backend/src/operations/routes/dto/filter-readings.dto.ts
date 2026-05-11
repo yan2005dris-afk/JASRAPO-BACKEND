@@ -3,6 +3,8 @@ import {
   IsOptional,
   IsIn,
   IsNumber,
+  IsInt,
+  Min,
   IsString,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
@@ -50,7 +52,8 @@ export class FilterReadingsDto {
     example: 0,
   })
   @IsOptional()
-  @IsNumber()
+  @IsInt()
+  @Min(0)
   @Type(() => Number)
   skip?: number;
 
@@ -60,7 +63,8 @@ export class FilterReadingsDto {
     example: 10,
   })
   @IsOptional()
-  @IsNumber()
+  @IsInt()
+  @Min(1)
   @Type(() => Number)
   take?: number;
 }
