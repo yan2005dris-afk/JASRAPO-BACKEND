@@ -11,7 +11,7 @@ import {
 import { ReadingAnomalyService } from './reading-anomaly.service';
 import { CreateReadingAnomalyDto } from './dto/create-reading-anomaly.dto';
 import { UpdateReadingAnomalyDto } from './dto/update-reading-anomaly.dto';
-import { ReadingAnomalyEntity } from './entities/reading-anomaly.entity';
+import { ResponseReadingAnomalyDto } from './dto/response-reading-anomaly.dto';
 import { TipoAnomalia, EstadoAnomalia } from 'src/generated/prisma/client';
 import {
   ApiTags,
@@ -41,7 +41,7 @@ export class ReadingAnomalyController {
   @ApiResponse({
     status: 201,
     description: 'Anomalía creada',
-    type: ReadingAnomalyEntity,
+    type: ResponseReadingAnomalyDto as any,
   })
   @ApiResponse({ status: 400, description: 'Datos inválidos' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
@@ -53,7 +53,7 @@ export class ReadingAnomalyController {
   @Post()
   async create(
     @Body() createDto: CreateReadingAnomalyDto,
-  ): Promise<ReadingAnomalyEntity> {
+  ): Promise<ResponseReadingAnomalyDto> {
     return this.readingAnomalyService.create(createDto);
   }
 
@@ -94,7 +94,7 @@ export class ReadingAnomalyController {
   @ApiResponse({
     status: 200,
     description: 'Lista de anomalías',
-    type: [ReadingAnomalyEntity],
+    type: [ResponseReadingAnomalyDto as any],
   })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @RequiredPermission('reading-anomalies', 'read')
@@ -105,7 +105,7 @@ export class ReadingAnomalyController {
     @Query('lecturaId') lecturaId?: string,
     @Query('tipo') tipo?: TipoAnomalia,
     @Query('estado') estado?: EstadoAnomalia,
-  ): Promise<ReadingAnomalyEntity[]> {
+  ): Promise<ResponseReadingAnomalyDto[]> {
     const where: any = {};
     if (lecturaId) where.lecturaId = BigInt(lecturaId);
     if (tipo) where.tipo = tipo;
@@ -131,13 +131,13 @@ export class ReadingAnomalyController {
   @ApiResponse({
     status: 200,
     description: 'Anomalía encontrada',
-    type: ReadingAnomalyEntity,
+    type: ResponseReadingAnomalyDto as any,
   })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({ status: 404, description: 'Anomalía no encontrada' })
   @RequiredPermission('reading-anomalies', 'read')
   @Get(':id')
-  async findOne(@Param('id') id: string): Promise<ReadingAnomalyEntity> {
+  async findOne(@Param('id') id: string): Promise<ResponseReadingAnomalyDto> {
     return this.readingAnomalyService.findOne(BigInt(id));
   }
 
@@ -158,7 +158,7 @@ export class ReadingAnomalyController {
   @ApiResponse({
     status: 200,
     description: 'Anomalía actualizada',
-    type: ReadingAnomalyEntity,
+    type: ResponseReadingAnomalyDto as any,
   })
   @ApiResponse({ status: 400, description: 'Datos inválidos' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
@@ -172,7 +172,7 @@ export class ReadingAnomalyController {
   async update(
     @Param('id') id: string,
     @Body() updateDto: UpdateReadingAnomalyDto,
-  ): Promise<ReadingAnomalyEntity> {
+  ): Promise<ResponseReadingAnomalyDto> {
     return this.readingAnomalyService.update(BigInt(id), updateDto);
   }
 
