@@ -22,9 +22,11 @@ import type {
 import { REFRESH_TOKEN_MAX_AGE_MS } from 'src/infrastructure/config/app.constants';
 import { CookieValue } from 'src/infrastructure/common/decorators/cookie-value.decorator';
 import { RequiredStringPipe } from 'src/infrastructure/common/pipes/required-string.pipe';
+import { ThrottlerGuard } from '@nestjs/throttler';
 
 @ApiTags('auth')
 @Controller('auth')
+@UseGuards(ThrottlerGuard)
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
@@ -190,6 +192,8 @@ export class AuthController {
     res.json({
       message: 'Token refrescado correctamente',
       accessToken: tokens.accessToken,
+      createdAt: tokens.accessTokenInfo.iatDate,
+      expiresAt: tokens.accessTokenInfo.expDate,
     });
   }
 

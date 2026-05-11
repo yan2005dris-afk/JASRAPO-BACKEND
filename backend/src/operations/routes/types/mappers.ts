@@ -26,6 +26,8 @@ export class RouteMapper {
       comunidadId: route.comunidadId,
       sectorId: route.sectorId,
       fechaPlanificada: route.fechaPlanificada,
+      fechaInicio: route.fechaInicio,
+      fechaFin: route.fechaFin,
       estado: route.estado,
       createdAt: route.createdAt,
       updatedAt: route.updatedAt,

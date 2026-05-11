@@ -22,8 +22,13 @@ export async function seedRolePermissions(
         });
     }
 
-        // 2. SECRETARIA: CONTRATOS
-    const contratosResources = ['clientes', 'contratos', 'medidores', 'tarifas', 'lecturas', 'convenios'];
+    // 2. SECRETARIA: CONTRATOS
+    const contratosResources = [
+        'clientes', 'contratos', 'contracts', 
+        'medidores', 'meters', 'tarifas', 
+        'lecturas', 'convenios', 'reading-anomalies',
+        'comunidades', 'sectores'
+    ];
     const secretaryPerms = permissions.filter(p => contratosResources.includes(p.recurso));
     for (const perm of secretaryPerms) {
         await prisma.rolPermisos.create({
@@ -31,31 +36,35 @@ export async function seedRolePermissions(
         });
     }
 
-        // 3. RECAUDACION: FACTURACION
-        const recaudacionResources = ['planillas', 'facturacion_electronica', 'recaudacion', 'notas_credito', 'envio_facturas'];
-        const recaudacionPerms = permissions.filter(p => recaudacionResources.includes(p.recurso));
-        for (const perm of recaudacionPerms) {
+    // 3. RECAUDACION: FACTURACION
+    const recaudacionResources = ['planillas', 'facturacion_electronica', 'recaudacion', 'notas_credito', 'envio_facturas', 'lote', 'lotes'];
+    const recaudacionPerms = permissions.filter(p => recaudacionResources.includes(p.recurso));
+    for (const perm of recaudacionPerms) {
         await prisma.rolPermisos.create({
-                        data: { rolId: roles.recaudacionRol.rolId, permisoId: perm.permisoId },
+            data: { rolId: roles.recaudacionRol.rolId, permisoId: perm.permisoId },
         });
     }
 
-        // 4. PRESIDENCIA: SOLO LECTURA DE REPORTES
-        const reportesResources = ['estado_cuenta', 'recaudacion_morosidad', 'consumo_zonas', 'dashboard'];
-        const presidenciaPerms = permissions.filter(
-            (p) => reportesResources.includes(p.recurso) && p.accion === 'read',
-        );
-        for (const perm of presidenciaPerms) {
-            await prisma.rolPermisos.create({
-                data: { rolId: roles.presidenciaRol.rolId, permisoId: perm.permisoId },
-            });
-        }
+    // 4. PRESIDENCIA: SOLO LECTURA DE REPORTES
+    const reportesResources = ['estado_cuenta', 'recaudacion_morosidad', 'consumo_zonas', 'dashboard'];
+    const presidenciaPerms = permissions.filter(
+        (p) => reportesResources.includes(p.recurso) && p.accion === 'read',
+    );
+    for (const perm of presidenciaPerms) {
+        await prisma.rolPermisos.create({
+            data: { rolId: roles.presidenciaRol.rolId, permisoId: perm.permisoId },
+        });
+    }
 
-        // 5. OPERADORES: OPERACION DIARIA SIN ELIMINAR
-        const operadoresResources = ['clientes', 'contratos', 'medidores', 'lecturas', 'convenios'];
-        const operadoresPerms = permissions.filter(
-            (p) => operadoresResources.includes(p.recurso) && p.accion !== 'delete',
-        );
+    // 5. OPERADORES: OPERACION DIARIA SIN ELIMINAR
+    const operadoresResources = [
+        'clientes', 'contratos', 'contracts', 
+        'medidores', 'meters', 'lecturas', 
+        'convenios', 'reading-anomalies'
+    ];
+    const operadoresPerms = permissions.filter(
+        (p) => operadoresResources.includes(p.recurso) && p.accion !== 'delete',
+    );
         for (const perm of operadoresPerms) {
             await prisma.rolPermisos.create({
                 data: { rolId: roles.operadoresRol.rolId, permisoId: perm.permisoId },
@@ -64,6 +73,13 @@ export async function seedRolePermissions(
 
         // 6. CONTABILIDAD: hereda de secretaria + recaudacion por jerarquia (sin directos)
 
-        // 7. USER: NADA
+        // 7. USER: SOLO PERFIL
+        const userResources = ['profile'];
+        const userPerms = permissions.filter(p => userResources.includes(p.recurso));
+        for (const perm of userPerms) {
+            await prisma.rolPermisos.create({
+                data: { rolId: roles.userRol.rolId, permisoId: perm.permisoId },
+            });
+        }
     console.log('✅ Roles-Permisos asignados correctamente.');
 }

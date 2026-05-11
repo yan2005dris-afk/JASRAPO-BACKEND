@@ -28,10 +28,12 @@ import { MinioService } from '../../infrastructure/storage/minio.service';
 import { Public } from 'src/infrastructure/common/decorators/public.decorator';
 import type { Response } from 'express';
 import { AuthUserId } from 'src/infrastructure/common/decorators/auth-user-id.decorator';
+import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
+import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
 
 @ApiTags('profile')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('profile')
 export class ProfileController {
   constructor(
@@ -72,6 +74,7 @@ export class ProfileController {
     status: 409,
     description: 'Conflicto - El usuario ya tiene un perfil creado',
   })
+  @RequiredPermission('profile', 'create')
   @Post()
   createProfile(
     @AuthUserId() usersId: number,
@@ -103,6 +106,7 @@ export class ProfileController {
   })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({ status: 404, description: 'Perfil no encontrado' })
+  @RequiredPermission('profile', 'read')
   @Get('me')
   findMeProfile(@AuthUserId() usersId: number) {
     return this.profileService.findMyProfile(usersId);
@@ -138,6 +142,7 @@ export class ProfileController {
   @ApiResponse({ status: 400, description: 'Datos inválidos' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({ status: 404, description: 'Perfil no encontrado' })
+  @RequiredPermission('profile', 'update')
   @Patch('me')
   updateProfile(
     @AuthUserId() usersId: number,
@@ -173,6 +178,7 @@ export class ProfileController {
   @ApiResponse({ status: 400, description: 'No se envió ninguna imagen' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({ status: 404, description: 'Perfil no encontrado' })
+  @RequiredPermission('profile', 'update')
   @Post('avatar')
   @UseInterceptors(FileInterceptor('file'))
   uploadAvatar(
@@ -228,6 +234,7 @@ export class ProfileController {
   })
   @ApiResponse({ status: 200, description: 'Avatar vinculado exitosamente' })
   @ApiResponse({ status: 404, description: 'El archivo no existe en MinIO' })
+  @RequiredPermission('profile', 'read')
   @Get('avatars/available')
   async listAvailableAvatars(@AuthUserId() usersId: number) {
     return this.profileService.listAvailableAvatars(usersId);
@@ -257,6 +264,7 @@ export class ProfileController {
   })
   @ApiResponse({ status: 200, description: 'Avatar vinculado exitosamente' })
   @ApiResponse({ status: 404, description: 'El archivo no existe en MinIO' })
+  @RequiredPermission('profile', 'update')
   @Patch('avatar/select')
   async selectExistingAvatar(
     @AuthUserId() usersId: number,

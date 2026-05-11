@@ -7,6 +7,7 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -18,6 +19,8 @@ import {
   ApiBody,
 } from '@nestjs/swagger';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
+import { JwtAuthGuard } from 'src/identity/auth/guards/jwt-auth.guard';
+import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 import { ClientService } from './client.service';
 import { CreateClientDto } from './dto/create-client.dto';
 import { UpdateClientDto } from './dto/update-client.dto';
@@ -25,6 +28,7 @@ import { FilterClientDto } from './dto/filter-client.dto';
 
 @ApiTags('clients')
 @ApiBearerAuth()
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('clients')
 export class ClientController {
   constructor(private readonly clientService: ClientService) {}
@@ -37,6 +41,7 @@ export class ClientController {
     description: 'Retorna lista de tipos de identificación para formularios',
   })
   @ApiResponse({ status: 200, description: 'Lista de identificaciones' })
+  @RequiredPermission('clientes', 'read')
   @Get('identification-types')
   findAllIdentificaciones() {
     return this.clientService.findAllIdentificaciones();

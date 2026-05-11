@@ -5,6 +5,8 @@ import {
   IsEnum,
   IsDateString,
   IsArray,
+  ArrayNotEmpty,
+  IsNumberString,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
@@ -78,7 +80,8 @@ export class CreateRouteDto {
     example: ['1', '3', '5', '7'],
   })
   @IsArray()
-  @IsNotEmpty()
+  @ArrayNotEmpty()
+  @IsNumberString({}, { each: true })
   @Type(() => String)
   lecturaIds!: string[];
 }

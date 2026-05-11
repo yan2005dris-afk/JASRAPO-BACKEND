@@ -4,6 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
+import { EstadoGenerico } from 'src/generated/prisma/client';
 import { CreateRouteDto } from '../dto/create-route.dto';
 import { RouteEntity } from '../types/route.entity';
 import { RouteMapper } from '../types/mappers';
@@ -23,8 +24,8 @@ export class CreateRouteUseCase {
       throw new NotFoundException('Operario no encontrado');
     }
 
-    // Rol operador = 5
-    if (operario.rol?.rolId !== 5) {
+    // Rol operador = 'operadores'
+    if (operario.rol?.nombre !== 'operadores') {
       throw new BadRequestException('Solo se pueden asignar operadores');
     }
 
@@ -55,6 +56,11 @@ export class CreateRouteUseCase {
     // 4. Validar lecturas
     const lecturaIds = createDto.lecturaIds.map((id) => BigInt(id));
 
+    const estadoContratoEsperado =
+      createDto.tipoRuta === 'TOMA_LECTURA'
+        ? EstadoGenerico.ACTIVO
+        : EstadoGenerico.RECONEXION;
+
     const lecturasExistentes = await this.prisma.lecturas.findMany({
       where: {
         lecturaId: { in: lecturaIds },
@@ -63,6 +69,12 @@ export class CreateRouteUseCase {
           in: ['PENDIENTE', 'POR_REVISION'],
         },
         deletedAt: null,
+        contrato: {
+          estado: estadoContratoEsperado,
+          comunidadId: createDto.comunidadId,
+          ...(createDto.sectorId && { sectorId: createDto.sectorId }),
+          deletedAt: null,
+        },
       },
       include: {
         contrato: true,
@@ -72,18 +84,19 @@ export class CreateRouteUseCase {
     // Validar que todas existan
     if (lecturasExistentes.length !== lecturaIds.length) {
       throw new BadRequestException(
-        'Una o más lecturas no están disponibles para asignar',
+        'Una o más lecturas no están disponibles para asignar, pertenecen a otra comunidad/sector, o su contrato no tiene el estado requerido',
       );
     }
 
-    // Validar contratos activos
+    // Validar contratos (respaldo por si Prisma devuelve sin contrato)
     const contratosInvalidos = lecturasExistentes.some(
-      (lectura) => !lectura.contrato || lectura.contrato.estado !== 'ACTIVO',
+      (lectura) =>
+        !lectura.contrato || lectura.contrato.estado !== estadoContratoEsperado,
     );
 
     if (contratosInvalidos) {
       throw new BadRequestException(
-        'Una o más lecturas pertenecen a contratos no activos',
+        `Una o más lecturas pertenecen a contratos que no están en estado ${estadoContratoEsperado}`,
       );
     }
 

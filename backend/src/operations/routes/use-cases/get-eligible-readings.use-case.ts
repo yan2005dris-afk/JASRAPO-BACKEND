@@ -85,12 +85,13 @@ export class GetEligibleReadingsUseCase {
     };
 
     // Búsqueda
-    if (search?.trim()) {
+    const q = search?.trim();
+    if (q) {
       where.OR = [
         {
           contrato: {
             numeroGuia: {
-              contains: search,
+              contains: q,
               mode: 'insensitive',
             },
           },
@@ -100,7 +101,7 @@ export class GetEligibleReadingsUseCase {
           contrato: {
             cliente: {
               nombres: {
-                contains: search,
+                contains: q,
                 mode: 'insensitive',
               },
             },
@@ -111,7 +112,7 @@ export class GetEligibleReadingsUseCase {
           contrato: {
             cliente: {
               apellidos: {
-                contains: search,
+                contains: q,
                 mode: 'insensitive',
               },
             },

@@ -24,11 +24,17 @@ export class UpdateRouteUseCase {
     const rutaActualizada = await this.prisma.rutas.update({
       where: { rutaId },
       data: {
-        ...(updateDto.nombre && { nombre: updateDto.nombre }),
-        ...(updateDto.descripcion && { descripcion: updateDto.descripcion }),
-        ...(updateDto.estado && { estado: updateDto.estado as EstadoRuta }),
-        ...(updateDto.fechaPlanificada && {
-          fechaPlanificada: new Date(updateDto.fechaPlanificada),
+        ...(updateDto.nombre !== undefined && { nombre: updateDto.nombre }),
+        ...(updateDto.descripcion !== undefined && {
+          descripcion: updateDto.descripcion,
+        }),
+        ...(updateDto.estado !== undefined && {
+          estado: updateDto.estado as EstadoRuta,
+        }),
+        ...(updateDto.fechaPlanificada !== undefined && {
+          fechaPlanificada: updateDto.fechaPlanificada
+            ? new Date(updateDto.fechaPlanificada)
+            : null,
         }),
       },
     });

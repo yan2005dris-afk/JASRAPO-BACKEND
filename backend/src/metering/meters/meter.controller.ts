@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { MeterService } from './meter.service';
 import { CreateMeterDto } from './dto/create-meter.dto';
@@ -24,9 +25,12 @@ import {
   ApiBody,
 } from '@nestjs/swagger';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
+import { JwtAuthGuard } from 'src/identity/auth/guards/jwt-auth.guard';
+import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 
 @ApiTags('meters')
 @ApiBearerAuth()
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('meters')
 export class MeterController {
   constructor(private readonly meterService: MeterService) {}
@@ -43,6 +47,7 @@ export class MeterController {
     description: 'Lista de estados',
     type: [EstadoMedidorResponseDto],
   })
+  @RequiredPermission('meters', 'read')
   @Get('status')
   findAllEstados(): Promise<EstadoMedidorResponseDto[]> {
     return this.meterService.findAllEstados();

@@ -15,6 +15,8 @@ import {
   ApiResponse,
   ApiQuery,
   ApiParam,
+  ApiExtraModels,
+  getSchemaPath,
 } from '@nestjs/swagger';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
 import { RoutesService } from './routes.service';
@@ -26,6 +28,7 @@ import { ReadingForRouteEntity } from './types/reading-for-route.entity';
 
 @ApiTags('routes')
 @ApiBearerAuth()
+@ApiExtraModels(RouteEntity, ReadingForRouteEntity)
 @Controller('routes')
 export class RoutesController {
   constructor(private readonly routesService: RoutesService) {}
@@ -48,7 +51,15 @@ export class RoutesController {
   @ApiResponse({
     status: 200,
     description: 'Lecturas elegibles obtenidas',
-    isArray: true,
+    schema: {
+      properties: {
+        data: {
+          type: 'array',
+          items: { $ref: getSchemaPath(ReadingForRouteEntity) },
+        },
+        total: { type: 'number' },
+      },
+    },
   })
   @RequiredPermission('rutas', 'read')
   @Get('eligible-readings')
@@ -92,7 +103,15 @@ export class RoutesController {
   @ApiResponse({
     status: 200,
     description: 'Lista de rutas',
-    type: [RouteEntity],
+    schema: {
+      properties: {
+        data: {
+          type: 'array',
+          items: { $ref: getSchemaPath(RouteEntity) },
+        },
+        total: { type: 'number' },
+      },
+    },
   })
   @RequiredPermission('rutas', 'read')
   @Get()
