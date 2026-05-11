@@ -5,7 +5,7 @@ import type {
   DebtSummaryResponseDto,
   PrefacturaDeudaItemDto,
 } from '../dto/debt-summary-response.dto';
-import { EstadoPrefactura } from '@generated/prisma/browser';
+import type { EstadoPrefactura } from '@generated/prisma/enums';
 
 /**
  * Estados de prefactura que se consideran deuda pendiente.

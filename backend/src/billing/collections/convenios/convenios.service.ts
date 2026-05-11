@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { CreateConvenioDto } from './dto/create-convenio.dto';
 import { ConvenioResponseDto } from './dto/convenio-response.dto';
@@ -106,10 +106,16 @@ export class ConveniosService {
       select: { estadoConvenioId: true },
     });
 
+    if (!estadoAnulado) {
+      throw new InternalServerErrorException(
+        'El estado de convenio ANULADO no se encuentra configurado en el sistema.',
+      );
+    }
+
     const updated = await this.prisma.convenios.update({
       where: { convenioId: BigInt(id) },
       data: {
-        estadoConvenioId: estadoAnulado!.estadoConvenioId,
+        estadoConvenioId: estadoAnulado.estadoConvenioId,
         deletedAt: new Date(),
       },
       select: safeConvenioWithCuotasSelect,

@@ -94,11 +94,15 @@ VALUES
 ON CONFLICT ("codigo") DO NOTHING;
 
 -- Backfill: asignar estado_convenio_id a partir del valor del enum anterior
--- El enum original tenía: PREPARADO, PENDIENTE_ABONO, ACTIVO, CUMPLIDO, ANULADO, VENCIDO
+-- Mapeo explícito de valores heredados: FINALIZADO -> CUMPLIDO, INCUMPLIDO -> VENCIDO
 UPDATE "convenios" c
 SET "estado_convenio_id" = ec."estado_convenio_id"
 FROM "estado_convenio" ec
-WHERE ec."codigo" = c."estado_convenio"::TEXT;
+WHERE ec."codigo" = CASE 
+    WHEN c."estado_convenio"::TEXT = 'FINALIZADO' THEN 'CUMPLIDO'
+    WHEN c."estado_convenio"::TEXT = 'INCUMPLIDO' THEN 'VENCIDO'
+    ELSE c."estado_convenio"::TEXT
+END;
 
 -- Backfill: asignar estado_cuota_convenio_id a partir del enum anterior en cuota_convenio
 UPDATE "cuota_convenio" cc
