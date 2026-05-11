@@ -23,7 +23,6 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/identity/auth/guards/jwt-auth.guard';
-import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 import { UploadFileUseCase } from './use-cases/upload-file.use-case';
 import { GetFileUrlUseCase } from './use-cases/get-file-url.use-case';
 import { ListFilesUseCase } from './use-cases/list-files.use-case';

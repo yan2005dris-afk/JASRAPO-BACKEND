@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { APP_GUARD } from '@nestjs/core';
-import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { IdentityModule } from './identity/identity.module';
 import { DatabaseModule } from './infrastructure/database/prisma.module';
 import { MeteringModule } from './metering/metering.module';

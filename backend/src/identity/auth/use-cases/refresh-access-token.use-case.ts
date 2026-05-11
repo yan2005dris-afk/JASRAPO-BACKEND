@@ -82,7 +82,7 @@ export class RefreshAccessTokenUseCase {
   }
 
   private buildTokenInfo(token: string) {
-    const decoded = this.jwtService.decode(token) as any;
+    const decoded = this.jwtService.decode(token);
     const toDate = (ts?: number) =>
       ts ? EcuadorTimezoneUtil.formatAsEcuadorISO(new Date(ts * 1000)) : null;
 
