@@ -1,79 +1,77 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { ConveniosService } from './convenios.service';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { CreateConvenioUseCase } from './use-cases/create-convenio.use-case';
 import { FindOneConvenioUseCase } from './use-cases/find-one-convenio.use-case';
 import { GetDebtSummaryUseCase } from './use-cases/get-debt-summary.use-case';
+import { ConveniosService } from './convenios.service';
 
 describe('ConveniosService', () => {
   let service: ConveniosService;
-  let createUseCase: CreateConvenioUseCase;
-  let findOneUseCase: FindOneConvenioUseCase;
-  let getDebtSummaryUseCase: GetDebtSummaryUseCase;
 
-  // ── Shared mock data ───────────────────────────────────────────────────────
-
-  const mockConvenioFromDb = {
-    convenioId: BigInt(1),
-    contratoId: BigInt(1),
-    numeroCuotas: 6,
-    abonoInicial: 50,
-    deudaTotal: 215.75,
-    diasMoraActual: 30,
-    estado: {
-      estadoConvenioId: BigInt(1),
-      codigo: 'PREPARADO',
-      nombre: 'Preparado',
-    },
-    fechaAprobacion: null,
-    fechaPrimerPago: new Date('2026-06-01'),
-    fechaProximoPago: new Date('2026-06-01'),
-    montoPagadoActual: 0,
-    motivo: null,
-    createdAt: new Date('2026-05-10'),
-    cuotaConvenio: [],
-  };
-
-  const mockEstadoDb = {
-    estadoConvenioId: BigInt(1),
-    codigo: 'PREPARADO',
-    nombre: 'Preparado',
-    descripcion: 'Convenio en preparación',
-    orden: 1,
-    activo: true,
-  };
-
-  const mockEstadoCuotaDb = {
-    estadoCuotaConvenioId: BigInt(1),
-    codigo: 'PENDIENTE',
-    nombre: 'Pendiente',
-    descripcion: 'Cuota pendiente de pago',
-    orden: 1,
-    activo: true,
-  };
-
-  const mockPrisma = {
-    estadoConvenio: { findMany: jest.fn() },
-    estadoCuotaConvenio: { findMany: jest.fn() },
-    convenios: {
+  const mockPrismaService = {
+    estadoConvenio: {
       findMany: jest.fn(),
       findUnique: jest.fn(),
+    },
+    estadoCuotaConvenio: {
+      findMany: jest.fn(),
+    },
+    convenios: {
+      findMany: jest.fn(),
       update: jest.fn(),
     },
-    cuotaConvenio: { findMany: jest.fn() },
+    cuotaConvenio: {
+      findMany: jest.fn(),
+    },
   };
 
   const mockCreateUseCase = { execute: jest.fn() };
   const mockFindOneUseCase = { execute: jest.fn() };
   const mockGetDebtSummaryUseCase = { execute: jest.fn() };
 
+  const convenioRecord = {
+    convenioId: 1n,
+    contratoId: 10n,
+    numeroCuotas: 2,
+    abonoInicial: 5,
+    deudaTotal: 100,
+    mesesMoraActual: 1,
+    estado: { estadoConvenioId: 1n, codigo: 'PREPARADO', nombre: 'Preparado' },
+    fechaAprobacion: null,
+    fechaPrimerPago: new Date('2026-06-01T00:00:00.000Z'),
+    fechaProximoPago: new Date('2026-06-01T00:00:00.000Z'),
+    montoPagadoActual: 0,
+    motivo: null,
+    createdAt: new Date('2026-05-01T00:00:00.000Z'),
+    cuotaConvenio: [],
+  };
+
+  const cuotaRecord = {
+    cuotaConvenioId: 1n,
+    convenioId: 1n,
+    numeroCuota: 1,
+    valorCuota: 50,
+    fechaVencimiento: new Date('2026-06-01T00:00:00.000Z'),
+    estado: {
+      estadoCuotaConvenioId: 1n,
+      codigo: 'PENDIENTE',
+      nombre: 'Pendiente',
+    },
+    fechaPago: null,
+    montoPagado: 0,
+    saldoPendiente: 50,
+    diasRetraso: 0,
+    interesMoraAplicado: 0,
+    pagoCompleto: false,
+    fechaPagoAnticipado: null,
+  };
+
   beforeEach(async () => {
-    jest.clearAllMocks();
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ConveniosService,
-        { provide: PrismaService, useValue: mockPrisma },
+        { provide: PrismaService, useValue: mockPrismaService },
         { provide: CreateConvenioUseCase, useValue: mockCreateUseCase },
         { provide: FindOneConvenioUseCase, useValue: mockFindOneUseCase },
         { provide: GetDebtSummaryUseCase, useValue: mockGetDebtSummaryUseCase },
@@ -81,167 +79,173 @@ describe('ConveniosService', () => {
     }).compile();
 
     service = module.get<ConveniosService>(ConveniosService);
-    createUseCase = module.get<CreateConvenioUseCase>(CreateConvenioUseCase);
-    findOneUseCase = module.get<FindOneConvenioUseCase>(FindOneConvenioUseCase);
-    getDebtSummaryUseCase = module.get<GetDebtSummaryUseCase>(
-      GetDebtSummaryUseCase,
-    );
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {
     expect(service).toBeDefined();
   });
 
-  // ── Catálogos ──────────────────────────────────────────────────────────────
+  it('should return active convenio statuses mapped to DTOs', async () => {
+    mockPrismaService.estadoConvenio.findMany.mockResolvedValue([
+      {
+        estadoConvenioId: 1n,
+        codigo: 'ACTIVO',
+        nombre: 'Activo',
+        descripcion: 'En curso',
+        orden: 1,
+      },
+    ]);
 
-  describe('findAllEstadosConvenio', () => {
-    it('should return mapped estado convenio catalog', async () => {
-      mockPrisma.estadoConvenio.findMany.mockResolvedValue([mockEstadoDb]);
+    const result = await service.findAllEstadosConvenio();
 
-      const result = await service.findAllEstadosConvenio();
+    expect(result).toEqual([
+      {
+        estadoConvenioId: 1,
+        codigo: 'ACTIVO',
+        nombre: 'Activo',
+        descripcion: 'En curso',
+        orden: 1,
+      },
+    ]);
+    expect(mockPrismaService.estadoConvenio.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { activo: true },
+        orderBy: { orden: 'asc' },
+      }),
+    );
+  });
 
-      expect(result).toHaveLength(1);
-      expect(result[0].codigo).toBe('PREPARADO');
-      expect(result[0].estadoConvenioId).toBe(1); // Number, not BigInt
-      expect(mockPrisma.estadoConvenio.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({ where: { activo: true } }),
-      );
+  it('should return active installment statuses mapped to DTOs', async () => {
+    mockPrismaService.estadoCuotaConvenio.findMany.mockResolvedValue([
+      {
+        estadoCuotaConvenioId: 2n,
+        codigo: 'PAGADA',
+        nombre: 'Pagada',
+        descripcion: null,
+        orden: 2,
+      },
+    ]);
+
+    const result = await service.findAllEstadosCuotaConvenio();
+
+    expect(result).toEqual([
+      {
+        estadoCuotaConvenioId: 2,
+        codigo: 'PAGADA',
+        nombre: 'Pagada',
+        descripcion: null,
+        orden: 2,
+      },
+    ]);
+  });
+
+  it('should delegate debt summary converting contratoId to BigInt', async () => {
+    mockGetDebtSummaryUseCase.execute.mockResolvedValue({ contratoId: '10' });
+
+    const result = await service.getDebtSummary('10');
+
+    expect(result).toEqual({ contratoId: '10' });
+    expect(mockGetDebtSummaryUseCase.execute).toHaveBeenCalledWith(10n);
+  });
+
+  it('should create convenio through use case and map response', async () => {
+    mockCreateUseCase.execute.mockResolvedValue(convenioRecord);
+
+    const result = await service.create({
+      contratoId: '10',
+      numeroCuotas: 2,
+      fechaPrimerPago: '2026-06-01',
     });
 
-    it('should return empty array when no estados configured', async () => {
-      mockPrisma.estadoConvenio.findMany.mockResolvedValue([]);
-      const result = await service.findAllEstadosConvenio();
-      expect(result).toEqual([]);
+    expect(result).toMatchObject({
+      convenioId: '1',
+      contratoId: '10',
+      numeroCuotas: 2,
+      cuotas: [],
     });
   });
 
-  describe('findAllEstadosCuotaConvenio', () => {
-    it('should return mapped estado cuota catalog', async () => {
-      mockPrisma.estadoCuotaConvenio.findMany.mockResolvedValue([
-        mockEstadoCuotaDb,
-      ]);
+  it('should find all convenios without contrato filter', async () => {
+    mockPrismaService.convenios.findMany.mockResolvedValue([convenioRecord]);
 
-      const result = await service.findAllEstadosCuotaConvenio();
+    const result = await service.findAll();
 
-      expect(result).toHaveLength(1);
-      expect(result[0].codigo).toBe('PENDIENTE');
-      expect(result[0].estadoCuotaConvenioId).toBe(1); // Number, not BigInt
-    });
+    expect(result).toHaveLength(1);
+    expect(mockPrismaService.convenios.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { deletedAt: null },
+        orderBy: { createdAt: 'desc' },
+      }),
+    );
   });
 
-  // ── Deuda ─────────────────────────────────────────────────────────────────
+  it('should find all convenios by contrato filter', async () => {
+    mockPrismaService.convenios.findMany.mockResolvedValue([convenioRecord]);
 
-  describe('getDebtSummary', () => {
-    it('should delegate to GetDebtSummaryUseCase', async () => {
-      const mockSummary = { contratoId: '1', deudaTotal: 200, prefacturas: [] };
-      mockGetDebtSummaryUseCase.execute.mockResolvedValue(mockSummary);
+    await service.findAll('10');
 
-      const result = await service.getDebtSummary('1');
-
-      expect(result).toEqual(mockSummary);
-      expect(getDebtSummaryUseCase.execute).toHaveBeenCalledWith(BigInt('1'));
-    });
+    expect(mockPrismaService.convenios.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { deletedAt: null, contratoId: 10n },
+      }),
+    );
   });
 
-  // ── create ─────────────────────────────────────────────────────────────────
+  it('should find one convenio through use case and map response', async () => {
+    mockFindOneUseCase.execute.mockResolvedValue(convenioRecord);
 
-  describe('create', () => {
-    it('should delegate to CreateConvenioUseCase and return mapped response', async () => {
-      const dto = {
-        contratoId: '1',
-        numeroCuotas: 6,
-        abonoInicial: 50,
-        fechaPrimerPago: '2026-06-01',
-      };
-      mockCreateUseCase.execute.mockResolvedValue(mockConvenioFromDb);
+    const result = await service.findOne('1');
 
-      const result = await service.create(dto);
-
-      expect(result.convenioId).toBe('1');
-      expect(result.contratoId).toBe('1');
-      expect(result.estado.codigo).toBe('PREPARADO');
-      expect(createUseCase.execute).toHaveBeenCalledWith(dto);
-    });
+    expect(result.convenioId).toBe('1');
+    expect(mockFindOneUseCase.execute).toHaveBeenCalledWith(1n);
   });
 
-  // ── findAll ────────────────────────────────────────────────────────────────
+  it('should validate convenio before returning installments', async () => {
+    mockFindOneUseCase.execute.mockResolvedValue(convenioRecord);
+    mockPrismaService.cuotaConvenio.findMany.mockResolvedValue([cuotaRecord]);
 
-  describe('findAll', () => {
-    it('should return all convenios when no contratoId filter', async () => {
-      mockPrisma.convenios.findMany.mockResolvedValue([mockConvenioFromDb]);
+    const result = await service.findCuotas('1');
 
-      const result = await service.findAll();
-
-      expect(result).toHaveLength(1);
-      expect(result[0].convenioId).toBe('1');
-      expect(mockPrisma.convenios.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({ where: { deletedAt: null } }),
-      );
-    });
-
-    it('should filter by contratoId when provided', async () => {
-      mockPrisma.convenios.findMany.mockResolvedValue([mockConvenioFromDb]);
-
-      await service.findAll('1');
-
-      expect(mockPrisma.convenios.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: expect.objectContaining({ contratoId: BigInt('1') }),
-        }),
-      );
-    });
+    expect(result).toEqual([
+      expect.objectContaining({
+        cuotaConvenioId: '1',
+        convenioId: '1',
+        numeroCuota: 1,
+      }),
+    ]);
+    expect(mockFindOneUseCase.execute).toHaveBeenCalledWith(1n);
+    expect(mockPrismaService.cuotaConvenio.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { convenioId: 1n, deletedAt: null },
+        orderBy: { numeroCuota: 'asc' },
+      }),
+    );
   });
 
-  // ── findOne ────────────────────────────────────────────────────────────────
-
-  describe('findOne', () => {
-    it('should delegate to FindOneConvenioUseCase and return mapped response', async () => {
-      mockFindOneUseCase.execute.mockResolvedValue(mockConvenioFromDb);
-
-      const result = await service.findOne('1');
-
-      expect(result.convenioId).toBe('1');
-      expect(findOneUseCase.execute).toHaveBeenCalledWith(BigInt('1'));
+  it('should cancel convenio with ANULADO status and soft delete date', async () => {
+    mockFindOneUseCase.execute.mockResolvedValue(convenioRecord);
+    mockPrismaService.estadoConvenio.findUnique.mockResolvedValue({
+      estadoConvenioId: 9n,
     });
-  });
+    mockPrismaService.convenios.update.mockResolvedValue({
+      ...convenioRecord,
+      estado: { estadoConvenioId: 9n, codigo: 'ANULADO', nombre: 'Anulado' },
+    });
 
-  // ── cancel (anular) ────────────────────────────────────────────────────────
+    const result = await service.cancel('1');
 
-  describe('cancel', () => {
-    it('should update estado to ANULADO and set deletedAt', async () => {
-      mockFindOneUseCase.execute.mockResolvedValue(mockConvenioFromDb);
-      mockPrisma.estadoConvenio.findMany.mockResolvedValue([
-        { estadoConvenioId: BigInt(6), codigo: 'ANULADO' },
-      ]);
-
-      // Para findUnique de estadoConvenio ANULADO
-      const prismaFull = mockPrisma as any;
-      if (!prismaFull.estadoConvenio.findUnique) {
-        prismaFull.estadoConvenio.findUnique = jest.fn();
-      }
-      prismaFull.estadoConvenio.findUnique.mockResolvedValue({
-        estadoConvenioId: BigInt(6),
-      });
-
-      mockPrisma.convenios.update.mockResolvedValue({
-        ...mockConvenioFromDb,
-        estado: {
-          estadoConvenioId: BigInt(6),
-          codigo: 'ANULADO',
-          nombre: 'Anulado',
-        },
-        deletedAt: new Date(),
-      });
-
-      const result = await service.cancel('1');
-
-      expect(result.estado.codigo).toBe('ANULADO');
-      expect(mockPrisma.convenios.update).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: { convenioId: BigInt('1') },
-          data: expect.objectContaining({ deletedAt: expect.any(Date) }),
-        }),
-      );
+    expect(result.estado.codigo).toBe('ANULADO');
+    expect(mockPrismaService.convenios.update).toHaveBeenCalledWith({
+      where: { convenioId: 1n },
+      data: {
+        estadoConvenioId: 9n,
+        deletedAt: expect.any(Date),
+      },
+      select: expect.any(Object),
     });
   });
 });

@@ -7,8 +7,8 @@ export class FindOneConvenioUseCase {
   constructor(private readonly prisma: PrismaService) {}
 
   async execute(convenioId: bigint) {
-    const convenio = await this.prisma.convenios.findUnique({
-      where: { convenioId },
+    const convenio = await this.prisma.convenios.findFirst({
+      where: { convenioId, deletedAt: null },
       select: safeConvenioWithCuotasSelect,
     });
 

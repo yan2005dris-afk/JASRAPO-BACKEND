@@ -68,7 +68,7 @@ export function toConvenioResponse(convenio: any): ConvenioResponseDto {
     numeroCuotas: convenio.numeroCuotas,
     abonoInicial: Number(convenio.abonoInicial),
     deudaTotal: Number(convenio.deudaTotal),
-    diasMoraActual: convenio.diasMoraActual,
+    mesesMoraActual: convenio.mesesMoraActual,
     estado: {
       estadoConvenioId: Number(convenio.estado.estadoConvenioId),
       codigo: convenio.estado.codigo,

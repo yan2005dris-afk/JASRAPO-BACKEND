@@ -5,12 +5,17 @@ import type {
   DebtSummaryResponseDto,
   PrefacturaDeudaItemDto,
 } from '../dto/debt-summary-response.dto';
+import { EstadoPrefactura } from '@generated/prisma/browser';
 
 /**
  * Estados de prefactura que se consideran deuda pendiente.
  * Se excluyen: PAGADA, ANULADA, RECHAZADA
  */
-const ESTADOS_DEUDA_PREFACTURA = ['GENERADA', 'EN_REVISION', 'APROBADA'];
+const ESTADOS_DEUDA_PREFACTURA: readonly EstadoPrefactura[] = [
+  'GENERADA',
+  'EN_REVISION',
+  'APROBADA',
+];
 
 @Injectable()
 export class GetDebtSummaryUseCase {
@@ -18,7 +23,7 @@ export class GetDebtSummaryUseCase {
 
   async execute(contratoId: bigint): Promise<DebtSummaryResponseDto> {
     // Verificar que el contrato existe
-    const contrato = await this.prisma.contratos.findUnique({
+    const contrato = await this.prisma.contratos.findFirst({
       where: { contratoId, deletedAt: null },
       select: { contratoId: true },
     });
@@ -35,7 +40,7 @@ export class GetDebtSummaryUseCase {
         contratoId,
         deletedAt: null,
         estado: {
-          in: ESTADOS_DEUDA_PREFACTURA as any[],
+          in: [...ESTADOS_DEUDA_PREFACTURA],
         },
       },
       select: {
@@ -56,7 +61,7 @@ export class GetDebtSummaryUseCase {
       const abono = Number(p.abono);
       const saldoPendiente = Math.max(
         0,
-        Number(p.saldoActual) || totalPagar - abono,
+        Number(p.saldoActual ?? totalPagar - abono),
       );
 
       return {

@@ -22,9 +22,9 @@ export class ConvenioResponseDto {
 
   @ApiProperty({
     example: 3,
-    description: 'Días de mora al momento de crear el convenio',
+    description: 'Meses de mora al momento de crear el convenio',
   })
-  diasMoraActual: number;
+  mesesMoraActual: number;
 
   @ApiProperty({
     description: 'Estado del convenio',

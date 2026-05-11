@@ -38,7 +38,7 @@ export interface IConvenio {
   numeroCuotas: number;
   abonoInicial: any; // Decimal de Prisma
   deudaTotal: any;
-  diasMoraActual: number;
+  mesesMoraActual: number;
   estado: IEstadoConvenio;
   fechaAprobacion: Date | null;
   fechaPrimerPago: Date;
@@ -99,7 +99,7 @@ export const safeConvenioSelect = {
   numeroCuotas: true,
   abonoInicial: true,
   deudaTotal: true,
-  diasMoraActual: true,
+  mesesMoraActual: true,
   estado: {
     select: {
       estadoConvenioId: true,

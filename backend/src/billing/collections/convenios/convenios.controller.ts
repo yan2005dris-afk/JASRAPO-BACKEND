@@ -6,6 +6,7 @@ import {
   Param,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -17,6 +18,8 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
+import { JwtAuthGuard } from 'src/identity/auth/guards/jwt-auth.guard';
+import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 import { ConveniosService } from './convenios.service';
 import { CreateConvenioDto } from './dto/create-convenio.dto';
 import { ConvenioResponseDto } from './dto/convenio-response.dto';
@@ -27,6 +30,7 @@ import { EstadoCuotaConvenioResponseDto } from './dto/estado-cuota-convenio-resp
 
 @ApiTags('convenios')
 @ApiBearerAuth()
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('convenios')
 export class ConveniosController {
   constructor(private readonly conveniosService: ConveniosService) {}
