@@ -1,9 +1,0 @@
-{
-  "typescript.tsdk": "FRONT/node_modules/typescript/lib",
-  "typescript.enablePromptUseWorkspaceTsdk": true,
-  "typescript.preferences.includePackageJsonAutoImports": "on",
-  "eslint.workingDirectories": [
-    "backend"
-  ],
-  "terminal.integrated.fontFamily": "MesloLGS NF, MesloLGM Nerd Font, JetBrainsMono Nerd Font, CaskaydiaCove Nerd Font Mono, monospace"
-}
