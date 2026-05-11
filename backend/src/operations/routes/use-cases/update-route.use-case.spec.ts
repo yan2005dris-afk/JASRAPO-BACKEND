@@ -39,4 +39,33 @@ describe('UpdateRouteUseCase', () => {
       NotFoundException,
     );
   });
+
+  it('should update route successfully with defined fields', async () => {
+    prismaService.rutas.findUnique.mockResolvedValue({ rutaId: 1n });
+    prismaService.rutas.update.mockResolvedValue({ rutaId: 1n, nombre: 'New Name' });
+
+    await useCase.execute(1n, { nombre: 'New Name', descripcion: 'New Desc' });
+
+    expect(prismaService.rutas.update).toHaveBeenCalledWith({
+      where: { rutaId: 1n },
+      data: {
+        nombre: 'New Name',
+        descripcion: 'New Desc',
+      },
+    });
+  });
+
+  it('should pass correct data when fechaPlanificada is set to null vs undefined', async () => {
+    prismaService.rutas.findUnique.mockResolvedValue({ rutaId: 1n });
+    prismaService.rutas.update.mockResolvedValue({ rutaId: 1n });
+
+    await useCase.execute(1n, { fechaPlanificada: null, nombre: undefined } as any);
+
+    expect(prismaService.rutas.update).toHaveBeenCalledWith({
+      where: { rutaId: 1n },
+      data: {
+        fechaPlanificada: null,
+      },
+    });
+  });
 });

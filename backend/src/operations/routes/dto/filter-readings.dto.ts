@@ -1,7 +1,7 @@
 import {
   IsNotEmpty,
   IsOptional,
-  IsEnum,
+  IsIn,
   IsNumber,
   IsString,
 } from 'class-validator';
@@ -14,7 +14,7 @@ export class FilterReadingsDto {
     enum: ['TOMA_LECTURA', 'RECONEXION'],
   })
   @IsNotEmpty()
-  @IsEnum(['TOMA_LECTURA', 'RECONEXION'])
+  @IsIn(['TOMA_LECTURA', 'RECONEXION'])
   tipoRuta!: 'TOMA_LECTURA' | 'RECONEXION';
 
   @ApiProperty({

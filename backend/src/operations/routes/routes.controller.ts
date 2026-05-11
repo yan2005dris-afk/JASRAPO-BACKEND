@@ -26,6 +26,7 @@ import { RoutesService } from './routes.service';
 import { CreateRouteDto } from './dto/create-route.dto';
 import { UpdateRouteDto } from './dto/update-route.dto';
 import { FilterReadingsDto } from './dto/filter-readings.dto';
+import { FindAllRoutesDto } from './dto/find-all-routes.dto';
 import { RouteEntity } from './types/route.entity';
 import { ReadingForRouteEntity } from './types/reading-for-route.entity';
 
@@ -101,9 +102,6 @@ export class RoutesController {
     summary: 'Listar rutas',
     description: 'Retorna lista de rutas con paginación',
   })
-  @ApiQuery({ name: 'skip', type: Number, required: false })
-  @ApiQuery({ name: 'take', type: Number, required: false })
-  @ApiQuery({ name: 'estado', type: String, required: false })
   @ApiResponse({
     status: 200,
     description: 'Lista de rutas',
@@ -120,16 +118,14 @@ export class RoutesController {
   @RequiredPermission('rutas', 'read')
   @Get()
   async findAll(
-    @Query('skip') skip?: number,
-    @Query('take') take?: number,
-    @Query('estado') estado?: string,
+    @Query() query: FindAllRoutesDto,
   ): Promise<{ data: RouteEntity[]; total: number }> {
     const where: any = {};
-    if (estado) where.estado = estado;
+    if (query.estado) where.estado = query.estado;
 
     return this.routesService.findAll({
-      skip: skip ? Number(skip) : undefined,
-      take: take ? Number(take) : undefined,
+      skip: query.skip,
+      take: query.take,
       where,
     });
   }

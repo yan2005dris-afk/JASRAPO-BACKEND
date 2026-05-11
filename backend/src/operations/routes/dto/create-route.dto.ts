@@ -2,7 +2,7 @@ import {
   IsNotEmpty,
   IsNumber,
   IsOptional,
-  IsEnum,
+  IsIn,
   IsDateString,
   IsArray,
   ArrayNotEmpty,
@@ -42,7 +42,7 @@ export class CreateRouteDto {
     example: 'TOMA_LECTURA',
   })
   @IsNotEmpty()
-  @IsEnum(['TOMA_LECTURA', 'RECONEXION'])
+  @IsIn(['TOMA_LECTURA', 'RECONEXION'])
   tipoRuta!: 'TOMA_LECTURA' | 'RECONEXION';
 
   @ApiProperty({
