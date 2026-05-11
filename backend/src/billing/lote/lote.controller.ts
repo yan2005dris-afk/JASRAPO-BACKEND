@@ -5,12 +5,17 @@ import {
   Param,
   ParseIntPipe,
   Post,
+  UseGuards,
 } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { JwtAuthGuard } from 'src/identity/auth/guards/jwt-auth.guard';
+import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 import { GenerarLoteDto } from './dto/generar-lote.dto';
 import { LoteService } from './lote.service';
 
 @ApiTags('Lotes')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('lotes')
 export class LoteController {
   constructor(private readonly loteService: LoteService) {}

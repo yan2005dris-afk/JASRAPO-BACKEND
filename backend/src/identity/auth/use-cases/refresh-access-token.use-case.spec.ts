@@ -32,6 +32,7 @@ describe('RefreshAccessTokenUseCase', () => {
           provide: JwtService,
           useValue: {
             signAsync: jest.fn(),
+            decode: jest.fn(),
           },
         },
         {
@@ -83,6 +84,7 @@ describe('RefreshAccessTokenUseCase', () => {
         email: 'test@test.com',
       });
       jwtService.signAsync.mockResolvedValue('new-token');
+      jwtService.decode.mockReturnValue({ iat: 100, exp: 200 });
       (bcrypt.hash as jest.Mock).mockResolvedValue('new-hash');
 
       const result = await useCase.execute('sid', 'rt', 'ip', 'ua', 1);
@@ -90,6 +92,12 @@ describe('RefreshAccessTokenUseCase', () => {
       expect(result).toEqual({
         accessToken: 'new-token',
         refreshToken: 'new-token',
+        accessTokenInfo: {
+          iat: 100,
+          exp: 200,
+          iatDate: expect.any(String),
+          expDate: expect.any(String),
+        },
       });
       expect(sessionsService.updateSession).toHaveBeenCalled();
     });

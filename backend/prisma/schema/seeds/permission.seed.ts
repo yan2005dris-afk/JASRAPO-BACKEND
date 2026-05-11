@@ -1,6 +1,7 @@
 import type { Permisos, PrismaClient } from 'src/generated/prisma/client';
 
 export async function seedPermissions(prisma: PrismaClient) {
+<<<<<<< HEAD
   const resources = [
     'clientes',
     'contratos',
@@ -31,6 +32,50 @@ export async function seedPermissions(prisma: PrismaClient) {
     'files',
     'metrics',
   ];
+=======
+    const resources = [
+        "clientes",
+        "contratos",
+        "contracts", // Alias para coincidir con decoradores
+        "medidores",
+        "meters",    // Alias para coincidir con decoradores
+        "tarifas",
+        "lecturas",
+        "reading-anomalies",
+        "comunidades",
+        "sectores",
+        "lote",
+        "lotes",
+        "convenios",
+        "planillas",
+        "facturacion_electronica",
+        "recaudacion",
+        "notas_credito",
+        "envio_facturas",
+        "estado_cuenta",
+        "recaudacion_morosidad",
+        "consumo_zonas",
+        "dashboard",
+        "users",
+        "roles",
+        "permissions",
+        "profile",
+        "files",
+        "metrics"
+    ];
+
+    const actions = ["read", "create", "update", "delete"];
+    
+    const permissionsToCreate: { resource: string, action: string }[] = [];
+
+    for (const resource of resources) {
+        for (const action of actions) {
+            permissionsToCreate.push({ resource, action });
+        }
+    }
+    
+    const savedPermissions: Permisos[] = [];
+>>>>>>> 5362066b9f4b7bea8a2acdc52c54af2da702f42e
 
   const actions = ['read', 'create', 'update', 'delete'];
 

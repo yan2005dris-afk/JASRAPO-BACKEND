@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { ReadingAnomalyService } from './reading-anomaly.service';
 import { CreateReadingAnomalyDto } from './dto/create-reading-anomaly.dto';
@@ -23,9 +24,12 @@ import {
   ApiBody,
 } from '@nestjs/swagger';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
+import { JwtAuthGuard } from 'src/identity/auth/guards/jwt-auth.guard';
+import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 
 @ApiTags('reading-anomalies')
 @ApiBearerAuth()
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('reading-anomalies')
 export class ReadingAnomalyController {
   constructor(private readonly readingAnomalyService: ReadingAnomalyService) {}

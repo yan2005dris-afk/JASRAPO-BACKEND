@@ -10,6 +10,7 @@ import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { SessionsService } from '../../sessions/sessions.service';
 import * as bcrypt from 'bcryptjs';
 import { REFRESH_TOKEN_MAX_AGE_MS } from 'src/infrastructure/config/app.constants';
+import { EcuadorTimezoneUtil } from 'src/infrastructure/common/util/ecuador-timezone-backend.util';
 import type { StringValue } from 'ms';
 
 @Injectable()
@@ -73,7 +74,24 @@ export class RefreshAccessTokenUseCase {
       throw new InternalServerErrorException('Error al actualizar sesión.');
     }
 
-    return tokens;
+    return {
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+      accessTokenInfo: this.buildTokenInfo(tokens.accessToken),
+    };
+  }
+
+  private buildTokenInfo(token: string) {
+    const decoded = this.jwtService.decode(token);
+    const toDate = (ts?: number) =>
+      ts ? EcuadorTimezoneUtil.formatAsEcuadorISO(new Date(ts * 1000)) : null;
+
+    return {
+      iat: decoded?.iat,
+      exp: decoded?.exp,
+      iatDate: toDate(decoded?.iat),
+      expDate: toDate(decoded?.exp),
+    };
   }
 
   private async generateJwtToken(

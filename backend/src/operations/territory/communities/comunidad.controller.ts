@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { ComunidadService } from './comunidad.service';
 import { CreateComunidadDto } from './dto/create-comunidad.dto';
@@ -21,9 +22,12 @@ import {
   ApiQuery,
 } from '@nestjs/swagger';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
+import { JwtAuthGuard } from 'src/identity/auth/guards/jwt-auth.guard';
+import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 
 @ApiTags('communities')
 @ApiBearerAuth()
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('communities')
 export class ComunidadController {
   constructor(private readonly comunidadService: ComunidadService) {}

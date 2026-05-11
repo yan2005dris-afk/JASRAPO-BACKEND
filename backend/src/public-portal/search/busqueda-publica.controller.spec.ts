@@ -3,6 +3,7 @@ import { Test } from '@nestjs/testing';
 import { BusquedaPublicaController } from './busqueda-publica.controller';
 import { BusquedaPublicaService } from './busqueda-publica.service';
 import { PublicSearchUseCase } from './use-cases/public-search.use-case';
+import { ThrottlerGuard } from '@nestjs/throttler';
 
 describe('BusquedaPublicaController', () => {
   let controller: BusquedaPublicaController;
@@ -16,7 +17,10 @@ describe('BusquedaPublicaController', () => {
         BusquedaPublicaService,
         { provide: PublicSearchUseCase, useValue: mockPublicSearchUseCase },
       ],
-    }).compile();
+    })
+      .overrideGuard(ThrottlerGuard)
+      .useValue({ canActivate: () => true })
+      .compile();
 
     controller = module.get<BusquedaPublicaController>(
       BusquedaPublicaController,
