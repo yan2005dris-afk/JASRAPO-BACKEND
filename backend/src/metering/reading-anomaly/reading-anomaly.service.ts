@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Prisma } from 'src/generated/prisma/client';
 import { CreateReadingAnomalyDto } from './dto/create-reading-anomaly.dto';
 import { UpdateReadingAnomalyDto } from './dto/update-reading-anomaly.dto';
-import { ReadingAnomalyEntity } from './entities/reading-anomaly.entity';
+import { IResponseReadingAnomaly } from './types/IResponseReadingAnomaly';
 import { CreateReadingAnomalyUseCase } from './use-cases/create-reading-anomaly.use-case';
 import { FindAllReadingAnomaliesUseCase } from './use-cases/find-all-reading-anomalies.use-case';
 import { FindOneReadingAnomalyUseCase } from './use-cases/find-one-reading-anomaly.use-case';
@@ -21,7 +21,7 @@ export class ReadingAnomalyService {
 
   async create(
     createDto: CreateReadingAnomalyDto,
-  ): Promise<ReadingAnomalyEntity> {
+  ): Promise<IResponseReadingAnomaly> {
     return this.createUseCase.execute(createDto);
   }
 
@@ -29,18 +29,18 @@ export class ReadingAnomalyService {
     skip?: number;
     take?: number;
     where?: Prisma.LecturaAnomaliaWhereInput;
-  }): Promise<ReadingAnomalyEntity[]> {
+  }): Promise<IResponseReadingAnomaly[]> {
     return this.findAllUseCase.execute(params);
   }
 
-  async findOne(id: bigint): Promise<ReadingAnomalyEntity> {
+  async findOne(id: bigint): Promise<IResponseReadingAnomaly> {
     return this.findOneUseCase.execute(id);
   }
 
   async update(
     id: bigint,
     updateDto: UpdateReadingAnomalyDto,
-  ): Promise<ReadingAnomalyEntity> {
+  ): Promise<IResponseReadingAnomaly> {
     return this.updateUseCase.execute(id, updateDto);
   }
 
