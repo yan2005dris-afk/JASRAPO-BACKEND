@@ -11,7 +11,7 @@ import {
 import { ReadingService } from './reading.service';
 import { CrearLecturaDto } from './dto/create-lectura.dto';
 import { ActualizarLecturaDto } from './dto/update-lectura.dto';
-import { LecturaEntity } from './entities/lectura.entity';
+import { ResponseReadingDto } from './dto/response-reading.dto';
 import {
   ApiTags,
   ApiBearerAuth,
@@ -37,7 +37,7 @@ export class ReadingController {
   @ApiResponse({
     status: 201,
     description: 'Lectura creada',
-    type: LecturaEntity,
+    type: ResponseReadingDto,
   })
   @ApiResponse({ status: 400, description: 'Datos inválidos' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
@@ -46,7 +46,7 @@ export class ReadingController {
   @Post()
   async create(
     @Body() crearLecturaDto: CrearLecturaDto,
-  ): Promise<LecturaEntity> {
+  ): Promise<ResponseReadingDto> {
     return this.readingService.create(crearLecturaDto);
   }
 
@@ -75,7 +75,7 @@ export class ReadingController {
   @ApiResponse({
     status: 200,
     description: 'Lista de lecturas',
-    type: [LecturaEntity],
+    type: [ResponseReadingDto],
   })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @RequiredPermission('lecturas', 'read')
@@ -84,7 +84,7 @@ export class ReadingController {
     @Query('skip') skip?: number,
     @Query('take') take?: number,
     @Query('contratoId') contratoId?: string,
-  ): Promise<LecturaEntity[]> {
+  ): Promise<ResponseReadingDto[]> {
     const where: any = {};
     if (contratoId) where.contratoId = BigInt(contratoId);
     return this.readingService.findAll({
@@ -107,13 +107,13 @@ export class ReadingController {
   @ApiResponse({
     status: 200,
     description: 'Lectura encontrada',
-    type: LecturaEntity,
+    type: ResponseReadingDto,
   })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({ status: 404, description: 'Lectura no encontrada' })
   @RequiredPermission('lecturas', 'read')
   @Get(':id')
-  async findOne(@Param('id') id: string): Promise<LecturaEntity> {
+  async findOne(@Param('id') id: string): Promise<ResponseReadingDto> {
     return this.readingService.findOne(BigInt(id));
   }
 
@@ -131,7 +131,7 @@ export class ReadingController {
   @ApiResponse({
     status: 200,
     description: 'Lectura actualizada',
-    type: LecturaEntity,
+    type: ResponseReadingDto,
   })
   @ApiResponse({ status: 400, description: 'Datos inválidos' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
@@ -142,7 +142,7 @@ export class ReadingController {
   async actualizarLectura(
     @Param('id') id: string,
     @Body() updateLecturaDto: ActualizarLecturaDto,
-  ): Promise<LecturaEntity> {
+  ): Promise<ResponseReadingDto> {
     return this.readingService.update(BigInt(id), updateLecturaDto);
   }
 
