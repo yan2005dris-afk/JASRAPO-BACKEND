@@ -41,6 +41,7 @@ export class ClientController {
     description: 'Retorna lista de tipos de identificación para formularios',
   })
   @ApiResponse({ status: 200, description: 'Lista de identificaciones' })
+  @RequiredPermission('clientes', 'read')
   @Get('identification-types')
   findAllIdentificaciones() {
     return this.clientService.findAllIdentificaciones();

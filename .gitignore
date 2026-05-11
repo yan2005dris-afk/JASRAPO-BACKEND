@@ -24,3 +24,21 @@ backend/postgres/.env
 
 *.zip
 CLAUDE
+
+# -- codegraph -- 
+.codegraph
+
+# -- graphify -- 
+.graphify
+
+# -- vscode -- 
+.vscode
+
+# -- sonarlint -- 
+.sonarlint
+
+# -- env 
+.env
+
+# -- .gga
+.gga
