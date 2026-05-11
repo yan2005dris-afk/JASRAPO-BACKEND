@@ -6,10 +6,10 @@ export class RemoveReadingUseCase {
   constructor(private readonly prisma: PrismaService) {}
 
   async execute(id: bigint): Promise<{ message: string }> {
-    const existing = await this.prisma.lecturas.findUnique({
-      where: { lecturaId: id },
+    const existing = await this.prisma.lecturas.findFirst({
+      where: { lecturaId: id, deletedAt: null },
     });
-    if (!existing || existing.deletedAt) {
+    if (!existing) {
       throw new NotFoundException(`Lectura con ID ${id} no encontrada`);
     }
 
