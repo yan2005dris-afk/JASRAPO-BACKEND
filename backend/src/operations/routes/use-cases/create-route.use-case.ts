@@ -117,16 +117,33 @@ export class CreateRouteUseCase {
         },
       });
 
+      const lecturasDisponiblesWhere = {
+        lecturaId: { in: lecturaIds },
+        estadoAsignacion: 'NO_ASIGNADA',
+        estado: {
+          in: ['PENDIENTE', 'POR_REVISION'],
+        },
+        deletedAt: null,
+        contrato: {
+          estado: estadoContratoEsperado,
+          comunidadId: createDto.comunidadId,
+          ...(createDto.sectorId ? { sectorId: createDto.sectorId } : {}),
+        },
+      };
+
+      const lecturasDisponibles = await tx.lecturas.count({
+        where: lecturasDisponiblesWhere,
+      });
+
+      if (lecturasDisponibles !== lecturaIds.length) {
+        throw new BadRequestException(
+          'Una o más lecturas ya no cumplen las condiciones requeridas para ser asignadas',
+        );
+      }
+
       // Asignar lecturas
       const updateResult = await tx.lecturas.updateMany({
-        where: {
-          lecturaId: { in: lecturaIds },
-          estadoAsignacion: 'NO_ASIGNADA',
-          estado: {
-            in: ['PENDIENTE', 'POR_REVISION'],
-          },
-          deletedAt: null,
-        },
+        where: lecturasDisponiblesWhere,
         data: {
           rutaAsignadaId: rutaCreada.rutaId,
           estadoAsignacion: 'ASIGNADA',

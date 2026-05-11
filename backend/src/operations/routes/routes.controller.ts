@@ -66,7 +66,7 @@ export class RoutesController {
       },
     },
   })
-  @RequiredPermission('rutas', 'read')
+  @RequiredPermission('routes', 'read')
   @Get('eligible-readings')
   async getEligibleReadings(
     @Query() filterDto: FilterReadingsDto,
