@@ -3,9 +3,12 @@ import { Permisos, PrismaClient } from "src/generated/prisma/client";
 export async function seedPermissions(prisma: PrismaClient) {
     const resources = [
         "clientes",
+        "client",
         "contratos",
+        "contract",
         "contracts", // Alias para coincidir con decoradores
         "medidores",
+        "meter",
         "meters",    // Alias para coincidir con decoradores
         "tarifas",
         "lecturas",

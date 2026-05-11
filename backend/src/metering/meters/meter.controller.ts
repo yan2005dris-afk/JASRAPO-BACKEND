@@ -47,6 +47,7 @@ export class MeterController {
     description: 'Lista de estados',
     type: [EstadoMedidorResponseDto],
   })
+  @RequiredPermission('meters', 'read')
   @Get('status')
   findAllEstados(): Promise<EstadoMedidorResponseDto[]> {
     return this.meterService.findAllEstados();

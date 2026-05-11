@@ -73,6 +73,13 @@ export async function seedRolePermissions(
 
         // 6. CONTABILIDAD: hereda de secretaria + recaudacion por jerarquia (sin directos)
 
-        // 7. USER: NADA
+        // 7. USER: SOLO PERFIL
+        const userResources = ['profile'];
+        const userPerms = permissions.filter(p => userResources.includes(p.recurso));
+        for (const perm of userPerms) {
+            await prisma.rolPermisos.create({
+                data: { rolId: roles.userRol.rolId, permisoId: perm.permisoId },
+            });
+        }
     console.log('✅ Roles-Permisos asignados correctamente.');
 }
