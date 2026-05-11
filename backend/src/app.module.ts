@@ -39,11 +39,6 @@ import { ObservabilityModule } from './infrastructure/observability/observabilit
     StorageModule,
   ],
   controllers: [],
-  providers: [
-    {
-      provide: APP_GUARD,
-      useClass: ThrottlerGuard,
-    },
-  ],
+  providers: [],
 })
 export class AppModule {}

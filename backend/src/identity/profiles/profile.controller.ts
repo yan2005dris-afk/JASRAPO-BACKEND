@@ -28,10 +28,11 @@ import { MinioService } from '../../infrastructure/storage/minio.service';
 import { Public } from 'src/infrastructure/common/decorators/public.decorator';
 import type { Response } from 'express';
 import { AuthUserId } from 'src/infrastructure/common/decorators/auth-user-id.decorator';
+import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 
 @ApiTags('profile')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('profile')
 export class ProfileController {
   constructor(
