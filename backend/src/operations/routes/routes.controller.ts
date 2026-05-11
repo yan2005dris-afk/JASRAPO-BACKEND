@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -19,6 +20,8 @@ import {
   getSchemaPath,
 } from '@nestjs/swagger';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
+import { JwtAuthGuard } from 'src/identity/auth/guards/jwt-auth.guard';
+import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 import { RoutesService } from './routes.service';
 import { CreateRouteDto } from './dto/create-route.dto';
 import { UpdateRouteDto } from './dto/update-route.dto';
@@ -29,6 +32,7 @@ import { ReadingForRouteEntity } from './types/reading-for-route.entity';
 @ApiTags('routes')
 @ApiBearerAuth()
 @ApiExtraModels(RouteEntity, ReadingForRouteEntity)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('routes')
 export class RoutesController {
   constructor(private readonly routesService: RoutesService) {}

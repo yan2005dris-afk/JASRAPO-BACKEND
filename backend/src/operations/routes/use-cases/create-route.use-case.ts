@@ -118,15 +118,26 @@ export class CreateRouteUseCase {
       });
 
       // Asignar lecturas
-      await tx.lecturas.updateMany({
+      const updateResult = await tx.lecturas.updateMany({
         where: {
           lecturaId: { in: lecturaIds },
+          estadoAsignacion: 'NO_ASIGNADA',
+          estado: {
+            in: ['PENDIENTE', 'POR_REVISION'],
+          },
+          deletedAt: null,
         },
         data: {
           rutaAsignadaId: rutaCreada.rutaId,
           estadoAsignacion: 'ASIGNADA',
         },
       });
+
+      if (updateResult.count !== lecturaIds.length) {
+        throw new BadRequestException(
+          'Una o más lecturas ya fueron asignadas o no están disponibles (condición de carrera)',
+        );
+      }
 
       return rutaCreada;
     });
