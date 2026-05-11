@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { CreateReadingAnomalyDto } from '../dto/create-reading-anomaly.dto';
-import { ReadingAnomalyEntity } from '../entities/reading-anomaly.entity';
+import { safeReadingAnomaliesSelect } from '../types/IResponseReadingAnomaly';
+import { toReadingAnomalyResponse } from '../types/readingAnomalyMapper';
 
 @Injectable()
 export class CreateReadingAnomalyUseCase {
@@ -9,7 +10,7 @@ export class CreateReadingAnomalyUseCase {
 
   async execute(
     createDto: CreateReadingAnomalyDto,
-  ): Promise<ReadingAnomalyEntity> {
+  ) {
     const anomalia = await this.prisma.lecturaAnomalia.create({
       data: {
         lecturaId: BigInt(createDto.lecturaId),
@@ -17,7 +18,8 @@ export class CreateReadingAnomalyUseCase {
         tipo: createDto.tipo,
         estado: createDto.estado,
       },
+      select: safeReadingAnomaliesSelect,
     });
-    return new ReadingAnomalyEntity(anomalia);
+    return toReadingAnomalyResponse(anomalia);
   }
 }

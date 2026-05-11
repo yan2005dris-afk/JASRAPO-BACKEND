@@ -1,7 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { UpdateReadingAnomalyDto } from '../dto/update-reading-anomaly.dto';
-import { ReadingAnomalyEntity } from '../entities/reading-anomaly.entity';
+import { safeReadingAnomaliesSelect } from '../types/IResponseReadingAnomaly';
+import { toReadingAnomalyResponse } from '../types/readingAnomalyMapper';
 
 @Injectable()
 export class UpdateReadingAnomalyUseCase {
@@ -10,11 +11,11 @@ export class UpdateReadingAnomalyUseCase {
   async execute(
     id: bigint,
     updateDto: UpdateReadingAnomalyDto,
-  ): Promise<ReadingAnomalyEntity> {
-    const existing = await this.prisma.lecturaAnomalia.findUnique({
-      where: { anomaliaId: id },
+  ) {
+    const existing = await this.prisma.lecturaAnomalia.findFirst({
+      where: { anomaliaId: id, deletedAt: null },
     });
-    if (!existing || existing.deletedAt) {
+    if (!existing) {
       throw new NotFoundException(`Anomalía con ID ${id} no encontrada`);
     }
 
@@ -25,7 +26,8 @@ export class UpdateReadingAnomalyUseCase {
     const anomalia = await this.prisma.lecturaAnomalia.update({
       where: { anomaliaId: id },
       data: dataToUpdate,
+      select: safeReadingAnomaliesSelect,
     });
-    return new ReadingAnomalyEntity(anomalia);
+    return toReadingAnomalyResponse(anomalia);
   }
 }
