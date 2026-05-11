@@ -6,10 +6,10 @@ export class RemoveReadingAnomalyUseCase {
   constructor(private readonly prisma: PrismaService) {}
 
   async execute(id: bigint): Promise<{ message: string }> {
-    const existing = await this.prisma.lecturaAnomalia.findUnique({
-      where: { anomaliaId: id },
+    const existing = await this.prisma.lecturaAnomalia.findFirst({
+      where: { anomaliaId: id, deletedAt: null },
     });
-    if (!existing || existing.deletedAt) {
+    if (!existing) {
       throw new NotFoundException(`Anomalía con ID ${id} no encontrada`);
     }
 
