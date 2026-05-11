@@ -8,14 +8,19 @@ import {
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 
+export enum TipoRuta {
+  TOMA_LECTURA = 'TOMA_LECTURA',
+  RECONEXION = 'RECONEXION',
+}
+
 export class FilterReadingsDto {
   @ApiProperty({
     description: 'Tipo de ruta para filtrar lecturas elegibles',
-    enum: ['TOMA_LECTURA', 'RECONEXION'],
+    enum: TipoRuta,
   })
   @IsNotEmpty()
-  @IsEnum(['TOMA_LECTURA', 'RECONEXION'])
-  tipoRuta!: 'TOMA_LECTURA' | 'RECONEXION';
+  @IsEnum(TipoRuta)
+  tipoRuta!: TipoRuta;
 
   @ApiProperty({
     description: 'ID de la comunidad',
