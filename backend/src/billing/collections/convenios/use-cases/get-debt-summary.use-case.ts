@@ -57,12 +57,12 @@ export class GetDebtSummaryUseCase {
     });
 
     const items: PrefacturaDeudaItemDto[] = prefacturasImpagadas.map((p) => {
-      const totalPagar = Number(p.totalPagar);
-      const abono = Number(p.abono);
-      const saldoPendiente = Math.max(
-        0,
-        Number(p.saldoActual ?? totalPagar - abono),
-      );
+      const totalPagar = Math.round(Number(p.totalPagar) * 100) / 100;
+      const abono = Math.round(Number(p.abono) * 100) / 100;
+      const saldoPendiente =
+        Math.round(
+          Math.max(0, Number(p.saldoActual ?? totalPagar - abono)) * 100,
+        ) / 100;
 
       return {
         prefacturaId: String(p.prefacturaId),

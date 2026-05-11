@@ -6,6 +6,7 @@ import {
 import { Prisma } from 'src/generated/prisma/client';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { DateUtil } from 'src/infrastructure/common/util/date.util';
+import { addMonths } from 'date-fns';
 import { CreateConvenioDto } from '../dto/create-convenio.dto';
 import { safeConvenioWithCuotasSelect } from '../types/IConvenio';
 import { GetDebtSummaryUseCase } from './get-debt-summary.use-case';
@@ -187,9 +188,8 @@ export class CreateConvenioUseCase {
         const valorCuota =
           i === dto.numeroCuotas ? valorUltimaCuota : valorCuotaBase;
 
-        // Fecha de vencimiento: fechaPrimerPago + (i-1) meses
-        const fechaVencimiento = new Date(fechaPrimerPago);
-        fechaVencimiento.setMonth(fechaVencimiento.getMonth() + (i - 1));
+        // Fecha de vencimiento: fechaPrimerPago + (i-1) meses (usando date-fns para saltos de fin de mes seguros)
+        const fechaVencimiento = addMonths(fechaPrimerPago, i - 1);
 
         cuotas.push({
           convenioId: nuevoConvenio.convenioId,

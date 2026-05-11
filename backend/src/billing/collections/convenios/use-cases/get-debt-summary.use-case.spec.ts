@@ -83,7 +83,7 @@ describe('GetDebtSummaryUseCase', () => {
       }),
       expect.objectContaining({
         prefacturaId: '11',
-        saldoPendiente: 40.555,
+        saldoPendiente: 40.56,
         estado: 'APROBADA',
       }),
     ]);

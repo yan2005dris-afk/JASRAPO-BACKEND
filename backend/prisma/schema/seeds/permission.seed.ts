@@ -1,64 +1,64 @@
-import { Permisos, PrismaClient } from "src/generated/prisma/client";
+import { Permisos, PrismaClient } from 'src/generated/prisma/client';
 
 export async function seedPermissions(prisma: PrismaClient) {
-    const resources = [
-        "clientes",
-        "contratos",
-        "contracts", // Alias para coincidir con decoradores
-        "medidores",
-        "meters",    // Alias para coincidir con decoradores
-        "tarifas",
-        "lecturas",
-        "reading-anomalies",
-        "comunidades",
-        "sectores",
-        "lote",
-        "lotes",
-        "convenios",
-        "planillas",
-        "facturacion_electronica",
-        "recaudacion",
-        "notas_credito",
-        "envio_facturas",
-        "estado_cuenta",
-        "recaudacion_morosidad",
-        "consumo_zonas",
-        "dashboard",
-        "users",
-        "roles",
-        "permissions",
-        "profile",
-        "files",
-        "metrics"
-    ];
+  const resources = [
+    'clientes',
+    'contratos',
+    'contracts', // Alias para coincidir con decoradores
+    'medidores',
+    'meters', // Alias para coincidir con decoradores
+    'tarifas',
+    'lecturas',
+    'reading-anomalies',
+    'comunidades',
+    'sectores',
+    'lote',
+    'lotes',
+    'convenios',
+    'planillas',
+    'facturacion_electronica',
+    'recaudacion',
+    'notas_credito',
+    'envio_facturas',
+    'estado_cuenta',
+    'recaudacion_morosidad',
+    'consumo_zonas',
+    'dashboard',
+    'users',
+    'roles',
+    'permissions',
+    'profile',
+    'files',
+    'metrics',
+  ];
 
-    const actions = ["read", "create", "update", "delete"];
-    
-    const permissionsToCreate: { resource: string, action: string }[] = [];
+  const actions = ['read', 'create', 'update', 'delete'];
 
-    for (const resource of resources) {
-        for (const action of actions) {
-            permissionsToCreate.push({ resource, action });
-        }
+  const permissionsToCreate: { resource: string; action: string }[] = [];
+
+  for (const resource of resources) {
+    for (const action of actions) {
+      permissionsToCreate.push({ resource, action });
     }
-    
-    const savedPermissions: Permisos[] = [];
+  }
 
-    for (const p of permissionsToCreate) {
-        let perm = await prisma.permisos.findFirst({
-            where: { recurso: p.resource, accion: p.action },
-        });
+  const savedPermissions: Permisos[] = [];
 
-        if (!perm) {
-            perm = await prisma.permisos.create({
-            data: {
-                recurso: p.resource,
-                accion: p.action,
-            },
-        });
-        }
-        savedPermissions.push(perm);
+  for (const p of permissionsToCreate) {
+    let perm = await prisma.permisos.findFirst({
+      where: { recurso: p.resource, accion: p.action },
+    });
+
+    if (!perm) {
+      perm = await prisma.permisos.create({
+        data: {
+          recurso: p.resource,
+          accion: p.action,
+        },
+      });
     }
+    savedPermissions.push(perm);
+  }
 
-    return savedPermissions;
+  return savedPermissions;
 }

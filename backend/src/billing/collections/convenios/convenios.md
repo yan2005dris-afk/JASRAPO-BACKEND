@@ -38,16 +38,17 @@ convenios/
 - `PREPARADO` - En preparación
 - `PENDIENTE_ABONO` - Esperando abono inicial
 - `ACTIVO` - Vigente
-- `INCUMPLIDO` - Convention roto (mora)
-- `FINALIZADO` - Completamente pagado
-- `ANULADO` - Anulado
+- `CUMPLIDO` - Completamente pagado
+- `ANULADO` - Anulado antes de cumplimiento
+- `VENCIDO` - Convenio roto por mora
 
 ## Estados de la Cuota
 
 - `PENDIENTE` - Pendiente de pago
-- `PAGADA` - Pagada
+- `PAGADA` - Pagada en su totalidad
 - `VENCIDA` - Vencida sin pago
-- `INCUMPLIDA` - Pagada fuera de fecha
+- `ANULADA` - Anulada junto al convenio
+- `ANTICIPADA` - Pagada de forma anticipada
 
 ## Flujo de Vida
 
@@ -61,7 +62,7 @@ cliente en mora → crear CONVENIO PREPARADO
     ┌─────────────────────────────────┐
     │                                │
     ↓                                ↓
-incumplido                    FINALIZADO
+ VENCIDO                         CUMPLIDO
 (roto por mora)           (todas pagadas)
 ```
 
