@@ -36,3 +36,9 @@ CLAUDE
 
 # -- sonarlint -- 
 .sonarlint
+
+# -- env 
+.env
+
+# -- .gga
+.gga
