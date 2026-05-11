@@ -34,7 +34,7 @@ export class CreateConvenioUseCase {
     const contratoId = BigInt(dto.contratoId);
 
     // ── 1. Verificar que el contrato existe ──────────────────────────────────
-    const contrato = await this.prisma.contratos.findUnique({
+    const contrato = await this.prisma.contratos.findFirst({
       where: { contratoId, deletedAt: null },
       select: { contratoId: true },
     });
@@ -100,9 +100,9 @@ export class CreateConvenioUseCase {
     // tasa en porcentaje (ej: 1.5 = 1.5% mensual)
     const tasaMensual = tasaInteresParam ? tasaInteresParam.tasa / 100 : 0;
 
-    // ── 5. diasMoraActual: tomar meses_atrasado máximo desde debtSummary ────
-    //    (ya viene calculado desde la DB, es más preciso que calcularlo desde fechaCreacion)
-    const diasMoraActual = debtSummary.maxMesesAtrasado ?? 0;
+    // ── 5. mesesMoraActual: tomar máximo de meses atrasados desde debtSummary ──
+    //    (calculado por el SP en la DB, unidad: meses calendario)
+    const mesesMoraActual = debtSummary.maxMesesAtrasado ?? 0;
 
     // ── 6. Calcular intereses sobre el monto a financiar ─────────────────────
     //    interés simple: (deudaTotal - abonoInicial) × tasaMensual × numeroCuotas
@@ -171,7 +171,7 @@ export class CreateConvenioUseCase {
           numeroCuotas: dto.numeroCuotas,
           abonoInicial,
           deudaTotal, // deuda bruta desde prefacturas (sin intereses)
-          diasMoraActual,
+          mesesMoraActual,
           estadoConvenioId,
           fechaPrimerPago,
           fechaProximoPago: fechaPrimerPago,

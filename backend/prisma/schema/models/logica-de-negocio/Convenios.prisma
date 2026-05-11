@@ -4,7 +4,7 @@ model Convenios {
   abonoInicial        Decimal             @map("abono_inicial") @db.Decimal(18, 2)
   contratoId          BigInt              @map("contrato_id")
   deudaTotal          Decimal             @map("deuda_total") @db.Decimal(18, 2)
-  diasMoraActual      Int                 @map("dias_mora_actual")
+  mesesMoraActual     Int                 @map("meses_mora_actual")
   estadoConvenioId    BigInt              @map("estado_convenio_id")
   fechaAprobacion     DateTime?           @map("fecha_aprobacion")
   fechaPrimerPago     DateTime            @map("fecha_primer_pago")

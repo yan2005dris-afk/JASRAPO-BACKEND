@@ -7,6 +7,7 @@ import { DebtSummaryResponseDto } from './dto/debt-summary-response.dto';
 import { EstadoConvenioResponseDto } from './dto/estado-convenio-response.dto';
 import { EstadoCuotaConvenioResponseDto } from './dto/estado-cuota-convenio-response.dto';
 import {
+  safeCuotaConvenioSelect,
   safeConvenioSelect,
   safeConvenioWithCuotasSelect,
   safeEstadoConvenioSelect,
@@ -14,6 +15,7 @@ import {
 } from './types/IConvenio';
 import {
   toConvenioResponse,
+  toCuotaConvenioResponse,
   toEstadoConvenioResponse,
   toEstadoCuotaConvenioResponse,
 } from './types/conveniosMapper';
@@ -83,58 +85,16 @@ export class ConveniosService {
   }
 
   async findCuotas(convenioId: string): Promise<CuotaConvenioResponseDto[]> {
-    // Verificar que el convenio existe
+    // Verificar que el convenio existe y no está soft-deleted
     await this.findOneUseCase.execute(BigInt(convenioId));
 
     const cuotas = await this.prisma.cuotaConvenio.findMany({
       where: { convenioId: BigInt(convenioId), deletedAt: null },
-      select: {
-        cuotaConvenioId: true,
-        convenioId: true,
-        numeroCuota: true,
-        valorCuota: true,
-        fechaVencimiento: true,
-        estado: {
-          select: {
-            estadoCuotaConvenioId: true,
-            codigo: true,
-            nombre: true,
-          },
-        },
-        fechaPago: true,
-        montoPagado: true,
-        saldoPendiente: true,
-        diasRetraso: true,
-        interesMoraAplicado: true,
-        pagoCompleto: true,
-        fechaPagoAnticipado: true,
-      },
+      select: safeCuotaConvenioSelect,
       orderBy: { numeroCuota: 'asc' },
     });
 
-    return cuotas.map((cuota) => ({
-      cuotaConvenioId: String(cuota.cuotaConvenioId),
-      convenioId: String(cuota.convenioId),
-      numeroCuota: cuota.numeroCuota,
-      valorCuota: Number(cuota.valorCuota),
-      fechaVencimiento: cuota.fechaVencimiento.toISOString().split('T')[0],
-      estado: {
-        estadoCuotaConvenioId: Number(cuota.estado.estadoCuotaConvenioId),
-        codigo: cuota.estado.codigo,
-        nombre: cuota.estado.nombre,
-      },
-      fechaPago: cuota.fechaPago
-        ? cuota.fechaPago.toISOString().split('T')[0]
-        : null,
-      montoPagado: Number(cuota.montoPagado),
-      saldoPendiente: Number(cuota.saldoPendiente),
-      diasRetraso: cuota.diasRetraso,
-      interesMoraAplicado: Number(cuota.interesMoraAplicado),
-      pagoCompleto: cuota.pagoCompleto,
-      fechaPagoAnticipado: cuota.fechaPagoAnticipado
-        ? cuota.fechaPagoAnticipado.toISOString().split('T')[0]
-        : null,
-    }));
+    return cuotas.map(toCuotaConvenioResponse);
   }
 
   async cancel(id: string): Promise<ConvenioResponseDto> {

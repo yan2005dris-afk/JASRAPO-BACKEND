@@ -13,6 +13,10 @@ import { seedSectores } from './seeds/sectores.seed';
 import { seedCategoriaTarifa } from './seeds/categoriaTarifa.seed';
 import { seedIdentificacion } from './seeds/identificacion.seed';
 import { seedEstadoMedidor } from './seeds/estadoMedidor.seed';
+import {
+  seedEstadosConvenio,
+  seedEstadosCuotaConvenio,
+} from './seeds/estadosConvenio.seed';
 import { seedMedidores } from './seeds/medidores.seed';
 import { seedClientes } from './seeds/clientes.seed';
 import { seedContratos } from './seeds/contratos.seed';
@@ -102,6 +106,11 @@ async function main() {
   // Estados de Medidor
   await seedEstadoMedidor(prisma);
   console.log('✅ Estados de medidor creados.');
+
+  // Estados de Convenio y Cuota de Convenio
+  await seedEstadosConvenio(prisma);
+  await seedEstadosCuotaConvenio(prisma);
+  console.log('✅ Catálogos de estados de convenio creados.');
 
   // Estados de Lote
   await prisma.estadoLote.upsert({

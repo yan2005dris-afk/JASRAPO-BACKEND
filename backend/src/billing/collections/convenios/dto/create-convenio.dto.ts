@@ -29,15 +29,18 @@ export class CreateConvenioDto {
   @Type(() => Number)
   numeroCuotas: number;
 
-  @ApiProperty({
-    description: 'Abono inicial que el cliente paga al firmar el convenio',
+  @ApiPropertyOptional({
+    description:
+      'Abono inicial que el cliente paga al firmar el convenio. Si se omite, se asume 0.',
     example: 50.0,
     minimum: 0,
+    default: 0,
   })
+  @IsOptional()
   @IsNumber()
   @Min(0)
   @Type(() => Number)
-  abonoInicial: number;
+  abonoInicial?: number;
 
   @ApiProperty({
     description: 'Fecha del primer pago de cuota (YYYY-MM-DD)',

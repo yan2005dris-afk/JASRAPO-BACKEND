@@ -1,124 +1,124 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
-import { GetDebtSummaryUseCase } from './get-debt-summary.use-case';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
+import { GetDebtSummaryUseCase } from './get-debt-summary.use-case';
 
 describe('GetDebtSummaryUseCase', () => {
   let useCase: GetDebtSummaryUseCase;
 
-  const mockPrisma = {
-    contratos: { findUnique: jest.fn() },
-    prefacturas: { findMany: jest.fn() },
-    parametroTasainteres: { findFirst: jest.fn() },
+  const mockPrismaService = {
+    contratos: {
+      findFirst: jest.fn(),
+    },
+    prefacturas: {
+      findMany: jest.fn(),
+    },
+    parametroTasainteres: {
+      findFirst: jest.fn(),
+    },
   };
 
   beforeEach(async () => {
-    jest.clearAllMocks();
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         GetDebtSummaryUseCase,
-        { provide: PrismaService, useValue: mockPrisma },
+        { provide: PrismaService, useValue: mockPrismaService },
       ],
     }).compile();
 
     useCase = module.get<GetDebtSummaryUseCase>(GetDebtSummaryUseCase);
   });
 
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('should be defined', () => {
     expect(useCase).toBeDefined();
   });
 
-  it('should throw NotFoundException when contract does not exist', async () => {
-    mockPrisma.contratos.findUnique.mockResolvedValue(null);
+  it('should calculate debt summary from unpaid prefacturas', async () => {
+    mockPrismaService.contratos.findFirst.mockResolvedValue({ contratoId: 1n });
+    mockPrismaService.prefacturas.findMany.mockResolvedValue([
+      {
+        prefacturaId: 10n,
+        periodoId: 202601,
+        totalPagar: 100,
+        abono: 25,
+        saldoActual: null,
+        meses_atrasado: 2,
+        estado: 'GENERADA',
+        createdAt: new Date('2026-01-15T00:00:00.000Z'),
+      },
+      {
+        prefacturaId: 11n,
+        periodoId: 202602,
+        totalPagar: 80,
+        abono: 0,
+        saldoActual: 40.555,
+        meses_atrasado: 4,
+        estado: 'APROBADA',
+        createdAt: new Date('2026-02-15T00:00:00.000Z'),
+      },
+    ]);
+    mockPrismaService.parametroTasainteres.findFirst.mockResolvedValue({
+      tasa: 1.5,
+    });
 
-    await expect(useCase.execute(BigInt(999))).rejects.toThrow(
-      NotFoundException,
+    const result = await useCase.execute(1n);
+
+    expect(result).toMatchObject({
+      contratoId: '1',
+      deudaTotal: 115.56,
+      tasaMensualVigente: 1.5,
+      maxMesesAtrasado: 4,
+      totalPrefacturasImpagadas: 2,
+    });
+    expect(result.prefacturas).toEqual([
+      expect.objectContaining({
+        prefacturaId: '10',
+        saldoPendiente: 75,
+        estado: 'GENERADA',
+      }),
+      expect.objectContaining({
+        prefacturaId: '11',
+        saldoPendiente: 40.555,
+        estado: 'APROBADA',
+      }),
+    ]);
+    expect(mockPrismaService.prefacturas.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          contratoId: 1n,
+          deletedAt: null,
+          estado: { in: ['GENERADA', 'EN_REVISION', 'APROBADA'] },
+        }),
+        orderBy: { createdAt: 'asc' },
+      }),
     );
   });
 
-  it('should return zero debt when no unpaid prefacturas exist', async () => {
-    mockPrisma.contratos.findUnique.mockResolvedValue({
-      contratoId: BigInt(1),
+  it('should return zero totals when there are no unpaid prefacturas', async () => {
+    mockPrismaService.contratos.findFirst.mockResolvedValue({ contratoId: 1n });
+    mockPrismaService.prefacturas.findMany.mockResolvedValue([]);
+    mockPrismaService.parametroTasainteres.findFirst.mockResolvedValue(null);
+
+    const result = await useCase.execute(1n);
+
+    expect(result).toMatchObject({
+      deudaTotal: 0,
+      tasaMensualVigente: 0,
+      maxMesesAtrasado: 0,
+      totalPrefacturasImpagadas: 0,
+      prefacturas: [],
     });
-    mockPrisma.prefacturas.findMany.mockResolvedValue([]);
-    mockPrisma.parametroTasainteres.findFirst.mockResolvedValue({ tasa: 1.5 });
-
-    const result = await useCase.execute(BigInt(1));
-
-    expect(result.deudaTotal).toBe(0);
-    expect(result.totalPrefacturasImpagadas).toBe(0);
-    expect(result.prefacturas).toHaveLength(0);
-    expect(result.contratoId).toBe('1');
   });
 
-  it('should calculate total debt from unpaid prefacturas', async () => {
-    mockPrisma.contratos.findUnique.mockResolvedValue({
-      contratoId: BigInt(1),
-    });
-    mockPrisma.prefacturas.findMany.mockResolvedValue([
-      {
-        prefacturaId: BigInt(10),
-        periodoId: 202503,
-        totalPagar: { valueOf: () => 100 }, // Decimal mock
-        abono: { valueOf: () => 20 },
-        estado: 'APROBADA',
-        createdAt: new Date('2025-03-15'),
-      },
-      {
-        prefacturaId: BigInt(11),
-        periodoId: 202504,
-        totalPagar: { valueOf: () => 80 },
-        abono: { valueOf: () => 0 },
-        estado: 'GENERADA',
-        createdAt: new Date('2025-04-15'),
-      },
-    ]);
-    mockPrisma.parametroTasainteres.findFirst.mockResolvedValue({ tasa: 1.5 });
+  it('should throw NotFoundException when contrato does not exist', async () => {
+    mockPrismaService.contratos.findFirst.mockResolvedValue(null);
 
-    const result = await useCase.execute(BigInt(1));
-
-    // saldo prefactura 1: 100 - 20 = 80
-    // saldo prefactura 2: 80 - 0 = 80
-    // total: 160
-    expect(result.deudaTotal).toBe(160);
-    expect(result.totalPrefacturasImpagadas).toBe(2);
-    expect(result.tasaMensualVigente).toBe(1.5);
-    expect(result.prefacturas[0].saldoPendiente).toBe(80);
-    expect(result.prefacturas[1].saldoPendiente).toBe(80);
-  });
-
-  it('should return tasaMensualVigente as 0 when no interest rate configured', async () => {
-    mockPrisma.contratos.findUnique.mockResolvedValue({
-      contratoId: BigInt(1),
-    });
-    mockPrisma.prefacturas.findMany.mockResolvedValue([]);
-    mockPrisma.parametroTasainteres.findFirst.mockResolvedValue(null);
-
-    const result = await useCase.execute(BigInt(1));
-
-    expect(result.tasaMensualVigente).toBe(0);
-  });
-
-  it('should not count abono as negative saldo (floor at 0)', async () => {
-    mockPrisma.contratos.findUnique.mockResolvedValue({
-      contratoId: BigInt(1),
-    });
-    mockPrisma.prefacturas.findMany.mockResolvedValue([
-      {
-        prefacturaId: BigInt(10),
-        periodoId: 202501,
-        totalPagar: { valueOf: () => 50 },
-        abono: { valueOf: () => 60 }, // abono mayor al total (caso borde)
-        estado: 'APROBADA',
-        createdAt: new Date('2025-01-15'),
-      },
-    ]);
-    mockPrisma.parametroTasainteres.findFirst.mockResolvedValue({ tasa: 1.5 });
-
-    const result = await useCase.execute(BigInt(1));
-
-    expect(result.prefacturas[0].saldoPendiente).toBe(0);
-    expect(result.deudaTotal).toBe(0);
+    await expect(useCase.execute(999n)).rejects.toThrow(NotFoundException);
+    expect(mockPrismaService.prefacturas.findMany).not.toHaveBeenCalled();
   });
 });
