@@ -582,7 +582,7 @@ jobs:
 ### "Cannot find module 'bcryptjs'"
 
 ```bash
-npm install bcryptjs
+pnpm install bcryptjs
 ```
 
 ### "Cannot read property of undefined"

@@ -11,14 +11,14 @@ API REST para gestión de mediciones y lectura de medidores.
 
 ## Requisitos
 
-- Node.js 20+
+- Node.js 22+
 - PostgreSQL 14+
-- npm 10+
+- pnpm 9+
 
 ## Instalación
 
 ```bash
-npm install
+pnpm install
 ```
 
 ## Configuración
@@ -37,42 +37,42 @@ openssl rand -hex 16
 
 ```bash
 # Desarrollo
-npm run start
+pnpm run start
 
 # Modo watch
-npm run start:dev
+pnpm run start:dev
 
 # Producción
-npm run start:prod
+pnpm run start:prod
 ```
 
 ## Tests
 
 ```bash
 # Todos los tests
-npm test
+pnpm test
 
 # Tests con coverage
-npm run test:cov
+pnpm run test:cov
 
 # Tests e2e
-npm run test:e2e
+pnpm run test:e2e
 ```
 
 ## Linting
 
 ```bash
 # Ver errores
-npm run lint
+pnpm run lint
 
 # Auto-arreglar errores
-npm run lint:fix
+pnpm run lint:fix
 ```
 
 ## Build
 
 ```bash
-npm run build
+pnpm run build
 ```
 
 ## API Documentation

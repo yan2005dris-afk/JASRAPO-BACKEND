@@ -629,7 +629,7 @@ Estos patrones NO requieren migración porque son excepciones legítimas:
 cd backend
 
 # Modo desarrollo
-npm run start:dev
+pnpm run start:dev
 
 # El servidor estará disponible en:
 # - API: http://localhost:3000/api/v1
