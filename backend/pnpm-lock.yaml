@@ -4,6 +4,9 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+overrides:
+  rxjs: ^7.8.1
+
 importers:
 
   .:
@@ -129,7 +132,7 @@ importers:
         specifier: ^0.2.2
         version: 0.2.2
       rxjs:
-        specifier: ^7.8.2
+        specifier: ^7.8.1
         version: 7.8.2
       tsx:
         specifier: ^4.21.0
@@ -982,7 +985,7 @@ packages:
       class-transformer: '>=0.4.1'
       class-validator: '>=0.13.2'
       reflect-metadata: ^0.1.12 || ^0.2.0
-      rxjs: ^7.1.0
+      rxjs: ^7.8.1
     peerDependenciesMeta:
       class-transformer:
         optional: true
@@ -993,7 +996,7 @@ packages:
     resolution: {integrity: sha512-CJPjNitr0bAufSEnRe2N+JbnVmMmDoo6hvKCPzXgZoGwJSmp/dZPk9f/RMbuD/+Q1ZJPjwsRpq0vxna++Knwow==}
     peerDependencies:
       '@nestjs/common': ^10.0.0 || ^11.0.0
-      rxjs: ^7.1.0
+      rxjs: ^7.8.1
 
   '@nestjs/core@11.1.19':
     resolution: {integrity: sha512-6nJkWa2efrYi+XlU686J9y5L7OvxpLVjT0T/sxRKE7Jvpffiihelup4WSvLvRhdHDjj/5SuoWEwqReXAaaeHmw==}
@@ -1004,7 +1007,7 @@ packages:
       '@nestjs/platform-express': ^11.0.0
       '@nestjs/websockets': ^11.0.0
       reflect-metadata: ^0.1.12 || ^0.2.0
-      rxjs: ^7.1.0
+      rxjs: ^7.8.1
     peerDependenciesMeta:
       '@nestjs/microservices':
         optional: true
@@ -4678,9 +4681,6 @@ packages:
     resolution: {integrity: sha512-nLTrUKm2UyiL7rlhapu/Zl45FwNgkZGaCpZbIHajDYgwlJCOzLSk+cIPAnsEqV955GjILJnKbdQC1nVPz+gAYQ==}
     engines: {node: '>= 18'}
 
-  rxjs@7.8.1:
-    resolution: {integrity: sha512-AA3TVj+0A2iuIoQkWEK/tqFjBq2j+6PO6Y0zJcvzLAFhEFIO3HL0vls9hWLncZbAAbK0mar7oZ4V079I/qPMxg==}
-
   rxjs@7.8.2:
     resolution: {integrity: sha512-dhKf903U/PQZY6boNNtAGdWbG85WAbjT/1xYoZIC7FAY0yWapOBQVsVrDl58W86//e1VpMNBtRV4MaXfdMySFA==}
 
@@ -5454,7 +5454,7 @@ snapshots:
       ajv-formats: 3.0.1(ajv@8.18.0)
       jsonc-parser: 3.3.1
       picomatch: 4.0.4
-      rxjs: 7.8.1
+      rxjs: 7.8.2
       source-map: 0.7.4
     optionalDependencies:
       chokidar: 4.0.3
@@ -5477,7 +5477,7 @@ snapshots:
       jsonc-parser: 3.3.1
       magic-string: 0.30.17
       ora: 5.4.1
-      rxjs: 7.8.1
+      rxjs: 7.8.2
     transitivePeerDependencies:
       - chokidar
 
@@ -10640,10 +10640,6 @@ snapshots:
       path-to-regexp: 8.4.2
     transitivePeerDependencies:
       - supports-color
-
-  rxjs@7.8.1:
-    dependencies:
-      tslib: 2.8.1
 
   rxjs@7.8.2:
     dependencies:
