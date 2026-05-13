@@ -31,7 +31,19 @@
   "pnpm": {
     "overrides": {
       "rxjs": "^7.8.1"
-    }
+    },
+    "onlyBuiltDependencies": [
+      "@nestjs/core",
+      "@prisma/engines",
+      "@scarf/scarf",
+      "bcrypt",
+      "cpu-features",
+      "esbuild",
+      "prisma",
+      "protobufjs",
+      "ssh2",
+      "unrs-resolver"
+    ]
   },
   "dependencies": {
     "@nestjs/common": "^11.1.16",
