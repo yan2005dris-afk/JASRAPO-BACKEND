@@ -1,5 +1,6 @@
 # ─── Stage 1: Base ─────────────────────────────────────────────
 FROM node:22-alpine AS base
+RUN apk add --no-cache python3 make g++
 WORKDIR /app
 RUN npm install -g pnpm
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
@@ -10,6 +11,7 @@ RUN pnpm install --no-frozen-lockfile
 
 # ─── Stage 3: Production ──────────────────────────────────────
 FROM node:22-alpine AS production
+RUN apk add --no-cache python3 make g++
 WORKDIR /app
 RUN npm install -g pnpm
 ENV NODE_ENV=production
@@ -17,6 +19,7 @@ ENV NODE_ENV=production
 # Only production dependencies
 COPY --from=deps /app/package.json ./package.json
 COPY --from=deps /app/pnpm-lock.yaml ./pnpm-lock.yaml
+COPY --from=deps /app/pnpm-workspace.yaml ./pnpm-workspace.yaml
 RUN pnpm install --prod --no-frozen-lockfile
 
 # Copy source code
