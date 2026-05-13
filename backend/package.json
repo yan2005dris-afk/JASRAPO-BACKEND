@@ -43,7 +43,8 @@
       "protobufjs",
       "ssh2",
       "unrs-resolver"
-    ]
+    ],
+    "onlyBuiltDependenciesFromTopLevel": true
   },
   "dependencies": {
     "@nestjs/common": "^11.1.16",
