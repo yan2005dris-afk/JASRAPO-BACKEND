@@ -4,15 +4,15 @@ import {
   Injectable,
   NestInterceptor,
 } from '@nestjs/common';
-import type { Observable } from 'rxjs';
+import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
 @Injectable()
 export class BigIntInterceptor implements NestInterceptor {
   intercept(
     _context: ExecutionContext,
-    next: CallHandler<unknown>,
-  ): Observable<unknown> {
+    next: CallHandler<any>,
+  ): Observable<any> {
     return next.handle().pipe(map((data: unknown) => this.convertBigInt(data)));
   }
 

@@ -69,7 +69,7 @@ describe('ProfileService', () => {
   it('should delegate create to CreateProfileUseCase', async () => {
     const userId = 1;
     const dto = { firstName: 'John', lastName: 'Doe' };
-    await service.create(userId, dto as any);
+    await service.create(userId, dto);
     expect(createUseCase.execute).toHaveBeenCalledWith(userId, dto);
   });
 
@@ -82,7 +82,7 @@ describe('ProfileService', () => {
   it('should delegate update to UpdateProfileUseCase', async () => {
     const userId = 1;
     const dto = { firstName: 'Jane' };
-    await service.update(userId, dto as any);
+    await service.update(userId, dto);
     expect(updateUseCase.execute).toHaveBeenCalledWith(userId, dto);
   });
 

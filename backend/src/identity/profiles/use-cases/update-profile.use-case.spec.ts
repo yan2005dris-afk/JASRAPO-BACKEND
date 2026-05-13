@@ -40,7 +40,7 @@ describe('UpdateProfileUseCase', () => {
       nombres: dto.firstName,
     });
 
-    const result = await useCase.execute(userId, dto as any);
+    const result = await useCase.execute(userId, dto);
 
     expect(prisma.perfiles.update).toHaveBeenCalledWith({
       where: { usuarioId: userId },
@@ -58,7 +58,7 @@ describe('UpdateProfileUseCase', () => {
       nombres: 'Jane',
     });
 
-    await useCase.execute(userId, { firstName: 'Jane' } as any);
+    await useCase.execute(userId, { firstName: 'Jane' });
 
     expect(prisma.perfiles.create).toHaveBeenCalledWith({
       data: expect.objectContaining({ usuarioId: userId, nombres: 'Jane' }),

@@ -42,7 +42,7 @@ describe('UpdateSectorUseCase', () => {
     };
     mockPrismaService.sectores.update.mockResolvedValue(mockUpdatedSector);
 
-    const result = await useCase.execute(1, dto as any);
+    const result = await useCase.execute(1, dto);
 
     expect(result).toEqual(mockUpdatedSector);
     expect(prisma.sectores.update).toHaveBeenCalledWith({

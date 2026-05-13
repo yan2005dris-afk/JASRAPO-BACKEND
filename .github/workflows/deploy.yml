@@ -17,7 +17,7 @@ jobs:
           clean: false
 
       - name: Build Backend only
-        run: docker compose build backend
+        run: docker compose build backend --no-cache
 
       - name: Deploy
         run: docker compose up -d backend
