@@ -28,24 +28,7 @@
   "prisma": {
     "seed": "tsx prisma/schema/seed.ts"
   },
-  "pnpm": {
-    "overrides": {
-      "rxjs": "^7.8.1"
-    },
-    "onlyBuiltDependencies": [
-      "@nestjs/core",
-      "@prisma/engines",
-      "@scarf/scarf",
-      "bcrypt",
-      "cpu-features",
-      "esbuild",
-      "prisma",
-      "protobufjs",
-      "ssh2",
-      "unrs-resolver"
-    ],
-    "onlyBuiltDependenciesFromTopLevel": true
-  },
+  
   "dependencies": {
     "@nestjs/common": "^11.1.16",
     "@nestjs/config": "^4.0.3",
