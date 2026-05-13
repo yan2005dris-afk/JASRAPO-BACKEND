@@ -25,34 +25,26 @@ export class RouteEntity {
   @ApiProperty()
   estado: string;
 
-  @ApiProperty({ required: false })
-  fechaPlanificada?: Date;
+  @ApiProperty({ required: false, nullable: true, example: '2025-05-12T10:30:00.000Z' })
+  fechaPlanificada: string | null;
 
-  @ApiProperty({ required: false })
-  fechaInicio?: Date;
+  @ApiProperty({ required: false, nullable: true })
+  fechaInicio: string | null;
 
-  @ApiProperty({ required: false })
-  fechaFin?: Date;
-
-  @ApiProperty()
-  createdAt: Date;
-
-  @ApiProperty()
-  updatedAt: Date;
+  @ApiProperty({ required: false, nullable: true })
+  fechaFin: string | null;
 
   constructor(data: any) {
     this.rutaId = data.rutaId;
     this.nombre = data.nombre;
-    this.descripcion = data.descripcion;
+    this.descripcion = data.descripcion ?? null;
     this.operarioId = data.operarioId;
     this.tipoRuta = data.tipoRuta;
     this.comunidadId = data.comunidadId;
-    this.sectorId = data.sectorId;
+    this.sectorId = data.sectorId ?? null;
     this.estado = data.estado;
     this.fechaPlanificada = data.fechaPlanificada;
     this.fechaInicio = data.fechaInicio;
     this.fechaFin = data.fechaFin;
-    this.createdAt = data.createdAt;
-    this.updatedAt = data.updatedAt;
   }
 }

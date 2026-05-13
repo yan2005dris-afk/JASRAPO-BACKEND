@@ -1,6 +1,7 @@
 import type { Prisma } from 'src/generated/prisma/client';
 import { RouteEntity } from './route.entity';
 import { ReadingForRouteEntity } from './reading-for-route.entity';
+import { DateUtil } from 'src/infrastructure/common/util/date.util';
 
 type RouteModel = Prisma.RutasGetPayload<{}>;
 
@@ -25,12 +26,10 @@ export class RouteMapper {
       tipoRuta: route.tipoRuta,
       comunidadId: route.comunidadId,
       sectorId: route.sectorId,
-      fechaPlanificada: route.fechaPlanificada,
-      fechaInicio: route.fechaInicio,
-      fechaFin: route.fechaFin,
+      fechaPlanificada: DateUtil.formatForFrontend(route.createdAt),
+      fechaInicio: DateUtil.formatForFrontend(route.fechaInicio),
+      fechaFin: DateUtil.formatForFrontend(route.fechaFin),
       estado: route.estado,
-      createdAt: route.createdAt,
-      updatedAt: route.updatedAt,
     });
   }
 }
