@@ -8,10 +8,12 @@ model Usuarios {
   descuentosDetalle DescuentoDetalle[] @relation("AutorizadoPor")
   lote              Lote[]
   pagos             Pagos[]
+  rutas             Rutas[]
   perfil            Perfiles?
   sesiones          Sesiones[]
   permisosUsuario   UsuarioPermisos[]
   rol               Roles?             @relation(fields: [rolId], references: [rolId])
 
   @@map("usuarios")
+  
 }

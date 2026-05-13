@@ -16,9 +16,12 @@ model Lecturas {
 
   medidorId           BigInt?            @map("medidor_id")
   estado              EstadoLectura      @default(PENDIENTE) @map("estado")
+  rutaAsignadaId      BigInt?            @map("ruta_asignada_id")
+  estadoAsignacion    EstadoAsignacion   @default(NO_ASIGNADA) @map("estado_asignacion")
   contrato            Contratos          @relation(fields: [contratoId], references: [contratoId])
   medidor             Medidores?         @relation(fields: [medidorId], references: [medidorId], onDelete: Restrict)
   periodoRel          Periodos           @relation(fields: [periodoId], references: [periodoId])
+  rutaAsignada        Rutas?            @relation(fields: [rutaAsignadaId], references: [rutaId], onDelete: SetNull)
   lecturaAnomalias LecturaAnomalia[]
   prefacturas         Prefacturas[]
 
@@ -27,7 +30,10 @@ model Lecturas {
   @@index([fecha])
   @@index([estado, periodoId])
   @@index([contratoId, fecha])
+  @@index([rutaAsignadaId])
+  @@index([estadoAsignacion])
   @@map("lecturas")
+  
 }
 
 enum EstadoLectura {

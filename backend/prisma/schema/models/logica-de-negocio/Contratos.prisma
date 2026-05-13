@@ -39,4 +39,5 @@ enum EstadoGenerico {
   SUSPENDIDO
   EN_CONVENIO
   RETIRADO
+  RECONEXION
 }

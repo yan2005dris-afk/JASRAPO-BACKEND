@@ -91,7 +91,7 @@ async function bootstrap() {
       forbidNonWhitelisted: true,
       stopAtFirstError: true,
       transformOptions: {
-        enableImplicitConversion: false,
+        enableImplicitConversion: true,
       },
     }),
   );

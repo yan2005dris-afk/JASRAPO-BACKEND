@@ -32,7 +32,8 @@ export async function seedPermissions(prisma: PrismaClient) {
         "permissions",
         "profile",
         "files",
-        "metrics"
+        "metrics",
+        "routes"     // Rutas de trabajo (empleados asignados a zonas)
     ];
 
     const actions = ["read", "create", "update", "delete"];
