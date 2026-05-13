@@ -28,10 +28,6 @@ jobs:
           cache: 'pnpm'
           cache-dependency-path: backend/pnpm-lock.yaml
 
-      - name: Config pnpm security bypass
-        run: pnpm config set only-built-dependencies-file-checking false
-        working-directory: backend
-
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
         working-directory: backend
@@ -64,10 +60,6 @@ jobs:
           node-version: '22'
           cache: 'pnpm'
           cache-dependency-path: backend/pnpm-lock.yaml
-
-      - name: Config pnpm security bypass
-        run: pnpm config set only-built-dependencies-file-checking false
-        working-directory: backend
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -116,10 +108,6 @@ jobs:
           node-version: '22'
           cache: 'pnpm'
           cache-dependency-path: backend/pnpm-lock.yaml
-
-      - name: Config pnpm security bypass
-        run: pnpm config set only-built-dependencies-file-checking false
-        working-directory: backend
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
