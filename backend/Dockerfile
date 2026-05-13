@@ -6,7 +6,7 @@ COPY package.json pnpm-lock.yaml ./
 
 # ─── Stage 2: Dependencies ────────────────────────────────────
 FROM base AS deps
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --no-frozen-lockfile
 
 # ─── Stage 3: Production ──────────────────────────────────────
 FROM node:22-alpine AS production
@@ -17,7 +17,7 @@ ENV NODE_ENV=production
 # Only production dependencies
 COPY --from=deps /app/package.json ./package.json
 COPY --from=deps /app/pnpm-lock.yaml ./pnpm-lock.yaml
-RUN pnpm install --prod --frozen-lockfile
+RUN pnpm install --prod --no-frozen-lockfile
 
 # Copy source code
 COPY --from=deps /app/node_modules ./node_modules
