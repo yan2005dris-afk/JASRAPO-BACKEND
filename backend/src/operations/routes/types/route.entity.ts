@@ -25,7 +25,11 @@ export class RouteEntity {
   @ApiProperty()
   estado: string;
 
-  @ApiProperty({ required: false, nullable: true, example: '2025-05-12T10:30:00.000Z' })
+  @ApiProperty({
+    required: false,
+    nullable: true,
+    example: '2025-05-12T10:30:00.000Z',
+  })
   fechaPlanificada: string | null;
 
   @ApiProperty({ required: false, nullable: true })

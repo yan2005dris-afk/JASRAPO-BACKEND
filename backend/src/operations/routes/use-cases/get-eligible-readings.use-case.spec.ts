@@ -37,7 +37,11 @@ describe('GetEligibleReadingsUseCase', () => {
   it('should throw NotFoundException if comunidad not found', async () => {
     prismaService.comunidades.findUnique.mockResolvedValue(null);
     await expect(
-      useCase.execute({ tipoRuta: 'TOMA_LECTURA', comunidadId: 1 }),
+      useCase.execute({
+        tipoRuta: 'TOMA_LECTURA',
+        comunidadId: 1,
+        pagination: { page: 1, limit: 10 },
+      }),
     ).rejects.toThrow(NotFoundException);
   });
 
@@ -50,6 +54,7 @@ describe('GetEligibleReadingsUseCase', () => {
         tipoRuta: 'TOMA_LECTURA',
         comunidadId: 1,
         sectorId: 2,
+        pagination: { page: 1, limit: 10 },
       }),
     ).rejects.toThrow(NotFoundException);
   });
@@ -66,6 +71,7 @@ describe('GetEligibleReadingsUseCase', () => {
         tipoRuta: 'TOMA_LECTURA',
         comunidadId: 1,
         sectorId: 2,
+        pagination: { page: 1, limit: 10 },
       }),
     ).rejects.toThrow(BadRequestException);
   });
@@ -89,8 +95,7 @@ describe('GetEligibleReadingsUseCase', () => {
     const result = await useCase.execute({
       tipoRuta: 'TOMA_LECTURA',
       comunidadId: 1,
-      skip: 5,
-      take: 15,
+      pagination: { page: 2, limit: 15 },
       search: ' Juan ',
     });
 
@@ -117,12 +122,12 @@ describe('GetEligibleReadingsUseCase', () => {
 
     expect(prismaService.lecturas.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        skip: 5,
+        skip: 15,
         take: 15,
       }),
     );
 
-    expect(result.total).toBe(1);
+    expect(result.meta.total).toBe(1);
     expect(result.data).toHaveLength(1);
     expect(result.data[0].lecturaId).toBe(10n);
     expect(result.data[0].clienteNombre).toBe('Juan Perez');
@@ -136,6 +141,7 @@ describe('GetEligibleReadingsUseCase', () => {
     await useCase.execute({
       tipoRuta: 'RECONEXION',
       comunidadId: 1,
+      pagination: { page: 1, limit: 10 },
     });
 
     expect(prismaService.lecturas.count).toHaveBeenCalledWith(

@@ -41,7 +41,8 @@ export class RoutesController {
    */
   @ApiOperation({
     summary: 'Obtener lecturas elegibles para ruta',
-    description: 'Retorna las lecturas disponibles para asignar a una nueva ruta',
+    description:
+      'Retorna las lecturas disponibles para asignar a una nueva ruta',
   })
   @ApiPaginatedResponse(ReadingForRouteEntity)
   //@RequiredPermission('routes', 'read')
@@ -103,7 +104,11 @@ export class RoutesController {
     description: 'Retorna una ruta específica',
   })
   @ApiParam({ name: 'id', description: 'ID de la ruta', type: String })
-  @ApiResponse({ status: 200, description: 'Ruta encontrada', type: RouteEntity })
+  @ApiResponse({
+    status: 200,
+    description: 'Ruta encontrada',
+    type: RouteEntity,
+  })
   @ApiResponse({ status: 404, description: 'Ruta no encontrada' })
   @RequiredPermission('routes', 'read')
   @Get(':id')
@@ -119,7 +124,11 @@ export class RoutesController {
     description: 'Actualiza los datos de una ruta existente',
   })
   @ApiParam({ name: 'id', description: 'ID de la ruta', type: String })
-  @ApiResponse({ status: 200, description: 'Ruta actualizada', type: RouteEntity })
+  @ApiResponse({
+    status: 200,
+    description: 'Ruta actualizada',
+    type: RouteEntity,
+  })
   @RequiredPermission('routes', 'update')
   @Patch(':id')
   async update(

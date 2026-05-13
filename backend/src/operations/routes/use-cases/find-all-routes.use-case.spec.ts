@@ -40,8 +40,7 @@ describe('FindAllRoutesUseCase', () => {
     ]);
 
     const result = await useCase.execute({
-      skip: 0,
-      take: 10,
+      pagination: { page: 1, limit: 10 },
       where: { estado: 'PENDIENTE' },
     });
 
@@ -54,7 +53,7 @@ describe('FindAllRoutesUseCase', () => {
       where: { estado: 'PENDIENTE', deletedAt: null },
       orderBy: { createdAt: 'desc' },
     });
-    expect(result.total).toBe(2);
+    expect(result.meta.total).toBe(2);
     expect(result.data).toHaveLength(2);
     expect(result.data[0].rutaId).toBe(1n);
     expect(result.data[0].nombre).toBe('Route 1');

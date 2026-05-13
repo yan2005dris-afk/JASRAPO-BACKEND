@@ -1,4 +1,4 @@
-import { PaginatedResult } from '../types/paginated-result.type';
+import type { PaginatedResult } from '../types/paginated-result.type';
 
 export interface PaginateOptions {
   page?: number;

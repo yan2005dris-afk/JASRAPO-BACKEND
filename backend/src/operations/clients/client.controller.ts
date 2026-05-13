@@ -97,7 +97,11 @@ export class ClientController {
     type: String,
     example: '1',
   })
-  @ApiResponse({ status: 200, description: 'Cliente encontrado', type: ClientEntity })
+  @ApiResponse({
+    status: 200,
+    description: 'Cliente encontrado',
+    type: ClientEntity,
+  })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({ status: 403, description: 'Sin permiso clientes:read' })
   @ApiResponse({ status: 404, description: 'Cliente no encontrado' })
