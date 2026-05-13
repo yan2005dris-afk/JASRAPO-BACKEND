@@ -8,6 +8,11 @@ import { Prisma, EstadoGenerico } from 'src/generated/prisma/client';
 
 import { ReadingForRouteEntity } from '../types/reading-for-route.entity';
 import { ReadingForRouteMapper } from '../types/mappers';
+import {
+  paginate,
+  PaginateOptions,
+} from 'src/infrastructure/common/util/pagination.util';
+import { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
 
 @Injectable()
 export class GetEligibleReadingsUseCase {
@@ -18,20 +23,9 @@ export class GetEligibleReadingsUseCase {
     comunidadId: number;
     sectorId?: number;
     search?: string;
-    skip?: number;
-    take?: number;
-  }): Promise<{
-    data: ReadingForRouteEntity[];
-    total: number;
-  }> {
-    const {
-      tipoRuta,
-      comunidadId,
-      sectorId,
-      search,
-      skip = 0,
-      take = 10,
-    } = params;
+    pagination: PaginateOptions;
+  }): Promise<PaginatedResult<ReadingForRouteEntity>> {
+    const { tipoRuta, comunidadId, sectorId, search, pagination } = params;
 
     // Validar comunidad
     const comunidad = await this.prisma.comunidades.findUnique({
@@ -121,47 +115,37 @@ export class GetEligibleReadingsUseCase {
       ];
     }
 
-    // Total
-    const total = await this.prisma.lecturas.count({
-      where,
-    });
-
-    // Datos
-    const lecturas = await this.prisma.lecturas.findMany({
-      where,
-
-      skip,
-
-      take,
-
-      include: {
-        contrato: {
-          include: {
-            cliente: true,
-            sector: true,
+    const result = await paginate<Prisma.LecturasDelegate, any>(
+      this.prisma.lecturas,
+      {
+        where,
+        include: {
+          contrato: {
+            include: {
+              cliente: true,
+              sector: true,
+            },
           },
         },
+        orderBy: [
+          {
+            contrato: {
+              sectorId: 'asc',
+            },
+          },
+          {
+            contrato: {
+              numeroGuia: 'asc',
+            },
+          },
+        ],
       },
-
-      orderBy: [
-        {
-          contrato: {
-            sectorId: 'asc',
-          },
-        },
-
-        {
-          contrato: {
-            numeroGuia: 'asc',
-          },
-        },
-      ],
-    });
+      pagination,
+    );
 
     return {
-      data: lecturas.map((l) => ReadingForRouteMapper.toEntity(l)),
-
-      total,
+      ...result,
+      data: result.data.map((l) => ReadingForRouteMapper.toEntity(l)),
     };
   }
 }

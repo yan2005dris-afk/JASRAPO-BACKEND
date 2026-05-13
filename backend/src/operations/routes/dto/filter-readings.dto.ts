@@ -3,14 +3,13 @@ import {
   IsOptional,
   IsIn,
   IsNumber,
-  IsInt,
-  Min,
   IsString,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
+import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
 
-export class FilterReadingsDto {
+export class FilterReadingsDto extends PaginationDto {
   @ApiProperty({
     description: 'Tipo de ruta para filtrar lecturas elegibles',
     enum: ['TOMA_LECTURA', 'RECONEXION'],
@@ -45,26 +44,4 @@ export class FilterReadingsDto {
   @IsOptional()
   @IsString()
   search?: string;
-
-  @ApiProperty({
-    description: 'Registros a omitir (paginación)',
-    required: false,
-    example: 0,
-  })
-  @IsOptional()
-  @IsInt()
-  @Min(0)
-  @Type(() => Number)
-  skip?: number;
-
-  @ApiProperty({
-    description: 'Límite de registros (paginación)',
-    required: false,
-    example: 10,
-  })
-  @IsOptional()
-  @IsInt()
-  @Min(1)
-  @Type(() => Number)
-  take?: number;
 }

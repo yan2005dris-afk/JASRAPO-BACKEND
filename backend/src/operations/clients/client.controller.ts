@@ -14,9 +14,9 @@ import {
   ApiTags,
   ApiOperation,
   ApiResponse,
-  ApiQuery,
   ApiParam,
   ApiBody,
+  ApiExtraModels,
 } from '@nestjs/swagger';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
 import { JwtAuthGuard } from 'src/identity/auth/guards/jwt-auth.guard';
@@ -25,9 +25,13 @@ import { ClientService } from './client.service';
 import { CreateClientDto } from './dto/create-client.dto';
 import { UpdateClientDto } from './dto/update-client.dto';
 import { FilterClientDto } from './dto/filter-client.dto';
+import { ApiPaginatedResponse } from 'src/infrastructure/common/decorators/api-paginated-response.decorator';
+import { ClientEntity } from './types/client.entity';
+import { PaginationMetaDto } from 'src/infrastructure/common/dtos/pagination-meta.dto';
 
 @ApiTags('clients')
 @ApiBearerAuth()
+@ApiExtraModels(ClientEntity, PaginationMetaDto)
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('clients')
 export class ClientController {
@@ -71,42 +75,9 @@ export class ClientController {
    */
   @ApiOperation({
     summary: 'Listar clientes',
-    description: 'Retorna clientes con filtros opcionales',
+    description: 'Retorna clientes con filtros opcionales y paginación',
   })
-  @ApiQuery({
-    name: 'identificacion',
-    description: 'Filtrar por número de identificación',
-    required: false,
-    example: '1234567890',
-  })
-  @ApiQuery({
-    name: 'nombres',
-    description: 'Filtrar por nombres (búsqueda parcial)',
-    required: false,
-    example: 'Juan',
-  })
-  @ApiQuery({
-    name: 'apellidos',
-    description: 'Filtrar por apellidos (búsqueda parcial)',
-    required: false,
-    example: 'Pérez',
-  })
-  @ApiQuery({
-    name: 'nombreCompleto',
-    description: 'Filtrar por nombre completo (búsqueda parcial)',
-    required: false,
-    example: 'Juan Pérez',
-  })
-  @ApiQuery({
-    name: 'activo',
-    description: 'Filtrar por estado: true=activos, false=inactivos',
-    required: false,
-    type: Boolean,
-    example: true,
-  })
-  @ApiResponse({ status: 200, description: 'Lista de clientes' })
-  @ApiResponse({ status: 401, description: 'No autorizado' })
-  @ApiResponse({ status: 403, description: 'Sin permiso clientes:read' })
+  @ApiPaginatedResponse(ClientEntity)
   @RequiredPermission('clientes', 'read')
   @Get()
   findAll(@Query() filters: FilterClientDto) {
@@ -126,7 +97,7 @@ export class ClientController {
     type: String,
     example: '1',
   })
-  @ApiResponse({ status: 200, description: 'Cliente encontrado' })
+  @ApiResponse({ status: 200, description: 'Cliente encontrado', type: ClientEntity })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({ status: 403, description: 'Sin permiso clientes:read' })
   @ApiResponse({ status: 404, description: 'Cliente no encontrado' })

@@ -11,6 +11,7 @@ import { FindAllRoutesUseCase } from './use-cases/find-all-routes.use-case';
 import { FindOneRouteUseCase } from './use-cases/find-one-route.use-case';
 import { UpdateRouteUseCase } from './use-cases/update-route.use-case';
 import { DeleteRouteUseCase } from './use-cases/delete-route.use-case';
+import { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
 
 @Injectable()
 export class RoutesService {
@@ -25,14 +26,16 @@ export class RoutesService {
 
   async getEligibleReadings(
     filterDto: FilterReadingsDto,
-  ): Promise<{ data: ReadingForRouteEntity[]; total: number }> {
+  ): Promise<PaginatedResult<ReadingForRouteEntity>> {
     return this.getEligibleReadingsUseCase.execute({
       tipoRuta: filterDto.tipoRuta,
       comunidadId: filterDto.comunidadId,
       sectorId: filterDto.sectorId,
       search: filterDto.search,
-      skip: filterDto.skip,
-      take: filterDto.take,
+      pagination: {
+        page: filterDto.page,
+        limit: filterDto.limit,
+      },
     });
   }
 
@@ -41,10 +44,9 @@ export class RoutesService {
   }
 
   async findAll(params: {
-    skip?: number;
-    take?: number;
+    pagination: { page?: number; limit?: number };
     where?: Prisma.RutasWhereInput;
-  }): Promise<{ data: RouteEntity[]; total: number }> {
+  }): Promise<PaginatedResult<RouteEntity>> {
     return this.findAllRoutesUseCase.execute(params);
   }
 
