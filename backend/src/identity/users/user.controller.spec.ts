@@ -48,9 +48,7 @@ describe('UserController', () => {
       };
       const mockUser = { usuarioId: 1, email: 'test@example.com' };
 
-      jest
-        .spyOn(userService, 'createUser')
-        .mockResolvedValue(mockUser as never);
+      jest.spyOn(userService, 'createUser').mockResolvedValue(mockUser);
 
       const result = await controller.create(createUserDto);
 
@@ -88,7 +86,7 @@ describe('UserController', () => {
       const userId = 1;
       const mockUser = { usuarioId: userId, email: 'test@example.com' };
 
-      jest.spyOn(userService, 'user').mockResolvedValue(mockUser as never);
+      jest.spyOn(userService, 'user').mockResolvedValue(mockUser);
 
       const result = await controller.findOne(userId);
 
@@ -140,9 +138,7 @@ describe('UserController', () => {
         email: 'newemail@example.com',
       };
 
-      jest
-        .spyOn(userService, 'updateUser')
-        .mockResolvedValue(mockUpdatedUser as never);
+      jest.spyOn(userService, 'updateUser').mockResolvedValue(mockUpdatedUser);
 
       const result = await controller.updateUser(userId, updateUserDto);
 

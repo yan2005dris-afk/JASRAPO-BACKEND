@@ -68,7 +68,7 @@ describe('SectorService', () => {
   describe('actualizarSector', () => {
     it('should delegate to UpdateSectorUseCase', async () => {
       const dto = { nombre: 'Sector Updated' };
-      await service.actualizarSector(1, dto as any);
+      await service.actualizarSector(1, dto);
       expect(updateUseCase.execute).toHaveBeenCalledWith(1, dto);
     });
   });

@@ -5,7 +5,7 @@ export interface PaginateOptions {
   limit?: number;
 }
 
-export async function paginate<T, K>(
+export async function paginate<K>(
   model: any,
   args: any = { where: {} },
   options: PaginateOptions = { page: 1, limit: 10 },
