@@ -115,7 +115,7 @@ export class GetEligibleReadingsUseCase {
       ];
     }
 
-    const result = await paginate<Prisma.LecturasDelegate, any>(
+    const result = await paginate<any>(
       this.prisma.lecturas,
       {
         where,

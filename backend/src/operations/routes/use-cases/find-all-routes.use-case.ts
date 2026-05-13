@@ -19,7 +19,7 @@ export class FindAllRoutesUseCase {
   }): Promise<PaginatedResult<RouteEntity>> {
     const { pagination, where } = params;
 
-    const result = await paginate<Prisma.RutasDelegate, any>(
+    const result = await paginate<any>(
       this.prisma.rutas,
       {
         where: { ...where, deletedAt: null },
