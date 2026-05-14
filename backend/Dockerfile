@@ -19,10 +19,7 @@ FROM base AS production
 ENV NODE_ENV=production
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-RUN apk add --no-cache python3 make g++ \
-    && pnpm install --prod --frozen-lockfile \
-    && apk del python3 make g++
-
+COPY --from=deps /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/src/generated/prisma ./src/generated/prisma
 COPY --from=builder /app/prisma ./prisma
