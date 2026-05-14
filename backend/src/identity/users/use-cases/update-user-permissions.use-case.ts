@@ -55,7 +55,9 @@ export class UpdateUserPermissionsUseCase {
     const deduplicatedPermissions = [
       ...new Map(permissions.map((p) => [p.permisoId, p])).values(),
     ];
-    const newPermissionIds = new Set(deduplicatedPermissions.map((p) => p.permisoId));
+    const newPermissionIds = new Set(
+      deduplicatedPermissions.map((p) => p.permisoId),
+    );
 
     const run = async (innerTx: Prisma.TransactionClient) => {
       const permissionsToRemove = [...activePermissionIds].filter(
