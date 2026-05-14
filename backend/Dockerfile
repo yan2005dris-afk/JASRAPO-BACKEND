@@ -24,7 +24,7 @@ RUN apk add --no-cache python3 make g++ \
     && apk del python3 make g++
 
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/src/generated/prisma ./src/generated/prisma
 COPY --from=builder /app/prisma ./prisma
 
 EXPOSE ${PORT:-3000}
