@@ -1,5 +1,7 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { ConflictException } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { CreateUserUseCase } from './create-user.use-case';
 
@@ -127,5 +129,73 @@ describe('CreateUserUseCase', () => {
         rolId: 999,
       }),
     ).rejects.toThrow('Rol no encontrado o eliminado');
+  });
+
+  it('should throw BadRequestException for invalid Ecuador phone', async () => {
+    mockPrisma.usuarios.findUnique.mockResolvedValue(null);
+    await expect(
+      useCase.execute({
+        email: 't@t.com',
+        nombres: 'Test',
+        apellidos: 'User',
+        telefono: '+5491155555555', // Teléfono argentino - inválido
+      }),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('should throw BadRequestException for empty nombres', async () => {
+    mockPrisma.usuarios.findUnique.mockResolvedValue(null);
+    await expect(
+      useCase.execute({
+        email: 't@t.com',
+        nombres: '',
+        apellidos: 'User',
+        telefono: '0991234567',
+      }),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('should throw BadRequestException for whitespace-only nombres', async () => {
+    mockPrisma.usuarios.findUnique.mockResolvedValue(null);
+    await expect(
+      useCase.execute({
+        email: 't@t.com',
+        nombres: '   ',
+        apellidos: 'User',
+        telefono: '0991234567',
+      }),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('should throw ConflictException if email already exists (active)', async () => {
+    mockPrisma.usuarios.findUnique.mockResolvedValue({
+      usuarioId: 1,
+      email: 't@t.com',
+      deletedAt: null,
+    });
+    await expect(
+      useCase.execute({
+        email: 't@t.com',
+        nombres: 'Test',
+        apellidos: 'User',
+        telefono: '0991234567',
+      }),
+    ).rejects.toThrow(ConflictException);
+  });
+
+  it('should throw ConflictException with specific message if email exists but deleted', async () => {
+    mockPrisma.usuarios.findUnique.mockResolvedValue({
+      usuarioId: 1,
+      email: 't@t.com',
+      deletedAt: new Date('2024-01-01'),
+    });
+    await expect(
+      useCase.execute({
+        email: 't@t.com',
+        nombres: 'Test',
+        apellidos: 'User',
+        telefono: '0991234567',
+      }),
+    ).rejects.toThrow('pertenece a un usuario eliminado');
   });
 });

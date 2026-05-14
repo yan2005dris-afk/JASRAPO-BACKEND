@@ -11,6 +11,9 @@ describe('UpdateUserPermissionsUseCase', () => {
     usuarios: {
       findUnique: jest.fn(),
     },
+    permisos: {
+      findMany: jest.fn().mockResolvedValue([]),
+    },
     usuarioPermisos: {
       findMany: jest.fn(),
       findFirst: jest.fn(),
@@ -71,8 +74,18 @@ describe('UpdateUserPermissionsUseCase', () => {
       deletedAt: null,
     });
     mockPrisma.usuarioPermisos.findMany.mockResolvedValue([]);
+    mockPrisma.permisos.findMany.mockResolvedValue([{ permisoId: 10 }]);
 
     await useCase.execute(1, [{ permisoId: 10, permitido: true }]);
+
+    // Validar que se verificó que el permiso no está eliminado
+    expect(mockPrisma.permisos.findMany).toHaveBeenCalledWith({
+      where: {
+        permisoId: { in: [10] },
+        deletedAt: null,
+      },
+      select: { permisoId: true },
+    });
 
     expect(mockPrisma.usuarioPermisos.create).toHaveBeenCalledWith({
       data: {
@@ -88,18 +101,29 @@ describe('UpdateUserPermissionsUseCase', () => {
       usuarioId: 1,
       deletedAt: null,
     });
+    // Primera query: permisos actuales del usuario
     mockPrisma.usuarioPermisos.findMany.mockResolvedValue([{ permisoId: 10 }]);
-    mockPrisma.usuarioPermisos.findFirst.mockResolvedValue({
-      usuarioPermisoId: 1,
-      permisoId: 10,
-      permitido: true,
-    });
+    // Segunda query dentro de transacción: permisos con relación
+    mockPrisma.usuarioPermisos.findMany
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([
+        {
+          usuarioPermisoId: 1,
+          permisoId: 10,
+          permiso: { permisoId: 10, deletedAt: null },
+        },
+      ]);
+    mockPrisma.permisos.findMany.mockResolvedValue([{ permisoId: 10 }]);
 
     await useCase.execute(1, [{ permisoId: 10, permitido: false }]);
 
-    expect(mockPrisma.usuarioPermisos.update).toHaveBeenCalledWith({
-      where: { usuarioPermisoId: 1 },
-      data: { permitido: false },
+    // Verificar que se creó el permiso (ya que el existente no tiene update)
+    expect(mockPrisma.usuarioPermisos.create).toHaveBeenCalledWith({
+      data: {
+        usuarioId: 1,
+        permisoId: 10,
+        permitido: false,
+      },
     });
   });
 

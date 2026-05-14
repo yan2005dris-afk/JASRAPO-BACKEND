@@ -40,8 +40,9 @@ export class CreateUserDto {
   apellidos: string;
 
   @ApiProperty({
-    description: 'Teléfono del usuario',
-    example: '+5491155555555',
+    description:
+      'Teléfono del usuario (formato Ecuador: +593XXXXXXXXX o 09XXXXXXXX)',
+    example: '+593991234567',
     required: true,
   })
   @IsString()

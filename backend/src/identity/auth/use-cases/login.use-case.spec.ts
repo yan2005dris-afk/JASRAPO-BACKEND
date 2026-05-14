@@ -79,12 +79,17 @@ describe('LoginUseCase', () => {
     it('should login successfully with minimal data retrieval', async () => {
       const loginDto = { email: 'test@jasrapo.com', password: 'Password123!' };
 
-      // Minimal user data
+      // User data with merged profile fields
       const mockUser = {
         usuarioId: 1,
         email: 'test@jasrapo.com',
         clave: 'hashedPassword',
         deletedAt: null,
+        nombres: 'Juan',
+        apellidos: 'Pérez',
+        avatar: { url: 'https://example.com/avatar.png', key: 'avatar.png' },
+        rolId: 1,
+        rol: { nombre: 'admin' },
       };
 
       (prismaService.usuarios.findUnique as jest.Mock).mockResolvedValue(
@@ -111,11 +116,11 @@ describe('LoginUseCase', () => {
         email: 'test@jasrapo.com',
         accessToken: 'access-token',
         refreshToken: 'refresh-token',
+        name: 'Juan Pérez',
+        avatar: 'avatar.png',
+        roleId: 1,
+        roleName: 'admin',
       });
-      // Verification of null fields in consolidated model
-      expect(result.name).toBeNull();
-      expect(result.avatar).toBeNull();
-      expect(result.roleId).toBeNull();
 
       expect(sessionsService.createSession).toHaveBeenCalled();
       expect(prismaService.usuarios.findUnique).toHaveBeenCalledTimes(1);

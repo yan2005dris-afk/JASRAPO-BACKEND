@@ -51,36 +51,33 @@ export class UpdateUserPermissionsUseCase {
         });
       }
 
-      // 2. Crear o actualizar permisos
-      for (const perm of permissions) {
-        const exists = existingPermissionIds.has(perm.permisoId);
+      // 2. Validar que los permisos a asignar no estén eliminados
+      const validPermissions = await tx.permisos.findMany({
+        where: {
+          permisoId: { in: permissions.map((p) => p.permisoId) },
+          deletedAt: null,
+        },
+        select: { permisoId: true },
+      });
+      const validPermissionIds = new Set(
+        validPermissions.map((p) => p.permisoId),
+      );
 
-        if (exists) {
-          // Verificar que el permiso existe y no está eliminado
-          const existing = await tx.usuarioPermisos.findFirst({
-            where: {
-              usuarioId,
-              permisoId: perm.permisoId,
-              deletedAt: null,
-            },
-          });
+      // 3. Crear permisos que no existen (solo los válidos/no eliminados)
+      const permissionsToCreate = permissions.filter(
+        (p) =>
+          validPermissionIds.has(p.permisoId) &&
+          !existingPermissionIds.has(p.permisoId),
+      );
 
-          if (existing && existing.permitido !== perm.permitido) {
-            await tx.usuarioPermisos.update({
-              where: { usuarioPermisoId: existing.usuarioPermisoId },
-              data: { permitido: perm.permitido ?? true },
-            });
-          }
-        } else {
-          // Crear nuevo permiso directo
-          await tx.usuarioPermisos.create({
-            data: {
-              usuarioId,
-              permisoId: perm.permisoId,
-              permitido: perm.permitido ?? true,
-            },
-          });
-        }
+      for (const perm of permissionsToCreate) {
+        await tx.usuarioPermisos.create({
+          data: {
+            usuarioId,
+            permisoId: perm.permisoId,
+            permitido: perm.permitido ?? true,
+          },
+        });
       }
     });
   }

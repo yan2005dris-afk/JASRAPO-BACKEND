@@ -21,6 +21,11 @@ interface ValidatedUser {
   email: string;
   clave: string;
   deletedAt: Date | null;
+  nombres: string | null;
+  apellidos: string | null;
+  avatar: unknown;
+  rolId: number | null;
+  rol: { nombre: string } | null;
 }
 
 @Injectable()
@@ -88,6 +93,13 @@ export class LoginUseCase {
         email: true,
         clave: true,
         deletedAt: true,
+        nombres: true,
+        apellidos: true,
+        avatar: true,
+        rolId: true,
+        rol: {
+          select: { nombre: true },
+        },
       },
     });
 
@@ -148,15 +160,24 @@ export class LoginUseCase {
     const toDate = (ts?: number) =>
       ts ? EcuadorTimezoneUtil.formatAsEcuadorISO(new Date(ts * 1000)) : null;
 
+    const fullName =
+      user.nombres && user.apellidos
+        ? `${user.nombres} ${user.apellidos}`
+        : user.nombres || user.apellidos || null;
+    const avatarKey =
+      user.avatar && typeof user.avatar === 'object'
+        ? ((user.avatar as { key?: string }).key ?? null)
+        : null;
+
     return {
       sub: user.usuarioId,
       sid: sesionId,
-      name: null,
-      avatar: null,
+      name: fullName,
+      avatar: avatarKey,
       email: user.email,
-      roleId: null,
-      roleName: null,
-      roles: [],
+      roleId: user.rolId,
+      roleName: user.rol?.nombre ?? null,
+      roles: user.rolId ? [user.rolId] : [],
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
       accessTokenInfo: {

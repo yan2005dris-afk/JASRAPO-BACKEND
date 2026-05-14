@@ -43,7 +43,7 @@ describe('RegisterUseCase', () => {
         email: 'test@test.com',
         nombres: 'Juan',
         apellidos: 'Pérez',
-        telefono: '+5491155555555',
+        telefono: '+593991234567',
       });
 
       expect(result.message).toBe('El registro fue exitoso');
@@ -51,7 +51,7 @@ describe('RegisterUseCase', () => {
         email: 'test@test.com',
         nombres: 'Juan',
         apellidos: 'Pérez',
-        telefono: '+5491155555555',
+        telefono: '+593991234567',
       });
     });
 
@@ -62,7 +62,7 @@ describe('RegisterUseCase', () => {
           email: 'test@test.com',
           nombres: 'Juan',
           apellidos: 'Pérez',
-          telefono: '+5491155555555',
+          telefono: '+593991234567',
         }),
       ).rejects.toThrow(BadRequestException);
     });
@@ -75,7 +75,7 @@ describe('RegisterUseCase', () => {
           email: 'test@test.com',
           nombres: 'Juan',
           apellidos: 'Pérez',
-          telefono: '+5491155555555',
+          telefono: '+593991234567',
         }),
       ).rejects.toThrow(BadRequestException);
     });
@@ -91,7 +91,7 @@ describe('RegisterUseCase', () => {
         email: 'admin@test.com',
         nombres: 'Admin',
         apellidos: 'User',
-        telefono: '+5491166666666',
+        telefono: '+593981234567',
         rolId: '2',
       });
 
@@ -99,7 +99,7 @@ describe('RegisterUseCase', () => {
         email: 'admin@test.com',
         nombres: 'Admin',
         apellidos: 'User',
-        telefono: '+5491166666666',
+        telefono: '+593981234567',
         rolId: 2,
       });
     });

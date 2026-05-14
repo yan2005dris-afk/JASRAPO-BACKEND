@@ -2,7 +2,7 @@ import { BadRequestException } from '@nestjs/common';
 
 /**
  * Utilitario para validación de números de teléfono
- * Ecuador: +593 (código país) o 09 (código移动通信)
+ * Ecuador: +593 (código país) o 09 (código de telefonía móvil)
  */
 export class PhoneUtil {
   /**
@@ -34,9 +34,9 @@ export class PhoneUtil {
           `El campo ${fieldName} debe tener 9 dígitos después de +593`,
         );
       }
-      if (!/^\d{9}$/.test(numberPart)) {
+      if (!/^9\d{8}$/.test(numberPart)) {
         throw new BadRequestException(
-          `El campo ${fieldName} contiene caracteres inválidos después de +593`,
+          `El campo ${fieldName} debe comenzar con 9 (prefijo móvil) después de +593`,
         );
       }
       return;

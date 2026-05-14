@@ -51,8 +51,8 @@ export class UserProfileEntity {
   name: string | null;
 
   @ApiProperty({
-    example: '+5491155555555',
-    description: 'Número de teléfono',
+    example: '+593991234567',
+    description: 'Número de teléfono (formato Ecuador)',
     nullable: true,
   })
   phone: string | null;
@@ -97,8 +97,8 @@ export class UserEntity {
   apellidos: string | null;
 
   @ApiProperty({
-    example: '+5491155555555',
-    description: 'Teléfono',
+    example: '+593991234567',
+    description: 'Teléfono (formato Ecuador)',
     nullable: true,
   })
   telefono: string | null;

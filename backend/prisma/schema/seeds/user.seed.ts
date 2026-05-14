@@ -20,7 +20,7 @@ export async function seedUSers(
             rolId: roles.adminRol.rolId,
             nombres: 'Juan',
             apellidos: 'Pérez',
-            telefono: '+5491155555555',
+            telefono: '+593991234567',
             avatar: { url: 'https://res.cloudinary.com/jasrapo/image/upload/v1/avatars/admin', publicId: 'avatars/admin' },
         },
         {
@@ -29,7 +29,7 @@ export async function seedUSers(
             rolId: roles.secretariaRol.rolId,
             nombres: 'María',
             apellidos: 'Gómez',
-            telefono: '+5491155555556',
+            telefono: '+593981234567',
             avatar: { url: 'https://res.cloudinary.com/jasrapo/image/upload/v1/avatars/secretaria', publicId: 'avatars/secretaria' },
         },
         {
@@ -38,7 +38,7 @@ export async function seedUSers(
             rolId: roles.recaudacionRol.rolId,
             nombres: 'Carlos',
             apellidos: 'Rodríguez',
-            telefono: '+5491155555557',
+            telefono: '+593971234567',
             avatar: { url: 'https://res.cloudinary.com/jasrapo/image/upload/v1/avatars/recaudacion', publicId: 'avatars/recaudacion' },
         },
         {
@@ -47,7 +47,7 @@ export async function seedUSers(
             rolId: roles.presidenciaRol.rolId,
             nombres: 'Ana',
             apellidos: 'Martínez',
-            telefono: '+5491155555558',
+            telefono: '+593961234567',
             avatar: { url: 'https://res.cloudinary.com/jasrapo/image/upload/v1/avatars/presidencia', publicId: 'avatars/presidencia' },
         },
         {
@@ -56,7 +56,7 @@ export async function seedUSers(
             rolId: roles.operadoresRol.rolId,
             nombres: 'Pedro',
             apellidos: 'Sánchez',
-            telefono: '+5491155555559',
+            telefono: '+593951234567',
             avatar: { url: 'https://res.cloudinary.com/jasrapo/image/upload/v1/avatars/operadores', publicId: 'avatars/operadores' },
         },
         {
@@ -65,7 +65,7 @@ export async function seedUSers(
             rolId: roles.contabilidadRol.rolId,
             nombres: 'Laura',
             apellidos: 'Fernández',
-            telefono: '+5491155555560',
+            telefono: '+593941234567',
             avatar: { url: 'https://res.cloudinary.com/jasrapo/image/upload/v1/avatars/contabilidad', publicId: 'avatars/contabilidad' },
         },
         {
@@ -74,7 +74,7 @@ export async function seedUSers(
             rolId: roles.userRol.rolId,
             nombres: 'Usuario',
             apellidos: 'Demo',
-            telefono: '+5491155555561',
+            telefono: '+593931234567',
             avatar: { url: 'https://res.cloudinary.com/jasrapo/image/upload/v1/avatars/user', publicId: 'avatars/user' },
         },
     ];

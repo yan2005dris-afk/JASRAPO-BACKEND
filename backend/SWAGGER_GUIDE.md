@@ -283,27 +283,27 @@ export class UserController {
     summary: 'Obtener todos los usuarios', 
     description: 'Retorna una lista de usuarios con soporte para paginación mediante query parameters' 
   })
-  @ApiQuery({ 
-    name: 'skip', 
-    description: 'Número de registros a omitir (para paginación)', 
-    required: false, 
-    example: 0,
-    type: Number 
+  @ApiQuery({
+    name: 'page',
+    description: 'Número de página (para paginación)',
+    required: false,
+    example: 1,
+    type: Number,
   })
-  @ApiQuery({ 
-    name: 'take', 
-    description: 'Número de registros a obtener (límite)', 
-    required: false, 
+  @ApiQuery({
+    name: 'limit',
+    description: 'Número de registros por página',
+    required: false,
     example: 10,
-    type: Number 
+    type: Number,
   })
-  @ApiResponse({ 
-    status: 200, 
-    description: 'Lista de usuarios obtenida exitosamente' 
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de usuarios obtenida exitosamente',
   })
   @Get()
-  findAll(@Query('skip') skip?: number, @Query('take') take?: number) {
-    return this.userService.findAll({ skip, take });
+  findAll(@Query('page') page?: number, @Query('limit') limit?: number) {
+    return this.userService.findAll({ page, limit });
   }
 
   /**
@@ -657,7 +657,7 @@ Una vez iniciado el servidor, visita:
 - **Autenticación**: Tu API usa JWT. Los usuarios deben obtener un token en `/auth/login` y usarlo en el header `Authorization: Bearer <token>`
 - **Permisos**: Los endpoints están protegidos por el sistema de permisos. El `@RequiredPermission` decorator controla el acceso
 - **Soft Delete**: Tu sistema usa eliminación lógica (soft delete), no física
-- **Paginación**: Los endpoints de lista soportan paginación con `skip` y `take`
+- **Paginación**: Los endpoints de lista soportan paginación con `page` y `limit`
 
 ---
 
@@ -677,31 +677,60 @@ import {
   Post,
   Query,
   UseGuards,
+  NotFoundException,
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { AssignRoleDto } from './dto/assign-role.dto';
-import { AssignPermissionDto } from './dto/assign-permission.dto';
 import { UserService } from './user.service';
-import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
-import { PermissionsGuard } from 'src/common/guards/permissions.guard';
-import { RequiredPermission } from 'src/common/decorators/require-permission.decorator';
+import { JwtAuthGuard } from 'src/identity/auth/guards/jwt-auth.guard';
+import { AuthUserId } from 'src/infrastructure/common/decorators/auth-user-id.decorator';
+import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
+import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
 import {
   ApiBearerAuth,
   ApiTags,
   ApiOperation,
   ApiResponse,
   ApiParam,
-  ApiQuery,
-  ApiBody,
+  ApiExtraModels,
 } from '@nestjs/swagger';
+import {
+  UserEntity,
+  UserProfileEntity,
+  UserDetailEntity,
+} from './entities/user.entity';
+import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
+import { ApiPaginatedResponse } from 'src/infrastructure/common/decorators/api-paginated-response.decorator';
+import { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
 
 @ApiTags('users')
 @ApiBearerAuth()
+@ApiExtraModels(UserEntity, UserProfileEntity, UserDetailEntity)
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
+
+  /**
+   * Obtiene los datos del perfil del usuario autenticado.
+   * Requiere permiso: users:read
+   */
+  @ApiOperation({
+    summary: 'Obtener mi perfil',
+    description:
+      'Retorna los datos del usuario actualmente autenticado (email, nombres, apellidos, teléfono, avatar y rol).',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Perfil obtenido exitosamente',
+    type: UserProfileEntity,
+  })
+  @ApiResponse({ status: 401, description: 'No autorizado' })
+  @RequiredPermission('users', 'read')
+  @Get('me')
+  async findMe(@AuthUserId() usersId: number): Promise<UserProfileEntity> {
+    return this.userService.findMe(usersId);
+  }
 
   /**
    * Crea un nuevo usuario en el sistema.
@@ -709,125 +738,60 @@ export class UserController {
    */
   @ApiOperation({
     summary: 'Crear usuario',
-    description: 'Crea un nuevo usuario con email y contraseña. El email debe ser único en el sistema.',
+    description:
+      'Crea un nuevo usuario. El email debe ser único en el sistema. Teléfono debe ser formato Ecuador (+593 o 09).',
   })
-  @ApiBody({ type: CreateUserDto, description: 'Datos del usuario a crear' })
   @ApiResponse({
     status: 201,
     description: 'Usuario creado exitosamente',
-    schema: {
-      example: {
-        usersId: 1,
-        email: 'nuevo@jasrapo.com',
-        createdAt: '2024-01-15T10:30:00Z',
-        updatedAt: '2024-01-15T10:30:00Z',
-      },
-    },
+    type: UserEntity,
   })
   @ApiResponse({ status: 400, description: 'Datos inválidos' })
-  @ApiResponse({ status: 401, description: 'No autorizado - Token inválido o expirado' })
+  @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({ status: 403, description: 'Prohibido - Sin permiso users:create' })
   @ApiResponse({ status: 409, description: 'Conflicto - El email ya existe' })
   @RequiredPermission('users', 'create')
-  @Post('/')
-  create(@Body() createUserDto: CreateUserDto) {
+  @Post()
+  create(@Body() createUserDto: CreateUserDto): Promise<UserEntity> {
     return this.userService.createUser(createUserDto);
   }
 
   /**
-   * Obtiene todos los usuarios con paginación opcional.
+   * Obtiene todos los usuarios con paginación.
    * Requiere permiso: users:read
    */
-  @ApiOperation({
-    summary: 'Listar usuarios',
-    description: 'Retorna una lista paginada de usuarios. Si no se especifican parámetros de paginación, retorna todos los usuarios.',
-  })
-  @ApiQuery({
-    name: 'skip',
-    description: 'Número de registros a omitir (para paginación)',
-    required: false,
-    example: 0,
-    type: Number,
-  })
-  @ApiQuery({
-    name: 'take',
-    description: 'Número máximo de registros a retornar',
-    required: false,
-    example: 10,
-    type: Number,
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Lista de usuarios obtenida exitosamente',
-  })
-  @ApiResponse({ status: 401, description: 'No autorizado' })
-  @ApiResponse({ status: 403, description: 'Prohibido - Sin permiso users:read' })
+  @ApiOperation({ summary: 'Listar usuarios' })
+  @ApiPaginatedResponse(UserEntity)
   @RequiredPermission('users', 'read')
-  @Get('/')
-  findAll(@Query('skip') skip?: number, @Query('take') take?: number) {
-    return this.userService.users({
-      skip: skip ?? undefined,
-      take: take ?? undefined,
-    });
+  @Get()
+  findAll(
+    @Query() paginationDto: PaginationDto,
+  ): Promise<PaginatedResult<UserEntity>> {
+    return this.userService.users(paginationDto);
   }
 
   /**
    * Obtiene un usuario específico por su ID.
    * Requiere permiso: users:read
    */
-  @ApiOperation({
-    summary: 'Obtener usuario por ID',
-    description: 'Retorna los datos de un usuario específico, incluyendo sus roles y permisos asignados.',
-  })
-  @ApiParam({
-    name: 'id',
-    description: 'ID único del usuario',
-    type: Number,
-    example: 1,
-  })
+  @ApiOperation({ summary: 'Obtener un usuario por ID' })
+  @ApiParam({ name: 'id', description: 'ID del usuario', type: Number })
   @ApiResponse({
     status: 200,
-    description: 'Usuario encontrado exitosamente',
+    description: 'Usuario encontrado',
+    type: UserDetailEntity,
   })
-  @ApiResponse({ status: 401, description: 'No autorizado' })
-  @ApiResponse({ status: 403, description: 'Prohibido - Sin permiso users:read' })
   @ApiResponse({ status: 404, description: 'Usuario no encontrado' })
-  @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.userService.user({ usersId: id });
-  }
-
-  /**
-   * Obtiene los roles asignados a un usuario.
-   * Requiere permiso: users:read
-   */
-  @ApiOperation({
-    summary: 'Obtener roles de usuario',
-    description: 'Retorna los roles asignados a un usuario específico.',
-  })
-  @ApiParam({
-    name: 'id',
-    description: 'ID único del usuario',
-    type: Number,
-    example: 1,
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Rol del usuario obtenido exitosamente',
-    schema: {
-      example: {
-        usuarioId: 1,
-        rol: {
-          rolId: 2,
-          nombre: 'admin',
-        },
-      },
-    },
-  })
   @RequiredPermission('users', 'read')
-  @Get(':id/role')
-  getUserRole(@Param('id', ParseIntPipe) id: number) {
-    return this.userService.getUserRole(id);
+  @Get(':id')
+  async findOne(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<UserDetailEntity> {
+    const user = await this.userService.user({ usuarioId: id });
+    if (!user) {
+      throw new NotFoundException('Usuario no encontrado');
+    }
+    return user;
   }
 
   /**
@@ -836,7 +800,8 @@ export class UserController {
    */
   @ApiOperation({
     summary: 'Actualizar usuario',
-    description: 'Actualiza los datos básicos de un usuario (email o contraseña).',
+    description:
+      'Actualiza de forma flexible cualquier campo del usuario: email, nombres, apellidos, teléfono, avatar (JSON), rol (rolId) y permisos directos.',
   })
   @ApiParam({
     name: 'id',
@@ -844,10 +809,10 @@ export class UserController {
     type: Number,
     example: 1,
   })
-  @ApiBody({ type: UpdateUserDto, description: 'Datos a actualizar' })
   @ApiResponse({
     status: 200,
     description: 'Usuario actualizado exitosamente',
+    type: UserEntity,
   })
   @ApiResponse({ status: 400, description: 'Datos inválidos' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
@@ -858,54 +823,11 @@ export class UserController {
   updateUser(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateUserDto: UpdateUserDto,
-  ) {
+  ): Promise<UserEntity> {
     return this.userService.updateUser({
-      where: { usersId: id },
-      data: {
-        email: updateUserDto.email,
-        password: updateUserDto.password,
-      },
-    });
-  }
-
-  /**
-   * Asigna un rol a un usuario.
-   * Requiere permiso: users:update
-   */
-  @ApiOperation({
-    summary: 'Asignar rol a usuario',
-    description: 'Asigna un rol adicional a un usuario existente. No elimina los roles anteriores.',
-  })
-  @ApiParam({
-    name: 'id',
-    description: 'ID único del usuario',
-    type: Number,
-    example: 1,
-  })
-  @ApiBody({
-    type: AssignRoleDto,
-    description: 'ID del rol a asignar',
-    examples: {
-      ejemplo1: {
-        value: { rolesId: 2 },
-        summary: 'Asignar rol de Editor',
-      },
-    },
-  })
-  @ApiResponse({
-    status: 201,
-    description: 'Rol asignado exitosamente',
-  })
-  @ApiResponse({ status: 401, description: 'No autorizado' })
-  @ApiResponse({ status: 403, description: 'Prohibido - Sin permiso users:update' })
-  @ApiResponse({ status: 404, description: 'Usuario o rol no encontrado' })
-  @RequiredPermission('users', 'update')
-  @Post(':id/roles')
-  assignRole(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() assignRoleDto: AssignRoleDto,
-  ) {
-    return this.userService.assignRoleToUser(id, assignRoleDto.rolesId);
+      where: { usuarioId: id },
+      data: updateUserDto,
+    }) as Promise<UserEntity>;
   }
 
   /**
@@ -914,7 +836,7 @@ export class UserController {
    */
   @ApiOperation({
     summary: 'Eliminar usuario',
-    description: 'Marca un usuario como eliminado (soft delete). El usuario no se borra permanentemente de la base de datos.',
+    description: 'Marca un usuario como eliminado (soft delete).',
   })
   @ApiParam({
     name: 'id',
@@ -932,7 +854,7 @@ export class UserController {
   @RequiredPermission('users', 'delete')
   @Delete(':id')
   remove(@Param('id', ParseIntPipe) id: number) {
-    return this.userService.softDeleteUser({ usersId: id });
+    return this.userService.softDeleteUser({ usuarioId: id });
   }
 }
 ```
