@@ -62,7 +62,7 @@ export class UserProfileEntity {
     description: 'Datos del avatar (JSON)',
     nullable: true,
   })
-  avatar: any | null;
+  avatar: unknown;
 
   @ApiProperty({
     type: () => RoleEntity,
@@ -108,7 +108,7 @@ export class UserEntity {
     description: 'Datos del avatar (JSON)',
     nullable: true,
   })
-  avatar: any | null;
+  avatar: unknown;
 
   @ApiProperty({
     type: () => RoleEntity,

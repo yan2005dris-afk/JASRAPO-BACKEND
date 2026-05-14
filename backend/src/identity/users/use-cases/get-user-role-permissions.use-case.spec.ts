@@ -91,6 +91,6 @@ describe('GetUserRolePermissionsUseCase', () => {
       deletedAt: new Date(),
     });
 
-    await expect(useCase.execute(1)).toThrow(NotFoundException);
+    await expect(useCase.execute(1)).rejects.toThrow(NotFoundException);
   });
 });

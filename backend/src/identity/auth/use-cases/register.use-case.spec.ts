@@ -32,12 +32,12 @@ describe('RegisterUseCase', () => {
 
   describe('execute', () => {
     it('should register a new user with required fields', async () => {
-      userService.user.mockResolvedValue(null as any);
+      userService.user.mockResolvedValue(null);
       userService.createUser.mockResolvedValue({
         usuarioId: 1,
         email: 'test@test.com',
         role: { rolId: 1, nombre: 'user' },
-      } as any);
+      });
 
       const result = await useCase.execute({
         email: 'test@test.com',
@@ -68,8 +68,8 @@ describe('RegisterUseCase', () => {
     });
 
     it('should throw BadRequestException if creation fails', async () => {
-      userService.user.mockResolvedValue(null as any);
-      userService.createUser.mockResolvedValue(null as any);
+      userService.user.mockResolvedValue(null);
+      userService.createUser.mockResolvedValue(null);
       await expect(
         useCase.execute({
           email: 'test@test.com',
@@ -81,11 +81,11 @@ describe('RegisterUseCase', () => {
     });
 
     it('should pass rolId when provided', async () => {
-      userService.user.mockResolvedValue(null as any);
+      userService.user.mockResolvedValue(null);
       userService.createUser.mockResolvedValue({
         usuarioId: 1,
         role: { rolId: 2, nombre: 'admin' },
-      } as any);
+      });
 
       await useCase.execute({
         email: 'admin@test.com',

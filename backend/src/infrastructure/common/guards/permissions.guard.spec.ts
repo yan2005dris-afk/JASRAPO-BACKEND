@@ -1,6 +1,8 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { Reflector } from '@nestjs/core';
-import { ExecutionContext, ForbiddenException } from '@nestjs/common';
+import type { ExecutionContext } from '@nestjs/common';
+import { ForbiddenException } from '@nestjs/common';
 import { PermissionsGuard } from './permissions.guard';
 
 describe('PermissionsGuard', () => {
@@ -43,7 +45,9 @@ describe('PermissionsGuard', () => {
       }),
     } as unknown as ExecutionContext;
 
-    reflector.get = jest.fn().mockReturnValue({ resource: 'test', action: 'read' });
+    reflector.get = jest
+      .fn()
+      .mockReturnValue({ resource: 'test', action: 'read' });
 
     expect(guard.canActivate(mockContext)).toBe(true);
   });
@@ -63,7 +67,9 @@ describe('PermissionsGuard', () => {
       }),
     } as unknown as ExecutionContext;
 
-    reflector.get = jest.fn().mockReturnValue({ resource: 'test', action: 'read' });
+    reflector.get = jest
+      .fn()
+      .mockReturnValue({ resource: 'test', action: 'read' });
 
     expect(() => guard.canActivate(mockContext)).toThrow(ForbiddenException);
   });
@@ -81,7 +87,9 @@ describe('PermissionsGuard', () => {
     } as unknown as ExecutionContext;
 
     expect(() => guard.canActivate(mockContext)).toThrow(ForbiddenException);
-    expect(() => guard.canActivate(mockContext)).toThrow('Usuario no identificado');
+    expect(() => guard.canActivate(mockContext)).toThrow(
+      'Usuario no identificado',
+    );
   });
 
   it('should infer permissions when no decorator is present', () => {

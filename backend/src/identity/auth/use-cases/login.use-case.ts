@@ -77,7 +77,9 @@ export class LoginUseCase {
     return this.buildLoginResponse(user, sesionId, tokens);
   }
 
-  private async validateUser(loginUserDto: LoginUserDto): Promise<ValidatedUser> {
+  private async validateUser(
+    loginUserDto: LoginUserDto,
+  ): Promise<ValidatedUser> {
     const { email, password } = loginUserDto;
     const user = await this.prisma.usuarios.findUnique({
       where: { email },

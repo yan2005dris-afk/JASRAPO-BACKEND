@@ -96,7 +96,7 @@ describe('GetUserDirectPermissionsUseCase', () => {
       deletedAt: new Date(),
     });
 
-    await expect(useCase.execute(1)).toThrow(NotFoundException);
+    await expect(useCase.execute(1)).rejects.toThrow(NotFoundException);
   });
 
   it('should order by resource and action', async () => {
@@ -105,12 +105,6 @@ describe('GetUserDirectPermissionsUseCase', () => {
       deletedAt: null,
     });
     mockPrisma.usuarioPermisos.findMany.mockResolvedValue([
-      {
-        usuarioPermisoId: 1,
-        permisoId: 1,
-        permiso: { recurso: 'zebra', accion: 'read' },
-        permitido: true,
-      },
       {
         usuarioPermisoId: 2,
         permisoId: 2,
@@ -121,6 +115,12 @@ describe('GetUserDirectPermissionsUseCase', () => {
         usuarioPermisoId: 3,
         permisoId: 3,
         permiso: { recurso: 'beta', accion: 'delete' },
+        permitido: true,
+      },
+      {
+        usuarioPermisoId: 1,
+        permisoId: 1,
+        permiso: { recurso: 'zebra', accion: 'read' },
         permitido: true,
       },
     ]);

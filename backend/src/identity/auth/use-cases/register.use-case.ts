@@ -28,7 +28,10 @@ export class RegisterUseCase {
     const newUser = await this.userService.createUser(createUserData);
 
     if (newUser) {
-      return { message: 'El registro fue exitoso', usuarioId: newUser.usuarioId };
+      return {
+        message: 'El registro fue exitoso',
+        usuarioId: newUser.usuarioId,
+      };
     } else {
       throw new BadRequestException('Error al registrar el usuario');
     }
