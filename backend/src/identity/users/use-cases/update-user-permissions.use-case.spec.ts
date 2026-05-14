@@ -120,7 +120,7 @@ describe('UpdateUserPermissionsUseCase', () => {
     });
     // El permiso ya existe y está activo (deletedAt: null) con permitido: true
     mockPrisma.usuarioPermisos.findMany.mockResolvedValue([
-      { permisoId: 10, deletedAt: null },
+      { permisoId: 10, deletedAt: null, permitido: true },
     ]);
     mockPrisma.permisos.findMany.mockResolvedValue([{ permisoId: 10 }]);
 
@@ -147,7 +147,7 @@ describe('UpdateUserPermissionsUseCase', () => {
     });
     // El permiso fue soft-deleted (deletedAt tiene fecha)
     mockPrisma.usuarioPermisos.findMany.mockResolvedValue([
-      { permisoId: 10, deletedAt: new Date('2024-01-01') },
+      { permisoId: 10, deletedAt: new Date('2024-01-01'), permitido: true },
     ]);
     mockPrisma.permisos.findMany.mockResolvedValue([{ permisoId: 10 }]);
 
@@ -175,9 +175,9 @@ describe('UpdateUserPermissionsUseCase', () => {
     });
     // Permissions are active (deletedAt: null)
     mockPrisma.usuarioPermisos.findMany.mockResolvedValue([
-      { permisoId: 1, deletedAt: null },
-      { permisoId: 2, deletedAt: null },
-      { permisoId: 3, deletedAt: null },
+      { permisoId: 1, deletedAt: null, permitido: true },
+      { permisoId: 2, deletedAt: null, permitido: true },
+      { permisoId: 3, deletedAt: null, permitido: true },
     ]);
     mockPrisma.permisos.findMany.mockResolvedValue([{ permisoId: 1 }]);
 
@@ -193,6 +193,26 @@ describe('UpdateUserPermissionsUseCase', () => {
     });
   });
 
+  it('should deduplicate permissions by permisoId (last value wins)', async () => {
+    mockPrisma.usuarios.findUnique.mockResolvedValue({
+      usuarioId: 1,
+      deletedAt: null,
+    });
+    mockPrisma.usuarioPermisos.findMany.mockResolvedValue([]);
+    mockPrisma.permisos.findMany.mockResolvedValue([{ permisoId: 10 }]);
+
+    await useCase.execute(1, [
+      { permisoId: 10, permitido: true },
+      { permisoId: 10, permitido: false },
+    ]);
+
+    // Solo debe crear una entrada — el último valor (false) gana
+    expect(mockPrisma.usuarioPermisos.create).toHaveBeenCalledTimes(1);
+    expect(mockPrisma.usuarioPermisos.create).toHaveBeenCalledWith({
+      data: { usuarioId: 1, permisoId: 10, permitido: false },
+    });
+  });
+
   it('should handle empty permissions array', async () => {
     mockPrisma.usuarios.findUnique.mockResolvedValue({
       usuarioId: 1,
@@ -200,7 +220,7 @@ describe('UpdateUserPermissionsUseCase', () => {
     });
     // Permission is active (deletedAt: null)
     mockPrisma.usuarioPermisos.findMany.mockResolvedValue([
-      { permisoId: 1, deletedAt: null },
+      { permisoId: 1, deletedAt: null, permitido: true },
     ]);
 
     await useCase.execute(1, []);

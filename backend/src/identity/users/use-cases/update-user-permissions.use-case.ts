@@ -51,7 +51,11 @@ export class UpdateUserPermissionsUseCase {
         .filter((p) => p.deletedAt === null)
         .map((p) => p.permisoId),
     );
-    const newPermissionIds = new Set(permissions.map((p) => p.permisoId));
+    // Deduplicar por permisoId — último valor gana en caso de duplicados
+    const deduplicatedPermissions = [
+      ...new Map(permissions.map((p) => [p.permisoId, p])).values(),
+    ];
+    const newPermissionIds = new Set(deduplicatedPermissions.map((p) => p.permisoId));
 
     const run = async (innerTx: Prisma.TransactionClient) => {
       const permissionsToRemove = [...activePermissionIds].filter(
@@ -71,7 +75,7 @@ export class UpdateUserPermissionsUseCase {
 
       const validPermissions = await innerTx.permisos.findMany({
         where: {
-          permisoId: { in: permissions.map((p) => p.permisoId) },
+          permisoId: { in: deduplicatedPermissions.map((p) => p.permisoId) },
           deletedAt: null,
         },
         select: { permisoId: true },
@@ -80,7 +84,7 @@ export class UpdateUserPermissionsUseCase {
         validPermissions.map((p) => p.permisoId),
       );
 
-      const invalidIds = permissions
+      const invalidIds = deduplicatedPermissions
         .map((p) => p.permisoId)
         .filter((id) => !validPermissionIds.has(id));
 
@@ -90,7 +94,7 @@ export class UpdateUserPermissionsUseCase {
         );
       }
 
-      for (const perm of permissions) {
+      for (const perm of deduplicatedPermissions) {
         const state = permissionState.get(perm.permisoId);
 
         if (state === undefined) {
