@@ -1,87 +1,159 @@
 import {
   Injectable,
   NotFoundException,
+  BadRequestException,
   ConflictException,
 } from '@nestjs/common';
-import * as bcrypt from 'bcryptjs';
-import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { Prisma } from 'src/generated/prisma/client';
+import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { CreateUserUseCase } from './use-cases/create-user.use-case';
 import { GetEffectivePermissionsUseCase } from './use-cases/get-effective-permissions.use-case';
-import { AssignRoleToUserUseCase } from './use-cases/assign-role-to-user.use-case';
-import { AssignPermissionToUserUseCase } from './use-cases/assign-permission-to-user.use-case';
-import { RevokePermissionFromUserUseCase } from './use-cases/revoke-permission-from-user.use-case';
-
-const safeUserSelect = {
-  usuarioId: true,
-  email: true,
-} satisfies Prisma.UsuariosSelect;
-
-const userWithRolesSelect = {
-  usuarioId: true,
-  email: true,
-  rol: {
-    select: {
-      rolId: true,
-      nombre: true,
-      deletedAt: true,
-    },
-  },
-} satisfies Prisma.UsuariosSelect;
+import { UpdateUserPermissionsUseCase } from './use-cases/update-user-permissions.use-case';
+import { paginate } from 'src/infrastructure/common/util/pagination.util';
+import { ValidationUtil } from 'src/infrastructure/common/util/validation.util';
+import { PhoneUtil } from 'src/infrastructure/common/util/phone.util';
+import { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
+import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
+import {
+  safeUserSelect,
+  userWithRolesSelect,
+  UserWithPermissionsResponse,
+  UserWithRoleResponse,
+  ProfileResponse,
+  EffectivePermissionsResponse,
+} from './types/user.types';
 
 @Injectable()
 export class UserService {
   constructor(
-    private prisma: PrismaService,
+    private readonly prisma: PrismaService,
     private readonly createUserUseCase: CreateUserUseCase,
     private readonly getEffectivePermissionsUseCase: GetEffectivePermissionsUseCase,
-    private readonly assignRoleUseCase: AssignRoleToUserUseCase,
-    private readonly assignPermissionUseCase: AssignPermissionToUserUseCase,
-    private readonly revokePermissionUseCase: RevokePermissionFromUserUseCase,
+    private readonly updateUserPermissionsUseCase: UpdateUserPermissionsUseCase,
   ) {}
 
-  private isBcryptHash(value: string): boolean {
-    return /^\$2[aby]\$\d{2}\$[./A-Za-z0-9]{53}$/.test(value);
-  }
-
-  private async ensureHashedPassword(password: string): Promise<string> {
-    if (this.isBcryptHash(password)) return password;
-    return bcrypt.hash(password, 10);
-  }
-
-  async user(userWhereUniqueInput: Prisma.UsuariosWhereUniqueInput) {
-    return this.prisma.usuarios.findUnique({
+  async user(
+    userWhereUniqueInput: Prisma.UsuariosWhereUniqueInput,
+  ): Promise<UserWithPermissionsResponse | null> {
+    const user = await this.prisma.usuarios.findUnique({
       where: userWhereUniqueInput,
-      select: safeUserSelect,
-    });
-  }
-
-  async users(params: {
-    skip?: number;
-    take?: number;
-    cursor?: Prisma.UsuariosWhereUniqueInput;
-    where?: Prisma.UsuariosWhereInput;
-    orderBy?: Prisma.UsuariosOrderByWithRelationInput;
-  }) {
-    const { skip, take, cursor, where, orderBy } = params;
-    const users = await this.prisma.usuarios.findMany({
-      skip,
-      take,
-      cursor,
-      where,
-      orderBy,
       select: userWithRolesSelect,
     });
 
-    return users.map((user) => ({
+    if (!user || user.deletedAt) return null;
+
+    const [directPermissionRows, rolePermissionRows] = await Promise.all([
+      this.prisma.usuarioPermisos.findMany({
+        where: {
+          usuarioId: user.usuarioId,
+          deletedAt: null,
+          permiso: { deletedAt: null },
+        },
+        orderBy: [
+          { permiso: { recurso: 'asc' } },
+          { permiso: { accion: 'asc' } },
+        ],
+        include: {
+          permiso: { select: { permisoId: true, recurso: true, accion: true } },
+        },
+      }),
+      user.rol && !user.rol.deletedAt
+        ? this.prisma.rolPermisos.findMany({
+            where: {
+              rolId: user.rol.rolId,
+              deletedAt: null,
+              permiso: { deletedAt: null },
+            },
+            include: { permiso: { select: { recurso: true, accion: true } } },
+          })
+        : Promise.resolve([]),
+    ]);
+
+    return {
       usuarioId: user.usuarioId,
       email: user.email,
-      roles:
+      nombres: user.nombres,
+      apellidos: user.apellidos,
+      telefono: user.telefono,
+      avatar: user.avatar,
+      role:
         user.rol && !user.rol.deletedAt
-          ? [{ rolId: user.rol.rolId, nombre: user.rol.nombre }]
-          : [],
+          ? { rolId: user.rol.rolId, nombre: user.rol.nombre }
+          : null,
+      directPermissions: directPermissionRows.map((a) => ({
+        usuarioPermisoId: a.usuarioPermisoId,
+        permisoId: a.permisoId,
+        recurso: a.permiso.recurso,
+        accion: a.permiso.accion,
+        permitido: a.permitido,
+      })),
+      rolePermissions: rolePermissionRows.map((rp) => ({
+        resource: rp.permiso.recurso,
+        action: rp.permiso.accion,
+      })),
+    };
+  }
+
+  async findMe(usersId: number): Promise<ProfileResponse> {
+    const user = await this.prisma.usuarios.findUnique({
+      where: { usuarioId: usersId },
+      select: userWithRolesSelect,
+    });
+
+    if (!user || user.deletedAt) {
+      throw new NotFoundException('Usuario no encontrado o eliminado');
+    }
+
+    const fullName = [user.nombres, user.apellidos].filter(Boolean).join(' ');
+    const avatarObj = user.avatar as { url?: string; key?: string } | null;
+
+    return {
+      usuarioId: user.usuarioId,
+      email: user.email,
+      name: fullName || null,
+      phone: user.telefono,
+      avatar: avatarObj,
+      role:
+        user.rol && !user.rol.deletedAt
+          ? { rolId: user.rol.rolId, nombre: user.rol.nombre }
+          : null,
+    };
+  }
+
+  async users(
+    pagination: PaginationDto,
+  ): Promise<PaginatedResult<UserWithRoleResponse>> {
+    const result = await paginate(
+      this.prisma.usuarios,
+      {
+        select: userWithRolesSelect,
+        where: { deletedAt: null },
+        orderBy: { usuarioId: 'asc' },
+      },
+      {
+        page: pagination.page,
+        limit: pagination.limit,
+      },
+    );
+
+    const mappedData = result.data.map((user: any) => ({
+      usuarioId: user.usuarioId,
+      email: user.email,
+      nombres: user.nombres,
+      apellidos: user.apellidos,
+      telefono: user.telefono,
+      avatar: user.avatar,
+      role:
+        user.rol && !user.rol.deletedAt
+          ? { rolId: user.rol.rolId, nombre: user.rol.nombre }
+          : null,
     }));
+
+    return {
+      data: mappedData,
+      meta: result.meta,
+    };
   }
 
   async createUser(createUsersDto: CreateUserDto) {
@@ -90,19 +162,92 @@ export class UserService {
 
   async updateUser(params: {
     where: Prisma.UsuariosWhereUniqueInput;
-    data: Prisma.UsuariosUpdateInput;
-  }) {
-    const updateData = { ...params.data };
-    if (updateData.clave) {
-      updateData.clave = await this.ensureHashedPassword(
-        updateData.clave as string,
+    data: Prisma.UsuariosUncheckedUpdateInput & {
+      directPermissions?: unknown[];
+    };
+  }): Promise<UserWithPermissionsResponse | null> {
+    const { where, data } = params;
+    const { directPermissions, ...userData } = data;
+    const updateData = { ...userData };
+
+    // Verificar que el usuario no esté eliminado
+    const existingUser = await this.prisma.usuarios.findUnique({
+      where,
+      select: { usuarioId: true, deletedAt: true },
+    });
+
+    if (!existingUser) {
+      throw new NotFoundException('Usuario no encontrado');
+    }
+
+    if (existingUser.deletedAt) {
+      throw new BadRequestException(
+        'No se puede modificar un usuario eliminado',
       );
     }
-    return this.prisma.usuarios.update({
-      where: params.where,
-      data: updateData,
-      select: safeUserSelect,
-    });
+
+    // Validar campos que no pueden estar vacíos
+    if (updateData.nombres !== undefined) {
+      ValidationUtil.requireNonEmpty(updateData.nombres as string, 'nombres');
+    }
+    if (updateData.apellidos !== undefined) {
+      ValidationUtil.requireNonEmpty(
+        updateData.apellidos as string,
+        'apellidos',
+      );
+    }
+    if (updateData.email !== undefined) {
+      ValidationUtil.requireNonEmpty(updateData.email as string, 'email');
+    }
+    if (updateData.telefono !== undefined) {
+      ValidationUtil.requireNonEmpty(updateData.telefono as string, 'telefono');
+      updateData.telefono = PhoneUtil.validateAndClean(
+        updateData.telefono as string,
+        'telefono',
+      );
+    }
+
+    // Validar rolId si se proporciona
+    if (updateData.rolId !== undefined && updateData.rolId !== null) {
+      const role = await this.prisma.roles.findUnique({
+        where: { rolId: updateData.rolId as number },
+        select: { rolId: true, deletedAt: true },
+      });
+      if (!role || role.deletedAt) {
+        throw new NotFoundException('Rol no encontrado o eliminado');
+      }
+    }
+
+    try {
+      await this.prisma.$transaction(async (tx) => {
+        await tx.usuarios.update({
+          where,
+          data: updateData,
+          select: { usuarioId: true },
+        });
+
+        if (directPermissions && Array.isArray(directPermissions)) {
+          await this.updateUserPermissionsUseCase.execute(
+            existingUser.usuarioId,
+            directPermissions as { permisoId: number; permitido?: boolean }[],
+            tx,
+          );
+        }
+      });
+    } catch (error: any) {
+      const target = error?.meta?.target;
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002' &&
+        Array.isArray(target) &&
+        target.includes('email')
+      ) {
+        throw new ConflictException('El correo electrónico ya está en uso');
+      }
+      throw error;
+    }
+
+    return this.user({ usuarioId: existingUser.usuarioId });
   }
 
   async softDeleteUser(where: Prisma.UsuariosWhereUniqueInput) {
@@ -113,99 +258,17 @@ export class UserService {
     });
   }
 
-  async getRolesByUserId(usuarioId: number) {
-    const user = await this.prisma.usuarios.findUnique({
-      where: { usuarioId },
-      select: { rol: { select: { nombre: true, deletedAt: true } } },
-    });
-    if (!user) throw new NotFoundException('Usuario no encontrado');
-    if (!user.rol || user.rol.deletedAt) return null;
-    return user.rol.nombre;
-  }
-
-  async getRoleAssignmentsByUserId(usuarioId: number) {
-    const user = await this.prisma.usuarios.findUnique({
-      where: { usuarioId },
-      select: {
-        usuarioId: true,
-        deletedAt: true,
-        rolId: true,
-        rol: { select: { rolId: true, nombre: true, deletedAt: true } },
-      },
-    });
-    if (!user || user.deletedAt)
-      throw new NotFoundException('Usuario eliminado o no encontrado');
-    if (!user.rol || user.rol.deletedAt || !user.rolId) return [];
-    return [
-      { usuarioId: user.usuarioId, rolId: user.rolId, nombre: user.rol.nombre },
-    ];
-  }
-
-  async assignRoleToUser(usuarioId: number, rolId: number) {
-    return this.assignRoleUseCase.execute(usuarioId, rolId);
-  }
-
-  async revokeRoleFromUser(usuarioId: number) {
-    const user = await this.prisma.usuarios.findUnique({
-      where: { usuarioId },
-      select: { usuarioId: true, deletedAt: true, rolId: true },
-    });
-    if (!user || user.deletedAt)
-      throw new NotFoundException('Usuario no encontrado o eliminado');
-    if (!user.rolId)
-      throw new ConflictException('El usuario ya no tiene rol asignado');
-    return this.prisma.usuarios.update({
-      where: { usuarioId },
-      data: { rolId: null },
-    });
-  }
-
-  async getDirectPermissionsByUserId(usuarioId: number) {
-    const user = await this.prisma.usuarios.findUnique({
-      where: { usuarioId },
-    });
-    if (!user || user.deletedAt)
-      throw new NotFoundException('Usuario no encontrado o eliminado');
-
-    const assignments = await this.prisma.usuarioPermisos.findMany({
-      where: { usuarioId, deletedAt: null, permiso: { deletedAt: null } },
-      orderBy: [
-        { permiso: { recurso: 'asc' } },
-        { permiso: { accion: 'asc' } },
-      ],
-      include: {
-        permiso: {
-          select: { permisoId: true, recurso: true, accion: true },
-        },
-      },
-    });
-
-    return assignments.map((assignment) => ({
-      usuarioPermisoId: assignment.usuarioPermisoId,
-      permisoId: assignment.permisoId,
-      recurso: assignment.permiso.recurso,
-      accion: assignment.permiso.accion,
-      permitido: assignment.permitido,
-    }));
-  }
-
-  async assignPermissionToUser(
+  async getEffectivePermissions(
     usuarioId: number,
-    permisoId: number,
-    permitido = true,
-  ) {
-    return this.assignPermissionUseCase.execute(
+  ): Promise<EffectivePermissionsResponse> {
+    const permissions =
+      await this.getEffectivePermissionsUseCase.execute(usuarioId);
+    return {
       usuarioId,
-      permisoId,
-      permitido,
-    );
-  }
-
-  async revokePermissionFromUser(usuarioPermisoId: number) {
-    return this.revokePermissionUseCase.execute(usuarioPermisoId);
-  }
-
-  async getEffectivePermissions(usuarioId: number) {
-    return this.getEffectivePermissionsUseCase.execute(usuarioId);
+      permissions: permissions.map((p) => ({
+        resource: p.resource,
+        action: p.action,
+      })),
+    };
   }
 }

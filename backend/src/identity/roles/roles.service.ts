@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
@@ -22,13 +22,17 @@ export class RolesService {
   }
 
   findAll() {
-    return this.prisma.roles.findMany();
+    return this.prisma.roles.findMany({
+      where: { deletedAt: null },
+    });
   }
 
-  findOne(id: number) {
-    return this.prisma.roles.findUnique({ where: { rolId: id } });
+  async findOne(id: number) {
+    const role = await this.prisma.roles.findUnique({ where: { rolId: id } });
+    if (!role || role.deletedAt)
+      throw new NotFoundException('Rol no encontrado');
+    return role;
   }
-
   update(id: number, updateRoleDto: UpdateRoleDto) {
     return this.prisma.roles.update({
       where: { rolId: id },

@@ -1,5 +1,4 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import * as bcrypt from 'bcryptjs';
 import { UserService } from 'src/identity/users/user.service';
 import { RegisterDto } from '../dto/register.dto';
 
@@ -7,26 +6,32 @@ import { RegisterDto } from '../dto/register.dto';
 export class RegisterUseCase {
   constructor(private readonly userService: UserService) {}
 
-  /**
-   * Registra un nuevo usuario
-   * @param email correo del usuario
-   * @param password contraseña del usuario
-   * @returns mensaje de éxito o lanza excepción si el correo ya existe
-   */
-  async execute({ email, password }: RegisterDto) {
-    const user = await this.userService.user({ email });
+  async execute(registerDto: RegisterDto) {
+    const user = await this.userService.user({ email: registerDto.email });
 
     if (user) {
       throw new BadRequestException('El correo ya está registrado');
     }
 
-    const newUser = await this.userService.createUser({
-      email,
-      clave: await bcrypt.hash(password, 10),
-    });
+    const createUserData: any = {
+      email: registerDto.email,
+      nombres: registerDto.nombres,
+      apellidos: registerDto.apellidos,
+      telefono: registerDto.telefono,
+    };
+
+    // Agregar rolId si se proporciona
+    if (registerDto.rolId) {
+      createUserData.rolId = parseInt(registerDto.rolId, 10);
+    }
+
+    const newUser = await this.userService.createUser(createUserData);
 
     if (newUser) {
-      return 'El registro fue exitoso';
+      return {
+        message: 'El registro fue exitoso',
+        usuarioId: newUser.usuarioId,
+      };
     } else {
       throw new BadRequestException('Error al registrar el usuario');
     }

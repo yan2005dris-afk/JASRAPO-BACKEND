@@ -15,9 +15,8 @@ export class GetMyMenusUseCase {
 
   async execute(userId: number): Promise<MenuResponseDto[]> {
     // Obtener permisos efectivos del usuario (roles + permisos directos)
-    const permissions = (await this.userService.getEffectivePermissions(
-      userId,
-    )) as EffectivePermission[];
+    const result = await this.userService.getEffectivePermissions(userId);
+    const permissions = result.permissions as EffectivePermission[];
 
     if (permissions.length === 0) {
       return [];

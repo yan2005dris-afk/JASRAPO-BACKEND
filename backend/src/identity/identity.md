@@ -5,9 +5,8 @@ Gestión de la identidad, autenticación, autorización y perfiles de usuario. E
 
 ## Contenido
 - **`auth/`**: Lógica de login, registro y tokens JWT.
-- **`users/`**: Gestión de la entidad principal de usuario.
+- **`users/`**: Gestión de la entidad principal de usuario y su perfil (consolidado).
 - **`roles/` & `permissions/`**: Control de acceso basado en roles (RBAC).
-- **`profiles/`**: Información extendida del usuario.
 - **`sessions/`**: Seguimiento de sesiones activas.
 - **`menus/`**: Estructura de navegación permitida según permisos.
 

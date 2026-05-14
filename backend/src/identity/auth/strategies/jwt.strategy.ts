@@ -33,7 +33,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     if (!session || session.revocado || session.expiraEn < new Date()) {
       throw new UnauthorizedException('Sesión inválida o expirada');
     }
-    const permissions =
+    const { permissions } =
       await this.userService.getEffectivePermissions(usuarioId);
     return {
       sub: usuarioId,

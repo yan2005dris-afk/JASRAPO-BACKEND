@@ -1,5 +1,6 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
+import { NotFoundException } from '@nestjs/common';
 import { RolesService } from './roles.service';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { CreateRoleUseCase } from './use-cases/create-role.use-case';
@@ -13,6 +14,7 @@ describe('RolesService', () => {
   let getPermissionsUseCase: GetRolePermissionsUseCase;
   let assignPermissionUseCase: AssignPermissionToRoleUseCase;
   let removePermissionUseCase: RemovePermissionFromRoleUseCase;
+  let prisma: PrismaService;
 
   const mockUseCase = { execute: jest.fn() };
 
@@ -48,6 +50,7 @@ describe('RolesService', () => {
     removePermissionUseCase = module.get<RemovePermissionFromRoleUseCase>(
       RemovePermissionFromRoleUseCase,
     );
+    prisma = module.get<PrismaService>(PrismaService);
   });
 
   it('should delegate create to CreateRoleUseCase', async () => {
@@ -69,5 +72,39 @@ describe('RolesService', () => {
   it('should delegate removePermission to RemovePermissionFromRoleUseCase', async () => {
     await service.removePermission(1, 10);
     expect(removePermissionUseCase.execute).toHaveBeenCalledWith(1, 10);
+  });
+
+  it('should filter deleted roles in findAll', async () => {
+    await service.findAll();
+    expect(prisma.roles.findMany).toHaveBeenCalledWith({
+      where: { deletedAt: null },
+    });
+  });
+
+  it('should throw NotFoundException in findOne if role does not exist', async () => {
+    (prisma.roles.findUnique as jest.Mock).mockResolvedValue(null);
+
+    await expect(service.findOne(999)).rejects.toThrow(NotFoundException);
+  });
+
+  it('should throw NotFoundException in findOne if role is deleted', async () => {
+    (prisma.roles.findUnique as jest.Mock).mockResolvedValue({
+      rolId: 1,
+      nombre: 'test',
+      deletedAt: new Date(),
+    });
+
+    await expect(service.findOne(1)).rejects.toThrow(NotFoundException);
+  });
+
+  it('should return role in findOne if role is not deleted', async () => {
+    (prisma.roles.findUnique as jest.Mock).mockResolvedValue({
+      rolId: 1,
+      nombre: 'test',
+      deletedAt: null,
+    });
+
+    const result = await service.findOne(1);
+    expect(result).toEqual({ rolId: 1, nombre: 'test', deletedAt: null });
   });
 });

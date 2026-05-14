@@ -51,15 +51,14 @@ Carpeta Prisma: `autenticacion-autorizacion/` → Carpeta NestJS: `src/identity/
 
 | Modelo Prisma | Ubicación NestJS | Sub-dominio | Descripción |
 |--------------|------------------|------------|-------------|
-| Usuarios | `users/` | users | Gestión de usuarios del sistema |
+| Usuarios | `users/` | users | Gestión de usuarios y perfiles unificados |
 | Roles | `roles/` | roles | Roles y permisos |
 | Permisos | `permissions/` | permissions | Permisos granulares |
 | Sesiones | `sessions/` | sessions | Sesiones activas de usuarios |
-| Menus | `menus/` | menus | Menú del sistema por perfil |
-| Perfiles | `profiles/` | profiles | Perfiles de usuario (avatars) |
+| Menus | `menus/` | menus | Menú dinámico basado en permisos |
 | RolPermisos | `roles/` | roles | Relación muchos a muchos |
 | UsuarioPermisos | `users/` | users | Relación muchos a muchos |
-| MenuPermisos | `menus/` | menuss | Relación muchos a muchos |
+| MenuPermisos | `menus/` | menus | Relación muchos a muchos |
 
 ---
 
