@@ -1,5 +1,6 @@
-import { IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsOptional, IsString, IsObject, IsInt, Min } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { Prisma } from 'src/generated/prisma/client';
 
 export class CreateUserDto {
   @ApiProperty({
@@ -13,14 +14,48 @@ export class CreateUserDto {
   email: string;
 
   @ApiProperty({
-    description: 'Contraseña del usuario (mínimo 6 caracteres)',
-    example: 'Password123!',
-    minLength: 6,
+    description: 'Nombres del usuario',
+    example: 'Juan',
     required: true,
-    format: 'password',
   })
   @IsString()
   @IsNotEmpty()
-  @MinLength(6)
-  clave: string;
+  nombres: string;
+
+  @ApiProperty({
+    description: 'Apellidos del usuario',
+    example: 'Pérez',
+    required: true,
+  })
+  @IsString()
+  @IsNotEmpty()
+  apellidos: string;
+
+  @ApiProperty({
+    description: 'Teléfono del usuario',
+    example: '+5491155555555',
+    required: true,
+  })
+  @IsString()
+  @IsNotEmpty()
+  telefono: string;
+
+  @ApiProperty({
+    description: 'Avatar del usuario (JSON con url y publicId)',
+    example: { url: 'https://res.cloudinary.com/...', publicId: 'avatars/user' },
+    required: false,
+  })
+  @IsOptional()
+  @IsObject()
+  avatar?: Prisma.InputJsonValue;
+
+  @ApiProperty({
+    description: 'ID del rol a asignar (opcional). Si no se envía, se asigna el rol "user" por defecto',
+    example: 1,
+    required: false,
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  rolId?: number;
 }

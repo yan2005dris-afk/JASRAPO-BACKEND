@@ -1,29 +1,31 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { UserService } from './user.service';
 import { UserController } from './user.controller';
 import { CreateUserUseCase } from './use-cases/create-user.use-case';
 import { GetEffectivePermissionsUseCase } from './use-cases/get-effective-permissions.use-case';
-import { AssignRoleToUserUseCase } from './use-cases/assign-role-to-user.use-case';
-import { AssignPermissionToUserUseCase } from './use-cases/assign-permission-to-user.use-case';
-import { RevokePermissionFromUserUseCase } from './use-cases/revoke-permission-from-user.use-case';
+import { GetUserDirectPermissionsUseCase } from './use-cases/get-user-direct-permissions.use-case';
+import { GetUserRolePermissionsUseCase } from './use-cases/get-user-role-permissions.use-case';
+import { UpdateUserPermissionsUseCase } from './use-cases/update-user-permissions.use-case';
+import { StorageModule } from '../../infrastructure/storage/storage.module';
 
 @Module({
+  imports: [forwardRef(() => StorageModule)],
   controllers: [UserController],
   providers: [
     UserService,
     CreateUserUseCase,
     GetEffectivePermissionsUseCase,
-    AssignRoleToUserUseCase,
-    AssignPermissionToUserUseCase,
-    RevokePermissionFromUserUseCase,
+    GetUserDirectPermissionsUseCase,
+    GetUserRolePermissionsUseCase,
+    UpdateUserPermissionsUseCase,
   ],
   exports: [
     UserService,
     CreateUserUseCase,
     GetEffectivePermissionsUseCase,
-    AssignRoleToUserUseCase,
-    AssignPermissionToUserUseCase,
-    RevokePermissionFromUserUseCase,
+    GetUserDirectPermissionsUseCase,
+    GetUserRolePermissionsUseCase,
+    UpdateUserPermissionsUseCase,
   ],
 })
 export class UserModule {}

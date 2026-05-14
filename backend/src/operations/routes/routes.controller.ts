@@ -63,7 +63,21 @@ export class RoutesController {
   @ApiResponse({
     status: 201,
     description: 'Ruta creada exitosamente',
-    type: RouteEntity,
+    schema: {
+      example: {
+        rutaId: 0,
+        nombre: 'string',
+        descripcion: 'string',
+        operarioId: 0,
+        tipoRuta: 'string',
+        comunidadId: 0,
+        sectorId: 0,
+        estado: 'string',
+        fechaPlanificada: '2025-05-12T10:30:00.000Z',
+        fechaInicio: 'string',
+        fechaFin: 'string',
+      },
+    },
   })
   //@RequiredPermission('routes', 'create')
   @Post()

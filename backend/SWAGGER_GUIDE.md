@@ -504,8 +504,6 @@ bootstrap();
 | AssignRolePermissionDto | `src/identity/roles/dto/assign-role-permission.dto.ts` | ✅ Documentado |
 | CreateMenuDto | `src/identity/menus/dto/create-menu.dto.ts` | ✅ Documentado |
 | UpdateMenuDto | `src/identity/menus/dto/update-menu.dto.ts` | ✅ Partial |
-| CreateProfileDto | `src/identity/profiles/dto/create-profile.dto.ts` | ✅ Documentado |
-| UpdateProfileDto | `src/identity/profiles/dto/update-profile.dto.ts` | ✅ Partial |
 | CreatePermissionDto | `src/identity/permissions/dto/create-permission.dto.ts` | ✅ Documentado |
 | UpdatePermissionDto | `src/identity/permissions/dto/update-permission.dto.ts` | ✅ Partial |
 | CrearMedidorDto | `src/metering/devices/dto/create-medidor.dto.ts` | ✅ Documentado |
@@ -519,11 +517,10 @@ bootstrap();
 | Controlador | Endpoint | Estado |
 |-------------|----------|--------|
 | AuthController | `/auth` | ✅ Completo |
-| UserController | `/users` | ✅ Documentado |
 | RolesController | `/roles` | ✅ Documentado |
 | PermissionsController | `/permissions` | ✅ Documentado |
 | MenusController | `/menus` | ✅ Documentado |
-| ProfileController | `/profile` | ✅ Documentado |
+| UserController | `/users` | ✅ Documentado (incluye /me) |
 | FilesController | `/files` | ✅ Documentado |
 | ClientController | `/clients` | ✅ Actualizado (ingles + plural) |
 | SectorController | `/sectors` | ✅ Actualizado (plural) |
@@ -591,7 +588,6 @@ Estos patrones NO requieren migración porque son excepciones legítimas:
 | Endpoint | Razón |
 |----------|-------|
 | `/auth/login`, `/auth/register`, `/auth/logout` | Autenticación (no es recurso) |
-| `/profile` | Singleton por usuario |
 | `/search` | Búsqueda avanzada con query params |
 | `/files/upload`, `/files/upload-multiple` | Acciones de negocio específicas |
 | `/menus/my` | Sub-recurso del usuario actual |
@@ -605,7 +601,6 @@ Estos patrones NO requieren migración porque son excepciones legítimas:
 .addTag('roles', 'Administración de roles')
 .addTag('permissions', 'Gestión de permisos')
 .addTag('menus', 'Menús y navegación basados en permisos')
-.addTag('profile', 'Gestión de perfiles de usuario')
 .addTag('files', 'Subida, descarga y gestión de archivos (MinIO)')
 .addTag('clients', 'Gestión de clientes')
 .addTag('sectors', 'Gestión de sectores territoriales')
@@ -818,12 +813,21 @@ export class UserController {
   })
   @ApiResponse({
     status: 200,
-    description: 'Roles del usuario obtenidos exitosamente',
+    description: 'Rol del usuario obtenido exitosamente',
+    schema: {
+      example: {
+        usuarioId: 1,
+        rol: {
+          rolId: 2,
+          nombre: 'admin',
+        },
+      },
+    },
   })
   @RequiredPermission('users', 'read')
-  @Get(':id/roles')
-  getUserRoles(@Param('id', ParseIntPipe) id: number) {
-    return this.userService.getRolesByUserId(id);
+  @Get(':id/role')
+  getUserRole(@Param('id', ParseIntPipe) id: number) {
+    return this.userService.getUserRole(id);
   }
 
   /**

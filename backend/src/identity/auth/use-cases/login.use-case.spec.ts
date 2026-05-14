@@ -33,9 +33,6 @@ describe('LoginUseCase', () => {
             usuarios: {
               findUnique: jest.fn(),
             },
-            perfiles: {
-              findUnique: jest.fn(),
-            },
           },
         },
         {
@@ -79,8 +76,10 @@ describe('LoginUseCase', () => {
   });
 
   describe('execute', () => {
-    it('should login successfully and return response', async () => {
+    it('should login successfully with minimal data retrieval', async () => {
       const loginDto = { email: 'test@jasrapo.com', password: 'Password123!' };
+
+      // Minimal user data
       const mockUser = {
         usuarioId: 1,
         email: 'test@jasrapo.com',
@@ -88,13 +87,9 @@ describe('LoginUseCase', () => {
         deletedAt: null,
       };
 
-      (prismaService.usuarios.findUnique as jest.Mock)
-        .mockResolvedValueOnce(mockUser) // Initial validateUser
-        .mockResolvedValueOnce({
-          // buildLoginResponse
-          rolId: 1,
-          rol: { nombre: 'ADMIN', deletedAt: null },
-        });
+      (prismaService.usuarios.findUnique as jest.Mock).mockResolvedValue(
+        mockUser,
+      );
 
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
       (bcrypt.hash as jest.Mock).mockResolvedValue('hashedRefreshToken');
@@ -107,12 +102,6 @@ describe('LoginUseCase', () => {
         .mockReturnValueOnce({ iat: 1000, exp: 2000 })
         .mockReturnValueOnce({ iat: 1000, exp: 2000 });
 
-      prismaService.perfiles.findUnique.mockResolvedValue({
-        nombres: 'Test',
-        apellidos: 'User',
-        avatar: { key: 'avatar-key' },
-      } as any);
-
       sessionsService.createSession.mockResolvedValue({} as any);
 
       const result = await useCase.execute(loginDto, '127.0.0.1', 'Chrome');
@@ -123,7 +112,13 @@ describe('LoginUseCase', () => {
         accessToken: 'access-token',
         refreshToken: 'refresh-token',
       });
+      // Verification of null fields in consolidated model
+      expect(result.name).toBeNull();
+      expect(result.avatar).toBeNull();
+      expect(result.roleId).toBeNull();
+
       expect(sessionsService.createSession).toHaveBeenCalled();
+      expect(prismaService.usuarios.findUnique).toHaveBeenCalledTimes(1);
     });
 
     it('should throw UnauthorizedException when user not found', async () => {

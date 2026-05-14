@@ -1,8 +1,6 @@
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
-import { CreateUserUseCase } from './create-user.use-case';
+import { Test, TestingModule } from '@nestjs/testing';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
-import * as bcrypt from 'bcryptjs';
+import { CreateUserUseCase } from './create-user.use-case';
 
 describe('CreateUserUseCase', () => {
   let useCase: CreateUserUseCase;
@@ -11,11 +9,10 @@ describe('CreateUserUseCase', () => {
   const mockPrisma = {
     roles: {
       findFirst: jest.fn(),
+      findUnique: jest.fn(),
     },
     usuarios: {
-      create: jest.fn(),
-    },
-    perfiles: {
+      findUnique: jest.fn(),
       create: jest.fn(),
     },
   };
@@ -32,58 +29,96 @@ describe('CreateUserUseCase', () => {
     prisma = module.get<PrismaService>(PrismaService);
   });
 
-  afterEach(() => {
-    jest.clearAllMocks();
+  it('should be defined', () => {
+    expect(useCase).toBeDefined();
   });
 
-  it('should create user with profile', async () => {
+  it('should create user with default role when rolId not provided', async () => {
+    const dto = {
+      email: 'test@example.com',
+      nombres: 'Juan',
+      apellidos: 'Pérez',
+      telefono: '0991234567',
+    };
     mockPrisma.roles.findFirst.mockResolvedValue({ rolId: 1, nombre: 'user' });
     mockPrisma.usuarios.create.mockResolvedValue({
       usuarioId: 1,
       email: 'test@example.com',
+      nombres: 'Juan',
+      apellidos: 'Pérez',
+      telefono: '0991234567',
+      rolId: 1,
+      avatar: null,
     });
-    mockPrisma.perfiles.create.mockResolvedValue({});
 
-    const result = await useCase.execute({
+    const result = await useCase.execute(dto);
+
+    expect(result).toEqual({
+      usuarioId: 1,
       email: 'test@example.com',
-      clave: 'password123',
+      nombres: 'Juan',
+      apellidos: 'Pérez',
+      telefono: '0991234567',
+      avatar: null,
+      role: {
+        rolId: 1,
+        nombre: 'user',
+      },
     });
-
-    expect(result).toEqual({ usuarioId: 1, email: 'test@example.com' });
     expect(mockPrisma.roles.findFirst).toHaveBeenCalledWith({
       where: { nombre: 'user' },
     });
-    expect(mockPrisma.usuarios.create).toHaveBeenCalled();
-    expect(mockPrisma.perfiles.create).toHaveBeenCalledWith({
-      data: { usuarioId: 1 },
-    });
   });
 
-  it('should hash the password', async () => {
-    mockPrisma.roles.findFirst.mockResolvedValue({ rolId: 1, nombre: 'user' });
+  it('should use provided rolId when specified', async () => {
+    const dto = {
+      email: 'admin@example.com',
+      nombres: 'Admin',
+      apellidos: 'User',
+      telefono: '0998765432',
+      rolId: 2,
+    };
+    mockPrisma.roles.findUnique.mockResolvedValue({ rolId: 2, nombre: 'admin', deletedAt: null });
     mockPrisma.usuarios.create.mockResolvedValue({
-      usuarioId: 1,
-      email: 'test@example.com',
+      usuarioId: 2,
+      email: 'admin@example.com',
+      nombres: 'Admin',
+      apellidos: 'User',
+      telefono: '0998765432',
+      rolId: 2,
+      avatar: null,
     });
 
-    await useCase.execute({
-      email: 'test@example.com',
-      clave: 'password123',
-    });
+    const result = await useCase.execute(dto);
 
-    const createCall = mockPrisma.usuarios.create.mock.calls[0][0];
-    const isMatch = await bcrypt.compare('password123', createCall.data.clave);
-    expect(isMatch).toBe(true);
+    expect(result.role).toEqual({ rolId: 2, nombre: 'admin' });
+    expect(mockPrisma.roles.findUnique).toHaveBeenCalledWith({ where: { rolId: 2 } });
   });
 
-  it('should throw error if default role "user" not found', async () => {
+  it('should throw error if default user role is missing', async () => {
+    mockPrisma.usuarios.findUnique.mockResolvedValue(null);
     mockPrisma.roles.findFirst.mockResolvedValue(null);
-
     await expect(
       useCase.execute({
-        email: 'test@example.com',
-        clave: 'password123',
+        email: 't@t.com',
+        nombres: 'Test',
+        apellidos: 'User',
+        telefono: '0991234567',
       }),
     ).rejects.toThrow('No existe el rol por defecto "user".');
+  });
+
+  it('should throw NotFoundException if provided rolId does not exist', async () => {
+    mockPrisma.usuarios.findUnique.mockResolvedValue(null);
+    mockPrisma.roles.findUnique.mockResolvedValue(null);
+    await expect(
+      useCase.execute({
+        email: 't@t.com',
+        nombres: 'Test',
+        apellidos: 'User',
+        telefono: '0991234567',
+        rolId: 999,
+      }),
+    ).rejects.toThrow('Rol no encontrado o eliminado');
   });
 });

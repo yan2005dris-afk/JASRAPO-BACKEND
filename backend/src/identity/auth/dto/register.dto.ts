@@ -1,5 +1,5 @@
 import { Transform } from 'class-transformer';
-import { IsEmail, IsString, Matches, MinLength } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class RegisterDto {
@@ -13,21 +13,41 @@ export class RegisterDto {
     typeof value === 'string' ? value.trim().toLowerCase() : value,
   )
   @IsEmail()
+  @IsNotEmpty()
   email: string;
 
   @ApiProperty({
-    description:
-      'Contraseña segura (mínimo 6 caracteres, debe contener al menos una mayúscula, un número y un carácter especial)',
-    example: 'SecurePass123!',
-    minLength: 6,
+    description: 'Nombres del usuario',
+    example: 'Juan',
     required: true,
-    format: 'password',
   })
   @IsString()
-  @MinLength(6)
-  @Matches(/^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])/, {
-    message:
-      'La contraseña debe tener al menos una mayúscula, un número y un carácter especial (!@#$%^&*)',
+  @IsNotEmpty()
+  nombres: string;
+
+  @ApiProperty({
+    description: 'Apellidos del usuario',
+    example: 'Pérez',
+    required: true,
   })
-  password: string;
+  @IsString()
+  @IsNotEmpty()
+  apellidos: string;
+
+  @ApiProperty({
+    description: 'Teléfono del usuario',
+    example: '+5491155555555',
+    required: true,
+  })
+  @IsString()
+  @IsNotEmpty()
+  telefono: string;
+
+  @ApiProperty({
+    description: 'ID del rol (opcional)',
+    example: 1,
+    required: false,
+  })
+  @IsString()
+  rolId?: string;
 }

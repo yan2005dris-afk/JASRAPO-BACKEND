@@ -42,7 +42,9 @@ export class PermissionsGuard implements CanActivate {
     }
 
     // Permisos cargados por JwtStrategy (fuente de verdad)
-    const permissions: AuthPermission[] = user.permissions ?? [];
+    const permissions: AuthPermission[] = Array.isArray(user.permissions)
+      ? user.permissions
+      : [];
 
     const hasPermission = permissions.some(
       (p) => p.resource === required.resource && p.action === required.action,

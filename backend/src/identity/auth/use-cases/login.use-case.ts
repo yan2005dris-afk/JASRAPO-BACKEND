@@ -16,6 +16,13 @@ import { EcuadorTimezoneUtil } from 'src/infrastructure/common/util/ecuador-time
 import type { DecodedJwt } from '../types/auth-service.types';
 import type { StringValue } from 'ms';
 
+interface ValidatedUser {
+  usuarioId: number;
+  email: string;
+  clave: string;
+  deletedAt: Date | null;
+}
+
 @Injectable()
 export class LoginUseCase {
   private readonly logger = new Logger(LoginUseCase.name);
@@ -70,9 +77,17 @@ export class LoginUseCase {
     return this.buildLoginResponse(user, sesionId, tokens);
   }
 
-  private async validateUser(loginUserDto: LoginUserDto) {
+  private async validateUser(loginUserDto: LoginUserDto): Promise<ValidatedUser> {
     const { email, password } = loginUserDto;
-    const user = await this.prisma.usuarios.findUnique({ where: { email } });
+    const user = await this.prisma.usuarios.findUnique({
+      where: { email },
+      select: {
+        usuarioId: true,
+        email: true,
+        clave: true,
+        deletedAt: true,
+      },
+    });
 
     if (!user || user.deletedAt) {
       throw new UnauthorizedException('Credenciales inválidas');
@@ -116,8 +131,8 @@ export class LoginUseCase {
     return { accessToken, refreshToken };
   }
 
-  private async buildLoginResponse(
-    user: { usuarioId: number; email: string },
+  private buildLoginResponse(
+    user: ValidatedUser,
     sesionId: string,
     tokens: { accessToken: string; refreshToken: string },
   ) {
@@ -128,41 +143,18 @@ export class LoginUseCase {
       this.jwtService.decode(tokens.refreshToken),
     );
 
-    const [userWithRole, profile] = await Promise.all([
-      this.prisma.usuarios.findUnique({
-        where: { usuarioId: user.usuarioId },
-        select: {
-          rolId: true,
-          rol: { select: { nombre: true, deletedAt: true } },
-        },
-      }),
-      this.prisma.perfiles.findUnique({
-        where: { usuarioId: user.usuarioId },
-        select: { nombres: true, apellidos: true, avatar: true },
-      }),
-    ]);
-
-    const fullName =
-      [profile?.nombres, profile?.apellidos].filter(Boolean).join(' ') || null;
-    const avatarKey = (profile?.avatar as any)?.key || null;
-
-    const firstRole =
-      userWithRole?.rol && !userWithRole.rol.deletedAt
-        ? { rolId: userWithRole.rolId, nombre: userWithRole.rol.nombre }
-        : null;
-
     const toDate = (ts?: number) =>
       ts ? EcuadorTimezoneUtil.formatAsEcuadorISO(new Date(ts * 1000)) : null;
 
     return {
       sub: user.usuarioId,
       sid: sesionId,
-      name: fullName,
-      avatar: avatarKey,
+      name: null,
+      avatar: null,
       email: user.email,
-      roleId: firstRole?.rolId ?? null,
-      roleName: firstRole?.nombre ?? null,
-      roles: firstRole?.rolId ? [firstRole.rolId] : [],
+      roleId: null,
+      roleName: null,
+      roles: [],
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
       accessTokenInfo: {

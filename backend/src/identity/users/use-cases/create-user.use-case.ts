@@ -1,37 +1,103 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
+import { Prisma } from 'src/generated/prisma/client';
 import { CreateUserDto } from '../dto/create-user.dto';
+import { ValidationUtil } from 'src/infrastructure/common/util/validation.util';
+import { PhoneUtil } from 'src/infrastructure/common/util/phone.util';
 
 @Injectable()
 export class CreateUserUseCase {
   constructor(private readonly prisma: PrismaService) {}
 
   async execute(createUsersDto: CreateUserDto) {
-    const userRole = await this.prisma.roles.findFirst({
-      where: { nombre: 'user' },
+    // Validar campos obligatorios
+    ValidationUtil.requireNonEmpty(createUsersDto.email, 'email');
+    ValidationUtil.requireNonEmpty(createUsersDto.nombres, 'nombres');
+    ValidationUtil.requireNonEmpty(createUsersDto.apellidos, 'apellidos');
+    ValidationUtil.requireNonEmpty(createUsersDto.telefono, 'telefono');
+
+    // Validar formato de teléfono ecuatoriano
+    PhoneUtil.validateEcuadorian(createUsersDto.telefono, 'telefono');
+
+    // Verificar que el email no exista previamente (incluye usuarios eliminados)
+    const existingUser = await this.prisma.usuarios.findUnique({
+      where: { email: createUsersDto.email },
+      select: { usuarioId: true, deletedAt: true },
     });
-    if (!userRole) {
-      throw new Error('No existe el rol por defecto "user".');
+    if (existingUser) {
+      if (existingUser.deletedAt) {
+        throw new ConflictException(
+          'El correo electrónico pertenece a un usuario eliminado. Contacte al administrador para restaurar el usuario.',
+        );
+      }
+      throw new ConflictException('El correo electrónico ya está en uso');
     }
 
-    const hashedPassword = await bcrypt.hash(createUsersDto.clave, 10);
+    // Determinar el rol a asignar
+    let roleId: number;
+    let roleName: string;
 
-    const newUser = await this.prisma.usuarios.create({
-      data: {
-        email: createUsersDto.email,
-        clave: hashedPassword,
-        rolId: userRole.rolId,
-      },
-    });
+    if (createUsersDto.rolId) {
+      const role = await this.prisma.roles.findUnique({
+        where: { rolId: createUsersDto.rolId },
+      });
+      if (!role || role.deletedAt) {
+        throw new NotFoundException('Rol no encontrado o eliminado');
+      }
+      roleId = role.rolId;
+      roleName = role.nombre;
+    } else {
+      const defaultRole = await this.prisma.roles.findFirst({
+        where: { nombre: 'user' },
+      });
+      if (!defaultRole) {
+        throw new Error('No existe el rol por defecto "user".');
+      }
+      roleId = defaultRole.rolId;
+      roleName = defaultRole.nombre;
+    }
 
-    await this.prisma.perfiles.create({
-      data: { usuarioId: newUser.usuarioId },
-    });
+    // TODO: Generar contraseña temporal y enviar por email
+    // Por ahora se crea con un hash placeholder
+    const temporaryPassword = 'TEMP_' + Date.now();
+    const hashedPassword = await bcrypt.hash(temporaryPassword, 10);
 
-    return {
-      usuarioId: newUser.usuarioId,
-      email: newUser.email,
-    };
+    try {
+      const newUser = await this.prisma.usuarios.create({
+        data: {
+          email: createUsersDto.email,
+          clave: hashedPassword,
+          nombres: createUsersDto.nombres,
+          apellidos: createUsersDto.apellidos,
+          telefono: createUsersDto.telefono,
+          avatar: createUsersDto.avatar,
+          rolId: roleId,
+          createdAt: new Date(),
+        },
+      });
+
+      return {
+        usuarioId: newUser.usuarioId,
+        email: newUser.email,
+        nombres: newUser.nombres,
+        apellidos: newUser.apellidos,
+        telefono: newUser.telefono,
+        avatar: newUser.avatar,
+        role: {
+          rolId: roleId,
+          nombre: roleName,
+        },
+      };
+    } catch (error) {
+      // Manejar error de constraint único de Prisma
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        throw new ConflictException('El correo electrónico ya está en uso');
+      }
+      throw error;
+    }
   }
 }

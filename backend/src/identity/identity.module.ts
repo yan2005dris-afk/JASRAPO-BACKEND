@@ -4,8 +4,8 @@ import { UserModule } from './users/user.module';
 import { RolesModule } from './roles/roles.module';
 import { PermissionsModule } from './permissions/permissions.module';
 import { MenusModule } from './menus/menus.module';
-import { ProfileModule } from './profiles/profile.module';
 import { SessionsModule } from './sessions/sessions.module';
+import { StorageModule } from '../infrastructure/storage/storage.module';
 
 @Module({
   imports: [
@@ -14,16 +14,16 @@ import { SessionsModule } from './sessions/sessions.module';
     RolesModule,
     PermissionsModule,
     MenusModule,
-    ProfileModule,
     SessionsModule,
+    StorageModule,
   ],
+  controllers: [],
   exports: [
     AuthModule,
     UserModule,
     RolesModule,
     PermissionsModule,
     MenusModule,
-    ProfileModule,
     SessionsModule,
   ],
 })
