@@ -90,7 +90,7 @@ export async function seedUSers(
             create: {
                 email: u.email,
                 clave: hashedPassword,
-                rolId: u.rolId,
+                rol: { connect: { rolId: u.rolId } },
                 nombres: u.nombres,
                 apellidos: u.apellidos,
                 telefono: u.telefono,
