@@ -31,9 +31,7 @@ export class UpdateUserPermissionsUseCase {
     const existingPermissionIds = new Set(
       existingPermissions.map((p) => p.permisoId),
     );
-    const newPermissionIds = new Set(
-      permissions.map((p) => p.permisoId),
-    );
+    const newPermissionIds = new Set(permissions.map((p) => p.permisoId));
 
     // Transacción para actualizar permisos
     await this.prisma.$transaction(async (tx) => {

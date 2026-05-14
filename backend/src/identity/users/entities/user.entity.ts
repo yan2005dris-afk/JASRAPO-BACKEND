@@ -37,23 +37,38 @@ export class UserProfileEntity {
   @ApiProperty({ example: 1, description: 'ID único del usuario' })
   usuarioId: number;
 
-  @ApiProperty({ example: 'usuario@jasrapo.com', description: 'Correo electrónico' })
+  @ApiProperty({
+    example: 'usuario@jasrapo.com',
+    description: 'Correo electrónico',
+  })
   email: string;
 
-  @ApiProperty({ example: 'Juan Pérez', description: 'Nombre completo concatenado', nullable: true })
+  @ApiProperty({
+    example: 'Juan Pérez',
+    description: 'Nombre completo concatenado',
+    nullable: true,
+  })
   name: string | null;
 
-  @ApiProperty({ example: '+5491155555555', description: 'Número de teléfono', nullable: true })
+  @ApiProperty({
+    example: '+5491155555555',
+    description: 'Número de teléfono',
+    nullable: true,
+  })
   phone: string | null;
 
-  @ApiProperty({ 
-    example: { url: 'avatars/profile.png', key: 'profile.png' }, 
-    description: 'Datos del avatar (JSON)', 
-    nullable: true 
+  @ApiProperty({
+    example: { url: 'avatars/profile.png', key: 'profile.png' },
+    description: 'Datos del avatar (JSON)',
+    nullable: true,
   })
   avatar: any | null;
 
-  @ApiProperty({ type: () => RoleEntity, description: 'Rol asignado al usuario', nullable: true })
+  @ApiProperty({
+    type: () => RoleEntity,
+    description: 'Rol asignado al usuario',
+    nullable: true,
+  })
   role: RoleEntity | null;
 }
 
@@ -61,33 +76,58 @@ export class UserEntity {
   @ApiProperty({ example: 1, description: 'ID único del usuario' })
   usuarioId: number;
 
-  @ApiProperty({ example: 'usuario@jasrapo.com', description: 'Correo electrónico' })
+  @ApiProperty({
+    example: 'usuario@jasrapo.com',
+    description: 'Correo electrónico',
+  })
   email: string;
 
-  @ApiProperty({ example: 'Juan', description: 'Nombres del usuario', nullable: true })
+  @ApiProperty({
+    example: 'Juan',
+    description: 'Nombres del usuario',
+    nullable: true,
+  })
   nombres: string | null;
 
-  @ApiProperty({ example: 'Pérez', description: 'Apellidos del usuario', nullable: true })
+  @ApiProperty({
+    example: 'Pérez',
+    description: 'Apellidos del usuario',
+    nullable: true,
+  })
   apellidos: string | null;
 
-  @ApiProperty({ example: '+5491155555555', description: 'Teléfono', nullable: true })
+  @ApiProperty({
+    example: '+5491155555555',
+    description: 'Teléfono',
+    nullable: true,
+  })
   telefono: string | null;
 
-  @ApiProperty({ 
-    example: { url: 'avatars/profile.png', key: 'profile.png' }, 
-    description: 'Datos del avatar (JSON)', 
-    nullable: true 
+  @ApiProperty({
+    example: { url: 'avatars/profile.png', key: 'profile.png' },
+    description: 'Datos del avatar (JSON)',
+    nullable: true,
   })
   avatar: any | null;
 
-  @ApiProperty({ type: () => RoleEntity, description: 'Rol asignado', nullable: true })
+  @ApiProperty({
+    type: () => RoleEntity,
+    description: 'Rol asignado',
+    nullable: true,
+  })
   role: RoleEntity | null;
 }
 
 export class UserDetailEntity extends UserEntity {
-  @ApiProperty({ type: [DirectPermissionEntity], description: 'Permisos asignados directamente' })
+  @ApiProperty({
+    type: [DirectPermissionEntity],
+    description: 'Permisos asignados directamente',
+  })
   directPermissions: DirectPermissionEntity[];
 
-  @ApiProperty({ type: [AuthPermissionEntity], description: 'Permisos heredados por el rol' })
+  @ApiProperty({
+    type: [AuthPermissionEntity],
+    description: 'Permisos heredados por el rol',
+  })
   rolePermissions: AuthPermissionEntity[];
 }

@@ -10,9 +10,14 @@ export class ValidationUtil {
    * @param fieldName - Nombre del campo para el mensaje de error
    * @throws BadRequestException si el valor está vacío o es solo espacios
    */
-  static requireNonEmpty(value: string | null | undefined, fieldName: string): void {
+  static requireNonEmpty(
+    value: string | null | undefined,
+    fieldName: string,
+  ): void {
     if (!value || value.trim().length === 0) {
-      throw new BadRequestException(`El campo ${fieldName} no puede estar vacío`);
+      throw new BadRequestException(
+        `El campo ${fieldName} no puede estar vacío`,
+      );
     }
   }
 
@@ -22,9 +27,14 @@ export class ValidationUtil {
    * @param fieldName - Nombre del campo para el mensaje de error
    * @throws BadRequestException si el valor tiene solo espacios
    */
-  static requireNonWhitespace(value: string | null | undefined, fieldName: string): void {
+  static requireNonWhitespace(
+    value: string | null | undefined,
+    fieldName: string,
+  ): void {
     if (value !== null && value !== undefined && value.trim().length === 0) {
-      throw new BadRequestException(`El campo ${fieldName} no puede contener solo espacios`);
+      throw new BadRequestException(
+        `El campo ${fieldName} no puede contener solo espacios`,
+      );
     }
   }
 
@@ -35,9 +45,14 @@ export class ValidationUtil {
    * @returns El valor limpio (trimmed)
    * @throws BadRequestException si el valor está vacío o es solo espacios
    */
-  static validateAndTrim(value: string | null | undefined, fieldName: string): string {
+  static validateAndTrim(
+    value: string | null | undefined,
+    fieldName: string,
+  ): string {
     if (!value || value.trim().length === 0) {
-      throw new BadRequestException(`El campo ${fieldName} no puede estar vacío`);
+      throw new BadRequestException(
+        `El campo ${fieldName} no puede estar vacío`,
+      );
     }
     return value.trim();
   }

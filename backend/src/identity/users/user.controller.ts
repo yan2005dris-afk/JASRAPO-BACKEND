@@ -26,14 +26,28 @@ import {
   ApiParam,
   ApiExtraModels,
 } from '@nestjs/swagger';
-import { UserEntity, UserProfileEntity, RoleEntity, AuthPermissionEntity, DirectPermissionEntity, UserDetailEntity } from './entities/user.entity';
+import {
+  UserEntity,
+  UserProfileEntity,
+  RoleEntity,
+  AuthPermissionEntity,
+  DirectPermissionEntity,
+  UserDetailEntity,
+} from './entities/user.entity';
 import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
 import { ApiPaginatedResponse } from 'src/infrastructure/common/decorators/api-paginated-response.decorator';
 import { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
 
 @ApiTags('users')
 @ApiBearerAuth()
-@ApiExtraModels(UserEntity, UserProfileEntity, RoleEntity, AuthPermissionEntity, DirectPermissionEntity, UserDetailEntity)
+@ApiExtraModels(
+  UserEntity,
+  UserProfileEntity,
+  RoleEntity,
+  AuthPermissionEntity,
+  DirectPermissionEntity,
+  UserDetailEntity,
+)
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('users')
 export class UserController {
@@ -44,7 +58,8 @@ export class UserController {
    */
   @ApiOperation({
     summary: 'Obtener mi perfil',
-    description: 'Retorna los datos del usuario actualmente autenticado (email, nombres, apellidos, teléfono, avatar y rol).',
+    description:
+      'Retorna los datos del usuario actualmente autenticado (email, nombres, apellidos, teléfono, avatar y rol).',
   })
   @ApiResponse({
     status: 200,
@@ -63,7 +78,11 @@ export class UserController {
    * Requiere permiso: users:create
    */
   @ApiOperation({ summary: 'Crear usuario' })
-  @ApiResponse({ status: 201, description: 'Usuario creado exitosamente', type: UserEntity })
+  @ApiResponse({
+    status: 201,
+    description: 'Usuario creado exitosamente',
+    type: UserEntity,
+  })
   @ApiResponse({ status: 400, description: 'Datos inválidos' })
   @RequiredPermission('users', 'create')
   @Post()
@@ -79,7 +98,9 @@ export class UserController {
   @ApiPaginatedResponse(UserEntity)
   @RequiredPermission('users', 'read')
   @Get()
-  findAll(@Query() paginationDto: PaginationDto): Promise<PaginatedResult<UserEntity>> {
+  findAll(
+    @Query() paginationDto: PaginationDto,
+  ): Promise<PaginatedResult<UserEntity>> {
     return this.userService.users(paginationDto);
   }
 
@@ -89,16 +110,22 @@ export class UserController {
    */
   @ApiOperation({ summary: 'Obtener un usuario por ID' })
   @ApiParam({ name: 'id', description: 'ID del usuario', type: Number })
-  @ApiResponse({ status: 200, description: 'Usuario encontrado', type: UserDetailEntity })
+  @ApiResponse({
+    status: 200,
+    description: 'Usuario encontrado',
+    type: UserDetailEntity,
+  })
   @ApiResponse({ status: 404, description: 'Usuario no encontrado' })
   @RequiredPermission('users', 'read')
   @Get(':id')
-  async findOne(@Param('id', ParseIntPipe) id: number): Promise<UserDetailEntity> {
+  async findOne(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<UserDetailEntity> {
     const user = await this.userService.user({ usuarioId: id });
     if (!user) {
       throw new NotFoundException('Usuario no encontrado');
     }
-    return user as UserDetailEntity;
+    return user;
   }
 
   /**
@@ -147,8 +174,7 @@ export class UserController {
    */
   @ApiOperation({
     summary: 'Eliminar usuario',
-    description:
-      'Marca un usuario como eliminado (soft delete).',
+    description: 'Marca un usuario como eliminado (soft delete).',
   })
   @ApiParam({
     name: 'id',

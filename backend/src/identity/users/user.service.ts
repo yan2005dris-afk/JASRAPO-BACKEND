@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { Prisma } from 'src/generated/prisma/client';
@@ -69,9 +73,10 @@ export class UserService {
       apellidos: user.apellidos,
       telefono: user.telefono,
       avatar: user.avatar,
-      role: user.rol && !user.rol.deletedAt
-        ? { rolId: user.rol.rolId, nombre: user.rol.nombre }
-        : null,
+      role:
+        user.rol && !user.rol.deletedAt
+          ? { rolId: user.rol.rolId, nombre: user.rol.nombre }
+          : null,
       directPermissions,
       rolePermissions: rolePermissions.map((rp) => ({
         resource: rp.recurso,
@@ -99,13 +104,16 @@ export class UserService {
       name: fullName || null,
       phone: user.telefono,
       avatar: avatarObj,
-      role: user.rol && !user.rol.deletedAt
-        ? { rolId: user.rol.rolId, nombre: user.rol.nombre }
-        : null,
+      role:
+        user.rol && !user.rol.deletedAt
+          ? { rolId: user.rol.rolId, nombre: user.rol.nombre }
+          : null,
     };
   }
 
-  async users(pagination: PaginationDto): Promise<PaginatedResult<UserWithRoleResponse>> {
+  async users(
+    pagination: PaginationDto,
+  ): Promise<PaginatedResult<UserWithRoleResponse>> {
     const result = await paginate(
       this.prisma.usuarios,
       {
@@ -126,9 +134,10 @@ export class UserService {
       apellidos: user.apellidos,
       telefono: user.telefono,
       avatar: user.avatar,
-      role: user.rol && !user.rol.deletedAt
-        ? { rolId: user.rol.rolId, nombre: user.rol.nombre }
-        : null,
+      role:
+        user.rol && !user.rol.deletedAt
+          ? { rolId: user.rol.rolId, nombre: user.rol.nombre }
+          : null,
     }));
 
     return {
@@ -143,7 +152,9 @@ export class UserService {
 
   async updateUser(params: {
     where: Prisma.UsuariosWhereUniqueInput;
-    data: Prisma.UsuariosUncheckedUpdateInput & { directPermissions?: unknown[] };
+    data: Prisma.UsuariosUncheckedUpdateInput & {
+      directPermissions?: unknown[];
+    };
   }): Promise<UserWithPermissionsResponse | null> {
     const { where, data } = params;
     const { directPermissions, ...userData } = data;
@@ -160,15 +171,14 @@ export class UserService {
     }
 
     if (existingUser.deletedAt) {
-      throw new BadRequestException('No se puede modificar un usuario eliminado');
+      throw new BadRequestException(
+        'No se puede modificar un usuario eliminado',
+      );
     }
 
     // Validar campos que no pueden estar vacíos
     if (updateData.nombres !== undefined) {
-      ValidationUtil.requireNonEmpty(
-        updateData.nombres as string,
-        'nombres',
-      );
+      ValidationUtil.requireNonEmpty(updateData.nombres as string, 'nombres');
     }
     if (updateData.apellidos !== undefined) {
       ValidationUtil.requireNonEmpty(
@@ -215,7 +225,8 @@ export class UserService {
   async getEffectivePermissions(
     usuarioId: number,
   ): Promise<EffectivePermissionsResponse> {
-    const permissions = await this.getEffectivePermissionsUseCase.execute(usuarioId);
+    const permissions =
+      await this.getEffectivePermissionsUseCase.execute(usuarioId);
     return {
       usuarioId,
       permissions: permissions.map((p) => ({

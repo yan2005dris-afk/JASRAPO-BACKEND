@@ -88,9 +88,7 @@ describe('UpdateUserPermissionsUseCase', () => {
       usuarioId: 1,
       deletedAt: null,
     });
-    mockPrisma.usuarioPermisos.findMany.mockResolvedValue([
-      { permisoId: 10 },
-    ]);
+    mockPrisma.usuarioPermisos.findMany.mockResolvedValue([{ permisoId: 10 }]);
     mockPrisma.usuarioPermisos.findFirst.mockResolvedValue({
       usuarioPermisoId: 1,
       permisoId: 10,
@@ -133,9 +131,7 @@ describe('UpdateUserPermissionsUseCase', () => {
       usuarioId: 1,
       deletedAt: null,
     });
-    mockPrisma.usuarioPermisos.findMany.mockResolvedValue([
-      { permisoId: 1 },
-    ]);
+    mockPrisma.usuarioPermisos.findMany.mockResolvedValue([{ permisoId: 1 }]);
 
     await useCase.execute(1, []);
 

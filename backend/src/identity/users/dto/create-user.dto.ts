@@ -1,4 +1,12 @@
-import { IsEmail, IsNotEmpty, IsOptional, IsString, IsObject, IsInt, Min } from 'class-validator';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsObject,
+  IsInt,
+  Min,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Prisma } from 'src/generated/prisma/client';
 
@@ -42,7 +50,10 @@ export class CreateUserDto {
 
   @ApiProperty({
     description: 'Avatar del usuario (JSON con url y publicId)',
-    example: { url: 'https://res.cloudinary.com/...', publicId: 'avatars/user' },
+    example: {
+      url: 'https://res.cloudinary.com/...',
+      publicId: 'avatars/user',
+    },
     required: false,
   })
   @IsOptional()
@@ -50,7 +61,8 @@ export class CreateUserDto {
   avatar?: Prisma.InputJsonValue;
 
   @ApiProperty({
-    description: 'ID del rol a asignar (opcional). Si no se envía, se asigna el rol "user" por defecto',
+    description:
+      'ID del rol a asignar (opcional). Si no se envía, se asigna el rol "user" por defecto',
     example: 1,
     required: false,
   })

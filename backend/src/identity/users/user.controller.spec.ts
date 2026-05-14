@@ -81,7 +81,11 @@ describe('UserController', () => {
   describe('findMe', () => {
     it('should call userService.findMe with correct usersId', async () => {
       const usersId = 1;
-      const mockProfile = { usuarioId: usersId, email: 'test@t.com', role: { nombre: 'admin' } };
+      const mockProfile = {
+        usuarioId: usersId,
+        email: 'test@t.com',
+        role: { nombre: 'admin' },
+      };
 
       jest.spyOn(userService, 'findMe').mockResolvedValue(mockProfile as any);
 
@@ -95,15 +99,21 @@ describe('UserController', () => {
   describe('updateUser', () => {
     it('should call userService.updateUser with correct data', async () => {
       const userId = 1;
-      const updateUserDto = { email: 'newemail@example.com', clave: 'secret', rolId: 2 };
+      const updateUserDto = {
+        email: 'newemail@example.com',
+        clave: 'secret',
+        rolId: 2,
+      };
       const mockUpdatedUser = {
         usuarioId: userId,
         email: 'newemail@example.com',
       };
 
-      jest.spyOn(userService, 'updateUser').mockResolvedValue(mockUpdatedUser as any);
+      jest
+        .spyOn(userService, 'updateUser')
+        .mockResolvedValue(mockUpdatedUser as any);
 
-      const result = await controller.updateUser(userId, updateUserDto as any);
+      const result = await controller.updateUser(userId, updateUserDto);
 
       expect(userService.updateUser).toHaveBeenCalledWith({
         where: { usuarioId: userId },

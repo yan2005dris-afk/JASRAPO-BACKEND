@@ -18,7 +18,9 @@ export class PhoneUtil {
    */
   static validateEcuadorian(phone: string, fieldName: string): void {
     if (!phone || phone.trim().length === 0) {
-      throw new BadRequestException(`El campo ${fieldName} no puede estar vacío`);
+      throw new BadRequestException(
+        `El campo ${fieldName} no puede estar vacío`,
+      );
     }
 
     // Limpiar espacios y guiones

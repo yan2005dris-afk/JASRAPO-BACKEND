@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { CreateUserUseCase } from './create-user.use-case';
 
@@ -78,7 +79,11 @@ describe('CreateUserUseCase', () => {
       telefono: '0998765432',
       rolId: 2,
     };
-    mockPrisma.roles.findUnique.mockResolvedValue({ rolId: 2, nombre: 'admin', deletedAt: null });
+    mockPrisma.roles.findUnique.mockResolvedValue({
+      rolId: 2,
+      nombre: 'admin',
+      deletedAt: null,
+    });
     mockPrisma.usuarios.create.mockResolvedValue({
       usuarioId: 2,
       email: 'admin@example.com',
@@ -92,7 +97,9 @@ describe('CreateUserUseCase', () => {
     const result = await useCase.execute(dto);
 
     expect(result.role).toEqual({ rolId: 2, nombre: 'admin' });
-    expect(mockPrisma.roles.findUnique).toHaveBeenCalledWith({ where: { rolId: 2 } });
+    expect(mockPrisma.roles.findUnique).toHaveBeenCalledWith({
+      where: { rolId: 2 },
+    });
   });
 
   it('should throw error if default user role is missing', async () => {
