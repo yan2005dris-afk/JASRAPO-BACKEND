@@ -90,7 +90,12 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
     // Agregar errores de validación si existen
     if (errors && errors.length > 0) {
-      errorResponse.errors = this.formatValidationErrors(errors);
+      // Si son strings (formato por defecto de ValidationPipe), los devolvemos directamente
+      // Si son objetos ValidationError, los formateamos
+      errorResponse.errors =
+        typeof errors[0] === 'string'
+          ? (errors as any)
+          : this.formatValidationErrors(errors);
     }
 
     response.status(status).json(errorResponse);
