@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { MinioService } from './minio.service';
 import { FilesController } from './files.controller';
 import { AuthModule } from 'src/identity/auth/auth.module';
@@ -8,7 +8,7 @@ import { ListFilesUseCase } from './use-cases/list-files.use-case';
 import { DeleteFileUseCase } from './use-cases/delete-file.use-case';
 
 @Module({
-  imports: [AuthModule],
+  imports: [forwardRef(() => AuthModule)],
   controllers: [FilesController],
   providers: [
     MinioService,

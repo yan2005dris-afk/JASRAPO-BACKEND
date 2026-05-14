@@ -59,7 +59,10 @@ describe('GetMyMenusUseCase', () => {
   });
 
   it('should return empty array when user has no permissions', async () => {
-    mockUserService.getEffectivePermissions.mockResolvedValue([]);
+    mockUserService.getEffectivePermissions.mockResolvedValue({
+      usuarioId: 1,
+      permisos: [],
+    });
 
     const result = await useCase.execute(1);
 
@@ -68,8 +71,11 @@ describe('GetMyMenusUseCase', () => {
   });
 
   it('should build menu tree when user has permissions', async () => {
-    const mockPermissions = [{ resource: 'dashboard', action: 'read' }];
-    mockUserService.getEffectivePermissions.mockResolvedValue(mockPermissions);
+    const mockPermissions = [{ recurso: 'dashboard', accion: 'read' }];
+    mockUserService.getEffectivePermissions.mockResolvedValue({
+      usuarioId: 1,
+      permisos: mockPermissions,
+    });
 
     // First findMany for direct menus
     mockPrismaService.menus.findMany.mockResolvedValueOnce([mockMenuRecord]);
@@ -82,7 +88,7 @@ describe('GetMyMenusUseCase', () => {
   });
 
   it('should include parent menus recursively', async () => {
-    const mockPermissions = [{ resource: 'child', action: 'read' }];
+    const mockPermissions = [{ recurso: 'child', accion: 'read' }];
     const childMenu = {
       menuId: 2,
       menuPadreId: 1,
@@ -98,7 +104,10 @@ describe('GetMyMenusUseCase', () => {
       activo: true,
     };
 
-    mockUserService.getEffectivePermissions.mockResolvedValue(mockPermissions);
+    mockUserService.getEffectivePermissions.mockResolvedValue({
+      usuarioId: 1,
+      permisos: mockPermissions,
+    });
 
     // First call: find child menu
     mockPrismaService.menus.findMany.mockResolvedValueOnce([childMenu]);

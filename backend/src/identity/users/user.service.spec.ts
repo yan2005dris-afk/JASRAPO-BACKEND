@@ -4,67 +4,66 @@ import { UserService } from './user.service';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { CreateUserUseCase } from './use-cases/create-user.use-case';
 import { GetEffectivePermissionsUseCase } from './use-cases/get-effective-permissions.use-case';
-import { AssignRoleToUserUseCase } from './use-cases/assign-role-to-user.use-case';
-import { AssignPermissionToUserUseCase } from './use-cases/assign-permission-to-user.use-case';
-import { RevokePermissionFromUserUseCase } from './use-cases/revoke-permission-from-user.use-case';
-import { NotFoundException } from '@nestjs/common';
+import { UpdateUserPermissionsUseCase } from './use-cases/update-user-permissions.use-case';
+import { NotFoundException, BadRequestException } from '@nestjs/common';
 
 describe('UserService', () => {
   let service: UserService;
-  let createUserUseCase: CreateUserUseCase;
+  let prisma: PrismaService;
   let getEffectivePermissionsUseCase: GetEffectivePermissionsUseCase;
-  let assignRoleUseCase: AssignRoleToUserUseCase;
-  let assignPermissionUseCase: AssignPermissionToUserUseCase;
-  let revokePermissionUseCase: RevokePermissionFromUserUseCase;
+  let updateUserPermissionsUseCase: UpdateUserPermissionsUseCase;
 
   const mockPrismaService = {
     usuarios: {
       findUnique: jest.fn(),
       findMany: jest.fn(),
+      count: jest.fn(),
       update: jest.fn(),
+    },
+    roles: {
+      findUnique: jest.fn(),
     },
     usuarioPermisos: {
       findMany: jest.fn(),
     },
+    rolPermisos: {
+      findMany: jest.fn(),
+    },
+    $transaction: jest.fn((cb) => cb(mockPrismaService)),
   };
 
-  const mockUseCase = { execute: jest.fn() };
+  const mockGetEffectivePermissionsUseCase = {
+    execute: jest.fn(),
+  };
+
+  const mockUpdateUserPermissionsUseCase = {
+    execute: jest.fn(),
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UserService,
         { provide: PrismaService, useValue: mockPrismaService },
-        { provide: CreateUserUseCase, useValue: { execute: jest.fn() } },
+        { provide: CreateUserUseCase, useValue: {} },
         {
           provide: GetEffectivePermissionsUseCase,
-          useValue: { execute: jest.fn() },
-        },
-        { provide: AssignRoleToUserUseCase, useValue: { execute: jest.fn() } },
-        {
-          provide: AssignPermissionToUserUseCase,
-          useValue: { execute: jest.fn() },
+          useValue: mockGetEffectivePermissionsUseCase,
         },
         {
-          provide: RevokePermissionFromUserUseCase,
-          useValue: { execute: jest.fn() },
+          provide: UpdateUserPermissionsUseCase,
+          useValue: mockUpdateUserPermissionsUseCase,
         },
       ],
     }).compile();
 
     service = module.get<UserService>(UserService);
-    createUserUseCase = module.get<CreateUserUseCase>(CreateUserUseCase);
+    prisma = module.get<PrismaService>(PrismaService);
     getEffectivePermissionsUseCase = module.get<GetEffectivePermissionsUseCase>(
       GetEffectivePermissionsUseCase,
     );
-    assignRoleUseCase = module.get<AssignRoleToUserUseCase>(
-      AssignRoleToUserUseCase,
-    );
-    assignPermissionUseCase = module.get<AssignPermissionToUserUseCase>(
-      AssignPermissionToUserUseCase,
-    );
-    revokePermissionUseCase = module.get<RevokePermissionFromUserUseCase>(
-      RevokePermissionFromUserUseCase,
+    updateUserPermissionsUseCase = module.get<UpdateUserPermissionsUseCase>(
+      UpdateUserPermissionsUseCase,
     );
   });
 
@@ -72,104 +71,167 @@ describe('UserService', () => {
     jest.clearAllMocks();
   });
 
-  it('should be defined', () => {
-    expect(service).toBeDefined();
-  });
-
-  describe('createUser', () => {
-    it('should delegate to CreateUserUseCase', async () => {
-      const dto = { email: 'test@test.com', clave: 'password123' };
-      await service.createUser(dto);
-      expect(createUserUseCase.execute).toHaveBeenCalledWith(dto);
-    });
-  });
-
   describe('user', () => {
-    it('should return user from prisma', async () => {
-      mockPrismaService.usuarios.findUnique.mockResolvedValue({ usuarioId: 1 });
-      const result = await service.user({ usuarioId: 1 });
-      expect(result).toEqual({ usuarioId: 1 });
-    });
-  });
+    it('should return user with mapped permissions and roles', async () => {
+      const mockUser = {
+        usuarioId: 1,
+        email: 'test@test.com',
+        nombres: 'John',
+        apellidos: 'Doe',
+        telefono: '123456',
+        avatar: null,
+        rol: { rolId: 1, nombre: 'admin', deletedAt: null },
+      };
 
-  describe('users', () => {
-    it('should return users from prisma and map roles', async () => {
-      mockPrismaService.usuarios.findMany.mockResolvedValue([
+      const mockDirect = [
         {
-          usuarioId: 1,
-          email: 't@t.com',
-          rol: { rolId: 1, nombre: 'admin', deletedAt: null },
+          usuarioPermisoId: 10,
+          permisoId: 1,
+          permitido: true,
+          permiso: { permisoId: 1, recurso: 'users', accion: 'read' },
         },
-      ]);
-      const result = await service.users({});
-      expect(result[0].roles).toEqual([{ rolId: 1, nombre: 'admin' }]);
+      ];
+
+      const mockRolePerms = [
+        { permiso: { recurso: 'users', accion: 'write' } },
+      ];
+
+      mockPrismaService.usuarios.findUnique.mockResolvedValue(mockUser);
+      mockPrismaService.usuarioPermisos.findMany.mockResolvedValue(mockDirect);
+      mockPrismaService.rolPermisos.findMany.mockResolvedValue(mockRolePerms);
+
+      const result = await service.user({ usuarioId: 1 });
+
+      expect(result).toEqual({
+        usuarioId: 1,
+        email: 'test@test.com',
+        nombres: 'John',
+        apellidos: 'Doe',
+        telefono: '123456',
+        avatar: null,
+        rol: { rolId: 1, nombre: 'admin' },
+        permisosDirectos: [
+          {
+            usuarioPermisoId: 10,
+            permisoId: 1,
+            recurso: 'users',
+            accion: 'read',
+            permitido: true,
+          },
+        ],
+        permisosRol: [{ recurso: 'users', accion: 'write' }],
+      });
+    });
+
+    it('should return null if user not found', async () => {
+      mockPrismaService.usuarios.findUnique.mockResolvedValue(null);
+      const result = await service.user({ usuarioId: 999 });
+      expect(result).toBeNull();
     });
   });
 
   describe('updateUser', () => {
-    it('should hash password and update via prisma', async () => {
-      mockPrismaService.usuarios.update.mockResolvedValue({ usuarioId: 1 });
+    it('should call updateUserPermissionsUseCase if directPermissions provided', async () => {
+      mockPrismaService.usuarios.findUnique.mockResolvedValue({
+        usuarioId: 1,
+        deletedAt: null,
+      });
+      const mockUpdatedUser = { usuarioId: 1 };
+      const mockDirectPermissions = [{ permisoId: 1, permitido: true }];
+
+      mockPrismaService.usuarios.update.mockResolvedValue(mockUpdatedUser);
+
       await service.updateUser({
         where: { usuarioId: 1 },
-        data: { clave: 'new' },
+        data: { nombres: 'Test', directPermissions: mockDirectPermissions },
       });
-      expect(mockPrismaService.usuarios.update).toHaveBeenCalled();
-      const updateCall = mockPrismaService.usuarios.update.mock.calls[0][0];
-      expect(updateCall.data.clave).toMatch(/^\$2[aby]\$\d{2}\$/);
-    });
-  });
 
-  describe('softDeleteUser', () => {
-    it('should update deletedAt via prisma', async () => {
-      await service.softDeleteUser({ usuarioId: 1 });
-      expect(mockPrismaService.usuarios.update).toHaveBeenCalledWith(
-        expect.objectContaining({ data: { deletedAt: expect.any(Date) } }),
+      expect(updateUserPermissionsUseCase.execute).toHaveBeenCalledWith(
+        1,
+        mockDirectPermissions,
+        expect.any(Object),
       );
     });
-  });
 
-  describe('assignRoleToUser', () => {
-    it('should delegate to AssignRoleToUserUseCase', async () => {
-      await service.assignRoleToUser(1, 2);
-      expect(assignRoleUseCase.execute).toHaveBeenCalledWith(1, 2);
+    it('should throw NotFoundException if rolId is invalid (not found)', async () => {
+      mockPrismaService.usuarios.findUnique.mockResolvedValue({
+        usuarioId: 1,
+        deletedAt: null,
+      });
+      mockPrismaService.roles.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.updateUser({
+          where: { usuarioId: 1 },
+          data: { rolId: 999 },
+        }),
+      ).rejects.toThrow(NotFoundException);
     });
-  });
 
-  describe('assignPermissionToUser', () => {
-    it('should delegate to AssignPermissionToUserUseCase', async () => {
-      await service.assignPermissionToUser(1, 2, true);
-      expect(assignPermissionUseCase.execute).toHaveBeenCalledWith(1, 2, true);
-    });
-  });
+    it('should throw NotFoundException if rolId is invalid (soft-deleted)', async () => {
+      mockPrismaService.usuarios.findUnique.mockResolvedValue({
+        usuarioId: 1,
+        deletedAt: null,
+      });
+      mockPrismaService.roles.findUnique.mockResolvedValue({
+        rolId: 2,
+        deletedAt: new Date(),
+      });
 
-  describe('revokePermissionFromUser', () => {
-    it('should delegate to RevokePermissionFromUserUseCase', async () => {
-      await service.revokePermissionFromUser(1);
-      expect(revokePermissionUseCase.execute).toHaveBeenCalledWith(1);
+      await expect(
+        service.updateUser({
+          where: { usuarioId: 1 },
+          data: { rolId: 2 },
+        }),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
   describe('getEffectivePermissions', () => {
-    it('should delegate to GetEffectivePermissionsUseCase', async () => {
-      await service.getEffectivePermissions(1);
+    it('should delegate to GetEffectivePermissionsUseCase and return wrapped response', async () => {
+      const mockPerms = [{ recurso: 'test', accion: 'read' }];
+      (getEffectivePermissionsUseCase.execute as jest.Mock).mockResolvedValue(
+        mockPerms as any,
+      );
+
+      const result = await service.getEffectivePermissions(1);
+
+      expect(result).toEqual({
+        usuarioId: 1,
+        permisos: mockPerms,
+      });
       expect(getEffectivePermissionsUseCase.execute).toHaveBeenCalledWith(1);
     });
   });
 
-  describe('getRolesByUserId', () => {
-    it('should return role name from prisma', async () => {
+  describe('findMe', () => {
+    it('should return profile with rol info', async () => {
       mockPrismaService.usuarios.findUnique.mockResolvedValue({
-        rol: { nombre: 'admin', deletedAt: null },
+        usuarioId: 1,
+        email: 'test@test.com',
+        nombres: 'John',
+        apellidos: 'Doe',
+        telefono: '123456',
+        avatar: { url: 'avatar.png' },
+        rol: { rolId: 1, nombre: 'admin', deletedAt: null },
       });
-      const result = await service.getRolesByUserId(1);
-      expect(result).toBe('admin');
+
+      const result = await service.findMe(1);
+
+      expect(result).toEqual({
+        usuarioId: 1,
+        email: 'test@test.com',
+        nombre: 'John Doe',
+        telefono: '123456',
+        avatar: { url: 'avatar.png' },
+        rol: { rolId: 1, nombre: 'admin' },
+      });
     });
 
-    it('should throw NotFoundException if user not found', async () => {
+    it('should throw NotFoundException if profile user not found', async () => {
       mockPrismaService.usuarios.findUnique.mockResolvedValue(null);
-      await expect(service.getRolesByUserId(1)).rejects.toThrow(
-        NotFoundException,
-      );
+
+      await expect(service.findMe(1)).rejects.toThrow(NotFoundException);
     });
   });
 });

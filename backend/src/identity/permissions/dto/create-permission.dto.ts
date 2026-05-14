@@ -5,10 +5,10 @@ export class CreatePermissionDto {
   @ApiProperty({ example: 'users' })
   @IsString()
   @IsNotEmpty()
-  resource: string;
+  recurso: string;
 
   @ApiProperty({ example: 'read' })
   @IsString()
   @IsNotEmpty()
-  action: string;
+  accion: string;
 }

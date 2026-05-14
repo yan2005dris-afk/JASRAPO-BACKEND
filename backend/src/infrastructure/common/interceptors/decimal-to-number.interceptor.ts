@@ -45,7 +45,7 @@ function transformDecimals(obj: unknown): unknown {
 
 @Injectable()
 export class DecimalToNumberInterceptor implements NestInterceptor {
-  intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
+  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     return next.handle().pipe(map((data) => transformDecimals(data)));
   }
 }

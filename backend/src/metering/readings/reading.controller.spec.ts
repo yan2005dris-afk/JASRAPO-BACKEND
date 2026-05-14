@@ -85,7 +85,7 @@ describe('ReadingController', () => {
     it('should update a reading', async () => {
       const updateDto = { lecturaActual: 200 };
       jest.spyOn(service, 'update').mockResolvedValue(mockLecturaData as any);
-      const result = await controller.actualizarLectura('1', updateDto as any);
+      const result = await controller.actualizarLectura('1', updateDto);
 
       expect(service.update).toHaveBeenCalledWith(BigInt(1), updateDto);
       expect(result).toBeDefined();

@@ -24,6 +24,7 @@ import { seedLecturas } from './seeds/lecturas.seed';
 import { seedCatalogoDescuento } from './seeds/catalogoDescuento.seed';
 import { seedFacturacion } from './seeds/facturacion.seed';
 import { seedSriCatalogs } from './seeds/sri.seed';
+import { seedRoutes } from './seeds/routes.seed';
 import { syncSequences } from './seeds/sync-sequences';
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
@@ -219,6 +220,10 @@ async function main() {
   // === FACTURACIÓN ===
   await seedFacturacion(prisma);
   console.log('✅ Datos de facturación creados.');
+
+  // === RUTAS ===
+  await seedRoutes(prisma);
+  console.log('✅ Rutas creadas correctamente.');
 
   // === SINCRONIZACIÓN FINAL ===
   // Esto asegura que los autoincrementales empiecen después de los IDs manuales del seed

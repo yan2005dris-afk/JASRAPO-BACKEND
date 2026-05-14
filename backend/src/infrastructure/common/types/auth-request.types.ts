@@ -1,14 +1,14 @@
 import type { Request } from 'express';
 
 export type AuthPermission = {
-  resource: string;
-  action: string;
+  recurso: string;
+  accion: string;
 };
 
 export type AuthUser = {
   usersId: number;
   email?: string;
-  permissions?: AuthPermission[];
+  permisos?: AuthPermission[];
 };
 
 export type AuthenticatedRequest = Request & {

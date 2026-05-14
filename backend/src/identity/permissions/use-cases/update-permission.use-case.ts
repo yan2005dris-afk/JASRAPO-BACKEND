@@ -10,8 +10,8 @@ export class UpdatePermissionUseCase {
     return this.prisma.permisos.update({
       where: { permisoId: id },
       data: {
-        recurso: updatePermissionDto.resource,
-        accion: updatePermissionDto.action,
+        recurso: updatePermissionDto.recurso,
+        accion: updatePermissionDto.accion,
       },
       select: {
         permisoId: true,

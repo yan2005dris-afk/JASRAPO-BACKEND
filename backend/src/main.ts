@@ -91,7 +91,7 @@ async function bootstrap() {
       forbidNonWhitelisted: true,
       stopAtFirstError: true,
       transformOptions: {
-        enableImplicitConversion: false,
+        enableImplicitConversion: true,
       },
     }),
   );
@@ -106,7 +106,7 @@ async function bootstrap() {
 # API REST de JASRAPO - Sistema de Gestión
 
 ## 📋 Descripción
-API RESTful para el sistema de gestión Jasrapo. Proporciona endpoints para la gestión de usuarios, roles, permisos, menús y perfiles.
+API RESTful para el sistema de gestión Jasrapo. Proporciona endpoints para la gestión de usuarios, roles, permisos y menús.
 
 ## 🔐 Autenticación
 La API utiliza **JWT (JSON Web Tokens)** para la autenticación:
@@ -121,7 +121,7 @@ La API utiliza **JWT (JSON Web Tokens)** para la autenticación:
 ## 🛡️ Sistema de Permisos
 La API implementa un sistema de control de acceso basado en roles y permisos:
 
-- **Recursos**: Entidades del sistema (users, roles, permissions, menus, profile)
+- **Recursos**: Entidades del sistema (users, roles, permissions, menus)
 - **Acciones**: Operaciones permitidas (create, read, update, delete)
 - **Permisos**: Combinación recurso:acción (ej: users:read, users:create)
 
@@ -169,9 +169,6 @@ Gestión de permisos del sistema.
 ### Menus (Menús)
 Obtención de menús basados en permisos del usuario.
 
-### Profile (Perfiles)
-Gestión de perfiles de usuario.
-
 ### Files (Archivos)
 Subida, descarga, listado y eliminación de archivos mediante MinIO (S3-compatible).
 - Soporta subida individual y múltiple
@@ -210,7 +207,6 @@ Para consultas o soporte, contacta al equipo de desarrollo del Backend.
     .addTag('roles', 'Administración de roles')
     .addTag('permissions', 'Gestión de permisos')
     .addTag('menus', 'Menús y navegación basados en permisos')
-    .addTag('profile', 'Gestión de perfiles de usuario')
     .addTag('files', 'Subida, descarga y gestión de archivos (MinIO)')
     .addTag('clients', 'Gestión de clientes')
     .addTag('sectors', 'Gestión de sectores territoriales')

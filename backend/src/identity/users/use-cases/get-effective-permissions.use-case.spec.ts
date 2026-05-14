@@ -53,8 +53,8 @@ describe('GetEffectivePermissionsUseCase', () => {
 
     const result = await useCase.execute(1);
 
-    expect(result).toContainEqual({ resource: 'role-perm', action: 'read' });
-    expect(result).toContainEqual({ resource: 'extra', action: 'read' });
+    expect(result).toContainEqual({ recurso: 'role-perm', accion: 'read' });
+    expect(result).toContainEqual({ recurso: 'extra', accion: 'read' });
   });
 
   it('should exclude revoked permissions', async () => {
@@ -80,8 +80,8 @@ describe('GetEffectivePermissionsUseCase', () => {
     const result = await useCase.execute(1);
 
     expect(result).not.toContainEqual({
-      resource: 'role-perm',
-      action: 'read',
+      recurso: 'role-perm',
+      accion: 'read',
     });
   });
 

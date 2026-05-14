@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
@@ -17,7 +17,7 @@ import type { StringValue } from 'ms';
 
 @Module({
   imports: [
-    UserModule,
+    forwardRef(() => UserModule),
     SessionsModule,
     JwtModule.registerAsync({
       inject: [ConfigService],

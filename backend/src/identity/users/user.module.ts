@@ -3,27 +3,22 @@ import { UserService } from './user.service';
 import { UserController } from './user.controller';
 import { CreateUserUseCase } from './use-cases/create-user.use-case';
 import { GetEffectivePermissionsUseCase } from './use-cases/get-effective-permissions.use-case';
-import { AssignRoleToUserUseCase } from './use-cases/assign-role-to-user.use-case';
-import { AssignPermissionToUserUseCase } from './use-cases/assign-permission-to-user.use-case';
-import { RevokePermissionFromUserUseCase } from './use-cases/revoke-permission-from-user.use-case';
+import { UpdateUserPermissionsUseCase } from './use-cases/update-user-permissions.use-case';
 
 @Module({
+  imports: [],
   controllers: [UserController],
   providers: [
     UserService,
     CreateUserUseCase,
     GetEffectivePermissionsUseCase,
-    AssignRoleToUserUseCase,
-    AssignPermissionToUserUseCase,
-    RevokePermissionFromUserUseCase,
+    UpdateUserPermissionsUseCase,
   ],
   exports: [
     UserService,
     CreateUserUseCase,
     GetEffectivePermissionsUseCase,
-    AssignRoleToUserUseCase,
-    AssignPermissionToUserUseCase,
-    RevokePermissionFromUserUseCase,
+    UpdateUserPermissionsUseCase,
   ],
 })
 export class UserModule {}

@@ -35,19 +35,19 @@ Documentación del sistema de observabilidad implementado: logs, métricas y tra
 
 ```bash
 # Logs
-npm install pino pino-pretty pino-roll
+pnpm install pino pino-pretty pino-roll
 
 # Métricas
-npm install prom-client
+pnpm install prom-client
 
 # Trazas (OpenTelemetry)
-npm install @opentelemetry/api @opentelemetry/sdk-node
-npm install @opentelemetry/auto-instrumentations-node
-npm install @opentelemetry/exporter-trace-otlp-http
-npm install @opentelemetry/exporter-metrics-otlp-http
-npm install @opentelemetry/instrumentation-express
-npm install @opentelemetry/instrumentation-http
-npm install @opentelemetry/instrumentation-pg
+pnpm install @opentelemetry/api @opentelemetry/sdk-node
+pnpm install @opentelemetry/auto-instrumentations-node
+pnpm install @opentelemetry/exporter-trace-otlp-http
+pnpm install @opentelemetry/exporter-metrics-otlp-http
+pnpm install @opentelemetry/instrumentation-express
+pnpm install @opentelemetry/instrumentation-http
+pnpm install @opentelemetry/instrumentation-pg
 ```
 
 ---

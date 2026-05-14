@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { UserService } from '../../users/user.service';
 import { MenuResponseDto } from '../dto/response-menu.dto';
-import { EffectivePermission, MenuRecord } from '../types/menu.types';
+import { MenuRecord } from '../types/menu.types';
 
 @Injectable()
 export class GetMyMenusUseCase {
@@ -15,17 +15,16 @@ export class GetMyMenusUseCase {
 
   async execute(userId: number): Promise<MenuResponseDto[]> {
     // Obtener permisos efectivos del usuario (roles + permisos directos)
-    const permissions = (await this.userService.getEffectivePermissions(
-      userId,
-    )) as EffectivePermission[];
+    const result = await this.userService.getEffectivePermissions(userId);
+    const permisos = result.permisos;
 
-    if (permissions.length === 0) {
+    if (permisos.length === 0) {
       return [];
     }
 
-    const filtrosPermisos = permissions.map((permission) => ({
-      recurso: permission.resource,
-      accion: permission.action,
+    const filtrosPermisos = permisos.map((permission) => ({
+      recurso: permission.recurso,
+      accion: permission.accion,
     }));
 
     // 1. Obtener los acciones que el usuario tiene acceso directo

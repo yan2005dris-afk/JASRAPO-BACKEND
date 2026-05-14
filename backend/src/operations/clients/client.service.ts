@@ -34,7 +34,7 @@ export class ClientService {
       where,
       orderBy: { createdAt: 'desc' },
       select: safeClientesSelect,
-    }) as Promise<IResponseClient[]>;
+    });
   }
 
   async findOne(id: string) {

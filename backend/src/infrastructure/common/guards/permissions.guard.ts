@@ -42,18 +42,20 @@ export class PermissionsGuard implements CanActivate {
     }
 
     // Permisos cargados por JwtStrategy (fuente de verdad)
-    const permissions: AuthPermission[] = user.permissions ?? [];
+    const permissions: AuthPermission[] = Array.isArray(user.permisos)
+      ? user.permisos
+      : [];
 
     const hasPermission = permissions.some(
-      (p) => p.resource === required.resource && p.action === required.action,
+      (p) => p.recurso === required.recurso && p.accion === required.accion,
     );
 
     if (!hasPermission) {
       this.logger.warn(
-        `Acceso denegado: Usuario ${user.email} intentó ${required.action} en ${required.resource}`,
+        `Acceso denegado: Usuario ${user.email} intentó ${required.accion} en ${required.recurso}`,
       );
       throw new ForbiddenException(
-        `No tienes permiso para la acción "${required.action}" en "${required.resource}"`,
+        `No tienes permiso para la acción "${required.accion}" en "${required.recurso}"`,
       );
     }
 
@@ -88,6 +90,6 @@ export class PermissionsGuard implements CanActivate {
 
     this.logger.debug(`Permiso inferido por convención: ${resource}:${action}`);
 
-    return { resource, action };
+    return { recurso: resource, accion: action };
   }
 }

@@ -163,8 +163,8 @@ export class RolesController {
    * Requiere permiso: roles:read
    */
   @ApiOperation({
-    summary: 'Obtener permisos efectivos de un rol',
-    description: 'Retorna todos los permisos efectivos de un rol.',
+    summary: 'Obtener permisos asociados a un rol',
+    description: 'Retorna todos los permisos asociados a un rol.',
   })
   @ApiParam({
     name: 'id',

@@ -58,8 +58,8 @@ export class GetEffectivePermissionsUseCase {
     });
 
     return Array.from(effectivePermissionsMap.keys()).map((key) => {
-      const [resource, action] = key.split(':');
-      return { resource, action };
+      const [recurso, accion] = key.split(':');
+      return { recurso, accion };
     });
   }
 }
