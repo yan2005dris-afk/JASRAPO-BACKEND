@@ -15,7 +15,7 @@ interface ErrorResponse {
   path: string;
   method: string;
   message: string;
-  errors?: ValidationError[];
+  errors?: any[];
 }
 
 @Catch()
@@ -94,7 +94,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       // Si son objetos ValidationError, los formateamos
       errorResponse.errors =
         typeof errors[0] === 'string'
-          ? (errors as any)
+          ? errors
           : this.formatValidationErrors(errors);
     }
 

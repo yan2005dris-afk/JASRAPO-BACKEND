@@ -179,7 +179,7 @@ export class LoginUseCase {
       avatar: avatarKey,
       email: user.email,
       roleId: isRoleActive ? user.rolId : null,
-      roleName: isRoleActive ? user.rol?.nombre ?? null : null,
+      roleName: isRoleActive ? (user.rol?.nombre ?? null) : null,
       roles: user.rolId ? [user.rolId] : [],
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
