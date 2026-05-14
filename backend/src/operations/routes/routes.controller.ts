@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -17,6 +18,8 @@ import {
   ApiExtraModels,
 } from '@nestjs/swagger';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
+import { JwtAuthGuard } from 'src/identity/auth/guards/jwt-auth.guard';
+import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 import { RoutesService } from './routes.service';
 import { CreateRouteDto } from './dto/create-route.dto';
 import { UpdateRouteDto } from './dto/update-route.dto';
@@ -31,7 +34,7 @@ import { PaginationMetaDto } from 'src/infrastructure/common/dtos/pagination-met
 @ApiTags('routes')
 @ApiBearerAuth()
 @ApiExtraModels(RouteEntity, ReadingForRouteEntity, PaginationMetaDto)
-//@UseGuards(JwtAuthGuard, PermissionsGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('routes')
 export class RoutesController {
   constructor(private readonly routesService: RoutesService) {}
@@ -45,7 +48,7 @@ export class RoutesController {
       'Retorna las lecturas disponibles para asignar a una nueva ruta',
   })
   @ApiPaginatedResponse(ReadingForRouteEntity)
-  //@RequiredPermission('routes', 'read')
+  @RequiredPermission('routes', 'read')
   @Get('eligible-readings')
   async getEligibleReadings(
     @Query() filterDto: FilterReadingsDto,
@@ -63,23 +66,9 @@ export class RoutesController {
   @ApiResponse({
     status: 201,
     description: 'Ruta creada exitosamente',
-    schema: {
-      example: {
-        rutaId: 0,
-        nombre: 'string',
-        descripcion: 'string',
-        operarioId: 0,
-        tipoRuta: 'string',
-        comunidadId: 0,
-        sectorId: 0,
-        estado: 'string',
-        fechaPlanificada: '2025-05-12T10:30:00.000Z',
-        fechaInicio: 'string',
-        fechaFin: 'string',
-      },
-    },
+    type: RouteEntity,
   })
-  //@RequiredPermission('routes', 'create')
+  @RequiredPermission('routes', 'create')
   @Post()
   async create(@Body() createDto: CreateRouteDto): Promise<RouteEntity> {
     return this.routesService.create(createDto);
@@ -93,7 +82,7 @@ export class RoutesController {
     description: 'Retorna lista de rutas con paginación',
   })
   @ApiPaginatedResponse(RouteEntity)
-  //@RequiredPermission('routes', 'read')
+  @RequiredPermission('routes', 'read')
   @Get()
   async findAll(
     @Query() query: FindAllRoutesDto,
