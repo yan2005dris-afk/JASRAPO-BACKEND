@@ -182,7 +182,7 @@ export class LoginUseCase {
       email: user.email,
       roleId: isRoleActive ? user.rolId : null,
       roleName: isRoleActive ? (user.rol?.nombre ?? null) : null,
-      roles: user.rolId ? [user.rolId] : [],
+      roles: isRoleActive && user.rolId ? [user.rolId] : [],
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
       accessTokenInfo: {

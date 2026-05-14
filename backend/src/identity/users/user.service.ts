@@ -10,8 +10,6 @@ import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { CreateUserUseCase } from './use-cases/create-user.use-case';
 import { GetEffectivePermissionsUseCase } from './use-cases/get-effective-permissions.use-case';
-import { GetUserDirectPermissionsUseCase } from './use-cases/get-user-direct-permissions.use-case';
-import { GetUserRolePermissionsUseCase } from './use-cases/get-user-role-permissions.use-case';
 import { UpdateUserPermissionsUseCase } from './use-cases/update-user-permissions.use-case';
 import { paginate } from 'src/infrastructure/common/util/pagination.util';
 import { ValidationUtil } from 'src/infrastructure/common/util/validation.util';
@@ -33,8 +31,6 @@ export class UserService {
     private readonly prisma: PrismaService,
     private readonly createUserUseCase: CreateUserUseCase,
     private readonly getEffectivePermissionsUseCase: GetEffectivePermissionsUseCase,
-    private readonly getUserDirectPermissionsUseCase: GetUserDirectPermissionsUseCase,
-    private readonly getUserRolePermissionsUseCase: GetUserRolePermissionsUseCase,
     private readonly updateUserPermissionsUseCase: UpdateUserPermissionsUseCase,
   ) {}
 
@@ -55,16 +51,25 @@ export class UserService {
       select: userWithRolesSelect,
     });
 
-    if (!user) return null;
+    if (!user || user.deletedAt) return null;
 
-    // Verificar si el usuario está eliminado
-    if (user.deletedAt) {
-      return null; // O lanzar excepción según el caso de uso
-    }
-
-    const [directPermissions, rolePermissions] = await Promise.all([
-      this.getUserDirectPermissionsUseCase.execute(user.usuarioId),
-      this.getUserRolePermissionsUseCase.execute(user.usuarioId),
+    const [directPermissionRows, rolePermissionRows] = await Promise.all([
+      this.prisma.usuarioPermisos.findMany({
+        where: { usuarioId: user.usuarioId, deletedAt: null, permiso: { deletedAt: null } },
+        orderBy: [
+          { permiso: { recurso: 'asc' } },
+          { permiso: { accion: 'asc' } },
+        ],
+        include: {
+          permiso: { select: { permisoId: true, recurso: true, accion: true } },
+        },
+      }),
+      user.rol && !user.rol.deletedAt
+        ? this.prisma.rolPermisos.findMany({
+            where: { rolId: user.rol.rolId, deletedAt: null, permiso: { deletedAt: null } },
+            include: { permiso: { select: { recurso: true, accion: true } } },
+          })
+        : Promise.resolve([]),
     ]);
 
     return {
@@ -78,10 +83,16 @@ export class UserService {
         user.rol && !user.rol.deletedAt
           ? { rolId: user.rol.rolId, nombre: user.rol.nombre }
           : null,
-      directPermissions,
-      rolePermissions: rolePermissions.map((rp) => ({
-        resource: rp.recurso,
-        action: rp.accion,
+      directPermissions: directPermissionRows.map((a) => ({
+        usuarioPermisoId: a.usuarioPermisoId,
+        permisoId: a.permisoId,
+        recurso: a.permiso.recurso,
+        accion: a.permiso.accion,
+        permitido: a.permitido,
+      })),
+      rolePermissions: rolePermissionRows.map((rp) => ({
+        resource: rp.permiso.recurso,
+        action: rp.permiso.accion,
       })),
     };
   }

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 
 export interface UserDirectPermissionInput {
@@ -78,14 +78,22 @@ export class UpdateUserPermissionsUseCase {
         validPermissions.map((p) => p.permisoId),
       );
 
-      // 3. Upsert: crear o restaurar permisos
+      // 3. Validar que todos los IDs solicitados sean válidos antes de upsert
+      const invalidIds = permissions
+        .map((p) => p.permisoId)
+        .filter((id) => !validPermissionIds.has(id));
+
+      if (invalidIds.length > 0) {
+        throw new BadRequestException(
+          `Permisos no encontrados o eliminados: ${invalidIds.join(', ')}`,
+        );
+      }
+
+      // Upsert: crear o restaurar permisos
       // - Si no existe relación -> crear
       // - Si existe pero está eliminado (soft delete) -> restaurar (set deletedAt: null)
       // - Si existe y está activo -> actualizar permitido si cambió
       for (const perm of permissions) {
-        if (!validPermissionIds.has(perm.permisoId)) {
-          continue; // Skip invalid permissions
-        }
 
         const state = permissionState.get(perm.permisoId);
 

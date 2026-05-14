@@ -2,7 +2,7 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { UpdateUserPermissionsUseCase } from './update-user-permissions.use-case';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 
 describe('UpdateUserPermissionsUseCase', () => {
   let useCase: UpdateUserPermissionsUseCase;
@@ -66,6 +66,23 @@ describe('UpdateUserPermissionsUseCase', () => {
     await expect(
       useCase.execute(1, [{ permisoId: 1, permitido: true }]),
     ).rejects.toThrow(NotFoundException);
+  });
+
+  it('should throw BadRequestException if any permiso is invalid or soft-deleted', async () => {
+    mockPrisma.usuarios.findUnique.mockResolvedValue({
+      usuarioId: 1,
+      deletedAt: null,
+    });
+    mockPrisma.usuarioPermisos.findMany.mockResolvedValue([]);
+    // permisoId 99 no existe o está eliminado — no retornado por permisos.findMany
+    mockPrisma.permisos.findMany.mockResolvedValue([{ permisoId: 10 }]);
+
+    await expect(
+      useCase.execute(1, [
+        { permisoId: 10, permitido: true },
+        { permisoId: 99, permitido: true },
+      ]),
+    ).rejects.toThrow(BadRequestException);
   });
 
   it('should create new permissions when they do not exist', async () => {

@@ -302,8 +302,10 @@ export class UserController {
     description: 'Lista de usuarios obtenida exitosamente',
   })
   @Get()
-  findAll(@Query('page') page?: number, @Query('limit') limit?: number) {
-    return this.userService.findAll({ page, limit });
+  findAll(
+    @Query() paginationDto: PaginationDto,
+  ): Promise<PaginatedResult<UserEntity>> {
+    return this.userService.users(paginationDto);
   }
 
   /**

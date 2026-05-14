@@ -9,13 +9,20 @@ import {
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 
+interface FormattedValidationError {
+  field: string;
+  message?: string;
+  constraints?: string[];
+  children?: FormattedValidationError[];
+}
+
 interface ErrorResponse {
   statusCode: number;
   timestamp: string;
   path: string;
   method: string;
   message: string;
-  errors?: any[];
+  errors?: string[] | FormattedValidationError[];
 }
 
 @Catch()
@@ -27,7 +34,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
     let message = 'Error interno del servidor';
-    let errors: ValidationError[] | undefined;
+    let errors: (string | ValidationError)[] | undefined;
 
     // Manejo de errores de validación (class-validator)
     if (exception instanceof BadRequestException) {
@@ -42,7 +49,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         // Errors from ValidationPipe
         if (Array.isArray(exceptionResponse.message)) {
           message = 'Error de validación';
-          errors = exceptionResponse.message as ValidationError[];
+          errors = exceptionResponse.message as (string | ValidationError)[];
         } else {
           message = exceptionResponse.message as string;
         }
@@ -94,8 +101,8 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       // Si son objetos ValidationError, los formateamos
       errorResponse.errors =
         typeof errors[0] === 'string'
-          ? errors
-          : this.formatValidationErrors(errors);
+          ? (errors as string[])
+          : this.formatValidationErrors(errors as ValidationError[]);
     }
 
     response.status(status).json(errorResponse);
@@ -104,9 +111,9 @@ export class GlobalExceptionFilter implements ExceptionFilter {
   /**
    * Formatea los errores de validación para ser más legibles
    */
-  private formatValidationErrors(errors: ValidationError[]): any[] {
+  private formatValidationErrors(errors: ValidationError[]): FormattedValidationError[] {
     return errors.map((error) => {
-      const formatted: any = {
+      const formatted: FormattedValidationError = {
         field: error.property,
       };
 

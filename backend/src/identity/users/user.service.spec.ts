@@ -4,8 +4,6 @@ import { UserService } from './user.service';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { CreateUserUseCase } from './use-cases/create-user.use-case';
 import { GetEffectivePermissionsUseCase } from './use-cases/get-effective-permissions.use-case';
-import { GetUserDirectPermissionsUseCase } from './use-cases/get-user-direct-permissions.use-case';
-import { GetUserRolePermissionsUseCase } from './use-cases/get-user-role-permissions.use-case';
 import { UpdateUserPermissionsUseCase } from './use-cases/update-user-permissions.use-case';
 import { NotFoundException } from '@nestjs/common';
 
@@ -14,8 +12,6 @@ describe('UserService', () => {
   let createUserUseCase: CreateUserUseCase;
   let getEffectivePermissionsUseCase: GetEffectivePermissionsUseCase;
   let updateUserPermissionsUseCase: UpdateUserPermissionsUseCase;
-  let getUserDirectPermissionsUseCase: GetUserDirectPermissionsUseCase;
-  let getUserRolePermissionsUseCase: GetUserRolePermissionsUseCase;
 
   const mockPrismaService = {
     usuarios: {
@@ -46,14 +42,6 @@ describe('UserService', () => {
           useValue: { execute: jest.fn() },
         },
         {
-          provide: GetUserDirectPermissionsUseCase,
-          useValue: { execute: jest.fn() },
-        },
-        {
-          provide: GetUserRolePermissionsUseCase,
-          useValue: { execute: jest.fn() },
-        },
-        {
           provide: UpdateUserPermissionsUseCase,
           useValue: { execute: jest.fn() },
         },
@@ -64,13 +52,6 @@ describe('UserService', () => {
     createUserUseCase = module.get<CreateUserUseCase>(CreateUserUseCase);
     getEffectivePermissionsUseCase = module.get<GetEffectivePermissionsUseCase>(
       GetEffectivePermissionsUseCase,
-    );
-    getUserDirectPermissionsUseCase =
-      module.get<GetUserDirectPermissionsUseCase>(
-        GetUserDirectPermissionsUseCase,
-      );
-    getUserRolePermissionsUseCase = module.get<GetUserRolePermissionsUseCase>(
-      GetUserRolePermissionsUseCase,
     );
     updateUserPermissionsUseCase = module.get<UpdateUserPermissionsUseCase>(
       UpdateUserPermissionsUseCase,
@@ -106,11 +87,9 @@ describe('UserService', () => {
         rol: { rolId: 1, nombre: 'admin', deletedAt: null },
       });
 
-      (getUserDirectPermissionsUseCase.execute as jest.Mock).mockResolvedValue(
-        [],
-      );
-      (getUserRolePermissionsUseCase.execute as jest.Mock).mockResolvedValue([
-        { recurso: 'test', accion: 'read' },
+      mockPrismaService.usuarioPermisos.findMany.mockResolvedValueOnce([]);
+      mockPrismaService.rolPermisos.findMany.mockResolvedValueOnce([
+        { permiso: { recurso: 'test', accion: 'read' } },
       ]);
 
       const result = await service.user({ usuarioId: 1 });
@@ -168,14 +147,9 @@ describe('UserService', () => {
       mockPrismaService.usuarios.update.mockResolvedValue({ usuarioId: 1 });
       mockPrismaService.usuarios.findUnique.mockResolvedValue({
         usuarioId: 1,
+        deletedAt: null,
         rol: null,
       });
-      (getUserDirectPermissionsUseCase.execute as jest.Mock).mockResolvedValue(
-        [],
-      );
-      (getUserRolePermissionsUseCase.execute as jest.Mock).mockResolvedValue(
-        [],
-      );
 
       await service.updateUser({
         where: { usuarioId: 1 },
@@ -202,12 +176,6 @@ describe('UserService', () => {
       const mockDirectPermissions = [{ permisoId: 1, permitido: true }];
 
       mockPrismaService.usuarios.update.mockResolvedValue(mockUpdatedUser);
-      (getUserDirectPermissionsUseCase.execute as jest.Mock).mockResolvedValue(
-        [],
-      );
-      (getUserRolePermissionsUseCase.execute as jest.Mock).mockResolvedValue(
-        [],
-      );
 
       await service.updateUser({
         where: { usuarioId: 1 },
