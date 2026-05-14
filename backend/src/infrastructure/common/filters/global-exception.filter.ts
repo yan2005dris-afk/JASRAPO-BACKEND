@@ -111,7 +111,9 @@ export class GlobalExceptionFilter implements ExceptionFilter {
   /**
    * Formatea los errores de validación para ser más legibles
    */
-  private formatValidationErrors(errors: ValidationError[]): FormattedValidationError[] {
+  private formatValidationErrors(
+    errors: ValidationError[],
+  ): FormattedValidationError[] {
     return errors.map((error) => {
       const formatted: FormattedValidationError = {
         field: error.property,

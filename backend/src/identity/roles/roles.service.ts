@@ -29,7 +29,8 @@ export class RolesService {
 
   async findOne(id: number) {
     const role = await this.prisma.roles.findUnique({ where: { rolId: id } });
-    if (!role || role.deletedAt) throw new NotFoundException('Rol no encontrado');
+    if (!role || role.deletedAt)
+      throw new NotFoundException('Rol no encontrado');
     return role;
   }
   update(id: number, updateRoleDto: UpdateRoleDto) {

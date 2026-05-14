@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 
 export interface UserDirectPermissionInput {
@@ -94,7 +98,6 @@ export class UpdateUserPermissionsUseCase {
       // - Si existe pero está eliminado (soft delete) -> restaurar (set deletedAt: null)
       // - Si existe y está activo -> actualizar permitido si cambió
       for (const perm of permissions) {
-
         const state = permissionState.get(perm.permisoId);
 
         if (state === undefined) {

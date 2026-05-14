@@ -179,6 +179,7 @@ describe('UpdateUserPermissionsUseCase', () => {
       { permisoId: 2, deletedAt: null },
       { permisoId: 3, deletedAt: null },
     ]);
+    mockPrisma.permisos.findMany.mockResolvedValue([{ permisoId: 1 }]);
 
     await useCase.execute(1, [{ permisoId: 1, permitido: true }]);
 

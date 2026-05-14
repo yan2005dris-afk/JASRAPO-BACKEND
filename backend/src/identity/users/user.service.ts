@@ -55,7 +55,11 @@ export class UserService {
 
     const [directPermissionRows, rolePermissionRows] = await Promise.all([
       this.prisma.usuarioPermisos.findMany({
-        where: { usuarioId: user.usuarioId, deletedAt: null, permiso: { deletedAt: null } },
+        where: {
+          usuarioId: user.usuarioId,
+          deletedAt: null,
+          permiso: { deletedAt: null },
+        },
         orderBy: [
           { permiso: { recurso: 'asc' } },
           { permiso: { accion: 'asc' } },
@@ -66,7 +70,11 @@ export class UserService {
       }),
       user.rol && !user.rol.deletedAt
         ? this.prisma.rolPermisos.findMany({
-            where: { rolId: user.rol.rolId, deletedAt: null, permiso: { deletedAt: null } },
+            where: {
+              rolId: user.rol.rolId,
+              deletedAt: null,
+              permiso: { deletedAt: null },
+            },
             include: { permiso: { select: { recurso: true, accion: true } } },
           })
         : Promise.resolve([]),
