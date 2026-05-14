@@ -1,34 +1,31 @@
 # ─── Stage 1: Base ─────────────────────────────────────────────
 FROM node:22-alpine AS base
-RUN apk add --no-cache python3 make g++
+RUN corepack enable
 WORKDIR /app
-RUN npm install -g pnpm
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
-# ─── Stage 2: Dependencies ────────────────────────────────────
+# ─── Stage 2: Dependencies ─────────────────────────────────────
 FROM base AS deps
-RUN pnpm install --no-frozen-lockfile
-
-# ─── Stage 3: Production ──────────────────────────────────────
-FROM node:22-alpine AS production
 RUN apk add --no-cache python3 make g++
-WORKDIR /app
-RUN npm install -g pnpm
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+RUN pnpm install --frozen-lockfile
+
+# ─── Stage 3: Builder ──────────────────────────────────────────
+FROM deps AS builder
+COPY . .
+RUN pnpm run prisma:generate && pnpm run build
+
+# ─── Stage 4: Production ───────────────────────────────────────
+FROM base AS production
 ENV NODE_ENV=production
 
-# Only production dependencies
-COPY --from=deps /app/package.json ./package.json
-COPY --from=deps /app/pnpm-lock.yaml ./pnpm-lock.yaml
-COPY --from=deps /app/pnpm-workspace.yaml ./pnpm-workspace.yaml
-RUN pnpm install --prod --no-frozen-lockfile
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+RUN apk add --no-cache python3 make g++ \
+    && pnpm install --prod --frozen-lockfile \
+    && apk del python3 make g++
 
-# Copy source code
-COPY --from=deps /app/node_modules ./node_modules
-COPY . .
-
-# Generate Prisma client and build
-RUN pnpm run prisma:generate
-RUN pnpm run build
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/prisma ./prisma
 
 EXPOSE ${PORT:-3000}
-CMD ["sh", "-c", "pnpm dlx prisma migrate deploy && node dist/src/main.js"]
+CMD ["sh", "-c", "node_modules/.bin/prisma migrate deploy && node dist/src/main.js"]
