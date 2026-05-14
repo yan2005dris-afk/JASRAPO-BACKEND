@@ -77,20 +77,20 @@ export class UserService {
       apellidos: user.apellidos,
       telefono: user.telefono,
       avatar: user.avatar,
-      role:
+      rol:
         user.rol && !user.rol.deletedAt
           ? { rolId: user.rol.rolId, nombre: user.rol.nombre }
           : null,
-      directPermissions: directPermissionRows.map((a) => ({
+      permisosDirectos: directPermissionRows.map((a) => ({
         usuarioPermisoId: a.usuarioPermisoId,
         permisoId: a.permisoId,
         recurso: a.permiso.recurso,
         accion: a.permiso.accion,
         permitido: a.permitido,
       })),
-      rolePermissions: rolePermissionRows.map((rp) => ({
-        resource: rp.permiso.recurso,
-        action: rp.permiso.accion,
+      permisosRol: rolePermissionRows.map((rp) => ({
+        recurso: rp.permiso.recurso,
+        accion: rp.permiso.accion,
       })),
     };
   }
@@ -111,10 +111,10 @@ export class UserService {
     return {
       usuarioId: user.usuarioId,
       email: user.email,
-      name: fullName || null,
-      phone: user.telefono,
+      nombre: fullName || null,
+      telefono: user.telefono,
       avatar: avatarObj,
-      role:
+      rol:
         user.rol && !user.rol.deletedAt
           ? { rolId: user.rol.rolId, nombre: user.rol.nombre }
           : null,
@@ -144,7 +144,7 @@ export class UserService {
       apellidos: user.apellidos,
       telefono: user.telefono,
       avatar: user.avatar,
-      role:
+      rol:
         user.rol && !user.rol.deletedAt
           ? { rolId: user.rol.rolId, nombre: user.rol.nombre }
           : null,
@@ -265,9 +265,9 @@ export class UserService {
       await this.getEffectivePermissionsUseCase.execute(usuarioId);
     return {
       usuarioId,
-      permissions: permissions.map((p) => ({
-        resource: p.resource,
-        action: p.action,
+      permisos: permissions.map((p) => ({
+        recurso: p.recurso,
+        accion: p.accion,
       })),
     };
   }

@@ -116,10 +116,10 @@ describe('LoginUseCase', () => {
         email: 'test@jasrapo.com',
         accessToken: 'access-token',
         refreshToken: 'refresh-token',
-        name: 'Juan Pérez',
+        nombre: 'Juan Pérez',
         avatar: 'avatar.png',
-        roleId: 1,
-        roleName: 'admin',
+        rolId: 1,
+        nombreRol: 'admin',
       });
 
       expect(sessionsService.createSession).toHaveBeenCalled();
@@ -166,7 +166,7 @@ describe('LoginUseCase', () => {
       ).rejects.toThrow(InternalServerErrorException);
     });
 
-    it('should return null roleId and roleName when role is soft-deleted', async () => {
+    it('should return null rolId and nombreRol when role is soft-deleted', async () => {
       const loginDto = { email: 'test@jasrapo.com', password: 'Password123!' };
 
       const mockUser = {
@@ -203,8 +203,8 @@ describe('LoginUseCase', () => {
       expect(result).toMatchObject({
         sub: 1,
         email: 'test@jasrapo.com',
-        roleId: null,
-        roleName: null,
+        rolId: null,
+        nombreRol: null,
       });
     });
   });

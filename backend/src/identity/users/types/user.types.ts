@@ -44,15 +44,15 @@ export interface UserResponse {
 }
 
 export interface UserWithRoleResponse extends UserResponse {
-  role: {
+  rol: {
     rolId: number;
     nombre: string;
   } | null;
 }
 
 export interface UserWithPermissionsResponse extends UserWithRoleResponse {
-  directPermissions: DirectPermissionResponse[];
-  rolePermissions: AuthPermissionResponse[];
+  permisosDirectos: DirectPermissionResponse[];
+  permisosRol: AuthPermissionResponse[];
 }
 
 export interface DirectPermissionResponse {
@@ -64,8 +64,8 @@ export interface DirectPermissionResponse {
 }
 
 export interface AuthPermissionResponse {
-  resource: string;
-  action: string;
+  recurso: string;
+  accion: string;
 }
 
 export interface RolePermissionResponse {
@@ -76,10 +76,10 @@ export interface RolePermissionResponse {
 export interface ProfileResponse {
   usuarioId: number;
   email: string;
-  name: string | null;
-  phone: string | null;
+  nombre: string | null;
+  telefono: string | null;
   avatar: { url?: string; key?: string } | null;
-  role: {
+  rol: {
     rolId: number;
     nombre: string;
   } | null;
@@ -87,5 +87,5 @@ export interface ProfileResponse {
 
 export interface EffectivePermissionsResponse {
   usuarioId: number;
-  permissions: AuthPermissionResponse[];
+  permisos: AuthPermissionResponse[];
 }

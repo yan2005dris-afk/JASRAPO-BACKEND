@@ -10,10 +10,10 @@ export class RoleEntity {
 
 export class AuthPermissionEntity {
   @ApiProperty({ example: 'users', description: 'Nombre del recurso' })
-  resource: string;
+  recurso: string;
 
   @ApiProperty({ example: 'read', description: 'Acción permitida' })
-  action: string;
+  accion: string;
 }
 
 export class DirectPermissionEntity {
@@ -48,14 +48,14 @@ export class UserProfileEntity {
     description: 'Nombre completo concatenado',
     nullable: true,
   })
-  name: string | null;
+  nombre: string | null;
 
   @ApiProperty({
     example: '+593991234567',
     description: 'Número de teléfono (formato Ecuador)',
     nullable: true,
   })
-  phone: string | null;
+  telefono: string | null;
 
   @ApiProperty({
     example: { url: 'avatars/profile.png', key: 'profile.png' },
@@ -69,7 +69,7 @@ export class UserProfileEntity {
     description: 'Rol asignado al usuario',
     nullable: true,
   })
-  role: RoleEntity | null;
+  rol: RoleEntity | null;
 }
 
 export class UserEntity {
@@ -115,7 +115,7 @@ export class UserEntity {
     description: 'Rol asignado',
     nullable: true,
   })
-  role: RoleEntity | null;
+  rol: RoleEntity | null;
 }
 
 export class UserDetailEntity extends UserEntity {
@@ -123,11 +123,11 @@ export class UserDetailEntity extends UserEntity {
     type: [DirectPermissionEntity],
     description: 'Permisos asignados directamente',
   })
-  directPermissions: DirectPermissionEntity[];
+  permisosDirectos: DirectPermissionEntity[];
 
   @ApiProperty({
     type: [AuthPermissionEntity],
     description: 'Permisos heredados por el rol',
   })
-  rolePermissions: AuthPermissionEntity[];
+  permisosRol: AuthPermissionEntity[];
 }

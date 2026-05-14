@@ -29,11 +29,11 @@ export async function paginate<K>(
     data,
     meta: {
       total,
-      lastPage,
-      currentPage: page,
-      perPage,
-      prev: page > 1 ? page - 1 : null,
-      next: page < lastPage ? page + 1 : null,
+      ultimaPagina: lastPage,
+      paginaActual: page,
+      porPagina: perPage,
+      anterior: page > 1 ? page - 1 : null,
+      siguiente: page < lastPage ? page + 1 : null,
     },
   };
 }

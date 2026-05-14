@@ -31,7 +31,7 @@ describe('CreateRoleUseCase', () => {
   });
 
   it('should create a role without children (flat roles model)', async () => {
-    const dto = { name: 'Admin', description: 'Admin role' };
+    const dto = { nombre: 'Admin', description: 'Admin role' };
     mockPrisma.roles.create.mockResolvedValue({ rolId: 1, nombre: 'Admin' });
 
     const result = await useCase.execute(dto);
@@ -43,7 +43,7 @@ describe('CreateRoleUseCase', () => {
   });
 
   it('should create a role with only name (no hierarchy)', async () => {
-    const dto = { name: 'Operador' };
+    const dto = { nombre: 'Operador' };
     mockPrisma.roles.create.mockResolvedValue({ rolId: 5, nombre: 'Operador' });
 
     const result = await useCase.execute(dto);

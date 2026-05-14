@@ -5,17 +5,17 @@ export class PaginationMetaDto {
   total: number;
 
   @ApiProperty({ description: 'Última página disponible' })
-  lastPage: number;
+  ultimaPagina: number;
 
   @ApiProperty({ description: 'Página actual' })
-  currentPage: number;
+  paginaActual: number;
 
   @ApiProperty({ description: 'Registros por página' })
-  perPage: number;
+  porPagina: number;
 
   @ApiProperty({ description: 'Página anterior', nullable: true })
-  prev: number | null;
+  anterior: number | null;
 
   @ApiProperty({ description: 'Siguiente página', nullable: true })
-  next: number | null;
+  siguiente: number | null;
 }

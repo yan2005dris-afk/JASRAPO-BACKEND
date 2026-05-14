@@ -90,7 +90,7 @@ export class CreateUserUseCase {
         apellidos: newUser.apellidos,
         telefono: newUser.telefono,
         avatar: newUser.avatar,
-        role: {
+        rol: {
           rolId: roleId,
           nombre: roleName,
         },

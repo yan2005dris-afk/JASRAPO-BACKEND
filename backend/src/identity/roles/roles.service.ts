@@ -36,7 +36,7 @@ export class RolesService {
   update(id: number, updateRoleDto: UpdateRoleDto) {
     return this.prisma.roles.update({
       where: { rolId: id },
-      data: { nombre: updateRoleDto.name },
+      data: { nombre: updateRoleDto.nombre },
     });
   }
 

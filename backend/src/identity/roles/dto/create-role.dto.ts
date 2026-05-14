@@ -8,5 +8,5 @@ export class CreateRoleDto {
   })
   @IsString()
   @IsNotEmpty()
-  name: string;
+  nombre: string;
 }

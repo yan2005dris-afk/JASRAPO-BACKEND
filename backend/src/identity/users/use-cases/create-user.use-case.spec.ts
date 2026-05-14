@@ -63,7 +63,7 @@ describe('CreateUserUseCase', () => {
       apellidos: 'Pérez',
       telefono: '0991234567',
       avatar: null,
-      role: {
+      rol: {
         rolId: 1,
         nombre: 'user',
       },
@@ -116,7 +116,7 @@ describe('CreateUserUseCase', () => {
 
     const result = await useCase.execute(dto);
 
-    expect(result.role).toEqual({ rolId: 2, nombre: 'admin' });
+    expect(result.rol).toEqual({ rolId: 2, nombre: 'admin' });
     expect(mockPrisma.roles.findUnique).toHaveBeenCalledWith({
       where: { rolId: 2 },
     });

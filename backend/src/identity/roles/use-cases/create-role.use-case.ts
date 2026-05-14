@@ -7,7 +7,7 @@ export class CreateRoleUseCase {
   constructor(private readonly prisma: PrismaService) {}
 
   async execute(createRoleDto: CreateRoleDto) {
-    const roleData = { nombre: createRoleDto.name };
+    const roleData = { nombre: createRoleDto.nombre };
 
     try {
       return await this.prisma.roles.create({ data: roleData });
