@@ -130,13 +130,13 @@ export class UserController {
 
   /**
    * Actualiza los datos de un usuario por su ID.
-   * Permite actualizar email, contraseña, nombres, apellidos, teléfono, avatar (JSON), rol y permisos directos.
+   * Permite actualizar email, nombres, apellidos, teléfono, avatar (JSON), rol y permisos directos.
    * Requiere permiso: users:update
    */
   @ApiOperation({
     summary: 'Actualizar usuario',
     description:
-      'Actualiza de forma flexible cualquier campo del usuario: email, clave, nombres, apellidos, teléfono, avatar (JSON), rol (rolId) y permisos directos.',
+      'Actualiza de forma flexible cualquier campo del usuario: email, nombres, apellidos, teléfono, avatar (JSON), rol (rolId) y permisos directos.',
   })
   @ApiParam({
     name: 'id',
@@ -156,6 +156,10 @@ export class UserController {
     description: 'Prohibido - Sin permiso users:update',
   })
   @ApiResponse({ status: 404, description: 'Usuario no encontrado' })
+  @ApiResponse({
+    status: 409,
+    description: 'El correo electrónico ya está en uso',
+  })
   @RequiredPermission('users', 'update')
   @Patch(':id')
   async updateUser(

@@ -5,7 +5,6 @@ import { RolesModule } from './roles/roles.module';
 import { PermissionsModule } from './permissions/permissions.module';
 import { MenusModule } from './menus/menus.module';
 import { SessionsModule } from './sessions/sessions.module';
-import { StorageModule } from '../infrastructure/storage/storage.module';
 
 @Module({
   imports: [
@@ -15,7 +14,6 @@ import { StorageModule } from '../infrastructure/storage/storage.module';
     PermissionsModule,
     MenusModule,
     SessionsModule,
-    StorageModule,
   ],
   controllers: [],
   exports: [

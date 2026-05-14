@@ -3,6 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { Prisma } from 'src/generated/prisma/client';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 
 export interface UserDirectPermissionInput {
@@ -17,8 +18,11 @@ export class UpdateUserPermissionsUseCase {
   async execute(
     usuarioId: number,
     permissions: UserDirectPermissionInput[],
+    tx?: Prisma.TransactionClient,
   ): Promise<void> {
-    const user = await this.prisma.usuarios.findUnique({
+    const client = tx ?? this.prisma;
+
+    const user = await client.usuarios.findUnique({
       where: { usuarioId },
     });
 
@@ -26,14 +30,11 @@ export class UpdateUserPermissionsUseCase {
       throw new NotFoundException('Usuario no encontrado o eliminado');
     }
 
-    // Obtener TODOS los permisos directos del usuario (incluidos eliminados)
-    // para determinar si una relación existe o fue soft-deleted
-    const allExistingPermissions = await this.prisma.usuarioPermisos.findMany({
+    const allExistingPermissions = await client.usuarioPermisos.findMany({
       where: { usuarioId },
       select: { permisoId: true, deletedAt: true, permitido: true },
     });
 
-    // Mapa de permisoId -> { deletedAt, permitido } (null = activo, no null = eliminado)
     const permissionState = new Map<
       number,
       { deletedAt: Date | null; permitido: boolean }
@@ -52,15 +53,13 @@ export class UpdateUserPermissionsUseCase {
     );
     const newPermissionIds = new Set(permissions.map((p) => p.permisoId));
 
-    // Transacción para actualizar permisos
-    await this.prisma.$transaction(async (tx) => {
-      // 1. Desactivar permisos activos que ya no vienen en la lista (soft delete)
+    const run = async (innerTx: Prisma.TransactionClient) => {
       const permissionsToRemove = [...activePermissionIds].filter(
         (id) => !newPermissionIds.has(id),
       );
 
       if (permissionsToRemove.length > 0) {
-        await tx.usuarioPermisos.updateMany({
+        await innerTx.usuarioPermisos.updateMany({
           where: {
             usuarioId,
             permisoId: { in: permissionsToRemove },
@@ -70,8 +69,7 @@ export class UpdateUserPermissionsUseCase {
         });
       }
 
-      // 2. Validar que los permisos a asignar no estén eliminados (el permiso maestro existe)
-      const validPermissions = await tx.permisos.findMany({
+      const validPermissions = await innerTx.permisos.findMany({
         where: {
           permisoId: { in: permissions.map((p) => p.permisoId) },
           deletedAt: null,
@@ -82,7 +80,6 @@ export class UpdateUserPermissionsUseCase {
         validPermissions.map((p) => p.permisoId),
       );
 
-      // 3. Validar que todos los IDs solicitados sean válidos antes de upsert
       const invalidIds = permissions
         .map((p) => p.permisoId)
         .filter((id) => !validPermissionIds.has(id));
@@ -93,16 +90,11 @@ export class UpdateUserPermissionsUseCase {
         );
       }
 
-      // Upsert: crear o restaurar permisos
-      // - Si no existe relación -> crear
-      // - Si existe pero está eliminado (soft delete) -> restaurar (set deletedAt: null)
-      // - Si existe y está activo -> actualizar permitido si cambió
       for (const perm of permissions) {
         const state = permissionState.get(perm.permisoId);
 
         if (state === undefined) {
-          // No existe relación -> crear nuevo
-          await tx.usuarioPermisos.create({
+          await innerTx.usuarioPermisos.create({
             data: {
               usuarioId,
               permisoId: perm.permisoId,
@@ -110,8 +102,7 @@ export class UpdateUserPermissionsUseCase {
             },
           });
         } else if (state.deletedAt !== null) {
-          // Existe pero fue soft-deleted -> restaurar
-          await tx.usuarioPermisos.update({
+          await innerTx.usuarioPermisos.update({
             where: {
               usuarioId_permisoId: {
                 usuarioId,
@@ -124,10 +115,9 @@ export class UpdateUserPermissionsUseCase {
             },
           });
         } else {
-          // Existe y ya está activo -> actualizar solo si 'permitido' cambió
           const newPermitido = perm.permitido ?? true;
           if (state.permitido !== newPermitido) {
-            await tx.usuarioPermisos.update({
+            await innerTx.usuarioPermisos.update({
               where: {
                 usuarioId_permisoId: {
                   usuarioId,
@@ -141,6 +131,13 @@ export class UpdateUserPermissionsUseCase {
           }
         }
       }
-    });
+    };
+
+    // Si ya viene dentro de una transacción externa, ejecutar directamente
+    if (tx) {
+      await run(tx);
+    } else {
+      await this.prisma.$transaction(run);
+    }
   }
 }

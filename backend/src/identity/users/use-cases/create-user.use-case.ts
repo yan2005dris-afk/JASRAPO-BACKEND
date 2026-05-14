@@ -21,8 +21,10 @@ export class CreateUserUseCase {
     ValidationUtil.requireNonEmpty(createUsersDto.apellidos, 'apellidos');
     ValidationUtil.requireNonEmpty(createUsersDto.telefono, 'telefono');
 
-    // Validar formato de teléfono ecuatoriano
-    PhoneUtil.validateEcuadorian(createUsersDto.telefono, 'telefono');
+    const cleanPhone = PhoneUtil.validateAndClean(
+      createUsersDto.telefono,
+      'telefono',
+    );
 
     // Verificar que el email no exista previamente (incluye usuarios eliminados)
     const existingUser = await this.prisma.usuarios.findUnique({
@@ -74,7 +76,7 @@ export class CreateUserUseCase {
           clave: hashedPassword,
           nombres: createUsersDto.nombres,
           apellidos: createUsersDto.apellidos,
-          telefono: createUsersDto.telefono,
+          telefono: cleanPhone,
           avatar: createUsersDto.avatar,
           rolId: roleId,
           createdAt: new Date(),

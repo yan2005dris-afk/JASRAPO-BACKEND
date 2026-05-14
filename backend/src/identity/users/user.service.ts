@@ -5,7 +5,6 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { Prisma } from 'src/generated/prisma/client';
-import * as bcrypt from 'bcryptjs';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { CreateUserUseCase } from './use-cases/create-user.use-case';
@@ -33,15 +32,6 @@ export class UserService {
     private readonly getEffectivePermissionsUseCase: GetEffectivePermissionsUseCase,
     private readonly updateUserPermissionsUseCase: UpdateUserPermissionsUseCase,
   ) {}
-
-  private isBcryptHash(value: string): boolean {
-    return /^\$2[aby]\$\d{2}\$[./A-Za-z0-9]{53}$/.test(value);
-  }
-
-  private async ensureHashedPassword(password: string): Promise<string> {
-    if (this.isBcryptHash(password)) return password;
-    return bcrypt.hash(password, 10);
-  }
 
   async user(
     userWhereUniqueInput: Prisma.UsuariosWhereUniqueInput,
@@ -211,11 +201,10 @@ export class UserService {
     }
     if (updateData.telefono !== undefined) {
       ValidationUtil.requireNonEmpty(updateData.telefono as string, 'telefono');
-      PhoneUtil.validateEcuadorian(updateData.telefono as string, 'telefono');
-    }
-
-    if (updateData.clave && typeof updateData.clave === 'string') {
-      updateData.clave = await this.ensureHashedPassword(updateData.clave);
+      updateData.telefono = PhoneUtil.validateAndClean(
+        updateData.telefono as string,
+        'telefono',
+      );
     }
 
     // Validar rolId si se proporciona
@@ -229,12 +218,21 @@ export class UserService {
       }
     }
 
-    let updatedUser: { usuarioId: number };
     try {
-      updatedUser = await this.prisma.usuarios.update({
-        where,
-        data: updateData,
-        select: { usuarioId: true },
+      await this.prisma.$transaction(async (tx) => {
+        await tx.usuarios.update({
+          where,
+          data: updateData,
+          select: { usuarioId: true },
+        });
+
+        if (directPermissions && Array.isArray(directPermissions)) {
+          await this.updateUserPermissionsUseCase.execute(
+            existingUser.usuarioId,
+            directPermissions as { permisoId: number; permitido?: boolean }[],
+            tx,
+          );
+        }
       });
     } catch (error: any) {
       const target = error?.meta?.target;
@@ -249,14 +247,7 @@ export class UserService {
       throw error;
     }
 
-    if (directPermissions && Array.isArray(directPermissions)) {
-      await this.updateUserPermissionsUseCase.execute(
-        updatedUser.usuarioId,
-        directPermissions as { permisoId: number; permitido?: boolean }[],
-      );
-    }
-
-    return this.user({ usuarioId: updatedUser.usuarioId });
+    return this.user({ usuarioId: existingUser.usuarioId });
   }
 
   async softDeleteUser(where: Prisma.UsuariosWhereUniqueInput) {

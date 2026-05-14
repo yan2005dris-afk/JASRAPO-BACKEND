@@ -13,6 +13,12 @@ describe('UserService', () => {
   let getEffectivePermissionsUseCase: GetEffectivePermissionsUseCase;
   let updateUserPermissionsUseCase: UpdateUserPermissionsUseCase;
 
+  const mockTransaction = jest.fn().mockImplementation((callback) =>
+    callback({
+      usuarios: { update: jest.fn().mockResolvedValue({ usuarioId: 1 }) },
+    }),
+  );
+
   const mockPrismaService = {
     usuarios: {
       findUnique: jest.fn(),
@@ -29,6 +35,7 @@ describe('UserService', () => {
     rolPermisos: {
       findMany: jest.fn().mockResolvedValue([]),
     },
+    $transaction: mockTransaction,
   };
 
   beforeEach(async () => {
@@ -153,11 +160,9 @@ describe('UserService', () => {
 
       await service.updateUser({
         where: { usuarioId: 1 },
-        data: { clave: 'new' },
+        data: { nombres: 'Nuevo Nombre' },
       });
-      expect(mockPrismaService.usuarios.update).toHaveBeenCalled();
-      const updateCall = mockPrismaService.usuarios.update.mock.calls[0][0];
-      expect(updateCall.data.clave).toMatch(/^\$2[aby]\$\d{2}\$/);
+      expect(mockPrismaService.$transaction).toHaveBeenCalled();
     });
   });
 
@@ -185,6 +190,7 @@ describe('UserService', () => {
       expect(updateUserPermissionsUseCase.execute).toHaveBeenCalledWith(
         1,
         mockDirectPermissions,
+        expect.any(Object),
       );
     });
 
