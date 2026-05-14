@@ -166,7 +166,9 @@ export class LoginUseCase {
         : user.nombres || user.apellidos || null;
     const avatarKey =
       user.avatar && typeof user.avatar === 'object'
-        ? ((user.avatar as { key?: string }).key ?? null)
+        ? ((user.avatar as { key?: string; publicId?: string }).key ??
+          (user.avatar as { key?: string; publicId?: string }).publicId ??
+          null)
         : null;
 
     // Si el rol está eliminado, no devolver roleId ni roleName

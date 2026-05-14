@@ -96,12 +96,12 @@ describe('UpdateUserPermissionsUseCase', () => {
     });
   });
 
-  it('should not modify permission if it already exists and is active', async () => {
+  it('should update permitted status if it already exists and is active but status changed', async () => {
     mockPrisma.usuarios.findUnique.mockResolvedValue({
       usuarioId: 1,
       deletedAt: null,
     });
-    // El permiso ya existe y está activo (deletedAt: null)
+    // El permiso ya existe y está activo (deletedAt: null) con permitido: true
     mockPrisma.usuarioPermisos.findMany.mockResolvedValue([
       { permisoId: 10, deletedAt: null },
     ]);
@@ -109,9 +109,18 @@ describe('UpdateUserPermissionsUseCase', () => {
 
     await useCase.execute(1, [{ permisoId: 10, permitido: false }]);
 
-    // El permiso ya está activo, no debe crear ni actualizar
-    expect(mockPrisma.usuarioPermisos.create).not.toHaveBeenCalled();
-    expect(mockPrisma.usuarioPermisos.update).not.toHaveBeenCalled();
+    // Debe actualizar el campo permitido
+    expect(mockPrisma.usuarioPermisos.update).toHaveBeenCalledWith({
+      where: {
+        usuarioId_permisoId: {
+          usuarioId: 1,
+          permisoId: 10,
+        },
+      },
+      data: {
+        permitido: false,
+      },
+    });
   });
 
   it('should restore soft-deleted permission', async () => {

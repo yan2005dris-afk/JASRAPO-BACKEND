@@ -50,10 +50,10 @@ export class CreateUserDto {
   telefono: string;
 
   @ApiProperty({
-    description: 'Avatar del usuario (JSON con url y publicId)',
+    description: 'Avatar del usuario (JSON con url y key)',
     example: {
-      url: 'https://res.cloudinary.com/...',
-      publicId: 'avatars/user',
+      url: 'https://example.com/avatar.png',
+      key: 'avatars/user.png',
     },
     required: false,
   })

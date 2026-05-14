@@ -75,7 +75,7 @@ export async function seedUSers(
             nombres: 'Usuario',
             apellidos: 'Demo',
             telefono: '+593931234567',
-            avatar: { url: 'https://res.cloudinary.com/jasrapo/image/upload/v1/avatars/user', publicId: 'avatars/user' },
+            avatar: { url: 'https://res.cloudinary.com/jasrapo/image/upload/v1/avatars/user', key: 'avatars/user' },
         },
     ];
     

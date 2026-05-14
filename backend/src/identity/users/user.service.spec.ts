@@ -24,6 +24,9 @@ describe('UserService', () => {
       update: jest.fn(),
       count: jest.fn(),
     },
+    roles: {
+      findUnique: jest.fn(),
+    },
     usuarioPermisos: {
       findMany: jest.fn().mockResolvedValue([]),
     },
@@ -215,6 +218,39 @@ describe('UserService', () => {
         1,
         mockDirectPermissions,
       );
+    });
+
+    it('should throw NotFoundException if rolId is invalid (not found)', async () => {
+      mockPrismaService.usuarios.findUnique.mockResolvedValue({
+        usuarioId: 1,
+        deletedAt: null,
+      });
+      mockPrismaService.roles.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.updateUser({
+          where: { usuarioId: 1 },
+          data: { rolId: 999 },
+        }),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw NotFoundException if rolId is invalid (soft-deleted)', async () => {
+      mockPrismaService.usuarios.findUnique.mockResolvedValue({
+        usuarioId: 1,
+        deletedAt: null,
+      });
+      mockPrismaService.roles.findUnique.mockResolvedValue({
+        rolId: 2,
+        deletedAt: new Date(),
+      });
+
+      await expect(
+        service.updateUser({
+          where: { usuarioId: 1 },
+          data: { rolId: 2 },
+        }),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 

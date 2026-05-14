@@ -199,6 +199,17 @@ export class UserService {
       updateData.clave = await this.ensureHashedPassword(updateData.clave);
     }
 
+    // Validar rolId si se proporciona
+    if (updateData.rolId !== undefined && updateData.rolId !== null) {
+      const role = await this.prisma.roles.findUnique({
+        where: { rolId: updateData.rolId as number },
+        select: { rolId: true, deletedAt: true },
+      });
+      if (!role || role.deletedAt) {
+        throw new NotFoundException('Rol no encontrado o eliminado');
+      }
+    }
+
     let updatedUser: { usuarioId: number };
     try {
       updatedUser = await this.prisma.usuarios.update({

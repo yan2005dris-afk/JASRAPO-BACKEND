@@ -26,13 +26,19 @@ export class UpdateUserPermissionsUseCase {
     // para determinar si una relación existe o fue soft-deleted
     const allExistingPermissions = await this.prisma.usuarioPermisos.findMany({
       where: { usuarioId },
-      select: { permisoId: true, deletedAt: true },
+      select: { permisoId: true, deletedAt: true, permitido: true },
     });
 
-    // Mapa de permisoId -> deletedAt (null = activo, no null = eliminado)
-    const permissionState = new Map<number, Date | null>();
-    for (const p of allExistingPermissions) {
-      permissionState.set(p.permisoId, p.deletedAt);
+    // Mapa de permisoId -> { deletedAt, permitido } (null = activo, no null = eliminado)
+    const permissionState = new Map<
+      number,
+      { deletedAt: Date | null; permitido: boolean }
+    >();
+    for (const p of allExistingPermissions as any[]) {
+      permissionState.set(p.permisoId, {
+        deletedAt: p.deletedAt,
+        permitido: p.permitido,
+      });
     }
 
     const activePermissionIds = new Set(
@@ -81,9 +87,9 @@ export class UpdateUserPermissionsUseCase {
           continue; // Skip invalid permissions
         }
 
-        const existingState = permissionState.get(perm.permisoId);
+        const state = permissionState.get(perm.permisoId);
 
-        if (existingState === undefined) {
+        if (state === undefined) {
           // No existe relación -> crear nuevo
           await tx.usuarioPermisos.create({
             data: {
@@ -92,7 +98,7 @@ export class UpdateUserPermissionsUseCase {
               permitido: perm.permitido ?? true,
             },
           });
-        } else if (existingState !== null) {
+        } else if (state.deletedAt !== null) {
           // Existe pero fue soft-deleted -> restaurar
           await tx.usuarioPermisos.update({
             where: {
@@ -106,8 +112,23 @@ export class UpdateUserPermissionsUseCase {
               permitido: perm.permitido ?? true,
             },
           });
+        } else {
+          // Existe y ya está activo -> actualizar solo si 'permitido' cambió
+          const newPermitido = perm.permitido ?? true;
+          if (state.permitido !== newPermitido) {
+            await tx.usuarioPermisos.update({
+              where: {
+                usuarioId_permisoId: {
+                  usuarioId,
+                  permisoId: perm.permisoId,
+                },
+              },
+              data: {
+                permitido: newPermitido,
+              },
+            });
+          }
         }
-        // Si existingState === null (ya activo), no hace falta hacer nada
       }
     });
   }
