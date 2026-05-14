@@ -7,5 +7,6 @@ model Permisos {
   rolPermisos     RolPermisos[]
   usuarioPermisos UsuarioPermisos[]
 
+  @@index([recurso, accion])
   @@map("permisos")
 }
