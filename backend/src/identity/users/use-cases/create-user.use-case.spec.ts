@@ -69,7 +69,25 @@ describe('CreateUserUseCase', () => {
       },
     });
     expect(mockPrisma.roles.findFirst).toHaveBeenCalledWith({
-      where: { nombre: 'user' },
+      where: { nombre: 'user', deletedAt: null },
+    });
+  });
+
+  it('should fail if default user role is soft-deleted', async () => {
+    const dto = {
+      email: 'test@example.com',
+      nombres: 'Juan',
+      apellidos: 'Pérez',
+      telefono: '0991234567',
+    };
+    mockPrisma.usuarios.findUnique.mockResolvedValue(null);
+    mockPrisma.roles.findFirst.mockResolvedValue(null); // Filtered by deletedAt: null
+
+    await expect(useCase.execute(dto)).rejects.toThrow(
+      'No existe el rol por defecto "user".',
+    );
+    expect(mockPrisma.roles.findFirst).toHaveBeenCalledWith({
+      where: { nombre: 'user', deletedAt: null },
     });
   });
 

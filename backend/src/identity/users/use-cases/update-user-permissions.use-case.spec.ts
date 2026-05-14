@@ -96,33 +96,48 @@ describe('UpdateUserPermissionsUseCase', () => {
     });
   });
 
-  it('should update existing permission if it already exists', async () => {
+  it('should not modify permission if it already exists and is active', async () => {
     mockPrisma.usuarios.findUnique.mockResolvedValue({
       usuarioId: 1,
       deletedAt: null,
     });
-    // Primera query: permisos actuales del usuario
-    mockPrisma.usuarioPermisos.findMany.mockResolvedValue([{ permisoId: 10 }]);
-    // Segunda query dentro de transacción: permisos con relación
-    mockPrisma.usuarioPermisos.findMany
-      .mockResolvedValueOnce([])
-      .mockResolvedValueOnce([
-        {
-          usuarioPermisoId: 1,
-          permisoId: 10,
-          permiso: { permisoId: 10, deletedAt: null },
-        },
-      ]);
+    // El permiso ya existe y está activo (deletedAt: null)
+    mockPrisma.usuarioPermisos.findMany.mockResolvedValue([
+      { permisoId: 10, deletedAt: null },
+    ]);
     mockPrisma.permisos.findMany.mockResolvedValue([{ permisoId: 10 }]);
 
     await useCase.execute(1, [{ permisoId: 10, permitido: false }]);
 
-    // Verificar que se creó el permiso (ya que el existente no tiene update)
-    expect(mockPrisma.usuarioPermisos.create).toHaveBeenCalledWith({
+    // El permiso ya está activo, no debe crear ni actualizar
+    expect(mockPrisma.usuarioPermisos.create).not.toHaveBeenCalled();
+    expect(mockPrisma.usuarioPermisos.update).not.toHaveBeenCalled();
+  });
+
+  it('should restore soft-deleted permission', async () => {
+    mockPrisma.usuarios.findUnique.mockResolvedValue({
+      usuarioId: 1,
+      deletedAt: null,
+    });
+    // El permiso fue soft-deleted (deletedAt tiene fecha)
+    mockPrisma.usuarioPermisos.findMany.mockResolvedValue([
+      { permisoId: 10, deletedAt: new Date('2024-01-01') },
+    ]);
+    mockPrisma.permisos.findMany.mockResolvedValue([{ permisoId: 10 }]);
+
+    await useCase.execute(1, [{ permisoId: 10, permitido: true }]);
+
+    // Debe restaurar el permiso (update con deletedAt: null)
+    expect(mockPrisma.usuarioPermisos.update).toHaveBeenCalledWith({
+      where: {
+        usuarioId_permisoId: {
+          usuarioId: 1,
+          permisoId: 10,
+        },
+      },
       data: {
-        usuarioId: 1,
-        permisoId: 10,
-        permitido: false,
+        deletedAt: null,
+        permitido: true,
       },
     });
   });
@@ -132,10 +147,11 @@ describe('UpdateUserPermissionsUseCase', () => {
       usuarioId: 1,
       deletedAt: null,
     });
+    // Permissions are active (deletedAt: null)
     mockPrisma.usuarioPermisos.findMany.mockResolvedValue([
-      { permisoId: 1 },
-      { permisoId: 2 },
-      { permisoId: 3 },
+      { permisoId: 1, deletedAt: null },
+      { permisoId: 2, deletedAt: null },
+      { permisoId: 3, deletedAt: null },
     ]);
 
     await useCase.execute(1, [{ permisoId: 1, permitido: true }]);
@@ -155,7 +171,10 @@ describe('UpdateUserPermissionsUseCase', () => {
       usuarioId: 1,
       deletedAt: null,
     });
-    mockPrisma.usuarioPermisos.findMany.mockResolvedValue([{ permisoId: 1 }]);
+    // Permission is active (deletedAt: null)
+    mockPrisma.usuarioPermisos.findMany.mockResolvedValue([
+      { permisoId: 1, deletedAt: null },
+    ]);
 
     await useCase.execute(1, []);
 

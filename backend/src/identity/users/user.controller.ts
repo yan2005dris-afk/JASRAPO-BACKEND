@@ -147,7 +147,7 @@ export class UserController {
   @ApiResponse({
     status: 200,
     description: 'Usuario actualizado exitosamente',
-    type: UserEntity,
+    type: UserDetailEntity,
   })
   @ApiResponse({ status: 400, description: 'Datos inválidos' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
@@ -158,14 +158,18 @@ export class UserController {
   @ApiResponse({ status: 404, description: 'Usuario no encontrado' })
   @RequiredPermission('users', 'update')
   @Patch(':id')
-  updateUser(
+  async updateUser(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateUserDto: UpdateUserDto,
-  ): Promise<UserEntity> {
-    return this.userService.updateUser({
+  ): Promise<UserDetailEntity> {
+    const result = await this.userService.updateUser({
       where: { usuarioId: id },
       data: updateUserDto,
-    }) as Promise<UserEntity>;
+    });
+    if (!result) {
+      throw new NotFoundException('Usuario no encontrado');
+    }
+    return result;
   }
 
   /**

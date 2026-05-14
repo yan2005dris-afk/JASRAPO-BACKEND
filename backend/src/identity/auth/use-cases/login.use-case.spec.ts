@@ -89,7 +89,7 @@ describe('LoginUseCase', () => {
         apellidos: 'Pérez',
         avatar: { url: 'https://example.com/avatar.png', key: 'avatar.png' },
         rolId: 1,
-        rol: { nombre: 'admin' },
+        rol: { nombre: 'admin', deletedAt: null },
       };
 
       (prismaService.usuarios.findUnique as jest.Mock).mockResolvedValue(
@@ -164,6 +164,48 @@ describe('LoginUseCase', () => {
       await expect(
         useCase.execute({ email: 'test@test.com', password: 'pass' }),
       ).rejects.toThrow(InternalServerErrorException);
+    });
+
+    it('should return null roleId and roleName when role is soft-deleted', async () => {
+      const loginDto = { email: 'test@jasrapo.com', password: 'Password123!' };
+
+      const mockUser = {
+        usuarioId: 1,
+        email: 'test@jasrapo.com',
+        clave: 'hashedPassword',
+        deletedAt: null,
+        nombres: 'Juan',
+        apellidos: 'Pérez',
+        avatar: null,
+        rolId: 1,
+        rol: { nombre: 'admin', deletedAt: new Date() }, // Soft-deleted role
+      };
+
+      (prismaService.usuarios.findUnique as jest.Mock).mockResolvedValue(
+        mockUser,
+      );
+
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+      (bcrypt.hash as jest.Mock).mockResolvedValue('hashedRefreshToken');
+
+      jwtService.signAsync
+        .mockResolvedValueOnce('access-token')
+        .mockResolvedValueOnce('refresh-token');
+
+      jwtService.decode
+        .mockReturnValueOnce({ iat: 1000, exp: 2000 })
+        .mockReturnValueOnce({ iat: 1000, exp: 2000 });
+
+      sessionsService.createSession.mockResolvedValue({} as any);
+
+      const result = await useCase.execute(loginDto, '127.0.0.1', 'Chrome');
+
+      expect(result).toMatchObject({
+        sub: 1,
+        email: 'test@jasrapo.com',
+        roleId: null,
+        roleName: null,
+      });
     });
   });
 });

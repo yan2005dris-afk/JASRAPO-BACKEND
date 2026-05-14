@@ -53,7 +53,7 @@ export class CreateUserUseCase {
       roleName = role.nombre;
     } else {
       const defaultRole = await this.prisma.roles.findFirst({
-        where: { nombre: 'user' },
+        where: { nombre: 'user', deletedAt: null },
       });
       if (!defaultRole) {
         throw new Error('No existe el rol por defecto "user".');

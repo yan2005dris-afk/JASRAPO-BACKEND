@@ -2,10 +2,11 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  ConflictException,
 } from '@nestjs/common';
+import { Prisma } from 'src/generated/prisma/client';
 import * as bcrypt from 'bcryptjs';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
-import { Prisma } from 'src/generated/prisma/client';
 import { CreateUserDto } from './dto/create-user.dto';
 import { CreateUserUseCase } from './use-cases/create-user.use-case';
 import { GetEffectivePermissionsUseCase } from './use-cases/get-effective-permissions.use-case';
@@ -91,8 +92,8 @@ export class UserService {
       select: userWithRolesSelect,
     });
 
-    if (!user) {
-      throw new NotFoundException('Usuario no encontrado');
+    if (!user || user.deletedAt) {
+      throw new NotFoundException('Usuario no encontrado o eliminado');
     }
 
     const fullName = [user.nombres, user.apellidos].filter(Boolean).join(' ');
@@ -198,11 +199,25 @@ export class UserService {
       updateData.clave = await this.ensureHashedPassword(updateData.clave);
     }
 
-    const updatedUser = await this.prisma.usuarios.update({
-      where,
-      data: updateData,
-      select: { usuarioId: true },
-    });
+    let updatedUser: { usuarioId: number };
+    try {
+      updatedUser = await this.prisma.usuarios.update({
+        where,
+        data: updateData,
+        select: { usuarioId: true },
+      });
+    } catch (error: any) {
+      const target = error?.meta?.target;
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002' &&
+        Array.isArray(target) &&
+        target.includes('email')
+      ) {
+        throw new ConflictException('El correo electrónico ya está en uso');
+      }
+      throw error;
+    }
 
     if (directPermissions && Array.isArray(directPermissions)) {
       await this.updateUserPermissionsUseCase.execute(

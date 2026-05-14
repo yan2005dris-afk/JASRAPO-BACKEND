@@ -25,7 +25,7 @@ interface ValidatedUser {
   apellidos: string | null;
   avatar: unknown;
   rolId: number | null;
-  rol: { nombre: string } | null;
+  rol: { nombre: string; deletedAt: Date | null } | null;
 }
 
 @Injectable()
@@ -98,7 +98,7 @@ export class LoginUseCase {
         avatar: true,
         rolId: true,
         rol: {
-          select: { nombre: true },
+          select: { nombre: true, deletedAt: true },
         },
       },
     });
@@ -169,14 +169,17 @@ export class LoginUseCase {
         ? ((user.avatar as { key?: string }).key ?? null)
         : null;
 
+    // Si el rol está eliminado, no devolver roleId ni roleName
+    const isRoleActive = user.rol && user.rol.deletedAt === null;
+
     return {
       sub: user.usuarioId,
       sid: sesionId,
       name: fullName,
       avatar: avatarKey,
       email: user.email,
-      roleId: user.rolId,
-      roleName: user.rol?.nombre ?? null,
+      roleId: isRoleActive ? user.rolId : null,
+      roleName: isRoleActive ? user.rol?.nombre ?? null : null,
       roles: user.rolId ? [user.rolId] : [],
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
