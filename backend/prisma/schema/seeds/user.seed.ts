@@ -18,10 +18,10 @@ export async function seedUSers(
             email:'admin@jasrapo.com',
             password:'Admin123#',
             rolId: roles.adminRol.rolId,
-            nombres: 'Juan',
-            apellidos: 'Pérez',
+            nombres: 'Administrador',
+            apellidos: 'Principal',
             telefono: '+593991234567',
-            avatar: { url: 'https://res.cloudinary.com/jasrapo/image/upload/v1/avatars/admin', publicId: 'avatars/admin' },
+            avatar: { url: 'https://res.cloudinary.com/jasrapo/image/upload/v1/avatars/admin', key: 'avatars/admin' },
         },
         {
             email:'secretaria@jasrapo.com',
@@ -30,7 +30,7 @@ export async function seedUSers(
             nombres: 'María',
             apellidos: 'Gómez',
             telefono: '+593981234567',
-            avatar: { url: 'https://res.cloudinary.com/jasrapo/image/upload/v1/avatars/secretaria', publicId: 'avatars/secretaria' },
+            avatar: { url: 'https://res.cloudinary.com/jasrapo/image/upload/v1/avatars/secretaria', key: 'avatars/secretaria' },
         },
         {
             email:'recaudacion@jasrapo.com',
@@ -39,7 +39,7 @@ export async function seedUSers(
             nombres: 'Carlos',
             apellidos: 'Rodríguez',
             telefono: '+593971234567',
-            avatar: { url: 'https://res.cloudinary.com/jasrapo/image/upload/v1/avatars/recaudacion', publicId: 'avatars/recaudacion' },
+            avatar: { url: 'https://res.cloudinary.com/jasrapo/image/upload/v1/avatars/recaudacion', key: 'avatars/recaudacion' },
         },
         {
             email:'presidencia@jasrapo.com',
@@ -48,7 +48,7 @@ export async function seedUSers(
             nombres: 'Ana',
             apellidos: 'Martínez',
             telefono: '+593961234567',
-            avatar: { url: 'https://res.cloudinary.com/jasrapo/image/upload/v1/avatars/presidencia', publicId: 'avatars/presidencia' },
+            avatar: { url: 'https://res.cloudinary.com/jasrapo/image/upload/v1/avatars/presidencia', key: 'avatars/presidencia' },
         },
         {
             email:'operadores@jasrapo.com',
@@ -57,7 +57,7 @@ export async function seedUSers(
             nombres: 'Pedro',
             apellidos: 'Sánchez',
             telefono: '+593951234567',
-            avatar: { url: 'https://res.cloudinary.com/jasrapo/image/upload/v1/avatars/operadores', publicId: 'avatars/operadores' },
+            avatar: { url: 'https://res.cloudinary.com/jasrapo/image/upload/v1/avatars/operadores', key: 'avatars/operadores' },
         },
         {
             email:'contabilidad@jasrapo.com',
@@ -66,7 +66,7 @@ export async function seedUSers(
             nombres: 'Laura',
             apellidos: 'Fernández',
             telefono: '+593941234567',
-            avatar: { url: 'https://res.cloudinary.com/jasrapo/image/upload/v1/avatars/contabilidad', publicId: 'avatars/contabilidad' },
+            avatar: { url: 'https://res.cloudinary.com/jasrapo/image/upload/v1/avatars/contabilidad', key: 'avatars/contabilidad' },
         },
         {
             email:'user@jasrapo.com',

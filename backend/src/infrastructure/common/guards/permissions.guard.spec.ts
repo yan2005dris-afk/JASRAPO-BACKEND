@@ -30,7 +30,7 @@ describe('PermissionsGuard', () => {
     expect(guard).toBeDefined();
   });
 
-  it('should work when user.permissions is an array (FIXED BEHAVIOR)', () => {
+  it('should work when user.permisos is an array (FIXED BEHAVIOR)', () => {
     const mockContext = {
       getHandler: jest.fn(),
       getClass: jest.fn().mockReturnValue({ name: 'TestController' }),
@@ -39,7 +39,7 @@ describe('PermissionsGuard', () => {
           method: 'GET',
           user: {
             usersId: 1,
-            permissions: [{ resource: 'test', action: 'read' }],
+            permisos: [{ recurso: 'test', accion: 'read' }],
           },
         }),
       }),
@@ -47,7 +47,7 @@ describe('PermissionsGuard', () => {
 
     reflector.get = jest
       .fn()
-      .mockReturnValue({ resource: 'test', action: 'read' });
+      .mockReturnValue({ recurso: 'test', accion: 'read' });
 
     expect(guard.canActivate(mockContext)).toBe(true);
   });
@@ -61,7 +61,7 @@ describe('PermissionsGuard', () => {
           method: 'GET',
           user: {
             usersId: 1,
-            permissions: [{ resource: 'other', action: 'read' }],
+            permisos: [{ recurso: 'other', accion: 'read' }],
           },
         }),
       }),
@@ -69,7 +69,7 @@ describe('PermissionsGuard', () => {
 
     reflector.get = jest
       .fn()
-      .mockReturnValue({ resource: 'test', action: 'read' });
+      .mockReturnValue({ recurso: 'test', accion: 'read' });
 
     expect(() => guard.canActivate(mockContext)).toThrow(ForbiddenException);
   });
@@ -101,7 +101,7 @@ describe('PermissionsGuard', () => {
           method: 'POST',
           user: {
             usersId: 1,
-            permissions: [{ resource: 'clientes', action: 'create' }],
+            permisos: [{ recurso: 'clientes', accion: 'create' }],
           },
         }),
       }),
