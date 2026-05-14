@@ -10,6 +10,6 @@ model Menus {
   padre           Menus?            @relation("MenuAMenu", fields: [menuPadreId], references: [menuId])
   hijos           Menus[]           @relation("MenuAMenu")
 
-  @@index([menuPadreId])
+  @@index([menuPadreId], map: "menus_menu_padre_id_idx")
   @@map("menus")
 }
