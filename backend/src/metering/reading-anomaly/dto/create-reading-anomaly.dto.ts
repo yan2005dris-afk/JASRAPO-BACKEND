@@ -1,6 +1,7 @@
 import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { TipoAnomalia, EstadoAnomalia } from 'src/generated/prisma/client';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsNotEmptyString } from 'src/infrastructure/common/decorators/is-not-empty-string.decorator';
 
 export class CreateReadingAnomalyDto {
   @ApiProperty({
@@ -16,6 +17,7 @@ export class CreateReadingAnomalyDto {
   })
   @IsOptional()
   @IsString()
+  @IsNotEmptyString()
   observacion?: string;
 
   @ApiProperty({

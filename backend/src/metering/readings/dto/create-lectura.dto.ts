@@ -5,6 +5,7 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator';
+import { IsNotEmptyString } from 'src/infrastructure/common/decorators/is-not-empty-string.decorator';
 
 export class CrearLecturaDto {
   @IsNotEmpty() fecha: string;
@@ -12,8 +13,8 @@ export class CrearLecturaDto {
   @IsNotEmpty() @IsNumber() lecturaActual: number;
   @IsOptional() @IsNumber() consumoCalculado?: number;
   @IsNotEmpty() contratoId: string | number;
-  @IsOptional() @IsString() descripcionAnomalia?: string;
-  @IsOptional() @IsString() fotoUrlMinIo?: string;
+  @IsOptional() @IsString() @IsNotEmptyString() descripcionAnomalia?: string;
+  @IsOptional() @IsString() @IsNotEmptyString() fotoUrlMinIo?: string;
   @IsNotEmpty() @IsBoolean() lecturaInicial: boolean;
   @IsNotEmpty() @IsNumber() periodoId: number;
 }
