@@ -13,6 +13,7 @@ import { CreateReadingAnomalyDto } from './dto/create-reading-anomaly.dto';
 import { UpdateReadingAnomalyDto } from './dto/update-reading-anomaly.dto';
 import { ResponseReadingAnomalyDto } from './dto/response-reading-anomaly.dto';
 import { TipoAnomalia, EstadoAnomalia } from 'src/generated/prisma/client';
+import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
 import {
   ApiTags,
   ApiBearerAuth,
@@ -59,19 +60,7 @@ export class ReadingAnomalyController {
 
   @ApiOperation({
     summary: 'Listar anomalías de lecturas',
-    description: 'Retorna lista de anomalías con filtros',
-  })
-  @ApiQuery({
-    name: 'skip',
-    description: 'Registros a omitir',
-    required: false,
-    type: Number,
-  })
-  @ApiQuery({
-    name: 'take',
-    description: 'Límite de registros',
-    required: false,
-    type: Number,
+    description: 'Retorna lista de anomalías con paginación',
   })
   @ApiQuery({
     name: 'lecturaId',
@@ -94,28 +83,26 @@ export class ReadingAnomalyController {
   @ApiResponse({
     status: 200,
     description: 'Lista de anomalías',
-    type: [ResponseReadingAnomalyDto as any],
   })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @RequiredPermission('reading-anomalies', 'read')
   @Get()
   async findAll(
-    @Query('skip') skip?: number,
-    @Query('take') take?: number,
+    @Query() paginationDto: PaginationDto,
     @Query('lecturaId') lecturaId?: string,
     @Query('tipo') tipo?: TipoAnomalia,
     @Query('estado') estado?: EstadoAnomalia,
-  ): Promise<ResponseReadingAnomalyDto[]> {
+  ) {
     const where: any = {};
     if (lecturaId) where.lecturaId = BigInt(lecturaId);
     if (tipo) where.tipo = tipo;
     if (estado) where.estado = estado;
 
-    return this.readingAnomalyService.findAll({
-      skip: skip ? Number(skip) : undefined,
-      take: take ? Number(take) : undefined,
+    return this.readingAnomalyService.findAll(
+      paginationDto.page,
+      paginationDto.limit,
       where,
-    });
+    );
   }
 
   @ApiOperation({

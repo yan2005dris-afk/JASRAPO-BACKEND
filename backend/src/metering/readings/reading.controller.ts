@@ -12,6 +12,7 @@ import { ReadingService } from './reading.service';
 import { CrearLecturaDto } from './dto/create-lectura.dto';
 import { ActualizarLecturaDto } from './dto/update-lectura.dto';
 import { ResponseReadingDto } from './dto/response-reading.dto';
+import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
 import {
   ApiTags,
   ApiBearerAuth,
@@ -55,18 +56,6 @@ export class ReadingController {
     description: 'Retorna lista de lecturas con paginación',
   })
   @ApiQuery({
-    name: 'skip',
-    description: 'Registros a omitir',
-    required: false,
-    type: Number,
-  })
-  @ApiQuery({
-    name: 'take',
-    description: 'Límite de registros',
-    required: false,
-    type: Number,
-  })
-  @ApiQuery({
     name: 'contratoId',
     description: 'Filtrar por ID de contrato',
     required: false,
@@ -75,23 +64,21 @@ export class ReadingController {
   @ApiResponse({
     status: 200,
     description: 'Lista de lecturas',
-    type: [ResponseReadingDto],
   })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @RequiredPermission('lecturas', 'read')
   @Get()
   async findAll(
-    @Query('skip') skip?: number,
-    @Query('take') take?: number,
+    @Query() paginationDto: PaginationDto,
     @Query('contratoId') contratoId?: string,
-  ): Promise<ResponseReadingDto[]> {
+  ) {
     const where: any = {};
     if (contratoId) where.contratoId = BigInt(contratoId);
-    return this.readingService.findAll({
-      skip: skip ? Number(skip) : undefined,
-      take: take ? Number(take) : undefined,
+    return this.readingService.findAll(
+      paginationDto.page,
+      paginationDto.limit,
       where,
-    });
+    );
   }
 
   @ApiOperation({

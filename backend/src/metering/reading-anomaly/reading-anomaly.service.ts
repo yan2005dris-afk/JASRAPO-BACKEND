@@ -25,12 +25,12 @@ export class ReadingAnomalyService {
     return this.createUseCase.execute(createDto);
   }
 
-  async findAll(params: {
-    skip?: number;
-    take?: number;
-    where?: Prisma.LecturaAnomaliaWhereInput;
-  }): Promise<IResponseReadingAnomaly[]> {
-    return this.findAllUseCase.execute(params);
+  async findAll(
+    page = 1,
+    limit = 10,
+    where?: Prisma.LecturaAnomaliaWhereInput,
+  ) {
+    return this.findAllUseCase.execute(page, limit, where);
   }
 
   async findOne(id: bigint): Promise<IResponseReadingAnomaly> {

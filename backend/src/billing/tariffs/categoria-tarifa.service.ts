@@ -21,13 +21,13 @@ export class CategoriaTarifaService {
     return this.createUseCase.execute(dto);
   }
 
-  async getCategorias(nombre?: string) {
-    return this.findAllUseCase.execute(nombre);
+  async getCategorias(page = 1, limit = 10, nombre?: string) {
+    return this.findAllUseCase.execute(page, limit, nombre);
   }
 
   async buscarCategoriaPorNombre(nombre: string) {
     // Reutilizamos el findAll con el filtro de nombre
-    return this.findAllUseCase.execute(nombre);
+    return this.findAllUseCase.execute(1, 10, nombre);
   }
 
   async updateCategoria(id: number, dto: UpdateCategoriaTarifaDto) {
