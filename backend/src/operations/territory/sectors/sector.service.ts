@@ -21,8 +21,8 @@ export class SectorService {
     return this.createUseCase.execute(dto);
   }
 
-  async findAll() {
-    return this.getAllUseCase.execute();
+  async findAll(page = 1, limit = 10) {
+    return this.getAllUseCase.execute(page, limit);
   }
 
   async findOne(id: number) {

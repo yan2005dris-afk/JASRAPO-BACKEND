@@ -11,6 +11,7 @@ import {
 import { ContratoMedidorService } from './contrato-medidor.service';
 import { CrearContratoMedidorDto } from './dto/create-contrato-medidor.dto';
 import { ActualizarContratoMedidorDto } from './dto/update-contrato-medidor.dto';
+import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
 import {
   ApiTags,
   ApiBearerAuth,
@@ -47,19 +48,7 @@ export class ContratoMedidorController {
 
   @ApiOperation({
     summary: 'Listar contratos',
-    description: 'Retorna lista de contratos',
-  })
-  @ApiQuery({
-    name: 'skip',
-    description: 'Registros a omitir',
-    required: false,
-    type: Number,
-  })
-  @ApiQuery({
-    name: 'take',
-    description: 'Límite de registros',
-    required: false,
-    type: Number,
+    description: 'Retorna lista de contratos con paginación',
   })
   @ApiQuery({
     name: 'contratoId',
@@ -78,19 +67,18 @@ export class ContratoMedidorController {
   @RequiredPermission('contracts', 'read')
   @Get()
   buscarContratos(
-    @Query('skip') skip?: string,
-    @Query('take') take?: string,
+    @Query() paginationDto: PaginationDto,
     @Query('contratoId') contratoId?: string,
     @Query('medidorId') medidorId?: string,
   ) {
     const where: any = {};
     if (contratoId) where.contratoId = BigInt(contratoId);
     if (medidorId) where.medidorId = BigInt(medidorId);
-    return this.contratoMedidorService.buscarContratos({
-      skip: skip ? +skip : undefined,
-      take: take ? +take : undefined,
+    return this.contratoMedidorService.buscarContratos(
+      paginationDto.page,
+      paginationDto.limit,
       where,
-    });
+    );
   }
 
   @ApiOperation({

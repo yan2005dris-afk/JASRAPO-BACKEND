@@ -23,12 +23,12 @@ export class ReadingService {
     return this.createUseCase.execute(createDto);
   }
 
-  async findAll(params: {
-    skip?: number;
-    take?: number;
-    where?: Prisma.LecturasWhereInput;
-  }): Promise<IResponseReading[]> {
-    return this.findAllUseCase.execute(params);
+  async findAll(
+    page = 1,
+    limit = 10,
+    where?: Prisma.LecturasWhereInput,
+  ) {
+    return this.findAllUseCase.execute(page, limit, where);
   }
 
   async findOne(id: bigint): Promise<IResponseReading> {
