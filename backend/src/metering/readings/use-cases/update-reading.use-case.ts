@@ -1,7 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { ActualizarLecturaDto } from '../dto/update-lectura.dto';
-import { LecturaEntity } from '../entities/lectura.entity';
+import { safeReadingsSelect } from '../types/IResponseReading';
+import { toReadingResponse } from '../types/readingMapper';
 
 @Injectable()
 export class UpdateReadingUseCase {
@@ -10,11 +11,11 @@ export class UpdateReadingUseCase {
   async execute(
     id: bigint,
     updateDto: ActualizarLecturaDto,
-  ): Promise<LecturaEntity> {
-    const existing = await this.prisma.lecturas.findUnique({
-      where: { lecturaId: id },
+  ) {
+    const existing = await this.prisma.lecturas.findFirst({
+      where: { lecturaId: id, deletedAt: null },
     });
-    if (!existing || existing.deletedAt) {
+    if (!existing) {
       throw new NotFoundException(`Lectura con ID ${id} no encontrada`);
     }
 
@@ -26,7 +27,8 @@ export class UpdateReadingUseCase {
     const lectura = await this.prisma.lecturas.update({
       where: { lecturaId: id },
       data: dataToUpdate,
+      select: safeReadingsSelect,
     });
-    return new LecturaEntity(lectura);
+    return toReadingResponse(lectura);
   }
 }

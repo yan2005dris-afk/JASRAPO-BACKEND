@@ -1,14 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { CrearLecturaDto } from '../dto/create-lectura.dto';
-import { LecturaEntity } from '../entities/lectura.entity';
+import { safeReadingsSelect } from '../types/IResponseReading';
+import { toReadingResponse } from '../types/readingMapper';
 import { EstadoLectura } from 'src/generated/prisma/enums';
 
 @Injectable()
 export class CreateReadingUseCase {
   constructor(private readonly prisma: PrismaService) {}
 
-  async execute(createDto: CrearLecturaDto): Promise<LecturaEntity> {
+  async execute(createDto: CrearLecturaDto) {
     const lectura = await this.prisma.lecturas.create({
       data: {
         fecha: new Date(createDto.fecha),
@@ -22,7 +23,8 @@ export class CreateReadingUseCase {
         periodoId: createDto.periodoId,
         estado: EstadoLectura.PENDIENTE,
       },
+      select: safeReadingsSelect,
     });
-    return new LecturaEntity(lectura);
+    return toReadingResponse(lectura);
   }
 }
