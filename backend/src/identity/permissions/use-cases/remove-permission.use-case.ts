@@ -11,6 +11,8 @@ export class RemovePermissionUseCase {
       data: { deletedAt: new Date() },
       select: {
         permisoId: true,
+        nombre: true,
+        descripcion: true,
         recurso: true,
         accion: true,
       },

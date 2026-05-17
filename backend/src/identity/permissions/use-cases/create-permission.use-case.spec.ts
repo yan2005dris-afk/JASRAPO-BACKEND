@@ -26,18 +26,36 @@ describe('CreatePermissionUseCase', () => {
   });
 
   it('should create a permission', async () => {
-    const dto = { recurso: 'Users', accion: 'Read' };
+    const dto = {
+      nombre: 'Leer usuarios',
+      descripcion: 'Consulta usuarios',
+      recurso: 'Users',
+      accion: 'Read',
+    };
     mockPrisma.permisos.create.mockResolvedValue({
       permisoId: 1,
+      nombre: dto.nombre,
+      descripcion: dto.descripcion,
       recurso: dto.recurso,
       accion: dto.accion,
     });
 
     const result = await useCase.execute(dto);
 
-    expect(result).toEqual({ permisoId: 1, recurso: 'Users', accion: 'Read' });
+    expect(result).toEqual({
+      permisoId: 1,
+      nombre: 'Leer usuarios',
+      descripcion: 'Consulta usuarios',
+      recurso: 'Users',
+      accion: 'Read',
+    });
     expect(prisma.permisos.create).toHaveBeenCalledWith({
-      data: { recurso: dto.recurso, accion: dto.accion },
+      data: {
+        nombre: dto.nombre,
+        descripcion: dto.descripcion,
+        recurso: dto.recurso,
+        accion: dto.accion,
+      },
     });
   });
 });

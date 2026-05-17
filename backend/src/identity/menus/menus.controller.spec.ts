@@ -34,24 +34,25 @@ describe('MenusController', () => {
       const mockMenus = [
         {
           id: 1,
-          name: 'Dashboard',
-          route: '/dashboard',
-          icon: 'dashboard',
-          children: [],
-        },
-        {
-          id: 2,
-          name: 'Usuarios',
-          route: '/users',
-          icon: 'people',
+          name: 'Suministro',
+          route: '/suministro',
+          icon: 'water_drop',
           children: [
             {
-              id: 3,
-              name: 'Listar Usuarios',
-              route: '/users/list',
-              icon: null,
+              id: 2,
+              name: 'Clientes',
+              route: '/suministro/clientes',
+              icon: 'group',
+              children: [],
             },
           ],
+        },
+        {
+          id: 3,
+          name: 'Recaudación',
+          route: '/recaudacion',
+          icon: 'payments',
+          children: [],
         },
       ];
 

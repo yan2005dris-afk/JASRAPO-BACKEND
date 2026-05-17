@@ -27,7 +27,13 @@ describe('FindAllPermissionsUseCase', () => {
 
   it('should return all permissions', async () => {
     mockPrisma.permisos.findMany.mockResolvedValue([
-      { permisoId: 1, recurso: 'Users', accion: 'Read' },
+      {
+        permisoId: 1,
+        nombre: 'Leer usuarios',
+        descripcion: 'Consulta usuarios',
+        recurso: 'Users',
+        accion: 'Read',
+      },
     ]);
 
     const result = await useCase.execute();

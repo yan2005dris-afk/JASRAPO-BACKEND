@@ -11,6 +11,8 @@ export class FindAllPermissionsUseCase {
       orderBy: [{ recurso: 'asc' }, { accion: 'asc' }],
       select: {
         permisoId: true,
+        nombre: true,
+        descripcion: true,
         recurso: true,
         accion: true,
       },
