@@ -34,6 +34,8 @@ describe('RemovePermissionUseCase', () => {
     const id = 1;
     const expectedResult = {
       permisoId: id,
+      nombre: 'Test',
+      descripcion: 'Test desc',
       recurso: 'test',
       accion: 'test',
     };
@@ -48,6 +50,8 @@ describe('RemovePermissionUseCase', () => {
       data: { deletedAt: expect.any(Date) },
       select: {
         permisoId: true,
+        nombre: true,
+        descripcion: true,
         recurso: true,
         accion: true,
       },

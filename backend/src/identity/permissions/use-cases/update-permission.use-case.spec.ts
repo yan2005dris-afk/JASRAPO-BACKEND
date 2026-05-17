@@ -32,9 +32,16 @@ describe('UpdatePermissionUseCase', () => {
 
   it('should update a permission', async () => {
     const id = 1;
-    const dto = { recurso: 'test', accion: 'test' };
+    const dto = {
+      nombre: 'Test',
+      descripcion: 'Test desc',
+      recurso: 'test',
+      accion: 'test',
+    };
     const expectedResult = {
       permisoId: id,
+      nombre: dto.nombre,
+      descripcion: dto.descripcion,
       recurso: dto.recurso,
       accion: dto.accion,
     };
@@ -47,11 +54,15 @@ describe('UpdatePermissionUseCase', () => {
     expect(prismaService.permisos.update).toHaveBeenCalledWith({
       where: { permisoId: id },
       data: {
+        nombre: dto.nombre,
+        descripcion: dto.descripcion,
         recurso: dto.recurso,
         accion: dto.accion,
       },
       select: {
         permisoId: true,
+        nombre: true,
+        descripcion: true,
         recurso: true,
         accion: true,
       },

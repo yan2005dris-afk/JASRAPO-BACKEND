@@ -12,9 +12,9 @@ describe('GetMyMenusUseCase', () => {
   const mockMenuRecord = {
     menuId: 1,
     menuPadreId: null,
-    nombre: 'Dashboard',
-    ruta: '/dashboard',
-    icono: 'dashboard',
+    nombre: 'Suministro',
+    ruta: '/suministro',
+    icono: 'water_drop',
     activo: true,
     createdAt: new Date(),
     deletedAt: null,
@@ -71,37 +71,42 @@ describe('GetMyMenusUseCase', () => {
   });
 
   it('should build menu tree when user has permissions', async () => {
-    const mockPermissions = [{ recurso: 'dashboard', accion: 'read' }];
+    const mockPermissions = [{ recurso: 'clientes', accion: 'read' }];
     mockUserService.getEffectivePermissions.mockResolvedValue({
       usuarioId: 1,
       permisos: mockPermissions,
     });
 
-    // First findMany for direct menus
     mockPrismaService.menus.findMany.mockResolvedValueOnce([mockMenuRecord]);
 
     const result = await useCase.execute(1);
 
     expect(result).toHaveLength(1);
-    expect(result[0].name).toBe('Dashboard');
+    expect(result[0].name).toBe('Suministro');
     expect(prismaService.menus.findMany).toHaveBeenCalled();
   });
 
   it('should include parent menus recursively', async () => {
-    const mockPermissions = [{ recurso: 'child', accion: 'read' }];
+    const mockPermissions = [{ recurso: 'clientes', accion: 'read' }];
     const childMenu = {
       menuId: 2,
       menuPadreId: 1,
-      nombre: 'Child',
-      ruta: '/child',
+      nombre: 'Clientes',
+      ruta: '/suministro/clientes',
+      icono: 'group',
       activo: true,
+      createdAt: new Date(),
+      deletedAt: null,
     };
     const parentMenu = {
       menuId: 1,
       menuPadreId: null,
-      nombre: 'Parent',
-      ruta: '/parent',
+      nombre: 'Suministro',
+      ruta: '/suministro',
+      icono: 'water_drop',
       activo: true,
+      createdAt: new Date(),
+      deletedAt: null,
     };
 
     mockUserService.getEffectivePermissions.mockResolvedValue({
@@ -109,16 +114,14 @@ describe('GetMyMenusUseCase', () => {
       permisos: mockPermissions,
     });
 
-    // First call: find child menu
     mockPrismaService.menus.findMany.mockResolvedValueOnce([childMenu]);
-    // Second call (while loop): find parent menu
     mockPrismaService.menus.findMany.mockResolvedValueOnce([parentMenu]);
 
     const result = await useCase.execute(1);
 
     expect(result).toHaveLength(1);
-    expect(result[0].name).toBe('Parent');
+    expect(result[0].name).toBe('Suministro');
     expect(result[0].children).toHaveLength(1);
-    expect(result[0].children![0].name).toBe('Child');
+    expect(result[0].children![0].name).toBe('Clientes');
   });
 });

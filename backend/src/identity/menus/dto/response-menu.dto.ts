@@ -5,6 +5,5 @@ export class MenuResponseDto {
   name?: string;
   route?: string;
   is_active?: boolean;
-  created_at?: Date | null;
   children?: MenuResponseDto[];
 }

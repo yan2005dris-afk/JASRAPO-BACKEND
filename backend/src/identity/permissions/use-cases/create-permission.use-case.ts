@@ -9,6 +9,8 @@ export class CreatePermissionUseCase {
   async execute(createPermissionDto: CreatePermissionDto) {
     return this.prisma.permisos.create({
       data: {
+        nombre: createPermissionDto.nombre,
+        descripcion: createPermissionDto.descripcion,
         recurso: createPermissionDto.recurso,
         accion: createPermissionDto.accion,
       },

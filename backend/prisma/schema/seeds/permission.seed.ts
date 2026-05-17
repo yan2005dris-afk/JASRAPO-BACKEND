@@ -1,5 +1,28 @@
 import { Permisos, PrismaClient } from "src/generated/prisma/client";
 
+const ACTION_LABELS: Record<string, string> = {
+    read: "Consultar",
+    create: "Crear",
+    update: "Actualizar",
+    delete: "Eliminar",
+};
+
+function buildPermissionName(resource: string, action: string): string {
+    const actionLabel = ACTION_LABELS[action] ?? action;
+    const resourceLabel = resource
+        .replace(/_/g, " ")
+        .replace(/\b\w/g, (c) => c.toUpperCase());
+    return `${actionLabel} ${resourceLabel}`;
+}
+
+function buildPermissionDescription(resource: string, action: string): string {
+    const actionLabel = ACTION_LABELS[action] ?? action;
+    const resourceLabel = resource
+        .replace(/_/g, " ")
+        .replace(/\b\w/g, (c) => c.toUpperCase());
+    return `Permite ${actionLabel.toLowerCase()} registros de ${resourceLabel.toLowerCase()}`;
+}
+
 export async function seedPermissions(prisma: PrismaClient) {
     const resources = [
         "clientes",
@@ -56,6 +79,8 @@ export async function seedPermissions(prisma: PrismaClient) {
         if (!perm) {
             perm = await prisma.permisos.create({
             data: {
+                nombre: buildPermissionName(p.resource, p.action),
+                descripcion: buildPermissionDescription(p.resource, p.action),
                 recurso: p.resource,
                 accion: p.action,
             },

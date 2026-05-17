@@ -79,15 +79,6 @@ export class GetMyMenusUseCase {
 
     const fullTree = this.buildMenuTree(finalMenus);
 
-    // Limitar a 2 niveles
-    fullTree.forEach((level1) => {
-      if (level1.children && level1.children.length > 0) {
-        level1.children.forEach((level2) => {
-          level2.children = [];
-        });
-      }
-    });
-
     this.logger.log(`Menu tree built for user ${userId}`);
     return fullTree;
   }
@@ -104,7 +95,6 @@ export class GetMyMenusUseCase {
         route: menu.ruta,
         icon: menu.icono ?? null,
         is_active: menu.activo,
-        created_at: menu.createdAt ? new Date(menu.createdAt) : null,
         children: [],
       };
       menuMap.set(menu.menuId, mappedMenu);

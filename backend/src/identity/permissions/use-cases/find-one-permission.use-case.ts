@@ -10,6 +10,8 @@ export class FindOnePermissionUseCase {
       where: { permisoId: id },
       select: {
         permisoId: true,
+        nombre: true,
+        descripcion: true,
         recurso: true,
         accion: true,
         deletedAt: true,
