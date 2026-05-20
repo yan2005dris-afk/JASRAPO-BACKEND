@@ -29,7 +29,8 @@ describe('StorageServiceFactory', () => {
       makeMockMinioService() as unknown as jest.Mocked<MinioStorageService>;
     mockFsService =
       makeMockFsService() as unknown as jest.Mocked<FilesystemStorageService>;
-    mockConfigService = makeMockConfigService() as unknown as jest.Mocked<ConfigService>;
+    mockConfigService =
+      makeMockConfigService() as unknown as jest.Mocked<ConfigService>;
   });
 
   describe('getStorageService', () => {

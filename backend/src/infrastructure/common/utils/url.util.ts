@@ -4,7 +4,9 @@ import { lookup } from 'dns/promises';
  * Valida si una URL es segura para realizar peticiones externas (prevención de SSRF).
  * Bloquea protocolos que no sean HTTP/HTTPS y destinos que resuelvan a IPs de loopback o privadas.
  */
-export async function validateSafeUrl(urlString: string): Promise<{ safe: boolean; error?: string }> {
+export async function validateSafeUrl(
+  urlString: string,
+): Promise<{ safe: boolean; error?: string }> {
   try {
     const url = new URL(urlString);
 
@@ -33,7 +35,8 @@ export async function validateSafeUrl(urlString: string): Promise<{ safe: boolea
     }
 
     // 3. Validar si es una IP privada o loopback
-    const isDevOrTest = process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test';
+    const isDevOrTest =
+      process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test';
     if (isPrivateIp(address, family) && !isDevOrTest) {
       return {
         safe: false,
@@ -83,7 +86,11 @@ function isPrivateIp(ip: string, family: number): boolean {
     if (ip.toLowerCase().startsWith('fe80:')) return true;
 
     // IPv6 Unique Local Address (fc00::/7)
-    if (ip.toLowerCase().startsWith('fc00:') || ip.toLowerCase().startsWith('fd00:')) return true;
+    if (
+      ip.toLowerCase().startsWith('fc00:') ||
+      ip.toLowerCase().startsWith('fd00:')
+    )
+      return true;
   }
 
   return false;
@@ -92,7 +99,10 @@ function isPrivateIp(ip: string, family: number): boolean {
 /**
  * Lee el cuerpo de una respuesta de forma segura con un límite de bytes leídos (evita OOM por respuestas masivas).
  */
-export async function readLimitedText(response: Response, limitBytes = 10240): Promise<string> {
+export async function readLimitedText(
+  response: Response,
+  limitBytes = 10240,
+): Promise<string> {
   if (!response.body) {
     return '';
   }

@@ -1,5 +1,23 @@
 import { validateSafeUrl, readLimitedText } from './url.util';
 
+jest.mock('dns/promises', () => ({
+  lookup: jest.fn().mockImplementation((hostname: string) => {
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return Promise.resolve({ address: '127.0.0.1', family: 4 });
+    }
+    if (hostname === '192.168.1.1') {
+      return Promise.resolve({ address: '192.168.1.1', family: 4 });
+    }
+    if (hostname === '169.254.169.254') {
+      return Promise.resolve({ address: '169.254.169.254', family: 4 });
+    }
+    if (hostname === 'example.com') {
+      return Promise.resolve({ address: '93.184.216.34', family: 4 });
+    }
+    return Promise.reject(new Error(`getaddrinfo ENOTFOUND ${hostname}`));
+  }),
+}));
+
 describe('UrlUtil', () => {
   const originalEnv = process.env.NODE_ENV;
 

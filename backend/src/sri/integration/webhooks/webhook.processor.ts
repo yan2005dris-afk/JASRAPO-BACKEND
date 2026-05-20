@@ -1,7 +1,10 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { RawPgService } from '../../../infrastructure/database/raw-pg/raw-pg.service';
 import { JobsService } from '../../../infrastructure/jobs/jobs.service';
-import { validateSafeUrl, readLimitedText } from '../../../infrastructure/common/utils/url.util';
+import {
+  validateSafeUrl,
+  readLimitedText,
+} from '../../../infrastructure/common/utils/url.util';
 import * as crypto from 'crypto';
 
 export const WEBHOOK_DISPATCH_JOB = 'webhook-dispatch';
@@ -13,7 +16,7 @@ export interface WebhookJobData {
   evento: string;
   payload: Record<string, unknown>;
 }
-  
+
 /**
  * Processor de webhooks migrado a pg-boss (PostgreSQL).
  */

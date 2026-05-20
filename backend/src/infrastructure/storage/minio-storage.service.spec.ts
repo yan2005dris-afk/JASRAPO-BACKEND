@@ -30,8 +30,10 @@ describe('MinioStorageService', () => {
   });
 
   beforeEach(() => {
-    mockMinioService = makeMockMinioService() as unknown as jest.Mocked<MinioService>;
-    mockConfigService = makeMockConfigService() as unknown as jest.Mocked<ConfigService>;
+    mockMinioService =
+      makeMockMinioService() as unknown as jest.Mocked<MinioService>;
+    mockConfigService =
+      makeMockConfigService() as unknown as jest.Mocked<ConfigService>;
     service = new MinioStorageService(mockMinioService, mockConfigService);
   });
 

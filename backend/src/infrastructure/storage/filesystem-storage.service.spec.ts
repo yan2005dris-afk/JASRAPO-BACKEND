@@ -162,7 +162,7 @@ describe('FilesystemStorageService', () => {
       const buffer = Buffer.from('malicious content');
 
       await expect(
-        service.upload('../malicious-bucket', 'test.xml', buffer)
+        service.upload('../malicious-bucket', 'test.xml', buffer),
       ).rejects.toThrow('Path traversal detected');
     });
 
@@ -171,36 +171,36 @@ describe('FilesystemStorageService', () => {
       const buffer = Buffer.from('malicious content');
 
       await expect(
-        service.upload('sri-xmls', '../../malicious.xml', buffer)
+        service.upload('sri-xmls', '../../malicious.xml', buffer),
       ).rejects.toThrow('Path traversal detected');
     });
 
     it('should throw an error on delete when paths point outside baseDir', async () => {
       const service = new FilesystemStorageService(mockBaseDir);
       await expect(
-        service.delete('sri-xmls', '../../malicious.xml')
+        service.delete('sri-xmls', '../../malicious.xml'),
       ).rejects.toThrow('Path traversal detected');
     });
 
     it('should throw an error on exists when paths point outside baseDir', async () => {
       const service = new FilesystemStorageService(mockBaseDir);
       await expect(
-        service.exists('sri-xmls', '../../malicious.xml')
+        service.exists('sri-xmls', '../../malicious.xml'),
       ).rejects.toThrow('Path traversal detected');
     });
 
     it('should throw an error on getObject when paths point outside baseDir', async () => {
       const service = new FilesystemStorageService(mockBaseDir);
       await expect(
-        service.getObject('sri-xmls', '../../malicious.xml')
+        service.getObject('sri-xmls', '../../malicious.xml'),
       ).rejects.toThrow('Path traversal detected');
     });
 
     it('should throw an error on list when bucket points outside baseDir', async () => {
       const service = new FilesystemStorageService(mockBaseDir);
-      await expect(
-        service.list('../malicious-bucket')
-      ).rejects.toThrow('Path traversal detected');
+      await expect(service.list('../malicious-bucket')).rejects.toThrow(
+        'Path traversal detected',
+      );
     });
   });
 });

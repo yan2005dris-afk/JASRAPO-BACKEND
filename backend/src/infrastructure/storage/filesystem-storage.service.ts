@@ -44,10 +44,17 @@ export class FilesystemStorageService implements IStorageService {
   private validateSafePath(targetPath: string): string {
     const resolvedBase = resolve(this.baseDir);
     const resolvedTarget = resolve(targetPath);
-    const basePrefix = resolvedBase.endsWith(sep) ? resolvedBase : resolvedBase + sep;
+    const basePrefix = resolvedBase.endsWith(sep)
+      ? resolvedBase
+      : resolvedBase + sep;
 
-    if (!resolvedTarget.startsWith(basePrefix) && resolvedTarget !== resolvedBase) {
-      throw new Error('Path traversal detected: Path is outside the storage base directory.');
+    if (
+      !resolvedTarget.startsWith(basePrefix) &&
+      resolvedTarget !== resolvedBase
+    ) {
+      throw new Error(
+        'Path traversal detected: Path is outside the storage base directory.',
+      );
     }
     return resolvedTarget;
   }
