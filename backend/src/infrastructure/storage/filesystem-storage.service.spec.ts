@@ -81,7 +81,11 @@ describe('FilesystemStorageService', () => {
   describe('getObject', () => {
     it('should return readable stream', async () => {
       const service = new FilesystemStorageService(mockBaseDir);
-      await service.upload('sri-xmls', 'stream-test.xml', Buffer.from('stream content'));
+      await service.upload(
+        'sri-xmls',
+        'stream-test.xml',
+        Buffer.from('stream content'),
+      );
 
       const stream = await service.getObject('sri-xmls', 'stream-test.xml');
 

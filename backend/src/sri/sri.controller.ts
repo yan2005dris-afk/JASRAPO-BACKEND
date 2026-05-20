@@ -11,7 +11,6 @@ import {
   HttpStatus,
   Logger,
   NotFoundException,
-  BadRequestException,
   ForbiddenException,
   UseInterceptors,
   UploadedFile,
@@ -23,7 +22,6 @@ import {
   ApiTags,
   ApiOperation,
   ApiResponse,
-  ApiParam,
   ApiBody,
   ApiBearerAuth,
   ApiConsumes,
@@ -231,11 +229,24 @@ export class SriController {
       if (query.rucEmisor) {
         await this.emisoresService.validateRucAccess(query.rucEmisor, user);
       } else if (user.tenantId) {
-        const emisores = await this.emisoresService.findByTenantId(user.tenantId);
+        const emisores = await this.emisoresService.findByTenantId(
+          user.tenantId,
+        );
         if (!emisores || emisores.length === 0) {
-          return { data: [], meta: { total: 0, page: 1, limit: query.limit || 20, totalPages: 0 } };
+          return {
+            data: [],
+            meta: {
+              total: 0,
+              page: 1,
+              limit: query.limit || 20,
+              totalPages: 0,
+            },
+          };
         }
-        return this.sriService.listarComprobantes({ ...query, emisorIds: emisores.map((e) => e.id) });
+        return this.sriService.listarComprobantes({
+          ...query,
+          emisorIds: emisores.map((e) => e.id),
+        });
       }
     }
     return this.sriService.listarComprobantes(query);
@@ -252,7 +263,8 @@ export class SriController {
   ): Promise<ComprobanteDetalladoDto> {
     await this.validateClaveAccesoAccess(claveAcceso, user);
     const result = await this.sriService.obtenerComprobante(claveAcceso);
-    if (!result) throw new NotFoundException(`Comprobante ${claveAcceso} no encontrado`);
+    if (!result)
+      throw new NotFoundException(`Comprobante ${claveAcceso} no encontrado`);
     return result;
   }
 
@@ -268,9 +280,13 @@ export class SriController {
   ): Promise<void> {
     await this.validateClaveAccesoAccess(claveAcceso, user);
     const xml = await this.sriService.obtenerXmlAutorizado(claveAcceso);
-    if (!xml) throw new NotFoundException(`XML para ${claveAcceso} no disponible`);
+    if (!xml)
+      throw new NotFoundException(`XML para ${claveAcceso} no disponible`);
     res.setHeader('Content-Type', 'application/xml');
-    res.setHeader('Content-Disposition', `attachment; filename="${claveAcceso}.xml"`);
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="${claveAcceso}.xml"`,
+    );
     res.send(xml);
   }
 
@@ -331,7 +347,8 @@ export class SriController {
     @CurrentUser() user: JwtPayload,
   ): Promise<any> {
     if (user.rol !== UserRole.SUPERADMIN) {
-      if (!body.rucEmisor) throw new ForbiddenException('Debe especificar rucEmisor');
+      if (!body.rucEmisor)
+        throw new ForbiddenException('Debe especificar rucEmisor');
       await this.emisoresService.validateRucAccess(body.rucEmisor, user);
     }
     return this.sriService.sincronizarConSri(body);

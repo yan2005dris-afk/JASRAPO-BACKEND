@@ -27,8 +27,9 @@ export class StorageServiceFactory {
       return this.storageService;
     }
 
-    const minioEnabled = 
-      this.configService.get<string>('MINIO_ENABLED', 'true').toLowerCase() === 'true';
+    const minioEnabled =
+      this.configService.get<string>('MINIO_ENABLED', 'true').toLowerCase() ===
+      'true';
 
     if (minioEnabled && this.minioService.isMinIO()) {
       this.storageService = this.minioService;

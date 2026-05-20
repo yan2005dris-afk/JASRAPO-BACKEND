@@ -6,6 +6,7 @@ import {
   Res,
   BadRequestException,
   NotFoundException,
+  Logger,
 } from '@nestjs/common';
 import type { Response } from 'express';
 import { ConfigService } from '@nestjs/config';
@@ -27,6 +28,7 @@ import { STORAGE_PATHS } from '../utils/storage-paths';
 @ApiTags('Signature')
 @Controller('signature')
 export class SignatureController {
+  private readonly logger = new Logger(SignatureController.name);
   private readonly publicUrl: string;
 
   constructor(
@@ -91,7 +93,7 @@ export class SignatureController {
 
       // Log warning if certificate expires soon
       if (validation.warning) {
-        console.warn(`ADVERTENCIA: ${validation.warning}`);
+        this.logger.warn(`ADVERTENCIA: ${validation.warning}`);
       }
     } catch (certError) {
       if (certError instanceof BadRequestException) {
@@ -201,7 +203,7 @@ export class SignatureController {
       }
 
       if (validation.warning) {
-        console.warn(`ADVERTENCIA: ${validation.warning}`);
+        this.logger.warn(`ADVERTENCIA: ${validation.warning}`);
       }
     } catch (certError) {
       if (certError instanceof BadRequestException) {
@@ -308,7 +310,7 @@ export class SignatureController {
       }
 
       if (validation.warning) {
-        console.warn(`ADVERTENCIA: ${validation.warning}`);
+        this.logger.warn(`ADVERTENCIA: ${validation.warning}`);
       }
     } catch (certError) {
       if (certError instanceof BadRequestException) {

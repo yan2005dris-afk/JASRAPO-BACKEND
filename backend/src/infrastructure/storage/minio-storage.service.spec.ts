@@ -1,6 +1,6 @@
 import { Readable } from 'stream';
 import { MinioStorageService, SRI_BUCKETS } from './minio-storage.service';
-import { MinioService } from '../database/minio/minio.service';
+import type { MinioService } from '../database/minio/minio.service';
 import type { ConfigService } from '@nestjs/config';
 
 describe('MinioStorageService', () => {
@@ -13,7 +13,9 @@ describe('MinioStorageService', () => {
     uploadFile: jest.fn().mockResolvedValue('test.xml'),
     deleteFile: jest.fn().mockResolvedValue(undefined),
     fileExists: jest.fn().mockResolvedValue(true),
-    getPresignedUrl: jest.fn().mockResolvedValue('https://minio.local/test.xml?token=abc'),
+    getPresignedUrl: jest
+      .fn()
+      .mockResolvedValue('https://minio.local/test.xml?token=abc'),
     getFileStream: jest.fn().mockResolvedValue(new Readable()),
     listFiles: jest.fn().mockResolvedValue(['file1.xml', 'file2.xml']),
     getFileMetadata: jest.fn().mockResolvedValue({

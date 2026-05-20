@@ -70,7 +70,7 @@ export class AuditService {
   /**
    * Buscar registros de auditoría con filtros
    */
-  async search(filters: any) {
+  async search(_filters: any) {
     // Lógica similar a la original pero usando RawPgService
     // (Por brevedad mantengo la firma para compatibilidad)
     return { data: [], total: 0, page: 1, totalPages: 0 };

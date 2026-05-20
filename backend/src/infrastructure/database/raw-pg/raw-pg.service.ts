@@ -15,7 +15,7 @@ import { ConfigService } from '@nestjs/config';
  */
 @Injectable()
 export class RawPgService implements OnModuleInit, OnModuleDestroy {
-  private pool: Pool | undefined;
+  private pool: Pool | null = null;
   private readonly logger = new Logger(RawPgService.name);
 
   // Regex para validar identificadores SQL (tablas, columnas)
@@ -30,7 +30,8 @@ export class RawPgService implements OnModuleInit, OnModuleDestroy {
         port: this.configService.get<number>('POSTGRES_PORT') || 5432,
         database: this.configService.get<string>('POSTGRES_DB') || 'appdb',
         user: this.configService.get<string>('POSTGRES_USER') || 'appuser',
-        password: this.configService.get<string>('POSTGRES_PASSWORD') || 'apppass',
+        password:
+          this.configService.get<string>('POSTGRES_PASSWORD') || 'apppass',
         ssl:
           this.configService.get('POSTGRES_SSL') === 'true'
             ? { rejectUnauthorized: false }
@@ -64,7 +65,7 @@ export class RawPgService implements OnModuleInit, OnModuleDestroy {
         '[RAW-PG:DOWN] No se pudo conectar a PostgreSQL',
         error,
       );
-      this.pool = undefined;
+      this.pool = null;
     }
   }
 
@@ -77,9 +78,7 @@ export class RawPgService implements OnModuleInit, OnModuleDestroy {
 
   private sanitizeIdentifier(identifier: string): string {
     if (!RawPgService.SAFE_IDENTIFIER.test(identifier)) {
-      throw new Error(
-        `Identificador SQL no válido: "${identifier}".`,
-      );
+      throw new Error(`Identificador SQL no válido: "${identifier}".`);
     }
     return `"${identifier}"`;
   }
@@ -89,7 +88,9 @@ export class RawPgService implements OnModuleInit, OnModuleDestroy {
     params?: any[],
   ): Promise<QueryResult<T>> {
     if (!this.pool) {
-      throw new ServiceUnavailableException('La base de datos no está disponible.');
+      throw new ServiceUnavailableException(
+        'La base de datos no está disponible.',
+      );
     }
 
     const start = Date.now();
@@ -101,7 +102,9 @@ export class RawPgService implements OnModuleInit, OnModuleDestroy {
       this.logger.debug(`[DB] ${operation} → ${duration}ms`);
       return result;
     } catch (error) {
-      this.logger.error(`[DB] ❌ ${operation} falló: ${(error as Error).message}`);
+      this.logger.error(
+        `[DB] ❌ ${operation} falló: ${(error as Error).message}`,
+      );
       throw error;
     }
   }
@@ -123,11 +126,14 @@ export class RawPgService implements OnModuleInit, OnModuleDestroy {
   }
 
   async getClient(): Promise<PoolClient> {
-    if (!this.pool) throw new ServiceUnavailableException('Base de datos no disponible');
+    if (!this.pool)
+      throw new ServiceUnavailableException('Base de datos no disponible');
     return await this.pool.connect();
   }
 
-  async transaction<T>(callback: (client: PoolClient) => Promise<T>): Promise<T> {
+  async transaction<T>(
+    callback: (client: PoolClient) => Promise<T>,
+  ): Promise<T> {
     const client = await this.getClient();
     try {
       await client.query('BEGIN');

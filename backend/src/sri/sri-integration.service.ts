@@ -17,7 +17,7 @@ export class SriIntegrationService {
   /**
    * Toma una prefactura de JASRAPO y la convierte en una Factura Electrónica en el SRI
    */
-  async emitirFacturaDesdePrefactura(prefacturaId: number, emisorId: number) {
+  async emitirFacturaDesdePrefactura(prefacturaId: number, _emisorId: number) {
     this.logger.log(`Iniciando emisión SRI para prefactura: ${prefacturaId}`);
 
     // 1. Obtener la prefactura con sus detalles y cliente
@@ -38,10 +38,10 @@ export class SriIntegrationService {
           include: {
             establecimiento: {
               include: {
-                emisor: true
-              }
-            }
-          }
+                emisor: true,
+              },
+            },
+          },
         },
       },
     });
@@ -64,7 +64,9 @@ export class SriIntegrationService {
         obligadoContabilidad: emisor.obligadoContabilidad ? 'SI' : 'NO',
       },
       comprador: {
-        tipoIdentificacion: this.mapTipoIdentificacion(Number(prefactura.contrato.cliente.tipoIdentificacionId)),
+        tipoIdentificacion: this.mapTipoIdentificacion(
+          Number(prefactura.contrato.cliente.tipoIdentificacionId),
+        ),
         identificacion: prefactura.contrato.cliente.identificacion,
         razonSocial: `${prefactura.contrato.cliente.nombres} ${prefactura.contrato.cliente.apellidos}`,
         direccion: prefactura.clienteDireccion || 'S/N',
@@ -88,7 +90,7 @@ export class SriIntegrationService {
       })),
       pagos: [
         {
-          formaPago: FormaPago.SIN_UTILIZACION_SISTEMA_FINANCIERO, 
+          formaPago: FormaPago.SIN_UTILIZACION_SISTEMA_FINANCIERO,
           total: Number(prefactura.totalPagar),
         },
       ],
@@ -103,7 +105,7 @@ export class SriIntegrationService {
     // 4. Actualizar la prefactura con el ID del comprobante
     if (result && 'claveAcceso' in result) {
       const comprobante = await this.prisma.comprobantes.findUnique({
-        where: { claveAcceso: result.claveAcceso as string }
+        where: { claveAcceso: result.claveAcceso },
       });
 
       if (comprobante) {

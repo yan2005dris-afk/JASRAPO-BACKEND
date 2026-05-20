@@ -75,10 +75,16 @@ export class AuthResponseDto {
   @ApiProperty({ example: 'Bearer' })
   tokenType: string;
 
-  @ApiProperty({ description: 'Segundos restantes para la expiración del accessToken', example: 3600 })
+  @ApiProperty({
+    description: 'Segundos restantes para la expiración del accessToken',
+    example: 3600,
+  })
   expiresIn: number;
 
-  @ApiProperty({ description: 'Timestamp exacto de expiración', example: '2026-05-02T12:00:00.000Z' })
+  @ApiProperty({
+    description: 'Timestamp exacto de expiración',
+    example: '2026-05-02T12:00:00.000Z',
+  })
   expiresAt: string;
 
   @ApiProperty()

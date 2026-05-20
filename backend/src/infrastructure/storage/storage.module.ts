@@ -8,17 +8,13 @@ import { MinioModule } from '../database/minio/minio.module';
 
 /**
  * Storage Module - Exports MinioStorageService for file operations
- * 
+ *
  * FilesystemStorageService is available as fallback if needed
  * StorageServiceFactory provides a unified entry point
  */
 @Global()
 @Module({
-  imports: [
-    forwardRef(() => AuthModule),
-    ConfigModule,
-    MinioModule,
-  ],
+  imports: [forwardRef(() => AuthModule), ConfigModule, MinioModule],
   providers: [
     MinioStorageService,
     StorageServiceFactory,

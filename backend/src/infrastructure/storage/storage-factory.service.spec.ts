@@ -1,6 +1,6 @@
 import { StorageServiceFactory } from './storage-factory.service';
-import { MinioStorageService } from './minio-storage.service';
-import { FilesystemStorageService } from './filesystem-storage.service';
+import type { MinioStorageService } from './minio-storage.service';
+import type { FilesystemStorageService } from './filesystem-storage.service';
 import type { ConfigService } from '@nestjs/config';
 import type { IStorageService } from './interfaces/storage.interface';
 
@@ -23,8 +23,10 @@ describe('StorageServiceFactory', () => {
   });
 
   beforeEach(() => {
-    mockMinioService = makeMockMinioService() as jest.Mocked<MinioStorageService>;
-    mockFsService = makeMockFsService() as jest.Mocked<FilesystemStorageService>;
+    mockMinioService =
+      makeMockMinioService() as jest.Mocked<MinioStorageService>;
+    mockFsService =
+      makeMockFsService() as jest.Mocked<FilesystemStorageService>;
     mockConfigService = makeMockConfigService() as jest.Mocked<ConfigService>;
   });
 

@@ -11,7 +11,11 @@ import {
 } from 'fs';
 import { join, dirname } from 'path';
 import { Readable } from 'stream';
-import { IStorageService, UploadOptions, UploadResult } from './interfaces/storage.interface';
+import {
+  IStorageService,
+  UploadOptions,
+  UploadResult,
+} from './interfaces/storage.interface';
 
 /**
  * Filesystem-based fallback implementation of IStorageService
@@ -86,7 +90,9 @@ export class FilesystemStorageService implements IStorageService {
 
       stream.on('end', () => {
         writeStream.end();
-        this.logger.debug(`[FS:UPLOAD:STREAM] ${bucket}/${key} (${size} bytes)`);
+        this.logger.debug(
+          `[FS:UPLOAD:STREAM] ${bucket}/${key} (${size} bytes)`,
+        );
         resolve({
           key,
           size,

@@ -5,6 +5,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
+import { randomBytes } from 'node:crypto';
 import { RawPgService } from '../../../infrastructure/database/raw-pg/raw-pg.service';
 import { JobsService } from '../../../infrastructure/jobs/jobs.service';
 import { WEBHOOK_DISPATCH_JOB } from './webhook.processor';
@@ -35,11 +36,7 @@ export class WebhooksService {
     this.logger.log(
       `Evento comprobante.autorizado recibido para ${payload.claveAcceso}`,
     );
-    await this.emit(
-      'comprobante.autorizado' as WebhookEvent,
-      payload,
-      payload.emisorId,
-    );
+    await this.emit('comprobante.autorizado', payload, payload.emisorId);
   }
 
   @OnEvent('comprobante.rechazado')
@@ -47,11 +44,7 @@ export class WebhooksService {
     this.logger.log(
       `Evento comprobante.rechazado recibido para ${payload.claveAcceso}`,
     );
-    await this.emit(
-      'comprobante.rechazado' as WebhookEvent,
-      payload,
-      payload.emisorId,
-    );
+    await this.emit('comprobante.rechazado', payload, payload.emisorId);
   }
 
   // =====================
@@ -73,7 +66,9 @@ export class WebhooksService {
     query += ` ORDER BY created_at DESC`;
 
     const result = await this.db.query(query, params);
-    return result.rows.map((row: Record<string, unknown>) => this.mapToResponse(row));
+    return result.rows.map((row: Record<string, unknown>) =>
+      this.mapToResponse(row),
+    );
   }
 
   /**
@@ -98,7 +93,9 @@ export class WebhooksService {
     query += ` ORDER BY created_at DESC`;
 
     const result = await this.db.query(query, params);
-    return result.rows.map((row: Record<string, unknown>) => this.mapToResponse(row));
+    return result.rows.map((row: Record<string, unknown>) =>
+      this.mapToResponse(row),
+    );
   }
 
   async findOne(id: string): Promise<WebhookResponseDto> {
@@ -116,7 +113,10 @@ export class WebhooksService {
     return this.mapToResponse(result.rows[0]);
   }
 
-  async create(dto: CreateWebhookDto, tenantId?: string): Promise<WebhookResponseDto> {
+  async create(
+    dto: CreateWebhookDto,
+    tenantId?: string,
+  ): Promise<WebhookResponseDto> {
     const secreto = this.generateSecret();
 
     const result = await this.db.query(
@@ -235,10 +235,9 @@ export class WebhooksService {
     const offset = (page - 1) * limit;
 
     const [countResult, dataResult] = await Promise.all([
-      this.db.query(
-        `SELECT COUNT(*) FROM webhook_logs WHERE config_id = $1`,
-        [id],
-      ),
+      this.db.query(`SELECT COUNT(*) FROM webhook_logs WHERE config_id = $1`, [
+        id,
+      ]),
       this.db.query(
         `SELECT id, evento, payload, status_code, respuesta, intento, exitoso, error, tiempo_respuesta_ms, created_at
          FROM webhook_logs
@@ -302,15 +301,11 @@ export class WebhooksService {
         payload,
       };
 
-      await this.jobsService.send(
-        WEBHOOK_DISPATCH_JOB,
-        jobData,
-        {
-          retryLimit: (config.reintentos_max as number) || 5,
-          retryBackoff: true,
-          retryDelay: 3,
-        },
-      );
+      await this.jobsService.send(WEBHOOK_DISPATCH_JOB, jobData, {
+        retryLimit: (config.reintentos_max as number) || 5,
+        retryBackoff: true,
+        retryDelay: 3,
+      });
     }
   }
 
@@ -319,8 +314,7 @@ export class WebhooksService {
   // =====================
 
   private generateSecret(): string {
-    const crypto = require('crypto') as typeof import('crypto');
-    return 'whsec_' + crypto.randomBytes(24).toString('hex');
+    return 'whsec_' + randomBytes(24).toString('hex');
   }
 
   private mapToResponse(row: Record<string, unknown>): WebhookResponseDto {
@@ -338,7 +332,9 @@ export class WebhooksService {
     };
   }
 
-  private mapLogToResponse(row: Record<string, unknown>): WebhookLogResponseDto {
+  private mapLogToResponse(
+    row: Record<string, unknown>,
+  ): WebhookLogResponseDto {
     return {
       id: row.id as string,
       evento: row.evento as string,

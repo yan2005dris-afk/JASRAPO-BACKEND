@@ -29,7 +29,9 @@ export class WebhookProcessor implements OnModuleInit {
     await this.jobsService.work(WEBHOOK_DISPATCH_JOB, async (job) => {
       await this.processWebhook(job);
     });
-    this.logger.log(`Worker de Webhooks escuchando en PostgreSQL (job: ${WEBHOOK_DISPATCH_JOB})`);
+    this.logger.log(
+      `Worker de Webhooks escuchando en PostgreSQL (job: ${WEBHOOK_DISPATCH_JOB})`,
+    );
   }
 
   private async processWebhook(job: any): Promise<void> {

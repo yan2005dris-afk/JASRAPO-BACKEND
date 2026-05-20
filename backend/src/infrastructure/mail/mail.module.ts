@@ -42,13 +42,7 @@ import { JobsModule } from '../jobs/jobs.module';
       inject: [ConfigService],
     }),
   ],
-  providers: [
-    NodemailerProvider,
-    MailQueueService,
-  ],
-  exports: [
-    NodemailerProvider,
-    MailQueueService,
-  ],
+  providers: [NodemailerProvider, MailQueueService],
+  exports: [NodemailerProvider, MailQueueService],
 })
 export class MailModule {}

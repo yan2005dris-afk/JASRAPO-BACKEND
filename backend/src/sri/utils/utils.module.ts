@@ -4,13 +4,7 @@ import { CatalogoValidatorService } from './catalogo-validator.service';
 
 @Global()
 @Module({
-  providers: [
-    SriBaseService,
-    CatalogoValidatorService,
-  ],
-  exports: [
-    SriBaseService,
-    CatalogoValidatorService,
-  ],
+  providers: [SriBaseService, CatalogoValidatorService],
+  exports: [SriBaseService, CatalogoValidatorService],
 })
 export class UtilsModule {}

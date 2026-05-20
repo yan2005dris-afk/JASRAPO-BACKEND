@@ -1,7 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { MinioStorageService, getBucketName, SRI_STORAGE_TYPES } from '../../../infrastructure/storage/minio-storage.service';
-import { IStorageService } from '../../../infrastructure/storage/interfaces/storage.interface';
+import {
+  MinioStorageService,
+  getBucketName,
+  SRI_STORAGE_TYPES,
+} from '../../../infrastructure/storage/minio-storage.service';
 import { Readable } from 'stream';
 
 /**
@@ -20,9 +23,7 @@ export class XmlStorageService {
   ) {
     this.baseDir =
       this.configService.get<string>('directories.xmls') || '../xmls';
-    this.logger.log(
-      `XmlStorageService initialized with MinIO storage`,
-    );
+    this.logger.log(`XmlStorageService initialized with MinIO storage`);
   }
 
   /**
@@ -50,8 +51,13 @@ export class XmlStorageService {
   /**
    * Maps tipo to subdirectory name
    */
-  private mapTipoToSubdir(tipo: 'sin_firma' | 'firmado' | 'autorizado'): 'sin_firmar' | 'firmados' | 'autorizados' {
-    const subdirMap: Record<'sin_firma' | 'firmado' | 'autorizado', 'sin_firmar' | 'firmados' | 'autorizados'> = {
+  private mapTipoToSubdir(
+    tipo: 'sin_firma' | 'firmado' | 'autorizado',
+  ): 'sin_firmar' | 'firmados' | 'autorizados' {
+    const subdirMap: Record<
+      'sin_firma' | 'firmado' | 'autorizado',
+      'sin_firmar' | 'firmados' | 'autorizados'
+    > = {
       sin_firma: 'sin_firmar',
       firmado: 'firmados',
       autorizado: 'autorizados',
@@ -93,7 +99,11 @@ export class XmlStorageService {
     xmlSinFirma?: string,
     xmlFirmado?: string,
     xmlAutorizado?: string,
-  ): Promise<{ sinFirmaKey?: string; firmadoKey?: string; autorizadoKey?: string }> {
+  ): Promise<{
+    sinFirmaKey?: string;
+    firmadoKey?: string;
+    autorizadoKey?: string;
+  }> {
     const keys: {
       sinFirmaKey?: string;
       firmadoKey?: string;
@@ -171,7 +181,10 @@ export class XmlStorageService {
    * @param relativePath The relative storage key
    * @param expiresInSeconds URL expiration time (default: 24 hours)
    */
-  async getFullPath(relativePath: string, expiresInSeconds = 86400): Promise<string> {
+  async getFullPath(
+    relativePath: string,
+    expiresInSeconds = 86400,
+  ): Promise<string> {
     // Extract RUC from the first segment of the path
     const pathParts = relativePath.split('/');
     if (pathParts.length < 5) {
@@ -179,7 +192,11 @@ export class XmlStorageService {
     }
     const ruc = pathParts[0];
     const bucket = this.getBucketForRuc(ruc);
-    return await this.storageService.getUrl(bucket, relativePath, expiresInSeconds);
+    return await this.storageService.getUrl(
+      bucket,
+      relativePath,
+      expiresInSeconds,
+    );
   }
 
   /**
@@ -187,7 +204,10 @@ export class XmlStorageService {
    * Useful when the previous URL has expired
    * Accepts the relative path stored in database (format: {ruc}/{year}/{month}/{subdir}/{claveAcceso}.xml)
    */
-  async refreshUrl(relativePath: string, expiresInSeconds = 86400): Promise<string> {
+  async refreshUrl(
+    relativePath: string,
+    expiresInSeconds = 86400,
+  ): Promise<string> {
     // Extract RUC from the first segment of the path
     const pathParts = relativePath.split('/');
     if (pathParts.length < 5) {
@@ -195,6 +215,10 @@ export class XmlStorageService {
     }
     const ruc = pathParts[0];
     const bucket = this.getBucketForRuc(ruc);
-    return await this.storageService.refreshUrl(bucket, relativePath, expiresInSeconds);
+    return await this.storageService.refreshUrl(
+      bucket,
+      relativePath,
+      expiresInSeconds,
+    );
   }
 }

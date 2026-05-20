@@ -1,7 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Readable } from 'stream';
-import { IStorageService, UploadOptions, UploadResult } from './interfaces/storage.interface';
+import {
+  IStorageService,
+  UploadOptions,
+  UploadResult,
+} from './interfaces/storage.interface';
 import { MinioService } from '../database/minio/minio.service';
 
 /**
@@ -19,7 +23,8 @@ export const SRI_STORAGE_TYPES = {
   READING_NEWS: 'reading-news',
 } as const;
 
-export type SriStorageType = (typeof SRI_STORAGE_TYPES)[keyof typeof SRI_STORAGE_TYPES];
+export type SriStorageType =
+  (typeof SRI_STORAGE_TYPES)[keyof typeof SRI_STORAGE_TYPES];
 
 /**
  * Generates dynamic bucket name per RUC
@@ -62,7 +67,7 @@ export class MinioStorageService implements IStorageService {
     private readonly minioService: MinioService,
     private readonly configService: ConfigService,
   ) {
-    this.initializeDefaultBuckets();
+    void this.initializeDefaultBuckets();
   }
 
   /**
@@ -84,9 +89,7 @@ export class MinioStorageService implements IStorageService {
     }
 
     try {
-      const exists = await this.minioService.fileExists(bucket, '');
-      // fileExists with empty key doesn't work for buckets, need different approach
-      // We'll try to list files - if bucket doesn't exist it'll throw
+      // Try to list files - if bucket doesn't exist it'll throw
       await this.minioService.listFiles(bucket);
       this.initializedBuckets.add(bucket);
       this.logger.debug(`[MINIO:BUCKET] Already exists: ${bucket}`);
@@ -125,7 +128,9 @@ export class MinioStorageService implements IStorageService {
 
     await this.minioService.uploadFile(bucket, key, buffer);
 
-    this.logger.debug(`[MINIO:UPLOAD] ${bucket}/${key} (${buffer.length} bytes)`);
+    this.logger.debug(
+      `[MINIO:UPLOAD] ${bucket}/${key} (${buffer.length} bytes)`,
+    );
 
     return {
       key,
@@ -155,7 +160,7 @@ export class MinioStorageService implements IStorageService {
     key: string,
     expiresInSeconds?: number,
   ): Promise<string> {
-    const expiry = expiresInSeconds ?? 24 * 60 * 60; // Default 24 hours
+    const _expiry = expiresInSeconds ?? 24 * 60 * 60; // Default 24 hours
     return this.minioService.getPresignedUrl(bucket, key);
   }
 

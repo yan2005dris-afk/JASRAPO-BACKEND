@@ -1,16 +1,5 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Delete,
-  Param,
-  UseInterceptors,
-  UploadedFile,
-  BadRequestException,
-  Query,
-} from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiTags, ApiOperation, ApiConsumes, ApiBody } from '@nestjs/swagger';
+import { Controller, Get, Delete, Param, Query } from '@nestjs/common';
+import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { CertificateService } from './certificate.service';
 
 @ApiTags('Certificados')

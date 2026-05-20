@@ -20,8 +20,13 @@ export class SriSoapClient {
     private readonly soapFactory: SriSoapFactoryService,
   ) {}
 
-  async validarComprobante(xmlFirmado: string, ambiente: '1' | '2'): Promise<SriRecepcionResponse> {
-    this.logger.log(`Enviando comprobante al SRI para validación (Ambiente ${ambiente})`);
+  async validarComprobante(
+    xmlFirmado: string,
+    ambiente: '1' | '2',
+  ): Promise<SriRecepcionResponse> {
+    this.logger.log(
+      `Enviando comprobante al SRI para validación (Ambiente ${ambiente})`,
+    );
     const xmlBase64 = Buffer.from(xmlFirmado, 'utf-8').toString('base64');
 
     try {
@@ -56,10 +61,9 @@ export class SriSoapClient {
     try {
       const ambiente = claveAcceso.charAt(23) as '1' | '2';
       const client = await this.soapFactory.getAutorizacionClient(ambiente);
-      const [result] =
-        await client.autorizacionComprobanteAsync({
-          claveAccesoComprobante: claveAcceso,
-        });
+      const [result] = await client.autorizacionComprobanteAsync({
+        claveAccesoComprobante: claveAcceso,
+      });
 
       const response = result?.RespuestaAutorizacionComprobante || result;
       this.logger.log(
@@ -85,7 +89,7 @@ export class SriSoapClient {
       maxRetries ?? this.configService.get<number>('SRI_MAX_RETRIES', 3);
     const delay =
       retryDelay ?? this.configService.get<number>('SRI_RETRY_DELAY_MS', 2000);
-      
+
     const ambiente = claveAcceso.charAt(23) as '1' | '2';
     // Paso 1: Validar comprobante (Recepción)
     const recepcion = await this.validarComprobante(xmlFirmado, ambiente);

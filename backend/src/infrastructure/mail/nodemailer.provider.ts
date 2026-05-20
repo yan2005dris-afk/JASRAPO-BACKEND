@@ -1,6 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { MailerService } from '@nestjs-modules/mailer';
-import { IMailProvider, SendMailOptions, MailResult } from './interfaces/mail-provider.interface';
+import {
+  IMailProvider,
+  SendMailOptions,
+  MailResult,
+} from './interfaces/mail-provider.interface';
 
 /**
  * Proveedor de correo basado en Nodemailer.

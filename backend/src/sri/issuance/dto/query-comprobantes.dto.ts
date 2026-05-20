@@ -190,7 +190,10 @@ export class ComprobanteDetalladoDto extends ComprobanteResponseDto {
   @ApiProperty({ type: () => ComprobanteDetalleItemDto, isArray: true })
   detalles: ComprobanteDetalleItemDto[];
 
-  @ApiPropertyOptional({ type: () => ComprobanteInfoAdicionalItemDto, isArray: true })
+  @ApiPropertyOptional({
+    type: () => ComprobanteInfoAdicionalItemDto,
+    isArray: true,
+  })
   infoAdicional?: ComprobanteInfoAdicionalItemDto[];
 
   @ApiProperty()

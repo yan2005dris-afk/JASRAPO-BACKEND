@@ -5,7 +5,7 @@ import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { ConflictException, BadRequestException } from '@nestjs/common';
 import { TipoIdentificacionUtil } from 'src/infrastructure/common/utils/tipo-identificacion.util';
 
-jest.mock('src/infrastructure/common/util/tipo-identificacion.util');
+jest.mock('src/infrastructure/common/utils/tipo-identificacion.util');
 
 describe('CreateClientUseCase', () => {
   let useCase: CreateClientUseCase;

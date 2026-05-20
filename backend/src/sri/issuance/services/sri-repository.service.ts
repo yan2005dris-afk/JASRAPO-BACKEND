@@ -551,7 +551,7 @@ export class SriRepositoryService {
   /**
    * Busca un comprobante por clave de acceso con info de XML disponible
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   async findComprobanteConDetalles(claveAcceso: string): Promise<any> {
     return this.db.queryOne<any>(
       `SELECT 

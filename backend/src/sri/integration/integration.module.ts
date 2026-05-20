@@ -4,15 +4,7 @@ import { WebhooksModule } from './webhooks/webhooks.module';
 import { CertificateModule } from './certificate.module';
 
 @Module({
-  imports: [
-    TenantsModule,
-    WebhooksModule,
-    CertificateModule,
-  ],
-  exports: [
-    TenantsModule,
-    WebhooksModule,
-    CertificateModule,
-  ],
+  imports: [TenantsModule, WebhooksModule, CertificateModule],
+  exports: [TenantsModule, WebhooksModule, CertificateModule],
 })
 export class IntegrationModule {}

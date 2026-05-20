@@ -1,5 +1,9 @@
 import { resolve } from 'path';
-import { requireEnv, resolveDir, ensureDir } from '../../infrastructure/common/utils/env.utils';
+import {
+  requireEnv,
+  resolveDir,
+  ensureDir,
+} from '../../infrastructure/common/utils/env.utils';
 
 /**
  * Local filesystem storage paths (deprecated in favor of MinIO)

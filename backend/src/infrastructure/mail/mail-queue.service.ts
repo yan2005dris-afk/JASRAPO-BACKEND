@@ -25,7 +25,9 @@ export class MailQueueService implements OnModuleInit {
     await this.jobsService.work(MAIL_JOB_NAME, async (job) => {
       await this.processMailJob(job);
     });
-    this.logger.log(`Worker de correo escuchando en PostgreSQL (job: ${MAIL_JOB_NAME})`);
+    this.logger.log(
+      `Worker de correo escuchando en PostgreSQL (job: ${MAIL_JOB_NAME})`,
+    );
   }
 
   /**
@@ -57,12 +59,16 @@ export class MailQueueService implements OnModuleInit {
    */
   private async processMailJob(job: any): Promise<void> {
     const data: SendMailOptions = job.data;
-    this.logger.log(`Procesando envío de correo para: ${data.to} - Asunto: ${data.subject}`);
+    this.logger.log(
+      `Procesando envío de correo para: ${Array.isArray(data.to) ? data.to.join(', ') : data.to} - Asunto: ${data.subject}`,
+    );
 
     const result = await this.mailProvider.send(data);
 
     if (!result.success) {
-      throw new Error(`Fallo el envío a ${data.to}: ${result.error}`);
+      throw new Error(
+        `Fallo el envío a ${Array.isArray(data.to) ? data.to.join(', ') : data.to}: ${result.error}`,
+      );
     }
   }
 }

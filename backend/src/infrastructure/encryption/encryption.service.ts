@@ -22,10 +22,12 @@ export class EncryptionService {
 
   constructor(private readonly configService: ConfigService) {
     // Soporta tanto mayúsculas como minúsculas
-    this.encryptionKey = this.configService.get<string>('encryptionKey') 
-      || this.configService.get<string>('ENCRYPTION_KEY')!;
-    this.encryptionSalt = this.configService.get<string>('encryptionSalt') 
-      || this.configService.get<string>('ENCRYPTION_SALT')!;
+    this.encryptionKey =
+      this.configService.get<string>('encryptionKey') ||
+      this.configService.get<string>('ENCRYPTION_KEY')!;
+    this.encryptionSalt =
+      this.configService.get<string>('encryptionSalt') ||
+      this.configService.get<string>('ENCRYPTION_SALT')!;
 
     if (!this.encryptionKey || !this.encryptionSalt) {
       throw new Error(

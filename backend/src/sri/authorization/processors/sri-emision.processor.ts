@@ -25,12 +25,16 @@ export class SriEmisionProcessor implements OnModuleInit {
     await this.jobsService.work(SRI_EMISION_JOB, async (job) => {
       await this.processEmision(job);
     });
-    this.logger.log(`Worker de SRI escuchando en PostgreSQL (job: ${SRI_EMISION_JOB})`);
+    this.logger.log(
+      `Worker de SRI escuchando en PostgreSQL (job: ${SRI_EMISION_JOB})`,
+    );
   }
 
   private async processEmision(job: any): Promise<any> {
     const { tipo, dto } = job.data;
-    this.logger.log(`Procesando emisión asíncrona de ${tipo} - Job ID: ${job.id}`);
+    this.logger.log(
+      `Procesando emisión asíncrona de ${tipo} - Job ID: ${job.id}`,
+    );
 
     try {
       switch (tipo) {
@@ -48,7 +52,10 @@ export class SriEmisionProcessor implements OnModuleInit {
           throw new Error(`Tipo de comprobante no soportado: ${tipo}`);
       }
     } catch (error: any) {
-      this.logger.error(`Error procesando job ${job.id} de tipo ${tipo}: ${error.message}`, error.stack);
+      this.logger.error(
+        `Error procesando job ${job.id} de tipo ${tipo}: ${error.message}`,
+        error.stack,
+      );
       throw error;
     }
   }
