@@ -131,7 +131,10 @@ export class WebhookResponseDto {
  * The secret is shown once and never again in list/get responses.
  */
 export class WebhookSecretResponseDto extends WebhookResponseDto {
-  @ApiProperty({ description: 'HMAC signing secret — store it securely, it will not be shown again' })
+  @ApiProperty({
+    description:
+      'HMAC signing secret — store it securely, it will not be shown again',
+  })
   secreto: string;
 }
 

@@ -332,7 +332,9 @@ export class WebhooksService {
     };
   }
 
-  private mapToSecretResponse(row: Record<string, unknown>): WebhookSecretResponseDto {
+  private mapToSecretResponse(
+    row: Record<string, unknown>,
+  ): WebhookSecretResponseDto {
     return {
       ...this.mapToResponse(row),
       secreto: row.secreto as string,

@@ -97,7 +97,9 @@ export class PdfImageService {
             // Validate safe URL to prevent SSRF
             const urlValidation = await validateSafeUrl(image.url);
             if (!urlValidation.safe) {
-              this.logger.warn(`SSRF Blocked or unsafe URL skipped: ${image.url} - ${urlValidation.error}`);
+              this.logger.warn(
+                `SSRF Blocked or unsafe URL skipped: ${image.url} - ${urlValidation.error}`,
+              );
               continue;
             }
 
@@ -110,7 +112,9 @@ export class PdfImageService {
           } else {
             // Basic path traversal block
             if (image.url.includes('..')) {
-              this.logger.warn(`Intento de path traversal detectado: ${image.url}`);
+              this.logger.warn(
+                `Intento de path traversal detectado: ${image.url}`,
+              );
               continue;
             }
 
@@ -123,7 +127,10 @@ export class PdfImageService {
             const resolvedTarget = resolve(imagePath);
 
             // Allow files ONLY if they are located under STORAGE_PATHS.pdfsImages or STORAGE_PATHS.templates
-            const allowedDirs = [STORAGE_PATHS.pdfsImages, STORAGE_PATHS.templates];
+            const allowedDirs = [
+              STORAGE_PATHS.pdfsImages,
+              STORAGE_PATHS.templates,
+            ];
             let isAllowed = false;
 
             for (const dir of allowedDirs) {
@@ -132,14 +139,19 @@ export class PdfImageService {
                 ? resolvedBase
                 : resolvedBase + sep;
 
-              if (resolvedTarget.startsWith(basePrefix) || resolvedTarget === resolvedBase) {
+              if (
+                resolvedTarget.startsWith(basePrefix) ||
+                resolvedTarget === resolvedBase
+              ) {
                 isAllowed = true;
                 break;
               }
             }
 
             if (!isAllowed) {
-              this.logger.warn(`Acceso denegado a archivo local fuera de directorios permitidos: ${imagePath}`);
+              this.logger.warn(
+                `Acceso denegado a archivo local fuera de directorios permitidos: ${imagePath}`,
+              );
               continue;
             }
 

@@ -31,7 +31,10 @@ export class WebhooksController {
     @Body() createWebhookDto: CreateWebhookDto,
     @CurrentUser() user: JwtPayload,
   ) {
-    return this.webhooksService.create(createWebhookDto, user.tenantId ?? undefined);
+    return this.webhooksService.create(
+      createWebhookDto,
+      user.tenantId ?? undefined,
+    );
   }
 
   @Get()
