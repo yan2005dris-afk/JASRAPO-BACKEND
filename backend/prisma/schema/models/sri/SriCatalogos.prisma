@@ -1,0 +1,68 @@
+model ComprobanteRetenciones {
+  id                     String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid @map("id")
+  comprobanteId          BigInt       @map("comprobante_id")
+  codigo                  String       @db.VarChar(2) @map("codigo")
+  codigoRetencion         String       @db.VarChar(5) @map("codigo_retencion")
+  baseImponible           Decimal?     @db.Decimal(18, 2) @map("base_imponible")
+  porcentajeRetener       Decimal?     @db.Decimal(8, 2) @map("porcentaje_retener")
+  valorRetenido           Decimal?     @db.Decimal(18, 2) @map("valor_retenido")
+  codDocSustento          String?      @db.VarChar(2) @map("cod_doc_sustento")
+  numDocSustento          String?      @db.VarChar(20) @map("num_doc_sustento")
+  fechaEmisionDocSustento DateTime?    @db.Date @map("fecha_emision_doc_sustento")
+  totalSinImpuestos       Decimal?     @db.Decimal(18, 2) @map("total_sin_impuestos")
+  importeTotal            Decimal?     @db.Decimal(18, 2) @map("importe_total")
+  pagoLocExt              String       @default("01") @db.VarChar(2) @map("pago_loc_ext")
+  codSustento             String?      @db.VarChar(2) @map("cod_sustento")
+  formaPago               String?      @db.VarChar(2) @map("forma_pago")
+  
+  comprobante            Comprobantes @relation(fields: [comprobanteId], references: [id], onDelete: Cascade)
+
+  @@map("comprobante_retenciones")
+}
+
+model SriTipoComprobante {
+  id           Int            @id @default(autoincrement()) @map("id")
+  codigo       String         @unique @map("codigo")
+  nombre       String         @map("nombre")
+  descripcion  String?        @map("descripcion")
+  activo       Boolean        @default(true) @map("activo")
+
+  @@map("sri_tipo_comprobante")
+}
+
+model SriImpuesto {
+  id               Int      @id @default(autoincrement()) @map("id")
+  codigo           String   @map("codigo")
+  codigoPorcentaje String   @map("codigo_porcentaje")
+  nombre           String   @map("nombre")
+  tarifa           Decimal  @map("tarifa") @db.Decimal
+  activo           Boolean  @default(true) @map("activo")
+  createdAt        DateTime @default(now()) @map("creado_en")
+  updatedAt        DateTime @updatedAt @map("actualizado_en")
+  rubros           Rubros[]
+
+  @@unique([codigo, codigoPorcentaje])
+  @@map("sri_impuesto")
+}
+
+model SriFormaPago {
+  id           Int           @id @default(autoincrement()) @map("id")
+  codigo       String        @unique @map("codigo")
+  nombre       String        @map("nombre")
+  activo       Boolean       @default(true) @map("activo")
+  detallePagos DetallePago[]
+
+  @@map("sri_forma_pago")
+}
+
+model CatalogosSri {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid @map("id")
+  tipo        String   @map("tipo") 
+  codigo      String   @map("codigo")
+  descripcion String   @map("descripcion")
+  valor       Decimal? @db.Decimal(18, 4) @map("valor")
+  activo      Boolean  @default(true) @map("activo")
+
+  @@unique([tipo, codigo])
+  @@map("sri_catalogos")
+}

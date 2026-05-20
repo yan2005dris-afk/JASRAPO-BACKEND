@@ -1,0 +1,72 @@
+import {
+  Injectable,
+  OnModuleInit,
+  OnModuleDestroy,
+  Logger,
+} from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { PgBoss, JobInsert, SendOptions, WorkHandler } from 'pg-boss';
+
+/**
+ * Servicio base de PgBoss para gestionar colas en PostgreSQL.
+ * Actúa como motor central de trabajos para toda la aplicación.
+ */
+@Injectable()
+export class JobsService implements OnModuleInit, OnModuleDestroy {
+  private readonly logger = new Logger(JobsService.name);
+  private boss: PgBoss;
+  private readonly knownQueues = new Set<string>();
+
+  constructor(private readonly configService: ConfigService) {
+    const connectionString = this.configService.get<string>('DATABASE_URL')!;
+
+    this.boss = new PgBoss({
+      connectionString,
+      schema: 'jobs',
+      application_name: 'jasrapo-backend-jobs',
+    });
+
+    this.boss.on('error', (error) => this.logger.error('PgBoss Error:', error));
+  }
+
+  async onModuleInit() {
+    try {
+      await this.boss.start();
+      this.logger.log('PgBoss (Jobs Engine) started on schema "jobs"');
+    } catch (error) {
+      this.logger.error('Error al iniciar PgBoss:', error);
+    }
+  }
+
+  async onModuleDestroy() {
+    await this.boss.stop();
+  }
+
+  // pg-boss v12 requires explicit queue creation before send/work.
+  // Cache ensures createQueue is called once per queue per process lifetime.
+  private async ensureQueue(name: string): Promise<void> {
+    if (!this.knownQueues.has(name)) {
+      await this.boss.createQueue(name);
+      this.knownQueues.add(name);
+    }
+  }
+
+  async send(name: string, data: object, options?: SendOptions) {
+    await this.ensureQueue(name);
+    return this.boss.send(name, data, options);
+  }
+
+  async insert(name: string, jobs: JobInsert[]) {
+    await this.ensureQueue(name);
+    return this.boss.insert(name, jobs);
+  }
+
+  async work(name: string, handler: WorkHandler<any>) {
+    await this.ensureQueue(name);
+    return this.boss.work(name, handler);
+  }
+
+  getBossInstance(): PgBoss {
+    return this.boss;
+  }
+}

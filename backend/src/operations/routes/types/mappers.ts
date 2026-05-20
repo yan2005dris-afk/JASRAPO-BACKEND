@@ -1,7 +1,7 @@
 import type { Prisma } from 'src/generated/prisma/client';
 import { RouteEntity } from './route.entity';
 import { ReadingForRouteEntity } from './reading-for-route.entity';
-import { DateUtil } from 'src/infrastructure/common/util/date.util';
+import { DateUtil } from 'src/infrastructure/common/utils/date.util';
 
 type RouteModel = Prisma.RutasGetPayload<{}>;
 

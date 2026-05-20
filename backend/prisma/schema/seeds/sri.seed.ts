@@ -11,22 +11,21 @@ export async function seedSriCatalogs(prisma: PrismaClient) {
       nombreComercial: 'JAAP OLON',
       direccionMatriz: 'Calle Principal Olón',
       obligadoContabilidad: false,
-      ambiente: 'PRUEBAS'
+      ambiente: '1'
     }
   });
 
   const establecimiento = await prisma.establecimientos.upsert({
     where: { 
-      empresaId_codigo: { 
-        empresaId: empresa.empresaId, 
+      emisorId_codigo: { 
+        emisorId: empresa.id, 
         codigo: '001' 
       } 
     },
     update: {},
     create: {
-      empresaId: empresa.empresaId,
+      emisorId: empresa.id,
       codigo: '001',
-      nombre: 'OFICINA CENTRAL OLON',
       direccion: 'Calle Principal Olón'
     }
   });
@@ -34,16 +33,15 @@ export async function seedSriCatalogs(prisma: PrismaClient) {
   await prisma.puntosEmision.upsert({
     where: { 
       establecimientoId_codigo: { 
-        establecimientoId: establecimiento.establecimientoId, 
+        establecimientoId: establecimiento.id, 
         codigo: '001' 
       } 
     },
     update: {},
     create: {
-      establecimientoId: establecimiento.establecimientoId,
+      establecimientoId: establecimiento.id,
       codigo: '001',
-      nombre: 'VENTANILLA 1',
-      secuencialActual: 1
+      descripcion: 'VENTANILLA 1',
     }
   });
 

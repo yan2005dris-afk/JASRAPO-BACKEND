@@ -12,7 +12,7 @@ import { InstallMeterUseCase } from './use-cases/install-meter.use-case';
 import { DecommissionMeterUseCase } from './use-cases/decommission-meter.use-case';
 import { safeMeterSelect } from './types/IResponseMeters';
 import { toMeterResponse } from './types/metersMapper';
-import { DateUtil } from 'src/infrastructure/common/util/date.util';
+import { DateUtil } from 'src/infrastructure/common/utils/date.util';
 
 @Injectable()
 export class MeterService {

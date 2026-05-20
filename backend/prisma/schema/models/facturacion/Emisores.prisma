@@ -1,0 +1,56 @@
+model Empresa {
+  id                    Int                @id @default(autoincrement()) @map("id")
+  uuid                  String             @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid @map("uuid")
+  tenantId              String?            @db.Uuid @map("tenant_id")
+  ruc                   String             @unique @map("ruc")
+  razonSocial           String             @map("razon_social")
+  nombreComercial       String?            @map("nombre_comercial")
+  direccionMatriz       String             @map("direccion_matriz")
+  obligadoContabilidad  Boolean            @default(false) @map("obligado_contabilidad")
+  contribuyenteEspecial String?            @map("contribuyente_especial")
+  agenteRetencion       String?            @map("agente_retencion")
+  contribuyenteRimpe    Boolean            @default(false) @map("contribuyente_rimpe")
+  ambiente              String             @default("1") @map("ambiente")
+  estado                String             @default("ACTIVO") @map("estado")
+  certificadoNombre     String?            @map("certificado_nombre")
+  certificadoPassword   String?            @map("certificado_password_encrypted")
+  certificadoValidoHasta DateTime?          @map("certificado_valido_hasta")
+  certificadoSujeto     String?            @map("certificado_sujeto")
+  createdAt             DateTime           @default(now()) @map("created_at")
+  updatedAt             DateTime           @updatedAt @map("updated_at")
+  establecimientos      Establecimientos[]
+  comprobantes          Comprobantes[]
+  webhooks              WebhookConfigs[]
+
+  @@map("emisores")
+}
+
+model Establecimientos {
+  id            Int             @id @default(autoincrement()) @map("id")
+  emisorId      Int             @map("emisor_id")
+  codigo        String          @db.VarChar(3) @map("codigo")
+  direccion     String          @map("direccion")
+  estado        String          @default("ACTIVO") @map("estado")
+  createdAt     DateTime        @default(now()) @map("created_at")
+  emisor        Empresa         @relation(fields: [emisorId], references: [id], onDelete: Cascade)
+  puntosEmision PuntosEmision[]
+
+  @@unique([emisorId, codigo])
+  @@map("establecimientos")
+}
+
+model PuntosEmision {
+  id                Int              @id @default(autoincrement()) @map("id")
+  establecimientoId Int              @map("establecimiento_id")
+  codigo            String           @db.VarChar(3) @map("codigo")
+  descripcion       String?          @map("descripcion")
+  estado            String           @default("ACTIVO") @map("estado")
+  createdAt         DateTime         @default(now()) @map("created_at")
+  establecimiento   Establecimientos @relation(fields: [establecimientoId], references: [id], onDelete: Cascade)
+  comprobantes      Comprobantes[]
+  prefacturas       Prefacturas[]
+  secuenciales      Secuenciales[]
+
+  @@unique([establecimientoId, codigo])
+  @@map("puntos_emision")
+}

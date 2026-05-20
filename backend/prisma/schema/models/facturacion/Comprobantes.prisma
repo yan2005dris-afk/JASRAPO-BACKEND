@@ -1,0 +1,103 @@
+model Comprobantes {
+  id                            BigInt               @id @default(autoincrement()) @map("id")
+  uuid                          String               @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid @map("uuid")
+  emisorId                      Int                  @map("emisor_id")
+  puntoEmisionId                Int                  @map("punto_emision_id")
+  tipoComprobante               String               @db.VarChar(2) @map("tipo_comprobante")
+  ambiente                      String               @db.VarChar(1) @map("ambiente")
+  tipoEmision                   String               @default("1") @db.VarChar(1) @map("tipo_emision")
+  secuencial                    String               @db.VarChar(9) @map("secuencial")
+  claveAcceso                   String?              @unique @db.VarChar(49) @map("clave_acceso")
+  fechaEmision                  DateTime             @map("fecha_emision")
+  estado                        String               @default("PENDIENTE") @map("estado")
+  estadoSri                     String?              @map("estado_sri")
+  fechaAutorizacion             DateTime?            @map("fecha_autorizacion")
+  numeroAutorizacion            String?              @db.VarChar(49) @map("numero_autorizacion")
+  totalSinImpuestos             Decimal?             @db.Decimal(18, 2) @map("total_sin_impuestos")
+  totalDescuento                Decimal              @default(0) @db.Decimal(18, 2) @map("total_descuento")
+  importeTotal                  Decimal?             @db.Decimal(18, 2) @map("importe_total")
+  propina                       Decimal?             @db.Decimal(18, 2) @map("propina")
+  moneda                        String               @default("DOLAR") @db.VarChar(15) @map("moneda")
+  
+  // Datos del Receptor
+  receptorTipoIdentificacion    String?              @db.VarChar(2) @map("receptor_tipo_identificacion")
+  receptorIdentificacion        String?              @db.VarChar(20) @map("receptor_identificacion")
+  receptorRazonSocial           String?              @db.VarChar(300) @map("receptor_razon_social")
+  receptorDireccion             String?              @map("receptor_direccion")
+  receptorEmail                 String?              @db.VarChar(255) @map("receptor_email")
+  receptorTelefono              String?              @db.VarChar(20) @map("receptor_telefono")
+
+  // Campos específicos (NC/ND/Guía/Retención)
+  docModificadoTipo                  String?   @db.VarChar(2) @map("doc_modificado_tipo")
+  docModificadoNumero                String?   @db.VarChar(20) @map("doc_modificado_numero")
+  docModificadoFecha                 DateTime? @map("doc_modificado_fecha")
+  motivo                             String?   @map("motivo")
+  valorModificacion                  Decimal?  @db.Decimal(18, 2) @map("valor_modificacion")
+  rise                               String?   @db.VarChar(40) @map("rise")
+  periodoFiscal                      String?   @db.VarChar(7) @map("periodo_fiscal")
+  guiaRemision                       String?   @db.VarChar(20) @map("guia_remision")
+  dirPartida                         String?   @map("dir_partida")
+  placa                              String?   @db.VarChar(20) @map("placa")
+  rucTransportista                   String?   @db.VarChar(13) @map("ruc_transportista")
+  razonSocialTransportista           String?   @db.VarChar(300) @map("razon_social_transportista")
+  tipoIdentificacionTransportista    String?   @db.VarChar(2) @map("tipo_identificacion_transportista")
+  fechaIniTransporte                 DateTime? @db.Date @map("fecha_ini_transporte")
+  fechaFinTransporte                 DateTime? @db.Date @map("fecha_fin_transporte")
+  idReferenciaExterna                String?   @db.VarChar(100) @map("id_referencia_externa")
+  tipoSistemaExterno                 String?   @db.VarChar(50) @map("tipo_sistema_externo")
+  
+  createdAt                     DateTime             @default(now()) @map("created_at")
+  updatedAt                     DateTime             @updatedAt @map("updated_at")
+
+  emisor                        Empresa              @relation(fields: [emisorId], references: [id], onDelete: Cascade)
+  puntoEmision                  PuntosEmision        @relation(fields: [puntoEmisionId], references: [id])
+  xmls                          ComprobanteXmls?
+  detalles                      ComprobanteDetalles[]
+  pagos                         ComprobantePagos[]
+  retenciones                   ComprobanteRetenciones[]
+  totales                       ComprobanteTotales[]
+  infoAdicional                 InfoAdicional[]
+  motivosNotaDebito             MotivosNotaDebito[]
+  guiaDestinatarios             GuiaDestinatarios[]
+  prefactura                    Prefacturas?
+  detallePago                   DetallePago[]
+
+  @@index([emisorId])
+  @@index([puntoEmisionId])
+  @@index([fechaEmision])
+  @@index([estado])
+  @@map("comprobantes")
+}
+
+model ComprobanteDetalles {
+  id                    String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid @map("id")
+  comprobanteId         BigInt        @map("comprobante_id")
+  codigoPrincipal        String?              @db.VarChar(25) @map("codigo_principal")
+  codigoAuxiliar         String?              @db.VarChar(25) @map("codigo_auxiliar")
+  descripcion            String               @db.VarChar(300) @map("descripcion")
+  unidadMedida           String?              @db.VarChar(50) @map("unidad_medida")
+  cantidad               Decimal              @db.Decimal(18, 6) @map("cantidad")
+  precioUnitario         Decimal              @db.Decimal(18, 6) @map("precio_unitario")
+  descuento              Decimal              @default(0) @db.Decimal(18, 2) @map("descuento")
+  precioTotalSinImpuesto Decimal?             @db.Decimal(18, 2) @map("precio_total_sin_impuesto")
+  orden                  Int                  @default(0) @map("orden")
+
+  comprobante            Comprobantes         @relation(fields: [comprobanteId], references: [id], onDelete: Cascade)
+  impuestos              ComprobanteImpuestos[]
+  detallesAdicionales    DetallesAdicionales[]
+
+  @@map("comprobante_detalles")
+}
+
+model ComprobantePagos {
+  id              String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid @map("id")
+  comprobanteId   BigInt        @map("comprobante_id")
+  formaPago       String        @db.VarChar(2) @map("forma_pago")
+  total           Decimal       @db.Decimal(18, 2) @map("total")
+  plazo           Int?          @map("plazo")
+  unidadTiempo    String?       @db.VarChar(20) @map("unidad_tiempo")
+  
+  comprobante     Comprobantes  @relation(fields: [comprobanteId], references: [id], onDelete: Cascade)
+
+  @@map("comprobante_pagos")
+}

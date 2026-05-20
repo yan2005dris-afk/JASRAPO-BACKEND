@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { UpdateClientDto } from '../dto/update-client.dto';
-import { TipoIdentificacionUtil } from 'src/infrastructure/common/util/tipo-identificacion.util';
+import { TipoIdentificacionUtil } from 'src/infrastructure/common/utils/tipo-identificacion.util';
 import { safeClientesSelect } from '../types/IResponseClient';
 
 @Injectable()

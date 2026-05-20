@@ -1,5 +1,5 @@
 import type { MeterResponseDto } from '../dto/meter-response.dto';
-import { DateUtil } from 'src/infrastructure/common/util/date.util';
+import { DateUtil } from 'src/infrastructure/common/utils/date.util';
 
 /**
  * Mapea resultado de Prisma a DTO de response

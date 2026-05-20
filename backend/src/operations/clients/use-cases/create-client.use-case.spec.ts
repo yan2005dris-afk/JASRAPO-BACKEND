@@ -3,7 +3,7 @@ import { Test } from '@nestjs/testing';
 import { CreateClientUseCase } from './create-client.use-case';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { ConflictException, BadRequestException } from '@nestjs/common';
-import { TipoIdentificacionUtil } from 'src/infrastructure/common/util/tipo-identificacion.util';
+import { TipoIdentificacionUtil } from 'src/infrastructure/common/utils/tipo-identificacion.util';
 
 jest.mock('src/infrastructure/common/util/tipo-identificacion.util');
 
