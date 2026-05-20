@@ -88,12 +88,13 @@ describe('MinioStorageService', () => {
   });
 
   describe('getUrl', () => {
-    it('should return presigned URL for the object', async () => {
+    it('should return presigned URL with default expiration (24h)', async () => {
       const url = await service.getUrl('sri-xmls', 'test.xml');
 
       expect(mockMinioService.getPresignedUrl).toHaveBeenCalledWith(
         'sri-xmls',
         'test.xml',
+        24 * 60 * 60,
       );
       expect(url).toBe('https://minio.local/test.xml?token=abc');
     });
@@ -101,8 +102,11 @@ describe('MinioStorageService', () => {
     it('should accept custom expiration', async () => {
       await service.getUrl('sri-xmls', 'test.xml', 3600);
 
-      // expiration is ignored by current MinioService.getPresignedUrl
-      expect(mockMinioService.getPresignedUrl).toHaveBeenCalled();
+      expect(mockMinioService.getPresignedUrl).toHaveBeenCalledWith(
+        'sri-xmls',
+        'test.xml',
+        3600,
+      );
     });
   });
 
@@ -168,10 +172,14 @@ describe('MinioStorageService', () => {
   });
 
   describe('refreshUrl', () => {
-    it('should regenerate presigned URL', async () => {
+    it('should regenerate presigned URL with default expiration', async () => {
       const url = await service.refreshUrl('sri-xmls', 'test.xml');
 
-      expect(mockMinioService.getPresignedUrl).toHaveBeenCalled();
+      expect(mockMinioService.getPresignedUrl).toHaveBeenCalledWith(
+        'sri-xmls',
+        'test.xml',
+        24 * 60 * 60,
+      );
       expect(url).toBe('https://minio.local/test.xml?token=abc');
     });
   });

@@ -29,7 +29,8 @@ export class XmlStorageService {
    * Generates the bucket name for a given RUC
    */
   private getBucketForRuc(ruc: string): string {
-    return getBucketName(ruc, SRI_STORAGE_TYPES.XMLS);
+    const prefix = this.configService.get<string>('MINIO_BUCKET_PREFIX', 'sri');
+    return getBucketName(ruc, SRI_STORAGE_TYPES.XMLS, prefix);
   }
 
   /**

@@ -13,6 +13,7 @@ import {
   CreateWebhookDto,
   UpdateWebhookDto,
   WebhookResponseDto,
+  WebhookSecretResponseDto,
   WebhookLogResponseDto,
   WebhookEvent,
 } from './dto';
@@ -53,7 +54,7 @@ export class WebhooksService {
 
   async findAll(emisorId?: string): Promise<WebhookResponseDto[]> {
     let query = `
-      SELECT id, nombre, url, eventos, emisor_id, secreto, activo, reintentos_max, tenant_id, created_at, updated_at
+      SELECT id, nombre, url, eventos, emisor_id, activo, reintentos_max, tenant_id, created_at, updated_at
       FROM webhook_configs
     `;
     const params: string[] = [];
@@ -79,7 +80,7 @@ export class WebhooksService {
     emisorId?: string,
   ): Promise<WebhookResponseDto[]> {
     let query = `
-      SELECT id, nombre, url, eventos, emisor_id, secreto, activo, reintentos_max, tenant_id, created_at, updated_at
+      SELECT id, nombre, url, eventos, emisor_id, activo, reintentos_max, tenant_id, created_at, updated_at
       FROM webhook_configs
       WHERE tenant_id = $1
     `;
@@ -100,7 +101,7 @@ export class WebhooksService {
 
   async findOne(id: string): Promise<WebhookResponseDto> {
     const result = await this.db.query(
-      `SELECT id, nombre, url, eventos, emisor_id, secreto, activo, reintentos_max, created_at, updated_at
+      `SELECT id, nombre, url, eventos, emisor_id, activo, reintentos_max, created_at, updated_at
        FROM webhook_configs
        WHERE id = $1`,
       [id],
@@ -116,7 +117,7 @@ export class WebhooksService {
   async create(
     dto: CreateWebhookDto,
     tenantId?: string,
-  ): Promise<WebhookResponseDto> {
+  ): Promise<WebhookSecretResponseDto> {
     const secreto = this.generateSecret();
 
     const result = await this.db.query(
@@ -135,7 +136,7 @@ export class WebhooksService {
     );
 
     this.logger.log(`Webhook creado: ${dto.nombre} -> ${dto.url}`);
-    return this.mapToResponse(result.rows[0]);
+    return this.mapToSecretResponse(result.rows[0]);
   }
 
   async update(id: string, dto: UpdateWebhookDto): Promise<WebhookResponseDto> {
@@ -176,7 +177,7 @@ export class WebhooksService {
     const result = await this.db.query(
       `UPDATE webhook_configs SET ${updates.join(', ')}
        WHERE id = $${paramIndex}
-       RETURNING id, nombre, url, eventos, emisor_id, secreto, activo, reintentos_max, created_at, updated_at`,
+       RETURNING id, nombre, url, eventos, emisor_id, activo, reintentos_max, created_at, updated_at`,
       values,
     );
 
@@ -195,7 +196,7 @@ export class WebhooksService {
     const result = await this.db.query(
       `UPDATE webhook_configs SET activo = false, updated_at = NOW()
        WHERE id = $1
-       RETURNING id, nombre, url, eventos, emisor_id, secreto, activo, reintentos_max, created_at, updated_at`,
+       RETURNING id, nombre, url, eventos, emisor_id, activo, reintentos_max, created_at, updated_at`,
       [id],
     );
 
@@ -203,7 +204,7 @@ export class WebhooksService {
     return this.mapToResponse(result.rows[0]);
   }
 
-  async regenerateSecret(id: string): Promise<WebhookResponseDto> {
+  async regenerateSecret(id: string): Promise<WebhookSecretResponseDto> {
     await this.findOne(id);
     const newSecret = this.generateSecret();
 
@@ -215,7 +216,7 @@ export class WebhooksService {
     );
 
     this.logger.log(`Secreto regenerado para webhook: ${id}`);
-    return this.mapToResponse(result.rows[0]);
+    return this.mapToSecretResponse(result.rows[0]);
   }
 
   // Paginación completa para logs de webhooks
@@ -324,11 +325,17 @@ export class WebhooksService {
       url: row.url as string,
       eventos: row.eventos as string[],
       emisorId: row.emisor_id as string,
-      secreto: row.secreto as string,
       activo: row.activo as boolean,
       reintentosMax: row.reintentos_max as number,
       createdAt: (row.created_at as Date)?.toISOString(),
       updatedAt: (row.updated_at as Date)?.toISOString(),
+    };
+  }
+
+  private mapToSecretResponse(row: Record<string, unknown>): WebhookSecretResponseDto {
+    return {
+      ...this.mapToResponse(row),
+      secreto: row.secreto as string,
     };
   }
 

@@ -267,7 +267,7 @@ flowchart TB
 
     classDef backend fill:#e1f5fe,stroke:#0288d1,stroke-width:2px
     classDef infra fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
-    classDef obs fill:#e8f5e green,stroke:#388e3c,stroke-width:2px
+    classDef obs fill:#e8f5e9,stroke:#388e3c,stroke-width:2px
     classDef client fill:#fff3e0,stroke:#f57c00,stroke-width:2px
 
     class Backend backend

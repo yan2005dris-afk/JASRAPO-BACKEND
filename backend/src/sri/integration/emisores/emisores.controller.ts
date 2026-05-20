@@ -7,6 +7,7 @@ import {
   Body,
   Param,
   Logger,
+  UseGuards,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -18,9 +19,12 @@ import { EmisoresService } from './emisores.service';
 import { CreateEmisorDto, UpdateEmisorDto, EmisorResponseDto } from './dto';
 import { CurrentUser } from '../../../identity/auth/decorators/current-user.decorator';
 import { JwtPayload, UserRole } from '../../../identity/auth/dto/auth.dto';
+import { JwtAuthGuard } from '../../../identity/auth/guards/jwt-auth.guard';
+import { PermissionsGuard } from '../../../infrastructure/common/guards/permissions.guard';
 
 @ApiTags('Emisores')
 @ApiBearerAuth('JWT')
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('emisores')
 export class EmisoresController {
   private readonly logger = new Logger(EmisoresController.name);

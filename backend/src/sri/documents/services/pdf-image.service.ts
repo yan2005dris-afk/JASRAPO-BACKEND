@@ -1,8 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import axios from 'axios';
 import { readFileSync, existsSync } from 'fs';
-import { join } from 'path';
+import { join, resolve, sep } from 'path';
 import { PDFDocument } from 'pdf-lib';
+import { validateSafeUrl } from '../../../infrastructure/common/utils/url.util';
+import { STORAGE_PATHS } from '../../utils/storage-paths';
 
 export interface ImageData {
   url: string;
@@ -26,14 +28,22 @@ export class PdfImageService {
     imageData: ImageData[],
   ): Promise<Buffer> {
     try {
-      // Log received data for debugging
-      this.logger.log(
+      // Log received data for debugging (query params stripped to avoid leaking presigned URL tokens)
+      this.logger.debug(
         `Recibidas ${imageData?.length || 0} imágenes para procesar`,
       );
       if (imageData && imageData.length > 0) {
         imageData.forEach((img, index) => {
-          this.logger.log(
-            `Imagen ${index}: url=${img.url}, page=${img.page}, x=${img.x}, y=${img.y}`,
+          const safeUrl = (() => {
+            try {
+              const u = new URL(img.url);
+              return `${u.origin}${u.pathname}`;
+            } catch {
+              return '[local-file]';
+            }
+          })();
+          this.logger.debug(
+            `Imagen ${index}: url=${safeUrl}, page=${img.page}, x=${img.x}, y=${img.y}`,
           );
         });
       }
@@ -84,24 +94,61 @@ export class PdfImageService {
             image.url.startsWith('http://') ||
             image.url.startsWith('https://')
           ) {
+            // Validate safe URL to prevent SSRF
+            const urlValidation = await validateSafeUrl(image.url);
+            if (!urlValidation.safe) {
+              this.logger.warn(`SSRF Blocked or unsafe URL skipped: ${image.url} - ${urlValidation.error}`);
+              continue;
+            }
+
             // Get image from URL
             const response = await axios.get(image.url, {
               responseType: 'arraybuffer',
+              timeout: 10000,
             });
             imageBytes = Buffer.from(response.data);
           } else {
+            // Basic path traversal block
+            if (image.url.includes('..')) {
+              this.logger.warn(`Intento de path traversal detectado: ${image.url}`);
+              continue;
+            }
+
             // Get image from local file
             const imagePath =
               image.url.startsWith('/') || image.url.includes(':')
                 ? image.url // Absolute path
                 : join(process.cwd(), image.url); // Relative path
 
-            if (!existsSync(imagePath)) {
-              this.logger.warn(`Imagen no encontrada: ${imagePath}`);
+            const resolvedTarget = resolve(imagePath);
+
+            // Allow files ONLY if they are located under STORAGE_PATHS.pdfsImages or STORAGE_PATHS.templates
+            const allowedDirs = [STORAGE_PATHS.pdfsImages, STORAGE_PATHS.templates];
+            let isAllowed = false;
+
+            for (const dir of allowedDirs) {
+              const resolvedBase = resolve(dir);
+              const basePrefix = resolvedBase.endsWith(sep)
+                ? resolvedBase
+                : resolvedBase + sep;
+
+              if (resolvedTarget.startsWith(basePrefix) || resolvedTarget === resolvedBase) {
+                isAllowed = true;
+                break;
+              }
+            }
+
+            if (!isAllowed) {
+              this.logger.warn(`Acceso denegado a archivo local fuera de directorios permitidos: ${imagePath}`);
               continue;
             }
 
-            imageBytes = readFileSync(imagePath);
+            if (!existsSync(resolvedTarget)) {
+              this.logger.warn(`Imagen no encontrada: ${resolvedTarget}`);
+              continue;
+            }
+
+            imageBytes = readFileSync(resolvedTarget);
           }
 
           // Embed image based on format

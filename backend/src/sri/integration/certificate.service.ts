@@ -12,7 +12,7 @@ import {
   unlinkSync,
   readFileSync,
 } from 'fs';
-import { join } from 'path';
+import { join, resolve, sep } from 'path';
 import * as forge from 'node-forge';
 import { STORAGE_PATHS } from '../utils/storage-paths';
 
@@ -81,10 +81,25 @@ export class CertificateService {
   }
 
   /**
+   * Resolve a fileName safely within certsDir (throws if traversal detected)
+   */
+  private resolveSafePath(fileName: string): string {
+    const base = resolve(this.certsDir);
+    const target = resolve(join(base, fileName));
+    const basePrefix = base.endsWith(sep) ? base : base + sep;
+    if (!target.startsWith(basePrefix) && target !== base) {
+      throw new BadRequestException(
+        `Nombre de archivo inválido: contiene secuencias de path no permitidas`,
+      );
+    }
+    return target;
+  }
+
+  /**
    * Check if certificate exists
    */
   certificateExists(fileName: string): boolean {
-    const filePath = join(this.certsDir, fileName);
+    const filePath = this.resolveSafePath(fileName);
     return existsSync(filePath);
   }
 
@@ -92,7 +107,7 @@ export class CertificateService {
    * Get certificate file path
    */
   getCertificatePath(fileName: string): string {
-    return join(this.certsDir, fileName);
+    return this.resolveSafePath(fileName);
   }
 
   /**
@@ -170,7 +185,7 @@ export class CertificateService {
       );
     }
 
-    const filePath = join(this.certsDir, fileName);
+    const filePath = this.resolveSafePath(fileName);
 
     if (!existsSync(filePath)) {
       throw new NotFoundException(`El certificado ${fileName} no existe`);

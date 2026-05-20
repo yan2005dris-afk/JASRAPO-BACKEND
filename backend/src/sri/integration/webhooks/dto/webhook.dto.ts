@@ -114,9 +114,6 @@ export class WebhookResponseDto {
   emisorId?: string;
 
   @ApiProperty()
-  secreto: string;
-
-  @ApiProperty()
   activo: boolean;
 
   @ApiProperty()
@@ -127,6 +124,15 @@ export class WebhookResponseDto {
 
   @ApiProperty()
   updatedAt: string;
+}
+
+/**
+ * Returned ONLY on create and regenerateSecret.
+ * The secret is shown once and never again in list/get responses.
+ */
+export class WebhookSecretResponseDto extends WebhookResponseDto {
+  @ApiProperty({ description: 'HMAC signing secret — store it securely, it will not be shown again' })
+  secreto: string;
 }
 
 export class WebhookLogResponseDto {

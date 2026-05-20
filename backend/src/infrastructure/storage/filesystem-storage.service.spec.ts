@@ -98,6 +98,19 @@ describe('FilesystemStorageService', () => {
 
       expect(stream).toBeDefined();
       expect(typeof stream.pipe).toBe('function');
+
+      // Wait for the stream to open, destroy it, and resolve only after it is fully closed
+      await new Promise<void>((resolve) => {
+        stream.on('open', () => {
+          stream.destroy();
+        });
+        stream.on('close', () => {
+          resolve();
+        });
+        stream.on('error', () => {
+          resolve();
+        });
+      });
     });
   });
 

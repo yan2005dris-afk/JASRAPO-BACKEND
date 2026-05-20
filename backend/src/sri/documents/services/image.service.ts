@@ -1,8 +1,7 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { existsSync, readdirSync, statSync, unlinkSync } from 'fs';
-import { extname } from 'path';
-import { join } from 'path';
+import { extname, join, resolve, sep } from 'path';
 import { formatFileSize } from '../../../infrastructure/common/utils/file.utils';
 import { STORAGE_PATHS } from '../../utils/storage-paths';
 
@@ -108,13 +107,34 @@ export class ImageService {
    * Delete an image
    */
   deleteImage(fileName: string): boolean {
-    const filePath = join(this.getImagesDir(), fileName);
+    if (
+      fileName.includes('..') ||
+      fileName.includes('/') ||
+      fileName.includes('\\')
+    ) {
+      throw new BadRequestException('Nombre de archivo inválido');
+    }
 
-    if (!existsSync(filePath)) {
+    const imagesDir = this.getImagesDir();
+    const resolvedBase = resolve(imagesDir);
+    const filePath = join(imagesDir, fileName);
+    const resolvedTarget = resolve(filePath);
+    const basePrefix = resolvedBase.endsWith(sep)
+      ? resolvedBase
+      : resolvedBase + sep;
+
+    if (
+      !resolvedTarget.startsWith(basePrefix) &&
+      resolvedTarget !== resolvedBase
+    ) {
+      throw new BadRequestException('Path traversal detected');
+    }
+
+    if (!existsSync(resolvedTarget)) {
       throw new NotFoundException(`Imagen ${fileName} no encontrada`);
     }
 
-    unlinkSync(filePath);
+    unlinkSync(resolvedTarget);
     this.logger.log(`Imagen eliminada: ${fileName}`);
     return true;
   }

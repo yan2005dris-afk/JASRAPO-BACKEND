@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Readable } from 'stream';
 import {
@@ -30,9 +30,13 @@ export type SriStorageType =
  * Generates dynamic bucket name per RUC
  * Format: sri-{ruc}-{type} (e.g., sri-179xxxxxxx-xmls)
  */
-export function getBucketName(ruc: string, type: SriStorageType): string {
-  const prefix = 'sri';
-  return `${prefix}-${ruc}-${type}`;
+export function getBucketName(
+  ruc: string,
+  type: SriStorageType,
+  prefix = 'sri',
+): string {
+  const cleanPrefix = prefix.endsWith('-') ? prefix.slice(0, -1) : prefix;
+  return `${cleanPrefix}-${ruc}-${type}`;
 }
 
 /**
@@ -59,15 +63,30 @@ Object.freeze(SRI_STORAGE_TYPES);
  * Provides object storage with presigned URLs and streaming support
  */
 @Injectable()
-export class MinioStorageService implements IStorageService {
+export class MinioStorageService implements IStorageService, OnModuleInit {
   private readonly logger = new Logger(MinioStorageService.name);
   private initializedBuckets = new Set<string>();
 
   constructor(
     private readonly minioService: MinioService,
     private readonly configService: ConfigService,
-  ) {
-    void this.initializeDefaultBuckets();
+  ) {}
+
+  async onModuleInit(): Promise<void> {
+    if (!this.minioService.isAvailable) {
+      this.logger.warn(
+        '[MINIO:INIT] MinIO not available — skipping default bucket initialization',
+      );
+      return;
+    }
+    try {
+      await this.initializeDefaultBuckets();
+    } catch (error) {
+      this.logger.error(
+        '[MINIO:INIT] Failed to initialize default buckets',
+        error,
+      );
+    }
   }
 
   /**
@@ -109,7 +128,8 @@ export class MinioStorageService implements IStorageService {
    * Ensures dynamic bucket exists for specific RUC and type
    */
   async ensureBucketForRuc(ruc: string, type: SriStorageType): Promise<string> {
-    const bucket = getBucketName(ruc, type);
+    const prefix = this.configService.get<string>('MINIO_BUCKET_PREFIX', 'sri');
+    const bucket = getBucketName(ruc, type, prefix);
     await this.ensureBucketExists(bucket);
     return bucket;
   }
@@ -164,8 +184,8 @@ export class MinioStorageService implements IStorageService {
     key: string,
     expiresInSeconds?: number,
   ): Promise<string> {
-    const _expiry = expiresInSeconds ?? 24 * 60 * 60; // Default 24 hours
-    return this.minioService.getPresignedUrl(bucket, key);
+    const expiry = expiresInSeconds ?? 24 * 60 * 60;
+    return this.minioService.getPresignedUrl(bucket, key, expiry);
   }
 
   async refreshUrl(

@@ -136,12 +136,16 @@ export class MinioService implements OnModuleInit {
     }
   }
 
-  async getPresignedUrl(bucketName: string, fileName: string): Promise<string> {
+  async getPresignedUrl(
+    bucketName: string,
+    fileName: string,
+    expiresInSeconds = 24 * 60 * 60,
+  ): Promise<string> {
     this.ensureAvailable();
     return this.minioClient!.presignedGetObject(
       bucketName,
       fileName,
-      24 * 60 * 60,
+      expiresInSeconds,
     );
   }
 
