@@ -15,7 +15,7 @@ import { PgBoss, JobInsert, SendOptions, WorkHandler } from 'pg-boss';
 export class JobsService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(JobsService.name);
   private boss: PgBoss;
-  private readonly knownQueues = new Set<string>();
+  private readonly queuePromises = new Map<string, Promise<void>>();
 
   constructor(private readonly configService: ConfigService) {
     const connectionString = this.configService.get<string>('DATABASE_URL')!;
@@ -45,10 +45,20 @@ export class JobsService implements OnModuleInit, OnModuleDestroy {
   // pg-boss v12 requires explicit queue creation before send/work.
   // Cache ensures createQueue is called once per queue per process lifetime.
   private async ensureQueue(name: string): Promise<void> {
-    if (!this.knownQueues.has(name)) {
-      await this.boss.createQueue(name);
-      this.knownQueues.add(name);
+    let promise = this.queuePromises.get(name);
+    if (!promise) {
+      promise = (async () => {
+        try {
+          await this.boss.createQueue(name);
+        } catch (error) {
+          this.logger.error(`Error al crear la cola "${name}":`, error);
+          this.queuePromises.delete(name); // Permite reintentar si falla
+          throw error;
+        }
+      })();
+      this.queuePromises.set(name, promise);
     }
+    return promise;
   }
 
   async send(name: string, data: object, options?: SendOptions) {

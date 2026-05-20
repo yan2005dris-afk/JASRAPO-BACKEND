@@ -268,7 +268,7 @@ export class XmlSignerService implements OnModuleInit {
    * Get certs directory from configuration
    */
   private getCertsDir(): string {
-    return this.configService.get<string>('directories.certs') || '';
+    return this.configService.get<string>('CERTS_DIR', '');
   }
 
   /**

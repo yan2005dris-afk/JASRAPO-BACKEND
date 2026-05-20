@@ -31,7 +31,7 @@ export class StorageServiceFactory {
       this.configService.get<string>('MINIO_ENABLED', 'true').toLowerCase() ===
       'true';
 
-    if (minioEnabled && this.minioService.isMinIO()) {
+    if (minioEnabled && this.minioService.isAvailable()) {
       this.storageService = this.minioService;
     } else {
       this.storageService = this.fsService;

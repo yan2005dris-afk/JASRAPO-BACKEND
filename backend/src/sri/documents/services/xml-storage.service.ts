@@ -22,7 +22,7 @@ export class XmlStorageService {
     private readonly configService: ConfigService,
   ) {
     this.baseDir =
-      this.configService.get<string>('directories.xmls') || '../xmls';
+      this.configService.get<string>('XMLS_DIR', '../xmls');
     this.logger.log(`XmlStorageService initialized with MinIO storage`);
   }
 

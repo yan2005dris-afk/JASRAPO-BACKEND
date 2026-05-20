@@ -9,7 +9,7 @@ import {
   createReadStream,
   createWriteStream,
 } from 'fs';
-import { join, dirname } from 'path';
+import { join, dirname, resolve, sep } from 'path';
 import { Readable } from 'stream';
 import {
   IStorageService,
@@ -34,11 +34,29 @@ export class FilesystemStorageService implements IStorageService {
     return false;
   }
 
+  isAvailable(): boolean {
+    return true;
+  }
+
+  /**
+   * Validates and returns a safe absolute path, preventing path traversal outside the base directory.
+   */
+  private validateSafePath(targetPath: string): string {
+    const resolvedBase = resolve(this.baseDir);
+    const resolvedTarget = resolve(targetPath);
+    const basePrefix = resolvedBase.endsWith(sep) ? resolvedBase : resolvedBase + sep;
+
+    if (!resolvedTarget.startsWith(basePrefix) && resolvedTarget !== resolvedBase) {
+      throw new Error('Path traversal detected: Path is outside the storage base directory.');
+    }
+    return resolvedTarget;
+  }
+
   /**
    * Resolves the full filesystem path for a bucket/key pair
    */
   private resolvePath(bucket: string, key: string): string {
-    return join(this.baseDir, bucket, key);
+    return this.validateSafePath(join(this.baseDir, bucket, key));
   }
 
   /**
@@ -132,7 +150,7 @@ export class FilesystemStorageService implements IStorageService {
   }
 
   async list(bucket: string, prefix?: string): Promise<string[]> {
-    const bucketDir = join(this.baseDir, bucket);
+    const bucketDir = this.validateSafePath(join(this.baseDir, bucket));
 
     if (!existsSync(bucketDir)) {
       return [];

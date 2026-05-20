@@ -20,7 +20,7 @@ export class ImageService {
   private readonly validExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.webp'];
 
   constructor(private configService: ConfigService) {
-    this.publicUrl = this.configService.get<string>('publicUrl')!;
+    this.publicUrl = this.configService.get<string>('PUBLIC_URL', 'http://localhost:3000');
   }
 
   /**

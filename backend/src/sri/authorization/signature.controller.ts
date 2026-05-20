@@ -38,7 +38,7 @@ export class SignatureController {
     private readonly templateService: TemplateService,
     private readonly configService: ConfigService,
   ) {
-    this.publicUrl = this.configService.get<string>('publicUrl')!;
+    this.publicUrl = this.configService.get<string>('PUBLIC_URL', 'http://localhost:3000');
   }
 
   /**

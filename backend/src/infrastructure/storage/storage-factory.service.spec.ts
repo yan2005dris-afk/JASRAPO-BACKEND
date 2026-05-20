@@ -12,10 +12,12 @@ describe('StorageServiceFactory', () => {
 
   const makeMockMinioService = () => ({
     isMinIO: jest.fn().mockReturnValue(true),
+    isAvailable: jest.fn().mockReturnValue(true),
   });
 
   const makeMockFsService = () => ({
     isMinIO: jest.fn().mockReturnValue(false),
+    isAvailable: jest.fn().mockReturnValue(true),
   });
 
   const makeMockConfigService = () => ({
@@ -24,10 +26,10 @@ describe('StorageServiceFactory', () => {
 
   beforeEach(() => {
     mockMinioService =
-      makeMockMinioService() as jest.Mocked<MinioStorageService>;
+      makeMockMinioService() as unknown as jest.Mocked<MinioStorageService>;
     mockFsService =
-      makeMockFsService() as jest.Mocked<FilesystemStorageService>;
-    mockConfigService = makeMockConfigService() as jest.Mocked<ConfigService>;
+      makeMockFsService() as unknown as jest.Mocked<FilesystemStorageService>;
+    mockConfigService = makeMockConfigService() as unknown as jest.Mocked<ConfigService>;
   });
 
   describe('getStorageService', () => {
@@ -59,7 +61,7 @@ describe('StorageServiceFactory', () => {
 
     it('should return filesystem when MinIO is not available', () => {
       mockConfigService.get.mockReturnValue('true');
-      mockMinioService.isMinIO.mockReturnValue(false);
+      mockMinioService.isAvailable.mockReturnValue(false);
       factory = new StorageServiceFactory(
         mockMinioService,
         mockFsService,

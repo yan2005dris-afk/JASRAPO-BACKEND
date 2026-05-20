@@ -46,13 +46,12 @@ export class SignatureService {
   private readonly signpdfInstance: SignPdf;
 
   constructor(private configService: ConfigService) {
-    const signConfig = this.configService.get('signature');
     this.signatureConfig = {
-      qrSize: signConfig?.qrSize || 50,
-      totalWidth: signConfig?.totalWidth || 200,
-      defaultX: signConfig?.defaultX || 0,
-      defaultY: signConfig?.defaultY || 0,
-      defaultPage: signConfig?.defaultPage || -1,
+      qrSize: this.configService.get<number>('SIGNATURE_QR_SIZE', 50),
+      totalWidth: this.configService.get<number>('SIGNATURE_TOTAL_WIDTH', 200),
+      defaultX: this.configService.get<number>('SIGNATURE_DEFAULT_X', 0),
+      defaultY: this.configService.get<number>('SIGNATURE_DEFAULT_Y', 0),
+      defaultPage: this.configService.get<number>('SIGNATURE_DEFAULT_PAGE', -1),
     };
 
     this.signpdfInstance = new SignPdf();

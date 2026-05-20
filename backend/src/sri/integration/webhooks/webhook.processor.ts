@@ -1,6 +1,7 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { RawPgService } from '../../../infrastructure/database/raw-pg/raw-pg.service';
 import { JobsService } from '../../../infrastructure/jobs/jobs.service';
+import { validateSafeUrl, readLimitedText } from '../../../infrastructure/common/utils/url.util';
 import * as crypto from 'crypto';
 
 export const WEBHOOK_DISPATCH_JOB = 'webhook-dispatch';
@@ -12,7 +13,7 @@ export interface WebhookJobData {
   evento: string;
   payload: Record<string, unknown>;
 }
-
+  
 /**
  * Processor de webhooks migrado a pg-boss (PostgreSQL).
  */
@@ -55,6 +56,11 @@ export class WebhookProcessor implements OnModuleInit {
       .digest('hex');
 
     try {
+      const urlValidation = await validateSafeUrl(url);
+      if (!urlValidation.safe) {
+        throw new Error(`SSRF Prevention: ${urlValidation.error}`);
+      }
+
       const response = await fetch(url, {
         method: 'POST',
         headers: {
@@ -64,11 +70,12 @@ export class WebhookProcessor implements OnModuleInit {
           'X-Webhook-Attempt': String(attempt),
         },
         body,
+        redirect: 'error',
         signal: AbortSignal.timeout(30000),
       });
 
       const tiempoRespuesta = Date.now() - startTime;
-      const respuestaText = await response.text();
+      const respuestaText = await readLimitedText(response);
 
       // Log del intento
       await this.logWebhook(

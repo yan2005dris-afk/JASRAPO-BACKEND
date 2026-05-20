@@ -115,6 +115,10 @@ export class MinioStorageService implements IStorageService {
   }
 
   isMinIO(): boolean {
+    return true;
+  }
+
+  isAvailable(): boolean {
     return this.minioService.isAvailable;
   }
 

@@ -30,20 +30,26 @@ describe('MinioStorageService', () => {
   });
 
   beforeEach(() => {
-    mockMinioService = makeMockMinioService() as jest.Mocked<MinioService>;
-    mockConfigService = makeMockConfigService() as jest.Mocked<ConfigService>;
+    mockMinioService = makeMockMinioService() as unknown as jest.Mocked<MinioService>;
+    mockConfigService = makeMockConfigService() as unknown as jest.Mocked<ConfigService>;
     service = new MinioStorageService(mockMinioService, mockConfigService);
   });
 
   describe('isMinIO', () => {
+    it('should always return true for MinIO service', () => {
+      expect(service.isMinIO()).toBe(true);
+    });
+  });
+
+  describe('isAvailable', () => {
     it('should return true when MinIO is available', () => {
       mockMinioService.isAvailable = true;
-      expect(service.isMinIO()).toBe(true);
+      expect(service.isAvailable()).toBe(true);
     });
 
     it('should return false when MinIO is unavailable', () => {
       mockMinioService.isAvailable = false;
-      expect(service.isMinIO()).toBe(false);
+      expect(service.isAvailable()).toBe(false);
     });
   });
 

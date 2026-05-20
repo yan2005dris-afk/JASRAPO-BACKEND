@@ -108,4 +108,9 @@ export interface IStorageService {
    * Whether the underlying storage is MinIO (true) or filesystem (false)
    */
   isMinIO(): boolean;
+
+  /**
+   * Checks if the storage service is available and healthy
+   */
+  isAvailable(): boolean;
 }
