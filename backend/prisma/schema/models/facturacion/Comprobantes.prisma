@@ -35,14 +35,6 @@ model Comprobantes {
   valorModificacion                  Decimal?  @db.Decimal(18, 2) @map("valor_modificacion")
   rise                               String?   @db.VarChar(40) @map("rise")
   periodoFiscal                      String?   @db.VarChar(7) @map("periodo_fiscal")
-  guiaRemision                       String?   @db.VarChar(20) @map("guia_remision")
-  dirPartida                         String?   @map("dir_partida")
-  placa                              String?   @db.VarChar(20) @map("placa")
-  rucTransportista                   String?   @db.VarChar(13) @map("ruc_transportista")
-  razonSocialTransportista           String?   @db.VarChar(300) @map("razon_social_transportista")
-  tipoIdentificacionTransportista    String?   @db.VarChar(2) @map("tipo_identificacion_transportista")
-  fechaIniTransporte                 DateTime? @db.Date @map("fecha_ini_transporte")
-  fechaFinTransporte                 DateTime? @db.Date @map("fecha_fin_transporte")
   idReferenciaExterna                String?   @db.VarChar(100) @map("id_referencia_externa")
   tipoSistemaExterno                 String?   @db.VarChar(50) @map("tipo_sistema_externo")
   
@@ -58,9 +50,11 @@ model Comprobantes {
   totales                       ComprobanteTotales[]
   infoAdicional                 InfoAdicional[]
   motivosNotaDebito             MotivosNotaDebito[]
-  guiaDestinatarios             GuiaDestinatarios[]
   prefactura                    Prefacturas?
   detallePago                   DetallePago[]
+
+  tipoCompRel               SriTipoComprobante?  @relation("TipoComprobante", fields: [tipoComprobante], references: [codigo])
+  docModifTipoRel           SriTipoComprobante?  @relation("TipoComprobanteModificado", fields: [docModificadoTipo], references: [codigo])
 
   @@index([emisorId])
   @@index([puntoEmisionId])

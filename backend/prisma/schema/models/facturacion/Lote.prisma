@@ -7,10 +7,9 @@ model Lote {
   notas          String?       @map("notas")
   createdAt      DateTime      @default(now()) @map("creado_en")
   updatedAt      DateTime      @updatedAt @map("actualizado_en")
-  createdBy      Int?          @map("creado_por")
+  creadoPor      String?       @map("creado_por")
   totalEmisiones Int           @default(0) @map("total_emisiones")
   comunidad      Comunidades   @relation(fields: [comunidadId], references: [comunidadId])
-  usuario        Usuarios?     @relation(fields: [createdBy], references: [usuarioId])
   periodoRel     Periodos      @relation(fields: [periodoId], references: [periodoId])
   estado        EstadoLote    @relation(fields: [estadoId], references: [estadoId])
   prefacturas    Prefacturas[]
@@ -18,5 +17,6 @@ model Lote {
   @@unique([comunidadId, periodoId], name: "uk_lote_comunidad_periodo")
   @@index([comunidadId])
   @@index([periodoId])
+  @@index([creadoPor])
   @@map("lote")
 }

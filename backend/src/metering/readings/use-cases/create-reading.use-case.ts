@@ -15,7 +15,7 @@ export class CreateReadingUseCase {
         lecturaAnterior: createDto.lecturaAnterior,
         lecturaActual: createDto.lecturaActual,
         consumoCalculado: createDto.consumoCalculado ?? 0,
-        contratoId: BigInt(createDto.contratoId),
+        medidorId: BigInt(createDto.medidorId),
         descripcionAnomalia: createDto.descripcionAnomalia,
         fotoUrlMinIo: createDto.fotoUrlMinIo,
         lecturaInicial: createDto.lecturaInicial,

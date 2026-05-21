@@ -4,7 +4,6 @@ import { FacturaService } from '../../issuance/services/factura.service';
 import { NotaCreditoService } from '../../issuance/services/nota-credito.service';
 import { NotaDebitoService } from '../../issuance/services/nota-debito.service';
 import { RetencionService } from '../../issuance/services/retencion.service';
-import { GuiaRemisionService } from '../../issuance/services/guia-remision.service';
 
 export const SRI_EMISION_JOB = 'sri-emision';
 
@@ -18,7 +17,6 @@ export class SriEmisionProcessor implements OnModuleInit {
     private readonly notaCreditoService: NotaCreditoService,
     private readonly notaDebitoService: NotaDebitoService,
     private readonly retencionService: RetencionService,
-    private readonly guiaRemisionService: GuiaRemisionService,
   ) {}
 
   async onModuleInit() {
@@ -46,8 +44,6 @@ export class SriEmisionProcessor implements OnModuleInit {
           return await this.notaDebitoService.emitirNotaDebito(dto);
         case 'RETENCION':
           return await this.retencionService.emitirRetencion(dto);
-        case 'GUIA_REMISION':
-          return await this.guiaRemisionService.emitirGuiaRemision(dto);
         default:
           throw new Error(`Tipo de comprobante no soportado: ${tipo}`);
       }

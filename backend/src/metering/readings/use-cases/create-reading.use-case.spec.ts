@@ -27,31 +27,39 @@ describe('CreateReadingUseCase', () => {
     expect(useCase).toBeDefined();
   });
 
-  it('should create a reading', async () => {
+  it('should create a reading for a meter', async () => {
     const dto = {
-      fecha: new Date('2026-01-15'),
+      fecha: '2026-01-15',
       lecturaAnterior: 100,
       lecturaActual: 150,
       consumoCalculado: 50,
-      contratoId: 1,
+      medidorId: '1',
       periodoId: 1,
-      lecturaInicial: 0,
-      tieneAnomalia: false,
-      isValidada: false,
+      lecturaInicial: false,
     };
 
     const mockReading = {
       lecturaId: BigInt(1),
-      ...dto,
-      contratoId: BigInt(1),
-      periodoId: BigInt(1),
+      fecha: new Date('2026-01-15'),
+      lecturaAnterior: 100,
+      lecturaActual: 150,
+      consumoCalculado: 50,
+      medidorId: BigInt(1),
+      periodoId: 1,
+      estado: 'PENDIENTE',
+      createdAt: new Date(),
+      updatedAt: new Date(),
     };
 
     mockPrismaService.lecturas.create.mockResolvedValue(mockReading as any);
 
-    const result = await useCase.execute(dto);
+    const result = await useCase.execute(dto as any);
 
     expect(result.lecturaActual).toBe(150);
-    expect(mockPrismaService.lecturas.create).toHaveBeenCalled();
+    expect(mockPrismaService.lecturas.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        medidorId: BigInt(1),
+      }),
+    });
   });
 });

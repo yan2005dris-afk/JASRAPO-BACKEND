@@ -42,7 +42,6 @@ export interface InfoFactura {
   paisDestino?: string;
   paisAdquisicion?: string;
   tipoIdentificacionComprador: TipoIdentificacion;
-  guiaRemision?: string;
   razonSocialComprador: string;
   identificacionComprador: string;
   direccionComprador?: string;

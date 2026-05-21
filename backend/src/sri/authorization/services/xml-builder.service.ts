@@ -14,17 +14,12 @@ import {
   Retencion,
   InfoRetencion,
   ImpuestoRetenido,
-  GuiaRemision,
-  InfoGuiaRemision,
-  DestinatarioGuiaRemision,
-  DetalleGuiaRemision,
 } from '../../utils/interfaces';
 import {
   FACTURA_VERSION,
   NOTA_CREDITO_VERSION,
   NOTA_DEBITO_VERSION,
   RETENCION_VERSION,
-  GUIA_REMISION_VERSION,
 } from '../../utils/constants';
 
 /**
@@ -134,10 +129,6 @@ export class XmlBuilderService {
 
     result.obligadoContabilidad = info.obligadoContabilidad;
     result.tipoIdentificacionComprador = info.tipoIdentificacionComprador;
-
-    if (info.guiaRemision) {
-      result.guiaRemision = info.guiaRemision;
-    }
 
     result.razonSocialComprador = info.razonSocialComprador;
     result.identificacionComprador = info.identificacionComprador;
@@ -589,143 +580,6 @@ export class XmlBuilderService {
       numDocSustento: impuesto.numDocSustento,
       fechaEmisionDocSustento: impuesto.fechaEmisionDocSustento,
     };
-  }
-
-  /**
-   * Construye el XML de una Guía de Remisión electrónica
-   */
-  buildGuiaRemision(guia: GuiaRemision): string {
-    this.logger.log('Construyendo XML de guía de remisión');
-
-    const xmlObj = {
-      guiaRemision: {
-        $: {
-          id: 'comprobante',
-          version: GUIA_REMISION_VERSION,
-        },
-        infoTributaria: this.buildInfoTributaria(guia.infoTributaria),
-        infoGuiaRemision: this.buildInfoGuiaRemision(guia.infoGuiaRemision),
-        destinatarios: {
-          destinatario: guia.destinatarios.map((d) =>
-            this.buildDestinatario(d),
-          ),
-        },
-      },
-    };
-
-    if (guia.infoAdicional && guia.infoAdicional.length > 0) {
-      (xmlObj.guiaRemision as any).infoAdicional = {
-        campoAdicional: guia.infoAdicional.map((campo) => ({
-          $: { nombre: campo.nombre },
-          _: campo.valor,
-        })),
-      };
-    }
-
-    const xml = this.builder.buildObject(xmlObj);
-    this.logger.log('XML de guía de remisión construido exitosamente');
-    return xml;
-  }
-
-  private buildInfoGuiaRemision(info: InfoGuiaRemision): Record<string, any> {
-    const result: Record<string, any> = {};
-
-    if (info.dirEstablecimiento) {
-      result.dirEstablecimiento = info.dirEstablecimiento;
-    }
-
-    result.dirPartida = info.dirPartida;
-    result.razonSocialTransportista = info.razonSocialTransportista;
-    result.tipoIdentificacionTransportista =
-      info.tipoIdentificacionTransportista;
-    result.rucTransportista = info.rucTransportista;
-
-    if (info.rise) {
-      result.rise = info.rise;
-    }
-
-    result.obligadoContabilidad = info.obligadoContabilidad;
-
-    if (info.contribuyenteEspecial) {
-      result.contribuyenteEspecial = info.contribuyenteEspecial;
-    }
-
-    result.fechaIniTransporte = info.fechaIniTransporte;
-    result.fechaFinTransporte = info.fechaFinTransporte;
-    result.placa = info.placa;
-
-    return result;
-  }
-
-  private buildDestinatario(
-    dest: DestinatarioGuiaRemision,
-  ): Record<string, any> {
-    const result: Record<string, any> = {
-      tipoIdentificacionDestinatario: dest.tipoIdentificacionDestinatario,
-      identificacionDestinatario: dest.identificacionDestinatario,
-      razonSocialDestinatario: dest.razonSocialDestinatario,
-      dirDestinatario: dest.dirDestinatario,
-      motivoTraslado: dest.motivoTraslado,
-    };
-
-    if (dest.docAduaneroUnico) {
-      result.docAduaneroUnico = dest.docAduaneroUnico;
-    }
-
-    if (dest.codEstabDestino) {
-      result.codEstabDestino = dest.codEstabDestino;
-    }
-
-    if (dest.ruta) {
-      result.ruta = dest.ruta;
-    }
-
-    if (dest.codDocSustento) {
-      result.codDocSustento = dest.codDocSustento;
-    }
-
-    if (dest.numDocSustento) {
-      result.numDocSustento = dest.numDocSustento;
-    }
-
-    if (dest.numAutDocSustento) {
-      result.numAutDocSustento = dest.numAutDocSustento;
-    }
-
-    if (dest.fechaEmisionDocSustento) {
-      result.fechaEmisionDocSustento = dest.fechaEmisionDocSustento;
-    }
-
-    result.detalles = {
-      detalle: dest.detalles.map((det) => this.buildDetalleGuiaRemision(det)),
-    };
-
-    return result;
-  }
-
-  private buildDetalleGuiaRemision(
-    detalle: DetalleGuiaRemision,
-  ): Record<string, any> {
-    const result: Record<string, any> = {
-      codigoInterno: detalle.codigoInterno,
-    };
-
-    if (detalle.codigoAdicional) {
-      result.codigoAdicional = detalle.codigoAdicional;
-    }
-
-    result.descripcion = detalle.descripcion;
-    result.cantidad = this.formatDecimal(detalle.cantidad, 6);
-
-    if (detalle.detallesAdicionales && detalle.detallesAdicionales.length > 0) {
-      result.detallesAdicionales = {
-        detAdicional: detalle.detallesAdicionales.map((d) => ({
-          $: { nombre: d.nombre, valor: d.valor },
-        })),
-      };
-    }
-
-    return result;
   }
 
   async parseXml<T>(xml: string): Promise<T> {

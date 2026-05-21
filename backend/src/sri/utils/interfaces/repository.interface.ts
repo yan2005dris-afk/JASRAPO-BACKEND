@@ -42,7 +42,6 @@ export interface ComprobanteRecord {
   tipo_identificacion_transportista?: string;
   fecha_ini_transporte?: string;
   fecha_fin_transporte?: string;
-  guia_remision?: string;
   id_referencia_externa?: string;
   tipo_sistema_externo?: string;
 }

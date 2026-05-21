@@ -9,7 +9,6 @@ import {
   NotaCreditoService,
   NotaDebitoService,
   RetencionService,
-  GuiaRemisionService,
   SriRepositoryService,
 } from './issuance/services';
 import { SriSoapClient, XmlBuilderService } from './authorization/services';
@@ -23,8 +22,6 @@ import {
   NotaDebitoResponseDto,
   CreateRetencionDto,
   RetencionResponseDto,
-  CreateGuiaRemisionDto,
-  GuiaRemisionResponseDto,
   EmisionEncoladaResponseDto,
 } from './issuance/dto';
 import { TIPO_COMPROBANTE_DESCRIPCIONES } from './utils/constants';
@@ -41,7 +38,6 @@ export class SriService {
     private readonly notaCreditoService: NotaCreditoService,
     private readonly notaDebitoService: NotaDebitoService,
     private readonly retencionService: RetencionService,
-    private readonly guiaRemisionService: GuiaRemisionService,
     private readonly eventEmitter: EventEmitter2,
     private readonly configService: ConfigService,
     private readonly xmlBuilder: XmlBuilderService,
@@ -157,30 +153,6 @@ export class SriService {
   }
 
   // ==========================================
-  // GUÍA DE REMISIÓN — Delegado a GuiaRemisionService
-  // ==========================================
-
-  async emitirGuiaRemision(
-    dto: CreateGuiaRemisionDto,
-  ): Promise<EmisionEncoladaResponseDto | GuiaRemisionResponseDto> {
-    const isAsync =
-      this.configService.get<string>('SRI_EMISION_ASYNC') !== 'false';
-    if (!isAsync) {
-      return this.guiaRemisionService.emitirGuiaRemision(dto);
-    }
-    const jobId = await this.jobsService.send(SRI_EMISION_JOB, {
-      tipo: 'GUIA_REMISION',
-      dto,
-    });
-    this.logger.log(`Guía de remisión encolada con Job ID: ${jobId}`);
-    return {
-      mensaje: 'Guía de remisión encolada para emisión asíncrona',
-      jobId: jobId || 'N/A',
-      estado: 'EN_COLA',
-    };
-  }
-
-  // ==========================================
   // AUTORIZACIÓN Y VALIDACIÓN
   // ==========================================
 
@@ -257,7 +229,6 @@ export class SriService {
       '<notaCredito',
       '<notaDebito',
       '<comprobanteRetencion',
-      '<guiaRemision',
     ];
     if (!tiposValidos.some((t) => xmlFirmado.includes(t))) {
       errores.push('El XML no contiene un tipo de comprobante válido');

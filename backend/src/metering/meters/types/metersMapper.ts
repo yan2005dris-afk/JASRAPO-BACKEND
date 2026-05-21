@@ -8,11 +8,10 @@ import { DateUtil } from 'src/infrastructure/common/utils/date.util';
 export function toMeterResponse(meter: any): MeterResponseDto {
   return {
     medidorId: meter.medidorId,
-    contratoId: meter.contratoId,
     marca: meter.marca,
     modelo: meter.modelo,
     serie: meter.serie,
-    estado: meter.estado?.codigo,
+    estado: meter.estado,
     fechaInstalacion: DateUtil.formatForFrontend(meter.fechaInstalacion),
     fechaBaja: DateUtil.formatForFrontend(meter.fechaBaja),
     motivo: meter.motivo,

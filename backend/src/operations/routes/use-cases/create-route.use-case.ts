@@ -69,15 +69,29 @@ export class CreateRouteUseCase {
           in: ['PENDIENTE', 'POR_REVISION'],
         },
         deletedAt: null,
-        contrato: {
-          estado: estadoContratoEsperado,
-          comunidadId: createDto.comunidadId,
-          ...(createDto.sectorId && { sectorId: createDto.sectorId }),
-          deletedAt: null,
+        medidor: {
+          historial: {
+            some: {
+              fechaHasta: null,
+              contrato: {
+                estado: estadoContratoEsperado,
+                comunidadId: createDto.comunidadId,
+                ...(createDto.sectorId && { sectorId: createDto.sectorId }),
+                deletedAt: null,
+              },
+            },
+          },
         },
       },
       include: {
-        contrato: true,
+        medidor: {
+          include: {
+            historial: {
+              where: { fechaHasta: null },
+              include: { contrato: true },
+            },
+          },
+        },
       },
     });
 
@@ -89,10 +103,11 @@ export class CreateRouteUseCase {
     }
 
     // Validar contratos (respaldo por si Prisma devuelve sin contrato)
-    const contratosInvalidos = lecturasExistentes.some(
-      (lectura) =>
-        !lectura.contrato || lectura.contrato.estado !== estadoContratoEsperado,
-    );
+    const contratosInvalidos = lecturasExistentes.some((lectura) => {
+      const activeHistory = lectura.medidor?.historial?.[0];
+      const contrato = activeHistory?.contrato;
+      return !contrato || contrato.estado !== estadoContratoEsperado;
+    });
 
     if (contratosInvalidos) {
       throw new BadRequestException(
@@ -124,11 +139,18 @@ export class CreateRouteUseCase {
           in: ['PENDIENTE', 'POR_REVISION'],
         },
         deletedAt: null,
-        contrato: {
-          estado: estadoContratoEsperado,
-          comunidadId: createDto.comunidadId,
-          ...(createDto.sectorId ? { sectorId: createDto.sectorId } : {}),
-          deletedAt: null,
+        medidor: {
+          historial: {
+            some: {
+              fechaHasta: null,
+              contrato: {
+                estado: estadoContratoEsperado,
+                comunidadId: createDto.comunidadId,
+                ...(createDto.sectorId ? { sectorId: createDto.sectorId } : {}),
+                deletedAt: null,
+              },
+            },
+          },
         },
       };
 

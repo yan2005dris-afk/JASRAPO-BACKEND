@@ -14,6 +14,8 @@ import { safeMeterSelect } from './types/IResponseMeters';
 import { toMeterResponse } from './types/metersMapper';
 import { DateUtil } from 'src/infrastructure/common/utils/date.util';
 
+import { METER_STATUS_LIST } from 'src/infrastructure/config/app.constants';
+
 @Injectable()
 export class MeterService {
   constructor(
@@ -108,14 +110,11 @@ export class MeterService {
    * Obtener catálogo de estados de medidor
    */
   async findAllEstados(): Promise<EstadoMedidorResponseDto[]> {
-    const estados = await this.prisma.estadoMedidor.findMany({
-      orderBy: { orden: 'asc' },
-    });
-    return estados.map((e) => ({
-      estadoId: Number(e.estadoId),
-      codigo: e.codigo,
-      nombre: e.nombre,
-      orden: Number(e.orden),
+    return METER_STATUS_LIST.map((s) => ({
+      estadoId: s.estadoId,
+      codigo: s.codigo,
+      nombre: s.nombre,
+      orden: s.orden,
     }));
   }
 }

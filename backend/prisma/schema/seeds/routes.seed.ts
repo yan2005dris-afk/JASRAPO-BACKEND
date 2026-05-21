@@ -158,8 +158,15 @@ export async function seedRoutes(prisma: PrismaClient) {
     where: {
       estado: "PENDIENTE",
       rutaAsignadaId: null,
-      contrato: {
-        comunidadId: 1,
+      medidor: {
+        historial: {
+          some: {
+            fechaHasta: null,
+            contrato: {
+              comunidadId: 1,
+            },
+          },
+        },
       },
     },
     take: 10,
@@ -181,8 +188,15 @@ export async function seedRoutes(prisma: PrismaClient) {
     where: {
       estado: "PENDIENTE",
       rutaAsignadaId: null,
-      contrato: {
-        comunidadId: 1,
+      medidor: {
+        historial: {
+          some: {
+            fechaHasta: null,
+            contrato: {
+              comunidadId: 1,
+            },
+          },
+        },
       },
     },
     take: 8,

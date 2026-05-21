@@ -89,10 +89,6 @@ export class CreateFacturaDto {
   @Type(() => CampoAdicionalDto)
   infoAdicional?: CampoAdicionalDto[];
 
-  @ApiPropertyOptional({ description: 'Número de guía de remisión' })
-  @IsOptional()
-  @IsString()
-  guiaRemision?: string;
 }
 
 export class FacturaResponseDto {

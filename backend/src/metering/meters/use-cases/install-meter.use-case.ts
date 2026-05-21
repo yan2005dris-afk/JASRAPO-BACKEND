@@ -8,6 +8,8 @@ import { safeMeterSelect } from '../types/IResponseMeters';
 import { toMeterResponse } from '../types/metersMapper';
 import { MeterResponseDto } from '../dto/meter-response.dto';
 
+import { EstadoMedidor } from 'src/generated/prisma/enums';
+
 @Injectable()
 export class InstallMeterUseCase {
   constructor(private readonly prisma: PrismaService) {}
@@ -18,27 +20,40 @@ export class InstallMeterUseCase {
   ): Promise<MeterResponseDto> {
     const medidor = await this.prisma.medidores.findUnique({
       where: { medidorId },
-      include: { estado: true },
     });
 
     if (!medidor || medidor.deletedAt) {
       throw new NotFoundException('Medidor no encontrado');
     }
 
-    if (medidor.estado?.codigo !== 'BODEGA') {
+    if (medidor.estado !== EstadoMedidor.BODEGA) {
       throw new BadRequestException(
-        `El medidor no puede ser instalado desde el estado ${medidor.estado?.nombre}`,
+        `El medidor no puede ser instalado desde el estado ${medidor.estado}`,
       );
     }
 
-    const updated = await this.prisma.medidores.update({
-      where: { medidorId },
-      data: {
-        estadoId: BigInt(2), // INSTALADO
-        contratoId: BigInt(contratoId),
-      },
-      select: safeMeterSelect,
+    return await this.prisma.$transaction(async (tx) => {
+      // 1. Update meter status
+      const updated = await tx.medidores.update({
+        where: { medidorId },
+        data: {
+          estado: EstadoMedidor.INSTALADO,
+        },
+        select: safeMeterSelect,
+      });
+
+      // 2. Create initial history entry
+      await tx.historialMedidores.create({
+        data: {
+          medidorId,
+          contratoId,
+          lecturaInicial: 0, // Default for installation
+          motivo: 'INSTALACION INICIAL',
+          fechaDesde: new Date(),
+        },
+      });
+
+      return toMeterResponse(updated);
     });
-    return toMeterResponse(updated);
   }
 }

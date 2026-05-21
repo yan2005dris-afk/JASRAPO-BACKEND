@@ -5,5 +5,7 @@ model CatalogoDocumentosSustento {
   activo      Boolean  @default(true)
   createdAt   DateTime @default(now()) @map("created_at")
 
+  comprobanteRetenciones  ComprobanteRetenciones[]
+
   @@map("catalogo_documentos_sustento")
 }

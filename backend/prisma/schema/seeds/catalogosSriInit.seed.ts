@@ -374,31 +374,6 @@ export async function seedCatalogosSriInit(prisma: PrismaClient) {
   }
   console.log(`  ✅ ${retenciones.length} retenciones cargadas.`);
 
-  // ─── Motivos de Traslado (9 registros) ───
-  const motivosTraslado = [
-    { codigo: '01', descripcion: 'VENTA' },
-    { codigo: '02', descripcion: 'COMPRA' },
-    { codigo: '03', descripcion: 'TRANSFORMACIÓN' },
-    { codigo: '04', descripcion: 'CONSIGNACIÓN' },
-    { codigo: '05', descripcion: 'DEVOLUCIÓN' },
-    {
-      codigo: '06',
-      descripcion: 'TRASLADO ENTRE ESTABLECIMIENTOS DE UNA MISMA EMPRESA',
-    },
-    { codigo: '07', descripcion: 'TRASLADO POR EMISOR ITINERANTE' },
-    { codigo: '08', descripcion: 'EXPORTACIÓN' },
-    { codigo: '09', descripcion: 'OTROS' },
-  ];
-
-  for (const m of motivosTraslado) {
-    await prisma.catalogoMotivosTraslado.upsert({
-      where: { codigo: m.codigo },
-      update: {},
-      create: m,
-    });
-  }
-  console.log(`  ✅ ${motivosTraslado.length} motivos de traslado cargados.`);
-
   // ─── Tipos de Identificación (5 registros) ───
   const tiposIdentificacion = [
     {
