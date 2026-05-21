@@ -125,7 +125,10 @@ export class EncryptionService {
   /**
    * Legacy decryption for AES-256-CBC
    */
-  private async decryptCBC(ivHex: string, encryptedHex: string): Promise<string> {
+  private async decryptCBC(
+    ivHex: string,
+    encryptedHex: string,
+  ): Promise<string> {
     const iv = Buffer.from(ivHex, 'hex');
     const encrypted = Buffer.from(encryptedHex, 'hex');
     const key = await this.deriveKey();

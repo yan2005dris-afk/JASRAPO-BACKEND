@@ -52,6 +52,7 @@ import {
 
 @ApiTags('SRI - Facturación Electrónica')
 @ApiBearerAuth('JWT')
+@UseGuards(JwtAuthGuard)
 @Controller('sri')
 export class SriController {
   private readonly logger = new Logger(SriController.name);
@@ -64,12 +65,9 @@ export class SriController {
 
   /**
    * Extrae el RUC del emisor desde una clave de acceso (posiciones 10-23)
-   * y valida que el usuario actual tenga acceso a ese emisor.
+   * y valida que el emisor exista.
    */
-  private async validateClaveAccesoAccess(
-    claveAcceso: string,
-    _user: JwtPayload,
-  ): Promise<void> {
+  private async validateClaveAccesoAccess(claveAcceso: string): Promise<void> {
     const rucEmisor = extractRucFromClaveAcceso(claveAcceso);
     await this.emisoresService.validateRucAccess(rucEmisor);
   }
@@ -95,7 +93,6 @@ export class SriController {
   @ApiResponse({ status: 400, description: 'Datos inválidos' })
   async emitirFactura(
     @Body() dto: CreateFacturaDto,
-    @CurrentUser() user: JwtPayload,
   ): Promise<EmisionEncoladaResponseDto | FacturaResponseDto> {
     this.logger.log(`POST /sri/emitir/factura`);
     await this.emisoresService.validateRucAccess(dto.emisor.ruc);
@@ -110,7 +107,6 @@ export class SriController {
   @ApiBody({ type: CreateNotaCreditoDto })
   async emitirNotaCredito(
     @Body() dto: CreateNotaCreditoDto,
-    @CurrentUser() user: JwtPayload,
   ): Promise<EmisionEncoladaResponseDto | NotaCreditoResponseDto> {
     this.logger.log(`POST /sri/emitir/nota-credito`);
     await this.emisoresService.validateRucAccess(dto.emisor.ruc);
@@ -125,7 +121,6 @@ export class SriController {
   @ApiBody({ type: CreateNotaDebitoDto })
   async emitirNotaDebito(
     @Body() dto: CreateNotaDebitoDto,
-    @CurrentUser() user: JwtPayload,
   ): Promise<EmisionEncoladaResponseDto | NotaDebitoResponseDto> {
     this.logger.log(`POST /sri/emitir/nota-debito`);
     await this.emisoresService.validateRucAccess(dto.emisor.ruc);
@@ -140,7 +135,6 @@ export class SriController {
   @ApiBody({ type: CreateRetencionDto })
   async emitirRetencion(
     @Body() dto: CreateRetencionDto,
-    @CurrentUser() user: JwtPayload,
   ): Promise<EmisionEncoladaResponseDto | RetencionResponseDto> {
     this.logger.log(`POST /sri/emitir/retencion`);
     await this.emisoresService.validateRucAccess(dto.emisor.ruc);
@@ -148,28 +142,24 @@ export class SriController {
   }
 
   @Get('autorizar/:claveAcceso')
-  @UseGuards(JwtAuthGuard)
   @ApiOperation({
     summary: 'Consultar autorización',
   })
   async consultarAutorizacion(
     @Param('claveAcceso') claveAcceso: string,
-    @CurrentUser() user: JwtPayload,
   ): Promise<FacturaResponseDto> {
     this.logger.log(`GET /sri/autorizar/${claveAcceso}`);
-    await this.validateClaveAccesoAccess(claveAcceso, user);
+    await this.validateClaveAccesoAccess(claveAcceso);
     return this.sriService.consultarAutorizacion(claveAcceso);
   }
 
   @Post('preview/factura')
-  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Vista previa de factura XML',
   })
   async previewFactura(
     @Body() dto: CreateFacturaDto,
-    @CurrentUser() user: JwtPayload,
   ): Promise<{ xml: string }> {
     this.logger.log('POST /sri/preview/factura');
     await this.emisoresService.validateRucAccess(dto.emisor.ruc);
@@ -178,7 +168,6 @@ export class SriController {
   }
 
   @Post('validar')
-  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Validar XML firmado (Upload Archivo)',
@@ -199,7 +188,6 @@ export class SriController {
   }
 
   @Get('comprobantes')
-  @UseGuards(JwtAuthGuard)
   @ApiOperation({
     summary: 'Listar comprobantes',
   })
@@ -214,15 +202,13 @@ export class SriController {
   }
 
   @Get('comprobantes/:claveAcceso')
-  @UseGuards(JwtAuthGuard)
   @ApiOperation({
     summary: 'Obtener comprobante por clave de acceso',
   })
   async obtenerComprobante(
     @Param('claveAcceso') claveAcceso: string,
-    @CurrentUser() user: JwtPayload,
   ): Promise<ComprobanteDetalladoDto> {
-    await this.validateClaveAccesoAccess(claveAcceso, user);
+    await this.validateClaveAccesoAccess(claveAcceso);
     const result = await this.sriService.obtenerComprobante(claveAcceso);
     if (!result)
       throw new NotFoundException(`Comprobante ${claveAcceso} no encontrado`);
@@ -230,16 +216,14 @@ export class SriController {
   }
 
   @Get('comprobantes/:claveAcceso/xml')
-  @UseGuards(JwtAuthGuard)
   @ApiOperation({
     summary: 'Descargar XML autorizado',
   })
   async descargarXml(
     @Param('claveAcceso') claveAcceso: string,
     @Res() res: Response,
-    @CurrentUser() user: JwtPayload,
   ): Promise<void> {
-    await this.validateClaveAccesoAccess(claveAcceso, user);
+    await this.validateClaveAccesoAccess(claveAcceso);
     const xml = await this.sriService.obtenerXmlAutorizado(claveAcceso);
     if (!xml)
       throw new NotFoundException(`XML para ${claveAcceso} no disponible`);
@@ -252,27 +236,23 @@ export class SriController {
   }
 
   @Patch('comprobantes/:claveAcceso/anular')
-  @UseGuards(JwtAuthGuard)
   @ApiOperation({
     summary: 'Anular comprobante',
   })
   async anularComprobante(
     @Param('claveAcceso') claveAcceso: string,
-    @CurrentUser() user: JwtPayload,
   ): Promise<{ message: string; claveAcceso: string; estadoAnterior: string }> {
-    await this.validateClaveAccesoAccess(claveAcceso, user);
+    await this.validateClaveAccesoAccess(claveAcceso);
     return this.sriService.anularComprobante(claveAcceso);
   }
 
   @Post('comprobantes/:claveAcceso/reintentar')
-  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Reintentar comprobante fallido',
   })
   async reintentarComprobante(
     @Param('claveAcceso') claveAcceso: string,
-    @CurrentUser() user: JwtPayload,
   ): Promise<{
     claveAcceso: string;
     estado: string;
@@ -280,25 +260,22 @@ export class SriController {
     mensaje: string;
     errores?: string[];
   }> {
-    await this.validateClaveAccesoAccess(claveAcceso, user);
+    await this.validateClaveAccesoAccess(claveAcceso);
     return this.sriService.reintentarComprobante(claveAcceso);
   }
 
   @Get('verificar/:claveAcceso')
-  @UseGuards(JwtAuthGuard)
   @ApiOperation({
     summary: 'Verificar estado en SRI',
   })
   async verificarEnSri(
     @Param('claveAcceso') claveAcceso: string,
-    @CurrentUser() user: JwtPayload,
   ): Promise<any> {
-    await this.validateClaveAccesoAccess(claveAcceso, user);
+    await this.validateClaveAccesoAccess(claveAcceso);
     return this.sriService.verificarEnSri(claveAcceso);
   }
 
   @Post('sincronizar')
-  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Sincronizar comprobantes con SRI',
