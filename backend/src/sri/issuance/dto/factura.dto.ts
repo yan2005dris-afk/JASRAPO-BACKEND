@@ -88,7 +88,6 @@ export class CreateFacturaDto {
   @ValidateNested({ each: true })
   @Type(() => CampoAdicionalDto)
   infoAdicional?: CampoAdicionalDto[];
-
 }
 
 export class FacturaResponseDto {

@@ -5,6 +5,7 @@ import {
   IsArray,
   IsUrl,
   IsNumber,
+  IsNotEmpty,
   Min,
   Max,
   ArrayNotEmpty,
@@ -43,12 +44,13 @@ export class CreateWebhookDto {
   @IsString({ each: true })
   eventos: WebhookEvent[];
 
-  @ApiPropertyOptional({
-    description: 'ID del emisor (opcional, para filtrar por emisor)',
+  @ApiProperty({
+    description: 'ID del emisor (vínculo obligatorio)',
+    example: 1,
   })
-  @IsOptional()
-  @IsString()
-  emisorId?: string;
+  @IsNotEmpty()
+  @IsNumber()
+  emisorId: number;
 
   @ApiPropertyOptional({
     description: 'Número máximo de reintentos',
@@ -110,8 +112,8 @@ export class WebhookResponseDto {
   @ApiProperty({ type: [String] })
   eventos: string[];
 
-  @ApiPropertyOptional()
-  emisorId?: string;
+  @ApiProperty()
+  emisorId: number;
 
   @ApiProperty()
   activo: boolean;

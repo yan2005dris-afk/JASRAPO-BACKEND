@@ -124,7 +124,9 @@ describe('UpdateClientUseCase', () => {
         ...mockCliente,
         tipoIdentificacion: { id: 1, codigo: '05' },
       });
-      mockPrismaService.catalogoTiposIdentificacion.findUnique.mockResolvedValue(null);
+      mockPrismaService.catalogoTiposIdentificacion.findUnique.mockResolvedValue(
+        null,
+      );
 
       await expect(
         useCase.execute('1', { tipoIdentificacionId: 999 }),

@@ -94,9 +94,7 @@ describe('MeterService', () => {
 
   it('create should delegate to CreateMeterUseCase and map response', async () => {
     const dto = { serie: 'MED-001' } as any;
-    jest
-      .spyOn(createUseCase, 'execute')
-      .mockResolvedValue(mockPrismaResult as any);
+    jest.spyOn(createUseCase, 'execute').mockResolvedValue(mockPrismaResult);
     const result = await service.create(dto);
     expect(result.medidorId).toEqual(expectedResponse.medidorId);
     expect(result.serie).toBe(expectedResponse.serie);
@@ -106,9 +104,7 @@ describe('MeterService', () => {
 
   it('findOne should delegate to FindOneMeterUseCase and map response', async () => {
     const id = BigInt(1);
-    jest
-      .spyOn(findOneUseCase, 'execute')
-      .mockResolvedValue(mockPrismaResult as any);
+    jest.spyOn(findOneUseCase, 'execute').mockResolvedValue(mockPrismaResult);
     const result = await service.findOne(id);
     expect(result.medidorId).toEqual(expectedResponse.medidorId);
     expect(result.serie).toBe(expectedResponse.serie);

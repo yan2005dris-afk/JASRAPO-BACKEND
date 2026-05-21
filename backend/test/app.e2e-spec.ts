@@ -67,7 +67,7 @@ describe('Auth E2E (Real Database)', () => {
     await app.init();
 
     // Get base URL
-    const address = app.getHttpServer().address();
+    const address = (app.getHttpServer() as any).address();
     baseUrl = `http://localhost:${address?.port}`;
 
     // Get Prisma service
@@ -171,7 +171,7 @@ describe('Auth E2E (Real Database)', () => {
         .send({ email: 'UPPER@TEST.COM', password: 'TestPass123!' })
         .expect(201);
 
-      expect(response.body.user.email).toBe('upper@test.com');
+      expect(response.body.email).toBe('upper@test.com');
       console.log('✅ Test 1.5: Email normalized');
     });
   });
@@ -326,14 +326,15 @@ describe('Auth E2E (Real Database)', () => {
         .post('/client')
         .set('Authorization', `Bearer ${accessToken}`)
         .send({
-          nombre: 'Test Client',
+          nombres: 'Test',
+          apellidos: 'Client',
           identificacion: '1234567890',
-          tipoIdentificacion: 'CED',
+          tipoIdentificacionId: 1,
         })
         .expect(201);
 
-      expect(response.body).toHaveProperty('clientesId');
-      clientId = response.body.clientesId;
+      expect(response.body).toHaveProperty('clienteId');
+      clientId = Number(response.body.clienteId);
       console.log('✅ Test 6.1: Client created');
     });
 
@@ -348,7 +349,7 @@ describe('Auth E2E (Real Database)', () => {
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200);
 
-      expect(response.body).toHaveProperty('clientesId');
+      expect(response.body).toHaveProperty('clienteId');
       console.log('✅ Test 6.2: Client retrieved');
     });
 
@@ -376,7 +377,7 @@ describe('Auth E2E (Real Database)', () => {
       const response = await request(baseUrl)
         .patch(`/client/${clientId}`)
         .set('Authorization', `Bearer ${accessToken}`)
-        .send({ nombre: 'Updated' })
+        .send({ nombres: 'Updated' })
         .expect(200);
 
       console.log('✅ Test 6.4: Client updated');
@@ -579,9 +580,10 @@ describe('Auth E2E (Real Database)', () => {
       // Create client and contrato first
       const client = await prisma.clientes.create({
         data: {
-          nombre: 'Lectura Test Client',
+          nombres: 'Lectura Test',
+          apellidos: 'Client',
           identificacion: '1111111111',
-          tipoIdentificacion: 'CED',
+          tipoIdentificacionId: 1,
         },
       });
 
@@ -861,17 +863,22 @@ describe('Auth E2E (Real Database)', () => {
       const createResponse = await request(baseUrl)
         .post('/permissions')
         .set('Authorization', `Bearer ${accessToken}`)
-        .send({ resource: 'e2e-test', action: 'read' })
+        .send({
+          recurso: 'e2e-test',
+          accion: 'read',
+          nombre: 'Test',
+          descripcion: 'test',
+        })
         .expect(201);
 
-      const permId = createResponse.body.permissionsId;
+      const permId = createResponse.body.permisoId;
 
       const response = await request(baseUrl)
         .get(`/permissions/${permId}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200);
 
-      expect(response.body).toHaveProperty('permissionsId');
+      expect(response.body).toHaveProperty('permisoId');
       console.log('✅ Test 17.2: Permission retrieved');
     });
 
@@ -885,15 +892,20 @@ describe('Auth E2E (Real Database)', () => {
       const createResponse = await request(baseUrl)
         .post('/permissions')
         .set('Authorization', `Bearer ${accessToken}`)
-        .send({ resource: 'e2e-update', action: 'read' })
+        .send({
+          recurso: 'e2e-update',
+          accion: 'read',
+          nombre: 'Update',
+          descripcion: 'test',
+        })
         .expect(201);
 
-      const permId = createResponse.body.permissionsId;
+      const permId = createResponse.body.permisoId;
 
       await request(baseUrl)
         .patch(`/permissions/${permId}`)
         .set('Authorization', `Bearer ${accessToken}`)
-        .send({ action: 'update' })
+        .send({ accion: 'update' })
         .expect(200);
 
       console.log('✅ Test 17.3: Permission updated');
@@ -909,10 +921,15 @@ describe('Auth E2E (Real Database)', () => {
       const createResponse = await request(baseUrl)
         .post('/permissions')
         .set('Authorization', `Bearer ${accessToken}`)
-        .send({ resource: 'e2e-delete', action: 'read' })
+        .send({
+          recurso: 'e2e-delete',
+          accion: 'read',
+          nombre: 'Delete',
+          descripcion: 'test',
+        })
         .expect(201);
 
-      const permId = createResponse.body.permissionsId;
+      const permId = createResponse.body.permisoId;
 
       await request(baseUrl)
         .delete(`/permissions/${permId}`)

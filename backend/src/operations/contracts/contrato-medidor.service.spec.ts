@@ -84,7 +84,7 @@ describe('ContratoMedidorService', () => {
   describe('actualizar', () => {
     it('should delegate to UpdateContractUseCase', async () => {
       const id = BigInt(1);
-      const dto = { numeroGuia: 'NEW-GUIA' };
+      const dto = { motivoCambio: 'NEW-MOTIVO' };
       mockUpdateUseCase.execute.mockResolvedValue({ id: 1 });
 
       const result = await service.actualizar(id, dto);

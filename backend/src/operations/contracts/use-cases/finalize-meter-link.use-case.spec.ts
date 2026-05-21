@@ -44,14 +44,18 @@ describe('FinalizeMeterLinkUseCase', () => {
     mockPrismaService.medidores.findUnique.mockResolvedValue({
       medidorId,
     });
-    mockPrismaService.historialMedidores.updateMany.mockResolvedValue({ count: 1 });
+    mockPrismaService.historialMedidores.updateMany.mockResolvedValue({
+      count: 1,
+    });
 
     const result = await useCase.execute(medidorId);
 
     expect(result).toBeDefined();
-    
+
     // Should close existing history for the medidor
-    expect(mockPrismaService.historialMedidores.updateMany).toHaveBeenCalledWith({
+    expect(
+      mockPrismaService.historialMedidores.updateMany,
+    ).toHaveBeenCalledWith({
       where: { medidorId, fechaHasta: null },
       data: { fechaHasta: expect.any(Date) },
     });

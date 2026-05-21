@@ -13,6 +13,8 @@
  * [48-48] digitoVerificador (módulo 11)
  */
 
+import { BadRequestException } from '@nestjs/common';
+
 export function extractRucFromClaveAcceso(claveAcceso: string): string {
   validateClaveAcceso(claveAcceso);
   return claveAcceso.substring(10, 23);
@@ -37,15 +39,15 @@ export function extractTipoComprobanteFromClaveAcceso(
 
 function validateClaveAcceso(claveAcceso: string): void {
   if (!claveAcceso) {
-    throw new Error('Clave de acceso no puede ser nula o vacía');
+    throw new BadRequestException('Clave de acceso no puede ser nula o vacía');
   }
   if (claveAcceso.length !== 49) {
-    throw new Error(
+    throw new BadRequestException(
       `Clave de acceso inválida: se esperaban 49 dígitos, se recibieron ${claveAcceso.length}. Valor: "${claveAcceso}"`,
     );
   }
   if (!/^\d{49}$/.test(claveAcceso)) {
-    throw new Error(
+    throw new BadRequestException(
       `Clave de acceso inválida: solo se permiten dígitos numéricos. Valor: "${claveAcceso}"`,
     );
   }

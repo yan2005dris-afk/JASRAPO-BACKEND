@@ -53,7 +53,7 @@ describe('CreateReadingUseCase', () => {
 
     mockPrismaService.lecturas.create.mockResolvedValue(mockReading as any);
 
-    const result = await useCase.execute(dto as any);
+    const result = await useCase.execute(dto);
 
     expect(result.lecturaActual).toBe(150);
     expect(mockPrismaService.lecturas.create).toHaveBeenCalledWith({

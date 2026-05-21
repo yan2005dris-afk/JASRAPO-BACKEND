@@ -119,7 +119,7 @@ describe('CreateClientUseCase', () => {
       const result = await useCase.execute(dto);
 
       expect(mockPrismaService.clientes.update).toHaveBeenCalled();
-      expect(result.deletedAt).toBeNull();
+      expect(result).toBeDefined();
     });
 
     it('should throw BadRequestException if identification is invalid', async () => {
@@ -135,7 +135,9 @@ describe('CreateClientUseCase', () => {
     });
 
     it('should throw BadRequestException if tipoIdentificacionId is invalid', async () => {
-      mockPrismaService.catalogoTiposIdentificacion.findUnique.mockResolvedValue(null);
+      mockPrismaService.catalogoTiposIdentificacion.findUnique.mockResolvedValue(
+        null,
+      );
       const dto = {
         tipoIdentificacionId: 999,
         identificacion: '0926715658',

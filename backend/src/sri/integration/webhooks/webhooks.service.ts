@@ -52,12 +52,12 @@ export class WebhooksService {
   // CRUD Operations
   // =====================
 
-  async findAll(emisorId?: string): Promise<WebhookResponseDto[]> {
+  async findAll(emisorId?: number): Promise<WebhookResponseDto[]> {
     let query = `
       SELECT id, nombre, url, eventos, emisor_id, activo, reintentos_max, created_at, updated_at
       FROM webhook_configs
     `;
-    const params: string[] = [];
+    const params: any[] = [];
 
     if (emisorId) {
       query += ` WHERE emisor_id = $1`;
@@ -87,9 +87,7 @@ export class WebhooksService {
     return this.mapToResponse(result.rows[0]);
   }
 
-  async create(
-    dto: CreateWebhookDto,
-  ): Promise<WebhookSecretResponseDto> {
+  async create(dto: CreateWebhookDto): Promise<WebhookSecretResponseDto> {
     const secreto = this.generateSecret();
 
     const result = await this.db.query(
@@ -238,7 +236,7 @@ export class WebhooksService {
   async emit(
     evento: WebhookEvent,
     payload: Record<string, unknown>,
-    emisorId?: string,
+    emisorId?: number,
   ): Promise<void> {
     // Buscar webhooks suscritos a este evento
     let query = `
@@ -246,7 +244,7 @@ export class WebhooksService {
       FROM webhook_configs
       WHERE activo = true AND $1 = ANY(eventos)
     `;
-    const params: (string | undefined)[] = [evento];
+    const params: any[] = [evento];
 
     if (emisorId) {
       query += ` AND (emisor_id IS NULL OR emisor_id = $2)`;
@@ -295,7 +293,7 @@ export class WebhooksService {
       nombre: row.nombre as string,
       url: row.url as string,
       eventos: row.eventos as string[],
-      emisorId: row.emisor_id as string,
+      emisorId: row.emisor_id as number,
       activo: row.activo as boolean,
       reintentosMax: row.reintentos_max as number,
       createdAt: (row.created_at as Date)?.toISOString(),

@@ -39,7 +39,7 @@ describe('RemovePermissionUseCase', () => {
       recurso: 'test',
       accion: 'test',
     };
-    (prismaService.permisos.update as jest.fn).mockResolvedValue(
+    (prismaService.permisos.update as jest.Mock).mockResolvedValue(
       expectedResult,
     );
 

@@ -74,7 +74,9 @@ describe('ReadingService', () => {
 
   it('findAll should delegate to FindAllReadingsUseCase', async () => {
     const params = { skip: 0 };
-    jest.spyOn(findAllUseCase, 'execute').mockResolvedValue([mockLectura] as any);
+    jest
+      .spyOn(findAllUseCase, 'execute')
+      .mockResolvedValue([mockLectura] as any);
     const result = await service.findAll(params);
     expect(result).toEqual([mockLectura]);
     expect(findAllUseCase.execute).toHaveBeenCalledWith(params);

@@ -25,12 +25,8 @@ export class WebhooksController {
   @Post()
   @RequiredPermission('webhooks', 'create')
   @ApiOperation({ summary: 'Configurar nuevo webhook' })
-  create(
-    @Body() createWebhookDto: CreateWebhookDto,
-  ) {
-    return this.webhooksService.create(
-      createWebhookDto,
-    );
+  create(@Body() createWebhookDto: CreateWebhookDto) {
+    return this.webhooksService.create(createWebhookDto);
   }
 
   @Get()

@@ -63,31 +63,69 @@ export class EncryptionService {
    * @returns Texto encriptado en formato "iv_hex:encrypted_hex"
    */
   async encrypt(plainText: string): Promise<string> {
-    const iv = randomBytes(16);
+    const iv = randomBytes(12); // GCM standard IV size is 12 bytes
     const key = await this.deriveKey();
-    const cipher = createCipheriv('aes-256-cbc', key, iv);
+    const cipher = createCipheriv('aes-256-gcm', key, iv);
+
     const encrypted = Buffer.concat([
       cipher.update(plainText, 'utf8'),
       cipher.final(),
     ]);
 
-    return iv.toString('hex') + ':' + encrypted.toString('hex');
+    const authTag = cipher.getAuthTag();
+
+    // Format: "iv_hex:auth_tag_hex:encrypted_hex"
+    return (
+      iv.toString('hex') +
+      ':' +
+      authTag.toString('hex') +
+      ':' +
+      encrypted.toString('hex')
+    );
   }
 
   /**
-   * Desencripta un texto encriptado con AES-256-CBC.
-   * @param encryptedText - Texto en formato "iv_hex:encrypted_hex"
+   * Desencripta un texto encriptado con AES-256-GCM.
+   * Soporta fallback para datos antiguos encriptados con AES-256-CBC.
+   *
+   * @param encryptedText - Texto en formato "iv:authTag:encrypted" (GCM) o "iv:encrypted" (CBC)
    * @returns Texto plano original
    */
   async decrypt(encryptedText: string): Promise<string> {
-    const [ivHex, encryptedHex] = encryptedText.split(':');
+    const parts = encryptedText.split(':');
 
-    if (!ivHex || !encryptedHex) {
+    // Fallback para AES-256-CBC (Formato antiguo: iv:encrypted)
+    if (parts.length === 2) {
+      return this.decryptCBC(parts[0], parts[1]);
+    }
+
+    if (parts.length !== 3) {
       throw new Error(
-        'Formato de texto encriptado inválido. Se esperaba "iv:encrypted"',
+        'Formato de texto encriptado inválido. Se esperaba "iv:authTag:encrypted"',
       );
     }
 
+    const [ivHex, authTagHex, encryptedHex] = parts;
+    const iv = Buffer.from(ivHex, 'hex');
+    const authTag = Buffer.from(authTagHex, 'hex');
+    const encrypted = Buffer.from(encryptedHex, 'hex');
+    const key = await this.deriveKey();
+
+    const decipher = createDecipheriv('aes-256-gcm', key, iv);
+    decipher.setAuthTag(authTag);
+
+    const decrypted = Buffer.concat([
+      decipher.update(encrypted),
+      decipher.final(),
+    ]);
+
+    return decrypted.toString('utf8');
+  }
+
+  /**
+   * Legacy decryption for AES-256-CBC
+   */
+  private async decryptCBC(ivHex: string, encryptedHex: string): Promise<string> {
     const iv = Buffer.from(ivHex, 'hex');
     const encrypted = Buffer.from(encryptedHex, 'hex');
     const key = await this.deriveKey();

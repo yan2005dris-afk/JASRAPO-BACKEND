@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 import {
-    FacturaService,
-    NotaCreditoService,
-    NotaDebitoService,
-    RetencionService,
-    SriRepositoryService,
+  FacturaService,
+  NotaCreditoService,
+  NotaDebitoService,
+  RetencionService,
+  SriRepositoryService,
 } from './services';
 
 @Module({

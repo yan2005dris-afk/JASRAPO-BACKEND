@@ -149,7 +149,8 @@ export class CreateClientUseCase {
     nombres?: string,
     apellidos?: string,
   ) {
-    if (codigo !== '07' && (!nombres || !apellidos)) { // CONSUMIDOR_FINAL
+    if (codigo !== '07' && (!nombres || !apellidos)) {
+      // CONSUMIDOR_FINAL
       throw new BadRequestException('Nombres y apellidos son requeridos');
     }
   }

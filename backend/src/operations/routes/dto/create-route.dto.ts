@@ -4,9 +4,6 @@ import {
   IsOptional,
   IsIn,
   IsDateString,
-  IsArray,
-  ArrayNotEmpty,
-  IsNumberString,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';

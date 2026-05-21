@@ -45,13 +45,17 @@ describe('CreateContractLinkUseCase', () => {
     mockPrismaService.medidores.findUnique.mockResolvedValue({
       medidorId: BigInt(1),
     });
-    mockPrismaService.historialMedidores.updateMany.mockResolvedValue({ count: 1 });
+    mockPrismaService.historialMedidores.updateMany.mockResolvedValue({
+      count: 1,
+    });
     mockPrismaService.historialMedidores.create.mockResolvedValue({});
 
     await useCase.execute(dto);
 
     // Should close existing links for either medidor or contract
-    expect(mockPrismaService.historialMedidores.updateMany).toHaveBeenCalledWith({
+    expect(
+      mockPrismaService.historialMedidores.updateMany,
+    ).toHaveBeenCalledWith({
       where: {
         OR: [
           { medidorId: BigInt(1), fechaHasta: null },

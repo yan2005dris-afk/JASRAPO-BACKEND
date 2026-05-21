@@ -36,7 +36,11 @@ describe('RegisterUseCase', () => {
       userService.createUser.mockResolvedValue({
         usuarioId: 1,
         email: 'test@test.com',
-        role: { rolId: 1, nombre: 'user' },
+        nombres: 'Juan',
+        apellidos: 'Pérez',
+        telefono: '+593991234567',
+        avatar: null,
+        rol: { rolId: 1, nombre: 'user' },
       });
 
       const result = await useCase.execute({
@@ -69,7 +73,7 @@ describe('RegisterUseCase', () => {
 
     it('should throw BadRequestException if creation fails', async () => {
       userService.user.mockResolvedValue(null);
-      userService.createUser.mockResolvedValue(null);
+      userService.createUser.mockResolvedValue(null as any);
       await expect(
         useCase.execute({
           email: 'test@test.com',
@@ -84,8 +88,8 @@ describe('RegisterUseCase', () => {
       userService.user.mockResolvedValue(null);
       userService.createUser.mockResolvedValue({
         usuarioId: 1,
-        role: { rolId: 2, nombre: 'admin' },
-      });
+        rol: { rolId: 2, nombre: 'admin' },
+      } as any);
 
       await useCase.execute({
         email: 'admin@test.com',

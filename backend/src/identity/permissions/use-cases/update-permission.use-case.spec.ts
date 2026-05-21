@@ -45,7 +45,7 @@ describe('UpdatePermissionUseCase', () => {
       recurso: dto.recurso,
       accion: dto.accion,
     };
-    (prismaService.permisos.update as jest.fn).mockResolvedValue(
+    (prismaService.permisos.update as jest.Mock).mockResolvedValue(
       expectedResult,
     );
 

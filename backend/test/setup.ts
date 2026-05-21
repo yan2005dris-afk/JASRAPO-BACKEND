@@ -1,5 +1,7 @@
 import { PrismaClient } from '../src/generated/prisma/client';
 import * as bcrypt from 'bcrypt';
+import { Pool } from 'pg';
+import { PrismaPg } from '@prisma/adapter-pg';
 
 // Global references
 let prisma: PrismaClient;
@@ -103,9 +105,12 @@ export async function setupTestDatabase(): Promise<void> {
 
   // Wait for database to be ready with retry logic
   let retries = 5;
+  const pool = new Pool({ connectionString: databaseUrl });
+  const adapter = new PrismaPg(pool);
+
   while (retries > 0) {
     try {
-      prisma = new PrismaClient();
+      prisma = new PrismaClient({ adapter });
 
       // Test connection
       await prisma.$connect();

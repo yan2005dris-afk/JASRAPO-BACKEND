@@ -74,5 +74,3 @@ export const BATCH_STATUSES = {
 export const BATCH_STATUS_LIST = Object.values(BATCH_STATUSES).sort(
   (a, b) => a.orden - b.orden,
 );
-
-

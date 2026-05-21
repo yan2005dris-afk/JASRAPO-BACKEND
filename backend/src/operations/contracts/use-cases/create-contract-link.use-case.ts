@@ -15,7 +15,10 @@ export class CreateContractLinkUseCase {
       // 1. Close any existing active history for this medidor or contract
       await tx.historialMedidores.updateMany({
         where: {
-          OR: [{ medidorId, fechaHasta: null }, { contratoId, fechaHasta: null }],
+          OR: [
+            { medidorId, fechaHasta: null },
+            { contratoId, fechaHasta: null },
+          ],
         },
         data: { fechaHasta: new Date() },
       });

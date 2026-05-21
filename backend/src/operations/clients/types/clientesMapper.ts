@@ -1,4 +1,7 @@
-import type { Clientes, CatalogoTiposIdentificacion } from 'src/generated/prisma/client';
+import type {
+  Clientes,
+  CatalogoTiposIdentificacion,
+} from 'src/generated/prisma/client';
 import type { IResponseClient } from './IResponseClient';
 
 /**

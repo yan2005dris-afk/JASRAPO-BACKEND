@@ -48,9 +48,7 @@ export class EmisoresController {
     type: EmisorResponseDto,
   })
   @ApiResponse({ status: 404, description: 'Emisor no encontrado' })
-  async findOne(
-    @Param('id') id: string,
-  ): Promise<EmisorResponseDto> {
+  async findOne(@Param('id') id: string): Promise<EmisorResponseDto> {
     return this.emisoresService.findOne(id);
   }
 
@@ -62,9 +60,7 @@ export class EmisoresController {
     type: EmisorResponseDto,
   })
   @ApiResponse({ status: 400, description: 'RUC ya existe' })
-  async create(
-    @Body() dto: CreateEmisorDto,
-  ): Promise<EmisorResponseDto> {
+  async create(@Body() dto: CreateEmisorDto): Promise<EmisorResponseDto> {
     return this.emisoresService.create(dto);
   }
 
@@ -92,9 +88,7 @@ export class EmisoresController {
   })
   @ApiResponse({ status: 400, description: 'Emisor ya está inactivo' })
   @ApiResponse({ status: 404, description: 'Emisor no encontrado' })
-  async delete(
-    @Param('id') id: string,
-  ): Promise<EmisorResponseDto> {
+  async delete(@Param('id') id: string): Promise<EmisorResponseDto> {
     return this.emisoresService.delete(id);
   }
 }

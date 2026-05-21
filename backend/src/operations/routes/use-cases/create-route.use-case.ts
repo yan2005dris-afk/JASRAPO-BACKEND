@@ -4,7 +4,6 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
-import { EstadoGenerico, Prisma } from 'src/generated/prisma/client';
 import { CreateRouteDto } from '../dto/create-route.dto';
 import { RouteEntity } from '../types/route.entity';
 import { RouteMapper } from '../types/mappers';

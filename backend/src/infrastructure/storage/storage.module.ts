@@ -1,6 +1,5 @@
-import { Module, Global, forwardRef } from '@nestjs/common';
+import { Module, Global } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { AuthModule } from 'src/identity/auth/auth.module';
 import { MinioStorageService } from './minio-storage.service';
 import { FilesystemStorageService } from './filesystem-storage.service';
 import { StorageServiceFactory } from './storage-factory.service';
@@ -14,7 +13,7 @@ import { MinioModule } from '../database/minio/minio.module';
  */
 @Global()
 @Module({
-  imports: [forwardRef(() => AuthModule), ConfigModule, MinioModule],
+  imports: [ConfigModule, MinioModule],
   providers: [
     MinioStorageService,
     StorageServiceFactory,
