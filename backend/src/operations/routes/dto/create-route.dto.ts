@@ -72,16 +72,4 @@ export class CreateRouteDto {
   @IsOptional()
   @IsDateString()
   fechaPlanificada?: string;
-
-  @ApiProperty({
-    description: 'IDs de las lecturas a asignar a esta ruta',
-    isArray: true,
-    type: String,
-    example: ['1', '3', '5', '7'],
-  })
-  @IsArray()
-  @ArrayNotEmpty()
-  @IsNumberString({}, { each: true })
-  @Type(() => String)
-  lecturaIds!: string[];
 }

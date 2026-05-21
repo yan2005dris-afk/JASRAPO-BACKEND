@@ -47,3 +47,32 @@ export const METER_STATUS_LIST = Object.values(METER_STATUSES).sort(
   (a, b) => a.orden - b.orden,
 );
 
+/**
+ * ESTADOS DE LOTE (Enum Mapping)
+ */
+export const BATCH_STATUSES = {
+  BORRADOR: {
+    estadoId: 1,
+    codigo: 'BORRADOR',
+    nombre: 'Borrador',
+    orden: 1,
+  },
+  DEFINITIVO: {
+    estadoId: 2,
+    codigo: 'DEFINITIVO',
+    nombre: 'Definitivo',
+    orden: 2,
+  },
+  ENVIADO: {
+    estadoId: 3,
+    codigo: 'ENVIADO',
+    nombre: 'Enviado',
+    orden: 3,
+  },
+} as const;
+
+export const BATCH_STATUS_LIST = Object.values(BATCH_STATUSES).sort(
+  (a, b) => a.orden - b.orden,
+);
+
+

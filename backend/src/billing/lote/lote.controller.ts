@@ -26,6 +26,15 @@ export class LoteController {
     return this.loteService.generarLote(dto);
   }
 
+  @Get('status')
+  @ApiOperation({
+    summary: 'Catálogo de estados de lote',
+    description: 'Retorna lista de estados disponibles para lotes de facturación',
+  })
+  async findAllEstados() {
+    return this.loteService.findAllEstados();
+  }
+
   @Get()
   @ApiOperation({ summary: 'Listar todos los lotes de facturación' })
   async findAll() {
