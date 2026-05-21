@@ -4,7 +4,6 @@ import { RawPgService } from '../database/raw-pg/raw-pg.service';
 export interface AuditEntry {
   usuarioId?: string;
   usuarioEmail?: string;
-  tenantId?: string;
   ipAddress?: string;
   userAgent?: string;
   accion: string;
@@ -37,15 +36,14 @@ export class AuditService {
     try {
       await this.db.query(
         `INSERT INTO auditoria 
-         (usuario_id, usuario_email, tenant_id, ip_address, user_agent,
+         (usuario_id, usuario_email, ip_address, user_agent,
           accion, recurso, recurso_id, descripcion,
           datos_anteriores, datos_nuevos, metadata,
           exitoso, error, duracion_ms)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`,
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
         [
           entry.usuarioId || null,
           entry.usuarioEmail || null,
-          entry.tenantId || null,
           entry.ipAddress || null,
           entry.userAgent || null,
           entry.accion,

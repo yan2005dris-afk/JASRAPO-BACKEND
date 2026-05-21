@@ -11,7 +11,6 @@ import { seedUSers } from './seeds/user.seed';
 import { seedComunidades } from './seeds/comunidades.seed';
 import { seedSectores } from './seeds/sectores.seed';
 import { seedCategoriaTarifa } from './seeds/categoriaTarifa.seed';
-import { seedIdentificacion } from './seeds/identificacion.seed';
 import { seedEstadoMedidor } from './seeds/estadoMedidor.seed';
 import { seedMedidores } from './seeds/medidores.seed';
 import { seedClientes } from './seeds/clientes.seed';
@@ -20,6 +19,7 @@ import { seedLecturas } from './seeds/lecturas.seed';
 import { seedCatalogoDescuento } from './seeds/catalogoDescuento.seed';
 import { seedFacturacion } from './seeds/facturacion.seed';
 import { seedSriCatalogs } from './seeds/sri.seed';
+import { seedCatalogosSriInit } from './seeds/catalogosSriInit.seed';
 import { seedRoutes } from './seeds/routes.seed';
 import { syncSequences } from './seeds/sync-sequences';
 
@@ -78,10 +78,15 @@ async function main() {
   await seedMenuPermissions(prisma, menus, permissions);
   console.log('✅ Permisos asignados a Menus correctamente.');
 
-  // SRI Catalogs
-  console.log('🏛️ Cargando catálogos SRI...');
+  // SRI Catalogs (legacy)
+  console.log('🏛️ Cargando catálogos SRI (legacy)...');
   await seedSriCatalogs(prisma);
-  console.log('✅ Catálogos SRI cargados.');
+  console.log('✅ Catálogos SRI (legacy) cargados.');
+
+  // SRI Catalogs (init.sql — modelos nuevos priorizando estructura de referencia)
+  console.log('📋 Cargando catálogos SRI desde init.sql...');
+  await seedCatalogosSriInit(prisma);
+  console.log('✅ Catálogos SRI desde init.sql cargados.');
 
   // === SEEDS DE LÓGICA DE NEGOCIO ===
   console.log('🏗️ Cargando datos de lógica de negocio...');
@@ -93,10 +98,6 @@ async function main() {
 
   await seedCategoriaTarifa(prisma);
   console.log('✅ Categorías de tarifa creadas.');
-
-  // Identificaciones
-  await seedIdentificacion(prisma);
-  console.log('✅ Identificaciones creadas.');
 
   // Estados de Medidor
   await seedEstadoMedidor(prisma);
@@ -140,14 +141,24 @@ async function main() {
   await seedCatalogoDescuento(prisma);
   console.log('✅ Catálogo de descuentos creado.');
 
-  // Rubros
+  // Rubros — lookup tariff IDs from new catalog tables (seeded by seedCatalogosSriInit above)
+  const ivaImpuesto = await prisma.catalogoImpuestos.findUnique({ where: { codigo: '2' } });
+  if (!ivaImpuesto) throw new Error('IVA impuesto not found in catalog — seed order issue');
+  const tarifaIva0 = await prisma.catalogoTarifasImpuesto.findFirst({
+    where: { impuestoId: ivaImpuesto.id, codigoPorcentaje: '0' },
+  });
+  const tarifaIva12 = await prisma.catalogoTarifasImpuesto.findFirst({
+    where: { impuestoId: ivaImpuesto.id, codigoPorcentaje: '2' },
+  });
+  if (!tarifaIva12 || !tarifaIva0) throw new Error('IVA tariff records not found — seed order issue');
+
   await prisma.rubros.createMany({
     data: [
-      { codigoSri: '001', nombre: 'Consumo Agua', descripcion: 'Consumo de agua potable m3', precioUnitario: 0.50, tipoRubro: 'VARIABLE' as any, impuestoId: 2 },
-      { codigoSri: '002', nombre: 'Cargo Fijo', descripcion: 'Mantenimiento básico de conexión', precioUnitario: 5.00, tipoRubro: 'FIJO' as any, impuestoId: 2 },
-      { codigoSri: '003', nombre: 'Interés Mora', descripcion: 'Interés por falta de pago puntual', precioUnitario: 0.10, tipoRubro: 'MULTA' as any, impuestoId: 1 },
-      { codigoSri: '004', nombre: 'Tasa Seguridad Olón', descripcion: 'Tasa de seguridad comunitaria (Solo Olón)', precioUnitario: 2.00, tipoRubro: 'FIJO' as any, impuestoId: 1 },
-      { codigoSri: '005', nombre: 'Instalación Medidor', descripcion: 'Costo de nueva acometida e instalación', precioUnitario: 150.00, tipoRubro: 'SERVICIO' as any, impuestoId: 2 },
+      { codigoSri: '001', nombre: 'Consumo Agua', descripcion: 'Consumo de agua potable m3', precioUnitario: 0.50, tipoRubro: 'VARIABLE' as any, tarifaImpuestoId: tarifaIva12.id },
+      { codigoSri: '002', nombre: 'Cargo Fijo', descripcion: 'Mantenimiento básico de conexión', precioUnitario: 5.00, tipoRubro: 'FIJO' as any, tarifaImpuestoId: tarifaIva12.id },
+      { codigoSri: '003', nombre: 'Interés Mora', descripcion: 'Interés por falta de pago puntual', precioUnitario: 0.10, tipoRubro: 'MULTA' as any, tarifaImpuestoId: tarifaIva0.id },
+      { codigoSri: '004', nombre: 'Tasa Seguridad Olón', descripcion: 'Tasa de seguridad comunitaria (Solo Olón)', precioUnitario: 2.00, tipoRubro: 'FIJO' as any, tarifaImpuestoId: tarifaIva0.id },
+      { codigoSri: '005', nombre: 'Instalación Medidor', descripcion: 'Costo de nueva acometida e instalación', precioUnitario: 150.00, tipoRubro: 'SERVICIO' as any, tarifaImpuestoId: tarifaIva12.id },
     ],
     skipDuplicates: true,
   });

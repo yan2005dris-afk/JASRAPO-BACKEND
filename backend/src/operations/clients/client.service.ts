@@ -53,9 +53,9 @@ export class ClientService {
    * Obtener catálogo de identificaciones activas
    */
   async findAllIdentificaciones(): Promise<IResponseIdentificacion[]> {
-    const identificaciones = await this.prisma.identificacion.findMany({
+    const identificaciones = await this.prisma.catalogoTiposIdentificacion.findMany({
       where: { activo: true },
-      orderBy: { orden: 'asc' },
+      orderBy: { id: 'asc' },
     });
 
     return identificaciones.map(toIdentificacionResponse);

@@ -1,7 +1,6 @@
 model Empresa {
   id                    Int                @id @default(autoincrement()) @map("id")
   uuid                  String             @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid @map("uuid")
-  tenantId              String?            @db.Uuid @map("tenant_id")
   ruc                   String             @unique @map("ruc")
   razonSocial           String             @map("razon_social")
   nombreComercial       String?            @map("nombre_comercial")

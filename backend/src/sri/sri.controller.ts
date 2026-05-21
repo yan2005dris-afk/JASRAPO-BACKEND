@@ -11,7 +11,6 @@ import {
   HttpStatus,
   Logger,
   NotFoundException,
-  ForbiddenException,
   UseInterceptors,
   UploadedFile,
   UseGuards,
@@ -71,10 +70,10 @@ export class SriController {
    */
   private async validateClaveAccesoAccess(
     claveAcceso: string,
-    user: JwtPayload,
+    _user: JwtPayload,
   ): Promise<void> {
     const rucEmisor = extractRucFromClaveAcceso(claveAcceso);
-    await this.emisoresService.validateRucAccess(rucEmisor, user);
+    await this.emisoresService.validateRucAccess(rucEmisor);
   }
 
   @Post('emitir/factura')
@@ -101,7 +100,7 @@ export class SriController {
     @CurrentUser() user: JwtPayload,
   ): Promise<EmisionEncoladaResponseDto | FacturaResponseDto> {
     this.logger.log(`POST /sri/emitir/factura`);
-    await this.emisoresService.validateRucAccess(dto.emisor.ruc, user);
+    await this.emisoresService.validateRucAccess(dto.emisor.ruc);
     return this.sriService.emitirFactura(dto);
   }
 
@@ -116,7 +115,7 @@ export class SriController {
     @CurrentUser() user: JwtPayload,
   ): Promise<EmisionEncoladaResponseDto | NotaCreditoResponseDto> {
     this.logger.log(`POST /sri/emitir/nota-credito`);
-    await this.emisoresService.validateRucAccess(dto.emisor.ruc, user);
+    await this.emisoresService.validateRucAccess(dto.emisor.ruc);
     return this.sriService.emitirNotaCredito(dto);
   }
 
@@ -131,7 +130,7 @@ export class SriController {
     @CurrentUser() user: JwtPayload,
   ): Promise<EmisionEncoladaResponseDto | NotaDebitoResponseDto> {
     this.logger.log(`POST /sri/emitir/nota-debito`);
-    await this.emisoresService.validateRucAccess(dto.emisor.ruc, user);
+    await this.emisoresService.validateRucAccess(dto.emisor.ruc);
     return this.sriService.emitirNotaDebito(dto);
   }
 
@@ -146,7 +145,7 @@ export class SriController {
     @CurrentUser() user: JwtPayload,
   ): Promise<EmisionEncoladaResponseDto | RetencionResponseDto> {
     this.logger.log(`POST /sri/emitir/retencion`);
-    await this.emisoresService.validateRucAccess(dto.emisor.ruc, user);
+    await this.emisoresService.validateRucAccess(dto.emisor.ruc);
     return this.sriService.emitirRetencion(dto);
   }
 
@@ -161,7 +160,7 @@ export class SriController {
     @CurrentUser() user: JwtPayload,
   ): Promise<EmisionEncoladaResponseDto | GuiaRemisionResponseDto> {
     this.logger.log(`POST /sri/emitir/guia-remision`);
-    await this.emisoresService.validateRucAccess(dto.emisor.ruc, user);
+    await this.emisoresService.validateRucAccess(dto.emisor.ruc);
     return this.sriService.emitirGuiaRemision(dto);
   }
 
@@ -190,7 +189,7 @@ export class SriController {
     @CurrentUser() user: JwtPayload,
   ): Promise<{ xml: string }> {
     this.logger.log('POST /sri/preview/factura');
-    await this.emisoresService.validateRucAccess(dto.emisor.ruc, user);
+    await this.emisoresService.validateRucAccess(dto.emisor.ruc);
     const xml = this.sriService.generarXmlPreview(dto);
     return { xml };
   }
@@ -225,29 +224,8 @@ export class SriController {
     @Query() query: QueryComprobantesDto,
     @CurrentUser() user: JwtPayload,
   ): Promise<PaginatedComprobantesDto> {
-    if (user.rol !== UserRole.SUPERADMIN) {
-      if (query.rucEmisor) {
-        await this.emisoresService.validateRucAccess(query.rucEmisor, user);
-      } else if (user.tenantId) {
-        const emisores = await this.emisoresService.findByTenantId(
-          user.tenantId,
-        );
-        if (!emisores || emisores.length === 0) {
-          return {
-            data: [],
-            meta: {
-              total: 0,
-              page: 1,
-              limit: query.limit || 20,
-              totalPages: 0,
-            },
-          };
-        }
-        return this.sriService.listarComprobantes({
-          ...query,
-          emisorIds: emisores.map((e) => e.id),
-        });
-      }
+    if (user.rol !== UserRole.SUPERADMIN && query.rucEmisor) {
+      await this.emisoresService.validateRucAccess(query.rucEmisor);
     }
     return this.sriService.listarComprobantes(query);
   }
@@ -348,8 +326,8 @@ export class SriController {
   ): Promise<any> {
     if (user.rol !== UserRole.SUPERADMIN) {
       if (!body.rucEmisor)
-        throw new ForbiddenException('Debe especificar rucEmisor');
-      await this.emisoresService.validateRucAccess(body.rucEmisor, user);
+        throw new NotFoundException('Debe especificar rucEmisor');
+      await this.emisoresService.validateRucAccess(body.rucEmisor);
     }
     return this.sriService.sincronizarConSri(body);
   }

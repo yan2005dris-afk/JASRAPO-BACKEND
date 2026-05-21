@@ -122,10 +122,12 @@ export class SriIntegrationService {
   }
 
   private mapTipoIdentificacion(tipoId: number): TipoIdentificacion {
+    // Mapeo según catálogo: 1=RUC('04'), 2=CEDULA('05'), 3=PASAPORTE('06'), 4=CONSUMIDOR_FINAL('07')
     const map: Record<number, TipoIdentificacion> = {
-      1: TipoIdentificacion.CEDULA,
-      2: TipoIdentificacion.RUC,
+      1: TipoIdentificacion.RUC,
+      2: TipoIdentificacion.CEDULA,
       3: TipoIdentificacion.PASAPORTE,
+      4: TipoIdentificacion.CONSUMIDOR_FINAL,
     };
     return map[tipoId] || TipoIdentificacion.CEDULA;
   }

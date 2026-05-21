@@ -23,15 +23,15 @@ export class UpdateClientUseCase {
     if (!cliente) throw new NotFoundException('Cliente no encontrado');
 
     const tipoId = dto.tipoIdentificacionId
-      ? BigInt(dto.tipoIdentificacionId)
-      : cliente.tipoIdentificacionId!;
+      ? dto.tipoIdentificacionId
+      : Number(cliente.tipoIdentificacionId);
     const identificacionFinal = (
       dto.identificacion ?? cliente.identificacion
     ).trim();
 
     // Obtener el código del tipo de identificación
-    const catalogo = await this.prisma.identificacion.findUnique({
-      where: { identificacionId: tipoId },
+    const catalogo = await this.prisma.catalogoTiposIdentificacion.findUnique({
+      where: { id: tipoId },
     });
 
     if (!catalogo) {
@@ -39,7 +39,7 @@ export class UpdateClientUseCase {
     }
 
     if (
-      catalogo.codigo !== 'CONSUMIDOR_FINAL' &&
+      catalogo.codigo !== '07' && // CONSUMIDOR_FINAL
       !TipoIdentificacionUtil.validar(catalogo.codigo, identificacionFinal)
     ) {
       throw new BadRequestException('Identificación inválida');
@@ -59,7 +59,7 @@ export class UpdateClientUseCase {
       ?.trim()
       .toUpperCase();
 
-    if (catalogo.codigo !== 'CONSUMIDOR_FINAL' && (!nombres || !apellidos)) {
+    if (catalogo.codigo !== '07' && (!nombres || !apellidos)) {
       throw new BadRequestException('Nombres y apellidos son requeridos');
     }
 
@@ -67,7 +67,7 @@ export class UpdateClientUseCase {
       where: { clienteId },
       data: {
         tipoIdentificacion: {
-          connect: { identificacionId: tipoId },
+          connect: { id: tipoId },
         },
         identificacion: identificacionFinal,
         nombres,

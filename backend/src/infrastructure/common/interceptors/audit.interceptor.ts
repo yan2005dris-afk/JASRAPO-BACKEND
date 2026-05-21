@@ -12,7 +12,6 @@ import { AuditService } from '../../audit/audit.service';
 interface RequestUser {
   sub?: string;
   email?: string;
-  tenantId?: string;
 }
 
 /**
@@ -60,7 +59,7 @@ export class AuditInterceptor implements NestInterceptor {
         void this.auditService.log({
           usuarioId: user?.sub,
           usuarioEmail: user?.email,
-          tenantId: user?.tenantId,
+
           ipAddress: request.ip || request.socket?.remoteAddress,
           userAgent: request.headers['user-agent'],
           accion,
@@ -81,7 +80,7 @@ export class AuditInterceptor implements NestInterceptor {
         void this.auditService.log({
           usuarioId: user?.sub,
           usuarioEmail: user?.email,
-          tenantId: user?.tenantId,
+
           ipAddress: request.ip || request.socket?.remoteAddress,
           userAgent: request.headers['user-agent'],
           accion,

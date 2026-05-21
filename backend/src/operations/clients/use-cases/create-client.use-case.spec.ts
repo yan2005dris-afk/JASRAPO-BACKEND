@@ -19,7 +19,7 @@ describe('CreateClientUseCase', () => {
       update: jest.fn(),
       updateMany: jest.fn(),
     },
-    identificacion: {
+    catalogoTiposIdentificacion: {
       findUnique: jest.fn(),
     },
   };
@@ -39,9 +39,9 @@ describe('CreateClientUseCase', () => {
     prisma = module.get<PrismaService>(PrismaService);
 
     (TipoIdentificacionUtil.validar as jest.Mock).mockReturnValue(true);
-    mockPrismaService.identificacion.findUnique.mockResolvedValue({
-      identificacionId: BigInt(1),
-      codigo: 'CEDULA',
+    mockPrismaService.catalogoTiposIdentificacion.findUnique.mockResolvedValue({
+      id: 1,
+      codigo: '05', // CÉDULA
     });
   });
 
@@ -135,7 +135,7 @@ describe('CreateClientUseCase', () => {
     });
 
     it('should throw BadRequestException if tipoIdentificacionId is invalid', async () => {
-      mockPrismaService.identificacion.findUnique.mockResolvedValue(null);
+      mockPrismaService.catalogoTiposIdentificacion.findUnique.mockResolvedValue(null);
       const dto = {
         tipoIdentificacionId: 999,
         identificacion: '0926715658',

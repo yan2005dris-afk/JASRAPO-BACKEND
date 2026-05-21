@@ -25,7 +25,7 @@ export class CreateClientDto {
       'Identificación del cliente. Obligatorio para todos los tipos excepto CONSUMIDOR FINAL',
   })
   @ValidateIf(
-    (o) => o.tipoIdentificacionId !== 4, // CONSUMIDOR_FINAL tiene ID 4
+    (o) => o.tipoIdentificacionId !== 4, // CONSUMIDOR_FINAL tiene ID 4 en catálogo
   )
   @IsNotEmpty()
   @IsString()
@@ -51,7 +51,7 @@ export class CreateClientDto {
   @ApiPropertyOptional({
     description: 'Razón social (solo aplica para RUC)',
   })
-  @ValidateIf((o) => o.tipoIdentificacionId === 2) // RUC tiene ID 2
+  @ValidateIf((o) => o.tipoIdentificacionId === 1) // RUC tiene ID 1 en catálogo
   @IsOptional()
   @IsNotEmpty()
   @IsString()

@@ -1,0 +1,11 @@
+model CatalogoFormasPago {
+  id          Int           @id @default(autoincrement())
+  codigo      String        @unique @db.VarChar(2)
+  descripcion String        @db.VarChar(100)
+  activo      Boolean       @default(true)
+  createdAt   DateTime      @default(now()) @map("created_at")
+
+  detallePagos DetallePago[]
+
+  @@map("catalogo_formas_pago")
+}

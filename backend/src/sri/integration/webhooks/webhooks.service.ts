@@ -54,40 +54,13 @@ export class WebhooksService {
 
   async findAll(emisorId?: string): Promise<WebhookResponseDto[]> {
     let query = `
-      SELECT id, nombre, url, eventos, emisor_id, activo, reintentos_max, tenant_id, created_at, updated_at
+      SELECT id, nombre, url, eventos, emisor_id, activo, reintentos_max, created_at, updated_at
       FROM webhook_configs
     `;
     const params: string[] = [];
 
     if (emisorId) {
       query += ` WHERE emisor_id = $1`;
-      params.push(emisorId);
-    }
-
-    query += ` ORDER BY created_at DESC`;
-
-    const result = await this.db.query(query, params);
-    return result.rows.map((row: Record<string, unknown>) =>
-      this.mapToResponse(row),
-    );
-  }
-
-  /**
-   * Listado filtrado por tenant — previene fuga de datos multi-tenant
-   */
-  async findAllByTenant(
-    tenantId: string,
-    emisorId?: string,
-  ): Promise<WebhookResponseDto[]> {
-    let query = `
-      SELECT id, nombre, url, eventos, emisor_id, activo, reintentos_max, tenant_id, created_at, updated_at
-      FROM webhook_configs
-      WHERE tenant_id = $1
-    `;
-    const params: string[] = [tenantId];
-
-    if (emisorId) {
-      query += ` AND emisor_id = $2`;
       params.push(emisorId);
     }
 
@@ -116,14 +89,13 @@ export class WebhooksService {
 
   async create(
     dto: CreateWebhookDto,
-    tenantId?: string,
   ): Promise<WebhookSecretResponseDto> {
     const secreto = this.generateSecret();
 
     const result = await this.db.query(
-      `INSERT INTO webhook_configs (nombre, url, eventos, emisor_id, secreto, reintentos_max, tenant_id)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
-       RETURNING id, nombre, url, eventos, emisor_id, secreto, activo, reintentos_max, tenant_id, created_at, updated_at`,
+      `INSERT INTO webhook_configs (nombre, url, eventos, emisor_id, secreto, reintentos_max)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING id, nombre, url, eventos, emisor_id, secreto, activo, reintentos_max, created_at, updated_at`,
       [
         dto.nombre,
         dto.url,
@@ -131,7 +103,6 @@ export class WebhooksService {
         dto.emisorId || null,
         secreto,
         dto.reintentosMax || 3,
-        tenantId || null,
       ],
     );
 

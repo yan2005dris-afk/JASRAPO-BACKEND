@@ -30,31 +30,6 @@ model SriTipoComprobante {
   @@map("sri_tipo_comprobante")
 }
 
-model SriImpuesto {
-  id               Int      @id @default(autoincrement()) @map("id")
-  codigo           String   @map("codigo")
-  codigoPorcentaje String   @map("codigo_porcentaje")
-  nombre           String   @map("nombre")
-  tarifa           Decimal  @map("tarifa") @db.Decimal
-  activo           Boolean  @default(true) @map("activo")
-  createdAt        DateTime @default(now()) @map("creado_en")
-  updatedAt        DateTime @updatedAt @map("actualizado_en")
-  rubros           Rubros[]
-
-  @@unique([codigo, codigoPorcentaje])
-  @@map("sri_impuesto")
-}
-
-model SriFormaPago {
-  id           Int           @id @default(autoincrement()) @map("id")
-  codigo       String        @unique @map("codigo")
-  nombre       String        @map("nombre")
-  activo       Boolean       @default(true) @map("activo")
-  detallePagos DetallePago[]
-
-  @@map("sri_forma_pago")
-}
-
 model CatalogosSri {
   id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid @map("id")
   tipo        String   @map("tipo") 

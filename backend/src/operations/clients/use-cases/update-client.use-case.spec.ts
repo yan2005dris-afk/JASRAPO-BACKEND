@@ -18,7 +18,7 @@ describe('UpdateClientUseCase', () => {
       findUnique: jest.fn(),
       update: jest.fn(),
     },
-    identificacion: {
+    catalogoTiposIdentificacion: {
       findUnique: jest.fn(),
     },
   };
@@ -26,7 +26,7 @@ describe('UpdateClientUseCase', () => {
   const mockCliente = {
     clienteId: BigInt(1),
     identificacion: '0926715658',
-    tipoIdentificacionId: BigInt(1),
+    tipoIdentificacionId: 1,
     nombres: 'JOHN',
     apellidos: 'DOE',
     deletedAt: null,
@@ -45,9 +45,9 @@ describe('UpdateClientUseCase', () => {
 
     useCase = module.get<UpdateClientUseCase>(UpdateClientUseCase);
     jest.spyOn(TipoIdentificacionUtil, 'validar').mockReturnValue(true);
-    mockPrismaService.identificacion.findUnique.mockResolvedValue({
-      identificacionId: BigInt(1),
-      codigo: 'CEDULA',
+    mockPrismaService.catalogoTiposIdentificacion.findUnique.mockResolvedValue({
+      id: 1,
+      codigo: '05', // CÉDULA
     });
   });
 
@@ -64,9 +64,9 @@ describe('UpdateClientUseCase', () => {
       mockPrismaService.clientes.findFirst.mockResolvedValue({
         ...mockCliente,
         tipoIdentificacion: {
-          identificacionId: BigInt(1),
-          codigo: 'CEDULA',
-          nombre: 'Cédula',
+          id: 1,
+          codigo: '05',
+          descripcion: 'CÉDULA',
         },
       });
       mockPrismaService.clientes.update.mockResolvedValue({
@@ -95,7 +95,7 @@ describe('UpdateClientUseCase', () => {
     it('should throw BadRequestException if new identification is invalid', async () => {
       mockPrismaService.clientes.findFirst.mockResolvedValue({
         ...mockCliente,
-        tipoIdentificacion: { identificacionId: BigInt(1), codigo: 'CEDULA' },
+        tipoIdentificacion: { id: 1, codigo: '05' },
       });
       jest.spyOn(TipoIdentificacionUtil, 'validar').mockReturnValue(false);
 
@@ -107,7 +107,7 @@ describe('UpdateClientUseCase', () => {
     it('should throw ConflictException if new identification already exists for another client', async () => {
       mockPrismaService.clientes.findFirst.mockResolvedValue({
         ...mockCliente,
-        tipoIdentificacion: { identificacionId: BigInt(1), codigo: 'CEDULA' },
+        tipoIdentificacion: { id: 1, codigo: '05' },
       });
       mockPrismaService.clientes.findUnique.mockResolvedValue({
         clienteId: BigInt(2),
@@ -122,9 +122,9 @@ describe('UpdateClientUseCase', () => {
     it('should throw BadRequestException if tipoIdentificacionId is invalid', async () => {
       mockPrismaService.clientes.findFirst.mockResolvedValue({
         ...mockCliente,
-        tipoIdentificacion: { identificacionId: BigInt(1), codigo: 'CEDULA' },
+        tipoIdentificacion: { id: 1, codigo: '05' },
       });
-      mockPrismaService.identificacion.findUnique.mockResolvedValue(null);
+      mockPrismaService.catalogoTiposIdentificacion.findUnique.mockResolvedValue(null);
 
       await expect(
         useCase.execute('1', { tipoIdentificacionId: 999 }),

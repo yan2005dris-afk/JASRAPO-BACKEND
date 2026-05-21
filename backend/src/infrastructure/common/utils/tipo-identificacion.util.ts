@@ -120,14 +120,19 @@ export class TipoIdentificacionUtil {
   // =========================
   static validar(tipoCodigo: string, valor: string): boolean {
     switch (tipoCodigo) {
+      case '05':   // CÉDULA (SRI code)
       case 'CEDULA':
         return this.esCedula(valor);
+      case '04':   // RUC (SRI code)
       case 'RUC':
         return this.esRuc(valor);
+      case '06':   // PASAPORTE (SRI code)
       case 'PASAPORTE':
         return this.esPasaporteEcuatoriano(valor);
+      case '08':   // IDENTIFICACIÓN DEL EXTERIOR (SRI code)
       case 'IDENTIFICACION_EXTRANJERA':
         return this.esIdentificacionExtranjera(valor);
+      case '07':   // CONSUMIDOR FINAL (SRI code)
       case 'CONSUMIDOR_FINAL':
         return true;
       default:

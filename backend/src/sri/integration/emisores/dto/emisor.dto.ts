@@ -56,13 +56,6 @@ export class CreateEmisorDto {
   @IsOptional()
   @IsString()
   ambiente?: string;
-
-  @ApiPropertyOptional({
-    description: 'ID del tenant al que pertenece el emisor',
-  })
-  @IsOptional()
-  @IsString()
-  tenantId?: string;
 }
 
 export class UpdateEmisorDto {
@@ -147,9 +140,6 @@ export class EmisorResponseDto {
 
   @ApiProperty()
   estado: string;
-
-  @ApiPropertyOptional()
-  tenantId?: string;
 
   @ApiProperty()
   tieneCertificado: boolean;

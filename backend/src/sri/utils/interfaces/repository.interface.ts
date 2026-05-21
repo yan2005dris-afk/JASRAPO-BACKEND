@@ -174,7 +174,6 @@ export interface MotivoNotaDebitoRecord {
 
 export interface EmisorRecord {
   id: string;
-  tenant_id: string;
   ruc: string;
   razon_social: string;
   nombre_comercial?: string;

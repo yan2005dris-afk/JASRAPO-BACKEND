@@ -1,0 +1,9 @@
+model CatalogoDocumentosSustento {
+  id          Int      @id @default(autoincrement())
+  codigo      String   @unique @db.VarChar(2)
+  descripcion String   @db.VarChar(200)
+  activo      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("catalogo_documentos_sustento")
+}

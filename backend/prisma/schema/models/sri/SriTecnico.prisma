@@ -13,7 +13,6 @@ model ComprobanteXmls {
 model WebhookConfigs {
   id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid @map("id")
   emisorId        Int       @map("emisor_id")
-  tenantId        String?   @db.Uuid @map("tenant_id")
   nombre          String    @db.VarChar(100) @map("nombre")
   url             String    @map("url")
   eventos         String[]  @default([]) @map("eventos")
@@ -51,7 +50,6 @@ model AuditoriaSri {
   id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid @map("id")
   usuarioId        String?  @db.Uuid @map("usuario_id")
   usuarioEmail     String?  @db.VarChar(255) @map("usuario_email")
-  tenantId         String?  @db.Uuid @map("tenant_id")
   ipAddress        String?  @map("ip_address")
   userAgent        String?  @map("user_agent")
   accion           String   @db.VarChar(50) @map("accion")
@@ -68,7 +66,6 @@ model AuditoriaSri {
 
   @@index([accion])
   @@index([recurso, recursoId])
-  @@index([tenantId])
   @@index([usuarioId])
   @@map("auditoria")
 }

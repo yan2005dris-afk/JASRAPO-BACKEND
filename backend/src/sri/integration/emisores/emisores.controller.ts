@@ -17,8 +17,6 @@ import {
 } from '@nestjs/swagger';
 import { EmisoresService } from './emisores.service';
 import { CreateEmisorDto, UpdateEmisorDto, EmisorResponseDto } from './dto';
-import { CurrentUser } from '../../../identity/auth/decorators/current-user.decorator';
-import { JwtPayload, UserRole } from '../../../identity/auth/dto/auth.dto';
 import { JwtAuthGuard } from '../../../identity/auth/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../../../infrastructure/common/guards/permissions.guard';
 
@@ -32,18 +30,14 @@ export class EmisoresController {
   constructor(private readonly emisoresService: EmisoresService) {}
 
   @Get()
-  @ApiOperation({ summary: 'Listar emisores del tenant actual' })
+  @ApiOperation({ summary: 'Listar todos los emisores' })
   @ApiResponse({
     status: 200,
     description: 'Lista de emisores',
     type: [EmisorResponseDto],
   })
-  async findAll(@CurrentUser() user: JwtPayload): Promise<EmisorResponseDto[]> {
-    // SUPERADMIN ve todos, otros ven solo los de su tenant
-    if (user.rol === UserRole.SUPERADMIN) {
-      return this.emisoresService.findAll();
-    }
-    return this.emisoresService.findAllByTenant(user.tenantId!);
+  async findAll(): Promise<EmisorResponseDto[]> {
+    return this.emisoresService.findAll();
   }
 
   @Get(':id')
@@ -56,9 +50,8 @@ export class EmisoresController {
   @ApiResponse({ status: 404, description: 'Emisor no encontrado' })
   async findOne(
     @Param('id') id: string,
-    @CurrentUser() user: JwtPayload,
   ): Promise<EmisorResponseDto> {
-    return this.emisoresService.findOneSecured(id, user);
+    return this.emisoresService.findOne(id);
   }
 
   @Post()
@@ -71,12 +64,7 @@ export class EmisoresController {
   @ApiResponse({ status: 400, description: 'RUC ya existe' })
   async create(
     @Body() dto: CreateEmisorDto,
-    @CurrentUser() user: JwtPayload,
   ): Promise<EmisorResponseDto> {
-    // Si no es SUPERADMIN, forzar el tenantId del usuario
-    if (user.rol !== UserRole.SUPERADMIN && user.tenantId) {
-      dto.tenantId = user.tenantId;
-    }
     return this.emisoresService.create(dto);
   }
 
@@ -91,10 +79,7 @@ export class EmisoresController {
   async update(
     @Param('id') id: string,
     @Body() dto: UpdateEmisorDto,
-    @CurrentUser() user: JwtPayload,
   ): Promise<EmisorResponseDto> {
-    // Verificar acceso al emisor antes de actualizar
-    await this.emisoresService.findOneSecured(id, user);
     return this.emisoresService.update(id, dto);
   }
 
@@ -109,9 +94,7 @@ export class EmisoresController {
   @ApiResponse({ status: 404, description: 'Emisor no encontrado' })
   async delete(
     @Param('id') id: string,
-    @CurrentUser() user: JwtPayload,
   ): Promise<EmisorResponseDto> {
-    await this.emisoresService.findOneSecured(id, user);
     return this.emisoresService.delete(id);
   }
 }

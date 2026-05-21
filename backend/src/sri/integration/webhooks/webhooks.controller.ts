@@ -12,8 +12,6 @@ import { ApiBearerAuth, ApiTags, ApiOperation } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/identity/auth/guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
-import { CurrentUser } from 'src/identity/auth/decorators/current-user.decorator';
-import { JwtPayload } from 'src/identity/auth/dto/auth.dto';
 import { WebhooksService } from './webhooks.service';
 import { CreateWebhookDto, UpdateWebhookDto } from './dto/webhook.dto';
 
@@ -29,19 +27,17 @@ export class WebhooksController {
   @ApiOperation({ summary: 'Configurar nuevo webhook' })
   create(
     @Body() createWebhookDto: CreateWebhookDto,
-    @CurrentUser() user: JwtPayload,
   ) {
     return this.webhooksService.create(
       createWebhookDto,
-      user.tenantId ?? undefined,
     );
   }
 
   @Get()
   @RequiredPermission('webhooks', 'read')
   @ApiOperation({ summary: 'Listar configuraciones de webhooks' })
-  findAll(@CurrentUser() user: JwtPayload) {
-    return this.webhooksService.findAllByTenant(user.tenantId ?? '');
+  findAll() {
+    return this.webhooksService.findAll();
   }
 
   @Get(':id')

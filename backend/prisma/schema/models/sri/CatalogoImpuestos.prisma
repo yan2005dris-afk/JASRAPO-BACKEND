@@ -1,0 +1,13 @@
+model CatalogoImpuestos {
+  id          Int      @id @default(autoincrement())
+  codigo      String   @unique @db.VarChar(2)
+  nombre      String   @db.VarChar(100)
+  descripcion String?  @db.VarChar(300)
+  activo      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  tarifas CatalogoTarifasImpuesto[]
+
+  @@map("catalogo_impuestos")
+}

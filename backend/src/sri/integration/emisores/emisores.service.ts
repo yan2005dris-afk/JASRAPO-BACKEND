@@ -3,13 +3,11 @@ import {
   Logger,
   NotFoundException,
   BadRequestException,
-  ForbiddenException,
 } from '@nestjs/common';
 import { RawPgService } from '../../../infrastructure/database/raw-pg/raw-pg.service';
 import { CreateEmisorDto, UpdateEmisorDto, EmisorResponseDto } from './dto';
 import * as forge from 'node-forge';
 import { EncryptionService } from '../../../infrastructure/encryption/encryption.service';
-import { JwtPayload, UserRole } from '../../../identity/auth/dto/auth.dto';
 
 @Injectable()
 export class EmisoresService {
@@ -49,7 +47,7 @@ export class EmisoresService {
     const result = await this.db.query(
       `SELECT id, ruc, razon_social, nombre_comercial, direccion_matriz,
               obligado_contabilidad, contribuyente_especial, agente_retencion,
-              contribuyente_rimpe, ambiente, estado, tenant_id,
+              contribuyente_rimpe, ambiente, estado,
               certificado_p12 IS NOT NULL as tiene_certificado,
               certificado_valido_hasta, certificado_sujeto,
               created_at, updated_at
@@ -58,55 +56,13 @@ export class EmisoresService {
     );
 
     return result.rows.map((row) => this.mapToResponse(row));
-  }
-
-  /**
-   * FIX P3: Listar emisores filtrados por tenant — previene data leakage
-   */
-  async findAllByTenant(tenantId: string): Promise<EmisorResponseDto[]> {
-    const result = await this.db.query(
-      `SELECT id, ruc, razon_social, nombre_comercial, direccion_matriz,
-              obligado_contabilidad, contribuyente_especial, agente_retencion,
-              contribuyente_rimpe, ambiente, estado, tenant_id,
-              certificado_p12 IS NOT NULL as tiene_certificado,
-              certificado_valido_hasta, certificado_sujeto,
-              created_at, updated_at
-       FROM emisores
-       WHERE tenant_id = $1
-       ORDER BY created_at DESC`,
-      [tenantId],
-    );
-
-    return result.rows.map((row) => this.mapToResponse(row));
-  }
-
-  /**
-   * FIX P3: Acceso seguro a un emisor — verifica que pertenece al tenant del usuario
-   */
-  async findOneSecured(
-    id: string,
-    user: JwtPayload,
-  ): Promise<EmisorResponseDto> {
-    const emisor = await this.findOne(id);
-
-    // SUPERADMIN puede ver cualquier emisor
-    if (user.rol === UserRole.SUPERADMIN) {
-      return emisor;
-    }
-
-    // Verificar que el emisor pertenece al tenant del usuario
-    if (emisor.tenantId && emisor.tenantId !== user.tenantId) {
-      throw new ForbiddenException('No tienes acceso a este emisor');
-    }
-
-    return emisor;
   }
 
   async findOne(id: string): Promise<EmisorResponseDto> {
     const result = await this.db.query(
       `SELECT id, ruc, razon_social, nombre_comercial, direccion_matriz,
               obligado_contabilidad, contribuyente_especial, agente_retencion,
-              contribuyente_rimpe, ambiente, estado, tenant_id,
+              contribuyente_rimpe, ambiente, estado,
               certificado_p12 IS NOT NULL as tiene_certificado,
               certificado_valido_hasta, certificado_sujeto,
               created_at, updated_at
@@ -123,60 +79,22 @@ export class EmisoresService {
   }
 
   /**
-   * Valida que un emisorId pertenece al tenant del usuario.
-   * SUPERADMIN tiene acceso a todos. Lanza ForbiddenException si no tiene acceso.
-   * Retorna el emisor validado.
+   * Valida acceso a un emisor por ID.
+   * Retorna el emisor o lanza NotFoundException.
    */
-  async validateEmisorAccess(
-    emisorId: string,
-    user: JwtPayload,
-  ): Promise<EmisorResponseDto> {
-    const emisor = await this.findOne(emisorId);
-
-    if (user.rol === UserRole.SUPERADMIN) {
-      return emisor;
-    }
-
-    if (
-      !user.tenantId ||
-      (emisor.tenantId && emisor.tenantId !== user.tenantId)
-    ) {
-      this.logger.warn(
-        `IDOR blocked: user ${user.sub} (tenant ${user.tenantId}) tried to access emisor ${emisorId} (tenant ${emisor.tenantId})`,
-      );
-      throw new ForbiddenException('No tienes acceso a este emisor');
-    }
-
-    return emisor;
+  async validateEmisorAccess(emisorId: string): Promise<EmisorResponseDto> {
+    return this.findOne(emisorId);
   }
 
   /**
-   * Valida que un RUC pertenece a un emisor del tenant del usuario.
-   * SUPERADMIN tiene acceso a todos. Lanza ForbiddenException si no tiene acceso.
-   * Retorna el emisor validado.
+   * Valida acceso a un emisor por RUC.
+   * Retorna el emisor o lanza NotFoundException.
    */
-  async validateRucAccess(
-    ruc: string,
-    user: JwtPayload,
-  ): Promise<EmisorResponseDto> {
+  async validateRucAccess(ruc: string): Promise<EmisorResponseDto> {
     const emisor = await this.findByRuc(ruc);
 
     if (!emisor) {
       throw new NotFoundException(`Emisor con RUC ${ruc} no encontrado`);
-    }
-
-    if (user.rol === UserRole.SUPERADMIN) {
-      return emisor;
-    }
-
-    if (
-      !user.tenantId ||
-      (emisor.tenantId && emisor.tenantId !== user.tenantId)
-    ) {
-      this.logger.warn(
-        `IDOR blocked: user ${user.sub} (tenant ${user.tenantId}) tried to access RUC ${ruc} (tenant ${emisor.tenantId})`,
-      );
-      throw new ForbiddenException('No tienes acceso a este emisor');
     }
 
     return emisor;
@@ -186,7 +104,7 @@ export class EmisoresService {
     const result = await this.db.query(
       `SELECT id, ruc, razon_social, nombre_comercial, direccion_matriz,
               obligado_contabilidad, contribuyente_especial, agente_retencion,
-              contribuyente_rimpe, ambiente, estado, tenant_id,
+              contribuyente_rimpe, ambiente, estado,
               certificado_p12 IS NOT NULL as tiene_certificado,
               certificado_valido_hasta, certificado_sujeto,
               created_at, updated_at
@@ -202,26 +120,6 @@ export class EmisoresService {
     return this.mapToResponse(result.rows[0]);
   }
 
-  /**
-   * Obtiene todos los emisores que pertenecen a un tenant específico.
-   * Retorna solo emisores activos.
-   */
-  async findByTenantId(tenantId: string): Promise<EmisorResponseDto[]> {
-    const result = await this.db.query(
-      `SELECT id, ruc, razon_social, nombre_comercial, direccion_matriz,
-              obligado_contabilidad, contribuyente_especial, agente_retencion,
-              contribuyente_rimpe, ambiente, estado, tenant_id,
-              certificado_p12 IS NOT NULL as tiene_certificado,
-              certificado_valido_hasta, certificado_sujeto,
-              created_at, updated_at
-       FROM emisores
-       WHERE tenant_id = $1 AND estado = 'ACTIVO'`,
-      [tenantId],
-    );
-
-    return result.rows.map((row: any) => this.mapToResponse(row));
-  }
-
   async create(dto: CreateEmisorDto): Promise<EmisorResponseDto> {
     // Verificar si ya existe
     const existing = await this.findByRuc(dto.ruc);
@@ -233,11 +131,11 @@ export class EmisoresService {
       `INSERT INTO emisores (
         ruc, razon_social, nombre_comercial, direccion_matriz,
         obligado_contabilidad, contribuyente_especial, agente_retencion,
-        contribuyente_rimpe, ambiente, estado, tenant_id
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'ACTIVO', $10)
+        contribuyente_rimpe, ambiente, estado
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'ACTIVO')
       RETURNING id, ruc, razon_social, nombre_comercial, direccion_matriz,
                 obligado_contabilidad, contribuyente_especial, agente_retencion,
-                contribuyente_rimpe, ambiente, estado, tenant_id,
+                contribuyente_rimpe, ambiente, estado,
                 false as tiene_certificado,
                 null as certificado_valido_hasta, null as certificado_sujeto,
                 created_at, updated_at`,
@@ -251,7 +149,6 @@ export class EmisoresService {
         dto.agenteRetencion || null,
         dto.contribuyenteRimpe ?? false,
         this.toAmbienteCodigo(dto.ambiente),
-        dto.tenantId || null,
       ],
     );
 
@@ -468,7 +365,6 @@ export class EmisoresService {
       contribuyenteRimpe: row.contribuyente_rimpe,
       ambiente: row.ambiente,
       estado: row.estado,
-      tenantId: row.tenant_id,
       tieneCertificado: row.tiene_certificado,
       certificadoValidoHasta: row.certificado_valido_hasta?.toISOString(),
       certificadoSujeto: row.certificado_sujeto,

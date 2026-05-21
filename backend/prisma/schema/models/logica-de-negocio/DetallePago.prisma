@@ -13,7 +13,7 @@ model DetallePago {
   
   cuotaConvenio    CuotaConvenio?  @relation(fields: [cuotaConvenioId], references: [cuotaConvenioId])
   comprobante      Comprobantes?   @relation(fields: [comprobanteId], references: [id])
-  formaPago        SriFormaPago    @relation(fields: [formaPagoId], references: [id])
+  formaPago        CatalogoFormasPago    @relation(fields: [formaPagoId], references: [id])
   pago             Pagos           @relation(fields: [pagoId], references: [pagoId])
 
   @@index([pagoId])

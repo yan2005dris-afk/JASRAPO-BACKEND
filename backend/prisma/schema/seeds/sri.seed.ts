@@ -62,35 +62,4 @@ export async function seedSriCatalogs(prisma: PrismaClient) {
     });
   }
 
-  // 3. SRI Impuesto
-  const impuestos = [
-    { id: 1, codigo: '2', codigoPorcentaje: '0', nombre: 'IVA 0%', tarifa: 0 },
-    { id: 2, codigo: '2', codigoPorcentaje: '2', nombre: 'IVA 12%', tarifa: 12 },
-    { id: 4, codigo: '2', codigoPorcentaje: '4', nombre: 'IVA 15%', tarifa: 15 },
-    { id: 5, codigo: '2', codigoPorcentaje: '5', nombre: 'IVA 5%', tarifa: 5 },
-  ];
-
-  for (const i of impuestos) {
-    await prisma.sriImpuesto.upsert({
-      where: { id: i.id },
-      update: i,
-      create: i,
-    });
-  }
-
-  // 4. SRI Forma Pago
-  const formasPago = [
-    { id: 1, codigo: '01', nombre: 'EFECTIVO (SIN UTILIZACION DEL SISTEMA FINANCIERO)', activo: true },
-    { id: 16, codigo: '16', nombre: 'TARJETA DE DEBITO', activo: true },
-    { id: 19, codigo: '19', nombre: 'TARJETA DE CREDITO', activo: true },
-    { id: 20, codigo: '20', nombre: 'TRANSFERENCIA/OTROS (CON UTILIZACION DEL SISTEMA FINANCIERO)', activo: true },
-  ];
-
-  for (const f of formasPago) {
-    await prisma.sriFormaPago.upsert({
-      where: { codigo: f.codigo },
-      update: f,
-      create: f,
-    });
-  }
 }

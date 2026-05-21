@@ -43,13 +43,6 @@ export class RegisterUserDto {
   @IsEnum(UserRole)
   @IsOptional()
   rol?: UserRole;
-
-  @ApiPropertyOptional({
-    description: 'ID del tenant al que pertenece el usuario',
-  })
-  @IsUUID()
-  @IsOptional()
-  tenantId?: string;
 }
 
 export class ChangePasswordDto {
@@ -92,7 +85,6 @@ export class AuthResponseDto {
     id: string;
     email: string;
     rol: string;
-    tenantId: string | null;
   };
 }
 
@@ -100,7 +92,6 @@ export class JwtPayload {
   sub: string | number;
   email: string;
   rol: UserRole;
-  tenantId: string | null;
   type?: 'access' | 'refresh';
   iat?: number;
   exp?: number;
