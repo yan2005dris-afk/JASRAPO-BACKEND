@@ -11,7 +11,7 @@ export class CrearLecturaDto {
   @IsNotEmpty() @IsNumber() lecturaAnterior: number;
   @IsNotEmpty() @IsNumber() lecturaActual: number;
   @IsOptional() @IsNumber() consumoCalculado?: number;
-  @IsNotEmpty() contratoId: string | number;
+  @IsNotEmpty() medidorId: string | number;
   @IsOptional() @IsString() descripcionAnomalia?: string;
   @IsOptional() @IsString() fotoUrlMinIo?: string;
   @IsNotEmpty() @IsBoolean() lecturaInicial: boolean;

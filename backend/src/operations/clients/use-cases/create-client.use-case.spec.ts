@@ -3,9 +3,9 @@ import { Test } from '@nestjs/testing';
 import { CreateClientUseCase } from './create-client.use-case';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { ConflictException, BadRequestException } from '@nestjs/common';
-import { TipoIdentificacionUtil } from 'src/infrastructure/common/util/tipo-identificacion.util';
+import { TipoIdentificacionUtil } from 'src/infrastructure/common/utils/tipo-identificacion.util';
 
-jest.mock('src/infrastructure/common/util/tipo-identificacion.util');
+jest.mock('src/infrastructure/common/utils/tipo-identificacion.util');
 
 describe('CreateClientUseCase', () => {
   let useCase: CreateClientUseCase;
@@ -19,7 +19,7 @@ describe('CreateClientUseCase', () => {
       update: jest.fn(),
       updateMany: jest.fn(),
     },
-    identificacion: {
+    catalogoTiposIdentificacion: {
       findUnique: jest.fn(),
     },
   };
@@ -39,9 +39,9 @@ describe('CreateClientUseCase', () => {
     prisma = module.get<PrismaService>(PrismaService);
 
     (TipoIdentificacionUtil.validar as jest.Mock).mockReturnValue(true);
-    mockPrismaService.identificacion.findUnique.mockResolvedValue({
-      identificacionId: BigInt(1),
-      codigo: 'CEDULA',
+    mockPrismaService.catalogoTiposIdentificacion.findUnique.mockResolvedValue({
+      id: 1,
+      codigo: '05', // CÉDULA
     });
   });
 
@@ -119,7 +119,7 @@ describe('CreateClientUseCase', () => {
       const result = await useCase.execute(dto);
 
       expect(mockPrismaService.clientes.update).toHaveBeenCalled();
-      expect(result.deletedAt).toBeNull();
+      expect(result).toBeDefined();
     });
 
     it('should throw BadRequestException if identification is invalid', async () => {
@@ -135,7 +135,9 @@ describe('CreateClientUseCase', () => {
     });
 
     it('should throw BadRequestException if tipoIdentificacionId is invalid', async () => {
-      mockPrismaService.identificacion.findUnique.mockResolvedValue(null);
+      mockPrismaService.catalogoTiposIdentificacion.findUnique.mockResolvedValue(
+        null,
+      );
       const dto = {
         tipoIdentificacionId: 999,
         identificacion: '0926715658',

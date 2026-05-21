@@ -7,12 +7,6 @@ export class MeterResponseDto {
   })
   medidorId: bigint;
 
-  @ApiPropertyOptional({
-    description: 'ID del contrato asociado',
-    example: '1',
-  })
-  contratoId: bigint | null;
-
   @ApiProperty({
     description: 'Marca del medidor',
     example: 'Itron',
@@ -77,7 +71,6 @@ export class MeterResponseDto {
  */
 export const MeterResponseExample = {
   medidorId: '1',
-  contratoId: null,
   marca: 'Itron',
   modelo: 'CX1000',
   serie: 'SN-2024-001234',

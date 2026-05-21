@@ -101,7 +101,7 @@ describe('PublicSearchUseCase', () => {
       const result = await useCase.execute('contrato', 'G-001');
 
       expect(result.data[0].label).toBe('G-001');
-      expect(result.data[0].extra.cliente).toBe('John Doe');
+      expect((result.data[0].extra as any).cliente).toBe('John Doe');
       expect(mockPrismaService.$transaction).toHaveBeenCalled();
     });
   });

@@ -9,6 +9,13 @@ import { BillingModule } from './billing/billing.module';
 import { OperationsModule } from './operations/operations.module';
 import { PublicPortalModule } from './public-portal/public-portal.module';
 import { ObservabilityModule } from './infrastructure/observability/observability.module';
+import { SriIntegrationModule } from './sri/sri.module';
+import { MinioModule } from './infrastructure/database/minio/minio.module';
+import { MailModule } from './infrastructure/mail/mail.module';
+import { JobsModule } from './infrastructure/jobs/jobs.module';
+import { EncryptionModule } from './infrastructure/encryption/encryption.module';
+import { RawPgModule } from './infrastructure/database/raw-pg/raw-pg.module';
+import { AuditModule } from './infrastructure/audit/audit.module';
 
 @Module({
   imports: [
@@ -17,6 +24,18 @@ import { ObservabilityModule } from './infrastructure/observability/observabilit
       envFilePath: '../.env',
       ignoreEnvFile: process.env.NODE_ENV === 'production',
     }),
+
+    // Motor de trabajos asíncronos basado en PostgreSQL
+    JobsModule,
+
+    // Encriptación Global
+    EncryptionModule,
+
+    // Acceso a DB de bajo nivel (Raw SQL)
+    RawPgModule,
+
+    // Auditoría Global
+    AuditModule,
 
     // Limitar peticiones
     ThrottlerModule.forRoot({
@@ -30,12 +49,15 @@ import { ObservabilityModule } from './infrastructure/observability/observabilit
 
     ObservabilityModule,
     DatabaseModule,
+    MinioModule,
     IdentityModule,
     MeteringModule,
     BillingModule,
     OperationsModule,
     PublicPortalModule,
     StorageModule,
+    SriIntegrationModule,
+    MailModule,
   ],
   controllers: [],
   providers: [],

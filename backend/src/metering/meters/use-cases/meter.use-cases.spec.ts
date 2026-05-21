@@ -16,12 +16,11 @@ describe('Meter Use Cases', () => {
   let decommissionUseCase: DecommissionMeterUseCase;
   let prisma: PrismaService;
 
-  // Mock for findUnique - includes estado relation
+  // Mock for findUnique
   const mockMedidorFromDb = {
     medidorId: BigInt(1),
     serie: 'MED-001',
-    estadoId: BigInt(1),
-    estado: { codigo: 'BODEGA', nombre: 'En Bodega' },
+    estado: 'BODEGA',
     deletedAt: null,
   };
 
@@ -31,6 +30,10 @@ describe('Meter Use Cases', () => {
       findUnique: jest.fn(),
       update: jest.fn(),
     },
+    historialMedidores: {
+      create: jest.fn(),
+    },
+    $transaction: jest.fn((cb) => cb(mockPrismaService)),
   };
 
   beforeEach(async () => {
@@ -89,8 +92,7 @@ describe('Meter Use Cases', () => {
       );
       mockPrismaService.medidores.update.mockResolvedValue({
         ...mockMedidorFromDb,
-        estadoId: BigInt(2),
-        estado: { codigo: 'INSTALADO', nombre: 'Instalado' },
+        estado: 'INSTALADO',
       });
       const result = await installUseCase.execute(BigInt(1), BigInt(1));
       expect(result.estado).toBe('INSTALADO');
@@ -99,8 +101,7 @@ describe('Meter Use Cases', () => {
     it('should throw BadRequestException if not in BODEGA', async () => {
       mockPrismaService.medidores.findUnique.mockResolvedValue({
         ...mockMedidorFromDb,
-        estadoId: BigInt(2),
-        estado: { codigo: 'INSTALADO', nombre: 'Instalado' },
+        estado: 'INSTALADO',
       });
       await expect(
         installUseCase.execute(BigInt(1), BigInt(1)),
@@ -112,13 +113,11 @@ describe('Meter Use Cases', () => {
     it('should report defect', async () => {
       mockPrismaService.medidores.findUnique.mockResolvedValue({
         ...mockMedidorFromDb,
-        estadoId: BigInt(2),
-        estado: { codigo: 'INSTALADO', nombre: 'Instalado' },
+        estado: 'INSTALADO',
       });
       mockPrismaService.medidores.update.mockResolvedValue({
         ...mockMedidorFromDb,
-        estadoId: BigInt(3),
-        estado: { codigo: 'DANADO', nombre: 'Dañado' },
+        estado: 'DANADO',
       });
       const result = await reportDamageUseCase.execute(BigInt(1));
       expect(result.estado).toBe('DANADO');
@@ -127,8 +126,7 @@ describe('Meter Use Cases', () => {
     it('should throw BadRequestException if not INSTALADO', async () => {
       mockPrismaService.medidores.findUnique.mockResolvedValue({
         ...mockMedidorFromDb,
-        estadoId: BigInt(1),
-        estado: { codigo: 'BODEGA', nombre: 'En Bodega' },
+        estado: 'BODEGA',
       });
       await expect(reportDamageUseCase.execute(BigInt(1))).rejects.toThrow(
         BadRequestException,
@@ -140,13 +138,11 @@ describe('Meter Use Cases', () => {
     it('should decommission a meter', async () => {
       mockPrismaService.medidores.findUnique.mockResolvedValue({
         ...mockMedidorFromDb,
-        estadoId: BigInt(3),
-        estado: { codigo: 'DANADO', nombre: 'Dañado' },
+        estado: 'DANADO',
       });
       mockPrismaService.medidores.update.mockResolvedValue({
         ...mockMedidorFromDb,
-        estadoId: BigInt(5),
-        estado: { codigo: 'BAJA', nombre: 'Dado de Baja' },
+        estado: 'BAJA',
       });
       const result = await decommissionUseCase.execute(BigInt(1), 'Broken');
       expect(result.estado).toBe('BAJA');
@@ -155,8 +151,7 @@ describe('Meter Use Cases', () => {
     it('should throw BadRequestException if not DANADO', async () => {
       mockPrismaService.medidores.findUnique.mockResolvedValue({
         ...mockMedidorFromDb,
-        estadoId: BigInt(2),
-        estado: { codigo: 'INSTALADO', nombre: 'Instalado' },
+        estado: 'INSTALADO',
       });
       await expect(
         decommissionUseCase.execute(BigInt(1), 'Broken'),

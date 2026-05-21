@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../infrastructure/database/prisma.service';
 import { GenerarLoteDto } from './dto/generar-lote.dto';
+import { BATCH_STATUS_LIST } from 'src/infrastructure/config/app.constants';
 
 @Injectable()
 export class LoteService {
@@ -53,5 +54,17 @@ export class LoteService {
         periodoRel: true,
       },
     });
+  }
+
+  /**
+   * Catálogo de estados de lote
+   */
+  async findAllEstados() {
+    return BATCH_STATUS_LIST.map((s) => ({
+      estadoId: s.estadoId,
+      codigo: s.codigo,
+      nombre: s.nombre,
+      orden: s.orden,
+    }));
   }
 }

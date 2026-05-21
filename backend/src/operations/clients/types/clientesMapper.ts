@@ -1,4 +1,7 @@
-import type { Clientes, Identificacion } from 'src/generated/prisma/client';
+import type {
+  Clientes,
+  CatalogoTiposIdentificacion,
+} from 'src/generated/prisma/client';
 import type { IResponseClient } from './IResponseClient';
 
 /**
@@ -20,8 +23,8 @@ export type ClientePrismaRaw = Pick<
   | 'aplicaTerceraEdad'
 > & {
   tipoIdentificacion?: Pick<
-    Identificacion,
-    'identificacionId' | 'codigo' | 'nombre'
+    CatalogoTiposIdentificacion,
+    'id' | 'codigo' | 'descripcion'
   > | null;
 };
 
@@ -45,9 +48,9 @@ export function toClienteResponse(cliente: ClientePrismaRaw): IResponseClient {
     aplicaTerceraEdad: cliente.aplicaTerceraEdad,
     tipoIdentificacion: cliente.tipoIdentificacion
       ? {
-          identificacionId: cliente.tipoIdentificacion.identificacionId,
+          id: cliente.tipoIdentificacion.id,
           codigo: cliente.tipoIdentificacion.codigo,
-          nombre: cliente.tipoIdentificacion.nombre,
+          descripcion: cliente.tipoIdentificacion.descripcion,
         }
       : null,
   };

@@ -9,10 +9,7 @@ model Periodos {
   updatedAt        DateTime          @updatedAt @map("actualizado_en")
   lecturas         Lecturas[]
   lotes            Lote[]
-  notasCredito     NotasCredito[]
-  notasDebito      NotasDebito[]
   prefacturas      Prefacturas[]
-  retenciones      Retenciones[]
 
   @@map("periodos")
 }

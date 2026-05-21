@@ -22,7 +22,7 @@ describe('ReadingService', () => {
     lecturaAnterior: 100,
     lecturaActual: 150,
     consumoCalculado: 50,
-    contratoId: BigInt(1),
+    medidorId: BigInt(1),
   };
 
   beforeEach(async () => {
@@ -65,8 +65,8 @@ describe('ReadingService', () => {
   });
 
   it('create should delegate to CreateReadingUseCase', async () => {
-    const dto = { contratoId: '1' } as any;
-    jest.spyOn(createUseCase, 'execute').mockResolvedValue(mockLectura);
+    const dto = { medidorId: '1' } as any;
+    jest.spyOn(createUseCase, 'execute').mockResolvedValue(mockLectura as any);
     const result = await service.create(dto);
     expect(result).toBe(mockLectura);
     expect(createUseCase.execute).toHaveBeenCalledWith(dto);
@@ -74,7 +74,9 @@ describe('ReadingService', () => {
 
   it('findAll should delegate to FindAllReadingsUseCase', async () => {
     const params = { skip: 0 };
-    jest.spyOn(findAllUseCase, 'execute').mockResolvedValue([mockLectura]);
+    jest
+      .spyOn(findAllUseCase, 'execute')
+      .mockResolvedValue([mockLectura] as any);
     const result = await service.findAll(params);
     expect(result).toEqual([mockLectura]);
     expect(findAllUseCase.execute).toHaveBeenCalledWith(params);
@@ -82,7 +84,7 @@ describe('ReadingService', () => {
 
   it('findOne should delegate to FindOneReadingUseCase', async () => {
     const id = BigInt(1);
-    jest.spyOn(findOneUseCase, 'execute').mockResolvedValue(mockLectura);
+    jest.spyOn(findOneUseCase, 'execute').mockResolvedValue(mockLectura as any);
     const result = await service.findOne(id);
     expect(result).toBe(mockLectura);
     expect(findOneUseCase.execute).toHaveBeenCalledWith(id);
@@ -91,7 +93,7 @@ describe('ReadingService', () => {
   it('update should delegate to UpdateReadingUseCase', async () => {
     const id = BigInt(1);
     const dto = { lecturaActual: 200 };
-    jest.spyOn(updateUseCase, 'execute').mockResolvedValue(mockLectura);
+    jest.spyOn(updateUseCase, 'execute').mockResolvedValue(mockLectura as any);
     const result = await service.update(id, dto);
     expect(result).toBe(mockLectura);
     expect(updateUseCase.execute).toHaveBeenCalledWith(id, dto);

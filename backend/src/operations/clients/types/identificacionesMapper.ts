@@ -1,15 +1,13 @@
 import type { IResponseIdentificacion } from './IResponseIdentificacion';
+import type { CatalogoTiposIdentificacion } from 'src/generated/prisma/client';
 
 /**
  * Tipo de entrada desde Prisma
  */
-export type IdentificacionPrismaRaw = {
-  identificacionId: bigint;
-  codigo: string;
-  nombre: string;
-  activo: boolean;
-  orden: number;
-};
+export type IdentificacionPrismaRaw = Pick<
+  CatalogoTiposIdentificacion,
+  'id' | 'codigo' | 'descripcion' | 'activo'
+>;
 
 /**
  * Mapea resultado de Prisma a DTO de response
@@ -18,10 +16,9 @@ export function toIdentificacionResponse(
   identificacion: IdentificacionPrismaRaw,
 ): IResponseIdentificacion {
   return {
-    identificacionId: identificacion.identificacionId,
+    id: identificacion.id,
     codigo: identificacion.codigo,
-    nombre: identificacion.nombre,
+    descripcion: identificacion.descripcion,
     activo: identificacion.activo,
-    orden: identificacion.orden,
   };
 }

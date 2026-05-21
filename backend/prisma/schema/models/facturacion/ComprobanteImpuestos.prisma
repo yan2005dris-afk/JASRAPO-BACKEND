@@ -1,0 +1,14 @@
+model ComprobanteImpuestos {
+  id                   String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid @map("id")
+  comprobanteDetalleId String              @db.Uuid @map("comprobante_detalle_id")
+  codigo               String              @db.VarChar(2) @map("codigo")
+  codigoPorcentaje     String              @db.VarChar(4) @map("codigo_porcentaje")
+  tarifa               Decimal?            @db.Decimal(8, 2) @map("tarifa")
+  baseImponible        Decimal?            @db.Decimal(18, 2) @map("base_imponible")
+  valor                Decimal?            @db.Decimal(18, 2) @map("valor")
+
+  detalle              ComprobanteDetalles @relation(fields: [comprobanteDetalleId], references: [id], onDelete: Cascade)
+
+  @@index([comprobanteDetalleId])
+  @@map("comprobante_impuestos")
+}

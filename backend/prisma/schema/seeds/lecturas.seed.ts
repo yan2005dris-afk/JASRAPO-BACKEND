@@ -25,12 +25,15 @@ export async function seedLecturas(prisma: PrismaClient) {
 
     const contratos = await prisma.contratos.findMany({
         where: { estado: "ACTIVO" },
-        select: { contratoId: true },
+        include: { historialMedidores: { where: { fechaHasta: null } } },
     });
 
     let lecturaId = 1;
 
     for (const contrato of contratos) {
+        const medidorId = contrato.historialMedidores[0]?.medidorId;
+        if (!medidorId) continue;
+
         let lecturaAnterior = 0;
         for (const pDb of periodosDb) {
             const consumo = Math.floor(Math.random() * 30) + 5;
@@ -39,7 +42,7 @@ export async function seedLecturas(prisma: PrismaClient) {
             await prisma.lecturas.create({
                 data: {
                     lecturaId: BigInt(lecturaId),
-                    contratoId: contrato.contratoId,
+                    medidorId: medidorId,
                     periodoId: pDb.periodoId,
                     fecha: new Date(),
                     lecturaAnterior,

@@ -1,22 +1,27 @@
+enum EstadoLote {
+  BORRADOR
+  DEFINITIVO
+  ENVIADO
+}
+
 model Lote {
   loteId         BigInt        @id @default(autoincrement()) @map("lote_id")
   comunidadId    Int           @map("comunidad_id")
   periodoId      Int           @map("periodo_id")
-  estadoId       BigInt        @default(1) @map("estado_id")
+  estado         EstadoLote    @default(BORRADOR) @map("estado")
   totalMonto     Decimal       @default(0) @map("total_monto") @db.Decimal(18, 2)
   notas          String?       @map("notas")
   createdAt      DateTime      @default(now()) @map("creado_en")
   updatedAt      DateTime      @updatedAt @map("actualizado_en")
-  createdBy      Int?          @map("creado_por")
+  creadoPor      String?       @map("creado_por")
   totalEmisiones Int           @default(0) @map("total_emisiones")
   comunidad      Comunidades   @relation(fields: [comunidadId], references: [comunidadId])
-  usuario        Usuarios?     @relation(fields: [createdBy], references: [usuarioId])
   periodoRel     Periodos      @relation(fields: [periodoId], references: [periodoId])
-  estado        EstadoLote    @relation(fields: [estadoId], references: [estadoId])
   prefacturas    Prefacturas[]
 
   @@unique([comunidadId, periodoId], name: "uk_lote_comunidad_periodo")
   @@index([comunidadId])
   @@index([periodoId])
+  @@index([creadoPor])
   @@map("lote")
 }

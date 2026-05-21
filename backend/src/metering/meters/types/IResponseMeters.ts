@@ -2,15 +2,10 @@ import type { Prisma } from 'src/generated/prisma/client';
 
 export interface IResponseMeters {
   medidorId: bigint;
-  contratoId: bigint | null;
   marca: string;
   modelo: string;
   serie: string;
-  estado: {
-    estadoId: bigint;
-    codigo: string;
-    nombre: string;
-  } | null;
+  estado: string;
   fechaInstalacion: Date | null;
   fechaBaja: Date | null;
   motivo: string | null;
@@ -20,17 +15,10 @@ export interface IResponseMeters {
 
 export const safeMeterSelect = {
   medidorId: true,
-  contratoId: true,
   marca: true,
   modelo: true,
   serie: true,
-  estado: {
-    select: {
-      estadoId: true,
-      codigo: true,
-      nombre: true,
-    },
-  },
+  estado: true,
   fechaInstalacion: true,
   fechaBaja: true,
   motivo: true,
@@ -40,17 +28,10 @@ export const safeMeterSelect = {
 
 export const safeMeterSelectWithDelete = {
   medidorId: true,
-  contratoId: true,
   marca: true,
   modelo: true,
   serie: true,
-  estado: {
-    select: {
-      estadoId: true,
-      codigo: true,
-      nombre: true,
-    },
-  },
+  estado: true,
   fechaInstalacion: true,
   fechaBaja: true,
   motivo: true,

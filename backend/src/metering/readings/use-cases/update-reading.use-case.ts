@@ -19,8 +19,8 @@ export class UpdateReadingUseCase {
     }
 
     const dataToUpdate: any = { ...updateDto };
-    if (updateDto.contratoId)
-      dataToUpdate.contratoId = BigInt(updateDto.contratoId);
+    if (updateDto.medidorId)
+      dataToUpdate.medidorId = BigInt(updateDto.medidorId);
     if (updateDto.fecha) dataToUpdate.fecha = new Date(updateDto.fecha);
 
     const lectura = await this.prisma.lecturas.update({

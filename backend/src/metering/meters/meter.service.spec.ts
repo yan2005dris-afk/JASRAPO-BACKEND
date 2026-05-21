@@ -8,6 +8,8 @@ import { InstallMeterUseCase } from './use-cases/install-meter.use-case';
 import { ReportDefectUseCase } from './use-cases/report-defect.use-case';
 import { DecommissionMeterUseCase } from './use-cases/decommission-meter.use-case';
 
+import { EstadoMedidor } from 'src/generated/prisma/enums';
+
 describe('MeterService', () => {
   let service: MeterService;
   let prisma: PrismaService;
@@ -23,15 +25,15 @@ describe('MeterService', () => {
     serie: 'MED-001',
     modelo: 'CX1000',
     marca: 'Itron',
-    estadoId: BigInt(1),
-    estado: { codigo: 'BODEGA', nombre: 'En Bodega' },
-    contratoId: null,
+    estado: EstadoMedidor.BODEGA,
     fechaInstalacion: null,
     fechaBaja: null,
     motivo: null,
     latitud: null,
     longitud: null,
     deletedAt: null,
+    createdAt: new Date(),
+    updatedAt: new Date(),
   };
 
   // DTO shape (what the service returns after mapping)
@@ -41,7 +43,6 @@ describe('MeterService', () => {
     modelo: 'CX1000',
     marca: 'Itron',
     estado: 'BODEGA',
-    contratoId: null,
     fechaInstalacion: null,
     fechaBaja: null,
     motivo: null,
@@ -93,9 +94,7 @@ describe('MeterService', () => {
 
   it('create should delegate to CreateMeterUseCase and map response', async () => {
     const dto = { serie: 'MED-001' } as any;
-    jest
-      .spyOn(createUseCase, 'execute')
-      .mockResolvedValue(mockPrismaResult as any);
+    jest.spyOn(createUseCase, 'execute').mockResolvedValue(mockPrismaResult);
     const result = await service.create(dto);
     expect(result.medidorId).toEqual(expectedResponse.medidorId);
     expect(result.serie).toBe(expectedResponse.serie);
@@ -105,9 +104,7 @@ describe('MeterService', () => {
 
   it('findOne should delegate to FindOneMeterUseCase and map response', async () => {
     const id = BigInt(1);
-    jest
-      .spyOn(findOneUseCase, 'execute')
-      .mockResolvedValue(mockPrismaResult as any);
+    jest.spyOn(findOneUseCase, 'execute').mockResolvedValue(mockPrismaResult);
     const result = await service.findOne(id);
     expect(result.medidorId).toEqual(expectedResponse.medidorId);
     expect(result.serie).toBe(expectedResponse.serie);

@@ -35,14 +35,12 @@ describe('CreateMeterUseCase', () => {
       lecturaInicial: 0,
     };
 
-    // FK pattern: estadoId + estado relation
     const expectedMedidor = {
       medidorId: BigInt(1),
       serie: dto.serie,
       modelo: dto.modelo,
       marca: dto.marca,
-      estadoId: BigInt(1),
-      estado: { codigo: 'BODEGA', nombre: 'En Bodega' },
+      estado: 'BODEGA',
     };
 
     mockPrismaService.medidores.create.mockResolvedValue(

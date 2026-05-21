@@ -90,7 +90,16 @@ export class ReadingController {
     @Query('contratoId') contratoId?: string,
   ): Promise<LecturaEntity[]> {
     const where: any = {};
-    if (contratoId) where.contratoId = BigInt(contratoId);
+    if (contratoId) {
+      where.medidor = {
+        historial: {
+          some: {
+            contratoId: BigInt(contratoId),
+            fechaHasta: null,
+          },
+        },
+      };
+    }
     return this.readingService.findAll({
       skip: skip ? Number(skip) : undefined,
       take: take ? Number(take) : undefined,

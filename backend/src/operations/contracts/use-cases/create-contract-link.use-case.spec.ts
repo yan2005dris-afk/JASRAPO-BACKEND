@@ -8,8 +8,14 @@ describe('CreateContractLinkUseCase', () => {
 
   const mockPrismaService = {
     medidores: {
+      findUnique: jest.fn(),
       update: jest.fn(),
     },
+    historialMedidores: {
+      updateMany: jest.fn(),
+      create: jest.fn(),
+    },
+    $transaction: jest.fn((cb) => cb(mockPrismaService)),
   };
 
   beforeEach(async () => {
@@ -34,19 +40,38 @@ describe('CreateContractLinkUseCase', () => {
     expect(useCase).toBeDefined();
   });
 
-  it('should update medidor with contratoId', async () => {
-    const dto = { medidorId: '1', contratoId: '2' };
-    mockPrismaService.medidores.update.mockResolvedValue({
+  it('should create a new link and close previous ones', async () => {
+    const dto = { medidorId: '1', contratoId: '2', lecturaInicial: 0 };
+    mockPrismaService.medidores.findUnique.mockResolvedValue({
       medidorId: BigInt(1),
-      contratoId: BigInt(2),
+    });
+    mockPrismaService.historialMedidores.updateMany.mockResolvedValue({
+      count: 1,
+    });
+    mockPrismaService.historialMedidores.create.mockResolvedValue({});
+
+    await useCase.execute(dto);
+
+    // Should close existing links for either medidor or contract
+    expect(
+      mockPrismaService.historialMedidores.updateMany,
+    ).toHaveBeenCalledWith({
+      where: {
+        OR: [
+          { medidorId: BigInt(1), fechaHasta: null },
+          { contratoId: BigInt(2), fechaHasta: null },
+        ],
+      },
+      data: { fechaHasta: expect.any(Date) },
     });
 
-    const result = await useCase.execute(dto);
-
-    expect(result.contratoId).toBe(BigInt(2));
-    expect(mockPrismaService.medidores.update).toHaveBeenCalledWith({
-      where: { medidorId: BigInt(1) },
-      data: { contratoId: BigInt(2) },
+    // Should create new link
+    expect(mockPrismaService.historialMedidores.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        medidorId: BigInt(1),
+        contratoId: BigInt(2),
+        lecturaInicial: 0,
+      }),
     });
   });
 });

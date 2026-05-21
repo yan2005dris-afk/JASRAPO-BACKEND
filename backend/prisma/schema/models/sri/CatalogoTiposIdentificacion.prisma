@@ -1,0 +1,13 @@
+model CatalogoTiposIdentificacion {
+  id              Int         @id @default(autoincrement())
+  codigo          String      @unique @db.VarChar(2)
+  descripcion     String      @db.VarChar(100)
+  longitud        Int?
+  regexValidacion String?     @db.VarChar(100) @map("regex_validacion")
+  activo          Boolean     @default(true)
+  createdAt       DateTime    @default(now()) @map("created_at")
+
+  clientes Clientes[]
+
+  @@map("catalogo_tipos_identificacion")
+}

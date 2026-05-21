@@ -8,8 +8,13 @@ describe('FinalizeMeterLinkUseCase', () => {
 
   const mockPrismaService = {
     medidores: {
+      findUnique: jest.fn(),
       update: jest.fn(),
     },
+    historialMedidores: {
+      updateMany: jest.fn(),
+    },
+    $transaction: jest.fn((cb) => cb(mockPrismaService)),
   };
 
   beforeEach(async () => {
@@ -34,19 +39,25 @@ describe('FinalizeMeterLinkUseCase', () => {
     expect(useCase).toBeDefined();
   });
 
-  it('should update medidor to set contratoId to null', async () => {
+  it('should finalize link and close history', async () => {
     const medidorId = BigInt(1);
-    mockPrismaService.medidores.update.mockResolvedValue({
+    mockPrismaService.medidores.findUnique.mockResolvedValue({
       medidorId,
-      contratoId: null,
+    });
+    mockPrismaService.historialMedidores.updateMany.mockResolvedValue({
+      count: 1,
     });
 
     const result = await useCase.execute(medidorId);
 
-    expect(result.contratoId).toBeNull();
-    expect(mockPrismaService.medidores.update).toHaveBeenCalledWith({
-      where: { medidorId },
-      data: { contratoId: null },
+    expect(result).toBeDefined();
+
+    // Should close existing history for the medidor
+    expect(
+      mockPrismaService.historialMedidores.updateMany,
+    ).toHaveBeenCalledWith({
+      where: { medidorId, fechaHasta: null },
+      data: { fechaHasta: expect.any(Date) },
     });
   });
 });

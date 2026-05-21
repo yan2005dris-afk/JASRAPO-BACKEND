@@ -12,7 +12,7 @@ import { LoginUserDto } from '../dto/login-user.dto';
 import * as bcrypt from 'bcryptjs';
 import { randomUUID } from 'crypto';
 import { REFRESH_TOKEN_MAX_AGE_MS } from 'src/infrastructure/config/app.constants';
-import { EcuadorTimezoneUtil } from 'src/infrastructure/common/util/ecuador-timezone-backend.util';
+import { EcuadorTimezoneUtil } from 'src/infrastructure/common/utils/ecuador-timezone-backend.util';
 import type { DecodedJwt } from '../types/auth-service.types';
 import type { StringValue } from 'ms';
 

@@ -38,7 +38,7 @@ describe('UpdateContractUseCase', () => {
 
   it('should update a contract if it exists', async () => {
     const id = BigInt(1);
-    const updateDto = { numeroGuia: 'NEW-GUIA' };
+    const updateDto = { motivoCambio: 'NEW-MOTIVO' };
     mockPrismaService.contratos.findUnique.mockResolvedValue({
       contratoId: id,
       deletedAt: null,
@@ -50,7 +50,7 @@ describe('UpdateContractUseCase', () => {
 
     const result = await useCase.execute(id, updateDto);
 
-    expect(result.numeroGuia).toBe('NEW-GUIA');
+    expect(result.motivoCambio).toBe('NEW-MOTIVO');
     expect(mockPrismaService.contratos.update).toHaveBeenCalledWith({
       where: { contratoId: id },
       data: updateDto,
@@ -61,7 +61,7 @@ describe('UpdateContractUseCase', () => {
     const id = BigInt(1);
     mockPrismaService.contratos.findUnique.mockResolvedValue(null);
 
-    await expect(useCase.execute(id, { numeroGuia: 'TEST' })).rejects.toThrow(
+    await expect(useCase.execute(id, { motivoCambio: 'TEST' })).rejects.toThrow(
       NotFoundException,
     );
   });

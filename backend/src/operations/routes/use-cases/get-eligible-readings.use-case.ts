@@ -11,7 +11,7 @@ import { ReadingForRouteMapper } from '../types/mappers';
 import {
   paginate,
   PaginateOptions,
-} from 'src/infrastructure/common/util/pagination.util';
+} from 'src/infrastructure/common/utils/pagination.util';
 import { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
 
 @Injectable()
@@ -67,14 +67,18 @@ export class GetEligibleReadingsUseCase {
 
       deletedAt: null,
 
-      contrato: {
-        estado: estadoContratoEsperado,
-
-        comunidadId,
-
-        ...(sectorId && { sectorId }),
-
-        deletedAt: null,
+      medidor: {
+        historial: {
+          some: {
+            fechaHasta: null,
+            contrato: {
+              estado: estadoContratoEsperado,
+              comunidadId,
+              ...(sectorId && { sectorId }),
+              deletedAt: null,
+            },
+          },
+        },
       },
     };
 
@@ -83,31 +87,52 @@ export class GetEligibleReadingsUseCase {
     if (q) {
       where.OR = [
         {
-          contrato: {
-            numeroGuia: {
-              contains: q,
-              mode: 'insensitive',
-            },
-          },
-        },
-
-        {
-          contrato: {
-            cliente: {
-              nombres: {
-                contains: q,
-                mode: 'insensitive',
+          medidor: {
+            historial: {
+              some: {
+                fechaHasta: null,
+                contrato: {
+                  numeroGuia: {
+                    contains: q,
+                    mode: 'insensitive',
+                  },
+                },
               },
             },
           },
         },
 
         {
-          contrato: {
-            cliente: {
-              apellidos: {
-                contains: q,
-                mode: 'insensitive',
+          medidor: {
+            historial: {
+              some: {
+                fechaHasta: null,
+                contrato: {
+                  cliente: {
+                    nombres: {
+                      contains: q,
+                      mode: 'insensitive',
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+
+        {
+          medidor: {
+            historial: {
+              some: {
+                fechaHasta: null,
+                contrato: {
+                  cliente: {
+                    apellidos: {
+                      contains: q,
+                      mode: 'insensitive',
+                    },
+                  },
+                },
               },
             },
           },
@@ -120,22 +145,28 @@ export class GetEligibleReadingsUseCase {
       {
         where,
         include: {
-          contrato: {
+          medidor: {
             include: {
-              cliente: true,
-              sector: true,
+              historial: {
+                where: { fechaHasta: null },
+                include: {
+                  contrato: {
+                    include: {
+                      cliente: true,
+                      sector: true,
+                    },
+                  },
+                },
+              },
             },
           },
         },
         orderBy: [
           {
-            contrato: {
-              sectorId: 'asc',
-            },
-          },
-          {
-            contrato: {
-              numeroGuia: 'asc',
+            medidor: {
+              historial: {
+                _count: 'desc', // This is just a placeholder, real ordering is harder now
+              },
             },
           },
         ],
