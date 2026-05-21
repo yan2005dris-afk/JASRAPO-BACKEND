@@ -23,7 +23,7 @@ describe('Readings Use Cases', () => {
     lecturaAnterior: 100,
     lecturaActual: 150,
     consumoCalculado: 50,
-    contratoId: BigInt(1),
+    medidorId: BigInt(1),
     createdAt: new Date(),
     updatedAt: new Date(),
     deletedAt: null,
@@ -35,6 +35,9 @@ describe('Readings Use Cases', () => {
       findMany: jest.fn(),
       findUnique: jest.fn(),
       update: jest.fn(),
+    },
+    medidor: {
+      findUnique: jest.fn(),
     },
   };
 
@@ -65,7 +68,7 @@ describe('Readings Use Cases', () => {
         fecha: '2024-01-01',
         lecturaAnterior: 100,
         lecturaActual: 150,
-        contratoId: '1',
+        medidorId: '1',
       } as any);
       expect(result).toBeInstanceOf(LecturaEntity);
       expect(mockPrismaService.lecturas.create).toHaveBeenCalled();

@@ -12,14 +12,16 @@ describe('InstallMeterUseCase', () => {
       findUnique: jest.fn(),
       update: jest.fn(),
     },
+    historialMedidores: {
+      create: jest.fn(),
+    },
+    $transaction: jest.fn((cb) => cb(mockPrismaService)),
   };
 
-  // FK pattern: estadoId instead of enum
   const mockMedidor = {
     medidorId: BigInt(1),
     serie: 'MED-001',
-    estadoId: BigInt(1), // BODEGA
-    estado: { codigo: 'BODEGA', nombre: 'En Bodega' },
+    estado: 'BODEGA',
     deletedAt: null,
   };
 
@@ -38,28 +40,33 @@ describe('InstallMeterUseCase', () => {
     expect(useCase).toBeDefined();
   });
 
-  it('should install device from BODEGA status', async () => {
+  it('should install device from BODEGA status and create history', async () => {
     mockPrismaService.medidores.findUnique.mockResolvedValue(
       mockMedidor as any,
     );
     mockPrismaService.medidores.update.mockResolvedValue({
       ...mockMedidor,
-      estadoId: BigInt(2), // INSTALADO
-      estado: { codigo: 'INSTALADO', nombre: 'Instalado' },
-      contratoId: BigInt(123),
+      estado: 'INSTALADO',
     } as any);
+    mockPrismaService.historialMedidores.create.mockResolvedValue({});
 
     const result = await useCase.execute(BigInt(1), BigInt(123));
 
     expect(result.estado).toBe('INSTALADO');
+    expect(mockPrismaService.historialMedidores.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        medidorId: BigInt(1),
+        contratoId: BigInt(123),
+        lecturaInicial: 0,
+      }),
+    });
   });
 
   it('should throw BadRequestException when medidor is not in BODEGA status', async () => {
     mockPrismaService.medidores.findUnique.mockResolvedValue({
       ...mockMedidor,
-      estadoId: BigInt(2), // INSTALADO
-      estado: { codigo: 'INSTALADO', nombre: 'Instalado' },
-    } as any);
+      estado: 'INSTALADO',
+    });
 
     await expect(useCase.execute(BigInt(1), BigInt(123))).rejects.toThrow(
       BadRequestException,
@@ -88,8 +95,7 @@ describe('InstallMeterUseCase', () => {
   it('should throw BadRequestException when medidor already installed', async () => {
     mockPrismaService.medidores.findUnique.mockResolvedValue({
       ...mockMedidor,
-      estadoId: BigInt(2),
-      estado: { codigo: 'INSTALADO', nombre: 'Instalado' },
+      estado: 'INSTALADO',
     } as any);
 
     await expect(useCase.execute(BigInt(1), BigInt(123))).rejects.toThrow(

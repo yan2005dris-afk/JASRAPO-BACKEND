@@ -1,7 +1,7 @@
 model CatalogoRetenciones {
   id           Int       @id @default(autoincrement())
   tipo         String    @db.VarChar(10)
-  codigo       String    @db.VarChar(10)
+  codigo       String    @unique @db.VarChar(10)
   descripcion  String    @db.VarChar(500)
   porcentaje   Decimal   @db.Decimal(5, 2)
   vigenteDesde DateTime  @default(now()) @db.Date @map("vigente_desde")
@@ -9,6 +9,8 @@ model CatalogoRetenciones {
   activo       Boolean   @default(true)
   createdAt    DateTime  @default(now()) @map("created_at")
   updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  retenciones  ComprobanteRetenciones[]
 
   @@unique([tipo, codigo, vigenteDesde])
   @@index([tipo])

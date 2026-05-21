@@ -1,11 +1,10 @@
 import { Module } from '@nestjs/common';
 import {
-  FacturaService,
-  NotaCreditoService,
-  NotaDebitoService,
-  RetencionService,
-  GuiaRemisionService,
-  SriRepositoryService,
+    FacturaService,
+    NotaCreditoService,
+    NotaDebitoService,
+    RetencionService,
+    SriRepositoryService,
 } from './services';
 
 @Module({
@@ -14,7 +13,6 @@ import {
     NotaCreditoService,
     NotaDebitoService,
     RetencionService,
-    GuiaRemisionService,
     SriRepositoryService,
   ],
   exports: [
@@ -22,7 +20,6 @@ import {
     NotaCreditoService,
     NotaDebitoService,
     RetencionService,
-    GuiaRemisionService,
     SriRepositoryService,
   ],
 })

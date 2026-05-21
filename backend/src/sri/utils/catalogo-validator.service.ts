@@ -49,14 +49,6 @@ export interface DocumentoSustento {
 }
 
 /**
- * Motivo traslado del catálogo
- */
-export interface MotivoTraslado {
-  codigo: string;
-  descripcion: string;
-}
-
-/**
  * Servicio para validar códigos contra los catálogos almacenados en base de datos
  */
 @Injectable()
@@ -69,8 +61,6 @@ export class CatalogoValidatorService {
   private formasPagoCache: Map<string, FormaPago> = new Map();
   private tiposIdentificacionCache: Map<string, TipoIdentificacion> = new Map();
   private documentosSustentoCache: Map<string, DocumentoSustento> = new Map();
-  private motivosTrasladoCache: Map<string, MotivoTraslado> = new Map();
-
   private cacheExpiry: number = 0;
   private readonly CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutos
   private loadingPromise: Promise<void> | null = null; // FIX P7: Semáforo anti-carga paralela
@@ -246,29 +236,6 @@ export class CatalogoValidatorService {
   }
 
   // =====================================================
-  // VALIDACIONES DE MOTIVOS TRASLADO (Guía Remisión)
-  // =====================================================
-
-  async validateMotivoTraslado(codigo: string): Promise<{
-    valid: boolean;
-    motivoTraslado?: MotivoTraslado;
-    error?: string;
-  }> {
-    await this.refreshCacheIfNeeded();
-
-    const motivoTraslado = this.motivosTrasladoCache.get(codigo);
-
-    if (!motivoTraslado) {
-      return {
-        valid: false,
-        error: `Motivo de traslado ${codigo} no encontrado en catálogo`,
-      };
-    }
-
-    return { valid: true, motivoTraslado };
-  }
-
-  // =====================================================
   // MÉTODOS DE CONSULTA
   // =====================================================
 
@@ -307,11 +274,6 @@ export class CatalogoValidatorService {
   async getDocumentosSustento(): Promise<DocumentoSustento[]> {
     await this.refreshCacheIfNeeded();
     return Array.from(this.documentosSustentoCache.values());
-  }
-
-  async getMotivosTraslado(): Promise<MotivoTraslado[]> {
-    await this.refreshCacheIfNeeded();
-    return Array.from(this.motivosTrasladoCache.values());
   }
 
   // =====================================================
@@ -418,23 +380,10 @@ export class CatalogoValidatorService {
         });
       }
 
-      // 6. Cargar motivos traslado
-      const motivosTraslado = await this.db.query<any>(`
-        SELECT codigo, descripcion FROM catalogo_motivos_traslado WHERE activo = true
-      `);
-      this.motivosTrasladoCache.clear();
-      for (const mt of motivosTraslado.rows) {
-        this.motivosTrasladoCache.set(mt.codigo, {
-          codigo: mt.codigo,
-          descripcion: mt.descripcion,
-        });
-      }
-
       this.logger.log(
         `Catálogos cargados: ${this.tarifasCache.size} tarifas, ` +
           `${this.retencionesCache.size} retenciones, ${this.formasPagoCache.size} formas pago, ` +
-          `${this.tiposIdentificacionCache.size} tipos ident, ${this.documentosSustentoCache.size} docs sustento, ` +
-          `${this.motivosTrasladoCache.size} motivos traslado`,
+          `${this.tiposIdentificacionCache.size} tipos ident, ${this.documentosSustentoCache.size} docs sustento`,
       );
     } catch (error) {
       this.logger.error(

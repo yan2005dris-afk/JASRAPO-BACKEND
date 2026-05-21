@@ -50,7 +50,6 @@ export async function seedSriCatalogs(prisma: PrismaClient) {
     { id: 1, codigo: '01', nombre: 'FACTURA', activo: true },
     { id: 4, codigo: '04', nombre: 'NOTA DE CRÉDITO', activo: true },
     { id: 5, codigo: '05', nombre: 'NOTA DE DÉBITO', activo: true },
-    { id: 6, codigo: '06', nombre: 'GUÍA DE REMISIÓN', activo: true },
     { id: 7, codigo: '07', nombre: 'COMPROBANTE DE RETENCIÓN', activo: true },
   ];
 

@@ -42,8 +42,6 @@ import {
   NotaDebitoResponseDto,
   CreateRetencionDto,
   RetencionResponseDto,
-  CreateGuiaRemisionDto,
-  GuiaRemisionResponseDto,
   EmisionEncoladaResponseDto,
 } from './issuance/dto';
 import {
@@ -147,21 +145,6 @@ export class SriController {
     this.logger.log(`POST /sri/emitir/retencion`);
     await this.emisoresService.validateRucAccess(dto.emisor.ruc);
     return this.sriService.emitirRetencion(dto);
-  }
-
-  @Post('emitir/guia-remision')
-  @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({
-    summary: 'Emitir guía de remisión electrónica',
-  })
-  @ApiBody({ type: CreateGuiaRemisionDto })
-  async emitirGuiaRemision(
-    @Body() dto: CreateGuiaRemisionDto,
-    @CurrentUser() user: JwtPayload,
-  ): Promise<EmisionEncoladaResponseDto | GuiaRemisionResponseDto> {
-    this.logger.log(`POST /sri/emitir/guia-remision`);
-    await this.emisoresService.validateRucAccess(dto.emisor.ruc);
-    return this.sriService.emitirGuiaRemision(dto);
   }
 
   @Get('autorizar/:claveAcceso')

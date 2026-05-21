@@ -12,10 +12,6 @@ model Usuarios {
   createdAt         DateTime?          @default(now()) @map("creado_en")
   updatedAt         DateTime?          @updatedAt @map("actualizado_en")
   // Relaciones
-  cajaSesion        CajaSesion[]
-  descuentosDetalle DescuentoDetalle[] @relation("AutorizadoPor")
-  lote              Lote[]
-  pagos             Pagos[]
   rutas             Rutas[]
   sesiones          Sesiones[]
   permisosUsuario   UsuarioPermisos[]

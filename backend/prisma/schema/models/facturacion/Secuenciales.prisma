@@ -5,7 +5,8 @@ model Secuenciales {
   ultimoSecuencial Int           @default(0) @map("ultimo_secuencial")
   updatedAt        DateTime      @updatedAt @map("updated_at")
 
-  puntoEmision     PuntosEmision @relation(fields: [puntoEmisionId], references: [id], onDelete: Cascade)
+  puntoEmision     PuntosEmision        @relation(fields: [puntoEmisionId], references: [id], onDelete: Cascade)
+  tipoCompRel      SriTipoComprobante?  @relation("SecuencialTipoComprobante", fields: [tipoComprobante], references: [codigo])
 
   @@unique([puntoEmisionId, tipoComprobante])
   @@index([puntoEmisionId])

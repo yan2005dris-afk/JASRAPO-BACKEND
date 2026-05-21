@@ -5,7 +5,6 @@ model Lecturas {
   lecturaActual       Decimal            @map("lectura_actual") @db.Decimal
   consumoCalculado    Decimal            @map("consumo_calculado") @db.Decimal
   deletedAt           DateTime?          @map("borrado_en")
-  contratoId          BigInt             @map("contrato_id")
   createdAt           DateTime           @default(now()) @map("creado_en")
   fechaValidacion     DateTime?          @map("fecha_validacion")
   fotoUrlMinIo        String?            @map("foto_url_minio")
@@ -14,22 +13,20 @@ model Lecturas {
   descripcionAnomalia String?            @map("descripcion_anomalia")
   updatedAt           DateTime           @updatedAt @map("actualizado_en")
 
-  medidorId           BigInt?            @map("medidor_id")
+  medidorId           BigInt             @map("medidor_id")
   estado              EstadoLectura      @default(PENDIENTE) @map("estado")
   rutaAsignadaId      BigInt?            @map("ruta_asignada_id")
   estadoAsignacion    EstadoAsignacion   @default(NO_ASIGNADA) @map("estado_asignacion")
-  contrato            Contratos          @relation(fields: [contratoId], references: [contratoId])
-  medidor             Medidores?         @relation(fields: [medidorId], references: [medidorId], onDelete: Restrict)
+  medidor             Medidores          @relation(fields: [medidorId], references: [medidorId], onDelete: Restrict)
   periodoRel          Periodos           @relation(fields: [periodoId], references: [periodoId])
   rutaAsignada        Rutas?            @relation(fields: [rutaAsignadaId], references: [rutaId], onDelete: SetNull)
   lecturaAnomalias LecturaAnomalia[]
   prefacturas         Prefacturas[]
 
-  @@index([contratoId, periodoId])
+  @@index([periodoId])
   @@index([medidorId])
   @@index([fecha])
   @@index([estado, periodoId])
-  @@index([contratoId, fecha])
   @@index([rutaAsignadaId])
   @@index([estadoAsignacion])
   @@map("lecturas")

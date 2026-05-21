@@ -378,7 +378,6 @@ export class FacturaService {
           receptor_direccion: dto.comprador.direccion,
           receptor_email: dto.comprador.email,
           receptor_telefono: dto.comprador.telefono,
-          guia_remision: dto.guiaRemision,
         },
         client,
       );
@@ -560,7 +559,6 @@ export class FacturaService {
       contribuyenteEspecial: dto.emisor.contribuyenteEspecial,
       obligadoContabilidad: dto.emisor.obligadoContabilidad,
       tipoIdentificacionComprador: dto.comprador.tipoIdentificacion,
-      guiaRemision: dto.guiaRemision,
       razonSocialComprador: dto.comprador.razonSocial,
       identificacionComprador: dto.comprador.identificacion,
       direccionComprador: dto.comprador.direccion,

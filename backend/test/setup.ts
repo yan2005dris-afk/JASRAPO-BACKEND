@@ -105,11 +105,7 @@ export async function setupTestDatabase(): Promise<void> {
   let retries = 5;
   while (retries > 0) {
     try {
-      prisma = new PrismaClient({
-        datasources: {
-          db: { url: databaseUrl },
-        },
-      });
+      prisma = new PrismaClient();
 
       // Test connection
       await prisma.$connect();
@@ -162,8 +158,6 @@ async function seedTestData(prisma: PrismaClient): Promise<void> {
       await prisma.roles.create({
         data: {
           nombre: 'Administrador',
-          descripcion: 'Usuario con acceso completo',
-          activo: true,
         },
       });
     }
@@ -178,23 +172,22 @@ async function seedTestData(prisma: PrismaClient): Promise<void> {
         data: {
           nombre: 'Test Comunidad',
           codigo: 'TC001',
-          activo: true,
+          porcentajeTasaSeguridad: 0,
         },
       });
     }
 
     // Check tarifas
     const existingTarifa = await prisma.categoriaTarifa.findFirst({
-      where: { codigo: 'DOM' },
+      where: { nombre: 'Doméstica' },
     });
 
     if (!existingTarifa) {
       await prisma.categoriaTarifa.create({
         data: {
           nombre: 'Doméstica',
-          codigo: 'DOM',
           activo: true,
-          precioBase: 10.0,
+          valorBase: 10.0,
         },
       });
     }
@@ -216,19 +209,10 @@ export async function cleanupTestDatabase(): Promise<void> {
   const tables = [
     'historialMedidores',
     'lecturas',
-    'contratoMedidor',
+    'contratos',
     'medidores',
-    'descuentosDetalle',
-    'abonoCliente',
-    'pagos',
-    'detallePago',
-    'cuotaConvenio',
-    'convenios',
-    'clientes',
-    'sessions',
-    'profiles',
-    'userPermissions',
-    'menus',
+    'usuarios',
+    'roles',
   ];
 
   for (const table of tables) {
@@ -248,7 +232,7 @@ export async function teardownTestDatabase(): Promise<void> {
 
   if (prisma) {
     await prisma.$disconnect();
-    prisma = null;
+    (prisma as any) = null;
   }
 
   console.log('✅ Test database teardown complete');

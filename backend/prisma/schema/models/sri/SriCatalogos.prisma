@@ -15,7 +15,10 @@ model ComprobanteRetenciones {
   codSustento             String?      @db.VarChar(2) @map("cod_sustento")
   formaPago               String?      @db.VarChar(2) @map("forma_pago")
   
-  comprobante            Comprobantes @relation(fields: [comprobanteId], references: [id], onDelete: Cascade)
+  comprobante            Comprobantes                @relation(fields: [comprobanteId], references: [id], onDelete: Cascade)
+  retencion              CatalogoRetenciones?        @relation(fields: [codigoRetencion], references: [codigo])
+  docSustento            CatalogoDocumentosSustento? @relation(fields: [codDocSustento], references: [codigo])
+  formaPagoCatalog       CatalogoFormasPago?         @relation(fields: [formaPago], references: [codigo])
 
   @@map("comprobante_retenciones")
 }
@@ -27,17 +30,10 @@ model SriTipoComprobante {
   descripcion  String?        @map("descripcion")
   activo       Boolean        @default(true) @map("activo")
 
+  comprobantes        Comprobantes[]     @relation("TipoComprobante")
+  comprobantesModif   Comprobantes[]     @relation("TipoComprobanteModificado")
+  secuenciales        Secuenciales[]     @relation("SecuencialTipoComprobante")
+
   @@map("sri_tipo_comprobante")
 }
 
-model CatalogosSri {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid @map("id")
-  tipo        String   @map("tipo") 
-  codigo      String   @map("codigo")
-  descripcion String   @map("descripcion")
-  valor       Decimal? @db.Decimal(18, 4) @map("valor")
-  activo      Boolean  @default(true) @map("activo")
-
-  @@unique([tipo, codigo])
-  @@map("sri_catalogos")
-}

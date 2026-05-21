@@ -5,7 +5,8 @@ model CatalogoFormasPago {
   activo      Boolean       @default(true)
   createdAt   DateTime      @default(now()) @map("created_at")
 
-  detallePagos DetallePago[]
+  detallePagos            DetallePago[]
+  comprobanteRetenciones  ComprobanteRetenciones[]
 
   @@map("catalogo_formas_pago")
 }

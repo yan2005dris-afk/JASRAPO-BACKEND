@@ -1,11 +1,17 @@
+enum EstadoMedidor {
+  BODEGA
+  INSTALADO
+  DANADO
+  PENDIENTE
+  BAJA
+}
+
 model Medidores {
   medidorId        BigInt               @id @default(autoincrement()) @map("medidor_id")
-  contratoId       BigInt?              @unique @map("contrato_id")
   marca            String               @map("marca")
   modelo           String               @map("modelo")
   serie            String               @unique @map("serie")
-  estado           EstadoMedidor?      @relation(fields: [estadoId], references: [estadoId])
-  estadoId         BigInt?              @map("estado_id")
+  estado           EstadoMedidor        @default(BODEGA) @map("estado")
   fechaInstalacion DateTime?            @default(now()) @map("fecha_instalacion")
   fechaBaja        DateTime?            @map("fecha_baja")
   motivo           String?              @map("motivo")
@@ -16,7 +22,6 @@ model Medidores {
   longitud         Decimal?             @map("longitud") @db.Decimal(11, 8)
   historial        HistorialMedidores[]
   lecturas         Lecturas[]
-  contrato         Contratos?           @relation(fields: [contratoId], references: [contratoId], onDelete: Restrict, onUpdate: NoAction)
 
   @@map("medidores")
 }

@@ -150,23 +150,4 @@ export class CatalogosController {
       })),
     };
   }
-
-  @Get('motivos-traslado')
-  @ApiOperation({
-    summary: 'Listar motivos de traslado',
-    description: 'Obtiene todos los motivos de traslado para guías de remisión',
-  })
-  @ApiResponse({ status: 200, description: 'Lista de motivos de traslado' })
-  async listarMotivosTraslado(): Promise<{ motivosTraslado: any[] }> {
-    this.logger.log('GET /catalogos/motivos-traslado');
-
-    const motivos = await this.catalogoService.getMotivosTraslado();
-
-    return {
-      motivosTraslado: motivos.map((mt) => ({
-        codigo: mt.codigo,
-        descripcion: mt.descripcion,
-      })),
-    };
-  }
 }

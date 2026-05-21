@@ -11,7 +11,6 @@ import { seedUSers } from './seeds/user.seed';
 import { seedComunidades } from './seeds/comunidades.seed';
 import { seedSectores } from './seeds/sectores.seed';
 import { seedCategoriaTarifa } from './seeds/categoriaTarifa.seed';
-import { seedEstadoMedidor } from './seeds/estadoMedidor.seed';
 import { seedMedidores } from './seeds/medidores.seed';
 import { seedClientes } from './seeds/clientes.seed';
 import { seedContratos } from './seeds/contratos.seed';
@@ -98,10 +97,6 @@ async function main() {
 
   await seedCategoriaTarifa(prisma);
   console.log('✅ Categorías de tarifa creadas.');
-
-  // Estados de Medidor
-  await seedEstadoMedidor(prisma);
-  console.log('✅ Estados de medidor creados.');
 
   // Estados de Lote
   await prisma.estadoLote.upsert({

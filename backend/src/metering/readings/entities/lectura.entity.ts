@@ -6,7 +6,7 @@ export class LecturaEntity {
   lecturaAnterior: number;
   lecturaActual: number;
   consumoCalculado: number;
-  contratoId: string;
+  medidorId: string;
   createdAt: Date;
   descripcionAnomalia: string | null;
   fechaValidacion: Date | null;
@@ -22,7 +22,7 @@ export class LecturaEntity {
     if (partial) {
       Object.assign(this, partial);
       if (partial.lecturaId) this.lecturaId = partial.lecturaId.toString();
-      if (partial.contratoId) this.contratoId = partial.contratoId.toString();
+      if (partial.medidorId) this.medidorId = partial.medidorId.toString();
     }
   }
 }
