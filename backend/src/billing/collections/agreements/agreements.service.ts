@@ -27,6 +27,7 @@ import {
 import { CreateAgreementUseCase } from './use-cases/create-agreement.use-case';
 import { FindOneAgreementUseCase } from './use-cases/find-one-agreement.use-case';
 import { GetDebtSummaryUseCase } from './use-cases/get-debt-summary.use-case';
+import { UpdateAgreementUseCase } from './use-cases/update-agreement.use-case';
 
 @Injectable()
 export class AgreementsService {
@@ -35,6 +36,7 @@ export class AgreementsService {
     private readonly createUseCase: CreateAgreementUseCase,
     private readonly findOneUseCase: FindOneAgreementUseCase,
     private readonly getDebtSummaryUseCase: GetDebtSummaryUseCase,
+    private readonly updateUseCase: UpdateAgreementUseCase,
   ) {}
 
   // ── Estado catalogs ──────────────────────────────────────────────────────
@@ -102,6 +104,14 @@ export class AgreementsService {
     });
 
     return cuotas.map(toInstallmentResponse);
+  }
+
+  async update(
+    id: string,
+    dto: { estado: string },
+  ): Promise<AgreementResponseDto> {
+    const convenio = await this.updateUseCase.execute(BigInt(id), dto.estado);
+    return toAgreementResponse(convenio);
   }
 
   async cancel(id: string): Promise<AgreementResponseDto> {

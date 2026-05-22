@@ -4,6 +4,7 @@ import { AgreementsService } from './agreements.service';
 import { CreateAgreementUseCase } from './use-cases/create-agreement.use-case';
 import { FindOneAgreementUseCase } from './use-cases/find-one-agreement.use-case';
 import { GetDebtSummaryUseCase } from './use-cases/get-debt-summary.use-case';
+import { UpdateAgreementUseCase } from './use-cases/update-agreement.use-case';
 
 @Module({
   controllers: [AgreementsController],
@@ -12,6 +13,7 @@ import { GetDebtSummaryUseCase } from './use-cases/get-debt-summary.use-case';
     CreateAgreementUseCase,
     FindOneAgreementUseCase,
     GetDebtSummaryUseCase,
+    UpdateAgreementUseCase,
   ],
   exports: [AgreementsService, GetDebtSummaryUseCase],
 })

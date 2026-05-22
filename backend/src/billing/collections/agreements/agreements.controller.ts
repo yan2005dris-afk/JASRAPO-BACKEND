@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Param,
+  Patch,
   Post,
   Query,
   UseGuards,
@@ -18,6 +19,7 @@ import {
 } from '@nestjs/swagger';
 import { AgreementsService } from './agreements.service';
 import { CreateAgreementDto } from './dto/create-agreement.dto';
+import { UpdateAgreementDto } from './dto/update-agreement.dto';
 import { AgreementResponseDto } from './dto/agreement-response.dto';
 import { DebtSummaryResponseDto } from './dto/debt-summary-response.dto';
 import { AgreementStateResponseDto } from './dto/agreement-state-response.dto';
@@ -124,6 +126,35 @@ export class AgreementsController {
   @Post()
   async create(@Body() dto: CreateAgreementDto): Promise<AgreementResponseDto> {
     return this.agreementsService.create(dto);
+  }
+
+  /**
+   * PATCH /agreements/:id
+   * Actualizar estado del convenio
+   */
+  @ApiOperation({
+    summary: 'Actualizar estado del convenio',
+    description:
+      'Cambia el estado de un convenio. PAGADO: marca convenio y cuotas como pagadas. ACTIVO: aprueba el convenio.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Convenio actualizado exitosamente',
+    type: AgreementResponseDto,
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'ID del convenio',
+    type: String,
+    example: '1',
+  })
+  @RequiredPermission('agreements', 'update')
+  @Patch(':id')
+  async update(
+    @Param('id') id: string,
+    @Body() dto: UpdateAgreementDto,
+  ): Promise<AgreementResponseDto> {
+    return this.agreementsService.update(id, dto);
   }
 
   /**
