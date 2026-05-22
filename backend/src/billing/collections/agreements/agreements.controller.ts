@@ -201,7 +201,9 @@ export class AgreementsController {
   })
   @RequiredPermission('agreements', 'read')
   @Get(':id')
-  async findOne(@Param('id', ParseBigIntPipe) id: bigint): Promise<AgreementResponseDto> {
+  async findOne(
+    @Param('id', ParseBigIntPipe) id: bigint,
+  ): Promise<AgreementResponseDto> {
     return this.agreementsService.findOne(id);
   }
 
@@ -227,7 +229,9 @@ export class AgreementsController {
   })
   @RequiredPermission('agreements', 'delete')
   @Delete(':id')
-  async cancel(@Param('id', ParseBigIntPipe) id: bigint): Promise<AgreementResponseDto> {
+  async cancel(
+    @Param('id', ParseBigIntPipe) id: bigint,
+  ): Promise<AgreementResponseDto> {
     return this.agreementsService.cancel(id);
   }
 }
