@@ -24,9 +24,8 @@ model DetallePago {
 }
 
 enum TipoDetallePago {
-  FACTURA
+  COMPROBANTE
   CUOTA_CONVENIO
   PAGO_LIBRE
-  NOTA_DEBITO
   SALDO_FAVOR
 }

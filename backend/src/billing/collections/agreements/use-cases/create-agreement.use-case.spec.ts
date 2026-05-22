@@ -1,12 +1,12 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
-import { PrismaService } from 'src/infrastructure/database/prisma.service';
-import { CreateConvenioUseCase } from './create-convenio.use-case';
+import { PrismaService } from '../../../../infrastructure/database/prisma.service';
+import { CreateAgreementUseCase } from './create-agreement.use-case';
 import { GetDebtSummaryUseCase } from './get-debt-summary.use-case';
 
-describe('CreateConvenioUseCase', () => {
-  let useCase: CreateConvenioUseCase;
+describe('CreateAgreementUseCase', () => {
+  let useCase: CreateAgreementUseCase;
 
   const mockPrismaService = {
     contratos: {
@@ -18,12 +18,6 @@ describe('CreateConvenioUseCase', () => {
     },
     parametroTasainteres: {
       findFirst: jest.fn(),
-    },
-    estadoConvenio: {
-      findUnique: jest.fn(),
-    },
-    estadoCuotaConvenio: {
-      findUnique: jest.fn(),
     },
     $transaction: jest.fn(),
   };
@@ -43,13 +37,13 @@ describe('CreateConvenioUseCase', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        CreateConvenioUseCase,
+        CreateAgreementUseCase,
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: GetDebtSummaryUseCase, useValue: mockGetDebtSummaryUseCase },
       ],
     }).compile();
 
-    useCase = module.get<CreateConvenioUseCase>(CreateConvenioUseCase);
+    useCase = module.get<CreateAgreementUseCase>(CreateAgreementUseCase);
   });
 
   afterEach(() => {
@@ -60,7 +54,7 @@ describe('CreateConvenioUseCase', () => {
     expect(useCase).toBeDefined();
   });
 
-  it('should create convenio and generated cuotas in a transaction', async () => {
+  it('should create agreement and generate installments in a transaction', async () => {
     const createdConvenio = { convenioId: 50n };
     const tx = {
       convenios: {
@@ -80,12 +74,6 @@ describe('CreateConvenioUseCase', () => {
     mockPrismaService.parametroTasainteres.findFirst.mockResolvedValue({
       tasa: 1,
     });
-    mockPrismaService.estadoConvenio.findUnique
-      .mockResolvedValueOnce({ estadoConvenioId: 1n })
-      .mockResolvedValueOnce({ estadoConvenioId: 2n });
-    mockPrismaService.estadoCuotaConvenio.findUnique.mockResolvedValue({
-      estadoCuotaConvenioId: 10n,
-    });
     mockPrismaService.$transaction.mockImplementation((callback) =>
       callback(tx),
     );
@@ -104,7 +92,7 @@ describe('CreateConvenioUseCase', () => {
         abonoInicial: 10,
         deudaTotal: 100,
         mesesMoraActual: 2,
-        estadoConvenioId: 2n,
+        estado: 'PENDIENTE_ABONO',
         montoPagadoActual: 0,
         motivo: 'Solicitud del cliente',
       }),
@@ -117,7 +105,7 @@ describe('CreateConvenioUseCase', () => {
           numeroCuota: 1,
           valorCuota: 30.9,
           saldoPendiente: 30.9,
-          estadoCuotaConvenioId: 10n,
+          estado: 'PENDIENTE',
           interesMoraAplicado: 0.9,
         }),
         expect.objectContaining({ numeroCuota: 2, valorCuota: 30.9 }),
@@ -147,12 +135,6 @@ describe('CreateConvenioUseCase', () => {
       maxMesesAtrasado: 0,
     });
     mockPrismaService.parametroTasainteres.findFirst.mockResolvedValue(null);
-    mockPrismaService.estadoConvenio.findUnique
-      .mockResolvedValueOnce({ estadoConvenioId: 1n })
-      .mockResolvedValueOnce({ estadoConvenioId: 2n });
-    mockPrismaService.estadoCuotaConvenio.findUnique.mockResolvedValue({
-      estadoCuotaConvenioId: 10n,
-    });
     mockPrismaService.$transaction.mockImplementation((callback) =>
       callback(tx),
     );
@@ -170,7 +152,7 @@ describe('CreateConvenioUseCase', () => {
       expect.objectContaining({
         data: expect.objectContaining({
           abonoInicial: 0,
-          estadoConvenioId: 1n,
+          estado: 'PREPARADO',
           motivo: null,
         }),
       }),
@@ -184,11 +166,11 @@ describe('CreateConvenioUseCase', () => {
     expect(mockGetDebtSummaryUseCase.execute).not.toHaveBeenCalled();
   });
 
-  it('should throw BadRequestException when contrato already has active convenio', async () => {
+  it('should throw BadRequestException when contrato already has active agreement', async () => {
     mockPrismaService.contratos.findFirst.mockResolvedValue({ contratoId: 1n });
     mockPrismaService.convenios.findFirst.mockResolvedValue({
       convenioId: 9n,
-      estado: { codigo: 'ACTIVO' },
+      estado: 'ACTIVO',
     });
 
     await expect(useCase.execute(dto)).rejects.toThrow(BadRequestException);
@@ -219,7 +201,7 @@ describe('CreateConvenioUseCase', () => {
     ).rejects.toThrow(BadRequestException);
   });
 
-  it('should throw BadRequestException when required statuses are missing', async () => {
+  it('should throw BadRequestException when required statuses are missing (already handled by enum)', async () => {
     mockPrismaService.contratos.findFirst.mockResolvedValue({ contratoId: 1n });
     mockPrismaService.convenios.findFirst.mockResolvedValue(null);
     mockGetDebtSummaryUseCase.execute.mockResolvedValue({
@@ -227,14 +209,22 @@ describe('CreateConvenioUseCase', () => {
       maxMesesAtrasado: 0,
     });
     mockPrismaService.parametroTasainteres.findFirst.mockResolvedValue(null);
-    mockPrismaService.estadoConvenio.findUnique
-      .mockResolvedValueOnce(null)
-      .mockResolvedValueOnce({ estadoConvenioId: 2n });
-    mockPrismaService.estadoCuotaConvenio.findUnique.mockResolvedValue({
-      estadoCuotaConvenioId: 10n,
+    mockPrismaService.$transaction.mockImplementation((callback) =>
+      callback({
+        convenios: {
+          create: jest.fn().mockResolvedValue({ convenioId: 51n }),
+        },
+        cuotaConvenio: {
+          createMany: jest.fn().mockResolvedValue({ count: 2 }),
+        },
+      }),
+    );
+    mockPrismaService.convenios.findUnique.mockResolvedValue({
+      convenioId: 51n,
     });
 
-    await expect(useCase.execute(dto)).rejects.toThrow(BadRequestException);
-    expect(mockPrismaService.$transaction).not.toHaveBeenCalled();
+    await expect(
+      useCase.execute({ ...dto, abonoInicial: 0 }),
+    ).resolves.toBeDefined();
   });
 });

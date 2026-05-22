@@ -1,7 +1,7 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
-import { PrismaService } from 'src/infrastructure/database/prisma.service';
+import { PrismaService } from '../../../../infrastructure/database/prisma.service';
 import { GetDebtSummaryUseCase } from './get-debt-summary.use-case';
 
 describe('GetDebtSummaryUseCase', () => {

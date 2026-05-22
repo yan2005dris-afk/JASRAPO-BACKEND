@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 import { CategoriaTarifaModule } from './tariffs/categoria-tarifa.module';
 import { LoteModule } from './lote/lote.module';
-import { ConveniosModule } from './collections/convenios/convenios.module';
+import { AgreementsModule } from './collections/agreements/agreements.module';
 
 @Module({
-  imports: [CategoriaTarifaModule, LoteModule, ConveniosModule],
-  exports: [CategoriaTarifaModule, LoteModule, ConveniosModule],
+  imports: [CategoriaTarifaModule, LoteModule, AgreementsModule],
+  exports: [CategoriaTarifaModule, LoteModule, AgreementsModule],
 })
 export class BillingModule {}

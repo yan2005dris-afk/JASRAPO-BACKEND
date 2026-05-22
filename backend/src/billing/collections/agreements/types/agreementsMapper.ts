@@ -1,41 +1,11 @@
-import { DateUtil } from 'src/infrastructure/common/util/date.util';
-import type { ConvenioResponseDto } from '../dto/convenio-response.dto';
-import type { CuotaConvenioResponseDto } from '../dto/cuota-convenio-response.dto';
-import type { EstadoConvenioResponseDto } from '../dto/estado-convenio-response.dto';
-import type { EstadoCuotaConvenioResponseDto } from '../dto/estado-cuota-convenio-response.dto';
-
-/**
- * Mapea un resultado de Prisma EstadoConvenio al DTO de catálogo
- */
-export function toEstadoConvenioResponse(e: any): EstadoConvenioResponseDto {
-  return {
-    estadoConvenioId: Number(e.estadoConvenioId),
-    codigo: e.codigo,
-    nombre: e.nombre,
-    descripcion: e.descripcion ?? null,
-    orden: Number(e.orden),
-  };
-}
-
-/**
- * Mapea un resultado de Prisma EstadoCuotaConvenio al DTO de catálogo
- */
-export function toEstadoCuotaConvenioResponse(
-  e: any,
-): EstadoCuotaConvenioResponseDto {
-  return {
-    estadoCuotaConvenioId: Number(e.estadoCuotaConvenioId),
-    codigo: e.codigo,
-    nombre: e.nombre,
-    descripcion: e.descripcion ?? null,
-    orden: Number(e.orden),
-  };
-}
+import { DateUtil } from '../../../../infrastructure/common/utils/date.util';
+import type { AgreementResponseDto } from '../dto/agreement-response.dto';
+import type { InstallmentResponseDto } from '../dto/installment-response.dto';
 
 /**
  * Mapea un resultado de Prisma CuotaConvenio al DTO de respuesta
  */
-export function toCuotaConvenioResponse(cuota: any): CuotaConvenioResponseDto {
+export function toInstallmentResponse(cuota: any): InstallmentResponseDto {
   return {
     cuotaConvenioId: String(cuota.cuotaConvenioId),
     convenioId: String(cuota.convenioId),
@@ -43,9 +13,8 @@ export function toCuotaConvenioResponse(cuota: any): CuotaConvenioResponseDto {
     valorCuota: Number(cuota.valorCuota),
     fechaVencimiento: DateUtil.formatForFrontend(cuota.fechaVencimiento)!,
     estado: {
-      estadoCuotaConvenioId: Number(cuota.estado.estadoCuotaConvenioId),
-      codigo: cuota.estado.codigo,
-      nombre: cuota.estado.nombre,
+      codigo: cuota.estado,
+      nombre: cuota.estado,
     },
     fechaPago: DateUtil.formatForFrontend(cuota.fechaPago),
     montoPagado: Number(cuota.montoPagado),
@@ -61,7 +30,7 @@ export function toCuotaConvenioResponse(cuota: any): CuotaConvenioResponseDto {
  * Mapea un resultado de Prisma Convenios al DTO de respuesta
  * Convierte BigInt → string, Decimal → number, Date → YYYY-MM-DD
  */
-export function toConvenioResponse(convenio: any): ConvenioResponseDto {
+export function toAgreementResponse(convenio: any): AgreementResponseDto {
   return {
     convenioId: String(convenio.convenioId),
     contratoId: String(convenio.contratoId),
@@ -70,9 +39,8 @@ export function toConvenioResponse(convenio: any): ConvenioResponseDto {
     deudaTotal: Number(convenio.deudaTotal),
     mesesMoraActual: convenio.mesesMoraActual,
     estado: {
-      estadoConvenioId: Number(convenio.estado.estadoConvenioId),
-      codigo: convenio.estado.codigo,
-      nombre: convenio.estado.nombre,
+      codigo: convenio.estado,
+      nombre: convenio.estado,
     },
     fechaAprobacion: DateUtil.formatForFrontend(convenio.fechaAprobacion),
     fechaPrimerPago: DateUtil.formatForFrontend(convenio.fechaPrimerPago)!,
@@ -81,7 +49,7 @@ export function toConvenioResponse(convenio: any): ConvenioResponseDto {
     motivo: convenio.motivo ?? null,
     fechaCreacion: DateUtil.formatForFrontend(convenio.createdAt)!,
     cuotas: convenio.cuotaConvenio
-      ? convenio.cuotaConvenio.map(toCuotaConvenioResponse)
+      ? convenio.cuotaConvenio.map(toInstallmentResponse)
       : undefined,
   };
 }

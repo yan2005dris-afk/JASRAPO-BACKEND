@@ -18,24 +18,6 @@ ResponseXXXXXX.dto.ts    → Para respuestas al cliente
 FilterXXXXXX.dto.ts      → Para filtros y queries
 ```
 
-## Ejemplo
-
-```typescript
-// create-convenio.dto.ts
-export class CreateConvenioDto {
-  @IsInt()
-  @IsPositive()
-  contratoId: number;
-
-  @IsInt()
-  @Min(1)
-  numeroCuotas: number;
-
-  @IsDecimal()
-  deudaTotal: string;
-}
-```
-
 ## Referencias
 
 - Paquete: `class-validator`

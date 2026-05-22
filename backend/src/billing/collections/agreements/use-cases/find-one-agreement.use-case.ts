@@ -1,15 +1,15 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from 'src/infrastructure/database/prisma.service';
-import { safeConvenioWithCuotasSelect } from '../types/IConvenio';
+import { PrismaService } from '../../../../infrastructure/database/prisma.service';
+import { safeAgreementWithInstallmentsSelect } from '../types/IAgreement';
 
 @Injectable()
-export class FindOneConvenioUseCase {
+export class FindOneAgreementUseCase {
   constructor(private readonly prisma: PrismaService) {}
 
   async execute(convenioId: bigint) {
     const convenio = await this.prisma.convenios.findFirst({
       where: { convenioId, deletedAt: null },
-      select: safeConvenioWithCuotasSelect,
+      select: safeAgreementWithInstallmentsSelect,
     });
 
     if (!convenio) {

@@ -1,7 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { CuotaConvenioResponseDto } from './cuota-convenio-response.dto';
+import { InstallmentResponseDto } from './installment-response.dto';
 
-export class ConvenioResponseDto {
+export class AgreementResponseDto {
   @ApiProperty({ example: '1', description: 'ID del convenio' })
   convenioId: string;
 
@@ -28,10 +28,9 @@ export class ConvenioResponseDto {
 
   @ApiProperty({
     description: 'Estado del convenio',
-    example: { estadoConvenioId: 1, codigo: 'ACTIVO', nombre: 'Activo' },
+    example: { codigo: 'ACTIVO', nombre: 'ACTIVO' },
   })
   estado: {
-    estadoConvenioId: number;
     codigo: string;
     nombre: string;
   };
@@ -70,8 +69,8 @@ export class ConvenioResponseDto {
   fechaCreacion: string;
 
   @ApiPropertyOptional({
-    type: [CuotaConvenioResponseDto],
+    type: [InstallmentResponseDto],
     description: 'Cuotas generadas para este convenio',
   })
-  cuotas?: CuotaConvenioResponseDto[];
+  cuotas?: InstallmentResponseDto[];
 }

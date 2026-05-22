@@ -1,10 +1,15 @@
+enum EstadoCuotaConvenio {
+  PENDIENTE
+  PAGADA
+}
+
 model CuotaConvenio {
   cuotaConvenioId       BigInt                @id @default(autoincrement()) @map("cuota_convenio_id")
   convenioId            BigInt                @map("convenio_id")
   numeroCuota           Int                   @map("numero_cuota")
   valorCuota            Decimal               @map("valor_cuota") @db.Decimal(18, 2)
   fechaVencimiento      DateTime              @map("fecha_vencimiento")
-  estadoCuotaConvenioId BigInt                @map("estado_cuota_convenio_id")
+  estado                EstadoCuotaConvenio   @default(PENDIENTE) @map("estado")
   fechaPago             DateTime?             @map("fecha_pago")
   montoPagado           Decimal               @default(0) @map("monto_pagado") @db.Decimal(18, 2)
   diasRetraso           Int                   @default(0) @map("dias_retraso")
@@ -16,12 +21,10 @@ model CuotaConvenio {
   updatedAt             DateTime              @updatedAt @map("actualizado_en")
   deletedAt             DateTime?             @map("borrado_en")
 
-  convenio      Convenios           @relation(fields: [convenioId], references: [convenioId])
-  estado        EstadoCuotaConvenio @relation(fields: [estadoCuotaConvenioId], references: [estadoCuotaConvenioId])
+  convenio      Convenios     @relation(fields: [convenioId], references: [convenioId])
   detallePago   DetallePago[]
   prefacturaDetalle PrefacturaDetalle[]
 
   @@index([convenioId])
-  @@index([estadoCuotaConvenioId])
   @@map("cuota_convenio")
 }

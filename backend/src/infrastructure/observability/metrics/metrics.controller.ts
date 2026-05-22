@@ -7,7 +7,7 @@ import { MetricsService } from './metrics.service';
  * Controlador de métricas para Prometheus
  * Expone endpoint de scrapeo de métricas en formato Prometheus
  */
-@ApiTags('metrics')
+@ApiTags('[No Aplicable] Métricas para Prometheus (scraping)')
 @Controller('metrics')
 export class MetricsController {
   constructor(private readonly metricsService: MetricsService) {}

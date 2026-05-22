@@ -10,7 +10,7 @@ import {
   Min,
 } from 'class-validator';
 
-export class CreateConvenioDto {
+export class CreateAgreementDto {
   @ApiProperty({
     description: 'ID del contrato al que pertenece el convenio',
     example: '1',

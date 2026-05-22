@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
-export class CuotaConvenioResponseDto {
+export class InstallmentResponseDto {
   @ApiProperty({ example: '1', description: 'ID de la cuota' })
   cuotaConvenioId: string;
 
@@ -22,13 +22,11 @@ export class CuotaConvenioResponseDto {
   @ApiProperty({
     description: 'Estado de la cuota',
     example: {
-      estadoCuotaConvenioId: 1,
       codigo: 'PENDIENTE',
-      nombre: 'Pendiente',
+      nombre: 'PENDIENTE',
     },
   })
   estado: {
-    estadoCuotaConvenioId: number;
     codigo: string;
     nombre: string;
   };

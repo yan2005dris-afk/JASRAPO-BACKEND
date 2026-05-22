@@ -2,7 +2,7 @@ import { Controller, Get, Logger } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { CatalogoValidatorService } from './utils/catalogo-validator.service';
 
-@ApiTags('Catálogos SRI')
+@ApiTags('[En Desarrollo] Catálogos SRI')
 @Controller('catalogos')
 export class CatalogosController {
   private readonly logger = new Logger(CatalogosController.name);

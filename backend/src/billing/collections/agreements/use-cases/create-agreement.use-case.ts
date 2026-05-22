@@ -3,12 +3,13 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma } from 'src/generated/prisma/client';
-import { PrismaService } from 'src/infrastructure/database/prisma.service';
-import { DateUtil } from 'src/infrastructure/common/util/date.util';
+import { Prisma } from '../../../../generated/prisma/client';
+import { PrismaService } from '../../../../infrastructure/database/prisma.service';
+import { DateUtil } from '../../../../infrastructure/common/utils/date.util';
 import { addMonths } from 'date-fns';
-import { CreateConvenioDto } from '../dto/create-convenio.dto';
-import { safeConvenioWithCuotasSelect } from '../types/IConvenio';
+import { EstadoConvenio } from '../../../../generated/prisma/enums';
+import { CreateAgreementDto } from '../dto/create-agreement.dto';
+import { safeAgreementWithInstallmentsSelect } from '../types/IAgreement';
 import { GetDebtSummaryUseCase } from './get-debt-summary.use-case';
 
 /**
@@ -25,13 +26,13 @@ import { GetDebtSummaryUseCase } from './get-debt-summary.use-case';
  *    - estado = PENDIENTE
  */
 @Injectable()
-export class CreateConvenioUseCase {
+export class CreateAgreementUseCase {
   constructor(
     private readonly prisma: PrismaService,
     private readonly getDebtSummaryUseCase: GetDebtSummaryUseCase,
   ) {}
 
-  async execute(dto: CreateConvenioDto) {
+  async execute(dto: CreateAgreementDto) {
     const contratoId = BigInt(dto.contratoId);
 
     // ── 1. Verificar que el contrato existe ──────────────────────────────────
@@ -47,21 +48,19 @@ export class CreateConvenioUseCase {
     }
 
     // ── 2. Verificar que no haya convenio activo o pendiente para este contrato ─
-    const estadosBloquean = ['ACTIVO', 'PENDIENTE_ABONO'];
+    const estadosBloquean: EstadoConvenio[] = ['ACTIVO', 'PENDIENTE_ABONO'];
     const convenioActivo = await this.prisma.convenios.findFirst({
       where: {
         contratoId,
         deletedAt: null,
-        estado: {
-          codigo: { in: estadosBloquean },
-        },
+        estado: { in: estadosBloquean },
       },
-      select: { convenioId: true, estado: { select: { codigo: true } } },
+      select: { convenioId: true, estado: true },
     });
 
     if (convenioActivo) {
       throw new BadRequestException(
-        `El contrato ya tiene un convenio en estado ${convenioActivo.estado.codigo}. ` +
+        `El contrato ya tiene un convenio en estado ${convenioActivo.estado}. ` +
           `Debe finalizarse o anularse antes de crear uno nuevo.`,
       );
     }
@@ -85,7 +84,6 @@ export class CreateConvenioUseCase {
     }
 
     // ── 4. Obtener tasa de interés por mora vigente (ParametroTasainteres) ───
-    //    Según convenios.md: monto_cuota = (deuda_total + intereses) / numeroCuotas
     const hoy = new Date();
     const tasaInteresParam = await this.prisma.parametroTasainteres.findFirst({
       where: {
@@ -102,61 +100,31 @@ export class CreateConvenioUseCase {
     const tasaMensual = tasaInteresParam ? tasaInteresParam.tasa / 100 : 0;
 
     // ── 5. mesesMoraActual: tomar máximo de meses atrasados desde debtSummary ──
-    //    (calculado por el SP en la DB, unidad: meses calendario)
     const mesesMoraActual = debtSummary.maxMesesAtrasado ?? 0;
 
     // ── 6. Calcular intereses sobre el monto a financiar ─────────────────────
-    //    interés simple: (deudaTotal - abonoInicial) × tasaMensual × numeroCuotas
     const montoAFinanciar = deudaTotal - abonoInicial;
     const interesesTotales =
       Math.round(montoAFinanciar * tasaMensual * dto.numeroCuotas * 100) / 100;
 
-    // Monto total a distribuir en cuotas: deuda neta + intereses (convenios.md)
+    // Monto total a distribuir en cuotas: deuda neta + intereses
     const totalADistribuir = montoAFinanciar + interesesTotales;
 
     // ── 7. Calcular valor de cada cuota ──────────────────────────────────────
     const valorCuotaBase =
       Math.floor((totalADistribuir / dto.numeroCuotas) * 100) / 100;
-    // El residuo (por redondeo) va a la última cuota
     const totalDistribuido = valorCuotaBase * (dto.numeroCuotas - 1);
     const valorUltimaCuota =
       Math.round((totalADistribuir - totalDistribuido) * 100) / 100;
 
-    // Interés proporcional por cuota (para trazabilidad)
     const interesPorCuota =
       dto.numeroCuotas > 0
         ? Math.round((interesesTotales / dto.numeroCuotas) * 100) / 100
         : 0;
 
-    // ── 8. Obtener IDs de estados desde la DB ────────────────────────────────
-    const [estadoPreparado, estadoPendienteAbono, estadoCuotaPendiente] =
-      await Promise.all([
-        this.prisma.estadoConvenio.findUnique({
-          where: { codigo: 'PREPARADO' },
-          select: { estadoConvenioId: true },
-        }),
-        this.prisma.estadoConvenio.findUnique({
-          where: { codigo: 'PENDIENTE_ABONO' },
-          select: { estadoConvenioId: true },
-        }),
-        this.prisma.estadoCuotaConvenio.findUnique({
-          where: { codigo: 'PENDIENTE' },
-          select: { estadoCuotaConvenioId: true },
-        }),
-      ]);
-
-    if (!estadoPreparado || !estadoPendienteAbono || !estadoCuotaPendiente) {
-      throw new BadRequestException(
-        'No se encontraron los estados necesarios en la base de datos. ' +
-          'Verifique que la migración de estados se ejecutó correctamente.',
-      );
-    }
-
-    // Usar PENDIENTE_ABONO si hay abono inicial, PREPARADO si no
-    const estadoConvenioId =
-      abonoInicial > 0
-        ? estadoPendienteAbono.estadoConvenioId
-        : estadoPreparado.estadoConvenioId;
+    // ── 8. Determinar estado del convenio ────────────────────────────────────
+    const estadoConvenio: EstadoConvenio =
+      abonoInicial > 0 ? 'PENDIENTE_ABONO' : 'PREPARADO';
 
     // ── 9. Parsear fecha primer pago ─────────────────────────────────────────
     const fechaPrimerPago = DateUtil.parseFrontendDateStrict(
@@ -165,15 +133,14 @@ export class CreateConvenioUseCase {
 
     // ── 10. Crear convenio + cuotas en una transacción ───────────────────────
     const convenioId = await this.prisma.$transaction(async (tx) => {
-      // Crear el convenio
       const nuevoConvenio = await tx.convenios.create({
         data: {
           contratoId,
           numeroCuotas: dto.numeroCuotas,
           abonoInicial,
-          deudaTotal, // deuda bruta desde prefacturas (sin intereses)
+          deudaTotal,
           mesesMoraActual,
-          estadoConvenioId,
+          estado: estadoConvenio,
           fechaPrimerPago,
           fechaProximoPago: fechaPrimerPago,
           montoPagadoActual: 0,
@@ -182,13 +149,10 @@ export class CreateConvenioUseCase {
         select: { convenioId: true },
       });
 
-      // Generar las cuotas automáticamente
       const cuotas: Prisma.CuotaConvenioCreateManyInput[] = [];
       for (let i = 1; i <= dto.numeroCuotas; i++) {
         const valorCuota =
           i === dto.numeroCuotas ? valorUltimaCuota : valorCuotaBase;
-
-        // Fecha de vencimiento: fechaPrimerPago + (i-1) meses (usando date-fns para saltos de fin de mes seguros)
         const fechaVencimiento = addMonths(fechaPrimerPago, i - 1);
 
         cuotas.push({
@@ -197,7 +161,7 @@ export class CreateConvenioUseCase {
           valorCuota,
           saldoPendiente: valorCuota,
           fechaVencimiento,
-          estadoCuotaConvenioId: estadoCuotaPendiente.estadoCuotaConvenioId,
+          estado: 'PENDIENTE',
           montoPagado: 0,
           diasRetraso: 0,
           interesMoraAplicado: interesPorCuota,
@@ -210,10 +174,9 @@ export class CreateConvenioUseCase {
       return nuevoConvenio.convenioId;
     });
 
-    // ── 11. Retornar el convenio creado con sus cuotas ───────────────────────
     return this.prisma.convenios.findUnique({
       where: { convenioId },
-      select: safeConvenioWithCuotasSelect,
+      select: safeAgreementWithInstallmentsSelect,
     });
   }
 }

@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from 'src/infrastructure/database/prisma.service';
-import { DateUtil } from 'src/infrastructure/common/util/date.util';
+import { PrismaService } from '../../../../infrastructure/database/prisma.service';
+import { DateUtil } from '../../../../infrastructure/common/utils/date.util';
 import type {
   DebtSummaryResponseDto,
   PrefacturaDeudaItemDto,
@@ -22,7 +22,6 @@ export class GetDebtSummaryUseCase {
   constructor(private readonly prisma: PrismaService) {}
 
   async execute(contratoId: bigint): Promise<DebtSummaryResponseDto> {
-    // Verificar que el contrato existe
     const contrato = await this.prisma.contratos.findFirst({
       where: { contratoId, deletedAt: null },
       select: { contratoId: true },
@@ -34,7 +33,6 @@ export class GetDebtSummaryUseCase {
       );
     }
 
-    // ── Obtener prefacturas impagadas del contrato ───────────────────────────
     const prefacturasImpagadas = await this.prisma.prefacturas.findMany({
       where: {
         contratoId,
@@ -85,7 +83,6 @@ export class GetDebtSummaryUseCase {
       0,
     );
 
-    // Obtener tasa de interés vigente para informar al frontend
     const hoy = new Date();
     const tasaInteresParam = await this.prisma.parametroTasainteres.findFirst({
       where: {

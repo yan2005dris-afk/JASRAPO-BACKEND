@@ -1,12 +1,12 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
-import { PrismaService } from 'src/infrastructure/database/prisma.service';
-import { safeConvenioWithCuotasSelect } from '../types/IConvenio';
-import { FindOneConvenioUseCase } from './find-one-convenio.use-case';
+import { PrismaService } from '../../../../infrastructure/database/prisma.service';
+import { safeAgreementWithInstallmentsSelect } from '../types/IAgreement';
+import { FindOneAgreementUseCase } from './find-one-agreement.use-case';
 
-describe('FindOneConvenioUseCase', () => {
-  let useCase: FindOneConvenioUseCase;
+describe('FindOneAgreementUseCase', () => {
+  let useCase: FindOneAgreementUseCase;
 
   const mockPrismaService = {
     convenios: {
@@ -17,12 +17,12 @@ describe('FindOneConvenioUseCase', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        FindOneConvenioUseCase,
+        FindOneAgreementUseCase,
         { provide: PrismaService, useValue: mockPrismaService },
       ],
     }).compile();
 
-    useCase = module.get<FindOneConvenioUseCase>(FindOneConvenioUseCase);
+    useCase = module.get<FindOneAgreementUseCase>(FindOneAgreementUseCase);
   });
 
   afterEach(() => {
@@ -33,7 +33,7 @@ describe('FindOneConvenioUseCase', () => {
     expect(useCase).toBeDefined();
   });
 
-  it('should return convenio with cuotas when found', async () => {
+  it('should return agreement with installments when found', async () => {
     const convenio = { convenioId: 1n, contratoId: 10n, cuotaConvenio: [] };
     mockPrismaService.convenios.findFirst.mockResolvedValue(convenio);
 
@@ -42,11 +42,11 @@ describe('FindOneConvenioUseCase', () => {
     expect(result).toBe(convenio);
     expect(mockPrismaService.convenios.findFirst).toHaveBeenCalledWith({
       where: { convenioId: 1n, deletedAt: null },
-      select: safeConvenioWithCuotasSelect,
+      select: safeAgreementWithInstallmentsSelect,
     });
   });
 
-  it('should throw NotFoundException when convenio does not exist', async () => {
+  it('should throw NotFoundException when agreement does not exist', async () => {
     mockPrismaService.convenios.findFirst.mockResolvedValue(null);
 
     await expect(useCase.execute(999n)).rejects.toThrow(NotFoundException);

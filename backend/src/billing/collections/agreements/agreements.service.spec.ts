@@ -1,22 +1,18 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { PrismaService } from 'src/infrastructure/database/prisma.service';
-import { CreateConvenioUseCase } from './use-cases/create-convenio.use-case';
-import { FindOneConvenioUseCase } from './use-cases/find-one-convenio.use-case';
+import { PrismaService } from '../../../infrastructure/database/prisma.service';
+import { paginate } from '../../../infrastructure/common/utils/pagination.util';
+import { CreateAgreementUseCase } from './use-cases/create-agreement.use-case';
+import { FindOneAgreementUseCase } from './use-cases/find-one-agreement.use-case';
 import { GetDebtSummaryUseCase } from './use-cases/get-debt-summary.use-case';
-import { ConveniosService } from './convenios.service';
+import { AgreementsService } from './agreements.service';
 
-describe('ConveniosService', () => {
-  let service: ConveniosService;
+jest.mock('../../../infrastructure/common/utils/pagination.util');
+
+describe('AgreementsService', () => {
+  let service: AgreementsService;
 
   const mockPrismaService = {
-    estadoConvenio: {
-      findMany: jest.fn(),
-      findUnique: jest.fn(),
-    },
-    estadoCuotaConvenio: {
-      findMany: jest.fn(),
-    },
     convenios: {
       findMany: jest.fn(),
       update: jest.fn(),
@@ -37,7 +33,7 @@ describe('ConveniosService', () => {
     abonoInicial: 5,
     deudaTotal: 100,
     mesesMoraActual: 1,
-    estado: { estadoConvenioId: 1n, codigo: 'PREPARADO', nombre: 'Preparado' },
+    estado: 'PREPARADO',
     fechaAprobacion: null,
     fechaPrimerPago: new Date('2026-06-01T00:00:00.000Z'),
     fechaProximoPago: new Date('2026-06-01T00:00:00.000Z'),
@@ -53,11 +49,7 @@ describe('ConveniosService', () => {
     numeroCuota: 1,
     valorCuota: 50,
     fechaVencimiento: new Date('2026-06-01T00:00:00.000Z'),
-    estado: {
-      estadoCuotaConvenioId: 1n,
-      codigo: 'PENDIENTE',
-      nombre: 'Pendiente',
-    },
+    estado: 'PENDIENTE',
     fechaPago: null,
     montoPagado: 0,
     saldoPendiente: 50,
@@ -70,15 +62,15 @@ describe('ConveniosService', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        ConveniosService,
+        AgreementsService,
         { provide: PrismaService, useValue: mockPrismaService },
-        { provide: CreateConvenioUseCase, useValue: mockCreateUseCase },
-        { provide: FindOneConvenioUseCase, useValue: mockFindOneUseCase },
+        { provide: CreateAgreementUseCase, useValue: mockCreateUseCase },
+        { provide: FindOneAgreementUseCase, useValue: mockFindOneUseCase },
         { provide: GetDebtSummaryUseCase, useValue: mockGetDebtSummaryUseCase },
       ],
     }).compile();
 
-    service = module.get<ConveniosService>(ConveniosService);
+    service = module.get<AgreementsService>(AgreementsService);
   });
 
   afterEach(() => {
@@ -89,58 +81,31 @@ describe('ConveniosService', () => {
     expect(service).toBeDefined();
   });
 
-  it('should return active convenio statuses mapped to DTOs', async () => {
-    mockPrismaService.estadoConvenio.findMany.mockResolvedValue([
-      {
-        estadoConvenioId: 1n,
-        codigo: 'ACTIVO',
-        nombre: 'Activo',
-        descripcion: 'En curso',
-        orden: 1,
-      },
-    ]);
+  it('should return active agreement states mapped from enum', async () => {
+    const result = await service.findAllAgreementStates();
 
-    const result = await service.findAllEstadosConvenio();
-
-    expect(result).toEqual([
-      {
-        estadoConvenioId: 1,
-        codigo: 'ACTIVO',
-        nombre: 'Activo',
-        descripcion: 'En curso',
-        orden: 1,
-      },
-    ]);
-    expect(mockPrismaService.estadoConvenio.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: { activo: true },
-        orderBy: { orden: 'asc' },
-      }),
+    expect(result).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ codigo: 'ACTIVO' }),
+        expect.objectContaining({ codigo: 'PENDIENTE_ABONO' }),
+        expect.objectContaining({ codigo: 'PREPARADO' }),
+        expect.objectContaining({ codigo: 'ANULADO' }),
+        expect.objectContaining({ codigo: 'PAGADO' }),
+      ]),
     );
+    expect(result).toHaveLength(5);
   });
 
-  it('should return active installment statuses mapped to DTOs', async () => {
-    mockPrismaService.estadoCuotaConvenio.findMany.mockResolvedValue([
-      {
-        estadoCuotaConvenioId: 2n,
-        codigo: 'PAGADA',
-        nombre: 'Pagada',
-        descripcion: null,
-        orden: 2,
-      },
-    ]);
+  it('should return active installment states mapped from enum', async () => {
+    const result = await service.findAllInstallmentStates();
 
-    const result = await service.findAllEstadosCuotaConvenio();
-
-    expect(result).toEqual([
-      {
-        estadoCuotaConvenioId: 2,
-        codigo: 'PAGADA',
-        nombre: 'Pagada',
-        descripcion: null,
-        orden: 2,
-      },
-    ]);
+    expect(result).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ codigo: 'PENDIENTE' }),
+        expect.objectContaining({ codigo: 'PAGADA' }),
+      ]),
+    );
+    expect(result).toHaveLength(2);
   });
 
   it('should delegate debt summary converting contratoId to BigInt', async () => {
@@ -152,7 +117,7 @@ describe('ConveniosService', () => {
     expect(mockGetDebtSummaryUseCase.execute).toHaveBeenCalledWith(10n);
   });
 
-  it('should create convenio through use case and map response', async () => {
+  it('should create agreement through use case and map response', async () => {
     mockCreateUseCase.execute.mockResolvedValue(convenioRecord);
 
     const result = await service.create({
@@ -169,33 +134,67 @@ describe('ConveniosService', () => {
     });
   });
 
-  it('should find all convenios without contrato filter', async () => {
-    mockPrismaService.convenios.findMany.mockResolvedValue([convenioRecord]);
+  it('should return paginated agreements without contrato filter', async () => {
+    const paginatedResult = {
+      data: [convenioRecord],
+      meta: {
+        total: 1,
+        paginaActual: 1,
+        porPagina: 10,
+        ultimaPagina: 1,
+        anterior: null,
+        siguiente: null,
+      },
+    };
+    (paginate as jest.Mock).mockResolvedValue(paginatedResult);
 
-    const result = await service.findAll();
+    const result = await service.findAll({
+      pagination: { page: 1, limit: 10 },
+    });
 
-    expect(result).toHaveLength(1);
-    expect(mockPrismaService.convenios.findMany).toHaveBeenCalledWith(
+    expect(result.meta.total).toBe(1);
+    expect(result.data).toHaveLength(1);
+    expect(result.data[0].convenioId).toBe('1');
+    expect(paginate).toHaveBeenCalledWith(
+      expect.any(Object),
       expect.objectContaining({
         where: { deletedAt: null },
         orderBy: { createdAt: 'desc' },
       }),
+      { page: 1, limit: 10 },
     );
   });
 
-  it('should find all convenios by contrato filter', async () => {
-    mockPrismaService.convenios.findMany.mockResolvedValue([convenioRecord]);
+  it('should return paginated agreements by contrato filter', async () => {
+    const paginatedResult = {
+      data: [convenioRecord],
+      meta: {
+        total: 1,
+        paginaActual: 1,
+        porPagina: 10,
+        ultimaPagina: 1,
+        anterior: null,
+        siguiente: null,
+      },
+    };
+    (paginate as jest.Mock).mockResolvedValue(paginatedResult);
 
-    await service.findAll('10');
+    const result = await service.findAll({
+      pagination: { page: 1, limit: 10 },
+      contratoId: '10',
+    });
 
-    expect(mockPrismaService.convenios.findMany).toHaveBeenCalledWith(
+    expect(result.data).toHaveLength(1);
+    expect(paginate).toHaveBeenCalledWith(
+      expect.any(Object),
       expect.objectContaining({
         where: { deletedAt: null, contratoId: 10n },
       }),
+      { page: 1, limit: 10 },
     );
   });
 
-  it('should find one convenio through use case and map response', async () => {
+  it('should find one agreement through use case and map response', async () => {
     mockFindOneUseCase.execute.mockResolvedValue(convenioRecord);
 
     const result = await service.findOne('1');
@@ -204,11 +203,11 @@ describe('ConveniosService', () => {
     expect(mockFindOneUseCase.execute).toHaveBeenCalledWith(1n);
   });
 
-  it('should validate convenio before returning installments', async () => {
+  it('should validate agreement before returning installments', async () => {
     mockFindOneUseCase.execute.mockResolvedValue(convenioRecord);
     mockPrismaService.cuotaConvenio.findMany.mockResolvedValue([cuotaRecord]);
 
-    const result = await service.findCuotas('1');
+    const result = await service.findInstallments('1');
 
     expect(result).toEqual([
       expect.objectContaining({
@@ -226,14 +225,11 @@ describe('ConveniosService', () => {
     );
   });
 
-  it('should cancel convenio with ANULADO status and soft delete date', async () => {
+  it('should cancel agreement with ANULADO status and soft delete date', async () => {
     mockFindOneUseCase.execute.mockResolvedValue(convenioRecord);
-    mockPrismaService.estadoConvenio.findUnique.mockResolvedValue({
-      estadoConvenioId: 9n,
-    });
     mockPrismaService.convenios.update.mockResolvedValue({
       ...convenioRecord,
-      estado: { estadoConvenioId: 9n, codigo: 'ANULADO', nombre: 'Anulado' },
+      estado: 'ANULADO',
     });
 
     const result = await service.cancel('1');
@@ -242,7 +238,7 @@ describe('ConveniosService', () => {
     expect(mockPrismaService.convenios.update).toHaveBeenCalledWith({
       where: { convenioId: 1n },
       data: {
-        estadoConvenioId: 9n,
+        estado: 'ANULADO',
         deletedAt: expect.any(Date),
       },
       select: expect.any(Object),
