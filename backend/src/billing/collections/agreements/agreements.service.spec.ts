@@ -111,10 +111,10 @@ describe('AgreementsService', () => {
     expect(result).toHaveLength(2);
   });
 
-  it('should delegate debt summary converting contratoId to BigInt', async () => {
+  it('should delegate debt summary with contratoId as bigint', async () => {
     mockGetDebtSummaryUseCase.execute.mockResolvedValue({ contratoId: '10' });
 
-    const result = await service.getDebtSummary('10');
+    const result = await service.getDebtSummary(10n);
 
     expect(result).toEqual({ contratoId: '10' });
     expect(mockGetDebtSummaryUseCase.execute).toHaveBeenCalledWith(10n);
@@ -200,7 +200,7 @@ describe('AgreementsService', () => {
   it('should find one agreement through use case and map response', async () => {
     mockFindOneUseCase.execute.mockResolvedValue(convenioRecord);
 
-    const result = await service.findOne('1');
+    const result = await service.findOne(1n);
 
     expect(result.convenioId).toBe('1');
     expect(mockFindOneUseCase.execute).toHaveBeenCalledWith(1n);
@@ -237,7 +237,7 @@ describe('AgreementsService', () => {
     };
     mockUpdateUseCase.execute.mockResolvedValue(updatedRecord);
 
-    const result = await service.update('1', { estado: 'PAGADO' });
+    const result = await service.update(1n, { estado: 'PAGADO' });
 
     expect(result.estado.codigo).toBe('PAGADO');
     expect(mockUpdateUseCase.execute).toHaveBeenCalledWith(1n, 'PAGADO');
@@ -250,7 +250,7 @@ describe('AgreementsService', () => {
       estado: 'ANULADO',
     });
 
-    const result = await service.cancel('1');
+    const result = await service.cancel(1n);
 
     expect(result.estado.codigo).toBe('ANULADO');
     expect(mockPrismaService.convenios.update).toHaveBeenCalledWith({

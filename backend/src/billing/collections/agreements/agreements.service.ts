@@ -51,8 +51,8 @@ export class AgreementsService {
 
   // ── Debt ─────────────────────────────────────────────────────────────────
 
-  async getDebtSummary(contratoId: string): Promise<DebtSummaryResponseDto> {
-    return this.getDebtSummaryUseCase.execute(BigInt(contratoId));
+  async getDebtSummary(contratoId: bigint): Promise<DebtSummaryResponseDto> {
+    return this.getDebtSummaryUseCase.execute(contratoId);
   }
 
   // ── CRUD ─────────────────────────────────────────────────────────────────
@@ -87,8 +87,8 @@ export class AgreementsService {
     };
   }
 
-  async findOne(id: string): Promise<AgreementResponseDto> {
-    const convenio = await this.findOneUseCase.execute(BigInt(id));
+  async findOne(id: bigint): Promise<AgreementResponseDto> {
+    const convenio = await this.findOneUseCase.execute(id);
     return toAgreementResponse(convenio);
   }
 
@@ -107,18 +107,18 @@ export class AgreementsService {
   }
 
   async update(
-    id: string,
+    id: bigint,
     dto: { estado: string },
   ): Promise<AgreementResponseDto> {
-    const convenio = await this.updateUseCase.execute(BigInt(id), dto.estado);
+    const convenio = await this.updateUseCase.execute(id, dto.estado);
     return toAgreementResponse(convenio);
   }
 
-  async cancel(id: string): Promise<AgreementResponseDto> {
-    await this.findOneUseCase.execute(BigInt(id));
+  async cancel(id: bigint): Promise<AgreementResponseDto> {
+    await this.findOneUseCase.execute(id);
 
     const updated = await this.prisma.convenios.update({
-      where: { convenioId: BigInt(id) },
+      where: { convenioId: id },
       data: {
         estado: 'ANULADO',
         deletedAt: new Date(),

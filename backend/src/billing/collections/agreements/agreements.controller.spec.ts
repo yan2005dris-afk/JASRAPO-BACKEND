@@ -56,10 +56,10 @@ describe('AgreementsController', () => {
   it('should get debt summary', async () => {
     service.getDebtSummary.mockResolvedValue({ contratoId: '10' } as any);
 
-    await expect(controller.getDebtSummary('10')).resolves.toEqual({
+    await expect(controller.getDebtSummary(10n)).resolves.toEqual({
       contratoId: '10',
     });
-    expect(service.getDebtSummary).toHaveBeenCalledWith('10');
+    expect(service.getDebtSummary).toHaveBeenCalledWith(10n);
   });
 
   it('should create agreement', async () => {
@@ -89,17 +89,17 @@ describe('AgreementsController', () => {
   it('should find one agreement', async () => {
     service.findOne.mockResolvedValue({ convenioId: '1' } as any);
 
-    await expect(controller.findOne('1')).resolves.toEqual({
+    await expect(controller.findOne(1n)).resolves.toEqual({
       convenioId: '1',
     });
-    expect(service.findOne).toHaveBeenCalledWith('1');
+    expect(service.findOne).toHaveBeenCalledWith(1n);
   });
 
   it('should cancel agreement', async () => {
     service.cancel.mockResolvedValue({ convenioId: '1' } as any);
 
-    await expect(controller.cancel('1')).resolves.toEqual({ convenioId: '1' });
-    expect(service.cancel).toHaveBeenCalledWith('1');
+    await expect(controller.cancel(1n)).resolves.toEqual({ convenioId: '1' });
+    expect(service.cancel).toHaveBeenCalledWith(1n);
   });
 
   it('should update agreement state', async () => {
@@ -109,10 +109,10 @@ describe('AgreementsController', () => {
       estado: 'PAGADO',
     } as any);
 
-    await expect(controller.update('1', dto)).resolves.toEqual({
+    await expect(controller.update(1n, dto)).resolves.toEqual({
       convenioId: '1',
       estado: 'PAGADO',
     });
-    expect(service.update).toHaveBeenCalledWith('1', dto);
+    expect(service.update).toHaveBeenCalledWith(1n, dto);
   });
 });

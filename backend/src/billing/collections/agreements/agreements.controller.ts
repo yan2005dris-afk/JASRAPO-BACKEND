@@ -28,6 +28,7 @@ import { FindAllAgreementsDto } from './dto/find-all-agreements.dto';
 import { JwtAuthGuard } from '../../../identity/auth/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../../../infrastructure/common/guards/permissions.guard';
 import { RequiredPermission } from '../../../infrastructure/common/decorators/require-permission.decorator';
+import { ParseBigIntPipe } from '../../../infrastructure/common/pipes/parse-bigint.pipe';
 import { ApiPaginatedResponse } from '../../../infrastructure/common/decorators/api-paginated-response.decorator';
 import type { PaginatedResult } from '../../../infrastructure/common/types/paginated-result.type';
 import { PaginationMetaDto } from 'src/infrastructure/common/dtos/pagination-meta.dto';
@@ -103,7 +104,7 @@ export class AgreementsController {
   @RequiredPermission('agreements', 'read')
   @Get('debt-summary/:contratoId')
   async getDebtSummary(
-    @Param('contratoId') contratoId: string,
+    @Param('contratoId', ParseBigIntPipe) contratoId: bigint,
   ): Promise<DebtSummaryResponseDto> {
     return this.agreementsService.getDebtSummary(contratoId);
   }
@@ -151,7 +152,7 @@ export class AgreementsController {
   @RequiredPermission('agreements', 'update')
   @Patch(':id')
   async update(
-    @Param('id') id: string,
+    @Param('id', ParseBigIntPipe) id: bigint,
     @Body() dto: UpdateAgreementDto,
   ): Promise<AgreementResponseDto> {
     return this.agreementsService.update(id, dto);
@@ -200,7 +201,7 @@ export class AgreementsController {
   })
   @RequiredPermission('agreements', 'read')
   @Get(':id')
-  async findOne(@Param('id') id: string): Promise<AgreementResponseDto> {
+  async findOne(@Param('id', ParseBigIntPipe) id: bigint): Promise<AgreementResponseDto> {
     return this.agreementsService.findOne(id);
   }
 
@@ -226,7 +227,7 @@ export class AgreementsController {
   })
   @RequiredPermission('agreements', 'delete')
   @Delete(':id')
-  async cancel(@Param('id') id: string): Promise<AgreementResponseDto> {
+  async cancel(@Param('id', ParseBigIntPipe) id: bigint): Promise<AgreementResponseDto> {
     return this.agreementsService.cancel(id);
   }
 }

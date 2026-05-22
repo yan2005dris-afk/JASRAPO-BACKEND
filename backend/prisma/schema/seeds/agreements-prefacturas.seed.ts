@@ -266,8 +266,8 @@ export async function seedAgreementsPrefacturas(prisma: PrismaClient) {
   }
 
   console.log('✅ Prefacturas para agreements creadas para contrato 4:');
-  console.log('   - Período 1  → $45.50 (3 meses atraso, GENERADA)');
-  console.log('   - Período 5  → $32.00 (2 meses atraso, APROBADA, abono $7.20)');
-  console.log('   - Período 10 → $78.00 (1 mes atraso, GENERADA)');
+  console.log(`   - Período ${periodo1.periodoId} → $45.50 (3 meses atraso, GENERADA)`);
+  console.log(`   - Período ${periodo2.periodoId} → $32.00 (2 meses atraso, APROBADA, abono $7.20)`);
+  console.log(`   - Período ${periodo3.periodoId} → $78.00 (1 mes atraso, GENERADA)`);
   console.log('   → Deuda total: $155.50');
 }
