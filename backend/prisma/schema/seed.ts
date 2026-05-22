@@ -21,6 +21,7 @@ import { seedSriCatalogs } from './seeds/sri.seed';
 import { seedCatalogosSriInit } from './seeds/catalogosSriInit.seed';
 import { seedRoutes } from './seeds/routes.seed';
 import { seedAgreements } from './seeds/agreements.seed';
+import { seedAgreementsPrefacturas } from './seeds/agreements-prefacturas.seed';
 import { syncSequences } from './seeds/sync-sequences';
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
@@ -145,6 +146,9 @@ async function main() {
   // === FACTURACIÓN ===
   await seedFacturacion(prisma);
   console.log('✅ Datos de facturación creados.');
+
+  // === PREFACTURAS PARA AGREEMENTS ===
+  await seedAgreementsPrefacturas(prisma);
 
   // === RUTAS ===
   await seedRoutes(prisma);

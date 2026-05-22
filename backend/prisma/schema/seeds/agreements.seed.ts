@@ -101,7 +101,20 @@ export async function seedAgreements(prisma: PrismaClient) {
   ];
 
   // Installments for agreement 2 (PREPARADO - 6 cuotas, todas pendientes)
-  const installmentsAgreement2 = [];
+  const installmentsAgreement2: Array<{
+    cuotaConvenioId: bigint;
+    convenioId: bigint;
+    numeroCuota: number;
+    valorCuota: number;
+    fechaVencimiento: Date;
+    estado: 'PENDIENTE';
+    fechaPago: null;
+    montoPagado: number;
+    saldoPendiente: number;
+    diasRetraso: number;
+    interesMoraAplicado: number;
+    pagoCompleto: boolean;
+  }> = [];
   for (let i = 0; i < 6; i++) {
     const cuotaIndex = 4 + i;
     const valorCuota = i < 5 ? 35.95 : 35.99;
