@@ -212,9 +212,9 @@ describe('UpdateAgreementUseCase', () => {
     it('should throw BadRequestException when estado is the same', async () => {
       mockPrismaService.convenios.findFirst.mockResolvedValue(baseConvenio);
 
-      await expect(
-        useCase.execute(1n, 'PENDIENTE_ABONO'),
-      ).rejects.toThrow(BadRequestException);
+      await expect(useCase.execute(1n, 'PENDIENTE_ABONO')).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should throw BadRequestException when convenio is already PAGADO', async () => {

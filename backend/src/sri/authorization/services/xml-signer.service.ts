@@ -204,11 +204,17 @@ export class XmlSignerService implements OnModuleInit {
     }
 
     const serializer = new XMLSerializer();
-    const signedXmlStr = serializer.serializeToString(signedXmlDoc);
-    const signedNode = new DOMParser()
-      .parseFromString(signedXmlStr, 'application/xml')
-      .documentElement;
-    rootElement.appendChild(signedNode);
+    // signedXmlDoc is a runtime xmldom node (xadesjs uses xmldom via setNodeDependencies)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const signedXmlStr = serializer.serializeToString(signedXmlDoc as any);
+    const parsedDoc = new DOMParser().parseFromString(
+      signedXmlStr,
+      'application/xml',
+    );
+    if (!parsedDoc.documentElement) {
+      throw new Error('Error al re-parsear el nodo firmado');
+    }
+    rootElement.appendChild(parsedDoc.documentElement);
 
     const signedXmlString = serializer.serializeToString(xmlDoc);
 
@@ -450,11 +456,17 @@ export class XmlSignerService implements OnModuleInit {
     }
 
     const serializer = new XMLSerializer();
-    const signedXmlStr = serializer.serializeToString(signedXmlDoc);
-    const signedNode = new DOMParser()
-      .parseFromString(signedXmlStr, 'application/xml')
-      .documentElement;
-    rootElement.appendChild(signedNode);
+    // signedXmlDoc is a runtime xmldom node (xadesjs uses xmldom via setNodeDependencies)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const signedXmlStr = serializer.serializeToString(signedXmlDoc as any);
+    const parsedDoc = new DOMParser().parseFromString(
+      signedXmlStr,
+      'application/xml',
+    );
+    if (!parsedDoc.documentElement) {
+      throw new Error('Error al re-parsear el nodo firmado');
+    }
+    rootElement.appendChild(parsedDoc.documentElement);
 
     const signedXmlString = serializer.serializeToString(xmlDoc);
 

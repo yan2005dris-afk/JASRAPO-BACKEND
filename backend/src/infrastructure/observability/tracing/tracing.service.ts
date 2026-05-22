@@ -58,8 +58,10 @@ export class TracingService implements OnModuleInit, OnModuleDestroy {
     this.sdk = new NodeSDK({
       resource: resourceFromAttributes({
         [ATTR_SERVICE_NAME]: config.serviceName,
-        [ATTR_DEPLOYMENT_ENVIRONMENT]:
-          this.configService.get<string>('NODE_ENV', 'development'),
+        [ATTR_DEPLOYMENT_ENVIRONMENT]: this.configService.get<string>(
+          'NODE_ENV',
+          'development',
+        ),
       }),
       traceExporter,
       sampler,
