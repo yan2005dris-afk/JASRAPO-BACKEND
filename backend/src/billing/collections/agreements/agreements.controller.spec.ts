@@ -104,7 +104,10 @@ describe('AgreementsController', () => {
 
   it('should update agreement state', async () => {
     const dto = { estado: 'PAGADO' };
-    service.update.mockResolvedValue({ convenioId: '1', estado: 'PAGADO' } as any);
+    service.update.mockResolvedValue({
+      convenioId: '1',
+      estado: 'PAGADO',
+    } as any);
 
     await expect(controller.update('1', dto)).resolves.toEqual({
       convenioId: '1',

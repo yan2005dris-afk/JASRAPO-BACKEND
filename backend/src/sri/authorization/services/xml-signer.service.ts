@@ -205,7 +205,6 @@ export class XmlSignerService implements OnModuleInit {
 
     const serializer = new XMLSerializer();
     // signedXmlDoc is a runtime xmldom node (xadesjs uses xmldom via setNodeDependencies)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const signedXmlStr = serializer.serializeToString(signedXmlDoc as any);
     const parsedDoc = new DOMParser().parseFromString(
       signedXmlStr,
@@ -457,7 +456,6 @@ export class XmlSignerService implements OnModuleInit {
 
     const serializer = new XMLSerializer();
     // signedXmlDoc is a runtime xmldom node (xadesjs uses xmldom via setNodeDependencies)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const signedXmlStr = serializer.serializeToString(signedXmlDoc as any);
     const parsedDoc = new DOMParser().parseFromString(
       signedXmlStr,
