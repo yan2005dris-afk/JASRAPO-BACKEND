@@ -170,7 +170,6 @@ Para consultas o soporte, contacta al equipo de desarrollo del Backend.
         description: 'Ingresa el token JWT válido',
         in: 'header',
       },
-      'JWT-auth',
     )
     .addCookieAuth(
       'refreshToken',
