@@ -1,5 +1,9 @@
 import bcrypt from 'bcrypt';
-import { PrismaClient, Roles, Usuarios } from "src/generated/prisma/client";
+import type {
+  PrismaClient,
+  Roles,
+  Usuarios,
+} from 'src/generated/prisma/client';
 
 export async function seedUSers(
   prisma: PrismaClient,
@@ -81,8 +85,8 @@ export async function seedUSers(
     
     const createdUsers:Usuarios[] = [];
 
-    for (const u of usersToCreate) {
-        const hashedPassword = await bcrypt.hash(u.password, 10);
+  for (const u of usersToCreate) {
+    const hashedPassword = await bcrypt.hash(u.password, 10);
 
         const user = await prisma.usuarios.upsert({
             where: { email: u.email },
@@ -102,7 +106,7 @@ export async function seedUSers(
         createdUsers.push(user);
     }
 
-    console.log('✅ Usuarios creados correctamente.');
+  console.log('✅ Usuarios creados correctamente.');
 
-    return createdUsers;
+  return createdUsers;
 }

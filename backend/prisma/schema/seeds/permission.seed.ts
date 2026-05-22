@@ -40,7 +40,7 @@ export async function seedPermissions(prisma: PrismaClient) {
         "sectores",
         "lote",
         "lotes",
-        "convenios",
+        "agreements",
         "planillas",
         "facturacion_electronica",
         "recaudacion",

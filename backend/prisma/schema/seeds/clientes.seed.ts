@@ -1,4 +1,4 @@
-import { Clientes, PrismaClient } from "src/generated/prisma/client";
+import type { PrismaClient } from 'src/generated/prisma/client';
 
 export async function seedClientes(prisma: PrismaClient) {
     const clientes: Awaited<ReturnType<typeof prisma.clientes.findUnique>>[] = [];
@@ -167,5 +167,5 @@ export async function seedClientes(prisma: PrismaClient) {
         clientes.push(created);
     }
 
-    return clientes;
+  return clientes;
 }

@@ -603,7 +603,6 @@ Estos patrones NO requieren migración porque son excepciones legítimas:
 .addTag('roles', 'Administración de roles')
 .addTag('permissions', 'Gestión de permisos')
 .addTag('menus', 'Menús y navegación basados en permisos')
-.addTag('files', 'Subida, descarga y gestión de archivos (MinIO)')
 .addTag('clients', 'Gestión de clientes')
 .addTag('sectors', 'Gestión de sectores territoriales')
 .addTag('communities', 'Gestión de comunidades')

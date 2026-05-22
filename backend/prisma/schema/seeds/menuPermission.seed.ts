@@ -1,4 +1,8 @@
-import { Menus, Permisos, PrismaClient } from 'src/generated/prisma/client';
+import type {
+  Menus,
+  Permisos,
+  PrismaClient,
+} from 'src/generated/prisma/client';
 
 interface MenuPermissionMapping {
   menuNombre: string;

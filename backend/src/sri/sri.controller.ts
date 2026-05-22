@@ -50,7 +50,7 @@ import {
   ComprobanteDetalladoDto,
 } from './issuance/dto/query-comprobantes.dto';
 
-@ApiTags('SRI - Facturación Electrónica')
+@ApiTags('[En Desarrollo] SRI - Facturación Electrónica')
 @ApiBearerAuth('JWT')
 @UseGuards(JwtAuthGuard)
 @Controller('sri')

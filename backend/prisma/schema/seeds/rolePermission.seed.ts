@@ -1,19 +1,23 @@
-import { Permisos, PrismaClient, Roles } from "src/generated/prisma/client";
+import {
+  Permisos,
+  PrismaClient,
+  Roles,
+} from 'src/generated/prisma/client';
 
 export async function seedRolePermissions(
-    prisma: PrismaClient,
-    roles: {
-        adminRol: Roles,
-        secretariaRol: Roles,
-        recaudacionRol: Roles,
-        presidenciaRol: Roles,
-        operadoresRol: Roles,
-        contabilidadRol: Roles,
-        userRol: Roles,
-    },
-    permissions: Permisos[]
+  prisma: PrismaClient,
+  roles: {
+    adminRol: Roles;
+    secretariaRol: Roles;
+    recaudacionRol: Roles;
+    presidenciaRol: Roles;
+    operadoresRol: Roles;
+    contabilidadRol: Roles;
+    userRol: Roles;
+  },
+  permissions: Permisos[],
 ) {
-    await prisma.rolPermisos.deleteMany();
+  await prisma.rolPermisos.deleteMany();
 
     // 1. ADMIN: TODOS LOS PERMISOS (Acceso total garantizado)
     for (const perm of permissions) {

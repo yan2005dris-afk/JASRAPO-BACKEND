@@ -11,8 +11,9 @@ import { HttpInstrumentation } from '@opentelemetry/instrumentation-http';
 import { ExpressInstrumentation } from '@opentelemetry/instrumentation-express';
 import { PgInstrumentation } from '@opentelemetry/instrumentation-pg';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
-import { Resource } from '@opentelemetry/resources';
-import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions';
+import { resourceFromAttributes } from '@opentelemetry/resources';
+import { ATTR_SERVICE_NAME } from '@opentelemetry/semantic-conventions';
+import { ATTR_DEPLOYMENT_ENVIRONMENT } from '@opentelemetry/semantic-conventions/incubating';
 import { createSampler, getTracingConfig } from './sampling.config';
 
 @Injectable()
@@ -55,10 +56,12 @@ export class TracingService implements OnModuleInit, OnModuleDestroy {
     });
 
     this.sdk = new NodeSDK({
-      resource: new Resource({
-        [SemanticResourceAttributes.SERVICE_NAME]: config.serviceName,
-        [SemanticResourceAttributes.DEPLOYMENT_ENVIRONMENT]:
-          this.configService.get<string>('NODE_ENV', 'development'),
+      resource: resourceFromAttributes({
+        [ATTR_SERVICE_NAME]: config.serviceName,
+        [ATTR_DEPLOYMENT_ENVIRONMENT]: this.configService.get<string>(
+          'NODE_ENV',
+          'development',
+        ),
       }),
       traceExporter,
       sampler,

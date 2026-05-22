@@ -7,7 +7,7 @@ import * as forge from 'node-forge';
 import { Crypto } from '@peculiar/webcrypto';
 import * as xadesjs from 'xadesjs';
 import * as xmlCore from 'xml-core';
-import { DOMParser, XMLSerializer } from 'xmldom';
+import { DOMParser, XMLSerializer } from '@xmldom/xmldom';
 import { RawPgService } from '../../../infrastructure/database/raw-pg/raw-pg.service';
 import { EncryptionService } from '../../../infrastructure/encryption/encryption.service';
 import { STORAGE_PATHS } from '../../utils/storage-paths';
@@ -110,7 +110,8 @@ export class XmlSignerService implements OnModuleInit {
           const isCA =
             cert.extensions &&
             cert.extensions.some(
-              (ext: any) => ext.name === 'basicConstraints' && ext.cA === true,
+              (ext: { name: string; cA?: boolean }) =>
+                ext.name === 'basicConstraints' && ext.cA === true,
             );
 
           if (!isCA) {
@@ -177,7 +178,7 @@ export class XmlSignerService implements OnModuleInit {
         name: 'RSA-SHA1',
       },
       this.privateKey,
-      xmlDoc,
+      xmlDoc as unknown as Document,
       {
         x509: [this.certificate],
         references: [
@@ -202,9 +203,18 @@ export class XmlSignerService implements OnModuleInit {
       throw new Error('Error al generar el XML firmado');
     }
 
-    rootElement.appendChild(signedXmlDoc);
-
     const serializer = new XMLSerializer();
+    // signedXmlDoc is a runtime xmldom node (xadesjs uses xmldom via setNodeDependencies)
+    const signedXmlStr = serializer.serializeToString(signedXmlDoc as any);
+    const parsedDoc = new DOMParser().parseFromString(
+      signedXmlStr,
+      'application/xml',
+    );
+    if (!parsedDoc.documentElement) {
+      throw new Error('Error al re-parsear el nodo firmado');
+    }
+    rootElement.appendChild(parsedDoc.documentElement);
+
     const signedXmlString = serializer.serializeToString(xmlDoc);
 
     this.logger.log('Documento XML firmado exitosamente con XAdES-BES');
@@ -352,7 +362,8 @@ export class XmlSignerService implements OnModuleInit {
           const isCA =
             cert.extensions &&
             cert.extensions.some(
-              (ext: any) => ext.name === 'basicConstraints' && ext.cA === true,
+              (ext: { name: string; cA?: boolean }) =>
+                ext.name === 'basicConstraints' && ext.cA === true,
             );
 
           if (!isCA) {
@@ -418,7 +429,7 @@ export class XmlSignerService implements OnModuleInit {
         name: 'RSA-SHA1',
       },
       privateKey,
-      xmlDoc,
+      xmlDoc as unknown as Document,
       {
         x509: [certificate],
         references: [
@@ -443,9 +454,18 @@ export class XmlSignerService implements OnModuleInit {
       throw new Error('Error al generar el XML firmado');
     }
 
-    rootElement.appendChild(signedXmlDoc);
-
     const serializer = new XMLSerializer();
+    // signedXmlDoc is a runtime xmldom node (xadesjs uses xmldom via setNodeDependencies)
+    const signedXmlStr = serializer.serializeToString(signedXmlDoc as any);
+    const parsedDoc = new DOMParser().parseFromString(
+      signedXmlStr,
+      'application/xml',
+    );
+    if (!parsedDoc.documentElement) {
+      throw new Error('Error al re-parsear el nodo firmado');
+    }
+    rootElement.appendChild(parsedDoc.documentElement);
+
     const signedXmlString = serializer.serializeToString(xmlDoc);
 
     this.logger.log(

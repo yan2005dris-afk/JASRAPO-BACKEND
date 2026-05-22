@@ -13,3 +13,11 @@ allowBuilds:
 
 overrides:
   rxjs: ^7.8.1
+  crypto-js: ^4.2.0
+  xmldom: npm:@xmldom/xmldom@^0.9.7
+  protobufjs: ^8.2.0
+  "@hono/node-server": ^1.19.13
+  uuid: ^11.1.1
+  path-to-regexp: ^8.3.0
+  lodash: ^4.17.23
+  handlebars: ^4.7.9

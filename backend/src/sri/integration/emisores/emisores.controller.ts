@@ -20,7 +20,7 @@ import { CreateEmisorDto, UpdateEmisorDto, EmisorResponseDto } from './dto';
 import { JwtAuthGuard } from '../../../identity/auth/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../../../infrastructure/common/guards/permissions.guard';
 
-@ApiTags('Emisores')
+@ApiTags('[En Desarrollo] Emisores')
 @ApiBearerAuth('JWT')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('emisores')

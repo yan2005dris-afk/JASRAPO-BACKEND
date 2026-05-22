@@ -25,7 +25,7 @@ import { TemplateService } from '../documents/services/template.service';
 import { SignPdfDto, GenerateAndSignPdfDto } from './dto/signature.dto';
 import { STORAGE_PATHS } from '../utils/storage-paths';
 
-@ApiTags('Signature')
+@ApiTags('[En Desarrollo] Signature')
 @Controller('signature')
 export class SignatureController {
   private readonly logger = new Logger(SignatureController.name);

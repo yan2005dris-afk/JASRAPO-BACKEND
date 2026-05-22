@@ -1,11 +1,11 @@
-import { PrismaClient } from "src/generated/prisma/client";
+import type { PrismaClient } from 'src/generated/prisma/client';
 
 export async function seedCategoriaTarifa(prisma: PrismaClient) {
   const categorias = [
     {
       categoriaTarifaId: 1,
-      nombre: "RESIDENCIAL",
-      descripcion: "Tarifa para consumo doméstico estándar",
+      nombre: 'RESIDENCIAL',
+      descripcion: 'Tarifa para consumo doméstico estándar',
       valorBase: 4.0,
       valorExcedenteM3: 0.4,
       activo: true,
@@ -13,8 +13,8 @@ export async function seedCategoriaTarifa(prisma: PrismaClient) {
     },
     {
       categoriaTarifaId: 2,
-      nombre: "COMERCIAL",
-      descripcion: "Tarifa para locales comerciales y negocios",
+      nombre: 'COMERCIAL',
+      descripcion: 'Tarifa para locales comerciales y negocios',
       valorBase: 7.5,
       valorExcedenteM3: 0.75,
       activo: true,
@@ -22,8 +22,8 @@ export async function seedCategoriaTarifa(prisma: PrismaClient) {
     },
     {
       categoriaTarifaId: 3,
-      nombre: "INDUSTRIAL",
-      descripcion: "Tarifa para industrias y grandes consumidores",
+      nombre: 'INDUSTRIAL',
+      descripcion: 'Tarifa para industrias y grandes consumidores',
       valorBase: 15.0,
       valorExcedenteM3: 1.5,
       activo: true,
@@ -31,8 +31,8 @@ export async function seedCategoriaTarifa(prisma: PrismaClient) {
     },
     {
       categoriaTarifaId: 4,
-      nombre: "TERCERA EDAD",
-      descripcion: "Tarifa subsidiada para adultos mayores",
+      nombre: 'TERCERA EDAD',
+      descripcion: 'Tarifa subsidiada para adultos mayores',
       valorBase: 4.0,
       valorExcedenteM3: 0.4,
       activo: true,
@@ -40,8 +40,8 @@ export async function seedCategoriaTarifa(prisma: PrismaClient) {
     },
     {
       categoriaTarifaId: 5,
-      nombre: "DISCAPACIDAD",
-      descripcion: "Tarifa subsidiada para personas con discapacidad",
+      nombre: 'DISCAPACIDAD',
+      descripcion: 'Tarifa subsidiada para personas con discapacidad',
       valorBase: 4.0,
       valorExcedenteM3: 0.4,
       activo: true,

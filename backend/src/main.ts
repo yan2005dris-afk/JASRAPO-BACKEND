@@ -161,17 +161,14 @@ Para consultas o soporte, contacta al equipo de desarrollo del Backend.
     `,
     )
     .setVersion('2.0')
-    .addBearerAuth(
-      {
-        type: 'http',
-        scheme: 'bearer',
-        bearerFormat: 'JWT',
-        name: 'JWT',
-        description: 'Ingresa el token JWT válido',
-        in: 'header',
-      },
-      'JWT-auth',
-    )
+    .addBearerAuth({
+      type: 'http',
+      scheme: 'bearer',
+      bearerFormat: 'JWT',
+      name: 'JWT',
+      description: 'Ingresa el token JWT válido',
+      in: 'header',
+    })
     .addCookieAuth(
       'refreshToken',
       {
@@ -188,7 +185,6 @@ Para consultas o soporte, contacta al equipo de desarrollo del Backend.
     .addTag('roles', 'Administración de roles')
     .addTag('permissions', 'Gestión de permisos')
     .addTag('menus', 'Menús y navegación basados en permisos')
-    .addTag('files', 'Subida, descarga y gestión de archivos (MinIO)')
     .addTag('clients', 'Gestión de clientes')
     .addTag('sectors', 'Gestión de sectores territoriales')
     .addTag('communities', 'Gestión de comunidades')
@@ -199,7 +195,24 @@ Para consultas o soporte, contacta al equipo de desarrollo del Backend.
     .addTag('reading-anomalies', 'Anomalías de lecturas (fugas, daños)')
     .addTag('routes', 'Planificación y gestión de rutas de lectura')
     .addTag('search', 'Búsqueda pública de información')
-    .addTag('metrics', 'Métricas para Prometheus (scraping)')
+    .addTag('Lotes', 'Gestión de lotes de facturación')
+    .addTag('agreements', 'Payment agreements')
+    .addTag(
+      '[En Desarrollo] SRI - Facturación Electrónica',
+      'Módulo de facturación electrónica SRI',
+    )
+    .addTag('[En Desarrollo] Catálogos SRI', 'Catálogos oficiales del SRI')
+    .addTag('[En Desarrollo] Emisores', 'Gestión de emisores de comprobantes')
+    .addTag('[En Desarrollo] Signature', 'Firma electrónica de documentos')
+    .addTag(
+      '[En Desarrollo] SRI - Webhooks',
+      'Webhooks para notificaciones del SRI',
+    )
+    .addTag('[En Desarrollo] Certificados', 'Gestión de certificados digitales')
+    .addTag(
+      '[No Aplicable] Métricas para Prometheus (scraping)',
+      'Métricas para Prometheus (scraping)',
+    )
     .addServer('http://localhost:3000', 'Servidor de desarrollo')
     .addServer('https://api.dihm-muertos.site/', 'Servidor de pruebas')
     .setContact('Equipo Jasrapo', 'https://jasrapo.com', 'soporte@jasrapo.com')
