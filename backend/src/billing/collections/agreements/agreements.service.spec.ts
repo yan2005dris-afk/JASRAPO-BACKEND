@@ -5,6 +5,7 @@ import { paginate } from '../../../infrastructure/common/utils/pagination.util';
 import { CreateAgreementUseCase } from './use-cases/create-agreement.use-case';
 import { FindOneAgreementUseCase } from './use-cases/find-one-agreement.use-case';
 import { GetDebtSummaryUseCase } from './use-cases/get-debt-summary.use-case';
+import { UpdateAgreementUseCase } from './use-cases/update-agreement.use-case';
 import { AgreementsService } from './agreements.service';
 
 jest.mock('../../../infrastructure/common/utils/pagination.util');
@@ -25,6 +26,7 @@ describe('AgreementsService', () => {
   const mockCreateUseCase = { execute: jest.fn() };
   const mockFindOneUseCase = { execute: jest.fn() };
   const mockGetDebtSummaryUseCase = { execute: jest.fn() };
+  const mockUpdateUseCase = { execute: jest.fn() };
 
   const convenioRecord = {
     convenioId: 1n,
@@ -67,6 +69,7 @@ describe('AgreementsService', () => {
         { provide: CreateAgreementUseCase, useValue: mockCreateUseCase },
         { provide: FindOneAgreementUseCase, useValue: mockFindOneUseCase },
         { provide: GetDebtSummaryUseCase, useValue: mockGetDebtSummaryUseCase },
+        { provide: UpdateAgreementUseCase, useValue: mockUpdateUseCase },
       ],
     }).compile();
 
@@ -223,6 +226,21 @@ describe('AgreementsService', () => {
         orderBy: { numeroCuota: 'asc' },
       }),
     );
+  });
+
+  it('should update agreement estado through use case and map response', async () => {
+    const updatedRecord = {
+      ...convenioRecord,
+      estado: 'PAGADO',
+      fechaProximoPago: null,
+      cuotaConvenio: [{ ...cuotaRecord, estado: 'PAGADA' }],
+    };
+    mockUpdateUseCase.execute.mockResolvedValue(updatedRecord);
+
+    const result = await service.update('1', { estado: 'PAGADO' });
+
+    expect(result.estado.codigo).toBe('PAGADO');
+    expect(mockUpdateUseCase.execute).toHaveBeenCalledWith(1n, 'PAGADO');
   });
 
   it('should cancel agreement with ANULADO status and soft delete date', async () => {
