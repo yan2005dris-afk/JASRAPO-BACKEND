@@ -153,58 +153,9 @@ export async function seedRoutes(prisma: PrismaClient) {
     rutasCount++;
   }
 
-  // Asignamos lecturas a la ruta 1 (PENDIENTE)
-  const lecturasPendientes = await prisma.lecturas.findMany({
-    where: {
-      estado: "PENDIENTE",
-      rutaAsignadaId: null,
-      contrato: {
-        comunidadId: 1,
-      },
-    },
-    take: 10,
-    select: { lecturaId: true },
-  });
-
-  for (const lectura of lecturasPendientes) {
-    await prisma.lecturas.update({
-      where: { lecturaId: lectura.lecturaId },
-      data: {
-        rutaAsignadaId: BigInt(1),
-        estadoAsignacion: "ASIGNADA",
-      },
-    });
-  }
-
-  // Asignamos lecturas a la ruta 2 (EN_PROGRESO)
-  const lecturasEnProgreso = await prisma.lecturas.findMany({
-    where: {
-      estado: "PENDIENTE",
-      rutaAsignadaId: null,
-      contrato: {
-        comunidadId: 1,
-      },
-    },
-    take: 8,
-    select: { lecturaId: true },
-  });
-
-  for (const lectura of lecturasEnProgreso) {
-    await prisma.lecturas.update({
-      where: { lecturaId: lectura.lecturaId },
-      data: {
-        rutaAsignadaId: BigInt(2),
-        estadoAsignacion: "ASIGNADA",
-      },
-    });
-  }
-
   console.log(`✅ ${rutasCount} rutas creadas correctamente.`);
-  console.log(`✅ ${lecturasPendientes.length} lecturas asignadas a ruta de lectura pendiente.`);
-  console.log(`✅ ${lecturasEnProgreso.length} lecturas asignadas a ruta de lectura en progreso.`);
 
   return {
     rutasCreadas: rutasCount,
-    lecturasAsignadas: lecturasPendientes.length + lecturasEnProgreso.length,
   };
 }

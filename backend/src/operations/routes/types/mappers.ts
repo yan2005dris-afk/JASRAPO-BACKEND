@@ -1,16 +1,24 @@
 import type { Prisma } from 'src/generated/prisma/client';
 import { RouteEntity } from './route.entity';
 import { ReadingForRouteEntity } from './reading-for-route.entity';
-import { DateUtil } from 'src/infrastructure/common/util/date.util';
+import { DateUtil } from 'src/infrastructure/common/utils/date.util';
 
 type RouteModel = Prisma.RutasGetPayload<{}>;
 
 type ReadingWithRelations = Prisma.LecturasGetPayload<{
   include: {
-    contrato: {
+    medidor: {
       include: {
-        cliente: true;
-        sector: true;
+        historial: {
+          include: {
+            contrato: {
+              include: {
+                cliente: true;
+                sector: true;
+              };
+            };
+          };
+        };
       };
     };
   };
@@ -36,7 +44,12 @@ export class RouteMapper {
 
 export class ReadingForRouteMapper {
   static toEntity(lectura: ReadingWithRelations): ReadingForRouteEntity {
-    const cliente = lectura.contrato?.cliente;
+    // Current contract is the one in history with fechaHasta: null
+    const activeHistory = lectura.medidor?.historial?.find(
+      (h) => h.fechaHasta === null,
+    );
+    const contrato = activeHistory?.contrato;
+    const cliente = contrato?.cliente;
 
     const clienteNombre = cliente
       ? [cliente.nombres, cliente.apellidos].filter(Boolean).join(' ').trim()
@@ -45,15 +58,15 @@ export class ReadingForRouteMapper {
     return new ReadingForRouteEntity({
       lecturaId: lectura.lecturaId,
 
-      guia: lectura.contrato?.numeroGuia ?? 'Sin guía',
+      guia: contrato?.numeroGuia ?? 'Sin guía',
 
       clienteNombre,
 
-      direccion: lectura.contrato?.direccionSuministro ?? 'Sin dirección',
+      direccion: contrato?.direccionSuministro ?? 'Sin dirección',
 
-      sector: lectura.contrato?.sector?.nombre ?? 'Sin sector',
+      sector: contrato?.sector?.nombre ?? 'Sin sector',
 
-      estadoContrato: lectura.contrato?.estado ?? 'DESCONOCIDO',
+      estadoContrato: contrato?.estado ?? 'DESCONOCIDO',
     });
   }
 }

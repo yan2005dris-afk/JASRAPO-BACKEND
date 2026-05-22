@@ -27,6 +27,7 @@ import {
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
 import { JwtAuthGuard } from 'src/identity/auth/guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
+import { EstadoMedidor } from 'src/generated/prisma/enums';
 
 @ApiTags('meters')
 @ApiBearerAuth()
@@ -121,7 +122,7 @@ export class MeterController {
     return this.meterService.findAll({
       skip: skip ? +skip : undefined,
       take: take ? +take : undefined,
-      where: estado ? { estado: { codigo: estado } } : undefined,
+      where: estado ? { estado: estado as EstadoMedidor } : undefined,
     });
   }
 

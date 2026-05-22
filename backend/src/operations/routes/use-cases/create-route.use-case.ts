@@ -4,7 +4,6 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
-import { EstadoGenerico, Prisma } from 'src/generated/prisma/client';
 import { CreateRouteDto } from '../dto/create-route.dto';
 import { RouteEntity } from '../types/route.entity';
 import { RouteMapper } from '../types/mappers';
@@ -53,118 +52,20 @@ export class CreateRouteUseCase {
       }
     }
 
-    // 4. Validar lecturas
-    const lecturaIds = createDto.lecturaIds.map((id) => BigInt(id));
-
-    const estadoContratoEsperado =
-      createDto.tipoRuta === 'TOMA_LECTURA'
-        ? EstadoGenerico.ACTIVO
-        : EstadoGenerico.RECONEXION;
-
-    const lecturasExistentes = await this.prisma.lecturas.findMany({
-      where: {
-        lecturaId: { in: lecturaIds },
-        estadoAsignacion: 'NO_ASIGNADA',
-        estado: {
-          in: ['PENDIENTE', 'POR_REVISION'],
-        },
-        deletedAt: null,
-        contrato: {
-          estado: estadoContratoEsperado,
-          comunidadId: createDto.comunidadId,
-          ...(createDto.sectorId && { sectorId: createDto.sectorId }),
-          deletedAt: null,
-        },
+    // 4. Crear ruta
+    const ruta = await this.prisma.rutas.create({
+      data: {
+        nombre: createDto.nombre,
+        descripcion: createDto.descripcion,
+        operarioId: createDto.operarioId,
+        tipoRuta: createDto.tipoRuta,
+        comunidadId: createDto.comunidadId,
+        sectorId: createDto.sectorId,
+        fechaPlanificada: createDto.fechaPlanificada
+          ? new Date(createDto.fechaPlanificada)
+          : null,
+        estado: 'PENDIENTE',
       },
-      include: {
-        contrato: true,
-      },
-    });
-
-    // Validar que todas existan
-    if (lecturasExistentes.length !== lecturaIds.length) {
-      throw new BadRequestException(
-        'Una o más lecturas no están disponibles para asignar, pertenecen a otra comunidad/sector, o su contrato no tiene el estado requerido',
-      );
-    }
-
-    // Validar contratos (respaldo por si Prisma devuelve sin contrato)
-    const contratosInvalidos = lecturasExistentes.some(
-      (lectura) =>
-        !lectura.contrato || lectura.contrato.estado !== estadoContratoEsperado,
-    );
-
-    if (contratosInvalidos) {
-      throw new BadRequestException(
-        `Una o más lecturas pertenecen a contratos que no están en estado ${estadoContratoEsperado}`,
-      );
-    }
-
-    // 5. Crear ruta
-    const ruta = await this.prisma.$transaction(async (tx) => {
-      const rutaCreada = await tx.rutas.create({
-        data: {
-          nombre: createDto.nombre,
-          descripcion: createDto.descripcion,
-          operarioId: createDto.operarioId,
-          tipoRuta: createDto.tipoRuta,
-          comunidadId: createDto.comunidadId,
-          sectorId: createDto.sectorId,
-          fechaPlanificada: createDto.fechaPlanificada
-            ? new Date(createDto.fechaPlanificada)
-            : null,
-          estado: 'PENDIENTE',
-        },
-      });
-
-      const lecturasDisponiblesWhere: Prisma.LecturasWhereInput = {
-        lecturaId: { in: lecturaIds },
-        estadoAsignacion: 'NO_ASIGNADA',
-        estado: {
-          in: ['PENDIENTE', 'POR_REVISION'],
-        },
-        deletedAt: null,
-        contrato: {
-          estado: estadoContratoEsperado,
-          comunidadId: createDto.comunidadId,
-          ...(createDto.sectorId ? { sectorId: createDto.sectorId } : {}),
-          deletedAt: null,
-        },
-      };
-
-      const lecturasDisponibles = await tx.lecturas.count({
-        where: lecturasDisponiblesWhere,
-      });
-
-      if (lecturasDisponibles !== lecturaIds.length) {
-        throw new BadRequestException(
-          'Una o más lecturas ya no cumplen las condiciones requeridas para ser asignadas',
-        );
-      }
-
-      // Asignar lecturas
-      const updateResult = await tx.lecturas.updateMany({
-        where: {
-          lecturaId: { in: lecturaIds },
-          estadoAsignacion: 'NO_ASIGNADA',
-          estado: {
-            in: ['PENDIENTE', 'POR_REVISION'],
-          },
-          deletedAt: null,
-        },
-        data: {
-          rutaAsignadaId: rutaCreada.rutaId,
-          estadoAsignacion: 'ASIGNADA',
-        },
-      });
-
-      if (updateResult.count !== lecturaIds.length) {
-        throw new BadRequestException(
-          'Una o más lecturas ya fueron asignadas o no están disponibles (condición de carrera)',
-        );
-      }
-
-      return rutaCreada;
     });
 
     return RouteMapper.toEntity(ruta);

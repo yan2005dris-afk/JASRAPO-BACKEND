@@ -10,7 +10,7 @@ import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { SessionsService } from '../../sessions/sessions.service';
 import * as bcrypt from 'bcryptjs';
 import { REFRESH_TOKEN_MAX_AGE_MS } from 'src/infrastructure/config/app.constants';
-import { EcuadorTimezoneUtil } from 'src/infrastructure/common/util/ecuador-timezone-backend.util';
+import { EcuadorTimezoneUtil } from 'src/infrastructure/common/utils/ecuador-timezone-backend.util';
 import type { StringValue } from 'ms';
 
 @Injectable()

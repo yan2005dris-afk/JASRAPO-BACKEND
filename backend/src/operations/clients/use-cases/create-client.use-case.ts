@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { CreateClientDto } from '../dto/create-client.dto';
-import { TipoIdentificacionUtil } from 'src/infrastructure/common/util/tipo-identificacion.util';
+import { TipoIdentificacionUtil } from 'src/infrastructure/common/utils/tipo-identificacion.util';
 import { safeClientesSelect } from '../types/IResponseClient';
 import { Prisma } from 'src/generated/prisma/client';
 
@@ -14,9 +14,9 @@ export class CreateClientUseCase {
   constructor(private readonly prisma: PrismaService) {}
 
   async execute(dto: CreateClientDto) {
-    const tipoId = BigInt(dto.tipoIdentificacionId);
+    const tipoId = dto.tipoIdentificacionId;
 
-    // CONSUMIDOR_FINAL tiene ID 4
+    // CONSUMIDOR_FINAL tiene código '07'
     if (dto.tipoIdentificacionId === 4) {
       return this.handleConsumidorFinal(dto);
     }
@@ -30,8 +30,8 @@ export class CreateClientUseCase {
     const identificacion = dto.identificacion.trim();
 
     // Obtener el código del tipo de identificación para validar
-    const catalogo = await this.prisma.identificacion.findUnique({
-      where: { identificacionId: tipoId },
+    const catalogo = await this.prisma.catalogoTiposIdentificacion.findUnique({
+      where: { id: tipoId },
     });
 
     if (!catalogo) {
@@ -72,7 +72,7 @@ export class CreateClientUseCase {
 
   private async handleConsumidorFinal(dto: CreateClientDto) {
     const consumidores = await this.prisma.clientes.findMany({
-      where: { tipoIdentificacionId: BigInt(4) }, // CONSUMIDOR_FINAL
+      where: { tipoIdentificacionId: 4 }, // CONSUMIDOR_FINAL
       orderBy: { createdAt: 'asc' },
     });
 
@@ -115,7 +115,7 @@ export class CreateClientUseCase {
       data: {
         identificacion: '9999999999999',
         tipoIdentificacion: {
-          connect: { identificacionId: BigInt(4) },
+          connect: { id: 4 },
         }, // CONSUMIDOR_FINAL
         nombres: 'CONSUMIDOR',
         apellidos: 'FINAL',
@@ -137,7 +137,7 @@ export class CreateClientUseCase {
     if (!codigo)
       throw new BadRequestException('Tipo de identificación requerido');
     if (
-      codigo !== 'CONSUMIDOR_FINAL' &&
+      codigo !== '07' && // CONSUMIDOR_FINAL
       !TipoIdentificacionUtil.validar(codigo, identificacion)
     ) {
       throw new BadRequestException('Identificación inválida');
@@ -149,7 +149,8 @@ export class CreateClientUseCase {
     nombres?: string,
     apellidos?: string,
   ) {
-    if (codigo !== 'CONSUMIDOR_FINAL' && (!nombres || !apellidos)) {
+    if (codigo !== '07' && (!nombres || !apellidos)) {
+      // CONSUMIDOR_FINAL
       throw new BadRequestException('Nombres y apellidos son requeridos');
     }
   }
@@ -161,7 +162,7 @@ export class CreateClientUseCase {
     return {
       identificacion,
       tipoIdentificacion: {
-        connect: { identificacionId: BigInt(dto.tipoIdentificacionId) },
+        connect: { id: dto.tipoIdentificacionId },
       },
       nombres: dto.nombres?.trim().toUpperCase() ?? '',
       apellidos: dto.apellidos?.trim().toUpperCase() ?? '',

@@ -14,9 +14,9 @@ export interface IResponseClient {
   aplicaDiscapacidad: boolean;
   aplicaTerceraEdad: boolean;
   tipoIdentificacion: {
-    identificacionId: bigint;
+    id: number;
     codigo: string;
-    nombre: string;
+    descripcion: string;
   } | null;
 }
 
@@ -35,9 +35,9 @@ export const safeClientesSelect = {
   aplicaTerceraEdad: true,
   tipoIdentificacion: {
     select: {
-      identificacionId: true,
+      id: true,
       codigo: true,
-      nombre: true,
+      descripcion: true,
     },
   },
 } satisfies Prisma.ClientesSelect;

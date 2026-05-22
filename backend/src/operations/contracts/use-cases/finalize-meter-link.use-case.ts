@@ -6,12 +6,17 @@ export class FinalizeMeterLinkUseCase {
   constructor(private readonly prisma: PrismaService) {}
 
   async execute(medidorId: bigint): Promise<any> {
-    // Desvinculamos el medidor del contrato
-    return await this.prisma.medidores.update({
-      where: { medidorId },
-      data: {
-        contratoId: null as any,
-      },
+    return await this.prisma.$transaction(async (tx) => {
+      // 1. Close active history for this medidor
+      await tx.historialMedidores.updateMany({
+        where: { medidorId, fechaHasta: null },
+        data: { fechaHasta: new Date() },
+      });
+
+      // 2. Return the medidor status
+      return await tx.medidores.findUnique({
+        where: { medidorId },
+      });
     });
   }
 }

@@ -14,19 +14,9 @@ export class DeleteRouteUseCase {
       throw new NotFoundException('Ruta no encontrada');
     }
 
-    await this.prisma.$transaction(async (tx) => {
-      await tx.rutas.update({
-        where: { rutaId },
-        data: { deletedAt: new Date() },
-      });
-
-      await tx.lecturas.updateMany({
-        where: { rutaAsignadaId: rutaId },
-        data: {
-          rutaAsignadaId: null,
-          estadoAsignacion: 'NO_ASIGNADA',
-        },
-      });
+    await this.prisma.rutas.update({
+      where: { rutaId },
+      data: { deletedAt: new Date() },
     });
 
     return { message: 'Ruta eliminada correctamente' };

@@ -2,13 +2,13 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 class TipoIdentificacionSnippet {
   @ApiProperty()
-  identificacionId: number;
+  id: number;
 
   @ApiProperty()
   codigo: string;
 
   @ApiProperty()
-  nombre: string;
+  descripcion: string;
 }
 
 export class ClientEntity {

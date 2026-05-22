@@ -34,10 +34,12 @@ describe('RemovePermissionUseCase', () => {
     const id = 1;
     const expectedResult = {
       permisoId: id,
+      nombre: 'Test',
+      descripcion: 'Test desc',
       recurso: 'test',
       accion: 'test',
     };
-    (prismaService.permisos.update as jest.fn).mockResolvedValue(
+    (prismaService.permisos.update as jest.Mock).mockResolvedValue(
       expectedResult,
     );
 
@@ -48,6 +50,8 @@ describe('RemovePermissionUseCase', () => {
       data: { deletedAt: expect.any(Date) },
       select: {
         permisoId: true,
+        nombre: true,
+        descripcion: true,
         recurso: true,
         accion: true,
       },

@@ -1,0 +1,19 @@
+model CatalogoTarifasImpuesto {
+  id               Int               @id @default(autoincrement())
+  impuestoId       Int               @map("impuesto_id")
+  codigoPorcentaje String            @db.VarChar(4) @map("codigo_porcentaje")
+  descripcion      String            @db.VarChar(100)
+  porcentaje       Decimal           @db.Decimal(5, 2)
+  vigenteDesde     DateTime          @default(now()) @db.Date @map("vigente_desde")
+  vigenteHasta     DateTime?         @db.Date @map("vigente_hasta")
+  activo           Boolean           @default(true)
+  createdAt        DateTime          @default(now()) @map("created_at")
+  updatedAt        DateTime          @updatedAt @map("updated_at")
+
+  impuesto CatalogoImpuestos @relation(fields: [impuestoId], references: [id], onDelete: Cascade)
+  rubros   Rubros[]
+
+  @@unique([impuestoId, codigoPorcentaje, vigenteDesde])
+  @@index([vigenteDesde, vigenteHasta])
+  @@map("catalogo_tarifas_impuesto")
+}

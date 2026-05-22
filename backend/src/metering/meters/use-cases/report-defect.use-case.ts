@@ -8,6 +8,8 @@ import { safeMeterSelect } from '../types/IResponseMeters';
 import { toMeterResponse } from '../types/metersMapper';
 import { MeterResponseDto } from '../dto/meter-response.dto';
 
+import { EstadoMedidor } from 'src/generated/prisma/enums';
+
 @Injectable()
 export class ReportDefectUseCase {
   constructor(private readonly prisma: PrismaService) {}
@@ -15,13 +17,12 @@ export class ReportDefectUseCase {
   async execute(medidorId: bigint): Promise<MeterResponseDto> {
     const medidor = await this.prisma.medidores.findUnique({
       where: { medidorId },
-      include: { estado: true },
     });
 
     if (!medidor || medidor.deletedAt)
       throw new NotFoundException('Medidor no encontrado');
 
-    if (medidor.estado?.codigo !== 'INSTALADO') {
+    if (medidor.estado !== EstadoMedidor.INSTALADO) {
       throw new BadRequestException(
         `Solo medidores INSTALADOS pueden reportarse como dañados`,
       );
@@ -30,7 +31,7 @@ export class ReportDefectUseCase {
     const updated = await this.prisma.medidores.update({
       where: { medidorId },
       data: {
-        estadoId: BigInt(3), // DANADO
+        estado: EstadoMedidor.DANADO,
       },
       select: safeMeterSelect,
     });

@@ -10,9 +10,9 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { CreateUserUseCase } from './use-cases/create-user.use-case';
 import { GetEffectivePermissionsUseCase } from './use-cases/get-effective-permissions.use-case';
 import { UpdateUserPermissionsUseCase } from './use-cases/update-user-permissions.use-case';
-import { paginate } from 'src/infrastructure/common/util/pagination.util';
-import { ValidationUtil } from 'src/infrastructure/common/util/validation.util';
-import { PhoneUtil } from 'src/infrastructure/common/util/phone.util';
+import { paginate } from 'src/infrastructure/common/utils/pagination.util';
+import { ValidationUtil } from 'src/infrastructure/common/utils/validation.util';
+import { PhoneUtil } from 'src/infrastructure/common/utils/phone.util';
 import { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
 import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
 import {

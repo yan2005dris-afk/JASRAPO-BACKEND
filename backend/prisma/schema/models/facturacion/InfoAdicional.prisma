@@ -1,0 +1,23 @@
+model InfoAdicional {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid @map("id")
+  comprobanteId BigInt       @map("comprobante_id")
+  nombre        String       @db.VarChar(100) @map("nombre")
+  valor         String       @db.VarChar(300) @map("valor")
+
+  comprobante   Comprobantes @relation(fields: [comprobanteId], references: [id], onDelete: Cascade)
+
+  @@index([comprobanteId])
+  @@map("info_adicional")
+}
+
+model DetallesAdicionales {
+  id                   String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid @map("id")
+  comprobanteDetalleId String              @db.Uuid @map("comprobante_detalle_id")
+  nombre               String              @db.VarChar(100) @map("nombre")
+  valor                String              @db.VarChar(300) @map("valor")
+
+  detalle              ComprobanteDetalles @relation(fields: [comprobanteDetalleId], references: [id], onDelete: Cascade)
+
+  @@index([comprobanteDetalleId])
+  @@map("detalles_adicionales")
+}

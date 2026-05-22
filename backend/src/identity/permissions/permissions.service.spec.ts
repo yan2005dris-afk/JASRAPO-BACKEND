@@ -65,7 +65,12 @@ describe('PermissionsService', () => {
   });
 
   it('should delegate create to CreatePermissionUseCase', async () => {
-    const dto = { name: 'test', description: 'test' };
+    const dto = {
+      nombre: 'test',
+      descripcion: 'test',
+      recurso: 'test',
+      accion: 'test',
+    } as any;
     await service.create(dto);
     expect(createUseCase.execute).toHaveBeenCalledWith(dto);
   });
@@ -81,7 +86,7 @@ describe('PermissionsService', () => {
   });
 
   it('should delegate update to UpdatePermissionUseCase', async () => {
-    const dto = { name: 'updated' };
+    const dto = { nombre: 'updated' } as any;
     await service.update(1, dto);
     expect(updateUseCase.execute).toHaveBeenCalledWith(1, dto);
   });

@@ -42,3 +42,6 @@ CLAUDE
 
 # -- .gga
 .gga
+/.pi
+/openspec
+/backend/openspec

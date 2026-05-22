@@ -9,13 +9,13 @@ describe('ClientController', () => {
   const mockClient = {
     clienteId: BigInt(1),
     identificacion: '0999999999001',
-    tipoIdentificacionId: BigInt(2),
+    tipoIdentificacionId: 2,
     nombres: 'JUAN',
     apellidos: 'PEREZ',
     tipoIdentificacion: {
-      identificacionId: BigInt(2),
-      codigo: 'RUC',
-      nombre: 'RUC',
+      id: 2,
+      codigo: '04',
+      descripcion: 'RUC',
     },
   };
 
@@ -95,11 +95,10 @@ describe('ClientController', () => {
     it('should call service.findAllIdentificaciones', async () => {
       const mockIdentificaciones = [
         {
-          identificacionId: BigInt(1),
-          codigo: 'CEDULA',
-          nombre: 'Cédula',
+          id: 1,
+          codigo: '05',
+          descripcion: 'Cédula',
           activo: true,
-          orden: 1,
         },
       ];
       mockClientService.findAllIdentificaciones.mockResolvedValue(

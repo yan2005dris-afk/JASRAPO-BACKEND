@@ -29,6 +29,8 @@ describe('FindOnePermissionUseCase', () => {
   it('should return a permission', async () => {
     const mockPermission = {
       permisoId: 1,
+      nombre: 'Leer usuarios',
+      descripcion: 'Consulta usuarios',
       recurso: 'Users',
       accion: 'Read',
       deletedAt: null,

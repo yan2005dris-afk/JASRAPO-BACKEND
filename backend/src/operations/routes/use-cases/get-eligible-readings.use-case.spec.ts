@@ -82,12 +82,19 @@ describe('GetEligibleReadingsUseCase', () => {
 
     const mockLectura = {
       lecturaId: 10n,
-      contrato: {
-        estado: 'ACTIVO',
-        numeroGuia: 'G-123',
-        direccionSuministro: 'Dir 1',
-        cliente: { nombres: 'Juan', apellidos: 'Perez' },
-        sector: { nombre: 'Sector 1' },
+      medidor: {
+        historial: [
+          {
+            fechaHasta: null,
+            contrato: {
+              estado: 'ACTIVO',
+              numeroGuia: 'G-123',
+              direccionSuministro: 'Dir 1',
+              cliente: { nombres: 'Juan', apellidos: 'Perez' },
+              sector: { nombre: 'Sector 1' },
+            },
+          },
+        ],
       },
     };
     prismaService.lecturas.findMany.mockResolvedValue([mockLectura]);
@@ -103,15 +110,27 @@ describe('GetEligibleReadingsUseCase', () => {
       expect.objectContaining({
         where: expect.objectContaining({
           estadoAsignacion: 'NO_ASIGNADA',
-          contrato: expect.objectContaining({
-            estado: EstadoGenerico.ACTIVO,
-            comunidadId: 1,
+          medidor: expect.objectContaining({
+            historial: expect.objectContaining({
+              some: expect.objectContaining({
+                contrato: expect.objectContaining({
+                  estado: EstadoGenerico.ACTIVO,
+                  comunidadId: 1,
+                }),
+              }),
+            }),
           }),
           OR: expect.arrayContaining([
             expect.objectContaining({
-              contrato: expect.objectContaining({
-                cliente: expect.objectContaining({
-                  nombres: expect.objectContaining({ contains: 'Juan' }),
+              medidor: expect.objectContaining({
+                historial: expect.objectContaining({
+                  some: expect.objectContaining({
+                    contrato: expect.objectContaining({
+                      cliente: expect.objectContaining({
+                        nombres: expect.objectContaining({ contains: 'Juan' }),
+                      }),
+                    }),
+                  }),
                 }),
               }),
             }),
@@ -147,8 +166,14 @@ describe('GetEligibleReadingsUseCase', () => {
     expect(prismaService.lecturas.count).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
-          contrato: expect.objectContaining({
-            estado: EstadoGenerico.RECONEXION,
+          medidor: expect.objectContaining({
+            historial: expect.objectContaining({
+              some: expect.objectContaining({
+                contrato: expect.objectContaining({
+                  estado: EstadoGenerico.RECONEXION,
+                }),
+              }),
+            }),
           }),
         }),
       }),

@@ -41,9 +41,9 @@ describe('CreateRouteUseCase', () => {
 
   it('should throw NotFoundException if operario not found', async () => {
     prismaService.usuarios.findUnique.mockResolvedValue(null);
-    await expect(
-      useCase.execute({ operarioId: 1, lecturaIds: [] } as any),
-    ).rejects.toThrow(NotFoundException);
+    await expect(useCase.execute({ operarioId: 1 } as any)).rejects.toThrow(
+      NotFoundException,
+    );
   });
 
   it('should throw BadRequestException if operario is not an operator', async () => {
@@ -52,9 +52,9 @@ describe('CreateRouteUseCase', () => {
       rol: { nombre: 'admin' },
     });
 
-    await expect(
-      useCase.execute({ operarioId: 1, lecturaIds: [] } as any),
-    ).rejects.toThrow(BadRequestException);
+    await expect(useCase.execute({ operarioId: 1 } as any)).rejects.toThrow(
+      BadRequestException,
+    );
   });
 
   it('should throw NotFoundException if comunidad not found', async () => {
@@ -65,7 +65,7 @@ describe('CreateRouteUseCase', () => {
     prismaService.comunidades.findUnique.mockResolvedValue(null);
 
     await expect(
-      useCase.execute({ operarioId: 1, comunidadId: 2, lecturaIds: [] } as any),
+      useCase.execute({ operarioId: 1, comunidadId: 2 } as any),
     ).rejects.toThrow(NotFoundException);
   });
 
@@ -82,7 +82,6 @@ describe('CreateRouteUseCase', () => {
         operarioId: 1,
         comunidadId: 1,
         sectorId: 2,
-        lecturaIds: [],
       } as any),
     ).rejects.toThrow(NotFoundException);
   });
@@ -103,64 +102,16 @@ describe('CreateRouteUseCase', () => {
         operarioId: 1,
         comunidadId: 1,
         sectorId: 2,
-        lecturaIds: [],
       } as any),
     ).rejects.toThrow(BadRequestException);
   });
 
-  it('should throw BadRequestException if readings are missing or not eligible', async () => {
+  it('should create route successfully', async () => {
     prismaService.usuarios.findUnique.mockResolvedValue({
       usuarioId: 1,
       rol: { nombre: 'operadores' },
     });
     prismaService.comunidades.findUnique.mockResolvedValue({ comunidadId: 1 });
-
-    // We send 2 lecturaIds but findMany returns only 1
-    prismaService.lecturas.findMany.mockResolvedValue([
-      { lecturaId: 10n, contrato: { estado: EstadoGenerico.ACTIVO } },
-    ]);
-
-    await expect(
-      useCase.execute({
-        operarioId: 1,
-        comunidadId: 1,
-        tipoRuta: 'TOMA_LECTURA',
-        lecturaIds: ['10', '20'],
-      } as any),
-    ).rejects.toThrow(BadRequestException);
-  });
-
-  it('should throw BadRequestException if readings contracts state mismatch', async () => {
-    prismaService.usuarios.findUnique.mockResolvedValue({
-      usuarioId: 1,
-      rol: { nombre: 'operadores' },
-    });
-    prismaService.comunidades.findUnique.mockResolvedValue({ comunidadId: 1 });
-
-    prismaService.lecturas.findMany.mockResolvedValue([
-      { lecturaId: 10n, contrato: { estado: EstadoGenerico.SUSPENDIDO } },
-    ]);
-
-    await expect(
-      useCase.execute({
-        operarioId: 1,
-        comunidadId: 1,
-        tipoRuta: 'TOMA_LECTURA',
-        lecturaIds: ['10'],
-      } as any),
-    ).rejects.toThrow(BadRequestException);
-  });
-
-  it('should create route and update lecturas successfully', async () => {
-    prismaService.usuarios.findUnique.mockResolvedValue({
-      usuarioId: 1,
-      rol: { nombre: 'operadores' },
-    });
-    prismaService.comunidades.findUnique.mockResolvedValue({ comunidadId: 1 });
-
-    prismaService.lecturas.findMany.mockResolvedValue([
-      { lecturaId: 10n, contrato: { estado: EstadoGenerico.ACTIVO } },
-    ]);
 
     const mockCreatedRoute = {
       rutaId: 100n,
@@ -170,57 +121,16 @@ describe('CreateRouteUseCase', () => {
       tipoRuta: 'TOMA_LECTURA',
     };
     prismaService.rutas.create.mockResolvedValue(mockCreatedRoute);
-    prismaService.lecturas.count.mockResolvedValue(1);
-    prismaService.lecturas.updateMany.mockResolvedValue({ count: 1 });
 
     const result = await useCase.execute({
       operarioId: 1,
       comunidadId: 1,
       tipoRuta: 'TOMA_LECTURA',
-      lecturaIds: ['10'],
       nombre: 'Test Route',
     } as any);
 
-    expect(prismaService.$transaction).toHaveBeenCalled();
     expect(prismaService.rutas.create).toHaveBeenCalled();
-    expect(prismaService.lecturas.updateMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({
-          lecturaId: { in: [10n] },
-          estadoAsignacion: 'NO_ASIGNADA',
-          estado: { in: ['PENDIENTE', 'POR_REVISION'] },
-          deletedAt: null,
-        }),
-        data: { rutaAsignadaId: 100n, estadoAsignacion: 'ASIGNADA' },
-      }),
-    );
     expect(result.rutaId).toBe(100n);
     expect(result.nombre).toBe('Test Route');
-  });
-
-  it('should throw BadRequestException if update count does not match lecturaIds length (race condition)', async () => {
-    prismaService.usuarios.findUnique.mockResolvedValue({
-      usuarioId: 1,
-      rol: { nombre: 'operadores' },
-    });
-    prismaService.comunidades.findUnique.mockResolvedValue({ comunidadId: 1 });
-
-    prismaService.lecturas.findMany.mockResolvedValue([
-      { lecturaId: 10n, contrato: { estado: EstadoGenerico.ACTIVO } },
-    ]);
-
-    prismaService.rutas.create.mockResolvedValue({ rutaId: 100n });
-    prismaService.lecturas.count.mockResolvedValue(1);
-    prismaService.lecturas.updateMany.mockResolvedValue({ count: 0 });
-
-    await expect(
-      useCase.execute({
-        operarioId: 1,
-        comunidadId: 1,
-        tipoRuta: 'TOMA_LECTURA',
-        lecturaIds: ['10'],
-        nombre: 'Test Route',
-      } as any),
-    ).rejects.toThrow(BadRequestException);
   });
 });

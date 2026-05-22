@@ -11,7 +11,6 @@ import {
 import { RolesService } from './roles.service';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
-import { AssignRolePermissionDto } from './dto/assign-role-permission.dto';
 import { JwtAuthGuard } from 'src/identity/auth/guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
@@ -48,9 +47,8 @@ export class RolesController {
     description: 'Rol creado exitosamente',
     schema: {
       example: {
-        rolesId: 1,
-        name: 'Administrador',
-        createdAt: '2024-01-15T10:30:00Z',
+        rolId: 1,
+        nombre: 'Administrador',
       },
     },
   })
@@ -73,7 +71,8 @@ export class RolesController {
    */
   @ApiOperation({
     summary: 'Listar roles',
-    description: 'Retorna todos los roles registrados en el sistema.',
+    description:
+      'Retorna todos los roles registrados en el sistema. Sin paginación.',
   })
   @ApiResponse({
     status: 200,
@@ -91,12 +90,13 @@ export class RolesController {
   }
 
   /**
-   * Obtiene un rol específico por su ID.
+   * Obtiene un rol específico por su ID, incluyendo sus permisos asociados.
    * Requiere permiso: roles:read
    */
   @ApiOperation({
     summary: 'Obtener rol por ID',
-    description: 'Retorna los datos de un rol específico.',
+    description:
+      'Retorna los datos de un rol específico junto con sus permisos asociados.',
   })
   @ApiParam({
     name: 'id',
@@ -107,6 +107,22 @@ export class RolesController {
   @ApiResponse({
     status: 200,
     description: 'Rol encontrado exitosamente',
+    schema: {
+      example: {
+        rolId: 1,
+        nombre: 'Administrador',
+        permisos: [
+          {
+            rolPermisoId: 1,
+            permisoId: 1,
+            nombre: 'Consultar Clientes',
+            descripcion: 'Permite consultar registros de clientes',
+            recurso: 'clientes',
+            accion: 'read',
+          },
+        ],
+      },
+    },
   })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({
@@ -121,12 +137,13 @@ export class RolesController {
   }
 
   /**
-   * Actualiza los datos de un rol.
+   * Actualiza un rol: nombre, asignar y/o revocar permisos.
    * Requiere permiso: roles:update
    */
   @ApiOperation({
     summary: 'Actualizar rol',
-    description: 'Actualiza el nombre de un rol existente.',
+    description:
+      'Actualiza el nombre de un rol y/o asigna y revoca permisos en una sola operación.',
   })
   @ApiParam({
     name: 'id',
@@ -136,7 +153,30 @@ export class RolesController {
   })
   @ApiBody({
     type: UpdateRoleDto,
-    description: 'Datos a actualizar (nombre del rol)',
+    description:
+      'Datos a actualizar: nombre, permisosAsignar (array de IDs), permisosRevocar (array de IDs)',
+    examples: {
+      soloNombre: {
+        summary: 'Solo cambiar nombre',
+        value: { nombre: 'Super Administrador' },
+      },
+      asignarPermisos: {
+        summary: 'Asignar permisos',
+        value: { permisosAsignar: [1, 2, 3, 4] },
+      },
+      revocarPermisos: {
+        summary: 'Revocar permisos',
+        value: { permisosRevocar: [5, 6] },
+      },
+      combinado: {
+        summary: 'Combinado: nombre + asignar + revocar',
+        value: {
+          nombre: 'Editor',
+          permisosAsignar: [7, 8],
+          permisosRevocar: [1, 2],
+        },
+      },
+    },
   })
   @ApiResponse({
     status: 200,
@@ -156,124 +196,5 @@ export class RolesController {
     @Body() updateRoleDto: UpdateRoleDto,
   ) {
     return this.rolesService.update(+id, updateRoleDto);
-  }
-
-  /**
-   * Obtiene los permisos de un rol.
-   * Requiere permiso: roles:read
-   */
-  @ApiOperation({
-    summary: 'Obtener permisos asociados a un rol',
-    description: 'Retorna todos los permisos asociados a un rol.',
-  })
-  @ApiParam({
-    name: 'id',
-    description: 'ID único del rol',
-    type: Number,
-    example: 1,
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Permisos del rol obtenidos exitosamente',
-  })
-  @ApiResponse({ status: 401, description: 'No autorizado' })
-  @ApiResponse({
-    status: 403,
-    description: 'Prohibido - Sin permiso roles:read',
-  })
-  @ApiResponse({ status: 404, description: 'Rol no encontrado' })
-  @RequiredPermission('roles', 'read')
-  @Get(':id/permissions')
-  getRolePermissions(@Param('id', ParseIntPipe) id: string) {
-    return this.rolesService.getRolePermissions(+id);
-  }
-
-  /**
-   * Asigna un permiso a un rol.
-   * Requiere permiso: roles:update
-   */
-  @ApiOperation({
-    summary: 'Asignar permiso a rol',
-    description: 'Asigna un permiso a un rol existente.',
-  })
-  @ApiParam({
-    name: 'id',
-    description: 'ID único del rol',
-    type: Number,
-    example: 1,
-  })
-  @ApiBody({
-    type: AssignRolePermissionDto,
-    description: 'ID del permiso a asignar',
-    examples: {
-      ejemplo1: {
-        value: { permissionsId: 1 },
-        summary: 'Asignar permiso de lectura',
-      },
-    },
-  })
-  @ApiResponse({
-    status: 201,
-    description: 'Permiso asignado exitosamente al rol',
-  })
-  @ApiResponse({ status: 400, description: 'Datos inválidos' })
-  @ApiResponse({ status: 401, description: 'No autorizado' })
-  @ApiResponse({
-    status: 403,
-    description: 'Prohibido - Sin permiso roles:update',
-  })
-  @ApiResponse({ status: 404, description: 'Rol o permiso no encontrado' })
-  @RequiredPermission('roles', 'update')
-  @Post(':id/permissions')
-  assignPermission(
-    @Param('id', ParseIntPipe) id: string,
-    @Body() assignRolePermissionDto: AssignRolePermissionDto,
-  ) {
-    return this.rolesService.assignPermission(
-      +id,
-      assignRolePermissionDto.permissionsId,
-    );
-  }
-
-  /**
-   * Revoca un permiso de un rol.
-   * Requiere permiso: roles:delete
-   */
-  @ApiOperation({
-    summary: 'Revocar permiso de rol',
-    description: 'Revoca (soft delete) un permiso asignado a un rol.',
-  })
-  @ApiParam({
-    name: 'id',
-    description: 'ID único del rol',
-    type: Number,
-    example: 1,
-  })
-  @ApiParam({
-    name: 'permissionId',
-    description: 'ID del permiso a revocar',
-    type: Number,
-    example: 1,
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Permiso revocado exitosamente del rol',
-  })
-  @ApiResponse({ status: 401, description: 'No autorizado' })
-  @ApiResponse({
-    status: 403,
-    description: 'Prohibido - Sin permiso roles:delete',
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Relación rol-permiso no encontrada',
-  })
-  @RequiredPermission('roles', 'delete')
-  @Patch(':id/permissions/:permissionId')
-  removePermission(
-    @Param('id', ParseIntPipe) id: string,
-    @Param('permissionId', ParseIntPipe) permissionId: string,
-  ) {
-    return this.rolesService.removePermission(+id, +permissionId);
   }
 }

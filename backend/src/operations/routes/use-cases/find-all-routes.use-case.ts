@@ -6,7 +6,7 @@ import { RouteMapper } from '../types/mappers';
 import {
   paginate,
   PaginateOptions,
-} from 'src/infrastructure/common/util/pagination.util';
+} from 'src/infrastructure/common/utils/pagination.util';
 import { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
 
 @Injectable()

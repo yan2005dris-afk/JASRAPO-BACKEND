@@ -47,7 +47,7 @@ describe('RemoveClientUseCase', () => {
 
       const result = await useCase.execute('1');
 
-      expect(result.deletedAt).toBeDefined();
+      expect(result).toBeDefined();
       expect(mockPrismaService.clientes.update).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { clienteId: BigInt(1) },

@@ -1,5 +1,5 @@
 import type { MeterResponseDto } from '../dto/meter-response.dto';
-import { DateUtil } from 'src/infrastructure/common/util/date.util';
+import { DateUtil } from 'src/infrastructure/common/utils/date.util';
 
 /**
  * Mapea resultado de Prisma a DTO de response
@@ -8,11 +8,10 @@ import { DateUtil } from 'src/infrastructure/common/util/date.util';
 export function toMeterResponse(meter: any): MeterResponseDto {
   return {
     medidorId: meter.medidorId,
-    contratoId: meter.contratoId,
     marca: meter.marca,
     modelo: meter.modelo,
     serie: meter.serie,
-    estado: meter.estado?.codigo,
+    estado: meter.estado,
     fechaInstalacion: DateUtil.formatForFrontend(meter.fechaInstalacion),
     fechaBaja: DateUtil.formatForFrontend(meter.fechaBaja),
     motivo: meter.motivo,

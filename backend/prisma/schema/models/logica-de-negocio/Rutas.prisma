@@ -16,7 +16,6 @@ model Rutas {
   operario            Usuarios           @relation(fields: [operarioId], references: [usuarioId])
   comunidad           Comunidades        @relation(fields: [comunidadId], references: [comunidadId])
   sector              Sectores?          @relation(fields: [sectorId], references: [sectorId], onDelete: SetNull)
-  lecturas            Lecturas[]
   
   @@index([operarioId])
   @@index([comunidadId])

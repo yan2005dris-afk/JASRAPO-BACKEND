@@ -1,0 +1,11 @@
+model MotivosNotaDebito {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid @map("id")
+  comprobanteId BigInt       @map("comprobante_id")
+  razon         String       @map("razon")
+  valor         Decimal      @db.Decimal(18, 2) @map("valor")
+
+  comprobante   Comprobantes @relation(fields: [comprobanteId], references: [id], onDelete: Cascade)
+
+  @@index([comprobanteId])
+  @@map("motivos_nota_debito")
+}
