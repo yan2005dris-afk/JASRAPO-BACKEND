@@ -16,6 +16,7 @@ describe('AgreementsController', () => {
     findOne: jest.fn(),
     findInstallments: jest.fn(),
     cancel: jest.fn(),
+    update: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -99,5 +100,16 @@ describe('AgreementsController', () => {
 
     await expect(controller.cancel('1')).resolves.toEqual({ convenioId: '1' });
     expect(service.cancel).toHaveBeenCalledWith('1');
+  });
+
+  it('should update agreement state', async () => {
+    const dto = { estado: 'PAGADO' };
+    service.update.mockResolvedValue({ convenioId: '1', estado: 'PAGADO' } as any);
+
+    await expect(controller.update('1', dto)).resolves.toEqual({
+      convenioId: '1',
+      estado: 'PAGADO',
+    });
+    expect(service.update).toHaveBeenCalledWith('1', dto);
   });
 });

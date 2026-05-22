@@ -50,7 +50,7 @@ export async function seedAgreements(prisma: PrismaClient) {
     await prisma.convenios.upsert({
       where: { convenioId },
       update: {},
-      create: data,
+      create: { convenioId, ...data },
     });
   }
 
@@ -177,7 +177,7 @@ export async function seedAgreements(prisma: PrismaClient) {
     await prisma.cuotaConvenio.upsert({
       where: { cuotaConvenioId },
       update: {},
-      create: data,
+      create: { cuotaConvenioId, ...data },
     });
   }
 

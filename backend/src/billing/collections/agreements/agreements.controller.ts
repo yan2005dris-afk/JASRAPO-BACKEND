@@ -47,7 +47,7 @@ export class AgreementsController {
   @ApiOperation({
     summary: 'Listar estados de convenio',
     description:
-      'Retorna los estados disponibles para convenios, consultados desde la base de datos',
+      'Retorna los estados disponibles para convenios, derivados del enum de Prisma',
   })
   @ApiResponse({
     status: 200,
@@ -67,7 +67,7 @@ export class AgreementsController {
   @ApiOperation({
     summary: 'Listar estados de cuota',
     description:
-      'Retorna los estados disponibles para cuotas de convenio, consultados desde la base de datos',
+      'Retorna los estados disponibles para cuotas de convenio, derivados del enum de Prisma',
   })
   @ApiResponse({
     status: 200,

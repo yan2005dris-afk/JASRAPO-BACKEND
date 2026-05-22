@@ -40,35 +40,37 @@ export async function seedAgreementsPrefacturas(prisma: PrismaClient) {
     return;
   }
 
-  const periodo = await prisma.periodos.findFirst({
-    where: { estado: 'ABIERTO' },
+  const periodos = await prisma.periodos.findMany({
     orderBy: { periodoId: 'asc' },
+    take: 3,
   });
 
   const puntoEmision = await prisma.puntosEmision.findFirst();
   const rubros = await prisma.rubros.findMany();
 
-  if (!periodo || !puntoEmision || rubros.length === 0) {
-    console.warn('⚠️ Faltan periodos, puntos de emisión o rubros.');
+  if (periodos.length < 3 || !puntoEmision || rubros.length < 3) {
+    console.warn('⚠️ Faltan periodos (mínimo 3), puntos de emisión o rubros (mínimo 3).');
     return;
   }
 
-  const rubroAgua = rubros.find((r) => r.nombre.includes('Agua')) || rubros[0];
-  const rubroCargo =
-    rubros.find((r) => r.nombre.includes('Cargo')) || rubros[1];
-  const rubroSeguridad =
-    rubros.find((r) => r.nombre.includes('Seguridad')) || rubros[2];
+  const [periodo1, periodo2, periodo3] = periodos;
 
-  // ── Prefactura 1: período 1, 3 meses atrasado, $45.50, GENERADA ──────────
+  const rubroAgua = rubros.find((r) => r.nombre.includes('Agua')) ?? rubros[0];
+  const rubroCargo =
+    rubros.find((r) => r.nombre.includes('Cargo')) ?? rubros[1];
+  const rubroSeguridad =
+    rubros.find((r) => r.nombre.includes('Seguridad')) ?? rubros[2];
+
+  // ── Prefactura 1: período más antiguo, 3 meses atrasado, $45.50, GENERADA ──────────
   const p1exists = await prisma.prefacturas.findFirst({
-    where: { contratoId: 4n, periodoId: 1, deletedAt: null },
+    where: { contratoId: 4n, periodoId: periodo1.periodoId, deletedAt: null },
   });
 
   if (!p1exists) {
     const p1 = await prisma.prefacturas.create({
       data: {
         contrato: { connect: { contratoId: 4n } },
-        periodoRel: { connect: { periodoId: 1 } },
+        periodoRel: { connect: { periodoId: periodo1.periodoId } },
         puntoEmision: { connect: { id: puntoEmision.id } },
         clienteNombre: 'Cliente Test Contrato 4',
         clienteIdentificacion: '9999999999',
@@ -127,16 +129,16 @@ export async function seedAgreementsPrefacturas(prisma: PrismaClient) {
     });
   }
 
-  // ── Prefactura 2: período 5, 2 meses atrasado, parcial $32.00, APROBADA ──
+  // ── Prefactura 2: segundo período, 2 meses atrasado, parcial $32.00, APROBADA ──
   const p2exists = await prisma.prefacturas.findFirst({
-    where: { contratoId: 4n, periodoId: 5, deletedAt: null },
+    where: { contratoId: 4n, periodoId: periodo2.periodoId, deletedAt: null },
   });
 
   if (!p2exists) {
     const p2 = await prisma.prefacturas.create({
       data: {
         contrato: { connect: { contratoId: 4n } },
-        periodoRel: { connect: { periodoId: 5 } },
+        periodoRel: { connect: { periodoId: periodo2.periodoId } },
         puntoEmision: { connect: { id: puntoEmision.id } },
         clienteNombre: 'Cliente Test Contrato 4',
         clienteIdentificacion: '9999999999',
@@ -195,16 +197,16 @@ export async function seedAgreementsPrefacturas(prisma: PrismaClient) {
     });
   }
 
-  // ── Prefactura 3: período 10, 1 mes atrasado, $78.00, GENERADA ───────────
+  // ── Prefactura 3: tercer período, 1 mes atrasado, $78.00, GENERADA ───────────
   const p3exists = await prisma.prefacturas.findFirst({
-    where: { contratoId: 4n, periodoId: 10, deletedAt: null },
+    where: { contratoId: 4n, periodoId: periodo3.periodoId, deletedAt: null },
   });
 
   if (!p3exists) {
     const p3 = await prisma.prefacturas.create({
       data: {
         contrato: { connect: { contratoId: 4n } },
-        periodoRel: { connect: { periodoId: 10 } },
+        periodoRel: { connect: { periodoId: periodo3.periodoId } },
         puntoEmision: { connect: { id: puntoEmision.id } },
         clienteNombre: 'Cliente Test Contrato 4',
         clienteIdentificacion: '9999999999',
