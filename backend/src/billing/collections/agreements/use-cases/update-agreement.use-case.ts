@@ -3,6 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { Decimal } from 'decimal.js';
 import { PrismaService } from '../../../../infrastructure/database/prisma.service';
 import { safeAgreementWithInstallmentsSelect } from '../types/IAgreement';
 
@@ -51,7 +52,7 @@ export class UpdateAgreementUseCase {
     // ── 3. Ejecutar la transición ────────────────────────────────────────────
     switch (nuevoEstado) {
       case 'PAGADO':
-        return this.ejecutarPago(convenioId);
+        return this.ejecutarPago(convenioId, convenio.deudaTotal);
       case 'ANULADO':
         return this.ejecutarAnulacion(convenioId);
       case 'ACTIVO':
@@ -70,7 +71,7 @@ export class UpdateAgreementUseCase {
    * - fechaProximoPago = null
    * - estado = PAGADO
    */
-  private async ejecutarPago(convenioId: bigint) {
+  private async ejecutarPago(convenioId: bigint, deudaTotal: Decimal) {
     const hoy = new Date();
 
     return this.prisma.$transaction(async (tx) => {
@@ -100,6 +101,7 @@ export class UpdateAgreementUseCase {
         data: {
           estado: 'PAGADO',
           fechaProximoPago: null,
+          montoPagadoActual: deudaTotal,
         },
         select: safeAgreementWithInstallmentsSelect,
       });
