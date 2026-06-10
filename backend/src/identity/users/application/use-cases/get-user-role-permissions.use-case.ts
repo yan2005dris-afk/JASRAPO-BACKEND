@@ -24,7 +24,9 @@ export class GetUserRolePermissionsUseCase {
       return [];
     }
 
-    const assignments = await this.userRepository.findRolePermissions(user.rolId);
+    const assignments = await this.userRepository.findRolePermissions(
+      user.rolId,
+    );
 
     return assignments.map((rp) => ({
       recurso: rp.permiso.recurso,

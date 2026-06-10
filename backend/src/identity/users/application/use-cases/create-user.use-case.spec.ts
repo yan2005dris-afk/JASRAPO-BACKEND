@@ -41,7 +41,10 @@ describe('CreateUserUseCase', () => {
       telefono: '0991234567',
     };
     mockUserRepository.findUnique.mockResolvedValue(null);
-    mockUserRepository.findRoleByName.mockResolvedValue({ rolId: 1, nombre: 'user' });
+    mockUserRepository.findRoleByName.mockResolvedValue({
+      rolId: 1,
+      nombre: 'user',
+    });
     mockUserRepository.create.mockResolvedValue({
       usuarioId: 1,
       email: 'test@example.com',

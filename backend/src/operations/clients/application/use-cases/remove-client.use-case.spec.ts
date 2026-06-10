@@ -1,17 +1,21 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { RemoveClientUseCase } from './remove-client.use-case';
-import { PrismaService } from 'src/infrastructure/database/prisma.service';
+import { ClientRepository } from '../../domain/repositories/client.repository';
 import { NotFoundException } from '@nestjs/common';
 
 describe('RemoveClientUseCase', () => {
   let useCase: RemoveClientUseCase;
 
-  const mockPrismaService = {
-    clientes: {
-      findFirst: jest.fn(),
-      update: jest.fn(),
-    },
+  const mockClientRepository = {
+    findFirst: jest.fn(),
+    findUnique: jest.fn(),
+    findMany: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    updateMany: jest.fn(),
+    findCatalogoTipoIdentificacion: jest.fn(),
+    findManyCatalogoTipoIdentificacion: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -19,8 +23,8 @@ describe('RemoveClientUseCase', () => {
       providers: [
         RemoveClientUseCase,
         {
-          provide: PrismaService,
-          useValue: mockPrismaService,
+          provide: ClientRepository,
+          useValue: mockClientRepository,
         },
       ],
     }).compile();
@@ -39,8 +43,8 @@ describe('RemoveClientUseCase', () => {
   describe('execute', () => {
     it('should soft delete a client if found', async () => {
       const mockCliente = { clienteId: BigInt(1), deletedAt: null };
-      mockPrismaService.clientes.findFirst.mockResolvedValue(mockCliente);
-      mockPrismaService.clientes.update.mockResolvedValue({
+      mockClientRepository.findFirst.mockResolvedValue(mockCliente);
+      mockClientRepository.update.mockResolvedValue({
         ...mockCliente,
         deletedAt: new Date(),
       });
@@ -48,16 +52,15 @@ describe('RemoveClientUseCase', () => {
       const result = await useCase.execute('1');
 
       expect(result).toBeDefined();
-      expect(mockPrismaService.clientes.update).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: { clienteId: BigInt(1) },
-          data: expect.objectContaining({ deletedAt: expect.any(Date) }),
-        }),
+      expect(mockClientRepository.update).toHaveBeenCalledWith(
+        { clienteId: BigInt(1) },
+        { deletedAt: expect.any(Date) },
+        expect.any(Object),
       );
     });
 
     it('should throw NotFoundException if client not found', async () => {
-      mockPrismaService.clientes.findFirst.mockResolvedValue(null);
+      mockClientRepository.findFirst.mockResolvedValue(null);
 
       await expect(useCase.execute('1')).rejects.toThrow(NotFoundException);
     });

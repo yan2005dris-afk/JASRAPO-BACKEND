@@ -21,7 +21,8 @@ describe('FindOnePermissionUseCase', () => {
     }).compile();
 
     useCase = module.get<FindOnePermissionUseCase>(FindOnePermissionUseCase);
-    permissionRepository = module.get<PermissionRepository>(PermissionRepository);
+    permissionRepository =
+      module.get<PermissionRepository>(PermissionRepository);
   });
 
   it('should return a permission', async () => {

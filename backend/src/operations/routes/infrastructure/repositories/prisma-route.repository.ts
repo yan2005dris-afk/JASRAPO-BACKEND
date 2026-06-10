@@ -2,7 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { Prisma } from 'src/generated/prisma/client';
 import { RouteRepository } from '../../domain/repositories/route.repository';
-import { paginate, PaginateOptions } from 'src/infrastructure/common/utils/pagination.util';
+import {
+  paginate,
+  PaginateOptions,
+} from 'src/infrastructure/common/utils/pagination.util';
 import { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
 
 @Injectable()
@@ -56,7 +59,11 @@ export class PrismaRouteRepository implements RouteRepository {
   }
 
   async paginateLecturas(
-    args: { where?: Prisma.LecturasWhereInput; include?: Prisma.LecturasInclude; orderBy?: any },
+    args: {
+      where?: Prisma.LecturasWhereInput;
+      include?: Prisma.LecturasInclude;
+      orderBy?: any;
+    },
     pagination: PaginateOptions,
   ): Promise<PaginatedResult<any>> {
     return paginate<any>(this.prisma.lecturas, args, pagination);

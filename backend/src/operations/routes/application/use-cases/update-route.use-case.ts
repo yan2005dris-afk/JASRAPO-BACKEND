@@ -8,7 +8,10 @@ import { RouteMapper } from '../../domain/types/mappers';
 export class UpdateRouteUseCase {
   constructor(private readonly routeRepository: RouteRepository) {}
 
-  async execute(rutaId: bigint, updateDto: UpdateRouteDto): Promise<RouteEntity> {
+  async execute(
+    rutaId: bigint,
+    updateDto: UpdateRouteDto,
+  ): Promise<RouteEntity> {
     const ruta = await this.routeRepository.findUnique({ rutaId });
 
     if (!ruta || ruta.deletedAt) {
@@ -19,7 +22,9 @@ export class UpdateRouteUseCase {
       { rutaId },
       {
         ...(updateDto.nombre !== undefined && { nombre: updateDto.nombre }),
-        ...(updateDto.descripcion !== undefined && { descripcion: updateDto.descripcion }),
+        ...(updateDto.descripcion !== undefined && {
+          descripcion: updateDto.descripcion,
+        }),
         ...(updateDto.estado !== undefined && { estado: updateDto.estado }),
         ...(updateDto.fechaPlanificada !== undefined && {
           fechaPlanificada: updateDto.fechaPlanificada

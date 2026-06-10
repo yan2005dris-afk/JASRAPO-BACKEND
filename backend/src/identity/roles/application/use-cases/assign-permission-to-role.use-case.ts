@@ -18,7 +18,10 @@ export class AssignPermissionToRoleUseCase {
     if (!permission || permission.deletedAt)
       throw new NotFoundException('Permiso no encontrado o eliminado');
 
-    const existing = await this.roleRepository.findFirstAssignment(rolId, permisoId);
+    const existing = await this.roleRepository.findFirstAssignment(
+      rolId,
+      permisoId,
+    );
 
     if (existing) {
       if (existing.deletedAt) {

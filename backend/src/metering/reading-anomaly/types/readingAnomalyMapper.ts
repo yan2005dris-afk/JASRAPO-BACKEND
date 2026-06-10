@@ -23,7 +23,9 @@ export type ReadingAnomalyPrismaRaw = Pick<
  * Mapea resultado de Prisma a DTO de response
  * Excluye campos internos: updatedAt, createdAt, deletedAt
  */
-export function toReadingAnomalyResponse(anomaly: ReadingAnomalyPrismaRaw): IResponseReadingAnomaly {
+export function toReadingAnomalyResponse(
+  anomaly: ReadingAnomalyPrismaRaw,
+): IResponseReadingAnomaly {
   return {
     anomaliaId: anomaly.anomaliaId.toString(),
     lecturaId: anomaly.lecturaId.toString(),

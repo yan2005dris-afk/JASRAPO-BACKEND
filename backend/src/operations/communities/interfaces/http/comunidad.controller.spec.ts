@@ -1,7 +1,7 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { ComunidadController } from './comunidad.controller';
-import { ComunidadService } from './comunidad.service';
+import { ComunidadService } from '../../application/comunidad.service';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 
 describe('ComunidadController', () => {

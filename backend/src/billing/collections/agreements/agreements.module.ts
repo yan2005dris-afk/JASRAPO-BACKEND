@@ -18,10 +18,6 @@ import { PrismaAgreementRepository } from './infrastructure/repositories/prisma-
     GetDebtSummaryUseCase,
     UpdateAgreementUseCase,
   ],
-  exports: [
-    AgreementRepository,
-    AgreementsService,
-    GetDebtSummaryUseCase,
-  ],
+  exports: [AgreementRepository, AgreementsService, GetDebtSummaryUseCase],
 })
 export class AgreementsModule {}

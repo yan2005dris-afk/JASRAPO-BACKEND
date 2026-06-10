@@ -1,4 +1,4 @@
-import { Prisma } from 'src/generated/prisma/client';
+import type { Prisma } from 'src/generated/prisma/client';
 
 export abstract class MeterRepository {
   abstract findUnique(
@@ -27,11 +27,11 @@ export abstract class MeterRepository {
   ): Promise<any>;
 
   abstract createHistory(
-    data: Prisma.HistorialMedidoresCreateInput | Prisma.HistorialMedidoresUncheckedCreateInput,
+    data:
+      | Prisma.HistorialMedidoresCreateInput
+      | Prisma.HistorialMedidoresUncheckedCreateInput,
     tx?: any,
   ): Promise<any>;
 
-  abstract executeTransaction<T>(
-    callback: (tx: any) => Promise<T>,
-  ): Promise<T>;
+  abstract executeTransaction<T>(callback: (tx: any) => Promise<T>): Promise<T>;
 }

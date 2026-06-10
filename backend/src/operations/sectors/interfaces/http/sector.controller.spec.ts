@@ -1,7 +1,7 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { SectorController } from './sector.controller';
-import { SectorService } from './sector.service';
+import { SectorService } from '../../application/sector.service';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 
 describe('SectorController', () => {

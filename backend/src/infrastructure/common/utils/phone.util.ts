@@ -17,7 +17,7 @@ export function isValidEcuadorPhone(phone: string): boolean {
   }
 
   // Eliminar espacios y caracteres especiales
-  const cleaned = phone.replace(/[\s\-\(\)]/g, '');
+  const cleaned = phone.replace(/[\s\-()]/g, '');
 
   // Validar formato ecuatoriano
   const ecuadorPhoneRegex = /^(\+593|0)?[2-9]\d{8}$/;
@@ -32,7 +32,7 @@ export function normalizeEcuadorPhone(phone: string): string {
     return '';
   }
 
-  const cleaned = phone.replace(/[\s\-\(\)]/g, '');
+  const cleaned = phone.replace(/[\s\-()]/g, '');
 
   // Si ya tiene el código de país
   if (cleaned.startsWith('+593')) {
@@ -132,4 +132,3 @@ export class PhoneUtil {
     return phone.replace(/[\s-]/g, '');
   }
 }
-

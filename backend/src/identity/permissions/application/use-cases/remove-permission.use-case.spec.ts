@@ -23,7 +23,8 @@ describe('RemovePermissionUseCase', () => {
     }).compile();
 
     useCase = module.get<RemovePermissionUseCase>(RemovePermissionUseCase);
-    permissionRepository = module.get<PermissionRepository>(PermissionRepository);
+    permissionRepository =
+      module.get<PermissionRepository>(PermissionRepository);
   });
 
   it('should be defined', () => {
@@ -39,9 +40,7 @@ describe('RemovePermissionUseCase', () => {
       recurso: 'test',
       accion: 'test',
     };
-    mockPermissionRepository.update.mockResolvedValue(
-      expectedResult,
-    );
+    mockPermissionRepository.update.mockResolvedValue(expectedResult);
 
     const result = await useCase.execute(id);
 

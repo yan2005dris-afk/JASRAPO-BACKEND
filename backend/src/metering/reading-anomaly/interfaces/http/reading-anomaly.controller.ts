@@ -46,7 +46,7 @@ export class ReadingAnomalyController {
   @ApiResponse({
     status: 201,
     description: 'Anomalía creada',
-    type: ResponseReadingAnomalyDto as any,
+    type: ResponseReadingAnomalyDto,
   })
   @ApiResponse({ status: 400, description: 'Datos inválidos' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
@@ -122,7 +122,7 @@ export class ReadingAnomalyController {
   @ApiResponse({
     status: 200,
     description: 'Anomalía encontrada',
-    type: ResponseReadingAnomalyDto as any,
+    type: ResponseReadingAnomalyDto,
   })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({ status: 404, description: 'Anomalía no encontrada' })
@@ -149,7 +149,7 @@ export class ReadingAnomalyController {
   @ApiResponse({
     status: 200,
     description: 'Anomalía actualizada',
-    type: ResponseReadingAnomalyDto as any,
+    type: ResponseReadingAnomalyDto,
   })
   @ApiResponse({ status: 400, description: 'Datos inválidos' })
   @ApiResponse({ status: 401, description: 'No autorizado' })

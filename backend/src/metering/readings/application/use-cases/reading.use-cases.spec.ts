@@ -7,7 +7,6 @@ import { FindOneReadingUseCase } from './find-one-reading.use-case';
 import { UpdateReadingUseCase } from './update-reading.use-case';
 import { RemoveReadingUseCase } from './remove-reading.use-case';
 import { NotFoundException } from '@nestjs/common';
-import { LecturaEntity } from '../../domain/entities/lectura.entity';
 
 describe('Readings Use Cases', () => {
   let createUseCase: CreateReadingUseCase;
@@ -33,6 +32,7 @@ describe('Readings Use Cases', () => {
     create: jest.fn(),
     findMany: jest.fn(),
     findUnique: jest.fn(),
+    count: jest.fn(),
     update: jest.fn(),
   };
 
@@ -56,26 +56,33 @@ describe('Readings Use Cases', () => {
     readingRepository = module.get<ReadingRepository>(ReadingRepository);
   });
 
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   describe('CreateReadingUseCase', () => {
     it('should create a reading', async () => {
       mockReadingRepository.create.mockResolvedValue(mockLectura);
+      mockReadingRepository.findUnique.mockResolvedValue(mockLectura);
       const result = await createUseCase.execute({
         fecha: '2024-01-01',
         lecturaAnterior: 100,
         lecturaActual: 150,
         medidorId: '1',
       } as any);
-      expect(result).toBeInstanceOf(LecturaEntity);
+      expect(result).toBeDefined();
+      expect(result.lecturaActual).toBe(150);
       expect(mockReadingRepository.create).toHaveBeenCalled();
     });
   });
 
   describe('FindAllReadingsUseCase', () => {
-    it('should return all readings', async () => {
+    it('should return all readings with pagination', async () => {
       mockReadingRepository.findMany.mockResolvedValue([mockLectura]);
-      const result = await findAllUseCase.execute({});
-      expect(result).toHaveLength(1);
-      expect(result[0]).toBeInstanceOf(LecturaEntity);
+      mockReadingRepository.count.mockResolvedValue(1);
+      const result = await findAllUseCase.execute();
+      expect(result.data).toHaveLength(1);
+      expect(result.meta.total).toBe(1);
     });
   });
 
@@ -83,7 +90,8 @@ describe('Readings Use Cases', () => {
     it('should return a reading', async () => {
       mockReadingRepository.findUnique.mockResolvedValue(mockLectura);
       const result = await findOneUseCase.execute(BigInt(1));
-      expect(result).toBeInstanceOf(LecturaEntity);
+      expect(result).toBeDefined();
+      expect(result.lecturaActual).toBe(150);
     });
 
     it('should throw NotFoundException if not found', async () => {
@@ -96,11 +104,11 @@ describe('Readings Use Cases', () => {
 
   describe('UpdateReadingUseCase', () => {
     it('should update a reading', async () => {
-      mockReadingRepository.findUnique.mockResolvedValue(mockLectura);
-      mockReadingRepository.update.mockResolvedValue({
-        ...mockLectura,
-        lecturaActual: 200,
-      });
+      const updatedLectura = { ...mockLectura, lecturaActual: 200 };
+      mockReadingRepository.findUnique
+        .mockResolvedValueOnce(mockLectura)
+        .mockResolvedValueOnce(updatedLectura);
+      mockReadingRepository.update.mockResolvedValue(updatedLectura);
       const result = await updateUseCase.execute(BigInt(1), {
         lecturaActual: 200,
       });

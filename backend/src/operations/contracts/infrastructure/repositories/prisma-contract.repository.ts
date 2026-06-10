@@ -25,9 +25,7 @@ export class PrismaContractRepository implements ContractRepository {
     return this.prisma.contratos.findUnique({ where, select });
   }
 
-  async count(params: {
-    where?: Prisma.ContratosWhereInput;
-  }): Promise<number> {
+  async count(params: { where?: Prisma.ContratosWhereInput }): Promise<number> {
     return this.prisma.contratos.count(params);
   }
 

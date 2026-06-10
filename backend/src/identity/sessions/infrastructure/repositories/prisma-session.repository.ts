@@ -11,13 +11,13 @@ export class PrismaSessionRepository implements SessionRepository {
     return this.prisma.sesiones.create({ data });
   }
 
-  async findById(sesionId: string): Promise<any | null> {
+  async findById(sesionId: string): Promise<any> {
     return this.prisma.sesiones.findUnique({
       where: { sesionId },
     });
   }
 
-  async findActiveSession(usuarioId: number, sesionId: string): Promise<any | null> {
+  async findActiveSession(usuarioId: number, sesionId: string): Promise<any> {
     return this.prisma.sesiones.findFirst({
       where: {
         usuarioId,
@@ -39,7 +39,10 @@ export class PrismaSessionRepository implements SessionRepository {
     });
   }
 
-  async update(sesionId: string, data: Prisma.SesionesUpdateInput): Promise<any> {
+  async update(
+    sesionId: string,
+    data: Prisma.SesionesUpdateInput,
+  ): Promise<any> {
     return this.prisma.sesiones.update({
       where: { sesionId },
       data,

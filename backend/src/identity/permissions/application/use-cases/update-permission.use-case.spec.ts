@@ -23,7 +23,8 @@ describe('UpdatePermissionUseCase', () => {
     }).compile();
 
     useCase = module.get<UpdatePermissionUseCase>(UpdatePermissionUseCase);
-    permissionRepository = module.get<PermissionRepository>(PermissionRepository);
+    permissionRepository =
+      module.get<PermissionRepository>(PermissionRepository);
   });
 
   it('should be defined', () => {
@@ -45,9 +46,7 @@ describe('UpdatePermissionUseCase', () => {
       recurso: dto.recurso,
       accion: dto.accion,
     };
-    mockPermissionRepository.update.mockResolvedValue(
-      expectedResult,
-    );
+    mockPermissionRepository.update.mockResolvedValue(expectedResult);
 
     const result = await useCase.execute(id, dto);
 

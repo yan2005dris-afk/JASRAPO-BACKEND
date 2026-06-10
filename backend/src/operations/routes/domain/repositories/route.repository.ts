@@ -1,6 +1,6 @@
-import { Prisma } from 'src/generated/prisma/client';
-import { PaginateOptions } from 'src/infrastructure/common/utils/pagination.util';
-import { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
+import type { Prisma } from 'src/generated/prisma/client';
+import type { PaginateOptions } from 'src/infrastructure/common/utils/pagination.util';
+import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
 
 export abstract class RouteRepository {
   abstract findUnique(where: Prisma.RutasWhereUniqueInput): Promise<any>;
@@ -24,14 +24,23 @@ export abstract class RouteRepository {
     data: Prisma.RutasUpdateInput,
   ): Promise<any>;
 
-  abstract findUsuario(where: Prisma.UsuariosWhereUniqueInput, options?: { include?: Prisma.UsuariosInclude }): Promise<any>;
+  abstract findUsuario(
+    where: Prisma.UsuariosWhereUniqueInput,
+    options?: { include?: Prisma.UsuariosInclude },
+  ): Promise<any>;
 
-  abstract findComunidad(where: Prisma.ComunidadesWhereUniqueInput): Promise<any>;
+  abstract findComunidad(
+    where: Prisma.ComunidadesWhereUniqueInput,
+  ): Promise<any>;
 
   abstract findSector(where: Prisma.SectoresWhereUniqueInput): Promise<any>;
 
   abstract paginateLecturas(
-    args: { where?: Prisma.LecturasWhereInput; include?: Prisma.LecturasInclude; orderBy?: any },
+    args: {
+      where?: Prisma.LecturasWhereInput;
+      include?: Prisma.LecturasInclude;
+      orderBy?: any;
+    },
     pagination: PaginateOptions,
   ): Promise<PaginatedResult<any>>;
 }

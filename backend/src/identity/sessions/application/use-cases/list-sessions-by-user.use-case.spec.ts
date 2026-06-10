@@ -25,7 +25,9 @@ describe('ListSessionsByUserUseCase', () => {
   });
 
   it('should list active sessions for user', async () => {
-    (sessionRepository.findActiveSessionsByUser as jest.Mock).mockResolvedValue([]);
+    (sessionRepository.findActiveSessionsByUser as jest.Mock).mockResolvedValue(
+      [],
+    );
 
     await useCase.execute(1);
 

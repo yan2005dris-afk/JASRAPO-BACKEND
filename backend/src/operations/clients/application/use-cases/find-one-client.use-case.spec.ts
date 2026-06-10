@@ -1,16 +1,21 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { FindOneClientUseCase } from './find-one-client.use-case';
-import { PrismaService } from 'src/infrastructure/database/prisma.service';
+import { ClientRepository } from '../../domain/repositories/client.repository';
 import { NotFoundException } from '@nestjs/common';
 
 describe('FindOneClientUseCase', () => {
   let useCase: FindOneClientUseCase;
 
-  const mockPrismaService = {
-    clientes: {
-      findFirst: jest.fn(),
-    },
+  const mockClientRepository = {
+    findFirst: jest.fn(),
+    findUnique: jest.fn(),
+    findMany: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    updateMany: jest.fn(),
+    findCatalogoTipoIdentificacion: jest.fn(),
+    findManyCatalogoTipoIdentificacion: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -18,8 +23,8 @@ describe('FindOneClientUseCase', () => {
       providers: [
         FindOneClientUseCase,
         {
-          provide: PrismaService,
-          useValue: mockPrismaService,
+          provide: ClientRepository,
+          useValue: mockClientRepository,
         },
       ],
     }).compile();
@@ -38,15 +43,18 @@ describe('FindOneClientUseCase', () => {
   describe('execute', () => {
     it('should return a client if found', async () => {
       const mockCliente = { clienteId: BigInt(1), deletedAt: null };
-      mockPrismaService.clientes.findFirst.mockResolvedValue(mockCliente);
+      mockClientRepository.findFirst.mockResolvedValue(mockCliente);
 
       const result = await useCase.execute('1');
 
-      expect(result).toEqual(mockCliente);
+      expect(mockClientRepository.findFirst).toHaveBeenCalledWith(
+        { clienteId: BigInt(1), deletedAt: null },
+        { select: expect.any(Object) },
+      );
     });
 
     it('should throw NotFoundException if client not found', async () => {
-      mockPrismaService.clientes.findFirst.mockResolvedValue(null);
+      mockClientRepository.findFirst.mockResolvedValue(null);
 
       await expect(useCase.execute('1')).rejects.toThrow(NotFoundException);
     });

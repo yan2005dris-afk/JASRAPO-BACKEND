@@ -23,11 +23,7 @@ export class ReadingService {
     return this.createUseCase.execute(createDto);
   }
 
-  async findAll(
-    page = 1,
-    limit = 10,
-    where?: Prisma.LecturasWhereInput,
-  ) {
+  async findAll(page = 1, limit = 10, where?: Prisma.LecturasWhereInput) {
     return this.findAllUseCase.execute(page, limit, where);
   }
 

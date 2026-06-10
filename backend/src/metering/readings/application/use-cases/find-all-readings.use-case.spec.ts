@@ -7,7 +7,11 @@ describe('FindAllReadingsUseCase', () => {
   let useCase: FindAllReadingsUseCase;
 
   const mockReadingRepository = {
+    findUnique: jest.fn(),
     findMany: jest.fn(),
+    count: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
   };
 
   const mockReadings = [
@@ -26,39 +30,57 @@ describe('FindAllReadingsUseCase', () => {
     useCase = module.get<FindAllReadingsUseCase>(FindAllReadingsUseCase);
   });
 
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('should be defined', () => {
     expect(useCase).toBeDefined();
   });
 
-  it('should return all readings', async () => {
+  it('should return all readings with pagination', async () => {
     mockReadingRepository.findMany.mockResolvedValue(mockReadings as any);
+    mockReadingRepository.count.mockResolvedValue(2);
 
-    const result = await useCase.execute({});
+    const result = await useCase.execute();
 
-    expect(result).toHaveLength(2);
+    expect(result.data).toHaveLength(2);
+    expect(result.meta.total).toBe(2);
+    expect(mockReadingRepository.findMany).toHaveBeenCalledWith({
+      skip: 0,
+      take: 10,
+      where: { deletedAt: null },
+      select: expect.any(Object),
+      orderBy: { fecha: 'desc' },
+    });
+    expect(mockReadingRepository.count).toHaveBeenCalledWith({
+      where: { deletedAt: null },
+    });
   });
 
   it('should apply pagination', async () => {
-    mockReadingRepository.findMany.mockResolvedValue([
-      mockReadings[0],
-    ] as any);
+    mockReadingRepository.findMany.mockResolvedValue([mockReadings[0]] as any);
+    mockReadingRepository.count.mockResolvedValue(1);
 
-    const result = await useCase.execute({ skip: 0, take: 1 });
+    const result = await useCase.execute(1, 1);
 
-    expect(result).toHaveLength(1);
+    expect(result.data).toHaveLength(1);
     expect(mockReadingRepository.findMany).toHaveBeenCalledWith({
       skip: 0,
       take: 1,
       where: { deletedAt: null },
+      select: expect.any(Object),
       orderBy: { fecha: 'desc' },
     });
   });
 
-  it('should return empty array when no readings', async () => {
+  it('should return empty paginated result when no readings', async () => {
     mockReadingRepository.findMany.mockResolvedValue([]);
+    mockReadingRepository.count.mockResolvedValue(0);
 
-    const result = await useCase.execute({});
+    const result = await useCase.execute();
 
-    expect(result).toEqual([]);
+    expect(result.data).toEqual([]);
+    expect(result.meta.total).toBe(0);
   });
 });

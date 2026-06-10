@@ -41,7 +41,9 @@ export class CreateClientUseCase {
     this.validarIdentificacion(catalogo.codigo, identificacion);
     this.validarCamposBasicos(catalogo.codigo, dto.nombres, dto.apellidos);
 
-    const existente = await this.clientRepository.findUnique({ identificacion });
+    const existente = await this.clientRepository.findUnique({
+      identificacion,
+    });
 
     const data = this.buildCreateData(dto, identificacion);
 

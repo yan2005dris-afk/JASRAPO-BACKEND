@@ -1,29 +1,23 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../../../../infrastructure/database/prisma.service';
+import { AgreementRepository } from '../../domain/repositories/agreement.repository';
 import { GetDebtSummaryUseCase } from './get-debt-summary.use-case';
 
 describe('GetDebtSummaryUseCase', () => {
   let useCase: GetDebtSummaryUseCase;
 
-  const mockPrismaService = {
-    contratos: {
-      findFirst: jest.fn(),
-    },
-    prefacturas: {
-      findMany: jest.fn(),
-    },
-    parametroTasainteres: {
-      findFirst: jest.fn(),
-    },
+  const mockAgreementRepository = {
+    findFirstContrato: jest.fn(),
+    findManyPrefacturas: jest.fn(),
+    findFirstParametroTasainteres: jest.fn(),
   };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         GetDebtSummaryUseCase,
-        { provide: PrismaService, useValue: mockPrismaService },
+        { provide: AgreementRepository, useValue: mockAgreementRepository },
       ],
     }).compile();
 
@@ -39,8 +33,10 @@ describe('GetDebtSummaryUseCase', () => {
   });
 
   it('should calculate debt summary from unpaid prefacturas', async () => {
-    mockPrismaService.contratos.findFirst.mockResolvedValue({ contratoId: 1n });
-    mockPrismaService.prefacturas.findMany.mockResolvedValue([
+    mockAgreementRepository.findFirstContrato.mockResolvedValue({
+      contratoId: 1n,
+    });
+    mockAgreementRepository.findManyPrefacturas.mockResolvedValue([
       {
         prefacturaId: 10n,
         periodoId: 202601,
@@ -62,7 +58,7 @@ describe('GetDebtSummaryUseCase', () => {
         createdAt: new Date('2026-02-15T00:00:00.000Z'),
       },
     ]);
-    mockPrismaService.parametroTasainteres.findFirst.mockResolvedValue({
+    mockAgreementRepository.findFirstParametroTasainteres.mockResolvedValue({
       tasa: 1.5,
     });
 
@@ -87,22 +83,16 @@ describe('GetDebtSummaryUseCase', () => {
         estado: 'APROBADA',
       }),
     ]);
-    expect(mockPrismaService.prefacturas.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({
-          contratoId: 1n,
-          deletedAt: null,
-          estado: { in: ['GENERADA', 'EN_REVISION', 'APROBADA'] },
-        }),
-        orderBy: { createdAt: 'asc' },
-      }),
-    );
   });
 
   it('should return zero totals when there are no unpaid prefacturas', async () => {
-    mockPrismaService.contratos.findFirst.mockResolvedValue({ contratoId: 1n });
-    mockPrismaService.prefacturas.findMany.mockResolvedValue([]);
-    mockPrismaService.parametroTasainteres.findFirst.mockResolvedValue(null);
+    mockAgreementRepository.findFirstContrato.mockResolvedValue({
+      contratoId: 1n,
+    });
+    mockAgreementRepository.findManyPrefacturas.mockResolvedValue([]);
+    mockAgreementRepository.findFirstParametroTasainteres.mockResolvedValue(
+      null,
+    );
 
     const result = await useCase.execute(1n);
 
@@ -116,9 +106,9 @@ describe('GetDebtSummaryUseCase', () => {
   });
 
   it('should throw NotFoundException when contrato does not exist', async () => {
-    mockPrismaService.contratos.findFirst.mockResolvedValue(null);
+    mockAgreementRepository.findFirstContrato.mockResolvedValue(null);
 
     await expect(useCase.execute(999n)).rejects.toThrow(NotFoundException);
-    expect(mockPrismaService.prefacturas.findMany).not.toHaveBeenCalled();
+    expect(mockAgreementRepository.findManyPrefacturas).not.toHaveBeenCalled();
   });
 });

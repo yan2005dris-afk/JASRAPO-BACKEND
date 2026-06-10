@@ -9,9 +9,12 @@ export class FindOneMeterUseCase {
   constructor(private readonly meterRepository: MeterRepository) {}
 
   async execute(id: bigint): Promise<MeterResponseDto> {
-    const medidor = await this.meterRepository.findUnique({
-      medidorId: id,
-    }, safeMeterSelectWithDelete);
+    const medidor = await this.meterRepository.findUnique(
+      {
+        medidorId: id,
+      },
+      safeMeterSelectWithDelete,
+    );
     if (!medidor || medidor.deletedAt) {
       throw new NotFoundException(`Medidor con ID ${id} no encontrado`);
     }

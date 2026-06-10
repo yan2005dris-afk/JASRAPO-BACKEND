@@ -13,6 +13,6 @@ export class UpdateSectorUseCase {
       throw new NotFoundException(`Sector con ID ${id} no encontrado`);
     }
 
-    return this.sectorRepository.update({ sectorId: id }, dto as any);
+    return this.sectorRepository.update({ sectorId: id }, dto);
   }
 }

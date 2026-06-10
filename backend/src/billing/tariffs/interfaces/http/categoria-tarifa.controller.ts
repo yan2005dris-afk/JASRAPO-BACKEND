@@ -39,11 +39,20 @@ export class CategoriaTarifaController {
   }
 
   // LISTADO PRINCIPAL
-  @ApiOperation({ summary: 'Obtener todas las categorías activas con paginación' })
+  @ApiOperation({
+    summary: 'Obtener todas las categorías activas con paginación',
+  })
   @RequiredPermission('tarifas', 'read')
   @Get()
-  findAll(@Query() paginationDto: PaginationDto, @Query('nombre') nombre?: string) {
-    return this.service.getCategorias(paginationDto.page, paginationDto.limit, nombre);
+  findAll(
+    @Query() paginationDto: PaginationDto,
+    @Query('nombre') nombre?: string,
+  ) {
+    return this.service.getCategorias(
+      paginationDto.page,
+      paginationDto.limit,
+      nombre,
+    );
   }
 
   // BÚSQUEDA POR NOMBRE

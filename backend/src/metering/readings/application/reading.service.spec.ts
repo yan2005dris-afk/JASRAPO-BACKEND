@@ -73,13 +73,26 @@ describe('ReadingService', () => {
   });
 
   it('findAll should delegate to FindAllReadingsUseCase', async () => {
-    const params = { skip: 0 };
+    const where = { medidorId: BigInt(1) };
+    const paginatedResult = {
+      data: [mockLectura],
+      meta: {
+        total: 1,
+        page: 1,
+        limit: 10,
+        ultimaPagina: 1,
+        paginaActual: 1,
+        porPagina: 10,
+        anterior: null,
+        siguiente: null,
+      },
+    };
     jest
       .spyOn(findAllUseCase, 'execute')
-      .mockResolvedValue([mockLectura] as any);
-    const result = await service.findAll(params);
-    expect(result).toEqual([mockLectura]);
-    expect(findAllUseCase.execute).toHaveBeenCalledWith(params);
+      .mockResolvedValue(paginatedResult as any);
+    const result = await service.findAll(1, 10, where);
+    expect(result).toEqual(paginatedResult);
+    expect(findAllUseCase.execute).toHaveBeenCalledWith(1, 10, where);
   });
 
   it('findOne should delegate to FindOneReadingUseCase', async () => {

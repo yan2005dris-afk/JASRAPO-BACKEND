@@ -9,9 +9,7 @@ export class CreateReadingAnomalyUseCase {
     private readonly readingAnomalyRepository: ReadingAnomalyRepository,
   ) {}
 
-  async execute(
-    createDto: CreateReadingAnomalyDto,
-  ) {
+  async execute(createDto: CreateReadingAnomalyDto) {
     const anomalia = await this.readingAnomalyRepository.create({
       lecturaId: BigInt(createDto.lecturaId),
       observacion: createDto.observacion,

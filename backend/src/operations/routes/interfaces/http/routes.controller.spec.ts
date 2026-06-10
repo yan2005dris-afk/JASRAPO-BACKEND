@@ -1,7 +1,7 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { RoutesController } from './routes.controller';
-import { RoutesService } from './routes.service';
+import { RoutesService } from '../../application/routes.service';
 
 describe('RoutesController', () => {
   let controller: RoutesController;

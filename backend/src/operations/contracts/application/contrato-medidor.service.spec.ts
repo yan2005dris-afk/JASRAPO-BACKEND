@@ -59,13 +59,17 @@ describe('ContratoMedidorService', () => {
 
   describe('buscarContratos', () => {
     it('should delegate to FindAllContractsUseCase', async () => {
-      const params = { skip: 0, take: 10 };
-      mockFindAllUseCase.execute.mockResolvedValue([]);
+      const where = { contratoId: BigInt(1) };
+      const paginatedResult = {
+        data: [],
+        meta: { total: 0, page: 1, limit: 10 },
+      };
+      mockFindAllUseCase.execute.mockResolvedValue(paginatedResult);
 
-      const result = await service.buscarContratos(params);
+      const result = await service.buscarContratos(1, 10, where);
 
-      expect(result).toEqual([]);
-      expect(mockFindAllUseCase.execute).toHaveBeenCalledWith(params);
+      expect(result).toEqual(paginatedResult);
+      expect(mockFindAllUseCase.execute).toHaveBeenCalledWith(1, 10, where);
     });
   });
 

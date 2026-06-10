@@ -1,14 +1,15 @@
-import { Prisma } from 'src/generated/prisma/client';
+import type { Prisma } from 'src/generated/prisma/client';
 
 export abstract class ClientRepository {
   abstract findFirst(
     where: Prisma.ClientesWhereInput,
-    options?: { include?: Prisma.ClientesInclude; select?: Prisma.ClientesSelect },
+    options?: {
+      include?: Prisma.ClientesInclude;
+      select?: Prisma.ClientesSelect;
+    },
   ): Promise<any>;
 
-  abstract findUnique(
-    where: Prisma.ClientesWhereUniqueInput,
-  ): Promise<any>;
+  abstract findUnique(where: Prisma.ClientesWhereUniqueInput): Promise<any>;
 
   abstract findMany(params: {
     where?: Prisma.ClientesWhereInput;

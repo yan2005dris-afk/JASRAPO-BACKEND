@@ -25,9 +25,7 @@ export class PrismaSectorRepository implements SectorRepository {
     return this.prisma.sectores.findMany(params);
   }
 
-  async count(params: {
-    where?: Prisma.SectoresWhereInput;
-  }): Promise<number> {
+  async count(params: { where?: Prisma.SectoresWhereInput }): Promise<number> {
     return this.prisma.sectores.count(params);
   }
 

@@ -9,12 +9,21 @@ describe('UpdateReadingUseCase', () => {
 
   const mockReadingRepository = {
     findUnique: jest.fn(),
+    findMany: jest.fn(),
+    count: jest.fn(),
+    create: jest.fn(),
     update: jest.fn(),
   };
 
   const mockReading = {
     lecturaId: BigInt(1),
     lecturaActual: 150,
+    deletedAt: null,
+  };
+
+  const mockUpdatedReading = {
+    lecturaId: BigInt(1),
+    lecturaActual: 200,
     deletedAt: null,
   };
 
@@ -29,20 +38,27 @@ describe('UpdateReadingUseCase', () => {
     useCase = module.get<UpdateReadingUseCase>(UpdateReadingUseCase);
   });
 
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('should be defined', () => {
     expect(useCase).toBeDefined();
   });
 
   it('should update a reading', async () => {
-    mockReadingRepository.findUnique.mockResolvedValue(mockReading as any);
-    mockReadingRepository.update.mockResolvedValue({
-      ...mockReading,
-      lecturaActual: 200,
-    } as any);
+    mockReadingRepository.findUnique
+      .mockResolvedValueOnce(mockReading as any) // first call: existence check
+      .mockResolvedValueOnce(mockUpdatedReading as any); // second call: after update with select
+    mockReadingRepository.update.mockResolvedValue(mockUpdatedReading as any);
 
     const result = await useCase.execute(BigInt(1), { lecturaActual: 200 });
 
     expect(result.lecturaActual).toBe(200);
+    expect(mockReadingRepository.update).toHaveBeenCalledWith(
+      { lecturaId: BigInt(1) },
+      expect.objectContaining({ lecturaActual: 200 }),
+    );
   });
 
   it('should throw NotFoundException when reading not found', async () => {

@@ -1,17 +1,18 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { UpdateContractUseCase } from './update-contract.use-case';
-import { PrismaService } from 'src/infrastructure/database/prisma.service';
+import { ContractRepository } from '../../domain/repositories/contract.repository';
 import { NotFoundException } from '@nestjs/common';
 
 describe('UpdateContractUseCase', () => {
   let useCase: UpdateContractUseCase;
 
-  const mockPrismaService = {
-    contratos: {
-      findUnique: jest.fn(),
-      update: jest.fn(),
-    },
+  const mockContractRepository = {
+    findUnique: jest.fn(),
+    findMany: jest.fn(),
+    count: jest.fn(),
+    update: jest.fn(),
+    executeTransaction: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -19,8 +20,8 @@ describe('UpdateContractUseCase', () => {
       providers: [
         UpdateContractUseCase,
         {
-          provide: PrismaService,
-          useValue: mockPrismaService,
+          provide: ContractRepository,
+          useValue: mockContractRepository,
         },
       ],
     }).compile();
@@ -39,11 +40,11 @@ describe('UpdateContractUseCase', () => {
   it('should update a contract if it exists', async () => {
     const id = BigInt(1);
     const updateDto = { motivoCambio: 'NEW-MOTIVO' };
-    mockPrismaService.contratos.findUnique.mockResolvedValue({
+    mockContractRepository.findUnique.mockResolvedValue({
       contratoId: id,
       deletedAt: null,
     });
-    mockPrismaService.contratos.update.mockResolvedValue({
+    mockContractRepository.update.mockResolvedValue({
       contratoId: id,
       ...updateDto,
     });
@@ -51,15 +52,15 @@ describe('UpdateContractUseCase', () => {
     const result = await useCase.execute(id, updateDto);
 
     expect(result.motivoCambio).toBe('NEW-MOTIVO');
-    expect(mockPrismaService.contratos.update).toHaveBeenCalledWith({
-      where: { contratoId: id },
-      data: updateDto,
-    });
+    expect(mockContractRepository.update).toHaveBeenCalledWith(
+      { contratoId: id },
+      updateDto,
+    );
   });
 
   it('should throw NotFoundException if contract does not exist', async () => {
     const id = BigInt(1);
-    mockPrismaService.contratos.findUnique.mockResolvedValue(null);
+    mockContractRepository.findUnique.mockResolvedValue(null);
 
     await expect(useCase.execute(id, { motivoCambio: 'TEST' })).rejects.toThrow(
       NotFoundException,

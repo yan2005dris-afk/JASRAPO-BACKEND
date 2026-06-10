@@ -1,5 +1,10 @@
 import type { IResponseReading } from './IResponseReading';
-import type { Lecturas, Contratos, Medidores, Periodos } from 'src/generated/prisma/client';
+import type {
+  Lecturas,
+  Contratos,
+  Medidores,
+  Periodos,
+} from 'src/generated/prisma/client';
 
 /**
  * Tipo de entrada desde Prisma (relación incluída)
@@ -19,17 +24,16 @@ export type ReadingPrismaRaw = Pick<
   | 'estado'
   | 'medidorId'
 > & {
-  medidor?: (Pick<
-    Medidores,
-    'medidorId' | 'serie' | 'marca' | 'modelo'
-  > & {
-    historial?: Array<{
-      contrato: Pick<
-        Contratos,
-        'contratoId' | 'numeroGuia' | 'direccionSuministro' | 'estado'
-      >;
-    }>;
-  }) | null;
+  medidor?:
+    | (Pick<Medidores, 'medidorId' | 'serie' | 'marca' | 'modelo'> & {
+        historial?: Array<{
+          contrato: Pick<
+            Contratos,
+            'contratoId' | 'numeroGuia' | 'direccionSuministro' | 'estado'
+          >;
+        }>;
+      })
+    | null;
   periodoRel?: Pick<
     Periodos,
     'periodoId' | 'nombre' | 'fechaInicio' | 'fechaFin'

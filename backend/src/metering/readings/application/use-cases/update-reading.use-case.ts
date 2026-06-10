@@ -8,10 +8,7 @@ import { safeReadingsSelect } from '../../types/IResponseReading';
 export class UpdateReadingUseCase {
   constructor(private readonly readingRepository: ReadingRepository) {}
 
-  async execute(
-    id: bigint,
-    updateDto: ActualizarLecturaDto,
-  ) {
+  async execute(id: bigint, updateDto: ActualizarLecturaDto) {
     const existing = await this.readingRepository.findUnique({
       lecturaId: id,
     });
@@ -24,10 +21,7 @@ export class UpdateReadingUseCase {
       dataToUpdate.medidorId = BigInt(updateDto.medidorId);
     if (updateDto.fecha) dataToUpdate.fecha = new Date(updateDto.fecha);
 
-    await this.readingRepository.update(
-      { lecturaId: id },
-      dataToUpdate,
-    );
+    await this.readingRepository.update({ lecturaId: id }, dataToUpdate);
 
     const lectura = await this.readingRepository.findUnique(
       { lecturaId: id },

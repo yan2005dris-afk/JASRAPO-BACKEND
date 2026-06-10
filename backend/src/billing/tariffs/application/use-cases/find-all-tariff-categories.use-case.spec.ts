@@ -1,16 +1,18 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { FindAllTariffCategoriesUseCase } from './find-all-tariff-categories.use-case';
-import { PrismaService } from 'src/infrastructure/database/prisma.service';
+import { TariffRepository } from '../../domain/repositories/tariff.repository';
 
 describe('FindAllTariffCategoriesUseCase', () => {
   let useCase: FindAllTariffCategoriesUseCase;
-  let prisma: PrismaService;
 
-  const mockPrismaService = {
-    categoriaTarifa: {
-      findMany: jest.fn(),
-    },
+  const mockTariffRepository = {
+    findFirst: jest.fn(),
+    findMany: jest.fn(),
+    count: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    executeTransaction: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -18,8 +20,8 @@ describe('FindAllTariffCategoriesUseCase', () => {
       providers: [
         FindAllTariffCategoriesUseCase,
         {
-          provide: PrismaService,
-          useValue: mockPrismaService,
+          provide: TariffRepository,
+          useValue: mockTariffRepository,
         },
       ],
     }).compile();
@@ -27,7 +29,6 @@ describe('FindAllTariffCategoriesUseCase', () => {
     useCase = module.get<FindAllTariffCategoriesUseCase>(
       FindAllTariffCategoriesUseCase,
     );
-    prisma = module.get<PrismaService>(PrismaService);
   });
 
   afterEach(() => {
@@ -38,31 +39,41 @@ describe('FindAllTariffCategoriesUseCase', () => {
     expect(useCase).toBeDefined();
   });
 
-  it('should return all active tariff categories', async () => {
-    mockPrismaService.categoriaTarifa.findMany.mockResolvedValue([
-      { categoriaTarifaId: 1, nombre: 'Residencial' },
-    ]);
+  it('should return all active tariff categories with pagination', async () => {
+    const mockData = [{ categoriaTarifaId: 1, nombre: 'Residencial' }];
+    mockTariffRepository.findMany.mockResolvedValue(mockData);
+    mockTariffRepository.count.mockResolvedValue(1);
 
     const result = await useCase.execute();
 
-    expect(result).toHaveLength(1);
-    expect(mockPrismaService.categoriaTarifa.findMany).toHaveBeenCalledWith({
+    expect(result.data).toHaveLength(1);
+    expect(result.meta.total).toBe(1);
+    expect(mockTariffRepository.findMany).toHaveBeenCalledWith({
       where: {
         activo: true,
         deletedAt: null,
       },
+      select: expect.any(Object),
+      skip: 0,
+      take: 10,
       orderBy: { createdAt: 'desc' },
+    });
+    expect(mockTariffRepository.count).toHaveBeenCalledWith({
+      where: {
+        activo: true,
+        deletedAt: null,
+      },
     });
   });
 
   it('should filter by name if provided', async () => {
-    mockPrismaService.categoriaTarifa.findMany.mockResolvedValue([
-      { categoriaTarifaId: 1, nombre: 'Residencial' },
-    ]);
+    const mockData = [{ categoriaTarifaId: 1, nombre: 'Residencial' }];
+    mockTariffRepository.findMany.mockResolvedValue(mockData);
+    mockTariffRepository.count.mockResolvedValue(1);
 
-    await useCase.execute('residencial');
+    await useCase.execute(1, 10, 'residencial');
 
-    expect(mockPrismaService.categoriaTarifa.findMany).toHaveBeenCalledWith({
+    expect(mockTariffRepository.findMany).toHaveBeenCalledWith({
       where: {
         activo: true,
         deletedAt: null,
@@ -71,6 +82,9 @@ describe('FindAllTariffCategoriesUseCase', () => {
           mode: 'insensitive',
         },
       },
+      select: expect.any(Object),
+      skip: 0,
+      take: 10,
       orderBy: { createdAt: 'desc' },
     });
   });

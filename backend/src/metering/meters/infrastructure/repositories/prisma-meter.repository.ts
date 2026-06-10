@@ -42,16 +42,16 @@ export class PrismaMeterRepository implements MeterRepository {
   }
 
   async createHistory(
-    data: Prisma.HistorialMedidoresCreateInput | Prisma.HistorialMedidoresUncheckedCreateInput,
+    data:
+      | Prisma.HistorialMedidoresCreateInput
+      | Prisma.HistorialMedidoresUncheckedCreateInput,
     tx?: any,
   ): Promise<any> {
     const client = tx || this.prisma;
     return client.historialMedidores.create({ data });
   }
 
-  async executeTransaction<T>(
-    callback: (tx: any) => Promise<T>,
-  ): Promise<T> {
+  async executeTransaction<T>(callback: (tx: any) => Promise<T>): Promise<T> {
     return this.prisma.$transaction(callback);
   }
 }

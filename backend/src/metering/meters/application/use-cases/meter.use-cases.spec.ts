@@ -65,9 +65,7 @@ describe('Meter Use Cases', () => {
 
   describe('FindOneMeterUseCase', () => {
     it('should return a meter', async () => {
-      mockMeterRepository.findUnique.mockResolvedValue(
-        mockMedidorFromDb,
-      );
+      mockMeterRepository.findUnique.mockResolvedValue(mockMedidorFromDb);
       const result = await findOneUseCase.execute(BigInt(1));
       expect(result).toHaveProperty('serie');
       expect(result).toHaveProperty('estado');
@@ -83,9 +81,7 @@ describe('Meter Use Cases', () => {
 
   describe('InstallMeterUseCase', () => {
     it('should install a meter', async () => {
-      mockMeterRepository.findUnique.mockResolvedValue(
-        mockMedidorFromDb,
-      );
+      mockMeterRepository.findUnique.mockResolvedValue(mockMedidorFromDb);
       mockMeterRepository.update.mockResolvedValue({
         ...mockMedidorFromDb,
         estado: 'INSTALADO',

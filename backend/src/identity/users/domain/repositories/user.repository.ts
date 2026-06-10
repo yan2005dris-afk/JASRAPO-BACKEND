@@ -1,5 +1,5 @@
-import { Prisma } from 'src/generated/prisma/client';
-import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
+import type { Prisma } from 'src/generated/prisma/client';
+import type { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
 
 export abstract class UserRepository {
   abstract findUnique(
@@ -25,9 +25,13 @@ export abstract class UserRepository {
     select?: Prisma.UsuariosSelect,
   ): Promise<{ data: any[]; meta: any }>;
 
-  abstract count(params: { where?: Prisma.UsuariosWhereInput }): Promise<number>;
+  abstract count(params: {
+    where?: Prisma.UsuariosWhereInput;
+  }): Promise<number>;
 
-  abstract create(data: Prisma.UsuariosCreateInput | Prisma.UsuariosUncheckedCreateInput): Promise<any>;
+  abstract create(
+    data: Prisma.UsuariosCreateInput | Prisma.UsuariosUncheckedCreateInput,
+  ): Promise<any>;
 
   abstract update(
     where: Prisma.UsuariosWhereUniqueInput,
@@ -49,7 +53,5 @@ export abstract class UserRepository {
     tx?: any,
   ): Promise<void>;
 
-  abstract executeTransaction<T>(
-    callback: (tx: any) => Promise<T>,
-  ): Promise<T>;
+  abstract executeTransaction<T>(callback: (tx: any) => Promise<T>): Promise<T>;
 }

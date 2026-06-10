@@ -25,9 +25,7 @@ export class PrismaReadingRepository implements ReadingRepository {
     return this.prisma.lecturas.findMany(params);
   }
 
-  async count(params: {
-    where?: Prisma.LecturasWhereInput;
-  }): Promise<number> {
+  async count(params: { where?: Prisma.LecturasWhereInput }): Promise<number> {
     return this.prisma.lecturas.count(params);
   }
 

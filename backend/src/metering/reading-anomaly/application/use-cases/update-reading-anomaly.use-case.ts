@@ -9,10 +9,7 @@ export class UpdateReadingAnomalyUseCase {
     private readonly readingAnomalyRepository: ReadingAnomalyRepository,
   ) {}
 
-  async execute(
-    id: bigint,
-    updateDto: UpdateReadingAnomalyDto,
-  ) {
+  async execute(id: bigint, updateDto: UpdateReadingAnomalyDto) {
     const existing = await this.readingAnomalyRepository.findUnique({
       anomaliaId: id,
     });

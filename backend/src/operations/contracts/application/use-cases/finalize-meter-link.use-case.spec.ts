@@ -1,29 +1,42 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { FinalizeMeterLinkUseCase } from './finalize-meter-link.use-case';
-import { PrismaService } from 'src/infrastructure/database/prisma.service';
+import { ContractRepository } from '../../domain/repositories/contract.repository';
 
 describe('FinalizeMeterLinkUseCase', () => {
   let useCase: FinalizeMeterLinkUseCase;
 
-  const mockPrismaService = {
-    medidores: {
-      findUnique: jest.fn(),
-      update: jest.fn(),
-    },
-    historialMedidores: {
-      updateMany: jest.fn(),
-    },
-    $transaction: jest.fn((cb) => cb(mockPrismaService)),
+  let mockTx: any;
+
+  const mockContractRepository = {
+    findUnique: jest.fn(),
+    findMany: jest.fn(),
+    count: jest.fn(),
+    update: jest.fn(),
+    executeTransaction: jest.fn(),
   };
 
   beforeEach(async () => {
+    mockTx = {
+      medidores: {
+        findUnique: jest.fn(),
+        update: jest.fn(),
+      },
+      historialMedidores: {
+        updateMany: jest.fn(),
+      },
+    };
+
+    mockContractRepository.executeTransaction.mockImplementation((cb: any) =>
+      cb(mockTx),
+    );
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         FinalizeMeterLinkUseCase,
         {
-          provide: PrismaService,
-          useValue: mockPrismaService,
+          provide: ContractRepository,
+          useValue: mockContractRepository,
         },
       ],
     }).compile();
@@ -41,10 +54,10 @@ describe('FinalizeMeterLinkUseCase', () => {
 
   it('should finalize link and close history', async () => {
     const medidorId = BigInt(1);
-    mockPrismaService.medidores.findUnique.mockResolvedValue({
+    mockTx.medidores.findUnique.mockResolvedValue({
       medidorId,
     });
-    mockPrismaService.historialMedidores.updateMany.mockResolvedValue({
+    mockTx.historialMedidores.updateMany.mockResolvedValue({
       count: 1,
     });
 
@@ -53,9 +66,7 @@ describe('FinalizeMeterLinkUseCase', () => {
     expect(result).toBeDefined();
 
     // Should close existing history for the medidor
-    expect(
-      mockPrismaService.historialMedidores.updateMany,
-    ).toHaveBeenCalledWith({
+    expect(mockTx.historialMedidores.updateMany).toHaveBeenCalledWith({
       where: { medidorId, fechaHasta: null },
       data: { fechaHasta: expect.any(Date) },
     });

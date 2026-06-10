@@ -22,7 +22,9 @@ export type TariffCategoryPrismaRaw = Pick<
  * Convierte Decimal a number donde sea necesario
  * Excluye campos internos: updatedAt, createdAt, deletedAt
  */
-export function toTariffCategoryResponse(tariff: TariffCategoryPrismaRaw): IResponseTariffCategory {
+export function toTariffCategoryResponse(
+  tariff: TariffCategoryPrismaRaw,
+): IResponseTariffCategory {
   return {
     categoriaTarifaId: tariff.categoriaTarifaId,
     nombre: tariff.nombre,

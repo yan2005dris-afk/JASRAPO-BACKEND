@@ -1,7 +1,7 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { ClientService } from './client.service';
-import { PrismaService } from 'src/infrastructure/database/prisma.service';
+import { ClientRepository } from '../domain/repositories/client.repository';
 import { CreateClientUseCase } from './use-cases/create-client.use-case';
 import { UpdateClientUseCase } from './use-cases/update-client.use-case';
 import { FindOneClientUseCase } from './use-cases/find-one-client.use-case';
@@ -13,19 +13,23 @@ describe('ClientService', () => {
   let updateUseCase: UpdateClientUseCase;
   let findOneUseCase: FindOneClientUseCase;
   let removeUseCase: RemoveClientUseCase;
-  let prisma: PrismaService;
 
-  const mockPrismaService = {
-    clientes: {
-      findMany: jest.fn(),
-    },
+  const mockClientRepository = {
+    findFirst: jest.fn(),
+    findUnique: jest.fn(),
+    findMany: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    updateMany: jest.fn(),
+    findCatalogoTipoIdentificacion: jest.fn(),
+    findManyCatalogoTipoIdentificacion: jest.fn(),
   };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ClientService,
-        { provide: PrismaService, useValue: mockPrismaService },
+        { provide: ClientRepository, useValue: mockClientRepository },
         { provide: CreateClientUseCase, useValue: { execute: jest.fn() } },
         { provide: UpdateClientUseCase, useValue: { execute: jest.fn() } },
         { provide: FindOneClientUseCase, useValue: { execute: jest.fn() } },
@@ -38,7 +42,6 @@ describe('ClientService', () => {
     updateUseCase = module.get<UpdateClientUseCase>(UpdateClientUseCase);
     findOneUseCase = module.get<FindOneClientUseCase>(FindOneClientUseCase);
     removeUseCase = module.get<RemoveClientUseCase>(RemoveClientUseCase);
-    prisma = module.get<PrismaService>(PrismaService);
   });
 
   it('should be defined', () => {
@@ -54,10 +57,10 @@ describe('ClientService', () => {
     expect(createUseCase.execute).toHaveBeenCalledWith(dto);
   });
 
-  it('findAll should call prisma with filters', async () => {
-    mockPrismaService.clientes.findMany.mockResolvedValue([]);
+  it('findAll should call repository with filters', async () => {
+    mockClientRepository.findMany.mockResolvedValue([]);
     await service.findAll();
-    expect(mockPrismaService.clientes.findMany).toHaveBeenCalledWith({
+    expect(mockClientRepository.findMany).toHaveBeenCalledWith({
       where: { deletedAt: null },
       orderBy: { createdAt: 'desc' },
       select: expect.anything(),
@@ -65,9 +68,9 @@ describe('ClientService', () => {
   });
 
   it('findAll should apply filters when provided', async () => {
-    mockPrismaService.clientes.findMany.mockResolvedValue([]);
+    mockClientRepository.findMany.mockResolvedValue([]);
     await service.findAll({ identificacion: '123' });
-    expect(mockPrismaService.clientes.findMany).toHaveBeenCalledWith(
+    expect(mockClientRepository.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
           AND: expect.arrayContaining([

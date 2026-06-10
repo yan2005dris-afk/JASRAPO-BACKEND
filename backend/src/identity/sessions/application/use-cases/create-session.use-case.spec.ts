@@ -30,7 +30,10 @@ describe('CreateSessionUseCase', () => {
       hashRefreshToken: 'hash',
       expiraEn: new Date(),
     } as any;
-    (sessionRepository.create as jest.Mock).mockResolvedValue({ id: 1, ...data });
+    (sessionRepository.create as jest.Mock).mockResolvedValue({
+      id: 1,
+      ...data,
+    });
 
     await useCase.execute(data);
 

@@ -32,14 +32,18 @@ export class PrismaReadingAnomalyRepository implements ReadingAnomalyRepository 
   }
 
   async create(
-    data: Prisma.LecturaAnomaliaCreateInput | Prisma.LecturaAnomaliaUncheckedCreateInput,
+    data:
+      | Prisma.LecturaAnomaliaCreateInput
+      | Prisma.LecturaAnomaliaUncheckedCreateInput,
   ): Promise<any> {
     return this.prisma.lecturaAnomalia.create({ data });
   }
 
   async update(
     where: Prisma.LecturaAnomaliaWhereUniqueInput,
-    data: Prisma.LecturaAnomaliaUpdateInput | Prisma.LecturaAnomaliaUncheckedUpdateInput,
+    data:
+      | Prisma.LecturaAnomaliaUpdateInput
+      | Prisma.LecturaAnomaliaUncheckedUpdateInput,
   ): Promise<any> {
     return this.prisma.lecturaAnomalia.update({ where, data });
   }

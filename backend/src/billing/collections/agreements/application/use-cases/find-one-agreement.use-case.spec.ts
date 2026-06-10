@@ -1,24 +1,22 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../../../../infrastructure/database/prisma.service';
-import { safeAgreementWithInstallmentsSelect } from '../types/IAgreement';
+import { AgreementRepository } from '../../domain/repositories/agreement.repository';
+import { safeAgreementWithInstallmentsSelect } from '../../domain/types/IAgreement';
 import { FindOneAgreementUseCase } from './find-one-agreement.use-case';
 
 describe('FindOneAgreementUseCase', () => {
   let useCase: FindOneAgreementUseCase;
 
-  const mockPrismaService = {
-    convenios: {
-      findFirst: jest.fn(),
-    },
+  const mockAgreementRepository = {
+    findFirstConvenio: jest.fn(),
   };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         FindOneAgreementUseCase,
-        { provide: PrismaService, useValue: mockPrismaService },
+        { provide: AgreementRepository, useValue: mockAgreementRepository },
       ],
     }).compile();
 
@@ -35,19 +33,19 @@ describe('FindOneAgreementUseCase', () => {
 
   it('should return agreement with installments when found', async () => {
     const convenio = { convenioId: 1n, contratoId: 10n, cuotaConvenio: [] };
-    mockPrismaService.convenios.findFirst.mockResolvedValue(convenio);
+    mockAgreementRepository.findFirstConvenio.mockResolvedValue(convenio);
 
     const result = await useCase.execute(1n);
 
     expect(result).toBe(convenio);
-    expect(mockPrismaService.convenios.findFirst).toHaveBeenCalledWith({
-      where: { convenioId: 1n, deletedAt: null },
-      select: safeAgreementWithInstallmentsSelect,
-    });
+    expect(mockAgreementRepository.findFirstConvenio).toHaveBeenCalledWith(
+      { convenioId: 1n, deletedAt: null },
+      safeAgreementWithInstallmentsSelect,
+    );
   });
 
   it('should throw NotFoundException when agreement does not exist', async () => {
-    mockPrismaService.convenios.findFirst.mockResolvedValue(null);
+    mockAgreementRepository.findFirstConvenio.mockResolvedValue(null);
 
     await expect(useCase.execute(999n)).rejects.toThrow(NotFoundException);
   });

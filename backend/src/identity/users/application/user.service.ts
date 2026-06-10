@@ -15,7 +15,6 @@ import { PaginatedResult } from 'src/infrastructure/common/types/paginated-resul
 import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
 import { UserRepository } from '../domain/repositories/user.repository';
 import {
-  safeUserSelect,
   userWithRolesSelect,
   UserWithPermissionsResponse,
   UserWithRoleResponse,
@@ -142,10 +141,10 @@ export class UserService {
     const updateData = { ...userData };
 
     // Verificar que el usuario no esté eliminado
-    const existingUser = await this.userRepository.findUnique(
-      where,
-      { usuarioId: true, deletedAt: true },
-    );
+    const existingUser = await this.userRepository.findUnique(where, {
+      usuarioId: true,
+      deletedAt: true,
+    });
 
     if (!existingUser) {
       throw new NotFoundException('Usuario no encontrado');
@@ -180,7 +179,9 @@ export class UserService {
 
     // Validar rolId si se proporciona
     if (updateData.rolId !== undefined && updateData.rolId !== null) {
-      const role = await this.userRepository.findRoleById(updateData.rolId as number);
+      const role = await this.userRepository.findRoleById(
+        updateData.rolId as number,
+      );
       if (!role || role.deletedAt) {
         throw new NotFoundException('Rol no encontrado o eliminado');
       }
@@ -188,11 +189,7 @@ export class UserService {
 
     try {
       await this.userRepository.executeTransaction(async (tx) => {
-        await this.userRepository.update(
-          where,
-          updateData,
-          tx,
-        );
+        await this.userRepository.update(where, updateData, tx);
 
         if (directPermissions && Array.isArray(directPermissions)) {
           await this.updateUserPermissionsUseCase.execute(
@@ -219,10 +216,7 @@ export class UserService {
   }
 
   async softDeleteUser(where: Prisma.UsuariosWhereUniqueInput) {
-    return this.userRepository.update(
-      where,
-      { deletedAt: new Date() },
-    );
+    return this.userRepository.update(where, { deletedAt: new Date() });
   }
 
   async getEffectivePermissions(

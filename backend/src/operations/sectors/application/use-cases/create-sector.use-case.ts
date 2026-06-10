@@ -20,11 +20,13 @@ export class CreateSectorUseCase {
     }
 
     try {
-      await this.sectorRepository.create(dto as any);
+      await this.sectorRepository.create(dto);
       return { message: 'Sector creado exitosamente.', statusCode: 201 };
     } catch (error: any) {
       if (error.code === 'P2002') {
-        throw new ConflictException('El sector ya existe (código o ID duplicado).');
+        throw new ConflictException(
+          'El sector ya existe (código o ID duplicado).',
+        );
       }
       throw error;
     }

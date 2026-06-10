@@ -1,33 +1,31 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { CreateRouteUseCase } from './create-route.use-case';
-import { PrismaService } from 'src/infrastructure/database/prisma.service';
+import { RouteRepository } from '../../domain/repositories/route.repository';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
-import { EstadoGenerico } from 'src/generated/prisma/client';
+
 describe('CreateRouteUseCase', () => {
   let useCase: CreateRouteUseCase;
-  let prismaService: any;
+
+  const mockRouteRepository = {
+    findUnique: jest.fn(),
+    findMany: jest.fn(),
+    paginateRutas: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    findUsuario: jest.fn(),
+    findComunidad: jest.fn(),
+    findSector: jest.fn(),
+    paginateLecturas: jest.fn(),
+  };
 
   beforeEach(async () => {
-    prismaService = {
-      usuarios: { findUnique: jest.fn() },
-      comunidades: { findUnique: jest.fn() },
-      sectores: { findUnique: jest.fn() },
-      lecturas: {
-        findMany: jest.fn(),
-        updateMany: jest.fn(),
-        count: jest.fn(),
-      },
-      rutas: { create: jest.fn() },
-      $transaction: jest.fn((callback) => callback(prismaService)),
-    };
-
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateRouteUseCase,
         {
-          provide: PrismaService,
-          useValue: prismaService,
+          provide: RouteRepository,
+          useValue: mockRouteRepository,
         },
       ],
     }).compile();
@@ -40,14 +38,14 @@ describe('CreateRouteUseCase', () => {
   });
 
   it('should throw NotFoundException if operario not found', async () => {
-    prismaService.usuarios.findUnique.mockResolvedValue(null);
+    mockRouteRepository.findUsuario.mockResolvedValue(null);
     await expect(useCase.execute({ operarioId: 1 } as any)).rejects.toThrow(
       NotFoundException,
     );
   });
 
   it('should throw BadRequestException if operario is not an operator', async () => {
-    prismaService.usuarios.findUnique.mockResolvedValue({
+    mockRouteRepository.findUsuario.mockResolvedValue({
       usuarioId: 1,
       rol: { nombre: 'admin' },
     });
@@ -58,11 +56,11 @@ describe('CreateRouteUseCase', () => {
   });
 
   it('should throw NotFoundException if comunidad not found', async () => {
-    prismaService.usuarios.findUnique.mockResolvedValue({
+    mockRouteRepository.findUsuario.mockResolvedValue({
       usuarioId: 1,
       rol: { nombre: 'operadores' },
     });
-    prismaService.comunidades.findUnique.mockResolvedValue(null);
+    mockRouteRepository.findComunidad.mockResolvedValue(null);
 
     await expect(
       useCase.execute({ operarioId: 1, comunidadId: 2 } as any),
@@ -70,12 +68,12 @@ describe('CreateRouteUseCase', () => {
   });
 
   it('should throw NotFoundException if sector not found', async () => {
-    prismaService.usuarios.findUnique.mockResolvedValue({
+    mockRouteRepository.findUsuario.mockResolvedValue({
       usuarioId: 1,
       rol: { nombre: 'operadores' },
     });
-    prismaService.comunidades.findUnique.mockResolvedValue({ comunidadId: 1 });
-    prismaService.sectores.findUnique.mockResolvedValue(null);
+    mockRouteRepository.findComunidad.mockResolvedValue({ comunidadId: 1 });
+    mockRouteRepository.findSector.mockResolvedValue(null);
 
     await expect(
       useCase.execute({
@@ -87,12 +85,12 @@ describe('CreateRouteUseCase', () => {
   });
 
   it('should throw BadRequestException if sector does not belong to comunidad', async () => {
-    prismaService.usuarios.findUnique.mockResolvedValue({
+    mockRouteRepository.findUsuario.mockResolvedValue({
       usuarioId: 1,
       rol: { nombre: 'operadores' },
     });
-    prismaService.comunidades.findUnique.mockResolvedValue({ comunidadId: 1 });
-    prismaService.sectores.findUnique.mockResolvedValue({
+    mockRouteRepository.findComunidad.mockResolvedValue({ comunidadId: 1 });
+    mockRouteRepository.findSector.mockResolvedValue({
       sectorId: 2,
       comunidadId: 99,
     });
@@ -107,11 +105,11 @@ describe('CreateRouteUseCase', () => {
   });
 
   it('should create route successfully', async () => {
-    prismaService.usuarios.findUnique.mockResolvedValue({
+    mockRouteRepository.findUsuario.mockResolvedValue({
       usuarioId: 1,
       rol: { nombre: 'operadores' },
     });
-    prismaService.comunidades.findUnique.mockResolvedValue({ comunidadId: 1 });
+    mockRouteRepository.findComunidad.mockResolvedValue({ comunidadId: 1 });
 
     const mockCreatedRoute = {
       rutaId: 100n,
@@ -120,7 +118,7 @@ describe('CreateRouteUseCase', () => {
       comunidadId: 1,
       tipoRuta: 'TOMA_LECTURA',
     };
-    prismaService.rutas.create.mockResolvedValue(mockCreatedRoute);
+    mockRouteRepository.create.mockResolvedValue(mockCreatedRoute);
 
     const result = await useCase.execute({
       operarioId: 1,
@@ -129,7 +127,7 @@ describe('CreateRouteUseCase', () => {
       nombre: 'Test Route',
     } as any);
 
-    expect(prismaService.rutas.create).toHaveBeenCalled();
+    expect(mockRouteRepository.create).toHaveBeenCalled();
     expect(result.rutaId).toBe(100n);
     expect(result.nombre).toBe('Test Route');
   });

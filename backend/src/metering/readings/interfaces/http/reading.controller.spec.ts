@@ -64,7 +64,7 @@ describe('ReadingController', () => {
       jest
         .spyOn(service, 'findAll')
         .mockResolvedValue([mockLecturaData as any]);
-      const result = await controller.findAll();
+      const result = await controller.findAll({ page: 1, limit: 10 });
 
       expect(service.findAll).toHaveBeenCalled();
       expect(result).toEqual([mockLecturaData]);

@@ -18,7 +18,9 @@ export class GetEffectivePermissionsUseCase {
     const rolId = usuario.rolId;
 
     const [rolePermissionRows, directPermissionRows] = await Promise.all([
-      rolId ? this.userRepository.findRolePermissions(rolId) : Promise.resolve([]),
+      rolId
+        ? this.userRepository.findRolePermissions(rolId)
+        : Promise.resolve([]),
       this.userRepository.findDirectPermissions(usuarioId),
     ]);
 

@@ -48,10 +48,7 @@ import { WebhookProcessor } from './infrastructure/queue/processors/webhook.proc
 
 @Global()
 @Module({
-  imports: [
-    EventEmitterModule.forRoot(),
-    HttpModule,
-  ],
+  imports: [EventEmitterModule.forRoot(), HttpModule],
   controllers: [
     SriController,
     CatalogosController,

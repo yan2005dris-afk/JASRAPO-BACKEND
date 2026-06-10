@@ -6,8 +6,13 @@ import { ActualizarContratoMedidorDto } from '../../interfaces/dto/update-contra
 export class UpdateContractUseCase {
   constructor(private readonly contractRepository: ContractRepository) {}
 
-  async execute(id: bigint, updateDto: ActualizarContratoMedidorDto): Promise<any> {
-    const registro = await this.contractRepository.findUnique({ contratoId: id });
+  async execute(
+    id: bigint,
+    updateDto: ActualizarContratoMedidorDto,
+  ): Promise<any> {
+    const registro = await this.contractRepository.findUnique({
+      contratoId: id,
+    });
     if (!registro || registro.deletedAt) {
       throw new NotFoundException(`Contrato con ID ${id} no encontrado`);
     }

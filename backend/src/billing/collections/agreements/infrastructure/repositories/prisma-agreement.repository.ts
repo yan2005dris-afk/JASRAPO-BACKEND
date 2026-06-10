@@ -58,7 +58,11 @@ export class PrismaAgreementRepository implements AgreementRepository {
     orderBy?: Prisma.ParametroTasainteresOrderByWithRelationInput,
     select?: Prisma.ParametroTasainteresSelect,
   ): Promise<any> {
-    return this.prisma.parametroTasainteres.findFirst({ where, orderBy, select });
+    return this.prisma.parametroTasainteres.findFirst({
+      where,
+      orderBy,
+      select,
+    });
   }
 
   async findManyPrefacturas(params: {

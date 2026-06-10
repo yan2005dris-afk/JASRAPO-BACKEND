@@ -41,9 +41,7 @@ describe('CreateMeterUseCase', () => {
       estado: 'BODEGA',
     };
 
-    mockMeterRepository.create.mockResolvedValue(
-      expectedMedidor as any,
-    );
+    mockMeterRepository.create.mockResolvedValue(expectedMedidor as any);
 
     const result = await useCase.execute(dto);
 

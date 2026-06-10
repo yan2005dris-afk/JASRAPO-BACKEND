@@ -1,5 +1,13 @@
 import type { IResponseContract } from './IResponseContract';
-import type { Contratos, CategoriaTarifa, Clientes, Comunidades, Sectores, Medidores, HistorialMedidores } from 'src/generated/prisma/client';
+import type {
+  Contratos,
+  CategoriaTarifa,
+  Clientes,
+  Comunidades,
+  Sectores,
+  Medidores,
+  HistorialMedidores,
+} from 'src/generated/prisma/client';
 
 /**
  * Tipo de entrada desde Prisma (relaciones incluidas).
@@ -27,16 +35,13 @@ export type ContractPrismaRaw = Pick<
     Clientes,
     'clienteId' | 'identificacion' | 'nombres' | 'apellidos' | 'razonSocial'
   > | null;
-  comunidad?: Pick<
-    Comunidades,
-    'comunidadId' | 'codigo' | 'nombre'
-  > | null;
-  sector?: Pick<
-    Sectores,
-    'sectorId' | 'codigo' | 'nombre'
-  > | null;
+  comunidad?: Pick<Comunidades, 'comunidadId' | 'codigo' | 'nombre'> | null;
+  sector?: Pick<Sectores, 'sectorId' | 'codigo' | 'nombre'> | null;
   historialMedidores?: Array<
-    Pick<HistorialMedidores, 'historialId' | 'medidorId' | 'fechaDesde' | 'fechaHasta'> & {
+    Pick<
+      HistorialMedidores,
+      'historialId' | 'medidorId' | 'fechaDesde' | 'fechaHasta'
+    > & {
       medidor: Pick<Medidores, 'medidorId' | 'serie' | 'marca' | 'modelo'>;
     }
   >;
@@ -47,7 +52,9 @@ export type ContractPrismaRaw = Pick<
  * Convierte Decimal a number donde sea necesario.
  * Excluye campos internos: updatedAt, createdAt, deletedAt.
  */
-export function toContractResponse(contract: ContractPrismaRaw): IResponseContract {
+export function toContractResponse(
+  contract: ContractPrismaRaw,
+): IResponseContract {
   return {
     contratoId: contract.contratoId,
     clienteId: contract.clienteId,
