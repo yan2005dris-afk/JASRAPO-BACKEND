@@ -68,6 +68,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+      network: host
     container_name: jasrapo-backend
     restart: unless-stopped
     env_file: .env
