@@ -8,7 +8,14 @@ export abstract class TariffRepository {
   abstract findMany(params: {
     where?: Prisma.CategoriaTarifaWhereInput;
     orderBy?: Prisma.CategoriaTarifaOrderByWithRelationInput;
+    skip?: number;
+    take?: number;
+    select?: Prisma.CategoriaTarifaSelect;
   }): Promise<any[]>;
+
+  abstract count(params: {
+    where?: Prisma.CategoriaTarifaWhereInput;
+  }): Promise<number>;
 
   abstract create(
     data: Prisma.CategoriaTarifaCreateInput,

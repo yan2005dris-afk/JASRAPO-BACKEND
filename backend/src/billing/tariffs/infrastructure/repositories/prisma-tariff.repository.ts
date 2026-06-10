@@ -14,8 +14,17 @@ export class PrismaTariffRepository implements TariffRepository {
   async findMany(params: {
     where?: Prisma.CategoriaTarifaWhereInput;
     orderBy?: Prisma.CategoriaTarifaOrderByWithRelationInput;
+    skip?: number;
+    take?: number;
+    select?: Prisma.CategoriaTarifaSelect;
   }): Promise<any[]> {
     return this.prisma.categoriaTarifa.findMany(params);
+  }
+
+  async count(params: {
+    where?: Prisma.CategoriaTarifaWhereInput;
+  }): Promise<number> {
+    return this.prisma.categoriaTarifa.count(params);
   }
 
   async create(data: Prisma.CategoriaTarifaCreateInput): Promise<any> {

@@ -24,8 +24,6 @@ export class CategoriaTarifaService {
   }
 
   async buscarCategoriaPorNombre(nombre: string) {
-    return this.findAllUseCase.execute(nombre);
-    // Reutilizamos el findAll con el filtro de nombre
     return this.findAllUseCase.execute(1, 10, nombre);
   }
 
