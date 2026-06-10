@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { UserModule } from '../users/user.module';
-import { MenusController } from './menus.controller';
-import { MenusService } from './menus.service';
-import { GetMyMenusUseCase } from './use-cases/get-my-menus.use-case';
+import { MenusController } from './interfaces/http/menus.controller';
+import { MenusService } from './application/menus.service';
+import { GetMyMenusUseCase } from './application/use-cases/get-my-menus.use-case';
 
 @Module({
   controllers: [MenusController],

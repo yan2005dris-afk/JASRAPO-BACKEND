@@ -40,27 +40,31 @@ export const safeReadingsSelect = {
   lecturaAnterior: true,
   lecturaActual: true,
   consumoCalculado: true,
-  contratoId: true,
   descripcionAnomalia: true,
   fechaValidacion: true,
   fotoUrlMinIo: true,
   lecturaInicial: true,
   periodoId: true,
   estado: true,
-  contrato: {
-    select: {
-      contratoId: true,
-      numeroGuia: true,
-      direccionSuministro: true,
-      estado: true,
-    },
-  },
   medidor: {
     select: {
       medidorId: true,
       serie: true,
       marca: true,
       modelo: true,
+      historial: {
+        where: { fechaHasta: null },
+        select: {
+          contrato: {
+            select: {
+              contratoId: true,
+              numeroGuia: true,
+              direccionSuministro: true,
+              estado: true,
+            },
+          },
+        },
+      },
     },
   },
   periodoRel: {

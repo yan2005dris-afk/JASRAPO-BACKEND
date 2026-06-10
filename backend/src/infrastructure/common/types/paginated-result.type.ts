@@ -4,5 +4,10 @@ export interface PaginatedResult<T> {
     total: number;
     page: number;
     limit: number;
+    ultimaPagina: number;
+    paginaActual: number;
+    porPagina: number;
+    anterior: number | null;
+    siguiente: number | null;
   };
 }

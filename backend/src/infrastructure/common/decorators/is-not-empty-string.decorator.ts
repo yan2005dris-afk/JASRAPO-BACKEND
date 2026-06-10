@@ -4,7 +4,7 @@ import {
   ValidatorConstraint,
   ValidatorConstraintInterface,
 } from 'class-validator';
-import { isNotEmptyString } from '../util/validation.util';
+import { isNotEmptyString } from '../utils/validation.util';
 
 @ValidatorConstraint({ name: 'isNotEmptyString', async: false })
 export class IsNotEmptyStringConstraint implements ValidatorConstraintInterface {

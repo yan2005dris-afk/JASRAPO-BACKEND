@@ -1,0 +1,39 @@
+model ComprobanteRetenciones {
+  id                     String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid @map("id")
+  comprobanteId          BigInt       @map("comprobante_id")
+  codigo                  String       @db.VarChar(2) @map("codigo")
+  codigoRetencion         String       @db.VarChar(5) @map("codigo_retencion")
+  baseImponible           Decimal?     @db.Decimal(18, 2) @map("base_imponible")
+  porcentajeRetener       Decimal?     @db.Decimal(8, 2) @map("porcentaje_retener")
+  valorRetenido           Decimal?     @db.Decimal(18, 2) @map("valor_retenido")
+  codDocSustento          String?      @db.VarChar(2) @map("cod_doc_sustento")
+  numDocSustento          String?      @db.VarChar(20) @map("num_doc_sustento")
+  fechaEmisionDocSustento DateTime?    @db.Date @map("fecha_emision_doc_sustento")
+  totalSinImpuestos       Decimal?     @db.Decimal(18, 2) @map("total_sin_impuestos")
+  importeTotal            Decimal?     @db.Decimal(18, 2) @map("importe_total")
+  pagoLocExt              String       @default("01") @db.VarChar(2) @map("pago_loc_ext")
+  codSustento             String?      @db.VarChar(2) @map("cod_sustento")
+  formaPago               String?      @db.VarChar(2) @map("forma_pago")
+  
+  comprobante            Comprobantes                @relation(fields: [comprobanteId], references: [id], onDelete: Cascade)
+  retencion              CatalogoRetenciones?        @relation(fields: [codigoRetencion], references: [codigo])
+  docSustento            CatalogoDocumentosSustento? @relation(fields: [codDocSustento], references: [codigo])
+  formaPagoCatalog       CatalogoFormasPago?         @relation(fields: [formaPago], references: [codigo])
+
+  @@map("comprobante_retenciones")
+}
+
+model SriTipoComprobante {
+  id           Int            @id @default(autoincrement()) @map("id")
+  codigo       String         @unique @map("codigo")
+  nombre       String         @map("nombre")
+  descripcion  String?        @map("descripcion")
+  activo       Boolean        @default(true) @map("activo")
+
+  comprobantes        Comprobantes[]     @relation("TipoComprobante")
+  comprobantesModif   Comprobantes[]     @relation("TipoComprobanteModificado")
+  secuenciales        Secuenciales[]     @relation("SecuencialTipoComprobante")
+
+  @@map("sri_tipo_comprobante")
+}
+

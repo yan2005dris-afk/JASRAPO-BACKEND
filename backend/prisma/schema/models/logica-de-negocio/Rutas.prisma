@@ -1,0 +1,47 @@
+model Rutas {
+  rutaId              BigInt             @id @default(autoincrement()) @map("ruta_id")
+  nombre              String             @map("nombre")
+  descripcion         String?            @map("descripcion")
+  operarioId          Int                @map("operario_id")
+  tipoRuta            TipoRuta           @map("tipo_ruta")
+  comunidadId         Int                @map("comunidad_id")
+  sectorId            Int?               @map("sector_id")
+  estado              EstadoRuta         @default(PENDIENTE) @map("estado")
+  fechaPlanificada    DateTime?          @map("fecha_planificada")
+  fechaInicio         DateTime?          @map("fecha_inicio")
+  fechaFin            DateTime?          @map("fecha_fin")
+  createdAt           DateTime           @default(now()) @map("creado_en")
+  updatedAt           DateTime           @updatedAt @map("actualizado_en")
+  deletedAt           DateTime?          @map("borrado_en")
+  operario            Usuarios           @relation(fields: [operarioId], references: [usuarioId])
+  comunidad           Comunidades        @relation(fields: [comunidadId], references: [comunidadId])
+  sector              Sectores?          @relation(fields: [sectorId], references: [sectorId], onDelete: SetNull)
+  
+  @@index([operarioId])
+  @@index([comunidadId])
+  @@index([sectorId])
+  @@index([estado])
+  @@index([tipoRuta])
+  @@index([fechaPlanificada])
+  @@map("rutas")
+}
+
+enum TipoRuta {
+  TOMA_LECTURA
+  RECONEXION
+}
+
+enum EstadoRuta {
+  PENDIENTE
+  EN_PROGRESO
+  COMPLETADA
+  PARCIAL
+  CANCELADA
+}
+
+enum EstadoAsignacion {
+  NO_ASIGNADA
+  ASIGNADA
+  TOMADA
+  COMPLETADA
+}

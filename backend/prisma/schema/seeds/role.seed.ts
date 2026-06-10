@@ -2,6 +2,12 @@ import { PrismaClient } from "src/generated/prisma/client";
 
 
 export async function seedRoles(prisma: PrismaClient) {
+    const superadminRol = await prisma.roles.upsert({
+        where: { rolId: 0 },
+        update: {},
+        create: { rolId: 0, nombre: 'superadmin' },
+    });
+
     const adminRol = await prisma.roles.upsert({
         where: { rolId: 1 },
         update: {},
@@ -45,6 +51,7 @@ export async function seedRoles(prisma: PrismaClient) {
     });
 
     return {
+        superadminRol,
         adminRol,
         secretariaRol,
         recaudacionRol,

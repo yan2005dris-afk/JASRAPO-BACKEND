@@ -4,11 +4,15 @@ model Usuarios {
   clave             String             @map("contrasenia")
   rolId             Int?               @map("rol_id")
   deletedAt         DateTime?          @map("borrado_en")
-  cajaSesion        CajaSesion[]
-  descuentosDetalle DescuentoDetalle[] @relation("AutorizadoPor")
-  lote              Lote[]
-  pagos             Pagos[]
-  perfil            Perfiles?
+  // Campos de perfil anteriormente en tabla Perfiles
+  nombres           String?            @map("primer_nombre")
+  apellidos         String?            @map("apellido")
+  telefono          String?            @map("telefono")
+  avatar            Json?              @map("avatar")
+  createdAt         DateTime?          @default(now()) @map("creado_en")
+  updatedAt         DateTime?          @updatedAt @map("actualizado_en")
+  // Relaciones
+  rutas             Rutas[]
   sesiones          Sesiones[]
   permisosUsuario   UsuarioPermisos[]
   rol               Roles?             @relation(fields: [rolId], references: [rolId])

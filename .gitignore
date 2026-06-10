@@ -22,5 +22,29 @@ backend/postgres/.env
 *.log
 .DS_Store
 
+# --- Plantillas (no son código productivo) ---
+open-api-facturacion-sri-main/package-lock.json
+
 *.zip
 CLAUDE
+
+# -- codegraph -- 
+.codegraph
+
+# -- graphify -- 
+.graphify
+
+# -- vscode -- 
+.vscode
+
+# -- sonarlint -- 
+.sonarlint
+
+# -- env 
+.env
+
+# -- .gga
+.gga
+/.pi
+/openspec
+/backend/openspec

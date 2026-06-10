@@ -34,12 +34,18 @@ export interface IResponseContract {
     codigo: string;
     nombre: string;
   } | null;
-  medidor?: {
+  historialMedidores?: Array<{
+    historialId: bigint;
     medidorId: bigint;
-    serie: string;
-    marca: string;
-    modelo: string;
-  } | null;
+    fechaDesde: Date;
+    fechaHasta: Date | null;
+    medidor: {
+      medidorId: bigint;
+      serie: string;
+      marca: string;
+      modelo: string;
+    };
+  }>;
 }
 
 export const safeContractsSelect = {
@@ -84,12 +90,20 @@ export const safeContractsSelect = {
       nombre: true,
     },
   },
-  medidor: {
+  historialMedidores: {
     select: {
+      historialId: true,
       medidorId: true,
-      serie: true,
-      marca: true,
-      modelo: true,
+      fechaDesde: true,
+      fechaHasta: true,
+      medidor: {
+        select: {
+          medidorId: true,
+          serie: true,
+          marca: true,
+          modelo: true,
+        },
+      },
     },
   },
 } satisfies Prisma.ContratosSelect;

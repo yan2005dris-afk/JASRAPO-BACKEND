@@ -51,15 +51,14 @@ Carpeta Prisma: `autenticacion-autorizacion/` → Carpeta NestJS: `src/identity/
 
 | Modelo Prisma | Ubicación NestJS | Sub-dominio | Descripción |
 |--------------|------------------|------------|-------------|
-| Usuarios | `users/` | users | Gestión de usuarios del sistema |
+| Usuarios | `users/` | users | Gestión de usuarios y perfiles unificados |
 | Roles | `roles/` | roles | Roles y permisos |
 | Permisos | `permissions/` | permissions | Permisos granulares |
 | Sesiones | `sessions/` | sessions | Sesiones activas de usuarios |
-| Menus | `menus/` | menus | Menú del sistema por perfil |
-| Perfiles | `profiles/` | profiles | Perfiles de usuario (avatars) |
+| Menus | `menus/` | menus | Menú dinámico basado en permisos |
 | RolPermisos | `roles/` | roles | Relación muchos a muchos |
 | UsuarioPermisos | `users/` | users | Relación muchos a muchos |
-| MenuPermisos | `menus/` | menuss | Relación muchos a muchos |
+| MenuPermisos | `menus/` | menus | Relación muchos a muchos |
 
 ---
 
@@ -228,6 +227,67 @@ src/billing/
 - **Escalabilidad**: Es mucho más fácil extraer un contexto a un microservicio independiente si el sistema crece demasiado.
 - **Claridad**: Los archivos relacionados están físicamente cerca, eliminando el "salto" constante entre carpetas técnicas distantes.
 - **Onboarding**: Un desarrollador nuevo sabe exactamente dónde encontrar la lógica de "medidores" sin tener que buscar en una carpeta global de `services`.
+
+---
+
+## 🗺️ Infrastructure Diagram
+
+```mermaid
+flowchart TB
+    subgraph Observability["📊 Observability Stack"]
+        Prometheus["📈 Prometheus\n:9091"]
+        Tempo["🔍 Tempo\n:3201"]
+        Loki["📝 Loki\n:3101"]
+        Grafana["📊 Grafana\n:3001"]
+    end
+
+    subgraph Infra["🗄️ Infrastructure"]
+        PostgreSQL["🐘 PostgreSQL\n:5432"]
+        MinIO["📦 MinIO\n:9000 / :9001"]
+        Jobs["⚙️ Jobs Engine\n(pg-boss)"]
+    end
+
+    Client["🌐 Client / Frontend"]
+    Backend["🚀 Backend NestJS\n:3000"]
+
+    Client --> Backend
+    Backend -->|SQL / Transactions| PostgreSQL
+    Backend -->|S3 API| MinIO
+    PostgreSQL --- Jobs
+    Backend -.->|Enqueues Jobs| Jobs
+    Jobs -.->|Processes| Backend
+
+    Backend -->|/metrics scrape| Prometheus
+    Backend -->|OTLP Traces| Tempo
+    Backend -->|Logs| Loki
+
+    Prometheus --> Grafana
+    Tempo --> Grafana
+    Loki --> Grafana
+
+    classDef backend fill:#e1f5fe,stroke:#0288d1,stroke-width:2px
+    classDef infra fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    classDef obs fill:#e8f5e9,stroke:#388e3c,stroke-width:2px
+    classDef client fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+
+    class Backend backend
+    class PostgreSQL,MinIO,Jobs infra
+    class Prometheus,Tempo,Loki,Grafana obs
+    class Client client
+```
+
+### Servicios del Stack
+
+| Servicio | Puerto | Función |
+|---|---|---|
+| **Backend NestJS** | `3000` | API principal + Swagger en `/docs` |
+| **PostgreSQL** | `5432` | Base de datos relacional (incluye motor de trabajos pg-boss) |
+| **MinIO** | `9000` / `9001` | Object storage (S3-compatible) + consola web |
+| **Jobs Engine** | N/A | Colas transaccionales y procesos en background (Redis-less) |
+| **Prometheus** | `9091` | Métricas (scrapea `/metrics` del backend) |
+| **Tempo** | `3201` | Distributed tracing (OTLP) |
+| **Loki** | `3101` | Agregación de logs |
+| **Grafana** | `3001` | Dashboards unificados (métricas + traces + logs) |
 
 ---
 

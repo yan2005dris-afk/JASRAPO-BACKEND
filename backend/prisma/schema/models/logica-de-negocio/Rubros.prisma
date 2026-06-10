@@ -5,16 +5,16 @@ model Rubros {
   descripcion       String              @map("descripcion")
   precioUnitario    Decimal             @map("precio_unitario") @db.Decimal(18, 2)
   tipoRubro         TipoRubro           @map("tipo_rubro")
-  impuestoId        Int                 @map("impuesto_id")
-  activo            Boolean             @default(true) @map("activo")
-  createdAt         DateTime            @default(now()) @map("creado_en")
-  updatedAt         DateTime            @updatedAt @map("actualizado_en")
-  deletedAt         DateTime?           @map("borrado_en")
+  tarifaImpuestoId  Int                       @map("tarifa_impuesto_id")
+  activo            Boolean                   @default(true) @map("activo")
+  createdAt         DateTime                  @default(now()) @map("creado_en")
+  updatedAt         DateTime                  @updatedAt @map("actualizado_en")
+  deletedAt         DateTime?                 @map("borrado_en")
   catalogoDescuento CatalogoDescuento[]
   prefacturaDetalle PrefacturaDetalle[]
-  impuesto          SriImpuesto         @relation(fields: [impuestoId], references: [id])
+  tarifaImpuesto    CatalogoTarifasImpuesto   @relation(fields: [tarifaImpuestoId], references: [id])
 
-  @@index([impuestoId])
+  @@index([tarifaImpuestoId])
   @@map("rubros")
 }
 

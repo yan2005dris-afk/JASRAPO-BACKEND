@@ -2,8 +2,8 @@ import { ConfigService } from '@nestjs/config';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PassportStrategy } from '@nestjs/passport';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { UserService } from 'src/identity/users/user.service';
-import { SessionsService } from '../../sessions/sessions.service';
+import { UserService } from 'src/identity/users/application/user.service';
+import { SessionsService } from '../../sessions/application/sessions.service';
 import type { JwtAccessPayload } from '../types/JwtRequest.types';
 
 @Injectable()
@@ -33,14 +33,14 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     if (!session || session.revocado || session.expiraEn < new Date()) {
       throw new UnauthorizedException('Sesión inválida o expirada');
     }
-    const permissions =
+    const { permisos } =
       await this.userService.getEffectivePermissions(usuarioId);
     return {
       sub: usuarioId,
       usersId: usuarioId,
       sid: sesionId,
       email,
-      permissions,
+      permisos,
     };
   }
 }

@@ -1,12 +1,17 @@
 import { Module } from '@nestjs/common';
 import { DatabaseModule } from '../../infrastructure/database/prisma.module';
-import { LoteController } from './lote.controller';
-import { LoteService } from './lote.service';
+import { LoteController } from './interfaces/http/lote.controller';
+import { LoteService } from './application/lote.service';
+import { LoteRepository } from './domain/repositories/lote.repository';
+import { PrismaLoteRepository } from './infrastructure/repositories/prisma-lote.repository';
 
 @Module({
   imports: [DatabaseModule],
   controllers: [LoteController],
-  providers: [LoteService],
-  exports: [LoteService],
+  providers: [
+    { provide: LoteRepository, useClass: PrismaLoteRepository },
+    LoteService,
+  ],
+  exports: [LoteRepository, LoteService],
 })
 export class LoteModule {}

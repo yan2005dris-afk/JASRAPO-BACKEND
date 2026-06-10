@@ -18,8 +18,6 @@ model Contratos {
   sector              Sectores?            @relation(fields: [sectorId], references: [sectorId], onDelete: Restrict)
   convenios           Convenios[]
   historialMedidores  HistorialMedidores[]
-  lecturas            Lecturas[]
-  medidor             Medidores?
   prefacturas         Prefacturas[]
 
   @@index([clienteId])
@@ -39,4 +37,5 @@ enum EstadoGenerico {
   SUSPENDIDO
   EN_CONVENIO
   RETIRADO
+  RECONEXION
 }

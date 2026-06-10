@@ -1,6 +1,6 @@
 model CajaSesion {
   cajaId                        BigInt              @id @default(autoincrement()) @map("caja_id")
-  usuarioId                       Int                 @map("usuario_id")
+  creadoPor                     String              @map("creado_por")
   fechaApertura                 DateTime            @default(now()) @map("fecha_apertura")
   montoApertura                 Decimal             @map("monto_apertura") @db.Decimal
   montoCierreSistema            Decimal?            @map("monto_cierre_sistema") @db.Decimal
@@ -12,10 +12,9 @@ model CajaSesion {
   totalChequesDeclarados        Decimal?            @default(0) @map("total_cheques_declarados") @db.Decimal
   totalTransferenciasDeclaradas Decimal?            @default(0) @map("total_transferencias_declaradas") @db.Decimal
   arqueoDetalle                 CajaArqueoDetalle[]
-  usuario                       Usuarios            @relation(fields: [usuarioId], references: [usuarioId])
   pagos                         Pagos[]
 
-  @@index([usuarioId])
+  @@index([creadoPor])
   @@map("caja_sesion")
 }
 

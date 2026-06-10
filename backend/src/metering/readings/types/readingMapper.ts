@@ -11,22 +11,25 @@ export type ReadingPrismaRaw = Pick<
   | 'lecturaAnterior'
   | 'lecturaActual'
   | 'consumoCalculado'
-  | 'contratoId'
   | 'descripcionAnomalia'
   | 'fechaValidacion'
   | 'fotoUrlMinIo'
   | 'lecturaInicial'
   | 'periodoId'
   | 'estado'
+  | 'medidorId'
 > & {
-  contrato?: Pick<
-    Contratos,
-    'contratoId' | 'numeroGuia' | 'direccionSuministro' | 'estado'
-  > | null;
-  medidor?: Pick<
+  medidor?: (Pick<
     Medidores,
     'medidorId' | 'serie' | 'marca' | 'modelo'
-  > | null;
+  > & {
+    historial?: Array<{
+      contrato: Pick<
+        Contratos,
+        'contratoId' | 'numeroGuia' | 'direccionSuministro' | 'estado'
+      >;
+    }>;
+  }) | null;
   periodoRel?: Pick<
     Periodos,
     'periodoId' | 'nombre' | 'fechaInicio' | 'fechaFin'
@@ -39,13 +42,15 @@ export type ReadingPrismaRaw = Pick<
  * Excluye campos internos: updatedAt, createdAt, deletedAt
  */
 export function toReadingResponse(reading: ReadingPrismaRaw): IResponseReading {
+  const activeContrato = reading.medidor?.historial?.[0]?.contrato;
+
   return {
     lecturaId: reading.lecturaId.toString(),
     fecha: reading.fecha,
     lecturaAnterior: Number(reading.lecturaAnterior), // Convertir Decimal a number
     lecturaActual: Number(reading.lecturaActual), // Convertir Decimal a number
     consumoCalculado: Number(reading.consumoCalculado), // Convertir Decimal a number
-    contratoId: reading.contratoId.toString(),
+    contratoId: activeContrato ? activeContrato.contratoId.toString() : '',
     descripcionAnomalia: reading.descripcionAnomalia,
     fechaValidacion: reading.fechaValidacion,
     fotoUrlMinIo: reading.fotoUrlMinIo,
@@ -53,12 +58,12 @@ export function toReadingResponse(reading: ReadingPrismaRaw): IResponseReading {
     lecturaInicial: reading.lecturaInicial,
     periodoId: reading.periodoId,
     tieneAnomalia: !!reading.descripcionAnomalia,
-    contrato: reading.contrato
+    contrato: activeContrato
       ? {
-          contratoId: reading.contrato.contratoId.toString(),
-          numeroGuia: reading.contrato.numeroGuia,
-          direccionSuministro: reading.contrato.direccionSuministro,
-          estado: reading.contrato.estado,
+          contratoId: activeContrato.contratoId.toString(),
+          numeroGuia: activeContrato.numeroGuia,
+          direccionSuministro: activeContrato.direccionSuministro,
+          estado: activeContrato.estado,
         }
       : null,
     medidor: reading.medidor

@@ -1,0 +1,47 @@
+{
+  "name": "open-api-facturacion-sri",
+  "version": "1.0.0",
+  "description": "API de facturación electrónica SRI Ecuador compatible con XAdES-BES",
+  "keywords": [
+    "sri",
+    "ecuador",
+    "facturacion-electronica",
+    "xades-bes",
+    "nestjs"
+  ],
+  "author": "Angelo Barzola",
+  "private": false,
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://minka.gob.ec/angelo_barzola/api-facturacion-electronica-sri.git"
+  },
+  "homepage": "https://minka.gob.ec/angelo_barzola/api-facturacion-electronica-sri",
+  "bugs": {
+    "url": "https://minka.gob.ec/angelo_barzola/api-facturacion-electronica-sri/-/issues"
+  },
+  "scripts": {
+    "build": "nest build",
+    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+    "start": "cross-env NODE_ENV=production nest start",
+    "start:dev": "cross-env NODE_ENV=development nest start --watch",
+    "start:debug": "cross-env NODE_ENV=development nest start --debug --watch",
+    "start:prod": "cross-env NODE_ENV=production node dist/main",
+    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:cov": "jest --coverage",
+    "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "docker:build": "docker build -t open-api-facturacion-sri .",
+    "docker:run": "docker run -d -p 3001:3001 --name open-api-facturacion-sri open-api-facturacion-sri",
+    "docker:up": "docker compose up -d --build",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f",
+    "docker:dev": "docker compose -f docker-compose.yml up --build",
+    "docker:tag": "docker tag open-api-facturacion-sri angelobarzola/open-api-facturacion-sri:latest",
+    "docker:push": "npm run docker:build && docker tag open-api-facturacion-sri angelobarzola/open-api-facturacion-sri:latest && docker push angelobarzola/open-api-facturacion-sri:latest"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

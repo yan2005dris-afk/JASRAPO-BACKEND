@@ -1,0 +1,14 @@
+model Secuenciales {
+  id               String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid @map("id")
+  puntoEmisionId   Int           @map("punto_emision_id")
+  tipoComprobante  String        @db.VarChar(2) @map("tipo_comprobante")
+  ultimoSecuencial Int           @default(0) @map("ultimo_secuencial")
+  updatedAt        DateTime      @updatedAt @map("updated_at")
+
+  puntoEmision     PuntosEmision        @relation(fields: [puntoEmisionId], references: [id], onDelete: Cascade)
+  tipoCompRel      SriTipoComprobante?  @relation("SecuencialTipoComprobante", fields: [tipoComprobante], references: [codigo])
+
+  @@unique([puntoEmisionId, tipoComprobante])
+  @@index([puntoEmisionId])
+  @@map("secuenciales")
+}

@@ -91,7 +91,7 @@ async function bootstrap() {
       forbidNonWhitelisted: true,
       stopAtFirstError: true,
       transformOptions: {
-        enableImplicitConversion: false,
+        enableImplicitConversion: true,
       },
     }),
   );
@@ -106,28 +106,27 @@ async function bootstrap() {
 # API REST de JASRAPO - Sistema de Gestión
 
 ## 📋 Descripción
-API RESTful para el sistema de gestión Jasrapo. Proporciona endpoints para la gestión de usuarios, roles, permisos, menús y perfiles.
+API RESTful para el sistema de gestión de servicios públicos Jasrapo. Cubre operaciones de suministro, facturación, recaudación, reportes y administración del sistema.
 
 ## 🔐 Autenticación
 La API utiliza **JWT (JSON Web Tokens)** para la autenticación:
 
-1. **Iniciar sesión**: Envía tus credenciales a \`/auth/login\` \n
+1. **Iniciar sesión**: \`POST /auth/login\` con email y contraseña
 2. **Obtener token**: Recibirás un \`accessToken\` en la respuesta
-3. **Autorizar**: Usa el token en el header: \`Authorization: Bearer <tu-token>\`
-4. **Refresh token**: Usa el endpoint \`/auth/refresh\` para renovar tu token
+3. **Autorizar**: Incluye el token en el header: \`Authorization: Bearer <tu-token>\`
+4. **Refresh token**: \`POST /auth/refresh\` renueva tu token automáticamente
 
-**Nota**: El refresh token se almacena automáticamente en una cookie httpOnly.
+**Nota**: El refresh token se almacena en una cookie httpOnly segura.
 
 ## 🛡️ Sistema de Permisos
-La API implementa un sistema de control de acceso basado en roles y permisos:
+Control de acceso basado en roles y permisos granulares:
 
-- **Recursos**: Entidades del sistema (users, roles, permissions, menus, profile)
-- **Acciones**: Operaciones permitidas (create, read, update, delete)
-- **Permisos**: Combinación recurso:acción (ej: users:read, users:create)
+- **Permisos**: Cada permiso tiene un nombre, descripción, recurso y acción (ej: \`clientes:read\`, \`users:create\`)
+- **Roles**: Los roles agrupan permisos. Un usuario puede tener un rol y/o permisos directos
+- **Menús**: Los menús de navegación se filtran automáticamente según los permisos efectivos del usuario
+- **Protección**: Cada endpoint protegido valida los permisos del JWT antes de ejecutar la acción
 
-Cada endpoint está protegido y requiere los permisos correspondientes.
-
-## 📌 convenciones
+## 📌 Convenciones
 
 ### Códigos de Respuesta
 | Código | Descripción |
@@ -142,58 +141,34 @@ Cada endpoint está protegido y requiere los permisos correspondientes.
 | 500 | Error interno del servidor |
 
 ### Paginación
-Los endpoints de listado soportan paginación mediante query parameters:
-- \`skip\`: Número de registros a omitir \n
-- \`take\`: Número máximo de registros a retornar
+Los endpoints de listado soportan dos esquemas de paginación:
+
+**Esquema page/limit** (usuarios, rutas, clientes):
+- \`page\`: Número de página (default: 1)
+- \`limit\`: Registros por página (default: 10)
+
+**Esquema skip/take** (medidores, lecturas, contratos, anomalías):
+- \`skip\`: Registros a omitir
+- \`take\`: Máximo de registros a retornar
+
+Las respuestas paginadas incluyen metadata: \`total\`, \`paginaActual\`, \`totalPaginas\`, \`anterior\`, \`siguiente\`.
 
 ### Soft Delete
-Los endpoints de eliminación implementan eliminación lógica (soft delete), marcando registros como eliminados sin borrarlos físicamente de la base de datos.
-
-## 🏢 Módulos
-
-### Auth (Autenticación)
-- \`POST /auth/login\` - Iniciar sesión
-- \`POST /auth/register\` - Registrar usuario (requiere permisos) \n
-- \`POST /auth/refresh\` - Refresh token
-- \`POST /auth/logout\` - Cerrar sesión
-
-### Users (Usuarios)
-Gestión completa de usuarios del sistema.
-
-### Roles (Roles)
-Administración de roles y asignación de permisos.
-
-### Permissions (Permisos)
-Gestión de permisos del sistema.
-
-### Menus (Menús)
-Obtención de menús basados en permisos del usuario.
-
-### Profile (Perfiles)
-Gestión de perfiles de usuario.
-
-### Files (Archivos)
-Subida, descarga, listado y eliminación de archivos mediante MinIO (S3-compatible).
-- Soporta subida individual y múltiple
-- Genera URLs temporales presigned (24 horas)
-- Buckets se crean automáticamente
+Los endpoints de eliminación implementan eliminación lógica (soft delete). Los registros eliminados se marcan con \`borrado_en\` y se excluyen de las consultas normales.
 
 ## 📞 Soporte
 Para consultas o soporte, contacta al equipo de desarrollo del Backend.
     `,
     )
     .setVersion('2.0')
-    .addBearerAuth(
-      {
-        type: 'http',
-        scheme: 'bearer',
-        bearerFormat: 'JWT',
-        name: 'JWT',
-        description: 'Ingresa el token JWT válido',
-        in: 'header',
-      },
-      'JWT-auth',
-    )
+    .addBearerAuth({
+      type: 'http',
+      scheme: 'bearer',
+      bearerFormat: 'JWT',
+      name: 'JWT',
+      description: 'Ingresa el token JWT válido',
+      in: 'header',
+    })
     .addCookieAuth(
       'refreshToken',
       {
@@ -210,8 +185,6 @@ Para consultas o soporte, contacta al equipo de desarrollo del Backend.
     .addTag('roles', 'Administración de roles')
     .addTag('permissions', 'Gestión de permisos')
     .addTag('menus', 'Menús y navegación basados en permisos')
-    .addTag('profile', 'Gestión de perfiles de usuario')
-    .addTag('files', 'Subida, descarga y gestión de archivos (MinIO)')
     .addTag('clients', 'Gestión de clientes')
     .addTag('sectors', 'Gestión de sectores territoriales')
     .addTag('communities', 'Gestión de comunidades')
@@ -220,8 +193,26 @@ Para consultas o soporte, contacta al equipo de desarrollo del Backend.
     .addTag('meters', 'Gestión de medidores')
     .addTag('readings', 'Lecturas de medidores')
     .addTag('reading-anomalies', 'Anomalías de lecturas (fugas, daños)')
+    .addTag('routes', 'Planificación y gestión de rutas de lectura')
     .addTag('search', 'Búsqueda pública de información')
-    .addTag('metrics', 'Métricas para Prometheus (scraping)')
+    .addTag('Lotes', 'Gestión de lotes de facturación')
+    .addTag('agreements', 'Payment agreements')
+    .addTag(
+      '[En Desarrollo] SRI - Facturación Electrónica',
+      'Módulo de facturación electrónica SRI',
+    )
+    .addTag('[En Desarrollo] Catálogos SRI', 'Catálogos oficiales del SRI')
+    .addTag('[En Desarrollo] Emisores', 'Gestión de emisores de comprobantes')
+    .addTag('[En Desarrollo] Signature', 'Firma electrónica de documentos')
+    .addTag(
+      '[En Desarrollo] SRI - Webhooks',
+      'Webhooks para notificaciones del SRI',
+    )
+    .addTag('[En Desarrollo] Certificados', 'Gestión de certificados digitales')
+    .addTag(
+      '[No Aplicable] Métricas para Prometheus (scraping)',
+      'Métricas para Prometheus (scraping)',
+    )
     .addServer('http://localhost:3000', 'Servidor de desarrollo')
     .addServer('https://api.dihm-muertos.site/', 'Servidor de pruebas')
     .setContact('Equipo Jasrapo', 'https://jasrapo.com', 'soporte@jasrapo.com')

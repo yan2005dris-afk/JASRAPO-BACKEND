@@ -1,0 +1,16 @@
+model ComprobanteTotales {
+  id                   String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid @map("id")
+  comprobanteId        BigInt       @map("comprobante_id")
+  codigo               String       @db.VarChar(2) @map("codigo")
+  codigoPorcentaje     String       @db.VarChar(4) @map("codigo_porcentaje")
+  descuentoAdicional   Decimal?     @db.Decimal(18, 2) @map("descuento_adicional")
+  baseImponible        Decimal?     @db.Decimal(18, 2) @map("base_imponible")
+  tarifa               Decimal?     @db.Decimal(8, 2) @map("tarifa")
+  valor                Decimal?     @db.Decimal(18, 2) @map("valor")
+  valorDevolucionIva   Decimal?     @db.Decimal(18, 2) @map("valor_devolucion_iva")
+
+  comprobante          Comprobantes @relation(fields: [comprobanteId], references: [id], onDelete: Cascade)
+
+  @@index([comprobanteId])
+  @@map("comprobante_totales")
+}

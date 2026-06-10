@@ -1,555 +1,83 @@
-import { PrismaClient } from 'src/generated/prisma/client';
+import type { PrismaClient } from 'src/generated/prisma/client';
+
+interface MenuSeedEntry {
+  nombre: string;
+  ruta: string;
+  icono: string;
+  parentNombre: string | null;
+}
+
+const LEVEL_1: Omit<MenuSeedEntry, 'parentNombre'>[] = [
+  { nombre: 'Suministro', ruta: '/suministro', icono: 'water_drop' },
+  { nombre: 'Recaudación', ruta: '/recaudacion', icono: 'payments' },
+  { nombre: 'Reportes', ruta: '/reportes', icono: 'menu_book' },
+  { nombre: 'Administración', ruta: '/admin', icono: 'settings' },
+];
+
+const LEVEL_2: MenuSeedEntry[] = [
+  { nombre: 'Clientes', ruta: '/Contratos/Cliente', icono: 'group', parentNombre: 'Suministro' },
+  { nombre: 'Inventario de Medidores', ruta: '/Contratos/Medidores', icono: 'gas_meter', parentNombre: 'Suministro' },
+  { nombre: 'Planificación de Rutas', ruta: '/Contratos/LecturaDeConsumo', icono: 'route', parentNombre: 'Suministro' },
+  { nombre: 'Bandeja de Auditoría', ruta: '/suministro/auditoria', icono: 'assignment', parentNombre: 'Suministro' },
+
+  { nombre: 'Punto de Recaudación', ruta: '/recaudacion/punto', icono: 'point_of_sale', parentNombre: 'Recaudación' },
+  { nombre: 'Caja Diaria', ruta: '/recaudacion/caja-diaria', icono: 'payments', parentNombre: 'Recaudación' },
+  { nombre: 'Validación Transferencia', ruta: '/recaudacion/validacion', icono: 'verified', parentNombre: 'Recaudación' },
+  { nombre: 'Emisión SRI', ruta: '/recaudacion/emision-sri', icono: 'gavel', parentNombre: 'Recaudación' },
+
+  { nombre: 'Gestión General', ruta: '/admin/users', icono: 'admin_panel_settings', parentNombre: 'Administración' },
+
+  { nombre: 'Estado de cuenta Cliente', ruta: '/reportes/estado-cuenta', icono: 'article_person', parentNombre: 'Reportes' },
+  { nombre: 'Recaudación y Morosidad', ruta: '/reportes/recaudacion-morosidad', icono: 'money_off', parentNombre: 'Reportes' },
+  { nombre: 'ConsumoPorZonas', ruta: '/reportes/consumo-zonas', icono: 'location_on', parentNombre: 'Reportes' },
+  { nombre: 'DashboardKPI', ruta: '/reportes/dashboard', icono: 'dashboard', parentNombre: 'Reportes' },
+];
+
+async function upsertMenu(
+  prisma: PrismaClient,
+  nombre: string,
+  ruta: string,
+  icono: string | null,
+  menuPadreId: number | null,
+): Promise<number> {
+  const existing = await prisma.menus.findFirst({
+    where: { nombre, deletedAt: null },
+    select: { menuId: true },
+  });
+
+  if (existing) {
+    await prisma.menus.update({
+      where: { menuId: existing.menuId },
+      data: { ruta, icono, menuPadreId, activo: true },
+    });
+    return existing.menuId;
+  }
+
+  const created = await prisma.menus.create({
+    data: { nombre, ruta, icono, menuPadreId, activo: true },
+    select: { menuId: true },
+  });
+  return created.menuId;
+}
 
 export async function seedMenus(prisma: PrismaClient) {
-  const menusToCreate = [
-    {
-      menuId: 1,
-      menuPadreId: null,
-      nombre: 'Contratos',
-      ruta: '/Contratos',
-      icono: 'contract',
-    },
-    {
-      menuId: 2,
-      menuPadreId: 1,
-      nombre: 'Cliente',
-      ruta: '/Contratos/Cliente',
-      icono: 'inbox_text_person',
-    },
-    {
-      menuId: 3,
-      menuPadreId: 1,
-      nombre: 'Contratos de Servicios',
-      ruta: '/Contratos/ContratosDeServicios',
-      icono: 'clean_hands',
-    },
-    {
-      menuId: 4,
-      menuPadreId: 1,
-      nombre: 'Medidores',
-      ruta: '/Contratos/Medidores',
-      icono: 'valve',
-    },
-    {
-      menuId: 5,
-      menuPadreId: 1,
-      nombre: 'Tarifas y Categorias',
-      ruta: '/Contratos/TarifasYCategorias',
-      icono: 'price_change',
-    },
-    {
-      menuId: 6,
-      menuPadreId: 1,
-      nombre: 'Lectura de Consumo',
-      ruta: '/Contratos/LecturaDeConsumo',
-      icono: 'dishwasher_gen',
-    },
-    {
-      menuId: 7,
-      menuPadreId: 1,
-      nombre: 'Convenios de pago',
-      ruta: '/Contratos/ConveniosDePago',
-      icono: 'handshake',
-    },
-    {
-      menuId: 8,
-      menuPadreId: null,
-      nombre: 'Facturacion',
-      ruta: '/Facturacion',
-      icono: 'receipt',
-    },
-    {
-      menuId: 9,
-      menuPadreId: 8,
-      nombre: 'Generacion de Planillas',
-      ruta: '/Facturacion/GeneracionPlanilla',
-      icono: 'assignment',
-    },
-    {
-      menuId: 10,
-      menuPadreId: 8,
-      nombre: 'Facturacion Electronica',
-      ruta: '/Facturacion/FacturacionElectronica',
-      icono: 'receipt_long',
-    },
-    {
-      menuId: 11,
-      menuPadreId: 8,
-      nombre: 'Recaudación y pagos',
-      ruta: '/Facturacion/RecaudacionYPagos',
-      icono: 'point_of_sale',
-    },
-    {
-      menuId: 12,
-      menuPadreId: 8,
-      nombre: 'Notas de Credito o Debito',
-      ruta: '/Facturacion/NotasDeCreditoDebito',
-      icono: 'universal_currency',
-    },
-    {
-      menuId: 13,
-      menuPadreId: 8,
-      nombre: 'Envio de Facturas',
-      ruta: '/Facturacion/EnvioDeFacturacion',
-      icono: 'export_notes',
-    },
-    {
-      menuId: 14,
-      menuPadreId: null,
-      nombre: 'Reportes',
-      ruta: '/Reportes',
-      icono: 'menu_book',
-    },
-    {
-      menuId: 15,
-      menuPadreId: 14,
-      nombre: 'Estado de cuenta Cliente',
-      ruta: '/Reportes/EstadoCuentaCliente',
-      icono: 'article_person',
-    },
-    {
-      menuId: 16,
-      menuPadreId: 14,
-      nombre: 'Recaudación y Morosida',
-      ruta: '/Reportes/RecaudacionMorosida',
-      icono: 'money_off',
-    },
-    {
-      menuId: 17,
-      menuPadreId: 14,
-      nombre: 'ConsumoPorZonas',
-      ruta: '/Reportes/ConsumoZonas',
-      icono: 'location_on',
-    },
-    {
-      menuId: 18,
-      menuPadreId: 14,
-      nombre: 'DashboardKpi',
-      ruta: '/Reportes/DashboardKpi',
-      icono: 'dashboard',
-    },
-    ...[
-      {
-        menuId: 19,
-        menuPadreId: 2,
-        nombre: 'Listar Cliente',
-        ruta: '/Contratos/Cliente/Listar',
-      },
-      {
-        menuId: 20,
-        menuPadreId: 2,
-        nombre: 'Crear Cliente',
-        ruta: '/Contratos/Cliente/Crear',
-      },
-      {
-        menuId: 21,
-        menuPadreId: 2,
-        nombre: 'Actualizar Cliente',
-        ruta: '/Contratos/Cliente/Actualizar',
-      },
-      {
-        menuId: 22,
-        menuPadreId: 2,
-        nombre: 'Eliminar Cliente',
-        ruta: '/Contratos/Cliente/Eliminar',
-      },
-      {
-        menuId: 23,
-        menuPadreId: 3,
-        nombre: 'Listar Contratos de Servicios',
-        ruta: '/Contratos/ContratosDeServicios/Listar',
-      },
-      {
-        menuId: 24,
-        menuPadreId: 3,
-        nombre: 'Crear Contratos de Servicios',
-        ruta: '/Contratos/ContratosDeServicios/Crear',
-      },
-      {
-        menuId: 25,
-        menuPadreId: 3,
-        nombre: 'Actualizar Contratos de Servicios',
-        ruta: '/Contratos/ContratosDeServicios/Actualizar',
-      },
-      {
-        menuId: 26,
-        menuPadreId: 3,
-        nombre: 'Eliminar Contratos de Servicios',
-        ruta: '/Contratos/ContratosDeServicios/Eliminar',
-      },
-      {
-        menuId: 27,
-        menuPadreId: 4,
-        nombre: 'Listar Medidores',
-        ruta: '/Contratos/Medidores/Listar',
-      },
-      {
-        menuId: 28,
-        menuPadreId: 4,
-        nombre: 'Crear Medidores',
-        ruta: '/Contratos/Medidores/Crear',
-      },
-      {
-        menuId: 29,
-        menuPadreId: 4,
-        nombre: 'Actualizar Medidores',
-        ruta: '/Contratos/Medidores/Actualizar',
-      },
-      {
-        menuId: 30,
-        menuPadreId: 4,
-        nombre: 'Eliminar Medidores',
-        ruta: '/Contratos/Medidores/Eliminar',
-      },
-      {
-        menuId: 31,
-        menuPadreId: 5,
-        nombre: 'Listar Tarifas y Categorias',
-        ruta: '/Contratos/TarifasYCategorias/Listar',
-      },
-      {
-        menuId: 32,
-        menuPadreId: 5,
-        nombre: 'Crear Tarifas y Categorias',
-        ruta: '/Contratos/TarifasYCategorias/Crear',
-      },
-      {
-        menuId: 33,
-        menuPadreId: 5,
-        nombre: 'Actualizar Tarifas y Categorias',
-        ruta: '/Contratos/TarifasYCategorias/Actualizar',
-      },
-      {
-        menuId: 34,
-        menuPadreId: 5,
-        nombre: 'Eliminar Tarifas y Categorias',
-        ruta: '/Contratos/TarifasYCategorias/Eliminar',
-      },
-      {
-        menuId: 35,
-        menuPadreId: 6,
-        nombre: 'Listar Lectura de Consumo',
-        ruta: '/Contratos/LecturaDeConsumo/Listar',
-      },
-      {
-        menuId: 36,
-        menuPadreId: 6,
-        nombre: 'Crear Lectura de Consumo',
-        ruta: '/Contratos/LecturaDeConsumo/Crear',
-      },
-      {
-        menuId: 37,
-        menuPadreId: 6,
-        nombre: 'Actualizar Lectura de Consumo',
-        ruta: '/Contratos/LecturaDeConsumo/Actualizar',
-      },
-      {
-        menuId: 38,
-        menuPadreId: 6,
-        nombre: 'Eliminar Lectura de Consumo',
-        ruta: '/Contratos/LecturaDeConsumo/Eliminar',
-      },
-      {
-        menuId: 39,
-        menuPadreId: 7,
-        nombre: 'Listar Convenios de pago',
-        ruta: '/Contratos/ConveniosDePago/Listar',
-      },
-      {
-        menuId: 40,
-        menuPadreId: 7,
-        nombre: 'Crear Convenios de pago',
-        ruta: '/Contratos/ConveniosDePago/Crear',
-      },
-      {
-        menuId: 41,
-        menuPadreId: 7,
-        nombre: 'Actualizar Convenios de pago',
-        ruta: '/Contratos/ConveniosDePago/Actualizar',
-      },
-      {
-        menuId: 42,
-        menuPadreId: 7,
-        nombre: 'Eliminar Convenios de pago',
-        ruta: '/Contratos/ConveniosDePago/Eliminar',
-      },
-      {
-        menuId: 43,
-        menuPadreId: 9,
-        nombre: 'Listar Generacion de Planillas',
-        ruta: '/Facturacion/GeneracionPlanilla/Listar',
-      },
-      {
-        menuId: 44,
-        menuPadreId: 9,
-        nombre: 'Crear Generacion de Planillas',
-        ruta: '/Facturacion/GeneracionPlanilla/Crear',
-      },
-      {
-        menuId: 45,
-        menuPadreId: 9,
-        nombre: 'Actualizar Generacion de Planillas',
-        ruta: '/Facturacion/GeneracionPlanilla/Actualizar',
-      },
-      {
-        menuId: 46,
-        menuPadreId: 9,
-        nombre: 'Eliminar Generacion de Planillas',
-        ruta: '/Facturacion/GeneracionPlanilla/Eliminar',
-      },
-      {
-        menuId: 47,
-        menuPadreId: 10,
-        nombre: 'Listar Facturacion Electronica',
-        ruta: '/Facturacion/FacturacionElectronica/Listar',
-      },
-      {
-        menuId: 48,
-        menuPadreId: 10,
-        nombre: 'Crear Facturacion Electronica',
-        ruta: '/Facturacion/FacturacionElectronica/Crear',
-      },
-      {
-        menuId: 49,
-        menuPadreId: 10,
-        nombre: 'Actualizar Facturacion Electronica',
-        ruta: '/Facturacion/FacturacionElectronica/Actualizar',
-      },
-      {
-        menuId: 50,
-        menuPadreId: 10,
-        nombre: 'Eliminar Facturacion Electronica',
-        ruta: '/Facturacion/FacturacionElectronica/Eliminar',
-      },
-      {
-        menuId: 51,
-        menuPadreId: 11,
-        nombre: 'Listar Recaudación y pagos',
-        ruta: '/Facturacion/RecaudacionYPagos/Listar',
-      },
-      {
-        menuId: 52,
-        menuPadreId: 11,
-        nombre: 'Crear Recaudación y pagos',
-        ruta: '/Facturacion/RecaudacionYPagos/Crear',
-      },
-      {
-        menuId: 53,
-        menuPadreId: 11,
-        nombre: 'Actualizar Recaudación y pagos',
-        ruta: '/Facturacion/RecaudacionYPagos/Actualizar',
-      },
-      {
-        menuId: 54,
-        menuPadreId: 11,
-        nombre: 'Eliminar Recaudación y pagos',
-        ruta: '/Facturacion/RecaudacionYPagos/Eliminar',
-      },
-      {
-        menuId: 55,
-        menuPadreId: 12,
-        nombre: 'Listar Notas de Credito o Debito',
-        ruta: '/Facturacion/NotasDeCreditoDebito/Listar',
-      },
-      {
-        menuId: 56,
-        menuPadreId: 12,
-        nombre: 'Crear Notas de Credito o Debito',
-        ruta: '/Facturacion/NotasDeCreditoDebito/Crear',
-      },
-      {
-        menuId: 57,
-        menuPadreId: 12,
-        nombre: 'Actualizar Notas de Credito o Debito',
-        ruta: '/Facturacion/NotasDeCreditoDebito/Actualizar',
-      },
-      {
-        menuId: 58,
-        menuPadreId: 12,
-        nombre: 'Eliminar Notas de Credito o Debito',
-        ruta: '/Facturacion/NotasDeCreditoDebito/Eliminar',
-      },
-      {
-        menuId: 59,
-        menuPadreId: 13,
-        nombre: 'Listar Envio de Facturas',
-        ruta: '/Facturacion/EnvioDeFacturacion/Listar',
-      },
-      {
-        menuId: 60,
-        menuPadreId: 13,
-        nombre: 'Crear Envio de Facturas',
-        ruta: '/Facturacion/EnvioDeFacturacion/Crear',
-      },
-      {
-        menuId: 61,
-        menuPadreId: 13,
-        nombre: 'Actualizar Envio de Facturas',
-        ruta: '/Facturacion/EnvioDeFacturacion/Actualizar',
-      },
-      {
-        menuId: 62,
-        menuPadreId: 13,
-        nombre: 'Eliminar Envio de Facturas',
-        ruta: '/Facturacion/EnvioDeFacturacion/Eliminar',
-      },
-      {
-        menuId: 63,
-        menuPadreId: 15,
-        nombre: 'Listar Estado de cuenta Cliente',
-        ruta: '/Reportes/EstadoCuentaCliente/Listar',
-      },
-      {
-        menuId: 64,
-        menuPadreId: 15,
-        nombre: 'Crear Estado de cuenta Cliente',
-        ruta: '/Reportes/EstadoCuentaCliente/Crear',
-      },
-      {
-        menuId: 65,
-        menuPadreId: 15,
-        nombre: 'Actualizar Estado de cuenta Cliente',
-        ruta: '/Reportes/EstadoCuentaCliente/Actualizar',
-      },
-      {
-        menuId: 66,
-        menuPadreId: 15,
-        nombre: 'Eliminar Estado de cuenta Cliente',
-        ruta: '/Reportes/EstadoCuentaCliente/Eliminar',
-      },
-      {
-        menuId: 67,
-        menuPadreId: 16,
-        nombre: 'Listar Recaudación y Morosida',
-        ruta: '/Reportes/RecaudacionMorosida/Listar',
-      },
-      {
-        menuId: 68,
-        menuPadreId: 16,
-        nombre: 'Crear Recaudación y Morosida',
-        ruta: '/Reportes/RecaudacionMorosida/Crear',
-      },
-      {
-        menuId: 69,
-        menuPadreId: 16,
-        nombre: 'Actualizar Recaudación y Morosida',
-        ruta: '/Reportes/RecaudacionMorosida/Actualizar',
-      },
-      {
-        menuId: 70,
-        menuPadreId: 16,
-        nombre: 'Eliminar Recaudación y Morosida',
-        ruta: '/Reportes/RecaudacionMorosida/Eliminar',
-      },
-      {
-        menuId: 71,
-        menuPadreId: 17,
-        nombre: 'Listar ConsumoPorZonas',
-        ruta: '/Reportes/ConsumoZonas/Listar',
-      },
-      {
-        menuId: 72,
-        menuPadreId: 17,
-        nombre: 'Crear ConsumoPorZonas',
-        ruta: '/Reportes/ConsumoZonas/Crear',
-      },
-      {
-        menuId: 73,
-        menuPadreId: 17,
-        nombre: 'Actualizar ConsumoPorZonas',
-        ruta: '/Reportes/ConsumoZonas/Actualizar',
-      },
-      {
-        menuId: 74,
-        menuPadreId: 17,
-        nombre: 'Eliminar ConsumoPorZonas',
-        ruta: '/Reportes/ConsumoZonas/Eliminar',
-      },
-      {
-        menuId: 75,
-        menuPadreId: 18,
-        nombre: 'Listar DashboardKpi',
-        ruta: '/Reportes/DashboardKpi/Listar',
-      },
-      {
-        menuId: 76,
-        menuPadreId: 18,
-        nombre: 'Crear DashboardKpi',
-        ruta: '/Reportes/DashboardKpi/Crear',
-      },
-      {
-        menuId: 77,
-        menuPadreId: 18,
-        nombre: 'Actualizar DashboardKpi',
-        ruta: '/Reportes/DashboardKpi/Actualizar',
-      },
-      {
-        menuId: 78,
-        menuPadreId: 18,
-        nombre: 'Eliminar DashboardKpi',
-        ruta: '/Reportes/DashboardKpi/Eliminar',
-      },
-      {
-        menuId: 79,
-        menuPadreId: null,
-        nombre: 'Administracion Sistema',
-        ruta: '/admin',
-        icono: 'admin_panel_settings',
-      },
-      {
-        menuId: 80,
-        menuPadreId: 79,
-        nombre: 'Usuarios y Roles',
-        ruta: '/admin/users',
-        icono: 'group',
-      },
-      {
-        menuId: 81,
-        menuPadreId: 80,
-        nombre: 'Lectura Usuarios',
-        ruta: '/admin/users',
-      },
-      {
-        menuId: 82,
-        menuPadreId: 80,
-        nombre: 'Escritura Usuarios',
-        ruta: '/admin/users',
-      },
-      {
-        menuId: 83,
-        menuPadreId: 80,
-        nombre: 'Actualizacion Usuarios',
-        ruta: '/admin/users',
-      },
-      {
-        menuId: 84,
-        menuPadreId: 80,
-        nombre: 'Eliminacion Usuarios',
-        ruta: '/admin/users',
-      },
-    ],
-  ];
+  const parentIds = new Map<string, number>();
 
-  for (const menu of menusToCreate) {
-    await prisma.menus.upsert({
-      where: { menuId: menu.menuId },
-      update: {
-        nombre: menu.nombre,
-        ruta: menu.ruta,
-        menuPadreId: menu.menuPadreId,
-        icono: menu.icono ?? null,
-      },
-      create: {
-        menuId: menu.menuId,
-        menuPadreId: menu.menuPadreId,
-        nombre: menu.nombre,
-        ruta: menu.ruta,
-        icono: menu.icono ?? null,
-      },
-    });
+  for (const entry of LEVEL_1) {
+    const id = await upsertMenu(prisma, entry.nombre, entry.ruta, entry.icono, null);
+    parentIds.set(entry.nombre, id);
+  }
+
+  for (const entry of LEVEL_2) {
+    const parentId = parentIds.get(entry.parentNombre!);
+    if (!parentId) {
+      throw new Error(`Parent menu "${entry.parentNombre}" not found`);
+    }
+    await upsertMenu(prisma, entry.nombre, entry.ruta, entry.icono, parentId);
   }
 
   return prisma.menus.findMany({
+    where: { deletedAt: null },
     orderBy: { menuId: 'asc' },
   });
 }

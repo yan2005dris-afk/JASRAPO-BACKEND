@@ -1,8 +1,10 @@
 import type { IResponseContract } from './IResponseContract';
-import type { Contratos, CategoriaTarifa, Clientes, Comunidades, Sectores, Medidores } from 'src/generated/prisma/client';
+import type { Contratos, CategoriaTarifa, Clientes, Comunidades, Sectores, Medidores, HistorialMedidores } from 'src/generated/prisma/client';
 
 /**
- * Tipo de entrada desde Prisma (relación incluída)
+ * Tipo de entrada desde Prisma (relaciones incluidas).
+ * Contratos no tiene relación directa medidor — el medidor se accede
+ * a través de HistorialMedidores (relación N:M con fechaHasta nullable).
  */
 export type ContractPrismaRaw = Pick<
   Contratos,
@@ -33,16 +35,17 @@ export type ContractPrismaRaw = Pick<
     Sectores,
     'sectorId' | 'codigo' | 'nombre'
   > | null;
-  medidor?: Pick<
-    Medidores,
-    'medidorId' | 'serie' | 'marca' | 'modelo'
-  > | null;
+  historialMedidores?: Array<
+    Pick<HistorialMedidores, 'historialId' | 'medidorId' | 'fechaDesde' | 'fechaHasta'> & {
+      medidor: Pick<Medidores, 'medidorId' | 'serie' | 'marca' | 'modelo'>;
+    }
+  >;
 };
 
 /**
- * Mapea resultado de Prisma a DTO de response
- * Convierte Decimal a number donde sea necesario
- * Excluye campos internos: updatedAt, createdAt, deletedAt
+ * Mapea resultado de Prisma a DTO de response.
+ * Convierte Decimal a number donde sea necesario.
+ * Excluye campos internos: updatedAt, createdAt, deletedAt.
  */
 export function toContractResponse(contract: ContractPrismaRaw): IResponseContract {
   return {
@@ -61,7 +64,7 @@ export function toContractResponse(contract: ContractPrismaRaw): IResponseContra
           categoriaTarifaId: contract.categoriaTarifa.categoriaTarifaId,
           nombre: contract.categoriaTarifa.nombre,
           descripcion: contract.categoriaTarifa.descripcion,
-          valorBase: Number(contract.categoriaTarifa.valorBase), // Convertir Decimal a number
+          valorBase: Number(contract.categoriaTarifa.valorBase),
         }
       : null,
     cliente: contract.cliente
@@ -87,13 +90,17 @@ export function toContractResponse(contract: ContractPrismaRaw): IResponseContra
           nombre: contract.sector.nombre,
         }
       : null,
-    medidor: contract.medidor
-      ? {
-          medidorId: contract.medidor.medidorId,
-          serie: contract.medidor.serie,
-          marca: contract.medidor.marca,
-          modelo: contract.medidor.modelo,
-        }
-      : null,
+    historialMedidores: contract.historialMedidores?.map((h) => ({
+      historialId: h.historialId,
+      medidorId: h.medidorId,
+      fechaDesde: h.fechaDesde,
+      fechaHasta: h.fechaHasta,
+      medidor: {
+        medidorId: h.medidor.medidorId,
+        serie: h.medidor.serie,
+        marca: h.medidor.marca,
+        modelo: h.medidor.modelo,
+      },
+    })),
   };
 }

@@ -35,7 +35,7 @@ export async function seedFacturacion(prisma: PrismaClient) {
         data: {
             contrato: { connect: { contratoId: contrato.contratoId } },
             periodoRel: { connect: { periodoId: periodo.periodoId } },
-            puntoEmision: { connect: { puntoEmisionId: puntoEmision.puntoEmisionId } },
+            puntoEmision: { connect: { id: puntoEmision.id } },
             clienteNombre: `${contrato.cliente.nombres} ${contrato.cliente.apellidos}`,
             clienteIdentificacion: contrato.cliente.identificacion,
             clienteDireccion: contrato.cliente.direccionDomicilio || 'Olón',

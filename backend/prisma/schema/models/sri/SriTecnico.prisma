@@ -1,0 +1,71 @@
+model ComprobanteXmls {
+  id                String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid @map("id")
+  comprobanteId     BigInt       @unique @map("comprobante_id")
+  xmlFirmadoPath    String?      @db.VarChar(500) @map("xml_firmado_path")
+  xmlAutorizadoPath String?      @db.VarChar(500) @map("xml_autorizado_path")
+  createdAt         DateTime     @default(now()) @map("created_at")
+  
+  comprobante       Comprobantes @relation(fields: [comprobanteId], references: [id], onDelete: Cascade)
+
+  @@map("comprobante_xmls")
+}
+
+model WebhookConfigs {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid @map("id")
+  emisorId        Int       @map("emisor_id")
+  nombre          String    @db.VarChar(100) @map("nombre")
+  url             String    @map("url")
+  eventos         String[]  @default([]) @map("eventos")
+  secreto         String    @db.VarChar(100) @map("secreto")
+  activo          Boolean   @default(true) @map("activo")
+  reintentosMax   Int       @default(3) @map("reintentos_max")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  emisor          Empresa   @relation(fields: [emisorId], references: [id], onDelete: Cascade)
+  logs            WebhookLogs[]
+
+  @@map("webhook_configs")
+}
+
+model WebhookLogs {
+  id                String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid @map("id")
+  configId          String?         @db.Uuid @map("config_id")
+  evento            String          @db.VarChar(50) @map("evento")
+  payload           Json            @map("payload")
+  statusCode        Int?            @map("status_code")
+  respuesta         String?         @map("respuesta")
+  intento           Int             @default(1) @map("intento")
+  exitoso           Boolean         @default(false) @map("exitoso")
+  error             String?         @map("error")
+  tiempoRespuestaMs Int?            @map("tiempo_respuesta_ms")
+  createdAt         DateTime        @default(now()) @map("created_at")
+
+  config            WebhookConfigs? @relation(fields: [configId], references: [id], onDelete: SetNull)
+
+  @@map("webhook_logs")
+}
+
+model AuditoriaSri {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid @map("id")
+  usuarioId        String?  @db.Uuid @map("usuario_id")
+  usuarioEmail     String?  @db.VarChar(255) @map("usuario_email")
+  ipAddress        String?  @map("ip_address")
+  userAgent        String?  @map("user_agent")
+  accion           String   @db.VarChar(50) @map("accion")
+  recurso          String   @db.VarChar(100) @map("recurso")
+  recursoId        String?  @db.VarChar(255) @map("recurso_id")
+  descripcion      String?  @map("descripcion")
+  datosAnteriores  Json?    @map("datos_anteriores")
+  datosNuevos      Json?    @map("datos_nuevos")
+  metadata         Json?    @map("metadata")
+  exitoso          Boolean  @default(true) @map("exitoso")
+  error            String?  @map("error")
+  duracionMs       Int?     @map("duracion_ms")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  @@index([accion])
+  @@index([recurso, recursoId])
+  @@index([usuarioId])
+  @@map("auditoria")
+}
