@@ -1,15 +1,14 @@
-allowBuilds:
-  '@nestjs/core': true
-  '@prisma/engines': true
-  '@scarf/scarf': true
-  bcrypt: true
-  cpu-features: true
-  esbuild: true
-  msgpackr-extract: false
-  prisma: true
-  protobufjs: true
-  ssh2: true
-  unrs-resolver: true
+onlyBuiltDependencies:
+  - '@nestjs/core'
+  - '@prisma/engines'
+  - '@scarf/scarf'
+  - bcrypt
+  - cpu-features
+  - esbuild
+  - prisma
+  - protobufjs
+  - ssh2
+  - unrs-resolver
 
 overrides:
   rxjs: ^7.8.1

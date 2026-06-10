@@ -29,7 +29,7 @@ import { Throttle } from '@nestjs/throttler';
 import { SriService } from './sri.service';
 import { EmisoresService } from './integration/emisores/emisores.service';
 import { CurrentUser } from '../identity/auth/decorators/current-user.decorator';
-import { JwtPayload, UserRole } from '../identity/auth/dto/auth.dto';
+import { JwtPayload, UserRole } from '../identity/auth/interfaces/dto/auth.dto';
 import { JwtAuthGuard } from '../identity/auth/guards/jwt-auth.guard';
 import { ConfigService } from '@nestjs/config';
 import { extractRucFromClaveAcceso } from './utils/clave-acceso.utils';

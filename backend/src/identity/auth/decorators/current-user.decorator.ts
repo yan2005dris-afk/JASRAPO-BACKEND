@@ -1,6 +1,6 @@
 import type { ExecutionContext } from '@nestjs/common';
 import { createParamDecorator } from '@nestjs/common';
-import type { JwtPayload } from '../dto/auth.dto';
+import type { JwtPayload } from '../interfaces/dto/auth.dto';
 
 /**
  * Decorador para extraer el usuario actual del request.
