@@ -1,6 +1,6 @@
 import { IsOptional, Matches } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { PaginationDto } from '../../../../infrastructure/common/dtos/pagination.dto';
+import { PaginationDto } from '../../../../../infrastructure/common/dtos/pagination.dto';
 
 export class FindAllAgreementsDto extends PaginationDto {
   @ApiPropertyOptional({

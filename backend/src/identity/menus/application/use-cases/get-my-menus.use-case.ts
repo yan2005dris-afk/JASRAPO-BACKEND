@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
-import { UserService } from '../../../users/application/services/user.service';
+import { UserService } from '../../../users/application/user.service';
 import { MenuResponseDto } from '../../interfaces/dto/response-menu.dto';
 import { MenuRecord } from '../../domain/types/menu.types';
 

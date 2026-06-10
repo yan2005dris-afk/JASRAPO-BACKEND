@@ -13,7 +13,7 @@ import {
 } from '@nestjs/common';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { UpdateUserDto } from '../dto/update-user.dto';
-import { UserService } from '../../application/services/user.service';
+import { UserService } from '../../application/user.service';
 import { JwtAuthGuard } from 'src/identity/auth/guards/jwt-auth.guard';
 import { AuthUserId } from 'src/infrastructure/common/decorators/auth-user-id.decorator';
 import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';

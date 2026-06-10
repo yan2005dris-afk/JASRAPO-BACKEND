@@ -9,7 +9,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ComunidadService } from '../../application/services/comunidad.service';
+import { ComunidadService } from '../../application/comunidad.service';
 import { CreateComunidadDto } from '../dto/create-comunidad.dto';
 import { UpdateComunidadDto } from '../dto/update-comunidad.dto';
 import {

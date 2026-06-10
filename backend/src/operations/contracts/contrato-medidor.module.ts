@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ContratoMedidorService } from './application/services/contrato-medidor.service';
+import { ContratoMedidorService } from './application/contrato-medidor.service';
 import { ContratoMedidorController } from './interfaces/http/contrato-medidor.controller';
 import { CreateContractLinkUseCase } from './application/use-cases/create-contract-link.use-case';
 import { FindAllContractsUseCase } from './application/use-cases/find-all-contracts.use-case';

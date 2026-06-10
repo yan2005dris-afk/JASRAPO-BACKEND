@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { CategoriaTarifaService } from './application/services/categoria-tarifa.service';
+import { CategoriaTarifaService } from './application/categoria-tarifa.service';
 import { CategoriaTarifaController } from './interfaces/http/categoria-tarifa.controller';
 import { CreateTariffCategoryUseCase } from './application/use-cases/create-tariff-category.use-case';
 import { FindAllTariffCategoriesUseCase } from './application/use-cases/find-all-tariff-categories.use-case';

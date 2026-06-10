@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { BusquedaPublicaService } from './application/services/busqueda-publica.service';
+import { BusquedaPublicaService } from './application/busqueda-publica.service';
 import { BusquedaPublicaController } from './interfaces/http/busqueda-publica.controller';
 import { PublicSearchUseCase } from './application/use-cases/public-search.use-case';
 import { BusquedaPublicaRepository } from './domain/repositories/busqueda-publica.repository';

@@ -48,18 +48,24 @@ export class CreateRouteUseCase {
       }
     }
 
-    const ruta = await this.routeRepository.create({
-      nombre: createDto.nombre,
-      descripcion: createDto.descripcion,
-      operarioId: createDto.operarioId,
-      tipoRuta: createDto.tipoRuta,
-      comunidadId: createDto.comunidadId,
-      sectorId: createDto.sectorId,
-      fechaPlanificada: createDto.fechaPlanificada
-        ? new Date(createDto.fechaPlanificada)
-        : null,
-      estado: 'PENDIENTE',
-    });
+  const ruta = await this.routeRepository.create({
+    nombre: createDto.nombre,
+    descripcion: createDto.descripcion,
+    operario: {
+      connect: {
+        usuarioId: createDto.operarioId,
+      },
+    },
+    tipoRuta: createDto.tipoRuta,
+    comunidad: {
+      connect: {
+        comunidadId: createDto.comunidadId,
+      },
+    },
+    sector: createDto.sectorId ? { connect: { sectorId: createDto.sectorId } } : undefined,
+    fechaPlanificada: createDto.fechaPlanificada ? new Date(createDto.fechaPlanificada) : null,
+    estado: 'PENDIENTE',
+  });
 
     return RouteMapper.toEntity(ruta);
   }

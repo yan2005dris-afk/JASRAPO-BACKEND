@@ -1,7 +1,7 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
-import { UserService } from '../../../users/application/services/user.service';
+import { UserService } from '../../../users/application/user.service';
 import { GetMyMenusUseCase } from './get-my-menus.use-case';
 
 describe('GetMyMenusUseCase', () => {

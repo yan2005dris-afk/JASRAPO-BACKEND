@@ -1,7 +1,7 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { MenusController } from './menus.controller';
-import { MenusService } from '../../application/services/menus.service';
+import { MenusService } from '../../application/menus.service';
 
 describe('MenusController', () => {
   let controller: MenusController;

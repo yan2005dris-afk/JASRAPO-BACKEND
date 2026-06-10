@@ -1,8 +1,8 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../infrastructure/database/prisma.service';
 import { SriService } from './sri.service';
-import { CreateFacturaDto } from './issuance/dto/factura.dto';
-import { TipoIdentificacion, FormaPago } from './utils/constants';
+import { CreateFacturaDto } from './interfaces/dto';
+import { TipoIdentificacion, FormaPago } from './domain/constants';
 import { format } from 'date-fns';
 
 @Injectable()

@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { RoutesService } from './application/services/routes.service';
+import { RoutesService } from './application/routes.service';
 import { RoutesController } from './interfaces/http/routes.controller';
 import { GetEligibleReadingsUseCase } from './application/use-cases/get-eligible-readings.use-case';
 import { CreateRouteUseCase } from './application/use-cases/create-route.use-case';

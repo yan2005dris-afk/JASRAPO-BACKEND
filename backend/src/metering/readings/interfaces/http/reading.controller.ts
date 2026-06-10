@@ -9,7 +9,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ReadingService } from '../../application/services/reading.service';
+import { ReadingService } from '../../application/reading.service';
 import { CrearLecturaDto } from '../dto/create-lectura.dto';
 import { ActualizarLecturaDto } from '../dto/update-lectura.dto';
 import { LecturaEntity } from '../../domain/entities/lectura.entity';

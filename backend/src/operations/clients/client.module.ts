@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ClientService } from './application/services/client.service';
+import { ClientService } from './application/client.service';
 import { ClientController } from './interfaces/http/client.controller';
 import { CreateClientUseCase } from './application/use-cases/create-client.use-case';
 import { UpdateClientUseCase } from './application/use-cases/update-client.use-case';

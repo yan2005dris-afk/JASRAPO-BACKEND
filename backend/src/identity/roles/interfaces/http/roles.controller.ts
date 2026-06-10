@@ -8,7 +8,7 @@ import {
   UseGuards,
   ParseIntPipe,
 } from '@nestjs/common';
-import { RolesService } from '../../application/services/roles.service';
+import { RolesService } from '../../application/roles.service';
 import { CreateRoleDto } from '../dto/create-role.dto';
 import { UpdateRoleDto } from '../dto/update-role.dto';
 import { JwtAuthGuard } from 'src/identity/auth/guards/jwt-auth.guard';

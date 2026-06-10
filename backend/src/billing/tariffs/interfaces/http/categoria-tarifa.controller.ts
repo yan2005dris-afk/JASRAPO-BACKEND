@@ -9,7 +9,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { CategoriaTarifaService } from '../../application/services/categoria-tarifa.service';
+import { CategoriaTarifaService } from '../../application/categoria-tarifa.service';
 import { CreateCategoriaTarifaDto } from '../dto/create-categoria-tarifa.dto';
 import { UpdateCategoriaTarifaDto } from '../dto/update-categoria-tarifa.dto';
 import {

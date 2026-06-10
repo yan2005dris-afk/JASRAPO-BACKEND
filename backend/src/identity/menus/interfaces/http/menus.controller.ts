@@ -1,6 +1,6 @@
 import { Controller, Get, Req, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/identity/auth/guards/jwt-auth.guard';
-import { MenusService } from '../../application/services/menus.service';
+import { MenusService } from '../../application/menus.service';
 import {
   ApiBearerAuth,
   ApiOperation,

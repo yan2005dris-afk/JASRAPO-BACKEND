@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { SessionsService } from '../../../sessions/application/services/sessions.service';
+import { SessionsService } from '../../../sessions/application/sessions.service';
 
 @Injectable()
 export class LogoutUseCase {

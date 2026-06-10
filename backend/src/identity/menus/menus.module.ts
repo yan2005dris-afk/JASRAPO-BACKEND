@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { UserModule } from '../users/user.module';
 import { MenusController } from './interfaces/http/menus.controller';
-import { MenusService } from './application/services/menus.service';
+import { MenusService } from './application/menus.service';
 import { GetMyMenusUseCase } from './application/use-cases/get-my-menus.use-case';
 
 @Module({

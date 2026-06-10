@@ -1,7 +1,7 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { RegisterUseCase } from './register.use-case';
-import { UserService } from 'src/identity/users/application/services/user.service';
+import { UserService } from 'src/identity/users/application/user.service';
 import { BadRequestException } from '@nestjs/common';
 
 describe('RegisterUseCase', () => {

@@ -1,7 +1,7 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { MeterController } from './meter.controller';
-import { MeterService } from '../../application/services/meter.service';
+import { MeterService } from '../../application/meter.service';
 
 describe('MeterController', () => {
   let controller: MeterController;

@@ -9,7 +9,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ContratoMedidorService } from '../../application/services/contrato-medidor.service';
+import { ContratoMedidorService } from '../../application/contrato-medidor.service';
 import { CrearContratoMedidorDto } from '../dto/create-contrato-medidor.dto';
 import { ActualizarContratoMedidorDto } from '../dto/update-contrato-medidor.dto';
 import {

@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { MeterService } from './application/services/meter.service';
+import { MeterService } from './application/meter.service';
 import { MeterController } from './interfaces/http/meter.controller';
 import { CreateMeterUseCase } from './application/use-cases/create-meter.use-case';
 import { FindOneMeterUseCase } from './application/use-cases/find-one-meter.use-case';

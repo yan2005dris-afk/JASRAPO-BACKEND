@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ReadingService } from './application/services/reading.service';
+import { ReadingService } from './application/reading.service';
 import { ReadingController } from './interfaces/http/reading.controller';
 import { CreateReadingUseCase } from './application/use-cases/create-reading.use-case';
 import { FindAllReadingsUseCase } from './application/use-cases/find-all-readings.use-case';

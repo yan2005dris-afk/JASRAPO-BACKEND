@@ -1,7 +1,7 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { AuthController } from './auth.controller';
-import { AuthService } from '../../application/services/auth.service';
+import { AuthService } from '../../application/auth.service';
 import { ThrottlerGuard } from '@nestjs/throttler';
 
 describe('AuthController', () => {

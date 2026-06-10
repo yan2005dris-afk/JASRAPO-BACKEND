@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ComunidadService } from './application/services/comunidad.service';
+import { ComunidadService } from './application/comunidad.service';
 import { ComunidadController } from './interfaces/http/comunidad.controller';
 import { CreateCommunityUseCase } from './application/use-cases/create-community.use-case';
 import { UpdateCommunityUseCase } from './application/use-cases/update-community.use-case';

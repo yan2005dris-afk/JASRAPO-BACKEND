@@ -4,10 +4,10 @@ export abstract class LoteRepository {
     orderBy?: Record<string, any>;
   }): Promise<any[]>;
 
-  abstract findUnique(params: {
-    where: Record<string, any>;
-    include?: Record<string, any>;
-  }): Promise<any>;
+  abstract findById(
+    id: number | bigint,
+    options?: { include?: Record<string, any> },
+  ): Promise<any>;
 
   abstract generarLote(
     periodoId: number,

@@ -9,7 +9,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ReadingAnomalyService } from '../../application/services/reading-anomaly.service';
+import { ReadingAnomalyService } from '../../application/reading-anomaly.service';
 import { CreateReadingAnomalyDto } from '../dto/create-reading-anomaly.dto';
 import { UpdateReadingAnomalyDto } from '../dto/update-reading-anomaly.dto';
 import { ReadingAnomalyEntity } from '../../domain/entities/reading-anomaly.entity';

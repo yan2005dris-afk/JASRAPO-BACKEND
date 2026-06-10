@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { SessionsService } from './application/services/sessions.service';
+import { SessionsService } from './application/sessions.service';
 import { SessionRepository } from './domain/repositories/session.repository';
 import { PrismaSessionRepository } from './infrastructure/repositories/prisma-session.repository';
 import { CreateSessionUseCase } from './application/use-cases/create-session.use-case';

@@ -9,7 +9,7 @@ import {
   UseGuards,
   ParseIntPipe,
 } from '@nestjs/common';
-import { PermissionsService } from '../../application/services/permissions.service';
+import { PermissionsService } from '../../application/permissions.service';
 import { CreatePermissionDto } from '../dto/create-permission.dto';
 import { UpdatePermissionDto } from '../dto/update-permission.dto';
 import { JwtAuthGuard } from 'src/identity/auth/guards/jwt-auth.guard';

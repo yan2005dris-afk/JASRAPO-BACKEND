@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { SectorService } from './application/services/sector.service';
+import { SectorService } from './application/sector.service';
 import { SectorController } from './interfaces/http/sector.controller';
 import { CreateSectorUseCase } from './application/use-cases/create-sector.use-case';
 import { UpdateSectorUseCase } from './application/use-cases/update-sector.use-case';

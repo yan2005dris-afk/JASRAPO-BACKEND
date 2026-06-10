@@ -1,7 +1,7 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { ReadingController } from './reading.controller';
-import { ReadingService } from '../../application/services/reading.service';
+import { ReadingService } from '../../application/reading.service';
 import { LecturaEntity } from '../../domain/entities/lectura.entity';
 
 describe('ReadingController', () => {

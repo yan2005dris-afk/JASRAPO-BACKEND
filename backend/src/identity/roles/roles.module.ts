@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { RolesService } from './application/services/roles.service';
+import { RolesService } from './application/roles.service';
 import { RolesController } from './interfaces/http/roles.controller';
 import { CreateRoleUseCase } from './application/use-cases/create-role.use-case';
 import { AssignPermissionToRoleUseCase } from './application/use-cases/assign-permission-to-role.use-case';

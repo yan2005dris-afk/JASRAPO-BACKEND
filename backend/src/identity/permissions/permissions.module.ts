@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { PermissionsService } from './application/services/permissions.service';
+import { PermissionsService } from './application/permissions.service';
 import { PermissionsController } from './interfaces/http/permissions.controller';
 import { CreatePermissionUseCase } from './application/use-cases/create-permission.use-case';
 import { FindAllPermissionsUseCase } from './application/use-cases/find-all-permissions.use-case';

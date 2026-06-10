@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { SessionsService } from '../../../sessions/application/services/sessions.service';
+import { SessionsService } from '../../../sessions/application/sessions.service';
 import { LoginUserDto } from '../../interfaces/dto/login-user.dto';
 import * as bcrypt from 'bcryptjs';
 import { randomUUID } from 'crypto';

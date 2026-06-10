@@ -17,7 +17,7 @@ import {
   ApiParam,
   ApiExtraModels,
 } from '@nestjs/swagger';
-import { AgreementsService } from '../../application/services/agreements.service';
+import { AgreementsService } from '../../application/agreements.service';
 import { CreateAgreementDto } from '../dto/create-agreement.dto';
 import { UpdateAgreementDto } from '../dto/update-agreement.dto';
 import { AgreementResponseDto } from '../dto/agreement-response.dto';

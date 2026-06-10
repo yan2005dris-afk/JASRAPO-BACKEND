@@ -1,7 +1,7 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
-import { BusquedaPublicaService } from '../../application/services/busqueda-publica.service';
+import { BusquedaPublicaService } from '../../application/busqueda-publica.service';
 import { CreateBusquedaPublicaDto } from '../dto/create-busqueda-publica.dto';
 
 @ApiTags('search')

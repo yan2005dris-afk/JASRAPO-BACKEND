@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { UserService } from './application/services/user.service';
+import { UserService } from './application/user.service';
 import { UserController } from './interfaces/http/user.controller';
 import { CreateUserUseCase } from './application/use-cases/create-user.use-case';
 import { GetEffectivePermissionsUseCase } from './application/use-cases/get-effective-permissions.use-case';

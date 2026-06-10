@@ -4,7 +4,7 @@ import { RefreshAccessTokenUseCase } from './refresh-access-token.use-case';
 import { UserRepository } from '../../../users/domain/repositories/user.repository';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { SessionsService } from '../../../sessions/application/services/sessions.service';
+import { SessionsService } from '../../../sessions/application/sessions.service';
 import { UnauthorizedException } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 

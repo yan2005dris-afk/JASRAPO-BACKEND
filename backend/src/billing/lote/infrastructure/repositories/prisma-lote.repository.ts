@@ -13,11 +13,14 @@ export class PrismaLoteRepository implements LoteRepository {
     return this.prisma.lote.findMany(params);
   }
 
-  async findUnique(params: {
-    where: Record<string, any>;
-    include?: Record<string, any>;
-  }): Promise<any> {
-    return this.prisma.lote.findUnique(params);
+  async findById(
+    id: number | bigint,
+    options?: { include?: Record<string, any> },
+  ): Promise<any> {
+    return this.prisma.lote.findUnique({
+      where: { loteId: BigInt(id) },
+      include: options?.include,
+    });
   }
 
   async generarLote(

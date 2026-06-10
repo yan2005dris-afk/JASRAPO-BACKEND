@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { AgreementsController } from './interfaces/http/agreements.controller';
-import { AgreementsService } from './application/services/agreements.service';
+import { AgreementsService } from './application/agreements.service';
 import { CreateAgreementUseCase } from './application/use-cases/create-agreement.use-case';
 import { FindOneAgreementUseCase } from './application/use-cases/find-one-agreement.use-case';
 import { GetDebtSummaryUseCase } from './application/use-cases/get-debt-summary.use-case';

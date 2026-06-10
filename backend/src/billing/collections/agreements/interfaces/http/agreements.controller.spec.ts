@@ -1,7 +1,7 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { AgreementsController } from './agreements.controller';
-import { AgreementsService } from '../../application/services/agreements.service';
+import { AgreementsService } from '../../application/agreements.service';
 
 describe('AgreementsController', () => {
   let controller: AgreementsController;
