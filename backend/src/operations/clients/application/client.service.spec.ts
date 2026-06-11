@@ -17,12 +17,12 @@ describe('ClientService', () => {
   const mockClientRepository = {
     findFirst: jest.fn(),
     findUnique: jest.fn(),
-    findMany: jest.fn(),
     create: jest.fn(),
     update: jest.fn(),
     updateMany: jest.fn(),
     findCatalogoTipoIdentificacion: jest.fn(),
     findManyCatalogoTipoIdentificacion: jest.fn(),
+    paginateClientes: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -58,19 +58,22 @@ describe('ClientService', () => {
   });
 
   it('findAll should call repository with filters', async () => {
-    mockClientRepository.findMany.mockResolvedValue([]);
+    mockClientRepository.paginateClientes.mockResolvedValue({ data: [], total: 0 });
     await service.findAll();
-    expect(mockClientRepository.findMany).toHaveBeenCalledWith({
-      where: { deletedAt: null },
-      orderBy: { createdAt: 'desc' },
-      select: expect.anything(),
-    });
+    expect(mockClientRepository.paginateClientes).toHaveBeenCalledWith(
+      {
+        where: { deletedAt: null },
+        orderBy: { createdAt: 'desc' },
+        select: expect.anything(),
+      },
+      { page: undefined, limit: undefined },
+    );
   });
 
   it('findAll should apply filters when provided', async () => {
-    mockClientRepository.findMany.mockResolvedValue([]);
+    mockClientRepository.paginateClientes.mockResolvedValue({ data: [], total: 0 });
     await service.findAll({ identificacion: '123' });
-    expect(mockClientRepository.findMany).toHaveBeenCalledWith(
+    expect(mockClientRepository.paginateClientes).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
           AND: expect.arrayContaining([
@@ -79,6 +82,7 @@ describe('ClientService', () => {
           ]),
         }),
       }),
+      { page: undefined, limit: undefined },
     );
   });
 
