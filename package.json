@@ -1,6 +1,19 @@
 {
   "name": "jasrapo-root",
   "private": true,
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@nestjs/core",
+      "@prisma/engines",
+      "@scarf/scarf",
+      "bcrypt",
+      "cpu-features",
+      "esbuild",
+      "prisma",
+      "ssh2",
+      "unrs-resolver"
+    ]
+  },
   "overrides": {
     "crypto-js": "^4.2.0",
     "xmldom": "npm:@xmldom/xmldom@^0.9.10",
