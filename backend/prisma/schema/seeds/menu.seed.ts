@@ -26,6 +26,10 @@ const LEVEL_2: MenuSeedEntry[] = [
   { nombre: 'Emisión SRI', ruta: '/recaudacion/emision-sri', icono: 'gavel', parentNombre: 'Recaudación' },
 
   { nombre: 'Gestión General', ruta: '/admin/users', icono: 'admin_panel_settings', parentNombre: 'Administración' },
+  { nombre: 'Usuarios', ruta: '/admin/usuarios', icono: 'group', parentNombre: 'Administración' },
+  { nombre: 'Roles y Permisos', ruta: '/admin/roles', icono: 'admin_panel_settings', parentNombre: 'Administración' },
+  { nombre: 'Comunidades', ruta: '/admin/comunidades', icono: 'communities', parentNombre: 'Administración' },
+  { nombre: 'Sectores', ruta: '/admin/sectores', icono: 'map', parentNombre: 'Administración' },
 
   { nombre: 'Estado de cuenta Cliente', ruta: '/reportes/estado-cuenta', icono: 'article_person', parentNombre: 'Reportes' },
   { nombre: 'Recaudación y Morosidad', ruta: '/reportes/recaudacion-morosidad', icono: 'money_off', parentNombre: 'Reportes' },

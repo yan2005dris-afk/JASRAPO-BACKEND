@@ -96,6 +96,42 @@ const PERMISSION_MAP: MenuPermissionMapping[] = [
     ],
   },
   {
+    menuNombre: 'Usuarios',
+    permisos: [
+      { recurso: 'users', accion: 'read' },
+      { recurso: 'users', accion: 'create' },
+      { recurso: 'users', accion: 'update' },
+      { recurso: 'users', accion: 'delete' },
+    ],
+  },
+  {
+    menuNombre: 'Roles y Permisos',
+    permisos: [
+      { recurso: 'roles', accion: 'read' },
+      { recurso: 'roles', accion: 'create' },
+      { recurso: 'roles', accion: 'update' },
+      { recurso: 'roles', accion: 'delete' },
+    ],
+  },
+  {
+    menuNombre: 'Comunidades',
+    permisos: [
+      { recurso: 'comunidades', accion: 'read' },
+      { recurso: 'comunidades', accion: 'create' },
+      { recurso: 'comunidades', accion: 'update' },
+      { recurso: 'comunidades', accion: 'delete' },
+    ],
+  },
+  {
+    menuNombre: 'Sectores',
+    permisos: [
+      { recurso: 'sectores', accion: 'read' },
+      { recurso: 'sectores', accion: 'create' },
+      { recurso: 'sectores', accion: 'update' },
+      { recurso: 'sectores', accion: 'delete' },
+    ],
+  },
+  {
     menuNombre: 'Estado de cuenta Cliente',
     permisos: [
       { recurso: 'estado_cuenta', accion: 'read' },
