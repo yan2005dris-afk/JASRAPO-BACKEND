@@ -37,22 +37,19 @@ FROM base AS runner
 
 # Copiar node_modules raíz y del backend (pnpm usa symlinks
 # desde /app/node_modules/.pnpm/ hacia los paquetes individuales)
-COPY --from=builder /app/node_modules /app/node_modules
-COPY --from=builder /app/backend/node_modules /app/backend/node_modules
-COPY --from=builder /app/pnpm-lock.yaml /app/pnpm-lock.yaml
-COPY --from=builder /app/pnpm-workspace.yaml /app/pnpm-workspace.yaml
+COPY --chown=node:node --from=builder /app/node_modules /app/node_modules
+COPY --chown=node:node --from=builder /app/backend/node_modules /app/backend/node_modules
+COPY --chown=node:node --from=builder /app/pnpm-lock.yaml /app/pnpm-lock.yaml
+COPY --chown=node:node --from=builder /app/pnpm-workspace.yaml /app/pnpm-workspace.yaml
 
 WORKDIR /app/backend
 
 # Copiar artefactos del backend
-COPY --from=builder /app/backend/dist ./dist
-COPY --from=builder /app/backend/package.json ./package.json
-COPY --from=builder /app/backend/prisma ./prisma
-COPY --from=builder /app/backend/src/generated ./src/generated
-COPY --from=builder /app/backend/prisma.config.ts ./prisma.config.ts
-
-# Corregir permisos para el usuario node
-RUN chown -R node:node /app
+COPY --chown=node:node --from=builder /app/backend/dist ./dist
+COPY --chown=node:node --from=builder /app/backend/package.json ./package.json
+COPY --chown=node:node --from=builder /app/backend/prisma ./prisma
+COPY --chown=node:node --from=builder /app/backend/src/generated ./src/generated
+COPY --chown=node:node --from=builder /app/backend/prisma.config.ts ./prisma.config.ts
 
 # Seguridad: No correr como root
 USER node
