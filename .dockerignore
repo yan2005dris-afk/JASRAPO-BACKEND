@@ -1,0 +1,19 @@
+node_modules
+**/node_modules
+dist
+**/dist
+.git
+.gitignore
+.env
+.env.*
+*.md
+coverage
+**/coverage
+.vscode
+.idea
+*.log
+backups
+docs
+Files JASRAP-Olon
+backend-db
+observability

@@ -232,7 +232,17 @@ El proyecto incluye una stack completa de observabilidad:
 | **Loki** | 3101 | Logs |
 | **Tempo** | 3201 | Trazas |
 
-Consulta [OBSERVABILITY.md](./OBSERVABILITY.md) para la guía completa.
+Consulta [OBSERVABILITY.md](./observability/OBSERVABILITY.md) para la guía completa.
+
+## Documentación
+
+Para más información detallada, consulta los siguientes documentos en la carpeta `docs/`:
+
+- [Arquitectura](./docs/architecture/ARCHITECTURE.md)
+- [Convenciones de Commits](./docs/conventions/COMMIT_CONVENTIONS.md)
+- [Guías de Desarrollo](./docs/guides/)
+- [Configuración Frontend](./docs/frontend/CONFIGURACION_FRONTEND.md)
+- [Agentes](./docs/AGENTS.md)
 
 ## Base de Datos
 

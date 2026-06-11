@@ -4,6 +4,7 @@
   "description": "",
   "author": "",
   "private": true,
+  "packageManager": "pnpm@11.1.1",
   "license": "UNLICENSED",
   "scripts": {
     "prisma:generate": "prisma generate",
@@ -30,24 +31,10 @@
   },
   "overrides": {
     "crypto-js": "^4.2.0",
-    "xmldom": "npm:@xmldom/xmldom@^0.9.7",
+    "xmldom": "npm:@xmldom/xmldom@^0.9.10",
     "protobufjs": "^8.4.0",
     "@hono/node-server": "^1.19.13",
     "uuid": "^11.1.1"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "@nestjs/core",
-      "@prisma/engines",
-      "@scarf/scarf",
-      "bcrypt",
-      "cpu-features",
-      "esbuild",
-      "prisma",
-      "protobufjs",
-      "ssh2",
-      "unrs-resolver"
-    ]
   },
   "dependencies": {
     "@nestjs-modules/mailer": "2.3.4",
@@ -122,15 +109,6 @@
     "xml-core": "^1.1.20",
     "xml2js": "^0.6.2",
     "xmldom": "npm:@xmldom/xmldom@^0.9.10"
-  },
-  "pnpm": {
-    "overrides": {
-      "crypto-js": "^4.2.0",
-      "xmldom": "npm:@xmldom/xmldom@^0.9.7",
-      "protobufjs": "^8.4.0",
-      "@hono/node-server": "^1.19.13",
-      "uuid": "^11.1.1"
-    }
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",

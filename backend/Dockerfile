@@ -1,60 +1,62 @@
 # ─── Stage: Base ──────────────────────────────────────────────────────────────
 FROM node:22-alpine AS base
 
+# Instalar dependencias críticas para Prisma y herramientas de build
+RUN apk add --no-cache openssl libc6-compat
+
 # Configuración de pnpm
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable && corepack prepare pnpm@11.1.1 --activate
 
 WORKDIR /app
-
-# ─── Stage: Dependencies ──────────────────────────────────────────────────────
-FROM base AS dependencies
-
-# Copiar archivos de definición de dependencias
-# Se asume que el contexto de build es la carpeta 'backend/'
-COPY package.json pnpm-lock.yaml ./
-
-# Instalación de dependencias usando caché del store para optimizar builds futuros
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-    pnpm install --frozen-lockfile
 
 # ─── Stage: Builder ───────────────────────────────────────────────────────────
 FROM base AS builder
 
-# Copiar el código fuente y las dependencias instaladas
-COPY . .
-COPY --from=dependencies /app/node_modules ./node_modules
+# Copiar archivos de configuración del monorepo
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+# Copiar manifiestos de los subproyectos
+COPY backend/package.json ./backend/
 
-# Generar cliente de Prisma y compilar el proyecto
-RUN pnpm prisma:generate && pnpm build
+# Instalación de dependencias (se usa la caché del store de pnpm)
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+    pnpm install --frozen-lockfile
 
-# Limpiar dependencias de desarrollo para reducir el tamaño de la imagen final
-RUN pnpm prune --prod
+# Copiar el resto del código fuente
+COPY backend/ ./backend/
 
-# ─── Stage: Runner ────────────────────────────────────────────────────────────
-FROM node:22-alpine AS runner
+# Evitar que Prisma genere el cliente automáticamente en postinstall (lo haremos manual)
+ENV PRISMA_SKIP_POSTINSTALL_GENERATE=true
 
-WORKDIR /app
+# Generar cliente de Prisma y compilar desde el root del workspace
+RUN pnpm --filter backend exec prisma generate && pnpm --filter backend run build
 
-# Variables de entorno por defecto
-ENV NODE_ENV=production
-ENV PORT=3000
+# ─── Stage: Runner (Producción) ───────────────────────────────────────────────
+FROM base AS runner
 
-# Copiar artefactos necesarios desde el builder
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/prisma ./prisma
-# Copiar archivos de generación de prisma si son necesarios en runtime
-COPY --from=builder /app/src/generated ./src/generated
-# Copiar configuración adicional si existe
-COPY --from=builder /app/prisma.config.ts ./ 2>/dev/null || true
+# Copiar node_modules raíz y del backend (pnpm usa symlinks
+# desde /app/node_modules/.pnpm/ hacia los paquetes individuales)
+COPY --from=builder /app/node_modules /app/node_modules
+COPY --from=builder /app/backend/node_modules /app/backend/node_modules
+COPY --from=builder /app/pnpm-lock.yaml /app/pnpm-lock.yaml
+COPY --from=builder /app/pnpm-workspace.yaml /app/pnpm-workspace.yaml
 
-# Ejecutar como usuario no root por seguridad
+WORKDIR /app/backend
+
+# Copiar artefactos del backend
+COPY --from=builder /app/backend/dist ./dist
+COPY --from=builder /app/backend/package.json ./package.json
+COPY --from=builder /app/backend/prisma ./prisma
+COPY --from=builder /app/backend/src/generated ./src/generated
+COPY --from=builder /app/backend/prisma.config.ts ./prisma.config.ts
+
+# Corregir permisos para el usuario node
+RUN chown -R node:node /app
+
+# Seguridad: No correr como root
 USER node
-
 EXPOSE 3000
 
-# Ejecutar migraciones y arrancar la aplicación
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/src/main.js"]
+# Arrancar migraciones y servidor
+CMD ["sh", "-c", "./node_modules/.bin/prisma migrate deploy && node dist/src/main.js"]
