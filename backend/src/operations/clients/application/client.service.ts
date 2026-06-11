@@ -12,6 +12,7 @@ import { toIdentificacionResponse } from '../domain/types/identificacionesMapper
 import { safeClientesSelect } from '../domain/types/IResponseClient';
 import type { IResponseIdentificacion } from '../domain/types/IResponseIdentificacion';
 import type { IResponseClient } from '../domain/types/IResponseClient';
+import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
 
 @Injectable()
 export class ClientService {
@@ -27,14 +28,19 @@ export class ClientService {
     return this.createUseCase.execute(dto);
   }
 
-  async findAll(filters?: FilterClientDto): Promise<IResponseClient[]> {
+  async findAll(
+    filters?: FilterClientDto,
+  ): Promise<PaginatedResult<IResponseClient>> {
     const where = filters ? buildClientWhere(filters) : { deletedAt: null };
 
-    return this.clientRepository.findMany({
-      where,
-      orderBy: { createdAt: 'desc' },
-      select: safeClientesSelect,
-    });
+    return this.clientRepository.paginateClientes(
+      {
+        where,
+        orderBy: { createdAt: 'desc' },
+        select: safeClientesSelect,
+      },
+      { page: filters?.page, limit: filters?.limit },
+    );
   }
 
   async findOne(id: string) {

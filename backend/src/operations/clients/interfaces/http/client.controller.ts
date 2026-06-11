@@ -28,6 +28,7 @@ import { FilterClientDto } from '../dto/filter-client.dto';
 import { ApiPaginatedResponse } from 'src/infrastructure/common/decorators/api-paginated-response.decorator';
 import { ClientEntity } from '../../domain/types/client.entity';
 import { PaginationMetaDto } from 'src/infrastructure/common/dtos/pagination-meta.dto';
+import { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
 
 @ApiTags('clients')
 @ApiBearerAuth()
@@ -80,8 +81,10 @@ export class ClientController {
   @ApiPaginatedResponse(ClientEntity)
   @RequiredPermission('clientes', 'read')
   @Get()
-  findAll(@Query() filters: FilterClientDto) {
-    return this.clientService.findAll(filters);
+  async findAll(
+    @Query() filters: FilterClientDto,
+  ): Promise<PaginatedResult<ClientEntity>> {
+    return this.clientService.findAll(filters) as any;
   }
 
   /**
