@@ -14,7 +14,7 @@ import {
 import { CreateUserDto } from '../dto/create-user.dto';
 import { UpdateUserDto } from '../dto/update-user.dto';
 import { UserService } from '../../application/user.service';
-import { JwtAuthGuard } from 'src/identity/auth/guards/jwt-auth.guard';
+import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
 import { AuthUserId } from 'src/infrastructure/common/decorators/auth-user-id.decorator';
 import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
@@ -166,10 +166,7 @@ export class UserController {
     @Param('id', ParseIntPipe) id: number,
     @Body() updateUserDto: UpdateUserDto,
   ): Promise<UserDetailEntity> {
-    const result = await this.userService.updateUser({
-      where: { usuarioId: id },
-      data: updateUserDto,
-    });
+    const result = await this.userService.updateUser(id, updateUserDto);
     if (!result) {
       throw new NotFoundException('Usuario no encontrado');
     }
@@ -203,6 +200,6 @@ export class UserController {
   @RequiredPermission('users', 'delete')
   @Delete(':id')
   remove(@Param('id', ParseIntPipe) id: number) {
-    return this.userService.softDeleteUser({ usuarioId: id });
+    return this.userService.softDeleteUser(id);
   }
 }

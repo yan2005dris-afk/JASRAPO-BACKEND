@@ -25,7 +25,7 @@ import { DebtSummaryResponseDto } from '../dto/debt-summary-response.dto';
 import { AgreementStateResponseDto } from '../dto/agreement-state-response.dto';
 import { InstallmentStateResponseDto } from '../dto/installment-state-response.dto';
 import { FindAllAgreementsDto } from '../dto/find-all-agreements.dto';
-import { JwtAuthGuard } from 'src/identity/auth/guards/jwt-auth.guard';
+import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
 import { ParseBigIntPipe } from 'src/infrastructure/common/pipes/parse-bigint.pipe';

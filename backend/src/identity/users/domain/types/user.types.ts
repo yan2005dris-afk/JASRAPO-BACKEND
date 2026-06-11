@@ -47,7 +47,9 @@ export interface UserWithRoleResponse extends UserResponse {
   rol: {
     rolId: number;
     nombre: string;
+    deletedAt?: Date | null;
   } | null;
+  deletedAt?: Date | null;
 }
 
 export interface UserWithPermissionsResponse extends UserWithRoleResponse {

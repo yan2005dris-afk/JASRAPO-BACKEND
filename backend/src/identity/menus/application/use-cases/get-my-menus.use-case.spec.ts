@@ -1,12 +1,12 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { UserService } from '../../../users/application/user.service';
 import { GetMyMenusUseCase } from './get-my-menus.use-case';
+import { MenuRepository } from '../../domain/repositories/menu.repository';
 
 describe('GetMyMenusUseCase', () => {
   let useCase: GetMyMenusUseCase;
-  let prismaService: PrismaService;
+  let menuRepository: MenuRepository;
   let userService: UserService;
 
   const mockMenuRecord = {
@@ -24,10 +24,9 @@ describe('GetMyMenusUseCase', () => {
     getEffectivePermissions: jest.fn(),
   };
 
-  const mockPrismaService = {
-    menus: {
-      findMany: jest.fn(),
-    },
+  const mockMenuRepository = {
+    findActiveMenusByPermissions: jest.fn(),
+    findActiveMenusByIds: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -35,8 +34,8 @@ describe('GetMyMenusUseCase', () => {
       providers: [
         GetMyMenusUseCase,
         {
-          provide: PrismaService,
-          useValue: mockPrismaService,
+          provide: MenuRepository,
+          useValue: mockMenuRepository,
         },
         {
           provide: UserService,
@@ -46,7 +45,7 @@ describe('GetMyMenusUseCase', () => {
     }).compile();
 
     useCase = module.get<GetMyMenusUseCase>(GetMyMenusUseCase);
-    prismaService = module.get<PrismaService>(PrismaService);
+    menuRepository = module.get<MenuRepository>(MenuRepository);
     userService = module.get<UserService>(UserService);
   });
 
@@ -77,13 +76,13 @@ describe('GetMyMenusUseCase', () => {
       permisos: mockPermissions,
     });
 
-    mockPrismaService.menus.findMany.mockResolvedValueOnce([mockMenuRecord]);
+    mockMenuRepository.findActiveMenusByPermissions.mockResolvedValueOnce([mockMenuRecord]);
 
     const result = await useCase.execute(1);
 
     expect(result).toHaveLength(1);
     expect(result[0].name).toBe('Suministro');
-    expect(prismaService.menus.findMany).toHaveBeenCalled();
+    expect(menuRepository.findActiveMenusByPermissions).toHaveBeenCalled();
   });
 
   it('should include parent menus recursively', async () => {
@@ -114,8 +113,8 @@ describe('GetMyMenusUseCase', () => {
       permisos: mockPermissions,
     });
 
-    mockPrismaService.menus.findMany.mockResolvedValueOnce([childMenu]);
-    mockPrismaService.menus.findMany.mockResolvedValueOnce([parentMenu]);
+    mockMenuRepository.findActiveMenusByPermissions.mockResolvedValueOnce([childMenu]);
+    mockMenuRepository.findActiveMenusByIds.mockResolvedValueOnce([parentMenu]);
 
     const result = await useCase.execute(1);
 
@@ -125,3 +124,4 @@ describe('GetMyMenusUseCase', () => {
     expect(result[0].children![0].name).toBe('Clientes');
   });
 });
+

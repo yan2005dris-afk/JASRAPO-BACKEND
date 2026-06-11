@@ -1,43 +1,63 @@
-import type { Prisma } from 'src/generated/prisma/client';
 import type { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
+import type { UserWithRoleResponse } from '../types/user.types';
+
+export interface FiltroFecha {
+  igualA?: Date | null;
+  antesDe?: Date;
+  despuesDe?: Date;
+}
+
+export interface UserFilters {
+  deletedAt?: FiltroFecha | null;
+  email?: string;
+}
+
+export interface CreateUserRepositoryData {
+  email: string;
+  clave: string;
+  nombres: string;
+  apellidos: string;
+  telefono: string;
+  avatar?: any;
+  rolId: number;
+}
+
+export interface UpdateUserRepositoryData {
+  email?: string;
+  clave?: string;
+  nombres?: string;
+  apellidos?: string;
+  telefono?: string;
+  avatar?: any;
+  rolId?: number;
+  deletedAt?: Date | null;
+}
 
 export abstract class UserRepository {
-  abstract findUnique(
-    where: Prisma.UsuariosWhereUniqueInput,
-    select?: Prisma.UsuariosSelect,
-  ): Promise<any>;
+  abstract findById(usuarioId: number): Promise<UserWithRoleResponse | null>;
 
-  abstract findFirst(
-    where: Prisma.UsuariosWhereInput,
-    select?: Prisma.UsuariosSelect,
-  ): Promise<any>;
+  abstract findByEmail(email: string): Promise<UserWithRoleResponse | null>;
 
-  abstract findMany(params: {
-    select?: Prisma.UsuariosSelect;
-    where?: Prisma.UsuariosWhereInput;
-    orderBy?: Prisma.UsuariosOrderByWithRelationInput;
-    take?: number;
-    skip?: number;
-  }): Promise<any[]>;
+  abstract findByEmailWithPassword(
+    email: string,
+  ): Promise<(UserWithRoleResponse & { clave: string }) | null>;
 
   abstract findManyActive(
     pagination: PaginationDto,
-    select?: Prisma.UsuariosSelect,
-  ): Promise<{ data: any[]; meta: any }>;
+  ): Promise<{ data: UserWithRoleResponse[]; meta: any }>;
 
-  abstract count(params: {
-    where?: Prisma.UsuariosWhereInput;
-  }): Promise<number>;
+  abstract findMany(
+    filters: UserFilters,
+    pagination: PaginationDto,
+  ): Promise<{ data: UserWithRoleResponse[]; meta: any }>;
 
-  abstract create(
-    data: Prisma.UsuariosCreateInput | Prisma.UsuariosUncheckedCreateInput,
-  ): Promise<any>;
+  abstract create(data: CreateUserRepositoryData): Promise<UserWithRoleResponse>;
 
   abstract update(
-    where: Prisma.UsuariosWhereUniqueInput,
-    data: Prisma.UsuariosUpdateInput | Prisma.UsuariosUncheckedUpdateInput,
+    usuarioId: number,
+    data: UpdateUserRepositoryData,
     tx?: any,
-  ): Promise<any>;
+  ): Promise<UserWithRoleResponse>;
 
   abstract findRoleById(rolId: number): Promise<any>;
 
@@ -55,3 +75,4 @@ export abstract class UserRepository {
 
   abstract executeTransaction<T>(callback: (tx: any) => Promise<T>): Promise<T>;
 }
+

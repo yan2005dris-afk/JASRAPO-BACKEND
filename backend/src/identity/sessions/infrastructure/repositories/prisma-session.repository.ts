@@ -1,24 +1,44 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma } from 'src/generated/prisma/client';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
-import { SessionRepository } from '../../domain/repositories/session.repository';
+import {
+  CreateSessionRepositoryData,
+  SessionEntity,
+  SessionRepository,
+  UpdateSessionRepositoryData,
+} from '../../domain/repositories/session.repository';
+import { SessionMapper } from '../mappers/session.mapper';
 
 @Injectable()
 export class PrismaSessionRepository implements SessionRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(data: Prisma.SesionesCreateInput): Promise<any> {
-    return this.prisma.sesiones.create({ data });
+  async create(data: CreateSessionRepositoryData): Promise<SessionEntity> {
+    const session = await this.prisma.sesiones.create({
+      data: {
+        sesionId: data.sesionId,
+        usuarioId: data.usuarioId,
+        hashRefreshToken: data.hashRefreshToken,
+        direccionIp: data.direccionIp,
+        usuarioAgente: data.usuarioAgente,
+        revocado: data.revocado ?? false,
+        expiraEn: data.expiraEn,
+      },
+    });
+    return SessionMapper.toEntity(session)!;
   }
 
-  async findById(sesionId: string): Promise<any> {
-    return this.prisma.sesiones.findUnique({
+  async findById(sesionId: string): Promise<SessionEntity | null> {
+    const session = await this.prisma.sesiones.findUnique({
       where: { sesionId },
     });
+    return session ? SessionMapper.toEntity(session) : null;
   }
 
-  async findActiveSession(usuarioId: number, sesionId: string): Promise<any> {
-    return this.prisma.sesiones.findFirst({
+  async findActiveSession(
+    usuarioId: number,
+    sesionId: string,
+  ): Promise<SessionEntity | null> {
+    const session = await this.prisma.sesiones.findFirst({
       where: {
         usuarioId,
         sesionId,
@@ -26,10 +46,11 @@ export class PrismaSessionRepository implements SessionRepository {
         expiraEn: { gt: new Date() },
       },
     });
+    return session ? SessionMapper.toEntity(session) : null;
   }
 
-  async findActiveSessionsByUser(usuarioId: number): Promise<any[]> {
-    return this.prisma.sesiones.findMany({
+  async findActiveSessionsByUser(usuarioId: number): Promise<SessionEntity[]> {
+    const sessions = await this.prisma.sesiones.findMany({
       where: {
         usuarioId,
         revocado: false,
@@ -37,22 +58,32 @@ export class PrismaSessionRepository implements SessionRepository {
       },
       orderBy: { createdAt: 'desc' },
     });
+    return sessions.map((session) => SessionMapper.toEntity(session)!);
   }
 
   async update(
     sesionId: string,
-    data: Prisma.SesionesUpdateInput,
-  ): Promise<any> {
-    return this.prisma.sesiones.update({
+    data: UpdateSessionRepositoryData,
+  ): Promise<SessionEntity> {
+    const session = await this.prisma.sesiones.update({
       where: { sesionId },
-      data,
+      data: {
+        hashRefreshToken: data.hashRefreshToken,
+        direccionIp: data.direccionIp,
+        usuarioAgente: data.usuarioAgente,
+        revocado: data.revocado,
+        expiraEn: data.expiraEn,
+      },
     });
+    return SessionMapper.toEntity(session)!;
   }
 
-  async revoke(sesionId: string): Promise<any> {
-    return this.prisma.sesiones.update({
+  async revoke(sesionId: string): Promise<SessionEntity> {
+    const session = await this.prisma.sesiones.update({
       where: { sesionId },
       data: { revocado: true },
     });
+    return SessionMapper.toEntity(session)!;
   }
 }
+

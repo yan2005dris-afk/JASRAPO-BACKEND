@@ -1,9 +1,8 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { ConfigService } from '@nestjs/config';
-import { SessionsService } from '../../sessions/application/sessions.service';
+import { SessionsService } from '../../../../sessions/application/sessions.service';
 import type {
   JwtRefreshPayload,
   RequestWithCookies,
@@ -15,7 +14,6 @@ export class RefreshTokenStrategy extends PassportStrategy(
   'jwt-refresh',
 ) {
   constructor(
-    private readonly prisma: PrismaService,
     private readonly config: ConfigService,
     private readonly sessionsService: SessionsService,
   ) {

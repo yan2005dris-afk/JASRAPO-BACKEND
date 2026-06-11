@@ -6,16 +6,13 @@ export class GetEffectivePermissionsUseCase {
   constructor(private readonly userRepository: UserRepository) {}
 
   async execute(usuarioId: number) {
-    const usuario = await this.userRepository.findUnique(
-      { usuarioId },
-      { usuarioId: true, deletedAt: true, rolId: true },
-    );
+    const usuario = await this.userRepository.findById(usuarioId);
 
     if (!usuario || usuario.deletedAt) {
       throw new NotFoundException('Usuario eliminado o no encontrado');
     }
 
-    const rolId = usuario.rolId;
+    const rolId = usuario.rol?.rolId;
 
     const [rolePermissionRows, directPermissionRows] = await Promise.all([
       rolId

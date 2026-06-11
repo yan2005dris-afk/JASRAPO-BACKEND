@@ -17,7 +17,7 @@ import {
 } from '@nestjs/swagger';
 import { EmisoresService } from '../../application/services/emisores.service';
 import { CreateEmisorDto, UpdateEmisorDto, EmisorResponseDto } from '../dto';
-import { JwtAuthGuard } from '../../../identity/auth/guards/jwt-auth.guard';
+import { JwtAuthGuard } from '../../../identity/auth/interfaces/http/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../../../infrastructure/common/guards/permissions.guard';
 
 @ApiTags('[En Desarrollo] Emisores')

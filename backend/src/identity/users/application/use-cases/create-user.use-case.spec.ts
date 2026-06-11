@@ -10,7 +10,7 @@ describe('CreateUserUseCase', () => {
   let userRepository: UserRepository;
 
   const mockUserRepository = {
-    findUnique: jest.fn(),
+    findByEmail: jest.fn(),
     findRoleById: jest.fn(),
     findRoleByName: jest.fn(),
     create: jest.fn(),
@@ -40,7 +40,7 @@ describe('CreateUserUseCase', () => {
       apellidos: 'Pérez',
       telefono: '0991234567',
     };
-    mockUserRepository.findUnique.mockResolvedValue(null);
+    mockUserRepository.findByEmail.mockResolvedValue(null);
     mockUserRepository.findRoleByName.mockResolvedValue({
       rolId: 1,
       nombre: 'user',
@@ -79,7 +79,7 @@ describe('CreateUserUseCase', () => {
       apellidos: 'Pérez',
       telefono: '0991234567',
     };
-    mockUserRepository.findUnique.mockResolvedValue(null);
+    mockUserRepository.findByEmail.mockResolvedValue(null);
     mockUserRepository.findRoleByName.mockResolvedValue(null);
 
     await expect(useCase.execute(dto)).rejects.toThrow(
@@ -96,7 +96,7 @@ describe('CreateUserUseCase', () => {
       telefono: '0998765432',
       rolId: 2,
     };
-    mockUserRepository.findUnique.mockResolvedValue(null);
+    mockUserRepository.findByEmail.mockResolvedValue(null);
     mockUserRepository.findRoleById.mockResolvedValue({
       rolId: 2,
       nombre: 'admin',
@@ -119,7 +119,7 @@ describe('CreateUserUseCase', () => {
   });
 
   it('should throw NotFoundException if provided rolId does not exist', async () => {
-    mockUserRepository.findUnique.mockResolvedValue(null);
+    mockUserRepository.findByEmail.mockResolvedValue(null);
     mockUserRepository.findRoleById.mockResolvedValue(null);
     await expect(
       useCase.execute({
@@ -133,7 +133,7 @@ describe('CreateUserUseCase', () => {
   });
 
   it('should throw BadRequestException for invalid Ecuador phone', async () => {
-    mockUserRepository.findUnique.mockResolvedValue(null);
+    mockUserRepository.findByEmail.mockResolvedValue(null);
     await expect(
       useCase.execute({
         email: 't@t.com',
@@ -145,7 +145,7 @@ describe('CreateUserUseCase', () => {
   });
 
   it('should throw BadRequestException for empty nombres', async () => {
-    mockUserRepository.findUnique.mockResolvedValue(null);
+    mockUserRepository.findByEmail.mockResolvedValue(null);
     await expect(
       useCase.execute({
         email: 't@t.com',
@@ -157,7 +157,7 @@ describe('CreateUserUseCase', () => {
   });
 
   it('should throw ConflictException if email already exists (active)', async () => {
-    mockUserRepository.findUnique.mockResolvedValue({
+    mockUserRepository.findByEmail.mockResolvedValue({
       usuarioId: 1,
       email: 't@t.com',
       deletedAt: null,
@@ -173,7 +173,7 @@ describe('CreateUserUseCase', () => {
   });
 
   it('should throw ConflictException with specific message if email exists but deleted', async () => {
-    mockUserRepository.findUnique.mockResolvedValue({
+    mockUserRepository.findByEmail.mockResolvedValue({
       usuarioId: 1,
       email: 't@t.com',
       deletedAt: new Date('2024-01-01'),

@@ -2,8 +2,8 @@ import { Body, Controller, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { AuthService } from '../../application/auth.service';
 import { LoginUserDto } from '../dto/login-user.dto';
 import { RegisterDto } from '../dto/register.dto';
-import { JwtRefreshGuard } from '../../guards/jwt-refresh.guard';
-import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
+import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
 import {
@@ -18,7 +18,7 @@ import type { CookieOptions, Response } from 'express';
 import type {
   LoginRequest,
   RefreshRequest,
-} from '../../types/auth-controller.types';
+} from './types/auth-controller.types';
 import { REFRESH_TOKEN_MAX_AGE_MS } from 'src/infrastructure/config/app.constants';
 import { CookieValue } from 'src/infrastructure/common/decorators/cookie-value.decorator';
 import { RequiredStringPipe } from 'src/infrastructure/common/pipes/required-string.pipe';

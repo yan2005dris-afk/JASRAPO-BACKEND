@@ -15,10 +15,7 @@ export class UpdateUserPermissionsUseCase {
     permissions: UserDirectPermissionInput[],
     tx?: any,
   ): Promise<void> {
-    const user = await this.userRepository.findUnique(
-      { usuarioId },
-      { usuarioId: true, deletedAt: true },
-    );
+    const user = await this.userRepository.findById(usuarioId);
 
     if (!user || user.deletedAt) {
       throw new NotFoundException('Usuario no encontrado o eliminado');

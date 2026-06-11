@@ -1,15 +1,15 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { UserService } from '../../../users/application/user.service';
 import { MenuResponseDto } from '../../interfaces/dto/response-menu.dto';
 import { MenuRecord } from '../../domain/types/menu.types';
+import { MenuRepository } from '../../domain/repositories/menu.repository';
 
 @Injectable()
 export class GetMyMenusUseCase {
   private readonly logger = new Logger(GetMyMenusUseCase.name);
 
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly menuRepository: MenuRepository,
     private readonly userService: UserService,
   ) {}
 
@@ -28,19 +28,9 @@ export class GetMyMenusUseCase {
     }));
 
     // 1. Obtener los acciones que el usuario tiene acceso directo
-    const directMenus = await this.prisma.menus.findMany({
-      where: {
-        permisosMenu: {
-          some: {
-            permiso: {
-              OR: filtrosPermisos,
-            },
-          },
-        },
-        activo: true,
-        deletedAt: null,
-      },
-    });
+    const directMenus = await this.menuRepository.findActiveMenusByPermissions(
+      filtrosPermisos,
+    );
 
     // 2. Recorrer recurrentemente para incluir a los padres en caso de que falten
     const menuMap = new Map<number, MenuRecord>();
@@ -60,13 +50,9 @@ export class GetMyMenusUseCase {
 
       if (missingParentIds.length === 0) break;
 
-      const parentMenus = await this.prisma.menus.findMany({
-        where: {
-          menuId: { in: missingParentIds as number[] },
-          activo: true,
-          deletedAt: null,
-        },
-      });
+      const parentMenus = await this.menuRepository.findActiveMenusByIds(
+        missingParentIds as number[],
+      );
 
       parentMenus.forEach((m) => menuMap.set(m.menuId, m));
       currentMenus = parentMenus;
