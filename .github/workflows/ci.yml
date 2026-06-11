@@ -6,6 +6,12 @@ on:
   pull_request:
     branches: [main, develop]
 
+defaults:
+  run:
+    # Ejecutar desde la raíz del workspace para evitar el bug de
+    # pnpm 11 con runDepsStatusCheck desde subdirectorios
+    working-directory: ./
+
 jobs:
   lint:
     name: ESLint
@@ -19,26 +25,23 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 11
+          version: 11.1
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: 'pnpm'
-          cache-dependency-path: backend/pnpm-lock.yaml
+          cache-dependency-path: pnpm-lock.yaml
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-        working-directory: backend
 
       - name: Generate Prisma Client
-        run: pnpm prisma generate
-        working-directory: backend
+        run: pnpm --filter backend exec prisma generate
 
       - name: Run ESLint
-        run: pnpm run lint
-        working-directory: backend
+        run: pnpm --filter backend run lint
 
   test:
     name: Tests + Coverage
@@ -52,26 +55,23 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 11
+          version: 11.1
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: 'pnpm'
-          cache-dependency-path: backend/pnpm-lock.yaml
+          cache-dependency-path: pnpm-lock.yaml
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-        working-directory: backend
 
       - name: Generate Prisma Client
-        run: pnpm prisma generate
-        working-directory: backend
+        run: pnpm --filter backend exec prisma generate
 
       - name: Run tests with coverage
-        run: pnpm run test:cov
-        working-directory: backend
+        run: pnpm --filter backend run test:cov
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
@@ -100,23 +100,20 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 11
+          version: 11.1
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: 'pnpm'
-          cache-dependency-path: backend/pnpm-lock.yaml
+          cache-dependency-path: pnpm-lock.yaml
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-        working-directory: backend
 
       - name: Generate Prisma Client
-        run: pnpm prisma generate
-        working-directory: backend
+        run: pnpm --filter backend exec prisma generate
 
       - name: Build application
-        run: pnpm run build
-        working-directory: backend
+        run: pnpm --filter backend run build
