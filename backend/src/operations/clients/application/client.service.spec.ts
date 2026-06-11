@@ -58,7 +58,10 @@ describe('ClientService', () => {
   });
 
   it('findAll should call repository with filters', async () => {
-    mockClientRepository.paginateClientes.mockResolvedValue({ data: [], total: 0 });
+    mockClientRepository.paginateClientes.mockResolvedValue({
+      data: [],
+      total: 0,
+    });
     await service.findAll();
     expect(mockClientRepository.paginateClientes).toHaveBeenCalledWith(
       {
@@ -71,7 +74,10 @@ describe('ClientService', () => {
   });
 
   it('findAll should apply filters when provided', async () => {
-    mockClientRepository.paginateClientes.mockResolvedValue({ data: [], total: 0 });
+    mockClientRepository.paginateClientes.mockResolvedValue({
+      data: [],
+      total: 0,
+    });
     await service.findAll({ identificacion: '123' });
     expect(mockClientRepository.paginateClientes).toHaveBeenCalledWith(
       expect.objectContaining({
