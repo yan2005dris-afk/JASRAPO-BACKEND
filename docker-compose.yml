@@ -68,7 +68,6 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-      network: host
     container_name: jasrapo-backend
     restart: unless-stopped
     env_file: .env
@@ -210,7 +209,6 @@ networks:
   jasrapo-network:
     name: jasrapo-network
     driver: bridge
-    external: true
 
 volumes:
   postgres_data:
