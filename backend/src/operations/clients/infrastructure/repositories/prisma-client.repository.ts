@@ -2,6 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { Prisma } from 'src/generated/prisma/client';
 import { ClientRepository } from '../../domain/repositories/client.repository';
+import {
+  paginate,
+  PaginateOptions,
+} from 'src/infrastructure/common/utils/pagination.util';
+import { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
 
 @Injectable()
 export class PrismaClientRepository implements ClientRepository {
@@ -62,5 +67,16 @@ export class PrismaClientRepository implements ClientRepository {
     orderBy?: Prisma.CatalogoTiposIdentificacionOrderByWithRelationInput;
   }): Promise<any[]> {
     return this.prisma.catalogoTiposIdentificacion.findMany(params);
+  }
+
+  async paginateClientes(
+    args: {
+      where?: Prisma.ClientesWhereInput;
+      orderBy?: Prisma.ClientesOrderByWithRelationInput;
+      select?: Prisma.ClientesSelect;
+    },
+    pagination: PaginateOptions,
+  ): Promise<PaginatedResult<any>> {
+    return paginate<any>(this.prisma.clientes, args, pagination);
   }
 }

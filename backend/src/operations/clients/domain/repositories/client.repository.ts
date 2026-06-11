@@ -1,4 +1,6 @@
 import type { Prisma } from 'src/generated/prisma/client';
+import type { PaginateOptions } from 'src/infrastructure/common/utils/pagination.util';
+import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
 
 export abstract class ClientRepository {
   abstract findFirst(
@@ -41,4 +43,13 @@ export abstract class ClientRepository {
     where?: Prisma.CatalogoTiposIdentificacionWhereInput;
     orderBy?: Prisma.CatalogoTiposIdentificacionOrderByWithRelationInput;
   }): Promise<any[]>;
+
+  abstract paginateClientes(
+    args: {
+      where?: Prisma.ClientesWhereInput;
+      orderBy?: Prisma.ClientesOrderByWithRelationInput;
+      select?: Prisma.ClientesSelect;
+    },
+    pagination: PaginateOptions,
+  ): Promise<PaginatedResult<any>>;
 }
