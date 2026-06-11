@@ -9,8 +9,9 @@ export class PrismaReadingAnomalyRepository implements ReadingAnomalyRepository 
 
   async findUnique(
     where: Prisma.LecturaAnomaliaWhereUniqueInput,
+    select?: Prisma.LecturaAnomaliaSelect,
   ): Promise<any> {
-    return this.prisma.lecturaAnomalia.findUnique({ where });
+    return this.prisma.lecturaAnomalia.findUnique({ where, select });
   }
 
   async findMany(params: {
@@ -18,19 +19,31 @@ export class PrismaReadingAnomalyRepository implements ReadingAnomalyRepository 
     take?: number;
     where?: Prisma.LecturaAnomaliaWhereInput;
     orderBy?: Prisma.LecturaAnomaliaOrderByWithRelationInput;
+    select?: Prisma.LecturaAnomaliaSelect;
+    include?: Prisma.LecturaAnomaliaInclude;
   }): Promise<any[]> {
     return this.prisma.lecturaAnomalia.findMany(params);
   }
 
+  async count(params: {
+    where?: Prisma.LecturaAnomaliaWhereInput;
+  }): Promise<number> {
+    return this.prisma.lecturaAnomalia.count(params);
+  }
+
   async create(
-    data: Prisma.LecturaAnomaliaCreateInput | Prisma.LecturaAnomaliaUncheckedCreateInput,
+    data:
+      | Prisma.LecturaAnomaliaCreateInput
+      | Prisma.LecturaAnomaliaUncheckedCreateInput,
   ): Promise<any> {
     return this.prisma.lecturaAnomalia.create({ data });
   }
 
   async update(
     where: Prisma.LecturaAnomaliaWhereUniqueInput,
-    data: Prisma.LecturaAnomaliaUpdateInput | Prisma.LecturaAnomaliaUncheckedUpdateInput,
+    data:
+      | Prisma.LecturaAnomaliaUpdateInput
+      | Prisma.LecturaAnomaliaUncheckedUpdateInput,
   ): Promise<any> {
     return this.prisma.lecturaAnomalia.update({ where, data });
   }

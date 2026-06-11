@@ -66,9 +66,8 @@ services:
   # ─── Backend API (NestJS) ───────────────────────────────────────
   backend:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
-      network: host
+      context: .
+      dockerfile: backend/Dockerfile
     container_name: jasrapo-backend
     restart: unless-stopped
     env_file: .env

@@ -20,7 +20,8 @@ describe('CreatePermissionUseCase', () => {
     }).compile();
 
     useCase = module.get<CreatePermissionUseCase>(CreatePermissionUseCase);
-    permissionRepository = module.get<PermissionRepository>(PermissionRepository);
+    permissionRepository =
+      module.get<PermissionRepository>(PermissionRepository);
   });
 
   it('should create a permission', async () => {

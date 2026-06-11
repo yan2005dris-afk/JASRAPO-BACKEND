@@ -8,11 +8,14 @@ export class DeleteSectorUseCase {
   async execute(id: number) {
     const sector = await this.sectorRepository.findUnique({ sectorId: id });
 
-    if (!sector) {
+    if (!sector || sector.deletedAt !== null) {
       throw new NotFoundException(`Sector con ID ${id} no encontrado`);
     }
 
-    await this.sectorRepository.delete({ sectorId: id });
+    await this.sectorRepository.update(
+      { sectorId: id },
+      { deletedAt: new Date() },
+    );
 
     return { message: 'Sector eliminado exitosamente.', statusCode: 200 };
   }

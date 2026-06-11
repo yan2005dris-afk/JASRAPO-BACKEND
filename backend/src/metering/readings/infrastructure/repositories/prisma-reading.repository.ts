@@ -9,8 +9,9 @@ export class PrismaReadingRepository implements ReadingRepository {
 
   async findUnique(
     where: Prisma.LecturasWhereUniqueInput,
+    select?: Prisma.LecturasSelect,
   ): Promise<any> {
-    return this.prisma.lecturas.findUnique({ where });
+    return this.prisma.lecturas.findUnique({ where, select });
   }
 
   async findMany(params: {
@@ -18,8 +19,14 @@ export class PrismaReadingRepository implements ReadingRepository {
     take?: number;
     where?: Prisma.LecturasWhereInput;
     orderBy?: Prisma.LecturasOrderByWithRelationInput;
+    select?: Prisma.LecturasSelect;
+    include?: Prisma.LecturasInclude;
   }): Promise<any[]> {
     return this.prisma.lecturas.findMany(params);
+  }
+
+  async count(params: { where?: Prisma.LecturasWhereInput }): Promise<number> {
+    return this.prisma.lecturas.count(params);
   }
 
   async create(

@@ -1,4 +1,4 @@
-import { Prisma } from 'src/generated/prisma/client';
+import type { Prisma } from 'src/generated/prisma/client';
 
 export abstract class BusquedaPublicaRepository {
   abstract findManyClientes(params: {

@@ -20,7 +20,8 @@ describe('FindAllPermissionsUseCase', () => {
     }).compile();
 
     useCase = module.get<FindAllPermissionsUseCase>(FindAllPermissionsUseCase);
-    permissionRepository = module.get<PermissionRepository>(PermissionRepository);
+    permissionRepository =
+      module.get<PermissionRepository>(PermissionRepository);
   });
 
   it('should return all permissions', async () => {

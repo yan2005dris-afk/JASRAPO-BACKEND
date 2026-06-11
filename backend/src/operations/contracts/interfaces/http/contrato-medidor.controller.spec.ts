@@ -1,7 +1,7 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { ContratoMedidorController } from './contrato-medidor.controller';
-import { ContratoMedidorService } from './contrato-medidor.service';
+import { ContratoMedidorService } from '../../application/contrato-medidor.service';
 
 describe('ContratoMedidorController', () => {
   let controller: ContratoMedidorController;

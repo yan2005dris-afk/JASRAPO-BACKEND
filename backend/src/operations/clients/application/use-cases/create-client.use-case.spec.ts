@@ -1,7 +1,7 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { CreateClientUseCase } from './create-client.use-case';
-import { PrismaService } from 'src/infrastructure/database/prisma.service';
+import { ClientRepository } from '../../domain/repositories/client.repository';
 import { ConflictException, BadRequestException } from '@nestjs/common';
 import { TipoIdentificacionUtil } from 'src/infrastructure/common/utils/tipo-identificacion.util';
 
@@ -9,19 +9,16 @@ jest.mock('src/infrastructure/common/utils/tipo-identificacion.util');
 
 describe('CreateClientUseCase', () => {
   let useCase: CreateClientUseCase;
-  let prisma: PrismaService;
 
-  const mockPrismaService = {
-    clientes: {
-      findUnique: jest.fn(),
-      findMany: jest.fn(),
-      create: jest.fn(),
-      update: jest.fn(),
-      updateMany: jest.fn(),
-    },
-    catalogoTiposIdentificacion: {
-      findUnique: jest.fn(),
-    },
+  const mockClientRepository = {
+    findFirst: jest.fn(),
+    findUnique: jest.fn(),
+    findMany: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    updateMany: jest.fn(),
+    findCatalogoTipoIdentificacion: jest.fn(),
+    findManyCatalogoTipoIdentificacion: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -29,17 +26,16 @@ describe('CreateClientUseCase', () => {
       providers: [
         CreateClientUseCase,
         {
-          provide: PrismaService,
-          useValue: mockPrismaService,
+          provide: ClientRepository,
+          useValue: mockClientRepository,
         },
       ],
     }).compile();
 
     useCase = module.get<CreateClientUseCase>(CreateClientUseCase);
-    prisma = module.get<PrismaService>(PrismaService);
 
     (TipoIdentificacionUtil.validar as jest.Mock).mockReturnValue(true);
-    mockPrismaService.catalogoTiposIdentificacion.findUnique.mockResolvedValue({
+    mockClientRepository.findCatalogoTipoIdentificacion.mockResolvedValue({
       id: 1,
       codigo: '05', // CÉDULA
     });
@@ -62,8 +58,8 @@ describe('CreateClientUseCase', () => {
         apellidos: 'Doe',
       };
 
-      mockPrismaService.clientes.findUnique.mockResolvedValue(null);
-      mockPrismaService.clientes.create.mockResolvedValue({
+      mockClientRepository.findUnique.mockResolvedValue(null);
+      mockClientRepository.create.mockResolvedValue({
         ...dto,
         clienteId: BigInt(1),
       });
@@ -71,14 +67,14 @@ describe('CreateClientUseCase', () => {
       const result = await useCase.execute(dto);
 
       expect(result).toBeDefined();
-      expect(mockPrismaService.clientes.create).toHaveBeenCalledWith({
-        data: expect.objectContaining({
+      expect(mockClientRepository.create).toHaveBeenCalledWith(
+        expect.objectContaining({
           identificacion: '0926715658',
           nombres: 'JOHN',
           apellidos: 'DOE',
         }),
-        select: expect.anything(),
-      });
+        expect.anything(),
+      );
     });
 
     it('should throw ConflictException if identification already exists', async () => {
@@ -89,7 +85,7 @@ describe('CreateClientUseCase', () => {
         apellidos: 'Doe',
       };
 
-      mockPrismaService.clientes.findUnique.mockResolvedValue({
+      mockClientRepository.findUnique.mockResolvedValue({
         clienteId: BigInt(1),
         deletedAt: null,
       });
@@ -105,12 +101,12 @@ describe('CreateClientUseCase', () => {
         apellidos: 'Doe',
       };
 
-      mockPrismaService.clientes.findUnique.mockResolvedValue({
+      mockClientRepository.findUnique.mockResolvedValue({
         clienteId: BigInt(1),
         identificacion: '0926715658',
         deletedAt: new Date(),
       });
-      mockPrismaService.clientes.update.mockResolvedValue({
+      mockClientRepository.update.mockResolvedValue({
         ...dto,
         clienteId: BigInt(1),
         deletedAt: null,
@@ -118,7 +114,7 @@ describe('CreateClientUseCase', () => {
 
       const result = await useCase.execute(dto);
 
-      expect(mockPrismaService.clientes.update).toHaveBeenCalled();
+      expect(mockClientRepository.update).toHaveBeenCalled();
       expect(result).toBeDefined();
     });
 
@@ -135,7 +131,7 @@ describe('CreateClientUseCase', () => {
     });
 
     it('should throw BadRequestException if tipoIdentificacionId is invalid', async () => {
-      mockPrismaService.catalogoTiposIdentificacion.findUnique.mockResolvedValue(
+      mockClientRepository.findCatalogoTipoIdentificacion.mockResolvedValue(
         null,
       );
       const dto = {

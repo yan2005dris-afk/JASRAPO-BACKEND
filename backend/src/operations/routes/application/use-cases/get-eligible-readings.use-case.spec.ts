@@ -1,26 +1,32 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { GetEligibleReadingsUseCase } from './get-eligible-readings.use-case';
-import { PrismaService } from 'src/infrastructure/database/prisma.service';
+import { RouteRepository } from '../../domain/repositories/route.repository';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { EstadoGenerico } from 'src/generated/prisma/client';
+
 describe('GetEligibleReadingsUseCase', () => {
   let useCase: GetEligibleReadingsUseCase;
-  let prismaService: any;
+
+  const mockRouteRepository = {
+    findUnique: jest.fn(),
+    findMany: jest.fn(),
+    paginateRutas: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    findUsuario: jest.fn(),
+    findComunidad: jest.fn(),
+    findSector: jest.fn(),
+    paginateLecturas: jest.fn(),
+  };
 
   beforeEach(async () => {
-    prismaService = {
-      comunidades: { findUnique: jest.fn() },
-      sectores: { findUnique: jest.fn() },
-      lecturas: { count: jest.fn(), findMany: jest.fn() },
-    };
-
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         GetEligibleReadingsUseCase,
         {
-          provide: PrismaService,
-          useValue: prismaService,
+          provide: RouteRepository,
+          useValue: mockRouteRepository,
         },
       ],
     }).compile();
@@ -35,7 +41,7 @@ describe('GetEligibleReadingsUseCase', () => {
   });
 
   it('should throw NotFoundException if comunidad not found', async () => {
-    prismaService.comunidades.findUnique.mockResolvedValue(null);
+    mockRouteRepository.findComunidad.mockResolvedValue(null);
     await expect(
       useCase.execute({
         tipoRuta: 'TOMA_LECTURA',
@@ -46,8 +52,8 @@ describe('GetEligibleReadingsUseCase', () => {
   });
 
   it('should throw NotFoundException if sector not found', async () => {
-    prismaService.comunidades.findUnique.mockResolvedValue({ comunidadId: 1 });
-    prismaService.sectores.findUnique.mockResolvedValue(null);
+    mockRouteRepository.findComunidad.mockResolvedValue({ comunidadId: 1 });
+    mockRouteRepository.findSector.mockResolvedValue(null);
 
     await expect(
       useCase.execute({
@@ -60,8 +66,8 @@ describe('GetEligibleReadingsUseCase', () => {
   });
 
   it('should throw BadRequestException if sector does not belong to comunidad', async () => {
-    prismaService.comunidades.findUnique.mockResolvedValue({ comunidadId: 1 });
-    prismaService.sectores.findUnique.mockResolvedValue({
+    mockRouteRepository.findComunidad.mockResolvedValue({ comunidadId: 1 });
+    mockRouteRepository.findSector.mockResolvedValue({
       sectorId: 2,
       comunidadId: 99,
     });
@@ -77,8 +83,7 @@ describe('GetEligibleReadingsUseCase', () => {
   });
 
   it('should build correct where clause for TOMA_LECTURA and return paginated mapped data', async () => {
-    prismaService.comunidades.findUnique.mockResolvedValue({ comunidadId: 1 });
-    prismaService.lecturas.count.mockResolvedValue(1);
+    mockRouteRepository.findComunidad.mockResolvedValue({ comunidadId: 1 });
 
     const mockLectura = {
       lecturaId: 10n,
@@ -97,7 +102,11 @@ describe('GetEligibleReadingsUseCase', () => {
         ],
       },
     };
-    prismaService.lecturas.findMany.mockResolvedValue([mockLectura]);
+
+    mockRouteRepository.paginateLecturas.mockResolvedValue({
+      data: [mockLectura],
+      meta: { total: 1, page: 2, limit: 15 },
+    });
 
     const result = await useCase.execute({
       tipoRuta: 'TOMA_LECTURA',
@@ -106,7 +115,7 @@ describe('GetEligibleReadingsUseCase', () => {
       search: ' Juan ',
     });
 
-    expect(prismaService.lecturas.count).toHaveBeenCalledWith(
+    expect(mockRouteRepository.paginateLecturas).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
           estadoAsignacion: 'NO_ASIGNADA',
@@ -137,13 +146,7 @@ describe('GetEligibleReadingsUseCase', () => {
           ]),
         }),
       }),
-    );
-
-    expect(prismaService.lecturas.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        skip: 15,
-        take: 15,
-      }),
+      { page: 2, limit: 15 },
     );
 
     expect(result.meta.total).toBe(1);
@@ -153,9 +156,11 @@ describe('GetEligibleReadingsUseCase', () => {
   });
 
   it('should build correct where clause for RECONEXION type', async () => {
-    prismaService.comunidades.findUnique.mockResolvedValue({ comunidadId: 1 });
-    prismaService.lecturas.count.mockResolvedValue(0);
-    prismaService.lecturas.findMany.mockResolvedValue([]);
+    mockRouteRepository.findComunidad.mockResolvedValue({ comunidadId: 1 });
+    mockRouteRepository.paginateLecturas.mockResolvedValue({
+      data: [],
+      meta: { total: 0, page: 1, limit: 10 },
+    });
 
     await useCase.execute({
       tipoRuta: 'RECONEXION',
@@ -163,7 +168,7 @@ describe('GetEligibleReadingsUseCase', () => {
       pagination: { page: 1, limit: 10 },
     });
 
-    expect(prismaService.lecturas.count).toHaveBeenCalledWith(
+    expect(mockRouteRepository.paginateLecturas).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
           medidor: expect.objectContaining({
@@ -177,6 +182,7 @@ describe('GetEligibleReadingsUseCase', () => {
           }),
         }),
       }),
+      { page: 1, limit: 10 },
     );
   });
 });

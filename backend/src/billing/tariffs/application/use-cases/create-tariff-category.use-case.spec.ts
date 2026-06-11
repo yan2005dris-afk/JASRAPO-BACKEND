@@ -1,18 +1,19 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { CreateTariffCategoryUseCase } from './create-tariff-category.use-case';
-import { PrismaService } from 'src/infrastructure/database/prisma.service';
+import { TariffRepository } from '../../domain/repositories/tariff.repository';
 import { ConflictException } from '@nestjs/common';
 
 describe('CreateTariffCategoryUseCase', () => {
   let useCase: CreateTariffCategoryUseCase;
-  let prisma: PrismaService;
 
-  const mockPrismaService = {
-    categoriaTarifa: {
-      findFirst: jest.fn(),
-      create: jest.fn(),
-    },
+  const mockTariffRepository = {
+    findFirst: jest.fn(),
+    findMany: jest.fn(),
+    count: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    executeTransaction: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -20,8 +21,8 @@ describe('CreateTariffCategoryUseCase', () => {
       providers: [
         CreateTariffCategoryUseCase,
         {
-          provide: PrismaService,
-          useValue: mockPrismaService,
+          provide: TariffRepository,
+          useValue: mockTariffRepository,
         },
       ],
     }).compile();
@@ -29,7 +30,6 @@ describe('CreateTariffCategoryUseCase', () => {
     useCase = module.get<CreateTariffCategoryUseCase>(
       CreateTariffCategoryUseCase,
     );
-    prisma = module.get<PrismaService>(PrismaService);
   });
 
   afterEach(() => {
@@ -49,8 +49,8 @@ describe('CreateTariffCategoryUseCase', () => {
       valorExcedenteM3: 0.5,
     };
 
-    mockPrismaService.categoriaTarifa.findFirst.mockResolvedValue(null);
-    mockPrismaService.categoriaTarifa.create.mockResolvedValue({
+    mockTariffRepository.findFirst.mockResolvedValue(null);
+    mockTariffRepository.create.mockResolvedValue({
       categoriaTarifaId: 1,
       ...dto,
       activo: true,
@@ -60,13 +60,13 @@ describe('CreateTariffCategoryUseCase', () => {
 
     expect(result).toBeDefined();
     expect(result.nombre).toBe(dto.nombre);
-    expect(mockPrismaService.categoriaTarifa.findFirst).toHaveBeenCalled();
-    expect(mockPrismaService.categoriaTarifa.create).toHaveBeenCalled();
+    expect(mockTariffRepository.findFirst).toHaveBeenCalled();
+    expect(mockTariffRepository.create).toHaveBeenCalled();
   });
 
   it('should throw ConflictException if category with same name exists', async () => {
     const dto = { nombre: 'Residencial' };
-    mockPrismaService.categoriaTarifa.findFirst.mockResolvedValue({
+    mockTariffRepository.findFirst.mockResolvedValue({
       categoriaTarifaId: 1,
       nombre: 'Residencial',
     });
@@ -74,6 +74,6 @@ describe('CreateTariffCategoryUseCase', () => {
     await expect(useCase.execute(dto as any)).rejects.toThrow(
       ConflictException,
     );
-    expect(mockPrismaService.categoriaTarifa.create).not.toHaveBeenCalled();
+    expect(mockTariffRepository.create).not.toHaveBeenCalled();
   });
 });

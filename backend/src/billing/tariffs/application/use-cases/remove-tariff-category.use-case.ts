@@ -18,7 +18,7 @@ export class RemoveTariffCategoryUseCase {
 
     const now = new Date();
 
-    return this.tariffRepository.update(
+    await this.tariffRepository.update(
       { categoriaTarifaId: id },
       {
         activo: false,
@@ -27,5 +27,10 @@ export class RemoveTariffCategoryUseCase {
         updatedAt: now,
       },
     );
+
+    return {
+      message: 'Categoría de tarifa eliminada exitosamente',
+      statusCode: 200,
+    };
   }
 }

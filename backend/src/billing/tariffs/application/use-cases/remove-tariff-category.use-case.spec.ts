@@ -1,18 +1,19 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { RemoveTariffCategoryUseCase } from './remove-tariff-category.use-case';
-import { PrismaService } from 'src/infrastructure/database/prisma.service';
+import { TariffRepository } from '../../domain/repositories/tariff.repository';
 import { NotFoundException } from '@nestjs/common';
 
 describe('RemoveTariffCategoryUseCase', () => {
   let useCase: RemoveTariffCategoryUseCase;
-  let prisma: PrismaService;
 
-  const mockPrismaService = {
-    categoriaTarifa: {
-      findFirst: jest.fn(),
-      update: jest.fn(),
-    },
+  const mockTariffRepository = {
+    findFirst: jest.fn(),
+    findMany: jest.fn(),
+    count: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    executeTransaction: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -20,8 +21,8 @@ describe('RemoveTariffCategoryUseCase', () => {
       providers: [
         RemoveTariffCategoryUseCase,
         {
-          provide: PrismaService,
-          useValue: mockPrismaService,
+          provide: TariffRepository,
+          useValue: mockTariffRepository,
         },
       ],
     }).compile();
@@ -29,7 +30,6 @@ describe('RemoveTariffCategoryUseCase', () => {
     useCase = module.get<RemoveTariffCategoryUseCase>(
       RemoveTariffCategoryUseCase,
     );
-    prisma = module.get<PrismaService>(PrismaService);
   });
 
   afterEach(() => {
@@ -48,8 +48,8 @@ describe('RemoveTariffCategoryUseCase', () => {
       activo: true,
     };
 
-    mockPrismaService.categoriaTarifa.findFirst.mockResolvedValue(current);
-    mockPrismaService.categoriaTarifa.update.mockResolvedValue({
+    mockTariffRepository.findFirst.mockResolvedValue(current);
+    mockTariffRepository.update.mockResolvedValue({
       ...current,
       activo: false,
       deletedAt: new Date(),
@@ -57,14 +57,20 @@ describe('RemoveTariffCategoryUseCase', () => {
 
     const result = await useCase.execute(id);
 
-    expect(result.activo).toBe(false);
-    expect(result.deletedAt).toBeDefined();
-    expect(mockPrismaService.categoriaTarifa.findFirst).toHaveBeenCalled();
-    expect(mockPrismaService.categoriaTarifa.update).toHaveBeenCalled();
+    expect(result.message).toBe('Categoría de tarifa eliminada exitosamente');
+    expect(result.statusCode).toBe(200);
+    expect(mockTariffRepository.findFirst).toHaveBeenCalled();
+    expect(mockTariffRepository.update).toHaveBeenCalledWith(
+      { categoriaTarifaId: id },
+      expect.objectContaining({
+        activo: false,
+        deletedAt: expect.any(Date),
+      }),
+    );
   });
 
   it('should throw NotFoundException if category does not exist', async () => {
-    mockPrismaService.categoriaTarifa.findFirst.mockResolvedValue(null);
+    mockTariffRepository.findFirst.mockResolvedValue(null);
 
     await expect(useCase.execute(1)).rejects.toThrow(NotFoundException);
   });

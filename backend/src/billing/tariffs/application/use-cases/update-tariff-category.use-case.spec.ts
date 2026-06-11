@@ -1,20 +1,19 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { UpdateTariffCategoryUseCase } from './update-tariff-category.use-case';
-import { PrismaService } from 'src/infrastructure/database/prisma.service';
+import { TariffRepository } from '../../domain/repositories/tariff.repository';
 import { ConflictException, NotFoundException } from '@nestjs/common';
 
 describe('UpdateTariffCategoryUseCase', () => {
   let useCase: UpdateTariffCategoryUseCase;
-  let prisma: PrismaService;
 
-  const mockPrismaService = {
-    categoriaTarifa: {
-      findFirst: jest.fn(),
-      update: jest.fn(),
-      create: jest.fn(),
-    },
-    $transaction: jest.fn(),
+  const mockTariffRepository = {
+    findFirst: jest.fn(),
+    findMany: jest.fn(),
+    count: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    executeTransaction: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -22,8 +21,8 @@ describe('UpdateTariffCategoryUseCase', () => {
       providers: [
         UpdateTariffCategoryUseCase,
         {
-          provide: PrismaService,
-          useValue: mockPrismaService,
+          provide: TariffRepository,
+          useValue: mockTariffRepository,
         },
       ],
     }).compile();
@@ -31,7 +30,6 @@ describe('UpdateTariffCategoryUseCase', () => {
     useCase = module.get<UpdateTariffCategoryUseCase>(
       UpdateTariffCategoryUseCase,
     );
-    prisma = module.get<PrismaService>(PrismaService);
   });
 
   afterEach(() => {
@@ -51,8 +49,8 @@ describe('UpdateTariffCategoryUseCase', () => {
       activo: true,
     };
 
-    mockPrismaService.categoriaTarifa.findFirst.mockResolvedValue(current);
-    mockPrismaService.$transaction.mockImplementation(async (cb) => {
+    mockTariffRepository.findFirst.mockResolvedValue(current);
+    mockTariffRepository.executeTransaction.mockImplementation(async (cb) => {
       const tx = {
         categoriaTarifa: {
           update: jest.fn().mockResolvedValue({}),
@@ -68,12 +66,12 @@ describe('UpdateTariffCategoryUseCase', () => {
     const result = await useCase.execute(id, dto);
 
     expect(result).toBeDefined();
-    expect(mockPrismaService.categoriaTarifa.findFirst).toHaveBeenCalled();
+    expect(mockTariffRepository.findFirst).toHaveBeenCalled();
     expect(result.nombre).toBe('Residencial Plus');
   });
 
   it('should throw NotFoundException if category does not exist', async () => {
-    mockPrismaService.categoriaTarifa.findFirst.mockResolvedValue(null);
+    mockTariffRepository.findFirst.mockResolvedValue(null);
 
     await expect(useCase.execute(1, { nombre: 'New' })).rejects.toThrow(
       NotFoundException,
@@ -89,12 +87,12 @@ describe('UpdateTariffCategoryUseCase', () => {
       activo: true,
     };
 
-    mockPrismaService.categoriaTarifa.findFirst.mockImplementation((args) => {
-      if (args.where.nombre === 'Comercial')
+    mockTariffRepository.findFirst.mockImplementation((args: any) => {
+      if (args.nombre === 'Comercial')
         return { categoriaTarifaId: 2, nombre: 'Comercial' };
       return current;
     });
-    mockPrismaService.$transaction.mockImplementation(async (cb) => {
+    mockTariffRepository.executeTransaction.mockImplementation(async (cb) => {
       const tx = {
         categoriaTarifa: {
           update: jest.fn(),

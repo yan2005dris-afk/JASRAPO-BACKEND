@@ -1,35 +1,32 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { CreateCommunityUseCase } from './create-community.use-case';
+import { CommunityRepository } from '../../domain/repositories/community.repository';
 
 describe('CreateCommunityUseCase', () => {
   let useCase: CreateCommunityUseCase;
-  let prisma: PrismaService;
 
-  const mockPrismaService = {
-    comunidades: {
-      create: jest.fn(),
-      findFirst: jest.fn(),
-      findUnique: jest.fn(),
-      update: jest.fn(),
-    },
+  const mockCommunityRepository = {
+    findUnique: jest.fn(),
+    findFirst: jest.fn(),
+    findMany: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
   };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateCommunityUseCase,
-        { provide: PrismaService, useValue: mockPrismaService },
+        { provide: CommunityRepository, useValue: mockCommunityRepository },
       ],
     }).compile();
 
     useCase = module.get<CreateCommunityUseCase>(CreateCommunityUseCase);
-    prisma = module.get<PrismaService>(PrismaService);
 
     // Default mocks to avoid crashes
-    mockPrismaService.comunidades.findFirst.mockResolvedValue(null);
-    mockPrismaService.comunidades.findUnique.mockResolvedValue(null);
+    mockCommunityRepository.findFirst.mockResolvedValue(null);
+    mockCommunityRepository.findUnique.mockResolvedValue(null);
   });
 
   it('should create a community', async () => {
@@ -38,7 +35,7 @@ describe('CreateCommunityUseCase', () => {
       codigo: 'CT-001',
       porcentajeTasaSeguridad: 5,
     };
-    mockPrismaService.comunidades.create.mockResolvedValue({
+    mockCommunityRepository.create.mockResolvedValue({
       comunidadId: 1,
       ...dto,
       createdAt: new Date(),
@@ -49,6 +46,6 @@ describe('CreateCommunityUseCase', () => {
     const result = await useCase.execute(dto);
 
     expect(result).toBeDefined();
-    expect(prisma.comunidades.create).toHaveBeenCalled();
+    expect(mockCommunityRepository.create).toHaveBeenCalled();
   });
 });

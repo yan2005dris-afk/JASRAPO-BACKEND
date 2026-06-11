@@ -80,7 +80,9 @@ export class GetEligibleReadingsUseCase {
             historial: {
               some: {
                 fechaHasta: null,
-                contrato: { cliente: { nombres: { contains: q, mode: 'insensitive' } } },
+                contrato: {
+                  cliente: { nombres: { contains: q, mode: 'insensitive' } },
+                },
               },
             },
           },
@@ -90,7 +92,9 @@ export class GetEligibleReadingsUseCase {
             historial: {
               some: {
                 fechaHasta: null,
-                contrato: { cliente: { apellidos: { contains: q, mode: 'insensitive' } } },
+                contrato: {
+                  cliente: { apellidos: { contains: q, mode: 'insensitive' } },
+                },
               },
             },
           },
@@ -106,7 +110,9 @@ export class GetEligibleReadingsUseCase {
             include: {
               historial: {
                 where: { fechaHasta: null },
-                include: { contrato: { include: { cliente: true, sector: true } } },
+                include: {
+                  contrato: { include: { cliente: true, sector: true } },
+                },
               },
             },
           },

@@ -1,26 +1,31 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { FindOneRouteUseCase } from './find-one-route.use-case';
-import { PrismaService } from 'src/infrastructure/database/prisma.service';
+import { RouteRepository } from '../../domain/repositories/route.repository';
 import { NotFoundException } from '@nestjs/common';
 
 describe('FindOneRouteUseCase', () => {
   let useCase: FindOneRouteUseCase;
-  let prismaService: any;
+
+  const mockRouteRepository = {
+    findUnique: jest.fn(),
+    findMany: jest.fn(),
+    paginateRutas: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    findUsuario: jest.fn(),
+    findComunidad: jest.fn(),
+    findSector: jest.fn(),
+    paginateLecturas: jest.fn(),
+  };
 
   beforeEach(async () => {
-    prismaService = {
-      rutas: {
-        findUnique: jest.fn(),
-      },
-    };
-
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         FindOneRouteUseCase,
         {
-          provide: PrismaService,
-          useValue: prismaService,
+          provide: RouteRepository,
+          useValue: mockRouteRepository,
         },
       ],
     }).compile();
@@ -33,12 +38,12 @@ describe('FindOneRouteUseCase', () => {
   });
 
   it('should throw NotFoundException if route not found', async () => {
-    prismaService.rutas.findUnique.mockResolvedValue(null);
+    mockRouteRepository.findUnique.mockResolvedValue(null);
     await expect(useCase.execute(1n)).rejects.toThrow(NotFoundException);
   });
 
   it('should return mapped RouteEntity if route is found', async () => {
-    prismaService.rutas.findUnique.mockResolvedValue({
+    mockRouteRepository.findUnique.mockResolvedValue({
       rutaId: 1n,
       nombre: 'Route 1',
       deletedAt: null,
@@ -46,9 +51,7 @@ describe('FindOneRouteUseCase', () => {
 
     const result = await useCase.execute(1n);
 
-    expect(prismaService.rutas.findUnique).toHaveBeenCalledWith({
-      where: { rutaId: 1n },
-    });
+    expect(mockRouteRepository.findUnique).toHaveBeenCalledWith({ rutaId: 1n });
     expect(result.rutaId).toBe(1n);
     expect(result.nombre).toBe('Route 1');
   });

@@ -7,11 +7,13 @@ export class PaginationDto {
     description: 'Número de página (empieza desde 1)',
     default: 1,
     minimum: 1,
+    maximum: 1000,
   })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(1)
+  @Max(1000)
   page?: number = 1;
 
   @ApiPropertyOptional({

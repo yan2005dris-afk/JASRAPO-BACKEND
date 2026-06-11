@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { ReadingAnomalyRepository } from '../../domain/repositories/reading-anomaly.repository';
 import { UpdateReadingAnomalyDto } from '../../interfaces/dto/update-reading-anomaly.dto';
-import { ReadingAnomalyEntity } from '../../domain/entities/reading-anomaly.entity';
+import { toReadingAnomalyResponse } from '../../types/readingAnomalyMapper';
 
 @Injectable()
 export class UpdateReadingAnomalyUseCase {
@@ -9,10 +9,7 @@ export class UpdateReadingAnomalyUseCase {
     private readonly readingAnomalyRepository: ReadingAnomalyRepository,
   ) {}
 
-  async execute(
-    id: bigint,
-    updateDto: UpdateReadingAnomalyDto,
-  ): Promise<ReadingAnomalyEntity> {
+  async execute(id: bigint, updateDto: UpdateReadingAnomalyDto) {
     const existing = await this.readingAnomalyRepository.findUnique({
       anomaliaId: id,
     });
@@ -28,6 +25,6 @@ export class UpdateReadingAnomalyUseCase {
       { anomaliaId: id },
       dataToUpdate,
     );
-    return new ReadingAnomalyEntity(anomalia);
+    return toReadingAnomalyResponse(anomalia);
   }
 }

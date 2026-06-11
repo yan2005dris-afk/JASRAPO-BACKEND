@@ -23,7 +23,8 @@ export class GetUserDirectPermissionsUseCase {
       throw new NotFoundException('Usuario no encontrado o eliminado');
     }
 
-    const assignments = await this.userRepository.findDirectPermissions(usuarioId);
+    const assignments =
+      await this.userRepository.findDirectPermissions(usuarioId);
 
     return assignments.map((assignment) => ({
       usuarioPermisoId: assignment.usuarioPermisoId,

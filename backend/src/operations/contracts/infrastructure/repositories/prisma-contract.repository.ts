@@ -12,12 +12,21 @@ export class PrismaContractRepository implements ContractRepository {
     take?: number;
     where?: Prisma.ContratosWhereInput;
     orderBy?: Prisma.ContratosOrderByWithRelationInput;
+    select?: Prisma.ContratosSelect;
+    include?: Prisma.ContratosInclude;
   }): Promise<any[]> {
     return this.prisma.contratos.findMany(params);
   }
 
-  async findUnique(where: Prisma.ContratosWhereUniqueInput): Promise<any> {
-    return this.prisma.contratos.findUnique({ where });
+  async findUnique(
+    where: Prisma.ContratosWhereUniqueInput,
+    select?: Prisma.ContratosSelect,
+  ): Promise<any> {
+    return this.prisma.contratos.findUnique({ where, select });
+  }
+
+  async count(params: { where?: Prisma.ContratosWhereInput }): Promise<number> {
+    return this.prisma.contratos.count(params);
   }
 
   async update(

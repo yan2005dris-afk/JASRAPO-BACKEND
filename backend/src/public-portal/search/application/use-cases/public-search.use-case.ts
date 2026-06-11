@@ -59,7 +59,11 @@ export class PublicSearchUseCase {
     if (tipo === 'global') {
       const whereGlobal = this.buildWhereCliente(isIdent, valor, tokens);
       const [clientes, contratos] = await Promise.all([
-        this.searchRepository.findManyClientes({ where: whereGlobal, skip: 0, take: 5 }),
+        this.searchRepository.findManyClientes({
+          where: whereGlobal,
+          skip: 0,
+          take: 5,
+        }),
         this.searchRepository.findManyContratos({
           where: {
             numeroGuia: { contains: valor, mode: 'insensitive' },

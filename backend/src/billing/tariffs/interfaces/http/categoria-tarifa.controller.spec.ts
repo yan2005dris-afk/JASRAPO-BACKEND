@@ -1,7 +1,7 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { CategoriaTarifaController } from './categoria-tarifa.controller';
-import { CategoriaTarifaService } from './categoria-tarifa.service';
+import { CategoriaTarifaService } from '../../application/categoria-tarifa.service';
 
 describe('CategoriaTarifaController', () => {
   let controller: CategoriaTarifaController;

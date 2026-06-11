@@ -20,10 +20,7 @@ export class PrismaPermissionRepository implements PermissionRepository {
   async findAll(): Promise<any[]> {
     return this.prisma.permisos.findMany({
       where: { deletedAt: null },
-      orderBy: [
-        { recurso: 'asc' },
-        { accion: 'asc' },
-      ],
+      orderBy: [{ recurso: 'asc' }, { accion: 'asc' }],
     });
   }
 

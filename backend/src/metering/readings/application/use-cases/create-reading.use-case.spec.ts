@@ -7,7 +7,11 @@ describe('CreateReadingUseCase', () => {
   let useCase: CreateReadingUseCase;
 
   const mockReadingRepository = {
+    findUnique: jest.fn(),
+    findMany: jest.fn(),
+    count: jest.fn(),
     create: jest.fn(),
+    update: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -19,6 +23,10 @@ describe('CreateReadingUseCase', () => {
     }).compile();
 
     useCase = module.get<CreateReadingUseCase>(CreateReadingUseCase);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {
@@ -50,6 +58,7 @@ describe('CreateReadingUseCase', () => {
     };
 
     mockReadingRepository.create.mockResolvedValue(mockReading as any);
+    mockReadingRepository.findUnique.mockResolvedValue(mockReading as any);
 
     const result = await useCase.execute(dto);
 
@@ -58,6 +67,10 @@ describe('CreateReadingUseCase', () => {
       expect.objectContaining({
         medidorId: BigInt(1),
       }),
+    );
+    expect(mockReadingRepository.findUnique).toHaveBeenCalledWith(
+      { lecturaId: mockReading.lecturaId },
+      expect.any(Object),
     );
   });
 });

@@ -1,4 +1,4 @@
-import { Prisma } from 'src/generated/prisma/client';
+import type { Prisma } from 'src/generated/prisma/client';
 
 export abstract class AgreementRepository {
   abstract findFirstConvenio(
@@ -53,7 +53,5 @@ export abstract class AgreementRepository {
     orderBy?: Prisma.CuotaConvenioOrderByWithRelationInput;
   }): Promise<any[]>;
 
-  abstract executeTransaction<T>(
-    callback: (tx: any) => Promise<T>,
-  ): Promise<T>;
+  abstract executeTransaction<T>(callback: (tx: any) => Promise<T>): Promise<T>;
 }

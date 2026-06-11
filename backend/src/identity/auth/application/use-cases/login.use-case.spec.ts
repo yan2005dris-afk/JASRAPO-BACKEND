@@ -90,9 +90,7 @@ describe('LoginUseCase', () => {
         rol: { nombre: 'admin', deletedAt: null },
       };
 
-      (userRepository.findUnique as jest.Mock).mockResolvedValue(
-        mockUser,
-      );
+      (userRepository.findUnique as jest.Mock).mockResolvedValue(mockUser);
 
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
       (bcrypt.hash as jest.Mock).mockResolvedValue('hashedRefreshToken');
@@ -179,9 +177,7 @@ describe('LoginUseCase', () => {
         rol: { nombre: 'admin', deletedAt: new Date() }, // Soft-deleted role
       };
 
-      (userRepository.findUnique as jest.Mock).mockResolvedValue(
-        mockUser,
-      );
+      (userRepository.findUnique as jest.Mock).mockResolvedValue(mockUser);
 
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
       (bcrypt.hash as jest.Mock).mockResolvedValue('hashedRefreshToken');

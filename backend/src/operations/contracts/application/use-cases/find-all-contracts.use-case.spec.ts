@@ -1,15 +1,17 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { FindAllContractsUseCase } from './find-all-contracts.use-case';
-import { PrismaService } from 'src/infrastructure/database/prisma.service';
+import { ContractRepository } from '../../domain/repositories/contract.repository';
 
 describe('FindAllContractsUseCase', () => {
   let useCase: FindAllContractsUseCase;
 
-  const mockPrismaService = {
-    contratos: {
-      findMany: jest.fn(),
-    },
+  const mockContractRepository = {
+    findUnique: jest.fn(),
+    findMany: jest.fn(),
+    count: jest.fn(),
+    update: jest.fn(),
+    executeTransaction: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -17,8 +19,8 @@ describe('FindAllContractsUseCase', () => {
       providers: [
         FindAllContractsUseCase,
         {
-          provide: PrismaService,
-          useValue: mockPrismaService,
+          provide: ContractRepository,
+          useValue: mockContractRepository,
         },
       ],
     }).compile();
@@ -35,17 +37,22 @@ describe('FindAllContractsUseCase', () => {
   });
 
   it('should call findMany with correct parameters', async () => {
-    const params = { skip: 0, take: 10 };
-    mockPrismaService.contratos.findMany.mockResolvedValue([]);
+    mockContractRepository.findMany.mockResolvedValue([]);
+    mockContractRepository.count.mockResolvedValue(0);
 
-    const result = await useCase.execute(params);
+    const result = await useCase.execute(1, 10);
 
-    expect(result).toEqual([]);
-    expect(mockPrismaService.contratos.findMany).toHaveBeenCalledWith({
+    expect(result.data).toEqual([]);
+    expect(result.meta.total).toBe(0);
+    expect(mockContractRepository.findMany).toHaveBeenCalledWith({
+      where: { deletedAt: null },
+      select: expect.any(Object),
       skip: 0,
       take: 10,
-      where: { deletedAt: null },
       orderBy: { createdAt: 'desc' },
+    });
+    expect(mockContractRepository.count).toHaveBeenCalledWith({
+      where: { deletedAt: null },
     });
   });
 });

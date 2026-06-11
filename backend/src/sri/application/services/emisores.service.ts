@@ -5,7 +5,11 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { RawPgService } from '../../../infrastructure/database/raw-pg/raw-pg.service';
-import { CreateEmisorDto, UpdateEmisorDto, EmisorResponseDto } from '../../interfaces/dto';
+import {
+  CreateEmisorDto,
+  UpdateEmisorDto,
+  EmisorResponseDto,
+} from '../../interfaces/dto';
 import * as forge from 'node-forge';
 import { EncryptionService } from '../../../infrastructure/encryption/encryption.service';
 

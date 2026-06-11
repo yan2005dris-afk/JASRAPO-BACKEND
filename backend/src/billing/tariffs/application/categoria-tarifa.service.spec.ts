@@ -1,7 +1,7 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { CategoriaTarifaService } from './categoria-tarifa.service';
-import { PrismaService } from 'src/infrastructure/database/prisma.service';
+import { TariffRepository } from '../domain/repositories/tariff.repository';
 import { ConflictException, NotFoundException } from '@nestjs/common';
 import { CreateTariffCategoryUseCase } from './use-cases/create-tariff-category.use-case';
 import { FindAllTariffCategoriesUseCase } from './use-cases/find-all-tariff-categories.use-case';
@@ -10,7 +10,6 @@ import { RemoveTariffCategoryUseCase } from './use-cases/remove-tariff-category.
 
 describe('CategoriaTarifaService', () => {
   let service: CategoriaTarifaService;
-  let prismaService: PrismaService;
 
   const mockCategoriaTarifa = {
     categoriaTarifaId: 1,
@@ -27,14 +26,13 @@ describe('CategoriaTarifaService', () => {
     deletedAt: null,
   };
 
-  const mockPrismaService = {
-    categoriaTarifa: {
-      findFirst: jest.fn(),
-      findMany: jest.fn(),
-      create: jest.fn(),
-      update: jest.fn(),
-    },
-    $transaction: jest.fn(),
+  const mockTariffRepository = {
+    findFirst: jest.fn(),
+    findMany: jest.fn(),
+    count: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    executeTransaction: jest.fn(),
   };
 
   const mockCreateUseCase = { execute: jest.fn() };
@@ -46,7 +44,7 @@ describe('CategoriaTarifaService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CategoriaTarifaService,
-        { provide: PrismaService, useValue: mockPrismaService },
+        { provide: TariffRepository, useValue: mockTariffRepository },
         { provide: CreateTariffCategoryUseCase, useValue: mockCreateUseCase },
         {
           provide: FindAllTariffCategoriesUseCase,
@@ -58,7 +56,6 @@ describe('CategoriaTarifaService', () => {
     }).compile();
 
     service = module.get<CategoriaTarifaService>(CategoriaTarifaService);
-    prismaService = module.get<PrismaService>(PrismaService);
   });
 
   afterEach(() => {
@@ -119,9 +116,13 @@ describe('CategoriaTarifaService', () => {
     it('should filter by nombre with case-insensitive search', async () => {
       mockFindAllUseCase.execute.mockResolvedValue([mockCategoriaTarifa]);
 
-      await service.getCategorias('residencial');
+      await service.getCategorias(1, 10, 'residencial');
 
-      expect(mockFindAllUseCase.execute).toHaveBeenCalledWith('residencial');
+      expect(mockFindAllUseCase.execute).toHaveBeenCalledWith(
+        1,
+        10,
+        'residencial',
+      );
     });
   });
 
@@ -150,7 +151,11 @@ describe('CategoriaTarifaService', () => {
 
       await service.buscarCategoriaPorNombre('RESIDENCIAL');
 
-      expect(mockFindAllUseCase.execute).toHaveBeenCalledWith('RESIDENCIAL');
+      expect(mockFindAllUseCase.execute).toHaveBeenCalledWith(
+        1,
+        10,
+        'RESIDENCIAL',
+      );
     });
   });
 

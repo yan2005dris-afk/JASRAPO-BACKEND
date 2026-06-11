@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Prisma } from 'src/generated/prisma/client';
 import { CrearLecturaDto } from '../interfaces/dto/create-lectura.dto';
 import { ActualizarLecturaDto } from '../interfaces/dto/update-lectura.dto';
-import { LecturaEntity } from '../domain/entities/lectura.entity';
+import { IResponseReading } from '../types/IResponseReading';
 import { CreateReadingUseCase } from './use-cases/create-reading.use-case';
 import { FindAllReadingsUseCase } from './use-cases/find-all-readings.use-case';
 import { FindOneReadingUseCase } from './use-cases/find-one-reading.use-case';
@@ -19,26 +19,22 @@ export class ReadingService {
     private readonly removeUseCase: RemoveReadingUseCase,
   ) {}
 
-  async create(createDto: CrearLecturaDto): Promise<LecturaEntity> {
+  async create(createDto: CrearLecturaDto): Promise<IResponseReading> {
     return this.createUseCase.execute(createDto);
   }
 
-  async findAll(params: {
-    skip?: number;
-    take?: number;
-    where?: Prisma.LecturasWhereInput;
-  }): Promise<LecturaEntity[]> {
-    return this.findAllUseCase.execute(params);
+  async findAll(page = 1, limit = 10, where?: Prisma.LecturasWhereInput) {
+    return this.findAllUseCase.execute(page, limit, where);
   }
 
-  async findOne(id: bigint): Promise<LecturaEntity> {
+  async findOne(id: bigint): Promise<IResponseReading> {
     return this.findOneUseCase.execute(id);
   }
 
   async update(
     id: bigint,
     updateDto: ActualizarLecturaDto,
-  ): Promise<LecturaEntity> {
+  ): Promise<IResponseReading> {
     return this.updateUseCase.execute(id, updateDto);
   }
 

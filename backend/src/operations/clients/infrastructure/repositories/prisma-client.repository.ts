@@ -9,7 +9,10 @@ export class PrismaClientRepository implements ClientRepository {
 
   async findFirst(
     where: Prisma.ClientesWhereInput,
-    options?: { include?: Prisma.ClientesInclude; select?: Prisma.ClientesSelect },
+    options?: {
+      include?: Prisma.ClientesInclude;
+      select?: Prisma.ClientesSelect;
+    },
   ): Promise<any> {
     return this.prisma.clientes.findFirst({ where, ...options });
   }

@@ -7,15 +7,26 @@ import { SectorRepository } from '../../domain/repositories/sector.repository';
 export class PrismaSectorRepository implements SectorRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findUnique(where: Prisma.SectoresWhereUniqueInput): Promise<any> {
-    return this.prisma.sectores.findUnique({ where });
+  async findUnique(
+    where: Prisma.SectoresWhereUniqueInput,
+    select?: Prisma.SectoresSelect,
+  ): Promise<any> {
+    return this.prisma.sectores.findUnique({ where, select });
   }
 
   async findMany(params?: {
     where?: Prisma.SectoresWhereInput;
     orderBy?: Prisma.SectoresOrderByWithRelationInput;
+    skip?: number;
+    take?: number;
+    select?: Prisma.SectoresSelect;
+    include?: Prisma.SectoresInclude;
   }): Promise<any[]> {
     return this.prisma.sectores.findMany(params);
+  }
+
+  async count(params: { where?: Prisma.SectoresWhereInput }): Promise<number> {
+    return this.prisma.sectores.count(params);
   }
 
   async create(data: Prisma.SectoresCreateInput): Promise<any> {

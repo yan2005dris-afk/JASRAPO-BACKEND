@@ -6,11 +6,13 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { SectorService } from '../../application/sector.service';
 import { CreateSectorDto } from '../dto/create-sector.dto';
 import { UpdateSectorDto } from '../dto/update-sector.dto';
+import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
 import {
   ApiTags,
   ApiBearerAuth,
@@ -47,14 +49,14 @@ export class SectorController {
 
   @ApiOperation({
     summary: 'Listar sectores',
-    description: 'Retorna todos los sectores',
+    description: 'Retorna todos los sectores con paginación',
   })
   @ApiResponse({ status: 200, description: 'Lista de sectores' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @RequiredPermission('sectores', 'read')
   @Get()
-  findAll() {
-    return this.sectorService.findAll();
+  findAll(@Query() paginationDto: PaginationDto) {
+    return this.sectorService.findAll(paginationDto.page, paginationDto.limit);
   }
 
   @ApiOperation({

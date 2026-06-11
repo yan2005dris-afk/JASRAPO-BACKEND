@@ -5,6 +5,8 @@ import {
 } from '@nestjs/common';
 import { TariffRepository } from '../../domain/repositories/tariff.repository';
 import { UpdateCategoriaTarifaDto } from '../../interfaces/dto/update-categoria-tarifa.dto';
+import { safeTariffCategoriesSelect } from '../../types/IResponseTariffCategory';
+import { toTariffCategoryResponse } from '../../types/tariffCategoryMapper';
 
 @Injectable()
 export class UpdateTariffCategoryUseCase {
@@ -23,49 +25,54 @@ export class UpdateTariffCategoryUseCase {
 
     const now = new Date();
 
-    return this.tariffRepository.executeTransaction(async (tx) => {
-      // cerrar vigencia actual
-      await tx.categoriaTarifa.update({
-        where: { categoriaTarifaId: id },
-        data: {
-          fechaVigenciaHasta: now,
-          activo: false,
-          updatedAt: now,
-        },
-      });
-
-      // validar duplicado (por si cambian nombre)
-      if (dto.nombre && dto.nombre !== current.nombre) {
-        const existing = await tx.categoriaTarifa.findFirst({
-          where: {
-            nombre: dto.nombre,
-            activo: true,
-            deletedAt: null,
+    const newTariff = await this.tariffRepository.executeTransaction(
+      async (tx) => {
+        // cerrar vigencia actual
+        await tx.categoriaTarifa.update({
+          where: { categoriaTarifaId: id },
+          data: {
+            fechaVigenciaHasta: now,
+            activo: false,
+            updatedAt: now,
           },
         });
 
-        if (existing) {
-          throw new ConflictException(
-            'Ya existe una categoría activa con ese nombre',
-          );
-        }
-      }
+        // validar duplicado (por si cambian nombre)
+        if (dto.nombre && dto.nombre !== current.nombre) {
+          const existing = await tx.categoriaTarifa.findFirst({
+            where: {
+              nombre: dto.nombre,
+              activo: true,
+              deletedAt: null,
+            },
+          });
 
-      // crear nueva versión
-      return tx.categoriaTarifa.create({
-        data: {
-          nombre: dto.nombre ?? current.nombre,
-          descripcion: dto.descripcion ?? current.descripcion,
-          valorBase: dto.valorBase ?? current.valorBase,
-          consumoMinimoMensual:
-            dto.consumoMinimoMensual ?? current.consumoMinimoMensual,
-          valorExcedenteM3: dto.valorExcedenteM3 ?? current.valorExcedenteM3,
-          fechaVigenciaDesde: now,
-          fechaVigenciaHasta: null,
-          activo: true,
-          createdAt: now,
-        },
-      });
-    });
+          if (existing) {
+            throw new ConflictException(
+              'Ya existe una categoría activa con ese nombre',
+            );
+          }
+        }
+
+        // crear nueva versión
+        return tx.categoriaTarifa.create({
+          data: {
+            nombre: dto.nombre ?? current.nombre,
+            descripcion: dto.descripcion ?? current.descripcion,
+            valorBase: dto.valorBase ?? current.valorBase,
+            consumoMinimoMensual:
+              dto.consumoMinimoMensual ?? current.consumoMinimoMensual,
+            valorExcedenteM3: dto.valorExcedenteM3 ?? current.valorExcedenteM3,
+            fechaVigenciaDesde: now,
+            fechaVigenciaHasta: null,
+            activo: true,
+            createdAt: now,
+          },
+          select: safeTariffCategoriesSelect,
+        });
+      },
+    );
+
+    return toTariffCategoryResponse(newTariff);
   }
 }

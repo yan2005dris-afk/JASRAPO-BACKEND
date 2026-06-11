@@ -1,6 +1,7 @@
 import { ConflictException, Injectable } from '@nestjs/common';
 import { TariffRepository } from '../../domain/repositories/tariff.repository';
 import { CreateCategoriaTarifaDto } from '../../interfaces/dto/create-categoria-tarifa.dto';
+import { toTariffCategoryResponse } from '../../types/tariffCategoryMapper';
 
 @Injectable()
 export class CreateTariffCategoryUseCase {
@@ -21,12 +22,14 @@ export class CreateTariffCategoryUseCase {
 
     const now = new Date();
 
-    return this.tariffRepository.create({
+    const newTariff = await this.tariffRepository.create({
       ...dto,
       fechaVigenciaDesde: now,
       fechaVigenciaHasta: null,
       activo: true,
       createdAt: now,
     });
+
+    return toTariffCategoryResponse(newTariff);
   }
 }

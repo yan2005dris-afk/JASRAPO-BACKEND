@@ -1,40 +1,39 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { UpdateCommunityUseCase } from './update-community.use-case';
+import { CommunityRepository } from '../../domain/repositories/community.repository';
 
 describe('UpdateCommunityUseCase', () => {
   let useCase: UpdateCommunityUseCase;
-  let prisma: PrismaService;
 
-  const mockPrismaService = {
-    comunidades: {
-      update: jest.fn(),
-      findUnique: jest.fn(),
-    },
+  const mockCommunityRepository = {
+    findUnique: jest.fn(),
+    findFirst: jest.fn(),
+    findMany: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
   };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UpdateCommunityUseCase,
-        { provide: PrismaService, useValue: mockPrismaService },
+        { provide: CommunityRepository, useValue: mockCommunityRepository },
       ],
     }).compile();
 
     useCase = module.get<UpdateCommunityUseCase>(UpdateCommunityUseCase);
-    prisma = module.get<PrismaService>(PrismaService);
   });
 
   it('should update a community', async () => {
     const id = 1;
     const dto = { nombre: 'Comunidad Updated' };
-    mockPrismaService.comunidades.findUnique.mockResolvedValue({
+    mockCommunityRepository.findUnique.mockResolvedValue({
       comunidadId: id,
       nombre: 'Old Name',
       deletedAt: null,
     });
-    mockPrismaService.comunidades.update.mockResolvedValue({
+    mockCommunityRepository.update.mockResolvedValue({
       comunidadId: id,
       ...dto,
       createdAt: new Date(),
@@ -45,6 +44,6 @@ describe('UpdateCommunityUseCase', () => {
     const result = await useCase.execute(id, dto);
 
     expect(result).toBeDefined();
-    expect(prisma.comunidades.update).toHaveBeenCalled();
+    expect(mockCommunityRepository.update).toHaveBeenCalled();
   });
 });

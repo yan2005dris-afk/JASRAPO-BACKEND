@@ -1,18 +1,23 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../../../../infrastructure/database/prisma.service';
+import { AgreementRepository } from '../../domain/repositories/agreement.repository';
 import { UpdateAgreementUseCase } from './update-agreement.use-case';
 
 describe('UpdateAgreementUseCase', () => {
   let useCase: UpdateAgreementUseCase;
 
-  const mockPrismaService = {
-    convenios: {
-      findFirst: jest.fn(),
-      update: jest.fn(),
-    },
-    $transaction: jest.fn(),
+  const mockAgreementRepository = {
+    findFirstConvenio: jest.fn(),
+    findUniqueConvenio: jest.fn(),
+    findManyConvenios: jest.fn(),
+    createConvenio: jest.fn(),
+    updateConvenio: jest.fn(),
+    findFirstContrato: jest.fn(),
+    findFirstParametroTasainteres: jest.fn(),
+    findManyPrefacturas: jest.fn(),
+    findManyCuotaConvenio: jest.fn(),
+    executeTransaction: jest.fn(),
   };
 
   const baseConvenio = {
@@ -25,7 +30,7 @@ describe('UpdateAgreementUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UpdateAgreementUseCase,
-        { provide: PrismaService, useValue: mockPrismaService },
+        { provide: AgreementRepository, useValue: mockAgreementRepository },
       ],
     }).compile();
 
@@ -66,9 +71,9 @@ describe('UpdateAgreementUseCase', () => {
         },
       };
 
-      mockPrismaService.convenios.findFirst.mockResolvedValue(baseConvenio);
-      mockPrismaService.$transaction.mockImplementation((callback) =>
-        callback(tx),
+      mockAgreementRepository.findFirstConvenio.mockResolvedValue(baseConvenio);
+      mockAgreementRepository.executeTransaction.mockImplementation(
+        (callback) => callback(tx),
       );
 
       const result = await useCase.execute(1n, 'PAGADO');
@@ -110,9 +115,9 @@ describe('UpdateAgreementUseCase', () => {
         },
       };
 
-      mockPrismaService.convenios.findFirst.mockResolvedValue(baseConvenio);
-      mockPrismaService.$transaction.mockImplementation((callback) =>
-        callback(tx),
+      mockAgreementRepository.findFirstConvenio.mockResolvedValue(baseConvenio);
+      mockAgreementRepository.executeTransaction.mockImplementation(
+        (callback) => callback(tx),
       );
 
       const result = await useCase.execute(1n, 'PAGADO');
@@ -124,8 +129,8 @@ describe('UpdateAgreementUseCase', () => {
 
   describe('ANULADO transition', () => {
     it('should soft delete the convenio', async () => {
-      mockPrismaService.convenios.findFirst.mockResolvedValue(baseConvenio);
-      mockPrismaService.convenios.update.mockResolvedValue({
+      mockAgreementRepository.findFirstConvenio.mockResolvedValue(baseConvenio);
+      mockAgreementRepository.updateConvenio.mockResolvedValue({
         convenioId: 1n,
         estado: 'ANULADO',
         deletedAt: new Date(),
@@ -134,24 +139,24 @@ describe('UpdateAgreementUseCase', () => {
       const result = await useCase.execute(1n, 'ANULADO');
 
       expect(result.estado).toBe('ANULADO');
-      expect(mockPrismaService.convenios.update).toHaveBeenCalledWith({
-        where: { convenioId: 1n },
-        data: expect.objectContaining({
+      expect(mockAgreementRepository.updateConvenio).toHaveBeenCalledWith(
+        { convenioId: 1n },
+        expect.objectContaining({
           estado: 'ANULADO',
           deletedAt: expect.any(Date),
         }),
-        select: expect.any(Object),
-      });
+        expect.any(Object),
+      );
     });
   });
 
   describe('ACTIVO transition', () => {
     it('should activate convenio and set approval date', async () => {
-      mockPrismaService.convenios.findFirst
+      mockAgreementRepository.findFirstConvenio
         .mockResolvedValueOnce(baseConvenio) // primer find para validación
         .mockResolvedValueOnce({ fechaAprobacion: null }); // segundo find en ejecutarActivacion
 
-      mockPrismaService.convenios.update.mockResolvedValue({
+      mockAgreementRepository.updateConvenio.mockResolvedValue({
         convenioId: 1n,
         estado: 'ACTIVO',
         fechaAprobacion: expect.any(Date),
@@ -160,27 +165,27 @@ describe('UpdateAgreementUseCase', () => {
       const result = await useCase.execute(1n, 'ACTIVO');
 
       expect(result.estado).toBe('ACTIVO');
-      expect(mockPrismaService.convenios.update).toHaveBeenCalledWith({
-        where: { convenioId: 1n },
-        data: expect.objectContaining({
+      expect(mockAgreementRepository.updateConvenio).toHaveBeenCalledWith(
+        { convenioId: 1n },
+        expect.objectContaining({
           estado: 'ACTIVO',
           fechaAprobacion: expect.any(Date),
         }),
-        select: expect.any(Object),
-      });
+        expect.any(Object),
+      );
     });
 
     it('should keep existing approval date when already set', async () => {
       const existingDate = new Date('2026-06-01');
 
-      mockPrismaService.convenios.findFirst
+      mockAgreementRepository.findFirstConvenio
         .mockResolvedValueOnce({
           ...baseConvenio,
           estado: 'PREPARADO',
         })
         .mockResolvedValueOnce({ fechaAprobacion: existingDate });
 
-      mockPrismaService.convenios.update.mockResolvedValue({
+      mockAgreementRepository.updateConvenio.mockResolvedValue({
         convenioId: 1n,
         estado: 'ACTIVO',
         fechaAprobacion: existingDate,
@@ -189,20 +194,20 @@ describe('UpdateAgreementUseCase', () => {
       const result = await useCase.execute(1n, 'ACTIVO');
 
       expect(result.estado).toBe('ACTIVO');
-      expect(mockPrismaService.convenios.update).toHaveBeenCalledWith({
-        where: { convenioId: 1n },
-        data: {
+      expect(mockAgreementRepository.updateConvenio).toHaveBeenCalledWith(
+        { convenioId: 1n },
+        {
           estado: 'ACTIVO',
           fechaAprobacion: existingDate,
         },
-        select: expect.any(Object),
-      });
+        expect.any(Object),
+      );
     });
   });
 
   describe('validations', () => {
     it('should throw NotFoundException when convenio does not exist', async () => {
-      mockPrismaService.convenios.findFirst.mockResolvedValue(null);
+      mockAgreementRepository.findFirstConvenio.mockResolvedValue(null);
 
       await expect(useCase.execute(999n, 'PAGADO')).rejects.toThrow(
         NotFoundException,
@@ -210,7 +215,7 @@ describe('UpdateAgreementUseCase', () => {
     });
 
     it('should throw BadRequestException when estado is the same', async () => {
-      mockPrismaService.convenios.findFirst.mockResolvedValue(baseConvenio);
+      mockAgreementRepository.findFirstConvenio.mockResolvedValue(baseConvenio);
 
       await expect(useCase.execute(1n, 'PENDIENTE_ABONO')).rejects.toThrow(
         BadRequestException,
@@ -218,7 +223,7 @@ describe('UpdateAgreementUseCase', () => {
     });
 
     it('should throw BadRequestException when convenio is already PAGADO', async () => {
-      mockPrismaService.convenios.findFirst.mockResolvedValue({
+      mockAgreementRepository.findFirstConvenio.mockResolvedValue({
         ...baseConvenio,
         estado: 'PAGADO',
       });
@@ -229,7 +234,7 @@ describe('UpdateAgreementUseCase', () => {
     });
 
     it('should throw BadRequestException when convenio is already ANULADO', async () => {
-      mockPrismaService.convenios.findFirst.mockResolvedValue({
+      mockAgreementRepository.findFirstConvenio.mockResolvedValue({
         ...baseConvenio,
         estado: 'ANULADO',
       });
@@ -240,7 +245,7 @@ describe('UpdateAgreementUseCase', () => {
     });
 
     it('should throw BadRequestException for unsupported transitions', async () => {
-      mockPrismaService.convenios.findFirst.mockResolvedValue(baseConvenio);
+      mockAgreementRepository.findFirstConvenio.mockResolvedValue(baseConvenio);
 
       await expect(useCase.execute(1n, 'PAGADA')).rejects.toThrow(
         BadRequestException,

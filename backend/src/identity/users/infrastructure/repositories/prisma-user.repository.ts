@@ -55,7 +55,9 @@ export class PrismaUserRepository implements UserRepository {
     return this.prisma.usuarios.count(params);
   }
 
-  async create(data: Prisma.UsuariosCreateInput | Prisma.UsuariosUncheckedCreateInput): Promise<any> {
+  async create(
+    data: Prisma.UsuariosCreateInput | Prisma.UsuariosUncheckedCreateInput,
+  ): Promise<any> {
     return this.prisma.usuarios.create({ data });
   }
 
@@ -230,9 +232,7 @@ export class PrismaUserRepository implements UserRepository {
     }
   }
 
-  async executeTransaction<T>(
-    callback: (tx: any) => Promise<T>,
-  ): Promise<T> {
+  async executeTransaction<T>(callback: (tx: any) => Promise<T>): Promise<T> {
     return this.prisma.$transaction(callback);
   }
 }

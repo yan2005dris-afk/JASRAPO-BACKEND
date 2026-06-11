@@ -1,28 +1,31 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { UpdateSectorUseCase } from './update-sector.use-case';
-import { PrismaService } from 'src/infrastructure/database/prisma.service';
+import { SectorRepository } from '../../domain/repositories/sector.repository';
+import { NotFoundException } from '@nestjs/common';
 
 describe('UpdateSectorUseCase', () => {
   let useCase: UpdateSectorUseCase;
-  let prisma: PrismaService;
 
-  const mockPrismaService = {
-    sectores: {
-      update: jest.fn(),
-    },
+  const mockSectorRepository = {
+    findUnique: jest.fn(),
+    update: jest.fn(),
+    findMany: jest.fn(),
+    count: jest.fn(),
+    create: jest.fn(),
+    delete: jest.fn(),
+    findComunidad: jest.fn(),
   };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UpdateSectorUseCase,
-        { provide: PrismaService, useValue: mockPrismaService },
+        { provide: SectorRepository, useValue: mockSectorRepository },
       ],
     }).compile();
 
     useCase = module.get<UpdateSectorUseCase>(UpdateSectorUseCase);
-    prisma = module.get<PrismaService>(PrismaService);
   });
 
   afterEach(() => {
@@ -35,19 +38,26 @@ describe('UpdateSectorUseCase', () => {
 
   it('should update a sector successfully', async () => {
     const dto = { nombre: 'Sector Updated' };
+    const mockExistingSector = {
+      sectorId: 1,
+      nombre: 'Old',
+      comunidadId: 1,
+      deletedAt: null,
+    };
     const mockUpdatedSector = {
       sectorId: 1,
       nombre: 'Sector Updated',
       comunidadId: 1,
     };
-    mockPrismaService.sectores.update.mockResolvedValue(mockUpdatedSector);
+    mockSectorRepository.findUnique.mockResolvedValue(mockExistingSector);
+    mockSectorRepository.update.mockResolvedValue(mockUpdatedSector);
 
     const result = await useCase.execute(1, dto);
 
     expect(result).toEqual(mockUpdatedSector);
-    expect(prisma.sectores.update).toHaveBeenCalledWith({
-      where: { sectorId: 1 },
-      data: dto,
-    });
+    expect(mockSectorRepository.update).toHaveBeenCalledWith(
+      { sectorId: 1 },
+      dto,
+    );
   });
 });

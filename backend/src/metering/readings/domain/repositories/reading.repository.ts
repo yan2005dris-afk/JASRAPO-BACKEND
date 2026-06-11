@@ -1,8 +1,9 @@
-import { Prisma } from 'src/generated/prisma/client';
+import type { Prisma } from 'src/generated/prisma/client';
 
 export abstract class ReadingRepository {
   abstract findUnique(
     where: Prisma.LecturasWhereUniqueInput,
+    select?: Prisma.LecturasSelect,
   ): Promise<any>;
 
   abstract findMany(params: {
@@ -10,7 +11,13 @@ export abstract class ReadingRepository {
     take?: number;
     where?: Prisma.LecturasWhereInput;
     orderBy?: Prisma.LecturasOrderByWithRelationInput;
+    select?: Prisma.LecturasSelect;
+    include?: Prisma.LecturasInclude;
   }): Promise<any[]>;
+
+  abstract count(params: {
+    where?: Prisma.LecturasWhereInput;
+  }): Promise<number>;
 
   abstract create(
     data: Prisma.LecturasCreateInput | Prisma.LecturasUncheckedCreateInput,

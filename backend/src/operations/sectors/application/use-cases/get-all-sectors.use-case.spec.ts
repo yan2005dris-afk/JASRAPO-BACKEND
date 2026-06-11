@@ -1,28 +1,30 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { GetAllSectorsUseCase } from './get-all-sectors.use-case';
-import { PrismaService } from 'src/infrastructure/database/prisma.service';
+import { SectorRepository } from '../../domain/repositories/sector.repository';
 
 describe('GetAllSectorsUseCase', () => {
   let useCase: GetAllSectorsUseCase;
-  let prisma: PrismaService;
 
-  const mockPrismaService = {
-    sectores: {
-      findMany: jest.fn(),
-    },
+  const mockSectorRepository = {
+    findUnique: jest.fn(),
+    findMany: jest.fn(),
+    count: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn(),
+    findComunidad: jest.fn(),
   };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         GetAllSectorsUseCase,
-        { provide: PrismaService, useValue: mockPrismaService },
+        { provide: SectorRepository, useValue: mockSectorRepository },
       ],
     }).compile();
 
     useCase = module.get<GetAllSectorsUseCase>(GetAllSectorsUseCase);
-    prisma = module.get<PrismaService>(PrismaService);
   });
 
   afterEach(() => {
@@ -38,11 +40,14 @@ describe('GetAllSectorsUseCase', () => {
       { sectorId: 1, nombre: 'Sector 1', comunidadId: 1 },
       { sectorId: 2, nombre: 'Sector 2', comunidadId: 1 },
     ];
-    mockPrismaService.sectores.findMany.mockResolvedValue(mockSectors);
+    mockSectorRepository.findMany.mockResolvedValue(mockSectors);
+    mockSectorRepository.count.mockResolvedValue(2);
 
     const result = await useCase.execute();
 
-    expect(result).toEqual(mockSectors);
-    expect(prisma.sectores.findMany).toHaveBeenCalled();
+    expect(result.data).toEqual(mockSectors);
+    expect(result.meta.total).toBe(2);
+    expect(mockSectorRepository.findMany).toHaveBeenCalled();
+    expect(mockSectorRepository.count).toHaveBeenCalled();
   });
 });

@@ -37,9 +37,7 @@ describe('InstallMeterUseCase', () => {
   });
 
   it('should install device from BODEGA status and create history', async () => {
-    mockMeterRepository.findUnique.mockResolvedValue(
-      mockMedidor as any,
-    );
+    mockMeterRepository.findUnique.mockResolvedValue(mockMedidor as any);
     mockMeterRepository.update.mockResolvedValue({
       ...mockMedidor,
       estado: 'INSTALADO',
@@ -52,7 +50,9 @@ describe('InstallMeterUseCase', () => {
     expect(mockMeterRepository.createHistory).toHaveBeenCalledWith(
       expect.objectContaining({
         medidor: expect.objectContaining({ connect: { medidorId: BigInt(1) } }),
-        contrato: expect.objectContaining({ connect: { contratoId: BigInt(123) } }),
+        contrato: expect.objectContaining({
+          connect: { contratoId: BigInt(123) },
+        }),
         lecturaInicial: 0,
       }),
       null,

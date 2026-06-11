@@ -12,6 +12,7 @@ import {
 import { CategoriaTarifaService } from '../../application/categoria-tarifa.service';
 import { CreateCategoriaTarifaDto } from '../dto/create-categoria-tarifa.dto';
 import { UpdateCategoriaTarifaDto } from '../dto/update-categoria-tarifa.dto';
+import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -38,11 +39,20 @@ export class CategoriaTarifaController {
   }
 
   // LISTADO PRINCIPAL
-  @ApiOperation({ summary: 'Obtener todas las categorías activas' })
+  @ApiOperation({
+    summary: 'Obtener todas las categorías activas con paginación',
+  })
   @RequiredPermission('tarifas', 'read')
   @Get()
-  findAll(@Query('nombre') nombre?: string) {
-    return this.service.getCategorias(nombre);
+  findAll(
+    @Query() paginationDto: PaginationDto,
+    @Query('nombre') nombre?: string,
+  ) {
+    return this.service.getCategorias(
+      paginationDto.page,
+      paginationDto.limit,
+      nombre,
+    );
   }
 
   // BÚSQUEDA POR NOMBRE

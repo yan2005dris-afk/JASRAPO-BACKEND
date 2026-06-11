@@ -71,7 +71,7 @@ export class MeterService {
 
     const updated = await this.meterRepository.update(
       { medidorId: id },
-      dataToUpdate as any,
+      dataToUpdate,
     );
     return toMeterResponse(updated);
   }

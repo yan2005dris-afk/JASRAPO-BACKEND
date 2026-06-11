@@ -9,7 +9,7 @@ export class RemoveReadingUseCase {
     const existing = await this.readingRepository.findUnique({
       lecturaId: id,
     });
-    if (!existing || existing.deletedAt) {
+    if (!existing || existing.deletedAt !== null) {
       throw new NotFoundException(`Lectura con ID ${id} no encontrada`);
     }
 

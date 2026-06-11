@@ -37,7 +37,10 @@ describe('CreateRoleUseCase', () => {
 
   it('should create a role with only name (no hierarchy)', async () => {
     const dto = { nombre: 'Operador' };
-    mockRoleRepository.create.mockResolvedValue({ rolId: 5, nombre: 'Operador' });
+    mockRoleRepository.create.mockResolvedValue({
+      rolId: 5,
+      nombre: 'Operador',
+    });
 
     const result = await useCase.execute(dto);
 

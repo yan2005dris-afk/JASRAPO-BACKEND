@@ -8,7 +8,10 @@ import { PrismaBusquedaPublicaRepository } from './infrastructure/repositories/p
 @Module({
   controllers: [BusquedaPublicaController],
   providers: [
-    { provide: BusquedaPublicaRepository, useClass: PrismaBusquedaPublicaRepository },
+    {
+      provide: BusquedaPublicaRepository,
+      useClass: PrismaBusquedaPublicaRepository,
+    },
     BusquedaPublicaService,
     PublicSearchUseCase,
   ],

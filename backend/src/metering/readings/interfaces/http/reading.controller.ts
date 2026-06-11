@@ -12,7 +12,8 @@ import {
 import { ReadingService } from '../../application/reading.service';
 import { CrearLecturaDto } from '../dto/create-lectura.dto';
 import { ActualizarLecturaDto } from '../dto/update-lectura.dto';
-import { LecturaEntity } from '../../domain/entities/lectura.entity';
+import { ResponseReadingDto } from '../dto/response-reading.dto';
+import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
 import {
   ApiTags,
   ApiBearerAuth,
@@ -41,7 +42,7 @@ export class ReadingController {
   @ApiResponse({
     status: 201,
     description: 'Lectura creada',
-    type: LecturaEntity,
+    type: ResponseReadingDto,
   })
   @ApiResponse({ status: 400, description: 'Datos inválidos' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
@@ -50,25 +51,13 @@ export class ReadingController {
   @Post()
   async create(
     @Body() crearLecturaDto: CrearLecturaDto,
-  ): Promise<LecturaEntity> {
+  ): Promise<ResponseReadingDto> {
     return this.readingService.create(crearLecturaDto);
   }
 
   @ApiOperation({
     summary: 'Listar lecturas',
     description: 'Retorna lista de lecturas con paginación',
-  })
-  @ApiQuery({
-    name: 'skip',
-    description: 'Registros a omitir',
-    required: false,
-    type: Number,
-  })
-  @ApiQuery({
-    name: 'take',
-    description: 'Límite de registros',
-    required: false,
-    type: Number,
   })
   @ApiQuery({
     name: 'contratoId',
@@ -79,16 +68,14 @@ export class ReadingController {
   @ApiResponse({
     status: 200,
     description: 'Lista de lecturas',
-    type: [LecturaEntity],
   })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @RequiredPermission('lecturas', 'read')
   @Get()
   async findAll(
-    @Query('skip') skip?: number,
-    @Query('take') take?: number,
+    @Query() paginationDto: PaginationDto,
     @Query('contratoId') contratoId?: string,
-  ): Promise<LecturaEntity[]> {
+  ) {
     const where: any = {};
     if (contratoId) {
       where.medidor = {
@@ -100,11 +87,11 @@ export class ReadingController {
         },
       };
     }
-    return this.readingService.findAll({
-      skip: skip ? Number(skip) : undefined,
-      take: take ? Number(take) : undefined,
+    return this.readingService.findAll(
+      paginationDto.page,
+      paginationDto.limit,
       where,
-    });
+    );
   }
 
   @ApiOperation({
@@ -120,13 +107,13 @@ export class ReadingController {
   @ApiResponse({
     status: 200,
     description: 'Lectura encontrada',
-    type: LecturaEntity,
+    type: ResponseReadingDto,
   })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({ status: 404, description: 'Lectura no encontrada' })
   @RequiredPermission('lecturas', 'read')
   @Get(':id')
-  async findOne(@Param('id') id: string): Promise<LecturaEntity> {
+  async findOne(@Param('id') id: string): Promise<ResponseReadingDto> {
     return this.readingService.findOne(BigInt(id));
   }
 
@@ -144,7 +131,7 @@ export class ReadingController {
   @ApiResponse({
     status: 200,
     description: 'Lectura actualizada',
-    type: LecturaEntity,
+    type: ResponseReadingDto,
   })
   @ApiResponse({ status: 400, description: 'Datos inválidos' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
@@ -155,7 +142,7 @@ export class ReadingController {
   async actualizarLectura(
     @Param('id') id: string,
     @Body() updateLecturaDto: ActualizarLecturaDto,
-  ): Promise<LecturaEntity> {
+  ): Promise<ResponseReadingDto> {
     return this.readingService.update(BigInt(id), updateLecturaDto);
   }
 

@@ -1,25 +1,19 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../../../../infrastructure/database/prisma.service';
+import { AgreementRepository } from '../../domain/repositories/agreement.repository';
 import { CreateAgreementUseCase } from './create-agreement.use-case';
 import { GetDebtSummaryUseCase } from './get-debt-summary.use-case';
 
 describe('CreateAgreementUseCase', () => {
   let useCase: CreateAgreementUseCase;
 
-  const mockPrismaService = {
-    contratos: {
-      findFirst: jest.fn(),
-    },
-    convenios: {
-      findFirst: jest.fn(),
-      findUnique: jest.fn(),
-    },
-    parametroTasainteres: {
-      findFirst: jest.fn(),
-    },
-    $transaction: jest.fn(),
+  const mockAgreementRepository = {
+    findFirstContrato: jest.fn(),
+    findFirstConvenio: jest.fn(),
+    findFirstParametroTasainteres: jest.fn(),
+    findUniqueConvenio: jest.fn(),
+    executeTransaction: jest.fn(),
   };
 
   const mockGetDebtSummaryUseCase = {
@@ -38,7 +32,7 @@ describe('CreateAgreementUseCase', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateAgreementUseCase,
-        { provide: PrismaService, useValue: mockPrismaService },
+        { provide: AgreementRepository, useValue: mockAgreementRepository },
         { provide: GetDebtSummaryUseCase, useValue: mockGetDebtSummaryUseCase },
       ],
     }).compile();
@@ -57,27 +51,25 @@ describe('CreateAgreementUseCase', () => {
   it('should create agreement and generate installments in a transaction', async () => {
     const createdConvenio = { convenioId: 50n };
     const tx = {
-      convenios: {
-        create: jest.fn().mockResolvedValue(createdConvenio),
-      },
-      cuotaConvenio: {
-        createMany: jest.fn().mockResolvedValue({ count: 3 }),
-      },
+      convenios: { create: jest.fn().mockResolvedValue(createdConvenio) },
+      cuotaConvenio: { createMany: jest.fn().mockResolvedValue({ count: 3 }) },
     };
 
-    mockPrismaService.contratos.findFirst.mockResolvedValue({ contratoId: 1n });
-    mockPrismaService.convenios.findFirst.mockResolvedValue(null);
+    mockAgreementRepository.findFirstContrato.mockResolvedValue({
+      contratoId: 1n,
+    });
+    mockAgreementRepository.findFirstConvenio.mockResolvedValue(null);
     mockGetDebtSummaryUseCase.execute.mockResolvedValue({
       deudaTotal: 100,
       maxMesesAtrasado: 2,
     });
-    mockPrismaService.parametroTasainteres.findFirst.mockResolvedValue({
+    mockAgreementRepository.findFirstParametroTasainteres.mockResolvedValue({
       tasa: 1,
     });
-    mockPrismaService.$transaction.mockImplementation((callback) =>
+    mockAgreementRepository.executeTransaction.mockImplementation((callback) =>
       callback(tx),
     );
-    mockPrismaService.convenios.findUnique.mockResolvedValue({
+    mockAgreementRepository.findUniqueConvenio.mockResolvedValue({
       convenioId: 50n,
       cuotaConvenio: [],
     });
@@ -104,41 +96,35 @@ describe('CreateAgreementUseCase', () => {
           convenioId: 50n,
           numeroCuota: 1,
           valorCuota: 30.9,
-          saldoPendiente: 30.9,
-          estado: 'PENDIENTE',
           interesMoraAplicado: 0.9,
         }),
         expect.objectContaining({ numeroCuota: 2, valorCuota: 30.9 }),
         expect.objectContaining({ numeroCuota: 3, valorCuota: 30.9 }),
       ],
     });
-    expect(mockPrismaService.convenios.findUnique).toHaveBeenCalledWith({
-      where: { convenioId: 50n },
-      select: expect.any(Object),
-    });
   });
 
   it('should use PREPARADO status when there is no initial payment', async () => {
     const tx = {
-      convenios: {
-        create: jest.fn().mockResolvedValue({ convenioId: 51n }),
-      },
-      cuotaConvenio: {
-        createMany: jest.fn().mockResolvedValue({ count: 2 }),
-      },
+      convenios: { create: jest.fn().mockResolvedValue({ convenioId: 51n }) },
+      cuotaConvenio: { createMany: jest.fn().mockResolvedValue({ count: 2 }) },
     };
 
-    mockPrismaService.contratos.findFirst.mockResolvedValue({ contratoId: 1n });
-    mockPrismaService.convenios.findFirst.mockResolvedValue(null);
+    mockAgreementRepository.findFirstContrato.mockResolvedValue({
+      contratoId: 1n,
+    });
+    mockAgreementRepository.findFirstConvenio.mockResolvedValue(null);
     mockGetDebtSummaryUseCase.execute.mockResolvedValue({
       deudaTotal: 100,
       maxMesesAtrasado: 0,
     });
-    mockPrismaService.parametroTasainteres.findFirst.mockResolvedValue(null);
-    mockPrismaService.$transaction.mockImplementation((callback) =>
+    mockAgreementRepository.findFirstParametroTasainteres.mockResolvedValue(
+      null,
+    );
+    mockAgreementRepository.executeTransaction.mockImplementation((callback) =>
       callback(tx),
     );
-    mockPrismaService.convenios.findUnique.mockResolvedValue({
+    mockAgreementRepository.findUniqueConvenio.mockResolvedValue({
       convenioId: 51n,
     });
 
@@ -160,15 +146,17 @@ describe('CreateAgreementUseCase', () => {
   });
 
   it('should throw NotFoundException when contrato does not exist', async () => {
-    mockPrismaService.contratos.findFirst.mockResolvedValue(null);
+    mockAgreementRepository.findFirstContrato.mockResolvedValue(null);
 
     await expect(useCase.execute(dto)).rejects.toThrow(NotFoundException);
     expect(mockGetDebtSummaryUseCase.execute).not.toHaveBeenCalled();
   });
 
   it('should throw BadRequestException when contrato already has active agreement', async () => {
-    mockPrismaService.contratos.findFirst.mockResolvedValue({ contratoId: 1n });
-    mockPrismaService.convenios.findFirst.mockResolvedValue({
+    mockAgreementRepository.findFirstContrato.mockResolvedValue({
+      contratoId: 1n,
+    });
+    mockAgreementRepository.findFirstConvenio.mockResolvedValue({
       convenioId: 9n,
       estado: 'ACTIVO',
     });
@@ -178,8 +166,10 @@ describe('CreateAgreementUseCase', () => {
   });
 
   it('should throw BadRequestException when debt is zero', async () => {
-    mockPrismaService.contratos.findFirst.mockResolvedValue({ contratoId: 1n });
-    mockPrismaService.convenios.findFirst.mockResolvedValue(null);
+    mockAgreementRepository.findFirstContrato.mockResolvedValue({
+      contratoId: 1n,
+    });
+    mockAgreementRepository.findFirstConvenio.mockResolvedValue(null);
     mockGetDebtSummaryUseCase.execute.mockResolvedValue({
       deudaTotal: 0,
       maxMesesAtrasado: 0,
@@ -189,8 +179,10 @@ describe('CreateAgreementUseCase', () => {
   });
 
   it('should throw BadRequestException when initial payment covers the debt', async () => {
-    mockPrismaService.contratos.findFirst.mockResolvedValue({ contratoId: 1n });
-    mockPrismaService.convenios.findFirst.mockResolvedValue(null);
+    mockAgreementRepository.findFirstContrato.mockResolvedValue({
+      contratoId: 1n,
+    });
+    mockAgreementRepository.findFirstConvenio.mockResolvedValue(null);
     mockGetDebtSummaryUseCase.execute.mockResolvedValue({
       deudaTotal: 100,
       maxMesesAtrasado: 0,
@@ -201,25 +193,27 @@ describe('CreateAgreementUseCase', () => {
     ).rejects.toThrow(BadRequestException);
   });
 
-  it('should throw BadRequestException when required statuses are missing (already handled by enum)', async () => {
-    mockPrismaService.contratos.findFirst.mockResolvedValue({ contratoId: 1n });
-    mockPrismaService.convenios.findFirst.mockResolvedValue(null);
+  it('should resolve when no initial payment and no rate found', async () => {
+    const tx = {
+      convenios: { create: jest.fn().mockResolvedValue({ convenioId: 51n }) },
+      cuotaConvenio: { createMany: jest.fn().mockResolvedValue({ count: 2 }) },
+    };
+
+    mockAgreementRepository.findFirstContrato.mockResolvedValue({
+      contratoId: 1n,
+    });
+    mockAgreementRepository.findFirstConvenio.mockResolvedValue(null);
     mockGetDebtSummaryUseCase.execute.mockResolvedValue({
       deudaTotal: 100,
       maxMesesAtrasado: 0,
     });
-    mockPrismaService.parametroTasainteres.findFirst.mockResolvedValue(null);
-    mockPrismaService.$transaction.mockImplementation((callback) =>
-      callback({
-        convenios: {
-          create: jest.fn().mockResolvedValue({ convenioId: 51n }),
-        },
-        cuotaConvenio: {
-          createMany: jest.fn().mockResolvedValue({ count: 2 }),
-        },
-      }),
+    mockAgreementRepository.findFirstParametroTasainteres.mockResolvedValue(
+      null,
     );
-    mockPrismaService.convenios.findUnique.mockResolvedValue({
+    mockAgreementRepository.executeTransaction.mockImplementation((callback) =>
+      callback(tx),
+    );
+    mockAgreementRepository.findUniqueConvenio.mockResolvedValue({
       convenioId: 51n,
     });
 

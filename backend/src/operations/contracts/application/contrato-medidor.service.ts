@@ -24,12 +24,12 @@ export class ContratoMedidorService {
     return this.createLinkUseCase.execute(createDto);
   }
 
-  async buscarContratos(params: {
-    skip?: number;
-    take?: number;
-    where?: Prisma.ContratosWhereInput;
-  }): Promise<any[]> {
-    return this.findAllUseCase.execute(params);
+  async buscarContratos(
+    page = 1,
+    limit = 10,
+    where?: Prisma.ContratosWhereInput,
+  ) {
+    return this.findAllUseCase.execute(page, limit, where);
   }
 
   async buscarContrato(id: bigint): Promise<any> {
