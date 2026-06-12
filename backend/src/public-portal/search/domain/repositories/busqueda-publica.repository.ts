@@ -1,5 +1,5 @@
-import { SearchResultEntity } from '../entities/public-search-result.entity';
-import { SearchFilters } from '../types/public-search-filters';
+import type { SearchResultEntity } from '../entities/public-search-result.entity';
+import type { SearchFilters } from '../types/public-search-filters';
 
 export abstract class BusquedaPublicaRepository {
   abstract findManyClientes(

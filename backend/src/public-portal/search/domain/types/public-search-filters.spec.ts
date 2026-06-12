@@ -1,4 +1,7 @@
-import { SearchFilters, SearchPaginationMeta } from './public-search-filters';
+import type {
+  SearchFilters,
+  SearchPaginationMeta,
+} from './public-search-filters';
 
 describe('SearchFilters', () => {
   it('should accept a complete search filter object', () => {

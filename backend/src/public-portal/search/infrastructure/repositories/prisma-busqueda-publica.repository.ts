@@ -50,9 +50,7 @@ export class PrismaBusquedaPublicaRepository implements BusquedaPublicaRepositor
     return this.prisma.contratos.count({ where });
   }
 
-  private buildWhereCliente(
-    filters: SearchFilters,
-  ): Prisma.ClientesWhereInput {
+  private buildWhereCliente(filters: SearchFilters): Prisma.ClientesWhereInput {
     if (filters.isIdent) {
       return { identificacion: filters.valor.trim(), deletedAt: null };
     }
