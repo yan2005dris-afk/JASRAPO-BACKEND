@@ -28,6 +28,7 @@ import { RequiredPermission } from 'src/infrastructure/common/decorators/require
 import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 import { EstadoMedidor } from 'src/generated/prisma/enums';
+import { toMeterResponse } from '../../domain/types/metersMapper';
 
 @ApiTags('meters')
 @ApiBearerAuth()
@@ -74,7 +75,7 @@ export class MeterController {
   @RequiredPermission('meters', 'create')
   @Post()
   async create(@Body() createDto: CreateMeterDto): Promise<MeterResponseDto> {
-    return this.meterService.create(createDto);
+    return toMeterResponse(await this.meterService.create(createDto));
   }
 
   /**
@@ -119,11 +120,12 @@ export class MeterController {
     @Query('take') take?: string,
     @Query('estado') estado?: string,
   ): Promise<MeterResponseDto[]> {
-    return this.meterService.findAll({
+    const meters = await this.meterService.findAll({
       skip: skip ? +skip : undefined,
       take: take ? +take : undefined,
-      where: estado ? { estado: estado as EstadoMedidor } : undefined,
+      where: estado ? { estado } : undefined,
     });
+    return meters.map(toMeterResponse);
   }
 
   /**
@@ -150,7 +152,7 @@ export class MeterController {
   @RequiredPermission('meters', 'read')
   @Get(':id')
   async findOne(@Param('id') id: string): Promise<MeterResponseDto> {
-    return this.meterService.findOne(BigInt(id));
+    return toMeterResponse(await this.meterService.findOne(BigInt(id)));
   }
 
   /**
@@ -183,7 +185,7 @@ export class MeterController {
     @Param('id') id: string,
     @Body() updateDto: UpdateMeterDto,
   ): Promise<MeterResponseDto> {
-    return this.meterService.update(BigInt(id), updateDto);
+    return toMeterResponse(await this.meterService.update(BigInt(id), updateDto));
   }
 
   /**
@@ -248,7 +250,9 @@ export class MeterController {
     @Param('id') id: string,
     @Body() installDto: InstallMeterDto,
   ): Promise<MeterResponseDto> {
-    return this.meterService.install(BigInt(id), BigInt(installDto.contratoId));
+    return toMeterResponse(
+      await this.meterService.install(BigInt(id), BigInt(installDto.contratoId)),
+    );
   }
 
   /**
@@ -279,7 +283,7 @@ export class MeterController {
   @RequiredPermission('meters', 'update')
   @Post(':id/report-defect')
   async reportDefect(@Param('id') id: string): Promise<MeterResponseDto> {
-    return this.meterService.reportDefect(BigInt(id));
+    return toMeterResponse(await this.meterService.reportDefect(BigInt(id)));
   }
 
   /**
@@ -316,6 +320,8 @@ export class MeterController {
     @Param('id') id: string,
     @Body('motivoBaja') motivoBaja: string,
   ): Promise<MeterResponseDto> {
-    return this.meterService.decommission(BigInt(id), motivoBaja);
+    return toMeterResponse(
+      await this.meterService.decommission(BigInt(id), motivoBaja),
+    );
   }
 }

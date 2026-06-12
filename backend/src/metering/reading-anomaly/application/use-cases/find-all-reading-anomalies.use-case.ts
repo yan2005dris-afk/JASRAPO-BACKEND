@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { ReadingAnomalyRepository } from '../../domain/repositories/reading-anomaly.repository';
-import { Prisma } from 'src/generated/prisma/client';
-import { safeReadingAnomaliesSelect } from '../../types/IResponseReadingAnomaly';
-import { toReadingAnomalyResponse } from '../../types/readingAnomalyMapper';
+import {
+  ReadingAnomalyFilters,
+  ReadingAnomalyRepository,
+} from '../../domain/repositories/reading-anomaly.repository';
 import { getPagination } from 'src/infrastructure/common/utils/pagination.util';
 import { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
-import { IResponseReadingAnomaly } from '../../types/IResponseReadingAnomaly';
+import { ReadingAnomalyEntity } from '../../domain/entities/reading-anomaly.entity';
 
 @Injectable()
 export class FindAllReadingAnomaliesUseCase {
@@ -16,27 +16,23 @@ export class FindAllReadingAnomaliesUseCase {
   async execute(
     page = 1,
     limit = 10,
-    where?: Prisma.LecturaAnomaliaWhereInput,
-  ): Promise<PaginatedResult<IResponseReadingAnomaly>> {
+    filters?: ReadingAnomalyFilters,
+  ): Promise<PaginatedResult<ReadingAnomalyEntity>> {
     const { skip, take, page: safePage } = getPagination(page, limit);
-
-    const filterWhere = { ...where, deletedAt: null };
 
     const [anomalies, total] = await Promise.all([
       this.readingAnomalyRepository.findMany({
-        where: filterWhere,
-        select: safeReadingAnomaliesSelect,
+        where: filters,
         skip,
         take,
-        orderBy: { createdAt: 'desc' },
       }),
       this.readingAnomalyRepository.count({
-        where: filterWhere,
+        where: filters,
       }),
     ]);
 
     return {
-      data: anomalies.map(toReadingAnomalyResponse),
+      data: anomalies,
       meta: {
         total,
         page: safePage,

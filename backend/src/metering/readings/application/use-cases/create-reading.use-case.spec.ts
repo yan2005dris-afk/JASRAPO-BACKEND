@@ -70,7 +70,6 @@ describe('CreateReadingUseCase', () => {
     );
     expect(mockReadingRepository.findUnique).toHaveBeenCalledWith(
       { lecturaId: mockReading.lecturaId },
-      expect.any(Object),
     );
   });
 });

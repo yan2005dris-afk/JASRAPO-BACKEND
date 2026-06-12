@@ -1,14 +1,16 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { ReadingRepository } from '../../domain/repositories/reading.repository';
 import { ActualizarLecturaDto } from '../../interfaces/dto/update-lectura.dto';
-import { toReadingResponse } from '../../types/readingMapper';
-import { safeReadingsSelect } from '../../types/IResponseReading';
+import { LecturaEntity } from '../../domain/entities/lectura.entity';
 
 @Injectable()
 export class UpdateReadingUseCase {
   constructor(private readonly readingRepository: ReadingRepository) {}
 
-  async execute(id: bigint, updateDto: ActualizarLecturaDto) {
+  async execute(
+    id: bigint,
+    updateDto: ActualizarLecturaDto,
+  ): Promise<LecturaEntity> {
     const existing = await this.readingRepository.findUnique({
       lecturaId: id,
     });
@@ -17,17 +19,23 @@ export class UpdateReadingUseCase {
     }
 
     const dataToUpdate: any = { ...updateDto };
-    if (updateDto.medidorId)
+    if (updateDto.medidorId) {
       dataToUpdate.medidorId = BigInt(updateDto.medidorId);
-    if (updateDto.fecha) dataToUpdate.fecha = new Date(updateDto.fecha);
+    }
+    if (updateDto.fecha) {
+      dataToUpdate.fecha = new Date(updateDto.fecha);
+    }
 
     await this.readingRepository.update({ lecturaId: id }, dataToUpdate);
 
-    const lectura = await this.readingRepository.findUnique(
-      { lecturaId: id },
-      safeReadingsSelect,
-    );
+    const lectura = await this.readingRepository.findUnique({
+      lecturaId: id,
+    });
 
-    return toReadingResponse(lectura);
+    if (!lectura) {
+      throw new NotFoundException('Lectura no encontrada');
+    }
+
+    return lectura;
   }
 }

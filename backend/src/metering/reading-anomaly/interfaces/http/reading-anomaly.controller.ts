@@ -27,6 +27,8 @@ import {
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
 import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
+import { toReadingAnomalyResponse } from '../../types/readingAnomalyMapper';
+import { ReadingAnomalyFilters } from '../../domain/repositories/reading-anomaly.repository';
 
 @ApiTags('reading-anomalies')
 @ApiBearerAuth()
@@ -59,7 +61,7 @@ export class ReadingAnomalyController {
   async create(
     @Body() createDto: CreateReadingAnomalyDto,
   ): Promise<ResponseReadingAnomalyDto> {
-    return this.readingAnomalyService.create(createDto);
+    return toReadingAnomalyResponse(await this.readingAnomalyService.create(createDto))!;
   }
 
   @ApiOperation({
@@ -97,16 +99,26 @@ export class ReadingAnomalyController {
     @Query('tipo') tipo?: TipoAnomalia,
     @Query('estado') estado?: EstadoAnomalia,
   ) {
-    const where: any = {};
-    if (lecturaId) where.lecturaId = BigInt(lecturaId);
-    if (tipo) where.tipo = tipo;
-    if (estado) where.estado = estado;
+    const filters: ReadingAnomalyFilters = {};
+    if (lecturaId) {
+      filters.lecturaId = BigInt(lecturaId);
+    }
+    if (tipo) {
+      filters.tipo = tipo;
+    }
+    if (estado) {
+      filters.estado = estado;
+    }
 
-    return this.readingAnomalyService.findAll(
+    const result = await this.readingAnomalyService.findAll(
       paginationDto.page,
       paginationDto.limit,
-      where,
+      filters,
     );
+    return {
+      data: result.data.map((x) => toReadingAnomalyResponse(x)!),
+      meta: result.meta,
+    };
   }
 
   @ApiOperation({
@@ -129,7 +141,7 @@ export class ReadingAnomalyController {
   @RequiredPermission('reading-anomalies', 'read')
   @Get(':id')
   async findOne(@Param('id') id: string): Promise<ResponseReadingAnomalyDto> {
-    return this.readingAnomalyService.findOne(BigInt(id));
+    return toReadingAnomalyResponse(await this.readingAnomalyService.findOne(BigInt(id)))!;
   }
 
   @ApiOperation({
@@ -164,7 +176,7 @@ export class ReadingAnomalyController {
     @Param('id') id: string,
     @Body() updateDto: UpdateReadingAnomalyDto,
   ): Promise<ResponseReadingAnomalyDto> {
-    return this.readingAnomalyService.update(BigInt(id), updateDto);
+    return toReadingAnomalyResponse(await this.readingAnomalyService.update(BigInt(id), updateDto))!;
   }
 
   @ApiOperation({

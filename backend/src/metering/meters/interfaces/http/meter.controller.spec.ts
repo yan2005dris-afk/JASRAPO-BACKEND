@@ -16,6 +16,19 @@ describe('MeterController', () => {
     deletedAt: null,
   };
 
+  const expectedMappedMedidor = {
+    medidorId: BigInt(1),
+    serie: 'MED-001',
+    modelo: 'DIGITAL_2000',
+    marca: 'Itron',
+    estado: 'BODEGA',
+    fechaInstalacion: null,
+    fechaBaja: null,
+    motivo: undefined,
+    latitud: null,
+    longitud: null,
+  };
+
   const mockMeterService = {
     create: jest.fn(() => Promise.resolve(mockMedidor)),
     findAll: jest.fn(() => Promise.resolve([mockMedidor])),
@@ -47,7 +60,7 @@ describe('MeterController', () => {
       const result = await controller.create(createDto);
 
       expect(service.create).toHaveBeenCalledWith(createDto);
-      expect(result).toEqual(mockMedidor);
+      expect(result).toEqual(expectedMappedMedidor);
     });
   });
 
@@ -56,7 +69,7 @@ describe('MeterController', () => {
       const result = await controller.findAll();
 
       expect(service.findAll).toHaveBeenCalledWith({});
-      expect(result).toEqual([mockMedidor]);
+      expect(result).toEqual([expectedMappedMedidor]);
     });
 
     it('should apply pagination when skip and take provided', async () => {
@@ -66,7 +79,7 @@ describe('MeterController', () => {
         skip: 10,
         take: 5,
       });
-      expect(result).toEqual([mockMedidor]);
+      expect(result).toEqual([expectedMappedMedidor]);
     });
   });
 
@@ -75,7 +88,7 @@ describe('MeterController', () => {
       const result = await controller.findOne('1');
 
       expect(service.findOne).toHaveBeenCalledWith(BigInt(1));
-      expect(result).toEqual(mockMedidor);
+      expect(result).toEqual(expectedMappedMedidor);
     });
   });
 
@@ -85,7 +98,7 @@ describe('MeterController', () => {
       const result = await controller.update('1', updateDto);
 
       expect(service.update).toHaveBeenCalledWith(BigInt(1), updateDto);
-      expect(result).toEqual(mockMedidor);
+      expect(result).toEqual(expectedMappedMedidor);
     });
   });
 
