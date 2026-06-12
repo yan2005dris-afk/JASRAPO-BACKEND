@@ -1,8 +1,9 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { BusquedaPublicaService } from '../../application/busqueda-publica.service';
 import { CreateBusquedaPublicaDto } from '../dto/create-busqueda-publica.dto';
+import { SearchDeudaDto } from '../dto/search-deuda.dto';
 
 @ApiTags('search')
 @Controller('search')
@@ -13,34 +14,9 @@ export class BusquedaPublicaController {
   ) {}
 
   @ApiOperation({
-    summary: 'Búsqueda pública',
+    summary: 'Búsqueda pública de clientes y contratos',
     description:
-      'Endpoint público para buscar información. Permite búsqueda por identificación, nombres, apellidos o nombre completo.',
-  })
-  @ApiQuery({
-    name: 'tipo',
-    description: 'Tipo de búsqueda',
-    enum: ['identificacion', 'nombres', 'apellidos', 'nombreCompleto'],
-    required: true,
-    example: 'identificacion',
-  })
-  @ApiQuery({
-    name: 'valor',
-    description: 'Texto a buscar',
-    required: true,
-    example: '12345678',
-  })
-  @ApiQuery({
-    name: 'page',
-    description: 'Número de página',
-    required: false,
-    type: Number,
-  })
-  @ApiQuery({
-    name: 'limit',
-    description: 'Resultados por página',
-    required: false,
-    type: Number,
+      'Busca clientes (por identificación o nombre) y contratos (por número de guía).',
   })
   @ApiResponse({ status: 200, description: 'Resultados de búsqueda' })
   @ApiResponse({ status: 400, description: 'Parámetros inválidos' })
@@ -48,6 +24,24 @@ export class BusquedaPublicaController {
   @Throttle({ default: { limit: 10, ttl: 60000 } })
   searchPublic(@Query() query: CreateBusquedaPublicaDto) {
     return this.busquedaPublicaService.search(
+      query.tipo,
+      query.valor,
+      query.page ?? 1,
+      query.limit ?? 10,
+    );
+  }
+
+  @ApiOperation({
+    summary: 'Consulta pública de deuda',
+    description:
+      'Retorna el resumen de deuda de un cliente o contrato. Búsqueda por identificación, nombre o número de guía.',
+  })
+  @ApiResponse({ status: 200, description: 'Resumen de deuda' })
+  @ApiResponse({ status: 400, description: 'Parámetros inválidos' })
+  @Get('deuda')
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  searchDeuda(@Query() query: SearchDeudaDto) {
+    return this.busquedaPublicaService.searchDeuda(
       query.tipo,
       query.valor,
       query.page ?? 1,
