@@ -29,7 +29,10 @@ export class XmlStorageService {
    * Generates the bucket name for a given RUC
    */
   private getBucketForRuc(ruc: string): string {
-    const prefix = this.configService.get<string>('STORAGE_BUCKET_PREFIX', 'sri');
+    const prefix = this.configService.get<string>(
+      'STORAGE_BUCKET_PREFIX',
+      'sri',
+    );
     return getBucketName(ruc, SRI_STORAGE_TYPES.XMLS, prefix);
   }
 

@@ -122,7 +122,10 @@ export class StorageService implements IStorageService, OnModuleInit {
    * Ensures dynamic bucket exists for specific RUC and type
    */
   async ensureBucketForRuc(ruc: string, type: SriStorageType): Promise<string> {
-    const prefix = this.configService.get<string>('STORAGE_BUCKET_PREFIX', 'sri');
+    const prefix = this.configService.get<string>(
+      'STORAGE_BUCKET_PREFIX',
+      'sri',
+    );
     const bucket = getBucketName(ruc, type, prefix);
     await this.ensureBucketExists(bucket);
     return bucket;
