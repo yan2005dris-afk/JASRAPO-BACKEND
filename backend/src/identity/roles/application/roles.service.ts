@@ -4,7 +4,10 @@ import { UpdateRoleDto } from '../interfaces/dto/update-role.dto';
 import { CreateRoleUseCase } from './use-cases/create-role.use-case';
 import { AssignPermissionToRoleUseCase } from './use-cases/assign-permission-to-role.use-case';
 import { RemovePermissionFromRoleUseCase } from './use-cases/remove-permission-from-role.use-case';
-import { RoleRepository, type SimpleRole } from '../domain/repositories/role.repository';
+import {
+  RoleRepository,
+  type SimpleRole,
+} from '../domain/repositories/role.repository';
 import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
 import { getPagination } from 'src/infrastructure/common/utils/pagination.util';
 

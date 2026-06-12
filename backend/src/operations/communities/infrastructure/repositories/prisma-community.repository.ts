@@ -54,9 +54,7 @@ export class PrismaCommunityRepository implements CommunityRepository {
     return CommunityMapper.toDomainList(records);
   }
 
-  async count(params?: {
-    where?: Record<string, any>;
-  }): Promise<number> {
+  async count(params?: { where?: Record<string, any> }): Promise<number> {
     return this.prisma.comunidades.count({
       where: (params?.where ?? {}) as Prisma.ComunidadesWhereInput,
     });

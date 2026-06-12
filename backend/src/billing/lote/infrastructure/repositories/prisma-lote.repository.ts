@@ -15,9 +15,7 @@ export class PrismaLoteRepository implements LoteRepository {
     return this.prisma.lote.findMany(params);
   }
 
-  async count(params?: {
-    where?: Record<string, any>;
-  }): Promise<number> {
+  async count(params?: { where?: Record<string, any> }): Promise<number> {
     return this.prisma.lote.count({
       where: (params?.where ?? {}) as any,
     });

@@ -73,7 +73,8 @@ export class RolesController {
    */
   @ApiOperation({
     summary: 'Listar roles',
-    description: 'Retorna todos los roles registrados en el sistema con paginación.',
+    description:
+      'Retorna todos los roles registrados en el sistema con paginación.',
   })
   @ApiResponse({
     status: 200,
@@ -87,10 +88,7 @@ export class RolesController {
   @RequiredPermission('roles', 'read')
   @Get()
   async findAllRoles(@Query() paginationDto: PaginationDto) {
-    return this.rolesService.findAll(
-      paginationDto.page,
-      paginationDto.limit,
-    );
+    return this.rolesService.findAll(paginationDto.page, paginationDto.limit);
   }
 
   /**

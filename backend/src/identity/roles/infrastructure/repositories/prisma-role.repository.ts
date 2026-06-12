@@ -77,9 +77,7 @@ export class PrismaRoleRepository implements RoleRepository {
     return roles.map((role) => RoleMapper.toSimple(role)!);
   }
 
-  async count(params?: {
-    where?: Record<string, any>;
-  }): Promise<number> {
+  async count(params?: { where?: Record<string, any> }): Promise<number> {
     return this.prisma.roles.count({
       where: (params?.where ?? {}) as any,
     });

@@ -36,9 +36,7 @@ export class PrismaPermissionRepository implements PermissionRepository {
     return permissions.map((p) => PermissionMapper.toEntity(p)!);
   }
 
-  async count(params?: {
-    where?: Record<string, any>;
-  }): Promise<number> {
+  async count(params?: { where?: Record<string, any> }): Promise<number> {
     return this.prisma.permisos.count({
       where: (params?.where ?? {}) as any,
     });
