@@ -15,11 +15,9 @@
     ]
   },
   "overrides": {
-    "crypto-js": "^4.2.0",
     "xmldom": "npm:@xmldom/xmldom@^0.9.10",
     "protobufjs": "^8.2.0",
-    "@hono/node-server": "^1.19.13",
-    "uuid": "^11.1.1",
+    "uuid": "^13.0.0",
     "path-to-regexp": "^8.3.0",
     "lodash": "^4.17.23",
     "handlebars": "^4.7.9"

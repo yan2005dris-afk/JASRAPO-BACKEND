@@ -19,6 +19,12 @@
       "unrs-resolver"
     ]
   },
+  "overrides": {
+    "xmldom": "npm:@xmldom/xmldom@^0.9.10",
+    "protobufjs": "^8.4.0",
+    "uuid": "^13.0.0",
+    "tmp": "^0.2.4"
+  },
   "scripts": {
     "prisma:generate": "prisma generate",
     "prestart": "npm run prisma:generate",
@@ -42,15 +48,8 @@
   "prisma": {
     "seed": "tsx prisma/schema/seed.ts"
   },
-  "overrides": {
-    "crypto-js": "^4.2.0",
-    "xmldom": "npm:@xmldom/xmldom@^0.9.10",
-    "protobufjs": "^8.4.0",
-    "@hono/node-server": "^1.19.13",
-    "uuid": "^11.1.1"
-  },
   "dependencies": {
-    "@nestjs-modules/mailer": "2.3.4",
+    "@nestjs-modules/mailer": "2.3.6",
     "@nestjs/axios": "^4.0.1",
     "@nestjs/cache-manager": "^3.1.2",
     "@nestjs/common": "^11.1.16",
@@ -153,7 +152,7 @@
     "prisma": "^7.6.0",
     "source-map-support": "^0.5.21",
     "supertest": "^7.0.0",
-    "testcontainers": "^11.14.0",
+    "testcontainers": "^12.0.1",
     "ts-jest": "^29.2.5",
     "ts-loader": "^9.5.2",
     "ts-node": "^10.9.2",
