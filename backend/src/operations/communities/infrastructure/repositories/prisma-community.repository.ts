@@ -41,13 +41,25 @@ export class PrismaCommunityRepository implements CommunityRepository {
   async findMany(params: {
     where?: Record<string, any>;
     orderBy?: Record<string, any>;
+    skip?: number;
+    take?: number;
   }): Promise<CommunityEntity[]> {
     const records = await this.prisma.comunidades.findMany({
       where: (params.where ?? {}) as Prisma.ComunidadesWhereInput,
       orderBy: params.orderBy as Prisma.ComunidadesOrderByWithRelationInput,
+      skip: params.skip,
+      take: params.take,
       include: this.defaultInclude,
     });
     return CommunityMapper.toDomainList(records);
+  }
+
+  async count(params?: {
+    where?: Record<string, any>;
+  }): Promise<number> {
+    return this.prisma.comunidades.count({
+      where: (params?.where ?? {}) as Prisma.ComunidadesWhereInput,
+    });
   }
 
   async create(data: CreateCommunityData): Promise<CommunityEntity> {

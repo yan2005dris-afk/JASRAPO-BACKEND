@@ -26,12 +26,22 @@ export class PrismaPermissionRepository implements PermissionRepository {
     return PermissionMapper.toEntity(raw)!;
   }
 
-  async findAll(): Promise<PermissionEntity[]> {
+  async findAll(skip?: number, take?: number): Promise<PermissionEntity[]> {
     const permissions = await this.prisma.permisos.findMany({
       where: { deletedAt: null },
       orderBy: [{ recurso: 'asc' }, { accion: 'asc' }],
+      skip,
+      take,
     });
     return permissions.map((p) => PermissionMapper.toEntity(p)!);
+  }
+
+  async count(params?: {
+    where?: Record<string, any>;
+  }): Promise<number> {
+    return this.prisma.permisos.count({
+      where: (params?.where ?? {}) as any,
+    });
   }
 
   async findUnique(permisoId: number): Promise<PermissionEntity | null> {

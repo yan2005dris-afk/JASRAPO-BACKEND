@@ -77,16 +77,28 @@ describe('ComunidadService', () => {
     expect(createUseCase.execute).toHaveBeenCalledWith(dto);
   });
 
-  it('findAll should delegate to FindAllCommunitiesUseCase', async () => {
-    await service.findAll();
-    expect(findAllUseCase.execute).toHaveBeenCalled();
+  it('findAll should delegate to FindAllCommunitiesUseCase with pagination', async () => {
+    await service.findAll(2, 5);
+    expect(findAllUseCase.execute).toHaveBeenCalledWith(2, 5);
   });
 
-  it('findAllWithSector should delegate to FindAllCommunitiesWithSectorUseCase', async () => {
-    await service.findAllWithSector({ sectorId: 1 });
+  it('findAll should use defaults when no pagination provided', async () => {
+    await service.findAll();
+    expect(findAllUseCase.execute).toHaveBeenCalledWith(undefined, undefined);
+  });
+
+  it('findAllWithSector should delegate to FindAllCommunitiesWithSectorUseCase with pagination', async () => {
+    await service.findAllWithSector({ sectorId: 1, page: 2, limit: 10 });
     expect(findAllWithSectorUseCase.execute).toHaveBeenCalledWith({
       sectorId: 1,
+      page: 2,
+      limit: 10,
     });
+  });
+
+  it('findAllWithSector should work without options', async () => {
+    await service.findAllWithSector();
+    expect(findAllWithSectorUseCase.execute).toHaveBeenCalledWith(undefined);
   });
 
   it('findOne should delegate to FindOneCommunityUseCase', async () => {

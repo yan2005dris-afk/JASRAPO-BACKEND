@@ -42,7 +42,8 @@ export abstract class RoleRepository {
     nombre: string;
     deletedAt: Date | null;
   } | null>;
-  abstract findAll(): Promise<SimpleRole[]>;
+  abstract findAll(skip?: number, take?: number): Promise<SimpleRole[]>;
+  abstract count(params?: { where?: Record<string, any> }): Promise<number>;
   abstract create(nombre: string): Promise<SimpleRole>;
   abstract update(
     rolId: number,

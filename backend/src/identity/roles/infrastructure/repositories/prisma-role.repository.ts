@@ -64,15 +64,25 @@ export class PrismaRoleRepository implements RoleRepository {
     });
   }
 
-  async findAll(): Promise<SimpleRole[]> {
+  async findAll(skip?: number, take?: number): Promise<SimpleRole[]> {
     const roles = await this.prisma.roles.findMany({
       where: { deletedAt: null },
       select: {
         rolId: true,
         nombre: true,
       },
+      skip,
+      take,
     });
     return roles.map((role) => RoleMapper.toSimple(role)!);
+  }
+
+  async count(params?: {
+    where?: Record<string, any>;
+  }): Promise<number> {
+    return this.prisma.roles.count({
+      where: (params?.where ?? {}) as any,
+    });
   }
 
   async create(nombre: string): Promise<SimpleRole> {

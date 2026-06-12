@@ -5,6 +5,7 @@ import {
   Param,
   ParseIntPipe,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -12,6 +13,7 @@ import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.
 import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 import { GenerarLoteDto } from '../dto/generar-lote.dto';
 import { LoteService } from '../../application/lote.service';
+import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
 
 @ApiTags('Lotes')
 @ApiBearerAuth()
@@ -38,8 +40,8 @@ export class LoteController {
 
   @Get()
   @ApiOperation({ summary: 'Listar todos los lotes de facturación' })
-  async findAll() {
-    return this.loteService.findAll();
+  async findAll(@Query() paginationDto: PaginationDto) {
+    return this.loteService.findAll(paginationDto.page, paginationDto.limit);
   }
 
   @Get(':id')

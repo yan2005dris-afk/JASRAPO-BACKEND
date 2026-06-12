@@ -9,8 +9,18 @@ export class PrismaLoteRepository implements LoteRepository {
   async findMany(params: {
     include?: Record<string, any>;
     orderBy?: Record<string, any>;
+    skip?: number;
+    take?: number;
   }): Promise<any[]> {
     return this.prisma.lote.findMany(params);
+  }
+
+  async count(params?: {
+    where?: Record<string, any>;
+  }): Promise<number> {
+    return this.prisma.lote.count({
+      where: (params?.where ?? {}) as any,
+    });
   }
 
   async findById(

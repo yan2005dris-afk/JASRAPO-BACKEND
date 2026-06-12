@@ -2,7 +2,13 @@ export abstract class LoteRepository {
   abstract findMany(params: {
     include?: Record<string, any>;
     orderBy?: Record<string, any>;
+    skip?: number;
+    take?: number;
   }): Promise<any[]>;
+
+  abstract count(params?: {
+    where?: Record<string, any>;
+  }): Promise<number>;
 
   abstract findById(
     id: number | bigint,

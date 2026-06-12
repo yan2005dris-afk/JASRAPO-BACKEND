@@ -13,7 +13,13 @@ export abstract class CommunityRepository {
   abstract findMany(params: {
     where?: Record<string, any>;
     orderBy?: Record<string, any>;
+    skip?: number;
+    take?: number;
   }): Promise<CommunityEntity[]>;
+
+  abstract count(params?: {
+    where?: Record<string, any>;
+  }): Promise<number>;
 
   abstract create(data: CreateCommunityData): Promise<CommunityEntity>;
 

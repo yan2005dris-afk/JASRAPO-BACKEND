@@ -4,7 +4,9 @@ import { UpdateRoleDto } from '../interfaces/dto/update-role.dto';
 import { CreateRoleUseCase } from './use-cases/create-role.use-case';
 import { AssignPermissionToRoleUseCase } from './use-cases/assign-permission-to-role.use-case';
 import { RemovePermissionFromRoleUseCase } from './use-cases/remove-permission-from-role.use-case';
-import { RoleRepository } from '../domain/repositories/role.repository';
+import { RoleRepository, type SimpleRole } from '../domain/repositories/role.repository';
+import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
+import { getPagination } from 'src/infrastructure/common/utils/pagination.util';
 
 @Injectable()
 export class RolesService {
@@ -19,8 +21,32 @@ export class RolesService {
     return this.createRoleUseCase.execute(createRoleDto);
   }
 
-  findAll() {
-    return this.roleRepository.findAll();
+  async findAll(
+    page: number = 1,
+    limit: number = 10,
+  ): Promise<PaginatedResult<SimpleRole>> {
+    const { skip, take } = getPagination(page, limit);
+
+    const [data, total] = await Promise.all([
+      this.roleRepository.findAll(skip, take),
+      this.roleRepository.count({ where: { deletedAt: null } }),
+    ]);
+
+    const totalPages = Math.ceil(total / take);
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit: take,
+        ultimaPagina: totalPages,
+        paginaActual: page,
+        porPagina: take,
+        anterior: page > 1 ? page - 1 : null,
+        siguiente: page < totalPages ? page + 1 : null,
+      },
+    };
   }
 
   async findOne(id: number) {

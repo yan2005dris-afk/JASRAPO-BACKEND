@@ -5,6 +5,7 @@ import {
   Body,
   Patch,
   Param,
+  Query,
   UseGuards,
   ParseIntPipe,
 } from '@nestjs/common';
@@ -22,6 +23,7 @@ import {
   ApiParam,
   ApiBody,
 } from '@nestjs/swagger';
+import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
 
 @ApiTags('roles')
 @ApiBearerAuth()
@@ -71,8 +73,7 @@ export class RolesController {
    */
   @ApiOperation({
     summary: 'Listar roles',
-    description:
-      'Retorna todos los roles registrados en el sistema. Sin paginación.',
+    description: 'Retorna todos los roles registrados en el sistema con paginación.',
   })
   @ApiResponse({
     status: 200,
@@ -85,8 +86,11 @@ export class RolesController {
   })
   @RequiredPermission('roles', 'read')
   @Get()
-  findAllRoles() {
-    return this.rolesService.findAll();
+  async findAllRoles(@Query() paginationDto: PaginationDto) {
+    return this.rolesService.findAll(
+      paginationDto.page,
+      paginationDto.limit,
+    );
   }
 
   /**

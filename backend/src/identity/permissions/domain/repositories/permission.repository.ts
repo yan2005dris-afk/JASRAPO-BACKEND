@@ -26,7 +26,8 @@ export abstract class PermissionRepository {
   abstract create(
     data: CreatePermissionRepositoryData,
   ): Promise<PermissionEntity>;
-  abstract findAll(): Promise<PermissionEntity[]>;
+  abstract findAll(skip?: number, take?: number): Promise<PermissionEntity[]>;
+  abstract count(params?: { where?: Record<string, any> }): Promise<number>;
   abstract findUnique(permisoId: number): Promise<PermissionEntity | null>;
   abstract update(
     permisoId: number,

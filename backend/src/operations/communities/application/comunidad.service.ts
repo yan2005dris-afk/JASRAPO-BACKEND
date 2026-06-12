@@ -23,11 +23,11 @@ export class ComunidadService {
     return this.createUseCase.execute(dto);
   }
 
-  async findAll() {
-    return this.findAllUseCase.execute();
+  async findAll(page?: number, limit?: number) {
+    return this.findAllUseCase.execute(page, limit);
   }
 
-  async findAllWithSector(options?: { sectorId?: number }) {
+  async findAllWithSector(options?: { sectorId?: number; page?: number; limit?: number }) {
     return this.findAllWithSectorUseCase.execute(options);
   }
 
