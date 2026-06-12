@@ -11,19 +11,22 @@ import {
 
 export class CreateBusquedaPublicaDto {
   @ApiProperty({
-    description: 'Tipo de búsqueda',
-    enum: ['identificacion', 'nombres', 'apellidos', 'nombreCompleto'],
-    example: 'identificacion',
+    description:
+      'Tipo de búsqueda: "cliente" busca por identificación o nombre, "contrato" busca por número de guía, "global" busca en ambos.',
+    enum: ['cliente', 'contrato', 'global'],
+    example: 'cliente',
   })
-  @IsIn(['identificacion', 'nombres', 'apellidos', 'nombreCompleto'])
-  tipo!: 'identificacion' | 'nombres' | 'apellidos' | 'nombreCompleto';
+  @IsIn(['cliente', 'contrato', 'global'])
+  tipo!: 'cliente' | 'contrato' | 'global';
 
   @ApiProperty({
     description: 'Texto a buscar',
-    example: '12345678',
+    example: '0912345678',
     minLength: 2,
   })
-  @Transform(({ value }) => value?.trim())
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.trim().replace(/\s+/g, ' ') : value,
+  )
   @IsString()
   @MinLength(2)
   valor!: string;
