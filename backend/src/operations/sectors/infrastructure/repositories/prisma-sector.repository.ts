@@ -1,50 +1,88 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
-import { Prisma } from 'src/generated/prisma/client';
 import { SectorRepository } from '../../domain/repositories/sector.repository';
+import { SectorEntity, ComunidadRef } from '../../domain/entities/sector.entity';
+import { CreateSectorData } from '../../domain/types/create-sector-data';
+import { UpdateSectorData } from '../../domain/types/update-sector-data';
+import { SectorFilters } from '../../domain/types/sector-filters';
+import { SectorMapper } from '../mappers/sector.mapper';
 
 @Injectable()
 export class PrismaSectorRepository implements SectorRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findUnique(
-    where: Prisma.SectoresWhereUniqueInput,
-    select?: Prisma.SectoresSelect,
-  ): Promise<any> {
-    return this.prisma.sectores.findUnique({ where, select });
+  async findUnique(where: {
+    sectorId: number;
+  }): Promise<SectorEntity | null> {
+    const raw = await this.prisma.sectores.findUnique({
+      where,
+      include: { comunidades: true },
+    });
+    return raw ? SectorMapper.toDomain(raw) : null;
   }
 
   async findMany(params?: {
-    where?: Prisma.SectoresWhereInput;
-    orderBy?: Prisma.SectoresOrderByWithRelationInput;
+    where?: SectorFilters;
+    orderBy?: { sectorId?: 'asc' | 'desc' };
     skip?: number;
     take?: number;
-    select?: Prisma.SectoresSelect;
-    include?: Prisma.SectoresInclude;
-  }): Promise<any[]> {
-    return this.prisma.sectores.findMany(params);
+  }): Promise<SectorEntity[]> {
+    const raws = await this.prisma.sectores.findMany({
+      where: params?.where as any,
+      orderBy: params?.orderBy,
+      skip: params?.skip,
+      take: params?.take,
+      include: { comunidades: true },
+    });
+    return SectorMapper.toDomainList(raws);
   }
 
-  async count(params: { where?: Prisma.SectoresWhereInput }): Promise<number> {
-    return this.prisma.sectores.count(params);
+  async count(params: { where?: SectorFilters }): Promise<number> {
+    return this.prisma.sectores.count({
+      where: params?.where as any,
+    });
   }
 
-  async create(data: Prisma.SectoresCreateInput): Promise<any> {
-    return this.prisma.sectores.create({ data });
+  async create(data: CreateSectorData): Promise<SectorEntity> {
+    const raw = await this.prisma.sectores.create({
+      data,
+      include: { comunidades: true },
+    });
+    return SectorMapper.toDomain(raw);
   }
 
   async update(
-    where: Prisma.SectoresWhereUniqueInput,
-    data: Prisma.SectoresUpdateInput,
-  ): Promise<any> {
-    return this.prisma.sectores.update({ where, data });
+    where: { sectorId: number },
+    data: UpdateSectorData,
+  ): Promise<SectorEntity> {
+    const raw = await this.prisma.sectores.update({
+      where,
+      data,
+      include: { comunidades: true },
+    });
+    return SectorMapper.toDomain(raw);
   }
 
-  async delete(where: Prisma.SectoresWhereUniqueInput): Promise<any> {
-    return this.prisma.sectores.delete({ where });
+  async delete(where: { sectorId: number }): Promise<SectorEntity> {
+    const raw = await this.prisma.sectores.update({
+      where,
+      data: { deletedAt: new Date() },
+      include: { comunidades: true },
+    });
+    return SectorMapper.toDomain(raw);
   }
 
-  async findComunidad(where: Prisma.ComunidadesWhereUniqueInput): Promise<any> {
-    return this.prisma.comunidades.findUnique({ where });
+  async findComunidad(where: {
+    comunidadId: number;
+  }): Promise<ComunidadRef | null> {
+    const comunidad = await this.prisma.comunidades.findUnique({
+      where,
+    });
+    if (!comunidad) return null;
+    return {
+      comunidadId: comunidad.comunidadId,
+      codigo: comunidad.codigo,
+      nombre: comunidad.nombre,
+    };
   }
 }

@@ -1,34 +1,32 @@
-import type { Prisma } from 'src/generated/prisma/client';
+import { SectorEntity, ComunidadRef } from '../entities/sector.entity';
+import { CreateSectorData } from '../types/create-sector-data';
+import { UpdateSectorData } from '../types/update-sector-data';
+import { SectorFilters } from '../types/sector-filters';
 
 export abstract class SectorRepository {
-  abstract findUnique(
-    where: Prisma.SectoresWhereUniqueInput,
-    select?: Prisma.SectoresSelect,
-  ): Promise<any>;
+  abstract findUnique(where: {
+    sectorId: number;
+  }): Promise<SectorEntity | null>;
 
   abstract findMany(params?: {
-    where?: Prisma.SectoresWhereInput;
-    orderBy?: Prisma.SectoresOrderByWithRelationInput;
+    where?: SectorFilters;
+    orderBy?: { sectorId?: 'asc' | 'desc' };
     skip?: number;
     take?: number;
-    select?: Prisma.SectoresSelect;
-    include?: Prisma.SectoresInclude;
-  }): Promise<any[]>;
+  }): Promise<SectorEntity[]>;
 
-  abstract count(params: {
-    where?: Prisma.SectoresWhereInput;
-  }): Promise<number>;
+  abstract count(params: { where?: SectorFilters }): Promise<number>;
 
-  abstract create(data: Prisma.SectoresCreateInput): Promise<any>;
+  abstract create(data: CreateSectorData): Promise<SectorEntity>;
 
   abstract update(
-    where: Prisma.SectoresWhereUniqueInput,
-    data: Prisma.SectoresUpdateInput,
-  ): Promise<any>;
+    where: { sectorId: number },
+    data: UpdateSectorData,
+  ): Promise<SectorEntity>;
 
-  abstract delete(where: Prisma.SectoresWhereUniqueInput): Promise<any>;
+  abstract delete(where: { sectorId: number }): Promise<SectorEntity>;
 
-  abstract findComunidad(
-    where: Prisma.ComunidadesWhereUniqueInput,
-  ): Promise<any>;
+  abstract findComunidad(where: {
+    comunidadId: number;
+  }): Promise<ComunidadRef | null>;
 }

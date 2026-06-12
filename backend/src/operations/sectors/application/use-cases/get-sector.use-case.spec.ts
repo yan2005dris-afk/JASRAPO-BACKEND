@@ -50,7 +50,6 @@ describe('GetSectorUseCase', () => {
     expect(result).toEqual(mockSector);
     expect(mockSectorRepository.findUnique).toHaveBeenCalledWith(
       { sectorId: 1 },
-      expect.any(Object),
     );
   });
 
