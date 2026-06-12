@@ -30,6 +30,8 @@ describe('PublicSearchUseCase', () => {
       [SearchFilters, number, number]
     >(),
     countContratos: jest.fn<Promise<number>, [SearchFilters]>(),
+    findContratosDeudaBy: jest.fn().mockResolvedValue([]),
+    countContratosDeuda: jest.fn().mockResolvedValue(0),
   });
 
   describe('cliente search', () => {
