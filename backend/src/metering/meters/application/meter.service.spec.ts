@@ -52,6 +52,7 @@ describe('MeterService', () => {
 
   const mockMeterRepository = {
     findMany: jest.fn(),
+    count: jest.fn(),
     update: jest.fn(),
   };
 
@@ -111,14 +112,19 @@ describe('MeterService', () => {
     expect(findOneUseCase.execute).toHaveBeenCalledWith(id);
   });
 
-  it('findAll should use repository and map response', async () => {
-    const params = { skip: 0 };
+  it('findAll should return paginated response with kpis', async () => {
     jest
       .spyOn(meterRepository, 'findMany')
       .mockResolvedValue([mockPrismaResult]);
-    const result = await service.findAll(params);
-    expect(result[0].medidorId).toEqual(expectedResponse.medidorId);
-    expect(result[0].serie).toBe(expectedResponse.serie);
+    jest.spyOn(meterRepository, 'count').mockResolvedValue(1);
+
+    const result = await service.findAll(1, 10);
+
+    expect(result.data).toHaveLength(1);
+    expect(result.meta.total).toBe(1);
+    expect(result.meta.page).toBe(1);
+    expect(result.kpis.enBodega).toBe(1);
     expect(meterRepository.findMany).toHaveBeenCalled();
+    expect(meterRepository.count).toHaveBeenCalled();
   });
 });

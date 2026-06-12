@@ -14,6 +14,8 @@ import { CreateMeterDto } from '../dto/create-meter.dto';
 import { UpdateMeterDto } from '../dto/update-meter.dto';
 import { InstallMeterDto } from '../dto/install-meter.dto';
 import { MeterResponseDto } from '../dto/meter-response.dto';
+import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
+import { PaginatedMeterResponse } from '../types/paginated-meter-response.type';
 import { EstadoMedidorResponseDto } from '../dto/estado-medidor-response.dto';
 import {
   ApiTags,
@@ -84,48 +86,24 @@ export class MeterController {
    */
   @ApiOperation({
     summary: 'Listar medidores',
-    description: 'Retorna lista paginada de medidores',
-  })
-  @ApiQuery({
-    name: 'skip',
-    description: 'Número de registros a omitir',
-    required: false,
-    type: Number,
-    example: 0,
-  })
-  @ApiQuery({
-    name: 'take',
-    description: 'Número máximo de registros',
-    required: false,
-    type: Number,
-    example: 10,
-  })
-  @ApiQuery({
-    name: 'estado',
-    description: 'Filtrar por estado del medidor (codigo)',
-    required: false,
-    type: String,
-    example: 'BODEGA',
+    description: 'Retorna lista paginada de medidores con KPIs',
   })
   @ApiResponse({
     status: 200,
-    description: 'Lista de medidores',
-    type: [MeterResponseDto],
+    description: 'Lista paginada de medidores con KPIs',
   })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @RequiredPermission('meters', 'read')
   @Get()
   async findAll(
-    @Query('skip') skip?: string,
-    @Query('take') take?: string,
+    @Query() paginationDto: PaginationDto,
     @Query('estado') estado?: string,
-  ): Promise<MeterResponseDto[]> {
-    const meters = await this.meterService.findAll({
-      skip: skip ? +skip : undefined,
-      take: take ? +take : undefined,
-      where: estado ? { estado } : undefined,
-    });
-    return meters.map(toMeterResponse);
+  ): Promise<PaginatedMeterResponse> {
+    return this.meterService.findAll(
+      paginationDto.page,
+      paginationDto.limit,
+      estado ? { estado } : undefined,
+    );
   }
 
   /**
