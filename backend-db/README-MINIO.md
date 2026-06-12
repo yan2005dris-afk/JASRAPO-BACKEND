@@ -1,13 +1,17 @@
-# MinIO (backend-db/minio-data)
+# RustFS Object Storage (backend-db/rustfs-data)
 
-## Acceso local
-- MinIO expone la API en el puerto 9000 y la consola web en el 9001.
-- Acceso web: http://localhost:9001
-- Usuario y contraseña por defecto: admin / password123
-- El almacenamiento persistente está en esta carpeta.
+## Local access
+- RustFS exposes the S3 API on port 9000 and the web console on port 9001.
+- Web console: http://localhost:9001
+- Default credentials: controlled by `MINIO_ACCESS_KEY` / `MINIO_SECRET_KEY` in `.env`
 
-## Seguridad en producción
-- Cambia las variables de entorno `MINIO_ROOT_USER` y `MINIO_ROOT_PASSWORD` por valores fuertes.
-- Usa HTTPS si expones MinIO fuera de la red local.
-- No expongas los puertos a internet sin firewall o autenticación fuerte.
-- Haz backups regulares de esta carpeta para no perder archivos importantes.
+## Why RustFS
+- Drop-in S3-compatible replacement for MinIO CE (archived Feb 2026)
+- Apache 2.0 license — no AGPL restrictions
+- Same ports and API surface, the app SDK requires no changes
+
+## Production security
+- Set strong values for `MINIO_ACCESS_KEY` and `MINIO_SECRET_KEY` in `.env`
+- Enable TLS via `RUSTFS_TLS_PATH` if exposing outside the local network
+- Never expose port 9000/9001 to the internet without a firewall or reverse proxy
+- Back up the `rustfs_data` Docker volume regularly

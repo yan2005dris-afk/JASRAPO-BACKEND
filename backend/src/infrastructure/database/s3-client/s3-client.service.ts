@@ -4,8 +4,8 @@ import { ConfigService } from '@nestjs/config';
 import { Readable } from 'stream';
 
 @Injectable()
-export class MinioService implements OnModuleInit {
-  private readonly logger = new Logger(MinioService.name);
+export class S3ClientService implements OnModuleInit {
+  private readonly logger = new Logger(S3ClientService.name);
   private minioClient: Minio.Client | null = null;
   isAvailable = false;
 
@@ -14,32 +14,26 @@ export class MinioService implements OnModuleInit {
   constructor(private configService: ConfigService) {}
 
   async onModuleInit() {
-    const enabled = this.configService.get<string>('MINIO_ENABLED', 'true');
-
-    if (enabled.toLowerCase() === 'false') {
-      this.logger.warn('[MINIO:DISABLED] MinIO está deshabilitado');
-      return;
-    }
-
     const endpoint = this.configService.get<string>(
-      'MINIO_ENDPOINT',
+      'STORAGE_ENDPOINT',
       'localhost',
     );
-    const port = this.configService.get<number>('MINIO_PORT', 9000);
+    const port = this.configService.get<number>('STORAGE_PORT', 9000);
     const useSsl =
-      this.configService.get<string>('MINIO_USE_SSL', 'false') === 'true';
+      this.configService.get<string>('STORAGE_USE_SSL', 'false') === 'true';
     const accessKey = this.configService.get<string>(
-      'MINIO_ACCESS_KEY',
+      'STORAGE_ACCESS_KEY',
       'admin',
     );
     const secretKey = this.configService.get<string>(
-      'MINIO_SECRET_KEY',
+      'STORAGE_SECRET_KEY',
       'password123',
     );
 
     if (!port || port < 1 || port > 65535) {
-      this.logger.warn(`[MINIO:DISABLED] MINIO_PORT inválido: "${port}"`);
-      return;
+      throw new Error(
+        `[STORAGE] Invalid STORAGE_PORT value: "${port}". Application cannot start without a valid storage connection.`,
+      );
     }
 
     this.minioClient = new Minio.Client({
@@ -53,13 +47,12 @@ export class MinioService implements OnModuleInit {
     try {
       await this.minioClient.listBuckets();
       this.isAvailable = true;
-      this.logger.log('[MINIO:UP] Conexión a MinIO establecida correctamente');
-    } catch {
+      this.logger.log('[MINIO:UP] MinIO connection established successfully');
+    } catch (error) {
       this.minioClient = null;
-      this.logger.warn(
-        '[MINIO:DOWN] No se pudo conectar a MinIO. Storage deshabilitado.',
+      throw new Error(
+        `[MINIO] Failed to connect to MinIO at ${endpoint}:${port}. Application cannot start without MinIO. Original error: ${error}`,
       );
-      return;
     }
 
     for (const bucket of this.defaultBuckets) {
@@ -67,11 +60,11 @@ export class MinioService implements OnModuleInit {
         const exists = await this.minioClient.bucketExists(bucket);
         if (!exists) {
           await this.minioClient.makeBucket(bucket);
-          this.logger.log(`Bucket "${bucket}" creado`);
+          this.logger.log(`Bucket "${bucket}" created`);
         }
       } catch (error) {
         this.logger.warn(
-          `No se pudo verificar/crear bucket "${bucket}": ${error}`,
+          `Could not verify/create bucket "${bucket}": ${error}`,
         );
       }
     }
@@ -80,7 +73,7 @@ export class MinioService implements OnModuleInit {
   private ensureAvailable(): void {
     if (!this.isAvailable || !this.minioClient) {
       throw new Error(
-        'MinIO no está disponible. Configure MINIO_ENABLED=true para habilitar.',
+        'MinIO is not available. The service failed to connect during startup.',
       );
     }
   }

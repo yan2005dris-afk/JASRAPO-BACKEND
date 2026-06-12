@@ -10,7 +10,6 @@ import { OperationsModule } from './operations/operations.module';
 import { PublicPortalModule } from './public-portal/public-portal.module';
 import { ObservabilityModule } from './infrastructure/observability/observability.module';
 import { SriIntegrationModule } from './sri/sri.module';
-import { MinioModule } from './infrastructure/database/minio/minio.module';
 import { MailModule } from './infrastructure/mail/mail.module';
 import { JobsModule } from './infrastructure/jobs/jobs.module';
 import { EncryptionModule } from './infrastructure/encryption/encryption.module';
@@ -49,7 +48,6 @@ import { AuditModule } from './infrastructure/audit/audit.module';
 
     ObservabilityModule,
     DatabaseModule,
-    MinioModule,
     IdentityModule,
     MeteringModule,
     BillingModule,

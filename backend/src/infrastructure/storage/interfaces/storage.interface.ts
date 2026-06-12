@@ -24,11 +24,10 @@ export interface UploadResult {
 
 /**
  * Unified storage abstraction interface
- * Encapsulates MinIO and filesystem operations with identical API
+ * Encapsulates MinIO object storage operations
  *
  * ## Usage
- * Inject `StorageServiceFactory` and use `getStorageService()` to get the active storage.
- * The factory automatically chooses MinIO if available, otherwise falls back to filesystem.
+ * Inject `StorageService` directly to interact with object storage.
  *
  * ## Bucket Naming Convention
  * For multi-tenant storage, buckets follow the pattern: `sri-{ruc}-{type}`
@@ -103,14 +102,4 @@ export interface IStorageService {
     key: string,
     expiresInSeconds?: number,
   ): Promise<string>;
-
-  /**
-   * Whether the underlying storage is MinIO (true) or filesystem (false)
-   */
-  isMinIO(): boolean;
-
-  /**
-   * Checks if the storage service is available and healthy
-   */
-  isAvailable(): boolean;
 }
