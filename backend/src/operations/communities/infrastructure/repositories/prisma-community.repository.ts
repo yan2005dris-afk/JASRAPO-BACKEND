@@ -2,47 +2,78 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { Prisma } from 'src/generated/prisma/client';
 import { CommunityRepository } from '../../domain/repositories/community.repository';
+import { CommunityEntity } from '../../domain/entities/community.entity';
+import { CommunityMapper } from '../mappers/community.mapper';
+import type { CreateCommunityData } from '../../domain/types/create-community-data';
 
 @Injectable()
 export class PrismaCommunityRepository implements CommunityRepository {
+  private readonly defaultInclude = {
+    sector: {
+      select: {
+        sectorId: true,
+        nombre: true,
+        codigo: true,
+      },
+    },
+  } satisfies Prisma.ComunidadesInclude;
+
   constructor(private readonly prisma: PrismaService) {}
 
   async findUnique(
-    where: Prisma.ComunidadesWhereUniqueInput,
-    select?: Prisma.ComunidadesSelect,
-  ): Promise<any> {
-    return this.prisma.comunidades.findUnique({ where, select });
+    where: Record<string, any>,
+  ): Promise<CommunityEntity | null> {
+    const record = await this.prisma.comunidades.findUnique({
+      where: where as Prisma.ComunidadesWhereUniqueInput,
+      include: this.defaultInclude,
+    });
+    return CommunityMapper.toDomain(record);
   }
 
   async findFirst(
-    where: Prisma.ComunidadesWhereInput,
-    select?: Prisma.ComunidadesSelect,
-  ): Promise<any> {
-    return this.prisma.comunidades.findFirst({ where, select });
+    where: Record<string, any>,
+  ): Promise<CommunityEntity | null> {
+    const record = await this.prisma.comunidades.findFirst({
+      where: where as Prisma.ComunidadesWhereInput,
+      include: this.defaultInclude,
+    });
+    return CommunityMapper.toDomain(record);
   }
 
   async findMany(params: {
-    select?: Prisma.ComunidadesSelect;
-    where?: Prisma.ComunidadesWhereInput;
-    orderBy?: Prisma.ComunidadesOrderByWithRelationInput;
-    take?: number;
-    skip?: number;
-  }): Promise<any[]> {
-    return this.prisma.comunidades.findMany(params);
+    where?: Record<string, any>;
+    orderBy?: Record<string, any>;
+  }): Promise<CommunityEntity[]> {
+    const records = await this.prisma.comunidades.findMany({
+      where: (params.where ?? {}) as Prisma.ComunidadesWhereInput,
+      orderBy:
+        params.orderBy as Prisma.ComunidadesOrderByWithRelationInput,
+      include: this.defaultInclude,
+    });
+    return CommunityMapper.toDomainList(records);
   }
 
-  async create(
-    data: Prisma.ComunidadesCreateInput,
-    select?: Prisma.ComunidadesSelect,
-  ): Promise<any> {
-    return this.prisma.comunidades.create({ data, select });
+  async create(data: CreateCommunityData): Promise<CommunityEntity> {
+    const record = await this.prisma.comunidades.create({
+      data: {
+        nombre: data.nombre,
+        codigo: data.codigo,
+        porcentajeTasaSeguridad: data.porcentajeTasaSeguridad,
+      },
+      include: this.defaultInclude,
+    });
+    return CommunityMapper.toDomain(record)!;
   }
 
   async update(
-    where: Prisma.ComunidadesWhereUniqueInput,
-    data: Prisma.ComunidadesUpdateInput,
-    select?: Prisma.ComunidadesSelect,
-  ): Promise<any> {
-    return this.prisma.comunidades.update({ where, data, select });
+    where: Record<string, any>,
+    data: Record<string, any>,
+  ): Promise<CommunityEntity> {
+    const record = await this.prisma.comunidades.update({
+      where: where as Prisma.ComunidadesWhereUniqueInput,
+      data: data as Prisma.ComunidadesUpdateInput,
+      include: this.defaultInclude,
+    });
+    return CommunityMapper.toDomain(record)!;
   }
 }

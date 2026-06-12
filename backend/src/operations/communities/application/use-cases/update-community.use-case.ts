@@ -1,8 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CommunityRepository } from '../../domain/repositories/community.repository';
 import { UpdateComunidadDto } from '../../interfaces/dto/update-comunidad.dto';
-import { safeCommunitiesSelect } from '../../domain/types/IResponseCommunities';
-import { toComunidadResponse } from '../../domain/types/communitiesMapper';
 
 @Injectable()
 export class UpdateCommunityUseCase {
@@ -21,9 +19,8 @@ export class UpdateCommunityUseCase {
     const updated = await this.communityRepository.update(
       { comunidadId: id },
       dto,
-      safeCommunitiesSelect,
     );
 
-    return toComunidadResponse(updated);
+    return updated;
   }
 }
