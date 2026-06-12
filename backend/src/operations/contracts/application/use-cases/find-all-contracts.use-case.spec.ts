@@ -46,7 +46,6 @@ describe('FindAllContractsUseCase', () => {
     expect(result.meta.total).toBe(0);
     expect(mockContractRepository.findMany).toHaveBeenCalledWith({
       where: { deletedAt: null },
-      select: expect.any(Object),
       skip: 0,
       take: 10,
       orderBy: { createdAt: 'desc' },

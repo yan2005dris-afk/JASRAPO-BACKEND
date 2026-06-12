@@ -1,28 +1,23 @@
-import type { Prisma } from 'src/generated/prisma/client';
+import type { ContractEntity } from '../entities/contract.entity';
 
 export abstract class ContractRepository {
   abstract findMany(params: {
     skip?: number;
     take?: number;
-    where?: Prisma.ContratosWhereInput;
-    orderBy?: Prisma.ContratosOrderByWithRelationInput;
-    select?: Prisma.ContratosSelect;
-    include?: Prisma.ContratosInclude;
-  }): Promise<any[]>;
+    where?: Record<string, any>;
+    orderBy?: Record<string, any>;
+  }): Promise<ContractEntity[]>;
 
   abstract findUnique(
-    where: Prisma.ContratosWhereUniqueInput,
-    select?: Prisma.ContratosSelect,
-  ): Promise<any>;
+    where: Record<string, any>,
+  ): Promise<ContractEntity | null>;
 
-  abstract count(params: {
-    where?: Prisma.ContratosWhereInput;
-  }): Promise<number>;
+  abstract count(params: { where?: Record<string, any> }): Promise<number>;
 
   abstract update(
-    where: Prisma.ContratosWhereUniqueInput,
-    data: Prisma.ContratosUpdateInput,
-  ): Promise<any>;
+    where: Record<string, any>,
+    data: Record<string, any>,
+  ): Promise<ContractEntity>;
 
   abstract executeTransaction<T>(callback: (tx: any) => Promise<T>): Promise<T>;
 }

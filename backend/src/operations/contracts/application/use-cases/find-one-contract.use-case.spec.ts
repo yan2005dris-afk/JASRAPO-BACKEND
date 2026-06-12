@@ -44,10 +44,9 @@ describe('FindOneContractUseCase', () => {
 
     const result = await useCase.execute(id);
 
-    expect(mockContractRepository.findUnique).toHaveBeenCalledWith(
-      { contratoId: id },
-      expect.any(Object),
-    );
+    expect(mockContractRepository.findUnique).toHaveBeenCalledWith({
+      contratoId: id,
+    });
   });
 
   it('should throw NotFoundException if contract does not exist', async () => {

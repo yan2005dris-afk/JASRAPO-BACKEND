@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma } from 'src/generated/prisma/client';
 import { CrearContratoMedidorDto } from '../interfaces/dto/create-contrato-medidor.dto';
 import { ActualizarContratoMedidorDto } from '../interfaces/dto/update-contrato-medidor.dto';
 import { CreateContractLinkUseCase } from './use-cases/create-contract-link.use-case';
@@ -27,7 +26,7 @@ export class ContratoMedidorService {
   async buscarContratos(
     page = 1,
     limit = 10,
-    where?: Prisma.ContratosWhereInput,
+    where?: Record<string, any>,
   ) {
     return this.findAllUseCase.execute(page, limit, where);
   }
