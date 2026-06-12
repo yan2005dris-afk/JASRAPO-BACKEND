@@ -13,7 +13,7 @@ class TipoIdentificacionSnippet {
 
 export class ClientEntity {
   @ApiProperty()
-  clienteId: string;
+  clienteId: bigint;
 
   @ApiProperty()
   identificacion: string;
@@ -50,4 +50,17 @@ export class ClientEntity {
 
   @ApiPropertyOptional({ type: TipoIdentificacionSnippet, nullable: true })
   tipoIdentificacion: TipoIdentificacionSnippet | null;
+
+  @ApiPropertyOptional({ nullable: true })
+  deletedAt: Date | null;
+
+  @ApiProperty()
+  createdAt: Date;
+
+  @ApiProperty()
+  updatedAt: Date;
+
+  constructor(partial: Partial<ClientEntity>) {
+    Object.assign(this, partial);
+  }
 }

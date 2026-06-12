@@ -47,10 +47,10 @@ describe('FindOneClientUseCase', () => {
 
       const result = await useCase.execute('1');
 
-      expect(mockClientRepository.findFirst).toHaveBeenCalledWith(
-        { clienteId: BigInt(1), deletedAt: null },
-        { select: expect.any(Object) },
-      );
+      expect(mockClientRepository.findFirst).toHaveBeenCalledWith({
+        clienteId: BigInt(1),
+        deletedAt: null,
+      });
     });
 
     it('should throw NotFoundException if client not found', async () => {

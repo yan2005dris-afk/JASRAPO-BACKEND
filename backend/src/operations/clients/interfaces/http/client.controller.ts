@@ -26,7 +26,7 @@ import { CreateClientDto } from '../dto/create-client.dto';
 import { UpdateClientDto } from '../dto/update-client.dto';
 import { FilterClientDto } from '../dto/filter-client.dto';
 import { ApiPaginatedResponse } from 'src/infrastructure/common/decorators/api-paginated-response.decorator';
-import { ClientEntity } from '../../domain/types/client.entity';
+import { ClientEntity } from '../../domain/entities/client.entity';
 import { PaginationMetaDto } from 'src/infrastructure/common/dtos/pagination-meta.dto';
 import { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
 

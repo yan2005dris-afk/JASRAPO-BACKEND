@@ -55,7 +55,6 @@ describe('RemoveClientUseCase', () => {
       expect(mockClientRepository.update).toHaveBeenCalledWith(
         { clienteId: BigInt(1) },
         { deletedAt: expect.any(Date) },
-        expect.any(Object),
       );
     });
 

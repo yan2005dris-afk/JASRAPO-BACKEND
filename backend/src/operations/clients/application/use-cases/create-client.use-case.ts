@@ -6,8 +6,7 @@ import {
 import { ClientRepository } from '../../domain/repositories/client.repository';
 import { CreateClientDto } from '../../interfaces/dto/create-client.dto';
 import { TipoIdentificacionUtil } from 'src/infrastructure/common/utils/tipo-identificacion.util';
-import { safeClientesSelect } from '../../domain/types/IResponseClient';
-import { Prisma } from 'src/generated/prisma/client';
+import type { CreateClientData } from '../../domain/types/create-client-data';
 
 @Injectable()
 export class CreateClientUseCase {
@@ -16,7 +15,7 @@ export class CreateClientUseCase {
   async execute(dto: CreateClientDto) {
     const tipoId = dto.tipoIdentificacionId;
 
-    // CONSUMIDOR_FINAL tiene código '07'
+    // CONSUMIDOR_FINAL has code '07' via catalog, id 4
     if (dto.tipoIdentificacionId === 4) {
       return this.handleConsumidorFinal(dto);
     }
@@ -29,7 +28,7 @@ export class CreateClientUseCase {
 
     const identificacion = dto.identificacion.trim();
 
-    // Obtener el código del tipo de identificación para validar
+    // Get the catalogo to validate identification type
     const catalogo = await this.clientRepository.findCatalogoTipoIdentificacion(
       { id: tipoId },
     );
@@ -52,14 +51,13 @@ export class CreateClientUseCase {
         return this.clientRepository.update(
           { clienteId: existente.clienteId },
           { ...data, deletedAt: null },
-          safeClientesSelect,
         );
       }
       throw new ConflictException('La identificación ya está registrada');
     }
 
     try {
-      return await this.clientRepository.create(data, safeClientesSelect);
+      return await this.clientRepository.create(data);
     } catch (error: any) {
       if (error.code === 'P2002')
         throw new ConflictException('La identificación ya está registrada');
@@ -99,7 +97,6 @@ export class CreateClientUseCase {
           aplicaDiscapacidad: false,
           deletedAt: null,
         },
-        safeClientesSelect,
       );
 
       return {
@@ -108,24 +105,19 @@ export class CreateClientUseCase {
       };
     }
 
-    const created = await this.clientRepository.create(
-      {
-        identificacion: '9999999999999',
-        tipoIdentificacion: {
-          connect: { id: 4 },
-        }, // CONSUMIDOR_FINAL
-        nombres: 'CONSUMIDOR',
-        apellidos: 'FINAL',
-        razonSocial: 'CONSUMIDOR FINAL',
-        email: dto.email?.trim().toLowerCase(),
-        telefono: dto.telefono,
-        telefonoSecundario: dto.telefonoSecundario,
-        direccionDomicilio: dto.direccionDomicilio,
-        aplicaTerceraEdad: false,
-        aplicaDiscapacidad: false,
-      },
-      safeClientesSelect,
-    );
+    const created = await this.clientRepository.create({
+      identificacion: '9999999999999',
+      tipoIdentificacionId: 4, // CONSUMIDOR_FINAL
+      nombres: 'CONSUMIDOR',
+      apellidos: 'FINAL',
+      razonSocial: 'CONSUMIDOR FINAL',
+      email: dto.email?.trim().toLowerCase(),
+      telefono: dto.telefono,
+      telefonoSecundario: dto.telefonoSecundario,
+      direccionDomicilio: dto.direccionDomicilio,
+      aplicaTerceraEdad: false,
+      aplicaDiscapacidad: false,
+    });
 
     return { message: 'Consumidor Final creado correctamente.', data: created };
   }
@@ -155,12 +147,10 @@ export class CreateClientUseCase {
   private buildCreateData(
     dto: CreateClientDto,
     identificacion: string,
-  ): Prisma.ClientesCreateInput {
+  ): CreateClientData {
     return {
       identificacion,
-      tipoIdentificacion: {
-        connect: { id: dto.tipoIdentificacionId },
-      },
+      tipoIdentificacionId: dto.tipoIdentificacionId,
       nombres: dto.nombres?.trim().toUpperCase() ?? '',
       apellidos: dto.apellidos?.trim().toUpperCase() ?? '',
       razonSocial: dto.razonSocial?.trim().toUpperCase(),

@@ -73,7 +73,6 @@ describe('CreateClientUseCase', () => {
           nombres: 'JOHN',
           apellidos: 'DOE',
         }),
-        expect.anything(),
       );
     });
 
