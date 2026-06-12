@@ -11,21 +11,18 @@ export class GetUserRolePermissionsUseCase {
   constructor(private readonly userRepository: UserRepository) {}
 
   async execute(usuarioId: number): Promise<UserRolePermission[]> {
-    const user = await this.userRepository.findUnique(
-      { usuarioId },
-      { usuarioId: true, deletedAt: true, rolId: true },
-    );
+    const user = await this.userRepository.findById(usuarioId);
 
     if (!user || user.deletedAt) {
       throw new NotFoundException('Usuario no encontrado o eliminado');
     }
 
-    if (!user.rolId) {
+    if (!user.rol?.rolId) {
       return [];
     }
 
     const assignments = await this.userRepository.findRolePermissions(
-      user.rolId,
+      user.rol.rolId,
     );
 
     return assignments.map((rp) => ({

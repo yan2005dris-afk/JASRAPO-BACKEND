@@ -5,13 +5,14 @@ import {
   Body,
   Patch,
   Param,
+  Query,
   UseGuards,
   ParseIntPipe,
 } from '@nestjs/common';
 import { RolesService } from '../../application/roles.service';
 import { CreateRoleDto } from '../dto/create-role.dto';
 import { UpdateRoleDto } from '../dto/update-role.dto';
-import { JwtAuthGuard } from 'src/identity/auth/guards/jwt-auth.guard';
+import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
 import {
@@ -22,6 +23,7 @@ import {
   ApiParam,
   ApiBody,
 } from '@nestjs/swagger';
+import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
 
 @ApiTags('roles')
 @ApiBearerAuth()
@@ -72,7 +74,7 @@ export class RolesController {
   @ApiOperation({
     summary: 'Listar roles',
     description:
-      'Retorna todos los roles registrados en el sistema. Sin paginación.',
+      'Retorna todos los roles registrados en el sistema con paginación.',
   })
   @ApiResponse({
     status: 200,
@@ -85,8 +87,8 @@ export class RolesController {
   })
   @RequiredPermission('roles', 'read')
   @Get()
-  findAllRoles() {
-    return this.rolesService.findAll();
+  async findAllRoles(@Query() paginationDto: PaginationDto) {
+    return this.rolesService.findAll(paginationDto.page, paginationDto.limit);
   }
 
   /**

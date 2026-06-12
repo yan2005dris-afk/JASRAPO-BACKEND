@@ -1,5 +1,5 @@
 import { Controller, Get, Req, UseGuards } from '@nestjs/common';
-import { JwtAuthGuard } from 'src/identity/auth/guards/jwt-auth.guard';
+import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
 import { MenusService } from '../../application/menus.service';
 import {
   ApiBearerAuth,
@@ -8,7 +8,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { MenuResponseDto } from '../dto/response-menu.dto';
-import type { JwtRequest } from 'src/identity/auth/types/JwtRequest.types';
+import type { JwtRequest } from 'src/identity/auth/interfaces/http/types/JwtRequest.types';
 
 @ApiTags('menus')
 @ApiBearerAuth()

@@ -115,10 +115,10 @@ describe('UserController', () => {
 
       const result = await controller.updateUser(userId, updateUserDto);
 
-      expect(userService.updateUser).toHaveBeenCalledWith({
-        where: { usuarioId: userId },
-        data: updateUserDto,
-      });
+      expect(userService.updateUser).toHaveBeenCalledWith(
+        userId,
+        updateUserDto,
+      );
       expect(result).toEqual(mockUpdatedUser);
     });
   });
@@ -132,9 +132,7 @@ describe('UserController', () => {
 
       const result = await controller.remove(userId);
 
-      expect(userService.softDeleteUser).toHaveBeenCalledWith({
-        usuarioId: userId,
-      });
+      expect(userService.softDeleteUser).toHaveBeenCalledWith(userId);
       expect(result).toEqual(mockResult);
     });
   });

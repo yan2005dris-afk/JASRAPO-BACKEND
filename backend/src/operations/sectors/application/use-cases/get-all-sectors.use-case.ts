@@ -2,38 +2,32 @@ import { Injectable } from '@nestjs/common';
 import { SectorRepository } from '../../domain/repositories/sector.repository';
 import { getPagination } from 'src/infrastructure/common/utils/pagination.util';
 import { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
-import {
-  IResponseSector,
-  safeSectoresSelect,
-} from '../../types/IResponseSector';
+import { SectorEntity } from '../../domain/entities/sector.entity';
+import { SectorFilters } from '../../domain/types/sector-filters';
 
 @Injectable()
 export class GetAllSectorsUseCase {
   constructor(private readonly sectorRepository: SectorRepository) {}
 
-  async execute(
-    page = 1,
-    limit = 10,
-  ): Promise<PaginatedResult<IResponseSector>> {
+  async execute(page = 1, limit = 10): Promise<PaginatedResult<SectorEntity>> {
     const { skip, take, page: safePage } = getPagination(page, limit);
 
-    const where = { deletedAt: null };
+    const where: SectorFilters = { deletedAt: null };
 
     const [sectores, total] = await Promise.all([
       this.sectorRepository.findMany({
         where,
-        select: safeSectoresSelect,
         skip,
         take,
         orderBy: { sectorId: 'asc' },
-      } as any),
+      }),
       this.sectorRepository.count({
         where,
       }),
     ]);
 
     return {
-      data: sectores as IResponseSector[],
+      data: sectores,
       meta: {
         total,
         page: safePage,

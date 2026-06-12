@@ -6,6 +6,8 @@ import { RoleRepository } from '../domain/repositories/role.repository';
 import { CreateRoleUseCase } from './use-cases/create-role.use-case';
 import { AssignPermissionToRoleUseCase } from './use-cases/assign-permission-to-role.use-case';
 import { RemovePermissionFromRoleUseCase } from './use-cases/remove-permission-from-role.use-case';
+import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
+import type { SimpleRole } from '../domain/repositories/role.repository';
 
 describe('RolesService', () => {
   let service: RolesService;
@@ -18,6 +20,7 @@ describe('RolesService', () => {
 
   const mockRoleRepository = {
     findAll: jest.fn(),
+    count: jest.fn(),
     findUnique: jest.fn(),
     update: jest.fn(),
   };
@@ -54,9 +57,42 @@ describe('RolesService', () => {
     expect(createUseCase.execute).toHaveBeenCalledWith(dto);
   });
 
-  it('should delegate findAll to RoleRepository', async () => {
+  it('should return paginated results from findAll', async () => {
+    const mockRoles: SimpleRole[] = [
+      { rolId: 1, nombre: 'Admin' },
+      { rolId: 2, nombre: 'Editor' },
+    ];
+    mockRoleRepository.findAll.mockResolvedValue(mockRoles);
+    mockRoleRepository.count.mockResolvedValue(10);
+
+    const result: PaginatedResult<SimpleRole> = await service.findAll(1, 10);
+
+    expect(mockRoleRepository.findAll).toHaveBeenCalledWith(0, 10);
+    expect(mockRoleRepository.count).toHaveBeenCalled();
+    expect(result.data).toEqual(mockRoles);
+    expect(result.meta.total).toBe(10);
+    expect(result.meta.page).toBe(1);
+    expect(result.meta.limit).toBe(10);
+  });
+
+  it('should use custom pagination in findAll', async () => {
+    mockRoleRepository.findAll.mockResolvedValue([]);
+    mockRoleRepository.count.mockResolvedValue(25);
+
+    const result = await service.findAll(3, 5);
+
+    expect(mockRoleRepository.findAll).toHaveBeenCalledWith(10, 5);
+    expect(result.meta.page).toBe(3);
+    expect(result.meta.limit).toBe(5);
+    expect(result.meta.ultimaPagina).toBe(5);
+  });
+
+  it('should use default pagination when not provided', async () => {
+    mockRoleRepository.findAll.mockResolvedValue([]);
+    mockRoleRepository.count.mockResolvedValue(0);
+
     await service.findAll();
-    expect(mockRoleRepository.findAll).toHaveBeenCalled();
+    expect(mockRoleRepository.findAll).toHaveBeenCalledWith(0, 10);
   });
 
   it('should throw NotFoundException in findOne if role does not exist', async () => {

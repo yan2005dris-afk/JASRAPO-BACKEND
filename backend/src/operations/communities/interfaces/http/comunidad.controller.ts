@@ -20,13 +20,19 @@ import {
   ApiParam,
   ApiBody,
   ApiQuery,
+  ApiExtraModels,
 } from '@nestjs/swagger';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
-import { JwtAuthGuard } from 'src/identity/auth/guards/jwt-auth.guard';
+import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
+import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
+import { ApiPaginatedResponse } from 'src/infrastructure/common/decorators/api-paginated-response.decorator';
+import { CommunityEntity } from '../../domain/entities/community.entity';
+import { PaginationMetaDto } from 'src/infrastructure/common/dtos/pagination-meta.dto';
 
 @ApiTags('communities')
 @ApiBearerAuth()
+@ApiExtraModels(CommunityEntity, PaginationMetaDto)
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('communities')
 export class ComunidadController {
@@ -51,12 +57,15 @@ export class ComunidadController {
     summary: 'Listar comunidades',
     description: 'Retorna todas las comunidades sin sectores',
   })
-  @ApiResponse({ status: 200, description: 'Lista de comunidades' })
+  @ApiPaginatedResponse(CommunityEntity)
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @RequiredPermission('comunidades', 'read')
   @Get()
-  findAll() {
-    return this.comunidadService.findAll();
+  async findAll(@Query() paginationDto: PaginationDto) {
+    return this.comunidadService.findAll(
+      paginationDto.page,
+      paginationDto.limit,
+    );
   }
 
   @ApiOperation({
@@ -69,6 +78,7 @@ export class ComunidadController {
     required: false,
     type: Number,
   })
+  @ApiPaginatedResponse(CommunityEntity)
   @ApiResponse({
     status: 200,
     description: 'Lista de comunidades con sectores',
@@ -76,10 +86,16 @@ export class ComunidadController {
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @RequiredPermission('comunidades', 'read')
   @Get('with-sector')
-  findAllWithSector(@Query('sectorId') sectorId?: string) {
-    return this.comunidadService.findAllWithSector(
-      sectorId ? { sectorId: +sectorId } : undefined,
-    );
+  async findAllWithSector(
+    @Query('sectorId') sectorId?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.comunidadService.findAllWithSector({
+      sectorId: sectorId ? +sectorId : undefined,
+      page: page ? +page : undefined,
+      limit: limit ? +limit : undefined,
+    });
   }
 
   @ApiOperation({

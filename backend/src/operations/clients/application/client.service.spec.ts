@@ -60,14 +60,22 @@ describe('ClientService', () => {
   it('findAll should call repository with filters', async () => {
     mockClientRepository.paginateClientes.mockResolvedValue({
       data: [],
-      total: 0,
+      meta: {
+        total: 0,
+        page: 1,
+        limit: 10,
+        ultimaPagina: 1,
+        paginaActual: 1,
+        porPagina: 10,
+        anterior: null,
+        siguiente: null,
+      },
     });
     await service.findAll();
     expect(mockClientRepository.paginateClientes).toHaveBeenCalledWith(
       {
-        where: { deletedAt: null },
+        filters: undefined,
         orderBy: { createdAt: 'desc' },
-        select: expect.anything(),
       },
       { page: undefined, limit: undefined },
     );
@@ -76,18 +84,23 @@ describe('ClientService', () => {
   it('findAll should apply filters when provided', async () => {
     mockClientRepository.paginateClientes.mockResolvedValue({
       data: [],
-      total: 0,
+      meta: {
+        total: 0,
+        page: 1,
+        limit: 10,
+        ultimaPagina: 1,
+        paginaActual: 1,
+        porPagina: 10,
+        anterior: null,
+        siguiente: null,
+      },
     });
     await service.findAll({ identificacion: '123' });
     expect(mockClientRepository.paginateClientes).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({
-          AND: expect.arrayContaining([
-            { deletedAt: null },
-            { identificacion: { contains: '123', mode: 'insensitive' } },
-          ]),
-        }),
-      }),
+      {
+        filters: { identificacion: '123' },
+        orderBy: { createdAt: 'desc' },
+      },
       { page: undefined, limit: undefined },
     );
   });

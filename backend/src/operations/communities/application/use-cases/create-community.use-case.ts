@@ -1,8 +1,6 @@
 import { ConflictException, Injectable } from '@nestjs/common';
 import { CommunityRepository } from '../../domain/repositories/community.repository';
 import { CreateComunidadDto } from '../../interfaces/dto/create-comunidad.dto';
-import { safeCommunitiesSelectWithTimestamps } from '../../domain/types/IResponseCommunities';
-import { toComunidadResponse } from '../../domain/types/communitiesMapper';
 
 @Injectable()
 export class CreateCommunityUseCase {
@@ -38,16 +36,12 @@ export class CreateCommunityUseCase {
           porcentajeTasaSeguridad: dto.porcentajeTasaSeguridad,
           deletedAt: null,
         },
-        safeCommunitiesSelectWithTimestamps,
       );
-      return toComunidadResponse(reactivated);
+      return reactivated;
     }
 
-    const created = await this.communityRepository.create(
-      dto,
-      safeCommunitiesSelectWithTimestamps,
-    );
+    const created = await this.communityRepository.create(dto);
 
-    return toComunidadResponse(created);
+    return created;
   }
 }

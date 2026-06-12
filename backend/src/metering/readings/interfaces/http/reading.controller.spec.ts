@@ -24,9 +24,30 @@ describe('ReadingController', () => {
     deletedAt: null,
   };
 
+  const expectedMappedLectura = {
+    lecturaId: '1',
+    fecha: new Date('2024-01-15'),
+    lecturaAnterior: 100,
+    lecturaActual: 150,
+    consumoCalculado: 50,
+    contratoId: '',
+    descripcionAnomalia: null,
+    fechaValidacion: null,
+    fotoUrlMinIo: undefined,
+    isValidada: undefined,
+    lecturaInicial: undefined,
+    periodoId: 1,
+    tieneAnomalia: undefined,
+    contrato: null,
+    medidor: null,
+    periodoRel: null,
+  };
+
   const mockReadingService = {
     create: jest.fn(() => Promise.resolve(mockLecturaData)),
-    findAll: jest.fn(() => Promise.resolve([mockLecturaData])),
+    findAll: jest.fn(() =>
+      Promise.resolve({ data: [mockLecturaData], meta: { total: 1 } }),
+    ),
     findOne: jest.fn(() => Promise.resolve(mockLecturaData)),
     update: jest.fn(() => Promise.resolve(mockLecturaData)),
     delete: jest.fn(() => Promise.resolve({ message: 'deleted' })),
@@ -55,19 +76,23 @@ describe('ReadingController', () => {
       const result = await controller.create(createDto as any);
 
       expect(service.create).toHaveBeenCalled();
-      expect(result).toBeDefined();
+      expect(result).toEqual(expectedMappedLectura);
     });
   });
 
   describe('findAll', () => {
     it('should return all readings', async () => {
-      jest
-        .spyOn(service, 'findAll')
-        .mockResolvedValue([mockLecturaData as any]);
+      jest.spyOn(service, 'findAll').mockResolvedValue({
+        data: [mockLecturaData as any],
+        meta: { total: 1 },
+      } as any);
       const result = await controller.findAll({ page: 1, limit: 10 });
 
       expect(service.findAll).toHaveBeenCalled();
-      expect(result).toEqual([mockLecturaData]);
+      expect(result).toEqual({
+        data: [expectedMappedLectura],
+        meta: { total: 1 },
+      });
     });
   });
 
@@ -77,7 +102,7 @@ describe('ReadingController', () => {
       const result = await controller.findOne('1');
 
       expect(service.findOne).toHaveBeenCalledWith(BigInt(1));
-      expect(result).toEqual(mockLecturaData);
+      expect(result).toEqual(expectedMappedLectura);
     });
   });
 
@@ -88,7 +113,7 @@ describe('ReadingController', () => {
       const result = await controller.actualizarLectura('1', updateDto);
 
       expect(service.update).toHaveBeenCalledWith(BigInt(1), updateDto);
-      expect(result).toBeDefined();
+      expect(result).toEqual(expectedMappedLectura);
     });
   });
 

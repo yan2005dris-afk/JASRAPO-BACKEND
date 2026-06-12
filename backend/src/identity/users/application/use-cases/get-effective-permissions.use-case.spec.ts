@@ -9,7 +9,7 @@ describe('GetEffectivePermissionsUseCase', () => {
   let userRepository: UserRepository;
 
   const mockUserRepository = {
-    findUnique: jest.fn(),
+    findById: jest.fn(),
     findRolePermissions: jest.fn(),
     findDirectPermissions: jest.fn(),
   };
@@ -33,11 +33,11 @@ describe('GetEffectivePermissionsUseCase', () => {
   });
 
   it('should combine role and direct permissions', async () => {
-    mockUserRepository.findUnique.mockResolvedValue({
+    mockUserRepository.findById.mockResolvedValue({
       usuarioId: 1,
       deletedAt: null,
-      rolId: 1,
-    });
+      rol: { rolId: 1, nombre: 'admin' },
+    } as any);
     mockUserRepository.findRolePermissions.mockResolvedValue([
       { permiso: { recurso: 'role-perm', accion: 'read' } },
     ]);
@@ -55,11 +55,11 @@ describe('GetEffectivePermissionsUseCase', () => {
   });
 
   it('should exclude revoked permissions', async () => {
-    mockUserRepository.findUnique.mockResolvedValue({
+    mockUserRepository.findById.mockResolvedValue({
       usuarioId: 1,
       deletedAt: null,
-      rolId: 1,
-    });
+      rol: { rolId: 1, nombre: 'admin' },
+    } as any);
     mockUserRepository.findRolePermissions.mockResolvedValue([
       { permiso: { recurso: 'role-perm', accion: 'read' } },
     ]);
@@ -83,7 +83,7 @@ describe('GetEffectivePermissionsUseCase', () => {
   });
 
   it('should throw NotFoundException if user not found or deleted', async () => {
-    mockUserRepository.findUnique.mockResolvedValue(null);
+    mockUserRepository.findById.mockResolvedValue(null);
 
     await expect(useCase.execute(1)).rejects.toThrow(NotFoundException);
   });

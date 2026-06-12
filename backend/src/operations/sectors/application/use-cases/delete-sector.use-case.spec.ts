@@ -41,7 +41,7 @@ describe('DeleteSectorUseCase', () => {
       sectorId: 1,
       deletedAt: null,
     });
-    mockSectorRepository.update.mockResolvedValue({ sectorId: 1 });
+    mockSectorRepository.delete.mockResolvedValue({ sectorId: 1 });
 
     const result = await useCase.execute(1);
 
@@ -52,10 +52,9 @@ describe('DeleteSectorUseCase', () => {
     expect(mockSectorRepository.findUnique).toHaveBeenCalledWith({
       sectorId: 1,
     });
-    expect(mockSectorRepository.update).toHaveBeenCalledWith(
-      { sectorId: 1 },
-      { deletedAt: expect.any(Date) },
-    );
+    expect(mockSectorRepository.delete).toHaveBeenCalledWith({
+      sectorId: 1,
+    });
   });
 
   it('should throw NotFoundException if sector does not exist', async () => {

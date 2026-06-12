@@ -1,6 +1,5 @@
 packages:
   - 'backend'
-  - 'open-api-facturacion-sri-main'
 
 allowBuilds:
   '@nestjs/core': true

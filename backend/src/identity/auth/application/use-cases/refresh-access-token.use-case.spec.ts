@@ -23,7 +23,7 @@ describe('RefreshAccessTokenUseCase', () => {
         {
           provide: UserRepository,
           useValue: {
-            findUnique: jest.fn(),
+            findById: jest.fn(),
           },
         },
         {
@@ -78,7 +78,7 @@ describe('RefreshAccessTokenUseCase', () => {
 
       sessionsService.getSession.mockResolvedValue(mockSession as any);
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
-      (userRepository.findUnique as jest.Mock).mockResolvedValue({
+      (userRepository.findById as jest.Mock).mockResolvedValue({
         email: 'test@test.com',
       });
       jwtService.signAsync.mockResolvedValue('new-token');

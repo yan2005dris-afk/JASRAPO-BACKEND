@@ -1,19 +1,18 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma } from 'src/generated/prisma/client';
-import { MeterRepository } from '../domain/repositories/meter.repository';
+import {
+  MeterFilters,
+  MeterRepository,
+} from '../domain/repositories/meter.repository';
 import { CreateMeterDto } from '../interfaces/dto/create-meter.dto';
 import { UpdateMeterDto } from '../interfaces/dto/update-meter.dto';
-import { MeterResponseDto } from '../interfaces/dto/meter-response.dto';
 import { EstadoMedidorResponseDto } from '../interfaces/dto/estado-medidor-response.dto';
 import { CreateMeterUseCase } from './use-cases/create-meter.use-case';
 import { ReportDefectUseCase } from './use-cases/report-defect.use-case';
 import { FindOneMeterUseCase } from './use-cases/find-one-meter.use-case';
 import { InstallMeterUseCase } from './use-cases/install-meter.use-case';
 import { DecommissionMeterUseCase } from './use-cases/decommission-meter.use-case';
-import { safeMeterSelect } from '../domain/types/IResponseMeters';
-import { toMeterResponse } from '../domain/types/metersMapper';
+import { MeterEntity } from '../domain/entities/meter.entity';
 import { DateUtil } from 'src/infrastructure/common/utils/date.util';
-
 import { METER_STATUS_LIST } from 'src/infrastructure/config/app.constants';
 
 @Injectable()
@@ -27,38 +26,29 @@ export class MeterService {
     private readonly decommissionUseCase: DecommissionMeterUseCase,
   ) {}
 
-  async create(createDto: CreateMeterDto): Promise<MeterResponseDto> {
-    const meter = await this.createUseCase.execute(createDto);
-    return toMeterResponse(meter);
+  async create(createDto: CreateMeterDto): Promise<MeterEntity> {
+    return this.createUseCase.execute(createDto);
   }
 
   async findAll(params: {
     skip?: number;
     take?: number;
-    where?: Prisma.MedidoresWhereInput;
-  }): Promise<MeterResponseDto[]> {
-    const meters = await this.meterRepository.findMany({
-      ...params,
-      where: { ...params.where, deletedAt: null },
-      orderBy: { createdAt: 'desc' },
-      select: safeMeterSelect,
+    where?: MeterFilters;
+  }): Promise<MeterEntity[]> {
+    return this.meterRepository.findMany({
+      skip: params.skip,
+      take: params.take,
+      where: params.where,
     });
-
-    return meters.map(toMeterResponse);
   }
 
-  async findOne(id: bigint): Promise<MeterResponseDto> {
-    const meter = await this.findOneUseCase.execute(id);
-    return toMeterResponse(meter);
+  async findOne(id: bigint): Promise<MeterEntity> {
+    return this.findOneUseCase.execute(id);
   }
 
-  async update(
-    id: bigint,
-    updateDto: UpdateMeterDto,
-  ): Promise<MeterResponseDto> {
+  async update(id: bigint, updateDto: UpdateMeterDto): Promise<MeterEntity> {
     await this.findOneUseCase.execute(id);
 
-    // Parsear fechas incoming del frontend
     const dataToUpdate = {
       ...updateDto,
       fechaInstalacion: updateDto.fechaInstalacion
@@ -69,11 +59,7 @@ export class MeterService {
         : undefined,
     };
 
-    const updated = await this.meterRepository.update(
-      { medidorId: id },
-      dataToUpdate,
-    );
-    return toMeterResponse(updated);
+    return this.meterRepository.update({ medidorId: id }, dataToUpdate);
   }
 
   async remove(id: bigint): Promise<{ message: string }> {
@@ -85,30 +71,21 @@ export class MeterService {
     return { message: `Medidor con ID ${id} eliminado` };
   }
 
-  async install(
-    medidorId: bigint,
-    contratoId: bigint,
-  ): Promise<MeterResponseDto> {
-    const meter = await this.installUseCase.execute(medidorId, contratoId);
-    return toMeterResponse(meter);
+  async install(medidorId: bigint, contratoId: bigint): Promise<MeterEntity> {
+    return this.installUseCase.execute(medidorId, contratoId);
   }
 
-  async reportDefect(medidorId: bigint): Promise<MeterResponseDto> {
-    const meter = await this.reportDamageUseCase.execute(medidorId);
-    return toMeterResponse(meter);
+  async reportDefect(medidorId: bigint): Promise<MeterEntity> {
+    return this.reportDamageUseCase.execute(medidorId);
   }
 
   async decommission(
     medidorId: bigint,
     motivoBaja: string,
-  ): Promise<MeterResponseDto> {
-    const meter = await this.decommissionUseCase.execute(medidorId, motivoBaja);
-    return toMeterResponse(meter);
+  ): Promise<MeterEntity> {
+    return this.decommissionUseCase.execute(medidorId, motivoBaja);
   }
 
-  /**
-   * Obtener catálogo de estados de medidor
-   */
   async findAllEstados(): Promise<EstadoMedidorResponseDto[]> {
     return METER_STATUS_LIST.map((s) => ({
       estadoId: s.estadoId,

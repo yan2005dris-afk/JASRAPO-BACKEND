@@ -7,29 +7,29 @@ import {
 import { ClientRepository } from '../../domain/repositories/client.repository';
 import { UpdateClientDto } from '../../interfaces/dto/update-client.dto';
 import { TipoIdentificacionUtil } from 'src/infrastructure/common/utils/tipo-identificacion.util';
-import { safeClientesSelect } from '../../domain/types/IResponseClient';
+import { ClientEntity } from '../../domain/entities/client.entity';
 
 @Injectable()
 export class UpdateClientUseCase {
   constructor(private readonly clientRepository: ClientRepository) {}
 
-  async execute(id: string, dto: UpdateClientDto) {
+  async execute(id: string, dto: UpdateClientDto): Promise<ClientEntity> {
     const clienteId = BigInt(id);
-    const cliente = await this.clientRepository.findFirst(
-      { clienteId, deletedAt: null },
-      { include: { tipoIdentificacion: true } },
-    );
+    const cliente = await this.clientRepository.findFirst({
+      clienteId,
+      deletedAt: null,
+    });
 
     if (!cliente) throw new NotFoundException('Cliente no encontrado');
 
     const tipoId = dto.tipoIdentificacionId
       ? dto.tipoIdentificacionId
-      : Number(cliente.tipoIdentificacionId);
+      : (cliente.tipoIdentificacion?.id ?? 0);
     const identificacionFinal = (
       dto.identificacion ?? cliente.identificacion
     ).trim();
 
-    // Obtener el código del tipo de identificación
+    // Get catalogo to validate identification type
     const catalogo = await this.clientRepository.findCatalogoTipoIdentificacion(
       { id: tipoId },
     );
@@ -84,7 +84,6 @@ export class UpdateClientUseCase {
         aplicaDiscapacidad:
           dto.aplicaDiscapacidad ?? cliente.aplicaDiscapacidad,
       },
-      safeClientesSelect,
     );
   }
 }

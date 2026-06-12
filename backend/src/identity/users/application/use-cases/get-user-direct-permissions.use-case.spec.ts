@@ -9,7 +9,7 @@ describe('GetUserDirectPermissionsUseCase', () => {
   let userRepository: UserRepository;
 
   const mockUserRepository = {
-    findUnique: jest.fn(),
+    findById: jest.fn(),
     findDirectPermissions: jest.fn(),
   };
 
@@ -32,7 +32,7 @@ describe('GetUserDirectPermissionsUseCase', () => {
   });
 
   it('should return direct permissions for a user', async () => {
-    mockUserRepository.findUnique.mockResolvedValue({
+    mockUserRepository.findById.mockResolvedValue({
       usuarioId: 1,
       deletedAt: null,
     });
@@ -71,7 +71,7 @@ describe('GetUserDirectPermissionsUseCase', () => {
   });
 
   it('should return empty array if user has no direct permissions', async () => {
-    mockUserRepository.findUnique.mockResolvedValue({
+    mockUserRepository.findById.mockResolvedValue({
       usuarioId: 1,
       deletedAt: null,
     });
@@ -83,13 +83,13 @@ describe('GetUserDirectPermissionsUseCase', () => {
   });
 
   it('should throw NotFoundException if user not found', async () => {
-    mockUserRepository.findUnique.mockResolvedValue(null);
+    mockUserRepository.findById.mockResolvedValue(null);
 
     await expect(useCase.execute(1)).rejects.toThrow(NotFoundException);
   });
 
   it('should throw NotFoundException if user is deleted', async () => {
-    mockUserRepository.findUnique.mockResolvedValue({
+    mockUserRepository.findById.mockResolvedValue({
       usuarioId: 1,
       deletedAt: new Date(),
     });
@@ -98,7 +98,7 @@ describe('GetUserDirectPermissionsUseCase', () => {
   });
 
   it('should order by resource and action', async () => {
-    mockUserRepository.findUnique.mockResolvedValue({
+    mockUserRepository.findById.mockResolvedValue({
       usuarioId: 1,
       deletedAt: null,
     });

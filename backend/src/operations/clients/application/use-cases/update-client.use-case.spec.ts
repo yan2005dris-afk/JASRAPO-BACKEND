@@ -80,7 +80,6 @@ describe('UpdateClientUseCase', () => {
       expect(mockClientRepository.update).toHaveBeenCalledWith(
         { clienteId: BigInt(1) },
         expect.objectContaining({ nombres: 'CARLOS' }),
-        expect.any(Object),
       );
     });
 

@@ -45,10 +45,7 @@ export class RefreshAccessTokenUseCase {
       throw new UnauthorizedException('Refresh token inválido');
     }
 
-    const user = await this.userRepository.findUnique(
-      { usuarioId },
-      { email: true },
-    );
+    const user = await this.userRepository.findById(usuarioId);
 
     if (!user) {
       throw new UnauthorizedException('Usuario no encontrado');

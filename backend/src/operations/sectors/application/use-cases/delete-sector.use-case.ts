@@ -12,10 +12,7 @@ export class DeleteSectorUseCase {
       throw new NotFoundException(`Sector con ID ${id} no encontrado`);
     }
 
-    await this.sectorRepository.update(
-      { sectorId: id },
-      { deletedAt: new Date() },
-    );
+    await this.sectorRepository.delete({ sectorId: id });
 
     return { message: 'Sector eliminado exitosamente.', statusCode: 200 };
   }

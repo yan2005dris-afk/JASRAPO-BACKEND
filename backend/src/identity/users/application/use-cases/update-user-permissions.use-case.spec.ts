@@ -9,7 +9,7 @@ describe('UpdateUserPermissionsUseCase', () => {
   let userRepository: UserRepository;
 
   const mockUserRepository = {
-    findUnique: jest.fn(),
+    findById: jest.fn(),
     updatePermissions: jest.fn(),
   };
 
@@ -33,7 +33,7 @@ describe('UpdateUserPermissionsUseCase', () => {
   });
 
   it('should throw NotFoundException if user not found', async () => {
-    mockUserRepository.findUnique.mockResolvedValue(null);
+    mockUserRepository.findById.mockResolvedValue(null);
 
     await expect(
       useCase.execute(1, [{ permisoId: 1, permitido: true }]),
@@ -41,10 +41,10 @@ describe('UpdateUserPermissionsUseCase', () => {
   });
 
   it('should throw NotFoundException if user is deleted', async () => {
-    mockUserRepository.findUnique.mockResolvedValue({
+    mockUserRepository.findById.mockResolvedValue({
       usuarioId: 1,
       deletedAt: new Date(),
-    });
+    } as any);
 
     await expect(
       useCase.execute(1, [{ permisoId: 1, permitido: true }]),
@@ -52,10 +52,10 @@ describe('UpdateUserPermissionsUseCase', () => {
   });
 
   it('should call updatePermissions on the repository', async () => {
-    mockUserRepository.findUnique.mockResolvedValue({
+    mockUserRepository.findById.mockResolvedValue({
       usuarioId: 1,
       deletedAt: null,
-    });
+    } as any);
     const permissions = [{ permisoId: 10, permitido: true }];
     await useCase.execute(1, permissions);
 

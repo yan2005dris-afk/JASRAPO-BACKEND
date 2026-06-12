@@ -75,9 +75,14 @@ describe('PermissionsService', () => {
     expect(createUseCase.execute).toHaveBeenCalledWith(dto);
   });
 
-  it('should delegate findAll to FindAllPermissionsUseCase', async () => {
+  it('should delegate findAll to FindAllPermissionsUseCase with pagination', async () => {
+    await service.findAll(2, 5);
+    expect(findAllUseCase.execute).toHaveBeenCalledWith(2, 5);
+  });
+
+  it('should use defaults when no pagination provided', async () => {
     await service.findAll();
-    expect(findAllUseCase.execute).toHaveBeenCalled();
+    expect(findAllUseCase.execute).toHaveBeenCalledWith(undefined, undefined);
   });
 
   it('should delegate findOne to FindOnePermissionUseCase', async () => {

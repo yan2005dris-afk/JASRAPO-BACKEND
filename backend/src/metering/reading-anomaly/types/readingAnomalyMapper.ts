@@ -1,31 +1,13 @@
 import type { IResponseReadingAnomaly } from './IResponseReadingAnomaly';
-import type { LecturaAnomalia, Lecturas } from 'src/generated/prisma/client';
+import type { ReadingAnomalyEntity } from '../domain/entities/reading-anomaly.entity';
 
 /**
- * Tipo de entrada desde Prisma (relación incluída)
- */
-export type ReadingAnomalyPrismaRaw = Pick<
-  LecturaAnomalia,
-  | 'anomaliaId'
-  | 'lecturaId'
-  | 'observacion'
-  | 'tipo'
-  | 'estado'
-  | 'fotoUrlMinIo'
-> & {
-  lectura?: Pick<
-    Lecturas,
-    'lecturaId' | 'fecha' | 'lecturaActual' | 'consumoCalculado'
-  > | null;
-};
-
-/**
- * Mapea resultado de Prisma a DTO de response
- * Excluye campos internos: updatedAt, createdAt, deletedAt
+ * Mapea resultado de Entidad de Dominio a DTO de response
  */
 export function toReadingAnomalyResponse(
-  anomaly: ReadingAnomalyPrismaRaw,
-): IResponseReadingAnomaly {
+  anomaly: ReadingAnomalyEntity | null | undefined,
+): IResponseReadingAnomaly | null {
+  if (!anomaly) return null;
   return {
     anomaliaId: anomaly.anomaliaId.toString(),
     lecturaId: anomaly.lecturaId.toString(),
@@ -37,8 +19,8 @@ export function toReadingAnomalyResponse(
       ? {
           lecturaId: anomaly.lectura.lecturaId.toString(),
           fecha: anomaly.lectura.fecha,
-          lecturaActual: Number(anomaly.lectura.lecturaActual),
-          consumoCalculado: Number(anomaly.lectura.consumoCalculado),
+          lecturaActual: anomaly.lectura.lecturaActual,
+          consumoCalculado: anomaly.lectura.consumoCalculado,
         }
       : null,
   };

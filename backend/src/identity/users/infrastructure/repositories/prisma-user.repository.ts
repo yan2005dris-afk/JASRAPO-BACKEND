@@ -1,46 +1,71 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { Prisma } from 'src/generated/prisma/client';
-import { UserRepository } from '../../domain/repositories/user.repository';
+import {
+  UserRepository,
+  CreateUserRepositoryData,
+  UpdateUserRepositoryData,
+  UserFilters,
+  FiltroFecha,
+} from '../../domain/repositories/user.repository';
 import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
 import { paginate } from 'src/infrastructure/common/utils/pagination.util';
+import {
+  userWithRolesSelect,
+  UserWithRoleResponse,
+} from '../../domain/types/user.types';
+import { UserMapper } from '../mappers/user.mapper';
 
 @Injectable()
 export class PrismaUserRepository implements UserRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findUnique(
-    where: Prisma.UsuariosWhereUniqueInput,
-    select?: Prisma.UsuariosSelect,
-  ): Promise<any> {
-    return this.prisma.usuarios.findUnique({ where, select });
+  private mapFiltroFecha(filter?: FiltroFecha | null) {
+    if (filter === undefined) return undefined;
+    if (filter === null) return null;
+    if (filter.igualA !== undefined) return filter.igualA;
+    return {
+      lt: filter.antesDe,
+      gt: filter.despuesDe,
+    };
   }
 
-  async findFirst(
-    where: Prisma.UsuariosWhereInput,
-    select?: Prisma.UsuariosSelect,
-  ): Promise<any> {
-    return this.prisma.usuarios.findFirst({ where, select });
+  async findById(usuarioId: number): Promise<UserWithRoleResponse | null> {
+    const user = await this.prisma.usuarios.findUnique({
+      where: { usuarioId },
+      select: userWithRolesSelect,
+    });
+    return UserMapper.toWithRole(user);
   }
 
-  async findMany(params: {
-    select?: Prisma.UsuariosSelect;
-    where?: Prisma.UsuariosWhereInput;
-    orderBy?: Prisma.UsuariosOrderByWithRelationInput;
-    take?: number;
-    skip?: number;
-  }): Promise<any[]> {
-    return this.prisma.usuarios.findMany(params);
+  async findByEmail(email: string): Promise<UserWithRoleResponse | null> {
+    const user = await this.prisma.usuarios.findUnique({
+      where: { email },
+      select: userWithRolesSelect,
+    });
+    return UserMapper.toWithRole(user);
+  }
+
+  async findByEmailWithPassword(
+    email: string,
+  ): Promise<(UserWithRoleResponse & { clave: string }) | null> {
+    const user = await this.prisma.usuarios.findUnique({
+      where: { email },
+      select: {
+        ...userWithRolesSelect,
+        clave: true,
+      },
+    });
+    return UserMapper.toWithRoleAndClave(user);
   }
 
   async findManyActive(
     pagination: PaginationDto,
-    select?: Prisma.UsuariosSelect,
-  ): Promise<{ data: any[]; meta: any }> {
-    return paginate(
+  ): Promise<{ data: UserWithRoleResponse[]; meta: any }> {
+    const result = await paginate(
       this.prisma.usuarios,
       {
-        select,
+        select: userWithRolesSelect,
         where: { deletedAt: null },
         orderBy: { usuarioId: 'asc' },
       },
@@ -49,25 +74,75 @@ export class PrismaUserRepository implements UserRepository {
         limit: pagination.limit,
       },
     );
+    return {
+      data: (result.data as any[]).map((user) => UserMapper.toWithRole(user)!),
+      meta: result.meta,
+    };
   }
 
-  async count(params: { where?: Prisma.UsuariosWhereInput }): Promise<number> {
-    return this.prisma.usuarios.count(params);
+  async findMany(
+    filters: UserFilters,
+    pagination: PaginationDto,
+  ): Promise<{ data: UserWithRoleResponse[]; meta: any }> {
+    const where: Prisma.UsuariosWhereInput = {
+      ...(filters.email && { email: filters.email }),
+      ...(filters.deletedAt !== undefined && {
+        deletedAt: this.mapFiltroFecha(filters.deletedAt),
+      }),
+    };
+    const result = await paginate(
+      this.prisma.usuarios,
+      {
+        select: userWithRolesSelect,
+        where,
+        orderBy: { usuarioId: 'asc' },
+      },
+      {
+        page: pagination.page,
+        limit: pagination.limit,
+      },
+    );
+    return {
+      data: (result.data as any[]).map((user) => UserMapper.toWithRole(user)!),
+      meta: result.meta,
+    };
   }
 
-  async create(
-    data: Prisma.UsuariosCreateInput | Prisma.UsuariosUncheckedCreateInput,
-  ): Promise<any> {
-    return this.prisma.usuarios.create({ data });
+  async create(data: CreateUserRepositoryData): Promise<UserWithRoleResponse> {
+    const { rolId, ...userData } = data;
+    const createData: Prisma.UsuariosCreateInput = {
+      ...userData,
+      avatar: userData.avatar as Prisma.InputJsonValue,
+      rol: { connect: { rolId } },
+    };
+    const user = await this.prisma.usuarios.create({
+      data: createData,
+      select: userWithRolesSelect,
+    });
+    return UserMapper.toWithRole(user)!;
   }
 
   async update(
-    where: Prisma.UsuariosWhereUniqueInput,
-    data: Prisma.UsuariosUpdateInput | Prisma.UsuariosUncheckedUpdateInput,
+    usuarioId: number,
+    data: UpdateUserRepositoryData,
     tx?: any,
-  ): Promise<any> {
+  ): Promise<UserWithRoleResponse> {
     const client = tx || this.prisma;
-    return client.usuarios.update({ where, data });
+    const { rolId, ...userData } = data;
+    const updateData: Prisma.UsuariosUpdateInput = {
+      ...userData,
+      avatar:
+        userData.avatar !== undefined
+          ? (userData.avatar as Prisma.InputJsonValue)
+          : undefined,
+      rol: rolId ? { connect: { rolId } } : undefined,
+    };
+    const user = await client.usuarios.update({
+      where: { usuarioId },
+      data: updateData,
+      select: userWithRolesSelect,
+    });
+    return UserMapper.toWithRole(user)!;
   }
 
   async findRoleById(rolId: number): Promise<any> {

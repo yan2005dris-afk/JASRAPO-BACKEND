@@ -48,10 +48,9 @@ describe('GetSectorUseCase', () => {
     const result = await useCase.execute(1);
 
     expect(result).toEqual(mockSector);
-    expect(mockSectorRepository.findUnique).toHaveBeenCalledWith(
-      { sectorId: 1 },
-      expect.any(Object),
-    );
+    expect(mockSectorRepository.findUnique).toHaveBeenCalledWith({
+      sectorId: 1,
+    });
   });
 
   it('should throw NotFoundException if sector does not exist', async () => {

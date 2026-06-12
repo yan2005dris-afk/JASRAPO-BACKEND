@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { Prisma } from 'src/generated/prisma/client';
 import { CreateUserDto } from '../interfaces/dto/create-user.dto';
+import { UpdateUserDto } from '../interfaces/dto/update-user.dto';
 import { CreateUserUseCase } from './use-cases/create-user.use-case';
 import { GetEffectivePermissionsUseCase } from './use-cases/get-effective-permissions.use-case';
 import { UpdateUserPermissionsUseCase } from './use-cases/update-user-permissions.use-case';
@@ -31,13 +32,15 @@ export class UserService {
     private readonly updateUserPermissionsUseCase: UpdateUserPermissionsUseCase,
   ) {}
 
-  async user(
-    userWhereUniqueInput: Prisma.UsuariosWhereUniqueInput,
-  ): Promise<UserWithPermissionsResponse | null> {
-    const user = await this.userRepository.findUnique(
-      userWhereUniqueInput,
-      userWithRolesSelect,
-    );
+  async user(criteria: {
+    usuarioId?: number;
+    email?: string;
+  }): Promise<UserWithPermissionsResponse | null> {
+    const user = criteria.usuarioId
+      ? await this.userRepository.findById(criteria.usuarioId)
+      : criteria.email
+        ? await this.userRepository.findByEmail(criteria.email)
+        : null;
 
     if (!user || user.deletedAt) return null;
 
@@ -74,10 +77,7 @@ export class UserService {
   }
 
   async findMe(usersId: number): Promise<ProfileResponse> {
-    const user = await this.userRepository.findUnique(
-      { usuarioId: usersId },
-      userWithRolesSelect,
-    );
+    const user = await this.userRepository.findById(usersId);
 
     if (!user || user.deletedAt) {
       throw new NotFoundException('Usuario no encontrado o eliminado');
@@ -102,10 +102,7 @@ export class UserService {
   async users(
     pagination: PaginationDto,
   ): Promise<PaginatedResult<UserWithRoleResponse>> {
-    const result = await this.userRepository.findManyActive(
-      pagination,
-      userWithRolesSelect,
-    );
+    const result = await this.userRepository.findManyActive(pagination);
 
     const mappedData = result.data.map((user: any) => ({
       usuarioId: user.usuarioId,
@@ -130,21 +127,15 @@ export class UserService {
     return this.createUserUseCase.execute(createUsersDto);
   }
 
-  async updateUser(params: {
-    where: Prisma.UsuariosWhereUniqueInput;
-    data: Prisma.UsuariosUncheckedUpdateInput & {
-      directPermissions?: unknown[];
-    };
-  }): Promise<UserWithPermissionsResponse | null> {
-    const { where, data } = params;
+  async updateUser(
+    usuarioId: number,
+    data: UpdateUserDto,
+  ): Promise<UserWithPermissionsResponse | null> {
     const { directPermissions, ...userData } = data;
     const updateData = { ...userData };
 
     // Verificar que el usuario no esté eliminado
-    const existingUser = await this.userRepository.findUnique(where, {
-      usuarioId: true,
-      deletedAt: true,
-    });
+    const existingUser = await this.userRepository.findById(usuarioId);
 
     if (!existingUser) {
       throw new NotFoundException('Usuario no encontrado');
@@ -158,30 +149,25 @@ export class UserService {
 
     // Validar campos que no pueden estar vacíos
     if (updateData.nombres !== undefined) {
-      ValidationUtil.requireNonEmpty(updateData.nombres as string, 'nombres');
+      ValidationUtil.requireNonEmpty(updateData.nombres, 'nombres');
     }
     if (updateData.apellidos !== undefined) {
-      ValidationUtil.requireNonEmpty(
-        updateData.apellidos as string,
-        'apellidos',
-      );
+      ValidationUtil.requireNonEmpty(updateData.apellidos, 'apellidos');
     }
     if (updateData.email !== undefined) {
-      ValidationUtil.requireNonEmpty(updateData.email as string, 'email');
+      ValidationUtil.requireNonEmpty(updateData.email, 'email');
     }
     if (updateData.telefono !== undefined) {
-      ValidationUtil.requireNonEmpty(updateData.telefono as string, 'telefono');
+      ValidationUtil.requireNonEmpty(updateData.telefono, 'telefono');
       updateData.telefono = PhoneUtil.validateAndClean(
-        updateData.telefono as string,
+        updateData.telefono,
         'telefono',
       );
     }
 
     // Validar rolId si se proporciona
     if (updateData.rolId !== undefined && updateData.rolId !== null) {
-      const role = await this.userRepository.findRoleById(
-        updateData.rolId as number,
-      );
+      const role = await this.userRepository.findRoleById(updateData.rolId);
       if (!role || role.deletedAt) {
         throw new NotFoundException('Rol no encontrado o eliminado');
       }
@@ -189,12 +175,12 @@ export class UserService {
 
     try {
       await this.userRepository.executeTransaction(async (tx) => {
-        await this.userRepository.update(where, updateData, tx);
+        await this.userRepository.update(usuarioId, updateData, tx);
 
         if (directPermissions && Array.isArray(directPermissions)) {
           await this.updateUserPermissionsUseCase.execute(
             existingUser.usuarioId,
-            directPermissions as { permisoId: number; permitido?: boolean }[],
+            directPermissions,
             tx,
           );
         }
@@ -215,8 +201,8 @@ export class UserService {
     return this.user({ usuarioId: existingUser.usuarioId });
   }
 
-  async softDeleteUser(where: Prisma.UsuariosWhereUniqueInput) {
-    return this.userRepository.update(where, { deletedAt: new Date() });
+  async softDeleteUser(usuarioId: number) {
+    return this.userRepository.update(usuarioId, { deletedAt: new Date() });
   }
 
   async getEffectivePermissions(

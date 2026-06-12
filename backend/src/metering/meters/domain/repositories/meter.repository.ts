@@ -1,37 +1,63 @@
-import type { Prisma } from 'src/generated/prisma/client';
+import type { MeterEntity } from '../entities/meter.entity';
+
+export interface CreateMeterRepositoryData {
+  marca: string;
+  modelo: string;
+  serie: string;
+  estado: string;
+  latitud?: number | null;
+  longitud?: number | null;
+}
+
+export interface UpdateMeterRepositoryData {
+  marca?: string;
+  modelo?: string;
+  serie?: string;
+  estado?: string;
+  fechaInstalacion?: Date | null;
+  fechaBaja?: Date | null;
+  motivo?: string | null;
+  latitud?: number | null;
+  longitud?: number | null;
+  deletedAt?: Date | null;
+}
+
+export interface CreateMeterHistoryRepositoryData {
+  medidorId: bigint;
+  contratoId: bigint;
+  lecturaInicial: number;
+  motivo: string;
+  fechaDesde: Date;
+}
+
+export interface MeterFilters {
+  estado?: string;
+}
 
 export abstract class MeterRepository {
-  abstract findUnique(
-    where: Prisma.MedidoresWhereUniqueInput,
-    select?: Prisma.MedidoresSelect,
-  ): Promise<any>;
+  abstract findUnique(where: {
+    medidorId?: bigint;
+    serie?: string;
+  }): Promise<MeterEntity | null>;
 
   abstract findMany(params: {
-    select?: Prisma.MedidoresSelect;
-    where?: Prisma.MedidoresWhereInput;
-    orderBy?: Prisma.MedidoresOrderByWithRelationInput;
+    where?: MeterFilters;
     take?: number;
     skip?: number;
-  }): Promise<any[]>;
+  }): Promise<MeterEntity[]>;
 
-  abstract create(
-    data: Prisma.MedidoresCreateInput,
-    select?: Prisma.MedidoresSelect,
-  ): Promise<any>;
+  abstract create(data: CreateMeterRepositoryData): Promise<MeterEntity>;
 
   abstract update(
-    where: Prisma.MedidoresWhereUniqueInput,
-    data: Prisma.MedidoresUpdateInput,
-    select?: Prisma.MedidoresSelect,
+    where: { medidorId: bigint },
+    data: UpdateMeterRepositoryData,
     tx?: any,
-  ): Promise<any>;
+  ): Promise<MeterEntity>;
 
   abstract createHistory(
-    data:
-      | Prisma.HistorialMedidoresCreateInput
-      | Prisma.HistorialMedidoresUncheckedCreateInput,
+    data: CreateMeterHistoryRepositoryData,
     tx?: any,
-  ): Promise<any>;
+  ): Promise<void>;
 
   abstract executeTransaction<T>(callback: (tx: any) => Promise<T>): Promise<T>;
 }
