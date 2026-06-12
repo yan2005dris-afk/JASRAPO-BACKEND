@@ -46,6 +46,8 @@ export abstract class MeterRepository {
     skip?: number;
   }): Promise<MeterEntity[]>;
 
+  abstract count(where?: MeterFilters): Promise<number>;
+
   abstract create(data: CreateMeterRepositoryData): Promise<MeterEntity>;
 
   abstract update(

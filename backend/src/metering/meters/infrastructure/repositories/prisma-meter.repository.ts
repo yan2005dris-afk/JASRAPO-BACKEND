@@ -47,6 +47,14 @@ export class PrismaMeterRepository implements MeterRepository {
     return MeterMapper.toDomainList(records);
   }
 
+  async count(where?: MeterFilters): Promise<number> {
+    const whereClause: Prisma.MedidoresWhereInput = {
+      deletedAt: null,
+      ...(where?.estado && { estado: where.estado as any }),
+    };
+    return this.prisma.medidores.count({ where: whereClause });
+  }
+
   async create(data: CreateMeterRepositoryData): Promise<MeterEntity> {
     const record = await this.prisma.medidores.create({
       data: {

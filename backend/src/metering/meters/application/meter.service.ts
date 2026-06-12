@@ -14,6 +14,8 @@ import { DecommissionMeterUseCase } from './use-cases/decommission-meter.use-cas
 import { MeterEntity } from '../domain/entities/meter.entity';
 import { DateUtil } from 'src/infrastructure/common/utils/date.util';
 import { METER_STATUS_LIST } from 'src/infrastructure/config/app.constants';
+import { getPagination } from 'src/infrastructure/common/utils/pagination.util';
+import { PaginatedMeterResponse, MeterKpis } from '../interfaces/types/paginated-meter-response.type';
 
 @Injectable()
 export class MeterService {
@@ -30,16 +32,42 @@ export class MeterService {
     return this.createUseCase.execute(createDto);
   }
 
-  async findAll(params: {
-    skip?: number;
-    take?: number;
-    where?: MeterFilters;
-  }): Promise<MeterEntity[]> {
-    return this.meterRepository.findMany({
-      skip: params.skip,
-      take: params.take,
-      where: params.where,
-    });
+  async findAll(page = 1, limit = 10, where?: MeterFilters): Promise<PaginatedMeterResponse> {
+    const { skip, take, page: safePage } = getPagination(page, limit);
+
+    const [
+      meters,
+      total,
+      enBodegaCount,
+      instaladosCount,
+      danadosCount,
+    ] = await Promise.all([
+      this.meterRepository.findMany({ where, skip, take }),
+      this.meterRepository.count(where),
+      this.meterRepository.count({ ...where, estado: 'BODEGA' }),
+      this.meterRepository.count({ ...where, estado: 'INSTALADO' }),
+      this.meterRepository.count({ ...where, estado: 'DANADO' }),
+    ]);
+
+    return {
+      data: meters as unknown as any[],
+      meta: {
+        total,
+        page: safePage,
+        limit: take,
+        ultimaPagina: Math.ceil(total / take),
+        paginaActual: safePage,
+        porPagina: take,
+        anterior: safePage > 1 ? safePage - 1 : null,
+        siguiente: safePage < Math.ceil(total / take) ? safePage + 1 : null,
+      },
+      kpis: {
+        enBodega: enBodegaCount,
+        instalados: instaladosCount,
+        danados: danadosCount,
+        total,
+      },
+    };
   }
 
   async findOne(id: bigint): Promise<MeterEntity> {
