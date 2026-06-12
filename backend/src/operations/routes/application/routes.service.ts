@@ -1,10 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma } from 'src/generated/prisma/client';
 import { CreateRouteDto } from '../interfaces/dto/create-route.dto';
 import { UpdateRouteDto } from '../interfaces/dto/update-route.dto';
 import { FilterReadingsDto } from '../interfaces/dto/filter-readings.dto';
-import { RouteEntity } from '../domain/types/route.entity';
-import { ReadingForRouteEntity } from '../domain/types/reading-for-route.entity';
+import { RouteEntity } from '../domain/entities/route.entity';
+import { ReadingForRouteEntity } from '../domain/entities/reading-for-route.entity';
 import { GetEligibleReadingsUseCase } from './use-cases/get-eligible-readings.use-case';
 import { CreateRouteUseCase } from './use-cases/create-route.use-case';
 import { FindAllRoutesUseCase } from './use-cases/find-all-routes.use-case';
@@ -45,7 +44,7 @@ export class RoutesService {
 
   async findAll(params: {
     pagination: { page?: number; limit?: number };
-    where?: Prisma.RutasWhereInput;
+    where?: Record<string, any>;
   }): Promise<PaginatedResult<RouteEntity>> {
     return this.findAllRoutesUseCase.execute(params);
   }

@@ -85,26 +85,18 @@ describe('GetEligibleReadingsUseCase', () => {
   it('should build correct where clause for TOMA_LECTURA and return paginated mapped data', async () => {
     mockRouteRepository.findComunidad.mockResolvedValue({ comunidadId: 1 });
 
-    const mockLectura = {
+    // paginateLecturas now returns ReadingForRouteEntity[] — repo does mapping internally
+    const mappedEntity = {
       lecturaId: 10n,
-      medidor: {
-        historial: [
-          {
-            fechaHasta: null,
-            contrato: {
-              estado: 'ACTIVO',
-              numeroGuia: 'G-123',
-              direccionSuministro: 'Dir 1',
-              cliente: { nombres: 'Juan', apellidos: 'Perez' },
-              sector: { nombre: 'Sector 1' },
-            },
-          },
-        ],
-      },
+      guia: 'G-123',
+      clienteNombre: 'Juan Perez',
+      direccion: 'Dir 1',
+      sector: 'Sector 1',
+      estadoContrato: 'ACTIVO',
     };
 
     mockRouteRepository.paginateLecturas.mockResolvedValue({
-      data: [mockLectura],
+      data: [mappedEntity],
       meta: { total: 1, page: 2, limit: 15 },
     });
 

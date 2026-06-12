@@ -1,46 +1,69 @@
-import type { Prisma } from 'src/generated/prisma/client';
 import type { PaginateOptions } from 'src/infrastructure/common/utils/pagination.util';
 import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
+import { RouteEntity } from '../entities/route.entity';
+import { ReadingForRouteEntity } from '../entities/reading-for-route.entity';
+import type { CreateRouteData } from '../types/create-route-data';
+import type { UpdateRouteData } from '../types/update-route-data';
+
+/**
+ * Cross-module lookup interfaces — minimal shapes for domain validation.
+ * The Prisma repository returns these shapes from other modules' tables.
+ */
+export interface UsuarioRef {
+  usuarioId: number;
+  rol?: { nombre?: string } | null;
+}
+
+export interface ComunidadRef {
+  comunidadId: number;
+}
+
+export interface SectorRef {
+  sectorId: number;
+  comunidadId: number;
+  nombre?: string;
+}
 
 export abstract class RouteRepository {
-  abstract findUnique(where: Prisma.RutasWhereUniqueInput): Promise<any>;
+  abstract findUnique(where: Record<string, any>): Promise<any>;
 
   abstract findMany(params: {
-    where?: Prisma.RutasWhereInput;
-    orderBy?: Prisma.RutasOrderByWithRelationInput;
+    where?: Record<string, any>;
+    orderBy?: Record<string, any>;
     skip?: number;
     take?: number;
   }): Promise<any[]>;
 
   abstract paginateRutas(
-    args: { where?: Prisma.RutasWhereInput; orderBy?: any },
+    args: { where?: Record<string, any>; orderBy?: Record<string, any> },
     pagination: PaginateOptions,
-  ): Promise<PaginatedResult<any>>;
+  ): Promise<PaginatedResult<RouteEntity>>;
 
-  abstract create(data: Prisma.RutasCreateInput): Promise<any>;
+  abstract create(data: CreateRouteData): Promise<any>;
 
   abstract update(
-    where: Prisma.RutasWhereUniqueInput,
-    data: Prisma.RutasUpdateInput,
+    where: Record<string, any>,
+    data: Record<string, any>,
   ): Promise<any>;
 
   abstract findUsuario(
-    where: Prisma.UsuariosWhereUniqueInput,
-    options?: { include?: Prisma.UsuariosInclude },
-  ): Promise<any>;
+    where: { usuarioId: number },
+    options?: { include?: Record<string, any> },
+  ): Promise<UsuarioRef | null>;
 
   abstract findComunidad(
-    where: Prisma.ComunidadesWhereUniqueInput,
-  ): Promise<any>;
+    where: { comunidadId: number },
+  ): Promise<ComunidadRef | null>;
 
-  abstract findSector(where: Prisma.SectoresWhereUniqueInput): Promise<any>;
+  abstract findSector(
+    where: { sectorId: number },
+  ): Promise<SectorRef | null>;
 
   abstract paginateLecturas(
     args: {
-      where?: Prisma.LecturasWhereInput;
-      include?: Prisma.LecturasInclude;
+      where?: Record<string, any>;
       orderBy?: any;
     },
     pagination: PaginateOptions,
-  ): Promise<PaginatedResult<any>>;
+  ): Promise<PaginatedResult<ReadingForRouteEntity>>;
 }

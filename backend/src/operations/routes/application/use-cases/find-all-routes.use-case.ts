@@ -1,8 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma } from 'src/generated/prisma/client';
 import { RouteRepository } from '../../domain/repositories/route.repository';
-import { RouteEntity } from '../../domain/types/route.entity';
-import { RouteMapper } from '../../domain/types/mappers';
+import { RouteEntity } from '../../domain/entities/route.entity';
 import { PaginateOptions } from 'src/infrastructure/common/utils/pagination.util';
 import { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
 
@@ -12,21 +10,16 @@ export class FindAllRoutesUseCase {
 
   async execute(params: {
     pagination: PaginateOptions;
-    where?: Prisma.RutasWhereInput;
+    where?: Record<string, any>;
   }): Promise<PaginatedResult<RouteEntity>> {
     const { pagination, where } = params;
 
-    const result = await this.routeRepository.paginateRutas(
+    return this.routeRepository.paginateRutas(
       {
         where: { ...where, deletedAt: null },
         orderBy: { createdAt: 'desc' },
       },
       pagination,
     );
-
-    return {
-      ...result,
-      data: result.data.map((r: any) => RouteMapper.toEntity(r)),
-    };
   }
 }
