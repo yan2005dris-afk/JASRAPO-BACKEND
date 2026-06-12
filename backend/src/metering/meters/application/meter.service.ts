@@ -15,7 +15,10 @@ import { MeterEntity } from '../domain/entities/meter.entity';
 import { DateUtil } from 'src/infrastructure/common/utils/date.util';
 import { METER_STATUS_LIST } from 'src/infrastructure/config/app.constants';
 import { getPagination } from 'src/infrastructure/common/utils/pagination.util';
-import { PaginatedMeterResponse, MeterKpis } from '../interfaces/types/paginated-meter-response.type';
+import {
+  PaginatedMeterResponse,
+  MeterKpis,
+} from '../interfaces/types/paginated-meter-response.type';
 
 @Injectable()
 export class MeterService {
@@ -32,22 +35,21 @@ export class MeterService {
     return this.createUseCase.execute(createDto);
   }
 
-  async findAll(page = 1, limit = 10, where?: MeterFilters): Promise<PaginatedMeterResponse> {
+  async findAll(
+    page = 1,
+    limit = 10,
+    where?: MeterFilters,
+  ): Promise<PaginatedMeterResponse> {
     const { skip, take, page: safePage } = getPagination(page, limit);
 
-    const [
-      meters,
-      total,
-      enBodegaCount,
-      instaladosCount,
-      danadosCount,
-    ] = await Promise.all([
-      this.meterRepository.findMany({ where, skip, take }),
-      this.meterRepository.count(where),
-      this.meterRepository.count({ ...where, estado: 'BODEGA' }),
-      this.meterRepository.count({ ...where, estado: 'INSTALADO' }),
-      this.meterRepository.count({ ...where, estado: 'DANADO' }),
-    ]);
+    const [meters, total, enBodegaCount, instaladosCount, danadosCount] =
+      await Promise.all([
+        this.meterRepository.findMany({ where, skip, take }),
+        this.meterRepository.count(where),
+        this.meterRepository.count({ ...where, estado: 'BODEGA' }),
+        this.meterRepository.count({ ...where, estado: 'INSTALADO' }),
+        this.meterRepository.count({ ...where, estado: 'DANADO' }),
+      ]);
 
     return {
       data: meters as unknown as any[],

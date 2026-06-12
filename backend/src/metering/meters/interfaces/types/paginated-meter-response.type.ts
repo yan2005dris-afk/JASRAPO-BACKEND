@@ -1,4 +1,4 @@
-import { MeterResponseDto } from '../dto/meter-response.dto';
+import type { MeterResponseDto } from '../dto/meter-response.dto';
 
 export interface MeterKpis {
   enBodega: number;
