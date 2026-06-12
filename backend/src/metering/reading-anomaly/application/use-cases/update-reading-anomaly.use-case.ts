@@ -25,6 +25,9 @@ export class UpdateReadingAnomalyUseCase {
       dataToUpdate.lecturaId = BigInt(updateDto.lecturaId);
     }
 
-    return this.readingAnomalyRepository.update({ anomaliaId: id }, dataToUpdate);
+    return this.readingAnomalyRepository.update(
+      { anomaliaId: id },
+      dataToUpdate,
+    );
   }
 }

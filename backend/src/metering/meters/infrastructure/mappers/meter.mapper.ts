@@ -21,6 +21,8 @@ export class MeterMapper {
   }
 
   static toDomainList(rawList: any[]): MeterEntity[] {
-    return rawList.map((raw) => this.toDomain(raw)).filter((item): item is MeterEntity => item !== null);
+    return rawList
+      .map((raw) => this.toDomain(raw))
+      .filter((item): item is MeterEntity => item !== null);
   }
 }

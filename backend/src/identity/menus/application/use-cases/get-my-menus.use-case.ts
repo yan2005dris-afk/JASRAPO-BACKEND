@@ -28,9 +28,8 @@ export class GetMyMenusUseCase {
     }));
 
     // 1. Obtener los acciones que el usuario tiene acceso directo
-    const directMenus = await this.menuRepository.findActiveMenusByPermissions(
-      filtrosPermisos,
-    );
+    const directMenus =
+      await this.menuRepository.findActiveMenusByPermissions(filtrosPermisos);
 
     // 2. Recorrer recurrentemente para incluir a los padres en caso de que falten
     const menuMap = new Map<number, MenuRecord>();

@@ -49,9 +49,11 @@ export class PrismaRoleRepository implements RoleRepository {
     return RoleMapper.toAssignment(assignment);
   }
 
-  async findPermission(
-    permisoId: number,
-  ): Promise<{ permisoId: number; nombre: string; deletedAt: Date | null } | null> {
+  async findPermission(permisoId: number): Promise<{
+    permisoId: number;
+    nombre: string;
+    deletedAt: Date | null;
+  } | null> {
     return this.prisma.permisos.findUnique({
       where: { permisoId },
       select: {

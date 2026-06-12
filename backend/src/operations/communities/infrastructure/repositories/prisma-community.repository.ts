@@ -30,9 +30,7 @@ export class PrismaCommunityRepository implements CommunityRepository {
     return CommunityMapper.toDomain(record);
   }
 
-  async findFirst(
-    where: Record<string, any>,
-  ): Promise<CommunityEntity | null> {
+  async findFirst(where: Record<string, any>): Promise<CommunityEntity | null> {
     const record = await this.prisma.comunidades.findFirst({
       where: where as Prisma.ComunidadesWhereInput,
       include: this.defaultInclude,
@@ -46,8 +44,7 @@ export class PrismaCommunityRepository implements CommunityRepository {
   }): Promise<CommunityEntity[]> {
     const records = await this.prisma.comunidades.findMany({
       where: (params.where ?? {}) as Prisma.ComunidadesWhereInput,
-      orderBy:
-        params.orderBy as Prisma.ComunidadesOrderByWithRelationInput,
+      orderBy: params.orderBy as Prisma.ComunidadesOrderByWithRelationInput,
       include: this.defaultInclude,
     });
     return CommunityMapper.toDomainList(records);

@@ -1,4 +1,4 @@
-import { CreateSectorData } from './create-sector-data';
+import type { CreateSectorData } from './create-sector-data';
 
 describe('CreateSectorData', () => {
   it('should accept valid create data', () => {
@@ -21,6 +21,10 @@ describe('CreateSectorData', () => {
     };
 
     // Verify structural type - all required fields present
-    expect(Object.keys(data).sort()).toEqual(['codigo', 'comunidadId', 'nombre']);
+    expect(Object.keys(data).sort()).toEqual([
+      'codigo',
+      'comunidadId',
+      'nombre',
+    ]);
   });
 });

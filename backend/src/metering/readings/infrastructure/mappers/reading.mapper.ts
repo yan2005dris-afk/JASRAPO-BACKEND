@@ -51,6 +51,8 @@ export class ReadingMapper {
   }
 
   static toDomainList(rawList: any[]): LecturaEntity[] {
-    return rawList.map((raw) => this.toDomain(raw)).filter((item): item is LecturaEntity => item !== null);
+    return rawList
+      .map((raw) => this.toDomain(raw))
+      .filter((item): item is LecturaEntity => item !== null);
   }
 }

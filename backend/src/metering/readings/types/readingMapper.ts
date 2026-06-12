@@ -1,10 +1,12 @@
 import type { IResponseReading } from './IResponseReading';
-import { LecturaEntity } from '../domain/entities/lectura.entity';
+import type { LecturaEntity } from '../domain/entities/lectura.entity';
 
 /**
  * Mapea resultado de Entidad de Dominio a DTO de response
  */
-export function toReadingResponse(reading: LecturaEntity | null | undefined): IResponseReading | null {
+export function toReadingResponse(
+  reading: LecturaEntity | null | undefined,
+): IResponseReading | null {
   if (!reading) return null;
   const activeContrato = reading.contrato;
 

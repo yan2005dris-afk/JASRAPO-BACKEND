@@ -1,4 +1,4 @@
-import { SectorFilters } from './sector-filters';
+import type { SectorFilters } from './sector-filters';
 
 describe('SectorFilters', () => {
   it('should accept empty filters', () => {

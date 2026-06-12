@@ -35,9 +35,7 @@ export class PrismaContractRepository implements ContractRepository {
     return ContractMapper.toDomainList(records);
   }
 
-  async findUnique(
-    where: Record<string, any>,
-  ): Promise<ContractEntity | null> {
+  async findUnique(where: Record<string, any>): Promise<ContractEntity | null> {
     const record = await this.prisma.contratos.findUnique({
       where: where as Prisma.ContratosWhereUniqueInput,
       include: this.defaultInclude,

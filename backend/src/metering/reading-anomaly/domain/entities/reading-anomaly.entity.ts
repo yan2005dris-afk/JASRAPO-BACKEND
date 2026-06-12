@@ -8,25 +8,51 @@ export class ReadingAnomalyEntity {
   @ApiProperty({ example: '1', description: 'ID de la lectura asociada' })
   lecturaId: bigint;
 
-  @ApiProperty({ example: 'Vidrio empañado', description: 'Observación sobre la anomalía', nullable: true })
+  @ApiProperty({
+    example: 'Vidrio empañado',
+    description: 'Observación sobre la anomalía',
+    nullable: true,
+  })
   observacion: string | null;
 
-  @ApiProperty({ example: 'MEDIDOR_DANADO', enum: TipoAnomalia, description: 'Tipo de anomalía' })
+  @ApiProperty({
+    example: 'MEDIDOR_DANADO',
+    enum: TipoAnomalia,
+    description: 'Tipo de anomalía',
+  })
   tipo: TipoAnomalia;
 
-  @ApiProperty({ example: 'REGISTRADA', enum: EstadoAnomalia, description: 'Estado de la anomalía' })
+  @ApiProperty({
+    example: 'REGISTRADA',
+    enum: EstadoAnomalia,
+    description: 'Estado de la anomalía',
+  })
   estado: EstadoAnomalia;
 
-  @ApiProperty({ example: '2026-06-11T00:00:00.000Z', description: 'Fecha de creación' })
+  @ApiProperty({
+    example: '2026-06-11T00:00:00.000Z',
+    description: 'Fecha de creación',
+  })
   createdAt: Date;
 
-  @ApiProperty({ example: '2026-06-11T00:00:00.000Z', description: 'Fecha de última actualización' })
+  @ApiProperty({
+    example: '2026-06-11T00:00:00.000Z',
+    description: 'Fecha de última actualización',
+  })
   updatedAt: Date;
 
-  @ApiProperty({ example: '2026-06-11T00:00:00.000Z', description: 'Fecha de eliminación lógica', nullable: true })
+  @ApiProperty({
+    example: '2026-06-11T00:00:00.000Z',
+    description: 'Fecha de eliminación lógica',
+    nullable: true,
+  })
   deletedAt: Date | null;
 
-  @ApiProperty({ example: 'http://minio/photo.jpg', description: 'URL de la foto en MinIO', nullable: true })
+  @ApiProperty({
+    example: 'http://minio/photo.jpg',
+    description: 'URL de la foto en MinIO',
+    nullable: true,
+  })
   fotoUrlMinIo: string | null;
 
   // Relaciones opcionales del dominio

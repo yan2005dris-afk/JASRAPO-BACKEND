@@ -69,7 +69,9 @@ export class PrismaRouteRepository implements RouteRepository {
         operario: { connect: { usuarioId: data.operarioId } },
         tipoRuta: data.tipoRuta as TipoRuta,
         comunidad: { connect: { comunidadId: data.comunidadId } },
-        sector: data.sectorId ? { connect: { sectorId: data.sectorId } } : undefined,
+        sector: data.sectorId
+          ? { connect: { sectorId: data.sectorId } }
+          : undefined,
         fechaPlanificada: data.fechaPlanificada ?? null,
         estado: (data.estado ?? 'PENDIENTE') as EstadoRuta,
       },
@@ -95,20 +97,18 @@ export class PrismaRouteRepository implements RouteRepository {
       ...(options?.include && {
         include: options.include as Prisma.UsuariosInclude,
       }),
-    }) as Promise<UsuarioRef | null>;
+    });
   }
 
-  async findComunidad(
-    where: { comunidadId: number },
-  ): Promise<ComunidadRef | null> {
+  async findComunidad(where: {
+    comunidadId: number;
+  }): Promise<ComunidadRef | null> {
     return this.prisma.comunidades.findUnique({
       where: { comunidadId: where.comunidadId },
-    }) as Promise<ComunidadRef | null>;
+    });
   }
 
-  async findSector(
-    where: { sectorId: number },
-  ): Promise<SectorRef | null> {
+  async findSector(where: { sectorId: number }): Promise<SectorRef | null> {
     return this.prisma.sectores.findUnique({
       where: { sectorId: where.sectorId },
     }) as Promise<SectorRef | null>;

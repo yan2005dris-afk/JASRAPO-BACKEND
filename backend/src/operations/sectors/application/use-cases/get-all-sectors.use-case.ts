@@ -9,10 +9,7 @@ import { SectorFilters } from '../../domain/types/sector-filters';
 export class GetAllSectorsUseCase {
   constructor(private readonly sectorRepository: SectorRepository) {}
 
-  async execute(
-    page = 1,
-    limit = 10,
-  ): Promise<PaginatedResult<SectorEntity>> {
+  async execute(page = 1, limit = 10): Promise<PaginatedResult<SectorEntity>> {
     const { skip, take, page: safePage } = getPagination(page, limit);
 
     const where: SectorFilters = { deletedAt: null };

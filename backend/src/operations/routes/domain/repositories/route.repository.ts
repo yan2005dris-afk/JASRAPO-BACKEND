@@ -1,7 +1,7 @@
 import type { PaginateOptions } from 'src/infrastructure/common/utils/pagination.util';
 import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
-import { RouteEntity } from '../entities/route.entity';
-import { ReadingForRouteEntity } from '../entities/reading-for-route.entity';
+import type { RouteEntity } from '../entities/route.entity';
+import type { ReadingForRouteEntity } from '../entities/reading-for-route.entity';
 import type { CreateRouteData } from '../types/create-route-data';
 import type { UpdateRouteData } from '../types/update-route-data';
 
@@ -51,13 +51,11 @@ export abstract class RouteRepository {
     options?: { include?: Record<string, any> },
   ): Promise<UsuarioRef | null>;
 
-  abstract findComunidad(
-    where: { comunidadId: number },
-  ): Promise<ComunidadRef | null>;
+  abstract findComunidad(where: {
+    comunidadId: number;
+  }): Promise<ComunidadRef | null>;
 
-  abstract findSector(
-    where: { sectorId: number },
-  ): Promise<SectorRef | null>;
+  abstract findSector(where: { sectorId: number }): Promise<SectorRef | null>;
 
   abstract paginateLecturas(
     args: {

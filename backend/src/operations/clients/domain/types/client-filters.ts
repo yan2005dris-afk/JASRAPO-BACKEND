@@ -12,9 +12,7 @@ export interface ClientFilters {
  * Builds a ClientFilters object from the incoming FilterClientDto.
  * Strips pagination fields (page, limit) and returns only domain filter fields.
  */
-export function buildClientFilters(
-  filters: FilterClientDto,
-): ClientFilters {
+export function buildClientFilters(filters: FilterClientDto): ClientFilters {
   const result: ClientFilters = {};
 
   if (filters.identificacion !== undefined) {

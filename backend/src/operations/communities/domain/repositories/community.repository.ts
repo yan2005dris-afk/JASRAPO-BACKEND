@@ -1,4 +1,4 @@
-import { CommunityEntity } from '../entities/community.entity';
+import type { CommunityEntity } from '../entities/community.entity';
 import type { CreateCommunityData } from '../types/create-community-data';
 
 export abstract class CommunityRepository {

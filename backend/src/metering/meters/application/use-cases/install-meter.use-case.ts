@@ -11,10 +11,7 @@ import { EstadoMedidor } from 'src/generated/prisma/client';
 export class InstallMeterUseCase {
   constructor(private readonly meterRepository: MeterRepository) {}
 
-  async execute(
-    medidorId: bigint,
-    contratoId: bigint,
-  ): Promise<MeterEntity> {
+  async execute(medidorId: bigint, contratoId: bigint): Promise<MeterEntity> {
     const medidor = await this.meterRepository.findUnique({
       medidorId,
     });

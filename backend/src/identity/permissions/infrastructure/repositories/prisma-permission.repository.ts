@@ -12,7 +12,9 @@ import { PermissionMapper } from '../mappers/permission.mapper';
 export class PrismaPermissionRepository implements PermissionRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(data: CreatePermissionRepositoryData): Promise<PermissionEntity> {
+  async create(
+    data: CreatePermissionRepositoryData,
+  ): Promise<PermissionEntity> {
     const raw = await this.prisma.permisos.create({
       data: {
         nombre: data.nombre,

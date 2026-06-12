@@ -185,7 +185,9 @@ export class MeterController {
     @Param('id') id: string,
     @Body() updateDto: UpdateMeterDto,
   ): Promise<MeterResponseDto> {
-    return toMeterResponse(await this.meterService.update(BigInt(id), updateDto));
+    return toMeterResponse(
+      await this.meterService.update(BigInt(id), updateDto),
+    );
   }
 
   /**
@@ -251,7 +253,10 @@ export class MeterController {
     @Body() installDto: InstallMeterDto,
   ): Promise<MeterResponseDto> {
     return toMeterResponse(
-      await this.meterService.install(BigInt(id), BigInt(installDto.contratoId)),
+      await this.meterService.install(
+        BigInt(id),
+        BigInt(installDto.contratoId),
+      ),
     );
   }
 

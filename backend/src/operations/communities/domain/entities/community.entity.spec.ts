@@ -32,9 +32,7 @@ describe('CommunityEntity', () => {
       comunidadId: 1,
       nombre: 'With Sector',
       codigo: 'WS-001',
-      sectores: [
-        { sectorId: 1, nombre: 'Sector A', codigo: 'SA-001' },
-      ],
+      sectores: [{ sectorId: 1, nombre: 'Sector A', codigo: 'SA-001' }],
     });
 
     expect(entity.sectores).toHaveLength(1);

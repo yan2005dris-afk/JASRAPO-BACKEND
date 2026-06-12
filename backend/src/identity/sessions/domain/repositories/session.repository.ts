@@ -30,8 +30,16 @@ export interface SessionEntity {
 export abstract class SessionRepository {
   abstract create(data: CreateSessionRepositoryData): Promise<SessionEntity>;
   abstract findById(sesionId: string): Promise<SessionEntity | null>;
-  abstract findActiveSession(usuarioId: number, sesionId: string): Promise<SessionEntity | null>;
-  abstract findActiveSessionsByUser(usuarioId: number): Promise<SessionEntity[]>;
-  abstract update(sesionId: string, data: UpdateSessionRepositoryData): Promise<SessionEntity>;
+  abstract findActiveSession(
+    usuarioId: number,
+    sesionId: string,
+  ): Promise<SessionEntity | null>;
+  abstract findActiveSessionsByUser(
+    usuarioId: number,
+  ): Promise<SessionEntity[]>;
+  abstract update(
+    sesionId: string,
+    data: UpdateSessionRepositoryData,
+  ): Promise<SessionEntity>;
   abstract revoke(sesionId: string): Promise<SessionEntity>;
 }

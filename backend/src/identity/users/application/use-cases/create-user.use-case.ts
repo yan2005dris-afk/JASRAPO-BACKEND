@@ -27,7 +27,9 @@ export class CreateUserUseCase {
     );
 
     // Verificar que el email no exista previamente (incluye usuarios eliminados)
-    const existingUser = await this.userRepository.findByEmail(createUsersDto.email);
+    const existingUser = await this.userRepository.findByEmail(
+      createUsersDto.email,
+    );
     if (existingUser) {
       if (existingUser.deletedAt) {
         throw new ConflictException(

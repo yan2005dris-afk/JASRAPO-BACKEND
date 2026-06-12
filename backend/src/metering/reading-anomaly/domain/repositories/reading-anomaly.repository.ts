@@ -1,5 +1,5 @@
-import { ReadingAnomalyEntity } from '../entities/reading-anomaly.entity';
-import { TipoAnomalia, EstadoAnomalia } from 'src/generated/prisma/client';
+import type { ReadingAnomalyEntity } from '../entities/reading-anomaly.entity';
+import type { TipoAnomalia, EstadoAnomalia } from 'src/generated/prisma/client';
 
 export interface CreateReadingAnomalyRepositoryData {
   lecturaId: bigint;
@@ -35,9 +35,7 @@ export abstract class ReadingAnomalyRepository {
     where?: ReadingAnomalyFilters;
   }): Promise<ReadingAnomalyEntity[]>;
 
-  abstract count(params: {
-    where?: ReadingAnomalyFilters;
-  }): Promise<number>;
+  abstract count(params: { where?: ReadingAnomalyFilters }): Promise<number>;
 
   abstract create(
     data: CreateReadingAnomalyRepositoryData,

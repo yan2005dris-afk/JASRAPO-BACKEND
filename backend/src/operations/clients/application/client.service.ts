@@ -63,6 +63,8 @@ export class ClientService {
         orderBy: { id: 'asc' },
       });
 
-    return identificaciones.map(IdentificacionMapper.toDomain).filter(Boolean) as IResponseIdentificacion[];
+    return identificaciones
+      .map(IdentificacionMapper.toDomain)
+      .filter(Boolean) as IResponseIdentificacion[];
   }
 }

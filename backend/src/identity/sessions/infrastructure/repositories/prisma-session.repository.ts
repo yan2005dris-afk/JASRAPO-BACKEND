@@ -86,4 +86,3 @@ export class PrismaSessionRepository implements SessionRepository {
     return SessionMapper.toEntity(session)!;
   }
 }
-

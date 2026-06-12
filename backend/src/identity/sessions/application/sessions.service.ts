@@ -54,4 +54,3 @@ export class SessionsService {
     return this.listByUserUseCase.execute(usuarioId);
   }
 }
-

@@ -45,7 +45,9 @@ describe('ReadingController', () => {
 
   const mockReadingService = {
     create: jest.fn(() => Promise.resolve(mockLecturaData)),
-    findAll: jest.fn(() => Promise.resolve({ data: [mockLecturaData], meta: { total: 1 } })),
+    findAll: jest.fn(() =>
+      Promise.resolve({ data: [mockLecturaData], meta: { total: 1 } }),
+    ),
     findOne: jest.fn(() => Promise.resolve(mockLecturaData)),
     update: jest.fn(() => Promise.resolve(mockLecturaData)),
     delete: jest.fn(() => Promise.resolve({ message: 'deleted' })),
@@ -80,13 +82,17 @@ describe('ReadingController', () => {
 
   describe('findAll', () => {
     it('should return all readings', async () => {
-      jest
-        .spyOn(service, 'findAll')
-        .mockResolvedValue({ data: [mockLecturaData as any], meta: { total: 1 } } as any);
+      jest.spyOn(service, 'findAll').mockResolvedValue({
+        data: [mockLecturaData as any],
+        meta: { total: 1 },
+      } as any);
       const result = await controller.findAll({ page: 1, limit: 10 });
 
       expect(service.findAll).toHaveBeenCalled();
-      expect(result).toEqual({ data: [expectedMappedLectura], meta: { total: 1 } });
+      expect(result).toEqual({
+        data: [expectedMappedLectura],
+        meta: { total: 1 },
+      });
     });
   });
 

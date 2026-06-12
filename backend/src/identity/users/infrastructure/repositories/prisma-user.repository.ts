@@ -10,7 +10,10 @@ import {
 } from '../../domain/repositories/user.repository';
 import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
 import { paginate } from 'src/infrastructure/common/utils/pagination.util';
-import { userWithRolesSelect, UserWithRoleResponse } from '../../domain/types/user.types';
+import {
+  userWithRolesSelect,
+  UserWithRoleResponse,
+} from '../../domain/types/user.types';
 import { UserMapper } from '../mappers/user.mapper';
 
 @Injectable()
@@ -128,7 +131,10 @@ export class PrismaUserRepository implements UserRepository {
     const { rolId, ...userData } = data;
     const updateData: Prisma.UsuariosUpdateInput = {
       ...userData,
-      avatar: userData.avatar !== undefined ? (userData.avatar as Prisma.InputJsonValue) : undefined,
+      avatar:
+        userData.avatar !== undefined
+          ? (userData.avatar as Prisma.InputJsonValue)
+          : undefined,
       rol: rolId ? { connect: { rolId } } : undefined,
     };
     const user = await client.usuarios.update({

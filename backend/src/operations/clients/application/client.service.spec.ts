@@ -60,7 +60,16 @@ describe('ClientService', () => {
   it('findAll should call repository with filters', async () => {
     mockClientRepository.paginateClientes.mockResolvedValue({
       data: [],
-      meta: { total: 0, page: 1, limit: 10, ultimaPagina: 1, paginaActual: 1, porPagina: 10, anterior: null, siguiente: null },
+      meta: {
+        total: 0,
+        page: 1,
+        limit: 10,
+        ultimaPagina: 1,
+        paginaActual: 1,
+        porPagina: 10,
+        anterior: null,
+        siguiente: null,
+      },
     });
     await service.findAll();
     expect(mockClientRepository.paginateClientes).toHaveBeenCalledWith(
@@ -75,7 +84,16 @@ describe('ClientService', () => {
   it('findAll should apply filters when provided', async () => {
     mockClientRepository.paginateClientes.mockResolvedValue({
       data: [],
-      meta: { total: 0, page: 1, limit: 10, ultimaPagina: 1, paginaActual: 1, porPagina: 10, anterior: null, siguiente: null },
+      meta: {
+        total: 0,
+        page: 1,
+        limit: 10,
+        ultimaPagina: 1,
+        paginaActual: 1,
+        porPagina: 10,
+        anterior: null,
+        siguiente: null,
+      },
     });
     await service.findAll({ identificacion: '123' });
     expect(mockClientRepository.paginateClientes).toHaveBeenCalledWith(

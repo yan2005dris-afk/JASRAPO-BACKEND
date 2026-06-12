@@ -76,7 +76,9 @@ describe('GetMyMenusUseCase', () => {
       permisos: mockPermissions,
     });
 
-    mockMenuRepository.findActiveMenusByPermissions.mockResolvedValueOnce([mockMenuRecord]);
+    mockMenuRepository.findActiveMenusByPermissions.mockResolvedValueOnce([
+      mockMenuRecord,
+    ]);
 
     const result = await useCase.execute(1);
 
@@ -113,7 +115,9 @@ describe('GetMyMenusUseCase', () => {
       permisos: mockPermissions,
     });
 
-    mockMenuRepository.findActiveMenusByPermissions.mockResolvedValueOnce([childMenu]);
+    mockMenuRepository.findActiveMenusByPermissions.mockResolvedValueOnce([
+      childMenu,
+    ]);
     mockMenuRepository.findActiveMenusByIds.mockResolvedValueOnce([parentMenu]);
 
     const result = await useCase.execute(1);
@@ -124,4 +128,3 @@ describe('GetMyMenusUseCase', () => {
     expect(result[0].children![0].name).toBe('Clientes');
   });
 });
-

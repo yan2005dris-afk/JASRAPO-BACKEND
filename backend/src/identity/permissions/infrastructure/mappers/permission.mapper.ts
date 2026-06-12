@@ -1,4 +1,4 @@
-import { PermissionEntity } from '../../domain/entities/permission.entity';
+import type { PermissionEntity } from '../../domain/entities/permission.entity';
 
 export class PermissionMapper {
   static toEntity(raw: any): PermissionEntity | null {

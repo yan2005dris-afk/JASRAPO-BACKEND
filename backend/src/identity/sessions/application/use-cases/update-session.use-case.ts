@@ -12,4 +12,3 @@ export class UpdateSessionUseCase {
     return this.sessionRepository.update(sesionId, data);
   }
 }
-

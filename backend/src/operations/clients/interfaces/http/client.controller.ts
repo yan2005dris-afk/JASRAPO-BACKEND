@@ -84,7 +84,7 @@ export class ClientController {
   async findAll(
     @Query() filters: FilterClientDto,
   ): Promise<PaginatedResult<ClientEntity>> {
-    return this.clientService.findAll(filters) as any;
+    return this.clientService.findAll(filters);
   }
 
   /**

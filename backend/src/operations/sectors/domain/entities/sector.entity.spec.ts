@@ -1,4 +1,5 @@
-import { SectorEntity, ComunidadRef } from './sector.entity';
+import type { ComunidadRef } from './sector.entity';
+import { SectorEntity } from './sector.entity';
 
 describe('SectorEntity', () => {
   it('should create an instance with all required fields', () => {
@@ -30,13 +31,7 @@ describe('SectorEntity', () => {
       nombre: 'Comunidad Central',
     };
 
-    const entity = new SectorEntity(
-      2,
-      'Sector Sur',
-      'SS-002',
-      5,
-      comunidadRef,
-    );
+    const entity = new SectorEntity(2, 'Sector Sur', 'SS-002', 5, comunidadRef);
 
     expect(entity.sectorId).toBe(2);
     expect(entity.nombre).toBe('Sector Sur');
@@ -48,7 +43,14 @@ describe('SectorEntity', () => {
 
   it('should create an instance with a non-null deletedAt', () => {
     const deletedAt = new Date('2024-12-31');
-    const entity = new SectorEntity(3, 'Eliminado', 'EL-001', null, null, deletedAt);
+    const entity = new SectorEntity(
+      3,
+      'Eliminado',
+      'EL-001',
+      null,
+      null,
+      deletedAt,
+    );
 
     expect(entity.sectorId).toBe(3);
     expect(entity.deletedAt).toEqual(deletedAt);

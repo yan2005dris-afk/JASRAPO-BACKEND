@@ -12,9 +12,7 @@ import { ReadingAnomalyMapper } from '../mappers/reading-anomaly.mapper';
 import { safeReadingAnomaliesSelect } from '../../types/IResponseReadingAnomaly';
 
 @Injectable()
-export class PrismaReadingAnomalyRepository
-  implements ReadingAnomalyRepository
-{
+export class PrismaReadingAnomalyRepository implements ReadingAnomalyRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async findUnique(where: {

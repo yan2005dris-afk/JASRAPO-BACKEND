@@ -23,8 +23,13 @@ export interface PermissionEntity {
 }
 
 export abstract class PermissionRepository {
-  abstract create(data: CreatePermissionRepositoryData): Promise<PermissionEntity>;
+  abstract create(
+    data: CreatePermissionRepositoryData,
+  ): Promise<PermissionEntity>;
   abstract findAll(): Promise<PermissionEntity[]>;
   abstract findUnique(permisoId: number): Promise<PermissionEntity | null>;
-  abstract update(permisoId: number, data: UpdatePermissionRepositoryData): Promise<PermissionEntity>;
+  abstract update(
+    permisoId: number,
+    data: UpdatePermissionRepositoryData,
+  ): Promise<PermissionEntity>;
 }

@@ -1,7 +1,7 @@
-import { SectorEntity, ComunidadRef } from '../entities/sector.entity';
-import { CreateSectorData } from '../types/create-sector-data';
-import { UpdateSectorData } from '../types/update-sector-data';
-import { SectorFilters } from '../types/sector-filters';
+import type { SectorEntity, ComunidadRef } from '../entities/sector.entity';
+import type { CreateSectorData } from '../types/create-sector-data';
+import type { UpdateSectorData } from '../types/update-sector-data';
+import type { SectorFilters } from '../types/sector-filters';
 
 export abstract class SectorRepository {
   abstract findUnique(where: {

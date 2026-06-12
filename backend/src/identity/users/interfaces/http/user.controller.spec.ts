@@ -115,7 +115,10 @@ describe('UserController', () => {
 
       const result = await controller.updateUser(userId, updateUserDto);
 
-      expect(userService.updateUser).toHaveBeenCalledWith(userId, updateUserDto);
+      expect(userService.updateUser).toHaveBeenCalledWith(
+        userId,
+        updateUserDto,
+      );
       expect(result).toEqual(mockUpdatedUser);
     });
   });

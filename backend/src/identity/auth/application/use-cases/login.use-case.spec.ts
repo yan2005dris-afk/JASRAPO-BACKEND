@@ -94,7 +94,9 @@ describe('LoginUseCase', () => {
         rol: { rolId: 1, nombre: 'admin', deletedAt: null },
       };
 
-      (userRepository.findByEmailWithPassword as jest.Mock).mockResolvedValue(mockUser);
+      (userRepository.findByEmailWithPassword as jest.Mock).mockResolvedValue(
+        mockUser,
+      );
 
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
       (bcrypt.hash as jest.Mock).mockResolvedValue('hashedRefreshToken');
@@ -127,7 +129,9 @@ describe('LoginUseCase', () => {
     });
 
     it('should throw UnauthorizedException when user not found', async () => {
-      (userRepository.findByEmailWithPassword as jest.Mock).mockResolvedValue(null);
+      (userRepository.findByEmailWithPassword as jest.Mock).mockResolvedValue(
+        null,
+      );
 
       await expect(
         useCase.execute({ email: 'notfound@test.com', password: 'any' }),
@@ -181,7 +185,9 @@ describe('LoginUseCase', () => {
         rol: { rolId: 1, nombre: 'admin', deletedAt: new Date() }, // Soft-deleted role
       };
 
-      (userRepository.findByEmailWithPassword as jest.Mock).mockResolvedValue(mockUser);
+      (userRepository.findByEmailWithPassword as jest.Mock).mockResolvedValue(
+        mockUser,
+      );
 
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
       (bcrypt.hash as jest.Mock).mockResolvedValue('hashedRefreshToken');

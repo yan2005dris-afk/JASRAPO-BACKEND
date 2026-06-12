@@ -90,9 +90,7 @@ export class PrismaClientRepository implements ClientRepository {
     });
   }
 
-  async findCatalogoTipoIdentificacion(where: {
-    id: number;
-  }): Promise<{
+  async findCatalogoTipoIdentificacion(where: { id: number }): Promise<{
     id: number;
     codigo: string;
     descripcion: string;
@@ -101,12 +99,7 @@ export class PrismaClientRepository implements ClientRepository {
     return this.prisma.catalogoTiposIdentificacion.findUnique({
       where: { id: where.id },
       select: { id: true, codigo: true, descripcion: true, activo: true },
-    }) as Promise<{
-      id: number;
-      codigo: string;
-      descripcion: string;
-      activo: boolean;
-    } | null>;
+    });
   }
 
   async findManyCatalogoTipoIdentificacion(params: {
@@ -157,14 +150,15 @@ export class PrismaClientRepository implements ClientRepository {
     conditions.push({ deletedAt: null });
 
     if (!filters) {
-      return conditions.length === 1
-        ? conditions[0]
-        : { AND: conditions };
+      return conditions.length === 1 ? conditions[0] : { AND: conditions };
     }
 
     if (filters.identificacion) {
       conditions.push({
-        identificacion: { contains: filters.identificacion, mode: 'insensitive' },
+        identificacion: {
+          contains: filters.identificacion,
+          mode: 'insensitive',
+        },
       });
     }
 
@@ -183,9 +177,14 @@ export class PrismaClientRepository implements ClientRepository {
     if (filters.nombreCompleto) {
       conditions.push({
         OR: [
-          { nombres: { contains: filters.nombreCompleto, mode: 'insensitive' } },
           {
-            apellidos: { contains: filters.nombreCompleto, mode: 'insensitive' },
+            nombres: { contains: filters.nombreCompleto, mode: 'insensitive' },
+          },
+          {
+            apellidos: {
+              contains: filters.nombreCompleto,
+              mode: 'insensitive',
+            },
           },
         ],
       });

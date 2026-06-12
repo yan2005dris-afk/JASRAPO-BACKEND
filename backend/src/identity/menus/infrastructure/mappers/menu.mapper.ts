@@ -1,4 +1,4 @@
-import { MenuEntity } from '../../domain/entities/menu.entity';
+import type { MenuEntity } from '../../domain/entities/menu.entity';
 
 export class MenuMapper {
   static toEntity(raw: any): MenuEntity | null {

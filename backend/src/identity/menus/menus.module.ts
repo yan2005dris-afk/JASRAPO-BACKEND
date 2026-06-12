@@ -20,4 +20,3 @@ import { PrismaMenuRepository } from './infrastructure/repositories/prisma-menu.
   exports: [GetMyMenusUseCase, MenuRepository],
 })
 export class MenusModule {}
-

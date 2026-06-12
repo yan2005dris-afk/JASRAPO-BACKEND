@@ -1,4 +1,4 @@
-import { LecturaEntity } from '../entities/lectura.entity';
+import type { LecturaEntity } from '../entities/lectura.entity';
 
 export interface CreateReadingRepositoryData {
   fecha: Date;

@@ -1,4 +1,5 @@
-import { SectorEntity, ComunidadRef } from '../../domain/entities/sector.entity';
+import type { ComunidadRef } from '../../domain/entities/sector.entity';
+import { SectorEntity } from '../../domain/entities/sector.entity';
 
 interface PrismaSectorRaw {
   sectorId: number;

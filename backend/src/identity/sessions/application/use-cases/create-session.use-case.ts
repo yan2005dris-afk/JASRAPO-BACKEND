@@ -12,4 +12,3 @@ export class CreateSessionUseCase {
     return this.sessionRepository.create(data);
   }
 }
-

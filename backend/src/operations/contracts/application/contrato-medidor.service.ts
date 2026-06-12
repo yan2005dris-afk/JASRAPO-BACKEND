@@ -23,11 +23,7 @@ export class ContratoMedidorService {
     return this.createLinkUseCase.execute(createDto);
   }
 
-  async buscarContratos(
-    page = 1,
-    limit = 10,
-    where?: Record<string, any>,
-  ) {
+  async buscarContratos(page = 1, limit = 10, where?: Record<string, any>) {
     return this.findAllUseCase.execute(page, limit, where);
   }
 

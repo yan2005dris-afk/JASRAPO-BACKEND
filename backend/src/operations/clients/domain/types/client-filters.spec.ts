@@ -61,7 +61,11 @@ describe('buildClientFilters', () => {
   });
 
   it('should ignore page and limit fields from pagination', () => {
-    const result = buildClientFilters({ identificacion: '123', page: 2, limit: 20 } as any);
+    const result = buildClientFilters({
+      identificacion: '123',
+      page: 2,
+      limit: 20,
+    });
     expect(result.identificacion).toBe('123');
     expect((result as any).page).toBeUndefined();
     expect((result as any).limit).toBeUndefined();

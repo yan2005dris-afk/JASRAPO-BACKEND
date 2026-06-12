@@ -46,10 +46,7 @@ export class MeterService {
     return this.findOneUseCase.execute(id);
   }
 
-  async update(
-    id: bigint,
-    updateDto: UpdateMeterDto,
-  ): Promise<MeterEntity> {
+  async update(id: bigint, updateDto: UpdateMeterDto): Promise<MeterEntity> {
     await this.findOneUseCase.execute(id);
 
     const dataToUpdate = {
@@ -74,10 +71,7 @@ export class MeterService {
     return { message: `Medidor con ID ${id} eliminado` };
   }
 
-  async install(
-    medidorId: bigint,
-    contratoId: bigint,
-  ): Promise<MeterEntity> {
+  async install(medidorId: bigint, contratoId: bigint): Promise<MeterEntity> {
     return this.installUseCase.execute(medidorId, contratoId);
   }
 

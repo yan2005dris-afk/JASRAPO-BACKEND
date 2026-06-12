@@ -61,7 +61,9 @@ export class ReadingAnomalyController {
   async create(
     @Body() createDto: CreateReadingAnomalyDto,
   ): Promise<ResponseReadingAnomalyDto> {
-    return toReadingAnomalyResponse(await this.readingAnomalyService.create(createDto))!;
+    return toReadingAnomalyResponse(
+      await this.readingAnomalyService.create(createDto),
+    )!;
   }
 
   @ApiOperation({
@@ -141,7 +143,9 @@ export class ReadingAnomalyController {
   @RequiredPermission('reading-anomalies', 'read')
   @Get(':id')
   async findOne(@Param('id') id: string): Promise<ResponseReadingAnomalyDto> {
-    return toReadingAnomalyResponse(await this.readingAnomalyService.findOne(BigInt(id)))!;
+    return toReadingAnomalyResponse(
+      await this.readingAnomalyService.findOne(BigInt(id)),
+    )!;
   }
 
   @ApiOperation({
@@ -176,7 +180,9 @@ export class ReadingAnomalyController {
     @Param('id') id: string,
     @Body() updateDto: UpdateReadingAnomalyDto,
   ): Promise<ResponseReadingAnomalyDto> {
-    return toReadingAnomalyResponse(await this.readingAnomalyService.update(BigInt(id), updateDto))!;
+    return toReadingAnomalyResponse(
+      await this.readingAnomalyService.update(BigInt(id), updateDto),
+    )!;
   }
 
   @ApiOperation({

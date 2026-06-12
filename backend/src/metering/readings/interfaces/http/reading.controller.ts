@@ -54,7 +54,9 @@ export class ReadingController {
   async create(
     @Body() crearLecturaDto: CrearLecturaDto,
   ): Promise<ResponseReadingDto> {
-    return toReadingResponse(await this.readingService.create(crearLecturaDto))!;
+    return toReadingResponse(
+      await this.readingService.create(crearLecturaDto),
+    )!;
   }
 
   @ApiOperation({
@@ -142,7 +144,9 @@ export class ReadingController {
     @Param('id') id: string,
     @Body() updateLecturaDto: ActualizarLecturaDto,
   ): Promise<ResponseReadingDto> {
-    return toReadingResponse(await this.readingService.update(BigInt(id), updateLecturaDto))!;
+    return toReadingResponse(
+      await this.readingService.update(BigInt(id), updateLecturaDto),
+    )!;
   }
 
   @ApiOperation({

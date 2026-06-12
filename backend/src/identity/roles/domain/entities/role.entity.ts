@@ -9,7 +9,11 @@ export class SimpleRoleEntity {
 }
 
 export class RoleEntity extends SimpleRoleEntity {
-  @ApiProperty({ example: null, description: 'Fecha de eliminación suave', nullable: true })
+  @ApiProperty({
+    example: null,
+    description: 'Fecha de eliminación suave',
+    nullable: true,
+  })
   deletedAt: Date | null;
 }
 
@@ -17,10 +21,17 @@ export class RolePermissionPermisoEntity {
   @ApiProperty({ example: 1, description: 'ID único del permiso' })
   permisoId: number;
 
-  @ApiProperty({ example: 'usuarios', description: 'Nombre descriptivo del permiso' })
+  @ApiProperty({
+    example: 'usuarios',
+    description: 'Nombre descriptivo del permiso',
+  })
   nombre: string;
 
-  @ApiProperty({ example: 'Ver usuarios', description: 'Descripción del permiso', nullable: true })
+  @ApiProperty({
+    example: 'Ver usuarios',
+    description: 'Descripción del permiso',
+    nullable: true,
+  })
   descripcion: string | null;
 
   @ApiProperty({ example: 'usuarios', description: 'Recurso asociado' })
@@ -40,10 +51,17 @@ export class RolePermissionDetailsEntity {
   @ApiProperty({ example: 1, description: 'ID del permiso' })
   permisoId: number;
 
-  @ApiProperty({ example: null, description: 'Fecha de eliminación suave', nullable: true })
+  @ApiProperty({
+    example: null,
+    description: 'Fecha de eliminación suave',
+    nullable: true,
+  })
   deletedAt: Date | null;
 
-  @ApiProperty({ type: () => RolePermissionPermisoEntity, description: 'Detalles del permiso' })
+  @ApiProperty({
+    type: () => RolePermissionPermisoEntity,
+    description: 'Detalles del permiso',
+  })
   permiso: RolePermissionPermisoEntity;
 }
 
@@ -65,6 +83,10 @@ export class RolePermissionAssignmentEntity {
   @ApiProperty({ example: 1, description: 'ID del permiso' })
   permisoId: number;
 
-  @ApiProperty({ example: null, description: 'Fecha de eliminación suave', nullable: true })
+  @ApiProperty({
+    example: null,
+    description: 'Fecha de eliminación suave',
+    nullable: true,
+  })
   deletedAt: Date | null;
 }

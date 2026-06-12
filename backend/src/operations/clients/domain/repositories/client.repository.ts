@@ -1,6 +1,6 @@
 import type { PaginateOptions } from 'src/infrastructure/common/utils/pagination.util';
 import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
-import { ClientEntity } from '../entities/client.entity';
+import type { ClientEntity } from '../entities/client.entity';
 import type { CreateClientData } from '../types/create-client-data';
 import type { ClientFilters } from '../types/client-filters';
 
@@ -26,9 +26,7 @@ export abstract class ClientRepository {
     data: Record<string, any>,
   ): Promise<any>;
 
-  abstract findCatalogoTipoIdentificacion(where: {
-    id: number;
-  }): Promise<{
+  abstract findCatalogoTipoIdentificacion(where: { id: number }): Promise<{
     id: number;
     codigo: string;
     descripcion: string;

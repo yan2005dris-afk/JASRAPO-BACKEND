@@ -74,7 +74,9 @@ export class PrismaMeterRepository implements MeterRepository {
         ...(data.modelo !== undefined && { modelo: data.modelo }),
         ...(data.serie !== undefined && { serie: data.serie }),
         ...(data.estado !== undefined && { estado: data.estado as any }),
-        ...(data.fechaInstalacion !== undefined && { fechaInstalacion: data.fechaInstalacion }),
+        ...(data.fechaInstalacion !== undefined && {
+          fechaInstalacion: data.fechaInstalacion,
+        }),
         ...(data.fechaBaja !== undefined && { fechaBaja: data.fechaBaja }),
         ...(data.motivo !== undefined && { motivo: data.motivo }),
         ...(data.latitud !== undefined && { latitud: data.latitud }),

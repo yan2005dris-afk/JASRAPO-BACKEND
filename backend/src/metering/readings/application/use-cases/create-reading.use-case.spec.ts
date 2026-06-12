@@ -68,8 +68,8 @@ describe('CreateReadingUseCase', () => {
         medidorId: BigInt(1),
       }),
     );
-    expect(mockReadingRepository.findUnique).toHaveBeenCalledWith(
-      { lecturaId: mockReading.lecturaId },
-    );
+    expect(mockReadingRepository.findUnique).toHaveBeenCalledWith({
+      lecturaId: mockReading.lecturaId,
+    });
   });
 });

@@ -1,4 +1,4 @@
-import { UserWithRoleResponse } from '../../domain/types/user.types';
+import type { UserWithRoleResponse } from '../../domain/types/user.types';
 
 export class UserMapper {
   static toWithRole(rawUser: any): UserWithRoleResponse | null {
@@ -21,7 +21,9 @@ export class UserMapper {
     };
   }
 
-  static toWithRoleAndClave(rawUser: any): (UserWithRoleResponse & { clave: string }) | null {
+  static toWithRoleAndClave(
+    rawUser: any,
+  ): (UserWithRoleResponse & { clave: string }) | null {
     if (!rawUser) return null;
     const base = this.toWithRole(rawUser);
     if (!base) return null;

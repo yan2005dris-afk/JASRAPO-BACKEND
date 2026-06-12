@@ -1,4 +1,4 @@
-import { MeterEntity } from '../entities/meter.entity';
+import type { MeterEntity } from '../entities/meter.entity';
 
 export interface CreateMeterRepositoryData {
   marca: string;

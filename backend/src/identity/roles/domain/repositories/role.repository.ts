@@ -33,12 +33,28 @@ export interface RolePermissionAssignment {
 
 export abstract class RoleRepository {
   abstract findUnique(rolId: number): Promise<RoleWithPermissions | null>;
-  abstract findFirstAssignment(rolId: number, permisoId: number): Promise<RolePermissionAssignment | null>;
-  abstract findPermission(permisoId: number): Promise<{ permisoId: number; nombre: string; deletedAt: Date | null } | null>;
+  abstract findFirstAssignment(
+    rolId: number,
+    permisoId: number,
+  ): Promise<RolePermissionAssignment | null>;
+  abstract findPermission(permisoId: number): Promise<{
+    permisoId: number;
+    nombre: string;
+    deletedAt: Date | null;
+  } | null>;
   abstract findAll(): Promise<SimpleRole[]>;
   abstract create(nombre: string): Promise<SimpleRole>;
-  abstract update(rolId: number, data: { nombre?: string; deletedAt?: Date | null }): Promise<SimpleRole>;
-  abstract assignPermission(rolId: number, permisoId: number): Promise<RolePermissionAssignment>;
-  abstract updateAssignment(rolPermisoId: number, data: { deletedAt?: Date | null }): Promise<RolePermissionAssignment>;
+  abstract update(
+    rolId: number,
+    data: { nombre?: string; deletedAt?: Date | null },
+  ): Promise<SimpleRole>;
+  abstract assignPermission(
+    rolId: number,
+    permisoId: number,
+  ): Promise<RolePermissionAssignment>;
+  abstract updateAssignment(
+    rolPermisoId: number,
+    data: { deletedAt?: Date | null },
+  ): Promise<RolePermissionAssignment>;
   abstract syncSequence(): Promise<void>;
 }

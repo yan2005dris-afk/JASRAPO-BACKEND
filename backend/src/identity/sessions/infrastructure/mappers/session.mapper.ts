@@ -1,4 +1,4 @@
-import { SessionEntity } from '../../domain/entities/session.entity';
+import type { SessionEntity } from '../../domain/entities/session.entity';
 
 export class SessionMapper {
   static toEntity(raw: any): SessionEntity | null {

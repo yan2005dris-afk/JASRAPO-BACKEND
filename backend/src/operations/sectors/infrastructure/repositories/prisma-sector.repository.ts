@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { SectorRepository } from '../../domain/repositories/sector.repository';
-import { SectorEntity, ComunidadRef } from '../../domain/entities/sector.entity';
+import {
+  SectorEntity,
+  ComunidadRef,
+} from '../../domain/entities/sector.entity';
 import { CreateSectorData } from '../../domain/types/create-sector-data';
 import { UpdateSectorData } from '../../domain/types/update-sector-data';
 import { SectorFilters } from '../../domain/types/sector-filters';
@@ -11,9 +14,7 @@ import { SectorMapper } from '../mappers/sector.mapper';
 export class PrismaSectorRepository implements SectorRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findUnique(where: {
-    sectorId: number;
-  }): Promise<SectorEntity | null> {
+  async findUnique(where: { sectorId: number }): Promise<SectorEntity | null> {
     const raw = await this.prisma.sectores.findUnique({
       where,
       include: { comunidades: true },

@@ -1,4 +1,4 @@
-import { MenuRecord } from '../types/menu.types';
+import type { MenuRecord } from '../types/menu.types';
 
 export abstract class MenuRepository {
   abstract findActiveMenusByPermissions(

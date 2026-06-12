@@ -51,7 +51,9 @@ export abstract class UserRepository {
     pagination: PaginationDto,
   ): Promise<{ data: UserWithRoleResponse[]; meta: any }>;
 
-  abstract create(data: CreateUserRepositoryData): Promise<UserWithRoleResponse>;
+  abstract create(
+    data: CreateUserRepositoryData,
+  ): Promise<UserWithRoleResponse>;
 
   abstract update(
     usuarioId: number,
@@ -75,4 +77,3 @@ export abstract class UserRepository {
 
   abstract executeTransaction<T>(callback: (tx: any) => Promise<T>): Promise<T>;
 }
-

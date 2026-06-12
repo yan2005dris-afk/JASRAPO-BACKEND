@@ -25,6 +25,8 @@ export class ReadingAnomalyMapper {
   }
 
   static toDomainList(rawList: any[]): ReadingAnomalyEntity[] {
-    return rawList.map((raw) => this.toDomain(raw)).filter((item): item is ReadingAnomalyEntity => item !== null);
+    return rawList
+      .map((raw) => this.toDomain(raw))
+      .filter((item): item is ReadingAnomalyEntity => item !== null);
   }
 }

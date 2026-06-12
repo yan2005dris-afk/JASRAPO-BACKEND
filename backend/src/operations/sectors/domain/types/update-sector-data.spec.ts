@@ -1,4 +1,4 @@
-import { UpdateSectorData } from './update-sector-data';
+import type { UpdateSectorData } from './update-sector-data';
 
 describe('UpdateSectorData', () => {
   it('should allow partial sector update', () => {

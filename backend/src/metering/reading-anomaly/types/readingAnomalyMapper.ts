@@ -1,5 +1,5 @@
 import type { IResponseReadingAnomaly } from './IResponseReadingAnomaly';
-import { ReadingAnomalyEntity } from '../domain/entities/reading-anomaly.entity';
+import type { ReadingAnomalyEntity } from '../domain/entities/reading-anomaly.entity';
 
 /**
  * Mapea resultado de Entidad de Dominio a DTO de response

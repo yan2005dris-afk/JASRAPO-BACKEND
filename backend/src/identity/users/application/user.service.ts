@@ -149,30 +149,25 @@ export class UserService {
 
     // Validar campos que no pueden estar vacíos
     if (updateData.nombres !== undefined) {
-      ValidationUtil.requireNonEmpty(updateData.nombres as string, 'nombres');
+      ValidationUtil.requireNonEmpty(updateData.nombres, 'nombres');
     }
     if (updateData.apellidos !== undefined) {
-      ValidationUtil.requireNonEmpty(
-        updateData.apellidos as string,
-        'apellidos',
-      );
+      ValidationUtil.requireNonEmpty(updateData.apellidos, 'apellidos');
     }
     if (updateData.email !== undefined) {
-      ValidationUtil.requireNonEmpty(updateData.email as string, 'email');
+      ValidationUtil.requireNonEmpty(updateData.email, 'email');
     }
     if (updateData.telefono !== undefined) {
-      ValidationUtil.requireNonEmpty(updateData.telefono as string, 'telefono');
+      ValidationUtil.requireNonEmpty(updateData.telefono, 'telefono');
       updateData.telefono = PhoneUtil.validateAndClean(
-        updateData.telefono as string,
+        updateData.telefono,
         'telefono',
       );
     }
 
     // Validar rolId si se proporciona
     if (updateData.rolId !== undefined && updateData.rolId !== null) {
-      const role = await this.userRepository.findRoleById(
-        updateData.rolId as number,
-      );
+      const role = await this.userRepository.findRoleById(updateData.rolId);
       if (!role || role.deletedAt) {
         throw new NotFoundException('Rol no encontrado o eliminado');
       }
@@ -185,7 +180,7 @@ export class UserService {
         if (directPermissions && Array.isArray(directPermissions)) {
           await this.updateUserPermissionsUseCase.execute(
             existingUser.usuarioId,
-            directPermissions as { permisoId: number; permitido?: boolean }[],
+            directPermissions,
             tx,
           );
         }

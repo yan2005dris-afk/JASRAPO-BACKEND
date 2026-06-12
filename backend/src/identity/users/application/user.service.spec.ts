@@ -133,7 +133,10 @@ describe('UserService', () => {
 
       mockUserRepository.update.mockResolvedValue(mockUpdatedUser as any);
 
-      await service.updateUser(1, { nombres: 'Test', directPermissions: mockDirectPermissions });
+      await service.updateUser(1, {
+        nombres: 'Test',
+        directPermissions: mockDirectPermissions,
+      });
 
       expect(updateUserPermissionsUseCase.execute).toHaveBeenCalledWith(
         1,
@@ -149,9 +152,9 @@ describe('UserService', () => {
       } as any);
       mockUserRepository.findRoleById.mockResolvedValue(null);
 
-      await expect(
-        service.updateUser(1, { rolId: 999 }),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.updateUser(1, { rolId: 999 })).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw NotFoundException if rolId is invalid (soft-deleted)', async () => {
@@ -164,9 +167,9 @@ describe('UserService', () => {
         deletedAt: new Date(),
       });
 
-      await expect(
-        service.updateUser(1, { rolId: 2 }),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.updateUser(1, { rolId: 2 })).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
