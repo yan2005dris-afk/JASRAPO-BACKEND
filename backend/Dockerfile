@@ -19,8 +19,10 @@ COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
 # Copiar manifiestos de los subproyectos
 COPY backend/package.json ./backend/
 
-# Instalación de dependencias
-RUN pnpm install --frozen-lockfile
+# Instalación de dependencias (cache mount preserves pnpm store across builds)
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+    pnpm config set store-dir /pnpm/store && \
+    pnpm install --frozen-lockfile
 
 # Copiar el resto del código fuente
 COPY backend/ ./backend/
