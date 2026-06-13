@@ -60,7 +60,9 @@ export class S3ClientService implements OnModuleInit {
     try {
       await this.s3Client.send(new ListBucketsCommand({}));
       this.isAvailable = true;
-      this.logger.log('[S3:READY] S3-compatible storage connection established successfully');
+      this.logger.log(
+        '[S3:READY] S3-compatible storage connection established successfully',
+      );
     } catch (error) {
       this.s3Client = null;
       throw new Error(
@@ -111,7 +113,7 @@ export class S3ClientService implements OnModuleInit {
   async fileExists(bucketName: string, fileName: string): Promise<boolean> {
     if (!this.isAvailable || !this.s3Client) return false;
     try {
-      await this.s3Client!.send(
+      await this.s3Client.send(
         new HeadObjectCommand({ Bucket: bucketName, Key: fileName }),
       );
       return true;
@@ -126,7 +128,7 @@ export class S3ClientService implements OnModuleInit {
   ): Promise<{ size: number; contentType: string; lastModified: Date } | null> {
     if (!this.isAvailable || !this.s3Client) return null;
     try {
-      const head = await this.s3Client!.send(
+      const head = await this.s3Client.send(
         new HeadObjectCommand({ Bucket: bucketName, Key: fileName }),
       );
       return {
@@ -171,9 +173,7 @@ export class S3ClientService implements OnModuleInit {
 
   private async ensureBucket(bucketName: string): Promise<void> {
     try {
-      await this.s3Client!.send(
-        new HeadBucketCommand({ Bucket: bucketName }),
-      );
+      await this.s3Client!.send(new HeadBucketCommand({ Bucket: bucketName }));
     } catch {
       await this.s3Client!.send(
         new CreateBucketCommand({ Bucket: bucketName }),

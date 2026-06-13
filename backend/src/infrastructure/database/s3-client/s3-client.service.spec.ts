@@ -54,7 +54,7 @@ describe('S3ClientService', () => {
           STORAGE_ACCESS_KEY: 'admin',
           STORAGE_SECRET_KEY: 'password123',
         };
-        return (config[key] ?? defaultValue) as string;
+        return config[key] ?? defaultValue;
       },
     );
 
