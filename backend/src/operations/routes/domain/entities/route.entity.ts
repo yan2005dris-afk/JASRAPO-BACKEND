@@ -22,6 +22,9 @@ export class RouteEntity {
   @ApiProperty({ required: false })
   sectorId?: number;
 
+  @ApiProperty({ required: false, nullable: true })
+  periodoId: number | null;
+
   @ApiProperty()
   estado: string;
 
@@ -46,6 +49,7 @@ export class RouteEntity {
     this.tipoRuta = data.tipoRuta;
     this.comunidadId = data.comunidadId;
     this.sectorId = data.sectorId ?? null;
+    this.periodoId = data.periodoId ?? null;
     this.estado = data.estado;
     this.fechaPlanificada = data.fechaPlanificada;
     this.fechaInicio = data.fechaInicio;

@@ -2,7 +2,7 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { UpdateRouteUseCase } from './update-route.use-case';
 import { RouteRepository } from '../../domain/repositories/route.repository';
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 
 describe('UpdateRouteUseCase', () => {
   let useCase: UpdateRouteUseCase;
@@ -16,6 +16,8 @@ describe('UpdateRouteUseCase', () => {
     findUsuario: jest.fn(),
     findComunidad: jest.fn(),
     findSector: jest.fn(),
+    findPeriodo: jest.fn(),
+    findOverlappingRoutes: jest.fn(),
     paginateLecturas: jest.fn(),
   };
 
@@ -41,6 +43,56 @@ describe('UpdateRouteUseCase', () => {
     mockRouteRepository.findUnique.mockResolvedValue(null);
     await expect(useCase.execute(1n, {} as any)).rejects.toThrow(
       NotFoundException,
+    );
+  });
+
+  it('should throw BadRequestException when updating to overlapping period', async () => {
+    mockRouteRepository.findUnique.mockResolvedValue({
+      rutaId: 1n,
+      deletedAt: null,
+      comunidadId: 1,
+      sectorId: null,
+    });
+    mockRouteRepository.findPeriodo.mockResolvedValue({
+      periodoId: 2,
+      estado: 'ABIERTO',
+    });
+    mockRouteRepository.findOverlappingRoutes.mockResolvedValue([
+      { rutaId: 2n },
+    ]);
+    mockRouteRepository.update.mockResolvedValue({
+      rutaId: 1n,
+      periodoId: 2,
+      comunidadId: 1,
+    });
+
+    await expect(useCase.execute(1n, { periodoId: 2 } as any)).rejects.toThrow(
+      BadRequestException,
+    );
+  });
+
+  it('should update periodoId successfully', async () => {
+    mockRouteRepository.findUnique.mockResolvedValue({
+      rutaId: 1n,
+      deletedAt: null,
+      comunidadId: 1,
+      sectorId: null,
+    });
+    mockRouteRepository.findPeriodo.mockResolvedValue({
+      periodoId: 2,
+      estado: 'ABIERTO',
+    });
+    mockRouteRepository.findOverlappingRoutes.mockResolvedValue([]);
+    mockRouteRepository.update.mockResolvedValue({
+      rutaId: 1n,
+      periodoId: 2,
+    });
+
+    await useCase.execute(1n, { periodoId: 2 });
+
+    expect(mockRouteRepository.update).toHaveBeenCalledWith(
+      { rutaId: 1n },
+      expect.objectContaining({ periodoId: 2 }),
     );
   });
 

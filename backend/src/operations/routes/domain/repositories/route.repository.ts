@@ -23,6 +23,11 @@ export interface SectorRef {
   nombre?: string;
 }
 
+export interface PeriodoRef {
+  periodoId: number;
+  estado: string;
+}
+
 export abstract class RouteRepository {
   abstract findUnique(where: Record<string, any>): Promise<any>;
 
@@ -55,6 +60,16 @@ export abstract class RouteRepository {
   }): Promise<ComunidadRef | null>;
 
   abstract findSector(where: { sectorId: number }): Promise<SectorRef | null>;
+
+  abstract findPeriodo(where: {
+    periodoId: number;
+  }): Promise<PeriodoRef | null>;
+
+  abstract findOverlappingRoutes(
+    comunidadId: number,
+    periodoId: number,
+    sectorId?: number,
+  ): Promise<any[]>;
 
   abstract paginateLecturas(
     args: {

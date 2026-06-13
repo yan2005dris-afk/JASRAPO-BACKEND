@@ -49,6 +49,30 @@ export class CreateRouteUseCase {
       }
     }
 
+    const periodo = await this.routeRepository.findPeriodo({
+      periodoId: createDto.periodoId,
+    });
+
+    if (!periodo) {
+      throw new NotFoundException('Periodo no encontrado');
+    }
+
+    if (periodo.estado !== 'ABIERTO') {
+      throw new BadRequestException('El periodo no está abierto');
+    }
+
+    const overlapping = await this.routeRepository.findOverlappingRoutes(
+      createDto.comunidadId,
+      createDto.periodoId,
+      createDto.sectorId,
+    );
+
+    if (overlapping.length > 0) {
+      throw new BadRequestException(
+        'Ya existe una ruta para esta comunidad y periodo',
+      );
+    }
+
     const createData: CreateRouteData = {
       nombre: createDto.nombre,
       descripcion: createDto.descripcion,
@@ -56,6 +80,7 @@ export class CreateRouteUseCase {
       tipoRuta: createDto.tipoRuta,
       comunidadId: createDto.comunidadId,
       sectorId: createDto.sectorId,
+      periodoId: createDto.periodoId,
       fechaPlanificada: createDto.fechaPlanificada
         ? new Date(createDto.fechaPlanificada)
         : null,

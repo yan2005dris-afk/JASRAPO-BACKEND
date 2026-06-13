@@ -9,6 +9,7 @@ export class UpdateRouteDto extends PartialType(
     'nombre',
     'descripcion',
     'fechaPlanificada',
+    'periodoId',
   ] as const),
 ) {
   @ApiProperty({
