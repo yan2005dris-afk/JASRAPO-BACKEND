@@ -63,9 +63,7 @@ export class PrefacturaService {
     }
     if (filters?.contratoId != null) {
       if (!/^\d+$/.test(filters.contratoId)) {
-        throw new BadRequestException(
-          'contratoId debe ser un valor numérico',
-        );
+        throw new BadRequestException('contratoId debe ser un valor numérico');
       }
       where.contratoId = BigInt(filters.contratoId);
     }
