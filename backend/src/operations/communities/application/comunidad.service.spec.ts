@@ -4,16 +4,15 @@ import { ComunidadService } from './comunidad.service';
 import { CreateCommunityUseCase } from './use-cases/create-community.use-case';
 import { UpdateCommunityUseCase } from './use-cases/update-community.use-case';
 import { FindAllCommunitiesUseCase } from './use-cases/find-all-communities.use-case';
-import { FindAllCommunitiesWithSectorUseCase } from './use-cases/find-all-communities-with-sector.use-case';
 import { FindOneCommunityUseCase } from './use-cases/find-one-community.use-case';
 import { DeleteCommunityUseCase } from './use-cases/delete-community.use-case';
+import type { CommunityFilterDto } from '../interfaces/dto/community-filter.dto';
 
 describe('ComunidadService', () => {
   let service: ComunidadService;
   let createUseCase: CreateCommunityUseCase;
   let updateUseCase: UpdateCommunityUseCase;
   let findAllUseCase: FindAllCommunitiesUseCase;
-  let findAllWithSectorUseCase: FindAllCommunitiesWithSectorUseCase;
   let findOneUseCase: FindOneCommunityUseCase;
   let deleteUseCase: DeleteCommunityUseCase;
 
@@ -34,10 +33,6 @@ describe('ComunidadService', () => {
           useValue: { execute: jest.fn() },
         },
         {
-          provide: FindAllCommunitiesWithSectorUseCase,
-          useValue: { execute: jest.fn() },
-        },
-        {
           provide: FindOneCommunityUseCase,
           useValue: { execute: jest.fn() },
         },
@@ -53,9 +48,6 @@ describe('ComunidadService', () => {
     updateUseCase = module.get<UpdateCommunityUseCase>(UpdateCommunityUseCase);
     findAllUseCase = module.get<FindAllCommunitiesUseCase>(
       FindAllCommunitiesUseCase,
-    );
-    findAllWithSectorUseCase = module.get<FindAllCommunitiesWithSectorUseCase>(
-      FindAllCommunitiesWithSectorUseCase,
     );
     findOneUseCase = module.get<FindOneCommunityUseCase>(
       FindOneCommunityUseCase,
@@ -79,26 +71,22 @@ describe('ComunidadService', () => {
 
   it('findAll should delegate to FindAllCommunitiesUseCase with pagination', async () => {
     await service.findAll(2, 5);
-    expect(findAllUseCase.execute).toHaveBeenCalledWith(2, 5);
+    expect(findAllUseCase.execute).toHaveBeenCalledWith(2, 5, undefined);
   });
 
   it('findAll should use defaults when no pagination provided', async () => {
     await service.findAll();
-    expect(findAllUseCase.execute).toHaveBeenCalledWith(undefined, undefined);
+    expect(findAllUseCase.execute).toHaveBeenCalledWith(
+      undefined,
+      undefined,
+      undefined,
+    );
   });
 
-  it('findAllWithSector should delegate to FindAllCommunitiesWithSectorUseCase with pagination', async () => {
-    await service.findAllWithSector({ sectorId: 1, page: 2, limit: 10 });
-    expect(findAllWithSectorUseCase.execute).toHaveBeenCalledWith({
-      sectorId: 1,
-      page: 2,
-      limit: 10,
-    });
-  });
-
-  it('findAllWithSector should work without options', async () => {
-    await service.findAllWithSector();
-    expect(findAllWithSectorUseCase.execute).toHaveBeenCalledWith(undefined);
+  it('findAll should pass CommunityFilterDto', async () => {
+    const filter: CommunityFilterDto = { nombre: 'test', codigo: 'TC-001' };
+    await service.findAll(1, 10, filter);
+    expect(findAllUseCase.execute).toHaveBeenCalledWith(1, 10, filter);
   });
 
   it('findOne should delegate to FindOneCommunityUseCase', async () => {

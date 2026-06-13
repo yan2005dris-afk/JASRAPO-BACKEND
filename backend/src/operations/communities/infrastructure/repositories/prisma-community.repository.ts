@@ -43,13 +43,14 @@ export class PrismaCommunityRepository implements CommunityRepository {
     orderBy?: Record<string, any>;
     skip?: number;
     take?: number;
+    include?: Prisma.ComunidadesInclude;
   }): Promise<CommunityEntity[]> {
     const records = await this.prisma.comunidades.findMany({
       where: (params.where ?? {}) as Prisma.ComunidadesWhereInput,
       orderBy: params.orderBy as Prisma.ComunidadesOrderByWithRelationInput,
       skip: params.skip,
       take: params.take,
-      include: this.defaultInclude,
+      ...(params.include ? { include: params.include } : {}),
     });
     return CommunityMapper.toDomainList(records);
   }

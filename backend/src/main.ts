@@ -7,6 +7,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 import { ThrottlerExceptionFilter } from './infrastructure/common/filters/throttler-exception.filter';
+import { AuditFieldsInterceptor } from './infrastructure/common/interceptors/audit-fields.interceptor';
 import { BigIntInterceptor } from './infrastructure/common/interceptors/bigint.interceptor';
 import { DecimalToNumberInterceptor } from './infrastructure/common/interceptors/decimal-to-number.interceptor';
 import {
@@ -44,10 +45,13 @@ async function bootstrap() {
 
   app.setGlobalPrefix('api/v1');
 
-  //Interceptor BigInt
+  // Audit fields interceptor (strips createdAt, updatedAt, deletedAt from all responses)
+  app.useGlobalInterceptors(new AuditFieldsInterceptor());
+
+  //BigInt interceptor
   app.useGlobalInterceptors(new BigIntInterceptor());
 
-  //Interceptor Decimal -> Number (para JSON)
+  //Decimal to Number interceptor
   app.useGlobalInterceptors(new DecimalToNumberInterceptor());
 
   // Logging and Metrics Interceptor
@@ -141,15 +145,10 @@ Control de acceso basado en roles y permisos granulares:
 | 500 | Error interno del servidor |
 
 ### Paginación
-Los endpoints de listado soportan dos esquemas de paginación:
+Todos los endpoints de listado soportan paginación mediante los siguientes parámetros:
 
-**Esquema page/limit** (usuarios, rutas, clientes):
 - \`page\`: Número de página (default: 1)
 - \`limit\`: Registros por página (default: 10)
-
-**Esquema skip/take** (medidores, lecturas, contratos, anomalías):
-- \`skip\`: Registros a omitir
-- \`take\`: Máximo de registros a retornar
 
 Las respuestas paginadas incluyen metadata: \`total\`, \`paginaActual\`, \`totalPaginas\`, \`anterior\`, \`siguiente\`.
 

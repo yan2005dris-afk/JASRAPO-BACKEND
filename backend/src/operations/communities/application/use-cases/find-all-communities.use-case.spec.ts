@@ -12,6 +12,8 @@ describe('FindAllCommunitiesUseCase', () => {
     count: jest.fn(),
   };
 
+  const defaultWhere = { deletedAt: null };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -39,12 +41,12 @@ describe('FindAllCommunitiesUseCase', () => {
     const result = await useCase.execute();
 
     expect(mockRepository.findMany).toHaveBeenCalledWith({
-      where: { deletedAt: null },
+      where: defaultWhere,
       skip: 0,
       take: 10,
     });
     expect(mockRepository.count).toHaveBeenCalledWith({
-      where: { deletedAt: null },
+      where: defaultWhere,
     });
     expect(result.data).toEqual(mockData);
     expect(result.meta.total).toBe(10);
@@ -64,7 +66,7 @@ describe('FindAllCommunitiesUseCase', () => {
     const result = await useCase.execute(3, 5);
 
     expect(mockRepository.findMany).toHaveBeenCalledWith({
-      where: { deletedAt: null },
+      where: defaultWhere,
       skip: 10,
       take: 5,
     });
@@ -85,5 +87,123 @@ describe('FindAllCommunitiesUseCase', () => {
     const firstPage = await useCase.execute(1, 10);
     expect(firstPage.meta.anterior).toBeNull();
     expect(firstPage.meta.siguiente).toBe(2);
+  });
+
+  it('should filter by nombre with case-insensitive contains', async () => {
+    mockRepository.findMany.mockResolvedValue([]);
+    mockRepository.count.mockResolvedValue(0);
+
+    const result = await useCase.execute(undefined, undefined, {
+      nombre: 'test',
+    });
+
+    const expectedWhere = {
+      ...defaultWhere,
+      nombre: { contains: 'test', mode: 'insensitive' },
+    };
+    expect(mockRepository.findMany).toHaveBeenCalledWith({
+      where: expectedWhere,
+      skip: 0,
+      take: 10,
+    });
+    expect(mockRepository.count).toHaveBeenCalledWith({
+      where: expectedWhere,
+    });
+    expect(result.meta.total).toBe(0);
+  });
+
+  it('should filter by codigo with case-insensitive contains', async () => {
+    mockRepository.findMany.mockResolvedValue([]);
+    mockRepository.count.mockResolvedValue(0);
+
+    const result = await useCase.execute(undefined, undefined, {
+      codigo: 'TC-001',
+    });
+
+    const expectedWhere = {
+      ...defaultWhere,
+      codigo: { contains: 'TC-001', mode: 'insensitive' },
+    };
+    expect(mockRepository.findMany).toHaveBeenCalledWith({
+      where: expectedWhere,
+      skip: 0,
+      take: 10,
+    });
+    expect(mockRepository.count).toHaveBeenCalledWith({
+      where: expectedWhere,
+    });
+    expect(result.meta.total).toBe(0);
+  });
+
+  it('should combine nombre and codigo filters', async () => {
+    mockRepository.findMany.mockResolvedValue([]);
+    mockRepository.count.mockResolvedValue(0);
+
+    const result = await useCase.execute(undefined, undefined, {
+      nombre: 'test',
+      codigo: 'TC-001',
+    });
+
+    const expectedWhere = {
+      ...defaultWhere,
+      nombre: { contains: 'test', mode: 'insensitive' },
+      codigo: { contains: 'TC-001', mode: 'insensitive' },
+    };
+    expect(mockRepository.findMany).toHaveBeenCalledWith({
+      where: expectedWhere,
+      skip: 0,
+      take: 10,
+    });
+    expect(mockRepository.count).toHaveBeenCalledWith({
+      where: expectedWhere,
+    });
+    expect(result.meta.total).toBe(0);
+  });
+
+  it('should filter without pagination params and still work', async () => {
+    const mockData = [
+      { comunidadId: 1, nombre: 'Found', codigo: 'F-001' },
+    ] as any;
+    mockRepository.findMany.mockResolvedValue(mockData);
+    mockRepository.count.mockResolvedValue(1);
+
+    const result = await useCase.execute(undefined, undefined, {
+      nombre: 'found',
+    });
+
+    const expectedWhere = {
+      ...defaultWhere,
+      nombre: { contains: 'found', mode: 'insensitive' },
+    };
+    expect(mockRepository.findMany).toHaveBeenCalledWith({
+      where: expectedWhere,
+      skip: 0,
+      take: 10,
+    });
+    expect(result.data).toHaveLength(1);
+    expect(result.data[0].nombre).toBe('Found');
+  });
+
+  it('should work with pagination and filters together', async () => {
+    mockRepository.findMany.mockResolvedValue([]);
+    mockRepository.count.mockResolvedValue(20);
+
+    const result = await useCase.execute(2, 4, { codigo: 'COM' });
+
+    const expectedWhere = {
+      ...defaultWhere,
+      codigo: { contains: 'COM', mode: 'insensitive' },
+    };
+    expect(mockRepository.findMany).toHaveBeenCalledWith({
+      where: expectedWhere,
+      skip: 4,
+      take: 4,
+    });
+    expect(mockRepository.count).toHaveBeenCalledWith({
+      where: expectedWhere,
+    });
+    expect(result.meta.page).toBe(2);
+    expect(result.meta.limit).toBe(4);
+    expect(result.meta.ultimaPagina).toBe(5);
   });
 });
