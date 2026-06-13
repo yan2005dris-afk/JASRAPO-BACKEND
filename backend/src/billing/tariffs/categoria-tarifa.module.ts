@@ -5,6 +5,7 @@ import { CreateTariffCategoryUseCase } from './application/use-cases/create-tari
 import { FindAllTariffCategoriesUseCase } from './application/use-cases/find-all-tariff-categories.use-case';
 import { UpdateTariffCategoryUseCase } from './application/use-cases/update-tariff-category.use-case';
 import { RemoveTariffCategoryUseCase } from './application/use-cases/remove-tariff-category.use-case';
+import { FindOneTariffCategoryUseCase } from './application/use-cases/find-one-tariff-category.use-case';
 import { TariffRepository } from './domain/repositories/tariff.repository';
 import { PrismaTariffRepository } from './infrastructure/repositories/prisma-tariff.repository';
 
@@ -15,6 +16,7 @@ import { PrismaTariffRepository } from './infrastructure/repositories/prisma-tar
     CategoriaTarifaService,
     CreateTariffCategoryUseCase,
     FindAllTariffCategoriesUseCase,
+    FindOneTariffCategoryUseCase,
     UpdateTariffCategoryUseCase,
     RemoveTariffCategoryUseCase,
   ],
@@ -22,6 +24,7 @@ import { PrismaTariffRepository } from './infrastructure/repositories/prisma-tar
     TariffRepository,
     CreateTariffCategoryUseCase,
     FindAllTariffCategoriesUseCase,
+    FindOneTariffCategoryUseCase,
     UpdateTariffCategoryUseCase,
     RemoveTariffCategoryUseCase,
   ],

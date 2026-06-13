@@ -15,7 +15,6 @@ describe('CategoriaTarifaController', () => {
           useValue: {
             createCategoria: jest.fn(),
             getCategorias: jest.fn(),
-            buscarCategoriaPorNombre: jest.fn(),
             updateCategoria: jest.fn(),
             deleteCategoria: jest.fn(),
           },
