@@ -15,10 +15,7 @@ import { MeterEntity } from '../domain/entities/meter.entity';
 import { DateUtil } from 'src/infrastructure/common/utils/date.util';
 import { METER_STATUS_LIST } from 'src/infrastructure/config/app.constants';
 import { getPagination } from 'src/infrastructure/common/utils/pagination.util';
-import {
-  PaginatedMeterResponse,
-  MeterKpis,
-} from '../interfaces/types/paginated-meter-response.type';
+import { PaginatedMeterResponse } from '../interfaces/types/paginated-meter-response.type';
 
 @Injectable()
 export class MeterService {

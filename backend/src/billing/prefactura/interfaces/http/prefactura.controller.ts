@@ -21,10 +21,7 @@ import { RequiredPermission } from 'src/infrastructure/common/decorators/require
 import { CurrentUser } from 'src/identity/auth/interfaces/http/decorators/current-user.decorator';
 import { PrefacturaService } from '../../application/prefactura.service';
 import { FindAllPrefacturasDto } from '../dto/find-all-prefacturas.dto';
-import {
-  UpdatePrefacturaEstadoDto,
-  EstadoPrefacturaAction,
-} from '../dto/update-prefactura-estado.dto';
+import { UpdatePrefacturaEstadoDto } from '../dto/update-prefactura-estado.dto';
 import { PrefacturaResponseDto } from '../dto/prefactura-response.dto';
 import { PaginationMetaDto } from 'src/infrastructure/common/dtos/pagination-meta.dto';
 import { ApiPaginatedResponse } from 'src/infrastructure/common/decorators/api-paginated-response.decorator';

@@ -23,13 +23,11 @@ import {
   ApiOperation,
   ApiResponse,
   ApiParam,
-  ApiQuery,
   ApiBody,
 } from '@nestjs/swagger';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
 import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
-import { EstadoMedidor } from 'src/generated/prisma/enums';
 import { toMeterResponse } from '../../domain/types/metersMapper';
 
 @ApiTags('meters')

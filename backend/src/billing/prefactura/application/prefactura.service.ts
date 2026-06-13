@@ -3,7 +3,6 @@ import {
   Logger,
   BadRequestException,
   NotFoundException,
-  ForbiddenException,
 } from '@nestjs/common';
 import { PrefacturaRepository } from '../domain/repositories/prefactura.repository';
 import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
