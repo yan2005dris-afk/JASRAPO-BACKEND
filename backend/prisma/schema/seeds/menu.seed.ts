@@ -24,6 +24,7 @@ const LEVEL_2: MenuSeedEntry[] = [
   { nombre: 'Caja Diaria', ruta: '/recaudacion/caja-diaria', icono: 'payments', parentNombre: 'Recaudación' },
   { nombre: 'Validación Transferencia', ruta: '/recaudacion/validacion', icono: 'verified', parentNombre: 'Recaudación' },
   { nombre: 'Emisión SRI', ruta: '/recaudacion/emision-sri', icono: 'gavel', parentNombre: 'Recaudación' },
+  { nombre: 'Generación de Planillas', ruta: '/recaudacion/planillas', icono: 'description', parentNombre: 'Recaudación' },
 
   { nombre: 'Gestión General', ruta: '/admin/users', icono: 'admin_panel_settings', parentNombre: 'Administración' },
   { nombre: 'Usuarios', ruta: '/admin/usuarios', icono: 'group', parentNombre: 'Administración' },
