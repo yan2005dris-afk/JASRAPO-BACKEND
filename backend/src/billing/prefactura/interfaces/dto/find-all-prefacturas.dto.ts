@@ -11,6 +11,7 @@ export class FindAllPrefacturasDto extends PaginationDto {
   @IsOptional()
   @Type(() => Number)
   @IsInt()
+  @Min(1)
   loteId?: number;
 
   @ApiPropertyOptional({
@@ -20,10 +21,12 @@ export class FindAllPrefacturasDto extends PaginationDto {
   @IsOptional()
   @Type(() => Number)
   @IsInt()
+  @Min(1)
   periodoId?: number;
 
   @ApiPropertyOptional({
-    description: 'Filtrar por estado (GENERADA, EN_REVISION, APROBADA, RECHAZADA, ANULADA, PAGADA)',
+    description:
+      'Filtrar por estado (GENERADA, EN_REVISION, APROBADA, RECHAZADA, ANULADA, PAGADA)',
     example: 'GENERADA',
   })
   @IsOptional()

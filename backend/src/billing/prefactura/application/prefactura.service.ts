@@ -52,16 +52,16 @@ export class PrefacturaService {
 
     const where: Record<string, any> = {};
 
-    if (filters?.loteId) {
+    if (filters?.loteId != null) {
       where.loteId = BigInt(filters.loteId);
     }
-    if (filters?.periodoId) {
+    if (filters?.periodoId != null) {
       where.periodoId = filters.periodoId;
     }
-    if (filters?.estado) {
+    if (filters?.estado != null) {
       where.estado = filters.estado;
     }
-    if (filters?.contratoId) {
+    if (filters?.contratoId != null) {
       where.contratoId = BigInt(filters.contratoId);
     }
     if (filters?.identificacion) {
@@ -183,10 +183,10 @@ export class PrefacturaService {
       );
     }
 
-    if (accion === 'RECHAZADA' && !motivoRechazo) {
-      throw new BadRequestException(
-        'Debe proporcionar un motivo de rechazo',
-      );
+    const motivoRechazoNormalizado = motivoRechazo?.trim() || undefined;
+
+    if (accion === 'RECHAZADA' && !motivoRechazoNormalizado) {
+      throw new BadRequestException('Debe proporcionar un motivo de rechazo');
     }
 
     const data: {
@@ -201,10 +201,22 @@ export class PrefacturaService {
     }
 
     if (accion === 'RECHAZADA') {
-      data.motivoRechazo = motivoRechazo;
+      data.motivoRechazo = motivoRechazoNormalizado;
     }
 
-    return this.prefacturaRepository.updateEstado(id, accion, data);
+    const actualizado = await this.prefacturaRepository.updateEstado(
+      id,
+      accion,
+      estadoActual,
+      data,
+    );
+    if (!actualizado) {
+      throw new BadRequestException(
+        'La prefactura cambió de estado durante la operación. Reintente.',
+      );
+    }
+
+    return this.prefacturaRepository.findById(id);
   }
 
   async findAllEstados() {

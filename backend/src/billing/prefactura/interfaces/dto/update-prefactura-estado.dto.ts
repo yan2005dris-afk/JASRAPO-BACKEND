@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsString, ValidateIf } from 'class-validator';
 
 export enum EstadoPrefacturaAction {
   APROBAR = 'APROBADA',
@@ -21,7 +21,8 @@ export class UpdatePrefacturaEstadoDto {
     description: 'Motivo de rechazo (requerido si la acción es RECHAZAR)',
     example: 'Lectura incorrecta',
   })
-  @IsOptional()
+  @ValidateIf((o) => o.accion === 'RECHAZADA')
+  @IsNotEmpty()
   @IsString()
   motivoRechazo?: string;
 }

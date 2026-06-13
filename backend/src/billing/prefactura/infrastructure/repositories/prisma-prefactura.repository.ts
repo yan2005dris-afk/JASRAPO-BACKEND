@@ -35,16 +35,27 @@ export class PrismaPrefacturaRepository implements PrefacturaRepository {
   async updateEstado(
     id: number | bigint,
     estado: string,
-    data?: { aprobadaPor?: string; motivoRechazo?: string; fechaAprobacion?: Date },
-  ): Promise<any> {
-    return this.prisma.prefacturas.update({
-      where: { prefacturaId: BigInt(id) },
+    estadoEsperado: string,
+    data?: {
+      aprobadaPor?: string;
+      motivoRechazo?: string;
+      fechaAprobacion?: Date;
+    },
+  ): Promise<boolean> {
+    const result = await this.prisma.prefacturas.updateMany({
+      where: {
+        prefacturaId: BigInt(id),
+        estado: estadoEsperado as any,
+      },
       data: {
         estado: estado as any,
         ...(data?.aprobadaPor ? { aprobadaPor: data.aprobadaPor } : {}),
         ...(data?.motivoRechazo ? { motivoRechazo: data.motivoRechazo } : {}),
-        ...(data?.fechaAprobacion ? { fechaAprobacion: data.fechaAprobacion } : {}),
+        ...(data?.fechaAprobacion
+          ? { fechaAprobacion: data.fechaAprobacion }
+          : {}),
       },
     });
+    return result.count > 0;
   }
 }

@@ -5,7 +5,17 @@ import { AgreementsModule } from './collections/agreements/agreements.module';
 import { PrefacturaModule } from './prefactura/prefactura.module';
 
 @Module({
-  imports: [CategoriaTarifaModule, LoteModule, AgreementsModule, PrefacturaModule],
-  exports: [CategoriaTarifaModule, LoteModule, AgreementsModule, PrefacturaModule],
+  imports: [
+    CategoriaTarifaModule,
+    LoteModule,
+    AgreementsModule,
+    PrefacturaModule,
+  ],
+  exports: [
+    CategoriaTarifaModule,
+    LoteModule,
+    AgreementsModule,
+    PrefacturaModule,
+  ],
 })
 export class BillingModule {}

@@ -17,6 +17,11 @@ export abstract class PrefacturaRepository {
   abstract updateEstado(
     id: number | bigint,
     estado: string,
-    data?: { aprobadaPor?: string; motivoRechazo?: string; fechaAprobacion?: Date },
-  ): Promise<any>;
+    estadoEsperado: string,
+    data?: {
+      aprobadaPor?: string;
+      motivoRechazo?: string;
+      fechaAprobacion?: Date;
+    },
+  ): Promise<boolean>;
 }

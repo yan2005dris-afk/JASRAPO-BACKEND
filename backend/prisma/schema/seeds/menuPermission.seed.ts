@@ -91,6 +91,8 @@ const PERMISSION_MAP: MenuPermissionMapping[] = [
       { recurso: 'prefacturas', accion: 'delete' },
       { recurso: 'lotes', accion: 'read' },
       { recurso: 'lotes', accion: 'create' },
+      { recurso: 'lotes', accion: 'update' },
+      { recurso: 'lotes', accion: 'delete' },
     ],
   },
   {
