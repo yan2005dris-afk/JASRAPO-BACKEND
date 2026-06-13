@@ -22,6 +22,8 @@ describe('CreateRouteUseCase', () => {
   };
 
   beforeEach(async () => {
+    jest.clearAllMocks();
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateRouteUseCase,
@@ -164,6 +166,12 @@ describe('CreateRouteUseCase', () => {
         periodoId: 1,
       } as any),
     ).rejects.toThrow(BadRequestException);
+
+    expect(mockRouteRepository.findOverlappingRoutes).toHaveBeenCalledWith(
+      1,
+      1,
+      undefined,
+    );
   });
 
   it('should throw BadRequestException if overlapping SECTORIAL same sector', async () => {
@@ -175,6 +183,10 @@ describe('CreateRouteUseCase', () => {
     mockRouteRepository.findPeriodo.mockResolvedValue({
       periodoId: 1,
       estado: 'ABIERTO',
+    });
+    mockRouteRepository.findSector.mockResolvedValue({
+      sectorId: 2,
+      comunidadId: 1,
     });
     mockRouteRepository.findOverlappingRoutes.mockResolvedValue([
       { rutaId: 1n },
@@ -188,6 +200,61 @@ describe('CreateRouteUseCase', () => {
         sectorId: 2,
       } as any),
     ).rejects.toThrow(BadRequestException);
+
+    expect(mockRouteRepository.findOverlappingRoutes).toHaveBeenCalledWith(
+      1,
+      1,
+      2,
+    );
+  });
+
+  it('should allow create if overlapping SECTORIAL different sector', async () => {
+    mockRouteRepository.findUsuario.mockResolvedValue({
+      usuarioId: 1,
+      rol: { nombre: 'operadores' },
+    });
+    mockRouteRepository.findComunidad.mockResolvedValue({ comunidadId: 1 });
+    mockRouteRepository.findPeriodo.mockResolvedValue({
+      periodoId: 1,
+      estado: 'ABIERTO',
+    });
+    mockRouteRepository.findSector.mockResolvedValue({
+      sectorId: 3,
+      comunidadId: 1,
+    });
+    // Repository filters by sectorId, so overlaps in a different sector
+    // are not returned — empty result means creation is allowed.
+    mockRouteRepository.findOverlappingRoutes.mockResolvedValue([]);
+
+    const mockCreatedRoute = {
+      rutaId: 400n,
+      nombre: 'Different Sector Route',
+      operarioId: 1,
+      comunidadId: 1,
+      tipoRuta: 'TOMA_LECTURA',
+      periodoId: 1,
+      sectorId: 3,
+    };
+    mockRouteRepository.create.mockResolvedValue(mockCreatedRoute);
+
+    const result = await useCase.execute({
+      operarioId: 1,
+      comunidadId: 1,
+      tipoRuta: 'TOMA_LECTURA',
+      nombre: 'Different Sector Route',
+      periodoId: 1,
+      sectorId: 3,
+    } as any);
+
+    expect(mockRouteRepository.findOverlappingRoutes).toHaveBeenCalledWith(
+      1,
+      1,
+      3,
+    );
+    expect(mockRouteRepository.create).toHaveBeenCalledWith(
+      expect.objectContaining({ sectorId: 3 }),
+    );
+    expect(result.rutaId).toBe(400n);
   });
 
   it('should create route with periodoId when no overlap', async () => {
