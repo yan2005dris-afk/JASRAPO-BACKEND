@@ -10,7 +10,8 @@ function runInterceptor(
   return new Promise((resolve, reject) => {
     interceptor.intercept(mockContext, mockCallHandler).subscribe({
       next: (result) => resolve(result),
-      error: (err) => reject(err instanceof Error ? err : new Error(String(err))),
+      error: (err) =>
+        reject(err instanceof Error ? err : new Error(String(err))),
     });
   });
 }
