@@ -126,39 +126,6 @@ describe('CategoriaTarifaService', () => {
     });
   });
 
-  describe('buscarCategoriaPorNombre', () => {
-    it('should return categoria by nombre search', async () => {
-      mockFindAllUseCase.execute.mockResolvedValue([mockCategoriaTarifa]);
-
-      const result = await service.buscarCategoriaPorNombre('Residencial');
-
-      expect(result).toHaveLength(1);
-      expect(result[0].nombre).toBe('Residencial');
-    });
-
-    it('should throw NotFoundException when no categoria found', async () => {
-      mockFindAllUseCase.execute.mockRejectedValue(
-        new NotFoundException('No se encontraron categorías'),
-      );
-
-      await expect(service.buscarCategoriaPorNombre('NoExist')).rejects.toThrow(
-        NotFoundException,
-      );
-    });
-
-    it('should search case-insensitively', async () => {
-      mockFindAllUseCase.execute.mockResolvedValue([mockCategoriaTarifa]);
-
-      await service.buscarCategoriaPorNombre('RESIDENCIAL');
-
-      expect(mockFindAllUseCase.execute).toHaveBeenCalledWith(
-        1,
-        10,
-        'RESIDENCIAL',
-      );
-    });
-  });
-
   describe('updateCategoria', () => {
     it('should update categoria with transaction', async () => {
       const updatedCategoria = {
