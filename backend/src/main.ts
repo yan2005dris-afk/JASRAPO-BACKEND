@@ -145,15 +145,10 @@ Control de acceso basado en roles y permisos granulares:
 | 500 | Error interno del servidor |
 
 ### Paginación
-Los endpoints de listado soportan dos esquemas de paginación:
+Todos los endpoints de listado soportan paginación mediante los siguientes parámetros:
 
-**Esquema page/limit** (usuarios, rutas, clientes):
 - \`page\`: Número de página (default: 1)
 - \`limit\`: Registros por página (default: 10)
-
-**Esquema skip/take** (medidores, lecturas, contratos, anomalías):
-- \`skip\`: Registros a omitir
-- \`take\`: Máximo de registros a retornar
 
 Las respuestas paginadas incluyen metadata: \`total\`, \`paginaActual\`, \`totalPaginas\`, \`anterior\`, \`siguiente\`.
 

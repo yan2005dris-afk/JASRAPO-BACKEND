@@ -22,11 +22,7 @@ export class ComunidadService {
     return this.createUseCase.execute(dto);
   }
 
-  async findAll(
-    page?: number,
-    limit?: number,
-    filters?: CommunityFilterDto,
-  ) {
+  async findAll(page?: number, limit?: number, filters?: CommunityFilterDto) {
     return this.findAllUseCase.execute(page, limit, filters);
   }
 

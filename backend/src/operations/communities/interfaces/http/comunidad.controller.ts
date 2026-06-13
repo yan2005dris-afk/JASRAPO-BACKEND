@@ -79,7 +79,11 @@ export class ComunidadController {
     type: Number,
     example: 1,
   })
-  @ApiResponse({ status: 200, description: 'Comunidad encontrada', type: CommunityEntity })
+  @ApiResponse({
+    status: 200,
+    description: 'Comunidad encontrada',
+    type: CommunityEntity,
+  })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({ status: 404, description: 'Comunidad no encontrada' })
   @RequiredPermission('comunidades', 'read')

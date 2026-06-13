@@ -28,10 +28,7 @@ export class AuditFieldsInterceptor implements NestInterceptor {
     'deletedAt',
   ]);
 
-  intercept(
-    context: ExecutionContext,
-    next: CallHandler,
-  ): Observable<unknown> {
+  intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     return next.handle().pipe(map((data) => this.strip(data)));
   }
 
@@ -51,11 +48,7 @@ export class AuditFieldsInterceptor implements NestInterceptor {
 
     // PaginatedResponse shape { data: [...], meta: {...} }
     const obj = value as Record<string, unknown>;
-    if (
-      'data' in obj &&
-      Array.isArray(obj.data) &&
-      'meta' in obj
-    ) {
+    if ('data' in obj && Array.isArray(obj.data) && 'meta' in obj) {
       return {
         ...obj,
         data: obj.data.map((item) => this.strip(item)),

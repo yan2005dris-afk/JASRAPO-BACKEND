@@ -38,7 +38,16 @@ describe('ComunidadController', () => {
     const filters: CommunityFilterDto = { page: 2, limit: 5, nombre: 'test' };
     mockComunidadService.findAll.mockResolvedValue({
       data: [],
-      meta: { total: 0, page: 2, limit: 5, ultimaPagina: 0, paginaActual: 2, porPagina: 5, anterior: 1, siguiente: null },
+      meta: {
+        total: 0,
+        page: 2,
+        limit: 5,
+        ultimaPagina: 0,
+        paginaActual: 2,
+        porPagina: 5,
+        anterior: 1,
+        siguiente: null,
+      },
     });
 
     await controller.findAll(filters);
@@ -50,7 +59,16 @@ describe('ComunidadController', () => {
     const filters: CommunityFilterDto = {};
     mockComunidadService.findAll.mockResolvedValue({
       data: [],
-      meta: { total: 0, page: 1, limit: 10, ultimaPagina: 0, paginaActual: 1, porPagina: 10, anterior: null, siguiente: null },
+      meta: {
+        total: 0,
+        page: 1,
+        limit: 10,
+        ultimaPagina: 0,
+        paginaActual: 1,
+        porPagina: 10,
+        anterior: null,
+        siguiente: null,
+      },
     });
 
     await controller.findAll(filters);
@@ -62,7 +80,16 @@ describe('ComunidadController', () => {
     const filters: CommunityFilterDto = { codigo: 'TC-001' };
     mockComunidadService.findAll.mockResolvedValue({
       data: [],
-      meta: { total: 0, page: 1, limit: 10, ultimaPagina: 0, paginaActual: 1, porPagina: 10, anterior: null, siguiente: null },
+      meta: {
+        total: 0,
+        page: 1,
+        limit: 10,
+        ultimaPagina: 0,
+        paginaActual: 1,
+        porPagina: 10,
+        anterior: null,
+        siguiente: null,
+      },
     });
 
     await controller.findAll(filters);
