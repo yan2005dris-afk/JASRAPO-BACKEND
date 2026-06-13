@@ -259,7 +259,7 @@ export class PaymentService {
 | Servicio | Imagen | Puertos | Recursos |
 |----------|--------|---------|----------|
 | postgres | postgres:16-alpine | 5432 | 1 CPU, 1GB |
-| minio | minio/minio | 9000, 9001 | 0.5 CPU, 512MB |
+| rustfs | rustfs/rustfs | 9000, 9001 | 0.5 CPU, 512MB |
 | backend | jasrapo-backend | 3000 | 1 CPU, 1GB |
 | prometheus | prom/prometheus:v2.45.0 | 9091 | 0.5 CPU, 512MB |
 | tempo | grafana/tempo:2.2.3 | 4319, 4320, 3201, 16687 | 0.5 CPU, 512MB |

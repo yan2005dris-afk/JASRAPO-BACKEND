@@ -49,11 +49,11 @@ export class ReadingAnomalyEntity {
   deletedAt: Date | null;
 
   @ApiProperty({
-    example: 'http://minio/photo.jpg',
-    description: 'URL de la foto en MinIO',
+    example: 'http://storage/photo.jpg',
+    description: 'URL de la foto',
     nullable: true,
   })
-  fotoUrlMinIo: string | null;
+  fotoUrl: string | null;
 
   // Relaciones opcionales del dominio
   lectura?: {

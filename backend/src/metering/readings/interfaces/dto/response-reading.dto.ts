@@ -26,8 +26,8 @@ export class ResponseReadingDto implements IResponseReading {
   @ApiProperty({ description: 'Fecha de validación', required: false })
   fechaValidacion: Date | null;
 
-  @ApiProperty({ description: 'URL de foto en MinIO', required: false })
-  fotoUrlMinIo: string | null;
+  @ApiProperty({ description: 'URL de la foto', required: false })
+  fotoUrl: string | null;
 
   @ApiProperty({ description: 'Indica si está validada' })
   isValidada: boolean;

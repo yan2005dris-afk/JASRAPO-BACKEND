@@ -14,7 +14,7 @@ export function toReadingAnomalyResponse(
     observacion: anomaly.observacion,
     tipo: anomaly.tipo,
     estado: anomaly.estado,
-    fotoUrlMinIo: anomaly.fotoUrlMinIo,
+    fotoUrl: anomaly.fotoUrl,
     lectura: anomaly.lectura
       ? {
           lecturaId: anomaly.lectura.lecturaId.toString(),

@@ -6,7 +6,7 @@ export interface IResponseReadingAnomaly {
   observacion: string | null;
   tipo: string;
   estado: string;
-  fotoUrlMinIo: string | null;
+  fotoUrl: string | null;
   lectura?: {
     lecturaId: string;
     fecha: Date;
@@ -21,7 +21,7 @@ export const safeReadingAnomaliesSelect = {
   observacion: true,
   tipo: true,
   estado: true,
-  fotoUrlMinIo: true,
+  fotoUrl: true,
   lectura: {
     select: {
       lecturaId: true,

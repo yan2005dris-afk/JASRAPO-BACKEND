@@ -77,7 +77,7 @@ export class StorageService implements IStorageService, OnModuleInit {
       await this.initializeDefaultBuckets();
     } catch (error) {
       this.logger.error(
-        '[MINIO:INIT] Failed to initialize default buckets',
+        '[STORAGE:INIT] Failed to initialize default buckets',
         error,
       );
     }
@@ -105,15 +105,15 @@ export class StorageService implements IStorageService, OnModuleInit {
       // Try to list files - if bucket doesn't exist it'll throw
       await this.s3Client.listFiles(bucket);
       this.initializedBuckets.add(bucket);
-      this.logger.debug(`[MINIO:BUCKET] Already exists: ${bucket}`);
+      this.logger.debug(`[STORAGE:BUCKET] Already exists: ${bucket}`);
     } catch {
       // Bucket doesn't exist - create it
       try {
         // S3ClientService relies on upload to create bucket
         this.initializedBuckets.add(bucket);
-        this.logger.log(`[MINIO:BUCKET] Will use bucket: ${bucket}`);
+        this.logger.log(`[STORAGE:BUCKET] Will use bucket: ${bucket}`);
       } catch (error) {
-        this.logger.warn(`[MINIO:BUCKET] Could not ensure: ${bucket}`, error);
+        this.logger.warn(`[STORAGE:BUCKET] Could not ensure: ${bucket}`, error);
       }
     }
   }

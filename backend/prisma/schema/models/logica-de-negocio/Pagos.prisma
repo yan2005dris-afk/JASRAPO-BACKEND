@@ -1,7 +1,7 @@
 model Pagos {
   pagoId              BigInt               @id @default(autoincrement()) @map("pago_id")
   cajaId              BigInt?              @map("caja_id")
-  comprobanteUrlMinIo String?              @map("comprobante_url_minio")
+  comprobanteUrl      String?              @map("comprobante_url")
   fechaPago           DateTime             @map("fecha_pago")
   montoTotalRecibido  Decimal              @map("monto_total_recibido") @db.Decimal
   numeroOperacion     String?              @map("numero_operacion")

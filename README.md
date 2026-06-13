@@ -21,7 +21,7 @@
 | **ORM** | Prisma |
 | **API Docs** | Swagger (OpenAPI) |
 | **Autenticación** | JWT + Roles + Permisos |
-| **Almacenamiento** | MinIO (S3 compatible) |
+| **Almacenamiento** | S3-compatible (RustFS) |
 | **Contenedores** | Docker + Docker Compose |
 | **Testing** | Jest |
 | **Observabilidad** | Prometheus + Grafana + OpenTelemetry |
@@ -120,18 +120,16 @@ JWT_REFRESH_EXPIRES_IN=7d
 DATABASE_URL=postgresql://appuser:apppass@localhost:5432/appdb
 BACKEND_PORT=3000
 
-# ─── MinIO (Almacenamiento de archivos) ───────
-# Habilitar/deshabilitar MinIO (true/false)
-MINIO_ENABLED=true
-# Endpoint de MinIO (servidor o localhost)
-MINIO_ENDPOINT=localhost
-# Puerto de MinIO
-MINIO_PORT=9000
+# ─── S3-compatible Storage (RustFS) ────────────
+# Endpoint del servidor S3
+STORAGE_ENDPOINT=localhost
+# Puerto del servidor S3
+STORAGE_PORT=9000
 # Usar SSL (https)
-MINIO_USE_SSL=false
+STORAGE_USE_SSL=false
 # Credenciales
-MINIO_ACCESS_KEY=admin
-MINIO_SECRET_KEY=password123
+STORAGE_ACCESS_KEY=admin
+STORAGE_SECRET_KEY=password123
 ```
 
 > Copiar `.env.example` a `.env` y configurar según el entorno.
@@ -191,8 +189,8 @@ npm run build           # Compilar producción
 | Servicio | Local | Producción |
 |----------|-------|------------|
 | **PostgreSQL** | localhost:5432 | interno (Docker) |
-| **MinIO (API)** | localhost:9000 | interno (Docker) |
-| **MinIO (Console)** | localhost:9001 | interno (Docker) |
+| **RustFS (API S3)** | localhost:9000 | interno (Docker) |
+| **RustFS (Console)** | localhost:9001 | interno (Docker) |
 | **Prometheus** | localhost:9090 | interno (Docker) |
 | **Grafana** | localhost:3001 | interno (Docker) |
 

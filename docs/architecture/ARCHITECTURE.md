@@ -35,7 +35,7 @@ Cada carpeta dentro de un contexto es un **Dominio** o **Sub-dominio** que conti
 
 Todo lo que sea un **detalle técnico** o una herramienta externa que no pertenece a la lógica de negocio se centraliza en `src/infrastructure/`:
 -   `database/`: Prisma Service y conexión a PostgreSQL.
--   `storage/`: Integración con Minio (S3).
+-   `storage/`: Integración con S3-compatible (RustFS).
 -   `common/`: Decoradores, filtros, interceptores y utilidades globales.
 -   `config/`: Constantes y configuración de la aplicación.
 
@@ -243,7 +243,7 @@ flowchart TB
 
     subgraph Infra["🗄️ Infrastructure"]
         PostgreSQL["🐘 PostgreSQL\n:5432"]
-        MinIO["📦 MinIO\n:9000 / :9001"]
+        RustFS["📦 RustFS\n:9000 / :9001"]
         Jobs["⚙️ Jobs Engine\n(pg-boss)"]
     end
 
@@ -252,7 +252,7 @@ flowchart TB
 
     Client --> Backend
     Backend -->|SQL / Transactions| PostgreSQL
-    Backend -->|S3 API| MinIO
+    Backend -->|S3 API| RustFS
     PostgreSQL --- Jobs
     Backend -.->|Enqueues Jobs| Jobs
     Jobs -.->|Processes| Backend
@@ -271,7 +271,7 @@ flowchart TB
     classDef client fill:#fff3e0,stroke:#f57c00,stroke-width:2px
 
     class Backend backend
-    class PostgreSQL,MinIO,Jobs infra
+    class PostgreSQL,RustFS,Jobs infra
     class Prometheus,Tempo,Loki,Grafana obs
     class Client client
 ```
@@ -282,7 +282,7 @@ flowchart TB
 |---|---|---|
 | **Backend NestJS** | `3000` | API principal + Swagger en `/docs` |
 | **PostgreSQL** | `5432` | Base de datos relacional (incluye motor de trabajos pg-boss) |
-| **MinIO** | `9000` / `9001` | Object storage (S3-compatible) + consola web |
+| **RustFS** | `9000` / `9001` | Object storage (S3-compatible) + consola web |
 | **Jobs Engine** | N/A | Colas transaccionales y procesos en background (Redis-less) |
 | **Prometheus** | `9091` | Métricas (scrapea `/metrics` del backend) |
 | **Tempo** | `3201` | Distributed tracing (OTLP) |

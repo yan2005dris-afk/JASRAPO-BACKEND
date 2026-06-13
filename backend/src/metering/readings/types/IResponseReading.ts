@@ -9,7 +9,7 @@ export interface IResponseReading {
   contratoId: string;
   descripcionAnomalia: string | null;
   fechaValidacion: Date | null;
-  fotoUrlMinIo: string | null;
+  fotoUrl: string | null;
   isValidada: boolean;
   lecturaInicial: boolean;
   periodoId: number;
@@ -42,7 +42,7 @@ export const safeReadingsSelect = {
   consumoCalculado: true,
   descripcionAnomalia: true,
   fechaValidacion: true,
-  fotoUrlMinIo: true,
+  fotoUrl: true,
   lecturaInicial: true,
   periodoId: true,
   estado: true,

@@ -30,7 +30,7 @@ Para mantener la integridad fiscal y técnica:
 
 1.  **Estados SRI:** Todos estos documentos comparten el enum `EstadoSri` (BORRADOR, FIRMADO, ENVIADO, AUTORIZADO, etc.).
 2.  **Snapshot Inmutable:** Al igual que la Factura, la NC/ND debe guardar una copia de los datos del cliente al momento de la emisión.
-3.  **URLs de MinIO:** No guardes el XML gigante en la base de datos. Usá los campos `xml_firmado_url` y `xml_autorizado_url` para apuntar al almacenamiento de objetos.
+3.  **URLs de almacenamiento S3:** No guardes el XML gigante en la base de datos. Usá los campos `xml_firmado_url` y `xml_autorizado_url` para apuntar al almacenamiento de objetos (S3-compatible).
 4.  **Secuenciales:** Cada tipo de documento (NC, ND, Retención) tiene su propio contador secuencial por Punto de Emisión.
 
 ---

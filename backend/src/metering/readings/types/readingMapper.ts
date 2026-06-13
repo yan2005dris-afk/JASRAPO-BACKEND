@@ -19,7 +19,7 @@ export function toReadingResponse(
     contratoId: activeContrato ? activeContrato.contratoId.toString() : '',
     descripcionAnomalia: reading.descripcionAnomalia,
     fechaValidacion: reading.fechaValidacion,
-    fotoUrlMinIo: reading.fotoUrlMinIo,
+    fotoUrl: reading.fotoUrl,
     isValidada: reading.isValidada,
     lecturaInicial: reading.lecturaInicial,
     periodoId: reading.periodoId,

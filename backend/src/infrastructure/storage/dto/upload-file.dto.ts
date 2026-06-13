@@ -4,7 +4,7 @@ import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 export class UploadFileQueryDto {
   @ApiProperty({
     description:
-      'Nombre del bucket de MinIO donde se almacenará el archivo. ' +
+      'Nombre del bucket de almacenamiento S3 donde se almacenará el archivo. ' +
       'Se crea automáticamente si no existe.',
     example: 'documents',
   })

@@ -37,11 +37,11 @@ export class LecturaEntity {
   fechaValidacion: Date | null;
 
   @ApiProperty({
-    example: 'http://minio/photo.jpg',
-    description: 'URL de la foto en MinIO',
+    example: 'http://storage/photo.jpg',
+    description: 'URL de la foto',
     nullable: true,
   })
-  fotoUrlMinIo: string | null;
+  fotoUrl: string | null;
 
   @ApiProperty({
     example: false,

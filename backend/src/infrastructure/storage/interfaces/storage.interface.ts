@@ -24,7 +24,7 @@ export interface UploadResult {
 
 /**
  * Unified storage abstraction interface
- * Encapsulates MinIO object storage operations
+ * Encapsulates S3-compatible object storage operations
  *
  * ## Usage
  * Inject `StorageService` directly to interact with object storage.

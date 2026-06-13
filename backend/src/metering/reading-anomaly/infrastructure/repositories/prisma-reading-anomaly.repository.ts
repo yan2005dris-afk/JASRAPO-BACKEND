@@ -67,7 +67,7 @@ export class PrismaReadingAnomalyRepository implements ReadingAnomalyRepository 
         observacion: data.observacion,
         tipo: data.tipo,
         estado: data.estado,
-        fotoUrlMinIo: data.fotoUrlMinIo,
+        fotoUrl: data.fotoUrl,
       },
       select: safeReadingAnomaliesSelect,
     });
@@ -87,8 +87,8 @@ export class PrismaReadingAnomalyRepository implements ReadingAnomalyRepository 
         }),
         ...(data.tipo !== undefined && { tipo: data.tipo }),
         ...(data.estado !== undefined && { estado: data.estado }),
-        ...(data.fotoUrlMinIo !== undefined && {
-          fotoUrlMinIo: data.fotoUrlMinIo,
+        ...(data.fotoUrl !== undefined && {
+          fotoUrl: data.fotoUrl,
         }),
         ...(data.deletedAt !== undefined && { deletedAt: data.deletedAt }),
       },

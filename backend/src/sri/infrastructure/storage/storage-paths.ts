@@ -6,11 +6,11 @@ import {
 } from '../../../infrastructure/common/utils/env.utils';
 
 /**
- * Local filesystem storage paths (deprecated in favor of MinIO)
+ * Local filesystem storage paths (deprecated in favor of S3-compatible storage)
  *
  * @deprecated These paths are maintained for backward compatibility and fallback scenarios.
- * New code should use MinIO storage via IStorageService. The StorageServiceFactory
- * automatically handles the selection between MinIO and filesystem.
+ * New code should use S3-compatible storage via IStorageService. The StorageServiceFactory
+ * automatically handles the selection between S3 and filesystem.
  *
  * Current usage (still needed for):
  * - PDF generation endpoints (write to local disk before serving)
@@ -18,10 +18,10 @@ import {
  * - Status checks (reads filesystem for health monitoring)
  *
  * Migration status:
- * - XML: Migrated to MinIO (sri-xmls bucket)
- * - Templates: Migrated to MinIO (sri-templates bucket)
- * - PDFs (upload): Migrated to MinIO (sri-pdfs bucket)
- * - Images (upload): Migrated to MinIO (sri-images bucket)
+ * - XML: Migrated to S3 (sri-xmls bucket)
+ * - Templates: Migrated to S3 (sri-templates bucket)
+ * - PDFs (upload): Migrated to S3 (sri-pdfs bucket)
+ * - Images (upload): Migrated to S3 (sri-images bucket)
  * - PDFs (generation): Still uses local filesystem
  */
 export const STORAGE_PATHS = {

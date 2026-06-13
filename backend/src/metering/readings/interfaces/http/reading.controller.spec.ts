@@ -33,7 +33,7 @@ describe('ReadingController', () => {
     contratoId: '',
     descripcionAnomalia: null,
     fechaValidacion: null,
-    fotoUrlMinIo: undefined,
+    fotoUrl: undefined,
     isValidada: undefined,
     lecturaInicial: undefined,
     periodoId: 1,
