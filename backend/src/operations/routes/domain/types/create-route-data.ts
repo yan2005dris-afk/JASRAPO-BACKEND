@@ -5,6 +5,7 @@ export interface CreateRouteData {
   tipoRuta: string;
   comunidadId: number;
   sectorId?: number;
+  periodoId: number;
   fechaPlanificada?: Date | null;
   estado?: string;
 }

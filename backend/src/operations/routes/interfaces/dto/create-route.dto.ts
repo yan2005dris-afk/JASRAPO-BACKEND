@@ -62,6 +62,15 @@ export class CreateRouteDto {
   sectorId?: number;
 
   @ApiProperty({
+    description: 'ID del periodo contable',
+    example: 1,
+  })
+  @IsNotEmpty()
+  @IsNumber()
+  @Type(() => Number)
+  periodoId!: number;
+
+  @ApiProperty({
     description: 'Fecha planificada para ejecutar la ruta',
     required: false,
     example: '2026-05-10',

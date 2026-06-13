@@ -3,4 +3,5 @@ export interface UpdateRouteData {
   descripcion?: string;
   estado?: string;
   fechaPlanificada?: Date | null;
+  periodoId?: number;
 }

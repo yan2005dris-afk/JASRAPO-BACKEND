@@ -3,7 +3,6 @@ import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-
 import type { RouteEntity } from '../entities/route.entity';
 import type { ReadingForRouteEntity } from '../entities/reading-for-route.entity';
 import type { CreateRouteData } from '../types/create-route-data';
-import type { UpdateRouteData } from '../types/update-route-data';
 
 /**
  * Cross-module lookup interfaces — minimal shapes for domain validation.
@@ -22,6 +21,11 @@ export interface SectorRef {
   sectorId: number;
   comunidadId: number;
   nombre?: string;
+}
+
+export interface PeriodoRef {
+  periodoId: number;
+  estado: string;
 }
 
 export abstract class RouteRepository {
@@ -56,6 +60,16 @@ export abstract class RouteRepository {
   }): Promise<ComunidadRef | null>;
 
   abstract findSector(where: { sectorId: number }): Promise<SectorRef | null>;
+
+  abstract findPeriodo(where: {
+    periodoId: number;
+  }): Promise<PeriodoRef | null>;
+
+  abstract findOverlappingRoutes(
+    comunidadId: number,
+    periodoId: number,
+    sectorId?: number,
+  ): Promise<any[]>;
 
   abstract paginateLecturas(
     args: {

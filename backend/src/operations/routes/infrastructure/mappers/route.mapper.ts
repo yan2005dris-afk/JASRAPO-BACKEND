@@ -9,6 +9,7 @@ export interface RouteRaw {
   tipoRuta: string;
   comunidadId: number;
   sectorId?: number | null;
+  periodoId?: number | null;
   estado: string;
   createdAt: Date;
   fechaInicio?: Date | null;
@@ -25,6 +26,7 @@ export class RouteMapper {
       tipoRuta: route.tipoRuta,
       comunidadId: route.comunidadId,
       sectorId: route.sectorId,
+      periodoId: route.periodoId,
       fechaPlanificada: DateUtil.formatForFrontend(route.createdAt),
       fechaInicio: DateUtil.formatForFrontend(route.fechaInicio),
       fechaFin: DateUtil.formatForFrontend(route.fechaFin),
