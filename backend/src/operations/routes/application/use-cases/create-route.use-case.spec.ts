@@ -266,6 +266,11 @@ describe('CreateRouteUseCase', () => {
       rol: { nombre: 'operadores' },
     });
     mockRouteRepository.findComunidad.mockResolvedValue({ comunidadId: 1 });
+    mockRouteRepository.findPeriodo.mockResolvedValue({
+      periodoId: 1,
+      estado: 'ABIERTO',
+    });
+    mockRouteRepository.findOverlappingRoutes.mockResolvedValue([]);
 
     const mockCreatedRoute = {
       rutaId: 100n,
@@ -273,6 +278,7 @@ describe('CreateRouteUseCase', () => {
       operarioId: 1,
       comunidadId: 1,
       tipoRuta: 'TOMA_LECTURA',
+      periodoId: 1,
     };
     mockRouteRepository.create.mockResolvedValue(mockCreatedRoute);
 
@@ -281,10 +287,12 @@ describe('CreateRouteUseCase', () => {
       comunidadId: 1,
       tipoRuta: 'TOMA_LECTURA',
       nombre: 'Test Route',
+      periodoId: 1,
     } as any);
 
     expect(mockRouteRepository.create).toHaveBeenCalled();
     expect(result.rutaId).toBe(100n);
     expect(result.nombre).toBe('Test Route');
+    expect(result.periodoId).toBe(1);
   });
 });
