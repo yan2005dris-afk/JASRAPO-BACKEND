@@ -19,6 +19,7 @@ import { EmisoresService } from '../../application/services/emisores.service';
 import { CreateEmisorDto, UpdateEmisorDto, EmisorResponseDto } from '../dto';
 import { JwtAuthGuard } from '../../../identity/auth/interfaces/http/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../../../infrastructure/common/guards/permissions.guard';
+import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
 
 @ApiTags('[En Desarrollo] Emisores')
 @ApiBearerAuth('JWT')
@@ -36,6 +37,7 @@ export class EmisoresController {
     description: 'Lista de emisores',
     type: [EmisorResponseDto],
   })
+  @RequiredPermission('emisores', 'read')
   async findAll(): Promise<EmisorResponseDto[]> {
     return this.emisoresService.findAll();
   }
@@ -48,6 +50,7 @@ export class EmisoresController {
     type: EmisorResponseDto,
   })
   @ApiResponse({ status: 404, description: 'Emisor no encontrado' })
+  @RequiredPermission('emisores', 'read')
   async findOne(@Param('id') id: string): Promise<EmisorResponseDto> {
     return this.emisoresService.findOne(id);
   }
@@ -60,6 +63,7 @@ export class EmisoresController {
     type: EmisorResponseDto,
   })
   @ApiResponse({ status: 400, description: 'RUC ya existe' })
+  @RequiredPermission('emisores', 'create')
   async create(@Body() dto: CreateEmisorDto): Promise<EmisorResponseDto> {
     return this.emisoresService.create(dto);
   }
@@ -72,6 +76,7 @@ export class EmisoresController {
     type: EmisorResponseDto,
   })
   @ApiResponse({ status: 404, description: 'Emisor no encontrado' })
+  @RequiredPermission('emisores', 'update')
   async update(
     @Param('id') id: string,
     @Body() dto: UpdateEmisorDto,
@@ -88,6 +93,7 @@ export class EmisoresController {
   })
   @ApiResponse({ status: 400, description: 'Emisor ya está inactivo' })
   @ApiResponse({ status: 404, description: 'Emisor no encontrado' })
+  @RequiredPermission('emisores', 'delete')
   async delete(@Param('id') id: string): Promise<EmisorResponseDto> {
     return this.emisoresService.delete(id);
   }

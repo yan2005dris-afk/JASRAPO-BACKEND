@@ -22,10 +22,10 @@ const PERMISSION_MAP: MenuPermissionMapping[] = [
   {
     menuNombre: 'Inventario de Medidores',
     permisos: [
-      { recurso: 'medidores', accion: 'read' },
-      { recurso: 'medidores', accion: 'create' },
-      { recurso: 'medidores', accion: 'update' },
-      { recurso: 'medidores', accion: 'delete' },
+      { recurso: 'meters', accion: 'read' },
+      { recurso: 'meters', accion: 'create' },
+      { recurso: 'meters', accion: 'update' },
+      { recurso: 'meters', accion: 'delete' },
     ],
   },
   {

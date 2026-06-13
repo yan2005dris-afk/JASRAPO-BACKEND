@@ -26,20 +26,15 @@ function buildPermissionDescription(resource: string, action: string): string {
 export async function seedPermissions(prisma: PrismaClient) {
     const resources = [
         "clientes",
-        "client",
-        "contratos",
-        "contract",
-        "contracts", // Alias para coincidir con decoradores
-        "medidores",
-        "meter",
-        "meters",    // Alias para coincidir con decoradores
+        "contracts",
+        "meters",
         "tarifas",
         "lecturas",
         "reading-anomalies",
         "comunidades",
         "sectores",
-        "lote",
         "lotes",
+        "prefacturas",
         "agreements",
         "planillas",
         "facturacion_electronica",
@@ -56,7 +51,10 @@ export async function seedPermissions(prisma: PrismaClient) {
         "profile",
         "files",
         "metrics",
-        "routes"     // Rutas de trabajo (empleados asignados a zonas)
+        "routes",
+        "certificados",
+        "webhooks",
+        "emisores"
     ];
 
     const actions = ["read", "create", "update", "delete"];
