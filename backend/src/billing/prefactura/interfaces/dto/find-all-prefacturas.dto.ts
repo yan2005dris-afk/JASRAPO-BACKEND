@@ -1,4 +1,11 @@
-import { IsOptional, IsInt, IsString, Matches, Min } from 'class-validator';
+import {
+  IsOptional,
+  IsInt,
+  IsString,
+  IsIn,
+  Matches,
+  Min,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
@@ -31,6 +38,14 @@ export class FindAllPrefacturasDto extends PaginationDto {
   })
   @IsOptional()
   @IsString()
+  @IsIn([
+    'GENERADA',
+    'EN_REVISION',
+    'APROBADA',
+    'RECHAZADA',
+    'ANULADA',
+    'PAGADA',
+  ])
   estado?: string;
 
   @ApiPropertyOptional({
