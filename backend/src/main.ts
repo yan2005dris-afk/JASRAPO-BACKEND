@@ -160,21 +160,32 @@ Para consultas o soporte, contacta al equipo de desarrollo del Backend.
     `,
     )
     .setVersion('2.0')
-    .addBearerAuth({
-      type: 'http',
-      scheme: 'bearer',
-      bearerFormat: 'JWT',
-      name: 'JWT',
-      description: 'Ingresa el token JWT válido',
-      in: 'header',
-    })
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        description: 'Ingresa el token JWT de acceso válido',
+      },
+      'bearer',
+    )
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        description: 'Ingresa el token JWT de acceso válido',
+      },
+      'JWT',
+    )
     .addCookieAuth(
       'refreshToken',
       {
         description: 'Token de actualización almacenado en cookie (httpOnly)',
-        type: 'http',
+        type: 'apiKey',
+        in: 'cookie',
       },
-      'refresh-cookie',
+      'refreshToken',
     )
     .addTag(
       'auth',
