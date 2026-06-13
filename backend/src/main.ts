@@ -45,14 +45,14 @@ async function bootstrap() {
 
   app.setGlobalPrefix('api/v1');
 
-  //Interceptor BigInt
+  // Audit fields interceptor (strips createdAt, updatedAt, deletedAt from all responses)
+  app.useGlobalInterceptors(new AuditFieldsInterceptor());
+
+  //BigInt interceptor
   app.useGlobalInterceptors(new BigIntInterceptor());
 
-  //Interceptor Decimal -> Number (para JSON)
+  //Decimal to Number interceptor
   app.useGlobalInterceptors(new DecimalToNumberInterceptor());
-
-  // Strips createdAt, updatedAt, deletedAt from all API responses
-  app.useGlobalInterceptors(new AuditFieldsInterceptor());
 
   // Logging and Metrics Interceptor
   app.useGlobalInterceptors(app.get(LoggingInterceptor));
