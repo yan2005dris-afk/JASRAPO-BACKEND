@@ -5,6 +5,7 @@ import { TariffRepository } from '../domain/repositories/tariff.repository';
 import { ConflictException, NotFoundException } from '@nestjs/common';
 import { CreateTariffCategoryUseCase } from './use-cases/create-tariff-category.use-case';
 import { FindAllTariffCategoriesUseCase } from './use-cases/find-all-tariff-categories.use-case';
+import { FindOneTariffCategoryUseCase } from './use-cases/find-one-tariff-category.use-case';
 import { UpdateTariffCategoryUseCase } from './use-cases/update-tariff-category.use-case';
 import { RemoveTariffCategoryUseCase } from './use-cases/remove-tariff-category.use-case';
 
@@ -37,6 +38,7 @@ describe('CategoriaTarifaService', () => {
 
   const mockCreateUseCase = { execute: jest.fn() };
   const mockFindAllUseCase = { execute: jest.fn() };
+  const mockFindOneUseCase = { execute: jest.fn() };
   const mockUpdateUseCase = { execute: jest.fn() };
   const mockRemoveUseCase = { execute: jest.fn() };
 
@@ -49,6 +51,10 @@ describe('CategoriaTarifaService', () => {
         {
           provide: FindAllTariffCategoriesUseCase,
           useValue: mockFindAllUseCase,
+        },
+        {
+          provide: FindOneTariffCategoryUseCase,
+          useValue: mockFindOneUseCase,
         },
         { provide: UpdateTariffCategoryUseCase, useValue: mockUpdateUseCase },
         { provide: RemoveTariffCategoryUseCase, useValue: mockRemoveUseCase },
@@ -122,6 +128,27 @@ describe('CategoriaTarifaService', () => {
         1,
         10,
         'residencial',
+      );
+    });
+  });
+
+  describe('findOneCategoria', () => {
+    it('should return a single active tariff category by id', async () => {
+      mockFindOneUseCase.execute.mockResolvedValue(mockCategoriaTarifa);
+
+      const result = await service.findOneCategoria(1);
+
+      expect(result).toEqual(mockCategoriaTarifa);
+      expect(mockFindOneUseCase.execute).toHaveBeenCalledWith(1);
+    });
+
+    it('should throw NotFoundException when not found', async () => {
+      mockFindOneUseCase.execute.mockRejectedValue(
+        new NotFoundException('Categoría no encontrada'),
+      );
+
+      await expect(service.findOneCategoria(999)).rejects.toThrow(
+        NotFoundException,
       );
     });
   });

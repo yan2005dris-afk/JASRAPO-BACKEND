@@ -8,6 +8,7 @@ import {
   Delete,
   Query,
   UseGuards,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { CategoriaTarifaService } from '../../application/categoria-tarifa.service';
 import { CreateCategoriaTarifaDto } from '../dto/create-categoria-tarifa.dto';
@@ -65,21 +66,24 @@ export class CategoriaTarifaController {
   @ApiResponse({ status: 404, description: 'Categoría no encontrada' })
   @RequiredPermission('tarifas', 'read')
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.service.findOneCategoria(+id);
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.service.findOneCategoria(id);
   }
 
   @ApiOperation({ summary: 'Actualizar categoría (crea nueva versión)' })
   @RequiredPermission('tarifas', 'update')
   @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateCategoriaTarifaDto) {
-    return this.service.updateCategoria(+id, dto);
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateCategoriaTarifaDto,
+  ) {
+    return this.service.updateCategoria(id, dto);
   }
 
   @ApiOperation({ summary: 'Eliminar categoría (soft delete)' })
   @RequiredPermission('tarifas', 'delete')
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.service.deleteCategoria(+id);
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.service.deleteCategoria(id);
   }
 }
