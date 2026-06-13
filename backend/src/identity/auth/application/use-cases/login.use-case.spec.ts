@@ -119,7 +119,10 @@ describe('LoginUseCase', () => {
         accessToken: 'access-token',
         refreshToken: 'refresh-token',
         nombre: 'Juan Pérez',
-        avatar: 'avatar.png',
+        avatar: {
+          key: 'avatar.png',
+          url: 'https://example.com/avatar.png',
+        },
         rolId: 1,
         nombreRol: 'admin',
       });

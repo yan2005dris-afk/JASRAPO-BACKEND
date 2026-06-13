@@ -11,7 +11,8 @@
       "esbuild",
       "prisma",
       "ssh2",
-      "unrs-resolver"
+      "unrs-resolver",
+      "sharp"
     ]
   },
   "overrides": {

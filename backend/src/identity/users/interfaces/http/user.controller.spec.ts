@@ -21,6 +21,7 @@ describe('UserController', () => {
             softDeleteUser: jest.fn(),
             getEffectivePermissions: jest.fn(),
             findMe: jest.fn(),
+            updateAvatar: jest.fn(),
           },
         },
       ],
@@ -38,7 +39,10 @@ describe('UserController', () => {
     it('should call userService.createUser with correct data', async () => {
       const createUserDto = {
         email: 'test@example.com',
-        clave: 'password123',
+        nombres: 'Test',
+        apellidos: 'User',
+        telefono: '123456',
+        rolId: 1,
       };
       const mockUser = { usuarioId: 1, email: 'test@example.com' };
 
@@ -46,7 +50,7 @@ describe('UserController', () => {
 
       const result = await controller.create(createUserDto as any);
 
-      expect(userService.createUser).toHaveBeenCalledWith(createUserDto);
+      expect(userService.createUser).toHaveBeenCalledWith(createUserDto, undefined);
       expect(result).toEqual(mockUser);
     });
   });
@@ -101,7 +105,7 @@ describe('UserController', () => {
       const userId = 1;
       const updateUserDto = {
         email: 'newemail@example.com',
-        clave: 'secret',
+        nombres: 'Updated',
         rolId: 2,
       };
       const mockUpdatedUser = {
@@ -113,11 +117,12 @@ describe('UserController', () => {
         .spyOn(userService, 'updateUser')
         .mockResolvedValue(mockUpdatedUser as any);
 
-      const result = await controller.updateUser(userId, updateUserDto);
+      const result = await controller.updateUser(userId, updateUserDto as any);
 
       expect(userService.updateUser).toHaveBeenCalledWith(
         userId,
         updateUserDto,
+        undefined,
       );
       expect(result).toEqual(mockUpdatedUser);
     });
@@ -128,7 +133,7 @@ describe('UserController', () => {
       const userId = 1;
       const mockResult = { deleted: true };
 
-      jest.spyOn(userService, 'softDeleteUser').mockResolvedValue(mockResult);
+      jest.spyOn(userService, 'softDeleteUser').mockResolvedValue(mockResult as any);
 
       const result = await controller.remove(userId);
 

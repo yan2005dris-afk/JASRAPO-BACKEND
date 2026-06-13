@@ -1,7 +1,7 @@
-import type { INestApplication } from '@nestjs/common';
 import { ValidationPipe } from '@nestjs/common';
-import { GlobalExceptionFilter } from './infrastructure/common/filters/global-exception.filter';
 import { NestFactory } from '@nestjs/core';
+import type { NestExpressApplication } from '@nestjs/platform-express';
+import { GlobalExceptionFilter } from './infrastructure/common/filters/global-exception.filter';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
@@ -31,7 +31,7 @@ type CookieParserMiddleware = (
 type CookieParserFactory = () => CookieParserMiddleware;
 
 async function bootstrap() {
-  const app: INestApplication = await NestFactory.create(AppModule, {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     bufferLogs: true,
   });
 
@@ -44,6 +44,12 @@ async function bootstrap() {
   logger.log(`Tracing enabled: ${tracingService.isEnabled()}`, 'Bootstrap');
 
   app.setGlobalPrefix('api/v1');
+
+  // Aumentar el límite de tamaño para payloads JSON y URL-encoded
+  // Nota: Esto solo aplica a JSON/URL-encoded. Las subidas de archivos (multipart/form-data)
+  // se manejan de forma independiente mediante interceptores en los controladores.
+  app.useBodyParser('json', { limit: '10mb' });
+  app.useBodyParser('urlencoded', { extended: true, limit: '10mb' });
 
   // Audit fields interceptor (strips createdAt, updatedAt, deletedAt from all responses)
   app.useGlobalInterceptors(new AuditFieldsInterceptor());
@@ -86,7 +92,13 @@ async function bootstrap() {
       corsOrigin === '*' ? true : corsOrigin.split(',').map((o) => o.trim()),
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
-    allowedHeaders: 'Content-Type, Accept, Authorization, X-Requested-With',
+    allowedHeaders: [
+      'Content-Type',
+      'Accept',
+      'Authorization',
+      'X-Requested-With',
+      'X-HTTP-Method-Override',
+    ],
   });
   app.useGlobalPipes(
     new ValidationPipe({

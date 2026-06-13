@@ -10,7 +10,11 @@ import {
   Query,
   UseGuards,
   NotFoundException,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { UpdateUserDto } from '../dto/update-user.dto';
 import { UserService } from '../../application/user.service';
@@ -20,6 +24,7 @@ import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.g
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
 import {
   ApiBearerAuth,
+  ApiConsumes,
   ApiExtraModels,
   ApiOperation,
   ApiParam,
@@ -33,10 +38,12 @@ import {
   AuthPermissionEntity,
   DirectPermissionEntity,
   UserDetailEntity,
+  AvatarEntity,
 } from '../../domain/entities/user.entity';
 import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
 import { ApiPaginatedResponse } from 'src/infrastructure/common/decorators/api-paginated-response.decorator';
 import { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
+import { MAX_UPLOAD_SIZE_BYTES } from 'src/infrastructure/config/app.constants';
 
 @ApiTags('users')
 @ApiBearerAuth()
@@ -47,6 +54,7 @@ import { PaginatedResult } from 'src/infrastructure/common/types/paginated-resul
   AuthPermissionEntity,
   DirectPermissionEntity,
   UserDetailEntity,
+  AvatarEntity,
 )
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('users')
@@ -74,10 +82,56 @@ export class UserController {
   }
 
   /**
-   * Crea un nuevo usuario.
+   * Actualiza el perfil del usuario autenticado (incluyendo avatar opcional).
+   */
+  @ApiOperation({
+    summary: 'Actualizar mi perfil',
+    description:
+      'Actualiza los datos del usuario autenticado (nombres, email, teléfono, avatar).',
+  })
+  @ApiConsumes('multipart/form-data')
+  @ApiResponse({
+    status: 200,
+    description: 'Perfil actualizado exitosamente',
+    type: UserDetailEntity,
+  })
+  @RequiredPermission('users', 'update')
+  @Patch('me')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: { fileSize: MAX_UPLOAD_SIZE_BYTES },
+      fileFilter: (req, file, callback) => {
+        if (!file.mimetype.match(/^image\/(jpg|jpeg|png|webp)$/i)) {
+          return callback(
+            new BadRequestException(
+              'Solo se permiten imágenes (jpg, jpeg, png, webp)',
+            ),
+            false,
+          );
+        }
+        callback(null, true);
+      },
+    }),
+  )
+  async updateMe(
+    @AuthUserId() userId: number,
+    @Body() updateDto: UpdateUserDto,
+    @UploadedFile() file?: Express.Multer.File,
+  ): Promise<UserDetailEntity> {
+    // Un usuario no debería poder cambiarse su propio rol o permisos directos por seguridad
+    const { rolId, directPermissions, ...selfData } = updateDto;
+
+    const result = await this.userService.updateUser(userId, selfData, file);
+    if (!result) throw new NotFoundException('Usuario no encontrado');
+    return result;
+  }
+
+  /**
+   * Crea un nuevo usuario con avatar opcional.
    * Requiere permiso: users:create
    */
   @ApiOperation({ summary: 'Crear usuario' })
+  @ApiConsumes('multipart/form-data')
   @ApiResponse({
     status: 201,
     description: 'Usuario creado exitosamente',
@@ -86,8 +140,34 @@ export class UserController {
   @ApiResponse({ status: 400, description: 'Datos inválidos' })
   @RequiredPermission('users', 'create')
   @Post()
-  create(@Body() createUserDto: CreateUserDto): Promise<UserEntity> {
-    return this.userService.createUser(createUserDto);
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: { fileSize: MAX_UPLOAD_SIZE_BYTES },
+      fileFilter: (req, file, callback) => {
+        if (!file.mimetype.match(/^image\/(jpg|jpeg|png|webp)$/i)) {
+          return callback(
+            new BadRequestException(
+              'Solo se permiten imágenes (jpg, jpeg, png, webp)',
+            ),
+            false,
+          );
+        }
+        callback(null, true);
+      },
+    }),
+  )
+  create(
+    @Body() createUserDto: CreateUserDto,
+    @UploadedFile() file?: Express.Multer.File,
+  ): Promise<UserEntity> {
+    if (typeof createUserDto.rolId === 'string') {
+      const parsed = parseInt(createUserDto.rolId, 10);
+      if (isNaN(parsed)) {
+        throw new BadRequestException('rolId debe ser un número válido');
+      }
+      createUserDto.rolId = parsed;
+    }
+    return this.userService.createUser(createUserDto, file);
   }
 
   /**
@@ -129,15 +209,16 @@ export class UserController {
   }
 
   /**
-   * Actualiza los datos de un usuario por su ID.
-   * Permite actualizar email, nombres, apellidos, teléfono, avatar (JSON), rol y permisos directos.
+   * Actualiza los datos de un usuario por su ID, incluyendo avatar opcional.
+   * Permite actualizar email, nombres, apellidos, teléfono, rol y permisos directos.
    * Requiere permiso: users:update
    */
   @ApiOperation({
     summary: 'Actualizar usuario',
     description:
-      'Actualiza de forma flexible cualquier campo del usuario: email, nombres, apellidos, teléfono, avatar (JSON), rol (rolId) y permisos directos.',
+      'Actualiza de forma flexible cualquier campo del usuario: email, nombres, apellidos, teléfono, rol (rolId) y permisos directos. También permite subir un avatar.',
   })
+  @ApiConsumes('multipart/form-data')
   @ApiParam({
     name: 'id',
     description: 'ID único del usuario a actualizar',
@@ -162,11 +243,47 @@ export class UserController {
   })
   @RequiredPermission('users', 'update')
   @Patch(':id')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: { fileSize: MAX_UPLOAD_SIZE_BYTES },
+      fileFilter: (req, file, callback) => {
+        if (!file.mimetype.match(/^image\/(jpg|jpeg|png|webp)$/i)) {
+          return callback(
+            new BadRequestException(
+              'Solo se permiten imágenes (jpg, jpeg, png, webp)',
+            ),
+            false,
+          );
+        }
+        callback(null, true);
+      },
+    }),
+  )
   async updateUser(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateUserDto: UpdateUserDto,
+    @UploadedFile() file?: Express.Multer.File,
   ): Promise<UserDetailEntity> {
-    const result = await this.userService.updateUser(id, updateUserDto);
+    if (typeof updateUserDto.rolId === 'string') {
+      const parsed = parseInt(updateUserDto.rolId, 10);
+      if (isNaN(parsed)) {
+        throw new BadRequestException('rolId debe ser un número válido');
+      }
+      updateUserDto.rolId = parsed;
+    }
+    if (typeof updateUserDto.directPermissions === 'string') {
+      try {
+        updateUserDto.directPermissions = JSON.parse(
+          updateUserDto.directPermissions,
+        );
+      } catch (e) {
+        throw new BadRequestException(
+          'directPermissions debe ser un JSON válido',
+        );
+      }
+    }
+
+    const result = await this.userService.updateUser(id, updateUserDto, file);
     if (!result) {
       throw new NotFoundException('Usuario no encontrado');
     }
