@@ -12,6 +12,8 @@ import {
 import { ComunidadService } from '../../application/comunidad.service';
 import { CreateComunidadDto } from '../dto/create-comunidad.dto';
 import { UpdateComunidadDto } from '../dto/update-comunidad.dto';
+import { CommunityFilterDto } from '../dto/community-filter.dto';
+import { CommunityEntity } from '../../domain/entities/community.entity';
 import {
   ApiTags,
   ApiBearerAuth,
@@ -19,20 +21,17 @@ import {
   ApiResponse,
   ApiParam,
   ApiBody,
-  ApiQuery,
   ApiExtraModels,
 } from '@nestjs/swagger';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
 import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
-import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
 import { ApiPaginatedResponse } from 'src/infrastructure/common/decorators/api-paginated-response.decorator';
-import { CommunityEntity } from '../../domain/entities/community.entity';
 import { PaginationMetaDto } from 'src/infrastructure/common/dtos/pagination-meta.dto';
 
 @ApiTags('communities')
 @ApiBearerAuth()
-@ApiExtraModels(CommunityEntity, PaginationMetaDto)
+@ApiExtraModels(PaginationMetaDto)
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('communities')
 export class ComunidadController {
@@ -55,52 +54,24 @@ export class ComunidadController {
 
   @ApiOperation({
     summary: 'Listar comunidades',
-    description: 'Retorna todas las comunidades sin sectores',
+    description:
+      'Retorna todas las comunidades sin sectores, con filtros opcionales',
   })
   @ApiPaginatedResponse(CommunityEntity)
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @RequiredPermission('comunidades', 'read')
   @Get()
-  async findAll(@Query() paginationDto: PaginationDto) {
+  async findAll(@Query() filters: CommunityFilterDto) {
     return this.comunidadService.findAll(
-      paginationDto.page,
-      paginationDto.limit,
+      filters.page ?? 1,
+      filters.limit ?? 10,
+      filters,
     );
   }
 
   @ApiOperation({
-    summary: 'Listar comunidades con sectores',
-    description: 'Retorna comunidades con sus sectores relacionados',
-  })
-  @ApiQuery({
-    name: 'sectorId',
-    description: 'Filtrar comunidades por sector ID',
-    required: false,
-    type: Number,
-  })
-  @ApiPaginatedResponse(CommunityEntity)
-  @ApiResponse({
-    status: 200,
-    description: 'Lista de comunidades con sectores',
-  })
-  @ApiResponse({ status: 401, description: 'No autorizado' })
-  @RequiredPermission('comunidades', 'read')
-  @Get('with-sector')
-  async findAllWithSector(
-    @Query('sectorId') sectorId?: string,
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
-  ) {
-    return this.comunidadService.findAllWithSector({
-      sectorId: sectorId ? +sectorId : undefined,
-      page: page ? +page : undefined,
-      limit: limit ? +limit : undefined,
-    });
-  }
-
-  @ApiOperation({
     summary: 'Obtener comunidad',
-    description: 'Retorna una comunidad por ID',
+    description: 'Retorna una comunidad por ID con sus sectores',
   })
   @ApiParam({
     name: 'id',
@@ -108,12 +79,12 @@ export class ComunidadController {
     type: Number,
     example: 1,
   })
-  @ApiResponse({ status: 200, description: 'Comunidad encontrada' })
+  @ApiResponse({ status: 200, description: 'Comunidad encontrada', type: CommunityEntity })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({ status: 404, description: 'Comunidad no encontrada' })
   @RequiredPermission('comunidades', 'read')
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  async findOne(@Param('id') id: string) {
     return this.comunidadService.findOne(+id);
   }
 

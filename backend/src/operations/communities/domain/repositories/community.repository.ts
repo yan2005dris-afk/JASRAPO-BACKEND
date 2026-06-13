@@ -15,6 +15,7 @@ export abstract class CommunityRepository {
     orderBy?: Record<string, any>;
     skip?: number;
     take?: number;
+    include?: any;
   }): Promise<CommunityEntity[]>;
 
   abstract count(params?: { where?: Record<string, any> }): Promise<number>;

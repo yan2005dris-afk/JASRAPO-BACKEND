@@ -7,6 +7,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 import { ThrottlerExceptionFilter } from './infrastructure/common/filters/throttler-exception.filter';
+import { AuditFieldsInterceptor } from './infrastructure/common/interceptors/audit-fields.interceptor';
 import { BigIntInterceptor } from './infrastructure/common/interceptors/bigint.interceptor';
 import { DecimalToNumberInterceptor } from './infrastructure/common/interceptors/decimal-to-number.interceptor';
 import {
@@ -49,6 +50,9 @@ async function bootstrap() {
 
   //Interceptor Decimal -> Number (para JSON)
   app.useGlobalInterceptors(new DecimalToNumberInterceptor());
+
+  // Strips createdAt, updatedAt, deletedAt from all API responses
+  app.useGlobalInterceptors(new AuditFieldsInterceptor());
 
   // Logging and Metrics Interceptor
   app.useGlobalInterceptors(app.get(LoggingInterceptor));

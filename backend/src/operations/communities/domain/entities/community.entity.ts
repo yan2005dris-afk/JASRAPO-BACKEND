@@ -20,13 +20,8 @@ export class CommunityEntity {
   })
   sectores?: { sectorId: number; nombre: string; codigo: string }[];
 
-  @ApiPropertyOptional({ nullable: true })
   deletedAt: Date | null;
-
-  @ApiProperty()
   createdAt: Date;
-
-  @ApiProperty()
   updatedAt: Date;
 
   constructor(partial: Partial<CommunityEntity>) {

@@ -2,6 +2,7 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { ComunidadController } from './comunidad.controller';
 import { ComunidadService } from '../../application/comunidad.service';
+import type { CommunityFilterDto } from '../dto/community-filter.dto';
 
 describe('ComunidadController', () => {
   let controller: ComunidadController;
@@ -9,7 +10,6 @@ describe('ComunidadController', () => {
   const mockComunidadService = {
     crearComunidad: jest.fn(),
     findAll: jest.fn(),
-    findAllWithSector: jest.fn(),
     findOne: jest.fn(),
     update: jest.fn(),
     remove: jest.fn(),
@@ -34,31 +34,39 @@ describe('ComunidadController', () => {
     expect(controller).toBeDefined();
   });
 
-  it('findAll should call service.findAll with pagination params', async () => {
-    const paginationDto = { page: 2, limit: 5 };
-    await controller.findAll(paginationDto);
-    expect(mockComunidadService.findAll).toHaveBeenCalledWith(2, 5);
-  });
-
-  it('findAll should use defaults when no pagination provided', async () => {
-    await controller.findAll({ page: 1, limit: 10 });
-    expect(mockComunidadService.findAll).toHaveBeenCalledWith(1, 10);
-  });
-
-  it('findAllWithSector should pass sectorId and pagination', async () => {
-    await controller.findAllWithSector('3', '1', '20');
-    expect(mockComunidadService.findAllWithSector).toHaveBeenCalledWith({
-      sectorId: 3,
-      page: 1,
-      limit: 20,
+  it('findAll should call service.findAll with pagination and filter params', async () => {
+    const filters: CommunityFilterDto = { page: 2, limit: 5, nombre: 'test' };
+    mockComunidadService.findAll.mockResolvedValue({
+      data: [],
+      meta: { total: 0, page: 2, limit: 5, ultimaPagina: 0, paginaActual: 2, porPagina: 5, anterior: 1, siguiente: null },
     });
+
+    await controller.findAll(filters);
+
+    expect(mockComunidadService.findAll).toHaveBeenCalledWith(2, 5, filters);
   });
 
-  it('findAllWithSector should work without sectorId', async () => {
-    await controller.findAllWithSector(undefined, '2', '10');
-    expect(mockComunidadService.findAllWithSector).toHaveBeenCalledWith({
-      page: 2,
-      limit: 10,
+  it('findAll should use defaults when no pagination or filter provided', async () => {
+    const filters: CommunityFilterDto = {};
+    mockComunidadService.findAll.mockResolvedValue({
+      data: [],
+      meta: { total: 0, page: 1, limit: 10, ultimaPagina: 0, paginaActual: 1, porPagina: 10, anterior: null, siguiente: null },
     });
+
+    await controller.findAll(filters);
+
+    expect(mockComunidadService.findAll).toHaveBeenCalledWith(1, 10, filters);
+  });
+
+  it('findAll should work with codigo filter only', async () => {
+    const filters: CommunityFilterDto = { codigo: 'TC-001' };
+    mockComunidadService.findAll.mockResolvedValue({
+      data: [],
+      meta: { total: 0, page: 1, limit: 10, ultimaPagina: 0, paginaActual: 1, porPagina: 10, anterior: null, siguiente: null },
+    });
+
+    await controller.findAll(filters);
+
+    expect(mockComunidadService.findAll).toHaveBeenCalledWith(1, 10, filters);
   });
 });
