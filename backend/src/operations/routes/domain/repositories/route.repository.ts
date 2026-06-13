@@ -3,7 +3,6 @@ import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-
 import type { RouteEntity } from '../entities/route.entity';
 import type { ReadingForRouteEntity } from '../entities/reading-for-route.entity';
 import type { CreateRouteData } from '../types/create-route-data';
-import type { UpdateRouteData } from '../types/update-route-data';
 
 /**
  * Cross-module lookup interfaces — minimal shapes for domain validation.
