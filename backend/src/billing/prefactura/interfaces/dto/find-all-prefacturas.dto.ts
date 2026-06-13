@@ -1,4 +1,4 @@
-import { IsOptional, IsInt, IsString, Min, Max } from 'class-validator';
+import { IsOptional, IsInt, IsString, Matches, Min, Max } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
@@ -39,6 +39,7 @@ export class FindAllPrefacturasDto extends PaginationDto {
   })
   @IsOptional()
   @IsString()
+  @Matches(/^\d+$/, { message: 'contratoId debe ser un valor numérico' })
   contratoId?: string;
 
   @ApiPropertyOptional({
