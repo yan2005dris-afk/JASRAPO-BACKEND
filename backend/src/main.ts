@@ -218,6 +218,7 @@ Para consultas o soporte, contacta al equipo de desarrollo del Backend.
     .addTag('routes', 'Planificación y gestión de rutas de lectura')
     .addTag('search', 'Búsqueda pública de información')
     .addTag('batches', 'Billing batch management')
+    .addTag('pre-invoices', 'Gestión de prefacturas')
     .addTag('agreements', 'Payment agreements')
     .addTag(
       '[En Desarrollo] SRI - Facturación Electrónica',
