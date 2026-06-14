@@ -6,7 +6,7 @@ export interface CreateReadingAnomalyRepositoryData {
   observacion?: string | null;
   tipo: TipoAnomalia;
   estado: EstadoAnomalia;
-  fotoUrlMinIo?: string | null;
+  fotoUrl?: string | null;
 }
 
 export interface UpdateReadingAnomalyRepositoryData {
@@ -14,7 +14,7 @@ export interface UpdateReadingAnomalyRepositoryData {
   observacion?: string | null;
   tipo?: TipoAnomalia;
   estado?: EstadoAnomalia;
-  fotoUrlMinIo?: string | null;
+  fotoUrl?: string | null;
   deletedAt?: Date | null;
 }
 

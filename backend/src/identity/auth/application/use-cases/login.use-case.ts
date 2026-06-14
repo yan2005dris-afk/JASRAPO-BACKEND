@@ -149,12 +149,6 @@ export class LoginUseCase {
       user.nombres && user.apellidos
         ? `${user.nombres} ${user.apellidos}`
         : user.nombres || user.apellidos || null;
-    const avatarKey =
-      user.avatar && typeof user.avatar === 'object'
-        ? ((user.avatar as { key?: string; publicId?: string }).key ??
-          (user.avatar as { key?: string; publicId?: string }).publicId ??
-          null)
-        : null;
 
     // Si el rol está eliminado, no devolver roleId ni roleName
     const isRoleActive = user.rol && user.rol.deletedAt === null;
@@ -163,7 +157,7 @@ export class LoginUseCase {
       sub: user.usuarioId,
       sid: sesionId,
       nombre: fullName,
-      avatar: avatarKey,
+      avatar: user.avatar,
       email: user.email,
       rolId: isRoleActive && user.rol ? user.rol.rolId : null,
       nombreRol: isRoleActive ? (user.rol?.nombre ?? null) : null,

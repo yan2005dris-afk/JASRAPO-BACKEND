@@ -6,6 +6,7 @@ import { CreateUserUseCase } from './use-cases/create-user.use-case';
 import { GetEffectivePermissionsUseCase } from './use-cases/get-effective-permissions.use-case';
 import { UpdateUserPermissionsUseCase } from './use-cases/update-user-permissions.use-case';
 import { NotFoundException } from '@nestjs/common';
+import { StorageService } from 'src/infrastructure/storage/storage.service';
 
 describe('UserService', () => {
   let service: UserService;
@@ -32,6 +33,12 @@ describe('UserService', () => {
     execute: jest.fn(),
   };
 
+  const mockStorageService = {
+    getUrl: jest.fn(),
+    upload: jest.fn(),
+    delete: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -46,6 +53,7 @@ describe('UserService', () => {
           provide: UpdateUserPermissionsUseCase,
           useValue: mockUpdateUserPermissionsUseCase,
         },
+        { provide: StorageService, useValue: mockStorageService },
       ],
     }).compile();
 

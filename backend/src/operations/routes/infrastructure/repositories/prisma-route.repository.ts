@@ -6,6 +6,7 @@ import {
   UsuarioRef,
   ComunidadRef,
   SectorRef,
+  PeriodoRef,
 } from '../../domain/repositories/route.repository';
 import { RouteEntity } from '../../domain/entities/route.entity';
 import { ReadingForRouteEntity } from '../../domain/entities/reading-for-route.entity';
@@ -72,6 +73,9 @@ export class PrismaRouteRepository implements RouteRepository {
         sector: data.sectorId
           ? { connect: { sectorId: data.sectorId } }
           : undefined,
+        periodo: data.periodoId
+          ? { connect: { periodoId: data.periodoId } }
+          : undefined,
         fechaPlanificada: data.fechaPlanificada ?? null,
         estado: (data.estado ?? 'PENDIENTE') as EstadoRuta,
       },
@@ -112,6 +116,30 @@ export class PrismaRouteRepository implements RouteRepository {
     return this.prisma.sectores.findUnique({
       where: { sectorId: where.sectorId },
     }) as Promise<SectorRef | null>;
+  }
+
+  async findPeriodo(where: { periodoId: number }): Promise<PeriodoRef | null> {
+    return this.prisma.periodos.findUnique({
+      where: { periodoId: where.periodoId },
+    });
+  }
+
+  async findOverlappingRoutes(
+    comunidadId: number,
+    periodoId: number,
+    sectorId?: number,
+  ): Promise<any[]> {
+    const where: any = {
+      comunidadId,
+      periodoId,
+      deletedAt: null,
+    };
+
+    if (sectorId != null) {
+      where.OR = [{ sectorId: null }, { sectorId }];
+    }
+
+    return this.prisma.rutas.findMany({ where });
   }
 
   async paginateLecturas(

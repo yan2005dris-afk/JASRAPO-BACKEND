@@ -84,7 +84,7 @@ export class PrismaReadingRepository implements ReadingRepository {
         medidorId: data.medidorId,
         descripcionAnomalia: data.descripcionAnomalia,
         fechaValidacion: data.fechaValidacion,
-        fotoUrlMinIo: data.fotoUrlMinIo,
+        fotoUrl: data.fotoUrl,
         estado: data.estado as any,
         lecturaInicial: data.lecturaInicial,
         periodoId: data.periodoId,
@@ -118,8 +118,8 @@ export class PrismaReadingRepository implements ReadingRepository {
         ...(data.fechaValidacion !== undefined && {
           fechaValidacion: data.fechaValidacion,
         }),
-        ...(data.fotoUrlMinIo !== undefined && {
-          fotoUrlMinIo: data.fotoUrlMinIo,
+        ...(data.fotoUrl !== undefined && {
+          fotoUrl: data.fotoUrl,
         }),
         ...(data.estado !== undefined && { estado: data.estado as any }),
         ...(data.lecturaInicial !== undefined && {

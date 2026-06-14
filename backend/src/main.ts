@@ -1,12 +1,13 @@
-import type { INestApplication } from '@nestjs/common';
 import { ValidationPipe } from '@nestjs/common';
-import { GlobalExceptionFilter } from './infrastructure/common/filters/global-exception.filter';
 import { NestFactory } from '@nestjs/core';
+import type { NestExpressApplication } from '@nestjs/platform-express';
+import { GlobalExceptionFilter } from './infrastructure/common/filters/global-exception.filter';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 import { ThrottlerExceptionFilter } from './infrastructure/common/filters/throttler-exception.filter';
+import { AuditFieldsInterceptor } from './infrastructure/common/interceptors/audit-fields.interceptor';
 import { BigIntInterceptor } from './infrastructure/common/interceptors/bigint.interceptor';
 import { DecimalToNumberInterceptor } from './infrastructure/common/interceptors/decimal-to-number.interceptor';
 import {
@@ -30,7 +31,7 @@ type CookieParserMiddleware = (
 type CookieParserFactory = () => CookieParserMiddleware;
 
 async function bootstrap() {
-  const app: INestApplication = await NestFactory.create(AppModule, {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     bufferLogs: true,
   });
 
@@ -44,10 +45,19 @@ async function bootstrap() {
 
   app.setGlobalPrefix('api/v1');
 
-  //Interceptor BigInt
+  // Aumentar el límite de tamaño para payloads JSON y URL-encoded
+  // Nota: Esto solo aplica a JSON/URL-encoded. Las subidas de archivos (multipart/form-data)
+  // se manejan de forma independiente mediante interceptores en los controladores.
+  app.useBodyParser('json', { limit: '10mb' });
+  app.useBodyParser('urlencoded', { extended: true, limit: '10mb' });
+
+  // Audit fields interceptor (strips createdAt, updatedAt, deletedAt from all responses)
+  app.useGlobalInterceptors(new AuditFieldsInterceptor());
+
+  //BigInt interceptor
   app.useGlobalInterceptors(new BigIntInterceptor());
 
-  //Interceptor Decimal -> Number (para JSON)
+  //Decimal to Number interceptor
   app.useGlobalInterceptors(new DecimalToNumberInterceptor());
 
   // Logging and Metrics Interceptor
@@ -82,7 +92,13 @@ async function bootstrap() {
       corsOrigin === '*' ? true : corsOrigin.split(',').map((o) => o.trim()),
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
-    allowedHeaders: 'Content-Type, Accept, Authorization, X-Requested-With',
+    allowedHeaders: [
+      'Content-Type',
+      'Accept',
+      'Authorization',
+      'X-Requested-With',
+      'X-HTTP-Method-Override',
+    ],
   });
   app.useGlobalPipes(
     new ValidationPipe({
@@ -141,15 +157,10 @@ Control de acceso basado en roles y permisos granulares:
 | 500 | Error interno del servidor |
 
 ### Paginación
-Los endpoints de listado soportan dos esquemas de paginación:
+Todos los endpoints de listado soportan paginación mediante los siguientes parámetros:
 
-**Esquema page/limit** (usuarios, rutas, clientes):
 - \`page\`: Número de página (default: 1)
 - \`limit\`: Registros por página (default: 10)
-
-**Esquema skip/take** (medidores, lecturas, contratos, anomalías):
-- \`skip\`: Registros a omitir
-- \`take\`: Máximo de registros a retornar
 
 Las respuestas paginadas incluyen metadata: \`total\`, \`paginaActual\`, \`totalPaginas\`, \`anterior\`, \`siguiente\`.
 
@@ -161,21 +172,32 @@ Para consultas o soporte, contacta al equipo de desarrollo del Backend.
     `,
     )
     .setVersion('2.0')
-    .addBearerAuth({
-      type: 'http',
-      scheme: 'bearer',
-      bearerFormat: 'JWT',
-      name: 'JWT',
-      description: 'Ingresa el token JWT válido',
-      in: 'header',
-    })
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        description: 'Ingresa el token JWT de acceso válido',
+      },
+      'bearer',
+    )
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        description: 'Ingresa el token JWT de acceso válido',
+      },
+      'JWT',
+    )
     .addCookieAuth(
       'refreshToken',
       {
         description: 'Token de actualización almacenado en cookie (httpOnly)',
-        type: 'http',
+        type: 'apiKey',
+        in: 'cookie',
       },
-      'refresh-cookie',
+      'refreshToken',
     )
     .addTag(
       'auth',

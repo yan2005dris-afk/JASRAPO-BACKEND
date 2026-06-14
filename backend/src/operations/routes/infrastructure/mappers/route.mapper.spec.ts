@@ -16,6 +16,7 @@ describe('RouteMapper', () => {
         tipoRuta: 'TOMA_LECTURA',
         comunidadId: 1,
         sectorId: 2,
+        periodoId: 5,
         estado: 'PENDIENTE',
         createdAt,
         fechaInicio,
@@ -32,6 +33,7 @@ describe('RouteMapper', () => {
       expect(result.tipoRuta).toBe('TOMA_LECTURA');
       expect(result.comunidadId).toBe(1);
       expect(result.sectorId).toBe(2);
+      expect(result.periodoId).toBe(5);
       expect(result.estado).toBe('PENDIENTE');
       expect(result.fechaPlanificada).toBe('2025-06-01');
       expect(result.fechaInicio).toBe('2025-06-02');
@@ -49,6 +51,7 @@ describe('RouteMapper', () => {
         tipoRuta: 'RECONEXION',
         comunidadId: 2,
         sectorId: null,
+        periodoId: null,
         estado: 'EN_CURSO',
         createdAt,
         fechaInicio: null,
@@ -59,6 +62,7 @@ describe('RouteMapper', () => {
 
       expect(result.descripcion).toBeNull();
       expect(result.sectorId).toBeNull();
+      expect(result.periodoId).toBeNull();
       expect(result.fechaPlanificada).toBe('2025-06-01');
       expect(result.fechaInicio).toBeNull();
       expect(result.fechaFin).toBeNull();

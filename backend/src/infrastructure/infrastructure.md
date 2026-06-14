@@ -7,7 +7,7 @@ Este contexto contiene los detalles técnicos y herramientas transversales que d
 - **`database/`**: Configuración de Prisma y servicios de persistencia.
 - **`common/`**: Decoradores, filtros, guards, interceptores y utilidades reutilizables.
 - **`config/`**: Constantes globales y configuración de la aplicación.
-- **`storage/`**: Integración con servicios de almacenamiento (S3/Minio).
+- **`storage/`**: Integración con servicios de almacenamiento S3-compatible.
 - **`mail/`**: Infraestructura de envío de correos masivos con pg-boss y Nodemailer.
 
 ## Screaming Architecture

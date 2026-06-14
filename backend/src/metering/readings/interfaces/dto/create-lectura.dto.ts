@@ -14,7 +14,7 @@ export class CrearLecturaDto {
   @IsOptional() @IsNumber() consumoCalculado?: number;
   @IsNotEmpty() medidorId: string | number;
   @IsOptional() @IsString() @IsNotEmptyString() descripcionAnomalia?: string;
-  @IsOptional() @IsString() @IsNotEmptyString() fotoUrlMinIo?: string;
+  @IsOptional() @IsString() @IsNotEmptyString() fotoUrl?: string;
   @IsNotEmpty() @IsBoolean() lecturaInicial: boolean;
   @IsNotEmpty() @IsNumber() periodoId: number;
 }

@@ -208,7 +208,7 @@ describe('findByEmail', () => {
 | contrato-medidor.controller | ✅ Testeado |
 | novelty-operativa.service | ✅ Testeado |
 | novelty-operativa.controller | ✅ Testeado |
-| minio.service | ✅ Testeado |
+| s3-client.service | ✅ Testeado |
 | prisma.service | ✅ Testeado |
 | redis-session.service | ✅ Testeado |
 
@@ -314,7 +314,7 @@ Test Suites: 33 passed, 33 total
 | Update Client | Actualizar cliente |
 | Delete Client | Eliminar cliente |
 
-#### Phase 3 — Storage (MinIO)
+#### Phase 3 — Storage (S3-compatible)
 
 | Test | Descripción |
 |------|-------------|

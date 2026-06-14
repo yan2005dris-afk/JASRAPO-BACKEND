@@ -7,6 +7,7 @@ RUN apk add --no-cache openssl libc6-compat
 # Configuración de pnpm
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
+ENV PNPM_CONFIG_PACKAGE_IMPORT_METHOD=copy
 RUN corepack enable && corepack prepare pnpm@11.1.1 --activate
 
 WORKDIR /app
@@ -34,21 +35,27 @@ RUN pnpm --filter backend exec prisma generate && pnpm --filter backend run buil
 # ─── Stage: Runner (Producción) ───────────────────────────────────────────────
 FROM base AS runner
 
-# Copiar node_modules raíz y del backend (pnpm usa symlinks
-# desde /app/node_modules/.pnpm/ hacia los paquetes individuales)
-COPY --chown=node:node --from=builder /app/node_modules /app/node_modules
-COPY --chown=node:node --from=builder /app/backend/node_modules /app/backend/node_modules
-COPY --chown=node:node --from=builder /app/pnpm-lock.yaml /app/pnpm-lock.yaml
-COPY --chown=node:node --from=builder /app/pnpm-workspace.yaml /app/pnpm-workspace.yaml
+WORKDIR /app
+
+# Copiar configuración del monorepo
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+# Copiar manifiesto del subproyecto
+COPY backend/package.json ./backend/
+
+# Instalar únicamente dependencias de producción
+RUN pnpm install --prod --frozen-lockfile
+
+# Copiar artefactos del backend desde la etapa builder
+COPY --chown=node:node --from=builder /app/backend/dist ./backend/dist
+COPY --chown=node:node --from=builder /app/backend/package.json ./backend/package.json
+COPY --chown=node:node --from=builder /app/backend/prisma ./backend/prisma
+COPY --chown=node:node --from=builder /app/backend/src/generated ./backend/src/generated
+COPY --chown=node:node --from=builder /app/backend/prisma.config.ts ./backend/prisma.config.ts
+
+# Asegurar permisos para el usuario node
+RUN chown -R node:node /app
 
 WORKDIR /app/backend
-
-# Copiar artefactos del backend
-COPY --chown=node:node --from=builder /app/backend/dist ./dist
-COPY --chown=node:node --from=builder /app/backend/package.json ./package.json
-COPY --chown=node:node --from=builder /app/backend/prisma ./prisma
-COPY --chown=node:node --from=builder /app/backend/src/generated ./src/generated
-COPY --chown=node:node --from=builder /app/backend/prisma.config.ts ./prisma.config.ts
 
 # Seguridad: No correr como root
 USER node
@@ -56,3 +63,4 @@ EXPOSE 3000
 
 # Arrancar migraciones y servidor
 CMD ["sh", "-c", "./node_modules/.bin/prisma migrate deploy && node dist/src/main.js"]
+

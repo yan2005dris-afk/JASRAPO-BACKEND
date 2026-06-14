@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { RouteRepository } from '../../domain/repositories/route.repository';
 import { UpdateRouteDto } from '../../interfaces/dto/update-route.dto';
 import { RouteEntity } from '../../domain/entities/route.entity';
@@ -18,6 +22,32 @@ export class UpdateRouteUseCase {
       throw new NotFoundException('Ruta no encontrada');
     }
 
+    if (updateDto.periodoId !== undefined) {
+      const periodo = await this.routeRepository.findPeriodo({
+        periodoId: updateDto.periodoId,
+      });
+
+      if (!periodo) {
+        throw new NotFoundException('Periodo no encontrado');
+      }
+
+      if (periodo.estado !== 'ABIERTO') {
+        throw new BadRequestException('El periodo no está abierto');
+      }
+
+      const overlapping = await this.routeRepository.findOverlappingRoutes(
+        ruta.comunidadId,
+        updateDto.periodoId,
+        ruta.sectorId,
+      );
+
+      if (overlapping.some((r: any) => r.rutaId !== rutaId)) {
+        throw new BadRequestException(
+          'Ya existe una ruta para esta comunidad y periodo',
+        );
+      }
+    }
+
     const rutaActualizada = await this.routeRepository.update(
       { rutaId },
       {
@@ -30,6 +60,9 @@ export class UpdateRouteUseCase {
           fechaPlanificada: updateDto.fechaPlanificada
             ? new Date(updateDto.fechaPlanificada)
             : null,
+        }),
+        ...(updateDto.periodoId !== undefined && {
+          periodoId: updateDto.periodoId,
         }),
       },
     );

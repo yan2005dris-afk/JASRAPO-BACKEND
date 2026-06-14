@@ -6,7 +6,7 @@ import {
   UploadOptions,
   UploadResult,
 } from './interfaces/storage.interface';
-import { MinioService } from '../database/minio/minio.service';
+import { S3ClientService } from '../database/s3-client/s3-client.service';
 
 /**
  * Storage types for SRI
@@ -59,31 +59,25 @@ Object.freeze(SRI_BUCKETS);
 Object.freeze(SRI_STORAGE_TYPES);
 
 /**
- * MinIO-based implementation of IStorageService
+ * S3-compatible implementation of IStorageService
  * Provides object storage with presigned URLs and streaming support
  */
 @Injectable()
-export class MinioStorageService implements IStorageService, OnModuleInit {
-  private readonly logger = new Logger(MinioStorageService.name);
+export class StorageService implements IStorageService, OnModuleInit {
+  private readonly logger = new Logger(StorageService.name);
   private initializedBuckets = new Set<string>();
 
   constructor(
-    private readonly minioService: MinioService,
+    private readonly s3Client: S3ClientService,
     private readonly configService: ConfigService,
   ) {}
 
   async onModuleInit(): Promise<void> {
-    if (!this.minioService.isAvailable) {
-      this.logger.warn(
-        '[MINIO:INIT] MinIO not available — skipping default bucket initialization',
-      );
-      return;
-    }
     try {
       await this.initializeDefaultBuckets();
     } catch (error) {
       this.logger.error(
-        '[MINIO:INIT] Failed to initialize default buckets',
+        '[STORAGE:INIT] Failed to initialize default buckets',
         error,
       );
     }
@@ -109,17 +103,17 @@ export class MinioStorageService implements IStorageService, OnModuleInit {
 
     try {
       // Try to list files - if bucket doesn't exist it'll throw
-      await this.minioService.listFiles(bucket);
+      await this.s3Client.listFiles(bucket);
       this.initializedBuckets.add(bucket);
-      this.logger.debug(`[MINIO:BUCKET] Already exists: ${bucket}`);
+      this.logger.debug(`[STORAGE:BUCKET] Already exists: ${bucket}`);
     } catch {
       // Bucket doesn't exist - create it
       try {
-        // MinioService may not have createBucket - we rely on upload creating it
+        // S3ClientService relies on upload to create bucket
         this.initializedBuckets.add(bucket);
-        this.logger.log(`[MINIO:BUCKET] Will use bucket: ${bucket}`);
+        this.logger.log(`[STORAGE:BUCKET] Will use bucket: ${bucket}`);
       } catch (error) {
-        this.logger.warn(`[MINIO:BUCKET] Could not ensure: ${bucket}`, error);
+        this.logger.warn(`[STORAGE:BUCKET] Could not ensure: ${bucket}`, error);
       }
     }
   }
@@ -128,18 +122,13 @@ export class MinioStorageService implements IStorageService, OnModuleInit {
    * Ensures dynamic bucket exists for specific RUC and type
    */
   async ensureBucketForRuc(ruc: string, type: SriStorageType): Promise<string> {
-    const prefix = this.configService.get<string>('MINIO_BUCKET_PREFIX', 'sri');
+    const prefix = this.configService.get<string>(
+      'STORAGE_BUCKET_PREFIX',
+      'sri',
+    );
     const bucket = getBucketName(ruc, type, prefix);
     await this.ensureBucketExists(bucket);
     return bucket;
-  }
-
-  isMinIO(): boolean {
-    return true;
-  }
-
-  isAvailable(): boolean {
-    return this.minioService.isAvailable;
   }
 
   async upload(
@@ -150,10 +139,10 @@ export class MinioStorageService implements IStorageService, OnModuleInit {
   ): Promise<UploadResult> {
     const contentType = options?.contentType || 'application/octet-stream';
 
-    await this.minioService.uploadFile(bucket, key, buffer);
+    await this.s3Client.uploadFile(bucket, key, buffer);
 
     this.logger.debug(
-      `[MINIO:UPLOAD] ${bucket}/${key} (${buffer.length} bytes)`,
+      `[STORAGE:UPLOAD] ${bucket}/${key} (${buffer.length} bytes)`,
     );
 
     return {
@@ -185,7 +174,7 @@ export class MinioStorageService implements IStorageService, OnModuleInit {
     expiresInSeconds?: number,
   ): Promise<string> {
     const expiry = expiresInSeconds ?? 24 * 60 * 60;
-    return this.minioService.getPresignedUrl(bucket, key, expiry);
+    return this.s3Client.getPresignedUrl(bucket, key, expiry);
   }
 
   async refreshUrl(
@@ -193,33 +182,32 @@ export class MinioStorageService implements IStorageService, OnModuleInit {
     key: string,
     expiresInSeconds?: number,
   ): Promise<string> {
-    // MinIO generates fresh presigned URLs each time
-    // Simply regenerate with new expiration
+    // S3-compatible storage generates fresh presigned URLs each time
     return this.getUrl(bucket, key, expiresInSeconds);
   }
 
   async delete(bucket: string, key: string): Promise<void> {
-    await this.minioService.deleteFile(bucket, key);
-    this.logger.debug(`[MINIO:DELETE] ${bucket}/${key}`);
+    await this.s3Client.deleteFile(bucket, key);
+    this.logger.debug(`[STORAGE:DELETE] ${bucket}/${key}`);
   }
 
   async exists(bucket: string, key: string): Promise<boolean> {
-    return this.minioService.fileExists(bucket, key);
+    return this.s3Client.fileExists(bucket, key);
   }
 
   async list(bucket: string, prefix?: string): Promise<string[]> {
-    return this.minioService.listFiles(bucket, prefix);
+    return this.s3Client.listFiles(bucket, prefix);
   }
 
   async getObject(bucket: string, key: string): Promise<Readable> {
-    return this.minioService.getFileStream(bucket, key);
+    return this.s3Client.getFileStream(bucket, key);
   }
 
   async getMetadata(
     bucket: string,
     key: string,
   ): Promise<{ size: number; contentType: string } | null> {
-    const metadata = await this.minioService.getFileMetadata(bucket, key);
+    const metadata = await this.s3Client.getFileMetadata(bucket, key);
     if (!metadata) return null;
     return {
       size: metadata.size,

@@ -3,7 +3,9 @@ import {
   NotFoundException,
   BadRequestException,
   ConflictException,
+  Logger,
 } from '@nestjs/common';
+import { randomUUID } from 'crypto';
 import { Prisma } from 'src/generated/prisma/client';
 import { CreateUserDto } from '../interfaces/dto/create-user.dto';
 import { UpdateUserDto } from '../interfaces/dto/update-user.dto';
@@ -16,20 +18,28 @@ import { PaginatedResult } from 'src/infrastructure/common/types/paginated-resul
 import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
 import { UserRepository } from '../domain/repositories/user.repository';
 import {
-  userWithRolesSelect,
   UserWithPermissionsResponse,
   UserWithRoleResponse,
   ProfileResponse,
   EffectivePermissionsResponse,
+  AvatarResponse,
 } from '../domain/types/user.types';
+import {
+  StorageService,
+  SRI_BUCKETS,
+} from 'src/infrastructure/storage/storage.service';
+import { ImageProcessorUtil } from 'src/infrastructure/common/utils/image-processor.util';
 
 @Injectable()
 export class UserService {
+  private readonly logger = new Logger(UserService.name);
+
   constructor(
     private readonly userRepository: UserRepository,
     private readonly createUserUseCase: CreateUserUseCase,
     private readonly getEffectivePermissionsUseCase: GetEffectivePermissionsUseCase,
     private readonly updateUserPermissionsUseCase: UpdateUserPermissionsUseCase,
+    private readonly storageService: StorageService,
   ) {}
 
   async user(criteria: {
@@ -84,14 +94,13 @@ export class UserService {
     }
 
     const fullName = [user.nombres, user.apellidos].filter(Boolean).join(' ');
-    const avatarObj = user.avatar as { url?: string; key?: string } | null;
 
     return {
       usuarioId: user.usuarioId,
       email: user.email,
       nombre: fullName || null,
       telefono: user.telefono,
-      avatar: avatarObj,
+      avatar: user.avatar,
       rol:
         user.rol && !user.rol.deletedAt
           ? { rolId: user.rol.rolId, nombre: user.rol.nombre }
@@ -102,37 +111,68 @@ export class UserService {
   async users(
     pagination: PaginationDto,
   ): Promise<PaginatedResult<UserWithRoleResponse>> {
-    const result = await this.userRepository.findManyActive(pagination);
-
-    const mappedData = result.data.map((user: any) => ({
-      usuarioId: user.usuarioId,
-      email: user.email,
-      nombres: user.nombres,
-      apellidos: user.apellidos,
-      telefono: user.telefono,
-      avatar: user.avatar,
-      rol:
-        user.rol && !user.rol.deletedAt
-          ? { rolId: user.rol.rolId, nombre: user.rol.nombre }
-          : null,
-    }));
-
-    return {
-      data: mappedData,
-      meta: result.meta,
-    };
+    return this.userRepository.findManyActive(pagination);
   }
 
-  async createUser(createUsersDto: CreateUserDto) {
-    return this.createUserUseCase.execute(createUsersDto);
+  /**
+   * Helper privado para procesar y subir el avatar.
+   */
+  private async uploadAndProcessAvatar(
+    file: Express.Multer.File,
+  ): Promise<string> {
+    this.logger.debug(
+      `[AVATAR] Procesando imagen con ImageProcessorUtil (${file.size} bytes)`,
+    );
+
+    const processedBuffer = await ImageProcessorUtil.processProfilePicture(
+      file.buffer,
+    );
+
+    const key = `avatars/${randomUUID()}.webp`;
+    this.logger.debug(`[AVATAR] Subiendo a storage con key: ${key}`);
+
+    await this.storageService.upload(
+      SRI_BUCKETS.PROFILE_PHOTOS,
+      key,
+      processedBuffer,
+      { contentType: 'image/webp' },
+    );
+
+    return key;
+  }
+
+  async createUser(createUsersDto: CreateUserDto, file?: Express.Multer.File) {
+    let avatarKey: string | undefined;
+
+    if (file) {
+      avatarKey = await this.uploadAndProcessAvatar(file);
+    }
+
+    try {
+      return await this.createUserUseCase.execute({
+        ...createUsersDto,
+        avatar: avatarKey ? { key: avatarKey } : undefined,
+      });
+    } catch (error) {
+      if (avatarKey) {
+        this.logger.warn(
+          `[AVATAR] Revirtiendo subida por fallo en creación de usuario: ${avatarKey}`,
+        );
+        await this.storageService
+          .delete(SRI_BUCKETS.PROFILE_PHOTOS, avatarKey)
+          .catch(() => {});
+      }
+      throw error;
+    }
   }
 
   async updateUser(
     usuarioId: number,
     data: UpdateUserDto,
+    file?: Express.Multer.File,
   ): Promise<UserWithPermissionsResponse | null> {
     const { directPermissions, ...userData } = data;
-    const updateData = { ...userData };
+    const updateData: any = { ...userData };
 
     // Verificar que el usuario no esté eliminado
     const existingUser = await this.userRepository.findById(usuarioId);
@@ -173,6 +213,26 @@ export class UserService {
       }
     }
 
+    let newAvatarKey: string | undefined;
+    let oldAvatarKey: string | undefined;
+
+    if (file) {
+      try {
+        const oldAvatar = existingUser.avatar as { key?: string } | null;
+        oldAvatarKey = oldAvatar?.key;
+
+        newAvatarKey = await this.uploadAndProcessAvatar(file);
+        updateData.avatar = { key: newAvatarKey };
+      } catch (error) {
+        this.logger.error(
+          `[AVATAR] Error al procesar/subir imagen: ${error.message}`,
+        );
+        throw new BadRequestException(
+          'No se pudo procesar la imagen de perfil',
+        );
+      }
+    }
+
     try {
       await this.userRepository.executeTransaction(async (tx) => {
         await this.userRepository.update(usuarioId, updateData, tx);
@@ -185,7 +245,28 @@ export class UserService {
           );
         }
       });
+
+      // Paso exitoso: Borramos el avatar viejo si subimos uno nuevo
+      if (newAvatarKey && oldAvatarKey) {
+        await this.storageService
+          .delete(SRI_BUCKETS.PROFILE_PHOTOS, oldAvatarKey)
+          .catch((e) =>
+            this.logger.warn(
+              `[AVATAR] No se pudo borrar el avatar anterior (${oldAvatarKey}): ${e.message}`,
+            ),
+          );
+      }
     } catch (error: any) {
+      // Rollback del storage: si falló la DB, borramos la foto que recién subimos
+      if (newAvatarKey) {
+        this.logger.warn(
+          `[AVATAR] Revirtiendo subida por fallo en transacción DB: ${newAvatarKey}`,
+        );
+        await this.storageService
+          .delete(SRI_BUCKETS.PROFILE_PHOTOS, newAvatarKey)
+          .catch(() => {});
+      }
+
       const target = error?.meta?.target;
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
@@ -199,6 +280,49 @@ export class UserService {
     }
 
     return this.user({ usuarioId: existingUser.usuarioId });
+  }
+
+  /**
+   * Actualiza el avatar del usuario subiendo un archivo al storage.
+   * Mantenemos este método por compatibilidad si se usa por separado.
+   */
+  async updateAvatar(
+    usuarioId: number,
+    file: Express.Multer.File,
+  ): Promise<AvatarResponse> {
+    const user = await this.userRepository.findById(usuarioId);
+    if (!user || user.deletedAt) {
+      throw new NotFoundException('Usuario no encontrado');
+    }
+
+    let newAvatarKey: string | undefined;
+    const oldAvatar = user.avatar as { key?: string } | null;
+    const oldAvatarKey = oldAvatar?.key;
+
+    try {
+      newAvatarKey = await this.uploadAndProcessAvatar(file);
+
+      const updatedUser = await this.userRepository.update(usuarioId, {
+        avatar: { key: newAvatarKey },
+      });
+
+      // Éxito: Borramos el viejo si existe
+      if (oldAvatarKey) {
+        await this.storageService
+          .delete(SRI_BUCKETS.PROFILE_PHOTOS, oldAvatarKey)
+          .catch(() => {});
+      }
+
+      return updatedUser.avatar!;
+    } catch (error) {
+      // Rollback: Si subimos el nuevo pero falló la DB, borramos el nuevo
+      if (newAvatarKey) {
+        await this.storageService
+          .delete(SRI_BUCKETS.PROFILE_PHOTOS, newAvatarKey)
+          .catch(() => {});
+      }
+      throw error;
+    }
   }
 
   async softDeleteUser(usuarioId: number) {

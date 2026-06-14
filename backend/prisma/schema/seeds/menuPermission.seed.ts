@@ -22,10 +22,10 @@ const PERMISSION_MAP: MenuPermissionMapping[] = [
   {
     menuNombre: 'Inventario de Medidores',
     permisos: [
-      { recurso: 'medidores', accion: 'read' },
-      { recurso: 'medidores', accion: 'create' },
-      { recurso: 'medidores', accion: 'update' },
-      { recurso: 'medidores', accion: 'delete' },
+      { recurso: 'meters', accion: 'read' },
+      { recurso: 'meters', accion: 'create' },
+      { recurso: 'meters', accion: 'update' },
+      { recurso: 'meters', accion: 'delete' },
     ],
   },
   {
@@ -80,6 +80,19 @@ const PERMISSION_MAP: MenuPermissionMapping[] = [
       { recurso: 'facturacion_electronica', accion: 'create' },
       { recurso: 'facturacion_electronica', accion: 'update' },
       { recurso: 'facturacion_electronica', accion: 'delete' },
+    ],
+  },
+  {
+    menuNombre: 'Generación de Planillas',
+    permisos: [
+      { recurso: 'prefacturas', accion: 'read' },
+      { recurso: 'prefacturas', accion: 'create' },
+      { recurso: 'prefacturas', accion: 'update' },
+      { recurso: 'prefacturas', accion: 'delete' },
+      { recurso: 'lotes', accion: 'read' },
+      { recurso: 'lotes', accion: 'create' },
+      { recurso: 'lotes', accion: 'update' },
+      { recurso: 'lotes', accion: 'delete' },
     ],
   },
   {

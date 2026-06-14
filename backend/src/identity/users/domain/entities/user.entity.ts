@@ -33,6 +33,21 @@ export class DirectPermissionEntity {
   permitido: boolean;
 }
 
+export class AvatarEntity {
+  @ApiProperty({
+    example: 'https://example.com/avatar.png',
+    description: 'URL de acceso a la imagen',
+  })
+  url: string;
+
+  @ApiProperty({
+    example: 'profile-photos/user-1.png',
+    description: 'Key del archivo en el storage',
+    required: false,
+  })
+  key?: string;
+}
+
 export class UserProfileEntity {
   @ApiProperty({ example: 1, description: 'ID único del usuario' })
   usuarioId: number;
@@ -58,11 +73,11 @@ export class UserProfileEntity {
   telefono: string | null;
 
   @ApiProperty({
-    example: { url: 'avatars/profile.png', key: 'profile.png' },
-    description: 'Datos del avatar (JSON)',
+    type: () => AvatarEntity,
+    description: 'Datos del avatar',
     nullable: true,
   })
-  avatar: unknown;
+  avatar: AvatarEntity | null;
 
   @ApiProperty({
     type: () => RoleEntity,
@@ -104,11 +119,11 @@ export class UserEntity {
   telefono: string | null;
 
   @ApiProperty({
-    example: { url: 'avatars/profile.png', key: 'profile.png' },
-    description: 'Datos del avatar (JSON)',
+    type: () => AvatarEntity,
+    description: 'Datos del avatar',
     nullable: true,
   })
-  avatar: unknown;
+  avatar: AvatarEntity | null;
 
   @ApiProperty({
     type: () => RoleEntity,

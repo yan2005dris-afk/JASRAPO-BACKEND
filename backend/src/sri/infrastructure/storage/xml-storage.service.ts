@@ -1,16 +1,16 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
-  MinioStorageService,
+  StorageService,
   getBucketName,
   SRI_STORAGE_TYPES,
-} from '../../../infrastructure/storage/minio-storage.service';
+} from '../../../infrastructure/storage/storage.service';
 import { Readable } from 'stream';
 
 /**
  * Service for storing XML files using IStorageService abstraction
  * Organizes files by RUC/year/month for easy retrieval and 7-year retention
- * Uses MinIO with filesystem fallback
+ * Uses S3-compatible object storage (RustFS)
  */
 @Injectable()
 export class XmlStorageService {
@@ -18,18 +18,21 @@ export class XmlStorageService {
   private readonly baseDir: string;
 
   constructor(
-    private readonly storageService: MinioStorageService,
+    private readonly storageService: StorageService,
     private readonly configService: ConfigService,
   ) {
     this.baseDir = this.configService.get<string>('XMLS_DIR', '../xmls');
-    this.logger.log(`XmlStorageService initialized with MinIO storage`);
+    this.logger.log(`XmlStorageService initialized with S3-compatible storage`);
   }
 
   /**
    * Generates the bucket name for a given RUC
    */
   private getBucketForRuc(ruc: string): string {
-    const prefix = this.configService.get<string>('MINIO_BUCKET_PREFIX', 'sri');
+    const prefix = this.configService.get<string>(
+      'STORAGE_BUCKET_PREFIX',
+      'sri',
+    );
     return getBucketName(ruc, SRI_STORAGE_TYPES.XMLS, prefix);
   }
 

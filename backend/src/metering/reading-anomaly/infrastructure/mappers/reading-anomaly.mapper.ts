@@ -12,7 +12,7 @@ export class ReadingAnomalyMapper {
       createdAt: raw.createdAt,
       updatedAt: raw.updatedAt,
       deletedAt: raw.deletedAt,
-      fotoUrlMinIo: raw.fotoUrlMinIo,
+      fotoUrl: raw.fotoUrl,
       lectura: raw.lectura
         ? {
             lecturaId: raw.lectura.lecturaId,

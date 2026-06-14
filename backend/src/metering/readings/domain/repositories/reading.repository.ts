@@ -8,7 +8,7 @@ export interface CreateReadingRepositoryData {
   medidorId: bigint;
   descripcionAnomalia?: string | null;
   fechaValidacion?: Date | null;
-  fotoUrlMinIo?: string | null;
+  fotoUrl?: string | null;
   estado?: string;
   lecturaInicial?: boolean;
   periodoId: number;
@@ -22,7 +22,7 @@ export interface UpdateReadingRepositoryData {
   medidorId?: bigint;
   descripcionAnomalia?: string | null;
   fechaValidacion?: Date | null;
-  fotoUrlMinIo?: string | null;
+  fotoUrl?: string | null;
   estado?: string;
   lecturaInicial?: boolean;
   periodoId?: number;
