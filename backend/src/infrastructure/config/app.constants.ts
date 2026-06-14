@@ -8,6 +8,16 @@ export const TRUST_PROXY_KEY = 'trust proxy' as const;
 export const SESSION_TTL_SECONDS = DEFAULT_SESSION_TTL_SECONDS;
 
 /**
+ * CONFIGURACIÓN DE CARGA DE ARCHIVOS
+ */
+const parsedUploadSize = parseInt(process.env.MAX_UPLOAD_SIZE_MB || '5', 10);
+export const MAX_UPLOAD_SIZE_MB =
+  Number.isFinite(parsedUploadSize) && parsedUploadSize > 0
+    ? parsedUploadSize
+    : 5;
+export const MAX_UPLOAD_SIZE_BYTES = MAX_UPLOAD_SIZE_MB * 1024 * 1024;
+
+/**
  * ESTADOS DE MEDIDOR (Enum Mapping)
  */
 export const METER_STATUSES = {

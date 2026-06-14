@@ -16,7 +16,8 @@
       "esbuild",
       "prisma",
       "ssh2",
-      "unrs-resolver"
+      "unrs-resolver",
+      "sharp"
     ]
   },
   "overrides": {
@@ -116,6 +117,7 @@
     "qrcode": "^1.5.4",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
+    "sharp": "^0.35.1",
     "soap": "^1.9.1",
     "tsx": "^4.21.0",
     "xadesjs": "^2.6.5",

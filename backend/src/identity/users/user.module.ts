@@ -6,6 +6,7 @@ import { GetEffectivePermissionsUseCase } from './application/use-cases/get-effe
 import { UpdateUserPermissionsUseCase } from './application/use-cases/update-user-permissions.use-case';
 import { UserRepository } from './domain/repositories/user.repository';
 import { PrismaUserRepository } from './infrastructure/repositories/prisma-user.repository';
+import { UserMapper } from './infrastructure/mappers/user.mapper';
 
 @Module({
   imports: [],
@@ -15,6 +16,7 @@ import { PrismaUserRepository } from './infrastructure/repositories/prisma-user.
     CreateUserUseCase,
     GetEffectivePermissionsUseCase,
     UpdateUserPermissionsUseCase,
+    UserMapper,
     {
       provide: UserRepository,
       useClass: PrismaUserRepository,
@@ -26,6 +28,7 @@ import { PrismaUserRepository } from './infrastructure/repositories/prisma-user.
     GetEffectivePermissionsUseCase,
     UpdateUserPermissionsUseCase,
     UserRepository,
+    UserMapper,
   ],
 })
 export class UserModule {}

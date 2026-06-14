@@ -18,7 +18,10 @@ import { UserMapper } from '../mappers/user.mapper';
 
 @Injectable()
 export class PrismaUserRepository implements UserRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly userMapper: UserMapper,
+  ) {}
 
   private mapFiltroFecha(filter?: FiltroFecha | null) {
     if (filter === undefined) return undefined;
@@ -35,7 +38,7 @@ export class PrismaUserRepository implements UserRepository {
       where: { usuarioId },
       select: userWithRolesSelect,
     });
-    return UserMapper.toWithRole(user);
+    return await this.userMapper.toWithRole(user);
   }
 
   async findByEmail(email: string): Promise<UserWithRoleResponse | null> {
@@ -43,7 +46,7 @@ export class PrismaUserRepository implements UserRepository {
       where: { email },
       select: userWithRolesSelect,
     });
-    return UserMapper.toWithRole(user);
+    return await this.userMapper.toWithRole(user);
   }
 
   async findByEmailWithPassword(
@@ -56,7 +59,7 @@ export class PrismaUserRepository implements UserRepository {
         clave: true,
       },
     });
-    return UserMapper.toWithRoleAndClave(user);
+    return await this.userMapper.toWithRoleAndClave(user);
   }
 
   async findManyActive(
@@ -74,8 +77,13 @@ export class PrismaUserRepository implements UserRepository {
         limit: pagination.limit,
       },
     );
+
+    const data = await Promise.all(
+      (result.data as any[]).map((user) => this.userMapper.toWithRole(user)),
+    );
+
     return {
-      data: (result.data as any[]).map((user) => UserMapper.toWithRole(user)!),
+      data: data.filter((u): u is UserWithRoleResponse => u !== null),
       meta: result.meta,
     };
   }
@@ -102,8 +110,13 @@ export class PrismaUserRepository implements UserRepository {
         limit: pagination.limit,
       },
     );
+
+    const data = await Promise.all(
+      (result.data as any[]).map((user) => this.userMapper.toWithRole(user)),
+    );
+
     return {
-      data: (result.data as any[]).map((user) => UserMapper.toWithRole(user)!),
+      data: data.filter((u): u is UserWithRoleResponse => u !== null),
       meta: result.meta,
     };
   }
@@ -119,7 +132,13 @@ export class PrismaUserRepository implements UserRepository {
       data: createData,
       select: userWithRolesSelect,
     });
-    return UserMapper.toWithRole(user)!;
+    const mapped = await this.userMapper.toWithRole(user);
+    if (!mapped) {
+      throw new Error(
+        `Error al mapear el usuario creado (ID: ${user.usuarioId})`,
+      );
+    }
+    return mapped;
   }
 
   async update(
@@ -142,7 +161,13 @@ export class PrismaUserRepository implements UserRepository {
       data: updateData,
       select: userWithRolesSelect,
     });
-    return UserMapper.toWithRole(user)!;
+    const mapped = await this.userMapper.toWithRole(user);
+    if (!mapped) {
+      throw new Error(
+        `Error al mapear el usuario actualizado (ID: ${usuarioId})`,
+      );
+    }
+    return mapped;
   }
 
   async findRoleById(rolId: number): Promise<any> {
