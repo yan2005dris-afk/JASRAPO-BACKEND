@@ -51,8 +51,8 @@ export class MeterController {
   })
   @RequiredPermission('meters', 'read')
   @Get('status')
-  findAllEstados(): Promise<EstadoMedidorResponseDto[]> {
-    return this.meterService.findAllEstados();
+  findAllStates(): Promise<EstadoMedidorResponseDto[]> {
+    return this.meterService.findAllStates();
   }
 
   /**

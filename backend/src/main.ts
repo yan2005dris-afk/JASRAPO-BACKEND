@@ -217,7 +217,7 @@ Para consultas o soporte, contacta al equipo de desarrollo del Backend.
     .addTag('reading-anomalies', 'Anomalías de lecturas (fugas, daños)')
     .addTag('routes', 'Planificación y gestión de rutas de lectura')
     .addTag('search', 'Búsqueda pública de información')
-    .addTag('Lotes', 'Gestión de lotes de facturación')
+    .addTag('batches', 'Billing batch management')
     .addTag('agreements', 'Payment agreements')
     .addTag(
       '[En Desarrollo] SRI - Facturación Electrónica',

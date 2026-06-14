@@ -14,7 +14,7 @@ import { DecommissionMeterUseCase } from './use-cases/decommission-meter.use-cas
 import { MeterEntity } from '../domain/entities/meter.entity';
 import { DateUtil } from 'src/infrastructure/common/utils/date.util';
 import { METER_STATUS_LIST } from 'src/infrastructure/config/app.constants';
-import { getPagination } from 'src/infrastructure/common/utils/pagination.util';
+import { getPagination, paginate } from 'src/infrastructure/common/utils/pagination.util';
 import { PaginatedMeterResponse } from '../interfaces/types/paginated-meter-response.type';
 
 @Injectable()
@@ -48,17 +48,19 @@ export class MeterService {
         this.meterRepository.count({ ...where, estado: 'DANADO' }),
       ]);
 
+    const totalPages = Math.ceil(total / take);
+
     return {
       data: meters as unknown as any[],
       meta: {
         total,
         page: safePage,
         limit: take,
-        ultimaPagina: Math.ceil(total / take),
+        ultimaPagina: totalPages,
         paginaActual: safePage,
         porPagina: take,
         anterior: safePage > 1 ? safePage - 1 : null,
-        siguiente: safePage < Math.ceil(total / take) ? safePage + 1 : null,
+        siguiente: safePage < totalPages ? safePage + 1 : null,
       },
       kpis: {
         enBodega: enBodegaCount,
@@ -113,7 +115,7 @@ export class MeterService {
     return this.decommissionUseCase.execute(medidorId, motivoBaja);
   }
 
-  async findAllEstados(): Promise<EstadoMedidorResponseDto[]> {
+  async findAllStates(): Promise<EstadoMedidorResponseDto[]> {
     return METER_STATUS_LIST.map((s) => ({
       estadoId: s.estadoId,
       codigo: s.codigo,
