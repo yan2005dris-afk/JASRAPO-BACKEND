@@ -211,7 +211,7 @@ Para consultas o soporte, contacta al equipo de desarrollo del Backend.
     .addTag('sectors', 'Gestión de sectores territoriales')
     .addTag('communities', 'Gestión de comunidades')
     .addTag('contracts', 'Gestión de contratos y medidores')
-    .addTag('tariffs', 'Categorías tarifarias')
+    .addTag('tariff-categories', 'Categorías tarifarias (tarifas por consumo)')
     .addTag('meters', 'Gestión de medidores')
     .addTag('readings', 'Lecturas de medidores')
     .addTag('reading-anomalies', 'Anomalías de lecturas (fugas, daños)')
