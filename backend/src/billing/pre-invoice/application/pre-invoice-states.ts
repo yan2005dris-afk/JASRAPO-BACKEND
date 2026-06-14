@@ -1,11 +1,26 @@
-export const PREINVOICE_STATES = [
-  { estadoId: 1, codigo: 'GENERADA', nombre: 'Generated', orden: 1 },
-  { estadoId: 2, codigo: 'EN_REVISION', nombre: 'In Review', orden: 2 },
-  { estadoId: 3, codigo: 'APROBADA', nombre: 'Approved', orden: 3 },
-  { estadoId: 4, codigo: 'RECHAZADA', nombre: 'Rejected', orden: 4 },
-  { estadoId: 5, codigo: 'ANULADA', nombre: 'Voided', orden: 5 },
-  { estadoId: 6, codigo: 'PAGADA', nombre: 'Paid', orden: 6 },
-];
+import { EstadoPrefactura } from 'src/generated/prisma/enums';
+
+/**
+ * Generate state catalog from Prisma enum.
+ * Each state gets: codigo (enum value), nombre (display name), orden (sort order).
+ */
+const ESTADO_NAMES: Record<EstadoPrefactura, string> = {
+  [EstadoPrefactura.GENERADA]: 'Generada',
+  [EstadoPrefactura.EN_REVISION]: 'En Revisión',
+  [EstadoPrefactura.APROBADA]: 'Aprobada',
+  [EstadoPrefactura.RECHAZADA]: 'Rechazada',
+  [EstadoPrefactura.ANULADA]: 'Anulada',
+  [EstadoPrefactura.PAGADA]: 'Pagada',
+};
+
+export const PREINVOICE_STATES = Object.values(EstadoPrefactura).map(
+  (codigo, index) => ({
+    estadoId: index + 1,
+    codigo,
+    nombre: ESTADO_NAMES[codigo],
+    orden: index + 1,
+  }),
+);
 
 /**
  * Allowed status transitions.

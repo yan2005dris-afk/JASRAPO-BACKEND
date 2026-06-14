@@ -85,14 +85,14 @@ const PERMISSION_MAP: MenuPermissionMapping[] = [
   {
     menuNombre: 'Generación de Planillas',
     permisos: [
-      { recurso: 'prefacturas', accion: 'read' },
-      { recurso: 'prefacturas', accion: 'create' },
-      { recurso: 'prefacturas', accion: 'update' },
-      { recurso: 'prefacturas', accion: 'delete' },
-      { recurso: 'lotes', accion: 'read' },
-      { recurso: 'lotes', accion: 'create' },
-      { recurso: 'lotes', accion: 'update' },
-      { recurso: 'lotes', accion: 'delete' },
+      { recurso: 'pre-invoices', accion: 'read' },
+      { recurso: 'pre-invoices', accion: 'create' },
+      { recurso: 'pre-invoices', accion: 'update' },
+      { recurso: 'pre-invoices', accion: 'delete' },
+      { recurso: 'batches', accion: 'read' },
+      { recurso: 'batches', accion: 'create' },
+      { recurso: 'batches', accion: 'update' },
+      { recurso: 'batches', accion: 'delete' },
     ],
   },
   {
