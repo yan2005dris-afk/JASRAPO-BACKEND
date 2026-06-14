@@ -48,9 +48,12 @@ describe('UserController', () => {
 
       jest.spyOn(userService, 'createUser').mockResolvedValue(mockUser as any);
 
-      const result = await controller.create(createUserDto as any);
+      const result = await controller.create(createUserDto);
 
-      expect(userService.createUser).toHaveBeenCalledWith(createUserDto, undefined);
+      expect(userService.createUser).toHaveBeenCalledWith(
+        createUserDto,
+        undefined,
+      );
       expect(result).toEqual(mockUser);
     });
   });
@@ -117,7 +120,7 @@ describe('UserController', () => {
         .spyOn(userService, 'updateUser')
         .mockResolvedValue(mockUpdatedUser as any);
 
-      const result = await controller.updateUser(userId, updateUserDto as any);
+      const result = await controller.updateUser(userId, updateUserDto);
 
       expect(userService.updateUser).toHaveBeenCalledWith(
         userId,
@@ -133,7 +136,9 @@ describe('UserController', () => {
       const userId = 1;
       const mockResult = { deleted: true };
 
-      jest.spyOn(userService, 'softDeleteUser').mockResolvedValue(mockResult as any);
+      jest
+        .spyOn(userService, 'softDeleteUser')
+        .mockResolvedValue(mockResult as any);
 
       const result = await controller.remove(userId);
 

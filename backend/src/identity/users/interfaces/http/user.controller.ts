@@ -119,7 +119,11 @@ export class UserController {
     @UploadedFile() file?: Express.Multer.File,
   ): Promise<UserDetailEntity> {
     // Un usuario no debería poder cambiarse su propio rol o permisos directos por seguridad
-    const { rolId, directPermissions, ...selfData } = updateDto;
+    const {
+      rolId: _rolId,
+      directPermissions: _directPermissions,
+      ...selfData
+    } = updateDto;
 
     const result = await this.userService.updateUser(userId, selfData, file);
     if (!result) throw new NotFoundException('Usuario no encontrado');
@@ -276,7 +280,7 @@ export class UserController {
         updateUserDto.directPermissions = JSON.parse(
           updateUserDto.directPermissions,
         );
-      } catch (e) {
+      } catch {
         throw new BadRequestException(
           'directPermissions debe ser un JSON válido',
         );
