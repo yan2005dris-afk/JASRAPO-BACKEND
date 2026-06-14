@@ -9,9 +9,7 @@ export class GenerateBatchUseCase {
   constructor(private readonly batchRepository: BatchRepository) {}
 
   async execute(dto: GenerateBatchDto) {
-    this.logger.log(
-      `Starting batch generation for period ${dto.periodoId}`,
-    );
+    this.logger.log(`Starting batch generation for period ${dto.periodoId}`);
 
     const loteId = await this.batchRepository.generate(
       dto.periodoId,

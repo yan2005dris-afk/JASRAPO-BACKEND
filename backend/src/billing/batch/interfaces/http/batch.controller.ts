@@ -33,8 +33,7 @@ export class BatchController {
   @Get('status')
   @ApiOperation({
     summary: 'Batch status catalog',
-    description:
-      'Returns the list of available statuses for billing batches',
+    description: 'Returns the list of available statuses for billing batches',
   })
   @RequiredPermission('batches', 'read')
   async findAllStates() {

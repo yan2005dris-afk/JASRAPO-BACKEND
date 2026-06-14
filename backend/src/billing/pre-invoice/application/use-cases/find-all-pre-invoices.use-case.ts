@@ -74,15 +74,13 @@ export class FindAllPreInvoicesUseCase {
     };
   }
 
-  private buildWhereClause(
-    filters?: {
-      loteId?: number;
-      periodoId?: number;
-      estado?: string;
-      contratoId?: string;
-      identificacion?: string;
-    },
-  ): Record<string, any> {
+  private buildWhereClause(filters?: {
+    loteId?: number;
+    periodoId?: number;
+    estado?: string;
+    contratoId?: string;
+    identificacion?: string;
+  }): Record<string, any> {
     if (!filters) return {};
 
     const where: Record<string, any> = {};
