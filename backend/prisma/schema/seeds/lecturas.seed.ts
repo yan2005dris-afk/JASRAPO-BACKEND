@@ -1,22 +1,24 @@
 import { PrismaClient } from "src/generated/prisma/client";
 
 export async function seedLecturas(prisma: PrismaClient) {
+    // Un periodo por año (regla de negocio: un periodo anual)
     const periodos = [
-        '2025-04', '2025-05', '2025-06', '2025-07', '2025-08', '2025-09',
-        '2025-10', '2025-11', '2025-12', '2026-01', '2026-02', '2026-03'
+        { nombre: '2024', fechaInicio: '2024-01-01', fechaFin: '2024-12-31', vencimiento: '2025-01-15' },
+        { nombre: '2025', fechaInicio: '2025-01-01', fechaFin: '2025-12-31', vencimiento: '2026-01-15' },
+        { nombre: '2026', fechaInicio: '2026-01-01', fechaFin: '2026-12-31', vencimiento: '2027-01-15' },
     ];
 
     // Primero creamos los periodos si no existen para que las lecturas tengan a qué apuntar
     const periodosDb: any[] = [];
     for (const p of periodos) {
         const pDb = await prisma.periodos.upsert({
-            where: { nombre: p },
+            where: { nombre: p.nombre },
             update: {},
             create: {
-                nombre: p,
-                fechaInicio: new Date(`${p}-01`),
-                fechaFin: new Date(`${p}-28`),
-                fechaVencimiento: new Date(`${p}-30`),
+                nombre: p.nombre,
+                fechaInicio: new Date(p.fechaInicio),
+                fechaFin: new Date(p.fechaFin),
+                fechaVencimiento: new Date(p.vencimiento),
                 estado: "ABIERTO" as any,
             }
         });
