@@ -180,6 +180,7 @@
       ]
     },
     "moduleNameMapper": {
+      "^puppeteer$": "<rootDir>/__mocks__/puppeteer.ts",
       "^src/(.*)$": "<rootDir>/$1",
       "^(\\..*)\\.js$": "$1"
     },

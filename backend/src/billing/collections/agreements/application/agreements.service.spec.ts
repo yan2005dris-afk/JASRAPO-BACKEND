@@ -1,3 +1,5 @@
+jest.mock('puppeteer', () => ({}));
+
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
@@ -6,6 +8,8 @@ import { CreateAgreementUseCase } from './use-cases/create-agreement.use-case';
 import { FindOneAgreementUseCase } from './use-cases/find-one-agreement.use-case';
 import { GetDebtSummaryUseCase } from './use-cases/get-debt-summary.use-case';
 import { UpdateAgreementUseCase } from './use-cases/update-agreement.use-case';
+import { GetPaymentAgreementPdfDataUseCase } from './use-cases/get-payment-agreement-pdf-data.use-case';
+import { GeneratePdfUseCase } from 'src/infrastructure/pdf/use-cases/generate-pdf.use-case';
 import { AgreementsService } from './agreements.service';
 
 jest.mock('src/infrastructure/common/utils/pagination.util');
@@ -27,6 +31,8 @@ describe('AgreementsService', () => {
   const mockFindOneUseCase = { execute: jest.fn() };
   const mockGetDebtSummaryUseCase = { execute: jest.fn() };
   const mockUpdateUseCase = { execute: jest.fn() };
+  const mockGetPaymentAgreementPdfData = { execute: jest.fn() };
+  const mockGeneratePdf = { execute: jest.fn() };
 
   const convenioRecord = {
     convenioId: 1n,
@@ -70,6 +76,8 @@ describe('AgreementsService', () => {
         { provide: FindOneAgreementUseCase, useValue: mockFindOneUseCase },
         { provide: GetDebtSummaryUseCase, useValue: mockGetDebtSummaryUseCase },
         { provide: UpdateAgreementUseCase, useValue: mockUpdateUseCase },
+        { provide: GetPaymentAgreementPdfDataUseCase, useValue: mockGetPaymentAgreementPdfData },
+        { provide: GeneratePdfUseCase, useValue: mockGeneratePdf },
       ],
     }).compile();
 
