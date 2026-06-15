@@ -22,7 +22,9 @@ describe('GeneratePreInvoicePdfUseCase', () => {
       ],
     }).compile();
 
-    useCase = module.get<GeneratePreInvoicePdfUseCase>(GeneratePreInvoicePdfUseCase);
+    useCase = module.get<GeneratePreInvoicePdfUseCase>(
+      GeneratePreInvoicePdfUseCase,
+    );
   });
 
   afterEach(() => jest.clearAllMocks());
@@ -63,7 +65,9 @@ describe('GeneratePreInvoicePdfUseCase', () => {
   });
 
   it('should propagate NotFoundException from findOne', async () => {
-    mockFindOne.execute.mockRejectedValue(new NotFoundException('Pre-invoice 99 not found'));
+    mockFindOne.execute.mockRejectedValue(
+      new NotFoundException('Pre-invoice 99 not found'),
+    );
 
     await expect(useCase.execute(99)).rejects.toThrow(NotFoundException);
   });

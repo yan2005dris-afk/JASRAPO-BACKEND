@@ -83,9 +83,7 @@ export class GetConnectionRequestPdfDataUseCase {
           direccionSuministro: contrato.direccionSuministro,
           fechaInicio: contrato.fechaInicio.toISOString(),
           comunidad: { nombre: contrato.comunidad?.nombre ?? '' },
-          sector: contrato.sector
-            ? { nombre: contrato.sector.nombre }
-            : null,
+          sector: contrato.sector ? { nombre: contrato.sector.nombre } : null,
         },
         tarifa: {
           nombre: tipoNombre,

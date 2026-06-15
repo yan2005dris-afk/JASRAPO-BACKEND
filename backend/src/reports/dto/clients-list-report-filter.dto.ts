@@ -3,19 +3,25 @@ import { IsOptional, IsString, IsBoolean } from 'class-validator';
 import { Transform } from 'class-transformer';
 
 export class ClientsListReportFilterDto {
-  @ApiPropertyOptional({ description: 'Filtrar por identificación (búsqueda parcial)' })
+  @ApiPropertyOptional({
+    description: 'Filtrar por identificación (búsqueda parcial)',
+  })
   @IsOptional()
   @IsString()
   @Transform(({ value }) => (value === '' ? undefined : value))
   identificacion?: string;
 
-  @ApiPropertyOptional({ description: 'Filtrar por nombres (búsqueda parcial)' })
+  @ApiPropertyOptional({
+    description: 'Filtrar por nombres (búsqueda parcial)',
+  })
   @IsOptional()
   @IsString()
   @Transform(({ value }) => (value === '' ? undefined : value))
   nombres?: string;
 
-  @ApiPropertyOptional({ description: 'Filtrar por apellidos (búsqueda parcial)' })
+  @ApiPropertyOptional({
+    description: 'Filtrar por apellidos (búsqueda parcial)',
+  })
   @IsOptional()
   @IsString()
   @Transform(({ value }) => (value === '' ? undefined : value))
@@ -27,7 +33,9 @@ export class ClientsListReportFilterDto {
   @Transform(({ value }) => (value === '' ? undefined : value))
   nombreCompleto?: string;
 
-  @ApiPropertyOptional({ description: 'Filtrar solo activos (true) o inactivos (false)' })
+  @ApiPropertyOptional({
+    description: 'Filtrar solo activos (true) o inactivos (false)',
+  })
   @IsOptional()
   @IsBoolean()
   @Transform(({ value }) => {

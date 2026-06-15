@@ -5,7 +5,9 @@ import { GetResponsibilityAgreementPdfDataUseCase } from './get-responsibility-a
 import { ContractRepository } from '../../domain/repositories/contract.repository';
 import { ContractEntity } from '../../domain/entities/contract.entity';
 
-const makeContrato = (overrides: Partial<ContractEntity> = {}): ContractEntity =>
+const makeContrato = (
+  overrides: Partial<ContractEntity> = {},
+): ContractEntity =>
   new ContractEntity({
     contratoId: BigInt(1),
     clienteId: BigInt(10),
@@ -66,20 +68,26 @@ describe('GetResponsibilityAgreementPdfDataUseCase', () => {
   describe('execute', () => {
     it('should throw NotFoundException when contract not found', async () => {
       mockContractRepository.findUnique.mockResolvedValue(null);
-      await expect(useCase.execute(BigInt(1))).rejects.toThrow(NotFoundException);
+      await expect(useCase.execute(BigInt(1))).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw NotFoundException when contract is deleted', async () => {
       mockContractRepository.findUnique.mockResolvedValue(
         makeContrato({ deletedAt: new Date() }),
       );
-      await expect(useCase.execute(BigInt(1))).rejects.toThrow(NotFoundException);
+      await expect(useCase.execute(BigInt(1))).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should call repository with correct contratoId', async () => {
       mockContractRepository.findUnique.mockResolvedValue(makeContrato());
       await useCase.execute(BigInt(1));
-      expect(mockContractRepository.findUnique).toHaveBeenCalledWith({ contratoId: BigInt(1) });
+      expect(mockContractRepository.findUnique).toHaveBeenCalledWith({
+        contratoId: BigInt(1),
+      });
     });
 
     it('should return correct acta structure', async () => {

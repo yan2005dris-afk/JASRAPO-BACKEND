@@ -45,6 +45,8 @@ export class ContratoMedidorModule implements OnModuleInit {
 
   onModuleInit() {
     this.pdfService.registerDocumentType(ConnectionRequestPdfDocumentType);
-    this.pdfService.registerDocumentType(ResponsibilityAgreementPdfDocumentType);
+    this.pdfService.registerDocumentType(
+      ResponsibilityAgreementPdfDocumentType,
+    );
   }
 }

@@ -189,7 +189,10 @@ export class ContratoMedidorController {
   @RequiredPermission('contracts', 'read')
   @Get(':id/pdf/connection-request')
   async connectionRequestPdf(@Param('id') id: string, @Res() res: Response) {
-    const buffer = await this.contratoMedidorService.generateConnectionRequestPdf(BigInt(id));
+    const buffer =
+      await this.contratoMedidorService.generateConnectionRequestPdf(
+        BigInt(id),
+      );
     res.set({
       'Content-Type': 'application/pdf',
       'Content-Disposition': `inline; filename="solicitud-conexion-${id}.pdf"`,
@@ -217,7 +220,10 @@ export class ContratoMedidorController {
     @Param('id') id: string,
     @Res() res: Response,
   ) {
-    const buffer = await this.contratoMedidorService.generateResponsibilityAgreementPdf(BigInt(id));
+    const buffer =
+      await this.contratoMedidorService.generateResponsibilityAgreementPdf(
+        BigInt(id),
+      );
     res.set({
       'Content-Type': 'application/pdf',
       'Content-Disposition': `inline; filename="acta-responsabilidad-${id}.pdf"`,

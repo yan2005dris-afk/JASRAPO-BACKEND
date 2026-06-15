@@ -11,15 +11,17 @@ export const ConnectionHistoryPdfDocumentType: PdfDocumentType = {
   template: 'connection-history',
 
   adaptData(raw: Record<string, unknown>): Record<string, unknown> {
-    const prefacturas = (raw['prefacturas'] as Record<string, unknown>[] ?? []);
+    const prefacturas = (raw['prefacturas'] as Record<string, unknown>[]) ?? [];
 
     // Extract header from first prefactura's contrato
     const first = prefacturas[0] as Record<string, unknown> | undefined;
     const contrato = first?.['contrato'] as Record<string, unknown> | undefined;
-    const cliente = contrato?.['cliente'] as Record<string, unknown> | undefined;
-    const medidorSerie =
-      (contrato?.['historialMedidores'] as Record<string, unknown>[] | undefined)?.[0]
-        ?.['medidor'] as Record<string, unknown> | undefined;
+    const cliente = contrato?.['cliente'] as
+      | Record<string, unknown>
+      | undefined;
+    const medidorSerie = (
+      contrato?.['historialMedidores'] as Record<string, unknown>[] | undefined
+    )?.[0]?.['medidor'] as Record<string, unknown> | undefined;
 
     const filas = prefacturas.map((pf) => {
       const periodo = pf['periodoRel'] as Record<string, unknown> | undefined;
@@ -31,7 +33,15 @@ export const ConnectionHistoryPdfDocumentType: PdfDocumentType = {
       const abonos = Number(pf['abono'] ?? 0).toFixed(2);
       const saldo = Number(pf['saldoActual'] ?? 0).toFixed(2);
 
-      return { emision, lectActual, lectAnterior, consumo, valEmision, abonos, saldo };
+      return {
+        emision,
+        lectActual,
+        lectAnterior,
+        consumo,
+        valEmision,
+        abonos,
+        saldo,
+      };
     });
 
     // Totals
@@ -43,7 +53,9 @@ export const ConnectionHistoryPdfDocumentType: PdfDocumentType = {
       .toFixed(2);
     const saldoFinal =
       prefacturas.length > 0
-        ? Number(prefacturas[prefacturas.length - 1]['saldoActual'] ?? 0).toFixed(2)
+        ? Number(
+            prefacturas[prefacturas.length - 1]['saldoActual'] ?? 0,
+          ).toFixed(2)
         : '0.00';
 
     return {
@@ -56,7 +68,7 @@ export const ConnectionHistoryPdfDocumentType: PdfDocumentType = {
           'Todos los periodos',
         ),
         cuenta: raw['contratoId'] ?? '—',
-        clienteNombre: cliente ? resolveClientName(cliente as any) : '—',
+        clienteNombre: cliente ? resolveClientName(cliente) : '—',
         medidor: (medidorSerie?.['serie'] as string) ?? '—',
         filas,
         totalValEmision,

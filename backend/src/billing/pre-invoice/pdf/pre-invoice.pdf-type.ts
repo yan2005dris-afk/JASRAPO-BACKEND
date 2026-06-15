@@ -15,7 +15,8 @@ export const PreInvoicePdfDocumentType: PdfDocumentType = {
       prefactura: {
         prefacturaId: raw.prefacturaId,
         clienteNombre: raw.cliente?.clienteNombre ?? raw.clienteNombre,
-        clienteIdentificacion: raw.cliente?.clienteIdentificacion ?? raw.clienteIdentificacion,
+        clienteIdentificacion:
+          raw.cliente?.clienteIdentificacion ?? raw.clienteIdentificacion,
         clienteDireccion: raw.cliente?.clienteDireccion ?? raw.clienteDireccion,
         clienteEmail: raw.cliente?.clienteEmail ?? raw.clienteEmail,
         subtotal: raw.subtotal,
@@ -30,16 +31,19 @@ export const PreInvoicePdfDocumentType: PdfDocumentType = {
         },
         periodo: {
           nombre: raw.periodo?.nombre ?? raw.periodoNombre ?? '',
-          fechaVencimiento: raw.periodo?.fechaVencimiento ?? raw.fechaVencimiento ?? '',
+          fechaVencimiento:
+            raw.periodo?.fechaVencimiento ?? raw.fechaVencimiento ?? '',
         },
-        detalles: (raw.detalles ?? raw.prefacturaDetalle ?? []).map((d: any) => ({
-          descripcion: d.descripcion,
-          cantidad: d.cantidad,
-          precioUnitario: d.precioUnitario,
-          subtotal: d.subtotal,
-          iva: d.iva,
-          total: d.total,
-        })),
+        detalles: (raw.detalles ?? raw.prefacturaDetalle ?? []).map(
+          (d: any) => ({
+            descripcion: d.descripcion,
+            cantidad: d.cantidad,
+            precioUnitario: d.precioUnitario,
+            subtotal: d.subtotal,
+            iva: d.iva,
+            total: d.total,
+          }),
+        ),
       },
     };
   },

@@ -25,7 +25,9 @@ describe('pdf-format.utils', () => {
     });
 
     it('should handle December correctly', () => {
-      expect(formatMonthYear('2023-12-01T00:00:00.000Z')).toBe('diciembre de 2023');
+      expect(formatMonthYear('2023-12-01T00:00:00.000Z')).toBe(
+        'diciembre de 2023',
+      );
     });
   });
 
@@ -44,18 +46,33 @@ describe('pdf-format.utils', () => {
 
   describe('resolveClientName', () => {
     it('should return razonSocial when present', () => {
-      expect(resolveClientName({ razonSocial: 'Empresa ABC', nombres: 'Juan', apellidos: 'Pérez' }))
-        .toBe('Empresa ABC');
+      expect(
+        resolveClientName({
+          razonSocial: 'Empresa ABC',
+          nombres: 'Juan',
+          apellidos: 'Pérez',
+        }),
+      ).toBe('Empresa ABC');
     });
 
     it('should concatenate nombres and apellidos when razonSocial is null', () => {
-      expect(resolveClientName({ razonSocial: null, nombres: 'Juan', apellidos: 'Pérez' }))
-        .toBe('Juan Pérez');
+      expect(
+        resolveClientName({
+          razonSocial: null,
+          nombres: 'Juan',
+          apellidos: 'Pérez',
+        }),
+      ).toBe('Juan Pérez');
     });
 
     it('should trim result when one field is missing', () => {
-      expect(resolveClientName({ razonSocial: null, nombres: 'Juan', apellidos: undefined }))
-        .toBe('Juan');
+      expect(
+        resolveClientName({
+          razonSocial: null,
+          nombres: 'Juan',
+          apellidos: undefined,
+        }),
+      ).toBe('Juan');
     });
 
     it('should return empty string when all fields are missing', () => {
@@ -69,7 +86,9 @@ describe('pdf-format.utils', () => {
     });
 
     it('should use custom fallback', () => {
-      expect(buildRangoFechas(null, null, 'Todos los periodos')).toBe('Todos los periodos');
+      expect(buildRangoFechas(null, null, 'Todos los periodos')).toBe(
+        'Todos los periodos',
+      );
     });
 
     it('should return "Del X al Y" when both dates are present', () => {
@@ -124,7 +143,9 @@ describe('pdf-format.utils', () => {
   describe('formatDateInWords', () => {
     it('should return date in written Spanish', () => {
       const result = formatDateInWords('2024-01-15T00:00:00.000Z');
-      expect(result).toBe('quince días del mes de enero del dos mil veinticuatro');
+      expect(result).toBe(
+        'quince días del mes de enero del dos mil veinticuatro',
+      );
     });
 
     it('should handle first day of month', () => {

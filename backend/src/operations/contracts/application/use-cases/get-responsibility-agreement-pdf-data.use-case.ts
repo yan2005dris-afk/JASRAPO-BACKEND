@@ -20,7 +20,9 @@ export interface ResponsibilityAgreementPdfRawData {
 export class GetResponsibilityAgreementPdfDataUseCase {
   constructor(private readonly contractRepository: ContractRepository) {}
 
-  async execute(contratoId: bigint): Promise<ResponsibilityAgreementPdfRawData> {
+  async execute(
+    contratoId: bigint,
+  ): Promise<ResponsibilityAgreementPdfRawData> {
     const contrato = await this.contractRepository.findUnique({
       contratoId,
     });

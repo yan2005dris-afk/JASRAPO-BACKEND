@@ -10,8 +10,11 @@ export class GeneratePdfUseCase {
   async execute(type: string, raw: Record<string, unknown>): Promise<Buffer> {
     const docType = this.pdfService.getDocumentType(type);
     if (!docType) {
-      const available = this.pdfService.getAvailableTypes().join(', ') || 'none';
-      throw new NotFoundException(`PDF type '${type}' not registered. Available: ${available}`);
+      const available =
+        this.pdfService.getAvailableTypes().join(', ') || 'none';
+      throw new NotFoundException(
+        `PDF type '${type}' not registered. Available: ${available}`,
+      );
     }
 
     this.logger.log(`Generating PDF: type=${type}`);

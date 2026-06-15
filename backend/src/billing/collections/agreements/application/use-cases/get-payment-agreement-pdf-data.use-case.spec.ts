@@ -46,7 +46,9 @@ describe('GetPaymentAgreementPdfDataUseCase', () => {
       ],
     }).compile();
 
-    useCase = module.get<GetPaymentAgreementPdfDataUseCase>(GetPaymentAgreementPdfDataUseCase);
+    useCase = module.get<GetPaymentAgreementPdfDataUseCase>(
+      GetPaymentAgreementPdfDataUseCase,
+    );
   });
 
   afterEach(() => jest.clearAllMocks());
@@ -58,11 +60,15 @@ describe('GetPaymentAgreementPdfDataUseCase', () => {
   describe('execute', () => {
     it('should throw NotFoundException when convenio not found', async () => {
       mockAgreementRepository.findFirstConvenio.mockResolvedValue(null);
-      await expect(useCase.execute(BigInt(1))).rejects.toThrow(NotFoundException);
+      await expect(useCase.execute(BigInt(1))).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should call repository with correct where clause', async () => {
-      mockAgreementRepository.findFirstConvenio.mockResolvedValue(makeConvenio());
+      mockAgreementRepository.findFirstConvenio.mockResolvedValue(
+        makeConvenio(),
+      );
       await useCase.execute(BigInt(1));
       expect(mockAgreementRepository.findFirstConvenio).toHaveBeenCalledWith(
         { convenioId: BigInt(1), deletedAt: null },
@@ -71,7 +77,9 @@ describe('GetPaymentAgreementPdfDataUseCase', () => {
     });
 
     it('should return correctly mapped convenio data', async () => {
-      mockAgreementRepository.findFirstConvenio.mockResolvedValue(makeConvenio());
+      mockAgreementRepository.findFirstConvenio.mockResolvedValue(
+        makeConvenio(),
+      );
       const result = await useCase.execute(BigInt(1));
 
       expect(result.convenio.convenioId).toBe('1');
@@ -92,14 +100,22 @@ describe('GetPaymentAgreementPdfDataUseCase', () => {
     });
 
     it('should return ISO string for fechaPrimerPago and createdAt', async () => {
-      mockAgreementRepository.findFirstConvenio.mockResolvedValue(makeConvenio());
+      mockAgreementRepository.findFirstConvenio.mockResolvedValue(
+        makeConvenio(),
+      );
       const result = await useCase.execute(BigInt(1));
-      expect(result.convenio.fechaPrimerPago).toBe(new Date('2024-02-01').toISOString());
-      expect(result.convenio.createdAt).toBe(new Date('2024-01-15').toISOString());
+      expect(result.convenio.fechaPrimerPago).toBe(
+        new Date('2024-02-01').toISOString(),
+      );
+      expect(result.convenio.createdAt).toBe(
+        new Date('2024-01-15').toISOString(),
+      );
     });
 
     it('should map cliente and contrato fields', async () => {
-      mockAgreementRepository.findFirstConvenio.mockResolvedValue(makeConvenio());
+      mockAgreementRepository.findFirstConvenio.mockResolvedValue(
+        makeConvenio(),
+      );
       const result = await useCase.execute(BigInt(1));
 
       expect(result.convenio.cliente.nombres).toBe('María');
@@ -107,7 +123,9 @@ describe('GetPaymentAgreementPdfDataUseCase', () => {
       expect(result.convenio.cliente.identificacion).toBe('0912345678');
       expect(result.convenio.cliente.razonSocial).toBeNull();
       expect(result.convenio.contrato.numeroGuia).toBe('NG-001');
-      expect(result.convenio.contrato.direccionSuministro).toBe('Av. Principal 123');
+      expect(result.convenio.contrato.direccionSuministro).toBe(
+        'Av. Principal 123',
+      );
     });
   });
 });

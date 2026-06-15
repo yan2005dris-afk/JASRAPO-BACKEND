@@ -7,15 +7,20 @@ export const ClientsListPdfDocumentType: PdfDocumentType = {
   template: 'clients-list',
 
   adaptData(raw: Record<string, unknown>): Record<string, unknown> {
-    const clientes = (raw['clientes'] as Record<string, unknown>[] ?? []).map((c) => ({
-      identificacion: c['identificacion'] ?? '',
-      nombre: resolveClientName(c as any),
-      email: c['email'] ?? '—',
-      telefono: c['telefono'] ?? '—',
-      direccion: c['direccionDomicilio'] ?? '—',
-      activo: c['activo'] ? 'Activo' : 'Inactivo',
-      tipoId: (c['tipoIdentificacion'] as Record<string, unknown> | null)?.['descripcion'] ?? '—',
-    }));
+    const clientes = ((raw['clientes'] as Record<string, unknown>[]) ?? []).map(
+      (c) => ({
+        identificacion: c['identificacion'] ?? '',
+        nombre: resolveClientName(c as any),
+        email: c['email'] ?? '—',
+        telefono: c['telefono'] ?? '—',
+        direccion: c['direccionDomicilio'] ?? '—',
+        activo: c['activo'] ? 'Activo' : 'Inactivo',
+        tipoId:
+          (c['tipoIdentificacion'] as Record<string, unknown> | null)?.[
+            'descripcion'
+          ] ?? '—',
+      }),
+    );
 
     return {
       reporte: {

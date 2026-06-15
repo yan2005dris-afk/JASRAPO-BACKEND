@@ -9,7 +9,9 @@ export class PaymentsReportSpec implements ReportSpec<PaymentsReportFilterDto> {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  async fetchData(filters: PaymentsReportFilterDto): Promise<Record<string, unknown>> {
+  async fetchData(
+    filters: PaymentsReportFilterDto,
+  ): Promise<Record<string, unknown>> {
     const pagos = await this.prisma.pagos.findMany({
       where: {
         deletedAt: null,
@@ -17,8 +19,12 @@ export class PaymentsReportSpec implements ReportSpec<PaymentsReportFilterDto> {
         ...(filters.fechaDesde || filters.fechaHasta
           ? {
               fechaPago: {
-                ...(filters.fechaDesde ? { gte: new Date(filters.fechaDesde) } : {}),
-                ...(filters.fechaHasta ? { lte: new Date(filters.fechaHasta) } : {}),
+                ...(filters.fechaDesde
+                  ? { gte: new Date(filters.fechaDesde) }
+                  : {}),
+                ...(filters.fechaHasta
+                  ? { lte: new Date(filters.fechaHasta) }
+                  : {}),
               },
             }
           : {}),
@@ -66,7 +72,9 @@ export class PaymentsReportSpec implements ReportSpec<PaymentsReportFilterDto> {
 
     for (const pago of pagos) {
       const clienteNombre =
-        [pago.cliente?.nombres, pago.cliente?.apellidos].filter(Boolean).join(' ') ||
+        [pago.cliente?.nombres, pago.cliente?.apellidos]
+          .filter(Boolean)
+          .join(' ') ||
         pago.cliente?.razonSocial ||
         '—';
 
@@ -105,7 +113,10 @@ export class PaymentsReportSpec implements ReportSpec<PaymentsReportFilterDto> {
       }
     }
 
-    const totalGeneral = rows.reduce((sum, r) => sum + (r['valorNum'] as number), 0);
+    const totalGeneral = rows.reduce(
+      (sum, r) => sum + (r['valorNum'] as number),
+      0,
+    );
 
     return {
       pagos: rows,

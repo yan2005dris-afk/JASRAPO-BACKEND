@@ -29,7 +29,9 @@ export const ConnectionRequestPdfDocumentType: PdfDocumentType = {
           direccionSuministro: solicitud.contrato?.direccionSuministro ?? '',
           fechaInicio: solicitud.contrato?.fechaInicio ?? '',
           comunidad: { nombre: solicitud.contrato?.comunidad?.nombre ?? '' },
-          sector: solicitud.contrato?.sector ? { nombre: solicitud.contrato.sector.nombre } : null,
+          sector: solicitud.contrato?.sector
+            ? { nombre: solicitud.contrato.sector.nombre }
+            : null,
         },
         tarifa: {
           nombre: solicitud.tarifa?.nombre ?? '',
@@ -39,9 +41,13 @@ export const ConnectionRequestPdfDocumentType: PdfDocumentType = {
           valorExcedenteM3: solicitud.tarifa?.valorExcedenteM3 ?? 0,
         },
         costos: {
-          derechoInspeccion: (solicitud.costos?.derechoInspeccion ?? 3).toFixed(2),
+          derechoInspeccion: (solicitud.costos?.derechoInspeccion ?? 3).toFixed(
+            2,
+          ),
           costoGuia: (solicitud.costos?.costoGuia ?? 0).toFixed(2),
-          materialesExtras: (solicitud.costos?.materialesExtras ?? 0).toFixed(2),
+          materialesExtras: (solicitud.costos?.materialesExtras ?? 0).toFixed(
+            2,
+          ),
           iva: (solicitud.costos?.iva ?? 0).toFixed(2),
           total: (solicitud.costos?.total ?? 0).toFixed(2),
         },

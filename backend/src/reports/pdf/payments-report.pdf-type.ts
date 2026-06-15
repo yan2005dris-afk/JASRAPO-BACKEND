@@ -1,5 +1,8 @@
 import type { PdfDocumentType } from 'src/infrastructure/pdf/document-type.interface';
-import { buildRangoFechas, currentDateLabel } from 'src/infrastructure/pdf/utils/pdf-format.utils';
+import {
+  buildRangoFechas,
+  currentDateLabel,
+} from 'src/infrastructure/pdf/utils/pdf-format.utils';
 
 export const PaymentsReportPdfDocumentType: PdfDocumentType = {
   type: 'payments-report',
@@ -7,10 +10,13 @@ export const PaymentsReportPdfDocumentType: PdfDocumentType = {
   template: 'payments-report',
 
   adaptData(raw: Record<string, unknown>): Record<string, unknown> {
-    const rows = (raw['pagos'] as Record<string, unknown>[] ?? []);
+    const rows = (raw['pagos'] as Record<string, unknown>[]) ?? [];
 
     // Group rows by factura to build subtotal rows
-    const facturaMap = new Map<string, { rows: Record<string, unknown>[]; subtotal: number }>();
+    const facturaMap = new Map<
+      string,
+      { rows: Record<string, unknown>[]; subtotal: number }
+    >();
     for (const row of rows) {
       const key = row['factura'] as string;
       if (!facturaMap.has(key)) {

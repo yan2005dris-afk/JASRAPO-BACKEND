@@ -41,9 +41,7 @@ import { PaginationMetaDto } from 'src/infrastructure/common/dtos/pagination-met
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('agreements')
 export class AgreementsController {
-  constructor(
-    private readonly agreementsService: AgreementsService,
-  ) {}
+  constructor(private readonly agreementsService: AgreementsService) {}
 
   /**
    * GET /agreements/states

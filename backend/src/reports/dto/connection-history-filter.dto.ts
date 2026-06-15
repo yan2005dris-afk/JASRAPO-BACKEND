@@ -9,7 +9,9 @@ export class ConnectionHistoryFilterDto {
   @Type(() => String)
   contratoId: string;
 
-  @ApiPropertyOptional({ description: 'Fecha inicio del rango (ISO date string)' })
+  @ApiPropertyOptional({
+    description: 'Fecha inicio del rango (ISO date string)',
+  })
   @IsOptional()
   @IsString()
   @Transform(({ value }) => (value === '' ? undefined : value))

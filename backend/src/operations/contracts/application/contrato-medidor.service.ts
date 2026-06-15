@@ -55,12 +55,16 @@ export class ContratoMedidorService {
   // ── PDF ──────────────────────────────────────────────────────────────────
 
   async generateConnectionRequestPdf(contratoId: bigint): Promise<Buffer> {
-    const raw = await this.getConnectionRequestPdfDataUseCase.execute(contratoId);
+    const raw =
+      await this.getConnectionRequestPdfDataUseCase.execute(contratoId);
     return this.generatePdf.execute('connection-request', raw as any);
   }
 
-  async generateResponsibilityAgreementPdf(contratoId: bigint): Promise<Buffer> {
-    const raw = await this.getResponsibilityAgreementPdfDataUseCase.execute(contratoId);
+  async generateResponsibilityAgreementPdf(
+    contratoId: bigint,
+  ): Promise<Buffer> {
+    const raw =
+      await this.getResponsibilityAgreementPdfDataUseCase.execute(contratoId);
     return this.generatePdf.execute('responsibility-agreement', raw as any);
   }
 }

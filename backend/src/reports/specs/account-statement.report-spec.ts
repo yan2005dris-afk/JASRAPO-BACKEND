@@ -9,7 +9,9 @@ export class AccountStatementReportSpec implements ReportSpec<AccountStatementFi
 
   constructor(private readonly prisma: PrismaService) {}
 
-  async fetchData(filters: AccountStatementFilterDto): Promise<Record<string, unknown>> {
+  async fetchData(
+    filters: AccountStatementFilterDto,
+  ): Promise<Record<string, unknown>> {
     const contratoId = BigInt(filters.contratoId);
 
     // 1. Contract info (for header — cliente, sector, tarifa, medidor)

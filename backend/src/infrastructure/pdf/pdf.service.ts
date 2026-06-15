@@ -12,7 +12,9 @@ import puppeteer, { type Browser } from 'puppeteer';
 import type { PdfDocumentType } from './document-type.interface';
 
 @Injectable()
-export class PdfService implements OnApplicationBootstrap, OnApplicationShutdown {
+export class PdfService
+  implements OnApplicationBootstrap, OnApplicationShutdown
+{
   private readonly logger = new Logger(PdfService.name);
   private readonly templatesDir: string;
   private readonly documentTypes = new Map<string, PdfDocumentType>();
@@ -26,11 +28,16 @@ export class PdfService implements OnApplicationBootstrap, OnApplicationShutdown
   private registerHandlebarsHelpers(): void {
     Handlebars.registerHelper('math', (a: number, op: string, b: number) => {
       switch (op) {
-        case '+': return a + b;
-        case '-': return a - b;
-        case '*': return a * b;
-        case '/': return a / b;
-        default: return a;
+        case '+':
+          return a + b;
+        case '-':
+          return a - b;
+        case '*':
+          return a * b;
+        case '/':
+          return a / b;
+        default:
+          return a;
       }
     });
     Handlebars.registerHelper('eq', (a: unknown, b: unknown) => a === b);
@@ -41,7 +48,11 @@ export class PdfService implements OnApplicationBootstrap, OnApplicationShutdown
       this.browser = await puppeteer.launch({
         headless: true,
         executablePath: process.env['PUPPETEER_EXECUTABLE_PATH'],
-        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+        ],
       });
     }
     return this.browser;
@@ -63,13 +74,18 @@ export class PdfService implements OnApplicationBootstrap, OnApplicationShutdown
 
   registerDocumentType(docType: PdfDocumentType): void {
     if (this.documentTypes.has(docType.type)) {
-      this.logger.warn(`Document type '${docType.type}' already registered, overriding.`);
+      this.logger.warn(
+        `Document type '${docType.type}' already registered, overriding.`,
+      );
     }
     this.documentTypes.set(docType.type, docType);
     this.logger.log(`Registered PDF type: ${docType.type}`);
   }
 
-  async render(templateName: string, data: Record<string, unknown>): Promise<Buffer> {
+  async render(
+    templateName: string,
+    data: Record<string, unknown>,
+  ): Promise<Buffer> {
     const templateFile = path.join(this.templatesDir, `${templateName}.hbs`);
     if (!fs.existsSync(templateFile)) {
       throw new NotFoundException(`Template not found: ${templateName}.hbs`);
@@ -78,7 +94,10 @@ export class PdfService implements OnApplicationBootstrap, OnApplicationShutdown
     return this.htmlToPdf(html);
   }
 
-  private renderTemplate(templateFile: string, data: Record<string, unknown>): string {
+  private renderTemplate(
+    templateFile: string,
+    data: Record<string, unknown>,
+  ): string {
     const source = fs.readFileSync(templateFile, 'utf8');
     const template = Handlebars.compile(source);
     return template(data);

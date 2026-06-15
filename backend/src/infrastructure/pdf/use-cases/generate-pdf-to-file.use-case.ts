@@ -8,7 +8,11 @@ import { GeneratePdfUseCase } from './generate-pdf.use-case';
 export class GeneratePdfToFileUseCase {
   constructor(private readonly generatePdf: GeneratePdfUseCase) {}
 
-  async execute(type: string, raw: Record<string, unknown>, filename: string): Promise<string> {
+  async execute(
+    type: string,
+    raw: Record<string, unknown>,
+    filename: string,
+  ): Promise<string> {
     const buffer = await this.generatePdf.execute(type, raw);
     const filePath = path.join(os.tmpdir(), `${filename}.pdf`);
     fs.writeFileSync(filePath, buffer);

@@ -5,7 +5,9 @@ import { GetConnectionRequestPdfDataUseCase } from './get-connection-request-pdf
 import { ContractRepository } from '../../domain/repositories/contract.repository';
 import { ContractEntity } from '../../domain/entities/contract.entity';
 
-const makeContrato = (overrides: Partial<ContractEntity> = {}): ContractEntity =>
+const makeContrato = (
+  overrides: Partial<ContractEntity> = {},
+): ContractEntity =>
   new ContractEntity({
     contratoId: BigInt(1),
     clienteId: BigInt(10),
@@ -62,7 +64,9 @@ describe('GetConnectionRequestPdfDataUseCase', () => {
       ],
     }).compile();
 
-    useCase = module.get<GetConnectionRequestPdfDataUseCase>(GetConnectionRequestPdfDataUseCase);
+    useCase = module.get<GetConnectionRequestPdfDataUseCase>(
+      GetConnectionRequestPdfDataUseCase,
+    );
   });
 
   afterEach(() => jest.clearAllMocks());
@@ -74,20 +78,26 @@ describe('GetConnectionRequestPdfDataUseCase', () => {
   describe('execute', () => {
     it('should throw NotFoundException when contract not found', async () => {
       mockContractRepository.findUnique.mockResolvedValue(null);
-      await expect(useCase.execute(BigInt(1))).rejects.toThrow(NotFoundException);
+      await expect(useCase.execute(BigInt(1))).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw NotFoundException when contract is deleted', async () => {
       mockContractRepository.findUnique.mockResolvedValue(
         makeContrato({ deletedAt: new Date() }),
       );
-      await expect(useCase.execute(BigInt(1))).rejects.toThrow(NotFoundException);
+      await expect(useCase.execute(BigInt(1))).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should call repository with correct contratoId', async () => {
       mockContractRepository.findUnique.mockResolvedValue(makeContrato());
       await useCase.execute(BigInt(1));
-      expect(mockContractRepository.findUnique).toHaveBeenCalledWith({ contratoId: BigInt(1) });
+      expect(mockContractRepository.findUnique).toHaveBeenCalledWith({
+        contratoId: BigInt(1),
+      });
     });
 
     it('should return correct solicitud structure', async () => {
@@ -106,7 +116,16 @@ describe('GetConnectionRequestPdfDataUseCase', () => {
 
     it('should set costoGuia=120 when tarifa nombre includes "1"', async () => {
       mockContractRepository.findUnique.mockResolvedValue(
-        makeContrato({ categoriaTarifa: { categoriaTarifaId: 1, nombre: 'Tipo 1', descripcion: null, valorBase: 4, consumoMinimoMensual: 10, valorExcedenteM3: 0.4 } }),
+        makeContrato({
+          categoriaTarifa: {
+            categoriaTarifaId: 1,
+            nombre: 'Tipo 1',
+            descripcion: null,
+            valorBase: 4,
+            consumoMinimoMensual: 10,
+            valorExcedenteM3: 0.4,
+          },
+        }),
       );
       const result = await useCase.execute(BigInt(1));
       expect(result.solicitud.costos.costoGuia).toBe(120);
@@ -115,7 +134,16 @@ describe('GetConnectionRequestPdfDataUseCase', () => {
 
     it('should set costoGuia=150 when tarifa nombre includes "2"', async () => {
       mockContractRepository.findUnique.mockResolvedValue(
-        makeContrato({ categoriaTarifa: { categoriaTarifaId: 2, nombre: 'Tipo 2', descripcion: null, valorBase: 6, consumoMinimoMensual: 15, valorExcedenteM3: 0.5 } }),
+        makeContrato({
+          categoriaTarifa: {
+            categoriaTarifaId: 2,
+            nombre: 'Tipo 2',
+            descripcion: null,
+            valorBase: 6,
+            consumoMinimoMensual: 15,
+            valorExcedenteM3: 0.5,
+          },
+        }),
       );
       const result = await useCase.execute(BigInt(1));
       expect(result.solicitud.costos.costoGuia).toBe(150);
@@ -124,7 +152,16 @@ describe('GetConnectionRequestPdfDataUseCase', () => {
 
     it('should set costoGuia=200 for unknown tarifa type', async () => {
       mockContractRepository.findUnique.mockResolvedValue(
-        makeContrato({ categoriaTarifa: { categoriaTarifaId: 3, nombre: 'Tipo 3', descripcion: null, valorBase: 8, consumoMinimoMensual: 20, valorExcedenteM3: 0.6 } }),
+        makeContrato({
+          categoriaTarifa: {
+            categoriaTarifaId: 3,
+            nombre: 'Tipo 3',
+            descripcion: null,
+            valorBase: 8,
+            consumoMinimoMensual: 20,
+            valorExcedenteM3: 0.6,
+          },
+        }),
       );
       const result = await useCase.execute(BigInt(1));
       expect(result.solicitud.costos.costoGuia).toBe(200);
@@ -133,10 +170,14 @@ describe('GetConnectionRequestPdfDataUseCase', () => {
 
     it('should include sector when present', async () => {
       mockContractRepository.findUnique.mockResolvedValue(
-        makeContrato({ sector: { sectorId: 1, codigo: 'S1', nombre: 'Sector Norte' } }),
+        makeContrato({
+          sector: { sectorId: 1, codigo: 'S1', nombre: 'Sector Norte' },
+        }),
       );
       const result = await useCase.execute(BigInt(1));
-      expect(result.solicitud.contrato.sector).toEqual({ nombre: 'Sector Norte' });
+      expect(result.solicitud.contrato.sector).toEqual({
+        nombre: 'Sector Norte',
+      });
     });
 
     it('should map tarifa values from categoriaTarifa', async () => {

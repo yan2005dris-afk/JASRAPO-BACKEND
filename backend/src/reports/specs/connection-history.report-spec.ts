@@ -9,7 +9,9 @@ export class ConnectionHistoryReportSpec implements ReportSpec<ConnectionHistory
 
   constructor(private readonly prisma: PrismaService) {}
 
-  async fetchData(filters: ConnectionHistoryFilterDto): Promise<Record<string, unknown>> {
+  async fetchData(
+    filters: ConnectionHistoryFilterDto,
+  ): Promise<Record<string, unknown>> {
     const prefacturas = await this.prisma.prefacturas.findMany({
       where: {
         contratoId: BigInt(filters.contratoId),

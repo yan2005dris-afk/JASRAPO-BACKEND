@@ -33,7 +33,10 @@ describe('PreInvoiceController', () => {
       controllers: [PreInvoiceController],
       providers: [
         { provide: PreInvoiceService, useValue: mockPreInvoiceService },
-        { provide: GeneratePreInvoicePdfUseCase, useValue: mockGeneratePreInvoicePdf },
+        {
+          provide: GeneratePreInvoicePdfUseCase,
+          useValue: mockGeneratePreInvoicePdf,
+        },
       ],
     }).compile();
 
@@ -63,7 +66,15 @@ describe('PreInvoiceController', () => {
       const paginated = { data: [], meta: {} as any };
       mockPreInvoiceService.findAll.mockResolvedValue(paginated);
 
-      const query = { page: 2, limit: 5, loteId: 10, periodoId: 3, estado: 'APROBADA', contratoId: 1, identificacion: '123' };
+      const query = {
+        page: 2,
+        limit: 5,
+        loteId: 10,
+        periodoId: 3,
+        estado: 'APROBADA',
+        contratoId: 1,
+        identificacion: '123',
+      };
       const result = await controller.findAll(query as any);
 
       expect(result).toBe(paginated);
@@ -107,9 +118,13 @@ describe('PreInvoiceController', () => {
     });
 
     it('should propagate NotFoundException from use case', async () => {
-      mockGeneratePreInvoicePdf.execute.mockRejectedValue(new NotFoundException('not found'));
+      mockGeneratePreInvoicePdf.execute.mockRejectedValue(
+        new NotFoundException('not found'),
+      );
 
-      await expect(controller.generatePdf(99, mockRes())).rejects.toThrow(NotFoundException);
+      await expect(controller.generatePdf(99, mockRes())).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 

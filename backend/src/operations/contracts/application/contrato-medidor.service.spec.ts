@@ -39,8 +39,14 @@ describe('ContratoMedidorService', () => {
           provide: FinalizeMeterLinkUseCase,
           useValue: mockFinalizeLinkUseCase,
         },
-        { provide: GetConnectionRequestPdfDataUseCase, useValue: mockGetConnectionRequestPdfData },
-        { provide: GetResponsibilityAgreementPdfDataUseCase, useValue: mockGetResponsibilityAgreementPdfData },
+        {
+          provide: GetConnectionRequestPdfDataUseCase,
+          useValue: mockGetConnectionRequestPdfData,
+        },
+        {
+          provide: GetResponsibilityAgreementPdfDataUseCase,
+          useValue: mockGetResponsibilityAgreementPdfData,
+        },
         { provide: GeneratePdfUseCase, useValue: mockGeneratePdf },
       ],
     }).compile();

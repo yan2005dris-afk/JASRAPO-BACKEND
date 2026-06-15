@@ -46,7 +46,9 @@ describe('GeneratePdfUseCase', () => {
       mockPdfService.getDocumentType.mockReturnValue(undefined);
       mockPdfService.getAvailableTypes.mockReturnValue(['other-type']);
 
-      await expect(useCase.execute('unknown-type', {})).rejects.toThrow(NotFoundException);
+      await expect(useCase.execute('unknown-type', {})).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should call adaptData with raw data', async () => {
@@ -69,7 +71,10 @@ describe('GeneratePdfUseCase', () => {
 
       await useCase.execute('test-doc', raw);
 
-      expect(mockPdfService.render).toHaveBeenCalledWith('test-template', adapted);
+      expect(mockPdfService.render).toHaveBeenCalledWith(
+        'test-template',
+        adapted,
+      );
     });
 
     it('should return the Buffer from render', async () => {

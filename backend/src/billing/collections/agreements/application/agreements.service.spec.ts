@@ -76,7 +76,10 @@ describe('AgreementsService', () => {
         { provide: FindOneAgreementUseCase, useValue: mockFindOneUseCase },
         { provide: GetDebtSummaryUseCase, useValue: mockGetDebtSummaryUseCase },
         { provide: UpdateAgreementUseCase, useValue: mockUpdateUseCase },
-        { provide: GetPaymentAgreementPdfDataUseCase, useValue: mockGetPaymentAgreementPdfData },
+        {
+          provide: GetPaymentAgreementPdfDataUseCase,
+          useValue: mockGetPaymentAgreementPdfData,
+        },
         { provide: GeneratePdfUseCase, useValue: mockGeneratePdf },
       ],
     }).compile();
