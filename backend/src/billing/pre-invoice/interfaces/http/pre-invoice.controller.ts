@@ -7,6 +7,7 @@ import {
   Body,
   UseGuards,
   ParseIntPipe,
+  Res,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -15,6 +16,7 @@ import {
   ApiParam,
   ApiExtraModels,
 } from '@nestjs/swagger';
+import type { Response } from 'express';
 import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
@@ -26,6 +28,7 @@ import { PreInvoiceResponseDto } from '../dto/pre-invoice-response.dto';
 import { PaginationMetaDto } from 'src/infrastructure/common/dtos/pagination-meta.dto';
 import { ApiPaginatedResponse } from 'src/infrastructure/common/decorators/api-paginated-response.decorator';
 import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
+import { GeneratePreInvoicePdfUseCase } from '../../application/use-cases/generate-pre-invoice-pdf.use-case';
 
 @ApiTags('pre-invoices')
 @ApiBearerAuth()
@@ -33,7 +36,10 @@ import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('pre-invoices')
 export class PreInvoiceController {
-  constructor(private readonly preInvoiceService: PreInvoiceService) {}
+  constructor(
+    private readonly preInvoiceService: PreInvoiceService,
+    private readonly generatePreInvoicePdf: GeneratePreInvoicePdfUseCase,
+  ) {}
 
   /**
    * GET /pre-invoices/estados
@@ -93,6 +99,32 @@ export class PreInvoiceController {
   @Get(':id')
   async findOne(@Param('id', ParseIntPipe) id: number) {
     return this.preInvoiceService.findOne(id);
+  }
+
+  /**
+   * GET /pre-invoices/:id/pdf
+   * Generate pre-invoice PDF
+   */
+  @ApiOperation({ summary: 'Generate pre-invoice PDF' })
+  @ApiParam({
+    name: 'id',
+    description: 'Pre-invoice ID',
+    type: Number,
+    example: 1,
+  })
+  @RequiredPermission('pre-invoices', 'read')
+  @Get(':id/pdf')
+  async generatePdf(
+    @Param('id', ParseIntPipe) id: number,
+    @Res() res: Response,
+  ) {
+    const buffer = await this.generatePreInvoicePdf.execute(id);
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `inline; filename="prefactura-${id}.pdf"`,
+      'Content-Length': buffer.length,
+    });
+    res.end(buffer);
   }
 
   /**

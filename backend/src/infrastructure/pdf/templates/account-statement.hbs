@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; font-size: 10px; color: #333; }
+    .container { width: 100%; padding: 16px; }
+
+    .header { border-bottom: 2px solid #0066cc; padding-bottom: 10px; margin-bottom: 14px; }
+    .header table { width: 100%; border-collapse: collapse; }
+    .header td { border: none; vertical-align: middle; padding: 0; }
+    .header td.right { text-align: right; }
+    .company-name { font-size: 15px; font-weight: bold; color: #0066cc; }
+    .company-sub { font-size: 9px; color: #666; }
+    .report-title { font-size: 16px; font-weight: bold; color: #0066cc; }
+    .report-meta { font-size: 9px; color: #666; margin-top: 3px; }
+
+    .account-info { border: 1px solid #c8d8f5; border-radius: 4px; margin-bottom: 12px; }
+    .account-info table { width: 100%; border-collapse: collapse; }
+    .account-info th {
+      background-color: #0066cc;
+      color: white;
+      padding: 5px 8px;
+      font-size: 9px;
+      font-weight: bold;
+      text-align: left;
+    }
+    .account-info td { padding: 4px 8px; font-size: 10px; border-bottom: 1px solid #e8e8e8; }
+    .account-info .label { color: #555; font-weight: bold; width: 130px; }
+
+    table.billing { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 8px; }
+    table.billing th {
+      background-color: #0066cc;
+      color: white;
+      padding: 4px 3px;
+      text-align: center;
+      font-size: 7.5px;
+      font-weight: bold;
+      vertical-align: middle;
+    }
+    table.billing td {
+      padding: 4px 3px;
+      border-bottom: 1px solid #e0e0e0;
+      text-align: center;
+      vertical-align: middle;
+    }
+    table.billing tr.even td { background-color: #f5f8ff; }
+    table.billing tr.subtotal-row td {
+      background-color: #e0ecff;
+      font-weight: bold;
+      font-size: 8.5px;
+      border-top: 2px solid #0066cc;
+    }
+    table.billing tr.deuda-row td {
+      background-color: #cc0000;
+      color: white;
+      font-weight: bold;
+      font-size: 11px;
+    }
+    .year-header {
+      background-color: #e8eef5;
+      font-weight: bold;
+      font-size: 9px;
+      text-align: left;
+      padding: 5px 8px;
+      border-top: 2px solid #0066cc;
+    }
+
+    .footer { margin-top: 20px; text-align: center; font-size: 9px; color: #aaa; border-top: 1px solid #ddd; padding-top: 8px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- Header -->
+    <div class="header">
+      <table>
+        <tr>
+          <td>
+            <div class="company-name">JASRAPO</div>
+            <div class="company-sub">Junta de Agua Potable y Alcantarillado</div>
+            <div class="company-sub">Olón - Santa Elena</div>
+          </td>
+          <td class="right">
+            <div class="report-title">{{reporte.titulo}}</div>
+            <div class="report-meta">Fecha de emisión: {{reporte.fechaEmision}}</div>
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- Datos de la cuenta -->
+    <div class="account-info">
+      <table>
+        <thead>
+          <tr><th colspan="4">Datos de la Cuenta</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="label">Sector:</td>
+            <td>{{reporte.sector}}</td>
+            <td class="label">Cuenta N°:</td>
+            <td>{{reporte.cuenta}}</td>
+          </tr>
+          <tr>
+            <td class="label">Medidor (serie):</td>
+            <td>{{reporte.medidor}}</td>
+            <td class="label">Tarifa:</td>
+            <td>{{reporte.tarifaTipo}}</td>
+          </tr>
+          <tr>
+            <td class="label">Cliente:</td>
+            <td>{{reporte.clienteNombre}}</td>
+            <td class="label">Identificación:</td>
+            <td>{{reporte.clienteIdentificacion}}</td>
+          </tr>
+          <tr>
+            <td class="label">Dirección:</td>
+            <td colspan="3">{{reporte.clienteDireccion}}</td>
+          </tr>
+          <tr>
+            <td class="label">Cargo Fijo:</td>
+            <td>$ {{reporte.cargoFijo}}</td>
+            <td class="label">Factor excedente:</td>
+            <td>$ {{reporte.factor}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Tabla de facturación mensual -->
+    <table class="billing">
+      <thead>
+        <tr>
+          <th>PERIODO</th>
+          <th>L. ACTUAL</th>
+          <th>L. ANTERIOR</th>
+          <th>CONSU</th>
+          <th>EXCEDE</th>
+          <th>Cargo Fijo</th>
+          <th>Excedente $</th>
+          <th>TOTAL</th>
+          <th>Int. Mora</th>
+          <th>Tasa Seg</th>
+          <th>Convnio</th>
+          <th>Total Mes</th>
+          <th>Pagos/Abonos</th>
+          <th>Saldo</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each reporte.years}}
+        <tr class="year-header">
+          <td colspan="14">AÑO {{this.nombre}}</td>
+        </tr>
+        {{#each this.meses}}
+        <tr class="{{#if @even}}even{{/if}}">
+          <td>{{this.mes}}</td>
+          <td>{{this.lectActual}}</td>
+          <td>{{this.lectAnterior}}</td>
+          <td>{{this.consu}}</td>
+          <td>{{this.excede}}</td>
+          <td>$ {{this.cargoFijo}}</td>
+          <td>$ {{this.excedenteValor}}</td>
+          <td>$ {{this.total}}</td>
+          <td>$ {{this.intMora}}</td>
+          <td>$ {{this.tasaSeg}}</td>
+          <td>$ {{this.convenio}}</td>
+          <td>$ {{this.totalMes}}</td>
+          <td>$ {{this.pagos}}</td>
+          <td>$ {{this.saldo}}</td>
+        </tr>
+        {{/each}}
+        <tr class="subtotal-row">
+          <td colspan="5" style="text-align:right; padding-right:8px;">SUBTOTAL {{this.nombre}}:</td>
+          <td colspan="6"></td>
+          <td>$ {{this.subtotalAnual}}</td>
+          <td>$ {{this.pagos}}</td>
+          <td>$ {{this.saldo}}</td>
+        </tr>
+        {{/each}}
+        <tr class="deuda-row">
+          <td colspan="13" style="text-align:right; padding-right:12px;">DEUDA TOTAL:</td>
+          <td>$ {{reporte.deudaTotal}}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Footer -->
+    <div class="footer">
+      <p>Reporte generado por el sistema JASRAPO. Documento de uso interno.</p>
+    </div>
+
+  </div>
+</body>
+</html>

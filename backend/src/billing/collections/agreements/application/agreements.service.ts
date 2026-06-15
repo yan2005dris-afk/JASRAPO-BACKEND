@@ -28,6 +28,8 @@ import { CreateAgreementUseCase } from './use-cases/create-agreement.use-case';
 import { FindOneAgreementUseCase } from './use-cases/find-one-agreement.use-case';
 import { GetDebtSummaryUseCase } from './use-cases/get-debt-summary.use-case';
 import { UpdateAgreementUseCase } from './use-cases/update-agreement.use-case';
+import { GetPaymentAgreementPdfDataUseCase } from './use-cases/get-payment-agreement-pdf-data.use-case';
+import { GeneratePdfUseCase } from 'src/infrastructure/pdf/use-cases/generate-pdf.use-case';
 
 @Injectable()
 export class AgreementsService {
@@ -37,6 +39,8 @@ export class AgreementsService {
     private readonly findOneUseCase: FindOneAgreementUseCase,
     private readonly getDebtSummaryUseCase: GetDebtSummaryUseCase,
     private readonly updateUseCase: UpdateAgreementUseCase,
+    private readonly getPdfDataUseCase: GetPaymentAgreementPdfDataUseCase,
+    private readonly generatePdfUc: GeneratePdfUseCase,
   ) {}
 
   // ── Estado catalogs ──────────────────────────────────────────────────────
@@ -127,5 +131,12 @@ export class AgreementsService {
     });
 
     return toAgreementResponse(updated);
+  }
+
+  // ── PDF ──────────────────────────────────────────────────────────────────
+
+  async generatePdf(convenioId: bigint): Promise<Buffer> {
+    const raw = await this.getPdfDataUseCase.execute(convenioId);
+    return this.generatePdfUc.execute('payment-agreement', raw as any);
   }
 }

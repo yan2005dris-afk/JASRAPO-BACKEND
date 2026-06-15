@@ -15,6 +15,8 @@ import { JobsModule } from './infrastructure/jobs/jobs.module';
 import { EncryptionModule } from './infrastructure/encryption/encryption.module';
 import { RawPgModule } from './infrastructure/database/raw-pg/raw-pg.module';
 import { AuditModule } from './infrastructure/audit/audit.module';
+import { PdfModule } from './infrastructure/pdf/pdf.module';
+import { ReportsModule } from './reports/reports.module';
 
 @Module({
   imports: [
@@ -56,6 +58,8 @@ import { AuditModule } from './infrastructure/audit/audit.module';
     StorageModule,
     SriIntegrationModule,
     MailModule,
+    PdfModule,
+    ReportsModule,
   ],
   controllers: [],
   providers: [],

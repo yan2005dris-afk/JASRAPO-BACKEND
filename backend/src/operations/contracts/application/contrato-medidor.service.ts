@@ -7,6 +7,9 @@ import { FindOneContractUseCase } from './use-cases/find-one-contract.use-case';
 import { UpdateContractUseCase } from './use-cases/update-contract.use-case';
 import { RemoveContractUseCase } from './use-cases/remove-contract.use-case';
 import { FinalizeMeterLinkUseCase } from './use-cases/finalize-meter-link.use-case';
+import { GetConnectionRequestPdfDataUseCase } from './use-cases/get-connection-request-pdf-data.use-case';
+import { GetResponsibilityAgreementPdfDataUseCase } from './use-cases/get-responsibility-agreement-pdf-data.use-case';
+import { GeneratePdfUseCase } from 'src/infrastructure/pdf/use-cases/generate-pdf.use-case';
 
 @Injectable()
 export class ContratoMedidorService {
@@ -17,6 +20,9 @@ export class ContratoMedidorService {
     private readonly updateUseCase: UpdateContractUseCase,
     private readonly removeUseCase: RemoveContractUseCase,
     private readonly finalizeLinkUseCase: FinalizeMeterLinkUseCase,
+    private readonly getConnectionRequestPdfDataUseCase: GetConnectionRequestPdfDataUseCase,
+    private readonly getResponsibilityAgreementPdfDataUseCase: GetResponsibilityAgreementPdfDataUseCase,
+    private readonly generatePdf: GeneratePdfUseCase,
   ) {}
 
   async crearContrato(createDto: CrearContratoMedidorDto): Promise<any> {
@@ -44,5 +50,17 @@ export class ContratoMedidorService {
 
   async eliminar(id: bigint): Promise<{ message: string }> {
     return this.removeUseCase.execute(id);
+  }
+
+  // ── PDF ──────────────────────────────────────────────────────────────────
+
+  async generateConnectionRequestPdf(contratoId: bigint): Promise<Buffer> {
+    const raw = await this.getConnectionRequestPdfDataUseCase.execute(contratoId);
+    return this.generatePdf.execute('connection-request', raw as any);
+  }
+
+  async generateResponsibilityAgreementPdf(contratoId: bigint): Promise<Buffer> {
+    const raw = await this.getResponsibilityAgreementPdfDataUseCase.execute(contratoId);
+    return this.generatePdf.execute('responsibility-agreement', raw as any);
   }
 }
