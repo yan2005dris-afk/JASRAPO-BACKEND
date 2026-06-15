@@ -220,6 +220,7 @@ Para consultas o soporte, contacta al equipo de desarrollo del Backend.
     .addTag('batches', 'Billing batch management')
     .addTag('pre-invoices', 'Gestión de prefacturas')
     .addTag('agreements', 'Payment agreements')
+    .addTag('reports', 'Generación de reportes y documentos PDF')
     .addTag(
       '[En Desarrollo] SRI - Facturación Electrónica',
       'Módulo de facturación electrónica SRI',
@@ -274,6 +275,8 @@ Para consultas o soporte, contacta al equipo de desarrollo del Backend.
     `,
     customSiteTitle: 'JASRAPO API Documentation',
   });
+
+  app.enableShutdownHooks();
 
   const port = configService.get<number>('PORT', 3000);
   await app.listen(port);

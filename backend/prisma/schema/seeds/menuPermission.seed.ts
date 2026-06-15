@@ -96,7 +96,7 @@ const PERMISSION_MAP: MenuPermissionMapping[] = [
     ],
   },
   {
-    menuNombre: 'Gestión General',
+    menuNombre: 'Usuarios',
     permisos: [
       { recurso: 'users', accion: 'read' },
       { recurso: 'users', accion: 'create' },
@@ -106,15 +106,6 @@ const PERMISSION_MAP: MenuPermissionMapping[] = [
       { recurso: 'roles', accion: 'create' },
       { recurso: 'roles', accion: 'update' },
       { recurso: 'roles', accion: 'delete' },
-    ],
-  },
-  {
-    menuNombre: 'Usuarios',
-    permisos: [
-      { recurso: 'users', accion: 'read' },
-      { recurso: 'users', accion: 'create' },
-      { recurso: 'users', accion: 'update' },
-      { recurso: 'users', accion: 'delete' },
     ],
   },
   {

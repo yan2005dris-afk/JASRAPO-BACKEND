@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { PreInvoiceRepository } from '../domain/repositories/pre-invoice.repository';
 import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
 import { PREINVOICE_STATES } from './pre-invoice-states';
 import { FindAllPreInvoicesUseCase } from './use-cases/find-all-pre-invoices.use-case';
@@ -9,7 +8,6 @@ import { UpdatePreInvoiceStateUseCase } from './use-cases/update-pre-invoice-sta
 @Injectable()
 export class PreInvoiceService {
   constructor(
-    private readonly preInvoiceRepository: PreInvoiceRepository,
     private readonly findAllUseCase: FindAllPreInvoicesUseCase,
     private readonly findOneUseCase: FindOnePreInvoiceUseCase,
     private readonly updateStateUseCase: UpdatePreInvoiceStateUseCase,

@@ -33,7 +33,20 @@ ENV PRISMA_SKIP_POSTINSTALL_GENERATE=true
 RUN pnpm --filter backend exec prisma generate && pnpm --filter backend run build
 
 # ─── Stage: Runner (Producción) ───────────────────────────────────────────────
-FROM base AS runner
+FROM node:22-alpine AS runner
+
+# Chromium para Puppeteer (conversión HTML → PDF)
+RUN apk add --no-cache \
+    chromium \
+    nss \
+    freetype \
+    harfbuzz \
+    ca-certificates \
+    ttf-freefont
+
+# Puppeteer usa el Chromium del sistema en Docker (no descarga el suyo)
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
 WORKDIR /app
 
@@ -42,8 +55,10 @@ COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
 # Copiar manifiesto del subproyecto
 COPY backend/package.json ./backend/
 
-# Instalar únicamente dependencias de producción
-RUN pnpm install --prod --frozen-lockfile
+# Instalar dependencias de Node (pnpm viene del stage base via corepack)
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable && pnpm install --prod --frozen-lockfile
 
 # Copiar artefactos del backend desde la etapa builder
 COPY --chown=node:node --from=builder /app/backend/dist ./backend/dist

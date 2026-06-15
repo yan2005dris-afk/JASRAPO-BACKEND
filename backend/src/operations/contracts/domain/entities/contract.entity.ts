@@ -15,6 +15,8 @@ export class ContractEntity {
     nombre: string;
     descripcion: string | null;
     valorBase: number;
+    consumoMinimoMensual: number | null;
+    valorExcedenteM3: number | null;
   } | null;
 
   cliente?: {
@@ -23,6 +25,9 @@ export class ContractEntity {
     nombres: string;
     apellidos: string;
     razonSocial: string | null;
+    email: string | null;
+    telefono: string | null;
+    direccionDomicilio: string | null;
   } | null;
 
   comunidad?: {

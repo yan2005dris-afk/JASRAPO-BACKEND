@@ -10,5 +10,6 @@ allowBuilds:
   'esbuild': true
   'prisma': true
   'protobufjs': true
+  puppeteer: set this to true or false
   'ssh2': true
   'unrs-resolver': true

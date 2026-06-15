@@ -14,7 +14,10 @@
       }
     ],
     "deleteOutDir": true,
-    "assets": ["metadata.json"],
+    "assets": [
+      "metadata.json",
+      { "include": "infrastructure/pdf/templates/**/*.hbs", "outDir": "dist/src" }
+    ],
     "watchAssets": true
   }
 }

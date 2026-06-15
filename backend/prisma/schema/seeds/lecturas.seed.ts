@@ -1,4 +1,4 @@
-import { PrismaClient } from "src/generated/prisma/client";
+import { PrismaClient, EstadoMedidor } from "src/generated/prisma/client";
 
 export async function seedLecturas(prisma: PrismaClient) {
     // Un periodo por año (regla de negocio: un periodo anual)
@@ -27,35 +27,83 @@ export async function seedLecturas(prisma: PrismaClient) {
 
     const contratos = await prisma.contratos.findMany({
         where: { estado: "ACTIVO" },
-        include: { historialMedidores: { where: { fechaHasta: null } } },
     });
+
+    // Encontrar el medidorId máximo existente para generar nuevos IDs únicos
+    const maxMedidor = await prisma.medidores.findFirst({
+        orderBy: { medidorId: 'desc' },
+    });
+    let nextMedidorId = Number(maxMedidor?.medidorId ?? 0) + 1;
 
     let lecturaId = 1;
 
     for (const contrato of contratos) {
-        const medidorId = contrato.historialMedidores[0]?.medidorId;
-        if (!medidorId) continue;
+        // Limpiar historial existente para este contrato, así cada contrato
+        // tiene lecturas únicas sin mezclarse con otros contratos
+        await prisma.historialMedidores.deleteMany({
+            where: { contratoId: contrato.contratoId },
+        });
+
+        // Crear un medidor DEDICADO por contrato para evitar que lecturas
+        // de diferentes contratos compartan el mismo medidorId
+        const medidor = await prisma.medidores.create({
+            data: {
+                medidorId: nextMedidorId,
+                marca: 'Seed',
+                modelo: 'Dedicado',
+                serie: `SER-READ-${contrato.contratoId}`,
+                fechaInstalacion: new Date('2024-01-01'),
+                latitud: -0.2281,
+                longitud: -78.0023,
+                estado: 'INSTALADO' as EstadoMedidor,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+                deletedAt: null,
+            },
+        });
+        nextMedidorId++;
+
+        // Crear historial para el nuevo medidor dedicado
+        const historial = await prisma.historialMedidores.create({
+            data: {
+                medidorId: medidor.medidorId,
+                contratoId: contrato.contratoId,
+                fechaDesde: new Date('2024-01-01'),
+                lecturaInicial: 0,
+                motivo: 'ASIGNACION_INICIAL',
+                observacion: `Medidor dedicado para contrato ${contrato.contratoId} (seed)`,
+            },
+        });
 
         let lecturaAnterior = 0;
-        for (const pDb of periodosDb) {
-            const consumo = Math.floor(Math.random() * 30) + 5;
-            const lecturaActual = lecturaAnterior + consumo;
 
-            await prisma.lecturas.create({
-                data: {
-                    lecturaId: BigInt(lecturaId),
-                    medidorId: medidorId,
-                    periodoId: pDb.periodoId,
-                    fecha: new Date(),
-                    lecturaAnterior,
-                    lecturaActual,
-                    consumoCalculado: consumo,
-                    estado: "APROBADA",
-                    lecturaInicial: lecturaAnterior === 0,
-                },
-            });
-            lecturaAnterior = lecturaActual;
-            lecturaId++;
+        for (const pDb of periodosDb) {
+            // 12 lecturas mensuales por período (año)
+            const año = parseInt(pDb.nombre, 10); // Usar el nombre del período (e.g. "2024") para evitar timezone offset
+            for (let mes = 0; mes < 12; mes++) {
+                // Usar constructora UTC para evitar rollover de días por timezone
+                // (new Date('2024-01-01') es Dec 31 en Ecuador, causando getFullYear() → 2023)
+                const fechaLectura = new Date(Date.UTC(año, mes, 15, 12, 0, 0));
+
+                const consumo = Math.floor(Math.random() * 30) + 5;
+                const lecturaActual = lecturaAnterior + consumo;
+
+                await prisma.lecturas.create({
+                    data: {
+                        lecturaId: BigInt(lecturaId),
+                        medidorId: medidor.medidorId,
+                        periodoId: pDb.periodoId,
+                        fecha: fechaLectura,
+                        lecturaAnterior,
+                        lecturaActual,
+                        consumoCalculado: consumo,
+                        estado: "APROBADA",
+                        lecturaInicial: lecturaAnterior === 0,
+                    },
+                });
+                lecturaAnterior = lecturaActual;
+                lecturaId++;
+            }
         }
     }
 
