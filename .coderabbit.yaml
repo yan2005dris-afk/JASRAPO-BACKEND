@@ -1,0 +1,281 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+
+language: "es-ES"
+
+tone_instructions: |
+  Senior backend architect. Direct and educational.
+  For every finding: **Problem** → **Why it matters** (concrete consequence) → **Fix** (with code if needed) → **Pattern** (named pattern or tool that solves this class of problem).
+
+reviews:
+  profile: "assertive"
+  high_level_summary: true
+  high_level_summary_placeholder: "@coderabbitai summary"
+  poem: false
+  review_status: true
+  collapse_walkthrough: false
+  request_changes_workflow: true
+
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches:
+      - "main"
+      - "develop"
+
+  path_filters:
+    - "!**/node_modules/**"
+    - "!**/dist/**"
+    - "!**/coverage/**"
+    - "!**/*.generated.ts"
+    - "!**/generated/**"
+    - "!**/*.lock"
+    - "!**/*.snap"
+    - "!pnpm-lock.yaml"
+    - "!**/migrations/**"
+
+  path_instructions:
+    # ─── DOMAIN LAYER ──────────────────────────────────────────────────────────
+    - path: "backend/src/**/domain/**"
+      instructions: |
+        [RISK] Check for framework imports (NestJS decorators, Prisma types, Express).
+        Domain must be pure — no infrastructure dependencies.
+        Why it matters: coupling domain to infra makes the core untestable in isolation
+        and forces rewrites when the framework changes.
+        Fix: extract to an interface in domain, implement in infrastructure.
+        Pattern: Dependency Inversion Principle (SOLID-D), Hexagonal Architecture.
+
+        [READABILITY] Entities must express business rules, not data bags.
+        Flag anemic domain models — classes with only getters/setters and no behavior.
+        Pattern: Rich Domain Model.
+
+        [RELIABILITY] Value objects must be immutable and validated at construction.
+        If a value object can be instantiated with invalid state, flag it.
+        Pattern: Always-valid domain model.
+
+    # ─── APPLICATION / USE CASES ───────────────────────────────────────────────
+    - path: "backend/src/**/application/**"
+      instructions: |
+        [RISK] Use cases must not import Prisma or pg directly.
+        They may only use repository interfaces from the domain layer.
+        Why it matters: direct Prisma calls in use cases bypass the abstraction boundary,
+        making unit testing impossible and coupling business logic to the database.
+        Pattern: Repository Pattern, Ports and Adapters.
+
+        [RELIABILITY] Check that every use case handles the "not found" case explicitly
+        and returns a typed error (NotFoundException, BusinessRuleException) instead
+        of letting undefined propagate.
+
+        [RISK] If a use case performs multiple writes, verify they are wrapped in a
+        transaction or implement the Outbox Pattern for events.
+        Why it matters: partial writes leave the system in an inconsistent state.
+        Pattern: Unit of Work, Outbox Pattern.
+
+    # ─── INFRASTRUCTURE ────────────────────────────────────────────────────────
+    - path: "backend/src/infrastructure/**"
+      instructions: |
+        [RISK] Never use raw SQL string interpolation with user input.
+        Why it matters: SQL injection. Even if validated upstream, defense in depth requires
+        parameterized queries at the data layer.
+        Fix: use Prisma's typed query API or $queryRaw with Prisma.sql template literals.
+        Pattern: Parameterized Queries, Prisma ORM.
+
+        [RESILIENCE] External service calls (HTTP, S3, SMTP, SRI SOAP) must have:
+        - Explicit timeouts (no open connections)
+        - Retry logic with exponential backoff for transient failures
+        - Circuit breaker or fallback for non-critical paths
+        Pattern: Circuit Breaker, Retry with Backoff, Bulkhead.
+
+        [RELIABILITY] Prisma queries that can return null must handle the null case
+        explicitly — do not assume a record exists.
+
+        [RISK] S3 presigned URLs must have expiration set. Verify TTL is appropriate
+        for the use case (short for upload, longer for downloads only when justified).
+
+    # ─── AUTH / IDENTITY ───────────────────────────────────────────────────────
+    - path: "backend/src/identity/**"
+      instructions: |
+        [RISK - HIGH PRIORITY] This is a security-critical module. Every finding here
+        is potential production incident or data breach.
+
+        Check for:
+        - JWT secret hardcoded or loaded without validation at startup
+        - Missing token expiration (exp claim)
+        - Refresh tokens not rotated on use (allows replay attacks)
+          Fix: invalidate the old refresh token immediately on rotation.
+          Pattern: Refresh Token Rotation.
+        - Missing brute-force protection on login endpoint
+          Fix: @nestjs/throttler on AuthController, or IP-based rate limiting.
+        - Password comparison using == instead of bcrypt.compare (timing attack)
+          Fix: always use bcrypt.compare or equivalent constant-time comparison.
+          Pattern: Timing-safe comparison.
+        - Sessions not invalidated on logout (check session store or token blacklist)
+        - Sensitive data (password hash, internal IDs) leaking in response DTOs
+          Fix: use @Exclude() from class-transformer + ClassSerializerInterceptor.
+
+    # ─── PERMISSIONS / ROLES / MENUS ───────────────────────────────────────────
+    - path: "backend/src/identity/permissions/**"
+      instructions: |
+        [RISK] Authorization logic must be enforced at the controller or guard level,
+        never only on the frontend.
+        Check that every route that mutates data has a Guard or Policy applied.
+        Pattern: Policy-based Authorization, Guard Pattern (NestJS).
+
+        [RISK] Flag any permission check that uses string comparison without a constant enum.
+        Why it matters: typos silently grant or deny access with no compile-time error.
+        Fix: use a Permission enum or const object as single source of truth.
+
+    # ─── API CONTROLLERS ───────────────────────────────────────────────────────
+    - path: "backend/src/**/*.controller.ts"
+      instructions: |
+        [RISK] Controllers must not contain business logic.
+        Why it matters: logic in controllers is untestable without HTTP context and
+        violates the single responsibility principle.
+        Fix: move logic to a use case or service.
+
+        [RISK] Check that all endpoints that accept user input have DTO validation
+        via class-validator decorators. Missing validation = potential injection surface.
+        Pattern: Input Validation at boundary, DTO pattern.
+
+        [READABILITY] Every public endpoint must have @ApiOperation and @ApiResponse
+        decorators for Swagger documentation.
+
+        [RISK] Check that file upload endpoints validate MIME type and file size.
+        Fix: use Multer's fileFilter + limits options.
+
+    # ─── JOBS / QUEUES ─────────────────────────────────────────────────────────
+    - path: "backend/src/infrastructure/jobs/**"
+      instructions: |
+        [RELIABILITY] Every pg-boss job handler must have explicit error handling.
+        If a job throws without being caught, it will retry indefinitely.
+        Fix: wrap handler body in try/catch, log the error with structured context,
+        and either mark the job as failed or implement a dead-letter queue.
+        Pattern: Dead Letter Queue, Poison Message handling.
+
+        [RESILIENCE] Check that jobs that call external services have timeouts.
+        A hanging job blocks the worker thread.
+
+        [RELIABILITY] Idempotency: jobs that write to the database must be safe to
+        run twice (e.g., network retry causes duplicate execution).
+        Pattern: Idempotent consumer, upsert over insert.
+
+    # ─── OBSERVABILITY ─────────────────────────────────────────────────────────
+    - path: "backend/src/infrastructure/observability/**"
+      instructions: |
+        [RISK] Verify no PII (emails, names, document numbers, tokens) is logged.
+        Why it matters: log aggregators are often less secured than the DB — PII in logs
+        is a compliance violation (GDPR, local data protection laws).
+        Fix: log user IDs (UUIDs) only, never the actual values.
+
+        [READABILITY] Log messages must be structured (JSON key-value), not interpolated strings.
+        Why it matters: string logs are unsearchable in production log systems.
+        Fix: use Pino's structured logging API: logger.info({ userId, action }, 'message').
+        Pattern: Structured Logging.
+
+    # ─── SRI / BILLING / EXTERNAL INTEGRATIONS ─────────────────────────────────
+    - path: "backend/src/sri/**"
+      instructions: |
+        [RESILIENCE - HIGH PRIORITY] SRI SOAP service is an external government API.
+        All calls must have:
+        - HTTP timeout (do not leave connections open indefinitely)
+        - Retry with exponential backoff for 5xx and network errors
+        - Circuit breaker to stop hammering a down service
+        - Structured error response that distinguishes SRI rejection (business error)
+          from network failure (infrastructure error)
+        Pattern: Circuit Breaker, Retry with Backoff, Bulkhead.
+
+        [RISK] XML signatures (XAdES) must be verified after generation, not just generated.
+        Why it matters: a malformed signature will be rejected by SRI silently in some cases
+        or cause billing failures.
+
+        [RELIABILITY] Check that SRI document state transitions are persisted before sending.
+        If the process dies after sending but before persisting the response, the document
+        state is lost.
+        Pattern: Outbox Pattern, Two-Phase Commit alternative.
+
+    # ─── BILLING ───────────────────────────────────────────────────────────────
+    - path: "backend/src/billing/**"
+      instructions: |
+        [RISK] Any monetary or invoice calculation must use Decimal.js, never native
+        JavaScript float arithmetic.
+        Why it matters: 0.1 + 0.2 !== 0.3 in IEEE 754. Tax calculations with float
+        rounding produce billing errors and audit failures.
+        Fix: Decimal.js is already a dependency — use it.
+        Pattern: Fixed-point arithmetic, Decimal type.
+
+        [RISK] Invoice number sequences must be atomic. Check that sequence generation
+        uses a database-level sequence or SELECT FOR UPDATE, not application-level max+1.
+        Why it matters: concurrent requests produce duplicate invoice numbers.
+        Pattern: Database sequence, Pessimistic locking.
+
+    # ─── PDF / REPORTS ─────────────────────────────────────────────────────────
+    - path: "backend/src/**/pdf/**"
+      instructions: |
+        [RESILIENCE] PDF generation with Puppeteer must have:
+        - Browser instance lifecycle management (don't launch per request)
+        - Explicit page timeout
+        - Error handling that closes the page on failure (memory leak prevention)
+        Pattern: Object Pool (browser instance pool).
+
+        [RISK] If the PDF contains user-provided data rendered as HTML, check for
+        XSS sanitization before template rendering.
+        Why it matters: XSS in PDF generators can leak server-side data via JavaScript
+        execution in headless Chrome.
+        Fix: sanitize all user inputs before passing to Handlebars/HTML templates.
+
+    # ─── ENCRYPTION ────────────────────────────────────────────────────────────
+    - path: "backend/src/infrastructure/encryption/**"
+      instructions: |
+        [RISK - CRITICAL] Encryption module. Any issue here is a critical security finding.
+
+        Check for:
+        - Use of MD5 or SHA1 for password hashing (broken — use bcrypt/argon2)
+        - Static or hardcoded IVs in AES encryption (breaks semantic security)
+          Fix: generate a random IV per encryption, prepend to ciphertext.
+        - Key material stored in application memory longer than needed
+        - Missing authentication tag validation in AES-GCM (enables tampering)
+          Pattern: Authenticated Encryption (AES-GCM).
+        - node-forge usage for anything that could use Node.js native crypto
+          Why it matters: native crypto uses optimized, audited implementations.
+
+    # ─── TESTS ─────────────────────────────────────────────────────────────────
+    - path: "backend/**/*.spec.ts"
+      instructions: |
+        [RELIABILITY] Tests that mock the database instead of using testcontainers
+        (real Postgres) are unreliable for data-layer tests.
+        Why it matters: mocked DB tests passed while real migrations failed in production.
+        Fix: use testcontainers (already a dependency) for repository and integration tests.
+        Pattern: Integration test with real dependencies, Test Container.
+
+        [RELIABILITY] Flag tests with no assertions or only expect(true).toBe(true).
+        These tests give false confidence — they always pass regardless of behavior.
+
+        [READABILITY] Test descriptions must follow Arrange-Act-Assert structure and
+        describe behavior, not implementation: "should return 404 when user not found"
+        not "test getUserById".
+
+        [RELIABILITY] Check for missing edge case tests:
+        - Empty arrays / null inputs
+        - Concurrent execution (race conditions in services with shared state)
+        - Boundary values in financial calculations
+
+    # ─── DTOs ──────────────────────────────────────────────────────────────────
+    - path: "backend/src/**/*.dto.ts"
+      instructions: |
+        [RISK] Every field that comes from user input must have class-validator decorators.
+        Missing validation = unvalidated data reaching the database or business logic.
+
+        [RISK] DTOs that contain sensitive fields (password, token, secretKey) must
+        use @Exclude() to prevent accidental serialization in responses.
+        Pattern: Response DTO separation (CreateUserDto vs UserResponseDto).
+
+        [READABILITY] DTOs used for responses should not be the same class as DTOs
+        used for input. Mixing them causes accidental field exposure.
+
+  finishing_touches:
+    docstrings:
+      enabled: false
+    unit_tests:
+      enabled: false
+
+chat:
+  auto_reply: true
