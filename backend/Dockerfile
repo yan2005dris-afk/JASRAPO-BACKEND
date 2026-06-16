@@ -8,6 +8,7 @@ RUN apk add --no-cache openssl libc6-compat
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 ENV PNPM_CONFIG_PACKAGE_IMPORT_METHOD=copy
+ENV PRISMA_SKIP_POSTINSTALL_GENERATE=true
 RUN corepack enable && corepack prepare pnpm@11.1.1 --activate
 
 WORKDIR /app
@@ -24,7 +25,6 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
 
 COPY backend/ ./backend/
 
-ENV PRISMA_SKIP_POSTINSTALL_GENERATE=true
 RUN pnpm --filter backend exec prisma generate && pnpm --filter backend run build
 
 # Resolve prod deps from local store into a self-contained dir (no npm downloads)
