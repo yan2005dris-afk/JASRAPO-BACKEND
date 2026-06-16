@@ -57,8 +57,6 @@ COPY --chown=node:node --from=builder /app/backend/prisma         ./backend/pris
 COPY --chown=node:node --from=builder /app/backend/src/generated  ./backend/src/generated
 COPY --chown=node:node --from=builder /app/backend/prisma.config.ts ./backend/prisma.config.ts
 
-RUN chown -R node:node /app
-
 WORKDIR /app/backend
 
 USER node
