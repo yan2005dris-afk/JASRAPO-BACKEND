@@ -1,10 +1,11 @@
 import type { MeterEntity } from '../entities/meter.entity';
+import type { MeterFilters } from '../types/meter-filters';
 
 export interface CreateMeterRepositoryData {
   marca: string;
   modelo: string;
   serie: string;
-  estado: string;
+  estado: MeterEntity['estado'];
   latitud?: number | null;
   longitud?: number | null;
 }
@@ -13,7 +14,7 @@ export interface UpdateMeterRepositoryData {
   marca?: string;
   modelo?: string;
   serie?: string;
-  estado?: string;
+  estado?: MeterEntity['estado'];
   fechaInstalacion?: Date | null;
   fechaBaja?: Date | null;
   motivo?: string | null;
@@ -28,10 +29,6 @@ export interface CreateMeterHistoryRepositoryData {
   lecturaInicial: number;
   motivo: string;
   fechaDesde: Date;
-}
-
-export interface MeterFilters {
-  estado?: string;
 }
 
 export abstract class MeterRepository {

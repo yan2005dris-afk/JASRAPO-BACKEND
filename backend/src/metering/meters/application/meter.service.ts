@@ -1,10 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import {
-  MeterFilters,
-  MeterRepository,
-} from '../domain/repositories/meter.repository';
+import { MeterRepository } from '../domain/repositories/meter.repository';
 import { CreateMeterDto } from '../interfaces/dto/create-meter.dto';
 import { UpdateMeterDto } from '../interfaces/dto/update-meter.dto';
+import { FilterMeterDto } from '../interfaces/dto/filter-meter.dto';
+import { buildMeterFilters } from './mappers/meter-filters.mapper';
 import { EstadoMedidorResponseDto } from '../interfaces/dto/estado-medidor-response.dto';
 import { CreateMeterUseCase } from './use-cases/create-meter.use-case';
 import { ReportDefectUseCase } from './use-cases/report-defect.use-case';
@@ -35,20 +34,19 @@ export class MeterService {
     return this.createUseCase.execute(createDto);
   }
 
-  async findAll(
-    page = 1,
-    limit = 10,
-    where?: MeterFilters,
-  ): Promise<PaginatedMeterResponse> {
+  async findAll(filters?: FilterMeterDto): Promise<PaginatedMeterResponse> {
+    const page = filters?.page ?? 1;
+    const limit = filters?.limit ?? 10;
     const { skip, take, page: safePage } = getPagination(page, limit);
+    const meterFilters = filters ? buildMeterFilters(filters) : undefined;
 
     const [meters, total, enBodegaCount, instaladosCount, danadosCount] =
       await Promise.all([
-        this.meterRepository.findMany({ where, skip, take }),
-        this.meterRepository.count(where),
-        this.meterRepository.count({ ...where, estado: 'BODEGA' }),
-        this.meterRepository.count({ ...where, estado: 'INSTALADO' }),
-        this.meterRepository.count({ ...where, estado: 'DANADO' }),
+        this.meterRepository.findMany({ where: meterFilters, skip, take }),
+        this.meterRepository.count(meterFilters),
+        this.meterRepository.count({ ...meterFilters, estado: 'BODEGA' }),
+        this.meterRepository.count({ ...meterFilters, estado: 'INSTALADO' }),
+        this.meterRepository.count({ ...meterFilters, estado: 'DANADO' }),
       ]);
 
     const totalPages = Math.ceil(total / take);

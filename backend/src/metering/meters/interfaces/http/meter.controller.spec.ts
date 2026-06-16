@@ -2,6 +2,7 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { MeterController } from './meter.controller';
 import { MeterService } from '../../application/meter.service';
+import { EstadoMedidor } from 'src/generated/prisma/enums';
 
 describe('MeterController', () => {
   let controller: MeterController;
@@ -76,19 +77,19 @@ describe('MeterController', () => {
   });
 
   describe('findAll', () => {
-    it('should return paginated meters with defaults', async () => {
-      const paginationDto = { page: 1, limit: 10 };
-      const result = await controller.findAll(paginationDto);
+    it('should delegate empty filters to service', async () => {
+      const filterDto = {};
+      const result = await controller.findAll(filterDto);
 
-      expect(service.findAll).toHaveBeenCalledWith(1, 10, undefined);
+      expect(service.findAll).toHaveBeenCalledWith(filterDto);
       expect(result).toEqual(mockPaginatedResponse);
     });
 
     it('should filter by estado', async () => {
-      const paginationDto = { page: 1, limit: 5 };
-      const result = await controller.findAll(paginationDto, 'BODEGA');
+      const filterDto = { page: 1, limit: 5, estado: EstadoMedidor.BODEGA };
+      const result = await controller.findAll(filterDto);
 
-      expect(service.findAll).toHaveBeenCalledWith(1, 5, { estado: 'BODEGA' });
+      expect(service.findAll).toHaveBeenCalledWith(filterDto);
       expect(result).toEqual(mockPaginatedResponse);
     });
   });

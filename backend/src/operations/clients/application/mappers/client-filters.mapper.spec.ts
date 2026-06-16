@@ -1,4 +1,4 @@
-import { buildClientFilters } from './client-filters';
+import { buildClientFilters } from './client-filters.mapper';
 
 describe('buildClientFilters', () => {
   it('should return empty object when no filters provided', () => {
