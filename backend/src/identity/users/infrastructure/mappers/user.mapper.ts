@@ -8,7 +8,6 @@ import { STORAGE_PROXY_BASE } from 'src/infrastructure/storage-proxy/storage-pro
 
 @Injectable()
 export class UserMapper {
-
   /**
    * Enriquece los datos del avatar con una URL estable hacia el proxy de imágenes
    * o una de fallback si no hay avatar.
