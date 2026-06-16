@@ -6,27 +6,11 @@ import type { MeterFilters } from '../../domain/types/meter-filters';
  * Strips pagination fields and returns only domain filter fields.
  */
 export function buildMeterFilters(filters: FilterMeterDto): MeterFilters {
-  const result: MeterFilters = {};
+  // Excluir explícitamente los campos de paginación
+  const { page: _page, limit: _limit, ...meterFilters } = filters;
 
-  if (filters.estado !== undefined) {
-    result.estado = filters.estado;
-  }
-
-  if (filters.marca !== undefined) {
-    result.marca = filters.marca;
-  }
-
-  if (filters.modelo !== undefined) {
-    result.modelo = filters.modelo;
-  }
-
-  if (filters.serie !== undefined) {
-    result.serie = filters.serie;
-  }
-
-  if (filters.buscar !== undefined) {
-    result.buscar = filters.buscar;
-  }
-
-  return result;
+  // Eliminar campos undefined
+  return Object.fromEntries(
+    Object.entries(meterFilters).filter(([_, value]) => value !== undefined),
+  );
 }
