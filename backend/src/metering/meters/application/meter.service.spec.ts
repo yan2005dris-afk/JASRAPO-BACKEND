@@ -134,12 +134,22 @@ describe('MeterService', () => {
       .mockResolvedValue([mockPrismaResult]);
     jest.spyOn(meterRepository, 'count').mockResolvedValue(1);
 
-    const result = await service.findAll();
-
-    expect(result.meta.page).toBe(1);
-    expect(result.meta.limit).toBe(10);
-    expect(meterRepository.findMany).toHaveBeenCalledWith({
+    // Case 1: Undefined filters
+    const resultUndefined = await service.findAll();
+    expect(resultUndefined.meta.page).toBe(1);
+    expect(resultUndefined.meta.limit).toBe(10);
+    expect(meterRepository.findMany).toHaveBeenLastCalledWith({
       where: undefined,
+      skip: 0,
+      take: 10,
+    });
+
+    // Case 2: Empty filters ({})
+    const resultEmpty = await service.findAll({});
+    expect(resultEmpty.meta.page).toBe(1);
+    expect(resultEmpty.meta.limit).toBe(10);
+    expect(meterRepository.findMany).toHaveBeenLastCalledWith({
+      where: {},
       skip: 0,
       take: 10,
     });
