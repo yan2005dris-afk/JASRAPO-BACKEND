@@ -16,20 +16,23 @@ WORKDIR /app
 # ─── Stage: Builder ───────────────────────────────────────────────────────────
 FROM base AS builder
 
-COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
-COPY backend/package.json ./backend/
+# pnpm fetch downloads all packages to the virtual store using the lockfile only.
+# This layer is cached as long as pnpm-lock.yaml does not change — subsequent
+# builds with only source changes skip the network entirely.
+COPY pnpm-lock.yaml pnpm-workspace.yaml ./
+RUN pnpm fetch
 
-# Cache mount persists pnpm store on host between builds — packages never re-downloaded
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-    pnpm install --frozen-lockfile
+# Install from local store (offline — no network access)
+COPY package.json ./
+COPY backend/package.json ./backend/
+RUN pnpm install --frozen-lockfile --offline
 
 COPY backend/ ./backend/
 
 RUN pnpm --filter backend exec prisma generate && pnpm --filter backend run build
 
-# Resolve prod deps from local store into a self-contained dir (no npm downloads)
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-    pnpm deploy --filter=backend --prod /prod/backend
+# Resolve prod deps from local store into a self-contained dir
+RUN pnpm deploy --filter=backend --prod /prod/backend
 
 # ─── Stage: Runner (Producción) ───────────────────────────────────────────────
 FROM node:22-alpine AS runner
