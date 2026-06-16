@@ -34,7 +34,7 @@ COPY backend/ ./backend/
 RUN pnpm --filter backend exec prisma generate && pnpm --filter backend run build
 
 # Resolve prod deps from local store into a self-contained dir
-RUN pnpm deploy --filter=backend --prod /prod/backend
+RUN pnpm deploy --filter=backend --prod --legacy /prod/backend
 
 # ─── Stage: Runner (Producción) ───────────────────────────────────────────────
 FROM node:22-alpine AS runner
