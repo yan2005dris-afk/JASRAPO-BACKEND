@@ -153,5 +153,15 @@ describe('MeterService', () => {
       skip: 0,
       take: 10,
     });
+
+    // Case 3: Null filters
+    const resultNull = await service.findAll(null as any);
+    expect(resultNull.meta.page).toBe(1);
+    expect(resultNull.meta.limit).toBe(10);
+    expect(meterRepository.findMany).toHaveBeenLastCalledWith({
+      where: undefined,
+      skip: 0,
+      take: 10,
+    });
   });
 });
