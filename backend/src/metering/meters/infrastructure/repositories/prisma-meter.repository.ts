@@ -6,10 +6,10 @@ import {
   CreateMeterRepositoryData,
   UpdateMeterRepositoryData,
   CreateMeterHistoryRepositoryData,
-  MeterFilters,
 } from '../../domain/repositories/meter.repository';
 import { MeterEntity } from '../../domain/entities/meter.entity';
 import { MeterMapper } from '../mappers/meter.mapper';
+import { MeterFilters } from '../../domain/types/meter-filters';
 
 @Injectable()
 export class PrismaMeterRepository implements MeterRepository {
@@ -33,13 +33,10 @@ export class PrismaMeterRepository implements MeterRepository {
     take?: number;
     skip?: number;
   }): Promise<MeterEntity[]> {
-    const whereClause: Prisma.MedidoresWhereInput = {
-      deletedAt: null,
-      ...(params.where?.estado && { estado: params.where.estado as any }),
-    };
+    const where = this.buildMeterWhere(params.where);
 
     const records = await this.prisma.medidores.findMany({
-      where: whereClause,
+      where,
       take: params.take,
       skip: params.skip,
       orderBy: { createdAt: 'desc' },
@@ -48,11 +45,57 @@ export class PrismaMeterRepository implements MeterRepository {
   }
 
   async count(where?: MeterFilters): Promise<number> {
-    const whereClause: Prisma.MedidoresWhereInput = {
-      deletedAt: null,
-      ...(where?.estado && { estado: where.estado as any }),
-    };
+    const whereClause = this.buildMeterWhere(where);
     return this.prisma.medidores.count({ where: whereClause });
+  }
+
+  private buildMeterWhere(filters?: MeterFilters): Prisma.MedidoresWhereInput {
+    const conditions: Prisma.MedidoresWhereInput[] = [];
+
+    // Always exclude soft-deleted records
+    conditions.push({ deletedAt: null });
+
+    if (!filters) {
+      return conditions.length === 1 ? conditions[0] : { AND: conditions };
+    }
+
+    if (filters.estado) {
+      conditions.push({ estado: filters.estado as any });
+    }
+
+    if (filters.marca) {
+      conditions.push({
+        marca: { contains: filters.marca, mode: 'insensitive' },
+      });
+    }
+
+    if (filters.modelo) {
+      conditions.push({
+        modelo: { contains: filters.modelo, mode: 'insensitive' },
+      });
+    }
+
+    if (filters.serie) {
+      conditions.push({
+        serie: { contains: filters.serie, mode: 'insensitive' },
+      });
+    }
+
+    if (filters.buscar) {
+      conditions.push({
+        OR: [
+          { serie: { contains: filters.buscar, mode: 'insensitive' } },
+          { marca: { contains: filters.buscar, mode: 'insensitive' } },
+          { modelo: { contains: filters.buscar, mode: 'insensitive' } },
+        ],
+      });
+    }
+
+    if (conditions.length === 1) {
+      return conditions[0];
+    }
+
+    return { AND: conditions };
   }
 
   async create(data: CreateMeterRepositoryData): Promise<MeterEntity> {

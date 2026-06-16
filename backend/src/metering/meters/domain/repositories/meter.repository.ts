@@ -1,4 +1,5 @@
 import type { MeterEntity } from '../entities/meter.entity';
+import { MeterFilters } from '../types/meter-filters';
 
 export interface CreateMeterRepositoryData {
   marca: string;
@@ -28,10 +29,6 @@ export interface CreateMeterHistoryRepositoryData {
   lecturaInicial: number;
   motivo: string;
   fechaDesde: Date;
-}
-
-export interface MeterFilters {
-  estado?: string;
 }
 
 export abstract class MeterRepository {

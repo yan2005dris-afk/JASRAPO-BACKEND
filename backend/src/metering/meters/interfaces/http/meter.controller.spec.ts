@@ -77,18 +77,18 @@ describe('MeterController', () => {
 
   describe('findAll', () => {
     it('should return paginated meters with defaults', async () => {
-      const paginationDto = { page: 1, limit: 10 };
-      const result = await controller.findAll(paginationDto);
+      const filterDto = { page: 1, limit: 10 };
+      const result = await controller.findAll(filterDto);
 
-      expect(service.findAll).toHaveBeenCalledWith(1, 10, undefined);
+      expect(service.findAll).toHaveBeenCalledWith(filterDto);
       expect(result).toEqual(mockPaginatedResponse);
     });
 
     it('should filter by estado', async () => {
-      const paginationDto = { page: 1, limit: 5 };
-      const result = await controller.findAll(paginationDto, 'BODEGA');
+      const filterDto = { page: 1, limit: 5, estado: 'BODEGA' };
+      const result = await controller.findAll(filterDto);
 
-      expect(service.findAll).toHaveBeenCalledWith(1, 5, { estado: 'BODEGA' });
+      expect(service.findAll).toHaveBeenCalledWith(filterDto);
       expect(result).toEqual(mockPaginatedResponse);
     });
   });
