@@ -14,6 +14,7 @@ import { CreateMeterDto } from '../dto/create-meter.dto';
 import { UpdateMeterDto } from '../dto/update-meter.dto';
 import { InstallMeterDto } from '../dto/install-meter.dto';
 import { MeterResponseDto } from '../dto/meter-response.dto';
+import { FilterMeterDto } from '../dto/filter-meter.dto';
 import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
 import { PaginatedMeterResponse } from '../types/paginated-meter-response.type';
 import { EstadoMedidorResponseDto } from '../dto/estado-medidor-response.dto';
@@ -51,8 +52,8 @@ export class MeterController {
   })
   @RequiredPermission('meters', 'read')
   @Get('status')
-  findAllEstados(): Promise<EstadoMedidorResponseDto[]> {
-    return this.meterService.findAllEstados();
+  findAllStates(): Promise<EstadoMedidorResponseDto[]> {
+    return this.meterService.findAllStates();
   }
 
   /**
@@ -94,14 +95,9 @@ export class MeterController {
   @RequiredPermission('meters', 'read')
   @Get()
   async findAll(
-    @Query() paginationDto: PaginationDto,
-    @Query('estado') estado?: string,
+    @Query() filterDto: FilterMeterDto,
   ): Promise<PaginatedMeterResponse> {
-    return this.meterService.findAll(
-      paginationDto.page,
-      paginationDto.limit,
-      estado ? { estado } : undefined,
-    );
+    return this.meterService.findAll(filterDto);
   }
 
   /**

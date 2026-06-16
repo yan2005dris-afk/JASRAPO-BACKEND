@@ -1,4 +1,5 @@
-import { Module } from '@nestjs/common';
+import { Module, OnModuleInit } from '@nestjs/common';
+import { PdfService } from 'src/infrastructure/pdf/pdf.service';
 import { ContratoMedidorService } from './application/contrato-medidor.service';
 import { ContratoMedidorController } from './interfaces/http/contrato-medidor.controller';
 import { CreateContractLinkUseCase } from './application/use-cases/create-contract-link.use-case';
@@ -7,8 +8,12 @@ import { FindOneContractUseCase } from './application/use-cases/find-one-contrac
 import { UpdateContractUseCase } from './application/use-cases/update-contract.use-case';
 import { RemoveContractUseCase } from './application/use-cases/remove-contract.use-case';
 import { FinalizeMeterLinkUseCase } from './application/use-cases/finalize-meter-link.use-case';
+import { GetConnectionRequestPdfDataUseCase } from './application/use-cases/get-connection-request-pdf-data.use-case';
+import { GetResponsibilityAgreementPdfDataUseCase } from './application/use-cases/get-responsibility-agreement-pdf-data.use-case';
 import { ContractRepository } from './domain/repositories/contract.repository';
 import { PrismaContractRepository } from './infrastructure/repositories/prisma-contract.repository';
+import { ConnectionRequestPdfDocumentType } from './pdf/connection-request.pdf-type';
+import { ResponsibilityAgreementPdfDocumentType } from './pdf/responsibility-agreement.pdf-type';
 
 @Module({
   controllers: [ContratoMedidorController],
@@ -21,6 +26,8 @@ import { PrismaContractRepository } from './infrastructure/repositories/prisma-c
     UpdateContractUseCase,
     RemoveContractUseCase,
     FinalizeMeterLinkUseCase,
+    GetConnectionRequestPdfDataUseCase,
+    GetResponsibilityAgreementPdfDataUseCase,
   ],
   exports: [
     ContractRepository,
@@ -33,4 +40,13 @@ import { PrismaContractRepository } from './infrastructure/repositories/prisma-c
     FinalizeMeterLinkUseCase,
   ],
 })
-export class ContratoMedidorModule {}
+export class ContratoMedidorModule implements OnModuleInit {
+  constructor(private readonly pdfService: PdfService) {}
+
+  onModuleInit() {
+    this.pdfService.registerDocumentType(ConnectionRequestPdfDocumentType);
+    this.pdfService.registerDocumentType(
+      ResponsibilityAgreementPdfDocumentType,
+    );
+  }
+}

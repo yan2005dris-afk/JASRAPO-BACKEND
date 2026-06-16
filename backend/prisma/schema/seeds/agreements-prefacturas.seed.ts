@@ -49,7 +49,7 @@ export async function seedAgreementsPrefacturas(prisma: PrismaClient) {
   const rubros = await prisma.rubros.findMany();
 
   if (periodos.length < 3 || !puntoEmision || rubros.length < 3) {
-    console.warn('⚠️ Faltan periodos (mínimo 3), puntos de emisión o rubros (mínimo 3).');
+    console.warn('⚠️ Faltan periodos (mínimo 3 años), puntos de emisión o rubros (mínimo 3).');
     return;
   }
 
@@ -61,7 +61,7 @@ export async function seedAgreementsPrefacturas(prisma: PrismaClient) {
   const rubroSeguridad =
     rubros.find((r) => r.nombre.includes('Seguridad')) ?? rubros[2];
 
-  // ── Prefactura 1: período más antiguo, 3 meses atrasado, $45.50, GENERADA ──────────
+  // ── Prefactura 1: período más antiguo (2024), 3 meses atraso, $45.50, GENERADA ──
   const p1exists = await prisma.prefacturas.findFirst({
     where: { contratoId: 4n, periodoId: periodo1.periodoId, deletedAt: null },
   });
@@ -129,7 +129,7 @@ export async function seedAgreementsPrefacturas(prisma: PrismaClient) {
     });
   }
 
-  // ── Prefactura 2: segundo período, 2 meses atrasado, parcial $32.00, APROBADA ──
+  // ── Prefactura 2: segundo período (2025), 2 meses atraso, parcial $32.00, APROBADA ──
   const p2exists = await prisma.prefacturas.findFirst({
     where: { contratoId: 4n, periodoId: periodo2.periodoId, deletedAt: null },
   });
@@ -197,7 +197,7 @@ export async function seedAgreementsPrefacturas(prisma: PrismaClient) {
     });
   }
 
-  // ── Prefactura 3: tercer período, 1 mes atrasado, $78.00, GENERADA ───────────
+  // ── Prefactura 3: tercer período (2026), 1 mes atraso, $78.00, GENERADA ───────────
   const p3exists = await prisma.prefacturas.findFirst({
     where: { contratoId: 4n, periodoId: periodo3.periodoId, deletedAt: null },
   });
@@ -266,8 +266,8 @@ export async function seedAgreementsPrefacturas(prisma: PrismaClient) {
   }
 
   console.log('✅ Prefacturas para agreements creadas para contrato 4:');
-  console.log(`   - Período ${periodo1.periodoId} → $45.50 (3 meses atraso, GENERADA)`);
-  console.log(`   - Período ${periodo2.periodoId} → $32.00 (2 meses atraso, APROBADA, abono $7.20)`);
-  console.log(`   - Período ${periodo3.periodoId} → $78.00 (1 mes atraso, GENERADA)`);
+  console.log(`   - Período ${periodo1.nombre} → $45.50 (3 meses atraso, GENERADA)`);
+  console.log(`   - Período ${periodo2.nombre} → $32.00 (2 meses atraso, APROBADA, abono $7.20)`);
+  console.log(`   - Período ${periodo3.nombre} → $78.00 (1 mes atraso, GENERADA)`);
   console.log('   → Deuda total: $155.50');
 }

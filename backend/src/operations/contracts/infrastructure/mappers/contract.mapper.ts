@@ -24,6 +24,10 @@ export class ContractMapper {
             nombre: raw.categoriaTarifa.nombre,
             descripcion: raw.categoriaTarifa.descripcion,
             valorBase: Number(raw.categoriaTarifa.valorBase),
+            consumoMinimoMensual: raw.categoriaTarifa.consumoMinimoMensual,
+            valorExcedenteM3: raw.categoriaTarifa.valorExcedenteM3
+              ? Number(raw.categoriaTarifa.valorExcedenteM3)
+              : null,
           }
         : null,
       cliente: raw.cliente
@@ -33,6 +37,9 @@ export class ContractMapper {
             nombres: raw.cliente.nombres,
             apellidos: raw.cliente.apellidos,
             razonSocial: raw.cliente.razonSocial,
+            email: raw.cliente.email,
+            telefono: raw.cliente.telefono,
+            direccionDomicilio: raw.cliente.direccionDomicilio,
           }
         : null,
       comunidad: raw.comunidad

@@ -1,3 +1,5 @@
+jest.mock('puppeteer', () => ({}));
+
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { ContratoMedidorService } from './contrato-medidor.service';
@@ -7,6 +9,9 @@ import { FindOneContractUseCase } from './use-cases/find-one-contract.use-case';
 import { UpdateContractUseCase } from './use-cases/update-contract.use-case';
 import { RemoveContractUseCase } from './use-cases/remove-contract.use-case';
 import { FinalizeMeterLinkUseCase } from './use-cases/finalize-meter-link.use-case';
+import { GetConnectionRequestPdfDataUseCase } from './use-cases/get-connection-request-pdf-data.use-case';
+import { GetResponsibilityAgreementPdfDataUseCase } from './use-cases/get-responsibility-agreement-pdf-data.use-case';
+import { GeneratePdfUseCase } from 'src/infrastructure/pdf/use-cases/generate-pdf.use-case';
 
 describe('ContratoMedidorService', () => {
   let service: ContratoMedidorService;
@@ -17,6 +22,9 @@ describe('ContratoMedidorService', () => {
   const mockUpdateUseCase = { execute: jest.fn() };
   const mockRemoveUseCase = { execute: jest.fn() };
   const mockFinalizeLinkUseCase = { execute: jest.fn() };
+  const mockGetConnectionRequestPdfData = { execute: jest.fn() };
+  const mockGetResponsibilityAgreementPdfData = { execute: jest.fn() };
+  const mockGeneratePdf = { execute: jest.fn() };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -31,6 +39,15 @@ describe('ContratoMedidorService', () => {
           provide: FinalizeMeterLinkUseCase,
           useValue: mockFinalizeLinkUseCase,
         },
+        {
+          provide: GetConnectionRequestPdfDataUseCase,
+          useValue: mockGetConnectionRequestPdfData,
+        },
+        {
+          provide: GetResponsibilityAgreementPdfDataUseCase,
+          useValue: mockGetResponsibilityAgreementPdfData,
+        },
+        { provide: GeneratePdfUseCase, useValue: mockGeneratePdf },
       ],
     }).compile();
 

@@ -211,14 +211,16 @@ Para consultas o soporte, contacta al equipo de desarrollo del Backend.
     .addTag('sectors', 'Gestión de sectores territoriales')
     .addTag('communities', 'Gestión de comunidades')
     .addTag('contracts', 'Gestión de contratos y medidores')
-    .addTag('tariffs', 'Categorías tarifarias')
+    .addTag('tariff-categories', 'Categorías tarifarias (tarifas por consumo)')
     .addTag('meters', 'Gestión de medidores')
     .addTag('readings', 'Lecturas de medidores')
     .addTag('reading-anomalies', 'Anomalías de lecturas (fugas, daños)')
     .addTag('routes', 'Planificación y gestión de rutas de lectura')
     .addTag('search', 'Búsqueda pública de información')
-    .addTag('Lotes', 'Gestión de lotes de facturación')
+    .addTag('batches', 'Billing batch management')
+    .addTag('pre-invoices', 'Gestión de prefacturas')
     .addTag('agreements', 'Payment agreements')
+    .addTag('reports', 'Generación de reportes y documentos PDF')
     .addTag(
       '[En Desarrollo] SRI - Facturación Electrónica',
       'Módulo de facturación electrónica SRI',
@@ -273,6 +275,8 @@ Para consultas o soporte, contacta al equipo de desarrollo del Backend.
     `,
     customSiteTitle: 'JASRAPO API Documentation',
   });
+
+  app.enableShutdownHooks();
 
   const port = configService.get<number>('PORT', 3000);
   await app.listen(port);

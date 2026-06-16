@@ -1,10 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import {
-  MeterFilters,
-  MeterRepository,
-} from '../domain/repositories/meter.repository';
+import { MeterRepository } from '../domain/repositories/meter.repository';
 import { CreateMeterDto } from '../interfaces/dto/create-meter.dto';
 import { UpdateMeterDto } from '../interfaces/dto/update-meter.dto';
+import { FilterMeterDto } from '../interfaces/dto/filter-meter.dto';
+import { buildMeterFilters } from './mappers/meter-filters.mapper';
 import { EstadoMedidorResponseDto } from '../interfaces/dto/estado-medidor-response.dto';
 import { CreateMeterUseCase } from './use-cases/create-meter.use-case';
 import { ReportDefectUseCase } from './use-cases/report-defect.use-case';
@@ -14,7 +13,10 @@ import { DecommissionMeterUseCase } from './use-cases/decommission-meter.use-cas
 import { MeterEntity } from '../domain/entities/meter.entity';
 import { DateUtil } from 'src/infrastructure/common/utils/date.util';
 import { METER_STATUS_LIST } from 'src/infrastructure/config/app.constants';
-import { getPagination } from 'src/infrastructure/common/utils/pagination.util';
+import {
+  getPagination,
+  paginate,
+} from 'src/infrastructure/common/utils/pagination.util';
 import { PaginatedMeterResponse } from '../interfaces/types/paginated-meter-response.type';
 
 @Injectable()
@@ -32,21 +34,22 @@ export class MeterService {
     return this.createUseCase.execute(createDto);
   }
 
-  async findAll(
-    page = 1,
-    limit = 10,
-    where?: MeterFilters,
-  ): Promise<PaginatedMeterResponse> {
+  async findAll(filters?: FilterMeterDto): Promise<PaginatedMeterResponse> {
+    const page = filters?.page ?? 1;
+    const limit = filters?.limit ?? 10;
     const { skip, take, page: safePage } = getPagination(page, limit);
+    const meterFilters = filters ? buildMeterFilters(filters) : undefined;
 
     const [meters, total, enBodegaCount, instaladosCount, danadosCount] =
       await Promise.all([
-        this.meterRepository.findMany({ where, skip, take }),
-        this.meterRepository.count(where),
-        this.meterRepository.count({ ...where, estado: 'BODEGA' }),
-        this.meterRepository.count({ ...where, estado: 'INSTALADO' }),
-        this.meterRepository.count({ ...where, estado: 'DANADO' }),
+        this.meterRepository.findMany({ where: meterFilters, skip, take }),
+        this.meterRepository.count(meterFilters),
+        this.meterRepository.count({ ...meterFilters, estado: 'BODEGA' }),
+        this.meterRepository.count({ ...meterFilters, estado: 'INSTALADO' }),
+        this.meterRepository.count({ ...meterFilters, estado: 'DANADO' }),
       ]);
+
+    const totalPages = Math.ceil(total / take);
 
     return {
       data: meters as unknown as any[],
@@ -54,11 +57,11 @@ export class MeterService {
         total,
         page: safePage,
         limit: take,
-        ultimaPagina: Math.ceil(total / take),
+        ultimaPagina: totalPages,
         paginaActual: safePage,
         porPagina: take,
         anterior: safePage > 1 ? safePage - 1 : null,
-        siguiente: safePage < Math.ceil(total / take) ? safePage + 1 : null,
+        siguiente: safePage < totalPages ? safePage + 1 : null,
       },
       kpis: {
         enBodega: enBodegaCount,
@@ -113,7 +116,7 @@ export class MeterService {
     return this.decommissionUseCase.execute(medidorId, motivoBaja);
   }
 
-  async findAllEstados(): Promise<EstadoMedidorResponseDto[]> {
+  async findAllStates(): Promise<EstadoMedidorResponseDto[]> {
     return METER_STATUS_LIST.map((s) => ({
       estadoId: s.estadoId,
       codigo: s.codigo,

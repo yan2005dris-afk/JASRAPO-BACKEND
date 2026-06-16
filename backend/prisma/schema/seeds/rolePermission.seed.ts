@@ -30,7 +30,7 @@ export async function seedRolePermissions(
     const secretaryResources = [
         'clientes',
         'lecturas', 'reading-anomalies',
-        'routes', 'lotes'
+        'routes', 'batches'
     ];
     const secretaryPerms = permissions.filter(p => secretaryResources.includes(p.recurso));
     for (const perm of secretaryPerms) {
@@ -42,7 +42,7 @@ export async function seedRolePermissions(
     // 3. RECAUDACION: Facturación, Cobros y Clientes (Sin Lecturas)
     const recaudacionResources = [
         'planillas', 'facturacion_electronica', 'recaudacion', 
-        'notas_credito', 'envio_facturas', 'lotes',
+        'notas_credito', 'envio_facturas', 'batches',
         'clientes'
     ];
     const recaudacionPerms = permissions.filter(p => recaudacionResources.includes(p.recurso));

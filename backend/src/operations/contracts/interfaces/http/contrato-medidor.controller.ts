@@ -8,7 +8,9 @@ import {
   Delete,
   Query,
   UseGuards,
+  Res,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { ContratoMedidorService } from '../../application/contrato-medidor.service';
 import { CrearContratoMedidorDto } from '../dto/create-contrato-medidor.dto';
 import { ActualizarContratoMedidorDto } from '../dto/update-contrato-medidor.dto';
@@ -169,5 +171,64 @@ export class ContratoMedidorController {
   @Delete(':id')
   eliminarContrato(@Param('id') id: string) {
     return this.contratoMedidorService.eliminar(BigInt(id));
+  }
+
+  /**
+   * GET /contracts/:id/pdf/connection-request
+   * Generate connection request PDF (Solicitud para Conexión de Agua Potable)
+   */
+  @ApiOperation({ summary: 'Generate connection request PDF' })
+  @ApiParam({
+    name: 'id',
+    description: 'ID del contrato',
+    type: String,
+    example: '1',
+  })
+  @ApiResponse({ status: 200, description: 'PDF generado' })
+  @ApiResponse({ status: 404, description: 'Contrato no encontrado' })
+  @RequiredPermission('contracts', 'read')
+  @Get(':id/pdf/connection-request')
+  async connectionRequestPdf(@Param('id') id: string, @Res() res: Response) {
+    const buffer =
+      await this.contratoMedidorService.generateConnectionRequestPdf(
+        BigInt(id),
+      );
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `inline; filename="solicitud-conexion-${id}.pdf"`,
+      'Content-Length': buffer.length,
+    });
+    res.end(buffer);
+  }
+
+  /**
+   * GET /contracts/:id/pdf/responsibility-agreement
+   * Generate responsibility agreement PDF (Acta de Responsabilidad)
+   */
+  @ApiOperation({ summary: 'Generate responsibility agreement PDF' })
+  @ApiParam({
+    name: 'id',
+    description: 'ID del contrato',
+    type: String,
+    example: '1',
+  })
+  @ApiResponse({ status: 200, description: 'PDF generado' })
+  @ApiResponse({ status: 404, description: 'Contrato no encontrado' })
+  @RequiredPermission('contracts', 'read')
+  @Get(':id/pdf/responsibility-agreement')
+  async responsibilityAgreementPdf(
+    @Param('id') id: string,
+    @Res() res: Response,
+  ) {
+    const buffer =
+      await this.contratoMedidorService.generateResponsibilityAgreementPdf(
+        BigInt(id),
+      );
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `inline; filename="acta-responsabilidad-${id}.pdf"`,
+      'Content-Length': buffer.length,
+    });
+    res.end(buffer);
   }
 }

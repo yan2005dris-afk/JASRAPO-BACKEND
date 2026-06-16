@@ -7,7 +7,7 @@ import { CreateClientUseCase } from './use-cases/create-client.use-case';
 import { UpdateClientUseCase } from './use-cases/update-client.use-case';
 import { FindOneClientUseCase } from './use-cases/find-one-client.use-case';
 import { RemoveClientUseCase } from './use-cases/remove-client.use-case';
-import { buildClientFilters } from '../domain/types/client-filters';
+import { buildClientFilters } from './mappers/client-filters.mapper';
 import { IdentificacionMapper } from '../infrastructure/mappers/identificacion.mapper';
 import type { IResponseIdentificacion } from '../domain/types/IResponseIdentificacion';
 import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';

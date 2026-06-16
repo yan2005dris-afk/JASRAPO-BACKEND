@@ -7,8 +7,10 @@ import {
   Patch,
   Post,
   Query,
+  Res,
   UseGuards,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import {
   ApiBearerAuth,
   ApiTags,
@@ -233,5 +235,31 @@ export class AgreementsController {
     @Param('id', ParseBigIntPipe) id: bigint,
   ): Promise<AgreementResponseDto> {
     return this.agreementsService.cancel(id);
+  }
+
+  /**
+   * GET /agreements/:id/pdf
+   * Generate payment agreement PDF
+   */
+  @ApiOperation({ summary: 'Generate payment agreement PDF' })
+  @ApiParam({
+    name: 'id',
+    description: 'ID del convenio',
+    type: String,
+    example: '1',
+  })
+  @RequiredPermission('agreements', 'read')
+  @Get(':id/pdf')
+  async generatePdf(
+    @Param('id', ParseBigIntPipe) id: bigint,
+    @Res() res: Response,
+  ) {
+    const buffer = await this.agreementsService.generatePdf(id);
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `inline; filename="convenio-${id}.pdf"`,
+      'Content-Length': buffer.length,
+    });
+    res.end(buffer);
   }
 }

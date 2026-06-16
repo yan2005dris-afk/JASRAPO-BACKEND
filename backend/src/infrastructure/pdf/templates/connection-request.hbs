@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; font-size: 11px; color: #333; }
+    .container { width: 100%; padding: 20px 30px; }
+
+    .header { width: 100%; border-bottom: 2px solid #0066cc; padding-bottom: 12px; margin-bottom: 18px; }
+    .header table { width: 100%; border-collapse: collapse; }
+    .header td { vertical-align: middle; padding: 0; border: none; }
+    .header td.center { text-align: center; }
+    .header td.right { text-align: right; }
+    .company-name { font-size: 18px; font-weight: bold; color: #0066cc; }
+    .company-sub { font-size: 10px; color: #666; margin-top: 2px; }
+    .doc-number-circle {
+      display: inline-block;
+      border: 2px solid #0066cc;
+      border-radius: 50%;
+      width: 50px; height: 50px;
+      line-height: 46px;
+      text-align: center;
+      font-size: 14px;
+      font-weight: bold;
+      color: #0066cc;
+    }
+
+    .title-section { text-align: center; margin-bottom: 16px; }
+    .title-section h1 { font-size: 14px; font-weight: bold; color: #0066cc; text-transform: uppercase; }
+
+    .section { margin-bottom: 14px; }
+    .section-title { font-size: 11px; font-weight: bold; color: #fff; background: #0066cc; padding: 4px 8px; margin-bottom: 8px; }
+
+    .form-table { width: 100%; border-collapse: collapse; }
+    .form-table td { padding: 3px 6px; border: 1px solid #ccc; vertical-align: top; }
+    .form-table td.label { font-weight: bold; color: #555; width: 30%; background: #f5f5f5; }
+    .form-table td.value { width: 70%; }
+
+    .cost-table { width: 100%; border-collapse: collapse; }
+    .cost-table th { background: #0066cc; color: white; padding: 5px 8px; text-align: left; font-size: 11px; }
+    .cost-table td { padding: 4px 8px; border-bottom: 1px solid #ddd; }
+    .cost-table .total-row td { font-weight: bold; border-top: 2px solid #0066cc; }
+
+    .tarifa-table { width: 100%; border-collapse: collapse; }
+    .tarifa-table th { background: #0066cc; color: white; padding: 5px 8px; text-align: center; font-size: 11px; }
+    .tarifa-table td { padding: 4px 8px; border: 1px solid #ddd; text-align: center; }
+
+    .pago-section { margin-bottom: 14px; }
+    .checkbox { display: inline-block; width: 14px; height: 14px; border: 1px solid #333; text-align: center; line-height: 12px; font-size: 11px; margin-right: 4px; }
+
+    .footer { margin-top: 25px; text-align: center; font-size: 10px; color: #999; border-top: 1px solid #ddd; padding-top: 8px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- Header -->
+    <div class="header">
+      <table>
+        <tr>
+          <td style="width:50%">
+            <div class="company-name">JASRAPO</div>
+            <div class="company-sub">Junta Administradora del Sistema Regional de Agua Potable Olón</div>
+            <div class="company-sub">RUC: 0960005820001 &nbsp;|&nbsp; Decreto Ejecutivo N° 1088</div>
+          </td>
+          <td class="center" style="width:20%">
+            <div class="doc-number-circle">N°{{solicitud.numero}}</div>
+          </td>
+          <td class="right" style="width:30%">
+            <div style="font-size:10px; color:#666;">Fecha: {{solicitud.fechaEmision}}</div>
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- Title -->
+    <div class="title-section">
+      <h1>Solicitud para Conexión de Agua Potable</h1>
+    </div>
+
+    <!-- Datos Personales -->
+    <div class="section">
+      <div class="section-title">DATOS PERSONALES</div>
+      <table class="form-table">
+        <tr>
+          <td class="label">Provincia:</td>
+          <td class="value">Santa Elena</td>
+          <td class="label">Cantón:</td>
+          <td class="value">Santa Elena</td>
+        </tr>
+        <tr>
+          <td class="label">Parroquia:</td>
+          <td class="value">Colonche</td>
+          <td class="label">Comuna:</td>
+          <td class="value">{{solicitud.contrato.comunidad.nombre}}</td>
+        </tr>
+        <tr>
+          <td class="label">Nombre:</td>
+          <td class="value" colspan="3">
+            {{#if solicitud.cliente.razonSocial}}
+              {{solicitud.cliente.razonSocial}}
+            {{else}}
+              {{solicitud.cliente.nombres}} {{solicitud.cliente.apellidos}}
+            {{/if}}
+          </td>
+        </tr>
+        <tr>
+          <td class="label">Cédula / RUC:</td>
+          <td class="value">{{solicitud.cliente.identificacion}}</td>
+          <td class="label">Teléfono:</td>
+          <td class="value">{{solicitud.cliente.telefono}}</td>
+        </tr>
+        <tr>
+          <td class="label">Dirección Domiciliaria:</td>
+          <td class="value">{{solicitud.cliente.direccionDomicilio}}</td>
+          <td class="label">Correo:</td>
+          <td class="value">{{solicitud.cliente.email}}</td>
+        </tr>
+        <tr>
+          <td class="label">Dirección Suministro:</td>
+          <td class="value" colspan="3">{{solicitud.contrato.direccionSuministro}}</td>
+        </tr>
+        <tr>
+          <td class="label">N° Guía:</td>
+          <td class="value" colspan="3">{{solicitud.contrato.numeroGuia}}</td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- Tipo de Instalación -->
+    <div class="section">
+      <div class="section-title">TIPO DE INSTALACIÓN</div>
+      <table class="form-table">
+        <tr>
+          <td style="width:33%">
+            <span class="checkbox">{{#if (eq solicitud.tarifa.tipo "Tipo 1")}}✓{{/if}}</span> Tipo 1
+          </td>
+          <td style="width:33%">
+            <span class="checkbox">{{#if (eq solicitud.tarifa.tipo "Tipo 2")}}✓{{/if}}</span> Tipo 2
+          </td>
+          <td style="width:34%">
+            <span class="checkbox">{{#if (eq solicitud.tarifa.tipo "Tipo 3")}}✓{{/if}}</span> Tipo 3
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- Costo de la Conexión -->
+    <div class="section">
+      <div class="section-title">COSTO DE LA CONEXIÓN</div>
+      <table class="cost-table">
+        <thead>
+          <tr>
+            <th>Descripción</th>
+            <th style="text-align:right">Valor</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Derecho de inspección</td>
+            <td style="text-align:right">${{solicitud.costos.derechoInspeccion}}</td>
+          </tr>
+          <tr>
+            <td>Costo de la guía</td>
+            <td style="text-align:right">${{solicitud.costos.costoGuia}}</td>
+          </tr>
+          <tr>
+            <td>Materiales extras</td>
+            <td style="text-align:right">${{solicitud.costos.materialesExtras}}</td>
+          </tr>
+          <tr>
+            <td>IVA</td>
+            <td style="text-align:right">${{solicitud.costos.iva}}</td>
+          </tr>
+          <tr class="total-row">
+            <td><strong>Costo Total</strong></td>
+            <td style="text-align:right"><strong>${{solicitud.costos.total}}</strong></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Forma de Pago -->
+    <div class="section">
+      <div class="section-title">FORMA DE PAGO</div>
+      <div style="padding: 6px 8px;">
+        <span class="checkbox">{{#if (eq solicitud.formaPago "CONTADO")}}✓{{/if}}</span> A Contado &nbsp;&nbsp;&nbsp;
+        <span class="checkbox">{{#if (eq solicitud.formaPago "PLAZO")}}✓{{/if}}</span> A Plazo
+      </div>
+    </div>
+
+    <!-- Valor de la Tarifa -->
+    <div class="section">
+      <div class="section-title">VALOR DE LA TARIFA</div>
+      <table class="tarifa-table">
+        <thead>
+          <tr>
+            <th>Tipo</th>
+            <th>Consumo Mínimo</th>
+            <th>Valor Base</th>
+            <th>Excedente por m³</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="{{#if (eq solicitud.tarifa.tipo "Tipo 1")}}background:#e8f0fe;{{/if}}">
+            <td>Tipo 1</td>
+            <td>10 m³</td>
+            <td>$4.00</td>
+            <td>$0.40</td>
+          </tr>
+          <tr style="{{#if (eq solicitud.tarifa.tipo "Tipo 2")}}background:#e8f0fe;{{/if}}">
+            <td>Tipo 2</td>
+            <td>10 m³</td>
+            <td>$7.50</td>
+            <td>$0.75</td>
+          </tr>
+          <tr style="{{#if (eq solicitud.tarifa.tipo "Tipo 3")}}background:#e8f0fe;{{/if}}">
+            <td>Tipo 3</td>
+            <td>10 m³</td>
+            <td>$15.00</td>
+            <td>$1.50</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <p>Junta Administradora del Sistema Regional de Agua Potable Olón &nbsp;|&nbsp; Olón, Santa Elena, Ecuador</p>
+    </div>
+
+  </div>
+</body>
+</html>
