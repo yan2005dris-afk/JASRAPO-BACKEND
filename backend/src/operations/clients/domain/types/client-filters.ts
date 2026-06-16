@@ -5,4 +5,3 @@ export interface ClientFilters {
   nombreCompleto?: string;
   activo?: boolean;
 }
-

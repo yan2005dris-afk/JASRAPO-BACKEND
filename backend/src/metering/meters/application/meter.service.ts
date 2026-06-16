@@ -1,7 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import {
-  MeterRepository,
-} from '../domain/repositories/meter.repository';
+import { MeterRepository } from '../domain/repositories/meter.repository';
 import { CreateMeterDto } from '../interfaces/dto/create-meter.dto';
 import { UpdateMeterDto } from '../interfaces/dto/update-meter.dto';
 import { FilterMeterDto } from '../interfaces/dto/filter-meter.dto';
@@ -36,9 +34,7 @@ export class MeterService {
     return this.createUseCase.execute(createDto);
   }
 
-  async findAll(
-    filters?: FilterMeterDto,
-  ): Promise<PaginatedMeterResponse> {
+  async findAll(filters?: FilterMeterDto): Promise<PaginatedMeterResponse> {
     const page = filters?.page ?? 1;
     const limit = filters?.limit ?? 10;
     const { skip, take, page: safePage } = getPagination(page, limit);
