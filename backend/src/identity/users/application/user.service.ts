@@ -26,7 +26,7 @@ import {
 } from '../domain/types/user.types';
 import {
   StorageService,
-  SRI_BUCKETS,
+  SRI_STORAGE_TYPES,
 } from 'src/infrastructure/storage/storage.service';
 import { ImageProcessorUtil } from 'src/infrastructure/common/utils/image-processor.util';
 
@@ -132,7 +132,7 @@ export class UserService {
     this.logger.debug(`[AVATAR] Subiendo a storage con key: ${key}`);
 
     await this.storageService.upload(
-      SRI_BUCKETS.PROFILE_PHOTOS,
+      SRI_STORAGE_TYPES.PROFILE_PHOTOS,
       key,
       processedBuffer,
       { contentType: 'image/webp' },
@@ -159,7 +159,7 @@ export class UserService {
           `[AVATAR] Revirtiendo subida por fallo en creación de usuario: ${avatarKey}`,
         );
         await this.storageService
-          .delete(SRI_BUCKETS.PROFILE_PHOTOS, avatarKey)
+          .delete(SRI_STORAGE_TYPES.PROFILE_PHOTOS, avatarKey)
           .catch(() => {});
       }
       throw error;
@@ -249,7 +249,7 @@ export class UserService {
       // Paso exitoso: Borramos el avatar viejo si subimos uno nuevo
       if (newAvatarKey && oldAvatarKey) {
         await this.storageService
-          .delete(SRI_BUCKETS.PROFILE_PHOTOS, oldAvatarKey)
+          .delete(SRI_STORAGE_TYPES.PROFILE_PHOTOS, oldAvatarKey)
           .catch((e) =>
             this.logger.warn(
               `[AVATAR] No se pudo borrar el avatar anterior (${oldAvatarKey}): ${e.message}`,
@@ -263,7 +263,7 @@ export class UserService {
           `[AVATAR] Revirtiendo subida por fallo en transacción DB: ${newAvatarKey}`,
         );
         await this.storageService
-          .delete(SRI_BUCKETS.PROFILE_PHOTOS, newAvatarKey)
+          .delete(SRI_STORAGE_TYPES.PROFILE_PHOTOS, newAvatarKey)
           .catch(() => {});
       }
 
@@ -309,7 +309,7 @@ export class UserService {
       // Éxito: Borramos el viejo si existe
       if (oldAvatarKey) {
         await this.storageService
-          .delete(SRI_BUCKETS.PROFILE_PHOTOS, oldAvatarKey)
+          .delete(SRI_STORAGE_TYPES.PROFILE_PHOTOS, oldAvatarKey)
           .catch(() => {});
       }
 
@@ -318,7 +318,7 @@ export class UserService {
       // Rollback: Si subimos el nuevo pero falló la DB, borramos el nuevo
       if (newAvatarKey) {
         await this.storageService
-          .delete(SRI_BUCKETS.PROFILE_PHOTOS, newAvatarKey)
+          .delete(SRI_STORAGE_TYPES.PROFILE_PHOTOS, newAvatarKey)
           .catch(() => {});
       }
       throw error;

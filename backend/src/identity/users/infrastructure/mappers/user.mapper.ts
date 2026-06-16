@@ -1,41 +1,46 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import type {
   UserWithRoleResponse,
   AvatarResponse,
 } from '../../domain/types/user.types';
-import {
-  StorageService,
-  SRI_BUCKETS,
-} from 'src/infrastructure/storage/storage.service';
+import { SRI_STORAGE_TYPES } from 'src/infrastructure/storage/storage.service';
+import { STORAGE_PROXY_BASE } from 'src/infrastructure/storage-proxy/storage-proxy.constants';
 
 @Injectable()
 export class UserMapper {
-  private readonly logger = new Logger(UserMapper.name);
-
-  constructor(private readonly storageService: StorageService) {}
 
   /**
-   * Enriquece los datos del avatar con una URL dinámica o una de fallback.
+   * Enriquece los datos del avatar con una URL estable hacia el proxy de imágenes
+   * o una de fallback si no hay avatar.
+   *
+   * La URL generada apunta al StorageProxyController que sirve la imagen directamente
+   * desde S3 con cabeceras de caché HTTP. Esto permite:
+   * - Cacheo en navegador (Cache-Control: max-age=31536000)
+   * - Cacheo en Nginx (proxy_cache)
+   * - URLs estables que no expiran (a diferencia de presigned URLs)
    */
+  /**
+   * Formato que debe tener un key de avatar válido generado por
+   * `uploadAndProcessAvatar()` en UserService.
+   *
+   * Ejemplo: `avatars/550e8400-e29b-41d4-a716-446655440000.webp`
+   *
+   * Los keys que no cumplan este patrón (ej: legacy data, keys manuales)
+   * se consideran inválidos y se usa el fallback a ui-avatars.com.
+   */
+  private static readonly AVATAR_KEY_PATTERN = /^avatars\/[a-f0-9-]+\.webp$/;
+
   private async enrichAvatar(
     avatar: unknown,
     fullName: string | null,
   ): Promise<AvatarResponse> {
     const avatarObj = avatar as { key?: string } | null;
 
-    if (avatarObj?.key) {
-      try {
-        const url = await this.storageService.getUrl(
-          SRI_BUCKETS.PROFILE_PHOTOS,
-          avatarObj.key,
-        );
-        return { url, key: avatarObj.key };
-      } catch (error) {
-        this.logger.error(
-          `Error al generar URL firmada para avatar (key: ${avatarObj.key}): ${error.message}`,
-          error.stack,
-        );
-      }
+    if (avatarObj?.key && UserMapper.AVATAR_KEY_PATTERN.test(avatarObj.key)) {
+      // Replace '/' with '--' for URL safety — the controller reverts it
+      const safeKey = avatarObj.key.replace(/\//g, '--');
+      const url = `${STORAGE_PROXY_BASE}/${SRI_STORAGE_TYPES.PROFILE_PHOTOS}/${safeKey}`;
+      return { url, key: avatarObj.key };
     }
 
     // Avatar por defecto (Fallback) basado en el nombre
