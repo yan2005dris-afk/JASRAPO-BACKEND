@@ -1,14 +1,15 @@
-import { IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsOptional, IsString } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
+import { EstadoMedidor } from 'src/generated/prisma/enums';
 
 export class FilterMeterDto extends PaginationDto {
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ enum: EstadoMedidor })
   @IsOptional()
-  @IsString()
+  @IsEnum(EstadoMedidor)
   @Transform(({ value }) => (value === '' ? undefined : value))
-  estado?: string;
+  estado?: EstadoMedidor;
 
   @ApiPropertyOptional()
   @IsOptional()

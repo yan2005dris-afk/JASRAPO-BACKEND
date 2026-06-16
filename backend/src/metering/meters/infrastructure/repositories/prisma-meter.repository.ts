@@ -60,7 +60,7 @@ export class PrismaMeterRepository implements MeterRepository {
     }
 
     if (filters.estado) {
-      conditions.push({ estado: filters.estado as any });
+      conditions.push({ estado: filters.estado });
     }
 
     if (filters.marca) {
@@ -104,7 +104,7 @@ export class PrismaMeterRepository implements MeterRepository {
         marca: data.marca,
         modelo: data.modelo,
         serie: data.serie,
-        estado: data.estado as any,
+        estado: data.estado,
         latitud: data.latitud,
         longitud: data.longitud,
       },
@@ -124,7 +124,7 @@ export class PrismaMeterRepository implements MeterRepository {
         ...(data.marca !== undefined && { marca: data.marca }),
         ...(data.modelo !== undefined && { modelo: data.modelo }),
         ...(data.serie !== undefined && { serie: data.serie }),
-        ...(data.estado !== undefined && { estado: data.estado as any }),
+        ...(data.estado !== undefined && { estado: data.estado }),
         ...(data.fechaInstalacion !== undefined && {
           fechaInstalacion: data.fechaInstalacion,
         }),

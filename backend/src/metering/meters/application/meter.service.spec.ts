@@ -118,7 +118,7 @@ describe('MeterService', () => {
       .mockResolvedValue([mockPrismaResult]);
     jest.spyOn(meterRepository, 'count').mockResolvedValue(1);
 
-    const result = await service.findAll(1, 10);
+    const result = await service.findAll({ page: 1, limit: 10 });
 
     expect(result.data).toHaveLength(1);
     expect(result.meta.total).toBe(1);
@@ -126,5 +126,22 @@ describe('MeterService', () => {
     expect(result.kpis.enBodega).toBe(1);
     expect(meterRepository.findMany).toHaveBeenCalled();
     expect(meterRepository.count).toHaveBeenCalled();
+  });
+
+  it('findAll should fall back to default pagination when filters are empty or undefined', async () => {
+    jest
+      .spyOn(meterRepository, 'findMany')
+      .mockResolvedValue([mockPrismaResult]);
+    jest.spyOn(meterRepository, 'count').mockResolvedValue(1);
+
+    const result = await service.findAll();
+
+    expect(result.meta.page).toBe(1);
+    expect(result.meta.limit).toBe(10);
+    expect(meterRepository.findMany).toHaveBeenCalledWith({
+      where: undefined,
+      skip: 0,
+      take: 10,
+    });
   });
 });

@@ -6,27 +6,11 @@ import type { ClientFilters } from '../../domain/types/client-filters';
  * Strips pagination fields (page, limit) and returns only domain filter fields.
  */
 export function buildClientFilters(filters: FilterClientDto): ClientFilters {
-  const result: ClientFilters = {};
+  // Excluir explícitamente los campos de paginación
+  const { page: _page, limit: _limit, ...clientFilters } = filters;
 
-  if (filters.identificacion !== undefined) {
-    result.identificacion = filters.identificacion;
-  }
-
-  if (filters.nombres !== undefined) {
-    result.nombres = filters.nombres;
-  }
-
-  if (filters.apellidos !== undefined) {
-    result.apellidos = filters.apellidos;
-  }
-
-  if (filters.nombreCompleto !== undefined) {
-    result.nombreCompleto = filters.nombreCompleto;
-  }
-
-  if (filters.activo !== undefined) {
-    result.activo = filters.activo;
-  }
-
-  return result;
+  // Eliminar campos undefined
+  return Object.fromEntries(
+    Object.entries(clientFilters).filter(([_, value]) => value !== undefined),
+  );
 }

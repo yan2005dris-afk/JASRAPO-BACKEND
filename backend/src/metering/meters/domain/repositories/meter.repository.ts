@@ -5,7 +5,7 @@ export interface CreateMeterRepositoryData {
   marca: string;
   modelo: string;
   serie: string;
-  estado: string;
+  estado: MeterEntity['estado'];
   latitud?: number | null;
   longitud?: number | null;
 }
@@ -14,7 +14,7 @@ export interface UpdateMeterRepositoryData {
   marca?: string;
   modelo?: string;
   serie?: string;
-  estado?: string;
+  estado?: MeterEntity['estado'];
   fechaInstalacion?: Date | null;
   fechaBaja?: Date | null;
   motivo?: string | null;
