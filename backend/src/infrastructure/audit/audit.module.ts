@@ -1,6 +1,6 @@
 import { Global, Module } from '@nestjs/common';
 import { APP_INTERCEPTOR } from '@nestjs/core';
-import { RawPgModule } from '../database/raw-pg/raw-pg.module';
+import { DatabaseModule } from '../database/prisma.module';
 import { AuditService } from './audit.service';
 import { AuditInterceptor } from '../common/interceptors/audit.interceptor';
 
@@ -10,7 +10,7 @@ import { AuditInterceptor } from '../common/interceptors/audit.interceptor';
  */
 @Global()
 @Module({
-  imports: [RawPgModule],
+  imports: [DatabaseModule],
   providers: [
     AuditService,
     {

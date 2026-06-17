@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { randomBytes } from 'node:crypto';
-import { RawPgService } from '../../../infrastructure/database/raw-pg/raw-pg.service';
+import { PrismaService } from '../../../infrastructure/database/prisma.service';
 import { JobsService } from '../../../infrastructure/jobs/jobs.service';
 import { WEBHOOK_DISPATCH_JOB } from '../../infrastructure/queue/processors/webhook.processor';
 import {
@@ -24,7 +24,7 @@ export class WebhooksService {
   private readonly logger = new Logger(WebhooksService.name);
 
   constructor(
-    private readonly db: RawPgService,
+    private readonly prisma: PrismaService,
     private readonly jobsService: JobsService,
   ) {}
 
@@ -53,142 +53,90 @@ export class WebhooksService {
   // =====================
 
   async findAll(emisorId?: number): Promise<WebhookResponseDto[]> {
-    let query = `
-      SELECT id, nombre, url, eventos, emisor_id, activo, reintentos_max, created_at, updated_at
-      FROM webhook_configs
-    `;
-    const params: any[] = [];
-
-    if (emisorId) {
-      query += ` WHERE emisor_id = $1`;
-      params.push(emisorId);
-    }
-
-    query += ` ORDER BY created_at DESC`;
-
-    const result = await this.db.query(query, params);
-    return result.rows.map((row: Record<string, unknown>) =>
-      this.mapToResponse(row),
-    );
+    const configs = await this.prisma.webhookConfigs.findMany({
+      where: emisorId ? { emisorId } : {},
+      orderBy: { createdAt: 'desc' },
+    });
+    return configs.map((config) => this.mapToResponse(config));
   }
 
   async findOne(id: string): Promise<WebhookResponseDto> {
-    const result = await this.db.query(
-      `SELECT id, nombre, url, eventos, emisor_id, activo, reintentos_max, created_at, updated_at
-       FROM webhook_configs
-       WHERE id = $1`,
-      [id],
-    );
+    const config = await this.prisma.webhookConfigs.findUnique({
+      where: { id },
+    });
 
-    if (result.rows.length === 0) {
+    if (!config) {
       throw new NotFoundException(`Webhook con ID ${id} no encontrado`);
     }
 
-    return this.mapToResponse(result.rows[0]);
+    return this.mapToResponse(config);
   }
 
   async create(dto: CreateWebhookDto): Promise<WebhookSecretResponseDto> {
     const secreto = this.generateSecret();
 
-    const result = await this.db.query(
-      `INSERT INTO webhook_configs (nombre, url, eventos, emisor_id, secreto, reintentos_max)
-       VALUES ($1, $2, $3, $4, $5, $6)
-       RETURNING id, nombre, url, eventos, emisor_id, secreto, activo, reintentos_max, created_at, updated_at`,
-      [
-        dto.nombre,
-        dto.url,
-        dto.eventos,
-        dto.emisorId || null,
+    const config = await this.prisma.webhookConfigs.create({
+      data: {
+        nombre: dto.nombre,
+        url: dto.url,
+        eventos: dto.eventos,
+        emisorId: dto.emisorId,
         secreto,
-        dto.reintentosMax || 3,
-      ],
-    );
+        reintentosMax: dto.reintentosMax || 3,
+      },
+    });
 
     this.logger.log(`Webhook creado: ${dto.nombre} -> ${dto.url}`);
-    return this.mapToSecretResponse(result.rows[0]);
+    return this.mapToSecretResponse(config);
   }
 
   async update(id: string, dto: UpdateWebhookDto): Promise<WebhookResponseDto> {
     await this.findOne(id);
 
-    const updates: string[] = [];
-    const values: any[] = [];
-    let paramIndex = 1;
-
-    if (dto.nombre !== undefined) {
-      updates.push(`nombre = $${paramIndex++}`);
-      values.push(dto.nombre);
-    }
-    if (dto.url !== undefined) {
-      updates.push(`url = $${paramIndex++}`);
-      values.push(dto.url);
-    }
-    if (dto.eventos !== undefined) {
-      updates.push(`eventos = $${paramIndex++}`);
-      values.push(dto.eventos);
-    }
-    if (dto.activo !== undefined) {
-      updates.push(`activo = $${paramIndex++}`);
-      values.push(dto.activo);
-    }
-    if (dto.reintentosMax !== undefined) {
-      updates.push(`reintentos_max = $${paramIndex++}`);
-      values.push(dto.reintentosMax);
-    }
-
-    if (updates.length === 0) {
-      return this.findOne(id);
-    }
-
-    updates.push(`updated_at = NOW()`);
-    values.push(id);
-
-    const result = await this.db.query(
-      `UPDATE webhook_configs SET ${updates.join(', ')}
-       WHERE id = $${paramIndex}
-       RETURNING id, nombre, url, eventos, emisor_id, activo, reintentos_max, created_at, updated_at`,
-      values,
-    );
+    const config = await this.prisma.webhookConfigs.update({
+      where: { id },
+      data: {
+        nombre: dto.nombre !== undefined ? dto.nombre : undefined,
+        url: dto.url !== undefined ? dto.url : undefined,
+        eventos: dto.eventos !== undefined ? dto.eventos : undefined,
+        activo: dto.activo !== undefined ? dto.activo : undefined,
+        reintentosMax: dto.reintentosMax !== undefined ? dto.reintentosMax : undefined,
+      },
+    });
 
     this.logger.log(`Webhook actualizado: ${id}`);
-    return this.mapToResponse(result.rows[0]);
+    return this.mapToResponse(config);
   }
 
   async delete(id: string): Promise<WebhookResponseDto> {
     const webhook = await this.findOne(id);
 
-    // El recurso existe pero está inactivo — 400, no 404
     if (!webhook.activo) {
       throw new BadRequestException('El webhook ya se encuentra inactivo');
     }
 
-    const result = await this.db.query(
-      `UPDATE webhook_configs SET activo = false, updated_at = NOW()
-       WHERE id = $1
-       RETURNING id, nombre, url, eventos, emisor_id, activo, reintentos_max, created_at, updated_at`,
-      [id],
-    );
+    const config = await this.prisma.webhookConfigs.update({
+      where: { id },
+      data: { activo: false },
+    });
 
     this.logger.log(`Webhook inactivado: ${id}`);
-    return this.mapToResponse(result.rows[0]);
+    return this.mapToResponse(config);
   }
 
   async regenerateSecret(id: string): Promise<WebhookSecretResponseDto> {
     await this.findOne(id);
     const newSecret = this.generateSecret();
 
-    const result = await this.db.query(
-      `UPDATE webhook_configs SET secreto = $1, updated_at = NOW()
-       WHERE id = $2
-       RETURNING id, nombre, url, eventos, emisor_id, secreto, activo, reintentos_max, created_at, updated_at`,
-      [newSecret, id],
-    );
+    const config = await this.prisma.webhookConfigs.update({
+      where: { id },
+      data: { secreto: newSecret },
+    });
 
     this.logger.log(`Secreto regenerado para webhook: ${id}`);
-    return this.mapToSecretResponse(result.rows[0]);
+    return this.mapToSecretResponse(config);
   }
 
-  // Paginación completa para logs de webhooks
   async getLogs(
     id: string,
     page = 1,
@@ -201,28 +149,25 @@ export class WebhooksService {
   }> {
     await this.findOne(id);
 
-    if (limit > 100) limit = 100; // tope máximo para evitar queries pesados
+    if (limit > 100) limit = 100;
     const offset = (page - 1) * limit;
 
-    const [countResult, dataResult] = await Promise.all([
-      this.db.query(`SELECT COUNT(*) FROM webhook_logs WHERE config_id = $1`, [
-        id,
-      ]),
-      this.db.query(
-        `SELECT id, evento, payload, status_code, respuesta, intento, exitoso, error, tiempo_respuesta_ms, created_at
-         FROM webhook_logs
-         WHERE config_id = $1
-         ORDER BY created_at DESC
-         LIMIT $2 OFFSET $3`,
-        [id, limit, offset],
-      ),
+    const [total, logs] = await Promise.all([
+      this.prisma.webhookLogs.count({
+        where: { configId: id },
+      }),
+      this.prisma.webhookLogs.findMany({
+        where: { configId: id },
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        skip: offset,
+      }),
     ]);
 
-    const total = parseInt(countResult.rows[0].count, 10);
     const totalPages = Math.ceil(total / limit);
 
     return {
-      data: dataResult.rows.map((row: any) => this.mapLogToResponse(row)),
+      data: logs.map((row: any) => this.mapLogToResponse(row)),
       total,
       page,
       totalPages,
@@ -238,41 +183,35 @@ export class WebhooksService {
     payload: Record<string, unknown>,
     emisorId?: number,
   ): Promise<void> {
-    // Buscar webhooks suscritos a este evento
-    let query = `
-      SELECT id, url, secreto, reintentos_max
-      FROM webhook_configs
-      WHERE activo = true AND $1 = ANY(eventos)
-    `;
-    const params: any[] = [evento];
+    const configs = await this.prisma.webhookConfigs.findMany({
+      where: {
+        activo: true,
+        eventos: {
+          has: evento,
+        },
+        ...(emisorId ? { emisorId } : {}),
+      },
+    });
 
-    if (emisorId) {
-      query += ` AND (emisor_id IS NULL OR emisor_id = $2)`;
-      params.push(emisorId);
-    }
-
-    const configs = await this.db.query(query, params);
-
-    if (configs.rows.length === 0) {
-      return; // No hay webhooks suscritos
+    if (configs.length === 0) {
+      return;
     }
 
     this.logger.log(
-      `Encolando evento ${evento} a ${configs.rows.length} webhook(s)`,
+      `Encolando evento ${evento} a ${configs.length} webhook(s)`,
     );
 
-    // Encolar cada webhook como job de pg-boss
-    for (const config of configs.rows) {
+    for (const config of configs) {
       const jobData: WebhookJobData = {
-        configId: config.id as string,
-        url: config.url as string,
-        secreto: config.secreto as string,
+        configId: config.id,
+        url: config.url,
+        secreto: config.secreto,
         evento,
         payload,
       };
 
       await this.jobsService.send(WEBHOOK_DISPATCH_JOB, jobData, {
-        retryLimit: (config.reintentos_max as number) || 5,
+        retryLimit: config.reintentosMax || 5,
         retryBackoff: true,
         retryDelay: 3,
       });
@@ -287,43 +226,41 @@ export class WebhooksService {
     return 'whsec_' + randomBytes(24).toString('hex');
   }
 
-  private mapToResponse(row: Record<string, unknown>): WebhookResponseDto {
+  private mapToResponse(row: any): WebhookResponseDto {
     return {
-      id: row.id as string,
-      nombre: row.nombre as string,
-      url: row.url as string,
-      eventos: row.eventos as string[],
-      emisorId: row.emisor_id as number,
-      activo: row.activo as boolean,
-      reintentosMax: row.reintentos_max as number,
-      createdAt: (row.created_at as Date)?.toISOString(),
-      updatedAt: (row.updated_at as Date)?.toISOString(),
+      id: row.id,
+      nombre: row.nombre,
+      url: row.url,
+      eventos: row.eventos,
+      emisorId: row.emisorId,
+      activo: row.activo,
+      reintentosMax: row.reintentosMax,
+      createdAt: row.createdAt?.toISOString(),
+      updatedAt: row.updatedAt?.toISOString(),
     };
   }
 
   private mapToSecretResponse(
-    row: Record<string, unknown>,
+    row: any,
   ): WebhookSecretResponseDto {
     return {
       ...this.mapToResponse(row),
-      secreto: row.secreto as string,
+      secreto: row.secreto,
     };
   }
 
-  private mapLogToResponse(
-    row: Record<string, unknown>,
-  ): WebhookLogResponseDto {
+  private mapLogToResponse(row: any): WebhookLogResponseDto {
     return {
-      id: row.id as string,
-      evento: row.evento as string,
+      id: row.id,
+      evento: row.evento,
       payload: row.payload,
-      statusCode: row.status_code as number,
-      respuesta: row.respuesta as string,
-      intento: row.intento as number,
-      exitoso: row.exitoso as boolean,
-      error: row.error as string,
-      tiempoRespuestaMs: row.tiempo_respuesta_ms as number,
-      createdAt: (row.created_at as Date)?.toISOString(),
+      statusCode: row.statusCode,
+      respuesta: row.respuesta,
+      intento: row.intento,
+      exitoso: row.exitoso,
+      error: row.error,
+      tiempoRespuestaMs: row.tiempoRespuestaMs,
+      createdAt: row.createdAt?.toISOString(),
     };
   }
 }

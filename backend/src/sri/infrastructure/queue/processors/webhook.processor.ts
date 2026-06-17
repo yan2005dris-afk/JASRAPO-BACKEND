@@ -1,5 +1,5 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { RawPgService } from '../../../../infrastructure/database/raw-pg/raw-pg.service';
+import { PrismaService } from '../../../../infrastructure/database/prisma.service';
 import { JobsService } from '../../../../infrastructure/jobs/jobs.service';
 import {
   validateSafeUrl,
@@ -18,14 +18,14 @@ export interface WebhookJobData {
 }
 
 /**
- * Processor de webhooks migrado a pg-boss (PostgreSQL).
+ * Processor de webhooks migrado a pg-boss (PostgreSQL) usando Prisma.
  */
 @Injectable()
 export class WebhookProcessor implements OnModuleInit {
   private readonly logger = new Logger(WebhookProcessor.name);
 
   constructor(
-    private readonly db: RawPgService,
+    private readonly prisma: PrismaService,
     private readonly jobsService: JobsService,
   ) {}
 
@@ -137,21 +137,19 @@ export class WebhookProcessor implements OnModuleInit {
     tiempoRespuestaMs: number,
   ): Promise<void> {
     try {
-      await this.db.query(
-        `INSERT INTO webhook_logs (config_id, evento, payload, status_code, respuesta, intento, exitoso, error, tiempo_respuesta_ms)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-        [
+      await this.prisma.webhookLogs.create({
+        data: {
           configId,
           evento,
-          payload,
+          payload: payload as any,
           statusCode,
           respuesta,
           intento,
           exitoso,
           error,
           tiempoRespuestaMs,
-        ],
-      );
+        },
+      });
     } catch (logError) {
       this.logger.error(
         `Error al registrar webhook log: ${(logError as Error).message}`,
