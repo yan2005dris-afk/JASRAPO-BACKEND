@@ -1,4 +1,7 @@
-import { DestinatarioGuiaRecord, DetalleGuiaRecord } from '../interfaces/repository.interface';
+import type {
+  DestinatarioGuiaRecord,
+  DetalleGuiaRecord,
+} from '../interfaces/repository.interface';
 
 export abstract class GuiaRemisionRepository {
   abstract createDestinatarios(

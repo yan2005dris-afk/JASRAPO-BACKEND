@@ -93,10 +93,11 @@ export class EmitirNotaCreditoUseCase {
             'Para auto-generar secuencial NC, el emisor debe estar registrado en la base de datos',
           );
         }
-        const nextSecuencial = await this.secuencialRepository.getNextSecuencial(
-          puntoEmisionInfo.punto_emision_id,
-          TipoComprobante.NOTA_CREDITO,
-        );
+        const nextSecuencial =
+          await this.secuencialRepository.getNextSecuencial(
+            puntoEmisionInfo.punto_emision_id,
+            TipoComprobante.NOTA_CREDITO,
+          );
         secuencial = nextSecuencial;
         this.logger.log(`Secuencial NC auto-generado: ${secuencial}`);
       }
@@ -132,7 +133,11 @@ export class EmitirNotaCreditoUseCase {
       this.logger.log('XML de nota de crédito generado');
 
       // Verify emisor has certificate in database
-      if (!emisor || !emisor.certificado_nombre || !emisor.certificado_password_encrypted) {
+      if (
+        !emisor ||
+        !emisor.certificado_nombre ||
+        !emisor.certificado_password_encrypted
+      ) {
         throw new BadRequestException(
           `El emisor ${dto.emisor.ruc} no tiene certificado P12 configurado. ` +
             `Use el endpoint /certificates/upload-cert para subir el certificado.`,
@@ -242,22 +247,23 @@ export class EmitirNotaCreditoUseCase {
         // 2. Create detalles and their impuestos
         for (let i = 0; i < notaCredito.detalles.length; i++) {
           const det = notaCredito.detalles[i];
-          const detalleRecords = await this.comprobanteRepository.createDetalles(
-            [
-              {
-                comprobante_id: comprobante.id!,
-                codigo_principal: det.codigoInterno,
-                codigo_auxiliar: det.codigoAdicional,
-                descripcion: det.descripcion,
-                cantidad: det.cantidad,
-                precio_unitario: det.precioUnitario,
-                descuento: det.descuento,
-                precio_total_sin_impuesto: det.precioTotalSinImpuesto,
-                orden: i,
-              },
-            ],
-            tx,
-          );
+          const detalleRecords =
+            await this.comprobanteRepository.createDetalles(
+              [
+                {
+                  comprobante_id: comprobante.id!,
+                  codigo_principal: det.codigoInterno,
+                  codigo_auxiliar: det.codigoAdicional,
+                  descripcion: det.descripcion,
+                  cantidad: det.cantidad,
+                  precio_unitario: det.precioUnitario,
+                  descuento: det.descuento,
+                  precio_total_sin_impuesto: det.precioTotalSinImpuesto,
+                  orden: i,
+                },
+              ],
+              tx,
+            );
 
           const detalleId = detalleRecords[0].id!;
 

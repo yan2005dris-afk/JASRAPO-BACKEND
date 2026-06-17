@@ -1,8 +1,9 @@
-import { EmisorRecord, PuntoEmisionRecord } from '../interfaces/repository.interface';
+import type { EmisorRecord } from '../interfaces/repository.interface';
+import { PuntoEmisionRecord } from '../interfaces/repository.interface';
 
 export abstract class EmisorRepository {
   abstract findByRuc(ruc: string): Promise<EmisorRecord | null>;
-  
+
   abstract findPuntoEmision(
     emisorId: number,
     establecimiento: string,

@@ -353,10 +353,11 @@ export class CatalogoValidatorService {
       }
 
       // 4. Cargar tipos de identificación
-      const tiposIdent =
-        await this.prisma.catalogoTiposIdentificacion.findMany({
+      const tiposIdent = await this.prisma.catalogoTiposIdentificacion.findMany(
+        {
           where: { activo: true },
-        });
+        },
+      );
       this.tiposIdentificacionCache.clear();
       for (const ti of tiposIdent) {
         this.tiposIdentificacionCache.set(ti.codigo, {

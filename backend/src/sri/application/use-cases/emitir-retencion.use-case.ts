@@ -90,10 +90,11 @@ export class EmitirRetencionUseCase {
             'Para auto-generar secuencial RET, el emisor debe estar registrado en la base de datos',
           );
         }
-        const nextSecuencial = await this.secuencialRepository.getNextSecuencial(
-          puntoEmisionInfo.punto_emision_id,
-          TipoComprobante.COMPROBANTE_RETENCION,
-        );
+        const nextSecuencial =
+          await this.secuencialRepository.getNextSecuencial(
+            puntoEmisionInfo.punto_emision_id,
+            TipoComprobante.COMPROBANTE_RETENCION,
+          );
         secuencial = nextSecuencial;
         this.logger.log(`Secuencial RET auto-generado: ${secuencial}`);
       }
@@ -129,7 +130,11 @@ export class EmitirRetencionUseCase {
       this.logger.log('XML de comprobante de retención generado');
 
       // Verify emisor has certificate in database
-      if (!emisor || !emisor.certificado_nombre || !emisor.certificado_password_encrypted) {
+      if (
+        !emisor ||
+        !emisor.certificado_nombre ||
+        !emisor.certificado_password_encrypted
+      ) {
         throw new BadRequestException(
           `El emisor ${dto.emisor.ruc} no tiene certificado P12 configurado. ` +
             `Use el endpoint /certificates/upload-cert para subir el certificado.`,

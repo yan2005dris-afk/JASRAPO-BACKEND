@@ -39,7 +39,9 @@ export class PrismaComprobanteRepository extends ComprobanteRepository {
         tipoEmision: data.tipo_emision,
         secuencial: data.secuencial,
         claveAcceso: data.clave_acceso,
-        fechaEmision: data.fecha_emision ? new Date(data.fecha_emision) : new Date(),
+        fechaEmision: data.fecha_emision
+          ? new Date(data.fecha_emision)
+          : new Date(),
         estado: data.estado,
         estadoSri: data.estado_sri ?? undefined,
         fechaAutorizacion: data.fecha_autorizacion
@@ -51,7 +53,8 @@ export class PrismaComprobanteRepository extends ComprobanteRepository {
         importeTotal: data.importe_total ?? undefined,
         propina: data.propina ?? undefined,
         moneda: data.moneda ?? 'DOLAR',
-        receptorTipoIdentificacion: data.receptor_tipo_identificacion ?? undefined,
+        receptorTipoIdentificacion:
+          data.receptor_tipo_identificacion ?? undefined,
         receptorIdentificacion: data.receptor_identificacion ?? undefined,
         receptorRazonSocial: data.receptor_razon_social ?? undefined,
         receptorDireccion: data.receptor_direccion ?? undefined,
@@ -134,7 +137,9 @@ export class PrismaComprobanteRepository extends ComprobanteRepository {
     return this.mapComprobanteToRecord(updated);
   }
 
-  async findByClaveAcceso(claveAcceso: string): Promise<ComprobanteRecord | null> {
+  async findByClaveAcceso(
+    claveAcceso: string,
+  ): Promise<ComprobanteRecord | null> {
     const found = await this.prisma.comprobantes.findUnique({
       where: { claveAcceso },
     });
@@ -522,7 +527,9 @@ export class PrismaComprobanteRepository extends ComprobanteRepository {
       cantidad: Number(d.cantidad),
       precio_unitario: Number(d.precioUnitario),
       descuento: Number(d.descuento),
-      subtotal: d.precioTotalSinImpuesto ? Number(d.precioTotalSinImpuesto) : null,
+      subtotal: d.precioTotalSinImpuesto
+        ? Number(d.precioTotalSinImpuesto)
+        : null,
     }));
   }
 

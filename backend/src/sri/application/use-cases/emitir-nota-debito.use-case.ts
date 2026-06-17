@@ -105,10 +105,11 @@ export class EmitirNotaDebitoUseCase {
             'Para auto-generar secuencial ND, el emisor debe estar registrado en la base de datos',
           );
         }
-        const nextSecuencial = await this.secuencialRepository.getNextSecuencial(
-          puntoEmisionInfo.punto_emision_id,
-          TipoComprobante.NOTA_DEBITO,
-        );
+        const nextSecuencial =
+          await this.secuencialRepository.getNextSecuencial(
+            puntoEmisionInfo.punto_emision_id,
+            TipoComprobante.NOTA_DEBITO,
+          );
         secuencial = nextSecuencial;
         this.logger.log(`Secuencial ND auto-generado: ${secuencial}`);
       }
@@ -144,7 +145,11 @@ export class EmitirNotaDebitoUseCase {
       this.logger.log('XML de nota de débito generado');
 
       // Verify emisor has certificate in database
-      if (!emisor || !emisor.certificado_nombre || !emisor.certificado_password_encrypted) {
+      if (
+        !emisor ||
+        !emisor.certificado_nombre ||
+        !emisor.certificado_password_encrypted
+      ) {
         throw new BadRequestException(
           `El emisor ${dto.emisor.ruc} no tiene certificado P12 configurado. ` +
             `Use el endpoint /certificates/upload-cert para subir el certificado.`,

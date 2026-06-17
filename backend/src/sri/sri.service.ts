@@ -328,8 +328,7 @@ export class SriService {
    */
 
   async obtenerComprobante(claveAcceso: string): Promise<any> {
-    const comprobante =
-      await this.repository.findConDetalles(claveAcceso);
+    const comprobante = await this.repository.findConDetalles(claveAcceso);
     if (!comprobante) {
       return null;
     }
@@ -382,8 +381,7 @@ export class SriService {
    * Obtiene el XML autorizado de un comprobante
    */
   async obtenerXmlAutorizado(claveAcceso: string): Promise<string | null> {
-    const comprobante =
-      await this.repository.findByClaveAcceso(claveAcceso);
+    const comprobante = await this.repository.findByClaveAcceso(claveAcceso);
     if (!comprobante || !comprobante.id) {
       return null;
     }
@@ -402,8 +400,7 @@ export class SriService {
   async anularComprobante(
     claveAcceso: string,
   ): Promise<{ message: string; claveAcceso: string; estadoAnterior: string }> {
-    const comprobante =
-      await this.repository.findByClaveAcceso(claveAcceso);
+    const comprobante = await this.repository.findByClaveAcceso(claveAcceso);
 
     if (!comprobante) {
       throw new BadRequestException(`Comprobante ${claveAcceso} no encontrado`);
@@ -452,8 +449,7 @@ export class SriService {
     mensaje: string;
     errores?: string[];
   }> {
-    const comprobante =
-      await this.repository.findByClaveAcceso(claveAcceso);
+    const comprobante = await this.repository.findByClaveAcceso(claveAcceso);
 
     if (!comprobante) {
       throw new BadRequestException(`Comprobante ${claveAcceso} no encontrado`);

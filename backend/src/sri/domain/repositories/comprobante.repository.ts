@@ -1,4 +1,4 @@
-import {
+import type {
   ComprobanteRecord,
   DetalleRecord,
   ImpuestoRecord,
@@ -24,7 +24,9 @@ export abstract class ComprobanteRepository {
     tx?: any,
   ): Promise<ComprobanteRecord>;
 
-  abstract findByClaveAcceso(claveAcceso: string): Promise<ComprobanteRecord | null>;
+  abstract findByClaveAcceso(
+    claveAcceso: string,
+  ): Promise<ComprobanteRecord | null>;
 
   abstract findConDetalles(claveAcceso: string): Promise<any>;
 
@@ -58,10 +60,7 @@ export abstract class ComprobanteRepository {
     tx?: any,
   ): Promise<TotalRecord[]>;
 
-  abstract createPagos(
-    pagos: PagoRecord[],
-    tx?: any,
-  ): Promise<PagoRecord[]>;
+  abstract createPagos(pagos: PagoRecord[], tx?: any): Promise<PagoRecord[]>;
 
   abstract createRetenciones(
     retenciones: RetencionRecord[],
@@ -73,10 +72,7 @@ export abstract class ComprobanteRepository {
     tx?: any,
   ): Promise<ImpuestoDocSustentoRecord[]>;
 
-  abstract saveXml(
-    data: XmlRecord,
-    tx?: any,
-  ): Promise<XmlRecord>;
+  abstract saveXml(data: XmlRecord, tx?: any): Promise<XmlRecord>;
 
   abstract createInfoAdicional(
     items: InfoAdicionalRecord[],
@@ -95,7 +91,9 @@ export abstract class ComprobanteRepository {
 
   abstract findDetallesByComprobanteId(comprobanteId: bigint): Promise<any[]>;
 
-  abstract findInfoAdicionalByComprobanteId(comprobanteId: bigint): Promise<any[]>;
+  abstract findInfoAdicionalByComprobanteId(
+    comprobanteId: bigint,
+  ): Promise<any[]>;
 
   abstract findXmlAutorizado(comprobanteId: bigint): Promise<string | null>;
 

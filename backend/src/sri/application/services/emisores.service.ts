@@ -132,14 +132,22 @@ export class EmisoresService {
     const updateData: Record<string, any> = {};
 
     if (dto.razonSocial !== undefined) updateData.razonSocial = dto.razonSocial;
-    if (dto.nombreComercial !== undefined) updateData.nombreComercial = dto.nombreComercial;
-    if (dto.direccionMatriz !== undefined) updateData.direccionMatriz = dto.direccionMatriz;
-    if (dto.obligadoContabilidad !== undefined) updateData.obligadoContabilidad = dto.obligadoContabilidad;
-    if (dto.contribuyenteEspecial !== undefined) updateData.contribuyenteEspecial = dto.contribuyenteEspecial;
-    if (dto.agenteRetencion !== undefined) updateData.agenteRetencion = dto.agenteRetencion;
-    if (dto.contribuyenteRimpe !== undefined) updateData.contribuyenteRimpe = dto.contribuyenteRimpe;
-    if (dto.ambiente !== undefined) updateData.ambiente = this.toAmbienteCodigo(dto.ambiente);
-    if (dto.estado !== undefined) updateData.estado = this.toEstadoNormalizado(dto.estado);
+    if (dto.nombreComercial !== undefined)
+      updateData.nombreComercial = dto.nombreComercial;
+    if (dto.direccionMatriz !== undefined)
+      updateData.direccionMatriz = dto.direccionMatriz;
+    if (dto.obligadoContabilidad !== undefined)
+      updateData.obligadoContabilidad = dto.obligadoContabilidad;
+    if (dto.contribuyenteEspecial !== undefined)
+      updateData.contribuyenteEspecial = dto.contribuyenteEspecial;
+    if (dto.agenteRetencion !== undefined)
+      updateData.agenteRetencion = dto.agenteRetencion;
+    if (dto.contribuyenteRimpe !== undefined)
+      updateData.contribuyenteRimpe = dto.contribuyenteRimpe;
+    if (dto.ambiente !== undefined)
+      updateData.ambiente = this.toAmbienteCodigo(dto.ambiente);
+    if (dto.estado !== undefined)
+      updateData.estado = this.toEstadoNormalizado(dto.estado);
 
     if (Object.keys(updateData).length === 0) {
       return this.findOne(id);
@@ -258,14 +266,18 @@ export class EmisoresService {
       razonSocial: row.razonSocial ?? row.razon_social,
       nombreComercial: row.nombreComercial ?? row.nombre_comercial,
       direccionMatriz: row.direccionMatriz ?? row.direccion_matriz,
-      obligadoContabilidad: row.obligadoContabilidad ?? row.obligado_contabilidad,
-      contribuyenteEspecial: row.contribuyenteEspecial ?? row.contribuyente_especial,
+      obligadoContabilidad:
+        row.obligadoContabilidad ?? row.obligado_contabilidad,
+      contribuyenteEspecial:
+        row.contribuyenteEspecial ?? row.contribuyente_especial,
       agenteRetencion: row.agenteRetencion ?? row.agente_retencion,
       contribuyenteRimpe: row.contribuyenteRimpe ?? row.contribuyente_rimpe,
       ambiente: row.ambiente,
       estado: row.estado,
       tieneCertificado: !!(row.certificadoNombre ?? row.certificado_nombre),
-      certificadoValidoHasta: (row.certificadoValidoHasta ?? row.certificado_valido_hasta)?.toISOString?.(),
+      certificadoValidoHasta: (
+        row.certificadoValidoHasta ?? row.certificado_valido_hasta
+      )?.toISOString?.(),
       certificadoSujeto: row.certificadoSujeto ?? row.certificado_sujeto,
       createdAt: (row.createdAt ?? row.created_at)?.toISOString?.(),
       updatedAt: (row.updatedAt ?? row.updated_at)?.toISOString?.(),
