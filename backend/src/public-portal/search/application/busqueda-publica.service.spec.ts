@@ -24,7 +24,7 @@ describe('BusquedaPublicaService', () => {
 
   afterEach(() => jest.clearAllMocks());
 
-  it('should delegate search to PublicSearchUseCase and never touch SearchDeudaPublicaUseCase', async () => {
+  it('search() should route to the general search handler and not trigger the debt search handler', async () => {
     const expected = { data: [], meta: { total: 0, page: 1, limit: 10 } };
     mockPublicSearchUseCase.execute.mockResolvedValue(expected);
 
@@ -35,7 +35,7 @@ describe('BusquedaPublicaService', () => {
     expect(result).toBe(expected);
   });
 
-  it('should delegate searchDeuda to SearchDeudaPublicaUseCase and never touch PublicSearchUseCase', async () => {
+  it('searchDeuda() should route to the debt search handler and not trigger the general search handler', async () => {
     const expected = { data: [], meta: { total: 0, page: 1, limit: 10 } };
     mockSearchDeudaUseCase.execute.mockResolvedValue(expected);
 
@@ -46,11 +46,19 @@ describe('BusquedaPublicaService', () => {
     expect(result).toBe(expected);
   });
 
-  it('should apply default page=1 and limit=10 when called without those arguments', async () => {
+  it('should apply default page=1 and limit=10 when search is called without those arguments', async () => {
     mockPublicSearchUseCase.execute.mockResolvedValue({ data: [], meta: {} });
 
     await service.search('cliente', 'juan');
 
     expect(mockPublicSearchUseCase.execute).toHaveBeenCalledWith('cliente', 'juan', 1, 10);
+  });
+
+  it('should apply default page=1 and limit=10 when searchDeuda is called without those arguments', async () => {
+    mockSearchDeudaUseCase.execute.mockResolvedValue({ data: [], meta: {} });
+
+    await service.searchDeuda('identificacion', '0912345678');
+
+    expect(mockSearchDeudaUseCase.execute).toHaveBeenCalledWith('identificacion', '0912345678', 1, 10);
   });
 });
