@@ -13,10 +13,7 @@ import {
   StorageService,
   SRI_STORAGE_TYPES,
 } from 'src/infrastructure/storage/storage.service';
-import {
-  SLASH_SEPARATOR,
-  resolveContentType,
-} from './storage-proxy.constants';
+import { SLASH_SEPARATOR, resolveContentType } from './storage-proxy.constants';
 
 /**
  * Buckets accessible via the public storage proxy.
