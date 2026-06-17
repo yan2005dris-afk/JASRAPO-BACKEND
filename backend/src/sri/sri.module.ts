@@ -38,11 +38,9 @@ import { ImageService } from './infrastructure/storage/image.service';
 // Repositories
 import { ComprobanteRepository } from './domain/repositories/comprobante.repository';
 import { EmisorRepository } from './domain/repositories/emisor.repository';
-import { GuiaRemisionRepository } from './domain/repositories/guia-remision.repository';
 import { SecuencialRepository } from './domain/repositories/secuencial.repository';
 import { PrismaComprobanteRepository } from './infrastructure/persistence/prisma-comprobante.repository';
 import { PrismaEmisorRepository } from './infrastructure/persistence/prisma-emisor.repository';
-import { PrismaGuiaRemisionRepository } from './infrastructure/persistence/prisma-guia-remision.repository';
 import { PrismaSecuencialRepository } from './infrastructure/persistence/prisma-secuencial.repository';
 
 import { PdfImageService } from './infrastructure/storage/pdf-image.service';
@@ -92,10 +90,6 @@ import { WebhookProcessor } from './infrastructure/queue/processors/webhook.proc
       useClass: PrismaEmisorRepository,
     },
     {
-      provide: GuiaRemisionRepository,
-      useClass: PrismaGuiaRemisionRepository,
-    },
-    {
       provide: SecuencialRepository,
       useClass: PrismaSecuencialRepository,
     },
@@ -128,7 +122,6 @@ import { WebhookProcessor } from './infrastructure/queue/processors/webhook.proc
     SriSoapFactoryService,
     ComprobanteRepository,
     EmisorRepository,
-    GuiaRemisionRepository,
     SecuencialRepository,
     XmlStorageService,
     ImageService,

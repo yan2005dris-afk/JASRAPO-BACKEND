@@ -50,7 +50,6 @@ model Comprobantes {
   totales                       ComprobanteTotales[]
   infoAdicional                 InfoAdicional[]
   motivosNotaDebito             MotivosNotaDebito[]
-  destinatariosGuia             DestinatariosGuia[]
   prefactura                    Prefacturas?
   detallePago                   DetallePago[]
 
