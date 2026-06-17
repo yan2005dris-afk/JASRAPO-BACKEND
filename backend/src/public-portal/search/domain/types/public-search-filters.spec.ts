@@ -1,11 +1,11 @@
 import type {
-  SearchFilters,
-  SearchPaginationMeta,
+  ISearchFilters,
+  ISearchPaginationMeta,
 } from './public-search-filters';
 
-describe('SearchFilters', () => {
+describe('ISearchFilters', () => {
   it('should accept a complete search filter object', () => {
-    const filters: SearchFilters = {
+    const filters: ISearchFilters = {
       valor: 'juan perez',
       isIdent: false,
     };
@@ -15,7 +15,7 @@ describe('SearchFilters', () => {
   });
 
   it('should accept search filter with isIdent true', () => {
-    const filters: SearchFilters = {
+    const filters: ISearchFilters = {
       valor: '12345678',
       isIdent: true,
     };
@@ -25,9 +25,9 @@ describe('SearchFilters', () => {
   });
 });
 
-describe('SearchPaginationMeta', () => {
+describe('ISearchPaginationMeta', () => {
   it('should create a pagination meta object', () => {
-    const meta: SearchPaginationMeta = {
+    const meta: ISearchPaginationMeta = {
       total: 100,
       page: 1,
       limit: 10,

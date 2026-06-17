@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { BusquedaPublicaRepository } from '../../domain/repositories/busqueda-publica.repository';
-import { SearchFilters } from '../../domain/types/public-search-filters';
+import { ISearchFilters } from '../../domain/types/public-search-filters';
 
 @Injectable()
 export class PublicSearchUseCase {
@@ -13,7 +13,7 @@ export class PublicSearchUseCase {
 
     const { skip, take, page: safePage } = this.getPagination(page, limit);
     const isIdent = this.esIdentificacion(valor);
-    const filters: SearchFilters = { valor, isIdent };
+    const filters: ISearchFilters = { valor, isIdent };
 
     if (tipo === 'cliente') {
       const [clientes, total] = await Promise.all([

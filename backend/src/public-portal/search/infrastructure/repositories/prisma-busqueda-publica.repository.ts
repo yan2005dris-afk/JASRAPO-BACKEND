@@ -1,23 +1,23 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
-import { Prisma } from 'src/generated/prisma/client';
+import { EstadoDeuda, Prisma } from 'src/generated/prisma/client';
 import { BusquedaPublicaRepository } from '../../domain/repositories/busqueda-publica.repository';
-import { SearchFilters } from '../../domain/types/public-search-filters';
+import { ISearchFilters } from '../../domain/types/public-search-filters';
 import { SearchResultEntity } from '../../domain/entities/public-search-result.entity';
 import { BusquedaPublicaMapper } from '../mappers/busqueda-publica.mapper';
 import type {
-  ContratoConDeudaRaw,
+  IContratoConDeudaRaw,
   TipoBusquedaDeuda,
 } from '../../domain/types/debt-search.types';
 
-const ESTADOS_DEUDA = ['GENERADA', 'EN_REVISION', 'APROBADA'] as const;
+const ESTADOS_DEUDA = Object.values(EstadoDeuda);
 
 @Injectable()
 export class PrismaBusquedaPublicaRepository implements BusquedaPublicaRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async findManyClientes(
-    filters: SearchFilters,
+    filters: ISearchFilters,
     skip: number,
     take: number,
   ): Promise<SearchResultEntity[]> {
@@ -31,13 +31,13 @@ export class PrismaBusquedaPublicaRepository implements BusquedaPublicaRepositor
     return raw.map(BusquedaPublicaMapper.cliente);
   }
 
-  async countClientes(filters: SearchFilters): Promise<number> {
+  async countClientes(filters: ISearchFilters): Promise<number> {
     const where = this.buildWhereCliente(filters);
     return this.prisma.clientes.count({ where });
   }
 
   async findManyContratos(
-    filters: SearchFilters,
+    filters: ISearchFilters,
     skip: number,
     take: number,
   ): Promise<SearchResultEntity[]> {
@@ -51,7 +51,7 @@ export class PrismaBusquedaPublicaRepository implements BusquedaPublicaRepositor
     return raw.map(BusquedaPublicaMapper.contrato);
   }
 
-  async countContratos(filters: SearchFilters): Promise<number> {
+  async countContratos(filters: ISearchFilters): Promise<number> {
     const where = this.buildWhereContrato(filters);
     return this.prisma.contratos.count({ where });
   }
@@ -61,10 +61,16 @@ export class PrismaBusquedaPublicaRepository implements BusquedaPublicaRepositor
     valor: string,
     skip: number,
     take: number,
-  ): Promise<ContratoConDeudaRaw[]> {
+  ): Promise<IContratoConDeudaRaw[]> {
     const where = this.buildWhereDeuda(tipo, valor);
+    const deudaPrefacturaWhere: Prisma.PrefacturasListRelationFilter = {
+      some: {
+        deletedAt: null,
+        estado: { in: [...ESTADOS_DEUDA] },
+      },
+    };
     const rows = await this.prisma.contratos.findMany({
-      where,
+      where: { ...where, prefacturas: deudaPrefacturaWhere },
       include: {
         cliente: {
           select: {
@@ -101,7 +107,15 @@ export class PrismaBusquedaPublicaRepository implements BusquedaPublicaRepositor
     valor: string,
   ): Promise<number> {
     return this.prisma.contratos.count({
-      where: this.buildWhereDeuda(tipo, valor),
+      where: {
+        ...this.buildWhereDeuda(tipo, valor),
+        prefacturas: {
+          some: {
+            deletedAt: null,
+            estado: { in: [...ESTADOS_DEUDA] },
+          },
+        },
+      },
     });
   }
 
@@ -140,7 +154,7 @@ export class PrismaBusquedaPublicaRepository implements BusquedaPublicaRepositor
     };
   }
 
-  private buildWhereCliente(filters: SearchFilters): Prisma.ClientesWhereInput {
+  private buildWhereCliente(filters: ISearchFilters): Prisma.ClientesWhereInput {
     if (filters.isIdent) {
       return { identificacion: filters.valor.trim(), deletedAt: null };
     }
@@ -160,7 +174,7 @@ export class PrismaBusquedaPublicaRepository implements BusquedaPublicaRepositor
   }
 
   private buildWhereContrato(
-    filters: SearchFilters,
+    filters: ISearchFilters,
   ): Prisma.ContratosWhereInput {
     return {
       numeroGuia: { contains: filters.valor, mode: 'insensitive' },

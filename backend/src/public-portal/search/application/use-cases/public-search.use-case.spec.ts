@@ -1,7 +1,7 @@
 import { BadRequestException } from '@nestjs/common';
 import { PublicSearchUseCase } from './public-search.use-case';
 import { SearchResultEntity } from '../../domain/entities/public-search-result.entity';
-import type { SearchFilters } from '../../domain/types/public-search-filters';
+import type { ISearchFilters } from '../../domain/types/public-search-filters';
 
 describe('PublicSearchUseCase', () => {
   const makeClienteEntity = (id: string, label: string) =>
@@ -22,14 +22,14 @@ describe('PublicSearchUseCase', () => {
   const createMockRepo = () => ({
     findManyClientes: jest.fn<
       Promise<SearchResultEntity[]>,
-      [SearchFilters, number, number]
+      [ISearchFilters, number, number]
     >(),
-    countClientes: jest.fn<Promise<number>, [SearchFilters]>(),
+    countClientes: jest.fn<Promise<number>, [ISearchFilters]>(),
     findManyContratos: jest.fn<
       Promise<SearchResultEntity[]>,
-      [SearchFilters, number, number]
+      [ISearchFilters, number, number]
     >(),
-    countContratos: jest.fn<Promise<number>, [SearchFilters]>(),
+    countContratos: jest.fn<Promise<number>, [ISearchFilters]>(),
     findContratosDeudaBy: jest.fn().mockResolvedValue([]),
     countContratosDeuda: jest.fn().mockResolvedValue(0),
   });
@@ -51,8 +51,8 @@ describe('PublicSearchUseCase', () => {
       expect(result.data[0].label).toBe('Juan Perez');
       expect(result.meta).toEqual({ total: 1, page: 1, limit: 10 });
 
-      // Verify repo was called with SearchFilters
-      const filtersArg: SearchFilters =
+      // Verify repo was called with ISearchFilters
+      const filtersArg: ISearchFilters =
         mockRepo.findManyClientes.mock.calls[0][0];
       expect(filtersArg.valor).toBe('juan');
     });
@@ -66,7 +66,7 @@ describe('PublicSearchUseCase', () => {
 
       await useCase.execute('cliente', 'test', undefined, undefined);
 
-      const filtersArg: SearchFilters =
+      const filtersArg: ISearchFilters =
         mockRepo.findManyClientes.mock.calls[0][0];
       expect(filtersArg.valor).toBe('test');
     });

@@ -1,6 +1,6 @@
 import { SearchResultEntity } from '../../domain/entities/public-search-result.entity';
 
-interface ClientesRaw {
+interface IClientesRaw {
   clienteId: number | bigint;
   identificacion: string | null;
   nombres: string | null;
@@ -9,7 +9,7 @@ interface ClientesRaw {
   email: string | null;
 }
 
-interface ContratosRaw {
+interface IContratosRaw {
   contratoId: number | bigint;
   numeroGuia: string | null;
   estado: string | null;
@@ -22,7 +22,7 @@ interface ContratosRaw {
 }
 
 export class BusquedaPublicaMapper {
-  static cliente(raw: ClientesRaw): SearchResultEntity {
+  static cliente(raw: IClientesRaw): SearchResultEntity {
     const nombre = `${raw.nombres ?? ''} ${raw.apellidos ?? ''}`.trim();
 
     return new SearchResultEntity(
@@ -37,7 +37,7 @@ export class BusquedaPublicaMapper {
     );
   }
 
-  static contrato(raw: ContratosRaw): SearchResultEntity {
+  static contrato(raw: IContratosRaw): SearchResultEntity {
     const clienteNombre = raw.cliente
       ? `${raw.cliente.nombres ?? ''} ${raw.cliente.apellidos ?? ''}`.trim()
       : null;
