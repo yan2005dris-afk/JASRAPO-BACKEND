@@ -18,3 +18,18 @@ export interface IContratoConDeudaRaw {
   };
   prefacturasImpagadas: IPrefacturaParaCalculo[];
 }
+
+export interface IContratoResumenRaw {
+  contratoId: bigint;
+  numeroGuia: string;
+  estado: string;
+  prefacturasImpagadas: IPrefacturaParaCalculo[];
+}
+
+export interface IClienteConContratosRaw {
+  clienteId: bigint;
+  identificacion: string | null;
+  nombres: string | null;
+  apellidos: string | null;
+  contratos: IContratoResumenRaw[];
+}

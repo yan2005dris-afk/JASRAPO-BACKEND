@@ -2,10 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { EstadoDeuda, Prisma } from 'src/generated/prisma/client';
 import { BusquedaPublicaRepository } from '../../domain/repositories/busqueda-publica.repository';
-import { ISearchFilters } from '../../domain/types/public-search-filters';
-import { SearchResultEntity } from '../../domain/entities/public-search-result.entity';
-import { BusquedaPublicaMapper } from '../mappers/busqueda-publica.mapper';
 import type {
+  IClienteConContratosRaw,
   IContratoConDeudaRaw,
   TipoBusquedaDeuda,
 } from '../../domain/types/debt-search.types';
@@ -16,44 +14,56 @@ const ESTADOS_DEUDA = Object.values(EstadoDeuda);
 export class PrismaBusquedaPublicaRepository implements BusquedaPublicaRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findManyClientes(
-    filters: ISearchFilters,
+  async findClientesBy(
+    tipo: 'identificacion' | 'nombre',
+    valor: string,
     skip: number,
     take: number,
-  ): Promise<SearchResultEntity[]> {
-    const where = this.buildWhereCliente(filters);
-    const raw = await this.prisma.clientes.findMany({
+  ): Promise<IClienteConContratosRaw[]> {
+    const where = this.buildWhereCliente(tipo, valor);
+    const rows = await this.prisma.clientes.findMany({
       where,
+      include: {
+        contratos: {
+          where: { deletedAt: null },
+          include: {
+            prefacturas: {
+              where: {
+                deletedAt: null,
+                estado: { in: [...ESTADOS_DEUDA] },
+              },
+              select: { totalPagar: true, abono: true, periodoId: true },
+            },
+          },
+          orderBy: { contratoId: 'asc' },
+        },
+      },
       skip,
       take,
-      orderBy: { createdAt: 'desc' },
+      orderBy: { clienteId: 'asc' },
     });
-    return raw.map(BusquedaPublicaMapper.cliente);
+
+    return rows.map((r) => ({
+      clienteId: r.clienteId,
+      identificacion: r.identificacion,
+      nombres: r.nombres,
+      apellidos: r.apellidos,
+      contratos: r.contratos.map((c) => ({
+        contratoId: c.contratoId,
+        numeroGuia: c.numeroGuia,
+        estado: c.estado,
+        prefacturasImpagadas: c.prefacturas,
+      })),
+    }));
   }
 
-  async countClientes(filters: ISearchFilters): Promise<number> {
-    const where = this.buildWhereCliente(filters);
-    return this.prisma.clientes.count({ where });
-  }
-
-  async findManyContratos(
-    filters: ISearchFilters,
-    skip: number,
-    take: number,
-  ): Promise<SearchResultEntity[]> {
-    const where = this.buildWhereContrato(filters);
-    const raw = await this.prisma.contratos.findMany({
-      where,
-      include: { cliente: true },
-      skip,
-      take,
+  async countClientesBy(
+    tipo: 'identificacion' | 'nombre',
+    valor: string,
+  ): Promise<number> {
+    return this.prisma.clientes.count({
+      where: this.buildWhereCliente(tipo, valor),
     });
-    return raw.map(BusquedaPublicaMapper.contrato);
-  }
-
-  async countContratos(filters: ISearchFilters): Promise<number> {
-    const where = this.buildWhereContrato(filters);
-    return this.prisma.contratos.count({ where });
   }
 
   async findContratosDeudaBy(
@@ -63,14 +73,8 @@ export class PrismaBusquedaPublicaRepository implements BusquedaPublicaRepositor
     take: number,
   ): Promise<IContratoConDeudaRaw[]> {
     const where = this.buildWhereDeuda(tipo, valor);
-    const deudaPrefacturaWhere: Prisma.PrefacturasListRelationFilter = {
-      some: {
-        deletedAt: null,
-        estado: { in: [...ESTADOS_DEUDA] },
-      },
-    };
     const rows = await this.prisma.contratos.findMany({
-      where: { ...where, prefacturas: deudaPrefacturaWhere },
+      where,
       include: {
         cliente: {
           select: {
@@ -107,16 +111,30 @@ export class PrismaBusquedaPublicaRepository implements BusquedaPublicaRepositor
     valor: string,
   ): Promise<number> {
     return this.prisma.contratos.count({
-      where: {
-        ...this.buildWhereDeuda(tipo, valor),
-        prefacturas: {
-          some: {
-            deletedAt: null,
-            estado: { in: [...ESTADOS_DEUDA] },
-          },
-        },
-      },
+      where: this.buildWhereDeuda(tipo, valor),
     });
+  }
+
+  private buildWhereCliente(
+    tipo: 'identificacion' | 'nombre',
+    valor: string,
+  ): Prisma.ClientesWhereInput {
+    if (tipo === 'identificacion') {
+      return { identificacion: valor, deletedAt: null };
+    }
+    // tipo === 'nombre'
+    const tokens = this.normalizarTokens(valor);
+    return {
+      deletedAt: null,
+      AND: tokens.map(
+        (t): Prisma.ClientesWhereInput => ({
+          OR: [
+            { nombres: { contains: t, mode: 'insensitive' } },
+            { apellidos: { contains: t, mode: 'insensitive' } },
+          ],
+        }),
+      ),
+    };
   }
 
   private buildWhereDeuda(
@@ -151,37 +169,6 @@ export class PrismaBusquedaPublicaRepository implements BusquedaPublicaRepositor
           }),
         ),
       },
-    };
-  }
-
-  private buildWhereCliente(
-    filters: ISearchFilters,
-  ): Prisma.ClientesWhereInput {
-    if (filters.isIdent) {
-      return { identificacion: filters.valor.trim(), deletedAt: null };
-    }
-
-    const tokens = this.normalizarTokens(filters.valor);
-    return {
-      AND: tokens.map(
-        (t): Prisma.ClientesWhereInput => ({
-          OR: [
-            { nombres: { contains: t, mode: 'insensitive' } },
-            { apellidos: { contains: t, mode: 'insensitive' } },
-          ],
-        }),
-      ),
-      deletedAt: null,
-    };
-  }
-
-  private buildWhereContrato(
-    filters: ISearchFilters,
-  ): Prisma.ContratosWhereInput {
-    return {
-      numeroGuia: { contains: filters.valor, mode: 'insensitive' },
-      deletedAt: null,
-      cliente: { deletedAt: null },
     };
   }
 

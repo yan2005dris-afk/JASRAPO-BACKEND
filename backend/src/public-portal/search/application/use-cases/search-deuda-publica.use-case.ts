@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { BusquedaPublicaRepository } from '../../domain/repositories/busqueda-publica.repository';
 import { DebtCalculatorHelper } from 'src/infrastructure/common/utils/debt-calculator.util';
-import type { TipoBusquedaDeuda } from '../../domain/types/debt-search.types';
+import type { IClienteConContratosRaw, TipoBusquedaDeuda } from '../../domain/types/debt-search.types';
 import type {
   ContratoDeudaPublicaDto,
   DeudaPublicaItemDto,
@@ -29,22 +29,42 @@ export class SearchDeudaPublicaUseCase {
     const safePage = Math.max(parsedPage, 1);
     const skip = (safePage - 1) * safeLimit;
 
-    const [contratos, total] = await Promise.all([
-      this.searchRepository.findContratosDeudaBy(
-        tipo,
-        normalizedValor,
-        skip,
-        safeLimit,
-      ),
-      this.searchRepository.countContratosDeuda(tipo, normalizedValor),
+    if (tipo === 'numeroGuia') {
+      const [contratos, total] = await Promise.all([
+        this.searchRepository.findContratosDeudaBy(tipo, normalizedValor, skip, safeLimit),
+        this.searchRepository.countContratosDeuda(tipo, normalizedValor),
+      ]);
+      return {
+        data: this.agruparPorCliente(contratos),
+        meta: { total, page: safePage, limit: safeLimit },
+      };
+    }
+
+    const [clientes, total] = await Promise.all([
+      this.searchRepository.findClientesBy(tipo, normalizedValor, skip, safeLimit),
+      this.searchRepository.countClientesBy(tipo, normalizedValor),
     ]);
-
-    const agrupado = this.agruparPorCliente(contratos);
-
     return {
-      data: agrupado,
+      data: this.mapearClientes(clientes),
       meta: { total, page: safePage, limit: safeLimit },
     };
+  }
+
+  private mapearClientes(clientes: IClienteConContratosRaw[]): DeudaPublicaItemDto[] {
+    return clientes.map((cliente) => ({
+      cliente: {
+        nombre: this.formatearNombre(cliente.nombres, cliente.apellidos),
+        identificacion: cliente.identificacion,
+      },
+      contratos: cliente.contratos.map((c): ContratoDeudaPublicaDto => ({
+        contratoId: String(c.contratoId),
+        numeroGuia: c.numeroGuia,
+        estado: c.estado,
+        saldoVencido: DebtCalculatorHelper.calcularSaldoVencido(c.prefacturasImpagadas),
+        deudaAnterior: DebtCalculatorHelper.calcularDeudaAnterior(c.prefacturasImpagadas),
+        mesesAtrasado: DebtCalculatorHelper.calcularMesesAtrasado(c.prefacturasImpagadas),
+      })),
+    }));
   }
 
   private agruparPorCliente(

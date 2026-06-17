@@ -2,7 +2,6 @@ import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { BusquedaPublicaService } from '../../application/busqueda-publica.service';
-import { CreateBusquedaPublicaDto } from '../dto/create-busqueda-publica.dto';
 import { SearchDeudaDto } from '../dto/search-deuda.dto';
 
 @ApiTags('search')
@@ -14,34 +13,16 @@ export class BusquedaPublicaController {
   ) {}
 
   @ApiOperation({
-    summary: 'Búsqueda pública de clientes y contratos',
+    summary: 'Búsqueda pública de clientes con deuda',
     description:
-      'Busca clientes (por identificación o nombre) y contratos (por número de guía).',
+      'Busca clientes por identificación, nombre o número de guía y retorna sus contratos con resumen de deuda.',
   })
-  @ApiResponse({ status: 200, description: 'Resultados de búsqueda' })
+  @ApiResponse({ status: 200, description: 'Clientes con resumen de deuda' })
   @ApiResponse({ status: 400, description: 'Parámetros inválidos' })
   @Get()
   @Throttle({ default: { limit: 10, ttl: 60000 } })
-  searchPublic(@Query() query: CreateBusquedaPublicaDto) {
+  search(@Query() query: SearchDeudaDto) {
     return this.busquedaPublicaService.search(
-      query.tipo,
-      query.valor,
-      query.page ?? 1,
-      query.limit ?? 10,
-    );
-  }
-
-  @ApiOperation({
-    summary: 'Consulta pública de deuda',
-    description:
-      'Retorna el resumen de deuda de un cliente o contrato. Búsqueda por identificación, nombre o número de guía.',
-  })
-  @ApiResponse({ status: 200, description: 'Resumen de deuda' })
-  @ApiResponse({ status: 400, description: 'Parámetros inválidos' })
-  @Get('deuda')
-  @Throttle({ default: { limit: 5, ttl: 60000 } })
-  searchDeuda(@Query() query: SearchDeudaDto) {
-    return this.busquedaPublicaService.searchDeuda(
       query.tipo,
       query.valor,
       query.page ?? 1,
