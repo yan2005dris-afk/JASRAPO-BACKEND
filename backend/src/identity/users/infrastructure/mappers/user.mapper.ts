@@ -27,7 +27,8 @@ export class UserMapper {
    * Los keys que no cumplan este patrón (ej: legacy data, keys manuales)
    * se consideran inválidos y se usa el fallback a ui-avatars.com.
    */
-  private static readonly AVATAR_KEY_PATTERN = /^avatars\/[a-f0-9-]+\.webp$/;
+  private static readonly AVATAR_KEY_PATTERN =
+    /^avatars\/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.webp$/;
 
   private async enrichAvatar(
     avatar: unknown,

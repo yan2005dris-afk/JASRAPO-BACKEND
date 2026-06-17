@@ -9,42 +9,25 @@ import {
 import { ApiExcludeController } from '@nestjs/swagger';
 import type { Response } from 'express';
 import { Public } from 'src/infrastructure/common/decorators/public.decorator';
-import { StorageService } from 'src/infrastructure/storage/storage.service';
-
-const EXTENSION_MIME_TYPES: Record<string, string> = {
-  webp: 'image/webp',
-  jpg: 'image/jpeg',
-  jpeg: 'image/jpeg',
-  png: 'image/png',
-  gif: 'image/gif',
-  svg: 'image/svg+xml',
-  avif: 'image/avif',
-  pdf: 'application/pdf',
-  doc: 'application/msword',
-  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  xls: 'application/vnd.ms-excel',
-  xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-  txt: 'text/plain',
-  csv: 'text/csv',
-  json: 'application/json',
-  xml: 'application/xml',
-  zip: 'application/zip',
-};
-
-function resolveContentType(key: string): string {
-  const dotIndex = key.lastIndexOf('.');
-  if (dotIndex === -1) return 'application/octet-stream';
-
-  const ext = key.slice(dotIndex + 1).toLowerCase();
-  return EXTENSION_MIME_TYPES[ext] ?? 'application/octet-stream';
-}
+import {
+  StorageService,
+  SRI_STORAGE_TYPES,
+} from 'src/infrastructure/storage/storage.service';
+import {
+  SLASH_SEPARATOR,
+  resolveContentType,
+} from './storage-proxy.constants';
 
 /**
- * S3 keys like `avatars/uuid.webp` contain slashes that conflict with
- * Express path params. We replace `/` with `--` in the URL and revert it here.
- * Safe because UUIDs only contain hex chars and dashes, never `--`.
+ * Buckets accessible via the public storage proxy.
+ * Add a bucket here only when its content is meant to be publicly readable.
+ * Private buckets (xmls, certs, pdfs, etc.) must never appear here.
  */
-const SLASH_SEPARATOR = '--';
+const PUBLIC_BUCKETS = new Set<string>([
+  SRI_STORAGE_TYPES.PROFILE_PHOTOS,
+  SRI_STORAGE_TYPES.READINGS,
+  SRI_STORAGE_TYPES.READING_NEWS,
+]);
 
 /**
  * Generic proxy for serving files from S3-compatible storage.
@@ -75,7 +58,15 @@ export class StorageProxyController {
     @Param('key') key: string,
     @Res() res: Response,
   ): Promise<void> {
-    const actualKey = key.replace(new RegExp(SLASH_SEPARATOR, 'g'), '/');
+    if (!PUBLIC_BUCKETS.has(bucket)) {
+      throw new NotFoundException('File not found');
+    }
+
+    const actualKey = key.replaceAll(SLASH_SEPARATOR, '/');
+
+    if (actualKey.includes('..')) {
+      throw new NotFoundException('File not found');
+    }
 
     let stream;
     try {
@@ -91,15 +82,19 @@ export class StorageProxyController {
     res.setHeader('ETag', `"${actualKey}"`);
     res.setHeader('Content-Type', resolveContentType(actualKey));
 
-    stream.on('error', (streamError: Error) => {
+    stream.on('error', (streamError: Error & { code?: string }) => {
       this.logger.warn(
         `[STORAGE_PROXY] Stream error for ${bucket}/${actualKey}: ${streamError.message}`,
       );
       if (!res.headersSent) {
-        res.status(404).json({
-          statusCode: 404,
-          message: 'File not found',
-          error: 'Not Found',
+        const isNotFound =
+          streamError.code === 'NoSuchKey' ||
+          streamError.message?.includes('does not exist');
+        const status = isNotFound ? 404 : 500;
+        res.status(status).json({
+          statusCode: status,
+          message: isNotFound ? 'File not found' : 'Storage error',
+          error: isNotFound ? 'Not Found' : 'Internal Server Error',
         });
       }
     });
