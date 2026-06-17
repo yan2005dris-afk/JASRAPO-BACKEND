@@ -1,7 +1,6 @@
 import { BadRequestException } from '@nestjs/common';
 import { SearchDeudaPublicaUseCase } from './search-deuda-publica.use-case';
-import type { IContratoConDeudaRaw } from '../../domain/types/debt-search.types';
-import type { IPrefacturaParaCalculo } from 'src/infrastructure/common/utils/debt-calculator.util';
+import type { IContratoConDeudaRaw, IPrefacturaParaCalculo } from '../../domain/types/debt-search.types';
 
 describe('SearchDeudaPublicaUseCase', () => {
   const makeContrato = (override: {
