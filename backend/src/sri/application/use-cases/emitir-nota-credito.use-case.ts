@@ -1,12 +1,14 @@
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { Prisma } from '../../../generated/prisma/client.js';
 import { Decimal } from 'decimal.js';
 import { ClaveAccesoService } from '../../infrastructure/xml/clave-acceso.service';
 import { XmlBuilderService } from '../../infrastructure/xml/xml-builder.service';
 import { XmlSignerService } from '../../infrastructure/xml/xml-signer.service';
 import { SriSoapClient } from '../../infrastructure/soap/sri-soap.client';
-import { ComprobanteRepository } from '../../domain/repositories/comprobante.repository';
+import {
+  ComprobanteRepository,
+  TransactionContext,
+} from '../../domain/repositories/comprobante.repository';
 import { EmisorRepository } from '../../domain/repositories/emisor.repository';
 import { SecuencialRepository } from '../../domain/repositories/secuencial.repository';
 import { XmlStorageService } from '../../infrastructure/storage/xml-storage.service';
@@ -74,13 +76,23 @@ export class EmitirNotaCreditoUseCase {
 
       // Get emisor info from database
       const emisor = await this.emisorRepository.findByRuc(dto.emisor.ruc);
-      const puntoEmisionInfo = emisor
-        ? await this.emisorRepository.findPuntoEmision(
-            emisor.id,
-            dto.emisor.establecimiento,
-            dto.emisor.puntoEmision,
-          )
-        : null;
+      if (!emisor) {
+        throw new BadRequestException(
+          `El emisor con RUC ${dto.emisor.ruc} no está registrado en el sistema`,
+        );
+      }
+
+      const puntoEmisionInfo = await this.emisorRepository.findPuntoEmision(
+        emisor.id,
+        dto.emisor.establecimiento,
+        dto.emisor.puntoEmision,
+      );
+
+      if (!puntoEmisionInfo) {
+        throw new BadRequestException(
+          `El punto de emisión ${dto.emisor.establecimiento}-${dto.emisor.puntoEmision} no está registrado para el emisor ${dto.emisor.ruc}`,
+        );
+      }
 
       // Handle secuencial - auto-generate if not provided
       let secuencial: string;
@@ -88,11 +100,6 @@ export class EmitirNotaCreditoUseCase {
         secuencial = dto.secuencial.padStart(9, '0');
         this.logger.log(`Usando secuencial NC proporcionado: ${secuencial}`);
       } else {
-        if (!puntoEmisionInfo) {
-          throw new BadRequestException(
-            'Para auto-generar secuencial NC, el emisor debe estar registrado en la base de datos',
-          );
-        }
         const nextSecuencial =
           await this.secuencialRepository.getNextSecuencial(
             puntoEmisionInfo.punto_emision_id,
@@ -133,11 +140,7 @@ export class EmitirNotaCreditoUseCase {
       this.logger.log('XML de nota de crédito generado');
 
       // Verify emisor has certificate in database
-      if (
-        !emisor ||
-        !emisor.certificado_nombre ||
-        !emisor.certificado_password_encrypted
-      ) {
+      if (!emisor.certificado_nombre || !emisor.certificado_password_encrypted) {
         throw new BadRequestException(
           `El emisor ${dto.emisor.ruc} no tiene certificado P12 configurado. ` +
             `Use el endpoint /certificates/upload-cert para subir el certificado.`,
@@ -153,30 +156,62 @@ export class EmitirNotaCreditoUseCase {
       );
       this.logger.log('XML de nota de crédito firmado con XAdES-BES');
 
+      // Validar firma antes de enviar
+      const esFirmaValida = await this.xmlSignerService.verifySignature(xmlFirmado);
+      if (!esFirmaValida) {
+        throw new BadRequestException(
+          'La firma del XML generado no es válida. Verifique el certificado del emisor.',
+        );
+      }
+
+      // 1. Persistencia inicial en estado FIRMADO (antes de llamar al SRI)
+      const comprobante = await this.persistirNotaCredito(
+        dto,
+        notaCredito,
+        emisor.id,
+        puntoEmisionInfo.punto_emision_id,
+        claveAcceso,
+        secuencial,
+        ambiente,
+        tipoEmision,
+        xml,
+        xmlFirmado,
+        {
+          success: false,
+          estado: 'FIRMADO',
+          claveAcceso,
+          mensajes: [],
+        },
+      );
+
+      // 2. Llamada al SRI
       const resultado = await this.sriSoapClient.enviarYAutorizar(
         xmlFirmado,
         claveAcceso,
       );
 
-      // Persistir en base de datos
-      if (emisor && puntoEmisionInfo) {
-        await this.persistirNotaCredito(
-          dto,
-          notaCredito,
-          emisor.id,
-          puntoEmisionInfo.punto_emision_id,
+      // 3. Actualización de estado final en BD
+      await this.comprobanteRepository.update(comprobante.id!, {
+        estado: resultado.success ? 'AUTORIZADO' : resultado.estado,
+        estado_sri: resultado.estado,
+        fecha_autorizacion: resultado.fechaAutorizacion,
+        numero_autorizacion: resultado.numeroAutorizacion || claveAcceso,
+      });
+
+      // 4. Si fue autorizado, guardar el XML autorizado
+      if (resultado.xmlAutorizado) {
+        const xmlPaths = await this.xmlStorage.saveAllXmls(
+          dto.emisor.ruc,
           claveAcceso,
-          secuencial,
-          ambiente,
-          tipoEmision,
-          xml,
-          xmlFirmado,
-          resultado,
+          fechaEmision,
+          undefined,
+          undefined,
+          resultado.xmlAutorizado,
         );
-      } else {
-        this.logger.warn(
-          'Emisor no encontrado en BD, nota de crédito no persistida',
-        );
+        await this.comprobanteRepository.saveXml({
+          comprobante_id: comprobante.id!,
+          xml_autorizado_path: xmlPaths.autorizadoKey,
+        });
       }
 
       return this.mapResultToNotaCreditoResponse(resultado);
@@ -203,9 +238,9 @@ export class EmitirNotaCreditoUseCase {
     xmlSinFirma: string,
     xmlFirmado: string,
     resultado: SriOperationResult,
-  ): Promise<void> {
+  ): Promise<any> {
     try {
-      await this.comprobanteRepository.executeTransaction(async (tx) => {
+      return await this.comprobanteRepository.executeTransaction(async (tx) => {
         // 1. Create main comprobante record
         const comprobante = await this.comprobanteRepository.create(
           {
@@ -217,7 +252,7 @@ export class EmitirNotaCreditoUseCase {
             secuencial,
             clave_acceso: claveAcceso,
             fecha_emision: dto.fechaEmision.split('/').reverse().join('-'),
-            estado: resultado.success ? 'AUTORIZADO' : resultado.estado,
+            estado: resultado.estado,
             estado_sri: resultado.estado,
             fecha_autorizacion: resultado.fechaAutorizacion,
             numero_autorizacion: resultado.numeroAutorizacion || claveAcceso,
@@ -335,6 +370,8 @@ export class EmitirNotaCreditoUseCase {
         this.logger.log(
           `Nota de Crédito ${claveAcceso} persistida correctamente`,
         );
+
+        return comprobante;
       });
     } catch (error) {
       this.logger.error(

@@ -1,12 +1,14 @@
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { Prisma } from '../../../generated/prisma/client.js';
 import { Decimal } from 'decimal.js';
 import { ClaveAccesoService } from '../../infrastructure/xml/clave-acceso.service';
 import { XmlBuilderService } from '../../infrastructure/xml/xml-builder.service';
 import { XmlSignerService } from '../../infrastructure/xml/xml-signer.service';
 import { SriSoapClient } from '../../infrastructure/soap/sri-soap.client';
-import { ComprobanteRepository } from '../../domain/repositories/comprobante.repository';
+import {
+  ComprobanteRepository,
+  TransactionContext,
+} from '../../domain/repositories/comprobante.repository';
 import { EmisorRepository } from '../../domain/repositories/emisor.repository';
 import { SecuencialRepository } from '../../domain/repositories/secuencial.repository';
 import { XmlStorageService } from '../../infrastructure/storage/xml-storage.service';
@@ -78,24 +80,23 @@ export class EmitirFacturaUseCase {
       );
 
       // Buscar punto de emisión
-      const puntoEmisionInfo = emisor
-        ? await this.emisorRepository.findPuntoEmision(
-            emisor.id,
-            dto.emisor.establecimiento,
-            dto.emisor.puntoEmision,
-          )
-        : null;
+      const puntoEmisionInfo = await this.emisorRepository.findPuntoEmision(
+        emisor!.id,
+        dto.emisor.establecimiento,
+        dto.emisor.puntoEmision,
+      );
+
+      if (!puntoEmisionInfo) {
+        throw new BadRequestException(
+          `El punto de emisión ${dto.emisor.establecimiento}-${dto.emisor.puntoEmision} no está registrado para el emisor ${dto.emisor.ruc}`,
+        );
+      }
 
       // ─── FASE 1: Transacción corta (~5ms) — Solo reservar secuencial ───
       let secuencial: string;
       if (dto.secuencial) {
         secuencial = dto.secuencial.padStart(9, '0');
       } else {
-        if (!puntoEmisionInfo) {
-          throw new BadRequestException(
-            `No se puede generar secuencial automático: punto de emisión ${dto.emisor.establecimiento}-${dto.emisor.puntoEmision} no encontrado para emisor ${dto.emisor.ruc}`,
-          );
-        }
         secuencial = await this.comprobanteRepository.executeTransaction(
           async (tx) => {
             return this.secuencialRepository.getNextSecuencial(
@@ -147,6 +148,37 @@ export class EmitirFacturaUseCase {
         dto.emisor.ruc,
       );
 
+      // Validar firma antes de enviar
+      const esFirmaValida = await this.xmlSignerService.verifySignature(xmlFirmado);
+      if (!esFirmaValida) {
+        throw new BadRequestException(
+          'La firma del XML generado no es válida. Verifique el certificado del emisor.',
+        );
+      }
+
+      // ─── FASE 2.5: Persistencia inicial en estado FIRMADO ───
+      const comprobante = await this.comprobanteRepository.executeTransaction(async (tx) => {
+        return await this.persistirFactura(
+          dto,
+          factura,
+          emisor.id,
+          puntoEmisionInfo.punto_emision_id,
+          claveAcceso,
+          secuencial,
+          ambiente,
+          tipoEmision,
+          xml,
+          xmlFirmado,
+          {
+            success: false,
+            claveAcceso,
+            estado: 'FIRMADO',
+            mensajes: [],
+          },
+          tx,
+        );
+      });
+
       // Enviar y autorizar en SRI (puede tardar 2-10 segundos — sin bloquear DB)
       let resultado: SriOperationResult;
       try {
@@ -155,56 +187,32 @@ export class EmitirFacturaUseCase {
           claveAcceso,
         );
       } catch (error) {
-        // El SRI no respondió — guardar como PENDIENTE para reintento posterior
-        if (emisor && puntoEmisionInfo) {
-          await this.comprobanteRepository.executeTransaction(async (tx) => {
-            await this.persistirFactura(
-              dto,
-              factura,
-              emisor.id,
-              puntoEmisionInfo.punto_emision_id,
-              claveAcceso,
-              secuencial,
-              ambiente,
-              tipoEmision,
-              xml,
-              xmlFirmado,
-              {
-                success: false,
-                claveAcceso,
-                estado: 'PENDIENTE',
-                mensajes: [
-                  {
-                    identificador: 'SRI_TIMEOUT',
-                    mensaje: (error as Error).message,
-                    tipo: 'ERROR',
-                  },
-                ],
-              },
-              tx,
-            );
-          });
-        }
+        // El SRI no respondió — el registro ya existe como FIRMADO
+        this.logger.warn(`SRI no respondió para NC ${claveAcceso}: ${error.message}`);
         throw error;
       }
 
-      // ─── FASE 3: Transacción corta (~5ms) — Solo persistir resultado ───
-      if (emisor && puntoEmisionInfo) {
-        await this.comprobanteRepository.executeTransaction(async (tx) => {
-          await this.persistirFactura(
-            dto,
-            factura,
-            emisor.id,
-            puntoEmisionInfo.punto_emision_id,
-            claveAcceso,
-            secuencial,
-            ambiente,
-            tipoEmision,
-            xml,
-            xmlFirmado,
-            resultado,
-            tx,
-          );
+      // ─── FASE 3: Transacción corta (~5ms) — Actualizar resultado ───
+      await this.comprobanteRepository.update(comprobante.id!, {
+        estado: resultado.success ? 'AUTORIZADO' : resultado.estado,
+        estado_sri: resultado.estado,
+        fecha_autorizacion: resultado.fechaAutorizacion,
+        numero_autorizacion: resultado.numeroAutorizacion || claveAcceso,
+      });
+
+      // Si fue autorizado, guardar el XML autorizado
+      if (resultado.xmlAutorizado) {
+        const xmlPaths = await this.xmlStorage.saveAllXmls(
+          dto.emisor.ruc,
+          claveAcceso,
+          fechaEmision,
+          undefined,
+          undefined,
+          resultado.xmlAutorizado,
+        );
+        await this.comprobanteRepository.saveXml({
+          comprobante_id: comprobante.id!,
+          xml_autorizado_path: xmlPaths.autorizadoKey,
         });
       }
 
@@ -353,8 +361,8 @@ export class EmitirFacturaUseCase {
     xmlSinFirma: string,
     xmlFirmado: string,
     resultado: SriOperationResult,
-    tx: Prisma.TransactionClient,
-  ): Promise<void> {
+    tx: TransactionContext,
+  ): Promise<any> {
     try {
       // 1. Create main comprobante record
       const comprobante = await this.comprobanteRepository.create(
@@ -506,6 +514,7 @@ export class EmitirFacturaUseCase {
       }
 
       this.logger.log(`Factura ${claveAcceso} persistida correctamente`);
+      return comprobante;
     } catch (error) {
       this.logger.error(
         `CRÍTICO: Factura ${claveAcceso} autorizada por SRI pero NO persistida: ${(error as Error).message}`,

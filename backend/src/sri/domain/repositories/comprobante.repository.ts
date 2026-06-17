@@ -12,16 +12,18 @@ import type {
   MotivoNotaDebitoRecord,
 } from '../interfaces/repository.interface';
 
+export type TransactionContext = any;
+
 export abstract class ComprobanteRepository {
   abstract create(
     data: ComprobanteRecord,
-    tx?: any,
+    tx?: TransactionContext,
   ): Promise<ComprobanteRecord>;
 
   abstract update(
     id: bigint | string,
     data: Partial<ComprobanteRecord>,
-    tx?: any,
+    tx?: TransactionContext,
   ): Promise<ComprobanteRecord>;
 
   abstract findByClaveAcceso(
@@ -47,46 +49,46 @@ export abstract class ComprobanteRepository {
 
   abstract createDetalles(
     detalles: DetalleRecord[],
-    tx?: any,
+    tx?: TransactionContext,
   ): Promise<DetalleRecord[]>;
 
   abstract createImpuestos(
     impuestos: ImpuestoRecord[],
-    tx?: any,
+    tx?: TransactionContext,
   ): Promise<ImpuestoRecord[]>;
 
   abstract createTotales(
     totales: TotalRecord[],
-    tx?: any,
+    tx?: TransactionContext,
   ): Promise<TotalRecord[]>;
 
-  abstract createPagos(pagos: PagoRecord[], tx?: any): Promise<PagoRecord[]>;
+  abstract createPagos(pagos: PagoRecord[], tx?: TransactionContext): Promise<PagoRecord[]>;
 
   abstract createRetenciones(
     retenciones: RetencionRecord[],
-    tx?: any,
+    tx?: TransactionContext,
   ): Promise<RetencionRecord[]>;
 
   abstract createImpuestosDocSustento(
     impuestos: ImpuestoDocSustentoRecord[],
-    tx?: any,
+    tx?: TransactionContext,
   ): Promise<ImpuestoDocSustentoRecord[]>;
 
-  abstract saveXml(data: XmlRecord, tx?: any): Promise<XmlRecord>;
+  abstract saveXml(data: XmlRecord, tx?: TransactionContext): Promise<XmlRecord>;
 
   abstract createInfoAdicional(
     items: InfoAdicionalRecord[],
-    tx?: any,
+    tx?: TransactionContext,
   ): Promise<InfoAdicionalRecord[]>;
 
   abstract createDetallesAdicionales(
     items: DetalleAdicionalRecord[],
-    tx?: any,
+    tx?: TransactionContext,
   ): Promise<DetalleAdicionalRecord[]>;
 
   abstract createMotivosNotaDebito(
     motivos: MotivoNotaDebitoRecord[],
-    tx?: any,
+    tx?: TransactionContext,
   ): Promise<MotivoNotaDebitoRecord[]>;
 
   abstract findDetallesByComprobanteId(comprobanteId: bigint): Promise<any[]>;
@@ -104,5 +106,5 @@ export abstract class ComprobanteRepository {
     xml_autorizado_path?: string;
   } | null>;
 
-  abstract executeTransaction<T>(callback: (tx: any) => Promise<T>): Promise<T>;
+  abstract executeTransaction<T>(callback: (tx: TransactionContext) => Promise<T>): Promise<T>;
 }

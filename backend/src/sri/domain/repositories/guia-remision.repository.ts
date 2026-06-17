@@ -2,15 +2,16 @@ import type {
   DestinatarioGuiaRecord,
   DetalleGuiaRecord,
 } from '../interfaces/repository.interface';
+import { TransactionContext } from './comprobante.repository';
 
 export abstract class GuiaRemisionRepository {
   abstract createDestinatarios(
     destinatarios: DestinatarioGuiaRecord[],
-    tx?: any,
+    tx?: TransactionContext,
   ): Promise<DestinatarioGuiaRecord[]>;
 
   abstract createDetalles(
     detalles: DetalleGuiaRecord[],
-    tx?: any,
+    tx?: TransactionContext,
   ): Promise<DetalleGuiaRecord[]>;
 }

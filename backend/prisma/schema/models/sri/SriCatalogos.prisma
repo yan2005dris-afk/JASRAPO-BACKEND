@@ -35,6 +35,7 @@ model ImpuestosDocSustento {
 
   retencion               ComprobanteRetenciones @relation(fields: [comprobanteRetencionId], references: [id], onDelete: Cascade)
 
+  @@index([comprobanteRetencionId])
   @@map("impuestos_doc_sustento")
 }
 

@@ -158,8 +158,11 @@ export class PrismaComprobanteRepository extends ComprobanteRepository {
 
     if (!c) return null;
 
+    const record = this.mapComprobanteToRecord(c);
+
     return {
-      ...this.mapComprobanteToRecord(c),
+      ...record,
+      id: record.id?.toString(),
       ruc_emisor: c.emisor?.ruc,
       razon_social_emisor: c.emisor?.razonSocial,
       establecimiento: c.puntoEmision?.establecimiento?.codigo,
@@ -244,6 +247,7 @@ export class PrismaComprobanteRepository extends ComprobanteRepository {
 
     const data = rows.map((c) => ({
       id: c.id.toString(),
+      uuid: c.uuid,
       emisor_id: c.emisorId,
       clave_acceso: c.claveAcceso,
       tipo_comprobante: c.tipoComprobante,
@@ -277,7 +281,7 @@ export class PrismaComprobanteRepository extends ComprobanteRepository {
 
     const created = await client.comprobanteDetalles.createManyAndReturn({
       data: detalles.map((d) => ({
-        comprobanteId: BigInt(d.comprobante_id as any),
+        comprobanteId: d.comprobante_id,
         codigoPrincipal: d.codigo_principal ?? undefined,
         codigoAuxiliar: d.codigo_auxiliar ?? undefined,
         descripcion: d.descripcion,
@@ -294,7 +298,7 @@ export class PrismaComprobanteRepository extends ComprobanteRepository {
 
     return created.map((r) => ({
       id: r.id,
-      comprobante_id: r.comprobanteId.toString(),
+      comprobante_id: r.comprobanteId,
       codigo_principal: r.codigoPrincipal ?? undefined,
       codigo_auxiliar: r.codigoAuxiliar ?? undefined,
       descripcion: r.descripcion,
@@ -339,7 +343,7 @@ export class PrismaComprobanteRepository extends ComprobanteRepository {
 
     await client.comprobanteTotales.createMany({
       data: totales.map((t) => ({
-        comprobanteId: BigInt(t.comprobante_id as any),
+        comprobanteId: t.comprobante_id,
         codigo: t.codigo,
         codigoPorcentaje: t.codigo_porcentaje,
         descuentoAdicional: t.descuento_adicional ?? undefined,
@@ -362,7 +366,7 @@ export class PrismaComprobanteRepository extends ComprobanteRepository {
 
     await client.comprobantePagos.createMany({
       data: pagos.map((p) => ({
-        comprobanteId: BigInt(p.comprobante_id as any),
+        comprobanteId: p.comprobante_id,
         formaPago: p.forma_pago,
         total: new Prisma.Decimal(p.total),
         plazo: p.plazo ?? undefined,
@@ -384,7 +388,7 @@ export class PrismaComprobanteRepository extends ComprobanteRepository {
       retenciones.map((r) =>
         client.comprobanteRetenciones.create({
           data: {
-            comprobanteId: BigInt(r.comprobante_id as any),
+            comprobanteId: r.comprobante_id,
             codigo: r.codigo,
             codigoRetencion: r.codigo_retencion,
             baseImponible: r.base_imponible ?? undefined,
@@ -435,9 +439,9 @@ export class PrismaComprobanteRepository extends ComprobanteRepository {
     const client = tx ?? this.prisma;
 
     const result = await client.comprobanteXmls.upsert({
-      where: { comprobanteId: BigInt(data.comprobante_id as any) },
+      where: { comprobanteId: data.comprobante_id },
       create: {
-        comprobanteId: BigInt(data.comprobante_id as any),
+        comprobanteId: data.comprobante_id,
         xmlFirmadoPath: data.xml_firmado_path ?? undefined,
         xmlAutorizadoPath: data.xml_autorizado_path ?? undefined,
       },
@@ -453,7 +457,7 @@ export class PrismaComprobanteRepository extends ComprobanteRepository {
 
     return {
       id: result.id,
-      comprobante_id: result.comprobanteId.toString(),
+      comprobante_id: result.comprobanteId,
       xml_firmado_path: result.xmlFirmadoPath ?? undefined,
       xml_autorizado_path: result.xmlAutorizadoPath ?? undefined,
     };
@@ -468,7 +472,7 @@ export class PrismaComprobanteRepository extends ComprobanteRepository {
 
     await client.infoAdicional.createMany({
       data: items.map((item) => ({
-        comprobanteId: BigInt(item.comprobante_id as any),
+        comprobanteId: item.comprobante_id,
         nombre: item.nombre,
         valor: item.valor,
       })),
@@ -504,7 +508,7 @@ export class PrismaComprobanteRepository extends ComprobanteRepository {
 
     await client.motivosNotaDebito.createMany({
       data: motivos.map((m) => ({
-        comprobanteId: BigInt(m.comprobante_id as any),
+        comprobanteId: m.comprobante_id,
         razon: m.razon,
         valor: new Prisma.Decimal(m.valor),
       })),

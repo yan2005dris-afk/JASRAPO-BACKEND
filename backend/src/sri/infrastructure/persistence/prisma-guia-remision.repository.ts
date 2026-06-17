@@ -24,7 +24,7 @@ export class PrismaGuiaRemisionRepository extends GuiaRemisionRepository {
       destinatarios.map((d) =>
         client.destinatariosGuia.create({
           data: {
-            comprobanteId: BigInt(d.comprobante_id as any),
+            comprobanteId: d.comprobante_id,
             identificacionDestinatario: d.identificacion_destinatario,
             razonSocialDestinatario: d.razon_social_destinatario,
             dirDestinatario: d.dir_destinatario ?? undefined,
@@ -45,7 +45,7 @@ export class PrismaGuiaRemisionRepository extends GuiaRemisionRepository {
 
     return created.map((r) => ({
       id: r.id,
-      comprobante_id: r.comprobanteId.toString(),
+      comprobante_id: r.comprobanteId,
       identificacion_destinatario: r.identificacionDestinatario,
       razon_social_destinatario: r.razonSocialDestinatario,
       dir_destinatario: r.dirDestinatario ?? undefined,
@@ -56,8 +56,8 @@ export class PrismaGuiaRemisionRepository extends GuiaRemisionRepository {
       cod_doc_sustento: r.codDocSustento ?? undefined,
       num_doc_sustento: r.numDocSustento ?? undefined,
       num_aut_doc_sustento: r.numAutDocSustento ?? undefined,
-      fecha_emision_doc_sustento:
-        r.fechaEmisionDocSustento?.toISOString() ?? undefined,
+      fecha_emision_doc_sustento: r.fechaEmisionDocSustento?.toISOString?.() ?? undefined,
+    }));
     }));
   }
 

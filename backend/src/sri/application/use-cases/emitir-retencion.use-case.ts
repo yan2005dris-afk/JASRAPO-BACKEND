@@ -1,11 +1,13 @@
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { Prisma } from '../../../generated/prisma/client.js';
 import { ClaveAccesoService } from '../../infrastructure/xml/clave-acceso.service';
 import { XmlBuilderService } from '../../infrastructure/xml/xml-builder.service';
 import { XmlSignerService } from '../../infrastructure/xml/xml-signer.service';
 import { SriSoapClient } from '../../infrastructure/soap/sri-soap.client';
-import { ComprobanteRepository } from '../../domain/repositories/comprobante.repository';
+import {
+  ComprobanteRepository,
+  TransactionContext,
+} from '../../domain/repositories/comprobante.repository';
 import { EmisorRepository } from '../../domain/repositories/emisor.repository';
 import { SecuencialRepository } from '../../domain/repositories/secuencial.repository';
 import { XmlStorageService } from '../../infrastructure/storage/xml-storage.service';
@@ -71,13 +73,23 @@ export class EmitirRetencionUseCase {
 
       // Get emisor info from database
       const emisor = await this.emisorRepository.findByRuc(dto.emisor.ruc);
-      const puntoEmisionInfo = emisor
-        ? await this.emisorRepository.findPuntoEmision(
-            emisor.id,
-            dto.emisor.establecimiento,
-            dto.emisor.puntoEmision,
-          )
-        : null;
+      if (!emisor) {
+        throw new BadRequestException(
+          `El emisor con RUC ${dto.emisor.ruc} no está registrado en el sistema`,
+        );
+      }
+
+      const puntoEmisionInfo = await this.emisorRepository.findPuntoEmision(
+        emisor.id,
+        dto.emisor.establecimiento,
+        dto.emisor.puntoEmision,
+      );
+
+      if (!puntoEmisionInfo) {
+        throw new BadRequestException(
+          `El punto de emisión ${dto.emisor.establecimiento}-${dto.emisor.puntoEmision} no está registrado para el emisor ${dto.emisor.ruc}`,
+        );
+      }
 
       // Handle secuencial - auto-generate if not provided
       let secuencial: string;
@@ -85,11 +97,6 @@ export class EmitirRetencionUseCase {
         secuencial = dto.secuencial.padStart(9, '0');
         this.logger.log(`Usando secuencial RET proporcionado: ${secuencial}`);
       } else {
-        if (!puntoEmisionInfo) {
-          throw new BadRequestException(
-            'Para auto-generar secuencial RET, el emisor debe estar registrado en la base de datos',
-          );
-        }
         const nextSecuencial =
           await this.secuencialRepository.getNextSecuencial(
             puntoEmisionInfo.punto_emision_id,
@@ -130,11 +137,7 @@ export class EmitirRetencionUseCase {
       this.logger.log('XML de comprobante de retención generado');
 
       // Verify emisor has certificate in database
-      if (
-        !emisor ||
-        !emisor.certificado_nombre ||
-        !emisor.certificado_password_encrypted
-      ) {
+      if (!emisor.certificado_nombre || !emisor.certificado_password_encrypted) {
         throw new BadRequestException(
           `El emisor ${dto.emisor.ruc} no tiene certificado P12 configurado. ` +
             `Use el endpoint /certificates/upload-cert para subir el certificado.`,
@@ -150,28 +153,62 @@ export class EmitirRetencionUseCase {
       );
       this.logger.log('XML de comprobante de retención firmado con XAdES-BES');
 
+      // Validar firma antes de enviar
+      const esFirmaValida = await this.xmlSignerService.verifySignature(xmlFirmado);
+      if (!esFirmaValida) {
+        throw new BadRequestException(
+          'La firma del XML generado no es válida. Verifique el certificado del emisor.',
+        );
+      }
+
+      // 1. Persistencia inicial en estado FIRMADO (antes de llamar al SRI)
+      const comprobante = await this.persistirRetencion(
+        dto,
+        retencion,
+        emisor.id,
+        puntoEmisionInfo.punto_emision_id,
+        claveAcceso,
+        secuencial,
+        ambiente,
+        tipoEmision,
+        xml,
+        xmlFirmado,
+        {
+          success: false,
+          estado: 'FIRMADO',
+          claveAcceso,
+          mensajes: [],
+        },
+      );
+
+      // 2. Llamada al SRI
       const resultado = await this.sriSoapClient.enviarYAutorizar(
         xmlFirmado,
         claveAcceso,
       );
 
-      // Persistir en base de datos
-      if (emisor && puntoEmisionInfo) {
-        await this.persistirRetencion(
-          dto,
-          retencion,
-          emisor.id,
-          puntoEmisionInfo.punto_emision_id,
+      // 3. Actualización de estado final en BD
+      await this.comprobanteRepository.update(comprobante.id!, {
+        estado: resultado.success ? 'AUTORIZADO' : resultado.estado,
+        estado_sri: resultado.estado,
+        fecha_autorizacion: resultado.fechaAutorizacion,
+        numero_autorizacion: resultado.numeroAutorizacion || claveAcceso,
+      });
+
+      // 4. Si fue autorizado, guardar el XML autorizado
+      if (resultado.xmlAutorizado) {
+        const xmlPaths = await this.xmlStorage.saveAllXmls(
+          dto.emisor.ruc,
           claveAcceso,
-          secuencial,
-          ambiente,
-          tipoEmision,
-          xml,
-          xmlFirmado,
-          resultado,
+          fechaEmision,
+          undefined,
+          undefined,
+          resultado.xmlAutorizado,
         );
-      } else {
-        this.logger.warn('Emisor no encontrado en BD, retención no persistida');
+        await this.comprobanteRepository.saveXml({
+          comprobante_id: comprobante.id!,
+          xml_autorizado_path: xmlPaths.autorizadoKey,
+        });
       }
 
       return this.mapResultToRetencionResponse(resultado);
@@ -198,9 +235,9 @@ export class EmitirRetencionUseCase {
     xmlSinFirma: string,
     xmlFirmado: string,
     resultado: SriOperationResult,
-  ): Promise<void> {
+  ): Promise<any> {
     try {
-      await this.comprobanteRepository.executeTransaction(async (tx) => {
+      return await this.comprobanteRepository.executeTransaction(async (tx) => {
         // 1. Create main comprobante record
         const comprobante = await this.comprobanteRepository.create(
           {
@@ -212,7 +249,7 @@ export class EmitirRetencionUseCase {
             secuencial,
             clave_acceso: claveAcceso,
             fecha_emision: dto.fechaEmision.split('/').reverse().join('-'),
-            estado: resultado.success ? 'AUTORIZADO' : resultado.estado,
+            estado: resultado.estado,
             estado_sri: resultado.estado,
             fecha_autorizacion: resultado.fechaAutorizacion,
             numero_autorizacion: resultado.numeroAutorizacion || claveAcceso,
@@ -220,6 +257,7 @@ export class EmitirRetencionUseCase {
             receptor_identificacion: dto.sujetoRetenido.identificacion,
             receptor_razon_social: dto.sujetoRetenido.razonSocial,
             receptor_email: dto.sujetoRetenido.email,
+            periodo_fiscal: dto.periodoFiscal,
           },
           tx,
         );
@@ -228,23 +266,50 @@ export class EmitirRetencionUseCase {
 
         // 2. Create retenciones in comprobante_retenciones table
         if (retencion.impuestos && retencion.impuestos.length > 0) {
-          await this.comprobanteRepository.createRetenciones(
-            retencion.impuestos.map((imp) => ({
-              comprobante_id: comprobante.id!,
-              codigo: imp.codigo,
-              codigo_retencion: imp.codigoRetencion,
-              base_imponible: imp.baseImponible,
-              porcentaje_retener: imp.porcentajeRetener,
-              valor_retenido: imp.valorRetenido,
-              cod_doc_sustento: imp.codDocSustento,
-              num_doc_sustento: imp.numDocSustento,
-              fecha_emision_doc_sustento: imp.fechaEmisionDocSustento
-                ?.split('/')
-                .reverse()
-                .join('-'),
-            })),
-            tx,
-          );
+          const retencionesRecords =
+            await this.comprobanteRepository.createRetenciones(
+              retencion.impuestos.map((imp) => ({
+                comprobante_id: comprobante.id!,
+                codigo: imp.codigo,
+                codigo_retencion: imp.codigoRetencion,
+                base_imponible: imp.baseImponible,
+                porcentaje_retener: imp.porcentajeRetener,
+                valor_retenido: imp.valorRetenido,
+                cod_doc_sustento: imp.codDocSustento,
+                num_doc_sustento: imp.numDocSustento,
+                fecha_emision_doc_sustento: imp.fechaEmisionDocSustento
+                  ?.split('/')
+                  .reverse()
+                  .join('-'),
+                total_sin_impuestos: imp.totalSinImpuestos,
+                importe_total: imp.importeTotal,
+                pago_loc_ext: imp.pagoLocExt,
+              })),
+              tx,
+            );
+
+          // Create impuestos de sustento for each retencion record
+          for (let i = 0; i < retencion.impuestos.length; i++) {
+            const imp = retencion.impuestos[i];
+            const retRecord = retencionesRecords[i];
+
+            if (
+              imp.impuestosDocSustento &&
+              imp.impuestosDocSustento.length > 0
+            ) {
+              await this.comprobanteRepository.createImpuestosDocSustento(
+                imp.impuestosDocSustento.map((ids) => ({
+                  comprobante_retencion_id: retRecord.id!,
+                  cod_impuesto_doc_sustento: ids.codImpuestoDocSustento,
+                  codigo_porcentaje: ids.codigoPorcentaje,
+                  base_imponible: ids.baseImponible,
+                  tarifa: ids.tarifa,
+                  valor_impuesto: ids.valorImpuesto,
+                })),
+                tx,
+              );
+            }
+          }
         }
 
         // 3. Save signed XML always (needed for retry), authorized only if authorized
@@ -283,6 +348,8 @@ export class EmitirRetencionUseCase {
         }
 
         this.logger.log(`Retención ${claveAcceso} persistida correctamente`);
+
+        return comprobante;
       });
     } catch (error) {
       this.logger.error(

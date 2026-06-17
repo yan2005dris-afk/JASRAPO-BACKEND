@@ -17,6 +17,7 @@ model DestinatariosGuia {
   comprobante               Comprobantes @relation(fields: [comprobanteId], references: [id], onDelete: Cascade)
   detalles                  DetallesGuia[]
 
+  @@index([comprobanteId])
   @@map("destinatarios_guia")
 }
 
@@ -31,5 +32,6 @@ model DetallesGuia {
 
   destinatario    DestinatariosGuia @relation(fields: [destinatarioId], references: [id], onDelete: Cascade)
 
+  @@index([destinatarioId])
   @@map("detalles_guia")
 }

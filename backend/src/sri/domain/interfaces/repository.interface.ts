@@ -49,7 +49,7 @@ export interface ComprobanteRecord {
 
 export interface DetalleRecord {
   id?: string;
-  comprobante_id: string | bigint;
+  comprobante_id: bigint;
   producto_id?: string;
   codigo_principal?: string;
   codigo_auxiliar?: string;
@@ -74,7 +74,7 @@ export interface ImpuestoRecord {
 
 export interface TotalRecord {
   id?: string;
-  comprobante_id: string | bigint;
+  comprobante_id: bigint;
   codigo: string;
   codigo_porcentaje: string;
   descuento_adicional?: number;
@@ -86,7 +86,7 @@ export interface TotalRecord {
 
 export interface PagoRecord {
   id?: string;
-  comprobante_id: string | bigint;
+  comprobante_id: bigint;
   forma_pago: string;
   total: number;
   plazo?: number;
@@ -95,7 +95,7 @@ export interface PagoRecord {
 
 export interface RetencionRecord {
   id?: string;
-  comprobante_id: string | bigint;
+  comprobante_id: bigint;
   codigo: string;
   codigo_retencion: string;
   base_imponible?: number;
@@ -121,14 +121,14 @@ export interface ImpuestoDocSustentoRecord {
 
 export interface XmlRecord {
   id?: string;
-  comprobante_id: string | bigint;
+  comprobante_id: bigint;
   xml_firmado_path?: string;
   xml_autorizado_path?: string;
 }
 
 export interface InfoAdicionalRecord {
   id?: string;
-  comprobante_id: string | bigint;
+  comprobante_id: bigint;
   nombre: string;
   valor: string;
 }
@@ -142,7 +142,7 @@ export interface DetalleAdicionalRecord {
 
 export interface DestinatarioGuiaRecord {
   id?: string;
-  comprobante_id: string | bigint;
+  comprobante_id: bigint;
   identificacion_destinatario: string;
   razon_social_destinatario: string;
   dir_destinatario?: string;
@@ -167,7 +167,7 @@ export interface DetalleGuiaRecord {
 
 export interface MotivoNotaDebitoRecord {
   id?: string;
-  comprobante_id: string | bigint;
+  comprobante_id: bigint;
   razon: string;
   valor: number;
 }
@@ -192,6 +192,8 @@ export interface EmisorRecord {
   certificado_updated_at?: Date;
   ambiente: string;
   estado: string;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface PuntoEmisionRecord {

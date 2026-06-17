@@ -287,6 +287,7 @@ export class SriService {
 
     const data = result.data.map((c) => ({
       id: c.id,
+      uuid: c.uuid,
       emisorId: c.emisor_id,
       claveAcceso: c.clave_acceso,
       tipoComprobante: c.tipo_comprobante,
@@ -527,7 +528,7 @@ export class SriService {
         resultado.xmlAutorizado,
       );
       await this.repository.saveXml({
-        comprobante_id: comprobante.uuid!,
+        comprobante_id: comprobante.id!,
         xml_autorizado_path: autorizadoPath,
       });
     }
@@ -754,7 +755,7 @@ export class SriService {
                   auth.comprobante,
                 );
                 await this.repository.saveXml({
-                  comprobante_id: comp.id as string,
+                  comprobante_id: BigInt(comp.id),
                   xml_autorizado_path: autorizadoPath,
                 });
               }

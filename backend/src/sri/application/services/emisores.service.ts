@@ -4,7 +4,6 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
-import { PrismaService } from '../../../infrastructure/database/prisma.service';
 import {
   CreateEmisorDto,
   UpdateEmisorDto,
@@ -12,15 +11,56 @@ import {
 } from '../../interfaces/dto';
 import * as forge from 'node-forge';
 import { EncryptionService } from '../../../infrastructure/encryption/encryption.service';
+import { EmisorRepository } from '../../domain/repositories/emisor.repository';
+import { EmisorRecord } from '../../domain/interfaces/repository.interface';
+import {
+  StorageService,
+  SRI_STORAGE_TYPES,
+} from '../../../infrastructure/storage/storage.service';
+import { XmlSignerService } from '../../infrastructure/xml/xml-signer.service';
 
 @Injectable()
 export class EmisoresService {
   private readonly logger = new Logger(EmisoresService.name);
 
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly repository: EmisorRepository,
     private readonly encryptionService: EncryptionService,
+    private readonly storageService: StorageService,
+    private readonly xmlSignerService: XmlSignerService,
   ) {}
+
+  /**
+   * Valida que el ID sea un número positivo y esté en un rango seguro.
+   */
+  private parseSafeId(id: string): number {
+    if (!/^\d+$/.test(id)) {
+      throw new BadRequestException(
+        `ID inválido: "${id}". El ID debe contener solo dígitos.`,
+      );
+    }
+    const parsedId = parseInt(id, 10);
+    if (!Number.isSafeInteger(parsedId) || parsedId <= 0) {
+      throw new BadRequestException(
+        `ID fuera de rango o inválido: ${id}. Debe ser un entero positivo seguro.`,
+      );
+    }
+    return parsedId;
+  }
+
+  /**
+   * Obtiene un registro de emisor por ID validado.
+   */
+  private async findRecordById(id: string): Promise<EmisorRecord> {
+    const parsedId = this.parseSafeId(id);
+    const emisor = await this.repository.findById(parsedId);
+
+    if (!emisor) {
+      throw new NotFoundException(`Emisor con ID ${id} no encontrado`);
+    }
+
+    return emisor;
+  }
 
   /**
    * Convierte ambiente legible a código SRI
@@ -33,13 +73,6 @@ export class EmisoresService {
   }
 
   /**
-   * Convierte código SRI a texto legible
-   */
-  private toAmbienteTexto(codigo: string): string {
-    return codigo === '2' ? 'produccion' : 'pruebas';
-  }
-
-  /**
    * Normaliza estado a mayúsculas
    */
   private toEstadoNormalizado(estado?: string): string {
@@ -48,23 +81,13 @@ export class EmisoresService {
   }
 
   async findAll(): Promise<EmisorResponseDto[]> {
-    const empresas = await this.prisma.empresa.findMany({
-      orderBy: { createdAt: 'desc' },
-    });
-
-    return empresas.map((row) => this.mapToResponse(row));
+    const emisores = await this.repository.findAll();
+    return emisores.map((row) => this.mapToResponse(row));
   }
 
   async findOne(id: string): Promise<EmisorResponseDto> {
-    const empresa = await this.prisma.empresa.findUnique({
-      where: { id: parseInt(id, 10) },
-    });
-
-    if (!empresa) {
-      throw new NotFoundException(`Emisor con ID ${id} no encontrado`);
-    }
-
-    return this.mapToResponse(empresa);
+    const emisor = await this.findRecordById(id);
+    return this.mapToResponse(emisor);
   }
 
   /**
@@ -90,13 +113,9 @@ export class EmisoresService {
   }
 
   async findByRuc(ruc: string): Promise<EmisorResponseDto | null> {
-    const empresa = await this.prisma.empresa.findUnique({
-      where: { ruc },
-    });
-
-    if (!empresa) return null;
-
-    return this.mapToResponse(empresa);
+    const emisor = await this.repository.findByRuc(ruc);
+    if (!emisor) return null;
+    return this.mapToResponse(emisor);
   }
 
   async create(dto: CreateEmisorDto): Promise<EmisorResponseDto> {
@@ -106,79 +125,73 @@ export class EmisoresService {
       throw new BadRequestException(`Ya existe un emisor con RUC ${dto.ruc}`);
     }
 
-    const empresa = await this.prisma.empresa.create({
-      data: {
-        ruc: dto.ruc,
-        razonSocial: dto.razonSocial,
-        nombreComercial: dto.nombreComercial ?? undefined,
-        direccionMatriz: dto.direccionMatriz,
-        obligadoContabilidad: dto.obligadoContabilidad ?? false,
-        contribuyenteEspecial: dto.contribuyenteEspecial ?? undefined,
-        agenteRetencion: dto.agenteRetencion ?? undefined,
-        contribuyenteRimpe: dto.contribuyenteRimpe ?? false,
-        ambiente: this.toAmbienteCodigo(dto.ambiente),
-        estado: 'ACTIVO',
-      },
+    const emisor = await this.repository.create({
+      ruc: dto.ruc,
+      razon_social: dto.razonSocial,
+      nombre_comercial: dto.nombreComercial ?? undefined,
+      direccion_matriz: dto.direccionMatriz,
+      obligado_contabilidad: dto.obligadoContabilidad ?? false,
+      contribuyente_especial: dto.contribuyenteEspecial ?? undefined,
+      agente_retencion: dto.agenteRetencion ?? undefined,
+      contribuyente_rimpe: dto.contribuyenteRimpe ?? false,
+      ambiente: this.toAmbienteCodigo(dto.ambiente),
+      estado: 'ACTIVO',
     });
 
     this.logger.log(`Emisor creado: ${dto.ruc} - ${dto.razonSocial}`);
-    return this.mapToResponse(empresa);
+    return this.mapToResponse(emisor);
   }
 
   async update(id: string, dto: UpdateEmisorDto): Promise<EmisorResponseDto> {
-    // Verificar que existe
-    await this.findOne(id);
+    // Verificar que existe y obtener el registro para usar su ID numérico
+    const emisorActual = await this.findRecordById(id);
 
-    const updateData: Record<string, any> = {};
+    const updateData: Partial<EmisorRecord> = {};
 
-    if (dto.razonSocial !== undefined) updateData.razonSocial = dto.razonSocial;
+    if (dto.razonSocial !== undefined) updateData.razon_social = dto.razonSocial;
     if (dto.nombreComercial !== undefined)
-      updateData.nombreComercial = dto.nombreComercial;
+      updateData.nombre_comercial = dto.nombreComercial;
     if (dto.direccionMatriz !== undefined)
-      updateData.direccionMatriz = dto.direccionMatriz;
+      updateData.direccion_matriz = dto.direccionMatriz;
     if (dto.obligadoContabilidad !== undefined)
-      updateData.obligadoContabilidad = dto.obligadoContabilidad;
+      updateData.obligado_contabilidad = dto.obligadoContabilidad;
     if (dto.contribuyenteEspecial !== undefined)
-      updateData.contribuyenteEspecial = dto.contribuyenteEspecial;
+      updateData.contribuyente_especial = dto.contribuyenteEspecial;
     if (dto.agenteRetencion !== undefined)
-      updateData.agenteRetencion = dto.agenteRetencion;
+      updateData.agente_retencion = dto.agenteRetencion;
     if (dto.contribuyenteRimpe !== undefined)
-      updateData.contribuyenteRimpe = dto.contribuyenteRimpe;
+      updateData.contribuyente_rimpe = dto.contribuyenteRimpe;
     if (dto.ambiente !== undefined)
       updateData.ambiente = this.toAmbienteCodigo(dto.ambiente);
     if (dto.estado !== undefined)
       updateData.estado = this.toEstadoNormalizado(dto.estado);
 
     if (Object.keys(updateData).length === 0) {
-      return this.findOne(id);
+      return this.mapToResponse(emisorActual);
     }
 
-    const empresa = await this.prisma.empresa.update({
-      where: { id: parseInt(id, 10) },
-      data: updateData,
-    });
+    const emisor = await this.repository.update(emisorActual.id, updateData);
 
     this.logger.log(`Emisor actualizado: ${id}`);
-    return this.mapToResponse(empresa);
+    return this.mapToResponse(emisor);
   }
 
   async delete(id: string): Promise<EmisorResponseDto> {
     // Verificar que existe
-    const emisor = await this.findOne(id);
+    const emisorActual = await this.findRecordById(id);
 
     // Verificar si ya está inactivo
-    if (emisor.estado.toUpperCase() === 'INACTIVO') {
+    if (emisorActual.estado.toUpperCase() === 'INACTIVO') {
       throw new BadRequestException(`El emisor ya se encuentra inactivo`);
     }
 
     // Eliminación lógica: cambiar estado a inactivo
-    const empresa = await this.prisma.empresa.update({
-      where: { id: parseInt(id, 10) },
-      data: { estado: 'INACTIVO' },
+    const updated = await this.repository.update(emisorActual.id, {
+      estado: 'INACTIVO',
     });
 
     this.logger.log(`Emisor inactivado: ${id}`);
-    return this.mapToResponse(empresa);
+    return this.mapToResponse(updated);
   }
 
   async uploadCertificado(
@@ -186,8 +199,8 @@ export class EmisoresService {
     file: Buffer,
     password: string,
   ): Promise<EmisorResponseDto> {
-    // Verificar que existe
-    await this.findOne(id);
+    // Verificar que existe y obtener el registro
+    const emisorActual = await this.findRecordById(id);
 
     // Validar el certificado P12
     let certificateInfo: { validoHasta: Date; sujeto: string };
@@ -199,37 +212,65 @@ export class EmisoresService {
       );
     }
 
-    // Guardar el certificado (almacenamos nombre del archivo + password encriptado)
-    const empresa = await this.prisma.empresa.update({
-      where: { id: parseInt(id, 10) },
-      data: {
-        certificadoNombre: `cert_${id}.p12`,
-        certificadoPassword: await this.encryptionService.encrypt(password),
-        certificadoValidoHasta: certificateInfo.validoHasta,
-        certificadoSujeto: certificateInfo.sujeto,
-      },
+    // 1. Guardar el archivo en RustFS (S3)
+    const bucket = await this.storageService.ensureBucketForRuc(
+      emisorActual.ruc,
+      SRI_STORAGE_TYPES.CERTS,
+    );
+    const fileName = `cert_${emisorActual.id}.p12`;
+
+    await this.storageService.upload(bucket, fileName, file, {
+      contentType: 'application/x-pkcs12',
     });
 
-    this.logger.log(`Certificado cargado para emisor: ${id}`);
-    return this.mapToResponse(empresa);
+    // 2. Guardar metadata en la base de datos
+    const emisor = await this.repository.update(emisorActual.id, {
+      certificado_nombre: fileName,
+      certificado_password_encrypted:
+        await this.encryptionService.encrypt(password),
+      certificado_valido_hasta: certificateInfo.validoHasta,
+      certificado_sujeto: certificateInfo.sujeto,
+    });
+
+    // 3. Limpiar cache de firma para este emisor
+    this.xmlSignerService.clearEmisorCache(emisorActual.ruc);
+
+    this.logger.log(`Certificado cargado en RustFS para emisor: ${id}`);
+    return this.mapToResponse(emisor);
   }
 
   async deleteCertificado(id: string): Promise<EmisorResponseDto> {
     // Verificar que existe
-    await this.findOne(id);
+    const emisorActual = await this.findRecordById(id);
 
-    const empresa = await this.prisma.empresa.update({
-      where: { id: parseInt(id, 10) },
-      data: {
-        certificadoNombre: null,
-        certificadoPassword: null,
-        certificadoValidoHasta: null,
-        certificadoSujeto: null,
-      },
+    // 1. Eliminar de RustFS si existe
+    if (emisorActual.certificado_nombre) {
+      try {
+        const bucket = await this.storageService.ensureBucketForRuc(
+          emisorActual.ruc,
+          SRI_STORAGE_TYPES.CERTS,
+        );
+        await this.storageService.delete(bucket, emisorActual.certificado_nombre);
+      } catch (error) {
+        this.logger.warn(
+          `No se pudo eliminar el archivo físico del certificado: ${error.message}`,
+        );
+      }
+    }
+
+    // 2. Limpiar metadata en BD
+    const emisor = await this.repository.update(emisorActual.id, {
+      certificado_nombre: undefined,
+      certificado_password_encrypted: undefined,
+      certificado_valido_hasta: undefined,
+      certificado_sujeto: undefined,
     });
 
-    this.logger.log(`Certificado eliminado para emisor: ${id}`);
-    return this.mapToResponse(empresa);
+    // 3. Limpiar cache de firma para este emisor
+    this.xmlSignerService.clearEmisorCache(emisorActual.ruc);
+
+    this.logger.log(`Certificado eliminado de RustFS para emisor: ${id}`);
+    return this.mapToResponse(emisor);
   }
 
   private extractCertificateInfo(
@@ -259,28 +300,24 @@ export class EmisoresService {
     return { validoHasta, sujeto };
   }
 
-  private mapToResponse(row: any): EmisorResponseDto {
+  private mapToResponse(row: EmisorRecord): EmisorResponseDto {
     return {
-      id: row.id,
+      id: row.id.toString(),
       ruc: row.ruc,
-      razonSocial: row.razonSocial ?? row.razon_social,
-      nombreComercial: row.nombreComercial ?? row.nombre_comercial,
-      direccionMatriz: row.direccionMatriz ?? row.direccion_matriz,
-      obligadoContabilidad:
-        row.obligadoContabilidad ?? row.obligado_contabilidad,
-      contribuyenteEspecial:
-        row.contribuyenteEspecial ?? row.contribuyente_especial,
-      agenteRetencion: row.agenteRetencion ?? row.agente_retencion,
-      contribuyenteRimpe: row.contribuyenteRimpe ?? row.contribuyente_rimpe,
+      razonSocial: row.razon_social,
+      nombreComercial: row.nombre_comercial,
+      direccionMatriz: row.direccion_matriz,
+      obligadoContabilidad: row.obligado_contabilidad,
+      contribuyenteEspecial: row.contribuyente_especial,
+      agenteRetencion: row.agente_retencion,
+      contribuyenteRimpe: row.contribuyente_rimpe,
       ambiente: row.ambiente,
       estado: row.estado,
-      tieneCertificado: !!(row.certificadoNombre ?? row.certificado_nombre),
-      certificadoValidoHasta: (
-        row.certificadoValidoHasta ?? row.certificado_valido_hasta
-      )?.toISOString?.(),
-      certificadoSujeto: row.certificadoSujeto ?? row.certificado_sujeto,
-      createdAt: (row.createdAt ?? row.created_at)?.toISOString?.(),
-      updatedAt: (row.updatedAt ?? row.updated_at)?.toISOString?.(),
+      tieneCertificado: !!row.certificado_nombre,
+      certificadoValidoHasta: row.certificado_valido_hasta?.toISOString?.(),
+      certificadoSujeto: row.certificado_sujeto,
+      createdAt: row.createdAt?.toISOString?.() || new Date().toISOString(),
+      updatedAt: row.updatedAt?.toISOString?.() || new Date().toISOString(),
     };
   }
 }
