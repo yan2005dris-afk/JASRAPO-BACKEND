@@ -39,3 +39,9 @@ enum EstadoGenerico {
   RETIRADO
   RECONEXION
 }
+
+enum EstadoDeuda {
+  GENERADA
+  EN_REVISION
+  APROBADA
+}
