@@ -149,7 +149,8 @@ export class EmitirFacturaUseCase {
       );
 
       // Validar firma antes de enviar
-      const esFirmaValida = await this.xmlSignerService.verifySignature(xmlFirmado);
+      const esFirmaValida =
+        await this.xmlSignerService.verifySignature(xmlFirmado);
       if (!esFirmaValida) {
         throw new BadRequestException(
           'La firma del XML generado no es válida. Verifique el certificado del emisor.',
@@ -157,27 +158,29 @@ export class EmitirFacturaUseCase {
       }
 
       // ─── FASE 2.5: Persistencia inicial en estado FIRMADO ───
-      const comprobante = await this.comprobanteRepository.executeTransaction(async (tx) => {
-        return await this.persistirFactura(
-          dto,
-          factura,
-          emisor.id,
-          puntoEmisionInfo.punto_emision_id,
-          claveAcceso,
-          secuencial,
-          ambiente,
-          tipoEmision,
-          xml,
-          xmlFirmado,
-          {
-            success: false,
+      const comprobante = await this.comprobanteRepository.executeTransaction(
+        async (tx) => {
+          return await this.persistirFactura(
+            dto,
+            factura,
+            emisor.id,
+            puntoEmisionInfo.punto_emision_id,
             claveAcceso,
-            estado: 'FIRMADO',
-            mensajes: [],
-          },
-          tx,
-        );
-      });
+            secuencial,
+            ambiente,
+            tipoEmision,
+            xml,
+            xmlFirmado,
+            {
+              success: false,
+              claveAcceso,
+              estado: 'FIRMADO',
+              mensajes: [],
+            },
+            tx,
+          );
+        },
+      );
 
       // Enviar y autorizar en SRI (puede tardar 2-10 segundos — sin bloquear DB)
       let resultado: SriOperationResult;
@@ -188,12 +191,14 @@ export class EmitirFacturaUseCase {
         );
       } catch (error) {
         // El SRI no respondió — el registro ya existe como FIRMADO
-        this.logger.warn(`SRI no respondió para NC ${claveAcceso}: ${error.message}`);
+        this.logger.warn(
+          `SRI no respondió para factura ${claveAcceso}: ${error.message}`,
+        );
         throw error;
       }
 
       // ─── FASE 3: Transacción corta (~5ms) — Actualizar resultado ───
-      await this.comprobanteRepository.update(comprobante.id!, {
+      await this.comprobanteRepository.update(comprobante.id, {
         estado: resultado.success ? 'AUTORIZADO' : resultado.estado,
         estado_sri: resultado.estado,
         fecha_autorizacion: resultado.fechaAutorizacion,

@@ -286,7 +286,7 @@ export class SriService {
     });
 
     const data = result.data.map((c) => ({
-      id: c.id,
+      id: c.id.toString(),
       uuid: c.uuid,
       emisorId: c.emisor_id,
       claveAcceso: c.clave_acceso,
@@ -737,7 +737,7 @@ export class SriService {
             estadoSri = auth.estado || 'DESCONOCIDO';
 
             if (auth.estado === 'AUTORIZADO') {
-              await this.repository.update(comp.id as string, {
+              await this.repository.update(comp.uuid, {
                 estado: 'AUTORIZADO',
                 estado_sri: 'AUTORIZADO',
                 fecha_autorizacion: auth.fechaAutorizacion,
@@ -779,7 +779,7 @@ export class SriService {
               (auth.estado as string) === 'DEVUELTA' ||
               (auth.estado as string) === 'NO AUTORIZADO'
             ) {
-              await this.repository.update(comp.id as string, {
+              await this.repository.update(comp.uuid, {
                 estado: auth.estado,
                 estado_sri: auth.estado,
               });

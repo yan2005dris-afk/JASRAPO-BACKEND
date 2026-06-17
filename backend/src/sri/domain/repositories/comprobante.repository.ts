@@ -62,7 +62,10 @@ export abstract class ComprobanteRepository {
     tx?: TransactionContext,
   ): Promise<TotalRecord[]>;
 
-  abstract createPagos(pagos: PagoRecord[], tx?: TransactionContext): Promise<PagoRecord[]>;
+  abstract createPagos(
+    pagos: PagoRecord[],
+    tx?: TransactionContext,
+  ): Promise<PagoRecord[]>;
 
   abstract createRetenciones(
     retenciones: RetencionRecord[],
@@ -74,7 +77,10 @@ export abstract class ComprobanteRepository {
     tx?: TransactionContext,
   ): Promise<ImpuestoDocSustentoRecord[]>;
 
-  abstract saveXml(data: XmlRecord, tx?: TransactionContext): Promise<XmlRecord>;
+  abstract saveXml(
+    data: XmlRecord,
+    tx?: TransactionContext,
+  ): Promise<XmlRecord>;
 
   abstract createInfoAdicional(
     items: InfoAdicionalRecord[],
@@ -106,5 +112,7 @@ export abstract class ComprobanteRepository {
     xml_autorizado_path?: string;
   } | null>;
 
-  abstract executeTransaction<T>(callback: (tx: TransactionContext) => Promise<T>): Promise<T>;
+  abstract executeTransaction<T>(
+    callback: (tx: TransactionContext) => Promise<T>,
+  ): Promise<T>;
 }

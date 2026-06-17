@@ -56,8 +56,8 @@ export class PrismaGuiaRemisionRepository extends GuiaRemisionRepository {
       cod_doc_sustento: r.codDocSustento ?? undefined,
       num_doc_sustento: r.numDocSustento ?? undefined,
       num_aut_doc_sustento: r.numAutDocSustento ?? undefined,
-      fecha_emision_doc_sustento: r.fechaEmisionDocSustento?.toISOString?.() ?? undefined,
-    }));
+      fecha_emision_doc_sustento:
+        r.fechaEmisionDocSustento?.toISOString?.() ?? undefined,
     }));
   }
 

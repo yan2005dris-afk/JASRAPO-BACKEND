@@ -148,7 +148,8 @@ export class EmisoresService {
 
     const updateData: Partial<EmisorRecord> = {};
 
-    if (dto.razonSocial !== undefined) updateData.razon_social = dto.razonSocial;
+    if (dto.razonSocial !== undefined)
+      updateData.razon_social = dto.razonSocial;
     if (dto.nombreComercial !== undefined)
       updateData.nombre_comercial = dto.nombreComercial;
     if (dto.direccionMatriz !== undefined)
@@ -250,7 +251,10 @@ export class EmisoresService {
           emisorActual.ruc,
           SRI_STORAGE_TYPES.CERTS,
         );
-        await this.storageService.delete(bucket, emisorActual.certificado_nombre);
+        await this.storageService.delete(
+          bucket,
+          emisorActual.certificado_nombre,
+        );
       } catch (error) {
         this.logger.warn(
           `No se pudo eliminar el archivo físico del certificado: ${error.message}`,

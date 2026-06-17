@@ -284,7 +284,9 @@ export class XmlSignerService implements OnModuleInit {
       this.emisorCertificateCache.delete(ruc);
     }
 
-    this.logger.log(`Cargando certificado desde RustFS para emisor RUC: ${ruc}`);
+    this.logger.log(
+      `Cargando certificado desde RustFS para emisor RUC: ${ruc}`,
+    );
 
     // Get emisor info from repository
     const emisor = await this.repository.findByRuc(ruc);
@@ -317,8 +319,9 @@ export class XmlSignerService implements OnModuleInit {
       );
       p12Buffer = await this.streamToBuffer(stream);
     } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
       throw new Error(
-        `El archivo de certificado ${emisor.certificado_nombre} no se pudo leer desde RustFS: ${error.message}`,
+        `El archivo de certificado ${emisor.certificado_nombre} no se pudo leer desde RustFS: ${message}`,
       );
     }
 
@@ -491,8 +494,9 @@ export class XmlSignerService implements OnModuleInit {
 
       return result;
     } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
       this.logger.error(
-        `Error durante la verificación de la firma: ${error.message}`,
+        `Error durante la verificación de la firma: ${message}`,
       );
       return false;
     }

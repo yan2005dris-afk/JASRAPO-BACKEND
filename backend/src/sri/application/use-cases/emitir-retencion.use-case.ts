@@ -4,10 +4,7 @@ import { ClaveAccesoService } from '../../infrastructure/xml/clave-acceso.servic
 import { XmlBuilderService } from '../../infrastructure/xml/xml-builder.service';
 import { XmlSignerService } from '../../infrastructure/xml/xml-signer.service';
 import { SriSoapClient } from '../../infrastructure/soap/sri-soap.client';
-import {
-  ComprobanteRepository,
-  TransactionContext,
-} from '../../domain/repositories/comprobante.repository';
+import { ComprobanteRepository } from '../../domain/repositories/comprobante.repository';
 import { EmisorRepository } from '../../domain/repositories/emisor.repository';
 import { SecuencialRepository } from '../../domain/repositories/secuencial.repository';
 import { XmlStorageService } from '../../infrastructure/storage/xml-storage.service';
@@ -137,7 +134,10 @@ export class EmitirRetencionUseCase {
       this.logger.log('XML de comprobante de retención generado');
 
       // Verify emisor has certificate in database
-      if (!emisor.certificado_nombre || !emisor.certificado_password_encrypted) {
+      if (
+        !emisor.certificado_nombre ||
+        !emisor.certificado_password_encrypted
+      ) {
         throw new BadRequestException(
           `El emisor ${dto.emisor.ruc} no tiene certificado P12 configurado. ` +
             `Use el endpoint /certificates/upload-cert para subir el certificado.`,
@@ -154,7 +154,8 @@ export class EmitirRetencionUseCase {
       this.logger.log('XML de comprobante de retención firmado con XAdES-BES');
 
       // Validar firma antes de enviar
-      const esFirmaValida = await this.xmlSignerService.verifySignature(xmlFirmado);
+      const esFirmaValida =
+        await this.xmlSignerService.verifySignature(xmlFirmado);
       if (!esFirmaValida) {
         throw new BadRequestException(
           'La firma del XML generado no es válida. Verifique el certificado del emisor.',
@@ -188,7 +189,7 @@ export class EmitirRetencionUseCase {
       );
 
       // 3. Actualización de estado final en BD
-      await this.comprobanteRepository.update(comprobante.id!, {
+      await this.comprobanteRepository.update(comprobante.id, {
         estado: resultado.success ? 'AUTORIZADO' : resultado.estado,
         estado_sri: resultado.estado,
         fecha_autorizacion: resultado.fechaAutorizacion,

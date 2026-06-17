@@ -1,7 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../../infrastructure/database/prisma.service';
-import { EmisorRepository } from '../../domain/repositories/emisor.repository';
+import {
+  EmisorRepository,
+  CreateEmisorInput,
+  UpdateEmisorInput,
+} from '../../domain/repositories/emisor.repository';
 import { EmisorRecord } from '../../domain/interfaces/repository.interface';
 
 @Injectable()
@@ -39,8 +43,9 @@ export class PrismaEmisorRepository extends EmisorRepository {
 
   async findByRuc(ruc: string): Promise<EmisorRecord | null> {
     const cached = this.emisorCache.get(ruc);
-    if (cached && Date.now() < cached.expiry) {
-      return cached.data;
+    if (cached) {
+      if (Date.now() < cached.expiry) return cached.data;
+      this.emisorCache.delete(ruc);
     }
 
     const empresa = await this.prisma.empresa.findFirst({
@@ -59,25 +64,25 @@ export class PrismaEmisorRepository extends EmisorRepository {
     return emisor;
   }
 
-  async create(data: Partial<EmisorRecord>): Promise<EmisorRecord> {
+  async create(data: CreateEmisorInput): Promise<EmisorRecord> {
     const empresa = await this.prisma.empresa.create({
       data: {
-        ruc: data.ruc!,
-        razonSocial: data.razon_social!,
+        ruc: data.ruc,
+        razonSocial: data.razon_social,
         nombreComercial: data.nombre_comercial,
-        direccionMatriz: data.direccion_matriz!,
+        direccionMatriz: data.direccion_matriz,
         obligadoContabilidad: data.obligado_contabilidad ?? false,
         contribuyenteEspecial: data.contribuyente_especial,
         agenteRetencion: data.agente_retencion,
         contribuyenteRimpe: data.contribuyente_rimpe ?? false,
-        ambiente: data.ambiente!,
+        ambiente: data.ambiente,
         estado: data.estado ?? 'ACTIVO',
       },
     });
     return this.mapToRecord(empresa);
   }
 
-  async update(id: number, data: Partial<EmisorRecord>): Promise<EmisorRecord> {
+  async update(id: number, data: UpdateEmisorInput): Promise<EmisorRecord> {
     const empresa = await this.prisma.empresa.update({
       where: { id },
       data: {
@@ -135,8 +140,9 @@ export class PrismaEmisorRepository extends EmisorRepository {
   ): Promise<{ punto_emision_id: number; establecimiento_id: number } | null> {
     const cacheKey = `${emisorId}-${establecimiento}-${puntoEmision}`;
     const cached = this.puntoEmisionCache.get(cacheKey);
-    if (cached && Date.now() < cached.expiry) {
-      return cached.data;
+    if (cached) {
+      if (Date.now() < cached.expiry) return cached.data;
+      this.puntoEmisionCache.delete(cacheKey);
     }
 
     const pe = await this.prisma.puntosEmision.findFirst({

@@ -2,7 +2,7 @@ import type {
   DestinatarioGuiaRecord,
   DetalleGuiaRecord,
 } from '../interfaces/repository.interface';
-import { TransactionContext } from './comprobante.repository';
+import type { TransactionContext } from './comprobante.repository';
 
 export abstract class GuiaRemisionRepository {
   abstract createDestinatarios(
