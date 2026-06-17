@@ -118,7 +118,6 @@ export class MeterService {
 
   async findAllStates(): Promise<EstadoMedidorResponseDto[]> {
     return METER_STATUS_LIST.map((s) => ({
-      estadoId: s.estadoId,
       codigo: s.codigo,
       nombre: s.nombre,
       orden: s.orden,

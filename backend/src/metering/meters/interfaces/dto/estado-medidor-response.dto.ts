@@ -2,10 +2,6 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsNumber, IsString } from 'class-validator';
 
 export class EstadoMedidorResponseDto {
-  @ApiProperty({ example: 1, description: 'ID del estado' })
-  @IsNumber()
-  estadoId: number;
-
   @ApiProperty({ example: 'BODEGA', description: 'Código del estado' })
   @IsString()
   codigo: string;

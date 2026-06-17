@@ -1,6 +1,17 @@
 packages:
   - 'backend'
 
+overrides:
+  xmldom: 'npm:@xmldom/xmldom@^0.9.10'
+  protobufjs: '^8.2.0'
+  uuid: '^11.1.1'
+  path-to-regexp: '^8.3.0'
+  lodash: '^4.17.23'
+  handlebars: '^4.7.9'
+  esbuild: '^0.28.1'
+  '@hono/node-server': '^1.19.13'
+  crypto-js: '^4.2.0'
+
 allowBuilds:
   '@nestjs/core': true
   '@prisma/engines': true
