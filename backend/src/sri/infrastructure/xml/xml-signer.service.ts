@@ -1,29 +1,21 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { readFileSync, existsSync } from 'fs';
-import * as path from 'path';
-import { join } from 'path';
 import * as forge from 'node-forge';
 import { Crypto } from '@peculiar/webcrypto';
 import * as xadesjs from 'xadesjs';
 import * as xmlCore from 'xml-core';
 import { DOMParser, XMLSerializer } from '@xmldom/xmldom';
-import { RawPgService } from '../../../infrastructure/database/raw-pg/raw-pg.service';
 import { EncryptionService } from '../../../infrastructure/encryption/encryption.service';
-import { STORAGE_PATHS } from '../storage/storage-paths';
-
-interface EmisorCertificado {
-  certificado_nombre: string;
-  certificado_password_encrypted: string;
-}
+import { EmisorRepository } from '../../domain/repositories/emisor.repository';
+import {
+  StorageService,
+  SRI_STORAGE_TYPES,
+} from '../../../infrastructure/storage/storage.service';
+import { Readable } from 'stream';
 
 /**
  * Servicio para firmar documentos XML con firma digital XAdES-BES
  * compatible con los requerimientos del SRI Ecuador.
- *
- * Soporta dos modos:
- * 1. Certificado global (desde env vars) - para compatibilidad
- * 2. Certificado por emisor (desde BD) - recomendado para multi-tenant
  */
 @Injectable()
 export class XmlSignerService implements OnModuleInit {
@@ -33,7 +25,7 @@ export class XmlSignerService implements OnModuleInit {
   private certificateChain: string[] = [];
   private crypto: Crypto;
 
-  // Cache de certificados por RUC con TTL para evitar usar certificados vencidos
+  // Cache de certificados por RUC con TTL
   private emisorCertificateCache: Map<
     string,
     { privateKey: CryptoKey; certificate: string; loadedAt: number }
@@ -41,16 +33,16 @@ export class XmlSignerService implements OnModuleInit {
   private readonly CERT_CACHE_TTL_MS: number;
 
   constructor(
-    private configService: ConfigService,
-    private db: RawPgService,
-    private encryptionService: EncryptionService,
+    private readonly configService: ConfigService,
+    private readonly repository: EmisorRepository,
+    private readonly encryptionService: EncryptionService,
+    private readonly storageService: StorageService,
   ) {
     this.crypto = new Crypto();
     this.CERT_CACHE_TTL_MS = this.configService.get<number>(
       'CACHE_CERT_TTL_MS',
       3600000,
-    ); // 1h default
-    // Register Node.js DOM dependencies for xadesjs/xmldsigjs
+    );
     xmlCore.setNodeDependencies({
       DOMParser,
       XMLSerializer,
@@ -60,38 +52,20 @@ export class XmlSignerService implements OnModuleInit {
   }
 
   onModuleInit() {
-    // Los certificados se cargan dinámicamente desde la BD por emisor
-    // No se usa certificado global - cada emisor debe tener su certificado configurado
     this.logger.log(
-      'XmlSignerService inicializado. Certificados se cargan desde BD por emisor.',
+      'XmlSignerService inicializado. Certificados se cargan desde RustFS y BD.',
     );
   }
 
-  async loadCertificate(p12Path: string, password: string): Promise<void> {
-    this.logger.log(`Cargando certificado P12 desde: ${p12Path}`);
-
-    // Prevenir Path Traversal
-    const resolvedPath = path.resolve(p12Path);
-    const certsBaseDir = path.resolve(STORAGE_PATHS.certs);
-    if (!resolvedPath.startsWith(certsBaseDir)) {
-      throw new Error(
-        `Ruta de certificado inválida o no permitida: ${p12Path}`,
-      );
-    }
-
-    if (!existsSync(resolvedPath)) {
-      throw new Error(`El archivo de certificado no existe: ${resolvedPath}`);
-    }
-
-    const p12Buffer = readFileSync(resolvedPath);
-    await this.loadCertificateFromBuffer(p12Buffer, password);
-  }
-
+  /**
+   * Carga un certificado desde un buffer (útil para tests o carga manual)
+   */
   async loadCertificateFromBuffer(
     p12Buffer: Buffer,
     password: string,
   ): Promise<void> {
-    this.logger.log('Procesando certificado P12');
+    this.logger.log('Procesando certificado P12 desde Buffer');
+    // ... (logic remains same for processing P12)
 
     const p12Der = forge.util.createBuffer(p12Buffer.toString('binary'));
     const p12Asn1 = forge.asn1.fromDer(p12Der);
@@ -310,15 +284,12 @@ export class XmlSignerService implements OnModuleInit {
       this.emisorCertificateCache.delete(ruc);
     }
 
-    this.logger.log(`Cargando certificado desde BD para emisor RUC: ${ruc}`);
-
-    // Get certificate info from database
-    const emisor = await this.db.queryOne<EmisorCertificado>(
-      `SELECT certificado_nombre, certificado_password_encrypted 
-       FROM emisores 
-       WHERE ruc = $1 AND estado = 'ACTIVO'`,
-      [ruc],
+    this.logger.log(
+      `Cargando certificado desde RustFS para emisor RUC: ${ruc}`,
     );
+
+    // Get emisor info from repository
+    const emisor = await this.repository.findByRuc(ruc);
 
     if (
       !emisor ||
@@ -326,24 +297,33 @@ export class XmlSignerService implements OnModuleInit {
       !emisor.certificado_password_encrypted
     ) {
       throw new Error(
-        `El emisor con RUC ${ruc} no tiene certificado configurado. Por favor suba un certificado P12.`,
+        `El emisor con RUC ${ruc} no tiene certificado configurado o activo. Por favor suba un certificado P12.`,
       );
     }
 
     // Decrypt password
-    const password = await this.decryptPassword(
+    const password = await this.encryptionService.decrypt(
       emisor.certificado_password_encrypted,
     );
 
-    // Load certificate from filesystem
-    const certPath = join(this.getCertsDir(), emisor.certificado_nombre);
-    if (!existsSync(certPath)) {
+    // 1. Obtener el archivo desde RustFS (S3)
+    let p12Buffer: Buffer;
+    try {
+      const bucket = await this.storageService.ensureBucketForRuc(
+        ruc,
+        SRI_STORAGE_TYPES.CERTS,
+      );
+      const stream = await this.storageService.getObject(
+        bucket,
+        emisor.certificado_nombre,
+      );
+      p12Buffer = await this.streamToBuffer(stream);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
       throw new Error(
-        `El archivo de certificado ${emisor.certificado_nombre} no existe en el servidor.`,
+        `El archivo de certificado ${emisor.certificado_nombre} no se pudo leer desde RustFS: ${message}`,
       );
     }
-
-    const p12Buffer = readFileSync(certPath);
 
     // Process P12 certificate
     const p12Der = forge.util.createBuffer(p12Buffer.toString('binary'));
@@ -390,10 +370,21 @@ export class XmlSignerService implements OnModuleInit {
     const result = { privateKey, certificate, loadedAt: Date.now() };
     this.emisorCertificateCache.set(ruc, result);
     this.logger.log(
-      `Certificado para emisor RUC ${ruc} cargado y cacheado exitosamente`,
+      `Certificado para emisor RUC ${ruc} cargado desde RustFS y cacheado exitosamente`,
     );
 
     return result;
+  }
+
+  /**
+   * Helper to convert stream to buffer
+   */
+  private async streamToBuffer(stream: Readable): Promise<Buffer> {
+    const chunks: Buffer[] = [];
+    for await (const chunk of stream) {
+      chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+    }
+    return Buffer.concat(chunks);
   }
 
   /**
@@ -472,6 +463,43 @@ export class XmlSignerService implements OnModuleInit {
       'Documento XML firmado exitosamente con XAdES-BES para emisor: ' + ruc,
     );
     return signedXmlString;
+  }
+
+  /**
+   * Verifica criptográficamente una firma XAdES en un documento XML
+   */
+  async verifySignature(xmlString: string): Promise<boolean> {
+    try {
+      const parser = new DOMParser();
+      const xmlDoc = parser.parseFromString(xmlString, 'application/xml');
+
+      // Buscar el nodo Signature
+      const signature = xmlDoc.getElementsByTagNameNS(
+        'http://www.w3.org/2000/09/xmldsig#',
+        'Signature',
+      )[0];
+
+      if (!signature) {
+        throw new Error('No se encontró firma en el documento XML');
+      }
+
+      const signedXml = new xadesjs.SignedXml(xmlDoc as unknown as Document);
+      signedXml.LoadXml(signature as any);
+
+      const result = await signedXml.Verify();
+
+      if (!result) {
+        this.logger.error('La verificación de la firma XAdES falló');
+      }
+
+      return result;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        `Error durante la verificación de la firma: ${message}`,
+      );
+      return false;
+    }
   }
 
   /**
