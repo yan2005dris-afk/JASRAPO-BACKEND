@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
-import { IsIn, IsInt, IsString, Min, MinLength } from 'class-validator';
+import { IsIn, IsInt, IsString, Max, Min, MinLength } from 'class-validator';
 import type { TipoBusquedaDeuda } from '../../domain/types/debt-search.types';
 
 export class SearchDeudaDto {
@@ -31,9 +31,10 @@ export class SearchDeudaDto {
   @Min(1)
   page: number = 1;
 
-  @ApiPropertyOptional({ description: 'Resultados por página', example: 10, minimum: 1 })
+  @ApiPropertyOptional({ description: 'Resultados por página', example: 10, minimum: 1, maximum: 100 })
   @Type(() => Number)
   @IsInt()
   @Min(1)
+  @Max(100)
   limit: number = 10;
 }
