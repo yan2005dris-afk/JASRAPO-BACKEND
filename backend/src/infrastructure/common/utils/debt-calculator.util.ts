@@ -5,7 +5,11 @@ export interface IPrefacturaParaCalculo {
 }
 
 function toNum(val: number | { toNumber?: () => number }): number {
-  if (typeof val === 'object' && val !== null && typeof (val as any).toNumber === 'function') {
+  if (
+    typeof val === 'object' &&
+    val !== null &&
+    typeof (val as any).toNumber === 'function'
+  ) {
     return (val as any).toNumber();
   }
   const n = Number(val);
@@ -17,7 +21,9 @@ function toNum(val: number | { toNumber?: () => number }): number {
 
 export class DebtCalculatorHelper {
   static saldoPendienteItem(p: IPrefacturaParaCalculo): number {
-    return Math.round(Math.max(0, toNum(p.totalPagar) - toNum(p.abono)) * 100) / 100;
+    return (
+      Math.round(Math.max(0, toNum(p.totalPagar) - toNum(p.abono)) * 100) / 100
+    );
   }
 
   static calcularSaldoVencido(prefacturas: IPrefacturaParaCalculo[]): number {
@@ -39,6 +45,10 @@ export class DebtCalculatorHelper {
     const maxPeriodoId = Math.max(...prefacturas.map((p) => p.periodoId));
     const anterior = prefacturas.find((p) => p.periodoId === maxPeriodoId - 1);
     if (!anterior) return 0;
-    return Math.round(Math.max(0, toNum(anterior.totalPagar) - toNum(anterior.abono)) * 100) / 100;
+    return (
+      Math.round(
+        Math.max(0, toNum(anterior.totalPagar) - toNum(anterior.abono)) * 100,
+      ) / 100
+    );
   }
 }

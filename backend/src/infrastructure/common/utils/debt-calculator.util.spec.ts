@@ -31,7 +31,9 @@ describe('DebtCalculatorHelper', () => {
       ];
 
       // 20.672 → Math.round(20.672 * 100) / 100 = 20.67
-      expect(DebtCalculatorHelper.calcularSaldoVencido(prefacturas)).toBe(20.67);
+      expect(DebtCalculatorHelper.calcularSaldoVencido(prefacturas)).toBe(
+        20.67,
+      );
     });
 
     it('should handle Prisma Decimal objects via toNumber()', () => {
@@ -51,7 +53,9 @@ describe('DebtCalculatorHelper', () => {
         { totalPagar: NaN, abono: 0, periodoId: 202601 },
       ];
 
-      expect(() => DebtCalculatorHelper.calcularSaldoVencido(prefacturas)).toThrow(TypeError);
+      expect(() =>
+        DebtCalculatorHelper.calcularSaldoVencido(prefacturas),
+      ).toThrow(TypeError);
     });
 
     it('should throw TypeError when abono is Infinity', () => {
@@ -59,7 +63,9 @@ describe('DebtCalculatorHelper', () => {
         { totalPagar: 100, abono: Infinity, periodoId: 202601 },
       ];
 
-      expect(() => DebtCalculatorHelper.calcularSaldoVencido(prefacturas)).toThrow(TypeError);
+      expect(() =>
+        DebtCalculatorHelper.calcularSaldoVencido(prefacturas),
+      ).toThrow(TypeError);
     });
   });
 

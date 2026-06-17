@@ -15,15 +15,15 @@ describe('BusquedaPublicaController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [BusquedaPublicaController],
-      providers: [
-        { provide: BusquedaPublicaService, useValue: mockService },
-      ],
+      providers: [{ provide: BusquedaPublicaService, useValue: mockService }],
     })
       .overrideGuard(ThrottlerGuard)
       .useValue({ canActivate: () => true })
       .compile();
 
-    controller = module.get<BusquedaPublicaController>(BusquedaPublicaController);
+    controller = module.get<BusquedaPublicaController>(
+      BusquedaPublicaController,
+    );
   });
 
   afterEach(() => jest.clearAllMocks());
@@ -54,14 +54,24 @@ describe('BusquedaPublicaController', () => {
         limit: undefined as any,
       });
 
-      expect(mockService.search).toHaveBeenCalledWith('contrato', 'G-001', 1, 10);
+      expect(mockService.search).toHaveBeenCalledWith(
+        'contrato',
+        'G-001',
+        1,
+        10,
+      );
     });
 
     it('should propagate errors thrown by the service', async () => {
       mockService.search.mockRejectedValue(new Error('service failure'));
 
       await expect(
-        controller.searchPublic({ tipo: 'cliente', valor: 'juan', page: 1, limit: 10 }),
+        controller.searchPublic({
+          tipo: 'cliente',
+          valor: 'juan',
+          page: 1,
+          limit: 10,
+        }),
       ).rejects.toThrow('service failure');
     });
   });
@@ -78,7 +88,12 @@ describe('BusquedaPublicaController', () => {
         limit: 5,
       });
 
-      expect(mockService.searchDeuda).toHaveBeenCalledWith('identificacion', '0912345678', 1, 5);
+      expect(mockService.searchDeuda).toHaveBeenCalledWith(
+        'identificacion',
+        '0912345678',
+        1,
+        5,
+      );
       expect(result).toBe(expected);
     });
 
@@ -92,14 +107,24 @@ describe('BusquedaPublicaController', () => {
         limit: undefined as any,
       });
 
-      expect(mockService.searchDeuda).toHaveBeenCalledWith('nombre', 'Ana Torres', 1, 10);
+      expect(mockService.searchDeuda).toHaveBeenCalledWith(
+        'nombre',
+        'Ana Torres',
+        1,
+        10,
+      );
     });
 
     it('should propagate errors thrown by the service', async () => {
       mockService.searchDeuda.mockRejectedValue(new Error('service failure'));
 
       await expect(
-        controller.searchDeuda({ tipo: 'identificacion', valor: '0912345678', page: 1, limit: 10 }),
+        controller.searchDeuda({
+          tipo: 'identificacion',
+          valor: '0912345678',
+          page: 1,
+          limit: 10,
+        }),
       ).rejects.toThrow('service failure');
     });
   });

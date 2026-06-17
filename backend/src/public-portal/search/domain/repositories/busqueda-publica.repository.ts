@@ -1,6 +1,9 @@
 import type { SearchResultEntity } from '../entities/public-search-result.entity';
 import type { ISearchFilters } from '../types/public-search-filters';
-import type { IContratoConDeudaRaw, TipoBusquedaDeuda } from '../types/debt-search.types';
+import type {
+  IContratoConDeudaRaw,
+  TipoBusquedaDeuda,
+} from '../types/debt-search.types';
 
 export abstract class BusquedaPublicaRepository {
   abstract findManyClientes(

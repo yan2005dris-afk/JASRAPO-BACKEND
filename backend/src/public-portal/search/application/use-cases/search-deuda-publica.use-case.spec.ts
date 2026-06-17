@@ -1,33 +1,45 @@
 import { BadRequestException } from '@nestjs/common';
 import { SearchDeudaPublicaUseCase } from './search-deuda-publica.use-case';
-import type { IContratoConDeudaRaw, IPrefacturaParaCalculo } from '../../domain/types/debt-search.types';
+import type {
+  IContratoConDeudaRaw,
+  IPrefacturaParaCalculo,
+} from '../../domain/types/debt-search.types';
 
 describe('SearchDeudaPublicaUseCase', () => {
-  const makeContrato = (override: {
-    contratoId?: bigint;
-    numeroGuia?: string;
-    estado?: string;
-    clienteId?: bigint;
-    nombres?: string | null;
-    apellidos?: string | null;
-    identificacion?: string | null;
-    prefacturasImpagadas?: IPrefacturaParaCalculo[];
-  } = {}): IContratoConDeudaRaw => ({
+  const makeContrato = (
+    override: {
+      contratoId?: bigint;
+      numeroGuia?: string;
+      estado?: string;
+      clienteId?: bigint;
+      nombres?: string | null;
+      apellidos?: string | null;
+      identificacion?: string | null;
+      prefacturasImpagadas?: IPrefacturaParaCalculo[];
+    } = {},
+  ): IContratoConDeudaRaw => ({
     contratoId: override.contratoId ?? 1n,
     numeroGuia: override.numeroGuia ?? 'G-001',
     estado: override.estado ?? 'ACTIVO',
     cliente: {
       clienteId: override.clienteId ?? 1n,
-      identificacion: override.identificacion !== undefined ? override.identificacion : '0912345678',
+      identificacion:
+        override.identificacion !== undefined
+          ? override.identificacion
+          : '0912345678',
       nombres: override.nombres !== undefined ? override.nombres : 'Juan',
-      apellidos: override.apellidos !== undefined ? override.apellidos : 'Pérez',
+      apellidos:
+        override.apellidos !== undefined ? override.apellidos : 'Pérez',
     },
     prefacturasImpagadas: override.prefacturasImpagadas ?? [
       { totalPagar: 100, abono: 0, periodoId: 202601 },
     ],
   });
 
-  const createMockRepo = (contratos: IContratoConDeudaRaw[] = [], total = 0) => ({
+  const createMockRepo = (
+    contratos: IContratoConDeudaRaw[] = [],
+    total = 0,
+  ) => ({
     findManyClientes: jest.fn(),
     countClientes: jest.fn(),
     findManyContratos: jest.fn(),
@@ -42,7 +54,9 @@ describe('SearchDeudaPublicaUseCase', () => {
         makeContrato({ contratoId: 1n, numeroGuia: 'G-001' }),
         makeContrato({ contratoId: 2n, numeroGuia: 'G-002' }),
       ];
-      const useCase = new SearchDeudaPublicaUseCase(createMockRepo(contratos, 2) as any);
+      const useCase = new SearchDeudaPublicaUseCase(
+        createMockRepo(contratos, 2),
+      );
 
       const result = await useCase.execute('identificacion', '0912345678');
 
@@ -55,7 +69,9 @@ describe('SearchDeudaPublicaUseCase', () => {
         makeContrato({ clienteId: 1n, contratoId: 1n, numeroGuia: 'G-001' }),
         makeContrato({ clienteId: 2n, contratoId: 2n, numeroGuia: 'G-002' }),
       ];
-      const useCase = new SearchDeudaPublicaUseCase(createMockRepo(contratos, 2) as any);
+      const useCase = new SearchDeudaPublicaUseCase(
+        createMockRepo(contratos, 2),
+      );
 
       const result = await useCase.execute('nombre', 'juan');
 
@@ -70,19 +86,23 @@ describe('SearchDeudaPublicaUseCase', () => {
         { totalPagar: 80, abono: 0, periodoId: 202602 },
       ];
       const contratos = [makeContrato({ prefacturasImpagadas: prefacturas })];
-      const useCase = new SearchDeudaPublicaUseCase(createMockRepo(contratos, 1) as any);
+      const useCase = new SearchDeudaPublicaUseCase(
+        createMockRepo(contratos, 1),
+      );
 
       const result = await useCase.execute('identificacion', '0912345678');
       const contrato = result.data[0].contratos[0];
 
-      expect(contrato.saldoVencido).toBe(155);    // (100-25) + (80-0)
-      expect(contrato.deudaAnterior).toBe(75);    // saldo de 202601 (max-1)
+      expect(contrato.saldoVencido).toBe(155); // (100-25) + (80-0)
+      expect(contrato.deudaAnterior).toBe(75); // saldo de 202601 (max-1)
       expect(contrato.mesesAtrasado).toBe(2);
     });
 
     it('should return Sin nombre when both nombres and apellidos are null', async () => {
       const contratos = [makeContrato({ nombres: null, apellidos: null })];
-      const useCase = new SearchDeudaPublicaUseCase(createMockRepo(contratos, 1) as any);
+      const useCase = new SearchDeudaPublicaUseCase(
+        createMockRepo(contratos, 1),
+      );
 
       const result = await useCase.execute('identificacion', '0912345678');
 
@@ -92,7 +112,7 @@ describe('SearchDeudaPublicaUseCase', () => {
 
   describe('validation', () => {
     it('should throw BadRequestException when valor is blank', async () => {
-      const useCase = new SearchDeudaPublicaUseCase(createMockRepo() as any);
+      const useCase = new SearchDeudaPublicaUseCase(createMockRepo());
 
       await expect(useCase.execute('identificacion', '   ')).rejects.toThrow(
         BadRequestException,
@@ -102,7 +122,7 @@ describe('SearchDeudaPublicaUseCase', () => {
 
   describe('pagination', () => {
     it('should cap limit to 50 and enforce page minimum of 1', async () => {
-      const useCase = new SearchDeudaPublicaUseCase(createMockRepo([], 0) as any);
+      const useCase = new SearchDeudaPublicaUseCase(createMockRepo([], 0));
 
       const result = await useCase.execute('nombre', 'test', 0, 100);
 

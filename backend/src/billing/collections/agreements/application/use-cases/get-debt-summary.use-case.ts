@@ -58,9 +58,12 @@ export class GetDebtSummaryUseCase {
       fechaCreacion: DateUtil.formatForFrontend(p.createdAt),
     }));
 
-    const deudaTotal = DebtCalculatorHelper.calcularSaldoVencido(prefacturasImpagadas);
-    const deudaAnterior = DebtCalculatorHelper.calcularDeudaAnterior(prefacturasImpagadas);
-    const maxMesesAtrasado = DebtCalculatorHelper.calcularMesesAtrasado(prefacturasImpagadas);
+    const deudaTotal =
+      DebtCalculatorHelper.calcularSaldoVencido(prefacturasImpagadas);
+    const deudaAnterior =
+      DebtCalculatorHelper.calcularDeudaAnterior(prefacturasImpagadas);
+    const maxMesesAtrasado =
+      DebtCalculatorHelper.calcularMesesAtrasado(prefacturasImpagadas);
 
     const hoy = new Date();
     const tasaInteresParam =

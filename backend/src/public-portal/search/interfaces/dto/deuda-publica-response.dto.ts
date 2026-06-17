@@ -18,13 +18,22 @@ export class ContratoDeudaPublicaDto {
   @ApiProperty({ example: 'ACTIVO' })
   estado!: string;
 
-  @ApiProperty({ example: 150.0, description: 'Suma de saldos pendientes de todas las prefacturas impagadas' })
+  @ApiProperty({
+    example: 150.0,
+    description: 'Suma de saldos pendientes de todas las prefacturas impagadas',
+  })
   saldoVencido!: number;
 
-  @ApiProperty({ example: 45.0, description: 'Saldo pendiente del período inmediatamente anterior' })
+  @ApiProperty({
+    example: 45.0,
+    description: 'Saldo pendiente del período inmediatamente anterior',
+  })
   deudaAnterior!: number;
 
-  @ApiProperty({ example: 3, description: 'Cantidad de períodos con deuda pendiente' })
+  @ApiProperty({
+    example: 3,
+    description: 'Cantidad de períodos con deuda pendiente',
+  })
   mesesAtrasado!: number;
 }
 

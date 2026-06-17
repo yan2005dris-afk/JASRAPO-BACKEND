@@ -15,7 +15,10 @@ describe('BusquedaPublicaService', () => {
       providers: [
         BusquedaPublicaService,
         { provide: PublicSearchUseCase, useValue: mockPublicSearchUseCase },
-        { provide: SearchDeudaPublicaUseCase, useValue: mockSearchDeudaUseCase },
+        {
+          provide: SearchDeudaPublicaUseCase,
+          useValue: mockSearchDeudaUseCase,
+        },
       ],
     }).compile();
 
@@ -30,7 +33,12 @@ describe('BusquedaPublicaService', () => {
 
     const result = await service.search('cliente', 'juan', 1, 10);
 
-    expect(mockPublicSearchUseCase.execute).toHaveBeenCalledWith('cliente', 'juan', 1, 10);
+    expect(mockPublicSearchUseCase.execute).toHaveBeenCalledWith(
+      'cliente',
+      'juan',
+      1,
+      10,
+    );
     expect(mockSearchDeudaUseCase.execute).not.toHaveBeenCalled();
     expect(result).toBe(expected);
   });
@@ -39,9 +47,19 @@ describe('BusquedaPublicaService', () => {
     const expected = { data: [], meta: { total: 0, page: 1, limit: 10 } };
     mockSearchDeudaUseCase.execute.mockResolvedValue(expected);
 
-    const result = await service.searchDeuda('identificacion', '0912345678', 1, 10);
+    const result = await service.searchDeuda(
+      'identificacion',
+      '0912345678',
+      1,
+      10,
+    );
 
-    expect(mockSearchDeudaUseCase.execute).toHaveBeenCalledWith('identificacion', '0912345678', 1, 10);
+    expect(mockSearchDeudaUseCase.execute).toHaveBeenCalledWith(
+      'identificacion',
+      '0912345678',
+      1,
+      10,
+    );
     expect(mockPublicSearchUseCase.execute).not.toHaveBeenCalled();
     expect(result).toBe(expected);
   });
@@ -51,7 +69,12 @@ describe('BusquedaPublicaService', () => {
 
     await service.search('cliente', 'juan');
 
-    expect(mockPublicSearchUseCase.execute).toHaveBeenCalledWith('cliente', 'juan', 1, 10);
+    expect(mockPublicSearchUseCase.execute).toHaveBeenCalledWith(
+      'cliente',
+      'juan',
+      1,
+      10,
+    );
   });
 
   it('should apply default page=1 and limit=10 when searchDeuda is called without those arguments', async () => {
@@ -59,6 +82,11 @@ describe('BusquedaPublicaService', () => {
 
     await service.searchDeuda('identificacion', '0912345678');
 
-    expect(mockSearchDeudaUseCase.execute).toHaveBeenCalledWith('identificacion', '0912345678', 1, 10);
+    expect(mockSearchDeudaUseCase.execute).toHaveBeenCalledWith(
+      'identificacion',
+      '0912345678',
+      1,
+      10,
+    );
   });
 });

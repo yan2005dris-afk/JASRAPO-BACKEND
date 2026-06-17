@@ -44,7 +44,8 @@ export class DebtSummaryResponseDto {
 
   @ApiProperty({
     example: 45.5,
-    description: 'Saldo pendiente del período inmediatamente anterior (periodoId - 1)',
+    description:
+      'Saldo pendiente del período inmediatamente anterior (periodoId - 1)',
   })
   deudaAnterior!: number;
 

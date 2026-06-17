@@ -25,13 +25,22 @@ export class SearchDeudaDto {
   @MinLength(2)
   valor!: string;
 
-  @ApiPropertyOptional({ description: 'Número de página', example: 1, minimum: 1 })
+  @ApiPropertyOptional({
+    description: 'Número de página',
+    example: 1,
+    minimum: 1,
+  })
   @Type(() => Number)
   @IsInt()
   @Min(1)
   page: number = 1;
 
-  @ApiPropertyOptional({ description: 'Resultados por página', example: 10, minimum: 1, maximum: 100 })
+  @ApiPropertyOptional({
+    description: 'Resultados por página',
+    example: 10,
+    minimum: 1,
+    maximum: 100,
+  })
   @Type(() => Number)
   @IsInt()
   @Min(1)

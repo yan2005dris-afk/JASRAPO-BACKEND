@@ -154,7 +154,9 @@ export class PrismaBusquedaPublicaRepository implements BusquedaPublicaRepositor
     };
   }
 
-  private buildWhereCliente(filters: ISearchFilters): Prisma.ClientesWhereInput {
+  private buildWhereCliente(
+    filters: ISearchFilters,
+  ): Prisma.ClientesWhereInput {
     if (filters.isIdent) {
       return { identificacion: filters.valor.trim(), deletedAt: null };
     }

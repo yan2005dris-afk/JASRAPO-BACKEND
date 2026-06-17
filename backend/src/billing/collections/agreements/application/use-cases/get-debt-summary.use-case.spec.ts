@@ -120,7 +120,9 @@ describe('GetDebtSummaryUseCase', () => {
         createdAt: new Date('2026-01-15T00:00:00.000Z'),
       },
     ]);
-    mockAgreementRepository.findFirstParametroTasainteres.mockResolvedValue(null);
+    mockAgreementRepository.findFirstParametroTasainteres.mockResolvedValue(
+      null,
+    );
 
     const result = await useCase.execute(1n);
 

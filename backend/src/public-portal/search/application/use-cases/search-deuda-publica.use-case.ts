@@ -30,7 +30,12 @@ export class SearchDeudaPublicaUseCase {
     const skip = (safePage - 1) * safeLimit;
 
     const [contratos, total] = await Promise.all([
-      this.searchRepository.findContratosDeudaBy(tipo, normalizedValor, skip, safeLimit),
+      this.searchRepository.findContratosDeudaBy(
+        tipo,
+        normalizedValor,
+        skip,
+        safeLimit,
+      ),
       this.searchRepository.countContratosDeuda(tipo, normalizedValor),
     ]);
 
@@ -43,13 +48,18 @@ export class SearchDeudaPublicaUseCase {
   }
 
   private agruparPorCliente(
-    contratos: Awaited<ReturnType<BusquedaPublicaRepository['findContratosDeudaBy']>>,
+    contratos: Awaited<
+      ReturnType<BusquedaPublicaRepository['findContratosDeudaBy']>
+    >,
   ): DeudaPublicaItemDto[] {
     const mapa = new Map<string, DeudaPublicaItemDto>();
 
     for (const contrato of contratos) {
       const clienteKey = String(contrato.cliente.clienteId);
-      const nombre = this.formatearNombre(contrato.cliente.nombres, contrato.cliente.apellidos);
+      const nombre = this.formatearNombre(
+        contrato.cliente.nombres,
+        contrato.cliente.apellidos,
+      );
 
       if (!mapa.has(clienteKey)) {
         mapa.set(clienteKey, {
@@ -86,6 +96,9 @@ export class SearchDeudaPublicaUseCase {
     nombres: string | null,
     apellidos: string | null,
   ): string {
-    return `${nombres ?? ''} ${apellidos ?? ''}`.trim().replace(/\s+/g, ' ') || 'Sin nombre';
+    return (
+      `${nombres ?? ''} ${apellidos ?? ''}`.trim().replace(/\s+/g, ' ') ||
+      'Sin nombre'
+    );
   }
 }
