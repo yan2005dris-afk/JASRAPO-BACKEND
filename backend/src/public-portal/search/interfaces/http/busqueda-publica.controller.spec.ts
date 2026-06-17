@@ -56,6 +56,14 @@ describe('BusquedaPublicaController', () => {
 
       expect(mockService.search).toHaveBeenCalledWith('contrato', 'G-001', 1, 10);
     });
+
+    it('should propagate errors thrown by the service', async () => {
+      mockService.search.mockRejectedValue(new Error('service failure'));
+
+      await expect(
+        controller.searchPublic({ tipo: 'cliente', valor: 'juan', page: 1, limit: 10 }),
+      ).rejects.toThrow('service failure');
+    });
   });
 
   describe('searchDeuda', () => {
@@ -72,6 +80,27 @@ describe('BusquedaPublicaController', () => {
 
       expect(mockService.searchDeuda).toHaveBeenCalledWith('identificacion', '0912345678', 1, 5);
       expect(result).toBe(expected);
+    });
+
+    it('should apply ?? fallbacks when page and limit are undefined in the query object', async () => {
+      mockService.searchDeuda.mockResolvedValue({ data: [], meta: {} });
+
+      await controller.searchDeuda({
+        tipo: 'nombre',
+        valor: 'Ana Torres',
+        page: undefined as any,
+        limit: undefined as any,
+      });
+
+      expect(mockService.searchDeuda).toHaveBeenCalledWith('nombre', 'Ana Torres', 1, 10);
+    });
+
+    it('should propagate errors thrown by the service', async () => {
+      mockService.searchDeuda.mockRejectedValue(new Error('service failure'));
+
+      await expect(
+        controller.searchDeuda({ tipo: 'identificacion', valor: '0912345678', page: 1, limit: 10 }),
+      ).rejects.toThrow('service failure');
     });
   });
 });
