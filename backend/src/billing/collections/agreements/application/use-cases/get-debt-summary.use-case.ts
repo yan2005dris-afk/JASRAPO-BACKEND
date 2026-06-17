@@ -6,7 +6,7 @@ import type {
 } from '../../interfaces/dto/debt-summary-response.dto';
 import type { EstadoPrefactura } from '@generated/prisma/enums';
 import { AgreementRepository } from '../../domain/repositories/agreement.repository';
-import { DebtCalculatorHelper } from 'src/billing/shared/debt-calculator.helper';
+import { DebtCalculatorHelper } from 'src/infrastructure/common/utils/debt-calculator.util';
 
 const ESTADOS_DEUDA_PREFACTURA: readonly EstadoPrefactura[] = [
   'GENERADA',
