@@ -4,7 +4,7 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
-import { RawPgService } from '../../../infrastructure/database/raw-pg/raw-pg.service';
+import { PrismaService } from '../../../infrastructure/database/prisma.service';
 import {
   CreateEmisorDto,
   UpdateEmisorDto,
@@ -18,7 +18,7 @@ export class EmisoresService {
   private readonly logger = new Logger(EmisoresService.name);
 
   constructor(
-    private readonly db: RawPgService,
+    private readonly prisma: PrismaService,
     private readonly encryptionService: EncryptionService,
   ) {}
 
@@ -48,38 +48,23 @@ export class EmisoresService {
   }
 
   async findAll(): Promise<EmisorResponseDto[]> {
-    const result = await this.db.query(
-      `SELECT id, ruc, razon_social, nombre_comercial, direccion_matriz,
-              obligado_contabilidad, contribuyente_especial, agente_retencion,
-              contribuyente_rimpe, ambiente, estado,
-              certificado_p12 IS NOT NULL as tiene_certificado,
-              certificado_valido_hasta, certificado_sujeto,
-              created_at, updated_at
-       FROM emisores
-       ORDER BY created_at DESC`,
-    );
+    const empresas = await this.prisma.empresa.findMany({
+      orderBy: { createdAt: 'desc' },
+    });
 
-    return result.rows.map((row) => this.mapToResponse(row));
+    return empresas.map((row) => this.mapToResponse(row));
   }
 
   async findOne(id: string): Promise<EmisorResponseDto> {
-    const result = await this.db.query(
-      `SELECT id, ruc, razon_social, nombre_comercial, direccion_matriz,
-              obligado_contabilidad, contribuyente_especial, agente_retencion,
-              contribuyente_rimpe, ambiente, estado,
-              certificado_p12 IS NOT NULL as tiene_certificado,
-              certificado_valido_hasta, certificado_sujeto,
-              created_at, updated_at
-       FROM emisores
-       WHERE id = $1`,
-      [id],
-    );
+    const empresa = await this.prisma.empresa.findUnique({
+      where: { id: parseInt(id, 10) },
+    });
 
-    if (result.rows.length === 0) {
+    if (!empresa) {
       throw new NotFoundException(`Emisor con ID ${id} no encontrado`);
     }
 
-    return this.mapToResponse(result.rows[0]);
+    return this.mapToResponse(empresa);
   }
 
   /**
@@ -105,23 +90,13 @@ export class EmisoresService {
   }
 
   async findByRuc(ruc: string): Promise<EmisorResponseDto | null> {
-    const result = await this.db.query(
-      `SELECT id, ruc, razon_social, nombre_comercial, direccion_matriz,
-              obligado_contabilidad, contribuyente_especial, agente_retencion,
-              contribuyente_rimpe, ambiente, estado,
-              certificado_p12 IS NOT NULL as tiene_certificado,
-              certificado_valido_hasta, certificado_sujeto,
-              created_at, updated_at
-       FROM emisores
-       WHERE ruc = $1`,
-      [ruc],
-    );
+    const empresa = await this.prisma.empresa.findUnique({
+      where: { ruc },
+    });
 
-    if (result.rows.length === 0) {
-      return null;
-    }
+    if (!empresa) return null;
 
-    return this.mapToResponse(result.rows[0]);
+    return this.mapToResponse(empresa);
   }
 
   async create(dto: CreateEmisorDto): Promise<EmisorResponseDto> {
@@ -131,101 +106,52 @@ export class EmisoresService {
       throw new BadRequestException(`Ya existe un emisor con RUC ${dto.ruc}`);
     }
 
-    const result = await this.db.query(
-      `INSERT INTO emisores (
-        ruc, razon_social, nombre_comercial, direccion_matriz,
-        obligado_contabilidad, contribuyente_especial, agente_retencion,
-        contribuyente_rimpe, ambiente, estado
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'ACTIVO')
-      RETURNING id, ruc, razon_social, nombre_comercial, direccion_matriz,
-                obligado_contabilidad, contribuyente_especial, agente_retencion,
-                contribuyente_rimpe, ambiente, estado,
-                false as tiene_certificado,
-                null as certificado_valido_hasta, null as certificado_sujeto,
-                created_at, updated_at`,
-      [
-        dto.ruc,
-        dto.razonSocial,
-        dto.nombreComercial || null,
-        dto.direccionMatriz,
-        dto.obligadoContabilidad ?? false,
-        dto.contribuyenteEspecial || null,
-        dto.agenteRetencion || null,
-        dto.contribuyenteRimpe ?? false,
-        this.toAmbienteCodigo(dto.ambiente),
-      ],
-    );
+    const empresa = await this.prisma.empresa.create({
+      data: {
+        ruc: dto.ruc,
+        razonSocial: dto.razonSocial,
+        nombreComercial: dto.nombreComercial ?? undefined,
+        direccionMatriz: dto.direccionMatriz,
+        obligadoContabilidad: dto.obligadoContabilidad ?? false,
+        contribuyenteEspecial: dto.contribuyenteEspecial ?? undefined,
+        agenteRetencion: dto.agenteRetencion ?? undefined,
+        contribuyenteRimpe: dto.contribuyenteRimpe ?? false,
+        ambiente: this.toAmbienteCodigo(dto.ambiente),
+        estado: 'ACTIVO',
+      },
+    });
 
     this.logger.log(`Emisor creado: ${dto.ruc} - ${dto.razonSocial}`);
-    return this.mapToResponse(result.rows[0]);
+    return this.mapToResponse(empresa);
   }
 
   async update(id: string, dto: UpdateEmisorDto): Promise<EmisorResponseDto> {
     // Verificar que existe
     await this.findOne(id);
 
-    const updates: string[] = [];
-    const values: any[] = [];
-    let paramIndex = 1;
+    const updateData: Record<string, any> = {};
 
-    if (dto.razonSocial !== undefined) {
-      updates.push(`razon_social = $${paramIndex++}`);
-      values.push(dto.razonSocial);
-    }
-    if (dto.nombreComercial !== undefined) {
-      updates.push(`nombre_comercial = $${paramIndex++}`);
-      values.push(dto.nombreComercial);
-    }
-    if (dto.direccionMatriz !== undefined) {
-      updates.push(`direccion_matriz = $${paramIndex++}`);
-      values.push(dto.direccionMatriz);
-    }
-    if (dto.obligadoContabilidad !== undefined) {
-      updates.push(`obligado_contabilidad = $${paramIndex++}`);
-      values.push(dto.obligadoContabilidad);
-    }
-    if (dto.contribuyenteEspecial !== undefined) {
-      updates.push(`contribuyente_especial = $${paramIndex++}`);
-      values.push(dto.contribuyenteEspecial);
-    }
-    if (dto.agenteRetencion !== undefined) {
-      updates.push(`agente_retencion = $${paramIndex++}`);
-      values.push(dto.agenteRetencion);
-    }
-    if (dto.contribuyenteRimpe !== undefined) {
-      updates.push(`contribuyente_rimpe = $${paramIndex++}`);
-      values.push(dto.contribuyenteRimpe);
-    }
-    if (dto.ambiente !== undefined) {
-      updates.push(`ambiente = $${paramIndex++}`);
-      values.push(this.toAmbienteCodigo(dto.ambiente));
-    }
-    if (dto.estado !== undefined) {
-      updates.push(`estado = $${paramIndex++}`);
-      values.push(this.toEstadoNormalizado(dto.estado));
-    }
+    if (dto.razonSocial !== undefined) updateData.razonSocial = dto.razonSocial;
+    if (dto.nombreComercial !== undefined) updateData.nombreComercial = dto.nombreComercial;
+    if (dto.direccionMatriz !== undefined) updateData.direccionMatriz = dto.direccionMatriz;
+    if (dto.obligadoContabilidad !== undefined) updateData.obligadoContabilidad = dto.obligadoContabilidad;
+    if (dto.contribuyenteEspecial !== undefined) updateData.contribuyenteEspecial = dto.contribuyenteEspecial;
+    if (dto.agenteRetencion !== undefined) updateData.agenteRetencion = dto.agenteRetencion;
+    if (dto.contribuyenteRimpe !== undefined) updateData.contribuyenteRimpe = dto.contribuyenteRimpe;
+    if (dto.ambiente !== undefined) updateData.ambiente = this.toAmbienteCodigo(dto.ambiente);
+    if (dto.estado !== undefined) updateData.estado = this.toEstadoNormalizado(dto.estado);
 
-    if (updates.length === 0) {
+    if (Object.keys(updateData).length === 0) {
       return this.findOne(id);
     }
 
-    updates.push(`updated_at = NOW()`);
-    values.push(id);
-
-    const result = await this.db.query(
-      `UPDATE emisores SET ${updates.join(', ')}
-       WHERE id = $${paramIndex}
-       RETURNING id, ruc, razon_social, nombre_comercial, direccion_matriz,
-                 obligado_contabilidad, contribuyente_especial, agente_retencion,
-                 contribuyente_rimpe, ambiente, estado,
-                 certificado_p12 IS NOT NULL as tiene_certificado,
-                 certificado_valido_hasta, certificado_sujeto,
-                 created_at, updated_at`,
-      values,
-    );
+    const empresa = await this.prisma.empresa.update({
+      where: { id: parseInt(id, 10) },
+      data: updateData,
+    });
 
     this.logger.log(`Emisor actualizado: ${id}`);
-    return this.mapToResponse(result.rows[0]);
+    return this.mapToResponse(empresa);
   }
 
   async delete(id: string): Promise<EmisorResponseDto> {
@@ -238,22 +164,13 @@ export class EmisoresService {
     }
 
     // Eliminación lógica: cambiar estado a inactivo
-    const result = await this.db.query(
-      `UPDATE emisores SET 
-        estado = 'INACTIVO',
-        updated_at = NOW()
-       WHERE id = $1
-       RETURNING id, ruc, razon_social, nombre_comercial, direccion_matriz,
-                 obligado_contabilidad, contribuyente_especial, agente_retencion,
-                 contribuyente_rimpe, ambiente, estado,
-                 certificado_p12 IS NOT NULL as tiene_certificado,
-                 certificado_valido_hasta, certificado_sujeto,
-                 created_at, updated_at`,
-      [id],
-    );
+    const empresa = await this.prisma.empresa.update({
+      where: { id: parseInt(id, 10) },
+      data: { estado: 'INACTIVO' },
+    });
 
     this.logger.log(`Emisor inactivado: ${id}`);
-    return this.mapToResponse(result.rows[0]);
+    return this.mapToResponse(empresa);
   }
 
   async uploadCertificado(
@@ -274,59 +191,37 @@ export class EmisoresService {
       );
     }
 
-    // Guardar el certificado
-    const result = await this.db.query(
-      `UPDATE emisores SET
-        certificado_p12 = $1,
-        certificado_password = $2,
-        certificado_valido_hasta = $3,
-        certificado_sujeto = $4,
-        certificado_updated_at = NOW(),
-        updated_at = NOW()
-       WHERE id = $5
-       RETURNING id, ruc, razon_social, nombre_comercial, direccion_matriz,
-                 obligado_contabilidad, contribuyente_especial, agente_retencion,
-                 contribuyente_rimpe, ambiente, estado,
-                 true as tiene_certificado,
-                 certificado_valido_hasta, certificado_sujeto,
-                 created_at, updated_at`,
-      [
-        file,
-        await this.encryptionService.encrypt(password),
-        certificateInfo.validoHasta,
-        certificateInfo.sujeto,
-        id,
-      ],
-    );
+    // Guardar el certificado (almacenamos nombre del archivo + password encriptado)
+    const empresa = await this.prisma.empresa.update({
+      where: { id: parseInt(id, 10) },
+      data: {
+        certificadoNombre: `cert_${id}.p12`,
+        certificadoPassword: await this.encryptionService.encrypt(password),
+        certificadoValidoHasta: certificateInfo.validoHasta,
+        certificadoSujeto: certificateInfo.sujeto,
+      },
+    });
 
     this.logger.log(`Certificado cargado para emisor: ${id}`);
-    return this.mapToResponse(result.rows[0]);
+    return this.mapToResponse(empresa);
   }
 
   async deleteCertificado(id: string): Promise<EmisorResponseDto> {
     // Verificar que existe
     await this.findOne(id);
 
-    const result = await this.db.query(
-      `UPDATE emisores SET
-        certificado_p12 = NULL,
-        certificado_password = NULL,
-        certificado_valido_hasta = NULL,
-        certificado_sujeto = NULL,
-        certificado_updated_at = NULL,
-        updated_at = NOW()
-       WHERE id = $1
-       RETURNING id, ruc, razon_social, nombre_comercial, direccion_matriz,
-                 obligado_contabilidad, contribuyente_especial, agente_retencion,
-                 contribuyente_rimpe, ambiente, estado,
-                 false as tiene_certificado,
-                 null as certificado_valido_hasta, null as certificado_sujeto,
-                 created_at, updated_at`,
-      [id],
-    );
+    const empresa = await this.prisma.empresa.update({
+      where: { id: parseInt(id, 10) },
+      data: {
+        certificadoNombre: null,
+        certificadoPassword: null,
+        certificadoValidoHasta: null,
+        certificadoSujeto: null,
+      },
+    });
 
     this.logger.log(`Certificado eliminado para emisor: ${id}`);
-    return this.mapToResponse(result.rows[0]);
+    return this.mapToResponse(empresa);
   }
 
   private extractCertificateInfo(
@@ -360,20 +255,20 @@ export class EmisoresService {
     return {
       id: row.id,
       ruc: row.ruc,
-      razonSocial: row.razon_social,
-      nombreComercial: row.nombre_comercial,
-      direccionMatriz: row.direccion_matriz,
-      obligadoContabilidad: row.obligado_contabilidad,
-      contribuyenteEspecial: row.contribuyente_especial,
-      agenteRetencion: row.agente_retencion,
-      contribuyenteRimpe: row.contribuyente_rimpe,
+      razonSocial: row.razonSocial ?? row.razon_social,
+      nombreComercial: row.nombreComercial ?? row.nombre_comercial,
+      direccionMatriz: row.direccionMatriz ?? row.direccion_matriz,
+      obligadoContabilidad: row.obligadoContabilidad ?? row.obligado_contabilidad,
+      contribuyenteEspecial: row.contribuyenteEspecial ?? row.contribuyente_especial,
+      agenteRetencion: row.agenteRetencion ?? row.agente_retencion,
+      contribuyenteRimpe: row.contribuyenteRimpe ?? row.contribuyente_rimpe,
       ambiente: row.ambiente,
       estado: row.estado,
-      tieneCertificado: row.tiene_certificado,
-      certificadoValidoHasta: row.certificado_valido_hasta?.toISOString(),
-      certificadoSujeto: row.certificado_sujeto,
-      createdAt: row.created_at?.toISOString(),
-      updatedAt: row.updated_at?.toISOString(),
+      tieneCertificado: !!(row.certificadoNombre ?? row.certificado_nombre),
+      certificadoValidoHasta: (row.certificadoValidoHasta ?? row.certificado_valido_hasta)?.toISOString?.(),
+      certificadoSujeto: row.certificadoSujeto ?? row.certificado_sujeto,
+      createdAt: (row.createdAt ?? row.created_at)?.toISOString?.(),
+      updatedAt: (row.updatedAt ?? row.updated_at)?.toISOString?.(),
     };
   }
 }

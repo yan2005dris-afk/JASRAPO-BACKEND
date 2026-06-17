@@ -1,11 +1,14 @@
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { Prisma } from '../../../generated/prisma/client.js';
 import { Decimal } from 'decimal.js';
 import { ClaveAccesoService } from '../../infrastructure/xml/clave-acceso.service';
 import { XmlBuilderService } from '../../infrastructure/xml/xml-builder.service';
 import { XmlSignerService } from '../../infrastructure/xml/xml-signer.service';
 import { SriSoapClient } from '../../infrastructure/soap/sri-soap.client';
-import { SriRepositoryService } from '../../infrastructure/persistence/sri-repository.service';
+import { ComprobanteRepository } from '../../domain/repositories/comprobante.repository';
+import { EmisorRepository } from '../../domain/repositories/emisor.repository';
+import { SecuencialRepository } from '../../domain/repositories/secuencial.repository';
 import { XmlStorageService } from '../../infrastructure/storage/xml-storage.service';
 import { SriBaseService } from '../../infrastructure/xml/sri-base.service';
 import {
@@ -31,7 +34,9 @@ export class EmitirNotaCreditoUseCase {
     private readonly xmlBuilderService: XmlBuilderService,
     private readonly xmlSignerService: XmlSignerService,
     private readonly sriSoapClient: SriSoapClient,
-    private readonly repository: SriRepositoryService,
+    private readonly comprobanteRepository: ComprobanteRepository,
+    private readonly emisorRepository: EmisorRepository,
+    private readonly secuencialRepository: SecuencialRepository,
     private readonly xmlStorage: XmlStorageService,
     private readonly base: SriBaseService,
     private readonly eventEmitter: EventEmitter2,
@@ -68,9 +73,9 @@ export class EmitirNotaCreditoUseCase {
       const tipoEmision = dto.tipoEmision || TipoEmision.NORMAL;
 
       // Get emisor info from database
-      const emisor = await this.repository.findEmisorByRuc(dto.emisor.ruc);
+      const emisor = await this.emisorRepository.findByRuc(dto.emisor.ruc);
       const puntoEmisionInfo = emisor
-        ? await this.repository.findPuntoEmision(
+        ? await this.emisorRepository.findPuntoEmision(
             emisor.id,
             dto.emisor.establecimiento,
             dto.emisor.puntoEmision,
@@ -88,7 +93,7 @@ export class EmitirNotaCreditoUseCase {
             'Para auto-generar secuencial NC, el emisor debe estar registrado en la base de datos',
           );
         }
-        const nextSecuencial = await this.repository.getNextSecuencial(
+        const nextSecuencial = await this.secuencialRepository.getNextSecuencial(
           puntoEmisionInfo.punto_emision_id,
           TipoComprobante.NOTA_CREDITO,
         );
@@ -127,7 +132,7 @@ export class EmitirNotaCreditoUseCase {
       this.logger.log('XML de nota de crédito generado');
 
       // Verify emisor has certificate in database
-      if (!emisor || !emisor.certificado_p12) {
+      if (!emisor || !emisor.certificado_nombre || !emisor.certificado_password_encrypted) {
         throw new BadRequestException(
           `El emisor ${dto.emisor.ruc} no tiene certificado P12 configurado. ` +
             `Use el endpoint /certificates/upload-cert para subir el certificado.`,
@@ -184,8 +189,8 @@ export class EmitirNotaCreditoUseCase {
   private async persistirNotaCredito(
     dto: CreateNotaCreditoDto,
     notaCredito: NotaCredito,
-    emisorId: string,
-    puntoEmisionId: string,
+    emisorId: number,
+    puntoEmisionId: number,
     claveAcceso: string,
     secuencial: string,
     ambiente: string,
@@ -195,9 +200,9 @@ export class EmitirNotaCreditoUseCase {
     resultado: SriOperationResult,
   ): Promise<void> {
     try {
-      await this.repository.executeInTransaction(async (client) => {
+      await this.comprobanteRepository.executeTransaction(async (tx) => {
         // 1. Create main comprobante record
-        const comprobante = await this.repository.createComprobante(
+        const comprobante = await this.comprobanteRepository.create(
           {
             emisor_id: emisorId,
             punto_emision_id: puntoEmisionId,
@@ -229,7 +234,7 @@ export class EmitirNotaCreditoUseCase {
               .join('-'),
             motivo: dto.motivo,
           },
-          client,
+          tx,
         );
 
         this.logger.log(`Nota de Crédito creada con ID: ${comprobante.id}`);
@@ -237,7 +242,7 @@ export class EmitirNotaCreditoUseCase {
         // 2. Create detalles and their impuestos
         for (let i = 0; i < notaCredito.detalles.length; i++) {
           const det = notaCredito.detalles[i];
-          const detalleRecords = await this.repository.createDetalles(
+          const detalleRecords = await this.comprobanteRepository.createDetalles(
             [
               {
                 comprobante_id: comprobante.id!,
@@ -251,14 +256,14 @@ export class EmitirNotaCreditoUseCase {
                 orden: i,
               },
             ],
-            client,
+            tx,
           );
 
           const detalleId = detalleRecords[0].id!;
 
           // Create impuestos for this detalle
           if (det.impuestos && det.impuestos.length > 0) {
-            await this.repository.createImpuestos(
+            await this.comprobanteRepository.createImpuestos(
               det.impuestos.map((imp) => ({
                 comprobante_detalle_id: detalleId,
                 codigo: imp.codigo,
@@ -267,14 +272,14 @@ export class EmitirNotaCreditoUseCase {
                 base_imponible: imp.baseImponible,
                 valor: imp.valor,
               })),
-              client,
+              tx,
             );
           }
         }
 
         // 3. Create totales (totalConImpuestos)
         if (notaCredito.infoNotaCredito.totalConImpuestos) {
-          await this.repository.createTotales(
+          await this.comprobanteRepository.createTotales(
             notaCredito.infoNotaCredito.totalConImpuestos.map((tot) => ({
               comprobante_id: comprobante.id!,
               codigo: tot.codigo,
@@ -282,7 +287,7 @@ export class EmitirNotaCreditoUseCase {
               base_imponible: tot.baseImponible,
               valor: tot.valor,
             })),
-            client,
+            tx,
           );
         }
 
@@ -300,24 +305,24 @@ export class EmitirNotaCreditoUseCase {
           xmlFirmado, // firmado - always save for retry
           resultado.xmlAutorizado,
         );
-        await this.repository.saveXml(
+        await this.comprobanteRepository.saveXml(
           {
             comprobante_id: comprobante.id!,
             xml_firmado_path: xmlPaths.firmadoKey,
             xml_autorizado_path: xmlPaths.autorizadoKey,
           },
-          client,
+          tx,
         );
 
         // 5. Create info adicional
         if (dto.infoAdicional && dto.infoAdicional.length > 0) {
-          await this.repository.createInfoAdicional(
+          await this.comprobanteRepository.createInfoAdicional(
             dto.infoAdicional.map((info) => ({
               comprobante_id: comprobante.id!,
               nombre: info.nombre,
               valor: info.valor,
             })),
-            client,
+            tx,
           );
         }
 

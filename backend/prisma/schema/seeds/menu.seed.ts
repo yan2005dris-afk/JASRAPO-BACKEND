@@ -15,26 +15,117 @@ const LEVEL_1: Omit<MenuSeedEntry, 'parentNombre'>[] = [
 ];
 
 const LEVEL_2: MenuSeedEntry[] = [
-  { nombre: 'Clientes', ruta: '/Contratos/Cliente', icono: 'group', parentNombre: 'Suministro' },
-  { nombre: 'Inventario de Medidores', ruta: '/Contratos/Medidores', icono: 'gas_meter', parentNombre: 'Suministro' },
-  { nombre: 'Planificación de Rutas', ruta: '/Contratos/LecturaDeConsumo', icono: 'route', parentNombre: 'Suministro' },
-  { nombre: 'Bandeja de Auditoría', ruta: '/suministro/auditoria', icono: 'assignment', parentNombre: 'Suministro' },
+  {
+    nombre: 'Clientes',
+    ruta: '/Contratos/Cliente',
+    icono: 'group',
+    parentNombre: 'Suministro',
+  },
+  {
+    nombre: 'Inventario de Medidores',
+    ruta: '/Contratos/Medidores',
+    icono: 'gas_meter',
+    parentNombre: 'Suministro',
+  },
+  {
+    nombre: 'Planificación de Rutas',
+    ruta: '/Contratos/LecturaDeConsumo',
+    icono: 'route',
+    parentNombre: 'Suministro',
+  },
+  {
+    nombre: 'Bandeja de Auditoría',
+    ruta: '/suministro/auditoria',
+    icono: 'assignment',
+    parentNombre: 'Suministro',
+  },
+  {
+    nombre: 'Categoría Tarifa',
+    ruta: '/Contratos/TarifasYCategorias',
+    icono: 'price_change',
+    parentNombre: 'Suministro',
+  },
 
-  { nombre: 'Punto de Recaudación', ruta: '/recaudacion/punto', icono: 'point_of_sale', parentNombre: 'Recaudación' },
-  { nombre: 'Caja Diaria', ruta: '/recaudacion/caja-diaria', icono: 'payments', parentNombre: 'Recaudación' },
-  { nombre: 'Validación Transferencia', ruta: '/recaudacion/validacion', icono: 'verified', parentNombre: 'Recaudación' },
-  { nombre: 'Emisión SRI', ruta: '/recaudacion/emision-sri', icono: 'gavel', parentNombre: 'Recaudación' },
-  { nombre: 'Generación de Planillas', ruta: '/recaudacion/planillas', icono: 'description', parentNombre: 'Recaudación' },
+  {
+    nombre: 'Punto de Recaudación',
+    ruta: '/recaudacion/punto',
+    icono: 'point_of_sale',
+    parentNombre: 'Recaudación',
+  },
+  {
+    nombre: 'Caja Diaria',
+    ruta: '/recaudacion/caja-diaria',
+    icono: 'payments',
+    parentNombre: 'Recaudación',
+  },
+  {
+    nombre: 'Validación Transferencia',
+    ruta: '/recaudacion/validacion',
+    icono: 'verified',
+    parentNombre: 'Recaudación',
+  },
+  {
+    nombre: 'Emisión SRI',
+    ruta: '/recaudacion/emision-sri',
+    icono: 'gavel',
+    parentNombre: 'Recaudación',
+  },
+  {
+    nombre: 'Generación de Planillas',
+    ruta: '/recaudacion/planillas',
+    icono: 'description',
+    parentNombre: 'Recaudación',
+  },
 
-  { nombre: 'Usuarios', ruta: '/admin/users', icono: 'admin_panel_settings', parentNombre: 'Administración' },
-  { nombre: 'Roles y Permisos', ruta: '/admin/roles', icono: 'admin_panel_settings', parentNombre: 'Administración' },
-  { nombre: 'Comunidades', ruta: '/admin/comunidades', icono: 'communities', parentNombre: 'Administración' },
-  { nombre: 'Sectores', ruta: '/admin/sectores', icono: 'map', parentNombre: 'Administración' },
+  {
+    nombre: 'Usuarios',
+    ruta: '/admin/users',
+    icono: 'admin_panel_settings',
+    parentNombre: 'Administración',
+  },
+  {
+    nombre: 'Roles y Permisos',
+    ruta: '/admin/roles',
+    icono: 'admin_panel_settings',
+    parentNombre: 'Administración',
+  },
+  {
+    nombre: 'Comunidades',
+    ruta: '/admin/comunidades',
+    icono: 'communities',
+    parentNombre: 'Administración',
+  },
+  {
+    nombre: 'Sectores',
+    ruta: '/admin/sectores',
+    icono: 'map',
+    parentNombre: 'Administración',
+  },
 
-  { nombre: 'Estado de cuenta Cliente', ruta: '/reportes/estado-cuenta', icono: 'article_person', parentNombre: 'Reportes' },
-  { nombre: 'Recaudación y Morosidad', ruta: '/reportes/recaudacion-morosidad', icono: 'money_off', parentNombre: 'Reportes' },
-  { nombre: 'ConsumoPorZonas', ruta: '/reportes/consumo-zonas', icono: 'location_on', parentNombre: 'Reportes' },
-  { nombre: 'DashboardKPI', ruta: '/reportes/dashboard', icono: 'dashboard', parentNombre: 'Reportes' },
+  {
+    nombre: 'Estado de cuenta Cliente',
+    ruta: '/reportes/estado-cuenta',
+    icono: 'article_person',
+    parentNombre: 'Reportes',
+  },
+  {
+    nombre: 'Recaudación y Morosidad',
+    ruta: '/reportes/recaudacion-morosidad',
+    icono: 'money_off',
+    parentNombre: 'Reportes',
+  },
+  {
+    nombre: 'ConsumoPorZonas',
+    ruta: '/reportes/consumo-zonas',
+    icono: 'location_on',
+    parentNombre: 'Reportes',
+  },
+  {
+    nombre: 'DashboardKPI',
+    ruta: '/reportes/dashboard',
+    icono: 'dashboard',
+    parentNombre: 'Reportes',
+  },
 ];
 
 async function upsertMenu(
@@ -68,7 +159,13 @@ export async function seedMenus(prisma: PrismaClient) {
   const parentIds = new Map<string, number>();
 
   for (const entry of LEVEL_1) {
-    const id = await upsertMenu(prisma, entry.nombre, entry.ruta, entry.icono, null);
+    const id = await upsertMenu(
+      prisma,
+      entry.nombre,
+      entry.ruta,
+      entry.icono,
+      null,
+    );
     parentIds.set(entry.nombre, id);
   }
 

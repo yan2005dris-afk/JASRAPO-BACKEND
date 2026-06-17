@@ -3,9 +3,10 @@
  */
 
 export interface ComprobanteRecord {
-  id?: string;
-  emisor_id: string;
-  punto_emision_id: string;
+  id?: bigint;
+  uuid?: string;
+  emisor_id: number;
+  punto_emision_id: number;
   receptor_id?: string;
   tipo_comprobante: string;
   ambiente: string;
@@ -48,7 +49,7 @@ export interface ComprobanteRecord {
 
 export interface DetalleRecord {
   id?: string;
-  comprobante_id: string;
+  comprobante_id: string | bigint;
   producto_id?: string;
   codigo_principal?: string;
   codigo_auxiliar?: string;
@@ -73,7 +74,7 @@ export interface ImpuestoRecord {
 
 export interface TotalRecord {
   id?: string;
-  comprobante_id: string;
+  comprobante_id: string | bigint;
   codigo: string;
   codigo_porcentaje: string;
   descuento_adicional?: number;
@@ -85,7 +86,7 @@ export interface TotalRecord {
 
 export interface PagoRecord {
   id?: string;
-  comprobante_id: string;
+  comprobante_id: string | bigint;
   forma_pago: string;
   total: number;
   plazo?: number;
@@ -94,7 +95,7 @@ export interface PagoRecord {
 
 export interface RetencionRecord {
   id?: string;
-  comprobante_id: string;
+  comprobante_id: string | bigint;
   codigo: string;
   codigo_retencion: string;
   base_imponible?: number;
@@ -120,14 +121,14 @@ export interface ImpuestoDocSustentoRecord {
 
 export interface XmlRecord {
   id?: string;
-  comprobante_id: string;
+  comprobante_id: string | bigint;
   xml_firmado_path?: string;
   xml_autorizado_path?: string;
 }
 
 export interface InfoAdicionalRecord {
   id?: string;
-  comprobante_id: string;
+  comprobante_id: string | bigint;
   nombre: string;
   valor: string;
 }
@@ -141,11 +142,11 @@ export interface DetalleAdicionalRecord {
 
 export interface DestinatarioGuiaRecord {
   id?: string;
-  comprobante_id: string;
+  comprobante_id: string | bigint;
   identificacion_destinatario: string;
   razon_social_destinatario: string;
-  dir_destinatario: string;
-  motivo_traslado: string;
+  dir_destinatario?: string;
+  motivo_traslado?: string;
   doc_aduanero_unico?: string;
   cod_estab_destino?: string;
   ruta?: string;
@@ -166,13 +167,13 @@ export interface DetalleGuiaRecord {
 
 export interface MotivoNotaDebitoRecord {
   id?: string;
-  comprobante_id: string;
+  comprobante_id: string | bigint;
   razon: string;
   valor: number;
 }
 
 export interface EmisorRecord {
-  id: string;
+  id: number;
   ruc: string;
   razon_social: string;
   nombre_comercial?: string;
@@ -194,16 +195,16 @@ export interface EmisorRecord {
 }
 
 export interface PuntoEmisionRecord {
-  id: string;
-  establecimiento_id: string;
+  id: number;
+  establecimiento_id: number;
   codigo: string;
   descripcion?: string;
   estado: string;
 }
 
 export interface EstablecimientoRecord {
-  id: string;
-  emisor_id: string;
+  id: number;
+  emisor_id: number;
   codigo: string;
   direccion: string;
   estado: string;

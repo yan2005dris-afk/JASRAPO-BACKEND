@@ -19,8 +19,23 @@ model ComprobanteRetenciones {
   retencion              CatalogoRetenciones?        @relation(fields: [codigoRetencion], references: [codigo])
   docSustento            CatalogoDocumentosSustento? @relation(fields: [codDocSustento], references: [codigo])
   formaPagoCatalog       CatalogoFormasPago?         @relation(fields: [formaPago], references: [codigo])
+  impuestosDocSustento   ImpuestosDocSustento[]
 
   @@map("comprobante_retenciones")
+}
+
+model ImpuestosDocSustento {
+  id                      String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid @map("id")
+  comprobanteRetencionId  String       @db.Uuid @map("comprobante_retencion_id")
+  codImpuestoDocSustento  String       @db.VarChar(2) @map("cod_impuesto_doc_sustento")
+  codigoPorcentaje        String       @db.VarChar(4) @map("codigo_porcentaje")
+  baseImponible           Decimal?     @db.Decimal(18, 2) @map("base_imponible")
+  tarifa                  Decimal?     @db.Decimal(8, 2) @map("tarifa")
+  valorImpuesto           Decimal?     @db.Decimal(18, 2) @map("valor_impuesto")
+
+  retencion               ComprobanteRetenciones @relation(fields: [comprobanteRetencionId], references: [id], onDelete: Cascade)
+
+  @@map("impuestos_doc_sustento")
 }
 
 model SriTipoComprobante {

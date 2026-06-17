@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { RawPgService } from '../../../infrastructure/database/raw-pg/raw-pg.service';
+import { PrismaService } from '../../../infrastructure/database/prisma.service';
 
 /**
  * Tarifa de impuesto del catálogo
@@ -65,7 +65,7 @@ export class CatalogoValidatorService {
   private readonly CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutos
   private loadingPromise: Promise<void> | null = null; // FIX P7: Semáforo anti-carga paralela
 
-  constructor(private readonly db: RawPgService) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   // =====================================================
   // VALIDACIONES DE IMPUESTOS
@@ -303,50 +303,49 @@ export class CatalogoValidatorService {
 
     try {
       // 1. Cargar tarifas de impuestos
-      const tarifas = await this.db.query<any>(`
-        SELECT 
-          t.codigo_porcentaje, t.descripcion, t.porcentaje,
-          i.codigo as impuesto_codigo, i.nombre as impuesto_nombre
-        FROM catalogo_tarifas_impuesto t
-        JOIN catalogo_impuestos i ON t.impuesto_id = i.id
-        WHERE t.activo = true
-        AND (t.vigente_hasta IS NULL OR t.vigente_hasta >= CURRENT_DATE)
-      `);
+      const tarifas = await this.prisma.catalogoTarifasImpuesto.findMany({
+        where: {
+          activo: true,
+          OR: [{ vigenteHasta: null }, { vigenteHasta: { gte: new Date() } }],
+        },
+        include: { impuesto: true },
+      });
       this.tarifasCache.clear();
-      for (const tarifa of tarifas.rows) {
-        const key = `${tarifa.impuesto_codigo}-${tarifa.codigo_porcentaje}`;
+      for (const tarifa of tarifas) {
+        const key = `${tarifa.impuesto.codigo}-${tarifa.codigoPorcentaje}`;
         this.tarifasCache.set(key, {
-          codigo_porcentaje: tarifa.codigo_porcentaje,
+          codigo_porcentaje: tarifa.codigoPorcentaje,
           descripcion: tarifa.descripcion,
-          porcentaje: parseFloat(tarifa.porcentaje),
-          impuesto_codigo: tarifa.impuesto_codigo,
-          impuesto_nombre: tarifa.impuesto_nombre,
+          porcentaje: Number(tarifa.porcentaje),
+          impuesto_codigo: tarifa.impuesto.codigo,
+          impuesto_nombre: tarifa.impuesto.nombre,
         });
       }
 
       // 2. Cargar códigos de retención
-      const retenciones = await this.db.query<any>(`
-        SELECT tipo, codigo, descripcion, porcentaje
-        FROM catalogo_retenciones WHERE activo = true
-        AND (vigente_hasta IS NULL OR vigente_hasta >= CURRENT_DATE)
-      `);
+      const retenciones = await this.prisma.catalogoRetenciones.findMany({
+        where: {
+          activo: true,
+          OR: [{ vigenteHasta: null }, { vigenteHasta: { gte: new Date() } }],
+        },
+      });
       this.retencionesCache.clear();
-      for (const ret of retenciones.rows) {
+      for (const ret of retenciones) {
         const key = `${ret.tipo}-${ret.codigo}`;
         this.retencionesCache.set(key, {
           tipo: ret.tipo,
           codigo: ret.codigo,
           descripcion: ret.descripcion,
-          porcentaje: parseFloat(ret.porcentaje),
+          porcentaje: Number(ret.porcentaje),
         });
       }
 
       // 3. Cargar formas de pago
-      const formasPago = await this.db.query<any>(`
-        SELECT codigo, descripcion FROM catalogo_formas_pago WHERE activo = true
-      `);
+      const formasPago = await this.prisma.catalogoFormasPago.findMany({
+        where: { activo: true },
+      });
       this.formasPagoCache.clear();
-      for (const fp of formasPago.rows) {
+      for (const fp of formasPago) {
         this.formasPagoCache.set(fp.codigo, {
           codigo: fp.codigo,
           descripcion: fp.descripcion,
@@ -354,26 +353,27 @@ export class CatalogoValidatorService {
       }
 
       // 4. Cargar tipos de identificación
-      const tiposIdent = await this.db.query<any>(`
-        SELECT codigo, descripcion, longitud, regex_validacion 
-        FROM catalogo_tipos_identificacion WHERE activo = true
-      `);
+      const tiposIdent =
+        await this.prisma.catalogoTiposIdentificacion.findMany({
+          where: { activo: true },
+        });
       this.tiposIdentificacionCache.clear();
-      for (const ti of tiposIdent.rows) {
+      for (const ti of tiposIdent) {
         this.tiposIdentificacionCache.set(ti.codigo, {
           codigo: ti.codigo,
           descripcion: ti.descripcion,
-          longitud: ti.longitud,
-          regex_validacion: ti.regex_validacion,
+          longitud: ti.longitud ?? null,
+          regex_validacion: ti.regexValidacion ?? null,
         });
       }
 
       // 5. Cargar documentos sustento
-      const docsSustento = await this.db.query<any>(`
-        SELECT codigo, descripcion FROM catalogo_documentos_sustento WHERE activo = true
-      `);
+      const docsSustento =
+        await this.prisma.catalogoDocumentosSustento.findMany({
+          where: { activo: true },
+        });
       this.documentosSustentoCache.clear();
-      for (const ds of docsSustento.rows) {
+      for (const ds of docsSustento) {
         this.documentosSustentoCache.set(ds.codigo, {
           codigo: ds.codigo,
           descripcion: ds.descripcion,

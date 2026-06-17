@@ -1,0 +1,35 @@
+model DestinatariosGuia {
+  id                        String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid @map("id")
+  comprobanteId             BigInt       @map("comprobante_id")
+  identificacionDestinatario String       @db.VarChar(20) @map("identificacion_destinatario")
+  razonSocialDestinatario    String       @db.VarChar(300) @map("razon_social_destinatario")
+  dirDestinatario            String?      @db.VarChar(300) @map("dir_destinatario")
+  motivoTraslado             String?      @db.VarChar(300) @map("motivo_traslado")
+  docAduaneroUnico           String?      @db.VarChar(20) @map("doc_aduanero_unico")
+  codEstabDestino            String?      @db.VarChar(3) @map("cod_estab_destino")
+  ruta                       String?      @db.VarChar(300) @map("ruta")
+  codDocSustento             String?      @db.VarChar(2) @map("cod_doc_sustento")
+  numDocSustento             String?      @db.VarChar(17) @map("num_doc_sustento")
+  fechaEmisionDocSustento    DateTime?    @db.Date @map("fecha_emision_doc_sustento")
+  numAutDocSustento          String?      @db.VarChar(49) @map("num_aut_doc_sustento")
+  createdAt                  DateTime     @default(now()) @map("created_at")
+
+  comprobante               Comprobantes @relation(fields: [comprobanteId], references: [id], onDelete: Cascade)
+  detalles                  DetallesGuia[]
+
+  @@map("destinatarios_guia")
+}
+
+model DetallesGuia {
+  id              String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid @map("id")
+  destinatarioId  String            @db.Uuid @map("destinatario_id")
+  codigoInterno   String            @db.VarChar(25) @map("codigo_interno")
+  codigoAdicional String?           @db.VarChar(25) @map("codigo_adicional")
+  descripcion     String            @db.VarChar(300) @map("descripcion")
+  cantidad        Decimal           @db.Decimal(14, 2) @map("cantidad")
+  createdAt       DateTime          @default(now()) @map("created_at")
+
+  destinatario    DestinatariosGuia @relation(fields: [destinatarioId], references: [id], onDelete: Cascade)
+
+  @@map("detalles_guia")
+}

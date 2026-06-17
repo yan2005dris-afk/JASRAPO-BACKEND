@@ -1,10 +1,13 @@
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { Prisma } from '../../../generated/prisma/client.js';
 import { ClaveAccesoService } from '../../infrastructure/xml/clave-acceso.service';
 import { XmlBuilderService } from '../../infrastructure/xml/xml-builder.service';
 import { XmlSignerService } from '../../infrastructure/xml/xml-signer.service';
 import { SriSoapClient } from '../../infrastructure/soap/sri-soap.client';
-import { SriRepositoryService } from '../../infrastructure/persistence/sri-repository.service';
+import { ComprobanteRepository } from '../../domain/repositories/comprobante.repository';
+import { EmisorRepository } from '../../domain/repositories/emisor.repository';
+import { SecuencialRepository } from '../../domain/repositories/secuencial.repository';
 import { XmlStorageService } from '../../infrastructure/storage/xml-storage.service';
 import { SriBaseService } from '../../infrastructure/xml/sri-base.service';
 import { CreateRetencionDto, RetencionResponseDto } from '../../interfaces/dto';
@@ -26,7 +29,9 @@ export class EmitirRetencionUseCase {
     private readonly xmlBuilderService: XmlBuilderService,
     private readonly xmlSignerService: XmlSignerService,
     private readonly sriSoapClient: SriSoapClient,
-    private readonly repository: SriRepositoryService,
+    private readonly comprobanteRepository: ComprobanteRepository,
+    private readonly emisorRepository: EmisorRepository,
+    private readonly secuencialRepository: SecuencialRepository,
     private readonly xmlStorage: XmlStorageService,
     private readonly base: SriBaseService,
     private readonly eventEmitter: EventEmitter2,
@@ -65,9 +70,9 @@ export class EmitirRetencionUseCase {
       const tipoEmision = dto.tipoEmision || TipoEmision.NORMAL;
 
       // Get emisor info from database
-      const emisor = await this.repository.findEmisorByRuc(dto.emisor.ruc);
+      const emisor = await this.emisorRepository.findByRuc(dto.emisor.ruc);
       const puntoEmisionInfo = emisor
-        ? await this.repository.findPuntoEmision(
+        ? await this.emisorRepository.findPuntoEmision(
             emisor.id,
             dto.emisor.establecimiento,
             dto.emisor.puntoEmision,
@@ -85,7 +90,7 @@ export class EmitirRetencionUseCase {
             'Para auto-generar secuencial RET, el emisor debe estar registrado en la base de datos',
           );
         }
-        const nextSecuencial = await this.repository.getNextSecuencial(
+        const nextSecuencial = await this.secuencialRepository.getNextSecuencial(
           puntoEmisionInfo.punto_emision_id,
           TipoComprobante.COMPROBANTE_RETENCION,
         );
@@ -124,7 +129,7 @@ export class EmitirRetencionUseCase {
       this.logger.log('XML de comprobante de retención generado');
 
       // Verify emisor has certificate in database
-      if (!emisor || !emisor.certificado_p12) {
+      if (!emisor || !emisor.certificado_nombre || !emisor.certificado_password_encrypted) {
         throw new BadRequestException(
           `El emisor ${dto.emisor.ruc} no tiene certificado P12 configurado. ` +
             `Use el endpoint /certificates/upload-cert para subir el certificado.`,
@@ -179,8 +184,8 @@ export class EmitirRetencionUseCase {
   private async persistirRetencion(
     dto: CreateRetencionDto,
     retencion: Retencion,
-    emisorId: string,
-    puntoEmisionId: string,
+    emisorId: number,
+    puntoEmisionId: number,
     claveAcceso: string,
     secuencial: string,
     ambiente: string,
@@ -190,9 +195,9 @@ export class EmitirRetencionUseCase {
     resultado: SriOperationResult,
   ): Promise<void> {
     try {
-      await this.repository.executeInTransaction(async (client) => {
+      await this.comprobanteRepository.executeTransaction(async (tx) => {
         // 1. Create main comprobante record
-        const comprobante = await this.repository.createComprobante(
+        const comprobante = await this.comprobanteRepository.create(
           {
             emisor_id: emisorId,
             punto_emision_id: puntoEmisionId,
@@ -211,31 +216,30 @@ export class EmitirRetencionUseCase {
             receptor_razon_social: dto.sujetoRetenido.razonSocial,
             receptor_email: dto.sujetoRetenido.email,
           },
-          client,
+          tx,
         );
 
         this.logger.log(`Retención creada con ID: ${comprobante.id}`);
 
         // 2. Create retenciones in comprobante_retenciones table
         if (retencion.impuestos && retencion.impuestos.length > 0) {
-          for (const imp of retencion.impuestos) {
-            await client.query(
-              `INSERT INTO comprobante_retenciones 
-               (comprobante_id, codigo, codigo_retencion, base_imponible, porcentaje_retener, valor_retenido, cod_doc_sustento, num_doc_sustento, fecha_emision_doc_sustento)
-               VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-              [
-                comprobante.id,
-                imp.codigo,
-                imp.codigoRetencion,
-                imp.baseImponible,
-                imp.porcentajeRetener,
-                imp.valorRetenido,
-                imp.codDocSustento,
-                imp.numDocSustento,
-                imp.fechaEmisionDocSustento?.split('/').reverse().join('-'),
-              ],
-            );
-          }
+          await this.comprobanteRepository.createRetenciones(
+            retencion.impuestos.map((imp) => ({
+              comprobante_id: comprobante.id!,
+              codigo: imp.codigo,
+              codigo_retencion: imp.codigoRetencion,
+              base_imponible: imp.baseImponible,
+              porcentaje_retener: imp.porcentajeRetener,
+              valor_retenido: imp.valorRetenido,
+              cod_doc_sustento: imp.codDocSustento,
+              num_doc_sustento: imp.numDocSustento,
+              fecha_emision_doc_sustento: imp.fechaEmisionDocSustento
+                ?.split('/')
+                .reverse()
+                .join('-'),
+            })),
+            tx,
+          );
         }
 
         // 3. Save signed XML always (needed for retry), authorized only if authorized
@@ -252,24 +256,24 @@ export class EmitirRetencionUseCase {
           xmlFirmado, // firmado - always save for retry
           resultado.xmlAutorizado,
         );
-        await this.repository.saveXml(
+        await this.comprobanteRepository.saveXml(
           {
             comprobante_id: comprobante.id!,
             xml_firmado_path: xmlPaths.firmadoKey,
             xml_autorizado_path: xmlPaths.autorizadoKey,
           },
-          client,
+          tx,
         );
 
         // 4. Create info adicional
         if (dto.infoAdicional && dto.infoAdicional.length > 0) {
-          await this.repository.createInfoAdicional(
+          await this.comprobanteRepository.createInfoAdicional(
             dto.infoAdicional.map((info) => ({
               comprobante_id: comprobante.id!,
               nombre: info.nombre,
               valor: info.valor,
             })),
-            client,
+            tx,
           );
         }
 

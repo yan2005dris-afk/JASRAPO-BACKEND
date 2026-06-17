@@ -1,12 +1,14 @@
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { PoolClient } from 'pg';
+import { Prisma } from '../../../generated/prisma/client.js';
 import { Decimal } from 'decimal.js';
 import { ClaveAccesoService } from '../../infrastructure/xml/clave-acceso.service';
 import { XmlBuilderService } from '../../infrastructure/xml/xml-builder.service';
 import { XmlSignerService } from '../../infrastructure/xml/xml-signer.service';
 import { SriSoapClient } from '../../infrastructure/soap/sri-soap.client';
-import { SriRepositoryService } from '../../infrastructure/persistence/sri-repository.service';
+import { ComprobanteRepository } from '../../domain/repositories/comprobante.repository';
+import { EmisorRepository } from '../../domain/repositories/emisor.repository';
+import { SecuencialRepository } from '../../domain/repositories/secuencial.repository';
 import { XmlStorageService } from '../../infrastructure/storage/xml-storage.service';
 import { SriBaseService } from '../../infrastructure/xml/sri-base.service';
 import { CreateFacturaDto, FacturaResponseDto } from '../../interfaces/dto';
@@ -29,7 +31,9 @@ export class EmitirFacturaUseCase {
     private readonly xmlBuilderService: XmlBuilderService,
     private readonly xmlSignerService: XmlSignerService,
     private readonly sriSoapClient: SriSoapClient,
-    private readonly repository: SriRepositoryService,
+    private readonly comprobanteRepository: ComprobanteRepository,
+    private readonly emisorRepository: EmisorRepository,
+    private readonly secuencialRepository: SecuencialRepository,
     private readonly xmlStorage: XmlStorageService,
     private readonly base: SriBaseService,
     private readonly eventEmitter: EventEmitter2,
@@ -60,7 +64,7 @@ export class EmitirFacturaUseCase {
         dto.pagos && dto.pagos.length > 0
           ? this.base.validarFormasPagoCatalogo(dto.pagos)
           : Promise.resolve(),
-        this.repository.findEmisorByRuc(dto.emisor.ruc),
+        this.emisorRepository.findByRuc(dto.emisor.ruc),
       ]);
 
       // Variables de configuración
@@ -75,7 +79,7 @@ export class EmitirFacturaUseCase {
 
       // Buscar punto de emisión
       const puntoEmisionInfo = emisor
-        ? await this.repository.findPuntoEmision(
+        ? await this.emisorRepository.findPuntoEmision(
             emisor.id,
             dto.emisor.establecimiento,
             dto.emisor.puntoEmision,
@@ -92,12 +96,12 @@ export class EmitirFacturaUseCase {
             `No se puede generar secuencial automático: punto de emisión ${dto.emisor.establecimiento}-${dto.emisor.puntoEmision} no encontrado para emisor ${dto.emisor.ruc}`,
           );
         }
-        secuencial = await this.repository.executeInTransaction(
-          async (client) => {
-            return this.repository.getNextSecuencial(
+        secuencial = await this.comprobanteRepository.executeTransaction(
+          async (tx) => {
+            return this.secuencialRepository.getNextSecuencial(
               puntoEmisionInfo.punto_emision_id,
               TipoComprobante.FACTURA,
-              client,
+              tx,
             );
           },
         );
@@ -153,7 +157,7 @@ export class EmitirFacturaUseCase {
       } catch (error) {
         // El SRI no respondió — guardar como PENDIENTE para reintento posterior
         if (emisor && puntoEmisionInfo) {
-          await this.repository.executeInTransaction(async (client) => {
+          await this.comprobanteRepository.executeTransaction(async (tx) => {
             await this.persistirFactura(
               dto,
               factura,
@@ -177,7 +181,7 @@ export class EmitirFacturaUseCase {
                   },
                 ],
               },
-              client,
+              tx,
             );
           });
         }
@@ -186,7 +190,7 @@ export class EmitirFacturaUseCase {
 
       // ─── FASE 3: Transacción corta (~5ms) — Solo persistir resultado ───
       if (emisor && puntoEmisionInfo) {
-        await this.repository.executeInTransaction(async (client) => {
+        await this.comprobanteRepository.executeTransaction(async (tx) => {
           await this.persistirFactura(
             dto,
             factura,
@@ -199,7 +203,7 @@ export class EmitirFacturaUseCase {
             xml,
             xmlFirmado,
             resultado,
-            client,
+            tx,
           );
         });
       }
@@ -340,8 +344,8 @@ export class EmitirFacturaUseCase {
   private async persistirFactura(
     dto: CreateFacturaDto,
     factura: Factura,
-    emisorId: string,
-    puntoEmisionId: string,
+    emisorId: number,
+    puntoEmisionId: number,
     claveAcceso: string,
     secuencial: string,
     ambiente: string,
@@ -349,11 +353,11 @@ export class EmitirFacturaUseCase {
     xmlSinFirma: string,
     xmlFirmado: string,
     resultado: SriOperationResult,
-    client: PoolClient,
+    tx: Prisma.TransactionClient,
   ): Promise<void> {
     try {
       // 1. Create main comprobante record
-      const comprobante = await this.repository.createComprobante(
+      const comprobante = await this.comprobanteRepository.create(
         {
           emisor_id: emisorId,
           punto_emision_id: puntoEmisionId,
@@ -379,7 +383,7 @@ export class EmitirFacturaUseCase {
           receptor_email: dto.comprador.email,
           receptor_telefono: dto.comprador.telefono,
         },
-        client,
+        tx,
       );
 
       this.logger.log(`Comprobante creado con ID: ${comprobante.id}`);
@@ -387,7 +391,7 @@ export class EmitirFacturaUseCase {
       // 2. Create detalles and their impuestos
       for (let i = 0; i < factura.detalles.length; i++) {
         const det = factura.detalles[i];
-        const detalleRecords = await this.repository.createDetalles(
+        const detalleRecords = await this.comprobanteRepository.createDetalles(
           [
             {
               comprobante_id: comprobante.id!,
@@ -402,14 +406,14 @@ export class EmitirFacturaUseCase {
               orden: i,
             },
           ],
-          client,
+          tx,
         );
 
         const detalleId = detalleRecords[0].id!;
 
         // Create impuestos for this detalle
         if (det.impuestos && det.impuestos.length > 0) {
-          await this.repository.createImpuestos(
+          await this.comprobanteRepository.createImpuestos(
             det.impuestos.map((imp) => ({
               comprobante_detalle_id: detalleId,
               codigo: imp.codigo,
@@ -418,26 +422,26 @@ export class EmitirFacturaUseCase {
               base_imponible: imp.baseImponible,
               valor: imp.valor,
             })),
-            client,
+            tx,
           );
         }
 
         // Create detalles adicionales
         if (det.detallesAdicionales && det.detallesAdicionales.length > 0) {
-          await this.repository.createDetallesAdicionales(
+          await this.comprobanteRepository.createDetallesAdicionales(
             det.detallesAdicionales.map((da) => ({
               comprobante_detalle_id: detalleId,
               nombre: da.nombre,
               valor: da.valor,
             })),
-            client,
+            tx,
           );
         }
       }
 
       // 3. Create totales (totalConImpuestos)
       if (factura.infoFactura.totalConImpuestos) {
-        await this.repository.createTotales(
+        await this.comprobanteRepository.createTotales(
           factura.infoFactura.totalConImpuestos.map((tot) => ({
             comprobante_id: comprobante.id!,
             codigo: tot.codigo,
@@ -448,13 +452,13 @@ export class EmitirFacturaUseCase {
             valor: tot.valor,
             valor_devolucion_iva: tot.valorDevolucionIva,
           })),
-          client,
+          tx,
         );
       }
 
       // 4. Create pagos
       if (factura.infoFactura.pagos) {
-        await this.repository.createPagos(
+        await this.comprobanteRepository.createPagos(
           factura.infoFactura.pagos.map((pago) => ({
             comprobante_id: comprobante.id!,
             forma_pago: pago.formaPago,
@@ -462,7 +466,7 @@ export class EmitirFacturaUseCase {
             plazo: pago.plazo,
             unidad_tiempo: pago.unidadTiempo,
           })),
-          client,
+          tx,
         );
       }
 
@@ -480,24 +484,24 @@ export class EmitirFacturaUseCase {
         xmlFirmado, // firmado - always save for retry
         resultado.xmlAutorizado, // autorizado - only if success
       );
-      await this.repository.saveXml(
+      await this.comprobanteRepository.saveXml(
         {
           comprobante_id: comprobante.id!,
           xml_firmado_path: xmlPaths.firmadoKey,
           xml_autorizado_path: xmlPaths.autorizadoKey,
         },
-        client,
+        tx,
       );
 
       // 6. Create info adicional
       if (dto.infoAdicional && dto.infoAdicional.length > 0) {
-        await this.repository.createInfoAdicional(
+        await this.comprobanteRepository.createInfoAdicional(
           dto.infoAdicional.map((info) => ({
             comprobante_id: comprobante.id!,
             nombre: info.nombre,
             valor: info.valor,
           })),
-          client,
+          tx,
         );
       }
 
