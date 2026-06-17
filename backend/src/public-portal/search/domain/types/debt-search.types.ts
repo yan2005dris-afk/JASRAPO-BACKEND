@@ -1,8 +1,10 @@
-import type { IPrefacturaParaCalculo } from 'src/infrastructure/common/utils/debt-calculator.util';
-
-export type { IPrefacturaParaCalculo };
-
 export type TipoBusquedaDeuda = 'identificacion' | 'nombre' | 'numeroGuia';
+
+export interface IPrefacturaParaCalculo {
+  totalPagar: number | { toNumber?: () => number };
+  abono: number | { toNumber?: () => number };
+  periodoId: number;
+}
 
 export interface IContratoConDeudaRaw {
   contratoId: bigint;
