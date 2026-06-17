@@ -100,7 +100,8 @@ export class WebhooksService {
         url: dto.url !== undefined ? dto.url : undefined,
         eventos: dto.eventos !== undefined ? dto.eventos : undefined,
         activo: dto.activo !== undefined ? dto.activo : undefined,
-        reintentosMax: dto.reintentosMax !== undefined ? dto.reintentosMax : undefined,
+        reintentosMax:
+          dto.reintentosMax !== undefined ? dto.reintentosMax : undefined,
       },
     });
 
@@ -240,9 +241,7 @@ export class WebhooksService {
     };
   }
 
-  private mapToSecretResponse(
-    row: any,
-  ): WebhookSecretResponseDto {
+  private mapToSecretResponse(row: any): WebhookSecretResponseDto {
     return {
       ...this.mapToResponse(row),
       secreto: row.secreto,
