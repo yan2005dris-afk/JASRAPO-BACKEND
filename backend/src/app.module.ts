@@ -17,6 +17,7 @@ import { RawPgModule } from './infrastructure/database/raw-pg/raw-pg.module';
 import { AuditModule } from './infrastructure/audit/audit.module';
 import { PdfModule } from './infrastructure/pdf/pdf.module';
 import { ReportsModule } from './reports/reports.module';
+import { StorageProxyModule } from './infrastructure/storage-proxy/storage-proxy.module';
 
 @Module({
   imports: [
@@ -60,6 +61,7 @@ import { ReportsModule } from './reports/reports.module';
     MailModule,
     PdfModule,
     ReportsModule,
+    StorageProxyModule,
   ],
   controllers: [],
   providers: [],
