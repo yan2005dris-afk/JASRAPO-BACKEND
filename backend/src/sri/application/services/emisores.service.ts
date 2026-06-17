@@ -264,10 +264,10 @@ export class EmisoresService {
 
     // 2. Limpiar metadata en BD
     const emisor = await this.repository.update(emisorActual.id, {
-      certificado_nombre: undefined,
-      certificado_password_encrypted: undefined,
-      certificado_valido_hasta: undefined,
-      certificado_sujeto: undefined,
+      certificado_nombre: null,
+      certificado_password_encrypted: null,
+      certificado_valido_hasta: null,
+      certificado_sujeto: null,
     });
 
     // 3. Limpiar cache de firma para este emisor

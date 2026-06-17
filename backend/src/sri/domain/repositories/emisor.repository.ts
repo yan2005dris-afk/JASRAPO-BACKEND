@@ -14,8 +14,17 @@ export type UpdateEmisorInput = Partial<
     | 'ruc'
     | 'certificado_p12'
     | 'certificado_password'
+    | 'certificado_nombre'
+    | 'certificado_password_encrypted'
+    | 'certificado_valido_hasta'
+    | 'certificado_sujeto'
   >
->;
+> & {
+  certificado_nombre?: string | null;
+  certificado_password_encrypted?: string | null;
+  certificado_valido_hasta?: Date | null;
+  certificado_sujeto?: string | null;
+};
 
 export abstract class EmisorRepository {
   abstract findAll(): Promise<EmisorRecord[]>;

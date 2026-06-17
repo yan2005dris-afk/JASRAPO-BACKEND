@@ -86,7 +86,6 @@ export class PrismaEmisorRepository extends EmisorRepository {
     const empresa = await this.prisma.empresa.update({
       where: { id },
       data: {
-        ruc: data.ruc,
         razonSocial: data.razon_social,
         nombreComercial: data.nombre_comercial,
         direccionMatriz: data.direccion_matriz,
