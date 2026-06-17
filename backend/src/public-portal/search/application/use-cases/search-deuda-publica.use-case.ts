@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { BusquedaPublicaRepository } from '../../domain/repositories/busqueda-publica.repository';
-import { DebtCalculatorHelper } from 'src/billing/shared/debt-calculator.helper';
+import { DebtCalculatorHelper } from 'src/infrastructure/common/utils/debt-calculator.util';
 import type { TipoBusquedaDeuda } from '../../domain/types/debt-search.types';
 import type {
   ContratoDeudaPublicaDto,
@@ -18,13 +18,20 @@ export class SearchDeudaPublicaUseCase {
     page = 1,
     limit = 10,
   ): Promise<DeudaPublicaResponseDto> {
-    const safeLimit = Math.min(limit, 50);
-    const safePage = Math.max(page, 1);
+    const normalizedValor = valor?.trim();
+    if (!normalizedValor) {
+      throw new BadRequestException('El valor de búsqueda es obligatorio');
+    }
+
+    const parsedLimit = Number.isFinite(limit) ? Math.trunc(limit) : 10;
+    const parsedPage = Number.isFinite(page) ? Math.trunc(page) : 1;
+    const safeLimit = Math.min(Math.max(parsedLimit, 1), 50);
+    const safePage = Math.max(parsedPage, 1);
     const skip = (safePage - 1) * safeLimit;
 
     const [contratos, total] = await Promise.all([
-      this.searchRepository.findContratosDeudaBy(tipo, valor, skip, safeLimit),
-      this.searchRepository.countContratosDeuda(tipo, valor),
+      this.searchRepository.findContratosDeudaBy(tipo, normalizedValor, skip, safeLimit),
+      this.searchRepository.countContratosDeuda(tipo, normalizedValor),
     ]);
 
     const agrupado = this.agruparPorCliente(contratos);
