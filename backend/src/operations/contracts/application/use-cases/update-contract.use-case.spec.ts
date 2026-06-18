@@ -6,7 +6,6 @@ import { ContractRepository } from '../../domain/repositories/contract.repositor
 
 describe('UpdateContractUseCase', () => {
   let useCase: UpdateContractUseCase;
-  let mockTx: any;
 
   const mockContractRepository = {
     findUnique: jest.fn(),
@@ -14,24 +13,10 @@ describe('UpdateContractUseCase', () => {
     count: jest.fn(),
     update: jest.fn(),
     create: jest.fn(),
-    executeTransaction: jest.fn(),
+    replaceMeterInContract: jest.fn(),
   };
 
   beforeEach(async () => {
-    mockTx = {
-      contratos: { update: jest.fn() },
-      medidores: { findUnique: jest.fn() },
-      historialMedidores: {
-        create: jest.fn(),
-        updateMany: jest.fn(),
-        findFirst: jest.fn(),
-      },
-    };
-
-    mockContractRepository.executeTransaction.mockImplementation((cb: any) =>
-      cb(mockTx),
-    );
-
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UpdateContractUseCase,
@@ -57,7 +42,6 @@ describe('UpdateContractUseCase', () => {
     const id = BigInt(1);
     const updateDto = { estado: 'ACTIVO' };
 
-    // First call for existence check, second for return value after update
     mockContractRepository.findUnique
       .mockResolvedValueOnce({ contratoId: id, deletedAt: null })
       .mockResolvedValueOnce({
@@ -87,54 +71,47 @@ describe('UpdateContractUseCase', () => {
       contratoId: id,
       deletedAt: null,
     });
-    mockTx.medidores.findUnique.mockResolvedValue({ medidorId: BigInt(2) });
-    mockTx.historialMedidores.updateMany.mockResolvedValue({ count: 1 });
-    mockTx.historialMedidores.create.mockResolvedValue({});
-    mockContractRepository.findUnique.mockResolvedValue({
+    mockContractRepository.replaceMeterInContract.mockResolvedValue({
       contratoId: id,
       estado: 'SOLICITUD',
-    });
+    } as any);
 
     const result = await useCase.execute(id, updateDto);
 
-    expect(mockTx.historialMedidores.updateMany).toHaveBeenCalledWith({
-      where: { contratoId: id, fechaHasta: null },
-      data: { fechaHasta: expect.any(Date) },
-    });
-    expect(mockTx.historialMedidores.create).toHaveBeenCalledWith({
-      data: expect.objectContaining({
-        medidorId: BigInt(2),
-        contratoId: id,
-        motivo: 'REEMPLAZO',
-      }),
-    });
+    expect(mockContractRepository.replaceMeterInContract).toHaveBeenCalledWith(
+      id,
+      BigInt(2),
+      150,
+      undefined,
+    );
     expect(result).toBeDefined();
   });
 
-  it('should replace meter when no active link exists (S2.3)', async () => {
+  it('should replace meter with contract field updates (S2.3)', async () => {
     const id = BigInt(1);
-    const updateDto = { medidorId: '3' };
+    const updateDto = {
+      medidorId: '3',
+      estado: 'ACTIVO',
+      direccionSuministro: 'Nueva Dir',
+    };
 
     mockContractRepository.findUnique.mockResolvedValue({
       contratoId: id,
       deletedAt: null,
     });
-    mockTx.medidores.findUnique.mockResolvedValue({ medidorId: BigInt(3) });
-    mockTx.historialMedidores.updateMany.mockResolvedValue({ count: 0 });
-    mockTx.historialMedidores.create.mockResolvedValue({});
-    mockContractRepository.findUnique.mockResolvedValue({
+    mockContractRepository.replaceMeterInContract.mockResolvedValue({
       contratoId: id,
-    });
+      estado: 'ACTIVO',
+    } as any);
 
     const result = await useCase.execute(id, updateDto);
 
-    // updateMany should still be called even if no active link (harmless)
-    expect(mockTx.historialMedidores.updateMany).toHaveBeenCalledWith({
-      where: { contratoId: id, fechaHasta: null },
-      data: { fechaHasta: expect.any(Date) },
-    });
-    // New link should be created regardless
-    expect(mockTx.historialMedidores.create).toHaveBeenCalled();
+    expect(mockContractRepository.replaceMeterInContract).toHaveBeenCalledWith(
+      id,
+      BigInt(3),
+      0,
+      { estado: 'ACTIVO', direccionSuministro: 'Nueva Dir' },
+    );
     expect(result).toBeDefined();
   });
 
@@ -167,7 +144,9 @@ describe('UpdateContractUseCase', () => {
       contratoId: id,
       deletedAt: null,
     });
-    mockTx.medidores.findUnique.mockResolvedValue(null);
+    mockContractRepository.replaceMeterInContract.mockRejectedValue(
+      new NotFoundException(`Medidor con ID 999 no encontrado`),
+    );
 
     await expect(useCase.execute(id, updateDto)).rejects.toThrow(
       NotFoundException,

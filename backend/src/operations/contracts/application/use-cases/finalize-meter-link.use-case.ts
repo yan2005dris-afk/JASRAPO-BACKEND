@@ -15,33 +15,6 @@ export class FinalizeMeterLinkUseCase {
       );
     }
 
-    return this.contractRepository.executeTransaction(async (tx) => {
-      const activeLink = await tx.historialMedidores.findFirst({
-        where: { contratoId, fechaHasta: null },
-      });
-
-      if (!activeLink) {
-        throw new NotFoundException(
-          'No hay un vínculo activo para este contrato',
-        );
-      }
-
-      await tx.historialMedidores.update({
-        where: { historialId: activeLink.historialId },
-        data: { fechaHasta: new Date() },
-      });
-
-      const medidor = await tx.medidores.findUnique({
-        where: { medidorId: activeLink.medidorId },
-      });
-
-      if (!medidor) {
-        throw new NotFoundException(
-          `Medidor con ID ${activeLink.medidorId} no encontrado`,
-        );
-      }
-
-      return medidor;
-    });
+    return this.contractRepository.finalizeActiveMeterLink(contratoId);
   }
 }
