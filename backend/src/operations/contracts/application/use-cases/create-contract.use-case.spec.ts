@@ -22,6 +22,8 @@ describe('CreateContractUseCase', () => {
       clientes: { findUnique: jest.fn() },
       medidores: { findUnique: jest.fn() },
       categoriaTarifa: { findUnique: jest.fn() },
+      comunidades: { findUnique: jest.fn() },
+      sectores: { findUnique: jest.fn() },
       contratos: {
         create: jest.fn(),
         update: jest.fn(),
@@ -73,6 +75,7 @@ describe('CreateContractUseCase', () => {
     mockTx.categoriaTarifa.findUnique.mockResolvedValue({
       categoriaTarifaId: 3,
     });
+    mockTx.comunidades.findUnique.mockResolvedValue({ comunidadId: 2 });
     mockTx.contratos.create.mockResolvedValue({ contratoId: BigInt(1) });
     mockTx.historialMedidores.create.mockResolvedValue({});
     mockContractRepository.findUnique.mockResolvedValue({
@@ -90,6 +93,9 @@ describe('CreateContractUseCase', () => {
     });
     expect(mockTx.categoriaTarifa.findUnique).toHaveBeenCalledWith({
       where: { categoriaTarifaId: 3 },
+    });
+    expect(mockTx.comunidades.findUnique).toHaveBeenCalledWith({
+      where: { comunidadId: 2 },
     });
     expect(mockTx.contratos.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
@@ -129,6 +135,12 @@ describe('CreateContractUseCase', () => {
     mockTx.medidores.findUnique.mockResolvedValue({ medidorId: BigInt(300) });
     mockTx.categoriaTarifa.findUnique.mockResolvedValue({
       categoriaTarifaId: 5,
+    });
+    mockTx.comunidades.findUnique.mockResolvedValue({ comunidadId: 3 });
+    mockTx.sectores.findUnique.mockResolvedValue({
+      sectorId: 10,
+      codigo: 'SEC-A',
+      nombre: 'Sector A',
     });
     mockTx.contratos.create.mockResolvedValue({ contratoId: BigInt(2) });
     mockTx.historialMedidores.create.mockResolvedValue({});
@@ -172,6 +184,7 @@ describe('CreateContractUseCase', () => {
     };
 
     mockTx.clientes.findUnique.mockResolvedValue(null);
+    mockTx.comunidades.findUnique.mockResolvedValue({ comunidadId: 1 });
 
     await expect(useCase.execute(dto)).rejects.toThrow(NotFoundException);
   });
@@ -188,6 +201,7 @@ describe('CreateContractUseCase', () => {
 
     mockTx.clientes.findUnique.mockResolvedValue({ clienteId: BigInt(10) });
     mockTx.medidores.findUnique.mockResolvedValue(null);
+    mockTx.comunidades.findUnique.mockResolvedValue({ comunidadId: 1 });
 
     await expect(useCase.execute(dto)).rejects.toThrow(NotFoundException);
   });
@@ -205,6 +219,49 @@ describe('CreateContractUseCase', () => {
     mockTx.clientes.findUnique.mockResolvedValue({ clienteId: BigInt(10) });
     mockTx.medidores.findUnique.mockResolvedValue({ medidorId: BigInt(200) });
     mockTx.categoriaTarifa.findUnique.mockResolvedValue(null);
+    mockTx.comunidades.findUnique.mockResolvedValue({ comunidadId: 1 });
+
+    await expect(useCase.execute(dto)).rejects.toThrow(NotFoundException);
+  });
+
+  it('should throw NotFoundException when comunidad does not exist', async () => {
+    const dto = {
+      clienteId: '10',
+      categoriaTarifaId: '3',
+      medidorId: '200',
+      numeroGuia: 'GUIA-006',
+      direccionSuministro: 'Dir',
+      comunidadId: '999',
+    };
+
+    mockTx.clientes.findUnique.mockResolvedValue({ clienteId: BigInt(10) });
+    mockTx.medidores.findUnique.mockResolvedValue({ medidorId: BigInt(200) });
+    mockTx.categoriaTarifa.findUnique.mockResolvedValue({
+      categoriaTarifaId: 3,
+    });
+    mockTx.comunidades.findUnique.mockResolvedValue(null);
+
+    await expect(useCase.execute(dto)).rejects.toThrow(NotFoundException);
+  });
+
+  it('should throw NotFoundException when sector does not exist (S1.6)', async () => {
+    const dto = {
+      clienteId: '10',
+      categoriaTarifaId: '3',
+      medidorId: '200',
+      numeroGuia: 'GUIA-007',
+      direccionSuministro: 'Dir',
+      comunidadId: '1',
+      sectorId: '999',
+    };
+
+    mockTx.clientes.findUnique.mockResolvedValue({ clienteId: BigInt(10) });
+    mockTx.medidores.findUnique.mockResolvedValue({ medidorId: BigInt(200) });
+    mockTx.categoriaTarifa.findUnique.mockResolvedValue({
+      categoriaTarifaId: 3,
+    });
+    mockTx.comunidades.findUnique.mockResolvedValue({ comunidadId: 1 });
+    mockTx.sectores.findUnique.mockResolvedValue(null);
 
     await expect(useCase.execute(dto)).rejects.toThrow(NotFoundException);
   });

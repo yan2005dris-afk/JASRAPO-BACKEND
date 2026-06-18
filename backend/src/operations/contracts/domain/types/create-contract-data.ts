@@ -8,6 +8,4 @@ export interface CreateContractData {
   estado: string;
   creadoPor?: string | null;
   comunidadId: number;
-  medidorId?: bigint;
-  lecturaInicial?: number;
 }

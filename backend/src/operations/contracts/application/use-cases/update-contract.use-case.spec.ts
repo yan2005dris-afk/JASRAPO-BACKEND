@@ -1,6 +1,6 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { UpdateContractUseCase } from './update-contract.use-case';
 import { ContractRepository } from '../../domain/repositories/contract.repository';
 
@@ -171,6 +171,20 @@ describe('UpdateContractUseCase', () => {
 
     await expect(useCase.execute(id, updateDto)).rejects.toThrow(
       NotFoundException,
+    );
+  });
+
+  it('should throw BadRequestException when updateData is empty (S2.7)', async () => {
+    const id = BigInt(1);
+    const updateDto = {};
+
+    mockContractRepository.findUnique.mockResolvedValueOnce({
+      contratoId: id,
+      deletedAt: null,
+    });
+
+    await expect(useCase.execute(id, updateDto)).rejects.toThrow(
+      BadRequestException,
     );
   });
 });

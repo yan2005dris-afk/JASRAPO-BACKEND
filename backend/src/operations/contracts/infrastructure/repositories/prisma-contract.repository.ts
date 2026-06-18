@@ -21,9 +21,8 @@ export class PrismaContractRepository implements ContractRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(data: CreateContractData): Promise<ContractEntity> {
-    const { medidorId, lecturaInicial, ...contractFields } = data;
     const record = await this.prisma.contratos.create({
-      data: contractFields as Prisma.ContratosUncheckedCreateInput,
+      data: data as Prisma.ContratosUncheckedCreateInput,
       include: this.defaultInclude,
     });
     return ContractMapper.toDomain(record)!;
