@@ -101,7 +101,11 @@ export class PrismaContractRepository implements ContractRepository {
         },
       });
 
-      return this.findUnique({ contratoId: contrato.contratoId }) as Promise<ContractEntity>;
+      const createdRecord = await tx.contratos.findUnique({
+        where: { contratoId: contrato.contratoId },
+        include: this.defaultInclude,
+      });
+      return ContractMapper.toDomain(createdRecord)!;
     });
   }
 
@@ -142,7 +146,11 @@ export class PrismaContractRepository implements ContractRepository {
         });
       }
 
-      return this.findUnique({ contratoId: contractId }) as Promise<ContractEntity>;
+      const updatedRecord = await tx.contratos.findUnique({
+        where: { contratoId: contractId },
+        include: this.defaultInclude,
+      });
+      return ContractMapper.toDomain(updatedRecord)!;
     });
   }
 
@@ -173,7 +181,11 @@ export class PrismaContractRepository implements ContractRepository {
         );
       }
 
-      return this.findUnique({ contratoId }) as Promise<ContractEntity>;
+      const finalizedRecord = await tx.contratos.findUnique({
+        where: { contratoId },
+        include: this.defaultInclude,
+      });
+      return ContractMapper.toDomain(finalizedRecord)!;
     });
   }
 
@@ -183,51 +195,46 @@ export class PrismaContractRepository implements ContractRepository {
     tx: Prisma.TransactionClient,
     data: CreateContractWithMeterCommand,
   ): Promise<void> {
-    const cliente = await tx.clientes.findUnique({
-      where: { clienteId: data.clienteId },
-    });
+    const [cliente, medidor, tarifa, comunidad, sector] = await Promise.all([
+      tx.clientes.findUnique({ where: { clienteId: data.clienteId } }),
+      tx.medidores.findUnique({ where: { medidorId: data.medidorId } }),
+      tx.categoriaTarifa.findUnique({
+        where: { categoriaTarifaId: data.categoriaTarifaId },
+      }),
+      tx.comunidades.findUnique({ where: { comunidadId: data.comunidadId } }),
+      data.sectorId !== null
+        ? tx.sectores.findUnique({ where: { sectorId: data.sectorId } })
+        : Promise.resolve(null),
+    ]);
+
     if (!cliente) {
       throw new NotFoundException(
         `Cliente con ID ${data.clienteId} no encontrado`,
       );
     }
 
-    const medidor = await tx.medidores.findUnique({
-      where: { medidorId: data.medidorId },
-    });
     if (!medidor) {
       throw new NotFoundException(
         `Medidor con ID ${data.medidorId} no encontrado`,
       );
     }
 
-    const tarifa = await tx.categoriaTarifa.findUnique({
-      where: { categoriaTarifaId: data.categoriaTarifaId },
-    });
     if (!tarifa) {
       throw new NotFoundException(
         `Categoría de tarifa con ID ${data.categoriaTarifaId} no encontrada`,
       );
     }
 
-    const comunidad = await tx.comunidades.findUnique({
-      where: { comunidadId: data.comunidadId },
-    });
     if (!comunidad) {
       throw new NotFoundException(
         `Comunidad con ID ${data.comunidadId} no encontrada`,
       );
     }
 
-    if (data.sectorId !== null) {
-      const sector = await tx.sectores.findUnique({
-        where: { sectorId: data.sectorId },
-      });
-      if (!sector) {
-        throw new NotFoundException(
-          `Sector con ID ${data.sectorId} no encontrado`,
-        );
-      }
+    if (data.sectorId !== null && !sector) {
+      throw new NotFoundException(
+        `Sector con ID ${data.sectorId} no encontrado`,
+      );
     }
   }
 }

@@ -55,10 +55,10 @@ describe('FinalizeMeterLinkUseCase', () => {
     expect(mockContractRepository.findUnique).toHaveBeenCalledWith({
       contratoId,
     });
-    expect(
-      mockContractRepository.finalizeActiveMeterLink,
-    ).toHaveBeenCalledWith(contratoId);
-    expect(result).toBeDefined();
+    expect(mockContractRepository.finalizeActiveMeterLink).toHaveBeenCalledWith(
+      contratoId,
+    );
+    expect(result).toMatchObject({ contratoId, estado: 'ACTIVO' });
   });
 
   it('should throw NotFoundException when no active link exists (S3.2)', async () => {
@@ -108,9 +108,7 @@ describe('FinalizeMeterLinkUseCase', () => {
       deletedAt: null,
     });
     mockContractRepository.finalizeActiveMeterLink.mockRejectedValue(
-      new NotFoundException(
-        `Medidor con ID 999 no encontrado`,
-      ),
+      new NotFoundException(`Medidor con ID 999 no encontrado`),
     );
 
     await expect(useCase.execute(contratoId)).rejects.toThrow(

@@ -24,14 +24,7 @@ export class UpdateContractUseCase {
     if (updateDto.medidorId) {
       const medidorId = BigInt(updateDto.medidorId);
       const lecturaInicial = updateDto.lecturaInicial ?? 0;
-
-      const contractFields: Record<string, any> = {};
-      if (updateDto.estado !== undefined)
-        contractFields.estado = updateDto.estado;
-      if (updateDto.direccionSuministro !== undefined)
-        contractFields.direccionSuministro = updateDto.direccionSuministro;
-      if (updateDto.sectorId !== undefined)
-        contractFields.sectorId = Number(updateDto.sectorId);
+      const contractFields = this.extractFields(updateDto);
 
       return this.contractRepository.replaceMeterInContract(
         id,
@@ -42,12 +35,7 @@ export class UpdateContractUseCase {
     }
 
     // Only update contract fields (no meter replacement)
-    const updateData: Record<string, any> = {};
-    if (updateDto.estado !== undefined) updateData.estado = updateDto.estado;
-    if (updateDto.direccionSuministro !== undefined)
-      updateData.direccionSuministro = updateDto.direccionSuministro;
-    if (updateDto.sectorId !== undefined)
-      updateData.sectorId = Number(updateDto.sectorId);
+    const updateData = this.extractFields(updateDto);
 
     if (Object.keys(updateData).length === 0) {
       throw new BadRequestException(
@@ -58,5 +46,17 @@ export class UpdateContractUseCase {
     await this.contractRepository.update({ contratoId: id }, updateData);
 
     return this.contractRepository.findUnique({ contratoId: id });
+  }
+
+  private extractFields(
+    dto: ActualizarContratoMedidorDto,
+  ): Record<string, any> {
+    const fields: Record<string, any> = {};
+    if (dto.estado !== undefined) fields.estado = dto.estado;
+    if (dto.direccionSuministro !== undefined)
+      fields.direccionSuministro = dto.direccionSuministro;
+    if (dto.sectorId !== undefined)
+      fields.sectorId = Number(dto.sectorId);
+    return fields;
   }
 }

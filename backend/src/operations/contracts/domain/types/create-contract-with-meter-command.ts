@@ -6,7 +6,17 @@ export interface CreateContractWithMeterCommand {
   sectorId: number | null;
   numeroGuia: string;
   direccionSuministro: string;
-  estado: string;
+  estado:
+    | 'ACTIVO'
+    | 'SOLICITUD'
+    | 'PENDIENTE_PAGO'
+    | 'PENDIENTE_INSTALACION'
+    | 'EN_MORA'
+    | 'ORDEN_CORTE'
+    | 'SUSPENDIDO'
+    | 'EN_CONVENIO'
+    | 'RETIRADO'
+    | 'RECONEXION';
   creadoPor?: string;
   lecturaInicial: number;
 }

@@ -126,9 +126,7 @@ describe('CreateContractUseCase', () => {
     };
 
     mockContractRepository.createContractWithMeterHistory.mockRejectedValue(
-      new NotFoundException(
-        `Cliente con ID ${dto.clienteId} no encontrado`,
-      ),
+      new NotFoundException(`Cliente con ID ${dto.clienteId} no encontrado`),
     );
 
     await expect(useCase.execute(dto)).rejects.toThrow(NotFoundException);
@@ -145,9 +143,7 @@ describe('CreateContractUseCase', () => {
     };
 
     mockContractRepository.createContractWithMeterHistory.mockRejectedValue(
-      new NotFoundException(
-        `Medidor con ID ${dto.medidorId} no encontrado`,
-      ),
+      new NotFoundException(`Medidor con ID ${dto.medidorId} no encontrado`),
     );
 
     await expect(useCase.execute(dto)).rejects.toThrow(NotFoundException);
@@ -203,9 +199,7 @@ describe('CreateContractUseCase', () => {
     };
 
     mockContractRepository.createContractWithMeterHistory.mockRejectedValue(
-      new NotFoundException(
-        `Sector con ID ${dto.sectorId} no encontrado`,
-      ),
+      new NotFoundException(`Sector con ID ${dto.sectorId} no encontrado`),
     );
 
     await expect(useCase.execute(dto)).rejects.toThrow(NotFoundException);
