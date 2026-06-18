@@ -1,7 +1,6 @@
 model Contratos {
   contratoId          BigInt               @id @default(autoincrement()) @map("contrato_id")
   clienteId           BigInt               @map("cliente_id")
-  cargoInicialDiferido  Boolean            @default(true) @map("cargo_inicial_diferido")
   sectorId            Int?                 @map("sector_id")
   categoriaTarifaId   Int                  @map("categoria_tarifa_id")
   numeroGuia          String               @unique @map("numero_guia")

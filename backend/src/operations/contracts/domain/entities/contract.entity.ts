@@ -1,7 +1,6 @@
 export class ContractEntity {
   contratoId: bigint;
   clienteId: bigint;
-  cargoInicialDiferido: boolean;
   sectorId: number | null;
   categoriaTarifaId: number;
   numeroGuia: string;
