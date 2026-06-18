@@ -32,9 +32,17 @@ import { XmlBuilderService } from './infrastructure/xml/xml-builder.service';
 import { XmlSignerService } from './infrastructure/xml/xml-signer.service';
 import { SriSoapClient } from './infrastructure/soap/sri-soap.client';
 import { SriSoapFactoryService } from './infrastructure/soap/sri-soap-factory.service';
-import { SriRepositoryService } from './infrastructure/persistence/sri-repository.service';
 import { XmlStorageService } from './infrastructure/storage/xml-storage.service';
 import { ImageService } from './infrastructure/storage/image.service';
+
+// Repositories
+import { ComprobanteRepository } from './domain/repositories/comprobante.repository';
+import { EmisorRepository } from './domain/repositories/emisor.repository';
+import { SecuencialRepository } from './domain/repositories/secuencial.repository';
+import { PrismaComprobanteRepository } from './infrastructure/persistence/prisma-comprobante.repository';
+import { PrismaEmisorRepository } from './infrastructure/persistence/prisma-emisor.repository';
+import { PrismaSecuencialRepository } from './infrastructure/persistence/prisma-secuencial.repository';
+
 import { PdfImageService } from './infrastructure/storage/pdf-image.service';
 import { PdfService } from './infrastructure/storage/pdf.service';
 import { TemplateService } from './infrastructure/storage/template.service';
@@ -73,7 +81,18 @@ import { WebhookProcessor } from './infrastructure/queue/processors/webhook.proc
     XmlSignerService,
     SriSoapClient,
     SriSoapFactoryService,
-    SriRepositoryService,
+    {
+      provide: ComprobanteRepository,
+      useClass: PrismaComprobanteRepository,
+    },
+    {
+      provide: EmisorRepository,
+      useClass: PrismaEmisorRepository,
+    },
+    {
+      provide: SecuencialRepository,
+      useClass: PrismaSecuencialRepository,
+    },
     XmlStorageService,
     ImageService,
     PdfImageService,
@@ -101,7 +120,9 @@ import { WebhookProcessor } from './infrastructure/queue/processors/webhook.proc
     XmlSignerService,
     SriSoapClient,
     SriSoapFactoryService,
-    SriRepositoryService,
+    ComprobanteRepository,
+    EmisorRepository,
+    SecuencialRepository,
     XmlStorageService,
     ImageService,
     PdfImageService,

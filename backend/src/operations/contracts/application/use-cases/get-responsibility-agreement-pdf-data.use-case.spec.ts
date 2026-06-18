@@ -43,7 +43,6 @@ describe('GetResponsibilityAgreementPdfDataUseCase', () => {
     findMany: jest.fn(),
     count: jest.fn(),
     update: jest.fn(),
-    executeTransaction: jest.fn(),
   };
 
   beforeEach(async () => {

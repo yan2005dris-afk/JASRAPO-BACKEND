@@ -39,9 +39,14 @@ export class ContratoMedidorController {
 
   @ApiOperation({
     summary: 'Crear contrato',
-    description: 'Registra un nuevo contrato con medidor',
+    description:
+      'Crea un nuevo contrato con medidor en una transacción. Requiere clienteId, categoriaTarifaId, medidorId, numeroGuia, direccionSuministro, comunidadId obligatorios.',
   })
-  @ApiBody({ type: CrearContratoMedidorDto, description: 'Datos del contrato' })
+  @ApiBody({
+    type: CrearContratoMedidorDto,
+    description:
+      'Datos del contrato (clienteId, medidorId, categoriaTarifaId, numeroGuia, direccionSuministro, comunidadId obligatorios)',
+  })
   @ApiResponse({ status: 201, description: 'Contrato creado' })
   @ApiResponse({ status: 400, description: 'Datos inválidos' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
@@ -108,7 +113,8 @@ export class ContratoMedidorController {
 
   @ApiOperation({
     summary: 'Actualizar contrato',
-    description: 'Actualiza un contrato',
+    description:
+      'Actualiza campos del contrato (estado, direccionSuministro, sectorId). Si se envía medidorId, reemplaza el medidor en una transacción.',
   })
   @ApiParam({
     name: 'id',
@@ -118,7 +124,8 @@ export class ContratoMedidorController {
   })
   @ApiBody({
     type: ActualizarContratoMedidorDto,
-    description: 'Datos a actualizar',
+    description:
+      'Campos a actualizar (estado, direccionSuministro, sectorId, medidorId opcional para reemplazo)',
   })
   @ApiResponse({ status: 200, description: 'Contrato actualizado' })
   @ApiResponse({ status: 400, description: 'Datos inválidos' })
@@ -136,7 +143,8 @@ export class ContratoMedidorController {
 
   @ApiOperation({
     summary: 'Finalizar vínculo',
-    description: 'Finaliza el vínculo entre contrato y medidor',
+    description:
+      'Finaliza el vínculo activo entre contrato y medidor. Busca por ID de contrato.',
   })
   @ApiParam({
     name: 'id',

@@ -47,6 +47,15 @@ const PERMISSION_MAP: MenuPermissionMapping[] = [
     ],
   },
   {
+    menuNombre: 'Categoría Tarifa',
+    permisos: [
+      { recurso: 'tarifas', accion: 'read' },
+      { recurso: 'tarifas', accion: 'create' },
+      { recurso: 'tarifas', accion: 'update' },
+      { recurso: 'tarifas', accion: 'delete' },
+    ],
+  },
+  {
     menuNombre: 'Punto de Recaudación',
     permisos: [
       { recurso: 'recaudacion', accion: 'read' },

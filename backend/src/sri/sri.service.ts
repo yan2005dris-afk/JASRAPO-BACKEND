@@ -8,7 +8,7 @@ import { EmitirFacturaUseCase } from './application/use-cases/emitir-factura.use
 import { EmitirNotaCreditoUseCase } from './application/use-cases/emitir-nota-credito.use-case';
 import { EmitirNotaDebitoUseCase } from './application/use-cases/emitir-nota-debito.use-case';
 import { EmitirRetencionUseCase } from './application/use-cases/emitir-retencion.use-case';
-import { SriRepositoryService } from './infrastructure/persistence/sri-repository.service';
+import { ComprobanteRepository } from './domain/repositories/comprobante.repository';
 import { SriSoapClient } from './infrastructure/soap/sri-soap.client';
 import { XmlBuilderService } from './infrastructure/xml/xml-builder.service';
 import { XmlStorageService } from './infrastructure/storage/xml-storage.service';
@@ -31,7 +31,7 @@ export class SriService {
 
   constructor(
     private readonly sriSoapClient: SriSoapClient,
-    private readonly repository: SriRepositoryService,
+    private readonly repository: ComprobanteRepository,
     private readonly xmlStorage: XmlStorageService,
     private readonly emitirFacturaUseCase: EmitirFacturaUseCase,
     private readonly emitirNotaCreditoUseCase: EmitirNotaCreditoUseCase,
@@ -278,14 +278,16 @@ export class SriService {
     const limit = filters.limit || 20;
     const offset = filters.offset;
 
-    const result = await this.repository.findComprobantes({
+    const result = await this.repository.findMany({
       ...filters,
+      emisorIds: filters.emisorIds?.map((id) => parseInt(id, 10)),
       page: offset !== undefined ? Math.floor(offset / limit) + 1 : page,
       limit,
     });
 
     const data = result.data.map((c) => ({
-      id: c.id,
+      id: c.id.toString(),
+      uuid: c.uuid,
       emisorId: c.emisor_id,
       claveAcceso: c.clave_acceso,
       tipoComprobante: c.tipo_comprobante,
@@ -327,8 +329,7 @@ export class SriService {
    */
 
   async obtenerComprobante(claveAcceso: string): Promise<any> {
-    const comprobante =
-      await this.repository.findComprobanteConDetalles(claveAcceso);
+    const comprobante = await this.repository.findConDetalles(claveAcceso);
     if (!comprobante) {
       return null;
     }
@@ -381,8 +382,7 @@ export class SriService {
    * Obtiene el XML autorizado de un comprobante
    */
   async obtenerXmlAutorizado(claveAcceso: string): Promise<string | null> {
-    const comprobante =
-      await this.repository.findComprobanteByClaveAcceso(claveAcceso);
+    const comprobante = await this.repository.findByClaveAcceso(claveAcceso);
     if (!comprobante || !comprobante.id) {
       return null;
     }
@@ -401,8 +401,7 @@ export class SriService {
   async anularComprobante(
     claveAcceso: string,
   ): Promise<{ message: string; claveAcceso: string; estadoAnterior: string }> {
-    const comprobante =
-      await this.repository.findComprobanteByClaveAcceso(claveAcceso);
+    const comprobante = await this.repository.findByClaveAcceso(claveAcceso);
 
     if (!comprobante) {
       throw new BadRequestException(`Comprobante ${claveAcceso} no encontrado`);
@@ -424,7 +423,7 @@ export class SriService {
     }
 
     // Actualizar estado a ANULADO
-    await this.repository.updateComprobante(comprobante.id as string, {
+    await this.repository.update(comprobante.uuid!, {
       estado: 'ANULADO',
       estado_sri: 'ANULADO',
     });
@@ -451,8 +450,7 @@ export class SriService {
     mensaje: string;
     errores?: string[];
   }> {
-    const comprobante =
-      await this.repository.findComprobanteByClaveAcceso(claveAcceso);
+    const comprobante = await this.repository.findByClaveAcceso(claveAcceso);
 
     if (!comprobante) {
       throw new BadRequestException(`Comprobante ${claveAcceso} no encontrado`);
@@ -509,7 +507,7 @@ export class SriService {
     const esAutorizado = resultado.success && resultado.estado === 'AUTORIZADO';
     const nuevoEstado = esAutorizado ? 'AUTORIZADO' : resultado.estado;
 
-    await this.repository.updateComprobante(comprobante.id as string, {
+    await this.repository.update(comprobante.uuid!, {
       estado: nuevoEstado,
       estado_sri: resultado.estado,
       fecha_autorizacion: resultado.fechaAutorizacion,
@@ -530,7 +528,7 @@ export class SriService {
         resultado.xmlAutorizado,
       );
       await this.repository.saveXml({
-        comprobante_id: comprobante.id as string,
+        comprobante_id: comprobante.id!,
         xml_autorizado_path: autorizadoPath,
       });
     }
@@ -576,7 +574,7 @@ export class SriService {
 
     // 1. Consultar estado en nuestra BD
     const comprobanteLocal =
-      await this.repository.findComprobanteByClaveAcceso(claveAcceso);
+      await this.repository.findByClaveAcceso(claveAcceso);
     const estadoLocal = comprobanteLocal?.estado;
 
     // 2. Consultar directamente al SRI
@@ -739,7 +737,7 @@ export class SriService {
             estadoSri = auth.estado || 'DESCONOCIDO';
 
             if (auth.estado === 'AUTORIZADO') {
-              await this.repository.updateComprobante(comp.id as string, {
+              await this.repository.update(comp.uuid, {
                 estado: 'AUTORIZADO',
                 estado_sri: 'AUTORIZADO',
                 fecha_autorizacion: auth.fechaAutorizacion,
@@ -757,7 +755,7 @@ export class SriService {
                   auth.comprobante,
                 );
                 await this.repository.saveXml({
-                  comprobante_id: comp.id as string,
+                  comprobante_id: BigInt(comp.id),
                   xml_autorizado_path: autorizadoPath,
                 });
               }
@@ -781,7 +779,7 @@ export class SriService {
               (auth.estado as string) === 'DEVUELTA' ||
               (auth.estado as string) === 'NO AUTORIZADO'
             ) {
-              await this.repository.updateComprobante(comp.id as string, {
+              await this.repository.update(comp.uuid, {
                 estado: auth.estado,
                 estado_sri: auth.estado,
               });

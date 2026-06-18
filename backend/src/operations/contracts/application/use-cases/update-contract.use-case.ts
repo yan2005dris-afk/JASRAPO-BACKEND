@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { ContractRepository } from '../../domain/repositories/contract.repository';
 import { ActualizarContratoMedidorDto } from '../../interfaces/dto/update-contrato-medidor.dto';
 
@@ -16,6 +20,42 @@ export class UpdateContractUseCase {
     if (!registro || registro.deletedAt) {
       throw new NotFoundException(`Contrato con ID ${id} no encontrado`);
     }
-    return this.contractRepository.update({ contratoId: id }, updateDto as any);
+
+    if (updateDto.medidorId) {
+      const medidorId = BigInt(updateDto.medidorId);
+      const lecturaInicial = updateDto.lecturaInicial ?? 0;
+      const contractFields = this.extractFields(updateDto);
+
+      return this.contractRepository.replaceMeterInContract(
+        id,
+        medidorId,
+        lecturaInicial,
+        Object.keys(contractFields).length > 0 ? contractFields : undefined,
+      );
+    }
+
+    // Only update contract fields (no meter replacement)
+    const updateData = this.extractFields(updateDto);
+
+    if (Object.keys(updateData).length === 0) {
+      throw new BadRequestException(
+        'No se proporcionaron campos para actualizar',
+      );
+    }
+
+    await this.contractRepository.update({ contratoId: id }, updateData);
+
+    return this.contractRepository.findUnique({ contratoId: id });
+  }
+
+  private extractFields(
+    dto: ActualizarContratoMedidorDto,
+  ): Record<string, any> {
+    const fields: Record<string, any> = {};
+    if (dto.estado !== undefined) fields.estado = dto.estado;
+    if (dto.direccionSuministro !== undefined)
+      fields.direccionSuministro = dto.direccionSuministro;
+    if (dto.sectorId !== undefined) fields.sectorId = Number(dto.sectorId);
+    return fields;
   }
 }

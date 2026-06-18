@@ -5,7 +5,9 @@ import { ClaveAccesoService } from '../../infrastructure/xml/clave-acceso.servic
 import { XmlBuilderService } from '../../infrastructure/xml/xml-builder.service';
 import { XmlSignerService } from '../../infrastructure/xml/xml-signer.service';
 import { SriSoapClient } from '../../infrastructure/soap/sri-soap.client';
-import { SriRepositoryService } from '../../infrastructure/persistence/sri-repository.service';
+import { ComprobanteRepository } from '../../domain/repositories/comprobante.repository';
+import { EmisorRepository } from '../../domain/repositories/emisor.repository';
+import { SecuencialRepository } from '../../domain/repositories/secuencial.repository';
 import { XmlStorageService } from '../../infrastructure/storage/xml-storage.service';
 import { SriBaseService } from '../../infrastructure/xml/sri-base.service';
 import {
@@ -31,7 +33,9 @@ export class EmitirNotaCreditoUseCase {
     private readonly xmlBuilderService: XmlBuilderService,
     private readonly xmlSignerService: XmlSignerService,
     private readonly sriSoapClient: SriSoapClient,
-    private readonly repository: SriRepositoryService,
+    private readonly comprobanteRepository: ComprobanteRepository,
+    private readonly emisorRepository: EmisorRepository,
+    private readonly secuencialRepository: SecuencialRepository,
     private readonly xmlStorage: XmlStorageService,
     private readonly base: SriBaseService,
     private readonly eventEmitter: EventEmitter2,
@@ -68,14 +72,24 @@ export class EmitirNotaCreditoUseCase {
       const tipoEmision = dto.tipoEmision || TipoEmision.NORMAL;
 
       // Get emisor info from database
-      const emisor = await this.repository.findEmisorByRuc(dto.emisor.ruc);
-      const puntoEmisionInfo = emisor
-        ? await this.repository.findPuntoEmision(
-            emisor.id,
-            dto.emisor.establecimiento,
-            dto.emisor.puntoEmision,
-          )
-        : null;
+      const emisor = await this.emisorRepository.findByRuc(dto.emisor.ruc);
+      if (!emisor) {
+        throw new BadRequestException(
+          `El emisor con RUC ${dto.emisor.ruc} no está registrado en el sistema`,
+        );
+      }
+
+      const puntoEmisionInfo = await this.emisorRepository.findPuntoEmision(
+        emisor.id,
+        dto.emisor.establecimiento,
+        dto.emisor.puntoEmision,
+      );
+
+      if (!puntoEmisionInfo) {
+        throw new BadRequestException(
+          `El punto de emisión ${dto.emisor.establecimiento}-${dto.emisor.puntoEmision} no está registrado para el emisor ${dto.emisor.ruc}`,
+        );
+      }
 
       // Handle secuencial - auto-generate if not provided
       let secuencial: string;
@@ -83,15 +97,11 @@ export class EmitirNotaCreditoUseCase {
         secuencial = dto.secuencial.padStart(9, '0');
         this.logger.log(`Usando secuencial NC proporcionado: ${secuencial}`);
       } else {
-        if (!puntoEmisionInfo) {
-          throw new BadRequestException(
-            'Para auto-generar secuencial NC, el emisor debe estar registrado en la base de datos',
+        const nextSecuencial =
+          await this.secuencialRepository.getNextSecuencial(
+            puntoEmisionInfo.punto_emision_id,
+            TipoComprobante.NOTA_CREDITO,
           );
-        }
-        const nextSecuencial = await this.repository.getNextSecuencial(
-          puntoEmisionInfo.punto_emision_id,
-          TipoComprobante.NOTA_CREDITO,
-        );
         secuencial = nextSecuencial;
         this.logger.log(`Secuencial NC auto-generado: ${secuencial}`);
       }
@@ -127,7 +137,10 @@ export class EmitirNotaCreditoUseCase {
       this.logger.log('XML de nota de crédito generado');
 
       // Verify emisor has certificate in database
-      if (!emisor || !emisor.certificado_p12) {
+      if (
+        !emisor.certificado_nombre ||
+        !emisor.certificado_password_encrypted
+      ) {
         throw new BadRequestException(
           `El emisor ${dto.emisor.ruc} no tiene certificado P12 configurado. ` +
             `Use el endpoint /certificates/upload-cert para subir el certificado.`,
@@ -143,30 +156,63 @@ export class EmitirNotaCreditoUseCase {
       );
       this.logger.log('XML de nota de crédito firmado con XAdES-BES');
 
+      // Validar firma antes de enviar
+      const esFirmaValida =
+        await this.xmlSignerService.verifySignature(xmlFirmado);
+      if (!esFirmaValida) {
+        throw new BadRequestException(
+          'La firma del XML generado no es válida. Verifique el certificado del emisor.',
+        );
+      }
+
+      // 1. Persistencia inicial en estado FIRMADO (antes de llamar al SRI)
+      const comprobante = await this.persistirNotaCredito(
+        dto,
+        notaCredito,
+        emisor.id,
+        puntoEmisionInfo.punto_emision_id,
+        claveAcceso,
+        secuencial,
+        ambiente,
+        tipoEmision,
+        xml,
+        xmlFirmado,
+        {
+          success: false,
+          estado: 'FIRMADO',
+          claveAcceso,
+          mensajes: [],
+        },
+      );
+
+      // 2. Llamada al SRI
       const resultado = await this.sriSoapClient.enviarYAutorizar(
         xmlFirmado,
         claveAcceso,
       );
 
-      // Persistir en base de datos
-      if (emisor && puntoEmisionInfo) {
-        await this.persistirNotaCredito(
-          dto,
-          notaCredito,
-          emisor.id,
-          puntoEmisionInfo.punto_emision_id,
+      // 3. Actualización de estado final en BD
+      await this.comprobanteRepository.update(comprobante.id, {
+        estado: resultado.success ? 'AUTORIZADO' : resultado.estado,
+        estado_sri: resultado.estado,
+        fecha_autorizacion: resultado.fechaAutorizacion,
+        numero_autorizacion: resultado.numeroAutorizacion || claveAcceso,
+      });
+
+      // 4. Si fue autorizado, guardar el XML autorizado
+      if (resultado.xmlAutorizado) {
+        const xmlPaths = await this.xmlStorage.saveAllXmls(
+          dto.emisor.ruc,
           claveAcceso,
-          secuencial,
-          ambiente,
-          tipoEmision,
-          xml,
-          xmlFirmado,
-          resultado,
+          fechaEmision,
+          undefined,
+          undefined,
+          resultado.xmlAutorizado,
         );
-      } else {
-        this.logger.warn(
-          'Emisor no encontrado en BD, nota de crédito no persistida',
-        );
+        await this.comprobanteRepository.saveXml({
+          comprobante_id: comprobante.id!,
+          xml_autorizado_path: xmlPaths.autorizadoKey,
+        });
       }
 
       return this.mapResultToNotaCreditoResponse(resultado);
@@ -184,8 +230,8 @@ export class EmitirNotaCreditoUseCase {
   private async persistirNotaCredito(
     dto: CreateNotaCreditoDto,
     notaCredito: NotaCredito,
-    emisorId: string,
-    puntoEmisionId: string,
+    emisorId: number,
+    puntoEmisionId: number,
     claveAcceso: string,
     secuencial: string,
     ambiente: string,
@@ -193,11 +239,11 @@ export class EmitirNotaCreditoUseCase {
     xmlSinFirma: string,
     xmlFirmado: string,
     resultado: SriOperationResult,
-  ): Promise<void> {
+  ): Promise<any> {
     try {
-      await this.repository.executeInTransaction(async (client) => {
+      return await this.comprobanteRepository.executeTransaction(async (tx) => {
         // 1. Create main comprobante record
-        const comprobante = await this.repository.createComprobante(
+        const comprobante = await this.comprobanteRepository.create(
           {
             emisor_id: emisorId,
             punto_emision_id: puntoEmisionId,
@@ -207,7 +253,7 @@ export class EmitirNotaCreditoUseCase {
             secuencial,
             clave_acceso: claveAcceso,
             fecha_emision: dto.fechaEmision.split('/').reverse().join('-'),
-            estado: resultado.success ? 'AUTORIZADO' : resultado.estado,
+            estado: resultado.estado,
             estado_sri: resultado.estado,
             fecha_autorizacion: resultado.fechaAutorizacion,
             numero_autorizacion: resultado.numeroAutorizacion || claveAcceso,
@@ -229,7 +275,7 @@ export class EmitirNotaCreditoUseCase {
               .join('-'),
             motivo: dto.motivo,
           },
-          client,
+          tx,
         );
 
         this.logger.log(`Nota de Crédito creada con ID: ${comprobante.id}`);
@@ -237,28 +283,29 @@ export class EmitirNotaCreditoUseCase {
         // 2. Create detalles and their impuestos
         for (let i = 0; i < notaCredito.detalles.length; i++) {
           const det = notaCredito.detalles[i];
-          const detalleRecords = await this.repository.createDetalles(
-            [
-              {
-                comprobante_id: comprobante.id!,
-                codigo_principal: det.codigoInterno,
-                codigo_auxiliar: det.codigoAdicional,
-                descripcion: det.descripcion,
-                cantidad: det.cantidad,
-                precio_unitario: det.precioUnitario,
-                descuento: det.descuento,
-                precio_total_sin_impuesto: det.precioTotalSinImpuesto,
-                orden: i,
-              },
-            ],
-            client,
-          );
+          const detalleRecords =
+            await this.comprobanteRepository.createDetalles(
+              [
+                {
+                  comprobante_id: comprobante.id!,
+                  codigo_principal: det.codigoInterno,
+                  codigo_auxiliar: det.codigoAdicional,
+                  descripcion: det.descripcion,
+                  cantidad: det.cantidad,
+                  precio_unitario: det.precioUnitario,
+                  descuento: det.descuento,
+                  precio_total_sin_impuesto: det.precioTotalSinImpuesto,
+                  orden: i,
+                },
+              ],
+              tx,
+            );
 
           const detalleId = detalleRecords[0].id!;
 
           // Create impuestos for this detalle
           if (det.impuestos && det.impuestos.length > 0) {
-            await this.repository.createImpuestos(
+            await this.comprobanteRepository.createImpuestos(
               det.impuestos.map((imp) => ({
                 comprobante_detalle_id: detalleId,
                 codigo: imp.codigo,
@@ -267,14 +314,14 @@ export class EmitirNotaCreditoUseCase {
                 base_imponible: imp.baseImponible,
                 valor: imp.valor,
               })),
-              client,
+              tx,
             );
           }
         }
 
         // 3. Create totales (totalConImpuestos)
         if (notaCredito.infoNotaCredito.totalConImpuestos) {
-          await this.repository.createTotales(
+          await this.comprobanteRepository.createTotales(
             notaCredito.infoNotaCredito.totalConImpuestos.map((tot) => ({
               comprobante_id: comprobante.id!,
               codigo: tot.codigo,
@@ -282,7 +329,7 @@ export class EmitirNotaCreditoUseCase {
               base_imponible: tot.baseImponible,
               valor: tot.valor,
             })),
-            client,
+            tx,
           );
         }
 
@@ -300,30 +347,32 @@ export class EmitirNotaCreditoUseCase {
           xmlFirmado, // firmado - always save for retry
           resultado.xmlAutorizado,
         );
-        await this.repository.saveXml(
+        await this.comprobanteRepository.saveXml(
           {
             comprobante_id: comprobante.id!,
             xml_firmado_path: xmlPaths.firmadoKey,
             xml_autorizado_path: xmlPaths.autorizadoKey,
           },
-          client,
+          tx,
         );
 
         // 5. Create info adicional
         if (dto.infoAdicional && dto.infoAdicional.length > 0) {
-          await this.repository.createInfoAdicional(
+          await this.comprobanteRepository.createInfoAdicional(
             dto.infoAdicional.map((info) => ({
               comprobante_id: comprobante.id!,
               nombre: info.nombre,
               valor: info.valor,
             })),
-            client,
+            tx,
           );
         }
 
         this.logger.log(
           `Nota de Crédito ${claveAcceso} persistida correctamente`,
         );
+
+        return comprobante;
       });
     } catch (error) {
       this.logger.error(

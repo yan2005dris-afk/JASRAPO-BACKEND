@@ -12,7 +12,6 @@ describe('FindOneContractUseCase', () => {
     findMany: jest.fn(),
     count: jest.fn(),
     update: jest.fn(),
-    executeTransaction: jest.fn(),
   };
 
   beforeEach(async () => {
