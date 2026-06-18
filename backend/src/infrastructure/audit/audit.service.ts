@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { RawPgService } from '../database/raw-pg/raw-pg.service';
 
 export interface AuditEntry {
-  usuarioId?: string;
+  usuarioId?: number;
   usuarioEmail?: string;
   ipAddress?: string;
   userAgent?: string;
