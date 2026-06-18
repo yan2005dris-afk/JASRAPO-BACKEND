@@ -9,14 +9,24 @@
         "options": {
           "classValidatorShim": true,
           "introspectComments": true,
-          "dtoFileNameSuffix": [".dto.ts", ".entity.ts"]
+          "dtoFileNameSuffix": [
+            ".dto.ts",
+            ".entity.ts"
+          ]
         }
       }
     ],
     "deleteOutDir": true,
     "assets": [
       "metadata.json",
-      { "include": "infrastructure/pdf/templates/**/*.hbs", "outDir": "dist/src" }
+      {
+        "include": "infrastructure/pdf/templates/**/*.hbs",
+        "outDir": "dist/src"
+      },
+      {
+        "include": "infrastructure/mail/templates/**/*.hbs",
+        "outDir": "dist/src"
+      }
     ],
     "watchAssets": true
   }

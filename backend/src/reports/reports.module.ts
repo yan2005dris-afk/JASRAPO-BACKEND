@@ -10,6 +10,13 @@ import { ClientsListPdfDocumentType } from './pdf/clients-list.pdf-type';
 import { PaymentsReportPdfDocumentType } from './pdf/payments-report.pdf-type';
 import { ConnectionHistoryPdfDocumentType } from './pdf/connection-history.pdf-type';
 import { AccountStatementPdfDocumentType } from './pdf/account-statement.pdf-type';
+import { PaymentAgreementLegacyReportSpec } from './specs/payment-agreement-legacy.report-spec';
+import { PaymentAgreementLegacyPdfDocumentType } from './pdf/payment-agreement-legacy.pdf-type';
+import { PaymentAgreementModernPdfDocumentType } from './pdf/payment-agreement-modern.pdf-type';
+import { PaymentsReportLegacyPdfDocumentType } from './pdf/payments-report-legacy.pdf-type';
+import { PaymentsReportModernPdfDocumentType } from './pdf/payments-report-modern.pdf-type';
+import { ConnectionHistoryLegacyPdfDocumentType } from './pdf/connection-history-legacy.pdf-type';
+import { ConnectionHistoryModernPdfDocumentType } from './pdf/connection-history-modern.pdf-type';
 
 @Module({
   imports: [ClientModule],
@@ -19,6 +26,7 @@ import { AccountStatementPdfDocumentType } from './pdf/account-statement.pdf-typ
     PaymentsReportSpec,
     ConnectionHistoryReportSpec,
     AccountStatementReportSpec,
+    PaymentAgreementLegacyReportSpec,
   ],
 })
 export class ReportsModule implements OnModuleInit {
@@ -29,5 +37,15 @@ export class ReportsModule implements OnModuleInit {
     this.pdfService.registerDocumentType(PaymentsReportPdfDocumentType);
     this.pdfService.registerDocumentType(ConnectionHistoryPdfDocumentType);
     this.pdfService.registerDocumentType(AccountStatementPdfDocumentType);
+    this.pdfService.registerDocumentType(PaymentAgreementLegacyPdfDocumentType);
+    this.pdfService.registerDocumentType(PaymentAgreementModernPdfDocumentType);
+    this.pdfService.registerDocumentType(PaymentsReportLegacyPdfDocumentType);
+    this.pdfService.registerDocumentType(PaymentsReportModernPdfDocumentType);
+    this.pdfService.registerDocumentType(
+      ConnectionHistoryLegacyPdfDocumentType,
+    );
+    this.pdfService.registerDocumentType(
+      ConnectionHistoryModernPdfDocumentType,
+    );
   }
 }
