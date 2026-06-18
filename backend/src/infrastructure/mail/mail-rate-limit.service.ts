@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { RawPgService } from '../database/raw-pg/raw-pg.service';
+import { PrismaService } from '../database/prisma.service';
 
 const ACQUIRE_SLOT_SQL = `
   INSERT INTO mail_provider_daily_counts (provider_name, usage_date, sent_count)
@@ -22,15 +22,16 @@ const RELEASE_SLOT_SQL = `
 export class MailRateLimitService {
   private readonly logger = new Logger(MailRateLimitService.name);
 
-  constructor(private readonly rawPg: RawPgService) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   async tryAcquire(providerName: string, maxPerDay: number): Promise<boolean> {
     try {
-      const row = await this.rawPg.queryOne<{ sent_count: number }>(
+      const rows = await this.prisma.$queryRawUnsafe<{ sent_count: number }[]>(
         ACQUIRE_SLOT_SQL,
-        [providerName, maxPerDay],
+        providerName,
+        maxPerDay,
       );
-      return row !== null;
+      return rows.length > 0;
     } catch (error: unknown) {
       const message =
         error instanceof Error ? error.message : 'Unknown database error';
@@ -43,7 +44,7 @@ export class MailRateLimitService {
 
   async release(providerName: string): Promise<void> {
     try {
-      await this.rawPg.query(RELEASE_SLOT_SQL, [providerName]);
+      await this.prisma.$executeRawUnsafe(RELEASE_SLOT_SQL, [providerName]);
     } catch (error: unknown) {
       const message =
         error instanceof Error ? error.message : 'Unknown database error';
