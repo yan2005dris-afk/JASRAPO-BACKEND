@@ -3,7 +3,7 @@ export interface CreateContractData {
   sectorId?: number | null;
   categoriaTarifaId: number;
   numeroGuia: string;
-  fechaInicio: Date;
+  fechaInicio?: Date;
   direccionSuministro: string;
   estado: string;
   creadoPor?: string | null;

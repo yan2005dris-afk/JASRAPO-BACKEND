@@ -13,7 +13,6 @@ import { SriIntegrationModule } from './sri/sri.module';
 import { MailModule } from './infrastructure/mail/mail.module';
 import { JobsModule } from './infrastructure/jobs/jobs.module';
 import { EncryptionModule } from './infrastructure/encryption/encryption.module';
-import { RawPgModule } from './infrastructure/database/raw-pg/raw-pg.module';
 import { AuditModule } from './infrastructure/audit/audit.module';
 import { PdfModule } from './infrastructure/pdf/pdf.module';
 import { ReportsModule } from './reports/reports.module';
@@ -32,9 +31,6 @@ import { StorageProxyModule } from './infrastructure/storage-proxy/storage-proxy
 
     // Encriptación Global
     EncryptionModule,
-
-    // Acceso a DB de bajo nivel (Raw SQL)
-    RawPgModule,
 
     // Auditoría Global
     AuditModule,

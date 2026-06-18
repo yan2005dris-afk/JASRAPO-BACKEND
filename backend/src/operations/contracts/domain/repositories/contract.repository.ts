@@ -1,4 +1,6 @@
 import type { ContractEntity } from '../entities/contract.entity';
+import type { CreateContractData } from '../types/create-contract-data';
+import type { CreateContractWithMeterCommand } from '../types/create-contract-with-meter-command';
 
 export abstract class ContractRepository {
   abstract findMany(params: {
@@ -19,5 +21,20 @@ export abstract class ContractRepository {
     data: Record<string, any>,
   ): Promise<ContractEntity>;
 
-  abstract executeTransaction<T>(callback: (tx: any) => Promise<T>): Promise<T>;
+  abstract create(data: CreateContractData): Promise<ContractEntity>;
+
+  // ── Domain-level transactional operations ──────────────────────────────
+
+  abstract createContractWithMeterHistory(
+    data: CreateContractWithMeterCommand,
+  ): Promise<ContractEntity>;
+
+  abstract replaceMeterInContract(
+    contractId: bigint,
+    newMeterId: bigint,
+    lecturaInicial: number,
+    contractFields?: Record<string, any>,
+  ): Promise<ContractEntity>;
+
+  abstract finalizeActiveMeterLink(contratoId: bigint): Promise<ContractEntity>;
 }

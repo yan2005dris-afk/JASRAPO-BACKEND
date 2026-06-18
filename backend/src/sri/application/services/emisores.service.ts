@@ -4,7 +4,6 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
-import { RawPgService } from '../../../infrastructure/database/raw-pg/raw-pg.service';
 import {
   CreateEmisorDto,
   UpdateEmisorDto,
@@ -12,15 +11,56 @@ import {
 } from '../../interfaces/dto';
 import * as forge from 'node-forge';
 import { EncryptionService } from '../../../infrastructure/encryption/encryption.service';
+import { EmisorRepository } from '../../domain/repositories/emisor.repository';
+import { EmisorRecord } from '../../domain/interfaces/repository.interface';
+import {
+  StorageService,
+  SRI_STORAGE_TYPES,
+} from '../../../infrastructure/storage/storage.service';
+import { XmlSignerService } from '../../infrastructure/xml/xml-signer.service';
 
 @Injectable()
 export class EmisoresService {
   private readonly logger = new Logger(EmisoresService.name);
 
   constructor(
-    private readonly db: RawPgService,
+    private readonly repository: EmisorRepository,
     private readonly encryptionService: EncryptionService,
+    private readonly storageService: StorageService,
+    private readonly xmlSignerService: XmlSignerService,
   ) {}
+
+  /**
+   * Valida que el ID sea un número positivo y esté en un rango seguro.
+   */
+  private parseSafeId(id: string): number {
+    if (!/^\d+$/.test(id)) {
+      throw new BadRequestException(
+        `ID inválido: "${id}". El ID debe contener solo dígitos.`,
+      );
+    }
+    const parsedId = parseInt(id, 10);
+    if (!Number.isSafeInteger(parsedId) || parsedId <= 0) {
+      throw new BadRequestException(
+        `ID fuera de rango o inválido: ${id}. Debe ser un entero positivo seguro.`,
+      );
+    }
+    return parsedId;
+  }
+
+  /**
+   * Obtiene un registro de emisor por ID validado.
+   */
+  private async findRecordById(id: string): Promise<EmisorRecord> {
+    const parsedId = this.parseSafeId(id);
+    const emisor = await this.repository.findById(parsedId);
+
+    if (!emisor) {
+      throw new NotFoundException(`Emisor con ID ${id} no encontrado`);
+    }
+
+    return emisor;
+  }
 
   /**
    * Convierte ambiente legible a código SRI
@@ -33,13 +73,6 @@ export class EmisoresService {
   }
 
   /**
-   * Convierte código SRI a texto legible
-   */
-  private toAmbienteTexto(codigo: string): string {
-    return codigo === '2' ? 'produccion' : 'pruebas';
-  }
-
-  /**
    * Normaliza estado a mayúsculas
    */
   private toEstadoNormalizado(estado?: string): string {
@@ -48,38 +81,13 @@ export class EmisoresService {
   }
 
   async findAll(): Promise<EmisorResponseDto[]> {
-    const result = await this.db.query(
-      `SELECT id, ruc, razon_social, nombre_comercial, direccion_matriz,
-              obligado_contabilidad, contribuyente_especial, agente_retencion,
-              contribuyente_rimpe, ambiente, estado,
-              certificado_p12 IS NOT NULL as tiene_certificado,
-              certificado_valido_hasta, certificado_sujeto,
-              created_at, updated_at
-       FROM emisores
-       ORDER BY created_at DESC`,
-    );
-
-    return result.rows.map((row) => this.mapToResponse(row));
+    const emisores = await this.repository.findAll();
+    return emisores.map((row) => this.mapToResponse(row));
   }
 
   async findOne(id: string): Promise<EmisorResponseDto> {
-    const result = await this.db.query(
-      `SELECT id, ruc, razon_social, nombre_comercial, direccion_matriz,
-              obligado_contabilidad, contribuyente_especial, agente_retencion,
-              contribuyente_rimpe, ambiente, estado,
-              certificado_p12 IS NOT NULL as tiene_certificado,
-              certificado_valido_hasta, certificado_sujeto,
-              created_at, updated_at
-       FROM emisores
-       WHERE id = $1`,
-      [id],
-    );
-
-    if (result.rows.length === 0) {
-      throw new NotFoundException(`Emisor con ID ${id} no encontrado`);
-    }
-
-    return this.mapToResponse(result.rows[0]);
+    const emisor = await this.findRecordById(id);
+    return this.mapToResponse(emisor);
   }
 
   /**
@@ -105,23 +113,9 @@ export class EmisoresService {
   }
 
   async findByRuc(ruc: string): Promise<EmisorResponseDto | null> {
-    const result = await this.db.query(
-      `SELECT id, ruc, razon_social, nombre_comercial, direccion_matriz,
-              obligado_contabilidad, contribuyente_especial, agente_retencion,
-              contribuyente_rimpe, ambiente, estado,
-              certificado_p12 IS NOT NULL as tiene_certificado,
-              certificado_valido_hasta, certificado_sujeto,
-              created_at, updated_at
-       FROM emisores
-       WHERE ruc = $1`,
-      [ruc],
-    );
-
-    if (result.rows.length === 0) {
-      return null;
-    }
-
-    return this.mapToResponse(result.rows[0]);
+    const emisor = await this.repository.findByRuc(ruc);
+    if (!emisor) return null;
+    return this.mapToResponse(emisor);
   }
 
   async create(dto: CreateEmisorDto): Promise<EmisorResponseDto> {
@@ -131,129 +125,74 @@ export class EmisoresService {
       throw new BadRequestException(`Ya existe un emisor con RUC ${dto.ruc}`);
     }
 
-    const result = await this.db.query(
-      `INSERT INTO emisores (
-        ruc, razon_social, nombre_comercial, direccion_matriz,
-        obligado_contabilidad, contribuyente_especial, agente_retencion,
-        contribuyente_rimpe, ambiente, estado
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'ACTIVO')
-      RETURNING id, ruc, razon_social, nombre_comercial, direccion_matriz,
-                obligado_contabilidad, contribuyente_especial, agente_retencion,
-                contribuyente_rimpe, ambiente, estado,
-                false as tiene_certificado,
-                null as certificado_valido_hasta, null as certificado_sujeto,
-                created_at, updated_at`,
-      [
-        dto.ruc,
-        dto.razonSocial,
-        dto.nombreComercial || null,
-        dto.direccionMatriz,
-        dto.obligadoContabilidad ?? false,
-        dto.contribuyenteEspecial || null,
-        dto.agenteRetencion || null,
-        dto.contribuyenteRimpe ?? false,
-        this.toAmbienteCodigo(dto.ambiente),
-      ],
-    );
+    const emisor = await this.repository.create({
+      ruc: dto.ruc,
+      razon_social: dto.razonSocial,
+      nombre_comercial: dto.nombreComercial ?? undefined,
+      direccion_matriz: dto.direccionMatriz,
+      obligado_contabilidad: dto.obligadoContabilidad ?? false,
+      contribuyente_especial: dto.contribuyenteEspecial ?? undefined,
+      agente_retencion: dto.agenteRetencion ?? undefined,
+      contribuyente_rimpe: dto.contribuyenteRimpe ?? false,
+      ambiente: this.toAmbienteCodigo(dto.ambiente),
+      estado: 'ACTIVO',
+    });
 
     this.logger.log(`Emisor creado: ${dto.ruc} - ${dto.razonSocial}`);
-    return this.mapToResponse(result.rows[0]);
+    return this.mapToResponse(emisor);
   }
 
   async update(id: string, dto: UpdateEmisorDto): Promise<EmisorResponseDto> {
-    // Verificar que existe
-    await this.findOne(id);
+    // Verificar que existe y obtener el registro para usar su ID numérico
+    const emisorActual = await this.findRecordById(id);
 
-    const updates: string[] = [];
-    const values: any[] = [];
-    let paramIndex = 1;
+    const updateData: Partial<EmisorRecord> = {};
 
-    if (dto.razonSocial !== undefined) {
-      updates.push(`razon_social = $${paramIndex++}`);
-      values.push(dto.razonSocial);
-    }
-    if (dto.nombreComercial !== undefined) {
-      updates.push(`nombre_comercial = $${paramIndex++}`);
-      values.push(dto.nombreComercial);
-    }
-    if (dto.direccionMatriz !== undefined) {
-      updates.push(`direccion_matriz = $${paramIndex++}`);
-      values.push(dto.direccionMatriz);
-    }
-    if (dto.obligadoContabilidad !== undefined) {
-      updates.push(`obligado_contabilidad = $${paramIndex++}`);
-      values.push(dto.obligadoContabilidad);
-    }
-    if (dto.contribuyenteEspecial !== undefined) {
-      updates.push(`contribuyente_especial = $${paramIndex++}`);
-      values.push(dto.contribuyenteEspecial);
-    }
-    if (dto.agenteRetencion !== undefined) {
-      updates.push(`agente_retencion = $${paramIndex++}`);
-      values.push(dto.agenteRetencion);
-    }
-    if (dto.contribuyenteRimpe !== undefined) {
-      updates.push(`contribuyente_rimpe = $${paramIndex++}`);
-      values.push(dto.contribuyenteRimpe);
-    }
-    if (dto.ambiente !== undefined) {
-      updates.push(`ambiente = $${paramIndex++}`);
-      values.push(this.toAmbienteCodigo(dto.ambiente));
-    }
-    if (dto.estado !== undefined) {
-      updates.push(`estado = $${paramIndex++}`);
-      values.push(this.toEstadoNormalizado(dto.estado));
+    if (dto.razonSocial !== undefined)
+      updateData.razon_social = dto.razonSocial;
+    if (dto.nombreComercial !== undefined)
+      updateData.nombre_comercial = dto.nombreComercial;
+    if (dto.direccionMatriz !== undefined)
+      updateData.direccion_matriz = dto.direccionMatriz;
+    if (dto.obligadoContabilidad !== undefined)
+      updateData.obligado_contabilidad = dto.obligadoContabilidad;
+    if (dto.contribuyenteEspecial !== undefined)
+      updateData.contribuyente_especial = dto.contribuyenteEspecial;
+    if (dto.agenteRetencion !== undefined)
+      updateData.agente_retencion = dto.agenteRetencion;
+    if (dto.contribuyenteRimpe !== undefined)
+      updateData.contribuyente_rimpe = dto.contribuyenteRimpe;
+    if (dto.ambiente !== undefined)
+      updateData.ambiente = this.toAmbienteCodigo(dto.ambiente);
+    if (dto.estado !== undefined)
+      updateData.estado = this.toEstadoNormalizado(dto.estado);
+
+    if (Object.keys(updateData).length === 0) {
+      return this.mapToResponse(emisorActual);
     }
 
-    if (updates.length === 0) {
-      return this.findOne(id);
-    }
-
-    updates.push(`updated_at = NOW()`);
-    values.push(id);
-
-    const result = await this.db.query(
-      `UPDATE emisores SET ${updates.join(', ')}
-       WHERE id = $${paramIndex}
-       RETURNING id, ruc, razon_social, nombre_comercial, direccion_matriz,
-                 obligado_contabilidad, contribuyente_especial, agente_retencion,
-                 contribuyente_rimpe, ambiente, estado,
-                 certificado_p12 IS NOT NULL as tiene_certificado,
-                 certificado_valido_hasta, certificado_sujeto,
-                 created_at, updated_at`,
-      values,
-    );
+    const emisor = await this.repository.update(emisorActual.id, updateData);
 
     this.logger.log(`Emisor actualizado: ${id}`);
-    return this.mapToResponse(result.rows[0]);
+    return this.mapToResponse(emisor);
   }
 
   async delete(id: string): Promise<EmisorResponseDto> {
     // Verificar que existe
-    const emisor = await this.findOne(id);
+    const emisorActual = await this.findRecordById(id);
 
     // Verificar si ya está inactivo
-    if (emisor.estado.toUpperCase() === 'INACTIVO') {
+    if (emisorActual.estado.toUpperCase() === 'INACTIVO') {
       throw new BadRequestException(`El emisor ya se encuentra inactivo`);
     }
 
     // Eliminación lógica: cambiar estado a inactivo
-    const result = await this.db.query(
-      `UPDATE emisores SET 
-        estado = 'INACTIVO',
-        updated_at = NOW()
-       WHERE id = $1
-       RETURNING id, ruc, razon_social, nombre_comercial, direccion_matriz,
-                 obligado_contabilidad, contribuyente_especial, agente_retencion,
-                 contribuyente_rimpe, ambiente, estado,
-                 certificado_p12 IS NOT NULL as tiene_certificado,
-                 certificado_valido_hasta, certificado_sujeto,
-                 created_at, updated_at`,
-      [id],
-    );
+    const updated = await this.repository.update(emisorActual.id, {
+      estado: 'INACTIVO',
+    });
 
     this.logger.log(`Emisor inactivado: ${id}`);
-    return this.mapToResponse(result.rows[0]);
+    return this.mapToResponse(updated);
   }
 
   async uploadCertificado(
@@ -261,8 +200,8 @@ export class EmisoresService {
     file: Buffer,
     password: string,
   ): Promise<EmisorResponseDto> {
-    // Verificar que existe
-    await this.findOne(id);
+    // Verificar que existe y obtener el registro
+    const emisorActual = await this.findRecordById(id);
 
     // Validar el certificado P12
     let certificateInfo: { validoHasta: Date; sujeto: string };
@@ -274,59 +213,68 @@ export class EmisoresService {
       );
     }
 
-    // Guardar el certificado
-    const result = await this.db.query(
-      `UPDATE emisores SET
-        certificado_p12 = $1,
-        certificado_password = $2,
-        certificado_valido_hasta = $3,
-        certificado_sujeto = $4,
-        certificado_updated_at = NOW(),
-        updated_at = NOW()
-       WHERE id = $5
-       RETURNING id, ruc, razon_social, nombre_comercial, direccion_matriz,
-                 obligado_contabilidad, contribuyente_especial, agente_retencion,
-                 contribuyente_rimpe, ambiente, estado,
-                 true as tiene_certificado,
-                 certificado_valido_hasta, certificado_sujeto,
-                 created_at, updated_at`,
-      [
-        file,
-        await this.encryptionService.encrypt(password),
-        certificateInfo.validoHasta,
-        certificateInfo.sujeto,
-        id,
-      ],
+    // 1. Guardar el archivo en RustFS (S3)
+    const bucket = await this.storageService.ensureBucketForRuc(
+      emisorActual.ruc,
+      SRI_STORAGE_TYPES.CERTS,
     );
+    const fileName = `cert_${emisorActual.id}.p12`;
 
-    this.logger.log(`Certificado cargado para emisor: ${id}`);
-    return this.mapToResponse(result.rows[0]);
+    await this.storageService.upload(bucket, fileName, file, {
+      contentType: 'application/x-pkcs12',
+    });
+
+    // 2. Guardar metadata en la base de datos
+    const emisor = await this.repository.update(emisorActual.id, {
+      certificado_nombre: fileName,
+      certificado_password_encrypted:
+        await this.encryptionService.encrypt(password),
+      certificado_valido_hasta: certificateInfo.validoHasta,
+      certificado_sujeto: certificateInfo.sujeto,
+    });
+
+    // 3. Limpiar cache de firma para este emisor
+    this.xmlSignerService.clearEmisorCache(emisorActual.ruc);
+
+    this.logger.log(`Certificado cargado en RustFS para emisor: ${id}`);
+    return this.mapToResponse(emisor);
   }
 
   async deleteCertificado(id: string): Promise<EmisorResponseDto> {
     // Verificar que existe
-    await this.findOne(id);
+    const emisorActual = await this.findRecordById(id);
 
-    const result = await this.db.query(
-      `UPDATE emisores SET
-        certificado_p12 = NULL,
-        certificado_password = NULL,
-        certificado_valido_hasta = NULL,
-        certificado_sujeto = NULL,
-        certificado_updated_at = NULL,
-        updated_at = NOW()
-       WHERE id = $1
-       RETURNING id, ruc, razon_social, nombre_comercial, direccion_matriz,
-                 obligado_contabilidad, contribuyente_especial, agente_retencion,
-                 contribuyente_rimpe, ambiente, estado,
-                 false as tiene_certificado,
-                 null as certificado_valido_hasta, null as certificado_sujeto,
-                 created_at, updated_at`,
-      [id],
-    );
+    // 1. Eliminar de RustFS si existe
+    if (emisorActual.certificado_nombre) {
+      try {
+        const bucket = await this.storageService.ensureBucketForRuc(
+          emisorActual.ruc,
+          SRI_STORAGE_TYPES.CERTS,
+        );
+        await this.storageService.delete(
+          bucket,
+          emisorActual.certificado_nombre,
+        );
+      } catch (error) {
+        this.logger.warn(
+          `No se pudo eliminar el archivo físico del certificado: ${error.message}`,
+        );
+      }
+    }
 
-    this.logger.log(`Certificado eliminado para emisor: ${id}`);
-    return this.mapToResponse(result.rows[0]);
+    // 2. Limpiar metadata en BD
+    const emisor = await this.repository.update(emisorActual.id, {
+      certificado_nombre: null,
+      certificado_password_encrypted: null,
+      certificado_valido_hasta: null,
+      certificado_sujeto: null,
+    });
+
+    // 3. Limpiar cache de firma para este emisor
+    this.xmlSignerService.clearEmisorCache(emisorActual.ruc);
+
+    this.logger.log(`Certificado eliminado de RustFS para emisor: ${id}`);
+    return this.mapToResponse(emisor);
   }
 
   private extractCertificateInfo(
@@ -356,9 +304,9 @@ export class EmisoresService {
     return { validoHasta, sujeto };
   }
 
-  private mapToResponse(row: any): EmisorResponseDto {
+  private mapToResponse(row: EmisorRecord): EmisorResponseDto {
     return {
-      id: row.id,
+      id: row.id.toString(),
       ruc: row.ruc,
       razonSocial: row.razon_social,
       nombreComercial: row.nombre_comercial,
@@ -369,11 +317,11 @@ export class EmisoresService {
       contribuyenteRimpe: row.contribuyente_rimpe,
       ambiente: row.ambiente,
       estado: row.estado,
-      tieneCertificado: row.tiene_certificado,
-      certificadoValidoHasta: row.certificado_valido_hasta?.toISOString(),
+      tieneCertificado: !!row.certificado_nombre,
+      certificadoValidoHasta: row.certificado_valido_hasta?.toISOString?.(),
       certificadoSujeto: row.certificado_sujeto,
-      createdAt: row.created_at?.toISOString(),
-      updatedAt: row.updated_at?.toISOString(),
+      createdAt: row.createdAt?.toISOString?.() || new Date().toISOString(),
+      updatedAt: row.updatedAt?.toISOString?.() || new Date().toISOString(),
     };
   }
 }
