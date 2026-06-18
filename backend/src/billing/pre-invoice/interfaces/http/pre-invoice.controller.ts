@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Patch,
+  Post,
   Param,
   Query,
   Body,
@@ -15,6 +16,7 @@ import {
   ApiTags,
   ApiParam,
   ApiExtraModels,
+  ApiResponse,
 } from '@nestjs/swagger';
 import type { Response } from 'express';
 import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
@@ -29,6 +31,9 @@ import { PaginationMetaDto } from 'src/infrastructure/common/dtos/pagination-met
 import { ApiPaginatedResponse } from 'src/infrastructure/common/decorators/api-paginated-response.decorator';
 import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
 import { GeneratePreInvoicePdfUseCase } from '../../application/use-cases/generate-pre-invoice-pdf.use-case';
+import { SendPreInvoiceByEmailUseCase } from '../../application/use-cases/send-pre-invoice-by-email.use-case';
+import { SendBatchPreInvoicesByEmailUseCase } from '../../application/use-cases/send-batch-pre-invoices-by-email.use-case';
+import { SendBatchPreInvoicesByEmailDto } from '../dto/send-batch-pre-invoices-by-email.dto';
 
 @ApiTags('pre-invoices')
 @ApiBearerAuth()
@@ -39,6 +44,8 @@ export class PreInvoiceController {
   constructor(
     private readonly preInvoiceService: PreInvoiceService,
     private readonly generatePreInvoicePdf: GeneratePreInvoicePdfUseCase,
+    private readonly sendPreInvoiceByEmail: SendPreInvoiceByEmailUseCase,
+    private readonly sendBatchPreInvoicesByEmail: SendBatchPreInvoicesByEmailUseCase,
   ) {}
 
   /**
@@ -125,6 +132,51 @@ export class PreInvoiceController {
       'Content-Length': buffer.length,
     });
     res.end(buffer);
+  }
+
+  /**
+   * POST /pre-invoices/send-email-batch
+   * Queue planilla emails for multiple pre-invoices (PDF generated per item)
+   */
+  @ApiOperation({
+    summary: 'Send planillas by email in batches',
+    description:
+      'Generates the pre-invoice PDF for each ID and queues the email with attachment in batches of 25',
+  })
+  @ApiResponse({ status: 200, description: 'Emails queued successfully' })
+  @ApiResponse({ status: 400, description: 'Bad Request - Invalid IDs or validation failed' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @RequiredPermission('pre-invoices', 'update')
+  @Post('send-email-batch')
+  async sendEmailBatch(@Body() dto: SendBatchPreInvoicesByEmailDto) {
+    return this.sendBatchPreInvoicesByEmail.execute(dto.prefacturaIds);
+  }
+
+  /**
+   * POST /pre-invoices/:id/send-email
+   * Generate PDF and queue planilla email for one pre-invoice
+   */
+  @ApiOperation({
+    summary: 'Send planilla by email',
+    description:
+      'Generates the pre-invoice PDF and queues an email with the planilla attached',
+  })
+  @ApiResponse({ status: 200, description: 'Email queued successfully' })
+  @ApiResponse({ status: 400, description: 'Bad Request - Client has no email' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiResponse({ status: 404, description: 'Not Found - Pre-invoice not found' })
+  @ApiParam({
+    name: 'id',
+    description: 'Pre-invoice ID',
+    type: Number,
+    example: 1,
+  })
+  @RequiredPermission('pre-invoices', 'update')
+  @Post(':id/send-email')
+  async sendEmail(@Param('id', ParseIntPipe) id: number) {
+    return this.sendPreInvoiceByEmail.execute(id);
   }
 
   /**

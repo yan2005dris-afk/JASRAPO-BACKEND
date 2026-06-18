@@ -1,6 +1,6 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { JobsService } from '../jobs/jobs.service';
-import { NodemailerProvider } from './nodemailer.provider';
+import { MailProviderFactory } from './providers/provider.factory';
 import { SendMailOptions } from './interfaces/mail-provider.interface';
 
 export const MAIL_JOB_NAME = 'send-mail';
@@ -15,7 +15,7 @@ export class MailQueueService implements OnModuleInit {
 
   constructor(
     private readonly jobsService: JobsService,
-    private readonly mailProvider: NodemailerProvider,
+    private readonly mailProviderFactory: MailProviderFactory,
   ) {}
 
   /**
@@ -63,7 +63,7 @@ export class MailQueueService implements OnModuleInit {
       `Procesando envío de correo para: ${Array.isArray(data.to) ? data.to.join(', ') : data.to} - Asunto: ${data.subject}`,
     );
 
-    const result = await this.mailProvider.send(data);
+    const result = await this.mailProviderFactory.send(data);
 
     if (!result.success) {
       throw new Error(

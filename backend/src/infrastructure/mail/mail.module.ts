@@ -4,6 +4,9 @@ import { ConfigService } from '@nestjs/config';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/adapters/handlebars.adapter';
 import { join } from 'path';
 import { NodemailerProvider } from './nodemailer.provider';
+import { MailProviderFactory } from './providers/provider.factory';
+import { MailRateLimitService } from './mail-rate-limit.service';
+import { MailService } from './mail.service';
 import { MailQueueService } from './mail-queue.service';
 import { JobsModule } from '../jobs/jobs.module';
 
@@ -15,17 +18,15 @@ import { JobsModule } from '../jobs/jobs.module';
 @Module({
   imports: [
     JobsModule,
-    // Configuración de Mailer (Nodemailer)
     MailerModule.forRootAsync({
       useFactory: (config: ConfigService) => ({
         transport: {
-          service: config.get('EMAIL_SERVICE'), // Opcional (ej: 'gmail')
-          host: config.get('EMAIL_HOST', 'localhost'),
-          port: config.get('EMAIL_PORT', 587),
-          secure: config.get('EMAIL_SECURE', 'false') === 'true',
+          host: config.get('BREVO_SMTP_HOST', 'smtp-relay.brevo.com'),
+          port: parseInt(config.get('BREVO_SMTP_PORT', '587'), 10),
+          secure: false,
           auth: {
-            user: config.get('EMAIL_USER'),
-            pass: config.get('EMAIL_PASSWORD'),
+            user: config.get('BREVO_SMTP_USER'),
+            pass: config.get('BREVO_SMTP_PASS'),
           },
         },
         defaults: {
@@ -42,7 +43,13 @@ import { JobsModule } from '../jobs/jobs.module';
       inject: [ConfigService],
     }),
   ],
-  providers: [NodemailerProvider, MailQueueService],
-  exports: [NodemailerProvider, MailQueueService],
+  providers: [
+    NodemailerProvider,
+    MailRateLimitService,
+    MailProviderFactory,
+    MailService,
+    MailQueueService,
+  ],
+  exports: [MailService, MailQueueService, MailProviderFactory],
 })
 export class MailModule {}
