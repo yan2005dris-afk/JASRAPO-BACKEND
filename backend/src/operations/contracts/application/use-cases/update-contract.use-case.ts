@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from 'src/generated/prisma/client';
 import { ContractRepository } from '../../domain/repositories/contract.repository';
 import { ActualizarContratoMedidorDto } from '../../interfaces/dto/update-contrato-medidor.dto';
@@ -73,6 +73,12 @@ export class UpdateContractUseCase {
         updateData.direccionSuministro = updateDto.direccionSuministro;
       if (updateDto.sectorId !== undefined)
         updateData.sectorId = Number(updateDto.sectorId);
+
+      if (Object.keys(updateData).length === 0) {
+        throw new BadRequestException(
+          'No se proporcionaron campos para actualizar',
+        );
+      }
 
       await this.contractRepository.update({ contratoId: id }, updateData);
     }

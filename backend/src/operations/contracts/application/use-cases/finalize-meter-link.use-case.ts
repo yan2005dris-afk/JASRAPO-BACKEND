@@ -9,7 +9,7 @@ export class FinalizeMeterLinkUseCase {
     const registro = await this.contractRepository.findUnique({
       contratoId,
     });
-    if (!registro) {
+    if (!registro || registro.deletedAt) {
       throw new NotFoundException(
         `Contrato con ID ${contratoId} no encontrado`,
       );
@@ -31,9 +31,17 @@ export class FinalizeMeterLinkUseCase {
         data: { fechaHasta: new Date() },
       });
 
-      return tx.medidores.findUnique({
+      const medidor = await tx.medidores.findUnique({
         where: { medidorId: activeLink.medidorId },
       });
+
+      if (!medidor) {
+        throw new NotFoundException(
+          `Medidor con ID ${activeLink.medidorId} no encontrado`,
+        );
+      }
+
+      return medidor;
     });
   }
 }

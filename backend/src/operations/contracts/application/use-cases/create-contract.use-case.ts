@@ -48,6 +48,28 @@ export class CreateContractUseCase {
           );
         }
 
+        // Validate comunidadId
+        const comunidad = await tx.comunidades.findUnique({
+          where: { comunidadId },
+        });
+        if (!comunidad) {
+          throw new NotFoundException(
+            `Comunidad con ID ${dto.comunidadId} no encontrada`,
+          );
+        }
+
+        // Validate sectorId if provided
+        if (sectorId !== null) {
+          const sector = await tx.sectores.findUnique({
+            where: { sectorId },
+          });
+          if (!sector) {
+            throw new NotFoundException(
+              `Sector con ID ${dto.sectorId} no encontrado`,
+            );
+          }
+        }
+
         // Create the contract
         const contrato = await tx.contratos.create({
           data: {
