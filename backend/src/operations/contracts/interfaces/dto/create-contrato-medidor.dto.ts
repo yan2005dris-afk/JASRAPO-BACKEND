@@ -1,15 +1,21 @@
 import {
-  IsDateString,
   IsNotEmpty,
+  IsNumberString,
   IsOptional,
+  IsNumber,
   IsString,
 } from 'class-validator';
 import { IsNotEmptyString } from 'src/infrastructure/common/decorators/is-not-empty-string.decorator';
 
 export class CrearContratoMedidorDto {
-  @IsNotEmpty() contratoId: string | number;
-  @IsNotEmpty() medidorId: string | number;
-  @IsOptional() lecturaInicial?: number;
-  @IsOptional() @IsDateString() fechaInicio?: string | Date;
-  @IsOptional() @IsString() @IsNotEmptyString() motivoCambio?: string;
+  @IsNotEmpty() @IsNumberString() clienteId: string;
+  @IsNotEmpty() @IsNumberString() categoriaTarifaId: string;
+  @IsNotEmpty() @IsNumberString() medidorId: string;
+  @IsNotEmpty() @IsString() @IsNotEmptyString() numeroGuia: string;
+  @IsNotEmpty() @IsString() @IsNotEmptyString() direccionSuministro: string;
+  @IsNotEmpty() @IsNumberString() comunidadId: string;
+  @IsOptional() @IsNumberString() sectorId?: string;
+  @IsOptional() @IsNumber() lecturaInicial?: number;
+  @IsOptional() @IsString() estado?: string;
+  @IsOptional() @IsString() creadoPor?: string;
 }

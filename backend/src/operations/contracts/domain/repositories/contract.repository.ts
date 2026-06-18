@@ -1,4 +1,5 @@
 import type { ContractEntity } from '../entities/contract.entity';
+import type { CreateContractData } from '../types/create-contract-data';
 
 export abstract class ContractRepository {
   abstract findMany(params: {
@@ -18,6 +19,8 @@ export abstract class ContractRepository {
     where: Record<string, any>,
     data: Record<string, any>,
   ): Promise<ContractEntity>;
+
+  abstract create(data: CreateContractData): Promise<ContractEntity>;
 
   abstract executeTransaction<T>(callback: (tx: any) => Promise<T>): Promise<T>;
 }

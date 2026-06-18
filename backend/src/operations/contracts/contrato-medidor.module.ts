@@ -2,7 +2,7 @@ import { Module, OnModuleInit } from '@nestjs/common';
 import { PdfService } from 'src/infrastructure/pdf/pdf.service';
 import { ContratoMedidorService } from './application/contrato-medidor.service';
 import { ContratoMedidorController } from './interfaces/http/contrato-medidor.controller';
-import { CreateContractLinkUseCase } from './application/use-cases/create-contract-link.use-case';
+import { CreateContractUseCase } from './application/use-cases/create-contract.use-case';
 import { FindAllContractsUseCase } from './application/use-cases/find-all-contracts.use-case';
 import { FindOneContractUseCase } from './application/use-cases/find-one-contract.use-case';
 import { UpdateContractUseCase } from './application/use-cases/update-contract.use-case';
@@ -20,7 +20,7 @@ import { ResponsibilityAgreementPdfDocumentType } from './pdf/responsibility-agr
   providers: [
     { provide: ContractRepository, useClass: PrismaContractRepository },
     ContratoMedidorService,
-    CreateContractLinkUseCase,
+    CreateContractUseCase,
     FindAllContractsUseCase,
     FindOneContractUseCase,
     UpdateContractUseCase,
@@ -32,7 +32,7 @@ import { ResponsibilityAgreementPdfDocumentType } from './pdf/responsibility-agr
   exports: [
     ContractRepository,
     ContratoMedidorService,
-    CreateContractLinkUseCase,
+    CreateContractUseCase,
     FindAllContractsUseCase,
     FindOneContractUseCase,
     UpdateContractUseCase,
