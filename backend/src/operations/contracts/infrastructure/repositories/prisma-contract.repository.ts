@@ -86,7 +86,7 @@ export class PrismaContractRepository implements ContractRepository {
           numeroGuia: data.numeroGuia,
           direccionSuministro: data.direccionSuministro,
           comunidadId: data.comunidadId,
-          estado: data.estado,
+          estado: data.estado as any,
           ...(data.sectorId !== null ? { sectorId: data.sectorId } : {}),
           ...(data.creadoPor ? { creadoPor: data.creadoPor } : {}),
         },
