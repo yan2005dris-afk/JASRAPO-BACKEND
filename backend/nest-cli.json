@@ -16,7 +16,8 @@
     "deleteOutDir": true,
     "assets": [
       "metadata.json",
-      { "include": "infrastructure/pdf/templates/**/*.hbs", "outDir": "dist/src" }
+      { "include": "infrastructure/pdf/templates/**/*.hbs", "outDir": "dist/src" },
+      { "include": "infrastructure/mail/templates/**/*.hbs", "outDir": "dist/src" }
     ],
     "watchAssets": true
   }
