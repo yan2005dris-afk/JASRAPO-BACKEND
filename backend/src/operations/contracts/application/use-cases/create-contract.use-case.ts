@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { EstadoGenerico } from 'src/generated/prisma/client';
 import { ContractRepository } from '../../domain/repositories/contract.repository';
 import { CrearContratoMedidorDto } from '../../interfaces/dto/create-contrato-medidor.dto';
 
@@ -15,7 +16,7 @@ export class CreateContractUseCase {
       sectorId: dto.sectorId ? Number(dto.sectorId) : null,
       numeroGuia: dto.numeroGuia,
       direccionSuministro: dto.direccionSuministro,
-      estado: dto.estado || 'SOLICITUD',
+      estado: (dto.estado || EstadoGenerico.SOLICITUD) as EstadoGenerico,
       creadoPor: dto.creadoPor,
       lecturaInicial: dto.lecturaInicial ?? 0,
     });

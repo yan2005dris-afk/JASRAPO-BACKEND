@@ -1,3 +1,5 @@
+import type { EstadoGenerico } from 'src/generated/prisma/client';
+
 export interface CreateContractWithMeterCommand {
   clienteId: bigint;
   categoriaTarifaId: number;
@@ -6,17 +8,7 @@ export interface CreateContractWithMeterCommand {
   sectorId: number | null;
   numeroGuia: string;
   direccionSuministro: string;
-  estado:
-    | 'ACTIVO'
-    | 'SOLICITUD'
-    | 'PENDIENTE_PAGO'
-    | 'PENDIENTE_INSTALACION'
-    | 'EN_MORA'
-    | 'ORDEN_CORTE'
-    | 'SUSPENDIDO'
-    | 'EN_CONVENIO'
-    | 'RETIRADO'
-    | 'RECONEXION';
+  estado: EstadoGenerico;
   creadoPor?: string;
   lecturaInicial: number;
 }

@@ -55,8 +55,7 @@ export class UpdateContractUseCase {
     if (dto.estado !== undefined) fields.estado = dto.estado;
     if (dto.direccionSuministro !== undefined)
       fields.direccionSuministro = dto.direccionSuministro;
-    if (dto.sectorId !== undefined)
-      fields.sectorId = Number(dto.sectorId);
+    if (dto.sectorId !== undefined) fields.sectorId = Number(dto.sectorId);
     return fields;
   }
 }
