@@ -6,7 +6,6 @@ import { ContractRepository } from '../../domain/repositories/contract.repositor
 
 describe('FinalizeMeterLinkUseCase', () => {
   let useCase: FinalizeMeterLinkUseCase;
-  let mockTx: any;
 
   const mockContractRepository = {
     findUnique: jest.fn(),
@@ -14,22 +13,10 @@ describe('FinalizeMeterLinkUseCase', () => {
     count: jest.fn(),
     update: jest.fn(),
     create: jest.fn(),
-    executeTransaction: jest.fn(),
+    finalizeActiveMeterLink: jest.fn(),
   };
 
   beforeEach(async () => {
-    mockTx = {
-      medidores: { findUnique: jest.fn() },
-      historialMedidores: {
-        findFirst: jest.fn(),
-        update: jest.fn(),
-      },
-    };
-
-    mockContractRepository.executeTransaction.mockImplementation((cb: any) =>
-      cb(mockTx),
-    );
-
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         FinalizeMeterLinkUseCase,
@@ -53,40 +40,25 @@ describe('FinalizeMeterLinkUseCase', () => {
 
   it('should finalize active link by contratoId (S3.1)', async () => {
     const contratoId = BigInt(1);
-    const activeLink = {
-      historialId: BigInt(100),
-      medidorId: BigInt(200),
-      contratoId,
-      fechaHasta: null,
-    };
 
     mockContractRepository.findUnique.mockResolvedValue({
       contratoId,
       deletedAt: null,
     });
-    mockTx.historialMedidores.findFirst.mockResolvedValue(activeLink);
-    mockTx.historialMedidores.update.mockResolvedValue({
-      ...activeLink,
-      fechaHasta: new Date(),
-    });
-    mockTx.medidores.findUnique.mockResolvedValue({
-      medidorId: BigInt(200),
-      serie: 'SER-12345',
-    });
+    mockContractRepository.finalizeActiveMeterLink.mockResolvedValue({
+      contratoId,
+      estado: 'ACTIVO',
+    } as any);
 
     const result = await useCase.execute(contratoId);
 
     expect(mockContractRepository.findUnique).toHaveBeenCalledWith({
       contratoId,
     });
-    expect(mockTx.historialMedidores.findFirst).toHaveBeenCalledWith({
-      where: { contratoId, fechaHasta: null },
-    });
-    expect(mockTx.historialMedidores.update).toHaveBeenCalledWith({
-      where: { historialId: BigInt(100) },
-      data: { fechaHasta: expect.any(Date) },
-    });
-    expect(result).toEqual({ medidorId: BigInt(200), serie: 'SER-12345' });
+    expect(mockContractRepository.finalizeActiveMeterLink).toHaveBeenCalledWith(
+      contratoId,
+    );
+    expect(result).toMatchObject({ contratoId, estado: 'ACTIVO' });
   });
 
   it('should throw NotFoundException when no active link exists (S3.2)', async () => {
@@ -96,7 +68,9 @@ describe('FinalizeMeterLinkUseCase', () => {
       contratoId,
       deletedAt: null,
     });
-    mockTx.historialMedidores.findFirst.mockResolvedValue(null);
+    mockContractRepository.finalizeActiveMeterLink.mockRejectedValue(
+      new NotFoundException('No hay un vínculo activo para este contrato'),
+    );
 
     await expect(useCase.execute(contratoId)).rejects.toThrow(
       NotFoundException,
@@ -107,6 +81,35 @@ describe('FinalizeMeterLinkUseCase', () => {
     const contratoId = BigInt(999);
 
     mockContractRepository.findUnique.mockResolvedValue(null);
+
+    await expect(useCase.execute(contratoId)).rejects.toThrow(
+      NotFoundException,
+    );
+  });
+
+  it('should throw NotFoundException when contract is soft-deleted (S3.4)', async () => {
+    const contratoId = BigInt(1);
+
+    mockContractRepository.findUnique.mockResolvedValue({
+      contratoId,
+      deletedAt: new Date(),
+    });
+
+    await expect(useCase.execute(contratoId)).rejects.toThrow(
+      NotFoundException,
+    );
+  });
+
+  it('should throw NotFoundException when medidor not found after finalizing (S3.5)', async () => {
+    const contratoId = BigInt(1);
+
+    mockContractRepository.findUnique.mockResolvedValue({
+      contratoId,
+      deletedAt: null,
+    });
+    mockContractRepository.finalizeActiveMeterLink.mockRejectedValue(
+      new NotFoundException(`Medidor con ID 999 no encontrado`),
+    );
 
     await expect(useCase.execute(contratoId)).rejects.toThrow(
       NotFoundException,

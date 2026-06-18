@@ -6,7 +6,6 @@ import { ContractRepository } from '../../domain/repositories/contract.repositor
 
 describe('CreateContractUseCase', () => {
   let useCase: CreateContractUseCase;
-  let mockTx: any;
 
   const mockContractRepository = {
     findUnique: jest.fn(),
@@ -14,29 +13,10 @@ describe('CreateContractUseCase', () => {
     count: jest.fn(),
     update: jest.fn(),
     create: jest.fn(),
-    executeTransaction: jest.fn(),
+    createContractWithMeterHistory: jest.fn(),
   };
 
   beforeEach(async () => {
-    mockTx = {
-      clientes: { findUnique: jest.fn() },
-      medidores: { findUnique: jest.fn() },
-      categoriaTarifa: { findUnique: jest.fn() },
-      contratos: {
-        create: jest.fn(),
-        update: jest.fn(),
-      },
-      historialMedidores: {
-        create: jest.fn(),
-        updateMany: jest.fn(),
-        findFirst: jest.fn(),
-      },
-    };
-
-    mockContractRepository.executeTransaction.mockImplementation((cb: any) =>
-      cb(mockTx),
-    );
-
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateContractUseCase,
@@ -68,45 +48,26 @@ describe('CreateContractUseCase', () => {
       comunidadId: '2',
     };
 
-    mockTx.clientes.findUnique.mockResolvedValue({ clienteId: BigInt(10) });
-    mockTx.medidores.findUnique.mockResolvedValue({ medidorId: BigInt(200) });
-    mockTx.categoriaTarifa.findUnique.mockResolvedValue({
-      categoriaTarifaId: 3,
-    });
-    mockTx.contratos.create.mockResolvedValue({ contratoId: BigInt(1) });
-    mockTx.historialMedidores.create.mockResolvedValue({});
-    mockContractRepository.findUnique.mockResolvedValue({
+    mockContractRepository.createContractWithMeterHistory.mockResolvedValue({
       contratoId: BigInt(1),
       estado: 'SOLICITUD',
     });
 
     const result = await useCase.execute(dto);
 
-    expect(mockTx.clientes.findUnique).toHaveBeenCalledWith({
-      where: { clienteId: BigInt(10) },
-    });
-    expect(mockTx.medidores.findUnique).toHaveBeenCalledWith({
-      where: { medidorId: BigInt(200) },
-    });
-    expect(mockTx.categoriaTarifa.findUnique).toHaveBeenCalledWith({
-      where: { categoriaTarifaId: 3 },
-    });
-    expect(mockTx.contratos.create).toHaveBeenCalledWith({
-      data: expect.objectContaining({
-        clienteId: BigInt(10),
-        categoriaTarifaId: 3,
-        numeroGuia: 'GUIA-001',
-        direccionSuministro: 'Av. Principal 123',
-        comunidadId: 2,
-        estado: 'SOLICITUD',
-      }),
-    });
-    expect(mockTx.historialMedidores.create).toHaveBeenCalledWith({
-      data: expect.objectContaining({
-        medidorId: BigInt(200),
-        contratoId: BigInt(1),
-        motivo: 'VINCULACION MANUAL',
-      }),
+    expect(
+      mockContractRepository.createContractWithMeterHistory,
+    ).toHaveBeenCalledWith({
+      clienteId: BigInt(10),
+      categoriaTarifaId: 3,
+      medidorId: BigInt(200),
+      comunidadId: 2,
+      sectorId: null,
+      numeroGuia: 'GUIA-001',
+      direccionSuministro: 'Av. Principal 123',
+      estado: 'SOLICITUD',
+      creadoPor: undefined,
+      lecturaInicial: 0,
     });
     expect(result).toEqual({ contratoId: BigInt(1), estado: 'SOLICITUD' });
   });
@@ -125,14 +86,7 @@ describe('CreateContractUseCase', () => {
       estado: 'ACTIVO',
     };
 
-    mockTx.clientes.findUnique.mockResolvedValue({ clienteId: BigInt(20) });
-    mockTx.medidores.findUnique.mockResolvedValue({ medidorId: BigInt(300) });
-    mockTx.categoriaTarifa.findUnique.mockResolvedValue({
-      categoriaTarifaId: 5,
-    });
-    mockTx.contratos.create.mockResolvedValue({ contratoId: BigInt(2) });
-    mockTx.historialMedidores.create.mockResolvedValue({});
-    mockContractRepository.findUnique.mockResolvedValue({
+    mockContractRepository.createContractWithMeterHistory.mockResolvedValue({
       contratoId: BigInt(2),
       estado: 'ACTIVO',
       sector: { sectorId: 10, codigo: 'SEC-A', nombre: 'Sector A' },
@@ -140,19 +94,19 @@ describe('CreateContractUseCase', () => {
 
     const result = await useCase.execute(dto);
 
-    expect(mockTx.contratos.create).toHaveBeenCalledWith({
-      data: expect.objectContaining({
-        clienteId: BigInt(20),
-        sectorId: 10,
-        estado: 'ACTIVO',
-        creadoPor: 'admin',
-      }),
-    });
-    expect(mockTx.historialMedidores.create).toHaveBeenCalledWith({
-      data: expect.objectContaining({
-        medidorId: BigInt(300),
-        contratoId: BigInt(2),
-      }),
+    expect(
+      mockContractRepository.createContractWithMeterHistory,
+    ).toHaveBeenCalledWith({
+      clienteId: BigInt(20),
+      categoriaTarifaId: 5,
+      medidorId: BigInt(300),
+      comunidadId: 3,
+      sectorId: 10,
+      numeroGuia: 'GUIA-002',
+      direccionSuministro: 'Calle Secundaria 456',
+      estado: 'ACTIVO',
+      creadoPor: 'admin',
+      lecturaInicial: 500,
     });
     expect(result).toEqual({
       contratoId: BigInt(2),
@@ -171,7 +125,9 @@ describe('CreateContractUseCase', () => {
       comunidadId: '1',
     };
 
-    mockTx.clientes.findUnique.mockResolvedValue(null);
+    mockContractRepository.createContractWithMeterHistory.mockRejectedValue(
+      new NotFoundException(`Cliente con ID ${dto.clienteId} no encontrado`),
+    );
 
     await expect(useCase.execute(dto)).rejects.toThrow(NotFoundException);
   });
@@ -186,8 +142,9 @@ describe('CreateContractUseCase', () => {
       comunidadId: '1',
     };
 
-    mockTx.clientes.findUnique.mockResolvedValue({ clienteId: BigInt(10) });
-    mockTx.medidores.findUnique.mockResolvedValue(null);
+    mockContractRepository.createContractWithMeterHistory.mockRejectedValue(
+      new NotFoundException(`Medidor con ID ${dto.medidorId} no encontrado`),
+    );
 
     await expect(useCase.execute(dto)).rejects.toThrow(NotFoundException);
   });
@@ -202,9 +159,48 @@ describe('CreateContractUseCase', () => {
       comunidadId: '1',
     };
 
-    mockTx.clientes.findUnique.mockResolvedValue({ clienteId: BigInt(10) });
-    mockTx.medidores.findUnique.mockResolvedValue({ medidorId: BigInt(200) });
-    mockTx.categoriaTarifa.findUnique.mockResolvedValue(null);
+    mockContractRepository.createContractWithMeterHistory.mockRejectedValue(
+      new NotFoundException(
+        `Categoría de tarifa con ID ${dto.categoriaTarifaId} no encontrada`,
+      ),
+    );
+
+    await expect(useCase.execute(dto)).rejects.toThrow(NotFoundException);
+  });
+
+  it('should throw NotFoundException when comunidad does not exist', async () => {
+    const dto = {
+      clienteId: '10',
+      categoriaTarifaId: '3',
+      medidorId: '200',
+      numeroGuia: 'GUIA-006',
+      direccionSuministro: 'Dir',
+      comunidadId: '999',
+    };
+
+    mockContractRepository.createContractWithMeterHistory.mockRejectedValue(
+      new NotFoundException(
+        `Comunidad con ID ${dto.comunidadId} no encontrada`,
+      ),
+    );
+
+    await expect(useCase.execute(dto)).rejects.toThrow(NotFoundException);
+  });
+
+  it('should throw NotFoundException when sector does not exist (S1.6)', async () => {
+    const dto = {
+      clienteId: '10',
+      categoriaTarifaId: '3',
+      medidorId: '200',
+      numeroGuia: 'GUIA-007',
+      direccionSuministro: 'Dir',
+      comunidadId: '1',
+      sectorId: '999',
+    };
+
+    mockContractRepository.createContractWithMeterHistory.mockRejectedValue(
+      new NotFoundException(`Sector con ID ${dto.sectorId} no encontrado`),
+    );
 
     await expect(useCase.execute(dto)).rejects.toThrow(NotFoundException);
   });
