@@ -32,9 +32,7 @@ export class CreateContractUseCase {
             direccionSuministro: dto.direccionSuministro,
             comunidadId: ids.comunidadId,
             estado,
-            ...(ids.sectorId !== null
-              ? { sectorId: ids.sectorId }
-              : {}),
+            ...(ids.sectorId !== null ? { sectorId: ids.sectorId } : {}),
             ...(dto.creadoPor ? { creadoPor: dto.creadoPor } : {}),
           },
         });
