@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { RouteRepository } from '../../domain/repositories/route.repository';
-import { RouteEntity } from '../../domain/types/route.entity';
-import { RouteMapper } from '../../domain/types/mappers';
+import { RouteEntity } from '../../domain/entities/route.entity';
+import { RouteMapper } from '../../infrastructure/mappers/route.mapper';
 
 @Injectable()
 export class FindOneRouteUseCase {

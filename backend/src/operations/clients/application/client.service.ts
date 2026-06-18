@@ -7,11 +7,11 @@ import { CreateClientUseCase } from './use-cases/create-client.use-case';
 import { UpdateClientUseCase } from './use-cases/update-client.use-case';
 import { FindOneClientUseCase } from './use-cases/find-one-client.use-case';
 import { RemoveClientUseCase } from './use-cases/remove-client.use-case';
-import { buildClientWhere } from '../domain/types/clientFilters';
-import { toIdentificacionResponse } from '../domain/types/identificacionesMapper';
-import { safeClientesSelect } from '../domain/types/IResponseClient';
+import { buildClientFilters } from './mappers/client-filters.mapper';
+import { IdentificacionMapper } from '../infrastructure/mappers/identificacion.mapper';
 import type { IResponseIdentificacion } from '../domain/types/IResponseIdentificacion';
-import type { IResponseClient } from '../domain/types/IResponseClient';
+import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
+import type { ClientEntity } from '../domain/entities/client.entity';
 
 @Injectable()
 export class ClientService {
@@ -27,30 +27,34 @@ export class ClientService {
     return this.createUseCase.execute(dto);
   }
 
-  async findAll(filters?: FilterClientDto): Promise<IResponseClient[]> {
-    const where = filters ? buildClientWhere(filters) : { deletedAt: null };
+  async findAll(
+    filters?: FilterClientDto,
+  ): Promise<PaginatedResult<ClientEntity>> {
+    const clientFilters = filters ? buildClientFilters(filters) : undefined;
 
-    return this.clientRepository.findMany({
-      where,
-      orderBy: { createdAt: 'desc' },
-      select: safeClientesSelect,
-    });
+    return this.clientRepository.paginateClientes(
+      {
+        filters: clientFilters,
+        orderBy: { createdAt: 'desc' },
+      },
+      { page: filters?.page, limit: filters?.limit },
+    );
   }
 
-  async findOne(id: string) {
+  async findOne(id: string): Promise<ClientEntity> {
     return this.findOneUseCase.execute(id);
   }
 
-  async update(id: string, dto: UpdateClientDto) {
+  async update(id: string, dto: UpdateClientDto): Promise<ClientEntity> {
     return this.updateUseCase.execute(id, dto);
   }
 
-  async delete(id: string) {
+  async delete(id: string): Promise<ClientEntity> {
     return this.removeUseCase.execute(id);
   }
 
   /**
-   * Obtener catálogo de identificaciones activas
+   * Get active identification types catalog
    */
   async findAllIdentificaciones(): Promise<IResponseIdentificacion[]> {
     const identificaciones =
@@ -59,6 +63,8 @@ export class ClientService {
         orderBy: { id: 'asc' },
       });
 
-    return identificaciones.map(toIdentificacionResponse);
+    return identificaciones
+      .map(IdentificacionMapper.toDomain)
+      .filter(Boolean) as IResponseIdentificacion[];
   }
 }

@@ -19,15 +19,16 @@ import {
   ApiExtraModels,
 } from '@nestjs/swagger';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
-import { JwtAuthGuard } from 'src/identity/auth/guards/jwt-auth.guard';
+import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 import { ClientService } from '../../application/client.service';
 import { CreateClientDto } from '../dto/create-client.dto';
 import { UpdateClientDto } from '../dto/update-client.dto';
 import { FilterClientDto } from '../dto/filter-client.dto';
 import { ApiPaginatedResponse } from 'src/infrastructure/common/decorators/api-paginated-response.decorator';
-import { ClientEntity } from '../../domain/types/client.entity';
+import { ClientEntity } from '../../domain/entities/client.entity';
 import { PaginationMetaDto } from 'src/infrastructure/common/dtos/pagination-meta.dto';
+import { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
 
 @ApiTags('clients')
 @ApiBearerAuth()
@@ -80,7 +81,9 @@ export class ClientController {
   @ApiPaginatedResponse(ClientEntity)
   @RequiredPermission('clientes', 'read')
   @Get()
-  findAll(@Query() filters: FilterClientDto) {
+  async findAll(
+    @Query() filters: FilterClientDto,
+  ): Promise<PaginatedResult<ClientEntity>> {
     return this.clientService.findAll(filters);
   }
 

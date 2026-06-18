@@ -1,15 +1,14 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { ReadingRepository } from '../../domain/repositories/reading.repository';
 import { CrearLecturaDto } from '../../interfaces/dto/create-lectura.dto';
-import { EstadoLectura } from 'src/generated/prisma/enums';
-import { toReadingResponse } from '../../types/readingMapper';
-import { safeReadingsSelect } from '../../types/IResponseReading';
+import { EstadoLectura } from 'src/generated/prisma/client';
+import { LecturaEntity } from '../../domain/entities/lectura.entity';
 
 @Injectable()
 export class CreateReadingUseCase {
   constructor(private readonly readingRepository: ReadingRepository) {}
 
-  async execute(createDto: CrearLecturaDto) {
+  async execute(createDto: CrearLecturaDto): Promise<LecturaEntity> {
     const rawLectura = await this.readingRepository.create({
       fecha: new Date(createDto.fecha),
       lecturaAnterior: createDto.lecturaAnterior,
@@ -17,17 +16,20 @@ export class CreateReadingUseCase {
       consumoCalculado: createDto.consumoCalculado ?? 0,
       medidorId: BigInt(createDto.medidorId),
       descripcionAnomalia: createDto.descripcionAnomalia,
-      fotoUrlMinIo: createDto.fotoUrlMinIo,
+      fotoUrl: createDto.fotoUrl,
       lecturaInicial: createDto.lecturaInicial,
       periodoId: createDto.periodoId,
       estado: EstadoLectura.PENDIENTE,
     });
 
-    const lectura = await this.readingRepository.findUnique(
-      { lecturaId: rawLectura.lecturaId },
-      safeReadingsSelect,
-    );
+    const lectura = await this.readingRepository.findUnique({
+      lecturaId: rawLectura.lecturaId,
+    });
 
-    return toReadingResponse(lectura);
+    if (!lectura) {
+      throw new NotFoundException('Lectura no encontrada');
+    }
+
+    return lectura;
   }
 }

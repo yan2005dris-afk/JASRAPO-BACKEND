@@ -52,6 +52,7 @@ describe('MeterService', () => {
 
   const mockMeterRepository = {
     findMany: jest.fn(),
+    count: jest.fn(),
     update: jest.fn(),
   };
 
@@ -111,14 +112,56 @@ describe('MeterService', () => {
     expect(findOneUseCase.execute).toHaveBeenCalledWith(id);
   });
 
-  it('findAll should use repository and map response', async () => {
-    const params = { skip: 0 };
+  it('findAll should return paginated response with kpis', async () => {
     jest
       .spyOn(meterRepository, 'findMany')
       .mockResolvedValue([mockPrismaResult]);
-    const result = await service.findAll(params);
-    expect(result[0].medidorId).toEqual(expectedResponse.medidorId);
-    expect(result[0].serie).toBe(expectedResponse.serie);
+    jest.spyOn(meterRepository, 'count').mockResolvedValue(1);
+
+    const result = await service.findAll({ page: 1, limit: 10 });
+
+    expect(result.data).toHaveLength(1);
+    expect(result.meta.total).toBe(1);
+    expect(result.meta.page).toBe(1);
+    expect(result.kpis.enBodega).toBe(1);
     expect(meterRepository.findMany).toHaveBeenCalled();
+    expect(meterRepository.count).toHaveBeenCalled();
+  });
+
+  it('findAll should fall back to default pagination when filters are empty or undefined', async () => {
+    jest
+      .spyOn(meterRepository, 'findMany')
+      .mockResolvedValue([mockPrismaResult]);
+    jest.spyOn(meterRepository, 'count').mockResolvedValue(1);
+
+    // Case 1: Undefined filters
+    const resultUndefined = await service.findAll();
+    expect(resultUndefined.meta.page).toBe(1);
+    expect(resultUndefined.meta.limit).toBe(10);
+    expect(meterRepository.findMany).toHaveBeenLastCalledWith({
+      where: undefined,
+      skip: 0,
+      take: 10,
+    });
+
+    // Case 2: Empty filters ({})
+    const resultEmpty = await service.findAll({});
+    expect(resultEmpty.meta.page).toBe(1);
+    expect(resultEmpty.meta.limit).toBe(10);
+    expect(meterRepository.findMany).toHaveBeenLastCalledWith({
+      where: {},
+      skip: 0,
+      take: 10,
+    });
+
+    // Case 3: Null filters
+    const resultNull = await service.findAll(null as any);
+    expect(resultNull.meta.page).toBe(1);
+    expect(resultNull.meta.limit).toBe(10);
+    expect(meterRepository.findMany).toHaveBeenLastCalledWith({
+      where: undefined,
+      skip: 0,
+      take: 10,
+    });
   });
 });

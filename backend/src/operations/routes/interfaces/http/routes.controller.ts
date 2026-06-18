@@ -18,15 +18,15 @@ import {
   ApiExtraModels,
 } from '@nestjs/swagger';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
-import { JwtAuthGuard } from 'src/identity/auth/guards/jwt-auth.guard';
+import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 import { RoutesService } from '../../application/routes.service';
 import { CreateRouteDto } from '../dto/create-route.dto';
 import { UpdateRouteDto } from '../dto/update-route.dto';
 import { FilterReadingsDto } from '../dto/filter-readings.dto';
 import { FindAllRoutesDto } from '../dto/find-all-routes.dto';
-import { RouteEntity } from '../../domain/types/route.entity';
-import { ReadingForRouteEntity } from '../../domain/types/reading-for-route.entity';
+import { RouteEntity } from '../../domain/entities/route.entity';
+import { ReadingForRouteEntity } from '../../domain/entities/reading-for-route.entity';
 import { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
 import { ApiPaginatedResponse } from 'src/infrastructure/common/decorators/api-paginated-response.decorator';
 import { PaginationMetaDto } from 'src/infrastructure/common/dtos/pagination-meta.dto';

@@ -10,6 +10,7 @@ model Periodos {
   lecturas         Lecturas[]
   lotes            Lote[]
   prefacturas      Prefacturas[]
+  rutas            Rutas[]
 
   @@map("periodos")
 }

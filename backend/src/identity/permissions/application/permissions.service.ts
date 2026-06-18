@@ -21,8 +21,8 @@ export class PermissionsService {
     return this.createUseCase.execute(createPermissionDto);
   }
 
-  findAll() {
-    return this.findAllUseCase.execute();
+  findAll(page?: number, limit?: number) {
+    return this.findAllUseCase.execute(page, limit);
   }
 
   findOne(id: number) {

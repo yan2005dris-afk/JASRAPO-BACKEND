@@ -6,6 +6,7 @@ import { CreateUserUseCase } from './use-cases/create-user.use-case';
 import { GetEffectivePermissionsUseCase } from './use-cases/get-effective-permissions.use-case';
 import { UpdateUserPermissionsUseCase } from './use-cases/update-user-permissions.use-case';
 import { NotFoundException } from '@nestjs/common';
+import { StorageService } from 'src/infrastructure/storage/storage.service';
 
 describe('UserService', () => {
   let service: UserService;
@@ -14,10 +15,9 @@ describe('UserService', () => {
   let updateUserPermissionsUseCase: UpdateUserPermissionsUseCase;
 
   const mockUserRepository = {
-    findUnique: jest.fn(),
-    findMany: jest.fn(),
+    findById: jest.fn(),
+    findByEmail: jest.fn(),
     findManyActive: jest.fn(),
-    count: jest.fn(),
     update: jest.fn(),
     findRoleById: jest.fn(),
     findDirectPermissions: jest.fn(),
@@ -31,6 +31,12 @@ describe('UserService', () => {
 
   const mockUpdateUserPermissionsUseCase = {
     execute: jest.fn(),
+  };
+
+  const mockStorageService = {
+    getUrl: jest.fn(),
+    upload: jest.fn(),
+    delete: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -47,6 +53,7 @@ describe('UserService', () => {
           provide: UpdateUserPermissionsUseCase,
           useValue: mockUpdateUserPermissionsUseCase,
         },
+        { provide: StorageService, useValue: mockStorageService },
       ],
     }).compile();
 
@@ -89,7 +96,7 @@ describe('UserService', () => {
         { permiso: { recurso: 'users', accion: 'write' } },
       ];
 
-      mockUserRepository.findUnique.mockResolvedValue(mockUser);
+      mockUserRepository.findById.mockResolvedValue(mockUser);
       mockUserRepository.findDirectPermissions.mockResolvedValue(mockDirect);
       mockUserRepository.findRolePermissions.mockResolvedValue(mockRolePerms);
 
@@ -117,7 +124,7 @@ describe('UserService', () => {
     });
 
     it('should return null if user not found', async () => {
-      mockUserRepository.findUnique.mockResolvedValue(null);
+      mockUserRepository.findById.mockResolvedValue(null);
       const result = await service.user({ usuarioId: 999 });
       expect(result).toBeNull();
     });
@@ -125,18 +132,18 @@ describe('UserService', () => {
 
   describe('updateUser', () => {
     it('should call updateUserPermissionsUseCase if directPermissions provided', async () => {
-      mockUserRepository.findUnique.mockResolvedValue({
+      mockUserRepository.findById.mockResolvedValue({
         usuarioId: 1,
         deletedAt: null,
-      });
+      } as any);
       const mockUpdatedUser = { usuarioId: 1 };
       const mockDirectPermissions = [{ permisoId: 1, permitido: true }];
 
-      mockUserRepository.update.mockResolvedValue(mockUpdatedUser);
+      mockUserRepository.update.mockResolvedValue(mockUpdatedUser as any);
 
-      await service.updateUser({
-        where: { usuarioId: 1 },
-        data: { nombres: 'Test', directPermissions: mockDirectPermissions },
+      await service.updateUser(1, {
+        nombres: 'Test',
+        directPermissions: mockDirectPermissions,
       });
 
       expect(updateUserPermissionsUseCase.execute).toHaveBeenCalledWith(
@@ -147,36 +154,30 @@ describe('UserService', () => {
     });
 
     it('should throw NotFoundException if rolId is invalid (not found)', async () => {
-      mockUserRepository.findUnique.mockResolvedValue({
+      mockUserRepository.findById.mockResolvedValue({
         usuarioId: 1,
         deletedAt: null,
-      });
+      } as any);
       mockUserRepository.findRoleById.mockResolvedValue(null);
 
-      await expect(
-        service.updateUser({
-          where: { usuarioId: 1 },
-          data: { rolId: 999 },
-        }),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.updateUser(1, { rolId: 999 })).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw NotFoundException if rolId is invalid (soft-deleted)', async () => {
-      mockUserRepository.findUnique.mockResolvedValue({
+      mockUserRepository.findById.mockResolvedValue({
         usuarioId: 1,
         deletedAt: null,
-      });
+      } as any);
       mockUserRepository.findRoleById.mockResolvedValue({
         rolId: 2,
         deletedAt: new Date(),
       });
 
-      await expect(
-        service.updateUser({
-          where: { usuarioId: 1 },
-          data: { rolId: 2 },
-        }),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.updateUser(1, { rolId: 2 })).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -199,15 +200,15 @@ describe('UserService', () => {
 
   describe('findMe', () => {
     it('should return profile with rol info', async () => {
-      mockUserRepository.findUnique.mockResolvedValue({
+      mockUserRepository.findById.mockResolvedValue({
         usuarioId: 1,
         email: 'test@test.com',
         nombres: 'John',
         apellidos: 'Doe',
         telefono: '123456',
         avatar: { url: 'avatar.png' },
-        rol: { rolId: 1, nombre: 'admin', deletedAt: null },
-      });
+        rol: { rolId: 1, logo: null, nombre: 'admin', deletedAt: null },
+      } as any);
 
       const result = await service.findMe(1);
 
@@ -222,7 +223,7 @@ describe('UserService', () => {
     });
 
     it('should throw NotFoundException if profile user not found', async () => {
-      mockUserRepository.findUnique.mockResolvedValue(null);
+      mockUserRepository.findById.mockResolvedValue(null);
 
       await expect(service.findMe(1)).rejects.toThrow(NotFoundException);
     });

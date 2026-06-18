@@ -12,6 +12,10 @@ function transformDecimals(obj: unknown): unknown {
     return obj;
   }
 
+  if (obj instanceof Date) {
+    return obj;
+  }
+
   if (Array.isArray(obj)) {
     return obj.map((item) => transformDecimals(item));
   }

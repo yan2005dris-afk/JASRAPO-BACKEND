@@ -5,8 +5,9 @@ import {
 } from '@nestjs/common';
 import { RouteRepository } from '../../domain/repositories/route.repository';
 import { CreateRouteDto } from '../../interfaces/dto/create-route.dto';
-import { RouteEntity } from '../../domain/types/route.entity';
-import { RouteMapper } from '../../domain/types/mappers';
+import { RouteEntity } from '../../domain/entities/route.entity';
+import { RouteMapper } from '../../infrastructure/mappers/route.mapper';
+import type { CreateRouteData } from '../../domain/types/create-route-data';
 
 @Injectable()
 export class CreateRouteUseCase {
@@ -48,28 +49,45 @@ export class CreateRouteUseCase {
       }
     }
 
-    const ruta = await this.routeRepository.create({
+    const periodo = await this.routeRepository.findPeriodo({
+      periodoId: createDto.periodoId,
+    });
+
+    if (!periodo) {
+      throw new NotFoundException('Periodo no encontrado');
+    }
+
+    if (periodo.estado !== 'ABIERTO') {
+      throw new BadRequestException('El periodo no está abierto');
+    }
+
+    const overlapping = await this.routeRepository.findOverlappingRoutes(
+      createDto.comunidadId,
+      createDto.periodoId,
+      createDto.sectorId,
+    );
+
+    if (overlapping.length > 0) {
+      throw new BadRequestException(
+        'Ya existe una ruta para esta comunidad y periodo',
+      );
+    }
+
+    const createData: CreateRouteData = {
       nombre: createDto.nombre,
       descripcion: createDto.descripcion,
-      operario: {
-        connect: {
-          usuarioId: createDto.operarioId,
-        },
-      },
+      operarioId: createDto.operarioId,
       tipoRuta: createDto.tipoRuta,
-      comunidad: {
-        connect: {
-          comunidadId: createDto.comunidadId,
-        },
-      },
-      sector: createDto.sectorId
-        ? { connect: { sectorId: createDto.sectorId } }
-        : undefined,
+      comunidadId: createDto.comunidadId,
+      sectorId: createDto.sectorId,
+      periodoId: createDto.periodoId,
       fechaPlanificada: createDto.fechaPlanificada
         ? new Date(createDto.fechaPlanificada)
         : null,
       estado: 'PENDIENTE',
-    });
+    };
+
+    const ruta = await this.routeRepository.create(createData);
 
     return RouteMapper.toEntity(ruta);
   }

@@ -22,10 +22,10 @@ const PERMISSION_MAP: MenuPermissionMapping[] = [
   {
     menuNombre: 'Inventario de Medidores',
     permisos: [
-      { recurso: 'medidores', accion: 'read' },
-      { recurso: 'medidores', accion: 'create' },
-      { recurso: 'medidores', accion: 'update' },
-      { recurso: 'medidores', accion: 'delete' },
+      { recurso: 'meters', accion: 'read' },
+      { recurso: 'meters', accion: 'create' },
+      { recurso: 'meters', accion: 'update' },
+      { recurso: 'meters', accion: 'delete' },
     ],
   },
   {
@@ -44,6 +44,15 @@ const PERMISSION_MAP: MenuPermissionMapping[] = [
       { recurso: 'lecturas', accion: 'create' },
       { recurso: 'lecturas', accion: 'update' },
       { recurso: 'lecturas', accion: 'delete' },
+    ],
+  },
+  {
+    menuNombre: 'Categoría Tarifa',
+    permisos: [
+      { recurso: 'tarifas', accion: 'read' },
+      { recurso: 'tarifas', accion: 'create' },
+      { recurso: 'tarifas', accion: 'update' },
+      { recurso: 'tarifas', accion: 'delete' },
     ],
   },
   {
@@ -83,7 +92,20 @@ const PERMISSION_MAP: MenuPermissionMapping[] = [
     ],
   },
   {
-    menuNombre: 'Gestión General',
+    menuNombre: 'Generación de Planillas',
+    permisos: [
+      { recurso: 'pre-invoices', accion: 'read' },
+      { recurso: 'pre-invoices', accion: 'create' },
+      { recurso: 'pre-invoices', accion: 'update' },
+      { recurso: 'pre-invoices', accion: 'delete' },
+      { recurso: 'batches', accion: 'read' },
+      { recurso: 'batches', accion: 'create' },
+      { recurso: 'batches', accion: 'update' },
+      { recurso: 'batches', accion: 'delete' },
+    ],
+  },
+  {
+    menuNombre: 'Usuarios',
     permisos: [
       { recurso: 'users', accion: 'read' },
       { recurso: 'users', accion: 'create' },
@@ -93,6 +115,33 @@ const PERMISSION_MAP: MenuPermissionMapping[] = [
       { recurso: 'roles', accion: 'create' },
       { recurso: 'roles', accion: 'update' },
       { recurso: 'roles', accion: 'delete' },
+    ],
+  },
+  {
+    menuNombre: 'Roles y Permisos',
+    permisos: [
+      { recurso: 'roles', accion: 'read' },
+      { recurso: 'roles', accion: 'create' },
+      { recurso: 'roles', accion: 'update' },
+      { recurso: 'roles', accion: 'delete' },
+    ],
+  },
+  {
+    menuNombre: 'Comunidades',
+    permisos: [
+      { recurso: 'comunidades', accion: 'read' },
+      { recurso: 'comunidades', accion: 'create' },
+      { recurso: 'comunidades', accion: 'update' },
+      { recurso: 'comunidades', accion: 'delete' },
+    ],
+  },
+  {
+    menuNombre: 'Sectores',
+    permisos: [
+      { recurso: 'sectores', accion: 'read' },
+      { recurso: 'sectores', accion: 'create' },
+      { recurso: 'sectores', accion: 'update' },
+      { recurso: 'sectores', accion: 'delete' },
     ],
   },
   {

@@ -1,25 +1,69 @@
-import type {
-  TipoAnomalia,
-  EstadoAnomalia,
-  Prisma,
-} from 'src/generated/prisma/client';
+import { ApiProperty } from '@nestjs/swagger';
+import { TipoAnomalia, EstadoAnomalia } from 'src/generated/prisma/client';
 
 export class ReadingAnomalyEntity {
-  anomaliaId: string;
-  lecturaId: string;
-  observacion: string | null;
-  tipo: TipoAnomalia;
-  estado: EstadoAnomalia;
-  createdAt: Date;
-  updatedAt: Date;
-  deletedAt: Date | null;
-  fotoUrlMinIo: string | null;
+  @ApiProperty({ example: '1', description: 'ID de la anomalía' })
+  anomaliaId: bigint;
 
-  constructor(partial: Partial<Prisma.LecturaAnomaliaGetPayload<{}>>) {
-    if (partial) {
-      Object.assign(this, partial);
-      if (partial.anomaliaId) this.anomaliaId = partial.anomaliaId.toString();
-      if (partial.lecturaId) this.lecturaId = partial.lecturaId.toString();
-    }
+  @ApiProperty({ example: '1', description: 'ID de la lectura asociada' })
+  lecturaId: bigint;
+
+  @ApiProperty({
+    example: 'Vidrio empañado',
+    description: 'Observación sobre la anomalía',
+    nullable: true,
+  })
+  observacion: string | null;
+
+  @ApiProperty({
+    example: 'MEDIDOR_DANADO',
+    enum: TipoAnomalia,
+    description: 'Tipo de anomalía',
+  })
+  tipo: TipoAnomalia;
+
+  @ApiProperty({
+    example: 'REGISTRADA',
+    enum: EstadoAnomalia,
+    description: 'Estado de la anomalía',
+  })
+  estado: EstadoAnomalia;
+
+  @ApiProperty({
+    example: '2026-06-11T00:00:00.000Z',
+    description: 'Fecha de creación',
+  })
+  createdAt: Date;
+
+  @ApiProperty({
+    example: '2026-06-11T00:00:00.000Z',
+    description: 'Fecha de última actualización',
+  })
+  updatedAt: Date;
+
+  @ApiProperty({
+    example: '2026-06-11T00:00:00.000Z',
+    description: 'Fecha de eliminación lógica',
+    nullable: true,
+  })
+  deletedAt: Date | null;
+
+  @ApiProperty({
+    example: 'http://storage/photo.jpg',
+    description: 'URL de la foto',
+    nullable: true,
+  })
+  fotoUrl: string | null;
+
+  // Relaciones opcionales del dominio
+  lectura?: {
+    lecturaId: bigint;
+    fecha: Date;
+    lecturaActual: number;
+    consumoCalculado: number;
+  } | null;
+
+  constructor(partial: Partial<ReadingAnomalyEntity>) {
+    Object.assign(this, partial);
   }
 }

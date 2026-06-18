@@ -8,11 +8,12 @@ import {
   Delete,
   UseGuards,
   ParseIntPipe,
+  Query,
 } from '@nestjs/common';
 import { PermissionsService } from '../../application/permissions.service';
 import { CreatePermissionDto } from '../dto/create-permission.dto';
 import { UpdatePermissionDto } from '../dto/update-permission.dto';
-import { JwtAuthGuard } from 'src/identity/auth/guards/jwt-auth.guard';
+import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
 import {
@@ -23,6 +24,7 @@ import {
   ApiParam,
   ApiBody,
 } from '@nestjs/swagger';
+import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
 
 @ApiTags('permissions')
 @ApiBearerAuth()
@@ -88,8 +90,11 @@ export class PermissionsController {
   })
   @RequiredPermission('permissions', 'read')
   @Get()
-  findAllPermissions() {
-    return this.permissionsService.findAll();
+  async findAllPermissions(@Query() paginationDto: PaginationDto) {
+    return this.permissionsService.findAll(
+      paginationDto.page,
+      paginationDto.limit,
+    );
   }
 
   /**

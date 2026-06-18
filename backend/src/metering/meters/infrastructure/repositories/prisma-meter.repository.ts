@@ -1,54 +1,157 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { Prisma } from 'src/generated/prisma/client';
-import { MeterRepository } from '../../domain/repositories/meter.repository';
+import {
+  MeterRepository,
+  CreateMeterRepositoryData,
+  UpdateMeterRepositoryData,
+  CreateMeterHistoryRepositoryData,
+} from '../../domain/repositories/meter.repository';
+import { MeterEntity } from '../../domain/entities/meter.entity';
+import { MeterMapper } from '../mappers/meter.mapper';
+import { MeterFilters } from '../../domain/types/meter-filters';
 
 @Injectable()
 export class PrismaMeterRepository implements MeterRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findUnique(
-    where: Prisma.MedidoresWhereUniqueInput,
-    select?: Prisma.MedidoresSelect,
-  ): Promise<any> {
-    return this.prisma.medidores.findUnique({ where, select });
+  async findUnique(where: {
+    medidorId?: bigint;
+    serie?: string;
+  }): Promise<MeterEntity | null> {
+    const record = await this.prisma.medidores.findUnique({
+      where: {
+        ...(where.medidorId !== undefined && { medidorId: where.medidorId }),
+        ...(where.serie !== undefined && { serie: where.serie }),
+      } as Prisma.MedidoresWhereUniqueInput,
+    });
+    return MeterMapper.toDomain(record);
   }
 
   async findMany(params: {
-    select?: Prisma.MedidoresSelect;
-    where?: Prisma.MedidoresWhereInput;
-    orderBy?: Prisma.MedidoresOrderByWithRelationInput;
+    where?: MeterFilters;
     take?: number;
     skip?: number;
-  }): Promise<any[]> {
-    return this.prisma.medidores.findMany(params);
+  }): Promise<MeterEntity[]> {
+    const where = this.buildMeterWhere(params.where);
+
+    const records = await this.prisma.medidores.findMany({
+      where,
+      take: params.take,
+      skip: params.skip,
+      orderBy: { createdAt: 'desc' },
+    });
+    return MeterMapper.toDomainList(records);
   }
 
-  async create(
-    data: Prisma.MedidoresCreateInput,
-    select?: Prisma.MedidoresSelect,
-  ): Promise<any> {
-    return this.prisma.medidores.create({ data, select });
+  async count(where?: MeterFilters): Promise<number> {
+    const whereClause = this.buildMeterWhere(where);
+    return this.prisma.medidores.count({ where: whereClause });
+  }
+
+  private buildMeterWhere(filters?: MeterFilters): Prisma.MedidoresWhereInput {
+    const conditions: Prisma.MedidoresWhereInput[] = [];
+
+    // Always exclude soft-deleted records
+    conditions.push({ deletedAt: null });
+
+    if (!filters) {
+      return conditions.length === 1 ? conditions[0] : { AND: conditions };
+    }
+
+    if (filters.estado) {
+      conditions.push({ estado: filters.estado });
+    }
+
+    if (filters.marca) {
+      conditions.push({
+        marca: { contains: filters.marca, mode: 'insensitive' },
+      });
+    }
+
+    if (filters.modelo) {
+      conditions.push({
+        modelo: { contains: filters.modelo, mode: 'insensitive' },
+      });
+    }
+
+    if (filters.serie) {
+      conditions.push({
+        serie: { contains: filters.serie, mode: 'insensitive' },
+      });
+    }
+
+    if (filters.buscar) {
+      conditions.push({
+        OR: [
+          { serie: { contains: filters.buscar, mode: 'insensitive' } },
+          { marca: { contains: filters.buscar, mode: 'insensitive' } },
+          { modelo: { contains: filters.buscar, mode: 'insensitive' } },
+        ],
+      });
+    }
+
+    if (conditions.length === 1) {
+      return conditions[0];
+    }
+
+    return { AND: conditions };
+  }
+
+  async create(data: CreateMeterRepositoryData): Promise<MeterEntity> {
+    const record = await this.prisma.medidores.create({
+      data: {
+        marca: data.marca,
+        modelo: data.modelo,
+        serie: data.serie,
+        estado: data.estado,
+        latitud: data.latitud,
+        longitud: data.longitud,
+      },
+    });
+    return MeterMapper.toDomain(record)!;
   }
 
   async update(
-    where: Prisma.MedidoresWhereUniqueInput,
-    data: Prisma.MedidoresUpdateInput,
-    select?: Prisma.MedidoresSelect,
+    where: { medidorId: bigint },
+    data: UpdateMeterRepositoryData,
     tx?: any,
-  ): Promise<any> {
+  ): Promise<MeterEntity> {
     const client = tx || this.prisma;
-    return client.medidores.update({ where, data, select });
+    const record = await client.medidores.update({
+      where: { medidorId: where.medidorId },
+      data: {
+        ...(data.marca !== undefined && { marca: data.marca }),
+        ...(data.modelo !== undefined && { modelo: data.modelo }),
+        ...(data.serie !== undefined && { serie: data.serie }),
+        ...(data.estado !== undefined && { estado: data.estado }),
+        ...(data.fechaInstalacion !== undefined && {
+          fechaInstalacion: data.fechaInstalacion,
+        }),
+        ...(data.fechaBaja !== undefined && { fechaBaja: data.fechaBaja }),
+        ...(data.motivo !== undefined && { motivo: data.motivo }),
+        ...(data.latitud !== undefined && { latitud: data.latitud }),
+        ...(data.longitud !== undefined && { longitud: data.longitud }),
+        ...(data.deletedAt !== undefined && { deletedAt: data.deletedAt }),
+      },
+    });
+    return MeterMapper.toDomain(record)!;
   }
 
   async createHistory(
-    data:
-      | Prisma.HistorialMedidoresCreateInput
-      | Prisma.HistorialMedidoresUncheckedCreateInput,
+    data: CreateMeterHistoryRepositoryData,
     tx?: any,
-  ): Promise<any> {
+  ): Promise<void> {
     const client = tx || this.prisma;
-    return client.historialMedidores.create({ data });
+    await client.historialMedidores.create({
+      data: {
+        medidor: { connect: { medidorId: data.medidorId } },
+        contrato: { connect: { contratoId: data.contratoId } },
+        lecturaInicial: data.lecturaInicial,
+        motivo: data.motivo,
+        fechaDesde: data.fechaDesde,
+      },
+    });
   }
 
   async executeTransaction<T>(callback: (tx: any) => Promise<T>): Promise<T> {

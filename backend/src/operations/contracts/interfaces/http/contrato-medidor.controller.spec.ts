@@ -1,3 +1,5 @@
+jest.mock('puppeteer', () => ({}));
+
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { ContratoMedidorController } from './contrato-medidor.controller';

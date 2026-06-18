@@ -1,67 +1,29 @@
 import type { IResponseReading } from './IResponseReading';
-import type {
-  Lecturas,
-  Contratos,
-  Medidores,
-  Periodos,
-} from 'src/generated/prisma/client';
+import type { LecturaEntity } from '../domain/entities/lectura.entity';
 
 /**
- * Tipo de entrada desde Prisma (relación incluída)
+ * Mapea resultado de Entidad de Dominio a DTO de response
  */
-export type ReadingPrismaRaw = Pick<
-  Lecturas,
-  | 'lecturaId'
-  | 'fecha'
-  | 'lecturaAnterior'
-  | 'lecturaActual'
-  | 'consumoCalculado'
-  | 'descripcionAnomalia'
-  | 'fechaValidacion'
-  | 'fotoUrlMinIo'
-  | 'lecturaInicial'
-  | 'periodoId'
-  | 'estado'
-  | 'medidorId'
-> & {
-  medidor?:
-    | (Pick<Medidores, 'medidorId' | 'serie' | 'marca' | 'modelo'> & {
-        historial?: Array<{
-          contrato: Pick<
-            Contratos,
-            'contratoId' | 'numeroGuia' | 'direccionSuministro' | 'estado'
-          >;
-        }>;
-      })
-    | null;
-  periodoRel?: Pick<
-    Periodos,
-    'periodoId' | 'nombre' | 'fechaInicio' | 'fechaFin'
-  > | null;
-};
-
-/**
- * Mapea resultado de Prisma a DTO de response
- * Convierte Decimal a number donde sea necesario
- * Excluye campos internos: updatedAt, createdAt, deletedAt
- */
-export function toReadingResponse(reading: ReadingPrismaRaw): IResponseReading {
-  const activeContrato = reading.medidor?.historial?.[0]?.contrato;
+export function toReadingResponse(
+  reading: LecturaEntity | null | undefined,
+): IResponseReading | null {
+  if (!reading) return null;
+  const activeContrato = reading.contrato;
 
   return {
     lecturaId: reading.lecturaId.toString(),
     fecha: reading.fecha,
-    lecturaAnterior: Number(reading.lecturaAnterior), // Convertir Decimal a number
-    lecturaActual: Number(reading.lecturaActual), // Convertir Decimal a number
-    consumoCalculado: Number(reading.consumoCalculado), // Convertir Decimal a number
+    lecturaAnterior: reading.lecturaAnterior,
+    lecturaActual: reading.lecturaActual,
+    consumoCalculado: reading.consumoCalculado,
     contratoId: activeContrato ? activeContrato.contratoId.toString() : '',
     descripcionAnomalia: reading.descripcionAnomalia,
     fechaValidacion: reading.fechaValidacion,
-    fotoUrlMinIo: reading.fotoUrlMinIo,
-    isValidada: reading.estado !== 'PENDIENTE',
+    fotoUrl: reading.fotoUrl,
+    isValidada: reading.isValidada,
     lecturaInicial: reading.lecturaInicial,
     periodoId: reading.periodoId,
-    tieneAnomalia: !!reading.descripcionAnomalia,
+    tieneAnomalia: reading.tieneAnomalia,
     contrato: activeContrato
       ? {
           contratoId: activeContrato.contratoId.toString(),

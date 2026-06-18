@@ -27,9 +27,8 @@ export class CreateUserUseCase {
     );
 
     // Verificar que el email no exista previamente (incluye usuarios eliminados)
-    const existingUser = await this.userRepository.findUnique(
-      { email: createUsersDto.email },
-      { usuarioId: true, deletedAt: true },
+    const existingUser = await this.userRepository.findByEmail(
+      createUsersDto.email,
     );
     if (existingUser) {
       if (existingUser.deletedAt) {
@@ -74,7 +73,6 @@ export class CreateUserUseCase {
         telefono: cleanPhone,
         avatar: createUsersDto.avatar,
         rolId: roleId,
-        createdAt: new Date(),
       });
 
       return {

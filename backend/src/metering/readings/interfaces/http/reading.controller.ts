@@ -24,8 +24,10 @@ import {
   ApiBody,
 } from '@nestjs/swagger';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
-import { JwtAuthGuard } from 'src/identity/auth/guards/jwt-auth.guard';
+import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
+import { toReadingResponse } from '../../types/readingMapper';
+import { ReadingFilters } from '../../domain/repositories/reading.repository';
 
 @ApiTags('readings')
 @ApiBearerAuth()
@@ -52,7 +54,9 @@ export class ReadingController {
   async create(
     @Body() crearLecturaDto: CrearLecturaDto,
   ): Promise<ResponseReadingDto> {
-    return this.readingService.create(crearLecturaDto);
+    return toReadingResponse(
+      await this.readingService.create(crearLecturaDto),
+    )!;
   }
 
   @ApiOperation({
@@ -76,22 +80,19 @@ export class ReadingController {
     @Query() paginationDto: PaginationDto,
     @Query('contratoId') contratoId?: string,
   ) {
-    const where: any = {};
+    const filters: ReadingFilters = {};
     if (contratoId) {
-      where.medidor = {
-        historial: {
-          some: {
-            contratoId: BigInt(contratoId),
-            fechaHasta: null,
-          },
-        },
-      };
+      filters.contratoId = BigInt(contratoId);
     }
-    return this.readingService.findAll(
+    const result = await this.readingService.findAll(
       paginationDto.page,
       paginationDto.limit,
-      where,
+      filters,
     );
+    return {
+      data: result.data.map((x) => toReadingResponse(x)!),
+      meta: result.meta,
+    };
   }
 
   @ApiOperation({
@@ -114,7 +115,7 @@ export class ReadingController {
   @RequiredPermission('lecturas', 'read')
   @Get(':id')
   async findOne(@Param('id') id: string): Promise<ResponseReadingDto> {
-    return this.readingService.findOne(BigInt(id));
+    return toReadingResponse(await this.readingService.findOne(BigInt(id)))!;
   }
 
   @ApiOperation({
@@ -143,7 +144,9 @@ export class ReadingController {
     @Param('id') id: string,
     @Body() updateLecturaDto: ActualizarLecturaDto,
   ): Promise<ResponseReadingDto> {
-    return this.readingService.update(BigInt(id), updateLecturaDto);
+    return toReadingResponse(
+      await this.readingService.update(BigInt(id), updateLecturaDto),
+    )!;
   }
 
   @ApiOperation({

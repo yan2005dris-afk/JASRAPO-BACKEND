@@ -7,7 +7,7 @@ model LecturaAnomalia {
   createdAt      DateTime        @default(now()) @map("creado_en")
   updatedAt      DateTime        @updatedAt @map("actualizado_en")
   deletedAt      DateTime?        @map("borrado_en")
-  fotoUrlMinIo   String?         @map("foto_url_minio")
+  fotoUrl        String?         @map("foto_url")
   lectura        Lecturas        @relation(fields: [lecturaId], references: [lecturaId])
 
   @@map("lectura_anomalia")

@@ -1,0 +1,183 @@
+import {
+  S3Client,
+  PutObjectCommand,
+  GetObjectCommand,
+  DeleteObjectCommand,
+  HeadObjectCommand,
+  ListObjectsV2Command,
+  CreateBucketCommand,
+  HeadBucketCommand,
+  ListBucketsCommand,
+} from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { Readable } from 'stream';
+
+@Injectable()
+export class S3ClientService implements OnModuleInit {
+  private readonly logger = new Logger(S3ClientService.name);
+  private s3Client: S3Client | null = null;
+  isAvailable = false;
+
+  private readonly defaultBuckets = ['avatars', 'documents', 'uploads'];
+
+  constructor(private configService: ConfigService) {}
+
+  async onModuleInit() {
+    const endpoint = this.configService.get<string>(
+      'STORAGE_ENDPOINT',
+      'localhost',
+    );
+    const port = this.configService.get<number>('STORAGE_PORT', 9000);
+    const useSsl =
+      this.configService.get<string>('STORAGE_USE_SSL', 'false') === 'true';
+    const accessKey = this.configService.get<string>(
+      'STORAGE_ACCESS_KEY',
+      'admin',
+    );
+    const secretKey = this.configService.get<string>(
+      'STORAGE_SECRET_KEY',
+      'password123',
+    );
+
+    if (!port || port < 1 || port > 65535) {
+      throw new Error(
+        `[STORAGE] Invalid STORAGE_PORT value: "${port}". Application cannot start without a valid storage connection.`,
+      );
+    }
+
+    this.s3Client = new S3Client({
+      region: 'us-east-1',
+      endpoint: `${useSsl ? 'https' : 'http'}://${endpoint}:${port}`,
+      forcePathStyle: true,
+      credentials: {
+        accessKeyId: accessKey,
+        secretAccessKey: secretKey,
+      },
+    });
+
+    try {
+      await this.s3Client.send(new ListBucketsCommand({}));
+      this.isAvailable = true;
+      this.logger.log(
+        '[S3:READY] S3-compatible storage connection established successfully',
+      );
+    } catch (error) {
+      this.s3Client = null;
+      throw new Error(
+        `[S3] Failed to connect to S3-compatible storage at ${endpoint}:${port}. Application cannot start without storage. Original error: ${error}`,
+      );
+    }
+
+    for (const bucket of this.defaultBuckets) {
+      try {
+        await this.ensureBucket(bucket);
+        this.logger.log(`Bucket "${bucket}" created`);
+      } catch (error) {
+        this.logger.warn(
+          `Could not verify/create bucket "${bucket}": ${error}`,
+        );
+      }
+    }
+  }
+
+  private ensureAvailable(): void {
+    if (!this.isAvailable || !this.s3Client) {
+      throw new Error(
+        'S3-compatible storage is not available. The service failed to connect during startup.',
+      );
+    }
+  }
+
+  async uploadFile(
+    bucketName: string,
+    fileName: string,
+    buffer: Buffer,
+  ): Promise<string> {
+    this.ensureAvailable();
+    await this.ensureBucket(bucketName);
+    await this.s3Client!.send(
+      new PutObjectCommand({ Bucket: bucketName, Key: fileName, Body: buffer }),
+    );
+    return fileName;
+  }
+
+  async deleteFile(bucketName: string, fileName: string): Promise<void> {
+    this.ensureAvailable();
+    await this.s3Client!.send(
+      new DeleteObjectCommand({ Bucket: bucketName, Key: fileName }),
+    );
+  }
+
+  async fileExists(bucketName: string, fileName: string): Promise<boolean> {
+    if (!this.isAvailable || !this.s3Client) return false;
+    try {
+      await this.s3Client.send(
+        new HeadObjectCommand({ Bucket: bucketName, Key: fileName }),
+      );
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async getFileMetadata(
+    bucketName: string,
+    fileName: string,
+  ): Promise<{ size: number; contentType: string; lastModified: Date } | null> {
+    if (!this.isAvailable || !this.s3Client) return null;
+    try {
+      const head = await this.s3Client.send(
+        new HeadObjectCommand({ Bucket: bucketName, Key: fileName }),
+      );
+      return {
+        size: head.ContentLength ?? 0,
+        contentType: head.ContentType ?? 'application/octet-stream',
+        lastModified: head.LastModified ?? new Date(0),
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  async getPresignedUrl(
+    bucketName: string,
+    fileName: string,
+    expiresInSeconds = 24 * 60 * 60,
+  ): Promise<string> {
+    this.ensureAvailable();
+    return getSignedUrl(
+      this.s3Client!,
+      new GetObjectCommand({ Bucket: bucketName, Key: fileName }),
+      { expiresIn: expiresInSeconds },
+    );
+  }
+
+  async getFileStream(bucketName: string, fileName: string): Promise<Readable> {
+    this.ensureAvailable();
+    const response = await this.s3Client!.send(
+      new GetObjectCommand({ Bucket: bucketName, Key: fileName }),
+    );
+    return response.Body as Readable;
+  }
+
+  async listFiles(bucketName: string, prefix?: string): Promise<string[]> {
+    this.ensureAvailable();
+    await this.ensureBucket(bucketName);
+    const result = await this.s3Client!.send(
+      new ListObjectsV2Command({ Bucket: bucketName, Prefix: prefix || '' }),
+    );
+    return (result.Contents ?? []).map((item) => item.Key!).filter(Boolean);
+  }
+
+  private async ensureBucket(bucketName: string): Promise<void> {
+    try {
+      await this.s3Client!.send(new HeadBucketCommand({ Bucket: bucketName }));
+    } catch {
+      await this.s3Client!.send(
+        new CreateBucketCommand({ Bucket: bucketName }),
+      );
+    }
+  }
+}

@@ -1,34 +1,48 @@
-import type { Prisma } from 'src/generated/prisma/client';
+import type { ReadingAnomalyEntity } from '../entities/reading-anomaly.entity';
+import type { TipoAnomalia, EstadoAnomalia } from 'src/generated/prisma/client';
+
+export interface CreateReadingAnomalyRepositoryData {
+  lecturaId: bigint;
+  observacion?: string | null;
+  tipo: TipoAnomalia;
+  estado: EstadoAnomalia;
+  fotoUrl?: string | null;
+}
+
+export interface UpdateReadingAnomalyRepositoryData {
+  lecturaId?: bigint;
+  observacion?: string | null;
+  tipo?: TipoAnomalia;
+  estado?: EstadoAnomalia;
+  fotoUrl?: string | null;
+  deletedAt?: Date | null;
+}
+
+export interface ReadingAnomalyFilters {
+  lecturaId?: bigint;
+  tipo?: TipoAnomalia;
+  estado?: EstadoAnomalia;
+}
 
 export abstract class ReadingAnomalyRepository {
-  abstract findUnique(
-    where: Prisma.LecturaAnomaliaWhereUniqueInput,
-    select?: Prisma.LecturaAnomaliaSelect,
-  ): Promise<any>;
+  abstract findUnique(where: {
+    anomaliaId: bigint;
+  }): Promise<ReadingAnomalyEntity | null>;
 
   abstract findMany(params: {
     skip?: number;
     take?: number;
-    where?: Prisma.LecturaAnomaliaWhereInput;
-    orderBy?: Prisma.LecturaAnomaliaOrderByWithRelationInput;
-    select?: Prisma.LecturaAnomaliaSelect;
-    include?: Prisma.LecturaAnomaliaInclude;
-  }): Promise<any[]>;
+    where?: ReadingAnomalyFilters;
+  }): Promise<ReadingAnomalyEntity[]>;
 
-  abstract count(params: {
-    where?: Prisma.LecturaAnomaliaWhereInput;
-  }): Promise<number>;
+  abstract count(params: { where?: ReadingAnomalyFilters }): Promise<number>;
 
   abstract create(
-    data:
-      | Prisma.LecturaAnomaliaCreateInput
-      | Prisma.LecturaAnomaliaUncheckedCreateInput,
-  ): Promise<any>;
+    data: CreateReadingAnomalyRepositoryData,
+  ): Promise<ReadingAnomalyEntity>;
 
   abstract update(
-    where: Prisma.LecturaAnomaliaWhereUniqueInput,
-    data:
-      | Prisma.LecturaAnomaliaUpdateInput
-      | Prisma.LecturaAnomaliaUncheckedUpdateInput,
-  ): Promise<any>;
+    where: { anomaliaId: bigint },
+    data: UpdateReadingAnomalyRepositoryData,
+  ): Promise<ReadingAnomalyEntity>;
 }

@@ -1,21 +1,20 @@
-import type { Prisma } from 'src/generated/prisma/client';
+import type { SearchResultEntity } from '../entities/public-search-result.entity';
+import type { SearchFilters } from '../types/public-search-filters';
 
 export abstract class BusquedaPublicaRepository {
-  abstract findManyClientes(params: {
-    where: Prisma.ClientesWhereInput;
-    skip: number;
-    take: number;
-    orderBy?: Prisma.ClientesOrderByWithRelationInput;
-  }): Promise<any[]>;
+  abstract findManyClientes(
+    filters: SearchFilters,
+    skip: number,
+    take: number,
+  ): Promise<SearchResultEntity[]>;
 
-  abstract countClientes(where: Prisma.ClientesWhereInput): Promise<number>;
+  abstract countClientes(filters: SearchFilters): Promise<number>;
 
-  abstract findManyContratos(params: {
-    where: Prisma.ContratosWhereInput;
-    include?: Prisma.ContratosInclude;
-    skip: number;
-    take: number;
-  }): Promise<any[]>;
+  abstract findManyContratos(
+    filters: SearchFilters,
+    skip: number,
+    take: number,
+  ): Promise<SearchResultEntity[]>;
 
-  abstract countContratos(where: Prisma.ContratosWhereInput): Promise<number>;
+  abstract countContratos(filters: SearchFilters): Promise<number>;
 }

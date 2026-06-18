@@ -5,6 +5,7 @@ import { TariffRepository } from '../domain/repositories/tariff.repository';
 import { ConflictException, NotFoundException } from '@nestjs/common';
 import { CreateTariffCategoryUseCase } from './use-cases/create-tariff-category.use-case';
 import { FindAllTariffCategoriesUseCase } from './use-cases/find-all-tariff-categories.use-case';
+import { FindOneTariffCategoryUseCase } from './use-cases/find-one-tariff-category.use-case';
 import { UpdateTariffCategoryUseCase } from './use-cases/update-tariff-category.use-case';
 import { RemoveTariffCategoryUseCase } from './use-cases/remove-tariff-category.use-case';
 
@@ -37,6 +38,7 @@ describe('CategoriaTarifaService', () => {
 
   const mockCreateUseCase = { execute: jest.fn() };
   const mockFindAllUseCase = { execute: jest.fn() };
+  const mockFindOneUseCase = { execute: jest.fn() };
   const mockUpdateUseCase = { execute: jest.fn() };
   const mockRemoveUseCase = { execute: jest.fn() };
 
@@ -49,6 +51,10 @@ describe('CategoriaTarifaService', () => {
         {
           provide: FindAllTariffCategoriesUseCase,
           useValue: mockFindAllUseCase,
+        },
+        {
+          provide: FindOneTariffCategoryUseCase,
+          useValue: mockFindOneUseCase,
         },
         { provide: UpdateTariffCategoryUseCase, useValue: mockUpdateUseCase },
         { provide: RemoveTariffCategoryUseCase, useValue: mockRemoveUseCase },
@@ -126,35 +132,23 @@ describe('CategoriaTarifaService', () => {
     });
   });
 
-  describe('buscarCategoriaPorNombre', () => {
-    it('should return categoria by nombre search', async () => {
-      mockFindAllUseCase.execute.mockResolvedValue([mockCategoriaTarifa]);
+  describe('findOneCategoria', () => {
+    it('should return a single active tariff category by id', async () => {
+      mockFindOneUseCase.execute.mockResolvedValue(mockCategoriaTarifa);
 
-      const result = await service.buscarCategoriaPorNombre('Residencial');
+      const result = await service.findOneCategoria(1);
 
-      expect(result).toHaveLength(1);
-      expect(result[0].nombre).toBe('Residencial');
+      expect(result).toEqual(mockCategoriaTarifa);
+      expect(mockFindOneUseCase.execute).toHaveBeenCalledWith(1);
     });
 
-    it('should throw NotFoundException when no categoria found', async () => {
-      mockFindAllUseCase.execute.mockRejectedValue(
-        new NotFoundException('No se encontraron categorías'),
+    it('should throw NotFoundException when not found', async () => {
+      mockFindOneUseCase.execute.mockRejectedValue(
+        new NotFoundException('Categoría no encontrada'),
       );
 
-      await expect(service.buscarCategoriaPorNombre('NoExist')).rejects.toThrow(
+      await expect(service.findOneCategoria(999)).rejects.toThrow(
         NotFoundException,
-      );
-    });
-
-    it('should search case-insensitively', async () => {
-      mockFindAllUseCase.execute.mockResolvedValue([mockCategoriaTarifa]);
-
-      await service.buscarCategoriaPorNombre('RESIDENCIAL');
-
-      expect(mockFindAllUseCase.execute).toHaveBeenCalledWith(
-        1,
-        10,
-        'RESIDENCIAL',
       );
     });
   });

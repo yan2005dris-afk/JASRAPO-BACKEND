@@ -34,20 +34,27 @@ export const userWithRolesSelect = {
 // Frontend Response Types
 // ============================================
 
+export interface AvatarResponse {
+  url: string;
+  key?: string;
+}
+
 export interface UserResponse {
   usuarioId: number;
   email: string;
   nombres: string | null;
   apellidos: string | null;
   telefono: string | null;
-  avatar: unknown;
+  avatar: AvatarResponse | null;
 }
 
 export interface UserWithRoleResponse extends UserResponse {
   rol: {
     rolId: number;
     nombre: string;
+    deletedAt?: Date | null;
   } | null;
+  deletedAt?: Date | null;
 }
 
 export interface UserWithPermissionsResponse extends UserWithRoleResponse {
@@ -78,7 +85,7 @@ export interface ProfileResponse {
   email: string;
   nombre: string | null;
   telefono: string | null;
-  avatar: { url?: string; key?: string } | null;
+  avatar: AvatarResponse | null;
   rol: {
     rolId: number;
     nombre: string;

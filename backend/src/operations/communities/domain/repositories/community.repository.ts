@@ -1,32 +1,29 @@
-import type { Prisma } from 'src/generated/prisma/client';
+import type { CommunityEntity } from '../entities/community.entity';
+import type { CreateCommunityData } from '../types/create-community-data';
 
 export abstract class CommunityRepository {
   abstract findUnique(
-    where: Prisma.ComunidadesWhereUniqueInput,
-    select?: Prisma.ComunidadesSelect,
-  ): Promise<any>;
+    where: Record<string, any>,
+  ): Promise<CommunityEntity | null>;
 
   abstract findFirst(
-    where: Prisma.ComunidadesWhereInput,
-    select?: Prisma.ComunidadesSelect,
-  ): Promise<any>;
+    where: Record<string, any>,
+  ): Promise<CommunityEntity | null>;
 
   abstract findMany(params: {
-    select?: Prisma.ComunidadesSelect;
-    where?: Prisma.ComunidadesWhereInput;
-    orderBy?: Prisma.ComunidadesOrderByWithRelationInput;
-    take?: number;
+    where?: Record<string, any>;
+    orderBy?: Record<string, any>;
     skip?: number;
-  }): Promise<any[]>;
+    take?: number;
+    include?: any;
+  }): Promise<CommunityEntity[]>;
 
-  abstract create(
-    data: Prisma.ComunidadesCreateInput,
-    select?: Prisma.ComunidadesSelect,
-  ): Promise<any>;
+  abstract count(params?: { where?: Record<string, any> }): Promise<number>;
+
+  abstract create(data: CreateCommunityData): Promise<CommunityEntity>;
 
   abstract update(
-    where: Prisma.ComunidadesWhereUniqueInput,
-    data: Prisma.ComunidadesUpdateInput,
-    select?: Prisma.ComunidadesSelect,
-  ): Promise<any>;
+    where: Record<string, any>,
+    data: Record<string, any>,
+  ): Promise<CommunityEntity>;
 }

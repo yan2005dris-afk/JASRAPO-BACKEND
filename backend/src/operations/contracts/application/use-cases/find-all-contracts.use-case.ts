@@ -1,11 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma } from 'src/generated/prisma/client';
 import { ContractRepository } from '../../domain/repositories/contract.repository';
-import { safeContractsSelect } from '../../types/IResponseContract';
 import { getPagination } from 'src/infrastructure/common/utils/pagination.util';
 import { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
-import { IResponseContract } from '../../types/IResponseContract';
-import { toContractResponse } from '../../types/contractsMapper';
+import { ContractEntity } from '../../domain/entities/contract.entity';
 
 @Injectable()
 export class FindAllContractsUseCase {
@@ -14,8 +11,8 @@ export class FindAllContractsUseCase {
   async execute(
     page = 1,
     limit = 10,
-    where?: Prisma.ContratosWhereInput,
-  ): Promise<PaginatedResult<IResponseContract>> {
+    where?: Record<string, any>,
+  ): Promise<PaginatedResult<ContractEntity>> {
     const { skip, take, page: safePage } = getPagination(page, limit);
 
     const filterWhere = { ...where, deletedAt: null };
@@ -23,7 +20,6 @@ export class FindAllContractsUseCase {
     const [contratos, total] = await Promise.all([
       this.contractRepository.findMany({
         where: filterWhere,
-        select: safeContractsSelect,
         skip,
         take,
         orderBy: { createdAt: 'desc' },
@@ -34,7 +30,7 @@ export class FindAllContractsUseCase {
     ]);
 
     return {
-      data: contratos.map(toContractResponse),
+      data: contratos,
       meta: {
         total,
         page: safePage,

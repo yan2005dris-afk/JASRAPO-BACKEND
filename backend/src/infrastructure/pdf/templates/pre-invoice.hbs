@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; font-size: 12px; color: #333; }
+    .container { width: 100%; padding: 20px; }
+
+    .header { width: 100%; border-bottom: 2px solid #0066cc; padding-bottom: 15px; margin-bottom: 20px; }
+    .header table { width: 100%; border-collapse: collapse; }
+    .header td { vertical-align: top; padding: 0; border: none; }
+    .header td.right { text-align: right; }
+    .company-name { font-size: 18px; font-weight: bold; color: #0066cc; }
+    .company-sub { font-size: 11px; color: #666; }
+    .doc-title { font-size: 22px; font-weight: bold; color: #0066cc; }
+    .doc-number { font-size: 14px; color: #666; margin-top: 4px; }
+    .period-badge { display: inline-block; background: #0066cc; color: white; padding: 3px 10px; font-size: 11px; margin-top: 4px; }
+
+    .section { margin-bottom: 20px; }
+    .section-title { font-size: 13px; font-weight: bold; color: #0066cc; border-bottom: 1px solid #ddd; padding-bottom: 5px; margin-bottom: 10px; }
+    .info-table { width: 100%; border-collapse: collapse; }
+    .info-table td { border: none; padding: 3px 0; vertical-align: top; width: 50%; }
+    .label { font-weight: bold; color: #666; }
+
+    .detail-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    .detail-table th { background-color: #0066cc; color: white; padding: 8px; text-align: left; font-size: 11px; }
+    .detail-table td { padding: 8px; border-bottom: 1px solid #ddd; font-size: 11px; }
+    .detail-table tr.even td { background-color: #f9f9f9; }
+
+    .totals-wrapper { text-align: right; margin-top: 20px; }
+    .totals-table { width: 300px; border-collapse: collapse; margin-left: auto; }
+    .totals-table td { padding: 5px; border: none; font-size: 12px; }
+    .totals-table .total-row td { font-weight: bold; font-size: 14px; border-top: 2px solid #0066cc; }
+
+    .footer { margin-top: 30px; text-align: center; font-size: 10px; color: #999; border-top: 1px solid #ddd; padding-top: 10px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- Header -->
+    <div class="header">
+      <table>
+        <tr>
+          <td>
+            <div class="company-name">JASRAPO</div>
+            <div class="company-sub">Junta de Agua Potable y Alcantarillado</div>
+            <div class="company-sub">Olón - Santa Elena</div>
+          </td>
+          <td class="right">
+            <div class="doc-title">PREFACTURA</div>
+            <div class="doc-number">N° {{prefactura.prefacturaId}}</div>
+            <div class="period-badge">Período {{prefactura.periodo.nombre}}</div>
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- Datos del Cliente -->
+    <div class="section">
+      <div class="section-title">Datos del Cliente</div>
+      <table class="info-table">
+        <tr>
+          <td><span class="label">Cliente:</span> {{prefactura.clienteNombre}}</td>
+          <td><span class="label">Identificación:</span> {{prefactura.clienteIdentificacion}}</td>
+        </tr>
+        <tr>
+          <td><span class="label">Dirección:</span> {{prefactura.clienteDireccion}}</td>
+          <td><span class="label">Email:</span> {{prefactura.clienteEmail}}</td>
+        </tr>
+        <tr>
+          <td><span class="label">Contrato N°:</span> {{prefactura.contrato.numeroGuia}}</td>
+          <td></td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- Detalle de Cargos -->
+    <div class="section">
+      <div class="section-title">Detalle de Cargos</div>
+      <table class="detail-table">
+        <thead>
+          <tr>
+            <th>Descripción</th>
+            <th>Cantidad</th>
+            <th>Precio Unitario</th>
+            <th>Subtotal</th>
+            <th>IVA</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each prefactura.detalles}}
+          <tr class="{{#if @even}}even{{/if}}">
+            <td>{{this.descripcion}}</td>
+            <td>{{this.cantidad}}</td>
+            <td>{{this.precioUnitario}}</td>
+            <td>{{this.subtotal}}</td>
+            <td>{{this.iva}}</td>
+            <td>{{this.total}}</td>
+          </tr>
+          {{/each}}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Totales -->
+    <div class="totals-wrapper">
+      <table class="totals-table">
+        <tr><td>Subtotal:</td><td>{{prefactura.subtotal}}</td></tr>
+        <tr><td>IVA:</td><td>{{prefactura.iva}}</td></tr>
+        <tr><td>Descuento:</td><td>-{{prefactura.descuentoTotal}}</td></tr>
+        <tr><td>Interés Mora:</td><td>{{prefactura.interesMora}}</td></tr>
+        <tr><td>Deuda Anterior:</td><td>{{prefactura.deudaAnterior}}</td></tr>
+        <tr class="total-row"><td>TOTAL A PAGAR:</td><td>{{prefactura.totalPagar}}</td></tr>
+      </table>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <p>Este documento es una prefactura. El pago puede realizarse en los puntos autorizados.</p>
+      <p>Fecha de emisión: {{prefactura.createdAt}} | Vencimiento: {{prefactura.periodo.fechaVencimiento}}</p>
+    </div>
+
+  </div>
+</body>
+</html>

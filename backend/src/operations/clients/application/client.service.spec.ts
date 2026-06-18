@@ -17,12 +17,12 @@ describe('ClientService', () => {
   const mockClientRepository = {
     findFirst: jest.fn(),
     findUnique: jest.fn(),
-    findMany: jest.fn(),
     create: jest.fn(),
     update: jest.fn(),
     updateMany: jest.fn(),
     findCatalogoTipoIdentificacion: jest.fn(),
     findManyCatalogoTipoIdentificacion: jest.fn(),
+    paginateClientes: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -58,27 +58,50 @@ describe('ClientService', () => {
   });
 
   it('findAll should call repository with filters', async () => {
-    mockClientRepository.findMany.mockResolvedValue([]);
-    await service.findAll();
-    expect(mockClientRepository.findMany).toHaveBeenCalledWith({
-      where: { deletedAt: null },
-      orderBy: { createdAt: 'desc' },
-      select: expect.anything(),
+    mockClientRepository.paginateClientes.mockResolvedValue({
+      data: [],
+      meta: {
+        total: 0,
+        page: 1,
+        limit: 10,
+        ultimaPagina: 1,
+        paginaActual: 1,
+        porPagina: 10,
+        anterior: null,
+        siguiente: null,
+      },
     });
+    await service.findAll();
+    expect(mockClientRepository.paginateClientes).toHaveBeenCalledWith(
+      {
+        filters: undefined,
+        orderBy: { createdAt: 'desc' },
+      },
+      { page: undefined, limit: undefined },
+    );
   });
 
   it('findAll should apply filters when provided', async () => {
-    mockClientRepository.findMany.mockResolvedValue([]);
+    mockClientRepository.paginateClientes.mockResolvedValue({
+      data: [],
+      meta: {
+        total: 0,
+        page: 1,
+        limit: 10,
+        ultimaPagina: 1,
+        paginaActual: 1,
+        porPagina: 10,
+        anterior: null,
+        siguiente: null,
+      },
+    });
     await service.findAll({ identificacion: '123' });
-    expect(mockClientRepository.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({
-          AND: expect.arrayContaining([
-            { deletedAt: null },
-            { identificacion: { contains: '123', mode: 'insensitive' } },
-          ]),
-        }),
-      }),
+    expect(mockClientRepository.paginateClientes).toHaveBeenCalledWith(
+      {
+        filters: { identificacion: '123' },
+        orderBy: { createdAt: 'desc' },
+      },
+      { page: undefined, limit: undefined },
     );
   });
 

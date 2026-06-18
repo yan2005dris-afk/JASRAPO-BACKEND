@@ -30,7 +30,7 @@ describe('LoginUseCase', () => {
         {
           provide: UserRepository,
           useValue: {
-            findUnique: jest.fn(),
+            findByEmailWithPassword: jest.fn(),
           },
         },
         {
@@ -69,6 +69,10 @@ describe('LoginUseCase', () => {
     sessionsService = module.get(SessionsService);
   });
 
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('should be defined', () => {
     expect(useCase).toBeDefined();
   });
@@ -87,10 +91,12 @@ describe('LoginUseCase', () => {
         apellidos: 'Pérez',
         avatar: { url: 'https://example.com/avatar.png', key: 'avatar.png' },
         rolId: 1,
-        rol: { nombre: 'admin', deletedAt: null },
+        rol: { rolId: 1, nombre: 'admin', deletedAt: null },
       };
 
-      (userRepository.findUnique as jest.Mock).mockResolvedValue(mockUser);
+      (userRepository.findByEmailWithPassword as jest.Mock).mockResolvedValue(
+        mockUser,
+      );
 
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
       (bcrypt.hash as jest.Mock).mockResolvedValue('hashedRefreshToken');
@@ -113,17 +119,22 @@ describe('LoginUseCase', () => {
         accessToken: 'access-token',
         refreshToken: 'refresh-token',
         nombre: 'Juan Pérez',
-        avatar: 'avatar.png',
+        avatar: {
+          key: 'avatar.png',
+          url: 'https://example.com/avatar.png',
+        },
         rolId: 1,
         nombreRol: 'admin',
       });
 
       expect(sessionsService.createSession).toHaveBeenCalled();
-      expect(userRepository.findUnique).toHaveBeenCalledTimes(1);
+      expect(userRepository.findByEmailWithPassword).toHaveBeenCalledTimes(1);
     });
 
     it('should throw UnauthorizedException when user not found', async () => {
-      (userRepository.findUnique as jest.Mock).mockResolvedValue(null);
+      (userRepository.findByEmailWithPassword as jest.Mock).mockResolvedValue(
+        null,
+      );
 
       await expect(
         useCase.execute({ email: 'notfound@test.com', password: 'any' }),
@@ -131,7 +142,7 @@ describe('LoginUseCase', () => {
     });
 
     it('should throw UnauthorizedException when password invalid', async () => {
-      (userRepository.findUnique as jest.Mock).mockResolvedValue({
+      (userRepository.findByEmailWithPassword as jest.Mock).mockResolvedValue({
         usuarioId: 1,
         email: 'test@test.com',
         clave: 'hashed',
@@ -145,7 +156,7 @@ describe('LoginUseCase', () => {
     });
 
     it('should throw InternalServerErrorException when session creation fails', async () => {
-      (userRepository.findUnique as jest.Mock).mockResolvedValue({
+      (userRepository.findByEmailWithPassword as jest.Mock).mockResolvedValue({
         usuarioId: 1,
         email: 'test@test.com',
         clave: 'hashed',
@@ -174,10 +185,12 @@ describe('LoginUseCase', () => {
         apellidos: 'Pérez',
         avatar: null,
         rolId: 1,
-        rol: { nombre: 'admin', deletedAt: new Date() }, // Soft-deleted role
+        rol: { rolId: 1, nombre: 'admin', deletedAt: new Date() }, // Soft-deleted role
       };
 
-      (userRepository.findUnique as jest.Mock).mockResolvedValue(mockUser);
+      (userRepository.findByEmailWithPassword as jest.Mock).mockResolvedValue(
+        mockUser,
+      );
 
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
       (bcrypt.hash as jest.Mock).mockResolvedValue('hashedRefreshToken');

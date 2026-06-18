@@ -9,6 +9,23 @@
 
 ## Code Conventions
 
+### Naming Languages
+- **Code layer** (classes, methods, variables, constants, files, routes, Swagger tags, permissions): **English**
+- **Data layer** (DTO properties, DB columns, enum values): **Spanish** — they map to database columns
+- **Swagger docs** (summary, description): **Spanish** — for API consumers
+
+### Naming Patterns
+| Layer | Convention | Example |
+|-------|------------|---------|
+| Classes | PascalCase, English | `BatchService`, `PreInvoiceController` |
+| Methods | camelCase, English | `findAll()`, `generate()`, `updateState()` |
+| Variables | camelCase | `currentState`, `allowedTransitions` |
+| Constants | UPPER_SNAKE_CASE | `PREINVOICE_STATES`, `STATE_TRANSITIONS` |
+| Files | kebab-case, English | `create-agreement.dto.ts`, `batch.service.ts` |
+| Routes | kebab-case, English | `/batches`, `/pre-invoices`, `/:id/state` |
+| DTO properties | camelCase, Spanish | `contratoId`, `numeroCuotas`, `periodoId` |
+| Enum values | Spanish | `ACTIVO`, `PENDIENTE_ABONO`, `APROBAR` |
+
 ### DTOs & Types
 - Use `dto/` folder for request/response objects
 - Use `types/` folder for interfaces, selects, and mappers

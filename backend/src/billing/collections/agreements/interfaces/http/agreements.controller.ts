@@ -7,8 +7,10 @@ import {
   Patch,
   Post,
   Query,
+  Res,
   UseGuards,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import {
   ApiBearerAuth,
   ApiTags,
@@ -25,7 +27,7 @@ import { DebtSummaryResponseDto } from '../dto/debt-summary-response.dto';
 import { AgreementStateResponseDto } from '../dto/agreement-state-response.dto';
 import { InstallmentStateResponseDto } from '../dto/installment-state-response.dto';
 import { FindAllAgreementsDto } from '../dto/find-all-agreements.dto';
-import { JwtAuthGuard } from 'src/identity/auth/guards/jwt-auth.guard';
+import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
 import { ParseBigIntPipe } from 'src/infrastructure/common/pipes/parse-bigint.pipe';
@@ -233,5 +235,31 @@ export class AgreementsController {
     @Param('id', ParseBigIntPipe) id: bigint,
   ): Promise<AgreementResponseDto> {
     return this.agreementsService.cancel(id);
+  }
+
+  /**
+   * GET /agreements/:id/pdf
+   * Generate payment agreement PDF
+   */
+  @ApiOperation({ summary: 'Generate payment agreement PDF' })
+  @ApiParam({
+    name: 'id',
+    description: 'ID del convenio',
+    type: String,
+    example: '1',
+  })
+  @RequiredPermission('agreements', 'read')
+  @Get(':id/pdf')
+  async generatePdf(
+    @Param('id', ParseBigIntPipe) id: bigint,
+    @Res() res: Response,
+  ) {
+    const buffer = await this.agreementsService.generatePdf(id);
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `inline; filename="convenio-${id}.pdf"`,
+      'Content-Length': buffer.length,
+    });
+    res.end(buffer);
   }
 }

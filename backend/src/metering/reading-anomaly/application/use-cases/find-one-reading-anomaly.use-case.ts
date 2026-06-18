@@ -1,7 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { ReadingAnomalyRepository } from '../../domain/repositories/reading-anomaly.repository';
-import { safeReadingAnomaliesSelect } from '../../types/IResponseReadingAnomaly';
-import { toReadingAnomalyResponse } from '../../types/readingAnomalyMapper';
+import { ReadingAnomalyEntity } from '../../domain/entities/reading-anomaly.entity';
 
 @Injectable()
 export class FindOneReadingAnomalyUseCase {
@@ -9,14 +8,13 @@ export class FindOneReadingAnomalyUseCase {
     private readonly readingAnomalyRepository: ReadingAnomalyRepository,
   ) {}
 
-  async execute(id: bigint) {
-    const anomalia = await this.readingAnomalyRepository.findUnique(
-      { anomaliaId: id },
-      safeReadingAnomaliesSelect,
-    );
+  async execute(id: bigint): Promise<ReadingAnomalyEntity> {
+    const anomalia = await this.readingAnomalyRepository.findUnique({
+      anomaliaId: id,
+    });
     if (!anomalia || anomalia.deletedAt !== null) {
       throw new NotFoundException(`Anomalía con ID ${id} no encontrada`);
     }
-    return toReadingAnomalyResponse(anomalia);
+    return anomalia;
   }
 }

@@ -1,0 +1,99 @@
+jest.mock('puppeteer', () => ({}));
+
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
+import { NotFoundException } from '@nestjs/common';
+import { GeneratePdfUseCase } from './generate-pdf.use-case';
+import { PdfService } from '../pdf.service';
+import type { PdfDocumentType } from '../document-type.interface';
+
+const mockDocumentType: PdfDocumentType = {
+  type: 'test-doc',
+  name: 'Test Document',
+  template: 'test-template',
+  adaptData: jest.fn((raw) => ({ adapted: raw })),
+};
+
+describe('GeneratePdfUseCase', () => {
+  let useCase: GeneratePdfUseCase;
+
+  const mockPdfService = {
+    getDocumentType: jest.fn(),
+    getAvailableTypes: jest.fn(),
+    render: jest.fn(),
+    registerDocumentType: jest.fn(),
+  };
+
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        GeneratePdfUseCase,
+        { provide: PdfService, useValue: mockPdfService },
+      ],
+    }).compile();
+
+    useCase = module.get<GeneratePdfUseCase>(GeneratePdfUseCase);
+  });
+
+  afterEach(() => jest.clearAllMocks());
+
+  it('should be defined', () => {
+    expect(useCase).toBeDefined();
+  });
+
+  describe('execute', () => {
+    it('should throw NotFoundException when type is not registered', async () => {
+      mockPdfService.getDocumentType.mockReturnValue(undefined);
+      mockPdfService.getAvailableTypes.mockReturnValue(['other-type']);
+
+      await expect(useCase.execute('unknown-type', {})).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('should call adaptData with raw data', async () => {
+      const raw = { field: 'value' };
+      const pdfBuffer = Buffer.from('pdf-content');
+      mockPdfService.getDocumentType.mockReturnValue(mockDocumentType);
+      mockPdfService.render.mockResolvedValue(pdfBuffer);
+
+      await useCase.execute('test-doc', raw);
+
+      expect(mockDocumentType.adaptData).toHaveBeenCalledWith(raw);
+    });
+
+    it('should call render with template name and adapted data', async () => {
+      const raw = { field: 'value' };
+      const adapted = { adapted: raw };
+      const pdfBuffer = Buffer.from('pdf-content');
+      mockPdfService.getDocumentType.mockReturnValue(mockDocumentType);
+      mockPdfService.render.mockResolvedValue(pdfBuffer);
+
+      await useCase.execute('test-doc', raw);
+
+      expect(mockPdfService.render).toHaveBeenCalledWith(
+        'test-template',
+        adapted,
+      );
+    });
+
+    it('should return the Buffer from render', async () => {
+      const pdfBuffer = Buffer.from('pdf-content');
+      mockPdfService.getDocumentType.mockReturnValue(mockDocumentType);
+      mockPdfService.render.mockResolvedValue(pdfBuffer);
+
+      const result = await useCase.execute('test-doc', {});
+
+      expect(result).toBe(pdfBuffer);
+    });
+
+    it('should include available types in NotFoundException message', async () => {
+      mockPdfService.getDocumentType.mockReturnValue(undefined);
+      mockPdfService.getAvailableTypes.mockReturnValue(['type-a', 'type-b']);
+
+      await expect(useCase.execute('missing', {})).rejects.toThrow(
+        "PDF type 'missing' not registered. Available: type-a, type-b",
+      );
+    });
+  });
+});

@@ -14,6 +14,9 @@ import { CreateMeterDto } from '../dto/create-meter.dto';
 import { UpdateMeterDto } from '../dto/update-meter.dto';
 import { InstallMeterDto } from '../dto/install-meter.dto';
 import { MeterResponseDto } from '../dto/meter-response.dto';
+import { FilterMeterDto } from '../dto/filter-meter.dto';
+import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
+import { PaginatedMeterResponse } from '../types/paginated-meter-response.type';
 import { EstadoMedidorResponseDto } from '../dto/estado-medidor-response.dto';
 import {
   ApiTags,
@@ -21,13 +24,12 @@ import {
   ApiOperation,
   ApiResponse,
   ApiParam,
-  ApiQuery,
   ApiBody,
 } from '@nestjs/swagger';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
-import { JwtAuthGuard } from 'src/identity/auth/guards/jwt-auth.guard';
+import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
-import { EstadoMedidor } from 'src/generated/prisma/enums';
+import { toMeterResponse } from '../../domain/types/metersMapper';
 
 @ApiTags('meters')
 @ApiBearerAuth()
@@ -50,8 +52,8 @@ export class MeterController {
   })
   @RequiredPermission('meters', 'read')
   @Get('status')
-  findAllEstados(): Promise<EstadoMedidorResponseDto[]> {
-    return this.meterService.findAllEstados();
+  findAllStates(): Promise<EstadoMedidorResponseDto[]> {
+    return this.meterService.findAllStates();
   }
 
   /**
@@ -74,7 +76,7 @@ export class MeterController {
   @RequiredPermission('meters', 'create')
   @Post()
   async create(@Body() createDto: CreateMeterDto): Promise<MeterResponseDto> {
-    return this.meterService.create(createDto);
+    return toMeterResponse(await this.meterService.create(createDto));
   }
 
   /**
@@ -83,47 +85,19 @@ export class MeterController {
    */
   @ApiOperation({
     summary: 'Listar medidores',
-    description: 'Retorna lista paginada de medidores',
-  })
-  @ApiQuery({
-    name: 'skip',
-    description: 'Número de registros a omitir',
-    required: false,
-    type: Number,
-    example: 0,
-  })
-  @ApiQuery({
-    name: 'take',
-    description: 'Número máximo de registros',
-    required: false,
-    type: Number,
-    example: 10,
-  })
-  @ApiQuery({
-    name: 'estado',
-    description: 'Filtrar por estado del medidor (codigo)',
-    required: false,
-    type: String,
-    example: 'BODEGA',
+    description: 'Retorna lista paginada de medidores con KPIs',
   })
   @ApiResponse({
     status: 200,
-    description: 'Lista de medidores',
-    type: [MeterResponseDto],
+    description: 'Lista paginada de medidores con KPIs',
   })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @RequiredPermission('meters', 'read')
   @Get()
   async findAll(
-    @Query('skip') skip?: string,
-    @Query('take') take?: string,
-    @Query('estado') estado?: string,
-  ): Promise<MeterResponseDto[]> {
-    return this.meterService.findAll({
-      skip: skip ? +skip : undefined,
-      take: take ? +take : undefined,
-      where: estado ? { estado: estado as EstadoMedidor } : undefined,
-    });
+    @Query() filterDto: FilterMeterDto,
+  ): Promise<PaginatedMeterResponse> {
+    return this.meterService.findAll(filterDto);
   }
 
   /**
@@ -150,7 +124,7 @@ export class MeterController {
   @RequiredPermission('meters', 'read')
   @Get(':id')
   async findOne(@Param('id') id: string): Promise<MeterResponseDto> {
-    return this.meterService.findOne(BigInt(id));
+    return toMeterResponse(await this.meterService.findOne(BigInt(id)));
   }
 
   /**
@@ -183,7 +157,9 @@ export class MeterController {
     @Param('id') id: string,
     @Body() updateDto: UpdateMeterDto,
   ): Promise<MeterResponseDto> {
-    return this.meterService.update(BigInt(id), updateDto);
+    return toMeterResponse(
+      await this.meterService.update(BigInt(id), updateDto),
+    );
   }
 
   /**
@@ -248,7 +224,12 @@ export class MeterController {
     @Param('id') id: string,
     @Body() installDto: InstallMeterDto,
   ): Promise<MeterResponseDto> {
-    return this.meterService.install(BigInt(id), BigInt(installDto.contratoId));
+    return toMeterResponse(
+      await this.meterService.install(
+        BigInt(id),
+        BigInt(installDto.contratoId),
+      ),
+    );
   }
 
   /**
@@ -279,7 +260,7 @@ export class MeterController {
   @RequiredPermission('meters', 'update')
   @Post(':id/report-defect')
   async reportDefect(@Param('id') id: string): Promise<MeterResponseDto> {
-    return this.meterService.reportDefect(BigInt(id));
+    return toMeterResponse(await this.meterService.reportDefect(BigInt(id)));
   }
 
   /**
@@ -316,6 +297,8 @@ export class MeterController {
     @Param('id') id: string,
     @Body('motivoBaja') motivoBaja: string,
   ): Promise<MeterResponseDto> {
-    return this.meterService.decommission(BigInt(id), motivoBaja);
+    return toMeterResponse(
+      await this.meterService.decommission(BigInt(id), motivoBaja),
+    );
   }
 }

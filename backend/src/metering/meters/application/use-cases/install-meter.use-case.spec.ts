@@ -49,11 +49,10 @@ describe('InstallMeterUseCase', () => {
     expect(result.estado).toBe('INSTALADO');
     expect(mockMeterRepository.createHistory).toHaveBeenCalledWith(
       expect.objectContaining({
-        medidor: expect.objectContaining({ connect: { medidorId: BigInt(1) } }),
-        contrato: expect.objectContaining({
-          connect: { contratoId: BigInt(123) },
-        }),
+        medidorId: BigInt(1),
+        contratoId: BigInt(123),
         lecturaInicial: 0,
+        motivo: 'INSTALACION INICIAL',
       }),
       null,
     );

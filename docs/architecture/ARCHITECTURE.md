@@ -1,265 +1,283 @@
-# 🏛️ Screaming Architecture & Context-Based Design
+# Screaming Architecture & Hexagonal Design
 
-## ¿Qué es "Screaming Architecture"?
+## Concepto
 
-El término, acuñado por Uncle Bob, propone que **la arquitectura de un software debe "gritar" su intención**, no los frameworks o las herramientas que utiliza. 
+La arquitectura "grita" el dominio de negocio, no el framework. Al abrir `src/` no ves "controllers/models/services" — ves **"billing/identity/metering"**. Cualquier desarrollador sabe qué hace el sistema sin leer una línea de código.
 
-Cuando mirás la carpeta `src/`, no deberías ver "controllers", "models" y "services" (arquitectura técnica), sino **"billing", "identity" y "metering"** (arquitectura de negocio). El objetivo es que cualquier desarrollador pueda entender qué hace el sistema simplemente mirando la estructura de archivos, sin necesidad de abrir una sola línea de código.
+Cada contexto implementa **Arquitectura Hexagonal** internamente:
+- `domain/` — contratos abstractos, sin dependencias externas
+- `application/` — casos de uso y orquestación
+- `infrastructure/` — adaptadores (Prisma, S3, SOAP, etc.)
+- `interfaces/` — HTTP (controllers + DTOs)
 
-## Nuestra Implementación: Arquitectura por Contextos
-
-Hemos estructurado `jasrapo-backend` siguiendo este principio, dividiendo el sistema en contextos de negocio aislados y altamente cohesivos.
-
-### 🗺️ Mapa de Contextos (Bounded Contexts)
-
-1.  **`identity/` (Identidad)**: Gestión de usuarios, autenticación, roles, permisos y sesiones. Es el guardián del acceso al sistema.
-2.  **`metering/` (Medición)**: El núcleo operativo del agua. Gestiona dispositivos (medidores) y el ciclo de vida de las lecturas.
-3.  **`billing/` (Facturación)**: Transforma la medición en economía. Tarifas, facturas, convenios, cobros, pagos e integración con el SRI.
-4.  **`operations/` (Operaciones)**: Logística y territorio. Clientes, contratos, territorio y la jerarquía de sectores/comunidades.
-5.  **`public-portal/` (Portal Público)**: Exposición controlada de datos para el cliente final (consultas de facturas, búsquedas públicas).
+> Ver [../standards/LAYERS.md](../standards/LAYERS.md) para el detalle de capas y patrones.
 
 ---
 
-### 🧱 Anatomía de un Contexto
-
-Cada carpeta dentro de un contexto es un **Dominio** o **Sub-dominio** que contiene sus propios recursos técnicos. Por ejemplo, dentro de `identity/auth/` verás:
-
--   `dto/`: Objetos de transferencia de datos.
--   `guards/`: Reglas de acceso.
--   `strategies/`: Lógicas de autenticación (JWT).
--   `auth.service.ts`: Lógica de negocio pura.
--   `auth.controller.ts`: Puerta de entrada HTTP.
--   `auth.module.ts`: Definición de NestJS para este sub-dominio.
-
-### ⚙️ Infrastructure (Infraestructura)
-
-Todo lo que sea un **detalle técnico** o una herramienta externa que no pertenece a la lógica de negocio se centraliza en `src/infrastructure/`:
--   `database/`: Prisma Service y conexión a PostgreSQL.
--   `storage/`: Integración con Minio (S3).
--   `common/`: Decoradores, filtros, interceptores y utilidades globales.
--   `config/`: Constantes y configuración de la aplicación.
-
----
-
-## 📋 Mapeo Completo: Prisma → NestJS
-
-Esta tabla establece la correspondencia entre los modelos del schema de Prisma y su ubicación en el código NestJS.
-
-### 🔐 Identity (Identidad y Autenticación)
-
-Carpeta Prisma: `autenticacion-autorizacion/` → Carpeta NestJS: `src/identity/`
-
-| Modelo Prisma | Ubicación NestJS | Sub-dominio | Descripción |
-|--------------|------------------|------------|-------------|
-| Usuarios | `users/` | users | Gestión de usuarios y perfiles unificados |
-| Roles | `roles/` | roles | Roles y permisos |
-| Permisos | `permissions/` | permissions | Permisos granulares |
-| Sesiones | `sessions/` | sessions | Sesiones activas de usuarios |
-| Menus | `menus/` | menus | Menú dinámico basado en permisos |
-| RolPermisos | `roles/` | roles | Relación muchos a muchos |
-| UsuarioPermisos | `users/` | users | Relación muchos a muchos |
-| MenuPermisos | `menus/` | menus | Relación muchos a muchos |
-
----
-
-### 📐 Metering (Medición)
-
-Carpeta Prisma: `logica-de-negocio/` → Carpeta NestJS: `src/metering/`
-
-| Modelo Prisma | Ubicación NestJS | Sub-dominio | Descripción |
-|--------------|------------------|------------|-------------|
-| Medidores | `meters/` | meters | Dispositivos de medición |
-| Lecturas | `readings/` | readings | Lecturas de medidores |
-| LecturaAnomalia | `reading-anomaly/` | reading-anomaly | Anomalías en lecturas (fugas, daños) |
-| EstadoMedidor | `meters/` | meters | Estados del medidor (activo, dañado, dado de baja) |
-| HistorialMedidores | `readings/` | readings | Historial de cambios de medidores |
-
----
-
-### 🏢 Operations (Operaciones Comerciales)
-
-Carpeta Prisma: `logica-de-negocio/` → Carpeta NestJS: `src/operations/`
-
-| Modelo Prisma | Ubicación NestJS | Sub-dominio | Descripción |
-|--------------|------------------|------------|-------------|
-| Clientes | `clients/` | clients | Clientes del sistema |
-| Contratos | `contracts/` | contracts | Contratos de servicio (medidor - cliente) |
-| Comunidades | `territory/communities/` | communities | Comunidades/barrios |
-| Sectores | `territory/sectors/` | sectors | Sectores dentro de comunidades |
-| Identificacion | `clients/` | clients | Tipos de identificación (Cédula, RUC, Pasaporte) |
-| CategoriaTarifa | `billing/tariffs/` | tariffs | Categorías de tarifa |
-| Rubros | *(pendiente)* | - | Rubros para cargos adicionales |
-| ParametroTasainteres | *(pendiente)* | - | Parámetros de tasa de interés por mora |
-
----
-
-### 💰 Billing (Facturación y Cobranza)
-
-Carpeta Prisma: `facturacion/` y `logica-de-negocio/` → Carpeta NestJS: `src/billing/`
-
-#### Sub-dominio: Facturación (SRI)
-
-| Modelo Prisma | Ubicación NestJS | Sub-dominio | Descripción |
-|--------------|------------------|------------|-------------|
-| Facturas | *(pendiente)* | - | Facturas electrónicas |
-| Prefacturas | *(pendiente)* | - | Pre-facturas antes de aprobación |
-| PrefacturaDetalle | *(pendiente)* | - | Detalle de prefacturas |
-| NotasCredito | *(pendiente)* | - | Notas de crédito |
-| NotasDebito | *(pendiente)* | - | Notas de débito |
-| Retenciones | *(pendiente)* | - | Retenciones en facturas |
-| Periodos | *(pendiente)* | - | Períodos de facturación |
-| PuntosEmision | *(pendiente)* | - | Puntos de emisión (sucursales) |
-| Establecimientos | *(pendiente)* | - | Establecimientos/empresas |
-| Empresa | *(pendiente)* | - | Datos de la empresa |
-| Lote | `lote/` | lote | Lotes de generación de prefacturas |
-| SriFormaPago | *(pendiente)* | - | Formas de pago del SRI |
-| SriImpuesto | *(pendiente)* | - | Impuestos (IVA, ICE) |
-| SriTipoComprobante | *(pendiente)* | - | Tipos de comprobante SRI |
-| CatalogoDescuento | *(pendiente)* | - | Catálogo de descuentos |
-| DescuentoDetalle | *(pendiente)* | - | Detalle de descuentos aplicados |
-
-#### Sub-dominio: Convenios y Cobranza 🆕
-
-| Modelo Prisma | Ubicación NestJS | Sub-dominio | Descripción |
-|--------------|------------------|------------|-------------|
-| Convenios | `collections/convenios/` | convenios | Convenios de pago (acuerdos por mora) |
-| CuotaConvenio | `collections/convenios/` | convenios | Cuotas del convenio de pago |
-
-**Nota**: Convenios y CuotaConvenio están en Prisma en `logica-de-negocio/`, pero en NestJS van en `billing/collections/` porque representan la **lógica de cobranza** (cuando el cliente no puede pagar, se negocia un acuerdo de pago). Es un tema de facturación, no de operaciones comerciales.
-
-#### Sub-dominio: Pagos y Cobros
-
-| Modelo Prisma | Ubicación NestJS | Sub-dominio | Descripción |
-|--------------|------------------|------------|-------------|
-| Pagos | *(pendiente)* | - | Pagos recibidos |
-| DetallePago | *(pendiente)* | - | Detalle de pagos (aplicación a facturas/cuotas) |
-| SaldoFavorCliente | *(pendiente)* | - | Saldo a favor del cliente |
-| CajaSesion | *(pendiente)* | - | Sesiones de caja |
-| CajaArqueoDetalle | *(pendiente)* | - | Detalle de arqueo de caja |
-
----
-
-### ⚙️ Infrastructure (Configuración del Sistema)
-
-Carpeta Prisma: `infrastructure/` → Carpeta NestJS: `src/infrastructure/`
-
-| Modelo Prisma | Ubicación NestJS | Descripción |
-|--------------|------------------|-------------|
-| PreferenciasSistema | `config/` | Preferencias configurables del sistema |
-
----
-
-## 🎯 Reglas de Organización
-
-### Criterios para asignar un modelo a un contexto
-
-1.  **¿Quién crea/gestiona este recurso?**
-    - Si lo crea el **cliente selbst** → `operations/` (ej. contratos)
-    - Si lo crea el **sistema automaticamente** → `billing/` (ej. prefacturas)
-    - Si lo crea un **admin** → `identity/` (ej. usuarios)
-
-2.  **¿Qué proceso de negocio representa?**
-    - Si es parte del **ciclo del agua** (medidor → lectura → consumo) → `metering/`
-    - Si es parte del **ciclo de dinero** (factura → cobro → pago) → `billing/`
-    - Si es parte de la **relación comercial** → `operations/`
-
-3.  **¿Dónde tiene más sentido buscarlo?**
-    - Un usuario buscando "mis facturas" → `billing/`
-    - Un usuario buscando "mi contrato" → `operations/`
-    - Un técnico buscando "medidores" → `metering/`
-
-### Convenios: Caso Especial
-
-Los **Convenios** y **CuotaConvenio** son un caso especial importante:
-
-- En Prisma están en `logica-de-negocio/` (junto con Contratos)
-- En NestJS deben estar en `billing/collections/` (no en `operations/`)
-
-**Por qué**: Un convenio de pago es un acuerdo de **cobranza**, no una operación comercial básica. El contrato es la relación inicial; el convenio es la negociación cuando esa relación falló y el cliente no puede pagar. Por eso:
-- `operations/contracts/` = relación comercial (dar de alta un servicio)
-- `billing/collections/convenios/` = cobranza (acuerdo cuando hay mora)
-
----
-
-## 📁 Estructura Sugerida para billing/
+## Bounded Contexts
 
 ```
-src/billing/
-├── billing.module.ts
-├── billing.md
-├── tariffs/                    # ✅ Existe
-│   └── ...
-├── lote/                     # ✅ Existe
-│   └── ...
-├── invoices/                 # ⏳ Pendiente
-│   ├── dto/
-│   ├── types/
-│   ├── entities/
-│   ├── invoice.service.ts
-│   ├── invoice.controller.ts
-│   └── ...
-├── prefacturas/               # ⏳ Pendiente
-│   └── ...
-├── collections/               # ⏳ Pendiente (NUEVO)
-│   ├── dto/
-│   ├── types/
-│   ├── entities/
-│   ├── convenios/            # Convenios y cuotas
-│   │   ├── dto/
-│   │   ├── convenios.service.ts
-│   │   ├── convenios.controller.ts
-│   │   └── ...
-│   └── pagos/               # Pagos y cobros
-│       ├── dto/
-│       ├── pagos.service.ts
-│       └── ...
-└── sri/                     # ⏳ Pendiente
-    ├── formas-pago/
-    ├── impuestos/
-    └── tipos-comprobante/
+src/
+├── identity/        ← Quién puede entrar y qué puede hacer
+├── metering/        ← Ciclo del agua (medidores y lecturas)
+├── billing/         ← Ciclo del dinero (prefacturas, lotes, convenios)
+├── operations/      ← Relación comercial (clientes, contratos, territorio)
+├── sri/             ← Facturación electrónica (integración SRI Ecuador)
+├── reports/         ← Generación de reportes PDF
+├── public-portal/   ← Consultas públicas para el cliente final
+└── infrastructure/  ← Servicios técnicos transversales
 ```
 
 ---
 
-## 🚀 Beneficios de este Enfoque
+## Detalle por Contexto
 
-- **Mantenibilidad**: Los cambios en un contexto (ej. Facturación) tienen un impacto mínimo en otros (ej. Identidad).
-- **Escalabilidad**: Es mucho más fácil extraer un contexto a un microservicio independiente si el sistema crece demasiado.
-- **Claridad**: Los archivos relacionados están físicamente cerca, eliminando el "salto" constante entre carpetas técnicas distantes.
-- **Onboarding**: Un desarrollador nuevo sabe exactamente dónde encontrar la lógica de "medidores" sin tener que buscar en una carpeta global de `services`.
+### identity/ — Identidad y Acceso
+
+Guardián del sistema. Controla autenticación, autorización y perfiles.
+
+```
+identity/
+├── auth/            ← Login, JWT, refresh tokens, estrategias Passport
+├── users/           ← Gestión de usuarios y perfiles
+├── roles/           ← Roles del sistema
+├── permissions/     ← Permisos granulares por recurso/acción
+├── sessions/        ← Sesiones activas
+└── menus/           ← Menú dinámico según permisos del usuario
+```
+
+| Modelo Prisma | Sub-dominio | Descripción |
+|---------------|-------------|-------------|
+| Usuarios | `users/` | Usuario y perfil unificado |
+| Roles | `roles/` | Roles del sistema |
+| Permisos | `permissions/` | Permisos granulares |
+| RolPermisos | `roles/` | Relación N:M rol-permiso |
+| UsuarioPermisos | `users/` | Permisos directos al usuario |
+| Sesiones | `sessions/` | Sesiones activas y tokens |
+| Menus | `menus/` | Estructura de navegación |
+| MenuPermisos | `menus/` | Visibilidad de menú por permiso |
 
 ---
 
-## 🗺️ Infrastructure Diagram
+### metering/ — Medición
+
+Núcleo operativo del agua. Ciclo: dispositivo → lectura → consumo.
+
+```
+metering/
+├── meters/          ← Medidores físicos y sus estados
+├── readings/        ← Lecturas periódicas y consumo calculado
+└── reading-anomaly/ ← Anomalías detectadas (fugas, daños, consumo anormal)
+```
+
+| Modelo Prisma | Sub-dominio | Descripción |
+|---------------|-------------|-------------|
+| Medidores | `meters/` | Dispositivos de medición |
+| EstadoMedidor | `meters/` | Estados del medidor (activo, dañado, baja) |
+| HistorialMedidores | `readings/` | Historial de cambios de medidor por contrato |
+| Lecturas | `readings/` | Lecturas periódicas y consumo calculado |
+| LecturaAnomalia | `reading-anomaly/` | Anomalías en lecturas con foto y observación |
+
+---
+
+### billing/ — Facturación y Cobranza
+
+Transforma el consumo en dinero. Ciclo: lote → prefactura → cobro.
+
+```
+billing/
+├── batch/           ← Lotes de generación masiva de prefacturas
+├── pre-invoice/     ← Prefacturas individuales (revisión antes de emitir)
+├── tariffs/         ← Categorías de tarifa y precios por consumo
+└── collections/
+    └── agreements/  ← Convenios de pago (acuerdos por mora)
+```
+
+| Módulo | Estado | Descripción |
+|--------|--------|-------------|
+| `batch/` | ✅ | Generación de lotes de prefacturas por período/comunidad |
+| `pre-invoice/` | ✅ | Prefacturas individuales, estados, PDF |
+| `tariffs/` | ✅ | Categorías de tarifa, precios base y excedente |
+| `collections/agreements/` | ✅ | Convenios de pago y cuotas |
+| pagos y cobros | ⏳ | Pagos recibidos, sesiones de caja, saldo a favor |
+
+**Nota sobre Convenios:** están en `billing/collections/` (no en `operations/`) porque representan cobranza — negociación cuando el cliente no puede pagar, no la relación comercial inicial.
+
+---
+
+### operations/ — Operaciones Comerciales
+
+Relación comercial entre la empresa y el cliente. Territorio, contratos, rutas.
+
+```
+operations/
+├── clients/         ← Clientes del sistema
+├── contracts/       ← Contratos de servicio (cliente ↔ medidor)
+├── communities/     ← Comunidades/barrios
+├── sectors/         ← Sectores dentro de comunidades
+└── routes/          ← Rutas de lectura y distribución
+```
+
+| Modelo Prisma | Sub-dominio | Descripción |
+|---------------|-------------|-------------|
+| Clientes | `clients/` | Clientes y tipos de identificación |
+| Contratos | `contracts/` | Contratos de servicio activos |
+| Comunidades | `communities/` | Comunidades/barrios del territorio |
+| Sectores | `sectors/` | Sectores dentro de comunidades |
+| Rutas | `routes/` | Rutas de operación y lectura |
+
+---
+
+### sri/ — Facturación Electrónica SRI
+
+Integración con el Servicio de Rentas Internas de Ecuador. Firma digital, SOAP, XML, autorización.
+
+```
+sri/
+├── domain/
+│   ├── entities/    ← Entidades de comprobantes (factura, retención, etc.)
+│   ├── interfaces/  ← Contratos del dominio SRI
+│   └── repositories/
+├── application/
+│   ├── services/    ← Orquestación del ciclo de vida del comprobante
+│   └── use-cases/   ← Emisión, autorización, anulación
+└── infrastructure/
+    ├── soap/        ← Cliente SOAP para webservices SRI
+    ├── xml/         ← Generación y firma XAdES de comprobantes
+    ├── storage/     ← Almacenamiento de XMLs y PDFs en RustFS
+    ├── persistence/ ← Repositorios Prisma para comprobantes
+    └── queue/       ← Cola de envío asíncrono (pg-boss)
+```
+
+Tipos de comprobante soportados: facturas, notas de crédito, notas de débito, retenciones, guías de remisión.
+
+---
+
+### reports/ — Reportes
+
+Generación de reportes PDF del sistema (consumos, cobros, cortes, etc.).
+
+```
+reports/
+├── dto/             ← Parámetros de cada reporte
+├── interfaces/http/ ← Endpoints de descarga
+├── pdf/             ← Generación con Puppeteer/pdf-lib
+└── specs/           ← Especificaciones de layout por reporte
+```
+
+---
+
+### public-portal/ — Portal Público
+
+Acceso sin autenticación para consultas del cliente final.
+
+```
+public-portal/
+└── search/          ← Búsqueda de facturas y estado de cuenta por cliente
+```
+
+---
+
+### infrastructure/ — Servicios Técnicos Transversales
+
+No pertenece a ningún dominio de negocio. Son adaptadores y utilidades globales.
+
+```
+infrastructure/
+├── database/        ← PrismaService, conexión PostgreSQL, raw-pg, s3-client
+├── storage/         ← IStorageService → RustFS (S3-compatible)
+├── mail/            ← IMailProvider → SMTP vía Nodemailer
+├── encryption/      ← Cifrado AES, firma de certificados P12
+├── pdf/             ← Motor de generación PDF compartido (Puppeteer + pdf-lib)
+├── jobs/            ← Motor de colas pg-boss (sin Redis)
+├── audit/           ← Registro de auditoría de acciones
+├── observability/   ← Pino (logs), Prometheus (métricas), OpenTelemetry (trazas)
+├── common/          ← Guards, filters, interceptors, decorators, utils, pipes
+└── config/          ← Constantes, variables de entorno, configuración global
+```
+
+---
+
+## Anatomía de un Sub-dominio
+
+Todos los sub-dominios siguen la misma estructura hexagonal:
+
+```
+<context>/<subdomain>/
+├── application/
+│   ├── <entity>.service.ts
+│   └── use-cases/
+│       ├── find-all-<entity>.use-case.ts
+│       ├── find-one-<entity>.use-case.ts
+│       └── <action>-<entity>.use-case.ts
+├── domain/
+│   └── repositories/
+│       └── <entity>.repository.ts       ← abstract class (Port)
+├── infrastructure/
+│   └── repositories/
+│       └── prisma-<entity>.repository.ts ← Prisma impl (Adapter)
+├── interfaces/
+│   ├── dto/
+│   │   └── <action>-<entity>.dto.ts
+│   └── http/
+│       └── <entity>.controller.ts
+└── <entity>.module.ts
+```
+
+---
+
+## Reglas de Asignación de Contexto
+
+| Pregunta | Contexto |
+|----------|----------|
+| ¿Lo gestiona un admin del sistema? | `identity/` |
+| ¿Involucra un medidor físico o una lectura? | `metering/` |
+| ¿Es parte del ciclo de dinero (factura, cobro, convenio)? | `billing/` |
+| ¿Es la relación comercial inicial (cliente, contrato, territorio)? | `operations/` |
+| ¿Involucra firma digital y comunicación con el SRI? | `sri/` |
+| ¿Es una consulta pública sin auth? | `public-portal/` |
+| ¿Es un reporte descargable? | `reports/` |
+| ¿Es infraestructura técnica sin dominio propio? | `infrastructure/` |
+
+---
+
+## Infrastructure Diagram
 
 ```mermaid
 flowchart TB
-    subgraph Observability["📊 Observability Stack"]
-        Prometheus["📈 Prometheus\n:9091"]
-        Tempo["🔍 Tempo\n:3201"]
-        Loki["📝 Loki\n:3101"]
-        Grafana["📊 Grafana\n:3001"]
+    subgraph Observability["Observability Stack"]
+        Prometheus["Prometheus :9091"]
+        Tempo["Tempo :3201"]
+        Loki["Loki :3101"]
+        Grafana["Grafana :3001"]
     end
 
-    subgraph Infra["🗄️ Infrastructure"]
-        PostgreSQL["🐘 PostgreSQL\n:5432"]
-        MinIO["📦 MinIO\n:9000 / :9001"]
-        Jobs["⚙️ Jobs Engine\n(pg-boss)"]
+    subgraph Infra["Infrastructure"]
+        PostgreSQL["PostgreSQL :5432"]
+        RustFS["RustFS :9000 / :9001"]
+        Jobs["pg-boss (Jobs Engine)"]
     end
 
-    Client["🌐 Client / Frontend"]
-    Backend["🚀 Backend NestJS\n:3000"]
+    subgraph External["External"]
+        SRI["SRI Ecuador (SOAP)"]
+        SMTP["SMTP Mail"]
+    end
+
+    Client["Client / Frontend"]
+    Backend["Backend NestJS :3000"]
 
     Client --> Backend
     Backend -->|SQL / Transactions| PostgreSQL
-    Backend -->|S3 API| MinIO
+    Backend -->|S3 API| RustFS
+    Backend -->|SOAP / HTTPS| SRI
+    Backend -->|SMTP| SMTP
     PostgreSQL --- Jobs
     Backend -.->|Enqueues Jobs| Jobs
-    Jobs -.->|Processes| Backend
+    Jobs -.->|Processes async| Backend
 
-    Backend -->|/metrics scrape| Prometheus
+    Backend -->|/metrics| Prometheus
     Backend -->|OTLP Traces| Tempo
-    Backend -->|Logs| Loki
+    Backend -->|Structured Logs| Loki
 
     Prometheus --> Grafana
     Tempo --> Grafana
@@ -269,32 +287,37 @@ flowchart TB
     classDef infra fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
     classDef obs fill:#e8f5e9,stroke:#388e3c,stroke-width:2px
     classDef client fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+    classDef external fill:#fce4ec,stroke:#c62828,stroke-width:2px
 
     class Backend backend
-    class PostgreSQL,MinIO,Jobs infra
+    class PostgreSQL,RustFS,Jobs infra
     class Prometheus,Tempo,Loki,Grafana obs
     class Client client
+    class SRI,SMTP external
 ```
 
 ### Servicios del Stack
 
 | Servicio | Puerto | Función |
-|---|---|---|
-| **Backend NestJS** | `3000` | API principal + Swagger en `/docs` |
-| **PostgreSQL** | `5432` | Base de datos relacional (incluye motor de trabajos pg-boss) |
-| **MinIO** | `9000` / `9001` | Object storage (S3-compatible) + consola web |
-| **Jobs Engine** | N/A | Colas transaccionales y procesos en background (Redis-less) |
-| **Prometheus** | `9091` | Métricas (scrapea `/metrics` del backend) |
-| **Tempo** | `3201` | Distributed tracing (OTLP) |
-| **Loki** | `3101` | Agregación de logs |
-| **Grafana** | `3001` | Dashboards unificados (métricas + traces + logs) |
+|----------|--------|---------|
+| Backend NestJS | `3000` | API principal + Swagger en `/docs` |
+| PostgreSQL | `5432` | Base de datos relacional + motor pg-boss |
+| RustFS | `9000` / `9001` | Object storage S3-compatible + consola web |
+| pg-boss | — | Colas transaccionales en PostgreSQL (sin Redis) |
+| Prometheus | `9091` | Scraping de métricas desde `/metrics` |
+| Tempo | `3201` | Distributed tracing vía OTLP |
+| Loki | `3101` | Agregación de logs estructurados |
+| Grafana | `3001` | Dashboards unificados (métricas + trazas + logs) |
 
 ---
 
-## 📝 Leyenda
+## Documentos Relacionados
 
-| Símbolo | Significado |
-|--------|------------|
-| ✅ | Ya implementado |
-| ⏳ | Pendiente de implementar |
-| 🆕 | Nuevo en esta versión |
+| Documento | Descripción |
+|-----------|-------------|
+| [../standards/LAYERS.md](../standards/LAYERS.md) | Detalle de capas hexagonales con ejemplos de código |
+| [../standards/NAMING.md](../standards/NAMING.md) | Naming conventions por capa |
+| [modules/billing.md](./modules/billing.md) | Detalle del contexto Billing |
+| [modules/identity.md](./modules/identity.md) | Detalle del contexto Identity |
+| [modules/metering.md](./modules/metering.md) | Detalle del contexto Metering |
+| [modules/operations.md](./modules/operations.md) | Detalle del contexto Operations |

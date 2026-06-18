@@ -2,29 +2,54 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { MeterController } from './meter.controller';
 import { MeterService } from '../../application/meter.service';
+import { EstadoMedidor } from 'src/generated/prisma/enums';
 
 describe('MeterController', () => {
   let controller: MeterController;
   let service: MeterService;
 
-  const mockMedidor = {
-    medidorId: BigInt(1),
-    serie: 'MED-001',
-    modelo: 'DIGITAL_2000',
-    marca: 'Itron',
-    estado: 'BODEGA',
-    deletedAt: null,
+  const mockPaginatedResponse = {
+    data: [
+      {
+        medidorId: BigInt(1),
+        serie: 'MED-001',
+        modelo: 'DIGITAL_2000',
+        marca: 'Itron',
+        estado: 'BODEGA',
+        fechaInstalacion: null,
+        fechaBaja: null,
+        motivo: null,
+        latitud: null,
+        longitud: null,
+      },
+    ],
+    meta: {
+      total: 1,
+      page: 1,
+      limit: 10,
+      ultimaPagina: 1,
+      paginaActual: 1,
+      porPagina: 10,
+      anterior: null,
+      siguiente: null,
+    },
+    kpis: {
+      enBodega: 1,
+      instalados: 0,
+      danados: 0,
+      total: 1,
+    },
   };
 
   const mockMeterService = {
-    create: jest.fn(() => Promise.resolve(mockMedidor)),
-    findAll: jest.fn(() => Promise.resolve([mockMedidor])),
-    findOne: jest.fn(() => Promise.resolve(mockMedidor)),
-    update: jest.fn(() => Promise.resolve(mockMedidor)),
+    create: jest.fn(() => Promise.resolve(mockPaginatedResponse.data[0])),
+    findAll: jest.fn(() => Promise.resolve(mockPaginatedResponse)),
+    findOne: jest.fn(() => Promise.resolve(mockPaginatedResponse.data[0])),
+    update: jest.fn(() => Promise.resolve(mockPaginatedResponse.data[0])),
     remove: jest.fn(() => Promise.resolve(undefined)),
-    install: jest.fn(() => Promise.resolve(mockMedidor)),
-    reportDefect: jest.fn(() => Promise.resolve(mockMedidor)),
-    decommission: jest.fn(() => Promise.resolve(mockMedidor)),
+    install: jest.fn(() => Promise.resolve(mockPaginatedResponse.data[0])),
+    reportDefect: jest.fn(() => Promise.resolve(mockPaginatedResponse.data[0])),
+    decommission: jest.fn(() => Promise.resolve(mockPaginatedResponse.data[0])),
   };
 
   beforeEach(async () => {
@@ -47,26 +72,25 @@ describe('MeterController', () => {
       const result = await controller.create(createDto);
 
       expect(service.create).toHaveBeenCalledWith(createDto);
-      expect(result).toEqual(mockMedidor);
+      expect(result).toEqual(mockPaginatedResponse.data[0]);
     });
   });
 
   describe('findAll', () => {
-    it('should return all meters without pagination', async () => {
-      const result = await controller.findAll();
+    it('should delegate empty filters to service', async () => {
+      const filterDto = {};
+      const result = await controller.findAll(filterDto);
 
-      expect(service.findAll).toHaveBeenCalledWith({});
-      expect(result).toEqual([mockMedidor]);
+      expect(service.findAll).toHaveBeenCalledWith(filterDto);
+      expect(result).toEqual(mockPaginatedResponse);
     });
 
-    it('should apply pagination when skip and take provided', async () => {
-      const result = await controller.findAll('10', '5');
+    it('should filter by estado', async () => {
+      const filterDto = { page: 1, limit: 5, estado: EstadoMedidor.BODEGA };
+      const result = await controller.findAll(filterDto);
 
-      expect(service.findAll).toHaveBeenCalledWith({
-        skip: 10,
-        take: 5,
-      });
-      expect(result).toEqual([mockMedidor]);
+      expect(service.findAll).toHaveBeenCalledWith(filterDto);
+      expect(result).toEqual(mockPaginatedResponse);
     });
   });
 
@@ -75,7 +99,7 @@ describe('MeterController', () => {
       const result = await controller.findOne('1');
 
       expect(service.findOne).toHaveBeenCalledWith(BigInt(1));
-      expect(result).toEqual(mockMedidor);
+      expect(result).toEqual(mockPaginatedResponse.data[0]);
     });
   });
 
@@ -85,7 +109,7 @@ describe('MeterController', () => {
       const result = await controller.update('1', updateDto);
 
       expect(service.update).toHaveBeenCalledWith(BigInt(1), updateDto);
-      expect(result).toEqual(mockMedidor);
+      expect(result).toEqual(mockPaginatedResponse.data[0]);
     });
   });
 

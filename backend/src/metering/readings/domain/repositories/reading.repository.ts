@@ -1,30 +1,56 @@
-import type { Prisma } from 'src/generated/prisma/client';
+import type { LecturaEntity } from '../entities/lectura.entity';
+
+export interface CreateReadingRepositoryData {
+  fecha: Date;
+  lecturaAnterior: number;
+  lecturaActual: number;
+  consumoCalculado: number;
+  medidorId: bigint;
+  descripcionAnomalia?: string | null;
+  fechaValidacion?: Date | null;
+  fotoUrl?: string | null;
+  estado?: string;
+  lecturaInicial?: boolean;
+  periodoId: number;
+}
+
+export interface UpdateReadingRepositoryData {
+  fecha?: Date;
+  lecturaAnterior?: number;
+  lecturaActual?: number;
+  consumoCalculado?: number;
+  medidorId?: bigint;
+  descripcionAnomalia?: string | null;
+  fechaValidacion?: Date | null;
+  fotoUrl?: string | null;
+  estado?: string;
+  lecturaInicial?: boolean;
+  periodoId?: number;
+  deletedAt?: Date | null;
+}
+
+export interface ReadingFilters {
+  contratoId?: bigint;
+  medidorId?: bigint;
+}
 
 export abstract class ReadingRepository {
-  abstract findUnique(
-    where: Prisma.LecturasWhereUniqueInput,
-    select?: Prisma.LecturasSelect,
-  ): Promise<any>;
+  abstract findUnique(where: {
+    lecturaId: bigint;
+  }): Promise<LecturaEntity | null>;
 
   abstract findMany(params: {
     skip?: number;
     take?: number;
-    where?: Prisma.LecturasWhereInput;
-    orderBy?: Prisma.LecturasOrderByWithRelationInput;
-    select?: Prisma.LecturasSelect;
-    include?: Prisma.LecturasInclude;
-  }): Promise<any[]>;
+    where?: ReadingFilters;
+  }): Promise<LecturaEntity[]>;
 
-  abstract count(params: {
-    where?: Prisma.LecturasWhereInput;
-  }): Promise<number>;
+  abstract count(params: { where?: ReadingFilters }): Promise<number>;
 
-  abstract create(
-    data: Prisma.LecturasCreateInput | Prisma.LecturasUncheckedCreateInput,
-  ): Promise<any>;
+  abstract create(data: CreateReadingRepositoryData): Promise<LecturaEntity>;
 
   abstract update(
-    where: Prisma.LecturasWhereUniqueInput,
-    data: Prisma.LecturasUpdateInput | Prisma.LecturasUncheckedUpdateInput,
-  ): Promise<any>;
+    where: { lecturaId: bigint },
+    data: UpdateReadingRepositoryData,
+  ): Promise<LecturaEntity>;
 }

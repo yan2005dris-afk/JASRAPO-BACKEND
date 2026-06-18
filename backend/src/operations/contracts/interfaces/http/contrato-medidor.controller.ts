@@ -8,7 +8,9 @@ import {
   Delete,
   Query,
   UseGuards,
+  Res,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { ContratoMedidorService } from '../../application/contrato-medidor.service';
 import { CrearContratoMedidorDto } from '../dto/create-contrato-medidor.dto';
 import { ActualizarContratoMedidorDto } from '../dto/update-contrato-medidor.dto';
@@ -23,7 +25,7 @@ import {
   ApiBody,
 } from '@nestjs/swagger';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
-import { JwtAuthGuard } from 'src/identity/auth/guards/jwt-auth.guard';
+import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 
 @ApiTags('contracts')
@@ -37,9 +39,14 @@ export class ContratoMedidorController {
 
   @ApiOperation({
     summary: 'Crear contrato',
-    description: 'Registra un nuevo contrato con medidor',
+    description:
+      'Crea un nuevo contrato con medidor en una transacción. Requiere clienteId, categoriaTarifaId, medidorId, numeroGuia, direccionSuministro, comunidadId obligatorios.',
   })
-  @ApiBody({ type: CrearContratoMedidorDto, description: 'Datos del contrato' })
+  @ApiBody({
+    type: CrearContratoMedidorDto,
+    description:
+      'Datos del contrato (clienteId, medidorId, categoriaTarifaId, numeroGuia, direccionSuministro, comunidadId obligatorios)',
+  })
   @ApiResponse({ status: 201, description: 'Contrato creado' })
   @ApiResponse({ status: 400, description: 'Datos inválidos' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
@@ -106,7 +113,8 @@ export class ContratoMedidorController {
 
   @ApiOperation({
     summary: 'Actualizar contrato',
-    description: 'Actualiza un contrato',
+    description:
+      'Actualiza campos del contrato (estado, direccionSuministro, sectorId). Si se envía medidorId, reemplaza el medidor en una transacción.',
   })
   @ApiParam({
     name: 'id',
@@ -116,7 +124,8 @@ export class ContratoMedidorController {
   })
   @ApiBody({
     type: ActualizarContratoMedidorDto,
-    description: 'Datos a actualizar',
+    description:
+      'Campos a actualizar (estado, direccionSuministro, sectorId, medidorId opcional para reemplazo)',
   })
   @ApiResponse({ status: 200, description: 'Contrato actualizado' })
   @ApiResponse({ status: 400, description: 'Datos inválidos' })
@@ -134,7 +143,8 @@ export class ContratoMedidorController {
 
   @ApiOperation({
     summary: 'Finalizar vínculo',
-    description: 'Finaliza el vínculo entre contrato y medidor',
+    description:
+      'Finaliza el vínculo activo entre contrato y medidor. Busca por ID de contrato.',
   })
   @ApiParam({
     name: 'id',
@@ -169,5 +179,64 @@ export class ContratoMedidorController {
   @Delete(':id')
   eliminarContrato(@Param('id') id: string) {
     return this.contratoMedidorService.eliminar(BigInt(id));
+  }
+
+  /**
+   * GET /contracts/:id/pdf/connection-request
+   * Generate connection request PDF (Solicitud para Conexión de Agua Potable)
+   */
+  @ApiOperation({ summary: 'Generate connection request PDF' })
+  @ApiParam({
+    name: 'id',
+    description: 'ID del contrato',
+    type: String,
+    example: '1',
+  })
+  @ApiResponse({ status: 200, description: 'PDF generado' })
+  @ApiResponse({ status: 404, description: 'Contrato no encontrado' })
+  @RequiredPermission('contracts', 'read')
+  @Get(':id/pdf/connection-request')
+  async connectionRequestPdf(@Param('id') id: string, @Res() res: Response) {
+    const buffer =
+      await this.contratoMedidorService.generateConnectionRequestPdf(
+        BigInt(id),
+      );
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `inline; filename="solicitud-conexion-${id}.pdf"`,
+      'Content-Length': buffer.length,
+    });
+    res.end(buffer);
+  }
+
+  /**
+   * GET /contracts/:id/pdf/responsibility-agreement
+   * Generate responsibility agreement PDF (Acta de Responsabilidad)
+   */
+  @ApiOperation({ summary: 'Generate responsibility agreement PDF' })
+  @ApiParam({
+    name: 'id',
+    description: 'ID del contrato',
+    type: String,
+    example: '1',
+  })
+  @ApiResponse({ status: 200, description: 'PDF generado' })
+  @ApiResponse({ status: 404, description: 'Contrato no encontrado' })
+  @RequiredPermission('contracts', 'read')
+  @Get(':id/pdf/responsibility-agreement')
+  async responsibilityAgreementPdf(
+    @Param('id') id: string,
+    @Res() res: Response,
+  ) {
+    const buffer =
+      await this.contratoMedidorService.generateResponsibilityAgreementPdf(
+        BigInt(id),
+      );
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `inline; filename="acta-responsabilidad-${id}.pdf"`,
+      'Content-Length': buffer.length,
+    });
+    res.end(buffer);
   }
 }

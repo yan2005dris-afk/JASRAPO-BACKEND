@@ -12,7 +12,7 @@ import * as bcrypt from 'bcryptjs';
 import { randomUUID } from 'crypto';
 import { REFRESH_TOKEN_MAX_AGE_MS } from 'src/infrastructure/config/app.constants';
 import { EcuadorTimezoneUtil } from 'src/infrastructure/common/utils/ecuador-timezone-backend.util';
-import type { DecodedJwt } from '../../types/auth-service.types';
+import type { DecodedJwt } from '../types/auth-service.types';
 import type { StringValue } from 'ms';
 
 import { UserRepository } from '../../../users/domain/repositories/user.repository';
@@ -21,12 +21,11 @@ interface ValidatedUser {
   usuarioId: number;
   email: string;
   clave: string;
-  deletedAt: Date | null;
+  deletedAt?: Date | null;
   nombres: string | null;
   apellidos: string | null;
   avatar: unknown;
-  rolId: number | null;
-  rol: { nombre: string; deletedAt: Date | null } | null;
+  rol: { rolId: number; nombre: string; deletedAt?: Date | null } | null;
 }
 
 @Injectable()
@@ -69,7 +68,7 @@ export class LoginUseCase {
         usuarioAgente: userAgent,
         revocado: false,
         expiraEn,
-        usuario: { connect: { usuarioId: user.usuarioId } },
+        usuarioId: user.usuarioId,
       });
     } catch (err) {
       this.logger.error(
@@ -87,22 +86,7 @@ export class LoginUseCase {
     loginUserDto: LoginUserDto,
   ): Promise<ValidatedUser> {
     const { email, password } = loginUserDto;
-    const user = await this.userRepository.findUnique(
-      { email },
-      {
-        usuarioId: true,
-        email: true,
-        clave: true,
-        deletedAt: true,
-        nombres: true,
-        apellidos: true,
-        avatar: true,
-        rolId: true,
-        rol: {
-          select: { nombre: true, deletedAt: true },
-        },
-      },
-    );
+    const user = await this.userRepository.findByEmailWithPassword(email);
 
     if (!user || user.deletedAt) {
       throw new UnauthorizedException('Credenciales inválidas');
@@ -165,12 +149,6 @@ export class LoginUseCase {
       user.nombres && user.apellidos
         ? `${user.nombres} ${user.apellidos}`
         : user.nombres || user.apellidos || null;
-    const avatarKey =
-      user.avatar && typeof user.avatar === 'object'
-        ? ((user.avatar as { key?: string; publicId?: string }).key ??
-          (user.avatar as { key?: string; publicId?: string }).publicId ??
-          null)
-        : null;
 
     // Si el rol está eliminado, no devolver roleId ni roleName
     const isRoleActive = user.rol && user.rol.deletedAt === null;
@@ -179,11 +157,11 @@ export class LoginUseCase {
       sub: user.usuarioId,
       sid: sesionId,
       nombre: fullName,
-      avatar: avatarKey,
+      avatar: user.avatar,
       email: user.email,
-      rolId: isRoleActive ? user.rolId : null,
+      rolId: isRoleActive && user.rol ? user.rol.rolId : null,
       nombreRol: isRoleActive ? (user.rol?.nombre ?? null) : null,
-      roles: isRoleActive && user.rolId ? [user.rolId] : [],
+      roles: isRoleActive && user.rol ? [user.rol.rolId] : [],
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
       accessTokenInfo: {

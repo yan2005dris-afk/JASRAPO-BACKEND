@@ -48,3 +48,5 @@ CLAUDE
 /.pi
 /openspec
 /backend/openspec
+/.claude
+/.junie

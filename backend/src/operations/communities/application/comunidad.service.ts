@@ -4,9 +4,9 @@ import { UpdateComunidadDto } from '../interfaces/dto/update-comunidad.dto';
 import { CreateCommunityUseCase } from './use-cases/create-community.use-case';
 import { UpdateCommunityUseCase } from './use-cases/update-community.use-case';
 import { FindAllCommunitiesUseCase } from './use-cases/find-all-communities.use-case';
-import { FindAllCommunitiesWithSectorUseCase } from './use-cases/find-all-communities-with-sector.use-case';
 import { FindOneCommunityUseCase } from './use-cases/find-one-community.use-case';
 import { DeleteCommunityUseCase } from './use-cases/delete-community.use-case';
+import type { CommunityFilterDto } from '../interfaces/dto/community-filter.dto';
 
 @Injectable()
 export class ComunidadService {
@@ -14,7 +14,6 @@ export class ComunidadService {
     private readonly createUseCase: CreateCommunityUseCase,
     private readonly updateUseCase: UpdateCommunityUseCase,
     private readonly findAllUseCase: FindAllCommunitiesUseCase,
-    private readonly findAllWithSectorUseCase: FindAllCommunitiesWithSectorUseCase,
     private readonly findOneUseCase: FindOneCommunityUseCase,
     private readonly deleteUseCase: DeleteCommunityUseCase,
   ) {}
@@ -23,12 +22,8 @@ export class ComunidadService {
     return this.createUseCase.execute(dto);
   }
 
-  async findAll() {
-    return this.findAllUseCase.execute();
-  }
-
-  async findAllWithSector(options?: { sectorId?: number }) {
-    return this.findAllWithSectorUseCase.execute(options);
+  async findAll(page?: number, limit?: number, filters?: CommunityFilterDto) {
+    return this.findAllUseCase.execute(page, limit, filters);
   }
 
   async findOne(id: number) {

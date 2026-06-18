@@ -49,12 +49,10 @@ describe('FindAllReadingsUseCase', () => {
     expect(mockReadingRepository.findMany).toHaveBeenCalledWith({
       skip: 0,
       take: 10,
-      where: { deletedAt: null },
-      select: expect.any(Object),
-      orderBy: { fecha: 'desc' },
+      where: undefined,
     });
     expect(mockReadingRepository.count).toHaveBeenCalledWith({
-      where: { deletedAt: null },
+      where: undefined,
     });
   });
 
@@ -68,9 +66,7 @@ describe('FindAllReadingsUseCase', () => {
     expect(mockReadingRepository.findMany).toHaveBeenCalledWith({
       skip: 0,
       take: 1,
-      where: { deletedAt: null },
-      select: expect.any(Object),
-      orderBy: { fecha: 'desc' },
+      where: undefined,
     });
   });
 

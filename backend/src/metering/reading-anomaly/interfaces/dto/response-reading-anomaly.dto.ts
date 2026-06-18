@@ -17,8 +17,8 @@ export class ResponseReadingAnomalyDto implements IResponseReadingAnomaly {
   @ApiProperty({ description: 'Estado de la anomalía' })
   estado: string;
 
-  @ApiProperty({ description: 'URL de la foto en MinIO', required: false })
-  fotoUrlMinIo: string | null;
+  @ApiProperty({ description: 'URL de la foto', required: false })
+  fotoUrl: string | null;
 
   @ApiProperty({ description: 'Lectura asociada', required: false })
   lectura?: {

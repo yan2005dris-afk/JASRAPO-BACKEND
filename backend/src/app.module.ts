@@ -10,12 +10,13 @@ import { OperationsModule } from './operations/operations.module';
 import { PublicPortalModule } from './public-portal/public-portal.module';
 import { ObservabilityModule } from './infrastructure/observability/observability.module';
 import { SriIntegrationModule } from './sri/sri.module';
-import { MinioModule } from './infrastructure/database/minio/minio.module';
 import { MailModule } from './infrastructure/mail/mail.module';
 import { JobsModule } from './infrastructure/jobs/jobs.module';
 import { EncryptionModule } from './infrastructure/encryption/encryption.module';
-import { RawPgModule } from './infrastructure/database/raw-pg/raw-pg.module';
 import { AuditModule } from './infrastructure/audit/audit.module';
+import { PdfModule } from './infrastructure/pdf/pdf.module';
+import { ReportsModule } from './reports/reports.module';
+import { StorageProxyModule } from './infrastructure/storage-proxy/storage-proxy.module';
 
 @Module({
   imports: [
@@ -30,9 +31,6 @@ import { AuditModule } from './infrastructure/audit/audit.module';
 
     // Encriptación Global
     EncryptionModule,
-
-    // Acceso a DB de bajo nivel (Raw SQL)
-    RawPgModule,
 
     // Auditoría Global
     AuditModule,
@@ -49,7 +47,6 @@ import { AuditModule } from './infrastructure/audit/audit.module';
 
     ObservabilityModule,
     DatabaseModule,
-    MinioModule,
     IdentityModule,
     MeteringModule,
     BillingModule,
@@ -58,6 +55,9 @@ import { AuditModule } from './infrastructure/audit/audit.module';
     StorageModule,
     SriIntegrationModule,
     MailModule,
+    PdfModule,
+    ReportsModule,
+    StorageProxyModule,
   ],
   controllers: [],
   providers: [],

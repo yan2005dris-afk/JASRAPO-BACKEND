@@ -28,12 +28,12 @@ import {
 import { Throttle } from '@nestjs/throttler';
 import { SriService } from '../../sri.service';
 import { EmisoresService } from '../../application/services/emisores.service';
-import { CurrentUser } from '../../../identity/auth/decorators/current-user.decorator';
+import { CurrentUser } from '../../../identity/auth/interfaces/http/decorators/current-user.decorator';
 import {
   JwtPayload,
   UserRole,
 } from '../../../identity/auth/interfaces/dto/auth.dto';
-import { JwtAuthGuard } from '../../../identity/auth/guards/jwt-auth.guard';
+import { JwtAuthGuard } from '../../../identity/auth/interfaces/http/guards/jwt-auth.guard';
 import { ConfigService } from '@nestjs/config';
 import { extractRucFromClaveAcceso } from '../../infrastructure/xml/clave-acceso.utils';
 import {

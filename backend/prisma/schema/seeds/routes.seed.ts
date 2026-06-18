@@ -5,7 +5,7 @@ export async function seedRoutes(prisma: PrismaClient) {
   const operadores = await prisma.usuarios.findMany({
     where: {
       rol: {
-        nombre: "OPERADORES",
+        nombre: "operadores",
       },
     },
     select: { usuarioId: true },
@@ -144,7 +144,9 @@ export async function seedRoutes(prisma: PrismaClient) {
   for (const ruta of todasLasRutas) {
     await prisma.rutas.upsert({
       where: { rutaId: ruta.rutaId },
-      update: {},
+      update: {
+        nombre: ruta.nombre,
+      },
       create: {
         ...ruta,
         operarioId,

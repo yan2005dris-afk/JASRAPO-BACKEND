@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { ReadingRepository } from '../../domain/repositories/reading.repository';
-import { Prisma } from 'src/generated/prisma/client';
-import { safeReadingsSelect } from '../../types/IResponseReading';
-import { toReadingResponse } from '../../types/readingMapper';
+import {
+  ReadingFilters,
+  ReadingRepository,
+} from '../../domain/repositories/reading.repository';
 import { getPagination } from 'src/infrastructure/common/utils/pagination.util';
 import { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
-import { IResponseReading } from '../../types/IResponseReading';
+import { LecturaEntity } from '../../domain/entities/lectura.entity';
 
 @Injectable()
 export class FindAllReadingsUseCase {
@@ -14,27 +14,23 @@ export class FindAllReadingsUseCase {
   async execute(
     page = 1,
     limit = 10,
-    where?: Prisma.LecturasWhereInput,
-  ): Promise<PaginatedResult<IResponseReading>> {
+    filters?: ReadingFilters,
+  ): Promise<PaginatedResult<LecturaEntity>> {
     const { skip, take, page: safePage } = getPagination(page, limit);
-
-    const filterWhere = { ...where, deletedAt: null };
 
     const [readings, total] = await Promise.all([
       this.readingRepository.findMany({
-        where: filterWhere,
-        select: safeReadingsSelect,
+        where: filters,
         skip,
         take,
-        orderBy: { fecha: 'desc' },
       }),
       this.readingRepository.count({
-        where: filterWhere,
+        where: filters,
       }),
     ]);
 
     return {
-      data: readings.map(toReadingResponse),
+      data: readings,
       meta: {
         total,
         page: safePage,

@@ -1,28 +1,40 @@
-import type { Prisma } from 'src/generated/prisma/client';
+import type { ContractEntity } from '../entities/contract.entity';
+import type { CreateContractData } from '../types/create-contract-data';
+import type { CreateContractWithMeterCommand } from '../types/create-contract-with-meter-command';
 
 export abstract class ContractRepository {
   abstract findMany(params: {
     skip?: number;
     take?: number;
-    where?: Prisma.ContratosWhereInput;
-    orderBy?: Prisma.ContratosOrderByWithRelationInput;
-    select?: Prisma.ContratosSelect;
-    include?: Prisma.ContratosInclude;
-  }): Promise<any[]>;
+    where?: Record<string, any>;
+    orderBy?: Record<string, any>;
+  }): Promise<ContractEntity[]>;
 
   abstract findUnique(
-    where: Prisma.ContratosWhereUniqueInput,
-    select?: Prisma.ContratosSelect,
-  ): Promise<any>;
+    where: Record<string, any>,
+  ): Promise<ContractEntity | null>;
 
-  abstract count(params: {
-    where?: Prisma.ContratosWhereInput;
-  }): Promise<number>;
+  abstract count(params: { where?: Record<string, any> }): Promise<number>;
 
   abstract update(
-    where: Prisma.ContratosWhereUniqueInput,
-    data: Prisma.ContratosUpdateInput,
-  ): Promise<any>;
+    where: Record<string, any>,
+    data: Record<string, any>,
+  ): Promise<ContractEntity>;
 
-  abstract executeTransaction<T>(callback: (tx: any) => Promise<T>): Promise<T>;
+  abstract create(data: CreateContractData): Promise<ContractEntity>;
+
+  // ── Domain-level transactional operations ──────────────────────────────
+
+  abstract createContractWithMeterHistory(
+    data: CreateContractWithMeterCommand,
+  ): Promise<ContractEntity>;
+
+  abstract replaceMeterInContract(
+    contractId: bigint,
+    newMeterId: bigint,
+    lecturaInicial: number,
+    contractFields?: Record<string, any>,
+  ): Promise<ContractEntity>;
+
+  abstract finalizeActiveMeterLink(contratoId: bigint): Promise<ContractEntity>;
 }

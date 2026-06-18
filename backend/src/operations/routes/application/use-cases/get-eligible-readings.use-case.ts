@@ -3,10 +3,9 @@ import {
   BadRequestException,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma, EstadoGenerico } from 'src/generated/prisma/client';
+import { EstadoGenerico } from 'src/generated/prisma/client';
 import { RouteRepository } from '../../domain/repositories/route.repository';
-import { ReadingForRouteEntity } from '../../domain/types/reading-for-route.entity';
-import { ReadingForRouteMapper } from '../../domain/types/mappers';
+import { ReadingForRouteEntity } from '../../domain/entities/reading-for-route.entity';
 import { PaginateOptions } from 'src/infrastructure/common/utils/pagination.util';
 import { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
 
@@ -43,7 +42,7 @@ export class GetEligibleReadingsUseCase {
         ? EstadoGenerico.ACTIVO
         : EstadoGenerico.RECONEXION;
 
-    const where: Prisma.LecturasWhereInput = {
+    const where: Record<string, any> = {
       estadoAsignacion: 'NO_ASIGNADA',
       estado: { in: ['PENDIENTE', 'POR_REVISION'] },
       deletedAt: null,
@@ -102,29 +101,12 @@ export class GetEligibleReadingsUseCase {
       ];
     }
 
-    const result = await this.routeRepository.paginateLecturas(
+    return this.routeRepository.paginateLecturas(
       {
         where,
-        include: {
-          medidor: {
-            include: {
-              historial: {
-                where: { fechaHasta: null },
-                include: {
-                  contrato: { include: { cliente: true, sector: true } },
-                },
-              },
-            },
-          },
-        },
         orderBy: [{ medidor: { historial: { _count: 'desc' } } }],
       },
       pagination,
     );
-
-    return {
-      ...result,
-      data: result.data.map((l) => ReadingForRouteMapper.toEntity(l)),
-    };
   }
 }

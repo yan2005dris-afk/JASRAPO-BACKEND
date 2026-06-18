@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; font-size: 12px; color: #333; }
+    .container { width: 100%; padding: 30px 40px; }
+
+    .header { width: 100%; border-bottom: 2px solid #0066cc; padding-bottom: 15px; margin-bottom: 25px; }
+    .header table { width: 100%; border-collapse: collapse; }
+    .header td { vertical-align: middle; padding: 0; border: none; }
+    .company-name { font-size: 20px; font-weight: bold; color: #0066cc; }
+    .company-sub { font-size: 11px; color: #666; margin-top: 2px; }
+
+    .title-section { text-align: center; margin-bottom: 25px; }
+    .title-section h1 { font-size: 16px; font-weight: bold; color: #0066cc; text-transform: uppercase; letter-spacing: 1px; }
+
+    .body-text { font-size: 12px; line-height: 1.8; text-align: justify; margin-bottom: 14px; }
+
+    .clause-list { margin: 16px 0; padding-left: 0; list-style: none; }
+    .clause-list li { margin-bottom: 12px; font-size: 12px; line-height: 1.8; text-align: justify; padding-left: 25px; position: relative; }
+    .clause-list li .clause-num { position: absolute; left: 0; font-weight: bold; }
+
+    .closing-text { font-size: 12px; line-height: 1.8; text-align: justify; margin: 20px 0; }
+
+    .signature-section { margin-top: 50px; text-align: center; }
+    .sig-line { border-bottom: 1px dotted #333; width: 60%; margin: 0 auto 8px; height: 35px; }
+    .sig-label { font-size: 11px; color: #555; margin-bottom: 2px; }
+    .sig-name { font-weight: bold; font-size: 12px; }
+    .sig-ci { font-size: 11px; color: #555; }
+    .sig-role { font-size: 11px; color: #555; font-style: italic; margin-top: 2px; }
+
+    .footer { margin-top: 40px; text-align: center; font-size: 10px; color: #999; border-top: 1px solid #ddd; padding-top: 10px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- Header -->
+    <div class="header">
+      <table>
+        <tr>
+          <td>
+            <div class="company-name">JASRAPO</div>
+            <div class="company-sub">Junta Administradora del Sistema Regional de Agua Potable Olón</div>
+            <div class="company-sub">RUC: 0960005820001 &nbsp;|&nbsp; Olón - Santa Elena</div>
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- Title -->
+    <div class="title-section">
+      <h1>Acta de Responsabilidad</h1>
+    </div>
+
+    <!-- Body -->
+    <div class="body-text">
+      En las oficinas de la Junta Administradora del Sistema Regional de Agua Potable Olón
+      Yo <strong>{{acta.clienteNombre}}</strong> portador de la C.I. <strong>{{acta.identificacion}}</strong>
+      en mi calidad de usuario, asumo el compromiso de cumplir con lo establecido en la Institución:
+    </div>
+
+    <!-- Clauses -->
+    <ol class="clause-list">
+      <li>
+        <span class="clause-num">1.</span>
+        No utilizar el Agua para otros fines, ya que es mi obligación priorizar el líquido vital para el consumo humano
+        en esta época de escasez (Emergencia Hídrica) como lo manda la Ley Orgánica de Recursos Hídricos Uso y
+        Aprovechamiento del Agua en su Artículo # 86 de los Usos del Agua cuya prioridad A es para el
+        <strong>Consumo Humano</strong>.
+      </li>
+      <li>
+        <span class="clause-num">2.</span>
+        En caso de no cumplir la Junta Administradora del Sistema Regional de Agua Potable &quot;Olón&quot; tiene la
+        potestad de sancionar y reflejar en las planillas sin previa notificación.
+      </li>
+      <li>
+        <span class="clause-num">3.</span>
+        No obstruir, manipular, ni mover el medidor de la ubicación respectiva sin previo aviso evitando ser sancionado
+        por infracciones por la Junta Administradora del Sistema Regional de Agua Potable &quot;Olón&quot;.
+      </li>
+      <li>
+        <span class="clause-num">4.</span>
+        No proveer del líquido vital a terceros ya que cada medidor es para un solo domicilio.
+      </li>
+      <li>
+        <span class="clause-num">5.</span>
+        Por morosidad durante un año perderá los derechos de usuario, se retirará el medidor y a futuro que desee
+        solicitar una nueva guía deberá cancelar el valor adeudado que refleja en el sistema para de esta manera
+        proceder con los trámites de rigor para la obtención del nuevo medidor.
+      </li>
+    </ol>
+
+    <div class="closing-text">
+      Este compromiso se asume para su cumplimiento dentro de las leyes y reglamentos internos de la Junta
+      y garantía del uso del agua.
+    </div>
+
+    <div class="body-text">
+      Dado y Firmado a los <strong>{{acta.fechaFirmado}}</strong>.
+    </div>
+
+    <!-- Signature -->
+    <div class="signature-section">
+      <div class="sig-line"></div>
+      <div class="sig-label">Firma de Responsabilidad.</div>
+      <div class="sig-name">Sr. {{acta.clienteNombre}}</div>
+      <div class="sig-ci">C.I. {{acta.identificacion}}</div>
+      <div class="sig-role">USUARIO</div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <p>Junta Administradora del Sistema Regional de Agua Potable Olón &nbsp;|&nbsp; Olón, Santa Elena, Ecuador</p>
+    </div>
+
+  </div>
+</body>
+</html>
