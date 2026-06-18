@@ -22,7 +22,10 @@ export class PrismaBusquedaPublicaRepository implements BusquedaPublicaRepositor
   ): Promise<IClienteConContratosRaw[]> {
     const where = this.buildWhereCliente(tipo, valor);
     const rows = await this.prisma.clientes.findMany({
-      where,
+      where: {
+        ...where,
+        contratos: { some: { deletedAt: null } },
+      },
       include: {
         contratos: {
           where: { deletedAt: null },
@@ -62,7 +65,10 @@ export class PrismaBusquedaPublicaRepository implements BusquedaPublicaRepositor
     valor: string,
   ): Promise<number> {
     return this.prisma.clientes.count({
-      where: this.buildWhereCliente(tipo, valor),
+      where: {
+        ...this.buildWhereCliente(tipo, valor),
+        contratos: { some: { deletedAt: null } },
+      },
     });
   }
 
@@ -151,6 +157,13 @@ export class PrismaBusquedaPublicaRepository implements BusquedaPublicaRepositor
       return {
         ...base,
         numeroGuia: { contains: valor, mode: 'insensitive' },
+        cliente: { deletedAt: null },
+        prefacturas: {
+          some: {
+            deletedAt: null,
+            estado: { in: [...ESTADOS_DEUDA] },
+          },
+        },
       };
     }
 

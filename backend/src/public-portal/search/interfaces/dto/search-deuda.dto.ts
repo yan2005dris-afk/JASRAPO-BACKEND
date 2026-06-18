@@ -39,11 +39,11 @@ export class SearchDeudaDto {
     description: 'Resultados por página',
     example: 10,
     minimum: 1,
-    maximum: 100,
+    maximum: 50,
   })
   @Type(() => Number)
   @IsInt()
   @Min(1)
-  @Max(100)
+  @Max(50)
   limit: number = 10;
 }

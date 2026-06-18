@@ -11,7 +11,10 @@ describe('BusquedaPublicaService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         BusquedaPublicaService,
-        { provide: SearchDeudaPublicaUseCase, useValue: mockSearchDeudaUseCase },
+        {
+          provide: SearchDeudaPublicaUseCase,
+          useValue: mockSearchDeudaUseCase,
+        },
       ],
     }).compile();
 

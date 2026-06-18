@@ -18,7 +18,9 @@ describe('BusquedaPublicaController', () => {
       .useValue({ canActivate: () => true })
       .compile();
 
-    controller = module.get<BusquedaPublicaController>(BusquedaPublicaController);
+    controller = module.get<BusquedaPublicaController>(
+      BusquedaPublicaController,
+    );
   });
 
   afterEach(() => jest.clearAllMocks());
@@ -34,7 +36,12 @@ describe('BusquedaPublicaController', () => {
       limit: 10,
     });
 
-    expect(mockService.search).toHaveBeenCalledWith('identificacion', '0912345678', 1, 10);
+    expect(mockService.search).toHaveBeenCalledWith(
+      'identificacion',
+      '0912345678',
+      1,
+      10,
+    );
     expect(result).toBe(expected);
   });
 
@@ -48,14 +55,24 @@ describe('BusquedaPublicaController', () => {
       limit: undefined as any,
     });
 
-    expect(mockService.search).toHaveBeenCalledWith('nombre', 'Ana Torres', 1, 10);
+    expect(mockService.search).toHaveBeenCalledWith(
+      'nombre',
+      'Ana Torres',
+      1,
+      10,
+    );
   });
 
   it('search() propagates errors from the service', async () => {
     mockService.search.mockRejectedValue(new Error('service failure'));
 
     await expect(
-      controller.search({ tipo: 'numeroGuia', valor: 'GU-001', page: 1, limit: 10 }),
+      controller.search({
+        tipo: 'numeroGuia',
+        valor: 'GU-001',
+        page: 1,
+        limit: 10,
+      }),
     ).rejects.toThrow('service failure');
   });
 });
