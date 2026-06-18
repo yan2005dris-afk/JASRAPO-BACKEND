@@ -58,7 +58,8 @@ describe('MailRateLimitService', () => {
     expect(acquired).toBe(true);
     expect(mockPrisma.$queryRawUnsafe).toHaveBeenCalledWith(
       expect.stringContaining('CURRENT_DATE'),
-      expect.any(Array),
+      'brevo',
+      300,
     );
   });
 
