@@ -3,6 +3,7 @@ import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { Prisma } from 'src/generated/prisma/client';
 import { ContractRepository } from '../../domain/repositories/contract.repository';
 import { ContractEntity } from '../../domain/entities/contract.entity';
+import { CreateContractData } from '../../domain/types/create-contract-data';
 import { ContractMapper } from '../mappers/contract.mapper';
 
 @Injectable()
@@ -18,6 +19,15 @@ export class PrismaContractRepository implements ContractRepository {
   } satisfies Prisma.ContratosInclude;
 
   constructor(private readonly prisma: PrismaService) {}
+
+  async create(data: CreateContractData): Promise<ContractEntity> {
+    const { medidorId, lecturaInicial, ...contractFields } = data;
+    const record = await this.prisma.contratos.create({
+      data: contractFields as Prisma.ContratosUncheckedCreateInput,
+      include: this.defaultInclude,
+    });
+    return ContractMapper.toDomain(record)!;
+  }
 
   async findMany(params: {
     skip?: number;

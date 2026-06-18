@@ -7,6 +7,7 @@ export class ContractMapper {
     return new ContractEntity({
       contratoId: raw.contratoId,
       clienteId: raw.clienteId,
+      cargoInicialDiferido: raw.cargoInicialDiferido,
       sectorId: raw.sectorId,
       categoriaTarifaId: raw.categoriaTarifaId,
       numeroGuia: raw.numeroGuia,

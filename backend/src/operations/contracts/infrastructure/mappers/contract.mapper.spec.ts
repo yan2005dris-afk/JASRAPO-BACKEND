@@ -12,6 +12,7 @@ describe('ContractMapper', () => {
       const raw = {
         contratoId: BigInt(1),
         clienteId: BigInt(10),
+        cargoInicialDiferido: true,
         sectorId: 5,
         categoriaTarifaId: 3,
         numeroGuia: 'GUIA-001',
@@ -67,6 +68,7 @@ describe('ContractMapper', () => {
       expect(result).toBeInstanceOf(ContractEntity);
       expect(result!.contratoId).toEqual(BigInt(1));
       expect(result!.clienteId).toEqual(BigInt(10));
+      expect(result!.cargoInicialDiferido).toBe(true);
       expect(result!.sectorId).toBe(5);
       expect(result!.categoriaTarifaId).toBe(3);
       expect(result!.numeroGuia).toBe('GUIA-001');
@@ -101,6 +103,7 @@ describe('ContractMapper', () => {
       const raw = {
         contratoId: BigInt(2),
         clienteId: BigInt(20),
+        cargoInicialDiferido: false,
         sectorId: null,
         categoriaTarifaId: 1,
         numeroGuia: 'GUIA-002',
@@ -133,6 +136,7 @@ describe('ContractMapper', () => {
       const raw = {
         contratoId: BigInt(3),
         clienteId: BigInt(30),
+        cargoInicialDiferido: true,
         sectorId: null,
         categoriaTarifaId: 2,
         numeroGuia: 'GUIA-003',
@@ -182,25 +186,27 @@ describe('ContractMapper', () => {
     it('should convert an array of Prisma raw objects', () => {
       const rawList = [
         {
-          contratoId: BigInt(1),
-          clienteId: BigInt(10),
-          sectorId: null,
-          categoriaTarifaId: 1,
-          numeroGuia: 'GUIA-001',
-          fechaInicio: new Date(),
-          direccionSuministro: 'Dir 1',
-          estado: 'ACTIVO',
-          creadoPor: null,
-          comunidadId: 1,
-          deletedAt: null,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        {
-          contratoId: BigInt(2),
-          clienteId: BigInt(20),
-          sectorId: null,
-          categoriaTarifaId: 2,
+        contratoId: BigInt(1),
+        clienteId: BigInt(10),
+        cargoInicialDiferido: true,
+        sectorId: null,
+        categoriaTarifaId: 1,
+        numeroGuia: 'GUIA-001',
+        fechaInicio: new Date(),
+        direccionSuministro: 'Dir 1',
+        estado: 'ACTIVO',
+        creadoPor: null,
+        comunidadId: 1,
+        deletedAt: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        contratoId: BigInt(2),
+        clienteId: BigInt(20),
+        cargoInicialDiferido: false,
+        sectorId: null,
+        categoriaTarifaId: 2,
           numeroGuia: 'GUIA-002',
           fechaInicio: new Date(),
           direccionSuministro: 'Dir 2',
@@ -226,6 +232,7 @@ describe('ContractMapper', () => {
         {
           contratoId: BigInt(1),
           clienteId: BigInt(10),
+          cargoInicialDiferido: true,
           sectorId: null,
           categoriaTarifaId: 1,
           numeroGuia: 'GUIA-001',
@@ -242,6 +249,7 @@ describe('ContractMapper', () => {
         {
           contratoId: BigInt(3),
           clienteId: BigInt(30),
+          cargoInicialDiferido: true,
           sectorId: null,
           categoriaTarifaId: 3,
           numeroGuia: 'GUIA-003',
