@@ -1,4 +1,9 @@
-import { IsNumberString, IsOptional, IsNumber, IsString } from 'class-validator';
+import {
+  IsNumberString,
+  IsOptional,
+  IsNumber,
+  IsString,
+} from 'class-validator';
 import { IsNotEmptyString } from 'src/infrastructure/common/decorators/is-not-empty-string.decorator';
 
 export class ActualizarContratoMedidorDto {

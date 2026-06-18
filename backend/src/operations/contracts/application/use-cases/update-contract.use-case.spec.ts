@@ -28,8 +28,8 @@ describe('UpdateContractUseCase', () => {
       },
     };
 
-    mockContractRepository.executeTransaction.mockImplementation(
-      (cb: any) => cb(mockTx),
+    mockContractRepository.executeTransaction.mockImplementation((cb: any) =>
+      cb(mockTx),
     );
 
     const module: TestingModule = await Test.createTestingModule({
@@ -60,7 +60,11 @@ describe('UpdateContractUseCase', () => {
     // First call for existence check, second for return value after update
     mockContractRepository.findUnique
       .mockResolvedValueOnce({ contratoId: id, deletedAt: null })
-      .mockResolvedValueOnce({ contratoId: id, estado: 'ACTIVO', deletedAt: null });
+      .mockResolvedValueOnce({
+        contratoId: id,
+        estado: 'ACTIVO',
+        deletedAt: null,
+      });
     mockContractRepository.update.mockResolvedValue({
       contratoId: id,
       estado: 'ACTIVO',

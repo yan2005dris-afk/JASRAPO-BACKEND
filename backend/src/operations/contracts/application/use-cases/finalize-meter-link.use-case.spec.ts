@@ -26,8 +26,8 @@ describe('FinalizeMeterLinkUseCase', () => {
       },
     };
 
-    mockContractRepository.executeTransaction.mockImplementation(
-      (cb: any) => cb(mockTx),
+    mockContractRepository.executeTransaction.mockImplementation((cb: any) =>
+      cb(mockTx),
     );
 
     const module: TestingModule = await Test.createTestingModule({

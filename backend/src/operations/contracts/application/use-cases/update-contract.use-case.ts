@@ -51,7 +51,8 @@ export class UpdateContractUseCase {
 
         // Update contract fields
         const updateData: Record<string, any> = {};
-        if (updateDto.estado !== undefined) updateData.estado = updateDto.estado;
+        if (updateDto.estado !== undefined)
+          updateData.estado = updateDto.estado;
         if (updateDto.direccionSuministro !== undefined)
           updateData.direccionSuministro = updateDto.direccionSuministro;
         if (updateDto.sectorId !== undefined)
@@ -73,10 +74,7 @@ export class UpdateContractUseCase {
       if (updateDto.sectorId !== undefined)
         updateData.sectorId = Number(updateDto.sectorId);
 
-      await this.contractRepository.update(
-        { contratoId: id },
-        updateData,
-      );
+      await this.contractRepository.update({ contratoId: id }, updateData);
     }
 
     return this.contractRepository.findUnique({ contratoId: id });
