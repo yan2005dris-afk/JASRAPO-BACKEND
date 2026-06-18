@@ -48,7 +48,7 @@ model WebhookLogs {
 
 model AuditoriaSri {
   id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid @map("id")
-  usuarioId        String?  @db.Uuid @map("usuario_id")
+  usuarioId        Int?     @map("usuario_id")
   usuarioEmail     String?  @db.VarChar(255) @map("usuario_email")
   ipAddress        String?  @map("ip_address")
   userAgent        String?  @map("user_agent")

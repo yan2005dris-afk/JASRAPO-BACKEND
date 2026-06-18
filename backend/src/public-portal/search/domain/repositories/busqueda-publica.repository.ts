@@ -1,20 +1,31 @@
-import type { SearchResultEntity } from '../entities/public-search-result.entity';
-import type { SearchFilters } from '../types/public-search-filters';
+import type {
+  IClienteConContratosRaw,
+  IContratoConDeudaRaw,
+  TipoBusquedaDeuda,
+} from '../types/debt-search.types';
 
 export abstract class BusquedaPublicaRepository {
-  abstract findManyClientes(
-    filters: SearchFilters,
+  abstract findClientesBy(
+    tipo: 'identificacion' | 'nombre',
+    valor: string,
     skip: number,
     take: number,
-  ): Promise<SearchResultEntity[]>;
+  ): Promise<IClienteConContratosRaw[]>;
 
-  abstract countClientes(filters: SearchFilters): Promise<number>;
+  abstract countClientesBy(
+    tipo: 'identificacion' | 'nombre',
+    valor: string,
+  ): Promise<number>;
 
-  abstract findManyContratos(
-    filters: SearchFilters,
+  abstract findContratosDeudaBy(
+    tipo: TipoBusquedaDeuda,
+    valor: string,
     skip: number,
     take: number,
-  ): Promise<SearchResultEntity[]>;
+  ): Promise<IContratoConDeudaRaw[]>;
 
-  abstract countContratos(filters: SearchFilters): Promise<number>;
+  abstract countContratosDeuda(
+    tipo: TipoBusquedaDeuda,
+    valor: string,
+  ): Promise<number>;
 }

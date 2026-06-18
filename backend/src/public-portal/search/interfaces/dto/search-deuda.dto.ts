@@ -1,26 +1,20 @@
-import { Transform, Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import {
-  IsIn,
-  IsInt,
-  IsOptional,
-  IsString,
-  Min,
-  MinLength,
-} from 'class-validator';
+import { Transform, Type } from 'class-transformer';
+import { IsIn, IsInt, IsString, Max, Min, MinLength } from 'class-validator';
+import type { TipoBusquedaDeuda } from '../../domain/types/debt-search.types';
 
-export class CreateBusquedaPublicaDto {
+export class SearchDeudaDto {
+  @ApiProperty({
+    description: 'Tipo de búsqueda',
+    enum: ['identificacion', 'nombre', 'numeroGuia'],
+    example: 'identificacion',
+  })
+  @IsIn(['identificacion', 'nombre', 'numeroGuia'])
+  tipo!: TipoBusquedaDeuda;
+
   @ApiProperty({
     description:
-      'Tipo de búsqueda: "cliente" busca por identificación o nombre, "contrato" busca por número de guía, "global" busca en ambos.',
-    enum: ['cliente', 'contrato', 'global'],
-    example: 'cliente',
-  })
-  @IsIn(['cliente', 'contrato', 'global'])
-  tipo!: 'cliente' | 'contrato' | 'global';
-
-  @ApiProperty({
-    description: 'Texto a buscar',
+      'Valor a buscar. Para "nombre" se normalizan espacios múltiples automáticamente.',
     example: '0912345678',
     minLength: 2,
   })
@@ -36,7 +30,6 @@ export class CreateBusquedaPublicaDto {
     example: 1,
     minimum: 1,
   })
-  @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(1)
@@ -46,10 +39,11 @@ export class CreateBusquedaPublicaDto {
     description: 'Resultados por página',
     example: 10,
     minimum: 1,
+    maximum: 50,
   })
-  @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(1)
+  @Max(50)
   limit: number = 10;
 }
