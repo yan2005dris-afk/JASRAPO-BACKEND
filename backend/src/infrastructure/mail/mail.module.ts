@@ -8,6 +8,7 @@ import { MailProviderFactory } from './providers/provider.factory';
 import { MailRateLimitService } from './mail-rate-limit.service';
 import { MailService } from './mail.service';
 import { MailQueueService } from './mail-queue.service';
+import { MailMetricsController } from './mail-metrics.controller';
 import { JobsModule } from '../jobs/jobs.module';
 
 /**
@@ -43,6 +44,7 @@ import { JobsModule } from '../jobs/jobs.module';
       inject: [ConfigService],
     }),
   ],
+  controllers: [MailMetricsController],
   providers: [
     NodemailerProvider,
     MailRateLimitService,

@@ -101,7 +101,12 @@ export class MailProviderFactory {
   ): nodemailer.Transporter<SMTPTransport.SentMessageInfo> {
     let transporter = this.transporters.get(provider.name);
     if (!transporter) {
-      transporter = nodemailer.createTransport(provider.transport);
+      transporter = nodemailer.createTransport({
+        connectionTimeout: 10000,
+        socketTimeout: 15000,
+        greetingTimeout: 5000,
+        ...provider.transport,
+      });
       this.transporters.set(provider.name, transporter);
     }
     return transporter;

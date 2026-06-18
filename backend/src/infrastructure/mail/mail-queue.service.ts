@@ -38,6 +38,7 @@ export class MailQueueService implements OnModuleInit {
     await this.jobsService.send(MAIL_JOB_NAME, options, {
       retryLimit: 3,
       retryDelay: 5, // 5 segundos iniciales
+      retryDelayMax: 300, // Máximo 5 minutos
       retryBackoff: true,
     });
   }
@@ -49,6 +50,8 @@ export class MailQueueService implements OnModuleInit {
     const jobs = mails.map((mail) => ({
       data: mail,
       retryLimit: 3,
+      retryDelay: 5,
+      retryDelayMax: 300,
       retryBackoff: true,
     }));
     await this.jobsService.insert(MAIL_JOB_NAME, jobs);

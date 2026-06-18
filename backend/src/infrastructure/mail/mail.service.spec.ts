@@ -94,6 +94,8 @@ describe('MailService', () => {
     await service.sendBatchPlanillas(clientes, 'Enero 2026');
 
     expect(mockQueueService.queueBulkMails).toHaveBeenCalledTimes(2);
+    expect(mockQueueService.queueBulkMails.mock.calls[0]?.[0]).toHaveLength(25);
+    expect(mockQueueService.queueBulkMails.mock.calls[1]?.[0]).toHaveLength(5);
   });
 
   it('should not queue anything if array is empty', async () => {
@@ -110,6 +112,7 @@ describe('MailService', () => {
     }));
     await service.sendBatchPlanillas(clientes, 'Enero 2026');
     expect(mockQueueService.queueBulkMails).toHaveBeenCalledTimes(1);
+    expect(mockQueueService.queueBulkMails.mock.calls[0]?.[0]).toHaveLength(25);
   });
 
   it('should queue exactly 2 batches for 26 elements', async () => {
@@ -121,5 +124,7 @@ describe('MailService', () => {
     }));
     await service.sendBatchPlanillas(clientes, 'Enero 2026');
     expect(mockQueueService.queueBulkMails).toHaveBeenCalledTimes(2);
+    expect(mockQueueService.queueBulkMails.mock.calls[0]?.[0]).toHaveLength(25);
+    expect(mockQueueService.queueBulkMails.mock.calls[1]?.[0]).toHaveLength(1);
   });
 });

@@ -25,6 +25,10 @@ export class MailRateLimitService {
   constructor(private readonly prisma: PrismaService) {}
 
   async tryAcquire(providerName: string, maxPerDay: number): Promise<boolean> {
+    if (maxPerDay <= 0) {
+      return false;
+    }
+
     try {
       const rows = await this.prisma.$queryRawUnsafe<{ sent_count: number }[]>(
         ACQUIRE_SLOT_SQL,
