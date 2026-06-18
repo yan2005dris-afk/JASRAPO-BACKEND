@@ -58,7 +58,7 @@ describe('MailRateLimitService', () => {
     expect(acquired).toBe(true);
     expect(mockRawPg.queryOne).toHaveBeenCalledWith(
       expect.stringContaining('CURRENT_DATE'),
-      expect.any(Array)
+      expect.any(Array),
     );
   });
 

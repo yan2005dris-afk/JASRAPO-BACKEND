@@ -144,7 +144,10 @@ export class PreInvoiceController {
       'Generates the pre-invoice PDF for each ID and queues the email with attachment in batches of 25',
   })
   @ApiResponse({ status: 200, description: 'Emails queued successfully' })
-  @ApiResponse({ status: 400, description: 'Bad Request - Invalid IDs or validation failed' })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad Request - Invalid IDs or validation failed',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
   @RequiredPermission('pre-invoices', 'update')
@@ -163,10 +166,16 @@ export class PreInvoiceController {
       'Generates the pre-invoice PDF and queues an email with the planilla attached',
   })
   @ApiResponse({ status: 200, description: 'Email queued successfully' })
-  @ApiResponse({ status: 400, description: 'Bad Request - Client has no email' })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad Request - Client has no email',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
-  @ApiResponse({ status: 404, description: 'Not Found - Pre-invoice not found' })
+  @ApiResponse({
+    status: 404,
+    description: 'Not Found - Pre-invoice not found',
+  })
   @ApiParam({
     name: 'id',
     description: 'Pre-invoice ID',

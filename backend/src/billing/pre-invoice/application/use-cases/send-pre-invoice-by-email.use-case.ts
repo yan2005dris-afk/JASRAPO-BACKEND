@@ -59,7 +59,8 @@ export class SendPreInvoiceByEmailUseCase {
       return 'Cliente';
     }
 
-    const fullName = `${cliente.nombres ?? ''} ${cliente.apellidos ?? ''}`.trim();
+    const fullName =
+      `${cliente.nombres ?? ''} ${cliente.apellidos ?? ''}`.trim();
     return fullName || 'Cliente';
   }
 }

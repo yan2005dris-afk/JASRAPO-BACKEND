@@ -49,7 +49,8 @@ export class MailProviderFactory {
     try {
       mailOptions = await this.buildMailOptions(options);
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Unknown template error';
+      const message =
+        error instanceof Error ? error.message : 'Unknown template error';
       return {
         messageId: '',
         success: false,
