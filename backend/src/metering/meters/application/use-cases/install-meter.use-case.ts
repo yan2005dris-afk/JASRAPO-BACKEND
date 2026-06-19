@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { MeterRepository } from '../../domain/repositories/meter.repository';
 import { MeterEntity } from '../../domain/entities/meter.entity';
-import { EstadoMedidor } from 'src/shared/enums';
+import { EstadoMedidor, EstadoContrato } from 'src/shared/enums';
 
 @Injectable()
 export class InstallMeterUseCase {
@@ -35,7 +35,7 @@ export class InstallMeterUseCase {
       );
     }
 
-    if (contrato.estado !== 'PENDIENTE_INSTALACION') {
+    if (contrato.estado !== EstadoContrato.PENDIENTE_INSTALACION) {
       throw new BadRequestException(
         `El contrato debe estar en estado PENDIENTE_INSTALACION para instalar el medidor, estado actual: ${contrato.estado}`,
       );

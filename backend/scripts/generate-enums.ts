@@ -35,7 +35,8 @@ function parseEnums(content: string, filePath: string): EnumDef[] {
     const values = body
       .split('\n')
       .map((line) => line.trim())
-      .filter((line) => line.length > 0 && !line.startsWith('//') && !line.startsWith('@@'));
+      .filter((line) => line.length > 0 && !line.startsWith('//') && !line.startsWith('@@'))
+      .map((line) => line.split(/\s+/)[0]!);
 
     if (values.length > 0) {
       enums.push({ name, values, sourceFile: path.relative(SCHEMA_DIR, filePath) });
@@ -100,8 +101,8 @@ async function main() {
 
     for (const e of enums) {
       if (seen.has(e.name)) {
-        console.warn(`⚠  Enum duplicado: ${e.name} en ${relativePath} (ya definido)`);
-        continue;
+        console.error(`❌ Error: Enum duplicado "${e.name}" detectado en ${relativePath} (ya definido previamente).`);
+        process.exit(1);
       }
       seen.add(e.name);
       allEnums.push(e);
