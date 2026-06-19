@@ -103,9 +103,9 @@ describe('Meter Use Cases', () => {
         ...mockMedidorFromDb,
         estado: 'INSTALADO',
       });
-      await expect(
-        installUseCase.execute(BigInt(1)),
-      ).rejects.toThrow(BadRequestException);
+      await expect(installUseCase.execute(BigInt(1))).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 

@@ -59,9 +59,9 @@ describe('InstallMeterUseCase', () => {
     const result = await useCase.execute(BigInt(1));
 
     expect(result.estado).toBe('INSTALADO');
-    expect(
-      mockMeterRepository.findActiveContractForMeter,
-    ).toHaveBeenCalledWith(BigInt(1));
+    expect(mockMeterRepository.findActiveContractForMeter).toHaveBeenCalledWith(
+      BigInt(1),
+    );
     expect(mockMeterRepository.update).toHaveBeenCalledWith(
       { medidorId: BigInt(1) },
       expect.objectContaining({
@@ -133,9 +133,7 @@ describe('InstallMeterUseCase', () => {
       deletedAt: new Date(),
     } as any);
 
-    await expect(useCase.execute(BigInt(1))).rejects.toThrow(
-      NotFoundException,
-    );
+    await expect(useCase.execute(BigInt(1))).rejects.toThrow(NotFoundException);
   });
 
   it('should throw BadRequestException when meter has no active contract', async () => {

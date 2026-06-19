@@ -210,8 +210,7 @@ export class MeterController {
   })
   @ApiResponse({
     status: 400,
-    description:
-      'Datos inválidos - el medidor debe estar en estado PENDIENTE',
+    description: 'Datos inválidos - el medidor debe estar en estado PENDIENTE',
   })
   @ApiResponse({ status: 404, description: 'Medidor no encontrado' })
   @RequiredPermission('meters', 'update')
