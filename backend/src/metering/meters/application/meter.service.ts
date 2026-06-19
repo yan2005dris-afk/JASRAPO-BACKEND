@@ -101,8 +101,8 @@ export class MeterService {
     return { message: `Medidor con ID ${id} eliminado` };
   }
 
-  async install(medidorId: bigint, contratoId: bigint): Promise<MeterEntity> {
-    return this.installUseCase.execute(medidorId, contratoId);
+  async install(medidorId: bigint): Promise<MeterEntity> {
+    return this.installUseCase.execute(medidorId);
   }
 
   async reportDefect(medidorId: bigint): Promise<MeterEntity> {

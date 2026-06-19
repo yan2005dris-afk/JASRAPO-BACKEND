@@ -316,6 +316,9 @@ importers:
       eslint-plugin-unicorn:
         specifier: ^64.0.0
         version: 64.0.0(eslint@9.39.4(jiti@2.7.0))
+      glob:
+        specifier: ^13.0.6
+        version: 13.0.6
       globals:
         specifier: ^16.0.0
         version: 16.5.0

@@ -1,5 +1,7 @@
 import { PrismaPg } from '@prisma/adapter-pg';
-import 'dotenv/config';
+import * as dotenv from 'dotenv';
+import * as path from 'node:path';
+dotenv.config({ path: path.resolve(__dirname, '../../..', '.env') });
 import { Pool } from 'pg';
 import { PrismaClient } from '../../src/generated/prisma/client';
 import { seedMenus } from './seeds/menu.seed';
@@ -175,6 +177,16 @@ main()
     process.exit(1);
   })
   .finally(async () => {
-    await prisma.$disconnect();
+    try {
+      await prisma.$disconnect();
+    } catch (error) {
+      console.error('❌ Error desconectando Prisma:', error);
+    }
+
+    try {
+      await pool.end();
+    } catch (error) {
+      console.error('❌ Error cerrando el pool de conexiones de pg:', error);
+    }
   });
 

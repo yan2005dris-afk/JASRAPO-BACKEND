@@ -22,7 +22,8 @@
     ]
   },
   "scripts": {
-    "prisma:generate": "prisma generate",
+    "prisma:generate": "prisma generate && npm run enums:generate",
+    "enums:generate": "tsx scripts/generate-enums.ts",
     "prestart": "npm run prisma:generate",
     "prestart:dev": "npm run prisma:generate",
     "prestart:debug": "npm run prisma:generate",
@@ -145,6 +146,7 @@
     "eslint-plugin-jest": "^29.15.2",
     "eslint-plugin-prettier": "^5.2.2",
     "eslint-plugin-unicorn": "^64.0.0",
+    "glob": "^13.0.6",
     "globals": "^16.0.0",
     "jest": "^30.0.0",
     "prettier": "^3.4.2",
