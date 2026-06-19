@@ -8,7 +8,7 @@ import { InstallMeterUseCase } from './use-cases/install-meter.use-case';
 import { ReportDefectUseCase } from './use-cases/report-defect.use-case';
 import { DecommissionMeterUseCase } from './use-cases/decommission-meter.use-case';
 
-import { EstadoMedidor } from 'src/generated/prisma/enums';
+import { EstadoMedidor } from 'src/shared/enums';
 
 describe('MeterService', () => {
   let service: MeterService;

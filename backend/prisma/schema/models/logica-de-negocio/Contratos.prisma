@@ -6,7 +6,7 @@ model Contratos {
   numeroGuia          String               @unique @map("numero_guia")
   fechaInicio         DateTime             @default(now()) @map("fecha_inicio")
   direccionSuministro String               @map("direccion_suministro")
-  estado              EstadoGenerico       @map("estado")
+  estado              EstadoContrato       @map("estado")
   createdAt           DateTime             @default(now()) @map("creado_en")
   updatedAt           DateTime             @updatedAt @map("actualizado_en")
   deletedAt           DateTime?            @map("borrado_en")
@@ -27,7 +27,7 @@ model Contratos {
   @@map("contratos")
 }
 
-enum EstadoGenerico {
+enum EstadoContrato {
   SOLICITUD
   PENDIENTE_PAGO
   PENDIENTE_INSTALACION
@@ -38,4 +38,10 @@ enum EstadoGenerico {
   EN_CONVENIO
   RETIRADO
   RECONEXION
+}
+
+enum EstadoDeuda {
+  GENERADA
+  EN_REVISION
+  APROBADA
 }

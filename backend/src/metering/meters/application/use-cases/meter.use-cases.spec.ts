@@ -26,6 +26,7 @@ describe('Meter Use Cases', () => {
 
   const mockMeterRepository = {
     findUnique: jest.fn(),
+    findActiveContractForMeter: jest.fn(),
     create: jest.fn(),
     update: jest.fn(),
     createHistory: jest.fn(),
@@ -80,24 +81,31 @@ describe('Meter Use Cases', () => {
   });
 
   describe('InstallMeterUseCase', () => {
-    it('should install a meter', async () => {
-      mockMeterRepository.findUnique.mockResolvedValue(mockMedidorFromDb);
+    it('should install a meter from PENDIENTE', async () => {
+      mockMeterRepository.findUnique.mockResolvedValue({
+        ...mockMedidorFromDb,
+        estado: 'PENDIENTE',
+      });
+      mockMeterRepository.findActiveContractForMeter.mockResolvedValue({
+        contratoId: BigInt(1),
+        estado: 'PENDIENTE_INSTALACION',
+      });
       mockMeterRepository.update.mockResolvedValue({
         ...mockMedidorFromDb,
         estado: 'INSTALADO',
       });
-      const result = await installUseCase.execute(BigInt(1), BigInt(1));
+      const result = await installUseCase.execute(BigInt(1));
       expect(result.estado).toBe('INSTALADO');
     });
 
-    it('should throw BadRequestException if not in BODEGA', async () => {
+    it('should throw BadRequestException if not in PENDIENTE', async () => {
       mockMeterRepository.findUnique.mockResolvedValue({
         ...mockMedidorFromDb,
         estado: 'INSTALADO',
       });
-      await expect(
-        installUseCase.execute(BigInt(1), BigInt(1)),
-      ).rejects.toThrow(BadRequestException);
+      await expect(installUseCase.execute(BigInt(1))).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 

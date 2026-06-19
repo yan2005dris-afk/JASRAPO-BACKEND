@@ -32,7 +32,7 @@ describe('GetDebtSummaryUseCase', () => {
     expect(useCase).toBeDefined();
   });
 
-  it('should calculate debt summary from unpaid prefacturas', async () => {
+  it('should calculate debt summary dynamically from totalPagar and abono', async () => {
     mockAgreementRepository.findFirstContrato.mockResolvedValue({
       contratoId: 1n,
     });
@@ -42,8 +42,6 @@ describe('GetDebtSummaryUseCase', () => {
         periodoId: 202601,
         totalPagar: 100,
         abono: 25,
-        saldoActual: null,
-        meses_atrasado: 2,
         estado: 'GENERADA',
         createdAt: new Date('2026-01-15T00:00:00.000Z'),
       },
@@ -52,8 +50,6 @@ describe('GetDebtSummaryUseCase', () => {
         periodoId: 202602,
         totalPagar: 80,
         abono: 0,
-        saldoActual: 40.555,
-        meses_atrasado: 4,
         estado: 'APROBADA',
         createdAt: new Date('2026-02-15T00:00:00.000Z'),
       },
@@ -64,11 +60,15 @@ describe('GetDebtSummaryUseCase', () => {
 
     const result = await useCase.execute(1n);
 
+    // deudaTotal = (100-25) + (80-0) = 155
+    // deudaAnterior = saldo del periodo 202602-1=202601 → 100-25 = 75
+    // maxMesesAtrasado = 2 (ambos periodos tienen saldo > 0)
     expect(result).toMatchObject({
       contratoId: '1',
-      deudaTotal: 115.56,
+      deudaTotal: 155,
+      deudaAnterior: 75,
       tasaMensualVigente: 1.5,
-      maxMesesAtrasado: 4,
+      maxMesesAtrasado: 2,
       totalPrefacturasImpagadas: 2,
     });
     expect(result.prefacturas).toEqual([
@@ -79,7 +79,7 @@ describe('GetDebtSummaryUseCase', () => {
       }),
       expect.objectContaining({
         prefacturaId: '11',
-        saldoPendiente: 40.56,
+        saldoPendiente: 80,
         estado: 'APROBADA',
       }),
     ]);
@@ -98,11 +98,38 @@ describe('GetDebtSummaryUseCase', () => {
 
     expect(result).toMatchObject({
       deudaTotal: 0,
+      deudaAnterior: 0,
       tasaMensualVigente: 0,
       maxMesesAtrasado: 0,
       totalPrefacturasImpagadas: 0,
       prefacturas: [],
     });
+  });
+
+  it('should return deudaAnterior = 0 when there is no preceding period', async () => {
+    mockAgreementRepository.findFirstContrato.mockResolvedValue({
+      contratoId: 1n,
+    });
+    mockAgreementRepository.findManyPrefacturas.mockResolvedValue([
+      {
+        prefacturaId: 20n,
+        periodoId: 202601,
+        totalPagar: 60,
+        abono: 0,
+        estado: 'GENERADA',
+        createdAt: new Date('2026-01-15T00:00:00.000Z'),
+      },
+    ]);
+    mockAgreementRepository.findFirstParametroTasainteres.mockResolvedValue(
+      null,
+    );
+
+    const result = await useCase.execute(1n);
+
+    // Only one period → no preceding period exists → deudaAnterior = 0
+    expect(result.deudaAnterior).toBe(0);
+    expect(result.deudaTotal).toBe(60);
+    expect(result.maxMesesAtrasado).toBe(1);
   });
 
   it('should throw NotFoundException when contrato does not exist', async () => {

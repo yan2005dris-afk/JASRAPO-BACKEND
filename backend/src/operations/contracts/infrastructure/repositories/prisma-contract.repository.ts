@@ -1,6 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { Prisma } from 'src/generated/prisma/client';
+import { EstadoMedidor } from 'src/shared/enums';
 import { ContractRepository } from '../../domain/repositories/contract.repository';
 import { ContractEntity } from '../../domain/entities/contract.entity';
 import { CreateContractData } from '../../domain/types/create-contract-data';
@@ -101,6 +106,11 @@ export class PrismaContractRepository implements ContractRepository {
         },
       });
 
+      await tx.medidores.update({
+        where: { medidorId: data.medidorId },
+        data: { estado: EstadoMedidor.PENDIENTE },
+      });
+
       const createdRecord = await tx.contratos.findUnique({
         where: { contratoId: contrato.contratoId },
         include: this.defaultInclude,
@@ -181,6 +191,14 @@ export class PrismaContractRepository implements ContractRepository {
         );
       }
 
+      await tx.medidores.update({
+        where: { medidorId: activeLink.medidorId },
+        data: {
+          estado: EstadoMedidor.BAJA,
+          fechaBaja: new Date(),
+        },
+      });
+
       const finalizedRecord = await tx.contratos.findUnique({
         where: { contratoId },
         include: this.defaultInclude,
@@ -216,6 +234,12 @@ export class PrismaContractRepository implements ContractRepository {
     if (!medidor) {
       throw new NotFoundException(
         `Medidor con ID ${data.medidorId} no encontrado`,
+      );
+    }
+
+    if (medidor.estado !== EstadoMedidor.BODEGA) {
+      throw new BadRequestException(
+        `El medidor debe estar en estado BODEGA para ser vinculado, estado actual: ${medidor.estado}`,
       );
     }
 

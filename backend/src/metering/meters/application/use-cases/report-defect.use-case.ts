@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { MeterRepository } from '../../domain/repositories/meter.repository';
 import { MeterEntity } from '../../domain/entities/meter.entity';
-import { EstadoMedidor } from 'src/generated/prisma/client';
+import { EstadoMedidor } from 'src/shared/enums';
 
 @Injectable()
 export class ReportDefectUseCase {

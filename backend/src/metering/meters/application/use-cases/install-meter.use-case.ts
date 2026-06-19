@@ -5,13 +5,13 @@ import {
 } from '@nestjs/common';
 import { MeterRepository } from '../../domain/repositories/meter.repository';
 import { MeterEntity } from '../../domain/entities/meter.entity';
-import { EstadoMedidor } from 'src/generated/prisma/client';
+import { EstadoMedidor, EstadoContrato } from 'src/shared/enums';
 
 @Injectable()
 export class InstallMeterUseCase {
   constructor(private readonly meterRepository: MeterRepository) {}
 
-  async execute(medidorId: bigint, contratoId: bigint): Promise<MeterEntity> {
+  async execute(medidorId: bigint): Promise<MeterEntity> {
     const medidor = await this.meterRepository.findUnique({
       medidorId,
     });
@@ -20,30 +20,33 @@ export class InstallMeterUseCase {
       throw new NotFoundException('Medidor no encontrado');
     }
 
-    if (medidor.estado !== EstadoMedidor.BODEGA) {
+    if (medidor.estado !== EstadoMedidor.PENDIENTE) {
       throw new BadRequestException(
-        `El medidor no puede ser instalado desde el estado ${medidor.estado}`,
+        `El medidor debe estar en estado PENDIENTE para ser instalado, estado actual: ${medidor.estado}`,
+      );
+    }
+
+    const contrato =
+      await this.meterRepository.findActiveContractForMeter(medidorId);
+
+    if (!contrato) {
+      throw new BadRequestException(
+        'El medidor no tiene un contrato activo vinculado',
+      );
+    }
+
+    if (contrato.estado !== EstadoContrato.PENDIENTE_INSTALACION) {
+      throw new BadRequestException(
+        `El contrato debe estar en estado PENDIENTE_INSTALACION para instalar el medidor, estado actual: ${contrato.estado}`,
       );
     }
 
     return this.meterRepository.executeTransaction(async (tx) => {
-      // 1. Update meter status
       const updated = await this.meterRepository.update(
         { medidorId },
         {
           estado: EstadoMedidor.INSTALADO,
-        },
-        tx,
-      );
-
-      // 2. Create initial history entry
-      await this.meterRepository.createHistory(
-        {
-          medidorId,
-          contratoId,
-          lecturaInicial: 0,
-          motivo: 'INSTALACION INICIAL',
-          fechaDesde: new Date(),
+          fechaInstalacion: new Date(),
         },
         tx,
       );

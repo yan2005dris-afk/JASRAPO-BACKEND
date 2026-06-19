@@ -157,4 +157,23 @@ export class PrismaMeterRepository implements MeterRepository {
   async executeTransaction<T>(callback: (tx: any) => Promise<T>): Promise<T> {
     return this.prisma.$transaction(callback);
   }
+
+  async findActiveContractForMeter(
+    medidorId: bigint,
+  ): Promise<{ contratoId: bigint; estado: string } | null> {
+    const historial = await this.prisma.historialMedidores.findFirst({
+      where: { medidorId, fechaHasta: null },
+      select: {
+        contratoId: true,
+        contrato: { select: { estado: true } },
+      },
+    });
+
+    if (!historial) return null;
+
+    return {
+      contratoId: historial.contratoId,
+      estado: historial.contrato.estado,
+    };
+  }
 }

@@ -1,0 +1,2 @@
+-- CreateEnum
+CREATE TYPE "EstadoDeuda" AS ENUM ('GENERADA', 'EN_REVISION', 'APROBADA');

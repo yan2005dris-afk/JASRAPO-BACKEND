@@ -1,62 +1,137 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
-import { Prisma } from 'src/generated/prisma/client';
+import { EstadoDeuda, Prisma } from 'src/generated/prisma/client';
 import { BusquedaPublicaRepository } from '../../domain/repositories/busqueda-publica.repository';
-import { SearchFilters } from '../../domain/types/public-search-filters';
-import { SearchResultEntity } from '../../domain/entities/public-search-result.entity';
-import { BusquedaPublicaMapper } from '../mappers/busqueda-publica.mapper';
+import type {
+  IClienteConContratosRaw,
+  IContratoConDeudaRaw,
+  TipoBusquedaDeuda,
+} from '../../domain/types/debt-search.types';
+
+const ESTADOS_DEUDA = Object.values(EstadoDeuda);
 
 @Injectable()
 export class PrismaBusquedaPublicaRepository implements BusquedaPublicaRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findManyClientes(
-    filters: SearchFilters,
+  async findClientesBy(
+    tipo: 'identificacion' | 'nombre',
+    valor: string,
     skip: number,
     take: number,
-  ): Promise<SearchResultEntity[]> {
-    const where = this.buildWhereCliente(filters);
-    const raw = await this.prisma.clientes.findMany({
-      where,
+  ): Promise<IClienteConContratosRaw[]> {
+    const where = this.buildWhereCliente(tipo, valor);
+    const rows = await this.prisma.clientes.findMany({
+      where: {
+        ...where,
+        contratos: { some: { deletedAt: null } },
+      },
+      include: {
+        contratos: {
+          where: { deletedAt: null },
+          include: {
+            prefacturas: {
+              where: {
+                deletedAt: null,
+                estado: { in: [...ESTADOS_DEUDA] },
+              },
+              select: { totalPagar: true, abono: true, periodoId: true },
+            },
+          },
+          orderBy: { contratoId: 'asc' },
+        },
+      },
       skip,
       take,
-      orderBy: { createdAt: 'desc' },
+      orderBy: { clienteId: 'asc' },
     });
-    return raw.map(BusquedaPublicaMapper.cliente);
+
+    return rows.map((r) => ({
+      clienteId: r.clienteId,
+      identificacion: r.identificacion,
+      nombres: r.nombres,
+      apellidos: r.apellidos,
+      contratos: r.contratos.map((c) => ({
+        contratoId: c.contratoId,
+        numeroGuia: c.numeroGuia,
+        estado: c.estado,
+        prefacturasImpagadas: c.prefacturas,
+      })),
+    }));
   }
 
-  async countClientes(filters: SearchFilters): Promise<number> {
-    const where = this.buildWhereCliente(filters);
-    return this.prisma.clientes.count({ where });
+  async countClientesBy(
+    tipo: 'identificacion' | 'nombre',
+    valor: string,
+  ): Promise<number> {
+    return this.prisma.clientes.count({
+      where: {
+        ...this.buildWhereCliente(tipo, valor),
+        contratos: { some: { deletedAt: null } },
+      },
+    });
   }
 
-  async findManyContratos(
-    filters: SearchFilters,
+  async findContratosDeudaBy(
+    tipo: TipoBusquedaDeuda,
+    valor: string,
     skip: number,
     take: number,
-  ): Promise<SearchResultEntity[]> {
-    const where = this.buildWhereContrato(filters);
-    const raw = await this.prisma.contratos.findMany({
+  ): Promise<IContratoConDeudaRaw[]> {
+    const where = this.buildWhereDeuda(tipo, valor);
+    const rows = await this.prisma.contratos.findMany({
       where,
-      include: { cliente: true },
+      include: {
+        cliente: {
+          select: {
+            clienteId: true,
+            identificacion: true,
+            nombres: true,
+            apellidos: true,
+          },
+        },
+        prefacturas: {
+          where: {
+            deletedAt: null,
+            estado: { in: [...ESTADOS_DEUDA] },
+          },
+          select: { totalPagar: true, abono: true, periodoId: true },
+        },
+      },
       skip,
       take,
+      orderBy: { contratoId: 'asc' },
     });
-    return raw.map(BusquedaPublicaMapper.contrato);
+
+    return rows.map((r) => ({
+      contratoId: r.contratoId,
+      numeroGuia: r.numeroGuia,
+      estado: r.estado,
+      cliente: r.cliente,
+      prefacturasImpagadas: r.prefacturas,
+    }));
   }
 
-  async countContratos(filters: SearchFilters): Promise<number> {
-    const where = this.buildWhereContrato(filters);
-    return this.prisma.contratos.count({ where });
+  async countContratosDeuda(
+    tipo: TipoBusquedaDeuda,
+    valor: string,
+  ): Promise<number> {
+    return this.prisma.contratos.count({
+      where: this.buildWhereDeuda(tipo, valor),
+    });
   }
 
-  private buildWhereCliente(filters: SearchFilters): Prisma.ClientesWhereInput {
-    if (filters.isIdent) {
-      return { identificacion: filters.valor.trim(), deletedAt: null };
+  private buildWhereCliente(
+    tipo: 'identificacion' | 'nombre',
+    valor: string,
+  ): Prisma.ClientesWhereInput {
+    if (tipo === 'identificacion') {
+      return { identificacion: valor, deletedAt: null };
     }
-
-    const tokens = this.normalizarBusqueda(filters.valor);
+    // tipo === 'nombre'
+    const tokens = this.normalizarTokens(valor);
     return {
+      deletedAt: null,
       AND: tokens.map(
         (t): Prisma.ClientesWhereInput => ({
           OR: [
@@ -65,21 +140,52 @@ export class PrismaBusquedaPublicaRepository implements BusquedaPublicaRepositor
           ],
         }),
       ),
-      deletedAt: null,
     };
   }
 
-  private buildWhereContrato(
-    filters: SearchFilters,
+  private buildWhereDeuda(
+    tipo: TipoBusquedaDeuda,
+    valor: string,
   ): Prisma.ContratosWhereInput {
+    const base: Prisma.ContratosWhereInput = { deletedAt: null };
+
+    if (tipo === 'identificacion') {
+      return { ...base, cliente: { identificacion: valor, deletedAt: null } };
+    }
+
+    if (tipo === 'numeroGuia') {
+      return {
+        ...base,
+        numeroGuia: { contains: valor, mode: 'insensitive' },
+        cliente: { deletedAt: null },
+        prefacturas: {
+          some: {
+            deletedAt: null,
+            estado: { in: [...ESTADOS_DEUDA] },
+          },
+        },
+      };
+    }
+
+    // tipo === 'nombre'
+    const tokens = this.normalizarTokens(valor);
     return {
-      numeroGuia: { contains: filters.valor, mode: 'insensitive' },
-      deletedAt: null,
-      cliente: { deletedAt: null },
+      ...base,
+      cliente: {
+        deletedAt: null,
+        AND: tokens.map(
+          (t): Prisma.ClientesWhereInput => ({
+            OR: [
+              { nombres: { contains: t, mode: 'insensitive' } },
+              { apellidos: { contains: t, mode: 'insensitive' } },
+            ],
+          }),
+        ),
+      },
     };
   }
 
-  private normalizarBusqueda(valor: string): string[] {
+  private normalizarTokens(valor: string): string[] {
     return valor
       .trim()
       .toUpperCase()

@@ -1,5 +1,5 @@
 import type { ReadingAnomalyEntity } from '../entities/reading-anomaly.entity';
-import type { TipoAnomalia, EstadoAnomalia } from 'src/generated/prisma/client';
+import type { TipoAnomalia, EstadoAnomalia } from 'src/shared/enums';
 
 export interface CreateReadingAnomalyRepositoryData {
   lecturaId: bigint;
