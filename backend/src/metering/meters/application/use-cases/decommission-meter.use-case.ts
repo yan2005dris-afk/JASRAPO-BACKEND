@@ -1,7 +1,7 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { MeterRepository } from '../../domain/repositories/meter.repository';
 import { MeterEntity } from '../../domain/entities/meter.entity';
-import { EstadoMedidor } from 'src/generated/prisma/client';
+import { EstadoMedidor } from '../../domain/enums/estado-medidor.enum';
 
 @Injectable()
 export class DecommissionMeterUseCase {

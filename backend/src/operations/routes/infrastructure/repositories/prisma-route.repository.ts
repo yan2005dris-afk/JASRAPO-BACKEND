@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
-import { Prisma, EstadoRuta, TipoRuta } from 'src/generated/prisma/client';
+import { Prisma } from 'src/generated/prisma/client';
+import { EstadoRuta } from '../../domain/enums/estado-ruta.enum';
+import { TipoRuta } from '../../domain/enums/tipo-ruta.enum';
 import {
   RouteRepository,
   UsuarioRef,

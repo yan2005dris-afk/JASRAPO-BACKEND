@@ -3,7 +3,7 @@ import { Test } from '@nestjs/testing';
 import { GetEligibleReadingsUseCase } from './get-eligible-readings.use-case';
 import { RouteRepository } from '../../domain/repositories/route.repository';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
-import { EstadoGenerico } from 'src/generated/prisma/client';
+import { EstadoContrato } from 'src/operations/contracts/domain/enums/estado-contrato.enum';
 
 describe('GetEligibleReadingsUseCase', () => {
   let useCase: GetEligibleReadingsUseCase;
@@ -115,7 +115,7 @@ describe('GetEligibleReadingsUseCase', () => {
             historial: expect.objectContaining({
               some: expect.objectContaining({
                 contrato: expect.objectContaining({
-                  estado: EstadoGenerico.ACTIVO,
+                  estado: EstadoContrato.ACTIVO,
                   comunidadId: 1,
                 }),
               }),
@@ -167,7 +167,7 @@ describe('GetEligibleReadingsUseCase', () => {
             historial: expect.objectContaining({
               some: expect.objectContaining({
                 contrato: expect.objectContaining({
-                  estado: EstadoGenerico.RECONEXION,
+                  estado: EstadoContrato.RECONEXION,
                 }),
               }),
             }),

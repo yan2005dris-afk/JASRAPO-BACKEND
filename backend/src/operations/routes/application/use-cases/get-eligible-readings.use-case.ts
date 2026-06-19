@@ -3,7 +3,7 @@ import {
   BadRequestException,
   NotFoundException,
 } from '@nestjs/common';
-import { EstadoGenerico } from 'src/generated/prisma/client';
+import { EstadoContrato } from 'src/operations/contracts/domain/enums/estado-contrato.enum';
 import { RouteRepository } from '../../domain/repositories/route.repository';
 import { ReadingForRouteEntity } from '../../domain/entities/reading-for-route.entity';
 import { PaginateOptions } from 'src/infrastructure/common/utils/pagination.util';
@@ -37,10 +37,10 @@ export class GetEligibleReadingsUseCase {
       }
     }
 
-    const estadoContratoEsperado: EstadoGenerico =
+    const estadoContratoEsperado: EstadoContrato =
       tipoRuta === 'TOMA_LECTURA'
-        ? EstadoGenerico.ACTIVO
-        : EstadoGenerico.RECONEXION;
+        ? EstadoContrato.ACTIVO
+        : EstadoContrato.RECONEXION;
 
     const where: Record<string, any> = {
       estadoAsignacion: 'NO_ASIGNADA',

@@ -7,7 +7,7 @@ import {
   IsString,
 } from 'class-validator';
 import { CreateMeterDto } from './create-meter.dto';
-import { EstadoMedidor } from 'src/generated/prisma/enums';
+import { EstadoMedidor } from '../../domain/enums/estado-medidor.enum';
 
 export class UpdateMeterDto extends PartialType(CreateMeterDto) {
   @IsOptional()

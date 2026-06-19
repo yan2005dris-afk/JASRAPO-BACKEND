@@ -2,23 +2,28 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { InstallMeterUseCase } from './install-meter.use-case';
 import { MeterRepository } from '../../domain/repositories/meter.repository';
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 
 describe('InstallMeterUseCase', () => {
   let useCase: InstallMeterUseCase;
 
   const mockMeterRepository = {
     findUnique: jest.fn(),
+    findActiveContractForMeter: jest.fn(),
     update: jest.fn(),
-    createHistory: jest.fn(),
     executeTransaction: jest.fn((cb) => cb(null)),
   };
 
   const mockMedidor = {
     medidorId: BigInt(1),
     serie: 'MED-001',
-    estado: 'BODEGA',
+    estado: 'PENDIENTE',
     deletedAt: null,
+  };
+
+  const mockContratoPendienteInstalacion = {
+    contratoId: BigInt(1),
+    estado: 'PENDIENTE_INSTALACION',
   };
 
   beforeEach(async () => {
@@ -32,39 +37,84 @@ describe('InstallMeterUseCase', () => {
     useCase = module.get<InstallMeterUseCase>(InstallMeterUseCase);
   });
 
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('should be defined', () => {
     expect(useCase).toBeDefined();
   });
 
-  it('should install device from BODEGA status and create history', async () => {
+  it('should install meter from PENDIENTE when contract is PENDIENTE_INSTALACION', async () => {
     mockMeterRepository.findUnique.mockResolvedValue(mockMedidor as any);
+    mockMeterRepository.findActiveContractForMeter.mockResolvedValue(
+      mockContratoPendienteInstalacion,
+    );
     mockMeterRepository.update.mockResolvedValue({
       ...mockMedidor,
       estado: 'INSTALADO',
+      fechaInstalacion: new Date(),
     } as any);
-    mockMeterRepository.createHistory.mockResolvedValue({});
 
-    const result = await useCase.execute(BigInt(1), BigInt(123));
+    const result = await useCase.execute(BigInt(1));
 
     expect(result.estado).toBe('INSTALADO');
-    expect(mockMeterRepository.createHistory).toHaveBeenCalledWith(
+    expect(
+      mockMeterRepository.findActiveContractForMeter,
+    ).toHaveBeenCalledWith(BigInt(1));
+    expect(mockMeterRepository.update).toHaveBeenCalledWith(
+      { medidorId: BigInt(1) },
       expect.objectContaining({
-        medidorId: BigInt(1),
-        contratoId: BigInt(123),
-        lecturaInicial: 0,
-        motivo: 'INSTALACION INICIAL',
+        estado: 'INSTALADO',
+        fechaInstalacion: expect.any(Date),
       }),
       null,
     );
   });
 
-  it('should throw BadRequestException when medidor is not in BODEGA status', async () => {
+  it('should throw BadRequestException when medidor is not in PENDIENTE', async () => {
+    mockMeterRepository.findUnique.mockResolvedValue({
+      ...mockMedidor,
+      estado: 'BODEGA',
+    });
+
+    await expect(useCase.execute(BigInt(1))).rejects.toThrow(
+      BadRequestException,
+    );
+    expect(
+      mockMeterRepository.findActiveContractForMeter,
+    ).not.toHaveBeenCalled();
+  });
+
+  it('should throw BadRequestException when medidor is already INSTALADO', async () => {
     mockMeterRepository.findUnique.mockResolvedValue({
       ...mockMedidor,
       estado: 'INSTALADO',
-    });
+    } as any);
 
-    await expect(useCase.execute(BigInt(1), BigInt(123))).rejects.toThrow(
+    await expect(useCase.execute(BigInt(1))).rejects.toThrow(
+      BadRequestException,
+    );
+  });
+
+  it('should throw BadRequestException when medidor is BAJA', async () => {
+    mockMeterRepository.findUnique.mockResolvedValue({
+      ...mockMedidor,
+      estado: 'BAJA',
+    } as any);
+
+    await expect(useCase.execute(BigInt(1))).rejects.toThrow(
+      BadRequestException,
+    );
+  });
+
+  it('should throw BadRequestException when medidor is DANADO', async () => {
+    mockMeterRepository.findUnique.mockResolvedValue({
+      ...mockMedidor,
+      estado: 'DANADO',
+    } as any);
+
+    await expect(useCase.execute(BigInt(1))).rejects.toThrow(
       BadRequestException,
     );
   });
@@ -72,8 +122,8 @@ describe('InstallMeterUseCase', () => {
   it('should throw NotFoundException when medidor not found', async () => {
     mockMeterRepository.findUnique.mockResolvedValue(null);
 
-    await expect(useCase.execute(BigInt(999), BigInt(123))).rejects.toThrow(
-      'Medidor no encontrado',
+    await expect(useCase.execute(BigInt(999))).rejects.toThrow(
+      NotFoundException,
     );
   });
 
@@ -83,18 +133,40 @@ describe('InstallMeterUseCase', () => {
       deletedAt: new Date(),
     } as any);
 
-    await expect(useCase.execute(BigInt(1), BigInt(123))).rejects.toThrow(
-      'Medidor no encontrado',
+    await expect(useCase.execute(BigInt(1))).rejects.toThrow(
+      NotFoundException,
     );
   });
 
-  it('should throw BadRequestException when medidor already installed', async () => {
-    mockMeterRepository.findUnique.mockResolvedValue({
-      ...mockMedidor,
-      estado: 'INSTALADO',
-    } as any);
+  it('should throw BadRequestException when meter has no active contract', async () => {
+    mockMeterRepository.findUnique.mockResolvedValue(mockMedidor as any);
+    mockMeterRepository.findActiveContractForMeter.mockResolvedValue(null);
 
-    await expect(useCase.execute(BigInt(1), BigInt(123))).rejects.toThrow(
+    await expect(useCase.execute(BigInt(1))).rejects.toThrow(
+      BadRequestException,
+    );
+  });
+
+  it('should throw BadRequestException when contract is not PENDIENTE_INSTALACION', async () => {
+    mockMeterRepository.findUnique.mockResolvedValue(mockMedidor as any);
+    mockMeterRepository.findActiveContractForMeter.mockResolvedValue({
+      contratoId: BigInt(1),
+      estado: 'ACTIVO',
+    });
+
+    await expect(useCase.execute(BigInt(1))).rejects.toThrow(
+      BadRequestException,
+    );
+  });
+
+  it('should throw BadRequestException when contract is SOLICITUD', async () => {
+    mockMeterRepository.findUnique.mockResolvedValue(mockMedidor as any);
+    mockMeterRepository.findActiveContractForMeter.mockResolvedValue({
+      contratoId: BigInt(1),
+      estado: 'SOLICITUD',
+    });
+
+    await expect(useCase.execute(BigInt(1))).rejects.toThrow(
       BadRequestException,
     );
   });

@@ -1,9 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
-import {
-  EstadoConvenio,
-  EstadoCuotaConvenio,
-} from 'src/generated/prisma/enums';
+import { EstadoConvenio } from '../domain/enums/estado-convenio.enum';
+import { EstadoCuotaConvenio } from '../domain/enums/estado-cuota-convenio.enum';
 import {
   paginate,
   PaginateOptions,

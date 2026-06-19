@@ -1,5 +1,6 @@
 import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
-import { TipoAnomalia, EstadoAnomalia } from 'src/generated/prisma/client';
+import { TipoAnomalia } from '../../domain/enums/tipo-anomalia.enum';
+import { EstadoAnomalia } from '../../domain/enums/estado-anomalia.enum';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsNotEmptyString } from 'src/infrastructure/common/decorators/is-not-empty-string.decorator';
 

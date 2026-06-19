@@ -2,7 +2,7 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { MeterController } from './meter.controller';
 import { MeterService } from '../../application/meter.service';
-import { EstadoMedidor } from 'src/generated/prisma/enums';
+import { EstadoMedidor } from '../../domain/enums/estado-medidor.enum';
 
 describe('MeterController', () => {
   let controller: MeterController;
@@ -120,6 +120,18 @@ describe('MeterController', () => {
 
       expect(service.remove).toHaveBeenCalledWith(BigInt(1));
       expect(result).toEqual({ message: 'deleted' });
+    });
+  });
+
+  describe('install', () => {
+    it('should install a meter', async () => {
+      jest
+        .spyOn(service, 'install')
+        .mockResolvedValue(mockPaginatedResponse.data[0] as any);
+      const result = await controller.install('1');
+
+      expect(service.install).toHaveBeenCalledWith(BigInt(1));
+      expect(result).toEqual(mockPaginatedResponse.data[0]);
     });
   });
 });

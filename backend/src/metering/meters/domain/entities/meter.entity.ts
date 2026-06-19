@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { EstadoMedidor } from 'src/generated/prisma/client';
+import { EstadoMedidor } from '../enums/estado-medidor.enum';
 
 export class MeterEntity {
   @ApiProperty({ example: '1', description: 'ID del medidor' })

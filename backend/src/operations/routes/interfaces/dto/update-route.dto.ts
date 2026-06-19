@@ -2,7 +2,7 @@ import { PartialType, PickType } from '@nestjs/swagger';
 import { CreateRouteDto } from './create-route.dto';
 import { IsEnum, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { EstadoRuta } from 'src/generated/prisma/client';
+import { EstadoRuta } from '../../domain/enums/estado-ruta.enum';
 
 export class UpdateRouteDto extends PartialType(
   PickType(CreateRouteDto, [

@@ -187,22 +187,21 @@ export class MeterController {
   }
 
   /**
-   * Instalar un medidor en un contrato
+   * Instalar un medidor
    * POST /meters/:id/install
+   * El medidor debe estar en estado PENDIENTE (asignado a un contrato).
+   * Cambia el estado a INSTALADO y registra la fecha de instalación.
    */
   @ApiOperation({
     summary: 'Instalar medidor',
-    description: 'Asocia un medidor a un contrato',
+    description:
+      'Cambia el estado del medidor de PENDIENTE a INSTALADO. El medidor debe haber sido asociado a un contrato previamente.',
   })
   @ApiParam({
     name: 'id',
     description: 'ID del medidor',
     type: String,
     example: '1',
-  })
-  @ApiBody({
-    schema: { example: { contratoId: '1' } },
-    description: 'ID del contrato',
   })
   @ApiResponse({
     status: 200,
@@ -211,25 +210,14 @@ export class MeterController {
   })
   @ApiResponse({
     status: 400,
-    description: 'Datos inválidos - el medidor debe estar en estado BODEGA',
+    description:
+      'Datos inválidos - el medidor debe estar en estado PENDIENTE',
   })
-  @ApiResponse({ status: 404, description: 'Medidor o contrato no encontrado' })
-  @ApiBody({
-    type: InstallMeterDto,
-    description: 'Datos para instalar el medidor',
-  })
+  @ApiResponse({ status: 404, description: 'Medidor no encontrado' })
   @RequiredPermission('meters', 'update')
   @Post(':id/install')
-  async install(
-    @Param('id') id: string,
-    @Body() installDto: InstallMeterDto,
-  ): Promise<MeterResponseDto> {
-    return toMeterResponse(
-      await this.meterService.install(
-        BigInt(id),
-        BigInt(installDto.contratoId),
-      ),
-    );
+  async install(@Param('id') id: string): Promise<MeterResponseDto> {
+    return toMeterResponse(await this.meterService.install(BigInt(id)));
   }
 
   /**
