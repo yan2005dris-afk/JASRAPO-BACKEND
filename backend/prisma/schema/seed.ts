@@ -1,5 +1,6 @@
 import { PrismaPg } from '@prisma/adapter-pg';
-import 'dotenv/config';
+import * as dotenv from 'dotenv';
+dotenv.config({ path: '../.env' });
 import { Pool } from 'pg';
 import { PrismaClient } from '../../src/generated/prisma/client';
 import { seedMenus } from './seeds/menu.seed';
@@ -176,5 +177,6 @@ main()
   })
   .finally(async () => {
     await prisma.$disconnect();
+    await pool.end();
   });
 
