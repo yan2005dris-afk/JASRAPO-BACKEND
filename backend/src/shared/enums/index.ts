@@ -1,0 +1,246 @@
+// Auto-generado por scripts/generate-enums.ts
+// NO EDITAR MANUALMENTE - Ejecutar: npx tsx scripts/generate-enums.ts
+// Fuente: schemas Prisma en prisma/schema/
+
+/**
+ * Enums compatibles con Prisma 7.x
+ * Proporciona objetos runtime + tipos que Prisma ya no genera automáticamente
+ */
+
+export const EstadoAnomalia = {
+  PENDIENTE: 'PENDIENTE',
+  EN_REVISION: 'EN_REVISION',
+  RESUELTA: 'RESUELTA',
+  DESCARTADA: 'DESCARTADA',
+} as const;
+
+export type EstadoAnomalia =
+  (typeof EstadoAnomalia)[keyof typeof EstadoAnomalia];
+
+// Fuente: models/logica-de-negocio/LecturaAnomalia.prisma
+
+export const EstadoAsignacion = {
+  NO_ASIGNADA: 'NO_ASIGNADA',
+  ASIGNADA: 'ASIGNADA',
+  TOMADA: 'TOMADA',
+  COMPLETADA: 'COMPLETADA',
+} as const;
+
+export type EstadoAsignacion =
+  (typeof EstadoAsignacion)[keyof typeof EstadoAsignacion];
+
+// Fuente: models/logica-de-negocio/Rutas.prisma
+
+export const EstadoCaja = {
+  ABIERTA: 'ABIERTA',
+  CERRADA: 'CERRADA',
+  DESCUADRADA: 'DESCUADRADA',
+} as const;
+
+export type EstadoCaja = (typeof EstadoCaja)[keyof typeof EstadoCaja];
+
+// Fuente: models/logica-de-negocio/CajaSesion.prisma
+
+export const EstadoContrato = {
+  SOLICITUD: 'SOLICITUD',
+  PENDIENTE_PAGO: 'PENDIENTE_PAGO',
+  PENDIENTE_INSTALACION: 'PENDIENTE_INSTALACION',
+  ACTIVO: 'ACTIVO',
+  EN_MORA: 'EN_MORA',
+  ORDEN_CORTE: 'ORDEN_CORTE',
+  SUSPENDIDO: 'SUSPENDIDO',
+  EN_CONVENIO: 'EN_CONVENIO',
+  RETIRADO: 'RETIRADO',
+  RECONEXION: 'RECONEXION',
+} as const;
+
+export type EstadoContrato =
+  (typeof EstadoContrato)[keyof typeof EstadoContrato];
+
+// Fuente: models/logica-de-negocio/Contratos.prisma
+
+export const EstadoConvenio = {
+  ACTIVO: 'ACTIVO',
+  PENDIENTE_ABONO: 'PENDIENTE_ABONO',
+  PREPARADO: 'PREPARADO',
+  ANULADO: 'ANULADO',
+  PAGADO: 'PAGADO',
+} as const;
+
+export type EstadoConvenio =
+  (typeof EstadoConvenio)[keyof typeof EstadoConvenio];
+
+// Fuente: models/logica-de-negocio/Convenios.prisma
+
+export const EstadoCuotaConvenio = {
+  PENDIENTE: 'PENDIENTE',
+  PAGADA: 'PAGADA',
+} as const;
+
+export type EstadoCuotaConvenio =
+  (typeof EstadoCuotaConvenio)[keyof typeof EstadoCuotaConvenio];
+
+// Fuente: models/logica-de-negocio/CuotaConvenio.prisma
+
+export const EstadoDeuda = {
+  GENERADA: 'GENERADA',
+  EN_REVISION: 'EN_REVISION',
+  APROBADA: 'APROBADA',
+} as const;
+
+export type EstadoDeuda = (typeof EstadoDeuda)[keyof typeof EstadoDeuda];
+
+// Fuente: models/logica-de-negocio/Contratos.prisma
+
+export const EstadoLectura = {
+  PENDIENTE: 'PENDIENTE',
+  POR_REVISION: 'POR_REVISION',
+  APROBADA: 'APROBADA',
+  RECHAZADA_VERIFICACION: 'RECHAZADA_VERIFICACION',
+  ESTIMADA: 'ESTIMADA',
+  PLANILLADA: 'PLANILLADA',
+} as const;
+
+export type EstadoLectura = (typeof EstadoLectura)[keyof typeof EstadoLectura];
+
+// Fuente: models/logica-de-negocio/Lecturas.prisma
+
+export const EstadoLote = {
+  BORRADOR: 'BORRADOR',
+  DEFINITIVO: 'DEFINITIVO',
+  ENVIADO: 'ENVIADO',
+} as const;
+
+export type EstadoLote = (typeof EstadoLote)[keyof typeof EstadoLote];
+
+// Fuente: models/facturacion/Lote.prisma
+
+export const EstadoMedidor = {
+  BODEGA: 'BODEGA',
+  INSTALADO: 'INSTALADO',
+  DANADO: 'DANADO',
+  PENDIENTE: 'PENDIENTE',
+  BAJA: 'BAJA',
+} as const;
+
+export type EstadoMedidor = (typeof EstadoMedidor)[keyof typeof EstadoMedidor];
+
+// Fuente: models/logica-de-negocio/Medidores.prisma
+
+export const EstadoPeriodo = {
+  ABIERTO: 'ABIERTO',
+  CERRADO: 'CERRADO',
+  PROCESANDO: 'PROCESANDO',
+} as const;
+
+export type EstadoPeriodo = (typeof EstadoPeriodo)[keyof typeof EstadoPeriodo];
+
+// Fuente: models/facturacion/Periodos.prisma
+
+export const EstadoPrefactura = {
+  GENERADA: 'GENERADA',
+  EN_REVISION: 'EN_REVISION',
+  APROBADA: 'APROBADA',
+  RECHAZADA: 'RECHAZADA',
+  ANULADA: 'ANULADA',
+  PAGADA: 'PAGADA',
+} as const;
+
+export type EstadoPrefactura =
+  (typeof EstadoPrefactura)[keyof typeof EstadoPrefactura];
+
+// Fuente: models/facturacion/Prefacturas.prisma
+
+export const EstadoRuta = {
+  PENDIENTE: 'PENDIENTE',
+  EN_PROGRESO: 'EN_PROGRESO',
+  COMPLETADA: 'COMPLETADA',
+  PARCIAL: 'PARCIAL',
+  CANCELADA: 'CANCELADA',
+} as const;
+
+export type EstadoRuta = (typeof EstadoRuta)[keyof typeof EstadoRuta];
+
+// Fuente: models/logica-de-negocio/Rutas.prisma
+
+export const EstadoValidacionPago = {
+  REPORTADO: 'REPORTADO',
+  VALIDANDO: 'VALIDANDO',
+  APROBADO: 'APROBADO',
+  RECHAZADO: 'RECHAZADO',
+  CONCILIADO: 'CONCILIADO',
+} as const;
+
+export type EstadoValidacionPago =
+  (typeof EstadoValidacionPago)[keyof typeof EstadoValidacionPago];
+
+// Fuente: models/logica-de-negocio/Pagos.prisma
+
+export const TipoAnomalia = {
+  FUGA: 'FUGA',
+  MEDIDOR_DAÑADO: 'MEDIDOR_DAÑADO',
+  LECTURA_ERRONEA: 'LECTURA_ERRONEA',
+  OTRO: 'OTRO',
+} as const;
+
+export type TipoAnomalia = (typeof TipoAnomalia)[keyof typeof TipoAnomalia];
+
+// Fuente: models/logica-de-negocio/LecturaAnomalia.prisma
+
+export const TipoDescuento = {
+  TERCERA_EDAD: 'TERCERA_EDAD',
+  DISCAPACIDAD: 'DISCAPACIDAD',
+  INTERES_MORA: 'INTERES_MORA',
+  EXENCION_TASA: 'EXENCION_TASA',
+  CONVENIO: 'CONVENIO',
+  OTROS: 'OTROS',
+} as const;
+
+export type TipoDescuento = (typeof TipoDescuento)[keyof typeof TipoDescuento];
+
+// Fuente: models/facturacion/DescuentoDetalle.prisma
+
+export const TipoDetallePago = {
+  COMPROBANTE: 'COMPROBANTE',
+  CUOTA_CONVENIO: 'CUOTA_CONVENIO',
+  PAGO_LIBRE: 'PAGO_LIBRE',
+  SALDO_FAVOR: 'SALDO_FAVOR',
+} as const;
+
+export type TipoDetallePago =
+  (typeof TipoDetallePago)[keyof typeof TipoDetallePago];
+
+// Fuente: models/logica-de-negocio/DetallePago.prisma
+
+export const TipoOrigenAbono = {
+  PAGO_EXCESO: 'PAGO_EXCESO',
+  AJUSTE_RECLAMO: 'AJUSTE_RECLAMO',
+  OTROS: 'OTROS',
+} as const;
+
+export type TipoOrigenAbono =
+  (typeof TipoOrigenAbono)[keyof typeof TipoOrigenAbono];
+
+// Fuente: models/logica-de-negocio/SaldoFavorCliente.prisma
+
+export const TipoRubro = {
+  FIJO: 'FIJO',
+  VARIABLE: 'VARIABLE',
+  MULTA: 'MULTA',
+  OTRO: 'OTRO',
+  BIEN: 'BIEN',
+  SERVICIO: 'SERVICIO',
+} as const;
+
+export type TipoRubro = (typeof TipoRubro)[keyof typeof TipoRubro];
+
+// Fuente: models/logica-de-negocio/Rubros.prisma
+
+export const TipoRuta = {
+  TOMA_LECTURA: 'TOMA_LECTURA',
+  RECONEXION: 'RECONEXION',
+} as const;
+
+export type TipoRuta = (typeof TipoRuta)[keyof typeof TipoRuta];
+
+// Fuente: models/logica-de-negocio/Rutas.prisma

@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { TipoAnomalia, EstadoAnomalia } from 'src/generated/prisma/client';
+import { TipoAnomalia, EstadoAnomalia } from 'src/shared/enums';
 
 export class ReadingAnomalyEntity {
   @ApiProperty({ example: '1', description: 'ID de la anomalía' })

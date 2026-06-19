@@ -1,4 +1,4 @@
-import type { EstadoGenerico } from 'src/generated/prisma/client';
+import type { EstadoContrato } from 'src/shared/enums';
 
 export interface CreateContractWithMeterCommand {
   clienteId: bigint;
@@ -8,7 +8,7 @@ export interface CreateContractWithMeterCommand {
   sectorId: number | null;
   numeroGuia: string;
   direccionSuministro: string;
-  estado: EstadoGenerico;
+  estado: EstadoContrato;
   creadoPor?: string;
   lecturaInicial: number;
 }

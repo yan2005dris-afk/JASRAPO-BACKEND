@@ -1,4 +1,4 @@
-import { EstadoPrefactura } from 'src/generated/prisma/enums';
+import { EstadoPrefactura } from 'src/shared/enums';
 
 /**
  * Generate state catalog from Prisma enum.

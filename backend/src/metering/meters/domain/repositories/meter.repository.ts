@@ -59,4 +59,8 @@ export abstract class MeterRepository {
   ): Promise<void>;
 
   abstract executeTransaction<T>(callback: (tx: any) => Promise<T>): Promise<T>;
+
+  abstract findActiveContractForMeter(
+    medidorId: bigint,
+  ): Promise<{ contratoId: bigint; estado: string } | null>;
 }
