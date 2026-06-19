@@ -1,6 +1,5 @@
 import type { ReadingAnomalyEntity } from '../entities/reading-anomaly.entity';
-import type { TipoAnomalia } from '../enums/tipo-anomalia.enum';
-import type { EstadoAnomalia } from '../enums/estado-anomalia.enum';
+import type { TipoAnomalia, EstadoAnomalia } from 'src/shared/enums';
 
 export interface CreateReadingAnomalyRepositoryData {
   lecturaId: bigint;

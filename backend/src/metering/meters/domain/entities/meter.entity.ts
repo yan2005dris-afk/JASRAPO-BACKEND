@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { EstadoMedidor } from '../enums/estado-medidor.enum';
+import { EstadoMedidor } from 'src/shared/enums';
 
 export class MeterEntity {
   @ApiProperty({ example: '1', description: 'ID del medidor' })

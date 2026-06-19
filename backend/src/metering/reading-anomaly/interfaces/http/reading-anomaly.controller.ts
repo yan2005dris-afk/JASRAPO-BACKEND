@@ -13,8 +13,7 @@ import { ReadingAnomalyService } from '../../application/reading-anomaly.service
 import { CreateReadingAnomalyDto } from '../dto/create-reading-anomaly.dto';
 import { UpdateReadingAnomalyDto } from '../dto/update-reading-anomaly.dto';
 import { ResponseReadingAnomalyDto } from '../dto/response-reading-anomaly.dto';
-import { TipoAnomalia } from '../../domain/enums/tipo-anomalia.enum';
-import { EstadoAnomalia } from '../../domain/enums/estado-anomalia.enum';
+import { TipoAnomalia, EstadoAnomalia } from 'src/shared/enums';
 import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
 import {
   ApiTags,

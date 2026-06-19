@@ -7,7 +7,7 @@ import {
   IsString,
 } from 'class-validator';
 import { CreateMeterDto } from './create-meter.dto';
-import { EstadoMedidor } from '../../domain/enums/estado-medidor.enum';
+import { EstadoMedidor } from 'src/shared/enums';
 
 export class UpdateMeterDto extends PartialType(CreateMeterDto) {
   @IsOptional()

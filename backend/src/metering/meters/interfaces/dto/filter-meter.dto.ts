@@ -2,7 +2,7 @@ import { IsEnum, IsOptional, IsString } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
-import { EstadoMedidor } from '../../domain/enums/estado-medidor.enum';
+import { EstadoMedidor } from 'src/shared/enums';
 
 export class FilterMeterDto extends PaginationDto {
   @ApiPropertyOptional({ enum: EstadoMedidor })

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { EstadoContrato } from '../../domain/enums/estado-contrato.enum';
+import { EstadoContrato } from 'src/shared/enums';
 import { ContractRepository } from '../../domain/repositories/contract.repository';
 import { CrearContratoMedidorDto } from '../../interfaces/dto/create-contrato-medidor.dto';
 

@@ -3,7 +3,7 @@ import { Test } from '@nestjs/testing';
 import { GetEligibleReadingsUseCase } from './get-eligible-readings.use-case';
 import { RouteRepository } from '../../domain/repositories/route.repository';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
-import { EstadoContrato } from 'src/operations/contracts/domain/enums/estado-contrato.enum';
+import { EstadoContrato } from 'src/shared/enums';
 
 describe('GetEligibleReadingsUseCase', () => {
   let useCase: GetEligibleReadingsUseCase;

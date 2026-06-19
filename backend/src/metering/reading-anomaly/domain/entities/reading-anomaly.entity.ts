@@ -1,6 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { TipoAnomalia } from '../enums/tipo-anomalia.enum';
-import { EstadoAnomalia } from '../enums/estado-anomalia.enum';
+import { TipoAnomalia, EstadoAnomalia } from 'src/shared/enums';
 
 export class ReadingAnomalyEntity {
   @ApiProperty({ example: '1', description: 'ID de la anomalía' })

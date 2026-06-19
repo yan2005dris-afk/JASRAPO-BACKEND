@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { Prisma } from 'src/generated/prisma/client';
-import { EstadoMedidor } from 'src/metering/meters/domain/enums/estado-medidor.enum';
+import { EstadoMedidor } from 'src/shared/enums';
 import { ContractRepository } from '../../domain/repositories/contract.repository';
 import { ContractEntity } from '../../domain/entities/contract.entity';
 import { CreateContractData } from '../../domain/types/create-contract-data';

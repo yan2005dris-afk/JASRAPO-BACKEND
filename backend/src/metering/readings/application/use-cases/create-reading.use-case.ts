@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { ReadingRepository } from '../../domain/repositories/reading.repository';
 import { CrearLecturaDto } from '../../interfaces/dto/create-lectura.dto';
-import { EstadoLectura } from '../../domain/enums/estado-lectura.enum';
+import { EstadoLectura } from 'src/shared/enums';
 import { LecturaEntity } from '../../domain/entities/lectura.entity';
 
 @Injectable()

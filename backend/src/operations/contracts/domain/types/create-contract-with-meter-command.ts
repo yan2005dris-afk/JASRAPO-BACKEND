@@ -1,4 +1,4 @@
-import type { EstadoContrato } from '../enums/estado-contrato.enum';
+import type { EstadoContrato } from 'src/shared/enums';
 
 export interface CreateContractWithMeterCommand {
   clienteId: bigint;

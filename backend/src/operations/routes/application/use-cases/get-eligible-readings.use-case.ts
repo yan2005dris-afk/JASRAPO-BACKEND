@@ -3,7 +3,7 @@ import {
   BadRequestException,
   NotFoundException,
 } from '@nestjs/common';
-import { EstadoContrato } from 'src/operations/contracts/domain/enums/estado-contrato.enum';
+import { EstadoContrato } from 'src/shared/enums';
 import { RouteRepository } from '../../domain/repositories/route.repository';
 import { ReadingForRouteEntity } from '../../domain/entities/reading-for-route.entity';
 import { PaginateOptions } from 'src/infrastructure/common/utils/pagination.util';

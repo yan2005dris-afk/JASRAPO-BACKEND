@@ -2,7 +2,7 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { MeterController } from './meter.controller';
 import { MeterService } from '../../application/meter.service';
-import { EstadoMedidor } from '../../domain/enums/estado-medidor.enum';
+import { EstadoMedidor } from 'src/shared/enums';
 
 describe('MeterController', () => {
   let controller: MeterController;

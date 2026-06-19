@@ -22,7 +22,8 @@
     ]
   },
   "scripts": {
-    "prisma:generate": "prisma generate",
+    "prisma:generate": "prisma generate && npm run enums:generate",
+    "enums:generate": "tsx scripts/generate-enums.ts",
     "prestart": "npm run prisma:generate",
     "prestart:dev": "npm run prisma:generate",
     "prestart:debug": "npm run prisma:generate",
