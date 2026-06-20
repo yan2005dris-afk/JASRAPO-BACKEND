@@ -56,6 +56,7 @@ describe('CreateClientUseCase', () => {
         identificacion: '0926715658',
         nombres: 'John',
         apellidos: 'Doe',
+        direccionDomicilio: 'Av. Siempre Viva 123',
       };
 
       mockClientRepository.findUnique.mockResolvedValue(null);
@@ -82,6 +83,7 @@ describe('CreateClientUseCase', () => {
         identificacion: '0926715658',
         nombres: 'John',
         apellidos: 'Doe',
+        direccionDomicilio: 'Av. Siempre Viva 123',
       };
 
       mockClientRepository.findUnique.mockResolvedValue({
@@ -98,6 +100,7 @@ describe('CreateClientUseCase', () => {
         identificacion: '0926715658',
         nombres: 'John',
         apellidos: 'Doe',
+        direccionDomicilio: 'Av. Siempre Viva 123',
       };
 
       mockClientRepository.findUnique.mockResolvedValue({

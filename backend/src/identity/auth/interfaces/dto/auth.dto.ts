@@ -1,12 +1,12 @@
 import {
   IsEmail,
-  IsString,
-  IsNotEmpty,
   MinLength,
   IsOptional,
   IsEnum,
+  MaxLength,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { IsNotEmptyString } from 'src/infrastructure/common/decorators/is-not-empty-string.decorator';
 
 export enum UserRole {
   SUPERADMIN = 'SUPERADMIN',
@@ -17,25 +17,27 @@ export enum UserRole {
 export class LoginDto {
   @ApiProperty({ example: 'admin@empresa.com' })
   @IsEmail({}, { message: 'El email no es válido' })
-  @IsNotEmpty()
+  @IsNotEmptyString()
+  @MaxLength(255)
   email: string;
 
   @ApiProperty({ example: 'password123' })
-  @IsString()
-  @IsNotEmpty()
+  @IsNotEmptyString()
+  @MaxLength(128)
   password: string;
 }
 
 export class RegisterUserDto {
   @ApiProperty({ example: 'admin@empresa.com' })
   @IsEmail({}, { message: 'El email no es válido' })
-  @IsNotEmpty()
+  @IsNotEmptyString()
+  @MaxLength(255)
   email: string;
 
   @ApiProperty({ example: 'SecurePass123!', minLength: 8 })
-  @IsString()
+  @IsNotEmptyString()
+  @MaxLength(128)
   @MinLength(8, { message: 'La contraseña debe tener al menos 8 caracteres' })
-  @IsNotEmpty()
   password: string;
 
   @ApiProperty({ enum: UserRole, default: UserRole.USER })
@@ -46,14 +48,14 @@ export class RegisterUserDto {
 
 export class ChangePasswordDto {
   @ApiProperty()
-  @IsString()
-  @IsNotEmpty()
+  @IsNotEmptyString()
+  @MaxLength(128)
   currentPassword: string;
 
   @ApiProperty({ minLength: 8 })
-  @IsString()
+  @IsNotEmptyString()
+  @MaxLength(128)
   @MinLength(8)
-  @IsNotEmpty()
   newPassword: string;
 }
 
@@ -98,7 +100,7 @@ export class JwtPayload {
 
 export class RefreshTokenDto {
   @ApiProperty({ description: 'El refresh token obtenido en el login' })
-  @IsString()
-  @IsNotEmpty()
+  @IsNotEmptyString()
+  @MaxLength(500)
   refreshToken: string;
 }

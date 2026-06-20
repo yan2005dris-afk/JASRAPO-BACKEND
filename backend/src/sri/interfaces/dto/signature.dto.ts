@@ -1,12 +1,12 @@
 import {
-  IsString,
-  IsNotEmpty,
   IsOptional,
   IsObject,
   IsNumber,
+  MaxLength,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsNotEmptyString } from 'src/infrastructure/common/decorators/is-not-empty-string.decorator';
 
 export class SignaturePositionDto {
   @ApiPropertyOptional({
@@ -29,13 +29,13 @@ export class SignaturePositionDto {
 
 export class SignPdfDto {
   @ApiProperty({ description: 'Nombre del archivo de certificado P12' })
-  @IsString()
-  @IsNotEmpty()
+  @IsNotEmptyString()
+  @MaxLength(255)
   certFile: string;
 
   @ApiProperty({ description: 'Contraseña del certificado' })
-  @IsString()
-  @IsNotEmpty()
+  @IsNotEmptyString()
+  @MaxLength(128)
   password: string;
 
   @ApiPropertyOptional({
@@ -54,13 +54,13 @@ export class GenerateAndSignPdfDto {
   jsonData: Record<string, unknown>;
 
   @ApiProperty({ description: 'Nombre del archivo de certificado P12' })
-  @IsString()
-  @IsNotEmpty()
+  @IsNotEmptyString()
+  @MaxLength(255)
   certFile: string;
 
   @ApiProperty({ description: 'Contraseña del certificado' })
-  @IsString()
-  @IsNotEmpty()
+  @IsNotEmptyString()
+  @MaxLength(128)
   password: string;
 
   @ApiPropertyOptional({

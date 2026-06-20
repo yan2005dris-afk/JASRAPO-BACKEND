@@ -7,26 +7,28 @@ import {
   IsEnum,
   IsNumber,
   Min,
-  IsNotEmpty,
   IsIn,
+  MaxLength,
+  IsEmail,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { EmisorDto, CampoAdicionalDto } from './common.dto';
 import { Ambiente, TipoEmision } from '../../domain/constants';
+import { IsNotEmptyString } from 'src/infrastructure/common/decorators/is-not-empty-string.decorator';
 
 /**
  * Impuesto del documento sustento (factura original)
  */
 export class ImpuestoDocSustentoDto {
   @ApiProperty({ description: 'Código del impuesto (2=IVA, 3=ICE, 5=IRBPNR)' })
-  @IsString()
-  @IsNotEmpty()
+  @IsNotEmptyString()
+  @MaxLength(10)
   codImpuestoDocSustento: string;
 
   @ApiProperty({ description: 'Código porcentaje (0=0%, 2=12%, 3=14%, 4=15%)' })
-  @IsString()
-  @IsNotEmpty()
+  @IsNotEmptyString()
+  @MaxLength(10)
   codigoPorcentaje: string;
 
   @ApiProperty({ description: 'Base imponible del impuesto' })
@@ -50,13 +52,13 @@ export class ImpuestoDocSustentoDto {
  */
 export class ImpuestoRetenidoDto {
   @ApiProperty({ description: 'Código del impuesto (1=Renta, 2=IVA, 6=ISD)' })
-  @IsString()
-  @IsNotEmpty()
+  @IsNotEmptyString()
+  @MaxLength(10)
   codigo: string;
 
   @ApiProperty({ description: 'Código de retención según catálogo SRI' })
-  @IsString()
-  @IsNotEmpty()
+  @IsNotEmptyString()
+  @MaxLength(10)
   codigoRetencion: string;
 
   @ApiProperty({
@@ -166,23 +168,26 @@ export class SujetoRetenidoDto {
   tipoSujetoRetenido?: '01' | '02';
 
   @ApiProperty({ description: 'Número de identificación del sujeto retenido' })
-  @IsString()
-  @IsNotEmpty()
+  @IsNotEmptyString()
+  @MaxLength(20)
   identificacion: string;
 
   @ApiProperty({ description: 'Razón social del sujeto retenido' })
-  @IsString()
-  @IsNotEmpty()
+  @IsNotEmptyString()
+  @MaxLength(300)
   razonSocial: string;
 
   @ApiPropertyOptional({ description: 'Dirección del sujeto retenido' })
   @IsOptional()
-  @IsString()
+  @IsNotEmptyString()
+  @MaxLength(300)
   direccion?: string;
 
   @ApiPropertyOptional({ description: 'Email del sujeto retenido' })
   @IsOptional()
-  @IsString()
+  @IsNotEmptyString()
+  @IsEmail()
+  @MaxLength(255)
   email?: string;
 }
 

@@ -1,16 +1,17 @@
 import {
   IsString,
-  IsNotEmpty,
   IsOptional,
   Length,
   Matches,
+  MaxLength,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsNotEmptyString } from 'src/infrastructure/common/decorators/is-not-empty-string.decorator';
 
 export class UploadCertificateDto {
   @ApiProperty({ description: 'Contraseña del certificado P12' })
-  @IsString()
-  @IsNotEmpty()
+  @IsNotEmptyString()
+  @MaxLength(128)
   password: string;
 
   @ApiPropertyOptional({
@@ -27,7 +28,7 @@ export class UploadCertificateDto {
 
 export class ValidateCertificateDto {
   @ApiProperty({ description: 'Contraseña del certificado P12' })
-  @IsString()
-  @IsNotEmpty()
+  @IsNotEmptyString()
+  @MaxLength(128)
   password: string;
 }

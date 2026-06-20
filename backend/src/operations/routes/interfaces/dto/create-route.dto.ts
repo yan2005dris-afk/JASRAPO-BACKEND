@@ -4,16 +4,19 @@ import {
   IsOptional,
   IsIn,
   IsDateString,
+  MaxLength,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
+import { IsNotEmptyString } from 'src/infrastructure/common/decorators/is-not-empty-string.decorator';
 
 export class CreateRouteDto {
   @ApiProperty({
     description: 'Nombre descriptivo de la ruta',
     example: 'Ruta Sector Norte - 2026-05-10',
   })
-  @IsNotEmpty()
+  @IsNotEmptyString()
+  @MaxLength(200)
   nombre!: string;
 
   @ApiProperty({
@@ -22,6 +25,8 @@ export class CreateRouteDto {
     example: 'Toma de lecturas del sector norte',
   })
   @IsOptional()
+  @IsNotEmptyString()
+  @MaxLength(500)
   descripcion?: string;
 
   @ApiProperty({

@@ -9,8 +9,10 @@ import {
   Min,
   Max,
   ArrayNotEmpty,
+  MaxLength,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsNotEmptyString } from 'src/infrastructure/common/decorators/is-not-empty-string.decorator';
 
 export const WEBHOOK_EVENTS = [
   'comprobante.creado',
@@ -26,7 +28,8 @@ export type WebhookEvent = (typeof WEBHOOK_EVENTS)[number];
 
 export class CreateWebhookDto {
   @ApiProperty({ description: 'Nombre identificador del webhook' })
-  @IsString()
+  @IsNotEmptyString()
+  @MaxLength(200)
   nombre: string;
 
   @ApiProperty({ description: 'URL a la que se enviarán las notificaciones' })

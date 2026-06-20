@@ -8,11 +8,13 @@ import {
   Min,
   Length,
   Matches,
-  IsNotEmpty,
+  MaxLength,
+  IsEmail,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { TipoIdentificacion, FormaPago } from '../../domain/constants';
+import { IsNotEmptyString } from 'src/infrastructure/common/decorators/is-not-empty-string.decorator';
 
 export class EmisorDto {
   @ApiProperty({ description: 'RUC del emisor (13 dígitos)' })
@@ -22,23 +24,25 @@ export class EmisorDto {
   ruc: string;
 
   @ApiProperty({ description: 'Razón social del emisor' })
-  @IsString()
-  @IsNotEmpty()
+  @IsNotEmptyString()
+  @MaxLength(300)
   razonSocial: string;
 
   @ApiPropertyOptional({ description: 'Nombre comercial' })
   @IsOptional()
-  @IsString()
+  @IsNotEmptyString()
+  @MaxLength(300)
   nombreComercial?: string;
 
   @ApiProperty({ description: 'Dirección de la matriz' })
-  @IsString()
-  @IsNotEmpty()
+  @IsNotEmptyString()
+  @MaxLength(300)
   dirMatriz: string;
 
   @ApiPropertyOptional({ description: 'Dirección del establecimiento' })
   @IsOptional()
-  @IsString()
+  @IsNotEmptyString()
+  @MaxLength(300)
   dirEstablecimiento?: string;
 
   @ApiProperty({ description: 'Código del establecimiento (3 dígitos)' })
@@ -62,12 +66,14 @@ export class EmisorDto {
 
   @ApiPropertyOptional({ description: 'Contribuyente especial' })
   @IsOptional()
-  @IsString()
+  @IsNotEmptyString()
+  @MaxLength(20)
   contribuyenteEspecial?: string;
 
   @ApiPropertyOptional({ description: 'Número de agente de retención' })
   @IsOptional()
-  @IsString()
+  @IsNotEmptyString()
+  @MaxLength(20)
   agenteRetencion?: string;
 
   @ApiPropertyOptional({ description: 'Régimen RIMPE' })
@@ -85,28 +91,32 @@ export class CompradorDto {
   tipoIdentificacion: TipoIdentificacion;
 
   @ApiProperty({ description: 'Número de identificación' })
-  @IsString()
-  @IsNotEmpty()
+  @IsNotEmptyString()
+  @MaxLength(20)
   identificacion: string;
 
   @ApiProperty({ description: 'Razón social o nombre del comprador' })
-  @IsString()
-  @IsNotEmpty()
+  @IsNotEmptyString()
+  @MaxLength(300)
   razonSocial: string;
 
   @ApiPropertyOptional({ description: 'Dirección del comprador' })
   @IsOptional()
-  @IsString()
+  @IsNotEmptyString()
+  @MaxLength(300)
   direccion?: string;
 
   @ApiPropertyOptional({ description: 'Teléfono del comprador' })
   @IsOptional()
-  @IsString()
+  @IsNotEmptyString()
+  @MaxLength(20)
   telefono?: string;
 
   @ApiPropertyOptional({ description: 'Email del comprador' })
   @IsOptional()
-  @IsString()
+  @IsNotEmptyString()
+  @IsEmail()
+  @MaxLength(255)
   email?: string;
 }
 
@@ -137,35 +147,37 @@ export class ImpuestoDetalleDto {
 
 export class DetalleAdicionalDto {
   @ApiProperty({ description: 'Nombre del campo adicional' })
-  @IsString()
-  @IsNotEmpty()
+  @IsNotEmptyString()
+  @MaxLength(100)
   nombre: string;
 
   @ApiProperty({ description: 'Valor del campo adicional' })
-  @IsString()
-  @IsNotEmpty()
+  @IsNotEmptyString()
+  @MaxLength(255)
   valor: string;
 }
 
 export class DetalleFacturaDto {
   @ApiProperty({ description: 'Código principal del producto' })
-  @IsString()
-  @IsNotEmpty()
+  @IsNotEmptyString()
+  @MaxLength(50)
   codigoPrincipal: string;
 
   @ApiPropertyOptional({ description: 'Código auxiliar del producto' })
   @IsOptional()
-  @IsString()
+  @IsNotEmptyString()
+  @MaxLength(50)
   codigoAuxiliar?: string;
 
   @ApiProperty({ description: 'Descripción del producto o servicio' })
-  @IsString()
-  @IsNotEmpty()
+  @IsNotEmptyString()
+  @MaxLength(500)
   descripcion: string;
 
   @ApiPropertyOptional({ description: 'Unidad de medida' })
   @IsOptional()
-  @IsString()
+  @IsNotEmptyString()
+  @MaxLength(50)
   unidadMedida?: string;
 
   @ApiProperty({ description: 'Cantidad' })
@@ -232,12 +244,12 @@ export class PagoDto {
 
 export class CampoAdicionalDto {
   @ApiProperty({ description: 'Nombre del campo' })
-  @IsString()
-  @IsNotEmpty()
+  @IsNotEmptyString()
+  @MaxLength(100)
   nombre: string;
 
   @ApiProperty({ description: 'Valor del campo' })
-  @IsString()
-  @IsNotEmpty()
+  @IsNotEmptyString()
+  @MaxLength(255)
   valor: string;
 }

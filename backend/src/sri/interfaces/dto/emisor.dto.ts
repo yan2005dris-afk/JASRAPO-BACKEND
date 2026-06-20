@@ -4,9 +4,10 @@ import {
   IsBoolean,
   Length,
   Matches,
-  IsNotEmpty,
+  MaxLength,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsNotEmptyString } from 'src/infrastructure/common/decorators/is-not-empty-string.decorator';
 
 export class CreateEmisorDto {
   @ApiProperty({ description: 'RUC del emisor (13 dígitos)' })
@@ -16,18 +17,19 @@ export class CreateEmisorDto {
   ruc: string;
 
   @ApiProperty({ description: 'Razón social' })
-  @IsString()
-  @IsNotEmpty()
+  @IsNotEmptyString()
+  @MaxLength(300)
   razonSocial: string;
 
   @ApiPropertyOptional({ description: 'Nombre comercial' })
   @IsOptional()
-  @IsString()
+  @IsNotEmptyString()
+  @MaxLength(300)
   nombreComercial?: string;
 
   @ApiProperty({ description: 'Dirección matriz' })
-  @IsString()
-  @IsNotEmpty()
+  @IsNotEmptyString()
+  @MaxLength(300)
   direccionMatriz: string;
 
   @ApiPropertyOptional({ description: 'Obligado a llevar contabilidad' })
@@ -37,12 +39,14 @@ export class CreateEmisorDto {
 
   @ApiPropertyOptional({ description: 'Número de contribuyente especial' })
   @IsOptional()
-  @IsString()
+  @IsNotEmptyString()
+  @MaxLength(20)
   contribuyenteEspecial?: string;
 
   @ApiPropertyOptional({ description: 'Código de agente de retención' })
   @IsOptional()
-  @IsString()
+  @IsNotEmptyString()
+  @MaxLength(20)
   agenteRetencion?: string;
 
   @ApiPropertyOptional({ description: 'Es contribuyente RIMPE' })
@@ -54,7 +58,8 @@ export class CreateEmisorDto {
     description: 'Ambiente SRI: 1/pruebas o 2/produccion',
   })
   @IsOptional()
-  @IsString()
+  @IsNotEmptyString()
+  @MaxLength(1)
   ambiente?: string;
 }
 
@@ -159,7 +164,7 @@ export class EmisorResponseDto {
 
 export class UploadCertificadoDto {
   @ApiProperty({ description: 'Contraseña del certificado P12' })
-  @IsString()
-  @IsNotEmpty()
+  @IsNotEmptyString()
+  @MaxLength(128)
   password: string;
 }

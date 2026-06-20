@@ -2,21 +2,21 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   IsInt,
-  IsNotEmpty,
   IsNumber,
   IsOptional,
   IsPositive,
-  IsString,
+  MaxLength,
   Min,
 } from 'class-validator';
+import { IsNotEmptyString } from 'src/infrastructure/common/decorators/is-not-empty-string.decorator';
 
 export class CreateAgreementDto {
   @ApiProperty({
     description: 'ID del contrato al que pertenece el convenio',
     example: '1',
   })
-  @IsNotEmpty()
-  @IsString()
+  @IsNotEmptyString()
+  @MaxLength(50)
   contratoId: string;
 
   @ApiProperty({
@@ -46,8 +46,8 @@ export class CreateAgreementDto {
     description: 'Fecha del primer pago de cuota (YYYY-MM-DD)',
     example: '2026-06-01',
   })
-  @IsNotEmpty()
-  @IsString()
+  @IsNotEmptyString()
+  @MaxLength(10)
   fechaPrimerPago: string;
 
   @ApiPropertyOptional({
@@ -55,6 +55,7 @@ export class CreateAgreementDto {
     example: 'El cliente solicita plazo por problemas económicos temporales',
   })
   @IsOptional()
-  @IsString()
+  @IsNotEmptyString()
+  @MaxLength(500)
   motivo?: string;
 }

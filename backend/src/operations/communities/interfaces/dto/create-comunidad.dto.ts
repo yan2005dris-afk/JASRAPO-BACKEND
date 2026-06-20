@@ -1,10 +1,13 @@
-import { IsNumber, IsString } from 'class-validator';
+import { IsNumber, MaxLength } from 'class-validator';
+import { IsNotEmptyString } from 'src/infrastructure/common/decorators/is-not-empty-string.decorator';
 
 export class CreateComunidadDto {
-  @IsString()
+  @IsNotEmptyString()
+  @MaxLength(150)
   nombre: string;
 
-  @IsString()
+  @IsNotEmptyString()
+  @MaxLength(50)
   codigo: string;
 
   @IsNumber()

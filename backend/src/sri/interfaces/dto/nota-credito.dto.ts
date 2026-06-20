@@ -7,7 +7,7 @@ import {
   IsEnum,
   IsNumber,
   Min,
-  IsNotEmpty,
+  MaxLength,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
@@ -19,14 +19,15 @@ import {
   DetalleAdicionalDto,
 } from './common.dto';
 import { Ambiente, TipoEmision } from '../../domain/constants';
+import { IsNotEmptyString } from 'src/infrastructure/common/decorators/is-not-empty-string.decorator';
 
 /**
  * Detalle de un producto/servicio en la nota de crédito
  */
 export class DetalleNotaCreditoDto {
   @ApiProperty({ description: 'Código principal del producto' })
-  @IsString()
-  @IsNotEmpty()
+  @IsNotEmptyString()
+  @MaxLength(50)
   codigoPrincipal: string;
 
   @ApiPropertyOptional({ description: 'Código auxiliar del producto' })
@@ -35,8 +36,8 @@ export class DetalleNotaCreditoDto {
   codigoAuxiliar?: string;
 
   @ApiProperty({ description: 'Descripción del producto o servicio' })
-  @IsString()
-  @IsNotEmpty()
+  @IsNotEmptyString()
+  @MaxLength(500)
   descripcion: string;
 
   @ApiProperty({ description: 'Cantidad' })
@@ -151,8 +152,8 @@ export class CreateNotaCreditoDto {
   fechaEmisionDocSustento: string;
 
   @ApiProperty({ description: 'Motivo de la nota de crédito' })
-  @IsString()
-  @IsNotEmpty()
+  @IsNotEmptyString()
+  @MaxLength(500)
   motivo: string;
 
   @ApiProperty({

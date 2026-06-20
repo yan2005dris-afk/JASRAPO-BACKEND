@@ -7,7 +7,7 @@ import {
   IsEnum,
   IsNumber,
   Min,
-  IsNotEmpty,
+  MaxLength,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
@@ -18,14 +18,15 @@ import {
   CampoAdicionalDto,
 } from './common.dto';
 import { Ambiente, TipoEmision } from '../../domain/constants';
+import { IsNotEmptyString } from 'src/infrastructure/common/decorators/is-not-empty-string.decorator';
 
 /**
  * Motivo/Razón de la nota de débito
  */
 export class MotivoNotaDebitoDto {
   @ApiProperty({ description: 'Razón del cargo adicional' })
-  @IsString()
-  @IsNotEmpty()
+  @IsNotEmptyString()
+  @MaxLength(500)
   razon: string;
 
   @ApiProperty({ description: 'Valor del cargo' })

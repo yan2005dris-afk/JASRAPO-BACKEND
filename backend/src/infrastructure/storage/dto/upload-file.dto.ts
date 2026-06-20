@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsNotEmptyString } from 'src/infrastructure/common/decorators/is-not-empty-string.decorator';
 
 export class UploadFileQueryDto {
   @ApiProperty({
@@ -8,8 +9,8 @@ export class UploadFileQueryDto {
       'Se crea automáticamente si no existe.',
     example: 'documents',
   })
-  @IsString()
-  @IsNotEmpty()
+  @IsNotEmptyString()
+  @MaxLength(255)
   bucket: string;
 
   @ApiPropertyOptional({
