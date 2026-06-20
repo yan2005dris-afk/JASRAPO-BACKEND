@@ -41,8 +41,10 @@ export class PdfService
       }
     });
     Handlebars.registerHelper('eq', (a: unknown, b: unknown) => a === b);
-    Handlebars.registerHelper('isObject', (value: unknown) =>
-      typeof value === 'object' && value !== null && !Array.isArray(value),
+    Handlebars.registerHelper(
+      'isObject',
+      (value: unknown) =>
+        typeof value === 'object' && value !== null && !Array.isArray(value),
     );
     Handlebars.registerHelper('isArray', (value: unknown) =>
       Array.isArray(value),
