@@ -23,7 +23,9 @@ export class SimpleCircuitBreaker {
   async execute<T>(fn: () => Promise<T>): Promise<T> {
     if (this.state === 'OPEN') {
       if (Date.now() > this.nextAttemptTime) {
-        this.logger.warn(`Circuit Breaker is HALF-OPEN. Testing service availability.`);
+        this.logger.warn(
+          `Circuit Breaker is HALF-OPEN. Testing service availability.`,
+        );
         this.state = 'HALF-OPEN';
       } else {
         throw new Error(`Circuit Breaker is OPEN. Request fast-failed.`);

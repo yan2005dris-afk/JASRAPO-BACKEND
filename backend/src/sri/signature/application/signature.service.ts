@@ -7,7 +7,10 @@ import { SignPdf } from '@signpdf/signpdf';
 import { plainAddPlaceholder } from '@signpdf/placeholder-plain';
 import { P12Signer } from '@signpdf/signer-p12';
 import { Readable } from 'stream';
-import { StorageService, SRI_STORAGE_TYPES } from '../../../infrastructure/storage/storage.service';
+import {
+  StorageService,
+  SRI_STORAGE_TYPES,
+} from '../../../infrastructure/storage/storage.service';
 import { PrismaService } from '../../../infrastructure/database/prisma.service';
 
 export interface SignaturePosition {

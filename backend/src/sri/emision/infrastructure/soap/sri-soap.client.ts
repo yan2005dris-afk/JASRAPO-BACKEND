@@ -65,7 +65,9 @@ export class SriSoapClient {
     }
 
     const ambiente = claveAcceso.charAt(23) as '1' | '2';
-    const breaker = this.soapFactory.getCircuitBreaker(`autorizacion_${ambiente}`);
+    const breaker = this.soapFactory.getCircuitBreaker(
+      `autorizacion_${ambiente}`,
+    );
 
     try {
       const result = await breaker.execute(async () => {

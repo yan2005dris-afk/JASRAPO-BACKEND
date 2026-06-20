@@ -41,7 +41,9 @@ export class GenerateAndSignPdfUseCase {
     );
   }
 
-  async execute(input: GenerateAndSignPdfInput): Promise<GenerateAndSignPdfResult> {
+  async execute(
+    input: GenerateAndSignPdfInput,
+  ): Promise<GenerateAndSignPdfResult> {
     const { templateId, jsonData, certFile, password, position } = input;
 
     // Validate certificate

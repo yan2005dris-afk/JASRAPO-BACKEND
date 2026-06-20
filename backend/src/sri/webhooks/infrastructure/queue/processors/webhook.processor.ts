@@ -47,7 +47,7 @@ export class WebhookProcessor implements OnModuleInit {
           await this.processWebhook(job);
         } catch (error) {
           // If it is a business error (4xx/5xx responses), log and do NOT retry
-          if ((error as any).isBusinessError) {
+          if (error.isBusinessError) {
             this.logger.warn(
               `[Webhook] No se reintentará debido a error de negocio (4xx/5xx): ${(error as Error).message}`,
             );
@@ -110,7 +110,9 @@ export class WebhookProcessor implements OnModuleInit {
       await breaker.execute(async () => {
         const urlValidation = await validateSafeUrl(url);
         if (!urlValidation.safe) {
-          throw new WebhookBusinessError(`SSRF Prevention: ${urlValidation.error}`);
+          throw new WebhookBusinessError(
+            `SSRF Prevention: ${urlValidation.error}`,
+          );
         }
 
         const response = await fetch(url, {
@@ -156,7 +158,7 @@ export class WebhookProcessor implements OnModuleInit {
     } catch (error) {
       const tiempoRespuesta = Date.now() - startTime;
 
-      if (!(error as any).isBusinessError) {
+      if (!error.isBusinessError) {
         await this.logWebhook(
           configId,
           evento,
