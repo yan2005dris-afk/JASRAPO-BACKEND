@@ -6,16 +6,74 @@ import {
   readLimitedText,
 } from '../../../../../infrastructure/common/utils/url.util';
 import * as crypto from 'crypto';
+import { Agent } from 'undici';
+import {
+  WEBHOOK_DISPATCH_JOB,
+  WebhookJobData,
+} from '../../../application/contracts/webhook-job.contract';
 
-export const WEBHOOK_DISPATCH_JOB = 'webhook-dispatch';
-
-export interface WebhookJobData {
-  configId: string;
-  url: string;
-  secreto: string;
-  evento: string;
-  payload: Record<string, unknown>;
+export class WebhookBusinessError extends Error {
+  readonly isBusinessError = true;
+  constructor(message: string) {
+    super(message);
+    Object.setPrototypeOf(this, WebhookBusinessError.prototype);
+  }
 }
+
+export class WebhookCircuitBreaker {
+  private readonly logger = new Logger(WebhookCircuitBreaker.name);
+  private state: 'CLOSED' | 'OPEN' | 'HALF-OPEN' = 'CLOSED';
+  private failureCount = 0;
+  private nextAttemptTime = 0;
+
+  constructor(
+    private readonly name: string,
+    private readonly threshold = 10,
+    private readonly cooldownMs = 60000,
+  ) {}
+
+  async execute<T>(fn: () => Promise<T>): Promise<T> {
+    if (this.state === 'OPEN') {
+      if (Date.now() > this.nextAttemptTime) {
+        this.logger.warn(`Circuit Breaker [${this.name}] is HALF-OPEN. Testing service availability.`);
+        this.state = 'HALF-OPEN';
+      } else {
+        throw new Error(`Circuit Breaker [${this.name}] is OPEN. Request fast-failed.`);
+      }
+    }
+
+    try {
+      const result = await fn();
+      if (this.state === 'HALF-OPEN') {
+        this.logger.log(`Circuit Breaker [${this.name}] is CLOSED again. Service recovered.`);
+        this.state = 'CLOSED';
+        this.failureCount = 0;
+      }
+      return result;
+    } catch (error) {
+      if ((error as any).isBusinessError) {
+        // Business errors (like 4xx/5xx) do not count towards opening the circuit
+        throw error;
+      }
+
+      this.failureCount++;
+      this.logger.warn(`Failure [${this.failureCount}/${this.threshold}] on Circuit Breaker [${this.name}]: ${(error as Error).message}`);
+      
+      if (this.state === 'HALF-OPEN' || this.failureCount >= this.threshold) {
+        this.logger.error(`Circuit Breaker [${this.name}] is now OPEN. Cooldown active for ${this.cooldownMs}ms.`);
+        this.state = 'OPEN';
+        this.nextAttemptTime = Date.now() + this.cooldownMs;
+      }
+      throw error;
+    }
+  }
+}
+
+// Bulkhead connection pool configuration using undici Agent
+const globalDispatcher = new Agent({
+  connections: 50, // maxSockets limit
+  pipelining: 1,
+});
 
 /**
  * Processor de webhooks migrado a pg-boss (PostgreSQL) usando Prisma.
@@ -23,6 +81,7 @@ export interface WebhookJobData {
 @Injectable()
 export class WebhookProcessor implements OnModuleInit {
   private readonly logger = new Logger(WebhookProcessor.name);
+  private readonly breakers = new Map<string, WebhookCircuitBreaker>();
 
   constructor(
     private readonly prisma: PrismaService,
@@ -32,12 +91,37 @@ export class WebhookProcessor implements OnModuleInit {
   async onModuleInit() {
     await this.jobsService.work(WEBHOOK_DISPATCH_JOB, async ([job]) => {
       if (job) {
-        await this.processWebhook(job);
+        try {
+          await this.processWebhook(job);
+        } catch (error) {
+          // If it is a business error (4xx/5xx responses), log and do NOT retry
+          if ((error as any).isBusinessError) {
+            this.logger.warn(
+              `[Webhook] No se reintentará debido a error de negocio (4xx/5xx): ${(error as Error).message}`,
+            );
+            return; // Resolves promise -> success in pg-boss
+          }
+          throw error; // Rethrows -> failure and retry in pg-boss
+        }
       }
     });
     this.logger.log(
       `Worker de Webhooks escuchando en PostgreSQL (job: ${WEBHOOK_DISPATCH_JOB})`,
     );
+  }
+
+  private getCircuitBreaker(url: string): WebhookCircuitBreaker {
+    let host: string;
+    try {
+      host = new URL(url).host;
+    } catch {
+      host = url;
+    }
+
+    if (!this.breakers.has(host)) {
+      this.breakers.set(host, new WebhookCircuitBreaker(host, 10, 60000));
+    }
+    return this.breakers.get(host)!;
   }
 
   private async processWebhook(job: any): Promise<void> {
@@ -60,68 +144,75 @@ export class WebhookProcessor implements OnModuleInit {
       .update(body)
       .digest('hex');
 
+    const breaker = this.getCircuitBreaker(url);
+
     try {
-      const urlValidation = await validateSafeUrl(url);
-      if (!urlValidation.safe) {
-        throw new Error(`SSRF Prevention: ${urlValidation.error}`);
-      }
+      await breaker.execute(async () => {
+        const urlValidation = await validateSafeUrl(url);
+        if (!urlValidation.safe) {
+          throw new WebhookBusinessError(`SSRF Prevention: ${urlValidation.error}`);
+        }
 
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Webhook-Signature': signature,
-          'X-Webhook-Event': evento,
-          'X-Webhook-Attempt': String(attempt),
-        },
-        body,
-        redirect: 'error',
-        signal: AbortSignal.timeout(30000),
-      });
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Webhook-Signature': signature,
+            'X-Webhook-Event': evento,
+            'X-Webhook-Attempt': String(attempt),
+          },
+          body,
+          redirect: 'error',
+          signal: AbortSignal.timeout(30000),
+          dispatcher: globalDispatcher,
+        } as any);
 
-      const tiempoRespuesta = Date.now() - startTime;
-      const respuestaText = await readLimitedText(response);
+        const tiempoRespuesta = Date.now() - startTime;
+        const respuestaText = await readLimitedText(response);
 
-      // Log del intento
-      await this.logWebhook(
-        configId,
-        evento,
-        payload,
-        response.status,
-        respuestaText,
-        attempt,
-        response.ok,
-        null,
-        tiempoRespuesta,
-      );
-
-      if (!response.ok) {
-        throw new Error(
-          `Webhook respondió con status ${response.status}: ${respuestaText.substring(0, 200)}`,
+        // Log del intento
+        await this.logWebhook(
+          configId,
+          evento,
+          payload,
+          response.status,
+          respuestaText,
+          attempt,
+          response.ok,
+          null,
+          tiempoRespuesta,
         );
-      }
 
-      this.logger.log(
-        `[Webhook] ✅ ${evento} enviado exitosamente a ${url} en ${tiempoRespuesta}ms`,
-      );
+        if (!response.ok) {
+          throw new WebhookBusinessError(
+            `Webhook respondió con status ${response.status}: ${respuestaText.substring(0, 200)}`,
+          );
+        }
+
+        this.logger.log(
+          `[Webhook] ✅ ${evento} enviado exitosamente a ${url} en ${tiempoRespuesta}ms`,
+        );
+      });
     } catch (error) {
       const tiempoRespuesta = Date.now() - startTime;
 
-      await this.logWebhook(
-        configId,
-        evento,
-        payload,
-        null,
-        null,
-        attempt,
-        false,
-        (error as Error).message,
-        tiempoRespuesta,
-      );
+      if (!(error as any).isBusinessError) {
+        await this.logWebhook(
+          configId,
+          evento,
+          payload,
+          null,
+          null,
+          attempt,
+          false,
+          (error as Error).message,
+          tiempoRespuesta,
+        );
 
-      this.logger.error(
-        `[Webhook] ❌ Fallo enviando ${evento} a ${url} (intento ${attempt}): ${(error as Error).message}`,
-      );
+        this.logger.error(
+          `[Webhook] ❌ Fallo enviando ${evento} a ${url} (intento ${attempt}): ${(error as Error).message}`,
+        );
+      }
 
       throw error;
     }

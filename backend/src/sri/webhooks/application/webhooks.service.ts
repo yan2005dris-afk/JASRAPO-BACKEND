@@ -8,7 +8,6 @@ import { OnEvent } from '@nestjs/event-emitter';
 import { randomBytes } from 'node:crypto';
 import { PrismaService } from '../../../infrastructure/database/prisma.service';
 import { JobsService } from '../../../infrastructure/jobs/jobs.service';
-import { WEBHOOK_DISPATCH_JOB } from '../infrastructure/queue/processors/webhook.processor';
 import {
   CreateWebhookDto,
   UpdateWebhookDto,
@@ -17,7 +16,10 @@ import {
   WebhookLogResponseDto,
   WebhookEvent,
 } from '../interfaces/dto';
-import { WebhookJobData } from '../infrastructure/queue/processors/webhook.processor';
+import {
+  WEBHOOK_DISPATCH_JOB,
+  WebhookJobData,
+} from './contracts/webhook-job.contract';
 
 @Injectable()
 export class WebhooksService {
@@ -215,6 +217,7 @@ export class WebhooksService {
         retryLimit: config.reintentosMax || 5,
         retryBackoff: true,
         retryDelay: 3,
+        retryDelayMax: 180,
       });
     }
   }
