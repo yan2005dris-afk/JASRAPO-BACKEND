@@ -38,6 +38,30 @@ export class ContratoMedidorController {
   ) {}
 
   @ApiOperation({
+    summary: 'Catálogo de estados de contrato',
+    description: 'Retorna la lista de estados disponibles para contratos',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de estados de contrato',
+    schema: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          key: { type: 'string' },
+          value: { type: 'string' },
+        },
+      },
+    },
+  })
+  @RequiredPermission('contracts', 'read')
+  @Get('states')
+  getContractStates() {
+    return this.contratoMedidorService.getContractStatesCatalog();
+  }
+
+  @ApiOperation({
     summary: 'Crear contrato',
     description:
       'Crea un nuevo contrato con medidor en una transacción. Requiere clienteId, categoriaTarifaId, medidorId, numeroGuia, direccionSuministro, comunidadId obligatorios.',

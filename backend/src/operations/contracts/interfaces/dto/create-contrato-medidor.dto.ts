@@ -4,9 +4,11 @@ import {
   IsOptional,
   IsNumber,
   IsString,
+  IsIn,
   Min,
 } from 'class-validator';
 import { IsNotEmptyString } from 'src/infrastructure/common/decorators/is-not-empty-string.decorator';
+import { EstadoContrato } from 'src/shared/enums';
 
 export class CrearContratoMedidorDto {
   @IsNotEmpty() @IsNumberString() clienteId: string;
@@ -17,6 +19,9 @@ export class CrearContratoMedidorDto {
   @IsNotEmpty() @IsNumberString() comunidadId: string;
   @IsOptional() @IsNumberString() sectorId?: string;
   @IsOptional() @IsNumber() @Min(0) lecturaInicial?: number;
-  @IsOptional() @IsString() estado?: string;
+  @IsOptional()
+  @IsString()
+  @IsIn(Object.values(EstadoContrato))
+  estado?: string;
   @IsOptional() @IsString() creadoPor?: string;
 }
