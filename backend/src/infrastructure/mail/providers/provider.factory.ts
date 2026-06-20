@@ -130,11 +130,22 @@ export class MailProviderFactory {
       replyTo: options.replyTo,
       text: options.text,
       html: options.html,
-      attachments: options.attachments?.map((attachment) => ({
-        filename: attachment.filename,
-        content: attachment.content,
-        contentType: attachment.contentType,
-      })),
+      attachments: options.attachments?.map((attachment) => {
+        let content = attachment.content as any;
+        if (
+          content &&
+          typeof content === 'object' &&
+          content.type === 'Buffer' &&
+          Array.isArray(content.data)
+        ) {
+          content = Buffer.from(content.data);
+        }
+        return {
+          filename: attachment.filename,
+          content,
+          contentType: attachment.contentType,
+        };
+      }),
     };
 
     if (options.template) {

@@ -20,8 +20,10 @@ export class SriEmisionProcessor implements OnModuleInit {
   ) {}
 
   async onModuleInit() {
-    await this.jobsService.work(SRI_EMISION_JOB, async (job) => {
-      await this.processEmision(job);
+    await this.jobsService.work(SRI_EMISION_JOB, async ([job]) => {
+      if (job) {
+        await this.processEmision(job);
+      }
     });
     this.logger.log(
       `Worker de SRI escuchando en PostgreSQL (job: ${SRI_EMISION_JOB})`,

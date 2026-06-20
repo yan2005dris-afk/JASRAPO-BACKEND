@@ -22,8 +22,10 @@ export class MailQueueService implements OnModuleInit {
    * Inicializa el worker para procesar correos al arrancar el módulo.
    */
   async onModuleInit() {
-    await this.jobsService.work(MAIL_JOB_NAME, async (job) => {
-      await this.processMailJob(job);
+    await this.jobsService.work(MAIL_JOB_NAME, async ([job]) => {
+      if (job) {
+        await this.processMailJob(job);
+      }
     });
     this.logger.log(
       `Worker de correo escuchando en PostgreSQL (job: ${MAIL_JOB_NAME})`,
