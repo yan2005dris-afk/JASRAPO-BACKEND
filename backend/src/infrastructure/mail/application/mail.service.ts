@@ -47,8 +47,6 @@ export class MailService {
       pdfBuffer,
     );
 
-    const periodoSlug = periodo.replace(/\s+/g, '-').toLowerCase();
-
     await this.sendQueued({
       version: 2,
       to,
@@ -82,7 +80,6 @@ export class MailService {
             periodo,
             cliente.pdf,
           );
-          const periodoSlug = periodo.replace(/\s+/g, '-').toLowerCase();
           return {
             version: 2 as const,
             to: cliente.email,

@@ -80,6 +80,7 @@ describe('MailModule Integration', () => {
   let failoverDispatcher: FailoverDispatcher;
   let roundRobinDispatcher: RoundRobinDispatcher;
   let jobsService: JobsService;
+  // eslint-disable-next-line @typescript-eslint/consistent-type-imports
   let nodemailer: typeof import('nodemailer');
 
   beforeAll(async () => {
@@ -107,6 +108,7 @@ describe('MailModule Integration', () => {
     roundRobinDispatcher = module.get(RoundRobinDispatcher);
     jobsService = module.get(JobsService);
 
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     nodemailer = require('nodemailer');
   });
 
