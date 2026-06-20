@@ -168,9 +168,6 @@ importers:
       dotenv:
         specifier: ^17.3.1
         version: 17.4.2
-      form-data:
-        specifier: ^4.0.6
-        version: 4.0.6
       handlebars:
         specifier: ^4.7.9
         version: 4.7.9
