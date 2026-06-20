@@ -1,9 +1,4 @@
-import {
-  IsOptional,
-  IsObject,
-  IsNumber,
-  MaxLength,
-} from 'class-validator';
+import { IsOptional, IsObject, IsNumber, MaxLength } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsNotEmptyString } from 'src/infrastructure/common/decorators/is-not-empty-string.decorator';
