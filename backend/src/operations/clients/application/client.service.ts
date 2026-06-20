@@ -41,15 +41,15 @@ export class ClientService {
     );
   }
 
-  async findOne(id: string): Promise<ClientEntity> {
+  async findOne(id: bigint): Promise<ClientEntity> {
     return this.findOneUseCase.execute(id);
   }
 
-  async update(id: string, dto: UpdateClientDto): Promise<ClientEntity> {
+  async update(id: bigint, dto: UpdateClientDto): Promise<ClientEntity> {
     return this.updateUseCase.execute(id, dto);
   }
 
-  async delete(id: string): Promise<ClientEntity> {
+  async delete(id: bigint): Promise<ClientEntity> {
     return this.removeUseCase.execute(id);
   }
 

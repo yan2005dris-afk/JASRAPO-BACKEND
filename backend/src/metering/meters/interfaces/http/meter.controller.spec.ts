@@ -96,9 +96,9 @@ describe('MeterController', () => {
 
   describe('findOne', () => {
     it('should return a meter by id', async () => {
-      const result = await controller.findOne('1');
+      const result = await controller.findOne(1n);
 
-      expect(service.findOne).toHaveBeenCalledWith(BigInt(1));
+      expect(service.findOne).toHaveBeenCalledWith(1n);
       expect(result).toEqual(mockPaginatedResponse.data[0]);
     });
   });
@@ -106,9 +106,9 @@ describe('MeterController', () => {
   describe('update', () => {
     it('should update a meter', async () => {
       const updateDto = { modelo: 'NEW_MODEL' };
-      const result = await controller.update('1', updateDto);
+      const result = await controller.update(1n, updateDto);
 
-      expect(service.update).toHaveBeenCalledWith(BigInt(1), updateDto);
+      expect(service.update).toHaveBeenCalledWith(1n, updateDto);
       expect(result).toEqual(mockPaginatedResponse.data[0]);
     });
   });
@@ -116,9 +116,9 @@ describe('MeterController', () => {
   describe('remove', () => {
     it('should delete a meter', async () => {
       jest.spyOn(service, 'remove').mockResolvedValue({ message: 'deleted' });
-      const result = await controller.delete('1');
+      const result = await controller.delete(1n);
 
-      expect(service.remove).toHaveBeenCalledWith(BigInt(1));
+      expect(service.remove).toHaveBeenCalledWith(1n);
       expect(result).toEqual({ message: 'deleted' });
     });
   });
@@ -128,9 +128,9 @@ describe('MeterController', () => {
       jest
         .spyOn(service, 'install')
         .mockResolvedValue(mockPaginatedResponse.data[0] as any);
-      const result = await controller.install('1');
+      const result = await controller.install(1n);
 
-      expect(service.install).toHaveBeenCalledWith(BigInt(1));
+      expect(service.install).toHaveBeenCalledWith(1n);
       expect(result).toEqual(mockPaginatedResponse.data[0]);
     });
   });

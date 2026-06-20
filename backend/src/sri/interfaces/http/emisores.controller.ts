@@ -8,6 +8,7 @@ import {
   Param,
   Logger,
   UseGuards,
+  ParseIntPipe,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -51,7 +52,9 @@ export class EmisoresController {
   })
   @ApiResponse({ status: 404, description: 'Emisor no encontrado' })
   @RequiredPermission('emisores', 'read')
-  async findOne(@Param('id') id: string): Promise<EmisorResponseDto> {
+  async findOne(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<EmisorResponseDto> {
     return this.emisoresService.findOne(id);
   }
 
@@ -78,7 +81,7 @@ export class EmisoresController {
   @ApiResponse({ status: 404, description: 'Emisor no encontrado' })
   @RequiredPermission('emisores', 'update')
   async update(
-    @Param('id') id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateEmisorDto,
   ): Promise<EmisorResponseDto> {
     return this.emisoresService.update(id, dto);
@@ -94,7 +97,9 @@ export class EmisoresController {
   @ApiResponse({ status: 400, description: 'Emisor ya está inactivo' })
   @ApiResponse({ status: 404, description: 'Emisor no encontrado' })
   @RequiredPermission('emisores', 'delete')
-  async delete(@Param('id') id: string): Promise<EmisorResponseDto> {
+  async delete(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<EmisorResponseDto> {
     return this.emisoresService.delete(id);
   }
 }

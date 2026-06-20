@@ -74,11 +74,11 @@ describe('UpdateClientUseCase', () => {
         nombres: 'CARLOS',
       });
 
-      const result = await useCase.execute('1', { nombres: 'Carlos' });
+      const result = await useCase.execute(1n, { nombres: 'Carlos' });
 
       expect(result).toBeDefined();
       expect(mockClientRepository.update).toHaveBeenCalledWith(
-        { clienteId: BigInt(1) },
+        { clienteId: 1n },
         expect.objectContaining({ nombres: 'CARLOS' }),
       );
     });
@@ -86,7 +86,7 @@ describe('UpdateClientUseCase', () => {
     it('should throw NotFoundException if client does not exist', async () => {
       mockClientRepository.findFirst.mockResolvedValue(null);
 
-      await expect(useCase.execute('1', { nombres: 'Carlos' })).rejects.toThrow(
+      await expect(useCase.execute(1n, { nombres: 'Carlos' })).rejects.toThrow(
         NotFoundException,
       );
     });
@@ -99,7 +99,7 @@ describe('UpdateClientUseCase', () => {
       jest.spyOn(TipoIdentificacionUtil, 'validar').mockReturnValue(false);
 
       await expect(
-        useCase.execute('1', { identificacion: '123' }),
+        useCase.execute(1n, { identificacion: '123' }),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -114,7 +114,7 @@ describe('UpdateClientUseCase', () => {
       });
 
       await expect(
-        useCase.execute('1', { identificacion: '0926715641' }),
+        useCase.execute(1n, { identificacion: '0926715641' }),
       ).rejects.toThrow(ConflictException);
     });
 
@@ -128,7 +128,7 @@ describe('UpdateClientUseCase', () => {
       );
 
       await expect(
-        useCase.execute('1', { tipoIdentificacionId: 999 }),
+        useCase.execute(1n, { tipoIdentificacionId: 999 }),
       ).rejects.toThrow(BadRequestException);
     });
   });

@@ -31,29 +31,10 @@ export class EmisoresService {
   ) {}
 
   /**
-   * Valida que el ID sea un número positivo y esté en un rango seguro.
+   * Obtiene un registro de emisor por ID.
    */
-  private parseSafeId(id: string): number {
-    if (!/^\d+$/.test(id)) {
-      throw new BadRequestException(
-        `ID inválido: "${id}". El ID debe contener solo dígitos.`,
-      );
-    }
-    const parsedId = parseInt(id, 10);
-    if (!Number.isSafeInteger(parsedId) || parsedId <= 0) {
-      throw new BadRequestException(
-        `ID fuera de rango o inválido: ${id}. Debe ser un entero positivo seguro.`,
-      );
-    }
-    return parsedId;
-  }
-
-  /**
-   * Obtiene un registro de emisor por ID validado.
-   */
-  private async findRecordById(id: string): Promise<EmisorRecord> {
-    const parsedId = this.parseSafeId(id);
-    const emisor = await this.repository.findById(parsedId);
+  private async findRecordById(id: number): Promise<EmisorRecord> {
+    const emisor = await this.repository.findById(id);
 
     if (!emisor) {
       throw new NotFoundException(`Emisor con ID ${id} no encontrado`);
@@ -85,7 +66,7 @@ export class EmisoresService {
     return emisores.map((row) => this.mapToResponse(row));
   }
 
-  async findOne(id: string): Promise<EmisorResponseDto> {
+  async findOne(id: number): Promise<EmisorResponseDto> {
     const emisor = await this.findRecordById(id);
     return this.mapToResponse(emisor);
   }
@@ -94,7 +75,7 @@ export class EmisoresService {
    * Valida acceso a un emisor por ID.
    * Retorna el emisor o lanza NotFoundException.
    */
-  async validateEmisorAccess(emisorId: string): Promise<EmisorResponseDto> {
+  async validateEmisorAccess(emisorId: number): Promise<EmisorResponseDto> {
     return this.findOne(emisorId);
   }
 
@@ -142,7 +123,7 @@ export class EmisoresService {
     return this.mapToResponse(emisor);
   }
 
-  async update(id: string, dto: UpdateEmisorDto): Promise<EmisorResponseDto> {
+  async update(id: number, dto: UpdateEmisorDto): Promise<EmisorResponseDto> {
     // Verificar que existe y obtener el registro para usar su ID numérico
     const emisorActual = await this.findRecordById(id);
 
@@ -177,7 +158,7 @@ export class EmisoresService {
     return this.mapToResponse(emisor);
   }
 
-  async delete(id: string): Promise<EmisorResponseDto> {
+  async delete(id: number): Promise<EmisorResponseDto> {
     // Verificar que existe
     const emisorActual = await this.findRecordById(id);
 
@@ -196,7 +177,7 @@ export class EmisoresService {
   }
 
   async uploadCertificado(
-    id: string,
+    id: number,
     file: Buffer,
     password: string,
   ): Promise<EmisorResponseDto> {
@@ -240,7 +221,7 @@ export class EmisoresService {
     return this.mapToResponse(emisor);
   }
 
-  async deleteCertificado(id: string): Promise<EmisorResponseDto> {
+  async deleteCertificado(id: number): Promise<EmisorResponseDto> {
     // Verificar que existe
     const emisorActual = await this.findRecordById(id);
 

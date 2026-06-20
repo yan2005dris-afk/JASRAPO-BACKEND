@@ -41,6 +41,24 @@ export class PdfService
       }
     });
     Handlebars.registerHelper('eq', (a: unknown, b: unknown) => a === b);
+    Handlebars.registerHelper(
+      'isObject',
+      (value: unknown) =>
+        typeof value === 'object' && value !== null && !Array.isArray(value),
+    );
+    Handlebars.registerHelper('isArray', (value: unknown) =>
+      Array.isArray(value),
+    );
+    Handlebars.registerHelper('json', (value: unknown) =>
+      JSON.stringify(value, null, 2),
+    );
+    Handlebars.registerHelper(
+      'isPrimitiveArray',
+      (value: unknown) =>
+        Array.isArray(value) &&
+        value.length > 0 &&
+        (typeof value[0] !== 'object' || value[0] === null),
+    );
   }
 
   private async getBrowser(): Promise<Browser> {
