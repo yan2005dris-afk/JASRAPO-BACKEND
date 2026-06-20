@@ -2,11 +2,7 @@ import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { extractRucFromClaveAcceso } from '../../infrastructure/xml/clave-acceso.utils';
 import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-<<<<<<<< HEAD:backend/src/sri/application/services/sri.service.ts
-import { JobsService } from '../../../infrastructure/jobs/jobs.service';
-========
 import { JobsService } from '../../../../infrastructure/jobs/jobs.service';
->>>>>>>> origin/develop:backend/src/sri/emision/application/services/sri.service.ts
 import { SRI_EMISION_JOB } from '../../infrastructure/queue/processors/sri-emision.processor';
 import { EmitirFacturaUseCase } from '../use-cases/emitir-factura.use-case';
 import { EmitirNotaCreditoUseCase } from '../use-cases/emitir-nota-credito.use-case';

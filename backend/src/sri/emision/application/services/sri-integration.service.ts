@@ -1,9 +1,5 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-<<<<<<<< HEAD:backend/src/sri/application/services/sri-integration.service.ts
-import { PrismaService } from '../../../infrastructure/database/prisma.service';
-========
 import { PrismaService } from '../../../../infrastructure/database/prisma.service';
->>>>>>>> origin/develop:backend/src/sri/emision/application/services/sri-integration.service.ts
 import { SriService } from './sri.service';
 import { CreateFacturaDto } from '../../interfaces/dto';
 import { TipoIdentificacion, FormaPago } from '../../domain/constants';
