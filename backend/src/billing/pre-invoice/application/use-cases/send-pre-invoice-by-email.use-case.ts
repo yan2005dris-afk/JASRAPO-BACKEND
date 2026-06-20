@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { MailService } from 'src/infrastructure/mail/mail.service';
+import { MailService } from 'src/infrastructure/mail/application/mail.service';
 import { GeneratePreInvoicePdfUseCase } from './generate-pre-invoice-pdf.use-case';
 import { FindOnePreInvoiceUseCase } from './find-one-pre-invoice.use-case';
 

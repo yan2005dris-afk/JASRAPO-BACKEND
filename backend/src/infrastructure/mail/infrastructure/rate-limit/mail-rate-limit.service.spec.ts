@@ -1,7 +1,7 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { MailRateLimitService } from './mail-rate-limit.service';
-import { PrismaService } from '../database/prisma.service';
+import { PrismaService } from '../../../database/prisma.service';
 
 describe('MailRateLimitService', () => {
   let service: MailRateLimitService;

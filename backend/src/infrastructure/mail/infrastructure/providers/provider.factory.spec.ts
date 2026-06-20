@@ -3,8 +3,8 @@ import { Test } from '@nestjs/testing';
 import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { MailProviderFactory } from './provider.factory';
-import { MailRateLimitService } from '../mail-rate-limit.service';
-import type { SendMailOptions } from '../interfaces/mail-provider.interface';
+import { MailRateLimitService } from '../rate-limit/mail-rate-limit.service';
+import type { SendMailOptions } from '../../domain/interfaces/mail-provider.interface';
 
 const mockSendMail = jest.fn();
 

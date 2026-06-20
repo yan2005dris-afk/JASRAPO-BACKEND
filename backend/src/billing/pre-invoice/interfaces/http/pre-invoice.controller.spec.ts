@@ -18,7 +18,6 @@ import { PreInvoiceController } from './pre-invoice.controller';
 import { PreInvoiceService } from '../../application/pre-invoice.service';
 import { GeneratePreInvoicePdfUseCase } from '../../application/use-cases/generate-pre-invoice-pdf.use-case';
 import { SendPreInvoiceByEmailUseCase } from '../../application/use-cases/send-pre-invoice-by-email.use-case';
-import { SendBatchPreInvoicesByEmailUseCase } from '../../application/use-cases/send-batch-pre-invoices-by-email.use-case';
 
 const mockRes = () => {
   const res: any = {};
@@ -45,10 +44,6 @@ describe('PreInvoiceController', () => {
     execute: jest.fn(),
   };
 
-  const mockSendBatchPreInvoicesByEmail = {
-    execute: jest.fn(),
-  };
-
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [PreInvoiceController],
@@ -61,10 +56,6 @@ describe('PreInvoiceController', () => {
         {
           provide: SendPreInvoiceByEmailUseCase,
           useValue: mockSendPreInvoiceByEmail,
-        },
-        {
-          provide: SendBatchPreInvoicesByEmailUseCase,
-          useValue: mockSendBatchPreInvoicesByEmail,
         },
       ],
     }).compile();

@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { PrismaService } from '../database/prisma.service';
+import { PrismaService } from '../../../database/prisma.service';
 
 const ACQUIRE_SLOT_SQL = `
   INSERT INTO mail_provider_daily_counts (provider_name, usage_date, sent_count)

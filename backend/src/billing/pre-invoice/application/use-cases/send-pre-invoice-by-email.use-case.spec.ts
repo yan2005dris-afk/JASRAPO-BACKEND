@@ -18,7 +18,7 @@ import { Decimal } from 'decimal.js';
 import { SendPreInvoiceByEmailUseCase } from './send-pre-invoice-by-email.use-case';
 import { FindOnePreInvoiceUseCase } from './find-one-pre-invoice.use-case';
 import { GeneratePreInvoicePdfUseCase } from './generate-pre-invoice-pdf.use-case';
-import { MailService } from 'src/infrastructure/mail/mail.service';
+import { MailService } from 'src/infrastructure/mail/application/mail.service';
 
 describe('SendPreInvoiceByEmailUseCase', () => {
   let useCase: SendPreInvoiceByEmailUseCase;

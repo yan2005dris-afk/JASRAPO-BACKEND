@@ -1,19 +1,22 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Optional, Inject } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { readFileSync } from 'fs';
 import Handlebars from 'handlebars';
 import * as nodemailer from 'nodemailer';
 import type SMTPTransport from 'nodemailer/lib/smtp-transport';
 import { join } from 'path';
-import {
-  buildMailProviders,
-  type MailProviderConfig,
-} from '../interfaces/mail-provider.config';
+import { Readable } from 'stream';
+import { buildMailProviders } from './build-mail-providers';
+import type { MailProviderConfig } from '../../domain/config/mail-provider-config.interface';
 import type {
+  MailDispatcher,
   MailResult,
   SendMailOptions,
-} from '../interfaces/mail-provider.interface';
-import { MailRateLimitService } from '../mail-rate-limit.service';
+} from '../../domain/interfaces/mail-provider.interface';
+import { MailRateLimitService } from '../rate-limit/mail-rate-limit.service';
+import { StorageService } from '../../../storage/storage.service';
+
+const S3_URL_REGEX = /^s3:\/\/([^/]+)\/(.+)$/;
 
 @Injectable()
 export class MailProviderFactory {
@@ -28,6 +31,10 @@ export class MailProviderFactory {
   constructor(
     private readonly configService: ConfigService,
     private readonly rateLimitService: MailRateLimitService,
+    @Optional() private readonly storageService?: StorageService,
+    @Optional()
+    @Inject('MAIL_DISPATCHER')
+    private readonly dispatcher?: MailDispatcher,
   ) {
     this.providers = buildMailProviders(configService);
   }
@@ -58,6 +65,24 @@ export class MailProviderFactory {
       };
     }
 
+    // Delegate to MailDispatcher when available (production path)
+    if (this.dispatcher) {
+      return this.dispatcher.send(mailOptions, enabledProviders);
+    }
+
+    // Fallback inline loop (backward compat for tests without MailDispatcher)
+    return this.sendWithInlineLoop(mailOptions, enabledProviders, options);
+  }
+
+  /**
+   * Inline priority-failover loop — used when no MailDispatcher is injected.
+   * Kept for backward compat with existing tests.
+   */
+  private async sendWithInlineLoop(
+    mailOptions: nodemailer.SendMailOptions,
+    enabledProviders: MailProviderConfig[],
+    originalOptions: SendMailOptions,
+  ): Promise<MailResult> {
     for (const provider of enabledProviders) {
       const acquired = await this.rateLimitService.tryAcquire(
         provider.name,
@@ -75,7 +100,7 @@ export class MailProviderFactory {
         const transporter = this.getTransporter(provider);
         const info = await transporter.sendMail(mailOptions);
         this.logger.log(
-          `Email sent via ${provider.name} to ${this.formatRecipientsForLog(options.to)}`,
+          `Email sent via ${provider.name} to ${this.formatRecipientsForLog(originalOptions.to)}`,
         );
         return {
           messageId: info.messageId ?? '',
@@ -121,6 +146,73 @@ export class MailProviderFactory {
       'no-reply@jasrapo.com',
     );
 
+    const attachments = options.attachments
+      ? await Promise.all(
+          options.attachments.map(async (attachment) => {
+            // si la url está presente y el contenido no, se descarga de S3 (defensa en profundidad)
+            if (attachment.url && !attachment.content) {
+              try {
+                let content: Buffer;
+
+                if (attachment.url.startsWith('http')) {
+                  // URL pre-firmada HTTP — obtener directamente
+                  this.logger.debug(
+                    `Descargando adjunto desde URL HTTP en buildMailOptions`,
+                  );
+                  const response = await fetch(attachment.url);
+                  if (!response.ok) {
+                    throw new Error(
+                      `HTTP ${response.status}: ${response.statusText}`,
+                    );
+                  }
+                  content = Buffer.from(await response.arrayBuffer());
+                } else if (this.storageService) {
+                  const { bucket, key } = this.parseS3Url(attachment.url);
+                  const stream = await this.storageService.getObject(
+                    bucket,
+                    key,
+                  );
+                  content = await this.streamToBuffer(stream);
+                } else {
+                  throw new Error(
+                    'No StorageService disponible para resolver URL S3',
+                  );
+                }
+
+                return {
+                  filename: attachment.filename,
+                  content,
+                  contentType: attachment.contentType,
+                };
+              } catch (error: unknown) {
+                const message =
+                  error instanceof Error ? error.message : 'Unknown error';
+                this.logger.warn(
+                  `Fallo al descargar el adjunto desde la URL S3 en buildMailOptions: ${message}`,
+                );
+                // Fall through: incluir contenido vacío para que el envío falle visiblemente
+              }
+            }
+
+            // Reconstrucción de Buffer heredada ({type:'Buffer', data:[...]})
+            let content = attachment.content as any;
+            if (
+              content &&
+              typeof content === 'object' &&
+              content.type === 'Buffer' &&
+              Array.isArray(content.data)
+            ) {
+              content = Buffer.from(content.data);
+            }
+            return {
+              filename: attachment.filename,
+              content,
+              contentType: attachment.contentType,
+            };
+          }),
+        )
+      : undefined;
+
     const mailOptions: nodemailer.SendMailOptions = {
       from: `"${fromName}" <${fromEmail}>`,
       to: options.to,
@@ -130,22 +222,7 @@ export class MailProviderFactory {
       replyTo: options.replyTo,
       text: options.text,
       html: options.html,
-      attachments: options.attachments?.map((attachment) => {
-        let content = attachment.content as any;
-        if (
-          content &&
-          typeof content === 'object' &&
-          content.type === 'Buffer' &&
-          Array.isArray(content.data)
-        ) {
-          content = Buffer.from(content.data);
-        }
-        return {
-          filename: attachment.filename,
-          content,
-          contentType: attachment.contentType,
-        };
-      }),
+      attachments,
     };
 
     if (options.template) {
@@ -156,6 +233,28 @@ export class MailProviderFactory {
     }
 
     return mailOptions;
+  }
+
+  /**
+   * Analiza una URL S3 del formato s3://bucket/key
+   */
+  private parseS3Url(url: string): { bucket: string; key: string } {
+    const match = S3_URL_REGEX.exec(url);
+    if (!match) {
+      throw new Error(`Formato de URL S3 inválido: ${url}`);
+    }
+    return { bucket: match[1], key: match[2] };
+  }
+
+  /**
+   * Convierte un Readable stream a Buffer
+   */
+  private async streamToBuffer(stream: Readable): Promise<Buffer> {
+    const chunks: Buffer[] = [];
+    for await (const chunk of stream) {
+      chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+    }
+    return Buffer.concat(chunks);
   }
 
   private renderTemplate(

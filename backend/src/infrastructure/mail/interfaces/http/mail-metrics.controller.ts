@@ -1,6 +1,6 @@
 import { Controller, Get, Logger, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
-import { PrismaService } from '../database/prisma.service';
+import { PrismaService } from '../../../database/prisma.service';
 
 @ApiTags('[Posible Implementación] Monitoreo de Correos')
 @Controller('mail/metrics')

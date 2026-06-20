@@ -14,8 +14,8 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { Decimal } from 'decimal.js';
 import { MailService } from './mail.service';
-import { MailProviderFactory } from './providers/provider.factory';
-import { MailQueueService } from './mail-queue.service';
+import { MailProviderFactory } from '../infrastructure/providers/provider.factory';
+import { MailQueueService } from '../infrastructure/queue/mail-queue.service';
 
 describe('MailService', () => {
   let service: MailService;

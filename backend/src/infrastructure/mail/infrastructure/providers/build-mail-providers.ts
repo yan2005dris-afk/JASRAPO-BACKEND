@@ -1,15 +1,5 @@
 import type { ConfigService } from '@nestjs/config';
-import type SMTPTransport from 'nodemailer/lib/smtp-transport';
-
-import type SMTPPool from 'nodemailer/lib/smtp-pool';
-
-export interface MailProviderConfig {
-  name: string;
-  enabled: boolean;
-  priority: number;
-  rateLimit: { maxPerDay: number };
-  transport: SMTPTransport.Options | SMTPPool.Options;
-}
+import type { MailProviderConfig } from '../../domain/config/mail-provider-config.interface';
 
 function parseSmtpPort(portStr: string): number {
   const port = parseInt(portStr, 10);
@@ -32,6 +22,7 @@ export function buildMailProviders(
       name: 'brevo',
       enabled: !!brevoUser && !!brevoPass,
       priority: 1,
+      strategy: 'failover',
       rateLimit: { maxPerDay: 300 },
       transport: {
         pool: true,
@@ -50,6 +41,7 @@ export function buildMailProviders(
       name: 'gmail',
       enabled: !!gmailUser && !!gmailPass,
       priority: 2,
+      strategy: 'failover',
       rateLimit: { maxPerDay: 500 },
       transport: {
         pool: true,
