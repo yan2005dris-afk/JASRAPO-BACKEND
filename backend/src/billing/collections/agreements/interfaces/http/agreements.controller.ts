@@ -24,8 +24,7 @@ import { CreateAgreementDto } from '../dto/create-agreement.dto';
 import { UpdateAgreementDto } from '../dto/update-agreement.dto';
 import { AgreementResponseDto } from '../dto/agreement-response.dto';
 import { DebtSummaryResponseDto } from '../dto/debt-summary-response.dto';
-import { AgreementStateResponseDto } from '../dto/agreement-state-response.dto';
-import { InstallmentStateResponseDto } from '../dto/installment-state-response.dto';
+import { EnumStateDto } from 'src/shared/enums/state-catalog';
 import { FindAllAgreementsDto } from '../dto/find-all-agreements.dto';
 import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
@@ -55,11 +54,11 @@ export class AgreementsController {
   @ApiResponse({
     status: 200,
     description: 'Lista de estados de convenio',
-    type: [AgreementStateResponseDto],
+    type: [EnumStateDto],
   })
   @RequiredPermission('agreements', 'read')
   @Get('states')
-  async findAllStates(): Promise<AgreementStateResponseDto[]> {
+  async findAllStates(): Promise<EnumStateDto[]> {
     return this.agreementsService.findAllAgreementStates();
   }
 
@@ -75,11 +74,11 @@ export class AgreementsController {
   @ApiResponse({
     status: 200,
     description: 'Lista de estados de cuota',
-    type: [InstallmentStateResponseDto],
+    type: [EnumStateDto],
   })
   @RequiredPermission('agreements', 'read')
   @Get('installment-states')
-  async findAllInstallmentStates(): Promise<InstallmentStateResponseDto[]> {
+  async findAllInstallmentStates(): Promise<EnumStateDto[]> {
     return this.agreementsService.findAllInstallmentStates();
   }
 

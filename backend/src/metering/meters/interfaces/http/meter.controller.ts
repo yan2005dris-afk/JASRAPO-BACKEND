@@ -15,7 +15,7 @@ import { UpdateMeterDto } from '../dto/update-meter.dto';
 import { MeterResponseDto } from '../dto/meter-response.dto';
 import { FilterMeterDto } from '../dto/filter-meter.dto';
 import { PaginatedMeterResponse } from '../types/paginated-meter-response.type';
-import { EstadoMedidorResponseDto } from '../dto/estado-medidor-response.dto';
+import { EnumStateDto } from 'src/shared/enums/state-catalog';
 import {
   ApiTags,
   ApiBearerAuth,
@@ -46,11 +46,11 @@ export class MeterController {
   @ApiResponse({
     status: 200,
     description: 'Lista de estados',
-    type: [EstadoMedidorResponseDto],
+    type: [EnumStateDto],
   })
   @RequiredPermission('meters', 'read')
   @Get('status')
-  findAllStates(): Promise<EstadoMedidorResponseDto[]> {
+  findAllStates(): Promise<EnumStateDto[]> {
     return this.meterService.findAllStates();
   }
 

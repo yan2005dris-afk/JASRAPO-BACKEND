@@ -27,6 +27,7 @@ import {
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
 import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
+import { EnumStateDto } from 'src/shared/enums/state-catalog';
 
 @ApiTags('contracts')
 @ApiBearerAuth()
@@ -44,20 +45,11 @@ export class ContratoMedidorController {
   @ApiResponse({
     status: 200,
     description: 'Lista de estados de contrato',
-    schema: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          key: { type: 'string' },
-          value: { type: 'string' },
-        },
-      },
-    },
+    type: [EnumStateDto],
   })
   @RequiredPermission('contracts', 'read')
   @Get('states')
-  getContractStates() {
+  getContractStates(): EnumStateDto[] {
     return this.contratoMedidorService.getContractStatesCatalog();
   }
 

@@ -1,4 +1,5 @@
 import { EstadoPrefactura } from 'src/shared/enums';
+import { buildStateCatalog } from 'src/shared/enums/state-catalog';
 
 /**
  * Generate state catalog from Prisma enum.
@@ -13,13 +14,9 @@ const ESTADO_NAMES: Record<EstadoPrefactura, string> = {
   [EstadoPrefactura.PAGADA]: 'Pagada',
 };
 
-export const PREINVOICE_STATES = Object.values(EstadoPrefactura).map(
-  (codigo, index) => ({
-    estadoId: index + 1,
-    codigo,
-    nombre: ESTADO_NAMES[codigo],
-    orden: index + 1,
-  }),
+export const PREINVOICE_STATES = buildStateCatalog(
+  EstadoPrefactura,
+  ESTADO_NAMES,
 );
 
 /**

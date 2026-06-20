@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
 import { PREINVOICE_STATES } from './pre-invoice-states';
+import { EnumStateDto } from 'src/shared/enums/state-catalog';
 import { FindAllPreInvoicesUseCase } from './use-cases/find-all-pre-invoices.use-case';
 import { FindOnePreInvoiceUseCase } from './use-cases/find-one-pre-invoice.use-case';
 import { UpdatePreInvoiceStateUseCase } from './use-cases/update-pre-invoice-state.use-case';
@@ -45,7 +46,7 @@ export class PreInvoiceService {
     });
   }
 
-  async findAllStates() {
+  async findAllStates(): Promise<EnumStateDto[]> {
     return PREINVOICE_STATES;
   }
 }

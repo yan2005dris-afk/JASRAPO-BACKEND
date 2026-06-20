@@ -4,7 +4,7 @@ import { CreateMeterDto } from '../interfaces/dto/create-meter.dto';
 import { UpdateMeterDto } from '../interfaces/dto/update-meter.dto';
 import { FilterMeterDto } from '../interfaces/dto/filter-meter.dto';
 import { buildMeterFilters } from './mappers/meter-filters.mapper';
-import { EstadoMedidorResponseDto } from '../interfaces/dto/estado-medidor-response.dto';
+import { EnumStateDto } from 'src/shared/enums/state-catalog';
 import { CreateMeterUseCase } from './use-cases/create-meter.use-case';
 import { ReportDefectUseCase } from './use-cases/report-defect.use-case';
 import { FindOneMeterUseCase } from './use-cases/find-one-meter.use-case';
@@ -113,11 +113,7 @@ export class MeterService {
     return this.decommissionUseCase.execute(medidorId, motivoBaja);
   }
 
-  async findAllStates(): Promise<EstadoMedidorResponseDto[]> {
-    return METER_STATUS_LIST.map((s) => ({
-      codigo: s.codigo,
-      nombre: s.nombre,
-      orden: s.orden,
-    }));
+  async findAllStates(): Promise<EnumStateDto[]> {
+    return METER_STATUS_LIST;
   }
 }

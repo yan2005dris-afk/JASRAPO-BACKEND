@@ -18,6 +18,7 @@ export const MAX_UPLOAD_SIZE_MB =
 export const MAX_UPLOAD_SIZE_BYTES = MAX_UPLOAD_SIZE_MB * 1024 * 1024;
 
 import { EstadoMedidor, EstadoLote } from 'src/shared/enums';
+import { buildStateCatalog } from 'src/shared/enums/state-catalog';
 
 /**
  * ESTADOS DE MEDIDOR (generado desde enum Prisma)
@@ -30,13 +31,9 @@ const METER_STATE_NAMES: Record<EstadoMedidor, string> = {
   [EstadoMedidor.BAJA]: 'Dado de Baja',
 };
 
-export const METER_STATUS_LIST = Object.values(EstadoMedidor).map(
-  (codigo, index) => ({
-    estadoId: index + 1,
-    codigo,
-    nombre: METER_STATE_NAMES[codigo],
-    orden: index + 1,
-  }),
+export const METER_STATUS_LIST = buildStateCatalog(
+  EstadoMedidor,
+  METER_STATE_NAMES,
 );
 
 /**
@@ -48,11 +45,7 @@ const BATCH_STATE_NAMES: Record<EstadoLote, string> = {
   [EstadoLote.ENVIADO]: 'Enviado',
 };
 
-export const BATCH_STATUS_LIST = Object.values(EstadoLote).map(
-  (codigo, index) => ({
-    estadoId: index + 1,
-    codigo,
-    nombre: BATCH_STATE_NAMES[codigo],
-    orden: index + 1,
-  }),
+export const BATCH_STATUS_LIST = buildStateCatalog(
+  EstadoLote,
+  BATCH_STATE_NAMES,
 );
