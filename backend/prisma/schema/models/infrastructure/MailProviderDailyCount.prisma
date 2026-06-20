@@ -1,0 +1,8 @@
+model MailProviderDailyCount {
+  providerName String   @map("provider_name")
+  usageDate    DateTime @map("usage_date") @db.Date
+  sentCount    Int      @default(0) @map("sent_count")
+
+  @@id([providerName, usageDate])
+  @@map("mail_provider_daily_counts")
+}
