@@ -27,6 +27,7 @@ import {
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
 import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
+import { EstadoContrato } from 'src/shared/enums';
 
 @ApiTags('contracts')
 @ApiBearerAuth()
@@ -36,6 +37,33 @@ export class ContratoMedidorController {
   constructor(
     private readonly contratoMedidorService: ContratoMedidorService,
   ) {}
+
+  @ApiOperation({
+    summary: 'Catálogo de estados de contrato',
+    description: 'Retorna la lista de estados disponibles para contratos',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de estados de contrato',
+    schema: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          key: { type: 'string' },
+          value: { type: 'string' },
+        },
+      },
+    },
+  })
+  @RequiredPermission('contracts', 'read')
+  @Get('states')
+  getContractStates() {
+    return Object.entries(EstadoContrato).map(([key, value]) => ({
+      key,
+      value,
+    }));
+  }
 
   @ApiOperation({
     summary: 'Crear contrato',
