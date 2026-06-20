@@ -17,11 +17,7 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { EmisoresService } from '../../application/emisores.service';
-import {
-  CreateEmisorDto,
-  UpdateEmisorDto,
-  EmisorResponseDto,
-} from '../dto';
+import { CreateEmisorDto, UpdateEmisorDto, EmisorResponseDto } from '../dto';
 import { JwtAuthGuard } from '../../../../identity/auth/interfaces/http/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../../../../infrastructure/common/guards/permissions.guard';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
