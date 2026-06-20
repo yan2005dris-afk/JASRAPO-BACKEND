@@ -11,7 +11,7 @@ import { FindOneMeterUseCase } from './use-cases/find-one-meter.use-case';
 import { InstallMeterUseCase } from './use-cases/install-meter.use-case';
 import { DecommissionMeterUseCase } from './use-cases/decommission-meter.use-case';
 import { MeterEntity } from '../domain/entities/meter.entity';
-import { DateUtil } from 'src/infrastructure/common/utils/date.util';
+import { DateUtil } from 'src/shared/utils/date.util';
 import { METER_STATUS_LIST } from 'src/infrastructure/config/app.constants';
 import { getPagination } from 'src/infrastructure/common/utils/pagination.util';
 import { PaginatedMeterResponse } from '../interfaces/types/paginated-meter-response.type';

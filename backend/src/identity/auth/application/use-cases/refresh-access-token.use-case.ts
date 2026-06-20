@@ -10,7 +10,7 @@ import { UserRepository } from '../../../users/domain/repositories/user.reposito
 import { SessionsService } from '../../../sessions/application/sessions.service';
 import * as bcrypt from 'bcryptjs';
 import { REFRESH_TOKEN_MAX_AGE_MS } from 'src/infrastructure/config/app.constants';
-import { EcuadorTimezoneUtil } from 'src/infrastructure/common/utils/ecuador-timezone-backend.util';
+import { EcuadorTimezoneUtil } from 'src/shared/utils/ecuador-timezone.util';
 import type { StringValue } from 'ms';
 
 @Injectable()

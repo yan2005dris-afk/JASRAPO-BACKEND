@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { BusquedaPublicaRepository } from '../../domain/repositories/busqueda-publica.repository';
-import { DebtCalculatorHelper } from 'src/infrastructure/common/utils/debt-calculator.util';
+import { DebtCalculatorHelper } from 'src/shared/utils/debt-calculator.util';
 import type {
   IClienteConContratosRaw,
   TipoBusquedaDeuda,

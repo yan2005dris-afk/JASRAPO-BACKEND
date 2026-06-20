@@ -7,7 +7,7 @@ import {
   BadRequestException,
   ConflictException,
 } from '@nestjs/common';
-import { TipoIdentificacionUtil } from 'src/infrastructure/common/utils/tipo-identificacion.util';
+import { TipoIdentificacionUtil } from 'src/shared/utils/tipo-identificacion.util';
 
 describe('UpdateClientUseCase', () => {
   let useCase: UpdateClientUseCase;

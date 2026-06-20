@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { ClientRepository } from '../../domain/repositories/client.repository';
 import { CreateClientDto } from '../../interfaces/dto/create-client.dto';
-import { TipoIdentificacionUtil } from 'src/infrastructure/common/utils/tipo-identificacion.util';
+import { TipoIdentificacionUtil } from 'src/shared/utils/tipo-identificacion.util';
 import type { CreateClientData } from '../../domain/types/create-client-data';
 
 @Injectable()

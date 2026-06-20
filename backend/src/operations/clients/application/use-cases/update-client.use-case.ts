@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { ClientRepository } from '../../domain/repositories/client.repository';
 import { UpdateClientDto } from '../../interfaces/dto/update-client.dto';
-import { TipoIdentificacionUtil } from 'src/infrastructure/common/utils/tipo-identificacion.util';
+import { TipoIdentificacionUtil } from 'src/shared/utils/tipo-identificacion.util';
 import { ClientEntity } from '../../domain/entities/client.entity';
 
 @Injectable()
