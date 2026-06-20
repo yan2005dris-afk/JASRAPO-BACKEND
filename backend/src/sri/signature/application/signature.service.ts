@@ -1,14 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { existsSync, readFileSync } from 'fs';
-import { join } from 'path';
 import * as forge from 'node-forge';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import * as QRCode from 'qrcode';
 import { SignPdf } from '@signpdf/signpdf';
 import { plainAddPlaceholder } from '@signpdf/placeholder-plain';
 import { P12Signer } from '@signpdf/signer-p12';
-import { STORAGE_PATHS } from '../../emision/infrastructure/storage/storage-paths';
+import { Readable } from 'stream';
+import { StorageService, SRI_STORAGE_TYPES } from '../../../infrastructure/storage/storage.service';
+import { PrismaService } from '../../../infrastructure/database/prisma.service';
 
 export interface SignaturePosition {
   page?: number;
@@ -45,7 +45,11 @@ export class SignatureService {
   };
   private readonly signpdfInstance: SignPdf;
 
-  constructor(private configService: ConfigService) {
+  constructor(
+    private configService: ConfigService,
+    private readonly prisma: PrismaService,
+    private readonly storageService: StorageService,
+  ) {
     this.signatureConfig = {
       qrSize: this.configService.get<number>('SIGNATURE_QR_SIZE', 50),
       totalWidth: this.configService.get<number>('SIGNATURE_TOTAL_WIDTH', 200),
@@ -57,19 +61,13 @@ export class SignatureService {
     this.signpdfInstance = new SignPdf();
   }
 
-  /**
-   * Get directories from STORAGE_PATHS
-   */
-  private get certsDir(): string {
-    return STORAGE_PATHS.certs;
-  }
-
-  private get pdfDir(): string {
-    return STORAGE_PATHS.pdfs;
-  }
-
-  private get signedPdfDir(): string {
-    return STORAGE_PATHS.pdfsConFirma;
+  private async streamToBuffer(stream: Readable): Promise<Buffer> {
+    const chunks: any[] = [];
+    return new Promise((resolve, reject) => {
+      stream.on('data', (chunk) => chunks.push(chunk));
+      stream.on('error', (err) => reject(err));
+      stream.on('end', () => resolve(Buffer.concat(chunks)));
+    });
   }
 
   /**
@@ -262,16 +260,35 @@ export class SignatureService {
         `Iniciando proceso de firma con certificado: ${certFile}`,
       );
 
-      // Verify certificate exists
-      const certPath = join(this.certsDir, certFile);
-      if (!existsSync(certPath)) {
+      // Get the RUC of the emisor associated with this certFile
+      const emisor = await this.prisma.empresa.findFirst({
+        where: { certificadoNombre: certFile },
+        select: { ruc: true },
+      });
+
+      if (!emisor) {
         throw new Error(
-          `El certificado ${certFile} no existe en el directorio de certificados`,
+          `No se encontró un emisor asociado al certificado: ${certFile}`,
         );
       }
 
-      // Read P12 certificate
-      const p12Buffer = readFileSync(certPath);
+      // Resolve bucket name
+      const bucket = await this.storageService.ensureBucketForRuc(
+        emisor.ruc,
+        SRI_STORAGE_TYPES.CERTS,
+      );
+
+      // Check if certificate exists in centralized storage
+      const exists = await this.storageService.exists(bucket, certFile);
+      if (!exists) {
+        throw new Error(
+          `El certificado ${certFile} no existe en el almacenamiento centralizado`,
+        );
+      }
+
+      // Read P12 certificate from centralized storage
+      const certStream = await this.storageService.getObject(bucket, certFile);
+      const p12Buffer = await this.streamToBuffer(certStream);
 
       // Extract certificate info
       const certInfo = this.extractCertificateInfo(p12Buffer, password);
