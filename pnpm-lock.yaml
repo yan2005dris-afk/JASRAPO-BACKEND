@@ -14,9 +14,9 @@ overrides:
   esbuild: ^0.28.1
   '@hono/node-server': ^1.19.13
   crypto-js: ^4.2.0
-  undici: '>=7.28.0'
-  '@opentelemetry/core': '>=2.8.0'
-  js-yaml: '>=4.2.0'
+  undici: ^8.5.0
+  '@opentelemetry/core': ^2.8.0
+  js-yaml: ^4.2.0
 
 importers:
 
@@ -238,7 +238,7 @@ importers:
         specifier: ^4.21.0
         version: 4.22.4
       undici:
-        specifier: '>=7.28.0'
+        specifier: ^8.5.0
         version: 8.5.0
       xadesjs:
         specifier: ^2.6.5
@@ -1780,7 +1780,7 @@ packages:
     engines: {node: ^18.19.0 || >=20.6.0}
     peerDependencies:
       '@opentelemetry/api': ^1.4.1
-      '@opentelemetry/core': '>=2.8.0'
+      '@opentelemetry/core': ^2.8.0
 
   '@opentelemetry/configuration@0.218.0':
     resolution: {integrity: sha512-W8wIz7H2R1pufR5jfjb3gU2XkMpm2x/7b1RJcsuzvd70Il/rWWE+g5/Od7hQKrxRTSrTrOWlru101PWXz5I1EQ==}
