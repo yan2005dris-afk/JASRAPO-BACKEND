@@ -29,10 +29,16 @@ export class SriSoapClient {
     );
     const xmlBase64 = Buffer.from(xmlFirmado, 'utf-8').toString('base64');
 
+    const breaker = this.soapFactory.getCircuitBreaker(`recepcion_${ambiente}`);
+
     try {
-      const client = await this.soapFactory.getRecepcionClient(ambiente);
-      const [result] = await client.validarComprobanteAsync({
-        xml: xmlBase64,
+      const result = await breaker.execute(async () => {
+        const client = await this.soapFactory.getRecepcionClient(ambiente);
+        const [res] = await client.validarComprobanteAsync(
+          { xml: xmlBase64 },
+          { timeout: 15000 },
+        );
+        return res;
       });
 
       const response = result?.RespuestaRecepcionComprobante || result;
@@ -58,11 +64,17 @@ export class SriSoapClient {
       throw new Error('La clave de acceso debe tener 49 dígitos');
     }
 
+    const ambiente = claveAcceso.charAt(23) as '1' | '2';
+    const breaker = this.soapFactory.getCircuitBreaker(`autorizacion_${ambiente}`);
+
     try {
-      const ambiente = claveAcceso.charAt(23) as '1' | '2';
-      const client = await this.soapFactory.getAutorizacionClient(ambiente);
-      const [result] = await client.autorizacionComprobanteAsync({
-        claveAccesoComprobante: claveAcceso,
+      const result = await breaker.execute(async () => {
+        const client = await this.soapFactory.getAutorizacionClient(ambiente);
+        const [res] = await client.autorizacionComprobanteAsync(
+          { claveAccesoComprobante: claveAcceso },
+          { timeout: 15000 },
+        );
+        return res;
       });
 
       const response = result?.RespuestaAutorizacionComprobante || result;
@@ -107,7 +119,11 @@ export class SriSoapClient {
     // Paso 2: Consultar autorización con reintentos
     for (let intento = 1; intento <= retries; intento++) {
       if (intento > 1) {
-        await this.delay(delay);
+        const backoffDelay = delay * Math.pow(2, intento - 2);
+        this.logger.log(
+          `Esperando ${backoffDelay}ms antes de intentar consulta de autorización (intento ${intento}/${retries})`,
+        );
+        await this.delay(backoffDelay);
       }
 
       const autorizacion = await this.autorizarComprobante(claveAcceso);

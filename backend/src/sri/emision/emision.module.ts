@@ -40,7 +40,12 @@ import { PdfService as InfraPdfService } from 'src/infrastructure/pdf/pdf.servic
 import { SriDocumentPdfType } from './infrastructure/pdf/sri-document.pdf-type';
 
 @Module({
-  imports: [HttpModule],
+  imports: [
+    HttpModule.register({
+      timeout: 15000,
+      maxRedirects: 5,
+    }),
+  ],
   controllers: [SriController, CatalogosController],
   providers: [
     SriService,
