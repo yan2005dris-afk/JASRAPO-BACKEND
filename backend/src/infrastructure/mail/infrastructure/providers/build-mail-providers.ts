@@ -1,7 +1,8 @@
 import type { ConfigService } from '@nestjs/config';
 import type { MailProviderConfig } from '../../domain/config/mail-provider-config.interface';
 
-function parseSmtpPort(portStr: string): number {
+function parseSmtpPort(portStr: string | undefined, defaultPort = 587): number {
+  if (!portStr) return defaultPort;
   const port = parseInt(portStr, 10);
   if (isNaN(port) || port < 1 || port > 65535) {
     throw new Error(`Invalid SMTP port configuration: ${portStr}`);
