@@ -9,6 +9,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import { ParseBigIntPipe } from 'src/infrastructure/common/pipes/parse-bigint.pipe';
 import { ReadingAnomalyService } from '../../application/reading-anomaly.service';
 import { CreateReadingAnomalyDto } from '../dto/create-reading-anomaly.dto';
 import { UpdateReadingAnomalyDto } from '../dto/update-reading-anomaly.dto';
@@ -130,8 +131,8 @@ export class ReadingAnomalyController {
   @ApiParam({
     name: 'id',
     description: 'ID de la anomalía',
-    type: String,
-    example: '1',
+    type: Number,
+    example: 1,
   })
   @ApiResponse({
     status: 200,
@@ -142,9 +143,11 @@ export class ReadingAnomalyController {
   @ApiResponse({ status: 404, description: 'Anomalía no encontrada' })
   @RequiredPermission('reading-anomalies', 'read')
   @Get(':id')
-  async findOne(@Param('id') id: string): Promise<ResponseReadingAnomalyDto> {
+  async findOne(
+    @Param('id', ParseBigIntPipe) id: bigint,
+  ): Promise<ResponseReadingAnomalyDto> {
     return toReadingAnomalyResponse(
-      await this.readingAnomalyService.findOne(BigInt(id)),
+      await this.readingAnomalyService.findOne(id),
     )!;
   }
 
@@ -155,8 +158,8 @@ export class ReadingAnomalyController {
   @ApiParam({
     name: 'id',
     description: 'ID de la anomalía',
-    type: String,
-    example: '1',
+    type: Number,
+    example: 1,
   })
   @ApiBody({
     type: UpdateReadingAnomalyDto,
@@ -177,11 +180,11 @@ export class ReadingAnomalyController {
   @RequiredPermission('reading-anomalies', 'update')
   @Patch(':id')
   async update(
-    @Param('id') id: string,
+    @Param('id', ParseBigIntPipe) id: bigint,
     @Body() updateDto: UpdateReadingAnomalyDto,
   ): Promise<ResponseReadingAnomalyDto> {
     return toReadingAnomalyResponse(
-      await this.readingAnomalyService.update(BigInt(id), updateDto),
+      await this.readingAnomalyService.update(id, updateDto),
     )!;
   }
 
@@ -192,8 +195,8 @@ export class ReadingAnomalyController {
   @ApiParam({
     name: 'id',
     description: 'ID de la anomalía',
-    type: String,
-    example: '1',
+    type: Number,
+    example: 1,
   })
   @ApiResponse({ status: 200, description: 'Anomalía eliminada' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
@@ -204,7 +207,7 @@ export class ReadingAnomalyController {
   @ApiResponse({ status: 404, description: 'Anomalía no encontrada' })
   @RequiredPermission('reading-anomalies', 'delete')
   @Delete(':id')
-  async delete(@Param('id') id: string) {
-    return this.readingAnomalyService.delete(BigInt(id));
+  async delete(@Param('id', ParseBigIntPipe) id: bigint) {
+    return this.readingAnomalyService.delete(id);
   }
 }

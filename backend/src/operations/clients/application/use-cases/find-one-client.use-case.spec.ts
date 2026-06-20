@@ -45,10 +45,10 @@ describe('FindOneClientUseCase', () => {
       const mockCliente = { clienteId: BigInt(1), deletedAt: null };
       mockClientRepository.findFirst.mockResolvedValue(mockCliente);
 
-      const result = await useCase.execute('1');
+      const result = await useCase.execute(1n);
 
       expect(mockClientRepository.findFirst).toHaveBeenCalledWith({
-        clienteId: BigInt(1),
+        clienteId: 1n,
         deletedAt: null,
       });
     });
@@ -56,7 +56,7 @@ describe('FindOneClientUseCase', () => {
     it('should throw NotFoundException if client not found', async () => {
       mockClientRepository.findFirst.mockResolvedValue(null);
 
-      await expect(useCase.execute('1')).rejects.toThrow(NotFoundException);
+      await expect(useCase.execute(1n)).rejects.toThrow(NotFoundException);
     });
   });
 });

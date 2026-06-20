@@ -9,6 +9,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import { ParseBigIntPipe } from 'src/infrastructure/common/pipes/parse-bigint.pipe';
 import { ReadingService } from '../../application/reading.service';
 import { CrearLecturaDto } from '../dto/create-lectura.dto';
 import { ActualizarLecturaDto } from '../dto/update-lectura.dto';
@@ -102,8 +103,8 @@ export class ReadingController {
   @ApiParam({
     name: 'id',
     description: 'ID de la lectura',
-    type: String,
-    example: '1',
+    type: Number,
+    example: 1,
   })
   @ApiResponse({
     status: 200,
@@ -114,8 +115,10 @@ export class ReadingController {
   @ApiResponse({ status: 404, description: 'Lectura no encontrada' })
   @RequiredPermission('lecturas', 'read')
   @Get(':id')
-  async findOne(@Param('id') id: string): Promise<ResponseReadingDto> {
-    return toReadingResponse(await this.readingService.findOne(BigInt(id)))!;
+  async findOne(
+    @Param('id', ParseBigIntPipe) id: bigint,
+  ): Promise<ResponseReadingDto> {
+    return toReadingResponse(await this.readingService.findOne(id))!;
   }
 
   @ApiOperation({
@@ -125,8 +128,8 @@ export class ReadingController {
   @ApiParam({
     name: 'id',
     description: 'ID de la lectura',
-    type: String,
-    example: '1',
+    type: Number,
+    example: 1,
   })
   @ApiBody({ type: ActualizarLecturaDto, description: 'Datos a actualizar' })
   @ApiResponse({
@@ -141,11 +144,11 @@ export class ReadingController {
   @RequiredPermission('lecturas', 'update')
   @Patch(':id')
   async actualizarLectura(
-    @Param('id') id: string,
+    @Param('id', ParseBigIntPipe) id: bigint,
     @Body() updateLecturaDto: ActualizarLecturaDto,
   ): Promise<ResponseReadingDto> {
     return toReadingResponse(
-      await this.readingService.update(BigInt(id), updateLecturaDto),
+      await this.readingService.update(id, updateLecturaDto),
     )!;
   }
 
@@ -156,8 +159,8 @@ export class ReadingController {
   @ApiParam({
     name: 'id',
     description: 'ID de la lectura',
-    type: String,
-    example: '1',
+    type: Number,
+    example: 1,
   })
   @ApiResponse({ status: 200, description: 'Lectura eliminada' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
@@ -165,7 +168,7 @@ export class ReadingController {
   @ApiResponse({ status: 404, description: 'Lectura no encontrada' })
   @RequiredPermission('lecturas', 'delete')
   @Delete(':id')
-  async eliminarLectura(@Param('id') id: string) {
-    return this.readingService.delete(BigInt(id));
+  async eliminarLectura(@Param('id', ParseBigIntPipe) id: bigint) {
+    return this.readingService.delete(id);
   }
 }

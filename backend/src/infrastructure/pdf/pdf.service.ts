@@ -52,6 +52,13 @@ export class PdfService
     Handlebars.registerHelper('json', (value: unknown) =>
       JSON.stringify(value, null, 2),
     );
+    Handlebars.registerHelper(
+      'isPrimitiveArray',
+      (value: unknown) =>
+        Array.isArray(value) &&
+        value.length > 0 &&
+        (typeof value[0] !== 'object' || value[0] === null),
+    );
   }
 
   private async getBrowser(): Promise<Browser> {

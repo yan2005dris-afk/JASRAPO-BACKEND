@@ -66,15 +66,23 @@
           {{#if (isObject this)}}
             <pre>{{json this}}</pre>
           {{else if (isArray this)}}
-            <table>
-              {{#each this}}
-                <tr>
-                  {{#each this}}
-                    <td>{{this}}</td>
-                  {{/each}}
-                </tr>
-              {{/each}}
-            </table>
+            {{#if (isPrimitiveArray this)}}
+              <ul>
+                {{#each this}}
+                  <li>{{this}}</li>
+                {{/each}}
+              </ul>
+            {{else}}
+              <table>
+                {{#each this}}
+                  <tr>
+                    {{#each this}}
+                      <td>{{this}}</td>
+                    {{/each}}
+                  </tr>
+                {{/each}}
+              </table>
+            {{/if}}
           {{else}}
             {{this}}
           {{/if}}

@@ -99,9 +99,9 @@ describe('ReadingController', () => {
   describe('findOne', () => {
     it('should return a reading by id', async () => {
       jest.spyOn(service, 'findOne').mockResolvedValue(mockLecturaData as any);
-      const result = await controller.findOne('1');
+      const result = await controller.findOne(1n);
 
-      expect(service.findOne).toHaveBeenCalledWith(BigInt(1));
+      expect(service.findOne).toHaveBeenCalledWith(1n);
       expect(result).toEqual(expectedMappedLectura);
     });
   });
@@ -110,9 +110,9 @@ describe('ReadingController', () => {
     it('should update a reading', async () => {
       const updateDto = { lecturaActual: 200 };
       jest.spyOn(service, 'update').mockResolvedValue(mockLecturaData as any);
-      const result = await controller.actualizarLectura('1', updateDto);
+      const result = await controller.actualizarLectura(1n, updateDto);
 
-      expect(service.update).toHaveBeenCalledWith(BigInt(1), updateDto);
+      expect(service.update).toHaveBeenCalledWith(1n, updateDto);
       expect(result).toEqual(expectedMappedLectura);
     });
   });
@@ -120,9 +120,9 @@ describe('ReadingController', () => {
   describe('remove', () => {
     it('should remove a reading', async () => {
       jest.spyOn(service, 'delete').mockResolvedValue({ message: 'deleted' });
-      const result = await controller.eliminarLectura('1');
+      const result = await controller.eliminarLectura(1n);
 
-      expect(service.delete).toHaveBeenCalledWith(BigInt(1));
+      expect(service.delete).toHaveBeenCalledWith(1n);
       expect(result).toBeDefined();
     });
   });

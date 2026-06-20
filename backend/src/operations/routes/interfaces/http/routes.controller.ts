@@ -9,6 +9,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import { ParseBigIntPipe } from 'src/infrastructure/common/pipes/parse-bigint.pipe';
 import {
   ApiTags,
   ApiBearerAuth,
@@ -106,7 +107,7 @@ export class RoutesController {
     summary: 'Obtener ruta por ID',
     description: 'Retorna una ruta específica',
   })
-  @ApiParam({ name: 'id', description: 'ID de la ruta', type: String })
+  @ApiParam({ name: 'id', description: 'ID de la ruta', type: Number })
   @ApiResponse({
     status: 200,
     description: 'Ruta encontrada',
@@ -115,8 +116,10 @@ export class RoutesController {
   @ApiResponse({ status: 404, description: 'Ruta no encontrada' })
   @RequiredPermission('routes', 'read')
   @Get(':id')
-  async findOne(@Param('id') id: string): Promise<RouteEntity> {
-    return this.routesService.findOne(BigInt(id));
+  async findOne(
+    @Param('id', ParseBigIntPipe) id: bigint,
+  ): Promise<RouteEntity> {
+    return this.routesService.findOne(id);
   }
 
   /**
@@ -126,7 +129,7 @@ export class RoutesController {
     summary: 'Actualizar ruta',
     description: 'Actualiza los datos de una ruta existente',
   })
-  @ApiParam({ name: 'id', description: 'ID de la ruta', type: String })
+  @ApiParam({ name: 'id', description: 'ID de la ruta', type: Number })
   @ApiResponse({
     status: 200,
     description: 'Ruta actualizada',
@@ -135,10 +138,10 @@ export class RoutesController {
   @RequiredPermission('routes', 'update')
   @Patch(':id')
   async update(
-    @Param('id') id: string,
+    @Param('id', ParseBigIntPipe) id: bigint,
     @Body() updateDto: UpdateRouteDto,
   ): Promise<RouteEntity> {
-    return this.routesService.update(BigInt(id), updateDto);
+    return this.routesService.update(id, updateDto);
   }
 
   /**
@@ -148,11 +151,13 @@ export class RoutesController {
     summary: 'Eliminar ruta',
     description: 'Elimina una ruta y desasigna sus lecturas',
   })
-  @ApiParam({ name: 'id', description: 'ID de la ruta', type: String })
+  @ApiParam({ name: 'id', description: 'ID de la ruta', type: Number })
   @ApiResponse({ status: 200, description: 'Ruta eliminada' })
   @RequiredPermission('routes', 'delete')
   @Delete(':id')
-  async delete(@Param('id') id: string): Promise<{ message: string }> {
-    return this.routesService.delete(BigInt(id));
+  async delete(
+    @Param('id', ParseBigIntPipe) id: bigint,
+  ): Promise<{ message: string }> {
+    return this.routesService.delete(id);
   }
 }

@@ -10,6 +10,7 @@ import {
   UseGuards,
   Res,
 } from '@nestjs/common';
+import { ParseBigIntPipe } from 'src/infrastructure/common/pipes/parse-bigint.pipe';
 import type { Response } from 'express';
 import { ContratoMedidorService } from '../../application/contrato-medidor.service';
 import { CrearContratoMedidorDto } from '../dto/create-contrato-medidor.dto';
@@ -115,16 +116,16 @@ export class ContratoMedidorController {
   @ApiParam({
     name: 'id',
     description: 'ID del contrato',
-    type: String,
-    example: '1',
+    type: Number,
+    example: 1,
   })
   @ApiResponse({ status: 200, description: 'Contrato encontrado' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({ status: 404, description: 'Contrato no encontrado' })
   @RequiredPermission('contracts', 'read')
   @Get(':id')
-  buscarContrato(@Param('id') id: string) {
-    return this.contratoMedidorService.buscarContrato(BigInt(id));
+  buscarContrato(@Param('id', ParseBigIntPipe) id: bigint) {
+    return this.contratoMedidorService.buscarContrato(id);
   }
 
   @ApiOperation({
@@ -135,8 +136,8 @@ export class ContratoMedidorController {
   @ApiParam({
     name: 'id',
     description: 'ID del contrato',
-    type: String,
-    example: '1',
+    type: Number,
+    example: 1,
   })
   @ApiBody({
     type: ActualizarContratoMedidorDto,
@@ -151,10 +152,10 @@ export class ContratoMedidorController {
   @RequiredPermission('contracts', 'update')
   @Patch(':id')
   actualizarContrato(
-    @Param('id') id: string,
+    @Param('id', ParseBigIntPipe) id: bigint,
     @Body() updateDto: ActualizarContratoMedidorDto,
   ) {
-    return this.contratoMedidorService.actualizar(BigInt(id), updateDto);
+    return this.contratoMedidorService.actualizar(id, updateDto);
   }
 
   @ApiOperation({
@@ -165,16 +166,16 @@ export class ContratoMedidorController {
   @ApiParam({
     name: 'id',
     description: 'ID del contrato',
-    type: String,
-    example: '1',
+    type: Number,
+    example: 1,
   })
   @ApiResponse({ status: 200, description: 'Vínculo finalizado' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({ status: 404, description: 'Contrato no encontrado' })
   @RequiredPermission('contracts', 'update')
   @Post(':id/finalize')
-  finalizarVinculo(@Param('id') id: string) {
-    return this.contratoMedidorService.finalizarVinculo(BigInt(id));
+  finalizarVinculo(@Param('id', ParseBigIntPipe) id: bigint) {
+    return this.contratoMedidorService.finalizarVinculo(id);
   }
 
   @ApiOperation({
@@ -184,8 +185,8 @@ export class ContratoMedidorController {
   @ApiParam({
     name: 'id',
     description: 'ID del contrato',
-    type: String,
-    example: '1',
+    type: Number,
+    example: 1,
   })
   @ApiResponse({ status: 200, description: 'Contrato eliminado' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
@@ -193,8 +194,8 @@ export class ContratoMedidorController {
   @ApiResponse({ status: 404, description: 'Contrato no encontrado' })
   @RequiredPermission('contracts', 'delete')
   @Delete(':id')
-  eliminarContrato(@Param('id') id: string) {
-    return this.contratoMedidorService.eliminar(BigInt(id));
+  eliminarContrato(@Param('id', ParseBigIntPipe) id: bigint) {
+    return this.contratoMedidorService.eliminar(id);
   }
 
   /**
@@ -205,18 +206,19 @@ export class ContratoMedidorController {
   @ApiParam({
     name: 'id',
     description: 'ID del contrato',
-    type: String,
-    example: '1',
+    type: Number,
+    example: 1,
   })
   @ApiResponse({ status: 200, description: 'PDF generado' })
   @ApiResponse({ status: 404, description: 'Contrato no encontrado' })
   @RequiredPermission('contracts', 'read')
   @Get(':id/pdf/connection-request')
-  async connectionRequestPdf(@Param('id') id: string, @Res() res: Response) {
+  async connectionRequestPdf(
+    @Param('id', ParseBigIntPipe) id: bigint,
+    @Res() res: Response,
+  ) {
     const buffer =
-      await this.contratoMedidorService.generateConnectionRequestPdf(
-        BigInt(id),
-      );
+      await this.contratoMedidorService.generateConnectionRequestPdf(id);
     res.set({
       'Content-Type': 'application/pdf',
       'Content-Disposition': `inline; filename="solicitud-conexion-${id}.pdf"`,
@@ -233,21 +235,19 @@ export class ContratoMedidorController {
   @ApiParam({
     name: 'id',
     description: 'ID del contrato',
-    type: String,
-    example: '1',
+    type: Number,
+    example: 1,
   })
   @ApiResponse({ status: 200, description: 'PDF generado' })
   @ApiResponse({ status: 404, description: 'Contrato no encontrado' })
   @RequiredPermission('contracts', 'read')
   @Get(':id/pdf/responsibility-agreement')
   async responsibilityAgreementPdf(
-    @Param('id') id: string,
+    @Param('id', ParseBigIntPipe) id: bigint,
     @Res() res: Response,
   ) {
     const buffer =
-      await this.contratoMedidorService.generateResponsibilityAgreementPdf(
-        BigInt(id),
-      );
+      await this.contratoMedidorService.generateResponsibilityAgreementPdf(id);
     res.set({
       'Content-Type': 'application/pdf',
       'Content-Disposition': `inline; filename="acta-responsabilidad-${id}.pdf"`,

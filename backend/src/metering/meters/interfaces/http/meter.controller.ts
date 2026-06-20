@@ -9,6 +9,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import { ParseBigIntPipe } from 'src/infrastructure/common/pipes/parse-bigint.pipe';
 import { MeterService } from '../../application/meter.service';
 import { CreateMeterDto } from '../dto/create-meter.dto';
 import { UpdateMeterDto } from '../dto/update-meter.dto';
@@ -109,8 +110,8 @@ export class MeterController {
   @ApiParam({
     name: 'id',
     description: 'ID único del medidor',
-    type: String,
-    example: '1',
+    type: Number,
+    example: 1,
   })
   @ApiResponse({
     status: 200,
@@ -121,8 +122,10 @@ export class MeterController {
   @ApiResponse({ status: 404, description: 'Medidor no encontrado' })
   @RequiredPermission('meters', 'read')
   @Get(':id')
-  async findOne(@Param('id') id: string): Promise<MeterResponseDto> {
-    return toMeterResponse(await this.meterService.findOne(BigInt(id)));
+  async findOne(
+    @Param('id', ParseBigIntPipe) id: bigint,
+  ): Promise<MeterResponseDto> {
+    return toMeterResponse(await this.meterService.findOne(id));
   }
 
   /**
@@ -136,8 +139,8 @@ export class MeterController {
   @ApiParam({
     name: 'id',
     description: 'ID único del medidor',
-    type: String,
-    example: '1',
+    type: Number,
+    example: 1,
   })
   @ApiBody({ type: UpdateMeterDto, description: 'Datos a actualizar' })
   @ApiResponse({
@@ -152,12 +155,10 @@ export class MeterController {
   @RequiredPermission('meters', 'update')
   @Patch(':id')
   async update(
-    @Param('id') id: string,
+    @Param('id', ParseBigIntPipe) id: bigint,
     @Body() updateDto: UpdateMeterDto,
   ): Promise<MeterResponseDto> {
-    return toMeterResponse(
-      await this.meterService.update(BigInt(id), updateDto),
-    );
+    return toMeterResponse(await this.meterService.update(id, updateDto));
   }
 
   /**
@@ -171,8 +172,8 @@ export class MeterController {
   @ApiParam({
     name: 'id',
     description: 'ID único del medidor',
-    type: String,
-    example: '1',
+    type: Number,
+    example: 1,
   })
   @ApiResponse({ status: 200, description: 'Medidor eliminado' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
@@ -180,8 +181,10 @@ export class MeterController {
   @ApiResponse({ status: 404, description: 'Medidor no encontrado' })
   @RequiredPermission('meters', 'delete')
   @Delete(':id')
-  async delete(@Param('id') id: string): Promise<{ message: string }> {
-    return this.meterService.remove(BigInt(id));
+  async delete(
+    @Param('id', ParseBigIntPipe) id: bigint,
+  ): Promise<{ message: string }> {
+    return this.meterService.remove(id);
   }
 
   /**
@@ -198,8 +201,8 @@ export class MeterController {
   @ApiParam({
     name: 'id',
     description: 'ID del medidor',
-    type: String,
-    example: '1',
+    type: Number,
+    example: 1,
   })
   @ApiResponse({
     status: 200,
@@ -213,8 +216,10 @@ export class MeterController {
   @ApiResponse({ status: 404, description: 'Medidor no encontrado' })
   @RequiredPermission('meters', 'update')
   @Post(':id/install')
-  async install(@Param('id') id: string): Promise<MeterResponseDto> {
-    return toMeterResponse(await this.meterService.install(BigInt(id)));
+  async install(
+    @Param('id', ParseBigIntPipe) id: bigint,
+  ): Promise<MeterResponseDto> {
+    return toMeterResponse(await this.meterService.install(id));
   }
 
   /**
@@ -228,8 +233,8 @@ export class MeterController {
   @ApiParam({
     name: 'id',
     description: 'ID del medidor',
-    type: String,
-    example: '1',
+    type: Number,
+    example: 1,
     required: true,
   })
   @ApiResponse({
@@ -244,8 +249,10 @@ export class MeterController {
   @ApiResponse({ status: 404, description: 'Medidor no encontrado' })
   @RequiredPermission('meters', 'update')
   @Post(':id/report-defect')
-  async reportDefect(@Param('id') id: string): Promise<MeterResponseDto> {
-    return toMeterResponse(await this.meterService.reportDefect(BigInt(id)));
+  async reportDefect(
+    @Param('id', ParseBigIntPipe) id: bigint,
+  ): Promise<MeterResponseDto> {
+    return toMeterResponse(await this.meterService.reportDefect(id));
   }
 
   /**
@@ -259,8 +266,8 @@ export class MeterController {
   @ApiParam({
     name: 'id',
     description: 'ID del medidor',
-    type: String,
-    example: '1',
+    type: Number,
+    example: 1,
   })
   @ApiBody({
     schema: { example: { motivoBaja: 'Replacement' } },
@@ -279,11 +286,11 @@ export class MeterController {
   @RequiredPermission('meters', 'delete')
   @Post(':id/decommission')
   async decommission(
-    @Param('id') id: string,
+    @Param('id', ParseBigIntPipe) id: bigint,
     @Body('motivoBaja') motivoBaja: string,
   ): Promise<MeterResponseDto> {
     return toMeterResponse(
-      await this.meterService.decommission(BigInt(id), motivoBaja),
+      await this.meterService.decommission(id, motivoBaja),
     );
   }
 }
