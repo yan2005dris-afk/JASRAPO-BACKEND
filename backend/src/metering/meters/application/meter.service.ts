@@ -13,10 +13,7 @@ import { DecommissionMeterUseCase } from './use-cases/decommission-meter.use-cas
 import { MeterEntity } from '../domain/entities/meter.entity';
 import { DateUtil } from 'src/infrastructure/common/utils/date.util';
 import { METER_STATUS_LIST } from 'src/infrastructure/config/app.constants';
-import {
-  getPagination,
-  paginate,
-} from 'src/infrastructure/common/utils/pagination.util';
+import { getPagination } from 'src/infrastructure/common/utils/pagination.util';
 import { PaginatedMeterResponse } from '../interfaces/types/paginated-meter-response.type';
 
 @Injectable()

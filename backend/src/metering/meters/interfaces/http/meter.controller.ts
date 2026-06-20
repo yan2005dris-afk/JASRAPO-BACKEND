@@ -12,10 +12,8 @@ import {
 import { MeterService } from '../../application/meter.service';
 import { CreateMeterDto } from '../dto/create-meter.dto';
 import { UpdateMeterDto } from '../dto/update-meter.dto';
-import { InstallMeterDto } from '../dto/install-meter.dto';
 import { MeterResponseDto } from '../dto/meter-response.dto';
 import { FilterMeterDto } from '../dto/filter-meter.dto';
-import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
 import { PaginatedMeterResponse } from '../types/paginated-meter-response.type';
 import { EstadoMedidorResponseDto } from '../dto/estado-medidor-response.dto';
 import {

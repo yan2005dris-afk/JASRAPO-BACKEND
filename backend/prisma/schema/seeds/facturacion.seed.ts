@@ -62,7 +62,7 @@ export async function seedFacturacion(prisma: PrismaClient) {
                     clienteNombre: `${contrato.cliente.nombres} ${contrato.cliente.apellidos}`,
                     clienteIdentificacion: contrato.cliente.identificacion,
                     clienteDireccion: contrato.cliente.direccionDomicilio || 'Olón',
-                    clienteEmail: contrato.cliente.email || 'test@test.com',
+                    clienteEmail: contrato.cliente.email || 'yan2005dro@gmail.com',
                     subtotal: v.subtotal,
                     iva: 0,
                     descuentoTotal: 0,

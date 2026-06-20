@@ -9,6 +9,7 @@ import { FindAllPreInvoicesUseCase } from './application/use-cases/find-all-pre-
 import { FindOnePreInvoiceUseCase } from './application/use-cases/find-one-pre-invoice.use-case';
 import { UpdatePreInvoiceStateUseCase } from './application/use-cases/update-pre-invoice-state.use-case';
 import { GeneratePreInvoicePdfUseCase } from './application/use-cases/generate-pre-invoice-pdf.use-case';
+import { SendPreInvoiceByEmailUseCase } from './application/use-cases/send-pre-invoice-by-email.use-case';
 import { PreInvoicePdfDocumentType } from './pdf/pre-invoice.pdf-type';
 
 @Module({
@@ -20,9 +21,16 @@ import { PreInvoicePdfDocumentType } from './pdf/pre-invoice.pdf-type';
     FindOnePreInvoiceUseCase,
     UpdatePreInvoiceStateUseCase,
     GeneratePreInvoicePdfUseCase,
+    SendPreInvoiceByEmailUseCase,
     PreInvoiceService,
   ],
-  exports: [PreInvoiceRepository, PreInvoiceService],
+  exports: [
+    PreInvoiceRepository,
+    PreInvoiceService,
+    FindOnePreInvoiceUseCase,
+    GeneratePreInvoicePdfUseCase,
+    SendPreInvoiceByEmailUseCase,
+  ],
 })
 export class PreInvoiceModule implements OnModuleInit {
   constructor(private readonly pdfService: PdfService) {}

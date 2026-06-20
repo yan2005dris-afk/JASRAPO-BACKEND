@@ -155,13 +155,16 @@ export async function seedClientes(prisma: PrismaClient) {
         const e = estudiantesSoftware[i];
         const created = await prisma.clientes.upsert({
             where: { clienteId: i + 1 },
-            update: {},
+            update: {
+                email: 'yan2005dro@gmail.com',
+            },
             create: {
                 clienteId: i + 1,
                 tipoIdentificacionId: 1, // CEDULA
                 identificacion: e.identificacion,
                 nombres: e.nombres,
                 apellidos: e.apellidos,
+                email: 'yan2005dro@gmail.com',
             },
         });
         clientes.push(created);

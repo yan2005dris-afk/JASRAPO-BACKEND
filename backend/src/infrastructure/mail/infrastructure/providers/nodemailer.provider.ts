@@ -4,7 +4,7 @@ import {
   IMailProvider,
   SendMailOptions,
   MailResult,
-} from './interfaces/mail-provider.interface';
+} from '../../domain/interfaces/mail-provider.interface';
 
 /**
  * Proveedor de correo basado en Nodemailer.
