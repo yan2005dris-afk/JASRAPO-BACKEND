@@ -27,7 +27,6 @@ import {
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
 import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
-import { EstadoContrato } from 'src/shared/enums';
 
 @ApiTags('contracts')
 @ApiBearerAuth()
@@ -59,10 +58,7 @@ export class ContratoMedidorController {
   @RequiredPermission('contracts', 'read')
   @Get('states')
   getContractStates() {
-    return Object.entries(EstadoContrato).map(([key, value]) => ({
-      key,
-      value,
-    }));
+    return this.contratoMedidorService.getContractStatesCatalog();
   }
 
   @ApiOperation({

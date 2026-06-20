@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { CrearContratoMedidorDto } from '../interfaces/dto/create-contrato-medidor.dto';
 import { ActualizarContratoMedidorDto } from '../interfaces/dto/update-contrato-medidor.dto';
+import { EstadoContrato } from 'src/shared/enums';
 import { CreateContractUseCase } from './use-cases/create-contract.use-case';
 import { FindAllContractsUseCase } from './use-cases/find-all-contracts.use-case';
 import { FindOneContractUseCase } from './use-cases/find-one-contract.use-case';
@@ -24,6 +25,13 @@ export class ContratoMedidorService {
     private readonly getResponsibilityAgreementPdfDataUseCase: GetResponsibilityAgreementPdfDataUseCase,
     private readonly generatePdf: GeneratePdfUseCase,
   ) {}
+
+  getContractStatesCatalog(): { key: string; value: string }[] {
+    return Object.entries(EstadoContrato).map(([key, value]) => ({
+      key,
+      value,
+    }));
+  }
 
   async crearContrato(createDto: CrearContratoMedidorDto): Promise<any> {
     return this.createContractUseCase.execute(createDto);
