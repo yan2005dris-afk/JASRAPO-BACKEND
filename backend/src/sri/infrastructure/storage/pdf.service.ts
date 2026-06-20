@@ -1,111 +1,31 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import axios from 'axios';
-import FormData from 'form-data';
-import { createReadStream } from 'fs';
-import { basename } from 'path';
+import { Injectable, Logger, Optional } from '@nestjs/common';
+import { GeneratePdfUseCase } from 'src/infrastructure/pdf/use-cases/generate-pdf.use-case';
 import { PdfImageService, ImageData } from './pdf-image.service';
 
 @Injectable()
 export class PdfService {
   private readonly logger = new Logger(PdfService.name);
-  private readonly carboneApi: string;
-  private readonly pdfRenderConfig: {
-    maxAttempts: number;
-    retryDelay: number;
-  };
-  private readonly carboneRenderOptions: Record<string, unknown>;
 
   constructor(
-    private configService: ConfigService,
-    private pdfImageService: PdfImageService,
-  ) {
-    this.carboneApi = this.configService.get<string>('CARBONE_API')!;
-    this.pdfRenderConfig = {
-      maxAttempts: this.configService.get<number>('PDF_MAX_ATTEMPTS') || 2,
-      retryDelay: this.configService.get<number>('PDF_RETRY_DELAY') || 10,
-    };
-    this.carboneRenderOptions =
-      this.configService.get('CARBONE_RENDER_OPTIONS') || {};
-  }
+    private readonly generatePdf: GeneratePdfUseCase,
+    @Optional() private readonly pdfImageService?: PdfImageService,
+  ) {}
 
   /**
-   * Generate a PDF using the Carbone API
+   * Generate a PDF using the Puppeteer + Handlebars infrastructure
    */
   async generatePDF(
     jsonData: Record<string, unknown>,
     templatePath: string,
   ): Promise<Buffer> {
-    // 1. Upload template to Carbone
-    const formData = new FormData();
-    const templateStream = createReadStream(templatePath);
-    formData.append('template', templateStream, {
-      filename: basename(templatePath),
-      contentType:
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    });
+    const data = {
+      ...jsonData,
+      title: templatePath
+        ? `Documento: ${templatePath.split('/').pop()?.split('.').shift() || 'SRI'}`
+        : 'Documento SRI',
+    };
 
-    const templateResponse = await axios.post(
-      `${this.carboneApi}/template`,
-      formData,
-      {
-        headers: {
-          ...formData.getHeaders(),
-          Accept: 'application/json',
-        },
-        maxContentLength: Infinity,
-        maxBodyLength: Infinity,
-      },
-    );
-
-    if (
-      !templateResponse.data?.success ||
-      !templateResponse.data?.data?.templateId
-    ) {
-      throw new Error('Error al obtener el ID del template');
-    }
-
-    const templateId = templateResponse.data.data.templateId;
-
-    // 2. Render PDF
-    const renderResponse = await axios.post(
-      `${this.carboneApi}/render/${templateId}`,
-      {
-        data: jsonData,
-        ...this.carboneRenderOptions,
-      },
-    );
-
-    if (!renderResponse.data?.success || !renderResponse.data?.data?.renderId) {
-      throw new Error('Error al iniciar el renderizado');
-    }
-
-    const renderId = renderResponse.data.data.renderId;
-
-    // 3. Wait and check status
-    let attempts = 0;
-    const maxAttempts = this.pdfRenderConfig.maxAttempts;
-
-    while (attempts < maxAttempts) {
-      const statusResponse = await axios.get(`${this.carboneApi}/status`);
-
-      if (statusResponse.data.success || statusResponse.data.ready) {
-        // 4. Download the PDF
-        const pdfResponse = await axios.get(
-          `${this.carboneApi}/render/${renderId}`,
-          { responseType: 'arraybuffer' },
-        );
-
-        return Buffer.from(pdfResponse.data);
-      }
-
-      attempts++;
-      await new Promise((resolve) =>
-        setTimeout(resolve, this.pdfRenderConfig.retryDelay),
-      );
-    }
-
-    throw new Error('Tiempo de espera agotado');
+    return this.generatePdf.execute('sri-document', data);
   }
 
   /**
@@ -117,15 +37,19 @@ export class PdfService {
     images?: ImageData[],
   ): Promise<Buffer> {
     try {
-      // 1. Generate base PDF using Carbone
       const pdfBuffer = await this.generatePDF(jsonData, templatePath);
 
-      // 2. Add images if provided
       if (!images || images.length === 0) {
         return pdfBuffer;
       }
 
-      // 3. Process PDF to add images
+      if (!this.pdfImageService) {
+        this.logger.warn(
+          'PdfImageService not available, returning PDF without images',
+        );
+        return pdfBuffer;
+      }
+
       return await this.pdfImageService.addImagesToPdf(pdfBuffer, images);
     } catch (error) {
       this.logger.error('Error al generar PDF con imágenes:', error);

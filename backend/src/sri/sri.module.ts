@@ -45,6 +45,8 @@ import { PrismaSecuencialRepository } from './infrastructure/persistence/prisma-
 
 import { PdfImageService } from './infrastructure/storage/pdf-image.service';
 import { PdfService } from './infrastructure/storage/pdf.service';
+import { PdfService as InfraPdfService } from 'src/infrastructure/pdf/pdf.service';
+import { SriDocumentPdfType } from './pdf/sri-document.pdf-type';
 import { TemplateService } from './infrastructure/storage/template.service';
 import { SriBaseService } from './infrastructure/xml/sri-base.service';
 import { CatalogoValidatorService } from './infrastructure/xml/catalogo-validator.service';
@@ -98,6 +100,14 @@ import { WebhookProcessor } from './infrastructure/queue/processors/webhook.proc
     PdfImageService,
     PdfService,
     TemplateService,
+    {
+      provide: 'SRI_PDF_TYPE_REGISTRAR',
+      useFactory: (pdfService: InfraPdfService) => {
+        pdfService.registerDocumentType(SriDocumentPdfType);
+        return true;
+      },
+      inject: [InfraPdfService],
+    },
     SriBaseService,
     CatalogoValidatorService,
     IdentificacionValidatorService,
