@@ -26,7 +26,7 @@ import {
   ApiConsumes,
 } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
-import { SriService } from '../../sri.service';
+import { SriService } from '../../application/services/sri.service';
 import { EmisoresService } from '../../application/services/emisores.service';
 import { CurrentUser } from '../../../identity/auth/interfaces/http/decorators/current-user.decorator';
 import {

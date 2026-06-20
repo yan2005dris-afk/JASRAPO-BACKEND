@@ -11,8 +11,8 @@ import { SignatureController } from './interfaces/http/signature.controller';
 import { WebhooksController } from './interfaces/http/webhooks.controller';
 
 // Facade and Integration Services
-import { SriService } from './sri.service';
-import { SriIntegrationService } from './sri-integration.service';
+import { SriService } from './application/services/sri.service';
+import { SriIntegrationService } from './application/services/sri-integration.service';
 
 // Use Cases
 import { EmitirFacturaUseCase } from './application/use-cases/emitir-factura.use-case';
@@ -46,7 +46,7 @@ import { PrismaSecuencialRepository } from './infrastructure/persistence/prisma-
 import { PdfImageService } from './infrastructure/storage/pdf-image.service';
 import { PdfService } from './infrastructure/storage/pdf.service';
 import { PdfService as InfraPdfService } from 'src/infrastructure/pdf/pdf.service';
-import { SriDocumentPdfType } from './pdf/sri-document.pdf-type';
+import { SriDocumentPdfType } from './infrastructure/pdf/sri-document.pdf-type';
 import { TemplateService } from './infrastructure/storage/template.service';
 import { SriBaseService } from './infrastructure/xml/sri-base.service';
 import { CatalogoValidatorService } from './infrastructure/xml/catalogo-validator.service';

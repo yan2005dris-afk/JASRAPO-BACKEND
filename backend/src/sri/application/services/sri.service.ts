@@ -1,17 +1,17 @@
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
-import { extractRucFromClaveAcceso } from './infrastructure/xml/clave-acceso.utils';
+import { extractRucFromClaveAcceso } from '../../infrastructure/xml/clave-acceso.utils';
 import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { JobsService } from '../infrastructure/jobs/jobs.service';
-import { SRI_EMISION_JOB } from './infrastructure/queue/processors/sri-emision.processor';
-import { EmitirFacturaUseCase } from './application/use-cases/emitir-factura.use-case';
-import { EmitirNotaCreditoUseCase } from './application/use-cases/emitir-nota-credito.use-case';
-import { EmitirNotaDebitoUseCase } from './application/use-cases/emitir-nota-debito.use-case';
-import { EmitirRetencionUseCase } from './application/use-cases/emitir-retencion.use-case';
-import { ComprobanteRepository } from './domain/repositories/comprobante.repository';
-import { SriSoapClient } from './infrastructure/soap/sri-soap.client';
-import { XmlBuilderService } from './infrastructure/xml/xml-builder.service';
-import { XmlStorageService } from './infrastructure/storage/xml-storage.service';
+import { JobsService } from '../../../infrastructure/jobs/jobs.service';
+import { SRI_EMISION_JOB } from '../../infrastructure/queue/processors/sri-emision.processor';
+import { EmitirFacturaUseCase } from '../use-cases/emitir-factura.use-case';
+import { EmitirNotaCreditoUseCase } from '../use-cases/emitir-nota-credito.use-case';
+import { EmitirNotaDebitoUseCase } from '../use-cases/emitir-nota-debito.use-case';
+import { EmitirRetencionUseCase } from '../use-cases/emitir-retencion.use-case';
+import { ComprobanteRepository } from '../../domain/repositories/comprobante.repository';
+import { SriSoapClient } from '../../infrastructure/soap/sri-soap.client';
+import { XmlBuilderService } from '../../infrastructure/xml/xml-builder.service';
+import { XmlStorageService } from '../../infrastructure/storage/xml-storage.service';
 import {
   CreateFacturaDto,
   FacturaResponseDto,
@@ -22,8 +22,8 @@ import {
   CreateRetencionDto,
   RetencionResponseDto,
   EmisionEncoladaResponseDto,
-} from './interfaces/dto';
-import { TIPO_COMPROBANTE_DESCRIPCIONES } from './domain/constants';
+} from '../../interfaces/dto';
+import { TIPO_COMPROBANTE_DESCRIPCIONES } from '../../domain/constants';
 
 @Injectable()
 export class SriService {
