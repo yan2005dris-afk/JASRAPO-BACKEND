@@ -12,6 +12,7 @@ import { FindOneMeterUseCase } from './use-cases/find-one-meter.use-case';
 import { InstallMeterUseCase } from '../../operator/application/use-cases/install-meter.use-case';
 import { DecommissionMeterUseCase } from '../../operator/application/use-cases/decommission-meter.use-case';
 import { MeterEntity } from '../domain/entities/meter.entity';
+import { toMeterResponse } from '../domain/types/metersMapper';
 import { DateUtil } from 'src/shared/utils/date.util';
 import { METER_STATUS_LIST } from 'src/infrastructure/config/app.constants';
 import { getPagination } from 'src/infrastructure/common/utils/pagination.util';
@@ -50,7 +51,7 @@ export class MeterService {
     const totalPages = Math.ceil(total / take);
 
     return {
-      data: meters as unknown as any[],
+      data: meters.map((m) => toMeterResponse(m)),
       meta: {
         total,
         page: safePage,
