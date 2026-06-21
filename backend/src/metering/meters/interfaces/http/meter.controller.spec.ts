@@ -132,5 +132,4 @@ describe('MeterController', () => {
       expect(result).toEqual({ message: 'deleted' });
     });
   });
-
 });
