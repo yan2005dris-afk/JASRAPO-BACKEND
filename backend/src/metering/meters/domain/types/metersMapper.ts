@@ -7,7 +7,7 @@ import { DateUtil } from 'src/shared/utils/date.util';
  */
 export function toMeterResponse(meter: any): MeterResponseDto {
   return {
-    medidorId: meter.medidorId?.toString(),
+    medidorId: meter.medidorId?.toString() ?? '',
     marca: meter.marca,
     modelo: meter.modelo,
     serie: meter.serie,

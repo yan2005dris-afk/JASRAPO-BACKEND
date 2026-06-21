@@ -5,7 +5,7 @@ export class MeterResponseDto {
     description: 'ID único del medidor',
     example: '1',
   })
-  medidorId: bigint;
+  medidorId: string;
 
   @ApiProperty({
     description: 'Marca del medidor',
