@@ -229,6 +229,6 @@ export class OperatorController {
   async syncAll(@CurrentUser() user: JwtPayload): Promise<MeterResponseDto[]> {
     const operarioId = Number(user.sub);
     const meters = await this.syncAllUseCase.execute(operarioId);
-    return meters.map((m) => toMeterResponse(m)!);
+    return meters.map((m) => toMeterResponse(m));
   }
 }

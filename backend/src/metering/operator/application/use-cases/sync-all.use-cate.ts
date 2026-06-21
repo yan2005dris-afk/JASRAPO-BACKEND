@@ -5,9 +5,7 @@ import { OperatorRepository } from '../../domain/repositories/operator.repositor
 
 @Injectable()
 export class SyncAllUseCase {
-  constructor(
-    private readonly operatorRepository: OperatorRepository,
-  ) {}
+  constructor(private readonly operatorRepository: OperatorRepository) {}
 
   async execute(operarioId: number): Promise<MeterEntity[]> {
     // 1. Find the active billing period
@@ -39,10 +37,11 @@ export class SyncAllUseCase {
     }));
 
     // 5. Query meters with active historial matching the operator's routes
-    const meters = await this.operatorRepository.findMetersByRoutes(rutaConditions);
+    const meters =
+      await this.operatorRepository.findMetersByRoutes(rutaConditions);
 
     // 6. Map to MeterEntity[]
-    return (meters as any[]).map((m: any) => {
+    return meters.map((m: any) => {
       const activeHistorial = m.historial?.[0];
       return new MeterEntity({
         medidorId: m.medidorId,
@@ -59,10 +58,9 @@ export class SyncAllUseCase {
         updatedAt: m.updatedAt,
         deletedAt: m.deletedAt,
         contratoId: activeHistorial?.contrato?.contratoId ?? null,
-        clienteNombre:
-          activeHistorial?.contrato?.cliente
-            ? `${activeHistorial.contrato.cliente.nombres} ${activeHistorial.contrato.cliente.apellidos}`.trim()
-            : null,
+        clienteNombre: activeHistorial?.contrato?.cliente
+          ? `${activeHistorial.contrato.cliente.nombres} ${activeHistorial.contrato.cliente.apellidos}`.trim()
+          : null,
       });
     });
   }

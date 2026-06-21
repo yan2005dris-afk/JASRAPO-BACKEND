@@ -4,9 +4,7 @@ import { OperatorRepository } from '../../domain/repositories/operator.repositor
 
 @Injectable()
 export class GetOperatorReadingsUseCase {
-  constructor(
-    private readonly operatorRepository: OperatorRepository,
-  ) {}
+  constructor(private readonly operatorRepository: OperatorRepository) {}
 
   async execute(operarioId: number): Promise<IResponseReading[]> {
     // 1. Find the active billing period
@@ -40,10 +38,11 @@ export class GetOperatorReadingsUseCase {
     }));
 
     // 5. Query lecturas that belong to any of the operator's rutas
-    const lecturas = await this.operatorRepository.findReadingsByPeriodAndRoutes(
-      activePeriod.periodoId,
-      rutaConditions,
-    );
+    const lecturas =
+      await this.operatorRepository.findReadingsByPeriodAndRoutes(
+        activePeriod.periodoId,
+        rutaConditions,
+      );
 
     // 6. Map raw Prisma results to IResponseReading
     return lecturas.map((lectura) => {

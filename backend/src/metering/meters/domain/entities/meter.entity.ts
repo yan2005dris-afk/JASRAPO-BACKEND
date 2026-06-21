@@ -1,4 +1,4 @@
-import { EstadoMedidor } from 'src/shared/enums';
+import type { EstadoMedidor } from 'src/shared/enums';
 
 export class MeterEntity {
   medidorId: bigint;

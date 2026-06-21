@@ -205,9 +205,7 @@ export class PrismaOperatorRepository extends OperatorRepository {
     });
   }
 
-  async findReadingWithDetails(
-    id: bigint,
-  ): Promise<ReadingWithDetails | null> {
+  async findReadingWithDetails(id: bigint): Promise<ReadingWithDetails | null> {
     return this.prisma.lecturas.findUnique({
       where: { lecturaId: id, deletedAt: null },
       select: {
@@ -230,13 +228,10 @@ export class PrismaOperatorRepository extends OperatorRepository {
           },
         },
       },
-    }) as Promise<ReadingWithDetails | null>;
+    });
   }
 
-  async updateReading(
-    id: bigint,
-    data: Record<string, unknown>,
-  ): Promise<any> {
+  async updateReading(id: bigint, data: Record<string, unknown>): Promise<any> {
     return this.prisma.lecturas.update({
       where: { lecturaId: id },
       data,

@@ -16,9 +16,7 @@ const OPERATOR_EDITABLE_ESTADOS = new Set<string>([
 
 @Injectable()
 export class UpdateOperatorReadingUseCase {
-  constructor(
-    private readonly operatorRepository: OperatorRepository,
-  ) {}
+  constructor(private readonly operatorRepository: OperatorRepository) {}
 
   async execute(
     id: bigint,
