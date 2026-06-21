@@ -36,8 +36,6 @@ export async function seedLecturas(prisma: PrismaClient) {
     });
     let nextMedidorId = Number(maxMedidor?.medidorId ?? 0) + 1;
 
-    let lecturaId = 1;
-
     for (const contrato of contratos) {
         // Limpiar historial existente para este contrato, así cada contrato
         // tiene lecturas únicas sin mezclarse con otros contratos
@@ -101,6 +99,9 @@ export async function seedLecturas(prisma: PrismaClient) {
         const currentPeriodId = periodosDb[periodosDb.length - 1]?.periodoId;
 
         for (const pDb of periodosDb) {
+            // Active period readings are initialized to 0 by routes.seed.ts
+            if (pDb.periodoId === currentPeriodId) continue;
+
             // 12 lecturas mensuales por período (año)
             const año = parseInt(pDb.nombre, 10); // Usar el nombre del período (e.g. "2024") para evitar timezone offset
             for (let mes = 0; mes < 12; mes++) {
@@ -113,19 +114,17 @@ export async function seedLecturas(prisma: PrismaClient) {
 
                 await prisma.lecturas.create({
                     data: {
-                        lecturaId: BigInt(lecturaId),
                         medidorId: medidor.medidorId,
                         periodoId: pDb.periodoId,
                         fecha: fechaLectura,
                         lecturaAnterior,
                         lecturaActual,
                         consumoCalculado: consumo,
-                        estado: pDb.periodoId === currentPeriodId ? "PENDIENTE" : "APROBADA",
+                        estado: "APROBADA",
                         lecturaInicial: lecturaAnterior === 0,
                     },
                 });
                 lecturaAnterior = lecturaActual;
-                lecturaId++;
             }
         }
     }
