@@ -104,7 +104,8 @@ export class OperatorController {
     @CurrentUser() user: JwtPayload,
   ): Promise<any[]> {
     const operarioId = Number(user.sub);
-    const raw = await this.getOperatorReadingsWithAnomaliesUseCase.execute(operarioId);
+    const raw =
+      await this.getOperatorReadingsWithAnomaliesUseCase.execute(operarioId);
     return raw.map((r: any) => ({
       lecturaId: r.lecturaId?.toString() ?? null,
       medidorId: r.medidor?.medidorId?.toString() ?? null,

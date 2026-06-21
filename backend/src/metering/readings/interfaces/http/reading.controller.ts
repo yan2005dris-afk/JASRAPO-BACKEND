@@ -202,7 +202,8 @@ export class ReadingController {
   @Patch(':id')
   async actualizarLectura(
     @Param('id', ParseBigIntPipe) id: bigint,
-    @Body(new NotEmptyBodyPipe(), new ParseActualizarLecturaPipe()) updateLecturaDto: ActualizarLecturaDto,
+    @Body(new NotEmptyBodyPipe(), new ParseActualizarLecturaPipe())
+    updateLecturaDto: ActualizarLecturaDto,
   ): Promise<ResponseReadingDto> {
     return toReadingResponse(
       await this.readingService.update(id, updateLecturaDto),

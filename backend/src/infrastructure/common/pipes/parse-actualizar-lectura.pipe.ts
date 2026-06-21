@@ -13,14 +13,18 @@ export class ParseActualizarLecturaPipe implements PipeTransform {
       try {
         transformed.medidorId = BigInt(transformed.medidorId);
       } catch {
-        throw new BadRequestException('medidorId debe ser un valor numérico válido');
+        throw new BadRequestException(
+          'medidorId debe ser un valor numérico válido',
+        );
       }
     }
 
     if (transformed.fecha !== undefined && transformed.fecha !== null) {
       const date = new Date(transformed.fecha);
       if (isNaN(date.getTime())) {
-        throw new BadRequestException('fecha debe ser una fecha ISO 8601 válida');
+        throw new BadRequestException(
+          'fecha debe ser una fecha ISO 8601 válida',
+        );
       }
       transformed.fecha = date;
     }
