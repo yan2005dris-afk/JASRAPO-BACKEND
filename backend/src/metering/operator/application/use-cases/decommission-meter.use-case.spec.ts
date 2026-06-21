@@ -52,7 +52,7 @@ describe('DecommissionMeterUseCase', () => {
   it('should throw NotFoundException when meter does not exist', async () => {
     mockMeterRepository.findUnique.mockResolvedValue(null);
 
-    await expect(useCase.execute(BigInt(999))).rejects.toThrow(NotFoundException);
+    await expect(useCase.execute(BigInt(999), 'Motivo')).rejects.toThrow(NotFoundException);
   });
 
   it('should throw BadRequestException when meter is not in DANADO state', async () => {
@@ -60,25 +60,27 @@ describe('DecommissionMeterUseCase', () => {
       makeMeter({ estado: EstadoMedidor.INSTALADO }),
     );
 
-    await expect(useCase.execute(BigInt(1))).rejects.toThrow(BadRequestException);
+    await expect(useCase.execute(BigInt(1), 'Motivo')).rejects.toThrow(BadRequestException);
   });
 
   it('should update meter to BAJA and return the updated entity', async () => {
     const decommissionedMeter = makeMeter({
       estado: EstadoMedidor.BAJA,
       fechaBaja: new Date(),
+      motivo: 'Motivo',
     });
 
     mockMeterRepository.findUnique.mockResolvedValue(makeMeter());
     mockMeterRepository.update.mockResolvedValue(decommissionedMeter);
 
-    const result = await useCase.execute(BigInt(1));
+    const result = await useCase.execute(BigInt(1), 'Motivo');
 
     expect(mockMeterRepository.update).toHaveBeenCalledWith(
       { medidorId: BigInt(1) },
       expect.objectContaining({
         estado: EstadoMedidor.BAJA,
         fechaBaja: expect.any(Date),
+        motivo: 'Motivo',
       }),
     );
     expect(result.estado).toBe(EstadoMedidor.BAJA);

@@ -7,7 +7,7 @@ import type { MeterEntity } from '../../../meters/domain/entities/meter.entity';
 export class DecommissionMeterUseCase {
   constructor(private readonly meterRepository: MeterRepository) {}
 
-  async execute(medidorId: bigint): Promise<MeterEntity> {
+  async execute(medidorId: bigint, motivo: string): Promise<MeterEntity> {
     const meter = await this.meterRepository.findUnique({ medidorId });
 
     if (!meter || meter.deletedAt) {
@@ -25,6 +25,7 @@ export class DecommissionMeterUseCase {
       {
         estado: EstadoMedidor.BAJA,
         fechaBaja: new Date(),
+        motivo,
       },
     );
   }

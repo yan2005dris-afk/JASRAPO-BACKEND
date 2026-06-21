@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
-import { EstadoPeriodo, EstadoRuta, EstadoMedidor } from 'src/shared/enums';
+import { EstadoPeriodo, EstadoRuta, EstadoMedidor, EstadoLectura, EstadoAnomalia } from 'src/shared/enums';
 import {
   OperatorRepository,
   type ActivePeriod,
@@ -308,6 +308,73 @@ export class PrismaOperatorRepository extends OperatorRepository {
         modelo: true,
         latitud: true,
         longitud: true,
+      },
+    });
+  }
+
+  async findReadingsWithPendingAnomalies(
+    operarioId: number,
+    periodoId: number,
+  ): Promise<any[]> {
+    const routes = await this.findActiveRoutes(operarioId, periodoId);
+
+    if (routes.length === 0) {
+      return [];
+    }
+
+    const routeConditions = routes.map((r) => ({
+      contrato: {
+        comunidadId: r.comunidadId,
+        ...(r.sectorId !== null && r.sectorId !== undefined
+          ? { sectorId: r.sectorId }
+          : {}),
+      },
+    }));
+
+    return this.prisma.lecturas.findMany({
+      where: {
+        periodoId,
+        deletedAt: null,
+        estado: EstadoLectura.CON_NOVEDAD,
+        lecturaAnomalias: {
+          some: { estado: EstadoAnomalia.PENDIENTE, deletedAt: null },
+        },
+        medidor: {
+          historial: {
+            some: {
+              fechaHasta: null,
+              OR: routeConditions,
+            },
+          },
+        },
+      },
+      select: {
+        lecturaId: true,
+        fecha: true,
+        lecturaAnterior: true,
+        lecturaActual: true,
+        consumoCalculado: true,
+        estado: true,
+        periodoId: true,
+        descripcionAnomalia: true,
+        medidor: {
+          select: {
+            medidorId: true,
+            serie: true,
+            marca: true,
+            modelo: true,
+          },
+        },
+        lecturaAnomalias: {
+          where: { estado: EstadoAnomalia.PENDIENTE, deletedAt: null },
+          select: {
+            anomaliaId: true,
+            tipo: true,
+            estado: true,
+            observacion: true,
+            createdAt: true,
+          },
+        },
       },
     });
   }

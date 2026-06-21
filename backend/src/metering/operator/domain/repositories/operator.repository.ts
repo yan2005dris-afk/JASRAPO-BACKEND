@@ -63,4 +63,8 @@ export abstract class OperatorRepository {
     sectorId: number | null;
   } | null>;
   abstract findMedidoresById(medidorIds: bigint[]): Promise<any[]>;
+  abstract findReadingsWithPendingAnomalies(
+    operarioId: number,
+    periodoId: number,
+  ): Promise<any[]>;
 }

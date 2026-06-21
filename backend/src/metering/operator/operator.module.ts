@@ -8,6 +8,7 @@ import { UpdateTaskStateUseCase } from './application/use-cases/update-task-stat
 import { InstallMeterUseCase } from './application/use-cases/install-meter.use-case';
 import { ReportDefectUseCase } from './application/use-cases/report-defect.use-case';
 import { DecommissionMeterUseCase } from './application/use-cases/decommission-meter.use-case';
+import { GetOperatorReadingsWithAnomaliesUseCase } from './application/use-cases/get-operator-readings-with-anomalies.use-case';
 import { PrismaOperatorRepository } from './infrastructure/repositories/prisma-operator.repository';
 import { OperatorRepository } from './domain/repositories/operator.repository';
 import { HaversineService } from './domain/services/haversine.service';
@@ -26,6 +27,7 @@ import { ReadingModule } from '../readings/reading.module';
     InstallMeterUseCase,
     ReportDefectUseCase,
     DecommissionMeterUseCase,
+    GetOperatorReadingsWithAnomaliesUseCase,
     HaversineService,
     {
       provide: OperatorRepository,

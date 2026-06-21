@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { MeterRepository } from '../../../meters/domain/repositories/meter.repository';
-import { EstadoMedidor } from 'src/shared/enums';
+import { EstadoMedidor, EstadoContrato } from 'src/shared/enums';
 import type { MeterEntity } from '../../../meters/domain/entities/meter.entity';
 
 @Injectable()
@@ -20,12 +20,32 @@ export class InstallMeterUseCase {
       );
     }
 
-    return this.meterRepository.update(
-      { medidorId },
-      {
-        estado: EstadoMedidor.INSTALADO,
-        fechaInstalacion: new Date(),
-      },
-    );
+    const contrato =
+      await this.meterRepository.findActiveContractForMeter(medidorId);
+
+    if (!contrato) {
+      throw new BadRequestException(
+        'El medidor no tiene un contrato activo vinculado',
+      );
+    }
+
+    if (contrato.estado !== EstadoContrato.PENDIENTE_INSTALACION) {
+      throw new BadRequestException(
+        `El contrato debe estar en estado PENDIENTE_INSTALACION para instalar el medidor, estado actual: ${contrato.estado}`,
+      );
+    }
+
+    return this.meterRepository.executeTransaction(async (tx) => {
+      const updated = await this.meterRepository.update(
+        { medidorId },
+        {
+          estado: EstadoMedidor.INSTALADO,
+          fechaInstalacion: new Date(),
+        },
+        tx,
+      );
+
+      return updated;
+    });
   }
 }

@@ -4,9 +4,6 @@ import { MeterService } from './meter.service';
 import { MeterRepository } from '../domain/repositories/meter.repository';
 import { CreateMeterUseCase } from './use-cases/create-meter.use-case';
 import { FindOneMeterUseCase } from './use-cases/find-one-meter.use-case';
-import { InstallMeterUseCase } from './use-cases/install-meter.use-case';
-import { ReportDefectUseCase } from './use-cases/report-defect.use-case';
-import { DecommissionMeterUseCase } from './use-cases/decommission-meter.use-case';
 
 import { EstadoMedidor } from 'src/shared/enums';
 
@@ -15,9 +12,6 @@ describe('MeterService', () => {
   let meterRepository: MeterRepository;
   let createUseCase: CreateMeterUseCase;
   let findOneUseCase: FindOneMeterUseCase;
-  let installUseCase: InstallMeterUseCase;
-  let reportDamageUseCase: ReportDefectUseCase;
-  let decommissionUseCase: DecommissionMeterUseCase;
 
   // Prisma result (raw DB)
   const mockPrismaResult = {
@@ -66,15 +60,6 @@ describe('MeterService', () => {
         },
         { provide: CreateMeterUseCase, useValue: { execute: jest.fn() } },
         { provide: FindOneMeterUseCase, useValue: { execute: jest.fn() } },
-        { provide: InstallMeterUseCase, useValue: { execute: jest.fn() } },
-        {
-          provide: ReportDefectUseCase,
-          useValue: { execute: jest.fn() },
-        },
-        {
-          provide: DecommissionMeterUseCase,
-          useValue: { execute: jest.fn() },
-        },
       ],
     }).compile();
 
@@ -82,11 +67,6 @@ describe('MeterService', () => {
     meterRepository = module.get<MeterRepository>(MeterRepository);
     createUseCase = module.get<CreateMeterUseCase>(CreateMeterUseCase);
     findOneUseCase = module.get<FindOneMeterUseCase>(FindOneMeterUseCase);
-    installUseCase = module.get<InstallMeterUseCase>(InstallMeterUseCase);
-    reportDamageUseCase = module.get<ReportDefectUseCase>(ReportDefectUseCase);
-    decommissionUseCase = module.get<DecommissionMeterUseCase>(
-      DecommissionMeterUseCase,
-    );
   });
 
   it('should be defined', () => {

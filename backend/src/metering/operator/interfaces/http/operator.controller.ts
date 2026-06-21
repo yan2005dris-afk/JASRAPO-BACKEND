@@ -40,6 +40,7 @@ import { TipoRuta } from 'src/shared/enums';
 import { InstallMeterUseCase } from '../../application/use-cases/install-meter.use-case';
 import { ReportDefectUseCase } from '../../application/use-cases/report-defect.use-case';
 import { DecommissionMeterUseCase } from '../../application/use-cases/decommission-meter.use-case';
+import { GetOperatorReadingsWithAnomaliesUseCase } from '../../application/use-cases/get-operator-readings-with-anomalies.use-case';
 
 @ApiTags('operator')
 @ApiBearerAuth()
@@ -55,6 +56,7 @@ export class OperatorController {
     private readonly syncAllUseCase: SyncAllUseCase,
     private readonly getOperatorTasksUseCase: GetOperatorTasksUseCase,
     private readonly updateTaskStateUseCase: UpdateTaskStateUseCase,
+    private readonly getOperatorReadingsWithAnomaliesUseCase: GetOperatorReadingsWithAnomaliesUseCase,
   ) {}
 
   @ApiOperation({
@@ -77,6 +79,31 @@ export class OperatorController {
   ): Promise<ResponseReadingDto[]> {
     const operarioId = Number(user.sub);
     return this.getOperatorReadingsUseCase.execute(operarioId);
+  }
+
+  /**
+   * List readings with pending anomalies for the operator
+   * GET /operator/readings/anomalies
+   */
+  @ApiOperation({
+    summary: 'Lecturas con anomalías pendientes',
+    description:
+      'Retorna las lecturas con estado CON_NOVEDAD que tienen anomalías en estado PENDIENTE, ' +
+      'pertenecientes a las rutas activas del operario en el período activo',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de lecturas con anomalías pendientes',
+  })
+  @ApiResponse({ status: 401, description: 'No autorizado' })
+  @ApiResponse({ status: 404, description: 'No hay período activo' })
+  @RequiredPermission('lecturas', 'read')
+  @Get('readings/anomalies')
+  async getReadingsWithAnomalies(
+    @CurrentUser() user: JwtPayload,
+  ): Promise<any[]> {
+    const operarioId = Number(user.sub);
+    return this.getOperatorReadingsWithAnomaliesUseCase.execute(operarioId);
   }
 
   @ApiOperation({
@@ -222,7 +249,7 @@ export class OperatorController {
     @Param('id', ParseBigIntPipe) id: bigint,
     @Body() dto: DecommissionMeterDto,
   ): Promise<MeterResponseDto> {
-    return toMeterResponse(await this.decommissionMeterUseCase.execute(id));
+    return toMeterResponse(await this.decommissionMeterUseCase.execute(id, dto.motivoBaja));
   }
 
   /**

@@ -94,6 +94,7 @@ export const EstadoLectura = {
   RECHAZADA_VERIFICACION: 'RECHAZADA_VERIFICACION',
   ESTIMADA: 'ESTIMADA',
   PLANILLADA: 'PLANILLADA',
+  CON_NOVEDAD: 'CON_NOVEDAD',
 } as const;
 
 export type EstadoLectura = (typeof EstadoLectura)[keyof typeof EstadoLectura];
