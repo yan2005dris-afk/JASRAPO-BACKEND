@@ -27,6 +27,8 @@ export class PrismaMeterRepository implements MeterRepository {
       include: {
         historial: {
           where: { fechaHasta: null },
+          orderBy: { fechaDesde: 'desc' },
+          take: 1,
           include: {
             contrato: {
               include: {
@@ -55,6 +57,8 @@ export class PrismaMeterRepository implements MeterRepository {
       include: {
         historial: {
           where: { fechaHasta: null },
+          orderBy: { fechaDesde: 'desc' },
+          take: 1,
           include: {
             contrato: {
               include: {
