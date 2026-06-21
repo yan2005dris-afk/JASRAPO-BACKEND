@@ -4,10 +4,10 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { PrismaService } from 'src/infrastructure/database/prisma.service';
-import { EstadoLectura, EstadoPeriodo, EstadoRuta } from 'src/shared/enums';
+import { EstadoLectura } from 'src/shared/enums';
 import { ActualizarLecturaDto } from 'src/metering/readings/interfaces/dto/update-lectura.dto';
 import type { IResponseReading } from 'src/metering/readings/types/IResponseReading';
+import { OperatorRepository } from '../../domain/repositories/operator.repository';
 
 const OPERATOR_EDITABLE_ESTADOS = new Set<string>([
   EstadoLectura.PENDIENTE,
@@ -16,7 +16,9 @@ const OPERATOR_EDITABLE_ESTADOS = new Set<string>([
 
 @Injectable()
 export class UpdateOperatorReadingUseCase {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly operatorRepository: OperatorRepository,
+  ) {}
 
   async execute(
     id: bigint,
@@ -24,29 +26,7 @@ export class UpdateOperatorReadingUseCase {
     updateDto: ActualizarLecturaDto,
   ): Promise<IResponseReading> {
     // 1. Find the lectura with its medidor → historial → contrato relation
-    const existing = await this.prisma.lecturas.findUnique({
-      where: { lecturaId: id, deletedAt: null },
-      select: {
-        lecturaId: true,
-        estado: true,
-        medidor: {
-          select: {
-            historial: {
-              where: { fechaHasta: null },
-              select: {
-                contrato: {
-                  select: {
-                    contratoId: true,
-                    comunidadId: true,
-                    sectorId: true,
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-    });
+    const existing = await this.operatorRepository.findReadingWithDetails(id);
 
     if (!existing) {
       throw new NotFoundException(`Lectura con ID ${id} no encontrada`);
@@ -60,10 +40,7 @@ export class UpdateOperatorReadingUseCase {
     }
 
     // 3. Find the active billing period
-    const activePeriod = await this.prisma.periodos.findFirst({
-      where: { estado: EstadoPeriodo.ABIERTO },
-      select: { periodoId: true },
-    });
+    const activePeriod = await this.operatorRepository.findActivePeriod();
 
     if (!activePeriod) {
       throw new NotFoundException(
@@ -72,20 +49,10 @@ export class UpdateOperatorReadingUseCase {
     }
 
     // 4. Find operator's active rutas for this period
-    const rutas = await this.prisma.rutas.findMany({
-      where: {
-        operarioId,
-        periodoId: activePeriod.periodoId,
-        estado: {
-          notIn: [EstadoRuta.CANCELADA, EstadoRuta.COMPLETADA],
-        },
-        deletedAt: null,
-      },
-      select: {
-        comunidadId: true,
-        sectorId: true,
-      },
-    });
+    const rutas = await this.operatorRepository.findActiveRoutes(
+      operarioId,
+      activePeriod.periodoId,
+    );
 
     if (rutas.length === 0) {
       throw new ForbiddenException(
@@ -146,52 +113,10 @@ export class UpdateOperatorReadingUseCase {
     }
 
     // 7. Perform the update and return the updated lectura
-    const updated = await this.prisma.lecturas.update({
-      where: { lecturaId: id },
-      data: dataToUpdate,
-      select: {
-        lecturaId: true,
-        fecha: true,
-        lecturaAnterior: true,
-        lecturaActual: true,
-        consumoCalculado: true,
-        descripcionAnomalia: true,
-        fechaValidacion: true,
-        fotoUrl: true,
-        lecturaInicial: true,
-        periodoId: true,
-        estado: true,
-        medidor: {
-          select: {
-            medidorId: true,
-            serie: true,
-            marca: true,
-            modelo: true,
-            historial: {
-              where: { fechaHasta: null },
-              select: {
-                contrato: {
-                  select: {
-                    contratoId: true,
-                    numeroGuia: true,
-                    direccionSuministro: true,
-                    estado: true,
-                  },
-                },
-              },
-            },
-          },
-        },
-        periodoRel: {
-          select: {
-            periodoId: true,
-            nombre: true,
-            fechaInicio: true,
-            fechaFin: true,
-          },
-        },
-      },
-    });
+    const updated = await this.operatorRepository.updateReading(
+      id,
+      dataToUpdate,
+    );
 
     const updatedHistorial = updated.medidor?.historial?.[0];
     const updatedContrato = updatedHistorial?.contrato ?? null;

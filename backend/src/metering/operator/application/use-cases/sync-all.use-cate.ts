@@ -1,18 +1,17 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { MeterEntity } from 'src/metering/meters/domain/entities/meter.entity';
-import { EstadoMedidor, EstadoPeriodo, EstadoRuta } from 'src/shared/enums';
-import { PrismaService } from 'src/infrastructure/database/prisma.service';
+import { EstadoMedidor } from 'src/shared/enums';
+import { OperatorRepository } from '../../domain/repositories/operator.repository';
 
 @Injectable()
 export class SyncAllUseCase {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly operatorRepository: OperatorRepository,
+  ) {}
 
   async execute(operarioId: number): Promise<MeterEntity[]> {
     // 1. Find the active billing period
-    const activePeriod = await this.prisma.periodos.findFirst({
-      where: { estado: EstadoPeriodo.ABIERTO },
-      select: { periodoId: true },
-    });
+    const activePeriod = await this.operatorRepository.findActivePeriod();
 
     if (!activePeriod) {
       throw new NotFoundException(
@@ -21,20 +20,10 @@ export class SyncAllUseCase {
     }
 
     // 2. Find operator's active rutas for this period
-    const rutas = await this.prisma.rutas.findMany({
-      where: {
-        operarioId,
-        periodoId: activePeriod.periodoId,
-        estado: {
-          notIn: [EstadoRuta.CANCELADA, EstadoRuta.COMPLETADA],
-        },
-        deletedAt: null,
-      },
-      select: {
-        comunidadId: true,
-        sectorId: true,
-      },
-    });
+    const rutas = await this.operatorRepository.findActiveRoutes(
+      operarioId,
+      activePeriod.periodoId,
+    );
 
     // 3. No routes → return empty
     if (rutas.length === 0) {
@@ -50,51 +39,7 @@ export class SyncAllUseCase {
     }));
 
     // 5. Query meters with active historial matching the operator's routes
-    const meters = await this.prisma.medidores.findMany({
-      where: {
-        estado: EstadoMedidor.INSTALADO,
-        deletedAt: null,
-        historial: {
-          some: {
-            fechaHasta: null,
-            contrato: {
-              OR: rutaConditions,
-            },
-          },
-        },
-      },
-      select: {
-        medidorId: true,
-        marca: true,
-        modelo: true,
-        serie: true,
-        estado: true,
-        fechaInstalacion: true,
-        fechaBaja: true,
-        motivo: true,
-        latitud: true,
-        longitud: true,
-        createdAt: true,
-        updatedAt: true,
-        deletedAt: true,
-        historial: {
-          where: { fechaHasta: null },
-          select: {
-            contrato: {
-              select: {
-                contratoId: true,
-                cliente: {
-                  select: {
-                    nombres: true,
-                  },
-                },
-              },
-            },
-          },
-          take: 1,
-        },
-      },
-    });
+    const meters = await this.operatorRepository.findMetersByRoutes(rutaConditions);
 
     // 6. Map to MeterEntity[]
     return (meters as any[]).map((m: any) => {

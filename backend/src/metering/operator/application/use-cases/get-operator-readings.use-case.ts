@@ -1,18 +1,16 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from 'src/infrastructure/database/prisma.service';
-import { EstadoPeriodo, EstadoRuta } from 'src/shared/enums';
 import type { IResponseReading } from 'src/metering/readings/types/IResponseReading';
+import { OperatorRepository } from '../../domain/repositories/operator.repository';
 
 @Injectable()
 export class GetOperatorReadingsUseCase {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly operatorRepository: OperatorRepository,
+  ) {}
 
   async execute(operarioId: number): Promise<IResponseReading[]> {
     // 1. Find the active billing period
-    const activePeriod = await this.prisma.periodos.findFirst({
-      where: { estado: EstadoPeriodo.ABIERTO },
-      select: { periodoId: true },
-    });
+    const activePeriod = await this.operatorRepository.findActivePeriod();
 
     if (!activePeriod) {
       throw new NotFoundException(
@@ -21,21 +19,10 @@ export class GetOperatorReadingsUseCase {
     }
 
     // 2. Find operator's active rutas for this period
-    const rutas = await this.prisma.rutas.findMany({
-      where: {
-        operarioId,
-        periodoId: activePeriod.periodoId,
-        estado: {
-          notIn: [EstadoRuta.CANCELADA, EstadoRuta.COMPLETADA],
-        },
-        deletedAt: null,
-      },
-      select: {
-        rutaId: true,
-        comunidadId: true,
-        sectorId: true,
-      },
-    });
+    const rutas = await this.operatorRepository.findActiveRoutes(
+      operarioId,
+      activePeriod.periodoId,
+    );
 
     // 3. No routes assigned → return empty list (not 404)
     if (rutas.length === 0) {
@@ -53,70 +40,10 @@ export class GetOperatorReadingsUseCase {
     }));
 
     // 5. Query lecturas that belong to any of the operator's rutas
-    const lecturas = await this.prisma.lecturas.findMany({
-      where: {
-        periodoId: activePeriod.periodoId,
-        deletedAt: null,
-        medidor: {
-          historial: {
-            some: {
-              fechaHasta: null,
-              OR: rutaConditions,
-            },
-          },
-        },
-      },
-      select: {
-        lecturaId: true,
-        fecha: true,
-        lecturaAnterior: true,
-        lecturaActual: true,
-        consumoCalculado: true,
-        descripcionAnomalia: true,
-        fechaValidacion: true,
-        fotoUrl: true,
-        lecturaInicial: true,
-        periodoId: true,
-        estado: true,
-        medidor: {
-          select: {
-            medidorId: true,
-            serie: true,
-            marca: true,
-            modelo: true,
-            historial: {
-              where: { fechaHasta: null },
-              select: {
-                contrato: {
-                  select: {
-                    contratoId: true,
-                    numeroGuia: true,
-                    direccionSuministro: true,
-                    estado: true,
-                    comunidadId: true,
-                    sectorId: true,
-                    cliente: {
-                      select: {
-                        nombres: true,
-                        apellidos: true,
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-        periodoRel: {
-          select: {
-            periodoId: true,
-            nombre: true,
-            fechaInicio: true,
-            fechaFin: true,
-          },
-        },
-      },
-    });
+    const lecturas = await this.operatorRepository.findReadingsByPeriodAndRoutes(
+      activePeriod.periodoId,
+      rutaConditions,
+    );
 
     // 6. Map raw Prisma results to IResponseReading
     return lecturas.map((lectura) => {
