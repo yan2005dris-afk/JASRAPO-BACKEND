@@ -47,9 +47,7 @@ describe('UpdateReadingUseCase', () => {
   });
 
   it('should update a reading', async () => {
-    mockReadingRepository.findUnique
-      .mockResolvedValueOnce(mockReading as any) // first call: existence check
-      .mockResolvedValueOnce(mockUpdatedReading as any); // second call: after update with select
+    mockReadingRepository.findUnique.mockResolvedValue(mockReading as any);
     mockReadingRepository.update.mockResolvedValue(mockUpdatedReading as any);
 
     const result = await useCase.execute(BigInt(1), { lecturaActual: 200 });

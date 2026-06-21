@@ -6,6 +6,9 @@ import {
   Body,
   UseGuards,
   Post,
+  NotFoundException,
+  ForbiddenException,
+  BadRequestException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -21,10 +24,13 @@ import { RequiredPermission } from 'src/infrastructure/common/decorators/require
 import { CurrentUser } from 'src/identity/auth/interfaces/http/decorators/current-user.decorator';
 import { ParseBigIntPipe } from 'src/infrastructure/common/pipes/parse-bigint.pipe';
 import { JwtPayload } from 'src/identity/auth/interfaces/dto/auth.dto';
+import { EstadoLectura } from 'src/shared/enums';
 import { GetOperatorReadingsUseCase } from '../../application/use-cases/get-operator-readings.use-case';
-import { UpdateOperatorReadingUseCase } from '../../application/use-cases/update-operator-reading.use-case';
+import { UpdateReadingUseCase } from 'src/metering/readings/application/use-cases/update-reading.use-case';
 import { ActualizarLecturaDto } from 'src/metering/readings/interfaces/dto/update-lectura.dto';
 import { ResponseReadingDto } from 'src/metering/readings/interfaces/dto/response-reading.dto';
+import { toReadingResponse } from 'src/metering/readings/types/readingMapper';
+import { OperatorRepository } from '../../domain/repositories/operator.repository';
 import { MeterResponseDto } from 'src/metering/meters/interfaces/dto/meter-response.dto';
 import { toMeterResponse } from 'src/metering/meters/domain/types/metersMapper';
 import { ReportDefectUseCase } from '../../../meters/application/use-cases/report-defect.use-case';
@@ -40,7 +46,8 @@ import { DecommissionMeterDto } from './decommission-meter.dto';
 export class OperatorController {
   constructor(
     private readonly getOperatorReadingsUseCase: GetOperatorReadingsUseCase,
-    private readonly updateOperatorReadingUseCase: UpdateOperatorReadingUseCase,
+    private readonly updateReadingUseCase: UpdateReadingUseCase,
+    private readonly operatorRepository: OperatorRepository,
     private readonly reportDefectUseCase: ReportDefectUseCase,
     private readonly decommissionUseCase: DecommissionMeterUseCase,
     private readonly installUseCase: InstallMeterUseCase,
@@ -87,7 +94,6 @@ export class OperatorController {
   @ApiResponse({
     status: 200,
     description: 'Lectura actualizada',
-    type: ResponseReadingDto,
   })
   @ApiResponse({ status: 400, description: 'Estado no modificable' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
@@ -104,7 +110,61 @@ export class OperatorController {
     @Body() updateDto: ActualizarLecturaDto,
   ): Promise<ResponseReadingDto> {
     const operarioId = Number(user.sub);
-    return this.updateOperatorReadingUseCase.execute(id, operarioId, updateDto);
+
+    // 1. Validate that the reading belongs to the operator's routes
+    const lectura = await this.operatorRepository.findReadingWithDetails(id);
+    if (!lectura) {
+      throw new NotFoundException(`Lectura con ID ${id} no encontrada`);
+    }
+
+    const activePeriod = await this.operatorRepository.findActivePeriod();
+    if (!activePeriod) {
+      throw new NotFoundException(
+        'No hay un período de facturación ABIERTO en el sistema',
+      );
+    }
+
+    const rutas = await this.operatorRepository.findActiveRoutes(
+      operarioId,
+      activePeriod.periodoId,
+    );
+    if (rutas.length === 0) {
+      throw new ForbiddenException(
+        'No tenés rutas asignadas en el período activo',
+      );
+    }
+
+    const activeHistorial = lectura.medidor?.historial?.[0];
+    const contrato = activeHistorial?.contrato ?? null;
+    if (!contrato) {
+      throw new NotFoundException(
+        'No se encontró un contrato activo para esta lectura',
+      );
+    }
+
+    const lecturaPertenece = rutas.some((ruta) => {
+      const comunidadMatch = ruta.comunidadId === contrato.comunidadId;
+      const sectorMatch =
+        ruta.sectorId === null || ruta.sectorId === undefined
+          ? true
+          : ruta.sectorId === contrato.sectorId;
+      return comunidadMatch && sectorMatch;
+    });
+
+    if (!lecturaPertenece) {
+      throw new ForbiddenException(
+        'Esta lectura no pertenece a tu ruta asignada',
+      );
+    }
+
+    // 2. Delegate to the unified UpdateReadingUseCase with state machine
+    const updated = await this.updateReadingUseCase.execute(
+      id,
+      updateDto,
+      EstadoLectura.POR_REVISION,
+    );
+
+    return toReadingResponse(updated)!;
   }
 
   /**

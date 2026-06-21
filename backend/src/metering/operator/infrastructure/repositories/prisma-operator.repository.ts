@@ -1,11 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
-import {
-  EstadoLectura,
-  EstadoPeriodo,
-  EstadoRuta,
-  EstadoMedidor,
-} from 'src/shared/enums';
+import { EstadoPeriodo, EstadoRuta, EstadoMedidor } from 'src/shared/enums';
 import {
   OperatorRepository,
   type ActivePeriod,
@@ -15,48 +10,6 @@ import {
 
 @Injectable()
 export class PrismaOperatorRepository extends OperatorRepository {
-  private readonly lecturaSelect = {
-    lecturaId: true,
-    fecha: true,
-    lecturaAnterior: true,
-    lecturaActual: true,
-    consumoCalculado: true,
-    descripcionAnomalia: true,
-    fechaValidacion: true,
-    fotoUrl: true,
-    lecturaInicial: true,
-    periodoId: true,
-    estado: true,
-    medidor: {
-      select: {
-        medidorId: true,
-        serie: true,
-        marca: true,
-        modelo: true,
-        historial: {
-          where: { fechaHasta: null },
-          select: {
-            contrato: {
-              select: {
-                contratoId: true,
-                numeroGuia: true,
-                direccionSuministro: true,
-                estado: true,
-              },
-            },
-          },
-        },
-      },
-    },
-    periodoRel: {
-      select: {
-        periodoId: true,
-        nombre: true,
-        fechaInicio: true,
-        fechaFin: true,
-      },
-    },
-  } as const;
   constructor(private readonly prisma: PrismaService) {
     super();
   }
@@ -240,31 +193,6 @@ export class PrismaOperatorRepository extends OperatorRepository {
     return this.prisma.lecturas.update({
       where: { lecturaId: id },
       data,
-      select: this.lecturaSelect,
-    });
-  }
-
-  async updateReadingWithEstadoCas(
-    id: bigint,
-    expectedEstado: string,
-    data: Record<string, unknown>,
-  ): Promise<any> {
-    const { count } = await this.prisma.lecturas.updateMany({
-      where: {
-        lecturaId: id,
-        estado: expectedEstado as EstadoLectura,
-        deletedAt: null,
-      },
-      data,
-    });
-
-    if (count === 0) {
-      return null;
-    }
-
-    return this.prisma.lecturas.findUnique({
-      where: { lecturaId: id },
-      select: this.lecturaSelect,
     });
   }
 }

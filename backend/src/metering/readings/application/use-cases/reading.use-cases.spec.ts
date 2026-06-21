@@ -115,9 +115,7 @@ describe('Readings Use Cases', () => {
   describe('UpdateReadingUseCase', () => {
     it('should update a reading', async () => {
       const updatedLectura = { ...mockLectura, lecturaActual: 200 };
-      mockReadingRepository.findUnique
-        .mockResolvedValueOnce(mockLectura)
-        .mockResolvedValueOnce(updatedLectura);
+      mockReadingRepository.findUnique.mockResolvedValue(mockLectura);
       mockReadingRepository.update.mockResolvedValue(updatedLectura);
       const result = await updateUseCase.execute(BigInt(1), {
         lecturaActual: 200,
