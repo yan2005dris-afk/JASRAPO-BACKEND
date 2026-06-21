@@ -32,6 +32,7 @@ describe('ReadingController', () => {
     consumoCalculado: 50,
     contratoId: '',
     descripcionAnomalia: null,
+    estado: 'VALIDADA',
     fechaValidacion: null,
     fotoUrl: undefined,
     isValidada: undefined,

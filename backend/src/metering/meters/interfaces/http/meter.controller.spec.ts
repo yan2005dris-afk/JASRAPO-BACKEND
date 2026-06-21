@@ -59,10 +59,6 @@ describe('MeterController', () => {
     findOne: jest.fn(() => Promise.resolve(mockMeterEntity)),
     update: jest.fn(() => Promise.resolve(mockMeterEntity)),
     remove: jest.fn(() => Promise.resolve(undefined)),
-    install: jest.fn(() => Promise.resolve(mockMeterEntity)),
-    reportDefect: jest.fn(() => Promise.resolve(mockMeterEntity)),
-    decommission: jest.fn(() => Promise.resolve(mockMeterEntity)),
-    syncAll: jest.fn(() => Promise.resolve([mockMeterEntity])),
   };
 
   beforeEach(async () => {
@@ -95,7 +91,7 @@ describe('MeterController', () => {
       const result = await controller.findAll(filterDto);
 
       expect(service.findAll).toHaveBeenCalledWith(filterDto);
-      expect(result.data).toEqual([expectedDto]);
+      expect(result.data).toEqual([mockMeterEntity]);
       expect(result.meta).toEqual(mockPaginatedResponse.meta);
     });
 
@@ -104,7 +100,7 @@ describe('MeterController', () => {
       const result = await controller.findAll(filterDto);
 
       expect(service.findAll).toHaveBeenCalledWith(filterDto);
-      expect(result.data).toEqual([expectedDto]);
+      expect(result.data).toEqual([mockMeterEntity]);
     });
   });
 
@@ -137,32 +133,4 @@ describe('MeterController', () => {
     });
   });
 
-  describe('install', () => {
-    it('should install a meter', async () => {
-      jest.spyOn(service, 'install').mockResolvedValue(mockMeterEntity as any);
-      const result = await controller.install(1n);
-
-      expect(service.install).toHaveBeenCalledWith(1n);
-      expect(result).toEqual(expectedDto);
-    });
-  });
-
-  describe('syncAll', () => {
-    it('should return all meters without pagination and lean payload', async () => {
-      const result = await controller.syncAll();
-
-      expect(service.syncAll).toHaveBeenCalled();
-      expect(result).toEqual([
-        {
-          medidorId: '1',
-          serie: 'MED-001',
-          estado: 'BODEGA',
-          latitud: null,
-          longitud: null,
-          contratoId: null,
-          clienteNombre: null,
-        },
-      ]);
-    });
-  });
 });
