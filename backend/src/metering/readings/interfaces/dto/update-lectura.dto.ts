@@ -5,7 +5,10 @@ import { CrearLecturaDto } from './create-lectura.dto';
 
 export class ActualizarLecturaDto extends PartialType(CrearLecturaDto) {
   @IsOptional()
-  @IsNumberString({}, { message: 'medidorId debe ser un valor numérico válido' })
+  @IsNumberString(
+    {},
+    { message: 'medidorId debe ser un valor numérico válido' },
+  )
   @Transform(({ value }) => (value !== undefined ? BigInt(value) : undefined))
   medidorId?: string | number;
 

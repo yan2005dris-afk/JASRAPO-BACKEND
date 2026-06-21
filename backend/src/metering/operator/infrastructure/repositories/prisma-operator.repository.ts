@@ -188,5 +188,4 @@ export class PrismaOperatorRepository extends OperatorRepository {
       },
     });
   }
-
 }

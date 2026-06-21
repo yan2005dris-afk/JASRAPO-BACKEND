@@ -97,10 +97,7 @@ export class UpdateReadingUseCase {
       return existing;
     }
 
-    return this.readingRepository.update(
-      { lecturaId: id },
-      dataToUpdate,
-    );
+    return this.readingRepository.update({ lecturaId: id }, dataToUpdate);
   }
 
   private canTransition(from: EstadoLectura, to: EstadoLectura): boolean {
