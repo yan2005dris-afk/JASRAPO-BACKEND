@@ -38,13 +38,4 @@ export abstract class OperatorRepository {
   abstract findReadingWithDetails(
     id: bigint,
   ): Promise<ReadingWithDetails | null>;
-  abstract updateReading(
-    id: bigint,
-    data: Record<string, unknown>,
-  ): Promise<any>;
-  abstract updateReadingWithEstadoCas(
-    id: bigint,
-    expectedEstado: string,
-    data: Record<string, unknown>,
-  ): Promise<any>;
 }

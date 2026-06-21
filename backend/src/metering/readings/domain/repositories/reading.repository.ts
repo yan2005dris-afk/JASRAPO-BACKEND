@@ -54,4 +54,13 @@ export abstract class ReadingRepository {
     where: { lecturaId: bigint },
     data: UpdateReadingRepositoryData,
   ): Promise<LecturaEntity>;
+
+  /**
+   * Compare-And-Swap update: solo actualiza si el estado actual coincide
+   * con expectedEstado. Retorna null si hubo conflicto concurrente.
+   */
+  abstract updateWithCas(
+    where: { lecturaId: bigint; estado: string },
+    data: UpdateReadingRepositoryData,
+  ): Promise<LecturaEntity | null>;
 }

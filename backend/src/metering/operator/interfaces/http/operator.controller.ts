@@ -25,6 +25,7 @@ import { GetOperatorReadingsUseCase } from '../../application/use-cases/get-oper
 import { UpdateOperatorReadingUseCase } from '../../application/use-cases/update-operator-reading.use-case';
 import { ActualizarLecturaDto } from 'src/metering/readings/interfaces/dto/update-lectura.dto';
 import { ResponseReadingDto } from 'src/metering/readings/interfaces/dto/response-reading.dto';
+import { toReadingResponse } from 'src/metering/readings/types/readingMapper';
 import { MeterResponseDto } from 'src/metering/meters/interfaces/dto/meter-response.dto';
 import { toMeterResponse } from 'src/metering/meters/domain/types/metersMapper';
 import { ReportDefectUseCase } from '../../../meters/application/use-cases/report-defect.use-case';
@@ -104,7 +105,12 @@ export class OperatorController {
     @Body() updateDto: ActualizarLecturaDto,
   ): Promise<ResponseReadingDto> {
     const operarioId = Number(user.sub);
-    return this.updateOperatorReadingUseCase.execute(id, operarioId, updateDto);
+    const updated = await this.updateOperatorReadingUseCase.execute(
+      id,
+      operarioId,
+      updateDto,
+    );
+    return toReadingResponse(updated)!;
   }
 
   /**

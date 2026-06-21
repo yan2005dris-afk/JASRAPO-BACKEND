@@ -9,6 +9,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import { NotEmptyBodyPipe } from 'src/infrastructure/common/pipes/not-empty-body.pipe';
 import { ParseBigIntPipe } from 'src/infrastructure/common/pipes/parse-bigint.pipe';
 import { ReadingService } from '../../application/reading.service';
 import { CrearLecturaDto } from '../dto/create-lectura.dto';
@@ -184,7 +185,7 @@ export class ReadingController {
   @Patch(':id')
   async actualizarLectura(
     @Param('id', ParseBigIntPipe) id: bigint,
-    @Body() updateLecturaDto: ActualizarLecturaDto,
+    @Body(new NotEmptyBodyPipe()) updateLecturaDto: ActualizarLecturaDto,
   ): Promise<ResponseReadingDto> {
     return toReadingResponse(
       await this.readingService.update(id, updateLecturaDto),

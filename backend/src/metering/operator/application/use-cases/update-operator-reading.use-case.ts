@@ -5,69 +5,63 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { EstadoLectura } from 'src/shared/enums';
+import { UpdateReadingUseCase } from 'src/metering/readings/application/use-cases/update-reading.use-case';
 import { ActualizarLecturaDto } from 'src/metering/readings/interfaces/dto/update-lectura.dto';
-import type { IResponseReading } from 'src/metering/readings/types/IResponseReading';
+import { LecturaEntity } from 'src/metering/readings/domain/entities/lectura.entity';
 import { OperatorRepository } from '../../domain/repositories/operator.repository';
 
-const OPERATOR_EDITABLE_ESTADOS = new Set<string>([
+const OPERATOR_EDITABLE_ESTADOS: ReadonlySet<EstadoLectura> = new Set([
   EstadoLectura.PENDIENTE,
   EstadoLectura.RECHAZADA_VERIFICACION,
 ]);
 
 @Injectable()
 export class UpdateOperatorReadingUseCase {
-  constructor(private readonly operatorRepository: OperatorRepository) {}
+  constructor(
+    private readonly operatorRepository: OperatorRepository,
+    private readonly updateReadingUseCase: UpdateReadingUseCase,
+  ) {}
 
   async execute(
     id: bigint,
     operarioId: number,
     updateDto: ActualizarLecturaDto,
-  ): Promise<IResponseReading> {
-    // 1. Find the lectura with its medidor → historial → contrato relation
-    const existing = await this.operatorRepository.findReadingWithDetails(id);
-
-    if (!existing) {
+  ): Promise<LecturaEntity> {
+    // 1. Validar que la lectura existe y obtener datos de ruta
+    const lectura = await this.operatorRepository.findReadingWithDetails(id);
+    if (!lectura) {
       throw new NotFoundException(`Lectura con ID ${id} no encontrada`);
     }
 
-    // 2. Validate that the reading is in an editable state
-    if (!OPERATOR_EDITABLE_ESTADOS.has(existing.estado)) {
-      throw new BadRequestException(
-        `No se puede modificar una lectura en estado ${existing.estado}`,
-      );
-    }
-
-    // 3. Find the active billing period
+    // 2. Validar que hay un período activo
     const activePeriod = await this.operatorRepository.findActivePeriod();
-
     if (!activePeriod) {
       throw new NotFoundException(
         'No hay un período de facturación ABIERTO en el sistema',
       );
     }
 
-    // 4. Find operator's active rutas for this period
+    // 3. Obtener rutas activas del operador
     const rutas = await this.operatorRepository.findActiveRoutes(
       operarioId,
       activePeriod.periodoId,
     );
-
     if (rutas.length === 0) {
       throw new ForbiddenException(
         'No tenés rutas asignadas en el período activo',
       );
     }
 
-    // 5. Validate the lectura's contrato belongs to one of the operator's rutas
-    const activeHistorial = existing.medidor?.historial?.[0];
+    // 4. Obtener el contrato activo de la lectura
+    const activeHistorial = lectura.medidor?.historial?.[0];
     const contrato = activeHistorial?.contrato ?? null;
-
     if (!contrato) {
       throw new NotFoundException(
         'No se encontró un contrato activo para esta lectura',
       );
     }
 
+    // 5. Verificar que la lectura pertenezca a alguna ruta del operador
     const lecturaPertenece = rutas.some((ruta) => {
       const comunidadMatch = ruta.comunidadId === contrato.comunidadId;
       const sectorMatch =
@@ -83,93 +77,18 @@ export class UpdateOperatorReadingUseCase {
       );
     }
 
-    // 6. Build update payload — set estado to POR_REVISION and merge fields from DTO
-    const dataToUpdate: Record<string, unknown> = {
-      estado: EstadoLectura.POR_REVISION,
-    };
-
-    if (updateDto.lecturaActual !== undefined) {
-      dataToUpdate.lecturaActual = updateDto.lecturaActual;
-    }
-    if (updateDto.lecturaAnterior !== undefined) {
-      dataToUpdate.lecturaAnterior = updateDto.lecturaAnterior;
-    }
-    if (updateDto.consumoCalculado !== undefined) {
-      dataToUpdate.consumoCalculado = updateDto.consumoCalculado;
-    }
-    if (updateDto.descripcionAnomalia !== undefined) {
-      dataToUpdate.descripcionAnomalia = updateDto.descripcionAnomalia;
-    }
-    if (updateDto.lecturaInicial !== undefined) {
-      dataToUpdate.lecturaInicial = updateDto.lecturaInicial;
-    }
-    if (updateDto.fotoUrl !== undefined) {
-      dataToUpdate.fotoUrl = updateDto.fotoUrl;
-    }
-    if (updateDto.fecha !== undefined) {
-      dataToUpdate.fecha = new Date(updateDto.fecha);
-    }
-
-    // 7. Perform the update with CAS (compare-and-swap) to prevent TOCTOU
-    const updated = await this.operatorRepository.updateReadingWithEstadoCas(
-      id,
-      existing.estado,
-      dataToUpdate,
-    );
-
-    if (!updated) {
+    // 6. Validar que la lectura esté en un estado modificable por el operador
+    if (!OPERATOR_EDITABLE_ESTADOS.has(lectura.estado as EstadoLectura)) {
       throw new BadRequestException(
-        'La lectura fue modificada por otro usuario. Intentalo de nuevo.',
+        `La lectura está en estado ${lectura.estado} y no puede ser modificada por el operador`,
       );
     }
 
-    return this.mapResponse(updated);
-  }
-
-  private mapResponse(updated: any): IResponseReading {
-    const updatedHistorial = updated.medidor?.historial?.[0];
-    const updatedContrato = updatedHistorial?.contrato ?? null;
-
-    return {
-      lecturaId: updated.lecturaId.toString(),
-      fecha: updated.fecha,
-      lecturaAnterior: Number(updated.lecturaAnterior),
-      lecturaActual: Number(updated.lecturaActual),
-      consumoCalculado: Number(updated.consumoCalculado),
-      contratoId: updatedContrato ? updatedContrato.contratoId.toString() : '',
-      descripcionAnomalia: updated.descripcionAnomalia,
-      fechaValidacion: updated.fechaValidacion,
-      fotoUrl: updated.fotoUrl,
-      // Computed fields — not stored in DB
-      isValidada: updated.estado !== 'PENDIENTE',
-      tieneAnomalia: !!updated.descripcionAnomalia,
-      lecturaInicial: updated.lecturaInicial,
-      periodoId: updated.periodoId,
-      estado: updated.estado,
-      contrato: updatedContrato
-        ? {
-            contratoId: updatedContrato.contratoId.toString(),
-            numeroGuia: updatedContrato.numeroGuia,
-            direccionSuministro: updatedContrato.direccionSuministro,
-            estado: updatedContrato.estado,
-          }
-        : null,
-      medidor: updated.medidor
-        ? {
-            medidorId: updated.medidor.medidorId.toString(),
-            serie: updated.medidor.serie,
-            marca: updated.medidor.marca,
-            modelo: updated.medidor.modelo,
-          }
-        : null,
-      periodoRel: updated.periodoRel
-        ? {
-            periodoId: updated.periodoRel.periodoId,
-            nombre: updated.periodoRel.nombre,
-            fechaInicio: updated.periodoRel.fechaInicio,
-            fechaFin: updated.periodoRel.fechaFin,
-          }
-        : null,
-    };
+    // 7. Delegar al UpdateReadingUseCase unificado con state machine
+    return this.updateReadingUseCase.execute(
+      id,
+      updateDto,
+      EstadoLectura.POR_REVISION,
+    );
   }
 }
