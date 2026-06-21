@@ -25,6 +25,26 @@ export class OperarioInfo {
   apellidos: string;
 }
 
+export class TaskRutaPuntoDto {
+  @ApiProperty({ description: 'Latitud del punto', example: -0.9677 })
+  latitud: number;
+
+  @ApiProperty({ description: 'Longitud del punto', example: -80.7089 })
+  longitud: number;
+
+  @ApiProperty({ description: 'Orden de visita del punto', example: 1 })
+  orden: number;
+
+  @ApiProperty({ description: 'Serie del medidor', example: 'MED-001' })
+  serie: string;
+
+  @ApiProperty({
+    description: 'Nombre completo del cliente',
+    example: 'Juan Pérez',
+  })
+  clienteNombre: string;
+}
+
 export class TaskResponseDto {
   @ApiProperty({ description: 'ID de la ruta/tarea', example: '1' })
   rutaId: string;
@@ -76,4 +96,11 @@ export class TaskResponseDto {
 
   @ApiPropertyOptional({ description: 'Información del operario asignado' })
   operario?: OperarioInfo;
+
+  @ApiPropertyOptional({
+    description:
+      'Puntos/medidores que componen la ruta (para toma de lecturas)',
+    type: [TaskRutaPuntoDto],
+  })
+  rutaPuntos?: TaskRutaPuntoDto[];
 }

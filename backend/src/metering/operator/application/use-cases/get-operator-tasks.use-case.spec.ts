@@ -11,6 +11,7 @@ describe('GetOperatorTasksUseCase', () => {
     findActivePeriod: jest.fn(),
     findTasksByOperator: jest.fn(),
     findMedidoresById: jest.fn(),
+    findMetersByRoutes: jest.fn().mockResolvedValue([]),
   };
 
   const mockActivePeriod = { periodoId: 10 };
@@ -86,6 +87,29 @@ describe('GetOperatorTasksUseCase', () => {
     mockOperatorRepository.findActivePeriod.mockResolvedValue(mockActivePeriod);
     mockOperatorRepository.findTasksByOperator.mockResolvedValue(mockTasks);
     mockOperatorRepository.findMedidoresById.mockResolvedValue(mockMedidores);
+    mockOperatorRepository.findMetersByRoutes.mockResolvedValue([
+      {
+        medidorId: BigInt(101),
+        serie: 'MED-101',
+        marca: 'Itron',
+        modelo: 'CX1000',
+        latitud: -0.9677,
+        longitud: -80.7089,
+        historial: [
+          {
+            contrato: {
+              contratoId: BigInt(10),
+              comunidadId: 5,
+              sectorId: 3,
+              cliente: {
+                nombres: 'María',
+                apellidos: 'López',
+              },
+            },
+          },
+        ],
+      },
+    ]);
 
     const result = await useCase.execute(42);
 
@@ -110,6 +134,10 @@ describe('GetOperatorTasksUseCase', () => {
 
     expect(result[1].rutaId).toBe('2');
     expect(result[1].medidor).toBeNull();
+    expect(result[1].rutaPuntos).toBeDefined();
+    expect(result[1].rutaPuntos).toHaveLength(1);
+    expect(result[1].rutaPuntos![0].serie).toBe('MED-101');
+    expect(result[1].rutaPuntos![0].clienteNombre).toBe('María López');
   });
 
   it('should return empty array when operator has no tasks', async () => {
