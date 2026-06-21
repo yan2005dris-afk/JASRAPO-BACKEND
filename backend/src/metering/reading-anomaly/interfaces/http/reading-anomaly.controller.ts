@@ -129,6 +129,35 @@ export class ReadingAnomalyController {
   }
 
   @ApiOperation({
+    summary: 'Catálogo de estados de anomalía',
+    description:
+      'Retorna todos los estados posibles de una anomalía de lectura (EstadoAnomalia).',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de estados',
+    type: [EnumStateDto],
+  })
+  @Get('estados')
+  getEstados(): EnumStateDto[] {
+    return buildStateCatalog(
+      EstadoAnomalia,
+      {
+        PENDIENTE: 'Pendiente',
+        EN_REVISION: 'En Revisión',
+        RESUELTA: 'Resuelta',
+        DESCARTADA: 'Descartada',
+      },
+      {
+        PENDIENTE: 'bi-flag',
+        EN_REVISION: 'bi-search',
+        RESUELTA: 'bi-check-circle',
+        DESCARTADA: 'bi-x-circle',
+      },
+    );
+  }
+
+  @ApiOperation({
     summary: 'Obtener anomalía de lectura',
     description: 'Retorna una anomalía por ID',
   })
@@ -190,36 +219,6 @@ export class ReadingAnomalyController {
     return toReadingAnomalyResponse(
       await this.readingAnomalyService.update(id, updateDto),
     )!;
-  }
-
-  @ApiOperation({
-    summary: 'Catálogo de estados de anomalía',
-    description:
-      'Retorna todos los estados posibles de una anomalía de lectura (EstadoAnomalia).',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Lista de estados',
-    type: [EnumStateDto],
-  })
-  @RequiredPermission('reading-anomalies', 'read')
-  @Get('estados')
-  getEstados(): EnumStateDto[] {
-    return buildStateCatalog(
-      EstadoAnomalia,
-      {
-        PENDIENTE: 'Pendiente',
-        EN_REVISION: 'En Revisión',
-        RESUELTA: 'Resuelta',
-        DESCARTADA: 'Descartada',
-      },
-      {
-        PENDIENTE: 'bi-flag',
-        EN_REVISION: 'bi-search',
-        RESUELTA: 'bi-check-circle',
-        DESCARTADA: 'bi-x-circle',
-      },
-    );
   }
 
   @ApiOperation({

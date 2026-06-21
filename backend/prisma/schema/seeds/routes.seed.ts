@@ -160,7 +160,7 @@ export async function seedRoutes(prisma: PrismaClient) {
       where: { rutaId: ruta.rutaId },
       update: {
         nombre: ruta.nombre,
-        periodoId,
+        periodoId: 'periodoId' in ruta ? ruta.periodoId : undefined,
       },
       create: {
         ...ruta,

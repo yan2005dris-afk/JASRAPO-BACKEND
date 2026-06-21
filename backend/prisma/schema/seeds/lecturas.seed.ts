@@ -11,6 +11,7 @@ export async function seedLecturas(prisma: PrismaClient) {
     // Primero creamos los periodos si no existen para que las lecturas tengan a qué apuntar
     const periodosDb: any[] = [];
     for (const p of periodos) {
+        const esPeriodoActual = p.nombre === '2026';
         const pDb = await prisma.periodos.upsert({
             where: { nombre: p.nombre },
             update: {},
@@ -19,7 +20,7 @@ export async function seedLecturas(prisma: PrismaClient) {
                 fechaInicio: new Date(p.fechaInicio),
                 fechaFin: new Date(p.fechaFin),
                 fechaVencimiento: new Date(p.vencimiento),
-                estado: "ABIERTO" as any,
+                estado: (esPeriodoActual ? 'ABIERTO' : 'CERRADO') as any,
             }
         });
         periodosDb.push(pDb);

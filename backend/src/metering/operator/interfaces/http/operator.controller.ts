@@ -31,6 +31,7 @@ import { ReportDefectUseCase } from '../../../meters/application/use-cases/repor
 import { DecommissionMeterUseCase } from '../../../meters/application/use-cases/decommission-meter.use-case';
 import { InstallMeterUseCase } from '../../../meters/application/use-cases/install-meter.use-case';
 import { SyncAllUseCase } from '../../application/use-cases/sync-all.use-cate';
+import { DecommissionMeterDto } from './decommission-meter.dto';
 
 @ApiTags('operator')
 @ApiBearerAuth()
@@ -206,10 +207,10 @@ export class OperatorController {
   @Post(':id/decommission')
   async decommission(
     @Param('id', ParseBigIntPipe) id: bigint,
-    @Body('motivoBaja') motivoBaja: string,
+    @Body() dto: DecommissionMeterDto,
   ): Promise<MeterResponseDto> {
     return toMeterResponse(
-      await this.decommissionUseCase.execute(id, motivoBaja),
+      await this.decommissionUseCase.execute(id, dto.motivoBaja),
     );
   }
 
@@ -225,17 +226,9 @@ export class OperatorController {
   @ApiResponse({ status: 200, description: 'Lista de medidores del operador' })
   @RequiredPermission('meters', 'read')
   @Get('sync')
-  async syncAll(@CurrentUser() user: JwtPayload): Promise<any[]> {
+  async syncAll(@CurrentUser() user: JwtPayload): Promise<MeterResponseDto[]> {
     const operarioId = Number(user.sub);
     const meters = await this.syncAllUseCase.execute(operarioId);
-    return meters.map((m) => ({
-      medidorId: m.medidorId?.toString(),
-      serie: m.serie,
-      estado: m.estado,
-      latitud: m.latitud,
-      longitud: m.longitud,
-      contratoId: m.contratoId?.toString() ?? null,
-      clienteNombre: m.clienteNombre ?? null,
-    }));
+    return meters.map((m) => toMeterResponse(m)!);
   }
 }

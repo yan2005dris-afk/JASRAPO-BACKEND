@@ -112,12 +112,23 @@ export class UpdateOperatorReadingUseCase {
       dataToUpdate.fecha = new Date(updateDto.fecha);
     }
 
-    // 7. Perform the update and return the updated lectura
-    const updated = await this.operatorRepository.updateReading(
+    // 7. Perform the update with CAS (compare-and-swap) to prevent TOCTOU
+    const updated = await this.operatorRepository.updateReadingWithEstadoCas(
       id,
+      existing.estado,
       dataToUpdate,
     );
 
+    if (!updated) {
+      throw new BadRequestException(
+        'La lectura fue modificada por otro usuario. Intentalo de nuevo.',
+      );
+    }
+
+    return this.mapResponse(updated);
+  }
+
+  private mapResponse(updated: any): IResponseReading {
     const updatedHistorial = updated.medidor?.historial?.[0];
     const updatedContrato = updatedHistorial?.contrato ?? null;
 

@@ -4,7 +4,7 @@ import { ActualizarLecturaDto } from '../../interfaces/dto/update-lectura.dto';
 import { LecturaEntity } from '../../domain/entities/lectura.entity';
 import { EstadoLectura } from 'src/shared/enums';
 
-const OPERATOR_EDITABLE_ESTADOS = new Set<string>([
+const OPERATOR_EDITABLE_ESTADOS: Set<EstadoLectura> = new Set([
   EstadoLectura.PENDIENTE,
   EstadoLectura.RECHAZADA_VERIFICACION,
 ]);
@@ -33,7 +33,7 @@ export class UpdateReadingUseCase {
     }
 
     // Auto-transition to POR_REVISION when operator submits a measured value
-    if (OPERATOR_EDITABLE_ESTADOS.has(existing.estado)) {
+    if (OPERATOR_EDITABLE_ESTADOS.has(existing.estado as EstadoLectura)) {
       dataToUpdate.estado = EstadoLectura.POR_REVISION;
     }
 
