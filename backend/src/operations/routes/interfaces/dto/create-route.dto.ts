@@ -49,7 +49,8 @@ export class CreateRouteDto {
   tipoRuta!: TipoRuta;
 
   @ApiProperty({
-    description: 'ID del medidor asociado (requerido para INSTALACION e INSPECCION)',
+    description:
+      'ID del medidor asociado (requerido para INSTALACION e INSPECCION)',
     required: false,
     example: 42,
   })

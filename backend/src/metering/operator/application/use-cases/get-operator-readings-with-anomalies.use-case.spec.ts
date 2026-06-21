@@ -57,17 +57,23 @@ describe('GetOperatorReadingsWithAnomaliesUseCase', () => {
 
     await expect(useCase.execute(42)).rejects.toThrow(NotFoundException);
 
-    expect(mockOperatorRepository.findReadingsWithPendingAnomalies).not.toHaveBeenCalled();
+    expect(
+      mockOperatorRepository.findReadingsWithPendingAnomalies,
+    ).not.toHaveBeenCalled();
   });
 
   it('should return readings with pending anomalies for the operator in the active period', async () => {
     mockOperatorRepository.findActivePeriod.mockResolvedValue(mockActivePeriod);
-    mockOperatorRepository.findReadingsWithPendingAnomalies.mockResolvedValue(mockReadings);
+    mockOperatorRepository.findReadingsWithPendingAnomalies.mockResolvedValue(
+      mockReadings,
+    );
 
     const result = await useCase.execute(42);
 
     expect(mockOperatorRepository.findActivePeriod).toHaveBeenCalled();
-    expect(mockOperatorRepository.findReadingsWithPendingAnomalies).toHaveBeenCalledWith(42, 5);
+    expect(
+      mockOperatorRepository.findReadingsWithPendingAnomalies,
+    ).toHaveBeenCalledWith(42, 5);
     expect(result).toBe(mockReadings);
     expect(result).toHaveLength(2);
     expect(result[0].estado).toBe('CON_NOVEDAD');

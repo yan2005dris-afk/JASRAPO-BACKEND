@@ -72,7 +72,9 @@ describe('UpdateTaskStateUseCase', () => {
 
   describe('ownership validation', () => {
     it('should throw NotFoundException when task does not exist', async () => {
-      mockOperatorRepository.findActivePeriod.mockResolvedValue(mockActivePeriod);
+      mockOperatorRepository.findActivePeriod.mockResolvedValue(
+        mockActivePeriod,
+      );
       mockOperatorRepository.findTasksByOperator.mockResolvedValue([]);
 
       await expect(
@@ -81,7 +83,9 @@ describe('UpdateTaskStateUseCase', () => {
     });
 
     it('should throw ForbiddenException when task belongs to another operator', async () => {
-      mockOperatorRepository.findActivePeriod.mockResolvedValue(mockActivePeriod);
+      mockOperatorRepository.findActivePeriod.mockResolvedValue(
+        mockActivePeriod,
+      );
       mockOperatorRepository.findTasksByOperator.mockResolvedValue([
         makeTask({ operarioId: 99 }),
       ]);
@@ -94,7 +98,9 @@ describe('UpdateTaskStateUseCase', () => {
 
   describe('state transitions', () => {
     it('should transition PENDIENTE → EN_PROGRESO', async () => {
-      mockOperatorRepository.findActivePeriod.mockResolvedValue(mockActivePeriod);
+      mockOperatorRepository.findActivePeriod.mockResolvedValue(
+        mockActivePeriod,
+      );
       mockOperatorRepository.findTasksByOperator.mockResolvedValue([
         makeTask(),
       ]);
@@ -117,7 +123,9 @@ describe('UpdateTaskStateUseCase', () => {
     });
 
     it('should transition PENDIENTE → COMPLETADA', async () => {
-      mockOperatorRepository.findActivePeriod.mockResolvedValue(mockActivePeriod);
+      mockOperatorRepository.findActivePeriod.mockResolvedValue(
+        mockActivePeriod,
+      );
       mockOperatorRepository.findTasksByOperator.mockResolvedValue([
         makeTask(),
       ]);
@@ -133,7 +141,9 @@ describe('UpdateTaskStateUseCase', () => {
     });
 
     it('should transition EN_PROGRESO → COMPLETADA', async () => {
-      mockOperatorRepository.findActivePeriod.mockResolvedValue(mockActivePeriod);
+      mockOperatorRepository.findActivePeriod.mockResolvedValue(
+        mockActivePeriod,
+      );
       mockOperatorRepository.findTasksByOperator.mockResolvedValue([
         makeTask({ estado: 'EN_PROGRESO', fechaInicio: new Date() }),
       ]);
@@ -149,7 +159,9 @@ describe('UpdateTaskStateUseCase', () => {
     });
 
     it('should reject COMPLETADA → EN_PROGRESO (terminal)', async () => {
-      mockOperatorRepository.findActivePeriod.mockResolvedValue(mockActivePeriod);
+      mockOperatorRepository.findActivePeriod.mockResolvedValue(
+        mockActivePeriod,
+      );
       mockOperatorRepository.findTasksByOperator.mockResolvedValue([
         makeTask({ estado: 'COMPLETADA', fechaFin: new Date() }),
       ]);
@@ -162,7 +174,9 @@ describe('UpdateTaskStateUseCase', () => {
     });
 
     it('should reject CANCELADA → EN_PROGRESO (terminal)', async () => {
-      mockOperatorRepository.findActivePeriod.mockResolvedValue(mockActivePeriod);
+      mockOperatorRepository.findActivePeriod.mockResolvedValue(
+        mockActivePeriod,
+      );
       mockOperatorRepository.findTasksByOperator.mockResolvedValue([
         makeTask({ estado: 'CANCELADA', observacion: 'Razon' }),
       ]);
@@ -175,7 +189,9 @@ describe('UpdateTaskStateUseCase', () => {
     });
 
     it('should reject PENDIENTE → invalid state', async () => {
-      mockOperatorRepository.findActivePeriod.mockResolvedValue(mockActivePeriod);
+      mockOperatorRepository.findActivePeriod.mockResolvedValue(
+        mockActivePeriod,
+      );
       mockOperatorRepository.findTasksByOperator.mockResolvedValue([
         makeTask(),
       ]);
@@ -190,7 +206,9 @@ describe('UpdateTaskStateUseCase', () => {
 
   describe('CANCELADA requires observacion', () => {
     it('should reject CANCELADA without observacion', async () => {
-      mockOperatorRepository.findActivePeriod.mockResolvedValue(mockActivePeriod);
+      mockOperatorRepository.findActivePeriod.mockResolvedValue(
+        mockActivePeriod,
+      );
       mockOperatorRepository.findTasksByOperator.mockResolvedValue([
         makeTask(),
       ]);
@@ -203,7 +221,9 @@ describe('UpdateTaskStateUseCase', () => {
     });
 
     it('should reject CANCELADA with empty observacion', async () => {
-      mockOperatorRepository.findActivePeriod.mockResolvedValue(mockActivePeriod);
+      mockOperatorRepository.findActivePeriod.mockResolvedValue(
+        mockActivePeriod,
+      );
       mockOperatorRepository.findTasksByOperator.mockResolvedValue([
         makeTask(),
       ]);
@@ -217,7 +237,9 @@ describe('UpdateTaskStateUseCase', () => {
     });
 
     it('should accept CANCELADA with observacion', async () => {
-      mockOperatorRepository.findActivePeriod.mockResolvedValue(mockActivePeriod);
+      mockOperatorRepository.findActivePeriod.mockResolvedValue(
+        mockActivePeriod,
+      );
       mockOperatorRepository.findTasksByOperator.mockResolvedValue([
         makeTask(),
       ]);
@@ -239,7 +261,9 @@ describe('UpdateTaskStateUseCase', () => {
 
   describe('COMPLETADA de INSTALACION actualiza medidor', () => {
     it('should update meter to INSTALADO when completing INSTALACION task', async () => {
-      mockOperatorRepository.findActivePeriod.mockResolvedValue(mockActivePeriod);
+      mockOperatorRepository.findActivePeriod.mockResolvedValue(
+        mockActivePeriod,
+      );
       mockOperatorRepository.findTasksByOperator.mockResolvedValue([
         makeTask(),
       ]);
@@ -262,12 +286,18 @@ describe('UpdateTaskStateUseCase', () => {
     });
 
     it('should NOT update meter when completing non-INSTALACION task', async () => {
-      mockOperatorRepository.findActivePeriod.mockResolvedValue(mockActivePeriod);
+      mockOperatorRepository.findActivePeriod.mockResolvedValue(
+        mockActivePeriod,
+      );
       mockOperatorRepository.findTasksByOperator.mockResolvedValue([
         makeTask({ tipoRuta: 'INSPECCION', medidorId: null }),
       ]);
       mockOperatorRepository.updateTaskState.mockResolvedValue(
-        makeTask({ tipoRuta: 'INSPECCION', estado: 'COMPLETADA', fechaFin: new Date() }),
+        makeTask({
+          tipoRuta: 'INSPECCION',
+          estado: 'COMPLETADA',
+          fechaFin: new Date(),
+        }),
       );
 
       await useCase.execute(BigInt(1), mockOperarioId, {
@@ -278,12 +308,18 @@ describe('UpdateTaskStateUseCase', () => {
     });
 
     it('should NOT update meter when task has no medidorId', async () => {
-      mockOperatorRepository.findActivePeriod.mockResolvedValue(mockActivePeriod);
+      mockOperatorRepository.findActivePeriod.mockResolvedValue(
+        mockActivePeriod,
+      );
       mockOperatorRepository.findTasksByOperator.mockResolvedValue([
         makeTask({ medidorId: null }),
       ]);
       mockOperatorRepository.updateTaskState.mockResolvedValue(
-        makeTask({ estado: 'COMPLETADA', medidorId: null, fechaFin: new Date() }),
+        makeTask({
+          estado: 'COMPLETADA',
+          medidorId: null,
+          fechaFin: new Date(),
+        }),
       );
 
       await useCase.execute(BigInt(1), mockOperarioId, {

@@ -54,7 +54,9 @@ describe('InstallMeterUseCase', () => {
   it('should throw NotFoundException when meter does not exist', async () => {
     mockMeterRepository.findUnique.mockResolvedValue(null);
 
-    await expect(useCase.execute(BigInt(999))).rejects.toThrow(NotFoundException);
+    await expect(useCase.execute(BigInt(999))).rejects.toThrow(
+      NotFoundException,
+    );
   });
 
   it('should throw BadRequestException when meter is not in PENDIENTE state', async () => {
@@ -62,14 +64,18 @@ describe('InstallMeterUseCase', () => {
       makeMeter({ estado: EstadoMedidor.INSTALADO }),
     );
 
-    await expect(useCase.execute(BigInt(1))).rejects.toThrow(BadRequestException);
+    await expect(useCase.execute(BigInt(1))).rejects.toThrow(
+      BadRequestException,
+    );
   });
 
   it('should throw BadRequestException when no active contract exists', async () => {
     mockMeterRepository.findUnique.mockResolvedValue(makeMeter());
     mockMeterRepository.findActiveContractForMeter.mockResolvedValue(null);
 
-    await expect(useCase.execute(BigInt(1))).rejects.toThrow(BadRequestException);
+    await expect(useCase.execute(BigInt(1))).rejects.toThrow(
+      BadRequestException,
+    );
   });
 
   it('should throw BadRequestException when contract is not PENDIENTE_INSTALACION', async () => {
@@ -79,7 +85,9 @@ describe('InstallMeterUseCase', () => {
       estado: EstadoContrato.ACTIVO,
     });
 
-    await expect(useCase.execute(BigInt(1))).rejects.toThrow(BadRequestException);
+    await expect(useCase.execute(BigInt(1))).rejects.toThrow(
+      BadRequestException,
+    );
   });
 
   it('should update meter to INSTALADO and return the updated entity within a transaction', async () => {

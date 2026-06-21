@@ -52,7 +52,9 @@ describe('DecommissionMeterUseCase', () => {
   it('should throw NotFoundException when meter does not exist', async () => {
     mockMeterRepository.findUnique.mockResolvedValue(null);
 
-    await expect(useCase.execute(BigInt(999), 'Motivo')).rejects.toThrow(NotFoundException);
+    await expect(useCase.execute(BigInt(999), 'Motivo')).rejects.toThrow(
+      NotFoundException,
+    );
   });
 
   it('should throw BadRequestException when meter is not in DANADO state', async () => {
@@ -60,7 +62,9 @@ describe('DecommissionMeterUseCase', () => {
       makeMeter({ estado: EstadoMedidor.INSTALADO }),
     );
 
-    await expect(useCase.execute(BigInt(1), 'Motivo')).rejects.toThrow(BadRequestException);
+    await expect(useCase.execute(BigInt(1), 'Motivo')).rejects.toThrow(
+      BadRequestException,
+    );
   });
 
   it('should update meter to BAJA and return the updated entity', async () => {

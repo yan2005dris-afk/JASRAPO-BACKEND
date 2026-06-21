@@ -95,9 +95,9 @@ describe('GetOperatorTasksUseCase', () => {
       10,
       undefined,
     );
-    expect(mockOperatorRepository.findMedidoresById).toHaveBeenCalledWith(
-      [BigInt(100)],
-    );
+    expect(mockOperatorRepository.findMedidoresById).toHaveBeenCalledWith([
+      BigInt(100),
+    ]);
 
     expect(result).toHaveLength(2);
 
@@ -142,7 +142,9 @@ describe('GetOperatorTasksUseCase', () => {
 
   it('should pass tipoRuta filter to repository when provided', async () => {
     mockOperatorRepository.findActivePeriod.mockResolvedValue(mockActivePeriod);
-    mockOperatorRepository.findTasksByOperator.mockResolvedValue([mockTasks[0]]);
+    mockOperatorRepository.findTasksByOperator.mockResolvedValue([
+      mockTasks[0],
+    ]);
     mockOperatorRepository.findMedidoresById.mockResolvedValue(mockMedidores);
 
     const result = await useCase.execute(42, 'INSTALACION');

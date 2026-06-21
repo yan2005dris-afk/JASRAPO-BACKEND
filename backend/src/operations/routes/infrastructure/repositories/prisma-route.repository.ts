@@ -87,9 +87,7 @@ export class PrismaRouteRepository implements RouteRepository {
     });
   }
 
-  async findMedidor(where: {
-    medidorId: number;
-  }): Promise<MedidorRef | null> {
+  async findMedidor(where: { medidorId: number }): Promise<MedidorRef | null> {
     return this.prisma.medidores.findUnique({
       where: { medidorId: BigInt(where.medidorId) },
       select: { medidorId: true, serie: true },

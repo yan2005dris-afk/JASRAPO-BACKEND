@@ -17,10 +17,6 @@ import { PrismaMeterRepository } from './infrastructure/repositories/prisma-mete
     CreateMeterUseCase,
     FindOneMeterUseCase,
   ],
-  exports: [
-    MeterRepository,
-    CreateMeterUseCase,
-    FindOneMeterUseCase,
-  ],
+  exports: [MeterRepository, CreateMeterUseCase, FindOneMeterUseCase],
 })
 export class MeterModule {}

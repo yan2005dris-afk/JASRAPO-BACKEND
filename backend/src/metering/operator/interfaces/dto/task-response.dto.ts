@@ -32,7 +32,10 @@ export class TaskResponseDto {
   @ApiProperty({ description: 'Tipo de ruta', example: 'INSTALACION' })
   tipoRuta: string;
 
-  @ApiProperty({ description: 'Nombre de la tarea', example: 'Instalación MED-001' })
+  @ApiProperty({
+    description: 'Nombre de la tarea',
+    example: 'Instalación MED-001',
+  })
   nombre: string;
 
   @ApiPropertyOptional({ description: 'Descripción de la tarea' })

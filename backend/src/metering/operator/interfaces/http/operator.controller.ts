@@ -188,7 +188,8 @@ export class OperatorController {
    */
   @ApiOperation({
     summary: 'Reportar daño',
-    description: 'Marca un medidor como dañado y crea una tarea de inspección para el operario.',
+    description:
+      'Marca un medidor como dañado y crea una tarea de inspección para el operario.',
   })
   @ApiParam({
     name: 'id',
@@ -221,7 +222,8 @@ export class OperatorController {
    */
   @ApiOperation({
     summary: 'Dar de baja',
-    description: 'Desactiva un medidor del sistema y crea una tarea de inspección para el operario.',
+    description:
+      'Desactiva un medidor del sistema y crea una tarea de inspección para el operario.',
   })
   @ApiParam({
     name: 'id',
@@ -249,7 +251,9 @@ export class OperatorController {
     @Param('id', ParseBigIntPipe) id: bigint,
     @Body() dto: DecommissionMeterDto,
   ): Promise<MeterResponseDto> {
-    return toMeterResponse(await this.decommissionMeterUseCase.execute(id, dto.motivoBaja));
+    return toMeterResponse(
+      await this.decommissionMeterUseCase.execute(id, dto.motivoBaja),
+    );
   }
 
   /**

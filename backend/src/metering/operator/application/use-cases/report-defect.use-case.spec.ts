@@ -52,7 +52,9 @@ describe('ReportDefectUseCase', () => {
   it('should throw NotFoundException when meter does not exist', async () => {
     mockMeterRepository.findUnique.mockResolvedValue(null);
 
-    await expect(useCase.execute(BigInt(999))).rejects.toThrow(NotFoundException);
+    await expect(useCase.execute(BigInt(999))).rejects.toThrow(
+      NotFoundException,
+    );
   });
 
   it('should throw BadRequestException when meter is not in INSTALADO state', async () => {
@@ -60,7 +62,9 @@ describe('ReportDefectUseCase', () => {
       makeMeter({ estado: EstadoMedidor.PENDIENTE }),
     );
 
-    await expect(useCase.execute(BigInt(1))).rejects.toThrow(BadRequestException);
+    await expect(useCase.execute(BigInt(1))).rejects.toThrow(
+      BadRequestException,
+    );
   });
 
   it('should update meter to DANADO and return the updated entity', async () => {

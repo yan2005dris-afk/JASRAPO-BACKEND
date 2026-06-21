@@ -162,7 +162,10 @@ export class RoutesController {
     description: 'Ruta reasignada',
     type: RouteEntity,
   })
-  @ApiResponse({ status: 403, description: 'La ruta ya pertenece a este operario' })
+  @ApiResponse({
+    status: 403,
+    description: 'La ruta ya pertenece a este operario',
+  })
   @ApiResponse({ status: 404, description: 'Ruta u operario no encontrado' })
   @RequiredPermission('routes', 'update')
   @Patch(':id/reassign')

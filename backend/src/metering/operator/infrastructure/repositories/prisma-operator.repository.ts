@@ -1,6 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
-import { EstadoPeriodo, EstadoRuta, EstadoMedidor, EstadoLectura, EstadoAnomalia } from 'src/shared/enums';
+import {
+  EstadoPeriodo,
+  EstadoRuta,
+  EstadoMedidor,
+  EstadoLectura,
+  EstadoAnomalia,
+} from 'src/shared/enums';
 import {
   OperatorRepository,
   type ActivePeriod,
@@ -196,7 +202,11 @@ export class PrismaOperatorRepository extends OperatorRepository {
     periodoId: number,
     tipoRuta?: string,
   ): Promise<any[]> {
-    const where: Record<string, any> = { operarioId, periodoId, deletedAt: null };
+    const where: Record<string, any> = {
+      operarioId,
+      periodoId,
+      deletedAt: null,
+    };
 
     if (tipoRuta != null) {
       where.tipoRuta = tipoRuta;
@@ -204,11 +214,7 @@ export class PrismaOperatorRepository extends OperatorRepository {
 
     return this.prisma.rutas.findMany({
       where,
-      orderBy: [
-        { comunidadId: 'asc' },
-        { sectorId: 'asc' },
-        { orden: 'asc' },
-      ],
+      orderBy: [{ comunidadId: 'asc' }, { sectorId: 'asc' }, { orden: 'asc' }],
     });
   }
 
@@ -219,9 +225,11 @@ export class PrismaOperatorRepository extends OperatorRepository {
     const updateData: Record<string, any> = {};
 
     if (data.estado !== undefined) updateData.estado = data.estado;
-    if (data.fechaInicio !== undefined) updateData.fechaInicio = data.fechaInicio;
+    if (data.fechaInicio !== undefined)
+      updateData.fechaInicio = data.fechaInicio;
     if (data.fechaFin !== undefined) updateData.fechaFin = data.fechaFin;
-    if (data.observacion !== undefined) updateData.observacion = data.observacion;
+    if (data.observacion !== undefined)
+      updateData.observacion = data.observacion;
 
     return this.prisma.rutas.update({
       where: { rutaId, deletedAt: null },

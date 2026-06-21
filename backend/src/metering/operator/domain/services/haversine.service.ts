@@ -11,7 +11,12 @@ export class HaversineService {
    * Compute the great-circle distance between two points on Earth using the
    * Haversine formula. Returns distance in kilometers.
    */
-  static distance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  static distance(
+    lat1: number,
+    lon1: number,
+    lat2: number,
+    lon2: number,
+  ): number {
     const toRad = (deg: number) => (deg * Math.PI) / 180;
 
     const dLat = toRad(lat2 - lat1);
@@ -55,7 +60,12 @@ export class HaversineService {
       for (let i = 0; i < points.length; i++) {
         if (visited.has(points[i].id)) continue;
 
-        const dist = this.distance(current.lat, current.lng, points[i].lat, points[i].lng);
+        const dist = this.distance(
+          current.lat,
+          current.lng,
+          points[i].lat,
+          points[i].lng,
+        );
         if (dist < nearestDist) {
           nearestDist = dist;
           nearestIdx = i;

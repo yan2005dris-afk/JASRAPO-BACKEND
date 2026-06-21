@@ -4,11 +4,12 @@ import type { TaskResponseDto } from '../../interfaces/dto/task-response.dto';
 
 @Injectable()
 export class GetOperatorTasksUseCase {
-  constructor(
-    private readonly operatorRepository: OperatorRepository,
-  ) {}
+  constructor(private readonly operatorRepository: OperatorRepository) {}
 
-  async execute(operarioId: number, tipoRuta?: string): Promise<TaskResponseDto[]> {
+  async execute(
+    operarioId: number,
+    tipoRuta?: string,
+  ): Promise<TaskResponseDto[]> {
     const activePeriod = await this.operatorRepository.findActivePeriod();
 
     if (!activePeriod) {
@@ -42,7 +43,9 @@ export class GetOperatorTasksUseCase {
     );
 
     return tasks.map((task: any) => {
-      const medidor = task.medidorId ? medidorMap.get(task.medidorId.toString()) : null;
+      const medidor = task.medidorId
+        ? medidorMap.get(task.medidorId.toString())
+        : null;
 
       return {
         rutaId: task.rutaId.toString(),

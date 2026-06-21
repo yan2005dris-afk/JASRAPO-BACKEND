@@ -32,9 +32,7 @@ export class ReassignRouteUseCase {
 
     // 3. Prevent no-op reassignment
     if (route.operarioId === nuevoOperarioId) {
-      throw new ForbiddenException(
-        'La ruta ya está asignada a este operador',
-      );
+      throw new ForbiddenException('La ruta ya está asignada a este operador');
     }
 
     // 4. Reassign

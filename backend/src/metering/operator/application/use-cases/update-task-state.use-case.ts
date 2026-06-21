@@ -57,7 +57,7 @@ export class UpdateTaskStateUseCase {
       activePeriod.periodoId,
     );
 
-    const task = (tasks as any[]).find(
+    const task = tasks.find(
       (t) => t.rutaId === rutaId || t.rutaId?.toString() === rutaId?.toString(),
     );
 
@@ -90,7 +90,10 @@ export class UpdateTaskStateUseCase {
     }
 
     // 4. CANCELADA requires observacion
-    if (nuevoEstado === EstadoRuta.CANCELADA && (!observacion || observacion.trim().length === 0)) {
+    if (
+      nuevoEstado === EstadoRuta.CANCELADA &&
+      (!observacion || observacion.trim().length === 0)
+    ) {
       throw new BadRequestException(
         'La cancelación requiere una observación que explique el motivo',
       );
@@ -146,8 +149,14 @@ export class UpdateTaskStateUseCase {
       comunidadId: task.comunidadId,
       sectorId: task.sectorId ?? undefined,
       fechaPlanificada: task.fechaPlanificada?.toISOString() ?? undefined,
-      fechaInicio: updateData.fechaInicio?.toISOString() ?? task.fechaInicio?.toISOString() ?? undefined,
-      fechaFin: updateData.fechaFin?.toISOString() ?? task.fechaFin?.toISOString() ?? undefined,
+      fechaInicio:
+        updateData.fechaInicio?.toISOString() ??
+        task.fechaInicio?.toISOString() ??
+        undefined,
+      fechaFin:
+        updateData.fechaFin?.toISOString() ??
+        task.fechaFin?.toISOString() ??
+        undefined,
       medidor: task.medidorId
         ? { medidorId: task.medidorId.toString(), serie: '' }
         : null,

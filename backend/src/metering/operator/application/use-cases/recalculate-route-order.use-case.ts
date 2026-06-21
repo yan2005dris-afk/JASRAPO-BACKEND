@@ -15,10 +15,7 @@ export class RecalculateRouteOrderUseCase {
    *
    * Tasks without medidor coordinates are placed at the end of the order.
    */
-  async execute(
-    comunidadId: number,
-    sectorId: number | null,
-  ): Promise<void> {
+  async execute(comunidadId: number, sectorId: number | null): Promise<void> {
     // 1. Find active tasks in the zone that have a medidor with coordinates
     const where: any = {
       comunidadId,
@@ -47,10 +44,7 @@ export class RecalculateRouteOrderUseCase {
     const noCoordIds: bigint[] = [];
 
     for (const task of tasks) {
-      if (
-        task.medidor?.latitud != null &&
-        task.medidor?.longitud != null
-      ) {
+      if (task.medidor?.latitud != null && task.medidor?.longitud != null) {
         geoPoints.push({
           id: task.rutaId,
           lat: Number(task.medidor.latitud),

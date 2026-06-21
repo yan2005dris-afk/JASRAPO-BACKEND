@@ -55,8 +55,20 @@ describe('Operator Tasks - Schema & Repository', () => {
     describe('findTasksByOperator', () => {
       it('should find tasks for an operator in a given period ordered by comunidad, sector, orden', async () => {
         const mockTasks = [
-          { rutaId: BigInt(1), nombre: 'Task 1', comunidadId: 5, sectorId: 3, orden: 1 },
-          { rutaId: BigInt(2), nombre: 'Task 2', comunidadId: 5, sectorId: 3, orden: 2 },
+          {
+            rutaId: BigInt(1),
+            nombre: 'Task 1',
+            comunidadId: 5,
+            sectorId: 3,
+            orden: 1,
+          },
+          {
+            rutaId: BigInt(2),
+            nombre: 'Task 2',
+            comunidadId: 5,
+            sectorId: 3,
+            orden: 2,
+          },
         ];
         prisma.rutas.findMany.mockResolvedValue(mockTasks);
 
@@ -217,7 +229,11 @@ describe('Operator Tasks - Schema & Repository', () => {
           where: { medidorId: BigInt(100) },
           select: expect.objectContaining({ serie: true }),
         });
-        expect(result).toEqual({ serie: 'MED-001', comunidadId: 5, sectorId: 3 });
+        expect(result).toEqual({
+          serie: 'MED-001',
+          comunidadId: 5,
+          sectorId: 3,
+        });
       });
 
       it('should return null when meter does not exist', async () => {
@@ -236,14 +252,25 @@ describe('Operator Tasks - Schema & Repository', () => {
 
         const result = await repository.findMeterContractLocation(BigInt(200));
 
-        expect(result).toEqual({ serie: 'MED-002', comunidadId: 7, sectorId: null });
+        expect(result).toEqual({
+          serie: 'MED-002',
+          comunidadId: 7,
+          sectorId: null,
+        });
       });
     });
 
     describe('findMedidoresById', () => {
       it('should return meters for given ids', async () => {
         const mockMeters = [
-          { medidorId: BigInt(1), serie: 'M1', marca: 'X', modelo: 'Y', latitud: null, longitud: null },
+          {
+            medidorId: BigInt(1),
+            serie: 'M1',
+            marca: 'X',
+            modelo: 'Y',
+            latitud: null,
+            longitud: null,
+          },
         ];
         prisma.medidores.findMany.mockResolvedValue(mockMeters);
 

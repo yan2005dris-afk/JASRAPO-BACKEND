@@ -124,6 +124,7 @@ export class ReadingController {
         RECHAZADA_VERIFICACION: 'Rechazada',
         ESTIMADA: 'Estimada',
         PLANILLADA: 'Planillada',
+        CON_NOVEDAD: 'Con Novedad',
       },
       {
         PENDIENTE: 'bi-clock',
@@ -132,6 +133,7 @@ export class ReadingController {
         RECHAZADA_VERIFICACION: 'bi-x-circle-fill',
         ESTIMADA: 'bi-graph-up',
         PLANILLADA: 'bi-receipt',
+        CON_NOVEDAD: 'bi-exclamation-triangle',
       },
     );
   }
