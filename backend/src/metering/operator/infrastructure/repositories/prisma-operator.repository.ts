@@ -151,6 +151,7 @@ export class PrismaOperatorRepository extends OperatorRepository {
                 cliente: {
                   select: {
                     nombres: true,
+                    apellidos: true,
                   },
                 },
               },

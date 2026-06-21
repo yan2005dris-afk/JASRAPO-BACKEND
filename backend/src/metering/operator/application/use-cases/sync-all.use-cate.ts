@@ -59,7 +59,10 @@ export class SyncAllUseCase {
         updatedAt: m.updatedAt,
         deletedAt: m.deletedAt,
         contratoId: activeHistorial?.contrato?.contratoId ?? null,
-        clienteNombre: activeHistorial?.contrato?.cliente?.nombres ?? null,
+        clienteNombre:
+          activeHistorial?.contrato?.cliente
+            ? `${activeHistorial.contrato.cliente.nombres} ${activeHistorial.contrato.cliente.apellidos}`.trim()
+            : null,
       });
     });
   }
