@@ -38,4 +38,29 @@ export abstract class OperatorRepository {
   abstract findReadingWithDetails(
     id: bigint,
   ): Promise<ReadingWithDetails | null>;
+
+  // Task methods (operator-tareas)
+  abstract findTasksByOperator(
+    operarioId: number,
+    periodoId: number,
+    tipoRuta?: string,
+  ): Promise<any[]>;
+  abstract updateTaskState(
+    rutaId: bigint,
+    data: Record<string, any>,
+  ): Promise<any>;
+  abstract findOperatorsByGeography(
+    comunidadId: number,
+    sectorId: number | null,
+  ): Promise<any[]>;
+  abstract getMaxOrdenInZona(
+    comunidadId: number,
+    sectorId: number | null,
+  ): Promise<number>;
+  abstract findMeterContractLocation(medidorId: bigint): Promise<{
+    serie: string;
+    comunidadId: number;
+    sectorId: number | null;
+  } | null>;
+  abstract findMedidoresById(medidorIds: bigint[]): Promise<any[]>;
 }

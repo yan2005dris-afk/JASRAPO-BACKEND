@@ -17,6 +17,7 @@ describe('CreateRouteUseCase', () => {
     findComunidad: jest.fn(),
     findSector: jest.fn(),
     findPeriodo: jest.fn(),
+    findMedidor: jest.fn(),
     findOverlappingRoutes: jest.fn(),
     paginateLecturas: jest.fn(),
   };
@@ -325,6 +326,107 @@ describe('CreateRouteUseCase', () => {
       expect.objectContaining({ periodoId: 5 }),
     );
     expect(result.periodoId).toBe(5);
+  });
+
+  it('should throw NotFoundException if medidorId is provided but medidor not found', async () => {
+    mockRouteRepository.findUsuario.mockResolvedValue({
+      usuarioId: 1,
+      rol: { nombre: 'operadores' },
+    });
+    mockRouteRepository.findComunidad.mockResolvedValue({ comunidadId: 1 });
+    mockRouteRepository.findPeriodo.mockResolvedValue({
+      periodoId: 1,
+      estado: 'ABIERTO',
+    });
+    mockRouteRepository.findMedidor.mockResolvedValue(null);
+
+    await expect(
+      useCase.execute({
+        operarioId: 1,
+        comunidadId: 1,
+        tipoRuta: 'INSTALACION',
+        nombre: 'Install Task',
+        periodoId: 1,
+        medidorId: 99,
+      } as any),
+    ).rejects.toThrow(NotFoundException);
+
+    expect(mockRouteRepository.findMedidor).toHaveBeenCalledWith({
+      medidorId: 99,
+    });
+  });
+
+  it('should skip overlap check for INSTALACION tipoRuta', async () => {
+    mockRouteRepository.findUsuario.mockResolvedValue({
+      usuarioId: 1,
+      rol: { nombre: 'operadores' },
+    });
+    mockRouteRepository.findComunidad.mockResolvedValue({ comunidadId: 1 });
+    mockRouteRepository.findPeriodo.mockResolvedValue({
+      periodoId: 1,
+      estado: 'ABIERTO',
+    });
+    mockRouteRepository.findMedidor.mockResolvedValue({
+      medidorId: 42,
+      serie: 'MED-042',
+    });
+
+    const mockCreatedRoute = {
+      rutaId: 500n,
+      nombre: 'Instalación MED-042',
+      operarioId: 1,
+      comunidadId: 1,
+      tipoRuta: 'INSTALACION',
+      periodoId: 1,
+    };
+    mockRouteRepository.create.mockResolvedValue(mockCreatedRoute);
+
+    await useCase.execute({
+      operarioId: 1,
+      comunidadId: 1,
+      tipoRuta: 'INSTALACION',
+      nombre: 'Instalación MED-042',
+      periodoId: 1,
+      medidorId: 42,
+    } as any);
+
+    // Overlap check should NOT be called for work order types
+    expect(mockRouteRepository.findOverlappingRoutes).not.toHaveBeenCalled();
+    expect(mockRouteRepository.create).toHaveBeenCalledWith(
+      expect.objectContaining({ medidorId: 42, tipoRuta: 'INSTALACION' }),
+    );
+  });
+
+  it('should skip overlap check for INSPECCION tipoRuta', async () => {
+    mockRouteRepository.findUsuario.mockResolvedValue({
+      usuarioId: 1,
+      rol: { nombre: 'operadores' },
+    });
+    mockRouteRepository.findComunidad.mockResolvedValue({ comunidadId: 1 });
+    mockRouteRepository.findPeriodo.mockResolvedValue({
+      periodoId: 1,
+      estado: 'ABIERTO',
+    });
+
+    const mockCreatedRoute = {
+      rutaId: 501n,
+      nombre: 'Inspección Comunidad 1',
+      operarioId: 1,
+      comunidadId: 1,
+      tipoRuta: 'INSPECCION',
+      periodoId: 1,
+    };
+    mockRouteRepository.create.mockResolvedValue(mockCreatedRoute);
+
+    await useCase.execute({
+      operarioId: 1,
+      comunidadId: 1,
+      tipoRuta: 'INSPECCION',
+      nombre: 'Inspección Comunidad 1',
+      periodoId: 1,
+    } as any);
+
+    expect(mockRouteRepository.findOverlappingRoutes).not.toHaveBeenCalled();
   });
 
   it('should create route successfully', async () => {

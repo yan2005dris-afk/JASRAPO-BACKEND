@@ -8,6 +8,13 @@ import { CreateRouteDto } from '../../interfaces/dto/create-route.dto';
 import { RouteEntity } from '../../domain/entities/route.entity';
 import { RouteMapper } from '../../infrastructure/mappers/route.mapper';
 import type { CreateRouteData } from '../../domain/types/create-route-data';
+import { TipoRuta } from 'src/shared/enums';
+
+/** Route types that target a specific meter work order (not community-periodic). */
+const WORK_ORDER_TYPES = new Set<string>([
+  TipoRuta.INSTALACION,
+  TipoRuta.INSPECCION,
+]);
 
 @Injectable()
 export class CreateRouteUseCase {
@@ -61,16 +68,36 @@ export class CreateRouteUseCase {
       throw new BadRequestException('El periodo no está abierto');
     }
 
-    const overlapping = await this.routeRepository.findOverlappingRoutes(
-      createDto.comunidadId,
-      createDto.periodoId,
-      createDto.sectorId,
-    );
+    // Validate medidor when provided
+    if (createDto.medidorId != null) {
+      const medidor = await this.routeRepository.findMedidor({
+        medidorId: createDto.medidorId,
+      });
 
-    if (overlapping.length > 0) {
-      throw new BadRequestException(
-        'Ya existe una ruta para esta comunidad y periodo',
+      if (!medidor) {
+        throw new NotFoundException(
+          `Medidor con ID ${createDto.medidorId} no encontrado`,
+        );
+      }
+    }
+
+    // Overlap check applies only to periodic community routes
+    // (TOMA_LECTURA / RECONEXION). Work orders (INSTALACION / INSPECCION)
+    // target a specific meter and may coexist with other routes.
+    const isWorkOrder = WORK_ORDER_TYPES.has(createDto.tipoRuta);
+
+    if (!isWorkOrder) {
+      const overlapping = await this.routeRepository.findOverlappingRoutes(
+        createDto.comunidadId,
+        createDto.periodoId,
+        createDto.sectorId,
       );
+
+      if (overlapping.length > 0) {
+        throw new BadRequestException(
+          'Ya existe una ruta para esta comunidad y periodo',
+        );
+      }
     }
 
     const createData: CreateRouteData = {
@@ -85,6 +112,7 @@ export class CreateRouteUseCase {
         ? new Date(createDto.fechaPlanificada)
         : null,
       estado: 'PENDIENTE',
+      medidorId: createDto.medidorId,
     };
 
     const ruta = await this.routeRepository.create(createData);

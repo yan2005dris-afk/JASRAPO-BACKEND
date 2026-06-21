@@ -14,8 +14,7 @@ export const EstadoAnomalia = {
   DESCARTADA: 'DESCARTADA',
 } as const;
 
-export type EstadoAnomalia =
-  (typeof EstadoAnomalia)[keyof typeof EstadoAnomalia];
+export type EstadoAnomalia = (typeof EstadoAnomalia)[keyof typeof EstadoAnomalia];
 
 // Fuente: models/logica-de-negocio/LecturaAnomalia.prisma
 
@@ -26,8 +25,7 @@ export const EstadoAsignacion = {
   COMPLETADA: 'COMPLETADA',
 } as const;
 
-export type EstadoAsignacion =
-  (typeof EstadoAsignacion)[keyof typeof EstadoAsignacion];
+export type EstadoAsignacion = (typeof EstadoAsignacion)[keyof typeof EstadoAsignacion];
 
 // Fuente: models/logica-de-negocio/Rutas.prisma
 
@@ -54,8 +52,7 @@ export const EstadoContrato = {
   RECONEXION: 'RECONEXION',
 } as const;
 
-export type EstadoContrato =
-  (typeof EstadoContrato)[keyof typeof EstadoContrato];
+export type EstadoContrato = (typeof EstadoContrato)[keyof typeof EstadoContrato];
 
 // Fuente: models/logica-de-negocio/Contratos.prisma
 
@@ -67,8 +64,7 @@ export const EstadoConvenio = {
   PAGADO: 'PAGADO',
 } as const;
 
-export type EstadoConvenio =
-  (typeof EstadoConvenio)[keyof typeof EstadoConvenio];
+export type EstadoConvenio = (typeof EstadoConvenio)[keyof typeof EstadoConvenio];
 
 // Fuente: models/logica-de-negocio/Convenios.prisma
 
@@ -77,8 +73,7 @@ export const EstadoCuotaConvenio = {
   PAGADA: 'PAGADA',
 } as const;
 
-export type EstadoCuotaConvenio =
-  (typeof EstadoCuotaConvenio)[keyof typeof EstadoCuotaConvenio];
+export type EstadoCuotaConvenio = (typeof EstadoCuotaConvenio)[keyof typeof EstadoCuotaConvenio];
 
 // Fuente: models/logica-de-negocio/CuotaConvenio.prisma
 
@@ -146,8 +141,7 @@ export const EstadoPrefactura = {
   PAGADA: 'PAGADA',
 } as const;
 
-export type EstadoPrefactura =
-  (typeof EstadoPrefactura)[keyof typeof EstadoPrefactura];
+export type EstadoPrefactura = (typeof EstadoPrefactura)[keyof typeof EstadoPrefactura];
 
 // Fuente: models/facturacion/Prefacturas.prisma
 
@@ -171,8 +165,7 @@ export const EstadoValidacionPago = {
   CONCILIADO: 'CONCILIADO',
 } as const;
 
-export type EstadoValidacionPago =
-  (typeof EstadoValidacionPago)[keyof typeof EstadoValidacionPago];
+export type EstadoValidacionPago = (typeof EstadoValidacionPago)[keyof typeof EstadoValidacionPago];
 
 // Fuente: models/logica-de-negocio/Pagos.prisma
 
@@ -207,8 +200,7 @@ export const TipoDetallePago = {
   SALDO_FAVOR: 'SALDO_FAVOR',
 } as const;
 
-export type TipoDetallePago =
-  (typeof TipoDetallePago)[keyof typeof TipoDetallePago];
+export type TipoDetallePago = (typeof TipoDetallePago)[keyof typeof TipoDetallePago];
 
 // Fuente: models/logica-de-negocio/DetallePago.prisma
 
@@ -218,8 +210,7 @@ export const TipoOrigenAbono = {
   OTROS: 'OTROS',
 } as const;
 
-export type TipoOrigenAbono =
-  (typeof TipoOrigenAbono)[keyof typeof TipoOrigenAbono];
+export type TipoOrigenAbono = (typeof TipoOrigenAbono)[keyof typeof TipoOrigenAbono];
 
 // Fuente: models/logica-de-negocio/SaldoFavorCliente.prisma
 
@@ -239,6 +230,8 @@ export type TipoRubro = (typeof TipoRubro)[keyof typeof TipoRubro];
 export const TipoRuta = {
   TOMA_LECTURA: 'TOMA_LECTURA',
   RECONEXION: 'RECONEXION',
+  INSTALACION: 'INSTALACION',
+  INSPECCION: 'INSPECCION',
 } as const;
 
 export type TipoRuta = (typeof TipoRuta)[keyof typeof TipoRuta];

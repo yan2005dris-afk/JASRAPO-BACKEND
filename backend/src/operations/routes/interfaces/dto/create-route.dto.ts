@@ -2,13 +2,14 @@ import {
   IsNotEmpty,
   IsNumber,
   IsOptional,
-  IsIn,
+  IsEnum,
   IsDateString,
   MaxLength,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsNotEmptyString } from 'src/infrastructure/common/decorators/is-not-empty-string.decorator';
+import { TipoRuta } from 'src/shared/enums';
 
 export class CreateRouteDto {
   @ApiProperty({
@@ -40,12 +41,22 @@ export class CreateRouteDto {
 
   @ApiProperty({
     description: 'Tipo de ruta a crear',
-    enum: ['TOMA_LECTURA', 'RECONEXION'],
-    example: 'TOMA_LECTURA',
+    enum: TipoRuta,
+    example: TipoRuta.TOMA_LECTURA,
   })
   @IsNotEmpty()
-  @IsIn(['TOMA_LECTURA', 'RECONEXION'])
-  tipoRuta!: 'TOMA_LECTURA' | 'RECONEXION';
+  @IsEnum(TipoRuta)
+  tipoRuta!: TipoRuta;
+
+  @ApiProperty({
+    description: 'ID del medidor asociado (requerido para INSTALACION e INSPECCION)',
+    required: false,
+    example: 42,
+  })
+  @IsOptional()
+  @IsNumber()
+  @Type(() => Number)
+  medidorId?: number;
 
   @ApiProperty({
     description: 'ID de la comunidad donde se aplicará la ruta',

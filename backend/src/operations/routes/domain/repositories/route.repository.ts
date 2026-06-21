@@ -28,6 +28,11 @@ export interface PeriodoRef {
   estado: string;
 }
 
+export interface MedidorRef {
+  medidorId: number;
+  serie: string;
+}
+
 export abstract class RouteRepository {
   abstract findUnique(where: Record<string, any>): Promise<any>;
 
@@ -64,6 +69,10 @@ export abstract class RouteRepository {
   abstract findPeriodo(where: {
     periodoId: number;
   }): Promise<PeriodoRef | null>;
+
+  abstract findMedidor(where: {
+    medidorId: number;
+  }): Promise<{ medidorId: number; serie: string } | null>;
 
   abstract findOverlappingRoutes(
     comunidadId: number,

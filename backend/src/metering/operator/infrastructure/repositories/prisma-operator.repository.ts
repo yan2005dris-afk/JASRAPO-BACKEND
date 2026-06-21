@@ -188,4 +188,127 @@ export class PrismaOperatorRepository extends OperatorRepository {
       },
     });
   }
+
+  // ── Task methods (operator-tareas) ──────────────────────────────
+
+  async findTasksByOperator(
+    operarioId: number,
+    periodoId: number,
+    tipoRuta?: string,
+  ): Promise<any[]> {
+    const where: Record<string, any> = { operarioId, periodoId, deletedAt: null };
+
+    if (tipoRuta != null) {
+      where.tipoRuta = tipoRuta;
+    }
+
+    return this.prisma.rutas.findMany({
+      where,
+      orderBy: [
+        { comunidadId: 'asc' },
+        { sectorId: 'asc' },
+        { orden: 'asc' },
+      ],
+    });
+  }
+
+  async updateTaskState(
+    rutaId: bigint,
+    data: Record<string, any>,
+  ): Promise<any> {
+    const updateData: Record<string, any> = {};
+
+    if (data.estado !== undefined) updateData.estado = data.estado;
+    if (data.fechaInicio !== undefined) updateData.fechaInicio = data.fechaInicio;
+    if (data.fechaFin !== undefined) updateData.fechaFin = data.fechaFin;
+    if (data.observacion !== undefined) updateData.observacion = data.observacion;
+
+    return this.prisma.rutas.update({
+      where: { rutaId, deletedAt: null },
+      data: updateData,
+    });
+  }
+
+  async findOperatorsByGeography(
+    comunidadId: number,
+    sectorId: number | null,
+  ): Promise<any[]> {
+    const where: any = {
+      rutas: {
+        some: {
+          comunidadId,
+          deletedAt: null,
+        },
+      },
+    };
+
+    if (sectorId !== null && sectorId !== undefined) {
+      where.rutas.some.sectorId = sectorId;
+    }
+
+    return this.prisma.usuarios.findMany({ where });
+  }
+
+  async getMaxOrdenInZona(
+    comunidadId: number,
+    sectorId: number | null,
+  ): Promise<number> {
+    const where: any = { comunidadId, deletedAt: null };
+
+    if (sectorId !== null && sectorId !== undefined) {
+      where.sectorId = sectorId;
+    }
+
+    const result = await this.prisma.rutas.aggregate({
+      where,
+      _max: { orden: true },
+    });
+
+    return result._max.orden ?? 0;
+  }
+
+  async findMeterContractLocation(medidorId: bigint): Promise<{
+    serie: string;
+    comunidadId: number;
+    sectorId: number | null;
+  } | null> {
+    const result = await this.prisma.medidores.findUnique({
+      where: { medidorId },
+      select: {
+        serie: true,
+        historial: {
+          where: { fechaHasta: null },
+          take: 1,
+          select: {
+            contrato: {
+              select: { comunidadId: true, sectorId: true },
+            },
+          },
+        },
+      },
+    });
+
+    if (!result) return null;
+
+    const contrato = result.historial?.[0]?.contrato;
+    return {
+      serie: result.serie,
+      comunidadId: contrato?.comunidadId ?? 0,
+      sectorId: contrato?.sectorId ?? null,
+    };
+  }
+
+  async findMedidoresById(medidorIds: bigint[]): Promise<any[]> {
+    return this.prisma.medidores.findMany({
+      where: { medidorId: { in: medidorIds } },
+      select: {
+        medidorId: true,
+        serie: true,
+        marca: true,
+        modelo: true,
+        latitud: true,
+        longitud: true,
+      },
+    });
+  }
 }

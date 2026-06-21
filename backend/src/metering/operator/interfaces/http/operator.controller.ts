@@ -4,6 +4,7 @@ import {
   Patch,
   Param,
   Body,
+  Query,
   UseGuards,
   Post,
 } from '@nestjs/common';
@@ -14,6 +15,7 @@ import {
   ApiResponse,
   ApiParam,
   ApiBody,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
@@ -28,11 +30,16 @@ import { ResponseReadingDto } from 'src/metering/readings/interfaces/dto/respons
 import { toReadingResponse } from 'src/metering/readings/types/readingMapper';
 import { MeterResponseDto } from 'src/metering/meters/interfaces/dto/meter-response.dto';
 import { toMeterResponse } from 'src/metering/meters/domain/types/metersMapper';
-import { ReportDefectUseCase } from '../../../meters/application/use-cases/report-defect.use-case';
-import { DecommissionMeterUseCase } from '../../../meters/application/use-cases/decommission-meter.use-case';
-import { InstallMeterUseCase } from '../../../meters/application/use-cases/install-meter.use-case';
-import { SyncAllUseCase } from '../../application/use-cases/sync-all.use-cate';
+import { SyncAllUseCase } from '../../application/use-cases/sync-all.use-case';
 import { DecommissionMeterDto } from './decommission-meter.dto';
+import { GetOperatorTasksUseCase } from '../../application/use-cases/get-operator-tasks.use-case';
+import { UpdateTaskStateUseCase } from '../../application/use-cases/update-task-state.use-case';
+import { UpdateTaskDto } from '../../interfaces/dto/update-task.dto';
+import { TaskResponseDto } from '../../interfaces/dto/task-response.dto';
+import { TipoRuta } from 'src/shared/enums';
+import { InstallMeterUseCase } from '../../application/use-cases/install-meter.use-case';
+import { ReportDefectUseCase } from '../../application/use-cases/report-defect.use-case';
+import { DecommissionMeterUseCase } from '../../application/use-cases/decommission-meter.use-case';
 
 @ApiTags('operator')
 @ApiBearerAuth()
@@ -42,10 +49,12 @@ export class OperatorController {
   constructor(
     private readonly getOperatorReadingsUseCase: GetOperatorReadingsUseCase,
     private readonly updateOperatorReadingUseCase: UpdateOperatorReadingUseCase,
+    private readonly installMeterUseCase: InstallMeterUseCase,
     private readonly reportDefectUseCase: ReportDefectUseCase,
-    private readonly decommissionUseCase: DecommissionMeterUseCase,
-    private readonly installUseCase: InstallMeterUseCase,
+    private readonly decommissionMeterUseCase: DecommissionMeterUseCase,
     private readonly syncAllUseCase: SyncAllUseCase,
+    private readonly getOperatorTasksUseCase: GetOperatorTasksUseCase,
+    private readonly updateTaskStateUseCase: UpdateTaskStateUseCase,
   ) {}
 
   @ApiOperation({
@@ -114,15 +123,13 @@ export class OperatorController {
   }
 
   /**
-   * Instalar un medidor
-   * POST /meters/:id/install
-   * El medidor debe estar en estado PENDIENTE (asignado a un contrato).
-   * Cambia el estado a INSTALADO y registra la fecha de instalación.
+   * Instalar un medidor y crear tarea de instalación
+   * POST /operator/:id/install
    */
   @ApiOperation({
     summary: 'Instalar medidor',
     description:
-      'Cambia el estado del medidor de PENDIENTE a INSTALADO. El medidor debe haber sido asociado a un contrato previamente.',
+      'Cambia el estado del medidor de PENDIENTE a INSTALADO y crea una tarea de instalación para el operario.',
   })
   @ApiParam({
     name: 'id',
@@ -145,16 +152,16 @@ export class OperatorController {
   async install(
     @Param('id', ParseBigIntPipe) id: bigint,
   ): Promise<MeterResponseDto> {
-    return toMeterResponse(await this.installUseCase.execute(id));
+    return toMeterResponse(await this.installMeterUseCase.execute(id));
   }
 
   /**
-   * Reportar daño de un medidor
-   * POST /meters/:id/report-defect
+   * Reportar daño de un medidor y crear tarea de inspección
+   * POST /operator/:id/report-defect
    */
   @ApiOperation({
     summary: 'Reportar daño',
-    description: 'Marca un medidor como dañado',
+    description: 'Marca un medidor como dañado y crea una tarea de inspección para el operario.',
   })
   @ApiParam({
     name: 'id',
@@ -182,12 +189,12 @@ export class OperatorController {
   }
 
   /**
-   * Dar de baja un medidor
-   * POST /meters/:id/decommission
+   * Dar de baja un medidor y crear tarea de inspección
+   * POST /operator/:id/decommission
    */
   @ApiOperation({
     summary: 'Dar de baja',
-    description: 'Desactiva un medidor del sistema',
+    description: 'Desactiva un medidor del sistema y crea una tarea de inspección para el operario.',
   })
   @ApiParam({
     name: 'id',
@@ -215,14 +222,12 @@ export class OperatorController {
     @Param('id', ParseBigIntPipe) id: bigint,
     @Body() dto: DecommissionMeterDto,
   ): Promise<MeterResponseDto> {
-    return toMeterResponse(
-      await this.decommissionUseCase.execute(id, dto.motivoBaja),
-    );
+    return toMeterResponse(await this.decommissionMeterUseCase.execute(id));
   }
 
   /**
    * Sincronización offline PWA — devuelve todos los medidores sin paginación
-   * GET /meters/sync
+   * GET /operator/sync
    */
   @ApiOperation({
     summary: 'Sync offline de medidores',
@@ -236,5 +241,75 @@ export class OperatorController {
     const operarioId = Number(user.sub);
     const meters = await this.syncAllUseCase.execute(operarioId);
     return meters.map((m) => toMeterResponse(m));
+  }
+
+  // ── Task endpoints (field operator view) ─────────────────────────────
+
+  /**
+   * Listar tareas del operario
+   * GET /operator/tasks
+   */
+  @ApiOperation({
+    summary: 'Listar tareas del operario',
+    description:
+      'Retorna las tareas del período activo asignadas al operario autenticado',
+  })
+  @ApiQuery({
+    name: 'tipoRuta',
+    required: false,
+    enum: TipoRuta,
+    description: 'Filter tasks by route type',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de tareas del operario',
+    type: [TaskResponseDto],
+  })
+  @ApiResponse({ status: 401, description: 'No autorizado' })
+  @ApiResponse({ status: 404, description: 'No hay período activo' })
+  @RequiredPermission('lecturas', 'read')
+  @Get('tasks')
+  async getOperatorTasks(
+    @CurrentUser() user: JwtPayload,
+    @Query('tipoRuta') tipoRuta?: string,
+  ): Promise<TaskResponseDto[]> {
+    const operarioId = Number(user.sub);
+    return this.getOperatorTasksUseCase.execute(operarioId, tipoRuta);
+  }
+
+  /**
+   * Actualizar estado de una tarea
+   * PATCH /operator/tasks/:id
+   */
+  @ApiOperation({
+    summary: 'Actualizar estado de tarea',
+    description:
+      'Permite al operario actualizar el estado de una tarea asignada',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'ID de la tarea (ruta)',
+    type: Number,
+    example: 1,
+  })
+  @ApiBody({ type: UpdateTaskDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Tarea actualizada',
+    type: TaskResponseDto,
+  })
+  @ApiResponse({ status: 400, description: 'Transición inválida' })
+  @ApiResponse({ status: 401, description: 'No autorizado' })
+  @ApiResponse({ status: 403, description: 'Tarea no pertenece al operador' })
+  @ApiResponse({ status: 404, description: 'Tarea no encontrada' })
+  @RequiredPermission('lecturas', 'update')
+  @Patch('tasks/:id')
+  async updateTaskState(
+    @Param('id', ParseBigIntPipe) id: bigint,
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: UpdateTaskDto,
+  ): Promise<TaskResponseDto> {
+    const operarioId = Number(user.sub);
+    return this.updateTaskStateUseCase.execute(id, operarioId, dto);
   }
 }
