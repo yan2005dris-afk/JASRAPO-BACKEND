@@ -11,7 +11,6 @@ import { DecommissionMeterUseCase } from './application/use-cases/decommission-m
 import { GetOperatorReadingsWithAnomaliesUseCase } from './application/use-cases/get-operator-readings-with-anomalies.use-case';
 import { PrismaOperatorRepository } from './infrastructure/repositories/prisma-operator.repository';
 import { OperatorRepository } from './domain/repositories/operator.repository';
-import { HaversineService } from './domain/services/haversine.service';
 import { MeterModule } from '../meters/meter.module';
 import { ReadingModule } from '../readings/reading.module';
 
@@ -28,7 +27,6 @@ import { ReadingModule } from '../readings/reading.module';
     ReportDefectUseCase,
     DecommissionMeterUseCase,
     GetOperatorReadingsWithAnomaliesUseCase,
-    HaversineService,
     {
       provide: OperatorRepository,
       useClass: PrismaOperatorRepository,
