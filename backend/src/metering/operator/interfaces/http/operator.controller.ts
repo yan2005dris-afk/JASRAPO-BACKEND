@@ -27,9 +27,9 @@ import { ActualizarLecturaDto } from 'src/metering/readings/interfaces/dto/updat
 import { ResponseReadingDto } from 'src/metering/readings/interfaces/dto/response-reading.dto';
 import { MeterResponseDto } from 'src/metering/meters/interfaces/dto/meter-response.dto';
 import { toMeterResponse } from 'src/metering/meters/domain/types/metersMapper';
-import { ReportDefectUseCase } from '../../application/use-cases/report-defect.use-case';
-import { DecommissionMeterUseCase } from '../../application/use-cases/decommission-meter.use-case';
-import { InstallMeterUseCase } from '../../application/use-cases/install-meter.use-case';
+import { ReportDefectUseCase } from '../../../meters/application/use-cases/report-defect.use-case';
+import { DecommissionMeterUseCase } from '../../../meters/application/use-cases/decommission-meter.use-case';
+import { InstallMeterUseCase } from '../../../meters/application/use-cases/install-meter.use-case';
 import { SyncAllUseCase } from '../../application/use-cases/sync-all.use-cate';
 
 @ApiTags('operator')

@@ -4,9 +4,9 @@ import { MeterService } from './meter.service';
 import { MeterRepository } from '../domain/repositories/meter.repository';
 import { CreateMeterUseCase } from './use-cases/create-meter.use-case';
 import { FindOneMeterUseCase } from './use-cases/find-one-meter.use-case';
-import { InstallMeterUseCase } from '../../operator/application/use-cases/install-meter.use-case';
-import { ReportDefectUseCase } from '../../operator/application/use-cases/report-defect.use-case';
-import { DecommissionMeterUseCase } from '../../operator/application/use-cases/decommission-meter.use-case';
+import { InstallMeterUseCase } from './use-cases/install-meter.use-case';
+import { ReportDefectUseCase } from './use-cases/report-defect.use-case';
+import { DecommissionMeterUseCase } from './use-cases/decommission-meter.use-case';
 
 import { EstadoMedidor } from 'src/shared/enums';
 
