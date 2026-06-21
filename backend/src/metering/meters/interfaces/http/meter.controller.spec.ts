@@ -53,15 +53,17 @@ describe('MeterController', () => {
     kpis: { enBodega: 1, instalados: 0, danados: 0, total: 1 },
   };
 
-  const mockMeterService = {
-    create: jest.fn(() => Promise.resolve(mockMeterEntity)),
-    findAll: jest.fn(() => Promise.resolve(mockPaginatedResponse)),
-    findOne: jest.fn(() => Promise.resolve(mockMeterEntity)),
-    update: jest.fn(() => Promise.resolve(mockMeterEntity)),
-    remove: jest.fn(() => Promise.resolve(undefined)),
-  };
+  let mockMeterService: { [K in keyof MeterService]: jest.Mock };
 
   beforeEach(async () => {
+    mockMeterService = {
+      create: jest.fn(() => Promise.resolve(mockMeterEntity)),
+      findAll: jest.fn(() => Promise.resolve(mockPaginatedResponse)),
+      findOne: jest.fn(() => Promise.resolve(mockMeterEntity)),
+      update: jest.fn(() => Promise.resolve(mockMeterEntity)),
+      remove: jest.fn(() => Promise.resolve(undefined)),
+    } as any;
+
     const module: TestingModule = await Test.createTestingModule({
       controllers: [MeterController],
       providers: [{ provide: MeterService, useValue: mockMeterService }],
