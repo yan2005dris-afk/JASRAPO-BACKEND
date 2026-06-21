@@ -32,9 +32,6 @@ export class TaskRutaPuntoDto {
   @ApiProperty({ description: 'Longitud del punto', example: -80.7089 })
   longitud: number;
 
-  @ApiProperty({ description: 'Orden de visita del punto', example: 1 })
-  orden: number;
-
   @ApiProperty({ description: 'Serie del medidor', example: 'MED-001' })
   serie: string;
 

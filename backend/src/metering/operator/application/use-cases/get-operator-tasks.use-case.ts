@@ -75,10 +75,9 @@ export class GetOperatorTasksUseCase {
         matchingMeters.sort((a: any, b: any) => a.serie.localeCompare(b.serie));
 
         rutaPuntos = matchingMeters
-          .map((m: any, index: number) => ({
+          .map((m: any) => ({
             latitud: m.latitud != null ? Number(m.latitud) : null,
             longitud: m.longitud != null ? Number(m.longitud) : null,
-            orden: index + 1,
             serie: m.serie,
             clienteNombre: m.historial?.[0]?.contrato?.cliente
               ? `${m.historial[0].contrato.cliente.nombres} ${m.historial[0].contrato.cliente.apellidos}`.trim()
