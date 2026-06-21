@@ -1,6 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
-import { EstadoLectura, EstadoPeriodo, EstadoRuta, EstadoMedidor } from 'src/shared/enums';
+import {
+  EstadoLectura,
+  EstadoPeriodo,
+  EstadoRuta,
+  EstadoMedidor,
+} from 'src/shared/enums';
 import {
   OperatorRepository,
   type ActivePeriod,
@@ -245,7 +250,11 @@ export class PrismaOperatorRepository extends OperatorRepository {
     data: Record<string, unknown>,
   ): Promise<any> {
     const { count } = await this.prisma.lecturas.updateMany({
-      where: { lecturaId: id, estado: expectedEstado as EstadoLectura, deletedAt: null },
+      where: {
+        lecturaId: id,
+        estado: expectedEstado as EstadoLectura,
+        deletedAt: null,
+      },
       data,
     });
 
