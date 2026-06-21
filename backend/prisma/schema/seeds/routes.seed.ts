@@ -105,6 +105,12 @@ export async function seedRoutes(prisma: PrismaClient) {
     },
   ];
 
+  // Obtener algunos medidores para vincular a las rutas de reconexión/inspección
+  const medidores = await prisma.medidores.findMany({
+    select: { medidorId: true },
+    take: 5,
+  });
+
   // Rutas de RECONEXION en diferentes estados (no llevan periodoId)
   const rutasReconexion = [
     {
@@ -116,6 +122,7 @@ export async function seedRoutes(prisma: PrismaClient) {
       sectorId: sectores.find((s) => s.comunidadId === 1 && s.sectorId === 1)?.sectorId || 1,
       estado: "PENDIENTE" as const,
       fechaPlanificada: new Date("2026-05-20"),
+      medidorId: medidores[0]?.medidorId || BigInt(1),
     },
     {
       rutaId: BigInt(8),
@@ -127,6 +134,7 @@ export async function seedRoutes(prisma: PrismaClient) {
       estado: "EN_PROGRESO" as const,
       fechaPlanificada: new Date("2026-05-18"),
       fechaInicio: new Date("2026-05-18T09:00:00"),
+      medidorId: medidores[1]?.medidorId || BigInt(2),
     },
     {
       rutaId: BigInt(9),
@@ -139,6 +147,7 @@ export async function seedRoutes(prisma: PrismaClient) {
       fechaPlanificada: new Date("2026-05-05"),
       fechaInicio: new Date("2026-05-05T10:00:00"),
       fechaFin: new Date("2026-05-05T16:00:00"),
+      medidorId: medidores[2]?.medidorId || BigInt(3),
     },
     {
       rutaId: BigInt(10),
@@ -149,6 +158,7 @@ export async function seedRoutes(prisma: PrismaClient) {
       sectorId: null,
       estado: "PENDIENTE" as const,
       fechaPlanificada: new Date("2026-05-22"),
+      medidorId: medidores[3]?.medidorId || BigInt(4),
     },
   ];
 
@@ -160,7 +170,17 @@ export async function seedRoutes(prisma: PrismaClient) {
       where: { rutaId: ruta.rutaId },
       update: {
         nombre: ruta.nombre,
-        periodoId: 'periodoId' in ruta ? ruta.periodoId : undefined,
+        descripcion: ruta.descripcion,
+        tipoRuta: ruta.tipoRuta,
+        comunidadId: ruta.comunidadId,
+        sectorId: ruta.sectorId,
+        periodoId: 'periodoId' in ruta ? (ruta.periodoId as any) : undefined,
+        estado: ruta.estado,
+        fechaPlanificada: ruta.fechaPlanificada,
+        fechaInicio: 'fechaInicio' in ruta ? (ruta.fechaInicio as any) : undefined,
+        fechaFin: 'fechaFin' in ruta ? (ruta.fechaFin as any) : undefined,
+        medidorId: 'medidorId' in ruta ? (ruta.medidorId as any) : undefined,
+        operarioId,
       },
       create: {
         ...ruta,

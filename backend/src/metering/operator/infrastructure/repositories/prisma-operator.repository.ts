@@ -154,6 +154,8 @@ export class PrismaOperatorRepository extends OperatorRepository {
             contrato: {
               select: {
                 contratoId: true,
+                comunidadId: true,
+                sectorId: true,
                 cliente: {
                   select: {
                     nombres: true,

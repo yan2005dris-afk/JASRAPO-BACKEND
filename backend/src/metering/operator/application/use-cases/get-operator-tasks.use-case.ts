@@ -42,10 +42,53 @@ export class GetOperatorTasksUseCase {
       medidores.map((m) => [m.medidorId.toString(), m]),
     );
 
+    // Fetch meters for reading tasks to build their routes
+    const readingTasks = tasks.filter(
+      (t: any) => t.tipoRuta === 'TOMA_LECTURA',
+    );
+    let metersForRoutes: any[] = [];
+    if (readingTasks.length > 0) {
+      const routeConditions = readingTasks.map((t: any) => ({
+        comunidadId: t.comunidadId,
+        ...(t.sectorId !== null && t.sectorId !== undefined
+          ? { sectorId: t.sectorId }
+          : {}),
+      }));
+      metersForRoutes =
+        await this.operatorRepository.findMetersByRoutes(routeConditions);
+    }
+
     return tasks.map((task: any) => {
       const medidor = task.medidorId
         ? medidorMap.get(task.medidorId.toString())
         : null;
+
+      let rutaPuntos: any[] | undefined = undefined;
+      if (task.tipoRuta === 'TOMA_LECTURA') {
+        const matchingMeters = metersForRoutes.filter((m: any) => {
+          const contrato = m.historial?.[0]?.contrato;
+          if (!contrato) return false;
+          return (
+            contrato.comunidadId === task.comunidadId &&
+            contrato.sectorId === task.sectorId
+          );
+        });
+
+        // Sort by serie to give a deterministic path order
+        matchingMeters.sort((a: any, b: any) => a.serie.localeCompare(b.serie));
+
+        rutaPuntos = matchingMeters
+          .map((m: any, index: number) => ({
+            latitud: m.latitud != null ? Number(m.latitud) : null,
+            longitud: m.longitud != null ? Number(m.longitud) : null,
+            orden: index + 1,
+            serie: m.serie,
+            clienteNombre: m.historial?.[0]?.contrato?.cliente
+              ? `${m.historial[0].contrato.cliente.nombres} ${m.historial[0].contrato.cliente.apellidos}`.trim()
+              : '',
+          }))
+          .filter((pt: any) => pt.latitud != null && pt.longitud != null);
+      }
 
       return {
         rutaId: task.rutaId.toString(),
@@ -75,6 +118,7 @@ export class GetOperatorTasksUseCase {
           nombres: '',
           apellidos: '',
         },
+        rutaPuntos,
       };
     });
   }
