@@ -10,7 +10,9 @@ export class EnumStateDto {
   @ApiProperty({ description: 'Orden de visualización en dropdowns/listas' })
   orden: number;
 
-  @ApiPropertyOptional({ description: 'Clase de ícono Bootstrap para la UI (ej. bi-clock)' })
+  @ApiPropertyOptional({
+    description: 'Clase de ícono Bootstrap para la UI (ej. bi-clock)',
+  })
   icono?: string;
 }
 

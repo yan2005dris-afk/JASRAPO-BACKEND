@@ -98,7 +98,7 @@ export class MeterService {
     );
     return { message: `Medidor con ID ${id} eliminado` };
   }
-  
+
   async findAllStates(): Promise<EnumStateDto[]> {
     return METER_STATUS_LIST;
   }

@@ -29,7 +29,10 @@ import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.
 import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 import { toReadingResponse } from '../../types/readingMapper';
 import { ReadingFilters } from '../../domain/repositories/reading.repository';
-import { EnumStateDto, buildStateCatalog } from 'src/shared/enums/state-catalog';
+import {
+  EnumStateDto,
+  buildStateCatalog,
+} from 'src/shared/enums/state-catalog';
 import { EstadoLectura } from 'src/shared/enums';
 
 @ApiTags('readings')

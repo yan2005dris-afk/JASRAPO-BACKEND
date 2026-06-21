@@ -78,10 +78,18 @@ export class MeterEntity {
   })
   deletedAt: Date | null;
 
-  @ApiProperty({ example: '123', description: 'ID de contrato activo', nullable: true })
+  @ApiProperty({
+    example: '123',
+    description: 'ID de contrato activo',
+    nullable: true,
+  })
   contratoId?: bigint | null;
 
-  @ApiProperty({ example: 'Juan Pérez', description: 'Nombre completo del cliente', nullable: true })
+  @ApiProperty({
+    example: 'Juan Pérez',
+    description: 'Nombre completo del cliente',
+    nullable: true,
+  })
   clienteNombre?: string | null;
 
   constructor(partial: Partial<MeterEntity>) {

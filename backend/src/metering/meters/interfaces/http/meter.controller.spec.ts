@@ -77,7 +77,11 @@ describe('MeterController', () => {
 
   describe('create', () => {
     it('should create a meter', async () => {
-      const createDto = { serie: 'MED-001', modelo: 'DIGITAL_2000', marca: 'Itron' };
+      const createDto = {
+        serie: 'MED-001',
+        modelo: 'DIGITAL_2000',
+        marca: 'Itron',
+      };
       const result = await controller.create(createDto);
 
       expect(service.create).toHaveBeenCalledWith(createDto);

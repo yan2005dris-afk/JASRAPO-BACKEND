@@ -65,7 +65,7 @@ export class OperatorController {
     @CurrentUser() user: JwtPayload,
   ): Promise<ResponseReadingDto[]> {
     const operarioId = Number(user.sub);
-    return this.getOperatorReadingsUseCase.execute(operarioId) as Promise<ResponseReadingDto[]>;
+    return this.getOperatorReadingsUseCase.execute(operarioId);
   }
 
   @ApiOperation({
@@ -90,7 +90,10 @@ export class OperatorController {
   })
   @ApiResponse({ status: 400, description: 'Estado no modificable' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
-  @ApiResponse({ status: 403, description: 'Lectura fuera de la ruta asignada' })
+  @ApiResponse({
+    status: 403,
+    description: 'Lectura fuera de la ruta asignada',
+  })
   @ApiResponse({ status: 404, description: 'Lectura no encontrada' })
   @RequiredPermission('lecturas', 'update')
   @Patch('readings/:id')
@@ -100,11 +103,7 @@ export class OperatorController {
     @Body() updateDto: ActualizarLecturaDto,
   ): Promise<ResponseReadingDto> {
     const operarioId = Number(user.sub);
-    return this.updateOperatorReadingUseCase.execute(
-      id,
-      operarioId,
-      updateDto,
-    ) as Promise<ResponseReadingDto>;
+    return this.updateOperatorReadingUseCase.execute(id, operarioId, updateDto);
   }
 
   /**
@@ -214,7 +213,6 @@ export class OperatorController {
     );
   }
 
-
   /**
    * Sincronización offline PWA — devuelve todos los medidores sin paginación
    * GET /meters/sync
@@ -240,5 +238,4 @@ export class OperatorController {
       clienteNombre: m.clienteNombre ?? null,
     }));
   }
-
 }
