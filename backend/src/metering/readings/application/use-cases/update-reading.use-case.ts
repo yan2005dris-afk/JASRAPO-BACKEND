@@ -5,12 +5,24 @@ import {
 } from '@nestjs/common';
 import { EstadoLectura } from 'src/shared/enums';
 import { ReadingRepository } from '../../domain/repositories/reading.repository';
+import type { UpdateReadingRepositoryData } from '../../domain/repositories/reading.repository';
 import { ActualizarLecturaDto } from '../../interfaces/dto/update-lectura.dto';
 import { LecturaEntity } from '../../domain/entities/lectura.entity';
 
 /**
  * State machine: define qué transiciones de estado son válidas.
- * Solo se agregan transiciones explícitas, el resto son inválidas.
+ *
+ * Estados terminales (sin transiciones salientes):
+ *   - APROBADA
+ *   - RECHAZADA_VERIFICACION
+ *   - PLANILLADA (pendiente de definir transiciones)
+ *
+ * Estados sin transiciones definidas aún:
+ *   - ESTIMADA
+ *   - PLANILLADA
+ *
+ * Solo se agregan transiciones explícitas. La ausencia de una transición
+ * implica que no está permitida y será rechazada por canTransition().
  */
 const TRANSITIONS: Record<string, Partial<Record<string, true>>> = {
   [EstadoLectura.PENDIENTE]: {
@@ -52,7 +64,7 @@ export class UpdateReadingUseCase {
     // Build update payload — solo campos que el usuario envió
     const dataToUpdate = Object.fromEntries(
       Object.entries(updateDto).filter(([_, v]) => v !== undefined),
-    );
+    ) as Partial<UpdateReadingRepositoryData>;
 
     if (targetEstado) {
       // State machine validation
@@ -68,7 +80,7 @@ export class UpdateReadingUseCase {
       // CAS update: solo funciona si el estado actual no cambió
       const updated = await this.readingRepository.updateWithCas(
         { lecturaId: id, estado: currentEstado },
-        dataToUpdate as any,
+        dataToUpdate,
       );
 
       if (!updated) {
@@ -87,7 +99,7 @@ export class UpdateReadingUseCase {
 
     return this.readingRepository.update(
       { lecturaId: id },
-      dataToUpdate as any,
+      dataToUpdate,
     );
   }
 

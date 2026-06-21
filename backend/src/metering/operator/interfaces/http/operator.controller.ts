@@ -88,6 +88,7 @@ export class OperatorController {
   @ApiResponse({
     status: 200,
     description: 'Lectura actualizada',
+    type: ResponseReadingDto,
   })
   @ApiResponse({ status: 400, description: 'Estado no modificable' })
   @ApiResponse({ status: 401, description: 'No autorizado' })

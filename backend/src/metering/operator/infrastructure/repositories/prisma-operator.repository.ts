@@ -189,10 +189,4 @@ export class PrismaOperatorRepository extends OperatorRepository {
     });
   }
 
-  async updateReading(id: bigint, data: Record<string, unknown>): Promise<any> {
-    return this.prisma.lecturas.update({
-      where: { lecturaId: id },
-      data,
-    });
-  }
 }

@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -8,6 +9,11 @@ import { UpdateReadingUseCase } from 'src/metering/readings/application/use-case
 import { ActualizarLecturaDto } from 'src/metering/readings/interfaces/dto/update-lectura.dto';
 import { LecturaEntity } from 'src/metering/readings/domain/entities/lectura.entity';
 import { OperatorRepository } from '../../domain/repositories/operator.repository';
+
+const OPERATOR_EDITABLE_ESTADOS: ReadonlySet<EstadoLectura> = new Set([
+  EstadoLectura.PENDIENTE,
+  EstadoLectura.RECHAZADA_VERIFICACION,
+]);
 
 @Injectable()
 export class UpdateOperatorReadingUseCase {
@@ -71,7 +77,14 @@ export class UpdateOperatorReadingUseCase {
       );
     }
 
-    // 6. Delegar al UpdateReadingUseCase unificado con state machine
+    // 6. Validar que la lectura esté en un estado modificable por el operador
+    if (!OPERATOR_EDITABLE_ESTADOS.has(lectura.estado as EstadoLectura)) {
+      throw new BadRequestException(
+        `La lectura está en estado ${lectura.estado} y no puede ser modificada por el operador`,
+      );
+    }
+
+    // 7. Delegar al UpdateReadingUseCase unificado con state machine
     return this.updateReadingUseCase.execute(
       id,
       updateDto,
