@@ -8,21 +8,38 @@ describe('MeterController', () => {
   let controller: MeterController;
   let service: MeterService;
 
+  const mockMeterEntity = {
+    medidorId: BigInt(1),
+    serie: 'MED-001',
+    modelo: 'DIGITAL_2000',
+    marca: 'Itron',
+    estado: 'BODEGA',
+    fechaInstalacion: null,
+    fechaBaja: null,
+    motivo: null,
+    latitud: null,
+    longitud: null,
+    contratoId: null,
+    clienteNombre: null,
+  };
+
+  const expectedDto = {
+    medidorId: '1',
+    serie: 'MED-001',
+    modelo: 'DIGITAL_2000',
+    marca: 'Itron',
+    estado: 'BODEGA',
+    fechaInstalacion: null,
+    fechaBaja: null,
+    motivo: null,
+    latitud: null,
+    longitud: null,
+    contratoId: null,
+    clienteNombre: null,
+  };
+
   const mockPaginatedResponse = {
-    data: [
-      {
-        medidorId: BigInt(1),
-        serie: 'MED-001',
-        modelo: 'DIGITAL_2000',
-        marca: 'Itron',
-        estado: 'BODEGA',
-        fechaInstalacion: null,
-        fechaBaja: null,
-        motivo: null,
-        latitud: null,
-        longitud: null,
-      },
-    ],
+    data: [mockMeterEntity],
     meta: {
       total: 1,
       page: 1,
@@ -33,26 +50,20 @@ describe('MeterController', () => {
       anterior: null,
       siguiente: null,
     },
-    kpis: {
-      enBodega: 1,
-      instalados: 0,
-      danados: 0,
-      total: 1,
-    },
+    kpis: { enBodega: 1, instalados: 0, danados: 0, total: 1 },
   };
 
-  const mockMeterService = {
-    create: jest.fn(() => Promise.resolve(mockPaginatedResponse.data[0])),
-    findAll: jest.fn(() => Promise.resolve(mockPaginatedResponse)),
-    findOne: jest.fn(() => Promise.resolve(mockPaginatedResponse.data[0])),
-    update: jest.fn(() => Promise.resolve(mockPaginatedResponse.data[0])),
-    remove: jest.fn(() => Promise.resolve(undefined)),
-    install: jest.fn(() => Promise.resolve(mockPaginatedResponse.data[0])),
-    reportDefect: jest.fn(() => Promise.resolve(mockPaginatedResponse.data[0])),
-    decommission: jest.fn(() => Promise.resolve(mockPaginatedResponse.data[0])),
-  };
+  let mockMeterService: { [K in keyof MeterService]: jest.Mock };
 
   beforeEach(async () => {
+    mockMeterService = {
+      create: jest.fn(() => Promise.resolve(mockMeterEntity)),
+      findAll: jest.fn(() => Promise.resolve(mockPaginatedResponse)),
+      findOne: jest.fn(() => Promise.resolve(mockMeterEntity)),
+      update: jest.fn(() => Promise.resolve(mockMeterEntity)),
+      remove: jest.fn(() => Promise.resolve(undefined)),
+    } as any;
+
     const module: TestingModule = await Test.createTestingModule({
       controllers: [MeterController],
       providers: [{ provide: MeterService, useValue: mockMeterService }],
@@ -72,7 +83,7 @@ describe('MeterController', () => {
       const result = await controller.create(createDto);
 
       expect(service.create).toHaveBeenCalledWith(createDto);
-      expect(result).toEqual(mockPaginatedResponse.data[0]);
+      expect(result).toEqual(expectedDto);
     });
   });
 
@@ -82,7 +93,8 @@ describe('MeterController', () => {
       const result = await controller.findAll(filterDto);
 
       expect(service.findAll).toHaveBeenCalledWith(filterDto);
-      expect(result).toEqual(mockPaginatedResponse);
+      expect(result.data).toEqual([mockMeterEntity]);
+      expect(result.meta).toEqual(mockPaginatedResponse.meta);
     });
 
     it('should filter by estado', async () => {
@@ -90,7 +102,7 @@ describe('MeterController', () => {
       const result = await controller.findAll(filterDto);
 
       expect(service.findAll).toHaveBeenCalledWith(filterDto);
-      expect(result).toEqual(mockPaginatedResponse);
+      expect(result.data).toEqual([mockMeterEntity]);
     });
   });
 
@@ -99,7 +111,7 @@ describe('MeterController', () => {
       const result = await controller.findOne(1n);
 
       expect(service.findOne).toHaveBeenCalledWith(1n);
-      expect(result).toEqual(mockPaginatedResponse.data[0]);
+      expect(result).toEqual(expectedDto);
     });
   });
 
@@ -109,7 +121,7 @@ describe('MeterController', () => {
       const result = await controller.update(1n, updateDto);
 
       expect(service.update).toHaveBeenCalledWith(1n, updateDto);
-      expect(result).toEqual(mockPaginatedResponse.data[0]);
+      expect(result).toEqual(expectedDto);
     });
   });
 
@@ -120,18 +132,6 @@ describe('MeterController', () => {
 
       expect(service.remove).toHaveBeenCalledWith(1n);
       expect(result).toEqual({ message: 'deleted' });
-    });
-  });
-
-  describe('install', () => {
-    it('should install a meter', async () => {
-      jest
-        .spyOn(service, 'install')
-        .mockResolvedValue(mockPaginatedResponse.data[0] as any);
-      const result = await controller.install(1n);
-
-      expect(service.install).toHaveBeenCalledWith(1n);
-      expect(result).toEqual(mockPaginatedResponse.data[0]);
     });
   });
 });

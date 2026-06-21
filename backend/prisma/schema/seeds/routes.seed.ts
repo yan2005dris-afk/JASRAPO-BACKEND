@@ -23,10 +23,19 @@ export async function seedRoutes(prisma: PrismaClient) {
     select: { sectorId: true, comunidadId: true },
   });
 
+  // Período activo para asignar a las rutas
+  const periodoActivo = await prisma.periodos.findFirst({
+    where: { estado: 'ABIERTO' },
+    orderBy: { periodoId: 'desc' },
+    select: { periodoId: true },
+  });
+  const periodoId = periodoActivo?.periodoId ?? undefined;
+
   // Rutas de TOMA_LECTURA en diferentes estados
   const rutasTomaLectura = [
     {
       rutaId: BigInt(1),
+      periodoId,
       nombre: "Ruta Olón Norte - Lectura",
       descripcion: "Ruta para toma de lectura del sector norte de Olón",
       tipoRuta: "TOMA_LECTURA" as const,
@@ -37,6 +46,7 @@ export async function seedRoutes(prisma: PrismaClient) {
     },
     {
       rutaId: BigInt(2),
+      periodoId,
       nombre: "Ruta Olón Sur - Lectura",
       descripcion: "Ruta para toma de lectura del sector sur de Olón",
       tipoRuta: "TOMA_LECTURA" as const,
@@ -48,6 +58,7 @@ export async function seedRoutes(prisma: PrismaClient) {
     },
     {
       rutaId: BigInt(3),
+      periodoId,
       nombre: "Ruta Olón Centro - Lectura",
       descripcion: "Ruta para toma de lectura del sector centro de Olón",
       tipoRuta: "TOMA_LECTURA" as const,
@@ -60,6 +71,7 @@ export async function seedRoutes(prisma: PrismaClient) {
     },
     {
       rutaId: BigInt(4),
+      periodoId,
       nombre: "Ruta Olón Playa - Lectura",
       descripcion: "Ruta para toma de lectura del sector playa de Olón",
       tipoRuta: "TOMA_LECTURA" as const,
@@ -71,6 +83,7 @@ export async function seedRoutes(prisma: PrismaClient) {
     },
     {
       rutaId: BigInt(5),
+      periodoId,
       nombre: "Ruta Nuñez - Lectura",
       descripcion: "Ruta para toma de lectura de Nuñez",
       tipoRuta: "TOMA_LECTURA" as const,
@@ -81,6 +94,7 @@ export async function seedRoutes(prisma: PrismaClient) {
     },
     {
       rutaId: BigInt(6),
+      periodoId,
       nombre: "Ruta La Entrada - Lectura",
       descripcion: "Ruta para toma de lectura de La Entrada",
       tipoRuta: "TOMA_LECTURA" as const,
@@ -91,7 +105,7 @@ export async function seedRoutes(prisma: PrismaClient) {
     },
   ];
 
-  // Rutas de RECONEXION en diferentes estados
+  // Rutas de RECONEXION en diferentes estados (no llevan periodoId)
   const rutasReconexion = [
     {
       rutaId: BigInt(7),
@@ -146,6 +160,7 @@ export async function seedRoutes(prisma: PrismaClient) {
       where: { rutaId: ruta.rutaId },
       update: {
         nombre: ruta.nombre,
+        periodoId: 'periodoId' in ruta ? ruta.periodoId : undefined,
       },
       create: {
         ...ruta,

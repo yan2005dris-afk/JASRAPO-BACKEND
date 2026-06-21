@@ -30,6 +30,10 @@ import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.
 import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 import { toReadingAnomalyResponse } from '../../types/readingAnomalyMapper';
 import { ReadingAnomalyFilters } from '../../domain/repositories/reading-anomaly.repository';
+import {
+  EnumStateDto,
+  buildStateCatalog,
+} from 'src/shared/enums/state-catalog';
 
 @ApiTags('reading-anomalies')
 @ApiBearerAuth()
@@ -122,6 +126,35 @@ export class ReadingAnomalyController {
       data: result.data.map((x) => toReadingAnomalyResponse(x)!),
       meta: result.meta,
     };
+  }
+
+  @ApiOperation({
+    summary: 'Catálogo de estados de anomalía',
+    description:
+      'Retorna todos los estados posibles de una anomalía de lectura (EstadoAnomalia).',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de estados',
+    type: [EnumStateDto],
+  })
+  @Get('estados')
+  getEstados(): EnumStateDto[] {
+    return buildStateCatalog(
+      EstadoAnomalia,
+      {
+        PENDIENTE: 'Pendiente',
+        EN_REVISION: 'En Revisión',
+        RESUELTA: 'Resuelta',
+        DESCARTADA: 'Descartada',
+      },
+      {
+        PENDIENTE: 'bi-flag',
+        EN_REVISION: 'bi-search',
+        RESUELTA: 'bi-check-circle',
+        DESCARTADA: 'bi-x-circle',
+      },
+    );
   }
 
   @ApiOperation({

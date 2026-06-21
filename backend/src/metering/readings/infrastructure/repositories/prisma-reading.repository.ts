@@ -33,6 +33,7 @@ export class PrismaReadingRepository implements ReadingRepository {
     const whereClause: Prisma.LecturasWhereInput = {
       deletedAt: null,
       ...(params.where?.medidorId && { medidorId: params.where.medidorId }),
+      ...(params.where?.periodoId && { periodoId: params.where.periodoId }),
       ...(params.where?.contratoId && {
         medidor: {
           historial: {
@@ -59,6 +60,7 @@ export class PrismaReadingRepository implements ReadingRepository {
     const whereClause: Prisma.LecturasWhereInput = {
       deletedAt: null,
       ...(params.where?.medidorId && { medidorId: params.where.medidorId }),
+      ...(params.where?.periodoId && { periodoId: params.where.periodoId }),
       ...(params.where?.contratoId && {
         medidor: {
           historial: {

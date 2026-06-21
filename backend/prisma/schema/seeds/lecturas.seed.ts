@@ -11,6 +11,7 @@ export async function seedLecturas(prisma: PrismaClient) {
     // Primero creamos los periodos si no existen para que las lecturas tengan a qué apuntar
     const periodosDb: any[] = [];
     for (const p of periodos) {
+        const esPeriodoActual = p.nombre === '2026';
         const pDb = await prisma.periodos.upsert({
             where: { nombre: p.nombre },
             update: {},
@@ -19,7 +20,7 @@ export async function seedLecturas(prisma: PrismaClient) {
                 fechaInicio: new Date(p.fechaInicio),
                 fechaFin: new Date(p.fechaFin),
                 fechaVencimiento: new Date(p.vencimiento),
-                estado: "ABIERTO" as any,
+                estado: (esPeriodoActual ? 'ABIERTO' : 'CERRADO') as any,
             }
         });
         periodosDb.push(pDb);
@@ -77,6 +78,8 @@ export async function seedLecturas(prisma: PrismaClient) {
 
         let lecturaAnterior = 0;
 
+        const currentPeriodId = periodosDb[periodosDb.length - 1]?.periodoId;
+
         for (const pDb of periodosDb) {
             // 12 lecturas mensuales por período (año)
             const año = parseInt(pDb.nombre, 10); // Usar el nombre del período (e.g. "2024") para evitar timezone offset
@@ -97,7 +100,7 @@ export async function seedLecturas(prisma: PrismaClient) {
                         lecturaAnterior,
                         lecturaActual,
                         consumoCalculado: consumo,
-                        estado: "APROBADA",
+                        estado: pDb.periodoId === currentPeriodId ? "PENDIENTE" : "APROBADA",
                         lecturaInicial: lecturaAnterior === 0,
                     },
                 });

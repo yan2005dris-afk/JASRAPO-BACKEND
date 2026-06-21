@@ -32,6 +32,7 @@ export interface UpdateReadingRepositoryData {
 export interface ReadingFilters {
   contratoId?: bigint;
   medidorId?: bigint;
+  periodoId?: number;
 }
 
 export abstract class ReadingRepository {

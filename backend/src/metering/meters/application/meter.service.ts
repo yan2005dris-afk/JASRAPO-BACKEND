@@ -5,12 +5,14 @@ import { UpdateMeterDto } from '../interfaces/dto/update-meter.dto';
 import { FilterMeterDto } from '../interfaces/dto/filter-meter.dto';
 import { buildMeterFilters } from './mappers/meter-filters.mapper';
 import { EnumStateDto } from 'src/shared/enums/state-catalog';
+import { EstadoMedidor } from 'src/shared/enums';
 import { CreateMeterUseCase } from './use-cases/create-meter.use-case';
 import { ReportDefectUseCase } from './use-cases/report-defect.use-case';
 import { FindOneMeterUseCase } from './use-cases/find-one-meter.use-case';
 import { InstallMeterUseCase } from './use-cases/install-meter.use-case';
 import { DecommissionMeterUseCase } from './use-cases/decommission-meter.use-case';
 import { MeterEntity } from '../domain/entities/meter.entity';
+import { toMeterResponse } from '../domain/types/metersMapper';
 import { DateUtil } from 'src/shared/utils/date.util';
 import { METER_STATUS_LIST } from 'src/infrastructure/config/app.constants';
 import { getPagination } from 'src/infrastructure/common/utils/pagination.util';
@@ -49,7 +51,7 @@ export class MeterService {
     const totalPages = Math.ceil(total / take);
 
     return {
-      data: meters as unknown as any[],
+      data: meters.map((m) => toMeterResponse(m)),
       meta: {
         total,
         page: safePage,
@@ -96,21 +98,6 @@ export class MeterService {
       { deletedAt: new Date() },
     );
     return { message: `Medidor con ID ${id} eliminado` };
-  }
-
-  async install(medidorId: bigint): Promise<MeterEntity> {
-    return this.installUseCase.execute(medidorId);
-  }
-
-  async reportDefect(medidorId: bigint): Promise<MeterEntity> {
-    return this.reportDamageUseCase.execute(medidorId);
-  }
-
-  async decommission(
-    medidorId: bigint,
-    motivoBaja: string,
-  ): Promise<MeterEntity> {
-    return this.decommissionUseCase.execute(medidorId, motivoBaja);
   }
 
   async findAllStates(): Promise<EnumStateDto[]> {

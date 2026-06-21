@@ -24,6 +24,7 @@ export function toReadingResponse(
     lecturaInicial: reading.lecturaInicial,
     periodoId: reading.periodoId,
     tieneAnomalia: reading.tieneAnomalia,
+    estado: reading.estado,
     contrato: activeContrato
       ? {
           contratoId: activeContrato.contratoId.toString(),
