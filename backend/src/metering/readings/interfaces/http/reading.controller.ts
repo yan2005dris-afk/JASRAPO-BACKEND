@@ -11,6 +11,7 @@ import {
 } from '@nestjs/common';
 import { NotEmptyBodyPipe } from 'src/infrastructure/common/pipes/not-empty-body.pipe';
 import { ParseBigIntPipe } from 'src/infrastructure/common/pipes/parse-bigint.pipe';
+import { ParseActualizarLecturaPipe } from 'src/infrastructure/common/pipes/parse-actualizar-lectura.pipe';
 import { ReadingService } from '../../application/reading.service';
 import { CrearLecturaDto } from '../dto/create-lectura.dto';
 import { ActualizarLecturaDto } from '../dto/update-lectura.dto';
@@ -71,6 +72,20 @@ export class ReadingController {
     description: 'Retorna lista de lecturas con paginación',
   })
   @ApiQuery({
+    name: 'page',
+    description: 'Número de página (empieza en 1)',
+    required: false,
+    type: Number,
+    example: 1,
+  })
+  @ApiQuery({
+    name: 'limit',
+    description: 'Registros por página (máx 100)',
+    required: false,
+    type: Number,
+    example: 10,
+  })
+  @ApiQuery({
     name: 'contratoId',
     description: 'Filtrar por ID de contrato',
     required: false,
@@ -78,7 +93,7 @@ export class ReadingController {
   })
   @ApiResponse({
     status: 200,
-    description: 'Lista de lecturas',
+    description: 'Lista de lecturas paginada',
   })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @RequiredPermission('lecturas', 'read')
@@ -187,7 +202,7 @@ export class ReadingController {
   @Patch(':id')
   async actualizarLectura(
     @Param('id', ParseBigIntPipe) id: bigint,
-    @Body(new NotEmptyBodyPipe()) updateLecturaDto: ActualizarLecturaDto,
+    @Body(new NotEmptyBodyPipe(), new ParseActualizarLecturaPipe()) updateLecturaDto: ActualizarLecturaDto,
   ): Promise<ResponseReadingDto> {
     return toReadingResponse(
       await this.readingService.update(id, updateLecturaDto),

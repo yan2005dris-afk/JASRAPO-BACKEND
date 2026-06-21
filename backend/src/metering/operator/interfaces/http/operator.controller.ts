@@ -22,6 +22,7 @@ import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.g
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
 import { CurrentUser } from 'src/identity/auth/interfaces/http/decorators/current-user.decorator';
 import { ParseBigIntPipe } from 'src/infrastructure/common/pipes/parse-bigint.pipe';
+import { ParseActualizarLecturaPipe } from 'src/infrastructure/common/pipes/parse-actualizar-lectura.pipe';
 import { JwtPayload } from 'src/identity/auth/interfaces/dto/auth.dto';
 import { GetOperatorReadingsUseCase } from '../../application/use-cases/get-operator-readings.use-case';
 import { UpdateOperatorReadingUseCase } from '../../application/use-cases/update-operator-reading.use-case';
@@ -103,7 +104,19 @@ export class OperatorController {
     @CurrentUser() user: JwtPayload,
   ): Promise<any[]> {
     const operarioId = Number(user.sub);
-    return this.getOperatorReadingsWithAnomaliesUseCase.execute(operarioId);
+    const raw = await this.getOperatorReadingsWithAnomaliesUseCase.execute(operarioId);
+    return raw.map((r: any) => ({
+      lecturaId: r.lecturaId?.toString() ?? null,
+      medidorId: r.medidor?.medidorId?.toString() ?? null,
+      medidorSerie: r.medidor?.serie ?? '',
+      fecha: r.fecha,
+      estado: r.estado,
+      anomalias: (r.lecturaAnomalias ?? []).map((a: any) => ({
+        tipo: a.tipo,
+        observacion: a.observacion,
+        estado: a.estado,
+      })),
+    }));
   }
 
   @ApiOperation({
@@ -138,7 +151,7 @@ export class OperatorController {
   async updateOperatorReading(
     @Param('id', ParseBigIntPipe) id: bigint,
     @CurrentUser() user: JwtPayload,
-    @Body() updateDto: ActualizarLecturaDto,
+    @Body(new ParseActualizarLecturaPipe()) updateDto: ActualizarLecturaDto,
   ): Promise<ResponseReadingDto> {
     const operarioId = Number(user.sub);
     const updated = await this.updateOperatorReadingUseCase.execute(
