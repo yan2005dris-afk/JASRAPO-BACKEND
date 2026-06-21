@@ -1,7 +1,7 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { InstallMeterUseCase } from './install-meter.use-case';
-import { MeterRepository } from '../../domain/repositories/meter.repository';
+import { MeterRepository } from '../../../meters/domain/repositories/meter.repository';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 
 describe('InstallMeterUseCase', () => {

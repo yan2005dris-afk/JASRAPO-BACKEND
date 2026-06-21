@@ -15,6 +15,7 @@ export class CrearLecturaDto {
   @IsNotEmpty() medidorId: string | number;
   @IsOptional() @IsString() @IsNotEmptyString() descripcionAnomalia?: string;
   @IsOptional() @IsString() @IsNotEmptyString() fotoUrl?: string;
+  @IsOptional() @IsString() fotoBase64?: string;
   @IsNotEmpty() @IsBoolean() lecturaInicial: boolean;
-  @IsNotEmpty() @IsNumber() periodoId: number;
+  @IsOptional() @IsNumber() periodoId?: number;
 }

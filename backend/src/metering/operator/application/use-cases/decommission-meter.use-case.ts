@@ -1,6 +1,6 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
-import { MeterRepository } from '../../domain/repositories/meter.repository';
-import { MeterEntity } from '../../domain/entities/meter.entity';
+import { MeterRepository } from '../../../meters/domain/repositories/meter.repository';
+import { MeterEntity } from '../../../meters/domain/entities/meter.entity';
 import { EstadoMedidor } from 'src/shared/enums';
 
 @Injectable()

@@ -61,6 +61,18 @@ export class MeterResponseDto {
   })
   longitud: number | null;
 
+  @ApiPropertyOptional({
+    description: 'ID de contrato activo',
+    example: '123',
+  })
+  contratoId: string | null;
+
+  @ApiPropertyOptional({
+    description: 'Nombre completo del cliente',
+    example: 'Juan Pérez',
+  })
+  clienteNombre: string | null;
+
   constructor(partial: Partial<MeterResponseDto>) {
     Object.assign(this, partial);
   }

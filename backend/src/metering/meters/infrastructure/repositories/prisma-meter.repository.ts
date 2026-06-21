@@ -24,6 +24,18 @@ export class PrismaMeterRepository implements MeterRepository {
         ...(where.medidorId !== undefined && { medidorId: where.medidorId }),
         ...(where.serie !== undefined && { serie: where.serie }),
       } as Prisma.MedidoresWhereUniqueInput,
+      include: {
+        historial: {
+          where: { fechaHasta: null },
+          include: {
+            contrato: {
+              include: {
+                cliente: true,
+              },
+            },
+          },
+        },
+      },
     });
     return MeterMapper.toDomain(record);
   }
@@ -40,6 +52,18 @@ export class PrismaMeterRepository implements MeterRepository {
       take: params.take,
       skip: params.skip,
       orderBy: { createdAt: 'desc' },
+      include: {
+        historial: {
+          where: { fechaHasta: null },
+          include: {
+            contrato: {
+              include: {
+                cliente: true,
+              },
+            },
+          },
+        },
+      },
     });
     return MeterMapper.toDomainList(records);
   }

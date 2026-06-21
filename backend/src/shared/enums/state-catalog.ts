@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class EnumStateDto {
   @ApiProperty({ description: 'Código del estado (valor del enum)' })
@@ -9,21 +9,20 @@ export class EnumStateDto {
 
   @ApiProperty({ description: 'Orden de visualización en dropdowns/listas' })
   orden: number;
+
+  @ApiPropertyOptional({ description: 'Clase de ícono Bootstrap para la UI (ej. bi-clock)' })
+  icono?: string;
 }
 
-/**
- * Build a standardized state catalog from a string-enum-like const object.
- * @param enumObj The const object acting as an enum (e.g. EstadoMedidor)
- * @param names A record mapping enum values to human-readable display names
- * @returns Standardized array of EnumStateDto
- */
 export function buildStateCatalog<T extends string>(
   enumObj: Record<string, T>,
   names: Record<T, string>,
+  icons?: Partial<Record<T, string>>,
 ): EnumStateDto[] {
   return Object.values(enumObj).map((codigo, index) => ({
     codigo,
     nombre: names[codigo],
     orden: index + 1,
+    ...(icons?.[codigo] ? { icono: icons[codigo] } : {}),
   }));
 }

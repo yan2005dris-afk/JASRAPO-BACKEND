@@ -3,9 +3,9 @@ import { Test } from '@nestjs/testing';
 import { MeterRepository } from '../../domain/repositories/meter.repository';
 import { CreateMeterUseCase } from './create-meter.use-case';
 import { FindOneMeterUseCase } from './find-one-meter.use-case';
-import { InstallMeterUseCase } from './install-meter.use-case';
-import { ReportDefectUseCase } from './report-defect.use-case';
-import { DecommissionMeterUseCase } from './decommission-meter.use-case';
+import { InstallMeterUseCase } from '../../../operator/application/use-cases/install-meter.use-case';
+import { ReportDefectUseCase } from '../../../operator/application/use-cases/report-defect.use-case';
+import { DecommissionMeterUseCase } from '../../../operator/application/use-cases/decommission-meter.use-case';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 
 describe('Meter Use Cases', () => {

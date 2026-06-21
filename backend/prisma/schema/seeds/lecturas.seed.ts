@@ -77,6 +77,8 @@ export async function seedLecturas(prisma: PrismaClient) {
 
         let lecturaAnterior = 0;
 
+        const currentPeriodId = periodosDb[periodosDb.length - 1]?.periodoId;
+
         for (const pDb of periodosDb) {
             // 12 lecturas mensuales por período (año)
             const año = parseInt(pDb.nombre, 10); // Usar el nombre del período (e.g. "2024") para evitar timezone offset
@@ -97,7 +99,7 @@ export async function seedLecturas(prisma: PrismaClient) {
                         lecturaAnterior,
                         lecturaActual,
                         consumoCalculado: consumo,
-                        estado: "APROBADA",
+                        estado: pDb.periodoId === currentPeriodId ? "PENDIENTE" : "APROBADA",
                         lecturaInicial: lecturaAnterior === 0,
                     },
                 });

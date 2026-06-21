@@ -52,12 +52,15 @@ export async function seedRolePermissions(
         });
     }
 
-    // 4. OPERADORES: Solo toma de lecturas y novedades
-    const operadoresResources = [
-        'lecturas', 'reading-anomalies'
-    ];
-    const operadoresPerms = permissions.filter(p => operadoresResources.includes(p.recurso));
-    for (const perm of operadoresPerms) {
+    // 4. OPERADORES: Solo lo necesario para su pantalla de lecturas
+    const operadorPermissionKeys = new Set([
+        'meters:read',              // sync offline PWA
+        'lecturas:read',            // ver lecturas asignadas
+        'lecturas:update',          // modificar lectura (PENDIENTE → POR_REVISION)
+        'reading-anomalies:create', // reportar novedad/daño
+    ]);
+    const operadorPerms = permissions.filter(p => operadorPermissionKeys.has(`${p.recurso}:${p.accion}`));
+    for (const perm of operadorPerms) {
         await prisma.rolPermisos.create({
             data: { rolId: roles.operadoresRol.rolId, permisoId: perm.permisoId },
         });

@@ -29,6 +29,8 @@ import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.
 import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 import { toReadingResponse } from '../../types/readingMapper';
 import { ReadingFilters } from '../../domain/repositories/reading.repository';
+import { EnumStateDto, buildStateCatalog } from 'src/shared/enums/state-catalog';
+import { EstadoLectura } from 'src/shared/enums';
 
 @ApiTags('readings')
 @ApiBearerAuth()
@@ -94,6 +96,40 @@ export class ReadingController {
       data: result.data.map((x) => toReadingResponse(x)!),
       meta: result.meta,
     };
+  }
+
+  @ApiOperation({
+    summary: 'Catálogo de estados de lectura',
+    description:
+      'Retorna todos los estados posibles de una lectura (EstadoLectura).',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de estados',
+    type: [EnumStateDto],
+  })
+  @RequiredPermission('lecturas', 'read')
+  @Get('estados')
+  getEstados(): EnumStateDto[] {
+    return buildStateCatalog(
+      EstadoLectura,
+      {
+        PENDIENTE: 'Pendiente',
+        POR_REVISION: 'Por Revisión',
+        APROBADA: 'Aprobada',
+        RECHAZADA_VERIFICACION: 'Rechazada',
+        ESTIMADA: 'Estimada',
+        PLANILLADA: 'Planillada',
+      },
+      {
+        PENDIENTE: 'bi-clock',
+        POR_REVISION: 'bi-eye',
+        APROBADA: 'bi-check-circle',
+        RECHAZADA_VERIFICACION: 'bi-x-circle-fill',
+        ESTIMADA: 'bi-graph-up',
+        PLANILLADA: 'bi-receipt',
+      },
+    );
   }
 
   @ApiOperation({
