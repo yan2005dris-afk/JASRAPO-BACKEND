@@ -78,7 +78,11 @@ export class DiscountsService {
       // 1. Validar prefactura dentro de tx para evitar TOCTOU
       const prefactura = await tx.prefacturas.findUnique({
         where: { prefacturaId },
-        include: { prefacturaDetalle: true },
+        include: {
+          prefacturaDetalle: {
+            include: { rubro: { select: { codigoSri: true } } },
+          },
+        },
       });
 
       if (!prefactura) {
@@ -102,9 +106,9 @@ export class DiscountsService {
         );
       }
 
-      // 3. Encontrar detalle de cargo fijo
-      const cargoFijoDetalle = prefactura.prefacturaDetalle.find((d: any) =>
-        d.descripcion.includes('Cargo Fijo'),
+      // 3. Encontrar detalle de cargo fijo por codigoSri '002' (identificador SRI estable)
+      const cargoFijoDetalle = prefactura.prefacturaDetalle.find(
+        (d: any) => d.rubro?.codigoSri === '002',
       );
 
       if (!cargoFijoDetalle) {
