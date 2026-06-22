@@ -3,6 +3,7 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
+import { Decimal } from 'decimal.js';
 import { DiscountRepository } from '../../domain/repositories/discount.repository';
 import { ApplyDiscountToPreinvoiceDto } from '../../interfaces/dto/apply-discount-to-preinvoice.dto';
 
@@ -62,27 +63,29 @@ export class ApplyDiscountToPreinvoiceUseCase {
         );
       }
 
-      // 4. Calcular monto — cap porcentaje en 100, redondeo a 2 decimales
-      const montoCustom = dto.montoCustom ?? 0;
-      const subtotal = Number(targetDetalle.subtotal);
-      let montoDescontado: number;
+      // 4. Calcular monto con aritmética decimal exacta
+      const montoCustom = new Decimal(dto.montoCustom ?? 0);
+      const subtotal = new Decimal(targetDetalle.subtotal.toString());
+      let montoDescontado: Decimal;
 
-      if (montoCustom > 0) {
-        montoDescontado = Math.min(montoCustom, subtotal);
+      if (montoCustom.greaterThan(0)) {
+        montoDescontado = Decimal.min(montoCustom, subtotal);
       } else if (catalogo.esPorcentaje) {
-        const pct = Math.min(Number(catalogo.valor), 100);
-        montoDescontado = subtotal * (pct / 100);
+        const pct = Decimal.min(new Decimal(catalogo.valor.toString()), new Decimal(100));
+        montoDescontado = subtotal.times(pct.dividedBy(100));
       } else {
-        montoDescontado = Math.min(Number(catalogo.valor), subtotal);
+        montoDescontado = Decimal.min(new Decimal(catalogo.valor.toString()), subtotal);
       }
 
-      montoDescontado = Math.round(montoDescontado * 100) / 100;
+      montoDescontado = montoDescontado.toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
 
-      if (montoDescontado <= 0) {
+      if (montoDescontado.lessThanOrEqualTo(0)) {
         throw new BadRequestException(
           'El monto del descuento debe ser mayor a 0',
         );
       }
+
+      const montoFinal = montoDescontado.toNumber();
 
       // 5a. Crear línea de descuento en prefactura_detalle
       await tx.prefacturaDetalle.create({
@@ -93,11 +96,11 @@ export class ApplyDiscountToPreinvoiceUseCase {
             ? `Descuento: ${catalogo.nombre} — ${dto.motivo}`
             : `Descuento: ${catalogo.nombre}`,
           cantidad: 1,
-          precioUnitario: -montoDescontado,
-          subtotal: -montoDescontado,
+          precioUnitario: -montoFinal,
+          subtotal: -montoFinal,
           iva: 0,
-          total: -montoDescontado,
-          descuento: montoDescontado,
+          total: -montoFinal,
+          descuento: montoFinal,
           tarifaImpuesto: 0,
           codigoImpuestoSri: '2',
           codigoPorcentajeSri: '0',
@@ -109,9 +112,11 @@ export class ApplyDiscountToPreinvoiceUseCase {
         data: {
           prefacturaDetalleId: targetDetalle.prefacturaDetalleId,
           catalogoDescuentoId: dto.catalogoDescuentoId,
-          montoDescontado,
+          montoDescontado: montoFinal,
           esPorcentaje: catalogo.esPorcentaje,
-          valorAplicado: montoCustom > 0 ? montoCustom : Number(catalogo.valor),
+          valorAplicado: montoCustom.greaterThan(0)
+            ? montoCustom.toNumber()
+            : new Decimal(catalogo.valor.toString()).toNumber(),
         },
       });
 
@@ -119,9 +124,9 @@ export class ApplyDiscountToPreinvoiceUseCase {
       return tx.prefacturas.update({
         where: { prefacturaId },
         data: {
-          descuentoTotal: { increment: montoDescontado },
-          totalPagar: { decrement: montoDescontado },
-          saldoActual: { decrement: montoDescontado },
+          descuentoTotal: { increment: montoFinal },
+          totalPagar: { decrement: montoFinal },
+          saldoActual: { decrement: montoFinal },
         },
         include: { prefacturaDetalle: true },
       });
