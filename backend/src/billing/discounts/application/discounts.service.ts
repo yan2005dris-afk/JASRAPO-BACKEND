@@ -1,187 +1,47 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
-import { DiscountRepository } from '../domain/repositories/discount.repository';
+import { Injectable } from '@nestjs/common';
 import { CreateDiscountDto } from '../interfaces/dto/create-discount.dto';
 import { UpdateDiscountDto } from '../interfaces/dto/update-discount.dto';
 import { DiscountFilterDto } from '../interfaces/dto/discount-filter.dto';
 import { ApplyDiscountToPreinvoiceDto } from '../interfaces/dto/apply-discount-to-preinvoice.dto';
+import { CreateDiscountUseCase } from './use-cases/create-discount.use-case';
+import { FindAllDiscountsUseCase } from './use-cases/find-all-discounts.use-case';
+import { FindOneDiscountUseCase } from './use-cases/find-one-discount.use-case';
+import { UpdateDiscountUseCase } from './use-cases/update-discount.use-case';
+import { RemoveDiscountUseCase } from './use-cases/remove-discount.use-case';
+import { ApplyDiscountToPreinvoiceUseCase } from './use-cases/apply-discount-to-preinvoice.use-case';
 
 @Injectable()
 export class DiscountsService {
-  constructor(private readonly discountRepository: DiscountRepository) {}
+  constructor(
+    private readonly createUseCase: CreateDiscountUseCase,
+    private readonly findAllUseCase: FindAllDiscountsUseCase,
+    private readonly findOneUseCase: FindOneDiscountUseCase,
+    private readonly updateUseCase: UpdateDiscountUseCase,
+    private readonly removeUseCase: RemoveDiscountUseCase,
+    private readonly applyToPreinvoiceUseCase: ApplyDiscountToPreinvoiceUseCase,
+  ) {}
 
-  async create(dto: CreateDiscountDto) {
-    const { rubroId, ...data } = dto;
-    return this.discountRepository.createCatalogo({
-      ...data,
-      rubroId: rubroId ?? null,
-    } as any);
+  create(dto: CreateDiscountDto) {
+    return this.createUseCase.execute(dto);
   }
 
-  async findAll(filter: DiscountFilterDto) {
-    const page = filter.page ?? 1;
-    const limit = filter.limit ?? 20;
-    const skip = (page - 1) * limit;
-
-    const where: any = { activo: true };
-
-    if (filter.tipoDescuento) {
-      where.tipoDescuento = filter.tipoDescuento;
-    }
-    if (filter.aplicaAutomatico !== undefined) {
-      where.aplicaAutomatico = filter.aplicaAutomatico === 'true';
-    }
-
-    const [items, total] = await Promise.all([
-      this.discountRepository.findManyCatalogo({
-        where,
-        skip,
-        take: limit,
-        orderBy: { id: 'asc' },
-      }),
-      this.discountRepository.countCatalogo({ where }),
-    ]);
-
-    return { items, total, page, limit };
+  findAll(filter: DiscountFilterDto) {
+    return this.findAllUseCase.execute(filter);
   }
 
-  async findOne(id: number) {
-    const discount = await this.discountRepository.findUniqueCatalogo({ id });
-    if (!discount) {
-      throw new NotFoundException(`Descuento con ID ${id} no encontrado`);
-    }
-    return discount;
+  findOne(id: number) {
+    return this.findOneUseCase.execute(id);
   }
 
-  async update(id: number, dto: UpdateDiscountDto) {
-    await this.findOne(id);
-    const { rubroId, ...data } = dto;
-    return this.discountRepository.updateCatalogo({ id }, {
-      ...data,
-      rubroId: rubroId ?? undefined,
-    } as any);
+  update(id: number, dto: UpdateDiscountDto) {
+    return this.updateUseCase.execute(id, dto);
   }
 
-  async remove(id: number) {
-    await this.findOne(id);
-    return this.discountRepository.updateCatalogo({ id }, { activo: false });
+  remove(id: number) {
+    return this.removeUseCase.execute(id);
   }
 
-  async applyToPreinvoice(
-    prefacturaId: number,
-    dto: ApplyDiscountToPreinvoiceDto,
-  ) {
-    return this.discountRepository.executeTransaction(async (tx) => {
-      // 1. Validar prefactura dentro de tx para evitar TOCTOU
-      const prefactura = await tx.prefacturas.findUnique({
-        where: { prefacturaId },
-        include: {
-          prefacturaDetalle: {
-            include: { rubro: { select: { codigoSri: true } } },
-          },
-        },
-      });
-
-      if (!prefactura) {
-        throw new NotFoundException(`Prefactura ${prefacturaId} no encontrada`);
-      }
-
-      if (prefactura.estado === 'PAGADA' || prefactura.estado === 'ANULADA') {
-        throw new BadRequestException(
-          `No se puede aplicar descuento a una prefactura en estado ${prefactura.estado}`,
-        );
-      }
-
-      // 2. Validar descuento del catálogo dentro de tx
-      const catalogo = await tx.catalogoDescuento.findUnique({
-        where: { id: dto.catalogoDescuentoId },
-      });
-
-      if (!catalogo || !catalogo.activo) {
-        throw new NotFoundException(
-          'Descuento del catálogo no encontrado o inactivo',
-        );
-      }
-
-      // 3. Encontrar detalle de cargo fijo por codigoSri '002' (identificador SRI estable)
-      const cargoFijoDetalle = prefactura.prefacturaDetalle.find(
-        (d: any) => d.rubro?.codigoSri === '002',
-      );
-
-      if (!cargoFijoDetalle) {
-        throw new BadRequestException(
-          'No se encontró detalle de Cargo Fijo en la prefactura',
-        );
-      }
-
-      // 4. Calcular monto — cap porcentaje en 100, redondeo a 2 decimales
-      const montoCustom = dto.montoCustom ?? 0;
-      const subtotal = Number(cargoFijoDetalle.subtotal);
-      let montoDescontado: number;
-
-      if (montoCustom > 0) {
-        montoDescontado = Math.min(montoCustom, subtotal);
-      } else if (catalogo.esPorcentaje) {
-        const pct = Math.min(Number(catalogo.valor), 100);
-        montoDescontado = subtotal * (pct / 100);
-      } else {
-        montoDescontado = Math.min(Number(catalogo.valor), subtotal);
-      }
-
-      montoDescontado = Math.round(montoDescontado * 100) / 100;
-
-      if (montoDescontado <= 0) {
-        throw new BadRequestException(
-          'El monto del descuento debe ser mayor a 0',
-        );
-      }
-
-      // 5a. Crear línea de descuento en prefactura_detalle
-      await tx.prefacturaDetalle.create({
-        data: {
-          prefacturaId,
-          rubroId: cargoFijoDetalle.rubroId,
-          descripcion: dto.motivo
-            ? `Descuento: ${catalogo.nombre} — ${dto.motivo}`
-            : `Descuento: ${catalogo.nombre}`,
-          cantidad: 1,
-          precioUnitario: -montoDescontado,
-          subtotal: -montoDescontado,
-          iva: 0,
-          total: -montoDescontado,
-          descuento: montoDescontado,
-          tarifaImpuesto: 0,
-          codigoImpuestoSri: '2',
-          codigoPorcentajeSri: '0',
-        },
-      });
-
-      // 5b. Registrar en descuento_detalle
-      await tx.descuentoDetalle.create({
-        data: {
-          prefacturaDetalleId: cargoFijoDetalle.prefacturaDetalleId,
-          catalogoDescuentoId: dto.catalogoDescuentoId,
-          montoDescontado,
-          esPorcentaje: catalogo.esPorcentaje,
-          valorAplicado: montoCustom > 0 ? montoCustom : Number(catalogo.valor),
-        },
-      });
-
-      // 5c. Actualizar totales de la prefactura
-      return tx.prefacturas.update({
-        where: { prefacturaId },
-        data: {
-          descuentoTotal: { increment: montoDescontado },
-          totalPagar: { decrement: montoDescontado },
-          saldoActual: { decrement: montoDescontado },
-        },
-        include: {
-          prefacturaDetalle: true,
-        },
-      });
-    });
+  applyToPreinvoice(prefacturaId: number, dto: ApplyDiscountToPreinvoiceDto) {
+    return this.applyToPreinvoiceUseCase.execute(prefacturaId, dto);
   }
 }
