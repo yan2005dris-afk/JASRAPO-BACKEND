@@ -11,7 +11,10 @@ import { Type } from 'class-transformer';
 import { TipoDescuento } from 'src/shared/enums';
 
 export class DiscountFilterDto {
-  @ApiPropertyOptional({ description: 'Filtrar por tipo de descuento', enum: TipoDescuento })
+  @ApiPropertyOptional({
+    description: 'Filtrar por tipo de descuento',
+    enum: TipoDescuento,
+  })
   @IsOptional()
   @IsEnum(TipoDescuento)
   tipoDescuento?: TipoDescuento;
