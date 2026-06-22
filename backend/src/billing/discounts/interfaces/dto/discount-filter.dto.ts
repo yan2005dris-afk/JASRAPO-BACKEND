@@ -8,7 +8,7 @@ import {
   Min,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { TipoDescuento } from './create-discount.dto';
+import { TipoDescuento } from 'src/shared/enums';
 
 export class DiscountFilterDto {
   @ApiPropertyOptional({ description: 'Filtrar por tipo de descuento', enum: TipoDescuento })

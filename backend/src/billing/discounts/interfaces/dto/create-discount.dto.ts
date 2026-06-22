@@ -7,15 +7,7 @@ import {
   IsString,
   Min,
 } from 'class-validator';
-
-export enum TipoDescuento {
-  TERCERA_EDAD = 'TERCERA_EDAD',
-  DISCAPACIDAD = 'DISCAPACIDAD',
-  INTERES_MORA = 'INTERES_MORA',
-  EXENCION_TASA = 'EXENCION_TASA',
-  CONVENIO = 'CONVENIO',
-  OTROS = 'OTROS',
-}
+import { TipoDescuento } from 'src/shared/enums';
 
 export class CreateDiscountDto {
   @ApiProperty({
