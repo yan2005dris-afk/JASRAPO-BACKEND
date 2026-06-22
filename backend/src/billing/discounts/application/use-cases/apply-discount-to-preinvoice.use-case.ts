@@ -71,13 +71,22 @@ export class ApplyDiscountToPreinvoiceUseCase {
       if (montoCustom.greaterThan(0)) {
         montoDescontado = Decimal.min(montoCustom, subtotal);
       } else if (catalogo.esPorcentaje) {
-        const pct = Decimal.min(new Decimal(catalogo.valor.toString()), new Decimal(100));
+        const pct = Decimal.min(
+          new Decimal(catalogo.valor.toString()),
+          new Decimal(100),
+        );
         montoDescontado = subtotal.times(pct.dividedBy(100));
       } else {
-        montoDescontado = Decimal.min(new Decimal(catalogo.valor.toString()), subtotal);
+        montoDescontado = Decimal.min(
+          new Decimal(catalogo.valor.toString()),
+          subtotal,
+        );
       }
 
-      montoDescontado = montoDescontado.toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
+      montoDescontado = montoDescontado.toDecimalPlaces(
+        2,
+        Decimal.ROUND_HALF_UP,
+      );
 
       if (montoDescontado.lessThanOrEqualTo(0)) {
         throw new BadRequestException(
