@@ -1,4 +1,5 @@
-import { IsEnum, IsOptional, IsString, MinLength } from 'class-validator';
+import { Transform } from 'class-transformer';
+import { IsEnum, IsOptional, IsString, IsNotEmpty } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { EstadoRuta } from 'src/shared/enums';
 
@@ -16,7 +17,10 @@ export class UpdateTaskDto {
     example: 'Cliente no disponible',
   })
   @IsOptional()
+  @Transform(({ value }: { value: unknown }) =>
+    typeof value === 'string' ? value.trim() : value,
+  )
   @IsString()
-  @MinLength(1)
+  @IsNotEmpty()
   observacion?: string;
 }
