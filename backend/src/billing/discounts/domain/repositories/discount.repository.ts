@@ -45,7 +45,9 @@ export abstract class DiscountRepository {
 
   abstract findManyCatalogo(params: DiscountFindManyParams): Promise<any[]>;
 
-  abstract countCatalogo(params: { where?: DiscountWhereInput }): Promise<number>;
+  abstract countCatalogo(params: {
+    where?: DiscountWhereInput;
+  }): Promise<number>;
 
   abstract findUniqueCatalogo(where: DiscountWhereUniqueInput): Promise<any>;
 

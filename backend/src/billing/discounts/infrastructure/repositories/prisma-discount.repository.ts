@@ -18,7 +18,9 @@ export class PrismaDiscountRepository implements DiscountRepository {
     return this.prisma.catalogoDescuento.create({ data: data as any });
   }
 
-  async findManyCatalogo(params: DiscountFindManyParams): Promise<CatalogoDescuento[]> {
+  async findManyCatalogo(
+    params: DiscountFindManyParams,
+  ): Promise<CatalogoDescuento[]> {
     return this.prisma.catalogoDescuento.findMany(params as any);
   }
 
@@ -26,7 +28,9 @@ export class PrismaDiscountRepository implements DiscountRepository {
     return this.prisma.catalogoDescuento.count(params as any);
   }
 
-  async findUniqueCatalogo(where: DiscountWhereUniqueInput): Promise<CatalogoDescuento | null> {
+  async findUniqueCatalogo(
+    where: DiscountWhereUniqueInput,
+  ): Promise<CatalogoDescuento | null> {
     return this.prisma.catalogoDescuento.findUnique({ where });
   }
 
