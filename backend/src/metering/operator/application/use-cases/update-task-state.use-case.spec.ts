@@ -10,6 +10,14 @@ import { UpdateTaskStateUseCase } from './update-task-state.use-case';
 import { OperatorRepository } from '../../domain/repositories/operator.repository';
 import { MeterRepository } from '../../../meters/domain/repositories/meter.repository';
 
+/** Create a duck-typed Prisma P2025 error (matches isP2025Error in the use case). */
+function makeP2025Error(): Error & { code: string } {
+  const err = new Error('RecordNotFound');
+  err.name = 'PrismaClientKnownRequestError';
+  (err as Error & { code: string }).code = 'P2025';
+  return err as Error & { code: string };
+}
+
 describe('UpdateTaskStateUseCase', () => {
   let useCase: UpdateTaskStateUseCase;
 
@@ -373,7 +381,7 @@ describe('UpdateTaskStateUseCase', () => {
         makeTask({ estado: 'PENDIENTE' }),
       ]);
       mockOperatorRepository.updateTaskState.mockRejectedValueOnce(
-        new Error('P2025'),
+        makeP2025Error(),
       );
 
       await expect(
@@ -391,7 +399,7 @@ describe('UpdateTaskStateUseCase', () => {
         makeInstallTask(),
       ]);
       mockOperatorRepository.completeInstallationTask.mockRejectedValueOnce(
-        new Error('P2025'),
+        makeP2025Error(),
       );
 
       await expect(
@@ -399,6 +407,42 @@ describe('UpdateTaskStateUseCase', () => {
           estado: 'COMPLETADA',
         }),
       ).rejects.toThrow(ConflictException);
+    });
+
+    it('should propagate non-P2025 errors without masking as ConflictException', async () => {
+      mockOperatorRepository.findActivePeriod.mockResolvedValue(
+        mockActivePeriod,
+      );
+      mockOperatorRepository.findTasksByOperator.mockResolvedValue([
+        makeTask({ estado: 'PENDIENTE' }),
+      ]);
+      const dbError = new Error('Connection refused');
+      mockOperatorRepository.updateTaskState.mockRejectedValueOnce(dbError);
+
+      await expect(
+        useCase.execute(BigInt(1), mockOperarioId, {
+          estado: 'EN_PROGRESO',
+        }),
+      ).rejects.toThrow('Connection refused');
+    });
+
+    it('should propagate non-P2025 errors from INSTALACION completion', async () => {
+      mockOperatorRepository.findActivePeriod.mockResolvedValue(
+        mockActivePeriod,
+      );
+      mockOperatorRepository.findTasksByOperator.mockResolvedValue([
+        makeInstallTask(),
+      ]);
+      const dbError = new Error('Connection refused');
+      mockOperatorRepository.completeInstallationTask.mockRejectedValueOnce(
+        dbError,
+      );
+
+      await expect(
+        useCase.execute(BigInt(1), mockOperarioId, {
+          estado: 'COMPLETADA',
+        }),
+      ).rejects.toThrow('Connection refused');
     });
   });
 

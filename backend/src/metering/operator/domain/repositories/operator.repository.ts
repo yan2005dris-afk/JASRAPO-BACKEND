@@ -4,6 +4,7 @@ import type {
   OperatorTask,
   MeterBasicInfo,
   ReadingWithAnomalies,
+  TaskStateUpdate,
   OperatorUser,
 } from './repository-types';
 
@@ -56,14 +57,14 @@ export abstract class OperatorRepository {
   ): Promise<OperatorTask[]>;
   abstract updateTaskState(
     rutaId: bigint,
-    data: Record<string, any>,
+    data: TaskStateUpdate,
     expectedEstado?: string,
   ): Promise<OperatorTask>;
 
   /** Atomically complete an INSTALACION task and update meter to INSTALADO. */
   abstract completeInstallationTask(
     rutaId: bigint,
-    taskUpdateData: Record<string, any>,
+    taskUpdateData: TaskStateUpdate,
     expectedEstado: string,
     meterUpdateData: {
       medidorId: bigint;

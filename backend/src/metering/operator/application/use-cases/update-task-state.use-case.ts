@@ -12,6 +12,15 @@ import { MeterRepository } from '../../../meters/domain/repositories/meter.repos
 import type { TaskResponseDto } from '../../interfaces/dto/task-response.dto';
 import type { UpdateTaskDto } from '../../interfaces/dto/update-task.dto';
 
+/** Duck-type check for Prisma P2025 (record not found / optimistic lock failure). */
+function isP2025Error(error: unknown): error is Error & { code: string } {
+  return (
+    error instanceof Error &&
+    error.name === 'PrismaClientKnownRequestError' &&
+    (error as { code?: string }).code === 'P2025'
+  );
+}
+
 // Valid transitions: current -> set of allowed next states
 const ALLOWED_TRANSITIONS: Record<string, ReadonlySet<string>> = {
   [EstadoRuta.PENDIENTE]: new Set([
@@ -136,10 +145,13 @@ export class UpdateTaskStateUseCase {
             fechaInstalacion: new Date(),
           },
         );
-      } catch {
-        throw new ConflictException(
-          'Conflicto de concurrencia: la tarea fue modificada por otro request',
-        );
+      } catch (error) {
+        if (isP2025Error(error)) {
+          throw new ConflictException(
+            'Conflicto de concurrencia: la tarea fue modificada por otro request',
+          );
+        }
+        throw error;
       }
     } else {
       // Regular transition with optimistic locking
@@ -149,10 +161,13 @@ export class UpdateTaskStateUseCase {
           updateData,
           currentEstado,
         );
-      } catch {
-        throw new ConflictException(
-          'Conflicto de concurrencia: la tarea fue modificada por otro request',
-        );
+      } catch (error) {
+        if (isP2025Error(error)) {
+          throw new ConflictException(
+            'Conflicto de concurrencia: la tarea fue modificada por otro request',
+          );
+        }
+        throw error;
       }
     }
 

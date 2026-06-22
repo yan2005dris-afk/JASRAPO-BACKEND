@@ -117,10 +117,17 @@ export interface ReadingWithAnomalies {
   }>;
 }
 
+/** Fields that can be updated when transitioning a task's state. */
+export interface TaskStateUpdate {
+  estado?: string;
+  fechaInicio?: Date;
+  fechaFin?: Date;
+  observacion?: string | null;
+}
+
 export interface OperatorUser {
   usuarioId: number;
   email: string;
-  clave: string;
   rolId: number | null;
   nombres: string | null;
   apellidos: string | null;

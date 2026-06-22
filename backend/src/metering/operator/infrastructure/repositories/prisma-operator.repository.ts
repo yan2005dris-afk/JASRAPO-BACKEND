@@ -19,6 +19,7 @@ import type {
   OperatorTask,
   MeterBasicInfo,
   ReadingWithAnomalies,
+  TaskStateUpdate,
   OperatorUser,
 } from '../../domain/repositories/repository-types';
 
@@ -232,7 +233,7 @@ export class PrismaOperatorRepository extends OperatorRepository {
 
   async updateTaskState(
     rutaId: bigint,
-    data: Record<string, any>,
+    data: TaskStateUpdate,
     expectedEstado?: string,
   ): Promise<OperatorTask> {
     const updateData: Record<string, any> = {};
@@ -257,7 +258,7 @@ export class PrismaOperatorRepository extends OperatorRepository {
 
   async completeInstallationTask(
     rutaId: bigint,
-    taskUpdateData: Record<string, any>,
+    taskUpdateData: TaskStateUpdate,
     expectedEstado: string,
     meterUpdateData: {
       medidorId: bigint;
