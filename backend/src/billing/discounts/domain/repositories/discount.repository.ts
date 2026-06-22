@@ -1,3 +1,5 @@
+import type { DiscountEntity } from '../entities/discount.entity';
+
 export interface DiscountWhereUniqueInput {
   id: number;
 }
@@ -40,21 +42,29 @@ export interface DiscountUpdateInput {
   activo?: boolean;
 }
 
-export abstract class DiscountRepository {
-  abstract createCatalogo(data: DiscountCreateInput): Promise<any>;
+export type TransactionContext = any;
 
-  abstract findManyCatalogo(params: DiscountFindManyParams): Promise<any[]>;
+export abstract class DiscountRepository {
+  abstract createCatalogo(data: DiscountCreateInput): Promise<DiscountEntity>;
+
+  abstract findManyCatalogo(
+    params: DiscountFindManyParams,
+  ): Promise<DiscountEntity[]>;
 
   abstract countCatalogo(params: {
     where?: DiscountWhereInput;
   }): Promise<number>;
 
-  abstract findUniqueCatalogo(where: DiscountWhereUniqueInput): Promise<any>;
+  abstract findUniqueCatalogo(
+    where: DiscountWhereUniqueInput,
+  ): Promise<DiscountEntity | null>;
 
   abstract updateCatalogo(
     where: DiscountWhereUniqueInput,
     data: DiscountUpdateInput,
-  ): Promise<any>;
+  ): Promise<DiscountEntity>;
 
-  abstract executeTransaction<T>(callback: (tx: any) => Promise<T>): Promise<T>;
+  abstract executeTransaction<T>(
+    callback: (tx: TransactionContext) => Promise<T>,
+  ): Promise<T>;
 }

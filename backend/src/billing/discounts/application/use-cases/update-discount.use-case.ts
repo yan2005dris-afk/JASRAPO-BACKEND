@@ -15,7 +15,10 @@ export class UpdateDiscountUseCase {
     const { rubroId, ...data } = dto;
     return this.discountRepository.updateCatalogo(
       { id },
-      { ...data, rubroId: rubroId !== undefined ? rubroId : undefined },
+      {
+        ...data,
+        ...(rubroId !== undefined ? { rubroId } : {}),
+      },
     );
   }
 }
