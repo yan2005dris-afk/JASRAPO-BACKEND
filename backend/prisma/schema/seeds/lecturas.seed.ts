@@ -96,11 +96,7 @@ export async function seedLecturas(prisma: PrismaClient) {
 
         let lecturaAnterior = 0;
 
-        const currentPeriodId = periodosDb[periodosDb.length - 1]?.periodoId;
-
         for (const pDb of periodosDb) {
-            // Active period readings are initialized to 0 by routes.seed.ts
-            if (pDb.periodoId === currentPeriodId) continue;
 
             // 12 lecturas mensuales por período (año)
             const año = parseInt(pDb.nombre, 10); // Usar el nombre del período (e.g. "2024") para evitar timezone offset
