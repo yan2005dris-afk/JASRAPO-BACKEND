@@ -8,19 +8,13 @@ import {
   Min,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+import { TipoDescuento } from './create-discount.dto';
 
 export class DiscountFilterDto {
-  @ApiPropertyOptional({ description: 'Filtrar por tipo de descuento' })
+  @ApiPropertyOptional({ description: 'Filtrar por tipo de descuento', enum: TipoDescuento })
   @IsOptional()
-  @IsEnum([
-    'TERCERA_EDAD',
-    'DISCAPACIDAD',
-    'INTERES_MORA',
-    'EXENCION_TASA',
-    'CONVENIO',
-    'OTROS',
-  ])
-  tipoDescuento?: string;
+  @IsEnum(TipoDescuento)
+  tipoDescuento?: TipoDescuento;
 
   @ApiPropertyOptional({ description: 'Filtrar solo automáticos' })
   @IsOptional()

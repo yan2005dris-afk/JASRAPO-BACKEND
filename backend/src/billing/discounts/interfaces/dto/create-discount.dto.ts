@@ -8,6 +8,15 @@ import {
   Min,
 } from 'class-validator';
 
+export enum TipoDescuento {
+  TERCERA_EDAD = 'TERCERA_EDAD',
+  DISCAPACIDAD = 'DISCAPACIDAD',
+  INTERES_MORA = 'INTERES_MORA',
+  EXENCION_TASA = 'EXENCION_TASA',
+  CONVENIO = 'CONVENIO',
+  OTROS = 'OTROS',
+}
+
 export class CreateDiscountDto {
   @ApiProperty({
     description: 'Nombre del descuento',
@@ -23,30 +32,11 @@ export class CreateDiscountDto {
 
   @ApiProperty({
     description: 'Tipo de descuento',
-    enum: [
-      'TERCERA_EDAD',
-      'DISCAPACIDAD',
-      'INTERES_MORA',
-      'EXENCION_TASA',
-      'CONVENIO',
-      'OTROS',
-    ],
+    enum: TipoDescuento,
+    example: TipoDescuento.TERCERA_EDAD,
   })
-  @IsEnum([
-    'TERCERA_EDAD',
-    'DISCAPACIDAD',
-    'INTERES_MORA',
-    'EXENCION_TASA',
-    'CONVENIO',
-    'OTROS',
-  ])
-  tipoDescuento!:
-    | 'TERCERA_EDAD'
-    | 'DISCAPACIDAD'
-    | 'INTERES_MORA'
-    | 'EXENCION_TASA'
-    | 'CONVENIO'
-    | 'OTROS';
+  @IsEnum(TipoDescuento)
+  tipoDescuento!: TipoDescuento;
 
   @ApiProperty({ description: 'Valor del descuento', example: 50 })
   @IsNumber()

@@ -3,7 +3,7 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
-import { PrismaService } from '../../../infrastructure/database/prisma.service';
+import { DiscountRepository } from '../domain/repositories/discount.repository';
 import { CreateDiscountDto } from '../interfaces/dto/create-discount.dto';
 import { UpdateDiscountDto } from '../interfaces/dto/update-discount.dto';
 import { DiscountFilterDto } from '../interfaces/dto/discount-filter.dto';
@@ -11,16 +11,14 @@ import { ApplyDiscountToPreinvoiceDto } from '../interfaces/dto/apply-discount-t
 
 @Injectable()
 export class DiscountsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly discountRepository: DiscountRepository) {}
 
   async create(dto: CreateDiscountDto) {
     const { rubroId, ...data } = dto;
-    return this.prisma.catalogoDescuento.create({
-      data: {
-        ...data,
-        rubroId: rubroId ?? null,
-      },
-    });
+    return this.discountRepository.createCatalogo({
+      ...data,
+      rubroId: rubroId ?? null,
+    } as any);
   }
 
   async findAll(filter: DiscountFilterDto) {
@@ -38,22 +36,20 @@ export class DiscountsService {
     }
 
     const [items, total] = await Promise.all([
-      this.prisma.catalogoDescuento.findMany({
+      this.discountRepository.findManyCatalogo({
         where,
         skip,
         take: limit,
         orderBy: { id: 'asc' },
       }),
-      this.prisma.catalogoDescuento.count({ where }),
+      this.discountRepository.countCatalogo({ where }),
     ]);
 
     return { items, total, page, limit };
   }
 
   async findOne(id: number) {
-    const discount = await this.prisma.catalogoDescuento.findUnique({
-      where: { id },
-    });
+    const discount = await this.discountRepository.findUniqueCatalogo({ id });
     if (!discount) {
       throw new NotFoundException(`Descuento con ID ${id} no encontrado`);
     }
@@ -63,28 +59,22 @@ export class DiscountsService {
   async update(id: number, dto: UpdateDiscountDto) {
     await this.findOne(id);
     const { rubroId, ...data } = dto;
-    return this.prisma.catalogoDescuento.update({
-      where: { id },
-      data: {
-        ...data,
-        rubroId: rubroId ?? undefined,
-      },
-    });
+    return this.discountRepository.updateCatalogo(
+      { id },
+      { ...data, rubroId: rubroId ?? undefined } as any,
+    );
   }
 
   async remove(id: number) {
     await this.findOne(id);
-    return this.prisma.catalogoDescuento.update({
-      where: { id },
-      data: { activo: false },
-    });
+    return this.discountRepository.updateCatalogo({ id }, { activo: false });
   }
 
   async applyToPreinvoice(
     prefacturaId: number,
     dto: ApplyDiscountToPreinvoiceDto,
   ) {
-    return this.prisma.$transaction(async (tx) => {
+    return this.discountRepository.executeTransaction(async (tx) => {
       // 1. Validar prefactura dentro de tx para evitar TOCTOU
       const prefactura = await tx.prefacturas.findUnique({
         where: { prefacturaId },
@@ -113,8 +103,8 @@ export class DiscountsService {
       }
 
       // 3. Encontrar detalle de cargo fijo
-      const cargoFijoDetalle = prefactura.prefacturaDetalle.find((d) =>
-        d.descripcion.includes('Cargo Fijo'),
+      const cargoFijoDetalle = prefactura.prefacturaDetalle.find(
+        (d: any) => d.descripcion.includes('Cargo Fijo'),
       );
 
       if (!cargoFijoDetalle) {
