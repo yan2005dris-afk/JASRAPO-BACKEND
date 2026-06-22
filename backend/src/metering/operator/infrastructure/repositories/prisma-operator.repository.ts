@@ -13,6 +13,15 @@ import {
   type RouteData,
   type ReadingWithDetails,
 } from '../../domain/repositories/operator.repository';
+import type {
+  ReadingWithContractDetail,
+  MeterWithContractDetail,
+  OperatorTask,
+  MeterBasicInfo,
+  ReadingWithAnomalies,
+  TaskStateUpdate,
+  OperatorUser,
+} from '../../domain/repositories/repository-types';
 
 @Injectable()
 export class PrismaOperatorRepository extends OperatorRepository {
@@ -51,8 +60,8 @@ export class PrismaOperatorRepository extends OperatorRepository {
   async findReadingsByPeriodAndRoutes(
     periodoId: number,
     routeConditions: Record<string, unknown>[],
-  ): Promise<any[]> {
-    return this.prisma.lecturas.findMany({
+  ): Promise<ReadingWithContractDetail[]> {
+    const result = await this.prisma.lecturas.findMany({
       where: {
         periodoId,
         deletedAt: null,
@@ -116,12 +125,13 @@ export class PrismaOperatorRepository extends OperatorRepository {
         },
       },
     });
+    return result as unknown as ReadingWithContractDetail[];
   }
 
   async findMetersByRoutes(
     routeConditions: Record<string, unknown>[],
-  ): Promise<any[]> {
-    return this.prisma.medidores.findMany({
+  ): Promise<MeterWithContractDetail[]> {
+    const result = await this.prisma.medidores.findMany({
       where: {
         estado: EstadoMedidor.INSTALADO,
         deletedAt: null,
@@ -169,6 +179,7 @@ export class PrismaOperatorRepository extends OperatorRepository {
         },
       },
     });
+    return result as unknown as MeterWithContractDetail[];
   }
 
   async findReadingWithDetails(id: bigint): Promise<ReadingWithDetails | null> {
@@ -203,7 +214,7 @@ export class PrismaOperatorRepository extends OperatorRepository {
     operarioId: number,
     periodoId: number,
     tipoRuta?: string,
-  ): Promise<any[]> {
+  ): Promise<OperatorTask[]> {
     const where: Record<string, any> = {
       operarioId,
       periodoId,
@@ -222,8 +233,9 @@ export class PrismaOperatorRepository extends OperatorRepository {
 
   async updateTaskState(
     rutaId: bigint,
-    data: Record<string, any>,
-  ): Promise<any> {
+    data: TaskStateUpdate,
+    expectedEstado?: string,
+  ): Promise<OperatorTask> {
     const updateData: Record<string, any> = {};
 
     if (data.estado !== undefined) updateData.estado = data.estado;
@@ -233,16 +245,61 @@ export class PrismaOperatorRepository extends OperatorRepository {
     if (data.observacion !== undefined)
       updateData.observacion = data.observacion;
 
+    const where: any = { rutaId, deletedAt: null };
+    if (expectedEstado !== undefined) {
+      where.estado = expectedEstado;
+    }
+
     return this.prisma.rutas.update({
-      where: { rutaId, deletedAt: null },
+      where,
       data: updateData,
+    });
+  }
+
+  async completeInstallationTask(
+    rutaId: bigint,
+    taskUpdateData: TaskStateUpdate,
+    expectedEstado: string,
+    meterUpdateData: {
+      medidorId: bigint;
+      estado: string;
+      fechaInstalacion: Date;
+    },
+  ): Promise<OperatorTask> {
+    return this.prisma.$transaction(async (tx) => {
+      const taskUpdate: Record<string, any> = {};
+      if (taskUpdateData.estado !== undefined)
+        taskUpdate.estado = taskUpdateData.estado;
+      if (taskUpdateData.fechaFin !== undefined)
+        taskUpdate.fechaFin = taskUpdateData.fechaFin;
+      if (taskUpdateData.observacion !== undefined)
+        taskUpdate.observacion = taskUpdateData.observacion;
+
+      const updated = await tx.rutas.update({
+        where: {
+          rutaId,
+          deletedAt: null,
+          estado: expectedEstado as EstadoRuta,
+        },
+        data: taskUpdate,
+      });
+
+      await tx.medidores.update({
+        where: { medidorId: meterUpdateData.medidorId },
+        data: {
+          estado: meterUpdateData.estado as EstadoMedidor,
+          fechaInstalacion: meterUpdateData.fechaInstalacion,
+        },
+      });
+
+      return updated;
     });
   }
 
   async findOperatorsByGeography(
     comunidadId: number,
     sectorId: number | null,
-  ): Promise<any[]> {
+  ): Promise<OperatorUser[]> {
     const where: any = {
       rutas: {
         some: {
@@ -310,8 +367,8 @@ export class PrismaOperatorRepository extends OperatorRepository {
     };
   }
 
-  async findMedidoresById(medidorIds: bigint[]): Promise<any[]> {
-    return this.prisma.medidores.findMany({
+  async findMedidoresById(medidorIds: bigint[]): Promise<MeterBasicInfo[]> {
+    const result = await this.prisma.medidores.findMany({
       where: { medidorId: { in: medidorIds } },
       select: {
         medidorId: true,
@@ -322,12 +379,13 @@ export class PrismaOperatorRepository extends OperatorRepository {
         longitud: true,
       },
     });
+    return result as unknown as MeterBasicInfo[];
   }
 
   async findReadingsWithPendingAnomalies(
     operarioId: number,
     periodoId: number,
-  ): Promise<any[]> {
+  ): Promise<ReadingWithAnomalies[]> {
     const routes = await this.findActiveRoutes(operarioId, periodoId);
 
     if (routes.length === 0) {
@@ -343,7 +401,7 @@ export class PrismaOperatorRepository extends OperatorRepository {
       },
     }));
 
-    return this.prisma.lecturas.findMany({
+    const result = await this.prisma.lecturas.findMany({
       where: {
         periodoId,
         deletedAt: null,
@@ -389,5 +447,6 @@ export class PrismaOperatorRepository extends OperatorRepository {
         },
       },
     });
+    return result as unknown as ReadingWithAnomalies[];
   }
 }

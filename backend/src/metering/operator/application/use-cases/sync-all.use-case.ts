@@ -41,7 +41,7 @@ export class SyncAllUseCase {
       await this.operatorRepository.findMetersByRoutes(rutaConditions);
 
     // 6. Map to MeterEntity[]
-    return meters.map((m: any) => {
+    return meters.map((m) => {
       const activeHistorial = m.historial?.[0];
       return new MeterEntity({
         medidorId: m.medidorId,
