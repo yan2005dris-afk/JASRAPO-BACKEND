@@ -97,7 +97,6 @@ export async function seedLecturas(prisma: PrismaClient) {
         let lecturaAnterior = 0;
 
         for (const pDb of periodosDb) {
-
             // 12 lecturas mensuales por período (año)
             const año = parseInt(pDb.nombre, 10); // Usar el nombre del período (e.g. "2024") para evitar timezone offset
             for (let mes = 0; mes < 12; mes++) {

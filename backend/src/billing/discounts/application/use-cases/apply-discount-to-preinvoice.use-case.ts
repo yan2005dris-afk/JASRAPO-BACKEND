@@ -112,10 +112,12 @@ export class ApplyDiscountToPreinvoiceUseCase {
           montoDescontado,
           esPorcentaje: catalogo.esPorcentaje,
           valorAplicado: montoCustom > 0 ? montoCustom : Number(catalogo.valor),
+          motivo: dto.motivo,
+          autorizadoPor: dto.autorizadoPor,
         },
       });
 
-      // 5c. Actualizar totales de la prefactura
+
       return tx.prefacturas.update({
         where: { prefacturaId },
         data: {
