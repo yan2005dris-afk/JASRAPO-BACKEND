@@ -1,44 +1,39 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
-import { Prisma } from 'src/generated/prisma/client';
-import { DiscountRepository } from '../../domain/repositories/discount.repository';
+import {
+  DiscountRepository,
+  DiscountCreateInput,
+  DiscountFindManyParams,
+  DiscountUpdateInput,
+  DiscountWhereInput,
+  DiscountWhereUniqueInput,
+} from '../../domain/repositories/discount.repository';
 
 @Injectable()
 export class PrismaDiscountRepository implements DiscountRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async createCatalogo(
-    data: Prisma.CatalogoDescuentoCreateInput,
-  ): Promise<any> {
-    return this.prisma.catalogoDescuento.create({ data });
+  async createCatalogo(data: DiscountCreateInput): Promise<any> {
+    return this.prisma.catalogoDescuento.create({ data: data as any });
   }
 
-  async findManyCatalogo(params: {
-    where?: Prisma.CatalogoDescuentoWhereInput;
-    orderBy?: Prisma.CatalogoDescuentoOrderByWithRelationInput;
-    skip?: number;
-    take?: number;
-  }): Promise<any[]> {
-    return this.prisma.catalogoDescuento.findMany(params);
+  async findManyCatalogo(params: DiscountFindManyParams): Promise<any[]> {
+    return this.prisma.catalogoDescuento.findMany(params as any);
   }
 
-  async countCatalogo(params: {
-    where?: Prisma.CatalogoDescuentoWhereInput;
-  }): Promise<number> {
-    return this.prisma.catalogoDescuento.count(params);
+  async countCatalogo(params: { where?: DiscountWhereInput }): Promise<number> {
+    return this.prisma.catalogoDescuento.count(params as any);
   }
 
-  async findUniqueCatalogo(
-    where: Prisma.CatalogoDescuentoWhereUniqueInput,
-  ): Promise<any> {
+  async findUniqueCatalogo(where: DiscountWhereUniqueInput): Promise<any> {
     return this.prisma.catalogoDescuento.findUnique({ where });
   }
 
   async updateCatalogo(
-    where: Prisma.CatalogoDescuentoWhereUniqueInput,
-    data: Prisma.CatalogoDescuentoUpdateInput,
+    where: DiscountWhereUniqueInput,
+    data: DiscountUpdateInput,
   ): Promise<any> {
-    return this.prisma.catalogoDescuento.update({ where, data });
+    return this.prisma.catalogoDescuento.update({ where, data: data as any });
   }
 
   async executeTransaction<T>(callback: (tx: any) => Promise<T>): Promise<T> {

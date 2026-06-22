@@ -11,6 +11,6 @@ export class CreateDiscountUseCase {
     return this.discountRepository.createCatalogo({
       ...data,
       rubroId: rubroId ?? null,
-    } as any);
+    });
   }
 }
