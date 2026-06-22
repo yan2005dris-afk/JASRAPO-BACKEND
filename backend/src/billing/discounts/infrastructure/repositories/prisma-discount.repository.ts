@@ -7,7 +7,9 @@ import { DiscountRepository } from '../../domain/repositories/discount.repositor
 export class PrismaDiscountRepository implements DiscountRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async createCatalogo(data: Prisma.CatalogoDescuentoCreateInput): Promise<any> {
+  async createCatalogo(
+    data: Prisma.CatalogoDescuentoCreateInput,
+  ): Promise<any> {
     return this.prisma.catalogoDescuento.create({ data });
   }
 

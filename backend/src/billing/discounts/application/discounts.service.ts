@@ -59,10 +59,10 @@ export class DiscountsService {
   async update(id: number, dto: UpdateDiscountDto) {
     await this.findOne(id);
     const { rubroId, ...data } = dto;
-    return this.discountRepository.updateCatalogo(
-      { id },
-      { ...data, rubroId: rubroId ?? undefined } as any,
-    );
+    return this.discountRepository.updateCatalogo({ id }, {
+      ...data,
+      rubroId: rubroId ?? undefined,
+    } as any);
   }
 
   async remove(id: number) {
@@ -103,8 +103,8 @@ export class DiscountsService {
       }
 
       // 3. Encontrar detalle de cargo fijo
-      const cargoFijoDetalle = prefactura.prefacturaDetalle.find(
-        (d: any) => d.descripcion.includes('Cargo Fijo'),
+      const cargoFijoDetalle = prefactura.prefacturaDetalle.find((d: any) =>
+        d.descripcion.includes('Cargo Fijo'),
       );
 
       if (!cargoFijoDetalle) {
