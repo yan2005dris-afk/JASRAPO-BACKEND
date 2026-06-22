@@ -3,7 +3,7 @@ import { Test } from '@nestjs/testing';
 import { Logger } from '@nestjs/common';
 import { FailoverDispatcher } from './failover.dispatcher';
 import { MailRateLimitService } from '../rate-limit/mail-rate-limit.service';
-import type { MailProviderConfig } from '../../../domain/config/mail-provider-config.interface';
+import type { MailProviderConfig } from '../../domain/config/mail-provider-config.interface';
 import type * as nodemailer from 'nodemailer';
 
 const mockSendMail = jest.fn();
