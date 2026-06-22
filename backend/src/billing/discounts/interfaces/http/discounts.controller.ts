@@ -34,18 +34,23 @@ export class DiscountsController {
 
   @Get()
   @ApiOperation({ summary: 'Listar descuentos con filtros' })
+  @ApiResponse({ status: 200, description: 'Lista de descuentos activos' })
   findAll(@Query() filter: DiscountFilterDto) {
     return this.discountsService.findAll(filter);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Obtener un descuento por ID' })
+  @ApiResponse({ status: 200, description: 'Descuento encontrado' })
+  @ApiResponse({ status: 404, description: 'Descuento no encontrado' })
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.discountsService.findOne(id);
   }
 
   @Patch(':id')
   @ApiOperation({ summary: 'Actualizar un descuento' })
+  @ApiResponse({ status: 200, description: 'Descuento actualizado' })
+  @ApiResponse({ status: 404, description: 'Descuento no encontrado' })
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateDiscountDto,
@@ -61,6 +66,8 @@ export class DiscountsController {
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Desactivar un descuento (soft-delete)' })
+  @ApiResponse({ status: 200, description: 'Descuento desactivado' })
+  @ApiResponse({ status: 404, description: 'Descuento no encontrado' })
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.discountsService.remove(id);
   }

@@ -1,5 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsNumber, IsOptional, Min } from 'class-validator';
+import { IsBooleanString, IsEnum, IsNumber, IsOptional, Max, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class DiscountFilterDto {
@@ -17,6 +17,7 @@ export class DiscountFilterDto {
 
   @ApiPropertyOptional({ description: 'Filtrar solo automáticos' })
   @IsOptional()
+  @IsBooleanString()
   aplicaAutomatico?: string;
 
   @ApiPropertyOptional({ description: 'Número de página', default: 1 })
@@ -31,5 +32,6 @@ export class DiscountFilterDto {
   @Type(() => Number)
   @IsNumber()
   @Min(1)
+  @Max(100)
   limit?: number;
 }

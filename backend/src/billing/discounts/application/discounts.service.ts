@@ -28,7 +28,7 @@ export class DiscountsService {
     const limit = filter.limit ?? 20;
     const skip = (page - 1) * limit;
 
-    const where: any = {};
+    const where: any = { activo: true };
 
     if (filter.tipoDescuento) {
       where.tipoDescuento = filter.tipoDescuento;
@@ -52,10 +52,10 @@ export class DiscountsService {
 
   async findOne(id: number) {
     const discount = await this.prisma.catalogoDescuento.findUnique({
-      where: { id: id },
+      where: { id },
     });
     if (!discount) {
-      throw new Error(`Descuento con ID ${id} no encontrado`);
+      throw new NotFoundException(`Descuento con ID ${id} no encontrado`);
     }
     return discount;
   }
@@ -64,7 +64,7 @@ export class DiscountsService {
     await this.findOne(id);
     const { rubroId, ...data } = dto;
     return this.prisma.catalogoDescuento.update({
-      where: { id: id },
+      where: { id },
       data: {
         ...data,
         rubroId: rubroId ?? undefined,
@@ -75,7 +75,7 @@ export class DiscountsService {
   async remove(id: number) {
     await this.findOne(id);
     return this.prisma.catalogoDescuento.update({
-      where: { id: id },
+      where: { id },
       data: { activo: false },
     });
   }
@@ -84,63 +84,69 @@ export class DiscountsService {
     prefacturaId: number,
     dto: ApplyDiscountToPreinvoiceDto,
   ) {
-    // 1. Validar prefactura existe y está en estado válido
-    const prefactura = await this.prisma.prefacturas.findUnique({
-      where: { prefacturaId },
-      include: { prefacturaDetalle: true },
-    });
-
-    if (!prefactura) {
-      throw new NotFoundException(`Prefactura ${prefacturaId} no encontrada`);
-    }
-
-    if (prefactura.estado === 'PAGADA' || prefactura.estado === 'ANULADA') {
-      throw new BadRequestException(
-        `No se puede aplicar descuento a una prefactura en estado ${prefactura.estado}`,
-      );
-    }
-
-    // 2. Validar descuento del catálogo
-    const catalogo = await this.prisma.catalogoDescuento.findUnique({
-      where: { id: dto.catalogoDescuentoId },
-    });
-
-    if (!catalogo || !catalogo.activo) {
-      throw new NotFoundException(
-        'Descuento del catálogo no encontrado o inactivo',
-      );
-    }
-
-    // 3. Encontrar el detalle de cargo fijo para vincular descuento_detalle
-    const cargoFijoDetalle = prefactura.prefacturaDetalle.find((d) =>
-      d.descripcion.includes('Cargo Fijo'),
-    );
-
-    if (!cargoFijoDetalle) {
-      throw new BadRequestException(
-        'No se encontró detalle de Cargo Fijo en la prefactura',
-      );
-    }
-
-    // 4. Calcular monto
-    const montoCustom = dto.montoCustom ?? 0;
-    const montoDescontado =
-      montoCustom > 0
-        ? Math.min(montoCustom, Number(cargoFijoDetalle.subtotal))
-        : catalogo.esPorcentaje
-          ? Number(cargoFijoDetalle.subtotal) * (Number(catalogo.valor) / 100)
-          : Math.min(Number(catalogo.valor), Number(cargoFijoDetalle.subtotal));
-
-    if (montoDescontado <= 0) {
-      throw new BadRequestException(
-        'El monto del descuento debe ser mayor a 0',
-      );
-    }
-
-    // 5. Ejecutar en transacción
     return this.prisma.$transaction(async (tx) => {
+      // 1. Validar prefactura dentro de tx para evitar TOCTOU
+      const prefactura = await tx.prefacturas.findUnique({
+        where: { prefacturaId },
+        include: { prefacturaDetalle: true },
+      });
+
+      if (!prefactura) {
+        throw new NotFoundException(`Prefactura ${prefacturaId} no encontrada`);
+      }
+
+      if (prefactura.estado === 'PAGADA' || prefactura.estado === 'ANULADA') {
+        throw new BadRequestException(
+          `No se puede aplicar descuento a una prefactura en estado ${prefactura.estado}`,
+        );
+      }
+
+      // 2. Validar descuento del catálogo dentro de tx
+      const catalogo = await tx.catalogoDescuento.findUnique({
+        where: { id: dto.catalogoDescuentoId },
+      });
+
+      if (!catalogo || !catalogo.activo) {
+        throw new NotFoundException(
+          'Descuento del catálogo no encontrado o inactivo',
+        );
+      }
+
+      // 3. Encontrar detalle de cargo fijo
+      const cargoFijoDetalle = prefactura.prefacturaDetalle.find((d) =>
+        d.descripcion.includes('Cargo Fijo'),
+      );
+
+      if (!cargoFijoDetalle) {
+        throw new BadRequestException(
+          'No se encontró detalle de Cargo Fijo en la prefactura',
+        );
+      }
+
+      // 4. Calcular monto — cap porcentaje en 100, redondeo a 2 decimales
+      const montoCustom = dto.montoCustom ?? 0;
+      const subtotal = Number(cargoFijoDetalle.subtotal);
+      let montoDescontado: number;
+
+      if (montoCustom > 0) {
+        montoDescontado = Math.min(montoCustom, subtotal);
+      } else if (catalogo.esPorcentaje) {
+        const pct = Math.min(Number(catalogo.valor), 100);
+        montoDescontado = subtotal * (pct / 100);
+      } else {
+        montoDescontado = Math.min(Number(catalogo.valor), subtotal);
+      }
+
+      montoDescontado = Math.round(montoDescontado * 100) / 100;
+
+      if (montoDescontado <= 0) {
+        throw new BadRequestException(
+          'El monto del descuento debe ser mayor a 0',
+        );
+      }
+
       // 5a. Crear línea de descuento en prefactura_detalle
-      const detalle = await tx.prefacturaDetalle.create({
+      await tx.prefacturaDetalle.create({
         data: {
           prefacturaId,
           rubroId: cargoFijoDetalle.rubroId,
@@ -159,7 +165,7 @@ export class DiscountsService {
         },
       });
 
-      // 5b. Registrar en descuento_detalle (vinculado al cargo_fijo)
+      // 5b. Registrar en descuento_detalle
       await tx.descuentoDetalle.create({
         data: {
           prefacturaDetalleId: cargoFijoDetalle.prefacturaDetalleId,
@@ -171,7 +177,7 @@ export class DiscountsService {
       });
 
       // 5c. Actualizar totales de la prefactura
-      const updated = await tx.prefacturas.update({
+      return tx.prefacturas.update({
         where: { prefacturaId },
         data: {
           descuentoTotal: { increment: montoDescontado },
@@ -182,8 +188,6 @@ export class DiscountsService {
           prefacturaDetalle: true,
         },
       });
-
-      return updated;
     });
   }
 }

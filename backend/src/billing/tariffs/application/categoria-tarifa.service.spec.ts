@@ -200,8 +200,11 @@ describe('CategoriaTarifaService', () => {
 
       const result = await service.deleteCategoria(1);
 
-      expect(result.message).toBeDefined();
-      expect(result.statusCode).toBe(200);
+      expect(result).toEqual({
+        message: 'Categoría de tarifa eliminada exitosamente',
+        statusCode: 200,
+      });
+      expect(mockRemoveUseCase.execute).toHaveBeenCalledWith(1);
     });
 
     it('should throw NotFoundException when categoria not found', async () => {
