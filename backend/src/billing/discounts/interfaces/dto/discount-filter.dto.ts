@@ -1,5 +1,12 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsBooleanString, IsEnum, IsNumber, IsOptional, Max, Min } from 'class-validator';
+import {
+  IsBooleanString,
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  Max,
+  Min,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class DiscountFilterDto {
