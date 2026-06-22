@@ -24,10 +24,6 @@ import { ApplyDiscountToPreinvoiceUseCase } from './application/use-cases/apply-
     RemoveDiscountUseCase,
     ApplyDiscountToPreinvoiceUseCase,
   ],
-  exports: [
-    DiscountRepository,
-    DiscountsService,
-    FindOneDiscountUseCase,
-  ],
+  exports: [DiscountRepository, DiscountsService, FindOneDiscountUseCase],
 })
 export class DiscountsModule {}

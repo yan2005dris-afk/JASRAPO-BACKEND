@@ -13,9 +13,9 @@ export class UpdateDiscountUseCase {
   async execute(id: number, dto: UpdateDiscountDto) {
     await this.findOneUseCase.execute(id);
     const { rubroId, ...data } = dto;
-    return this.discountRepository.updateCatalogo(
-      { id },
-      { ...data, rubroId: rubroId ?? undefined } as any,
-    );
+    return this.discountRepository.updateCatalogo({ id }, {
+      ...data,
+      rubroId: rubroId ?? undefined,
+    } as any);
   }
 }

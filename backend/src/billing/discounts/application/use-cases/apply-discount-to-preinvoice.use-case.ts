@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { DiscountRepository } from '../../domain/repositories/discount.repository';
 import { ApplyDiscountToPreinvoiceDto } from '../../interfaces/dto/apply-discount-to-preinvoice.dto';
 
