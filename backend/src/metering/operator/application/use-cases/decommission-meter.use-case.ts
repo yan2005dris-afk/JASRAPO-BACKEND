@@ -1,24 +1,26 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { MeterRepository } from '../../../meters/domain/repositories/meter.repository';
-import { MeterEntity } from '../../../meters/domain/entities/meter.entity';
 import { EstadoMedidor } from 'src/shared/enums';
+import type { MeterEntity } from '../../../meters/domain/entities/meter.entity';
 
 @Injectable()
 export class DecommissionMeterUseCase {
   constructor(private readonly meterRepository: MeterRepository) {}
 
   async execute(medidorId: bigint, motivo: string): Promise<MeterEntity> {
-    const medidor = await this.meterRepository.findUnique({
-      medidorId,
-    });
+    const meter = await this.meterRepository.findUnique({ medidorId });
 
-    if (!medidor || medidor.deletedAt) {
-      throw new BadRequestException('Medidor no encontrado');
+    if (!meter || meter.deletedAt) {
+      throw new NotFoundException('Meter not found');
     }
 
-    if (medidor.estado !== EstadoMedidor.DANADO) {
+    if (meter.estado !== EstadoMedidor.DANADO) {
       throw new BadRequestException(
-        `Un medidor debe estar DANADO antes de darse de baja`,
+        `Meter must be in DANADO state to be decommissioned, current state: ${meter.estado}`,
       );
     }
 

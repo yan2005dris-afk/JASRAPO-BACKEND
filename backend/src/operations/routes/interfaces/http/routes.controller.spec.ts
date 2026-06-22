@@ -2,6 +2,7 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { RoutesController } from './routes.controller';
 import { RoutesService } from '../../application/routes.service';
+import { ReassignRouteUseCase } from '../../application/use-cases/reassign-route.use-case';
 
 describe('RoutesController', () => {
   let controller: RoutesController;
@@ -19,6 +20,12 @@ describe('RoutesController', () => {
             findOne: jest.fn(),
             update: jest.fn(),
             delete: jest.fn(),
+          },
+        },
+        {
+          provide: ReassignRouteUseCase,
+          useValue: {
+            execute: jest.fn(),
           },
         },
       ],

@@ -8,4 +8,5 @@ export interface CreateRouteData {
   periodoId: number;
   fechaPlanificada?: Date | null;
   estado?: string;
+  medidorId?: number;
 }

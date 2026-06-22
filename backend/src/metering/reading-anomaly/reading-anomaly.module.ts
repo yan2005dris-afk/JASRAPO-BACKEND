@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { ReadingAnomalyController } from './interfaces/http/reading-anomaly.controller';
 import { ReadingAnomalyService } from './application/reading-anomaly.service';
 import { CreateReadingAnomalyUseCase } from './application/use-cases/create-reading-anomaly.use-case';
@@ -8,8 +8,10 @@ import { UpdateReadingAnomalyUseCase } from './application/use-cases/update-read
 import { RemoveReadingAnomalyUseCase } from './application/use-cases/remove-reading-anomaly.use-case';
 import { ReadingAnomalyRepository } from './domain/repositories/reading-anomaly.repository';
 import { PrismaReadingAnomalyRepository } from './infrastructure/repositories/prisma-reading-anomaly.repository';
+import { ReadingModule } from '../readings/reading.module';
 
 @Module({
+  imports: [forwardRef(() => ReadingModule)],
   controllers: [ReadingAnomalyController],
   providers: [
     {

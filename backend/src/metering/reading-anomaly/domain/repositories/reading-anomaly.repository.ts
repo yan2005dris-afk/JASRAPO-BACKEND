@@ -1,5 +1,9 @@
 import type { ReadingAnomalyEntity } from '../entities/reading-anomaly.entity';
-import type { TipoAnomalia, EstadoAnomalia } from 'src/shared/enums';
+import type {
+  TipoAnomalia,
+  EstadoAnomalia,
+  EstadoLectura,
+} from 'src/shared/enums';
 
 export interface CreateReadingAnomalyRepositoryData {
   lecturaId: bigint;
@@ -39,6 +43,12 @@ export abstract class ReadingAnomalyRepository {
 
   abstract create(
     data: CreateReadingAnomalyRepositoryData,
+  ): Promise<ReadingAnomalyEntity>;
+
+  abstract createAndMarkReadingWithAnomaly(
+    data: CreateReadingAnomalyRepositoryData & {
+      nextEstadoLectura: EstadoLectura;
+    },
   ): Promise<ReadingAnomalyEntity>;
 
   abstract update(

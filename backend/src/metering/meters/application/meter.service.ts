@@ -7,10 +7,7 @@ import { buildMeterFilters } from './mappers/meter-filters.mapper';
 import { EnumStateDto } from 'src/shared/enums/state-catalog';
 import { EstadoMedidor } from 'src/shared/enums';
 import { CreateMeterUseCase } from './use-cases/create-meter.use-case';
-import { ReportDefectUseCase } from './use-cases/report-defect.use-case';
 import { FindOneMeterUseCase } from './use-cases/find-one-meter.use-case';
-import { InstallMeterUseCase } from './use-cases/install-meter.use-case';
-import { DecommissionMeterUseCase } from './use-cases/decommission-meter.use-case';
 import { MeterEntity } from '../domain/entities/meter.entity';
 import { toMeterResponse } from '../domain/types/metersMapper';
 import { DateUtil } from 'src/shared/utils/date.util';
@@ -24,9 +21,6 @@ export class MeterService {
     private readonly meterRepository: MeterRepository,
     private readonly createUseCase: CreateMeterUseCase,
     private readonly findOneUseCase: FindOneMeterUseCase,
-    private readonly installUseCase: InstallMeterUseCase,
-    private readonly reportDamageUseCase: ReportDefectUseCase,
-    private readonly decommissionUseCase: DecommissionMeterUseCase,
   ) {}
 
   async create(createDto: CreateMeterDto): Promise<MeterEntity> {

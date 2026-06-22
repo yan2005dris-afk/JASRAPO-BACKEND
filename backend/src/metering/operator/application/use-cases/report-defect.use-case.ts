@@ -1,36 +1,32 @@
 import {
-  Injectable,
   BadRequestException,
+  Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { MeterRepository } from '../../../meters/domain/repositories/meter.repository';
-import { MeterEntity } from '../../../meters/domain/entities/meter.entity';
 import { EstadoMedidor } from 'src/shared/enums';
+import type { MeterEntity } from '../../../meters/domain/entities/meter.entity';
 
 @Injectable()
 export class ReportDefectUseCase {
   constructor(private readonly meterRepository: MeterRepository) {}
 
   async execute(medidorId: bigint): Promise<MeterEntity> {
-    const medidor = await this.meterRepository.findUnique({
-      medidorId,
-    });
+    const meter = await this.meterRepository.findUnique({ medidorId });
 
-    if (!medidor || medidor.deletedAt) {
-      throw new NotFoundException('Medidor no encontrado');
+    if (!meter || meter.deletedAt) {
+      throw new NotFoundException('Meter not found');
     }
 
-    if (medidor.estado !== EstadoMedidor.INSTALADO) {
+    if (meter.estado !== EstadoMedidor.INSTALADO) {
       throw new BadRequestException(
-        `Solo medidores INSTALADOS pueden reportarse como dañados`,
+        `Only INSTALADO meters can be reported as defective, current state: ${meter.estado}`,
       );
     }
 
     return this.meterRepository.update(
       { medidorId },
-      {
-        estado: EstadoMedidor.DANADO,
-      },
+      { estado: EstadoMedidor.DANADO },
     );
   }
 }

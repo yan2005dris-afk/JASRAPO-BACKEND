@@ -36,8 +36,6 @@ export async function seedLecturas(prisma: PrismaClient) {
     });
     let nextMedidorId = Number(maxMedidor?.medidorId ?? 0) + 1;
 
-    let lecturaId = 1;
-
     for (const contrato of contratos) {
         // Limpiar historial existente para este contrato, así cada contrato
         // tiene lecturas únicas sin mezclarse con otros contratos
@@ -47,6 +45,26 @@ export async function seedLecturas(prisma: PrismaClient) {
 
         // Crear un medidor DEDICADO por contrato para evitar que lecturas
         // de diferentes contratos compartan el mismo medidorId
+        let baseLat = -1.7966;
+        let baseLng = -80.7568;
+        if (contrato.comunidadId === 2) {
+            baseLat = -1.7611;
+            baseLng = -80.7678;
+        } else if (contrato.comunidadId === 3) {
+            baseLat = -1.7456;
+            baseLng = -80.7712;
+        } else if (contrato.comunidadId === 4) {
+            baseLat = -1.8212;
+            baseLng = -80.7412;
+        } else if (contrato.comunidadId === 5) {
+            baseLat = -1.7823;
+            baseLng = -80.7612;
+        }
+
+        const offset = Number(contrato.contratoId) * 0.0002;
+        const finalLat = baseLat + (offset % 0.003);
+        const finalLng = baseLng + ((offset * 1.3) % 0.003);
+
         const medidor = await prisma.medidores.create({
             data: {
                 medidorId: nextMedidorId,
@@ -54,8 +72,8 @@ export async function seedLecturas(prisma: PrismaClient) {
                 modelo: 'Dedicado',
                 serie: `SER-READ-${contrato.contratoId}`,
                 fechaInstalacion: new Date('2024-01-01'),
-                latitud: -0.2281,
-                longitud: -78.0023,
+                latitud: finalLat,
+                longitud: finalLng,
                 estado: 'INSTALADO' as EstadoMedidor,
                 createdAt: new Date(),
                 updatedAt: new Date(),
@@ -81,6 +99,9 @@ export async function seedLecturas(prisma: PrismaClient) {
         const currentPeriodId = periodosDb[periodosDb.length - 1]?.periodoId;
 
         for (const pDb of periodosDb) {
+            // Active period readings are initialized to 0 by routes.seed.ts
+            if (pDb.periodoId === currentPeriodId) continue;
+
             // 12 lecturas mensuales por período (año)
             const año = parseInt(pDb.nombre, 10); // Usar el nombre del período (e.g. "2024") para evitar timezone offset
             for (let mes = 0; mes < 12; mes++) {
@@ -93,19 +114,17 @@ export async function seedLecturas(prisma: PrismaClient) {
 
                 await prisma.lecturas.create({
                     data: {
-                        lecturaId: BigInt(lecturaId),
                         medidorId: medidor.medidorId,
                         periodoId: pDb.periodoId,
                         fecha: fechaLectura,
                         lecturaAnterior,
                         lecturaActual,
                         consumoCalculado: consumo,
-                        estado: pDb.periodoId === currentPeriodId ? "PENDIENTE" : "APROBADA",
+                        estado: "APROBADA",
                         lecturaInicial: lecturaAnterior === 0,
                     },
                 });
                 lecturaAnterior = lecturaActual;
-                lecturaId++;
             }
         }
     }
