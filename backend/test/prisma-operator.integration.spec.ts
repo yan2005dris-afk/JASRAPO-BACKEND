@@ -4,8 +4,8 @@ import {
   PostgreSqlContainer,
   type StartedPostgreSqlContainer,
 } from '@testcontainers/postgresql';
-import { PrismaService } from '../../../../infrastructure/database/prisma.service';
-import { PrismaOperatorRepository } from './prisma-operator.repository';
+import { PrismaService } from 'src/infrastructure/database/prisma.service';
+import { PrismaOperatorRepository } from 'src/metering/operator/infrastructure/repositories/prisma-operator.repository';
 import { execSync } from 'node:child_process';
 import * as path from 'node:path';
 
