@@ -107,13 +107,13 @@ export class OperatorController {
     const operarioId = Number(user.sub);
     const raw =
       await this.getOperatorReadingsWithAnomaliesUseCase.execute(operarioId);
-    return raw.map((r: any) => ({
+    return raw.map((r) => ({
       lecturaId: r.lecturaId?.toString() ?? null,
       medidorId: r.medidor?.medidorId?.toString() ?? null,
       medidorSerie: r.medidor?.serie ?? '',
       fecha: r.fecha,
       estado: r.estado,
-      anomalias: (r.lecturaAnomalias ?? []).map((a: any) => ({
+      anomalias: (r.lecturaAnomalias ?? []).map((a) => ({
         tipo: a.tipo,
         observacion: a.observacion,
         estado: a.estado,

@@ -2,6 +2,7 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   NotFoundException,
 } from '@nestjs/common';
@@ -17,6 +18,7 @@ describe('UpdateTaskStateUseCase', () => {
     findActiveRoutes: jest.fn(),
     findTasksByOperator: jest.fn(),
     updateTaskState: jest.fn(),
+    completeInstallationTask: jest.fn(),
     findOperatorsByGeography: jest.fn(),
     getMaxOrdenInZona: jest.fn(),
     findMeterContractLocation: jest.fn(),
@@ -34,7 +36,28 @@ describe('UpdateTaskStateUseCase', () => {
   function makeTask(overrides: Record<string, any> = {}) {
     return {
       rutaId: BigInt(1),
-      nombre: 'Instalacion',
+      nombre: 'Lectura zona norte',
+      tipoRuta: 'TOMA_LECTURA',
+      estado: 'PENDIENTE',
+      orden: 1,
+      comunidadId: 5,
+      sectorId: 3,
+      operarioId: mockOperarioId,
+      medidorId: null,
+      observacion: null,
+      fechaLimite: null,
+      fechaPlanificada: null,
+      fechaInicio: null,
+      fechaFin: null,
+      periodoId: 10,
+      ...overrides,
+    };
+  }
+
+  function makeInstallTask(overrides: Record<string, any> = {}) {
+    return {
+      rutaId: BigInt(1),
+      nombre: 'Instalacion MED-001',
       tipoRuta: 'INSTALACION',
       estado: 'PENDIENTE',
       orden: 1,
@@ -119,6 +142,7 @@ describe('UpdateTaskStateUseCase', () => {
           estado: 'EN_PROGRESO',
           fechaInicio: expect.any(Date),
         }),
+        'PENDIENTE',
       );
     });
 
@@ -260,28 +284,32 @@ describe('UpdateTaskStateUseCase', () => {
   });
 
   describe('COMPLETADA de INSTALACION actualiza medidor', () => {
-    it('should update meter to INSTALADO when completing INSTALACION task', async () => {
+    it('should update meter to INSTALADO atomically when completing INSTALACION task', async () => {
       mockOperatorRepository.findActivePeriod.mockResolvedValue(
         mockActivePeriod,
       );
       mockOperatorRepository.findTasksByOperator.mockResolvedValue([
-        makeTask(),
+        makeInstallTask(),
       ]);
-      mockOperatorRepository.updateTaskState.mockResolvedValue(
-        makeTask({ estado: 'COMPLETADA', fechaFin: new Date() }),
+      mockOperatorRepository.completeInstallationTask.mockResolvedValue(
+        makeInstallTask({ estado: 'COMPLETADA', fechaFin: new Date() }),
       );
-      mockMeterRepository.update.mockResolvedValue({});
 
       await useCase.execute(BigInt(1), mockOperarioId, {
         estado: 'COMPLETADA',
       });
 
-      expect(mockMeterRepository.update).toHaveBeenCalledWith(
-        { medidorId: BigInt(100) },
-        expect.objectContaining({
+      expect(
+        mockOperatorRepository.completeInstallationTask,
+      ).toHaveBeenCalledWith(
+        BigInt(1),
+        expect.objectContaining({ estado: 'COMPLETADA' }),
+        'PENDIENTE',
+        {
+          medidorId: BigInt(100),
           estado: 'INSTALADO',
           fechaInstalacion: expect.any(Date),
-        }),
+        },
       );
     });
 
@@ -304,6 +332,9 @@ describe('UpdateTaskStateUseCase', () => {
         estado: 'COMPLETADA',
       });
 
+      expect(
+        mockOperatorRepository.completeInstallationTask,
+      ).not.toHaveBeenCalled();
       expect(mockMeterRepository.update).not.toHaveBeenCalled();
     });
 
@@ -312,10 +343,10 @@ describe('UpdateTaskStateUseCase', () => {
         mockActivePeriod,
       );
       mockOperatorRepository.findTasksByOperator.mockResolvedValue([
-        makeTask({ medidorId: null }),
+        makeInstallTask({ medidorId: null }),
       ]);
       mockOperatorRepository.updateTaskState.mockResolvedValue(
-        makeTask({
+        makeInstallTask({
           estado: 'COMPLETADA',
           medidorId: null,
           fechaFin: new Date(),
@@ -326,7 +357,48 @@ describe('UpdateTaskStateUseCase', () => {
         estado: 'COMPLETADA',
       });
 
+      expect(
+        mockOperatorRepository.completeInstallationTask,
+      ).not.toHaveBeenCalled();
       expect(mockMeterRepository.update).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('concurrency', () => {
+    it('should detect concurrent modifications and throw ConflictException', async () => {
+      mockOperatorRepository.findActivePeriod.mockResolvedValue(
+        mockActivePeriod,
+      );
+      mockOperatorRepository.findTasksByOperator.mockResolvedValue([
+        makeTask({ estado: 'PENDIENTE' }),
+      ]);
+      mockOperatorRepository.updateTaskState.mockRejectedValueOnce(
+        new Error('P2025'),
+      );
+
+      await expect(
+        useCase.execute(BigInt(1), mockOperarioId, {
+          estado: 'EN_PROGRESO',
+        }),
+      ).rejects.toThrow(ConflictException);
+    });
+
+    it('should handle concurrent INSTALACION completion safely', async () => {
+      mockOperatorRepository.findActivePeriod.mockResolvedValue(
+        mockActivePeriod,
+      );
+      mockOperatorRepository.findTasksByOperator.mockResolvedValue([
+        makeInstallTask(),
+      ]);
+      mockOperatorRepository.completeInstallationTask.mockRejectedValueOnce(
+        new Error('P2025'),
+      );
+
+      await expect(
+        useCase.execute(BigInt(1), mockOperarioId, {
+          estado: 'COMPLETADA',
+        }),
+      ).rejects.toThrow(ConflictException);
     });
   });
 

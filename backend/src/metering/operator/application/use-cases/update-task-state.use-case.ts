@@ -1,11 +1,13 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { EstadoRuta, EstadoMedidor } from 'src/shared/enums';
 import { OperatorRepository } from '../../domain/repositories/operator.repository';
+import type { OperatorTask } from '../../domain/repositories/repository-types';
 import { MeterRepository } from '../../../meters/domain/repositories/meter.repository';
 import type { TaskResponseDto } from '../../interfaces/dto/task-response.dto';
 import type { UpdateTaskDto } from '../../interfaces/dto/update-task.dto';
@@ -74,7 +76,7 @@ export class UpdateTaskStateUseCase {
     }
 
     // 3. Validate state transition
-    const currentEstado = task.estado as string;
+    const currentEstado = task.estado;
 
     if (TERMINAL_STATES.has(currentEstado)) {
       throw new BadRequestException(
@@ -114,28 +116,47 @@ export class UpdateTaskStateUseCase {
       updateData.observacion = observacion;
     }
 
-    // 6. Update the task state
-    const updated = await this.operatorRepository.updateTaskState(
-      rutaId,
-      updateData,
-    );
+    // 6. Apply state transition with optimistic concurrency
+    let updated: OperatorTask;
 
-    // 7. If task is INSTALACION and completed, update meter to INSTALADO
     if (
       nuevoEstado === EstadoRuta.COMPLETADA &&
       task.tipoRuta === 'INSTALACION' &&
       task.medidorId != null
     ) {
-      await this.meterRepository.update(
-        { medidorId: task.medidorId },
-        {
-          estado: EstadoMedidor.INSTALADO,
-          fechaInstalacion: new Date(),
-        },
-      );
+      // Atomic: task + meter update in a single transaction
+      try {
+        updated = await this.operatorRepository.completeInstallationTask(
+          rutaId,
+          updateData,
+          currentEstado,
+          {
+            medidorId: task.medidorId,
+            estado: EstadoMedidor.INSTALADO,
+            fechaInstalacion: new Date(),
+          },
+        );
+      } catch {
+        throw new ConflictException(
+          'Conflicto de concurrencia: la tarea fue modificada por otro request',
+        );
+      }
+    } else {
+      // Regular transition with optimistic locking
+      try {
+        updated = await this.operatorRepository.updateTaskState(
+          rutaId,
+          updateData,
+          currentEstado,
+        );
+      } catch {
+        throw new ConflictException(
+          'Conflicto de concurrencia: la tarea fue modificada por otro request',
+        );
+      }
     }
 
-    // 8. Return response DTO
+    // 7. Return response DTO
     return {
       rutaId: (updated.rutaId ?? rutaId).toString(),
       tipoRuta: task.tipoRuta,

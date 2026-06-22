@@ -1,5 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { OperatorRepository } from '../../domain/repositories/operator.repository';
+import type {
+  MeterBasicInfo,
+  MeterWithContractDetail,
+} from '../../domain/repositories/repository-types';
 import type { TaskResponseDto } from '../../interfaces/dto/task-response.dto';
 
 @Injectable()
@@ -29,10 +33,10 @@ export class GetOperatorTasksUseCase {
     }
 
     const medidorIds = tasks
-      .filter((t: any) => t.medidorId != null)
-      .map((t: any) => t.medidorId);
+      .filter((t) => t.medidorId != null)
+      .map((t) => t.medidorId!);
 
-    let medidores: any[] = [];
+    let medidores: MeterBasicInfo[] = [];
     if (medidorIds.length > 0) {
       medidores = await this.operatorRepository.findMedidoresById(medidorIds);
     }
@@ -41,12 +45,10 @@ export class GetOperatorTasksUseCase {
       medidores.map((m) => [m.medidorId.toString(), m]),
     );
 
-    const readingTasks = tasks.filter(
-      (t: any) => t.tipoRuta === 'TOMA_LECTURA',
-    );
-    let metersForRoutes: any[] = [];
+    const readingTasks = tasks.filter((t) => t.tipoRuta === 'TOMA_LECTURA');
+    let metersForRoutes: MeterWithContractDetail[] = [];
     if (readingTasks.length > 0) {
-      const routeConditions = readingTasks.map((t: any) => ({
+      const routeConditions = readingTasks.map((t) => ({
         comunidadId: t.comunidadId,
         ...(t.sectorId !== null && t.sectorId !== undefined
           ? { sectorId: t.sectorId }
@@ -56,14 +58,14 @@ export class GetOperatorTasksUseCase {
         await this.operatorRepository.findMetersByRoutes(routeConditions);
     }
 
-    return tasks.map((task: any) => {
+    return tasks.map((task) => {
       const medidor = task.medidorId
         ? medidorMap.get(task.medidorId.toString())
         : null;
 
       let rutaPuntos: any[] | undefined = undefined;
       if (task.tipoRuta === 'TOMA_LECTURA') {
-        const matchingMeters = metersForRoutes.filter((m: any) => {
+        const matchingMeters = metersForRoutes.filter((m) => {
           const contrato = m.historial?.[0]?.contrato;
           if (!contrato) return false;
           const sameSector =
@@ -73,10 +75,10 @@ export class GetOperatorTasksUseCase {
           return contrato.comunidadId === task.comunidadId && sameSector;
         });
 
-        matchingMeters.sort((a: any, b: any) => a.serie.localeCompare(b.serie));
+        matchingMeters.sort((a, b) => a.serie.localeCompare(b.serie));
 
         rutaPuntos = matchingMeters
-          .map((m: any) => ({
+          .map((m) => ({
             latitud: m.latitud != null ? Number(m.latitud) : null,
             longitud: m.longitud != null ? Number(m.longitud) : null,
             serie: m.serie,
@@ -84,7 +86,7 @@ export class GetOperatorTasksUseCase {
               ? `${m.historial[0].contrato.cliente.nombres} ${m.historial[0].contrato.cliente.apellidos}`.trim()
               : '',
           }))
-          .filter((pt: any) => pt.latitud != null && pt.longitud != null);
+          .filter((pt) => pt.latitud != null && pt.longitud != null);
       }
 
       return {

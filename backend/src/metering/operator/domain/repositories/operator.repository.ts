@@ -1,3 +1,12 @@
+import type {
+  ReadingWithContractDetail,
+  MeterWithContractDetail,
+  OperatorTask,
+  MeterBasicInfo,
+  ReadingWithAnomalies,
+  OperatorUser,
+} from './repository-types';
+
 export interface RouteData {
   rutaId?: bigint;
   comunidadId: number;
@@ -31,10 +40,10 @@ export abstract class OperatorRepository {
   abstract findReadingsByPeriodAndRoutes(
     periodoId: number,
     routeConditions: Record<string, unknown>[],
-  ): Promise<any[]>;
+  ): Promise<ReadingWithContractDetail[]>;
   abstract findMetersByRoutes(
     routeConditions: Record<string, unknown>[],
-  ): Promise<any[]>;
+  ): Promise<MeterWithContractDetail[]>;
   abstract findReadingWithDetails(
     id: bigint,
   ): Promise<ReadingWithDetails | null>;
@@ -44,15 +53,28 @@ export abstract class OperatorRepository {
     operarioId: number,
     periodoId: number,
     tipoRuta?: string,
-  ): Promise<any[]>;
+  ): Promise<OperatorTask[]>;
   abstract updateTaskState(
     rutaId: bigint,
     data: Record<string, any>,
-  ): Promise<any>;
+    expectedEstado?: string,
+  ): Promise<OperatorTask>;
+
+  /** Atomically complete an INSTALACION task and update meter to INSTALADO. */
+  abstract completeInstallationTask(
+    rutaId: bigint,
+    taskUpdateData: Record<string, any>,
+    expectedEstado: string,
+    meterUpdateData: {
+      medidorId: bigint;
+      estado: string;
+      fechaInstalacion: Date;
+    },
+  ): Promise<OperatorTask>;
   abstract findOperatorsByGeography(
     comunidadId: number,
     sectorId: number | null,
-  ): Promise<any[]>;
+  ): Promise<OperatorUser[]>;
   abstract getMaxOrdenInZona(
     comunidadId: number,
     sectorId: number | null,
@@ -62,9 +84,9 @@ export abstract class OperatorRepository {
     comunidadId: number;
     sectorId: number | null;
   } | null>;
-  abstract findMedidoresById(medidorIds: bigint[]): Promise<any[]>;
+  abstract findMedidoresById(medidorIds: bigint[]): Promise<MeterBasicInfo[]>;
   abstract findReadingsWithPendingAnomalies(
     operarioId: number,
     periodoId: number,
-  ): Promise<any[]>;
+  ): Promise<ReadingWithAnomalies[]>;
 }

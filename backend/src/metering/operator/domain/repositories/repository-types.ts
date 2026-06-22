@@ -1,0 +1,131 @@
+// ── Repository return type interfaces ─────────────────────────────────
+// These mirror the actual Prisma query shapes returned by each repository method.
+
+export interface ReadingWithContractDetail {
+  lecturaId: bigint;
+  fecha: Date;
+  lecturaAnterior: number;
+  lecturaActual: number;
+  consumoCalculado: number;
+  descripcionAnomalia: string | null;
+  fechaValidacion: Date | null;
+  fotoUrl: string | null;
+  lecturaInicial: boolean;
+  periodoId: number;
+  estado: string;
+  medidor: {
+    medidorId: bigint;
+    serie: string;
+    marca: string;
+    modelo: string;
+    historial: Array<{
+      contrato: {
+        contratoId: bigint;
+        numeroGuia: string;
+        direccionSuministro: string;
+        estado: string;
+        comunidadId: number;
+        sectorId: number | null;
+        cliente: { nombres: string; apellidos: string };
+      } | null;
+    }>;
+  } | null;
+  periodoRel: {
+    periodoId: number;
+    nombre: string;
+    fechaInicio: Date;
+    fechaFin: Date;
+  } | null;
+}
+
+export interface MeterWithContractDetail {
+  medidorId: bigint;
+  marca: string;
+  modelo: string;
+  serie: string;
+  estado: string;
+  fechaInstalacion: Date | null;
+  fechaBaja: Date | null;
+  motivo: string | null;
+  latitud: number | null;
+  longitud: number | null;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt: Date | null;
+  historial: Array<{
+    contrato: {
+      contratoId: bigint;
+      comunidadId: number;
+      sectorId: number | null;
+      cliente: { nombres: string; apellidos: string };
+    } | null;
+  }>;
+}
+
+export interface OperatorTask {
+  rutaId: bigint;
+  nombre: string;
+  descripcion: string | null;
+  operarioId: number;
+  tipoRuta: string;
+  comunidadId: number;
+  sectorId: number | null;
+  periodoId: number | null;
+  estado: string;
+  fechaPlanificada: Date | null;
+  fechaInicio: Date | null;
+  fechaFin: Date | null;
+  medidorId: bigint | null;
+  orden: number;
+  observacion: string | null;
+  fechaLimite: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt: Date | null;
+}
+
+export interface MeterBasicInfo {
+  medidorId: bigint;
+  serie: string;
+  marca: string;
+  modelo: string;
+  latitud: number | null;
+  longitud: number | null;
+}
+
+export interface ReadingWithAnomalies {
+  lecturaId: bigint;
+  fecha?: Date;
+  lecturaAnterior?: number;
+  lecturaActual?: number;
+  consumoCalculado?: number;
+  estado: string;
+  periodoId?: number;
+  descripcionAnomalia?: string | null;
+  medidor: {
+    medidorId: bigint;
+    serie: string;
+    marca: string;
+    modelo: string;
+  } | null;
+  lecturaAnomalias: Array<{
+    anomaliaId: bigint;
+    tipo: string;
+    estado: string;
+    observacion: string | null;
+    createdAt: Date;
+  }>;
+}
+
+export interface OperatorUser {
+  usuarioId: number;
+  email: string;
+  clave: string;
+  rolId: number | null;
+  nombres: string | null;
+  apellidos: string | null;
+  telefono: string | null;
+  createdAt: Date | null;
+  updatedAt: Date | null;
+  deletedAt: Date | null;
+}
