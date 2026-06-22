@@ -25,6 +25,7 @@ export async function seedRoutes(prisma: PrismaClient) {
   // Group active contracts by comunidad+sector to derive TOMA_LECTURA zones
   const contratos = await prisma.contratos.findMany({
     where: { estado: 'ACTIVO', deletedAt: null },
+    orderBy: [{ comunidadId: 'asc' }, { sectorId: 'asc' }, { contratoId: 'asc' }],
     select: {
       comunidadId: true,
       sectorId: true,
@@ -116,11 +117,12 @@ export async function seedRoutes(prisma: PrismaClient) {
         select: { lecturaActual: true },
       });
 
+      const seedDate = new Date(Date.UTC(2026, 0, 1, 12, 0, 0));
       await prisma.lecturas.create({
         data: {
           medidorId,
           periodoId: periodo.periodoId,
-          fecha: new Date(),
+          fecha: seedDate,
           lecturaAnterior: prevLectura?.lecturaActual ?? 0,
           lecturaActual: 0,
           consumoCalculado: 0,

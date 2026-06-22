@@ -356,7 +356,7 @@ describe('CreateRouteUseCase', () => {
     });
   });
 
-  it('should skip overlap check for INSTALACION tipoRuta', async () => {
+  it('should allow creating INSTALACION routes without overlap validation', async () => {
     mockRouteRepository.findUsuario.mockResolvedValue({
       usuarioId: 1,
       rol: { nombre: 'operadores' },
@@ -397,7 +397,7 @@ describe('CreateRouteUseCase', () => {
     );
   });
 
-  it('should skip overlap check for INSPECCION tipoRuta', async () => {
+  it('should allow creating INSPECCION routes without overlap validation', async () => {
     mockRouteRepository.findUsuario.mockResolvedValue({
       usuarioId: 1,
       rol: { nombre: 'operadores' },
@@ -407,6 +407,10 @@ describe('CreateRouteUseCase', () => {
       periodoId: 1,
       estado: 'ABIERTO',
     });
+    mockRouteRepository.findMedidor.mockResolvedValue({
+      medidorId: 50,
+      serie: 'MED-050',
+    });
 
     const mockCreatedRoute = {
       rutaId: 501n,
@@ -415,6 +419,7 @@ describe('CreateRouteUseCase', () => {
       comunidadId: 1,
       tipoRuta: 'INSPECCION',
       periodoId: 1,
+      medidorId: 50,
     };
     mockRouteRepository.create.mockResolvedValue(mockCreatedRoute);
 
@@ -424,6 +429,7 @@ describe('CreateRouteUseCase', () => {
       tipoRuta: 'INSPECCION',
       nombre: 'Inspección Comunidad 1',
       periodoId: 1,
+      medidorId: 50,
     } as any);
 
     expect(mockRouteRepository.findOverlappingRoutes).not.toHaveBeenCalled();

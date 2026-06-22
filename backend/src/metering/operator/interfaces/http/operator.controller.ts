@@ -7,6 +7,7 @@ import {
   Query,
   UseGuards,
   Post,
+  ParseEnumPipe,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -169,8 +170,7 @@ export class OperatorController {
    */
   @ApiOperation({
     summary: 'Instalar medidor',
-    description:
-      'Cambia el estado del medidor de PENDIENTE a INSTALADO y crea una tarea de instalación para el operario.',
+    description: 'Cambia el estado del medidor de PENDIENTE a INSTALADO.',
   })
   @ApiParam({
     name: 'id',
@@ -202,8 +202,7 @@ export class OperatorController {
    */
   @ApiOperation({
     summary: 'Reportar daño',
-    description:
-      'Marca un medidor como dañado y crea una tarea de inspección para el operario.',
+    description: 'Marca un medidor como dañado (INSTALADO → DAÑADO).',
   })
   @ApiParam({
     name: 'id',
@@ -236,8 +235,7 @@ export class OperatorController {
    */
   @ApiOperation({
     summary: 'Dar de baja',
-    description:
-      'Desactiva un medidor del sistema y crea una tarea de inspección para el operario.',
+    description: 'Desactiva un medidor del sistema (DAÑADO → BAJA).',
   })
   @ApiParam({
     name: 'id',
@@ -316,7 +314,8 @@ export class OperatorController {
   @Get('tasks')
   async getOperatorTasks(
     @CurrentUser() user: JwtPayload,
-    @Query('tipoRuta') tipoRuta?: string,
+    @Query('tipoRuta', new ParseEnumPipe(TipoRuta, { optional: true }))
+    tipoRuta?: TipoRuta,
   ): Promise<TaskResponseDto[]> {
     const operarioId = Number(user.sub);
     return this.getOperatorTasksUseCase.execute(operarioId, tipoRuta);

@@ -13,7 +13,15 @@ export async function seedMedidores(prisma: PrismaClient) {
   for (const m of medidores) {
     await prisma.medidores.upsert({
       where: { medidorId: m.medidorId },
-      update: {},
+      update: {
+        latitud: m.latitud,
+        longitud: m.longitud,
+        marca: m.marca,
+        modelo: m.modelo,
+        serie: m.serie,
+        estado: m.estado,
+        updatedAt: now,
+      },
       create: m,
     });
   }

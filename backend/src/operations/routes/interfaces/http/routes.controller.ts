@@ -112,7 +112,12 @@ export class RoutesController {
     summary: 'Obtener ruta por ID',
     description: 'Retorna una ruta específica',
   })
-  @ApiParam({ name: 'id', description: 'ID de la ruta', type: Number })
+  @ApiParam({
+    name: 'id',
+    description: 'ID de la ruta (bigint serializado como string)',
+    type: String,
+    example: '9223372036854775807',
+  })
   @ApiResponse({
     status: 200,
     description: 'Ruta encontrada',
@@ -134,7 +139,12 @@ export class RoutesController {
     summary: 'Actualizar ruta',
     description: 'Actualiza los datos de una ruta existente',
   })
-  @ApiParam({ name: 'id', description: 'ID de la ruta', type: Number })
+  @ApiParam({
+    name: 'id',
+    description: 'ID de la ruta (bigint serializado como string)',
+    type: String,
+    example: '9223372036854775807',
+  })
   @ApiResponse({
     status: 200,
     description: 'Ruta actualizada',
@@ -156,7 +166,12 @@ export class RoutesController {
     summary: 'Reasignar ruta',
     description: 'Reasigna una ruta a un operario diferente',
   })
-  @ApiParam({ name: 'id', description: 'ID de la ruta', type: Number })
+  @ApiParam({
+    name: 'id',
+    description: 'ID de la ruta (bigint serializado como string)',
+    type: String,
+    example: '9223372036854775807',
+  })
   @ApiResponse({
     status: 200,
     description: 'Ruta reasignada',
@@ -183,7 +198,12 @@ export class RoutesController {
     summary: 'Eliminar ruta',
     description: 'Elimina una ruta y desasigna sus lecturas',
   })
-  @ApiParam({ name: 'id', description: 'ID de la ruta', type: Number })
+  @ApiParam({
+    name: 'id',
+    description: 'ID de la ruta (bigint serializado como string)',
+    type: String,
+    example: '9223372036854775807',
+  })
   @ApiResponse({ status: 200, description: 'Ruta eliminada' })
   @RequiredPermission('routes', 'delete')
   @Delete(':id')

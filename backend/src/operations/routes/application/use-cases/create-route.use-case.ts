@@ -68,6 +68,15 @@ export class CreateRouteUseCase {
       throw new BadRequestException('El periodo no está abierto');
     }
 
+    // Work orders (INSTALACION / INSPECCION) require a medidor
+    const isWorkOrder = WORK_ORDER_TYPES.has(createDto.tipoRuta);
+
+    if (isWorkOrder && createDto.medidorId == null) {
+      throw new BadRequestException(
+        'medidorId es obligatorio para rutas de INSTALACION/INSPECCION',
+      );
+    }
+
     // Validate medidor when provided
     if (createDto.medidorId != null) {
       const medidor = await this.routeRepository.findMedidor({
@@ -84,7 +93,6 @@ export class CreateRouteUseCase {
     // Overlap check applies only to periodic community routes
     // (TOMA_LECTURA / RECONEXION). Work orders (INSTALACION / INSPECCION)
     // target a specific meter and may coexist with other routes.
-    const isWorkOrder = WORK_ORDER_TYPES.has(createDto.tipoRuta);
 
     if (!isWorkOrder) {
       const overlapping = await this.routeRepository.findOverlappingRoutes(

@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -19,15 +20,20 @@ export class ReassignRouteUseCase {
       throw new NotFoundException(`Ruta con ID ${rutaId} no encontrada`);
     }
 
-    // 2. Verify target operator exists
-    const targetOperator = await this.routeRepository.findUsuario({
-      usuarioId: nuevoOperarioId,
-    });
+    // 2. Verify target operator exists and has operator role
+    const targetOperator = await this.routeRepository.findUsuario(
+      { usuarioId: nuevoOperarioId },
+      { include: { rol: true } },
+    );
 
     if (!targetOperator) {
       throw new NotFoundException(
         `Operador con ID ${nuevoOperarioId} no encontrado`,
       );
+    }
+
+    if (targetOperator.rol?.nombre !== 'operadores') {
+      throw new BadRequestException('Solo se pueden asignar operadores');
     }
 
     // 3. Prevent no-op reassignment

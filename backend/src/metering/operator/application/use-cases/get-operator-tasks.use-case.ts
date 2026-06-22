@@ -66,10 +66,11 @@ export class GetOperatorTasksUseCase {
         const matchingMeters = metersForRoutes.filter((m: any) => {
           const contrato = m.historial?.[0]?.contrato;
           if (!contrato) return false;
-          return (
-            contrato.comunidadId === task.comunidadId &&
-            contrato.sectorId === task.sectorId
-          );
+          const sameSector =
+            task.sectorId === null || task.sectorId === undefined
+              ? true
+              : contrato.sectorId === task.sectorId;
+          return contrato.comunidadId === task.comunidadId && sameSector;
         });
 
         matchingMeters.sort((a: any, b: any) => a.serie.localeCompare(b.serie));

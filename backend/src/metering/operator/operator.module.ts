@@ -32,6 +32,11 @@ import { ReadingModule } from '../readings/reading.module';
       useClass: PrismaOperatorRepository,
     },
   ],
-  exports: [OperatorRepository],
+  exports: [
+    OperatorRepository,
+    InstallMeterUseCase,
+    ReportDefectUseCase,
+    DecommissionMeterUseCase,
+  ],
 })
 export class OperatorModule {}

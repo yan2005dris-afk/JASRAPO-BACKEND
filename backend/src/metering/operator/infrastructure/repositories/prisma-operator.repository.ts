@@ -301,10 +301,12 @@ export class PrismaOperatorRepository extends OperatorRepository {
     if (!result) return null;
 
     const contrato = result.historial?.[0]?.contrato;
+    if (!contrato) return null;
+
     return {
       serie: result.serie,
-      comunidadId: contrato?.comunidadId ?? 0,
-      sectorId: contrato?.sectorId ?? null,
+      comunidadId: contrato.comunidadId,
+      sectorId: contrato.sectorId,
     };
   }
 

@@ -62,6 +62,20 @@ describe('GetOperatorReadingsWithAnomaliesUseCase', () => {
     ).not.toHaveBeenCalled();
   });
 
+  it('should return empty array when no readings with anomalies exist', async () => {
+    mockOperatorRepository.findActivePeriod.mockResolvedValue(mockActivePeriod);
+    mockOperatorRepository.findReadingsWithPendingAnomalies.mockResolvedValue(
+      [],
+    );
+
+    const result = await useCase.execute(42);
+
+    expect(
+      mockOperatorRepository.findReadingsWithPendingAnomalies,
+    ).toHaveBeenCalledWith(42, 5);
+    expect(result).toEqual([]);
+  });
+
   it('should return readings with pending anomalies for the operator in the active period', async () => {
     mockOperatorRepository.findActivePeriod.mockResolvedValue(mockActivePeriod);
     mockOperatorRepository.findReadingsWithPendingAnomalies.mockResolvedValue(

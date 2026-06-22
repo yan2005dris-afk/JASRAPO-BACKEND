@@ -88,10 +88,17 @@ export class TaskResponseDto {
   @ApiPropertyOptional({ description: 'Fecha de fin' })
   fechaFin?: string;
 
-  @ApiPropertyOptional({ description: 'Información del medidor asociado' })
+  @ApiPropertyOptional({
+    description: 'Información del medidor asociado',
+    type: () => MedidorInfo,
+    nullable: true,
+  })
   medidor?: MedidorInfo | null;
 
-  @ApiPropertyOptional({ description: 'Información del operario asignado' })
+  @ApiPropertyOptional({
+    description: 'Información del operario asignado',
+    type: () => OperarioInfo,
+  })
   operario?: OperarioInfo;
 
   @ApiPropertyOptional({

@@ -2,7 +2,11 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { ReassignRouteUseCase } from './reassign-route.use-case';
 import { RouteRepository } from '../../domain/repositories/route.repository';
-import { ForbiddenException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 
 describe('ReassignRouteUseCase', () => {
   let useCase: ReassignRouteUseCase;
@@ -62,9 +66,26 @@ describe('ReassignRouteUseCase', () => {
 
     await expect(useCase.execute(1n, 10)).rejects.toThrow(NotFoundException);
 
-    expect(mockRouteRepository.findUsuario).toHaveBeenCalledWith({
-      usuarioId: 10,
+    expect(mockRouteRepository.findUsuario).toHaveBeenCalledWith(
+      { usuarioId: 10 },
+      { include: { rol: true } },
+    );
+  });
+
+  it('should throw BadRequestException if target user is not an operator', async () => {
+    mockRouteRepository.findUnique.mockResolvedValue({
+      rutaId: 1n,
+      operarioId: 5,
+      nombre: 'Test Route',
+      tipoRuta: 'TOMA_LECTURA',
+      estado: 'PENDIENTE',
     });
+    mockRouteRepository.findUsuario.mockResolvedValue({
+      usuarioId: 10,
+      rol: { nombre: 'admin' },
+    });
+
+    await expect(useCase.execute(1n, 10)).rejects.toThrow(BadRequestException);
   });
 
   it('should throw ForbiddenException when reassigning to the same operator', async () => {
@@ -77,6 +98,7 @@ describe('ReassignRouteUseCase', () => {
     });
     mockRouteRepository.findUsuario.mockResolvedValue({
       usuarioId: 10,
+      rol: { nombre: 'operadores' },
     });
 
     await expect(useCase.execute(1n, 10)).rejects.toThrow(ForbiddenException);
@@ -96,7 +118,10 @@ describe('ReassignRouteUseCase', () => {
     const updatedRoute = { ...existingRoute, operarioId: 10 };
 
     mockRouteRepository.findUnique.mockResolvedValue(existingRoute);
-    mockRouteRepository.findUsuario.mockResolvedValue({ usuarioId: 10 });
+    mockRouteRepository.findUsuario.mockResolvedValue({
+      usuarioId: 10,
+      rol: { nombre: 'operadores' },
+    });
     mockRouteRepository.update.mockResolvedValue(updatedRoute);
 
     const result = await useCase.execute(1n, 10);
