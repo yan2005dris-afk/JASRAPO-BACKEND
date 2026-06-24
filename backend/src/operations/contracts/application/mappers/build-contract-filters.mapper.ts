@@ -9,7 +9,8 @@ export function buildContractFilters(dto: FilterContractsDto): ContractFilters {
   if (dto.medidorId) filters.medidorId = BigInt(dto.medidorId);
   if (dto.medidorSerie) filters.medidorSerie = dto.medidorSerie;
   if (dto.numeroGuia) filters.numeroGuia = dto.numeroGuia;
-  if (dto.categoriaTarifaId) filters.categoriaTarifaId = Number(dto.categoriaTarifaId);
+  if (dto.categoriaTarifaId)
+    filters.categoriaTarifaId = Number(dto.categoriaTarifaId);
   if (dto.ubicacion) filters.ubicacion = dto.ubicacion;
   if (dto.estado) filters.estado = dto.estado;
 

@@ -53,7 +53,11 @@ export class ContratoMedidorService {
 
   async buscarContratos(filters?: FilterContractsDto) {
     const contractFilters = filters ? buildContractFilters(filters) : undefined;
-    return this.findAllUseCase.execute(filters?.page, filters?.limit, contractFilters);
+    return this.findAllUseCase.execute(
+      filters?.page,
+      filters?.limit,
+      contractFilters,
+    );
   }
 
   async buscarContrato(id: bigint): Promise<any> {

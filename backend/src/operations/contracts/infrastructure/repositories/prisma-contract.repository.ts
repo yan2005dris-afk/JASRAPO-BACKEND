@@ -13,7 +13,10 @@ import { CreateContractWithMeterCommand } from '../../domain/types/create-contra
 import { ContractMapper } from '../mappers/contract.mapper';
 import type { ContractFilters } from '../../domain/types/contract-filters';
 import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
-import { paginate, PaginateOptions } from 'src/infrastructure/common/utils/pagination.util';
+import {
+  paginate,
+  PaginateOptions,
+} from 'src/infrastructure/common/utils/pagination.util';
 
 @Injectable()
 export class PrismaContractRepository implements ContractRepository {
@@ -237,7 +240,9 @@ export class PrismaContractRepository implements ContractRepository {
 
   // ── Private helpers ────────────────────────────────────────────────────
 
-  private buildContractWhere(filters?: ContractFilters): Prisma.ContratosWhereInput {
+  private buildContractWhere(
+    filters?: ContractFilters,
+  ): Prisma.ContratosWhereInput {
     const conditions: Prisma.ContratosWhereInput[] = [{ deletedAt: null }];
 
     if (!filters) return conditions[0];
@@ -246,12 +251,19 @@ export class PrismaContractRepository implements ContractRepository {
       conditions.push({
         OR: [
           { numeroGuia: { contains: filters.search, mode: 'insensitive' } },
-          { direccionSuministro: { contains: filters.search, mode: 'insensitive' } },
+          {
+            direccionSuministro: {
+              contains: filters.search,
+              mode: 'insensitive',
+            },
+          },
           {
             historialMedidores: {
               some: {
                 fechaHasta: null,
-                medidor: { serie: { contains: filters.search, mode: 'insensitive' } },
+                medidor: {
+                  serie: { contains: filters.search, mode: 'insensitive' },
+                },
               },
             },
           },
@@ -280,7 +292,14 @@ export class PrismaContractRepository implements ContractRepository {
             fechaHasta: null,
             ...(filters.medidorId ? { medidorId: filters.medidorId } : {}),
             ...(filters.medidorSerie
-              ? { medidor: { serie: { contains: filters.medidorSerie, mode: 'insensitive' } } }
+              ? {
+                  medidor: {
+                    serie: {
+                      contains: filters.medidorSerie,
+                      mode: 'insensitive',
+                    },
+                  },
+                }
               : {}),
           },
         },
@@ -289,7 +308,10 @@ export class PrismaContractRepository implements ContractRepository {
 
     if (filters.ubicacion) {
       conditions.push({
-        direccionSuministro: { contains: filters.ubicacion, mode: 'insensitive' },
+        direccionSuministro: {
+          contains: filters.ubicacion,
+          mode: 'insensitive',
+        },
       });
     }
 

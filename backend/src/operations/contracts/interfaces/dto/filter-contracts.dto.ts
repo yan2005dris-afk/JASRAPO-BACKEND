@@ -5,7 +5,10 @@ import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
 import { EstadoContrato } from 'src/shared/enums';
 
 export class FilterContractsDto extends PaginationDto {
-  @ApiPropertyOptional({ description: 'Búsqueda global: número de guía, serie de medidor o dirección de suministro' })
+  @ApiPropertyOptional({
+    description:
+      'Búsqueda global: número de guía, serie de medidor o dirección de suministro',
+  })
   @IsOptional()
   @IsString()
   @Transform(({ value }) => (value === '' ? undefined : value))
@@ -17,7 +20,9 @@ export class FilterContractsDto extends PaginationDto {
   @Transform(({ value }) => (value === '' ? undefined : value))
   contratoId?: string;
 
-  @ApiPropertyOptional({ description: 'Filtrar por número de guía (búsqueda parcial)' })
+  @ApiPropertyOptional({
+    description: 'Filtrar por número de guía (búsqueda parcial)',
+  })
   @IsOptional()
   @IsString()
   @Transform(({ value }) => (value === '' ? undefined : value))
@@ -29,25 +34,34 @@ export class FilterContractsDto extends PaginationDto {
   @Transform(({ value }) => (value === '' ? undefined : value))
   categoriaTarifaId?: string;
 
-  @ApiPropertyOptional({ description: 'Filtrar por ID de medidor (historial activo)' })
+  @ApiPropertyOptional({
+    description: 'Filtrar por ID de medidor (historial activo)',
+  })
   @IsOptional()
   @IsString()
   @Transform(({ value }) => (value === '' ? undefined : value))
   medidorId?: string;
 
-  @ApiPropertyOptional({ description: 'Filtrar por serie del medidor (búsqueda parcial)' })
+  @ApiPropertyOptional({
+    description: 'Filtrar por serie del medidor (búsqueda parcial)',
+  })
   @IsOptional()
   @IsString()
   @Transform(({ value }) => (value === '' ? undefined : value))
   medidorSerie?: string;
 
-  @ApiPropertyOptional({ description: 'Filtrar por dirección de suministro (búsqueda parcial)' })
+  @ApiPropertyOptional({
+    description: 'Filtrar por dirección de suministro (búsqueda parcial)',
+  })
   @IsOptional()
   @IsString()
   @Transform(({ value }) => (value === '' ? undefined : value))
   ubicacion?: string;
 
-  @ApiPropertyOptional({ description: 'Filtrar por estado del contrato', enum: EstadoContrato })
+  @ApiPropertyOptional({
+    description: 'Filtrar por estado del contrato',
+    enum: EstadoContrato,
+  })
   @IsOptional()
   @IsEnum(EstadoContrato)
   estado?: EstadoContrato;

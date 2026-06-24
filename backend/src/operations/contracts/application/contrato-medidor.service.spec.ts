@@ -93,7 +93,9 @@ describe('ContratoMedidorService', () => {
       const result = await service.buscarContratos(filters);
 
       expect(result).toEqual(paginatedResult);
-      expect(mockFindAllUseCase.execute).toHaveBeenCalledWith(1, 10, { contratoId: BigInt(1) });
+      expect(mockFindAllUseCase.execute).toHaveBeenCalledWith(1, 10, {
+        contratoId: BigInt(1),
+      });
     });
   });
 
