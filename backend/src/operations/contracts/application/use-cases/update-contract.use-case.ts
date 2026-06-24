@@ -52,6 +52,7 @@ export class UpdateContractUseCase {
     dto: ActualizarContratoMedidorDto,
   ): Record<string, any> {
     const fields: Record<string, any> = {};
+    if (dto.clienteId !== undefined) fields.clienteId = BigInt(dto.clienteId);
     if (dto.estado !== undefined) fields.estado = dto.estado;
     if (dto.direccionSuministro !== undefined)
       fields.direccionSuministro = dto.direccionSuministro;

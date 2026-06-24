@@ -45,6 +45,14 @@ export class ActualizarContratoMedidorDto {
   @IsNumberString()
   comunidadId?: string;
 
+  @ApiPropertyOptional({
+    description: 'ID del nuevo cliente',
+    example: '10',
+  })
+  @IsOptional()
+  @IsNumberString()
+  clienteId?: string;
+
   @ApiPropertyOptional({ description: 'ID del nuevo sector', example: '4' })
   @IsOptional()
   @IsNumberString()
