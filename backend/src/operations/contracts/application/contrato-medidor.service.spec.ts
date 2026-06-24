@@ -83,17 +83,17 @@ describe('ContratoMedidorService', () => {
 
   describe('buscarContratos', () => {
     it('should delegate to FindAllContractsUseCase', async () => {
-      const where = { contratoId: BigInt(1) };
+      const filters = { contratoId: '1', page: 1, limit: 10 } as any;
       const paginatedResult = {
         data: [],
         meta: { total: 0, page: 1, limit: 10 },
       };
       mockFindAllUseCase.execute.mockResolvedValue(paginatedResult);
 
-      const result = await service.buscarContratos(1, 10, where);
+      const result = await service.buscarContratos(filters);
 
       expect(result).toEqual(paginatedResult);
-      expect(mockFindAllUseCase.execute).toHaveBeenCalledWith(1, 10, where);
+      expect(mockFindAllUseCase.execute).toHaveBeenCalledWith(1, 10, { contratoId: BigInt(1) });
     });
   });
 
