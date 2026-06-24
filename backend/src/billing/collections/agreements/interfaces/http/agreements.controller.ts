@@ -253,8 +253,9 @@ export class AgreementsController {
     @Param('id', ParseBigIntPipe) id: bigint,
     @Res() res: Response,
   ) {
-    const buffer = await this.agreementsService.generatePdf(id);
-    const filename = buildPdfFileName('convenio', 'General');
+    const { buffer, clienteNombre } =
+      await this.agreementsService.generatePdf(id);
+    const filename = buildPdfFileName('convenio', clienteNombre);
     res.set({
       'Content-Type': 'application/pdf',
       'Content-Disposition': `inline; filename="${filename}"`,

@@ -33,7 +33,7 @@ export const PaymentsReportModernPdfDocumentType: PdfDocumentType = {
         emision: row['emision'],
         valor: row['valor'],
       });
-      group.subtotalNum += row['valorNum'] as number;
+      group.subtotalNum += Number(row['valorNum'] ?? 0);
     }
 
     const grupos = Array.from(facturaMap.values()).map((g) => ({

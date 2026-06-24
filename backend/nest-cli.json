@@ -20,6 +20,7 @@
     "assets": [
       "metadata.json",
       { "include": "infrastructure/pdf/templates/**/*.hbs", "outDir": "dist/src" },
+      { "include": "infrastructure/pdf/assets/**", "outDir": "dist/src" },
       { "include": "infrastructure/mail/infrastructure/templates/**/*.hbs", "outDir": "dist/src" }
     ],
     "watchAssets": true

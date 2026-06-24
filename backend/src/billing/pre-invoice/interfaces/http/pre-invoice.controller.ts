@@ -130,7 +130,7 @@ export class PreInvoiceController {
     @Res() res: Response,
   ) {
     const buffer = await this.generatePreInvoicePdf.execute(id);
-    const filename = buildPdfFileName('prefactura', 'General');
+    const filename = buildPdfFileName('prefactura', id.toString());
     res.set({
       'Content-Type': 'application/pdf',
       'Content-Disposition': `inline; filename="${filename}"`,

@@ -161,8 +161,7 @@ export class ReportsController {
       `Generating connection-history PDF — filters: ${JSON.stringify(filters)}`,
     );
     const data = await this.connectionHistorySpec.fetchData(filters);
-    const clienteNombre = (data.reporte as Record<string, unknown>)
-      ?.clienteNombre as string | undefined;
+    const clienteNombre = this.getClienteNombre(data.reporte);
     await this.sendPdf(
       res,
       'connection-history',
@@ -191,8 +190,7 @@ export class ReportsController {
     );
     // Reutilizamos el mismo spec de datos
     const data = await this.connectionHistorySpec.fetchData(filters);
-    const clienteNombre = (data.reporte as Record<string, unknown>)
-      ?.clienteNombre as string | undefined;
+    const clienteNombre = this.getClienteNombre(data.reporte);
     await this.sendPdf(
       res,
       'connection-history-legacy',
@@ -221,8 +219,7 @@ export class ReportsController {
     );
     // Reutilizamos el mismo spec de datos
     const data = await this.connectionHistorySpec.fetchData(filters);
-    const clienteNombre = (data.reporte as Record<string, unknown>)
-      ?.clienteNombre as string | undefined;
+    const clienteNombre = this.getClienteNombre(data.reporte);
     await this.sendPdf(
       res,
       'connection-history-modern',
@@ -250,8 +247,7 @@ export class ReportsController {
       `Generating account-statement PDF — filters: ${JSON.stringify(filters)}`,
     );
     const data = await this.accountStatementSpec.fetchData(filters);
-    const clienteNombre = (data.reporte as Record<string, unknown>)
-      ?.clienteNombre as string | undefined;
+    const clienteNombre = this.getClienteNombre(data.reporte);
     await this.sendPdf(
       res,
       'account-statement',
@@ -338,5 +334,9 @@ export class ReportsController {
       'Content-Length': buffer.length,
     });
     res.end(buffer);
+  }
+
+  private getClienteNombre(reporte: unknown): string | undefined {
+    return (reporte as Record<string, unknown>)?.clienteNombre as string | undefined;
   }
 }
