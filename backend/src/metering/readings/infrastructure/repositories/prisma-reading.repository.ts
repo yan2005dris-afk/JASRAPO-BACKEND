@@ -33,6 +33,7 @@ export class PrismaReadingRepository implements ReadingRepository {
     const whereClause: Prisma.LecturasWhereInput = {
       deletedAt: null,
       ...(params.where?.medidorId && { medidorId: params.where.medidorId }),
+      ...(params.where?.periodoId && { periodoId: params.where.periodoId }),
       ...(params.where?.contratoId && {
         medidor: {
           historial: {
@@ -59,6 +60,7 @@ export class PrismaReadingRepository implements ReadingRepository {
     const whereClause: Prisma.LecturasWhereInput = {
       deletedAt: null,
       ...(params.where?.medidorId && { medidorId: params.where.medidorId }),
+      ...(params.where?.periodoId && { periodoId: params.where.periodoId }),
       ...(params.where?.contratoId && {
         medidor: {
           historial: {
@@ -131,5 +133,59 @@ export class PrismaReadingRepository implements ReadingRepository {
       select: safeReadingsSelect,
     });
     return ReadingMapper.toDomain(record)!;
+  }
+
+  async updateWithCas(
+    where: { lecturaId: bigint; estado: string },
+    data: UpdateReadingRepositoryData,
+  ): Promise<LecturaEntity | null> {
+    const record = await this.prisma.$transaction(async (tx) => {
+      const { count } = await tx.lecturas.updateMany({
+        where: {
+          lecturaId: where.lecturaId,
+          estado: where.estado as any,
+          deletedAt: null,
+        },
+        data: {
+          ...(data.fecha !== undefined && { fecha: data.fecha }),
+          ...(data.lecturaAnterior !== undefined && {
+            lecturaAnterior: data.lecturaAnterior,
+          }),
+          ...(data.lecturaActual !== undefined && {
+            lecturaActual: data.lecturaActual,
+          }),
+          ...(data.consumoCalculado !== undefined && {
+            consumoCalculado: data.consumoCalculado,
+          }),
+          ...(data.medidorId !== undefined && { medidorId: data.medidorId }),
+          ...(data.descripcionAnomalia !== undefined && {
+            descripcionAnomalia: data.descripcionAnomalia,
+          }),
+          ...(data.fechaValidacion !== undefined && {
+            fechaValidacion: data.fechaValidacion,
+          }),
+          ...(data.fotoUrl !== undefined && {
+            fotoUrl: data.fotoUrl,
+          }),
+          ...(data.estado !== undefined && { estado: data.estado as any }),
+          ...(data.lecturaInicial !== undefined && {
+            lecturaInicial: data.lecturaInicial,
+          }),
+          ...(data.periodoId !== undefined && { periodoId: data.periodoId }),
+          ...(data.deletedAt !== undefined && { deletedAt: data.deletedAt }),
+        },
+      });
+
+      if (count === 0) {
+        return null;
+      }
+
+      return tx.lecturas.findUnique({
+        where: { lecturaId: where.lecturaId },
+        select: safeReadingsSelect,
+      });
+    });
+
+    return ReadingMapper.toDomain(record);
   }
 }

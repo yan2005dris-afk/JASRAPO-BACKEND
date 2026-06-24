@@ -9,6 +9,9 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import { NotEmptyBodyPipe } from 'src/infrastructure/common/pipes/not-empty-body.pipe';
+import { ParseBigIntPipe } from 'src/infrastructure/common/pipes/parse-bigint.pipe';
+import { ParseActualizarLecturaPipe } from 'src/infrastructure/common/pipes/parse-actualizar-lectura.pipe';
 import { ReadingService } from '../../application/reading.service';
 import { CrearLecturaDto } from '../dto/create-lectura.dto';
 import { ActualizarLecturaDto } from '../dto/update-lectura.dto';
@@ -28,6 +31,11 @@ import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.
 import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 import { toReadingResponse } from '../../types/readingMapper';
 import { ReadingFilters } from '../../domain/repositories/reading.repository';
+import {
+  EnumStateDto,
+  buildStateCatalog,
+} from 'src/shared/enums/state-catalog';
+import { EstadoLectura } from 'src/shared/enums';
 
 @ApiTags('readings')
 @ApiBearerAuth()
@@ -64,6 +72,20 @@ export class ReadingController {
     description: 'Retorna lista de lecturas con paginación',
   })
   @ApiQuery({
+    name: 'page',
+    description: 'Número de página (empieza en 1)',
+    required: false,
+    type: Number,
+    example: 1,
+  })
+  @ApiQuery({
+    name: 'limit',
+    description: 'Registros por página (máx 100)',
+    required: false,
+    type: Number,
+    example: 10,
+  })
+  @ApiQuery({
     name: 'contratoId',
     description: 'Filtrar por ID de contrato',
     required: false,
@@ -71,7 +93,7 @@ export class ReadingController {
   })
   @ApiResponse({
     status: 200,
-    description: 'Lista de lecturas',
+    description: 'Lista de lecturas paginada',
   })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @RequiredPermission('lecturas', 'read')
@@ -96,14 +118,50 @@ export class ReadingController {
   }
 
   @ApiOperation({
+    summary: 'Catálogo de estados de lectura',
+    description:
+      'Retorna todos los estados posibles de una lectura (EstadoLectura).',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de estados',
+    type: [EnumStateDto],
+  })
+  @RequiredPermission('lecturas', 'read')
+  @Get('estados')
+  getEstados(): EnumStateDto[] {
+    return buildStateCatalog(
+      EstadoLectura,
+      {
+        PENDIENTE: 'Pendiente',
+        POR_REVISION: 'Por Revisión',
+        APROBADA: 'Aprobada',
+        RECHAZADA_VERIFICACION: 'Rechazada',
+        ESTIMADA: 'Estimada',
+        PLANILLADA: 'Planillada',
+        CON_NOVEDAD: 'Con Novedad',
+      },
+      {
+        PENDIENTE: 'bi-clock',
+        POR_REVISION: 'bi-eye',
+        APROBADA: 'bi-check-circle',
+        RECHAZADA_VERIFICACION: 'bi-x-circle-fill',
+        ESTIMADA: 'bi-graph-up',
+        PLANILLADA: 'bi-receipt',
+        CON_NOVEDAD: 'bi-exclamation-triangle',
+      },
+    );
+  }
+
+  @ApiOperation({
     summary: 'Obtener lectura',
     description: 'Retorna una lectura por ID',
   })
   @ApiParam({
     name: 'id',
     description: 'ID de la lectura',
-    type: String,
-    example: '1',
+    type: Number,
+    example: 1,
   })
   @ApiResponse({
     status: 200,
@@ -114,8 +172,10 @@ export class ReadingController {
   @ApiResponse({ status: 404, description: 'Lectura no encontrada' })
   @RequiredPermission('lecturas', 'read')
   @Get(':id')
-  async findOne(@Param('id') id: string): Promise<ResponseReadingDto> {
-    return toReadingResponse(await this.readingService.findOne(BigInt(id)))!;
+  async findOne(
+    @Param('id', ParseBigIntPipe) id: bigint,
+  ): Promise<ResponseReadingDto> {
+    return toReadingResponse(await this.readingService.findOne(id))!;
   }
 
   @ApiOperation({
@@ -125,8 +185,8 @@ export class ReadingController {
   @ApiParam({
     name: 'id',
     description: 'ID de la lectura',
-    type: String,
-    example: '1',
+    type: Number,
+    example: 1,
   })
   @ApiBody({ type: ActualizarLecturaDto, description: 'Datos a actualizar' })
   @ApiResponse({
@@ -141,11 +201,12 @@ export class ReadingController {
   @RequiredPermission('lecturas', 'update')
   @Patch(':id')
   async actualizarLectura(
-    @Param('id') id: string,
-    @Body() updateLecturaDto: ActualizarLecturaDto,
+    @Param('id', ParseBigIntPipe) id: bigint,
+    @Body(new NotEmptyBodyPipe(), new ParseActualizarLecturaPipe())
+    updateLecturaDto: ActualizarLecturaDto,
   ): Promise<ResponseReadingDto> {
     return toReadingResponse(
-      await this.readingService.update(BigInt(id), updateLecturaDto),
+      await this.readingService.update(id, updateLecturaDto),
     )!;
   }
 
@@ -156,8 +217,8 @@ export class ReadingController {
   @ApiParam({
     name: 'id',
     description: 'ID de la lectura',
-    type: String,
-    example: '1',
+    type: Number,
+    example: 1,
   })
   @ApiResponse({ status: 200, description: 'Lectura eliminada' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
@@ -165,7 +226,7 @@ export class ReadingController {
   @ApiResponse({ status: 404, description: 'Lectura no encontrada' })
   @RequiredPermission('lecturas', 'delete')
   @Delete(':id')
-  async eliminarLectura(@Param('id') id: string) {
-    return this.readingService.delete(BigInt(id));
+  async eliminarLectura(@Param('id', ParseBigIntPipe) id: bigint) {
+    return this.readingService.delete(id);
   }
 }

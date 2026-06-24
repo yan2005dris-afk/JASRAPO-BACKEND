@@ -123,8 +123,8 @@ export class PermissionsController {
   @ApiResponse({ status: 404, description: 'Permiso no encontrado' })
   @RequiredPermission('permissions', 'read')
   @Get(':id')
-  findOnePermissions(@Param('id', ParseIntPipe) id: string) {
-    return this.permissionsService.findOne(+id);
+  findOnePermissions(@Param('id', ParseIntPipe) id: number) {
+    return this.permissionsService.findOne(id);
   }
 
   /**
@@ -159,10 +159,10 @@ export class PermissionsController {
   @RequiredPermission('permissions', 'update')
   @Patch(':id')
   updatePermissions(
-    @Param('id', ParseIntPipe) id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Body() updatePermissionDto: UpdatePermissionDto,
   ) {
-    return this.permissionsService.update(+id, updatePermissionDto);
+    return this.permissionsService.update(id, updatePermissionDto);
   }
 
   /**
@@ -191,7 +191,7 @@ export class PermissionsController {
   @ApiResponse({ status: 404, description: 'Permiso no encontrado' })
   @RequiredPermission('permissions', 'delete')
   @Delete(':id')
-  SoftDeletePermissions(@Param('id', ParseIntPipe) id: string) {
-    return this.permissionsService.remove(+id);
+  SoftDeletePermissions(@Param('id', ParseIntPipe) id: number) {
+    return this.permissionsService.remove(id);
   }
 }

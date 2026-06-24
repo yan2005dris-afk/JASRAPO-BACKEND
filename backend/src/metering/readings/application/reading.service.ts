@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { EstadoLectura } from 'src/shared/enums';
 import { CrearLecturaDto } from '../interfaces/dto/create-lectura.dto';
 import { ActualizarLecturaDto } from '../interfaces/dto/update-lectura.dto';
 import { CreateReadingUseCase } from './use-cases/create-reading.use-case';
@@ -39,8 +40,9 @@ export class ReadingService {
   async update(
     id: bigint,
     updateDto: ActualizarLecturaDto,
+    targetEstado?: EstadoLectura,
   ): Promise<LecturaEntity> {
-    return this.updateUseCase.execute(id, updateDto);
+    return this.updateUseCase.execute(id, updateDto, targetEstado);
   }
 
   async delete(id: bigint): Promise<{ message: string }> {

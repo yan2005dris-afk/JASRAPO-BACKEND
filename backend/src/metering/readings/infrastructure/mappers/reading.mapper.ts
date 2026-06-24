@@ -16,6 +16,7 @@ export class ReadingMapper {
       descripcionAnomalia: raw.descripcionAnomalia,
       fechaValidacion: raw.fechaValidacion,
       fotoUrl: raw.fotoUrl,
+      estado: raw.estado,
       isValidada: raw.estado !== 'PENDIENTE',
       lecturaInicial: raw.lecturaInicial,
       periodoId: raw.periodoId,

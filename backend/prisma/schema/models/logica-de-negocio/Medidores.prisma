@@ -22,6 +22,7 @@ model Medidores {
   longitud         Decimal?             @map("longitud") @db.Decimal(11, 8)
   historial        HistorialMedidores[]
   lecturas         Lecturas[]
+  rutas            Rutas[]
 
   @@map("medidores")
 }

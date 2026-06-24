@@ -20,6 +20,15 @@ const PERMISSION_MAP: MenuPermissionMapping[] = [
     ],
   },
   {
+    menuNombre: 'Contratos',
+    permisos: [
+      { recurso: 'contracts', accion: 'read' },
+      { recurso: 'contracts', accion: 'create' },
+      { recurso: 'contracts', accion: 'update' },
+      { recurso: 'contracts', accion: 'delete' },
+    ],
+  },
+  {
     menuNombre: 'Inventario de Medidores',
     permisos: [
       { recurso: 'meters', accion: 'read' },
@@ -178,6 +187,24 @@ const PERMISSION_MAP: MenuPermissionMapping[] = [
       { recurso: 'dashboard', accion: 'create' },
       { recurso: 'dashboard', accion: 'update' },
       { recurso: 'dashboard', accion: 'delete' },
+    ],
+  },
+  {
+    menuNombre: 'Toma de Lecturas',
+    permisos: [
+      { recurso: 'lecturas', accion: 'read' },
+      { recurso: 'lecturas', accion: 'create' },
+      { recurso: 'lecturas', accion: 'update' },
+      { recurso: 'lecturas', accion: 'delete' },
+    ],
+  },
+  {
+    menuNombre: 'Reporte Novedades',
+    permisos: [
+      { recurso: 'reading-anomalies', accion: 'read' },
+      { recurso: 'reading-anomalies', accion: 'create' },
+      { recurso: 'reading-anomalies', accion: 'update' },
+      { recurso: 'reading-anomalies', accion: 'delete' },
     ],
   },
 ];

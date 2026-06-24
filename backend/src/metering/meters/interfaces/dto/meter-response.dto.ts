@@ -5,7 +5,7 @@ export class MeterResponseDto {
     description: 'ID único del medidor',
     example: '1',
   })
-  medidorId: bigint;
+  medidorId: string;
 
   @ApiProperty({
     description: 'Marca del medidor',
@@ -60,6 +60,18 @@ export class MeterResponseDto {
     example: -70.6693,
   })
   longitud: number | null;
+
+  @ApiPropertyOptional({
+    description: 'ID de contrato activo',
+    example: '123',
+  })
+  contratoId: string | null;
+
+  @ApiPropertyOptional({
+    description: 'Nombre completo del cliente',
+    example: 'Juan Pérez',
+  })
+  clienteNombre: string | null;
 
   constructor(partial: Partial<MeterResponseDto>) {
     Object.assign(this, partial);

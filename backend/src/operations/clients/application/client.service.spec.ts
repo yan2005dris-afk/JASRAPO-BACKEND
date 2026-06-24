@@ -106,18 +106,18 @@ describe('ClientService', () => {
   });
 
   it('findOne should delegate to FindOneClientUseCase', async () => {
-    await service.findOne('1');
-    expect(findOneUseCase.execute).toHaveBeenCalledWith('1');
+    await service.findOne(1n);
+    expect(findOneUseCase.execute).toHaveBeenCalledWith(1n);
   });
 
   it('update should delegate to UpdateClientUseCase', async () => {
     const dto = { nombres: 'Test' } as any;
-    await service.update('1', dto);
-    expect(updateUseCase.execute).toHaveBeenCalledWith('1', dto);
+    await service.update(1n, dto);
+    expect(updateUseCase.execute).toHaveBeenCalledWith(1n, dto);
   });
 
   it('delete should delegate to RemoveClientUseCase', async () => {
-    await service.delete('1');
-    expect(removeUseCase.execute).toHaveBeenCalledWith('1');
+    await service.delete(1n);
+    expect(removeUseCase.execute).toHaveBeenCalledWith(1n);
   });
 });

@@ -2,7 +2,7 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { RoundRobinDispatcher } from './round-robin.dispatcher';
 import { MailRateLimitService } from '../rate-limit/mail-rate-limit.service';
-import type { MailProviderConfig } from '../../../domain/config/mail-provider-config.interface';
+import type { MailProviderConfig } from '../../domain/config/mail-provider-config.interface';
 import type * as nodemailer from 'nodemailer';
 
 const mockSendMail = jest.fn();

@@ -9,6 +9,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import { ParseBigIntPipe } from 'src/infrastructure/common/pipes/parse-bigint.pipe';
 import {
   ApiBearerAuth,
   ApiTags,
@@ -97,8 +98,8 @@ export class ClientController {
   @ApiParam({
     name: 'id',
     description: 'ID único del cliente',
-    type: String,
-    example: '1',
+    type: Number,
+    example: 1,
   })
   @ApiResponse({
     status: 200,
@@ -110,7 +111,7 @@ export class ClientController {
   @ApiResponse({ status: 404, description: 'Cliente no encontrado' })
   @RequiredPermission('clientes', 'read')
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id', ParseBigIntPipe) id: bigint) {
     return this.clientService.findOne(id);
   }
 
@@ -124,8 +125,8 @@ export class ClientController {
   @ApiParam({
     name: 'id',
     description: 'ID único del cliente',
-    type: String,
-    example: '1',
+    type: Number,
+    example: 1,
   })
   @ApiBody({ type: UpdateClientDto, description: 'Datos a actualizar' })
   @ApiResponse({ status: 200, description: 'Cliente actualizado' })
@@ -135,7 +136,10 @@ export class ClientController {
   @ApiResponse({ status: 404, description: 'Cliente no encontrado' })
   @RequiredPermission('clientes', 'update')
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateClientDto: UpdateClientDto) {
+  update(
+    @Param('id', ParseBigIntPipe) id: bigint,
+    @Body() updateClientDto: UpdateClientDto,
+  ) {
     return this.clientService.update(id, updateClientDto);
   }
 
@@ -149,8 +153,8 @@ export class ClientController {
   @ApiParam({
     name: 'id',
     description: 'ID único del cliente',
-    type: String,
-    example: '1',
+    type: Number,
+    example: 1,
   })
   @ApiResponse({ status: 200, description: 'Cliente eliminado' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
@@ -158,7 +162,7 @@ export class ClientController {
   @ApiResponse({ status: 404, description: 'Cliente no encontrado' })
   @RequiredPermission('clientes', 'delete')
   @Delete(':id')
-  delete(@Param('id') id: string) {
+  delete(@Param('id', ParseBigIntPipe) id: bigint) {
     return this.clientService.delete(id);
   }
 }

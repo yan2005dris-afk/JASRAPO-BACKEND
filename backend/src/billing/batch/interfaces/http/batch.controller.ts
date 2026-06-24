@@ -17,6 +17,7 @@ import {
 import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
+import { EnumStateDto } from 'src/shared/enums/state-catalog';
 import { GenerateBatchDto } from '../dto/generate-batch.dto';
 import { BatchService } from '../../application/batch.service';
 import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
@@ -44,8 +45,13 @@ export class BatchController {
     summary: 'Batch status catalog',
     description: 'Returns the list of available statuses for billing batches',
   })
+  @ApiResponse({
+    status: 200,
+    description: 'List of batch statuses',
+    type: [EnumStateDto],
+  })
   @RequiredPermission('batches', 'read')
-  async findAllStates() {
+  async findAllStates(): Promise<EnumStateDto[]> {
     return this.batchService.findAllStates();
   }
 

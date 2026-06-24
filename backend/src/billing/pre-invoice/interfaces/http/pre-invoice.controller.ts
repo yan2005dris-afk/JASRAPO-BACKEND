@@ -31,6 +31,7 @@ import { PreInvoiceResponseDto } from '../dto/pre-invoice-response.dto';
 import { PaginationMetaDto } from 'src/infrastructure/common/dtos/pagination-meta.dto';
 import { ApiPaginatedResponse } from 'src/infrastructure/common/decorators/api-paginated-response.decorator';
 import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
+import { EnumStateDto } from 'src/shared/enums/state-catalog';
 import { GeneratePreInvoicePdfUseCase } from '../../application/use-cases/generate-pre-invoice-pdf.use-case';
 import { SendPreInvoiceByEmailUseCase } from '../../application/use-cases/send-pre-invoice-by-email.use-case';
 
@@ -55,9 +56,14 @@ export class PreInvoiceController {
     description:
       'Returns the available statuses for pre-invoices with their order',
   })
+  @ApiResponse({
+    status: 200,
+    description: 'List of pre-invoice statuses',
+    type: [EnumStateDto],
+  })
   @RequiredPermission('pre-invoices', 'read')
   @Get('estados')
-  async findAllStates() {
+  async findAllStates(): Promise<EnumStateDto[]> {
     return this.preInvoiceService.findAllStates();
   }
 

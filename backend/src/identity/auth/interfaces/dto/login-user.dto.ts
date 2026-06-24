@@ -1,12 +1,7 @@
 import { Transform } from 'class-transformer';
-import {
-  IsEmail,
-  IsNotEmpty,
-  IsString,
-  Matches,
-  MinLength,
-} from 'class-validator';
+import { IsEmail, Matches, MinLength, MaxLength } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { IsNotEmptyString } from 'src/infrastructure/common/decorators/is-not-empty-string.decorator';
 
 export class LoginUserDto {
   @ApiProperty({
@@ -18,7 +13,8 @@ export class LoginUserDto {
   @Transform(({ value }: { value: unknown }) =>
     typeof value === 'string' ? value.trim().toLowerCase() : value,
   ) // Elimina espacios al inicio/final y convierte a minúsculas si llega string
-  @IsNotEmpty()
+  @IsNotEmptyString()
+  @MaxLength(255)
   @IsEmail()
   email: string;
 
@@ -29,8 +25,8 @@ export class LoginUserDto {
     required: true,
     format: 'password',
   })
-  @IsNotEmpty()
-  @IsString()
+  @IsNotEmptyString()
+  @MaxLength(128)
   @MinLength(6)
   @Matches(/^\S+$/, { message: 'La contraseña no puede contener espacios' }) // Asegura que la contraseña no contenga espacios
   password: string;

@@ -99,6 +99,7 @@ export const EstadoLectura = {
   RECHAZADA_VERIFICACION: 'RECHAZADA_VERIFICACION',
   ESTIMADA: 'ESTIMADA',
   PLANILLADA: 'PLANILLADA',
+  CON_NOVEDAD: 'CON_NOVEDAD',
 } as const;
 
 export type EstadoLectura = (typeof EstadoLectura)[keyof typeof EstadoLectura];
@@ -239,6 +240,8 @@ export type TipoRubro = (typeof TipoRubro)[keyof typeof TipoRubro];
 export const TipoRuta = {
   TOMA_LECTURA: 'TOMA_LECTURA',
   RECONEXION: 'RECONEXION',
+  INSTALACION: 'INSTALACION',
+  INSPECCION: 'INSPECCION',
 } as const;
 
 export type TipoRuta = (typeof TipoRuta)[keyof typeof TipoRuta];

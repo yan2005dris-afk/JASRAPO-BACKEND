@@ -1,4 +1,4 @@
-import { DateUtil } from 'src/infrastructure/common/utils/date.util';
+import { DateUtil } from 'src/shared/utils/date.util';
 import type { AgreementResponseDto } from '../../interfaces/dto/agreement-response.dto';
 import type { InstallmentResponseDto } from '../../interfaces/dto/installment-response.dto';
 

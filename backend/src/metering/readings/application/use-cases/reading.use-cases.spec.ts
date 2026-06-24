@@ -7,6 +7,8 @@ import { FindOneReadingUseCase } from './find-one-reading.use-case';
 import { UpdateReadingUseCase } from './update-reading.use-case';
 import { RemoveReadingUseCase } from './remove-reading.use-case';
 import { NotFoundException } from '@nestjs/common';
+import { PrismaService } from 'src/infrastructure/database/prisma.service';
+import { StorageService } from 'src/infrastructure/storage/storage.service';
 
 describe('Readings Use Cases', () => {
   let createUseCase: CreateReadingUseCase;
@@ -36,6 +38,12 @@ describe('Readings Use Cases', () => {
     update: jest.fn(),
   };
 
+  const mockPrisma = {
+    periodos: { findFirst: jest.fn().mockResolvedValue({ periodoId: 1 }) },
+  };
+
+  const mockStorageService = { upload: jest.fn() };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -45,6 +53,8 @@ describe('Readings Use Cases', () => {
         UpdateReadingUseCase,
         RemoveReadingUseCase,
         { provide: ReadingRepository, useValue: mockReadingRepository },
+        { provide: PrismaService, useValue: mockPrisma },
+        { provide: StorageService, useValue: mockStorageService },
       ],
     }).compile();
 
@@ -105,9 +115,7 @@ describe('Readings Use Cases', () => {
   describe('UpdateReadingUseCase', () => {
     it('should update a reading', async () => {
       const updatedLectura = { ...mockLectura, lecturaActual: 200 };
-      mockReadingRepository.findUnique
-        .mockResolvedValueOnce(mockLectura)
-        .mockResolvedValueOnce(updatedLectura);
+      mockReadingRepository.findUnique.mockResolvedValue(mockLectura);
       mockReadingRepository.update.mockResolvedValue(updatedLectura);
       const result = await updateUseCase.execute(BigInt(1), {
         lecturaActual: 200,

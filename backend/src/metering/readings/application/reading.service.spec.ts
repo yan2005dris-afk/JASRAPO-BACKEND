@@ -109,7 +109,7 @@ describe('ReadingService', () => {
     jest.spyOn(updateUseCase, 'execute').mockResolvedValue(mockLectura as any);
     const result = await service.update(id, dto);
     expect(result).toBe(mockLectura);
-    expect(updateUseCase.execute).toHaveBeenCalledWith(id, dto);
+    expect(updateUseCase.execute).toHaveBeenCalledWith(id, dto, undefined);
   });
 
   it('delete should delegate to RemoveReadingUseCase', async () => {

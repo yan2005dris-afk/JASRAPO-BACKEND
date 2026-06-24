@@ -3,6 +3,7 @@ import { CategoriaTarifaModule } from './tariffs/categoria-tarifa.module';
 import { BatchModule } from './batch/batch.module';
 import { AgreementsModule } from './collections/agreements/agreements.module';
 import { PreInvoiceModule } from './pre-invoice/pre-invoice.module';
+import { DiscountsModule } from './discounts/discounts.module';
 
 @Module({
   imports: [
@@ -10,12 +11,14 @@ import { PreInvoiceModule } from './pre-invoice/pre-invoice.module';
     BatchModule,
     AgreementsModule,
     PreInvoiceModule,
+    DiscountsModule,
   ],
   exports: [
     CategoriaTarifaModule,
     BatchModule,
     AgreementsModule,
     PreInvoiceModule,
+    DiscountsModule,
   ],
 })
 export class BillingModule {}

@@ -4,14 +4,13 @@ import { CreateMeterDto } from '../interfaces/dto/create-meter.dto';
 import { UpdateMeterDto } from '../interfaces/dto/update-meter.dto';
 import { FilterMeterDto } from '../interfaces/dto/filter-meter.dto';
 import { buildMeterFilters } from './mappers/meter-filters.mapper';
-import { EstadoMedidorResponseDto } from '../interfaces/dto/estado-medidor-response.dto';
+import { EnumStateDto } from 'src/shared/enums/state-catalog';
+import { EstadoMedidor } from 'src/shared/enums';
 import { CreateMeterUseCase } from './use-cases/create-meter.use-case';
-import { ReportDefectUseCase } from './use-cases/report-defect.use-case';
 import { FindOneMeterUseCase } from './use-cases/find-one-meter.use-case';
-import { InstallMeterUseCase } from './use-cases/install-meter.use-case';
-import { DecommissionMeterUseCase } from './use-cases/decommission-meter.use-case';
 import { MeterEntity } from '../domain/entities/meter.entity';
-import { DateUtil } from 'src/infrastructure/common/utils/date.util';
+import { toMeterResponse } from '../domain/types/metersMapper';
+import { DateUtil } from 'src/shared/utils/date.util';
 import { METER_STATUS_LIST } from 'src/infrastructure/config/app.constants';
 import { getPagination } from 'src/infrastructure/common/utils/pagination.util';
 import { PaginatedMeterResponse } from '../interfaces/types/paginated-meter-response.type';
@@ -22,9 +21,6 @@ export class MeterService {
     private readonly meterRepository: MeterRepository,
     private readonly createUseCase: CreateMeterUseCase,
     private readonly findOneUseCase: FindOneMeterUseCase,
-    private readonly installUseCase: InstallMeterUseCase,
-    private readonly reportDamageUseCase: ReportDefectUseCase,
-    private readonly decommissionUseCase: DecommissionMeterUseCase,
   ) {}
 
   async create(createDto: CreateMeterDto): Promise<MeterEntity> {
@@ -49,7 +45,7 @@ export class MeterService {
     const totalPages = Math.ceil(total / take);
 
     return {
-      data: meters as unknown as any[],
+      data: meters.map((m) => toMeterResponse(m)),
       meta: {
         total,
         page: safePage,
@@ -98,26 +94,7 @@ export class MeterService {
     return { message: `Medidor con ID ${id} eliminado` };
   }
 
-  async install(medidorId: bigint): Promise<MeterEntity> {
-    return this.installUseCase.execute(medidorId);
-  }
-
-  async reportDefect(medidorId: bigint): Promise<MeterEntity> {
-    return this.reportDamageUseCase.execute(medidorId);
-  }
-
-  async decommission(
-    medidorId: bigint,
-    motivoBaja: string,
-  ): Promise<MeterEntity> {
-    return this.decommissionUseCase.execute(medidorId, motivoBaja);
-  }
-
-  async findAllStates(): Promise<EstadoMedidorResponseDto[]> {
-    return METER_STATUS_LIST.map((s) => ({
-      codigo: s.codigo,
-      nombre: s.nombre,
-      orden: s.orden,
-    }));
+  async findAllStates(): Promise<EnumStateDto[]> {
+    return METER_STATUS_LIST;
   }
 }

@@ -1,6 +1,7 @@
 import { Transform } from 'class-transformer';
-import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import { IsEmail, IsString, MaxLength } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { IsNotEmptyString } from 'src/infrastructure/common/decorators/is-not-empty-string.decorator';
 
 export class RegisterDto {
   @ApiProperty({
@@ -13,7 +14,8 @@ export class RegisterDto {
     typeof value === 'string' ? value.trim().toLowerCase() : value,
   )
   @IsEmail()
-  @IsNotEmpty()
+  @IsNotEmptyString()
+  @MaxLength(255)
   email: string;
 
   @ApiProperty({
@@ -21,8 +23,8 @@ export class RegisterDto {
     example: 'Juan',
     required: true,
   })
-  @IsString()
-  @IsNotEmpty()
+  @IsNotEmptyString()
+  @MaxLength(100)
   nombres: string;
 
   @ApiProperty({
@@ -30,8 +32,8 @@ export class RegisterDto {
     example: 'Pérez',
     required: true,
   })
-  @IsString()
-  @IsNotEmpty()
+  @IsNotEmptyString()
+  @MaxLength(100)
   apellidos: string;
 
   @ApiProperty({
@@ -40,8 +42,8 @@ export class RegisterDto {
     example: '+593991234567',
     required: true,
   })
-  @IsString()
-  @IsNotEmpty()
+  @IsNotEmptyString()
+  @MaxLength(20)
   telefono: string;
 
   @ApiProperty({

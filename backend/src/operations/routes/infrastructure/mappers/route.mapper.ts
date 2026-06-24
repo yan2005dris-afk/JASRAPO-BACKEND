@@ -1,5 +1,5 @@
 import { RouteEntity } from '../../domain/entities/route.entity';
-import { DateUtil } from 'src/infrastructure/common/utils/date.util';
+import { DateUtil } from 'src/shared/utils/date.util';
 
 export interface RouteRaw {
   rutaId: bigint;

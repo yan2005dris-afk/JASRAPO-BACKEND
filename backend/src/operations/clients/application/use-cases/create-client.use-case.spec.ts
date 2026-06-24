@@ -3,9 +3,9 @@ import { Test } from '@nestjs/testing';
 import { CreateClientUseCase } from './create-client.use-case';
 import { ClientRepository } from '../../domain/repositories/client.repository';
 import { ConflictException, BadRequestException } from '@nestjs/common';
-import { TipoIdentificacionUtil } from 'src/infrastructure/common/utils/tipo-identificacion.util';
+import { TipoIdentificacionUtil } from 'src/shared/utils/tipo-identificacion.util';
 
-jest.mock('src/infrastructure/common/utils/tipo-identificacion.util');
+jest.mock('src/shared/utils/tipo-identificacion.util');
 
 describe('CreateClientUseCase', () => {
   let useCase: CreateClientUseCase;
@@ -56,6 +56,7 @@ describe('CreateClientUseCase', () => {
         identificacion: '0926715658',
         nombres: 'John',
         apellidos: 'Doe',
+        direccionDomicilio: 'Av. Siempre Viva 123',
       };
 
       mockClientRepository.findUnique.mockResolvedValue(null);
@@ -82,6 +83,7 @@ describe('CreateClientUseCase', () => {
         identificacion: '0926715658',
         nombres: 'John',
         apellidos: 'Doe',
+        direccionDomicilio: 'Av. Siempre Viva 123',
       };
 
       mockClientRepository.findUnique.mockResolvedValue({
@@ -98,6 +100,7 @@ describe('CreateClientUseCase', () => {
         identificacion: '0926715658',
         nombres: 'John',
         apellidos: 'Doe',
+        direccionDomicilio: 'Av. Siempre Viva 123',
       };
 
       mockClientRepository.findUnique.mockResolvedValue({

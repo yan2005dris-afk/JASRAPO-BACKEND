@@ -8,6 +8,7 @@ import {
   Delete,
   Query,
   UseGuards,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { ComunidadService } from '../../application/comunidad.service';
 import { CreateComunidadDto } from '../dto/create-comunidad.dto';
@@ -88,8 +89,8 @@ export class ComunidadController {
   @ApiResponse({ status: 404, description: 'Comunidad no encontrada' })
   @RequiredPermission('comunidades', 'read')
   @Get(':id')
-  async findOne(@Param('id') id: string) {
-    return this.comunidadService.findOne(+id);
+  async findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.comunidadService.findOne(id);
   }
 
   @ApiOperation({
@@ -111,10 +112,10 @@ export class ComunidadController {
   @RequiredPermission('comunidades', 'update')
   @Patch(':id')
   update(
-    @Param('id') id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Body() updateComunidadDto: UpdateComunidadDto,
   ) {
-    return this.comunidadService.update(+id, updateComunidadDto);
+    return this.comunidadService.update(id, updateComunidadDto);
   }
 
   @ApiOperation({
@@ -133,7 +134,7 @@ export class ComunidadController {
   @ApiResponse({ status: 404, description: 'Comunidad no encontrada' })
   @RequiredPermission('comunidades', 'delete')
   @Delete(':id')
-  delete(@Param('id') id: string) {
-    return this.comunidadService.delete(+id);
+  delete(@Param('id', ParseIntPipe) id: number) {
+    return this.comunidadService.delete(id);
   }
 }

@@ -9,7 +9,7 @@ export async function seedCategoriaTarifa(prisma: PrismaClient) {
       valorBase: 4.0,
       valorExcedenteM3: 0.4,
       activo: true,
-      consumoMinimoMensual: 0,
+      consumoMinimoMensual: 10,
     },
     {
       categoriaTarifaId: 2,
@@ -18,7 +18,7 @@ export async function seedCategoriaTarifa(prisma: PrismaClient) {
       valorBase: 7.5,
       valorExcedenteM3: 0.75,
       activo: true,
-      consumoMinimoMensual: 0,
+      consumoMinimoMensual: 10,
     },
     {
       categoriaTarifaId: 3,
@@ -27,25 +27,7 @@ export async function seedCategoriaTarifa(prisma: PrismaClient) {
       valorBase: 15.0,
       valorExcedenteM3: 1.5,
       activo: true,
-      consumoMinimoMensual: 0,
-    },
-    {
-      categoriaTarifaId: 4,
-      nombre: 'TERCERA EDAD',
-      descripcion: 'Tarifa subsidiada para adultos mayores',
-      valorBase: 4.0,
-      valorExcedenteM3: 0.4,
-      activo: true,
-      consumoMinimoMensual: 0,
-    },
-    {
-      categoriaTarifaId: 5,
-      nombre: 'DISCAPACIDAD',
-      descripcion: 'Tarifa subsidiada para personas con discapacidad',
-      valorBase: 4.0,
-      valorExcedenteM3: 0.4,
-      activo: true,
-      consumoMinimoMensual: 0,
+      consumoMinimoMensual: 10,
     },
   ];
 

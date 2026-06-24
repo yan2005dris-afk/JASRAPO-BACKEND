@@ -41,6 +41,9 @@ export class ResponseReadingDto implements IResponseReading {
   @ApiProperty({ description: 'Indica si tiene anomalía' })
   tieneAnomalia: boolean;
 
+  @ApiProperty({ description: 'Estado de la lectura', example: 'PENDIENTE' })
+  estado: string;
+
   @ApiProperty({ description: 'Contrato asociado', required: false })
   contrato?: {
     contratoId: string;

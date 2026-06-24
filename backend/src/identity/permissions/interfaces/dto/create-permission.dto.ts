@@ -1,26 +1,27 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString } from 'class-validator';
+import { MaxLength } from 'class-validator';
+import { IsNotEmptyString } from 'src/infrastructure/common/decorators/is-not-empty-string.decorator';
 
 export class CreatePermissionDto {
   @ApiProperty({ example: 'Gestión de usuarios' })
-  @IsString()
-  @IsNotEmpty()
+  @IsNotEmptyString()
+  @MaxLength(100)
   nombre: string;
 
   @ApiProperty({
     example: 'Permite crear, leer, actualizar y eliminar usuarios',
   })
-  @IsString()
-  @IsNotEmpty()
+  @IsNotEmptyString()
+  @MaxLength(255)
   descripcion: string;
 
   @ApiProperty({ example: 'users' })
-  @IsString()
-  @IsNotEmpty()
+  @IsNotEmptyString()
+  @MaxLength(100)
   recurso: string;
 
   @ApiProperty({ example: 'read' })
-  @IsString()
-  @IsNotEmpty()
+  @IsNotEmptyString()
+  @MaxLength(50)
   accion: string;
 }

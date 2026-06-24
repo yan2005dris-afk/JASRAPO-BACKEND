@@ -1,14 +1,14 @@
 import {
   IsEmail,
-  IsNotEmpty,
   IsOptional,
-  IsString,
   IsObject,
   IsInt,
   Min,
+  MaxLength,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Prisma } from 'src/generated/prisma/client';
+import { IsNotEmptyString } from 'src/infrastructure/common/decorators/is-not-empty-string.decorator';
 
 export class CreateUserDto {
   @ApiProperty({
@@ -18,7 +18,8 @@ export class CreateUserDto {
     required: true,
   })
   @IsEmail()
-  @IsNotEmpty()
+  @IsNotEmptyString()
+  @MaxLength(255)
   email: string;
 
   @ApiProperty({
@@ -26,8 +27,8 @@ export class CreateUserDto {
     example: 'Juan',
     required: true,
   })
-  @IsString()
-  @IsNotEmpty()
+  @IsNotEmptyString()
+  @MaxLength(100)
   nombres: string;
 
   @ApiProperty({
@@ -35,8 +36,8 @@ export class CreateUserDto {
     example: 'Pérez',
     required: true,
   })
-  @IsString()
-  @IsNotEmpty()
+  @IsNotEmptyString()
+  @MaxLength(100)
   apellidos: string;
 
   @ApiProperty({
@@ -45,8 +46,8 @@ export class CreateUserDto {
     example: '+593991234567',
     required: true,
   })
-  @IsString()
-  @IsNotEmpty()
+  @IsNotEmptyString()
+  @MaxLength(20)
   telefono: string;
 
   @ApiProperty({

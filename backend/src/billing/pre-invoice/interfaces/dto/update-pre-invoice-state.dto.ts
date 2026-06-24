@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsNotEmpty, IsString, ValidateIf } from 'class-validator';
+import { IsEnum, MaxLength, ValidateIf } from 'class-validator';
+import { IsNotEmptyString } from 'src/infrastructure/common/decorators/is-not-empty-string.decorator';
 
 export enum PreInvoiceStateAction {
   APPROVE = 'APROBADA',
@@ -22,7 +23,7 @@ export class UpdatePreInvoiceStateDto {
     example: 'Incorrect reading',
   })
   @ValidateIf((o) => o.action === 'RECHAZADA')
-  @IsNotEmpty()
-  @IsString()
+  @IsNotEmptyString()
+  @MaxLength(500)
   motivoRechazo?: string;
 }

@@ -9,6 +9,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import { ParseBigIntPipe } from 'src/infrastructure/common/pipes/parse-bigint.pipe';
 import { ReadingAnomalyService } from '../../application/reading-anomaly.service';
 import { CreateReadingAnomalyDto } from '../dto/create-reading-anomaly.dto';
 import { UpdateReadingAnomalyDto } from '../dto/update-reading-anomaly.dto';
@@ -29,6 +30,10 @@ import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.
 import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 import { toReadingAnomalyResponse } from '../../types/readingAnomalyMapper';
 import { ReadingAnomalyFilters } from '../../domain/repositories/reading-anomaly.repository';
+import {
+  EnumStateDto,
+  buildStateCatalog,
+} from 'src/shared/enums/state-catalog';
 
 @ApiTags('reading-anomalies')
 @ApiBearerAuth()
@@ -124,14 +129,43 @@ export class ReadingAnomalyController {
   }
 
   @ApiOperation({
+    summary: 'Catálogo de estados de anomalía',
+    description:
+      'Retorna todos los estados posibles de una anomalía de lectura (EstadoAnomalia).',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de estados',
+    type: [EnumStateDto],
+  })
+  @Get('estados')
+  getEstados(): EnumStateDto[] {
+    return buildStateCatalog(
+      EstadoAnomalia,
+      {
+        PENDIENTE: 'Pendiente',
+        EN_REVISION: 'En Revisión',
+        RESUELTA: 'Resuelta',
+        DESCARTADA: 'Descartada',
+      },
+      {
+        PENDIENTE: 'bi-flag',
+        EN_REVISION: 'bi-search',
+        RESUELTA: 'bi-check-circle',
+        DESCARTADA: 'bi-x-circle',
+      },
+    );
+  }
+
+  @ApiOperation({
     summary: 'Obtener anomalía de lectura',
     description: 'Retorna una anomalía por ID',
   })
   @ApiParam({
     name: 'id',
     description: 'ID de la anomalía',
-    type: String,
-    example: '1',
+    type: Number,
+    example: 1,
   })
   @ApiResponse({
     status: 200,
@@ -142,9 +176,11 @@ export class ReadingAnomalyController {
   @ApiResponse({ status: 404, description: 'Anomalía no encontrada' })
   @RequiredPermission('reading-anomalies', 'read')
   @Get(':id')
-  async findOne(@Param('id') id: string): Promise<ResponseReadingAnomalyDto> {
+  async findOne(
+    @Param('id', ParseBigIntPipe) id: bigint,
+  ): Promise<ResponseReadingAnomalyDto> {
     return toReadingAnomalyResponse(
-      await this.readingAnomalyService.findOne(BigInt(id)),
+      await this.readingAnomalyService.findOne(id),
     )!;
   }
 
@@ -155,8 +191,8 @@ export class ReadingAnomalyController {
   @ApiParam({
     name: 'id',
     description: 'ID de la anomalía',
-    type: String,
-    example: '1',
+    type: Number,
+    example: 1,
   })
   @ApiBody({
     type: UpdateReadingAnomalyDto,
@@ -177,11 +213,11 @@ export class ReadingAnomalyController {
   @RequiredPermission('reading-anomalies', 'update')
   @Patch(':id')
   async update(
-    @Param('id') id: string,
+    @Param('id', ParseBigIntPipe) id: bigint,
     @Body() updateDto: UpdateReadingAnomalyDto,
   ): Promise<ResponseReadingAnomalyDto> {
     return toReadingAnomalyResponse(
-      await this.readingAnomalyService.update(BigInt(id), updateDto),
+      await this.readingAnomalyService.update(id, updateDto),
     )!;
   }
 
@@ -192,8 +228,8 @@ export class ReadingAnomalyController {
   @ApiParam({
     name: 'id',
     description: 'ID de la anomalía',
-    type: String,
-    example: '1',
+    type: Number,
+    example: 1,
   })
   @ApiResponse({ status: 200, description: 'Anomalía eliminada' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
@@ -204,7 +240,7 @@ export class ReadingAnomalyController {
   @ApiResponse({ status: 404, description: 'Anomalía no encontrada' })
   @RequiredPermission('reading-anomalies', 'delete')
   @Delete(':id')
-  async delete(@Param('id') id: string) {
-    return this.readingAnomalyService.delete(BigInt(id));
+  async delete(@Param('id', ParseBigIntPipe) id: bigint) {
+    return this.readingAnomalyService.delete(id);
   }
 }

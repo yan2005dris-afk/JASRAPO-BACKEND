@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { ClientRepository } from '../../domain/repositories/client.repository';
 import { CreateClientDto } from '../../interfaces/dto/create-client.dto';
-import { TipoIdentificacionUtil } from 'src/infrastructure/common/utils/tipo-identificacion.util';
+import { TipoIdentificacionUtil } from 'src/shared/utils/tipo-identificacion.util';
 import type { CreateClientData } from '../../domain/types/create-client-data';
 
 @Injectable()
@@ -38,7 +38,14 @@ export class CreateClientUseCase {
     }
 
     this.validarIdentificacion(catalogo.codigo, identificacion);
-    this.validarCamposBasicos(catalogo.codigo, dto.nombres, dto.apellidos);
+    this.validarCamposBasicos(
+      catalogo.codigo,
+      dto.nombres,
+      dto.apellidos,
+      dto.tipoIdentificacionId,
+      dto.razonSocial,
+      dto.direccionDomicilio,
+    );
 
     const existente = await this.clientRepository.findUnique({
       identificacion,
@@ -137,10 +144,25 @@ export class CreateClientUseCase {
     codigo: string,
     nombres?: string,
     apellidos?: string,
+    tipoIdentificacionId?: number,
+    razonSocial?: string,
+    direccionDomicilio?: string,
   ) {
-    if (codigo !== '07' && (!nombres || !apellidos)) {
-      // CONSUMIDOR_FINAL
+    if (codigo === '07') return; // CONSUMIDOR_FINAL
+
+    if (!nombres || !apellidos) {
       throw new BadRequestException('Nombres y apellidos son requeridos');
+    }
+
+    if (codigo === '04' && !razonSocial) {
+      // RUC
+      throw new BadRequestException('La razón social es obligatoria para RUC');
+    }
+
+    if (!direccionDomicilio) {
+      throw new BadRequestException(
+        'La dirección de domicilio es obligatoria para facturación',
+      );
     }
   }
 

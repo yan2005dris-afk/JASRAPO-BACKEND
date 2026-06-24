@@ -14,6 +14,7 @@ export interface IResponseReading {
   lecturaInicial: boolean;
   periodoId: number;
   tieneAnomalia: boolean;
+  estado: string;
   contrato?: {
     contratoId: string;
     numeroGuia: string;

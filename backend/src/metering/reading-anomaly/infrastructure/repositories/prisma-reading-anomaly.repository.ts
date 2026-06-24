@@ -7,6 +7,7 @@ import {
   UpdateReadingAnomalyRepositoryData,
   ReadingAnomalyFilters,
 } from '../../domain/repositories/reading-anomaly.repository';
+import { EstadoLectura } from 'src/shared/enums';
 import { ReadingAnomalyEntity } from '../../domain/entities/reading-anomaly.entity';
 import { ReadingAnomalyMapper } from '../mappers/reading-anomaly.mapper';
 import { safeReadingAnomaliesSelect } from '../../types/IResponseReadingAnomaly';
@@ -72,6 +73,36 @@ export class PrismaReadingAnomalyRepository implements ReadingAnomalyRepository 
       select: safeReadingAnomaliesSelect,
     });
     return ReadingAnomalyMapper.toDomain(record)!;
+  }
+
+  async createAndMarkReadingWithAnomaly(
+    data: CreateReadingAnomalyRepositoryData & {
+      nextEstadoLectura: EstadoLectura;
+    },
+  ): Promise<ReadingAnomalyEntity> {
+    const { nextEstadoLectura, ...createData } = data;
+
+    const result = await this.prisma.$transaction(async (tx) => {
+      const anomaly = await tx.lecturaAnomalia.create({
+        data: {
+          lecturaId: createData.lecturaId,
+          observacion: createData.observacion,
+          tipo: createData.tipo,
+          estado: createData.estado,
+          fotoUrl: createData.fotoUrl,
+        },
+        select: safeReadingAnomaliesSelect,
+      });
+
+      await tx.lecturas.update({
+        where: { lecturaId: createData.lecturaId },
+        data: { estado: nextEstadoLectura },
+      });
+
+      return anomaly;
+    });
+
+    return ReadingAnomalyMapper.toDomain(result)!;
   }
 
   async update(
