@@ -8,12 +8,7 @@ export function getPdfLogoUrl(): string {
     return cachedLogoUrl;
   }
   try {
-    const logoPath = path.join(
-      __dirname,
-      '..',
-      'assets',
-      'Logo.jpeg',
-    );
+    const logoPath = path.join(__dirname, '..', 'assets', 'Logo.jpeg');
     const imageBuffer = fs.readFileSync(logoPath);
     cachedLogoUrl = `data:image/jpeg;base64,${imageBuffer.toString('base64')}`;
   } catch {

@@ -337,6 +337,8 @@ export class ReportsController {
   }
 
   private getClienteNombre(reporte: unknown): string | undefined {
-    return (reporte as Record<string, unknown>)?.clienteNombre as string | undefined;
+    return (reporte as Record<string, unknown>)?.clienteNombre as
+      | string
+      | undefined;
   }
 }
