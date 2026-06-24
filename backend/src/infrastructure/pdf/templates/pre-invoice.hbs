@@ -1,37 +1,38 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+  {{> styles}}
   <meta charset="UTF-8">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: Arial, sans-serif; font-size: 12px; color: #333; }
     .container { width: 100%; padding: 20px; }
 
-    .header { width: 100%; border-bottom: 2px solid #0066cc; padding-bottom: 15px; margin-bottom: 20px; }
+    .header { width: 100%; border-bottom: 2px solid var(--primary-color); padding-bottom: 15px; margin-bottom: 20px; }
     .header table { width: 100%; border-collapse: collapse; }
     .header td { vertical-align: top; padding: 0; border: none; }
     .header td.right { text-align: right; }
-    .company-name { font-size: 18px; font-weight: bold; color: #0066cc; }
+    .company-name { font-size: 18px; font-weight: bold; color: var(--primary-color); }
     .company-sub { font-size: 11px; color: #666; }
-    .doc-title { font-size: 22px; font-weight: bold; color: #0066cc; }
+    .doc-title { font-size: 22px; font-weight: bold; color: var(--primary-color); }
     .doc-number { font-size: 14px; color: #666; margin-top: 4px; }
-    .period-badge { display: inline-block; background: #0066cc; color: white; padding: 3px 10px; font-size: 11px; margin-top: 4px; }
+    .period-badge { display: inline-block; background: var(--primary-color); color: white; padding: 3px 10px; font-size: 11px; margin-top: 4px; }
 
     .section { margin-bottom: 20px; }
-    .section-title { font-size: 13px; font-weight: bold; color: #0066cc; border-bottom: 1px solid #ddd; padding-bottom: 5px; margin-bottom: 10px; }
+    .section-title { font-size: 13px; font-weight: bold; color: var(--primary-color); border-bottom: 1px solid #ddd; padding-bottom: 5px; margin-bottom: 10px; }
     .info-table { width: 100%; border-collapse: collapse; }
     .info-table td { border: none; padding: 3px 0; vertical-align: top; width: 50%; }
     .label { font-weight: bold; color: #666; }
 
     .detail-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-    .detail-table th { background-color: #0066cc; color: white; padding: 8px; text-align: left; font-size: 11px; }
+    .detail-table th { background-color: var(--primary-color); color: white; padding: 8px; text-align: left; font-size: 11px; }
     .detail-table td { padding: 8px; border-bottom: 1px solid #ddd; font-size: 11px; }
     .detail-table tr.even td { background-color: #f9f9f9; }
 
     .totals-wrapper { text-align: right; margin-top: 20px; }
     .totals-table { width: 300px; border-collapse: collapse; margin-left: auto; }
     .totals-table td { padding: 5px; border: none; font-size: 12px; }
-    .totals-table .total-row td { font-weight: bold; font-size: 14px; border-top: 2px solid #0066cc; }
+    .totals-table .total-row td { font-weight: bold; font-size: 14px; border-top: 2px solid var(--primary-color); }
 
     .footer { margin-top: 30px; text-align: center; font-size: 10px; color: #999; border-top: 1px solid #ddd; padding-top: 10px; }
   </style>

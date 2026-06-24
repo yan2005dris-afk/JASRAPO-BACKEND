@@ -15,6 +15,7 @@ import { ContratoMedidorService } from '../../application/contrato-medidor.servi
 import { CrearContratoMedidorDto } from '../dto/create-contrato-medidor.dto';
 import { ActualizarContratoMedidorDto } from '../dto/update-contrato-medidor.dto';
 import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
+import { buildPdfFileName } from 'src/infrastructure/pdf/utils/pdf-format.utils';
 import {
   ApiTags,
   ApiBearerAuth,
@@ -201,9 +202,10 @@ export class ContratoMedidorController {
       await this.contratoMedidorService.generateConnectionRequestPdf(
         BigInt(id),
       );
+    const filename = buildPdfFileName('solicitud-conexion', 'General');
     res.set({
       'Content-Type': 'application/pdf',
-      'Content-Disposition': `inline; filename="solicitud-conexion-${id}.pdf"`,
+      'Content-Disposition': `inline; filename="${filename}"`,
       'Content-Length': buffer.length,
     });
     res.end(buffer);
@@ -232,9 +234,10 @@ export class ContratoMedidorController {
       await this.contratoMedidorService.generateResponsibilityAgreementPdf(
         BigInt(id),
       );
+    const filename = buildPdfFileName('acta-responsabilidad', 'General');
     res.set({
       'Content-Type': 'application/pdf',
-      'Content-Disposition': `inline; filename="acta-responsabilidad-${id}.pdf"`,
+      'Content-Disposition': `inline; filename="${filename}"`,
       'Content-Length': buffer.length,
     });
     res.end(buffer);

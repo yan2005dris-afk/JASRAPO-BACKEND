@@ -1,5 +1,3 @@
-import * as fs from 'node:fs';
-import * as path from 'node:path';
 import type { PdfDocumentType } from 'src/infrastructure/pdf/document-type.interface';
 import {
   formatDate,
@@ -9,36 +7,7 @@ import {
   resolveClientName,
 } from 'src/infrastructure/pdf/utils/pdf-format.utils';
 
-let cachedLogoUrl: string | null = null;
-function getLogoUrl(): string {
-  if (cachedLogoUrl) return cachedLogoUrl;
-  try {
-    let logoPath = path.join(
-      __dirname,
-      '..',
-      '..',
-      'infrastructure',
-      'pdf',
-      'assets',
-      'Logo.jpeg',
-    );
-    if (!fs.existsSync(logoPath)) {
-      logoPath = path.join(
-        process.cwd(),
-        'src',
-        'infrastructure',
-        'pdf',
-        'assets',
-        'Logo.jpeg',
-      );
-    }
-    const imageBuffer = fs.readFileSync(logoPath);
-    cachedLogoUrl = `data:image/jpeg;base64,${imageBuffer.toString('base64')}`;
-  } catch (error) {
-    cachedLogoUrl = '';
-  }
-  return cachedLogoUrl;
-}
+import { getPdfLogoUrl } from 'src/infrastructure/pdf/utils/pdf-logo-loader.util';
 
 export const PaymentAgreementModernPdfDocumentType: PdfDocumentType = {
   type: 'payment-agreement-modern',
@@ -51,7 +20,7 @@ export const PaymentAgreementModernPdfDocumentType: PdfDocumentType = {
     const contrato = c.contrato ?? {};
 
     return {
-      logoUrl: getLogoUrl(),
+      logoUrl: getPdfLogoUrl(),
       convenio: {
         fecha: formatDate(c.createdAt),
         numeroGuia: contrato.numeroGuia ?? '',

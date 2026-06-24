@@ -159,3 +159,14 @@ export function buildRangoFechas(
   if (desde) return `Desde ${fmt(desde)}`;
   return `Hasta ${fmt(hasta!)}`;
 }
+
+export function buildPdfFileName(
+  nombreArchivo: string,
+  nombreCliente?: string,
+): string {
+  const cleanNombreCliente = (nombreCliente || 'General')
+    .replace(/[^a-zA-Z0-9_]/g, '_')
+    .replace(/_+/g, '_');
+  const hashFecha = Date.now().toString(36);
+  return `${nombreArchivo}-${cleanNombreCliente}-${hashFecha}.pdf`;
+}

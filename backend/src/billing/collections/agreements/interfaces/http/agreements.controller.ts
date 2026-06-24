@@ -34,7 +34,7 @@ import { ParseBigIntPipe } from 'src/infrastructure/common/pipes/parse-bigint.pi
 import { ApiPaginatedResponse } from 'src/infrastructure/common/decorators/api-paginated-response.decorator';
 import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
 import { PaginationMetaDto } from 'src/infrastructure/common/dtos/pagination-meta.dto';
-
+import { buildPdfFileName } from 'src/infrastructure/pdf/utils/pdf-format.utils';
 @ApiTags('agreements')
 @ApiBearerAuth()
 @ApiExtraModels(AgreementResponseDto, PaginationMetaDto)
@@ -255,9 +255,10 @@ export class AgreementsController {
     @Res() res: Response,
   ) {
     const buffer = await this.agreementsService.generatePdf(id);
+    const filename = buildPdfFileName('convenio', 'General');
     res.set({
       'Content-Type': 'application/pdf',
-      'Content-Disposition': `inline; filename="convenio-${id}.pdf"`,
+      'Content-Disposition': `inline; filename="${filename}"`,
       'Content-Length': buffer.length,
     });
     res.end(buffer);

@@ -26,6 +26,7 @@ import { CurrentUser } from 'src/identity/auth/interfaces/http/decorators/curren
 import { PreInvoiceService } from '../../application/pre-invoice.service';
 import { FindAllPreInvoicesDto } from '../dto/find-all-pre-invoices.dto';
 import { UpdatePreInvoiceStateDto } from '../dto/update-pre-invoice-state.dto';
+import { buildPdfFileName } from 'src/infrastructure/pdf/utils/pdf-format.utils';
 import { PreInvoiceResponseDto } from '../dto/pre-invoice-response.dto';
 import { PaginationMetaDto } from 'src/infrastructure/common/dtos/pagination-meta.dto';
 import { ApiPaginatedResponse } from 'src/infrastructure/common/decorators/api-paginated-response.decorator';
@@ -123,9 +124,10 @@ export class PreInvoiceController {
     @Res() res: Response,
   ) {
     const buffer = await this.generatePreInvoicePdf.execute(id);
+    const filename = buildPdfFileName('prefactura', 'General');
     res.set({
       'Content-Type': 'application/pdf',
-      'Content-Disposition': `inline; filename="prefactura-${id}.pdf"`,
+      'Content-Disposition': `inline; filename="${filename}"`,
       'Content-Length': buffer.length,
     });
     res.end(buffer);

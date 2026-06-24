@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+  {{> styles}}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Convenio de Pago - Olón</title>
@@ -231,9 +232,9 @@
     <div class="content">
         <div class="title">CONVENIO DE PAGO</div>
 
-        <p>En las oficinas de la Junta del Sistema Regional de Agua Potable Olón a los {{convenio.fechaActual}} se realiza el presente convenio donde se compromete el usuario de la guía {{convenio.numeroGuia}} a nombre del Sr(a) {{convenio.clienteNombre}} comprometiéndose a cancelar en cuotas ${{convenio.cuotaMensual}} mensuales más el consumo generado por meses consecutivos, convenio que rige a partir del periodo --. Al dar fiel cumplimiento a lo acordado.</p>
+        <p>En las oficinas de la Junta del Sistema Regional de Agua Potable Olón a los {{convenio.fechaActual}} se realiza el presente convenio donde se compromete el usuario de la guía {{convenio.numeroGuia}} a nombre del Sr(a) {{convenio.clienteNombre}} comprometiéndose a cancelar en cuotas ${{convenio.cuotaMensual}} mensuales más el consumo generado por meses consecutivos, convenio que rige a partir del periodo {{#if convenio.periodoInicio}}{{convenio.periodoInicio}}{{else}}No especificado{{/if}}. Al dar fiel cumplimiento a lo acordado.</p>
 
-        <p>Las cuotas se cancelan en efectivo a partir de -- en adelante y así los meses posteriores hasta cancelar la deuda de ${{convenio.deudaTotal}}.</p>
+        <p>Las cuotas se cancelan en efectivo a partir de {{#if convenio.mesPrimerPago}}{{convenio.mesPrimerPago}}{{else}}No especificada{{/if}} en adelante y así los meses posteriores hasta cancelar la deuda de ${{convenio.deudaTotal}}.</p>
 
         <p>Comprometiéndose a cancelar la primera cuota de ${{convenio.abonoInicial}}.</p>
 

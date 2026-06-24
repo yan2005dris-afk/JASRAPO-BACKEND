@@ -4,21 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Historial de Conexión - Moderno Formal</title>
-    <!-- Import Modern Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Removed External Fonts -->
     
     <style>
         :root {
-            --brand-main: #0A2540;
-            --brand-light: #F6F9FC;
-            --brand-dark: #011627;
-            --brand-accent: #0284C7;
-            --text-main: #334155;
-            --text-light: #64748b;
+            --brand-main: var(--primary-color, #22c55e);
+            --brand-light: var(--primary-color-light, #f0fdf4);
+            --brand-dark: #166534;
+            --brand-accent: #15803d;
+            --text-main: var(--text-main, #333);
+            --text-light: var(--text-muted, #666);
             --text-lighter: #94a3b8;
-            --border-color: #e2e8f0;
+            --border-color: var(--border-color, #ddd);
         }
 
         @page {
@@ -29,7 +26,7 @@
         body { 
             -webkit-print-color-adjust: exact; 
             print-color-adjust: exact; 
-            font-family: 'Inter', sans-serif;
+            font-family: Arial, Helvetica, sans-serif;
             font-size: 10px;
             color: var(--text-main);
             background-color: #ffffff;

@@ -1,8 +1,4 @@
 import type { PdfDocumentType } from 'src/infrastructure/pdf/document-type.interface';
-import {
-  buildRangoFechas,
-  currentDateLabel,
-} from 'src/infrastructure/pdf/utils/pdf-format.utils';
 
 export const PaymentsReportLegacyPdfDocumentType: PdfDocumentType = {
   type: 'payments-report-legacy',

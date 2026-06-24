@@ -1,29 +1,30 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+  {{> styles}}
   <meta charset="UTF-8">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: Arial, sans-serif; font-size: 11px; color: #333; }
     .container { width: 100%; padding: 20px; }
 
-    .header { border-bottom: 2px solid #0066cc; padding-bottom: 12px; margin-bottom: 16px; }
+    .header { border-bottom: 2px solid var(--primary-color); padding-bottom: 12px; margin-bottom: 16px; }
     .header table { width: 100%; border-collapse: collapse; }
     .header td { border: none; vertical-align: middle; padding: 0; }
     .header td.right { text-align: right; }
-    .company-name { font-size: 16px; font-weight: bold; color: #0066cc; }
+    .company-name { font-size: 16px; font-weight: bold; color: var(--primary-color); }
     .company-sub { font-size: 10px; color: #666; }
-    .report-title { font-size: 18px; font-weight: bold; color: #0066cc; }
+    .report-title { font-size: 18px; font-weight: bold; color: var(--primary-color); }
     .report-meta { font-size: 10px; color: #666; margin-top: 4px; }
 
-    .info-box { background: #f5f8ff; border: 1px solid #c8d8f5; border-radius: 4px; padding: 10px 14px; margin-bottom: 14px; }
+    .info-box { background: var(--primary-color-light); border: 1px solid #c8d8f5; border-radius: 4px; padding: 10px 14px; margin-bottom: 14px; }
     .info-box table { width: 100%; border-collapse: collapse; }
     .info-box td { border: none; padding: 3px 8px; font-size: 10px; }
     .info-box .label { color: #666; font-weight: bold; width: 120px; }
 
     table.data { width: 100%; border-collapse: collapse; margin-top: 8px; }
     table.data th {
-      background-color: #0066cc;
+      background-color: var(--primary-color);
       color: white;
       padding: 7px 8px;
       text-align: center;
@@ -31,9 +32,9 @@
       font-weight: bold;
     }
     table.data td { padding: 6px 8px; border-bottom: 1px solid #e0e0e0; font-size: 10px; text-align: center; vertical-align: middle; }
-    table.data tr.even td { background-color: #f5f8ff; }
+    table.data tr.even td { background-color: var(--primary-color-light); }
     table.data tr.total-row td {
-      background-color: #0066cc;
+      background-color: var(--primary-color);
       color: white;
       font-weight: bold;
       font-size: 11px;

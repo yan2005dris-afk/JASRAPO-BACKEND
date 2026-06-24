@@ -1,28 +1,6 @@
-import * as fs from 'node:fs';
-import * as path from 'node:path';
 import type { PdfDocumentType } from 'src/infrastructure/pdf/document-type.interface';
 
-let cachedLogoUrl: string | null = null;
-function getLogoUrl(): string {
-  if (cachedLogoUrl) return cachedLogoUrl;
-  try {
-    const logoPath = path.join(
-      __dirname,
-      '..',
-      '..',
-      'infrastructure',
-      'pdf',
-      'assets',
-      'Logo.jpeg',
-    );
-    const imageBuffer = fs.readFileSync(logoPath);
-    cachedLogoUrl = `data:image/jpeg;base64,${imageBuffer.toString('base64')}`;
-  } catch (error) {
-    console.error('Error loading logo:', error);
-    cachedLogoUrl = '';
-  }
-  return cachedLogoUrl;
-}
+import { getPdfLogoUrl } from 'src/infrastructure/pdf/utils/pdf-logo-loader.util';
 
 export const AccountStatementPdfDocumentType: PdfDocumentType = {
   type: 'account-statement',
@@ -134,7 +112,7 @@ export const AccountStatementPdfDocumentType: PdfDocumentType = {
     });
 
     return {
-      logoUrl: getLogoUrl(),
+      logoUrl: getPdfLogoUrl(),
       reporte: {
         titulo: 'Estado de Cuenta',
         fechaEmision,

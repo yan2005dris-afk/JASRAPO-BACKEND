@@ -1,41 +1,9 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import type { PdfDocumentType } from 'src/infrastructure/pdf/document-type.interface';
-import {
-  buildRangoFechas,
-  currentDateLabel,
-} from 'src/infrastructure/pdf/utils/pdf-format.utils';
+import { currentDateLabel } from 'src/infrastructure/pdf/utils/pdf-format.utils';
 
-let cachedLogoUrl: string | null = null;
-function getLogoUrl(): string {
-  if (cachedLogoUrl) return cachedLogoUrl;
-  try {
-    let logoPath = path.join(
-      __dirname,
-      '..',
-      '..',
-      'infrastructure',
-      'pdf',
-      'assets',
-      'Logo.jpeg',
-    );
-    if (!fs.existsSync(logoPath)) {
-      logoPath = path.join(
-        process.cwd(),
-        'src',
-        'infrastructure',
-        'pdf',
-        'assets',
-        'Logo.jpeg',
-      );
-    }
-    const imageBuffer = fs.readFileSync(logoPath);
-    cachedLogoUrl = `data:image/jpeg;base64,${imageBuffer.toString('base64')}`;
-  } catch (error) {
-    cachedLogoUrl = '';
-  }
-  return cachedLogoUrl;
-}
+import { getPdfLogoUrl } from 'src/infrastructure/pdf/utils/pdf-logo-loader.util';
 
 export const PaymentsReportModernPdfDocumentType: PdfDocumentType = {
   type: 'payments-report-modern',
@@ -74,7 +42,7 @@ export const PaymentsReportModernPdfDocumentType: PdfDocumentType = {
     }));
 
     return {
-      logoUrl: getLogoUrl(),
+      logoUrl: getPdfLogoUrl(),
       reporte: {
         titulo: 'Reporte Detallado de Abonos',
         fechaDesde: raw['fechaDesde'] || '--',

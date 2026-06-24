@@ -41,6 +41,11 @@ export class PdfService
       }
     });
     Handlebars.registerHelper('eq', (a: unknown, b: unknown) => a === b);
+
+    const stylesPath = path.join(this.templatesDir, 'styles.hbs');
+    if (fs.existsSync(stylesPath)) {
+      Handlebars.registerPartial('styles', fs.readFileSync(stylesPath, 'utf8'));
+    }
   }
 
   private async getBrowser(): Promise<Browser> {

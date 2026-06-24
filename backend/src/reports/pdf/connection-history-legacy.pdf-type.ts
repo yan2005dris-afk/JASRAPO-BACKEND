@@ -1,6 +1,5 @@
 import type { PdfDocumentType } from 'src/infrastructure/pdf/document-type.interface';
 import {
-  buildRangoFechas,
   currentDateLabel,
   resolveClientName,
 } from 'src/infrastructure/pdf/utils/pdf-format.utils';

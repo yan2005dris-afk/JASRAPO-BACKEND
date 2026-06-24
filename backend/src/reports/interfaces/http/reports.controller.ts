@@ -13,6 +13,7 @@ import { AccountStatementFilterDto } from '../../dto/account-statement-filter.dt
 import { AccountStatementReportSpec } from '../../specs/account-statement.report-spec';
 import { PaymentAgreementLegacyFilterDto } from '../../dto/payment-agreement-legacy-filter.dto';
 import { PaymentAgreementLegacyReportSpec } from '../../specs/payment-agreement-legacy.report-spec';
+import { buildPdfFileName } from '../../../infrastructure/pdf/utils/pdf-format.utils';
 
 @ApiTags('reports')
 @Controller('reports')
@@ -50,7 +51,12 @@ export class ReportsController {
       `Generating clients-list PDF — filters: ${JSON.stringify(filters)}`,
     );
     const data = await this.clientsListSpec.fetchData(filters);
-    await this.sendPdf(res, 'clients-list', data, `clientes-${Date.now()}`);
+    await this.sendPdf(
+      res,
+      'clients-list',
+      data,
+      buildPdfFileName('clientes', 'General'),
+    );
   }
 
   @Get('payments-report')
@@ -72,7 +78,12 @@ export class ReportsController {
       `Generating payments-report PDF — filters: ${JSON.stringify(filters)}`,
     );
     const data = await this.paymentsReportSpec.fetchData(filters);
-    await this.sendPdf(res, 'payments-report', data, `abonos-${Date.now()}`);
+    await this.sendPdf(
+      res,
+      'payments-report',
+      data,
+      buildPdfFileName('abonos', 'General'),
+    );
   }
 
   @Get('payments-report-legacy')
@@ -99,7 +110,7 @@ export class ReportsController {
       res,
       'payments-report-legacy',
       data,
-      `abonos-legacy-${Date.now()}`,
+      buildPdfFileName('abonos-legacy', 'General'),
     );
   }
 
@@ -127,7 +138,7 @@ export class ReportsController {
       res,
       'payments-report-modern',
       data,
-      `abonos-moderno-${Date.now()}`,
+      buildPdfFileName('abonos-moderno', 'General'),
     );
   }
 
@@ -150,11 +161,13 @@ export class ReportsController {
       `Generating connection-history PDF — filters: ${JSON.stringify(filters)}`,
     );
     const data = await this.connectionHistorySpec.fetchData(filters);
+    const clienteNombre = (data.reporte as Record<string, unknown>)
+      ?.clienteNombre as string | undefined;
     await this.sendPdf(
       res,
       'connection-history',
       data,
-      `historial-conexion-${Date.now()}`,
+      buildPdfFileName('historial-conexion', clienteNombre),
     );
   }
 
@@ -178,11 +191,13 @@ export class ReportsController {
     );
     // Reutilizamos el mismo spec de datos
     const data = await this.connectionHistorySpec.fetchData(filters);
+    const clienteNombre = (data.reporte as Record<string, unknown>)
+      ?.clienteNombre as string | undefined;
     await this.sendPdf(
       res,
       'connection-history-legacy',
       data,
-      `historial-conexion-legacy-${Date.now()}`,
+      buildPdfFileName('historial-conexion-legacy', clienteNombre),
     );
   }
 
@@ -206,11 +221,13 @@ export class ReportsController {
     );
     // Reutilizamos el mismo spec de datos
     const data = await this.connectionHistorySpec.fetchData(filters);
+    const clienteNombre = (data.reporte as Record<string, unknown>)
+      ?.clienteNombre as string | undefined;
     await this.sendPdf(
       res,
       'connection-history-modern',
       data,
-      `historial-conexion-moderno-${Date.now()}`,
+      buildPdfFileName('historial-conexion-moderno', clienteNombre),
     );
   }
 
@@ -233,11 +250,13 @@ export class ReportsController {
       `Generating account-statement PDF — filters: ${JSON.stringify(filters)}`,
     );
     const data = await this.accountStatementSpec.fetchData(filters);
+    const clienteNombre = (data.reporte as Record<string, unknown>)
+      ?.clienteNombre as string | undefined;
     await this.sendPdf(
       res,
       'account-statement',
       data,
-      `estado-cuenta-${Date.now()}`,
+      buildPdfFileName('estado-cuenta', clienteNombre),
     );
   }
 
@@ -264,7 +283,7 @@ export class ReportsController {
       res,
       'payment-agreement-legacy',
       data,
-      `convenio-legacy-${filters.convenioId}`,
+      buildPdfFileName('convenio-legacy', 'General'),
     );
   }
 
@@ -292,7 +311,7 @@ export class ReportsController {
       res,
       'payment-agreement-modern',
       data,
-      `convenio-moderno-${filters.convenioId}`,
+      buildPdfFileName('convenio-moderno', 'General'),
     );
   }
 
@@ -315,7 +334,7 @@ export class ReportsController {
     const buffer = await this.generatePdf.execute(type, data);
     res.set({
       'Content-Type': 'application/pdf',
-      'Content-Disposition': `inline; filename="${filename}.pdf"`,
+      'Content-Disposition': `inline; filename="${filename}"`,
       'Content-Length': buffer.length,
     });
     res.end(buffer);
