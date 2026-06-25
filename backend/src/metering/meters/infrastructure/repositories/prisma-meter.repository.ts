@@ -109,12 +109,12 @@ export class PrismaMeterRepository implements MeterRepository {
       });
     }
 
-    if (filters.buscar) {
+    if (filters.search) {
       conditions.push({
         OR: [
-          { serie: { contains: filters.buscar, mode: 'insensitive' } },
-          { marca: { contains: filters.buscar, mode: 'insensitive' } },
-          { modelo: { contains: filters.buscar, mode: 'insensitive' } },
+          { serie: { contains: filters.search, mode: 'insensitive' } },
+          { marca: { contains: filters.search, mode: 'insensitive' } },
+          { modelo: { contains: filters.search, mode: 'insensitive' } },
         ],
       });
     }
