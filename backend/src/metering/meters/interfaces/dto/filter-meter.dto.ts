@@ -33,5 +33,5 @@ export class FilterMeterDto extends PaginationDto {
   @IsOptional()
   @IsString()
   @Transform(({ value }) => (value === '' ? undefined : value))
-  buscar?: string;
+  search?: string;
 }
