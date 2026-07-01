@@ -62,8 +62,9 @@ export class UpdateReadingUseCase {
     }
 
     // Build update payload — solo campos que el usuario envió
+    const { file: _file, ...fieldsToUpdate } = updateDto as any;
     const dataToUpdate = Object.fromEntries(
-      Object.entries(updateDto).filter(([_, v]) => v !== undefined),
+      Object.entries(fieldsToUpdate).filter(([_, v]) => v !== undefined),
     ) as Partial<UpdateReadingRepositoryData>;
 
     if (targetEstado) {

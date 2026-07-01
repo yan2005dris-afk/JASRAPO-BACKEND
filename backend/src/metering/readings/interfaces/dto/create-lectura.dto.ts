@@ -1,12 +1,11 @@
 import {
   IsBoolean,
-  IsBase64,
   IsNotEmpty,
   IsNumber,
   IsOptional,
   IsString,
-  MaxLength,
 } from 'class-validator';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsNotEmptyString } from 'src/infrastructure/common/decorators/is-not-empty-string.decorator';
 
 export class CrearLecturaDto {
@@ -16,8 +15,23 @@ export class CrearLecturaDto {
   @IsOptional() @IsNumber() consumoCalculado?: number;
   @IsNotEmpty() medidorId: string | number;
   @IsOptional() @IsString() @IsNotEmptyString() descripcionAnomalia?: string;
-  @IsOptional() @IsString() @IsNotEmptyString() fotoUrl?: string;
-  @IsOptional() @IsString() @IsBase64() @MaxLength(7000000) fotoBase64?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Evidencia fotográfica (solo para uso de Swagger o backward compat si lo mandan en JSON, pero la forma recomendada es adjuntar el archivo multipart)',
+  })
+  @IsOptional()
+  @IsString()
+  @IsNotEmptyString()
+  fotoUrl?: string;
+
+  @ApiPropertyOptional({
+    type: 'string',
+    format: 'binary',
+    description: 'Archivo de imagen para evidencia de la lectura',
+  })
+  file?: any;
+
   @IsNotEmpty() @IsBoolean() lecturaInicial: boolean;
   @IsOptional() @IsNumber() periodoId?: number;
 }

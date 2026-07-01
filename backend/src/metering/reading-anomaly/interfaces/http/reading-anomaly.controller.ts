@@ -8,7 +8,11 @@ import {
   Delete,
   Query,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ParseBigIntPipe } from 'src/infrastructure/common/pipes/parse-bigint.pipe';
 import { ReadingAnomalyService } from '../../application/reading-anomaly.service';
 import { CreateReadingAnomalyDto } from '../dto/create-reading-anomaly.dto';
@@ -24,6 +28,7 @@ import {
   ApiParam,
   ApiQuery,
   ApiBody,
+  ApiConsumes,
 } from '@nestjs/swagger';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
 import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
@@ -34,6 +39,7 @@ import {
   EnumStateDto,
   buildStateCatalog,
 } from 'src/shared/enums/state-catalog';
+import { MAX_UPLOAD_SIZE_BYTES } from 'src/infrastructure/config/app.constants';
 
 @ApiTags('reading-anomalies')
 @ApiBearerAuth()
@@ -61,13 +67,31 @@ export class ReadingAnomalyController {
     status: 403,
     description: 'Sin permiso reading-anomalies:create',
   })
+  @ApiConsumes('multipart/form-data', 'application/json')
   @RequiredPermission('reading-anomalies', 'create')
   @Post()
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: { fileSize: MAX_UPLOAD_SIZE_BYTES },
+      fileFilter: (req, file, callback) => {
+        if (!file.mimetype.match(/^image\/(jpg|jpeg|png|webp)$/i)) {
+          return callback(
+            new BadRequestException(
+              'Solo se permiten imágenes (jpg, jpeg, png, webp)',
+            ),
+            false,
+          );
+        }
+        callback(null, true);
+      },
+    }),
+  )
   async create(
     @Body() createDto: CreateReadingAnomalyDto,
+    @UploadedFile() file?: Express.Multer.File,
   ): Promise<ResponseReadingAnomalyDto> {
     return toReadingAnomalyResponse(
-      await this.readingAnomalyService.create(createDto),
+      await this.readingAnomalyService.create(createDto, file),
     )!;
   }
 
@@ -210,14 +234,32 @@ export class ReadingAnomalyController {
     description: 'Sin permiso reading-anomalies:update',
   })
   @ApiResponse({ status: 404, description: 'Anomalía no encontrada' })
+  @ApiConsumes('multipart/form-data', 'application/json')
   @RequiredPermission('reading-anomalies', 'update')
   @Patch(':id')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: { fileSize: MAX_UPLOAD_SIZE_BYTES },
+      fileFilter: (req, file, callback) => {
+        if (!file.mimetype.match(/^image\/(jpg|jpeg|png|webp)$/i)) {
+          return callback(
+            new BadRequestException(
+              'Solo se permiten imágenes (jpg, jpeg, png, webp)',
+            ),
+            false,
+          );
+        }
+        callback(null, true);
+      },
+    }),
+  )
   async update(
     @Param('id', ParseBigIntPipe) id: bigint,
     @Body() updateDto: UpdateReadingAnomalyDto,
+    @UploadedFile() file?: Express.Multer.File,
   ): Promise<ResponseReadingAnomalyDto> {
     return toReadingAnomalyResponse(
-      await this.readingAnomalyService.update(id, updateDto),
+      await this.readingAnomalyService.update(id, updateDto, file),
     )!;
   }
 

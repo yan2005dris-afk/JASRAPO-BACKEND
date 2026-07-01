@@ -8,7 +8,11 @@ import {
   Delete,
   Query,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { NotEmptyBodyPipe } from 'src/infrastructure/common/pipes/not-empty-body.pipe';
 import { ParseBigIntPipe } from 'src/infrastructure/common/pipes/parse-bigint.pipe';
 import { ParseActualizarLecturaPipe } from 'src/infrastructure/common/pipes/parse-actualizar-lectura.pipe';
@@ -25,6 +29,7 @@ import {
   ApiParam,
   ApiQuery,
   ApiBody,
+  ApiConsumes,
 } from '@nestjs/swagger';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
 import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
@@ -36,6 +41,7 @@ import {
   buildStateCatalog,
 } from 'src/shared/enums/state-catalog';
 import { EstadoLectura } from 'src/shared/enums';
+import { MAX_UPLOAD_SIZE_BYTES } from 'src/infrastructure/config/app.constants';
 
 @ApiTags('readings')
 @ApiBearerAuth()
@@ -57,13 +63,31 @@ export class ReadingController {
   @ApiResponse({ status: 400, description: 'Datos inválidos' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({ status: 403, description: 'Sin permiso lecturas:create' })
+  @ApiConsumes('multipart/form-data', 'application/json')
   @RequiredPermission('lecturas', 'create')
   @Post()
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: { fileSize: MAX_UPLOAD_SIZE_BYTES },
+      fileFilter: (req, file, callback) => {
+        if (!file.mimetype.match(/^image\/(jpg|jpeg|png|webp)$/i)) {
+          return callback(
+            new BadRequestException(
+              'Solo se permiten imágenes (jpg, jpeg, png, webp)',
+            ),
+            false,
+          );
+        }
+        callback(null, true);
+      },
+    }),
+  )
   async create(
     @Body() crearLecturaDto: CrearLecturaDto,
+    @UploadedFile() file?: Express.Multer.File,
   ): Promise<ResponseReadingDto> {
     return toReadingResponse(
-      await this.readingService.create(crearLecturaDto),
+      await this.readingService.create(crearLecturaDto, file),
     )!;
   }
 
@@ -198,15 +222,33 @@ export class ReadingController {
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({ status: 403, description: 'Sin permiso lecturas:update' })
   @ApiResponse({ status: 404, description: 'Lectura no encontrada' })
+  @ApiConsumes('multipart/form-data', 'application/json')
   @RequiredPermission('lecturas', 'update')
   @Patch(':id')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: { fileSize: MAX_UPLOAD_SIZE_BYTES },
+      fileFilter: (req, file, callback) => {
+        if (!file.mimetype.match(/^image\/(jpg|jpeg|png|webp)$/i)) {
+          return callback(
+            new BadRequestException(
+              'Solo se permiten imágenes (jpg, jpeg, png, webp)',
+            ),
+            false,
+          );
+        }
+        callback(null, true);
+      },
+    }),
+  )
   async actualizarLectura(
     @Param('id', ParseBigIntPipe) id: bigint,
     @Body(new NotEmptyBodyPipe(), new ParseActualizarLecturaPipe())
     updateLecturaDto: ActualizarLecturaDto,
+    @UploadedFile() file?: Express.Multer.File,
   ): Promise<ResponseReadingDto> {
     return toReadingResponse(
-      await this.readingService.update(id, updateLecturaDto),
+      await this.readingService.update(id, updateLecturaDto, undefined, file),
     )!;
   }
 

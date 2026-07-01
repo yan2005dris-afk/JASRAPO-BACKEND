@@ -37,4 +37,20 @@ export class CreateReadingAnomalyDto {
   @IsNotEmpty()
   @IsEnum(EstadoAnomalia)
   estado: EstadoAnomalia;
+
+  @ApiPropertyOptional({
+    description:
+      'Evidencia fotográfica (solo para uso de Swagger o backward compat si lo mandan en JSON, pero la forma recomendada es adjuntar el archivo multipart)',
+  })
+  @IsOptional()
+  @IsString()
+  @IsNotEmptyString()
+  fotoUrl?: string;
+
+  @ApiPropertyOptional({
+    type: 'string',
+    format: 'binary',
+    description: 'Archivo de imagen para evidencia de la anomalía',
+  })
+  file?: any;
 }

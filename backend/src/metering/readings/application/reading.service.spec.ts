@@ -6,6 +6,7 @@ import { FindAllReadingsUseCase } from './use-cases/find-all-readings.use-case';
 import { FindOneReadingUseCase } from './use-cases/find-one-reading.use-case';
 import { UpdateReadingUseCase } from './use-cases/update-reading.use-case';
 import { RemoveReadingUseCase } from './use-cases/remove-reading.use-case';
+import { StorageService } from 'src/infrastructure/storage/storage.service';
 import { LecturaEntity } from '../domain/entities/lectura.entity';
 
 describe('ReadingService', () => {
@@ -48,6 +49,13 @@ describe('ReadingService', () => {
         {
           provide: RemoveReadingUseCase,
           useValue: { execute: jest.fn() },
+        },
+        {
+          provide: StorageService,
+          useValue: {
+            upload: jest.fn(),
+            delete: jest.fn(),
+          },
         },
       ],
     }).compile();
@@ -106,6 +114,7 @@ describe('ReadingService', () => {
   it('update should delegate to UpdateReadingUseCase', async () => {
     const id = BigInt(1);
     const dto = { lecturaActual: 200 };
+    jest.spyOn(findOneUseCase, 'execute').mockResolvedValue(mockLectura as any);
     jest.spyOn(updateUseCase, 'execute').mockResolvedValue(mockLectura as any);
     const result = await service.update(id, dto);
     expect(result).toBe(mockLectura);

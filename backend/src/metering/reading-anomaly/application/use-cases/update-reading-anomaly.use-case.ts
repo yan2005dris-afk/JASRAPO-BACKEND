@@ -20,7 +20,8 @@ export class UpdateReadingAnomalyUseCase {
       throw new NotFoundException(`Anomalía con ID ${id} no encontrada`);
     }
 
-    const dataToUpdate: any = { ...updateDto };
+    const { file: _file, ...updateData } = updateDto;
+    const dataToUpdate: any = { ...updateData };
     if (updateDto.lecturaId) {
       dataToUpdate.lecturaId = BigInt(updateDto.lecturaId);
     }
