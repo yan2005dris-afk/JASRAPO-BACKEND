@@ -7,8 +7,6 @@ import { PaymentsReportSpec } from './specs/payments-report.report-spec';
 import { ConnectionHistoryReportSpec } from './specs/connection-history.report-spec';
 import { AccountStatementReportSpec } from './specs/account-statement.report-spec';
 import { ClientsListPdfDocumentType } from './pdf/clients-list.pdf-type';
-import { PaymentsReportPdfDocumentType } from './pdf/payments-report.pdf-type';
-import { ConnectionHistoryPdfDocumentType } from './pdf/connection-history.pdf-type';
 import { AccountStatementPdfDocumentType } from './pdf/account-statement.pdf-type';
 import { PaymentsReportLegacyPdfDocumentType } from './pdf/payments-report-legacy.pdf-type';
 import { PaymentsReportModernPdfDocumentType } from './pdf/payments-report-modern.pdf-type';
@@ -36,8 +34,6 @@ export class ReportsModule implements OnModuleInit {
 
   onModuleInit() {
     this.pdfService.registerDocumentType(ClientsListPdfDocumentType);
-    this.pdfService.registerDocumentType(PaymentsReportPdfDocumentType);
-    this.pdfService.registerDocumentType(ConnectionHistoryPdfDocumentType);
     this.pdfService.registerDocumentType(AccountStatementPdfDocumentType);
     this.pdfService.registerDocumentType(
       createPaymentAgreementPdfDocumentType('legacy'),
