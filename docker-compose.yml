@@ -222,7 +222,6 @@ networks:
   jasrapo-network:
     name: jasrapo-network
     driver: bridge
-    external: true
 
 volumes:
   postgres_data:
