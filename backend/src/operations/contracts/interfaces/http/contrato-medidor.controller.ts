@@ -220,7 +220,7 @@ export class ContratoMedidorController {
   ) {
     const buffer =
       await this.contratoMedidorService.generateConnectionRequestPdf(id);
-    const filename = buildPdfFileName('solicitud-conexion', 'General');
+    const filename = buildPdfFileName('solicitud-conexion');
     res.set({
       'Content-Type': 'application/pdf',
       'Content-Disposition': `inline; filename="${filename}"`,
@@ -250,7 +250,7 @@ export class ContratoMedidorController {
   ) {
     const buffer =
       await this.contratoMedidorService.generateResponsibilityAgreementPdf(id);
-    const filename = buildPdfFileName('acta-responsabilidad', 'General');
+    const filename = buildPdfFileName('acta-responsabilidad');
     res.set({
       'Content-Type': 'application/pdf',
       'Content-Disposition': `inline; filename="${filename}"`,

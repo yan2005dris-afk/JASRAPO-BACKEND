@@ -6,6 +6,7 @@ import {
   buildRangoFechas,
   numberToWords,
   formatDateInWords,
+  buildPdfFileName,
 } from './pdf-format.utils';
 
 describe('pdf-format.utils', () => {
@@ -151,6 +152,44 @@ describe('pdf-format.utils', () => {
     it('should handle first day of month', () => {
       const result = formatDateInWords('2024-03-01T00:00:00.000Z');
       expect(result).toBe('uno días del mes de marzo del dos mil veinticuatro');
+    });
+  });
+
+  describe('buildPdfFileName', () => {
+    it('returns filename in format ${reportKey}-${hash}.pdf', () => {
+      const filename = buildPdfFileName('payments-report', 'testhash');
+      expect(filename).toMatch(/^payments-report-testhash\.pdf$/);
+    });
+
+    it('generates a base36 hash when no hash is provided', () => {
+      const now = Date.now();
+      const expectedHash = now.toString(36);
+      jest.useFakeTimers({ now });
+      try {
+        const filename = buildPdfFileName('connection-history');
+        expect(filename).toBe(`connection-history-${expectedHash}.pdf`);
+      } finally {
+        jest.useRealTimers();
+      }
+    });
+
+    it('does NOT include client name in the filename', () => {
+      const filename = buildPdfFileName('payments-report', 'hash123');
+      expect(filename).not.toContain('Acme');
+      expect(filename).not.toContain('Acme_SA');
+      expect(filename).toMatch(/^[a-zA-Z0-9_-]+\.pdf$/);
+    });
+
+    it('strips non-ASCII characters from report key', () => {
+      const filename = buildPdfFileName('informe-español', 'hash');
+      expect(filename).not.toMatch(/ñ/);
+      expect(filename).toMatch(/^[a-zA-Z0-9_-]+\.pdf$/);
+    });
+
+    it('is stable for the same report key and hash', () => {
+      const a = buildPdfFileName('payments-report', 'abc123');
+      const b = buildPdfFileName('payments-report', 'abc123');
+      expect(a).toBe(b);
     });
   });
 });
