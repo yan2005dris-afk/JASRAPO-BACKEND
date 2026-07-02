@@ -2,19 +2,15 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { Logger } from '@nestjs/common';
 import { ReportStyleDispatcher } from './report-style.dispatcher';
-import {
-  ReportKey,
-  ReportStyle,
-  ReportStyleService,
-} from './report-style.service';
+import type { ReportKey, ReportStyle } from './report-style.service';
+import { ReportStyleService } from './report-style.service';
 import { PdfService } from '../../infrastructure/pdf/pdf.service';
 import { buildPdfFileName } from '../../infrastructure/pdf/utils/pdf-format.utils';
 import type { PdfDocumentType } from '../../infrastructure/pdf/document-type.interface';
 
 jest.mock('../../infrastructure/pdf/utils/pdf-format.utils', () => ({
   buildPdfFileName: jest.fn(
-    (reportKey: string, hash?: string) =>
-      `${reportKey}-${hash ?? 'auto'}.pdf`,
+    (reportKey: string, hash?: string) => `${reportKey}-${hash ?? 'auto'}.pdf`,
   ),
 }));
 
@@ -30,16 +26,15 @@ describe('ReportStyleDispatcher', () => {
     type: string,
     template: string,
     name: string,
-  ): PdfDocumentType =>
-    ({
-      type,
-      name,
-      template,
-      adaptData: jest.fn((raw: Record<string, unknown>) => ({
-        ...raw,
-        adaptedBy: template,
-      })),
-    }) as unknown as PdfDocumentType;
+  ): PdfDocumentType => ({
+    type,
+    name,
+    template,
+    adaptData: jest.fn((raw: Record<string, unknown>) => ({
+      ...raw,
+      adaptedBy: template,
+    })),
+  });
 
   const makeDocTypes = () => ({
     'payments-report-legacy': buildDocType(
@@ -181,11 +176,11 @@ describe('ReportStyleDispatcher', () => {
       await dispatcher.dispatch('payments-report', { raw: true });
 
       expect(modernType.adaptData).toHaveBeenCalledWith({ raw: true });
-      const renderData = mockPdfService.render.mock.calls[0]?.[1] as Record<
-        string,
-        unknown
-      >;
-      expect(renderData['adaptedBy']).toBe('payments-report-modern');
+      const renderMock = mockPdfService.render as jest.Mock;
+      const renderCall = renderMock.mock.calls[0] as unknown as
+        | [string, Record<string, unknown>]
+        | undefined;
+      expect(renderCall?.[1]['adaptedBy']).toBe('payments-report-modern');
     });
   });
 
@@ -194,9 +189,7 @@ describe('ReportStyleDispatcher', () => {
       // Simulate a corrupted cache entry: resolveStyle has a `ReportStyle`
       // return type so it cannot actually return garbage, but the
       // dispatcher re-validates as belt-and-suspenders (REQ-16).
-      mockStyleService.resolveStyle.mockResolvedValueOnce(
-        'midnight' as unknown as ReportStyle,
-      );
+      mockStyleService.resolveStyle.mockResolvedValueOnce('midnight');
 
       const result = await dispatcher.dispatch('payments-report', {});
 
@@ -216,9 +209,9 @@ describe('ReportStyleDispatcher', () => {
       mockStyleService.resolveStyle.mockResolvedValueOnce('modern');
       mockPdfService.getDocumentType.mockReturnValueOnce(undefined);
 
-      await expect(
-        dispatcher.dispatch('payments-report', {}),
-      ).rejects.toThrow(/payments-report-modern/);
+      await expect(dispatcher.dispatch('payments-report', {})).rejects.toThrow(
+        /payments-report-modern/,
+      );
     });
   });
 });

@@ -1,8 +1,11 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import type { PdfDocumentType } from '../../infrastructure/pdf/document-type.interface';
 import { PdfService } from '../../infrastructure/pdf/pdf.service';
 import { buildPdfFileName } from '../../infrastructure/pdf/utils/pdf-format.utils';
-import { ReportKey, ReportStyle, ReportStyleService } from './report-style.service';
+import {
+  ReportKey,
+  ReportStyle,
+  ReportStyleService,
+} from './report-style.service';
 
 const VALID_STYLES: readonly ReportStyle[] = ['legacy', 'modern'];
 

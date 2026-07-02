@@ -74,14 +74,17 @@ export function createPaymentAgreementPdfDocumentType(
     adaptData(raw: Record<string, unknown>): Record<string, unknown> {
       const root = raw as unknown as PaymentAgreementPdfRawData | undefined;
       const c = (root?.convenio ??
-        (raw as unknown as Omit<PaymentAgreementPdfRawData['convenio'], 'contrato' | 'cliente'>)) as
-        | PaymentAgreementPdfRawData['convenio']
-        | undefined;
+        (raw as unknown as Omit<
+          PaymentAgreementPdfRawData['convenio'],
+          'contrato' | 'cliente'
+        >)) as PaymentAgreementPdfRawData['convenio'] | undefined;
 
       const cliente = c?.cliente ?? {};
       const contrato = c?.contrato ?? {};
-      const createdAt = c?.createdAt ?? raw['createdAt'] as string;
-      const fechaInicio = (c?.fechaInicio ?? raw['fechaInicio'] ?? createdAt) as string;
+      const createdAt = c?.createdAt ?? (raw['createdAt'] as string);
+      const fechaInicio = (c?.fechaInicio ??
+        raw['fechaInicio'] ??
+        createdAt) as string;
 
       return {
         logoUrl: getPdfLogoUrl(),
@@ -95,9 +98,7 @@ export function createPaymentAgreementPdfDocumentType(
           abonoInicial: formatCurrency(Number(c?.abonoInicial ?? 0)),
           numeroCuotas: c?.numeroCuotas ?? 0,
           mesPrimerPago: formatMonthYear(c?.fechaPrimerPago ?? createdAt),
-          ...(isLegacy
-            ? { periodoInicio: formatMonthYear(fechaInicio) }
-            : {}),
+          ...(isLegacy ? { periodoInicio: formatMonthYear(fechaInicio) } : {}),
           fechaActual: formatDateInWords(createdAt),
         },
       };

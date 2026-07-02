@@ -1,9 +1,6 @@
-jest.mock(
-  '../../../infrastructure/pdf/utils/pdf-logo-loader.util',
-  () => ({
-    getPdfLogoUrl: jest.fn(() => '/static/logo.png'),
-  }),
-);
+jest.mock('../../../infrastructure/pdf/utils/pdf-logo-loader.util', () => ({
+  getPdfLogoUrl: jest.fn(() => '/static/logo.png'),
+}));
 
 import { createPaymentAgreementPdfDocumentType } from './payment-agreement.factory';
 import type { PdfDocumentType } from '../../../infrastructure/pdf/document-type.interface';

@@ -4,7 +4,8 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { Reflector } from '@nestjs/core';
 import { ExecutionContext, HttpException } from '@nestjs/common';
-import { ApiBearerAuth, UseGuards, applyDecorators } from '@nestjs/common';
+import { UseGuards, applyDecorators } from '@nestjs/common';
+import type { Response as ExpressResponse } from 'express';
 import { ReportsController } from './reports.controller';
 import { PdfService } from '../../../infrastructure/pdf/pdf.service';
 import { GeneratePdfUseCase } from '../../../infrastructure/pdf/use-cases/generate-pdf.use-case';
@@ -15,7 +16,7 @@ import { AccountStatementReportSpec } from '../../specs/account-statement.report
 import { PaymentAgreementLegacyReportSpec } from '../../specs/payment-agreement-legacy.report-spec';
 import { ReportStyleDispatcher } from '../../application/report-style.dispatcher';
 import { ReportStyleService } from '../../application/report-style.service';
-import { JwtAuthGuard } from '../../../../identity/auth/interfaces/http/guards/jwt-auth.guard';
+import { JwtAuthGuard } from '../../../identity/auth/interfaces/http/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../../../infrastructure/common/guards/permissions.guard';
 import { RequiredPermission } from '../../../infrastructure/common/decorators/require-permission.decorator';
 
@@ -24,15 +25,12 @@ import { RequiredPermission } from '../../../infrastructure/common/decorators/re
  * The `applyDecorators` -> `getMetadata` chain is the standard NestJS pattern for
  * assertion-level tests of controller metadata.
  */
-function readClassLevelDecorators(target: Function) {
+function readClassLevelDecorators(
+  target: abstract new (...args: never[]) => unknown,
+) {
   return {
-    guards:
-      Reflect.getMetadata('__guards__', target) ??
-      [],
-    apiBearerAuth: Reflect.getMetadata(
-      'swagger/apiSecurity',
-      target,
-    ),
+    guards: Reflect.getMetadata('__guards__', target) ?? [],
+    apiBearerAuth: Reflect.getMetadata('swagger/apiSecurity', target),
     apiTags: Reflect.getMetadata('swagger/apiUseTags', target),
   };
 }
@@ -41,8 +39,8 @@ describe('ReportsController — class-level auth wiring (REQ-5)', () => {
   it('declares JwtAuthGuard + PermissionsGuard at the class level', () => {
     const guards = readClassLevelDecorators(ReportsController).guards;
     expect(Array.isArray(guards)).toBe(true);
-    const guardClasses = (guards as unknown[]).map((g) =>
-      (g as { name?: string }).name,
+    const guardClasses = (guards as unknown[]).map(
+      (g) => (g as { name?: string }).name,
     );
     expect(guardClasses).toContain('JwtAuthGuard');
     expect(guardClasses).toContain('PermissionsGuard');
@@ -105,13 +103,16 @@ describe('ReportsController — per-endpoint permission (REQ-6)', () => {
     'paymentAgreementPdf',
     'clientsListPdf',
     'accountStatementPdf',
-  ])('decorates %s with RequiredPermission("reportes","read")', (methodName) => {
-    const metadata = Reflect.getMetadata(
-      'permission',
-      ReportsController.prototype[methodName],
-    );
-    expect(metadata).toEqual({ recurso: 'reportes', accion: 'read' });
-  });
+  ])(
+    'decorates %s with RequiredPermission("reportes","read")',
+    (methodName) => {
+      const metadata = Reflect.getMetadata(
+        'permission',
+        ReportsController.prototype[methodName],
+      );
+      expect(metadata).toEqual({ recurso: 'reportes', accion: 'read' });
+    },
+  );
 });
 
 describe('ReportsController — handler wiring (REQ-1/2/3 + dispatcher)', () => {
@@ -123,7 +124,11 @@ describe('ReportsController — handler wiring (REQ-1/2/3 + dispatcher)', () => 
   let clientsSpec: jest.Mocked<ClientsListReportSpec>;
   let accountSpec: jest.Mocked<AccountStatementReportSpec>;
   let generatePdf: { execute: jest.Mock };
-  let pdfService: { getAvailableTypes: jest.Mock; getDocumentType: jest.Mock; render: jest.Mock };
+  let pdfService: {
+    getAvailableTypes: jest.Mock;
+    getDocumentType: jest.Mock;
+    render: jest.Mock;
+  };
   // Cast helper — the existing controller still wires `PdfService` + `GeneratePdfUseCase`.
   // The new controller will likely drop the GeneratePdfUseCase and use only the dispatcher.
   // Both flows are covered.
@@ -131,11 +136,12 @@ describe('ReportsController — handler wiring (REQ-1/2/3 + dispatcher)', () => 
   const FAKE_PDF = Buffer.from('%PDF-1.4 fake');
 
   const mockRes = () => {
+    // Minimal Express response surface — only what the controller uses.
     const res = {
       set: jest.fn().mockReturnThis(),
       end: jest.fn().mockReturnThis(),
-    } as unknown as import('express').Response;
-    return res;
+    };
+    return res as unknown as ExpressResponse;
   };
 
   beforeEach(async () => {
@@ -209,7 +215,7 @@ describe('ReportsController — handler wiring (REQ-1/2/3 + dispatcher)', () => 
     });
     const res = mockRes();
 
-    await controller.paymentsReportPdf({} as never, res);
+    await controller.paymentsReportPdf({}, res);
 
     expect(paymentsSpec.fetchData).toHaveBeenCalledWith({});
     expect(dispatcher.dispatch).toHaveBeenCalledWith('payments-report', {
@@ -235,10 +241,7 @@ describe('ReportsController — handler wiring (REQ-1/2/3 + dispatcher)', () => 
     });
     const res = mockRes();
 
-    await controller.connectionHistoryPdf(
-      { contratoId: '42' } as never,
-      res,
-    );
+    await controller.connectionHistoryPdf({ contratoId: '42' }, res);
 
     expect(connectionSpec.fetchData).toHaveBeenCalledWith({
       contratoId: '42',
@@ -257,7 +260,7 @@ describe('ReportsController — handler wiring (REQ-1/2/3 + dispatcher)', () => 
     });
     const res = mockRes();
 
-    await controller.paymentAgreementPdf({ convenioId: '1' } as never, res);
+    await controller.paymentAgreementPdf({ convenioId: '1' }, res);
 
     expect(paymentAgreementSpec.fetchData).toHaveBeenCalledWith({
       convenioId: '1',
@@ -273,7 +276,7 @@ describe('ReportsController — handler wiring (REQ-1/2/3 + dispatcher)', () => 
     generatePdf.execute.mockResolvedValue(FAKE_PDF);
     const res = mockRes();
 
-    await controller.clientsListPdf({} as never, res);
+    await controller.clientsListPdf({}, res);
 
     expect(clientsSpec.fetchData).toHaveBeenCalledWith({});
     expect(generatePdf.execute).toHaveBeenCalledWith(
@@ -290,10 +293,7 @@ describe('ReportsController — handler wiring (REQ-1/2/3 + dispatcher)', () => 
     generatePdf.execute.mockResolvedValue(FAKE_PDF);
     const res = mockRes();
 
-    await controller.accountStatementPdf(
-      { contratoId: '42' } as never,
-      res,
-    );
+    await controller.accountStatementPdf({ contratoId: '42' }, res);
 
     expect(accountSpec.fetchData).toHaveBeenCalledWith({
       contratoId: '42',
@@ -317,10 +317,13 @@ function collectGetPaths(proto: object): string[] {
   while (target && target !== Object.prototype) {
     for (const name of Object.getOwnPropertyNames(target)) {
       if (name === 'constructor') continue;
-      const p = Reflect.getMetadata('path', (target as Record<string, unknown>)[name]);
-      const method = Reflect.getMetadata('method', (target as Record<string, unknown>)[name]);
+      const member = (target as Record<string, unknown>)[name] as object;
+      const p = Reflect.getMetadata('path', member);
+      const method = Reflect.getMetadata('method', member);
       if (p && (method === 'GET' || method === 0)) {
-        paths.push(typeof p === 'string' ? p : (p as { toString(): string }).toString());
+        paths.push(
+          typeof p === 'string' ? p : (p as { toString(): string }).toString(),
+        );
       }
     }
     target = Object.getPrototypeOf(target);

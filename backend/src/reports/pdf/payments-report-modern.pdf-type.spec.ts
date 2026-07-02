@@ -1,9 +1,6 @@
-jest.mock(
-  '../../infrastructure/pdf/utils/pdf-logo-loader.util',
-  () => ({
-    getPdfLogoUrl: jest.fn(() => '/static/logo.png'),
-  }),
-);
+jest.mock('../../infrastructure/pdf/utils/pdf-logo-loader.util', () => ({
+  getPdfLogoUrl: jest.fn(() => '/static/logo.png'),
+}));
 
 import { PaymentsReportModernPdfDocumentType } from './payments-report-modern.pdf-type';
 
@@ -81,7 +78,9 @@ describe('PaymentsReportModernPdfDocumentType', () => {
     };
 
     const result = pdfType.adaptData(raw);
-    const grupos = (result['reporte'] as Record<string, unknown>)['grupos'] as Record<string, unknown>[];
+    const grupos = (result['reporte'] as Record<string, unknown>)[
+      'grupos'
+    ] as Record<string, unknown>[];
     const fA = grupos.find((g) => g['factura'] === 'F-A');
     expect(fA?.['subtotal']).toBe('50.00');
     expect(fA?.['filas']).toHaveLength(2);
@@ -104,7 +103,9 @@ describe('PaymentsReportModernPdfDocumentType', () => {
     };
 
     const result = pdfType.adaptData(raw);
-    const grupos = (result['reporte'] as Record<string, unknown>)['grupos'] as Record<string, unknown>[];
+    const grupos = (result['reporte'] as Record<string, unknown>)[
+      'grupos'
+    ] as Record<string, unknown>[];
     expect(grupos[0]?.['subtotal']).toBe('5.00');
   });
 });

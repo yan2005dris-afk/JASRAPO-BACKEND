@@ -61,9 +61,7 @@ const REPORT_KEY_TO_CLAVE: Readonly<Record<ReportKey, string>> = {
 export class ReportStyleService {
   private readonly logger = new Logger(ReportStyleService.name);
 
-  constructor(
-    private readonly config: SistemaConfigService,
-  ) {}
+  constructor(private readonly config: SistemaConfigService) {}
 
   /**
    * Returns the resolved style for a given report key. Never throws —
@@ -74,12 +72,12 @@ export class ReportStyleService {
     const specificClave = REPORT_KEY_TO_CLAVE[reportKey];
     const specific = await this.config.getString(specificClave);
     if (this.isValid(specific)) {
-      return specific as ReportStyle;
+      return specific;
     }
 
     const generic = await this.config.getString(REPORTE_ESTILO_DEFAULT);
     if (this.isValid(generic)) {
-      return generic as ReportStyle;
+      return generic;
     }
 
     this.logger.warn(

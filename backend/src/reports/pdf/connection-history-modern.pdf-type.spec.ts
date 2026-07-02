@@ -1,9 +1,6 @@
-jest.mock(
-  '../../infrastructure/pdf/utils/pdf-logo-loader.util',
-  () => ({
-    getPdfLogoUrl: jest.fn(() => '/static/logo.png'),
-  }),
-);
+jest.mock('../../infrastructure/pdf/utils/pdf-logo-loader.util', () => ({
+  getPdfLogoUrl: jest.fn(() => '/static/logo.png'),
+}));
 
 import { ConnectionHistoryModernPdfDocumentType } from './connection-history-modern.pdf-type';
 

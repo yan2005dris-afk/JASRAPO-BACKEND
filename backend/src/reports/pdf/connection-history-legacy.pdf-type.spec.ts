@@ -95,7 +95,9 @@ describe('ConnectionHistoryLegacyPdfDocumentType', () => {
     };
 
     const result = pdfType.adaptData(raw);
-    const filas = (result['reporte'] as Record<string, unknown>)['filas'] as Record<string, unknown>[];
+    const filas = (result['reporte'] as Record<string, unknown>)[
+      'filas'
+    ] as Record<string, unknown>[];
     expect(filas[0]?.['lectActual']).toBe('0');
     expect(filas[0]?.['consumo']).toBe('8');
     expect(filas[0]?.['valEmision']).toBe('0.00');
