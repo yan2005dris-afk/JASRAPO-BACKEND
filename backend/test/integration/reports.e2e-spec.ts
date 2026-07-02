@@ -58,7 +58,8 @@ describe('Reports e2e (HTTP integration)', () => {
             getString: jest.fn(async (clave: string) => {
               if (clave === 'reporte.estilo.default') return 'modern';
               if (clave === 'reporte.estilo.payments-report') return 'modern';
-              if (clave === 'reporte.estilo.connection-history') return 'modern';
+              if (clave === 'reporte.estilo.connection-history')
+                return 'modern';
               if (clave === 'reporte.estilo.payment-agreement') return 'modern';
               return 'modern';
             }),
@@ -141,11 +142,14 @@ describe('Reports e2e (HTTP integration)', () => {
                 const composite = `${key}-${style}`;
                 const tpl = pdf.getDocumentType(composite);
                 const adapted = tpl?.adaptData ? tpl.adaptData(raw) : raw;
-                const buf = await pdf.render(tpl?.template ?? composite, adapted);
+                const buf = await pdf.render(
+                  tpl?.template ?? composite,
+                  adapted,
+                );
                 const filename = `${key}-${hash ?? 'auto'}.pdf`;
                 return { buffer: buf, filename };
               },
-            ) as unknown as jest.Mock;
+            );
             return { dispatch: dispatcherSpy };
           },
           inject: [ReportStyleService, PdfService],
@@ -211,9 +215,7 @@ describe('Reports e2e (HTTP integration)', () => {
       'clients-list',
       'account-statement',
     ])('returns 401 for GET /reports/%s without a JWT', async (path) => {
-      await request(app.getHttpServer())
-        .get(`/reports/${path}`)
-        .expect(401);
+      await request(app.getHttpServer()).get(`/reports/${path}`).expect(401);
     });
   });
 
@@ -257,7 +259,8 @@ describe('Reports e2e (HTTP integration)', () => {
         .expect(200);
 
       expect(res.headers['content-type']).toBe('application/pdf');
-      const last = dispatcherSpy.mock.calls[dispatcherSpy.mock.calls.length - 1];
+      const last =
+        dispatcherSpy.mock.calls[dispatcherSpy.mock.calls.length - 1];
       expect(last?.[0]).toBe('connection-history');
     });
 
@@ -268,7 +271,8 @@ describe('Reports e2e (HTTP integration)', () => {
         .expect(200);
 
       expect(res.headers['content-type']).toBe('application/pdf');
-      const last = dispatcherSpy.mock.calls[dispatcherSpy.mock.calls.length - 1];
+      const last =
+        dispatcherSpy.mock.calls[dispatcherSpy.mock.calls.length - 1];
       expect(last?.[0]).toBe('payment-agreement');
     });
 
