@@ -135,11 +135,21 @@ describe('ReportsController — handler wiring (REQ-1/2/3 + dispatcher)', () => 
 
   const FAKE_PDF = Buffer.from('%PDF-1.4 fake');
 
-  const mockRes = () => {
+  const mockRes = (acceptHeader?: string) => {
     // Minimal Express response surface — only what the controller uses.
+    // `req.headers.accept` is read from the response object (Express puts the
+    // request as `res.req`); pass `acceptHeader` to simulate a negotiated
+    // request. Default = no header → controller falls back to PDF.
+    const req = {
+      headers: {
+        ...(acceptHeader !== undefined ? { accept: acceptHeader } : {}),
+      },
+    };
     const res = {
       set: jest.fn().mockReturnThis(),
       end: jest.fn().mockReturnThis(),
+      json: jest.fn().mockReturnThis(),
+      req,
     };
     return res as unknown as ExpressResponse;
   };
@@ -325,6 +335,157 @@ describe('ReportsController — handler wiring (REQ-1/2/3 + dispatcher)', () => 
       expect.objectContaining({ reporte: expect.any(Object) }),
     );
     expect(dispatcher.dispatch).not.toHaveBeenCalled();
+  });
+});
+
+describe('ReportsController — content negotiation (Accept header)', () => {
+  let controller: ReportsController;
+  let paymentsSpec: jest.Mocked<Pick<PaymentsReportSpec, 'fetchData'>>;
+  let dispatcher: jest.Mocked<Pick<ReportStyleDispatcher, 'dispatch'>>;
+  let clientsSpec: jest.Mocked<Pick<ClientsListReportSpec, 'fetchData'>>;
+  let generatePdf: jest.Mocked<Pick<GeneratePdfUseCase, 'execute'>>;
+
+  const FAKE_PDF = Buffer.from('%PDF-1.4 fake');
+
+  const mockRes = (acceptHeader?: string) => {
+    const req = {
+      headers: {
+        ...(acceptHeader !== undefined ? { accept: acceptHeader } : {}),
+      },
+    };
+    const res = {
+      set: jest.fn().mockReturnThis(),
+      end: jest.fn().mockReturnThis(),
+      json: jest.fn().mockReturnThis(),
+      req,
+    };
+    return res as unknown as ExpressResponse;
+  };
+
+  beforeEach(async () => {
+    generatePdf = { execute: jest.fn() };
+    const module: TestingModule = await Test.createTestingModule({
+      controllers: [ReportsController],
+      providers: [
+        {
+          provide: PdfService,
+          useValue: { getDocumentType: jest.fn(), render: jest.fn() },
+        },
+        { provide: GeneratePdfUseCase, useValue: generatePdf },
+        {
+          provide: ClientsListReportSpec,
+          useValue: { fetchData: jest.fn(), type: 'clients-list' },
+        },
+        {
+          provide: PaymentsReportSpec,
+          useValue: { fetchData: jest.fn(), type: 'payments-report' },
+        },
+        {
+          provide: ConnectionHistoryReportSpec,
+          useValue: { fetchData: jest.fn(), type: 'connection-history' },
+        },
+        {
+          provide: AccountStatementReportSpec,
+          useValue: { fetchData: jest.fn(), type: 'account-statement' },
+        },
+        {
+          provide: GetPaymentAgreementPdfDataUseCase,
+          useValue: { execute: jest.fn() },
+        },
+        {
+          provide: ReportStyleService,
+          useValue: { resolveStyle: jest.fn() },
+        },
+        {
+          provide: ReportStyleDispatcher,
+          useValue: { dispatch: jest.fn() },
+        },
+        { provide: JwtAuthGuard, useValue: { canActivate: () => true } },
+        { provide: PermissionsGuard, useValue: { canActivate: () => true } },
+      ],
+    }).compile();
+
+    controller = module.get<ReportsController>(ReportsController);
+    paymentsSpec = module.get(PaymentsReportSpec);
+    dispatcher = module.get(ReportStyleDispatcher);
+    clientsSpec = module.get(ClientsListReportSpec);
+  });
+
+  it('returns PDF when no Accept header is sent (default)', async () => {
+    paymentsSpec.fetchData.mockResolvedValue({ pagos: [] });
+    dispatcher.dispatch.mockResolvedValue({
+      buffer: FAKE_PDF,
+      filename: 'payments-report.pdf',
+    });
+    const res = mockRes();
+
+    await controller.paymentsReportPdf({}, res);
+
+    expect(res.json).not.toHaveBeenCalled();
+    expect(res.set).toHaveBeenCalledWith(
+      expect.objectContaining({ 'Content-Type': 'application/pdf' }),
+    );
+    expect(res.end).toHaveBeenCalledWith(FAKE_PDF);
+  });
+
+  it('returns JSON when Accept: application/json is sent', async () => {
+    const rawData = { pagos: [{ id: 1, valor: 100 }] };
+    paymentsSpec.fetchData.mockResolvedValue(rawData);
+    dispatcher.dispatch.mockResolvedValue({
+      buffer: FAKE_PDF,
+      filename: 'payments-report.pdf',
+    });
+    const res = mockRes('application/json');
+
+    await controller.paymentsReportPdf({}, res);
+
+    expect(res.end).not.toHaveBeenCalled();
+    expect(res.set).toHaveBeenCalledWith(
+      expect.objectContaining({
+        'Content-Type': expect.stringContaining('application/json'),
+      }),
+    );
+    expect(res.json).toHaveBeenCalledWith(rawData);
+  });
+
+  it('returns PDF when both application/json and application/pdf are sent (PDF wins)', async () => {
+    paymentsSpec.fetchData.mockResolvedValue({ pagos: [] });
+    dispatcher.dispatch.mockResolvedValue({
+      buffer: FAKE_PDF,
+      filename: 'payments-report.pdf',
+    });
+    const res = mockRes('application/json, application/pdf');
+
+    await controller.paymentsReportPdf({}, res);
+
+    expect(res.json).not.toHaveBeenCalled();
+    expect(res.end).toHaveBeenCalledWith(FAKE_PDF);
+  });
+
+  it('returns PDF when wildcard Accept is sent (browser default)', async () => {
+    paymentsSpec.fetchData.mockResolvedValue({ pagos: [] });
+    dispatcher.dispatch.mockResolvedValue({
+      buffer: FAKE_PDF,
+      filename: 'payments-report.pdf',
+    });
+    const res = mockRes('text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8');
+
+    await controller.paymentsReportPdf({}, res);
+
+    expect(res.json).not.toHaveBeenCalled();
+    expect(res.end).toHaveBeenCalledWith(FAKE_PDF);
+  });
+
+  it('clientsListPdf: returns JSON with raw data when Accept: application/json', async () => {
+    const rawData = { clientes: [{ id: 1, nombre: 'Acme' }] };
+    clientsSpec.fetchData.mockResolvedValue(rawData);
+    generatePdf.execute.mockResolvedValue(FAKE_PDF);
+    const res = mockRes('application/json');
+
+    await controller.clientsListPdf({}, res);
+
+    expect(res.json).toHaveBeenCalledWith(rawData);
+    expect(res.end).not.toHaveBeenCalled();
   });
 });
 

@@ -150,7 +150,12 @@ export class ReportsController {
       'payment-agreement',
       data as unknown as Record<string, unknown>,
     );
-    this.respondWithContentNegotiation(res, data, buffer, filename);
+    this.respondWithContentNegotiation(
+      res,
+      data as unknown as Record<string, unknown>,
+      buffer,
+      filename,
+    );
   }
 
   // ─── Untouched endpoints (REQ-10) ───────────────────────────────────────────
@@ -218,9 +223,9 @@ export class ReportsController {
    *     with the raw spec data (what the spec returned from the DB, before
    *     PDF-specific adaptation). Useful for frontend tables, integrations,
    *     and debugging.
-   *   - `Accept: application/pdf`, missing header, or `*/*` → PDF binary
-   *     (the original behavior). Browsers typically send `*/*` so they
-   *     get the PDF.
+   *   - `Accept: application/pdf`, missing header, or the wildcard media type
+   *     → PDF binary (the original behavior). Browsers typically send the
+   *     wildcard so they get the PDF.
    *
    * If the client sends both `application/json` and `application/pdf`,
    * PDF wins (matches the endpoint's primary purpose: generate a PDF).
