@@ -446,6 +446,26 @@ export async function seedCatalogosSriInit(prisma: PrismaClient) {
       valor: '3600000',
       descripcion: 'TTL de la caché de certificados (1 hora)',
     },
+    {
+      clave: 'reporte.estilo.default',
+      valor: 'modern',
+      descripcion: 'Estilo por defecto para todos los reportes (legacy|modern)',
+    },
+    {
+      clave: 'reporte.estilo.payments-report',
+      valor: 'modern',
+      descripcion: 'Estilo del reporte "Reporte de Pagos" (legacy|modern)',
+    },
+    {
+      clave: 'reporte.estilo.connection-history',
+      valor: 'modern',
+      descripcion: 'Estilo del reporte "Historial de Conexiones" (legacy|modern)',
+    },
+    {
+      clave: 'reporte.estilo.payment-agreement',
+      valor: 'modern',
+      descripcion: 'Estilo del reporte "Convenio de Pago" (legacy|modern)',
+    },
   ];
 
   for (const s of sistemaConfig) {
