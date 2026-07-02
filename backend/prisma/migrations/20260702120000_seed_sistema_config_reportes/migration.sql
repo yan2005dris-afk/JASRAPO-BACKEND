@@ -12,10 +12,10 @@
 -- most one TTL window without a restart.
 -- ============================================================
 
-INSERT INTO sistema_config (clave, valor, descripcion)
+INSERT INTO sistema_config (clave, valor, descripcion, created_at, updated_at)
 VALUES
-  ('reporte.estilo.default',            'modern', 'Estilo por defecto para todos los reportes (legacy|modern)'),
-  ('reporte.estilo.payments-report',    'modern', 'Estilo del reporte "Reporte de Pagos" (legacy|modern)'),
-  ('reporte.estilo.connection-history', 'modern', 'Estilo del reporte "Historial de Conexiones" (legacy|modern)'),
-  ('reporte.estilo.payment-agreement',  'modern', 'Estilo del reporte "Convenio de Pago" (legacy|modern)')
+  ('reporte.estilo.default',            'modern', 'Estilo por defecto para todos los reportes (legacy|modern)', NOW(), NOW()),
+  ('reporte.estilo.payments-report',    'modern', 'Estilo del reporte "Reporte de Pagos" (legacy|modern)', NOW(), NOW()),
+  ('reporte.estilo.connection-history', 'modern', 'Estilo del reporte "Historial de Conexiones" (legacy|modern)', NOW(), NOW()),
+  ('reporte.estilo.payment-agreement',  'modern', 'Estilo del reporte "Convenio de Pago" (legacy|modern)', NOW(), NOW())
 ON CONFLICT (clave) DO NOTHING;
