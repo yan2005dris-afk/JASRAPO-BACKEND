@@ -17,13 +17,13 @@ import { CrearContratoMedidorDto } from '../dto/create-contrato-medidor.dto';
 import { ActualizarContratoMedidorDto } from '../dto/update-contrato-medidor.dto';
 import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
 import { buildPdfFileName } from 'src/infrastructure/pdf/utils/pdf-format.utils';
+import { FilterContractsDto } from '../dto/filter-contracts.dto';
 import {
   ApiTags,
   ApiBearerAuth,
   ApiOperation,
   ApiResponse,
   ApiParam,
-  ApiQuery,
   ApiBody,
 } from '@nestjs/swagger';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
@@ -77,37 +77,14 @@ export class ContratoMedidorController {
 
   @ApiOperation({
     summary: 'Listar contratos',
-    description: 'Retorna lista de contratos con paginación',
-  })
-  @ApiQuery({
-    name: 'contratoId',
-    description: 'Filtrar por ID de contrato',
-    required: false,
-    type: String,
-  })
-  @ApiQuery({
-    name: 'medidorId',
-    description: 'Filtrar por ID de medidor',
-    required: false,
-    type: String,
+    description: 'Retorna lista de contratos con paginación y filtros',
   })
   @ApiResponse({ status: 200, description: 'Lista de contratos' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @RequiredPermission('contracts', 'read')
   @Get()
-  buscarContratos(
-    @Query() paginationDto: PaginationDto,
-    @Query('contratoId') contratoId?: string,
-    @Query('medidorId') medidorId?: string,
-  ) {
-    const where: any = {};
-    if (contratoId) where.contratoId = BigInt(contratoId);
-    if (medidorId) where.medidorId = BigInt(medidorId);
-    return this.contratoMedidorService.buscarContratos(
-      paginationDto.page,
-      paginationDto.limit,
-      where,
-    );
+  buscarContratos(@Query() filters: FilterContractsDto) {
+    return this.contratoMedidorService.buscarContratos(filters);
   }
 
   @ApiOperation({

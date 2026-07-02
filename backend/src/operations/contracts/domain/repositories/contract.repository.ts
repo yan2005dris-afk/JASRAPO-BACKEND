@@ -1,8 +1,19 @@
 import type { ContractEntity } from '../entities/contract.entity';
 import type { CreateContractData } from '../types/create-contract-data';
 import type { CreateContractWithMeterCommand } from '../types/create-contract-with-meter-command';
+import type { ContractFilters } from '../types/contract-filters';
+import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
+import type { PaginateOptions } from 'src/infrastructure/common/utils/pagination.util';
 
 export abstract class ContractRepository {
+  abstract paginateContratos(
+    args: {
+      filters?: ContractFilters;
+      orderBy?: Record<string, any>;
+    },
+    pagination: PaginateOptions,
+  ): Promise<PaginatedResult<ContractEntity>>;
+
   abstract findMany(params: {
     skip?: number;
     take?: number;

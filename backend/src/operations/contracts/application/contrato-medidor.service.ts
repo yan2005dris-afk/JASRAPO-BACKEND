@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { CrearContratoMedidorDto } from '../interfaces/dto/create-contrato-medidor.dto';
 import { ActualizarContratoMedidorDto } from '../interfaces/dto/update-contrato-medidor.dto';
+import { FilterContractsDto } from '../interfaces/dto/filter-contracts.dto';
+import { buildContractFilters } from './mappers/build-contract-filters.mapper';
 import { EstadoContrato } from 'src/shared/enums';
 import {
   EnumStateDto,
@@ -49,8 +51,13 @@ export class ContratoMedidorService {
     return this.createContractUseCase.execute(createDto);
   }
 
-  async buscarContratos(page = 1, limit = 10, where?: Record<string, any>) {
-    return this.findAllUseCase.execute(page, limit, where);
+  async buscarContratos(filters?: FilterContractsDto) {
+    const contractFilters = filters ? buildContractFilters(filters) : undefined;
+    return this.findAllUseCase.execute(
+      filters?.page,
+      filters?.limit,
+      contractFilters,
+    );
   }
 
   async buscarContrato(id: bigint): Promise<any> {
