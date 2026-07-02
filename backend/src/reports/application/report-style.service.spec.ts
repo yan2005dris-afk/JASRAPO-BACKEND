@@ -2,13 +2,13 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { Logger } from '@nestjs/common';
 import { ReportStyleService } from './report-style.service';
-import { SistemaConfigService } from '../../../infrastructure/config/sistema-config.service';
+import { SistemaConfigService } from '../../infrastructure/config/sistema-config.service';
 import {
   REPORTE_ESTILO_DEFAULT,
   REPORTE_ESTILO_PAYMENTS_REPORT,
   REPORTE_ESTILO_CONNECTION_HISTORY,
   REPORTE_ESTILO_PAYMENT_AGREEMENT,
-} from '../../../infrastructure/config/sistema-config.keys';
+} from '../../infrastructure/config/sistema-config.keys';
 
 describe('ReportStyleService', () => {
   let service: ReportStyleService;
