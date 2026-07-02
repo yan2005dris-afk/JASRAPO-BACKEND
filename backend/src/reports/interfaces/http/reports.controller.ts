@@ -64,75 +64,84 @@ export class ReportsController {
   @Get('payments-report')
   @RequiredPermission('reportes', 'read')
   @ApiOperation({
-    summary: 'Reporte PDF — Abonos (estilo configurable)',
+    summary: 'Reporte de Abonos (estilo configurable)',
     description:
-      'Genera un PDF con los pagos aplicados a facturas. El estilo (legacy|modern) se resuelve desde sistema_config (`reporte.estilo.payments-report`, fallback `reporte.estilo.default`, último recurso `legacy`).',
+      'Genera un PDF con los pagos aplicados a facturas, o devuelve los datos crudos en JSON según el header `Accept`. El estilo (legacy|modern) se resuelve desde sistema_config (`reporte.estilo`).',
   })
   @ApiResponse({
     status: 200,
-    description: 'PDF generado (binary)',
-    content: { 'application/pdf': {} },
+    description: 'PDF generado (binary) o JSON con los datos crudos según Accept',
+    content: {
+      'application/pdf': {},
+      'application/json': {},
+    },
   })
   async paymentsReportPdf(
     @Query() filters: PaymentsReportFilterDto,
     @Res() res: Response,
   ) {
     this.logger.log(
-      `Generating payments-report PDF — filters: ${JSON.stringify(filters)}`,
+      `Generating payments-report — filters: ${JSON.stringify(filters)}`,
     );
     const data = await this.paymentsReportSpec.fetchData(filters);
     const { buffer, filename } = await this.dispatcher.dispatch(
       'payments-report',
       data,
     );
-    this.respondWithPdf(res, buffer, filename);
+    this.respondWithContentNegotiation(res, data, buffer, filename);
   }
 
   @Get('connection-history')
   @RequiredPermission('reportes', 'read')
   @ApiOperation({
-    summary: 'Reporte PDF — Historial de Conexión (estilo configurable)',
+    summary: 'Reporte de Historial de Conexión (estilo configurable)',
     description:
-      'Genera un PDF con el historial de facturación por período. El estilo se resuelve desde sistema_config (`reporte.estilo.connection-history`).',
+      'Genera un PDF con el historial de facturación por período, o devuelve los datos crudos en JSON según el header `Accept`. El estilo se resuelve desde sistema_config (`reporte.estilo`).',
   })
   @ApiResponse({
     status: 200,
-    description: 'PDF generado (binary)',
-    content: { 'application/pdf': {} },
+    description: 'PDF generado (binary) o JSON con los datos crudos según Accept',
+    content: {
+      'application/pdf': {},
+      'application/json': {},
+    },
   })
   async connectionHistoryPdf(
     @Query() filters: ConnectionHistoryFilterDto,
     @Res() res: Response,
   ) {
     this.logger.log(
-      `Generating connection-history PDF — filters: ${JSON.stringify(filters)}`,
+      `Generating connection-history — filters: ${JSON.stringify(filters)}`,
     );
     const data = await this.connectionHistorySpec.fetchData(filters);
     const { buffer, filename } = await this.dispatcher.dispatch(
       'connection-history',
       data,
     );
-    this.respondWithPdf(res, buffer, filename);
+    this.respondWithContentNegotiation(res, data, buffer, filename);
   }
 
   @Get('payment-agreement')
   @RequiredPermission('reportes', 'read')
   @ApiOperation({
-    summary: 'Reporte PDF — Convenio de Pago (estilo configurable)',
+    summary: 'Reporte de Convenio de Pago (estilo configurable)',
     description:
-      'Genera el PDF del convenio de pago. El estilo se resuelve desde sistema_config (`reporte.estilo.payment-agreement`).',
+      'Genera el PDF del convenio de pago, o devuelve los datos crudos en JSON según el header `Accept`. El estilo se resuelve desde sistema_config (`reporte.estilo`).',
   })
   @ApiResponse({
     status: 200,
-    description: 'PDF generado (binary)',
-    content: { 'application/pdf': {} },
+    description: 'PDF generado (binary) o JSON con los datos crudos según Accept',
+    content: {
+      'application/pdf': {},
+      'application/json': {},
+    },
   })
   async paymentAgreementPdf(
     @Query() filters: PaymentAgreementLegacyFilterDto,
     @Res() res: Response,
   ) {
     this.logger.log(
-      `Generating payment-agreement PDF — filters: ${JSON.stringify(filters)}`,
+      `Generating payment-agreement — filters: ${JSON.stringify(filters)}`,
     );
     const data = await this.paymentAgreementPdfData.execute(
       BigInt(filters.convenioId),
@@ -141,7 +150,7 @@ export class ReportsController {
       'payment-agreement',
       data as unknown as Record<string, unknown>,
     );
-    this.respondWithPdf(res, buffer, filename);
+    this.respondWithContentNegotiation(res, data, buffer, filename);
   }
 
   // ─── Untouched endpoints (REQ-10) ───────────────────────────────────────────
@@ -149,61 +158,99 @@ export class ReportsController {
   @Get('clients-list')
   @RequiredPermission('reportes', 'read')
   @ApiOperation({
-    summary: 'Reporte PDF — Listado de Clientes',
+    summary: 'Reporte de Listado de Clientes',
     description:
-      'Genera un PDF con todos los clientes. Soporta los mismos filtros que el listado de clientes. Sin paginación — incluye todos los registros que coincidan.',
+      'Genera un PDF con todos los clientes, o devuelve los datos crudos en JSON según el header `Accept`. Soporta los mismos filtros que el listado de clientes. Sin paginación — incluye todos los registros que coincidan.',
   })
   @ApiResponse({
     status: 200,
-    description: 'PDF generado (binary)',
-    content: { 'application/pdf': {} },
+    description: 'PDF generado (binary) o JSON con los datos crudos según Accept',
+    content: {
+      'application/pdf': {},
+      'application/json': {},
+    },
   })
   async clientsListPdf(
     @Query() filters: ClientsListReportFilterDto,
     @Res() res: Response,
   ) {
     this.logger.log(
-      `Generating clients-list PDF — filters: ${JSON.stringify(filters)}`,
+      `Generating clients-list — filters: ${JSON.stringify(filters)}`,
     );
     const data = await this.clientsListSpec.fetchData(filters);
     const buffer = await this.generatePdf.execute('clients-list', data);
-    this.respondWithPdf(res, buffer, 'clientes-General.pdf');
+    this.respondWithContentNegotiation(res, data, buffer, 'clientes-General.pdf');
   }
 
   @Get('account-statement')
   @RequiredPermission('reportes', 'read')
   @ApiOperation({
-    summary: 'Reporte PDF — Estado de Cuenta',
+    summary: 'Reporte de Estado de Cuenta',
     description:
-      'Genera un PDF con el estado de cuenta de un contrato. Filtros opcionales por rango de fechas (fechaDesde/fechaHasta). Por defecto trae los últimos 6 períodos.',
+      'Genera un PDF con el estado de cuenta de un contrato, o devuelve los datos crudos en JSON según el header `Accept`. Filtros opcionales por rango de fechas (fechaDesde/fechaHasta). Por defecto trae los últimos 6 períodos.',
   })
   @ApiResponse({
     status: 200,
-    description: 'PDF generado (binary)',
-    content: { 'application/pdf': {} },
+    description: 'PDF generado (binary) o JSON con los datos crudos según Accept',
+    content: {
+      'application/pdf': {},
+      'application/json': {},
+    },
   })
   async accountStatementPdf(
     @Query() filters: AccountStatementFilterDto,
     @Res() res: Response,
   ) {
     this.logger.log(
-      `Generating account-statement PDF — filters: ${JSON.stringify(filters)}`,
+      `Generating account-statement — filters: ${JSON.stringify(filters)}`,
     );
     const data = await this.accountStatementSpec.fetchData(filters);
     const buffer = await this.generatePdf.execute('account-statement', data);
-    this.respondWithPdf(res, buffer, 'estado-cuenta-General.pdf');
+    this.respondWithContentNegotiation(res, data, buffer, 'estado-cuenta-General.pdf');
   }
 
   // ─── Private helpers ────────────────────────────────────────────────────────
 
-  private respondWithPdf(
+  /**
+   * Content negotiation based on the `Accept` request header.
+   *
+   *   - `Accept: application/json` (and NOT `application/pdf`) → JSON payload
+   *     with the raw spec data (what the spec returned from the DB, before
+   *     PDF-specific adaptation). Useful for frontend tables, integrations,
+   *     and debugging.
+   *   - `Accept: application/pdf`, missing header, or `*/*` → PDF binary
+   *     (the original behavior). Browsers typically send `*/*` so they
+   *     get the PDF.
+   *
+   * If the client sends both `application/json` and `application/pdf`,
+   * PDF wins (matches the endpoint's primary purpose: generate a PDF).
+   */
+  private respondWithContentNegotiation(
     res: Response,
+    data: Record<string, unknown>,
     buffer: Buffer,
-    filename: string,
+    pdfFilename: string,
   ): void {
+    const accept = (res.req.headers.accept ?? '').toLowerCase();
+    const wantsJson = accept.includes('application/json');
+    const wantsPdf =
+      accept.includes('application/pdf') ||
+      accept === '' ||
+      accept.includes('*/*');
+
+    if (wantsJson && !wantsPdf) {
+      const jsonFilename = pdfFilename.replace(/\.pdf$/i, '.json');
+      res.set({
+        'Content-Type': 'application/json; charset=utf-8',
+        'Content-Disposition': `inline; filename="${jsonFilename}"`,
+      });
+      res.json(data);
+      return;
+    }
+
     res.set({
       'Content-Type': 'application/pdf',
-      'Content-Disposition': `inline; filename="${filename}"`,
+      'Content-Disposition': `inline; filename="${pdfFilename}"`,
       'Content-Length': buffer.length,
     });
     res.end(buffer);
