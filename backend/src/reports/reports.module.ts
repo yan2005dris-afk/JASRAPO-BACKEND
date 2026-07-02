@@ -11,12 +11,13 @@ import { PaymentsReportPdfDocumentType } from './pdf/payments-report.pdf-type';
 import { ConnectionHistoryPdfDocumentType } from './pdf/connection-history.pdf-type';
 import { AccountStatementPdfDocumentType } from './pdf/account-statement.pdf-type';
 import { PaymentAgreementLegacyReportSpec } from './specs/payment-agreement-legacy.report-spec';
-import { PaymentAgreementLegacyPdfDocumentType } from './pdf/payment-agreement-legacy.pdf-type';
-import { PaymentAgreementModernPdfDocumentType } from './pdf/payment-agreement-modern.pdf-type';
 import { PaymentsReportLegacyPdfDocumentType } from './pdf/payments-report-legacy.pdf-type';
 import { PaymentsReportModernPdfDocumentType } from './pdf/payments-report-modern.pdf-type';
 import { ConnectionHistoryLegacyPdfDocumentType } from './pdf/connection-history-legacy.pdf-type';
 import { ConnectionHistoryModernPdfDocumentType } from './pdf/connection-history-modern.pdf-type';
+import { createPaymentAgreementPdfDocumentType } from './pdf/factories/payment-agreement.factory';
+import { ReportStyleService } from './application/report-style.service';
+import { ReportStyleDispatcher } from './application/report-style.dispatcher';
 
 @Module({
   imports: [ClientModule],
@@ -27,6 +28,8 @@ import { ConnectionHistoryModernPdfDocumentType } from './pdf/connection-history
     ConnectionHistoryReportSpec,
     AccountStatementReportSpec,
     PaymentAgreementLegacyReportSpec,
+    ReportStyleService,
+    ReportStyleDispatcher,
   ],
 })
 export class ReportsModule implements OnModuleInit {
@@ -37,8 +40,12 @@ export class ReportsModule implements OnModuleInit {
     this.pdfService.registerDocumentType(PaymentsReportPdfDocumentType);
     this.pdfService.registerDocumentType(ConnectionHistoryPdfDocumentType);
     this.pdfService.registerDocumentType(AccountStatementPdfDocumentType);
-    this.pdfService.registerDocumentType(PaymentAgreementLegacyPdfDocumentType);
-    this.pdfService.registerDocumentType(PaymentAgreementModernPdfDocumentType);
+    this.pdfService.registerDocumentType(
+      createPaymentAgreementPdfDocumentType('legacy'),
+    );
+    this.pdfService.registerDocumentType(
+      createPaymentAgreementPdfDocumentType('modern'),
+    );
     this.pdfService.registerDocumentType(PaymentsReportLegacyPdfDocumentType);
     this.pdfService.registerDocumentType(PaymentsReportModernPdfDocumentType);
     this.pdfService.registerDocumentType(
