@@ -93,9 +93,9 @@ describe('SistemaConfigRepository', () => {
       );
       prisma.sistemaConfig.findUnique.mockRejectedValueOnce(prismaError);
 
-      await expect(repository.findByClave('reporte.estilo.x')).rejects.toBeInstanceOf(
-        SistemaConfigRepositoryError,
-      );
+      await expect(
+        repository.findByClave('reporte.estilo.x'),
+      ).rejects.toBeInstanceOf(SistemaConfigRepositoryError);
     });
 
     it('wraps the original error as the cause when mapping Prisma errors', async () => {

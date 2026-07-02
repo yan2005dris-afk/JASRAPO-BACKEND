@@ -56,7 +56,9 @@ export class SistemaConfigService {
       DEFAULT_CACHE_TTL_MS,
     );
     this.ttlMs =
-      typeof configured === 'number' && Number.isFinite(configured) && configured > 0
+      typeof configured === 'number' &&
+      Number.isFinite(configured) &&
+      configured > 0
         ? configured
         : DEFAULT_CACHE_TTL_MS;
   }

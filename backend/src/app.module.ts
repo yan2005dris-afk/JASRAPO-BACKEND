@@ -17,6 +17,7 @@ import { AuditModule } from './infrastructure/audit/audit.module';
 import { PdfModule } from './infrastructure/pdf/pdf.module';
 import { ReportsModule } from './reports/reports.module';
 import { StorageProxyModule } from './infrastructure/storage-proxy/storage-proxy.module';
+import { SistemaConfigModule } from './infrastructure/config/sistema-config.module';
 
 @Module({
   imports: [
@@ -58,6 +59,7 @@ import { StorageProxyModule } from './infrastructure/storage-proxy/storage-proxy
     PdfModule,
     ReportsModule,
     StorageProxyModule,
+    SistemaConfigModule,
   ],
   controllers: [],
   providers: [],

@@ -1,6 +1,9 @@
 import type { ConfigService } from '@nestjs/config';
 import type { SistemaConfigRepository } from './sistema-config.repository';
-import { __resetSistemaConfigCache, SistemaConfigService } from './sistema-config.service';
+import {
+  __resetSistemaConfigCache,
+  SistemaConfigService,
+} from './sistema-config.service';
 
 describe('SistemaConfigService', () => {
   let service: SistemaConfigService;
