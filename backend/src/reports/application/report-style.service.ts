@@ -1,17 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { SistemaConfigService } from '../../infrastructure/config/sistema-config.service';
-import {
-  REPORTE_ESTILO_DEFAULT,
-  REPORTE_ESTILO_PAYMENTS_REPORT,
-  REPORTE_ESTILO_CONNECTION_HISTORY,
-  REPORTE_ESTILO_PAYMENT_AGREEMENT,
-} from '../../infrastructure/config/sistema-config.keys';
+import { REPORTE_ESTILO } from '../../infrastructure/config/sistema-config.keys';
 
 /**
  * The finite set of report-key slugs the dispatcher knows how to route.
- * Keep this enum-style union tight — every entry must have a matching
- * `reporte.estilo.<key>` row in `sistema_config` (or rely on the
- * `reporte.estilo.default` fallback).
+ * Kept as a typed union for callers' compile-time safety, but the
+ * dispatcher no longer uses the key to look up a per-report estilo
+ * (see `ReportStyleService` — one global `reporte.estilo` applies to
+ * all reports now).
  */
 export type ReportKey =
   | 'payments-report'
@@ -25,37 +21,35 @@ export type ReportKey =
 export type ReportStyle = 'legacy' | 'modern';
 
 /**
- * Hard-coded last-resort fallback when both the per-report key and the
- * `reporte.estilo.default` key are missing or invalid in `sistema_config`.
- * Per locked user decision #5 in
+ * Hard-coded last-resort fallback when the `reporte.estilo` row is missing
+ * or invalid in `sistema_config`. Per locked user decision #5 in
  * `sdd/report-style-system-config/decisions`: silent fallback with a warn log.
  */
 const FALLBACK_STYLE: ReportStyle = 'legacy';
 
 const VALID_STYLES: readonly ReportStyle[] = ['legacy', 'modern'];
 
-const REPORT_KEY_TO_CLAVE: Readonly<Record<ReportKey, string>> = {
-  'payments-report': REPORTE_ESTILO_PAYMENTS_REPORT,
-  'connection-history': REPORTE_ESTILO_CONNECTION_HISTORY,
-  'payment-agreement': REPORTE_ESTILO_PAYMENT_AGREEMENT,
-};
-
 /**
- * Resolves the report style (`legacy` | `modern`) for a given report key
- * by reading the matching `reporte.estilo.<key>` row in `sistema_config`,
- * with a three-level fallback chain:
+ * Resolves the report style (`legacy` | `modern`) by reading the single
+ * `reporte.estilo` row in `sistema_config`. The `reportKey` argument is
+ * accepted for backwards compatibility with the dispatcher call site
+ * but is no longer used to look up a per-report value.
  *
- *  1. `reporte.estilo.<reportKey>` (specific)
- *  2. `reporte.estilo.default` (generic fallback)
- *  3. Hard-coded `'legacy'` + `Logger.warn` (last resort)
+ * Two-level fallback chain:
+ *
+ *  1. `reporte.estilo` (the one global row)
+ *  2. Hard-coded `'legacy'` + `Logger.warn` (last resort)
  *
  * Cache TTL (60s) and `null`-caching are owned by `SistemaConfigService`,
  * so this service stays pure and stateless — it only adds:
- *  - the `reporte.estilo.<key>` → clave resolution
- *  - the three-level fallback chain
  *  - the `IsIn(['legacy','modern'])` validation
+ *  - the fallback to the hard-coded legacy
  *
  * The dispatcher re-validates after a cache hit (REQ-16 belt-and-suspenders).
+ *
+ * Future per-report overrides: introduce a `reporte.estilo.overrides.<key>`
+ * row family with an explicit lookup here. Do NOT reintroduce the silent
+ * per-key + default chain — that masked misconfiguration.
  */
 @Injectable()
 export class ReportStyleService {
@@ -64,24 +58,18 @@ export class ReportStyleService {
   constructor(private readonly config: SistemaConfigService) {}
 
   /**
-   * Returns the resolved style for a given report key. Never throws —
-   * invalid / missing config rows always resolve to `'legacy'` with a
-   * warn log so a misconfigured deploy renders something instead of 5xx.
+   * Returns the resolved style. Never throws — invalid / missing config
+   * always resolves to `'legacy'` with a warn log so a misconfigured deploy
+   * renders something instead of 5xx.
    */
-  async resolveStyle(reportKey: ReportKey): Promise<ReportStyle> {
-    const specificClave = REPORT_KEY_TO_CLAVE[reportKey];
-    const specific = await this.config.getString(specificClave);
-    if (this.isValid(specific)) {
-      return specific;
-    }
-
-    const generic = await this.config.getString(REPORTE_ESTILO_DEFAULT);
-    if (this.isValid(generic)) {
-      return generic;
+  async resolveStyle(_reportKey: ReportKey): Promise<ReportStyle> {
+    const value = await this.config.getString(REPORTE_ESTILO);
+    if (this.isValid(value)) {
+      return value;
     }
 
     this.logger.warn(
-      `No valid estilo in sistema_config for "${reportKey}" — falling back to "${FALLBACK_STYLE}"`,
+      `No valid value for "${REPORTE_ESTILO}" in sistema_config (got "${String(value)}") — falling back to "${FALLBACK_STYLE}"`,
     );
     return FALLBACK_STYLE;
   }
