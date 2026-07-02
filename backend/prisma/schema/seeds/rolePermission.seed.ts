@@ -20,6 +20,8 @@ export async function seedRolePermissions(
   await prisma.rolPermisos.deleteMany();
 
     // 1. ADMIN: TODOS LOS PERMISOS (Acceso total garantizado)
+    //    Como el loop cubre TODOS los permisos, admin recibe `reportes:*`
+    //    automáticamente cuando `reportes` se agrega a permission.seed.ts.
     for (const perm of permissions) {
         await prisma.rolPermisos.create({
             data: { rolId: roles.adminRol.rolId, permisoId: perm.permisoId },
@@ -41,7 +43,7 @@ export async function seedRolePermissions(
 
     // 3. RECAUDACION: Facturación, Cobros y Clientes (Sin Lecturas)
     const recaudacionResources = [
-        'planillas', 'facturacion_electronica', 'recaudacion', 
+        'planillas', 'facturacion_electronica', 'recaudacion',
         'notas_credito', 'envio_facturas', 'batches',
         'clientes'
     ];
@@ -67,17 +69,57 @@ export async function seedRolePermissions(
     }
 
     // 5. PRESIDENCIA: SOLO LECTURA DE REPORTES
-    const reportesResources = ['estado_cuenta', 'recaudacion_morosidad', 'consumo_zonas', 'dashboard'];
-    const presidenciaPerms = permissions.filter(
-        (p) => reportesResources.includes(p.recurso) && p.accion === 'read',
+    //    Antes usaba los recursos zombie `estado_cuenta`, `recaudacion_morosidad`,
+    //    `consumo_zonas`, `dashboard`. Esos ya no se chequean en ningún
+    //    controller — ReportsController usa `@RequiredPermission('reportes','read')`.
+    //    Ahora se asigna `reportes:read` directamente.
+    const presidenciaReportes = permissions.filter(
+        (p) => p.recurso === 'reportes' && p.accion === 'read',
     );
-    for (const perm of presidenciaPerms) {
+    for (const perm of presidenciaReportes) {
         await prisma.rolPermisos.create({
             data: { rolId: roles.presidenciaRol.rolId, permisoId: perm.permisoId },
         });
     }
 
-    // 6. USER: SOLO PERFIL
+    // 6. CONTABILIDAD: SOLO LECTURA DE REPORTES
+    //    Mismo caso que presidencia — antes no tenía reportes asignados.
+    const contabilidadReportes = permissions.filter(
+        (p) => p.recurso === 'reportes' && p.accion === 'read',
+    );
+    for (const perm of contabilidadReportes) {
+        await prisma.rolPermisos.create({
+            data: { rolId: roles.contabilidadRol.rolId, permisoId: perm.permisoId },
+        });
+    }
+
+    // 7. REPORTES:READ para roles de staff que ya tienen permisos por recurso
+    //    (secretaria, recaudacion). Presidencia y contabilidad ya están
+    //    cubiertas arriba (secciones 5 y 6). User/operadores NO reciben.
+    const reportesRead = permissions.find(
+        (p) => p.recurso === 'reportes' && p.accion === 'read',
+    );
+    if (reportesRead) {
+        const staffRolesWithReportes = [
+            roles.secretariaRol,
+            roles.recaudacionRol,
+        ];
+        for (const rol of staffRolesWithReportes) {
+            const existing = await prisma.rolPermisos.findFirst({
+                where: {
+                    rolId: rol.rolId,
+                    permisoId: reportesRead.permisoId,
+                },
+            });
+            if (!existing) {
+                await prisma.rolPermisos.create({
+                    data: { rolId: rol.rolId, permisoId: reportesRead.permisoId },
+                });
+            }
+        }
+    }
+
+    // 8. USER: SOLO PERFIL
     const userResources = ['profile'];
     const userPerms = permissions.filter(p => userResources.includes(p.recurso));
     for (const perm of userPerms) {
