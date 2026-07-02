@@ -139,7 +139,7 @@ export class ReportsController {
     );
     const { buffer, filename } = await this.dispatcher.dispatch(
       'payment-agreement',
-      data,
+      data as unknown as Record<string, unknown>,
     );
     this.respondWithPdf(res, buffer, filename);
   }
