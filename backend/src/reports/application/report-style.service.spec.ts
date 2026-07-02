@@ -3,12 +3,7 @@ import { Test } from '@nestjs/testing';
 import { Logger } from '@nestjs/common';
 import { ReportStyleService } from './report-style.service';
 import { SistemaConfigService } from '../../infrastructure/config/sistema-config.service';
-import {
-  REPORTE_ESTILO_DEFAULT,
-  REPORTE_ESTILO_PAYMENTS_REPORT,
-  REPORTE_ESTILO_CONNECTION_HISTORY,
-  REPORTE_ESTILO_PAYMENT_AGREEMENT,
-} from '../../infrastructure/config/sistema-config.keys';
+import { REPORTE_ESTILO } from '../../infrastructure/config/sistema-config.keys';
 
 describe('ReportStyleService', () => {
   let service: ReportStyleService;
@@ -44,102 +39,75 @@ describe('ReportStyleService', () => {
   });
 
   describe('resolveStyle — happy path', () => {
-    it('returns the report-specific value when present and valid (modern)', async () => {
+    it('returns "modern" when the global value is "modern"', async () => {
       mockConfig.getString.mockResolvedValueOnce('modern');
 
       const result = await service.resolveStyle('payments-report');
 
       expect(result).toBe('modern');
       expect(mockConfig.getString).toHaveBeenCalledTimes(1);
-      expect(mockConfig.getString).toHaveBeenCalledWith(
-        REPORTE_ESTILO_PAYMENTS_REPORT,
-      );
+      expect(mockConfig.getString).toHaveBeenCalledWith(REPORTE_ESTILO);
       expect(loggerWarnSpy).not.toHaveBeenCalled();
     });
 
-    it('returns the report-specific value when present and valid (legacy)', async () => {
+    it('returns "legacy" when the global value is "legacy"', async () => {
       mockConfig.getString.mockResolvedValueOnce('legacy');
 
       const result = await service.resolveStyle('connection-history');
 
       expect(result).toBe('legacy');
-      expect(mockConfig.getString).toHaveBeenCalledWith(
-        REPORTE_ESTILO_CONNECTION_HISTORY,
-      );
+      expect(mockConfig.getString).toHaveBeenCalledWith(REPORTE_ESTILO);
       expect(loggerWarnSpy).not.toHaveBeenCalled();
     });
 
-    it('uses the canonical clave for payment-agreement', async () => {
-      mockConfig.getString.mockResolvedValueOnce('modern');
+    it('applies the same value to every report key (no per-key lookup)', async () => {
+      mockConfig.getString.mockResolvedValue('modern');
 
-      const result = await service.resolveStyle('payment-agreement');
+      const a = await service.resolveStyle('payments-report');
+      const b = await service.resolveStyle('connection-history');
+      const c = await service.resolveStyle('payment-agreement');
 
-      expect(result).toBe('modern');
-      expect(mockConfig.getString).toHaveBeenCalledWith(
-        REPORTE_ESTILO_PAYMENT_AGREEMENT,
-      );
+      expect(a).toBe('modern');
+      expect(b).toBe('modern');
+      expect(c).toBe('modern');
+      // All three calls hit the same key — no per-key branching.
+      expect(mockConfig.getString).toHaveBeenCalledTimes(3);
+      expect(mockConfig.getString).toHaveBeenCalledWith(REPORTE_ESTILO);
     });
   });
 
   describe('resolveStyle — fallback chain', () => {
-    it('falls back to the default key when the report-specific key returns null', async () => {
-      mockConfig.getString
-        .mockResolvedValueOnce(null) // report-specific missing
-        .mockResolvedValueOnce('modern'); // default
-
-      const result = await service.resolveStyle('payments-report');
-
-      expect(result).toBe('modern');
-      expect(mockConfig.getString).toHaveBeenCalledTimes(2);
-      expect(mockConfig.getString).toHaveBeenNthCalledWith(
-        1,
-        REPORTE_ESTILO_PAYMENTS_REPORT,
-      );
-      expect(mockConfig.getString).toHaveBeenNthCalledWith(
-        2,
-        REPORTE_ESTILO_DEFAULT,
-      );
-      expect(loggerWarnSpy).not.toHaveBeenCalled();
-    });
-
-    it('falls back to the default key when the report-specific key returns an invalid value', async () => {
-      mockConfig.getString
-        .mockResolvedValueOnce('midnight') // garbage
-        .mockResolvedValueOnce('legacy'); // default
-
-      const result = await service.resolveStyle('connection-history');
-
-      expect(result).toBe('legacy');
-      expect(mockConfig.getString).toHaveBeenCalledTimes(2);
-      expect(loggerWarnSpy).not.toHaveBeenCalled();
-    });
-
-    it('falls back to hardcoded legacy + warn when both keys are missing', async () => {
-      mockConfig.getString
-        .mockResolvedValueOnce(null) // report-specific missing
-        .mockResolvedValueOnce(null); // default missing
+    it('falls back to hardcoded legacy + warn when the key is missing (null)', async () => {
+      mockConfig.getString.mockResolvedValueOnce(null);
 
       const result = await service.resolveStyle('payment-agreement');
 
       expect(result).toBe('legacy');
+      expect(mockConfig.getString).toHaveBeenCalledTimes(1);
       expect(loggerWarnSpy).toHaveBeenCalledTimes(1);
       expect(loggerWarnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('payment-agreement'),
+        expect.stringContaining(REPORTE_ESTILO),
       );
       expect(loggerWarnSpy).toHaveBeenCalledWith(
         expect.stringContaining('legacy'),
       );
     });
 
-    it('falls back to hardcoded legacy + warn when both keys return invalid values', async () => {
-      mockConfig.getString
-        .mockResolvedValueOnce('') // empty
-        .mockResolvedValueOnce('banana'); // garbage
+    it('falls back to hardcoded legacy + warn when the key returns an invalid value', async () => {
+      mockConfig.getString.mockResolvedValueOnce('midnight');
 
-      const result = await service.resolveStyle('payment-agreement');
+      const result = await service.resolveStyle('connection-history');
 
       expect(result).toBe('legacy');
-      expect(mockConfig.getString).toHaveBeenCalledTimes(2);
+      expect(loggerWarnSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('falls back to hardcoded legacy + warn when the key returns an empty string', async () => {
+      mockConfig.getString.mockResolvedValueOnce('');
+
+      const result = await service.resolveStyle('payments-report');
+
+      expect(result).toBe('legacy');
       expect(loggerWarnSpy).toHaveBeenCalledTimes(1);
     });
   });
@@ -154,23 +122,6 @@ describe('ReportStyleService', () => {
       // Two calls — SistemaConfigService owns the cache. The dispatcher MUST
       // NOT add a second cache layer (REQ-11 / REQ-12 are owned upstream).
       expect(mockConfig.getString).toHaveBeenCalledTimes(2);
-    });
-
-    it('hits the underlying cache independently per report key', async () => {
-      mockConfig.getString
-        .mockResolvedValueOnce('modern') // payment
-        .mockResolvedValueOnce('legacy'); // connection
-
-      await service.resolveStyle('payments-report');
-      await service.resolveStyle('connection-history');
-
-      expect(mockConfig.getString).toHaveBeenCalledTimes(2);
-      expect(mockConfig.getString).toHaveBeenCalledWith(
-        REPORTE_ESTILO_PAYMENTS_REPORT,
-      );
-      expect(mockConfig.getString).toHaveBeenCalledWith(
-        REPORTE_ESTILO_CONNECTION_HISTORY,
-      );
     });
   });
 });

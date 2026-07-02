@@ -422,29 +422,14 @@ export async function seedCatalogosSriInit(prisma: PrismaClient) {
   // ─── Sistema Config (5 registros) ───
   const sistemaConfig = [
     {
-      clave: 'SRI_SYNC_MAX_LIMIT',
-      valor: '500',
-      descripcion: 'Límite máximo de comprobantes a sincronizar por lote',
-    },
-    {
-      clave: 'SRI_MAX_RETRIES',
-      valor: '3',
-      descripcion: 'Número máximo de reintentos para consultas al SRI',
-    },
-    {
-      clave: 'SRI_RETRY_DELAY_MS',
-      valor: '2000',
-      descripcion: 'Retraso entre reintentos en milisegundos',
-    },
-    {
-      clave: 'CACHE_EMISOR_TTL_MS',
-      valor: '3600000',
-      descripcion: 'TTL de la caché de emisores (1 hora)',
-    },
-    {
       clave: 'CACHE_CERT_TTL_MS',
       valor: '3600000',
       descripcion: 'TTL de la caché de certificados (1 hora)',
+    },
+    {
+      clave: 'reporte.estilo',
+      valor: 'modern',
+      descripcion: 'Estilo global para todos los reportes PDF (legacy|modern)',
     },
   ];
 
