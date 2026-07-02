@@ -13,7 +13,7 @@ import { ClientsListReportSpec } from '../../specs/clients-list.report-spec';
 import { PaymentsReportSpec } from '../../specs/payments-report.report-spec';
 import { ConnectionHistoryReportSpec } from '../../specs/connection-history.report-spec';
 import { AccountStatementReportSpec } from '../../specs/account-statement.report-spec';
-import { PaymentAgreementLegacyReportSpec } from '../../specs/payment-agreement-legacy.report-spec';
+import { GetPaymentAgreementPdfDataUseCase } from '../../../billing/collections/agreements/application/use-cases/get-payment-agreement-pdf-data.use-case';
 import { ReportStyleDispatcher } from '../../application/report-style.dispatcher';
 import { ReportStyleService } from '../../application/report-style.service';
 import { JwtAuthGuard } from '../../../identity/auth/interfaces/http/guards/jwt-auth.guard';
@@ -120,7 +120,7 @@ describe('ReportsController — handler wiring (REQ-1/2/3 + dispatcher)', () => 
   let dispatcher: jest.Mocked<ReportStyleDispatcher>;
   let paymentsSpec: jest.Mocked<PaymentsReportSpec>;
   let connectionSpec: jest.Mocked<ConnectionHistoryReportSpec>;
-  let paymentAgreementSpec: jest.Mocked<PaymentAgreementLegacyReportSpec>;
+  let paymentAgreementPdfData: jest.Mocked<GetPaymentAgreementPdfDataUseCase>;
   let clientsSpec: jest.Mocked<ClientsListReportSpec>;
   let accountSpec: jest.Mocked<AccountStatementReportSpec>;
   let generatePdf: { execute: jest.Mock };
@@ -180,8 +180,8 @@ describe('ReportsController — handler wiring (REQ-1/2/3 + dispatcher)', () => 
           useValue: { fetchData: jest.fn(), type: 'account-statement' },
         },
         {
-          provide: PaymentAgreementLegacyReportSpec,
-          useValue: { fetchData: jest.fn(), type: 'payment-agreement-legacy' },
+          provide: GetPaymentAgreementPdfDataUseCase,
+          useValue: { execute: jest.fn() },
         },
         {
           provide: ReportStyleService,
@@ -198,7 +198,7 @@ describe('ReportsController — handler wiring (REQ-1/2/3 + dispatcher)', () => 
     dispatcher = module.get(ReportStyleDispatcher);
     paymentsSpec = module.get(PaymentsReportSpec);
     connectionSpec = module.get(ConnectionHistoryReportSpec);
-    paymentAgreementSpec = module.get(PaymentAgreementLegacyReportSpec);
+    paymentAgreementPdfData = module.get(GetPaymentAgreementPdfDataUseCase);
     clientsSpec = module.get(ClientsListReportSpec);
     accountSpec = module.get(AccountStatementReportSpec);
   });
@@ -252,8 +252,30 @@ describe('ReportsController — handler wiring (REQ-1/2/3 + dispatcher)', () => 
     );
   });
 
-  it('paymentAgreementPdf: calls PaymentAgreementLegacyReportSpec then dispatcher', async () => {
-    paymentAgreementSpec.fetchData.mockResolvedValue({ convenio: {} });
+  it('paymentAgreementPdf: calls GetPaymentAgreementPdfDataUseCase then dispatcher', async () => {
+    paymentAgreementPdfData.execute.mockResolvedValue({
+      convenio: {
+        convenioId: '1',
+        contratoId: '5',
+        deudaTotal: 500,
+        abonoInicial: 100,
+        numeroCuotas: 4,
+        fechaPrimerPago: '2024-06-01T00:00:00.000Z',
+        motivo: 'Deuda acumulada',
+        createdAt: '2024-05-10T00:00:00.000Z',
+        cuotaMensual: 100,
+        contrato: {
+          numeroGuia: 'NG-001',
+          direccionSuministro: 'Av. Principal 123',
+        },
+        cliente: {
+          nombres: 'María',
+          apellidos: 'García',
+          razonSocial: null,
+          identificacion: '0912345678',
+        },
+      },
+    });
     dispatcher.dispatch.mockResolvedValue({
       buffer: FAKE_PDF,
       filename: 'payment-agreement-auto.pdf',
@@ -262,12 +284,10 @@ describe('ReportsController — handler wiring (REQ-1/2/3 + dispatcher)', () => 
 
     await controller.paymentAgreementPdf({ convenioId: '1' }, res);
 
-    expect(paymentAgreementSpec.fetchData).toHaveBeenCalledWith({
-      convenioId: '1',
-    });
+    expect(paymentAgreementPdfData.execute).toHaveBeenCalledWith(BigInt(1));
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
       'payment-agreement',
-      expect.objectContaining({ convenio: {} }),
+      expect.objectContaining({ convenio: expect.objectContaining({ convenioId: '1' }) }),
     );
   });
 

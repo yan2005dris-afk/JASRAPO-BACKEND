@@ -16,7 +16,7 @@ import { ClientsListReportSpec } from '../../src/reports/specs/clients-list.repo
 import { PaymentsReportSpec } from '../../src/reports/specs/payments-report.report-spec';
 import { ConnectionHistoryReportSpec } from '../../src/reports/specs/connection-history.report-spec';
 import { AccountStatementReportSpec } from '../../src/reports/specs/account-statement.report-spec';
-import { PaymentAgreementLegacyReportSpec } from '../../src/reports/specs/payment-agreement-legacy.report-spec';
+import { GetPaymentAgreementPdfDataUseCase } from '../../src/billing/collections/agreements/application/use-cases/get-payment-agreement-pdf-data.use-case';
 import { PdfService } from '../../src/infrastructure/pdf/pdf.service';
 import { GeneratePdfUseCase } from '../../src/infrastructure/pdf/use-cases/generate-pdf.use-case';
 import { ReportStyleDispatcher } from '../../src/reports/application/report-style.dispatcher';
@@ -120,9 +120,31 @@ describe('Reports e2e (HTTP integration)', () => {
           },
         },
         {
-          provide: PaymentAgreementLegacyReportSpec,
+          provide: GetPaymentAgreementPdfDataUseCase,
           useValue: {
-            fetchData: jest.fn(async () => ({ convenio: {} })),
+            execute: jest.fn(async (convenioId: bigint) => ({
+              convenio: {
+                convenioId: String(convenioId),
+                contratoId: '5',
+                deudaTotal: 500,
+                abonoInicial: 100,
+                numeroCuotas: 4,
+                fechaPrimerPago: '2024-06-01T00:00:00.000Z',
+                motivo: 'Deuda acumulada',
+                createdAt: '2024-05-10T00:00:00.000Z',
+                cuotaMensual: 100,
+                contrato: {
+                  numeroGuia: 'NG-001',
+                  direccionSuministro: 'Av. Principal 123',
+                },
+                cliente: {
+                  nombres: 'María',
+                  apellidos: 'García',
+                  razonSocial: null,
+                  identificacion: '0912345678',
+                },
+              },
+            })),
           },
         },
         // Real application services (style + dispatcher)
@@ -341,8 +363,29 @@ describe('Reports e2e (HTTP integration)', () => {
             useValue: { fetchData: jest.fn(async () => ({})) },
           },
           {
-            provide: PaymentAgreementLegacyReportSpec,
-            useValue: { fetchData: jest.fn(async () => ({})) },
+            provide: GetPaymentAgreementPdfDataUseCase,
+            useValue: {
+              execute: jest.fn(async () => ({
+                convenio: {
+                  convenioId: '1',
+                  contratoId: '5',
+                  deudaTotal: 500,
+                  abonoInicial: 100,
+                  numeroCuotas: 4,
+                  fechaPrimerPago: '2024-06-01T00:00:00.000Z',
+                  motivo: 'Deuda acumulada',
+                  createdAt: '2024-05-10T00:00:00.000Z',
+                  cuotaMensual: 100,
+                  contrato: { numeroGuia: 'NG-001', direccionSuministro: 'Av. Principal 123' },
+                  cliente: {
+                    nombres: 'María',
+                    apellidos: 'García',
+                    razonSocial: null,
+                    identificacion: '0912345678',
+                  },
+                },
+              })),
+            },
           },
           ReportStyleService,
           {

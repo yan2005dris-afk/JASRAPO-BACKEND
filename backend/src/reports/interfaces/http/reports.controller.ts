@@ -19,7 +19,7 @@ import { ConnectionHistoryReportSpec } from '../../specs/connection-history.repo
 import { AccountStatementFilterDto } from '../../dto/account-statement-filter.dto';
 import { AccountStatementReportSpec } from '../../specs/account-statement.report-spec';
 import { PaymentAgreementLegacyFilterDto } from '../../dto/payment-agreement-legacy-filter.dto';
-import { PaymentAgreementLegacyReportSpec } from '../../specs/payment-agreement-legacy.report-spec';
+import { GetPaymentAgreementPdfDataUseCase } from '../../../billing/collections/agreements/application/use-cases/get-payment-agreement-pdf-data.use-case';
 import { ReportStyleDispatcher } from '../../application/report-style.dispatcher';
 
 /**
@@ -55,7 +55,7 @@ export class ReportsController {
     private readonly paymentsReportSpec: PaymentsReportSpec,
     private readonly connectionHistorySpec: ConnectionHistoryReportSpec,
     private readonly accountStatementSpec: AccountStatementReportSpec,
-    private readonly paymentAgreementLegacySpec: PaymentAgreementLegacyReportSpec,
+    private readonly paymentAgreementPdfData: GetPaymentAgreementPdfDataUseCase,
     private readonly dispatcher: ReportStyleDispatcher,
   ) {}
 
@@ -134,7 +134,9 @@ export class ReportsController {
     this.logger.log(
       `Generating payment-agreement PDF — filters: ${JSON.stringify(filters)}`,
     );
-    const data = await this.paymentAgreementLegacySpec.fetchData(filters);
+    const data = await this.paymentAgreementPdfData.execute(
+      BigInt(filters.convenioId),
+    );
     const { buffer, filename } = await this.dispatcher.dispatch(
       'payment-agreement',
       data,
