@@ -287,7 +287,9 @@ describe('ReportsController — handler wiring (REQ-1/2/3 + dispatcher)', () => 
     expect(paymentAgreementPdfData.execute).toHaveBeenCalledWith(BigInt(1));
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
       'payment-agreement',
-      expect.objectContaining({ convenio: expect.objectContaining({ convenioId: '1' }) }),
+      expect.objectContaining({
+        convenio: expect.objectContaining({ convenioId: '1' }),
+      }),
     );
   });
 

@@ -376,7 +376,10 @@ describe('Reports e2e (HTTP integration)', () => {
                   motivo: 'Deuda acumulada',
                   createdAt: '2024-05-10T00:00:00.000Z',
                   cuotaMensual: 100,
-                  contrato: { numeroGuia: 'NG-001', direccionSuministro: 'Av. Principal 123' },
+                  contrato: {
+                    numeroGuia: 'NG-001',
+                    direccionSuministro: 'Av. Principal 123',
+                  },
                   cliente: {
                     nombres: 'María',
                     apellidos: 'García',
