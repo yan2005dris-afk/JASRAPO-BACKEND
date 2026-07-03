@@ -62,6 +62,8 @@ describe('MailService', () => {
   });
 
   it('should queue a single planilla email', async () => {
+    mockQueueService.queueMail.mockResolvedValue('job-planilla-1');
+
     await service.sendPlanilla(
       'cliente@test.com',
       'Juan Perez',
@@ -129,6 +131,20 @@ describe('MailService', () => {
     expect(mockQueueService.queueBulkMails).toHaveBeenCalledTimes(2);
     expect(mockQueueService.queueBulkMails.mock.calls[0]?.[0]).toHaveLength(25);
     expect(mockQueueService.queueBulkMails.mock.calls[1]?.[0]).toHaveLength(1);
+  });
+
+  it('should queue planilla and throw when pg-boss rejects', async () => {
+    mockQueueService.queueMail.mockResolvedValue(null);
+
+    await expect(
+      service.sendPlanilla(
+        'cliente@test.com',
+        'Juan Perez',
+        'Enero 2026',
+        new Decimal('25.50'),
+        Buffer.from('pdf'),
+      ),
+    ).rejects.toThrow(InternalServerErrorException);
   });
 
   describe('sendReport', () => {

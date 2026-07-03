@@ -31,8 +31,12 @@ export class MailService {
     return this.providerFactory.send(options);
   }
 
-  async sendQueued(options: SendMailOptions): Promise<void> {
-    await this.queueService.queueMail(options);
+  async sendQueued(options: SendMailOptions): Promise<string> {
+    const jobId = await this.queueService.queueMail(options);
+    if (!jobId) {
+      throw new InternalServerErrorException('Mail queue rejected the email');
+    }
+    return jobId;
   }
 
   async sendBulkPlanillas(mails: SendMailOptions[]): Promise<void> {
