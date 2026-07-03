@@ -1,6 +1,26 @@
-import { Controller, Get, Query, Res, Logger } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Post,
+  Query,
+  Res,
+  UseGuards,
+  Logger,
+} from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import type { Response } from 'express';
+import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
+import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
+import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
 import { PdfService } from '../../../infrastructure/pdf/pdf.service';
 import { GeneratePdfUseCase } from '../../../infrastructure/pdf/use-cases/generate-pdf.use-case';
 import { ClientsListReportFilterDto } from '../../dto/clients-list-report-filter.dto';
@@ -11,6 +31,12 @@ import { ConnectionHistoryFilterDto } from '../../dto/connection-history-filter.
 import { ConnectionHistoryReportSpec } from '../../specs/connection-history.report-spec';
 import { AccountStatementFilterDto } from '../../dto/account-statement-filter.dto';
 import { AccountStatementReportSpec } from '../../specs/account-statement.report-spec';
+import { SendPaymentsReportEmailDto } from '../../dto/send-payments-report-email.dto';
+import { SendConnectionHistoryEmailDto } from '../../dto/send-connection-history-email.dto';
+import { SendPaymentAgreementEmailDto } from '../../dto/send-payment-agreement-email.dto';
+import { SendAccountStatementEmailDto } from '../../dto/send-account-statement-email.dto';
+import { SendClientsListEmailDto } from '../../dto/send-clients-list-email.dto';
+import { SendReportByEmailUseCase } from '../../application/use-cases/send-report-by-email.use-case';
 
 @ApiTags('reports')
 @Controller('reports')
@@ -24,6 +50,7 @@ export class ReportsController {
     private readonly paymentsReportSpec: PaymentsReportSpec,
     private readonly connectionHistorySpec: ConnectionHistoryReportSpec,
     private readonly accountStatementSpec: AccountStatementReportSpec,
+    private readonly sendReportByEmail: SendReportByEmailUseCase,
   ) {}
 
   // ─── Real data endpoints ────────────────────────────────────────────────────
@@ -132,6 +159,100 @@ export class ReportsController {
   @ApiOperation({ summary: 'Listar tipos de reportes disponibles' })
   getTypes() {
     return { registered: this.pdfService.getAvailableTypes() };
+  }
+
+  // ─── Email send endpoints (PR 3) ───────────────────────────────────────────
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @ApiOperation({ summary: 'Enviar Reporte de Abonos por email' })
+  @ApiResponse({ status: 400, description: 'Falta clienteId o email' })
+  @ApiResponse({ status: 403, description: 'Sin permiso reportes:read' })
+  @HttpCode(HttpStatus.OK)
+  @RequiredPermission('reportes', 'read')
+  @Post('payments-report/email')
+  sendPaymentsReportEmail(@Body() body: SendPaymentsReportEmailDto) {
+    return this.sendReportByEmail.execute({
+      reportType: 'payments-report',
+      filters: body as unknown as Record<string, unknown>,
+      destinatarioOverride: body.destinatario,
+      subjectOverride: body.subject,
+    });
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @ApiOperation({ summary: 'Enviar Historial de Conexión por email' })
+  @ApiResponse({ status: 400, description: 'Falta contratoId o email' })
+  @ApiResponse({ status: 403, description: 'Sin permiso reportes:read' })
+  @HttpCode(HttpStatus.OK)
+  @RequiredPermission('reportes', 'read')
+  @Post('connection-history/email')
+  sendConnectionHistoryEmail(@Body() body: SendConnectionHistoryEmailDto) {
+    return this.sendReportByEmail.execute({
+      reportType: 'connection-history',
+      filters: body as unknown as Record<string, unknown>,
+      destinatarioOverride: body.destinatario,
+      subjectOverride: body.subject,
+    });
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @ApiOperation({ summary: 'Enviar Convenio de Pago por email' })
+  @ApiResponse({ status: 400, description: 'Falta convenioId o email' })
+  @ApiResponse({ status: 403, description: 'Sin permiso reportes:read' })
+  @HttpCode(HttpStatus.OK)
+  @RequiredPermission('reportes', 'read')
+  @Post('payment-agreement/email')
+  sendPaymentAgreementEmail(@Body() body: SendPaymentAgreementEmailDto) {
+    return this.sendReportByEmail.execute({
+      reportType: 'payment-agreement',
+      filters: body as unknown as Record<string, unknown>,
+      destinatarioOverride: body.destinatario,
+      subjectOverride: body.subject,
+    });
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @ApiOperation({ summary: 'Enviar Estado de Cuenta por email' })
+  @ApiResponse({ status: 400, description: 'Falta contratoId o email' })
+  @ApiResponse({ status: 403, description: 'Sin permiso reportes:read' })
+  @HttpCode(HttpStatus.OK)
+  @RequiredPermission('reportes', 'read')
+  @Post('account-statement/email')
+  sendAccountStatementEmail(@Body() body: SendAccountStatementEmailDto) {
+    return this.sendReportByEmail.execute({
+      reportType: 'account-statement',
+      filters: body as unknown as Record<string, unknown>,
+      destinatarioOverride: body.destinatario,
+      subjectOverride: body.subject,
+    });
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @ApiOperation({ summary: 'Enviar Listado de Clientes por email' })
+  @ApiResponse({ status: 400, description: 'Falta destinatario' })
+  @ApiResponse({ status: 403, description: 'Sin permiso reportes:read' })
+  @HttpCode(HttpStatus.OK)
+  @RequiredPermission('reportes', 'read')
+  @Post('clients/email')
+  sendClientsListEmail(@Body() body: SendClientsListEmailDto) {
+    // Route-level guard: only this route requires `destinatario` (no
+    // resource-derived recipient exists for a client listing).
+    if (!body.destinatario) {
+      throw new BadRequestException(
+        'destinatario es obligatorio para el listado de clientes',
+      );
+    }
+    return this.sendReportByEmail.execute({
+      reportType: 'clients-list',
+      filters: (body.filtros as unknown as Record<string, unknown>) ?? {},
+      destinatarioOverride: body.destinatario,
+      subjectOverride: body.subject,
+    });
   }
 
   // ─── Private helpers ─────────────────────────────────────────────────────────
