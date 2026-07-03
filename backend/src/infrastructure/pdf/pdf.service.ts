@@ -10,8 +10,10 @@ import * as path from 'node:path';
 import Handlebars from 'handlebars';
 import puppeteer, { type Browser, type Page } from 'puppeteer';
 import type { PdfDocumentType } from './document-type.interface';
+import { withTimeout } from '../../common/async/with-timeout';
 
 const PDF_CONCURRENCY = Number(process.env['PDF_CONCURRENCY']) || 4;
+const PDF_TIMEOUT_MS = Number(process.env['PDF_TIMEOUT_MS']) || 30_000;
 
 interface SemaphoreTask {
   fn: () => Promise<Buffer>;
@@ -183,16 +185,29 @@ export class PdfService
         const browser = await this.getBrowser();
         const page: Page = await browser.newPage();
         try {
-          await page.setContent(html, { waitUntil: 'load' });
-          const pdf = await page.pdf({
-            format: 'A4',
-            printBackground: true,
-            displayHeaderFooter: true,
-            headerTemplate: '<span></span>',
-            footerTemplate:
-              '<div style="width: 100%; text-align: right; font-size: 9px; padding-right: 15mm; color: #666;">Pág. <span class="pageNumber"></span> de <span class="totalPages"></span></div>',
-            margin: { top: '20mm', right: '15mm', bottom: '20mm', left: '15mm' },
-          });
+          await withTimeout(
+            page.setContent(html, { waitUntil: 'load' }),
+            PDF_TIMEOUT_MS,
+            'page.setContent',
+          );
+          const pdf = await withTimeout(
+            page.pdf({
+              format: 'A4',
+              printBackground: true,
+              displayHeaderFooter: true,
+              headerTemplate: '<span></span>',
+              footerTemplate:
+                '<div style="width: 100%; text-align: right; font-size: 9px; padding-right: 15mm; color: #666;">Pág. <span class="pageNumber"></span> de <span class="totalPages"></span></div>',
+              margin: {
+                top: '20mm',
+                right: '15mm',
+                bottom: '20mm',
+                left: '15mm',
+              },
+            }),
+            PDF_TIMEOUT_MS,
+            'page.pdf',
+          );
           return Buffer.from(pdf);
         } finally {
           await page.close();

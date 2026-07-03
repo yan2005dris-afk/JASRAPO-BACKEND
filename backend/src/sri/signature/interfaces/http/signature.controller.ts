@@ -7,6 +7,7 @@ import {
   BadRequestException,
   NotFoundException,
   Logger,
+  UseGuards,
 } from '@nestjs/common';
 import type { Response } from 'express';
 import { ConfigService } from '@nestjs/config';
@@ -17,7 +18,9 @@ import {
   ApiOperation,
   ApiResponse as SwaggerResponse,
   ApiParam,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../../../../identity/auth/interfaces/http/guards/jwt-auth.guard';
 import { SignatureService } from '../../application/signature.service';
 import { CertificateService } from '../../../certificates/application/certificate.service';
 import { GenerateAndSignPdfUseCase } from '../../application/use-cases/generate-and-sign-pdf.use-case';
@@ -25,6 +28,8 @@ import { SignPdfDto, GenerateAndSignPdfDto } from '../dto/signature.dto';
 import { STORAGE_PATHS } from '../../../emision/infrastructure/storage/storage-paths';
 
 @ApiTags('[En Desarrollo] Signature')
+@ApiBearerAuth('JWT')
+@UseGuards(JwtAuthGuard)
 @Controller('signature')
 export class SignatureController {
   private readonly logger = new Logger(SignatureController.name);
