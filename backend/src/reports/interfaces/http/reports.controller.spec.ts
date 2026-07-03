@@ -22,6 +22,8 @@ import { Test } from '@nestjs/testing';
 import request from 'supertest';
 import { ReportsController } from './reports.controller';
 import { SendReportByEmailUseCase } from '../../application/use-cases/send-report-by-email.use-case';
+import type { ReportEmailStrategy } from '../../application/use-cases/send-report-by-email.strategy';
+import type { MailService } from 'src/infrastructure/mail/application/mail.service';
 import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 import { PdfService } from 'src/infrastructure/pdf/pdf.service';
@@ -208,5 +210,86 @@ describe('ReportsController — POST /email routes (PR 3)', () => {
     } finally {
       await denyApp.close();
     }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// PR 4 — PDF-generation timeout integration test.
+// Uses a real SendReportByEmailUseCase wired with a tiny `pdfTimeoutMs` so
+// the test runs in milliseconds, and mocks GeneratePdfUseCase.execute to
+// return a promise that never resolves. The use case must convert the
+// underlying TimeoutError into a ServiceUnavailableException (HTTP 503),
+// and the controller must surface it correctly.
+// ---------------------------------------------------------------------------
+describe('ReportsController — PDF generation timeout (PR 4)', () => {
+  let slowApp: INestApplication;
+  let slowPdfExecute: jest.Mock;
+
+  beforeAll(async () => {
+    slowPdfExecute = jest.fn().mockImplementation(
+      () => new Promise<Buffer>(() => undefined), // never resolves
+    );
+
+    const realUseCase = new SendReportByEmailUseCase(
+      { sendReport: jest.fn() } as unknown as MailService,
+      { execute: slowPdfExecute } as unknown as GeneratePdfUseCase,
+      {
+        'payments-report': {
+          reportType: 'payments-report',
+          recipientResolver: jest.fn().mockResolvedValue('client@example.com'),
+          subjectBuilder: jest
+            .fn()
+            .mockReturnValue('Reporte de Abonos — Cliente #1'),
+          fetchSpec: jest.fn().mockResolvedValue({ pagos: [] }),
+        } satisfies ReportEmailStrategy<Record<string, unknown>>,
+      },
+      // 30ms timeout — fast enough for the test, slow enough to let the
+      // mock promise be observed as "still pending" before the timer fires.
+      30,
+    );
+
+    const moduleRef = await Test.createTestingModule({
+      controllers: [ReportsController],
+      providers: [
+        { provide: SendReportByEmailUseCase, useValue: realUseCase },
+        { provide: PdfService, useValue: {} },
+        { provide: GeneratePdfUseCase, useValue: { execute: slowPdfExecute } },
+        { provide: ClientsListReportSpec, useValue: {} },
+        { provide: PaymentsReportSpec, useValue: {} },
+        { provide: ConnectionHistoryReportSpec, useValue: {} },
+        { provide: AccountStatementReportSpec, useValue: {} },
+      ],
+    })
+      .overrideGuard(JwtAuthGuard)
+      .useValue({ canActivate: () => true })
+      .overrideGuard(PermissionsGuard)
+      .useValue({ canActivate: () => true })
+      .compile();
+    slowApp = moduleRef.createNestApplication();
+    slowApp.useGlobalPipes(
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+      }),
+    );
+    await slowApp.init();
+  });
+
+  afterAll(async () => {
+    await slowApp.close();
+  });
+
+  it('returns 503 with "PDF generation timeout" when GeneratePdfUseCase hangs past the timeout', async () => {
+    const res = await request(slowApp.getHttpServer())
+      .post('/reports/payments-report/email')
+      .send({ clienteId: '1' })
+      .expect(503);
+
+    expect(res.body).toMatchObject({
+      message: expect.stringContaining('PDF generation timeout'),
+      statusCode: 503,
+    });
+    expect(slowPdfExecute).toHaveBeenCalledTimes(1);
   });
 });

@@ -13,11 +13,21 @@ jest.mock('pg-boss', () => ({
 
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { BadRequestException, Logger, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Logger,
+  NotFoundException,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import { SendReportByEmailUseCase } from './send-report-by-email.use-case';
 import type { MailService } from 'src/infrastructure/mail/application/mail.service';
 import type { GeneratePdfUseCase } from 'src/infrastructure/pdf/use-cases/generate-pdf.use-case';
 import type { ReportEmailStrategy } from './send-report-by-email.strategy';
+
+// PR 4: PDF-generation timeout used by every test in this file. Production
+// default is 30s but that would make the timeout test path take ~30s — we
+// keep the same code path but speed up the test by passing a tiny value.
+const TEST_PDF_TIMEOUT_MS = 50;
 
 describe('SendReportByEmailUseCase (skeleton)', () => {
   // PR 1 builds the skeleton with a constructor-injectable strategies map.
@@ -38,6 +48,7 @@ describe('SendReportByEmailUseCase (skeleton)', () => {
 
   const compile = async (
     strategies: Record<string, ReportEmailStrategy<Record<string, unknown>>>,
+    pdfTimeoutMs: number = TEST_PDF_TIMEOUT_MS,
   ): Promise<SendReportByEmailUseCase> => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -48,6 +59,7 @@ describe('SendReportByEmailUseCase (skeleton)', () => {
               mockMailService as unknown as MailService,
               mockGeneratePdf as unknown as GeneratePdfUseCase,
               strategies,
+              pdfTimeoutMs,
             ),
         },
       ],
@@ -429,5 +441,138 @@ describe('SendReportByEmailUseCase (skeleton)', () => {
         contrato: { cliente: { email: 'derived@example.com' } },
       }),
     );
+  });
+
+  // ---------------------------------------------------------------------
+  // PR 4 — PDF generation timeout + PII-safe logging
+  // ---------------------------------------------------------------------
+
+  it('throws ServiceUnavailableException when PDF generation exceeds the timeout', async () => {
+    // Simulate a hung PDF renderer. The promise never resolves; the use
+    // case's `withTimeout` wrapper must convert the TimeoutError into a
+    // 503-mapped ServiceUnavailableException for the controller.
+    mockGeneratePdf.execute.mockImplementation(
+      () => new Promise<Buffer>(() => undefined),
+    );
+
+    const useCase = await compile({
+      'payments-report': buildStrategy(),
+    });
+
+    await expect(
+      useCase.execute({
+        reportType: 'payments-report',
+        filters: { clienteId: '1' },
+      }),
+    ).rejects.toThrow(ServiceUnavailableException);
+
+    expect(mockMailService.sendReport).not.toHaveBeenCalled();
+  });
+
+  it('exposes the PDF timeout error message as "PDF generation timeout"', async () => {
+    mockGeneratePdf.execute.mockImplementation(
+      () => new Promise<Buffer>(() => undefined),
+    );
+
+    const useCase = await compile({
+      'payments-report': buildStrategy(),
+    });
+
+    await expect(
+      useCase.execute({
+        reportType: 'payments-report',
+        filters: { clienteId: '1' },
+      }),
+    ).rejects.toMatchObject({
+      message: expect.stringContaining('PDF generation timeout'),
+    });
+  });
+
+  it('does NOT log the resolved recipient email at INFO level', async () => {
+    // PII surface: the use case is per-HTTP-request, so the email is PII.
+    // Per design rev 2 (decision #6 / item PII-LOW) the recipient must
+    // never appear in INFO logs; only DEBUG carries it.
+    const logSpy = jest
+      .spyOn(Logger.prototype, 'log')
+      .mockImplementation(() => undefined);
+
+    const useCase = await compile({
+      'payments-report': buildStrategy({
+        recipientResolver: jest.fn().mockResolvedValue('pii@example.com'),
+      }),
+    });
+
+    await useCase.execute({
+      reportType: 'payments-report',
+      filters: { clienteId: '1' },
+    });
+
+    for (const call of logSpy.mock.calls) {
+      const args = call as unknown as unknown[];
+      const joined = args
+        .map((a) => (typeof a === 'string' ? a : JSON.stringify(a)))
+        .join(' ');
+      expect(joined).not.toContain('pii@example.com');
+    }
+
+    logSpy.mockRestore();
+  });
+
+  it('does NOT log the override recipient email at INFO level', async () => {
+    const logSpy = jest
+      .spyOn(Logger.prototype, 'log')
+      .mockImplementation(() => undefined);
+
+    const useCase = await compile({
+      'payments-report': buildStrategy(),
+    });
+
+    await useCase.execute({
+      reportType: 'payments-report',
+      filters: { clienteId: '1' },
+      destinatarioOverride: 'override-pii@example.com',
+    });
+
+    for (const call of logSpy.mock.calls) {
+      const args = call as unknown as unknown[];
+      const joined = args
+        .map((a) => (typeof a === 'string' ? a : JSON.stringify(a)))
+        .join(' ');
+      expect(joined).not.toContain('override-pii@example.com');
+    }
+
+    logSpy.mockRestore();
+  });
+
+  it('emits a debug-level log after the recipient is resolved', async () => {
+    const debugSpy = jest
+      .spyOn(Logger.prototype, 'debug')
+      .mockImplementation(() => undefined);
+
+    const useCase = await compile({
+      'payments-report': buildStrategy({
+        recipientResolver: jest.fn().mockResolvedValue('derived@example.com'),
+      }),
+    });
+
+    await useCase.execute({
+      reportType: 'payments-report',
+      filters: { clienteId: '1' },
+    });
+
+    expect(debugSpy).toHaveBeenCalled();
+    const matched = debugSpy.mock.calls.some((call) => {
+      const args = call as unknown as unknown[];
+      const joined = args
+        .map((a) => (typeof a === 'string' ? a : JSON.stringify(a)))
+        .join(' ');
+      return (
+        joined.includes('recipient resolved') &&
+        joined.includes('payments-report')
+      );
+    });
+    expect(matched).toBe(true);
+
+    debugSpy.mockRestore();
   });
 });
