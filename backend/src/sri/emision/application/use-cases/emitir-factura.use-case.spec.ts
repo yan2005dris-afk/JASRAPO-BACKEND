@@ -12,6 +12,7 @@ import { XmlStorageService } from '../../infrastructure/storage/xml-storage.serv
 import { SriBaseService } from '../../infrastructure/xml/sri-base.service';
 import { SriOperationResult } from '../../domain/interfaces';
 import { CreateFacturaDto } from '../../interfaces/dto';
+import { ComprobanteEstado } from '../../domain/constants/comprobante-estado.enum';
 
 describe('EmitirFacturaUseCase — persistirFactura with comprobanteExistente (T-003)', () => {
   let useCase: EmitirFacturaUseCase;
@@ -29,7 +30,7 @@ describe('EmitirFacturaUseCase — persistirFactura with comprobanteExistente (T
     secuencial: '000000001',
     clave_acceso: '1234567890123456789012345678901234567890123456789',
     fecha_emision: '2026-07-03',
-    estado: 'FIRMADO',
+    estado: ComprobanteEstado.FIRMADO,
     receptor_tipo_identificacion: '05',
     receptor_identificacion: '1234567890',
     receptor_razon_social: 'Test Client',
@@ -99,7 +100,7 @@ describe('EmitirFacturaUseCase — persistirFactura with comprobanteExistente (T
     sriSoapClient = {
       enviarYAutorizar: jest.fn().mockResolvedValue({
         success: true,
-        estado: 'AUTORIZADO',
+        estado: ComprobanteEstado.AUTORIZADO,
         claveAcceso: '1234567890123456789012345678901234567890123456789',
         fechaAutorizacion: '2026-07-03T12:00:00Z',
         numeroAutorizacion: '1234567890',

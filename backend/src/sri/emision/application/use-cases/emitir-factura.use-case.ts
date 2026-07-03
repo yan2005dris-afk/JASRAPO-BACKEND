@@ -23,6 +23,7 @@ import {
   SriOperationResult,
 } from '../../domain/interfaces';
 import { TipoComprobante, Ambiente, TipoEmision } from '../../domain/constants';
+import { ComprobanteEstado } from '../../domain/constants/comprobante-estado.enum';
 import { ComprobanteRecord } from '../../../domain/interfaces/repository.interface';
 
 export interface EmitirFacturaOpts {
@@ -179,7 +180,7 @@ export class EmitirFacturaUseCase {
             {
               success: false,
               claveAcceso,
-              estado: 'FIRMADO',
+              estado: ComprobanteEstado.FIRMADO,
               mensajes: [],
             },
             tx,
@@ -205,7 +206,7 @@ export class EmitirFacturaUseCase {
 
       // ─── FASE 3: Transacción corta (~5ms) — Actualizar resultado ───
       await this.comprobanteRepository.update(comprobante.id, {
-        estado: resultado.success ? 'AUTORIZADO' : resultado.estado,
+        estado: resultado.success ? ComprobanteEstado.AUTORIZADO : resultado.estado,
         estado_sri: resultado.estado,
         fecha_autorizacion: resultado.fechaAutorizacion,
         numero_autorizacion: resultado.numeroAutorizacion || claveAcceso,
@@ -228,7 +229,7 @@ export class EmitirFacturaUseCase {
       }
 
       // 4. Emitir eventos para Webhooks
-      if (resultado.success || resultado.estado === 'AUTORIZADO') {
+      if (resultado.success || resultado.estado === ComprobanteEstado.AUTORIZADO) {
         this.eventEmitter.emit('comprobante.autorizado', {
           emisorId: emisor?.id,
           claveAcceso,
@@ -238,8 +239,8 @@ export class EmitirFacturaUseCase {
           numeroAutorizacion: resultado.numeroAutorizacion,
         });
       } else if (
-        resultado.estado === 'RECHAZADO' ||
-        resultado.estado === 'DEVUELTA'
+        resultado.estado === ComprobanteEstado.RECHAZADO ||
+        resultado.estado === ComprobanteEstado.DEVUELTA
       ) {
         this.eventEmitter.emit('comprobante.rechazado', {
           emisorId: emisor?.id,
@@ -387,7 +388,7 @@ export class EmitirFacturaUseCase {
         secuencial: secuencial,
         clave_acceso: claveAcceso,
         fecha_emision: dto.fechaEmision.split('/').reverse().join('-'),
-        estado: resultado.success ? 'AUTORIZADO' : resultado.estado,
+        estado: resultado.success ? ComprobanteEstado.AUTORIZADO : resultado.estado,
         estado_sri: resultado.estado,
         fecha_autorizacion: resultado.fechaAutorizacion,
         numero_autorizacion: resultado.numeroAutorizacion || claveAcceso,
