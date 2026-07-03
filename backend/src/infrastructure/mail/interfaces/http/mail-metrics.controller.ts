@@ -38,9 +38,9 @@ export class MailMetricsController {
   ) {
     try {
       const parsedLimit = parseInt(limitStr as string, 10);
-      const limit = isNaN(parsedLimit) ? 50 : parsedLimit;
+      const limit = isNaN(parsedLimit) ? 50 : Math.max(1, Math.min(1000, parsedLimit));
       const parsedOffset = parseInt(offsetStr as string, 10);
-      const offset = isNaN(parsedOffset) ? 0 : parsedOffset;
+      const offset = isNaN(parsedOffset) ? 0 : Math.max(0, parsedOffset);
       const rows = await this.prisma.$queryRawUnsafe<
         Array<{ state: string; count: bigint }>
       >(
@@ -69,16 +69,14 @@ export class MailMetricsController {
         metrics.total += count;
       }
 
-      const allRows = await this.prisma.$queryRawUnsafe<
+      const allRows = await this.prisma.$queryRaw<
         Array<{
           id: string;
           state: string;
           recipient: string;
           created_at: Date;
         }>
-      >(
-        `SELECT id, state, data->>'to' as recipient, created_on as created_at FROM jobs.job WHERE name = 'send-mail' ORDER BY created_on DESC LIMIT ${limit} OFFSET ${offset}`,
-      );
+      >`SELECT id, state, data->>'to' as recipient, created_on as created_at FROM jobs.job WHERE name = 'send-mail' ORDER BY created_on DESC LIMIT ${limit} OFFSET ${offset}`;
 
       metrics.allJobs = allRows;
 
