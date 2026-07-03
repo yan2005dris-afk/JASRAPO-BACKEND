@@ -25,13 +25,6 @@ export class CrearLecturaDto {
   @IsNotEmptyString()
   fotoUrl?: string;
 
-  @ApiPropertyOptional({
-    type: 'string',
-    format: 'binary',
-    description: 'Archivo de imagen para evidencia de la lectura',
-  })
-  file?: any;
-
   @IsNotEmpty() @IsBoolean() lecturaInicial: boolean;
   @IsOptional() @IsNumber() periodoId?: number;
 }

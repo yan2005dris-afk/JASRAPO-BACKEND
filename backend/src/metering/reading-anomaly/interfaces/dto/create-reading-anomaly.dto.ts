@@ -46,11 +46,4 @@ export class CreateReadingAnomalyDto {
   @IsString()
   @IsNotEmptyString()
   fotoUrl?: string;
-
-  @ApiPropertyOptional({
-    type: 'string',
-    format: 'binary',
-    description: 'Archivo de imagen para evidencia de la anomalía',
-  })
-  file?: any;
 }
