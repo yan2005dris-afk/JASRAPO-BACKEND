@@ -1,9 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
-import {
-  EstadoConvenio,
-  EstadoCuotaConvenio,
-} from 'src/generated/prisma/enums';
+import { EstadoConvenio, EstadoCuotaConvenio } from 'src/shared/enums';
 import {
   paginate,
   PaginateOptions,
@@ -13,8 +10,10 @@ import { CreateAgreementDto } from '../interfaces/dto/create-agreement.dto';
 import { AgreementResponseDto } from '../interfaces/dto/agreement-response.dto';
 import { InstallmentResponseDto } from '../interfaces/dto/installment-response.dto';
 import { DebtSummaryResponseDto } from '../interfaces/dto/debt-summary-response.dto';
-import { AgreementStateResponseDto } from '../interfaces/dto/agreement-state-response.dto';
-import { InstallmentStateResponseDto } from '../interfaces/dto/installment-state-response.dto';
+import {
+  EnumStateDto,
+  buildStateCatalog,
+} from 'src/shared/enums/state-catalog';
 import {
   safeInstallmentSelect,
   safeAgreementSelect,
@@ -45,12 +44,21 @@ export class AgreementsService {
 
   // ── Estado catalogs ──────────────────────────────────────────────────────
 
-  async findAllAgreementStates(): Promise<AgreementStateResponseDto[]> {
-    return Object.values(EstadoConvenio).map((codigo) => ({ codigo }));
+  async findAllAgreementStates(): Promise<EnumStateDto[]> {
+    return buildStateCatalog(EstadoConvenio, {
+      [EstadoConvenio.ACTIVO]: 'Activo',
+      [EstadoConvenio.PENDIENTE_ABONO]: 'Pendiente Abono',
+      [EstadoConvenio.PREPARADO]: 'Preparado',
+      [EstadoConvenio.ANULADO]: 'Anulado',
+      [EstadoConvenio.PAGADO]: 'Pagado',
+    });
   }
 
-  async findAllInstallmentStates(): Promise<InstallmentStateResponseDto[]> {
-    return Object.values(EstadoCuotaConvenio).map((codigo) => ({ codigo }));
+  async findAllInstallmentStates(): Promise<EnumStateDto[]> {
+    return buildStateCatalog(EstadoCuotaConvenio, {
+      [EstadoCuotaConvenio.PENDIENTE]: 'Pendiente',
+      [EstadoCuotaConvenio.PAGADA]: 'Pagada',
+    });
   }
 
   // ── Debt ─────────────────────────────────────────────────────────────────
@@ -135,8 +143,20 @@ export class AgreementsService {
 
   // ── PDF ──────────────────────────────────────────────────────────────────
 
-  async generatePdf(convenioId: bigint): Promise<Buffer> {
+  async generatePdf(
+    convenioId: bigint,
+  ): Promise<{ buffer: Buffer; clienteNombre: string }> {
     const raw = await this.getPdfDataUseCase.execute(convenioId);
-    return this.generatePdfUc.execute('payment-agreement', raw as any);
+    const buffer = await this.generatePdfUc.execute(
+      'payment-agreement',
+      raw as any,
+    );
+    const cliente = raw.convenio.cliente;
+    const clienteNombre =
+      cliente.razonSocial ||
+      `${cliente.nombres ?? ''} ${cliente.apellidos ?? ''}`.trim() ||
+      convenioId.toString();
+
+    return { buffer, clienteNombre };
   }
 }

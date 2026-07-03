@@ -22,11 +22,19 @@ export class PermissionsGuard implements CanActivate {
   constructor(private readonly reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
-    // 1. Intentar obtener el permiso explícito del decorador
+    // 1. Intentar obtener el permiso explícito del decorador (método)
     let required = this.reflector.get<PermissionConfig>(
       PERMISSION_KEY,
       context.getHandler(),
     );
+
+    // 1b. Fallback a decorador a nivel de clase (controller)
+    if (!required) {
+      required = this.reflector.get<PermissionConfig>(
+        PERMISSION_KEY,
+        context.getClass(),
+      );
+    }
 
     // 2. Si no hay decorador, aplicamos "Seguridad por Convención"
     if (!required) {

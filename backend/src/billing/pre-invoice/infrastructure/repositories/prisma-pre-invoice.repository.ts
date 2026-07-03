@@ -22,6 +22,13 @@ export class PrismaPreInvoiceRepository implements PreInvoiceRepository {
     });
   }
 
+  async findIdsByLoteId(loteId: bigint): Promise<{ prefacturaId: bigint }[]> {
+    return this.prisma.prefacturas.findMany({
+      where: { loteId },
+      select: { prefacturaId: true },
+    });
+  }
+
   async findById(
     id: number | bigint,
     options?: { include?: Record<string, any> },

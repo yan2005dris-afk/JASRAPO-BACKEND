@@ -7,6 +7,9 @@ export abstract class PreInvoiceRepository {
     take?: number;
   }): Promise<any[]>;
 
+  /** Finds pre-invoice IDs for a given batch/lote */
+  abstract findIdsByLoteId(loteId: bigint): Promise<{ prefacturaId: bigint }[]>;
+
   abstract count(where?: Record<string, any>): Promise<number>;
 
   abstract findById(

@@ -1,12 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
-import { Prisma, EstadoRuta, TipoRuta } from 'src/generated/prisma/client';
+import { Prisma } from 'src/generated/prisma/client';
+import { EstadoRuta, TipoRuta } from 'src/shared/enums';
 import {
   RouteRepository,
   UsuarioRef,
   ComunidadRef,
   SectorRef,
   PeriodoRef,
+  MedidorRef,
 } from '../../domain/repositories/route.repository';
 import { RouteEntity } from '../../domain/entities/route.entity';
 import { ReadingForRouteEntity } from '../../domain/entities/reading-for-route.entity';
@@ -76,10 +78,27 @@ export class PrismaRouteRepository implements RouteRepository {
         periodo: data.periodoId
           ? { connect: { periodoId: data.periodoId } }
           : undefined,
+        medidor: data.medidorId
+          ? { connect: { medidorId: BigInt(data.medidorId) } }
+          : undefined,
         fechaPlanificada: data.fechaPlanificada ?? null,
         estado: (data.estado ?? 'PENDIENTE') as EstadoRuta,
       },
     });
+  }
+
+  async findMedidor(where: { medidorId: number }): Promise<MedidorRef | null> {
+    const medidor = await this.prisma.medidores.findUnique({
+      where: { medidorId: BigInt(where.medidorId) },
+      select: { medidorId: true, serie: true },
+    });
+
+    if (!medidor) return null;
+
+    return {
+      medidorId: Number(medidor.medidorId),
+      serie: medidor.serie,
+    };
   }
 
   async update(

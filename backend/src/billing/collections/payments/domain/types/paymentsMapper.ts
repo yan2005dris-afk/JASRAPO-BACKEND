@@ -1,4 +1,4 @@
-import { DateUtil } from 'src/infrastructure/common/utils/date.util';
+import { DateUtil } from 'src/shared/utils/date.util';
 import type { PaymentResponseDto } from '../../interfaces/dto/payment-response.dto';
 import type { PaymentDetailResponseDto } from '../../interfaces/dto/payment-detail-response.dto';
 import type { SaldoFavorResponseDto } from '../../interfaces/dto/saldo-favor-response.dto';

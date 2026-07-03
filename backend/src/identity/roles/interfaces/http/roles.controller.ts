@@ -134,8 +134,8 @@ export class RolesController {
   @ApiResponse({ status: 404, description: 'Rol no encontrado' })
   @RequiredPermission('roles', 'read')
   @Get(':id')
-  findOneRol(@Param('id', ParseIntPipe) id: string) {
-    return this.rolesService.findOne(+id);
+  findOneRol(@Param('id', ParseIntPipe) id: number) {
+    return this.rolesService.findOne(id);
   }
 
   /**
@@ -194,9 +194,9 @@ export class RolesController {
   @RequiredPermission('roles', 'update')
   @Patch(':id')
   updateRol(
-    @Param('id', ParseIntPipe) id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Body() updateRoleDto: UpdateRoleDto,
   ) {
-    return this.rolesService.update(+id, updateRoleDto);
+    return this.rolesService.update(id, updateRoleDto);
   }
 }

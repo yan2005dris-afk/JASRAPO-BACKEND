@@ -3,6 +3,7 @@ import { BatchRepository } from '../domain/repositories/batch.repository';
 import { GenerateBatchDto } from '../interfaces/dto/generate-batch.dto';
 import { BATCH_STATUS_LIST } from 'src/infrastructure/config/app.constants';
 import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
+import { EnumStateDto } from 'src/shared/enums/state-catalog';
 import { GenerateBatchUseCase } from './use-cases/generate-batch.use-case';
 import { FindAllBatchesUseCase } from './use-cases/find-all-batches.use-case';
 import { FindOneBatchUseCase } from './use-cases/find-one-batch.use-case';
@@ -34,12 +35,7 @@ export class BatchService {
   /**
    * Batch status catalog
    */
-  async findAllStates() {
-    return BATCH_STATUS_LIST.map((s) => ({
-      estadoId: s.estadoId,
-      codigo: s.codigo,
-      nombre: s.nombre,
-      orden: s.orden,
-    }));
+  async findAllStates(): Promise<EnumStateDto[]> {
+    return BATCH_STATUS_LIST;
   }
 }

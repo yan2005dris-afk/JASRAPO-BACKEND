@@ -6,16 +6,15 @@ import { ClientEntity } from '../../domain/entities/client.entity';
 export class RemoveClientUseCase {
   constructor(private readonly clientRepository: ClientRepository) {}
 
-  async execute(id: string): Promise<ClientEntity> {
-    const clienteId = BigInt(id);
+  async execute(id: bigint): Promise<ClientEntity> {
     const cliente = await this.clientRepository.findFirst({
-      clienteId,
+      clienteId: id,
       deletedAt: null,
     });
     if (!cliente) throw new NotFoundException('Cliente no encontrado');
 
     return this.clientRepository.update(
-      { clienteId },
+      { clienteId: id },
       { deletedAt: new Date() },
     );
   }

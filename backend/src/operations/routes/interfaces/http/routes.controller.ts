@@ -9,6 +9,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import { ParseBigIntPipe } from 'src/infrastructure/common/pipes/parse-bigint.pipe';
 import {
   ApiTags,
   ApiBearerAuth,
@@ -21,8 +22,10 @@ import { RequiredPermission } from 'src/infrastructure/common/decorators/require
 import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 import { RoutesService } from '../../application/routes.service';
+import { ReassignRouteUseCase } from '../../application/use-cases/reassign-route.use-case';
 import { CreateRouteDto } from '../dto/create-route.dto';
 import { UpdateRouteDto } from '../dto/update-route.dto';
+import { ReassignRouteDto } from '../dto/reassign-route.dto';
 import { FilterReadingsDto } from '../dto/filter-readings.dto';
 import { FindAllRoutesDto } from '../dto/find-all-routes.dto';
 import { RouteEntity } from '../../domain/entities/route.entity';
@@ -37,7 +40,10 @@ import { PaginationMetaDto } from 'src/infrastructure/common/dtos/pagination-met
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('routes')
 export class RoutesController {
-  constructor(private readonly routesService: RoutesService) {}
+  constructor(
+    private readonly routesService: RoutesService,
+    private readonly reassignRouteUseCase: ReassignRouteUseCase,
+  ) {}
 
   /**
    * Obtener lecturas elegibles para crear una ruta
@@ -106,7 +112,12 @@ export class RoutesController {
     summary: 'Obtener ruta por ID',
     description: 'Retorna una ruta específica',
   })
-  @ApiParam({ name: 'id', description: 'ID de la ruta', type: String })
+  @ApiParam({
+    name: 'id',
+    description: 'ID de la ruta (bigint serializado como string)',
+    type: String,
+    example: '9223372036854775807',
+  })
   @ApiResponse({
     status: 200,
     description: 'Ruta encontrada',
@@ -115,8 +126,10 @@ export class RoutesController {
   @ApiResponse({ status: 404, description: 'Ruta no encontrada' })
   @RequiredPermission('routes', 'read')
   @Get(':id')
-  async findOne(@Param('id') id: string): Promise<RouteEntity> {
-    return this.routesService.findOne(BigInt(id));
+  async findOne(
+    @Param('id', ParseBigIntPipe) id: bigint,
+  ): Promise<RouteEntity> {
+    return this.routesService.findOne(id);
   }
 
   /**
@@ -126,7 +139,12 @@ export class RoutesController {
     summary: 'Actualizar ruta',
     description: 'Actualiza los datos de una ruta existente',
   })
-  @ApiParam({ name: 'id', description: 'ID de la ruta', type: String })
+  @ApiParam({
+    name: 'id',
+    description: 'ID de la ruta (bigint serializado como string)',
+    type: String,
+    example: '9223372036854775807',
+  })
   @ApiResponse({
     status: 200,
     description: 'Ruta actualizada',
@@ -135,10 +153,42 @@ export class RoutesController {
   @RequiredPermission('routes', 'update')
   @Patch(':id')
   async update(
-    @Param('id') id: string,
+    @Param('id', ParseBigIntPipe) id: bigint,
     @Body() updateDto: UpdateRouteDto,
   ): Promise<RouteEntity> {
-    return this.routesService.update(BigInt(id), updateDto);
+    return this.routesService.update(id, updateDto);
+  }
+
+  /**
+   * Reassign route to a different operator
+   */
+  @ApiOperation({
+    summary: 'Reasignar ruta',
+    description: 'Reasigna una ruta a un operario diferente',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'ID de la ruta (bigint serializado como string)',
+    type: String,
+    example: '9223372036854775807',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Ruta reasignada',
+    type: RouteEntity,
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'La ruta ya pertenece a este operario',
+  })
+  @ApiResponse({ status: 404, description: 'Ruta u operario no encontrado' })
+  @RequiredPermission('routes', 'update')
+  @Patch(':id/reassign')
+  async reassign(
+    @Param('id', ParseBigIntPipe) id: bigint,
+    @Body() dto: ReassignRouteDto,
+  ): Promise<RouteEntity> {
+    return this.reassignRouteUseCase.execute(id, dto.operarioId);
   }
 
   /**
@@ -148,11 +198,18 @@ export class RoutesController {
     summary: 'Eliminar ruta',
     description: 'Elimina una ruta y desasigna sus lecturas',
   })
-  @ApiParam({ name: 'id', description: 'ID de la ruta', type: String })
+  @ApiParam({
+    name: 'id',
+    description: 'ID de la ruta (bigint serializado como string)',
+    type: String,
+    example: '9223372036854775807',
+  })
   @ApiResponse({ status: 200, description: 'Ruta eliminada' })
   @RequiredPermission('routes', 'delete')
   @Delete(':id')
-  async delete(@Param('id') id: string): Promise<{ message: string }> {
-    return this.routesService.delete(BigInt(id));
+  async delete(
+    @Param('id', ParseBigIntPipe) id: bigint,
+  ): Promise<{ message: string }> {
+    return this.routesService.delete(id);
   }
 }

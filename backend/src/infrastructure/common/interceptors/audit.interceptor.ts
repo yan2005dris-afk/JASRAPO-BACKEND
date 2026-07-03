@@ -10,7 +10,7 @@ import { Request, Response } from 'express';
 import { AuditService } from '../../audit/audit.service';
 
 interface RequestUser {
-  sub?: string;
+  sub?: number;
   email?: string;
 }
 

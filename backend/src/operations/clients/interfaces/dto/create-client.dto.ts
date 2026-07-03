@@ -1,15 +1,24 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsOptional,
-  IsString,
   IsNumber,
   ValidateIf,
   IsEmail,
   IsBoolean,
-  IsNotEmpty,
   Min,
   Length,
+  MaxLength,
 } from 'class-validator';
+import { IsNotEmptyString } from 'src/infrastructure/common/decorators/is-not-empty-string.decorator';
+
+/** IDs del catálogo `catalogo_tipos_identificacion` */
+const CATALOGO = {
+  RUC: 1,
+  CEDULA: 2,
+  PASAPORTE: 3,
+  CONSUMIDOR_FINAL: 4,
+  IDENTIFICACION_EXTERIOR: 5,
+} as const;
 
 export class CreateClientDto {
   @ApiProperty({
@@ -24,54 +33,49 @@ export class CreateClientDto {
     description:
       'Identificación del cliente. Obligatorio para todos los tipos excepto CONSUMIDOR FINAL',
   })
-  @ValidateIf(
-    (o) => o.tipoIdentificacionId !== 4, // CONSUMIDOR_FINAL tiene ID 4 en catálogo
-  )
-  @IsNotEmpty()
-  @IsString()
+  @ValidateIf((o) => o.tipoIdentificacionId !== CATALOGO.CONSUMIDOR_FINAL)
+  @IsNotEmptyString()
   @Length(6, 20, {
     message: 'La identificación debe tener entre 6 y 20 caracteres',
   })
   identificacion?: string;
 
-  @ValidateIf((o) => o.tipoIdentificacionId !== 4)
-  @ApiPropertyOptional({ description: 'Nombres del cliente' })
-  @ValidateIf((o) => o.tipoIdentificacionId !== 4)
-  @IsOptional()
-  @IsNotEmpty()
-  @IsString()
+  @ApiProperty({ description: 'Nombres del cliente (obligatorio)' })
+  @ValidateIf((o) => o.tipoIdentificacionId !== CATALOGO.CONSUMIDOR_FINAL)
+  @IsNotEmptyString()
+  @MaxLength(100)
   nombres?: string;
 
-  @ApiPropertyOptional()
-  @ValidateIf((o) => o.tipoIdentificacionId !== 4)
-  @IsNotEmpty()
-  @IsString()
+  @ApiProperty({ description: 'Apellidos del cliente (obligatorio)' })
+  @ValidateIf((o) => o.tipoIdentificacionId !== CATALOGO.CONSUMIDOR_FINAL)
+  @IsNotEmptyString()
+  @MaxLength(100)
   apellidos?: string;
 
-  @ApiPropertyOptional({
-    description: 'Razón social (solo aplica para RUC)',
+  @ApiProperty({
+    description: 'Razón social (obligatoria para RUC)',
   })
-  @ValidateIf((o) => o.tipoIdentificacionId === 1) // RUC tiene ID 1 en catálogo
-  @IsOptional()
-  @IsNotEmpty()
-  @IsString()
+  @ValidateIf((o) => o.tipoIdentificacionId === CATALOGO.RUC)
+  @IsNotEmptyString({ message: 'La razón social es obligatoria para RUC' })
   @Length(2, 100)
   razonSocial?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
+  @IsNotEmptyString()
   @IsEmail()
+  @MaxLength(255)
   email?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
-  @IsString()
+  @IsNotEmptyString()
   @Length(9, 10)
   telefono?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
-  @IsString()
+  @IsNotEmptyString()
   @Length(9, 10)
   telefonoSecundario?: string;
 
@@ -85,9 +89,14 @@ export class CreateClientDto {
   @IsBoolean()
   aplicaDiscapacidad?: boolean;
 
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
+  @ApiProperty({
+    description:
+      'Dirección del domicilio (obligatoria para facturación, excepto Consumidor Final)',
+  })
+  @ValidateIf((o) => o.tipoIdentificacionId !== CATALOGO.CONSUMIDOR_FINAL)
+  @IsNotEmptyString({
+    message: 'La dirección de domicilio es obligatoria para facturación',
+  })
   @Length(5, 200)
   direccionDomicilio?: string;
 }

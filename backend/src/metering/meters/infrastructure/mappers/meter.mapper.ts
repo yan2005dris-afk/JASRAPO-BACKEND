@@ -17,6 +17,10 @@ export class MeterMapper {
       createdAt: raw.createdAt,
       updatedAt: raw.updatedAt,
       deletedAt: raw.deletedAt,
+      contratoId: raw.historial?.[0]?.contratoId ?? null,
+      clienteNombre: raw.historial?.[0]?.contrato?.cliente
+        ? `${raw.historial[0].contrato.cliente.nombres} ${raw.historial[0].contrato.cliente.apellidos}`
+        : null,
     });
   }
 

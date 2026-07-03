@@ -7,10 +7,7 @@ describe('FindAllContractsUseCase', () => {
   let useCase: FindAllContractsUseCase;
 
   const mockContractRepository = {
-    findUnique: jest.fn(),
-    findMany: jest.fn(),
-    count: jest.fn(),
-    update: jest.fn(),
+    paginateContratos: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -35,22 +32,53 @@ describe('FindAllContractsUseCase', () => {
     expect(useCase).toBeDefined();
   });
 
-  it('should call findMany with correct parameters', async () => {
-    mockContractRepository.findMany.mockResolvedValue([]);
-    mockContractRepository.count.mockResolvedValue(0);
+  it('should call paginateContratos with correct parameters', async () => {
+    const paginatedResult = {
+      data: [],
+      meta: {
+        total: 0,
+        page: 1,
+        limit: 10,
+        ultimaPagina: 0,
+        paginaActual: 1,
+        porPagina: 10,
+        anterior: null,
+        siguiente: null,
+      },
+    };
+    mockContractRepository.paginateContratos.mockResolvedValue(paginatedResult);
 
     const result = await useCase.execute(1, 10);
 
-    expect(result.data).toEqual([]);
-    expect(result.meta.total).toBe(0);
-    expect(mockContractRepository.findMany).toHaveBeenCalledWith({
-      where: { deletedAt: null },
-      skip: 0,
-      take: 10,
-      orderBy: { createdAt: 'desc' },
-    });
-    expect(mockContractRepository.count).toHaveBeenCalledWith({
-      where: { deletedAt: null },
-    });
+    expect(result).toEqual(paginatedResult);
+    expect(mockContractRepository.paginateContratos).toHaveBeenCalledWith(
+      { filters: undefined, orderBy: { createdAt: 'desc' } },
+      { page: 1, limit: 10 },
+    );
+  });
+
+  it('should pass filters to paginateContratos', async () => {
+    const filters = { estado: 'ACTIVO', numeroGuia: 'GU-001' };
+    const paginatedResult = {
+      data: [],
+      meta: {
+        total: 0,
+        page: 1,
+        limit: 10,
+        ultimaPagina: 0,
+        paginaActual: 1,
+        porPagina: 10,
+        anterior: null,
+        siguiente: null,
+      },
+    };
+    mockContractRepository.paginateContratos.mockResolvedValue(paginatedResult);
+
+    await useCase.execute(1, 10, filters);
+
+    expect(mockContractRepository.paginateContratos).toHaveBeenCalledWith(
+      { filters, orderBy: { createdAt: 'desc' } },
+      { page: 1, limit: 10 },
+    );
   });
 });

@@ -1,36 +1,37 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+  {{> styles}}
   <meta charset="UTF-8">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: Arial, sans-serif; font-size: 11px; color: #333; }
     .container { width: 100%; padding: 20px 30px; }
 
-    .header { width: 100%; border-bottom: 2px solid #0066cc; padding-bottom: 12px; margin-bottom: 18px; }
+    .header { width: 100%; border-bottom: 2px solid var(--primary-color); padding-bottom: 12px; margin-bottom: 18px; }
     .header table { width: 100%; border-collapse: collapse; }
     .header td { vertical-align: middle; padding: 0; border: none; }
     .header td.center { text-align: center; }
     .header td.right { text-align: right; }
-    .company-name { font-size: 18px; font-weight: bold; color: #0066cc; }
+    .company-name { font-size: 18px; font-weight: bold; color: var(--primary-color); }
     .company-sub { font-size: 10px; color: #666; margin-top: 2px; }
     .doc-number-circle {
       display: inline-block;
-      border: 2px solid #0066cc;
+      border: 2px solid var(--primary-color);
       border-radius: 50%;
       width: 50px; height: 50px;
       line-height: 46px;
       text-align: center;
       font-size: 14px;
       font-weight: bold;
-      color: #0066cc;
+      color: var(--primary-color);
     }
 
     .title-section { text-align: center; margin-bottom: 16px; }
-    .title-section h1 { font-size: 14px; font-weight: bold; color: #0066cc; text-transform: uppercase; }
+    .title-section h1 { font-size: 14px; font-weight: bold; color: var(--primary-color); text-transform: uppercase; }
 
     .section { margin-bottom: 14px; }
-    .section-title { font-size: 11px; font-weight: bold; color: #fff; background: #0066cc; padding: 4px 8px; margin-bottom: 8px; }
+    .section-title { font-size: 11px; font-weight: bold; color: #fff; background: var(--primary-color); padding: 4px 8px; margin-bottom: 8px; }
 
     .form-table { width: 100%; border-collapse: collapse; }
     .form-table td { padding: 3px 6px; border: 1px solid #ccc; vertical-align: top; }
@@ -38,12 +39,12 @@
     .form-table td.value { width: 70%; }
 
     .cost-table { width: 100%; border-collapse: collapse; }
-    .cost-table th { background: #0066cc; color: white; padding: 5px 8px; text-align: left; font-size: 11px; }
+    .cost-table th { background: var(--primary-color); color: white; padding: 5px 8px; text-align: left; font-size: 11px; }
     .cost-table td { padding: 4px 8px; border-bottom: 1px solid #ddd; }
-    .cost-table .total-row td { font-weight: bold; border-top: 2px solid #0066cc; }
+    .cost-table .total-row td { font-weight: bold; border-top: 2px solid var(--primary-color); }
 
     .tarifa-table { width: 100%; border-collapse: collapse; }
-    .tarifa-table th { background: #0066cc; color: white; padding: 5px 8px; text-align: center; font-size: 11px; }
+    .tarifa-table th { background: var(--primary-color); color: white; padding: 5px 8px; text-align: center; font-size: 11px; }
     .tarifa-table td { padding: 4px 8px; border: 1px solid #ddd; text-align: center; }
 
     .pago-section { margin-bottom: 14px; }

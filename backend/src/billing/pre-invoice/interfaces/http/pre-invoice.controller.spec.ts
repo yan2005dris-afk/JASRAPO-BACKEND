@@ -1,4 +1,15 @@
 jest.mock('puppeteer', () => ({}));
+jest.mock('pg-boss', () => ({
+  PgBoss: jest.fn().mockImplementation(() => ({
+    on: jest.fn(),
+    start: jest.fn(),
+    stop: jest.fn(),
+    createQueue: jest.fn(),
+    send: jest.fn(),
+    insert: jest.fn(),
+    work: jest.fn(),
+  })),
+}));
 
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
@@ -6,6 +17,7 @@ import { NotFoundException } from '@nestjs/common';
 import { PreInvoiceController } from './pre-invoice.controller';
 import { PreInvoiceService } from '../../application/pre-invoice.service';
 import { GeneratePreInvoicePdfUseCase } from '../../application/use-cases/generate-pre-invoice-pdf.use-case';
+import { SendPreInvoiceByEmailUseCase } from '../../application/use-cases/send-pre-invoice-by-email.use-case';
 
 const mockRes = () => {
   const res: any = {};
@@ -28,6 +40,10 @@ describe('PreInvoiceController', () => {
     execute: jest.fn(),
   };
 
+  const mockSendPreInvoiceByEmail = {
+    execute: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [PreInvoiceController],
@@ -36,6 +52,10 @@ describe('PreInvoiceController', () => {
         {
           provide: GeneratePreInvoicePdfUseCase,
           useValue: mockGeneratePreInvoicePdf,
+        },
+        {
+          provide: SendPreInvoiceByEmailUseCase,
+          useValue: mockSendPreInvoiceByEmail,
         },
       ],
     }).compile();
@@ -108,10 +128,13 @@ describe('PreInvoiceController', () => {
 
       await controller.generatePdf(5, res);
 
+      const expectedFilenameRegex =
+        /^inline; filename="prefactura-[a-z0-9]+\.pdf"$/;
+
       expect(mockGeneratePreInvoicePdf.execute).toHaveBeenCalledWith(5);
       expect(res.set).toHaveBeenCalledWith({
         'Content-Type': 'application/pdf',
-        'Content-Disposition': 'inline; filename="prefactura-5.pdf"',
+        'Content-Disposition': expect.stringMatching(expectedFilenameRegex),
         'Content-Length': pdfBuffer.length,
       });
       expect(res.end).toHaveBeenCalledWith(pdfBuffer);

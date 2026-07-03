@@ -24,8 +24,7 @@ import { CreateAgreementDto } from '../dto/create-agreement.dto';
 import { UpdateAgreementDto } from '../dto/update-agreement.dto';
 import { AgreementResponseDto } from '../dto/agreement-response.dto';
 import { DebtSummaryResponseDto } from '../dto/debt-summary-response.dto';
-import { AgreementStateResponseDto } from '../dto/agreement-state-response.dto';
-import { InstallmentStateResponseDto } from '../dto/installment-state-response.dto';
+import { EnumStateDto } from 'src/shared/enums/state-catalog';
 import { FindAllAgreementsDto } from '../dto/find-all-agreements.dto';
 import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
@@ -34,7 +33,7 @@ import { ParseBigIntPipe } from 'src/infrastructure/common/pipes/parse-bigint.pi
 import { ApiPaginatedResponse } from 'src/infrastructure/common/decorators/api-paginated-response.decorator';
 import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
 import { PaginationMetaDto } from 'src/infrastructure/common/dtos/pagination-meta.dto';
-
+import { buildPdfFileName } from 'src/infrastructure/pdf/utils/pdf-format.utils';
 @ApiTags('agreements')
 @ApiBearerAuth()
 @ApiExtraModels(AgreementResponseDto, PaginationMetaDto)
@@ -55,11 +54,11 @@ export class AgreementsController {
   @ApiResponse({
     status: 200,
     description: 'Lista de estados de convenio',
-    type: [AgreementStateResponseDto],
+    type: [EnumStateDto],
   })
   @RequiredPermission('agreements', 'read')
   @Get('states')
-  async findAllStates(): Promise<AgreementStateResponseDto[]> {
+  async findAllStates(): Promise<EnumStateDto[]> {
     return this.agreementsService.findAllAgreementStates();
   }
 
@@ -75,11 +74,11 @@ export class AgreementsController {
   @ApiResponse({
     status: 200,
     description: 'Lista de estados de cuota',
-    type: [InstallmentStateResponseDto],
+    type: [EnumStateDto],
   })
   @RequiredPermission('agreements', 'read')
   @Get('installment-states')
-  async findAllInstallmentStates(): Promise<InstallmentStateResponseDto[]> {
+  async findAllInstallmentStates(): Promise<EnumStateDto[]> {
     return this.agreementsService.findAllInstallmentStates();
   }
 
@@ -254,10 +253,11 @@ export class AgreementsController {
     @Param('id', ParseBigIntPipe) id: bigint,
     @Res() res: Response,
   ) {
-    const buffer = await this.agreementsService.generatePdf(id);
+    const { buffer } = await this.agreementsService.generatePdf(id);
+    const filename = buildPdfFileName('convenio');
     res.set({
       'Content-Type': 'application/pdf',
-      'Content-Disposition': `inline; filename="convenio-${id}.pdf"`,
+      'Content-Disposition': `inline; filename="${filename}"`,
       'Content-Length': buffer.length,
     });
     res.end(buffer);

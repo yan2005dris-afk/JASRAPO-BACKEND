@@ -1,5 +1,7 @@
 import { PrismaPg } from '@prisma/adapter-pg';
-import 'dotenv/config';
+import * as dotenv from 'dotenv';
+import * as path from 'node:path';
+dotenv.config({ path: path.resolve(__dirname, '../../..', '.env') });
 import { Pool } from 'pg';
 import { PrismaClient } from '../../src/generated/prisma/client';
 import { seedMenus } from './seeds/menu.seed';
@@ -137,7 +139,7 @@ async function main() {
       { codigoSri: '001', nombre: 'Consumo Agua', descripcion: 'Consumo de agua potable m3', precioUnitario: 0.50, tipoRubro: 'VARIABLE' as any, tarifaImpuestoId: tarifaIva12.id },
       { codigoSri: '002', nombre: 'Cargo Fijo', descripcion: 'Mantenimiento básico de conexión', precioUnitario: 5.00, tipoRubro: 'FIJO' as any, tarifaImpuestoId: tarifaIva12.id },
       { codigoSri: '003', nombre: 'Interés Mora', descripcion: 'Interés por falta de pago puntual', precioUnitario: 0.10, tipoRubro: 'MULTA' as any, tarifaImpuestoId: tarifaIva0.id },
-      { codigoSri: '004', nombre: 'Tasa Seguridad Olón', descripcion: 'Tasa de seguridad comunitaria (Solo Olón)', precioUnitario: 2.00, tipoRubro: 'FIJO' as any, tarifaImpuestoId: tarifaIva0.id },
+      { codigoSri: '004', nombre: 'Tasa Seguridad', descripcion: 'Tasa de seguridad comunitaria (calculada dinámicamente por % de comunidad)', precioUnitario: 0, tipoRubro: 'FIJO' as any, tarifaImpuestoId: tarifaIva0.id },
       { codigoSri: '005', nombre: 'Instalación Medidor', descripcion: 'Costo de nueva acometida e instalación', precioUnitario: 150.00, tipoRubro: 'SERVICIO' as any, tarifaImpuestoId: tarifaIva12.id },
     ],
     skipDuplicates: true,
@@ -175,6 +177,16 @@ main()
     process.exit(1);
   })
   .finally(async () => {
-    await prisma.$disconnect();
+    try {
+      await prisma.$disconnect();
+    } catch (error) {
+      console.error('❌ Error desconectando Prisma:', error);
+    }
+
+    try {
+      await pool.end();
+    } catch (error) {
+      console.error('❌ Error cerrando el pool de conexiones de pg:', error);
+    }
   });
 

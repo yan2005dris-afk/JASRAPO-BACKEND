@@ -6,17 +6,16 @@ import {
 } from '@nestjs/common';
 import { ClientRepository } from '../../domain/repositories/client.repository';
 import { UpdateClientDto } from '../../interfaces/dto/update-client.dto';
-import { TipoIdentificacionUtil } from 'src/infrastructure/common/utils/tipo-identificacion.util';
+import { TipoIdentificacionUtil } from 'src/shared/utils/tipo-identificacion.util';
 import { ClientEntity } from '../../domain/entities/client.entity';
 
 @Injectable()
 export class UpdateClientUseCase {
   constructor(private readonly clientRepository: ClientRepository) {}
 
-  async execute(id: string, dto: UpdateClientDto): Promise<ClientEntity> {
-    const clienteId = BigInt(id);
+  async execute(id: bigint, dto: UpdateClientDto): Promise<ClientEntity> {
     const cliente = await this.clientRepository.findFirst({
-      clienteId,
+      clienteId: id,
       deletedAt: null,
     });
 
@@ -49,7 +48,7 @@ export class UpdateClientUseCase {
       const existente = await this.clientRepository.findUnique({
         identificacion: identificacionFinal,
       });
-      if (existente && existente.clienteId !== clienteId) {
+      if (existente && existente.clienteId !== id) {
         throw new ConflictException('La identificación ya está registrada');
       }
     }
@@ -64,7 +63,7 @@ export class UpdateClientUseCase {
     }
 
     return this.clientRepository.update(
-      { clienteId },
+      { clienteId: id },
       {
         tipoIdentificacion: {
           connect: { id: tipoId },

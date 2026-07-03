@@ -64,6 +64,9 @@ export class LecturaEntity {
   })
   tieneAnomalia: boolean;
 
+  @ApiProperty({ example: 'PENDIENTE', description: 'Estado de la lectura' })
+  estado: string;
+
   @ApiProperty({
     example: '2026-06-11T00:00:00.000Z',
     description: 'Fecha de creación',

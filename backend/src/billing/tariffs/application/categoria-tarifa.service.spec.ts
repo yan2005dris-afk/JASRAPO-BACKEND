@@ -192,17 +192,19 @@ describe('CategoriaTarifaService', () => {
 
   describe('deleteCategoria', () => {
     it('should soft delete categoria', async () => {
-      const deletedCategoria = {
-        ...mockCategoriaTarifa,
-        activo: false,
-        deletedAt: new Date(),
+      const deleteResponse = {
+        message: 'Categoría de tarifa eliminada exitosamente',
+        statusCode: 200,
       };
-      mockRemoveUseCase.execute.mockResolvedValue(deletedCategoria);
+      mockRemoveUseCase.execute.mockResolvedValue(deleteResponse);
 
       const result = await service.deleteCategoria(1);
 
-      expect(result.activo).toBe(false);
-      expect(result.deletedAt).toBeDefined();
+      expect(result).toEqual({
+        message: 'Categoría de tarifa eliminada exitosamente',
+        statusCode: 200,
+      });
+      expect(mockRemoveUseCase.execute).toHaveBeenCalledWith(1);
     });
 
     it('should throw NotFoundException when categoria not found', async () => {

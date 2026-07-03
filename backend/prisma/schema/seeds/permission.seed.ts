@@ -45,6 +45,7 @@ export async function seedPermissions(prisma: PrismaClient) {
         "recaudacion_morosidad",
         "consumo_zonas",
         "dashboard",
+        "reportes",
         "users",
         "roles",
         "permissions",

@@ -159,3 +159,9 @@ export function buildRangoFechas(
   if (desde) return `Desde ${fmt(desde)}`;
   return `Hasta ${fmt(hasta!)}`;
 }
+
+export function buildPdfFileName(reportKey: string, hash?: string): string {
+  const cleanKey = reportKey.replace(/[^a-zA-Z0-9_-]/g, '');
+  const hashValue = hash ?? Date.now().toString(36);
+  return `${cleanKey}-${hashValue}.pdf`;
+}

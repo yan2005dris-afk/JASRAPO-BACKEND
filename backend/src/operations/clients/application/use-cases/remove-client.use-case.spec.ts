@@ -49,11 +49,11 @@ describe('RemoveClientUseCase', () => {
         deletedAt: new Date(),
       });
 
-      const result = await useCase.execute('1');
+      const result = await useCase.execute(1n);
 
       expect(result).toBeDefined();
       expect(mockClientRepository.update).toHaveBeenCalledWith(
-        { clienteId: BigInt(1) },
+        { clienteId: 1n },
         { deletedAt: expect.any(Date) },
       );
     });
@@ -61,7 +61,7 @@ describe('RemoveClientUseCase', () => {
     it('should throw NotFoundException if client not found', async () => {
       mockClientRepository.findFirst.mockResolvedValue(null);
 
-      await expect(useCase.execute('1')).rejects.toThrow(NotFoundException);
+      await expect(useCase.execute(1n)).rejects.toThrow(NotFoundException);
     });
   });
 });

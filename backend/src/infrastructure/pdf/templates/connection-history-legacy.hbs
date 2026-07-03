@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  {{> styles}}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reporte Historial de Conexión</title>
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 11px; /* Tamaño de letra pequeño, típico de reportes */
+            color: #222;
+            background-color: #fff;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            margin: 0;
+        }
+
+        @page {
+            margin: 0;
+            size: A4 portrait;
+        }
+
+        .report-container {
+            background-color: #fff;
+            width: 100%;
+            padding: 40px;
+            box-sizing: border-box;
+        }
+
+        /* Encabezados centrados */
+        .text-center {
+            text-align: center;
+        }
+
+        .title {
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+
+        .date-range {
+            font-size: 11px;
+            margin-bottom: 5px;
+        }
+        
+        .date-range span {
+            margin: 0 10px;
+        }
+
+        /* Fila de información de cuenta y paginación */
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 10px;
+            position: relative;
+        }
+
+        .page-num {
+            position: absolute;
+            right: 0;
+            top: -20px;
+            font-size: 11px;
+        }
+
+        .account-info {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+        }
+
+        .account-left {
+            width: 20%;
+        }
+
+        .account-center {
+            width: 60%;
+            text-align: center;
+        }
+
+        .account-right {
+            width: 20%;
+            text-align: right;
+        }
+
+        /* Tabla de Datos */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+            margin-top: 5px;
+        }
+
+        thead th {
+            border-top: 1px solid #000;
+            border-bottom: 1px solid #000;
+            padding: 4px 2px;
+            font-weight: normal;
+        }
+
+        /* Alineaciones */
+        .text-left { text-align: left; }
+        .text-right { text-align: right; }
+
+        td {
+            padding: 6px 2px;
+            vertical-align: top;
+        }
+
+        /* Fila de Totales */
+        .footer-row td {
+            border-top: 1px solid #000;
+            border-bottom: 1px solid #000;
+            padding-top: 10px;
+            padding-bottom: 10px;
+        }
+
+        .total-label {
+            text-align: right;
+            padding-right: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="report-container">
+    
+    <div class="text-center title">Junta Administradora del Sistema Regional de Agua Potable Olon</div>
+    <div class="header-row">
+        <div style="width: 100px;"></div> <div class="title">Junta Administradora del Sistema</div>
+        <div></div>
+    </div>    <div class="account-info text-center" style="width: 100%; display: block; margin-bottom: 5px;">
+            <span style="margin-right: 20px;">Desde: {{reporte.fechaDesde}}</span>
+            <span>Hasta: {{reporte.fechaHasta}}</span>
+        </div>
+
+    <div class="account-info">
+        <div class="account-left">Cuenta: {{reporte.cuenta}}</div>
+        <div class="account-center">Cliente: {{reporte.clienteNombre}}</div>
+        <div class="account-right">{{reporte.fechaEmision}}</div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th class="text-left" style="width: 12%;">EMISION</th>
+                <th class="text-left" style="width: 12%;">L.ACTUAL</th>
+                <th class="text-left" style="width: 12%;">L.ANTERIOR</th>
+                <th class="text-right" style="width: 12%;">CONSUMO</th>
+                <th class="text-right" style="width: 15%;">VAL.EMISION</th>
+                <th class="text-right" style="width: 15%;">ABONOS</th>
+                <th class="text-right" style="width: 15%;">SALDO</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#each reporte.filas}}
+            <tr>
+                <td>{{this.emision}}</td>
+                <td>{{this.lectActual}}</td>
+                <td>{{this.lectAnterior}}</td>
+                <td class="text-right">{{this.consumo}}</td>
+                <td class="text-right">{{this.valEmision}}</td>
+                <td class="text-right">{{this.abonos}}</td>
+                <td class="text-right">{{this.saldo}}</td>
+            </tr>
+            {{/each}}
+            
+            <tr class="footer-row">
+                <td colspan="2"></td>
+                <td colspan="2" class="total-label">TOTAL CLIENTE: {{reporte.clienteNombre}}</td>
+                <td class="text-right">{{reporte.totalValEmision}}</td>
+                <td class="text-right">{{reporte.totalAbonos}}</td>
+                <td class="text-right">{{reporte.saldoFinal}}</td>
+            </tr>
+        </tbody>
+    </table>
+
+</div>
+
+</body>
+</html>

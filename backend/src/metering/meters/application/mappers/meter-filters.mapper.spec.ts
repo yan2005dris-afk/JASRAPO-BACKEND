@@ -12,7 +12,7 @@ describe('buildMeterFilters', () => {
       marca: undefined,
       modelo: undefined,
       serie: undefined,
-      buscar: undefined,
+      search: undefined,
     });
     expect(result).toEqual({});
   });
@@ -37,9 +37,9 @@ describe('buildMeterFilters', () => {
     expect(result.serie).toBe('MED-001');
   });
 
-  it('should include buscar filter', () => {
-    const result = buildMeterFilters({ buscar: '123' });
-    expect(result.buscar).toBe('123');
+  it('should include search filter', () => {
+    const result = buildMeterFilters({ search: '123' });
+    expect(result.search).toBe('123');
   });
 
   it('should ignore page and limit fields from pagination', () => {

@@ -4,6 +4,7 @@ import { BatchModule } from './batch/batch.module';
 import { AgreementsModule } from './collections/agreements/agreements.module';
 import { PreInvoiceModule } from './pre-invoice/pre-invoice.module';
 import { PaymentsModule } from './collections/payments/payments.module';
+import { DiscountsModule } from './discounts/discounts.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { PaymentsModule } from './collections/payments/payments.module';
     AgreementsModule,
     PreInvoiceModule,
     PaymentsModule,
+    DiscountsModule,
   ],
   exports: [
     CategoriaTarifaModule,
@@ -19,6 +21,7 @@ import { PaymentsModule } from './collections/payments/payments.module';
     AgreementsModule,
     PreInvoiceModule,
     PaymentsModule,
+    DiscountsModule,
   ],
 })
 export class BillingModule {}

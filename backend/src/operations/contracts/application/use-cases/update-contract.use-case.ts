@@ -52,10 +52,15 @@ export class UpdateContractUseCase {
     dto: ActualizarContratoMedidorDto,
   ): Record<string, any> {
     const fields: Record<string, any> = {};
+    if (dto.clienteId !== undefined) fields.clienteId = BigInt(dto.clienteId);
     if (dto.estado !== undefined) fields.estado = dto.estado;
     if (dto.direccionSuministro !== undefined)
       fields.direccionSuministro = dto.direccionSuministro;
     if (dto.sectorId !== undefined) fields.sectorId = Number(dto.sectorId);
+    if (dto.categoriaTarifaId !== undefined)
+      fields.categoriaTarifaId = Number(dto.categoriaTarifaId);
+    if (dto.comunidadId !== undefined)
+      fields.comunidadId = Number(dto.comunidadId);
     return fields;
   }
 }

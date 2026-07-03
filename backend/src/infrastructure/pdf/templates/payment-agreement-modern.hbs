@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  {{> styles}}
+  {{> modern-styles}}
+    <meta charset="UTF-8">
+    <title>Convenio de Pago - Moderno</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            color: var(--text-main, #333);
+            margin: 0;
+            padding: 0;
+            background-color: #ffffff;
+        }
+
+        @page {
+            margin: 0;
+            size: A4 portrait;
+        }
+
+        .container {
+            width: 100%;
+            height: 100vh;
+            padding: 50px 60px;
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 3px solid var(--primary-color, #0284c7);
+            padding-bottom: 20px;
+            margin-bottom: 40px;
+        }
+
+        .header-logo {
+            width: 90px;
+            height: 90px;
+            object-fit: contain;
+        }
+
+        .header-info {
+            text-align: right;
+        }
+
+        .header-info h1 {
+            margin: 0;
+            color: var(--text-main, #333);
+            font-size: 26px;
+            font-weight: 700;
+        }
+
+        .header-info p {
+            margin: 5px 0 0;
+            color: var(--text-muted, #666);
+            font-size: 13px;
+        }
+
+        /* Main Content */
+        .title {
+            text-align: center;
+            font-size: 22px;
+            font-weight: 600;
+            color: var(--primary-color, #0284c7);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 35px;
+        }
+
+        .info-card {
+            background-color: var(--primary-color-light, #f0fdf4);
+            border: 1px solid var(--border-color, #ddd);
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 35px;
+        }
+
+        .info-row {
+            display: flex;
+            margin-bottom: 14px;
+        }
+        .info-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .info-label {
+            width: 40%;
+            font-weight: 600;
+            color: var(--text-muted, #666);
+            font-size: 15px;
+        }
+
+        .info-value {
+            width: 60%;
+            color: var(--text-main, #333);
+            font-size: 15px;
+            font-weight: 500;
+        }
+
+        .text-content {
+            font-size: 15px;
+            line-height: 1.8;
+            text-align: justify;
+            color: var(--text-main, #333);
+            margin-bottom: 40px;
+        }
+
+        /* Signatures */
+        .signatures {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 100px;
+            padding: 0 20px;
+        }
+
+        .signature-box {
+            width: 45%;
+            text-align: center;
+        }
+
+        .signature-line {
+            border-bottom: 1px solid var(--border-color, #ddd);
+            margin-bottom: 8px;
+            height: 40px;
+        }
+
+        .signature-name {
+            font-weight: 600;
+            font-size: 15px;
+            color: var(--text-main, #333);
+        }
+
+        .signature-role {
+            font-size: 13px;
+            color: var(--text-muted, #666);
+            margin-top: 4px;
+        }
+
+        /* Footer */
+        .footer {
+            position: absolute;
+            bottom: 50px;
+            left: 60px;
+            right: 60px;
+            border-top: 1px solid var(--border-color, #ddd);
+            padding-top: 15px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--text-muted, #666);
+        }
+        
+        .footer-left {
+            text-align: left;
+        }
+        
+        .footer-right {
+            text-align: right;
+        }
+        
+        .footer a {
+            color: var(--primary-color, #0284c7);
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    
+    <div class="header">
+        <div class="header-logo">
+            {{#if logoUrl}}
+                <img src="{{logoUrl}}" alt="JASRAPO Logo" style="width:100%; height:100%; object-fit:contain;">
+            {{/if}}
+        </div>
+        <div class="header-info">
+            <h1>JASRAPO</h1>
+            <p>Junta Administradora del Sistema Regional de Agua Potable "Olón"</p>
+            <p>R.U.C. 2490016050001 | Olón, Santa Elena</p>
+        </div>
+    </div>
+
+    <div class="title">Acuerdo de Pago Institucional</div>
+
+    <div class="info-card">
+        <div class="info-row">
+            <div class="info-label">Fecha del Acuerdo:</div>
+            <div class="info-value">{{convenio.fechaActual}}</div>
+        </div>
+        <div class="info-row">
+            <div class="info-label">Número de Guía:</div>
+            <div class="info-value">{{convenio.numeroGuia}}</div>
+        </div>
+        <div class="info-row">
+            <div class="info-label">Cliente (Titular):</div>
+            <div class="info-value">{{convenio.clienteNombre}}</div>
+        </div>
+        <div class="info-row">
+            <div class="info-label">Identificación (C.I./R.U.C.):</div>
+            <div class="info-value">{{convenio.clienteCI}}</div>
+        </div>
+    </div>
+
+    <div class="text-content">
+        <p>Por medio del presente documento, JASRAPO y el cliente titular antes mencionado, celebran un acuerdo formal para la liquidación de valores pendientes. El cliente reconoce y acepta mantener una deuda total de <strong>${{convenio.deudaTotal}}</strong>.</p>
+        
+        <p>Como parte de este compromiso, el titular acuerda realizar un abono inicial por la suma de <strong>${{convenio.abonoInicial}}</strong>. El saldo restante será diferido en pagos mensuales de <strong>${{convenio.cuotaMensual}}</strong>, valores que deberán ser cancelados en conjunto con el consumo mensual regular.</p>
+        
+        <p>Este convenio rige a partir de su firma. Las cuotas pactadas serán pagaderas de forma ininterrumpida hasta saldar la totalidad de la deuda. El incumplimiento de este acuerdo podrá derivar en la suspensión inmediata del servicio de agua potable según el reglamento interno de JASRAPO.</p>
+    </div>
+
+    <div class="signatures">
+        <div class="signature-box">
+            <div class="signature-line"></div>
+            <div class="signature-name">{{convenio.clienteNombre}}</div>
+            <div class="signature-role">C.I. {{convenio.clienteCI}}</div>
+            <div class="signature-role">Firma del Titular / Usuario</div>
+        </div>
+
+        <div class="signature-box">
+            <div class="signature-line"></div>
+            <div class="signature-name">Sr. Humberto Salinas Neira</div>
+            <div class="signature-role">C.I. 0915233670</div>
+            <div class="signature-role">Representante Legal JASRAPO</div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div class="footer-left">
+            <p>Dirección: Av. Santa Lucia e Intiñan (esquina)</p>
+            <p>Email: <a href="mailto:juntaaguaolon2017@yahoo.com">juntaaguaolon2017@yahoo.com</a></p>
+        </div>
+        <div class="footer-right">
+            <p>Teléfono: 2788051</p>
+            <p>Presidencia: 0983717499 | Tesorería: 0999896280 | Secretaría: 0998945560</p>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>

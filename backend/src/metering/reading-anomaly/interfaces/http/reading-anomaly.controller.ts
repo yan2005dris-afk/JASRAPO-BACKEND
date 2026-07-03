@@ -8,12 +8,17 @@ import {
   Delete,
   Query,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { createImageFileFilter } from 'src/infrastructure/common/utils/evidence-upload.util';
+import { ParseBigIntPipe } from 'src/infrastructure/common/pipes/parse-bigint.pipe';
 import { ReadingAnomalyService } from '../../application/reading-anomaly.service';
 import { CreateReadingAnomalyDto } from '../dto/create-reading-anomaly.dto';
 import { UpdateReadingAnomalyDto } from '../dto/update-reading-anomaly.dto';
 import { ResponseReadingAnomalyDto } from '../dto/response-reading-anomaly.dto';
-import { TipoAnomalia, EstadoAnomalia } from 'src/generated/prisma/client';
+import { TipoAnomalia, EstadoAnomalia } from 'src/shared/enums';
 import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
 import {
   ApiTags,
@@ -23,12 +28,18 @@ import {
   ApiParam,
   ApiQuery,
   ApiBody,
+  ApiConsumes,
 } from '@nestjs/swagger';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
 import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 import { toReadingAnomalyResponse } from '../../types/readingAnomalyMapper';
 import { ReadingAnomalyFilters } from '../../domain/repositories/reading-anomaly.repository';
+import {
+  EnumStateDto,
+  buildStateCatalog,
+} from 'src/shared/enums/state-catalog';
+import { MAX_UPLOAD_SIZE_BYTES } from 'src/infrastructure/config/app.constants';
 
 @ApiTags('reading-anomalies')
 @ApiBearerAuth()
@@ -56,13 +67,21 @@ export class ReadingAnomalyController {
     status: 403,
     description: 'Sin permiso reading-anomalies:create',
   })
+  @ApiConsumes('multipart/form-data', 'application/json')
   @RequiredPermission('reading-anomalies', 'create')
   @Post()
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: { fileSize: MAX_UPLOAD_SIZE_BYTES },
+      fileFilter: createImageFileFilter(),
+    }),
+  )
   async create(
     @Body() createDto: CreateReadingAnomalyDto,
+    @UploadedFile() file?: Express.Multer.File,
   ): Promise<ResponseReadingAnomalyDto> {
     return toReadingAnomalyResponse(
-      await this.readingAnomalyService.create(createDto),
+      await this.readingAnomalyService.create(createDto, file),
     )!;
   }
 
@@ -124,14 +143,43 @@ export class ReadingAnomalyController {
   }
 
   @ApiOperation({
+    summary: 'Catálogo de estados de anomalía',
+    description:
+      'Retorna todos los estados posibles de una anomalía de lectura (EstadoAnomalia).',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de estados',
+    type: [EnumStateDto],
+  })
+  @Get('estados')
+  getEstados(): EnumStateDto[] {
+    return buildStateCatalog(
+      EstadoAnomalia,
+      {
+        PENDIENTE: 'Pendiente',
+        EN_REVISION: 'En Revisión',
+        RESUELTA: 'Resuelta',
+        DESCARTADA: 'Descartada',
+      },
+      {
+        PENDIENTE: 'bi-flag',
+        EN_REVISION: 'bi-search',
+        RESUELTA: 'bi-check-circle',
+        DESCARTADA: 'bi-x-circle',
+      },
+    );
+  }
+
+  @ApiOperation({
     summary: 'Obtener anomalía de lectura',
     description: 'Retorna una anomalía por ID',
   })
   @ApiParam({
     name: 'id',
     description: 'ID de la anomalía',
-    type: String,
-    example: '1',
+    type: Number,
+    example: 1,
   })
   @ApiResponse({
     status: 200,
@@ -142,9 +190,11 @@ export class ReadingAnomalyController {
   @ApiResponse({ status: 404, description: 'Anomalía no encontrada' })
   @RequiredPermission('reading-anomalies', 'read')
   @Get(':id')
-  async findOne(@Param('id') id: string): Promise<ResponseReadingAnomalyDto> {
+  async findOne(
+    @Param('id', ParseBigIntPipe) id: bigint,
+  ): Promise<ResponseReadingAnomalyDto> {
     return toReadingAnomalyResponse(
-      await this.readingAnomalyService.findOne(BigInt(id)),
+      await this.readingAnomalyService.findOne(id),
     )!;
   }
 
@@ -155,8 +205,8 @@ export class ReadingAnomalyController {
   @ApiParam({
     name: 'id',
     description: 'ID de la anomalía',
-    type: String,
-    example: '1',
+    type: Number,
+    example: 1,
   })
   @ApiBody({
     type: UpdateReadingAnomalyDto,
@@ -174,14 +224,22 @@ export class ReadingAnomalyController {
     description: 'Sin permiso reading-anomalies:update',
   })
   @ApiResponse({ status: 404, description: 'Anomalía no encontrada' })
+  @ApiConsumes('multipart/form-data', 'application/json')
   @RequiredPermission('reading-anomalies', 'update')
   @Patch(':id')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: { fileSize: MAX_UPLOAD_SIZE_BYTES },
+      fileFilter: createImageFileFilter(),
+    }),
+  )
   async update(
-    @Param('id') id: string,
+    @Param('id', ParseBigIntPipe) id: bigint,
     @Body() updateDto: UpdateReadingAnomalyDto,
+    @UploadedFile() file?: Express.Multer.File,
   ): Promise<ResponseReadingAnomalyDto> {
     return toReadingAnomalyResponse(
-      await this.readingAnomalyService.update(BigInt(id), updateDto),
+      await this.readingAnomalyService.update(id, updateDto, file),
     )!;
   }
 
@@ -192,8 +250,8 @@ export class ReadingAnomalyController {
   @ApiParam({
     name: 'id',
     description: 'ID de la anomalía',
-    type: String,
-    example: '1',
+    type: Number,
+    example: 1,
   })
   @ApiResponse({ status: 200, description: 'Anomalía eliminada' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
@@ -204,7 +262,7 @@ export class ReadingAnomalyController {
   @ApiResponse({ status: 404, description: 'Anomalía no encontrada' })
   @RequiredPermission('reading-anomalies', 'delete')
   @Delete(':id')
-  async delete(@Param('id') id: string) {
-    return this.readingAnomalyService.delete(BigInt(id));
+  async delete(@Param('id', ParseBigIntPipe) id: bigint) {
+    return this.readingAnomalyService.delete(id);
   }
 }

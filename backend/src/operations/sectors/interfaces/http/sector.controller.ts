@@ -8,6 +8,7 @@ import {
   Delete,
   Query,
   UseGuards,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { SectorService } from '../../application/sector.service';
 import { CreateSectorDto } from '../dto/create-sector.dto';
@@ -74,8 +75,8 @@ export class SectorController {
   @ApiResponse({ status: 404, description: 'Sector no encontrado' })
   @RequiredPermission('sectores', 'read')
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.sectorService.findOne(+id);
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.sectorService.findOne(id);
   }
 
   @ApiOperation({
@@ -96,8 +97,11 @@ export class SectorController {
   @ApiResponse({ status: 404, description: 'Sector no encontrado' })
   @RequiredPermission('sectores', 'update')
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateSectorDto: UpdateSectorDto) {
-    return this.sectorService.actualizarSector(+id, updateSectorDto);
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateSectorDto: UpdateSectorDto,
+  ) {
+    return this.sectorService.actualizarSector(id, updateSectorDto);
   }
 
   @ApiOperation({
@@ -116,7 +120,7 @@ export class SectorController {
   @ApiResponse({ status: 404, description: 'Sector no encontrado' })
   @RequiredPermission('sectores', 'delete')
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.sectorService.eliminarSector(+id);
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.sectorService.eliminarSector(id);
   }
 }

@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsIn, IsNotEmpty, IsString } from 'class-validator';
+import { IsIn, MaxLength } from 'class-validator';
+import { IsNotEmptyString } from 'src/infrastructure/common/decorators/is-not-empty-string.decorator';
 
 /**
  * Estados a los que se puede cambiar un convenio mediante PATCH.
@@ -16,8 +17,8 @@ export class UpdateAgreementDto {
     example: 'PAGADO',
     enum: ESTADOS_VALIDOS,
   })
-  @IsNotEmpty()
-  @IsString()
+  @IsNotEmptyString()
+  @MaxLength(20)
   @IsIn(ESTADOS_VALIDOS, {
     message: 'Estado inválido. Valores permitidos: PAGADO, ANULADO, ACTIVO',
   })

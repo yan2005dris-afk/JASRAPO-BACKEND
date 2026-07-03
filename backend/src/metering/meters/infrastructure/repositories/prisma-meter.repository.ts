@@ -24,6 +24,20 @@ export class PrismaMeterRepository implements MeterRepository {
         ...(where.medidorId !== undefined && { medidorId: where.medidorId }),
         ...(where.serie !== undefined && { serie: where.serie }),
       } as Prisma.MedidoresWhereUniqueInput,
+      include: {
+        historial: {
+          where: { fechaHasta: null },
+          orderBy: { fechaDesde: 'desc' },
+          take: 1,
+          include: {
+            contrato: {
+              include: {
+                cliente: true,
+              },
+            },
+          },
+        },
+      },
     });
     return MeterMapper.toDomain(record);
   }
@@ -40,6 +54,20 @@ export class PrismaMeterRepository implements MeterRepository {
       take: params.take,
       skip: params.skip,
       orderBy: { createdAt: 'desc' },
+      include: {
+        historial: {
+          where: { fechaHasta: null },
+          orderBy: { fechaDesde: 'desc' },
+          take: 1,
+          include: {
+            contrato: {
+              include: {
+                cliente: true,
+              },
+            },
+          },
+        },
+      },
     });
     return MeterMapper.toDomainList(records);
   }
@@ -81,12 +109,12 @@ export class PrismaMeterRepository implements MeterRepository {
       });
     }
 
-    if (filters.buscar) {
+    if (filters.search) {
       conditions.push({
         OR: [
-          { serie: { contains: filters.buscar, mode: 'insensitive' } },
-          { marca: { contains: filters.buscar, mode: 'insensitive' } },
-          { modelo: { contains: filters.buscar, mode: 'insensitive' } },
+          { serie: { contains: filters.search, mode: 'insensitive' } },
+          { marca: { contains: filters.search, mode: 'insensitive' } },
+          { modelo: { contains: filters.search, mode: 'insensitive' } },
         ],
       });
     }
@@ -156,5 +184,24 @@ export class PrismaMeterRepository implements MeterRepository {
 
   async executeTransaction<T>(callback: (tx: any) => Promise<T>): Promise<T> {
     return this.prisma.$transaction(callback);
+  }
+
+  async findActiveContractForMeter(
+    medidorId: bigint,
+  ): Promise<{ contratoId: bigint; estado: string } | null> {
+    const historial = await this.prisma.historialMedidores.findFirst({
+      where: { medidorId, fechaHasta: null },
+      select: {
+        contratoId: true,
+        contrato: { select: { estado: true } },
+      },
+    });
+
+    if (!historial) return null;
+
+    return {
+      contratoId: historial.contratoId,
+      estado: historial.contrato.estado,
+    };
   }
 }

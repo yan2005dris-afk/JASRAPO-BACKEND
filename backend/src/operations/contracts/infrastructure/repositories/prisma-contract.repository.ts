@@ -1,11 +1,22 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { Prisma } from 'src/generated/prisma/client';
+import { EstadoMedidor } from 'src/shared/enums';
 import { ContractRepository } from '../../domain/repositories/contract.repository';
 import { ContractEntity } from '../../domain/entities/contract.entity';
 import { CreateContractData } from '../../domain/types/create-contract-data';
 import { CreateContractWithMeterCommand } from '../../domain/types/create-contract-with-meter-command';
 import { ContractMapper } from '../mappers/contract.mapper';
+import type { ContractFilters } from '../../domain/types/contract-filters';
+import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
+import {
+  paginate,
+  PaginateOptions,
+} from 'src/infrastructure/common/utils/pagination.util';
 
 @Injectable()
 export class PrismaContractRepository implements ContractRepository {
@@ -20,6 +31,31 @@ export class PrismaContractRepository implements ContractRepository {
   } satisfies Prisma.ContratosInclude;
 
   constructor(private readonly prisma: PrismaService) {}
+
+  async paginateContratos(
+    args: {
+      filters?: ContractFilters;
+      orderBy?: Record<string, any>;
+    },
+    pagination: PaginateOptions,
+  ): Promise<PaginatedResult<ContractEntity>> {
+    const where = this.buildContractWhere(args.filters);
+
+    const result = await paginate<any>(
+      this.prisma.contratos,
+      {
+        where,
+        orderBy: args.orderBy as Prisma.ContratosOrderByWithRelationInput,
+        include: this.defaultInclude,
+      },
+      pagination,
+    );
+
+    return {
+      data: ContractMapper.toDomainList(result.data),
+      meta: result.meta,
+    };
+  }
 
   async create(data: CreateContractData): Promise<ContractEntity> {
     const record = await this.prisma.contratos.create({
@@ -99,6 +135,11 @@ export class PrismaContractRepository implements ContractRepository {
           lecturaInicial: new Prisma.Decimal(data.lecturaInicial),
           motivo: 'VINCULACION MANUAL',
         },
+      });
+
+      await tx.medidores.update({
+        where: { medidorId: data.medidorId },
+        data: { estado: EstadoMedidor.PENDIENTE },
       });
 
       const createdRecord = await tx.contratos.findUnique({
@@ -181,6 +222,14 @@ export class PrismaContractRepository implements ContractRepository {
         );
       }
 
+      await tx.medidores.update({
+        where: { medidorId: activeLink.medidorId },
+        data: {
+          estado: EstadoMedidor.BAJA,
+          fechaBaja: new Date(),
+        },
+      });
+
       const finalizedRecord = await tx.contratos.findUnique({
         where: { contratoId },
         include: this.defaultInclude,
@@ -190,6 +239,88 @@ export class PrismaContractRepository implements ContractRepository {
   }
 
   // ── Private helpers ────────────────────────────────────────────────────
+
+  private buildContractWhere(
+    filters?: ContractFilters,
+  ): Prisma.ContratosWhereInput {
+    const conditions: Prisma.ContratosWhereInput[] = [{ deletedAt: null }];
+
+    if (!filters) return conditions[0];
+
+    if (filters.search) {
+      conditions.push({
+        OR: [
+          { numeroGuia: { contains: filters.search, mode: 'insensitive' } },
+          {
+            direccionSuministro: {
+              contains: filters.search,
+              mode: 'insensitive',
+            },
+          },
+          {
+            historialMedidores: {
+              some: {
+                fechaHasta: null,
+                medidor: {
+                  serie: { contains: filters.search, mode: 'insensitive' },
+                },
+              },
+            },
+          },
+        ],
+      });
+    }
+
+    if (filters.contratoId) {
+      conditions.push({ contratoId: filters.contratoId });
+    }
+
+    if (filters.numeroGuia) {
+      conditions.push({
+        numeroGuia: { contains: filters.numeroGuia, mode: 'insensitive' },
+      });
+    }
+
+    if (filters.categoriaTarifaId) {
+      conditions.push({ categoriaTarifaId: filters.categoriaTarifaId });
+    }
+
+    if (filters.medidorId || filters.medidorSerie) {
+      conditions.push({
+        historialMedidores: {
+          some: {
+            fechaHasta: null,
+            ...(filters.medidorId ? { medidorId: filters.medidorId } : {}),
+            ...(filters.medidorSerie
+              ? {
+                  medidor: {
+                    serie: {
+                      contains: filters.medidorSerie,
+                      mode: 'insensitive',
+                    },
+                  },
+                }
+              : {}),
+          },
+        },
+      });
+    }
+
+    if (filters.ubicacion) {
+      conditions.push({
+        direccionSuministro: {
+          contains: filters.ubicacion,
+          mode: 'insensitive',
+        },
+      });
+    }
+
+    if (filters.estado) {
+      conditions.push({ estado: filters.estado as any });
+    }
+
+    return conditions.length === 1 ? conditions[0] : { AND: conditions };
+  }
 
   private async validateContractDependencies(
     tx: Prisma.TransactionClient,
@@ -216,6 +347,12 @@ export class PrismaContractRepository implements ContractRepository {
     if (!medidor) {
       throw new NotFoundException(
         `Medidor con ID ${data.medidorId} no encontrado`,
+      );
+    }
+
+    if (medidor.estado !== EstadoMedidor.BODEGA) {
+      throw new BadRequestException(
+        `El medidor debe estar en estado BODEGA para ser vinculado, estado actual: ${medidor.estado}`,
       );
     }
 

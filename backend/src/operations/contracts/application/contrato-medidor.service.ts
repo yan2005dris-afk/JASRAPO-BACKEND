@@ -1,6 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { CrearContratoMedidorDto } from '../interfaces/dto/create-contrato-medidor.dto';
 import { ActualizarContratoMedidorDto } from '../interfaces/dto/update-contrato-medidor.dto';
+import { FilterContractsDto } from '../interfaces/dto/filter-contracts.dto';
+import { buildContractFilters } from './mappers/build-contract-filters.mapper';
+import { EstadoContrato } from 'src/shared/enums';
+import {
+  EnumStateDto,
+  buildStateCatalog,
+} from 'src/shared/enums/state-catalog';
 import { CreateContractUseCase } from './use-cases/create-contract.use-case';
 import { FindAllContractsUseCase } from './use-cases/find-all-contracts.use-case';
 import { FindOneContractUseCase } from './use-cases/find-one-contract.use-case';
@@ -25,12 +32,32 @@ export class ContratoMedidorService {
     private readonly generatePdf: GeneratePdfUseCase,
   ) {}
 
+  getContractStatesCatalog(): EnumStateDto[] {
+    return buildStateCatalog(EstadoContrato, {
+      [EstadoContrato.SOLICITUD]: 'Solicitud',
+      [EstadoContrato.PENDIENTE_PAGO]: 'Pendiente Pago',
+      [EstadoContrato.PENDIENTE_INSTALACION]: 'Pendiente Instalación',
+      [EstadoContrato.ACTIVO]: 'Activo',
+      [EstadoContrato.EN_MORA]: 'En Mora',
+      [EstadoContrato.ORDEN_CORTE]: 'Orden Corte',
+      [EstadoContrato.SUSPENDIDO]: 'Suspendido',
+      [EstadoContrato.EN_CONVENIO]: 'En Convenio',
+      [EstadoContrato.RETIRADO]: 'Retirado',
+      [EstadoContrato.RECONEXION]: 'Reconexión',
+    });
+  }
+
   async crearContrato(createDto: CrearContratoMedidorDto): Promise<any> {
     return this.createContractUseCase.execute(createDto);
   }
 
-  async buscarContratos(page = 1, limit = 10, where?: Record<string, any>) {
-    return this.findAllUseCase.execute(page, limit, where);
+  async buscarContratos(filters?: FilterContractsDto) {
+    const contractFilters = filters ? buildContractFilters(filters) : undefined;
+    return this.findAllUseCase.execute(
+      filters?.page,
+      filters?.limit,
+      contractFilters,
+    );
   }
 
   async buscarContrato(id: bigint): Promise<any> {

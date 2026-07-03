@@ -41,7 +41,6 @@ async function bootstrap() {
   const tracingService = app.get(TracingService);
 
   logger.log('Observability initialized', 'Bootstrap');
-  logger.log(`Tracing enabled: ${tracingService.isEnabled()}`, 'Bootstrap');
 
   app.setGlobalPrefix('api/v1');
 
@@ -280,6 +279,8 @@ Para consultas o soporte, contacta al equipo de desarrollo del Backend.
 
   const port = configService.get<number>('PORT', 3000);
   await app.listen(port);
+  logger.log(`Application running on: http://localhost:${port}`, 'Bootstrap');
+  logger.log(`Tracing enabled: ${tracingService.isEnabled()}`, 'Bootstrap');
 }
 
 void bootstrap();

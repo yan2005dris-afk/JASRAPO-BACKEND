@@ -1,5 +1,6 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { MaxLength } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { IsNotEmptyString } from 'src/infrastructure/common/decorators/is-not-empty-string.decorator';
 
 export class CreateMeterDto {
   @ApiProperty({
@@ -7,8 +8,8 @@ export class CreateMeterDto {
     example: 'Itron',
     required: true,
   })
-  @IsNotEmpty()
-  @IsString()
+  @IsNotEmptyString()
+  @MaxLength(100)
   marca: string;
 
   @ApiProperty({
@@ -16,8 +17,8 @@ export class CreateMeterDto {
     example: 'CX1000',
     required: true,
   })
-  @IsNotEmpty()
-  @IsString()
+  @IsNotEmptyString()
+  @MaxLength(100)
   modelo: string;
 
   @ApiProperty({
@@ -25,7 +26,7 @@ export class CreateMeterDto {
     example: 'SN-2024-001234',
     required: true,
   })
-  @IsNotEmpty()
-  @IsString()
+  @IsNotEmptyString()
+  @MaxLength(50)
   serie: string;
 }

@@ -1,5 +1,7 @@
 import type { PdfDocumentType } from 'src/infrastructure/pdf/document-type.interface';
 
+import { getPdfLogoUrl } from 'src/infrastructure/pdf/utils/pdf-logo-loader.util';
+
 export const AccountStatementPdfDocumentType: PdfDocumentType = {
   type: 'account-statement',
   name: 'Estado de Cuenta',
@@ -110,6 +112,7 @@ export const AccountStatementPdfDocumentType: PdfDocumentType = {
     });
 
     return {
+      logoUrl: getPdfLogoUrl(),
       reporte: {
         titulo: 'Estado de Cuenta',
         fechaEmision,
