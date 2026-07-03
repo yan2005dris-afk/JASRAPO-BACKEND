@@ -205,3 +205,221 @@ describe('EmitirFacturaUseCase — persistirFactura with comprobanteExistente (T
     });
   });
 });
+
+describe('EmitirFacturaUseCase — SRI rejection path (E-005)', () => {
+  let useCase: EmitirFacturaUseCase;
+  let comprobanteRepository: jest.Mocked<ComprobanteRepository>;
+  let sriSoapClient: jest.Mocked<SriSoapClient>;
+  let eventEmitterMock: { emit: jest.Mock };
+  let module: TestingModule;
+
+  const mockDto: CreateFacturaDto = {
+    fechaEmision: '03/07/2026',
+    emisor: {
+      ruc: '1234567890001',
+      razonSocial: 'Test Emisor',
+      dirMatriz: 'Av. Test',
+      establecimiento: '001',
+      puntoEmision: '001',
+      obligadoContabilidad: 'SI',
+    },
+    comprador: {
+      tipoIdentificacion: '05',
+      identificacion: '1234567890',
+      razonSocial: 'Test Client',
+      direccion: 'Test Address',
+    },
+    detalles: [
+      {
+        codigoPrincipal: '001',
+        descripcion: 'Test Item',
+        cantidad: 1,
+        precioUnitario: 100,
+        descuento: 0,
+        impuestos: [
+          { codigo: '2', codigoPorcentaje: '2', tarifa: 12, baseImponible: 100, valor: 12 },
+        ],
+      },
+    ],
+    pagos: [{ formaPago: '01', total: 112 }],
+  };
+
+  const emittedAutorizado = () =>
+    eventEmitterMock.mock.calls.filter(([event]) => event === 'comprobante.autorizado');
+
+  const emittedRechazado = () =>
+    eventEmitterMock.mock.calls.filter(([event]) => event === 'comprobante.rechazado');
+
+  beforeEach(async () => {
+    comprobanteRepository = {
+      create: jest.fn().mockResolvedValue({ id: BigInt(99) }),
+      update: jest.fn().mockResolvedValue({ id: BigInt(99) }),
+      createDetalles: jest.fn().mockResolvedValue([{ id: 'det-1' }]),
+      createImpuestos: jest.fn().mockResolvedValue([{}]),
+      createTotales: jest.fn().mockResolvedValue([{}]),
+      createPagos: jest.fn().mockResolvedValue([{}]),
+      createInfoAdicional: jest.fn().mockResolvedValue([{}]),
+      createDetallesAdicionales: jest.fn().mockResolvedValue([{}]),
+      saveXml: jest.fn().mockResolvedValue({}),
+      deleteDetallesByComprobanteId: jest.fn().mockResolvedValue(undefined),
+      deletePagosByComprobanteId: jest.fn().mockResolvedValue(undefined),
+      deleteImpuestosByComprobanteId: jest.fn().mockResolvedValue(undefined),
+      deleteTotalesByComprobanteId: jest.fn().mockResolvedValue(undefined),
+      deleteInfoAdicionalByComprobanteId: jest.fn().mockResolvedValue(undefined),
+      executeTransaction: jest.fn().mockImplementation((cb) => cb({})),
+      findByClaveAcceso: jest.fn(),
+      findConDetalles: jest.fn(),
+      findMany: jest.fn(),
+      createRetenciones: jest.fn(),
+      createImpuestosDocSustento: jest.fn(),
+      createMotivosNotaDebito: jest.fn(),
+      findDetallesByComprobanteId: jest.fn(),
+      findInfoAdicionalByComprobanteId: jest.fn(),
+      findXmlAutorizado: jest.fn(),
+      findXmlFirmado: jest.fn(),
+      findXmlByComprobanteId: jest.fn(),
+    } as any;
+
+    sriSoapClient = {
+      enviarYAutorizar: jest.fn(),
+    } as any;
+
+    const mockEmisorRepository = {
+      findByRuc: jest.fn().mockResolvedValue({
+        id: 1,
+        ruc: '1234567890001',
+        certificado_nombre: 'test.p12',
+        certificado_password_encrypted: 'encrypted',
+      }),
+      findPuntoEmision: jest.fn().mockResolvedValue({ punto_emision_id: 1 }),
+    } as any;
+
+    const eventEmitterProvider = { emit: jest.fn() };
+
+    module = await Test.createTestingModule({
+      providers: [
+        EmitirFacturaUseCase,
+        { provide: ClaveAccesoService, useValue: { generate: jest.fn().mockReturnValue('1234567890123456789012345678901234567890123456789') } },
+        { provide: XmlBuilderService, useValue: { buildFactura: jest.fn().mockReturnValue('<xml>') } },
+        { provide: XmlSignerService, useValue: { signXmlForEmisor: jest.fn().mockResolvedValue('<signed>'), verifySignature: jest.fn().mockResolvedValue(true) } },
+        { provide: SriSoapClient, useValue: sriSoapClient },
+        { provide: ComprobanteRepository, useValue: comprobanteRepository },
+        { provide: EmisorRepository, useValue: mockEmisorRepository },
+        { provide: SecuencialRepository, useValue: { getNextSecuencial: jest.fn().mockResolvedValue('000000001') } },
+        { provide: XmlStorageService, useValue: { saveAllXmls: jest.fn().mockResolvedValue({ firmadoKey: 'firmado.xml', autorizadoKey: 'autorizado.xml' }) } },
+        { provide: SriBaseService, useValue: {
+          validarIdentificacion: jest.fn(),
+          validarTipoIdentificacionCatalogo: jest.fn().mockResolvedValue(true),
+          validarImpuestosDetalles: jest.fn().mockResolvedValue(true),
+          validarFormasPagoCatalogo: jest.fn().mockResolvedValue(true),
+          getDefaultAmbiente: jest.fn().mockReturnValue('1'),
+        } },
+        { provide: EventEmitter2, useValue: eventEmitterProvider },
+      ],
+    }).compile();
+
+    useCase = module.get(EmitirFacturaUseCase);
+    eventEmitterMock = eventEmitterProvider.emit;
+  });
+
+  it('should mark comprobante as RECHAZADO and emit rechazado event when SRI rejects', async () => {
+    sriSoapClient.enviarYAutorizar.mockResolvedValueOnce({
+      success: false,
+      claveAcceso: '1234567890123456789012345678901234567890123456789',
+      estado: ComprobanteEstado.RECHAZADO,
+      mensajes: [
+        {
+          identificador: '43',
+          mensaje: 'Error en estructura del comprobante',
+          tipo: 'ERROR' as const,
+        },
+      ],
+    } as SriOperationResult);
+
+    await useCase.emitirFactura(mockDto);
+
+    // FASE 3 update reflects the SRI rejection state
+    const updateCalls = comprobanteRepository.update.mock.calls;
+    expect(updateCalls.length).toBeGreaterThanOrEqual(1);
+    const lastUpdatePayload = updateCalls[updateCalls.length - 1][1];
+    expect(lastUpdatePayload).toMatchObject({
+      estado: ComprobanteEstado.RECHAZADO,
+      estado_sri: ComprobanteEstado.RECHAZADO,
+    });
+
+    // Authorized event MUST NOT fire on rejection
+    expect(emittedAutorizado()).toHaveLength(0);
+
+    // Rechazado event fires with the SRI mensajes
+    const rechazadoCalls = emittedRechazado();
+    expect(rechazadoCalls).toHaveLength(1);
+    expect(rechazadoCalls[0][1]).toMatchObject({
+      estado: ComprobanteEstado.RECHAZADO,
+      mensajes: expect.arrayContaining([
+        expect.objectContaining({ tipo: 'ERROR', mensaje: expect.any(String) }),
+      ]),
+    });
+  });
+
+  it('should set estado_sri to DEVUELTA and emit rechazado event when SRI returns the comprobante', async () => {
+    sriSoapClient.enviarYAutorizar.mockResolvedValueOnce({
+      success: false,
+      claveAcceso: '1234567890123456789012345678901234567890123456789',
+      estado: ComprobanteEstado.DEVUELTA,
+      mensajes: [
+        {
+          identificador: '35',
+          mensaje: 'Factura devuelta por inconsistencia en datos',
+          tipo: 'ERROR' as const,
+        },
+      ],
+    } as SriOperationResult);
+
+    await useCase.emitirFactura(mockDto);
+
+    const updateCalls = comprobanteRepository.update.mock.calls;
+    const lastUpdatePayload = updateCalls[updateCalls.length - 1][1];
+    expect(lastUpdatePayload).toMatchObject({
+      estado: ComprobanteEstado.DEVUELTA,
+      estado_sri: ComprobanteEstado.DEVUELTA,
+    });
+
+    expect(emittedAutorizado()).toHaveLength(0);
+
+    const rechazadoCalls = emittedRechazado();
+    expect(rechazadoCalls).toHaveLength(1);
+    expect(rechazadoCalls[0][1]).toMatchObject({
+      estado: ComprobanteEstado.DEVUELTA,
+    });
+  });
+
+  it('should mark comprobante as AUTORIZADO and emit autorizado event when SRI authorizes', async () => {
+    sriSoapClient.enviarYAutorizar.mockResolvedValueOnce({
+      success: true,
+      claveAcceso: '1234567890123456789012345678901234567890123456789',
+      estado: ComprobanteEstado.AUTORIZADO,
+      fechaAutorizacion: '2026-07-03T15:00:00Z',
+      numeroAutorizacion: '9876543210',
+      xmlAutorizado: '<autorized/>',
+      mensajes: [],
+    } as SriOperationResult);
+
+    await useCase.emitirFactura(mockDto);
+
+    const updateCalls = comprobanteRepository.update.mock.calls;
+    const lastUpdatePayload = updateCalls[updateCalls.length - 1][1];
+    expect(lastUpdatePayload).toMatchObject({
+      estado: ComprobanteEstado.AUTORIZADO,
+      estado_sri: ComprobanteEstado.AUTORIZADO,
+    });
+
+    const autorizadoCalls = emittedAutorizado();
+    expect(autorizadoCalls).toHaveLength(1);
+    expect(autorizadoCalls[0][1]).toMatchObject({
+      numeroAutorizacion: '9876543210',
+      fechaAutorizacion: '2026-07-03T15:00:00Z',
+    });
+
+    expect(emittedRechazado()).toHaveLength(0);
+  });
+});
