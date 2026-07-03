@@ -34,6 +34,8 @@ import {
   UserRole,
 } from '../../../../identity/auth/interfaces/dto/auth.dto';
 import { JwtAuthGuard } from '../../../../identity/auth/interfaces/http/guards/jwt-auth.guard';
+import { PermissionsGuard } from '../../../../infrastructure/common/guards/permissions.guard';
+import { RequiredPermission } from '../../../../infrastructure/common/decorators/require-permission.decorator';
 import { ConfigService } from '@nestjs/config';
 import { extractRucFromClaveAcceso } from '../../infrastructure/xml/clave-acceso.utils';
 import {
@@ -53,7 +55,8 @@ import {
 
 @ApiTags('[En Desarrollo] SRI - Facturación Electrónica')
 @ApiBearerAuth('JWT')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
+@RequiredPermission('sri', 'admin')
 @Controller('sri')
 export class SriController {
   private readonly logger = new Logger(SriController.name);
