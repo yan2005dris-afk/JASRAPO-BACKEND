@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, OnModuleInit } from '@nestjs/common';
 import { PaymentsController } from './interfaces/http/payments.controller';
 import { PaymentsService } from './application/payments.service';
 import { PaymentRepository } from './domain/repositories/payment.repository';
@@ -10,8 +10,12 @@ import { AnnulPaymentUseCase } from './application/use-cases/annul-payment.use-c
 import { ApplySaldoFavorUseCase } from './application/use-cases/apply-saldo-favor.use-case';
 import { PagoValidadoHandler } from './application/pago-validado.handler';
 import { JobsService } from '../../../infrastructure/jobs/jobs.service';
+import { OutboxModule } from 'src/shared/outbox/outbox.module';
+import { OutboxProcessor } from 'src/shared/outbox/application/outbox.processor';
+import { EventosPendientesRepository } from 'src/shared/outbox/domain/repositories/eventos-pendientes.repository';
 
 @Module({
+  imports: [OutboxModule],
   controllers: [PaymentsController],
   providers: [
     { provide: PaymentRepository, useClass: PrismaPaymentRepository },
@@ -24,6 +28,20 @@ import { JobsService } from '../../../infrastructure/jobs/jobs.service';
     PagoValidadoHandler,
     { provide: 'JobService', useExisting: JobsService },
   ],
-  exports: [PaymentRepository, PaymentsService],
+  exports: [PaymentRepository, PaymentsService, EventosPendientesRepository],
 })
-export class PaymentsModule {}
+export class PaymentsModule implements OnModuleInit {
+  constructor(
+    private readonly outboxProcessor: OutboxProcessor,
+    private readonly pagoValidadoHandler: PagoValidadoHandler,
+  ) {}
+
+  onModuleInit(): void {
+    // W-3: route pago.validado outbox rows through the existing handler so
+    // comprobante emission remains eventually consistent on a process crash.
+    this.outboxProcessor.registerHandler('pago.validado', async (evento) => {
+      const pagoId = BigInt(evento.payload['pagoId'] as string);
+      await this.pagoValidadoHandler.procesarPagoValidado(pagoId);
+    });
+  }
+}

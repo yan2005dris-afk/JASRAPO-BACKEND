@@ -6,7 +6,6 @@ describe('PagoValidadoHandler (T-006)', () => {
   let paymentRepository: any;
   let comprobanteRepository: any;
   let jobsService: any;
-  let eventEmitter: any;
 
   beforeEach(() => {
     paymentRepository = {
@@ -71,11 +70,6 @@ describe('PagoValidadoHandler (T-006)', () => {
       onModuleDestroy: jest.fn(),
     } as any;
 
-    eventEmitter = {
-      emit: jest.fn(),
-      on: jest.fn(),
-    } as any;
-
     handler = new PagoValidadoHandler(
       paymentRepository as any,
       comprobanteRepository as any,
@@ -106,7 +100,7 @@ describe('PagoValidadoHandler (T-006)', () => {
     });
     comprobanteRepository.updateEstadoWithLock.mockResolvedValue(true);
 
-    await handler.handlePagoValidado({ pagoId: BigInt(1) });
+    await handler.procesarPagoValidado(BigInt(1));
 
     expect(comprobanteRepository.updateEstadoWithLock).toHaveBeenCalledWith(
       BigInt(42),
@@ -129,7 +123,7 @@ describe('PagoValidadoHandler (T-006)', () => {
       estado: ComprobanteEstado.BORRADOR,
     });
 
-    await handler.handlePagoValidado({ pagoId: BigInt(1) });
+    await handler.procesarPagoValidado(BigInt(1));
 
     expect(comprobanteRepository.updateEstadoWithLock).not.toHaveBeenCalled();
     expect(jobsService.send).not.toHaveBeenCalled();
@@ -145,7 +139,7 @@ describe('PagoValidadoHandler (T-006)', () => {
       estado: ComprobanteEstado.AUTORIZADO,
     });
 
-    await handler.handlePagoValidado({ pagoId: BigInt(1) });
+    await handler.procesarPagoValidado(BigInt(1));
 
     expect(comprobanteRepository.updateEstadoWithLock).not.toHaveBeenCalled();
     expect(jobsService.send).not.toHaveBeenCalled();
@@ -162,7 +156,7 @@ describe('PagoValidadoHandler (T-006)', () => {
     });
     comprobanteRepository.updateEstadoWithLock.mockResolvedValue(false);
 
-    await handler.handlePagoValidado({ pagoId: BigInt(1) });
+    await handler.procesarPagoValidado(BigInt(1));
 
     expect(jobsService.send).not.toHaveBeenCalled();
   });
@@ -186,7 +180,7 @@ describe('PagoValidadoHandler (T-006)', () => {
       });
     comprobanteRepository.updateEstadoWithLock.mockResolvedValue(true);
 
-    await handler.handlePagoValidado({ pagoId: BigInt(1) });
+    await handler.procesarPagoValidado(BigInt(1));
 
     // Both comprobantes should get the lock update
     expect(comprobanteRepository.updateEstadoWithLock).toHaveBeenCalledTimes(2);
@@ -196,7 +190,7 @@ describe('PagoValidadoHandler (T-006)', () => {
   it('should handle empty detalle_pago gracefully', async () => {
     paymentRepository.findManyDetallePago.mockResolvedValue([]);
 
-    await handler.handlePagoValidado({ pagoId: BigInt(1) });
+    await handler.procesarPagoValidado(BigInt(1));
 
     expect(comprobanteRepository.updateEstadoWithLock).not.toHaveBeenCalled();
     expect(jobsService.send).not.toHaveBeenCalled();
@@ -214,7 +208,7 @@ describe('PagoValidadoHandler (T-006)', () => {
     });
     comprobanteRepository.updateEstadoWithLock.mockResolvedValue(true);
 
-    await handler.handlePagoValidado({ pagoId: BigInt(1) });
+    await handler.procesarPagoValidado(BigInt(1));
 
     expect(comprobanteRepository.updateEstadoWithLock).toHaveBeenCalledTimes(1);
     expect(jobsService.send).toHaveBeenCalledTimes(1);
@@ -254,7 +248,7 @@ describe('PagoValidadoHandler (T-006)', () => {
     // Trigger handler as if pago2 ($40) just got validated.
     // Even though pago2's own detalle only sums $40, the repository returns
     // the FULL sum of ALL active detalle_pago for comprobante 42 ($60+$40=$100).
-    await handler.handlePagoValidado({ pagoId: BigInt(2) });
+    await handler.procesarPagoValidado(BigInt(2));
 
     // The handler must query by comprobanteId (not just pagoId) to retrieve
     // the total $100 and decide emission.
@@ -294,7 +288,7 @@ describe('PagoValidadoHandler (T-006)', () => {
       estado: ComprobanteEstado.BORRADOR,
     });
 
-    await handler.handlePagoValidado({ pagoId: BigInt(2) });
+    await handler.procesarPagoValidado(BigInt(2));
 
     expect(comprobanteRepository.updateEstadoWithLock).not.toHaveBeenCalled();
     expect(jobsService.send).not.toHaveBeenCalled();

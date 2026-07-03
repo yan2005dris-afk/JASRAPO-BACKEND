@@ -104,6 +104,16 @@ export type EstadoDeuda = (typeof EstadoDeuda)[keyof typeof EstadoDeuda];
 
 // Fuente: models/logica-de-negocio/Contratos.prisma
 
+export const EstadoEvento = {
+  PENDIENTE: 'PENDIENTE',
+  PROCESADO: 'PROCESADO',
+  FALLIDO: 'FALLIDO',
+} as const;
+
+export type EstadoEvento = (typeof EstadoEvento)[keyof typeof EstadoEvento];
+
+// Fuente: models/infrastructure/EventosPendientes.prisma
+
 export const EstadoLectura = {
   PENDIENTE: 'PENDIENTE',
   POR_REVISION: 'POR_REVISION',

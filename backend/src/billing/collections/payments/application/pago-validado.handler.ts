@@ -1,5 +1,4 @@
 import { Injectable, Logger, Inject } from '@nestjs/common';
-import { OnEvent } from '@nestjs/event-emitter';
 import { PaymentRepository } from 'src/billing/collections/payments/domain/repositories/payment.repository';
 import { ComprobanteRepository } from 'src/sri/emision/domain/repositories/comprobante.repository';
 import { ComprobanteEstado } from 'src/sri/emision/domain/constants/comprobante-estado.enum';
@@ -10,10 +9,13 @@ export interface JobService {
   send(name: string, data: object): Promise<string>;
 }
 
-interface PagoValidadoEvent {
-  pagoId: bigint;
-}
-
+/**
+ * W-3: The handler is now invoked directly by the outbox processor (no longer
+ * an `@OnEvent('pago.validado')` listener). Removing the in-process event
+ * guarantees the comprobante emission is durable: the outbox row is written
+ * in the same transaction as `updateManyPagos`, so we never lose the
+ * "emit comprobante when pago totals hit the bill" rule on a crash.
+ */
 @Injectable()
 export class PagoValidadoHandler {
   private readonly logger = new Logger(PagoValidadoHandler.name);
@@ -24,59 +26,49 @@ export class PagoValidadoHandler {
     @Inject('JobService') private readonly jobsService: JobService,
   ) {}
 
-  @OnEvent('pago.validado')
-  async handlePagoValidado(event: PagoValidadoEvent): Promise<void> {
-    const { pagoId } = event;
+  async procesarPagoValidado(pagoId: bigint): Promise<void> {
     this.logger.log(`Procesando pago.validado: pagoId=${pagoId}`);
 
-    try {
-      // RF-003: First, find the detalle_pago for THIS pago only to discover
-      // which comprobanteIds are touched by it.
-      const pagoDetalles = await this.paymentRepository.findManyDetallePago({
-        where: { pagoId },
+    // RF-003: First, find the detalle_pago for THIS pago only to discover
+    // which comprobanteIds are touched by it.
+    const pagoDetalles = await this.paymentRepository.findManyDetallePago({
+      where: { pagoId },
+    });
+
+    if (pagoDetalles.length === 0) {
+      this.logger.warn(`Pago ${pagoId} no tiene detalle_pago registrados`);
+      return;
+    }
+
+    // Collect unique comprobanteIds touched by this pago
+    const comprobanteIds = new Set<bigint>();
+    for (const detalle of pagoDetalles) {
+      if (detalle.comprobanteId) {
+        comprobanteIds.add(detalle.comprobanteId as bigint);
+      }
+    }
+
+    if (comprobanteIds.size === 0) {
+      this.logger.warn(
+        `Pago ${pagoId} no tiene detalle_pago con comprobanteId`,
+      );
+      return;
+    }
+
+    // RF-003: For each unique comprobanteId, sum ALL active detalle_pago.montoAbonado
+    // for that comprobanteId (across every pago). This handles multi-pago scenarios
+    // like pago1=$60 then pago2=$40 to complete $100.
+    for (const comprobanteId of comprobanteIds) {
+      const allDetalles = await this.paymentRepository.findManyDetallePago({
+        where: { comprobanteId },
       });
 
-      if (pagoDetalles.length === 0) {
-        this.logger.warn(
-          `Pago ${pagoId} no tiene detalle_pago registrados`,
-        );
-        return;
-      }
-
-      // Collect unique comprobanteIds touched by this pago
-      const comprobanteIds = new Set<bigint>();
-      for (const detalle of pagoDetalles) {
-        if (detalle.comprobanteId) {
-          comprobanteIds.add(detalle.comprobanteId as bigint);
-        }
-      }
-
-      if (comprobanteIds.size === 0) {
-        this.logger.warn(
-          `Pago ${pagoId} no tiene detalle_pago con comprobanteId`,
-        );
-        return;
-      }
-
-      // RF-003: For each unique comprobanteId, sum ALL active detalle_pago.montoAbonado
-      // for that comprobanteId (across every pago). This handles multi-pago scenarios
-      // like pago1=$60 then pago2=$40 to complete $100.
-      for (const comprobanteId of comprobanteIds) {
-        const allDetalles = await this.paymentRepository.findManyDetallePago({
-          where: { comprobanteId },
-        });
-
-        const totalAbonado = allDetalles.reduce(
-          (sum, d) => sum + (Number(d.montoAbonado) || 0),
-          0,
-        );
-
-        await this.processComprobante(comprobanteId, totalAbonado);
-      }
-    } catch (error) {
-      this.logger.error(
-        `Error procesando pago.validado pagoId=${pagoId}: ${(error as Error).message}`,
+      const totalAbonado = allDetalles.reduce(
+        (sum, d) => sum + (Number(d.montoAbonado) || 0),
+        0,
       );
+
+      await this.processComprobante(comprobanteId, totalAbonado);
     }
   }
 
@@ -89,9 +81,7 @@ export class PagoValidadoHandler {
     });
 
     if (!comprobante) {
-      this.logger.warn(
-        `Comprobante ${comprobanteId} no encontrado`,
-      );
+      this.logger.warn(`Comprobante ${comprobanteId} no encontrado`);
       return;
     }
 
