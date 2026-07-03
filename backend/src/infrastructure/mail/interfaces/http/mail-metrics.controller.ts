@@ -38,7 +38,9 @@ export class MailMetricsController {
   ) {
     try {
       const parsedLimit = parseInt(limitStr as string, 10);
-      const limit = isNaN(parsedLimit) ? 50 : Math.max(1, Math.min(1000, parsedLimit));
+      const limit = isNaN(parsedLimit)
+        ? 50
+        : Math.max(1, Math.min(1000, parsedLimit));
       const parsedOffset = parseInt(offsetStr as string, 10);
       const offset = isNaN(parsedOffset) ? 0 : Math.max(0, parsedOffset);
       const rows = await this.prisma.$queryRawUnsafe<

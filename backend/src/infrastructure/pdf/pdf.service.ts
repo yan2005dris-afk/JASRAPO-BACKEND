@@ -188,7 +188,12 @@ export class PdfService
             headerTemplate: '<span></span>',
             footerTemplate:
               '<div style="width: 100%; text-align: right; font-size: 9px; padding-right: 15mm; color: #666;">Pág. <span class="pageNumber"></span> de <span class="totalPages"></span></div>',
-            margin: { top: '20mm', right: '15mm', bottom: '20mm', left: '15mm' },
+            margin: {
+              top: '20mm',
+              right: '15mm',
+              bottom: '20mm',
+              left: '15mm',
+            },
           }),
           PDF_TIMEOUT_MS,
           'page.pdf',
