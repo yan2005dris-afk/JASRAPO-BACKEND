@@ -64,7 +64,11 @@ describe('AnnulPaymentUseCase', () => {
         estadoPago: EstadoPago.REGISTRADO,
         deletedAt: null,
         detallePago: [
-          { tipoPago: 'CUOTA_CONVENIO', montoAbonado: 50, cuotaConvenioId: 99n },
+          {
+            tipoPago: 'CUOTA_CONVENIO',
+            montoAbonado: 50,
+            cuotaConvenioId: 99n,
+          },
         ],
       })
       .mockResolvedValueOnce({ pagoId: 1n, estadoPago: EstadoPago.ANULADO });

@@ -118,7 +118,9 @@ describe('PaymentsService', () => {
     prisma.pagos.count.mockResolvedValue(0);
     prisma.pagos.findMany.mockResolvedValue([]);
 
-    const result = await service.findAll({ pagination: { page: 1, limit: 10 } });
+    const result = await service.findAll({
+      pagination: { page: 1, limit: 10 },
+    });
 
     expect(result.data).toEqual([]);
     expect(result.meta.total).toBe(0);
@@ -131,8 +133,16 @@ describe('PaymentsService', () => {
         montoTotalRecibido: 150,
         fechaPago: new Date('2026-06-18'),
         detallePago: [
-          { tipoPago: 'EFECTIVO', montoAbonado: 100, comprobante: { tipoComprobante: 'FACTURA' } },
-          { tipoPago: 'TRANSFERENCIA', montoAbonado: 50, comprobante: { tipoComprobante: 'FACTURA' } },
+          {
+            tipoPago: 'EFECTIVO',
+            montoAbonado: 100,
+            comprobante: { tipoComprobante: 'FACTURA' },
+          },
+          {
+            tipoPago: 'TRANSFERENCIA',
+            montoAbonado: 50,
+            comprobante: { tipoComprobante: 'FACTURA' },
+          },
         ],
       },
     ]);
@@ -155,7 +165,10 @@ describe('PaymentsService', () => {
   it('should filter daily cash summary by cajaId', async () => {
     prisma.pagos.findMany.mockResolvedValue([]);
 
-    const result = await service.getDailyCashSummary({ fecha: '2026-06-18', cajaId: '5' });
+    const result = await service.getDailyCashSummary({
+      fecha: '2026-06-18',
+      cajaId: '5',
+    });
 
     expect(result.cajaId).toBe('5');
     expect(result.totalPagos).toBe(0);

@@ -81,7 +81,9 @@ export class CreatePaymentDto {
     description: 'Banco de origen (solo para transferencias bancarias)',
   })
   @ValidateIf((o) => o.tarjetaCredito !== undefined)
-  @IsEmpty({ message: 'No puede enviar banco y tarjetaCredito simultáneamente' })
+  @IsEmpty({
+    message: 'No puede enviar banco y tarjetaCredito simultáneamente',
+  })
   @IsOptional()
   @IsEnum(Banco)
   banco?: Banco;
@@ -92,7 +94,9 @@ export class CreatePaymentDto {
     description: 'Marca de tarjeta (solo para pagos con tarjeta)',
   })
   @ValidateIf((o) => o.banco !== undefined)
-  @IsEmpty({ message: 'No puede enviar banco y tarjetaCredito simultáneamente' })
+  @IsEmpty({
+    message: 'No puede enviar banco y tarjetaCredito simultáneamente',
+  })
   @IsOptional()
   @IsEnum(TarjetaCredito)
   tarjetaCredito?: TarjetaCredito;

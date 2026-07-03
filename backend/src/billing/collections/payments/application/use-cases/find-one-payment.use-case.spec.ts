@@ -1,15 +1,20 @@
 import { NotFoundException } from '@nestjs/common';
 import { FindOnePaymentUseCase } from './find-one-payment.use-case';
-import { PaymentRepository } from '../../domain/repositories/payment.repository';
+import type { PaymentRepository } from '../../domain/repositories/payment.repository';
 
 describe('FindOnePaymentUseCase', () => {
-  const repository = { findUniquePago: jest.fn() } as unknown as jest.Mocked<PaymentRepository>;
+  const repository = {
+    findUniquePago: jest.fn(),
+  } as unknown as jest.Mocked<PaymentRepository>;
   const useCase = new FindOnePaymentUseCase(repository);
 
   beforeEach(() => jest.clearAllMocks());
 
   it('should return payment when it exists', async () => {
-    repository.findUniquePago.mockResolvedValue({ pagoId: 1n, deletedAt: null });
+    repository.findUniquePago.mockResolvedValue({
+      pagoId: 1n,
+      deletedAt: null,
+    });
     await expect(useCase.execute(1n)).resolves.toMatchObject({ pagoId: 1n });
   });
 
@@ -19,7 +24,10 @@ describe('FindOnePaymentUseCase', () => {
   });
 
   it('should throw NotFoundException when payment has deletedAt set', async () => {
-    repository.findUniquePago.mockResolvedValue({ pagoId: 1n, deletedAt: new Date('2026-06-18') });
+    repository.findUniquePago.mockResolvedValue({
+      pagoId: 1n,
+      deletedAt: new Date('2026-06-18'),
+    });
     await expect(useCase.execute(1n)).rejects.toBeInstanceOf(NotFoundException);
   });
 
