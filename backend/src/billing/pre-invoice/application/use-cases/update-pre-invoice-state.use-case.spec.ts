@@ -66,7 +66,6 @@ describe('UpdatePreInvoiceStateUseCase — comprobante BORRADOR (T-004)', () => 
       findXmlByComprobanteId: jest.fn(),
       deleteDetallesByComprobanteId: jest.fn(),
       deletePagosByComprobanteId: jest.fn(),
-      deleteImpuestosByComprobanteId: jest.fn(),
       deleteTotalesByComprobanteId: jest.fn(),
       deleteInfoAdicionalByComprobanteId: jest.fn(),
     };

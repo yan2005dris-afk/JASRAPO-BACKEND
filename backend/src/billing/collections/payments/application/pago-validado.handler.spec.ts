@@ -55,7 +55,6 @@ describe('PagoValidadoHandler (T-006)', () => {
       findXmlByComprobanteId: jest.fn(),
       deleteDetallesByComprobanteId: jest.fn(),
       deletePagosByComprobanteId: jest.fn(),
-      deleteImpuestosByComprobanteId: jest.fn(),
       deleteTotalesByComprobanteId: jest.fn(),
       deleteInfoAdicionalByComprobanteId: jest.fn(),
       executeTransaction: jest.fn().mockImplementation((cb: any) => cb({})),

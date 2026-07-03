@@ -122,11 +122,6 @@ export abstract class ComprobanteRepository {
     tx?: TransactionContext,
   ): Promise<void>;
 
-  abstract deleteImpuestosByComprobanteId(
-    id: bigint,
-    tx?: TransactionContext,
-  ): Promise<void>;
-
   abstract deleteTotalesByComprobanteId(
     id: bigint,
     tx?: TransactionContext,

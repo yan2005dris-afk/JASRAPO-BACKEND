@@ -604,25 +604,6 @@ export class PrismaComprobanteRepository extends ComprobanteRepository {
     });
   }
 
-  async deleteImpuestosByComprobanteId(
-    id: bigint,
-    tx?: Prisma.TransactionClient,
-  ): Promise<void> {
-    const client = tx ?? this.prisma;
-    // Impuestos are linked to detalles, not directly to comprobante.
-    // First find the detalle IDs for this comprobante, then delete impuestos.
-    const detalles = await client.comprobanteDetalles.findMany({
-      where: { comprobanteId: id },
-      select: { id: true },
-    });
-
-    if (detalles.length === 0) return;
-
-    await client.comprobanteImpuestos.deleteMany({
-      where: { comprobanteDetalleId: { in: detalles.map((d) => d.id) } },
-    });
-  }
-
   async deleteTotalesByComprobanteId(
     id: bigint,
     tx?: Prisma.TransactionClient,

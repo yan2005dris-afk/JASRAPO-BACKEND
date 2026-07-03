@@ -54,35 +54,6 @@ describe('PrismaComprobanteRepository — delete methods (T-002)', () => {
     });
   });
 
-  describe('deleteImpuestosByComprobanteId', () => {
-    it('should delete all impuestos for a given comprobanteId', async () => {
-      // First find the detalle IDs
-      mockPrisma.comprobanteDetalles.findMany = jest.fn().mockResolvedValue([
-        { id: 'det-1' },
-        { id: 'det-2' },
-      ]);
-      mockPrisma.comprobanteImpuestos.deleteMany.mockResolvedValue({ count: 4 });
-
-      await repository.deleteImpuestosByComprobanteId(BigInt(1));
-
-      expect(mockPrisma.comprobanteDetalles.findMany).toHaveBeenCalledWith({
-        where: { comprobanteId: BigInt(1) },
-        select: { id: true },
-      });
-      expect(mockPrisma.comprobanteImpuestos.deleteMany).toHaveBeenCalledWith({
-        where: { comprobanteDetalleId: { in: ['det-1', 'det-2'] } },
-      });
-    });
-
-    it('should return early if no detalles found', async () => {
-      mockPrisma.comprobanteDetalles.findMany = jest.fn().mockResolvedValue([]);
-
-      await repository.deleteImpuestosByComprobanteId(BigInt(1));
-
-      expect(mockPrisma.comprobanteImpuestos.deleteMany).not.toHaveBeenCalled();
-    });
-  });
-
   describe('deleteTotalesByComprobanteId', () => {
     it('should delete all totales for a given comprobanteId', async () => {
       mockPrisma.comprobanteTotales.deleteMany.mockResolvedValue({ count: 3 });
