@@ -10,9 +10,9 @@ import {
   UseGuards,
   UseInterceptors,
   UploadedFile,
-  BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { createImageFileFilter } from 'src/infrastructure/common/utils/evidence-upload.util';
 import { ParseBigIntPipe } from 'src/infrastructure/common/pipes/parse-bigint.pipe';
 import { ReadingAnomalyService } from '../../application/reading-anomaly.service';
 import { CreateReadingAnomalyDto } from '../dto/create-reading-anomaly.dto';
@@ -73,17 +73,7 @@ export class ReadingAnomalyController {
   @UseInterceptors(
     FileInterceptor('file', {
       limits: { fileSize: MAX_UPLOAD_SIZE_BYTES },
-      fileFilter: (req, file, callback) => {
-        if (!file.mimetype.match(/^image\/(jpg|jpeg|png|webp)$/i)) {
-          return callback(
-            new BadRequestException(
-              'Solo se permiten imágenes (jpg, jpeg, png, webp)',
-            ),
-            false,
-          );
-        }
-        callback(null, true);
-      },
+      fileFilter: createImageFileFilter(),
     }),
   )
   async create(
@@ -240,17 +230,7 @@ export class ReadingAnomalyController {
   @UseInterceptors(
     FileInterceptor('file', {
       limits: { fileSize: MAX_UPLOAD_SIZE_BYTES },
-      fileFilter: (req, file, callback) => {
-        if (!file.mimetype.match(/^image\/(jpg|jpeg|png|webp)$/i)) {
-          return callback(
-            new BadRequestException(
-              'Solo se permiten imágenes (jpg, jpeg, png, webp)',
-            ),
-            false,
-          );
-        }
-        callback(null, true);
-      },
+      fileFilter: createImageFileFilter(),
     }),
   )
   async update(

@@ -1,10 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { randomUUID } from 'crypto';
 import {
   StorageService,
   SRI_STORAGE_TYPES,
 } from 'src/infrastructure/storage/storage.service';
-import { ImageProcessorUtil } from 'src/infrastructure/common/utils/image-processor.util';
+import {
+  uploadEvidence,
+  rollbackEvidenceUpload,
+  deleteOldEvidence,
+} from 'src/infrastructure/common/utils/evidence-upload.util';
 import { CreateReadingAnomalyDto } from '../interfaces/dto/create-reading-anomaly.dto';
 import { UpdateReadingAnomalyDto } from '../interfaces/dto/update-reading-anomaly.dto';
 import { CreateReadingAnomalyUseCase } from './use-cases/create-reading-anomaly.use-case';
@@ -29,27 +32,6 @@ export class ReadingAnomalyService {
     private readonly storageService: StorageService,
   ) {}
 
-  private async uploadAndProcessImage(
-    file: Express.Multer.File,
-  ): Promise<string> {
-    this.logger.debug(
-      `[READING-ANOMALY] Procesando evidencia con ImageProcessorUtil (${file.size} bytes)`,
-    );
-    const processedBuffer = await ImageProcessorUtil.toWebP(file.buffer, {
-      width: 1024,
-      quality: 80,
-    });
-    const key = `reading-news/${randomUUID()}.webp`;
-    this.logger.debug(`[READING-ANOMALY] Subiendo a storage con key: ${key}`);
-    await this.storageService.upload(
-      SRI_STORAGE_TYPES.READING_NEWS,
-      key,
-      processedBuffer,
-      { contentType: 'image/webp' },
-    );
-    return key;
-  }
-
   async create(
     createDto: CreateReadingAnomalyDto,
     file?: Express.Multer.File,
@@ -58,7 +40,13 @@ export class ReadingAnomalyService {
     let uploadedKey: string | undefined;
 
     if (file) {
-      uploadedKey = await this.uploadAndProcessImage(file);
+      uploadedKey = await uploadEvidence(
+        file,
+        this.storageService,
+        SRI_STORAGE_TYPES.READING_NEWS,
+        'reading-news',
+        this.logger,
+      );
       fotoUrl = uploadedKey;
     }
 
@@ -66,12 +54,13 @@ export class ReadingAnomalyService {
       return await this.createUseCase.execute({ ...createDto, fotoUrl });
     } catch (error) {
       if (uploadedKey) {
-        this.logger.warn(
-          `[READING-ANOMALY] Revirtiendo subida por fallo en creación de anomalía: ${uploadedKey}`,
+        await rollbackEvidenceUpload(
+          uploadedKey,
+          this.storageService,
+          SRI_STORAGE_TYPES.READING_NEWS,
+          this.logger,
+          'READING-ANOMALY',
         );
-        await this.storageService
-          .delete(SRI_STORAGE_TYPES.READING_NEWS, uploadedKey)
-          .catch(() => {});
       }
       throw error;
     }
@@ -100,31 +89,38 @@ export class ReadingAnomalyService {
     const oldFotoUrl = existingAnomaly.fotoUrl || undefined;
 
     if (file) {
-      newFotoUrl = await this.uploadAndProcessImage(file);
+      newFotoUrl = await uploadEvidence(
+        file,
+        this.storageService,
+        SRI_STORAGE_TYPES.READING_NEWS,
+        'reading-news',
+        this.logger,
+      );
       updateDto.fotoUrl = newFotoUrl;
     }
 
     try {
       const result = await this.updateUseCase.execute(id, updateDto);
 
-      if (newFotoUrl && oldFotoUrl) {
-        await this.storageService
-          .delete(SRI_STORAGE_TYPES.READING_NEWS, oldFotoUrl)
-          .catch((e) =>
-            this.logger.warn(
-              `[READING-ANOMALY] No se pudo borrar la evidencia anterior (${oldFotoUrl}): ${e.message}`,
-            ),
-          );
-      }
+      await deleteOldEvidence(
+        oldFotoUrl || '',
+        newFotoUrl || '',
+        this.storageService,
+        SRI_STORAGE_TYPES.READING_NEWS,
+        this.logger,
+        'READING-ANOMALY',
+      );
+
       return result;
     } catch (error) {
       if (newFotoUrl) {
-        this.logger.warn(
-          `[READING-ANOMALY] Revirtiendo subida por fallo en actualización: ${newFotoUrl}`,
+        await rollbackEvidenceUpload(
+          newFotoUrl,
+          this.storageService,
+          SRI_STORAGE_TYPES.READING_NEWS,
+          this.logger,
+          'READING-ANOMALY',
         );
-        await this.storageService
-          .delete(SRI_STORAGE_TYPES.READING_NEWS, newFotoUrl)
-          .catch(() => {});
       }
       throw error;
     }
