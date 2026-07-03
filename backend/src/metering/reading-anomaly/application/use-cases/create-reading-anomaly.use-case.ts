@@ -20,6 +20,7 @@ export class CreateReadingAnomalyUseCase {
       observacion: createDto.observacion,
       tipo: createDto.tipo,
       estado: createDto.estado,
+      fotoUrl: createDto.fotoUrl,
       nextEstadoLectura: EstadoLectura.CON_NOVEDAD,
     });
   }

@@ -76,7 +76,7 @@ describe('ReadingController', () => {
       jest.spyOn(service, 'create').mockResolvedValue(mockLecturaData as any);
       const result = await controller.create(createDto as any);
 
-      expect(service.create).toHaveBeenCalled();
+      expect(service.create).toHaveBeenCalledWith(createDto, undefined);
       expect(result).toEqual(expectedMappedLectura);
     });
   });
@@ -113,7 +113,12 @@ describe('ReadingController', () => {
       jest.spyOn(service, 'update').mockResolvedValue(mockLecturaData as any);
       const result = await controller.actualizarLectura(1n, updateDto);
 
-      expect(service.update).toHaveBeenCalledWith(1n, updateDto);
+      expect(service.update).toHaveBeenCalledWith(
+        1n,
+        updateDto,
+        undefined,
+        undefined,
+      );
       expect(result).toEqual(expectedMappedLectura);
     });
   });

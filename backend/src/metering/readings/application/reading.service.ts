@@ -1,4 +1,13 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
+import {
+  StorageService,
+  SRI_STORAGE_TYPES,
+} from 'src/infrastructure/storage/storage.service';
+import {
+  uploadEvidence,
+  rollbackEvidenceUpload,
+  deleteOldEvidence,
+} from 'src/infrastructure/common/utils/evidence-upload.util';
 import { EstadoLectura } from 'src/shared/enums';
 import { CrearLecturaDto } from '../interfaces/dto/create-lectura.dto';
 import { ActualizarLecturaDto } from '../interfaces/dto/update-lectura.dto';
@@ -13,16 +22,49 @@ import { PaginatedResult } from 'src/infrastructure/common/types/paginated-resul
 
 @Injectable()
 export class ReadingService {
+  private readonly logger = new Logger(ReadingService.name);
+
   constructor(
     private readonly createUseCase: CreateReadingUseCase,
     private readonly findAllUseCase: FindAllReadingsUseCase,
     private readonly findOneUseCase: FindOneReadingUseCase,
     private readonly updateUseCase: UpdateReadingUseCase,
     private readonly removeUseCase: RemoveReadingUseCase,
+    private readonly storageService: StorageService,
   ) {}
 
-  async create(createDto: CrearLecturaDto): Promise<LecturaEntity> {
-    return this.createUseCase.execute(createDto);
+  async create(
+    createDto: CrearLecturaDto,
+    file?: Express.Multer.File,
+  ): Promise<LecturaEntity> {
+    let fotoUrl = createDto.fotoUrl;
+    let uploadedKey: string | undefined;
+
+    if (file) {
+      uploadedKey = await uploadEvidence(
+        file,
+        this.storageService,
+        SRI_STORAGE_TYPES.READINGS,
+        'readings',
+        this.logger,
+      );
+      fotoUrl = uploadedKey;
+    }
+
+    try {
+      return await this.createUseCase.execute({ ...createDto, fotoUrl });
+    } catch (error) {
+      if (uploadedKey) {
+        await rollbackEvidenceUpload(
+          uploadedKey,
+          this.storageService,
+          SRI_STORAGE_TYPES.READINGS,
+          this.logger,
+          'READINGS',
+        );
+      }
+      throw error;
+    }
   }
 
   async findAll(
@@ -41,8 +83,53 @@ export class ReadingService {
     id: bigint,
     updateDto: ActualizarLecturaDto,
     targetEstado?: EstadoLectura,
+    file?: Express.Multer.File,
   ): Promise<LecturaEntity> {
-    return this.updateUseCase.execute(id, updateDto, targetEstado);
+    const existingReading = await this.findOneUseCase.execute(id);
+
+    let newFotoUrl: string | undefined;
+    const oldFotoUrl = existingReading.fotoUrl || undefined;
+
+    if (file) {
+      newFotoUrl = await uploadEvidence(
+        file,
+        this.storageService,
+        SRI_STORAGE_TYPES.READINGS,
+        'readings',
+        this.logger,
+      );
+      updateDto.fotoUrl = newFotoUrl;
+    }
+
+    try {
+      const result = await this.updateUseCase.execute(
+        id,
+        updateDto,
+        targetEstado,
+      );
+
+      await deleteOldEvidence(
+        oldFotoUrl || '',
+        newFotoUrl || '',
+        this.storageService,
+        SRI_STORAGE_TYPES.READINGS,
+        this.logger,
+        'READINGS',
+      );
+
+      return result;
+    } catch (error) {
+      if (newFotoUrl) {
+        await rollbackEvidenceUpload(
+          newFotoUrl,
+          this.storageService,
+          SRI_STORAGE_TYPES.READINGS,
+          this.logger,
+          'READINGS',
+        );
+      }
+      throw error;
+    }
   }
 
   async delete(id: bigint): Promise<{ message: string }> {

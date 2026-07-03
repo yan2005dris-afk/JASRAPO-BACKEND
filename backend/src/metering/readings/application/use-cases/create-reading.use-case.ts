@@ -4,23 +4,17 @@ import { CrearLecturaDto } from '../../interfaces/dto/create-lectura.dto';
 import { EstadoLectura, EstadoPeriodo } from 'src/shared/enums';
 import { LecturaEntity } from '../../domain/entities/lectura.entity';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
-import {
-  StorageService,
-  SRI_BUCKETS,
-} from 'src/infrastructure/storage/storage.service';
-import * as crypto from 'crypto';
 
 @Injectable()
 export class CreateReadingUseCase {
   constructor(
     private readonly readingRepository: ReadingRepository,
     private readonly prisma: PrismaService,
-    private readonly storageService: StorageService,
   ) {}
 
   async execute(createDto: CrearLecturaDto): Promise<LecturaEntity> {
     const periodoId = await this.resolvePeriodoId(createDto.periodoId);
-    const fotoUrl = await this.resolvePhotoUrl(createDto);
+    const fotoUrl = createDto.fotoUrl;
 
     const rawLectura = await this.readingRepository.create({
       fecha: new Date(createDto.fecha),
@@ -61,25 +55,5 @@ export class CreateReadingUseCase {
     }
 
     return activePeriod.periodoId;
-  }
-
-  private async resolvePhotoUrl(
-    createDto: CrearLecturaDto,
-  ): Promise<string | undefined> {
-    if (createDto.fotoUrl) return createDto.fotoUrl;
-    if (!createDto.fotoBase64) return undefined;
-
-    const base64Data = createDto.fotoBase64.replace(
-      /^data:image\/\w+;base64,/,
-      '',
-    );
-    const buffer = Buffer.from(base64Data, 'base64');
-    const key = `readings/${crypto.randomUUID()}.jpg`;
-
-    await this.storageService.upload(SRI_BUCKETS.READINGS, key, buffer, {
-      contentType: 'image/jpeg',
-    });
-
-    return key;
   }
 }
