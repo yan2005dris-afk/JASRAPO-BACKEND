@@ -1,15 +1,16 @@
 import { BadRequestException } from '@nestjs/common';
-import { EstadoPago } from 'src/generated/prisma/enums';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { EstadoPago } from '../../domain/enums';
 import { ValidatePaymentUseCase } from './validate-payment.use-case';
 
 describe('ValidatePaymentUseCase', () => {
   const repository = {
-    updatePago: jest.fn(),
     updateManyPagos: jest.fn(),
     findUniquePago: jest.fn(),
   };
   const findOne = { execute: jest.fn() };
   const annul = { execute: jest.fn() };
+  const eventEmitter = { emit: jest.fn() };
   let useCase: ValidatePaymentUseCase;
 
   beforeEach(() => {
@@ -18,8 +19,11 @@ describe('ValidatePaymentUseCase', () => {
       repository as any,
       findOne as any,
       annul as any,
+      eventEmitter as any as EventEmitter2,
     );
   });
+
+  // ─── Existing tests (preserved) ───
 
   it('should allow PENDIENTE to REGISTRADO', async () => {
     findOne.execute.mockResolvedValue({
@@ -123,5 +127,40 @@ describe('ValidatePaymentUseCase', () => {
     await expect(
       useCase.execute(1n, { estadoPago: EstadoPago.REGISTRADO }),
     ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  // ─── T-005: pago.validado event tests ───
+
+  it('should emit pago.validado event after successful validation (T-005)', async () => {
+    findOne.execute.mockResolvedValue({
+      pagoId: 1n,
+      estadoPago: EstadoPago.PENDIENTE,
+    });
+    repository.updateManyPagos.mockResolvedValue({ count: 1 });
+    repository.findUniquePago.mockResolvedValue({
+      pagoId: 1n,
+      estadoPago: EstadoPago.REGISTRADO,
+    });
+
+    await useCase.execute(1n, { estadoPago: EstadoPago.REGISTRADO });
+
+    expect(eventEmitter.emit).toHaveBeenCalledWith(
+      'pago.validado',
+      expect.objectContaining({ pagoId: 1n }),
+    );
+  });
+
+  it('should NOT emit pago.validado when optimistic lock fails (T-005)', async () => {
+    findOne.execute.mockResolvedValue({
+      pagoId: 1n,
+      estadoPago: EstadoPago.PENDIENTE,
+    });
+    repository.updateManyPagos.mockResolvedValue({ count: 0 });
+
+    await expect(
+      useCase.execute(1n, { estadoPago: EstadoPago.REGISTRADO }),
+    ).rejects.toBeInstanceOf(BadRequestException);
+
+    expect(eventEmitter.emit).not.toHaveBeenCalled();
   });
 });

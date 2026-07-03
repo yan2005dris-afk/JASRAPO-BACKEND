@@ -23,6 +23,11 @@ import {
   SriOperationResult,
 } from '../../domain/interfaces';
 import { TipoComprobante, Ambiente, TipoEmision } from '../../domain/constants';
+import { ComprobanteRecord } from '../../../domain/interfaces/repository.interface';
+
+export interface EmitirFacturaOpts {
+  comprobanteExistente?: ComprobanteRecord;
+}
 
 @Injectable()
 export class EmitirFacturaUseCase {
@@ -45,7 +50,7 @@ export class EmitirFacturaUseCase {
    * Emite una factura electrónica completa: valida, genera XML, firma, envía al SRI y persiste
    * Patrón de 3 fases — nunca bloquea el pool de DB durante la llamada SOAP al SRI
    */
-  async emitirFactura(dto: CreateFacturaDto): Promise<FacturaResponseDto> {
+  async emitirFactura(dto: CreateFacturaDto, opts?: EmitirFacturaOpts): Promise<FacturaResponseDto> {
     this.logger.log('Iniciando emisión de factura electrónica');
 
     try {
@@ -178,6 +183,7 @@ export class EmitirFacturaUseCase {
               mensajes: [],
             },
             tx,
+            opts?.comprobanteExistente,
           );
         },
       );
@@ -353,6 +359,8 @@ export class EmitirFacturaUseCase {
 
   /**
    * Persists factura and all related data to database
+   * If comprobanteExistente is provided, UPDATE + deleteChildren + insertChildren
+   * Otherwise, CREATE a new comprobante record
    */
   private async persistirFactura(
     dto: CreateFacturaDto,
@@ -367,39 +375,75 @@ export class EmitirFacturaUseCase {
     xmlFirmado: string,
     resultado: SriOperationResult,
     tx: TransactionContext,
+    comprobanteExistente?: ComprobanteRecord,
   ): Promise<any> {
     try {
-      // 1. Create main comprobante record
-      const comprobante = await this.comprobanteRepository.create(
-        {
-          emisor_id: emisorId,
-          punto_emision_id: puntoEmisionId,
-          tipo_comprobante: TipoComprobante.FACTURA,
-          ambiente,
-          tipo_emision: tipoEmision,
-          secuencial: secuencial,
-          clave_acceso: claveAcceso,
-          fecha_emision: dto.fechaEmision.split('/').reverse().join('-'),
-          estado: resultado.success ? 'AUTORIZADO' : resultado.estado,
-          estado_sri: resultado.estado,
-          fecha_autorizacion: resultado.fechaAutorizacion,
-          numero_autorizacion: resultado.numeroAutorizacion || claveAcceso,
-          total_sin_impuestos: factura.infoFactura.totalSinImpuestos,
-          total_descuento: factura.infoFactura.totalDescuento,
-          importe_total: factura.infoFactura.importeTotal,
-          propina: factura.infoFactura.propina,
-          moneda: factura.infoFactura.moneda,
-          receptor_tipo_identificacion: dto.comprador.tipoIdentificacion,
-          receptor_identificacion: dto.comprador.identificacion,
-          receptor_razon_social: dto.comprador.razonSocial,
-          receptor_direccion: dto.comprador.direccion,
-          receptor_email: dto.comprador.email,
-          receptor_telefono: dto.comprador.telefono,
-        },
-        tx,
-      );
+      const comprobanteData = {
+        emisor_id: emisorId,
+        punto_emision_id: puntoEmisionId,
+        tipo_comprobante: TipoComprobante.FACTURA,
+        ambiente,
+        tipo_emision: tipoEmision,
+        secuencial: secuencial,
+        clave_acceso: claveAcceso,
+        fecha_emision: dto.fechaEmision.split('/').reverse().join('-'),
+        estado: resultado.success ? 'AUTORIZADO' : resultado.estado,
+        estado_sri: resultado.estado,
+        fecha_autorizacion: resultado.fechaAutorizacion,
+        numero_autorizacion: resultado.numeroAutorizacion || claveAcceso,
+        total_sin_impuestos: factura.infoFactura.totalSinImpuestos,
+        total_descuento: factura.infoFactura.totalDescuento,
+        importe_total: factura.infoFactura.importeTotal,
+        propina: factura.infoFactura.propina,
+        moneda: factura.infoFactura.moneda,
+        receptor_tipo_identificacion: dto.comprador.tipoIdentificacion,
+        receptor_identificacion: dto.comprador.identificacion,
+        receptor_razon_social: dto.comprador.razonSocial,
+        receptor_direccion: dto.comprador.direccion,
+        receptor_email: dto.comprador.email,
+        receptor_telefono: dto.comprador.telefono,
+      };
 
-      this.logger.log(`Comprobante creado con ID: ${comprobante.id}`);
+      let comprobante: any;
+
+      if (comprobanteExistente) {
+        // Branch: UPDATE existing comprobante + delete + insert children
+        const existingId = comprobanteExistente.id!;
+        comprobante = await this.comprobanteRepository.update(
+          existingId,
+          comprobanteData,
+          tx,
+        );
+
+        // Delete all children before re-creating them
+        await this.comprobanteRepository.deleteDetallesByComprobanteId(
+          existingId,
+          tx,
+        );
+        await this.comprobanteRepository.deletePagosByComprobanteId(
+          existingId,
+          tx,
+        );
+        await this.comprobanteRepository.deleteTotalesByComprobanteId(
+          existingId,
+          tx,
+        );
+        await this.comprobanteRepository.deleteInfoAdicionalByComprobanteId(
+          existingId,
+          tx,
+        );
+
+        this.logger.log(
+          `Comprobante actualizado con ID: ${existingId} (children re-created)`,
+        );
+      } else {
+        // Branch: CREATE new comprobante record
+        comprobante = await this.comprobanteRepository.create(
+          comprobanteData,
+          tx,
+        );
+        this.logger.log(`Comprobante creado con ID: ${comprobante.id}`);
+      }
 
       // 2. Create detalles and their impuestos
       for (let i = 0; i < factura.detalles.length; i++) {

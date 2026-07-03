@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { EstadoPago } from '../../domain/enums';
 import { UpdatePaymentStateDto } from '../../interfaces/dto/update-payment-state.dto';
 import { PaymentRepository } from '../../domain/repositories/payment.repository';
@@ -18,6 +19,7 @@ export class ValidatePaymentUseCase {
     private readonly paymentRepository: PaymentRepository,
     private readonly findOnePaymentUseCase: FindOnePaymentUseCase,
     private readonly annulPaymentUseCase: AnnulPaymentUseCase,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async execute(
@@ -57,6 +59,13 @@ export class ValidatePaymentUseCase {
         `El pago ${pagoId} fue modificado por otra solicitud`,
       );
     }
+
+    // Emit event so PagoValidadoHandler can check if comprobante is fully paid
+    this.eventEmitter.emit('pago.validado', {
+      pagoId,
+      estadoPago: dto.estadoPago,
+      actualizadoPor,
+    });
 
     return this.paymentRepository.findUniquePago(
       { pagoId },

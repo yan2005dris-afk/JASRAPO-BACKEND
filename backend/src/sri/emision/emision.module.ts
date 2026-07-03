@@ -38,6 +38,7 @@ import { PrismaSecuencialRepository } from './infrastructure/persistence/prisma-
 // PDF Registrar
 import { PdfService as InfraPdfService } from 'src/infrastructure/pdf/pdf.service';
 import { SriDocumentPdfType } from './infrastructure/pdf/sri-document.pdf-type';
+import { JobsService } from '../../infrastructure/jobs/jobs.service';
 
 @Module({
   imports: [
@@ -68,6 +69,7 @@ import { SriDocumentPdfType } from './infrastructure/pdf/sri-document.pdf-type';
     CatalogoValidatorService,
     IdentificacionValidatorService,
     SriEmisionProcessor,
+    { provide: 'JobService', useExisting: JobsService },
     {
       provide: ComprobanteRepository,
       useClass: PrismaComprobanteRepository,

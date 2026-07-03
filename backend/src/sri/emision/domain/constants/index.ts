@@ -1,5 +1,6 @@
 export * from './sri.enums';
 export * from './sri-endpoints.constant';
+export * from './comprobante-estado.enum';
 
 /**
  * Descripciones legibles de los tipos de comprobante SRI

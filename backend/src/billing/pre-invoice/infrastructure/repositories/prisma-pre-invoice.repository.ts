@@ -61,6 +61,9 @@ export class PrismaPreInvoiceRepository implements PreInvoiceRepository {
         ...(data?.fechaAprobacion
           ? { fechaAprobacion: data.fechaAprobacion }
           : {}),
+        ...(data?.comprobanteId
+          ? { comprobanteId: data.comprobanteId }
+          : {}),
       },
     });
     return result.count > 0;

@@ -8,6 +8,8 @@ import { FindOnePaymentUseCase } from './application/use-cases/find-one-payment.
 import { ValidatePaymentUseCase } from './application/use-cases/validate-payment.use-case';
 import { AnnulPaymentUseCase } from './application/use-cases/annul-payment.use-case';
 import { ApplySaldoFavorUseCase } from './application/use-cases/apply-saldo-favor.use-case';
+import { PagoValidadoHandler } from './application/pago-validado.handler';
+import { JobsService } from '../../../infrastructure/jobs/jobs.service';
 
 @Module({
   controllers: [PaymentsController],
@@ -19,6 +21,8 @@ import { ApplySaldoFavorUseCase } from './application/use-cases/apply-saldo-favo
     ValidatePaymentUseCase,
     AnnulPaymentUseCase,
     ApplySaldoFavorUseCase,
+    PagoValidadoHandler,
+    { provide: 'JobService', useExisting: JobsService },
   ],
   exports: [PaymentRepository, PaymentsService],
 })
