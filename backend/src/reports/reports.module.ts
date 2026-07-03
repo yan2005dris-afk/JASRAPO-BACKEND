@@ -1,6 +1,7 @@
 import { Module, OnModuleInit } from '@nestjs/common';
 import { PdfService } from '../infrastructure/pdf/pdf.service';
 import { ClientModule } from '../operations/clients/client.module';
+import { AgreementsModule } from '../billing/collections/agreements/agreements.module';
 import { ReportsController } from './interfaces/http/reports.controller';
 import { ClientsListReportSpec } from './specs/clients-list.report-spec';
 import { PaymentsReportSpec } from './specs/payments-report.report-spec';
@@ -15,7 +16,15 @@ import { ConnectionHistoryModernPdfDocumentType } from './pdf/connection-history
 import { createPaymentAgreementPdfDocumentType } from './pdf/factories/payment-agreement.factory';
 import { ReportStyleService } from './application/report-style.service';
 import { ReportStyleDispatcher } from './application/report-style.dispatcher';
-import { AgreementsModule } from '../billing/collections/agreements/agreements.module';
+import { SendReportByEmailUseCase } from './application/use-cases/send-report-by-email.use-case';
+import {
+  AccountStatementReportEmailStrategy,
+  ClientsListReportEmailStrategy,
+  ConnectionHistoryReportEmailStrategy,
+  PaymentAgreementReportEmailStrategy,
+  PaymentsReportEmailStrategy,
+  REPORT_EMAIL_STRATEGIES_PROVIDER,
+} from './application/use-cases/send-report-by-email.strategies';
 
 @Module({
   imports: [ClientModule, AgreementsModule],
@@ -27,6 +36,13 @@ import { AgreementsModule } from '../billing/collections/agreements/agreements.m
     AccountStatementReportSpec,
     ReportStyleService,
     ReportStyleDispatcher,
+    PaymentsReportEmailStrategy,
+    ConnectionHistoryReportEmailStrategy,
+    PaymentAgreementReportEmailStrategy,
+    AccountStatementReportEmailStrategy,
+    ClientsListReportEmailStrategy,
+    SendReportByEmailUseCase,
+    REPORT_EMAIL_STRATEGIES_PROVIDER,
   ],
 })
 export class ReportsModule implements OnModuleInit {

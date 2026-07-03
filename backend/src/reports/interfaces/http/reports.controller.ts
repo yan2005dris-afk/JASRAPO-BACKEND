@@ -1,4 +1,16 @@
-import { Controller, Get, Query, Res, Logger, UseGuards } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Post,
+  Query,
+  Res,
+  Logger,
+  UseGuards,
+} from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
@@ -21,6 +33,12 @@ import { AccountStatementReportSpec } from '../../specs/account-statement.report
 import { PaymentAgreementLegacyFilterDto } from '../../dto/payment-agreement-legacy-filter.dto';
 import { GetPaymentAgreementPdfDataUseCase } from '../../../billing/collections/agreements/application/use-cases/get-payment-agreement-pdf-data.use-case';
 import { ReportStyleDispatcher } from '../../application/report-style.dispatcher';
+import { SendPaymentsReportEmailDto } from '../../dto/send-payments-report-email.dto';
+import { SendConnectionHistoryEmailDto } from '../../dto/send-connection-history-email.dto';
+import { SendPaymentAgreementEmailDto } from '../../dto/send-payment-agreement-email.dto';
+import { SendAccountStatementEmailDto } from '../../dto/send-account-statement-email.dto';
+import { SendClientsListEmailDto } from '../../dto/send-clients-list-email.dto';
+import { SendReportByEmailUseCase } from '../../application/use-cases/send-report-by-email.use-case';
 
 /**
  * Reports HTTP surface.
@@ -57,6 +75,7 @@ export class ReportsController {
     private readonly accountStatementSpec: AccountStatementReportSpec,
     private readonly paymentAgreementPdfData: GetPaymentAgreementPdfDataUseCase,
     private readonly dispatcher: ReportStyleDispatcher,
+    private readonly sendReportByEmail: SendReportByEmailUseCase,
   ) {}
 
   // ─── Consolidated dispatcher endpoints (REQ-1/2/3) ──────────────────────────
@@ -70,7 +89,8 @@ export class ReportsController {
   })
   @ApiResponse({
     status: 200,
-    description: 'PDF generado (binary) o JSON con los datos crudos según Accept',
+    description:
+      'PDF generado (binary) o JSON con los datos crudos según Accept',
     content: {
       'application/pdf': {},
       'application/json': {},
@@ -100,7 +120,8 @@ export class ReportsController {
   })
   @ApiResponse({
     status: 200,
-    description: 'PDF generado (binary) o JSON con los datos crudos según Accept',
+    description:
+      'PDF generado (binary) o JSON con los datos crudos según Accept',
     content: {
       'application/pdf': {},
       'application/json': {},
@@ -130,7 +151,8 @@ export class ReportsController {
   })
   @ApiResponse({
     status: 200,
-    description: 'PDF generado (binary) o JSON con los datos crudos según Accept',
+    description:
+      'PDF generado (binary) o JSON con los datos crudos según Accept',
     content: {
       'application/pdf': {},
       'application/json': {},
@@ -169,7 +191,8 @@ export class ReportsController {
   })
   @ApiResponse({
     status: 200,
-    description: 'PDF generado (binary) o JSON con los datos crudos según Accept',
+    description:
+      'PDF generado (binary) o JSON con los datos crudos según Accept',
     content: {
       'application/pdf': {},
       'application/json': {},
@@ -184,7 +207,12 @@ export class ReportsController {
     );
     const data = await this.clientsListSpec.fetchData(filters);
     const buffer = await this.generatePdf.execute('clients-list', data);
-    this.respondWithContentNegotiation(res, data, buffer, 'clientes-General.pdf');
+    this.respondWithContentNegotiation(
+      res,
+      data,
+      buffer,
+      'clientes-General.pdf',
+    );
   }
 
   @Get('account-statement')
@@ -196,7 +224,8 @@ export class ReportsController {
   })
   @ApiResponse({
     status: 200,
-    description: 'PDF generado (binary) o JSON con los datos crudos según Accept',
+    description:
+      'PDF generado (binary) o JSON con los datos crudos según Accept',
     content: {
       'application/pdf': {},
       'application/json': {},
@@ -211,7 +240,106 @@ export class ReportsController {
     );
     const data = await this.accountStatementSpec.fetchData(filters);
     const buffer = await this.generatePdf.execute('account-statement', data);
-    this.respondWithContentNegotiation(res, data, buffer, 'estado-cuenta-General.pdf');
+    this.respondWithContentNegotiation(
+      res,
+      data,
+      buffer,
+      'estado-cuenta-General.pdf',
+    );
+  }
+
+  // ─── Email send endpoints (report-endpoint-send-email) ───────────────────────
+
+  @Post('payments-report/email')
+  @RequiredPermission('reportes', 'read')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Enviar Reporte de Abonos por email' })
+  @ApiResponse({
+    status: 400,
+    description: 'Falta clienteId o destinatario email',
+  })
+  @ApiResponse({ status: 403, description: 'Sin permiso reportes:read' })
+  sendPaymentsReportEmail(@Body() body: SendPaymentsReportEmailDto) {
+    return this.sendReportByEmail.execute({
+      reportType: 'payments-report',
+      filters: body as unknown as Record<string, unknown>,
+      destinatarioOverride: body.destinatario,
+      subjectOverride: body.subject,
+    });
+  }
+
+  @Post('connection-history/email')
+  @RequiredPermission('reportes', 'read')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Enviar Historial de Conexión por email' })
+  @ApiResponse({
+    status: 400,
+    description: 'Falta contratoId o destinatario email',
+  })
+  @ApiResponse({ status: 403, description: 'Sin permiso reportes:read' })
+  sendConnectionHistoryEmail(@Body() body: SendConnectionHistoryEmailDto) {
+    return this.sendReportByEmail.execute({
+      reportType: 'connection-history',
+      filters: body as unknown as Record<string, unknown>,
+      destinatarioOverride: body.destinatario,
+      subjectOverride: body.subject,
+    });
+  }
+
+  @Post('payment-agreement/email')
+  @RequiredPermission('reportes', 'read')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Enviar Convenio de Pago por email' })
+  @ApiResponse({
+    status: 400,
+    description: 'Falta convenioId o destinatario email',
+  })
+  @ApiResponse({ status: 403, description: 'Sin permiso reportes:read' })
+  sendPaymentAgreementEmail(@Body() body: SendPaymentAgreementEmailDto) {
+    return this.sendReportByEmail.execute({
+      reportType: 'payment-agreement',
+      filters: body as unknown as Record<string, unknown>,
+      destinatarioOverride: body.destinatario,
+      subjectOverride: body.subject,
+    });
+  }
+
+  @Post('account-statement/email')
+  @RequiredPermission('reportes', 'read')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Enviar Estado de Cuenta por email' })
+  @ApiResponse({
+    status: 400,
+    description: 'Falta contratoId o destinatario email',
+  })
+  @ApiResponse({ status: 403, description: 'Sin permiso reportes:read' })
+  sendAccountStatementEmail(@Body() body: SendAccountStatementEmailDto) {
+    return this.sendReportByEmail.execute({
+      reportType: 'account-statement',
+      filters: body as unknown as Record<string, unknown>,
+      destinatarioOverride: body.destinatario,
+      subjectOverride: body.subject,
+    });
+  }
+
+  @Post('clients/email')
+  @RequiredPermission('reportes', 'read')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Enviar Listado de Clientes por email' })
+  @ApiResponse({ status: 400, description: 'Falta destinatario' })
+  @ApiResponse({ status: 403, description: 'Sin permiso reportes:read' })
+  sendClientsListEmail(@Body() body: SendClientsListEmailDto) {
+    if (!body.destinatario) {
+      throw new BadRequestException(
+        'destinatario es obligatorio para el listado de clientes',
+      );
+    }
+    return this.sendReportByEmail.execute({
+      reportType: 'clients-list',
+      filters: (body.filtros as unknown as Record<string, unknown>) ?? {},
+      destinatarioOverride: body.destinatario,
+      subjectOverride: body.subject,
+    });
   }
 
   // ─── Private helpers ────────────────────────────────────────────────────────
@@ -219,20 +347,13 @@ export class ReportsController {
   /**
    * Content negotiation based on the `Accept` request header.
    *
-   *   - `Accept: application/json` → JSON payload (raw spec data, before
-   *     PDF-specific adaptation). Useful for frontend tables, integrations,
-   *     and debugging.
-   *   - `Accept: application/pdf` → PDF binary. The original behavior. Use
-   *     this when a backend service needs the PDF (e.g. attaching to an
-   *     email) or when a client explicitly wants the printable version.
-   *   - The wildcard media type, missing header, or any other value
-   *     → JSON (default).
-   *     an opt-in via `Accept: application/pdf`.
+   *   - `Accept: application/json` → JSON payload (raw spec data).
+   *   - `Accept: application/pdf` → PDF binary.
+   *   - wildcard or missing header → JSON (default).
    *
-   * If the client sends both `application/json` and `application/pdf`,
-   * JSON wins (matches the API-default principle: the more common
-   * consumer is a JSON-speaking client; the email service that needs
-   * PDF explicitly opts in).
+   * JSON wins if the client sends both `application/json` and `application/pdf`.
+   * The BigInt-safe JSON.stringify wrapper handles BigInt values that bypass
+   * the global BigIntInterceptor when @Res() is used.
    */
   private respondWithContentNegotiation(
     res: Response,
@@ -259,7 +380,11 @@ export class ReportsController {
         'Content-Type': 'application/json; charset=utf-8',
         'Content-Disposition': `inline; filename="${jsonFilename}"`,
       });
-      res.json(data);
+      // BigInt-safe serialization: @Res() bypasses the global BigIntInterceptor
+      const safeJson = JSON.stringify(data, (_key, value) =>
+        typeof value === 'bigint' ? value.toString() : value,
+      );
+      res.send(safeJson);
       return;
     }
 
