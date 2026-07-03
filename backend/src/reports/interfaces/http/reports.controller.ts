@@ -16,6 +16,7 @@ import {
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
+  ApiBody,
 } from '@nestjs/swagger';
 import type { Response } from 'express';
 import { GeneratePdfUseCase } from '../../../infrastructure/pdf/use-cases/generate-pdf.use-case';
@@ -33,10 +34,7 @@ import { AccountStatementReportSpec } from '../../specs/account-statement.report
 import { PaymentAgreementLegacyFilterDto } from '../../dto/payment-agreement-legacy-filter.dto';
 import { GetPaymentAgreementPdfDataUseCase } from '../../../billing/collections/agreements/application/use-cases/get-payment-agreement-pdf-data.use-case';
 import { ReportStyleDispatcher } from '../../application/report-style.dispatcher';
-import { SendPaymentsReportEmailDto } from '../../dto/send-payments-report-email.dto';
-import { SendConnectionHistoryEmailDto } from '../../dto/send-connection-history-email.dto';
-import { SendPaymentAgreementEmailDto } from '../../dto/send-payment-agreement-email.dto';
-import { SendAccountStatementEmailDto } from '../../dto/send-account-statement-email.dto';
+import { SendReportEmailDto } from '../../dto/send-report-email.dto';
 import { SendClientsListEmailDto } from '../../dto/send-clients-list-email.dto';
 import { SendReportByEmailUseCase } from '../../application/use-cases/send-report-by-email.use-case';
 
@@ -254,15 +252,16 @@ export class ReportsController {
   @RequiredPermission('reportes', 'read')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Enviar Reporte de Abonos por email' })
-  @ApiResponse({
-    status: 400,
-    description: 'Falta clienteId o destinatario email',
-  })
+  @ApiBody({ type: SendReportEmailDto })
+  @ApiResponse({ status: 400, description: 'Falta clienteId' })
   @ApiResponse({ status: 403, description: 'Sin permiso reportes:read' })
-  sendPaymentsReportEmail(@Body() body: SendPaymentsReportEmailDto) {
+  sendPaymentsReportEmail(@Body() body: SendReportEmailDto) {
+    if (!body.clienteId) {
+      throw new BadRequestException('clienteId es requerido');
+    }
     return this.sendReportByEmail.execute({
       reportType: 'payments-report',
-      filters: body as unknown as Record<string, unknown>,
+      filters: { clienteId: body.clienteId },
       destinatarioOverride: body.destinatario,
       subjectOverride: body.subject,
     });
@@ -272,15 +271,16 @@ export class ReportsController {
   @RequiredPermission('reportes', 'read')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Enviar Historial de Conexión por email' })
-  @ApiResponse({
-    status: 400,
-    description: 'Falta contratoId o destinatario email',
-  })
+  @ApiBody({ type: SendReportEmailDto })
+  @ApiResponse({ status: 400, description: 'Falta contratoId' })
   @ApiResponse({ status: 403, description: 'Sin permiso reportes:read' })
-  sendConnectionHistoryEmail(@Body() body: SendConnectionHistoryEmailDto) {
+  sendConnectionHistoryEmail(@Body() body: SendReportEmailDto) {
+    if (!body.contratoId) {
+      throw new BadRequestException('contratoId es requerido');
+    }
     return this.sendReportByEmail.execute({
       reportType: 'connection-history',
-      filters: body as unknown as Record<string, unknown>,
+      filters: { contratoId: body.contratoId },
       destinatarioOverride: body.destinatario,
       subjectOverride: body.subject,
     });
@@ -290,15 +290,16 @@ export class ReportsController {
   @RequiredPermission('reportes', 'read')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Enviar Convenio de Pago por email' })
-  @ApiResponse({
-    status: 400,
-    description: 'Falta convenioId o destinatario email',
-  })
+  @ApiBody({ type: SendReportEmailDto })
+  @ApiResponse({ status: 400, description: 'Falta convenioId' })
   @ApiResponse({ status: 403, description: 'Sin permiso reportes:read' })
-  sendPaymentAgreementEmail(@Body() body: SendPaymentAgreementEmailDto) {
+  sendPaymentAgreementEmail(@Body() body: SendReportEmailDto) {
+    if (!body.convenioId) {
+      throw new BadRequestException('convenioId es requerido');
+    }
     return this.sendReportByEmail.execute({
       reportType: 'payment-agreement',
-      filters: body as unknown as Record<string, unknown>,
+      filters: { convenioId: body.convenioId },
       destinatarioOverride: body.destinatario,
       subjectOverride: body.subject,
     });
@@ -308,15 +309,16 @@ export class ReportsController {
   @RequiredPermission('reportes', 'read')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Enviar Estado de Cuenta por email' })
-  @ApiResponse({
-    status: 400,
-    description: 'Falta contratoId o destinatario email',
-  })
+  @ApiBody({ type: SendReportEmailDto })
+  @ApiResponse({ status: 400, description: 'Falta contratoId' })
   @ApiResponse({ status: 403, description: 'Sin permiso reportes:read' })
-  sendAccountStatementEmail(@Body() body: SendAccountStatementEmailDto) {
+  sendAccountStatementEmail(@Body() body: SendReportEmailDto) {
+    if (!body.contratoId) {
+      throw new BadRequestException('contratoId es requerido');
+    }
     return this.sendReportByEmail.execute({
       reportType: 'account-statement',
-      filters: body as unknown as Record<string, unknown>,
+      filters: { contratoId: body.contratoId },
       destinatarioOverride: body.destinatario,
       subjectOverride: body.subject,
     });
@@ -326,6 +328,7 @@ export class ReportsController {
   @RequiredPermission('reportes', 'read')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Enviar Listado de Clientes por email' })
+  @ApiBody({ type: SendClientsListEmailDto })
   @ApiResponse({ status: 400, description: 'Falta destinatario' })
   @ApiResponse({ status: 403, description: 'Sin permiso reportes:read' })
   sendClientsListEmail(@Body() body: SendClientsListEmailDto) {
