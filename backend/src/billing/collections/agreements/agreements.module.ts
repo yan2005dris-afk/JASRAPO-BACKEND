@@ -22,7 +22,12 @@ import { PaymentAgreementPdfDocumentType } from './pdf/payment-agreement.pdf-typ
     UpdateAgreementUseCase,
     GetPaymentAgreementPdfDataUseCase,
   ],
-  exports: [AgreementRepository, AgreementsService, GetDebtSummaryUseCase],
+  exports: [
+    AgreementRepository,
+    AgreementsService,
+    GetDebtSummaryUseCase,
+    GetPaymentAgreementPdfDataUseCase,
+  ],
 })
 export class AgreementsModule implements OnModuleInit {
   constructor(private readonly pdfService: PdfService) {}

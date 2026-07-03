@@ -1,12 +1,16 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
   Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { MailService } from 'src/infrastructure/mail/application/mail.service';
 import { GeneratePdfUseCase } from 'src/infrastructure/pdf/use-cases/generate-pdf.use-case';
-import type { ReportEmailStrategy } from './send-report-by-email.strategy';
+import {
+  REPORT_EMAIL_STRATEGIES,
+  type ReportEmailStrategyMap,
+} from './send-report-by-email.strategies';
 
 export interface SendReportByEmailParams {
   reportType: string;
@@ -23,54 +27,22 @@ export interface SendReportByEmailResult {
 }
 
 /**
- * Default stub strategies. Each entry returns `null` from `recipientResolver`
- * and a placeholder subject so the skeleton compiles and tests pass without
- * reaching into real report specs (those land in PR 2).
- *
- * Tests inject a custom strategies map via the third constructor argument.
- */
-const DEFAULT_STUB_STRATEGIES: Record<
-  string,
-  ReportEmailStrategy<Record<string, unknown>>
-> = {
-  'payments-report': {
-    reportType: 'payments-report',
-    recipientResolver: () => null,
-    subjectBuilder: () => '<payments-report report>',
-  },
-  'connection-history': {
-    reportType: 'connection-history',
-    recipientResolver: () => null,
-    subjectBuilder: () => '<connection-history report>',
-  },
-  'payment-agreement': {
-    reportType: 'payment-agreement',
-    recipientResolver: () => null,
-    subjectBuilder: () => '<payment-agreement report>',
-  },
-  'account-statement': {
-    reportType: 'account-statement',
-    recipientResolver: () => null,
-    subjectBuilder: () => '<account-statement report>',
-  },
-  'clients-list': {
-    reportType: 'clients-list',
-    recipientResolver: () => null,
-    subjectBuilder: () => '<clients-list report>',
-  },
-};
-
-/**
  * Generic, strategy-driven use case that emails any of the 5 analytical reports.
  *
- * Lifecycle:
- *   PR 1 (this commit) — skeleton + stub strategies + tests for the orchestrating
- *     flow (recipient resolution, subject building, error envelopes).
- *   PR 2 — replaces the stub strategies with real `recipientResolver`/`subjectBuilder`
- *     implementations per route.
- *   PR 3 — controller @Post handlers call `execute(...)` with route-specific filters.
- *   PR 4 — wraps `generatePdf.execute(...)` with a 30s timeout and demotes the
- *     recipient log to debug.
+ * PR 2 changes from the skeleton:
+ *   - strategies injected via `@Inject(REPORT_EMAIL_STRATEGIES)` token (built
+ *     in `reports.module.ts` via `useFactory`). The use case no longer carries
+ *     a fallback stub map — production wiring always supplies real strategies.
+ *   - skips `recipientResolver` when `destinatarioOverride` is provided
+ *     (SUG #1 from PR 1 gate review).
+ *   - calls `strategy.fetchSpec(filters)` and passes the spec data to
+ *     `GeneratePdfUseCase.execute` instead of the raw filters — the PDF
+ *     templates expect the spec output shape (e.g. `pagos`, `fechaDesde`).
+ *   - log line surfaces the actual `jobId` + recipient instead of a placeholder
+ *     (SUG #2 from PR 1 gate review).
+ *   - `account-statement`'s resolver receives `(filters, specData)` so it can
+ *     prefer the email already on the loaded contrato and skip a redundant DB
+ *     query.
  *
  * Errors mapped:
  *   - unknown `reportType`           -> NotFoundException (404)
@@ -81,18 +53,13 @@ const DEFAULT_STUB_STRATEGIES: Record<
 @Injectable()
 export class SendReportByEmailUseCase {
   private readonly logger = new Logger(SendReportByEmailUseCase.name);
-  private readonly strategies: Record<
-    string,
-    ReportEmailStrategy<Record<string, unknown>>
-  >;
 
   constructor(
     private readonly mailService: MailService,
     private readonly generatePdf: GeneratePdfUseCase,
-    strategies?: Record<string, ReportEmailStrategy<Record<string, unknown>>>,
-  ) {
-    this.strategies = strategies ?? DEFAULT_STUB_STRATEGIES;
-  }
+    @Inject(REPORT_EMAIL_STRATEGIES)
+    private readonly strategies: ReportEmailStrategyMap,
+  ) {}
 
   async execute(
     params: SendReportByEmailParams,
@@ -104,7 +71,17 @@ export class SendReportByEmailUseCase {
       );
     }
 
-    const derivedRecipient = await strategy.recipientResolver(params.filters);
+    // Pull spec data first — it's needed both by the recipient resolver
+    // (account-statement prefers the already-loaded contrato.cliente.email)
+    // and by the PDF renderer (templates expect the spec output shape, not
+    // the raw filters).
+    const specData = await strategy.fetchSpec(params.filters);
+
+    // SUG #1 fix: skip the recipient lookup when an override is supplied so
+    // we never hit the DB unnecessarily.
+    const derivedRecipient = params.destinatarioOverride
+      ? null
+      : await strategy.recipientResolver(params.filters, specData);
     const destinatario = params.destinatarioOverride ?? derivedRecipient;
 
     if (!destinatario) {
@@ -118,7 +95,7 @@ export class SendReportByEmailUseCase {
 
     const pdfBuffer = await this.generatePdf.execute(
       params.reportType,
-      params.filters,
+      specData,
     );
 
     const { jobId } = await this.mailService.sendReport(
@@ -128,8 +105,10 @@ export class SendReportByEmailUseCase {
       pdfBuffer,
     );
 
+    // SUG #2 fix: surface the real jobId + recipient + report type so log
+    // scrapers and operators have something greppable.
     this.logger.log(
-      `Queued ${params.reportType} email — recipients: 1, jobId returned by pg-boss`,
+      `SendReportByEmailUseCase: queued ${params.reportType} -> ${destinatario} jobId=${jobId}`,
     );
 
     return {

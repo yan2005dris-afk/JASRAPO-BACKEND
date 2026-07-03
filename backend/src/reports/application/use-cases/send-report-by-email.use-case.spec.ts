@@ -13,7 +13,7 @@ jest.mock('pg-boss', () => ({
 
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Logger, NotFoundException } from '@nestjs/common';
 import { SendReportByEmailUseCase } from './send-report-by-email.use-case';
 import type { MailService } from 'src/infrastructure/mail/application/mail.service';
 import type { GeneratePdfUseCase } from 'src/infrastructure/pdf/use-cases/generate-pdf.use-case';
@@ -32,6 +32,7 @@ describe('SendReportByEmailUseCase (skeleton)', () => {
     reportType: 'payments-report',
     recipientResolver: jest.fn().mockResolvedValue('client@example.com'),
     subjectBuilder: jest.fn().mockReturnValue('Reporte de Abonos — Cliente #1'),
+    fetchSpec: jest.fn().mockResolvedValue({ pagos: [] }),
     ...overrides,
   });
 
@@ -94,7 +95,10 @@ describe('SendReportByEmailUseCase (skeleton)', () => {
       filters: { contratoId: '5' },
     });
 
-    expect(recipientResolver).toHaveBeenCalledWith({ contratoId: '5' });
+    expect(recipientResolver).toHaveBeenCalledWith(
+      { contratoId: '5' },
+      expect.any(Object),
+    );
     expect(mockMailService.sendReport).toHaveBeenCalledWith(
       'derived@example.com',
       'Estado de Cuenta — Contrato #5',
@@ -117,13 +121,36 @@ describe('SendReportByEmailUseCase (skeleton)', () => {
       destinatarioOverride: 'override@example.com',
     });
 
-    expect(recipientResolver).toHaveBeenCalledTimes(1);
     expect(mockMailService.sendReport).toHaveBeenCalledWith(
       'override@example.com',
       expect.any(String),
       'payments-report',
       expect.any(Buffer),
     );
+  });
+
+  // SUG #1: skip recipientResolver when destinatarioOverride is provided so
+  // the resolver never hits the DB unnecessarily (matters in PR 2 with real
+  // lookups).
+  it('skips recipientResolver when destinatarioOverride is provided', async () => {
+    const recipientResolver = jest.fn();
+    const fetchSpec = jest.fn().mockResolvedValue({ pagos: [] });
+    const subjectBuilder = jest.fn().mockReturnValue('Subject');
+    const useCase = await compile({
+      'payments-report': buildStrategy({
+        recipientResolver,
+        fetchSpec,
+        subjectBuilder,
+      }),
+    });
+
+    await useCase.execute({
+      reportType: 'payments-report',
+      filters: { clienteId: '1' },
+      destinatarioOverride: 'override@example.com',
+    });
+
+    expect(recipientResolver).not.toHaveBeenCalled();
   });
 
   it('uses subjectOverride when provided and ignores default subject', async () => {
@@ -211,5 +238,196 @@ describe('SendReportByEmailUseCase (skeleton)', () => {
         filters: { clienteId: '1' },
       }),
     ).rejects.toThrow('Mail queue rejected the job');
+  });
+
+  // PR 2: the use case now calls strategy.fetchSpec(filters) and passes the
+  // SPEC DATA (not the raw filters) to GeneratePdfUseCase.execute. The PDF
+  // templates expect the spec output shape (e.g. `pagos`, `fechaDesde`).
+  it('passes the spec data (not the raw filters) to GeneratePdfUseCase.execute', async () => {
+    const fetchSpec = jest.fn().mockResolvedValue({
+      pagos: [{ factura: 'F1', valorNum: 10 }],
+      totalGeneral: '10.00',
+      totalRegistros: 1,
+    });
+    const useCase = await compile({
+      'payments-report': buildStrategy({ fetchSpec }),
+    });
+
+    await useCase.execute({
+      reportType: 'payments-report',
+      filters: { clienteId: '7' },
+    });
+
+    expect(fetchSpec).toHaveBeenCalledWith({ clienteId: '7' });
+    expect(mockGeneratePdf.execute).toHaveBeenCalledWith('payments-report', {
+      pagos: [{ factura: 'F1', valorNum: 10 }],
+      totalGeneral: '10.00',
+      totalRegistros: 1,
+    });
+  });
+
+  // PR 2: per-strategy envelope shape — each route must resolve its derived
+  // recipient and subject via its own strategy. Confirms the wiring is
+  // dispatch-based on `reportType`.
+  it.each([
+    {
+      reportType: 'payments-report',
+      filters: { clienteId: '1' },
+      recipient: 'p@example.com',
+      subject: 'Reporte de Abonos — Cliente #1',
+    },
+    {
+      reportType: 'connection-history',
+      filters: { contratoId: '5' },
+      recipient: 'c@example.com',
+      subject: 'Historial de Conexión — Contrato #5',
+    },
+    {
+      reportType: 'payment-agreement',
+      filters: { convenioId: '9' },
+      recipient: 'a@example.com',
+      subject: 'Convenio de Pago #9',
+    },
+    {
+      reportType: 'account-statement',
+      filters: { contratoId: '12' },
+      recipient: 's@example.com',
+      subject: 'Estado de Cuenta — Contrato #12',
+    },
+  ] as const)(
+    'returns the queued envelope for $reportType',
+    async ({ reportType, filters, recipient, subject }) => {
+      const useCase = await compile({
+        [reportType]: buildStrategy({
+          reportType,
+          recipientResolver: jest.fn().mockResolvedValue(recipient),
+          subjectBuilder: jest.fn().mockReturnValue(subject),
+          fetchSpec: jest.fn().mockResolvedValue({ stub: true }),
+        }),
+      });
+
+      const result = await useCase.execute({ reportType, filters });
+
+      expect(result).toEqual({
+        queued: true,
+        jobId: 'job-abc',
+        destinatario: recipient,
+        subject,
+      });
+      expect(mockGeneratePdf.execute).toHaveBeenCalledWith(reportType, {
+        stub: true,
+      });
+      expect(mockMailService.sendReport).toHaveBeenCalledWith(
+        recipient,
+        subject,
+        reportType,
+        expect.any(Buffer),
+      );
+    },
+  );
+
+  // clients-list has no derivable recipient — must 400 unless override is
+  // supplied. Same shape as the prefactura 400.
+  it('returns 400 for clients-list when no destinatarioOverride is given', async () => {
+    const useCase = await compile({
+      'clients-list': buildStrategy({
+        reportType: 'clients-list',
+        recipientResolver: jest.fn().mockResolvedValue(null),
+        subjectBuilder: jest.fn().mockReturnValue('Listado de Clientes'),
+        fetchSpec: jest.fn().mockResolvedValue({ clientes: [] }),
+      }),
+    });
+
+    await expect(
+      useCase.execute({ reportType: 'clients-list', filters: {} }),
+    ).rejects.toThrow(BadRequestException);
+
+    expect(mockGeneratePdf.execute).not.toHaveBeenCalled();
+    expect(mockMailService.sendReport).not.toHaveBeenCalled();
+  });
+
+  // clients-list happy path WITH override — proves the resolver can stay
+  // null even when override is given.
+  it('accepts destinatarioOverride for clients-list', async () => {
+    const recipientResolver = jest.fn().mockResolvedValue(null);
+    const useCase = await compile({
+      'clients-list': buildStrategy({
+        reportType: 'clients-list',
+        recipientResolver,
+        subjectBuilder: jest.fn().mockReturnValue('Listado de Clientes'),
+        fetchSpec: jest.fn().mockResolvedValue({ clientes: [] }),
+      }),
+    });
+
+    const result = await useCase.execute({
+      reportType: 'clients-list',
+      filters: {},
+      destinatarioOverride: 'ops@example.com',
+    });
+
+    expect(result.destinatario).toBe('ops@example.com');
+    expect(recipientResolver).not.toHaveBeenCalled();
+    expect(mockMailService.sendReport).toHaveBeenCalledWith(
+      'ops@example.com',
+      'Listado de Clientes',
+      'clients-list',
+      expect.any(Buffer),
+    );
+  });
+
+  // SUG #2: the placeholder log message must reflect real values now that
+  // we have a real jobId + destinatario in scope.
+  it('logs a meaningful message that includes the actual jobId', async () => {
+    const logSpy = jest
+      .spyOn(Logger.prototype, 'log')
+      .mockImplementation(() => undefined);
+
+    const useCase = await compile({
+      'payments-report': buildStrategy(),
+    });
+
+    await useCase.execute({
+      reportType: 'payments-report',
+      filters: { clienteId: '1' },
+    });
+
+    expect(logSpy).toHaveBeenCalledWith(
+      expect.stringMatching(/payments-report/),
+    );
+    expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('job-abc'));
+
+    logSpy.mockRestore();
+  });
+
+  // account-statement resolver may need the specData argument to skip an
+  // extra DB query. Forward it through.
+  it('forwards specData to account-statement recipientResolver', async () => {
+    const recipientResolver = jest
+      .fn()
+      .mockResolvedValue('derived@example.com');
+    const fetchSpec = jest.fn().mockResolvedValue({
+      contrato: { cliente: { email: 'derived@example.com' } },
+    });
+    const useCase = await compile({
+      'account-statement': buildStrategy({
+        reportType: 'account-statement',
+        recipientResolver,
+        fetchSpec,
+      }),
+    });
+
+    await useCase.execute({
+      reportType: 'account-statement',
+      filters: { contratoId: '12' },
+    });
+
+    expect(fetchSpec).toHaveBeenCalled();
+    // Resolver was invoked with (filters, specData).
+    expect(recipientResolver).toHaveBeenCalledWith(
+      { contratoId: '12' },
+      expect.objectContaining({
+        contrato: { cliente: { email: 'derived@example.com' } },
+      }),
+    );
   });
 });

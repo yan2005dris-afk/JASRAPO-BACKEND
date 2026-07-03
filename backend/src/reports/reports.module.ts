@@ -1,6 +1,7 @@
 import { Module, OnModuleInit } from '@nestjs/common';
 import { PdfService } from '../infrastructure/pdf/pdf.service';
 import { ClientModule } from '../operations/clients/client.module';
+import { AgreementsModule } from '../billing/collections/agreements/agreements.module';
 import { ReportsController } from './interfaces/http/reports.controller';
 import { ClientsListReportSpec } from './specs/clients-list.report-spec';
 import { PaymentsReportSpec } from './specs/payments-report.report-spec';
@@ -11,16 +12,30 @@ import { PaymentsReportPdfDocumentType } from './pdf/payments-report.pdf-type';
 import { ConnectionHistoryPdfDocumentType } from './pdf/connection-history.pdf-type';
 import { AccountStatementPdfDocumentType } from './pdf/account-statement.pdf-type';
 import { SendReportByEmailUseCase } from './application/use-cases/send-report-by-email.use-case';
+import {
+  AccountStatementReportEmailStrategy,
+  ClientsListReportEmailStrategy,
+  ConnectionHistoryReportEmailStrategy,
+  PaymentAgreementReportEmailStrategy,
+  PaymentsReportEmailStrategy,
+  REPORT_EMAIL_STRATEGIES_PROVIDER,
+} from './application/use-cases/send-report-by-email.strategies';
 
 @Module({
-  imports: [ClientModule],
+  imports: [ClientModule, AgreementsModule],
   controllers: [ReportsController],
   providers: [
     ClientsListReportSpec,
     PaymentsReportSpec,
     ConnectionHistoryReportSpec,
     AccountStatementReportSpec,
+    PaymentsReportEmailStrategy,
+    ConnectionHistoryReportEmailStrategy,
+    PaymentAgreementReportEmailStrategy,
+    AccountStatementReportEmailStrategy,
+    ClientsListReportEmailStrategy,
     SendReportByEmailUseCase,
+    REPORT_EMAIL_STRATEGIES_PROVIDER,
   ],
 })
 export class ReportsModule implements OnModuleInit {

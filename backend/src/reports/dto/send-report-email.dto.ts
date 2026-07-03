@@ -17,6 +17,7 @@ export class SendReportEmailDto {
   })
   @IsOptional()
   @IsEmail({}, { message: 'destinatario must be a valid email address' })
+  @MaxLength(255, { message: 'destinatario must not exceed 255 characters' })
   destinatario?: string;
 
   @ApiPropertyOptional({
