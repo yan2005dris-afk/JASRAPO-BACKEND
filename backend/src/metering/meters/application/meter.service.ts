@@ -5,7 +5,6 @@ import { UpdateMeterDto } from '../interfaces/dto/update-meter.dto';
 import { FilterMeterDto } from '../interfaces/dto/filter-meter.dto';
 import { buildMeterFilters } from './mappers/meter-filters.mapper';
 import { EnumStateDto } from 'src/shared/enums/state-catalog';
-import { EstadoMedidor } from 'src/shared/enums';
 import { CreateMeterUseCase } from './use-cases/create-meter.use-case';
 import { FindOneMeterUseCase } from './use-cases/find-one-meter.use-case';
 import { MeterEntity } from '../domain/entities/meter.entity';

@@ -7,10 +7,7 @@ import {
 } from '../../../../../infrastructure/common/utils/url.util';
 import * as crypto from 'crypto';
 import { Agent } from 'undici';
-import {
-  WEBHOOK_DISPATCH_JOB,
-  WebhookJobData,
-} from '../../../application/contracts/webhook-job.contract';
+import { WEBHOOK_DISPATCH_JOB } from '../../../application/contracts/webhook-job.contract';
 import { SimpleCircuitBreaker } from '../../../../../infrastructure/common/resilience/circuit-breaker';
 
 export class WebhookBusinessError extends Error {

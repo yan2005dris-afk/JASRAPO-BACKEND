@@ -15,7 +15,6 @@ import type { Response } from 'express';
 import { ContratoMedidorService } from '../../application/contrato-medidor.service';
 import { CrearContratoMedidorDto } from '../dto/create-contrato-medidor.dto';
 import { ActualizarContratoMedidorDto } from '../dto/update-contrato-medidor.dto';
-import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
 import { buildPdfFileName } from 'src/infrastructure/pdf/utils/pdf-format.utils';
 import { FilterContractsDto } from '../dto/filter-contracts.dto';
 import {

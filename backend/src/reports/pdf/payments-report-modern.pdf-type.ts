@@ -1,5 +1,3 @@
-import * as fs from 'node:fs';
-import * as path from 'node:path';
 import type { PdfDocumentType } from 'src/infrastructure/pdf/document-type.interface';
 import { currentDateLabel } from 'src/infrastructure/pdf/utils/pdf-format.utils';
 
