@@ -30,12 +30,19 @@ export class PdfService
     string,
     HandlebarsTemplateDelegate
   >();
-  private browser: Browser | null = null;
+  browser: Browser | null = null; // exposed for health checks
 
   // Concurrency semaphore
-  private readonly concurrency = PDF_CONCURRENCY;
+  readonly concurrency = PDF_CONCURRENCY;
   private readonly queue: SemaphoreTask[] = [];
   private activeCount = 0;
+
+  // Health metrics
+  private browserLaunchTime = 0;
+  private totalRenders = 0;
+  private totalErrors = 0;
+  private lastErrorAt: string | null = null;
+  private lastErrorMessage: string | null = null;
 
   constructor() {
     this.templatesDir = path.join(__dirname, 'templates');
@@ -92,6 +99,8 @@ export class PdfService
           '--disable-dev-shm-usage',
         ],
       });
+      this.browserLaunchTime = Date.now();
+      this.logger.log('Puppeteer browser launched (or re-launched)');
     }
     return this.browser;
   }
@@ -169,25 +178,34 @@ export class PdfService
   }
 
   private async htmlToPdf(html: string): Promise<Buffer> {
-    return this.runWithSemaphore(async () => {
-      const browser = await this.getBrowser();
-      const page: Page = await browser.newPage();
-      try {
-        await page.setContent(html, { waitUntil: 'load' });
-        const pdf = await page.pdf({
-          format: 'A4',
-          printBackground: true,
-          displayHeaderFooter: true,
-          headerTemplate: '<span></span>',
-          footerTemplate:
-            '<div style="width: 100%; text-align: right; font-size: 9px; padding-right: 15mm; color: #666;">Pág. <span class="pageNumber"></span> de <span class="totalPages"></span></div>',
-          margin: { top: '20mm', right: '15mm', bottom: '20mm', left: '15mm' },
-        });
-        return Buffer.from(pdf);
-      } finally {
-        await page.close();
-      }
-    });
+    try {
+      const result = await this.runWithSemaphore(async () => {
+        const browser = await this.getBrowser();
+        const page: Page = await browser.newPage();
+        try {
+          await page.setContent(html, { waitUntil: 'load' });
+          const pdf = await page.pdf({
+            format: 'A4',
+            printBackground: true,
+            displayHeaderFooter: true,
+            headerTemplate: '<span></span>',
+            footerTemplate:
+              '<div style="width: 100%; text-align: right; font-size: 9px; padding-right: 15mm; color: #666;">Pág. <span class="pageNumber"></span> de <span class="totalPages"></span></div>',
+            margin: { top: '20mm', right: '15mm', bottom: '20mm', left: '15mm' },
+          });
+          return Buffer.from(pdf);
+        } finally {
+          await page.close();
+        }
+      });
+      this.totalRenders++;
+      return result;
+    } catch (err) {
+      this.totalErrors++;
+      this.lastErrorAt = new Date().toISOString();
+      this.lastErrorMessage = (err as Error).message ?? String(err);
+      throw err;
+    }
   }
 
   /**
@@ -232,5 +250,30 @@ export class PdfService
 
   getDocumentType(type: string): PdfDocumentType | undefined {
     return this.documentTypes.get(type);
+  }
+
+  getHealthStatus() {
+    return {
+      status: this.browser?.connected ? 'healthy' : 'unhealthy',
+      browser: {
+        connected: this.browser?.connected ?? false,
+        uptimeMs: this.browser?.connected
+          ? Date.now() - this.browserLaunchTime
+          : 0,
+      },
+      semaphore: {
+        concurrency: this.concurrency,
+        activeSlots: this.activeCount,
+        availableSlots: this.concurrency - this.activeCount,
+        queueLength: this.queue.length,
+      },
+      metrics: {
+        totalRenders: this.totalRenders,
+        totalErrors: this.totalErrors,
+        lastErrorAt: this.lastErrorAt,
+        lastErrorMessage: this.lastErrorMessage,
+      },
+      timestamp: new Date().toISOString(),
+    };
   }
 }
