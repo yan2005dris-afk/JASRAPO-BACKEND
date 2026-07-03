@@ -26,9 +26,7 @@ export function createConnectionHistoryPdfDocumentType(
   const isLegacy = style === 'legacy';
 
   return {
-    type: isLegacy
-      ? 'connection-history-legacy'
-      : 'connection-history-modern',
+    type: isLegacy ? 'connection-history-legacy' : 'connection-history-modern',
     name: isLegacy
       ? 'Historial de Conexión (Legacy)'
       : 'Historial de Conexión (Moderno)',
@@ -55,8 +53,7 @@ export function createConnectionHistoryPdfDocumentType(
       )?.[0]?.['medidor'] as Record<string, unknown> | undefined;
 
       const filas = prefacturas.map((pf) => {
-        const periodo =
-          pf['periodoRel'] as Record<string, unknown> | undefined;
+        const periodo = pf['periodoRel'] as Record<string, unknown> | undefined;
         const emision = periodo?.['nombre'] ?? '—';
         const lectActual = Number(pf['lecturaActual'] ?? 0).toFixed(0);
         const lectAnterior = Number(pf['lecturaAnterior'] ?? 0).toFixed(0);

@@ -37,7 +37,10 @@ describe('createConnectionHistoryPdfDocumentType', () => {
             abono: 25.5,
             saldoActual: 0,
             contrato: {
-              cliente: { razonSocial: 'Acme S.A.', identificacion: '1790000000' },
+              cliente: {
+                razonSocial: 'Acme S.A.',
+                identificacion: '1790000000',
+              },
               historialMedidores: [{ medidor: { serie: 'M-001' } }],
             },
           },
@@ -50,7 +53,10 @@ describe('createConnectionHistoryPdfDocumentType', () => {
             abono: 0,
             saldoActual: 26,
             contrato: {
-              cliente: { razonSocial: 'Acme S.A.', identificacion: '1790000000' },
+              cliente: {
+                razonSocial: 'Acme S.A.',
+                identificacion: '1790000000',
+              },
               historialMedidores: [{ medidor: { serie: 'M-001' } }],
             },
           },
