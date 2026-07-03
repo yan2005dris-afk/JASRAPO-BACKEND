@@ -217,7 +217,7 @@ describe('ReportsController — handler wiring (REQ-1/2/3 + dispatcher)', () => 
     jest.clearAllMocks();
   });
 
-  it('paymentsReportPdf: calls PaymentsReportSpec then dispatcher, then writes the PDF', async () => {
+  it('paymentsReportPdf: calls PaymentsReportSpec then dispatcher, then writes the JSON (API default)', async () => {
     paymentsSpec.fetchData.mockResolvedValue({ pagos: [] });
     dispatcher.dispatch.mockResolvedValue({
       buffer: FAKE_PDF,
@@ -233,11 +233,11 @@ describe('ReportsController — handler wiring (REQ-1/2/3 + dispatcher)', () => 
     });
     expect(res.set).toHaveBeenCalledWith(
       expect.objectContaining({
-        'Content-Type': 'application/pdf',
+        'Content-Type': expect.stringContaining('application/json'),
         'Content-Disposition': expect.stringContaining('payments-report'),
       }),
     );
-    expect(res.end).toHaveBeenCalledWith(FAKE_PDF);
+    expect(res.json).toHaveBeenCalledWith({ pagos: [] });
   });
 
   it('connectionHistoryPdf: calls ConnectionHistoryReportSpec then dispatcher', async () => {
@@ -411,7 +411,7 @@ describe('ReportsController — content negotiation (Accept header)', () => {
     clientsSpec = module.get(ClientsListReportSpec);
   });
 
-  it('returns PDF when no Accept header is sent (default)', async () => {
+  it('returns JSON when no Accept header is sent (API default)', async () => {
     paymentsSpec.fetchData.mockResolvedValue({ pagos: [] });
     dispatcher.dispatch.mockResolvedValue({
       buffer: FAKE_PDF,
@@ -421,11 +421,13 @@ describe('ReportsController — content negotiation (Accept header)', () => {
 
     await controller.paymentsReportPdf({}, res);
 
-    expect(res.json).not.toHaveBeenCalled();
+    expect(res.end).not.toHaveBeenCalled();
     expect(res.set).toHaveBeenCalledWith(
-      expect.objectContaining({ 'Content-Type': 'application/pdf' }),
+      expect.objectContaining({
+        'Content-Type': expect.stringContaining('application/json'),
+      }),
     );
-    expect(res.end).toHaveBeenCalledWith(FAKE_PDF);
+    expect(res.json).toHaveBeenCalledWith({ pagos: [] });
   });
 
   it('returns JSON when Accept: application/json is sent', async () => {
@@ -448,7 +450,7 @@ describe('ReportsController — content negotiation (Accept header)', () => {
     expect(res.json).toHaveBeenCalledWith(rawData);
   });
 
-  it('returns PDF when both application/json and application/pdf are sent (PDF wins)', async () => {
+  it('returns JSON when both application/json and application/pdf are sent (JSON wins — API default)', async () => {
     paymentsSpec.fetchData.mockResolvedValue({ pagos: [] });
     dispatcher.dispatch.mockResolvedValue({
       buffer: FAKE_PDF,
@@ -458,11 +460,25 @@ describe('ReportsController — content negotiation (Accept header)', () => {
 
     await controller.paymentsReportPdf({}, res);
 
-    expect(res.json).not.toHaveBeenCalled();
-    expect(res.end).toHaveBeenCalledWith(FAKE_PDF);
+    expect(res.end).not.toHaveBeenCalled();
+    expect(res.json).toHaveBeenCalledWith({ pagos: [] });
   });
 
-  it('returns PDF when wildcard Accept is sent (browser default)', async () => {
+  it('returns JSON when wildcard Accept is sent (Apidog / generic client default)', async () => {
+    paymentsSpec.fetchData.mockResolvedValue({ pagos: [] });
+    dispatcher.dispatch.mockResolvedValue({
+      buffer: FAKE_PDF,
+      filename: 'payments-report.pdf',
+    });
+    const res = mockRes('*/*');
+
+    await controller.paymentsReportPdf({}, res);
+
+    expect(res.end).not.toHaveBeenCalled();
+    expect(res.json).toHaveBeenCalledWith({ pagos: [] });
+  });
+
+  it('returns JSON when browser-style Accept is sent (text/html, application/xml, */*;q=0.8)', async () => {
     paymentsSpec.fetchData.mockResolvedValue({ pagos: [] });
     dispatcher.dispatch.mockResolvedValue({
       buffer: FAKE_PDF,
@@ -472,20 +488,37 @@ describe('ReportsController — content negotiation (Accept header)', () => {
 
     await controller.paymentsReportPdf({}, res);
 
+    expect(res.end).not.toHaveBeenCalled();
+    expect(res.json).toHaveBeenCalledWith({ pagos: [] });
+  });
+
+  it('returns PDF when Accept: application/pdf is sent (explicit opt-in for emails)', async () => {
+    paymentsSpec.fetchData.mockResolvedValue({ pagos: [] });
+    dispatcher.dispatch.mockResolvedValue({
+      buffer: FAKE_PDF,
+      filename: 'payments-report.pdf',
+    });
+    const res = mockRes('application/pdf');
+
+    await controller.paymentsReportPdf({}, res);
+
     expect(res.json).not.toHaveBeenCalled();
+    expect(res.set).toHaveBeenCalledWith(
+      expect.objectContaining({ 'Content-Type': 'application/pdf' }),
+    );
     expect(res.end).toHaveBeenCalledWith(FAKE_PDF);
   });
 
-  it('clientsListPdf: returns JSON with raw data when Accept: application/json', async () => {
+  it('clientsListPdf: returns PDF only with explicit Accept: application/pdf', async () => {
     const rawData = { clientes: [{ id: 1, nombre: 'Acme' }] };
     clientsSpec.fetchData.mockResolvedValue(rawData);
     generatePdf.execute.mockResolvedValue(FAKE_PDF);
-    const res = mockRes('application/json');
+    const res = mockRes('application/pdf');
 
     await controller.clientsListPdf({}, res);
 
-    expect(res.json).toHaveBeenCalledWith(rawData);
-    expect(res.end).not.toHaveBeenCalled();
+    expect(res.end).toHaveBeenCalledWith(FAKE_PDF);
+    expect(res.json).not.toHaveBeenCalled();
   });
 });
 
