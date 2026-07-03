@@ -219,16 +219,20 @@ export class ReportsController {
   /**
    * Content negotiation based on the `Accept` request header.
    *
-   *   - `Accept: application/json` (and NOT `application/pdf`) → JSON payload
-   *     with the raw spec data (what the spec returned from the DB, before
+   *   - `Accept: application/json` → JSON payload (raw spec data, before
    *     PDF-specific adaptation). Useful for frontend tables, integrations,
    *     and debugging.
-   *   - `Accept: application/pdf`, missing header, or the wildcard media type
-   *     → PDF binary (the original behavior). Browsers typically send the
-   *     wildcard so they get the PDF.
+   *   - `Accept: application/pdf` → PDF binary. The original behavior. Use
+   *     this when a backend service needs the PDF (e.g. attaching to an
+   *     email) or when a client explicitly wants the printable version.
+   *   - The wildcard media type, missing header, or any other value
+   *     → JSON (default).
+   *     an opt-in via `Accept: application/pdf`.
    *
    * If the client sends both `application/json` and `application/pdf`,
-   * PDF wins (matches the endpoint's primary purpose: generate a PDF).
+   * JSON wins (matches the API-default principle: the more common
+   * consumer is a JSON-speaking client; the email service that needs
+   * PDF explicitly opts in).
    */
   private respondWithContentNegotiation(
     res: Response,
@@ -237,13 +241,19 @@ export class ReportsController {
     pdfFilename: string,
   ): void {
     const accept = (res.req.headers.accept ?? '').toLowerCase();
-    const wantsJson = accept.includes('application/json');
+    // PDF is opt-in: only when the client sends EXACTLY `application/pdf` (or
+    // a comma-separated list where application/pdf is the only listed type).
+    // Anything else — including missing header, */*, application/json, or a
+    // mix of both — falls through to JSON, the API default.
+    const acceptedTypes = accept
+      .split(',')
+      .map((s) => s.trim().split(';')[0].trim())
+      .filter(Boolean);
     const wantsPdf =
-      accept.includes('application/pdf') ||
-      accept === '' ||
-      accept.includes('*/*');
+      acceptedTypes.length > 0 &&
+      acceptedTypes.every((t) => t === 'application/pdf');
 
-    if (wantsJson && !wantsPdf) {
+    if (!wantsPdf) {
       const jsonFilename = pdfFilename.replace(/\.pdf$/i, '.json');
       res.set({
         'Content-Type': 'application/json; charset=utf-8',
