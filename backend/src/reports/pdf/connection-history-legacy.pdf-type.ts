@@ -1,14 +1,13 @@
 import type { PdfDocumentType } from 'src/infrastructure/pdf/document-type.interface';
 import {
-  buildRangoFechas,
   currentDateLabel,
   resolveClientName,
 } from 'src/infrastructure/pdf/utils/pdf-format.utils';
 
-export const ConnectionHistoryPdfDocumentType: PdfDocumentType = {
-  type: 'connection-history',
-  name: 'Historial de Conexión',
-  template: 'connection-history',
+export const ConnectionHistoryLegacyPdfDocumentType: PdfDocumentType = {
+  type: 'connection-history-legacy',
+  name: 'Historial de Conexión (Legacy)',
+  template: 'connection-history-legacy',
 
   adaptData(raw: Record<string, unknown>): Record<string, unknown> {
     const prefacturas = (raw['prefacturas'] as Record<string, unknown>[]) ?? [];
@@ -26,9 +25,9 @@ export const ConnectionHistoryPdfDocumentType: PdfDocumentType = {
     const filas = prefacturas.map((pf) => {
       const periodo = pf['periodoRel'] as Record<string, unknown> | undefined;
       const emision = periodo?.['nombre'] ?? '—';
-      const lectActual = Number(pf['lecturaActual'] ?? 0).toFixed(2);
-      const lectAnterior = Number(pf['lecturaAnterior'] ?? 0).toFixed(2);
-      const consumo = Number(pf['consumoM3'] ?? 0).toFixed(2);
+      const lectActual = Number(pf['lecturaActual'] ?? 0).toFixed(0);
+      const lectAnterior = Number(pf['lecturaAnterior'] ?? 0).toFixed(0);
+      const consumo = Number(pf['consumoM3'] ?? 0).toFixed(0);
       const valEmision = Number(pf['totalPagar'] ?? 0).toFixed(2);
       const abonos = Number(pf['abono'] ?? 0).toFixed(2);
       const saldo = Number(pf['saldoActual'] ?? 0).toFixed(2);
@@ -60,13 +59,10 @@ export const ConnectionHistoryPdfDocumentType: PdfDocumentType = {
 
     return {
       reporte: {
-        titulo: 'Historial de Conexión',
+        titulo: 'REPORTE HISTORIAL DE CONEXION',
         fechaEmision: currentDateLabel(),
-        rangoFechas: buildRangoFechas(
-          raw['fechaDesde'] as string | null,
-          raw['fechaHasta'] as string | null,
-          'Todos los periodos',
-        ),
+        fechaDesde: raw['fechaDesde'] || '--',
+        fechaHasta: raw['fechaHasta'] || '--',
         cuenta: raw['contratoId'] ?? '—',
         clienteNombre: cliente ? resolveClientName(cliente) : '—',
         medidor: (medidorSerie?.['serie'] as string) ?? '—',

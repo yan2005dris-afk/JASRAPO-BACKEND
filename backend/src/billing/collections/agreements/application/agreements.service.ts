@@ -143,8 +143,20 @@ export class AgreementsService {
 
   // ── PDF ──────────────────────────────────────────────────────────────────
 
-  async generatePdf(convenioId: bigint): Promise<Buffer> {
+  async generatePdf(
+    convenioId: bigint,
+  ): Promise<{ buffer: Buffer; clienteNombre: string }> {
     const raw = await this.getPdfDataUseCase.execute(convenioId);
-    return this.generatePdfUc.execute('payment-agreement', raw as any);
+    const buffer = await this.generatePdfUc.execute(
+      'payment-agreement',
+      raw as any,
+    );
+    const cliente = raw.convenio.cliente;
+    const clienteNombre =
+      cliente.razonSocial ||
+      `${cliente.nombres ?? ''} ${cliente.apellidos ?? ''}`.trim() ||
+      convenioId.toString();
+
+    return { buffer, clienteNombre };
   }
 }

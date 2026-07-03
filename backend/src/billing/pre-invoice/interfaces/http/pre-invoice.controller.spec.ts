@@ -128,10 +128,13 @@ describe('PreInvoiceController', () => {
 
       await controller.generatePdf(5, res);
 
+      const expectedFilenameRegex =
+        /^inline; filename="prefactura-[a-z0-9]+\.pdf"$/;
+
       expect(mockGeneratePreInvoicePdf.execute).toHaveBeenCalledWith(5);
       expect(res.set).toHaveBeenCalledWith({
         'Content-Type': 'application/pdf',
-        'Content-Disposition': 'inline; filename="prefactura-5.pdf"',
+        'Content-Disposition': expect.stringMatching(expectedFilenameRegex),
         'Content-Length': pdfBuffer.length,
       });
       expect(res.end).toHaveBeenCalledWith(pdfBuffer);

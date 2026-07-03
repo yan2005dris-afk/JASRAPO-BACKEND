@@ -1,4 +1,9 @@
-import { Injectable, Logger, Optional } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+  Optional,
+} from '@nestjs/common';
 import { Decimal } from 'decimal.js';
 import { MailProviderFactory } from '../infrastructure/providers/provider.factory';
 import { MailQueueService } from '../infrastructure/queue/mail-queue.service';
@@ -32,6 +37,46 @@ export class MailService {
 
   async sendBulkPlanillas(mails: SendMailOptions[]): Promise<void> {
     await this.queueService.queueBulkMails(mails);
+  }
+
+  /**
+   * Enqueues a generic analytical report (PDF) for delivery via the existing
+   * pg-boss `send-mail` worker. Uses `version: 2` with an inline Buffer
+   * attachment — matches `sendPlanilla`'s fallback path so the worker's
+   * `resolveAttachments` branch picks the `content` arm.
+   *
+   * Returns the pg-boss jobId once accepted. If pg-boss rejects the send
+   * (returns null), surfaces an InternalServerErrorException so the controller
+   * never returns a fake 200.
+   */
+  async sendReport(
+    to: string,
+    subject: string,
+    reportType: string,
+    pdfBuffer: Buffer,
+  ): Promise<{ jobId: string }> {
+    const options: SendMailOptions = {
+      version: 2,
+      to,
+      subject,
+      template: 'generic-report',
+      context: { reportType },
+      attachments: [
+        {
+          filename: `${reportType}.pdf`,
+          content: pdfBuffer,
+          contentType: 'application/pdf',
+        },
+      ],
+    };
+
+    const jobId = await this.queueService.queueMail(options);
+    if (!jobId) {
+      throw new InternalServerErrorException(
+        `Mail queue rejected the report email (reportType=${reportType})`,
+      );
+    }
+    return { jobId };
   }
 
   async sendPlanilla(

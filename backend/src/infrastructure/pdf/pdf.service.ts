@@ -8,8 +8,16 @@ import {
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import Handlebars from 'handlebars';
-import puppeteer, { type Browser } from 'puppeteer';
+import puppeteer, { type Browser, type Page } from 'puppeteer';
 import type { PdfDocumentType } from './document-type.interface';
+
+const PDF_CONCURRENCY = Number(process.env['PDF_CONCURRENCY']) || 4;
+
+interface SemaphoreTask {
+  fn: () => Promise<Buffer>;
+  resolve: (value: Buffer) => void;
+  reject: (reason: unknown) => void;
+}
 
 @Injectable()
 export class PdfService
@@ -18,7 +26,16 @@ export class PdfService
   private readonly logger = new Logger(PdfService.name);
   private readonly templatesDir: string;
   private readonly documentTypes = new Map<string, PdfDocumentType>();
+  private readonly templateCache = new Map<
+    string,
+    HandlebarsTemplateDelegate
+  >();
   private browser: Browser | null = null;
+
+  // Concurrency semaphore
+  private readonly concurrency = PDF_CONCURRENCY;
+  private readonly queue: SemaphoreTask[] = [];
+  private activeCount = 0;
 
   constructor() {
     this.templatesDir = path.join(__dirname, 'templates');
@@ -41,24 +58,27 @@ export class PdfService
       }
     });
     Handlebars.registerHelper('eq', (a: unknown, b: unknown) => a === b);
-    Handlebars.registerHelper(
-      'isObject',
-      (value: unknown) =>
-        typeof value === 'object' && value !== null && !Array.isArray(value),
+  }
+
+  private registerPartials(): void {
+    // Register base styles partial
+    const stylesPath = path.join(this.templatesDir, 'styles.hbs');
+    if (fs.existsSync(stylesPath)) {
+      Handlebars.registerPartial('styles', fs.readFileSync(stylesPath, 'utf8'));
+    }
+
+    // Register modern-styles partial (extracted CSS chrome)
+    const modernStylesPath = path.join(
+      this.templatesDir,
+      'partials',
+      'modern-styles.hbs',
     );
-    Handlebars.registerHelper('isArray', (value: unknown) =>
-      Array.isArray(value),
-    );
-    Handlebars.registerHelper('json', (value: unknown) =>
-      JSON.stringify(value, null, 2),
-    );
-    Handlebars.registerHelper(
-      'isPrimitiveArray',
-      (value: unknown) =>
-        Array.isArray(value) &&
-        value.length > 0 &&
-        (typeof value[0] !== 'object' || value[0] === null),
-    );
+    if (fs.existsSync(modernStylesPath)) {
+      Handlebars.registerPartial(
+        'modern-styles',
+        fs.readFileSync(modernStylesPath, 'utf8'),
+      );
+    }
   }
 
   private async getBrowser(): Promise<Browser> {
@@ -79,7 +99,28 @@ export class PdfService
   async onApplicationBootstrap(): Promise<void> {
     this.logger.log('Warming up Puppeteer browser...');
     await this.getBrowser();
-    this.logger.log('Puppeteer browser ready.');
+
+    // Register Handlebars partials (styles + modern-styles)
+    this.registerPartials();
+
+    // Pre-compile all registered templates into the cache
+    const types = this.getAvailableTypes();
+    this.logger.log(`Pre-compiling ${types.length} templates...`);
+    for (const type of types) {
+      const docType = this.documentTypes.get(type);
+      if (!docType) continue;
+      const templatePath = path.join(
+        this.templatesDir,
+        `${docType.template}.hbs`,
+      );
+      if (fs.existsSync(templatePath)) {
+        const source = fs.readFileSync(templatePath, 'utf8');
+        this.templateCache.set(docType.template, Handlebars.compile(source));
+      }
+    }
+    this.logger.log(
+      `Template cache populated with ${this.templateCache.size} entries.`,
+    );
   }
 
   async onApplicationShutdown(): Promise<void> {
@@ -108,32 +149,80 @@ export class PdfService
     if (!fs.existsSync(templateFile)) {
       throw new NotFoundException(`Template not found: ${templateName}.hbs`);
     }
-    const html = this.renderTemplate(templateFile, data);
+    const html = this.renderTemplate(templateName, data);
     return this.htmlToPdf(html);
   }
 
   private renderTemplate(
-    templateFile: string,
+    templateName: string,
     data: Record<string, unknown>,
   ): string {
-    const source = fs.readFileSync(templateFile, 'utf8');
-    const template = Handlebars.compile(source);
-    return template(data);
+    let tpl = this.templateCache.get(templateName);
+    if (!tpl) {
+      // Cold-start / dev-injected template: compile on demand and cache
+      const templateFile = path.join(this.templatesDir, `${templateName}.hbs`);
+      const source = fs.readFileSync(templateFile, 'utf8');
+      tpl = Handlebars.compile(source);
+      this.templateCache.set(templateName, tpl);
+    }
+    return tpl(data);
   }
 
   private async htmlToPdf(html: string): Promise<Buffer> {
-    const browser = await this.getBrowser();
-    const page = await browser.newPage();
-    try {
-      await page.setContent(html, { waitUntil: 'load' });
-      const pdf = await page.pdf({
-        format: 'A4',
-        printBackground: true,
-        margin: { top: '20mm', right: '15mm', bottom: '20mm', left: '15mm' },
-      });
-      return Buffer.from(pdf);
-    } finally {
-      await page.close();
+    return this.runWithSemaphore(async () => {
+      const browser = await this.getBrowser();
+      const page: Page = await browser.newPage();
+      try {
+        await page.setContent(html, { waitUntil: 'load' });
+        const pdf = await page.pdf({
+          format: 'A4',
+          printBackground: true,
+          displayHeaderFooter: true,
+          headerTemplate: '<span></span>',
+          footerTemplate:
+            '<div style="width: 100%; text-align: right; font-size: 9px; padding-right: 15mm; color: #666;">Pág. <span class="pageNumber"></span> de <span class="totalPages"></span></div>',
+          margin: { top: '20mm', right: '15mm', bottom: '20mm', left: '15mm' },
+        });
+        return Buffer.from(pdf);
+      } finally {
+        await page.close();
+      }
+    });
+  }
+
+  /**
+   * Simple concurrency semaphore: at most `this.concurrency` tasks run in
+   * parallel.  If the limit is reached, further calls queue until a slot
+   * opens up.  Errors inside `fn` release the slot immediately.
+   */
+  private async runWithSemaphore(fn: () => Promise<Buffer>): Promise<Buffer> {
+    if (this.activeCount < this.concurrency) {
+      this.activeCount++;
+      try {
+        return await fn();
+      } finally {
+        this.activeCount--;
+        this.processQueue();
+      }
+    }
+
+    return new Promise<Buffer>((resolve, reject) => {
+      this.queue.push({ fn, resolve, reject });
+    });
+  }
+
+  private processQueue(): void {
+    while (this.activeCount < this.concurrency && this.queue.length > 0) {
+      const task = this.queue.shift()!;
+      this.activeCount++;
+      task
+        .fn()
+        .then(task.resolve)
+        .catch(task.reject)
+        .finally(() => {
+          this.activeCount--;
+          this.processQueue();
+        });
     }
   }
 

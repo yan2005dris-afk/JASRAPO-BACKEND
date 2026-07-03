@@ -10,8 +10,11 @@ jest.mock('pg-boss', () => ({
   })),
 }));
 
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
+import { InternalServerErrorException } from '@nestjs/common';
 import { Decimal } from 'decimal.js';
 import { MailService } from './mail.service';
 import { MailProviderFactory } from '../infrastructure/providers/provider.factory';
@@ -126,5 +129,73 @@ describe('MailService', () => {
     expect(mockQueueService.queueBulkMails).toHaveBeenCalledTimes(2);
     expect(mockQueueService.queueBulkMails.mock.calls[0]?.[0]).toHaveLength(25);
     expect(mockQueueService.queueBulkMails.mock.calls[1]?.[0]).toHaveLength(1);
+  });
+
+  describe('sendReport', () => {
+    it('returns the job id forwarded from queueMail on the happy path', async () => {
+      mockQueueService.queueMail.mockResolvedValue('job-123');
+
+      const result = await service.sendReport(
+        'client@example.com',
+        'Estado de Cuenta',
+        'account-statement',
+        Buffer.from('pdf'),
+      );
+
+      expect(result).toEqual({ jobId: 'job-123' });
+    });
+
+    it('enqueues with version 2 and an inline content attachment', async () => {
+      mockQueueService.queueMail.mockResolvedValue('job-xyz');
+
+      await service.sendReport(
+        'client@example.com',
+        'Reporte',
+        'payments-report',
+        Buffer.from('pdf-bytes'),
+      );
+
+      expect(mockQueueService.queueMail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          version: 2,
+          to: 'client@example.com',
+          subject: 'Reporte',
+          template: 'generic-report',
+          context: { reportType: 'payments-report' },
+          attachments: [
+            expect.objectContaining({
+              filename: 'payments-report.pdf',
+              contentType: 'application/pdf',
+              content: expect.any(Buffer),
+            }),
+          ],
+        }),
+      );
+      // Guard against accidental legacy shape (no `url`, has `content`).
+      const queued = mockQueueService.queueMail.mock.calls[0]?.[0] ?? {};
+      expect(queued.attachments?.[0]?.url).toBeUndefined();
+      expect(Buffer.isBuffer(queued.attachments?.[0]?.content)).toBe(true);
+    });
+
+    it('throws InternalServerErrorException when pg-boss returns null jobId', async () => {
+      mockQueueService.queueMail.mockResolvedValue(null);
+
+      await expect(
+        service.sendReport(
+          'client@example.com',
+          'Reporte',
+          'payments-report',
+          Buffer.from('pdf-bytes'),
+        ),
+      ).rejects.toThrow(InternalServerErrorException);
+    });
+
+    it('references a generic-report.hbs template that resolves on disk', () => {
+      // The pg-boss worker's renderTemplate() uses readFileSync on
+      // `${templateName}.hbs`. PR 1 ships both the template name and the
+      // .hbs file together so the worker never crashes with ENOENT.
+      const templateDir = join(__dirname, '..', 'infrastructure', 'templates');
+      expect(existsSync(join(templateDir, 'generic-report.hbs'))).toBe(true);
+    });
   });
 });

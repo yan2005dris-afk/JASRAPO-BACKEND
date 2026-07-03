@@ -1,0 +1,217 @@
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
+import { Logger } from '@nestjs/common';
+import { ReportStyleDispatcher } from './report-style.dispatcher';
+import type { ReportKey, ReportStyle } from './report-style.service';
+import { ReportStyleService } from './report-style.service';
+import { PdfService } from '../../infrastructure/pdf/pdf.service';
+import { buildPdfFileName } from '../../infrastructure/pdf/utils/pdf-format.utils';
+import type { PdfDocumentType } from '../../infrastructure/pdf/document-type.interface';
+
+jest.mock('../../infrastructure/pdf/utils/pdf-format.utils', () => ({
+  buildPdfFileName: jest.fn(
+    (reportKey: string, hash?: string) => `${reportKey}-${hash ?? 'auto'}.pdf`,
+  ),
+}));
+
+const buildPdfFileNameMock = buildPdfFileName as jest.Mock;
+
+describe('ReportStyleDispatcher', () => {
+  let dispatcher: ReportStyleDispatcher;
+  let styles: jest.Mocked<ReportStyleService>;
+  let pdfService: jest.Mocked<PdfService>;
+  let loggerWarnSpy: jest.SpyInstance;
+
+  const buildDocType = (
+    type: string,
+    template: string,
+    name: string,
+  ): PdfDocumentType => ({
+    type,
+    name,
+    template,
+    adaptData: jest.fn((raw: Record<string, unknown>) => ({
+      ...raw,
+      adaptedBy: template,
+    })),
+  });
+
+  const makeDocTypes = () => ({
+    'payments-report-legacy': buildDocType(
+      'payments-report-legacy',
+      'payments-report-legacy',
+      'Reporte de Abonos (Legacy)',
+    ),
+    'payments-report-modern': buildDocType(
+      'payments-report-modern',
+      'payments-report-modern',
+      'Reporte de Abonos (Moderno)',
+    ),
+    'connection-history-legacy': buildDocType(
+      'connection-history-legacy',
+      'connection-history-legacy',
+      'Historial de Conexión (Legacy)',
+    ),
+    'connection-history-modern': buildDocType(
+      'connection-history-modern',
+      'connection-history-modern',
+      'Historial de Conexión (Moderno)',
+    ),
+    'payment-agreement-legacy': buildDocType(
+      'payment-agreement-legacy',
+      'payment-agreement-legacy',
+      'Convenio de Pago (Legacy)',
+    ),
+    'payment-agreement-modern': buildDocType(
+      'payment-agreement-modern',
+      'payment-agreement-modern',
+      'Acuerdo de Pago (Moderno)',
+    ),
+  });
+
+  const docTypes = makeDocTypes();
+  const documentTypeMap = new Map<string, PdfDocumentType>(
+    Object.entries(docTypes),
+  );
+  const fakeBuffer = Buffer.from('%PDF-1.4 fake');
+
+  const mockStyleService = {
+    resolveStyle: jest.fn(),
+  };
+
+  const mockPdfService = {
+    getDocumentType: jest.fn((type: string) => documentTypeMap.get(type)),
+    getAvailableTypes: jest.fn(() => Array.from(documentTypeMap.keys())),
+    render: jest.fn(async () => fakeBuffer),
+  };
+
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        ReportStyleDispatcher,
+        { provide: ReportStyleService, useValue: mockStyleService },
+        { provide: PdfService, useValue: mockPdfService },
+      ],
+    }).compile();
+
+    dispatcher = module.get<ReportStyleDispatcher>(ReportStyleDispatcher);
+    styles = module.get(ReportStyleService);
+    pdfService = module.get(PdfService);
+
+    loggerWarnSpy = jest
+      .spyOn(Logger.prototype, 'warn')
+      .mockImplementation(() => undefined);
+
+    buildPdfFileNameMock.mockClear();
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+    buildPdfFileNameMock.mockClear();
+  });
+
+  it('should be defined', () => {
+    expect(dispatcher).toBeDefined();
+  });
+
+  describe('dispatch — composite-key routing', () => {
+    it.each<[ReportKey, ReportStyle, keyof typeof docTypes]>([
+      ['payments-report', 'legacy', 'payments-report-legacy'],
+      ['payments-report', 'modern', 'payments-report-modern'],
+      ['connection-history', 'legacy', 'connection-history-legacy'],
+      ['connection-history', 'modern', 'connection-history-modern'],
+      ['payment-agreement', 'legacy', 'payment-agreement-legacy'],
+      ['payment-agreement', 'modern', 'payment-agreement-modern'],
+    ])(
+      'routes %s + %s to pdf-type %s',
+      async (reportKey, style, expectedType) => {
+        mockStyleService.resolveStyle.mockResolvedValueOnce(style);
+
+        await dispatcher.dispatch(reportKey, { foo: 'bar' });
+
+        expect(mockStyleService.resolveStyle).toHaveBeenCalledWith(reportKey);
+        expect(mockPdfService.getDocumentType).toHaveBeenCalledWith(
+          expectedType,
+        );
+        expect(mockPdfService.render).toHaveBeenCalledWith(
+          expectedType,
+          expect.objectContaining({ adaptedBy: expectedType, foo: 'bar' }),
+        );
+      },
+    );
+  });
+
+  describe('dispatch — return value', () => {
+    it('returns the PDF buffer and a deterministic filename', async () => {
+      mockStyleService.resolveStyle.mockResolvedValueOnce('modern');
+
+      const result = await dispatcher.dispatch('payments-report', { ok: 1 });
+
+      expect(result.buffer).toBe(fakeBuffer);
+      expect(result.filename).toBe('payments-report-auto.pdf');
+      expect(buildPdfFileNameMock).toHaveBeenCalledTimes(1);
+      expect(buildPdfFileNameMock).toHaveBeenCalledWith(
+        'payments-report',
+        undefined,
+      );
+    });
+
+    it('forwards the explicit hash when provided', async () => {
+      mockStyleService.resolveStyle.mockResolvedValueOnce('legacy');
+
+      await dispatcher.dispatch('connection-history', {}, 'deadbeef');
+
+      expect(buildPdfFileNameMock).toHaveBeenCalledWith(
+        'connection-history',
+        'deadbeef',
+      );
+    });
+  });
+
+  describe('dispatch — adaptData', () => {
+    it('invokes the matched pdf-type adaptData before rendering', async () => {
+      mockStyleService.resolveStyle.mockResolvedValueOnce('modern');
+      const modernType = docTypes['payments-report-modern'];
+
+      await dispatcher.dispatch('payments-report', { raw: true });
+
+      expect(modernType.adaptData).toHaveBeenCalledWith({ raw: true });
+      const renderMock = mockPdfService.render as jest.Mock;
+      const renderCall = renderMock.mock.calls[0] as unknown as
+        | [string, Record<string, unknown>]
+        | undefined;
+      expect(renderCall?.[1]['adaptedBy']).toBe('payments-report-modern');
+    });
+  });
+
+  describe('dispatch — invalid style', () => {
+    it('forces legacy when an invalid style sneaks past the service', async () => {
+      // Simulate a corrupted cache entry: resolveStyle has a `ReportStyle`
+      // return type so it cannot actually return garbage, but the
+      // dispatcher re-validates as belt-and-suspenders (REQ-16).
+      mockStyleService.resolveStyle.mockResolvedValueOnce('midnight');
+
+      const result = await dispatcher.dispatch('payments-report', {});
+
+      expect(result.filename).toBe('payments-report-auto.pdf');
+      expect(loggerWarnSpy).toHaveBeenCalledTimes(1);
+      expect(loggerWarnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Invalid style'),
+      );
+      expect(mockPdfService.getDocumentType).toHaveBeenCalledWith(
+        'payments-report-legacy',
+      );
+    });
+  });
+
+  describe('dispatch — unknown composite key', () => {
+    it('throws NotFoundException when the resolved pdf-type is missing', async () => {
+      mockStyleService.resolveStyle.mockResolvedValueOnce('modern');
+      mockPdfService.getDocumentType.mockReturnValueOnce(undefined);
+
+      await expect(dispatcher.dispatch('payments-report', {})).rejects.toThrow(
+        /payments-report-modern/,
+      );
+    });
+  });
+});
