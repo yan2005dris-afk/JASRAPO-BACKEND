@@ -3,7 +3,9 @@ import type { PaymentResponseDto } from '../../interfaces/dto/payment-response.d
 import type { PaymentDetailResponseDto } from '../../interfaces/dto/payment-detail-response.dto';
 import type { SaldoFavorResponseDto } from '../../interfaces/dto/saldo-favor-response.dto';
 
-export function toPaymentDetailResponse(detalle: any): PaymentDetailResponseDto {
+export function toPaymentDetailResponse(
+  detalle: any,
+): PaymentDetailResponseDto {
   return {
     detallePagoId: String(detalle.detallePagoId),
     pagoId: String(detalle.pagoId),

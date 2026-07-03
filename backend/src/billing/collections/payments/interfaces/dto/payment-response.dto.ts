@@ -16,7 +16,11 @@ export class PaymentResponseDto {
   @ApiPropertyOptional({ enum: Banco, example: 'PICHINCHA' })
   banco: Banco | null;
 
-  @ApiPropertyOptional({ enum: TarjetaCredito, example: 'VISA', description: 'Marca de tarjeta de crédito/débito' })
+  @ApiPropertyOptional({
+    enum: TarjetaCredito,
+    example: 'VISA',
+    description: 'Marca de tarjeta de crédito/débito',
+  })
   tarjetaCredito: TarjetaCredito | null;
 
   @ApiPropertyOptional({ example: 'comprobante-url.pdf' })
@@ -28,13 +32,19 @@ export class PaymentResponseDto {
   @ApiProperty({ example: 150.5, description: 'Monto total recibido' })
   montoTotalRecibido: number;
 
-  @ApiPropertyOptional({ example: 'TRX-00123', description: 'Número de operación bancaria' })
+  @ApiPropertyOptional({
+    example: 'TRX-00123',
+    description: 'Número de operación bancaria',
+  })
   numeroOperacion: string | null;
 
   @ApiPropertyOptional({ example: 'Pago mensual' })
   observaciones: string | null;
 
-  @ApiPropertyOptional({ example: 'REF-BANCO-001', description: 'Referencia bancaria adicional' })
+  @ApiPropertyOptional({
+    example: 'REF-BANCO-001',
+    description: 'Referencia bancaria adicional',
+  })
   referenciaBanco: string | null;
 
   @ApiProperty({ enum: EstadoPago, example: 'PENDIENTE' })
@@ -49,7 +59,10 @@ export class PaymentResponseDto {
   @ApiPropertyOptional({ example: '2026-06-18', nullable: true })
   fechaAnulacion: string | null;
 
-  @ApiPropertyOptional({ example: 'Transferencia no confirmada', nullable: true })
+  @ApiPropertyOptional({
+    example: 'Transferencia no confirmada',
+    nullable: true,
+  })
   motivoAnulacion: string | null;
 
   @ApiProperty({ example: '2026-06-18', description: 'Fecha de creación' })

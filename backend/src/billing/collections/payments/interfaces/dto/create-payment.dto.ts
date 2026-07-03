@@ -4,6 +4,7 @@ import {
   ArrayMinSize,
   IsArray,
   IsDateString,
+  IsEmpty,
   IsEnum,
   IsInt,
   IsNotEmpty,
@@ -11,20 +12,26 @@ import {
   IsOptional,
   IsPositive,
   IsString,
+  Matches,
   Min,
+  ValidateIf,
   ValidateNested,
 } from 'class-validator';
-import { Banco, TarjetaCredito, TipoDetallePago } from 'src/generated/prisma/enums';
+import {
+  Banco,
+  TarjetaCredito,
+  TipoDetallePago,
+} from 'src/generated/prisma/enums';
 
 export class CreateDetallePagoDto {
   @ApiPropertyOptional({ example: '1', description: 'ID del comprobante' })
   @IsOptional()
-  @IsString()
+  @Matches(/^\d+$/, { message: 'comprobanteId debe ser un ID numérico' })
   comprobanteId?: string;
 
   @ApiPropertyOptional({ example: '1', description: 'ID de cuota de convenio' })
   @IsOptional()
-  @IsString()
+  @Matches(/^\d+$/, { message: 'cuotaConvenioId debe ser un ID numérico' })
   cuotaConvenioId?: string;
 
   @ApiProperty({ enum: TipoDetallePago, example: 'COMPROBANTE' })
@@ -56,21 +63,36 @@ export class CreateDetallePagoDto {
 
 export class CreatePaymentDto {
   @ApiProperty({ example: '1', description: 'ID del cliente que paga' })
-  @IsString()
+  @Matches(/^\d+$/, { message: 'clienteId debe ser un ID numérico' })
   @IsNotEmpty()
   clienteId: string;
 
-  @ApiPropertyOptional({ example: '12345', description: 'ID de sesión de caja' })
+  @ApiPropertyOptional({
+    example: '12345',
+    description: 'ID de sesión de caja',
+  })
   @IsOptional()
-  @IsString()
+  @Matches(/^\d+$/, { message: 'cajaId debe ser un ID numérico' })
   cajaId?: string;
 
-  @ApiPropertyOptional({ enum: Banco, example: 'PICHINCHA', description: 'Banco de origen (solo para transferencias bancarias)' })
+  @ApiPropertyOptional({
+    enum: Banco,
+    example: 'PICHINCHA',
+    description: 'Banco de origen (solo para transferencias bancarias)',
+  })
+  @ValidateIf((o) => o.tarjetaCredito !== undefined)
+  @IsEmpty({ message: 'No puede enviar banco y tarjetaCredito simultáneamente' })
   @IsOptional()
   @IsEnum(Banco)
   banco?: Banco;
 
-  @ApiPropertyOptional({ enum: TarjetaCredito, example: 'VISA', description: 'Marca de tarjeta (solo para pagos con tarjeta)' })
+  @ApiPropertyOptional({
+    enum: TarjetaCredito,
+    example: 'VISA',
+    description: 'Marca de tarjeta (solo para pagos con tarjeta)',
+  })
+  @ValidateIf((o) => o.banco !== undefined)
+  @IsEmpty({ message: 'No puede enviar banco y tarjetaCredito simultáneamente' })
   @IsOptional()
   @IsEnum(TarjetaCredito)
   tarjetaCredito?: TarjetaCredito;
@@ -85,7 +107,10 @@ export class CreatePaymentDto {
   @Type(() => Number)
   montoTotalRecibido: number;
 
-  @ApiPropertyOptional({ example: 'TRX-00123', description: 'Número de operación bancaria' })
+  @ApiPropertyOptional({
+    example: 'TRX-00123',
+    description: 'Número de operación bancaria',
+  })
   @IsOptional()
   @IsString()
   numeroOperacion?: string;
@@ -95,7 +120,10 @@ export class CreatePaymentDto {
   @IsString()
   observaciones?: string;
 
-  @ApiPropertyOptional({ example: 'REF-BANCO-001', description: 'Referencia bancaria adicional' })
+  @ApiPropertyOptional({
+    example: 'REF-BANCO-001',
+    description: 'Referencia bancaria adicional',
+  })
   @IsOptional()
   @IsString()
   referenciaBanco?: string;
@@ -105,7 +133,10 @@ export class CreatePaymentDto {
   @IsString()
   comprobanteUrl?: string;
 
-  @ApiProperty({ type: [CreateDetallePagoDto], description: 'Detalle de aplicación del pago' })
+  @ApiProperty({
+    type: [CreateDetallePagoDto],
+    description: 'Detalle de aplicación del pago',
+  })
   @IsArray()
   @ArrayMinSize(1)
   @ValidateNested({ each: true })
@@ -115,12 +146,12 @@ export class CreatePaymentDto {
 
 export class ApplySaldoFavorDto {
   @ApiProperty({ example: '1', description: 'ID del saldo a favor disponible' })
-  @IsString()
+  @Matches(/^\d+$/, { message: 'saldoFavorId debe ser un ID numérico' })
   @IsNotEmpty()
   saldoFavorId: string;
 
   @ApiProperty({ example: '1', description: 'ID del cliente' })
-  @IsString()
+  @Matches(/^\d+$/, { message: 'clienteId debe ser un ID numérico' })
   @IsNotEmpty()
   clienteId: string;
 
@@ -132,12 +163,15 @@ export class ApplySaldoFavorDto {
 
   @ApiPropertyOptional({ example: '10', description: 'Comprobante destino' })
   @IsOptional()
-  @IsString()
+  @Matches(/^\d+$/, { message: 'comprobanteId debe ser un ID numérico' })
   comprobanteId?: string;
 
-  @ApiPropertyOptional({ example: '3', description: 'Cuota de convenio destino' })
+  @ApiPropertyOptional({
+    example: '3',
+    description: 'Cuota de convenio destino',
+  })
   @IsOptional()
-  @IsString()
+  @Matches(/^\d+$/, { message: 'cuotaConvenioId debe ser un ID numérico' })
   cuotaConvenioId?: string;
 
   @ApiProperty({ example: 1, description: 'ID de forma de pago SRI' })

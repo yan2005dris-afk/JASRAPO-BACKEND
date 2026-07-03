@@ -1,5 +1,5 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
+import { IsEnum, IsNotEmpty, IsString, ValidateIf } from 'class-validator';
 import { EstadoPago } from 'src/generated/prisma/enums';
 
 export class UpdatePaymentStateDto {
@@ -7,8 +7,12 @@ export class UpdatePaymentStateDto {
   @IsEnum(EstadoPago)
   estadoPago: EstadoPago;
 
-  @ApiPropertyOptional({ example: 'Transferencia confirmada en banco' })
-  @IsOptional()
+  @ApiProperty({
+    example: 'Transferencia confirmada en banco',
+    description: 'Motivo del cambio (obligatorio si estadoPago = ANULADO)',
+  })
+  @ValidateIf((o) => o.estadoPago === EstadoPago.ANULADO)
+  @IsNotEmpty({ message: 'motivo es obligatorio cuando se anula un pago' })
   @IsString()
   motivo?: string;
 }

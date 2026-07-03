@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { EstadoPago } from 'src/generated/prisma/enums';
+import { EstadoPago } from '../../domain/enums';
 import { UpdatePaymentStateDto } from '../../interfaces/dto/update-payment-state.dto';
 import { PaymentRepository } from '../../domain/repositories/payment.repository';
 import { safePaymentWithDetailSelect } from '../../domain/types/IPayment';
@@ -20,7 +20,11 @@ export class ValidatePaymentUseCase {
     private readonly annulPaymentUseCase: AnnulPaymentUseCase,
   ) {}
 
-  async execute(pagoId: bigint, dto: UpdatePaymentStateDto, actualizadoPor = 'SYSTEM') {
+  async execute(
+    pagoId: bigint,
+    dto: UpdatePaymentStateDto,
+    actualizadoPor = 'SYSTEM',
+  ) {
     const pago = await this.findOnePaymentUseCase.execute(pagoId);
     const estadoActual = pago.estadoPago as EstadoPago;
 
@@ -43,9 +47,19 @@ export class ValidatePaymentUseCase {
       });
     }
 
-    return this.paymentRepository.updatePago(
-      { pagoId },
+    const result = await this.paymentRepository.updateManyPagos(
+      { pagoId, estadoPago: estadoActual, deletedAt: null },
       { estadoPago: dto.estadoPago },
+    );
+
+    if (result.count === 0) {
+      throw new BadRequestException(
+        `El pago ${pagoId} fue modificado por otra solicitud`,
+      );
+    }
+
+    return this.paymentRepository.findUniquePago(
+      { pagoId },
       safePaymentWithDetailSelect,
     );
   }

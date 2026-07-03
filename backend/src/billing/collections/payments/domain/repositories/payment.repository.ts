@@ -27,6 +27,12 @@ export abstract class PaymentRepository {
     tx?: Prisma.TransactionClient,
   ): Promise<any>;
 
+  abstract updateManyPagos(
+    where: Prisma.PagosWhereInput,
+    data: Prisma.PagosUpdateInput | Prisma.PagosUncheckedUpdateInput,
+    tx?: Prisma.TransactionClient,
+  ): Promise<{ count: number }>;
+
   abstract findManyDetallePago(
     params: {
       select?: Prisma.DetallePagoSelect;
@@ -42,7 +48,9 @@ export abstract class PaymentRepository {
   ): Promise<any>;
 
   abstract createDetallePago(
-    data: Prisma.DetallePagoCreateInput | Prisma.DetallePagoUncheckedCreateInput,
+    data:
+      | Prisma.DetallePagoCreateInput
+      | Prisma.DetallePagoUncheckedCreateInput,
     tx?: Prisma.TransactionClient,
   ): Promise<any>;
 
@@ -110,9 +118,13 @@ export abstract class PaymentRepository {
 
   abstract updateCuotaConvenio(
     where: Prisma.CuotaConvenioWhereUniqueInput,
-    data: Prisma.CuotaConvenioUpdateInput | Prisma.CuotaConvenioUncheckedUpdateInput,
+    data:
+      | Prisma.CuotaConvenioUpdateInput
+      | Prisma.CuotaConvenioUncheckedUpdateInput,
     tx?: Prisma.TransactionClient,
   ): Promise<any>;
 
-  abstract executeTransaction<T>(callback: (tx: Prisma.TransactionClient) => Promise<T>): Promise<T>;
+  abstract executeTransaction<T>(
+    callback: (tx: Prisma.TransactionClient) => Promise<T>,
+  ): Promise<T>;
 }

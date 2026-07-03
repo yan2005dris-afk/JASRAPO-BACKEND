@@ -45,6 +45,14 @@ export class PrismaPaymentRepository implements PaymentRepository {
     return this.client(tx).pagos.update({ where, data, select });
   }
 
+  async updateManyPagos(
+    where: Prisma.PagosWhereInput,
+    data: Prisma.PagosUpdateInput | Prisma.PagosUncheckedUpdateInput,
+    tx?: Prisma.TransactionClient,
+  ): Promise<{ count: number }> {
+    return this.client(tx).pagos.updateMany({ where, data });
+  }
+
   async findManyDetallePago(
     params: {
       select?: Prisma.DetallePagoSelect;
@@ -64,7 +72,9 @@ export class PrismaPaymentRepository implements PaymentRepository {
   }
 
   async createDetallePago(
-    data: Prisma.DetallePagoCreateInput | Prisma.DetallePagoUncheckedCreateInput,
+    data:
+      | Prisma.DetallePagoCreateInput
+      | Prisma.DetallePagoUncheckedCreateInput,
     tx?: Prisma.TransactionClient,
   ): Promise<any> {
     return this.client(tx).detallePago.create({ data });
@@ -154,13 +164,17 @@ export class PrismaPaymentRepository implements PaymentRepository {
 
   async updateCuotaConvenio(
     where: Prisma.CuotaConvenioWhereUniqueInput,
-    data: Prisma.CuotaConvenioUpdateInput | Prisma.CuotaConvenioUncheckedUpdateInput,
+    data:
+      | Prisma.CuotaConvenioUpdateInput
+      | Prisma.CuotaConvenioUncheckedUpdateInput,
     tx?: Prisma.TransactionClient,
   ): Promise<any> {
     return this.client(tx).cuotaConvenio.update({ where, data });
   }
 
-  async executeTransaction<T>(callback: (tx: Prisma.TransactionClient) => Promise<T>): Promise<T> {
+  async executeTransaction<T>(
+    callback: (tx: Prisma.TransactionClient) => Promise<T>,
+  ): Promise<T> {
     return this.prisma.$transaction(callback);
   }
 }

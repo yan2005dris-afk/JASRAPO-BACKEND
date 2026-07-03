@@ -1,7 +1,7 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { EstadoCaja, TipoDetallePago } from 'src/generated/prisma/enums';
 import { CreatePaymentUseCase } from './create-payment.use-case';
-import { PaymentRepository } from '../../domain/repositories/payment.repository';
+import type { PaymentRepository } from '../../domain/repositories/payment.repository';
 
 describe('CreatePaymentUseCase', () => {
   let useCase: CreatePaymentUseCase;
@@ -32,7 +32,13 @@ describe('CreatePaymentUseCase', () => {
         clienteId: '1',
         fechaPago: '2026-06-18',
         montoTotalRecibido: 10,
-        detalle: [{ tipoPago: TipoDetallePago.PAGO_LIBRE, montoAbonado: 10, formaPagoId: 1 }],
+        detalle: [
+          {
+            tipoPago: TipoDetallePago.PAGO_LIBRE,
+            montoAbonado: 10,
+            formaPagoId: 1,
+          },
+        ],
       }),
     ).rejects.toBeInstanceOf(NotFoundException);
   });
@@ -45,14 +51,23 @@ describe('CreatePaymentUseCase', () => {
         clienteId: '1',
         fechaPago: '2026-06-18',
         montoTotalRecibido: 11,
-        detalle: [{ tipoPago: TipoDetallePago.PAGO_LIBRE, montoAbonado: 10, formaPagoId: 1 }],
+        detalle: [
+          {
+            tipoPago: TipoDetallePago.PAGO_LIBRE,
+            montoAbonado: 10,
+            formaPagoId: 1,
+          },
+        ],
       }),
     ).rejects.toBeInstanceOf(BadRequestException);
   });
 
   it('should create a payment in a transaction', async () => {
     repository.findUniqueCliente.mockResolvedValue({ clienteId: 1n });
-    repository.findFirstCajaSesion.mockResolvedValue({ cajaId: 1n, estado: EstadoCaja.ABIERTA });
+    repository.findFirstCajaSesion.mockResolvedValue({
+      cajaId: 1n,
+      estado: EstadoCaja.ABIERTA,
+    });
     repository.executeTransaction.mockImplementation(async (cb: any) => {
       const tx = Symbol('tx') as any;
       repository.createPago.mockResolvedValue({ pagoId: 10n });
@@ -67,7 +82,13 @@ describe('CreatePaymentUseCase', () => {
         cajaId: '1',
         fechaPago: '2026-06-18',
         montoTotalRecibido: 10,
-        detalle: [{ tipoPago: TipoDetallePago.PAGO_LIBRE, montoAbonado: 10, formaPagoId: 1 }],
+        detalle: [
+          {
+            tipoPago: TipoDetallePago.PAGO_LIBRE,
+            montoAbonado: 10,
+            formaPagoId: 1,
+          },
+        ],
       }),
     ).resolves.toEqual({ pagoId: 10n });
   });

@@ -8,7 +8,11 @@ export class SaldoFavorResponseDto {
   @ApiProperty({ example: '1', description: 'ID del cliente' })
   clienteId: string;
 
-  @ApiProperty({ example: '5', nullable: true, description: 'Pago que originó el saldo' })
+  @ApiProperty({
+    example: '5',
+    nullable: true,
+    description: 'Pago que originó el saldo',
+  })
   pagoId: string | null;
 
   @ApiProperty({ example: 10.25, description: 'Monto disponible del saldo' })

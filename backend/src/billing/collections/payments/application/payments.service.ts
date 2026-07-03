@@ -3,9 +3,15 @@ import { Decimal } from 'decimal.js';
 import { Prisma } from 'src/generated/prisma/client';
 import { Banco, EstadoPago, TarjetaCredito } from 'src/generated/prisma/enums';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
-import { paginate, PaginateOptions } from 'src/infrastructure/common/utils/pagination.util';
+import {
+  paginate,
+  PaginateOptions,
+} from 'src/infrastructure/common/utils/pagination.util';
 import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
-import { CreatePaymentDto, ApplySaldoFavorDto } from '../interfaces/dto/create-payment.dto';
+import {
+  CreatePaymentDto,
+  ApplySaldoFavorDto,
+} from '../interfaces/dto/create-payment.dto';
 import { UpdatePaymentStateDto } from '../interfaces/dto/update-payment-state.dto';
 import { FindAllPaymentsDto } from '../interfaces/dto/find-all-payments.dto';
 import { PaymentResponseDto } from '../interfaces/dto/payment-response.dto';
@@ -59,21 +65,30 @@ export class PaymentsService {
     private readonly applySaldoFavorUseCase: ApplySaldoFavorUseCase,
   ) {}
 
-  async create(dto: CreatePaymentDto, creadoPor?: string): Promise<PaymentResponseDto> {
+  async create(
+    dto: CreatePaymentDto,
+    creadoPor?: string,
+  ): Promise<PaymentResponseDto> {
     const pago = await this.createUseCase.execute(dto, creadoPor);
     return toPaymentResponse(pago);
   }
 
   async findAll(
-    params: FindAllPaymentsDto & PaginateOptions & { pagination?: PaginateOptions },
+    params: FindAllPaymentsDto &
+      PaginateOptions & { pagination?: PaginateOptions },
   ): Promise<PaginatedResult<PaymentResponseDto>> {
-    const pagination = params.pagination ?? { page: params.page, limit: params.limit };
+    const pagination = params.pagination ?? {
+      page: params.page,
+      limit: params.limit,
+    };
     const where: Prisma.PagosWhereInput = {
       deletedAt: null,
       ...(params.clienteId ? { clienteId: BigInt(params.clienteId) } : {}),
       ...(params.estadoPago ? { estadoPago: params.estadoPago } : {}),
       ...(params.banco ? { banco: params.banco } : {}),
-      ...(params.tarjetaCredito ? { tarjetaCredito: params.tarjetaCredito } : {}),
+      ...(params.tarjetaCredito
+        ? { tarjetaCredito: params.tarjetaCredito }
+        : {}),
       ...this.buildDateFilter(params.fechaDesde, params.fechaHasta),
     };
 
@@ -103,7 +118,11 @@ export class PaymentsService {
     dto: UpdatePaymentStateDto,
     actualizadoPor?: string,
   ): Promise<PaymentResponseDto> {
-    const pago = await this.validatePaymentUseCase.execute(id, dto, actualizadoPor);
+    const pago = await this.validatePaymentUseCase.execute(
+      id,
+      dto,
+      actualizadoPor,
+    );
     return toPaymentResponse(pago);
   }
 
@@ -123,7 +142,9 @@ export class PaymentsService {
     return toPaymentResponse(pago);
   }
 
-  async findSaldoFavorByCliente(clienteId: bigint): Promise<SaldoFavorResponseDto[]> {
+  async findSaldoFavorByCliente(
+    clienteId: bigint,
+  ): Promise<SaldoFavorResponseDto[]> {
     const saldos = await this.prisma.saldoFavorCliente.findMany({
       where: {
         clienteId,
@@ -143,7 +164,7 @@ export class PaymentsService {
 
   async findBankCatalog(): Promise<BankResponseDto[]> {
     return Object.values(Banco).map((codigo) => {
-      const banco = codigo as Banco;
+      const banco = codigo;
       return {
         codigo: banco,
         descripcion: BANK_DESCRIPTIONS[banco],
@@ -153,7 +174,7 @@ export class PaymentsService {
 
   async findCardBrandCatalog(): Promise<CardBrandResponseDto[]> {
     return Object.values(TarjetaCredito).map((codigo) => {
-      const brand = codigo as TarjetaCredito;
+      const brand = codigo;
       return {
         codigo: brand,
         descripcion: CARD_BRAND_DESCRIPTIONS[brand],
@@ -193,10 +214,13 @@ export class PaymentsService {
           (porTipoDetalle.get(detalle.tipoPago) ?? new Decimal(0)).plus(monto),
         );
 
-        const tipoComprobante = detalle.comprobante?.tipoComprobante ?? 'SIN_COMPROBANTE';
+        const tipoComprobante =
+          detalle.comprobante?.tipoComprobante ?? 'SIN_COMPROBANTE';
         porTipoComprobante.set(
           tipoComprobante,
-          (porTipoComprobante.get(tipoComprobante) ?? new Decimal(0)).plus(monto),
+          (porTipoComprobante.get(tipoComprobante) ?? new Decimal(0)).plus(
+            monto,
+          ),
         );
       }
     }
@@ -211,16 +235,32 @@ export class PaymentsService {
     };
   }
 
-  private buildDateFilter(fechaDesde?: string, fechaHasta?: string): Prisma.PagosWhereInput {
+  private buildDateFilter(
+    fechaDesde?: string,
+    fechaHasta?: string,
+  ): Prisma.PagosWhereInput {
     if (!fechaDesde && !fechaHasta) return {};
 
     return {
       fechaPago: {
         ...(fechaDesde
-          ? { gte: (() => { const d = new Date(fechaDesde); d.setHours(0, 0, 0, 0); return d; })() }
+          ? {
+              gte: (() => {
+                const d = new Date(fechaDesde);
+                d.setHours(0, 0, 0, 0);
+                return d;
+              })(),
+            }
           : {}),
         ...(fechaHasta
-          ? { lt: (() => { const d = new Date(fechaHasta); d.setDate(d.getDate() + 1); d.setHours(0, 0, 0, 0); return d; })() }
+          ? {
+              lt: (() => {
+                const d = new Date(fechaHasta);
+                d.setDate(d.getDate() + 1);
+                d.setHours(0, 0, 0, 0);
+                return d;
+              })(),
+            }
           : {}),
       },
     };

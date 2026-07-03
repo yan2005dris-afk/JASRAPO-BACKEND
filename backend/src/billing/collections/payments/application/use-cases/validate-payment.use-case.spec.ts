@@ -3,7 +3,11 @@ import { EstadoPago } from 'src/generated/prisma/enums';
 import { ValidatePaymentUseCase } from './validate-payment.use-case';
 
 describe('ValidatePaymentUseCase', () => {
-  const repository = { updatePago: jest.fn() };
+  const repository = {
+    updatePago: jest.fn(),
+    updateManyPagos: jest.fn(),
+    findUniquePago: jest.fn(),
+  };
   const findOne = { execute: jest.fn() };
   const annul = { execute: jest.fn() };
   let useCase: ValidatePaymentUseCase;
@@ -15,7 +19,8 @@ describe('ValidatePaymentUseCase', () => {
 
   it('should allow PENDIENTE to REGISTRADO', async () => {
     findOne.execute.mockResolvedValue({ pagoId: 1n, estadoPago: EstadoPago.PENDIENTE });
-    repository.updatePago.mockResolvedValue({ pagoId: 1n, estadoPago: EstadoPago.REGISTRADO });
+    repository.updateManyPagos.mockResolvedValue({ count: 1 });
+    repository.findUniquePago.mockResolvedValue({ pagoId: 1n, estadoPago: EstadoPago.REGISTRADO });
 
     await expect(
       useCase.execute(1n, { estadoPago: EstadoPago.REGISTRADO }),
@@ -37,5 +42,41 @@ describe('ValidatePaymentUseCase', () => {
     await expect(
       useCase.execute(1n, { estadoPago: EstadoPago.ANULADO, motivo: 'error' }, 'admin'),
     ).resolves.toMatchObject({ estadoPago: EstadoPago.ANULADO });
+  });
+
+  it('should throw BadRequestException when transitioning to same state', async () => {
+    findOne.execute.mockResolvedValue({ pagoId: 1n, estadoPago: EstadoPago.PENDIENTE });
+
+    await expect(
+      useCase.execute(1n, { estadoPago: EstadoPago.PENDIENTE }),
+    ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('should reject invalid transition REGISTRADO → PENDIENTE', async () => {
+    findOne.execute.mockResolvedValue({ pagoId: 1n, estadoPago: EstadoPago.REGISTRADO });
+
+    await expect(
+      useCase.execute(1n, { estadoPago: EstadoPago.PENDIENTE }),
+    ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('should allow PENDIENTE → ANULADO via delegation to annul', async () => {
+    findOne.execute.mockResolvedValue({ pagoId: 1n, estadoPago: EstadoPago.PENDIENTE });
+    annul.execute.mockResolvedValue({ pagoId: 1n, estadoPago: EstadoPago.ANULADO });
+
+    await expect(
+      useCase.execute(1n, { estadoPago: EstadoPago.ANULADO, motivo: 'cancel' }, 'admin'),
+    ).resolves.toMatchObject({ estadoPago: EstadoPago.ANULADO });
+
+    expect(annul.execute).toHaveBeenCalledWith(1n, { motivoAnulacion: 'cancel', anuladoPor: 'admin' });
+  });
+
+  it('should throw BadRequestException on concurrent modification (count = 0)', async () => {
+    findOne.execute.mockResolvedValue({ pagoId: 1n, estadoPago: EstadoPago.PENDIENTE });
+    repository.updateManyPagos.mockResolvedValue({ count: 0 });
+
+    await expect(
+      useCase.execute(1n, { estadoPago: EstadoPago.REGISTRADO }),
+    ).rejects.toBeInstanceOf(BadRequestException);
   });
 });

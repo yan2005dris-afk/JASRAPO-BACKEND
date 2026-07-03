@@ -9,7 +9,10 @@ export class FindOnePaymentUseCase {
   async execute(pagoId: bigint) {
     const pago = await this.paymentRepository.findUniquePago(
       { pagoId },
-      { ...safePaymentWithDetailSelect, deletedAt: true } as any,
+      {
+        ...safePaymentWithDetailSelect,
+        deletedAt: true,
+      },
     );
 
     if (!pago || pago.deletedAt) {

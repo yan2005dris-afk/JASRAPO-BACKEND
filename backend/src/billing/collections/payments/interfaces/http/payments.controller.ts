@@ -57,7 +57,11 @@ export class PaymentsController {
     description:
       'Registra un pago con detalle de comprobantes, cuotas de convenio, saldos a favor o pagos libres.',
   })
-  @ApiResponse({ status: 201, description: 'Pago creado', type: PaymentResponseDto })
+  @ApiResponse({
+    status: 201,
+    description: 'Pago creado',
+    type: PaymentResponseDto,
+  })
   @RequiredPermission('payments', 'create')
   @Post()
   async create(
@@ -69,7 +73,8 @@ export class PaymentsController {
 
   @ApiOperation({
     summary: 'Listar pagos',
-    description: 'Retorna pagos paginados con filtros por cliente, estado, banco y rango de fechas.',
+    description:
+      'Retorna pagos paginados con filtros por cliente, estado, banco y rango de fechas.',
   })
   @ApiPaginatedResponse(PaymentResponseDto)
   @RequiredPermission('payments', 'read')
@@ -118,6 +123,7 @@ export class PaymentsController {
     description:
       'Resume pagos registrados del día con desglose por tipo de detalle y tipo de comprobante.',
   })
+  @ApiResponse({ status: 200, description: 'Resumen diario de caja' })
   @RequiredPermission('payments', 'read')
   @Get('cuadro-diario')
   async getDailyCashSummary(@Query() query: DailyCashSummaryQueryDto) {
@@ -140,7 +146,8 @@ export class PaymentsController {
 
   @ApiOperation({
     summary: 'Aplicar saldo a favor',
-    description: 'Aplica un saldo disponible a un comprobante o cuota de convenio.',
+    description:
+      'Aplica un saldo disponible a un comprobante o cuota de convenio.',
   })
   @ApiResponse({ status: 201, type: PaymentResponseDto })
   @RequiredPermission('payments', 'update')
@@ -168,7 +175,8 @@ export class PaymentsController {
 
   @ApiOperation({
     summary: 'Cambiar estado de pago',
-    description: 'Ejecuta transición PENDIENTE → REGISTRADO/ANULADO o REGISTRADO → ANULADO.',
+    description:
+      'Ejecuta transición PENDIENTE → REGISTRADO/ANULADO o REGISTRADO → ANULADO.',
   })
   @ApiParam({ name: 'id', type: String, example: '1' })
   @ApiResponse({ status: 200, type: PaymentResponseDto })
@@ -184,7 +192,8 @@ export class PaymentsController {
 
   @ApiOperation({
     summary: 'Anular pago',
-    description: 'Anula el pago con soft delete y revierte cuotas o saldos generados.',
+    description:
+      'Anula el pago con soft delete y revierte cuotas o saldos generados.',
   })
   @ApiParam({ name: 'id', type: String, example: '1' })
   @ApiResponse({ status: 200, type: PaymentResponseDto })

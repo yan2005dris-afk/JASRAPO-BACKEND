@@ -69,7 +69,11 @@ export class CreatePaymentUseCase {
 
         for (const detalle of dto.detalle) {
           if (detalle.tipoPago === TipoDetallePago.CUOTA_CONVENIO) {
-            await this.applyInstallmentPayment(tx, detalle.cuotaConvenioId!, detalle.montoAbonado);
+            await this.applyInstallmentPayment(
+              tx,
+              detalle.cuotaConvenioId!,
+              detalle.montoAbonado,
+            );
           }
 
           if (detalle.tipoPago === TipoDetallePago.SALDO_FAVOR) {
@@ -104,7 +108,9 @@ export class CreatePaymentUseCase {
     );
 
     if (!cliente) {
-      throw new NotFoundException(`Cliente con ID ${dto.clienteId} no encontrado`);
+      throw new NotFoundException(
+        `Cliente con ID ${dto.clienteId} no encontrado`,
+      );
     }
 
     if (!dto.cajaId) return;
@@ -128,20 +134,27 @@ export class CreatePaymentUseCase {
     );
     const totalRecibido = new Decimal(dto.montoTotalRecibido);
 
-    if (!totalDetalle.toDecimalPlaces(2).equals(totalRecibido.toDecimalPlaces(2))) {
+    if (
+      !totalDetalle.toDecimalPlaces(2).equals(totalRecibido.toDecimalPlaces(2))
+    ) {
       throw new BadRequestException(
         'El monto total recibido debe coincidir con la suma del detalle',
       );
     }
   }
 
-  private async validateDetails(dto: CreatePaymentDto, tx: Prisma.TransactionClient) {
+  private async validateDetails(
+    dto: CreatePaymentDto,
+    tx: Prisma.TransactionClient,
+  ) {
     const comprobanteAcumulado = new Map<string, Decimal>();
 
     for (const detalle of dto.detalle) {
       if (detalle.tipoPago === TipoDetallePago.COMPROBANTE) {
         if (!detalle.comprobanteId) {
-          throw new BadRequestException('El detalle COMPROBANTE requiere comprobanteId');
+          throw new BadRequestException(
+            'El detalle COMPROBANTE requiere comprobanteId',
+          );
         }
 
         const comprobante = await this.paymentRepository.findUniqueComprobante(
@@ -161,7 +174,10 @@ export class CreatePaymentUseCase {
             where: {
               comprobanteId: BigInt(detalle.comprobanteId),
               deletedAt: null,
-              pago: { deletedAt: null, estadoPago: { not: EstadoPago.ANULADO } },
+              pago: {
+                deletedAt: null,
+                estadoPago: { not: EstadoPago.ANULADO },
+              },
             },
             select: { montoAbonado: true },
           },
@@ -173,13 +189,16 @@ export class CreatePaymentUseCase {
           new Decimal(0),
         );
 
-        const montoEnSolicitud = comprobanteAcumulado.get(detalle.comprobanteId) ?? new Decimal(0);
+        const montoEnSolicitud =
+          comprobanteAcumulado.get(detalle.comprobanteId) ?? new Decimal(0);
         const montoAcumulado = montoEnSolicitud.plus(detalle.montoAbonado);
         comprobanteAcumulado.set(detalle.comprobanteId, montoAcumulado);
 
         if (
           comprobante.importeTotal &&
-          totalAplicado.plus(montoAcumulado).greaterThan(comprobante.importeTotal)
+          totalAplicado
+            .plus(montoAcumulado)
+            .greaterThan(comprobante.importeTotal)
         ) {
           throw new BadRequestException(
             `El monto excede el saldo pendiente del comprobante ${detalle.comprobanteId}`,
@@ -240,10 +259,14 @@ export class CreatePaymentUseCase {
     );
 
     if (!cuota) {
-      throw new NotFoundException(`Cuota de convenio ${cuotaConvenioId} no encontrada`);
+      throw new NotFoundException(
+        `Cuota de convenio ${cuotaConvenioId} no encontrada`,
+      );
     }
 
-    if (new Decimal(montoAbonado).greaterThan(new Decimal(cuota.saldoPendiente))) {
+    if (
+      new Decimal(montoAbonado).greaterThan(new Decimal(cuota.saldoPendiente))
+    ) {
       throw new BadRequestException(
         `El monto abonado excede el saldo pendiente de la cuota ${cuotaConvenioId}`,
       );

@@ -4,12 +4,12 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Decimal } from 'decimal.js';
-import type { Prisma } from 'src/generated/prisma/client';
 import {
   EstadoCuotaConvenio,
   EstadoPago,
   TipoDetallePago,
-} from 'src/generated/prisma/enums';
+} from '../../domain/enums';
+import type { TransactionClient } from '../../domain/types/transaction';
 import { PaymentRepository } from '../../domain/repositories/payment.repository';
 import { safePaymentWithDetailSelect } from '../../domain/types/IPayment';
 
@@ -25,32 +25,42 @@ export class AnnulPaymentUseCase {
       throw new BadRequestException('El motivo de anulación es obligatorio');
     }
 
-    const pago = await this.paymentRepository.findUniquePago(
-      { pagoId },
-      {
-        ...safePaymentWithDetailSelect,
-        deletedAt: true,
-      } as any,
-    );
-
-    if (!pago || pago.deletedAt) {
-      throw new NotFoundException(`Pago con ID ${pagoId} no encontrado`);
-    }
-
-    if (pago.estadoPago === EstadoPago.ANULADO) {
-      throw new BadRequestException('El pago ya se encuentra ANULADO');
-    }
-
-    if (![EstadoPago.PENDIENTE, EstadoPago.REGISTRADO].includes(pago.estadoPago)) {
-      throw new BadRequestException(
-        `No se puede anular un pago en estado ${pago.estadoPago}`,
-      );
-    }
-
     await this.paymentRepository.executeTransaction(async (tx) => {
+      // Re-read inside the transaction to validate state atomically
+      const pago = await this.paymentRepository.findUniquePago(
+        { pagoId },
+        {
+          ...safePaymentWithDetailSelect,
+          deletedAt: true,
+        },
+      );
+
+      if (!pago || pago.deletedAt) {
+        throw new NotFoundException(`Pago con ID ${pagoId} no encontrado`);
+      }
+
+      if (pago.estadoPago === EstadoPago.ANULADO) {
+        throw new BadRequestException('El pago ya se encuentra ANULADO');
+      }
+
+      if (
+        ![EstadoPago.PENDIENTE, EstadoPago.REGISTRADO].includes(pago.estadoPago)
+      ) {
+        throw new BadRequestException(
+          `No se puede anular un pago en estado ${pago.estadoPago}`,
+        );
+      }
+
       for (const detalle of pago.detallePago ?? []) {
-        if (detalle.tipoPago === TipoDetallePago.CUOTA_CONVENIO && detalle.cuotaConvenioId) {
-          await this.revertInstallment(tx, detalle.cuotaConvenioId, detalle.montoAbonado);
+        if (
+          detalle.tipoPago === TipoDetallePago.CUOTA_CONVENIO &&
+          detalle.cuotaConvenioId
+        ) {
+          await this.revertInstallment(
+            tx,
+            detalle.cuotaConvenioId,
+            detalle.montoAbonado,
+          );
         }
       }
 
@@ -69,8 +79,8 @@ export class AnnulPaymentUseCase {
         tx,
       );
 
-      await this.paymentRepository.updatePago(
-        { pagoId },
+      const result = await this.paymentRepository.updateManyPagos(
+        { pagoId, estadoPago: pago.estadoPago, deletedAt: null },
         {
           estadoPago: EstadoPago.ANULADO,
           motivoAnulacion: dto.motivoAnulacion,
@@ -78,19 +88,27 @@ export class AnnulPaymentUseCase {
           anuladoPor: dto.anuladoPor ?? 'SYSTEM',
           deletedAt: new Date(),
         },
-        undefined,
         tx,
       );
+
+      if (result.count === 0) {
+        throw new BadRequestException(
+          'El pago fue modificado por otra solicitud concurrente',
+        );
+      }
     });
 
     return this.paymentRepository.findUniquePago(
       { pagoId },
-      { ...safePaymentWithDetailSelect, deletedAt: true } as any,
+      {
+        ...safePaymentWithDetailSelect,
+        deletedAt: true,
+      },
     );
   }
 
   private async revertInstallment(
-    tx: Prisma.TransactionClient,
+    tx: TransactionClient,
     cuotaConvenioId: bigint,
     montoAbonado: any,
   ) {
@@ -106,7 +124,10 @@ export class AnnulPaymentUseCase {
 
     if (!cuota) return;
 
-    const montoPagado = Decimal.max(new Decimal(cuota.montoPagado).minus(montoAbonado), 0);
+    const montoPagado = Decimal.max(
+      new Decimal(cuota.montoPagado).minus(montoAbonado),
+      0,
+    );
     const saldoPendiente = new Decimal(cuota.saldoPendiente).plus(montoAbonado);
 
     await this.paymentRepository.updateCuotaConvenio(

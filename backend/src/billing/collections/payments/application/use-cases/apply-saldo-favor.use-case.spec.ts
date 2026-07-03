@@ -1,6 +1,6 @@
 import { BadRequestException } from '@nestjs/common';
 import { ApplySaldoFavorUseCase } from './apply-saldo-favor.use-case';
-import { PaymentRepository } from '../../domain/repositories/payment.repository';
+import type { PaymentRepository } from '../../domain/repositories/payment.repository';
 
 describe('ApplySaldoFavorUseCase', () => {
   const repository = {
@@ -74,7 +74,10 @@ describe('ApplySaldoFavorUseCase', () => {
         disponibleParaAplicar: true,
         deletedAt: null,
       });
-      repository.findUniqueComprobante.mockResolvedValue({ id: 1n, importeTotal: 100 });
+      repository.findUniqueComprobante.mockResolvedValue({
+        id: 1n,
+        importeTotal: 100,
+      });
       repository.createPago.mockResolvedValue({ pagoId: 2n });
       repository.createDetallePago.mockResolvedValue(undefined);
       repository.updateSaldoFavor.mockResolvedValue(undefined);
