@@ -10,6 +10,7 @@ import { ClientsListPdfDocumentType } from './pdf/clients-list.pdf-type';
 import { PaymentsReportPdfDocumentType } from './pdf/payments-report.pdf-type';
 import { ConnectionHistoryPdfDocumentType } from './pdf/connection-history.pdf-type';
 import { AccountStatementPdfDocumentType } from './pdf/account-statement.pdf-type';
+import { SendReportByEmailUseCase } from './application/use-cases/send-report-by-email.use-case';
 
 @Module({
   imports: [ClientModule],
@@ -19,6 +20,7 @@ import { AccountStatementPdfDocumentType } from './pdf/account-statement.pdf-typ
     PaymentsReportSpec,
     ConnectionHistoryReportSpec,
     AccountStatementReportSpec,
+    SendReportByEmailUseCase,
   ],
 })
 export class ReportsModule implements OnModuleInit {

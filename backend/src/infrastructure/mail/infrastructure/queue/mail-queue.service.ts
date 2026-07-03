@@ -40,9 +40,14 @@ export class MailQueueService implements OnModuleInit {
   /**
    * Agrega un correo a la cola de procesamiento.
    * Ideal para envíos masivos como las 5,000 planillas.
+   *
+   * Returns the pg-boss jobId when accepted, or `null` if pg-boss rejected the
+   * send. Existing callers that ignore the return value remain compatible —
+   * the widening only adds a transparent pass-through of `JobsService.send`,
+   * which already returns `string | null`.
    */
-  async queueMail(options: SendMailOptions) {
-    await this.jobsService.send(MAIL_JOB_NAME, options, {
+  async queueMail(options: SendMailOptions): Promise<string | null> {
+    return this.jobsService.send(MAIL_JOB_NAME, options, {
       retryLimit: 3,
       retryDelay: 5, // 5 segundos iniciales
       retryDelayMax: 300, // Máximo 5 minutos
