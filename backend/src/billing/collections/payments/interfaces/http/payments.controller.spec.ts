@@ -13,6 +13,7 @@ describe('PaymentsController', () => {
     annul: jest.fn(),
     findPaymentStates: jest.fn(),
     findBankCatalog: jest.fn(),
+    findCardBrandCatalog: jest.fn(),
     findSaldoFavorByCliente: jest.fn(),
     applySaldoFavor: jest.fn(),
     getDailyCashSummary: jest.fn(),

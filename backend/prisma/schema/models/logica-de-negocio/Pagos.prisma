@@ -13,6 +13,7 @@ model Pagos {
   creadoPor           String               @map("creado_por")
   clienteId           BigInt               @map("cliente_id")
   banco               Banco?               @map("banco")
+  tarjetaCredito      TarjetaCredito?      @map("tarjeta_credito")
   estadoPago          EstadoPago           @default(PENDIENTE) @map("estado_pago")
   anuladoPor          String?              @map("anulado_por")
   estadoValidacion    EstadoValidacionPago @default(APROBADO) @map("estado_validacion")
@@ -27,6 +28,7 @@ model Pagos {
   @@index([clienteId])
   @@index([cajaId])
   @@index([banco])
+  @@index([tarjetaCredito])
   @@index([estadoPago])
   @@map("pagos")
 }
@@ -39,7 +41,6 @@ enum EstadoValidacionPago {
   CONCILIADO
 }
 
-
 enum Banco {
   PICHINCHA
   GUAYAQUIL
@@ -50,11 +51,14 @@ enum Banco {
   AUSTRO
   RUMIÑAHUI
   CNT
-  Diners
-  Mastercard
-  Visa
-  AMEX
   OTRO
+}
+
+enum TarjetaCredito {
+  DINERS
+  MASTERCARD
+  VISA
+  AMEX
 }
 
 enum EstadoPago {

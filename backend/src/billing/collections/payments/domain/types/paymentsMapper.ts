@@ -49,6 +49,7 @@ export function toPaymentResponse(pago: any): PaymentResponseDto {
     clienteId: String(pago.clienteId),
     cajaId: pago.cajaId ? String(pago.cajaId) : null,
     banco: pago.banco ?? null,
+    tarjetaCredito: pago.tarjetaCredito ?? null,
     comprobanteUrl: pago.comprobanteUrl ?? null,
     fechaPago: DateUtil.formatForFrontend(pago.fechaPago)!,
     montoTotalRecibido: Number(pago.montoTotalRecibido),

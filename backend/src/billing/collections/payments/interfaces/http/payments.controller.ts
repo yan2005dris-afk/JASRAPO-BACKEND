@@ -41,6 +41,7 @@ import {
 import { PaymentResponseDto } from '../dto/payment-response.dto';
 import { PaymentStateResponseDto } from '../dto/payment-state-response.dto';
 import { BankResponseDto } from '../dto/bank-response.dto';
+import { CardBrandResponseDto } from '../dto/card-brand-response.dto';
 import { SaldoFavorResponseDto } from '../dto/saldo-favor-response.dto';
 
 @ApiTags('payments')
@@ -92,13 +93,24 @@ export class PaymentsController {
 
   @ApiOperation({
     summary: 'Catálogo de bancos',
-    description: 'Lista los bancos disponibles del enum Banco.',
+    description: 'Lista los bancos disponibles para transferencias.',
   })
   @ApiResponse({ status: 200, type: [BankResponseDto] })
   @RequiredPermission('payments', 'read')
   @Get('banks')
   async findBanks(): Promise<BankResponseDto[]> {
     return this.paymentsService.findBankCatalog();
+  }
+
+  @ApiOperation({
+    summary: 'Catálogo de tarjetas',
+    description: 'Lista las marcas de tarjeta disponibles (crédito/débito).',
+  })
+  @ApiResponse({ status: 200, type: [CardBrandResponseDto] })
+  @RequiredPermission('payments', 'read')
+  @Get('cards')
+  async findCardBrands(): Promise<CardBrandResponseDto[]> {
+    return this.paymentsService.findCardBrandCatalog();
   }
 
   @ApiOperation({

@@ -14,7 +14,7 @@ import {
   Min,
   ValidateNested,
 } from 'class-validator';
-import { Banco, TipoDetallePago } from 'src/generated/prisma/enums';
+import { Banco, TarjetaCredito, TipoDetallePago } from 'src/generated/prisma/enums';
 
 export class CreateDetallePagoDto {
   @ApiPropertyOptional({ example: '1', description: 'ID del comprobante' })
@@ -65,10 +65,15 @@ export class CreatePaymentDto {
   @IsString()
   cajaId?: string;
 
-  @ApiPropertyOptional({ enum: Banco, example: 'PICHINCHA', description: 'Banco de origen' })
+  @ApiPropertyOptional({ enum: Banco, example: 'PICHINCHA', description: 'Banco de origen (solo para transferencias bancarias)' })
   @IsOptional()
   @IsEnum(Banco)
   banco?: Banco;
+
+  @ApiPropertyOptional({ enum: TarjetaCredito, example: 'VISA', description: 'Marca de tarjeta (solo para pagos con tarjeta)' })
+  @IsOptional()
+  @IsEnum(TarjetaCredito)
+  tarjetaCredito?: TarjetaCredito;
 
   @ApiProperty({ example: '2026-06-18' })
   @IsDateString()

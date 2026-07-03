@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
+import { Decimal } from 'decimal.js';
 import { Prisma } from 'src/generated/prisma/client';
-import { Banco, EstadoPago } from 'src/generated/prisma/enums';
+import { Banco, EstadoPago, TarjetaCredito } from 'src/generated/prisma/enums';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { paginate, PaginateOptions } from 'src/infrastructure/common/utils/pagination.util';
 import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
@@ -11,6 +12,7 @@ import { PaymentResponseDto } from '../interfaces/dto/payment-response.dto';
 import { SaldoFavorResponseDto } from '../interfaces/dto/saldo-favor-response.dto';
 import { PaymentStateResponseDto } from '../interfaces/dto/payment-state-response.dto';
 import { BankResponseDto } from '../interfaces/dto/bank-response.dto';
+import { CardBrandResponseDto } from '../interfaces/dto/card-brand-response.dto';
 import {
   safePaymentSelect,
   safePaymentWithDetailSelect,
@@ -36,11 +38,14 @@ const BANK_DESCRIPTIONS: Record<Banco, string> = {
   [Banco.AUSTRO]: 'Banco del Austro',
   [Banco.RUMIÑAHUI]: 'Banco Rumiñahui',
   [Banco.CNT]: 'CNT',
-  [Banco.Diners]: 'Diners Club',
-  [Banco.Mastercard]: 'Mastercard',
-  [Banco.Visa]: 'Visa',
-  [Banco.AMEX]: 'American Express',
   [Banco.OTRO]: 'Otro banco/no especificado',
+};
+
+const CARD_BRAND_DESCRIPTIONS: Record<TarjetaCredito, string> = {
+  [TarjetaCredito.DINERS]: 'Diners Club',
+  [TarjetaCredito.MASTERCARD]: 'Mastercard',
+  [TarjetaCredito.VISA]: 'Visa',
+  [TarjetaCredito.AMEX]: 'American Express',
 };
 
 @Injectable()
@@ -68,6 +73,7 @@ export class PaymentsService {
       ...(params.clienteId ? { clienteId: BigInt(params.clienteId) } : {}),
       ...(params.estadoPago ? { estadoPago: params.estadoPago } : {}),
       ...(params.banco ? { banco: params.banco } : {}),
+      ...(params.tarjetaCredito ? { tarjetaCredito: params.tarjetaCredito } : {}),
       ...this.buildDateFilter(params.fechaDesde, params.fechaHasta),
     };
 
@@ -145,41 +151,52 @@ export class PaymentsService {
     });
   }
 
+  async findCardBrandCatalog(): Promise<CardBrandResponseDto[]> {
+    return Object.values(TarjetaCredito).map((codigo) => {
+      const brand = codigo as TarjetaCredito;
+      return {
+        codigo: brand,
+        descripcion: CARD_BRAND_DESCRIPTIONS[brand],
+      };
+    });
+  }
+
   async getDailyCashSummary(params: { fecha?: string; cajaId?: string }) {
     const fechaBase = params.fecha ? new Date(params.fecha) : new Date();
     const start = new Date(fechaBase);
     start.setHours(0, 0, 0, 0);
     const end = new Date(fechaBase);
-    end.setHours(23, 59, 59, 999);
+    end.setDate(end.getDate() + 1);
+    end.setHours(0, 0, 0, 0);
 
     const pagos = await this.prisma.pagos.findMany({
       where: {
         deletedAt: null,
         estadoPago: EstadoPago.REGISTRADO,
-        fechaPago: { gte: start, lte: end },
+        fechaPago: { gte: start, lt: end },
         ...(params.cajaId ? { cajaId: BigInt(params.cajaId) } : {}),
       },
       select: safePaymentWithDetailSelect,
       orderBy: { fechaPago: 'asc' },
     });
 
-    const porTipoDetalle = new Map<string, number>();
-    const porTipoComprobante = new Map<string, number>();
-    let total = 0;
+    const porTipoDetalle = new Map<string, Decimal>();
+    const porTipoComprobante = new Map<string, Decimal>();
+    let total = new Decimal(0);
 
     for (const pago of pagos) {
-      total += Number(pago.montoTotalRecibido);
+      total = total.plus(pago.montoTotalRecibido);
       for (const detalle of pago.detallePago ?? []) {
-        const monto = Number(detalle.montoAbonado);
+        const monto = new Decimal(detalle.montoAbonado);
         porTipoDetalle.set(
           detalle.tipoPago,
-          (porTipoDetalle.get(detalle.tipoPago) ?? 0) + monto,
+          (porTipoDetalle.get(detalle.tipoPago) ?? new Decimal(0)).plus(monto),
         );
 
         const tipoComprobante = detalle.comprobante?.tipoComprobante ?? 'SIN_COMPROBANTE';
         porTipoComprobante.set(
           tipoComprobante,
-          (porTipoComprobante.get(tipoComprobante) ?? 0) + monto,
+          (porTipoComprobante.get(tipoComprobante) ?? new Decimal(0)).plus(monto),
         );
       }
     }
@@ -188,7 +205,7 @@ export class PaymentsService {
       fecha: start.toISOString().slice(0, 10),
       cajaId: params.cajaId ?? null,
       totalPagos: pagos.length,
-      totalRecaudado: Number(total.toFixed(2)),
+      totalRecaudado: total.toNumber(),
       desglosePorTipoDetalle: this.mapToBreakdown(porTipoDetalle),
       desglosePorTipoComprobante: this.mapToBreakdown(porTipoComprobante),
     };
@@ -199,16 +216,20 @@ export class PaymentsService {
 
     return {
       fechaPago: {
-        ...(fechaDesde ? { gte: new Date(fechaDesde) } : {}),
-        ...(fechaHasta ? { lte: new Date(fechaHasta) } : {}),
+        ...(fechaDesde
+          ? { gte: (() => { const d = new Date(fechaDesde); d.setHours(0, 0, 0, 0); return d; })() }
+          : {}),
+        ...(fechaHasta
+          ? { lt: (() => { const d = new Date(fechaHasta); d.setDate(d.getDate() + 1); d.setHours(0, 0, 0, 0); return d; })() }
+          : {}),
       },
     };
   }
 
-  private mapToBreakdown(map: Map<string, number>) {
+  private mapToBreakdown(map: Map<string, Decimal>) {
     return Array.from(map.entries()).map(([codigo, total]) => ({
       codigo,
-      total: Number(total.toFixed(2)),
+      total: total.toNumber(),
     }));
   }
 }

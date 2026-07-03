@@ -9,6 +9,13 @@ describe('CreatePaymentUseCase', () => {
     findUniqueCliente: jest.fn(),
     findFirstCajaSesion: jest.fn(),
     executeTransaction: jest.fn(),
+    createPago: jest.fn(),
+    createManyDetallePago: jest.fn(),
+    createSaldoFavor: jest.fn(),
+    findUniqueComprobante: jest.fn(),
+    findManyDetallePago: jest.fn(),
+    findUniqueCuotaConvenio: jest.fn(),
+    updateCuotaConvenio: jest.fn(),
     findUniquePago: jest.fn(),
   } as unknown as jest.Mocked<PaymentRepository>;
 
@@ -46,15 +53,12 @@ describe('CreatePaymentUseCase', () => {
   it('should create a payment in a transaction', async () => {
     repository.findUniqueCliente.mockResolvedValue({ clienteId: 1n });
     repository.findFirstCajaSesion.mockResolvedValue({ cajaId: 1n, estado: EstadoCaja.ABIERTA });
-    repository.executeTransaction.mockImplementation(async (cb: any) =>
-      cb({
-        comprobantes: { findUnique: jest.fn() },
-        detallePago: { createMany: jest.fn(), findFirst: jest.fn() },
-        cuotaConvenio: { findUnique: jest.fn(), update: jest.fn() },
-        saldoFavorCliente: { create: jest.fn() },
-        pagos: { create: jest.fn().mockResolvedValue({ pagoId: 10n }) },
-      }),
-    );
+    repository.executeTransaction.mockImplementation(async (cb: any) => {
+      const tx = Symbol('tx') as any;
+      repository.createPago.mockResolvedValue({ pagoId: 10n });
+      repository.createManyDetallePago.mockResolvedValue(undefined);
+      return cb(tx);
+    });
     repository.findUniquePago.mockResolvedValue({ pagoId: 10n });
 
     await expect(

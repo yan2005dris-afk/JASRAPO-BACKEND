@@ -7,6 +7,11 @@ describe('AnnulPaymentUseCase', () => {
   const repository = {
     findUniquePago: jest.fn(),
     executeTransaction: jest.fn(),
+    updateManySaldoFavor: jest.fn(),
+    updateManyDetallePago: jest.fn(),
+    updatePago: jest.fn(),
+    findUniqueCuotaConvenio: jest.fn(),
+    updateCuotaConvenio: jest.fn(),
   } as unknown as jest.Mocked<PaymentRepository>;
   const useCase = new AnnulPaymentUseCase(repository);
 
@@ -29,13 +34,13 @@ describe('AnnulPaymentUseCase', () => {
     repository.findUniquePago
       .mockResolvedValueOnce({ pagoId: 1n, estadoPago: EstadoPago.PENDIENTE, deletedAt: null, detallePago: [] })
       .mockResolvedValueOnce({ pagoId: 1n, estadoPago: EstadoPago.ANULADO });
-    repository.executeTransaction.mockImplementation(async (cb: any) =>
-      cb({
-        saldoFavorCliente: { updateMany: jest.fn() },
-        detallePago: { updateMany: jest.fn() },
-        pagos: { update: jest.fn() },
-      }),
-    );
+    repository.executeTransaction.mockImplementation(async (cb: any) => {
+      const tx = Symbol('tx') as any;
+      repository.updateManySaldoFavor.mockResolvedValue(undefined);
+      repository.updateManyDetallePago.mockResolvedValue(undefined);
+      repository.updatePago.mockResolvedValue(undefined);
+      return cb(tx);
+    });
 
     await expect(
       useCase.execute(1n, { motivoAnulacion: 'error', anuladoPor: 'admin' }),

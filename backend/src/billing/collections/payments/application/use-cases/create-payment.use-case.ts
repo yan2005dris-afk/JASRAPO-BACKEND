@@ -4,6 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Decimal } from 'decimal.js';
+import type { Prisma } from 'src/generated/prisma/client';
 import {
   EstadoCaja,
   EstadoPago,
@@ -27,11 +28,12 @@ export class CreatePaymentUseCase {
       async (tx) => {
         await this.validateDetails(dto, tx);
 
-        const pago = await tx.pagos.create({
-          data: {
+        const pago = await this.paymentRepository.createPago(
+          {
             clienteId: BigInt(dto.clienteId),
             cajaId: dto.cajaId ? BigInt(dto.cajaId) : null,
             banco: dto.banco ?? null,
+            tarjetaCredito: dto.tarjetaCredito ?? null,
             fechaPago: new Date(dto.fechaPago),
             montoTotalRecibido: dto.montoTotalRecibido,
             numeroOperacion: dto.numeroOperacion ?? null,
@@ -41,11 +43,12 @@ export class CreatePaymentUseCase {
             estadoPago: EstadoPago.PENDIENTE,
             creadoPor,
           },
-          select: { pagoId: true },
-        });
+          { pagoId: true },
+          tx,
+        );
 
-        await tx.detallePago.createMany({
-          data: dto.detalle.map((detalle) => ({
+        await this.paymentRepository.createManyDetallePago(
+          dto.detalle.map((detalle) => ({
             pagoId: pago.pagoId,
             comprobanteId: detalle.comprobanteId
               ? BigInt(detalle.comprobanteId)
@@ -61,7 +64,8 @@ export class CreatePaymentUseCase {
               ? new Date(detalle.fechaTransaccion)
               : null,
           })),
-        });
+          tx,
+        );
 
         for (const detalle of dto.detalle) {
           if (detalle.tipoPago === TipoDetallePago.CUOTA_CONVENIO) {
@@ -69,15 +73,17 @@ export class CreatePaymentUseCase {
           }
 
           if (detalle.tipoPago === TipoDetallePago.SALDO_FAVOR) {
-            await tx.saldoFavorCliente.create({
-              data: {
+            await this.paymentRepository.createSaldoFavor(
+              {
                 clienteId: BigInt(dto.clienteId),
                 pagoId: pago.pagoId,
                 montoSaldo: detalle.montoAbonado,
                 tipoOrigen: TipoOrigenAbono.PAGO_EXCESO,
                 disponibleParaAplicar: true,
               },
-            });
+              undefined,
+              tx,
+            );
           }
         }
 
@@ -129,17 +135,20 @@ export class CreatePaymentUseCase {
     }
   }
 
-  private async validateDetails(dto: CreatePaymentDto, tx: any) {
+  private async validateDetails(dto: CreatePaymentDto, tx: Prisma.TransactionClient) {
+    const comprobanteAcumulado = new Map<string, Decimal>();
+
     for (const detalle of dto.detalle) {
       if (detalle.tipoPago === TipoDetallePago.COMPROBANTE) {
         if (!detalle.comprobanteId) {
           throw new BadRequestException('El detalle COMPROBANTE requiere comprobanteId');
         }
 
-        const comprobante = await tx.comprobantes.findUnique({
-          where: { id: BigInt(detalle.comprobanteId) },
-          select: { id: true, importeTotal: true },
-        });
+        const comprobante = await this.paymentRepository.findUniqueComprobante(
+          { id: BigInt(detalle.comprobanteId) },
+          { id: true, importeTotal: true },
+          tx,
+        );
 
         if (!comprobante) {
           throw new NotFoundException(
@@ -147,23 +156,30 @@ export class CreatePaymentUseCase {
           );
         }
 
-        const pagosAplicados = await tx.detallePago.findMany({
-          where: {
-            comprobanteId: BigInt(detalle.comprobanteId),
-            deletedAt: null,
-            pago: { deletedAt: null, estadoPago: { not: EstadoPago.ANULADO } },
+        const pagosAplicados = await this.paymentRepository.findManyDetallePago(
+          {
+            where: {
+              comprobanteId: BigInt(detalle.comprobanteId),
+              deletedAt: null,
+              pago: { deletedAt: null, estadoPago: { not: EstadoPago.ANULADO } },
+            },
+            select: { montoAbonado: true },
           },
-          select: { montoAbonado: true },
-        });
+          tx,
+        );
 
         const totalAplicado = pagosAplicados.reduce(
           (acc, item) => acc.plus(item.montoAbonado),
           new Decimal(0),
         );
 
+        const montoEnSolicitud = comprobanteAcumulado.get(detalle.comprobanteId) ?? new Decimal(0);
+        const montoAcumulado = montoEnSolicitud.plus(detalle.montoAbonado);
+        comprobanteAcumulado.set(detalle.comprobanteId, montoAcumulado);
+
         if (
           comprobante.importeTotal &&
-          totalAplicado.plus(detalle.montoAbonado).greaterThan(comprobante.importeTotal)
+          totalAplicado.plus(montoAcumulado).greaterThan(comprobante.importeTotal)
         ) {
           throw new BadRequestException(
             `El monto excede el saldo pendiente del comprobante ${detalle.comprobanteId}`,
@@ -178,15 +194,16 @@ export class CreatePaymentUseCase {
           );
         }
 
-        const cuota = await tx.cuotaConvenio.findUnique({
-          where: { cuotaConvenioId: BigInt(detalle.cuotaConvenioId) },
-          select: {
+        const cuota = await this.paymentRepository.findUniqueCuotaConvenio(
+          { cuotaConvenioId: BigInt(detalle.cuotaConvenioId) },
+          {
             cuotaConvenioId: true,
             estado: true,
             deletedAt: true,
             saldoPendiente: true,
           },
-        });
+          tx,
+        );
 
         if (!cuota || cuota.deletedAt) {
           throw new NotFoundException(
@@ -208,29 +225,37 @@ export class CreatePaymentUseCase {
   }
 
   private async applyInstallmentPayment(
-    tx: any,
+    tx: Prisma.TransactionClient,
     cuotaConvenioId: string,
     montoAbonado: number,
   ) {
-    const cuota = await tx.cuotaConvenio.findUnique({
-      where: { cuotaConvenioId: BigInt(cuotaConvenioId) },
-      select: {
+    const cuota = await this.paymentRepository.findUniqueCuotaConvenio(
+      { cuotaConvenioId: BigInt(cuotaConvenioId) },
+      {
         cuotaConvenioId: true,
         montoPagado: true,
         saldoPendiente: true,
       },
-    });
+      tx,
+    );
+
+    if (!cuota) {
+      throw new NotFoundException(`Cuota de convenio ${cuotaConvenioId} no encontrada`);
+    }
+
+    if (new Decimal(montoAbonado).greaterThan(new Decimal(cuota.saldoPendiente))) {
+      throw new BadRequestException(
+        `El monto abonado excede el saldo pendiente de la cuota ${cuotaConvenioId}`,
+      );
+    }
 
     const nuevoMontoPagado = new Decimal(cuota.montoPagado).plus(montoAbonado);
-    const nuevoSaldo = Decimal.max(
-      new Decimal(cuota.saldoPendiente).minus(montoAbonado),
-      0,
-    );
+    const nuevoSaldo = new Decimal(cuota.saldoPendiente).minus(montoAbonado);
     const estaPagada = nuevoSaldo.equals(0);
 
-    await tx.cuotaConvenio.update({
-      where: { cuotaConvenioId: BigInt(cuotaConvenioId) },
-      data: {
+    await this.paymentRepository.updateCuotaConvenio(
+      { cuotaConvenioId: BigInt(cuotaConvenioId) },
+      {
         montoPagado: nuevoMontoPagado.toNumber(),
         saldoPendiente: nuevoSaldo.toNumber(),
         estado: estaPagada
@@ -239,6 +264,7 @@ export class CreatePaymentUseCase {
         pagoCompleto: estaPagada,
         fechaPago: estaPagada ? new Date() : null,
       },
-    });
+      tx,
+    );
   }
 }

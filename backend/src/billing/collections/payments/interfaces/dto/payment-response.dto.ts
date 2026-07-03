@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Banco, EstadoPago } from 'src/generated/prisma/enums';
+import { Banco, EstadoPago, TarjetaCredito } from 'src/generated/prisma/enums';
 import { PaymentDetailResponseDto } from './payment-detail-response.dto';
 import { SaldoFavorResponseDto } from './saldo-favor-response.dto';
 
@@ -15,6 +15,9 @@ export class PaymentResponseDto {
 
   @ApiPropertyOptional({ enum: Banco, example: 'PICHINCHA' })
   banco: Banco | null;
+
+  @ApiPropertyOptional({ enum: TarjetaCredito, example: 'VISA', description: 'Marca de tarjeta de crédito/débito' })
+  tarjetaCredito: TarjetaCredito | null;
 
   @ApiPropertyOptional({ example: 'comprobante-url.pdf' })
   comprobanteUrl: string | null;

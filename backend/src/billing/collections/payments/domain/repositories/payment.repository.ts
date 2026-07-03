@@ -17,22 +17,39 @@ export abstract class PaymentRepository {
   abstract createPago(
     data: Prisma.PagosCreateInput | Prisma.PagosUncheckedCreateInput,
     select?: Prisma.PagosSelect,
+    tx?: Prisma.TransactionClient,
   ): Promise<any>;
 
   abstract updatePago(
     where: Prisma.PagosWhereUniqueInput,
     data: Prisma.PagosUpdateInput | Prisma.PagosUncheckedUpdateInput,
     select?: Prisma.PagosSelect,
+    tx?: Prisma.TransactionClient,
   ): Promise<any>;
 
-  abstract findManyDetallePago(params: {
-    select?: Prisma.DetallePagoSelect;
-    where?: Prisma.DetallePagoWhereInput;
-    orderBy?: Prisma.DetallePagoOrderByWithRelationInput;
-  }): Promise<any[]>;
+  abstract findManyDetallePago(
+    params: {
+      select?: Prisma.DetallePagoSelect;
+      where?: Prisma.DetallePagoWhereInput;
+      orderBy?: Prisma.DetallePagoOrderByWithRelationInput;
+    },
+    tx?: Prisma.TransactionClient,
+  ): Promise<any[]>;
 
   abstract createManyDetallePago(
     data: Prisma.DetallePagoCreateManyInput[],
+    tx?: Prisma.TransactionClient,
+  ): Promise<any>;
+
+  abstract createDetallePago(
+    data: Prisma.DetallePagoCreateInput | Prisma.DetallePagoUncheckedCreateInput,
+    tx?: Prisma.TransactionClient,
+  ): Promise<any>;
+
+  abstract updateManyDetallePago(
+    where: Prisma.DetallePagoWhereInput,
+    data: Prisma.DetallePagoUpdateInput,
+    tx?: Prisma.TransactionClient,
   ): Promise<any>;
 
   abstract findManySaldoFavor(params: {
@@ -41,11 +58,18 @@ export abstract class PaymentRepository {
     orderBy?: Prisma.SaldoFavorClienteOrderByWithRelationInput;
   }): Promise<any[]>;
 
+  abstract findUniqueSaldoFavor(
+    where: Prisma.SaldoFavorClienteWhereUniqueInput,
+    select?: Prisma.SaldoFavorClienteSelect,
+    tx?: Prisma.TransactionClient,
+  ): Promise<any>;
+
   abstract createSaldoFavor(
     data:
       | Prisma.SaldoFavorClienteCreateInput
       | Prisma.SaldoFavorClienteUncheckedCreateInput,
     select?: Prisma.SaldoFavorClienteSelect,
+    tx?: Prisma.TransactionClient,
   ): Promise<any>;
 
   abstract updateSaldoFavor(
@@ -53,6 +77,13 @@ export abstract class PaymentRepository {
     data:
       | Prisma.SaldoFavorClienteUpdateInput
       | Prisma.SaldoFavorClienteUncheckedUpdateInput,
+    tx?: Prisma.TransactionClient,
+  ): Promise<any>;
+
+  abstract updateManySaldoFavor(
+    where: Prisma.SaldoFavorClienteWhereInput,
+    data: Prisma.SaldoFavorClienteUpdateInput,
+    tx?: Prisma.TransactionClient,
   ): Promise<any>;
 
   abstract findFirstCajaSesion(
@@ -68,17 +99,20 @@ export abstract class PaymentRepository {
   abstract findUniqueComprobante(
     where: Prisma.ComprobantesWhereUniqueInput,
     select?: Prisma.ComprobantesSelect,
+    tx?: Prisma.TransactionClient,
   ): Promise<any>;
 
   abstract findUniqueCuotaConvenio(
     where: Prisma.CuotaConvenioWhereUniqueInput,
     select?: Prisma.CuotaConvenioSelect,
+    tx?: Prisma.TransactionClient,
   ): Promise<any>;
 
   abstract updateCuotaConvenio(
     where: Prisma.CuotaConvenioWhereUniqueInput,
     data: Prisma.CuotaConvenioUpdateInput | Prisma.CuotaConvenioUncheckedUpdateInput,
+    tx?: Prisma.TransactionClient,
   ): Promise<any>;
 
-  abstract executeTransaction<T>(callback: (tx: any) => Promise<T>): Promise<T>;
+  abstract executeTransaction<T>(callback: (tx: Prisma.TransactionClient) => Promise<T>): Promise<T>;
 }

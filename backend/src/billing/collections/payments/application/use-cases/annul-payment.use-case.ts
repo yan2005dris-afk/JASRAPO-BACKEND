@@ -4,6 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Decimal } from 'decimal.js';
+import type { Prisma } from 'src/generated/prisma/client';
 import {
   EstadoCuotaConvenio,
   EstadoPago,
@@ -53,29 +54,33 @@ export class AnnulPaymentUseCase {
         }
       }
 
-      await tx.saldoFavorCliente.updateMany({
-        where: { pagoId, deletedAt: null },
-        data: {
+      await this.paymentRepository.updateManySaldoFavor(
+        { pagoId, deletedAt: null },
+        {
           disponibleParaAplicar: false,
           deletedAt: new Date(),
         },
-      });
+        tx,
+      );
 
-      await tx.detallePago.updateMany({
-        where: { pagoId, deletedAt: null },
-        data: { deletedAt: new Date() },
-      });
+      await this.paymentRepository.updateManyDetallePago(
+        { pagoId, deletedAt: null },
+        { deletedAt: new Date() },
+        tx,
+      );
 
-      await tx.pagos.update({
-        where: { pagoId },
-        data: {
+      await this.paymentRepository.updatePago(
+        { pagoId },
+        {
           estadoPago: EstadoPago.ANULADO,
           motivoAnulacion: dto.motivoAnulacion,
           fechaAnulacion: new Date(),
           anuladoPor: dto.anuladoPor ?? 'SYSTEM',
           deletedAt: new Date(),
         },
-      });
+        undefined,
+        tx,
+      );
     });
 
     return this.paymentRepository.findUniquePago(
@@ -85,33 +90,35 @@ export class AnnulPaymentUseCase {
   }
 
   private async revertInstallment(
-    tx: any,
+    tx: Prisma.TransactionClient,
     cuotaConvenioId: bigint,
     montoAbonado: any,
   ) {
-    const cuota = await tx.cuotaConvenio.findUnique({
-      where: { cuotaConvenioId },
-      select: {
+    const cuota = await this.paymentRepository.findUniqueCuotaConvenio(
+      { cuotaConvenioId },
+      {
         cuotaConvenioId: true,
         montoPagado: true,
         saldoPendiente: true,
       },
-    });
+      tx,
+    );
 
     if (!cuota) return;
 
     const montoPagado = Decimal.max(new Decimal(cuota.montoPagado).minus(montoAbonado), 0);
     const saldoPendiente = new Decimal(cuota.saldoPendiente).plus(montoAbonado);
 
-    await tx.cuotaConvenio.update({
-      where: { cuotaConvenioId },
-      data: {
+    await this.paymentRepository.updateCuotaConvenio(
+      { cuotaConvenioId },
+      {
         montoPagado: montoPagado.toNumber(),
         saldoPendiente: saldoPendiente.toNumber(),
         estado: EstadoCuotaConvenio.PENDIENTE,
         pagoCompleto: false,
         fechaPago: montoPagado.equals(0) ? null : undefined,
       },
-    });
+      tx,
+    );
   }
 }

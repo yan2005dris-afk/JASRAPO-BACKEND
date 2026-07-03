@@ -1,6 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsDateString, IsEnum, IsOptional, IsString } from 'class-validator';
-import { Banco, EstadoPago } from 'src/generated/prisma/enums';
+import { Banco, EstadoPago, TarjetaCredito } from 'src/generated/prisma/enums';
 import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
 
 export class FindAllPaymentsDto extends PaginationDto {
@@ -18,6 +18,11 @@ export class FindAllPaymentsDto extends PaginationDto {
   @IsOptional()
   @IsEnum(Banco)
   banco?: Banco;
+
+  @ApiPropertyOptional({ enum: TarjetaCredito, description: 'Filtrar por marca de tarjeta' })
+  @IsOptional()
+  @IsEnum(TarjetaCredito)
+  tarjetaCredito?: TarjetaCredito;
 
   @ApiPropertyOptional({ example: '2026-06-01', description: 'Fecha desde' })
   @IsOptional()

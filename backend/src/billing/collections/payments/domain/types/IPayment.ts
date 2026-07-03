@@ -18,6 +18,7 @@ export interface IPayment {
   clienteId: bigint;
   cajaId: bigint | null;
   banco: string | null;
+  tarjetaCredito: string | null;
   comprobanteUrl: string | null;
   fechaPago: Date;
   montoTotalRecibido: any;
@@ -71,6 +72,7 @@ export const safePaymentSelect = {
   clienteId: true,
   cajaId: true,
   banco: true,
+  tarjetaCredito: true,
   comprobanteUrl: true,
   fechaPago: true,
   montoTotalRecibido: true,
