@@ -18,10 +18,11 @@ export class PdfHealthService
   constructor(private readonly pdfService: PdfService) {}
 
   onApplicationBootstrap(): void {
-    this.heartbeatTimer = setInterval(
-      () => this.checkHealth(),
-      PDF_HEARTBEAT_MS,
-    );
+    this.heartbeatTimer = setInterval(() => {
+      this.checkHealth().catch((err) =>
+        this.logger.error('Health heartbeat failed', err),
+      );
+    }, PDF_HEARTBEAT_MS);
     this.logger.log(
       `PDF health heartbeat started (interval: ${PDF_HEARTBEAT_MS}ms)`,
     );

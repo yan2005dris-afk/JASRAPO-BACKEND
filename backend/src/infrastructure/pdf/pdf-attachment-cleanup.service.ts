@@ -35,8 +35,14 @@ export class PdfAttachmentCleanupService
 
   onApplicationBootstrap(): void {
     // Run once at startup, then every interval
-    this.cleanup();
-    this.timer = setInterval(() => this.cleanup(), PDF_CLEANUP_INTERVAL_MS);
+    this.cleanup().catch((err) =>
+      this.logger.error('Initial cleanup failed', err),
+    );
+    this.timer = setInterval(() => {
+      this.cleanup().catch((err) =>
+        this.logger.error('Scheduled cleanup failed', err),
+      );
+    }, PDF_CLEANUP_INTERVAL_MS);
     this.logger.log(
       `PDF attachment cleanup scheduled every ${PDF_CLEANUP_INTERVAL_MS / 1000 / 60}m (retention: ${this.retentionDays}d)`,
     );
@@ -86,9 +92,7 @@ export class PdfAttachmentCleanupService
           (errors.length > 0 ? `, ${errors.length} errors` : ''),
       );
     } catch (err) {
-      this.logger.error(
-        `Attachment cleanup failed: ${(err as Error).message}`,
-      );
+      this.logger.error(`Attachment cleanup failed: ${(err as Error).message}`);
     }
   }
 
