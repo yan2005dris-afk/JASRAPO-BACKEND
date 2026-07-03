@@ -11,9 +11,8 @@ import { ClientsListPdfDocumentType } from './pdf/clients-list.pdf-type';
 import { AccountStatementPdfDocumentType } from './pdf/account-statement.pdf-type';
 import { PaymentsReportLegacyPdfDocumentType } from './pdf/payments-report-legacy.pdf-type';
 import { PaymentsReportModernPdfDocumentType } from './pdf/payments-report-modern.pdf-type';
-import { ConnectionHistoryLegacyPdfDocumentType } from './pdf/connection-history-legacy.pdf-type';
-import { ConnectionHistoryModernPdfDocumentType } from './pdf/connection-history-modern.pdf-type';
 import { createPaymentAgreementPdfDocumentType } from './pdf/factories/payment-agreement.factory';
+import { createConnectionHistoryPdfDocumentType } from './pdf/factories/connection-history.factory';
 import { ReportStyleService } from './application/report-style.service';
 import { ReportStyleDispatcher } from './application/report-style.dispatcher';
 import { SendReportByEmailUseCase } from './application/use-cases/send-report-by-email.use-case';
@@ -60,10 +59,10 @@ export class ReportsModule implements OnModuleInit {
     this.pdfService.registerDocumentType(PaymentsReportLegacyPdfDocumentType);
     this.pdfService.registerDocumentType(PaymentsReportModernPdfDocumentType);
     this.pdfService.registerDocumentType(
-      ConnectionHistoryLegacyPdfDocumentType,
+      createConnectionHistoryPdfDocumentType('legacy'),
     );
     this.pdfService.registerDocumentType(
-      ConnectionHistoryModernPdfDocumentType,
+      createConnectionHistoryPdfDocumentType('modern'),
     );
   }
 }
