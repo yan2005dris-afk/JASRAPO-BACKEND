@@ -9,8 +9,9 @@ jest.mock('../../../../infrastructure/database/prisma.service', () => ({
 }));
 
 import { SriIntegrationService } from './sri-integration.service';
-import { EmitirFacturaUseCase } from '../use-cases/emitir-factura.use-case';
+import type { EmitirFacturaUseCase } from '../use-cases/emitir-factura.use-case';
 import { NotFoundException } from '@nestjs/common';
+import { Decimal } from 'decimal.js';
 
 describe('SriIntegrationService — emitirDesdeComprobante (T-008)', () => {
   let service: SriIntegrationService;
@@ -36,10 +37,10 @@ describe('SriIntegrationService — emitirDesdeComprobante (T-008)', () => {
     prefacturaDetalle: [
       {
         rubroId: BigInt(5),
-        cantidad: new (require('decimal.js').Decimal)(2),
-        precioUnitario: new (require('decimal.js').Decimal)(50),
-        descuento: new (require('decimal.js').Decimal)(0),
-        subtotal: new (require('decimal.js').Decimal)(100),
+        cantidad: new Decimal(2),
+        precioUnitario: new Decimal(50),
+        descuento: new Decimal(0),
+        subtotal: new Decimal(100),
         rubro: { nombre: 'Servicio Test' },
       },
     ],
@@ -77,7 +78,9 @@ describe('SriIntegrationService — emitirDesdeComprobante (T-008)', () => {
     };
 
     emitirFacturaUseCase = {
-      emitirFactura: jest.fn().mockResolvedValue({ success: true, claveAcceso: 'XYZ' } as any),
+      emitirFactura: jest
+        .fn()
+        .mockResolvedValue({ success: true, claveAcceso: 'XYZ' } as any),
     } as any;
 
     service = new SriIntegrationService(
@@ -90,7 +93,9 @@ describe('SriIntegrationService — emitirDesdeComprobante (T-008)', () => {
   it('should load prefactura + comprobante and call emitirFactura with comprobanteExistente', async () => {
     prisma.prefacturas.findFirst.mockResolvedValue(mockPrefactura);
     prisma.comprobantes.findUnique.mockResolvedValue(mockComprobante);
-    emitirFacturaUseCase.emitirFactura.mockResolvedValue({ success: true } as any);
+    emitirFacturaUseCase.emitirFactura.mockResolvedValue({
+      success: true,
+    } as any);
 
     await service.emitirDesdeComprobante(BigInt(42));
 

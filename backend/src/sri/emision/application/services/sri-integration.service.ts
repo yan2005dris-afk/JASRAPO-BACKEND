@@ -100,7 +100,7 @@ export class SriIntegrationService {
     }
 
     // 2. Build DTO using shared helper
-    const { dto, emisor } = this.buildFacturaDtoFromPrefactura(prefactura);
+    const { dto } = this.buildFacturaDtoFromPrefactura(prefactura);
 
     // 3. Fetch existing BORRADOR comprobante to pass as comprobanteExistente
     const comprobante = await this.prisma.comprobantes.findUnique({
@@ -108,9 +108,7 @@ export class SriIntegrationService {
     });
 
     if (!comprobante) {
-      throw new NotFoundException(
-        `Comprobante ${comprobanteId} no encontrado`,
-      );
+      throw new NotFoundException(`Comprobante ${comprobanteId} no encontrado`);
     }
 
     // 4. Emit using existing comprobante (UPDATE path in persistirFactura)
