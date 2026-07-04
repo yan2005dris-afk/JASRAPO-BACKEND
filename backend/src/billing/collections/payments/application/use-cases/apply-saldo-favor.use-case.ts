@@ -4,7 +4,6 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Decimal } from 'decimal.js';
-import type { Prisma } from 'src/generated/prisma/client';
 import {
   EstadoCuotaConvenio,
   EstadoPago,
@@ -13,10 +12,14 @@ import {
 import { ApplySaldoFavorDto } from '../../interfaces/dto/create-payment.dto';
 import { PaymentRepository } from '../../domain/repositories/payment.repository';
 import { safePaymentWithDetailSelect } from '../../domain/types/IPayment';
+import { EventosPendientesRepository } from 'src/shared/outbox/domain/repositories/eventos-pendientes.repository';
 
 @Injectable()
 export class ApplySaldoFavorUseCase {
-  constructor(private readonly paymentRepository: PaymentRepository) {}
+  constructor(
+    private readonly paymentRepository: PaymentRepository,
+    private readonly eventosPendientesRepository: EventosPendientesRepository,
+  ) {}
 
   async execute(dto: ApplySaldoFavorDto, creadoPor = 'SYSTEM') {
     if (!dto.comprobanteId && !dto.cuotaConvenioId) {
@@ -185,6 +188,27 @@ export class ApplySaldoFavorUseCase {
             : { montoSaldo: saldoRestante.toNumber() },
           tx,
         );
+
+        // G1: emit pago.validado outbox event when the saldo is applied to
+        // a comprobante. The same PagoValidadoHandler that processes
+        // ValidatePaymentUseCase will pick it up and decide whether to
+        // transition the comprobante BORRADOR → ENVIANDO. The write is
+        // inside the same tx as Pago/DetallePago/SaldoFavor updates, so
+        // a failure rolls back the whole operation (atomicity).
+        if (dto.comprobanteId) {
+          await this.eventosPendientesRepository.createPending(
+            'pago.validado',
+            {
+              pagoId: pago.pagoId.toString(),
+              estadoPago: EstadoPago.REGISTRADO,
+              origen: 'SALDO_FAVOR',
+              creadoPor,
+            },
+            'PAGO',
+            pago.pagoId.toString(),
+            tx,
+          );
+        }
 
         return pago.pagoId;
       },
