@@ -44,7 +44,7 @@ describe('PagoValidadoHandler — E-007 concurrent emission (integration)', () =
     container = await new PostgreSqlContainer('postgres:16.3-alpine')
       .withDatabase('jasrapo_e2e')
       .withUsername('postgres')
-      .withPassword('postgres')
+      .withPassword(process.env.TEST_CONTAINER_PASSWORD ?? 'postgres')
       .start();
 
     const databaseUrl = container.getConnectionUri();
