@@ -15,3 +15,18 @@
  * mechanism when a real use case shows up. YAGNI.
  */
 export const REPORTE_ESTILO = 'reporte.estilo';
+
+/**
+ * SRI emission mode toggle consumed by `SriEmisionModeService`.
+ *
+ * Values:
+ *   - `'automatico'` (default) — `SRIEmissionDispatcherService.tryEmit()` sends
+ *     comprobantes immediately. Current behavior.
+ *   - `'manual'` — `tryEmit()` parks comprobantes in `ComprobanteEstado.POR_EMITIR`.
+ *     Operators trigger emission via `POST /sri/comprobantes/:claveAcceso/emitir-manual`.
+ *
+ * Unknown values (typo, manual edit) fall back to `'automatico'` with a warn
+ * log + an `AuditoriaSri` row (`accion='modo-invalido-fallback'`).
+ * See `sdd/sri-emision-modo-manual-automatico`.
+ */
+export const SRI_EMISION_MODO = 'sri.emision.modo';

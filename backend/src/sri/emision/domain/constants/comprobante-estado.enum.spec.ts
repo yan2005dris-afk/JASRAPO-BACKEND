@@ -25,7 +25,11 @@ describe('ComprobanteEstado', () => {
     expect(ComprobanteEstado.DEVUELTA).toBe('DEVUELTA');
   });
 
-  it('should contain exactly 6 states', () => {
+  it('R-3/S1: should have POR_EMITIR state (sdd/sri-emision-modo-manual-automatico)', () => {
+    expect(ComprobanteEstado.POR_EMITIR).toBe('POR_EMITIR');
+  });
+
+  it('should contain exactly 7 states', () => {
     const values = Object.values(ComprobanteEstado);
     expect(values).toEqual([
       'BORRADOR',
@@ -34,6 +38,7 @@ describe('ComprobanteEstado', () => {
       'AUTORIZADO',
       'RECHAZADO',
       'DEVUELTA',
+      'POR_EMITIR',
     ]);
   });
 
