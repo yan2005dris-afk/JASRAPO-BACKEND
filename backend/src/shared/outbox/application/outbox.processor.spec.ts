@@ -21,6 +21,7 @@ describe('OutboxProcessor', () => {
     repository = {
       createPending: jest.fn(),
       findPendingByTipo: jest.fn(),
+      findAllPending: jest.fn(),
       markProcessed: jest.fn().mockResolvedValue(undefined),
       markFailed: jest.fn().mockResolvedValue(undefined),
     };
@@ -56,7 +57,7 @@ describe('OutboxProcessor', () => {
       processor.registerHandler('pago.validado', handler);
 
       const e = mkEvento({ id: 1n });
-      repository.findPendingByTipo.mockResolvedValue([e]);
+      repository.findAllPending.mockResolvedValue([e]);
 
       await processor.processBatch();
 
@@ -72,12 +73,33 @@ describe('OutboxProcessor', () => {
       processor.registerHandler('pago.validado', second);
 
       const e = mkEvento({ id: 1n });
-      repository.findPendingByTipo.mockResolvedValue([e]);
+      repository.findAllPending.mockResolvedValue([e]);
 
       await processor.processBatch();
 
       expect(first).not.toHaveBeenCalled();
       expect(second).toHaveBeenCalledWith(e);
+    });
+  });
+
+  // ─── findAllPending (multi-tipo) ───────────────────────────────────────
+
+  describe('findAllPending', () => {
+    it('processes a mixed batch of multiple event tipos in a single tick', async () => {
+      const handler1 = jest.fn().mockResolvedValue(undefined);
+      const handler2 = jest.fn().mockResolvedValue(undefined);
+      processor.registerHandler('pago.validado', handler1);
+      processor.registerHandler('cuota.pagada', handler2);
+
+      const e1 = mkEvento({ id: 1n, tipo: 'pago.validado' });
+      const e2 = mkEvento({ id: 2n, tipo: 'cuota.pagada' });
+      repository.findAllPending.mockResolvedValue([e1, e2]);
+
+      await processor.processBatch();
+
+      expect(handler1).toHaveBeenCalledWith(e1);
+      expect(handler2).toHaveBeenCalledWith(e2);
+      expect(repository.markProcessed).toHaveBeenCalledTimes(2);
     });
   });
 
@@ -90,14 +112,11 @@ describe('OutboxProcessor', () => {
 
       const e1 = mkEvento({ id: 1n, payload: { pagoId: '1' } });
       const e2 = mkEvento({ id: 2n, payload: { pagoId: '2' } });
-      repository.findPendingByTipo.mockResolvedValue([e1, e2]);
+      repository.findAllPending.mockResolvedValue([e1, e2]);
 
       await processor.processBatch();
 
-      expect(repository.findPendingByTipo).toHaveBeenCalledWith(
-        'pago.validado',
-        10,
-      );
+      expect(repository.findAllPending).toHaveBeenCalledWith(10);
       expect(handler).toHaveBeenCalledTimes(2);
       expect(handler).toHaveBeenNthCalledWith(1, e1);
       expect(handler).toHaveBeenNthCalledWith(2, e2);
@@ -109,7 +128,7 @@ describe('OutboxProcessor', () => {
 
       const e1 = mkEvento({ id: 1n });
       const e2 = mkEvento({ id: 2n });
-      repository.findPendingByTipo.mockResolvedValue([e1, e2]);
+      repository.findAllPending.mockResolvedValue([e1, e2]);
 
       await processor.processBatch();
 
@@ -130,7 +149,7 @@ describe('OutboxProcessor', () => {
       const ok1 = mkEvento({ id: 100n });
       const boom = mkEvento({ id: 200n });
       const ok2 = mkEvento({ id: 300n });
-      repository.findPendingByTipo.mockResolvedValue([ok1, boom, ok2]);
+      repository.findAllPending.mockResolvedValue([ok1, boom, ok2]);
 
       await processor.processBatch();
 
@@ -152,7 +171,7 @@ describe('OutboxProcessor', () => {
         .mockImplementation(() => undefined);
 
       const e = mkEvento({ id: 5n, tipo: 'unknown.event' });
-      repository.findPendingByTipo.mockResolvedValue([e]);
+      repository.findAllPending.mockResolvedValue([e]);
 
       await processor.processBatch();
 
@@ -170,7 +189,7 @@ describe('OutboxProcessor', () => {
       const handler = jest.fn();
       processor.registerHandler('pago.validado', handler);
 
-      repository.findPendingByTipo.mockResolvedValue([]);
+      repository.findAllPending.mockResolvedValue([]);
 
       await processor.processBatch();
 
@@ -188,7 +207,7 @@ describe('OutboxProcessor', () => {
         await gate;
       });
       processor.registerHandler('pago.validado', handler);
-      repository.findPendingByTipo.mockResolvedValue([mkEvento({ id: 1n })]);
+      repository.findAllPending.mockResolvedValue([mkEvento({ id: 1n })]);
 
       const first = processor.processBatch();
       // While the first batch is mid-flight, a second call must short-circuit.
@@ -201,19 +220,19 @@ describe('OutboxProcessor', () => {
 
       expect(handler).toHaveBeenCalledTimes(1);
       expect(repository.markProcessed).toHaveBeenCalledTimes(1);
-      // The second call took the fast-path: never invoked findPendingByTipo.
-      expect(repository.findPendingByTipo).toHaveBeenCalledTimes(1);
+      // The second call took the fast-path: never invoked findAllPending.
+      expect(repository.findAllPending).toHaveBeenCalledTimes(1);
     });
 
     it('resets isProcessing even when the handler throws so the next tick can run', async () => {
       const handler = jest.fn().mockRejectedValue(new Error('bad-pago'));
       processor.registerHandler('pago.validado', handler);
-      repository.findPendingByTipo.mockResolvedValue([mkEvento({ id: 9n })]);
+      repository.findAllPending.mockResolvedValue([mkEvento({ id: 9n })]);
 
       await processor.processBatch();
 
       // Second cycle: must still execute (i.e. the lock is released).
-      repository.findPendingByTipo.mockResolvedValue([]);
+      repository.findAllPending.mockResolvedValue([]);
       await expect(processor.processBatch()).resolves.toBeUndefined();
     });
   });

@@ -14,11 +14,15 @@ import {
 } from 'src/generated/prisma/enums';
 import { CreatePaymentDto } from '../../interfaces/dto/create-payment.dto';
 import { PaymentRepository } from '../../domain/repositories/payment.repository';
+import { EventosPendientesRepository } from 'src/shared/outbox/domain/repositories/eventos-pendientes.repository';
 import { safePaymentWithDetailSelect } from '../../domain/types/IPayment';
 
 @Injectable()
 export class CreatePaymentUseCase {
-  constructor(private readonly paymentRepository: PaymentRepository) {}
+  constructor(
+    private readonly paymentRepository: PaymentRepository,
+    private readonly eventosPendientesRepository: EventosPendientesRepository,
+  ) {}
 
   async execute(dto: CreatePaymentDto, creadoPor = 'SYSTEM') {
     await this.validateHeader(dto);
@@ -73,6 +77,7 @@ export class CreatePaymentUseCase {
               tx,
               detalle.cuotaConvenioId!,
               detalle.montoAbonado,
+              pago.pagoId,
             );
           }
 
@@ -247,11 +252,13 @@ export class CreatePaymentUseCase {
     tx: Prisma.TransactionClient,
     cuotaConvenioId: string,
     montoAbonado: number,
+    pagoId?: bigint,
   ) {
     const cuota = await this.paymentRepository.findUniqueCuotaConvenio(
       { cuotaConvenioId: BigInt(cuotaConvenioId) },
       {
         cuotaConvenioId: true,
+        convenioId: true,
         montoPagado: true,
         saldoPendiente: true,
       },
@@ -289,5 +296,20 @@ export class CreatePaymentUseCase {
       },
       tx,
     );
+
+    // T-G2c: Emit cuota.pagada when the cuota becomes fully paid
+    if (estaPagada && pagoId) {
+      await this.eventosPendientesRepository.createPending(
+        'cuota.pagada',
+        {
+          cuotaConvenioId: cuotaConvenioId.toString(),
+          pagoId: pagoId.toString(),
+          convenioId: cuota.convenioId.toString(),
+        },
+        'CUOTA_CONVENIO',
+        cuotaConvenioId.toString(),
+        tx,
+      );
+    }
   }
 }

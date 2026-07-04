@@ -9,6 +9,7 @@ import { ValidatePaymentUseCase } from './application/use-cases/validate-payment
 import { AnnulPaymentUseCase } from './application/use-cases/annul-payment.use-case';
 import { ApplySaldoFavorUseCase } from './application/use-cases/apply-saldo-favor.use-case';
 import { PagoValidadoHandler } from './application/pago-validado.handler';
+import { CuotaPagadaHandler } from './application/cuota-pagada.handler';
 import { SRIEmissionDispatcherService } from './application/sri-emission-dispatcher.service';
 import { JobsService } from '../../../infrastructure/jobs/jobs.service';
 import { OutboxModule } from 'src/shared/outbox/outbox.module';
@@ -27,6 +28,7 @@ import { EventosPendientesRepository } from 'src/shared/outbox/domain/repositori
     AnnulPaymentUseCase,
     ApplySaldoFavorUseCase,
     PagoValidadoHandler,
+    CuotaPagadaHandler,
     SRIEmissionDispatcherService,
     { provide: 'JobService', useExisting: JobsService },
   ],
@@ -36,6 +38,7 @@ export class PaymentsModule implements OnModuleInit {
   constructor(
     private readonly outboxProcessor: OutboxProcessor,
     private readonly pagoValidadoHandler: PagoValidadoHandler,
+    private readonly cuotaPagadaHandler: CuotaPagadaHandler,
   ) {}
 
   onModuleInit(): void {
@@ -44,6 +47,15 @@ export class PaymentsModule implements OnModuleInit {
     this.outboxProcessor.registerHandler('pago.validado', async (evento) => {
       const pagoId = BigInt(evento.payload['pagoId'] as string);
       await this.pagoValidadoHandler.procesarPagoValidado(pagoId);
+    });
+
+    // G2: route cuota.pagada outbox rows — when the last cuota of a
+    // prefactura is paid, trigger SRI emission via the dispatcher.
+    this.outboxProcessor.registerHandler('cuota.pagada', async (evento) => {
+      const cuotaConvenioId = BigInt(
+        evento.payload['cuotaConvenioId'] as string,
+      );
+      await this.cuotaPagadaHandler.procesarCuotaPagada(cuotaConvenioId);
     });
   }
 }

@@ -38,6 +38,13 @@ export abstract class EventosPendientesRepository {
   ): Promise<EventoPendiente[]>;
 
   /**
+   * Returns up to `limit` oldest PENDIENTE rows across ALL event tipos,
+   * ordered by createdAt ascending so FIFO is preserved. Used by the
+   * OutboxProcessor to process any registered tipo in a single batch.
+   */
+  abstract findAllPending(limit: number): Promise<EventoPendiente[]>;
+
+  /**
    * Marks the row as PROCESADO and stamps processedAt.
    */
   abstract markProcessed(id: bigint): Promise<void>;
