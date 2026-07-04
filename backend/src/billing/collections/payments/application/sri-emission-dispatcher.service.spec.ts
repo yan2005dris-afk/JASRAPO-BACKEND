@@ -3,7 +3,7 @@ import { ComprobanteEstado } from 'src/sri/emision/domain/constants/comprobante-
 import { SRI_EMISION_JOB } from 'src/sri/emision/infrastructure/queue/processors/sri-emision.constants';
 import type { PaymentRepository } from '../domain/repositories/payment.repository';
 import type { ComprobanteRepository } from 'src/sri/emision/domain/repositories/comprobante.repository';
-import type { JobService } from './pago-validado.handler';
+import type { JobService } from '../domain/interfaces/job-service.interface';
 
 describe('SRIEmissionDispatcherService', () => {
   let service: SRIEmissionDispatcherService;
@@ -91,5 +91,57 @@ describe('SRIEmissionDispatcherService', () => {
 
     expect(outcome).toBe('LOCK_LOST');
     expect(jobsService.send).not.toHaveBeenCalled();
+  });
+
+  // ─── R-A.1: Rollback on enqueue failure ─────────────────────────────────
+
+  it('R-A.1: rejects when jobsService.send() fails and reverts estado to BORRADOR', async () => {
+    const sendError = new Error('pgboss-queue-down');
+    paymentRepository.findUniqueComprobante.mockResolvedValue({
+      id: 42n,
+      importeTotal: 100,
+      estado: ComprobanteEstado.BORRADOR,
+    } as any);
+    comprobanteRepository.updateEstadoWithLock
+      .mockResolvedValueOnce(true) // lock for ENVIANDO
+      .mockResolvedValueOnce(true); // revert to BORRADOR
+    jobsService.send.mockRejectedValue(sendError);
+
+    await expect(service.tryEmit(42n)).rejects.toThrow(sendError);
+
+    // Revert must be called with ENVIANDO → BORRADOR
+    expect(comprobanteRepository.updateEstadoWithLock).toHaveBeenCalledTimes(2);
+    expect(comprobanteRepository.updateEstadoWithLock).toHaveBeenNthCalledWith(
+      2,
+      42n,
+      ComprobanteEstado.ENVIANDO,
+      ComprobanteEstado.BORRADOR,
+    );
+  });
+
+  it('R-A.1: when both send AND revert fail, revert error is logged and original error propagates', async () => {
+    const sendError = new Error('pgboss-down');
+    const revertError = new Error('db-connection-lost');
+    const loggerErrorSpy = jest
+      .spyOn((service as any).logger, 'error')
+      .mockImplementation(() => undefined);
+
+    paymentRepository.findUniqueComprobante.mockResolvedValue({
+      id: 42n,
+      importeTotal: 100,
+      estado: ComprobanteEstado.BORRADOR,
+    } as any);
+    comprobanteRepository.updateEstadoWithLock
+      .mockResolvedValueOnce(true) // lock for ENVIANDO
+      .mockRejectedValueOnce(revertError); // revert also fails
+    jobsService.send.mockRejectedValue(sendError);
+
+    await expect(service.tryEmit(42n)).rejects.toThrow(sendError);
+
+    expect(loggerErrorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Revert failed'),
+      revertError,
+    );
+    loggerErrorSpy.mockRestore();
   });
 });

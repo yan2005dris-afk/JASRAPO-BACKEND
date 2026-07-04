@@ -3,6 +3,8 @@ import { PaymentsController } from './interfaces/http/payments.controller';
 import { PaymentsService } from './application/payments.service';
 import { PaymentRepository } from './domain/repositories/payment.repository';
 import { PrismaPaymentRepository } from './infrastructure/repositories/prisma-payment.repository';
+import { PrefacturaService } from './domain/services/prefactura.service';
+import { PrismaPrefacturaService } from './infrastructure/services/prisma-prefactura.service';
 import { CreatePaymentUseCase } from './application/use-cases/create-payment.use-case';
 import { FindOnePaymentUseCase } from './application/use-cases/find-one-payment.use-case';
 import { ValidatePaymentUseCase } from './application/use-cases/validate-payment.use-case';
@@ -21,6 +23,7 @@ import { EventosPendientesRepository } from 'src/shared/outbox/domain/repositori
   controllers: [PaymentsController],
   providers: [
     { provide: PaymentRepository, useClass: PrismaPaymentRepository },
+    { provide: PrefacturaService, useClass: PrismaPrefacturaService },
     PaymentsService,
     CreatePaymentUseCase,
     FindOnePaymentUseCase,

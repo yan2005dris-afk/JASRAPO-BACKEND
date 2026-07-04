@@ -162,6 +162,13 @@ export class CreatePaymentUseCase {
           );
         }
 
+        // R-B.1: Lock the comprobante row to prevent concurrent payments
+        // from racing on the same comprobante balance.
+        await this.paymentRepository.lockComprobante(
+          BigInt(detalle.comprobanteId),
+          tx,
+        );
+
         const comprobante = await this.paymentRepository.findUniqueComprobante(
           { id: BigInt(detalle.comprobanteId) },
           { id: true, importeTotal: true },

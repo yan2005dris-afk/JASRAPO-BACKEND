@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { PaymentRepository } from '../domain/repositories/payment.repository';
+import { PrefacturaService } from '../domain/services/prefactura.service';
 import { SRIEmissionDispatcherService } from './sri-emission-dispatcher.service';
 
 /**
@@ -17,7 +17,7 @@ export class CuotaPagadaHandler {
   private readonly logger = new Logger(CuotaPagadaHandler.name);
 
   constructor(
-    private readonly paymentRepository: PaymentRepository,
+    private readonly prefacturaService: PrefacturaService,
     private readonly sriDispatcher: SRIEmissionDispatcherService,
   ) {}
 
@@ -28,7 +28,7 @@ export class CuotaPagadaHandler {
 
     // 1. Find PrefacturaDetalle by cuotaConvenioId
     const detalles =
-      await this.paymentRepository.findPrefacturaDetalleByCuotaConvenioId(
+      await this.prefacturaService.findPrefacturaDetalleByCuotaConvenioId(
         cuotaConvenioId,
       );
 
@@ -42,7 +42,7 @@ export class CuotaPagadaHandler {
     const prefacturaId = detalles[0].prefacturaId as bigint;
 
     // 2. Get prefactura with comprobanteId + all detalle cuotaConvenioIds
-    const prefactura = await this.paymentRepository.findPrefacturaById(
+    const prefactura = await this.prefacturaService.findPrefacturaById(
       prefacturaId,
       {
         prefacturaId: true,
@@ -81,8 +81,9 @@ export class CuotaPagadaHandler {
     }
 
     // 4. Query ALL cuotas for those cuotaConvenioIds
-    const cuotas = await this.paymentRepository.findManyCuotaConvenio(
-      { cuotaConvenioId: { in: todasLasCuotaIds } },
+    // R-D.1: exclude soft-deleted cuotas so they don't block emission
+    const cuotas = await this.prefacturaService.findManyCuotaConvenio(
+      { cuotaConvenioId: { in: todasLasCuotaIds }, deletedAt: null },
       { cuotaConvenioId: true, estado: true },
     );
 

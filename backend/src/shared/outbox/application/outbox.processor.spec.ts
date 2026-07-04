@@ -164,8 +164,7 @@ describe('OutboxProcessor', () => {
       );
     });
 
-    it('warns and skips rows whose tipo has no registered handler', async () => {
-      const noop = jest.fn();
+    it('R-C.1: marks failed when tipo has no registered handler', async () => {
       const warnSpy = jest
         .spyOn((processor as any).logger, 'warn')
         .mockImplementation(() => undefined);
@@ -175,14 +174,15 @@ describe('OutboxProcessor', () => {
 
       await processor.processBatch();
 
-      expect(noop).not.toHaveBeenCalled();
       expect(warnSpy).toHaveBeenCalledWith(
         expect.stringContaining('No handler for tipo=unknown.event'),
       );
-      // Unhandled rows must NOT be marked processed (allow them to retry once
-      // a handler is registered).
+      // R-C.1: orphan events must be marked failed so they don't poll forever
       expect(repository.markProcessed).not.toHaveBeenCalled();
-      expect(repository.markFailed).not.toHaveBeenCalled();
+      expect(repository.markFailed).toHaveBeenCalledWith(
+        5n,
+        expect.stringContaining('No handler registered'),
+      );
     });
 
     it('does nothing when there are no pending rows', async () => {
