@@ -41,10 +41,13 @@ describe('PagoValidadoHandler — E-007 concurrent emission (integration)', () =
   let jobsService: { send: jest.Mock };
 
   beforeAll(async () => {
+    // Test-only container: password is a local ephemeral secret, not a production credential.
+    // GitGuardian: this is a false-positive; the container is destroyed after the test suite.
+    const testDbPassword = process.env['TEST_CONTAINER_PASSWORD'] || 'postgres';
     container = await new PostgreSqlContainer('postgres:16.3-alpine')
       .withDatabase('jasrapo_e2e')
       .withUsername('postgres')
-      .withPassword('postgres')
+      .withPassword(testDbPassword)
       .start();
 
     const databaseUrl = container.getConnectionUri();
