@@ -86,6 +86,10 @@ export class OutboxProcessor
     const handler = this.handlers.get(evento.tipo);
     if (!handler) {
       this.logger.warn(`No handler for tipo=${evento.tipo}; id=${evento.id}`);
+      await this.repository.markFailed(
+        evento.id,
+        `No handler registered for tipo=${evento.tipo}`,
+      );
       return;
     }
     try {

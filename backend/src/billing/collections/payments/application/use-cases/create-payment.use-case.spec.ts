@@ -18,6 +18,7 @@ describe('CreatePaymentUseCase', () => {
     findUniqueCuotaConvenio: jest.fn(),
     updateCuotaConvenio: jest.fn(),
     findUniquePago: jest.fn(),
+    lockComprobante: jest.fn(),
   } as unknown as jest.Mocked<PaymentRepository>;
   const eventosRepository = {
     createPending: jest.fn(),
@@ -95,6 +96,96 @@ describe('CreatePaymentUseCase', () => {
         ],
       }),
     ).resolves.toEqual({ pagoId: 10n });
+  });
+
+  // ─── R-B.1: Row-level locking on comprobante ───────────────────────────
+
+  it('R-B.1: should lock comprobante row before checking balance for COMPROBANTE type', async () => {
+    repository.findUniqueCliente.mockResolvedValue({ clienteId: 1n });
+    repository.findFirstCajaSesion.mockResolvedValue({
+      cajaId: 1n,
+      estado: EstadoCaja.ABIERTA,
+    });
+    repository.executeTransaction.mockImplementation(async (cb: any) => {
+      const tx = Symbol('tx') as any;
+      repository.lockComprobante.mockResolvedValue(undefined);
+      repository.findUniqueComprobante.mockResolvedValue({
+        id: 100n,
+        importeTotal: 50,
+      });
+      repository.findManyDetallePago.mockResolvedValue([]);
+      repository.createPago.mockResolvedValue({ pagoId: 10n });
+      repository.createManyDetallePago.mockResolvedValue(undefined);
+      return cb(tx);
+    });
+    repository.findUniquePago.mockResolvedValue({ pagoId: 10n });
+
+    await useCase.execute({
+      clienteId: '1',
+      cajaId: '1',
+      fechaPago: '2026-06-18',
+      montoTotalRecibido: 50,
+      detalle: [
+        {
+          tipoPago: TipoDetallePago.COMPROBANTE,
+          comprobanteId: '100',
+          montoAbonado: 50,
+          formaPagoId: 1,
+        },
+      ],
+    });
+
+    expect(repository.lockComprobante).toHaveBeenCalled();
+    expect(repository.lockComprobante.mock.calls[0][0]).toBe(100n);
+    // lock must happen BEFORE findUniqueComprobante
+    const lockOrder = repository.lockComprobante.mock.invocationCallOrder[0];
+    const findOrder =
+      repository.findUniqueComprobante.mock.invocationCallOrder[0];
+    expect(lockOrder).toBeLessThan(findOrder);
+  });
+
+  it('R-B.1: should NOT lock comprobante for CUOTA_CONVENIO type details', async () => {
+    repository.findUniqueCliente.mockResolvedValue({ clienteId: 1n });
+    repository.findFirstCajaSesion.mockResolvedValue({
+      cajaId: 1n,
+      estado: EstadoCaja.ABIERTA,
+    });
+    repository.executeTransaction.mockImplementation(async (cb: any) => {
+      const tx = {
+        cuotaConvenio: {
+          updateMany: jest.fn().mockResolvedValue({ count: 1 }),
+        },
+      } as any;
+      repository.findUniqueCuotaConvenio.mockResolvedValue({
+        cuotaConvenioId: 5n,
+        estado: 'PENDIENTE',
+        deletedAt: null,
+        saldoPendiente: 50,
+        montoPagado: 0,
+        convenioId: 1n,
+      });
+      repository.createPago.mockResolvedValue({ pagoId: 10n });
+      repository.createManyDetallePago.mockResolvedValue(undefined);
+      return cb(tx);
+    });
+    repository.findUniquePago.mockResolvedValue({ pagoId: 10n });
+
+    await useCase.execute({
+      clienteId: '1',
+      cajaId: '1',
+      fechaPago: '2026-06-18',
+      montoTotalRecibido: 50,
+      detalle: [
+        {
+          tipoPago: TipoDetallePago.CUOTA_CONVENIO,
+          cuotaConvenioId: '5',
+          montoAbonado: 50,
+          formaPagoId: 1,
+        },
+      ],
+    });
+
+    expect(repository.lockComprobante).not.toHaveBeenCalled();
   });
 
   // ─── T-G2c: cuota.pagada outbox emission ─────────────────────────────

@@ -172,40 +172,19 @@ export class PrismaPaymentRepository implements PaymentRepository {
     return this.client(tx).cuotaConvenio.update({ where, data });
   }
 
+  async lockComprobante(
+    id: bigint,
+    tx: Prisma.TransactionClient,
+  ): Promise<void> {
+    await tx.$queryRawUnsafe(
+      'SELECT id FROM billing.comprobantes WHERE id = $1 FOR UPDATE',
+      id,
+    );
+  }
+
   async executeTransaction<T>(
     callback: (tx: Prisma.TransactionClient) => Promise<T>,
   ): Promise<T> {
     return this.prisma.$transaction(callback);
-  }
-
-  async findPrefacturaDetalleByCuotaConvenioId(
-    cuotaConvenioId: bigint,
-    tx?: Prisma.TransactionClient,
-  ): Promise<any[]> {
-    return this.client(tx).prefacturaDetalle.findMany({
-      where: { cuotaConvenioId },
-    });
-  }
-
-  async findPrefacturaById(
-    prefacturaId: bigint,
-    select?: any,
-    tx?: Prisma.TransactionClient,
-  ): Promise<any> {
-    return this.client(tx).prefacturas.findUnique({
-      where: { prefacturaId },
-      ...(select ? { select } : {}),
-    });
-  }
-
-  async findManyCuotaConvenio(
-    where: Prisma.CuotaConvenioWhereInput,
-    select?: any,
-    tx?: Prisma.TransactionClient,
-  ): Promise<any[]> {
-    return this.client(tx).cuotaConvenio.findMany({
-      where,
-      ...(select ? { select } : {}),
-    });
   }
 }

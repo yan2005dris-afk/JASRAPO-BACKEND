@@ -3,7 +3,7 @@ import { ComprobanteEstado } from 'src/sri/emision/domain/constants/comprobante-
 import { SRI_EMISION_JOB } from 'src/sri/emision/infrastructure/queue/processors/sri-emision.constants';
 import { PaymentRepository } from '../domain/repositories/payment.repository';
 import { ComprobanteRepository } from 'src/sri/emision/domain/repositories/comprobante.repository';
-import type { JobService } from './pago-validado.handler';
+import { JobService } from '../domain/interfaces/job-service.interface';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
@@ -31,7 +31,9 @@ export type EmissionOutcome =
  * paid — that responsibility stays with the caller, which knows the context
  * (e.g. totalAbonado summed from DetallePago records). Here we only decide:
  * (a) does the comprobante exist? (b) is it still in BORRADOR? (c) can we
- * atomically transition it to ENVIANDO? (d) enqueue the SRI job.
+ * atomically transition it to ENVIANDO? (d) enqueue the SRI job, reverting
+ * the state on enqueue failure so the comprobante doesn't get stuck in
+ * ENVIANDO if the queue is down.
  */
 @LogContext()
 @Injectable()
@@ -60,6 +62,19 @@ export class SRIEmissionDispatcherService {
       return 'ALREADY_EMITTED';
     }
 
+    return this.tryEmitWithRevert(comprobanteId);
+  }
+
+  /**
+   * Shared BORRADOR → ENVIANDO + send-with-revert helper. Extracted to keep
+   * the rollback logic in one place — a future trigger reuses the same
+   * pipeline without re-implementing the enqueue-failure handling.
+   *
+   * @param comprobanteId BigInt id of the comprobante.
+   */
+  private async tryEmitWithRevert(
+    comprobanteId: bigint,
+  ): Promise<EmissionOutcome> {
     const locked = await this.comprobanteRepository.updateEstadoWithLock(
       comprobanteId,
       ComprobanteEstado.BORRADOR,
@@ -73,10 +88,26 @@ export class SRIEmissionDispatcherService {
       return 'LOCK_LOST';
     }
 
-    await this.jobsService.send(SRI_EMISION_JOB, {
-      tipo: 'FACTURA_DESDE_PREFACTURA',
-      comprobanteId,
-    });
+    try {
+      await this.jobsService.send(SRI_EMISION_JOB, {
+        tipo: 'FACTURA_DESDE_PREFACTURA',
+        comprobanteId,
+      });
+    } catch (err) {
+      try {
+        await this.comprobanteRepository.updateEstadoWithLock(
+          comprobanteId,
+          ComprobanteEstado.ENVIANDO,
+          ComprobanteEstado.BORRADOR,
+        );
+      } catch (revertErr) {
+        this.logger.error(
+          `Revert failed for comprobante ${comprobanteId} (to BORRADOR)`,
+          revertErr,
+        );
+      }
+      throw err;
+    }
 
     this.logger.log(
       `Comprobante ${comprobanteId}: emitido vía SRIEmissionDispatcherService, job sri-emision encolado`,

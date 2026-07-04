@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PaymentRepository } from '../domain/repositories/payment.repository';
+import { PrefacturaService } from '../domain/services/prefactura.service';
 import { SRIEmissionDispatcherService } from './sri-emission-dispatcher.service';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
@@ -18,7 +18,7 @@ import { LogContext } from 'src/shared/decorators/log-context.decorator';
 @Injectable()
 export class CuotaPagadaHandler {
   constructor(
-    private readonly paymentRepository: PaymentRepository,
+    private readonly prefacturaService: PrefacturaService,
     private readonly sriDispatcher: SRIEmissionDispatcherService,
     private readonly logger: LoggerService,
   ) {}
@@ -30,7 +30,7 @@ export class CuotaPagadaHandler {
 
     // 1. Find PrefacturaDetalle by cuotaConvenioId
     const detalles =
-      await this.paymentRepository.findPrefacturaDetalleByCuotaConvenioId(
+      await this.prefacturaService.findPrefacturaDetalleByCuotaConvenioId(
         cuotaConvenioId,
       );
 
@@ -44,7 +44,7 @@ export class CuotaPagadaHandler {
     const prefacturaId = detalles[0].prefacturaId as bigint;
 
     // 2. Get prefactura with comprobanteId + all detalle cuotaConvenioIds
-    const prefactura = await this.paymentRepository.findPrefacturaById(
+    const prefactura = await this.prefacturaService.findPrefacturaById(
       prefacturaId,
       {
         prefacturaId: true,
@@ -83,8 +83,9 @@ export class CuotaPagadaHandler {
     }
 
     // 4. Query ALL cuotas for those cuotaConvenioIds
-    const cuotas = await this.paymentRepository.findManyCuotaConvenio(
-      { cuotaConvenioId: { in: todasLasCuotaIds } },
+    // R-D.1: exclude soft-deleted cuotas so they don't block emission
+    const cuotas = await this.prefacturaService.findManyCuotaConvenio(
+      { cuotaConvenioId: { in: todasLasCuotaIds }, deletedAt: null },
       { cuotaConvenioId: true, estado: true },
     );
 
