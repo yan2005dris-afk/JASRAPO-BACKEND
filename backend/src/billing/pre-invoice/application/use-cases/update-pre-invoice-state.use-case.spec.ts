@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { UpdatePreInvoiceStateUseCase } from './update-pre-invoice-state.use-case';
 import { PreInvoiceRepository } from '../../domain/repositories/pre-invoice.repository';
@@ -42,9 +43,7 @@ describe('UpdatePreInvoiceStateUseCase — comprobante BORRADOR (T-004)', () => 
 
     comprobanteRepository = {
       create: jest.fn().mockResolvedValue({ id: BigInt(42) }),
-      executeTransaction: jest
-        .fn()
-        .mockImplementation((cb: any) => cb({})),
+      executeTransaction: jest.fn().mockImplementation((cb: any) => cb({})),
       update: jest.fn(),
       findByClaveAcceso: jest.fn(),
       findConDetalles: jest.fn(),

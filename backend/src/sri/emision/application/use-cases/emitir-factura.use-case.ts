@@ -51,7 +51,10 @@ export class EmitirFacturaUseCase {
    * Emite una factura electrónica completa: valida, genera XML, firma, envía al SRI y persiste
    * Patrón de 3 fases — nunca bloquea el pool de DB durante la llamada SOAP al SRI
    */
-  async emitirFactura(dto: CreateFacturaDto, opts?: EmitirFacturaOpts): Promise<FacturaResponseDto> {
+  async emitirFactura(
+    dto: CreateFacturaDto,
+    opts?: EmitirFacturaOpts,
+  ): Promise<FacturaResponseDto> {
     this.logger.log('Iniciando emisión de factura electrónica');
 
     try {
@@ -206,7 +209,9 @@ export class EmitirFacturaUseCase {
 
       // ─── FASE 3: Transacción corta (~5ms) — Actualizar resultado ───
       await this.comprobanteRepository.update(comprobante.id, {
-        estado: resultado.success ? ComprobanteEstado.AUTORIZADO : resultado.estado,
+        estado: resultado.success
+          ? ComprobanteEstado.AUTORIZADO
+          : resultado.estado,
         estado_sri: resultado.estado,
         fecha_autorizacion: resultado.fechaAutorizacion,
         numero_autorizacion: resultado.numeroAutorizacion || claveAcceso,
@@ -229,7 +234,10 @@ export class EmitirFacturaUseCase {
       }
 
       // 4. Emitir eventos para Webhooks
-      if (resultado.success || resultado.estado === ComprobanteEstado.AUTORIZADO) {
+      if (
+        resultado.success ||
+        resultado.estado === ComprobanteEstado.AUTORIZADO
+      ) {
         this.eventEmitter.emit('comprobante.autorizado', {
           emisorId: emisor?.id,
           claveAcceso,
@@ -388,7 +396,9 @@ export class EmitirFacturaUseCase {
         secuencial: secuencial,
         clave_acceso: claveAcceso,
         fecha_emision: dto.fechaEmision.split('/').reverse().join('-'),
-        estado: resultado.success ? ComprobanteEstado.AUTORIZADO : resultado.estado,
+        estado: resultado.success
+          ? ComprobanteEstado.AUTORIZADO
+          : resultado.estado,
         estado_sri: resultado.estado,
         fecha_autorizacion: resultado.fechaAutorizacion,
         numero_autorizacion: resultado.numeroAutorizacion || claveAcceso,
