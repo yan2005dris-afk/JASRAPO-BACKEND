@@ -12,6 +12,9 @@ model Pagos {
   deletedAt           DateTime?            @map("borrado_en")
   creadoPor           String               @map("creado_por")
   clienteId           BigInt               @map("cliente_id")
+  banco               Banco?               @map("banco")
+  tarjetaCredito      TarjetaCredito?      @map("tarjeta_credito")
+  estadoPago          EstadoPago           @default(PENDIENTE) @map("estado_pago")
   anuladoPor          String?              @map("anulado_por")
   estadoValidacion    EstadoValidacionPago @default(APROBADO) @map("estado_validacion")
   fechaAnulacion      DateTime?            @map("fecha_anulacion")
@@ -24,6 +27,9 @@ model Pagos {
   @@index([creadoPor])
   @@index([clienteId])
   @@index([cajaId])
+  @@index([banco])
+  @@index([tarjetaCredito])
+  @@index([estadoPago])
   @@map("pagos")
 }
 
@@ -33,4 +39,30 @@ enum EstadoValidacionPago {
   APROBADO
   RECHAZADO
   CONCILIADO
+}
+
+enum Banco {
+  PICHINCHA
+  GUAYAQUIL
+  PRODUBANC
+  PACIFICIO
+  BOLIVARIANO
+  LOJA
+  AUSTRO
+  RUMIÑAHUI
+  CNT
+  OTRO
+}
+
+enum TarjetaCredito {
+  DINERS
+  MASTERCARD
+  VISA
+  AMEX
+}
+
+enum EstadoPago {
+  PENDIENTE
+  REGISTRADO
+  ANULADO
 }

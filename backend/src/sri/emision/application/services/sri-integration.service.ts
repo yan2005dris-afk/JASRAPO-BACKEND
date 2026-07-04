@@ -1,6 +1,7 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../../infrastructure/database/prisma.service';
 import { SriService } from './sri.service';
+import { EmitirFacturaUseCase } from '../use-cases/emitir-factura.use-case';
 import { CreateFacturaDto } from '../../interfaces/dto';
 import { TipoIdentificacion, FormaPago } from '../../domain/constants';
 import { format } from 'date-fns';
@@ -12,35 +13,24 @@ export class SriIntegrationService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly sriService: SriService,
+    private readonly emitirFacturaUseCase: EmitirFacturaUseCase,
   ) {}
 
   /**
    * Toma una prefactura de JASRAPO y la convierte en una Factura Electrónica en el SRI
+   * (flujo legacy — sin comprobante BORRADOR pre-creado)
    */
   async emitirFacturaDesdePrefactura(prefacturaId: number, _emisorId: number) {
     this.logger.log(`Iniciando emisión SRI para prefactura: ${prefacturaId}`);
 
-    // 1. Obtener la prefactura con sus detalles y cliente
     const prefactura = await this.prisma.prefacturas.findUnique({
       where: { prefacturaId: BigInt(prefacturaId) },
       include: {
-        prefacturaDetalle: {
-          include: {
-            rubro: true,
-          },
-        },
-        contrato: {
-          include: {
-            cliente: true,
-          },
-        },
+        prefacturaDetalle: { include: { rubro: true } },
+        contrato: { include: { cliente: true } },
         puntoEmision: {
           include: {
-            establecimiento: {
-              include: {
-                emisor: true,
-              },
-            },
+            establecimiento: { include: { emisor: true } },
           },
         },
       },
@@ -50,9 +40,94 @@ export class SriIntegrationService {
       throw new NotFoundException(`Prefactura ${prefacturaId} no encontrada`);
     }
 
+    // Use shared helper to build DTO
+    const { dto: facturaDto } = this.buildFacturaDtoFromPrefactura(prefactura);
+
+    // Call SRI motor
+    const result = await this.sriService.emitirFactura(facturaDto);
+
+    // Update prefactura with comprobanteId
+    if (result && 'claveAcceso' in result) {
+      const comprobante = await this.prisma.comprobantes.findUnique({
+        where: { claveAcceso: result.claveAcceso },
+      });
+
+      if (comprobante) {
+        await this.prisma.prefacturas.update({
+          where: { prefacturaId: BigInt(prefacturaId) },
+          data: { comprobanteId: comprobante.id },
+        });
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Emite una factura desde un comprobante ya existente (BORRADOR),
+   * buscando la prefactura vinculada para construir el DTO.
+   * Usado por el handler FACTURA_DESDE_PREFACTURA en SriEmisionProcessor.
+   */
+  async emitirDesdeComprobante(comprobanteId: bigint) {
+    this.logger.log(
+      `Emitiendo factura desde comprobante existente ID: ${comprobanteId}`,
+    );
+
+    // 1. Fetch comprobante + find related prefactura
+    const prefactura = await this.prisma.prefacturas.findFirst({
+      where: { comprobanteId },
+      include: {
+        prefacturaDetalle: {
+          include: { rubro: true },
+        },
+        contrato: {
+          include: { cliente: true },
+        },
+        puntoEmision: {
+          include: {
+            establecimiento: {
+              include: { emisor: true },
+            },
+          },
+        },
+      },
+    });
+
+    if (!prefactura) {
+      throw new NotFoundException(
+        `Prefactura con comprobanteId ${comprobanteId} no encontrada`,
+      );
+    }
+
+    // 2. Build DTO using shared helper
+    const { dto, emisor } = this.buildFacturaDtoFromPrefactura(prefactura);
+
+    // 3. Fetch existing BORRADOR comprobante to pass as comprobanteExistente
+    const comprobante = await this.prisma.comprobantes.findUnique({
+      where: { id: comprobanteId },
+    });
+
+    if (!comprobante) {
+      throw new NotFoundException(
+        `Comprobante ${comprobanteId} no encontrado`,
+      );
+    }
+
+    // 4. Emit using existing comprobante (UPDATE path in persistirFactura)
+    return this.emitirFacturaUseCase.emitirFactura(dto, {
+      comprobanteExistente: comprobante,
+    });
+  }
+
+  /**
+   * Construye CreateFacturaDto + extrae el emisor desde el modelo de prefactura
+   */
+  private buildFacturaDtoFromPrefactura(prefactura: any): {
+    dto: CreateFacturaDto;
+    emisor: any;
+  } {
     const emisor = prefactura.puntoEmision.establecimiento.emisor;
 
-    // 2. Mapear al DTO que espera el motor SRI migrado
     const facturaDto: CreateFacturaDto = {
       fechaEmision: format(prefactura.createdAt, 'dd/MM/yyyy'),
       emisor: {
@@ -72,7 +147,7 @@ export class SriIntegrationService {
         direccion: prefactura.clienteDireccion || 'S/N',
         email: prefactura.clienteEmail || undefined,
       },
-      detalles: prefactura.prefacturaDetalle.map((det) => ({
+      detalles: prefactura.prefacturaDetalle.map((det: any) => ({
         codigoPrincipal: det.rubroId.toString(),
         descripcion: det.rubro.nombre,
         cantidad: Number(det.cantidad),
@@ -80,8 +155,8 @@ export class SriIntegrationService {
         descuento: Number(det.descuento),
         impuestos: [
           {
-            codigo: '2', // IVA
-            codigoPorcentaje: '2', // 12%
+            codigo: '2',
+            codigoPorcentaje: '2',
             tarifa: 12,
             baseImponible: Number(det.subtotal),
             valor: Number(det.subtotal) * 0.12,
@@ -99,26 +174,7 @@ export class SriIntegrationService {
       ],
     };
 
-    // 3. Llamar al motor SRI
-    const result = await this.sriService.emitirFactura(facturaDto);
-
-    // 4. Actualizar la prefactura con el ID del comprobante
-    if (result && 'claveAcceso' in result) {
-      const comprobante = await this.prisma.comprobantes.findUnique({
-        where: { claveAcceso: result.claveAcceso },
-      });
-
-      if (comprobante) {
-        await this.prisma.prefacturas.update({
-          where: { prefacturaId: BigInt(prefacturaId) },
-          data: {
-            comprobanteId: comprobante.id,
-          },
-        });
-      }
-    }
-
-    return result;
+    return { dto: facturaDto, emisor };
   }
 
   private mapTipoIdentificacion(tipoId: number): TipoIdentificacion {

@@ -1,0 +1,27 @@
+/// Outbox pattern: durable queue for domain events processed asynchronously
+/// (e.g. pago.validado). OutboxProcessor polls PENDIENTE rows and dispatches
+/// them to the appropriate handler in-process. The outbox row is written
+/// inside the same transaction as the aggregate change, so the event is
+/// never lost on a process crash between commit and dispatch.
+model EventosPendientes {
+  id            BigInt       @id @default(autoincrement())
+  tipo          String       @db.VarChar(100)
+  aggregateType String?      @db.VarChar(50)
+  aggregateId   String?      @db.VarChar(50)
+  payload       Json
+  estado        EstadoEvento @default(PENDIENTE)
+  intentos      Int          @default(0)
+  ultimoError   String?
+  createdAt     DateTime     @default(now()) @map("creado_en")
+  processedAt   DateTime?    @map("procesado_en")
+
+  @@index([estado, tipo, createdAt])
+  @@index([aggregateType, aggregateId])
+  @@map("eventos_pendientes")
+}
+
+enum EstadoEvento {
+  PENDIENTE
+  PROCESADO
+  FALLIDO
+}

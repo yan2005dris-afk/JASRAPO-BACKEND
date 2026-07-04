@@ -3,6 +3,7 @@ import { CategoriaTarifaModule } from './tariffs/categoria-tarifa.module';
 import { BatchModule } from './batch/batch.module';
 import { AgreementsModule } from './collections/agreements/agreements.module';
 import { PreInvoiceModule } from './pre-invoice/pre-invoice.module';
+import { PaymentsModule } from './collections/payments/payments.module';
 import { DiscountsModule } from './discounts/discounts.module';
 
 @Module({
@@ -11,6 +12,7 @@ import { DiscountsModule } from './discounts/discounts.module';
     BatchModule,
     AgreementsModule,
     PreInvoiceModule,
+    PaymentsModule,
     DiscountsModule,
   ],
   exports: [
@@ -18,6 +20,7 @@ import { DiscountsModule } from './discounts/discounts.module';
     BatchModule,
     AgreementsModule,
     PreInvoiceModule,
+    PaymentsModule,
     DiscountsModule,
   ],
 })

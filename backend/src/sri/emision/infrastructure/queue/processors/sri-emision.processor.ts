@@ -1,22 +1,29 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { JobsService } from '../../../../../infrastructure/jobs/jobs.service';
+import { Injectable, Logger, OnModuleInit, Inject } from '@nestjs/common';
 import { EmitirFacturaUseCase } from '../../../application/use-cases/emitir-factura.use-case';
 import { EmitirNotaCreditoUseCase } from '../../../application/use-cases/emitir-nota-credito.use-case';
 import { EmitirNotaDebitoUseCase } from '../../../application/use-cases/emitir-nota-debito.use-case';
 import { EmitirRetencionUseCase } from '../../../application/use-cases/emitir-retencion.use-case';
+import { SriIntegrationService } from '../../../application/services/sri-integration.service';
+import { SRI_EMISION_JOB } from './sri-emision.constants';
 
-export const SRI_EMISION_JOB = 'sri-emision';
+/** Minimal interface for the job service to avoid pg-boss ESM import issues */
+export interface SRIJobWorker {
+  work(name: string, handler: (jobs: any[]) => Promise<any>): Promise<any>;
+}
+
+export { SRI_EMISION_JOB };
 
 @Injectable()
 export class SriEmisionProcessor implements OnModuleInit {
   private readonly logger = new Logger(SriEmisionProcessor.name);
 
   constructor(
-    private readonly jobsService: JobsService,
+    @Inject('JobService') private readonly jobsService: SRIJobWorker,
     private readonly emitirFacturaUseCase: EmitirFacturaUseCase,
     private readonly emitirNotaCreditoUseCase: EmitirNotaCreditoUseCase,
     private readonly emitirNotaDebitoUseCase: EmitirNotaDebitoUseCase,
     private readonly emitirRetencionUseCase: EmitirRetencionUseCase,
+    private readonly sriIntegrationService: SriIntegrationService,
   ) {}
 
   async onModuleInit() {
@@ -30,7 +37,7 @@ export class SriEmisionProcessor implements OnModuleInit {
     );
   }
 
-  private async processEmision(job: any): Promise<any> {
+  async processEmision(job: any): Promise<any> {
     const { tipo, dto } = job.data;
     this.logger.log(
       `Procesando emisión asíncrona de ${tipo} - Job ID: ${job.id}`,
@@ -40,6 +47,12 @@ export class SriEmisionProcessor implements OnModuleInit {
       switch (tipo) {
         case 'FACTURA':
           return await this.emitirFacturaUseCase.emitirFactura(dto);
+        case 'FACTURA_DESDE_PREFACTURA': {
+          const { comprobanteId } = job.data;
+          return await this.sriIntegrationService.emitirDesdeComprobante(
+            BigInt(comprobanteId),
+          );
+        }
         case 'NOTA_CREDITO':
           return await this.emitirNotaCreditoUseCase.emitirNotaCredito(dto);
         case 'NOTA_DEBITO':

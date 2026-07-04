@@ -584,6 +584,60 @@ export class PrismaComprobanteRepository extends ComprobanteRepository {
     };
   }
 
+  async deleteDetallesByComprobanteId(
+    id: bigint,
+    tx?: Prisma.TransactionClient,
+  ): Promise<void> {
+    const client = tx ?? this.prisma;
+    await client.comprobanteDetalles.deleteMany({
+      where: { comprobanteId: id },
+    });
+  }
+
+  async deletePagosByComprobanteId(
+    id: bigint,
+    tx?: Prisma.TransactionClient,
+  ): Promise<void> {
+    const client = tx ?? this.prisma;
+    await client.comprobantePagos.deleteMany({
+      where: { comprobanteId: id },
+    });
+  }
+
+  async deleteTotalesByComprobanteId(
+    id: bigint,
+    tx?: Prisma.TransactionClient,
+  ): Promise<void> {
+    const client = tx ?? this.prisma;
+    await client.comprobanteTotales.deleteMany({
+      where: { comprobanteId: id },
+    });
+  }
+
+  async deleteInfoAdicionalByComprobanteId(
+    id: bigint,
+    tx?: Prisma.TransactionClient,
+  ): Promise<void> {
+    const client = tx ?? this.prisma;
+    await client.infoAdicional.deleteMany({
+      where: { comprobanteId: id },
+    });
+  }
+
+  async updateEstadoWithLock(
+    id: bigint,
+    estadoEsperado: string,
+    nuevoEstado: string,
+    tx?: Prisma.TransactionClient,
+  ): Promise<boolean> {
+    const client = tx ?? this.prisma;
+    const result = await client.comprobantes.updateMany({
+      where: { id, estado: estadoEsperado },
+      data: { estado: nuevoEstado },
+    });
+    return result.count > 0;
+  }
+
   async executeTransaction<T>(
     callback: (tx: Prisma.TransactionClient) => Promise<T>,
   ): Promise<T> {

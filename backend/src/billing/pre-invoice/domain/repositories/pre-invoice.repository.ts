@@ -25,6 +25,7 @@ export abstract class PreInvoiceRepository {
       aprobadaPor?: string;
       motivoRechazo?: string;
       fechaAprobacion?: Date;
+      comprobanteId?: bigint;
     },
   ): Promise<boolean>;
 }

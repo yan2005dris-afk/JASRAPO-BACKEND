@@ -112,6 +112,37 @@ export abstract class ComprobanteRepository {
     xml_autorizado_path?: string;
   } | null>;
 
+  abstract deleteDetallesByComprobanteId(
+    id: bigint,
+    tx?: TransactionContext,
+  ): Promise<void>;
+
+  abstract deletePagosByComprobanteId(
+    id: bigint,
+    tx?: TransactionContext,
+  ): Promise<void>;
+
+  abstract deleteTotalesByComprobanteId(
+    id: bigint,
+    tx?: TransactionContext,
+  ): Promise<void>;
+
+  abstract deleteInfoAdicionalByComprobanteId(
+    id: bigint,
+    tx?: TransactionContext,
+  ): Promise<void>;
+
+  /**
+   * Optimistic lock: updates estado only if current estado matches estadoEsperado.
+   * Returns true if a row was updated, false if not (race condition lost).
+   */
+  abstract updateEstadoWithLock(
+    id: bigint,
+    estadoEsperado: string,
+    nuevoEstado: string,
+    tx?: TransactionContext,
+  ): Promise<boolean>;
+
   abstract executeTransaction<T>(
     callback: (tx: TransactionContext) => Promise<T>,
   ): Promise<T>;
