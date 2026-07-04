@@ -69,7 +69,6 @@ export class SriController {
     private readonly configService: ConfigService,
     private readonly logger: LoggerService,
     private readonly emitirComprobanteManual: EmitirComprobanteManualUseCase,
-
   ) {}
 
   /**

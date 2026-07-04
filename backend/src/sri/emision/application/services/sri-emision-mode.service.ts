@@ -1,5 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { AuditService } from '../../../../infrastructure/audit/audit.service';
+import { LoggerService } from '../../../../infrastructure/observability/logger/logger.service';
 import { SistemaConfigService } from '../../../../infrastructure/config/sistema-config.service';
 import { SRI_EMISION_MODO } from '../../../../infrastructure/config/sistema-config.keys';
 
@@ -30,9 +31,8 @@ const FALLBACK: SriEmisionModo = 'automatico';
  */
 @Injectable()
 export class SriEmisionModeService {
-  private readonly logger = new Logger(SriEmisionModeService.name);
-
   constructor(
+    private readonly logger: LoggerService,
     private readonly sistemaConfig: SistemaConfigService,
     private readonly auditService: AuditService,
   ) {}

@@ -1,14 +1,26 @@
-import type { Logger } from '@nestjs/common';
+// Mock AuditService to prevent loading JobsService (which pulls in pg-boss ESM)
+jest.mock('../../../../infrastructure/audit/audit.service', () => ({
+  AuditService: jest.fn(),
+}));
 import type { AuditService } from '../../../../infrastructure/audit/audit.service';
+import type { LoggerService } from '../../../../infrastructure/observability/logger/logger.service';
 import type { SistemaConfigService } from '../../../../infrastructure/config/sistema-config.service';
 import { SriEmisionModeService } from './sri-emision-mode.service';
 import { SRI_EMISION_MODO } from '../../../../infrastructure/config/sistema-config.keys';
+
+const mockLogger = {
+  log: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+  debug: jest.fn(),
+  verbose: jest.fn(),
+};
 
 describe('SriEmisionModeService', () => {
   let service: SriEmisionModeService;
   let sistemaConfig: jest.Mocked<Pick<SistemaConfigService, 'getString'>>;
   let auditService: jest.Mocked<Pick<AuditService, 'log'>>;
-  let loggerWarnSpy: jest.SpyInstance;
+  let logger: typeof mockLogger;
 
   beforeEach(() => {
     sistemaConfig = {
@@ -17,21 +29,23 @@ describe('SriEmisionModeService', () => {
     auditService = {
       log: jest.fn().mockResolvedValue(undefined),
     };
+    logger = {
+      log: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+      debug: jest.fn(),
+      verbose: jest.fn(),
+    };
 
     service = new SriEmisionModeService(
+      logger as unknown as LoggerService,
       sistemaConfig as unknown as SistemaConfigService,
       auditService as unknown as AuditService,
     );
-
-    // Spy on the private Logger instance — by default Nestjs Logger writes to
-    // console; we override just to assert the warn call shape.
-    loggerWarnSpy = jest
-      .spyOn((service as unknown as { logger: Logger }).logger, 'warn')
-      .mockImplementation(() => undefined);
   });
 
   afterEach(() => {
-    loggerWarnSpy.mockRestore();
+    jest.clearAllMocks();
   });
 
   it('R-2/S1: returns "automatico" when sistema_config has "automatico"', async () => {
@@ -41,7 +55,7 @@ describe('SriEmisionModeService', () => {
 
     expect(result).toBe('automatico');
     expect(sistemaConfig.getString).toHaveBeenCalledWith(SRI_EMISION_MODO);
-    expect(loggerWarnSpy).not.toHaveBeenCalled();
+    expect(logger.warn).not.toHaveBeenCalled();
     expect(auditService.log).not.toHaveBeenCalled();
   });
 
@@ -51,7 +65,7 @@ describe('SriEmisionModeService', () => {
     const result = await service.getMode();
 
     expect(result).toBe('manual');
-    expect(loggerWarnSpy).not.toHaveBeenCalled();
+    expect(logger.warn).not.toHaveBeenCalled();
     expect(auditService.log).not.toHaveBeenCalled();
   });
 
@@ -61,7 +75,7 @@ describe('SriEmisionModeService', () => {
     const result = await service.getMode();
 
     expect(result).toBe('automatico');
-    expect(loggerWarnSpy).toHaveBeenCalledWith(
+    expect(logger.warn).toHaveBeenCalledWith(
       expect.stringContaining(SRI_EMISION_MODO),
     );
     expect(auditService.log).toHaveBeenCalledWith(
@@ -79,7 +93,7 @@ describe('SriEmisionModeService', () => {
     const result = await service.getMode();
 
     expect(result).toBe('automatico');
-    expect(loggerWarnSpy).toHaveBeenCalledWith(
+    expect(logger.warn).toHaveBeenCalledWith(
       expect.stringContaining('typo-value'),
     );
     expect(auditService.log).toHaveBeenCalledWith(
