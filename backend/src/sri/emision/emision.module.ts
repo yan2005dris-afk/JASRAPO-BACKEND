@@ -8,10 +8,12 @@ import { CatalogosController } from './interfaces/http/catalogos.controller';
 // Services & Use Cases
 import { SriService } from './application/services/sri.service';
 import { SriIntegrationService } from './application/services/sri-integration.service';
+import { SriEmisionModeService } from './application/services/sri-emision-mode.service';
 import { EmitirFacturaUseCase } from './application/use-cases/emitir-factura.use-case';
 import { EmitirNotaCreditoUseCase } from './application/use-cases/emitir-nota-credito.use-case';
 import { EmitirNotaDebitoUseCase } from './application/use-cases/emitir-nota-debito.use-case';
 import { EmitirRetencionUseCase } from './application/use-cases/emitir-retencion.use-case';
+import { EmitirComprobanteManualUseCase } from './application/use-cases/emitir-comprobante-manual.use-case';
 
 // Infrastructure
 import { ClaveAccesoService } from './infrastructure/xml/clave-acceso.service';
@@ -51,10 +53,12 @@ import { JobsService } from '../../infrastructure/jobs/jobs.service';
   providers: [
     SriService,
     SriIntegrationService,
+    SriEmisionModeService,
     EmitirFacturaUseCase,
     EmitirNotaCreditoUseCase,
     EmitirNotaDebitoUseCase,
     EmitirRetencionUseCase,
+    EmitirComprobanteManualUseCase,
     ClaveAccesoService,
     XmlBuilderService,
     XmlSignerService,
@@ -91,10 +95,13 @@ import { JobsService } from '../../infrastructure/jobs/jobs.service';
     SriService,
     SriIntegrationService,
     ComprobanteRepository,
+    SriEmisionModeService,
+
     EmitirFacturaUseCase,
     EmitirNotaCreditoUseCase,
     EmitirNotaDebitoUseCase,
     EmitirRetencionUseCase,
+    EmitirComprobanteManualUseCase,
     XmlSignerService,
     PdfService,
     TemplateService,

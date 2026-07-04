@@ -27,6 +27,8 @@ import {
 import { Throttle } from '@nestjs/throttler';
 import { SriService } from '../../application/services/sri.service';
 import { EmisoresService } from '../../../emisores/application/emisores.service';
+import { EmitirComprobanteManualUseCase } from '../../application/use-cases/emitir-comprobante-manual.use-case';
+import type { EmissionOutcome } from '../../../../billing/collections/payments/application/sri-emission-dispatcher.service';
 import { CurrentUser } from '../../../../identity/auth/interfaces/http/decorators/current-user.decorator';
 import {
   JwtPayload,
@@ -66,6 +68,8 @@ export class SriController {
     private readonly emisoresService: EmisoresService,
     private readonly configService: ConfigService,
     private readonly logger: LoggerService,
+    private readonly emitirComprobanteManual: EmitirComprobanteManualUseCase,
+
   ) {}
 
   /**
@@ -267,6 +271,50 @@ export class SriController {
   }> {
     await this.validateClaveAccesoAccess(claveAcceso);
     return this.sriService.reintentarComprobante(claveAcceso);
+  }
+
+  /**
+   * Operator-triggered emission for comprobantes parked in `POR_EMITIR` when
+   * `sri.emision.modo = 'manual'`. Also accepts comprobantes in `BORRADOR` so
+   * an admin can force-emit before the dispatcher picks them up.
+   *
+   * Guarded by `@RequiredPermission('sri', 'admin')` at the class level.
+   *
+   * Outcomes:
+   *   - `EMITTED` → 200 with the outcome
+   *   - `INVALID_STATE` → 409 (use case raises ConflictException)
+   *   - `NOT_FOUND` → 404 (use case raises NotFoundException)
+   *
+   * @see sdd/sri-emision-modo-manual-automatico for context.
+   */
+  @Post('comprobantes/:claveAcceso/emitir-manual')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Emitir manualmente un comprobante (modo manual)',
+    description:
+      'Dispara la emisión de un comprobante previamente parqueado (POR_EMITIR) o en BORRADOR, cuando el modo de emisión SRI es `manual`. Registra la acción en `auditoria`.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Resultado de la emisión (EMITTED, QUEUED_FOR_MANUAL, etc.)',
+  })
+  @ApiResponse({ status: 404, description: 'Comprobante no encontrado' })
+  @ApiResponse({
+    status: 409,
+    description: 'Comprobante en estado no elegible para emisión manual',
+  })
+  async emitirManual(
+    @Param('claveAcceso') claveAcceso: string,
+    @CurrentUser() user: JwtPayload,
+  ): Promise<EmissionOutcome> {
+    this.logger.log(
+      `POST /sri/comprobantes/${claveAcceso}/emitir-manual (usuario=${user.sub})`,
+    );
+    await this.validateClaveAccesoAccess(claveAcceso);
+    return this.emitirComprobanteManual.execute(claveAcceso, {
+      id: Number(user.sub),
+      email: user.email,
+    });
   }
 
   @Get('verificar/:claveAcceso')
