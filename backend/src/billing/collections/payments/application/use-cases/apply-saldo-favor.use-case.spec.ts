@@ -118,8 +118,10 @@ describe('ApplySaldoFavorUseCase', () => {
 
   /**
    * Wire up a tx-recording mock that captures the tx symbol from each
-   * repository write, tracks call order, and returns `rollback` for tests
-   * that simulate a failure inside the tx callback.
+   * repository write and tracks call order. Returns structural check
+   * helpers (`assertSameTx`, `assertOutboxLast`, `assertWritesBeforeFailure`)
+   * for verifying tx identity and write order — the closest unit-level
+   * proxy for the atomicity contract under test.
    */
   function setupComprobanteTxMock(opts: {
     tx: symbol;
