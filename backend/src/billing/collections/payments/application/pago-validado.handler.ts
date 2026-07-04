@@ -1,11 +1,11 @@
-import { Injectable, Logger, Inject } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PaymentRepository } from 'src/billing/collections/payments/domain/repositories/payment.repository';
 import {
   SRIEmissionDispatcherService,
   EmissionOutcome,
 } from './sri-emission-dispatcher.service';
 
-/** Minimal interface for the job service to avoid pg-boss ESM import issues */
+/** Minimal interface for the job service, shared with SRIEmissionDispatcherService */
 export interface JobService {
   send(name: string, data: object): Promise<string>;
 }
@@ -28,10 +28,6 @@ export class PagoValidadoHandler {
   constructor(
     private readonly paymentRepository: PaymentRepository,
     private readonly sriDispatcher: SRIEmissionDispatcherService,
-    // JobService is kept here only for type compat with the OutboxProcessor
-    // registration in PaymentsModule.onModuleInit. The actual job dispatch
-    // happens inside SRIEmissionDispatcherService.
-    @Inject('JobService') private readonly _jobsService: JobService,
   ) {}
 
   async procesarPagoValidado(pagoId: bigint): Promise<void> {

@@ -19,9 +19,6 @@ describe('PagoValidadoHandler (T-006, post-refactor RF-002)', () => {
     handler = new PagoValidadoHandler(
       paymentRepository,
       sriDispatcher,
-      // JobService is no longer used by the handler post-refactor; passed
-      // for constructor compatibility but never invoked in any code path.
-      { send: jest.fn() },
     );
   });
 
