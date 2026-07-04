@@ -9,6 +9,7 @@ import { ValidatePaymentUseCase } from './application/use-cases/validate-payment
 import { AnnulPaymentUseCase } from './application/use-cases/annul-payment.use-case';
 import { ApplySaldoFavorUseCase } from './application/use-cases/apply-saldo-favor.use-case';
 import { PagoValidadoHandler } from './application/pago-validado.handler';
+import { SRIEmissionDispatcherService } from './application/sri-emission-dispatcher.service';
 import { JobsService } from '../../../infrastructure/jobs/jobs.service';
 import { OutboxModule } from 'src/shared/outbox/outbox.module';
 import { OutboxProcessor } from 'src/shared/outbox/application/outbox.processor';
@@ -26,6 +27,7 @@ import { EventosPendientesRepository } from 'src/shared/outbox/domain/repositori
     AnnulPaymentUseCase,
     ApplySaldoFavorUseCase,
     PagoValidadoHandler,
+    SRIEmissionDispatcherService,
     { provide: 'JobService', useExisting: JobsService },
   ],
   exports: [PaymentRepository, PaymentsService, EventosPendientesRepository],
