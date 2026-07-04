@@ -283,9 +283,15 @@ export class CreatePaymentUseCase {
     const nuevoSaldo = new Decimal(cuota.saldoPendiente).minus(montoAbonado);
     const estaPagada = nuevoSaldo.equals(0);
 
-    await this.paymentRepository.updateCuotaConvenio(
-      { cuotaConvenioId: BigInt(cuotaConvenioId) },
-      {
+    // Use updateMany with optimistic lock to prevent concurrency issues:
+    // if another payment already modified this cuota, the saldoPendiente
+    // won't match and the update will affect 0 rows.
+    const result = await (tx as any).cuotaConvenio.updateMany({
+      where: {
+        cuotaConvenioId: BigInt(cuotaConvenioId),
+        saldoPendiente: cuota.saldoPendiente,
+      },
+      data: {
         montoPagado: nuevoMontoPagado.toNumber(),
         saldoPendiente: nuevoSaldo.toNumber(),
         estado: estaPagada
@@ -294,8 +300,13 @@ export class CreatePaymentUseCase {
         pagoCompleto: estaPagada,
         fechaPago: estaPagada ? new Date() : null,
       },
-      tx,
-    );
+    });
+
+    if (result.count === 0) {
+      throw new Error(
+        `Concurrency conflict on cuota ${cuotaConvenioId}: state changed before write`,
+      );
+    }
 
     // T-G2c: Emit cuota.pagada when the cuota becomes fully paid
     if (estaPagada && pagoId) {

@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { Decimal } from 'decimal.js';
 import { PaymentRepository } from 'src/billing/collections/payments/domain/repositories/payment.repository';
 import {
   SRIEmissionDispatcherService,
@@ -68,8 +69,8 @@ export class PagoValidadoHandler {
       });
 
       const totalAbonado = allDetalles.reduce(
-        (sum, d) => sum + (Number(d.montoAbonado) || 0),
-        0,
+        (sum, d) => sum.plus(d.montoAbonado ?? 0),
+        new Decimal(0),
       );
 
       await this.processComprobante(comprobanteId, totalAbonado);
@@ -78,7 +79,7 @@ export class PagoValidadoHandler {
 
   private async processComprobante(
     comprobanteId: bigint,
-    totalAbonado: number,
+    totalAbonado: Decimal,
   ): Promise<void> {
     const comprobante = await this.paymentRepository.findUniqueComprobante({
       id: comprobanteId,
@@ -89,14 +90,14 @@ export class PagoValidadoHandler {
       return;
     }
 
-    const importeTotal = Number(comprobante.importeTotal) || 0;
+    const importeTotal = new Decimal(comprobante.importeTotal ?? 0);
 
     // RB-001: Verificar si el pago está completo. This check stays in the
     // handler because the context (totalAbonado) is handler-local — the
     // dispatcher is comprobante-centric and does not see totalAbonado.
-    if (totalAbonado < importeTotal) {
+    if (totalAbonado.lessThan(importeTotal)) {
       this.logger.log(
-        `Comprobante ${comprobanteId}: totalAbonado=${totalAbonado} < importeTotal=${importeTotal}, pendiente`,
+        `Comprobante ${comprobanteId}: totalAbonado=${totalAbonado.toString()} < importeTotal=${importeTotal.toString()}, pendiente`,
       );
       return;
     }

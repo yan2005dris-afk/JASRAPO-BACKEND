@@ -42,8 +42,6 @@ export class ApplySaldoFavorUseCase {
 
     const pagoId = await this.paymentRepository.executeTransaction(
       async (tx) => {
-        let comprobanteImporteTotal: Decimal | null = null;
-
         const saldo = await this.paymentRepository.findUniqueSaldoFavor(
           { saldoFavorId: BigInt(dto.saldoFavorId) },
           {
@@ -99,9 +97,6 @@ export class ApplySaldoFavorUseCase {
             throw new BadRequestException(
               `El monto a aplicar excede el valor del comprobante ${dto.comprobanteId}`,
             );
-          }
-          if (comprobante.importeTotal) {
-            comprobanteImporteTotal = new Decimal(comprobante.importeTotal);
           }
         }
 
@@ -199,24 +194,6 @@ export class ApplySaldoFavorUseCase {
           },
           tx,
         );
-
-        // T-G1: Emit pago.validado when saldo fully covers the comprobante
-        if (
-          dto.comprobanteId &&
-          comprobanteImporteTotal &&
-          montoAplicar.greaterThanOrEqualTo(comprobanteImporteTotal)
-        ) {
-          await this.eventosPendientesRepository.createPending(
-            'pago.validado',
-            {
-              pagoId: pago.pagoId.toString(),
-              estadoPago: 'REGISTRADO',
-            },
-            'PAGO',
-            pago.pagoId.toString(),
-            tx,
-          );
-        }
 
         const saldoRestante = montoDisponible.minus(montoAplicar);
         await this.paymentRepository.updateSaldoFavor(

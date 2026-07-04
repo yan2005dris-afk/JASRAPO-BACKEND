@@ -100,7 +100,11 @@ describe('CreatePaymentUseCase', () => {
   // ─── T-G2c: cuota.pagada outbox emission ─────────────────────────────
 
   it('should emit cuota.pagada when a cuota becomes fully paid', async () => {
-    const tx = Symbol('tx') as any;
+    const tx = {
+      cuotaConvenio: {
+        updateMany: jest.fn().mockResolvedValue({ count: 1 }),
+      },
+    } as any;
     repository.executeTransaction.mockImplementation(async (cb: any) => {
       repository.findUniqueCliente.mockResolvedValue({ clienteId: 1n });
       repository.createPago.mockResolvedValue({ pagoId: 10n });
@@ -113,7 +117,6 @@ describe('CreatePaymentUseCase', () => {
         estado: 'PENDIENTE',
         deletedAt: null,
       });
-      repository.updateCuotaConvenio.mockResolvedValue(undefined);
       return cb(tx);
     });
     repository.findUniquePago.mockResolvedValue({ pagoId: 10n });

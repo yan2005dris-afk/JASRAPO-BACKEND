@@ -102,7 +102,7 @@ describe('ApplySaldoFavorUseCase', () => {
 
   // ─── T-G1: pago.validado outbox emission ──────────────────────────────
 
-  it('should emit pago.validado when saldo covers comprobante importeTotal', async () => {
+  it('should emit pago.validado when saldo is applied to a comprobante (unconditional)', async () => {
     const tx = Symbol('tx') as any;
     repository.executeTransaction.mockImplementation(async (cb: any) => {
       repository.findUniqueSaldoFavor.mockResolvedValue({
@@ -133,14 +133,19 @@ describe('ApplySaldoFavorUseCase', () => {
 
     expect(eventosRepository.createPending).toHaveBeenCalledWith(
       'pago.validado',
-      { pagoId: '2', estadoPago: 'REGISTRADO' },
+      {
+        pagoId: '2',
+        estadoPago: 'REGISTRADO',
+        origen: 'SALDO_FAVOR',
+        creadoPor: 'SYSTEM',
+      },
       'PAGO',
       '2',
       tx,
     );
   });
 
-  it('should NOT emit pago.validado when saldo does NOT cover importeTotal', async () => {
+  it('should emit pago.validado even when saldo does not fully cover importeTotal', async () => {
     const tx = Symbol('tx') as any;
     repository.executeTransaction.mockImplementation(async (cb: any) => {
       repository.findUniqueSaldoFavor.mockResolvedValue({
@@ -169,7 +174,18 @@ describe('ApplySaldoFavorUseCase', () => {
       formaPagoId: 1,
     });
 
-    expect(eventosRepository.createPending).not.toHaveBeenCalled();
+    expect(eventosRepository.createPending).toHaveBeenCalledWith(
+      'pago.validado',
+      {
+        pagoId: '3',
+        estadoPago: 'REGISTRADO',
+        origen: 'SALDO_FAVOR',
+        creadoPor: 'SYSTEM',
+      },
+      'PAGO',
+      '3',
+      tx,
+    );
   });
 
   it('should NOT emit pago.validado when applied to cuotaConvenioId (no comprobanteId)', async () => {

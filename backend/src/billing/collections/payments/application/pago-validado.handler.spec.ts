@@ -16,10 +16,7 @@ describe('PagoValidadoHandler (T-006, post-refactor RF-002)', () => {
       tryEmit: jest.fn(),
     } as unknown as jest.Mocked<SRIEmissionDispatcherService>;
 
-    handler = new PagoValidadoHandler(
-      paymentRepository,
-      sriDispatcher,
-    );
+    handler = new PagoValidadoHandler(paymentRepository, sriDispatcher);
   });
 
   function createDetallePago(overrides = {}) {
@@ -177,6 +174,15 @@ describe('PagoValidadoHandler (T-006, post-refactor RF-002)', () => {
   it('RF-003 — should NOT delegate when cumulative sum across pagos is below total', async () => {
     paymentRepository.findManyDetallePago.mockImplementation(
       async (params: any) => {
+        if (params?.where?.pagoId === BigInt(2)) {
+          return [
+            createDetallePago({
+              pagoId: BigInt(2),
+              comprobanteId: BigInt(42),
+              montoAbonado: 40,
+            }),
+          ];
+        }
         if (params?.where?.comprobanteId === BigInt(42)) {
           // pago1=$30 + pago2=$40 = $70 < $100 → still pending
           return [
