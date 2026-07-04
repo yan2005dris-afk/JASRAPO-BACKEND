@@ -4,7 +4,6 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Decimal } from 'decimal.js';
-import type { Prisma } from 'src/generated/prisma/client';
 import {
   EstadoCuotaConvenio,
   EstadoPago,
@@ -12,11 +11,15 @@ import {
 } from 'src/generated/prisma/enums';
 import { ApplySaldoFavorDto } from '../../interfaces/dto/create-payment.dto';
 import { PaymentRepository } from '../../domain/repositories/payment.repository';
+import { EventosPendientesRepository } from 'src/shared/outbox/domain/repositories/eventos-pendientes.repository';
 import { safePaymentWithDetailSelect } from '../../domain/types/IPayment';
 
 @Injectable()
 export class ApplySaldoFavorUseCase {
-  constructor(private readonly paymentRepository: PaymentRepository) {}
+  constructor(
+    private readonly paymentRepository: PaymentRepository,
+    private readonly eventosPendientesRepository: EventosPendientesRepository,
+  ) {}
 
   async execute(dto: ApplySaldoFavorDto, creadoPor = 'SYSTEM') {
     if (!dto.comprobanteId && !dto.cuotaConvenioId) {
@@ -38,6 +41,8 @@ export class ApplySaldoFavorUseCase {
 
     const pagoId = await this.paymentRepository.executeTransaction(
       async (tx) => {
+        let comprobanteImporteTotal: Decimal | null = null;
+
         const saldo = await this.paymentRepository.findUniqueSaldoFavor(
           { saldoFavorId: BigInt(dto.saldoFavorId) },
           {
@@ -94,7 +99,23 @@ export class ApplySaldoFavorUseCase {
               `El monto a aplicar excede el valor del comprobante ${dto.comprobanteId}`,
             );
           }
+          if (comprobante.importeTotal) {
+            comprobanteImporteTotal = new Decimal(comprobante.importeTotal);
+          }
         }
+
+        const pago = await this.paymentRepository.createPago(
+          {
+            clienteId: BigInt(dto.clienteId),
+            fechaPago: new Date(),
+            montoTotalRecibido: montoAplicar.toNumber(),
+            observaciones: dto.observaciones ?? 'Aplicación de saldo a favor',
+            estadoPago: EstadoPago.REGISTRADO,
+            creadoPor,
+          },
+          { pagoId: true },
+          tx,
+        );
 
         if (dto.cuotaConvenioId) {
           const cuota = await this.paymentRepository.findUniqueCuotaConvenio(
@@ -146,20 +167,21 @@ export class ApplySaldoFavorUseCase {
             },
             tx,
           );
-        }
 
-        const pago = await this.paymentRepository.createPago(
-          {
-            clienteId: BigInt(dto.clienteId),
-            fechaPago: new Date(),
-            montoTotalRecibido: montoAplicar.toNumber(),
-            observaciones: dto.observaciones ?? 'Aplicación de saldo a favor',
-            estadoPago: EstadoPago.REGISTRADO,
-            creadoPor,
-          },
-          { pagoId: true },
-          tx,
-        );
+          // T-G2d: Emit cuota.pagada when the cuota becomes fully paid
+          if (pagada) {
+            await this.eventosPendientesRepository.createPending(
+              'cuota.pagada',
+              {
+                cuotaConvenioId: dto.cuotaConvenioId.toString(),
+                pagoId: pago.pagoId.toString(),
+              },
+              'CUOTA_CONVENIO',
+              dto.cuotaConvenioId.toString(),
+              tx,
+            );
+          }
+        }
 
         await this.paymentRepository.createDetallePago(
           {
@@ -176,6 +198,24 @@ export class ApplySaldoFavorUseCase {
           },
           tx,
         );
+
+        // T-G1: Emit pago.validado when saldo fully covers the comprobante
+        if (
+          dto.comprobanteId &&
+          comprobanteImporteTotal &&
+          montoAplicar.greaterThanOrEqualTo(comprobanteImporteTotal)
+        ) {
+          await this.eventosPendientesRepository.createPending(
+            'pago.validado',
+            {
+              pagoId: pago.pagoId.toString(),
+              estadoPago: 'REGISTRADO',
+            },
+            'PAGO',
+            pago.pagoId.toString(),
+            tx,
+          );
+        }
 
         const saldoRestante = montoDisponible.minus(montoAplicar);
         await this.paymentRepository.updateSaldoFavor(

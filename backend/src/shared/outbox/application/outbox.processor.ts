@@ -68,10 +68,7 @@ export class OutboxProcessor
     }
     this.isProcessing = true;
     try {
-      const pendientes = await this.repository.findPendingByTipo(
-        'pago.validado',
-        BATCH_SIZE,
-      );
+      const pendientes = await this.repository.findAllPending(BATCH_SIZE);
 
       for (const evento of pendientes) {
         await this.dispatchOne(evento);

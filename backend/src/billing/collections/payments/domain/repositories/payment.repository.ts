@@ -127,4 +127,23 @@ export abstract class PaymentRepository {
   abstract executeTransaction<T>(
     callback: (tx: Prisma.TransactionClient) => Promise<T>,
   ): Promise<T>;
+
+  // ─── Prefactura / Cuota queries (for CuotaPagadaHandler) ──────────────
+
+  abstract findPrefacturaDetalleByCuotaConvenioId(
+    cuotaConvenioId: bigint,
+    tx?: Prisma.TransactionClient,
+  ): Promise<any[]>;
+
+  abstract findPrefacturaById(
+    prefacturaId: bigint,
+    select?: any,
+    tx?: Prisma.TransactionClient,
+  ): Promise<any>;
+
+  abstract findManyCuotaConvenio(
+    where: Prisma.CuotaConvenioWhereInput,
+    select?: any,
+    tx?: Prisma.TransactionClient,
+  ): Promise<any[]>;
 }

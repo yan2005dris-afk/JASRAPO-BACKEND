@@ -82,6 +82,15 @@ export class PrismaEventosPendientesRepository implements EventosPendientesRepos
     return rows.map((row) => this.toEntity(row));
   }
 
+  async findAllPending(limit: number): Promise<EventoPendiente[]> {
+    const rows = await this.prisma.eventosPendientes.findMany({
+      where: { estado: EstadoEvento.PENDIENTE },
+      orderBy: { createdAt: 'asc' },
+      take: limit,
+    });
+    return rows.map((row) => this.toEntity(row));
+  }
+
   async markProcessed(id: bigint): Promise<void> {
     await this.prisma.eventosPendientes.update({
       where: { id },

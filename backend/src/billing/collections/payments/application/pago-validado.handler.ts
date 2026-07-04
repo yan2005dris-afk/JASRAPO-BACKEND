@@ -1,8 +1,9 @@
 import { Injectable, Logger, Inject } from '@nestjs/common';
 import { PaymentRepository } from 'src/billing/collections/payments/domain/repositories/payment.repository';
-import { ComprobanteRepository } from 'src/sri/emision/domain/repositories/comprobante.repository';
-import { ComprobanteEstado } from 'src/sri/emision/domain/constants/comprobante-estado.enum';
-import { SRI_EMISION_JOB } from 'src/sri/emision/infrastructure/queue/processors/sri-emision.constants';
+import {
+  SRIEmissionDispatcherService,
+  EmissionOutcome,
+} from './sri-emission-dispatcher.service';
 
 /** Minimal interface for the job service to avoid pg-boss ESM import issues */
 export interface JobService {
@@ -15,6 +16,10 @@ export interface JobService {
  * guarantees the comprobante emission is durable: the outbox row is written
  * in the same transaction as `updateManyPagos`, so we never lose the
  * "emit comprobante when pago totals hit the bill" rule on a crash.
+ *
+ * RF-002: The comprobante-emission sequence (BORRADOR check + optimistic
+ * lock + SRI job enqueue) is delegated to SRIEmissionDispatcherService so
+ * future triggers (e.g. `cuota.pagada` in PR 2b) share the same pipeline.
  */
 @Injectable()
 export class PagoValidadoHandler {
@@ -22,8 +27,11 @@ export class PagoValidadoHandler {
 
   constructor(
     private readonly paymentRepository: PaymentRepository,
-    private readonly comprobanteRepository: ComprobanteRepository,
-    @Inject('JobService') private readonly jobsService: JobService,
+    private readonly sriDispatcher: SRIEmissionDispatcherService,
+    // JobService is kept here only for type compat with the OutboxProcessor
+    // registration in PaymentsModule.onModuleInit. The actual job dispatch
+    // happens inside SRIEmissionDispatcherService.
+    @Inject('JobService') private readonly _jobsService: JobService,
   ) {}
 
   async procesarPagoValidado(pagoId: bigint): Promise<void> {
@@ -85,17 +93,11 @@ export class PagoValidadoHandler {
       return;
     }
 
-    // RB-002: No emitir si comprobante ya fue emitido
-    if (comprobante.estado !== ComprobanteEstado.BORRADOR) {
-      this.logger.log(
-        `Comprobante ${comprobanteId} no está en BORRADOR (estado=${comprobante.estado}), saltando emisión`,
-      );
-      return;
-    }
-
     const importeTotal = Number(comprobante.importeTotal) || 0;
 
-    // RB-001: Verificar si el pago está completo
+    // RB-001: Verificar si el pago está completo. This check stays in the
+    // handler because the context (totalAbonado) is handler-local — the
+    // dispatcher is comprobante-centric and does not see totalAbonado.
     if (totalAbonado < importeTotal) {
       this.logger.log(
         `Comprobante ${comprobanteId}: totalAbonado=${totalAbonado} < importeTotal=${importeTotal}, pendiente`,
@@ -103,28 +105,15 @@ export class PagoValidadoHandler {
       return;
     }
 
-    // Optimistic lock: solo actualizar si sigue en BORRADOR
-    const locked = await this.comprobanteRepository.updateEstadoWithLock(
-      comprobanteId,
-      ComprobanteEstado.BORRADOR,
-      ComprobanteEstado.ENVIANDO,
-    );
-
-    if (!locked) {
-      this.logger.warn(
-        `Comprobante ${comprobanteId}: optimistic lock falló, otro proceso ganó la carrera`,
-      );
-      return;
-    }
-
-    // Encolar job de emisión SRI
-    await this.jobsService.send(SRI_EMISION_JOB, {
-      tipo: 'FACTURA_DESDE_PREFACTURA',
-      comprobanteId,
-    });
+    // Delegate BORRADOR check + optimistic lock + SRI enqueue to the
+    // dispatcher. The outcome is logged for observability but no further
+    // action is required — every non-EMITTED outcome is a legitimate
+    // no-op (race lost, already emitted, etc.).
+    const outcome: EmissionOutcome =
+      await this.sriDispatcher.tryEmit(comprobanteId);
 
     this.logger.log(
-      `Comprobante ${comprobanteId}: pagado completamente, job sri-emision encolado`,
+      `Comprobante ${comprobanteId}: dispatch outcome=${outcome}`,
     );
   }
 }
