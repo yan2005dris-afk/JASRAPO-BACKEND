@@ -56,4 +56,17 @@ describe('FindOneReadingUseCase', () => {
 
     await expect(useCase.execute(BigInt(1))).rejects.toThrow(NotFoundException);
   });
+
+  it('should return an active reading when repository resolves deletedAt as null (regression for soft-delete select)', async () => {
+    const activeReading = {
+      ...mockReading,
+      deletedAt: null,
+    };
+    mockReadingRepository.findUnique.mockResolvedValue(activeReading as any);
+
+    const result = await useCase.execute(BigInt(1));
+
+    expect(result).toBe(activeReading);
+    expect(result.deletedAt).toBeNull();
+  });
 });
