@@ -12,17 +12,6 @@ export class CreateMeterUseCase {
   constructor(private readonly meterRepository: MeterRepository) {}
 
   async execute(createDto: CreateMeterDto): Promise<MeterEntity> {
-    const existingMeter = await this.meterRepository.findUnique({
-      serie: createDto.serie,
-    });
-
-    if (existingMeter) {
-      this.logger.warn(
-        `Duplicate meter creation attempt for serial ${createDto.serie}`,
-      );
-      throw this.duplicateSerialException(createDto.serie);
-    }
-
     try {
       return await this.meterRepository.create({
         marca: createDto.marca,
