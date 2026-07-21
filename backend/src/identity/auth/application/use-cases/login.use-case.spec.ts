@@ -9,9 +9,9 @@ import {
   UnauthorizedException,
   InternalServerErrorException,
 } from '@nestjs/common';
-import * as bcrypt from 'bcryptjs';
+import * as bcrypt from 'bcrypt';
 
-jest.mock('bcryptjs');
+jest.mock('bcrypt');
 jest.mock('crypto', () => ({
   ...jest.requireActual('crypto'),
   randomUUID: () => 'test-uuid-1234-5678',
