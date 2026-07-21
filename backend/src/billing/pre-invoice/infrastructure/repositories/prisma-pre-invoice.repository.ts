@@ -47,6 +47,7 @@ export class PrismaPreInvoiceRepository implements PreInvoiceRepository {
       aprobadaPor?: string;
       motivoRechazo?: string;
       fechaAprobacion?: Date;
+      comprobanteId?: bigint;
     },
   ): Promise<boolean> {
     const result = await this.prisma.prefacturas.updateMany({

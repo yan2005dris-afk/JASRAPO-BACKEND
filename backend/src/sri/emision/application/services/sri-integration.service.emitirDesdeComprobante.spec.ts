@@ -26,6 +26,46 @@ describe('SriIntegrationService — emitirDesdeComprobante (T-008)', () => {
     secuencial: null,
   };
 
+  // Prisma returns camelCase (e.g. emisorId). The service must adapt
+  // it to the domain ComprobanteRecord (snake_case) before passing it
+  // to EmitirFacturaUseCase.
+  const mockPrismaComprobante = {
+    id: BigInt(42),
+    uuid: 'uuid-42',
+    emisorId: 7,
+    puntoEmisionId: 8,
+    tipoComprobante: '01',
+    ambiente: '1',
+    tipoEmision: '1',
+    secuencial: '000000001',
+    claveAcceso: 'CLAVE-42',
+    fechaEmision: new Date('2026-07-01T00:00:00Z'),
+    estado: 'BORRADOR',
+    estadoSri: null,
+    fechaAutorizacion: null,
+    numeroAutorizacion: null,
+    totalSinImpuestos: new Decimal('100'),
+    totalDescuento: new Decimal('0'),
+    importeTotal: new Decimal('112'),
+    propina: null,
+    moneda: 'DOLAR',
+    receptorTipoIdentificacion: '05',
+    receptorIdentificacion: '1234567890',
+    receptorRazonSocial: 'Juan Pérez',
+    receptorDireccion: 'Av. Test 123',
+    receptorEmail: 'juan@test.com',
+    receptorTelefono: '0999999999',
+    docModificadoTipo: null,
+    docModificadoNumero: null,
+    docModificadoFecha: null,
+    motivo: null,
+    valorModificacion: null,
+    rise: null,
+    periodoFiscal: null,
+    idReferenciaExterna: null,
+    tipoSistemaExterno: null,
+  };
+
   const mockPrefactura = {
     prefacturaId: BigInt(10),
     comprobanteId: BigInt(42),
@@ -140,5 +180,39 @@ describe('SriIntegrationService — emitirDesdeComprobante (T-008)', () => {
     );
     // Should not call emitirFactura without comprobanteExistente
     expect(emitirFacturaUseCase.emitirFactura).not.toHaveBeenCalled();
+  });
+
+  // ─── Regression: Prisma camelCase → domain ComprobanteRecord snake_case ───
+  it('should adapt Prisma comprobante (camelCase) to ComprobanteRecord (snake_case) before calling emitirFactura', async () => {
+    prisma.prefacturas.findFirst.mockResolvedValue(mockPrefactura);
+    prisma.comprobantes.findUnique.mockResolvedValue(mockPrismaComprobante);
+    emitirFacturaUseCase.emitirFactura.mockResolvedValue({
+      success: true,
+    } as any);
+
+    await service.emitirDesdeComprobante(BigInt(42));
+
+    expect(emitirFacturaUseCase.emitirFactura).toHaveBeenCalledTimes(1);
+    const [, opts] = emitirFacturaUseCase.emitirFactura.mock.calls[0];
+    const record = opts!.comprobanteExistente as Record<string, unknown>;
+
+    // id and required snake_case fields must be populated from Prisma camelCase
+    expect(record.id).toBe(BigInt(42));
+    expect(record.uuid).toBe('uuid-42');
+    expect(record.emisor_id).toBe(7);
+    expect(record.punto_emision_id).toBe(8);
+    expect(record.tipo_comprobante).toBe('01');
+    expect(record.tipo_emision).toBe('1');
+    expect(record.secuencial).toBe('000000001');
+    expect(record.clave_acceso).toBe('CLAVE-42');
+    expect(record.ambiente).toBe('1');
+    expect(record.estado).toBe('BORRADOR');
+    expect(record.moneda).toBe('DOLAR');
+    expect(record.receptor_identificacion).toBe('1234567890');
+
+    // Decimal fields must be coerced to number, dates to ISO string
+    expect(record.total_sin_impuestos).toBe(100);
+    expect(record.importe_total).toBe(112);
+    expect(record.fecha_emision).toBe('2026-07-01T00:00:00.000Z');
   });
 });
