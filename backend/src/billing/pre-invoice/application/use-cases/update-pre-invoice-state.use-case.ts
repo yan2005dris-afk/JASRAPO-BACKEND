@@ -69,8 +69,7 @@ export class UpdatePreInvoiceStateUseCase {
         clave_acceso: '',
         fecha_emision: new Date().toISOString().split('T')[0],
         importe_total: Number(preInvoice.totalPagar) || 0,
-        receptor_identificacion:
-          preInvoice.clienteIdentificacion ?? undefined,
+        receptor_identificacion: preInvoice.clienteIdentificacion ?? undefined,
         receptor_razon_social: preInvoice.clienteNombre ?? undefined,
         receptor_direccion: preInvoice.clienteDireccion ?? undefined,
         receptor_email: preInvoice.clienteEmail ?? undefined,
