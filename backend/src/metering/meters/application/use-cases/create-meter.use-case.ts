@@ -1,4 +1,5 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, Logger } from '@nestjs/common';
+import { Prisma } from 'src/generated/prisma/client';
 import { MeterRepository } from '../../domain/repositories/meter.repository';
 import { CreateMeterDto } from '../../interfaces/dto/create-meter.dto';
 import { MeterEntity } from '../../domain/entities/meter.entity';
@@ -6,14 +7,52 @@ import { EstadoMedidor } from 'src/shared/enums';
 
 @Injectable()
 export class CreateMeterUseCase {
+  private readonly logger = new Logger(CreateMeterUseCase.name);
+
   constructor(private readonly meterRepository: MeterRepository) {}
 
   async execute(createDto: CreateMeterDto): Promise<MeterEntity> {
-    return this.meterRepository.create({
-      marca: createDto.marca,
-      modelo: createDto.modelo,
+    const existingMeter = await this.meterRepository.findUnique({
       serie: createDto.serie,
-      estado: EstadoMedidor.BODEGA,
     });
+
+    if (existingMeter) {
+      this.logger.warn(
+        `Duplicate meter creation attempt for serial ${createDto.serie}`,
+      );
+      throw this.duplicateSerialException(createDto.serie);
+    }
+
+    try {
+      return await this.meterRepository.create({
+        marca: createDto.marca,
+        modelo: createDto.modelo,
+        serie: createDto.serie,
+        estado: EstadoMedidor.BODEGA,
+      });
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        this.logger.warn(
+          `Duplicate meter creation attempt for serial ${createDto.serie}`,
+        );
+        throw this.duplicateSerialException(createDto.serie);
+      }
+
+      this.logger.error(
+        `Failed to create meter with serial ${createDto.serie}`,
+        error instanceof Error ? error.stack : String(error),
+        CreateMeterUseCase.name,
+      );
+      throw error;
+    }
+  }
+
+  private duplicateSerialException(serie: string): ConflictException {
+    return new ConflictException(
+      `Ya existe un medidor registrado con el número de serie "${serie}".`,
+    );
   }
 }

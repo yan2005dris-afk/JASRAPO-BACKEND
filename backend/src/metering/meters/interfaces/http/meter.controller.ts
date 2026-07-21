@@ -72,6 +72,10 @@ export class MeterController {
   @ApiResponse({ status: 400, description: 'Datos inválidos' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({ status: 403, description: 'Sin permiso: meters:create' })
+  @ApiResponse({
+    status: 409,
+    description: 'Ya existe un medidor registrado con ese número de serie',
+  })
   @RequiredPermission('meters', 'create')
   @Post()
   async create(@Body() createDto: CreateMeterDto): Promise<MeterResponseDto> {
