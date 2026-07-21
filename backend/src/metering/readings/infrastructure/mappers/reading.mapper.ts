@@ -23,7 +23,7 @@ export class ReadingMapper {
       tieneAnomalia: !!raw.descripcionAnomalia,
       createdAt: raw.createdAt,
       updatedAt: raw.updatedAt,
-      deletedAt: raw.deletedAt,
+      deletedAt: raw.deletedAt ?? null,
       contrato: activeContrato
         ? {
             contratoId: activeContrato.contratoId,

@@ -1,5 +1,5 @@
 import { PrismaComprobanteRepository } from './prisma-comprobante.repository';
-import { PrismaService } from '../../../../infrastructure/database/prisma.service';
+import type { PrismaService } from '../../../../infrastructure/database/prisma.service';
 
 describe('PrismaComprobanteRepository — delete methods (T-002)', () => {
   let repository: PrismaComprobanteRepository;
@@ -15,7 +15,7 @@ describe('PrismaComprobanteRepository — delete methods (T-002)', () => {
       detallesAdicionales: { deleteMany: jest.fn() },
     } as any;
 
-    repository = new PrismaComprobanteRepository(mockPrisma as any);
+    repository = new PrismaComprobanteRepository(mockPrisma);
   });
 
   describe('deleteDetallesByComprobanteId', () => {
@@ -30,8 +30,14 @@ describe('PrismaComprobanteRepository — delete methods (T-002)', () => {
     });
 
     it('should use the transaction client when provided', async () => {
-      const tx = { comprobanteDetalles: { deleteMany: jest.fn().mockResolvedValue({ count: 0 }) } };
-      (tx.comprobanteDetalles.deleteMany as jest.Mock).mockResolvedValue({ count: 0 });
+      const tx = {
+        comprobanteDetalles: {
+          deleteMany: jest.fn().mockResolvedValue({ count: 0 }),
+        },
+      };
+      tx.comprobanteDetalles.deleteMany.mockResolvedValue({
+        count: 0,
+      });
 
       await repository.deleteDetallesByComprobanteId(BigInt(1), tx as any);
 
@@ -66,7 +72,11 @@ describe('PrismaComprobanteRepository — delete methods (T-002)', () => {
     });
 
     it('should use the transaction client when provided', async () => {
-      const tx = { comprobanteTotales: { deleteMany: jest.fn().mockResolvedValue({ count: 0 }) } };
+      const tx = {
+        comprobanteTotales: {
+          deleteMany: jest.fn().mockResolvedValue({ count: 0 }),
+        },
+      };
 
       await repository.deleteTotalesByComprobanteId(BigInt(1), tx as any);
 

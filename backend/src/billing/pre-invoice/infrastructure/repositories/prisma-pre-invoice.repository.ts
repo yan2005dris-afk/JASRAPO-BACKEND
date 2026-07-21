@@ -47,6 +47,7 @@ export class PrismaPreInvoiceRepository implements PreInvoiceRepository {
       aprobadaPor?: string;
       motivoRechazo?: string;
       fechaAprobacion?: Date;
+      comprobanteId?: bigint;
     },
   ): Promise<boolean> {
     const result = await this.prisma.prefacturas.updateMany({
@@ -61,9 +62,7 @@ export class PrismaPreInvoiceRepository implements PreInvoiceRepository {
         ...(data?.fechaAprobacion
           ? { fechaAprobacion: data.fechaAprobacion }
           : {}),
-        ...(data?.comprobanteId
-          ? { comprobanteId: data.comprobanteId }
-          : {}),
+        ...(data?.comprobanteId ? { comprobanteId: data.comprobanteId } : {}),
       },
     });
     return result.count > 0;

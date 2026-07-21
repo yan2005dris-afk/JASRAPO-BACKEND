@@ -3,12 +3,13 @@ jest.mock('../../../application/services/sri.service', () => ({
   SriService: jest.fn(),
 }));
 
-import { SriEmisionProcessor, SRIJobWorker } from './sri-emision.processor';
-import { EmitirFacturaUseCase } from '../../../application/use-cases/emitir-factura.use-case';
-import { EmitirNotaCreditoUseCase } from '../../../application/use-cases/emitir-nota-credito.use-case';
-import { EmitirNotaDebitoUseCase } from '../../../application/use-cases/emitir-nota-debito.use-case';
-import { EmitirRetencionUseCase } from '../../../application/use-cases/emitir-retencion.use-case';
-import { SriIntegrationService } from '../../../application/services/sri-integration.service';
+import type { SRIJobWorker } from './sri-emision.processor';
+import { SriEmisionProcessor } from './sri-emision.processor';
+import type { EmitirFacturaUseCase } from '../../../application/use-cases/emitir-factura.use-case';
+import type { EmitirNotaCreditoUseCase } from '../../../application/use-cases/emitir-nota-credito.use-case';
+import type { EmitirNotaDebitoUseCase } from '../../../application/use-cases/emitir-nota-debito.use-case';
+import type { EmitirRetencionUseCase } from '../../../application/use-cases/emitir-retencion.use-case';
+import type { SriIntegrationService } from '../../../application/services/sri-integration.service';
 
 describe('SriEmisionProcessor (T-007)', () => {
   let processor: SriEmisionProcessor;
@@ -22,10 +23,12 @@ describe('SriEmisionProcessor (T-007)', () => {
   beforeEach(() => {
     jobsService = {
       work: jest.fn().mockResolvedValue(undefined),
-    } as any;
+    };
 
     emitirFacturaUseCase = {
-      emitirFactura: jest.fn().mockResolvedValue({ success: true, claveAcceso: 'X' }),
+      emitirFactura: jest
+        .fn()
+        .mockResolvedValue({ success: true, claveAcceso: 'X' }),
     } as any;
 
     emitirNotaCreditoUseCase = {
@@ -65,7 +68,9 @@ describe('SriEmisionProcessor (T-007)', () => {
 
     await processor.processEmision(job);
 
-    expect(sriIntegrationService.emitirDesdeComprobante).toHaveBeenCalledTimes(1);
+    expect(sriIntegrationService.emitirDesdeComprobante).toHaveBeenCalledTimes(
+      1,
+    );
     expect(sriIntegrationService.emitirDesdeComprobante).toHaveBeenCalledWith(
       BigInt('42'),
     );
@@ -88,7 +93,9 @@ describe('SriEmisionProcessor (T-007)', () => {
     await processor.processEmision(job);
 
     expect(emitirFacturaUseCase.emitirFactura).toHaveBeenCalledTimes(1);
-    expect(emitirFacturaUseCase.emitirFactura).toHaveBeenCalledWith({ foo: 'bar' });
+    expect(emitirFacturaUseCase.emitirFactura).toHaveBeenCalledWith({
+      foo: 'bar',
+    });
     // Should NOT call the FACTURA_DESDE_PREFACTURA path
     expect(sriIntegrationService.emitirDesdeComprobante).not.toHaveBeenCalled();
   });

@@ -7,4 +7,5 @@ export const ComprobanteEstado = {
   DEVUELTA: 'DEVUELTA',
 } as const;
 
-export type ComprobanteEstado = (typeof ComprobanteEstado)[keyof typeof ComprobanteEstado];
+export type ComprobanteEstado =
+  (typeof ComprobanteEstado)[keyof typeof ComprobanteEstado];

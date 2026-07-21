@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { EmitirFacturaUseCase } from './emitir-factura.use-case';
 import { ClaveAccesoService } from '../../infrastructure/xml/clave-acceso.service';
@@ -10,8 +11,8 @@ import { EmisorRepository } from '../../../emisores/domain/repositories/emisor.r
 import { SecuencialRepository } from '../../domain/repositories/secuencial.repository';
 import { XmlStorageService } from '../../infrastructure/storage/xml-storage.service';
 import { SriBaseService } from '../../infrastructure/xml/sri-base.service';
-import { SriOperationResult } from '../../domain/interfaces';
-import { CreateFacturaDto } from '../../interfaces/dto';
+import type { SriOperationResult } from '../../domain/interfaces';
+import type { CreateFacturaDto } from '../../interfaces/dto';
 import { ComprobanteEstado } from '../../domain/constants/comprobante-estado.enum';
 
 describe('EmitirFacturaUseCase — persistirFactura with comprobanteExistente (T-003)', () => {
@@ -60,7 +61,13 @@ describe('EmitirFacturaUseCase — persistirFactura with comprobanteExistente (T
         precioUnitario: 100,
         descuento: 0,
         impuestos: [
-          { codigo: '2', codigoPorcentaje: '2', tarifa: 12, baseImponible: 100, valor: 12 },
+          {
+            codigo: '2',
+            codigoPorcentaje: '2',
+            tarifa: 12,
+            baseImponible: 100,
+            valor: 12,
+          },
         ],
       },
     ],
@@ -81,7 +88,9 @@ describe('EmitirFacturaUseCase — persistirFactura with comprobanteExistente (T
       deleteDetallesByComprobanteId: jest.fn().mockResolvedValue(undefined),
       deletePagosByComprobanteId: jest.fn().mockResolvedValue(undefined),
       deleteTotalesByComprobanteId: jest.fn().mockResolvedValue(undefined),
-      deleteInfoAdicionalByComprobanteId: jest.fn().mockResolvedValue(undefined),
+      deleteInfoAdicionalByComprobanteId: jest
+        .fn()
+        .mockResolvedValue(undefined),
       executeTransaction: jest.fn().mockImplementation((cb) => cb({})),
       findByClaveAcceso: jest.fn(),
       findConDetalles: jest.fn(),
@@ -105,7 +114,7 @@ describe('EmitirFacturaUseCase — persistirFactura with comprobanteExistente (T
         numeroAutorizacion: '1234567890',
         xmlAutorizado: '<autorized>',
         mensajes: [],
-      } as SriOperationResult),
+      }),
     } as any;
 
     const mockEmisorRepository = {
@@ -127,21 +136,52 @@ describe('EmitirFacturaUseCase — persistirFactura with comprobanteExistente (T
     module = await Test.createTestingModule({
       providers: [
         EmitirFacturaUseCase,
-        { provide: ClaveAccesoService, useValue: { generate: jest.fn().mockReturnValue('1234567890123456789012345678901234567890123456789') } },
-        { provide: XmlBuilderService, useValue: { buildFactura: jest.fn().mockReturnValue('<xml>') } },
-        { provide: XmlSignerService, useValue: { signXmlForEmisor: jest.fn().mockResolvedValue('<signed>'), verifySignature: jest.fn().mockResolvedValue(true) } },
+        {
+          provide: ClaveAccesoService,
+          useValue: {
+            generate: jest
+              .fn()
+              .mockReturnValue(
+                '1234567890123456789012345678901234567890123456789',
+              ),
+          },
+        },
+        {
+          provide: XmlBuilderService,
+          useValue: { buildFactura: jest.fn().mockReturnValue('<xml>') },
+        },
+        {
+          provide: XmlSignerService,
+          useValue: {
+            signXmlForEmisor: jest.fn().mockResolvedValue('<signed>'),
+            verifySignature: jest.fn().mockResolvedValue(true),
+          },
+        },
         { provide: SriSoapClient, useValue: sriSoapClient },
         { provide: ComprobanteRepository, useValue: comprobanteRepository },
         { provide: EmisorRepository, useValue: mockEmisorRepository },
         { provide: SecuencialRepository, useValue: mockSecuencialRepository },
-        { provide: XmlStorageService, useValue: { saveAllXmls: jest.fn().mockResolvedValue({ firmadoKey: 'firmado.xml', autorizadoKey: 'autorizado.xml' }) } },
-        { provide: SriBaseService, useValue: {
-          validarIdentificacion: jest.fn(),
-          validarTipoIdentificacionCatalogo: jest.fn().mockResolvedValue(true),
-          validarImpuestosDetalles: jest.fn().mockResolvedValue(true),
-          validarFormasPagoCatalogo: jest.fn().mockResolvedValue(true),
-          getDefaultAmbiente: jest.fn().mockReturnValue('1'),
-        } },
+        {
+          provide: XmlStorageService,
+          useValue: {
+            saveAllXmls: jest.fn().mockResolvedValue({
+              firmadoKey: 'firmado.xml',
+              autorizadoKey: 'autorizado.xml',
+            }),
+          },
+        },
+        {
+          provide: SriBaseService,
+          useValue: {
+            validarIdentificacion: jest.fn(),
+            validarTipoIdentificacionCatalogo: jest
+              .fn()
+              .mockResolvedValue(true),
+            validarImpuestosDetalles: jest.fn().mockResolvedValue(true),
+            validarFormasPagoCatalogo: jest.fn().mockResolvedValue(true),
+            getDefaultAmbiente: jest.fn().mockReturnValue('1'),
+          },
+        },
         { provide: EventEmitter2, useValue: { emit: jest.fn() } },
       ],
     }).compile();
@@ -152,7 +192,10 @@ describe('EmitirFacturaUseCase — persistirFactura with comprobanteExistente (T
   describe('with comprobanteExistente', () => {
     it('should update the existing comprobante instead of creating a new one', async () => {
       const result = await useCase.emitirFactura(mockDto, {
-        comprobanteExistente: { ...mockComprobanteRecord, id: BigInt(42) } as any,
+        comprobanteExistente: {
+          ...mockComprobanteRecord,
+          id: BigInt(42),
+        },
       });
 
       // Should call update at least once — FASE 2.5 for the existing comprobante (id=42)
@@ -167,26 +210,25 @@ describe('EmitirFacturaUseCase — persistirFactura with comprobanteExistente (T
 
     it('should delete and recreate children when comprobanteExistente is provided', async () => {
       await useCase.emitirFactura(mockDto, {
-        comprobanteExistente: { ...mockComprobanteRecord, id: BigInt(42) } as any,
+        comprobanteExistente: {
+          ...mockComprobanteRecord,
+          id: BigInt(42),
+        },
       });
 
       // Verify delete methods called with the existing comprobante ID
-      expect(comprobanteRepository.deleteDetallesByComprobanteId).toHaveBeenCalledWith(
-        BigInt(42),
-        expect.anything(),
-      );
-      expect(comprobanteRepository.deletePagosByComprobanteId).toHaveBeenCalledWith(
-        BigInt(42),
-        expect.anything(),
-      );
-      expect(comprobanteRepository.deleteTotalesByComprobanteId).toHaveBeenCalledWith(
-        BigInt(42),
-        expect.anything(),
-      );
-      expect(comprobanteRepository.deleteInfoAdicionalByComprobanteId).toHaveBeenCalledWith(
-        BigInt(42),
-        expect.anything(),
-      );
+      expect(
+        comprobanteRepository.deleteDetallesByComprobanteId,
+      ).toHaveBeenCalledWith(BigInt(42), expect.anything());
+      expect(
+        comprobanteRepository.deletePagosByComprobanteId,
+      ).toHaveBeenCalledWith(BigInt(42), expect.anything());
+      expect(
+        comprobanteRepository.deleteTotalesByComprobanteId,
+      ).toHaveBeenCalledWith(BigInt(42), expect.anything());
+      expect(
+        comprobanteRepository.deleteInfoAdicionalByComprobanteId,
+      ).toHaveBeenCalledWith(BigInt(42), expect.anything());
 
       // Verify create methods still called for children
       expect(comprobanteRepository.createDetalles).toHaveBeenCalled();
@@ -236,7 +278,13 @@ describe('EmitirFacturaUseCase — SRI rejection path (E-005)', () => {
         precioUnitario: 100,
         descuento: 0,
         impuestos: [
-          { codigo: '2', codigoPorcentaje: '2', tarifa: 12, baseImponible: 100, valor: 12 },
+          {
+            codigo: '2',
+            codigoPorcentaje: '2',
+            tarifa: 12,
+            baseImponible: 100,
+            valor: 12,
+          },
         ],
       },
     ],
@@ -244,10 +292,14 @@ describe('EmitirFacturaUseCase — SRI rejection path (E-005)', () => {
   };
 
   const emittedAutorizado = () =>
-    eventEmitterMock.mock.calls.filter(([event]) => event === 'comprobante.autorizado');
+    eventEmitterMock.mock.calls.filter(
+      ([event]) => event === 'comprobante.autorizado',
+    );
 
   const emittedRechazado = () =>
-    eventEmitterMock.mock.calls.filter(([event]) => event === 'comprobante.rechazado');
+    eventEmitterMock.mock.calls.filter(
+      ([event]) => event === 'comprobante.rechazado',
+    );
 
   beforeEach(async () => {
     comprobanteRepository = {
@@ -263,7 +315,9 @@ describe('EmitirFacturaUseCase — SRI rejection path (E-005)', () => {
       deleteDetallesByComprobanteId: jest.fn().mockResolvedValue(undefined),
       deletePagosByComprobanteId: jest.fn().mockResolvedValue(undefined),
       deleteTotalesByComprobanteId: jest.fn().mockResolvedValue(undefined),
-      deleteInfoAdicionalByComprobanteId: jest.fn().mockResolvedValue(undefined),
+      deleteInfoAdicionalByComprobanteId: jest
+        .fn()
+        .mockResolvedValue(undefined),
       executeTransaction: jest.fn().mockImplementation((cb) => cb({})),
       findByClaveAcceso: jest.fn(),
       findConDetalles: jest.fn(),
@@ -297,21 +351,57 @@ describe('EmitirFacturaUseCase — SRI rejection path (E-005)', () => {
     module = await Test.createTestingModule({
       providers: [
         EmitirFacturaUseCase,
-        { provide: ClaveAccesoService, useValue: { generate: jest.fn().mockReturnValue('1234567890123456789012345678901234567890123456789') } },
-        { provide: XmlBuilderService, useValue: { buildFactura: jest.fn().mockReturnValue('<xml>') } },
-        { provide: XmlSignerService, useValue: { signXmlForEmisor: jest.fn().mockResolvedValue('<signed>'), verifySignature: jest.fn().mockResolvedValue(true) } },
+        {
+          provide: ClaveAccesoService,
+          useValue: {
+            generate: jest
+              .fn()
+              .mockReturnValue(
+                '1234567890123456789012345678901234567890123456789',
+              ),
+          },
+        },
+        {
+          provide: XmlBuilderService,
+          useValue: { buildFactura: jest.fn().mockReturnValue('<xml>') },
+        },
+        {
+          provide: XmlSignerService,
+          useValue: {
+            signXmlForEmisor: jest.fn().mockResolvedValue('<signed>'),
+            verifySignature: jest.fn().mockResolvedValue(true),
+          },
+        },
         { provide: SriSoapClient, useValue: sriSoapClient },
         { provide: ComprobanteRepository, useValue: comprobanteRepository },
         { provide: EmisorRepository, useValue: mockEmisorRepository },
-        { provide: SecuencialRepository, useValue: { getNextSecuencial: jest.fn().mockResolvedValue('000000001') } },
-        { provide: XmlStorageService, useValue: { saveAllXmls: jest.fn().mockResolvedValue({ firmadoKey: 'firmado.xml', autorizadoKey: 'autorizado.xml' }) } },
-        { provide: SriBaseService, useValue: {
-          validarIdentificacion: jest.fn(),
-          validarTipoIdentificacionCatalogo: jest.fn().mockResolvedValue(true),
-          validarImpuestosDetalles: jest.fn().mockResolvedValue(true),
-          validarFormasPagoCatalogo: jest.fn().mockResolvedValue(true),
-          getDefaultAmbiente: jest.fn().mockReturnValue('1'),
-        } },
+        {
+          provide: SecuencialRepository,
+          useValue: {
+            getNextSecuencial: jest.fn().mockResolvedValue('000000001'),
+          },
+        },
+        {
+          provide: XmlStorageService,
+          useValue: {
+            saveAllXmls: jest.fn().mockResolvedValue({
+              firmadoKey: 'firmado.xml',
+              autorizadoKey: 'autorizado.xml',
+            }),
+          },
+        },
+        {
+          provide: SriBaseService,
+          useValue: {
+            validarIdentificacion: jest.fn(),
+            validarTipoIdentificacionCatalogo: jest
+              .fn()
+              .mockResolvedValue(true),
+            validarImpuestosDetalles: jest.fn().mockResolvedValue(true),
+            validarFormasPagoCatalogo: jest.fn().mockResolvedValue(true),
+            getDefaultAmbiente: jest.fn().mockReturnValue('1'),
+          },
+        },
         { provide: EventEmitter2, useValue: eventEmitterProvider },
       ],
     }).compile();
@@ -332,7 +422,7 @@ describe('EmitirFacturaUseCase — SRI rejection path (E-005)', () => {
           tipo: 'ERROR' as const,
         },
       ],
-    } as SriOperationResult);
+    });
 
     await useCase.emitirFactura(mockDto);
 
@@ -371,7 +461,7 @@ describe('EmitirFacturaUseCase — SRI rejection path (E-005)', () => {
           tipo: 'ERROR' as const,
         },
       ],
-    } as SriOperationResult);
+    });
 
     await useCase.emitirFactura(mockDto);
 
@@ -400,7 +490,7 @@ describe('EmitirFacturaUseCase — SRI rejection path (E-005)', () => {
       numeroAutorizacion: '9876543210',
       xmlAutorizado: '<autorized/>',
       mensajes: [],
-    } as SriOperationResult);
+    });
 
     await useCase.emitirFactura(mockDto);
 

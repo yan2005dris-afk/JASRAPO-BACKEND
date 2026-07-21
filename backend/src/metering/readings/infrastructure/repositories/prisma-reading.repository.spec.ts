@@ -1,0 +1,139 @@
+import { PrismaReadingRepository } from './prisma-reading.repository';
+import { ReadingMapper } from '../mappers/reading.mapper';
+import { safeReadingsSelect } from '../../types/IResponseReading';
+
+describe('PrismaReadingRepository - soft delete select regression', () => {
+  const buildPrismaMock = () => {
+    const findUnique = jest.fn();
+    return {
+      lecturas: {
+        findUnique,
+      },
+    };
+  };
+
+  it('safeReadingsSelect must request deletedAt so the use case soft-delete guard works', () => {
+    expect((safeReadingsSelect as Record<string, unknown>).deletedAt).toBe(
+      true,
+    );
+  });
+
+  it('ReadingMapper.toDomain normalizes undefined deletedAt to null (defensive)', () => {
+    const entity = ReadingMapper.toDomain({
+      lecturaId: BigInt(1),
+      fecha: new Date(),
+      lecturaAnterior: 100,
+      lecturaActual: 150,
+      consumoCalculado: 50,
+      medidorId: BigInt(1),
+      estado: 'PENDIENTE',
+      lecturaInicial: false,
+      periodoId: 1,
+      deletedAt: undefined,
+    });
+
+    expect(entity).not.toBeNull();
+    expect(entity!.deletedAt).toBeNull();
+  });
+
+  it('ReadingMapper.toDomain preserves null deletedAt for active rows', () => {
+    const entity = ReadingMapper.toDomain({
+      lecturaId: BigInt(1),
+      fecha: new Date(),
+      lecturaAnterior: 100,
+      lecturaActual: 150,
+      consumoCalculado: 50,
+      medidorId: BigInt(1),
+      estado: 'PENDIENTE',
+      lecturaInicial: false,
+      periodoId: 1,
+      deletedAt: null,
+    });
+
+    expect(entity).not.toBeNull();
+    expect(entity!.deletedAt).toBeNull();
+  });
+
+  it('ReadingMapper.toDomain preserves a real Date for soft-deleted rows', () => {
+    const deletedAt = new Date('2026-01-15T10:00:00.000Z');
+    const entity = ReadingMapper.toDomain({
+      lecturaId: BigInt(1),
+      fecha: new Date(),
+      lecturaAnterior: 100,
+      lecturaActual: 150,
+      consumoCalculado: 50,
+      medidorId: BigInt(1),
+      estado: 'PENDIENTE',
+      lecturaInicial: false,
+      periodoId: 1,
+      deletedAt,
+    });
+
+    expect(entity).not.toBeNull();
+    expect(entity!.deletedAt).toEqual(deletedAt);
+  });
+
+  it('findUnique maps an active record to a LecturaEntity with deletedAt === null', async () => {
+    const prisma = buildPrismaMock();
+    const repository = new PrismaReadingRepository(prisma as any);
+
+    prisma.lecturas.findUnique.mockResolvedValue({
+      lecturaId: BigInt(1),
+      fecha: new Date(),
+      lecturaAnterior: 100,
+      lecturaActual: 150,
+      consumoCalculado: 50,
+      medidorId: BigInt(1),
+      descripcionAnomalia: null,
+      fechaValidacion: null,
+      fotoUrl: null,
+      estado: 'PENDIENTE',
+      lecturaInicial: false,
+      periodoId: 1,
+      deletedAt: null,
+      medidor: null,
+      periodoRel: null,
+    });
+
+    const entity = await repository.findUnique({ lecturaId: BigInt(1) });
+
+    expect(prisma.lecturas.findUnique).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { lecturaId: BigInt(1) },
+        select: expect.objectContaining({ deletedAt: true }),
+      }),
+    );
+    expect(entity).not.toBeNull();
+    expect(entity!.deletedAt).toBeNull();
+  });
+
+  it('findUnique preserves soft-deleted Date so the use case guard treats it as deleted', async () => {
+    const prisma = buildPrismaMock();
+    const repository = new PrismaReadingRepository(prisma as any);
+    const deletedAt = new Date('2026-01-15T10:00:00.000Z');
+
+    prisma.lecturas.findUnique.mockResolvedValue({
+      lecturaId: BigInt(1),
+      fecha: new Date(),
+      lecturaAnterior: 100,
+      lecturaActual: 150,
+      consumoCalculado: 50,
+      medidorId: BigInt(1),
+      descripcionAnomalia: null,
+      fechaValidacion: null,
+      fotoUrl: null,
+      estado: 'PENDIENTE',
+      lecturaInicial: false,
+      periodoId: 1,
+      deletedAt,
+      medidor: null,
+      periodoRel: null,
+    });
+
+    const entity = await repository.findUnique({ lecturaId: BigInt(1) });
+
+    expect(entity).not.toBeNull();
+    expect(entity!.deletedAt).toEqual(deletedAt);
+    expect(entity!.deletedAt).not.toBeNull();
+  });
+});

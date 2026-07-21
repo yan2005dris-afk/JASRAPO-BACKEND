@@ -47,6 +47,7 @@ export const safeReadingsSelect = {
   lecturaInicial: true,
   periodoId: true,
   estado: true,
+  deletedAt: true,
   medidor: {
     select: {
       medidorId: true,

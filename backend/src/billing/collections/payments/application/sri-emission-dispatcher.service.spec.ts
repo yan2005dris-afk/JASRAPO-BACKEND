@@ -23,8 +23,8 @@ describe('SRIEmissionDispatcherService', () => {
     };
 
     service = new SRIEmissionDispatcherService(
-      paymentRepository as any,
-      comprobanteRepository as any,
+      paymentRepository,
+      comprobanteRepository,
       jobsService,
     );
   });
