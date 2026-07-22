@@ -10,7 +10,6 @@ describe('CreateMeterUseCase', () => {
 
   const mockMeterRepository = {
     create: jest.fn(),
-    findUnique: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -50,7 +49,6 @@ describe('CreateMeterUseCase', () => {
       estado: 'BODEGA',
     };
 
-    mockMeterRepository.findUnique.mockResolvedValue(null);
     mockMeterRepository.create.mockResolvedValue(expectedMedidor);
 
     const result = await useCase.execute(dto);
@@ -59,28 +57,19 @@ describe('CreateMeterUseCase', () => {
     expect(result.estado).toBe('BODEGA');
   });
 
-  it('should reject a serial found during the pre-check', async () => {
-    const serie = 'SER-READ-50';
-    mockMeterRepository.findUnique.mockResolvedValue({ serie });
-
-    await expect(
-      useCase.execute({ serie, modelo: 'Digital-2000', marca: 'Siemens' }),
-    ).rejects.toMatchObject({
-      constructor: ConflictException,
-      status: 409,
-      message: `Ya existe un medidor registrado con el número de serie "${serie}".`,
-    });
-    expect(mockMeterRepository.create).not.toHaveBeenCalled();
-  });
-
   it('should translate a concurrent P2002 into a conflict', async () => {
     const serie = 'SER-READ-51';
     const prismaError = new Prisma.PrismaClientKnownRequestError('duplicate', {
       code: 'P2002',
       clientVersion: '7.6.0',
     });
-    mockMeterRepository.findUnique.mockResolvedValue(null);
     mockMeterRepository.create.mockRejectedValue(prismaError);
+    const loggerWarn = jest
+      .spyOn(
+        (useCase as unknown as { logger: { warn: unknown } }).logger,
+        'warn',
+      )
+      .mockImplementation();
 
     await expect(
       useCase.execute({ serie, modelo: 'Digital-2000', marca: 'Siemens' }),
@@ -89,11 +78,14 @@ describe('CreateMeterUseCase', () => {
       status: 409,
       message: `Ya existe un medidor registrado con el número de serie "${serie}".`,
     });
+    expect(loggerWarn).toHaveBeenCalledTimes(1);
+    expect(loggerWarn).toHaveBeenCalledWith(
+      `Duplicate meter creation attempt for serial ${serie}`,
+    );
   });
 
   it('should propagate and log non-P2002 creation failures', async () => {
     const error = new Error('database unavailable');
-    mockMeterRepository.findUnique.mockResolvedValue(null);
     mockMeterRepository.create.mockRejectedValue(error);
     const loggerError = jest
       .spyOn(
