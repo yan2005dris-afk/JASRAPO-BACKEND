@@ -32,18 +32,14 @@ export class MeterService {
     const { skip, take, page: safePage } = getPagination(page, limit);
     const meterFilters = filters ? buildMeterFilters(filters) : undefined;
 
-    // Query count: 3 (was 5). findMany + count(meta.total) + single groupBy({ by: ['estado'] })
-    // replaces the prior Promise.all of 4 per-estado counts. The soft-delete predicate is no
-    // longer duplicated across per-status counts.
-    const [meters, total, estadoGroups] = await Promise.all([
-      this.meterRepository.findMany({ where: meterFilters, skip, take }),
-      this.meterRepository.count(meterFilters),
-      this.meterRepository.groupByEstado(meterFilters),
-    ]);
-
-    const kpiByEstado = new Map<string, number>(
-      estadoGroups.map((g) => [g.estado, g._count._all]),
-    );
+    const [meters, total, enBodegaCount, instaladosCount, danadosCount] =
+      await Promise.all([
+        this.meterRepository.findMany({ where: meterFilters, skip, take }),
+        this.meterRepository.count(meterFilters),
+        this.meterRepository.count({ ...meterFilters, estado: 'BODEGA' }),
+        this.meterRepository.count({ ...meterFilters, estado: 'INSTALADO' }),
+        this.meterRepository.count({ ...meterFilters, estado: 'DANADO' }),
+      ]);
 
     const totalPages = Math.ceil(total / take);
 
@@ -60,9 +56,9 @@ export class MeterService {
         siguiente: safePage < totalPages ? safePage + 1 : null,
       },
       kpis: {
-        enBodega: kpiByEstado.get('BODEGA') ?? 0,
-        instalados: kpiByEstado.get('INSTALADO') ?? 0,
-        danados: kpiByEstado.get('DANADO') ?? 0,
+        enBodega: enBodegaCount,
+        instalados: instaladosCount,
+        danados: danadosCount,
         total,
       },
     };

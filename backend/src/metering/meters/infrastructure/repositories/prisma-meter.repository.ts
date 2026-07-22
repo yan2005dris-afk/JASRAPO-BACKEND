@@ -77,23 +77,6 @@ export class PrismaMeterRepository implements MeterRepository {
     return this.prisma.medidores.count({ where: whereClause });
   }
 
-  async groupByEstado(
-    where?: MeterFilters,
-  ): Promise<
-    Array<{ estado: MeterEntity['estado']; _count: { _all: number } }>
-  > {
-    const whereClause = this.buildMeterWhere(where);
-    const groups = await this.prisma.medidores.groupBy({
-      by: ['estado'],
-      where: whereClause,
-      _count: { _all: true },
-    });
-    return groups.map((g) => ({
-      estado: g.estado,
-      _count: { _all: Number(g._count._all) },
-    }));
-  }
-
   private buildMeterWhere(filters?: MeterFilters): Prisma.MedidoresWhereInput {
     const conditions: Prisma.MedidoresWhereInput[] = [];
 

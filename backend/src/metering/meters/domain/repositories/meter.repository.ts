@@ -45,12 +45,6 @@ export abstract class MeterRepository {
 
   abstract count(where?: MeterFilters): Promise<number>;
 
-  abstract groupByEstado(
-    where?: MeterFilters,
-  ): Promise<
-    Array<{ estado: MeterEntity['estado']; _count: { _all: number } }>
-  >;
-
   abstract create(data: CreateMeterRepositoryData): Promise<MeterEntity>;
 
   abstract update(
