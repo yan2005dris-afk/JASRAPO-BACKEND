@@ -9,7 +9,7 @@ import { AppModule } from './app.module';
 import { ThrottlerExceptionFilter } from './infrastructure/common/filters/throttler-exception.filter';
 import { AuditFieldsInterceptor } from './infrastructure/common/interceptors/audit-fields.interceptor';
 import { BigIntInterceptor } from './infrastructure/common/interceptors/bigint.interceptor';
-import { DecimalToNumberInterceptor } from './infrastructure/common/interceptors/decimal-to-number.interceptor';
+import { DecimalToStringInterceptor } from './infrastructure/common/interceptors/decimal-to-string.interceptor';
 import {
   TRUST_PROXY_HOPS,
   TRUST_PROXY_KEY,
@@ -56,8 +56,8 @@ async function bootstrap() {
   //BigInt interceptor
   app.useGlobalInterceptors(new BigIntInterceptor());
 
-  //Decimal to Number interceptor
-  app.useGlobalInterceptors(new DecimalToNumberInterceptor());
+  //Decimal to String interceptor (lossless wire format — no float drift)
+  app.useGlobalInterceptors(new DecimalToStringInterceptor());
 
   // Logging and Metrics Interceptor
   app.useGlobalInterceptors(app.get(LoggingInterceptor));
