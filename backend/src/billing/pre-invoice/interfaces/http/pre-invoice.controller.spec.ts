@@ -14,10 +14,13 @@ jest.mock('pg-boss', () => ({
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
+import { Decimal } from 'decimal.js';
 import { PreInvoiceController } from './pre-invoice.controller';
 import { PreInvoiceService } from '../../application/pre-invoice.service';
 import { GeneratePreInvoicePdfUseCase } from '../../application/use-cases/generate-pre-invoice-pdf.use-case';
 import { SendPreInvoiceByEmailUseCase } from '../../application/use-cases/send-pre-invoice-by-email.use-case';
+import { DecimalToStringInterceptor } from 'src/infrastructure/common/interceptors/decimal-to-string.interceptor';
+import { of } from 'rxjs';
 
 const mockRes = () => {
   const res: any = {};
@@ -117,6 +120,90 @@ describe('PreInvoiceController', () => {
 
       expect(result).toEqual(preInvoice);
       expect(mockPreInvoiceService.findOne).toHaveBeenCalledWith(1);
+    });
+  });
+
+  // Contract test: simulate the wire format the controller+interceptor pair
+  // produces for `GET /api/v1/pre-invoices/:id`. The service returns Prisma
+  // `Decimal` instances; the global DecimalToStringInterceptor must convert
+  // every monetary field to a string with no float precision drift, so SRI
+  // reconciliation can match the wire bytes against the invoice exactly.
+  describe('contract: GET /pre-invoices/:id wire format', () => {
+    function runInterceptor(
+      interceptor: DecimalToStringInterceptor,
+      data: unknown,
+    ): Promise<unknown> {
+      return new Promise((resolve, reject) => {
+        interceptor.intercept({} as any, { handle: () => of(data) }).subscribe({
+          next: (result) => resolve(result),
+          error: (err) =>
+            reject(err instanceof Error ? err : new Error(String(err))),
+        });
+      });
+    }
+
+    it('serializes all monetary fields as strings (no float drift)', async () => {
+      const preInvoice = {
+        prefacturaId: 1,
+        uuid: 'a1b2c3d4',
+        contratoId: 99,
+        loteId: 7,
+        periodoId: 12,
+        subtotal: new Decimal('150.00'),
+        iva: new Decimal('17.25'),
+        descuentoTotal: new Decimal('0.00'),
+        totalPagar: new Decimal('150.00'),
+        deudaAnterior: new Decimal('0.00'),
+        saldoVencido: new Decimal('0.00'),
+        abono: new Decimal('0.00'),
+        saldoActual: new Decimal('150.00'),
+        estado: 'GENERADA',
+        createdAt: new Date('2026-01-01T00:00:00.000Z'),
+        updatedAt: new Date('2026-01-01T00:00:00.000Z'),
+        detalles: [
+          {
+            prefacturaDetalleId: 1,
+            descripcion: 'Cargo fijo',
+            cantidad: 1,
+            precioUnitario: new Decimal('150.00'),
+            subtotal: new Decimal('150.00'),
+            iva: new Decimal('17.25'),
+            total: new Decimal('150.00'),
+          },
+        ],
+      };
+      mockPreInvoiceService.findOne.mockResolvedValue(preInvoice);
+
+      const interceptor = new DecimalToStringInterceptor();
+      const serviceResult = await controller.findOne(1);
+      const wireResult = (await runInterceptor(
+        interceptor,
+        serviceResult,
+      )) as any;
+
+      // Monetary fields are strings, exact lossless Decimal -> string.
+      expect(typeof wireResult.subtotal).toBe('string');
+      expect(typeof wireResult.iva).toBe('string');
+      expect(typeof wireResult.totalPagar).toBe('string');
+      expect(typeof wireResult.saldoActual).toBe('string');
+      expect(wireResult.subtotal).toBe(new Decimal('150.00').toString());
+      expect(wireResult.iva).toBe(new Decimal('17.25').toString());
+      expect(wireResult.totalPagar).toBe(new Decimal('150.00').toString());
+      expect(wireResult.saldoActual).toBe(new Decimal('150.00').toString());
+
+      // Nested detalle monetary fields also serialized.
+      expect(typeof wireResult.detalles[0].precioUnitario).toBe('string');
+      expect(typeof wireResult.detalles[0].subtotal).toBe('string');
+      expect(typeof wireResult.detalles[0].iva).toBe('string');
+      expect(typeof wireResult.detalles[0].total).toBe('string');
+
+      // Non-Decimal fields remain untouched.
+      expect(wireResult.prefacturaId).toBe(1);
+      expect(wireResult.uuid).toBe('a1b2c3d4');
+      expect(wireResult.estado).toBe('GENERADA');
+      expect(wireResult.detalles[0].cantidad).toBe(1);
+      expect(wireResult.detalles[0].descripcion).toBe('Cargo fijo');
+      expect(wireResult.createdAt).toBeInstanceOf(Date);
     });
   });
 

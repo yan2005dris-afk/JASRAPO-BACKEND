@@ -1,13 +1,15 @@
-import { Injectable, Logger, Optional } from '@nestjs/common';
+import { Injectable, Optional } from '@nestjs/common';
 import { GeneratePdfUseCase } from 'src/infrastructure/pdf/use-cases/generate-pdf.use-case';
 import { PdfImageService, ImageData } from './pdf-image.service';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
+@LogContext()
 @Injectable()
 export class PdfService {
-  private readonly logger = new Logger(PdfService.name);
-
   constructor(
     private readonly generatePdf: GeneratePdfUseCase,
+    private readonly logger: LoggerService,
     @Optional() private readonly pdfImageService?: PdfImageService,
   ) {}
 

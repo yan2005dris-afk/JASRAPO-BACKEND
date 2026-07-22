@@ -86,4 +86,30 @@ export class UserMapper {
       clave: rawUser.clave,
     };
   }
+
+  /**
+   * Mapea el resultado crudo de Prisma para el flujo de login, incluyendo el
+   * hash de la clave y los contadores de protección contra fuerza bruta
+   * (issue #136).
+   */
+  async toWithPasswordAndLockout(rawUser: any): Promise<
+    | (UserWithRoleResponse & {
+        clave: string;
+        intentosFallidos: number;
+        ultimoIntentoFallidoEn: Date | null;
+        bloqueadoHasta: Date | null;
+      })
+    | null
+  > {
+    if (!rawUser) return null;
+    const base = await this.toWithRole(rawUser);
+    if (!base) return null;
+    return {
+      ...base,
+      clave: rawUser.clave,
+      intentosFallidos: rawUser.intentosFallidos,
+      ultimoIntentoFallidoEn: rawUser.ultimoIntentoFallidoEn,
+      bloqueadoHasta: rawUser.bloqueadoHasta,
+    };
+  }
 }

@@ -9,6 +9,14 @@ import { RemoveReadingUseCase } from './use-cases/remove-reading.use-case';
 import { StorageService } from 'src/infrastructure/storage/storage.service';
 import { ImageProcessorUtil } from 'src/infrastructure/common/utils/image-processor.util';
 import { LecturaEntity } from '../domain/entities/lectura.entity';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+const mockLogger = {
+  log: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+  debug: jest.fn(),
+  verbose: jest.fn(),
+};
 
 jest.mock('src/infrastructure/common/utils/image-processor.util', () => ({
   ImageProcessorUtil: {
@@ -55,6 +63,7 @@ describe('ReadingService', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
+        { provide: LoggerService, useValue: mockLogger },
         ReadingService,
         {
           provide: CreateReadingUseCase,

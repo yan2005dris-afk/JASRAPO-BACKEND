@@ -1,10 +1,12 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
+import { Public } from '../../../../infrastructure/common/decorators/public.decorator';
 import { BusquedaPublicaService } from '../../application/busqueda-publica.service';
 import { SearchDeudaDto } from '../dto/search-deuda.dto';
 
 @ApiTags('search')
+@Public()
 @Controller('search')
 @UseGuards(ThrottlerGuard)
 export class BusquedaPublicaController {

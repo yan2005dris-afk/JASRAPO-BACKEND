@@ -4,6 +4,8 @@ import { Reflector } from '@nestjs/core';
 import type { ExecutionContext } from '@nestjs/common';
 import { ForbiddenException } from '@nestjs/common';
 import { PermissionsGuard } from './permissions.guard';
+import { PERMISSION_KEY } from '../decorators/require-permission.decorator';
+import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 
 describe('PermissionsGuard', () => {
   let guard: PermissionsGuard;
@@ -17,6 +19,7 @@ describe('PermissionsGuard', () => {
           provide: Reflector,
           useValue: {
             get: jest.fn(),
+            getAllAndOverride: jest.fn(),
           },
         },
       ],
@@ -30,7 +33,34 @@ describe('PermissionsGuard', () => {
     expect(guard).toBeDefined();
   });
 
-  it('should work when user.permisos is an array (FIXED BEHAVIOR)', () => {
+  it('should throw ForbiddenException when @RequiredPermission is missing on a non-public route (fail-closed)', () => {
+    const mockContext = {
+      getHandler: jest.fn().mockReturnValue(function noop() {}),
+      getClass: jest.fn().mockReturnValue({ name: 'TestController' }),
+      switchToHttp: jest.fn().mockReturnValue({
+        getRequest: jest.fn().mockReturnValue({
+          method: 'POST',
+          user: {
+            usersId: 1,
+            permisos: [{ recurso: 'test', accion: 'create' }],
+          },
+        }),
+      }),
+    } as unknown as ExecutionContext;
+
+    (reflector.getAllAndOverride as jest.Mock).mockImplementation((key) => {
+      if (key === IS_PUBLIC_KEY) return false;
+      return undefined;
+    });
+    (reflector.get as jest.Mock).mockReturnValue(undefined);
+
+    expect(() => guard.canActivate(mockContext)).toThrow(ForbiddenException);
+    expect(() => guard.canActivate(mockContext)).toThrow(
+      'Missing @RequiredPermission decorator on protected route',
+    );
+  });
+
+  it('should pass when user has the matching permission declared via @RequiredPermission', () => {
     const mockContext = {
       getHandler: jest.fn(),
       getClass: jest.fn().mockReturnValue({ name: 'TestController' }),
@@ -45,14 +75,21 @@ describe('PermissionsGuard', () => {
       }),
     } as unknown as ExecutionContext;
 
-    reflector.get = jest
-      .fn()
-      .mockReturnValue({ recurso: 'test', accion: 'read' });
+    (reflector.getAllAndOverride as jest.Mock).mockImplementation((key) => {
+      if (key === IS_PUBLIC_KEY) return false;
+      return undefined;
+    });
+    (reflector.get as jest.Mock).mockImplementation((key) => {
+      if (key === PERMISSION_KEY) {
+        return { recurso: 'test', accion: 'read' };
+      }
+      return undefined;
+    });
 
     expect(guard.canActivate(mockContext)).toBe(true);
   });
 
-  it('should throw ForbiddenException when user has no matching permissions', () => {
+  it('should throw ForbiddenException when user lacks the declared permission', () => {
     const mockContext = {
       getHandler: jest.fn(),
       getClass: jest.fn().mockReturnValue({ name: 'TestController' }),
@@ -67,9 +104,16 @@ describe('PermissionsGuard', () => {
       }),
     } as unknown as ExecutionContext;
 
-    reflector.get = jest
-      .fn()
-      .mockReturnValue({ recurso: 'test', accion: 'read' });
+    (reflector.getAllAndOverride as jest.Mock).mockImplementation((key) => {
+      if (key === IS_PUBLIC_KEY) return false;
+      return undefined;
+    });
+    (reflector.get as jest.Mock).mockImplementation((key) => {
+      if (key === PERMISSION_KEY) {
+        return { recurso: 'test', accion: 'read' };
+      }
+      return undefined;
+    });
 
     expect(() => guard.canActivate(mockContext)).toThrow(ForbiddenException);
   });
@@ -86,15 +130,49 @@ describe('PermissionsGuard', () => {
       }),
     } as unknown as ExecutionContext;
 
+    (reflector.getAllAndOverride as jest.Mock).mockImplementation((key) => {
+      if (key === IS_PUBLIC_KEY) return false;
+      return undefined;
+    });
+    (reflector.get as jest.Mock).mockImplementation((key) => {
+      if (key === PERMISSION_KEY) {
+        return { recurso: 'test', accion: 'read' };
+      }
+      return undefined;
+    });
+
     expect(() => guard.canActivate(mockContext)).toThrow(ForbiddenException);
     expect(() => guard.canActivate(mockContext)).toThrow(
       'Usuario no identificado',
     );
   });
 
-  it('should infer permissions when no decorator is present', () => {
+  it('should skip the permission check entirely when @Public() is set', () => {
     const mockContext = {
       getHandler: jest.fn(),
+      getClass: jest.fn().mockReturnValue({ name: 'PublicController' }),
+      switchToHttp: jest.fn().mockReturnValue({
+        getRequest: jest.fn().mockReturnValue({
+          method: 'GET',
+          user: undefined,
+        }),
+      }),
+    } as unknown as ExecutionContext;
+
+    (reflector.getAllAndOverride as jest.Mock).mockImplementation((key) => {
+      if (key === IS_PUBLIC_KEY) return true;
+      return undefined;
+    });
+    const getSpy = reflector.get as jest.Mock;
+    getSpy.mockClear();
+
+    expect(guard.canActivate(mockContext)).toBe(true);
+    expect(getSpy).not.toHaveBeenCalledWith(PERMISSION_KEY, expect.anything());
+  });
+
+  it('should never invent a permission from controller name + HTTP verb (regression: inferPermission removed)', () => {
+    const mockContext = {
+      getHandler: jest.fn().mockReturnValue(function create() {}),
       getClass: jest.fn().mockReturnValue({ name: 'ClientesController' }),
       switchToHttp: jest.fn().mockReturnValue({
         getRequest: jest.fn().mockReturnValue({
@@ -107,8 +185,15 @@ describe('PermissionsGuard', () => {
       }),
     } as unknown as ExecutionContext;
 
-    reflector.get = jest.fn().mockReturnValue(null);
+    (reflector.getAllAndOverride as jest.Mock).mockImplementation((key) => {
+      if (key === IS_PUBLIC_KEY) return false;
+      return undefined;
+    });
+    (reflector.get as jest.Mock).mockReturnValue(undefined);
 
-    expect(guard.canActivate(mockContext)).toBe(true);
+    expect(() => guard.canActivate(mockContext)).toThrow(ForbiddenException);
+    expect(() => guard.canActivate(mockContext)).toThrow(
+      'Missing @RequiredPermission decorator on protected route',
+    );
   });
 });

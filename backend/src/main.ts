@@ -6,16 +6,18 @@ import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
+import ms from 'ms';
 import { AppModule } from './app.module';
 import { ThrottlerExceptionFilter } from './infrastructure/common/filters/throttler-exception.filter';
 import { AuditFieldsInterceptor } from './infrastructure/common/interceptors/audit-fields.interceptor';
 import { BigIntInterceptor } from './infrastructure/common/interceptors/bigint.interceptor';
-import { DecimalToNumberInterceptor } from './infrastructure/common/interceptors/decimal-to-number.interceptor';
+import { DecimalToStringInterceptor } from './infrastructure/common/interceptors/decimal-to-string.interceptor';
 import {
   TRUST_PROXY_HOPS,
   TRUST_PROXY_KEY,
 } from './infrastructure/config/app.constants';
 import { resolveCorsOptions } from './infrastructure/config/cors.options';
+import { assertAllSecrets } from './infrastructure/config/config.validator';
 import { LoggingInterceptor } from './infrastructure/observability/interceptors/logging.interceptor';
 import { TracingService } from './infrastructure/observability/tracing/tracing.service';
 import { LoggerService } from './infrastructure/observability/logger/logger.service';
@@ -32,7 +34,49 @@ type CookieParserMiddleware = (
 
 type CookieParserFactory = () => CookieParserMiddleware;
 
+/**
+ * Hard ceiling for JWT_REFRESH_EXPIRES_IN. A leaked refresh cookie
+ * should not grant more than 72h of access. Operators that need
+ * longer must set ALLOW_LONG_REFRESH=1 explicitly.
+ */
+const REFRESH_TOKEN_CEILING_MS = 72 * 60 * 60 * 1000;
+
+/**
+ * Validate JWT_REFRESH_EXPIRES_IN at boot. Refuses to start when the
+ * configured duration exceeds the safety ceiling unless the operator
+ * has explicitly opted in via ALLOW_LONG_REFRESH=1.
+ */
+function assertRefreshTokenCeiling(configService: ConfigService): void {
+  const raw = configService.get<string>('JWT_REFRESH_EXPIRES_IN', '24h');
+  const parsed = ms(raw as ms.StringValue);
+  if (parsed === undefined) {
+    throw new Error(
+      `JWT_REFRESH_EXPIRES_IN is not a valid duration: "${raw}". ` +
+        `Expected format like "24h" or "7d".`,
+    );
+  }
+  if (parsed <= REFRESH_TOKEN_CEILING_MS) {
+    return;
+  }
+  const allowLong = process.env.ALLOW_LONG_REFRESH === '1';
+  if (!allowLong) {
+    throw new Error(
+      `JWT_REFRESH_EXPIRES_IN="${raw}" exceeds the 72h security ceiling. ` +
+        `Set ALLOW_LONG_REFRESH=1 to opt in, or lower the duration.`,
+    );
+  }
+}
+
 async function bootstrap() {
+  try {
+    assertAllSecrets();
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    // eslint-disable-next-line no-console
+    console.error(`\n[FATAL] ${message}\n`);
+    process.exit(1);
+  }
+
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     bufferLogs: true,
   });
@@ -71,8 +115,8 @@ async function bootstrap() {
   //BigInt interceptor
   app.useGlobalInterceptors(new BigIntInterceptor());
 
-  //Decimal to Number interceptor
-  app.useGlobalInterceptors(new DecimalToNumberInterceptor());
+  //Decimal to String interceptor (lossless wire format — no float drift)
+  app.useGlobalInterceptors(new DecimalToStringInterceptor());
 
   // Logging and Metrics Interceptor
   app.useGlobalInterceptors(app.get(LoggingInterceptor));
@@ -284,6 +328,8 @@ Para consultas o soporte, contacta al equipo de desarrollo del Backend.
   });
 
   app.enableShutdownHooks();
+
+  assertRefreshTokenCeiling(configService);
 
   const port = configService.get<number>('PORT', 3000);
   await app.listen(port);

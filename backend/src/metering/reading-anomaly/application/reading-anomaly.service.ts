@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import {
   StorageService,
   SRI_STORAGE_TYPES,
@@ -18,11 +18,12 @@ import { RemoveReadingAnomalyUseCase } from './use-cases/remove-reading-anomaly.
 import { ReadingAnomalyEntity } from '../domain/entities/reading-anomaly.entity';
 import { ReadingAnomalyFilters } from '../domain/repositories/reading-anomaly.repository';
 import { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
+@LogContext()
 @Injectable()
 export class ReadingAnomalyService {
-  private readonly logger = new Logger(ReadingAnomalyService.name);
-
   constructor(
     private readonly createUseCase: CreateReadingAnomalyUseCase,
     private readonly findAllUseCase: FindAllReadingAnomaliesUseCase,
@@ -30,6 +31,7 @@ export class ReadingAnomalyService {
     private readonly updateUseCase: UpdateReadingAnomalyUseCase,
     private readonly removeUseCase: RemoveReadingAnomalyUseCase,
     private readonly storageService: StorageService,
+    private readonly logger: LoggerService,
   ) {}
 
   async create(

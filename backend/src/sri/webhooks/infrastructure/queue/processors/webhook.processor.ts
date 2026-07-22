@@ -1,14 +1,14 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { PrismaService } from '../../../../../infrastructure/database/prisma.service';
 import { JobsService } from '../../../../../infrastructure/jobs/jobs.service';
-import {
-  validateSafeUrl,
-  readLimitedText,
-} from '../../../../../infrastructure/common/utils/url.util';
+import { readLimitedText } from '../../../../../infrastructure/common/utils/url.util';
+import { LoggerService } from '../../../../../infrastructure/observability/logger/logger.service';
 import * as crypto from 'crypto';
 import { Agent } from 'undici';
 import { WEBHOOK_DISPATCH_JOB } from '../../../application/contracts/webhook-job.contract';
 import { SimpleCircuitBreaker } from '../../../../../infrastructure/common/resilience/circuit-breaker';
+import { resolveAndPin, SsrfBlockedError } from '../../ssrf-resolver';
+import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
 export class WebhookBusinessError extends Error {
   readonly isBusinessError = true;
@@ -18,23 +18,23 @@ export class WebhookBusinessError extends Error {
   }
 }
 
-// Bulkhead connection pool configuration using undici Agent
-const globalDispatcher = new Agent({
-  connections: 50, // maxSockets limit
-  pipelining: 1,
-});
-
 /**
  * Processor de webhooks migrado a pg-boss (PostgreSQL) usando Prisma.
+ *
+ * SSRF note (issue #149): DNS is resolved HERE and the first public IP is
+ * pinned into an undici Agent (per-job). The fetch reuses that Agent via the
+ * `dispatcher` option instead of re-resolving DNS at connect time, closing
+ * the DNS-rebinding window between validation and connect.
  */
+@LogContext()
 @Injectable()
 export class WebhookProcessor implements OnModuleInit {
-  private readonly logger = new Logger(WebhookProcessor.name);
   private readonly breakers = new Map<string, SimpleCircuitBreaker>();
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly jobsService: JobsService,
+    private readonly logger: LoggerService,
   ) {}
 
   async onModuleInit() {
@@ -102,14 +102,26 @@ export class WebhookProcessor implements OnModuleInit {
       .digest('hex');
 
     const breaker = this.getCircuitBreaker(url);
+    let pinnedDispatcher: Agent | null = null;
 
     try {
       await breaker.execute(async () => {
-        const urlValidation = await validateSafeUrl(url);
-        if (!urlValidation.safe) {
-          throw new WebhookBusinessError(
-            `SSRF Prevention: ${urlValidation.error}`,
+        let resolved;
+        try {
+          resolved = await resolveAndPin(url);
+          pinnedDispatcher = resolved.dispatcher;
+        } catch (ssrfErr) {
+          // OWASP A07 audit trail: every SSRF block is logged with full URL,
+          // resolved IP and reason. LoggerService is pino-backed.
+          const dangerousIp =
+            ssrfErr instanceof SsrfBlockedError && ssrfErr.dangerousIp
+              ? ssrfErr.dangerousIp
+              : 'n/a';
+          this.logger.warn(
+            `reason=ssrf_block url=${url} resolvedIp=${dangerousIp} msg="${(ssrfErr as Error).message}"`,
+            'WebhookProcessor',
           );
+          throw new WebhookBusinessError(`SSRF: ${(ssrfErr as Error).message}`);
         }
 
         const response = await fetch(url, {
@@ -123,7 +135,7 @@ export class WebhookProcessor implements OnModuleInit {
           body,
           redirect: 'error',
           signal: AbortSignal.timeout(30000),
-          dispatcher: globalDispatcher,
+          dispatcher: resolved.dispatcher,
         } as any);
 
         const tiempoRespuesta = Date.now() - startTime;
@@ -174,6 +186,16 @@ export class WebhookProcessor implements OnModuleInit {
       }
 
       throw error;
+    } finally {
+      // Always close the per-job dispatcher to avoid leaking sockets when the
+      // job ends (success, business error or thrown error).
+      if (pinnedDispatcher) {
+        try {
+          await (pinnedDispatcher as Agent).close();
+        } catch {
+          /* best effort */
+        }
+      }
     }
   }
 

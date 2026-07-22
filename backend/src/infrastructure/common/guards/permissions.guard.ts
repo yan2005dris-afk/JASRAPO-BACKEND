@@ -10,6 +10,7 @@ import {
   PERMISSION_KEY,
   PermissionConfig,
 } from '../decorators/require-permission.decorator';
+import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 import type {
   AuthPermission,
   AuthenticatedRequest,
@@ -22,13 +23,19 @@ export class PermissionsGuard implements CanActivate {
   constructor(private readonly reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
-    // 1. Intentar obtener el permiso explícito del decorador (método)
+    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+    if (isPublic) {
+      return true;
+    }
+
     let required = this.reflector.get<PermissionConfig>(
       PERMISSION_KEY,
       context.getHandler(),
     );
 
-    // 1b. Fallback a decorador a nivel de clase (controller)
     if (!required) {
       required = this.reflector.get<PermissionConfig>(
         PERMISSION_KEY,
@@ -36,9 +43,13 @@ export class PermissionsGuard implements CanActivate {
       );
     }
 
-    // 2. Si no hay decorador, aplicamos "Seguridad por Convención"
     if (!required) {
-      required = this.inferPermission(context);
+      this.logger.error(
+        `Missing @RequiredPermission decorator on ${context.getClass().name}.${context.getHandler().name}`,
+      );
+      throw new ForbiddenException(
+        'Missing @RequiredPermission decorator on protected route',
+      );
     }
 
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
@@ -49,7 +60,6 @@ export class PermissionsGuard implements CanActivate {
       throw new ForbiddenException('Usuario no identificado');
     }
 
-    // Permisos cargados por JwtStrategy (fuente de verdad)
     const permissions: AuthPermission[] = Array.isArray(user.permisos)
       ? user.permisos
       : [];
@@ -68,36 +78,5 @@ export class PermissionsGuard implements CanActivate {
     }
 
     return true;
-  }
-
-  /**
-   * Infiere el permiso basado en el nombre del controlador y el método HTTP.
-   * Ej: ClientesController + POST -> resource: "clientes", action: "create"
-   */
-  private inferPermission(context: ExecutionContext): PermissionConfig {
-    const controller = context.getClass().name;
-    const request = context.switchToHttp().getRequest();
-    const method = request.method;
-
-    // Limpiar nombre del controlador: ClientesController -> clientes
-    const resource = controller
-      .replace('Controller', '')
-      .replace('Module', '')
-      .toLowerCase();
-
-    // Mapeo de métodos HTTP a acciones estándar
-    const actionMap: Record<string, string> = {
-      GET: 'read',
-      POST: 'create',
-      PUT: 'update',
-      PATCH: 'update',
-      DELETE: 'delete',
-    };
-
-    const action = actionMap[method] || 'read';
-
-    this.logger.debug(`Permiso inferido por convención: ${resource}:${action}`);
-
-    return { recurso: resource, accion: action };
   }
 }

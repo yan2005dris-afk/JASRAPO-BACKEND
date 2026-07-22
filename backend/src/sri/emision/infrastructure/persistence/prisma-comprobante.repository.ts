@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../../infrastructure/database/prisma.service';
 import { ComprobanteRepository } from '../../domain/repositories/comprobante.repository';
 import { Prisma } from '../../../../generated/prisma/client.js';
@@ -15,12 +15,16 @@ import {
   DetalleAdicionalRecord,
   MotivoNotaDebitoRecord,
 } from '../../../domain/interfaces/repository.interface';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
+@LogContext()
 @Injectable()
 export class PrismaComprobanteRepository extends ComprobanteRepository {
-  private readonly logger = new Logger(PrismaComprobanteRepository.name);
-
-  constructor(private readonly prisma: PrismaService) {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly logger: LoggerService,
+  ) {
     super();
   }
 

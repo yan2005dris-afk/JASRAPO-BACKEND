@@ -1,8 +1,10 @@
 import { Controller, Get } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { Public } from '../common/decorators/public.decorator';
 import { PdfHealthService } from './pdf-health.service';
 
 @ApiTags('Health')
+@Public()
 @Controller('health/pdf')
 export class PdfHealthController {
   constructor(private readonly pdfHealth: PdfHealthService) {}

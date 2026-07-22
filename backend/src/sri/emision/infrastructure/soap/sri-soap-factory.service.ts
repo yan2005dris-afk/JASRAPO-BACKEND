@@ -1,11 +1,14 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import * as soap from 'soap';
 import { Client } from 'soap';
 import { SimpleCircuitBreaker } from '../../../../infrastructure/common/resilience/circuit-breaker';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
+@LogContext()
 @Injectable()
 export class SriSoapFactoryService {
-  private readonly logger = new Logger(SriSoapFactoryService.name);
+  constructor(private readonly logger: LoggerService) {}
 
   // Cache de clientes en memoria. Clave: tipo_ambiente (ej: 'recepcion_1')
   private clients = new Map<string, Client>();
