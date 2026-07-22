@@ -13,6 +13,44 @@ import {
 } from '../../../../infrastructure/storage/storage.service';
 import { Readable } from 'stream';
 
+const DEFAULT_XADES_HASH_ALGORITHM = 'SHA-256' as const;
+const XADES_HASH_ALGORITHMS = [
+  'SHA-256',
+  'SHA-384',
+  'SHA-512',
+  'SHA-1',
+] as const;
+type XadesHashAlgorithm = (typeof XADES_HASH_ALGORITHMS)[number];
+
+const XADES_DIGEST_METHOD_URIS: Record<XadesHashAlgorithm, string> = {
+  'SHA-256': 'http://www.w3.org/2001/04/xmlenc#sha256',
+  'SHA-384': 'http://www.w3.org/2001/04/xmldsig-more#sha384',
+  'SHA-512': 'http://www.w3.org/2001/04/xmlenc#sha512',
+  'SHA-1': 'http://www.w3.org/2000/09/xmldsig#sha1',
+};
+
+function parseXadesHashAlgorithm(
+  value: string | undefined,
+): XadesHashAlgorithm {
+  const hashAlgorithm = value ?? DEFAULT_XADES_HASH_ALGORITHM;
+
+  if (
+    !XADES_HASH_ALGORITHMS.includes(
+      hashAlgorithm as (typeof XADES_HASH_ALGORITHMS)[number],
+    )
+  ) {
+    throw new Error(
+      `Invalid XADES_HASH_ALGO: ${hashAlgorithm}. Allowed values: ${XADES_HASH_ALGORITHMS.join(', ')}`,
+    );
+  }
+
+  return hashAlgorithm as XadesHashAlgorithm;
+}
+
+function getXadesDigestMethodUri(hashAlgorithm: XadesHashAlgorithm): string {
+  return XADES_DIGEST_METHOD_URIS[hashAlgorithm];
+}
+
 /**
  * Servicio para firmar documentos XML con firma digital XAdES-BES
  * compatible con los requerimientos del SRI Ecuador.
@@ -31,6 +69,7 @@ export class XmlSignerService implements OnModuleInit {
     { privateKey: CryptoKey; certificate: string; loadedAt: number }
   > = new Map();
   private readonly CERT_CACHE_TTL_MS: number;
+  private readonly hashAlgorithm: XadesHashAlgorithm;
 
   constructor(
     private readonly configService: ConfigService,
@@ -39,6 +78,12 @@ export class XmlSignerService implements OnModuleInit {
     private readonly storageService: StorageService,
   ) {
     this.crypto = new Crypto();
+    this.hashAlgorithm = parseXadesHashAlgorithm(
+      this.configService.get<string>(
+        'XADES_HASH_ALGO',
+        DEFAULT_XADES_HASH_ALGORITHM,
+      ),
+    );
     this.CERT_CACHE_TTL_MS = this.configService.get<number>(
       'CACHE_CERT_TTL_MS',
       3600000,
@@ -159,7 +204,7 @@ export class XmlSignerService implements OnModuleInit {
           {
             id: 'Reference-' + referenceId,
             uri: '#' + referenceId,
-            hash: 'SHA-1',
+            hash: this.hashAlgorithm,
             transforms: ['enveloped', 'c14n'],
           },
         ],
@@ -177,6 +222,8 @@ export class XmlSignerService implements OnModuleInit {
       throw new Error('Error al generar el XML firmado');
     }
 
+    this.setDigestMethodUri(signedXmlDoc);
+
     const serializer = new XMLSerializer();
     // signedXmlDoc is a runtime xmldom node (xadesjs uses xmldom via setNodeDependencies)
     const signedXmlStr = serializer.serializeToString(signedXmlDoc as any);
@@ -193,6 +240,18 @@ export class XmlSignerService implements OnModuleInit {
 
     this.logger.log('Documento XML firmado exitosamente con XAdES-BES');
     return signedXmlString;
+  }
+
+  private setDigestMethodUri(signedXmlDoc: Element): void {
+    const digestMethods = signedXmlDoc.getElementsByTagNameNS(
+      'http://www.w3.org/2000/09/xmldsig#',
+      'DigestMethod',
+    );
+    const digestMethodUri = getXadesDigestMethodUri(this.hashAlgorithm);
+
+    for (let index = 0; index < digestMethods.length; index += 1) {
+      digestMethods[index].setAttribute('Algorithm', digestMethodUri);
+    }
   }
 
   isCertificateLoaded(): boolean {
@@ -215,7 +274,7 @@ export class XmlSignerService implements OnModuleInit {
         binaryDer,
         {
           name: 'RSASSA-PKCS1-v1_5',
-          hash: 'SHA-1',
+          hash: this.hashAlgorithm,
         },
         true,
         ['sign'],
@@ -240,7 +299,7 @@ export class XmlSignerService implements OnModuleInit {
         pkcs8Binary,
         {
           name: 'RSASSA-PKCS1-v1_5',
-          hash: 'SHA-1',
+          hash: this.hashAlgorithm,
         },
         true,
         ['sign'],
@@ -427,7 +486,7 @@ export class XmlSignerService implements OnModuleInit {
           {
             id: 'Reference-' + referenceId,
             uri: '#' + referenceId,
-            hash: 'SHA-1',
+            hash: this.hashAlgorithm,
             transforms: ['enveloped', 'c14n'],
           },
         ],
@@ -444,6 +503,8 @@ export class XmlSignerService implements OnModuleInit {
     if (!signedXmlDoc) {
       throw new Error('Error al generar el XML firmado');
     }
+
+    this.setDigestMethodUri(signedXmlDoc);
 
     const serializer = new XMLSerializer();
     // signedXmlDoc is a runtime xmldom node (xadesjs uses xmldom via setNodeDependencies)
