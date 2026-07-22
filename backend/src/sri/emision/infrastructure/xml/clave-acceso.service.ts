@@ -1,7 +1,9 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { randomInt } from 'crypto';
 import { ClaveAccesoData } from '../../domain/interfaces';
 import { Ambiente, TipoEmision } from '../../domain/constants';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
 /**
  * Servicio para generar claves de acceso de comprobantes electrónicos
@@ -18,9 +20,10 @@ import { Ambiente, TipoEmision } from '../../domain/constants';
  * - Tipo de emisión (1 dígito): 1=Normal, 2=Contingencia
  * - Dígito verificador Módulo 11 (1 dígito)
  */
+@LogContext()
 @Injectable()
 export class ClaveAccesoService {
-  private readonly logger = new Logger(ClaveAccesoService.name);
+  constructor(private readonly logger: LoggerService) {}
 
   /**
    * Genera una clave de acceso de 49 dígitos

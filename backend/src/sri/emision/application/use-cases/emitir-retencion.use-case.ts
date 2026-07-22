@@ -1,4 +1,4 @@
-import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ClaveAccesoService } from '../../infrastructure/xml/clave-acceso.service';
 import { XmlBuilderService } from '../../infrastructure/xml/xml-builder.service';
@@ -18,11 +18,12 @@ import {
   SriOperationResult,
 } from '../../domain/interfaces';
 import { TipoComprobante, Ambiente, TipoEmision } from '../../domain/constants';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
+@LogContext()
 @Injectable()
 export class EmitirRetencionUseCase {
-  private readonly logger = new Logger(EmitirRetencionUseCase.name);
-
   constructor(
     private readonly claveAccesoService: ClaveAccesoService,
     private readonly xmlBuilderService: XmlBuilderService,
@@ -34,6 +35,7 @@ export class EmitirRetencionUseCase {
     private readonly xmlStorage: XmlStorageService,
     private readonly base: SriBaseService,
     private readonly eventEmitter: EventEmitter2,
+    private readonly logger: LoggerService,
   ) {}
 
   /**

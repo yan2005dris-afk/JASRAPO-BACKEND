@@ -3,7 +3,6 @@ import {
   NotFoundException,
   BadRequestException,
   ConflictException,
-  Logger,
 } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { Prisma } from 'src/generated/prisma/client';
@@ -29,17 +28,19 @@ import {
   SRI_STORAGE_TYPES,
 } from 'src/infrastructure/storage/storage.service';
 import { ImageProcessorUtil } from 'src/infrastructure/common/utils/image-processor.util';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
+@LogContext()
 @Injectable()
 export class UserService {
-  private readonly logger = new Logger(UserService.name);
-
   constructor(
     private readonly userRepository: UserRepository,
     private readonly createUserUseCase: CreateUserUseCase,
     private readonly getEffectivePermissionsUseCase: GetEffectivePermissionsUseCase,
     private readonly updateUserPermissionsUseCase: UpdateUserPermissionsUseCase,
     private readonly storageService: StorageService,
+    private readonly logger: LoggerService,
   ) {}
 
   async user(criteria: {

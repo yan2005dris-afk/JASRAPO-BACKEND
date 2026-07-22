@@ -23,7 +23,7 @@ import type {
 import { REFRESH_TOKEN_MAX_AGE_MS } from 'src/infrastructure/config/app.constants';
 import { CookieValue } from 'src/infrastructure/common/decorators/cookie-value.decorator';
 import { RequiredStringPipe } from 'src/infrastructure/common/pipes/required-string.pipe';
-import { ThrottlerGuard } from '@nestjs/throttler';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -101,6 +101,11 @@ export class AuthController {
   @ApiResponse({ status: 400, description: 'Credenciales inválidas' })
   @ApiResponse({ status: 401, description: 'Autenticación fallida' })
   @Public()
+  @ApiResponse({ status: 429, description: 'Demasiadas solicitudes' })
+  // Tighter per-IP throttle (issue #136): el guard global permite 20/min por
+  // IP para todas las rutas; aquí bajamos a 5/min para endurecer el endpoint
+  // de login antes de que se active el lockout por cuenta.
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @Post('/login')
   async login(
     @Body() loginUserDto: LoginUserDto,

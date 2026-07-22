@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PdfService } from '../../infrastructure/pdf/pdf.service';
 import { buildPdfFileName } from '../../infrastructure/pdf/utils/pdf-format.utils';
 import {
@@ -6,6 +6,8 @@ import {
   ReportStyle,
   ReportStyleService,
 } from './report-style.service';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
 const VALID_STYLES: readonly ReportStyle[] = ['legacy', 'modern'];
 
@@ -20,13 +22,13 @@ const VALID_STYLES: readonly ReportStyle[] = ['legacy', 'modern'];
  * The dispatcher's job is orchestration only — caching, style resolution and
  * template rendering live in their respective services.
  */
+@LogContext()
 @Injectable()
 export class ReportStyleDispatcher {
-  private readonly logger = new Logger(ReportStyleDispatcher.name);
-
   constructor(
     private readonly styles: ReportStyleService,
     private readonly pdfService: PdfService,
+    private readonly logger: LoggerService,
   ) {}
 
   /**
