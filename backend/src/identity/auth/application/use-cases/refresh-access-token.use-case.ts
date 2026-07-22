@@ -169,11 +169,18 @@ export class RefreshAccessTokenUseCase {
       `[SECURITY] Refresh replay detectado: sesionId=${sesionId} usuarioId=${usuarioId} ip="${ip}" motivo="${reason}"`,
     );
     try {
-      await this.sessionsService.revokeSession(sesionId);
+      // Reuse de un refresh token = posible robo. Revoca TODAS las sesiones del
+      // usuario (no solo esta), para invalidar también el token del atacante
+      // que pueda vivir en otra sesión/familia (OWASP A07, issue #150).
+      const revoked =
+        await this.sessionsService.revokeAllUserSessions(usuarioId);
+      this.logger.warn(
+        `[SECURITY] Sesiones revocadas por replay: usuarioId=${usuarioId} count=${revoked}`,
+      );
     } catch (err) {
       // La revocación es best-effort: nunca debe enmascarar el 401 de replay.
       this.logger.error(
-        `[SECURITY] No se pudo revocar la sesión tras replay: sesionId=${sesionId} | ${err}`,
+        `[SECURITY] No se pudieron revocar sesiones tras replay: usuarioId=${usuarioId} | ${err}`,
       );
     }
   }

@@ -69,6 +69,7 @@ describe('RefreshAccessTokenUseCase', () => {
             getSession: jest.fn(),
             rotateSession: jest.fn(),
             revokeSession: jest.fn(),
+            revokeAllUserSessions: jest.fn().mockResolvedValue(1),
           },
         },
       ],
@@ -191,8 +192,8 @@ describe('RefreshAccessTokenUseCase', () => {
         'Refresh token replay detected',
       );
       expect(sessionsService.rotateSession).not.toHaveBeenCalled();
-      // Replay detectado: la sesión completa se revoca.
-      expect(sessionsService.revokeSession).toHaveBeenCalledWith('sid');
+      // Replay detectado: se revocan TODAS las sesiones del usuario.
+      expect(sessionsService.revokeAllUserSessions).toHaveBeenCalledWith(1);
     });
 
     it('revokes the session when the atomic rotate loses the race (replay)', async () => {
@@ -215,7 +216,7 @@ describe('RefreshAccessTokenUseCase', () => {
       await expect(useCase.execute('sid', 'rt', 'ip', 'ua', 1)).rejects.toThrow(
         'Refresh token replay detected',
       );
-      expect(sessionsService.revokeSession).toHaveBeenCalledWith('sid');
+      expect(sessionsService.revokeAllUserSessions).toHaveBeenCalledWith(1);
     });
 
     it('should reject a refresh token with the wrong sessionSecret', async () => {

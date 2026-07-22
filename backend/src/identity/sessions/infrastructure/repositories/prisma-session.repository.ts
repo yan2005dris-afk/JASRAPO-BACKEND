@@ -110,4 +110,12 @@ export class PrismaSessionRepository implements SessionRepository {
     });
     return SessionMapper.toEntity(session)!;
   }
+
+  async revokeAllByUser(usuarioId: number): Promise<number> {
+    const result = await this.prisma.sesiones.updateMany({
+      where: { usuarioId, revocado: false },
+      data: { revocado: true },
+    });
+    return result.count;
+  }
 }

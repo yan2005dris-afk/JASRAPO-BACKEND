@@ -55,4 +55,5 @@ export abstract class SessionRepository {
     data: RotateSessionRepositoryData,
   ): Promise<number>;
   abstract revoke(sesionId: string): Promise<SessionEntity>;
+  abstract revokeAllByUser(usuarioId: number): Promise<number>;
 }

@@ -58,6 +58,10 @@ export class SessionsService {
     return this.revokeUseCase.execute(sesionId);
   }
 
+  async revokeAllUserSessions(usuarioId: number): Promise<number> {
+    return this.sessionRepository.revokeAllByUser(usuarioId);
+  }
+
   async listSessionsByUser(usuarioId: number): Promise<SessionEntity[]> {
     return this.listByUserUseCase.execute(usuarioId);
   }
