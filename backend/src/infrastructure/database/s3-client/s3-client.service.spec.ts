@@ -43,20 +43,30 @@ describe('S3ClientService', () => {
 
     mockConfigService = {
       get: jest.fn(),
+      getOrThrow: jest.fn(),
     } as unknown as jest.Mocked<ConfigService>;
+
+    const config: Record<string, unknown> = {
+      STORAGE_ENDPOINT: 'localhost',
+      STORAGE_PORT: 9000,
+      STORAGE_USE_SSL: 'false',
+      STORAGE_ACCESS_KEY: 'admin',
+      STORAGE_SECRET_KEY: 'password123',
+    };
 
     mockConfigService.get.mockImplementation(
       (key: string, defaultValue?: unknown) => {
-        const config: Record<string, unknown> = {
-          STORAGE_ENDPOINT: 'localhost',
-          STORAGE_PORT: 9000,
-          STORAGE_USE_SSL: 'false',
-          STORAGE_ACCESS_KEY: 'admin',
-          STORAGE_SECRET_KEY: 'password123',
-        };
         return config[key] ?? defaultValue;
       },
     );
+
+    mockConfigService.getOrThrow.mockImplementation((key: string) => {
+      const value = config[key];
+      if (value === undefined || value === null) {
+        throw new Error(`Config key "${key}" is required but was not set`);
+      }
+      return value;
+    });
 
     service = new S3ClientService(mockConfigService);
   });
@@ -87,6 +97,56 @@ describe('S3ClientService', () => {
         '[S3] Failed to connect',
       );
       expect(service.isAvailable).toBe(false);
+    });
+
+    it('should throw when STORAGE_ACCESS_KEY is missing', async () => {
+      mockConfigService.getOrThrow.mockImplementation((key: string) => {
+        if (key === 'STORAGE_ACCESS_KEY') {
+          throw new Error('Config key "STORAGE_ACCESS_KEY" is required');
+        }
+        return 'any-value';
+      });
+
+      await expect(service.onModuleInit()).rejects.toThrow(
+        'STORAGE_ACCESS_KEY',
+      );
+    });
+
+    it('should throw when STORAGE_ACCESS_KEY is empty', async () => {
+      mockConfigService.getOrThrow.mockImplementation((key: string) => {
+        if (key === 'STORAGE_ACCESS_KEY') return '   ';
+        if (key === 'STORAGE_SECRET_KEY') return 'valid-secret';
+        throw new Error(`Unexpected key ${key}`);
+      });
+
+      await expect(service.onModuleInit()).rejects.toThrow(
+        'STORAGE_ACCESS_KEY is missing or empty',
+      );
+    });
+
+    it('should throw when STORAGE_SECRET_KEY is missing', async () => {
+      mockConfigService.getOrThrow.mockImplementation((key: string) => {
+        if (key === 'STORAGE_SECRET_KEY') {
+          throw new Error('Config key "STORAGE_SECRET_KEY" is required');
+        }
+        return 'any-value';
+      });
+
+      await expect(service.onModuleInit()).rejects.toThrow(
+        'STORAGE_SECRET_KEY',
+      );
+    });
+
+    it('should throw when STORAGE_SECRET_KEY is empty', async () => {
+      mockConfigService.getOrThrow.mockImplementation((key: string) => {
+        if (key === 'STORAGE_ACCESS_KEY') return 'valid-access-key';
+        if (key === 'STORAGE_SECRET_KEY') return '';
+        throw new Error(`Unexpected key ${key}`);
+      });
+
+      await expect(service.onModuleInit()).rejects.toThrow(
+        'STORAGE_SECRET_KEY is missing or empty',
+      );
     });
   });
 
@@ -200,21 +260,21 @@ describe('S3ClientService', () => {
   // --- getPresignedUrl ---
 
   describe('getPresignedUrl', () => {
-    it('should return a presigned URL with default expiration', async () => {
+    it('should return a presigned URL with the given expiration', async () => {
       await initService();
       (getSignedUrl as jest.Mock).mockResolvedValueOnce(
         'https://s3.local/file.txt?token=xyz',
       );
-      const url = await service.getPresignedUrl('bucket', 'file.txt');
+      const url = await service.getPresignedUrl('bucket', 'file.txt', 600);
       expect(url).toBe('https://s3.local/file.txt?token=xyz');
       expect(getSignedUrl).toHaveBeenCalledWith(
         expect.any(Object),
         expect.any(Object),
-        { expiresIn: 86400 },
+        { expiresIn: 600 },
       );
     });
 
-    it('should accept custom expiration', async () => {
+    it('should accept custom expiration within the 60-minute cap', async () => {
       await initService();
       (getSignedUrl as jest.Mock).mockResolvedValueOnce(
         'https://s3.local/file.txt?token=xyz',
@@ -225,6 +285,23 @@ describe('S3ClientService', () => {
         expect.any(Object),
         { expiresIn: 3600 },
       );
+    });
+
+    it('should throw when expiration exceeds the 60-minute cap', async () => {
+      await initService();
+      await expect(
+        service.getPresignedUrl('bucket', 'file.txt', 3601),
+      ).rejects.toThrow('capped at 3600s');
+    });
+
+    it('should throw when expiration is zero or negative', async () => {
+      await initService();
+      await expect(
+        service.getPresignedUrl('bucket', 'file.txt', 0),
+      ).rejects.toThrow('Invalid expiresInSeconds');
+      await expect(
+        service.getPresignedUrl('bucket', 'file.txt', -5),
+      ).rejects.toThrow('Invalid expiresInSeconds');
     });
   });
 

@@ -65,12 +65,12 @@ export interface IStorageService {
    * Generates a presigned URL for temporary access
    * @param bucket - Bucket name
    * @param key - Object key
-   * @param expiresInSeconds - URL expiration (default: 24 hours)
+   * @param expiresInSeconds - URL expiration in seconds (required, max 3600s / 60 minutes for download URLs)
    */
   getUrl(
     bucket: string,
     key: string,
-    expiresInSeconds?: number,
+    expiresInSeconds: number,
   ): Promise<string>;
 
   /**
@@ -96,10 +96,11 @@ export interface IStorageService {
   /**
    * Refreshes the URL for an existing object
    * (Generates a new presigned URL, same object key)
+   * @param expiresInSeconds - URL expiration in seconds (required, max 3600s / 60 minutes for download URLs)
    */
   refreshUrl(
     bucket: string,
     key: string,
-    expiresInSeconds?: number,
+    expiresInSeconds: number,
   ): Promise<string>;
 }

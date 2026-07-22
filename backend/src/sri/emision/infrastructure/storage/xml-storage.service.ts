@@ -185,11 +185,11 @@ export class XmlStorageService {
    * Gets a presigned URL for downloading the XML file
    * Accepts the relative path stored in database (format: {ruc}/{year}/{month}/{subdir}/{claveAcceso}.xml)
    * @param relativePath The relative storage key
-   * @param expiresInSeconds URL expiration time (default: 24 hours)
+   * @param expiresInSeconds URL expiration in seconds (required, max 3600s / 60 minutes)
    */
   async getFullPath(
     relativePath: string,
-    expiresInSeconds = 86400,
+    expiresInSeconds: number,
   ): Promise<string> {
     // Extract RUC from the first segment of the path
     const pathParts = relativePath.split('/');
@@ -209,10 +209,11 @@ export class XmlStorageService {
    * Refreshes the URL for an existing XML file (generates a new presigned URL)
    * Useful when the previous URL has expired
    * Accepts the relative path stored in database (format: {ruc}/{year}/{month}/{subdir}/{claveAcceso}.xml)
+   * @param expiresInSeconds URL expiration in seconds (required, max 3600s / 60 minutes)
    */
   async refreshUrl(
     relativePath: string,
-    expiresInSeconds = 86400,
+    expiresInSeconds: number,
   ): Promise<string> {
     // Extract RUC from the first segment of the path
     const pathParts = relativePath.split('/');
