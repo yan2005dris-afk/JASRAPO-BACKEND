@@ -86,7 +86,9 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       const exposeDetails =
         this.configService.get('EXPOSE_ERROR_DETAILS') === 'true';
 
-      message = exposeDetails ? exception.message : 'Error interno del servidor';
+      message = exposeDetails
+        ? exception.message
+        : 'Error interno del servidor';
     }
 
     // Log full stack to Loki for every unhandled exception, regardless of

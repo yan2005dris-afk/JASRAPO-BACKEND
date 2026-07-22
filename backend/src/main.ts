@@ -165,10 +165,7 @@ async function bootstrap() {
 
   // Filtro global de excepciones
   app.useGlobalFilters(
-    new GlobalExceptionFilter(
-      app.get(ConfigService),
-      app.get(LoggerService),
-    ),
+    new GlobalExceptionFilter(app.get(ConfigService), app.get(LoggerService)),
   );
 
   const config = new DocumentBuilder()

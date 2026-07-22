@@ -46,9 +46,7 @@ const makeConfigService = (
     ),
   }) as unknown as jest.Mocked<Pick<ConfigService, 'get'>>;
 
-const makeLogger = (): jest.Mocked<
-  Pick<LoggerService, 'error' | 'log'>
-> => ({
+const makeLogger = (): jest.Mocked<Pick<LoggerService, 'error' | 'log'>> => ({
   error: jest.fn(),
   log: jest.fn(),
 });
@@ -56,7 +54,7 @@ const makeLogger = (): jest.Mocked<
 describe('GlobalExceptionFilter', () => {
   describe('Prisma-style unhandled errors (status 500)', () => {
     const prismaMessage =
-      "Invalid `prisma.user.create()` invocation: Foreign key constraint failed on the field: `fk_user_company` at 10.0.0.5";
+      'Invalid `prisma.user.create()` invocation: Foreign key constraint failed on the field: `fk_user_company` at 10.0.0.5';
 
     it('returns the generic message when EXPOSE_ERROR_DETAILS=false', () => {
       const configService = makeConfigService(false);
@@ -260,7 +258,9 @@ describe('GlobalExceptionFilter', () => {
       filter.catch(err, host);
 
       const logCalls = logger.log.mock.calls.filter(
-        (call) => typeof call[0] === 'string' && call[0].includes('unhandled_exception'),
+        (call) =>
+          typeof call[0] === 'string' &&
+          call[0].includes('unhandled_exception'),
       );
       expect(logCalls.length).toBe(1);
       const payload = JSON.parse(logCalls[0][0]);
@@ -288,7 +288,9 @@ describe('GlobalExceptionFilter', () => {
       filter.catch(new Error('boom'), host);
 
       const logCalls = logger.log.mock.calls.filter(
-        (call) => typeof call[0] === 'string' && call[0].includes('unhandled_exception'),
+        (call) =>
+          typeof call[0] === 'string' &&
+          call[0].includes('unhandled_exception'),
       );
       const payload = JSON.parse(logCalls[0][0]);
       expect(payload.requestId).toBeUndefined();
