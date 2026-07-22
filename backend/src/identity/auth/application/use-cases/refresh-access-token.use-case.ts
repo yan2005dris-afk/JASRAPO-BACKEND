@@ -25,6 +25,19 @@ export class RefreshAccessTokenUseCase {
     private readonly logger: LoggerService,
   ) {}
 
+  // TODO(security/refresh-family): add family tracking — issue #150
+  // The current implementation only checks the single session row and
+  // does not detect refresh-token reuse across a token family. To
+  // close the OWASP A07 gap, persist a `familyId` column on `sesiones`
+  // (Prisma migration), generate a UUID on login, stamp it on every
+  // rotated refresh token, and revoke every row sharing the family
+  // whenever a refresh token is presented twice. Requires:
+  //   - schema migration (Sesiones.familyId String?, index)
+  //   - SessionsService.createSession / updateSession signature
+  //   - detection path on second-use + cascade revocation
+  //   - reuse-detection test (Testcontainers integration spec)
+  // Out of scope for the TTL/ceiling PR; tracked separately.
+
   async execute(
     sesionId: string,
     refreshToken: string,
