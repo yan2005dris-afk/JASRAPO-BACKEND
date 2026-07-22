@@ -5,6 +5,15 @@ import { XmlSignerService } from './xml-signer.service';
 import type { EmisorRepository } from '../../../emisores/domain/repositories/emisor.repository';
 import type { EncryptionService } from '../../../../infrastructure/encryption/encryption.service';
 import type { StorageService } from '../../../../infrastructure/storage/storage.service';
+import type { LoggerService } from '../../../../infrastructure/observability/logger/logger.service';
+
+const mockLogger = {
+  log: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+  debug: jest.fn(),
+  verbose: jest.fn(),
+};
 
 const XMLDSIG_NAMESPACE = 'http://www.w3.org/2000/09/xmldsig#';
 const SHA256_DIGEST_URI = 'http://www.w3.org/2001/04/xmlenc#sha256';
@@ -33,6 +42,7 @@ describe('XmlSignerService XAdES digest contract', () => {
       {} as EmisorRepository,
       {} as EncryptionService,
       {} as StorageService,
+      mockLogger as unknown as LoggerService,
     );
 
   const signSampleDocument = async (
