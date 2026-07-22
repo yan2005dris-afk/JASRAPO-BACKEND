@@ -424,10 +424,10 @@ describe('S3ClientService', () => {
       });
       stubSuccessfulBoot();
 
+      await expect(service.onModuleInit()).rejects.toThrow(/STORAGE_USE_SSL/i);
       await expect(service.onModuleInit()).rejects.toThrow(
-        /STORAGE_USE_SSL/i,
+        /NODE_ENV=production/,
       );
-      await expect(service.onModuleInit()).rejects.toThrow(/NODE_ENV=production/);
       expect((S3Client as jest.Mock).mock.calls).toHaveLength(0);
     });
 
