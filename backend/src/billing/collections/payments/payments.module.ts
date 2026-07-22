@@ -14,6 +14,7 @@ import { SRIEmissionDispatcherService } from './application/sri-emission-dispatc
 import { JobsService } from '../../../infrastructure/jobs/jobs.service';
 import { OutboxModule } from 'src/shared/outbox/outbox.module';
 import { OutboxProcessor } from 'src/shared/outbox/application/outbox.processor';
+import { EventosPendientesRepository } from 'src/shared/outbox/domain/repositories/eventos-pendientes.repository';
 
 @Module({
   imports: [OutboxModule],
@@ -31,7 +32,7 @@ import { OutboxProcessor } from 'src/shared/outbox/application/outbox.processor'
     SRIEmissionDispatcherService,
     { provide: 'JobService', useExisting: JobsService },
   ],
-  exports: [PaymentRepository, PaymentsService],
+  exports: [PaymentRepository, PaymentsService, EventosPendientesRepository],
 })
 export class PaymentsModule implements OnModuleInit {
   constructor(
