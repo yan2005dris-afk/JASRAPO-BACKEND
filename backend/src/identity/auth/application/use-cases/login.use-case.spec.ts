@@ -30,6 +30,7 @@ describe('LoginUseCase', () => {
   let userRepository: jest.Mocked<UserRepository>;
   let jwtService: jest.Mocked<JwtService>;
   let sessionsService: jest.Mocked<SessionsService>;
+  let configService: jest.Mocked<ConfigService>;
 
   const baseUserMock = {
     usuarioId: 1,
@@ -57,6 +58,7 @@ describe('LoginUseCase', () => {
             findByEmailWithPassword: jest.fn(),
             recordFailedLoginAttempt: jest.fn(),
             clearFailedLoginAttempts: jest.fn().mockResolvedValue(undefined),
+            update: jest.fn().mockResolvedValue({}),
           },
         },
         {
@@ -78,6 +80,7 @@ describe('LoginUseCase', () => {
               };
               return config[key];
             }),
+            get: jest.fn((_key: string, fallback?: unknown) => fallback),
           },
         },
         {
@@ -93,6 +96,7 @@ describe('LoginUseCase', () => {
     userRepository = module.get(UserRepository);
     jwtService = module.get(JwtService);
     sessionsService = module.get(SessionsService);
+    configService = module.get(ConfigService);
   });
 
   afterEach(() => {
@@ -333,6 +337,83 @@ describe('LoginUseCase', () => {
         windowMs: 15 * 60 * 1000,
         lockoutDurationMs: 30 * 60 * 1000,
       });
+    });
+  });
+
+  describe('bcrypt cost upgrade (issue #137)', () => {
+    const setupSuccessfulLogin = () => {
+      (userRepository.findByEmailWithPassword as jest.Mock).mockResolvedValue({
+        ...baseUserMock,
+      });
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+      (bcrypt.hash as jest.Mock).mockResolvedValue('rehashed-password');
+      jwtService.signAsync
+        .mockResolvedValueOnce('access-token')
+        .mockResolvedValueOnce('refresh-token');
+      jwtService.decode
+        .mockReturnValueOnce({ iat: 1000, exp: 2000 })
+        .mockReturnValueOnce({ iat: 1000, exp: 2000 });
+      sessionsService.createSession.mockResolvedValue({} as any);
+    };
+
+    it('re-hashes the plaintext password when stored cost is below the target', async () => {
+      setupSuccessfulLogin();
+      (bcrypt.getRounds as jest.Mock).mockReturnValue(10);
+
+      await useCase.execute({
+        email: 'test@jasrapo.com',
+        password: 'Password123!',
+      });
+
+      // Re-hashea la CONTRASEÑA en claro, no el hash almacenado, a cost 12.
+      expect(bcrypt.hash).toHaveBeenCalledWith('Password123!', 12);
+      expect(userRepository.update).toHaveBeenCalledWith(1, {
+        clave: 'rehashed-password',
+      });
+    });
+
+    it('does not re-hash when stored cost already meets the target', async () => {
+      setupSuccessfulLogin();
+      (bcrypt.getRounds as jest.Mock).mockReturnValue(12);
+
+      await useCase.execute({
+        email: 'test@jasrapo.com',
+        password: 'Password123!',
+      });
+
+      expect(bcrypt.hash).not.toHaveBeenCalled();
+      expect(userRepository.update).not.toHaveBeenCalled();
+    });
+
+    it('honors a configured BCRYPT_COST value', async () => {
+      setupSuccessfulLogin();
+      (bcrypt.getRounds as jest.Mock).mockReturnValue(10);
+      (configService.get as jest.Mock).mockImplementation(
+        (key: string, fallback?: unknown) =>
+          key === 'BCRYPT_COST' ? 14 : fallback,
+      );
+
+      await useCase.execute({
+        email: 'test@jasrapo.com',
+        password: 'Password123!',
+      });
+
+      expect(bcrypt.hash).toHaveBeenCalledWith('Password123!', 14);
+    });
+
+    it('does not block login if the re-hash update fails', async () => {
+      setupSuccessfulLogin();
+      (bcrypt.getRounds as jest.Mock).mockReturnValue(10);
+      (userRepository.update as jest.Mock).mockRejectedValue(
+        new Error('DB down'),
+      );
+
+      const result = await useCase.execute({
+        email: 'test@jasrapo.com',
+        password: 'Password123!',
+      });
+
+      expect(result.accessToken).toBe('access-token');
     });
   });
 });

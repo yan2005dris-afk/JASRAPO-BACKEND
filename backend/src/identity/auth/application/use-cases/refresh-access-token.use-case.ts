@@ -65,6 +65,7 @@ export class RefreshAccessTokenUseCase {
     }
 
     if (session.tokenVersion !== tokenVersion) {
+      await this.revokeOnReplay(sesionId, usuarioId, ip, 'stale tokenVersion');
       throw new UnauthorizedException('Refresh token replay detected');
     }
 
@@ -98,7 +99,6 @@ export class RefreshAccessTokenUseCase {
         sessionSecret: newSessionSecret,
         direccionIp: ip,
         usuarioAgente: userAgent,
-        revocado: false,
         expiraEn,
       });
     } catch (err) {
@@ -109,6 +109,10 @@ export class RefreshAccessTokenUseCase {
     }
 
     if (affectedRows === 0) {
+      // Otra request rotó primero (o la sesión dejó de estar viva entre la
+      // lectura y el UPDATE): es un replay. Revoca toda la sesión para que el
+      // token del atacante también muera.
+      await this.revokeOnReplay(sesionId, usuarioId, ip, 'lost atomic rotate');
       throw new UnauthorizedException('Refresh token replay detected');
     }
 
@@ -153,6 +157,32 @@ export class RefreshAccessTokenUseCase {
       jwtSecretBuffer.length === sessionSecretBuffer.length &&
       timingSafeEqual(jwtSecretBuffer, sessionSecretBuffer)
     );
+  }
+
+  private async revokeOnReplay(
+    sesionId: string,
+    usuarioId: number,
+    ip: string,
+    reason: string,
+  ): Promise<void> {
+    this.logger.warn(
+      `[SECURITY] Refresh replay detectado: sesionId=${sesionId} usuarioId=${usuarioId} ip="${ip}" motivo="${reason}"`,
+    );
+    try {
+      // Reuse de un refresh token = posible robo. Revoca TODAS las sesiones del
+      // usuario (no solo esta), para invalidar también el token del atacante
+      // que pueda vivir en otra sesión/familia (OWASP A07, issue #150).
+      const revoked =
+        await this.sessionsService.revokeAllUserSessions(usuarioId);
+      this.logger.warn(
+        `[SECURITY] Sesiones revocadas por replay: usuarioId=${usuarioId} count=${revoked}`,
+      );
+    } catch (err) {
+      // La revocación es best-effort: nunca debe enmascarar el 401 de replay.
+      this.logger.error(
+        `[SECURITY] No se pudieron revocar sesiones tras replay: usuarioId=${usuarioId} | ${err}`,
+      );
+    }
   }
 
   private buildTokenInfo(token: string) {

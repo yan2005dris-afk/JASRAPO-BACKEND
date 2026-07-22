@@ -68,6 +68,8 @@ describe('RefreshAccessTokenUseCase', () => {
           useValue: {
             getSession: jest.fn(),
             rotateSession: jest.fn(),
+            revokeSession: jest.fn(),
+            revokeAllUserSessions: jest.fn().mockResolvedValue(1),
           },
         },
       ],
@@ -190,6 +192,31 @@ describe('RefreshAccessTokenUseCase', () => {
         'Refresh token replay detected',
       );
       expect(sessionsService.rotateSession).not.toHaveBeenCalled();
+      // Replay detectado: se revocan TODAS las sesiones del usuario.
+      expect(sessionsService.revokeAllUserSessions).toHaveBeenCalledWith(1);
+    });
+
+    it('revokes the session when the atomic rotate loses the race (replay)', async () => {
+      sessionsService.getSession.mockResolvedValue({
+        sesionId: 'sid',
+        sessionSecret,
+        tokenVersion: 1,
+        revocado: false,
+        expiraEn: new Date(Date.now() + 100000),
+      } as any);
+      (jwtService.verifyAsync as jest.Mock).mockResolvedValue(refreshPayload);
+      (userRepository.findById as jest.Mock).mockResolvedValue({
+        email: 'test@test.com',
+      });
+      jwtService.signAsync.mockResolvedValue('new-token');
+      jwtService.decode.mockReturnValue({ iat: 100, exp: 200 });
+      // Otra request rotó primero: el UPDATE atómico no afecta filas.
+      sessionsService.rotateSession.mockResolvedValue(0);
+
+      await expect(useCase.execute('sid', 'rt', 'ip', 'ua', 1)).rejects.toThrow(
+        'Refresh token replay detected',
+      );
+      expect(sessionsService.revokeAllUserSessions).toHaveBeenCalledWith(1);
     });
 
     it('should reject a refresh token with the wrong sessionSecret', async () => {

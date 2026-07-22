@@ -21,7 +21,6 @@ export interface RotateSessionRepositoryData {
   sessionSecret: string;
   direccionIp?: string | null;
   usuarioAgente?: string | null;
-  revocado: boolean;
   expiraEn: Date;
 }
 
@@ -56,4 +55,5 @@ export abstract class SessionRepository {
     data: RotateSessionRepositoryData,
   ): Promise<number>;
   abstract revoke(sesionId: string): Promise<SessionEntity>;
+  abstract revokeAllByUser(usuarioId: number): Promise<number>;
 }
