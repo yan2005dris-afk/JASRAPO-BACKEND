@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import {
   CreateSessionRepositoryData,
+  RotateSessionRepositoryData,
   SessionEntity,
   SessionRepository,
   UpdateSessionRepositoryData,
@@ -17,7 +18,8 @@ export class PrismaSessionRepository implements SessionRepository {
       data: {
         sesionId: data.sesionId,
         usuarioId: data.usuarioId,
-        hashRefreshToken: data.hashRefreshToken,
+        sessionSecret: data.sessionSecret,
+        tokenVersion: data.tokenVersion,
         direccionIp: data.direccionIp,
         usuarioAgente: data.usuarioAgente,
         revocado: data.revocado ?? false,
@@ -68,7 +70,6 @@ export class PrismaSessionRepository implements SessionRepository {
     const session = await this.prisma.sesiones.update({
       where: { sesionId },
       data: {
-        hashRefreshToken: data.hashRefreshToken,
         direccionIp: data.direccionIp,
         usuarioAgente: data.usuarioAgente,
         revocado: data.revocado,
@@ -78,11 +79,43 @@ export class PrismaSessionRepository implements SessionRepository {
     return SessionMapper.toEntity(session)!;
   }
 
+  async rotate(
+    sesionId: string,
+    data: RotateSessionRepositoryData,
+  ): Promise<number> {
+    const result = await this.prisma.sesiones.updateMany({
+      where: {
+        sesionId,
+        tokenVersion: data.expectedTokenVersion,
+        // Solo rota sesiones vivas: una sesión revocada o expirada no debe
+        // poder resucitarse por una rotación en vuelo (TOCTOU con logout).
+        revocado: false,
+        expiraEn: { gt: new Date() },
+      },
+      data: {
+        sessionSecret: data.sessionSecret,
+        tokenVersion: { increment: 1 },
+        direccionIp: data.direccionIp,
+        usuarioAgente: data.usuarioAgente,
+        expiraEn: data.expiraEn,
+      },
+    });
+    return result.count;
+  }
+
   async revoke(sesionId: string): Promise<SessionEntity> {
     const session = await this.prisma.sesiones.update({
       where: { sesionId },
       data: { revocado: true },
     });
     return SessionMapper.toEntity(session)!;
+  }
+
+  async revokeAllByUser(usuarioId: number): Promise<number> {
+    const result = await this.prisma.sesiones.updateMany({
+      where: { usuarioId, revocado: false },
+      data: { revocado: true },
+    });
+    return result.count;
   }
 }

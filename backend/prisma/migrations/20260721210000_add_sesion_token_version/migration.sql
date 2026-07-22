@@ -1,0 +1,2 @@
+ALTER TABLE "sesiones" ADD COLUMN "tokenVersion" INTEGER NOT NULL DEFAULT 1;
+ALTER TABLE "sesiones" ADD COLUMN "sessionSecret" TEXT NOT NULL DEFAULT '';

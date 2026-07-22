@@ -27,7 +27,7 @@ describe('CreateSessionUseCase', () => {
   it('should create a session', async () => {
     const data = {
       usuarioId: 1,
-      hashRefreshToken: 'hash',
+      sessionSecret: 'a'.repeat(64),
       expiraEn: new Date(),
     } as any;
     (sessionRepository.create as jest.Mock).mockResolvedValue({

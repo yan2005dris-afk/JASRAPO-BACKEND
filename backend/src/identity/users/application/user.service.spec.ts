@@ -7,6 +7,14 @@ import { GetEffectivePermissionsUseCase } from './use-cases/get-effective-permis
 import { UpdateUserPermissionsUseCase } from './use-cases/update-user-permissions.use-case';
 import { NotFoundException } from '@nestjs/common';
 import { StorageService } from 'src/infrastructure/storage/storage.service';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+const mockLogger = {
+  log: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+  debug: jest.fn(),
+  verbose: jest.fn(),
+};
 
 describe('UserService', () => {
   let service: UserService;
@@ -42,6 +50,7 @@ describe('UserService', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
+        { provide: LoggerService, useValue: mockLogger },
         UserService,
         { provide: UserRepository, useValue: mockUserRepository },
         { provide: CreateUserUseCase, useValue: {} },

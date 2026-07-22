@@ -25,6 +25,7 @@ describe('SessionsService', () => {
           provide: SessionRepository,
           useValue: {
             findById: jest.fn(),
+            revokeAllByUser: jest.fn(),
           },
         },
         {
@@ -90,6 +91,11 @@ describe('SessionsService', () => {
   it('should delegate revokeSession', async () => {
     await service.revokeSession('abc');
     expect(revokeUseCase.execute).toHaveBeenCalledWith('abc');
+  });
+
+  it('should delegate revokeAllUserSessions to the repository', async () => {
+    await service.revokeAllUserSessions(1);
+    expect(sessionRepository.revokeAllByUser).toHaveBeenCalledWith(1);
   });
 
   it('should delegate listSessionsByUser', async () => {

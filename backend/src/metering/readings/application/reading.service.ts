@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import {
   StorageService,
   SRI_STORAGE_TYPES,
@@ -19,11 +19,12 @@ import { RemoveReadingUseCase } from './use-cases/remove-reading.use-case';
 import { LecturaEntity } from '../domain/entities/lectura.entity';
 import { ReadingFilters } from '../domain/repositories/reading.repository';
 import { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
+@LogContext()
 @Injectable()
 export class ReadingService {
-  private readonly logger = new Logger(ReadingService.name);
-
   constructor(
     private readonly createUseCase: CreateReadingUseCase,
     private readonly findAllUseCase: FindAllReadingsUseCase,
@@ -31,6 +32,7 @@ export class ReadingService {
     private readonly updateUseCase: UpdateReadingUseCase,
     private readonly removeUseCase: RemoveReadingUseCase,
     private readonly storageService: StorageService,
+    private readonly logger: LoggerService,
   ) {}
 
   async create(

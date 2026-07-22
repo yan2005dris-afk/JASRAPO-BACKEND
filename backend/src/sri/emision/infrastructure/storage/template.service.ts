@@ -1,8 +1,10 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { existsSync, readdirSync, statSync, unlinkSync, mkdirSync } from 'fs';
 import { join, extname, parse } from 'path';
 import { formatFileSize } from '../../../../infrastructure/common/utils/file.utils';
 import { STORAGE_PATHS } from './storage-paths';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
 export interface TemplateInfo {
   name: string;
@@ -17,9 +19,11 @@ export interface TemplateInfo {
   path: string;
 }
 
+@LogContext()
 @Injectable()
 export class TemplateService {
-  private readonly logger = new Logger(TemplateService.name);
+  constructor(private readonly logger: LoggerService) {}
+
   private readonly supportedFormats = [
     '.docx',
     '.odt',
