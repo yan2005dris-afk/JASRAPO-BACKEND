@@ -11,8 +11,6 @@ export interface SRIJobWorker {
   work(name: string, handler: (jobs: any[]) => Promise<any>): Promise<any>;
 }
 
-export { SRI_EMISION_JOB };
-
 @Injectable()
 export class SriEmisionProcessor implements OnModuleInit {
   private readonly logger = new Logger(SriEmisionProcessor.name);
