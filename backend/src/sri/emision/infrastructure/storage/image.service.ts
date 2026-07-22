@@ -1,6 +1,5 @@
 import {
   Injectable,
-  Logger,
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
@@ -9,6 +8,8 @@ import { existsSync, readdirSync, statSync, unlinkSync } from 'fs';
 import { extname, join, resolve, sep } from 'path';
 import { formatFileSize } from '../../../../infrastructure/common/utils/file.utils';
 import { STORAGE_PATHS } from './storage-paths';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
 export interface ImageInfo {
   name: string;
@@ -17,13 +18,16 @@ export interface ImageInfo {
   fileUrl: string;
 }
 
+@LogContext()
 @Injectable()
 export class ImageService {
-  private readonly logger = new Logger(ImageService.name);
   private readonly publicUrl: string;
   private readonly validExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.webp'];
 
-  constructor(private configService: ConfigService) {
+  constructor(
+    private configService: ConfigService,
+    private readonly logger: LoggerService,
+  ) {
     this.publicUrl = this.configService.get<string>(
       'PUBLIC_URL',
       'http://localhost:3000',

@@ -1,4 +1,4 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { PrismaService } from '../../../../../infrastructure/database/prisma.service';
 import { JobsService } from '../../../../../infrastructure/jobs/jobs.service';
 import { readLimitedText } from '../../../../../infrastructure/common/utils/url.util';
@@ -8,6 +8,7 @@ import { Agent } from 'undici';
 import { WEBHOOK_DISPATCH_JOB } from '../../../application/contracts/webhook-job.contract';
 import { SimpleCircuitBreaker } from '../../../../../infrastructure/common/resilience/circuit-breaker';
 import { resolveAndPin, SsrfBlockedError } from '../../ssrf-resolver';
+import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
 export class WebhookBusinessError extends Error {
   readonly isBusinessError = true;
@@ -25,15 +26,15 @@ export class WebhookBusinessError extends Error {
  * `dispatcher` option instead of re-resolving DNS at connect time, closing
  * the DNS-rebinding window between validation and connect.
  */
+@LogContext()
 @Injectable()
 export class WebhookProcessor implements OnModuleInit {
-  private readonly logger = new Logger(WebhookProcessor.name);
   private readonly breakers = new Map<string, SimpleCircuitBreaker>();
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly jobsService: JobsService,
-    private readonly loggerService: LoggerService,
+    private readonly logger: LoggerService,
   ) {}
 
   async onModuleInit() {
@@ -116,7 +117,7 @@ export class WebhookProcessor implements OnModuleInit {
             ssrfErr instanceof SsrfBlockedError && ssrfErr.dangerousIp
               ? ssrfErr.dangerousIp
               : 'n/a';
-          this.loggerService.warn(
+          this.logger.warn(
             `reason=ssrf_block url=${url} resolvedIp=${dangerousIp} msg="${(ssrfErr as Error).message}"`,
             'WebhookProcessor',
           );

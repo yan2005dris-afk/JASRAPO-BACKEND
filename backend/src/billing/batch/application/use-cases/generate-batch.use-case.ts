@@ -1,12 +1,16 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { BatchRepository } from '../../domain/repositories/batch.repository';
 import { GenerateBatchDto } from '../../interfaces/dto/generate-batch.dto';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
+@LogContext()
 @Injectable()
 export class GenerateBatchUseCase {
-  private readonly logger = new Logger(GenerateBatchUseCase.name);
-
-  constructor(private readonly batchRepository: BatchRepository) {}
+  constructor(
+    private readonly batchRepository: BatchRepository,
+    private readonly logger: LoggerService,
+  ) {}
 
   async execute(dto: GenerateBatchDto) {
     this.logger.log(`Starting batch generation for period ${dto.periodoId}`);

@@ -4,6 +4,13 @@ import type {
   EventosPendientesRepository,
 } from '../domain/repositories/eventos-pendientes.repository';
 import { EstadoEvento } from 'src/shared/enums';
+const mockLogger = {
+  log: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+  debug: jest.fn(),
+  verbose: jest.fn(),
+};
 
 /**
  * SAFETY NET — fresh file, no prior tests to protect.
@@ -26,7 +33,7 @@ describe('OutboxProcessor', () => {
       markFailed: jest.fn().mockResolvedValue(undefined),
     };
 
-    processor = new OutboxProcessor(repository);
+    processor = new OutboxProcessor(repository, mockLogger);
   });
 
   afterEach(() => {

@@ -1,10 +1,12 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Decimal } from 'decimal.js';
 import { PaymentRepository } from 'src/billing/collections/payments/domain/repositories/payment.repository';
 import {
   SRIEmissionDispatcherService,
   EmissionOutcome,
 } from './sri-emission-dispatcher.service';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
 /** Minimal interface for the job service, shared with SRIEmissionDispatcherService */
 export interface JobService {
@@ -22,13 +24,13 @@ export interface JobService {
  * lock + SRI job enqueue) is delegated to SRIEmissionDispatcherService so
  * future triggers (e.g. `cuota.pagada` in PR 2b) share the same pipeline.
  */
+@LogContext()
 @Injectable()
 export class PagoValidadoHandler {
-  private readonly logger = new Logger(PagoValidadoHandler.name);
-
   constructor(
     private readonly paymentRepository: PaymentRepository,
     private readonly sriDispatcher: SRIEmissionDispatcherService,
+    private readonly logger: LoggerService,
   ) {}
 
   async procesarPagoValidado(pagoId: bigint): Promise<void> {

@@ -8,7 +8,6 @@ import {
   Post,
   Query,
   Res,
-  Logger,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -37,6 +36,8 @@ import { ReportStyleDispatcher } from '../../application/report-style.dispatcher
 import { SendReportEmailDto } from '../../dto/send-report-email.dto';
 import { SendClientsListEmailDto } from '../../dto/send-clients-list-email.dto';
 import { SendReportByEmailUseCase } from '../../application/use-cases/send-report-by-email.use-case';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
 /**
  * Reports HTTP surface.
@@ -58,13 +59,12 @@ import { SendReportByEmailUseCase } from '../../application/use-cases/send-repor
  * is explicit via `@RequiredPermission('reportes', 'read')` instead of
  * relying on the guard's convention-based inference.
  */
+@LogContext()
 @ApiTags('reports')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('reports')
 export class ReportsController {
-  private readonly logger = new Logger(ReportsController.name);
-
   constructor(
     private readonly generatePdf: GeneratePdfUseCase,
     private readonly clientsListSpec: ClientsListReportSpec,
@@ -74,6 +74,7 @@ export class ReportsController {
     private readonly paymentAgreementPdfData: GetPaymentAgreementPdfDataUseCase,
     private readonly dispatcher: ReportStyleDispatcher,
     private readonly sendReportByEmail: SendReportByEmailUseCase,
+    private readonly logger: LoggerService,
   ) {}
 
   // ─── Consolidated dispatcher endpoints (REQ-1/2/3) ──────────────────────────

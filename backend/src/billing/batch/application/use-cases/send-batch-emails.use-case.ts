@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import type { Decimal } from 'decimal.js';
 import {
   MailService,
@@ -7,6 +7,8 @@ import {
 import { GeneratePreInvoicePdfUseCase } from '../../../pre-invoice/application/use-cases/generate-pre-invoice-pdf.use-case';
 import { FindOnePreInvoiceUseCase } from '../../../pre-invoice/application/use-cases/find-one-pre-invoice.use-case';
 import { PreInvoiceRepository } from '../../../pre-invoice/domain/repositories/pre-invoice.repository';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
 export interface SendBatchEmailsResult {
   queued: number;
@@ -22,15 +24,15 @@ type PlanillaCliente = {
   periodo: string;
 };
 
+@LogContext()
 @Injectable()
 export class SendBatchEmailsUseCase {
-  private readonly logger = new Logger(SendBatchEmailsUseCase.name);
-
   constructor(
     private readonly findOne: FindOnePreInvoiceUseCase,
     private readonly generatePdf: GeneratePreInvoicePdfUseCase,
     private readonly mailService: MailService,
     private readonly preInvoiceRepository: PreInvoiceRepository,
+    private readonly logger: LoggerService,
   ) {}
 
   async execute(batchId: number): Promise<SendBatchEmailsResult> {
