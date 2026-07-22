@@ -33,7 +33,6 @@ import {
   BadRequestException,
   Inject,
   Injectable,
-  Logger,
   NotFoundException,
   Optional,
   ServiceUnavailableException,
@@ -45,6 +44,8 @@ import {
   REPORT_EMAIL_STRATEGIES,
   type ReportEmailStrategyMap,
 } from './send-report-by-email.strategies';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
 export interface SendReportByEmailParams {
   reportType: string;
@@ -66,10 +67,9 @@ export interface SendReportByEmailResult {
  */
 export const DEFAULT_PDF_TIMEOUT_MS = 30_000;
 
+@LogContext()
 @Injectable()
 export class SendReportByEmailUseCase {
-  private readonly logger = new Logger(SendReportByEmailUseCase.name);
-
   constructor(
     private readonly mailService: MailService,
     private readonly generatePdf: GeneratePdfUseCase,
@@ -77,6 +77,7 @@ export class SendReportByEmailUseCase {
     private readonly strategies: ReportEmailStrategyMap,
     @Optional()
     private readonly pdfTimeoutMs: number = DEFAULT_PDF_TIMEOUT_MS,
+    private readonly logger: LoggerService,
   ) {}
 
   async execute(
@@ -104,7 +105,10 @@ export class SendReportByEmailUseCase {
 
     // PII: surface recipient resolution at DEBUG only. The recipient email
     // must never enter INFO logs at the use-case layer (see header docs).
-    this.logger.debug({ reportType: params.reportType }, 'recipient resolved');
+    this.logger.debug(
+      `recipient resolved reportType=${params.reportType}`,
+      SendReportByEmailUseCase.name,
+    );
 
     if (!destinatario) {
       throw new BadRequestException(

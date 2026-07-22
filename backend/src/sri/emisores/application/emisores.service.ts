@@ -1,6 +1,5 @@
 import {
   Injectable,
-  Logger,
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
@@ -18,16 +17,18 @@ import {
   SRI_STORAGE_TYPES,
 } from '../../../infrastructure/storage/storage.service';
 import { XmlSignerService } from '../../emision/infrastructure/xml/xml-signer.service';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
+@LogContext()
 @Injectable()
 export class EmisoresService {
-  private readonly logger = new Logger(EmisoresService.name);
-
   constructor(
     private readonly repository: EmisorRepository,
     private readonly encryptionService: EncryptionService,
     private readonly storageService: StorageService,
     private readonly xmlSignerService: XmlSignerService,
+    private readonly logger: LoggerService,
   ) {}
 
   /**

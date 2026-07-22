@@ -5,7 +5,13 @@ import {
   Logger,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { PgBoss, JobInsert, SendOptions, WorkHandler } from 'pg-boss';
+import {
+  PgBoss,
+  JobInsert,
+  SendOptions,
+  WorkHandler,
+  WorkWithMetadataHandler,
+} from 'pg-boss';
 
 /**
  * Servicio base de PgBoss para gestionar colas en PostgreSQL.
@@ -74,6 +80,14 @@ export class JobsService implements OnModuleInit, OnModuleDestroy {
   async work(name: string, handler: WorkHandler<any>) {
     await this.ensureQueue(name);
     return this.boss.work(name, handler);
+  }
+
+  async workWithMetadata<T>(
+    name: string,
+    handler: WorkWithMetadataHandler<T>,
+  ): Promise<string> {
+    await this.ensureQueue(name);
+    return this.boss.work(name, { includeMetadata: true }, handler);
   }
 
   getBossInstance(): PgBoss {

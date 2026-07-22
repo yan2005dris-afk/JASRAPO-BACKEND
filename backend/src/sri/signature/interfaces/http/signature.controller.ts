@@ -6,7 +6,6 @@ import {
   Res,
   BadRequestException,
   NotFoundException,
-  Logger,
   UseGuards,
 } from '@nestjs/common';
 import type { Response } from 'express';
@@ -26,13 +25,15 @@ import { CertificateService } from '../../../certificates/application/certificat
 import { GenerateAndSignPdfUseCase } from '../../application/use-cases/generate-and-sign-pdf.use-case';
 import { SignPdfDto, GenerateAndSignPdfDto } from '../dto/signature.dto';
 import { STORAGE_PATHS } from '../../../emision/infrastructure/storage/storage-paths';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
+@LogContext()
 @ApiTags('[En Desarrollo] Signature')
 @ApiBearerAuth('JWT')
 @UseGuards(JwtAuthGuard)
 @Controller('signature')
 export class SignatureController {
-  private readonly logger = new Logger(SignatureController.name);
   private readonly publicUrl: string;
 
   constructor(
@@ -40,6 +41,7 @@ export class SignatureController {
     private readonly certificateService: CertificateService,
     private readonly generateAndSignPdfUseCase: GenerateAndSignPdfUseCase,
     private readonly configService: ConfigService,
+    private readonly logger: LoggerService,
   ) {
     this.publicUrl = this.configService.get<string>(
       'PUBLIC_URL',

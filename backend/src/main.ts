@@ -5,6 +5,7 @@ import { GlobalExceptionFilter } from './infrastructure/common/filters/global-ex
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
+import ms from 'ms';
 import { AppModule } from './app.module';
 import { ThrottlerExceptionFilter } from './infrastructure/common/filters/throttler-exception.filter';
 import { AuditFieldsInterceptor } from './infrastructure/common/interceptors/audit-fields.interceptor';
@@ -30,6 +31,39 @@ type CookieParserMiddleware = (
 ) => void;
 
 type CookieParserFactory = () => CookieParserMiddleware;
+
+/**
+ * Hard ceiling for JWT_REFRESH_EXPIRES_IN. A leaked refresh cookie
+ * should not grant more than 72h of access. Operators that need
+ * longer must set ALLOW_LONG_REFRESH=1 explicitly.
+ */
+const REFRESH_TOKEN_CEILING_MS = 72 * 60 * 60 * 1000;
+
+/**
+ * Validate JWT_REFRESH_EXPIRES_IN at boot. Refuses to start when the
+ * configured duration exceeds the safety ceiling unless the operator
+ * has explicitly opted in via ALLOW_LONG_REFRESH=1.
+ */
+function assertRefreshTokenCeiling(configService: ConfigService): void {
+  const raw = configService.get<string>('JWT_REFRESH_EXPIRES_IN', '24h');
+  const parsed = ms(raw as ms.StringValue);
+  if (parsed === undefined) {
+    throw new Error(
+      `JWT_REFRESH_EXPIRES_IN is not a valid duration: "${raw}". ` +
+        `Expected format like "24h" or "7d".`,
+    );
+  }
+  if (parsed <= REFRESH_TOKEN_CEILING_MS) {
+    return;
+  }
+  const allowLong = process.env.ALLOW_LONG_REFRESH === '1';
+  if (!allowLong) {
+    throw new Error(
+      `JWT_REFRESH_EXPIRES_IN="${raw}" exceeds the 72h security ceiling. ` +
+        `Set ALLOW_LONG_REFRESH=1 to opt in, or lower the duration.`,
+    );
+  }
+}
 
 async function bootstrap() {
   try {
@@ -286,6 +320,8 @@ Para consultas o soporte, contacta al equipo de desarrollo del Backend.
   });
 
   app.enableShutdownHooks();
+
+  assertRefreshTokenCeiling(configService);
 
   const port = configService.get<number>('PORT', 3000);
   await app.listen(port);

@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { Prisma } from '../../../../generated/prisma/client.js';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import {
   RoleRepository,
@@ -130,15 +131,29 @@ export class PrismaRoleRepository implements RoleRepository {
     return RoleMapper.toAssignment(assignment)!;
   }
 
+  /**
+   * Why `Prisma.sql` over `$executeRawUnsafe`?
+   *
+   * `Prisma.sql` is a tagged template that hands every interpolation to Prisma's
+   * parameterizer. Even though `sequenceName` currently comes from PG metadata
+   * (`pg_get_serial_sequence`) and is not user-controlled, parameterizing it is
+   * defense-in-depth: any future caller that lets a user influence the table or
+   * column would otherwise expose a SQL injection vector via single-quote
+   * doubling. Tagged templates also make the SQL shape obvious to reviewers and
+   * tooling.
+   */
   async syncSequence(): Promise<void> {
     const sequenceResult = await this.prisma.$queryRaw<
       { seq: string | null }[]
     >`SELECT pg_get_serial_sequence('roles', 'rol_id') AS seq`;
     const sequenceName = sequenceResult[0]?.seq;
     if (!sequenceName) return;
-    const escapedSequenceName = sequenceName.replace(/'/g, "''");
-    await this.prisma.$executeRawUnsafe(
-      `SELECT setval('${escapedSequenceName}', COALESCE((SELECT MAX(rol_id) FROM roles), 0) + 1, false)`,
-    );
+    await this.prisma.$queryRaw(Prisma.sql`
+      SELECT setval(
+        ${sequenceName},
+        COALESCE((SELECT MAX(rol_id) FROM roles), 0) + 1,
+        false
+      )
+    `);
   }
 }
