@@ -371,4 +371,78 @@ describe('S3ClientService', () => {
       );
     });
   });
+
+  // --- STORAGE_USE_SSL — issue #141 ---
+
+  describe('STORAGE_USE_SSL — issue #141', () => {
+    type BootstrapEnv = Record<string, unknown>;
+
+    function overrideConfig(values: BootstrapEnv): void {
+      mockConfigService.get.mockImplementation(
+        (key: string, defaultValue?: unknown) => {
+          if (Object.prototype.hasOwnProperty.call(values, key)) {
+            return values[key];
+          }
+          return defaultValue;
+        },
+      );
+    }
+
+    function stubSuccessfulBoot(): void {
+      const send = jest.fn();
+      (S3Client as jest.Mock).mockImplementation(() => ({ send }));
+      send.mockResolvedValueOnce({ Buckets: [] }); // ListBuckets
+      send.mockResolvedValueOnce({}); // HeadBucket avatars
+      send.mockResolvedValueOnce({}); // HeadBucket documents
+      send.mockResolvedValueOnce({}); // HeadBucket uploads
+    }
+
+    const baseEnv: BootstrapEnv = {
+      STORAGE_ENDPOINT: 'localhost',
+      STORAGE_PORT: 9000,
+      STORAGE_ACCESS_KEY: 'admin',
+      STORAGE_SECRET_KEY: 'password123',
+    };
+
+    it('should default to TLS (https endpoint) when STORAGE_USE_SSL is unset', async () => {
+      overrideConfig({ ...baseEnv });
+      stubSuccessfulBoot();
+
+      await service.onModuleInit();
+
+      const s3Calls = (S3Client as jest.Mock).mock.calls;
+      expect(s3Calls).toHaveLength(1);
+      expect(s3Calls[0][0].endpoint).toMatch(/^https:\/\/localhost:9000$/);
+      expect(service.isAvailable).toBe(true);
+    });
+
+    it('should refuse to boot when NODE_ENV=production and STORAGE_USE_SSL=false', async () => {
+      overrideConfig({
+        ...baseEnv,
+        NODE_ENV: 'production',
+        STORAGE_USE_SSL: 'false',
+      });
+      stubSuccessfulBoot();
+
+      await expect(service.onModuleInit()).rejects.toThrow(/STORAGE_USE_SSL/i);
+      await expect(service.onModuleInit()).rejects.toThrow(
+        /NODE_ENV=production/,
+      );
+      expect((S3Client as jest.Mock).mock.calls).toHaveLength(0);
+    });
+
+    it('should allow STORAGE_USE_SSL=false in development (escape hatch)', async () => {
+      overrideConfig({
+        ...baseEnv,
+        NODE_ENV: 'development',
+        STORAGE_USE_SSL: 'false',
+      });
+      stubSuccessfulBoot();
+
+      await expect(service.onModuleInit()).resolves.not.toThrow();
+      const s3Calls = (S3Client as jest.Mock).mock.calls;
+      expect(s3Calls).toHaveLength(1);
+      expect(s3Calls[0][0].endpoint).toMatch(/^http:\/\/localhost:9000$/);
+    });
+  });
 });
