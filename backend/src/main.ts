@@ -15,6 +15,7 @@ import {
   TRUST_PROXY_HOPS,
   TRUST_PROXY_KEY,
 } from './infrastructure/config/app.constants';
+import { assertAllSecrets } from './infrastructure/config/config.validator';
 import { LoggingInterceptor } from './infrastructure/observability/interceptors/logging.interceptor';
 import { TracingService } from './infrastructure/observability/tracing/tracing.service';
 import { LoggerService } from './infrastructure/observability/logger/logger.service';
@@ -65,6 +66,15 @@ function assertRefreshTokenCeiling(configService: ConfigService): void {
 }
 
 async function bootstrap() {
+  try {
+    assertAllSecrets();
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    // eslint-disable-next-line no-console
+    console.error(`\n[FATAL] ${message}\n`);
+    process.exit(1);
+  }
+
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     bufferLogs: true,
   });
