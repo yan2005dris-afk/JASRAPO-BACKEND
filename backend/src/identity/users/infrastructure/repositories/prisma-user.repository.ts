@@ -7,11 +7,14 @@ import {
   UpdateUserRepositoryData,
   UserFilters,
   FiltroFecha,
+  FailedLoginAttemptOptions,
+  FailedLoginAttemptResult,
 } from '../../domain/repositories/user.repository';
 import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
 import { paginate } from 'src/infrastructure/common/utils/pagination.util';
 import {
   userWithRolesSelect,
+  userWithPasswordAndLockoutSelect,
   UserWithRoleResponse,
 } from '../../domain/types/user.types';
 import { UserMapper } from '../mappers/user.mapper';
@@ -49,17 +52,12 @@ export class PrismaUserRepository implements UserRepository {
     return await this.userMapper.toWithRole(user);
   }
 
-  async findByEmailWithPassword(
-    email: string,
-  ): Promise<(UserWithRoleResponse & { clave: string }) | null> {
+  async findByEmailWithPassword(email: string) {
     const user = await this.prisma.usuarios.findUnique({
       where: { email },
-      select: {
-        ...userWithRolesSelect,
-        clave: true,
-      },
+      select: userWithPasswordAndLockoutSelect,
     });
-    return await this.userMapper.toWithRoleAndClave(user);
+    return await this.userMapper.toWithPasswordAndLockout(user);
   }
 
   async findManyActive(
@@ -334,5 +332,75 @@ export class PrismaUserRepository implements UserRepository {
 
   async executeTransaction<T>(callback: (tx: any) => Promise<T>): Promise<T> {
     return this.prisma.$transaction(callback);
+  }
+
+  async recordFailedLoginAttempt(
+    usuarioId: number,
+    options: FailedLoginAttemptOptions,
+  ): Promise<FailedLoginAttemptResult> {
+    return this.prisma.$transaction(async (tx) => {
+      const current = await tx.usuarios.findUnique({
+        where: { usuarioId },
+        select: {
+          intentosFallidos: true,
+          ultimoIntentoFallidoEn: true,
+          bloqueadoHasta: true,
+        },
+      });
+
+      if (!current) {
+        throw new Error(
+          `Usuario no encontrado al registrar intento fallido: ${usuarioId}`,
+        );
+      }
+
+      const now = new Date();
+      const windowStart = new Date(now.getTime() - options.windowMs);
+      const isInWindow =
+        current.ultimoIntentoFallidoEn !== null &&
+        current.ultimoIntentoFallidoEn >= windowStart;
+      const nextCount = isInWindow ? current.intentosFallidos + 1 : 1;
+      const shouldLockout = nextCount >= options.threshold;
+
+      // Limpia bloqueos ya expirados para no mostrar fechas pasadas como activas.
+      const clearedBloqueadoHasta =
+        current.bloqueadoHasta !== null && current.bloqueadoHasta <= now
+          ? null
+          : current.bloqueadoHasta;
+
+      const updated = await tx.usuarios.update({
+        where: { usuarioId },
+        data: shouldLockout
+          ? {
+              intentosFallidos: 0,
+              ultimoIntentoFallidoEn: now,
+              bloqueadoHasta: new Date(
+                now.getTime() + options.lockoutDurationMs,
+              ),
+            }
+          : {
+              intentosFallidos: nextCount,
+              ultimoIntentoFallidoEn: now,
+              bloqueadoHasta: clearedBloqueadoHasta,
+            },
+        select: {
+          intentosFallidos: true,
+          bloqueadoHasta: true,
+        },
+      });
+
+      return updated;
+    });
+  }
+
+  async clearFailedLoginAttempts(usuarioId: number): Promise<void> {
+    await this.prisma.usuarios.update({
+      where: { usuarioId },
+      data: {
+        intentosFallidos: 0,
+        ultimoIntentoFallidoEn: null,
+        bloqueadoHasta: null,
+      },
+    });
   }
 }
