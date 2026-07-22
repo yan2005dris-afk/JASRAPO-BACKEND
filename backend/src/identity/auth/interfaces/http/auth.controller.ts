@@ -5,6 +5,7 @@ import { RegisterDto } from '../dto/register.dto';
 import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
+import { Public } from 'src/infrastructure/common/decorators/public.decorator';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
 import {
   ApiTags,
@@ -99,6 +100,7 @@ export class AuthController {
   })
   @ApiResponse({ status: 400, description: 'Credenciales inválidas' })
   @ApiResponse({ status: 401, description: 'Autenticación fallida' })
+  @Public()
   @ApiResponse({ status: 429, description: 'Demasiadas solicitudes' })
   // Tighter per-IP throttle (issue #136): el guard global permite 20/min por
   // IP para todas las rutas; aquí bajamos a 5/min para endurecer el endpoint
@@ -163,6 +165,7 @@ export class AuthController {
     status: 401,
     description: 'Refresh token inválido o expirado',
   })
+  @Public()
   @UseGuards(JwtRefreshGuard)
   @Post('refresh')
   async refresh(
@@ -222,6 +225,7 @@ export class AuthController {
     },
   })
   @ApiResponse({ status: 401, description: 'No autorizado' })
+  @Public()
   @UseGuards(JwtRefreshGuard)
   @Post('logout')
   async logout(@Req() req: RefreshRequest, @Res() res: Response) {
