@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
   StorageService,
@@ -6,20 +6,23 @@ import {
   SRI_STORAGE_TYPES,
 } from '../../../../infrastructure/storage/storage.service';
 import { Readable } from 'stream';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
 /**
  * Service for storing XML files using IStorageService abstraction
  * Organizes files by RUC/year/month for easy retrieval and 7-year retention
  * Uses S3-compatible object storage (RustFS)
  */
+@LogContext()
 @Injectable()
 export class XmlStorageService {
-  private readonly logger = new Logger(XmlStorageService.name);
   private readonly baseDir: string;
 
   constructor(
     private readonly storageService: StorageService,
     private readonly configService: ConfigService,
+    private readonly logger: LoggerService,
   ) {
     this.baseDir = this.configService.get<string>('XMLS_DIR', '../xmls');
     this.logger.log(`XmlStorageService initialized with S3-compatible storage`);
@@ -182,11 +185,11 @@ export class XmlStorageService {
    * Gets a presigned URL for downloading the XML file
    * Accepts the relative path stored in database (format: {ruc}/{year}/{month}/{subdir}/{claveAcceso}.xml)
    * @param relativePath The relative storage key
-   * @param expiresInSeconds URL expiration time (default: 24 hours)
+   * @param expiresInSeconds URL expiration in seconds (required, max 3600s / 60 minutes)
    */
   async getFullPath(
     relativePath: string,
-    expiresInSeconds = 86400,
+    expiresInSeconds: number,
   ): Promise<string> {
     // Extract RUC from the first segment of the path
     const pathParts = relativePath.split('/');
@@ -206,10 +209,11 @@ export class XmlStorageService {
    * Refreshes the URL for an existing XML file (generates a new presigned URL)
    * Useful when the previous URL has expired
    * Accepts the relative path stored in database (format: {ruc}/{year}/{month}/{subdir}/{claveAcceso}.xml)
+   * @param expiresInSeconds URL expiration in seconds (required, max 3600s / 60 minutes)
    */
   async refreshUrl(
     relativePath: string,
-    expiresInSeconds = 86400,
+    expiresInSeconds: number,
   ): Promise<string> {
     // Extract RUC from the first segment of the path
     const pathParts = relativePath.split('/');

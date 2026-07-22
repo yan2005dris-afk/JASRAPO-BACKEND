@@ -13,7 +13,16 @@ overrides:
   crypto-js: '^4.2.0'
   undici: '^8.5.0'
   '@opentelemetry/core': '^2.8.0'
-  js-yaml: '^4.2.0'
+  js-yaml: '^4.3.0'
+  # --- security audit overrides (added 2026-07-22) ---
+  multer: '^2.2.0'                              # GHSA-72gw-mp4g-v24j
+  nodemailer: '^9.0.1'                          # GHSA-p6gq-j5cr-w38f
+  brace-expansion: '^2.1.2'                     # GHSA-3jxr-9vmj-r5cp (>=2.0.0 <2.1.2 patched in 2.1.2; >=3.0.0 <5.0.7 never affects since no v3/v4 pinned)
+  axios: '^1.18.0'                              # GHSA-gcfj-64vw-6mp9
+  '@opentelemetry/propagator-jaeger': '^2.9.0'  # GHSA-45rx-2jwx-cxfr
+  linkify-it: '^5.0.2'                          # GHSA-v245-v573-v5vm
+  fast-uri: '^3.1.4'                            # GHSA-4c8g-83qw-93j6 / GHSA-v2hh-gcrm-f6hx
+  svgo: '^4.0.2'                                # GHSA-2p49-hgcm-8545
 
 allowBuilds:
   '@nestjs/core': true

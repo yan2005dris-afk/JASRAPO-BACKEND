@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { Prisma } from '../../../../generated/prisma/client.js';
 import { PrismaService } from '../../../database/prisma.service';
 
 const ACQUIRE_SLOT_SQL = `
@@ -7,14 +8,6 @@ const ACQUIRE_SLOT_SQL = `
   ON CONFLICT (provider_name, usage_date)
   DO UPDATE SET sent_count = mail_provider_daily_counts.sent_count + 1
   WHERE mail_provider_daily_counts.sent_count < $2
-  RETURNING sent_count
-`;
-
-const RELEASE_SLOT_SQL = `
-  UPDATE mail_provider_daily_counts
-  SET sent_count = GREATEST(sent_count - 1, 0)
-  WHERE provider_name = $1
-    AND usage_date = CURRENT_DATE
   RETURNING sent_count
 `;
 
@@ -48,7 +41,13 @@ export class MailRateLimitService {
 
   async release(providerName: string): Promise<void> {
     try {
-      await this.prisma.$executeRawUnsafe(RELEASE_SLOT_SQL, [providerName]);
+      await this.prisma.$queryRaw(Prisma.sql`
+        UPDATE mail_provider_daily_counts
+        SET sent_count = GREATEST(sent_count - 1, 0)
+        WHERE provider_name = ${providerName}
+          AND usage_date = CURRENT_DATE
+        RETURNING sent_count
+      `);
     } catch (error: unknown) {
       const message =
         error instanceof Error ? error.message : 'Unknown database error';

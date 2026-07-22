@@ -6,21 +6,6 @@
   "private": true,
   "packageManager": "pnpm@11.1.1",
   "license": "UNLICENSED",
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "@nestjs/core",
-      "@prisma/engines",
-      "@scarf/scarf",
-      "bcrypt",
-      "cpu-features",
-      "esbuild",
-      "prisma",
-      "puppeteer",
-      "ssh2",
-      "unrs-resolver",
-      "sharp"
-    ]
-  },
   "scripts": {
     "prisma:generate": "prisma generate && npm run enums:generate",
     "enums:generate": "tsx scripts/generate-enums.ts",
@@ -41,7 +26,7 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "test:integration": "NODE_OPTIONS=--experimental-vm-modules jest --config ./test/jest-integration.json --verbose",
+    "test:integration": "NODE_OPTIONS=--experimental-vm-modules jest --config ./jest.integration.config.ts --verbose",
     "pgboss:dashboard": "export $(grep -v '^#' ../.env | xargs) && PGBOSS_SCHEMA=jobs PORT=3002 npx pg-boss-dashboard"
   },
   "prisma": {
@@ -88,7 +73,6 @@
     "@xmldom/xmldom": "^0.9.7",
     "axios": "^1.7.9",
     "bcrypt": "^6.0.0",
-    "bcryptjs": "3.0.3",
     "cache-manager": "^7.2.8",
     "class-transformer": "^0.5.1",
     "class-validator": "0.14.3",
@@ -98,6 +82,8 @@
     "decimal.js": "^10.6.0",
     "dotenv": "^17.3.1",
     "handlebars": "^4.7.9",
+    "helmet": "^7.1.0",
+    "ipaddr.js": "^2.4.0",
     "ms": "^2.1.3",
     "multer": "^2.2.0",
     "node-forge": "^1.4.0",

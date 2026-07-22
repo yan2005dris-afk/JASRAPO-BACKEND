@@ -1,4 +1,4 @@
-import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import * as xml2js from 'xml2js';
 import {
   Factura,
@@ -21,17 +21,19 @@ import {
   NOTA_DEBITO_VERSION,
   RETENCION_VERSION,
 } from '../../domain/constants';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
 /**
  * Servicio para construir documentos XML de comprobantes electrónicos
  * según los esquemas XSD del SRI Ecuador.
  */
+@LogContext()
 @Injectable()
 export class XmlBuilderService {
-  private readonly logger = new Logger(XmlBuilderService.name);
   private readonly builder: xml2js.Builder;
 
-  constructor() {
+  constructor(private readonly logger: LoggerService) {
     this.builder = new xml2js.Builder({
       xmldec: { version: '1.0', encoding: 'UTF-8' },
       renderOpts: { pretty: true, indent: '  ' },

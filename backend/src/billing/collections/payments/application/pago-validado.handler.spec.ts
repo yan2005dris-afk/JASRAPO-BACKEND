@@ -1,5 +1,12 @@
 import { PagoValidadoHandler } from './pago-validado.handler';
 import type { SRIEmissionDispatcherService } from './sri-emission-dispatcher.service';
+const mockLogger = {
+  log: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+  debug: jest.fn(),
+  verbose: jest.fn(),
+};
 
 describe('PagoValidadoHandler (T-006, post-refactor RF-002)', () => {
   let handler: PagoValidadoHandler;
@@ -16,7 +23,11 @@ describe('PagoValidadoHandler (T-006, post-refactor RF-002)', () => {
       tryEmit: jest.fn(),
     } as unknown as jest.Mocked<SRIEmissionDispatcherService>;
 
-    handler = new PagoValidadoHandler(paymentRepository, sriDispatcher);
+    handler = new PagoValidadoHandler(
+      paymentRepository,
+      sriDispatcher,
+      mockLogger,
+    );
   });
 
   function createDetallePago(overrides = {}) {

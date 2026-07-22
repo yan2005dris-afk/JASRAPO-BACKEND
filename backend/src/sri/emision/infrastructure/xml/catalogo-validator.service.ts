@@ -1,5 +1,7 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../../infrastructure/database/prisma.service';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
 /**
  * Tarifa de impuesto del catálogo
@@ -51,10 +53,9 @@ export interface DocumentoSustento {
 /**
  * Servicio para validar códigos contra los catálogos almacenados en base de datos
  */
+@LogContext()
 @Injectable()
 export class CatalogoValidatorService {
-  private readonly logger = new Logger(CatalogoValidatorService.name);
-
   // Caches para evitar consultas repetitivas
   private tarifasCache: Map<string, TarifaImpuesto> = new Map();
   private retencionesCache: Map<string, CodigoRetencion> = new Map();
@@ -65,7 +66,10 @@ export class CatalogoValidatorService {
   private readonly CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutos
   private loadingPromise: Promise<void> | null = null; // FIX P7: Semáforo anti-carga paralela
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly logger: LoggerService,
+  ) {}
 
   // =====================================================
   // VALIDACIONES DE IMPUESTOS

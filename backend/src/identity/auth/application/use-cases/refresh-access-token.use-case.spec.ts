@@ -6,6 +6,14 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { SessionsService } from '../../../sessions/application/sessions.service';
 import { UnauthorizedException } from '@nestjs/common';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+const mockLogger = {
+  log: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+  debug: jest.fn(),
+  verbose: jest.fn(),
+};
 
 describe('RefreshAccessTokenUseCase', () => {
   let useCase: RefreshAccessTokenUseCase;
@@ -25,6 +33,7 @@ describe('RefreshAccessTokenUseCase', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
+        { provide: LoggerService, useValue: mockLogger },
         RefreshAccessTokenUseCase,
         {
           provide: UserRepository,
