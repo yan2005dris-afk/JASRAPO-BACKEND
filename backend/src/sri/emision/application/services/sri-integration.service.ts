@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../../infrastructure/database/prisma.service';
 import { SriService } from './sri.service';
 import { EmitirFacturaUseCase } from '../use-cases/emitir-factura.use-case';
@@ -6,15 +6,17 @@ import { CreateFacturaDto } from '../../interfaces/dto';
 import { TipoIdentificacion, FormaPago } from '../../domain/constants';
 import { format } from 'date-fns';
 import { ComprobanteRecord } from '../../../domain/interfaces/repository.interface';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
+@LogContext()
 @Injectable()
 export class SriIntegrationService {
-  private readonly logger = new Logger(SriIntegrationService.name);
-
   constructor(
     private readonly prisma: PrismaService,
     private readonly sriService: SriService,
     private readonly emitirFacturaUseCase: EmitirFacturaUseCase,
+    private readonly logger: LoggerService,
   ) {}
 
   /**

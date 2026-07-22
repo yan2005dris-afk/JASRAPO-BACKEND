@@ -1,6 +1,5 @@
 import {
   Injectable,
-  Logger,
   OnApplicationBootstrap,
   OnApplicationShutdown,
 } from '@nestjs/common';
@@ -8,6 +7,8 @@ import {
   EventoPendiente,
   EventosPendientesRepository,
 } from '../domain/repositories/eventos-pendientes.repository';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
 const POLL_INTERVAL_MS = 5_000;
 const BATCH_SIZE = 10;
@@ -23,16 +24,19 @@ export type OutboxHandler = (evento: EventoPendiente) => Promise<void>;
  * from racing on the same row. Failure isolation: one bad row does NOT
  * block siblings — each is processed independently inside the batch.
  */
+@LogContext()
 @Injectable()
 export class OutboxProcessor
   implements OnApplicationBootstrap, OnApplicationShutdown
 {
-  private readonly logger = new Logger(OutboxProcessor.name);
   private readonly handlers = new Map<string, OutboxHandler>();
   private isProcessing = false;
   private pollingTimer: ReturnType<typeof setInterval> | null = null;
 
-  constructor(private readonly repository: EventosPendientesRepository) {}
+  constructor(
+    private readonly repository: EventosPendientesRepository,
+    private readonly logger: LoggerService,
+  ) {}
 
   registerHandler(tipo: string, handler: OutboxHandler): void {
     this.handlers.set(tipo, handler);

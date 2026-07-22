@@ -4,6 +4,14 @@ import { ConflictException } from '@nestjs/common';
 import { Prisma } from 'src/generated/prisma/client';
 import { CreateMeterUseCase } from './create-meter.use-case';
 import { MeterRepository } from '../../domain/repositories/meter.repository';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+const mockLogger = {
+  log: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+  debug: jest.fn(),
+  verbose: jest.fn(),
+};
 
 describe('CreateMeterUseCase', () => {
   let useCase: CreateMeterUseCase;
@@ -17,6 +25,7 @@ describe('CreateMeterUseCase', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
+        { provide: LoggerService, useValue: mockLogger },
         CreateMeterUseCase,
         { provide: MeterRepository, useValue: mockMeterRepository },
       ],

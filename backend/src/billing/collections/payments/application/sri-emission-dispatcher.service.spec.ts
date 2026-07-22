@@ -4,6 +4,13 @@ import { SRI_EMISION_JOB } from 'src/sri/emision/infrastructure/queue/processors
 import type { PaymentRepository } from '../domain/repositories/payment.repository';
 import type { ComprobanteRepository } from 'src/sri/emision/domain/repositories/comprobante.repository';
 import type { JobService } from './pago-validado.handler';
+const mockLogger = {
+  log: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+  debug: jest.fn(),
+  verbose: jest.fn(),
+};
 
 describe('SRIEmissionDispatcherService', () => {
   let service: SRIEmissionDispatcherService;
@@ -26,6 +33,7 @@ describe('SRIEmissionDispatcherService', () => {
       paymentRepository,
       comprobanteRepository,
       jobsService,
+      mockLogger,
     );
   });
 

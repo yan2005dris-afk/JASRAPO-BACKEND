@@ -10,6 +10,13 @@ import type { EmitirNotaCreditoUseCase } from '../../../application/use-cases/em
 import type { EmitirNotaDebitoUseCase } from '../../../application/use-cases/emitir-nota-debito.use-case';
 import type { EmitirRetencionUseCase } from '../../../application/use-cases/emitir-retencion.use-case';
 import type { SriIntegrationService } from '../../../application/services/sri-integration.service';
+const mockLogger = {
+  log: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+  debug: jest.fn(),
+  verbose: jest.fn(),
+};
 
 describe('SriEmisionProcessor (T-007)', () => {
   let processor: SriEmisionProcessor;
@@ -54,6 +61,7 @@ describe('SriEmisionProcessor (T-007)', () => {
       emitirNotaDebitoUseCase,
       emitirRetencionUseCase,
       sriIntegrationService,
+      mockLogger,
     );
   });
 

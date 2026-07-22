@@ -3,6 +3,14 @@ import { Test } from '@nestjs/testing';
 import { UserService } from '../../../users/application/user.service';
 import { GetMyMenusUseCase } from './get-my-menus.use-case';
 import { MenuRepository } from '../../domain/repositories/menu.repository';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+const mockLogger = {
+  log: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+  debug: jest.fn(),
+  verbose: jest.fn(),
+};
 
 describe('GetMyMenusUseCase', () => {
   let useCase: GetMyMenusUseCase;
@@ -32,6 +40,7 @@ describe('GetMyMenusUseCase', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
+        { provide: LoggerService, useValue: mockLogger },
         GetMyMenusUseCase,
         {
           provide: MenuRepository,

@@ -1,15 +1,19 @@
-import { ConflictException, Injectable, Logger } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { Prisma } from 'src/generated/prisma/client';
 import { MeterRepository } from '../../domain/repositories/meter.repository';
 import { CreateMeterDto } from '../../interfaces/dto/create-meter.dto';
 import { MeterEntity } from '../../domain/entities/meter.entity';
 import { EstadoMedidor } from 'src/shared/enums';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
+@LogContext()
 @Injectable()
 export class CreateMeterUseCase {
-  private readonly logger = new Logger(CreateMeterUseCase.name);
-
-  constructor(private readonly meterRepository: MeterRepository) {}
+  constructor(
+    private readonly meterRepository: MeterRepository,
+    private readonly logger: LoggerService,
+  ) {}
 
   async execute(createDto: CreateMeterDto): Promise<MeterEntity> {
     try {
