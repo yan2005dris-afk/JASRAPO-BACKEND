@@ -30,6 +30,16 @@ export function buildPinoOptions(
     },
     timestamp: () => `,"timestamp":"${new Date().toISOString()}"`,
     mixin: () => ({ environment: process.env.NODE_ENV || 'development' }),
+    redact: {
+      paths: [
+        'req.headers.cookie',
+        'req.headers.authorization',
+        '*.email',
+        '*.ipAddress',
+        '*.password',
+      ],
+      censor: '[REDACTED]',
+    },
   };
 
   // En producción, agregar stream de Loki

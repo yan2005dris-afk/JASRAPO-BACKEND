@@ -2,6 +2,7 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { JobsService } from '../jobs/jobs.service';
 import { LoggerService } from '../observability/logger/logger.service';
+import { redactEmail, redactIp } from '../observability/redact';
 
 export interface AuditEntry {
   usuarioId?: number;
@@ -76,6 +77,11 @@ export class AuditService implements OnModuleInit {
    * Registra un evento de auditoría en la base de datos.
    * Fire-and-forget por defecto: nunca propaga errores al caller.
    * En caso de fallo de escritura, encola un job de reintento durable.
+   *
+   * PII fields (email, IP) are redacted at the write boundary inside
+   * `writeAudit()` so that neither the database nor downstream replicas
+   * store raw personal data. See docs/observability/loki-rbac.md for
+   * the full data-minimization policy.
    */
   async log(entry: AuditEntry): Promise<void> {
     try {
@@ -103,8 +109,10 @@ export class AuditService implements OnModuleInit {
     await this.prisma.auditoriaSri.create({
       data: {
         usuarioId: entry.usuarioId || null,
-        usuarioEmail: entry.usuarioEmail || null,
-        ipAddress: entry.ipAddress || null,
+        usuarioEmail: entry.usuarioEmail
+          ? redactEmail(entry.usuarioEmail)
+          : null,
+        ipAddress: entry.ipAddress ? redactIp(entry.ipAddress) : null,
         userAgent: entry.userAgent || null,
         accion: entry.accion,
         recurso: entry.recurso,

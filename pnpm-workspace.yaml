@@ -23,6 +23,10 @@ overrides:
   linkify-it: '^5.0.2'                          # GHSA-v245-v573-v5vm
   fast-uri: '^3.1.4'                            # GHSA-4c8g-83qw-93j6 / GHSA-v2hh-gcrm-f6hx
   svgo: '^4.0.2'                                # GHSA-2p49-hgcm-8545
+  # --- useragent transitive deps (PR #174) ---
+  tmp: '^0.2.4'                                 # GHSA-ph9p-34f9-6g65 (Path Traversal, high)
+  form-data: '^4.0.4'                           # GHSA-fjxv-7rqg-78g4 / GHSA-hmw2-7cc7-3qxx (unsafe random CRITICAL + CRLF)
+  semver: '^7.6.4'                              # GHSA-c2qf-rxjj-qqgw (ReDoS, high)
 
 allowBuilds:
   '@nestjs/core': true

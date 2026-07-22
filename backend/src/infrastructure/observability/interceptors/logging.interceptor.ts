@@ -3,19 +3,21 @@ import {
   NestInterceptor,
   ExecutionContext,
   CallHandler,
-  Logger,
   HttpException,
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { tap, finalize } from 'rxjs/operators';
 import { Request, Response } from 'express';
 import { MetricsService } from '../metrics/metrics.service';
+import { LoggerService } from '../logger/logger.service';
+import { parseUserAgent, redactIp } from '../redact';
 
 @Injectable()
 export class LoggingInterceptor implements NestInterceptor {
-  private readonly logger = new Logger('HTTP');
-
-  constructor(private readonly metricsService: MetricsService) {}
+  constructor(
+    private readonly metricsService: MetricsService,
+    private readonly logger: LoggerService,
+  ) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     const ctx = context.switchToHttp();
@@ -37,9 +39,9 @@ export class LoggingInterceptor implements NestInterceptor {
           const durationSec = durationMs / 1000;
           const status = response.statusCode.toString();
 
-          // Log request completion
           this.logger.log(
-            `${method} ${originalUrl} ${status} ${durationMs}ms - ${ip} ${userAgent}`,
+            `${method} ${originalUrl} ${status} ${durationMs}ms - ${redactIp(ip)} ${parseUserAgent(userAgent)}`,
+            'HTTP',
           );
 
           // Record metrics
@@ -65,9 +67,10 @@ export class LoggingInterceptor implements NestInterceptor {
             }
           }
 
-          // Log error
           this.logger.error(
             `${method} ${originalUrl} ${status} ${durationMs}ms - ${message}`,
+            undefined,
+            'HTTP',
           );
           // Record metrics
           this.metricsService.incrementHttpRequest(method, status, route);
