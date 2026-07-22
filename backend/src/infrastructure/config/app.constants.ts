@@ -8,6 +8,18 @@ export const TRUST_PROXY_KEY = 'trust proxy' as const;
 export const SESSION_TTL_SECONDS = DEFAULT_SESSION_TTL_SECONDS;
 
 /**
+ * PROTECCIÓN CONTRA FUERZA BRUTA EN LOGIN (issue #136)
+ *
+ * Umbral y ventana deslizante: tras LOGIN_LOCKOUT_THRESHOLD fallos dentro de
+ * LOGIN_LOCKOUT_WINDOW_MS, la cuenta queda bloqueada durante
+ * LOGIN_LOCKOUT_DURATION_MS. El contador se reinicia al hacer login exitoso
+ * o cuando la ventana deslizante expira sin nuevos intentos fallidos.
+ */
+export const LOGIN_LOCKOUT_THRESHOLD = 5;
+export const LOGIN_LOCKOUT_WINDOW_MS = 15 * 60 * 1000;
+export const LOGIN_LOCKOUT_DURATION_MS = 30 * 60 * 1000;
+
+/**
  * CONFIGURACIÓN DE CARGA DE ARCHIVOS
  */
 const parsedUploadSize = parseInt(process.env.MAX_UPLOAD_SIZE_MB || '5', 10);
