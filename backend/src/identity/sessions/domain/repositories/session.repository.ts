@@ -21,7 +21,6 @@ export interface RotateSessionRepositoryData {
   sessionSecret: string;
   direccionIp?: string | null;
   usuarioAgente?: string | null;
-  revocado: boolean;
   expiraEn: Date;
 }
 

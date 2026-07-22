@@ -87,13 +87,16 @@ export class PrismaSessionRepository implements SessionRepository {
       where: {
         sesionId,
         tokenVersion: data.expectedTokenVersion,
+        // Solo rota sesiones vivas: una sesión revocada o expirada no debe
+        // poder resucitarse por una rotación en vuelo (TOCTOU con logout).
+        revocado: false,
+        expiraEn: { gt: new Date() },
       },
       data: {
         sessionSecret: data.sessionSecret,
         tokenVersion: { increment: 1 },
         direccionIp: data.direccionIp,
         usuarioAgente: data.usuarioAgente,
-        revocado: data.revocado,
         expiraEn: data.expiraEn,
       },
     });
