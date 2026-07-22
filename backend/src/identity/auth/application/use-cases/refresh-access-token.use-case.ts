@@ -1,7 +1,6 @@
 import {
   Injectable,
   InternalServerErrorException,
-  Logger,
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -12,16 +11,18 @@ import * as bcrypt from 'bcrypt';
 import { REFRESH_TOKEN_MAX_AGE_MS } from 'src/infrastructure/config/app.constants';
 import { EcuadorTimezoneUtil } from 'src/shared/utils/ecuador-timezone.util';
 import type { StringValue } from 'ms';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
+@LogContext()
 @Injectable()
 export class RefreshAccessTokenUseCase {
-  private readonly logger = new Logger(RefreshAccessTokenUseCase.name);
-
   constructor(
     private readonly userRepository: UserRepository,
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
     private readonly sessionsService: SessionsService,
+    private readonly logger: LoggerService,
   ) {}
 
   async execute(

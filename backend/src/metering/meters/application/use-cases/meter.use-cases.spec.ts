@@ -4,6 +4,14 @@ import { MeterRepository } from '../../domain/repositories/meter.repository';
 import { CreateMeterUseCase } from './create-meter.use-case';
 import { FindOneMeterUseCase } from './find-one-meter.use-case';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+const mockLogger = {
+  log: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+  debug: jest.fn(),
+  verbose: jest.fn(),
+};
 
 describe('Meter Use Cases', () => {
   let createUseCase: CreateMeterUseCase;
@@ -30,6 +38,7 @@ describe('Meter Use Cases', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
+        { provide: LoggerService, useValue: mockLogger },
         CreateMeterUseCase,
         FindOneMeterUseCase,
         { provide: MeterRepository, useValue: mockMeterRepository },

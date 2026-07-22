@@ -1,18 +1,21 @@
 import {
   BadRequestException,
   Injectable,
-  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { MeterRepository } from '../../../meters/domain/repositories/meter.repository';
 import { EstadoMedidor, EstadoContrato } from 'src/shared/enums';
 import type { MeterEntity } from '../../../meters/domain/entities/meter.entity';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
+@LogContext()
 @Injectable()
 export class InstallMeterUseCase {
-  private readonly logger = new Logger(InstallMeterUseCase.name);
-
-  constructor(private readonly meterRepository: MeterRepository) {}
+  constructor(
+    private readonly meterRepository: MeterRepository,
+    private readonly logger: LoggerService,
+  ) {}
 
   async execute(medidorId: bigint): Promise<MeterEntity> {
     const meter = await this.meterRepository.findUnique({ medidorId });

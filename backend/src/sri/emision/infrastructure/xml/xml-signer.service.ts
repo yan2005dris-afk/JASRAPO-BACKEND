@@ -1,4 +1,4 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as forge from 'node-forge';
 import { Crypto } from '@peculiar/webcrypto';
@@ -12,14 +12,16 @@ import {
   SRI_STORAGE_TYPES,
 } from '../../../../infrastructure/storage/storage.service';
 import { Readable } from 'stream';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
 /**
  * Servicio para firmar documentos XML con firma digital XAdES-BES
  * compatible con los requerimientos del SRI Ecuador.
  */
+@LogContext()
 @Injectable()
 export class XmlSignerService implements OnModuleInit {
-  private readonly logger = new Logger(XmlSignerService.name);
   private privateKey: CryptoKey | null = null;
   private certificate: string | null = null;
   private certificateChain: string[] = [];
@@ -37,6 +39,7 @@ export class XmlSignerService implements OnModuleInit {
     private readonly repository: EmisorRepository,
     private readonly encryptionService: EncryptionService,
     private readonly storageService: StorageService,
+    private readonly logger: LoggerService,
   ) {
     this.crypto = new Crypto();
     this.CERT_CACHE_TTL_MS = this.configService.get<number>(

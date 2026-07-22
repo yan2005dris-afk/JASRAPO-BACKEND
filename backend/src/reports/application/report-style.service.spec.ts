@@ -1,9 +1,16 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import { ReportStyleService } from './report-style.service';
 import { SistemaConfigService } from '../../infrastructure/config/sistema-config.service';
 import { REPORTE_ESTILO } from '../../infrastructure/config/sistema-config.keys';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+const mockLogger = {
+  log: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+  debug: jest.fn(),
+  verbose: jest.fn(),
+};
 
 describe('ReportStyleService', () => {
   let service: ReportStyleService;
@@ -17,6 +24,7 @@ describe('ReportStyleService', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
+        { provide: LoggerService, useValue: mockLogger },
         ReportStyleService,
         { provide: SistemaConfigService, useValue: mockConfig },
       ],
@@ -26,7 +34,7 @@ describe('ReportStyleService', () => {
     config = module.get(SistemaConfigService);
 
     loggerWarnSpy = jest
-      .spyOn(Logger.prototype, 'warn')
+      .spyOn(mockLogger, 'warn')
       .mockImplementation(() => undefined);
   });
 
