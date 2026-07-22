@@ -8,7 +8,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { SessionsService } from '../../../sessions/application/sessions.service';
 import { LoginUserDto } from '../../interfaces/dto/login-user.dto';
-import * as bcrypt from 'bcryptjs';
+import * as bcrypt from 'bcrypt';
 import { randomUUID } from 'crypto';
 import { REFRESH_TOKEN_MAX_AGE_MS } from 'src/infrastructure/config/app.constants';
 import { EcuadorTimezoneUtil } from 'src/shared/utils/ecuador-timezone.util';

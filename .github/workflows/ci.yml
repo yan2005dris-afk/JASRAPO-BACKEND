@@ -117,3 +117,33 @@ jobs:
 
       - name: Build application
         run: pnpm --filter backend run build
+
+  audit:
+    name: Dependency audit (high+)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies (lockfile-only, no native builds)
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Run pnpm audit (production deps, fail on high+)
+        # Falla el job ante cualquier hallazgo de severidad >= high en dependencias
+        # de producción. continue-on-error queda en false: un hallazgo debe romper
+        # el check, no solo reportarse en el log.
+        run: pnpm audit --prod --audit-level=high

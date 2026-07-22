@@ -6,9 +6,9 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { SessionsService } from '../../../sessions/application/sessions.service';
 import { UnauthorizedException } from '@nestjs/common';
-import * as bcrypt from 'bcryptjs';
+import * as bcrypt from 'bcrypt';
 
-jest.mock('bcryptjs');
+jest.mock('bcrypt');
 
 describe('RefreshAccessTokenUseCase', () => {
   let useCase: RefreshAccessTokenUseCase;

@@ -6,21 +6,6 @@
   "private": true,
   "packageManager": "pnpm@11.1.1",
   "license": "UNLICENSED",
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "@nestjs/core",
-      "@prisma/engines",
-      "@scarf/scarf",
-      "bcrypt",
-      "cpu-features",
-      "esbuild",
-      "prisma",
-      "puppeteer",
-      "ssh2",
-      "unrs-resolver",
-      "sharp"
-    ]
-  },
   "scripts": {
     "prisma:generate": "prisma generate && npm run enums:generate",
     "enums:generate": "tsx scripts/generate-enums.ts",
@@ -88,7 +73,6 @@
     "@xmldom/xmldom": "^0.9.7",
     "axios": "^1.7.9",
     "bcrypt": "^6.0.0",
-    "bcryptjs": "3.0.3",
     "cache-manager": "^7.2.8",
     "class-transformer": "^0.5.1",
     "class-validator": "0.14.3",
