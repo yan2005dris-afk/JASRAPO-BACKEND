@@ -23,6 +23,7 @@ describe('AuditService (#147 durability)', () => {
   let jobsService: {
     send: jest.Mock;
     work: jest.Mock;
+    workWithMetadata: jest.Mock;
   };
   let loggerService: { error: jest.Mock };
 
@@ -42,6 +43,7 @@ describe('AuditService (#147 durability)', () => {
     jobsService = {
       send: jest.fn().mockResolvedValue('job-id'),
       work: jest.fn().mockResolvedValue(undefined),
+      workWithMetadata: jest.fn().mockResolvedValue(undefined),
     };
     loggerService = {
       error: jest.fn(),
@@ -61,7 +63,7 @@ describe('AuditService (#147 durability)', () => {
   });
 
   it('registers the audit-write worker on init', () => {
-    expect(jobsService.work).toHaveBeenCalledWith(
+    expect(jobsService.workWithMetadata).toHaveBeenCalledWith(
       AUDIT_RETRY_JOB,
       expect.any(Function),
     );
@@ -117,7 +119,7 @@ describe('AuditService (#147 durability)', () => {
     let handler: WorkHandler;
 
     beforeEach(() => {
-      handler = jobsService.work.mock.calls[0][1] as WorkHandler;
+      handler = jobsService.workWithMetadata.mock.calls[0][1] as WorkHandler;
     });
 
     it('writes successfully when the DB recovers on retry', async () => {

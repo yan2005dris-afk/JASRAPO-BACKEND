@@ -46,27 +46,30 @@ export class AuditService implements OnModuleInit {
   ) {}
 
   async onModuleInit(): Promise<void> {
-    await this.jobsService.work(AUDIT_RETRY_JOB, async ([job]) => {
-      if (!job) return;
-      try {
-        await this.writeAudit(job.data as AuditEntry);
-      } catch (error) {
-        const lastError = (error as Error)?.message ?? String(error);
-        if (job.retryCount >= job.retryLimit) {
-          this.loggerService.error(
-            `audit.durability.exhausted action=${(job.data as AuditEntry)?.accion} recurso=${(job.data as AuditEntry)?.recurso} lastError=${lastError}`,
-            JSON.stringify({
-              payload: job.data,
-              lastError,
-              retryCount: job.retryCount,
-              retryLimit: job.retryLimit,
-            }),
-            'AuditService',
-          );
+    await this.jobsService.workWithMetadata<AuditEntry>(
+      AUDIT_RETRY_JOB,
+      async ([job]) => {
+        if (!job) return;
+        try {
+          await this.writeAudit(job.data);
+        } catch (error) {
+          const lastError = (error as Error)?.message ?? String(error);
+          if (job.retryCount >= job.retryLimit) {
+            this.loggerService.error(
+              `audit.durability.exhausted action=${job.data?.accion} recurso=${job.data?.recurso} lastError=${lastError}`,
+              JSON.stringify({
+                payload: job.data,
+                lastError,
+                retryCount: job.retryCount,
+                retryLimit: job.retryLimit,
+              }),
+              'AuditService',
+            );
+          }
+          throw error;
         }
-        throw error;
-      }
-    });
+      },
+    );
   }
 
   /**
