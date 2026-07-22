@@ -31,11 +31,15 @@ describe('CreateMeterUseCase', () => {
   });
 
   it('should create device with BODEGA status', async () => {
+    // lecturaInicial is intentionally NOT a creation field: a meter enters the
+    // system in BODEGA state without a reading. The initial reading is captured
+    // at INSTALL time via InstallMeterDto and stored on historialMedidores
+    // (see InstallMeterDto + MeterRepository.createHistory). CreateMeterDto
+    // correctly rejects it via forbidNonWhitelisted in main.ts.
     const dto = {
       serie: 'MED-001',
       modelo: 'Digital-2000',
       marca: 'Siemens',
-      lecturaInicial: 0,
     };
 
     const expectedMedidor = {
