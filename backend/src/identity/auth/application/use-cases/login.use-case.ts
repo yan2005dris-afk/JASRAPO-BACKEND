@@ -40,6 +40,13 @@ const LOCKOUT_OPTIONS = {
   lockoutDurationMs: LOGIN_LOCKOUT_DURATION_MS,
 } as const;
 
+// OWASP 2024 recommends a bcrypt cost factor of at least 12 for password
+// hashing. Legacy hashes at a lower cost are transparently re-hashed on the
+// next successful login. Valid range is 4..15.
+const DEFAULT_BCRYPT_COST = 12;
+const MIN_BCRYPT_COST = 4;
+const MAX_BCRYPT_COST = 15;
+
 @LogContext()
 @Injectable()
 export class LoginUseCase {
@@ -68,6 +75,11 @@ export class LoginUseCase {
         `[LOGIN] No se pudieron limpiar contadores de lockout: user=${user.usuarioId} | ${err}`,
       );
     }
+
+    // Aprovecha el login para actualizar en caliente hashes bcrypt legados a
+    // un cost factor más alto (OWASP 2024). Re-hashea la contraseña en texto
+    // plano ya verificada, no el hash almacenado. No bloquea el login si falla.
+    await this.maybeUpgradePasswordHash(user, loginUserDto.password);
 
     const sesionId = randomUUID();
     const sessionSecret = randomBytes(32).toString('hex');
@@ -160,6 +172,47 @@ export class LoginUseCase {
     }
 
     return user;
+  }
+
+  private getBcryptCost(): number {
+    const raw = this.config.get<unknown>('BCRYPT_COST', DEFAULT_BCRYPT_COST);
+    const parsed = Number(raw);
+    if (
+      !Number.isFinite(parsed) ||
+      parsed < MIN_BCRYPT_COST ||
+      parsed > MAX_BCRYPT_COST
+    ) {
+      return DEFAULT_BCRYPT_COST;
+    }
+    return Math.trunc(parsed);
+  }
+
+  private async maybeUpgradePasswordHash(
+    user: ValidatedUser,
+    plainPassword: string,
+  ): Promise<void> {
+    const bcryptCost = this.getBcryptCost();
+
+    let currentRounds: number;
+    try {
+      currentRounds = bcrypt.getRounds(user.clave);
+    } catch {
+      // Hash con formato desconocido: no intentamos re-hashear.
+      return;
+    }
+
+    if (Number.isFinite(currentRounds) && currentRounds >= bcryptCost) {
+      return;
+    }
+
+    try {
+      const newHash = await bcrypt.hash(plainPassword, bcryptCost);
+      await this.userRepository.update(user.usuarioId, { clave: newHash });
+    } catch (err) {
+      this.logger.warn(
+        `[LOGIN] No se pudo actualizar el cost factor bcrypt: user=${user.usuarioId} | ${err}`,
+      );
+    }
   }
 
   private async generateJwtToken(
