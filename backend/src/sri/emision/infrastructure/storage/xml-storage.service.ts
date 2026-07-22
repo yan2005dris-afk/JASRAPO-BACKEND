@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
   StorageService,
@@ -6,20 +6,23 @@ import {
   SRI_STORAGE_TYPES,
 } from '../../../../infrastructure/storage/storage.service';
 import { Readable } from 'stream';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
 /**
  * Service for storing XML files using IStorageService abstraction
  * Organizes files by RUC/year/month for easy retrieval and 7-year retention
  * Uses S3-compatible object storage (RustFS)
  */
+@LogContext()
 @Injectable()
 export class XmlStorageService {
-  private readonly logger = new Logger(XmlStorageService.name);
   private readonly baseDir: string;
 
   constructor(
     private readonly storageService: StorageService,
     private readonly configService: ConfigService,
+    private readonly logger: LoggerService,
   ) {
     this.baseDir = this.configService.get<string>('XMLS_DIR', '../xmls');
     this.logger.log(`XmlStorageService initialized with S3-compatible storage`);

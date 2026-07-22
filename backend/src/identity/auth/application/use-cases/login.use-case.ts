@@ -1,14 +1,13 @@
 import {
   Injectable,
   InternalServerErrorException,
-  Logger,
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { SessionsService } from '../../../sessions/application/sessions.service';
 import { LoginUserDto } from '../../interfaces/dto/login-user.dto';
-import * as bcrypt from 'bcryptjs';
+import * as bcrypt from 'bcrypt';
 import { randomUUID } from 'crypto';
 import { REFRESH_TOKEN_MAX_AGE_MS } from 'src/infrastructure/config/app.constants';
 import { EcuadorTimezoneUtil } from 'src/shared/utils/ecuador-timezone.util';
@@ -16,6 +15,8 @@ import type { DecodedJwt } from '../types/auth-service.types';
 import type { StringValue } from 'ms';
 
 import { UserRepository } from '../../../users/domain/repositories/user.repository';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
 interface ValidatedUser {
   usuarioId: number;
@@ -28,15 +29,15 @@ interface ValidatedUser {
   rol: { rolId: number; nombre: string; deletedAt?: Date | null } | null;
 }
 
+@LogContext()
 @Injectable()
 export class LoginUseCase {
-  private readonly logger = new Logger(LoginUseCase.name);
-
   constructor(
     private readonly userRepository: UserRepository,
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
     private readonly sessionsService: SessionsService,
+    private readonly logger: LoggerService,
   ) {}
 
   async execute(

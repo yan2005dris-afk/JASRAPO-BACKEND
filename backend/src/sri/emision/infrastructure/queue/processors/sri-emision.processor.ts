@@ -1,22 +1,21 @@
-import { Injectable, Logger, OnModuleInit, Inject } from '@nestjs/common';
+import { Injectable, OnModuleInit, Inject } from '@nestjs/common';
 import { EmitirFacturaUseCase } from '../../../application/use-cases/emitir-factura.use-case';
 import { EmitirNotaCreditoUseCase } from '../../../application/use-cases/emitir-nota-credito.use-case';
 import { EmitirNotaDebitoUseCase } from '../../../application/use-cases/emitir-nota-debito.use-case';
 import { EmitirRetencionUseCase } from '../../../application/use-cases/emitir-retencion.use-case';
 import { SriIntegrationService } from '../../../application/services/sri-integration.service';
 import { SRI_EMISION_JOB } from './sri-emision.constants';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
 /** Minimal interface for the job service to avoid pg-boss ESM import issues */
 export interface SRIJobWorker {
   work(name: string, handler: (jobs: any[]) => Promise<any>): Promise<any>;
 }
 
-export { SRI_EMISION_JOB };
-
+@LogContext()
 @Injectable()
 export class SriEmisionProcessor implements OnModuleInit {
-  private readonly logger = new Logger(SriEmisionProcessor.name);
-
   constructor(
     @Inject('JobService') private readonly jobsService: SRIJobWorker,
     private readonly emitirFacturaUseCase: EmitirFacturaUseCase,
@@ -24,6 +23,7 @@ export class SriEmisionProcessor implements OnModuleInit {
     private readonly emitirNotaDebitoUseCase: EmitirNotaDebitoUseCase,
     private readonly emitirRetencionUseCase: EmitirRetencionUseCase,
     private readonly sriIntegrationService: SriIntegrationService,
+    private readonly logger: LoggerService,
   ) {}
 
   async onModuleInit() {

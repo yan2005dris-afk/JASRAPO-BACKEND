@@ -1,6 +1,5 @@
 import {
   Injectable,
-  Logger,
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
@@ -15,6 +14,8 @@ import {
 import { join, resolve, sep } from 'path';
 import * as forge from 'node-forge';
 import { STORAGE_PATHS } from '../../emision/infrastructure/storage/storage-paths';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
 export interface CertificateInfo {
   name: string;
@@ -59,9 +60,10 @@ export interface ExtractedCertInfo {
   daysUntilExpiry: number;
 }
 
+@LogContext()
 @Injectable()
 export class CertificateService {
-  private readonly logger = new Logger(CertificateService.name);
+  constructor(private readonly logger: LoggerService) {}
 
   /**
    * Get certs directory from STORAGE_PATHS

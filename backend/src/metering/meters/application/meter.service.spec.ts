@@ -47,6 +47,7 @@ describe('MeterService', () => {
   const mockMeterRepository = {
     findMany: jest.fn(),
     count: jest.fn(),
+    groupByEstado: jest.fn(),
     update: jest.fn(),
   };
 
@@ -97,6 +98,11 @@ describe('MeterService', () => {
       .spyOn(meterRepository, 'findMany')
       .mockResolvedValue([mockPrismaResult]);
     jest.spyOn(meterRepository, 'count').mockResolvedValue(1);
+    jest
+      .spyOn(meterRepository, 'groupByEstado')
+      .mockResolvedValue([
+        { estado: EstadoMedidor.BODEGA, _count: { _all: 1 } },
+      ]);
 
     const result = await service.findAll({ page: 1, limit: 10 });
 
@@ -104,8 +110,12 @@ describe('MeterService', () => {
     expect(result.meta.total).toBe(1);
     expect(result.meta.page).toBe(1);
     expect(result.kpis.enBodega).toBe(1);
+    expect(result.kpis.instalados).toBe(0);
+    expect(result.kpis.danados).toBe(0);
+    expect(result.kpis.total).toBe(1);
     expect(meterRepository.findMany).toHaveBeenCalled();
-    expect(meterRepository.count).toHaveBeenCalled();
+    expect(meterRepository.count).toHaveBeenCalledTimes(1);
+    expect(meterRepository.groupByEstado).toHaveBeenCalledTimes(1);
   });
 
   it('findAll should fall back to default pagination when filters are empty or undefined', async () => {
@@ -113,6 +123,11 @@ describe('MeterService', () => {
       .spyOn(meterRepository, 'findMany')
       .mockResolvedValue([mockPrismaResult]);
     jest.spyOn(meterRepository, 'count').mockResolvedValue(1);
+    jest
+      .spyOn(meterRepository, 'groupByEstado')
+      .mockResolvedValue([
+        { estado: EstadoMedidor.BODEGA, _count: { _all: 1 } },
+      ]);
 
     // Case 1: Undefined filters
     const resultUndefined = await service.findAll();
@@ -143,5 +158,26 @@ describe('MeterService', () => {
       skip: 0,
       take: 10,
     });
+  });
+
+  it('findAll should ignore unknown estados in named kpis but include them in meta.total', async () => {
+    jest
+      .spyOn(meterRepository, 'findMany')
+      .mockResolvedValue([mockPrismaResult]);
+    jest.spyOn(meterRepository, 'count').mockResolvedValue(7);
+    jest.spyOn(meterRepository, 'groupByEstado').mockResolvedValue([
+      { estado: EstadoMedidor.BODEGA, _count: { _all: 2 } },
+      { estado: EstadoMedidor.INSTALADO, _count: { _all: 3 } },
+      { estado: EstadoMedidor.DANADO, _count: { _all: 1 } },
+      { estado: EstadoMedidor.BAJA, _count: { _all: 1 } },
+    ]);
+
+    const result = await service.findAll({ page: 1, limit: 10 });
+
+    expect(result.meta.total).toBe(7);
+    expect(result.kpis.enBodega).toBe(2);
+    expect(result.kpis.instalados).toBe(3);
+    expect(result.kpis.danados).toBe(1);
+    expect(result.kpis.total).toBe(7);
   });
 });

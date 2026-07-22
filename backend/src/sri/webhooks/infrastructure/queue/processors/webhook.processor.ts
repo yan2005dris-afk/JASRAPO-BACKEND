@@ -1,4 +1,4 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { PrismaService } from '../../../../../infrastructure/database/prisma.service';
 import { JobsService } from '../../../../../infrastructure/jobs/jobs.service';
 import {
@@ -9,6 +9,8 @@ import * as crypto from 'crypto';
 import { Agent } from 'undici';
 import { WEBHOOK_DISPATCH_JOB } from '../../../application/contracts/webhook-job.contract';
 import { SimpleCircuitBreaker } from '../../../../../infrastructure/common/resilience/circuit-breaker';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
 export class WebhookBusinessError extends Error {
   readonly isBusinessError = true;
@@ -27,14 +29,15 @@ const globalDispatcher = new Agent({
 /**
  * Processor de webhooks migrado a pg-boss (PostgreSQL) usando Prisma.
  */
+@LogContext()
 @Injectable()
 export class WebhookProcessor implements OnModuleInit {
-  private readonly logger = new Logger(WebhookProcessor.name);
   private readonly breakers = new Map<string, SimpleCircuitBreaker>();
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly jobsService: JobsService,
+    private readonly logger: LoggerService,
   ) {}
 
   async onModuleInit() {
