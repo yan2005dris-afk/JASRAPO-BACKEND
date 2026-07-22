@@ -34,7 +34,7 @@ export class RefreshAccessTokenUseCase {
   // rotated refresh token, and revoke every row sharing the family
   // whenever a refresh token is presented twice. Requires:
   //   - schema migration (Sesiones.familyId String?, index)
-  //   - SessionsService.createSession / updateSession signature
+  //   - SessionsService.createSession / rotateSession signature
   //   - detection path on second-use + cascade revocation
   //   - reuse-detection test (Testcontainers integration spec)
   // Out of scope for the TTL/ceiling PR; tracked separately.
@@ -95,7 +95,6 @@ export class RefreshAccessTokenUseCase {
     try {
       affectedRows = await this.sessionsService.rotateSession(sesionId, {
         expectedTokenVersion: tokenVersion,
-        hashRefreshToken: '',
         sessionSecret: newSessionSecret,
         direccionIp: ip,
         usuarioAgente: userAgent,

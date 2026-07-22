@@ -86,7 +86,6 @@ export class LoginUseCase {
     try {
       await this.sessionsService.createSession({
         sesionId,
-        hashRefreshToken: '',
         sessionSecret,
         tokenVersion,
         direccionIp: ip,

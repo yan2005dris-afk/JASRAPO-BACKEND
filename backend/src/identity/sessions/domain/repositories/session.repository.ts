@@ -1,7 +1,6 @@
 export interface CreateSessionRepositoryData {
   sesionId: string;
   usuarioId: number;
-  hashRefreshToken: string;
   sessionSecret: string;
   tokenVersion: number;
   direccionIp?: string | null;
@@ -11,7 +10,6 @@ export interface CreateSessionRepositoryData {
 }
 
 export interface UpdateSessionRepositoryData {
-  hashRefreshToken?: string;
   direccionIp?: string | null;
   usuarioAgente?: string | null;
   revocado?: boolean;
@@ -20,7 +18,6 @@ export interface UpdateSessionRepositoryData {
 
 export interface RotateSessionRepositoryData {
   expectedTokenVersion: number;
-  hashRefreshToken: string;
   sessionSecret: string;
   direccionIp?: string | null;
   usuarioAgente?: string | null;
@@ -31,7 +28,6 @@ export interface RotateSessionRepositoryData {
 export interface SessionEntity {
   sesionId: string;
   usuarioId: number;
-  hashRefreshToken: string;
   sessionSecret: string;
   tokenVersion: number;
   direccionIp: string | null;

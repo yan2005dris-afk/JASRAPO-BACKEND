@@ -18,7 +18,6 @@ export class PrismaSessionRepository implements SessionRepository {
       data: {
         sesionId: data.sesionId,
         usuarioId: data.usuarioId,
-        hashRefreshToken: data.hashRefreshToken,
         sessionSecret: data.sessionSecret,
         tokenVersion: data.tokenVersion,
         direccionIp: data.direccionIp,
@@ -71,7 +70,6 @@ export class PrismaSessionRepository implements SessionRepository {
     const session = await this.prisma.sesiones.update({
       where: { sesionId },
       data: {
-        hashRefreshToken: data.hashRefreshToken,
         direccionIp: data.direccionIp,
         usuarioAgente: data.usuarioAgente,
         revocado: data.revocado,
@@ -91,7 +89,6 @@ export class PrismaSessionRepository implements SessionRepository {
         tokenVersion: data.expectedTokenVersion,
       },
       data: {
-        hashRefreshToken: data.hashRefreshToken,
         sessionSecret: data.sessionSecret,
         tokenVersion: { increment: 1 },
         direccionIp: data.direccionIp,

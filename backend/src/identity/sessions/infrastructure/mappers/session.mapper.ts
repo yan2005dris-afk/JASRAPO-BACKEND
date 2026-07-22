@@ -6,7 +6,6 @@ export class SessionMapper {
     return {
       sesionId: raw.sesionId,
       usuarioId: raw.usuarioId,
-      hashRefreshToken: raw.hashRefreshToken,
       sessionSecret: raw.sessionSecret,
       tokenVersion: raw.tokenVersion,
       direccionIp: raw.direccionIp,

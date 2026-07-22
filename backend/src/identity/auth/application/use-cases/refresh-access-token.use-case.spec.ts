@@ -87,7 +87,6 @@ describe('RefreshAccessTokenUseCase', () => {
     it('should refresh tokens and increment tokenVersion', async () => {
       const mockSession = {
         sesionId: 'sid',
-        hashRefreshToken: '',
         sessionSecret,
         tokenVersion: 1,
         revocado: false,
@@ -137,7 +136,6 @@ describe('RefreshAccessTokenUseCase', () => {
     it('should allow only one concurrent refresh for the same tokenVersion', async () => {
       const mockSession = {
         sesionId: 'sid',
-        hashRefreshToken: '',
         sessionSecret,
         tokenVersion: 1,
         revocado: false,
