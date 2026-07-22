@@ -38,6 +38,8 @@ export class RefreshTokenStrategy extends PassportStrategy(
       throw new UnauthorizedException('Session invalida');
     }
     const session = await this.sessionsService.getSession(usuarioId, sesionId);
+    // La verificación de tokenVersion (replay) vive en el use-case, que además
+    // revoca la sesión al detectarlo. Aquí solo rechazamos sesiones muertas.
     if (!session || session.revocado || session.expiraEn < new Date()) {
       throw new UnauthorizedException('Refresh token inválido o expirado');
     }

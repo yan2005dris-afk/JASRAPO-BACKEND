@@ -1,6 +1,9 @@
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { JwtAuthGuard } from './identity/auth/interfaces/http/guards/jwt-auth.guard';
+import { PermissionsGuard } from './infrastructure/common/guards/permissions.guard';
 import { IdentityModule } from './identity/identity.module';
 import { DatabaseModule } from './infrastructure/database/prisma.module';
 import { MeteringModule } from './metering/metering.module';
@@ -62,6 +65,15 @@ import { SistemaConfigModule } from './infrastructure/config/sistema-config.modu
     SistemaConfigModule,
   ],
   controllers: [],
-  providers: [],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: PermissionsGuard,
+    },
+  ],
 })
 export class AppModule {}

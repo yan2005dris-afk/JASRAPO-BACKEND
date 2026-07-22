@@ -6,10 +6,16 @@ import {
 import { MeterRepository } from '../../../meters/domain/repositories/meter.repository';
 import { EstadoMedidor, EstadoContrato } from 'src/shared/enums';
 import type { MeterEntity } from '../../../meters/domain/entities/meter.entity';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
+@LogContext()
 @Injectable()
 export class InstallMeterUseCase {
-  constructor(private readonly meterRepository: MeterRepository) {}
+  constructor(
+    private readonly meterRepository: MeterRepository,
+    private readonly logger: LoggerService,
+  ) {}
 
   async execute(medidorId: bigint): Promise<MeterEntity> {
     const meter = await this.meterRepository.findUnique({ medidorId });
@@ -39,17 +45,39 @@ export class InstallMeterUseCase {
       );
     }
 
+    const now = new Date();
+
     return this.meterRepository.executeTransaction(async (tx) => {
-      const updated = await this.meterRepository.update(
+      const updatedMeter = await this.meterRepository.update(
         { medidorId },
         {
           estado: EstadoMedidor.INSTALADO,
-          fechaInstalacion: new Date(),
+          fechaInstalacion: now,
         },
         tx,
       );
 
-      return updated;
+      const openHistorial = await tx.historialMedidores.findFirst({
+        where: { contratoId: contrato.contratoId, fechaHasta: null },
+      });
+
+      if (!openHistorial) {
+        this.logger.warn(
+          `Install: no open historialMedidores row for contratoId=${contrato.contratoId}; skipping fechaHasta close`,
+        );
+      } else {
+        await tx.historialMedidores.update({
+          where: { historialId: openHistorial.historialId },
+          data: { fechaHasta: now },
+        });
+      }
+
+      await tx.contratos.update({
+        where: { contratoId: contrato.contratoId },
+        data: { estado: EstadoContrato.ACTIVO },
+      });
+
+      return updatedMeter;
     });
   }
 }

@@ -1,8 +1,16 @@
 import { Controller, Get, Logger, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiQuery,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { PrismaService } from '../../../database/prisma.service';
+import { RequiredPermission } from '../../../common/decorators/require-permission.decorator';
 
 @ApiTags('[Posible Implementación] Monitoreo de Correos')
+@ApiBearerAuth()
 @Controller('mail/metrics')
 export class MailMetricsController {
   private readonly logger = new Logger(MailMetricsController.name);
@@ -15,6 +23,8 @@ export class MailMetricsController {
       'Endpoint diseñado para alimentar una futura pantalla de monitoreo. Devuelve el estado actual de la cola de pg-boss y el registro de todos los trabajos históricos.',
   })
   @ApiResponse({ status: 200, description: 'Métricas obtenidas correctamente' })
+  @ApiResponse({ status: 401, description: 'No autorizado' })
+  @ApiResponse({ status: 403, description: 'Sin permiso mail:metrics:read' })
   @ApiResponse({
     status: 503,
     description: 'Métricas no disponibles temporalmente',
@@ -31,6 +41,7 @@ export class MailMetricsController {
     type: Number,
     description: 'Offset de resultados (por defecto 0)',
   })
+  @RequiredPermission('mail', 'metrics:read')
   @Get()
   async getMetrics(
     @Query('limit') limitStr?: string,
@@ -62,7 +73,6 @@ export class MailMetricsController {
       };
 
       for (const row of rows) {
-        // Prisma returns count as BigInt, we need to convert it to Number
         const count = Number(row.count);
         const state = row.state as keyof typeof metrics;
         if (state in metrics && state !== 'allJobs') {
@@ -85,7 +95,6 @@ export class MailMetricsController {
       return metrics;
     } catch (error) {
       this.logger.error('Error fetching mail metrics', error);
-      // Retornamos un objeto vacío en caso de error (ej: si pg-boss no ha creado la tabla aún)
       return { total: 0, error: 'Metrics unavailable' };
     }
   }

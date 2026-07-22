@@ -91,8 +91,11 @@ export class AuthResponseDto {
 
 export class JwtPayload {
   sub: string | number;
+  sid: string;
   email: string;
   rol: UserRole;
+  tokenVersion: number;
+  sessionSecret?: string;
   type?: 'access' | 'refresh';
   iat?: number;
   exp?: number;

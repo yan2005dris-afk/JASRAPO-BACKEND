@@ -4,12 +4,15 @@ export type JwtAccessPayload = {
   sub: number;
   sid: string;
   email?: string;
+  tokenVersion?: number;
 };
 
 export type JwtRefreshPayload = {
   sub: number;
   sid: string;
   email?: string;
+  tokenVersion?: number;
+  sessionSecret?: string;
 };
 
 export type RequestWithCookies = Request & {

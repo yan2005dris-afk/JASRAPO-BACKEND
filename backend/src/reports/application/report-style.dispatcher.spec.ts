@@ -1,12 +1,19 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import { ReportStyleDispatcher } from './report-style.dispatcher';
 import type { ReportKey, ReportStyle } from './report-style.service';
 import { ReportStyleService } from './report-style.service';
 import { PdfService } from '../../infrastructure/pdf/pdf.service';
 import { buildPdfFileName } from '../../infrastructure/pdf/utils/pdf-format.utils';
 import type { PdfDocumentType } from '../../infrastructure/pdf/document-type.interface';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+const mockLogger = {
+  log: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+  debug: jest.fn(),
+  verbose: jest.fn(),
+};
 
 jest.mock('../../infrastructure/pdf/utils/pdf-format.utils', () => ({
   buildPdfFileName: jest.fn(
@@ -88,6 +95,7 @@ describe('ReportStyleDispatcher', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
+        { provide: LoggerService, useValue: mockLogger },
         ReportStyleDispatcher,
         { provide: ReportStyleService, useValue: mockStyleService },
         { provide: PdfService, useValue: mockPdfService },
@@ -99,7 +107,7 @@ describe('ReportStyleDispatcher', () => {
     pdfService = module.get(PdfService);
 
     loggerWarnSpy = jest
-      .spyOn(Logger.prototype, 'warn')
+      .spyOn(mockLogger, 'warn')
       .mockImplementation(() => undefined);
 
     buildPdfFileNameMock.mockClear();

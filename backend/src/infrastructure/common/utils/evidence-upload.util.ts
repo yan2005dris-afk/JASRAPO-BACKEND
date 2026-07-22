@@ -1,4 +1,3 @@
-import type { Logger } from '@nestjs/common';
 import { BadRequestException } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import type {
@@ -6,6 +5,11 @@ import type {
   SriStorageType,
 } from 'src/infrastructure/storage/storage.service';
 import { ImageProcessorUtil } from './image-processor.util';
+
+type EvidenceLogger = {
+  debug(message: string): void;
+  warn(message: string): void;
+};
 
 export const EVIDENCE_IMAGE_TYPES = /^image\/(jpg|jpeg|png|webp)$/i;
 export const EVIDENCE_IMAGE_MAX_WIDTH = 1024;
@@ -44,7 +48,7 @@ export async function uploadEvidence(
   storageService: StorageService,
   bucketType: SriStorageType,
   keyPrefix: string,
-  logger?: Logger,
+  logger?: EvidenceLogger,
 ): Promise<string> {
   logger?.debug(`Procesando evidencia (${file.size} bytes, ${file.mimetype})`);
   const processedBuffer = await ImageProcessorUtil.toWebP(file.buffer, {
@@ -67,7 +71,7 @@ export async function rollbackEvidenceUpload(
   key: string,
   storageService: StorageService,
   bucketType: SriStorageType,
-  logger: Logger,
+  logger: EvidenceLogger,
   context: string,
 ): Promise<void> {
   logger.warn(`[${context}] Revirtiendo subida por fallo en operación: ${key}`);
@@ -87,7 +91,7 @@ export async function deleteOldEvidence(
   newKey: string,
   storageService: StorageService,
   bucketType: SriStorageType,
-  logger: Logger,
+  logger: EvidenceLogger,
   context: string,
 ): Promise<void> {
   if (!newKey || !oldKey) return;

@@ -7,8 +7,11 @@ export class SessionEntity {
   @ApiProperty({ example: 1, description: 'ID del usuario asociado' })
   usuarioId: number;
 
-  @ApiProperty({ example: 'hash-token', description: 'Hash del refresh token' })
-  hashRefreshToken: string;
+  @ApiProperty({ example: 'a'.repeat(64), description: 'Secreto de sesión' })
+  sessionSecret: string;
+
+  @ApiProperty({ example: 1, description: 'Versión del token de sesión' })
+  tokenVersion: number;
 
   @ApiProperty({
     example: '127.0.0.1',

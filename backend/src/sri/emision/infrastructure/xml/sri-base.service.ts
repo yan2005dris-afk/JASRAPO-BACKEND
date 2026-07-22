@@ -1,21 +1,23 @@
-import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { IdentificacionValidatorService } from './identificacion-validator.service';
 import { CatalogoValidatorService } from './catalogo-validator.service';
 import { Ambiente } from '../../domain/constants';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
 /**
  * Servicio base con métodos compartidos entre todos los tipos de comprobante SRI.
  * Contiene validaciones contra catálogos, helpers de ambiente, etc.
  */
+@LogContext()
 @Injectable()
 export class SriBaseService {
-  private readonly logger = new Logger(SriBaseService.name);
-
   constructor(
     private readonly configService: ConfigService,
     private readonly identificacionValidator: IdentificacionValidatorService,
     private readonly catalogoValidator: CatalogoValidatorService,
+    private readonly logger: LoggerService,
   ) {}
 
   /**

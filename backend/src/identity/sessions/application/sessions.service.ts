@@ -6,6 +6,7 @@ import { RevokeSessionUseCase } from './use-cases/revoke-session.use-case';
 import { ListSessionsByUserUseCase } from './use-cases/list-sessions-by-user.use-case';
 import {
   CreateSessionRepositoryData,
+  RotateSessionRepositoryData,
   SessionEntity,
   SessionRepository,
   UpdateSessionRepositoryData,
@@ -46,8 +47,19 @@ export class SessionsService {
     return this.updateUseCase.execute(sesionId, data);
   }
 
+  async rotateSession(
+    sesionId: string,
+    data: RotateSessionRepositoryData,
+  ): Promise<number> {
+    return this.sessionRepository.rotate(sesionId, data);
+  }
+
   async revokeSession(sesionId: string): Promise<SessionEntity> {
     return this.revokeUseCase.execute(sesionId);
+  }
+
+  async revokeAllUserSessions(usuarioId: number): Promise<number> {
+    return this.sessionRepository.revokeAllByUser(usuarioId);
   }
 
   async listSessionsByUser(usuarioId: number): Promise<SessionEntity[]> {
