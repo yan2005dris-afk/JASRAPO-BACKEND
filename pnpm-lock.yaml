@@ -16,7 +16,15 @@ overrides:
   crypto-js: ^4.2.0
   undici: ^8.5.0
   '@opentelemetry/core': ^2.8.0
-  js-yaml: ^4.2.0
+  js-yaml: ^4.3.0
+  multer: ^2.2.0
+  nodemailer: ^9.0.1
+  brace-expansion: ^5.0.7
+  axios: ^1.18.0
+  '@opentelemetry/propagator-jaeger': ^2.9.0
+  linkify-it: ^5.0.2
+  fast-uri: ^3.1.4
+  svgo: ^4.0.2
 
 importers:
 
@@ -32,10 +40,10 @@ importers:
         version: 3.1067.0
       '@nestjs-modules/mailer':
         specifier: 2.3.6
-        version: 2.3.6(@nestjs/common@11.1.26(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.26)(@nestjs/event-emitter@3.1.0(@nestjs/common@11.1.26(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.26))(@nestjs/terminus@11.1.1(@grpc/grpc-js@1.14.4)(@grpc/proto-loader@0.8.1)(@nestjs/axios@4.0.1(@nestjs/common@11.1.26(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(axios@1.17.0)(rxjs@7.8.2))(@nestjs/common@11.1.26(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.26)(@prisma/client@7.8.0(prisma@7.8.0(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(typescript@5.9.3))(typescript@5.9.3))(reflect-metadata@0.2.2)(rxjs@7.8.2))(chokidar@4.0.3)(nodemailer@9.0.1)(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3)
+        version: 2.3.6(@nestjs/common@11.1.26(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.26)(@nestjs/event-emitter@3.1.0(@nestjs/common@11.1.26(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.26))(@nestjs/terminus@11.1.1(@grpc/grpc-js@1.14.4)(@grpc/proto-loader@0.8.1)(@nestjs/axios@4.0.1(@nestjs/common@11.1.26(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(axios@1.18.1)(rxjs@7.8.2))(@nestjs/common@11.1.26(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.26)(@prisma/client@7.8.0(prisma@7.8.0(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(typescript@5.9.3))(typescript@5.9.3))(reflect-metadata@0.2.2)(rxjs@7.8.2))(chokidar@4.0.3)(nodemailer@9.0.1)(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3)
       '@nestjs/axios':
         specifier: ^4.0.1
-        version: 4.0.1(@nestjs/common@11.1.26(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(axios@1.17.0)(rxjs@7.8.2)
+        version: 4.0.1(@nestjs/common@11.1.26(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(axios@1.18.1)(rxjs@7.8.2)
       '@nestjs/cache-manager':
         specifier: ^3.1.2
         version: 3.1.2(@nestjs/common@11.1.26(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.26)(cache-manager@7.2.8)(keyv@5.6.0)(rxjs@7.8.2)
@@ -71,7 +79,7 @@ importers:
         version: 11.4.2(@nestjs/common@11.1.26(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.26)(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)
       '@nestjs/terminus':
         specifier: ^11.0.0
-        version: 11.1.1(@grpc/grpc-js@1.14.4)(@grpc/proto-loader@0.8.1)(@nestjs/axios@4.0.1(@nestjs/common@11.1.26(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(axios@1.17.0)(rxjs@7.8.2))(@nestjs/common@11.1.26(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.26)(@prisma/client@7.8.0(prisma@7.8.0(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(typescript@5.9.3))(typescript@5.9.3))(reflect-metadata@0.2.2)(rxjs@7.8.2)
+        version: 11.1.1(@grpc/grpc-js@1.14.4)(@grpc/proto-loader@0.8.1)(@nestjs/axios@4.0.1(@nestjs/common@11.1.26(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(axios@1.18.1)(rxjs@7.8.2))(@nestjs/common@11.1.26(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.26)(@prisma/client@7.8.0(prisma@7.8.0(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(typescript@5.9.3))(typescript@5.9.3))(reflect-metadata@0.2.2)(rxjs@7.8.2)
       '@nestjs/throttler':
         specifier: ^6.5.0
         version: 6.5.0(@nestjs/common@11.1.26(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.26)(reflect-metadata@0.2.2)
@@ -139,8 +147,8 @@ importers:
         specifier: ^0.9.7
         version: 0.9.10
       axios:
-        specifier: ^1.7.9
-        version: 1.17.0(debug@4.4.3)
+        specifier: ^1.18.0
+        version: 1.18.1(debug@4.4.3)
       bcrypt:
         specifier: ^6.0.0
         version: 6.0.0
@@ -1528,7 +1536,7 @@ packages:
       '@nestjs/event-emitter': '>=2.0.0'
       '@nestjs/terminus': '>=10.0.0'
       bullmq: '>=4.0.0'
-      nodemailer: '>=8.0.5'
+      nodemailer: ^9.0.1
     peerDependenciesMeta:
       '@nestjs/event-emitter':
         optional: true
@@ -1541,7 +1549,7 @@ packages:
     resolution: {integrity: sha512-68pFJgu+/AZbWkGu65Z3r55bTsCPlgyKaV4BSG8yUAD72q1PPuyVRgUwFv6BxdnibTUHlyxm06FmYWNC+bjN7A==}
     peerDependencies:
       '@nestjs/common': ^10.0.0 || ^11.0.0
-      axios: ^1.3.1
+      axios: ^1.18.0
       rxjs: ^7.0.0
 
   '@nestjs/cache-manager@3.1.2':
@@ -2274,14 +2282,8 @@ packages:
     peerDependencies:
       '@opentelemetry/api': '>=1.0.0 <1.10.0'
 
-  '@opentelemetry/propagator-jaeger@2.7.1':
-    resolution: {integrity: sha512-KMjVBHzP4N60bOzxja76M1F1hZZ43lGPga5ix+mkv9+kk1nx9SbkxSvJsMbuVUxdPQmsPTqGShmhN8ulrMOg6Q==}
-    engines: {node: ^18.19.0 || >=20.6.0}
-    peerDependencies:
-      '@opentelemetry/api': '>=1.0.0 <1.10.0'
-
-  '@opentelemetry/propagator-jaeger@2.8.0':
-    resolution: {integrity: sha512-Xnz9zZvvQzUw+9DrOn0MomR7BxFCkA2pcfXBQuHC28ndJpSbjLs7knzYb05kw5SyCjSsEWombkZMgGcJSk8JVg==}
+  '@opentelemetry/propagator-jaeger@2.9.0':
+    resolution: {integrity: sha512-4mYGty27rYvSM0jtp1ZUOqd3LfVRCYg9H5G9OFzSx5HViYToU21MFhWfco7x1HwXr7ER8yGOiCIHZUwjPksc0Q==}
     engines: {node: ^18.19.0 || >=20.6.0}
     peerDependencies:
       '@opentelemetry/api': '>=1.0.0 <1.10.0'
@@ -3370,8 +3372,8 @@ packages:
   axios-ntlm@1.4.6:
     resolution: {integrity: sha512-4nR5cbVEBfPMTFkd77FEDpDuaR205JKibmrkaQyNwGcCx0szWNpRZaL0jZyMx4+mVY2PXHjRHuJafv9Oipl0Kg==}
 
-  axios@1.17.0:
-    resolution: {integrity: sha512-J8SwNxprqqpbfenehxWYXE7CW+wM1BB4w3+N+g+/Wx40xM4rsLrfPmHHxSWIxJLYDgSY/HqlFPIYb2/S3rxafw==}
+  axios@1.18.1:
+    resolution: {integrity: sha512-3nTvFlvpn9Zu/RkHUqtc7/+al4UpRW5az71ap5zccp6e8RAYEzhMTecX8Dz1wWDYrPpUoB1HAQEGEAEvUr7S9g==}
 
   b4a@1.8.1:
     resolution: {integrity: sha512-aiqre1Nr0B/6DgE2N5vwTc+2/oQZ4Wh1t4NznYY4E00y8LCt6NqdRv81so00oo27D8MVKTpUa/MwUUtBLXCoDw==}
@@ -3409,9 +3411,6 @@ packages:
   babel-walk@3.0.0-canary-5:
     resolution: {integrity: sha512-GAwkz0AihzY5bkwIY5QDR+LvsRQgB/B+1foMPvi0FZPMl5fjD7ICiznUiBdLYMH1QYe6vqu4gWYytZOccLouFw==}
     engines: {node: '>= 10.0.0'}
-
-  balanced-match@1.0.2:
-    resolution: {integrity: sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw==}
 
   balanced-match@4.0.4:
     resolution: {integrity: sha512-BLrgEcRTwX2o6gGxGOCNyMvGSp35YofuYzw9h1IMTRmKqttAZZVU67bdb9Pr2vUHA8+j3i2tJfjO6C6+4myGTA==}
@@ -3503,14 +3502,8 @@ packages:
     resolution: {integrity: sha512-9gYgQKXx+1nP8mP7CzFyaUARhg7D3n1dF/FnErWmu9l6JvGpNUN278h0aSb+QjoiKSWG+iZ3uHrcqk0qrY9RQQ==}
     engines: {node: '>=10'}
 
-  brace-expansion@1.1.15:
-    resolution: {integrity: sha512-EwOCDEex4quD37XhqM3omwtMoJjr//isUZz1JopUNWms+4Z2ViyM/k1YIRePpoVNnQhENnxtFjLaxNHrT7xIUg==}
-
-  brace-expansion@2.1.1:
-    resolution: {integrity: sha512-WR1cURNjuvBLMZBMbqM0UoE+WAfdUcEV1ccD8PVBVOI+Z3ND4+SZbN8RsfT2bMuG1qwz5RFvPukSZm5fF2D5eA==}
-
-  brace-expansion@5.0.6:
-    resolution: {integrity: sha512-kLpxurY4Z4r9sgMsyG0Z9uzsBlgiU/EFKhj/h91/8yHu0edo7XuixOIH3VcJ8kkxs6/jPzoI6U9Vj3WqbMQ94g==}
+  brace-expansion@5.0.7:
+    resolution: {integrity: sha512-7oFy703dxfY3/NLxC1fh2SUCQ0H9rmAY+5EpDVfXjUTTs+HEwR2nYaqLv+GWcTsumwxPfiz6CzCNkwXwBUwqCA==}
     engines: {node: 18 || 20 || >=22}
 
   braces@3.0.3:
@@ -3799,9 +3792,6 @@ packages:
   compress-commons@6.0.2:
     resolution: {integrity: sha512-6FqVXeETqWPoGcfzrXb37E50NP0LXT8kAMu5ooZayhWWdgEY4lBEEcbQNXtkuKQsGduxiIcI4gOTsxTmuq/bSg==}
     engines: {node: '>= 14'}
-
-  concat-map@0.0.1:
-    resolution: {integrity: sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==}
 
   concat-stream@1.6.2:
     resolution: {integrity: sha512-27HBghJxjiZtIk3Ycvn/4kbJk/1uZuJFfuPEns6LaEvpvG1f0hTea8lilrouyo9mVc2GWdcEZ8OLoGmSADlrCw==}
@@ -4569,8 +4559,8 @@ packages:
   fast-safe-stringify@2.1.1:
     resolution: {integrity: sha512-W+KJc2dmILlPplD/H4K9l9LcAHAfPtP6BY84uVLXQ6Evcz9Lcg33Y2z1IVblT6xdY54PXYVHEv+0Wpq8Io6zkA==}
 
-  fast-uri@3.1.2:
-    resolution: {integrity: sha512-rVjf7ArG3LTk+FS6Yw81V1DLuZl1bRbNrev6Tmd/9RaroeeRRJhAt7jg/6YFxbvAQXUCavSoZhPPj6oOx+5KjQ==}
+  fast-uri@3.1.4:
+    resolution: {integrity: sha512-8JnbkQ4juDyvYs4mgFGQqg4yCYtFDtUtmp2QIQq11ZZe5CFQ5wcqm1rqDgAh/QdMySuBnPzMUiJUNZG5N/AiQw==}
 
   fast-xml-builder@1.2.0:
     resolution: {integrity: sha512-00aAWieqff+ZJhsXA4g1g7M8k+7AYoMUUHF+/zFb5U6Uv/P0Vl4QZo84/IcufzYalLuEj9928bXN9PbbFzMF0Q==}
@@ -4902,7 +4892,7 @@ packages:
       purgecss: ^8.0.0
       relateurl: ^0.2.7
       srcset: ^5.0.1
-      svgo: ^4.0.0
+      svgo: ^4.0.2
       terser: ^5.21.0
       uncss: ^0.17.3
     peerDependenciesMeta:
@@ -5365,8 +5355,8 @@ packages:
   js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
 
-  js-yaml@4.2.0:
-    resolution: {integrity: sha512-ePWsvanv0DWuDRsW8dnt+R4jQ31SCRCQ7hhNcPXZPsoBZiemuZNYGf7adZdqX2D86j6rvKp3RpCxVTSb8WQlOw==}
+  js-yaml@4.3.0:
+    resolution: {integrity: sha512-1td788aAnnZ5qs7V2QIRl1owjtYpbKt749Y3xauqQgwIIGF/xXWz1wMTEBx5O3LK3lXLVuqXPdPxj2BoFHaW9Q==}
     hasBin: true
 
   jsesc@3.1.0:
@@ -5472,8 +5462,8 @@ packages:
   lines-and-columns@1.2.4:
     resolution: {integrity: sha512-7ylylesZQ/PV29jhEDl3Ufjo6ZX7gCqJr5F7PKrqc93v7fzSymt1BpwEU8nAUXs8qzzvqhbjhK5QZg6Mt/HkBg==}
 
-  linkify-it@5.0.1:
-    resolution: {integrity: sha512-wVoTjP4Q6R0NW5hiZkVJaFZPWgtXfoGF+6LucL3/FtiNjmcHhYjEr5f1Kqjirc1nBW07J/ZuRFumqr2oqccEWg==}
+  linkify-it@5.0.2:
+    resolution: {integrity: sha512-ONTm2jCMAVZjgQa/Fy1kScXsuOoF5NPTsoFBdE1KVIZ2vAh/r9+Bqo+0jINCBYnavTPQZz38QzFTme79ENoN3Q==}
 
   liquidjs@10.27.0:
     resolution: {integrity: sha512-tw/OA59K7aIBlMKIrKlumr37fiZUheShVHXY8cVctWisgY1p9mc5hreOvlreoS0wTiwlWk14Ya7305c2a/Cg5w==}
@@ -5790,10 +5780,6 @@ packages:
   ms@2.1.3:
     resolution: {integrity: sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==}
 
-  multer@2.1.1:
-    resolution: {integrity: sha512-mo+QTzKlx8R7E5ylSXxWzGoXoZbOsRMpyitcht8By2KHvMbf3tjwosZ/Mu/XYU6UuJ3VZnODIrak5ZrPiPyB6A==}
-    engines: {node: '>= 10.16.0'}
-
   multer@2.2.0:
     resolution: {integrity: sha512-6rdyFg2kLrMh9Jee7/BMPuV9lEAd7lLW2YUpF9/YxR7njyoUwwQ0ZPh3TaIY50Sw6vlyD2HW3wGOkTS4P79xrQ==}
     engines: {node: '>= 10.16.0'}
@@ -5870,10 +5856,6 @@ packages:
   node-releases@2.0.47:
     resolution: {integrity: sha512-Uzmd6LXpouKo8EUK68IjH4+E01w/hXyV3R3g/geCJo+rXLNfh1xucB+LOzYEOQPSiUK3h/xZf0cQGcSsmyL2Og==}
     engines: {node: '>=18'}
-
-  nodemailer@8.0.10:
-    resolution: {integrity: sha512-BLFuSth7QtHOkBzyqTehWWyub0NTRDuK2Q2SQfnGLsrJnzyU+Yeh4WpV1eZGuARFj1xQJHIdnTuJZLP+b9R1GQ==}
-    engines: {node: '>=6.0.0'}
 
   nodemailer@9.0.1:
     resolution: {integrity: sha512-Gwv8SQewT616ZM/URn0H54b8PWo/Wum7md3EW2aWy1lO27+WZCX+Xyak3J+NlmHUjDh5ME+uesJUDRbR3Ye8Bw==}
@@ -7065,8 +7047,8 @@ packages:
     resolution: {integrity: sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w==}
     engines: {node: '>= 0.4'}
 
-  svgo@4.0.1:
-    resolution: {integrity: sha512-XDpWUOPC6FEibaLzjfe0ucaV0YrOjYotGJO1WpF0Zd+n6ZGEQUsSugaoLq9QkEZtAfQIxT42UChcssDVPP3+/w==}
+  svgo@4.0.2:
+    resolution: {integrity: sha512-ekx94z1rRc5LDi6oSUaeRnYhd0UOJxdtQCL2rF8xpWxD3TPAsISWOrxezqGovqS38GRZOdpDfvQe3ts6F7nsng==}
     engines: {node: '>=16'}
     hasBin: true
 
@@ -8417,7 +8399,7 @@ snapshots:
       globals: 14.0.0
       ignore: 5.3.2
       import-fresh: 3.3.1
-      js-yaml: 4.2.0
+      js-yaml: 4.3.0
       minimatch: 3.1.5
       strip-json-comments: 3.1.1
     transitivePeerDependencies:
@@ -8751,7 +8733,7 @@ snapshots:
       camelcase: 5.3.1
       find-up: 4.1.0
       get-package-type: 0.1.0
-      js-yaml: 4.2.0
+      js-yaml: 4.3.0
       resolve-from: 5.0.0
 
   '@istanbuljs/schema@0.1.6': {}
@@ -8988,7 +8970,7 @@ snapshots:
       '@tybys/wasm-util': 0.10.2
     optional: true
 
-  '@nestjs-modules/mailer@2.3.6(@nestjs/common@11.1.26(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.26)(@nestjs/event-emitter@3.1.0(@nestjs/common@11.1.26(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.26))(@nestjs/terminus@11.1.1(@grpc/grpc-js@1.14.4)(@grpc/proto-loader@0.8.1)(@nestjs/axios@4.0.1(@nestjs/common@11.1.26(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(axios@1.17.0)(rxjs@7.8.2))(@nestjs/common@11.1.26(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.26)(@prisma/client@7.8.0(prisma@7.8.0(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(typescript@5.9.3))(typescript@5.9.3))(reflect-metadata@0.2.2)(rxjs@7.8.2))(chokidar@4.0.3)(nodemailer@9.0.1)(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3)':
+  '@nestjs-modules/mailer@2.3.6(@nestjs/common@11.1.26(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.26)(@nestjs/event-emitter@3.1.0(@nestjs/common@11.1.26(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.26))(@nestjs/terminus@11.1.1(@grpc/grpc-js@1.14.4)(@grpc/proto-loader@0.8.1)(@nestjs/axios@4.0.1(@nestjs/common@11.1.26(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(axios@1.18.1)(rxjs@7.8.2))(@nestjs/common@11.1.26(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.26)(@prisma/client@7.8.0(prisma@7.8.0(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(typescript@5.9.3))(typescript@5.9.3))(reflect-metadata@0.2.2)(rxjs@7.8.2))(chokidar@4.0.3)(nodemailer@9.0.1)(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3)':
     dependencies:
       '@css-inline/css-inline': 0.20.0
       '@nestjs/common': 11.1.26(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -8998,14 +8980,14 @@ snapshots:
       tslib: 2.8.1
     optionalDependencies:
       '@nestjs/event-emitter': 3.1.0(@nestjs/common@11.1.26(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.26)
-      '@nestjs/terminus': 11.1.1(@grpc/grpc-js@1.14.4)(@grpc/proto-loader@0.8.1)(@nestjs/axios@4.0.1(@nestjs/common@11.1.26(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(axios@1.17.0)(rxjs@7.8.2))(@nestjs/common@11.1.26(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.26)(@prisma/client@7.8.0(prisma@7.8.0(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(typescript@5.9.3))(typescript@5.9.3))(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/terminus': 11.1.1(@grpc/grpc-js@1.14.4)(@grpc/proto-loader@0.8.1)(@nestjs/axios@4.0.1(@nestjs/common@11.1.26(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(axios@1.18.1)(rxjs@7.8.2))(@nestjs/common@11.1.26(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.26)(@prisma/client@7.8.0(prisma@7.8.0(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(typescript@5.9.3))(typescript@5.9.3))(reflect-metadata@0.2.2)(rxjs@7.8.2)
       '@types/ejs': 3.1.5
       '@types/mjml': 4.7.4
       '@types/pug': 2.0.10
       ejs: 5.0.2
       handlebars: 4.7.9
       liquidjs: 10.27.0
-      mjml: 5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3)
+      mjml: 5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3)
       nunjucks: 3.2.4(chokidar@4.0.3)
       preview-email: 3.1.3
       pug: 3.0.4
@@ -9019,10 +9001,10 @@ snapshots:
       - typescript
       - uncss
 
-  '@nestjs/axios@4.0.1(@nestjs/common@11.1.26(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(axios@1.17.0)(rxjs@7.8.2)':
+  '@nestjs/axios@4.0.1(@nestjs/common@11.1.26(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(axios@1.18.1)(rxjs@7.8.2)':
     dependencies:
       '@nestjs/common': 11.1.26(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2)
-      axios: 1.17.0(debug@4.4.3)
+      axios: 1.18.1(debug@4.4.3)
       rxjs: 7.8.2
 
   '@nestjs/cache-manager@3.1.2(@nestjs/common@11.1.26(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.26)(cache-manager@7.2.8)(keyv@5.6.0)(rxjs@7.8.2)':
@@ -9136,7 +9118,7 @@ snapshots:
       '@nestjs/core': 11.1.26(@nestjs/common@11.1.26(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@11.1.26)(reflect-metadata@0.2.2)(rxjs@7.8.2)
       cors: 2.8.6
       express: 5.2.1
-      multer: 2.1.1
+      multer: 2.2.0
       path-to-regexp: 8.4.2
       tslib: 2.8.1
     transitivePeerDependencies:
@@ -9169,7 +9151,7 @@ snapshots:
       '@nestjs/common': 11.1.26(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2)
       '@nestjs/core': 11.1.26(@nestjs/common@11.1.26(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@11.1.26)(reflect-metadata@0.2.2)(rxjs@7.8.2)
       '@nestjs/mapped-types': 2.1.1(@nestjs/common@11.1.26(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)
-      js-yaml: 4.2.0
+      js-yaml: 4.3.0
       lodash: 4.18.1
       path-to-regexp: 8.4.2
       reflect-metadata: 0.2.2
@@ -9178,7 +9160,7 @@ snapshots:
       class-transformer: 0.5.1
       class-validator: 0.14.3
 
-  '@nestjs/terminus@11.1.1(@grpc/grpc-js@1.14.4)(@grpc/proto-loader@0.8.1)(@nestjs/axios@4.0.1(@nestjs/common@11.1.26(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(axios@1.17.0)(rxjs@7.8.2))(@nestjs/common@11.1.26(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.26)(@prisma/client@7.8.0(prisma@7.8.0(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(typescript@5.9.3))(typescript@5.9.3))(reflect-metadata@0.2.2)(rxjs@7.8.2)':
+  '@nestjs/terminus@11.1.1(@grpc/grpc-js@1.14.4)(@grpc/proto-loader@0.8.1)(@nestjs/axios@4.0.1(@nestjs/common@11.1.26(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(axios@1.18.1)(rxjs@7.8.2))(@nestjs/common@11.1.26(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.26)(@prisma/client@7.8.0(prisma@7.8.0(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(typescript@5.9.3))(typescript@5.9.3))(reflect-metadata@0.2.2)(rxjs@7.8.2)':
     dependencies:
       '@nestjs/common': 11.1.26(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2)
       '@nestjs/core': 11.1.26(@nestjs/common@11.1.26(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@11.1.26)(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -9189,7 +9171,7 @@ snapshots:
     optionalDependencies:
       '@grpc/grpc-js': 1.14.4
       '@grpc/proto-loader': 0.8.1
-      '@nestjs/axios': 4.0.1(@nestjs/common@11.1.26(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(axios@1.17.0)(rxjs@7.8.2)
+      '@nestjs/axios': 4.0.1(@nestjs/common@11.1.26(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(axios@1.18.1)(rxjs@7.8.2)
       '@prisma/client': 7.8.0(prisma@7.8.0(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(typescript@5.9.3))(typescript@5.9.3)
 
   '@nestjs/testing@11.1.26(@nestjs/common@11.1.26(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.26)(@nestjs/platform-express@11.1.26)':
@@ -9980,12 +9962,7 @@ snapshots:
       '@opentelemetry/api': 1.9.1
       '@opentelemetry/core': 2.8.0(@opentelemetry/api@1.9.1)
 
-  '@opentelemetry/propagator-jaeger@2.7.1(@opentelemetry/api@1.9.1)':
-    dependencies:
-      '@opentelemetry/api': 1.9.1
-      '@opentelemetry/core': 2.8.0(@opentelemetry/api@1.9.1)
-
-  '@opentelemetry/propagator-jaeger@2.8.0(@opentelemetry/api@1.9.1)':
+  '@opentelemetry/propagator-jaeger@2.9.0(@opentelemetry/api@1.9.1)':
     dependencies:
       '@opentelemetry/api': 1.9.1
       '@opentelemetry/core': 2.8.0(@opentelemetry/api@1.9.1)
@@ -10088,7 +10065,7 @@ snapshots:
       '@opentelemetry/instrumentation': 0.218.0(@opentelemetry/api@1.9.1)
       '@opentelemetry/otlp-exporter-base': 0.218.0(@opentelemetry/api@1.9.1)
       '@opentelemetry/propagator-b3': 2.7.1(@opentelemetry/api@1.9.1)
-      '@opentelemetry/propagator-jaeger': 2.7.1(@opentelemetry/api@1.9.1)
+      '@opentelemetry/propagator-jaeger': 2.9.0(@opentelemetry/api@1.9.1)
       '@opentelemetry/resources': 2.7.1(@opentelemetry/api@1.9.1)
       '@opentelemetry/sdk-logs': 0.218.0(@opentelemetry/api@1.9.1)
       '@opentelemetry/sdk-metrics': 2.7.1(@opentelemetry/api@1.9.1)
@@ -10120,7 +10097,7 @@ snapshots:
       '@opentelemetry/otlp-exporter-base': 0.219.0(@opentelemetry/api@1.9.1)
       '@opentelemetry/otlp-grpc-exporter-base': 0.219.0(@opentelemetry/api@1.9.1)
       '@opentelemetry/propagator-b3': 2.8.0(@opentelemetry/api@1.9.1)
-      '@opentelemetry/propagator-jaeger': 2.8.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/propagator-jaeger': 2.9.0(@opentelemetry/api@1.9.1)
       '@opentelemetry/resources': 2.8.0(@opentelemetry/api@1.9.1)
       '@opentelemetry/sdk-logs': 0.219.0(@opentelemetry/api@1.9.1)
       '@opentelemetry/sdk-metrics': 2.8.0(@opentelemetry/api@1.9.1)
@@ -11103,14 +11080,14 @@ snapshots:
   ajv@8.18.0:
     dependencies:
       fast-deep-equal: 3.1.3
-      fast-uri: 3.1.2
+      fast-uri: 3.1.4
       json-schema-traverse: 1.0.0
       require-from-string: 2.0.2
 
   ajv@8.20.0:
     dependencies:
       fast-deep-equal: 3.1.3
-      fast-uri: 3.1.2
+      fast-uri: 3.1.4
       json-schema-traverse: 1.0.0
       require-from-string: 2.0.2
 
@@ -11266,7 +11243,7 @@ snapshots:
 
   axios-ntlm@1.4.6(debug@4.4.3):
     dependencies:
-      axios: 1.17.0(debug@4.4.3)
+      axios: 1.18.1(debug@4.4.3)
       des.js: 1.1.0
       dev-null: 0.1.1
       js-md4: 0.3.2
@@ -11274,7 +11251,7 @@ snapshots:
       - debug
       - supports-color
 
-  axios@1.17.0(debug@4.4.3):
+  axios@1.18.1(debug@4.4.3):
     dependencies:
       follow-redirects: 1.16.0(debug@4.4.3)
       form-data: 4.0.6
@@ -11342,8 +11319,6 @@ snapshots:
     dependencies:
       '@babel/types': 7.29.7
     optional: true
-
-  balanced-match@1.0.2: {}
 
   balanced-match@4.0.4: {}
 
@@ -11436,16 +11411,7 @@ snapshots:
       widest-line: 3.1.0
       wrap-ansi: 7.0.0
 
-  brace-expansion@1.1.15:
-    dependencies:
-      balanced-match: 1.0.2
-      concat-map: 0.0.1
-
-  brace-expansion@2.1.1:
-    dependencies:
-      balanced-match: 1.0.2
-
-  brace-expansion@5.0.6:
+  brace-expansion@5.0.7:
     dependencies:
       balanced-match: 4.0.4
 
@@ -11744,8 +11710,6 @@ snapshots:
       normalize-path: 3.0.0
       readable-stream: 4.7.0
 
-  concat-map@0.0.1: {}
-
   concat-stream@1.6.2:
     dependencies:
       buffer-from: 1.1.2
@@ -11813,7 +11777,7 @@ snapshots:
   cosmiconfig@8.3.6(typescript@5.9.3):
     dependencies:
       import-fresh: 3.3.1
-      js-yaml: 4.2.0
+      js-yaml: 4.3.0
       parse-json: 5.2.0
       path-type: 4.0.0
     optionalDependencies:
@@ -11823,7 +11787,7 @@ snapshots:
     dependencies:
       env-paths: 2.2.1
       import-fresh: 3.3.1
-      js-yaml: 4.2.0
+      js-yaml: 4.3.0
       parse-json: 5.2.0
     optionalDependencies:
       typescript: 5.9.3
@@ -12692,7 +12656,7 @@ snapshots:
 
   fast-safe-stringify@2.1.1: {}
 
-  fast-uri@3.1.2: {}
+  fast-uri@3.1.4: {}
 
   fast-xml-builder@1.2.0:
     dependencies:
@@ -13054,7 +13018,7 @@ snapshots:
       selderee: 0.12.0
     optional: true
 
-  htmlnano@3.3.2(cssnano@7.1.9(postcss@8.5.15))(postcss@8.5.15)(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3):
+  htmlnano@3.3.2(cssnano@7.1.9(postcss@8.5.15))(postcss@8.5.15)(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3):
     dependencies:
       '@types/relateurl': 0.2.33
       commander: 14.0.3
@@ -13063,7 +13027,7 @@ snapshots:
     optionalDependencies:
       cssnano: 7.1.9(postcss@8.5.15)
       postcss: 8.5.15
-      svgo: 4.0.1
+      svgo: 4.0.2
       terser: 5.48.0
     transitivePeerDependencies:
       - typescript
@@ -13719,7 +13683,7 @@ snapshots:
 
   js-tokens@4.0.0: {}
 
-  js-yaml@4.2.0:
+  js-yaml@4.3.0:
     dependencies:
       argparse: 2.0.1
 
@@ -13846,7 +13810,7 @@ snapshots:
 
   lines-and-columns@1.2.4: {}
 
-  linkify-it@5.0.1:
+  linkify-it@5.0.2:
     dependencies:
       uc.micro: 2.1.0
     optional: true
@@ -13932,8 +13896,8 @@ snapshots:
       html-to-text: 10.0.0
       iconv-lite: 0.7.2
       libmime: 5.3.8
-      linkify-it: 5.0.1
-      nodemailer: 8.0.10
+      linkify-it: 5.0.2
+      nodemailer: 9.0.1
       punycode.js: 2.3.1
       tlds: 1.261.0
     optional: true
@@ -14002,19 +13966,19 @@ snapshots:
 
   minimatch@10.2.5:
     dependencies:
-      brace-expansion: 5.0.6
+      brace-expansion: 5.0.7
 
   minimatch@3.1.5:
     dependencies:
-      brace-expansion: 1.1.15
+      brace-expansion: 5.0.7
 
   minimatch@5.1.9:
     dependencies:
-      brace-expansion: 2.1.1
+      brace-expansion: 5.0.7
 
   minimatch@9.0.9:
     dependencies:
-      brace-expansion: 2.1.1
+      brace-expansion: 5.0.7
 
   minimist@1.2.8: {}
 
@@ -14022,11 +13986,11 @@ snapshots:
 
   mitt@3.0.1: {}
 
-  mjml-accordion@5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3):
+  mjml-accordion@5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3):
     dependencies:
       '@babel/runtime': 7.29.7
       lodash: 4.18.1
-      mjml-core: 5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3)
+      mjml-core: 5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3)
     transitivePeerDependencies:
       - purgecss
       - relateurl
@@ -14037,11 +14001,11 @@ snapshots:
       - uncss
     optional: true
 
-  mjml-body@5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3):
+  mjml-body@5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3):
     dependencies:
       '@babel/runtime': 7.29.7
       lodash: 4.18.1
-      mjml-core: 5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3)
+      mjml-core: 5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3)
     transitivePeerDependencies:
       - purgecss
       - relateurl
@@ -14052,11 +14016,11 @@ snapshots:
       - uncss
     optional: true
 
-  mjml-button@5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3):
+  mjml-button@5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3):
     dependencies:
       '@babel/runtime': 7.29.7
       lodash: 4.18.1
-      mjml-core: 5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3)
+      mjml-core: 5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3)
     transitivePeerDependencies:
       - purgecss
       - relateurl
@@ -14067,11 +14031,11 @@ snapshots:
       - uncss
     optional: true
 
-  mjml-carousel@5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3):
+  mjml-carousel@5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3):
     dependencies:
       '@babel/runtime': 7.29.7
       lodash: 4.18.1
-      mjml-core: 5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3)
+      mjml-core: 5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3)
     transitivePeerDependencies:
       - purgecss
       - relateurl
@@ -14082,16 +14046,16 @@ snapshots:
       - uncss
     optional: true
 
-  mjml-cli@5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3):
+  mjml-cli@5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3):
     dependencies:
       '@babel/runtime': 7.29.7
       chokidar: 4.0.3
       glob: 11.1.0
       lodash: 4.18.1
       minimatch: 10.2.5
-      mjml-core: 5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3)
+      mjml-core: 5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3)
       mjml-parser-xml: 5.3.0
-      mjml-preset-core: 5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3)
+      mjml-preset-core: 5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3)
       mjml-validator: 5.3.0
       yargs: 17.7.2
     transitivePeerDependencies:
@@ -14104,11 +14068,11 @@ snapshots:
       - uncss
     optional: true
 
-  mjml-column@5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3):
+  mjml-column@5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3):
     dependencies:
       '@babel/runtime': 7.29.7
       lodash: 4.18.1
-      mjml-core: 5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3)
+      mjml-core: 5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3)
     transitivePeerDependencies:
       - purgecss
       - relateurl
@@ -14119,14 +14083,14 @@ snapshots:
       - uncss
     optional: true
 
-  mjml-core@5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3):
+  mjml-core@5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3):
     dependencies:
       '@babel/runtime': 7.29.7
       cheerio: 1.0.0
       cssnano: 7.1.9(postcss@8.5.15)
       cssnano-preset-lite: 4.0.6(postcss@8.5.15)
       detect-node: 2.1.0
-      htmlnano: 3.3.2(cssnano@7.1.9(postcss@8.5.15))(postcss@8.5.15)(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3)
+      htmlnano: 3.3.2(cssnano@7.1.9(postcss@8.5.15))(postcss@8.5.15)(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3)
       js-beautify: 1.15.4
       juice: 11.1.1
       lodash: 4.18.1
@@ -14143,11 +14107,11 @@ snapshots:
       - uncss
     optional: true
 
-  mjml-divider@5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3):
+  mjml-divider@5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3):
     dependencies:
       '@babel/runtime': 7.29.7
       lodash: 4.18.1
-      mjml-core: 5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3)
+      mjml-core: 5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3)
     transitivePeerDependencies:
       - purgecss
       - relateurl
@@ -14158,11 +14122,11 @@ snapshots:
       - uncss
     optional: true
 
-  mjml-group@5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3):
+  mjml-group@5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3):
     dependencies:
       '@babel/runtime': 7.29.7
       lodash: 4.18.1
-      mjml-core: 5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3)
+      mjml-core: 5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3)
     transitivePeerDependencies:
       - purgecss
       - relateurl
@@ -14173,11 +14137,11 @@ snapshots:
       - uncss
     optional: true
 
-  mjml-head-attributes@5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3):
+  mjml-head-attributes@5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3):
     dependencies:
       '@babel/runtime': 7.29.7
       lodash: 4.18.1
-      mjml-core: 5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3)
+      mjml-core: 5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3)
     transitivePeerDependencies:
       - purgecss
       - relateurl
@@ -14188,11 +14152,11 @@ snapshots:
       - uncss
     optional: true
 
-  mjml-head-breakpoint@5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3):
+  mjml-head-breakpoint@5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3):
     dependencies:
       '@babel/runtime': 7.29.7
       lodash: 4.18.1
-      mjml-core: 5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3)
+      mjml-core: 5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3)
     transitivePeerDependencies:
       - purgecss
       - relateurl
@@ -14203,11 +14167,11 @@ snapshots:
       - uncss
     optional: true
 
-  mjml-head-font@5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3):
+  mjml-head-font@5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3):
     dependencies:
       '@babel/runtime': 7.29.7
       lodash: 4.18.1
-      mjml-core: 5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3)
+      mjml-core: 5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3)
     transitivePeerDependencies:
       - purgecss
       - relateurl
@@ -14218,11 +14182,11 @@ snapshots:
       - uncss
     optional: true
 
-  mjml-head-html-attributes@5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3):
+  mjml-head-html-attributes@5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3):
     dependencies:
       '@babel/runtime': 7.29.7
       lodash: 4.18.1
-      mjml-core: 5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3)
+      mjml-core: 5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3)
     transitivePeerDependencies:
       - purgecss
       - relateurl
@@ -14233,11 +14197,11 @@ snapshots:
       - uncss
     optional: true
 
-  mjml-head-preview@5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3):
+  mjml-head-preview@5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3):
     dependencies:
       '@babel/runtime': 7.29.7
       lodash: 4.18.1
-      mjml-core: 5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3)
+      mjml-core: 5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3)
     transitivePeerDependencies:
       - purgecss
       - relateurl
@@ -14248,11 +14212,11 @@ snapshots:
       - uncss
     optional: true
 
-  mjml-head-style@5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3):
+  mjml-head-style@5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3):
     dependencies:
       '@babel/runtime': 7.29.7
       lodash: 4.18.1
-      mjml-core: 5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3)
+      mjml-core: 5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3)
     transitivePeerDependencies:
       - purgecss
       - relateurl
@@ -14263,11 +14227,11 @@ snapshots:
       - uncss
     optional: true
 
-  mjml-head-title@5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3):
+  mjml-head-title@5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3):
     dependencies:
       '@babel/runtime': 7.29.7
       lodash: 4.18.1
-      mjml-core: 5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3)
+      mjml-core: 5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3)
     transitivePeerDependencies:
       - purgecss
       - relateurl
@@ -14278,11 +14242,11 @@ snapshots:
       - uncss
     optional: true
 
-  mjml-head@5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3):
+  mjml-head@5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3):
     dependencies:
       '@babel/runtime': 7.29.7
       lodash: 4.18.1
-      mjml-core: 5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3)
+      mjml-core: 5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3)
     transitivePeerDependencies:
       - purgecss
       - relateurl
@@ -14293,11 +14257,11 @@ snapshots:
       - uncss
     optional: true
 
-  mjml-hero@5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3):
+  mjml-hero@5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3):
     dependencies:
       '@babel/runtime': 7.29.7
       lodash: 4.18.1
-      mjml-core: 5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3)
+      mjml-core: 5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3)
     transitivePeerDependencies:
       - purgecss
       - relateurl
@@ -14308,11 +14272,11 @@ snapshots:
       - uncss
     optional: true
 
-  mjml-image@5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3):
+  mjml-image@5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3):
     dependencies:
       '@babel/runtime': 7.29.7
       lodash: 4.18.1
-      mjml-core: 5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3)
+      mjml-core: 5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3)
     transitivePeerDependencies:
       - purgecss
       - relateurl
@@ -14323,11 +14287,11 @@ snapshots:
       - uncss
     optional: true
 
-  mjml-navbar@5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3):
+  mjml-navbar@5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3):
     dependencies:
       '@babel/runtime': 7.29.7
       lodash: 4.18.1
-      mjml-core: 5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3)
+      mjml-core: 5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3)
     transitivePeerDependencies:
       - purgecss
       - relateurl
@@ -14346,34 +14310,34 @@ snapshots:
       lodash: 4.18.1
     optional: true
 
-  mjml-preset-core@5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3):
+  mjml-preset-core@5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3):
     dependencies:
       '@babel/runtime': 7.29.7
-      mjml-accordion: 5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3)
-      mjml-body: 5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3)
-      mjml-button: 5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3)
-      mjml-carousel: 5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3)
-      mjml-column: 5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3)
-      mjml-divider: 5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3)
-      mjml-group: 5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3)
-      mjml-head: 5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3)
-      mjml-head-attributes: 5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3)
-      mjml-head-breakpoint: 5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3)
-      mjml-head-font: 5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3)
-      mjml-head-html-attributes: 5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3)
-      mjml-head-preview: 5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3)
-      mjml-head-style: 5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3)
-      mjml-head-title: 5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3)
-      mjml-hero: 5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3)
-      mjml-image: 5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3)
-      mjml-navbar: 5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3)
-      mjml-raw: 5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3)
-      mjml-section: 5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3)
-      mjml-social: 5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3)
-      mjml-spacer: 5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3)
-      mjml-table: 5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3)
-      mjml-text: 5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3)
-      mjml-wrapper: 5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3)
+      mjml-accordion: 5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3)
+      mjml-body: 5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3)
+      mjml-button: 5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3)
+      mjml-carousel: 5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3)
+      mjml-column: 5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3)
+      mjml-divider: 5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3)
+      mjml-group: 5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3)
+      mjml-head: 5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3)
+      mjml-head-attributes: 5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3)
+      mjml-head-breakpoint: 5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3)
+      mjml-head-font: 5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3)
+      mjml-head-html-attributes: 5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3)
+      mjml-head-preview: 5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3)
+      mjml-head-style: 5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3)
+      mjml-head-title: 5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3)
+      mjml-hero: 5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3)
+      mjml-image: 5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3)
+      mjml-navbar: 5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3)
+      mjml-raw: 5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3)
+      mjml-section: 5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3)
+      mjml-social: 5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3)
+      mjml-spacer: 5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3)
+      mjml-table: 5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3)
+      mjml-text: 5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3)
+      mjml-wrapper: 5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3)
     transitivePeerDependencies:
       - purgecss
       - relateurl
@@ -14384,11 +14348,11 @@ snapshots:
       - uncss
     optional: true
 
-  mjml-raw@5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3):
+  mjml-raw@5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3):
     dependencies:
       '@babel/runtime': 7.29.7
       lodash: 4.18.1
-      mjml-core: 5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3)
+      mjml-core: 5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3)
     transitivePeerDependencies:
       - purgecss
       - relateurl
@@ -14399,11 +14363,11 @@ snapshots:
       - uncss
     optional: true
 
-  mjml-section@5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3):
+  mjml-section@5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3):
     dependencies:
       '@babel/runtime': 7.29.7
       lodash: 4.18.1
-      mjml-core: 5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3)
+      mjml-core: 5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3)
     transitivePeerDependencies:
       - purgecss
       - relateurl
@@ -14414,11 +14378,11 @@ snapshots:
       - uncss
     optional: true
 
-  mjml-social@5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3):
+  mjml-social@5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3):
     dependencies:
       '@babel/runtime': 7.29.7
       lodash: 4.18.1
-      mjml-core: 5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3)
+      mjml-core: 5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3)
     transitivePeerDependencies:
       - purgecss
       - relateurl
@@ -14429,11 +14393,11 @@ snapshots:
       - uncss
     optional: true
 
-  mjml-spacer@5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3):
+  mjml-spacer@5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3):
     dependencies:
       '@babel/runtime': 7.29.7
       lodash: 4.18.1
-      mjml-core: 5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3)
+      mjml-core: 5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3)
     transitivePeerDependencies:
       - purgecss
       - relateurl
@@ -14444,11 +14408,11 @@ snapshots:
       - uncss
     optional: true
 
-  mjml-table@5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3):
+  mjml-table@5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3):
     dependencies:
       '@babel/runtime': 7.29.7
       lodash: 4.18.1
-      mjml-core: 5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3)
+      mjml-core: 5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3)
     transitivePeerDependencies:
       - purgecss
       - relateurl
@@ -14459,11 +14423,11 @@ snapshots:
       - uncss
     optional: true
 
-  mjml-text@5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3):
+  mjml-text@5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3):
     dependencies:
       '@babel/runtime': 7.29.7
       lodash: 4.18.1
-      mjml-core: 5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3)
+      mjml-core: 5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3)
     transitivePeerDependencies:
       - purgecss
       - relateurl
@@ -14479,12 +14443,12 @@ snapshots:
       '@babel/runtime': 7.29.7
     optional: true
 
-  mjml-wrapper@5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3):
+  mjml-wrapper@5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3):
     dependencies:
       '@babel/runtime': 7.29.7
       lodash: 4.18.1
-      mjml-core: 5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3)
-      mjml-section: 5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3)
+      mjml-core: 5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3)
+      mjml-section: 5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3)
     transitivePeerDependencies:
       - purgecss
       - relateurl
@@ -14495,12 +14459,12 @@ snapshots:
       - uncss
     optional: true
 
-  mjml@5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3):
+  mjml@5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3):
     dependencies:
       '@babel/runtime': 7.29.7
-      mjml-cli: 5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3)
-      mjml-core: 5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3)
-      mjml-preset-core: 5.3.0(svgo@4.0.1)(terser@5.48.0)(typescript@5.9.3)
+      mjml-cli: 5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3)
+      mjml-core: 5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3)
+      mjml-preset-core: 5.3.0(svgo@4.0.2)(terser@5.48.0)(typescript@5.9.3)
       mjml-validator: 5.3.0
     transitivePeerDependencies:
       - purgecss
@@ -14521,13 +14485,6 @@ snapshots:
   module-details-from-path@1.0.4: {}
 
   ms@2.1.3: {}
-
-  multer@2.1.1:
-    dependencies:
-      append-field: 1.0.0
-      busboy: 1.6.0
-      concat-stream: 2.0.0
-      type-is: 1.6.18
 
   multer@2.2.0:
     dependencies:
@@ -14598,9 +14555,6 @@ snapshots:
   node-int64@0.4.0: {}
 
   node-releases@2.0.47: {}
-
-  nodemailer@8.0.10:
-    optional: true
 
   nodemailer@9.0.1: {}
 
@@ -15179,7 +15133,7 @@ snapshots:
     dependencies:
       postcss: 8.5.15
       postcss-value-parser: 4.2.0
-      svgo: 4.0.1
+      svgo: 4.0.2
     optional: true
 
   postcss-unique-selectors@7.0.7(postcss@8.5.15):
@@ -15252,7 +15206,7 @@ snapshots:
       fixpack: 4.0.0
       get-port: 5.1.1
       mailparser: 3.9.9
-      nodemailer: 8.0.10
+      nodemailer: 9.0.1
       open: 7.4.2
       p-event: 4.2.0
       p-wait-for: 3.2.0
@@ -15839,7 +15793,7 @@ snapshots:
 
   soap@1.9.3:
     dependencies:
-      axios: 1.17.0(debug@4.4.3)
+      axios: 1.18.1(debug@4.4.3)
       axios-ntlm: 1.4.6(debug@4.4.3)
       debug: 4.4.3
       follow-redirects: 1.16.0(debug@4.4.3)
@@ -16058,7 +16012,7 @@ snapshots:
 
   supports-preserve-symlinks-flag@1.0.0: {}
 
-  svgo@4.0.1:
+  svgo@4.0.2:
     dependencies:
       commander: 11.1.0
       css-select: 5.2.2
