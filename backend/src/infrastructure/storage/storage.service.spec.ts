@@ -70,24 +70,39 @@ describe('StorageService', () => {
   });
 
   describe('getUrl', () => {
-    it('should return presigned URL with default expiration (24h)', async () => {
-      const url = await service.getUrl('sri-xmls', 'test.xml');
+    it('should return presigned URL with the given expiration', async () => {
+      const url = await service.getUrl('sri-xmls', 'test.xml', 600);
 
       expect(mockS3ClientService.getPresignedUrl).toHaveBeenCalledWith(
         'sri-xmls',
         'test.xml',
-        24 * 60 * 60,
+        600,
       );
       expect(url).toBe('https://minio.local/test.xml?token=abc');
     });
 
-    it('should accept custom expiration', async () => {
+    it('should accept custom expiration within the 60-minute cap', async () => {
       await service.getUrl('sri-xmls', 'test.xml', 3600);
 
       expect(mockS3ClientService.getPresignedUrl).toHaveBeenCalledWith(
         'sri-xmls',
         'test.xml',
         3600,
+      );
+    });
+
+    it('should throw when expiration exceeds the 60-minute cap', async () => {
+      await expect(
+        service.getUrl('sri-xmls', 'test.xml', 86400),
+      ).rejects.toThrow('capped at 3600s');
+    });
+
+    it('should throw when expiration is zero or negative', async () => {
+      await expect(service.getUrl('sri-xmls', 'test.xml', 0)).rejects.toThrow(
+        'Invalid expiresInSeconds',
+      );
+      await expect(service.getUrl('sri-xmls', 'test.xml', -1)).rejects.toThrow(
+        'Invalid expiresInSeconds',
       );
     });
   });
@@ -154,15 +169,21 @@ describe('StorageService', () => {
   });
 
   describe('refreshUrl', () => {
-    it('should regenerate presigned URL with default expiration', async () => {
-      const url = await service.refreshUrl('sri-xmls', 'test.xml');
+    it('should regenerate presigned URL with the given expiration', async () => {
+      const url = await service.refreshUrl('sri-xmls', 'test.xml', 900);
 
       expect(mockS3ClientService.getPresignedUrl).toHaveBeenCalledWith(
         'sri-xmls',
         'test.xml',
-        24 * 60 * 60,
+        900,
       );
       expect(url).toBe('https://minio.local/test.xml?token=abc');
+    });
+
+    it('should throw when expiration exceeds the 60-minute cap', async () => {
+      await expect(
+        service.refreshUrl('sri-xmls', 'test.xml', 7200),
+      ).rejects.toThrow('capped at 3600s');
     });
   });
 

@@ -1,13 +1,17 @@
-import { Controller, Get, Logger } from '@nestjs/common';
+import { Controller, Get } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { CatalogoValidatorService } from '../../infrastructure/xml/catalogo-validator.service';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
+@LogContext()
 @ApiTags('[En Desarrollo] Catálogos SRI')
 @Controller('catalogos')
 export class CatalogosController {
-  private readonly logger = new Logger(CatalogosController.name);
-
-  constructor(private readonly catalogoService: CatalogoValidatorService) {}
+  constructor(
+    private readonly catalogoService: CatalogoValidatorService,
+    private readonly logger: LoggerService,
+  ) {}
 
   @Get('impuestos')
   @ApiOperation({

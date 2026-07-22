@@ -22,4 +22,4 @@ services:
       - key: JWT_REFRESH_SECRET
         generateValue: true
       - key: JWT_REFRESH_EXPIRES_IN
-        value: 7d
+        value: 24h

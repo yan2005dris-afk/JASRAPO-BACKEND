@@ -1,6 +1,8 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PaymentRepository } from '../domain/repositories/payment.repository';
 import { SRIEmissionDispatcherService } from './sri-emission-dispatcher.service';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
 /**
  * Handles the `cuota.pagada` outbox event.
@@ -12,13 +14,13 @@ import { SRIEmissionDispatcherService } from './sri-emission-dispatcher.service'
  * The handler is registered in PaymentsModule.onModuleInit and invoked
  * by the OutboxProcessor when a `cuota.pagada` row is polled.
  */
+@LogContext()
 @Injectable()
 export class CuotaPagadaHandler {
-  private readonly logger = new Logger(CuotaPagadaHandler.name);
-
   constructor(
     private readonly paymentRepository: PaymentRepository,
     private readonly sriDispatcher: SRIEmissionDispatcherService,
+    private readonly logger: LoggerService,
   ) {}
 
   async procesarCuotaPagada(cuotaConvenioId: bigint): Promise<void> {

@@ -6,9 +6,17 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { SessionsService } from '../../../sessions/application/sessions.service';
 import { UnauthorizedException } from '@nestjs/common';
-import * as bcrypt from 'bcryptjs';
+import * as bcrypt from 'bcrypt';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+const mockLogger = {
+  log: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+  debug: jest.fn(),
+  verbose: jest.fn(),
+};
 
-jest.mock('bcryptjs');
+jest.mock('bcrypt');
 
 describe('RefreshAccessTokenUseCase', () => {
   let useCase: RefreshAccessTokenUseCase;
@@ -19,6 +27,7 @@ describe('RefreshAccessTokenUseCase', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
+        { provide: LoggerService, useValue: mockLogger },
         RefreshAccessTokenUseCase,
         {
           provide: UserRepository,

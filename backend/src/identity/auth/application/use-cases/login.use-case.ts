@@ -1,21 +1,27 @@
 import {
   Injectable,
   InternalServerErrorException,
-  Logger,
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { SessionsService } from '../../../sessions/application/sessions.service';
 import { LoginUserDto } from '../../interfaces/dto/login-user.dto';
-import * as bcrypt from 'bcryptjs';
+import * as bcrypt from 'bcrypt';
 import { randomUUID } from 'crypto';
-import { REFRESH_TOKEN_MAX_AGE_MS } from 'src/infrastructure/config/app.constants';
+import {
+  REFRESH_TOKEN_MAX_AGE_MS,
+  LOGIN_LOCKOUT_THRESHOLD,
+  LOGIN_LOCKOUT_WINDOW_MS,
+  LOGIN_LOCKOUT_DURATION_MS,
+} from 'src/infrastructure/config/app.constants';
 import { EcuadorTimezoneUtil } from 'src/shared/utils/ecuador-timezone.util';
 import type { DecodedJwt } from '../types/auth-service.types';
 import type { StringValue } from 'ms';
 
 import { UserRepository } from '../../../users/domain/repositories/user.repository';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
 interface ValidatedUser {
   usuarioId: number;
@@ -28,15 +34,21 @@ interface ValidatedUser {
   rol: { rolId: number; nombre: string; deletedAt?: Date | null } | null;
 }
 
+const LOCKOUT_OPTIONS = {
+  threshold: LOGIN_LOCKOUT_THRESHOLD,
+  windowMs: LOGIN_LOCKOUT_WINDOW_MS,
+  lockoutDurationMs: LOGIN_LOCKOUT_DURATION_MS,
+} as const;
+
+@LogContext()
 @Injectable()
 export class LoginUseCase {
-  private readonly logger = new Logger(LoginUseCase.name);
-
   constructor(
     private readonly userRepository: UserRepository,
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
     private readonly sessionsService: SessionsService,
+    private readonly logger: LoggerService,
   ) {}
 
   async execute(
@@ -46,6 +58,16 @@ export class LoginUseCase {
   ) {
     const user = await this.validateUser(loginUserDto);
     this.logger.log(`[LOGIN] user=${user.usuarioId} | ip="${ip}"`);
+
+    // Login exitoso: limpia contadores de intentos fallidos y lockouts previos.
+    try {
+      await this.userRepository.clearFailedLoginAttempts(user.usuarioId);
+    } catch (err) {
+      // No bloqueamos el login si falla el reset; lo registramos.
+      this.logger.warn(
+        `[LOGIN] No se pudieron limpiar contadores de lockout: user=${user.usuarioId} | ${err}`,
+      );
+    }
 
     const sesionId = randomUUID();
 
@@ -88,12 +110,50 @@ export class LoginUseCase {
     const { email, password } = loginUserDto;
     const user = await this.userRepository.findByEmailWithPassword(email);
 
+    // Mismo mensaje para usuario inexistente / eliminado / password incorrecta
+    // para no filtrar información. El lockout por cuenta solo se activa si el
+    // usuario existe y no fue borrado.
     if (!user || user.deletedAt) {
       throw new UnauthorizedException('Credenciales inválidas');
     }
 
+    // Si la cuenta está bloqueada, no se valida la contraseña y se devuelve
+    // el mensaje genérico de credenciales inválidas para no filtrar la
+    // existencia de la cuenta.
+    if (user.bloqueadoHasta && user.bloqueadoHasta > new Date()) {
+      const minutesRemaining = Math.max(
+        1,
+        Math.ceil((user.bloqueadoHasta.getTime() - Date.now()) / (60 * 1000)),
+      );
+      this.logger.warn(
+        `[LOGIN] Cuenta bloqueada: user=${user.usuarioId} | hasta=${user.bloqueadoHasta.toISOString()}`,
+      );
+      throw new UnauthorizedException(
+        `Cuenta bloqueada temporalmente. Intenta en ${minutesRemaining} minutos.`,
+      );
+    }
+
     const isPasswordValid = await bcrypt.compare(password, user.clave);
     if (!isPasswordValid) {
+      try {
+        const result = await this.userRepository.recordFailedLoginAttempt(
+          user.usuarioId,
+          LOCKOUT_OPTIONS,
+        );
+        if (result.bloqueadoHasta && result.bloqueadoHasta > new Date()) {
+          this.logger.warn(
+            `[LOGIN] Cuenta bloqueada por umbral de intentos fallidos: user=${user.usuarioId}`,
+          );
+          throw new UnauthorizedException(
+            'Cuenta bloqueada temporalmente. Intenta en 30 minutos.',
+          );
+        }
+      } catch (err) {
+        if (err instanceof UnauthorizedException) throw err;
+        this.logger.error(
+          `[LOGIN] Error al registrar intento fallido: user=${user.usuarioId} | ${err}`,
+        );
+      }
       throw new UnauthorizedException('Credenciales inválidas');
     }
 
