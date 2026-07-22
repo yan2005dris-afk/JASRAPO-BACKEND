@@ -19,6 +19,14 @@ import { FindOnePreInvoiceUseCase } from '../../../pre-invoice/application/use-c
 import { GeneratePreInvoicePdfUseCase } from '../../../pre-invoice/application/use-cases/generate-pre-invoice-pdf.use-case';
 import { MailService } from 'src/infrastructure/mail/application/mail.service';
 import { PreInvoiceRepository } from '../../../pre-invoice/domain/repositories/pre-invoice.repository';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+const mockLogger = {
+  log: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+  debug: jest.fn(),
+  verbose: jest.fn(),
+};
 
 describe('SendBatchEmailsUseCase', () => {
   let useCase: SendBatchEmailsUseCase;
@@ -31,6 +39,7 @@ describe('SendBatchEmailsUseCase', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
+        { provide: LoggerService, useValue: mockLogger },
         SendBatchEmailsUseCase,
         { provide: FindOnePreInvoiceUseCase, useValue: mockFindOne },
         { provide: GeneratePreInvoicePdfUseCase, useValue: mockGeneratePdf },

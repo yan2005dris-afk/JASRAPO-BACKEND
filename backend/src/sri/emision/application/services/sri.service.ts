@@ -1,9 +1,9 @@
-import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { extractRucFromClaveAcceso } from '../../infrastructure/xml/clave-acceso.utils';
 import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { JobsService } from '../../../../infrastructure/jobs/jobs.service';
-import { SRI_EMISION_JOB } from '../../infrastructure/queue/processors/sri-emision.processor';
+import { SRI_EMISION_JOB } from '../../infrastructure/queue/processors/sri-emision.constants';
 import { EmitirFacturaUseCase } from '../use-cases/emitir-factura.use-case';
 import { EmitirNotaCreditoUseCase } from '../use-cases/emitir-nota-credito.use-case';
 import { EmitirNotaDebitoUseCase } from '../use-cases/emitir-nota-debito.use-case';
@@ -24,11 +24,12 @@ import {
   EmisionEncoladaResponseDto,
 } from '../../interfaces/dto';
 import { TIPO_COMPROBANTE_DESCRIPCIONES } from '../../domain/constants';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
+@LogContext()
 @Injectable()
 export class SriService {
-  private readonly logger = new Logger(SriService.name);
-
   constructor(
     private readonly sriSoapClient: SriSoapClient,
     private readonly repository: ComprobanteRepository,
@@ -41,6 +42,7 @@ export class SriService {
     private readonly configService: ConfigService,
     private readonly xmlBuilder: XmlBuilderService,
     private readonly jobsService: JobsService,
+    private readonly logger: LoggerService,
   ) {}
 
   // ==========================================

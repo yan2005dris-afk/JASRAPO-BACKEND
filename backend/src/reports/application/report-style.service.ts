@@ -1,6 +1,8 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { SistemaConfigService } from '../../infrastructure/config/sistema-config.service';
 import { REPORTE_ESTILO } from '../../infrastructure/config/sistema-config.keys';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
 /**
  * The finite set of report-key slugs the dispatcher knows how to route.
@@ -51,11 +53,13 @@ const VALID_STYLES: readonly ReportStyle[] = ['legacy', 'modern'];
  * row family with an explicit lookup here. Do NOT reintroduce the silent
  * per-key + default chain — that masked misconfiguration.
  */
+@LogContext()
 @Injectable()
 export class ReportStyleService {
-  private readonly logger = new Logger(ReportStyleService.name);
-
-  constructor(private readonly config: SistemaConfigService) {}
+  constructor(
+    private readonly config: SistemaConfigService,
+    private readonly logger: LoggerService,
+  ) {}
 
   /**
    * Returns the resolved style. Never throws — invalid / missing config

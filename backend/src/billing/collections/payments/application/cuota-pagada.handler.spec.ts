@@ -1,6 +1,13 @@
 import { CuotaPagadaHandler } from './cuota-pagada.handler';
 import type { PaymentRepository } from '../domain/repositories/payment.repository';
 import type { SRIEmissionDispatcherService } from './sri-emission-dispatcher.service';
+const mockLogger = {
+  log: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+  debug: jest.fn(),
+  verbose: jest.fn(),
+};
 
 describe('CuotaPagadaHandler', () => {
   let paymentRepository: jest.Mocked<PaymentRepository>;
@@ -46,7 +53,11 @@ describe('CuotaPagadaHandler', () => {
       tryEmit: jest.fn().mockResolvedValue('EMITTED'),
     } as unknown as jest.Mocked<SRIEmissionDispatcherService>;
 
-    handler = new CuotaPagadaHandler(paymentRepository, sriDispatcher);
+    handler = new CuotaPagadaHandler(
+      paymentRepository,
+      sriDispatcher,
+      mockLogger,
+    );
   });
 
   it('should delegate to SRIEmissionDispatcherService when all cuotas are PAGADA', async () => {
