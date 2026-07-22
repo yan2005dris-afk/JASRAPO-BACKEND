@@ -30,8 +30,12 @@ export class S3ClientService implements OnModuleInit {
       'localhost',
     );
     const port = this.configService.get<number>('STORAGE_PORT', 9000);
-    const useSsl =
-      this.configService.get<string>('STORAGE_USE_SSL', 'false') === 'true';
+    const storageUseSsl = this.configService.get<string>(
+      'STORAGE_USE_SSL',
+      'true',
+    );
+    const useSsl = storageUseSsl === 'true';
+    const nodeEnv = this.configService.get<string>('NODE_ENV', 'development');
     const accessKey =
       this.configService.getOrThrow<string>('STORAGE_ACCESS_KEY');
     const secretKey =
@@ -45,6 +49,12 @@ export class S3ClientService implements OnModuleInit {
     if (!secretKey || secretKey.trim().length === 0) {
       throw new Error(
         '[STORAGE] STORAGE_SECRET_KEY is missing or empty. Application cannot start without explicit S3 credentials.',
+      );
+    }
+
+    if (nodeEnv === 'production' && storageUseSsl !== 'true') {
+      throw new Error(
+        `[STORAGE] Refusing to start: STORAGE_USE_SSL must be "true" when NODE_ENV=production. Cleartext S3 connection would expose credentials and document bodies on the wire (issue #141, OWASP A02).`,
       );
     }
 
