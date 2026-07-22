@@ -2,6 +2,8 @@ export interface CreateSessionRepositoryData {
   sesionId: string;
   usuarioId: number;
   hashRefreshToken: string;
+  sessionSecret: string;
+  tokenVersion: number;
   direccionIp?: string | null;
   usuarioAgente?: string | null;
   revocado?: boolean;
@@ -16,10 +18,22 @@ export interface UpdateSessionRepositoryData {
   expiraEn?: Date;
 }
 
+export interface RotateSessionRepositoryData {
+  expectedTokenVersion: number;
+  hashRefreshToken: string;
+  sessionSecret: string;
+  direccionIp?: string | null;
+  usuarioAgente?: string | null;
+  revocado: boolean;
+  expiraEn: Date;
+}
+
 export interface SessionEntity {
   sesionId: string;
   usuarioId: number;
   hashRefreshToken: string;
+  sessionSecret: string;
+  tokenVersion: number;
   direccionIp: string | null;
   usuarioAgente: string | null;
   revocado: boolean;
@@ -41,5 +55,9 @@ export abstract class SessionRepository {
     sesionId: string,
     data: UpdateSessionRepositoryData,
   ): Promise<SessionEntity>;
+  abstract rotate(
+    sesionId: string,
+    data: RotateSessionRepositoryData,
+  ): Promise<number>;
   abstract revoke(sesionId: string): Promise<SessionEntity>;
 }

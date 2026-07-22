@@ -9,7 +9,7 @@ import { JwtService } from '@nestjs/jwt';
 import { SessionsService } from '../../../sessions/application/sessions.service';
 import { LoginUserDto } from '../../interfaces/dto/login-user.dto';
 import * as bcrypt from 'bcryptjs';
-import { randomUUID } from 'crypto';
+import { randomBytes, randomUUID } from 'crypto';
 import { REFRESH_TOKEN_MAX_AGE_MS } from 'src/infrastructure/config/app.constants';
 import { EcuadorTimezoneUtil } from 'src/shared/utils/ecuador-timezone.util';
 import type { DecodedJwt } from '../types/auth-service.types';
@@ -48,22 +48,25 @@ export class LoginUseCase {
     this.logger.log(`[LOGIN] user=${user.usuarioId} | ip="${ip}"`);
 
     const sesionId = randomUUID();
+    const sessionSecret = randomBytes(32).toString('hex');
+    const tokenVersion = 1;
 
-    // Generar tokens
     const tokens = await this.generateJwtToken(
       user.usuarioId,
       sesionId,
       user.email,
+      tokenVersion,
+      sessionSecret,
     );
 
-    // Guardar sesión
-    const hashRefreshToken = await bcrypt.hash(tokens.refreshToken, 10);
     const expiraEn = new Date(Date.now() + REFRESH_TOKEN_MAX_AGE_MS);
 
     try {
       await this.sessionsService.createSession({
         sesionId,
-        hashRefreshToken,
+        hashRefreshToken: '',
+        sessionSecret,
+        tokenVersion,
         direccionIp: ip,
         usuarioAgente: userAgent,
         revocado: false,
@@ -104,8 +107,16 @@ export class LoginUseCase {
     userId: number,
     sessionId: string,
     email: string,
+    tokenVersion: number,
+    sessionSecret: string,
   ) {
-    const payload = { sub: userId, sid: sessionId, email };
+    const accessPayload = {
+      sub: userId,
+      sid: sessionId,
+      email,
+      tokenVersion,
+    };
+    const refreshPayload = { ...accessPayload, sessionSecret };
     const accessSecret = this.config.getOrThrow<string>('JWT_ACCESS_SECRET');
     const refreshSecret = this.config.getOrThrow<string>('JWT_REFRESH_SECRET');
 
@@ -117,11 +128,11 @@ export class LoginUseCase {
     );
 
     const [accessToken, refreshToken] = await Promise.all([
-      this.jwtService.signAsync(payload, {
+      this.jwtService.signAsync(accessPayload, {
         secret: accessSecret,
         expiresIn: accessExpiresIn,
       }),
-      this.jwtService.signAsync(payload, {
+      this.jwtService.signAsync(refreshPayload, {
         secret: refreshSecret,
         expiresIn: refreshExpiresIn,
       }),

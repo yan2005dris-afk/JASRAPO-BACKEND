@@ -6,12 +6,13 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { randomBytes, timingSafeEqual } from 'crypto';
 import { UserRepository } from '../../../users/domain/repositories/user.repository';
 import { SessionsService } from '../../../sessions/application/sessions.service';
-import * as bcrypt from 'bcryptjs';
 import { REFRESH_TOKEN_MAX_AGE_MS } from 'src/infrastructure/config/app.constants';
 import { EcuadorTimezoneUtil } from 'src/shared/utils/ecuador-timezone.util';
 import type { StringValue } from 'ms';
+import type { JwtRefreshPayload } from '../../interfaces/http/types/JwtRequest.types';
 
 @Injectable()
 export class RefreshAccessTokenUseCase {
@@ -31,17 +32,31 @@ export class RefreshAccessTokenUseCase {
     userAgent: string = 'unknown',
     usuarioId: number,
   ) {
+    const payload = await this.verifyRefreshToken(refreshToken);
+    const tokenVersion = payload.tokenVersion ?? 1;
+
+    if (
+      payload.sid !== sesionId ||
+      payload.sub !== usuarioId ||
+      !Number.isInteger(tokenVersion) ||
+      tokenVersion < 1
+    ) {
+      throw new UnauthorizedException('Refresh token inválido');
+    }
+
     const session = await this.sessionsService.getSession(usuarioId, sesionId);
 
     if (!session || session.revocado || session.expiraEn < new Date()) {
       throw new UnauthorizedException('Sesión inválida o expirada');
     }
 
-    const isValid = await bcrypt.compare(
-      refreshToken,
-      session.hashRefreshToken,
-    );
-    if (!isValid) {
+    if (session.tokenVersion !== tokenVersion) {
+      throw new UnauthorizedException('Refresh token replay detected');
+    }
+
+    if (
+      !this.matchesSessionSecret(payload.sessionSecret, session.sessionSecret)
+    ) {
       throw new UnauthorizedException('Refresh token inválido');
     }
 
@@ -51,14 +66,23 @@ export class RefreshAccessTokenUseCase {
       throw new UnauthorizedException('Usuario no encontrado');
     }
 
-    // Rotar tokens
-    const tokens = await this.generateJwtToken(usuarioId, sesionId, user.email);
-    const newHash = await bcrypt.hash(tokens.refreshToken, 10);
+    const nextTokenVersion = tokenVersion + 1;
+    const newSessionSecret = randomBytes(32).toString('hex');
+    const tokens = await this.generateJwtToken(
+      usuarioId,
+      sesionId,
+      user.email,
+      nextTokenVersion,
+      newSessionSecret,
+    );
     const expiraEn = new Date(Date.now() + REFRESH_TOKEN_MAX_AGE_MS);
 
+    let affectedRows: number;
     try {
-      await this.sessionsService.updateSession(sesionId, {
-        hashRefreshToken: newHash,
+      affectedRows = await this.sessionsService.rotateSession(sesionId, {
+        expectedTokenVersion: tokenVersion,
+        hashRefreshToken: '',
+        sessionSecret: newSessionSecret,
         direccionIp: ip,
         usuarioAgente: userAgent,
         revocado: false,
@@ -71,11 +95,51 @@ export class RefreshAccessTokenUseCase {
       throw new InternalServerErrorException('Error al actualizar sesión.');
     }
 
+    if (affectedRows === 0) {
+      throw new UnauthorizedException('Refresh token replay detected');
+    }
+
     return {
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
       accessTokenInfo: this.buildTokenInfo(tokens.accessToken),
     };
+  }
+
+  private async verifyRefreshToken(
+    refreshToken: string,
+  ): Promise<JwtRefreshPayload> {
+    try {
+      return await this.jwtService.verifyAsync<JwtRefreshPayload>(
+        refreshToken,
+        {
+          secret: this.config.getOrThrow<string>('JWT_REFRESH_SECRET'),
+        },
+      );
+    } catch {
+      throw new UnauthorizedException('Refresh token inválido');
+    }
+  }
+
+  private matchesSessionSecret(
+    jwtSessionSecret: string | undefined,
+    sessionSecret: string,
+  ) {
+    if (
+      !jwtSessionSecret ||
+      !/^[0-9a-f]{64}$/i.test(jwtSessionSecret) ||
+      !/^[0-9a-f]{64}$/i.test(sessionSecret)
+    ) {
+      return false;
+    }
+
+    const jwtSecretBuffer = Buffer.from(jwtSessionSecret, 'hex');
+    const sessionSecretBuffer = Buffer.from(sessionSecret, 'hex');
+
+    return (
+      jwtSecretBuffer.length === sessionSecretBuffer.length &&
+      timingSafeEqual(jwtSecretBuffer, sessionSecretBuffer)
+    );
   }
 
   private buildTokenInfo(token: string) {
@@ -95,8 +159,16 @@ export class RefreshAccessTokenUseCase {
     userId: number,
     sessionId: string,
     email: string,
+    tokenVersion: number,
+    sessionSecret: string,
   ) {
-    const payload = { sub: userId, sid: sessionId, email };
+    const accessPayload = {
+      sub: userId,
+      sid: sessionId,
+      email,
+      tokenVersion,
+    };
+    const refreshPayload = { ...accessPayload, sessionSecret };
     const accessSecret = this.config.getOrThrow<string>('JWT_ACCESS_SECRET');
     const refreshSecret = this.config.getOrThrow<string>('JWT_REFRESH_SECRET');
 
@@ -108,11 +180,11 @@ export class RefreshAccessTokenUseCase {
     );
 
     const [accessToken, refreshToken] = await Promise.all([
-      this.jwtService.signAsync(payload, {
+      this.jwtService.signAsync(accessPayload, {
         secret: accessSecret,
         expiresIn: accessExpiresIn,
       }),
-      this.jwtService.signAsync(payload, {
+      this.jwtService.signAsync(refreshPayload, {
         secret: refreshSecret,
         expiresIn: refreshExpiresIn,
       }),

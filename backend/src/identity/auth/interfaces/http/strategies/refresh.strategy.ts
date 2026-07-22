@@ -38,7 +38,13 @@ export class RefreshTokenStrategy extends PassportStrategy(
       throw new UnauthorizedException('Session invalida');
     }
     const session = await this.sessionsService.getSession(usuarioId, sesionId);
-    if (!session || session.revocado || session.expiraEn < new Date()) {
+    const tokenVersion = payload.tokenVersion ?? 1;
+    if (
+      !session ||
+      session.revocado ||
+      session.expiraEn < new Date() ||
+      session.tokenVersion !== tokenVersion
+    ) {
       throw new UnauthorizedException('Refresh token inválido o expirado');
     }
     return { sub: usuarioId, sessionsId: sesionId, email };

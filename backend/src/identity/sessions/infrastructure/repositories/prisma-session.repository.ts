@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import {
   CreateSessionRepositoryData,
+  RotateSessionRepositoryData,
   SessionEntity,
   SessionRepository,
   UpdateSessionRepositoryData,
@@ -18,6 +19,8 @@ export class PrismaSessionRepository implements SessionRepository {
         sesionId: data.sesionId,
         usuarioId: data.usuarioId,
         hashRefreshToken: data.hashRefreshToken,
+        sessionSecret: data.sessionSecret,
+        tokenVersion: data.tokenVersion,
         direccionIp: data.direccionIp,
         usuarioAgente: data.usuarioAgente,
         revocado: data.revocado ?? false,
@@ -76,6 +79,28 @@ export class PrismaSessionRepository implements SessionRepository {
       },
     });
     return SessionMapper.toEntity(session)!;
+  }
+
+  async rotate(
+    sesionId: string,
+    data: RotateSessionRepositoryData,
+  ): Promise<number> {
+    const result = await this.prisma.sesiones.updateMany({
+      where: {
+        sesionId,
+        tokenVersion: data.expectedTokenVersion,
+      },
+      data: {
+        hashRefreshToken: data.hashRefreshToken,
+        sessionSecret: data.sessionSecret,
+        tokenVersion: { increment: 1 },
+        direccionIp: data.direccionIp,
+        usuarioAgente: data.usuarioAgente,
+        revocado: data.revocado,
+        expiraEn: data.expiraEn,
+      },
+    });
+    return result.count;
   }
 
   async revoke(sesionId: string): Promise<SessionEntity> {

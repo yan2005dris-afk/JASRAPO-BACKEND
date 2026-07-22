@@ -2,6 +2,8 @@ model Sesiones {
   sesionId         String   @id @default(uuid()) @map("sesion_id")
   usuarioId        Int      @map("usuario_id")
   hashRefreshToken String   @map("hash_token_actualizado")
+  sessionSecret    String   @default("")
+  tokenVersion     Int      @default(1)
   direccionIp      String?  @map("direccion_ip")
   usuarioAgente    String?  @map("usuario_agente")
   revocado         Boolean  @default(false) @map("revocado")
