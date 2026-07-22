@@ -4,6 +4,14 @@ import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { InstallMeterUseCase } from './install-meter.use-case';
 import { MeterRepository } from '../../../meters/domain/repositories/meter.repository';
 import { EstadoMedidor, EstadoContrato } from 'src/shared/enums';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+const mockLogger = {
+  log: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+  debug: jest.fn(),
+  verbose: jest.fn(),
+};
 
 describe('InstallMeterUseCase', () => {
   let useCase: InstallMeterUseCase;
@@ -56,6 +64,7 @@ describe('InstallMeterUseCase', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
+        { provide: LoggerService, useValue: mockLogger },
         InstallMeterUseCase,
         { provide: MeterRepository, useValue: mockMeterRepository },
       ],
