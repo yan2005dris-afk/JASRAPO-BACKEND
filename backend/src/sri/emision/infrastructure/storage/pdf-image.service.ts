@@ -1,10 +1,12 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import axios from 'axios';
 import { readFileSync, existsSync } from 'fs';
 import { join, resolve, sep } from 'path';
 import { PDFDocument } from 'pdf-lib';
 import { validateSafeUrl } from '../../../../infrastructure/common/utils/url.util';
 import { STORAGE_PATHS } from './storage-paths';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
 export interface ImageData {
   url: string;
@@ -16,9 +18,10 @@ export interface ImageData {
   opacity?: number;
 }
 
+@LogContext()
 @Injectable()
 export class PdfImageService {
-  private readonly logger = new Logger(PdfImageService.name);
+  constructor(private readonly logger: LoggerService) {}
 
   /**
    * Add images to an existing PDF

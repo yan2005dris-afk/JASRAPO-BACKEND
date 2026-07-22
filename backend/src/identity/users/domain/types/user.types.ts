@@ -30,6 +30,18 @@ export const userWithRolesSelect = {
   },
 } satisfies Prisma.UsuariosSelect;
 
+/**
+ * Select usado por el flujo de login: incluye el hash de la clave y los
+ * contadores de protección contra fuerza bruta (issue #136).
+ */
+export const userWithPasswordAndLockoutSelect = {
+  ...userWithRolesSelect,
+  clave: true,
+  intentosFallidos: true,
+  ultimoIntentoFallidoEn: true,
+  bloqueadoHasta: true,
+} satisfies Prisma.UsuariosSelect;
+
 // ============================================
 // Frontend Response Types
 // ============================================

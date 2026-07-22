@@ -8,7 +8,7 @@ describe('MailRateLimitService', () => {
 
   const mockPrisma = {
     $queryRawUnsafe: jest.fn(),
-    $executeRawUnsafe: jest.fn(),
+    $queryRaw: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -41,11 +41,11 @@ describe('MailRateLimitService', () => {
   });
 
   it('should release a reserved slot after a failed send', async () => {
-    mockPrisma.$executeRawUnsafe.mockResolvedValue(1);
+    mockPrisma.$queryRaw.mockResolvedValue([{ sent_count: 0 }]);
 
     await service.release('brevo');
 
-    expect(mockPrisma.$executeRawUnsafe).toHaveBeenCalled();
+    expect(mockPrisma.$queryRaw).toHaveBeenCalled();
   });
 
   it('should reset counter on day change (simulated by database behavior)', async () => {

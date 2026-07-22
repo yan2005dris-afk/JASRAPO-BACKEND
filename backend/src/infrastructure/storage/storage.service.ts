@@ -171,16 +171,25 @@ export class StorageService implements IStorageService, OnModuleInit {
   async getUrl(
     bucket: string,
     key: string,
-    expiresInSeconds?: number,
+    expiresInSeconds: number,
   ): Promise<string> {
-    const expiry = expiresInSeconds ?? 24 * 60 * 60;
-    return this.s3Client.getPresignedUrl(bucket, key, expiry);
+    if (!Number.isFinite(expiresInSeconds) || expiresInSeconds <= 0) {
+      throw new Error(
+        `[STORAGE] Invalid expiresInSeconds: ${expiresInSeconds}. Must be a positive number of seconds.`,
+      );
+    }
+    if (expiresInSeconds > 3600) {
+      throw new Error(
+        `[STORAGE] Presigned URL TTL capped at 3600s (60 minutes) for download URLs. Received ${expiresInSeconds}s.`,
+      );
+    }
+    return this.s3Client.getPresignedUrl(bucket, key, expiresInSeconds);
   }
 
   async refreshUrl(
     bucket: string,
     key: string,
-    expiresInSeconds?: number,
+    expiresInSeconds: number,
   ): Promise<string> {
     // S3-compatible storage generates fresh presigned URLs each time
     return this.getUrl(bucket, key, expiresInSeconds);

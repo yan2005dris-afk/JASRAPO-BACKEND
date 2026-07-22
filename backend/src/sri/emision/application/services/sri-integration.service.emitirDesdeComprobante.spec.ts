@@ -12,6 +12,13 @@ import { SriIntegrationService } from './sri-integration.service';
 import type { EmitirFacturaUseCase } from '../use-cases/emitir-factura.use-case';
 import { NotFoundException } from '@nestjs/common';
 import { Decimal } from 'decimal.js';
+const mockLogger = {
+  log: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+  debug: jest.fn(),
+  verbose: jest.fn(),
+};
 
 describe('SriIntegrationService — emitirDesdeComprobante (T-008)', () => {
   let service: SriIntegrationService;
@@ -127,6 +134,7 @@ describe('SriIntegrationService — emitirDesdeComprobante (T-008)', () => {
       prisma,
       {} as any, // SriService (mocked)
       emitirFacturaUseCase,
+      mockLogger,
     );
   });
 

@@ -3,7 +3,7 @@ import {
   NotFoundException,
   ConflictException,
 } from '@nestjs/common';
-import * as bcrypt from 'bcryptjs';
+import * as bcrypt from 'bcrypt';
 import { Prisma } from 'src/generated/prisma/client';
 import { CreateUserDto } from '../../interfaces/dto/create-user.dto';
 import { ValidationUtil } from 'src/infrastructure/common/utils/validation.util';
