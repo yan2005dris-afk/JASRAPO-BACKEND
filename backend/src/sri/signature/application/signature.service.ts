@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as forge from 'node-forge';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
@@ -12,6 +12,8 @@ import {
   SRI_STORAGE_TYPES,
 } from '../../../infrastructure/storage/storage.service';
 import { PrismaService } from '../../../infrastructure/database/prisma.service';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
 export interface SignaturePosition {
   page?: number;
@@ -36,9 +38,9 @@ export interface CertificateInfo {
   serialNumber: string;
 }
 
+@LogContext()
 @Injectable()
 export class SignatureService {
-  private readonly logger = new Logger(SignatureService.name);
   private readonly signatureConfig: {
     qrSize: number;
     totalWidth: number;
@@ -52,6 +54,7 @@ export class SignatureService {
     private configService: ConfigService,
     private readonly prisma: PrismaService,
     private readonly storageService: StorageService,
+    private readonly logger: LoggerService,
   ) {
     this.signatureConfig = {
       qrSize: this.configService.get<number>('SIGNATURE_QR_SIZE', 50),

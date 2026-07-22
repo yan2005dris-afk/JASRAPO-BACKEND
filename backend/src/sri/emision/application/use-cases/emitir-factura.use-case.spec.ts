@@ -14,6 +14,14 @@ import { SriBaseService } from '../../infrastructure/xml/sri-base.service';
 import type { SriOperationResult } from '../../domain/interfaces';
 import type { CreateFacturaDto } from '../../interfaces/dto';
 import { ComprobanteEstado } from '../../domain/constants/comprobante-estado.enum';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+const mockLogger = {
+  log: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+  debug: jest.fn(),
+  verbose: jest.fn(),
+};
 
 describe('EmitirFacturaUseCase — persistirFactura with comprobanteExistente (T-003)', () => {
   let useCase: EmitirFacturaUseCase;
@@ -135,6 +143,7 @@ describe('EmitirFacturaUseCase — persistirFactura with comprobanteExistente (T
 
     module = await Test.createTestingModule({
       providers: [
+        { provide: LoggerService, useValue: mockLogger },
         EmitirFacturaUseCase,
         {
           provide: ClaveAccesoService,
@@ -350,6 +359,7 @@ describe('EmitirFacturaUseCase — SRI rejection path (E-005)', () => {
 
     module = await Test.createTestingModule({
       providers: [
+        { provide: LoggerService, useValue: mockLogger },
         EmitirFacturaUseCase,
         {
           provide: ClaveAccesoService,

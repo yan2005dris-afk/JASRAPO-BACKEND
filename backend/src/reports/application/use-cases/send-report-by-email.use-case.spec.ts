@@ -15,7 +15,6 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import {
   BadRequestException,
-  Logger,
   NotFoundException,
   ServiceUnavailableException,
 } from '@nestjs/common';
@@ -23,6 +22,14 @@ import { SendReportByEmailUseCase } from './send-report-by-email.use-case';
 import type { MailService } from 'src/infrastructure/mail/application/mail.service';
 import type { GeneratePdfUseCase } from 'src/infrastructure/pdf/use-cases/generate-pdf.use-case';
 import type { ReportEmailStrategy } from './send-report-by-email.strategy';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+const mockLogger = {
+  log: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+  debug: jest.fn(),
+  verbose: jest.fn(),
+};
 
 // PR 4: PDF-generation timeout used by every test in this file. Production
 // default is 30s but that would make the timeout test path take ~30s — we
@@ -52,6 +59,7 @@ describe('SendReportByEmailUseCase (skeleton)', () => {
   ): Promise<SendReportByEmailUseCase> => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
+        { provide: LoggerService, useValue: mockLogger },
         {
           provide: SendReportByEmailUseCase,
           useFactory: () =>
@@ -60,6 +68,7 @@ describe('SendReportByEmailUseCase (skeleton)', () => {
               mockGeneratePdf as unknown as GeneratePdfUseCase,
               strategies,
               pdfTimeoutMs,
+              mockLogger,
             ),
         },
       ],
@@ -391,7 +400,7 @@ describe('SendReportByEmailUseCase (skeleton)', () => {
   // we have a real jobId + destinatario in scope.
   it('logs a meaningful message that includes the actual jobId', async () => {
     const logSpy = jest
-      .spyOn(Logger.prototype, 'log')
+      .spyOn(mockLogger, 'log')
       .mockImplementation(() => undefined);
 
     const useCase = await compile({
@@ -493,7 +502,7 @@ describe('SendReportByEmailUseCase (skeleton)', () => {
     // Per design rev 2 (decision #6 / item PII-LOW) the recipient must
     // never appear in INFO logs; only DEBUG carries it.
     const logSpy = jest
-      .spyOn(Logger.prototype, 'log')
+      .spyOn(mockLogger, 'log')
       .mockImplementation(() => undefined);
 
     const useCase = await compile({
@@ -520,7 +529,7 @@ describe('SendReportByEmailUseCase (skeleton)', () => {
 
   it('does NOT log the override recipient email at INFO level', async () => {
     const logSpy = jest
-      .spyOn(Logger.prototype, 'log')
+      .spyOn(mockLogger, 'log')
       .mockImplementation(() => undefined);
 
     const useCase = await compile({
@@ -546,7 +555,7 @@ describe('SendReportByEmailUseCase (skeleton)', () => {
 
   it('emits a debug-level log after the recipient is resolved', async () => {
     const debugSpy = jest
-      .spyOn(Logger.prototype, 'debug')
+      .spyOn(mockLogger, 'debug')
       .mockImplementation(() => undefined);
 
     const useCase = await compile({

@@ -30,16 +30,33 @@ export class S3ClientService implements OnModuleInit {
       'localhost',
     );
     const port = this.configService.get<number>('STORAGE_PORT', 9000);
-    const useSsl =
-      this.configService.get<string>('STORAGE_USE_SSL', 'false') === 'true';
-    const accessKey = this.configService.get<string>(
-      'STORAGE_ACCESS_KEY',
-      'admin',
+    const storageUseSsl = this.configService.get<string>(
+      'STORAGE_USE_SSL',
+      'true',
     );
-    const secretKey = this.configService.get<string>(
-      'STORAGE_SECRET_KEY',
-      'password123',
-    );
+    const useSsl = storageUseSsl === 'true';
+    const nodeEnv = this.configService.get<string>('NODE_ENV', 'development');
+    const accessKey =
+      this.configService.getOrThrow<string>('STORAGE_ACCESS_KEY');
+    const secretKey =
+      this.configService.getOrThrow<string>('STORAGE_SECRET_KEY');
+
+    if (!accessKey || accessKey.trim().length === 0) {
+      throw new Error(
+        '[STORAGE] STORAGE_ACCESS_KEY is missing or empty. Application cannot start without explicit S3 credentials.',
+      );
+    }
+    if (!secretKey || secretKey.trim().length === 0) {
+      throw new Error(
+        '[STORAGE] STORAGE_SECRET_KEY is missing or empty. Application cannot start without explicit S3 credentials.',
+      );
+    }
+
+    if (nodeEnv === 'production' && storageUseSsl !== 'true') {
+      throw new Error(
+        `[STORAGE] Refusing to start: STORAGE_USE_SSL must be "true" when NODE_ENV=production. Cleartext S3 connection would expose credentials and document bodies on the wire (issue #141, OWASP A02).`,
+      );
+    }
 
     if (!port || port < 1 || port > 65535) {
       throw new Error(
@@ -144,9 +161,19 @@ export class S3ClientService implements OnModuleInit {
   async getPresignedUrl(
     bucketName: string,
     fileName: string,
-    expiresInSeconds = 24 * 60 * 60,
+    expiresInSeconds: number,
   ): Promise<string> {
     this.ensureAvailable();
+    if (!Number.isFinite(expiresInSeconds) || expiresInSeconds <= 0) {
+      throw new Error(
+        `[S3] Invalid expiresInSeconds: ${expiresInSeconds}. Must be a positive number of seconds.`,
+      );
+    }
+    if (expiresInSeconds > 3600) {
+      throw new Error(
+        `[S3] Presigned URL TTL capped at 3600s (60 minutes) for download URLs. Received ${expiresInSeconds}s.`,
+      );
+    }
     return getSignedUrl(
       this.s3Client!,
       new GetObjectCommand({ Bucket: bucketName, Key: fileName }),

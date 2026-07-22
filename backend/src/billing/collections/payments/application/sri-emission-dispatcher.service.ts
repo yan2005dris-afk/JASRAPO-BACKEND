@@ -1,9 +1,11 @@
-import { Injectable, Logger, Inject } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { ComprobanteEstado } from 'src/sri/emision/domain/constants/comprobante-estado.enum';
 import { SRI_EMISION_JOB } from 'src/sri/emision/infrastructure/queue/processors/sri-emision.constants';
 import { PaymentRepository } from '../domain/repositories/payment.repository';
 import { ComprobanteRepository } from 'src/sri/emision/domain/repositories/comprobante.repository';
 import type { JobService } from './pago-validado.handler';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
 /**
  * Discriminated outcome of an emission attempt. The caller (e.g.
@@ -31,14 +33,14 @@ export type EmissionOutcome =
  * (a) does the comprobante exist? (b) is it still in BORRADOR? (c) can we
  * atomically transition it to ENVIANDO? (d) enqueue the SRI job.
  */
+@LogContext()
 @Injectable()
 export class SRIEmissionDispatcherService {
-  private readonly logger = new Logger(SRIEmissionDispatcherService.name);
-
   constructor(
     private readonly paymentRepository: PaymentRepository,
     private readonly comprobanteRepository: ComprobanteRepository,
     @Inject('JobService') private readonly jobsService: JobService,
+    private readonly logger: LoggerService,
   ) {}
 
   async tryEmit(comprobanteId: bigint): Promise<EmissionOutcome> {

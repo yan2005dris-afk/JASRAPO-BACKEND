@@ -1,11 +1,14 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
 /**
  * Servicio para validar identificaciones ecuatorianas (Cédula, RUC, Pasaporte)
  */
+@LogContext()
 @Injectable()
 export class IdentificacionValidatorService {
-  private readonly logger = new Logger(IdentificacionValidatorService.name);
+  constructor(private readonly logger: LoggerService) {}
 
   /**
    * Valida una identificación según su tipo

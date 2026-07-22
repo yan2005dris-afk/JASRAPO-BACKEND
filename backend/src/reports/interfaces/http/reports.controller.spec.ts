@@ -40,6 +40,14 @@ import { ReportStyleService } from '../../application/report-style.service';
 import { JwtAuthGuard } from '../../../identity/auth/interfaces/http/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../../../infrastructure/common/guards/permissions.guard';
 import { RequiredPermission } from '../../../infrastructure/common/decorators/require-permission.decorator';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+const mockLogger = {
+  log: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+  debug: jest.fn(),
+  verbose: jest.fn(),
+};
 
 /**
  * Helpers to introspect the class-level `@UseGuards` + `@ApiBearerAuth` decorators.
@@ -187,6 +195,7 @@ describe('ReportsController — handler wiring (REQ-1/2/3 + dispatcher)', () => 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [ReportsController],
       providers: [
+        { provide: LoggerService, useValue: mockLogger },
         {
           provide: PdfService,
           useValue: pdfService,
@@ -403,6 +412,7 @@ describe('ReportsController — content negotiation (Accept header)', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [ReportsController],
       providers: [
+        { provide: LoggerService, useValue: mockLogger },
         {
           provide: PdfService,
           useValue: { getDocumentType: jest.fn(), render: jest.fn() },
@@ -656,6 +666,7 @@ describe('ReportsController — POST /email routes (PR 3)', () => {
     const moduleRef = await Test.createTestingModule({
       controllers: [ReportsController],
       providers: [
+        { provide: LoggerService, useValue: mockLogger },
         {
           provide: SendReportByEmailUseCase,
           useValue: { execute: executeMock },
@@ -822,11 +833,13 @@ describe('ReportsController — PDF generation timeout (PR 4)', () => {
       // 30ms timeout — fast enough for the test, slow enough to let the
       // mock promise be observed as "still pending" before the timer fires.
       30,
+      mockLogger,
     );
 
     const moduleRef = await Test.createTestingModule({
       controllers: [ReportsController],
       providers: [
+        { provide: LoggerService, useValue: mockLogger },
         { provide: SendReportByEmailUseCase, useValue: realUseCase },
         { provide: PdfService, useValue: {} },
         { provide: GeneratePdfUseCase, useValue: { execute: slowPdfExecute } },

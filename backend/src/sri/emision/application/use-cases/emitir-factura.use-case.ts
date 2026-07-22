@@ -1,4 +1,4 @@
-import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Decimal } from 'decimal.js';
 import { ClaveAccesoService } from '../../infrastructure/xml/clave-acceso.service';
@@ -25,15 +25,16 @@ import {
 import { TipoComprobante, Ambiente, TipoEmision } from '../../domain/constants';
 import { ComprobanteEstado } from '../../domain/constants/comprobante-estado.enum';
 import { ComprobanteRecord } from '../../../domain/interfaces/repository.interface';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
 export interface EmitirFacturaOpts {
   comprobanteExistente?: ComprobanteRecord;
 }
 
+@LogContext()
 @Injectable()
 export class EmitirFacturaUseCase {
-  private readonly logger = new Logger(EmitirFacturaUseCase.name);
-
   constructor(
     private readonly claveAccesoService: ClaveAccesoService,
     private readonly xmlBuilderService: XmlBuilderService,
@@ -45,6 +46,7 @@ export class EmitirFacturaUseCase {
     private readonly xmlStorage: XmlStorageService,
     private readonly base: SriBaseService,
     private readonly eventEmitter: EventEmitter2,
+    private readonly logger: LoggerService,
   ) {}
 
   /**

@@ -1,16 +1,18 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { UserService } from '../../../users/application/user.service';
 import { MenuResponseDto } from '../../interfaces/dto/response-menu.dto';
 import { MenuRecord } from '../../domain/types/menu.types';
 import { MenuRepository } from '../../domain/repositories/menu.repository';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
+@LogContext()
 @Injectable()
 export class GetMyMenusUseCase {
-  private readonly logger = new Logger(GetMyMenusUseCase.name);
-
   constructor(
     private readonly menuRepository: MenuRepository,
     private readonly userService: UserService,
+    private readonly logger: LoggerService,
   ) {}
 
   async execute(userId: number): Promise<MenuResponseDto[]> {

@@ -9,7 +9,6 @@ import {
   Res,
   HttpCode,
   HttpStatus,
-  Logger,
   NotFoundException,
   UseInterceptors,
   UploadedFile,
@@ -52,19 +51,21 @@ import {
   PaginatedComprobantesDto,
   ComprobanteDetalladoDto,
 } from '../dto';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
+@LogContext()
 @ApiTags('[En Desarrollo] SRI - Facturación Electrónica')
 @ApiBearerAuth('JWT')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 @RequiredPermission('sri', 'admin')
 @Controller('sri')
 export class SriController {
-  private readonly logger = new Logger(SriController.name);
-
   constructor(
     private readonly sriService: SriService,
     private readonly emisoresService: EmisoresService,
     private readonly configService: ConfigService,
+    private readonly logger: LoggerService,
   ) {}
 
   /**

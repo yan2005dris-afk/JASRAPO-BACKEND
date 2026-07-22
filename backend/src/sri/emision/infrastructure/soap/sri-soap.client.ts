@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SriSoapFactoryService } from './sri-soap-factory.service';
 import {
@@ -7,17 +7,19 @@ import {
   SriOperationResult,
   SriMensaje,
 } from '../../domain/interfaces';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
 /**
  * Cliente SOAP para comunicación con los servicios web del SRI Ecuador.
  */
+@LogContext()
 @Injectable()
 export class SriSoapClient {
-  private readonly logger = new Logger(SriSoapClient.name);
-
   constructor(
     private readonly configService: ConfigService,
     private readonly soapFactory: SriSoapFactoryService,
+    private readonly logger: LoggerService,
   ) {}
 
   async validarComprobante(
