@@ -5,6 +5,7 @@ import { GlobalExceptionFilter } from './infrastructure/common/filters/global-ex
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
+import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { ThrottlerExceptionFilter } from './infrastructure/common/filters/throttler-exception.filter';
 import { AuditFieldsInterceptor } from './infrastructure/common/interceptors/audit-fields.interceptor';
@@ -14,6 +15,7 @@ import {
   TRUST_PROXY_HOPS,
   TRUST_PROXY_KEY,
 } from './infrastructure/config/app.constants';
+import { resolveCorsOptions } from './infrastructure/config/cors.options';
 import { LoggingInterceptor } from './infrastructure/observability/interceptors/logging.interceptor';
 import { TracingService } from './infrastructure/observability/tracing/tracing.service';
 import { LoggerService } from './infrastructure/observability/logger/logger.service';
@@ -43,6 +45,19 @@ async function bootstrap() {
   logger.log('Observability initialized', 'Bootstrap');
 
   app.setGlobalPrefix('api/v1');
+
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: ["'self'", "'unsafe-inline'"],
+          styleSrc: ["'self'", "'unsafe-inline'"],
+          imgSrc: ["'self'", 'data:'],
+        },
+      },
+    }),
+  );
 
   // Aumentar el límite de tamaño para payloads JSON y URL-encoded
   // Nota: Esto solo aplica a JSON/URL-encoded. Las subidas de archivos (multipart/form-data)
@@ -86,19 +101,12 @@ async function bootstrap() {
     'http://localhost:4200',
   );
 
-  app.enableCors({
-    origin:
-      corsOrigin === '*' ? true : corsOrigin.split(',').map((o) => o.trim()),
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-    credentials: true,
-    allowedHeaders: [
-      'Content-Type',
-      'Accept',
-      'Authorization',
-      'X-Requested-With',
-      'X-HTTP-Method-Override',
-    ],
-  });
+  app.enableCors(
+    resolveCorsOptions({
+      corsOrigin,
+      credentials: true,
+    }),
+  );
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
