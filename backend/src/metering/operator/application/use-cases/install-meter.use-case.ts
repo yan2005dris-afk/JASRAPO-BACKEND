@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { MeterRepository } from '../../../meters/domain/repositories/meter.repository';
@@ -9,6 +10,8 @@ import type { MeterEntity } from '../../../meters/domain/entities/meter.entity';
 
 @Injectable()
 export class InstallMeterUseCase {
+  private readonly logger = new Logger(InstallMeterUseCase.name);
+
   constructor(private readonly meterRepository: MeterRepository) {}
 
   async execute(medidorId: bigint): Promise<MeterEntity> {
@@ -39,17 +42,39 @@ export class InstallMeterUseCase {
       );
     }
 
+    const now = new Date();
+
     return this.meterRepository.executeTransaction(async (tx) => {
-      const updated = await this.meterRepository.update(
+      const updatedMeter = await this.meterRepository.update(
         { medidorId },
         {
           estado: EstadoMedidor.INSTALADO,
-          fechaInstalacion: new Date(),
+          fechaInstalacion: now,
         },
         tx,
       );
 
-      return updated;
+      const openHistorial = await tx.historialMedidores.findFirst({
+        where: { contratoId: contrato.contratoId, fechaHasta: null },
+      });
+
+      if (!openHistorial) {
+        this.logger.warn(
+          `Install: no open historialMedidores row for contratoId=${contrato.contratoId}; skipping fechaHasta close`,
+        );
+      } else {
+        await tx.historialMedidores.update({
+          where: { historialId: openHistorial.historialId },
+          data: { fechaHasta: now },
+        });
+      }
+
+      await tx.contratos.update({
+        where: { contratoId: contrato.contratoId },
+        data: { estado: EstadoContrato.ACTIVO },
+      });
+
+      return updatedMeter;
     });
   }
 }

@@ -3,7 +3,7 @@ import { extractRucFromClaveAcceso } from '../../infrastructure/xml/clave-acceso
 import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { JobsService } from '../../../../infrastructure/jobs/jobs.service';
-import { SRI_EMISION_JOB } from '../../infrastructure/queue/processors/sri-emision.processor';
+import { SRI_EMISION_JOB } from '../../infrastructure/queue/processors/sri-emision.constants';
 import { EmitirFacturaUseCase } from '../use-cases/emitir-factura.use-case';
 import { EmitirNotaCreditoUseCase } from '../use-cases/emitir-nota-credito.use-case';
 import { EmitirNotaDebitoUseCase } from '../use-cases/emitir-nota-debito.use-case';
