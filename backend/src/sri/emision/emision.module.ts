@@ -90,6 +90,7 @@ import { JobsService } from '../../infrastructure/jobs/jobs.service';
   exports: [
     SriService,
     SriIntegrationService,
+    ComprobanteRepository,
     EmitirFacturaUseCase,
     EmitirNotaCreditoUseCase,
     EmitirNotaDebitoUseCase,
