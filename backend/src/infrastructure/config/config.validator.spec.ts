@@ -75,7 +75,7 @@ describe('config.validator', () => {
 
     it('throws when the secret matches the .env.example placeholder sentinel', () => {
       expect(() =>
-        assertJwtSecret('__SET_VIA_OPENSSL_RAND_HEX_32__', 'JWT_ACCESS_SECRET'),
+        assertJwtSecret('__your_secret_here__', 'JWT_ACCESS_SECRET'),
       ).toThrow(InsecureSecretError);
     });
 

@@ -23,11 +23,12 @@ export class LoggingInterceptor implements NestInterceptor {
     const ctx = context.switchToHttp();
     const request = ctx.getRequest<Request>();
     const response = ctx.getResponse<Response>();
-
     const { method, originalUrl, ip, headers } = request;
-    const userAgent = headers['user-agent'] || '';
     const startTime = Date.now();
     const route = this.getRouteLabel(originalUrl);
+    const userAgentHeader: unknown = headers['user-agent'];
+    const userAgentString =
+      typeof userAgentHeader === 'string' ? userAgentHeader : '';
 
     // Increment in-progress metric
     this.metricsService.incrementHttpInProgress(method, route);
@@ -40,7 +41,7 @@ export class LoggingInterceptor implements NestInterceptor {
           const status = response.statusCode.toString();
 
           this.logger.log(
-            `${method} ${originalUrl} ${status} ${durationMs}ms - ${redactIp(ip)} ${parseUserAgent(userAgent)}`,
+            `${method} ${originalUrl} ${status} ${durationMs}ms - ${redactIp(ip ?? '')} ${parseUserAgent(userAgentString)}`,
             'HTTP',
           );
 

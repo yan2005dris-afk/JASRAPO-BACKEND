@@ -14,7 +14,7 @@ const FORBIDDEN_DEFAULT_SECRETS: ReadonlySet<string> = new Set([
 ]);
 
 const FORBIDDEN_PLACEHOLDER_SENTINELS: ReadonlySet<string> = new Set([
-  '__SET_VIA_OPENSSL_RAND_HEX_32__',
+  '__your_secret_here__',
   'changeme',
   'CHANGE_ME',
 ]);
