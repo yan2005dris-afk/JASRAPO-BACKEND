@@ -8,6 +8,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { MenuResponseDto } from '../dto/response-menu.dto';
+import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
 import type { JwtRequest } from 'src/identity/auth/interfaces/http/types/JwtRequest.types';
 
 @ApiTags('menus')
@@ -56,6 +57,7 @@ export class MenusController {
     status: 401,
     description: 'No autorizado - Token inválido o expirado',
   })
+  @RequiredPermission('menus', 'read')
   @Get('my')
   async getMyMenus(@Req() req: JwtRequest): Promise<MenuResponseDto[]> {
     const userId = req.user.sub;

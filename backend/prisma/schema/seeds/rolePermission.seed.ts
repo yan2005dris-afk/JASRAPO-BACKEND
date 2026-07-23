@@ -128,5 +128,30 @@ export async function seedRolePermissions(
         });
     }
 
+    // 9. MENUS:READ para todos los roles no-admin
+    //    Admin ya recibe este permiso por el loop del paso 1.
+    //    Cualquier usuario autenticado debe poder obtener su propio árbol de
+    //    menús (GET /api/v1/menus/my), por eso se asigna explícitamente a
+    //    cada rol. No se hace create/update/delete: el menú es managed data,
+    //    no algo que se cree por endpoint todavía (ver roles/permissions para eso).
+    const menusRead = permissions.find(
+        (p) => p.recurso === 'menus' && p.accion === 'read',
+    );
+    if (menusRead) {
+        const everyRoleExceptAdmin = [
+            roles.secretariaRol,
+            roles.recaudacionRol,
+            roles.operadoresRol,
+            roles.presidenciaRol,
+            roles.contabilidadRol,
+            roles.userRol,
+        ];
+        for (const rol of everyRoleExceptAdmin) {
+            await prisma.rolPermisos.create({
+                data: { rolId: rol.rolId, permisoId: menusRead.permisoId },
+            });
+        }
+    }
+
     console.log('✅ Roles-Permisos actualizados y asignados correctamente.');
 }
