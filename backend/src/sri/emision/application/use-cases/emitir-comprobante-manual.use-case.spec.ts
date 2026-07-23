@@ -108,17 +108,25 @@ describe('EmitirComprobanteManualUseCase', () => {
     );
   });
 
-  it('R-6/S3: AUTORIZADO → 409 ConflictException, no dispatcher call, no audit', async () => {
+  it('R-6/S3: INVALID_STATE from dispatcher → 409 ConflictException + audit(exitoso:false)', async () => {
     comprobanteRepository.findByClaveAcceso.mockResolvedValue({
       ...COMP,
       estado: ComprobanteEstado.AUTORIZADO,
     } as any);
+    sriDispatcher.tryEmitManual.mockResolvedValue('INVALID_STATE');
 
     await expect(useCase.execute(CLAVE, CURRENT_USER)).rejects.toBeInstanceOf(
       ConflictException,
     );
-    expect(sriDispatcher.tryEmitManual).not.toHaveBeenCalled();
-    expect(auditService.log).not.toHaveBeenCalled();
+    // Dispatcher is the single authority on state eligibility, so it IS called,
+    // and the rejected attempt is still audited for traceability.
+    expect(sriDispatcher.tryEmitManual).toHaveBeenCalledWith(42n);
+    expect(auditService.log).toHaveBeenCalledWith(
+      expect.objectContaining({
+        exitoso: false,
+        metadata: expect.objectContaining({ outcome: 'INVALID_STATE' }),
+      }),
+    );
   });
 
   it('R-6/S4: unknown claveAcceso → 404 NotFoundException, no dispatcher call, no audit', async () => {
@@ -131,17 +139,32 @@ describe('EmitirComprobanteManualUseCase', () => {
     expect(auditService.log).not.toHaveBeenCalled();
   });
 
-  it('dispatches INVALID_STATE from tryEmitManual without throwing', async () => {
+  it('LOCK_LOST from dispatcher → 409 ConflictException + audit(exitoso:false)', async () => {
     comprobanteRepository.findByClaveAcceso.mockResolvedValue(COMP as any);
-    sriDispatcher.tryEmitManual.mockResolvedValue('INVALID_STATE');
+    sriDispatcher.tryEmitManual.mockResolvedValue('LOCK_LOST');
 
-    const outcome = await useCase.execute(CLAVE, CURRENT_USER);
-
-    expect(outcome).toBe('INVALID_STATE');
+    await expect(useCase.execute(CLAVE, CURRENT_USER)).rejects.toBeInstanceOf(
+      ConflictException,
+    );
     expect(auditService.log).toHaveBeenCalledWith(
       expect.objectContaining({
         exitoso: false,
-        metadata: expect.objectContaining({ outcome: 'INVALID_STATE' }),
+        metadata: expect.objectContaining({ outcome: 'LOCK_LOST' }),
+      }),
+    );
+  });
+
+  it('NOT_FOUND from dispatcher (deleted mid-flight) → 404 NotFoundException', async () => {
+    comprobanteRepository.findByClaveAcceso.mockResolvedValue(COMP as any);
+    sriDispatcher.tryEmitManual.mockResolvedValue('NOT_FOUND');
+
+    await expect(useCase.execute(CLAVE, CURRENT_USER)).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
+    expect(auditService.log).toHaveBeenCalledWith(
+      expect.objectContaining({
+        exitoso: false,
+        metadata: expect.objectContaining({ outcome: 'NOT_FOUND' }),
       }),
     );
   });

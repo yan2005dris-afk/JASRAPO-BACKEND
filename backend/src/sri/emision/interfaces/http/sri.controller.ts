@@ -6,6 +6,7 @@ import {
   Body,
   Param,
   Query,
+  Req,
   Res,
   HttpCode,
   HttpStatus,
@@ -15,7 +16,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import type { Response } from 'express';
+import type { Request, Response } from 'express';
 import {
   ApiTags,
   ApiOperation,
@@ -305,6 +306,7 @@ export class SriController {
   async emitirManual(
     @Param('claveAcceso') claveAcceso: string,
     @CurrentUser() user: JwtPayload,
+    @Req() req: Request,
   ): Promise<EmissionOutcome> {
     this.logger.log(
       `POST /sri/comprobantes/${claveAcceso}/emitir-manual (usuario=${user.sub})`,
@@ -313,6 +315,8 @@ export class SriController {
     return this.emitirComprobanteManual.execute(claveAcceso, {
       id: Number(user.sub),
       email: user.email,
+      ip: req.ip ?? req.socket?.remoteAddress,
+      userAgent: req.headers['user-agent'],
     });
   }
 

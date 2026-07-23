@@ -34,10 +34,19 @@ describe('SriController — emitirManual', () => {
   const CLAVE = '1234567890123456789012345678901234567890123456789';
   const SRI_USER: JwtPayload = {
     sub: 7,
+    sid: 'test-session-id',
     email: 'sri-admin@example.com',
     rol: UserRole.ADMIN, // exact role is enforced by the @RequiredPermission guard,
     //                        not by the controller method itself.
+    tokenVersion: 0,
   };
+
+  // Minimal Express request stub: only the fields emitirManual reads.
+  const REQ = {
+    ip: '10.0.0.9',
+    socket: { remoteAddress: '10.0.0.9' },
+    headers: { 'user-agent': 'jest-agent/1.0' },
+  } as any;
 
   beforeEach(async () => {
     emitirComprobanteManual = {
@@ -84,12 +93,17 @@ describe('SriController — emitirManual', () => {
   it('R-7/S1: delegates to use case with current user + claveAcceso; returns outcome', async () => {
     emitirComprobanteManual.execute.mockResolvedValue('EMITTED');
 
-    const result = await controller.emitirManual(CLAVE, SRI_USER);
+    const result = await controller.emitirManual(CLAVE, SRI_USER, REQ);
 
     expect(result).toBe('EMITTED');
     expect(emitirComprobanteManual.execute).toHaveBeenCalledWith(
       CLAVE,
-      expect.objectContaining({ id: 7, email: 'sri-admin@example.com' }),
+      expect.objectContaining({
+        id: 7,
+        email: 'sri-admin@example.com',
+        ip: '10.0.0.9',
+        userAgent: 'jest-agent/1.0',
+      }),
     );
   });
 
@@ -99,7 +113,7 @@ describe('SriController — emitirManual', () => {
     );
 
     await expect(
-      controller.emitirManual(CLAVE, SRI_USER),
+      controller.emitirManual(CLAVE, SRI_USER, REQ),
     ).rejects.toBeInstanceOf(ConflictException);
   });
 
@@ -109,7 +123,7 @@ describe('SriController — emitirManual', () => {
     );
 
     await expect(
-      controller.emitirManual(CLAVE, SRI_USER),
+      controller.emitirManual(CLAVE, SRI_USER, REQ),
     ).rejects.toBeInstanceOf(NotFoundException);
   });
 
@@ -119,7 +133,7 @@ describe('SriController — emitirManual', () => {
     );
 
     await expect(
-      controller.emitirManual(CLAVE, SRI_USER),
+      controller.emitirManual(CLAVE, SRI_USER, REQ),
     ).rejects.toBeInstanceOf(ForbiddenException);
   });
 });
