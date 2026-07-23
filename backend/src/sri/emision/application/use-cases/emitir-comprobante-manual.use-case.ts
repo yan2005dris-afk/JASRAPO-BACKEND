@@ -3,7 +3,6 @@ import {
   NotFoundException,
   ConflictException,
 } from '@nestjs/common';
-import { ComprobanteEstado } from '../../domain/constants/comprobante-estado.enum';
 import { ComprobanteRepository } from '../../domain/repositories/comprobante.repository';
 import {
   SRIEmissionDispatcherService,
@@ -28,9 +27,18 @@ export interface EmitirManualCurrentUser {
  *
  * Operator-triggered emission (sdd/sri-emision-modo-manual-automatico):
  *   1. Look up comprobante by `claveAcceso` — 404 if missing.
- *   2. Validate estado ∈ {BORRADOR, POR_EMITIR} — 409 otherwise.
- *   3. Delegate to `SRIEmissionDispatcherService.tryEmitManual()`.
- *   4. Write `AuditoriaSri` row (`accion='emision-manual'`).
+ *   2. Delegate to `SRIEmissionDispatcherService.tryEmitManual()`, which is the
+ *      single authority on state eligibility ({BORRADOR, POR_EMITIR}) and
+ *      optimistic locking.
+ *   3. Write an audit row (`accion='emision-manual'`) recording the attempt —
+ *      success OR failure — so every operator-triggered emission is traceable.
+ *   4. Map the dispatcher outcome to an HTTP result:
+ *        - EMITTED       → returned to the controller (200)
+ *        - INVALID_STATE → 409 ConflictException
+ *        - LOCK_LOST     → 409 ConflictException (retryable; another process
+ *                          won the race)
+ *        - NOT_FOUND     → 404 NotFoundException (comprobante deleted after the
+ *                          initial lookup)
  *
  * Used by `SriController.emitirManual()` which guards the call with
  * `@RequiredPermission('sri','admin')` at the class level.
@@ -56,16 +64,6 @@ export class EmitirComprobanteManualUseCase {
       );
     }
 
-    const allowedFrom: ReadonlyArray<string> = [
-      ComprobanteEstado.BORRADOR,
-      ComprobanteEstado.POR_EMITIR,
-    ];
-    if (!allowedFrom.includes(comprobante.estado)) {
-      throw new ConflictException(
-        `Comprobante en estado ${comprobante.estado} no es elegible para emisión manual; debe estar en BORRADOR o POR_EMITIR`,
-      );
-    }
-
     const outcome = await this.sriDispatcher.tryEmitManual(comprobante.id!);
 
     await this.auditService.log({
@@ -84,6 +82,21 @@ export class EmitirComprobanteManualUseCase {
       },
     });
 
-    return outcome;
+    switch (outcome) {
+      case 'INVALID_STATE':
+        throw new ConflictException(
+          `Comprobante en estado ${comprobante.estado} no es elegible para emisión manual; debe estar en BORRADOR o POR_EMITIR`,
+        );
+      case 'LOCK_LOST':
+        throw new ConflictException(
+          `Comprobante ${claveAcceso} está siendo emitido por otra operación; reintente`,
+        );
+      case 'NOT_FOUND':
+        throw new NotFoundException(
+          `Comprobante con claveAcceso ${claveAcceso} no encontrado`,
+        );
+      default:
+        return outcome;
+    }
   }
 }
