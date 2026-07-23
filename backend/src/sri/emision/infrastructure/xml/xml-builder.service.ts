@@ -14,12 +14,17 @@ import {
   Retencion,
   InfoRetencion,
   ImpuestoRetenido,
+  GuiaRemision,
+  InfoGuiaRemision,
+  DestinatarioGuiaRemision,
+  DetalleGuiaRemision,
 } from '../../domain/interfaces';
 import {
   FACTURA_VERSION,
   NOTA_CREDITO_VERSION,
   NOTA_DEBITO_VERSION,
   RETENCION_VERSION,
+  GUIA_REMISION_VERSION,
 } from '../../domain/constants';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
@@ -582,6 +587,151 @@ export class XmlBuilderService {
       numDocSustento: impuesto.numDocSustento,
       fechaEmisionDocSustento: impuesto.fechaEmisionDocSustento,
     };
+  }
+
+  /**
+   * Construye el XML de una Guía de Remisión electrónica v1.1.0
+   */
+  buildGuiaRemision(guiaRemision: GuiaRemision): string {
+    this.logger.log('Construyendo XML de guía de remisión');
+
+    const xmlObj = {
+      guiaRemision: {
+        $: {
+          id: 'comprobante',
+          version: GUIA_REMISION_VERSION,
+        },
+        infoTributaria: this.buildInfoTributaria(guiaRemision.infoTributaria),
+        infoGuiaRemision: this.buildInfoGuiaRemision(
+          guiaRemision.infoGuiaRemision,
+        ),
+        destinatarios: {
+          destinatario: guiaRemision.destinatarios.map((d) =>
+            this.buildDestinatarioGuiaRemision(d),
+          ),
+        },
+      },
+    };
+
+    if (guiaRemision.infoAdicional && guiaRemision.infoAdicional.length > 0) {
+      (xmlObj.guiaRemision as any).infoAdicional = {
+        campoAdicional: guiaRemision.infoAdicional.map((campo) => ({
+          $: { nombre: campo.nombre },
+          _: campo.valor,
+        })),
+      };
+    }
+
+    const xml = this.builder.buildObject(xmlObj);
+    this.logger.log('XML de guía de remisión construido exitosamente');
+    return xml;
+  }
+
+  private buildInfoGuiaRemision(
+    info: InfoGuiaRemision,
+  ): Record<string, any> {
+    const result: Record<string, any> = {};
+
+    if (info.dirEstablecimiento) {
+      result.dirEstablecimiento = info.dirEstablecimiento;
+    }
+
+    result.dirPartida = info.dirPartida;
+    result.razonSocialTransportista = info.razonSocialTransportista;
+    result.tipoIdentificacionTransportista =
+      info.tipoIdentificacionTransportista;
+    result.rucTransportista = info.rucTransportista;
+
+    if (info.rise) {
+      result.rise = info.rise;
+    }
+
+    result.obligadoContabilidad = info.obligadoContabilidad;
+
+    if (info.contribuyenteEspecial) {
+      result.contribuyenteEspecial = info.contribuyenteEspecial;
+    }
+
+    result.fechaIniTransporte = info.fechaIniTransporte;
+    result.fechaFinTransporte = info.fechaFinTransporte;
+    result.placa = info.placa;
+
+    return result;
+  }
+
+  private buildDestinatarioGuiaRemision(
+    destinatario: DestinatarioGuiaRemision,
+  ): Record<string, any> {
+    const result: Record<string, any> = {
+      identificacionDestinatario: destinatario.identificacionDestinatario,
+      razonSocialDestinatario: destinatario.razonSocialDestinatario,
+      dirDestinatario: destinatario.dirDestinatario,
+      motivoTraslado: destinatario.motivoTraslado,
+    };
+
+    if (destinatario.docAduaneroUnico) {
+      result.docAduaneroUnico = destinatario.docAduaneroUnico;
+    }
+
+    if (destinatario.codEstabDestino) {
+      result.codEstabDestino = destinatario.codEstabDestino;
+    }
+
+    if (destinatario.ruta) {
+      result.ruta = destinatario.ruta;
+    }
+
+    if (destinatario.codDocSustento) {
+      result.codDocSustento = destinatario.codDocSustento;
+    }
+
+    if (destinatario.numDocSustento) {
+      result.numDocSustento = destinatario.numDocSustento;
+    }
+
+    if (destinatario.numAutDocSustento) {
+      result.numAutDocSustento = destinatario.numAutDocSustento;
+    }
+
+    if (destinatario.fechaEmisionDocSustento) {
+      result.fechaEmisionDocSustento = destinatario.fechaEmisionDocSustento;
+    }
+
+    result.detalles = {
+      detalle: destinatario.detalles.map((d) =>
+        this.buildDetalleGuiaRemision(d),
+      ),
+    };
+
+    return result;
+  }
+
+  private buildDetalleGuiaRemision(
+    detalle: DetalleGuiaRemision,
+  ): Record<string, any> {
+    const result: Record<string, any> = {
+      codigoInterno: detalle.codigoInterno,
+    };
+
+    if (detalle.codigoAdicional) {
+      result.codigoAdicional = detalle.codigoAdicional;
+    }
+
+    result.descripcion = detalle.descripcion;
+    result.cantidad = this.formatDecimal(detalle.cantidad, 6);
+
+    if (
+      detalle.detallesAdicionales &&
+      detalle.detallesAdicionales.length > 0
+    ) {
+      result.detallesAdicionales = {
+        detAdicional: detalle.detallesAdicionales.map((d) => ({
+          $: { nombre: d.nombre, valor: d.valor },
+        })),
+      };
+    }
+
+    return result;
   }
 
   async parseXml<T>(xml: string): Promise<T> {
