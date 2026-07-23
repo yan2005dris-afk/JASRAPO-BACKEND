@@ -1,3 +1,4 @@
+import { Readable } from 'stream';
 import type { ConfigService } from '@nestjs/config';
 import * as forge from 'node-forge';
 import { DOMParser } from '@xmldom/xmldom';
@@ -147,7 +148,11 @@ describe('XmlSignerService multi-tenant and helper methods', () => {
       forge.asn1.toDer(forge.pki.certificateToAsn1(cert)).getBytes(),
     );
 
-    const p12Asn1 = forge.pkcs12.toPkcs12Asn1(keyPair.privateKey, cert, p12Password);
+    const p12Asn1 = forge.pkcs12.toPkcs12Asn1(
+      keyPair.privateKey,
+      cert,
+      p12Password,
+    );
     const p12Der = forge.asn1.toDer(p12Asn1).getBytes();
     p12Buffer = Buffer.from(p12Der, 'binary');
   });
@@ -203,9 +208,9 @@ describe('XmlSignerService multi-tenant and helper methods', () => {
   });
 
   it('throws error when signXml is called before loading a certificate', async () => {
-    await expect(
-      service.signXml('<facturaId="comprobante"/>'),
-    ).rejects.toThrow('No hay certificado cargado');
+    await expect(service.signXml('<facturaId="comprobante"/>')).rejects.toThrow(
+      'No hay certificado cargado',
+    );
   });
 
   it('loads emisor certificate from database and RustFS storage', async () => {
@@ -218,15 +223,17 @@ describe('XmlSignerService multi-tenant and helper methods', () => {
     mockEncryptionService.decrypt.mockResolvedValue(p12Password);
     mockStorageService.ensureBucketForRuc.mockResolvedValue('bucket-certs');
 
-    const stream = require('stream').Readable.from([p12Buffer]);
-    mockStorageService.getObject.mockResolvedValue(stream as any);
+    const stream = Readable.from([p12Buffer]);
+    mockStorageService.getObject.mockResolvedValue(stream);
 
     const certData = await service.loadEmisorCertificate(ruc);
 
     expect(certData.privateKey).toBeDefined();
     expect(certData.certificate).toBeDefined();
     expect(mockEmisorRepo.findByRuc).toHaveBeenCalledWith(ruc);
-    expect(mockEncryptionService.decrypt).toHaveBeenCalledWith('encrypted-pass');
+    expect(mockEncryptionService.decrypt).toHaveBeenCalledWith(
+      'encrypted-pass',
+    );
 
     // Second call should return cached certificate without querying repository or storage
     const cachedData = await service.loadEmisorCertificate(ruc);
@@ -255,7 +262,9 @@ describe('XmlSignerService multi-tenant and helper methods', () => {
 
     mockEncryptionService.decrypt.mockResolvedValue(p12Password);
     mockStorageService.ensureBucketForRuc.mockResolvedValue('bucket-certs');
-    mockStorageService.getObject.mockRejectedValue(new Error('Storage failure'));
+    mockStorageService.getObject.mockRejectedValue(
+      new Error('Storage failure'),
+    );
 
     await expect(service.loadEmisorCertificate(ruc)).rejects.toThrow(
       'no se pudo leer desde RustFS',
@@ -272,10 +281,11 @@ describe('XmlSignerService multi-tenant and helper methods', () => {
     mockEncryptionService.decrypt.mockResolvedValue(p12Password);
     mockStorageService.ensureBucketForRuc.mockResolvedValue('bucket-certs');
 
-    const stream = require('stream').Readable.from([p12Buffer]);
-    mockStorageService.getObject.mockResolvedValue(stream as any);
+    const stream = Readable.from([p12Buffer]);
+    mockStorageService.getObject.mockResolvedValue(stream);
 
-    const xmlInput = '<factura id="comprobante"><infoTributaria>test</infoTributaria></factura>';
+    const xmlInput =
+      '<factura id="comprobante"><infoTributaria>test</infoTributaria></factura>';
     const signedXml = await service.signXmlForEmisor(xmlInput, ruc);
 
     expect(signedXml).toContain('ds:Signature');
@@ -284,7 +294,8 @@ describe('XmlSignerService multi-tenant and helper methods', () => {
 
   it('verifies a signed XML signature and handles verification failures gracefully', async () => {
     await service.loadCertificateFromBuffer(p12Buffer, p12Password);
-    const xmlInput = '<factura id="comprobante"><infoTributaria>test</infoTributaria></factura>';
+    const xmlInput =
+      '<factura id="comprobante"><infoTributaria>test</infoTributaria></factura>';
     const signedXml = await service.signXml(xmlInput);
 
     const isValid = await service.verifySignature(signedXml);
@@ -305,19 +316,18 @@ describe('XmlSignerService multi-tenant and helper methods', () => {
     mockEncryptionService.decrypt.mockResolvedValue(p12Password);
     mockStorageService.ensureBucketForRuc.mockResolvedValue('bucket-certs');
 
-    const stream = require('stream').Readable.from([p12Buffer]);
-    mockStorageService.getObject.mockResolvedValue(stream as any);
+    const stream = Readable.from([p12Buffer]);
+    mockStorageService.getObject.mockResolvedValue(stream);
 
     await service.loadEmisorCertificate(ruc);
     service.clearEmisorCache(ruc);
 
     // After clearing cache, loadEmisorCertificate should hit repository again
-    const stream2 = require('stream').Readable.from([p12Buffer]);
-    mockStorageService.getObject.mockResolvedValue(stream2 as any);
+    const stream2 = Readable.from([p12Buffer]);
+    mockStorageService.getObject.mockResolvedValue(stream2);
     await service.loadEmisorCertificate(ruc);
     expect(mockEmisorRepo.findByRuc).toHaveBeenCalledTimes(2);
 
     service.clearAllCache();
   });
 });
-

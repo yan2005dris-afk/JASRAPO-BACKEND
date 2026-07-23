@@ -72,7 +72,7 @@ describe('ClaveAccesoService', () => {
 
     it('generates a random 8-digit codigoNumerico when not provided', () => {
       const { codigoNumerico: _codigoNumerico, ...rest } = baseData;
-      const clave = service.generate(rest as ClaveAccesoData);
+      const clave = service.generate(rest);
 
       expect(/^\d{8}$/.test(clave.substring(39, 47))).toBe(true);
     });
@@ -91,9 +91,9 @@ describe('ClaveAccesoService', () => {
     });
 
     it('throws when the RUC does not have 13 digits', () => {
-      expect(() =>
-        service.generate({ ...baseData, ruc: '123456789' }),
-      ).toThrow('RUC inválido');
+      expect(() => service.generate({ ...baseData, ruc: '123456789' })).toThrow(
+        'RUC inválido',
+      );
     });
 
     it('strips non-numeric characters from the RUC before validating length', () => {
@@ -148,9 +148,7 @@ describe('ClaveAccesoService', () => {
       // the check digit — the recomputed módulo 11 must no longer match.
       const corruptedDigit = validClave.charAt(15) === '9' ? '8' : '9';
       const corrupted =
-        validClave.substring(0, 15) +
-        corruptedDigit +
-        validClave.substring(16);
+        validClave.substring(0, 15) + corruptedDigit + validClave.substring(16);
 
       expect(corrupted).not.toBe(validClave);
       expect(service.validate(corrupted)).toBe(false);

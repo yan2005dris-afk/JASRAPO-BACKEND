@@ -121,9 +121,7 @@ describe('XmlBuilderService', () => {
       const xml = service.buildFactura(buildFacturaFixture());
       const parsed = await parseXml(xml);
 
-      expect(xml.startsWith('<?xml version="1.0" encoding="UTF-8"')).toBe(
-        true,
-      );
+      expect(xml.startsWith('<?xml version="1.0" encoding="UTF-8"')).toBe(true);
       expect(parsed.factura).toBeDefined();
       expect(parsed.factura.$.id).toBe('comprobante');
       expect(parsed.factura.$.version).toBe(FACTURA_VERSION);
@@ -245,7 +243,9 @@ describe('XmlBuilderService', () => {
   });
 
   describe('buildNotaCredito', () => {
-    const buildNotaCreditoFixture = (overrides: Partial<NotaCredito> = {}): NotaCredito => ({
+    const buildNotaCreditoFixture = (
+      overrides: Partial<NotaCredito> = {},
+    ): NotaCredito => ({
       infoTributaria: baseInfoTributaria(TipoComprobante.NOTA_CREDITO),
       infoNotaCredito: {
         fechaEmision: '03/07/2026',
@@ -315,12 +315,18 @@ describe('XmlBuilderService', () => {
     it('includes infoAdicional on notaCredito when provided', async () => {
       const xml = service.buildNotaCredito(
         buildNotaCreditoFixture({
-          infoAdicional: [{ nombre: 'Observacion', valor: 'Nota de credito test' }],
+          infoAdicional: [
+            { nombre: 'Observacion', valor: 'Nota de credito test' },
+          ],
         }),
       );
       const parsed = await parseXml(xml);
-      expect(parsed.notaCredito.infoAdicional.campoAdicional.$.nombre).toBe('Observacion');
-      expect(parsed.notaCredito.infoAdicional.campoAdicional._).toBe('Nota de credito test');
+      expect(parsed.notaCredito.infoAdicional.campoAdicional.$.nombre).toBe(
+        'Observacion',
+      );
+      expect(parsed.notaCredito.infoAdicional.campoAdicional._).toBe(
+        'Nota de credito test',
+      );
     });
   });
 
@@ -374,8 +380,12 @@ describe('XmlBuilderService', () => {
         }),
       );
       const parsed = await parseXml(xml);
-      expect(parsed.notaDebito.infoAdicional.campoAdicional.$.nombre).toBe('Nota');
-      expect(parsed.notaDebito.infoAdicional.campoAdicional._).toBe('Debito adicional');
+      expect(parsed.notaDebito.infoAdicional.campoAdicional.$.nombre).toBe(
+        'Nota',
+      );
+      expect(parsed.notaDebito.infoAdicional.campoAdicional._).toBe(
+        'Debito adicional',
+      );
     });
   });
 
@@ -439,9 +449,7 @@ describe('XmlBuilderService', () => {
       const xml = service.buildRetencion(buildRetencionFixture());
       const parsed = await parseXml(xml);
 
-      expect(parsed.comprobanteRetencion.infoCompRetencion.parteRel).toBe(
-        'NO',
-      );
+      expect(parsed.comprobanteRetencion.infoCompRetencion.parteRel).toBe('NO');
     });
 
     it('honors an explicit parteRel value', async () => {
@@ -450,9 +458,7 @@ describe('XmlBuilderService', () => {
       );
       const parsed = await parseXml(xml);
 
-      expect(parsed.comprobanteRetencion.infoCompRetencion.parteRel).toBe(
-        'SI',
-      );
+      expect(parsed.comprobanteRetencion.infoCompRetencion.parteRel).toBe('SI');
     });
 
     it('omits tipoSujetoRetenido for a local identification type', async () => {
@@ -496,8 +502,7 @@ describe('XmlBuilderService', () => {
         ]),
       );
       const parsed = await parseXml(xml);
-      const docSustento =
-        parsed.comprobanteRetencion.docsSustento.docSustento;
+      const docSustento = parsed.comprobanteRetencion.docsSustento.docSustento;
 
       expect(Array.isArray(docSustento)).toBe(false);
       expect(docSustento.retenciones.retencion).toHaveLength(2);
@@ -513,8 +518,7 @@ describe('XmlBuilderService', () => {
         ]),
       );
       const parsed = await parseXml(xml);
-      const docSustento =
-        parsed.comprobanteRetencion.docsSustento.docSustento;
+      const docSustento = parsed.comprobanteRetencion.docsSustento.docSustento;
 
       expect(Array.isArray(docSustento)).toBe(true);
       expect(docSustento).toHaveLength(2);
@@ -527,8 +531,12 @@ describe('XmlBuilderService', () => {
         }),
       );
       const parsed = await parseXml(xml);
-      expect(parsed.comprobanteRetencion.infoAdicional.campoAdicional.$.nombre).toBe('Email');
-      expect(parsed.comprobanteRetencion.infoAdicional.campoAdicional._).toBe('proveedor@test.com');
+      expect(
+        parsed.comprobanteRetencion.infoAdicional.campoAdicional.$.nombre,
+      ).toBe('Email');
+      expect(parsed.comprobanteRetencion.infoAdicional.campoAdicional._).toBe(
+        'proveedor@test.com',
+      );
     });
   });
 
@@ -540,4 +548,3 @@ describe('XmlBuilderService', () => {
     });
   });
 });
-
