@@ -437,7 +437,8 @@ export class XmlSignerService implements OnModuleInit {
 
     // Cache the result with timestamp (evicting oldest entry if at max capacity)
     if (
-      this.emisorCertificateCache.size >= XmlSignerService.CERT_CACHE_MAX_ENTRIES
+      this.emisorCertificateCache.size >=
+      XmlSignerService.CERT_CACHE_MAX_ENTRIES
     ) {
       const oldestKey = this.emisorCertificateCache.keys().next().value;
       if (oldestKey) {
