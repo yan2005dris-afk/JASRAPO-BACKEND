@@ -2,7 +2,8 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { IdentificacionValidatorService } from './identificacion-validator.service';
 import { CatalogoValidatorService } from './catalogo-validator.service';
-import { Ambiente } from '../../domain/constants';
+import { SriAvailabilityService } from '../soap/sri-availability.service';
+import { Ambiente, TipoEmision } from '../../domain/constants';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
@@ -17,6 +18,7 @@ export class SriBaseService {
     private readonly configService: ConfigService,
     private readonly identificacionValidator: IdentificacionValidatorService,
     private readonly catalogoValidator: CatalogoValidatorService,
+    private readonly sriAvailability: SriAvailabilityService,
     private readonly logger: LoggerService,
   ) {}
 
@@ -29,6 +31,35 @@ export class SriBaseService {
       'development',
     );
     return env === 'production' ? Ambiente.PRODUCCION : Ambiente.PRUEBAS;
+  }
+
+  /**
+   * Decide el `tipoEmision` a usar para un comprobante nuevo (issue #201).
+   *
+   * - Si el llamador pidió explícitamente un `tipoEmision` (DTO), se respeta
+   *   siempre — control manual del operador nunca es sobreescrito.
+   * - Si no se pidió nada y el SRI está detectado como no disponible
+   *   (circuit breaker de Recepción abierto para ese ambiente), se usa
+   *   `CONTINGENCIA` automáticamente.
+   * - En cualquier otro caso, `NORMAL`.
+   */
+  resolverTipoEmision(
+    ambiente: Ambiente,
+    tipoEmisionSolicitado?: TipoEmision,
+  ): TipoEmision {
+    if (tipoEmisionSolicitado) {
+      return tipoEmisionSolicitado;
+    }
+
+    if (this.sriAvailability.isSriDown(ambiente)) {
+      this.logger.warn(
+        `SRI no disponible para ambiente ${ambiente} (circuit breaker abierto). ` +
+          'Generando comprobante en modo CONTINGENCIA (tipoEmision=2).',
+      );
+      return TipoEmision.CONTINGENCIA;
+    }
+
+    return TipoEmision.NORMAL;
   }
 
   /**

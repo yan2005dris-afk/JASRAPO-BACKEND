@@ -29,7 +29,13 @@ describe('ComprobanteEstado', () => {
     expect(ComprobanteEstado.POR_EMITIR).toBe('POR_EMITIR');
   });
 
-  it('should contain exactly 7 states', () => {
+  it('should have PENDIENTE_CONTINGENCIA state (issue #201: SRI contingency mode)', () => {
+    expect(ComprobanteEstado.PENDIENTE_CONTINGENCIA).toBe(
+      'PENDIENTE_CONTINGENCIA',
+    );
+  });
+
+  it('should contain exactly 8 states', () => {
     const values = Object.values(ComprobanteEstado);
     expect(values).toEqual([
       'BORRADOR',
@@ -39,6 +45,7 @@ describe('ComprobanteEstado', () => {
       'RECHAZADO',
       'DEVUELTA',
       'POR_EMITIR',
+      'PENDIENTE_CONTINGENCIA',
     ]);
   });
 

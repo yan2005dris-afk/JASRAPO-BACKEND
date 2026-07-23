@@ -61,4 +61,31 @@ export class SimpleCircuitBreaker {
       throw error;
     }
   }
+
+  /**
+   * Estado actual del breaker. HALF-OPEN cuenta como degradado/no disponible
+   * para efectos de decisiones de negocio (p. ej. modo de contingencia SRI):
+   * el servicio sigue considerándose no confiable hasta que una llamada
+   * real lo confirme y lo devuelva a CLOSED.
+   */
+  getState(): 'CLOSED' | 'OPEN' | 'HALF-OPEN' {
+    return this.state;
+  }
+
+  /**
+   * true si el circuito está abierto o probando recuperación (HALF-OPEN).
+   * Útil para lógica de negocio que necesita saber "¿el servicio está caído?"
+   * sin acoplarse a los 3 estados internos.
+   */
+  isOpen(): boolean {
+    return this.state === 'OPEN' || this.state === 'HALF-OPEN';
+  }
+
+  getFailureCount(): number {
+    return this.failureCount;
+  }
+
+  getName(): string {
+    return this.name;
+  }
 }

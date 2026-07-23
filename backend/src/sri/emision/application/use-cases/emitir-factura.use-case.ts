@@ -82,7 +82,12 @@ export class EmitirFacturaUseCase {
 
       // Variables de configuración
       const ambiente = dto.ambiente || this.base.getDefaultAmbiente();
-      const tipoEmision = dto.tipoEmision || TipoEmision.NORMAL;
+      // Issue #201: si el SRI está caído (circuit breaker abierto) y el
+      // caller no pidió un tipoEmision explícito, se emite en CONTINGENCIA.
+      const tipoEmision = this.base.resolverTipoEmision(
+        ambiente,
+        dto.tipoEmision,
+      );
       const [day, month, year] = dto.fechaEmision.split('/');
       const fechaEmision = new Date(
         parseInt(year),
@@ -202,11 +207,35 @@ export class EmitirFacturaUseCase {
           claveAcceso,
         );
       } catch (error) {
-        // El SRI no respondió — el registro ya existe como FIRMADO
-        this.logger.warn(
-          `SRI no respondió para factura ${claveAcceso}: ${error.message}`,
-        );
-        throw error;
+        if (tipoEmision === TipoEmision.CONTINGENCIA) {
+          // Issue #201: en modo contingencia el fallo de envío al SRI no
+          // debe bloquear la emisión — el comprobante queda FIRMADO y
+          // válido para entrega, pendiente de reenvío cuando el SRI se
+          // recupere (ver POST /sri/sincronizar o /reintentar).
+          this.logger.warn(
+            `SRI no disponible en modo contingencia para factura ${claveAcceso}, ` +
+              `queda pendiente de reenvío: ${(error as Error).message}`,
+          );
+          resultado = {
+            success: false,
+            claveAcceso,
+            estado: ComprobanteEstado.PENDIENTE_CONTINGENCIA,
+            mensajes: [
+              {
+                identificador: 'CONTINGENCIA',
+                mensaje:
+                  'Comprobante emitido en modo contingencia (SRI no disponible); pendiente de envío.',
+                tipo: 'ADVERTENCIA',
+              },
+            ],
+          };
+        } else {
+          // El SRI no respondió — el registro ya existe como FIRMADO
+          this.logger.warn(
+            `SRI no respondió para factura ${claveAcceso}: ${error.message}`,
+          );
+          throw error;
+        }
       }
 
       // ─── FASE 3: Transacción corta (~5ms) — Actualizar resultado ───

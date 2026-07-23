@@ -22,6 +22,7 @@ import { XmlBuilderService } from './infrastructure/xml/xml-builder.service';
 import { XmlSignerService } from './infrastructure/xml/xml-signer.service';
 import { SriSoapClient } from './infrastructure/soap/sri-soap.client';
 import { SriSoapFactoryService } from './infrastructure/soap/sri-soap-factory.service';
+import { SriAvailabilityService } from './infrastructure/soap/sri-availability.service';
 import { XmlStorageService } from './infrastructure/storage/xml-storage.service';
 import { ImageService } from './infrastructure/storage/image.service';
 import { PdfImageService } from './infrastructure/storage/pdf-image.service';
@@ -66,6 +67,7 @@ import { JobsService } from '../../infrastructure/jobs/jobs.service';
     XmlSignerService,
     SriSoapClient,
     SriSoapFactoryService,
+    SriAvailabilityService,
     XmlStorageService,
     ImageService,
     PdfImageService,
@@ -108,6 +110,7 @@ import { JobsService } from '../../infrastructure/jobs/jobs.service';
     XmlSignerService,
     PdfService,
     TemplateService,
+    SriAvailabilityService,
   ],
 })
 export class EmisionModule {}

@@ -460,12 +460,15 @@ export class SriService {
 
     const estadoActual = comprobante.estado;
 
-    // Solo permitir reintentar si está DEVUELTA o RECHAZADO
+    // Solo permitir reintentar si está DEVUELTA, RECHAZADO, o pendiente de
+    // envío (incluye PENDIENTE_CONTINGENCIA — issue #201: comprobantes
+    // emitidos en modo contingencia porque el SRI estaba caído).
     const estadosReintentables = [
       'DEVUELTA',
       'RECHAZADO',
       'PENDIENTE',
       'EN_PROCESO',
+      'PENDIENTE_CONTINGENCIA',
     ];
     if (!estadosReintentables.includes(estadoActual)) {
       throw new BadRequestException(
@@ -660,7 +663,16 @@ export class SriService {
       accion: string;
     }>;
   }> {
-    const estados = options.estados || ['PENDIENTE', 'EN_PROCESO', 'DEVUELTA'];
+    // PENDIENTE_CONTINGENCIA (issue #201) se incluye por defecto: son
+    // comprobantes emitidos con tipoEmision=CONTINGENCIA cuyo envío al SRI
+    // falló porque el servicio estaba caído — nunca llegaron a existir en
+    // el SRI, así que caen en la rama "NO EXISTE" + reintentar de abajo.
+    const estados = options.estados || [
+      'PENDIENTE',
+      'EN_PROCESO',
+      'DEVUELTA',
+      'PENDIENTE_CONTINGENCIA',
+    ];
     const reintentar = options.reintentar || false;
     const limiteGlobal = Math.min(
       options.limite || 200,

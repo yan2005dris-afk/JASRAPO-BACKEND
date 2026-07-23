@@ -71,7 +71,12 @@ export class EmitirNotaCreditoUseCase {
       await this.base.validarDocumentoSustentoCatalogo(dto.codDocModificado);
 
       const ambiente = dto.ambiente || this.base.getDefaultAmbiente();
-      const tipoEmision = dto.tipoEmision || TipoEmision.NORMAL;
+      // Issue #201: si el SRI está caído (circuit breaker abierto) y el
+      // caller no pidió un tipoEmision explícito, se emite en CONTINGENCIA.
+      const tipoEmision = this.base.resolverTipoEmision(
+        ambiente,
+        dto.tipoEmision,
+      );
 
       // Get emisor info from database
       const emisor = await this.emisorRepository.findByRuc(dto.emisor.ruc);
@@ -188,10 +193,37 @@ export class EmitirNotaCreditoUseCase {
       );
 
       // 2. Llamada al SRI
-      const resultado = await this.sriSoapClient.enviarYAutorizar(
-        xmlFirmado,
-        claveAcceso,
-      );
+      let resultado: SriOperationResult;
+      try {
+        resultado = await this.sriSoapClient.enviarYAutorizar(
+          xmlFirmado,
+          claveAcceso,
+        );
+      } catch (error) {
+        if (tipoEmision === TipoEmision.CONTINGENCIA) {
+          // Issue #201: en modo contingencia el fallo de envío al SRI no
+          // debe bloquear la emisión — queda pendiente de reenvío.
+          this.logger.warn(
+            `SRI no disponible en modo contingencia para NC ${claveAcceso}, ` +
+              `queda pendiente de reenvío: ${(error as Error).message}`,
+          );
+          resultado = {
+            success: false,
+            claveAcceso,
+            estado: 'PENDIENTE_CONTINGENCIA',
+            mensajes: [
+              {
+                identificador: 'CONTINGENCIA',
+                mensaje:
+                  'Comprobante emitido en modo contingencia (SRI no disponible); pendiente de envío.',
+                tipo: 'ADVERTENCIA',
+              },
+            ],
+          };
+        } else {
+          throw error;
+        }
+      }
 
       // 3. Actualización de estado final en BD
       await this.comprobanteRepository.update(comprobante.id, {
