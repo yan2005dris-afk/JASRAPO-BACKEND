@@ -8,11 +8,6 @@ import {
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
-/** Minimal interface for the job service, shared with SRIEmissionDispatcherService */
-export interface JobService {
-  send(name: string, data: object): Promise<string>;
-}
-
 /**
  * W-3: The handler is now invoked directly by the outbox processor (no longer
  * an `@OnEvent('pago.validado')` listener). Removing the in-process event
