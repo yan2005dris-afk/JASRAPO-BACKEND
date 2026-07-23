@@ -9,6 +9,7 @@ import {
   PgBoss,
   JobInsert,
   SendOptions,
+  ScheduleOptions,
   WorkHandler,
   WorkWithMetadataHandler,
 } from 'pg-boss';
@@ -88,6 +89,22 @@ export class JobsService implements OnModuleInit, OnModuleDestroy {
   ): Promise<string> {
     await this.ensureQueue(name);
     return this.boss.work(name, { includeMetadata: true }, handler);
+  }
+
+  /**
+   * Registra (o actualiza) un job periódico basado en una expresión cron.
+   * Reutiliza el mismo motor de PgBoss usado para las colas transaccionales,
+   * evitando introducir una librería de scheduling adicional (@nestjs/schedule).
+   * Si el schedule ya existe para esa cola, PgBoss lo actualiza.
+   */
+  async schedule(
+    name: string,
+    cron: string,
+    data: object | null = null,
+    options?: ScheduleOptions,
+  ): Promise<void> {
+    await this.ensureQueue(name);
+    return this.boss.schedule(name, cron, data, options);
   }
 
   getBossInstance(): PgBoss {
