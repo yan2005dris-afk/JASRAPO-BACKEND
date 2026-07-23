@@ -25,42 +25,24 @@ describe('BusquedaPublicaController', () => {
 
   afterEach(() => jest.clearAllMocks());
 
-  it('search() delegates to service with all query params', async () => {
-    const expected = { data: [], meta: { total: 0, page: 1, limit: 10 } };
+  it('search() delegates to service with query params', async () => {
+    const expected = {
+      cliente: { nombre: 'Juan', identificacion: '0912345678' },
+      contratos: [],
+      totalDeuda: 0,
+    };
     mockService.search.mockResolvedValue(expected);
 
     const result = await controller.search({
       tipo: 'identificacion',
       valor: '0912345678',
-      page: 1,
-      limit: 10,
     });
 
     expect(mockService.search).toHaveBeenCalledWith(
       'identificacion',
       '0912345678',
-      1,
-      10,
     );
     expect(result).toBe(expected);
-  });
-
-  it('search() applies ?? fallbacks when page and limit are undefined', async () => {
-    mockService.search.mockResolvedValue({ data: [], meta: {} });
-
-    await controller.search({
-      tipo: 'nombre',
-      valor: 'Ana Torres',
-      page: undefined as any,
-      limit: undefined as any,
-    });
-
-    expect(mockService.search).toHaveBeenCalledWith(
-      'nombre',
-      'Ana Torres',
-      1,
-      10,
-    );
   });
 
   it('search() propagates errors from the service', async () => {
@@ -70,8 +52,6 @@ describe('BusquedaPublicaController', () => {
       controller.search({
         tipo: 'numeroGuia',
         valor: 'GU-001',
-        page: 1,
-        limit: 10,
       }),
     ).rejects.toThrow('service failure');
   });

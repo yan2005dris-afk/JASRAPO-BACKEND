@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { BusquedaPublicaRepository } from '../../domain/repositories/busqueda-publica.repository';
 import { DebtCalculatorHelper } from 'src/shared/utils/debt-calculator.util';
 import type {
@@ -7,7 +11,6 @@ import type {
 } from '../../domain/types/debt-search.types';
 import type {
   ContratoDeudaPublicaDto,
-  DeudaPublicaItemDto,
   DeudaPublicaResponseDto,
 } from '../../interfaces/dto/deuda-publica-response.dto';
 
@@ -18,60 +21,48 @@ export class SearchDeudaPublicaUseCase {
   async execute(
     tipo: TipoBusquedaDeuda,
     valor: string,
-    page = 1,
-    limit = 10,
   ): Promise<DeudaPublicaResponseDto> {
     const normalizedValor = valor?.trim();
     if (!normalizedValor) {
       throw new BadRequestException('El valor de búsqueda es obligatorio');
     }
 
-    const parsedLimit = Number.isFinite(limit) ? Math.trunc(limit) : 10;
-    const parsedPage = Number.isFinite(page) ? Math.trunc(page) : 1;
-    const safeLimit = Math.min(Math.max(parsedLimit, 1), 50);
-    const safePage = Math.max(parsedPage, 1);
-    const skip = (safePage - 1) * safeLimit;
+    let resultado: DeudaPublicaResponseDto | null = null;
 
     if (tipo === 'numeroGuia') {
-      const [contratos, total] = await Promise.all([
-        this.searchRepository.findContratosDeudaBy(
-          tipo,
-          normalizedValor,
-          skip,
-          safeLimit,
-        ),
-        this.searchRepository.countContratosDeuda(tipo, normalizedValor),
-      ]);
-      return {
-        data: this.agruparPorCliente(contratos),
-        meta: { total, page: safePage, limit: safeLimit },
-      };
-    }
-
-    const [clientes, total] = await Promise.all([
-      this.searchRepository.findClientesBy(
+      const contratos = await this.searchRepository.findContratosDeudaBy(
         tipo,
         normalizedValor,
-        skip,
-        safeLimit,
-      ),
-      this.searchRepository.countClientesBy(tipo, normalizedValor),
-    ]);
-    return {
-      data: this.mapearClientes(clientes),
-      meta: { total, page: safePage, limit: safeLimit },
-    };
+        0,
+        50,
+      );
+      const agrupados = this.agruparPorCliente(contratos);
+      resultado = agrupados.length > 0 ? agrupados[0] : null;
+    } else {
+      const clientes = await this.searchRepository.findClientesBy(
+        tipo,
+        normalizedValor,
+        0,
+        50,
+      );
+      const mapeados = this.mapearClientes(clientes);
+      resultado = mapeados.length > 0 ? mapeados[0] : null;
+    }
+
+    if (!resultado) {
+      throw new NotFoundException(
+        'No se encontró registro de deuda para el parámetro ingresado',
+      );
+    }
+
+    return resultado;
   }
 
   private mapearClientes(
     clientes: IClienteConContratosRaw[],
-  ): DeudaPublicaItemDto[] {
-    return clientes.map((cliente) => ({
-      cliente: {
-        nombre: this.formatearNombre(cliente.nombres, cliente.apellidos),
-        identificacion: cliente.identificacion,
-      },
-      contratos: cliente.contratos.map(
+  ): DeudaPublicaResponseDto[] {
+    return clientes.map((cliente) => {
+      const contratos = cliente.contratos.map(
         (c): ContratoDeudaPublicaDto => ({
           contratoId: String(c.contratoId),
           numeroGuia: c.numeroGuia,
@@ -86,16 +77,26 @@ export class SearchDeudaPublicaUseCase {
             c.prefacturasImpagadas,
           ),
         }),
-      ),
-    }));
+      );
+      const totalDeuda = contratos.reduce((acc, c) => acc + c.saldoVencido, 0);
+
+      return {
+        cliente: {
+          nombre: this.formatearNombre(cliente.nombres, cliente.apellidos),
+          identificacion: cliente.identificacion,
+        },
+        contratos,
+        totalDeuda,
+      };
+    });
   }
 
   private agruparPorCliente(
     contratos: Awaited<
       ReturnType<BusquedaPublicaRepository['findContratosDeudaBy']>
     >,
-  ): DeudaPublicaItemDto[] {
-    const mapa = new Map<string, DeudaPublicaItemDto>();
+  ): DeudaPublicaResponseDto[] {
+    const mapa = new Map<string, DeudaPublicaResponseDto>();
 
     for (const contrato of contratos) {
       const clienteKey = String(contrato.cliente.clienteId);
@@ -111,6 +112,7 @@ export class SearchDeudaPublicaUseCase {
             identificacion: contrato.cliente.identificacion,
           },
           contratos: [],
+          totalDeuda: 0,
         });
       }
 
@@ -129,7 +131,9 @@ export class SearchDeudaPublicaUseCase {
         ),
       };
 
-      mapa.get(clienteKey)!.contratos.push(contratoDto);
+      const entry = mapa.get(clienteKey)!;
+      entry.contratos.push(contratoDto);
+      entry.totalDeuda += contratoDto.saldoVencido;
     }
 
     return Array.from(mapa.values());
