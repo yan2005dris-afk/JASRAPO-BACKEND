@@ -6,14 +6,14 @@ import type {
 
 export abstract class BusquedaPublicaRepository {
   abstract findClientesBy(
-    tipo: 'identificacion' | 'nombre',
+    tipo: 'identificacion',
     valor: string,
     skip: number,
     take: number,
   ): Promise<IClienteConContratosRaw[]>;
 
   abstract countClientesBy(
-    tipo: 'identificacion' | 'nombre',
+    tipo: 'identificacion',
     valor: string,
   ): Promise<number>;
 

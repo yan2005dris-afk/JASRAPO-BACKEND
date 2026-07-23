@@ -43,7 +43,7 @@ export class SearchDeudaPublicaUseCase {
         this.searchRepository.countContratosDeuda(tipo, normalizedValor),
       ]);
       return {
-        data: this.agruparPorCliente(contratos, tipo),
+        data: this.agruparPorCliente(contratos),
         meta: { total, page: safePage, limit: safeLimit },
       };
     }
@@ -58,19 +58,18 @@ export class SearchDeudaPublicaUseCase {
       this.searchRepository.countClientesBy(tipo, normalizedValor),
     ]);
     return {
-      data: this.mapearClientes(clientes, tipo),
+      data: this.mapearClientes(clientes),
       meta: { total, page: safePage, limit: safeLimit },
     };
   }
 
   private mapearClientes(
     clientes: IClienteConContratosRaw[],
-    tipo: TipoBusquedaDeuda,
   ): DeudaPublicaItemDto[] {
     return clientes.map((cliente) => ({
       cliente: {
         nombre: this.formatearNombre(cliente.nombres, cliente.apellidos),
-        identificacion: this.mapearIdentificacion(cliente.identificacion, tipo),
+        identificacion: cliente.identificacion,
       },
       contratos: cliente.contratos.map(
         (c): ContratoDeudaPublicaDto => ({
@@ -95,7 +94,6 @@ export class SearchDeudaPublicaUseCase {
     contratos: Awaited<
       ReturnType<BusquedaPublicaRepository['findContratosDeudaBy']>
     >,
-    tipo: TipoBusquedaDeuda,
   ): DeudaPublicaItemDto[] {
     const mapa = new Map<string, DeudaPublicaItemDto>();
 
@@ -110,10 +108,7 @@ export class SearchDeudaPublicaUseCase {
         mapa.set(clienteKey, {
           cliente: {
             nombre,
-            identificacion: this.mapearIdentificacion(
-              contrato.cliente.identificacion,
-              tipo,
-            ),
+            identificacion: contrato.cliente.identificacion,
           },
           contratos: [],
         });
@@ -148,39 +143,5 @@ export class SearchDeudaPublicaUseCase {
       `${nombres ?? ''} ${apellidos ?? ''}`.trim().replace(/\s+/g, ' ') ||
       'Sin nombre'
     );
-  }
-
-  /**
-   * Búsquedas por `nombre` no prueban identidad (a diferencia de
-   * `identificacion`/`numeroGuia`, que actúan como secretos compartidos), por
-   * lo que la identificación se enmascara en la respuesta para evitar
-   * exponer cédula/RUC completos a partir de un nombre filtrado.
-   */
-  private mapearIdentificacion(
-    identificacion: string | null,
-    tipo: TipoBusquedaDeuda,
-  ): string | null {
-    if (tipo !== 'nombre') {
-      return identificacion;
-    }
-    return this.enmascararIdentificacion(identificacion);
-  }
-
-  private enmascararIdentificacion(
-    identificacion: string | null,
-  ): string | null {
-    if (!identificacion) {
-      return identificacion;
-    }
-
-    const visibles = 3;
-    if (identificacion.length <= visibles * 2) {
-      return '*'.repeat(identificacion.length);
-    }
-
-    const inicio = identificacion.slice(0, visibles);
-    const fin = identificacion.slice(-visibles);
-    const oculto = '*'.repeat(identificacion.length - visibles * 2);
-    return `${inicio}${oculto}${fin}`;
   }
 }

@@ -50,7 +50,7 @@ describe('SearchDeudaPublicaUseCase', () => {
   describe('routing — which repo method is called per tipo', () => {
     it('identificacion uses findClientesBy and skips findContratosDeudaBy', async () => {
       const repo = createMockRepo([makeCliente()]);
-      const useCase = new SearchDeudaPublicaUseCase(repo);
+      const useCase = new SearchDeudaPublicaUseCase(repo as any);
 
       await useCase.execute('identificacion', '0912345678');
 
@@ -63,24 +63,9 @@ describe('SearchDeudaPublicaUseCase', () => {
       expect(repo.findContratosDeudaBy).not.toHaveBeenCalled();
     });
 
-    it('nombre uses findClientesBy and skips findContratosDeudaBy', async () => {
-      const repo = createMockRepo([makeCliente()]);
-      const useCase = new SearchDeudaPublicaUseCase(repo);
-
-      await useCase.execute('nombre', 'Juan Pérez');
-
-      expect(repo.findClientesBy).toHaveBeenCalledWith(
-        'nombre',
-        'Juan Pérez',
-        0,
-        10,
-      );
-      expect(repo.findContratosDeudaBy).not.toHaveBeenCalled();
-    });
-
     it('numeroGuia uses findContratosDeudaBy and skips findClientesBy', async () => {
       const repo = createMockRepo([], [makeContratoRaw()]);
-      const useCase = new SearchDeudaPublicaUseCase(repo);
+      const useCase = new SearchDeudaPublicaUseCase(repo as any);
 
       await useCase.execute('numeroGuia', 'G-001');
 
@@ -94,10 +79,10 @@ describe('SearchDeudaPublicaUseCase', () => {
     });
   });
 
-  describe('identificacion / nombre path (client-first)', () => {
+  describe('identificacion path (client-first)', () => {
     it('returns client with no contracts when client has none', async () => {
       const useCase = new SearchDeudaPublicaUseCase(
-        createMockRepo([makeCliente()]),
+        createMockRepo([makeCliente()]) as any,
       );
 
       const result = await useCase.execute('identificacion', '0912345678');
@@ -111,9 +96,9 @@ describe('SearchDeudaPublicaUseCase', () => {
         makeCliente({ clienteId: 1n }),
         makeCliente({ clienteId: 2n, identificacion: '0999999999' }),
       ];
-      const useCase = new SearchDeudaPublicaUseCase(createMockRepo(clientes));
+      const useCase = new SearchDeudaPublicaUseCase(createMockRepo(clientes) as any);
 
-      const result = await useCase.execute('nombre', 'juan');
+      const result = await useCase.execute('identificacion', '0912345678');
 
       expect(result.data).toHaveLength(2);
     });
@@ -133,7 +118,7 @@ describe('SearchDeudaPublicaUseCase', () => {
           },
         ],
       });
-      const useCase = new SearchDeudaPublicaUseCase(createMockRepo([cliente]));
+      const useCase = new SearchDeudaPublicaUseCase(createMockRepo([cliente]) as any);
 
       const result = await useCase.execute('identificacion', '0912345678');
       const contrato = result.data[0].contratos[0];
@@ -145,7 +130,7 @@ describe('SearchDeudaPublicaUseCase', () => {
 
     it('returns Sin nombre when nombres and apellidos are null', async () => {
       const useCase = new SearchDeudaPublicaUseCase(
-        createMockRepo([makeCliente({ nombres: null, apellidos: null })]),
+        createMockRepo([makeCliente({ nombres: null, apellidos: null })]) as any,
       );
 
       const result = await useCase.execute('identificacion', '0912345678');
@@ -154,20 +139,10 @@ describe('SearchDeudaPublicaUseCase', () => {
     });
   });
 
-  describe('identificacion masking (PII leak fix — issue #184)', () => {
-    it('masks identificacion in the response when tipo=nombre', async () => {
-      const useCase = new SearchDeudaPublicaUseCase(
-        createMockRepo([makeCliente({ identificacion: '0912345678' })]),
-      );
-
-      const result = await useCase.execute('nombre', 'Juan Pérez');
-
-      expect(result.data[0].cliente.identificacion).toBe('091****678');
-    });
-
+  describe('identificacion exposure (unmasked for exact search factors)', () => {
     it('does not mask identificacion when tipo=identificacion', async () => {
       const useCase = new SearchDeudaPublicaUseCase(
-        createMockRepo([makeCliente({ identificacion: '0912345678' })]),
+        createMockRepo([makeCliente({ identificacion: '0912345678' })]) as any,
       );
 
       const result = await useCase.execute('identificacion', '0912345678');
@@ -188,32 +163,12 @@ describe('SearchDeudaPublicaUseCase', () => {
             }),
           ],
           1,
-        ),
+        ) as any,
       );
 
       const result = await useCase.execute('numeroGuia', 'G-001');
 
       expect(result.data[0].cliente.identificacion).toBe('0912345678');
-    });
-
-    it('masks a short identificacion fully when it has no safe middle to hide', async () => {
-      const useCase = new SearchDeudaPublicaUseCase(
-        createMockRepo([makeCliente({ identificacion: '12345' })]),
-      );
-
-      const result = await useCase.execute('nombre', 'Juan Pérez');
-
-      expect(result.data[0].cliente.identificacion).toBe('*****');
-    });
-
-    it('leaves a null identificacion as null even for tipo=nombre', async () => {
-      const useCase = new SearchDeudaPublicaUseCase(
-        createMockRepo([makeCliente({ identificacion: null })]),
-      );
-
-      const result = await useCase.execute('nombre', 'Juan Pérez');
-
-      expect(result.data[0].cliente.identificacion).toBeNull();
     });
   });
 
@@ -224,7 +179,7 @@ describe('SearchDeudaPublicaUseCase', () => {
         makeContratoRaw({ contratoId: 2n, numeroGuia: 'G-002' }),
       ];
       const useCase = new SearchDeudaPublicaUseCase(
-        createMockRepo([], contratos, 2),
+        createMockRepo([], contratos, 2) as any,
       );
 
       const result = await useCase.execute('numeroGuia', 'G-00');
@@ -236,7 +191,7 @@ describe('SearchDeudaPublicaUseCase', () => {
 
   describe('validation', () => {
     it('throws BadRequestException when valor is blank', async () => {
-      const useCase = new SearchDeudaPublicaUseCase(createMockRepo());
+      const useCase = new SearchDeudaPublicaUseCase(createMockRepo() as any);
 
       await expect(useCase.execute('identificacion', '   ')).rejects.toThrow(
         BadRequestException,
@@ -246,9 +201,9 @@ describe('SearchDeudaPublicaUseCase', () => {
 
   describe('pagination', () => {
     it('caps limit to 50 and enforces page minimum of 1', async () => {
-      const useCase = new SearchDeudaPublicaUseCase(createMockRepo([], [], 0));
+      const useCase = new SearchDeudaPublicaUseCase(createMockRepo([], [], 0) as any);
 
-      const result = await useCase.execute('nombre', 'test', 0, 100);
+      const result = await useCase.execute('identificacion', '0912345678', 0, 100);
 
       expect(result.meta.limit).toBe(50);
       expect(result.meta.page).toBe(1);
@@ -256,7 +211,7 @@ describe('SearchDeudaPublicaUseCase', () => {
 
     it('caps limit to 50 on the identificacion path', async () => {
       const repo = createMockRepo([makeCliente()], [], 1);
-      const useCase = new SearchDeudaPublicaUseCase(repo);
+      const useCase = new SearchDeudaPublicaUseCase(repo as any);
 
       const result = await useCase.execute(
         'identificacion',

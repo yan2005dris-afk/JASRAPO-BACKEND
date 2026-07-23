@@ -5,16 +5,16 @@ import type { TipoBusquedaDeuda } from '../../domain/types/debt-search.types';
 
 export class SearchDeudaDto {
   @ApiProperty({
-    description: 'Tipo de búsqueda',
-    enum: ['identificacion', 'nombre', 'numeroGuia'],
+    description: 'Tipo de búsqueda (identificacion o numeroGuia)',
+    enum: ['identificacion', 'numeroGuia'],
     example: 'identificacion',
   })
-  @IsIn(['identificacion', 'nombre', 'numeroGuia'])
+  @IsIn(['identificacion', 'numeroGuia'])
   tipo!: TipoBusquedaDeuda;
 
   @ApiProperty({
     description:
-      'Valor a buscar. Para "nombre" se normalizan espacios múltiples automáticamente y se requiere coincidencia exacta (no parcial) por cada nombre/apellido.',
+      'Valor a buscar (número de identificación o número de guía/contrato)',
     example: '0912345678',
     minLength: 2,
   })

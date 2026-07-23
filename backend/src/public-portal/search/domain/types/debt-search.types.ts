@@ -1,4 +1,4 @@
-export type TipoBusquedaDeuda = 'identificacion' | 'nombre' | 'numeroGuia';
+export type TipoBusquedaDeuda = 'identificacion' | 'numeroGuia';
 
 export interface IPrefacturaParaCalculo {
   totalPagar: number | { toNumber?: () => number };
