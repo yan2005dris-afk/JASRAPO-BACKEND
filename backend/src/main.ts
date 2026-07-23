@@ -90,7 +90,27 @@ async function bootstrap() {
 
   app.setGlobalPrefix('api/v1');
 
+  // Strict default CSP for the whole API. No 'unsafe-inline' scripts here —
+  // Swagger UI (which needs it to render) gets its own relaxed policy below,
+  // scoped only to /docs.
   app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: ["'self'"],
+          styleSrc: ["'self'"],
+          imgSrc: ["'self'", 'data:'],
+        },
+      },
+    }),
+  );
+
+  // Swagger UI ships inline <script>/<style> tags to bootstrap the docs
+  // page, so it needs 'unsafe-inline'. Scope that relaxation to /docs only
+  // instead of weakening the CSP for the entire API.
+  app.use(
+    '/docs',
     helmet({
       contentSecurityPolicy: {
         directives: {

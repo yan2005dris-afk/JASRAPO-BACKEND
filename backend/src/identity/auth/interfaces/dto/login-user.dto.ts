@@ -19,15 +19,15 @@ export class LoginUserDto {
   email: string;
 
   @ApiProperty({
-    description: 'Contraseña del usuario (mínimo 6 caracteres, sin espacios)',
+    description: 'Contraseña del usuario (mínimo 8 caracteres, sin espacios)',
     example: 'Password123!',
-    minLength: 6,
+    minLength: 8,
     required: true,
     format: 'password',
   })
   @IsNotEmptyString()
   @MaxLength(128)
-  @MinLength(6)
+  @MinLength(8)
   @Matches(/^\S+$/, { message: 'La contraseña no puede contener espacios' }) // Asegura que la contraseña no contenga espacios
   password: string;
 }

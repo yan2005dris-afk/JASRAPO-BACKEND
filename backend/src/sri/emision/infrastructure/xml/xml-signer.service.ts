@@ -65,11 +65,15 @@ export class XmlSignerService implements OnModuleInit {
   private certificateChain: string[] = [];
   private crypto: Crypto;
 
-  // Cache de certificados por RUC con TTL
+  // Cache de certificados por RUC con TTL. Insertion order in a Map is
+  // preserved, so the oldest entry is always the first key — used below
+  // to evict when the cache grows past CERT_CACHE_MAX_ENTRIES (bounds
+  // memory exposure from decrypted private keys, issue #198).
   private emisorCertificateCache: Map<
     string,
     { privateKey: CryptoKey; certificate: string; loadedAt: number }
   > = new Map();
+  private static readonly CERT_CACHE_MAX_ENTRIES = 100;
   private readonly CERT_CACHE_TTL_MS: number;
   private readonly hashAlgorithm: XadesHashAlgorithm;
 
@@ -197,6 +201,9 @@ export class XmlSignerService implements OnModuleInit {
 
     const reference = await signedXml.Sign(
       {
+        // RSA-SHA1 is mandated by Ecuador's SRI XAdES-BES spec (Ficha
+        // Técnica de Comprobantes Electrónicos) — do not change to a
+        // stronger algorithm, the SRI will reject the signature.
         name: 'RSA-SHA1',
       },
       this.privateKey,
@@ -428,7 +435,16 @@ export class XmlSignerService implements OnModuleInit {
       forge.asn1.toDer(forge.pki.certificateToAsn1(signingCert)).getBytes(),
     );
 
-    // Cache the result with timestamp
+    // Cache the result with timestamp (evicting oldest entry if at max capacity)
+    if (
+      this.emisorCertificateCache.size >=
+      XmlSignerService.CERT_CACHE_MAX_ENTRIES
+    ) {
+      const oldestKey = this.emisorCertificateCache.keys().next().value;
+      if (oldestKey) {
+        this.emisorCertificateCache.delete(oldestKey);
+      }
+    }
     const result = { privateKey, certificate, loadedAt: Date.now() };
     this.emisorCertificateCache.set(ruc, result);
     this.logger.log(
@@ -479,6 +495,9 @@ export class XmlSignerService implements OnModuleInit {
 
     const reference = await signedXml.Sign(
       {
+        // RSA-SHA1 is mandated by Ecuador's SRI XAdES-BES spec (Ficha
+        // Técnica de Comprobantes Electrónicos) — do not change to a
+        // stronger algorithm, the SRI will reject the signature.
         name: 'RSA-SHA1',
       },
       privateKey,
