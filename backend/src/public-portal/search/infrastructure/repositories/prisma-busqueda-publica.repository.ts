@@ -15,7 +15,7 @@ export class PrismaBusquedaPublicaRepository implements BusquedaPublicaRepositor
   constructor(private readonly prisma: PrismaService) {}
 
   async findClientesBy(
-    tipo: 'identificacion' | 'nombre',
+    tipo: 'identificacion',
     valor: string,
     skip: number,
     take: number,
