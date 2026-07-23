@@ -245,7 +245,7 @@ describe('XmlBuilderService', () => {
   });
 
   describe('buildNotaCredito', () => {
-    const buildNotaCreditoFixture = (): NotaCredito => ({
+    const buildNotaCreditoFixture = (overrides: Partial<NotaCredito> = {}): NotaCredito => ({
       infoTributaria: baseInfoTributaria(TipoComprobante.NOTA_CREDITO),
       infoNotaCredito: {
         fechaEmision: '03/07/2026',
@@ -287,6 +287,7 @@ describe('XmlBuilderService', () => {
           ],
         },
       ],
+      ...overrides,
     });
 
     it('produces a well-formed <notaCredito> document with required nodes', async () => {
@@ -309,6 +310,72 @@ describe('XmlBuilderService', () => {
         codigoInterno: '001',
         descripcion: 'Producto Uno',
       });
+    });
+
+    it('includes infoAdicional on notaCredito when provided', async () => {
+      const xml = service.buildNotaCredito(
+        buildNotaCreditoFixture({
+          infoAdicional: [{ nombre: 'Observacion', valor: 'Nota de credito test' }],
+        }),
+      );
+      const parsed = await parseXml(xml);
+      expect(parsed.notaCredito.infoAdicional.campoAdicional.$.nombre).toBe('Observacion');
+      expect(parsed.notaCredito.infoAdicional.campoAdicional._).toBe('Nota de credito test');
+    });
+  });
+
+  describe('buildNotaDebito', () => {
+    const buildNotaDebitoFixture = (overrides: any = {}) => ({
+      infoTributaria: baseInfoTributaria('05'),
+      infoNotaDebito: {
+        fechaEmision: '03/07/2026',
+        tipoIdentificacionComprador: '05' as any,
+        razonSocialComprador: 'Cliente Debito Test',
+        identificacionComprador: '1234567890',
+        obligadoContabilidad: 'SI',
+        codDocModificado: '01',
+        numDocModificado: '001-001-000000001',
+        fechaEmisionDocSustento: '01/07/2026',
+        totalSinImpuestos: 50,
+        impuestos: [
+          {
+            codigo: '2',
+            codigoPorcentaje: '2',
+            tarifa: 12,
+            baseImponible: 50,
+            valor: 6,
+          },
+        ],
+        valorTotal: 56,
+      },
+      motivos: [
+        {
+          razon: 'Intereses por mora',
+          valor: 50,
+        },
+      ],
+      ...overrides,
+    });
+
+    it('produces a well-formed <notaDebito> document with required nodes', async () => {
+      const xml = service.buildNotaDebito(buildNotaDebitoFixture());
+      const parsed = await parseXml(xml);
+
+      expect(parsed.notaDebito).toBeDefined();
+      expect(parsed.notaDebito.infoNotaDebito.valorTotal).toBe('56.00');
+      expect(parsed.notaDebito.motivos.motivo.razon).toBe('Intereses por mora');
+      expect(parsed.notaDebito.motivos.motivo.valor).toBe('50.00');
+    });
+
+    it('includes infoAdicional on notaDebito when provided', async () => {
+      const xml = service.buildNotaDebito(
+        buildNotaDebitoFixture({
+          infoAdicional: [{ nombre: 'Nota', valor: 'Debito adicional' }],
+        }),
+      );
+      const parsed = await parseXml(xml);
+      expect(parsed.notaDebito.infoAdicional.campoAdicional.$.nombre).toBe('Nota');
+      expect(parsed.notaDebito.infoAdicional.campoAdicional._).toBe('Debito adicional');
     });
   });
 
@@ -341,6 +408,7 @@ describe('XmlBuilderService', () => {
     const buildRetencionFixture = (
       infoOverrides: Partial<Retencion['infoCompRetencion']> = {},
       impuestos: ImpuestoRetenido[] = [impuestoFixture()],
+      overrides: Partial<Retencion> = {},
     ): Retencion => ({
       infoTributaria: baseInfoTributaria(TipoComprobante.COMPROBANTE_RETENCION),
       infoCompRetencion: {
@@ -353,6 +421,7 @@ describe('XmlBuilderService', () => {
         ...infoOverrides,
       },
       impuestos,
+      ...overrides,
     });
 
     it('produces a well-formed <comprobanteRetencion> document with required nodes', async () => {
@@ -450,5 +519,25 @@ describe('XmlBuilderService', () => {
       expect(Array.isArray(docSustento)).toBe(true);
       expect(docSustento).toHaveLength(2);
     });
+
+    it('includes infoAdicional on comprobanteRetencion when provided', async () => {
+      const xml = service.buildRetencion(
+        buildRetencionFixture(undefined, [impuestoFixture()], {
+          infoAdicional: [{ nombre: 'Email', valor: 'proveedor@test.com' }],
+        }),
+      );
+      const parsed = await parseXml(xml);
+      expect(parsed.comprobanteRetencion.infoAdicional.campoAdicional.$.nombre).toBe('Email');
+      expect(parsed.comprobanteRetencion.infoAdicional.campoAdicional._).toBe('proveedor@test.com');
+    });
+  });
+
+  describe('parseXml', () => {
+    it('parses XML string into javascript object', async () => {
+      const xml = '<root><item>Hello</item></root>';
+      const result = await service.parseXml<{ root: { item: string } }>(xml);
+      expect(result.root.item).toBe('Hello');
+    });
   });
 });
+
