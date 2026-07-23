@@ -648,6 +648,14 @@ export class SriService {
     estados?: string[];
     reintentar?: boolean;
     limite?: number;
+    /**
+     * Filtra por comprobantes emitidos hasta esta fecha (ISO 8601),
+     * excluyendo los más recientes. Usado por el reconciliador
+     * automático (`SriReconciliationScheduler`) para no reintentar
+     * comprobantes que aún están dentro de su ventana normal de
+     * procesamiento.
+     */
+    fechaHasta?: string;
   }): Promise<{
     procesados: number;
     actualizados: number;
@@ -691,6 +699,7 @@ export class SriService {
       // Obtener lote de comprobantes pendientes
       const resultado = await this.listarComprobantes({
         estados,
+        fechaHasta: options.fechaHasta,
         limit: batchLimit,
         offset,
       });

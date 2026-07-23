@@ -9,6 +9,7 @@ import {
   PgBoss,
   JobInsert,
   SendOptions,
+  ScheduleOptions,
   WorkHandler,
   WorkWithMetadataHandler,
 } from 'pg-boss';
@@ -88,6 +89,21 @@ export class JobsService implements OnModuleInit, OnModuleDestroy {
   ): Promise<string> {
     await this.ensureQueue(name);
     return this.boss.work(name, { includeMetadata: true }, handler);
+  }
+
+  // Registers a recurring (cron-style) job on the queue. pg-boss v12 rejects
+  // schedule() with a foreign-key error if the queue doesn't exist yet, so
+  // ensureQueue() runs first, same as send/insert/work. Calling schedule()
+  // again with the same name/key upserts the cron expression (idempotent on
+  // module re-init/restart).
+  async schedule(
+    name: string,
+    cron: string,
+    data?: object,
+    options?: ScheduleOptions,
+  ) {
+    await this.ensureQueue(name);
+    return this.boss.schedule(name, cron, data ?? {}, options);
   }
 
   getBossInstance(): PgBoss {

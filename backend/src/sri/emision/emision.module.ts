@@ -43,6 +43,8 @@ import { PdfService as InfraPdfService } from 'src/infrastructure/pdf/pdf.servic
 import { SriDocumentPdfType } from './infrastructure/pdf/sri-document.pdf-type';
 import { JobsService } from '../../infrastructure/jobs/jobs.service';
 
+import { SriReconciliationScheduler } from './infrastructure/jobs/sri-reconciliation.scheduler';
+
 @Module({
   imports: [
     HttpModule.register({
@@ -53,6 +55,7 @@ import { JobsService } from '../../infrastructure/jobs/jobs.service';
   controllers: [SriController, CatalogosController],
   providers: [
     SriService,
+    SriReconciliationScheduler,
     SriIntegrationService,
     SriEmisionModeService,
     SRIEmissionDispatcherService,
@@ -95,6 +98,7 @@ import { JobsService } from '../../infrastructure/jobs/jobs.service';
   ],
   exports: [
     SriService,
+    SriReconciliationScheduler,
     SriIntegrationService,
     ComprobanteRepository,
     SriEmisionModeService,
