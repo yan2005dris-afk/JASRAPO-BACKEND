@@ -107,7 +107,6 @@ Ver [STANDARDS.md](./backend/STANDARDS.md) para más detalles.
 POSTGRES_DB=appdb
 POSTGRES_USER=appuser
 POSTGRES_PASSWORD=apppass
-POSTGRES_PORT=5432
 
 # ─── JWT ───────────────────────────────────────
 JWT_ACCESS_SECRET=access_super_secret_key

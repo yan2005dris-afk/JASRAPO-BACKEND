@@ -22,7 +22,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5433:5432"
+      - "${POSTGRES_HOST_PORT:-5433}:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-appuser} -d postgres"]
       interval: 10s
@@ -37,32 +37,32 @@ services:
           memory: 1G
 
   # ─── RustFS Storage (S3-compatible, Apache 2.0) ──────────────────
-  rustfs_perms:
-    image: alpine:latest
-    user: root
-    volumes:
-      - rustfs_data:/data
-    command: chown -R 10001:10001 /data
-
+  # The `:U` flag on the data volume remaps the mount UID/GID to match the
+  # rustfs process inside the container (uid 10001), so we no longer need a
+  # separate init-container to chown the volume on first boot.
   rustfs:
     image: rustfs/rustfs:latest
     container_name: rustfs-server
     restart: unless-stopped
-    depends_on:
-      rustfs_perms:
-        condition: service_completed_successfully
     environment:
       RUSTFS_ACCESS_KEY: ${STORAGE_ACCESS_KEY:-rustfsadmin}
       RUSTFS_SECRET_KEY: ${STORAGE_SECRET_KEY:-rustfsadmin}
       RUSTFS_ADDRESS: ":9000"
+      RUSTFS_TLS_PATH: /opt/tls
       RUSTFS_CONSOLE_ENABLE: "true"
     volumes:
-      - rustfs_data:/data
+      - rustfs_data:/data:U
+      - ./certs:/opt/tls:ro
     ports:
       - "9000:9000"
       - "9001:9001"
     healthcheck:
-      test: ["CMD-SHELL", "curl -s -o /dev/null -w \"%{http_code}\" http://localhost:9000/ | grep -qE '200|403'"]
+      test:
+        - "CMD-SHELL"
+        - >-
+          curl -ks -o /dev/null -w "%{http_code}"
+          https://localhost:9000/
+          | grep -qE '200|403|404'
       interval: 30s
       timeout: 20s
       retries: 3
@@ -83,8 +83,7 @@ services:
     restart: unless-stopped
     env_file: .env
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-appuser}:${POSTGRES_PASSWORD:-apppass}@postgres:5432/${POSTGRES_DB:-appdb}
-      POSTGRES_HOST: postgres
+      DATABASE_URL: "postgresql://${POSTGRES_USER:?}:${POSTGRES_PASSWORD:?}@${POSTGRES_HOST:-postgres}:5432/${POSTGRES_DB:?}"
       STORAGE_ENDPOINT: rustfs
       NODE_ENV: production
       PORT: 3000

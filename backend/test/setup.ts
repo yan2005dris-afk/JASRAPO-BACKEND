@@ -20,7 +20,7 @@ const getDbConfig = () => {
 
   // Fallback - construct from env
   const host = process.env.POSTGRES_HOST || 'localhost';
-  const port = parseInt(process.env.POSTGRES_PORT || '5432', 10);
+  const port = 5432;
   const user = process.env.POSTGRES_USER || 'postgres';
   const password = process.env.POSTGRES_PASSWORD || 'postgres';
   const db = process.env.POSTGRES_DB || 'jasrapo_e2e';
