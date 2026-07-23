@@ -46,6 +46,7 @@ describe('UpdatePreInvoiceStateUseCase — comprobante BORRADOR (T-004)', () => 
       executeTransaction: jest.fn().mockImplementation((cb: any) => cb({})),
       update: jest.fn(),
       findByClaveAcceso: jest.fn(),
+      findById: jest.fn(),
       findConDetalles: jest.fn(),
       findMany: jest.fn(),
       createDetalles: jest.fn(),
@@ -67,6 +68,7 @@ describe('UpdatePreInvoiceStateUseCase — comprobante BORRADOR (T-004)', () => 
       deletePagosByComprobanteId: jest.fn(),
       deleteTotalesByComprobanteId: jest.fn(),
       deleteInfoAdicionalByComprobanteId: jest.fn(),
+      updateEstadoWithLock: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -106,7 +108,9 @@ describe('UpdatePreInvoiceStateUseCase — comprobante BORRADOR (T-004)', () => 
       ...mockPreInvoice,
       estado: 'EN_REVISION',
     });
-    comprobanteRepository.create.mockResolvedValue({ id: BigInt(99) });
+    comprobanteRepository.create.mockResolvedValue({
+      id: BigInt(99),
+    } as any);
 
     // Mock updateState to also update the in-memory prefactura
     // The PreInvoiceRepository implementation in Prisma does updateMany

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrefacturaService } from '../domain/services/prefactura.service';
-import { SRIEmissionDispatcherService } from './sri-emission-dispatcher.service';
+import { SRIEmissionDispatcherService } from '../../../../sri/emision/application/services/sri-emission-dispatcher.service';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
 

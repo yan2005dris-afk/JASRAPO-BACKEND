@@ -4,7 +4,7 @@ import { PaymentRepository } from 'src/billing/collections/payments/domain/repos
 import {
   SRIEmissionDispatcherService,
   EmissionOutcome,
-} from './sri-emission-dispatcher.service';
+} from '../../../../sri/emision/application/services/sri-emission-dispatcher.service';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
 

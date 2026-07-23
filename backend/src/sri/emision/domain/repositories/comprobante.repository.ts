@@ -30,6 +30,17 @@ export abstract class ComprobanteRepository {
     claveAcceso: string,
   ): Promise<ComprobanteRecord | null>;
 
+  /**
+   * Lightweight lookup by primary key. Returns only the requested fields
+   * (defaults to `{ id, estado }`). Used by services that need to branch on
+   * the comprobante's current state without paying the cost of a full record
+   * mapping (e.g. `SRIEmissionDispatcherService`).
+   */
+  abstract findById(
+    id: bigint,
+    select?: { estado?: boolean; id?: boolean },
+  ): Promise<{ id: bigint; estado: string } | null>;
+
   abstract findConDetalles(claveAcceso: string): Promise<any>;
 
   abstract findMany(filters: {

@@ -9,6 +9,7 @@ import { CatalogosController } from './interfaces/http/catalogos.controller';
 import { SriService } from './application/services/sri.service';
 import { SriIntegrationService } from './application/services/sri-integration.service';
 import { SriEmisionModeService } from './application/services/sri-emision-mode.service';
+import { SRIEmissionDispatcherService } from './application/services/sri-emission-dispatcher.service';
 import { EmitirFacturaUseCase } from './application/use-cases/emitir-factura.use-case';
 import { EmitirNotaCreditoUseCase } from './application/use-cases/emitir-nota-credito.use-case';
 import { EmitirNotaDebitoUseCase } from './application/use-cases/emitir-nota-debito.use-case';
@@ -54,6 +55,7 @@ import { JobsService } from '../../infrastructure/jobs/jobs.service';
     SriService,
     SriIntegrationService,
     SriEmisionModeService,
+    SRIEmissionDispatcherService,
     EmitirFacturaUseCase,
     EmitirNotaCreditoUseCase,
     EmitirNotaDebitoUseCase,
@@ -96,6 +98,7 @@ import { JobsService } from '../../infrastructure/jobs/jobs.service';
     SriIntegrationService,
     ComprobanteRepository,
     SriEmisionModeService,
+    SRIEmissionDispatcherService,
 
     EmitirFacturaUseCase,
     EmitirNotaCreditoUseCase,

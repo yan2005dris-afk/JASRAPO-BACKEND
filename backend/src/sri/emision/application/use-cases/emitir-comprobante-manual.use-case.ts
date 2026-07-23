@@ -7,7 +7,7 @@ import { ComprobanteRepository } from '../../domain/repositories/comprobante.rep
 import {
   SRIEmissionDispatcherService,
   EmissionOutcome,
-} from '../../../../billing/collections/payments/application/sri-emission-dispatcher.service';
+} from '../services/sri-emission-dispatcher.service';
 import { AuditService } from '../../../../infrastructure/audit/audit.service';
 
 /**

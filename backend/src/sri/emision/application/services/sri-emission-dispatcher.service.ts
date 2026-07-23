@@ -1,12 +1,11 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { ComprobanteEstado } from 'src/sri/emision/domain/constants/comprobante-estado.enum';
-import { SRI_EMISION_JOB } from 'src/sri/emision/infrastructure/queue/processors/sri-emision.constants';
-import { PaymentRepository } from '../domain/repositories/payment.repository';
-import { ComprobanteRepository } from 'src/sri/emision/domain/repositories/comprobante.repository';
-import { JobService } from '../domain/interfaces/job-service.interface';
+import { ComprobanteEstado } from '../../domain/constants/comprobante-estado.enum';
+import { SRI_EMISION_JOB } from '../../infrastructure/queue/processors/sri-emision.constants';
+import { ComprobanteRepository } from '../../domain/repositories/comprobante.repository';
+import { JobService } from '../../domain/interfaces/job-service.interface';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
-import { SriEmisionModeService } from 'src/sri/emision/application/services/sri-emision-mode.service';
+import { SriEmisionModeService } from './sri-emision-mode.service';
 import { AuditService } from 'src/infrastructure/audit/audit.service';
 
 /**
@@ -32,10 +31,16 @@ export type EmissionOutcome =
 /**
  * Single source of truth for "given a comprobante id, attempt emission".
  *
- * Both PagoValidadoHandler and CuotaPagadaHandler delegate to this service
+ * Both `PagoValidadoHandler` and `CuotaPagadaHandler` (billing module) and
+ * `EmitirComprobanteManualUseCase` (this module) delegate to this service
  * instead of duplicating the BORRADOR-check + optimistic-lock + SRI job
  * enqueue sequence. A future trigger (e.g. `pago.anulado`) reuses the same
  * pipeline.
+ *
+ * Lives in `sri/emision/` because the emitted artefact, the locked state
+ * machine and the job contract are all SRI-domain concepts. Cross-module
+ * reachability for `billing/` callers is provided by the `@Global()`
+ * `SriIntegrationModule` exporting `EmisionModule`.
  *
  * Mode-aware (sdd/sri-emision-modo-manual-automatico):
  *   - automatico → existing BORRADOR → ENVIANDO + send path.
@@ -49,7 +54,6 @@ export type EmissionOutcome =
 @Injectable()
 export class SRIEmissionDispatcherService {
   constructor(
-    private readonly paymentRepository: PaymentRepository,
     private readonly comprobanteRepository: ComprobanteRepository,
     @Inject('JobService') private readonly jobsService: JobService,
     private readonly logger: LoggerService,
@@ -65,9 +69,10 @@ export class SRIEmissionDispatcherService {
    * `LOCK_LOST`, `NOT_FOUND`) by validating state BEFORE branching.
    */
   async tryEmit(comprobanteId: bigint): Promise<EmissionOutcome> {
-    const comprobante = await this.paymentRepository.findUniqueComprobante({
-      id: comprobanteId,
-    });
+    const comprobante = await this.comprobanteRepository.findById(
+      comprobanteId,
+      { id: true, estado: true },
+    );
 
     if (!comprobante) {
       this.logger.warn(`Comprobante ${comprobanteId} no encontrado`);
@@ -96,9 +101,10 @@ export class SRIEmissionDispatcherService {
    * Any other state → `INVALID_STATE` (controller maps to 409).
    */
   async tryEmitManual(comprobanteId: bigint): Promise<EmissionOutcome> {
-    const comprobante = await this.paymentRepository.findUniqueComprobante({
-      id: comprobanteId,
-    });
+    const comprobante = await this.comprobanteRepository.findById(
+      comprobanteId,
+      { id: true, estado: true },
+    );
 
     if (!comprobante) {
       this.logger.warn(`Comprobante ${comprobanteId} no encontrado`);

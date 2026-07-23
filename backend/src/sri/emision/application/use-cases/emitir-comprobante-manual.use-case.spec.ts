@@ -9,7 +9,7 @@ import type { ComprobanteRepository } from '../../domain/repositories/comprobant
 import type {
   SRIEmissionDispatcherService,
   EmissionOutcome,
-} from '../../../../billing/collections/payments/application/sri-emission-dispatcher.service';
+} from '../services/sri-emission-dispatcher.service';
 import type { AuditService } from '../../../../infrastructure/audit/audit.service';
 
 /**

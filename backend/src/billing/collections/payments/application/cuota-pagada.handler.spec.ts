@@ -4,7 +4,7 @@ jest.mock('../../../../infrastructure/audit/audit.service', () => ({
 }));
 import { CuotaPagadaHandler } from './cuota-pagada.handler';
 import type { PrefacturaService } from '../domain/services/prefactura.service';
-import type { SRIEmissionDispatcherService } from './sri-emission-dispatcher.service';
+import type { SRIEmissionDispatcherService } from '../../../../sri/emision/application/services/sri-emission-dispatcher.service';
 const mockLogger = {
   log: jest.fn(),
   warn: jest.fn(),

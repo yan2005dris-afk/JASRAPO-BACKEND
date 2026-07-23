@@ -13,7 +13,7 @@ import { PaymentRepository } from 'src/billing/collections/payments/domain/repos
 import { PrismaComprobanteRepository } from 'src/sri/emision/infrastructure/persistence/prisma-comprobante.repository';
 import { ComprobanteRepository } from 'src/sri/emision/domain/repositories/comprobante.repository';
 import { PagoValidadoHandler } from 'src/billing/collections/payments/application/pago-validado.handler';
-import { SRIEmissionDispatcherService } from 'src/billing/collections/payments/application/sri-emission-dispatcher.service';
+import { SRIEmissionDispatcherService } from 'src/sri/emision/application/services/sri-emission-dispatcher.service';
 import { ComprobanteEstado } from 'src/sri/emision/domain/constants/comprobante-estado.enum';
 import { SRI_EMISION_JOB } from 'src/sri/emision/infrastructure/queue/processors/sri-emision.constants';
 

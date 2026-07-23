@@ -3,12 +3,11 @@ jest.mock('../../../../infrastructure/audit/audit.service', () => ({
   AuditService: jest.fn(),
 }));
 import { SRIEmissionDispatcherService } from './sri-emission-dispatcher.service';
-import { ComprobanteEstado } from 'src/sri/emision/domain/constants/comprobante-estado.enum';
-import { SRI_EMISION_JOB } from 'src/sri/emision/infrastructure/queue/processors/sri-emision.constants';
-import type { PaymentRepository } from '../domain/repositories/payment.repository';
-import type { ComprobanteRepository } from 'src/sri/emision/domain/repositories/comprobante.repository';
-import type { JobService } from '../domain/interfaces/job-service.interface';
-import type { SriEmisionModeService } from 'src/sri/emision/application/services/sri-emision-mode.service';
+import { ComprobanteEstado } from '../../domain/constants/comprobante-estado.enum';
+import { SRI_EMISION_JOB } from '../../infrastructure/queue/processors/sri-emision.constants';
+import type { ComprobanteRepository } from '../../domain/repositories/comprobante.repository';
+import type { JobService } from '../../domain/interfaces/job-service.interface';
+import type { SriEmisionModeService } from './sri-emision-mode.service';
 import type { AuditService } from 'src/infrastructure/audit/audit.service';
 const mockLogger = {
   log: jest.fn(),
@@ -20,7 +19,6 @@ const mockLogger = {
 
 describe('SRIEmissionDispatcherService', () => {
   let service: SRIEmissionDispatcherService;
-  let paymentRepository: jest.Mocked<PaymentRepository>;
   let comprobanteRepository: jest.Mocked<ComprobanteRepository>;
   let jobsService: jest.Mocked<JobService>;
   let sriEmisionModeService: jest.Mocked<
@@ -29,10 +27,8 @@ describe('SRIEmissionDispatcherService', () => {
   let auditService: jest.Mocked<Pick<AuditService, 'log'>>;
 
   beforeEach(() => {
-    paymentRepository = {
-      findUniqueComprobante: jest.fn(),
-    } as unknown as jest.Mocked<PaymentRepository>;
     comprobanteRepository = {
+      findById: jest.fn(),
       updateEstadoWithLock: jest.fn(),
     } as unknown as jest.Mocked<ComprobanteRepository>;
     jobsService = {
@@ -46,7 +42,6 @@ describe('SRIEmissionDispatcherService', () => {
     };
 
     service = new SRIEmissionDispatcherService(
-      paymentRepository,
       comprobanteRepository,
       jobsService,
       mockLogger,
@@ -56,19 +51,19 @@ describe('SRIEmissionDispatcherService', () => {
   });
 
   it('EMITTED: locks BORRADOR → ENVIANDO and enqueues sri-emision job (auto mode)', async () => {
-    paymentRepository.findUniqueComprobante.mockResolvedValue({
+    comprobanteRepository.findById.mockResolvedValue({
       id: 42n,
-      importeTotal: 100,
       estado: ComprobanteEstado.BORRADOR,
-    } as any);
+    });
     comprobanteRepository.updateEstadoWithLock.mockResolvedValue(true);
     jobsService.send.mockResolvedValue('job-1');
 
     const outcome = await service.tryEmit(42n);
 
     expect(outcome).toBe('EMITTED');
-    expect(paymentRepository.findUniqueComprobante).toHaveBeenCalledWith({
-      id: 42n,
+    expect(comprobanteRepository.findById).toHaveBeenCalledWith(42n, {
+      id: true,
+      estado: true,
     });
     expect(comprobanteRepository.updateEstadoWithLock).toHaveBeenCalledWith(
       42n,
@@ -83,7 +78,7 @@ describe('SRIEmissionDispatcherService', () => {
   });
 
   it('NOT_FOUND: returns NOT_FOUND when comprobante does not exist', async () => {
-    paymentRepository.findUniqueComprobante.mockResolvedValue(null);
+    comprobanteRepository.findById.mockResolvedValue(null);
 
     const outcome = await service.tryEmit(99n);
 
@@ -93,11 +88,10 @@ describe('SRIEmissionDispatcherService', () => {
   });
 
   it('ALREADY_EMITTED: returns ALREADY_EMITTED when estado !== BORRADOR', async () => {
-    paymentRepository.findUniqueComprobante.mockResolvedValue({
+    comprobanteRepository.findById.mockResolvedValue({
       id: 42n,
-      importeTotal: 100,
       estado: ComprobanteEstado.AUTORIZADO,
-    } as any);
+    });
 
     const outcome = await service.tryEmit(42n);
 
@@ -107,11 +101,10 @@ describe('SRIEmissionDispatcherService', () => {
   });
 
   it('LOCK_LOST: returns LOCK_LOST when optimistic lock fails', async () => {
-    paymentRepository.findUniqueComprobante.mockResolvedValue({
+    comprobanteRepository.findById.mockResolvedValue({
       id: 42n,
-      importeTotal: 100,
       estado: ComprobanteEstado.BORRADOR,
-    } as any);
+    });
     comprobanteRepository.updateEstadoWithLock.mockResolvedValue(false);
 
     const outcome = await service.tryEmit(42n);
@@ -124,11 +117,10 @@ describe('SRIEmissionDispatcherService', () => {
 
   it('R-A.1: rejects when jobsService.send() fails and reverts estado to BORRADOR', async () => {
     const sendError = new Error('pgboss-queue-down');
-    paymentRepository.findUniqueComprobante.mockResolvedValue({
+    comprobanteRepository.findById.mockResolvedValue({
       id: 42n,
-      importeTotal: 100,
       estado: ComprobanteEstado.BORRADOR,
-    } as any);
+    });
     comprobanteRepository.updateEstadoWithLock
       .mockResolvedValueOnce(true) // lock for ENVIANDO
       .mockResolvedValueOnce(true); // revert to BORRADOR
@@ -153,11 +145,10 @@ describe('SRIEmissionDispatcherService', () => {
       .spyOn((service as any).logger, 'error')
       .mockImplementation(() => undefined);
 
-    paymentRepository.findUniqueComprobante.mockResolvedValue({
+    comprobanteRepository.findById.mockResolvedValue({
       id: 42n,
-      importeTotal: 100,
       estado: ComprobanteEstado.BORRADOR,
-    } as any);
+    });
     comprobanteRepository.updateEstadoWithLock
       .mockResolvedValueOnce(true) // lock for ENVIANDO
       .mockRejectedValueOnce(revertError); // revert also fails
@@ -177,11 +168,10 @@ describe('SRIEmissionDispatcherService', () => {
   describe('tryEmit — manual mode (R-4/S2)', () => {
     it('manual + BORRADOR → parks at POR_EMITIR, NO send, returns QUEUED_FOR_MANUAL, audits parqueado-manual', async () => {
       sriEmisionModeService.getMode.mockResolvedValue('manual');
-      paymentRepository.findUniqueComprobante.mockResolvedValue({
+      comprobanteRepository.findById.mockResolvedValue({
         id: 42n,
-        importeTotal: 100,
         estado: ComprobanteEstado.BORRADOR,
-      } as any);
+      });
       comprobanteRepository.updateEstadoWithLock.mockResolvedValue(true);
 
       const outcome = await service.tryEmit(42n);
@@ -209,11 +199,10 @@ describe('SRIEmissionDispatcherService', () => {
 
     it('manual + BORRADOR + LOCK_LOST → returns LOCK_LOST, NO audit, NO send', async () => {
       sriEmisionModeService.getMode.mockResolvedValue('manual');
-      paymentRepository.findUniqueComprobante.mockResolvedValue({
+      comprobanteRepository.findById.mockResolvedValue({
         id: 42n,
-        importeTotal: 100,
         estado: ComprobanteEstado.BORRADOR,
-      } as any);
+      });
       comprobanteRepository.updateEstadoWithLock.mockResolvedValue(false);
 
       const outcome = await service.tryEmit(42n);
@@ -225,11 +214,10 @@ describe('SRIEmissionDispatcherService', () => {
 
     it('manual + non-BORRADOR estado → returns ALREADY_EMITTED, no lock, no audit', async () => {
       sriEmisionModeService.getMode.mockResolvedValue('manual');
-      paymentRepository.findUniqueComprobante.mockResolvedValue({
+      comprobanteRepository.findById.mockResolvedValue({
         id: 42n,
-        importeTotal: 100,
         estado: ComprobanteEstado.AUTORIZADO,
-      } as any);
+      });
 
       const outcome = await service.tryEmit(42n);
 
@@ -244,11 +232,10 @@ describe('SRIEmissionDispatcherService', () => {
 
   describe('tryEmitManual (R-4/S3, S4, S5)', () => {
     it('S3: BORRADOR → locks to ENVIANDO + sends sri-emision job with origen="manual" → EMITTED', async () => {
-      paymentRepository.findUniqueComprobante.mockResolvedValue({
+      comprobanteRepository.findById.mockResolvedValue({
         id: 42n,
-        importeTotal: 100,
         estado: ComprobanteEstado.BORRADOR,
-      } as any);
+      });
       comprobanteRepository.updateEstadoWithLock.mockResolvedValue(true);
       jobsService.send.mockResolvedValue('job-1');
 
@@ -268,11 +255,10 @@ describe('SRIEmissionDispatcherService', () => {
     });
 
     it('S4: POR_EMITIR → locks to ENVIANDO + sends job with origen="manual" → EMITTED', async () => {
-      paymentRepository.findUniqueComprobante.mockResolvedValue({
+      comprobanteRepository.findById.mockResolvedValue({
         id: 42n,
-        importeTotal: 100,
         estado: ComprobanteEstado.POR_EMITIR,
-      } as any);
+      });
       comprobanteRepository.updateEstadoWithLock.mockResolvedValue(true);
       jobsService.send.mockResolvedValue('job-1');
 
@@ -292,11 +278,10 @@ describe('SRIEmissionDispatcherService', () => {
     });
 
     it('S5: AUTORIZADO → returns INVALID_STATE, no lock, no send', async () => {
-      paymentRepository.findUniqueComprobante.mockResolvedValue({
+      comprobanteRepository.findById.mockResolvedValue({
         id: 42n,
-        importeTotal: 100,
         estado: ComprobanteEstado.AUTORIZADO,
-      } as any);
+      });
 
       const outcome = await service.tryEmitManual(42n);
 
@@ -306,7 +291,7 @@ describe('SRIEmissionDispatcherService', () => {
     });
 
     it('NOT_FOUND: returns NOT_FOUND when comprobante does not exist', async () => {
-      paymentRepository.findUniqueComprobante.mockResolvedValue(null);
+      comprobanteRepository.findById.mockResolvedValue(null);
 
       const outcome = await service.tryEmitManual(99n);
 
@@ -317,11 +302,10 @@ describe('SRIEmissionDispatcherService', () => {
 
     it('R-A.1: rejects when send fails and reverts estado to BORRADOR (manual path)', async () => {
       const sendError = new Error('pgboss-queue-down');
-      paymentRepository.findUniqueComprobante.mockResolvedValue({
+      comprobanteRepository.findById.mockResolvedValue({
         id: 42n,
-        importeTotal: 100,
         estado: ComprobanteEstado.POR_EMITIR,
-      } as any);
+      });
       comprobanteRepository.updateEstadoWithLock
         .mockResolvedValueOnce(true) // POR_EMITIR → ENVIANDO
         .mockResolvedValueOnce(true); // revert: ENVIANDO → POR_EMITIR
@@ -344,11 +328,10 @@ describe('SRIEmissionDispatcherService', () => {
 
     it('rejects when send fails and reverts estado to BORRADOR (manual path, BORRADOR origin)', async () => {
       const sendError = new Error('pgboss-queue-down');
-      paymentRepository.findUniqueComprobante.mockResolvedValue({
+      comprobanteRepository.findById.mockResolvedValue({
         id: 42n,
-        importeTotal: 100,
         estado: ComprobanteEstado.BORRADOR,
-      } as any);
+      });
       comprobanteRepository.updateEstadoWithLock
         .mockResolvedValueOnce(true) // BORRADOR → ENVIANDO
         .mockResolvedValueOnce(true); // revert: ENVIANDO → BORRADOR

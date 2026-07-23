@@ -29,7 +29,7 @@ import { Throttle } from '@nestjs/throttler';
 import { SriService } from '../../application/services/sri.service';
 import { EmisoresService } from '../../../emisores/application/emisores.service';
 import { EmitirComprobanteManualUseCase } from '../../application/use-cases/emitir-comprobante-manual.use-case';
-import type { EmissionOutcome } from '../../../../billing/collections/payments/application/sri-emission-dispatcher.service';
+import type { EmissionOutcome } from '../../application/services/sri-emission-dispatcher.service';
 import { CurrentUser } from '../../../../identity/auth/interfaces/http/decorators/current-user.decorator';
 import {
   JwtPayload,
