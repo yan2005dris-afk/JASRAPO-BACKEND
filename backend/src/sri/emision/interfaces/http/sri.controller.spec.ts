@@ -23,6 +23,7 @@ import type { JwtPayload } from '../../../../identity/auth/interfaces/dto/auth.d
 import { UserRole } from '../../../../identity/auth/interfaces/dto/auth.dto';
 import { EmisoresService } from '../../../emisores/application/emisores.service';
 import { ConfigService } from '@nestjs/config';
+import { LoggerService } from '../../../../infrastructure/observability/logger/logger.service';
 
 describe('SriController — emitirManual', () => {
   let controller: SriController;
@@ -43,6 +44,14 @@ describe('SriController — emitirManual', () => {
       execute: jest.fn(),
     };
 
+    const mockLogger = {
+      log: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+      debug: jest.fn(),
+      verbose: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       controllers: [SriController],
       providers: [
@@ -57,6 +66,10 @@ describe('SriController — emitirManual', () => {
         {
           provide: ConfigService,
           useValue: { get: jest.fn() },
+        },
+        {
+          provide: LoggerService,
+          useValue: mockLogger,
         },
         {
           provide: EmitirComprobanteManualUseCase,

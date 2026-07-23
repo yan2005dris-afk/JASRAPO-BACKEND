@@ -1,3 +1,7 @@
+// Mock AuditService to prevent loading JobsService (which pulls in pg-boss ESM)
+jest.mock('../../../../infrastructure/audit/audit.service', () => ({
+  AuditService: jest.fn(),
+}));
 import { NotFoundException, ConflictException } from '@nestjs/common';
 import { EmitirComprobanteManualUseCase } from './emitir-comprobante-manual.use-case';
 import { ComprobanteEstado } from '../../domain/constants/comprobante-estado.enum';

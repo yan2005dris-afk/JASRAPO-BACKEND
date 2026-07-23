@@ -1,3 +1,7 @@
+// Mock AuditService to prevent loading JobsService (which pulls in pg-boss ESM)
+jest.mock('../../../../infrastructure/audit/audit.service', () => ({
+  AuditService: jest.fn(),
+}));
 import { PagoValidadoHandler } from './pago-validado.handler';
 import type { SRIEmissionDispatcherService } from './sri-emission-dispatcher.service';
 const mockLogger = {

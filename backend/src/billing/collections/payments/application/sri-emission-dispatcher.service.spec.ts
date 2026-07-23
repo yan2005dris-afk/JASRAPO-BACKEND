@@ -1,3 +1,7 @@
+// Mock AuditService to prevent loading JobsService (which pulls in pg-boss ESM)
+jest.mock('../../../../infrastructure/audit/audit.service', () => ({
+  AuditService: jest.fn(),
+}));
 import { SRIEmissionDispatcherService } from './sri-emission-dispatcher.service';
 import { ComprobanteEstado } from 'src/sri/emision/domain/constants/comprobante-estado.enum';
 import { SRI_EMISION_JOB } from 'src/sri/emision/infrastructure/queue/processors/sri-emision.constants';
