@@ -56,7 +56,8 @@ export async function seedPermissions(prisma: PrismaClient) {
         "certificados",
         "webhooks",
         "emisores",
-        "menus"
+        "menus",
+        "catalogos"
     ];
 
     const actions = ["read", "create", "update", "delete"];

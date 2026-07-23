@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Controller,
   Post,
   Get,
@@ -40,6 +41,7 @@ import { PermissionsGuard } from '../../../../infrastructure/common/guards/permi
 import { RequiredPermission } from '../../../../infrastructure/common/decorators/require-permission.decorator';
 import { ConfigService } from '@nestjs/config';
 import { extractRucFromClaveAcceso } from '../../infrastructure/xml/clave-acceso.utils';
+import { MAX_UPLOAD_SIZE_BYTES } from '../../../../infrastructure/config/app.constants';
 import {
   CreateFacturaDto,
   FacturaResponseDto,
@@ -182,7 +184,20 @@ export class SriController {
     summary: 'Validar XML firmado (Upload Archivo)',
   })
   @ApiConsumes('multipart/form-data')
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: { fileSize: MAX_UPLOAD_SIZE_BYTES },
+      fileFilter: (req, file, callback) => {
+        if (!file.mimetype.match(/^(application|text)\/xml$|^text\/plain$/i)) {
+          return callback(
+            new BadRequestException('Solo se permiten archivos XML'),
+            false,
+          );
+        }
+        callback(null, true);
+      },
+    }),
+  )
   async validarXml(
     @UploadedFile() file: Express.Multer.File,
   ): Promise<{ valido: boolean; errores: string[] }> {

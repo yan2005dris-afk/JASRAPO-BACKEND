@@ -61,6 +61,12 @@ export class S3ClientService implements OnModuleInit {
       );
     }
 
+    if (nodeEnv === 'production' && !sslVerify) {
+      throw new Error(
+        `[STORAGE] Refusing to start: STORAGE_SSL_VERIFY must not be "false" when NODE_ENV=production. Disabling TLS certificate verification would allow a MITM attacker to intercept credentials and document bodies (issue #187, OWASP A02).`,
+      );
+    }
+
     if (!accessKey || accessKey.trim().length === 0) {
       throw new Error(
         '[STORAGE] STORAGE_ACCESS_KEY is missing or empty. Application cannot start without explicit S3 credentials.',

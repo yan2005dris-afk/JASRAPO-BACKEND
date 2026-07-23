@@ -1,6 +1,7 @@
 import { Controller, Get, HttpCode, Res } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import type { Response } from 'express';
+import { Public } from '../../common/decorators/public.decorator';
 import { MetricsService } from './metrics.service';
 
 /**
@@ -8,6 +9,7 @@ import { MetricsService } from './metrics.service';
  * Expone endpoint de scrapeo de métricas en formato Prometheus
  */
 @ApiTags('[No Aplicable] Métricas para Prometheus (scraping)')
+@Public()
 @Controller('metrics')
 export class MetricsController {
   constructor(private readonly metricsService: MetricsService) {}

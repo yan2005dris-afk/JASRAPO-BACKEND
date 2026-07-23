@@ -70,7 +70,7 @@ export class PermissionsGuard implements CanActivate {
 
     if (!hasPermission) {
       this.logger.warn(
-        `Acceso denegado: Usuario ${user.email} intentó ${required.accion} en ${required.recurso}`,
+        `Acceso denegado: Usuario ${user.usersId} intentó ${required.accion} en ${required.recurso}`,
       );
       throw new ForbiddenException(
         `No tienes permiso para la acción "${required.accion}" en "${required.recurso}"`,

@@ -361,6 +361,15 @@ export class EmitirFacturaUseCase {
       dto.emisor.ruc,
     );
 
+    // Validar firma, igual que en los flujos de emisión reales
+    const esFirmaValida =
+      await this.xmlSignerService.verifySignature(xmlFirmado);
+    if (!esFirmaValida) {
+      throw new BadRequestException(
+        'La firma del XML generado no es válida. Verifique el certificado del emisor.',
+      );
+    }
+
     return {
       claveAcceso,
       xmlSinFirma,
