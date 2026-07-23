@@ -154,6 +154,69 @@ describe('SearchDeudaPublicaUseCase', () => {
     });
   });
 
+  describe('identificacion masking (PII leak fix — issue #184)', () => {
+    it('masks identificacion in the response when tipo=nombre', async () => {
+      const useCase = new SearchDeudaPublicaUseCase(
+        createMockRepo([makeCliente({ identificacion: '0912345678' })]),
+      );
+
+      const result = await useCase.execute('nombre', 'Juan Pérez');
+
+      expect(result.data[0].cliente.identificacion).toBe('091****678');
+    });
+
+    it('does not mask identificacion when tipo=identificacion', async () => {
+      const useCase = new SearchDeudaPublicaUseCase(
+        createMockRepo([makeCliente({ identificacion: '0912345678' })]),
+      );
+
+      const result = await useCase.execute('identificacion', '0912345678');
+
+      expect(result.data[0].cliente.identificacion).toBe('0912345678');
+    });
+
+    it('does not mask identificacion when tipo=numeroGuia', async () => {
+      const useCase = new SearchDeudaPublicaUseCase(
+        createMockRepo(
+          [],
+          [
+            makeContratoRaw({
+              cliente: {
+                ...makeContratoRaw().cliente,
+                identificacion: '0912345678',
+              },
+            }),
+          ],
+          1,
+        ),
+      );
+
+      const result = await useCase.execute('numeroGuia', 'G-001');
+
+      expect(result.data[0].cliente.identificacion).toBe('0912345678');
+    });
+
+    it('masks a short identificacion fully when it has no safe middle to hide', async () => {
+      const useCase = new SearchDeudaPublicaUseCase(
+        createMockRepo([makeCliente({ identificacion: '12345' })]),
+      );
+
+      const result = await useCase.execute('nombre', 'Juan Pérez');
+
+      expect(result.data[0].cliente.identificacion).toBe('*****');
+    });
+
+    it('leaves a null identificacion as null even for tipo=nombre', async () => {
+      const useCase = new SearchDeudaPublicaUseCase(
+        createMockRepo([makeCliente({ identificacion: null })]),
+      );
+
+      const result = await useCase.execute('nombre', 'Juan Pérez');
+
+      expect(result.data[0].cliente.identificacion).toBeNull();
+    });
+  });
+
   describe('numeroGuia path (contract-first)', () => {
     it('groups multiple contracts from the same client into one entry', async () => {
       const contratos = [

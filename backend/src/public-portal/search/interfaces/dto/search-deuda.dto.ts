@@ -14,7 +14,7 @@ export class SearchDeudaDto {
 
   @ApiProperty({
     description:
-      'Valor a buscar. Para "nombre" se normalizan espacios múltiples automáticamente.',
+      'Valor a buscar. Para "nombre" se normalizan espacios múltiples automáticamente y se requiere coincidencia exacta (no parcial) por cada nombre/apellido.',
     example: '0912345678',
     minLength: 2,
   })

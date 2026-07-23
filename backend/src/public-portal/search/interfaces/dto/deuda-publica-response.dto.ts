@@ -4,7 +4,12 @@ export class ClienteDeudaPublicaDto {
   @ApiProperty({ example: 'Juan Pablo Pérez' })
   nombre!: string;
 
-  @ApiProperty({ example: '0912345678', nullable: true })
+  @ApiProperty({
+    example: '0912345678',
+    nullable: true,
+    description:
+      'Cédula/RUC del cliente. Se enmascara (ej. "091****678") cuando la búsqueda se hizo por tipo=nombre, ya que ese modo no prueba identidad.',
+  })
   identificacion!: string | null;
 }
 

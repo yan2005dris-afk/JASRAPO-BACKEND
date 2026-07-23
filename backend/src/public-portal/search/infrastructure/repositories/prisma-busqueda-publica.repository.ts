@@ -135,8 +135,8 @@ export class PrismaBusquedaPublicaRepository implements BusquedaPublicaRepositor
       AND: tokens.map(
         (t): Prisma.ClientesWhereInput => ({
           OR: [
-            { nombres: { contains: t, mode: 'insensitive' } },
-            { apellidos: { contains: t, mode: 'insensitive' } },
+            { nombres: { equals: t, mode: 'insensitive' } },
+            { apellidos: { equals: t, mode: 'insensitive' } },
           ],
         }),
       ),
@@ -176,8 +176,8 @@ export class PrismaBusquedaPublicaRepository implements BusquedaPublicaRepositor
         AND: tokens.map(
           (t): Prisma.ClientesWhereInput => ({
             OR: [
-              { nombres: { contains: t, mode: 'insensitive' } },
-              { apellidos: { contains: t, mode: 'insensitive' } },
+              { nombres: { equals: t, mode: 'insensitive' } },
+              { apellidos: { equals: t, mode: 'insensitive' } },
             ],
           }),
         ),
