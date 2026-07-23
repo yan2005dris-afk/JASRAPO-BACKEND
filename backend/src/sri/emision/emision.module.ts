@@ -14,6 +14,7 @@ import { EmitirFacturaUseCase } from './application/use-cases/emitir-factura.use
 import { EmitirNotaCreditoUseCase } from './application/use-cases/emitir-nota-credito.use-case';
 import { EmitirNotaDebitoUseCase } from './application/use-cases/emitir-nota-debito.use-case';
 import { EmitirRetencionUseCase } from './application/use-cases/emitir-retencion.use-case';
+import { EmitirGuiaRemisionUseCase } from './application/use-cases/emitir-guia-remision.use-case';
 import { EmitirComprobanteManualUseCase } from './application/use-cases/emitir-comprobante-manual.use-case';
 
 // Infrastructure
@@ -60,6 +61,7 @@ import { JobsService } from '../../infrastructure/jobs/jobs.service';
     EmitirNotaCreditoUseCase,
     EmitirNotaDebitoUseCase,
     EmitirRetencionUseCase,
+    EmitirGuiaRemisionUseCase,
     EmitirComprobanteManualUseCase,
     ClaveAccesoService,
     XmlBuilderService,
@@ -104,6 +106,7 @@ import { JobsService } from '../../infrastructure/jobs/jobs.service';
     EmitirNotaCreditoUseCase,
     EmitirNotaDebitoUseCase,
     EmitirRetencionUseCase,
+    EmitirGuiaRemisionUseCase,
     EmitirComprobanteManualUseCase,
     XmlSignerService,
     PdfService,

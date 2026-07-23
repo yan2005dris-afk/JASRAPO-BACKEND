@@ -8,6 +8,7 @@ import { EmitirFacturaUseCase } from '../use-cases/emitir-factura.use-case';
 import { EmitirNotaCreditoUseCase } from '../use-cases/emitir-nota-credito.use-case';
 import { EmitirNotaDebitoUseCase } from '../use-cases/emitir-nota-debito.use-case';
 import { EmitirRetencionUseCase } from '../use-cases/emitir-retencion.use-case';
+import { EmitirGuiaRemisionUseCase } from '../use-cases/emitir-guia-remision.use-case';
 import { ComprobanteRepository } from '../../domain/repositories/comprobante.repository';
 import { SriSoapClient } from '../../infrastructure/soap/sri-soap.client';
 import { XmlBuilderService } from '../../infrastructure/xml/xml-builder.service';
@@ -21,6 +22,8 @@ import {
   NotaDebitoResponseDto,
   CreateRetencionDto,
   RetencionResponseDto,
+  CreateGuiaRemisionDto,
+  GuiaRemisionResponseDto,
   EmisionEncoladaResponseDto,
 } from '../../interfaces/dto';
 import { TIPO_COMPROBANTE_DESCRIPCIONES } from '../../domain/constants';
@@ -38,6 +41,7 @@ export class SriService {
     private readonly emitirNotaCreditoUseCase: EmitirNotaCreditoUseCase,
     private readonly emitirNotaDebitoUseCase: EmitirNotaDebitoUseCase,
     private readonly emitirRetencionUseCase: EmitirRetencionUseCase,
+    private readonly emitirGuiaRemisionUseCase: EmitirGuiaRemisionUseCase,
     private readonly eventEmitter: EventEmitter2,
     private readonly configService: ConfigService,
     private readonly xmlBuilder: XmlBuilderService,
@@ -148,6 +152,30 @@ export class SriService {
     this.logger.log(`Retención encolada con Job ID: ${jobId}`);
     return {
       mensaje: 'Retención encolada para emisión asíncrona',
+      jobId: jobId || 'N/A',
+      estado: 'EN_COLA',
+    };
+  }
+
+  // ==========================================
+  // GUÍA DE REMISIÓN — Delegado a EmitirGuiaRemisionUseCase
+  // ==========================================
+
+  async emitirGuiaRemision(
+    dto: CreateGuiaRemisionDto,
+  ): Promise<EmisionEncoladaResponseDto | GuiaRemisionResponseDto> {
+    const isAsync =
+      this.configService.get<string>('SRI_EMISION_ASYNC') !== 'false';
+    if (!isAsync) {
+      return this.emitirGuiaRemisionUseCase.emitirGuiaRemision(dto);
+    }
+    const jobId = await this.jobsService.send(SRI_EMISION_JOB, {
+      tipo: 'GUIA_REMISION',
+      dto,
+    });
+    this.logger.log(`Guía de remisión encolada con Job ID: ${jobId}`);
+    return {
+      mensaje: 'Guía de remisión encolada para emisión asíncrona',
       jobId: jobId || 'N/A',
       estado: 'EN_COLA',
     };

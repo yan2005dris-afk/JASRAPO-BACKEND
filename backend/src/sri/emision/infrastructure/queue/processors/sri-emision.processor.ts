@@ -3,6 +3,7 @@ import { EmitirFacturaUseCase } from '../../../application/use-cases/emitir-fact
 import { EmitirNotaCreditoUseCase } from '../../../application/use-cases/emitir-nota-credito.use-case';
 import { EmitirNotaDebitoUseCase } from '../../../application/use-cases/emitir-nota-debito.use-case';
 import { EmitirRetencionUseCase } from '../../../application/use-cases/emitir-retencion.use-case';
+import { EmitirGuiaRemisionUseCase } from '../../../application/use-cases/emitir-guia-remision.use-case';
 import { SriIntegrationService } from '../../../application/services/sri-integration.service';
 import { SRI_EMISION_JOB } from './sri-emision.constants';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
@@ -22,6 +23,7 @@ export class SriEmisionProcessor implements OnModuleInit {
     private readonly emitirNotaCreditoUseCase: EmitirNotaCreditoUseCase,
     private readonly emitirNotaDebitoUseCase: EmitirNotaDebitoUseCase,
     private readonly emitirRetencionUseCase: EmitirRetencionUseCase,
+    private readonly emitirGuiaRemisionUseCase: EmitirGuiaRemisionUseCase,
     private readonly sriIntegrationService: SriIntegrationService,
     private readonly logger: LoggerService,
   ) {}
@@ -59,6 +61,8 @@ export class SriEmisionProcessor implements OnModuleInit {
           return await this.emitirNotaDebitoUseCase.emitirNotaDebito(dto);
         case 'RETENCION':
           return await this.emitirRetencionUseCase.emitirRetencion(dto);
+        case 'GUIA_REMISION':
+          return await this.emitirGuiaRemisionUseCase.emitirGuiaRemision(dto);
         default:
           throw new Error(`Tipo de comprobante no soportado: ${tipo}`);
       }
