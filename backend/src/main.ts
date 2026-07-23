@@ -164,7 +164,9 @@ async function bootstrap() {
   );
 
   // Filtro global de excepciones
-  app.useGlobalFilters(new GlobalExceptionFilter());
+  app.useGlobalFilters(
+    new GlobalExceptionFilter(app.get(ConfigService), app.get(LoggerService)),
+  );
 
   const config = new DocumentBuilder()
     .setTitle('JASRAPO API')

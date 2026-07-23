@@ -7,7 +7,9 @@ import {
   BadRequestException,
   ValidationError,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Request, Response } from 'express';
+import { LoggerService } from '../../../infrastructure/observability/logger/logger.service';
 
 interface FormattedValidationError {
   field: string;
@@ -27,6 +29,11 @@ interface ErrorResponse {
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly loggerService: LoggerService,
+  ) {}
+
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
@@ -73,18 +80,39 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     }
     // Errores no manejados (deberían ser 500)
     else if (exception instanceof Error) {
-      // En desarrollo, mostrar el mensaje real
-      // En producción, mostrar mensaje genérico
-      message =
-        process.env.NODE_ENV === 'development'
-          ? exception.message
-          : 'Error interno del servidor';
+      // Gate detail exposure on an explicit operator flag, NOT on NODE_ENV.
+      // Default is OFF: production deploys that forgot to flip NODE_ENV still
+      // return a generic message instead of leaking Prisma column/FK/IP details.
+      const exposeDetails =
+        this.configService.get('EXPOSE_ERROR_DETAILS') === 'true';
 
-      // Log the error for debugging - in production this would go to the logger
-      if (process.env.NODE_ENV === 'development') {
-        // eslint-disable-next-line no-console
-        console.error('Unhandled error:', exception);
-      }
+      message = exposeDetails
+        ? exception.message
+        : 'Error interno del servidor';
+    }
+
+    // Log full stack to Loki for every unhandled exception, regardless of
+    // whether the response body exposes the message. Never put the stack in
+    // the response body — it leaks column names, FK chains, internal IPs.
+    if (!(exception instanceof HttpException) && exception instanceof Error) {
+      const requestId = this.extractRequestId(request);
+      this.loggerService.error(
+        exception.message,
+        exception.stack,
+        'GlobalExceptionFilter',
+      );
+      this.loggerService.log(
+        JSON.stringify({
+          event: 'unhandled_exception',
+          name: exception.name,
+          message: exception.message,
+          stack: exception.stack,
+          path: request.url,
+          method: request.method,
+          requestId,
+        }),
+        'GlobalExceptionFilter',
+      );
     }
 
     const errorResponse: ErrorResponse = {
@@ -106,6 +134,15 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     }
 
     response.status(status).json(errorResponse);
+  }
+
+  private extractRequestId(request: Request): string | undefined {
+    const headerValue =
+      (request.headers['x-request-id'] as string | undefined) ??
+      (request.headers['x-correlation-id'] as string | undefined);
+    return typeof headerValue === 'string' && headerValue.length > 0
+      ? headerValue
+      : undefined;
   }
 
   /**
