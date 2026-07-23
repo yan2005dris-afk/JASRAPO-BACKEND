@@ -50,3 +50,6 @@ CLAUDE
 /backend/openspec
 /.claude
 /.junie
+
+# --- Certs (self-signed RustFS TLS material; contains a private key, generated locally) ---
+certs/
