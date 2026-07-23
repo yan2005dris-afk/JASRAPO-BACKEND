@@ -10,8 +10,11 @@ import {
   ListBucketsCommand,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { NodeHttpHandler } from '@smithy/node-http-handler';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Agent as HttpsAgent } from 'https';
+import { Agent as HttpAgent } from 'http';
 import { Readable } from 'stream';
 
 @Injectable()
@@ -40,6 +43,23 @@ export class S3ClientService implements OnModuleInit {
       this.configService.getOrThrow<string>('STORAGE_ACCESS_KEY');
     const secretKey =
       this.configService.getOrThrow<string>('STORAGE_SECRET_KEY');
+
+    // STORAGE_SSL_VERIFY controls whether the AWS SDK TLS layer validates the
+    // server certificate. Defaults to true (verify). Set to false ONLY when
+    // connecting to a server with a self-signed certificate that the host
+    // does not trust (typical in dev/staging with local RustFS). A warning
+    // is logged at startup whenever this escape hatch is engaged so the
+    // posture is visible in production-like environments.
+    const storageSslVerify = this.configService.get<string>(
+      'STORAGE_SSL_VERIFY',
+      'true',
+    );
+    const sslVerify = storageSslVerify !== 'false';
+    if (!sslVerify) {
+      this.logger.warn(
+        `[STORAGE] STORAGE_SSL_VERIFY=false: TLS certificate verification is disabled. The client will trust any certificate presented by the storage endpoint (${endpoint}:${port}). Use ONLY in dev or staging with self-signed certs; production MUST keep this on.`,
+      );
+    }
 
     if (!accessKey || accessKey.trim().length === 0) {
       throw new Error(
@@ -72,6 +92,13 @@ export class S3ClientService implements OnModuleInit {
         accessKeyId: accessKey,
         secretAccessKey: secretKey,
       },
+      requestHandler: new NodeHttpHandler({
+        httpAgent: new HttpAgent({ keepAlive: true }),
+        httpsAgent: new HttpsAgent({
+          keepAlive: true,
+          rejectUnauthorized: sslVerify,
+        }),
+      }),
     });
 
     try {

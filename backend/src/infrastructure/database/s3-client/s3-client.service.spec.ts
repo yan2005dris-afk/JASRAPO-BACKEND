@@ -17,6 +17,16 @@ jest.mock('@aws-sdk/s3-request-presigner', () => ({
   getSignedUrl: jest.fn(),
 }));
 
+// Capture the options passed to the NodeHttpHandler constructor so we can
+// assert on `httpsAgent.options.rejectUnauthorized` without making a real
+// HTTP request. `httpHandlerConfigs()` only resolves after the first handle(),
+// so constructor-time inspection is the right level for these tests.
+jest.mock('@smithy/node-http-handler', () => ({
+  NodeHttpHandler: jest.fn().mockImplementation((opts: unknown) => ({
+    __constructorOptions: opts,
+  })),
+}));
+
 describe('S3ClientService', () => {
   let service: S3ClientService;
   let mockConfigService: jest.Mocked<ConfigService>;
@@ -443,6 +453,129 @@ describe('S3ClientService', () => {
       const s3Calls = (S3Client as jest.Mock).mock.calls;
       expect(s3Calls).toHaveLength(1);
       expect(s3Calls[0][0].endpoint).toMatch(/^http:\/\/localhost:9000$/);
+    });
+  });
+
+  // --- STORAGE_SSL_VERIFY ---
+
+  describe('STORAGE_SSL_VERIFY (self-signed cert escape hatch)', () => {
+    type BootstrapEnv = Record<string, unknown>;
+
+    function overrideConfig(values: BootstrapEnv): void {
+      mockConfigService.get.mockImplementation(
+        (key: string, defaultValue?: unknown) => {
+          if (Object.prototype.hasOwnProperty.call(values, key)) {
+            return values[key];
+          }
+          return defaultValue;
+        },
+      );
+    }
+
+    function stubSuccessfulBoot(): void {
+      const send = jest.fn();
+      (S3Client as jest.Mock).mockImplementation(() => ({ send }));
+      send.mockResolvedValueOnce({ Buckets: [] });
+      send.mockResolvedValueOnce({});
+      send.mockResolvedValueOnce({});
+      send.mockResolvedValueOnce({});
+    }
+
+    const baseEnv: BootstrapEnv = {
+      STORAGE_ENDPOINT: 'localhost',
+      STORAGE_PORT: 9000,
+      STORAGE_USE_SSL: 'true',
+      STORAGE_ACCESS_KEY: 'admin',
+      STORAGE_SECRET_KEY: 'password123',
+    };
+
+    it('should default to STORAGE_SSL_VERIFY=true (rejectUnauthorized: true) when unset', async () => {
+      overrideConfig({ ...baseEnv });
+      stubSuccessfulBoot();
+
+      await service.onModuleInit();
+
+      const s3Calls = (S3Client as jest.Mock).mock.calls;
+      expect(s3Calls).toHaveLength(1);
+      const requestHandler = s3Calls[0][0].requestHandler;
+      expect(requestHandler).toBeDefined();
+      const handlerOptions = (
+        requestHandler as unknown as { __constructorOptions?: unknown }
+      ).__constructorOptions as
+        | { httpsAgent?: { options: { rejectUnauthorized?: boolean } } }
+        | undefined;
+      const httpsAgent = handlerOptions?.httpsAgent;
+      expect(httpsAgent).toBeDefined();
+      expect(httpsAgent?.options.rejectUnauthorized).toBe(true);
+    });
+
+    it('should set rejectUnauthorized=false when STORAGE_SSL_VERIFY=false (self-signed escape hatch)', async () => {
+      overrideConfig({ ...baseEnv, STORAGE_SSL_VERIFY: 'false' });
+      stubSuccessfulBoot();
+
+      await service.onModuleInit();
+
+      const s3Calls = (S3Client as jest.Mock).mock.calls;
+      expect(s3Calls).toHaveLength(1);
+      const handlerOptions = s3Calls[0][0].requestHandler as unknown as {
+        __constructorOptions?: {
+          httpsAgent?: { options: { rejectUnauthorized?: boolean } };
+        };
+      };
+      const httpsAgent = handlerOptions.__constructorOptions?.httpsAgent;
+      expect(httpsAgent?.options.rejectUnauthorized).toBe(false);
+    });
+
+    it('should accept any value other than the literal "false" as truthy (e.g. "0", "no")', async () => {
+      overrideConfig({ ...baseEnv, STORAGE_SSL_VERIFY: '0' });
+      stubSuccessfulBoot();
+
+      await service.onModuleInit();
+
+      const s3Calls = (S3Client as jest.Mock).mock.calls;
+      const handlerOptions = s3Calls[0][0].requestHandler as unknown as {
+        __constructorOptions?: {
+          httpsAgent?: { options: { rejectUnauthorized?: boolean } };
+        };
+      };
+      const httpsAgent = handlerOptions.__constructorOptions?.httpsAgent;
+      expect(httpsAgent?.options.rejectUnauthorized).toBe(true);
+    });
+
+    it('should log a warning when STORAGE_SSL_VERIFY=false', async () => {
+      overrideConfig({ ...baseEnv, STORAGE_SSL_VERIFY: 'false' });
+      stubSuccessfulBoot();
+      const warnSpy = jest
+        .spyOn(
+          (service as unknown as { logger: { warn: jest.Mock } }).logger,
+          'warn',
+        )
+        .mockImplementation(() => undefined);
+
+      await service.onModuleInit();
+
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('STORAGE_SSL_VERIFY=false'),
+      );
+      warnSpy.mockRestore();
+    });
+
+    it('should not log the warning when STORAGE_SSL_VERIFY is unset (default true)', async () => {
+      overrideConfig({ ...baseEnv });
+      stubSuccessfulBoot();
+      const warnSpy = jest
+        .spyOn(
+          (service as unknown as { logger: { warn: jest.Mock } }).logger,
+          'warn',
+        )
+        .mockImplementation(() => undefined);
+
+      await service.onModuleInit();
+
+      expect(warnSpy).not.toHaveBeenCalledWith(
+        expect.stringContaining('STORAGE_SSL_VERIFY=false'),
+      );
+      warnSpy.mockRestore();
     });
   });
 });
