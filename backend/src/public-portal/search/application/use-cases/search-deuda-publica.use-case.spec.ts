@@ -1,10 +1,12 @@
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { SearchDeudaPublicaUseCase } from './search-deuda-publica.use-case';
 import type {
   IClienteConContratosRaw,
   IContratoConDeudaRaw,
   IPrefacturaParaCalculo,
 } from '../../domain/types/debt-search.types';
+
+import type { BusquedaPublicaRepository } from '../../domain/repositories/busqueda-publica.repository';
 
 const makeCliente = (
   override: Partial<IClienteConContratosRaw> = {},
@@ -36,14 +38,11 @@ const makeContratoRaw = (
 const createMockRepo = (
   clientes: IClienteConContratosRaw[] = [],
   contratosDeuda: IContratoConDeudaRaw[] = [],
-  total = 0,
-) => ({
+): jest.Mocked<BusquedaPublicaRepository> => ({
   findClientesBy: jest.fn().mockResolvedValue(clientes),
-  countClientesBy: jest.fn().mockResolvedValue(clientes.length || total),
+  countClientesBy: jest.fn().mockResolvedValue(clientes.length),
   findContratosDeudaBy: jest.fn().mockResolvedValue(contratosDeuda),
-  countContratosDeuda: jest
-    .fn()
-    .mockResolvedValue(contratosDeuda.length || total),
+  countContratosDeuda: jest.fn().mockResolvedValue(contratosDeuda.length),
 });
 
 describe('SearchDeudaPublicaUseCase', () => {
@@ -58,22 +57,7 @@ describe('SearchDeudaPublicaUseCase', () => {
         'identificacion',
         '0912345678',
         0,
-        10,
-      );
-      expect(repo.findContratosDeudaBy).not.toHaveBeenCalled();
-    });
-
-    it('nombre uses findClientesBy and skips findContratosDeudaBy', async () => {
-      const repo = createMockRepo([makeCliente()]);
-      const useCase = new SearchDeudaPublicaUseCase(repo);
-
-      await useCase.execute('nombre', 'Juan Pérez');
-
-      expect(repo.findClientesBy).toHaveBeenCalledWith(
-        'nombre',
-        'Juan Pérez',
-        0,
-        10,
+        50,
       );
       expect(repo.findContratosDeudaBy).not.toHaveBeenCalled();
     });
@@ -88,37 +72,27 @@ describe('SearchDeudaPublicaUseCase', () => {
         'numeroGuia',
         'G-001',
         0,
-        10,
+        50,
       );
       expect(repo.findClientesBy).not.toHaveBeenCalled();
     });
   });
 
-  describe('identificacion / nombre path (client-first)', () => {
-    it('returns client with no contracts when client has none', async () => {
+  describe('identificacion path (client-first)', () => {
+    it('returns client with no contracts and zero totalDeuda when client has no contracts', async () => {
       const useCase = new SearchDeudaPublicaUseCase(
         createMockRepo([makeCliente()]),
       );
 
       const result = await useCase.execute('identificacion', '0912345678');
 
-      expect(result.data).toHaveLength(1);
-      expect(result.data[0].contratos).toHaveLength(0);
+      expect(result.cliente.nombre).toBe('Juan Pérez');
+      expect(result.cliente.identificacion).toBe('0912345678');
+      expect(result.contratos).toHaveLength(0);
+      expect(result.totalDeuda).toBe(0);
     });
 
-    it('returns separate entries for different clients', async () => {
-      const clientes = [
-        makeCliente({ clienteId: 1n }),
-        makeCliente({ clienteId: 2n, identificacion: '0999999999' }),
-      ];
-      const useCase = new SearchDeudaPublicaUseCase(createMockRepo(clientes));
-
-      const result = await useCase.execute('nombre', 'juan');
-
-      expect(result.data).toHaveLength(2);
-    });
-
-    it('computes debt values from prefacturas inside contratos', async () => {
+    it('computes debt values and totalDeuda from prefacturas inside contratos', async () => {
       const prefacturas: IPrefacturaParaCalculo[] = [
         { totalPagar: 100, abono: 25, periodoId: 202601 },
         { totalPagar: 80, abono: 0, periodoId: 202602 },
@@ -136,11 +110,12 @@ describe('SearchDeudaPublicaUseCase', () => {
       const useCase = new SearchDeudaPublicaUseCase(createMockRepo([cliente]));
 
       const result = await useCase.execute('identificacion', '0912345678');
-      const contrato = result.data[0].contratos[0];
+      const contrato = result.contratos[0];
 
       expect(contrato.saldoVencido).toBe(155);
       expect(contrato.deudaAnterior).toBe(75);
       expect(contrato.mesesAtrasado).toBe(2);
+      expect(result.totalDeuda).toBe(155);
     });
 
     it('returns Sin nombre when nombres and apellidos are null', async () => {
@@ -150,64 +125,42 @@ describe('SearchDeudaPublicaUseCase', () => {
 
       const result = await useCase.execute('identificacion', '0912345678');
 
-      expect(result.data[0].cliente.nombre).toBe('Sin nombre');
+      expect(result.cliente.nombre).toBe('Sin nombre');
     });
   });
 
   describe('numeroGuia path (contract-first)', () => {
-    it('groups multiple contracts from the same client into one entry', async () => {
+    it('groups multiple contracts from the same client into one entry and sums totalDeuda', async () => {
       const contratos = [
         makeContratoRaw({ contratoId: 1n, numeroGuia: 'G-001' }),
         makeContratoRaw({ contratoId: 2n, numeroGuia: 'G-002' }),
       ];
       const useCase = new SearchDeudaPublicaUseCase(
-        createMockRepo([], contratos, 2),
+        createMockRepo([], contratos),
       );
 
       const result = await useCase.execute('numeroGuia', 'G-00');
 
-      expect(result.data).toHaveLength(1);
-      expect(result.data[0].contratos).toHaveLength(2);
+      expect(result.cliente.nombre).toBe('Juan Pérez');
+      expect(result.contratos).toHaveLength(2);
+      expect(result.totalDeuda).toBe(200);
     });
   });
 
-  describe('validation', () => {
+  describe('not found / validation', () => {
+    it('throws NotFoundException when no client or contract is found', async () => {
+      const useCase = new SearchDeudaPublicaUseCase(createMockRepo([], []));
+
+      await expect(
+        useCase.execute('identificacion', '0000000000'),
+      ).rejects.toThrow(NotFoundException);
+    });
+
     it('throws BadRequestException when valor is blank', async () => {
       const useCase = new SearchDeudaPublicaUseCase(createMockRepo());
 
       await expect(useCase.execute('identificacion', '   ')).rejects.toThrow(
         BadRequestException,
-      );
-    });
-  });
-
-  describe('pagination', () => {
-    it('caps limit to 50 and enforces page minimum of 1', async () => {
-      const useCase = new SearchDeudaPublicaUseCase(createMockRepo([], [], 0));
-
-      const result = await useCase.execute('nombre', 'test', 0, 100);
-
-      expect(result.meta.limit).toBe(50);
-      expect(result.meta.page).toBe(1);
-    });
-
-    it('caps limit to 50 on the identificacion path', async () => {
-      const repo = createMockRepo([makeCliente()], [], 1);
-      const useCase = new SearchDeudaPublicaUseCase(repo);
-
-      const result = await useCase.execute(
-        'identificacion',
-        '0912345678',
-        1,
-        100,
-      );
-
-      expect(result.meta.limit).toBe(50);
-      expect(repo.findClientesBy).toHaveBeenCalledWith(
-        'identificacion',
-        '0912345678',
-        0,
-        50,
       );
     });
   });

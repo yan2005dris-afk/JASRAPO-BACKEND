@@ -20,18 +20,14 @@ Sub-dominio único: `search/` (búsqueda pública de deuda).
 
 1. Valida que `valor` (el término de búsqueda) no esté vacío.
 2. Limita `limit` a un máximo de 50 y `page` a mínimo 1.
-3. Si `tipo === 'numeroGuia'`: busca directamente por número de guía, trae los contratos que matchean y los **agrupa por cliente** en la respuesta.
-4. Cualquier otro `tipo`: busca clientes (por identificación/nombre según el repositorio) y devuelve sus contratos anidados.
-5. Por cada contrato devuelto, calcula (`DebtCalculatorHelper`, a partir de las prefacturas impagadas del contrato):
-   - `saldoVencido`
-   - `deudaAnterior`
-   - `mesesAtrasado`
+3. Si `tipo === 'numeroGuia'`: busca directamente por número de guía/contrato, trae los contratos que matchean y los **agrupa por cliente** en la respuesta.
+4. Si `tipo === 'identificacion'`: busca cliente por número de identificación (cédula, RUC, pasaporte) y devuelve sus contratos anidados.
 
 La respuesta expone nombre del cliente, identificación, y por contrato: `numeroGuia`, `estado`, y el resumen de deuda — **no** expone montos de detalle, historial de pagos ni datos sensibles adicionales.
 
 ## Qué puede hacer un actor no autenticado
 
-- Consultar si un cliente/contrato tiene deuda pendiente y desde cuándo, dado que conozca su identificación, nombre o número de guía.
+- Consultar si un cliente/contrato tiene deuda pendiente y desde cuándo, dado que conozca su identificación (cédula/RUC/pasaporte) o número de guía/contrato.
 - Nada más: no puede pagar, no puede descargar PDFs, no puede ver comprobantes — este módulo es de solo lectura y de un único propósito (consulta de deuda).
 
 ## Archivos clave

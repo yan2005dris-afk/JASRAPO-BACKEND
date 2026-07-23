@@ -15,20 +15,16 @@ export class BusquedaPublicaController {
   ) {}
 
   @ApiOperation({
-    summary: 'Búsqueda pública de clientes con deuda',
+    summary: 'Búsqueda pública de cliente con deuda',
     description:
-      'Busca clientes por identificación, nombre o número de guía y retorna sus contratos con resumen de deuda.',
+      'Busca un cliente por número de identificación (cédula/RUC/pasaporte) o por número de guía/contrato y retorna su resumen de deuda.',
   })
-  @ApiResponse({ status: 200, description: 'Clientes con resumen de deuda' })
+  @ApiResponse({ status: 200, description: 'Resumen de deuda del cliente' })
   @ApiResponse({ status: 400, description: 'Parámetros inválidos' })
+  @ApiResponse({ status: 404, description: 'No se encontró registro de deuda' })
   @Get()
   @Throttle({ default: { limit: 10, ttl: 60000 } })
   search(@Query() query: SearchDeudaDto) {
-    return this.busquedaPublicaService.search(
-      query.tipo,
-      query.valor,
-      query.page ?? 1,
-      query.limit ?? 10,
-    );
+    return this.busquedaPublicaService.search(query.tipo, query.valor);
   }
 }

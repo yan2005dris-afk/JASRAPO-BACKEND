@@ -4,7 +4,11 @@ export class ClienteDeudaPublicaDto {
   @ApiProperty({ example: 'Juan Pablo Pérez' })
   nombre!: string;
 
-  @ApiProperty({ example: '0912345678', nullable: true })
+  @ApiProperty({
+    example: '0912345678',
+    nullable: true,
+    description: 'Número de cédula, RUC o pasaporte del cliente.',
+  })
   identificacion!: string | null;
 }
 
@@ -37,18 +41,17 @@ export class ContratoDeudaPublicaDto {
   mesesAtrasado!: number;
 }
 
-export class DeudaPublicaItemDto {
+export class DeudaPublicaResponseDto {
   @ApiProperty({ type: ClienteDeudaPublicaDto })
   cliente!: ClienteDeudaPublicaDto;
 
   @ApiProperty({ type: [ContratoDeudaPublicaDto] })
   contratos!: ContratoDeudaPublicaDto[];
-}
 
-export class DeudaPublicaResponseDto {
-  @ApiProperty({ type: [DeudaPublicaItemDto] })
-  data!: DeudaPublicaItemDto[];
-
-  @ApiProperty({ example: { total: 1, page: 1, limit: 10 } })
-  meta!: { total: number; page: number; limit: number };
+  @ApiProperty({
+    example: 155.0,
+    description:
+      'Monto total de deuda acumulada en todos los contratos del cliente',
+  })
+  totalDeuda!: number;
 }

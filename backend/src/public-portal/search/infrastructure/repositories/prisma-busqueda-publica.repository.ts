@@ -61,14 +61,11 @@ export class PrismaBusquedaPublicaRepository implements BusquedaPublicaRepositor
   }
 
   async countClientesBy(
-    tipo: 'identificacion' | 'nombre',
+    tipo: 'identificacion',
     valor: string,
   ): Promise<number> {
     return this.prisma.clientes.count({
-      where: {
-        ...this.buildWhereCliente(tipo, valor),
-        contratos: { some: { deletedAt: null } },
-      },
+      where: this.buildWhereCliente(tipo, valor),
     });
   }
 
@@ -122,25 +119,10 @@ export class PrismaBusquedaPublicaRepository implements BusquedaPublicaRepositor
   }
 
   private buildWhereCliente(
-    tipo: 'identificacion' | 'nombre',
+    tipo: 'identificacion',
     valor: string,
   ): Prisma.ClientesWhereInput {
-    if (tipo === 'identificacion') {
-      return { identificacion: valor, deletedAt: null };
-    }
-    // tipo === 'nombre'
-    const tokens = this.normalizarTokens(valor);
-    return {
-      deletedAt: null,
-      AND: tokens.map(
-        (t): Prisma.ClientesWhereInput => ({
-          OR: [
-            { nombres: { contains: t, mode: 'insensitive' } },
-            { apellidos: { contains: t, mode: 'insensitive' } },
-          ],
-        }),
-      ),
-    };
+    return { identificacion: valor, deletedAt: null };
   }
 
   private buildWhereDeuda(
@@ -153,34 +135,15 @@ export class PrismaBusquedaPublicaRepository implements BusquedaPublicaRepositor
       return { ...base, cliente: { identificacion: valor, deletedAt: null } };
     }
 
-    if (tipo === 'numeroGuia') {
-      return {
-        ...base,
-        numeroGuia: { contains: valor, mode: 'insensitive' },
-        cliente: { deletedAt: null },
-        prefacturas: {
-          some: {
-            deletedAt: null,
-            estado: { in: [...ESTADOS_DEUDA] },
-          },
-        },
-      };
-    }
-
-    // tipo === 'nombre'
-    const tokens = this.normalizarTokens(valor);
     return {
       ...base,
-      cliente: {
-        deletedAt: null,
-        AND: tokens.map(
-          (t): Prisma.ClientesWhereInput => ({
-            OR: [
-              { nombres: { contains: t, mode: 'insensitive' } },
-              { apellidos: { contains: t, mode: 'insensitive' } },
-            ],
-          }),
-        ),
+      numeroGuia: { contains: valor, mode: 'insensitive' },
+      cliente: { deletedAt: null },
+      prefacturas: {
+        some: {
+          deletedAt: null,
+          estado: { in: [...ESTADOS_DEUDA] },
+        },
       },
     };
   }

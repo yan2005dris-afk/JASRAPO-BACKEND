@@ -8,7 +8,7 @@ export class BusquedaPublicaService {
     private readonly searchDeudaPublicaUseCase: SearchDeudaPublicaUseCase,
   ) {}
 
-  async search(tipo: TipoBusquedaDeuda, valor: string, page = 1, limit = 10) {
-    return this.searchDeudaPublicaUseCase.execute(tipo, valor, page, limit);
+  async search(tipo: TipoBusquedaDeuda, valor: string) {
+    return this.searchDeudaPublicaUseCase.execute(tipo, valor);
   }
 }
