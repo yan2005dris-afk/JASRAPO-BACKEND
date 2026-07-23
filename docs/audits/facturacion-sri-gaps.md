@@ -13,7 +13,7 @@
 | Nota de Crédito | **Parcial** | Endpoint SRI completo (576 líneas); sin disparo automático desde `billing` (anulación de pago no la genera) ni tests |
 | Nota de Débito | **Parcial** | Endpoint SRI completo (481 líneas); sin disparo automático desde `billing` ni tests |
 | Comprobante de Retención | **Parcial** | Endpoint SRI completo (477 líneas); sin disparo automático desde `billing` ni tests |
-| Guía de Remisión | **Ausente** | Solo existe el valor de enum `GUIA_REMISION = '06'`; no hay use-case, servicio, DTO completo ni endpoint |
+| Guía de Remisión | **No aplica (Fuera de alcance)** | No aplica al dominio de JASRAPO (Junta de Agua Potable); no se requiere transporte de bienes/mercaderías |
 | Firma XML (XAdES-BES) | **Implementado** | `xml-signer.service.ts`, con spec propio |
 | Envío SRI (Recepción) | **Implementado** | `sri-soap.client.ts#validarComprobante`, con circuit breaker por ambiente |
 | Autorización (polling) | **Parcial** | Polling con backoff exponencial pero acotado a `SRI_MAX_RETRIES` (default 3) dentro del mismo job; sin job programado que reintente automáticamente los que quedan `EN PROCESO`/`PENDIENTE` |
@@ -30,32 +30,12 @@
 
 ## 2. Detalle por brecha
 
-### 2.1 Guía de Remisión — ausente
+### 2.1 Guía de Remisión — no aplica al dominio
 
-**Qué falta**: no existe `emitir-guia-remision.use-case.ts`, ni servicio, ni
-controlador. El único rastro es `TipoComprobante.GUIA_REMISION = '06'` en
-`backend/src/sri/emision/domain/constants/sri.enums.ts:10` y algunas
-referencias sueltas en DTOs/enums de consulta
-(`backend/src/sri/emision/interfaces/dto/query-comprobantes.dto.ts`,
-`backend/src/sri/emision/domain/interfaces/comprobante.interface.ts`).
-`EmisionModule` (`backend/src/sri/emision/emision.module.ts:59-63`) solo
-registra `EmitirFacturaUseCase`, `EmitirNotaCreditoUseCase`,
-`EmitirNotaDebitoUseCase`, `EmitirRetencionUseCase` y
-`EmitirComprobanteManualUseCase`.
+**Estado**: Fuera de alcance (No aplica).
 
-**Por qué importa**: la guía de remisión es obligatoria para el transporte de
-bienes (lecturas de medidores, entregas de equipos, materiales de
-instalación) según la normativa SRI. Sin ella, cualquier traslado de
-mercancía de la empresa queda fuera de cobertura fiscal.
+**Justificación de negocio**: JASRAPO administra la Junta del Sistema Regional de Agua Potable Olón. Los servicios ofrecidos corresponden al suministro de agua potable, alcantarillado y cobranza de planillas a usuarios finales. La Guía de Remisión (comprobante SRI 06) según la normativa fiscal del SRI está destinada al traslado de mercaderías/bienes físicos en logística y transporte. No aplica a la operación de facturación de servicios públicos de agua de la Junta.
 
-**Referencia**: `open-api-facturacion-sri-main/src/modules/sri/services/guia-remision.service.ts`
-(423 líneas) y `open-api-facturacion-sri-main/src/modules/sri/dto/guia-remision.dto.ts`
-implementan el flujo completo en la base de referencia.
-
-**Dónde debería vivir**: `backend/src/sri/emision/application/use-cases/emitir-guia-remision.use-case.ts`,
-siguiendo el mismo patrón que `emitir-retencion.use-case.ts`, más su DTO en
-`backend/src/sri/emision/interfaces/dto/guia-remision.dto.ts` y registro en
-`emision.module.ts` y `sri.controller.ts`.
 
 ### 2.2 NC/ND/Retención sin disparo automático desde `billing`
 
