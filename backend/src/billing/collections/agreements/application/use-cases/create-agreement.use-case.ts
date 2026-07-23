@@ -3,6 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { Decimal } from 'decimal.js';
 import { Prisma } from 'src/generated/prisma/client';
 import { DateUtil } from 'src/shared/utils/date.util';
 import { addMonths } from 'date-fns';
@@ -104,24 +105,45 @@ export class CreateAgreementUseCase {
     const mesesMoraActual = debtSummary.maxMesesAtrasado ?? 0;
 
     // ── 6. Calcular intereses sobre el monto a financiar ─────────────────────
-    const montoAFinanciar = deudaTotal - abonoInicial;
-    const interesesTotales =
-      Math.round(montoAFinanciar * tasaMensual * dto.numeroCuotas * 100) / 100;
+    const montoAFinanciarDecimal = new Decimal(deudaTotal).minus(
+      abonoInicial,
+    );
+    const interesesTotalesDecimal = montoAFinanciarDecimal
+      .times(tasaMensual)
+      .times(dto.numeroCuotas)
+      .toDecimalPlaces(2);
 
     // Monto total a distribuir en cuotas: deuda neta + intereses
-    const totalADistribuir = montoAFinanciar + interesesTotales;
+    const totalADistribuirDecimal = montoAFinanciarDecimal.plus(
+      interesesTotalesDecimal,
+    );
 
     // ── 7. Calcular valor de cada cuota ──────────────────────────────────────
-    const valorCuotaBase =
-      Math.floor((totalADistribuir / dto.numeroCuotas) * 100) / 100;
-    const totalDistribuido = valorCuotaBase * (dto.numeroCuotas - 1);
-    const valorUltimaCuota =
-      Math.round((totalADistribuir - totalDistribuido) * 100) / 100;
+    // Cuota base: se redondea hacia abajo (Decimal.ROUND_DOWN) y el remanente
+    // se absorbe íntegramente en la última cuota para que la suma de todas
+    // las cuotas coincida exactamente con totalADistribuir (sin drift de coma
+    // flotante).
+    const valorCuotaBaseDecimal = totalADistribuirDecimal
+      .dividedBy(dto.numeroCuotas)
+      .toDecimalPlaces(2, Decimal.ROUND_DOWN);
+    const totalDistribuidoDecimal = valorCuotaBaseDecimal.times(
+      dto.numeroCuotas - 1,
+    );
+    const valorUltimaCuotaDecimal = totalADistribuirDecimal
+      .minus(totalDistribuidoDecimal)
+      .toDecimalPlaces(2);
 
-    const interesPorCuota =
+    const interesPorCuotaDecimal =
       dto.numeroCuotas > 0
-        ? Math.round((interesesTotales / dto.numeroCuotas) * 100) / 100
-        : 0;
+        ? interesesTotalesDecimal.dividedBy(dto.numeroCuotas).toDecimalPlaces(2)
+        : new Decimal(0);
+
+    const montoAFinanciar = montoAFinanciarDecimal.toNumber();
+    const interesesTotales = interesesTotalesDecimal.toNumber();
+    const totalADistribuir = totalADistribuirDecimal.toNumber();
+    const valorCuotaBase = valorCuotaBaseDecimal.toNumber();
+    const valorUltimaCuota = valorUltimaCuotaDecimal.toNumber();
+    const interesPorCuota = interesPorCuotaDecimal.toNumber();
 
     // ── 8. Determinar estado del convenio ────────────────────────────────────
     const estadoConvenio: EstadoConvenio =
