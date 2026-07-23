@@ -157,7 +157,7 @@ export class EmitirNotaDebitoUseCase {
       ) {
         throw new BadRequestException(
           `El emisor ${dto.emisor.ruc} no tiene certificado P12 configurado. ` +
-            `Use el endpoint /certificates/upload-cert para subir el certificado.`,
+            `Use el endpoint POST /emisores/:id/certificado para subir el certificado.`,
         );
       }
 

@@ -149,7 +149,7 @@ export class EmitirFacturaUseCase {
       ) {
         throw new BadRequestException(
           `El emisor con RUC ${dto.emisor.ruc} no tiene certificado digital configurado. ` +
-            'Use el endpoint POST /certificates/upload-cert con el RUC para vincular un certificado P12.',
+            'Use el endpoint POST /emisores/:id/certificado para vincular un certificado P12.',
         );
       }
 
