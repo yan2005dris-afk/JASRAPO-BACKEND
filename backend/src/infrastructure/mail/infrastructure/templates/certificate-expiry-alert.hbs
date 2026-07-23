@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Alerta de Expiración de Certificado Digital</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f4f4f4; }
+    .container { max-width: 600px; margin: 0 auto; background: #ffffff; }
+    .header { background: #c0392b; color: #ffffff; padding: 20px; text-align: center; }
+    .header.warning { background: #d35400; }
+    .content { padding: 30px; color: #333333; line-height: 1.6; }
+    .details { background: #f8f9fa; border-left: 4px solid #c0392b; padding: 15px; margin: 20px 0; }
+    .details.warning { border-left-color: #d35400; }
+    .footer { background: #f4f4f4; padding: 20px; text-align: center; font-size: 12px; color: #666666; }
+    .badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-weight: bold; color: #fff; background: #c0392b; }
+    .badge.warning { background: #d35400; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header {{#if isWarning}}warning{{/if}}">
+      <h1>JASRAPO - Facturación Electrónica SRI</h1>
+      <p>Notificación de Certificado Digital P12</p>
+    </div>
+    <div class="content">
+      <h2>Estimado Administrador,</h2>
+      <p>Se ha detectado una novedad con el certificado digital de firma electrónica registrado para la siguiente empresa emisora:</p>
+      
+      <div class="details {{#if isWarning}}warning{{/if}}">
+        <p><strong>Emisor / RUC:</strong> {{razonSocial}} ({{ruc}})</p>
+        <p><strong>Sujeto:</strong> {{certificadoSujeto}}</p>
+        <p><strong>Fecha de Expiración:</strong> {{fechaExpiracion}}</p>
+        <p><strong>Estado:</strong> 
+          {{#if isExpired}}
+            <span class="badge">EXPIRADO</span> (Expiró hace {{diasAbsolutos}} días)
+          {{else}}
+            <span class="badge warning">POR EXPIRAR</span> (Faltan {{diasHastaExpiracion}} días)
+          {{/if}}
+        </p>
+      </div>
+
+      <p>
+        {{#if isExpired}}
+          <strong>Atención:</strong> El certificado ya ha expirado. Las emisiones de comprobantes electrónicos fallarán hasta que se cargue un nuevo certificado P12 válido.
+        {{else}}
+          Por favor, renueve y actualice el certificado P12 antes de la fecha de vencimiento para evitar interrupciones en la emision de comprobantes electrónicos al SRI.
+        {{/if}}
+      </p>
+    </div>
+    <div class="footer">
+      <p>JASRAPO - Sistema de Gestión de Agua Potable y Facturación Electrónica</p>
+      <p>Este es un mensaje automático generado por el sistema de monitoreo de certificados.</p>
+    </div>
+  </div>
+</body>
+</html>

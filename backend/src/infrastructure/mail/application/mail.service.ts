@@ -111,6 +111,35 @@ export class MailService {
     });
   }
 
+  async sendCertificateExpiryAlert(
+    to: string,
+    alertData: {
+      ruc: string;
+      razonSocial: string;
+      certificadoSujeto: string;
+      fechaExpiracion: string;
+      diasHastaExpiracion: number;
+      isExpired: boolean;
+    },
+  ): Promise<string> {
+    const isWarning = !alertData.isExpired;
+    const subject = alertData.isExpired
+      ? `[URGENTE] Certificado Digital EXPIRADO - Emisor ${alertData.ruc}`
+      : `[ALERTA] Certificado Digital expira en ${alertData.diasHastaExpiracion} días - Emisor ${alertData.ruc}`;
+
+    return this.sendQueued({
+      version: 2,
+      to,
+      subject,
+      template: 'certificate-expiry-alert',
+      context: {
+        ...alertData,
+        isWarning,
+        diasAbsolutos: Math.abs(alertData.diasHastaExpiracion),
+      },
+    });
+  }
+
   async sendBatchPlanillas(
     clientes: Array<{
       email: string;
