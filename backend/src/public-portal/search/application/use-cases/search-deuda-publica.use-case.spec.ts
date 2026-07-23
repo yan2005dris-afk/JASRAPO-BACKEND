@@ -6,6 +6,8 @@ import type {
   IPrefacturaParaCalculo,
 } from '../../domain/types/debt-search.types';
 
+import type { BusquedaPublicaRepository } from '../../domain/repositories/busqueda-publica.repository';
+
 const makeCliente = (
   override: Partial<IClienteConContratosRaw> = {},
 ): IClienteConContratosRaw => ({
@@ -36,7 +38,7 @@ const makeContratoRaw = (
 const createMockRepo = (
   clientes: IClienteConContratosRaw[] = [],
   contratosDeuda: IContratoConDeudaRaw[] = [],
-) => ({
+): jest.Mocked<BusquedaPublicaRepository> => ({
   findClientesBy: jest.fn().mockResolvedValue(clientes),
   countClientesBy: jest.fn().mockResolvedValue(clientes.length),
   findContratosDeudaBy: jest.fn().mockResolvedValue(contratosDeuda),
@@ -47,7 +49,7 @@ describe('SearchDeudaPublicaUseCase', () => {
   describe('routing — which repo method is called per tipo', () => {
     it('identificacion uses findClientesBy and skips findContratosDeudaBy', async () => {
       const repo = createMockRepo([makeCliente()]);
-      const useCase = new SearchDeudaPublicaUseCase(repo as any);
+      const useCase = new SearchDeudaPublicaUseCase(repo);
 
       await useCase.execute('identificacion', '0912345678');
 
@@ -62,7 +64,7 @@ describe('SearchDeudaPublicaUseCase', () => {
 
     it('numeroGuia uses findContratosDeudaBy and skips findClientesBy', async () => {
       const repo = createMockRepo([], [makeContratoRaw()]);
-      const useCase = new SearchDeudaPublicaUseCase(repo as any);
+      const useCase = new SearchDeudaPublicaUseCase(repo);
 
       await useCase.execute('numeroGuia', 'G-001');
 
@@ -79,7 +81,7 @@ describe('SearchDeudaPublicaUseCase', () => {
   describe('identificacion path (client-first)', () => {
     it('returns client with no contracts and zero totalDeuda when client has no contracts', async () => {
       const useCase = new SearchDeudaPublicaUseCase(
-        createMockRepo([makeCliente()]) as any,
+        createMockRepo([makeCliente()]),
       );
 
       const result = await useCase.execute('identificacion', '0912345678');
@@ -105,7 +107,7 @@ describe('SearchDeudaPublicaUseCase', () => {
           },
         ],
       });
-      const useCase = new SearchDeudaPublicaUseCase(createMockRepo([cliente]) as any);
+      const useCase = new SearchDeudaPublicaUseCase(createMockRepo([cliente]));
 
       const result = await useCase.execute('identificacion', '0912345678');
       const contrato = result.contratos[0];
@@ -118,7 +120,7 @@ describe('SearchDeudaPublicaUseCase', () => {
 
     it('returns Sin nombre when nombres and apellidos are null', async () => {
       const useCase = new SearchDeudaPublicaUseCase(
-        createMockRepo([makeCliente({ nombres: null, apellidos: null })]) as any,
+        createMockRepo([makeCliente({ nombres: null, apellidos: null })]),
       );
 
       const result = await useCase.execute('identificacion', '0912345678');
@@ -134,7 +136,7 @@ describe('SearchDeudaPublicaUseCase', () => {
         makeContratoRaw({ contratoId: 2n, numeroGuia: 'G-002' }),
       ];
       const useCase = new SearchDeudaPublicaUseCase(
-        createMockRepo([], contratos) as any,
+        createMockRepo([], contratos),
       );
 
       const result = await useCase.execute('numeroGuia', 'G-00');
@@ -147,7 +149,7 @@ describe('SearchDeudaPublicaUseCase', () => {
 
   describe('not found / validation', () => {
     it('throws NotFoundException when no client or contract is found', async () => {
-      const useCase = new SearchDeudaPublicaUseCase(createMockRepo([], []) as any);
+      const useCase = new SearchDeudaPublicaUseCase(createMockRepo([], []));
 
       await expect(
         useCase.execute('identificacion', '0000000000'),
@@ -155,7 +157,7 @@ describe('SearchDeudaPublicaUseCase', () => {
     });
 
     it('throws BadRequestException when valor is blank', async () => {
-      const useCase = new SearchDeudaPublicaUseCase(createMockRepo() as any);
+      const useCase = new SearchDeudaPublicaUseCase(createMockRepo());
 
       await expect(useCase.execute('identificacion', '   ')).rejects.toThrow(
         BadRequestException,

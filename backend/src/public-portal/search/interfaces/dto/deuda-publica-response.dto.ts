@@ -50,7 +50,8 @@ export class DeudaPublicaResponseDto {
 
   @ApiProperty({
     example: 155.0,
-    description: 'Monto total de deuda acumulada en todos los contratos del cliente',
+    description:
+      'Monto total de deuda acumulada en todos los contratos del cliente',
   })
   totalDeuda!: number;
 }

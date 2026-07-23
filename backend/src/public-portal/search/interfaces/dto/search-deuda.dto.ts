@@ -1,6 +1,6 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Transform, Type } from 'class-transformer';
-import { IsIn, IsInt, IsString, Max, Min, MinLength } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
+import { IsIn, IsString, MinLength } from 'class-validator';
 import type { TipoBusquedaDeuda } from '../../domain/types/debt-search.types';
 
 export class SearchDeudaDto {
