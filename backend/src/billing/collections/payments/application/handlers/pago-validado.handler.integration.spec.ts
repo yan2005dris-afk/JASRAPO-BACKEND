@@ -12,7 +12,7 @@ import { PrismaPaymentRepository } from 'src/billing/collections/payments/infras
 import { PaymentRepository } from 'src/billing/collections/payments/domain/repositories/payment.repository';
 import { PrismaComprobanteRepository } from 'src/sri/emision/infrastructure/persistence/prisma-comprobante.repository';
 import { ComprobanteRepository } from 'src/sri/emision/domain/repositories/comprobante.repository';
-import { PagoValidadoHandler } from 'src/billing/collections/payments/application/pago-validado.handler';
+import { PagoValidadoHandler } from 'src/billing/collections/payments/application/handlers/pago-validado.handler';
 import { SRIEmissionDispatcherService } from 'src/sri/emision/application/services/sri-emission-dispatcher.service';
 import { ComprobanteEstado } from 'src/sri/emision/domain/constants/comprobante-estado.enum';
 import { SRI_EMISION_JOB } from 'src/sri/emision/infrastructure/queue/processors/sri-emision.constants';
@@ -191,8 +191,6 @@ describe('PagoValidadoHandler — E-007 concurrent emission (integration)', () =
       },
     });
 
-    // Raw insert pagos (the schema declares tarjeta_credito which the
-    // migrations don't have — typed `prisma.pagos.create` errors out).
     const pagoInserts = await prisma.$queryRaw<Array<{ pago_id: bigint }>>`
       INSERT INTO pagos
         (cliente_id, fecha_pago, monto_total_recibido, creado_por, estado_validacion, actualizado_en)
@@ -222,25 +220,20 @@ describe('PagoValidadoHandler — E-007 concurrent emission (integration)', () =
   it('only one of two concurrent procesarPagoValidado calls enqueues the sri-emision job', async () => {
     const { comprobante, pago1, pago2 } = await seedEscenarioConcurrente();
 
-    // Fire both in parallel — both will see the comprobante as BORRADOR and
-    // race on the optimistic lock.
     const results = await Promise.allSettled([
       handler.procesarPagoValidado(pago1.pagoId),
       handler.procesarPagoValidado(pago2.pagoId),
     ]);
 
-    // Neither call should throw.
     expect(results[0].status).toBe('fulfilled');
     expect(results[1].status).toBe('fulfilled');
 
-    // Exactly ONE job should have been enqueued (the winner).
     expect(jobsService.send).toHaveBeenCalledTimes(1);
     expect(jobsService.send).toHaveBeenCalledWith(SRI_EMISION_JOB, {
       tipo: 'FACTURA_DESDE_PREFACTURA',
       comprobanteId: comprobante.id,
     });
 
-    // The comprobante ends in ENVIANDO, not duplicated anywhere.
     const after = await prisma.comprobantes.findUnique({
       where: { id: comprobante.id },
     });

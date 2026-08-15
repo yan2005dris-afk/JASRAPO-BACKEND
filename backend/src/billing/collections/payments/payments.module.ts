@@ -10,8 +10,8 @@ import { FindOnePaymentUseCase } from './application/use-cases/find-one-payment.
 import { ValidatePaymentUseCase } from './application/use-cases/validate-payment.use-case';
 import { AnnulPaymentUseCase } from './application/use-cases/annul-payment.use-case';
 import { ApplySaldoFavorUseCase } from './application/use-cases/apply-saldo-favor.use-case';
-import { PagoValidadoHandler } from './application/pago-validado.handler';
-import { CuotaPagadaHandler } from './application/cuota-pagada.handler';
+import { PagoValidadoHandler } from './application/handlers/pago-validado.handler';
+import { CuotaPagadaHandler } from './application/handlers/cuota-pagada.handler';
 import { JobsService } from '../../../infrastructure/jobs/jobs.service';
 import { OutboxModule } from 'src/shared/outbox/outbox.module';
 import { OutboxProcessor } from 'src/shared/outbox/application/outbox.processor';

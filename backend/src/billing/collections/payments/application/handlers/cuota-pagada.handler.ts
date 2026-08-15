@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { PrefacturaQueryRepository } from '../domain/repositories/prefactura-query.repository';
-import { SRIEmissionDispatcherService } from '../../../../sri/emision/application/services/sri-emission-dispatcher.service';
+import { PrefacturaQueryRepository } from '../../domain/repositories/prefactura-query.repository';
+import { SRIEmissionDispatcherService } from '../../../../../sri/emision/application/services/sri-emission-dispatcher.service';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
@@ -32,9 +32,8 @@ export class CuotaPagadaHandler {
 
     const prefacturaId = detalles[0].prefacturaId;
 
-    const prefactura = await this.prefacturaRepository.findPrefacturaWithDetails(
-      prefacturaId,
-    );
+    const prefactura =
+      await this.prefacturaRepository.findPrefacturaWithDetails(prefacturaId);
 
     if (!prefactura) {
       this.logger.warn(
