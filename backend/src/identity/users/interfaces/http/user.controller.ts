@@ -43,6 +43,21 @@ import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-
 
 const MAX_UPLOAD_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
 
+const AVATAR_UPLOAD_OPTIONS = {
+  limits: { fileSize: MAX_UPLOAD_SIZE_BYTES },
+  fileFilter: (req: any, file: Express.Multer.File, callback: any) => {
+    if (!file.mimetype.match(/^image\/(jpg|jpeg|png|webp)$/i)) {
+      return callback(
+        new BadRequestException(
+          'Solo se permiten imágenes (jpg, jpeg, png, webp)',
+        ),
+        false,
+      );
+    }
+    callback(null, true);
+  },
+};
+
 @ApiTags('users')
 @ApiBearerAuth()
 @ApiExtraModels(UserResponseDto, UserDetailResponseDto, UserProfileResponseDto)
@@ -88,22 +103,7 @@ export class UserController {
   })
   @RequiredPermission('users', 'update')
   @Patch('me')
-  @UseInterceptors(
-    FileInterceptor('file', {
-      limits: { fileSize: MAX_UPLOAD_SIZE_BYTES },
-      fileFilter: (req, file, callback) => {
-        if (!file.mimetype.match(/^image\/(jpg|jpeg|png|webp)$/i)) {
-          return callback(
-            new BadRequestException(
-              'Solo se permiten imágenes (jpg, jpeg, png, webp)',
-            ),
-            false,
-          );
-        }
-        callback(null, true);
-      },
-    }),
-  )
+  @UseInterceptors(FileInterceptor('file', AVATAR_UPLOAD_OPTIONS))
   async updateMe(
     @AuthUserId() userId: number,
     @Body() updateDto: UpdateUserDto,
@@ -116,7 +116,9 @@ export class UserController {
     } = updateDto;
 
     const result = await this.userService.updateUser(userId, selfData, file);
-    if (!result) throw new NotFoundException('Usuario no encontrado');
+    if (!result) {
+      throw new NotFoundException('Usuario no encontrado');
+    }
     return result;
   }
 
@@ -138,22 +140,7 @@ export class UserController {
   })
   @RequiredPermission('users', 'create')
   @Post()
-  @UseInterceptors(
-    FileInterceptor('file', {
-      limits: { fileSize: MAX_UPLOAD_SIZE_BYTES },
-      fileFilter: (req, file, callback) => {
-        if (!file.mimetype.match(/^image\/(jpg|jpeg|png|webp)$/i)) {
-          return callback(
-            new BadRequestException(
-              'Solo se permiten imágenes (jpg, jpeg, png, webp)',
-            ),
-            false,
-          );
-        }
-        callback(null, true);
-      },
-    }),
-  )
+  @UseInterceptors(FileInterceptor('file', AVATAR_UPLOAD_OPTIONS))
   create(
     @Body() createUserDto: CreateUserDto,
     @UploadedFile() file?: Express.Multer.File,
@@ -232,22 +219,7 @@ export class UserController {
   })
   @RequiredPermission('users', 'update')
   @Patch(':id')
-  @UseInterceptors(
-    FileInterceptor('file', {
-      limits: { fileSize: MAX_UPLOAD_SIZE_BYTES },
-      fileFilter: (req, file, callback) => {
-        if (!file.mimetype.match(/^image\/(jpg|jpeg|png|webp)$/i)) {
-          return callback(
-            new BadRequestException(
-              'Solo se permiten imágenes (jpg, jpeg, png, webp)',
-            ),
-            false,
-          );
-        }
-        callback(null, true);
-      },
-    }),
-  )
+  @UseInterceptors(FileInterceptor('file', AVATAR_UPLOAD_OPTIONS))
   async updateUser(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateUserDto: UpdateUserDto,
