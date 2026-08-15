@@ -14,6 +14,7 @@ import { UserEntity } from '../../domain/entities/user.entity';
 export class CreateUserDto extends OmitType(UserEntity, [
   'usuarioId',
   'rol',
+  'avatar',
 ] as const) {
   @IsEmail()
   @IsNotEmptyString()
