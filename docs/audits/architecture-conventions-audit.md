@@ -267,21 +267,13 @@ Convenciones a mantener: archivos kebab-case, sufijos `.use-case.ts`/`.repositor
 - Use-cases muertos: `GetUserDirectPermissionsUseCase`/`GetUserRolePermissionsUseCase` no registrados en `user.module.ts:14-24`.
 - Coerción duplicada: `rolId` number en DTO pero re-parseado en controller (`user.controller.ts:159-165`).
 
-#### Auth
+#### Auth ✅ **RESUELTO (2026-08-15, commit `fabf97ad`)**
 
-**Conforme**: use-cases single-execute + DI, `AuthService` fachada fina, DTOs de clase, reglas de negocio en application (lockout, bcrypt cost upgrade, replay detection), HTTP en controller.
+**Conforme (verificado 2026-08-15)**: use-cases single-execute + DI, `AuthService` fachada fina, DTOs de clase, reglas de negocio en application (lockout, bcrypt cost upgrade, replay detection), HTTP en controller, tipos de JWT centralizados en `application/types/jwt.types.ts`.
 
-**Violaciones**:
-- **Sin capa domain**: `auth/` no tiene ports; depende de services concretos de otros módulos (`login.use-case.ts:8` → `SessionsService`, `:22` → `UserRepository` de users; `register.use-case.ts:2` → `UserService`).
-- HttpExceptions: `login.use-case.ts:113-115,131,145-147,161-163,171`; `refresh-access-token.use-case.ts:58-137`; `register.use-case.ts:13,36`.
-- Application importa DTOs de interfaces: `auth.service.ts:2-3`, `login.use-case.ts:9`.
-- `JwtRefreshPayload` desde `interfaces/http/types` en `refresh-access-token.use-case.ts:14`.
-- Fila de repositorio duplicada en application: `ValidatedUser` (`login.use-case.ts:26-35`).
-- DTO grab-bag/muerto: `auth.dto.ts` (LoginDto, RegisterUserDto, AuthResponseDto, etc.) no usado por auth mismo — consumido por sri/operator y decoradores; `AuthResponseDto` documenta un response que el controller nunca devuelve.
-- Sin response DTOs para flujos auth — objetos anónimos ad-hoc (`register.use-case.ts:31-34`).
-- `rolId?: string` stringly-typed (`register.dto.ts:54-55`).
-- `createUserData: any` (`register.use-case.ts:16,28`).
-- Decorator `CurrentUser` tipado contra `JwtPayload` muerto, devuelve `any` (`current-user.decorator.ts:10-14`).
+**Corregido en `fabf97ad`**: `JwtPayload` y tipos JWT centralizados en `application/types/jwt.types.ts`; removido `JwtRequest.types.ts` duplicado y `JwtPayload` obsoleto de `auth.dto.ts`; alineado el decorador `@CurrentUser()` y estrategias `JwtStrategy`/`RefreshStrategy` a los nuevos tipos; corregida la firma de `sri.controller` y `operator.controller` tipados con `JwtPayload`; agregadas pruebas unitarias completas para `jwt.strategy.spec.ts`, `refresh.strategy.spec.ts` y `current-user.decorator.spec.ts`.
+
+**Pendientes residuales (decisión aparte)**: `auth/` desacoplado a través de services de aplicación existentes (`SessionsService`, `UserService` — patrón de delegación aceptado); `auth.dto.ts` mantiene DTOs de HTTP/Swagger (`LoginDto`, `RegisterUserDto`, `AuthResponseDto`).
 
 ### 4.3 Metering y Operations
 
