@@ -2,7 +2,7 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { FindOnePermissionUseCase } from './find-one-permission.use-case';
 import { PermissionRepository } from '../../domain/repositories/permission.repository';
-import { NotFoundException } from '@nestjs/common';
+import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 
 describe('FindOnePermissionUseCase', () => {
   let useCase: FindOnePermissionUseCase;
@@ -41,18 +41,18 @@ describe('FindOnePermissionUseCase', () => {
     expect(result).toEqual(mockPermission);
   });
 
-  it('should throw NotFoundException if permission does not exist', async () => {
+  it('should throw EntityNotFoundException if permission does not exist', async () => {
     mockPermissionRepository.findUnique.mockResolvedValue(null);
 
-    await expect(useCase.execute(1)).rejects.toThrow(NotFoundException);
+    await expect(useCase.execute(1)).rejects.toThrow(EntityNotFoundException);
   });
 
-  it('should throw NotFoundException if permission is deleted', async () => {
+  it('should throw EntityNotFoundException if permission is deleted', async () => {
     mockPermissionRepository.findUnique.mockResolvedValue({
       permisoId: 1,
       deletedAt: new Date(),
     });
 
-    await expect(useCase.execute(1)).rejects.toThrow(NotFoundException);
+    await expect(useCase.execute(1)).rejects.toThrow(EntityNotFoundException);
   });
 });

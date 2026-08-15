@@ -1,28 +1,19 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { RoleRepository } from '../../domain/repositories/role.repository';
+import { RoleEntity } from '../../domain/entities/role.entity';
+import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 
 @Injectable()
 export class FindOneRoleUseCase {
   constructor(private readonly roleRepository: RoleRepository) {}
 
-  async execute(id: number) {
+  async execute(id: number): Promise<RoleEntity> {
     const role = await this.roleRepository.findUnique(id);
 
     if (!role || role.deletedAt) {
-      throw new NotFoundException('Rol no encontrado');
+      throw new EntityNotFoundException('Rol', id);
     }
 
-    return {
-      rolId: role.rolId,
-      nombre: role.nombre,
-      permisos: (role.rolPermisos || []).map((rp: any) => ({
-        rolPermisoId: rp.rolPermisoId,
-        permisoId: rp.permisoId,
-        nombre: rp.permiso?.nombre,
-        descripcion: rp.permiso?.descripcion,
-        recurso: rp.permiso?.recurso,
-        accion: rp.permiso?.accion,
-      })),
-    };
+    return role;
   }
 }

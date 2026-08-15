@@ -8,6 +8,9 @@ import type {
   FailedLoginAttemptOptions,
   FailedLoginAttemptResult,
   DomainPaginationParams,
+  DomainPaginatedResult,
+  UserDirectPermission,
+  UserRolePermission,
 } from '../types/user.types';
 
 export type {
@@ -19,6 +22,9 @@ export type {
   FailedLoginAttemptOptions,
   FailedLoginAttemptResult,
   DomainPaginationParams,
+  DomainPaginatedResult,
+  UserDirectPermission,
+  UserRolePermission,
 };
 
 export abstract class UserRepository {
@@ -32,12 +38,12 @@ export abstract class UserRepository {
 
   abstract findManyActive(
     pagination: DomainPaginationParams,
-  ): Promise<{ data: UserEntity[]; meta: any }>;
+  ): Promise<DomainPaginatedResult<UserEntity>>;
 
   abstract findMany(
     filters: UserFilters,
     pagination: DomainPaginationParams,
-  ): Promise<{ data: UserEntity[]; meta: any }>;
+  ): Promise<DomainPaginatedResult<UserEntity>>;
 
   abstract create(data: CreateUserRepositoryData): Promise<UserEntity>;
 
@@ -47,9 +53,13 @@ export abstract class UserRepository {
     tx?: any,
   ): Promise<UserEntity>;
 
-  abstract findDirectPermissions(usuarioId: number): Promise<any[]>;
+  abstract findDirectPermissions(
+    usuarioId: number,
+  ): Promise<UserDirectPermission[]>;
 
-  abstract findRolePermissions(rolId: number): Promise<any[]>;
+  abstract findRolePermissions(
+    rolId: number,
+  ): Promise<UserRolePermission[]>;
 
   abstract updatePermissions(
     usuarioId: number,

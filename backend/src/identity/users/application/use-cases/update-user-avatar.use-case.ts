@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { UserRepository } from '../../domain/repositories/user.repository';
 import { UserAvatar } from '../../domain/types/user.types';
@@ -7,6 +7,7 @@ import {
   StorageService,
   SRI_STORAGE_TYPES,
 } from 'src/infrastructure/storage/storage.service';
+import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 
 @Injectable()
 export class UpdateUserAvatarUseCase {
@@ -21,7 +22,7 @@ export class UpdateUserAvatarUseCase {
   ): Promise<UserAvatar> {
     const user = await this.userRepository.findById(usuarioId);
     if (!user || user.deletedAt) {
-      throw new NotFoundException('Usuario no encontrado');
+      throw new EntityNotFoundException('Usuario', usuarioId);
     }
 
     let newAvatarKey: string | undefined;

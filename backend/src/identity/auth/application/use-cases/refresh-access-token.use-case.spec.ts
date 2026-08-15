@@ -5,7 +5,7 @@ import { UserRepository } from '../../../users/domain/repositories/user.reposito
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { SessionsService } from '../../../sessions/application/sessions.service';
-import { UnauthorizedException } from '@nestjs/common';
+import { UnauthorizedDomainException } from 'src/shared/domain/exceptions/domain.exception';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 const mockLogger = {
   log: jest.fn(),
@@ -192,7 +192,6 @@ describe('RefreshAccessTokenUseCase', () => {
         'Refresh token replay detected',
       );
       expect(sessionsService.rotateSession).not.toHaveBeenCalled();
-      // Replay detectado: se revocan TODAS las sesiones del usuario.
       expect(sessionsService.revokeAllUserSessions).toHaveBeenCalledWith(1);
     });
 
@@ -210,7 +209,6 @@ describe('RefreshAccessTokenUseCase', () => {
       });
       jwtService.signAsync.mockResolvedValue('new-token');
       jwtService.decode.mockReturnValue({ iat: 100, exp: 200 });
-      // Otra request rotó primero: el UPDATE atómico no afecta filas.
       sessionsService.rotateSession.mockResolvedValue(0);
 
       await expect(useCase.execute('sid', 'rt', 'ip', 'ua', 1)).rejects.toThrow(
@@ -230,26 +228,26 @@ describe('RefreshAccessTokenUseCase', () => {
       (jwtService.verifyAsync as jest.Mock).mockResolvedValue(refreshPayload);
 
       await expect(useCase.execute('sid', 'rt', 'ip', 'ua', 1)).rejects.toThrow(
-        UnauthorizedException,
+        UnauthorizedDomainException,
       );
       expect(sessionsService.rotateSession).not.toHaveBeenCalled();
     });
 
-    it('should throw UnauthorizedException if session not found', async () => {
+    it('should throw UnauthorizedDomainException if session not found', async () => {
       sessionsService.getSession.mockResolvedValue(null);
       (jwtService.verifyAsync as jest.Mock).mockResolvedValue(refreshPayload);
       await expect(useCase.execute('sid', 'rt', 'ip', 'ua', 1)).rejects.toThrow(
-        UnauthorizedException,
+        UnauthorizedDomainException,
       );
     });
 
-    it('should throw UnauthorizedException if session revoked', async () => {
+    it('should throw UnauthorizedDomainException if session revoked', async () => {
       sessionsService.getSession.mockResolvedValue({
         revocado: true,
       } as any);
       (jwtService.verifyAsync as jest.Mock).mockResolvedValue(refreshPayload);
       await expect(useCase.execute('sid', 'rt', 'ip', 'ua', 1)).rejects.toThrow(
-        UnauthorizedException,
+        UnauthorizedDomainException,
       );
     });
   });

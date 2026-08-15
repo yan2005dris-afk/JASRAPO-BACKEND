@@ -1,9 +1,9 @@
-import {
-  Injectable,
-  NotFoundException,
-  ConflictException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { RoleRepository } from '../../domain/repositories/role.repository';
+import {
+  EntityNotFoundException,
+  EntityAlreadyExistsException,
+} from 'src/shared/domain/exceptions/domain.exception';
 
 @Injectable()
 export class AssignPermissionToRoleUseCase {
@@ -12,11 +12,11 @@ export class AssignPermissionToRoleUseCase {
   async execute(rolId: number, permisoId: number) {
     const role = await this.roleRepository.findUnique(rolId);
     if (!role || role.deletedAt)
-      throw new NotFoundException('Rol no encontrado o eliminado');
+      throw new EntityNotFoundException('Rol', rolId);
 
     const permission = await this.roleRepository.findPermission(permisoId);
     if (!permission || permission.deletedAt)
-      throw new NotFoundException('Permiso no encontrado o eliminado');
+      throw new EntityNotFoundException('Permiso', permisoId);
 
     const existing = await this.roleRepository.findFirstAssignment(
       rolId,
@@ -29,7 +29,11 @@ export class AssignPermissionToRoleUseCase {
           deletedAt: null,
         });
       }
-      throw new ConflictException('El rol ya tiene ese permiso asignado');
+      throw new EntityAlreadyExistsException(
+        'Asignación Rol-Permiso',
+        'permisoId',
+        String(permisoId),
+      );
     }
 
     return this.roleRepository.assignPermission(rolId, permisoId);

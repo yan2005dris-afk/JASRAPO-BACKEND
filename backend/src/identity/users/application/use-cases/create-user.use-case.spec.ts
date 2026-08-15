@@ -1,11 +1,14 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { BadRequestException, NotFoundException } from '@nestjs/common';
-import { ConflictException } from '@nestjs/common';
+import { BadRequestException } from '@nestjs/common';
 import { CreateUserUseCase } from './create-user.use-case';
 import { UserRepository } from '../../domain/repositories/user.repository';
 import { RoleRepository } from '../../../roles/domain/repositories/role.repository';
 import { StorageService } from 'src/infrastructure/storage/storage.service';
+import {
+  EntityNotFoundException,
+  EntityAlreadyExistsException,
+} from 'src/shared/domain/exceptions/domain.exception';
 
 describe('CreateUserUseCase', () => {
   let useCase: CreateUserUseCase;
@@ -98,7 +101,7 @@ describe('CreateUserUseCase', () => {
     mockRoleRepository.findByName.mockResolvedValue(null);
 
     await expect(useCase.execute(dto)).rejects.toThrow(
-      'No existe el rol por defecto "user".',
+      EntityNotFoundException,
     );
     expect(mockRoleRepository.findByName).toHaveBeenCalledWith('user');
   });
@@ -133,7 +136,7 @@ describe('CreateUserUseCase', () => {
     expect(mockRoleRepository.findUnique).toHaveBeenCalledWith(2);
   });
 
-  it('should throw NotFoundException if provided rolId does not exist', async () => {
+  it('should throw EntityNotFoundException if provided rolId does not exist', async () => {
     mockUserRepository.findByEmail.mockResolvedValue(null);
     mockRoleRepository.findUnique.mockResolvedValue(null);
     await expect(
@@ -144,7 +147,7 @@ describe('CreateUserUseCase', () => {
         telefono: '0991234567',
         rolId: 999,
       }),
-    ).rejects.toThrow('Rol no encontrado o eliminado');
+    ).rejects.toThrow(EntityNotFoundException);
   });
 
   it('should throw BadRequestException for invalid Ecuador phone', async () => {
@@ -159,7 +162,7 @@ describe('CreateUserUseCase', () => {
     ).rejects.toThrow(BadRequestException);
   });
 
-  it('should throw ConflictException if email is already taken', async () => {
+  it('should throw EntityAlreadyExistsException if email is already taken', async () => {
     mockUserRepository.findByEmail.mockResolvedValue({
       usuarioId: 1,
       email: 'taken@example.com',
@@ -171,10 +174,10 @@ describe('CreateUserUseCase', () => {
         apellidos: 'User',
         telefono: '0991234567',
       }),
-    ).rejects.toThrow(ConflictException);
+    ).rejects.toThrow(EntityAlreadyExistsException);
   });
 
-  it('should throw ConflictException with clear message if email belongs to a deleted user', async () => {
+  it('should throw EntityAlreadyExistsException if email belongs to a deleted user', async () => {
     mockUserRepository.findByEmail.mockResolvedValue({
       usuarioId: 1,
       email: 'deleted@example.com',
@@ -187,8 +190,6 @@ describe('CreateUserUseCase', () => {
         apellidos: 'User',
         telefono: '0991234567',
       }),
-    ).rejects.toThrow(
-      'El correo electrónico pertenece a un usuario eliminado. Contacte al administrador para restaurar el usuario.',
-    );
+    ).rejects.toThrow(EntityAlreadyExistsException);
   });
 });

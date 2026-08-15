@@ -25,28 +25,19 @@ export class GetUserDetailUseCase {
         : Promise.resolve([]),
     ]);
 
-    return {
-      usuarioId: user.usuarioId,
-      email: user.email,
-      nombres: user.nombres,
-      apellidos: user.apellidos,
-      telefono: user.telefono,
-      avatar: user.avatar,
-      rol:
-        user.rol && !user.rol.deletedAt
-          ? { rolId: user.rol.rolId, nombre: user.rol.nombre }
-          : null,
-      permisosDirectos: directPermissionRows.map((a) => ({
-        usuarioPermisoId: a.usuarioPermisoId,
-        permisoId: a.permisoId,
-        recurso: a.permiso.recurso,
-        accion: a.permiso.accion,
-        permitido: a.permitido,
-      })),
-      permisosRol: rolePermissionRows.map((rp) => ({
-        recurso: rp.permiso.recurso,
-        accion: rp.permiso.accion,
-      })),
-    } as any;
+    user.permisosDirectos = directPermissionRows.map((a) => ({
+      usuarioPermisoId: a.usuarioPermisoId,
+      permisoId: a.permisoId,
+      recurso: a.recurso,
+      accion: a.accion,
+      permitido: a.permitido,
+    }));
+
+    user.permisosRol = rolePermissionRows.map((rp) => ({
+      recurso: rp.recurso,
+      accion: rp.accion,
+    }));
+
+    return user;
   }
 }

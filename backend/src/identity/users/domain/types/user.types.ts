@@ -29,6 +29,23 @@ export interface DomainPaginationParams {
   [key: string]: any;
 }
 
+export interface DomainPaginationMeta {
+  total: number;
+  page: number;
+  limit: number;
+  ultimaPagina: number;
+  paginaActual: number;
+  porPagina: number;
+  anterior: number | null;
+  siguiente: number | null;
+  [key: string]: any;
+}
+
+export interface DomainPaginatedResult<T> {
+  data: T[];
+  meta: DomainPaginationMeta;
+}
+
 export interface FiltroFecha {
   igualA?: Date | null;
   antesDe?: Date;
@@ -61,10 +78,6 @@ export interface UpdateUserRepositoryData {
   deletedAt?: Date | null;
 }
 
-/**
- * Usuario devuelto por el flujo de login: incluye el hash de la clave y el
- * estado de protección contra fuerza bruta (issue #136).
- */
 export type UserWithPasswordAndLockout = UserEntity & {
   clave: string;
   intentosFallidos: number;
@@ -72,16 +85,9 @@ export type UserWithPasswordAndLockout = UserEntity & {
   bloqueadoHasta: Date | null;
 };
 
-/**
- * Configuración para registrar un intento de login fallido y aplicar la
- * política de lockout por cuenta.
- */
 export interface FailedLoginAttemptOptions {
-  /** Ventana deslizante en ms. Si el último fallo fue fuera de esta ventana, el contador arranca desde 1. */
   windowMs: number;
-  /** Umbral de fallos a partir del cual se bloquea la cuenta. */
   threshold: number;
-  /** Duración del bloqueo en ms (cooldown). */
   lockoutDurationMs: number;
 }
 

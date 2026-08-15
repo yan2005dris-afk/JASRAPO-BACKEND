@@ -1,6 +1,10 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { UserService } from 'src/identity/users/application/user.service';
 import { RegisterDto } from '../../interfaces/dto/register.dto';
+import {
+  EntityAlreadyExistsException,
+  InvalidDomainOperationException,
+} from 'src/shared/domain/exceptions/domain.exception';
 
 @Injectable()
 export class RegisterUseCase {
@@ -10,7 +14,11 @@ export class RegisterUseCase {
     const user = await this.userService.user({ email: registerDto.email });
 
     if (user) {
-      throw new BadRequestException('El correo ya está registrado');
+      throw new EntityAlreadyExistsException(
+        'Usuario',
+        'email',
+        registerDto.email,
+      );
     }
 
     const createUserData: any = {
@@ -20,7 +28,6 @@ export class RegisterUseCase {
       telefono: registerDto.telefono,
     };
 
-    // Agregar rolId si se proporciona
     if (registerDto.rolId) {
       createUserData.rolId = parseInt(registerDto.rolId, 10);
     }
@@ -33,7 +40,7 @@ export class RegisterUseCase {
         usuarioId: newUser.usuarioId,
       };
     } else {
-      throw new BadRequestException('Error al registrar el usuario');
+      throw new InvalidDomainOperationException('Error al registrar el usuario');
     }
   }
 }

@@ -13,7 +13,10 @@ import { LoggerService } from '../../../infrastructure/observability/logger/logg
 import {
   DomainException,
   EntityNotFoundException,
+  EntityAlreadyExistsException,
   InvalidDomainOperationException,
+  UnauthorizedDomainException,
+  ForbiddenDomainException,
 } from '../../../shared/domain/exceptions/domain.exception';
 
 interface FormattedValidationError {
@@ -73,6 +76,12 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     else if (exception instanceof DomainException) {
       if (exception instanceof EntityNotFoundException) {
         status = HttpStatus.NOT_FOUND;
+      } else if (exception instanceof EntityAlreadyExistsException) {
+        status = HttpStatus.CONFLICT;
+      } else if (exception instanceof UnauthorizedDomainException) {
+        status = HttpStatus.UNAUTHORIZED;
+      } else if (exception instanceof ForbiddenDomainException) {
+        status = HttpStatus.FORBIDDEN;
       } else if (exception instanceof InvalidDomainOperationException) {
         status = HttpStatus.BAD_REQUEST;
       } else {
@@ -96,9 +105,6 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     }
     // Errores no manejados (deberían ser 500)
     else if (exception instanceof Error) {
-      // Gate detail exposure on an explicit operator flag, NOT on NODE_ENV.
-      // Default is OFF: production deploys that forgot to flip NODE_ENV still
-      // return a generic message instead of leaking Prisma column/FK/IP details.
       const exposeDetails =
         this.configService.get('EXPOSE_ERROR_DETAILS') === 'true';
 
@@ -107,9 +113,6 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         : 'Error interno del servidor';
     }
 
-    // Log full stack to Loki for every unhandled exception, regardless of
-    // whether the response body exposes the message. Never put the stack in
-    // the response body — it leaks column names, FK chains, internal IPs.
     if (!(exception instanceof HttpException) && exception instanceof Error) {
       const requestId = this.extractRequestId(request);
       this.loggerService.error(
@@ -139,10 +142,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       message,
     };
 
-    // Agregar errores de validación si existen
     if (errors && errors.length > 0) {
-      // Si son strings (formato por defecto de ValidationPipe), los devolvemos directamente
-      // Si son objetos ValidationError, los formateamos
       errorResponse.errors =
         typeof errors[0] === 'string'
           ? (errors as string[])
@@ -161,9 +161,6 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       : undefined;
   }
 
-  /**
-   * Formatea los errores de validación para ser más legibles
-   */
   private formatValidationErrors(
     errors: ValidationError[],
   ): FormattedValidationError[] {
@@ -172,14 +169,11 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         field: error.property,
       };
 
-      // Agregar las restricciones de validación
       if (error.constraints) {
         formatted.constraints = Object.values(error.constraints);
-        // Primer constraint como mensaje principal
         formatted.message = Object.values(error.constraints)[0];
       }
 
-      // Errores anidados (para objetos embebidos)
       if (error.children && error.children.length > 0) {
         formatted.children = this.formatValidationErrors(error.children);
       }

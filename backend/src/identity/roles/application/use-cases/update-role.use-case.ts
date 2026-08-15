@@ -1,9 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { RoleRepository } from '../../domain/repositories/role.repository';
 import { UpdateRoleDto } from '../../interfaces/dto/update-role.dto';
 import { AssignPermissionToRoleUseCase } from './assign-permission-to-role.use-case';
 import { RemovePermissionFromRoleUseCase } from './remove-permission-from-role.use-case';
 import { FindOneRoleUseCase } from './find-one-role.use-case';
+import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 
 @Injectable()
 export class UpdateRoleUseCase {
@@ -17,7 +18,7 @@ export class UpdateRoleUseCase {
   async execute(id: number, updateRoleDto: UpdateRoleDto) {
     const role = await this.roleRepository.findUnique(id);
     if (!role || role.deletedAt) {
-      throw new NotFoundException('Rol no encontrado');
+      throw new EntityNotFoundException('Rol', id);
     }
 
     if (updateRoleDto.nombre !== undefined) {

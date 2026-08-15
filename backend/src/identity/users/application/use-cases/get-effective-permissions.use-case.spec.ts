@@ -2,7 +2,7 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { GetEffectivePermissionsUseCase } from './get-effective-permissions.use-case';
 import { UserRepository } from '../../domain/repositories/user.repository';
-import { NotFoundException } from '@nestjs/common';
+import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 
 describe('GetEffectivePermissionsUseCase', () => {
   let useCase: GetEffectivePermissionsUseCase;
@@ -39,12 +39,13 @@ describe('GetEffectivePermissionsUseCase', () => {
       rol: { rolId: 1, nombre: 'admin' },
     } as any);
     mockUserRepository.findRolePermissions.mockResolvedValue([
-      { permiso: { recurso: 'role-perm', accion: 'read' } },
+      { recurso: 'role-perm', accion: 'read' },
     ]);
     mockUserRepository.findDirectPermissions.mockResolvedValue([
       {
         permitido: true,
-        permiso: { recurso: 'extra', accion: 'read', deletedAt: null },
+        recurso: 'extra',
+        accion: 'read',
       },
     ]);
 
@@ -61,16 +62,13 @@ describe('GetEffectivePermissionsUseCase', () => {
       rol: { rolId: 1, nombre: 'admin' },
     } as any);
     mockUserRepository.findRolePermissions.mockResolvedValue([
-      { permiso: { recurso: 'role-perm', accion: 'read' } },
+      { recurso: 'role-perm', accion: 'read' },
     ]);
     mockUserRepository.findDirectPermissions.mockResolvedValue([
       {
         permitido: false,
-        permiso: {
-          recurso: 'role-perm',
-          accion: 'read',
-          deletedAt: null,
-        },
+        recurso: 'role-perm',
+        accion: 'read',
       },
     ]);
 
@@ -82,9 +80,9 @@ describe('GetEffectivePermissionsUseCase', () => {
     });
   });
 
-  it('should throw NotFoundException if user not found or deleted', async () => {
+  it('should throw EntityNotFoundException if user not found or deleted', async () => {
     mockUserRepository.findById.mockResolvedValue(null);
 
-    await expect(useCase.execute(1)).rejects.toThrow(NotFoundException);
+    await expect(useCase.execute(1)).rejects.toThrow(EntityNotFoundException);
   });
 });

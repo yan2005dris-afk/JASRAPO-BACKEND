@@ -5,10 +5,8 @@ import { UserRepository } from '../../../users/domain/repositories/user.reposito
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { SessionsService } from '../../../sessions/application/sessions.service';
-import {
-  UnauthorizedException,
-  InternalServerErrorException,
-} from '@nestjs/common';
+import { InternalServerErrorException } from '@nestjs/common';
+import { UnauthorizedDomainException } from 'src/shared/domain/exceptions/domain.exception';
 import * as bcrypt from 'bcrypt';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 const mockLogger = {
@@ -150,17 +148,17 @@ describe('LoginUseCase', () => {
       expect(userRepository.recordFailedLoginAttempt).not.toHaveBeenCalled();
     });
 
-    it('should throw UnauthorizedException when user not found', async () => {
+    it('should throw UnauthorizedDomainException when user not found', async () => {
       (userRepository.findByEmailWithPassword as jest.Mock).mockResolvedValue(
         null,
       );
 
       await expect(
         useCase.execute({ email: 'notfound@test.com', password: 'any' }),
-      ).rejects.toThrow(UnauthorizedException);
+      ).rejects.toThrow(UnauthorizedDomainException);
     });
 
-    it('should throw UnauthorizedException when password invalid', async () => {
+    it('should throw UnauthorizedDomainException when password invalid', async () => {
       (userRepository.findByEmailWithPassword as jest.Mock).mockResolvedValue({
         ...baseUserMock,
       });
@@ -172,7 +170,7 @@ describe('LoginUseCase', () => {
 
       await expect(
         useCase.execute({ email: 'test@test.com', password: 'wrong' }),
-      ).rejects.toThrow(UnauthorizedException);
+      ).rejects.toThrow(UnauthorizedDomainException);
 
       expect(userRepository.recordFailedLoginAttempt).toHaveBeenCalledWith(1, {
         threshold: 5,
@@ -235,9 +233,6 @@ describe('LoginUseCase', () => {
       });
       (bcrypt.compare as jest.Mock).mockResolvedValue(false);
 
-      // En el 6to intento, el repositorio indica que la cuenta acaba de ser
-      // bloqueada (bloqueadoHasta en el futuro). El mensaje debe ser el de
-      // lockout, no el genérico de credenciales inválidas.
       (userRepository.recordFailedLoginAttempt as jest.Mock).mockResolvedValue({
         intentosFallidos: 0,
         bloqueadoHasta: new Date(Date.now() + 30 * 60 * 1000),
@@ -256,7 +251,6 @@ describe('LoginUseCase', () => {
     it('should reset failed-attempt counter after a successful login', async () => {
       (userRepository.findByEmailWithPassword as jest.Mock).mockResolvedValue({
         ...baseUserMock,
-        // El usuario viene con contadores sucios de intentos previos.
         intentosFallidos: 4,
         ultimoIntentoFallidoEn: new Date(Date.now() - 60 * 1000),
         bloqueadoHasta: null,
@@ -292,7 +286,6 @@ describe('LoginUseCase', () => {
         intentosFallidos: 5,
       });
 
-      // Aunque la contraseña sea correcta, el lockout prevalece.
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
 
       await expect(
@@ -307,8 +300,6 @@ describe('LoginUseCase', () => {
     });
 
     it('should apply sliding 15-min window: counter restarts at 1 when last failure is older than the window', async () => {
-      // El usuario llega con un contador sucio de 5 fallos pero el último fue
-      // hace 16 minutos (fuera de la ventana deslizante de 15 min).
       const oldFailure = new Date(Date.now() - 16 * 60 * 1000);
       (userRepository.findByEmailWithPassword as jest.Mock).mockResolvedValue({
         ...baseUserMock,
@@ -318,7 +309,6 @@ describe('LoginUseCase', () => {
       });
       (bcrypt.compare as jest.Mock).mockResolvedValue(false);
 
-      // El repositorio respeta la ventana deslizante y reinicia el contador a 1.
       (userRepository.recordFailedLoginAttempt as jest.Mock).mockResolvedValue({
         intentosFallidos: 1,
         bloqueadoHasta: null,
@@ -331,7 +321,6 @@ describe('LoginUseCase', () => {
         }),
       ).rejects.toThrow('Credenciales inválidas');
 
-      // No debe disparar lockout porque el contador se reinició a 1.
       expect(userRepository.recordFailedLoginAttempt).toHaveBeenCalledWith(1, {
         threshold: 5,
         windowMs: 15 * 60 * 1000,
@@ -365,7 +354,6 @@ describe('LoginUseCase', () => {
         password: 'Password123!',
       });
 
-      // Re-hashea la CONTRASEÑA en claro, no el hash almacenado, a cost 12.
       expect(bcrypt.hash).toHaveBeenCalledWith('Password123!', 12);
       expect(userRepository.update).toHaveBeenCalledWith(1, {
         clave: 'rehashed-password',

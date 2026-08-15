@@ -9,6 +9,9 @@ import {
   FiltroFecha,
   FailedLoginAttemptOptions,
   FailedLoginAttemptResult,
+  DomainPaginatedResult,
+  UserDirectPermission,
+  UserRolePermission,
 } from '../../domain/repositories/user.repository';
 import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
@@ -84,7 +87,7 @@ export class PrismaUserRepository implements UserRepository {
 
   async findManyActive(
     pagination: PaginationDto,
-  ): Promise<{ data: UserEntity[]; meta: any }> {
+  ): Promise<DomainPaginatedResult<UserEntity>> {
     const result = await paginate(
       this.prisma.usuarios,
       {
@@ -111,7 +114,7 @@ export class PrismaUserRepository implements UserRepository {
   async findMany(
     filters: UserFilters,
     pagination: PaginationDto,
-  ): Promise<{ data: UserEntity[]; meta: any }> {
+  ): Promise<DomainPaginatedResult<UserEntity>> {
     const where: Prisma.UsuariosWhereInput = {
       ...(filters.email && { email: filters.email }),
       ...(filters.deletedAt !== undefined && {
@@ -190,8 +193,10 @@ export class PrismaUserRepository implements UserRepository {
     return mapped;
   }
 
-  async findDirectPermissions(usuarioId: number): Promise<any[]> {
-    return this.prisma.usuarioPermisos.findMany({
+  async findDirectPermissions(
+    usuarioId: number,
+  ): Promise<UserDirectPermission[]> {
+    const raw = await this.prisma.usuarioPermisos.findMany({
       where: {
         usuarioId,
         deletedAt: null,
@@ -205,10 +210,17 @@ export class PrismaUserRepository implements UserRepository {
         permiso: { select: { permisoId: true, recurso: true, accion: true } },
       },
     });
+    return raw.map((item) => ({
+      usuarioPermisoId: item.usuarioPermisoId,
+      permisoId: item.permisoId,
+      recurso: item.permiso?.recurso || '',
+      accion: item.permiso?.accion || '',
+      permitido: item.permitido,
+    }));
   }
 
-  async findRolePermissions(rolId: number): Promise<any[]> {
-    return this.prisma.rolPermisos.findMany({
+  async findRolePermissions(rolId: number): Promise<UserRolePermission[]> {
+    const raw = await this.prisma.rolPermisos.findMany({
       where: {
         rolId,
         deletedAt: null,
@@ -216,6 +228,10 @@ export class PrismaUserRepository implements UserRepository {
       },
       include: { permiso: { select: { recurso: true, accion: true } } },
     });
+    return raw.map((item) => ({
+      recurso: item.permiso?.recurso || '',
+      accion: item.permiso?.accion || '',
+    }));
   }
 
   async updatePermissions(

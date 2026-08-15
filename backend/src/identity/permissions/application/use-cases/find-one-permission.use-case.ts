@@ -1,5 +1,6 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PermissionRepository } from '../../domain/repositories/permission.repository';
+import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 
 @Injectable()
 export class FindOnePermissionUseCase {
@@ -9,7 +10,7 @@ export class FindOnePermissionUseCase {
     const permission = await this.permissionRepository.findUnique(id);
 
     if (!permission || permission.deletedAt) {
-      throw new NotFoundException('Permiso no encontrado');
+      throw new EntityNotFoundException('Permiso', id);
     }
 
     return permission;

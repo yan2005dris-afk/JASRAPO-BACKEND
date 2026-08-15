@@ -1,6 +1,7 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { UserRepository } from '../../domain/repositories/user.repository';
 import { UserEntity } from '../../domain/entities/user.entity';
+import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 
 @Injectable()
 export class GetUserProfileUseCase {
@@ -10,21 +11,9 @@ export class GetUserProfileUseCase {
     const user = await this.userRepository.findById(usersId);
 
     if (!user || user.deletedAt) {
-      throw new NotFoundException('Usuario no encontrado o eliminado');
+      throw new EntityNotFoundException('Usuario', usersId);
     }
 
-    const fullName = [user.nombres, user.apellidos].filter(Boolean).join(' ');
-
-    return {
-      usuarioId: user.usuarioId,
-      email: user.email,
-      nombre: fullName || null,
-      telefono: user.telefono,
-      avatar: user.avatar,
-      rol:
-        user.rol && !user.rol.deletedAt
-          ? { rolId: user.rol.rolId, nombre: user.rol.nombre }
-          : null,
-    } as any;
+    return user;
   }
 }

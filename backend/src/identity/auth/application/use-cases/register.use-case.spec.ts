@@ -2,7 +2,10 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { RegisterUseCase } from './register.use-case';
 import { UserService } from 'src/identity/users/application/user.service';
-import { BadRequestException } from '@nestjs/common';
+import {
+  EntityAlreadyExistsException,
+  InvalidDomainOperationException,
+} from 'src/shared/domain/exceptions/domain.exception';
 
 describe('RegisterUseCase', () => {
   let useCase: RegisterUseCase;
@@ -41,7 +44,7 @@ describe('RegisterUseCase', () => {
         telefono: '+593991234567',
         avatar: null,
         rol: { rolId: 1, nombre: 'user' },
-      });
+      } as any);
 
       const result = await useCase.execute({
         email: 'test@test.com',
@@ -59,7 +62,7 @@ describe('RegisterUseCase', () => {
       });
     });
 
-    it('should throw BadRequestException if user exists', async () => {
+    it('should throw EntityAlreadyExistsException if user exists', async () => {
       userService.user.mockResolvedValue({ usuarioId: 1 } as any);
       await expect(
         useCase.execute({
@@ -68,10 +71,10 @@ describe('RegisterUseCase', () => {
           apellidos: 'Pérez',
           telefono: '+593991234567',
         }),
-      ).rejects.toThrow(BadRequestException);
+      ).rejects.toThrow(EntityAlreadyExistsException);
     });
 
-    it('should throw BadRequestException if creation fails', async () => {
+    it('should throw InvalidDomainOperationException if creation fails', async () => {
       userService.user.mockResolvedValue(null);
       userService.createUser.mockResolvedValue(null as any);
       await expect(
@@ -81,7 +84,7 @@ describe('RegisterUseCase', () => {
           apellidos: 'Pérez',
           telefono: '+593991234567',
         }),
-      ).rejects.toThrow(BadRequestException);
+      ).rejects.toThrow(InvalidDomainOperationException);
     });
 
     it('should pass rolId when provided', async () => {

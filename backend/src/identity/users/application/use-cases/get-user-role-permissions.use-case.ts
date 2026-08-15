@@ -1,6 +1,7 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { UserRepository } from '../../domain/repositories/user.repository';
 import { UserRolePermission } from '../../domain/types/user.types';
+import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 
 @Injectable()
 export class GetUserRolePermissionsUseCase {
@@ -10,20 +11,13 @@ export class GetUserRolePermissionsUseCase {
     const user = await this.userRepository.findById(usuarioId);
 
     if (!user || user.deletedAt) {
-      throw new NotFoundException('Usuario no encontrado o eliminado');
+      throw new EntityNotFoundException('Usuario', usuarioId);
     }
 
     if (!user.rol?.rolId) {
       return [];
     }
 
-    const assignments = await this.userRepository.findRolePermissions(
-      user.rol.rolId,
-    );
-
-    return assignments.map((rp) => ({
-      recurso: rp.permiso.recurso,
-      accion: rp.permiso.accion,
-    }));
+    return this.userRepository.findRolePermissions(user.rol.rolId);
   }
 }

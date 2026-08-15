@@ -1,5 +1,6 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { UserRepository } from '../../domain/repositories/user.repository';
+import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 
 @Injectable()
 export class GetEffectivePermissionsUseCase {
@@ -9,7 +10,7 @@ export class GetEffectivePermissionsUseCase {
     const usuario = await this.userRepository.findById(usuarioId);
 
     if (!usuario || usuario.deletedAt) {
-      throw new NotFoundException('Usuario eliminado o no encontrado');
+      throw new EntityNotFoundException('Usuario', usuarioId);
     }
 
     const rolId = usuario.rol?.rolId;
@@ -24,20 +25,15 @@ export class GetEffectivePermissionsUseCase {
     const effectivePermissionsMap = new Map<string, boolean>();
 
     rolePermissionRows.forEach((rp) => {
-      effectivePermissionsMap.set(
-        `${rp.permiso.recurso}:${rp.permiso.accion}`,
-        true,
-      );
+      effectivePermissionsMap.set(`${rp.recurso}:${rp.accion}`, true);
     });
 
     directPermissionRows.forEach((up) => {
-      if (up.permiso) {
-        const key = `${up.permiso.recurso}:${up.permiso.accion}`;
-        if (up.permitido) {
-          effectivePermissionsMap.set(key, true);
-        } else {
-          effectivePermissionsMap.delete(key);
-        }
+      const key = `${up.recurso}:${up.accion}`;
+      if (up.permitido) {
+        effectivePermissionsMap.set(key, true);
+      } else {
+        effectivePermissionsMap.delete(key);
       }
     });
 

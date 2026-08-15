@@ -2,7 +2,7 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { GetUserDirectPermissionsUseCase } from './get-user-direct-permissions.use-case';
 import { UserRepository } from '../../domain/repositories/user.repository';
-import { NotFoundException } from '@nestjs/common';
+import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 
 describe('GetUserDirectPermissionsUseCase', () => {
   let useCase: GetUserDirectPermissionsUseCase;
@@ -40,13 +40,15 @@ describe('GetUserDirectPermissionsUseCase', () => {
       {
         usuarioPermisoId: 1,
         permisoId: 10,
-        permiso: { recurso: 'users', accion: 'read' },
+        recurso: 'users',
+        accion: 'read',
         permitido: true,
       },
       {
         usuarioPermisoId: 2,
         permisoId: 20,
-        permiso: { recurso: 'users', accion: 'write' },
+        recurso: 'users',
+        accion: 'write',
         permitido: false,
       },
     ]);
@@ -82,19 +84,19 @@ describe('GetUserDirectPermissionsUseCase', () => {
     expect(result).toEqual([]);
   });
 
-  it('should throw NotFoundException if user not found', async () => {
+  it('should throw EntityNotFoundException if user not found', async () => {
     mockUserRepository.findById.mockResolvedValue(null);
 
-    await expect(useCase.execute(1)).rejects.toThrow(NotFoundException);
+    await expect(useCase.execute(1)).rejects.toThrow(EntityNotFoundException);
   });
 
-  it('should throw NotFoundException if user is deleted', async () => {
+  it('should throw EntityNotFoundException if user is deleted', async () => {
     mockUserRepository.findById.mockResolvedValue({
       usuarioId: 1,
       deletedAt: new Date(),
     });
 
-    await expect(useCase.execute(1)).rejects.toThrow(NotFoundException);
+    await expect(useCase.execute(1)).rejects.toThrow(EntityNotFoundException);
   });
 
   it('should order by resource and action', async () => {
@@ -106,19 +108,22 @@ describe('GetUserDirectPermissionsUseCase', () => {
       {
         usuarioPermisoId: 2,
         permisoId: 2,
-        permiso: { recurso: 'alpha', accion: 'write' },
+        recurso: 'alpha',
+        accion: 'write',
         permitido: true,
       },
       {
         usuarioPermisoId: 3,
         permisoId: 3,
-        permiso: { recurso: 'beta', accion: 'delete' },
+        recurso: 'beta',
+        accion: 'delete',
         permitido: true,
       },
       {
         usuarioPermisoId: 1,
         permisoId: 1,
-        permiso: { recurso: 'zebra', accion: 'read' },
+        recurso: 'zebra',
+        accion: 'read',
         permitido: true,
       },
     ]);

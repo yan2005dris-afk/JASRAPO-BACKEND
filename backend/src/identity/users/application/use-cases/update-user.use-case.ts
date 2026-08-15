@@ -1,11 +1,5 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-  ConflictException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { randomUUID } from 'crypto';
-import { Prisma } from 'src/generated/prisma/client';
 import { UserRepository } from '../../domain/repositories/user.repository';
 import { RoleRepository } from '../../../roles/domain/repositories/role.repository';
 import { UserEntity } from '../../domain/entities/user.entity';
@@ -19,6 +13,10 @@ import {
   StorageService,
   SRI_STORAGE_TYPES,
 } from 'src/infrastructure/storage/storage.service';
+import {
+  EntityNotFoundException,
+  InvalidDomainOperationException,
+} from 'src/shared/domain/exceptions/domain.exception';
 
 @Injectable()
 export class UpdateUserUseCase {
@@ -37,11 +35,11 @@ export class UpdateUserUseCase {
   ): Promise<UserEntity | null> {
     const existingUser = await this.userRepository.findById(usuarioId);
     if (!existingUser) {
-      throw new NotFoundException('Usuario no encontrado');
+      throw new EntityNotFoundException('Usuario', usuarioId);
     }
 
     if (existingUser.deletedAt) {
-      throw new BadRequestException(
+      throw new InvalidDomainOperationException(
         'No se puede modificar un usuario eliminado',
       );
     }
@@ -66,7 +64,7 @@ export class UpdateUserUseCase {
     if (updateData.rolId !== undefined && updateData.rolId !== null) {
       const role = await this.roleRepository.findUnique(updateData.rolId);
       if (!role || role.deletedAt) {
-        throw new NotFoundException('Rol no encontrado o eliminado');
+        throw new EntityNotFoundException('Rol', updateData.rolId);
       }
     }
 
@@ -127,13 +125,6 @@ export class UpdateUserUseCase {
         this.storageService
           .delete(SRI_STORAGE_TYPES.PROFILE_PHOTOS, newAvatarKey)
           .catch(() => {});
-      }
-
-      if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === 'P2002'
-      ) {
-        throw new ConflictException('El correo electrónico ya está en uso');
       }
 
       throw error;

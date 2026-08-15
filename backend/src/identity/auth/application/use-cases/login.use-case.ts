@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  InternalServerErrorException,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { SessionsService } from '../../../sessions/application/sessions.service';
@@ -22,6 +18,7 @@ import type { StringValue } from 'ms';
 import { UserRepository } from '../../../users/domain/repositories/user.repository';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
+import { UnauthorizedDomainException } from 'src/shared/domain/exceptions/domain.exception';
 
 interface ValidatedUser {
   usuarioId: number;
@@ -40,9 +37,6 @@ const LOCKOUT_OPTIONS = {
   lockoutDurationMs: LOGIN_LOCKOUT_DURATION_MS,
 } as const;
 
-// OWASP 2024 recommends a bcrypt cost factor of at least 12 for password
-// hashing. Legacy hashes at a lower cost are transparently re-hashed on the
-// next successful login. Valid range is 4..15.
 const DEFAULT_BCRYPT_COST = 12;
 const MIN_BCRYPT_COST = 4;
 const MAX_BCRYPT_COST = 15;
@@ -66,19 +60,14 @@ export class LoginUseCase {
     const user = await this.validateUser(loginUserDto);
     this.logger.log(`[LOGIN] user=${user.usuarioId} | ip="${ip}"`);
 
-    // Login exitoso: limpia contadores de intentos fallidos y lockouts previos.
     try {
       await this.userRepository.clearFailedLoginAttempts(user.usuarioId);
     } catch (err) {
-      // No bloqueamos el login si falla el reset; lo registramos.
       this.logger.warn(
         `[LOGIN] No se pudieron limpiar contadores de lockout: user=${user.usuarioId} | ${err}`,
       );
     }
 
-    // Aprovecha el login para actualizar en caliente hashes bcrypt legados a
-    // un cost factor más alto (OWASP 2024). Re-hashea la contraseña en texto
-    // plano ya verificada, no el hash almacenado. No bloquea el login si falla.
     await this.maybeUpgradePasswordHash(user, loginUserDto.password);
 
     const sesionId = randomUUID();
@@ -124,16 +113,10 @@ export class LoginUseCase {
     const { email, password } = loginUserDto;
     const user = await this.userRepository.findByEmailWithPassword(email);
 
-    // Mismo mensaje para usuario inexistente / eliminado / password incorrecta
-    // para no filtrar información. El lockout por cuenta solo se activa si el
-    // usuario existe y no fue borrado.
     if (!user || user.deletedAt) {
-      throw new UnauthorizedException('Credenciales inválidas');
+      throw new UnauthorizedDomainException('Credenciales inválidas');
     }
 
-    // Si la cuenta está bloqueada, no se valida la contraseña y se devuelve
-    // el mensaje genérico de credenciales inválidas para no filtrar la
-    // existencia de la cuenta.
     if (user.bloqueadoHasta && user.bloqueadoHasta > new Date()) {
       const minutesRemaining = Math.max(
         1,
@@ -142,7 +125,7 @@ export class LoginUseCase {
       this.logger.warn(
         `[LOGIN] Cuenta bloqueada: user=${user.usuarioId} | hasta=${user.bloqueadoHasta.toISOString()}`,
       );
-      throw new UnauthorizedException(
+      throw new UnauthorizedDomainException(
         `Cuenta bloqueada temporalmente. Intenta en ${minutesRemaining} minutos.`,
       );
     }
@@ -158,17 +141,17 @@ export class LoginUseCase {
           this.logger.warn(
             `[LOGIN] Cuenta bloqueada por umbral de intentos fallidos: user=${user.usuarioId}`,
           );
-          throw new UnauthorizedException(
+          throw new UnauthorizedDomainException(
             'Cuenta bloqueada temporalmente. Intenta en 30 minutos.',
           );
         }
       } catch (err) {
-        if (err instanceof UnauthorizedException) throw err;
+        if (err instanceof UnauthorizedDomainException) throw err;
         this.logger.error(
           `[LOGIN] Error al registrar intento fallido: user=${user.usuarioId} | ${err}`,
         );
       }
-      throw new UnauthorizedException('Credenciales inválidas');
+      throw new UnauthorizedDomainException('Credenciales inválidas');
     }
 
     return user;
@@ -197,7 +180,6 @@ export class LoginUseCase {
     try {
       currentRounds = bcrypt.getRounds(user.clave);
     } catch {
-      // Hash con formato desconocido: no intentamos re-hashear.
       return;
     }
 
@@ -273,7 +255,6 @@ export class LoginUseCase {
         ? `${user.nombres} ${user.apellidos}`
         : user.nombres || user.apellidos || null;
 
-    // Si el rol está eliminado, no devolver roleId ni roleName
     const isRoleActive = user.rol && user.rol.deletedAt === null;
 
     return {

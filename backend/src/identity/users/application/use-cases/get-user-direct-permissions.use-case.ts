@@ -1,6 +1,7 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { UserRepository } from '../../domain/repositories/user.repository';
 import { UserDirectPermission } from '../../domain/types/user.types';
+import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 
 @Injectable()
 export class GetUserDirectPermissionsUseCase {
@@ -10,18 +11,9 @@ export class GetUserDirectPermissionsUseCase {
     const user = await this.userRepository.findById(usuarioId);
 
     if (!user || user.deletedAt) {
-      throw new NotFoundException('Usuario no encontrado o eliminado');
+      throw new EntityNotFoundException('Usuario', usuarioId);
     }
 
-    const assignments =
-      await this.userRepository.findDirectPermissions(usuarioId);
-
-    return assignments.map((assignment) => ({
-      usuarioPermisoId: assignment.usuarioPermisoId,
-      permisoId: assignment.permisoId,
-      recurso: assignment.permiso.recurso,
-      accion: assignment.permiso.accion,
-      permitido: assignment.permitido,
-    }));
+    return this.userRepository.findDirectPermissions(usuarioId);
   }
 }

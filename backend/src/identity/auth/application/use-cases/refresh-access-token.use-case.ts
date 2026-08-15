@@ -1,7 +1,6 @@
 import {
   Injectable,
   InternalServerErrorException,
-  UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
@@ -14,6 +13,7 @@ import type { StringValue } from 'ms';
 import type { JwtRefreshPayload } from '../../interfaces/http/types/JwtRequest.types';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
+import { UnauthorizedDomainException } from 'src/shared/domain/exceptions/domain.exception';
 
 @LogContext()
 @Injectable()
@@ -25,19 +25,6 @@ export class RefreshAccessTokenUseCase {
     private readonly sessionsService: SessionsService,
     private readonly logger: LoggerService,
   ) {}
-
-  // TODO(security/refresh-family): add family tracking — issue #150
-  // The current implementation only checks the single session row and
-  // does not detect refresh-token reuse across a token family. To
-  // close the OWASP A07 gap, persist a `familyId` column on `sesiones`
-  // (Prisma migration), generate a UUID on login, stamp it on every
-  // rotated refresh token, and revoke every row sharing the family
-  // whenever a refresh token is presented twice. Requires:
-  //   - schema migration (Sesiones.familyId String?, index)
-  //   - SessionsService.createSession / rotateSession signature
-  //   - detection path on second-use + cascade revocation
-  //   - reuse-detection test (Testcontainers integration spec)
-  // Out of scope for the TTL/ceiling PR; tracked separately.
 
   async execute(
     sesionId: string,
@@ -55,30 +42,30 @@ export class RefreshAccessTokenUseCase {
       !Number.isInteger(tokenVersion) ||
       tokenVersion < 1
     ) {
-      throw new UnauthorizedException('Refresh token inválido');
+      throw new UnauthorizedDomainException('Refresh token inválido');
     }
 
     const session = await this.sessionsService.getSession(usuarioId, sesionId);
 
     if (!session || session.revocado || session.expiraEn < new Date()) {
-      throw new UnauthorizedException('Sesión inválida o expirada');
+      throw new UnauthorizedDomainException('Sesión inválida o expirada');
     }
 
     if (session.tokenVersion !== tokenVersion) {
       await this.revokeOnReplay(sesionId, usuarioId, ip, 'stale tokenVersion');
-      throw new UnauthorizedException('Refresh token replay detected');
+      throw new UnauthorizedDomainException('Refresh token replay detected');
     }
 
     if (
       !this.matchesSessionSecret(payload.sessionSecret, session.sessionSecret)
     ) {
-      throw new UnauthorizedException('Refresh token inválido');
+      throw new UnauthorizedDomainException('Refresh token inválido');
     }
 
     const user = await this.userRepository.findById(usuarioId);
 
     if (!user) {
-      throw new UnauthorizedException('Usuario no encontrado');
+      throw new UnauthorizedDomainException('Usuario no encontrado');
     }
 
     const nextTokenVersion = tokenVersion + 1;
@@ -109,11 +96,8 @@ export class RefreshAccessTokenUseCase {
     }
 
     if (affectedRows === 0) {
-      // Otra request rotó primero (o la sesión dejó de estar viva entre la
-      // lectura y el UPDATE): es un replay. Revoca toda la sesión para que el
-      // token del atacante también muera.
       await this.revokeOnReplay(sesionId, usuarioId, ip, 'lost atomic rotate');
-      throw new UnauthorizedException('Refresh token replay detected');
+      throw new UnauthorizedDomainException('Refresh token replay detected');
     }
 
     return {
@@ -134,7 +118,7 @@ export class RefreshAccessTokenUseCase {
         },
       );
     } catch {
-      throw new UnauthorizedException('Refresh token inválido');
+      throw new UnauthorizedDomainException('Refresh token inválido');
     }
   }
 
@@ -169,16 +153,12 @@ export class RefreshAccessTokenUseCase {
       `[SECURITY] Refresh replay detectado: sesionId=${sesionId} usuarioId=${usuarioId} ip="${ip}" motivo="${reason}"`,
     );
     try {
-      // Reuse de un refresh token = posible robo. Revoca TODAS las sesiones del
-      // usuario (no solo esta), para invalidar también el token del atacante
-      // que pueda vivir en otra sesión/familia (OWASP A07, issue #150).
       const revoked =
         await this.sessionsService.revokeAllUserSessions(usuarioId);
       this.logger.warn(
         `[SECURITY] Sesiones revocadas por replay: usuarioId=${usuarioId} count=${revoked}`,
       );
     } catch (err) {
-      // La revocación es best-effort: nunca debe enmascarar el 401 de replay.
       this.logger.error(
         `[SECURITY] No se pudieron revocar sesiones tras replay: usuarioId=${usuarioId} | ${err}`,
       );

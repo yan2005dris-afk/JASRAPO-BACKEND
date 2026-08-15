@@ -2,7 +2,7 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { GetUserRolePermissionsUseCase } from './get-user-role-permissions.use-case';
 import { UserRepository } from '../../domain/repositories/user.repository';
-import { NotFoundException } from '@nestjs/common';
+import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 
 describe('GetUserRolePermissionsUseCase', () => {
   let useCase: GetUserRolePermissionsUseCase;
@@ -38,9 +38,9 @@ describe('GetUserRolePermissionsUseCase', () => {
       rol: { rolId: 1, nombre: 'admin' },
     } as any);
     mockUserRepository.findRolePermissions.mockResolvedValue([
-      { permiso: { recurso: 'users', accion: 'read' } },
-      { permiso: { recurso: 'users', accion: 'write' } },
-      { permiso: { recurso: 'reports', accion: 'export' } },
+      { recurso: 'users', accion: 'read' },
+      { recurso: 'users', accion: 'write' },
+      { recurso: 'reports', accion: 'export' },
     ]);
 
     const result = await useCase.execute(1);
@@ -64,18 +64,18 @@ describe('GetUserRolePermissionsUseCase', () => {
     expect(mockUserRepository.findRolePermissions).not.toHaveBeenCalled();
   });
 
-  it('should throw NotFoundException if user not found', async () => {
+  it('should throw EntityNotFoundException if user not found', async () => {
     mockUserRepository.findById.mockResolvedValue(null);
 
-    await expect(useCase.execute(1)).rejects.toThrow(NotFoundException);
+    await expect(useCase.execute(1)).rejects.toThrow(EntityNotFoundException);
   });
 
-  it('should throw NotFoundException if user is deleted', async () => {
+  it('should throw EntityNotFoundException if user is deleted', async () => {
     mockUserRepository.findById.mockResolvedValue({
       usuarioId: 1,
       deletedAt: new Date(),
     } as any);
 
-    await expect(useCase.execute(1)).rejects.toThrow(NotFoundException);
+    await expect(useCase.execute(1)).rejects.toThrow(EntityNotFoundException);
   });
 });

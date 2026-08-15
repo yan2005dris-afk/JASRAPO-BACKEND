@@ -2,7 +2,7 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { AssignPermissionToRoleUseCase } from './assign-permission-to-role.use-case';
 import { RoleRepository } from '../../domain/repositories/role.repository';
-import { NotFoundException, ConflictException } from '@nestjs/common';
+import { EntityAlreadyExistsException } from 'src/shared/domain/exceptions/domain.exception';
 
 describe('AssignPermissionToRoleUseCase', () => {
   let useCase: AssignPermissionToRoleUseCase;
@@ -45,7 +45,7 @@ describe('AssignPermissionToRoleUseCase', () => {
     expect(mockRoleRepository.assignPermission).toHaveBeenCalledWith(1, 10);
   });
 
-  it('should throw ConflictException if already assigned', async () => {
+  it('should throw EntityAlreadyExistsException if already assigned', async () => {
     mockRoleRepository.findUnique.mockResolvedValue({ rolId: 1 });
     mockRoleRepository.findPermission.mockResolvedValue({ permisoId: 10 });
     mockRoleRepository.findFirstAssignment.mockResolvedValue({
@@ -53,7 +53,9 @@ describe('AssignPermissionToRoleUseCase', () => {
       deletedAt: null,
     });
 
-    await expect(useCase.execute(1, 10)).rejects.toThrow(ConflictException);
+    await expect(useCase.execute(1, 10)).rejects.toThrow(
+      EntityAlreadyExistsException,
+    );
   });
 
   it('should restore if previously deleted', async () => {
