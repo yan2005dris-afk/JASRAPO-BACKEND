@@ -78,7 +78,7 @@ export class PrismaContractRepository implements ContractRepository {
   async create(data: CreateContractData): Promise<ContractEntity> {
     try {
       const record = await this.prisma.contratos.create({
-        data: data as Prisma.ContratosUncheckedCreateInput,
+        data: data,
         include: this.defaultInclude,
       });
       return ContractMapper.toDomain(record)!;
@@ -135,7 +135,7 @@ export class PrismaContractRepository implements ContractRepository {
     try {
       const record = await this.prisma.contratos.update({
         where: { contratoId },
-        data: data as Prisma.ContratosUpdateInput,
+        data: data,
         include: this.defaultInclude,
       });
       return ContractMapper.toDomain(record)!;
@@ -243,7 +243,7 @@ export class PrismaContractRepository implements ContractRepository {
       if (contractFields && Object.keys(contractFields).length > 0) {
         await tx.contratos.update({
           where: { contratoId: contractId },
-          data: contractFields as Prisma.ContratosUpdateInput,
+          data: contractFields,
         });
       }
 
