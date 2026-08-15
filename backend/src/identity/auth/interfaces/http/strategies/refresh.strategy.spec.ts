@@ -1,5 +1,5 @@
 import { UnauthorizedException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import type { ConfigService } from '@nestjs/config';
 import { RefreshTokenStrategy } from './refresh.strategy';
 import type { SessionsService } from '../../../../sessions/application/sessions.service';
 
@@ -62,13 +62,17 @@ describe('RefreshTokenStrategy', () => {
       expiraEn: new Date(Date.now() + 100000),
     } as any);
 
-    await expect(strategy.validate(payload)).rejects.toThrow(UnauthorizedException);
+    await expect(strategy.validate(payload)).rejects.toThrow(
+      UnauthorizedException,
+    );
   });
 
   it('should extract refresh token from cookies', () => {
     const extractor = (strategy as any).getRefreshToken;
     expect(extractor(undefined)).toBeNull();
     expect(extractor({ cookies: null })).toBeNull();
-    expect(extractor({ cookies: { refreshToken: 'cookie-rt-val' } })).toBe('cookie-rt-val');
+    expect(extractor({ cookies: { refreshToken: 'cookie-rt-val' } })).toBe(
+      'cookie-rt-val',
+    );
   });
 });

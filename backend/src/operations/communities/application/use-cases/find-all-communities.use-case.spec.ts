@@ -28,8 +28,16 @@ describe('FindAllCommunitiesUseCase', () => {
 
   it('should return paginated results with default page and limit', async () => {
     const mockData = [
-      new CommunityEntity({ comunidadId: 1, nombre: 'Comunidad A', codigo: 'CA-001' }),
-      new CommunityEntity({ comunidadId: 2, nombre: 'Comunidad B', codigo: 'CB-002' }),
+      new CommunityEntity({
+        comunidadId: 1,
+        nombre: 'Comunidad A',
+        codigo: 'CA-001',
+      }),
+      new CommunityEntity({
+        comunidadId: 2,
+        nombre: 'Comunidad B',
+        codigo: 'CB-002',
+      }),
     ];
     mockRepository.paginate.mockResolvedValue({
       data: mockData,

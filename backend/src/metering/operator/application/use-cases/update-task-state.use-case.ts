@@ -32,9 +32,7 @@ const TERMINAL_STATES = new Set<string>([
 
 @Injectable()
 export class UpdateTaskStateUseCase {
-  constructor(
-    private readonly operatorRepository: OperatorRepository,
-  ) {}
+  constructor(private readonly operatorRepository: OperatorRepository) {}
 
   async execute(
     rutaId: bigint,

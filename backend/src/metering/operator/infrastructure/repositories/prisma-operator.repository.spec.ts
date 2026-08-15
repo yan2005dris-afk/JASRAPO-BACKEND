@@ -159,9 +159,16 @@ describe('Operator Tasks - Schema & Repository', () => {
 
     describe('updateTaskState', () => {
       const taskInclude = {
-        operario: { select: { usuarioId: true, nombres: true, apellidos: true } },
+        operario: {
+          select: { usuarioId: true, nombres: true, apellidos: true },
+        },
         medidor: {
-          select: { medidorId: true, serie: true, latitud: true, longitud: true },
+          select: {
+            medidorId: true,
+            serie: true,
+            latitud: true,
+            longitud: true,
+          },
         },
       };
 

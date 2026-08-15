@@ -26,13 +26,10 @@ export class CreateCommunityUseCase {
     );
 
     if (deletedWithCode?.deletedAt) {
-      return this.communityRepository.reactivate(
-        deletedWithCode.comunidadId,
-        {
-          nombre: dto.nombre,
-          porcentajeTasaSeguridad: dto.porcentajeTasaSeguridad,
-        },
-      );
+      return this.communityRepository.reactivate(deletedWithCode.comunidadId, {
+        nombre: dto.nombre,
+        porcentajeTasaSeguridad: dto.porcentajeTasaSeguridad,
+      });
     }
 
     return this.communityRepository.create(dto);

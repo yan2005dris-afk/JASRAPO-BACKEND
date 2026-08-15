@@ -5,7 +5,10 @@ export class OperatorAnomaliaDto {
   @ApiProperty({ description: 'Tipo de anomalía', example: 'LECTURA_ATIPICA' })
   tipo: string;
 
-  @ApiPropertyOptional({ description: 'Observación', example: 'Lectura no registrada' })
+  @ApiPropertyOptional({
+    description: 'Observación',
+    example: 'Lectura no registrada',
+  })
   observacion: string | null;
 
   @ApiProperty({ description: 'Estado de la anomalía', example: 'PENDIENTE' })
@@ -38,7 +41,9 @@ export class OperatorReadingAnomalyResponseDto {
     Object.assign(this, partial);
   }
 
-  static fromEntity(reading: ReadingWithAnomalies): OperatorReadingAnomalyResponseDto {
+  static fromEntity(
+    reading: ReadingWithAnomalies,
+  ): OperatorReadingAnomalyResponseDto {
     return new OperatorReadingAnomalyResponseDto({
       lecturaId: reading.lecturaId?.toString() ?? null,
       medidorId: reading.medidor?.medidorId?.toString() ?? null,

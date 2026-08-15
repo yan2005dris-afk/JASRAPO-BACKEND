@@ -133,8 +133,14 @@ export class TaskResponseDto {
         ? {
             medidorId: task.medidor.medidorId.toString(),
             serie: task.medidor.serie,
-            latitud: task.medidor.latitud != null ? Number(task.medidor.latitud) : undefined,
-            longitud: task.medidor.longitud != null ? Number(task.medidor.longitud) : undefined,
+            latitud:
+              task.medidor.latitud != null
+                ? Number(task.medidor.latitud)
+                : undefined,
+            longitud:
+              task.medidor.longitud != null
+                ? Number(task.medidor.longitud)
+                : undefined,
           }
         : null,
       operario: task.operario

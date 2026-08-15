@@ -96,7 +96,9 @@ describe('ComunidadController', () => {
     const result = await controller.update(1, { nombre: 'Nuevo Nombre' });
 
     expect(result.comunidadId).toBe(1);
-    expect(mockComunidadService.update).toHaveBeenCalledWith(1, { nombre: 'Nuevo Nombre' });
+    expect(mockComunidadService.update).toHaveBeenCalledWith(1, {
+      nombre: 'Nuevo Nombre',
+    });
   });
 
   it('delete should return deleted CommunityResponseDto', async () => {

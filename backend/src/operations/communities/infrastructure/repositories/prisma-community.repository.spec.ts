@@ -1,5 +1,5 @@
 import { PrismaCommunityRepository } from './prisma-community.repository';
-import { PrismaService } from 'src/infrastructure/database/prisma.service';
+import type { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { Prisma } from 'src/generated/prisma/client';
 import {
   EntityNotFoundException,
@@ -24,9 +24,7 @@ describe('PrismaCommunityRepository', () => {
     nombre: 'Comunidad 1',
     codigo: 'C1',
     porcentajeTasaSeguridad: 5,
-    sector: [
-      { sectorId: 10, nombre: 'Sector A', codigo: 'SA' },
-    ],
+    sector: [{ sectorId: 10, nombre: 'Sector A', codigo: 'SA' }],
     createdAt: new Date('2026-01-01'),
     updatedAt: new Date('2026-01-01'),
     deletedAt: null,
@@ -43,7 +41,9 @@ describe('PrismaCommunityRepository', () => {
         update: jest.fn(),
       },
     };
-    repository = new PrismaCommunityRepository(prisma as unknown as PrismaService);
+    repository = new PrismaCommunityRepository(
+      prisma as unknown as PrismaService,
+    );
   });
 
   describe('findById', () => {
@@ -93,7 +93,10 @@ describe('PrismaCommunityRepository', () => {
     it('should query active records with OR filter', async () => {
       prisma.comunidades.findFirst.mockResolvedValue(rawComunidad);
 
-      const result = await repository.findActiveByNameOrCode('Comunidad 1', 'C1');
+      const result = await repository.findActiveByNameOrCode(
+        'Comunidad 1',
+        'C1',
+      );
 
       expect(result?.comunidadId).toBe(1);
       expect(prisma.comunidades.findFirst).toHaveBeenCalledWith({
@@ -150,10 +153,13 @@ describe('PrismaCommunityRepository', () => {
     });
 
     it('should throw EntityAlreadyExistsException on P2002 error', async () => {
-      const p2002Error = new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
-        code: 'P2002',
-        clientVersion: '7.0.0',
-      });
+      const p2002Error = new Prisma.PrismaClientKnownRequestError(
+        'Unique constraint failed',
+        {
+          code: 'P2002',
+          clientVersion: '7.0.0',
+        },
+      );
       prisma.comunidades.create.mockRejectedValue(p2002Error);
 
       await expect(
@@ -173,16 +179,21 @@ describe('PrismaCommunityRepository', () => {
         nombre: 'Comunidad Modificada',
       });
 
-      const result = await repository.update(1, { nombre: 'Comunidad Modificada' });
+      const result = await repository.update(1, {
+        nombre: 'Comunidad Modificada',
+      });
 
       expect(result.nombre).toBe('Comunidad Modificada');
     });
 
     it('should throw EntityNotFoundException on P2025 error', async () => {
-      const p2025Error = new Prisma.PrismaClientKnownRequestError('Record not found', {
-        code: 'P2025',
-        clientVersion: '7.0.0',
-      });
+      const p2025Error = new Prisma.PrismaClientKnownRequestError(
+        'Record not found',
+        {
+          code: 'P2025',
+          clientVersion: '7.0.0',
+        },
+      );
       prisma.comunidades.update.mockRejectedValue(p2025Error);
 
       await expect(repository.update(99, { nombre: 'Test' })).rejects.toThrow(
@@ -226,10 +237,13 @@ describe('PrismaCommunityRepository', () => {
     });
 
     it('should throw EntityNotFoundException on P2025 error', async () => {
-      const p2025Error = new Prisma.PrismaClientKnownRequestError('Record not found', {
-        code: 'P2025',
-        clientVersion: '7.0.0',
-      });
+      const p2025Error = new Prisma.PrismaClientKnownRequestError(
+        'Record not found',
+        {
+          code: 'P2025',
+          clientVersion: '7.0.0',
+        },
+      );
       prisma.comunidades.update.mockRejectedValue(p2025Error);
 
       await expect(repository.softDelete(99)).rejects.toThrow(

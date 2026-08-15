@@ -4,10 +4,13 @@ import { ROUTE_ARGS_METADATA } from '@nestjs/common/constants';
 
 function getParamDecoratorFactory(decorator: any) {
   class TestTarget {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     public testMethod(@CurrentUser() _user: any) {}
   }
-  const metadata = Reflect.getMetadata(ROUTE_ARGS_METADATA, TestTarget, 'testMethod');
+  const metadata = Reflect.getMetadata(
+    ROUTE_ARGS_METADATA,
+    TestTarget,
+    'testMethod',
+  );
   const key = Object.keys(metadata)[0];
   return metadata[key].factory;
 }
@@ -32,7 +35,13 @@ describe('CurrentUser decorator', () => {
   });
 
   it('should return specific field when key provided', () => {
-    const mockUser = { sub: 10, usersId: 10, sid: 'session-10', email: 'test@mail.com', permisos: [] };
+    const mockUser = {
+      sub: 10,
+      usersId: 10,
+      sid: 'session-10',
+      email: 'test@mail.com',
+      permisos: [],
+    };
     const mockCtx = {
       switchToHttp: () => ({
         getRequest: () => ({ user: mockUser }),

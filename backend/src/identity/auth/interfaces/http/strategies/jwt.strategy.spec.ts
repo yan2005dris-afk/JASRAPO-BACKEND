@@ -1,5 +1,5 @@
 import { UnauthorizedException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import type { ConfigService } from '@nestjs/config';
 import { JwtStrategy } from './jwt.strategy';
 import type { UserService } from 'src/identity/users/application/user.service';
 import type { SessionsService } from '../../../../sessions/application/sessions.service';
@@ -41,13 +41,21 @@ describe('JwtStrategy', () => {
   });
 
   it('should validate and return JwtPayload for a valid token and session', async () => {
-    const payload = { sub: 1, sid: 'session-123', email: 'test@example.com', tokenVersion: 1 };
+    const payload = {
+      sub: 1,
+      sid: 'session-123',
+      email: 'test@example.com',
+      tokenVersion: 1,
+    };
     const validSession = {
       revocado: false,
       expiraEn: new Date(Date.now() + 100000),
       tokenVersion: 1,
     } as any;
-    const permissions = { usuarioId: 1, permisos: [{ recurso: 'users', accion: 'read' }] };
+    const permissions = {
+      usuarioId: 1,
+      permisos: [{ recurso: 'users', accion: 'read' }],
+    };
 
     sessionsService.getSession.mockResolvedValue(validSession);
     userService.getEffectivePermissions.mockResolvedValue(permissions);
@@ -79,7 +87,9 @@ describe('JwtStrategy', () => {
       tokenVersion: 1,
     } as any);
 
-    await expect(strategy.validate(payload)).rejects.toThrow(UnauthorizedException);
+    await expect(strategy.validate(payload)).rejects.toThrow(
+      UnauthorizedException,
+    );
   });
 
   it('should throw UnauthorizedException when tokenVersion does not match', async () => {
@@ -90,6 +100,8 @@ describe('JwtStrategy', () => {
       tokenVersion: 2,
     } as any);
 
-    await expect(strategy.validate(payload)).rejects.toThrow(UnauthorizedException);
+    await expect(strategy.validate(payload)).rejects.toThrow(
+      UnauthorizedException,
+    );
   });
 });

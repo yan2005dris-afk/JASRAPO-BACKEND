@@ -55,10 +55,7 @@ export class PrismaCommunityRepository implements CommunityRepository {
     const record = await this.prisma.comunidades.findFirst({
       where: {
         deletedAt: null,
-        OR: [
-          { nombre: { equals: nombre, mode: 'insensitive' } },
-          { codigo },
-        ],
+        OR: [{ nombre: { equals: nombre, mode: 'insensitive' } }, { codigo }],
       },
       include: this.defaultInclude,
     });
