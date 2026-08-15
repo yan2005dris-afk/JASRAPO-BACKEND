@@ -10,7 +10,8 @@ import { FindAllRoutesUseCase } from './use-cases/find-all-routes.use-case';
 import { FindOneRouteUseCase } from './use-cases/find-one-route.use-case';
 import { UpdateRouteUseCase } from './use-cases/update-route.use-case';
 import { DeleteRouteUseCase } from './use-cases/delete-route.use-case';
-import { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
+import type { RouteFilters } from '../domain/types/route-filters';
+import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
 
 @Injectable()
 export class RoutesService {
@@ -44,7 +45,7 @@ export class RoutesService {
 
   async findAll(params: {
     pagination: { page?: number; limit?: number };
-    where?: Record<string, any>;
+    where?: RouteFilters;
   }): Promise<PaginatedResult<RouteEntity>> {
     return this.findAllRoutesUseCase.execute(params);
   }
@@ -57,7 +58,7 @@ export class RoutesService {
     return this.updateRouteUseCase.execute(id, updateDto);
   }
 
-  async delete(id: bigint): Promise<{ message: string }> {
+  async delete(id: bigint): Promise<RouteEntity> {
     return this.deleteRouteUseCase.execute(id);
   }
 }

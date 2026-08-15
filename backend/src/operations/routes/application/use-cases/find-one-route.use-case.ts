@@ -1,19 +1,19 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { RouteRepository } from '../../domain/repositories/route.repository';
 import { RouteEntity } from '../../domain/entities/route.entity';
-import { RouteMapper } from '../../infrastructure/mappers/route.mapper';
+import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 
 @Injectable()
 export class FindOneRouteUseCase {
   constructor(private readonly routeRepository: RouteRepository) {}
 
   async execute(rutaId: bigint): Promise<RouteEntity> {
-    const ruta = await this.routeRepository.findUnique({ rutaId });
+    const ruta = await this.routeRepository.findById(rutaId);
 
-    if (!ruta || ruta.deletedAt) {
-      throw new NotFoundException('Ruta no encontrada');
+    if (!ruta) {
+      throw new EntityNotFoundException('Ruta', rutaId.toString());
     }
 
-    return RouteMapper.toEntity(ruta);
+    return ruta;
   }
 }

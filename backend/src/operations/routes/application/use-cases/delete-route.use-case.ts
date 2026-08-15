@@ -1,19 +1,19 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { RouteRepository } from '../../domain/repositories/route.repository';
+import { RouteEntity } from '../../domain/entities/route.entity';
+import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 
 @Injectable()
 export class DeleteRouteUseCase {
   constructor(private readonly routeRepository: RouteRepository) {}
 
-  async execute(rutaId: bigint): Promise<{ message: string }> {
-    const ruta = await this.routeRepository.findUnique({ rutaId });
+  async execute(rutaId: bigint): Promise<RouteEntity> {
+    const ruta = await this.routeRepository.findById(rutaId);
 
-    if (!ruta || ruta.deletedAt) {
-      throw new NotFoundException('Ruta no encontrada');
+    if (!ruta) {
+      throw new EntityNotFoundException('Ruta', rutaId.toString());
     }
 
-    await this.routeRepository.update({ rutaId }, { deletedAt: new Date() });
-
-    return { message: 'Ruta eliminada correctamente' };
+    return this.routeRepository.softDelete(rutaId);
   }
 }

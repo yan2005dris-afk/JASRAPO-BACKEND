@@ -4,7 +4,7 @@ import { RouteEntity } from '../../domain/entities/route.entity';
 describe('RouteMapper', () => {
   describe('toEntity', () => {
     it('should map all fields from a raw route to RouteEntity', () => {
-      const createdAt = new Date('2025-06-01T10:00:00Z');
+      const fechaPlanificada = new Date('2025-06-01T10:00:00Z');
       const fechaInicio = new Date('2025-06-02T08:00:00Z');
       const fechaFin = new Date('2025-06-02T16:00:00Z');
 
@@ -18,7 +18,7 @@ describe('RouteMapper', () => {
         sectorId: 2,
         periodoId: 5,
         estado: 'PENDIENTE',
-        createdAt,
+        fechaPlanificada,
         fechaInicio,
         fechaFin,
       };
@@ -41,8 +41,6 @@ describe('RouteMapper', () => {
     });
 
     it('should handle null optional fields', () => {
-      const createdAt = new Date('2025-06-01T10:00:00Z');
-
       const raw = {
         rutaId: 101n,
         nombre: 'Ruta Test',
@@ -53,7 +51,7 @@ describe('RouteMapper', () => {
         sectorId: null,
         periodoId: null,
         estado: 'EN_CURSO',
-        createdAt,
+        fechaPlanificada: null,
         fechaInicio: null,
         fechaFin: null,
       };
@@ -63,14 +61,12 @@ describe('RouteMapper', () => {
       expect(result.descripcion).toBeNull();
       expect(result.sectorId).toBeNull();
       expect(result.periodoId).toBeNull();
-      expect(result.fechaPlanificada).toBe('2025-06-01');
+      expect(result.fechaPlanificada).toBeNull();
       expect(result.fechaInicio).toBeNull();
       expect(result.fechaFin).toBeNull();
     });
 
-    it('should handle missing optional properties gracefully', () => {
-      const createdAt = new Date('2025-06-01T10:00:00Z');
-
+    it('toEntityList should map an array of raw routes', () => {
       const raw = {
         rutaId: 102n,
         nombre: 'Minimal Route',
@@ -78,13 +74,13 @@ describe('RouteMapper', () => {
         tipoRuta: 'TOMA_LECTURA',
         comunidadId: 1,
         estado: 'PENDIENTE',
-        createdAt,
       };
 
-      const result = RouteMapper.toEntity(raw);
+      const list = RouteMapper.toEntityList([raw]);
 
-      expect(result.rutaId).toBe(102n);
-      expect(result.nombre).toBe('Minimal Route');
+      expect(list).toHaveLength(1);
+      expect(list[0].rutaId).toBe(102n);
+      expect(list[0].nombre).toBe('Minimal Route');
     });
   });
 });

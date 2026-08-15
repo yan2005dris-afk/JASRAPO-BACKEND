@@ -1,13 +1,12 @@
-import {
-  Injectable,
-  BadRequestException,
-  NotFoundException,
-} from '@nestjs/common';
-import { EstadoContrato } from 'src/shared/enums';
+import { Injectable } from '@nestjs/common';
 import { RouteRepository } from '../../domain/repositories/route.repository';
 import { ReadingForRouteEntity } from '../../domain/entities/reading-for-route.entity';
-import { PaginateOptions } from 'src/infrastructure/common/utils/pagination.util';
-import { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
+import { getPagination } from 'src/infrastructure/common/utils/pagination.util';
+import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
+import {
+  EntityNotFoundException,
+  InvalidDomainOperationException,
+} from 'src/shared/domain/exceptions/domain.exception';
 
 @Injectable()
 export class GetEligibleReadingsUseCase {
@@ -18,95 +17,40 @@ export class GetEligibleReadingsUseCase {
     comunidadId: number;
     sectorId?: number;
     search?: string;
-    pagination: PaginateOptions;
+    pagination: { page?: number; limit?: number };
   }): Promise<PaginatedResult<ReadingForRouteEntity>> {
     const { tipoRuta, comunidadId, sectorId, search, pagination } = params;
 
-    const comunidad = await this.routeRepository.findComunidad({ comunidadId });
+    const comunidad = await this.routeRepository.findComunidad(comunidadId);
     if (!comunidad) {
-      throw new NotFoundException('Comunidad no encontrada');
+      throw new EntityNotFoundException('Comunidad', comunidadId);
     }
 
     if (sectorId) {
-      const sector = await this.routeRepository.findSector({ sectorId });
+      const sector = await this.routeRepository.findSector(sectorId);
       if (!sector) {
-        throw new NotFoundException('Sector no encontrado');
+        throw new EntityNotFoundException('Sector', sectorId);
       }
       if (sector.comunidadId !== comunidadId) {
-        throw new BadRequestException('El sector no pertenece a la comunidad');
+        throw new InvalidDomainOperationException(
+          'El sector no pertenece a la comunidad',
+        );
       }
     }
 
-    const estadoContratoEsperado: EstadoContrato =
-      tipoRuta === 'TOMA_LECTURA'
-        ? EstadoContrato.ACTIVO
-        : EstadoContrato.RECONEXION;
-
-    const where: Record<string, any> = {
-      estadoAsignacion: 'NO_ASIGNADA',
-      estado: { in: ['PENDIENTE', 'POR_REVISION'] },
-      deletedAt: null,
-      medidor: {
-        historial: {
-          some: {
-            fechaHasta: null,
-            contrato: {
-              estado: estadoContratoEsperado,
-              comunidadId,
-              ...(sectorId && { sectorId }),
-              deletedAt: null,
-            },
-          },
-        },
-      },
-    };
-
-    const q = search?.trim();
-    if (q) {
-      where.OR = [
-        {
-          medidor: {
-            historial: {
-              some: {
-                fechaHasta: null,
-                contrato: { numeroGuia: { contains: q, mode: 'insensitive' } },
-              },
-            },
-          },
-        },
-        {
-          medidor: {
-            historial: {
-              some: {
-                fechaHasta: null,
-                contrato: {
-                  cliente: { nombres: { contains: q, mode: 'insensitive' } },
-                },
-              },
-            },
-          },
-        },
-        {
-          medidor: {
-            historial: {
-              some: {
-                fechaHasta: null,
-                contrato: {
-                  cliente: { apellidos: { contains: q, mode: 'insensitive' } },
-                },
-              },
-            },
-          },
-        },
-      ];
-    }
+    const { skip, take, page } = getPagination(
+      pagination.page ?? 1,
+      pagination.limit ?? 10,
+    );
 
     return this.routeRepository.paginateLecturas(
       {
-        where,
-        orderBy: [{ medidor: { historial: { _count: 'desc' } } }],
+        tipoRuta,
+        comunidadId,
+        sectorId,
+        search,
       },
-      pagination,
+      { skip, take, page },
     );
   }
 }

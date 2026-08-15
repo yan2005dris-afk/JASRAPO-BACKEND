@@ -1,4 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import type { RouteEntity } from '../../domain/entities/route.entity';
+import type { ReadingForRouteEntity } from '../../domain/entities/reading-for-route.entity';
 
 export class RouteResponseDto {
   @ApiProperty({ example: '1', description: 'ID único de la ruta' })
@@ -60,6 +62,27 @@ export class RouteResponseDto {
     description: 'Fecha de fin',
   })
   fechaFin: string | null;
+
+  static fromEntity(entity: RouteEntity): RouteResponseDto {
+    const dto = new RouteResponseDto();
+    dto.rutaId = entity.rutaId;
+    dto.nombre = entity.nombre;
+    dto.descripcion = entity.descripcion ?? null;
+    dto.operarioId = entity.operarioId;
+    dto.tipoRuta = entity.tipoRuta;
+    dto.comunidadId = entity.comunidadId;
+    dto.sectorId = entity.sectorId ?? null;
+    dto.periodoId = entity.periodoId ?? null;
+    dto.estado = entity.estado;
+    dto.fechaPlanificada = entity.fechaPlanificada ?? null;
+    dto.fechaInicio = entity.fechaInicio ?? null;
+    dto.fechaFin = entity.fechaFin ?? null;
+    return dto;
+  }
+
+  static fromEntityList(entities: RouteEntity[]): RouteResponseDto[] {
+    return entities.map((e) => RouteResponseDto.fromEntity(e));
+  }
 }
 
 export class ReadingForRouteResponseDto {
@@ -84,4 +107,21 @@ export class ReadingForRouteResponseDto {
 
   @ApiProperty({ example: 'ACTIVO', description: 'Estado del contrato' })
   estadoContrato: string;
+
+  static fromEntity(entity: ReadingForRouteEntity): ReadingForRouteResponseDto {
+    const dto = new ReadingForRouteResponseDto();
+    dto.lecturaId = entity.lecturaId;
+    dto.guia = entity.guia;
+    dto.clienteNombre = entity.clienteNombre;
+    dto.direccion = entity.direccion;
+    dto.sector = entity.sector;
+    dto.estadoContrato = entity.estadoContrato;
+    return dto;
+  }
+
+  static fromEntityList(
+    entities: ReadingForRouteEntity[],
+  ): ReadingForRouteResponseDto[] {
+    return entities.map((e) => ReadingForRouteResponseDto.fromEntity(e));
+  }
 }

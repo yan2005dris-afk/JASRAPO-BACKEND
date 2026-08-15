@@ -39,4 +39,10 @@ export class ReadingForRouteMapper {
       estadoContrato: contrato?.estado ?? 'DESCONOCIDO',
     });
   }
+
+  static toEntityList(
+    readings: ReadingWithRelationsRaw[],
+  ): ReadingForRouteEntity[] {
+    return readings.map((r) => ReadingForRouteMapper.toEntity(r));
+  }
 }

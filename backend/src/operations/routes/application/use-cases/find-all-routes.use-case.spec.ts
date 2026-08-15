@@ -2,20 +2,13 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { FindAllRoutesUseCase } from './find-all-routes.use-case';
 import { RouteRepository } from '../../domain/repositories/route.repository';
+import { RouteEntity } from '../../domain/entities/route.entity';
 
 describe('FindAllRoutesUseCase', () => {
   let useCase: FindAllRoutesUseCase;
 
   const mockRouteRepository = {
-    findUnique: jest.fn(),
-    findMany: jest.fn(),
     paginateRutas: jest.fn(),
-    create: jest.fn(),
-    update: jest.fn(),
-    findUsuario: jest.fn(),
-    findComunidad: jest.fn(),
-    findSector: jest.fn(),
-    paginateLecturas: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -30,18 +23,43 @@ describe('FindAllRoutesUseCase', () => {
     }).compile();
 
     useCase = module.get<FindAllRoutesUseCase>(FindAllRoutesUseCase);
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {
     expect(useCase).toBeDefined();
   });
 
-  it('should call paginateRutas with correct params and map results', async () => {
+  it('should call paginateRutas with correct params and return results', async () => {
+    const mockEntities = [
+      new RouteEntity({
+        rutaId: 1n,
+        nombre: 'Route 1',
+        operarioId: 1,
+        tipoRuta: 'TOMA_LECTURA',
+        comunidadId: 1,
+        periodoId: 1,
+        estado: 'PENDIENTE',
+        fechaPlanificada: null,
+        fechaInicio: null,
+        fechaFin: null,
+      }),
+      new RouteEntity({
+        rutaId: 2n,
+        nombre: 'Route 2',
+        operarioId: 2,
+        tipoRuta: 'TOMA_LECTURA',
+        comunidadId: 1,
+        periodoId: 1,
+        estado: 'PENDIENTE',
+        fechaPlanificada: null,
+        fechaInicio: null,
+        fechaFin: null,
+      }),
+    ];
+
     mockRouteRepository.paginateRutas.mockResolvedValue({
-      data: [
-        { rutaId: 1n, nombre: 'Route 1' },
-        { rutaId: 2n, nombre: 'Route 2' },
-      ],
+      data: mockEntities,
       meta: { total: 2, page: 1, limit: 10 },
     });
 
@@ -51,11 +69,8 @@ describe('FindAllRoutesUseCase', () => {
     });
 
     expect(mockRouteRepository.paginateRutas).toHaveBeenCalledWith(
-      {
-        where: { estado: 'PENDIENTE', deletedAt: null },
-        orderBy: { createdAt: 'desc' },
-      },
-      { page: 1, limit: 10 },
+      { estado: 'PENDIENTE' },
+      { skip: 0, take: 10, page: 1 },
     );
     expect(result.meta.total).toBe(2);
     expect(result.data).toHaveLength(2);

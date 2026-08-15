@@ -3,6 +3,8 @@ import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-
 import type { RouteEntity } from '../entities/route.entity';
 import type { ReadingForRouteEntity } from '../entities/reading-for-route.entity';
 import type { CreateRouteData } from '../types/create-route-data';
+import type { UpdateRouteData } from '../types/update-route-data';
+import type { RouteFilters } from '../types/route-filters';
 
 /**
  * Cross-module lookup interfaces — minimal shapes for domain validation.
@@ -33,58 +35,54 @@ export interface MedidorRef {
   serie: string;
 }
 
-export abstract class RouteRepository {
-  abstract findUnique(where: Record<string, any>): Promise<any>;
+export interface EligibleReadingsCriteria {
+  tipoRuta: string;
+  comunidadId: number;
+  sectorId?: number;
+  search?: string;
+}
 
-  abstract findMany(params: {
-    where?: Record<string, any>;
-    orderBy?: Record<string, any>;
-    skip?: number;
-    take?: number;
-  }): Promise<any[]>;
+export abstract class RouteRepository {
+  abstract findById(
+    rutaId: bigint,
+    includeDeleted?: boolean,
+  ): Promise<RouteEntity | null>;
 
   abstract paginateRutas(
-    args: { where?: Record<string, any>; orderBy?: Record<string, any> },
+    filters: RouteFilters,
     pagination: PaginateOptions,
   ): Promise<PaginatedResult<RouteEntity>>;
 
-  abstract create(data: CreateRouteData): Promise<any>;
+  abstract create(data: CreateRouteData): Promise<RouteEntity>;
 
   abstract update(
-    where: Record<string, any>,
-    data: Record<string, any>,
-  ): Promise<any>;
+    rutaId: bigint,
+    data: UpdateRouteData,
+  ): Promise<RouteEntity>;
+
+  abstract softDelete(rutaId: bigint): Promise<RouteEntity>;
 
   abstract findUsuario(
-    where: { usuarioId: number },
-    options?: { include?: Record<string, any> },
+    usuarioId: number,
+    options?: { includeRole?: boolean },
   ): Promise<UsuarioRef | null>;
 
-  abstract findComunidad(where: {
-    comunidadId: number;
-  }): Promise<ComunidadRef | null>;
+  abstract findComunidad(comunidadId: number): Promise<ComunidadRef | null>;
 
-  abstract findSector(where: { sectorId: number }): Promise<SectorRef | null>;
+  abstract findSector(sectorId: number): Promise<SectorRef | null>;
 
-  abstract findPeriodo(where: {
-    periodoId: number;
-  }): Promise<PeriodoRef | null>;
+  abstract findPeriodo(periodoId: number): Promise<PeriodoRef | null>;
 
-  abstract findMedidor(where: {
-    medidorId: number;
-  }): Promise<{ medidorId: number; serie: string } | null>;
+  abstract findMedidor(medidorId: number): Promise<MedidorRef | null>;
 
   abstract findOverlappingRoutes(
     comunidadId: number,
     periodoId: number,
     sectorId?: number,
-  ): Promise<any[]>;
+  ): Promise<RouteEntity[]>;
 
   abstract paginateLecturas(
-    args: {
-      where?: Record<string, any>;
-      orderBy?: any;
-    },
+    criteria: EligibleReadingsCriteria,
     pagination: PaginateOptions,
   ): Promise<PaginatedResult<ReadingForRouteEntity>>;
 }

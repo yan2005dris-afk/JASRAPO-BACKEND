@@ -11,9 +11,12 @@ export interface RouteRaw {
   sectorId?: number | null;
   periodoId?: number | null;
   estado: string;
-  createdAt: Date;
-  fechaInicio?: Date | null;
-  fechaFin?: Date | null;
+  fechaPlanificada?: Date | string | null;
+  fechaInicio?: Date | string | null;
+  fechaFin?: Date | string | null;
+  createdAt?: Date;
+  updatedAt?: Date;
+  deletedAt?: Date | null;
 }
 
 export class RouteMapper {
@@ -27,10 +30,14 @@ export class RouteMapper {
       comunidadId: route.comunidadId,
       sectorId: route.sectorId,
       periodoId: route.periodoId,
-      fechaPlanificada: DateUtil.formatForFrontend(route.createdAt),
+      fechaPlanificada: DateUtil.formatForFrontend(route.fechaPlanificada),
       fechaInicio: DateUtil.formatForFrontend(route.fechaInicio),
       fechaFin: DateUtil.formatForFrontend(route.fechaFin),
       estado: route.estado,
     });
+  }
+
+  static toEntityList(routes: RouteRaw[]): RouteEntity[] {
+    return routes.map((r) => RouteMapper.toEntity(r));
   }
 }

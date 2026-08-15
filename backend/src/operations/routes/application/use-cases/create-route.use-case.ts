@@ -1,14 +1,13 @@
-import {
-  Injectable,
-  BadRequestException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { RouteRepository } from '../../domain/repositories/route.repository';
 import { CreateRouteDto } from '../../interfaces/dto/create-route.dto';
 import { RouteEntity } from '../../domain/entities/route.entity';
-import { RouteMapper } from '../../infrastructure/mappers/route.mapper';
 import type { CreateRouteData } from '../../domain/types/create-route-data';
 import { TipoRuta } from 'src/shared/enums';
+import {
+  EntityNotFoundException,
+  InvalidDomainOperationException,
+} from 'src/shared/domain/exceptions/domain.exception';
 
 /** Route types that target a specific meter work order (not community-periodic). */
 const WORK_ORDER_TYPES = new Set<string>([
@@ -22,78 +21,75 @@ export class CreateRouteUseCase {
 
   async execute(createDto: CreateRouteDto): Promise<RouteEntity> {
     const operario = await this.routeRepository.findUsuario(
-      { usuarioId: createDto.operarioId },
-      { include: { rol: true } },
+      createDto.operarioId,
+      { includeRole: true },
     );
 
     if (!operario) {
-      throw new NotFoundException('Operario no encontrado');
+      throw new EntityNotFoundException('Operario', createDto.operarioId);
     }
 
     if (operario.rol?.nombre !== 'operadores') {
-      throw new BadRequestException('Solo se pueden asignar operadores');
+      throw new InvalidDomainOperationException(
+        'Solo se pueden asignar operadores',
+      );
     }
 
-    const comunidad = await this.routeRepository.findComunidad({
-      comunidadId: createDto.comunidadId,
-    });
+    const comunidad = await this.routeRepository.findComunidad(
+      createDto.comunidadId,
+    );
 
     if (!comunidad) {
-      throw new NotFoundException('Comunidad no encontrada');
+      throw new EntityNotFoundException('Comunidad', createDto.comunidadId);
     }
 
     if (createDto.sectorId) {
-      const sector = await this.routeRepository.findSector({
-        sectorId: createDto.sectorId,
-      });
+      const sector = await this.routeRepository.findSector(createDto.sectorId);
 
       if (!sector) {
-        throw new NotFoundException('Sector no encontrado');
+        throw new EntityNotFoundException('Sector', createDto.sectorId);
       }
 
       if (sector.comunidadId !== createDto.comunidadId) {
-        throw new BadRequestException('El sector no pertenece a la comunidad');
+        throw new InvalidDomainOperationException(
+          'El sector no pertenece a la comunidad',
+        );
       }
     }
 
-    const periodo = await this.routeRepository.findPeriodo({
-      periodoId: createDto.periodoId,
-    });
+    const periodo = await this.routeRepository.findPeriodo(
+      createDto.periodoId,
+    );
 
     if (!periodo) {
-      throw new NotFoundException('Periodo no encontrado');
+      throw new EntityNotFoundException('Periodo', createDto.periodoId);
     }
 
     if (periodo.estado !== 'ABIERTO') {
-      throw new BadRequestException('El periodo no está abierto');
+      throw new InvalidDomainOperationException('El periodo no está abierto');
     }
 
     // Work orders (INSTALACION / INSPECCION) require a medidor
     const isWorkOrder = WORK_ORDER_TYPES.has(createDto.tipoRuta);
 
     if (isWorkOrder && createDto.medidorId == null) {
-      throw new BadRequestException(
+      throw new InvalidDomainOperationException(
         'medidorId es obligatorio para rutas de INSTALACION/INSPECCION',
       );
     }
 
     // Validate medidor when provided
     if (createDto.medidorId != null) {
-      const medidor = await this.routeRepository.findMedidor({
-        medidorId: createDto.medidorId,
-      });
+      const medidor = await this.routeRepository.findMedidor(
+        createDto.medidorId,
+      );
 
       if (!medidor) {
-        throw new NotFoundException(
-          `Medidor con ID ${createDto.medidorId} no encontrado`,
-        );
+        throw new EntityNotFoundException('Medidor', createDto.medidorId);
       }
     }
 
     // Overlap check applies only to periodic community routes
-    // (TOMA_LECTURA / RECONEXION). Work orders (INSTALACION / INSPECCION)
-    // target a specific meter and may coexist with other routes.
-
     if (!isWorkOrder) {
       const overlapping = await this.routeRepository.findOverlappingRoutes(
         createDto.comunidadId,
@@ -102,7 +98,7 @@ export class CreateRouteUseCase {
       );
 
       if (overlapping.length > 0) {
-        throw new BadRequestException(
+        throw new InvalidDomainOperationException(
           'Ya existe una ruta para esta comunidad y periodo',
         );
       }
@@ -123,8 +119,6 @@ export class CreateRouteUseCase {
       medidorId: createDto.medidorId,
     };
 
-    const ruta = await this.routeRepository.create(createData);
-
-    return RouteMapper.toEntity(ruta);
+    return this.routeRepository.create(createData);
   }
 }

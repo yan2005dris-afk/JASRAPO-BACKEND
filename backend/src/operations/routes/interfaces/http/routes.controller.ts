@@ -61,7 +61,11 @@ export class RoutesController {
   async getEligibleReadings(
     @Query() filterDto: FilterReadingsDto,
   ): Promise<PaginatedResult<ReadingForRouteResponseDto>> {
-    return this.routesService.getEligibleReadings(filterDto);
+    const result = await this.routesService.getEligibleReadings(filterDto);
+    return {
+      data: ReadingForRouteResponseDto.fromEntityList(result.data),
+      meta: result.meta,
+    };
   }
 
   /**
@@ -79,7 +83,8 @@ export class RoutesController {
   @RequiredPermission('routes', 'create')
   @Post()
   async create(@Body() createDto: CreateRouteDto): Promise<RouteResponseDto> {
-    return this.routesService.create(createDto);
+    const result = await this.routesService.create(createDto);
+    return RouteResponseDto.fromEntity(result);
   }
 
   /**
@@ -98,13 +103,17 @@ export class RoutesController {
     const where: any = {};
     if (query.estado) where.estado = query.estado;
 
-    return this.routesService.findAll({
+    const result = await this.routesService.findAll({
       pagination: {
         page: query.page,
         limit: query.limit,
       },
       where,
     });
+    return {
+      data: RouteResponseDto.fromEntityList(result.data),
+      meta: result.meta,
+    };
   }
 
   /**
@@ -131,7 +140,8 @@ export class RoutesController {
   async findOne(
     @Param('id', ParseBigIntPipe) id: bigint,
   ): Promise<RouteResponseDto> {
-    return this.routesService.findOne(id);
+    const result = await this.routesService.findOne(id);
+    return RouteResponseDto.fromEntity(result);
   }
 
   /**
@@ -158,7 +168,8 @@ export class RoutesController {
     @Param('id', ParseBigIntPipe) id: bigint,
     @Body() updateDto: UpdateRouteDto,
   ): Promise<RouteResponseDto> {
-    return this.routesService.update(id, updateDto);
+    const result = await this.routesService.update(id, updateDto);
+    return RouteResponseDto.fromEntity(result);
   }
 
   /**
@@ -190,7 +201,8 @@ export class RoutesController {
     @Param('id', ParseBigIntPipe) id: bigint,
     @Body() dto: ReassignRouteDto,
   ): Promise<RouteResponseDto> {
-    return this.reassignRouteUseCase.execute(id, dto.operarioId);
+    const result = await this.reassignRouteUseCase.execute(id, dto.operarioId);
+    return RouteResponseDto.fromEntity(result);
   }
 
   /**
@@ -206,12 +218,17 @@ export class RoutesController {
     type: String,
     example: '9223372036854775807',
   })
-  @ApiResponse({ status: 200, description: 'Ruta eliminada' })
+  @ApiResponse({
+    status: 200,
+    description: 'Ruta eliminada',
+    type: RouteResponseDto,
+  })
   @RequiredPermission('routes', 'delete')
   @Delete(':id')
   async delete(
     @Param('id', ParseBigIntPipe) id: bigint,
-  ): Promise<{ message: string }> {
-    return this.routesService.delete(id);
+  ): Promise<RouteResponseDto> {
+    const result = await this.routesService.delete(id);
+    return RouteResponseDto.fromEntity(result);
   }
 }

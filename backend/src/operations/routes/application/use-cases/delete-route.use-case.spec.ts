@@ -2,21 +2,15 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { DeleteRouteUseCase } from './delete-route.use-case';
 import { RouteRepository } from '../../domain/repositories/route.repository';
-import { NotFoundException } from '@nestjs/common';
+import { RouteEntity } from '../../domain/entities/route.entity';
+import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 
 describe('DeleteRouteUseCase', () => {
   let useCase: DeleteRouteUseCase;
 
   const mockRouteRepository = {
-    findUnique: jest.fn(),
-    findMany: jest.fn(),
-    paginateRutas: jest.fn(),
-    create: jest.fn(),
-    update: jest.fn(),
-    findUsuario: jest.fn(),
-    findComunidad: jest.fn(),
-    findSector: jest.fn(),
-    paginateLecturas: jest.fn(),
+    findById: jest.fn(),
+    softDelete: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -31,30 +25,38 @@ describe('DeleteRouteUseCase', () => {
     }).compile();
 
     useCase = module.get<DeleteRouteUseCase>(DeleteRouteUseCase);
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {
     expect(useCase).toBeDefined();
   });
 
-  it('should throw NotFoundException if route not found', async () => {
-    mockRouteRepository.findUnique.mockResolvedValue(null);
-    await expect(useCase.execute(1n)).rejects.toThrow(NotFoundException);
+  it('should throw EntityNotFoundException if route not found', async () => {
+    mockRouteRepository.findById.mockResolvedValue(null);
+    await expect(useCase.execute(1n)).rejects.toThrow(EntityNotFoundException);
   });
 
   it('should soft delete route', async () => {
-    mockRouteRepository.findUnique.mockResolvedValue({
+    const existing = new RouteEntity({
       rutaId: 1n,
-      deletedAt: null,
+      nombre: 'Route 1',
+      operarioId: 1,
+      tipoRuta: 'TOMA_LECTURA',
+      comunidadId: 1,
+      periodoId: 1,
+      estado: 'PENDIENTE',
+      fechaPlanificada: null,
+      fechaInicio: null,
+      fechaFin: null,
     });
-    mockRouteRepository.update.mockResolvedValue({ rutaId: 1n });
+    mockRouteRepository.findById.mockResolvedValue(existing);
+    mockRouteRepository.softDelete.mockResolvedValue(existing);
 
     const result = await useCase.execute(1n);
 
-    expect(mockRouteRepository.update).toHaveBeenCalledWith(
-      { rutaId: 1n },
-      { deletedAt: expect.any(Date) },
-    );
-    expect(result.message).toBe('Ruta eliminada correctamente');
+    expect(mockRouteRepository.findById).toHaveBeenCalledWith(1n);
+    expect(mockRouteRepository.softDelete).toHaveBeenCalledWith(1n);
+    expect(result.rutaId).toBe(1n);
   });
 });
