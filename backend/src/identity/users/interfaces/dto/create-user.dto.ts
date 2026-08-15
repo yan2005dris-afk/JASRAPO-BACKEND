@@ -15,7 +15,6 @@ export class CreateUserDto extends OmitType(UserResponseDto, [
   'usuarioId',
   'rol',
   'avatar',
-  'deletedAt',
 ] as const) {
   @IsEmail()
   @IsNotEmptyString()

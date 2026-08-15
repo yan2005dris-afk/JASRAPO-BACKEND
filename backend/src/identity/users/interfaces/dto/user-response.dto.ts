@@ -6,12 +6,6 @@ export class RoleResponseDto {
 
   @ApiProperty({ example: 'admin', description: 'Nombre descriptivo del rol' })
   nombre: string;
-
-  @ApiPropertyOptional({
-    description: 'Fecha de eliminación suave del rol',
-    nullable: true,
-  })
-  deletedAt?: Date | null;
 }
 
 export class AuthPermissionResponseDto {
@@ -89,19 +83,11 @@ export class UserResponseDto {
     nullable: true,
   })
   rol: RoleResponseDto | null;
-
-  @ApiPropertyOptional({
-    example: null,
-    description: 'Fecha de eliminación',
-    nullable: true,
-  })
-  deletedAt?: Date | null;
 }
 
 export class UserProfileResponseDto extends OmitType(UserResponseDto, [
   'nombres',
   'apellidos',
-  'deletedAt',
 ] as const) {
   @ApiProperty({
     example: 'Juan Pérez',
