@@ -2,7 +2,7 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { AgreementRepository } from '../../domain/repositories/agreement.repository';
-import { safeAgreementWithInstallmentsSelect } from '../../domain/types/IAgreement';
+import { safeAgreementWithInstallmentsSelect } from '../../infrastructure/repositories/prisma-agreement.repository';
 import { FindOneAgreementUseCase } from './find-one-agreement.use-case';
 
 describe('FindOneAgreementUseCase', () => {

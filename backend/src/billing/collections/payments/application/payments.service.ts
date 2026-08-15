@@ -23,7 +23,7 @@ import {
   safePaymentSelect,
   safePaymentWithDetailSelect,
   safeSaldoFavorSelect,
-} from '../domain/types/IPayment';
+} from '../infrastructure/repositories/prisma-payment.repository';
 import {
   toPaymentResponse,
   toSaldoFavorResponse,

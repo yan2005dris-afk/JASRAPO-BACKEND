@@ -11,6 +11,33 @@ import { MeterEntity } from '../../domain/entities/meter.entity';
 import { MeterMapper } from '../mappers/meter.mapper';
 import { MeterFilters } from '../../domain/types/meter-filters';
 
+export const safeMeterSelect = {
+  medidorId: true,
+  marca: true,
+  modelo: true,
+  serie: true,
+  estado: true,
+  fechaInstalacion: true,
+  fechaBaja: true,
+  motivo: true,
+  latitud: true,
+  longitud: true,
+} satisfies Prisma.MedidoresSelect;
+
+export const safeMeterSelectWithDelete = {
+  medidorId: true,
+  marca: true,
+  modelo: true,
+  serie: true,
+  estado: true,
+  fechaInstalacion: true,
+  fechaBaja: true,
+  motivo: true,
+  latitud: true,
+  longitud: true,
+  deletedAt: true,
+} satisfies Prisma.MedidoresSelect;
+
 @Injectable()
 export class PrismaMeterRepository implements MeterRepository {
   constructor(private readonly prisma: PrismaService) {}

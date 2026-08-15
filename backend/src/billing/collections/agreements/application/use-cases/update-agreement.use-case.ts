@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { Decimal } from 'decimal.js';
 import { AgreementRepository } from '../../domain/repositories/agreement.repository';
-import { safeAgreementWithInstallmentsSelect } from '../../domain/types/IAgreement';
+import { safeAgreementWithInstallmentsSelect } from '../../infrastructure/repositories/prisma-agreement.repository';
 
 /**
  * Actualiza el estado de un convenio.

@@ -12,7 +12,7 @@ import {
 import { ApplySaldoFavorDto } from '../../interfaces/dto/create-payment.dto';
 import { PaymentRepository } from '../../domain/repositories/payment.repository';
 import { EventosPendientesRepository } from 'src/shared/outbox/domain/repositories/eventos-pendientes.repository';
-import { safePaymentWithDetailSelect } from '../../domain/types/IPayment';
+import { safePaymentWithDetailSelect } from '../../infrastructure/repositories/prisma-payment.repository';
 
 @Injectable()
 export class ApplySaldoFavorUseCase {

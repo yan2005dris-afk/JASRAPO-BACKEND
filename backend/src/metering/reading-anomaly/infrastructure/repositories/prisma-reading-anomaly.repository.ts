@@ -10,7 +10,23 @@ import {
 import { EstadoLectura } from 'src/shared/enums';
 import { ReadingAnomalyEntity } from '../../domain/entities/reading-anomaly.entity';
 import { ReadingAnomalyMapper } from '../mappers/reading-anomaly.mapper';
-import { safeReadingAnomaliesSelect } from '../../types/IResponseReadingAnomaly';
+
+export const safeReadingAnomaliesSelect = {
+  anomaliaId: true,
+  lecturaId: true,
+  observacion: true,
+  tipo: true,
+  estado: true,
+  fotoUrl: true,
+  lectura: {
+    select: {
+      lecturaId: true,
+      fecha: true,
+      lecturaActual: true,
+      consumoCalculado: true,
+    },
+  },
+} satisfies Prisma.LecturaAnomaliaSelect;
 
 @Injectable()
 export class PrismaReadingAnomalyRepository implements ReadingAnomalyRepository {

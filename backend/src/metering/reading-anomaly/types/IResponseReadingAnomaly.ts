@@ -1,5 +1,3 @@
-import type { Prisma } from 'src/generated/prisma/client';
-
 export interface IResponseReadingAnomaly {
   anomaliaId: string;
   lecturaId: string;
@@ -14,20 +12,3 @@ export interface IResponseReadingAnomaly {
     consumoCalculado: number;
   } | null;
 }
-
-export const safeReadingAnomaliesSelect = {
-  anomaliaId: true,
-  lecturaId: true,
-  observacion: true,
-  tipo: true,
-  estado: true,
-  fotoUrl: true,
-  lectura: {
-    select: {
-      lecturaId: true,
-      fecha: true,
-      lecturaActual: true,
-      consumoCalculado: true,
-    },
-  },
-} satisfies Prisma.LecturaAnomaliaSelect;

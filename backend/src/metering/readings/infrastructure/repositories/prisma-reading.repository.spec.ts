@@ -1,6 +1,6 @@
 import { PrismaReadingRepository } from './prisma-reading.repository';
 import { ReadingMapper } from '../mappers/reading.mapper';
-import { safeReadingsSelect } from '../../types/IResponseReading';
+import { safeReadingsSelect } from './prisma-reading.repository';
 
 describe('PrismaReadingRepository - soft delete select regression', () => {
   const buildPrismaMock = () => {

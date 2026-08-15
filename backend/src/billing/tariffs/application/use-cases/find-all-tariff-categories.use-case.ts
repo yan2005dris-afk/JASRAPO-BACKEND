@@ -2,10 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { TariffRepository } from '../../domain/repositories/tariff.repository';
 import { getPagination } from 'src/infrastructure/common/utils/pagination.util';
 import { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
-import {
-  IResponseTariffCategory,
-  safeTariffCategoriesSelect,
-} from '../../types/IResponseTariffCategory';
+import { IResponseTariffCategory } from '../../types/IResponseTariffCategory';
+import { safeTariffCategoriesSelect } from '../../infrastructure/repositories/prisma-tariff.repository';
 import { toTariffCategoryResponse } from '../../types/tariffCategoryMapper';
 
 @Injectable()

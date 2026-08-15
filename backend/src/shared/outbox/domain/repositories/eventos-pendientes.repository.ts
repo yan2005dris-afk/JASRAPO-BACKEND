@@ -1,4 +1,3 @@
-import type { Prisma } from 'src/generated/prisma/client';
 import type { EstadoEvento } from 'src/shared/enums';
 
 export interface EventoPendiente {
@@ -25,7 +24,7 @@ export abstract class EventosPendientesRepository {
     payload: Record<string, unknown>,
     aggregateType?: string,
     aggregateId?: string,
-    tx?: Prisma.TransactionClient,
+    tx?: any,
   ): Promise<EventoPendiente>;
 
   /**
