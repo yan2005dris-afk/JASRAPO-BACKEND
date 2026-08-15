@@ -5,10 +5,16 @@ export class PermissionResponseDto {
   @ApiProperty({ example: 1, description: 'ID único del permiso' })
   permisoId: number;
 
-  @ApiProperty({ example: 'Consultar Usuarios', description: 'Nombre del permiso' })
+  @ApiProperty({
+    example: 'Consultar Usuarios',
+    description: 'Nombre del permiso',
+  })
   nombre: string;
 
-  @ApiProperty({ example: 'Permite consultar usuarios', description: 'Descripción del permiso' })
+  @ApiProperty({
+    example: 'Permite consultar usuarios',
+    description: 'Descripción del permiso',
+  })
   descripcion: string;
 
   @ApiProperty({ example: 'users', description: 'Nombre del recurso' })

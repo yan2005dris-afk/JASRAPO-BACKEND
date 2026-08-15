@@ -40,7 +40,9 @@ export class RegisterUseCase {
         usuarioId: newUser.usuarioId,
       };
     } else {
-      throw new InvalidDomainOperationException('Error al registrar el usuario');
+      throw new InvalidDomainOperationException(
+        'Error al registrar el usuario',
+      );
     }
   }
 }

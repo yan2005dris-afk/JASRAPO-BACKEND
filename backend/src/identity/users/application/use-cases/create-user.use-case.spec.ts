@@ -100,9 +100,7 @@ describe('CreateUserUseCase', () => {
     mockUserRepository.findByEmail.mockResolvedValue(null);
     mockRoleRepository.findByName.mockResolvedValue(null);
 
-    await expect(useCase.execute(dto)).rejects.toThrow(
-      EntityNotFoundException,
-    );
+    await expect(useCase.execute(dto)).rejects.toThrow(EntityNotFoundException);
     expect(mockRoleRepository.findByName).toHaveBeenCalledWith('user');
   });
 

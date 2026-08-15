@@ -64,7 +64,9 @@ export class AuthController {
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @RequiredPermission('users', 'create')
   @Post('register')
-  async register(@Body() registerDto: RegisterDto): Promise<RegisterResponseDto> {
+  async register(
+    @Body() registerDto: RegisterDto,
+  ): Promise<RegisterResponseDto> {
     return this.authService.register(registerDto);
   }
 

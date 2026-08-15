@@ -87,7 +87,7 @@ describe('FindAllMetersUseCase', () => {
       take: 10,
     });
 
-    const resultEmpty = await useCase.execute({} as any);
+    const resultEmpty = await useCase.execute({});
     expect(resultEmpty.meta.page).toBe(1);
     expect(resultEmpty.meta.limit).toBe(10);
     expect(mockMeterRepository.findMany).toHaveBeenLastCalledWith({
@@ -107,7 +107,7 @@ describe('FindAllMetersUseCase', () => {
       limit: 5,
       estado: EstadoMedidor.INSTALADO,
       marca: 'Itron',
-    } as any);
+    });
 
     expect(mockMeterRepository.findMany).toHaveBeenCalledWith({
       where: { estado: EstadoMedidor.INSTALADO, marca: 'Itron' },

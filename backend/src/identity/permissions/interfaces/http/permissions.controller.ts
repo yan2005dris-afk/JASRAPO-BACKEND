@@ -68,9 +68,8 @@ export class PermissionsController {
   async createPermissions(
     @Body() createPermissionDto: CreatePermissionDto,
   ): Promise<PermissionResponseDto> {
-    const permission = await this.permissionsService.create(
-      createPermissionDto,
-    );
+    const permission =
+      await this.permissionsService.create(createPermissionDto);
     return PermissionResponseDto.fromEntity(permission);
   }
 

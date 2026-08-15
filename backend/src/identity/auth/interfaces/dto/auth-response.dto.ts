@@ -1,7 +1,10 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class RegisterResponseDto {
-  @ApiProperty({ example: 'Usuario registrado exitosamente', description: 'Mensaje de respuesta' })
+  @ApiProperty({
+    example: 'Usuario registrado exitosamente',
+    description: 'Mensaje de respuesta',
+  })
   message: string;
 
   @ApiProperty({ example: 1, description: 'ID del usuario creado' })
@@ -21,7 +24,10 @@ export class LoginResponseDto {
   @ApiProperty({ example: 1, description: 'ID del usuario' })
   sub: number;
 
-  @ApiProperty({ example: 'admin@jasrapo.com', description: 'Correo electrónico' })
+  @ApiProperty({
+    example: 'admin@jasrapo.com',
+    description: 'Correo electrónico',
+  })
   email: string;
 
   @ApiPropertyOptional({ example: 'Admin', description: 'Nombre completo' })
@@ -30,21 +36,36 @@ export class LoginResponseDto {
   @ApiPropertyOptional({ example: 1, description: 'ID del rol' })
   rolId?: number | null;
 
-  @ApiPropertyOptional({ example: 'Administrador', description: 'Nombre del rol' })
+  @ApiPropertyOptional({
+    example: 'Administrador',
+    description: 'Nombre del rol',
+  })
   nombreRol?: string | null;
 
-  @ApiPropertyOptional({ example: 'https://example.com/avatar.png', description: 'URL del avatar' })
+  @ApiPropertyOptional({
+    example: 'https://example.com/avatar.png',
+    description: 'URL del avatar',
+  })
   avatar?: string | null;
 
-  @ApiProperty({ example: '2026-08-15T00:00:00.000Z', description: 'Fecha de emisión' })
+  @ApiProperty({
+    example: '2026-08-15T00:00:00.000Z',
+    description: 'Fecha de emisión',
+  })
   createdAt: Date | string;
 
-  @ApiProperty({ example: '2026-08-15T01:00:00.000Z', description: 'Fecha de expiración' })
+  @ApiProperty({
+    example: '2026-08-15T01:00:00.000Z',
+    description: 'Fecha de expiración',
+  })
   expiresAt: Date | string;
 }
 
 export class RefreshResponseDto {
-  @ApiProperty({ example: 'Token refrescado correctamente', description: 'Mensaje de éxito' })
+  @ApiProperty({
+    example: 'Token refrescado correctamente',
+    description: 'Mensaje de éxito',
+  })
   message: string;
 
   @ApiProperty({
@@ -53,9 +74,15 @@ export class RefreshResponseDto {
   })
   accessToken: string;
 
-  @ApiProperty({ example: '2026-08-15T00:00:00.000Z', description: 'Fecha de emisión' })
+  @ApiProperty({
+    example: '2026-08-15T00:00:00.000Z',
+    description: 'Fecha de emisión',
+  })
   createdAt: Date | string;
 
-  @ApiProperty({ example: '2026-08-15T01:00:00.000Z', description: 'Fecha de expiración' })
+  @ApiProperty({
+    example: '2026-08-15T01:00:00.000Z',
+    description: 'Fecha de expiración',
+  })
   expiresAt: Date | string;
 }

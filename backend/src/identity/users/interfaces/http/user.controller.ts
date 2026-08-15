@@ -181,7 +181,9 @@ export class UserController {
   @ApiResponse({ status: 404, description: 'Usuario no encontrado' })
   @RequiredPermission('users', 'read')
   @Get(':id')
-  async findOne(@Param('id', ParseIntPipe) id: number): Promise<UserDetailResponseDto> {
+  async findOne(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<UserDetailResponseDto> {
     const user = await this.userService.user({ usuarioId: id });
     if (!user) {
       throw new NotFoundException('Usuario no encontrado');

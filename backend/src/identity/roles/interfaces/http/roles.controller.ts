@@ -66,7 +66,9 @@ export class RolesController {
   @ApiResponse({ status: 409, description: 'Conflicto - El rol ya existe' })
   @RequiredPermission('roles', 'create')
   @Post()
-  async createRol(@Body() createRoleDto: CreateRoleDto): Promise<RoleResponseDto> {
+  async createRol(
+    @Body() createRoleDto: CreateRoleDto,
+  ): Promise<RoleResponseDto> {
     const role = await this.rolesService.create(createRoleDto);
     return RoleResponseDto.fromEntity(role);
   }
