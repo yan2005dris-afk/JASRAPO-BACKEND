@@ -15,7 +15,7 @@ El backend **tiene la estructura correcta de capas** (`domain/application/infras
 3. **Prisma raw dentro de use-cases y services** — el application layer saltea el port.
 4. **Mappers mal ubicados** — `domain/types/*Mapper.ts` importan DTOs de interfaces (leak domain→interfaces).
 5. **Entidades de dominio con `@nestjs/swagger`** — el dominio importa framework. ✅ meters/readings/reading-anomaly resueltos (2026-08-15); quedan **6 entidades** con `@ApiProperty`.
-6. **Response DTOs "de mentira"** en clients, communities, routes, identity — se declaran pero los controllers devuelven entidades directas.
+6. **Response DTOs "de mentira"** en communities, routes — se declaran pero los controllers devuelven entidades directas. ✅ clients, identity/users corregidos (2026-08-15).
 7. **Sin traducción de errores Prisma (P2002/P2025)** en la mayoría de repos — errores raw → 500 genérico.
 
 **Módulos de referencia (los que hacen las cosas bien)**: `contracts` (port transaccional de dominio + excepciones compartidas + mappers) y `discounts` (único port 100% limpio).
@@ -256,21 +256,13 @@ Convenciones a mantener: archivos kebab-case, sufijos `.use-case.ts`/`.repositor
 
 ### 4.2 Identity (`backend/src/identity/`)
 
-#### Users
+#### Users ✅ **RESUELTO (2026-08-15, commit `cefafde`)** — *nota: gran parte del audit previo ya estaba desactualizado (service fachada fina, entity sin swagger, DTOs mapeados, use-cases registrados); se verificó el código real y solo quedaban los puntos abajo.*
 
-**Conforme**: 4 capas, port abstracto + DI (`user.module.ts:20-23`), `PrismaUserRepository implements UserRepository` con toDomain mappers, DTOs de clase, `update-user.dto.ts:8` deriva de Create via PartialType, response DTOs agregados (`user-response.dto.ts`), un use-case por operación, naming correcto, **una** traducción Prisma→dominio (`prisma-user.repository.ts:309`).
+**Conforme (verificado 2026-08-15)**: 4 capas, port abstracto + DI (`user.module.ts`), `PrismaUserRepository implements UserRepository`, DTOs de clase con `fromEntity` activos en el controller (6 endpoints), un use-case por operación, los 9 use-cases registrados, service **fachada fina** (solo `getEffectivePermissions` mapea salida).
 
-**Violaciones**:
-- **Domain importa infraestructura**: `user.repository.ts:1` trae `PaginationDto` de infra.
-- **Domain depende de NestJS**: `user.entity.ts:1` (ApiProperty en todas las entidades).
-- Port filtra `any`/shapes raw: `user.repository.ts:21,31,76,81,90-107`.
-- Filas Prisma escapan a application: `get-effective-permissions.use-case.ts:26-41`; `user.service.ts:78-88`.
-- Application importa Prisma + concretos infra: `user.service.ts:8` (Prisma), `:14-15,31-34` (ValidationUtil, PhoneUtil, StorageService, ImageProcessorUtil, LoggerService).
-- HttpExceptions en application: `user.service.ts:96,184,188-190,211,229,280,294`; `create-user.use-case.ts:36-41,49,81`.
-- **Traducción P2002 vive en application en dos lugares**: `create-user.use-case.ts:77-82`; `user.service.ts:273-281`.
-- Repo lanza `Error` raw: `prisma-user.repository.ts:166-168,195-197,381-384`.
-- **Lógica de negocio dentro del repo**: `updatePermissions` (diff/dedupe/soft-restore/validez) y `recordFailedLoginAttempt` (ventana deslizante de lockout) — `prisma-user.repository.ts:240-360,366-423`.
-- Service god-orchestrator: `user.service.ts:172-286` (validación, storage upload/rollback, tx, P2002) con `updateData: any`.
+**Corregido en `cefafde`**: `UserDetailResponseDto.fromEntity(user: any)`→`fromEntity(user: UserEntity)` (sin `|| []`; `permisosDirectos`/`permisosRol` pasan a obligatorios porque el constructor los inicializa); Nest `NotFoundException` en `update-user-permissions.use-case.ts:20`→`EntityNotFoundException('Usuario', id)`; raw `Error` en repo (mapper null en create/update, usuario ausente en `recordFailedLoginAttempt`)→`EntityNotFoundException`; index signatures `[key: string]: any` fuera de `DomainPaginationParams`/`DomainPaginationMeta`; `avatar?: any`→`UserAvatarInput` en repo data y DTO; **Prisma fuera de `create-user.dto.ts`** (`avatar?: Prisma.InputJsonValue`→`UserAvatarInput`); `findManyActive`/`findMany` del repo alineados a tipos de dominio (sin `as any[]`); **orquestación de avatar extraída a `avatar-upload.helper.ts`** (process+upload+rollback+old-delete; 3 helpers duplicados eliminados).
+
+**Pendientes residuales (decisión aparte)**: lógica de negocio en repo — `updatePermissions` (diff/dedupe/soft-restore/validez) y `recordFailedLoginAttempt` (ventana deslizante de lockout) quedan en `prisma-user.repository.ts` como operaciones atómicas de infra (patrón aceptado; **ahora con tests**: `prisma-user.repository.spec.ts` 21 tests); `get-active-users.use-case.ts` y controller usan `PaginationDto`/`PaginatedResult` de infra (estructuralmente compatibles con los tipos de dominio — patrón transversal del proyecto); `ValidationUtil`/`PhoneUtil`/`StorageService`/`ImageProcessorUtil` de infra en use-cases (utils compartidos — patrón aceptado en readings).
 - **Response DTOs nominal-only**: nunca se instancian; controllers devuelven `UserEntity`/`UserDetailEntity`/`UserProfileEntity` tipados como DTOs (`user.controller.ts:73,120-122,180,200,204,282,286`).
 - Use-cases muertos: `GetUserDirectPermissionsUseCase`/`GetUserRolePermissionsUseCase` no registrados en `user.module.ts:14-24`.
 - Coerción duplicada: `rolId` number en DTO pero re-parseado en controller (`user.controller.ts:159-165`).
@@ -365,7 +357,7 @@ Convenciones a mantener: archivos kebab-case, sufijos `.use-case.ts`/`.repositor
 ### P2 — Modelo de dominio rico (deuda de diseño)
 
 12. **Agreements y Payments**: promocionar a clases con factories (`create()`, `fromPrimitives()`) — matemática de cuotas, transiciones de estado, dinero tipado (hoy `any`). La máquina de estados `VALID_TRANSITIONS` debe vivir en el dominio.
-13. **Mover lógica de negocio fuera de repos**: `updatePermissions`/`recordFailedLoginAttempt` (`prisma-user.repository.ts:240-423`), reemplazo de medidor/regla BODEGA (`prisma-contract.repository.ts:153-235,345-349`).
+13. **Mover lógica de negocio fuera de repos**: ~~`updatePermissions`/`recordFailedLoginAttempt` (`prisma-user.repository.ts:240-423`)~~ ✅ *decisión aparte: quedan en repo como operaciones atómicas con tests* (`prisma-user.repository.spec.ts`), reemplazo de medidor/regla BODEGA (`prisma-contract.repository.ts:153-235,345-349`).
 14. **Auth: crear capa domain** con ports (políticas de lockout, sesiones) en vez de depender de services concretos.
 15. **Sri: definir ports para infraestructura** (XmlBuilder, XmlSigner, SoapClient) e inyectarlos por DI.
 
