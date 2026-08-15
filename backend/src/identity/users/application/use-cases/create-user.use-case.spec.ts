@@ -5,6 +5,7 @@ import { ConflictException } from '@nestjs/common';
 import { CreateUserUseCase } from './create-user.use-case';
 import { UserRepository } from '../../domain/repositories/user.repository';
 import { RoleRepository } from '../../../roles/domain/repositories/role.repository';
+import { StorageService } from 'src/infrastructure/storage/storage.service';
 
 describe('CreateUserUseCase', () => {
   let useCase: CreateUserUseCase;
@@ -20,12 +21,18 @@ describe('CreateUserUseCase', () => {
     findByName: jest.fn(),
   };
 
+  const mockStorageService = {
+    upload: jest.fn(),
+    delete: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateUserUseCase,
         { provide: UserRepository, useValue: mockUserRepository },
         { provide: RoleRepository, useValue: mockRoleRepository },
+        { provide: StorageService, useValue: mockStorageService },
       ],
     }).compile();
 

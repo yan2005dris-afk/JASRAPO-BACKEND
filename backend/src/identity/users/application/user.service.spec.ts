@@ -1,14 +1,16 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { UserService } from './user.service';
-import { UserRepository } from '../domain/repositories/user.repository';
-import { RoleRepository } from '../../roles/domain/repositories/role.repository';
 import { CreateUserUseCase } from './use-cases/create-user.use-case';
+import { GetUserDetailUseCase } from './use-cases/get-user-detail.use-case';
+import { GetUserProfileUseCase } from './use-cases/get-user-profile.use-case';
+import { GetActiveUsersUseCase } from './use-cases/get-active-users.use-case';
+import { UpdateUserUseCase } from './use-cases/update-user.use-case';
+import { UpdateUserAvatarUseCase } from './use-cases/update-user-avatar.use-case';
+import { SoftDeleteUserUseCase } from './use-cases/soft-delete-user.use-case';
 import { GetEffectivePermissionsUseCase } from './use-cases/get-effective-permissions.use-case';
-import { UpdateUserPermissionsUseCase } from './use-cases/update-user-permissions.use-case';
-import { NotFoundException } from '@nestjs/common';
-import { StorageService } from 'src/infrastructure/storage/storage.service';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+
 const mockLogger = {
   log: jest.fn(),
   warn: jest.fn(),
@@ -19,71 +21,43 @@ const mockLogger = {
 
 describe('UserService', () => {
   let service: UserService;
-  let userRepository: UserRepository;
+  let createUserUseCase: CreateUserUseCase;
+  let getUserDetailUseCase: GetUserDetailUseCase;
+  let getUserProfileUseCase: GetUserProfileUseCase;
+  let getActiveUsersUseCase: GetActiveUsersUseCase;
+  let updateUserUseCase: UpdateUserUseCase;
+  let updateUserAvatarUseCase: UpdateUserAvatarUseCase;
+  let softDeleteUserUseCase: SoftDeleteUserUseCase;
   let getEffectivePermissionsUseCase: GetEffectivePermissionsUseCase;
-  let updateUserPermissionsUseCase: UpdateUserPermissionsUseCase;
 
-  const mockUserRepository = {
-    findById: jest.fn(),
-    findByEmail: jest.fn(),
-    findManyActive: jest.fn(),
-    update: jest.fn(),
-    findRoleById: jest.fn(),
-    findDirectPermissions: jest.fn(),
-    findRolePermissions: jest.fn(),
-    executeTransaction: jest.fn((cb) => cb(null)),
-  };
-
-  const mockRoleRepository = {
-    findUnique: jest.fn(),
-    findByName: jest.fn(),
-  };
-
-  const mockGetEffectivePermissionsUseCase = {
-    execute: jest.fn(),
-  };
-
-  const mockUpdateUserPermissionsUseCase = {
-    execute: jest.fn(),
-  };
-
-  const mockStorageService = {
-    getUrl: jest.fn(),
-    uploadFile: jest.fn(),
-    deleteFile: jest.fn(),
-  };
-
-  const mockCreateUserUseCase = {
-    execute: jest.fn(),
-  };
+  const mockUseCase = { execute: jest.fn() };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UserService,
-        { provide: UserRepository, useValue: mockUserRepository },
-        { provide: RoleRepository, useValue: mockRoleRepository },
-        { provide: CreateUserUseCase, useValue: mockCreateUserUseCase },
-        {
-          provide: GetEffectivePermissionsUseCase,
-          useValue: mockGetEffectivePermissionsUseCase,
-        },
-        {
-          provide: UpdateUserPermissionsUseCase,
-          useValue: mockUpdateUserPermissionsUseCase,
-        },
-        { provide: StorageService, useValue: mockStorageService },
+        { provide: CreateUserUseCase, useValue: mockUseCase },
+        { provide: GetUserDetailUseCase, useValue: mockUseCase },
+        { provide: GetUserProfileUseCase, useValue: mockUseCase },
+        { provide: GetActiveUsersUseCase, useValue: mockUseCase },
+        { provide: UpdateUserUseCase, useValue: mockUseCase },
+        { provide: UpdateUserAvatarUseCase, useValue: mockUseCase },
+        { provide: SoftDeleteUserUseCase, useValue: mockUseCase },
+        { provide: GetEffectivePermissionsUseCase, useValue: mockUseCase },
         { provide: LoggerService, useValue: mockLogger },
       ],
     }).compile();
 
     service = module.get<UserService>(UserService);
-    userRepository = module.get<UserRepository>(UserRepository);
+    createUserUseCase = module.get<CreateUserUseCase>(CreateUserUseCase);
+    getUserDetailUseCase = module.get<GetUserDetailUseCase>(GetUserDetailUseCase);
+    getUserProfileUseCase = module.get<GetUserProfileUseCase>(GetUserProfileUseCase);
+    getActiveUsersUseCase = module.get<GetActiveUsersUseCase>(GetActiveUsersUseCase);
+    updateUserUseCase = module.get<UpdateUserUseCase>(UpdateUserUseCase);
+    updateUserAvatarUseCase = module.get<UpdateUserAvatarUseCase>(UpdateUserAvatarUseCase);
+    softDeleteUserUseCase = module.get<SoftDeleteUserUseCase>(SoftDeleteUserUseCase);
     getEffectivePermissionsUseCase = module.get<GetEffectivePermissionsUseCase>(
       GetEffectivePermissionsUseCase,
-    );
-    updateUserPermissionsUseCase = module.get<UpdateUserPermissionsUseCase>(
-      UpdateUserPermissionsUseCase,
     );
   });
 
@@ -91,161 +65,54 @@ describe('UserService', () => {
     jest.clearAllMocks();
   });
 
-  describe('user', () => {
-    it('should return user with mapped permissions and roles', async () => {
-      const mockUser = {
-        usuarioId: 1,
-        email: 'test@test.com',
-        nombres: 'John',
-        apellidos: 'Doe',
-        telefono: '123456',
-        avatar: null,
-        rol: { rolId: 1, nombre: 'admin', deletedAt: null },
-      };
-
-      const mockDirect = [
-        {
-          usuarioPermisoId: 10,
-          permisoId: 1,
-          permitido: true,
-          permiso: { permisoId: 1, recurso: 'users', accion: 'read' },
-        },
-      ];
-
-      const mockRolePerms = [
-        { permiso: { recurso: 'users', accion: 'write' } },
-      ];
-
-      mockUserRepository.findById.mockResolvedValue(mockUser);
-      mockUserRepository.findDirectPermissions.mockResolvedValue(mockDirect);
-      mockUserRepository.findRolePermissions.mockResolvedValue(mockRolePerms);
-
-      const result = await service.user({ usuarioId: 1 });
-
-      expect(result).toEqual({
-        usuarioId: 1,
-        email: 'test@test.com',
-        nombres: 'John',
-        apellidos: 'Doe',
-        telefono: '123456',
-        avatar: null,
-        rol: { rolId: 1, nombre: 'admin' },
-        permisosDirectos: [
-          {
-            usuarioPermisoId: 10,
-            permisoId: 1,
-            recurso: 'users',
-            accion: 'read',
-            permitido: true,
-          },
-        ],
-        permisosRol: [{ recurso: 'users', accion: 'write' }],
-      });
-    });
-
-    it('should return null if user not found', async () => {
-      mockUserRepository.findById.mockResolvedValue(null);
-      const result = await service.user({ usuarioId: 999 });
-      expect(result).toBeNull();
-    });
+  it('should delegate user to GetUserDetailUseCase', async () => {
+    const criteria = { usuarioId: 1 };
+    await service.user(criteria);
+    expect(getUserDetailUseCase.execute).toHaveBeenCalledWith(criteria);
   });
 
-  describe('updateUser', () => {
-    it('should call updateUserPermissionsUseCase if directPermissions provided', async () => {
-      mockUserRepository.findById.mockResolvedValue({
-        usuarioId: 1,
-        deletedAt: null,
-      } as any);
-      const mockUpdatedUser = { usuarioId: 1 };
-      const mockDirectPermissions = [{ permisoId: 1, permitido: true }];
-
-      mockUserRepository.update.mockResolvedValue(mockUpdatedUser as any);
-
-      await service.updateUser(1, {
-        nombres: 'Test',
-        directPermissions: mockDirectPermissions,
-      });
-
-      expect(updateUserPermissionsUseCase.execute).toHaveBeenCalledWith(
-        1,
-        mockDirectPermissions,
-        null,
-      );
-    });
-
-    it('should throw NotFoundException if rolId is invalid (not found)', async () => {
-      mockUserRepository.findById.mockResolvedValue({
-        usuarioId: 1,
-        deletedAt: null,
-      } as any);
-      mockRoleRepository.findUnique.mockResolvedValue(null);
-
-      await expect(service.updateUser(1, { rolId: 999 })).rejects.toThrow(
-        NotFoundException,
-      );
-    });
-
-    it('should throw NotFoundException if rolId is invalid (soft-deleted)', async () => {
-      mockUserRepository.findById.mockResolvedValue({
-        usuarioId: 1,
-        deletedAt: null,
-      } as any);
-      mockRoleRepository.findUnique.mockResolvedValue({
-        rolId: 2,
-        deletedAt: new Date(),
-      });
-
-      await expect(service.updateUser(1, { rolId: 2 })).rejects.toThrow(
-        NotFoundException,
-      );
-    });
+  it('should delegate findMe to GetUserProfileUseCase', async () => {
+    await service.findMe(1);
+    expect(getUserProfileUseCase.execute).toHaveBeenCalledWith(1);
   });
 
-  describe('getEffectivePermissions', () => {
-    it('should delegate to GetEffectivePermissionsUseCase and return wrapped response', async () => {
-      const mockPerms = [{ recurso: 'test', accion: 'read' }];
-      (getEffectivePermissionsUseCase.execute as jest.Mock).mockResolvedValue(
-        mockPerms as any,
-      );
-
-      const result = await service.getEffectivePermissions(1);
-
-      expect(result).toEqual({
-        usuarioId: 1,
-        permisos: mockPerms,
-      });
-      expect(getEffectivePermissionsUseCase.execute).toHaveBeenCalledWith(1);
-    });
+  it('should delegate createUser to CreateUserUseCase', async () => {
+    const dto = { email: 'test@test.com' } as any;
+    await service.createUser(dto);
+    expect(createUserUseCase.execute).toHaveBeenCalledWith(dto, undefined);
   });
 
-  describe('findMe', () => {
-    it('should return profile with rol info', async () => {
-      mockUserRepository.findById.mockResolvedValue({
-        usuarioId: 1,
-        email: 'test@test.com',
-        nombres: 'John',
-        apellidos: 'Doe',
-        telefono: '123456',
-        avatar: { url: 'avatar.png' },
-        rol: { rolId: 1, logo: null, nombre: 'admin', deletedAt: null },
-      } as any);
+  it('should delegate users to GetActiveUsersUseCase', async () => {
+    const pagination = { page: 1, limit: 10 };
+    await service.users(pagination);
+    expect(getActiveUsersUseCase.execute).toHaveBeenCalledWith(pagination);
+  });
 
-      const result = await service.findMe(1);
+  it('should delegate updateUser to UpdateUserUseCase', async () => {
+    const updateDto = { nombres: 'Test' };
+    await service.updateUser(1, updateDto);
+    expect(updateUserUseCase.execute).toHaveBeenCalledWith(1, updateDto, undefined);
+  });
 
-      expect(result).toEqual({
-        usuarioId: 1,
-        email: 'test@test.com',
-        nombre: 'John Doe',
-        telefono: '123456',
-        avatar: { url: 'avatar.png' },
-        rol: { rolId: 1, nombre: 'admin' },
-      });
-    });
+  it('should delegate updateAvatar to UpdateUserAvatarUseCase', async () => {
+    const file = {} as any;
+    await service.updateAvatar(1, file);
+    expect(updateUserAvatarUseCase.execute).toHaveBeenCalledWith(1, file);
+  });
 
-    it('should throw NotFoundException if profile user not found', async () => {
-      mockUserRepository.findById.mockResolvedValue(null);
+  it('should delegate softDeleteUser to SoftDeleteUserUseCase', async () => {
+    await service.softDeleteUser(1);
+    expect(softDeleteUserUseCase.execute).toHaveBeenCalledWith(1);
+  });
 
-      await expect(service.findMe(1)).rejects.toThrow(NotFoundException);
+  it('should delegate getEffectivePermissions to GetEffectivePermissionsUseCase', async () => {
+    (getEffectivePermissionsUseCase.execute as jest.Mock).mockResolvedValue([
+      { recurso: 'users', accion: 'read' },
+    ]);
+    const result = await service.getEffectivePermissions(1);
+    expect(result).toEqual({
+      usuarioId: 1,
+      permisos: [{ recurso: 'users', accion: 'read' }],
     });
   });
 });

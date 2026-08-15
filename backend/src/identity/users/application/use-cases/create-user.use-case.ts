@@ -3,6 +3,7 @@ import {
   NotFoundException,
   ConflictException,
 } from '@nestjs/common';
+import { randomUUID } from 'crypto';
 import * as bcrypt from 'bcrypt';
 import { Prisma } from 'src/generated/prisma/client';
 import { CreateUserDto } from '../../interfaces/dto/create-user.dto';
@@ -11,16 +12,24 @@ import { PhoneUtil } from 'src/infrastructure/common/utils/phone.util';
 import { UserRepository } from '../../domain/repositories/user.repository';
 import { RoleRepository } from '../../../roles/domain/repositories/role.repository';
 import { UserEntity } from '../../domain/entities/user.entity';
+import { ImageProcessorUtil } from 'src/infrastructure/common/utils/image-processor.util';
+import {
+  StorageService,
+  SRI_STORAGE_TYPES,
+} from 'src/infrastructure/storage/storage.service';
 
 @Injectable()
 export class CreateUserUseCase {
   constructor(
     private readonly userRepository: UserRepository,
     private readonly roleRepository: RoleRepository,
+    private readonly storageService: StorageService,
   ) {}
 
-  async execute(createUsersDto: CreateUserDto): Promise<UserEntity> {
-    // Validar campos obligatorios
+  async execute(
+    createUsersDto: CreateUserDto,
+    file?: Express.Multer.File,
+  ): Promise<UserEntity> {
     ValidationUtil.requireNonEmpty(createUsersDto.email, 'email');
     ValidationUtil.requireNonEmpty(createUsersDto.nombres, 'nombres');
     ValidationUtil.requireNonEmpty(createUsersDto.apellidos, 'apellidos');
@@ -31,7 +40,6 @@ export class CreateUserUseCase {
       'telefono',
     );
 
-    // Verificar que el email no exista previamente (incluye usuarios eliminados)
     const existingUser = await this.userRepository.findByEmail(
       createUsersDto.email,
     );
@@ -44,7 +52,6 @@ export class CreateUserUseCase {
       throw new ConflictException('El correo electrónico ya está en uso');
     }
 
-    // Determinar el rol a asignar
     let roleId: number;
 
     if (createUsersDto.rolId) {
@@ -61,8 +68,12 @@ export class CreateUserUseCase {
       roleId = defaultRole.rolId;
     }
 
-    // TODO: Generar contraseña temporal y enviar por email
-    // Por ahora se crea con un hash placeholder
+    let avatarKey: string | undefined;
+    if (file) {
+      avatarKey = await this.uploadAndProcessAvatar(file);
+      createUsersDto.avatar = { key: avatarKey };
+    }
+
     const temporaryPassword = 'TEMP_' + Date.now();
     const hashedPassword = await bcrypt.hash(temporaryPassword, 10);
 
@@ -77,7 +88,11 @@ export class CreateUserUseCase {
         rolId: roleId,
       });
     } catch (error) {
-      // Manejar error de constraint único de Prisma
+      if (avatarKey) {
+        this.storageService
+          .delete(SRI_STORAGE_TYPES.PROFILE_PHOTOS, avatarKey)
+          .catch(() => {});
+      }
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
         error.code === 'P2002'
@@ -86,5 +101,24 @@ export class CreateUserUseCase {
       }
       throw error;
     }
+  }
+
+  private async uploadAndProcessAvatar(
+    file: Express.Multer.File,
+  ): Promise<string> {
+    const processedBuffer = await ImageProcessorUtil.processProfilePicture(
+      file.buffer,
+    );
+
+    const avatarKey = `avatars/${randomUUID()}.webp`;
+
+    await this.storageService.upload(
+      SRI_STORAGE_TYPES.PROFILE_PHOTOS,
+      avatarKey,
+      processedBuffer,
+      { contentType: 'image/webp' },
+    );
+
+    return avatarKey;
   }
 }
