@@ -1,46 +1,25 @@
 import { Injectable } from '@nestjs/common';
-import { UserEntity, AvatarEntity } from '../../domain/entities/user.entity';
+import { UserEntity, UserAvatar } from '../../domain/entities/user.entity';
 import { SRI_STORAGE_TYPES } from 'src/infrastructure/storage/storage.service';
 import { STORAGE_PROXY_BASE } from 'src/infrastructure/storage-proxy/storage-proxy.constants';
 
 @Injectable()
 export class UserMapper {
-  /**
-   * Enriquece los datos del avatar con una URL estable hacia el proxy de imágenes
-   * o una de fallback si no hay avatar.
-   *
-   * La URL generada apunta al StorageProxyController que sirve la imagen directamente
-   * desde S3 con cabeceras de caché HTTP. Esto permite:
-   * - Cacheo en navegador (Cache-Control: max-age=31536000)
-   * - Cacheo en Nginx (proxy_cache)
-   * - URLs estables que no expiran (a diferencia de presigned URLs)
-   */
-  /**
-   * Formato que debe tener un key de avatar válido generado por
-   * `uploadAndProcessAvatar()` en UserService.
-   *
-   * Ejemplo: `avatars/550e8400-e29b-41d4-a716-446655440000.webp`
-   *
-   * Los keys que no cumplan este patrón (ej: legacy data, keys manuales)
-   * se consideran inválidos y se usa el fallback a ui-avatars.com.
-   */
   private static readonly AVATAR_KEY_PATTERN =
     /^avatars\/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.webp$/;
 
   private async enrichAvatar(
     avatar: unknown,
     fullName: string | null,
-  ): Promise<AvatarEntity> {
+  ): Promise<UserAvatar> {
     const avatarObj = avatar as { key?: string } | null;
 
     if (avatarObj?.key && UserMapper.AVATAR_KEY_PATTERN.test(avatarObj.key)) {
-      // Replace '/' with '--' for URL safety — the controller reverts it
       const safeKey = avatarObj.key.replace(/\//g, '--');
       const url = `${STORAGE_PROXY_BASE}/${SRI_STORAGE_TYPES.PROFILE_PHOTOS}/${safeKey}`;
       return { url, key: avatarObj.key };
     }
 
-    // Avatar por defecto (Fallback) basado en el nombre
     const encodedName = encodeURIComponent(fullName || 'User');
     const defaultUrl = `https://ui-avatars.com/api/?name=${encodedName}&background=random&color=fff&size=256`;
 
@@ -54,7 +33,7 @@ export class UserMapper {
       .filter(Boolean)
       .join(' ');
 
-    return {
+    return new UserEntity({
       usuarioId: rawUser.usuarioId,
       email: rawUser.email,
       nombres: rawUser.nombres,
@@ -69,7 +48,7 @@ export class UserMapper {
             deletedAt: rawUser.rol.deletedAt,
           }
         : null,
-    };
+    });
   }
 
   async toWithRoleAndClave(
@@ -78,17 +57,9 @@ export class UserMapper {
     if (!rawUser) return null;
     const base = await this.toWithRole(rawUser);
     if (!base) return null;
-    return {
-      ...base,
-      clave: rawUser.clave,
-    };
+    return Object.assign(base, { clave: rawUser.clave });
   }
 
-  /**
-   * Mapea el resultado crudo de Prisma para el flujo de login, incluyendo el
-   * hash de la clave y los contadores de protección contra fuerza bruta
-   * (issue #136).
-   */
   async toWithPasswordAndLockout(rawUser: any): Promise<
     | (UserEntity & {
         clave: string;
@@ -101,12 +72,11 @@ export class UserMapper {
     if (!rawUser) return null;
     const base = await this.toWithRole(rawUser);
     if (!base) return null;
-    return {
-      ...base,
+    return Object.assign(base, {
       clave: rawUser.clave,
       intentosFallidos: rawUser.intentosFallidos,
       ultimoIntentoFallidoEn: rawUser.ultimoIntentoFallidoEn,
       bloqueadoHasta: rawUser.bloqueadoHasta,
-    };
+    });
   }
 }

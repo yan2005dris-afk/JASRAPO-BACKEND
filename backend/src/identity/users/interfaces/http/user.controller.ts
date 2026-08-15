@@ -22,6 +22,11 @@ import {
   UserResponseDto,
   UserDetailResponseDto,
 } from '../dto/user-response.dto';
+import {
+  UserEntity,
+  UserDetailEntity,
+  UserProfileEntity,
+} from '../../domain/entities/user.entity';
 import { UserService } from '../../application/user.service';
 import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
 import { AuthUserId } from 'src/infrastructure/common/decorators/auth-user-id.decorator';
@@ -38,24 +43,26 @@ import {
 } from '@nestjs/swagger';
 import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
 import { ApiPaginatedResponse } from 'src/infrastructure/common/decorators/api-paginated-response.decorator';
-import { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
-import { MAX_UPLOAD_SIZE_BYTES } from 'src/infrastructure/config/app.constants';
+import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
+
+const MAX_UPLOAD_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
 
 @ApiTags('users')
 @ApiBearerAuth()
-@ApiExtraModels(UserResponseDto, UserProfileResponseDto, UserDetailResponseDto)
+@ApiExtraModels(UserResponseDto, UserDetailResponseDto, UserProfileResponseDto)
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   /**
-   * Retorna los datos del perfil del usuario autenticado.
+   * Obtiene el perfil del usuario autenticado.
+   * Requiere permiso: users:read
    */
   @ApiOperation({
     summary: 'Obtener mi perfil',
     description:
-      'Retorna los datos del usuario actualmente autenticado (email, nombres, apellidos, teléfono, avatar y rol).',
+      'Retorna la información del perfil del usuario que realiza la petición.',
   })
   @ApiResponse({
     status: 200,
@@ -65,7 +72,7 @@ export class UserController {
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @RequiredPermission('users', 'read')
   @Get('me')
-  async findMe(@AuthUserId() usersId: number): Promise<UserProfileResponseDto> {
+  async findMe(@AuthUserId() usersId: number): Promise<UserProfileEntity> {
     return this.userService.findMe(usersId);
   }
 
@@ -105,8 +112,7 @@ export class UserController {
     @AuthUserId() userId: number,
     @Body() updateDto: UpdateUserDto,
     @UploadedFile() file?: Express.Multer.File,
-  ): Promise<UserDetailResponseDto> {
-    // Un usuario no debería poder cambiarse su propio rol o permisos directos por seguridad
+  ): Promise<UserDetailEntity> {
     const {
       rolId: _rolId,
       directPermissions: _directPermissions,
@@ -129,7 +135,11 @@ export class UserController {
     description: 'Usuario creado exitosamente',
     type: UserResponseDto,
   })
-  @ApiResponse({ status: 400, description: 'Datos inválidos' })
+  @ApiResponse({ status: 400, description: 'Datos de entrada no válidos' })
+  @ApiResponse({
+    status: 409,
+    description: 'El correo electrónico ya está en uso',
+  })
   @RequiredPermission('users', 'create')
   @Post()
   @UseInterceptors(
@@ -151,7 +161,7 @@ export class UserController {
   create(
     @Body() createUserDto: CreateUserDto,
     @UploadedFile() file?: Express.Multer.File,
-  ): Promise<UserResponseDto> {
+  ): Promise<UserEntity> {
     if (typeof createUserDto.rolId === 'string') {
       const parsed = parseInt(createUserDto.rolId, 10);
       if (isNaN(parsed)) {
@@ -172,7 +182,7 @@ export class UserController {
   @Get()
   findAll(
     @Query() paginationDto: PaginationDto,
-  ): Promise<PaginatedResult<UserResponseDto>> {
+  ): Promise<PaginatedResult<UserEntity>> {
     return this.userService.users(paginationDto);
   }
 
@@ -192,7 +202,7 @@ export class UserController {
   @Get(':id')
   async findOne(
     @Param('id', ParseIntPipe) id: number,
-  ): Promise<UserDetailResponseDto> {
+  ): Promise<UserDetailEntity> {
     const user = await this.userService.user({ usuarioId: id });
     if (!user) {
       throw new NotFoundException('Usuario no encontrado');
@@ -255,7 +265,7 @@ export class UserController {
     @Param('id', ParseIntPipe) id: number,
     @Body() updateUserDto: UpdateUserDto,
     @UploadedFile() file?: Express.Multer.File,
-  ): Promise<UserDetailResponseDto> {
+  ): Promise<UserDetailEntity> {
     if (typeof updateUserDto.rolId === 'string') {
       const parsed = parseInt(updateUserDto.rolId, 10);
       if (isNaN(parsed)) {
@@ -288,18 +298,12 @@ export class UserController {
    */
   @ApiOperation({ summary: 'Eliminar usuario' })
   @ApiParam({ name: 'id', description: 'ID del usuario', type: Number })
-  @ApiResponse({
-    status: 200,
-    description: 'Usuario eliminado exitosamente',
-  })
+  @ApiResponse({ status: 200, description: 'Usuario eliminado exitosamente' })
   @ApiResponse({ status: 404, description: 'Usuario no encontrado' })
   @RequiredPermission('users', 'delete')
   @Delete(':id')
   async remove(@Param('id', ParseIntPipe) id: number) {
-    const success = await this.userService.softDeleteUser(id);
-    if (!success) {
-      throw new NotFoundException('Usuario no encontrado');
-    }
+    await this.userService.softDeleteUser(id);
     return { message: 'Usuario eliminado exitosamente' };
   }
 }

@@ -1,10 +1,58 @@
-import { ApiProperty } from '@nestjs/swagger';
-import {
-  RoleEntity,
-  AvatarEntity,
-  DirectPermissionEntity,
-  AuthPermissionEntity,
-} from '../../domain/entities/user.entity';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+
+export class RoleResponseDto {
+  @ApiProperty({ example: 1, description: 'ID único del rol' })
+  rolId: number;
+
+  @ApiProperty({ example: 'admin', description: 'Nombre descriptivo del rol' })
+  nombre: string;
+
+  @ApiPropertyOptional({
+    description: 'Fecha de eliminación suave del rol',
+    nullable: true,
+  })
+  deletedAt?: Date | null;
+}
+
+export class AuthPermissionResponseDto {
+  @ApiProperty({ example: 'users', description: 'Nombre del recurso' })
+  recurso: string;
+
+  @ApiProperty({ example: 'read', description: 'Acción permitida' })
+  accion: string;
+}
+
+export class DirectPermissionResponseDto {
+  @ApiProperty({ example: 1, description: 'ID de la relación usuario-permiso' })
+  usuarioPermisoId: number;
+
+  @ApiProperty({ example: 1, description: 'ID del permiso' })
+  permisoId: number;
+
+  @ApiProperty({ example: 'users', description: 'Recurso' })
+  recurso: string;
+
+  @ApiProperty({ example: 'read', description: 'Acción' })
+  accion: string;
+
+  @ApiProperty({ example: true, description: 'Si está permitido o denegado' })
+  permitido: boolean;
+}
+
+export class AvatarResponseDto {
+  @ApiProperty({
+    example: 'https://example.com/avatar.png',
+    description: 'URL de acceso a la imagen',
+  })
+  url: string;
+
+  @ApiProperty({
+    example: 'profile-photos/user-1.png',
+    description: 'Key del archivo en el storage',
+    required: false,
+  })
+  key?: string;
+}
 
 export class UserProfileResponseDto {
   @ApiProperty({ example: 1, description: 'ID único del usuario' })
@@ -31,18 +79,18 @@ export class UserProfileResponseDto {
   telefono: string | null;
 
   @ApiProperty({
-    type: () => AvatarEntity,
+    type: () => AvatarResponseDto,
     description: 'Avatar',
     nullable: true,
   })
-  avatar: AvatarEntity | null;
+  avatar: AvatarResponseDto | null;
 
   @ApiProperty({
-    type: () => RoleEntity,
+    type: () => RoleResponseDto,
     description: 'Rol asignado',
     nullable: true,
   })
-  rol: RoleEntity | null;
+  rol: RoleResponseDto | null;
 }
 
 export class UserResponseDto {
@@ -69,18 +117,18 @@ export class UserResponseDto {
   telefono: string | null;
 
   @ApiProperty({
-    type: () => AvatarEntity,
+    type: () => AvatarResponseDto,
     description: 'Avatar',
     nullable: true,
   })
-  avatar: AvatarEntity | null;
+  avatar: AvatarResponseDto | null;
 
   @ApiProperty({
-    type: () => RoleEntity,
+    type: () => RoleResponseDto,
     description: 'Rol asignado',
     nullable: true,
   })
-  rol: RoleEntity | null;
+  rol: RoleResponseDto | null;
 
   @ApiProperty({
     example: null,
@@ -93,14 +141,14 @@ export class UserResponseDto {
 
 export class UserDetailResponseDto extends UserResponseDto {
   @ApiProperty({
-    type: [DirectPermissionEntity],
+    type: [DirectPermissionResponseDto],
     description: 'Permisos asignados directamente',
   })
-  permisosDirectos: DirectPermissionEntity[];
+  permisosDirectos: DirectPermissionResponseDto[];
 
   @ApiProperty({
-    type: [AuthPermissionEntity],
+    type: [AuthPermissionResponseDto],
     description: 'Permisos heredados por el rol',
   })
-  permisosRol: AuthPermissionEntity[];
+  permisosRol: AuthPermissionResponseDto[];
 }

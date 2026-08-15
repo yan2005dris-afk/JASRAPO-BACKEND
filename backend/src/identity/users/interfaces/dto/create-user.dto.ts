@@ -9,12 +9,13 @@ import {
 import { ApiProperty, OmitType } from '@nestjs/swagger';
 import { Prisma } from 'src/generated/prisma/client';
 import { IsNotEmptyString } from 'src/infrastructure/common/decorators/is-not-empty-string.decorator';
-import { UserEntity } from '../../domain/entities/user.entity';
+import { UserResponseDto } from './user-response.dto';
 
-export class CreateUserDto extends OmitType(UserEntity, [
+export class CreateUserDto extends OmitType(UserResponseDto, [
   'usuarioId',
   'rol',
   'avatar',
+  'deletedAt',
 ] as const) {
   @IsEmail()
   @IsNotEmptyString()

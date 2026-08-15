@@ -30,7 +30,7 @@ interface ValidatedUser {
   deletedAt?: Date | null;
   nombres: string | null;
   apellidos: string | null;
-  avatar: unknown;
+  avatar?: unknown;
   rol: { rolId: number; nombre: string; deletedAt?: Date | null } | null;
 }
 

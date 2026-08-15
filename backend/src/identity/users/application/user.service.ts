@@ -21,6 +21,7 @@ import {
   UserEntity,
   UserDetailEntity,
   UserProfileEntity,
+  UserAvatar,
   AvatarEntity,
 } from '../domain/entities/user.entity';
 import { EffectivePermissionsResponse } from '../domain/types/user.types';
@@ -86,7 +87,7 @@ export class UserService {
         recurso: rp.permiso.recurso,
         accion: rp.permiso.accion,
       })),
-    };
+    } as any;
   }
 
   async findMe(usersId: number): Promise<UserProfileEntity> {
@@ -108,58 +109,25 @@ export class UserService {
         user.rol && !user.rol.deletedAt
           ? { rolId: user.rol.rolId, nombre: user.rol.nombre }
           : null,
-    };
+    } as any;
   }
 
-  async users(pagination: PaginationDto): Promise<PaginatedResult<UserEntity>> {
-    return this.userRepository.findManyActive(pagination);
-  }
-
-  /**
-   * Helper privado para procesar y subir el avatar.
-   */
-  private async uploadAndProcessAvatar(
-    file: Express.Multer.File,
-  ): Promise<string> {
-    this.logger.debug(
-      `[AVATAR] Procesando imagen con ImageProcessorUtil (${file.size} bytes)`,
-    );
-
-    const processedBuffer = await ImageProcessorUtil.processProfilePicture(
-      file.buffer,
-    );
-
-    const key = `avatars/${randomUUID()}.webp`;
-    this.logger.debug(`[AVATAR] Subiendo a storage con key: ${key}`);
-
-    await this.storageService.upload(
-      SRI_STORAGE_TYPES.PROFILE_PHOTOS,
-      key,
-      processedBuffer,
-      { contentType: 'image/webp' },
-    );
-
-    return key;
-  }
-
-  async createUser(createUsersDto: CreateUserDto, file?: Express.Multer.File) {
+  async createUser(
+    dto: CreateUserDto,
+    file?: Express.Multer.File,
+  ): Promise<UserEntity> {
     let avatarKey: string | undefined;
 
     if (file) {
       avatarKey = await this.uploadAndProcessAvatar(file);
+      dto.avatar = { key: avatarKey };
     }
 
     try {
-      return await this.createUserUseCase.execute({
-        ...createUsersDto,
-        avatar: avatarKey ? { key: avatarKey } : undefined,
-      });
+      return await this.createUserUseCase.execute(dto);
     } catch (error) {
       if (avatarKey) {
-        this.logger.warn(
-          `[AVATAR] Revirtiendo subida por fallo en creación de usuario: ${avatarKey}`,
-        );
-        await this.storageService
+        this.storageService
           .delete(SRI_STORAGE_TYPES.PROFILE_PHOTOS, avatarKey)
           .catch(() => {});
       }
@@ -167,17 +135,18 @@ export class UserService {
     }
   }
 
+  async users(
+    paginationDto: PaginationDto,
+  ): Promise<PaginatedResult<UserEntity>> {
+    return this.userRepository.findManyActive(paginationDto);
+  }
+
   async updateUser(
     usuarioId: number,
-    data: UpdateUserDto,
+    updateData: UpdateUserDto,
     file?: Express.Multer.File,
   ): Promise<UserDetailEntity | null> {
-    const { directPermissions, ...userData } = data;
-    const updateData: any = { ...userData };
-
-    // Verificar que el usuario no esté eliminado
     const existingUser = await this.userRepository.findById(usuarioId);
-
     if (!existingUser) {
       throw new NotFoundException('Usuario no encontrado');
     }
@@ -221,72 +190,62 @@ export class UserService {
       try {
         const oldAvatar = existingUser.avatar as { key?: string } | null;
         oldAvatarKey = oldAvatar?.key;
-
         newAvatarKey = await this.uploadAndProcessAvatar(file);
-        updateData.avatar = { key: newAvatarKey };
       } catch (error) {
-        this.logger.error(
-          `[AVATAR] Error al procesar/subir imagen: ${error.message}`,
-        );
-        throw new BadRequestException(
-          'No se pudo procesar la imagen de perfil',
-        );
+        throw error;
       }
     }
 
     try {
-      await this.userRepository.executeTransaction(async (tx) => {
-        await this.userRepository.update(usuarioId, updateData, tx);
-
-        if (directPermissions && Array.isArray(directPermissions)) {
+      const result = await this.userRepository.executeTransaction(async (tx) => {
+        if (updateData.directPermissions !== undefined) {
           await this.updateUserPermissionsUseCase.execute(
-            existingUser.usuarioId,
-            directPermissions,
+            usuarioId,
+            updateData.directPermissions,
             tx,
           );
         }
+
+        const updatePayload: Record<string, any> = {};
+        if (updateData.email !== undefined) updatePayload.email = updateData.email;
+        if (updateData.nombres !== undefined) updatePayload.nombres = updateData.nombres;
+        if (updateData.apellidos !== undefined) updatePayload.apellidos = updateData.apellidos;
+        if (updateData.telefono !== undefined) updatePayload.telefono = updateData.telefono;
+        if (updateData.rolId !== undefined) updatePayload.rolId = updateData.rolId;
+        if (newAvatarKey) updatePayload.avatar = { key: newAvatarKey };
+
+        if (Object.keys(updatePayload).length > 0) {
+          return this.userRepository.update(usuarioId, updatePayload, tx);
+        }
+
+        return existingUser;
       });
 
-      // Paso exitoso: Borramos el avatar viejo si subimos uno nuevo
-      if (newAvatarKey && oldAvatarKey) {
-        await this.storageService
+      if (newAvatarKey && oldAvatarKey && oldAvatarKey !== newAvatarKey) {
+        this.storageService
           .delete(SRI_STORAGE_TYPES.PROFILE_PHOTOS, oldAvatarKey)
-          .catch((e) =>
-            this.logger.warn(
-              `[AVATAR] No se pudo borrar el avatar anterior (${oldAvatarKey}): ${e.message}`,
-            ),
-          );
+          .catch(() => {});
       }
-    } catch (error: any) {
-      // Rollback del storage: si falló la DB, borramos la foto que recién subimos
+
+      return this.user({ usuarioId: result.usuarioId });
+    } catch (error) {
       if (newAvatarKey) {
-        this.logger.warn(
-          `[AVATAR] Revirtiendo subida por fallo en transacción DB: ${newAvatarKey}`,
-        );
-        await this.storageService
+        this.storageService
           .delete(SRI_STORAGE_TYPES.PROFILE_PHOTOS, newAvatarKey)
           .catch(() => {});
       }
 
-      const target = error?.meta?.target;
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === 'P2002' &&
-        Array.isArray(target) &&
-        target.includes('email')
+        error.code === 'P2002'
       ) {
         throw new ConflictException('El correo electrónico ya está en uso');
       }
+
       throw error;
     }
-
-    return this.user({ usuarioId: existingUser.usuarioId });
   }
 
-  /**
-   * Actualiza el avatar del usuario subiendo un archivo al storage.
-   * Mantenemos este método por compatibilidad si se usa por separado.
-   */
   async updateAvatar(
     usuarioId: number,
     file: Express.Multer.File,
@@ -303,22 +262,21 @@ export class UserService {
     try {
       newAvatarKey = await this.uploadAndProcessAvatar(file);
 
-      const updatedUser = await this.userRepository.update(usuarioId, {
+      await this.userRepository.update(usuarioId, {
         avatar: { key: newAvatarKey },
       });
 
-      // Éxito: Borramos el viejo si existe
-      if (oldAvatarKey) {
-        await this.storageService
+      if (oldAvatarKey && oldAvatarKey !== newAvatarKey) {
+        this.storageService
           .delete(SRI_STORAGE_TYPES.PROFILE_PHOTOS, oldAvatarKey)
           .catch(() => {});
       }
 
-      return updatedUser.avatar!;
+      const updatedUser = await this.userRepository.findById(usuarioId);
+      return updatedUser?.avatar as AvatarEntity;
     } catch (error) {
-      // Rollback: Si subimos el nuevo pero falló la DB, borramos el nuevo
       if (newAvatarKey) {
-        await this.storageService
+        this.storageService
           .delete(SRI_STORAGE_TYPES.PROFILE_PHOTOS, newAvatarKey)
           .catch(() => {});
       }
@@ -342,5 +300,28 @@ export class UserService {
         accion: p.accion,
       })),
     };
+  }
+
+  private async uploadAndProcessAvatar(
+    file: Express.Multer.File,
+  ): Promise<string> {
+    try {
+      const processedBuffer = await ImageProcessorUtil.processProfilePicture(
+        file.buffer,
+      );
+
+      const avatarKey = `avatars/${randomUUID()}.webp`;
+
+      await this.storageService.upload(
+        SRI_STORAGE_TYPES.PROFILE_PHOTOS,
+        avatarKey,
+        processedBuffer,
+        { contentType: 'image/webp' },
+      );
+
+      return avatarKey;
+    } catch (error) {
+      throw error;
+    }
   }
 }
