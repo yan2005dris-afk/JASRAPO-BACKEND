@@ -1,37 +1,21 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { MeterService } from './meter.service';
-import { MeterRepository } from '../domain/repositories/meter.repository';
 import { CreateMeterUseCase } from './use-cases/create-meter.use-case';
 import { FindOneMeterUseCase } from './use-cases/find-one-meter.use-case';
-
-import { EstadoMedidor } from 'src/shared/enums';
+import { FindAllMetersUseCase } from './use-cases/find-all-meters.use-case';
+import { UpdateMeterUseCase } from './use-cases/update-meter.use-case';
+import { RemoveMeterUseCase } from './use-cases/remove-meter.use-case';
 
 describe('MeterService', () => {
   let service: MeterService;
-  let meterRepository: MeterRepository;
   let createUseCase: CreateMeterUseCase;
   let findOneUseCase: FindOneMeterUseCase;
+  let findAllUseCase: FindAllMetersUseCase;
+  let updateUseCase: UpdateMeterUseCase;
+  let removeUseCase: RemoveMeterUseCase;
 
-  // Prisma result (raw DB)
-  const mockPrismaResult = {
-    medidorId: BigInt(1),
-    serie: 'MED-001',
-    modelo: 'CX1000',
-    marca: 'Itron',
-    estado: EstadoMedidor.BODEGA,
-    fechaInstalacion: null,
-    fechaBaja: null,
-    motivo: null,
-    latitud: null,
-    longitud: null,
-    deletedAt: null,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
-
-  // DTO shape (what the service returns after mapping)
-  const expectedResponse = {
+  const mockMedidor = {
     medidorId: BigInt(1),
     serie: 'MED-001',
     modelo: 'CX1000',
@@ -42,142 +26,100 @@ describe('MeterService', () => {
     motivo: null,
     latitud: null,
     longitud: null,
+    deletedAt: null,
+    createdAt: new Date(),
+    updatedAt: new Date(),
   };
 
-  const mockMeterRepository = {
-    findMany: jest.fn(),
-    count: jest.fn(),
-    groupByEstado: jest.fn(),
-    update: jest.fn(),
+  const mockPaginatedResponse = {
+    data: [mockMedidor],
+    meta: {
+      total: 1,
+      page: 1,
+      limit: 10,
+      ultimaPagina: 1,
+      paginaActual: 1,
+      porPagina: 10,
+      anterior: null,
+      siguiente: null,
+    },
+    kpis: { enBodega: 1, instalados: 0, danados: 0, total: 1 },
   };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         MeterService,
-        {
-          provide: MeterRepository,
-          useValue: mockMeterRepository,
-        },
         { provide: CreateMeterUseCase, useValue: { execute: jest.fn() } },
         { provide: FindOneMeterUseCase, useValue: { execute: jest.fn() } },
+        { provide: FindAllMetersUseCase, useValue: { execute: jest.fn() } },
+        { provide: UpdateMeterUseCase, useValue: { execute: jest.fn() } },
+        { provide: RemoveMeterUseCase, useValue: { execute: jest.fn() } },
       ],
     }).compile();
 
     service = module.get<MeterService>(MeterService);
-    meterRepository = module.get<MeterRepository>(MeterRepository);
     createUseCase = module.get<CreateMeterUseCase>(CreateMeterUseCase);
     findOneUseCase = module.get<FindOneMeterUseCase>(FindOneMeterUseCase);
+    findAllUseCase = module.get<FindAllMetersUseCase>(FindAllMetersUseCase);
+    updateUseCase = module.get<UpdateMeterUseCase>(UpdateMeterUseCase);
+    removeUseCase = module.get<RemoveMeterUseCase>(RemoveMeterUseCase);
   });
 
   it('should be defined', () => {
     expect(service).toBeDefined();
   });
 
-  it('create should delegate to CreateMeterUseCase and map response', async () => {
+  it('create should delegate to CreateMeterUseCase', async () => {
     const dto = { serie: 'MED-001' } as any;
-    jest.spyOn(createUseCase, 'execute').mockResolvedValue(mockPrismaResult);
+    jest.spyOn(createUseCase, 'execute').mockResolvedValue(mockMedidor);
     const result = await service.create(dto);
-    expect(result.medidorId).toEqual(expectedResponse.medidorId);
-    expect(result.serie).toBe(expectedResponse.serie);
-    expect(result.marca).toBe(expectedResponse.marca);
+    expect(result).toBe(mockMedidor);
     expect(createUseCase.execute).toHaveBeenCalledWith(dto);
   });
 
-  it('findOne should delegate to FindOneMeterUseCase and map response', async () => {
+  it('findAll should delegate to FindAllMetersUseCase', async () => {
+    const filters = { page: 1, limit: 10 } as any;
+    jest
+      .spyOn(findAllUseCase, 'execute')
+      .mockResolvedValue(mockPaginatedResponse as any);
+    const result = await service.findAll(filters);
+    expect(result).toBe(mockPaginatedResponse);
+    expect(findAllUseCase.execute).toHaveBeenCalledWith(filters);
+  });
+
+  it('findAll should delegate even without filters', async () => {
+    jest
+      .spyOn(findAllUseCase, 'execute')
+      .mockResolvedValue(mockPaginatedResponse as any);
+    const result = await service.findAll();
+    expect(result).toBe(mockPaginatedResponse);
+    expect(findAllUseCase.execute).toHaveBeenCalledWith(undefined);
+  });
+
+  it('findOne should delegate to FindOneMeterUseCase', async () => {
     const id = BigInt(1);
-    jest.spyOn(findOneUseCase, 'execute').mockResolvedValue(mockPrismaResult);
+    jest.spyOn(findOneUseCase, 'execute').mockResolvedValue(mockMedidor);
     const result = await service.findOne(id);
-    expect(result.medidorId).toEqual(expectedResponse.medidorId);
-    expect(result.serie).toBe(expectedResponse.serie);
+    expect(result).toBe(mockMedidor);
     expect(findOneUseCase.execute).toHaveBeenCalledWith(id);
   });
 
-  it('findAll should return paginated response with kpis', async () => {
-    jest
-      .spyOn(meterRepository, 'findMany')
-      .mockResolvedValue([mockPrismaResult]);
-    jest.spyOn(meterRepository, 'count').mockResolvedValue(1);
-    jest
-      .spyOn(meterRepository, 'groupByEstado')
-      .mockResolvedValue([
-        { estado: EstadoMedidor.BODEGA, _count: { _all: 1 } },
-      ]);
-
-    const result = await service.findAll({ page: 1, limit: 10 });
-
-    expect(result.data).toHaveLength(1);
-    expect(result.meta.total).toBe(1);
-    expect(result.meta.page).toBe(1);
-    expect(result.kpis.enBodega).toBe(1);
-    expect(result.kpis.instalados).toBe(0);
-    expect(result.kpis.danados).toBe(0);
-    expect(result.kpis.total).toBe(1);
-    expect(meterRepository.findMany).toHaveBeenCalled();
-    expect(meterRepository.count).toHaveBeenCalledTimes(1);
-    expect(meterRepository.groupByEstado).toHaveBeenCalledTimes(1);
+  it('update should delegate to UpdateMeterUseCase', async () => {
+    const id = BigInt(1);
+    const dto = { estado: 'INSTALADO' } as any;
+    jest.spyOn(updateUseCase, 'execute').mockResolvedValue(mockMedidor);
+    const result = await service.update(id, dto);
+    expect(result).toBe(mockMedidor);
+    expect(updateUseCase.execute).toHaveBeenCalledWith(id, dto);
   });
 
-  it('findAll should fall back to default pagination when filters are empty or undefined', async () => {
-    jest
-      .spyOn(meterRepository, 'findMany')
-      .mockResolvedValue([mockPrismaResult]);
-    jest.spyOn(meterRepository, 'count').mockResolvedValue(1);
-    jest
-      .spyOn(meterRepository, 'groupByEstado')
-      .mockResolvedValue([
-        { estado: EstadoMedidor.BODEGA, _count: { _all: 1 } },
-      ]);
-
-    // Case 1: Undefined filters
-    const resultUndefined = await service.findAll();
-    expect(resultUndefined.meta.page).toBe(1);
-    expect(resultUndefined.meta.limit).toBe(10);
-    expect(meterRepository.findMany).toHaveBeenLastCalledWith({
-      where: undefined,
-      skip: 0,
-      take: 10,
-    });
-
-    // Case 2: Empty filters ({})
-    const resultEmpty = await service.findAll({});
-    expect(resultEmpty.meta.page).toBe(1);
-    expect(resultEmpty.meta.limit).toBe(10);
-    expect(meterRepository.findMany).toHaveBeenLastCalledWith({
-      where: {},
-      skip: 0,
-      take: 10,
-    });
-
-    // Case 3: Null filters
-    const resultNull = await service.findAll(null as any);
-    expect(resultNull.meta.page).toBe(1);
-    expect(resultNull.meta.limit).toBe(10);
-    expect(meterRepository.findMany).toHaveBeenLastCalledWith({
-      where: undefined,
-      skip: 0,
-      take: 10,
-    });
-  });
-
-  it('findAll should ignore unknown estados in named kpis but include them in meta.total', async () => {
-    jest
-      .spyOn(meterRepository, 'findMany')
-      .mockResolvedValue([mockPrismaResult]);
-    jest.spyOn(meterRepository, 'count').mockResolvedValue(7);
-    jest.spyOn(meterRepository, 'groupByEstado').mockResolvedValue([
-      { estado: EstadoMedidor.BODEGA, _count: { _all: 2 } },
-      { estado: EstadoMedidor.INSTALADO, _count: { _all: 3 } },
-      { estado: EstadoMedidor.DANADO, _count: { _all: 1 } },
-      { estado: EstadoMedidor.BAJA, _count: { _all: 1 } },
-    ]);
-
-    const result = await service.findAll({ page: 1, limit: 10 });
-
-    expect(result.meta.total).toBe(7);
-    expect(result.kpis.enBodega).toBe(2);
-    expect(result.kpis.instalados).toBe(3);
-    expect(result.kpis.danados).toBe(1);
-    expect(result.kpis.total).toBe(7);
+  it('remove should delegate to RemoveMeterUseCase', async () => {
+    const id = BigInt(1);
+    const message = { message: `Medidor con ID ${id} eliminado` };
+    jest.spyOn(removeUseCase, 'execute').mockResolvedValue(message);
+    const result = await service.remove(id);
+    expect(result).toBe(message);
+    expect(removeUseCase.execute).toHaveBeenCalledWith(id);
   });
 });
