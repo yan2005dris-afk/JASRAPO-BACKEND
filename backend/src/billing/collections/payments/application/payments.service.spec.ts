@@ -7,10 +7,10 @@ import { FindOnePaymentUseCase } from './use-cases/find-one-payment.use-case';
 import { ValidatePaymentUseCase } from './use-cases/validate-payment.use-case';
 import { AnnulPaymentUseCase } from './use-cases/annul-payment.use-case';
 import { ApplySaldoFavorUseCase } from './use-cases/apply-saldo-favor.use-case';
+import { GetDailyCashSummaryUseCase } from './use-cases/get-daily-cash-summary.use-case';
 import { PaymentRepository } from '../domain/repositories/payment.repository';
 import { PaymentEntity } from '../domain/entities/payment.entity';
 import { SaldoFavorEntity } from '../domain/entities/saldo-favor.entity';
-import { PaymentDetailEntity } from '../domain/entities/payment-detail.entity';
 
 describe('PaymentsService', () => {
   let service: PaymentsService;
@@ -19,6 +19,7 @@ describe('PaymentsService', () => {
   const validatePaymentUseCase = { execute: jest.fn() };
   const annulPaymentUseCase = { execute: jest.fn() };
   const applySaldoFavorUseCase = { execute: jest.fn() };
+  const getDailyCashSummaryUseCase = { execute: jest.fn() };
   const paymentRepository = {
     paginate: jest.fn(),
     findSaldoFavorByCliente: jest.fn(),
@@ -57,6 +58,10 @@ describe('PaymentsService', () => {
         { provide: ValidatePaymentUseCase, useValue: validatePaymentUseCase },
         { provide: AnnulPaymentUseCase, useValue: annulPaymentUseCase },
         { provide: ApplySaldoFavorUseCase, useValue: applySaldoFavorUseCase },
+        {
+          provide: GetDailyCashSummaryUseCase,
+          useValue: getDailyCashSummaryUseCase,
+        },
       ],
     }).compile();
 
@@ -114,58 +119,23 @@ describe('PaymentsService', () => {
     );
   });
 
-  it('should return daily cash summary with correct totals and breakdowns', async () => {
-    paymentRepository.findDailyCashPayments.mockResolvedValue([
-      new PaymentEntity({
-        pagoId: 1n,
-        montoTotalRecibido: 150,
-        fechaPago: new Date('2026-06-18'),
-        detallePago: [
-          new PaymentDetailEntity({
-            tipoPago: 'EFECTIVO',
-            montoAbonado: 100,
-            comprobante: { comprobanteId: '1', tipoComprobante: 'FACTURA' },
-          }),
-          new PaymentDetailEntity({
-            tipoPago: 'TRANSFERENCIA',
-            montoAbonado: 50,
-            comprobante: { comprobanteId: '2', tipoComprobante: 'FACTURA' },
-          }),
-        ],
-      }),
-    ]);
+  it('should delegate getDailyCashSummary to use case', async () => {
+    const summary = {
+      fecha: '2026-06-18',
+      cajaId: null,
+      totalPagos: 1,
+      totalRecaudado: 150,
+      desglosePorTipoDetalle: [{ codigo: 'EFECTIVO', total: 150 }],
+      desglosePorTipoComprobante: [{ codigo: 'FACTURA', total: 150 }],
+    };
+    getDailyCashSummaryUseCase.execute.mockResolvedValue(summary);
 
     const result = await service.getDailyCashSummary({ fecha: '2026-06-18' });
 
-    expect(result.totalPagos).toBe(1);
-    expect(result.totalRecaudado).toBe(150);
-    expect(result.desglosePorTipoDetalle).toEqual(
-      expect.arrayContaining([
-        { codigo: 'EFECTIVO', total: 100 },
-        { codigo: 'TRANSFERENCIA', total: 50 },
-      ]),
-    );
-    expect(result.desglosePorTipoComprobante).toEqual(
-      expect.arrayContaining([{ codigo: 'FACTURA', total: 150 }]),
-    );
-  });
-
-  it('should filter daily cash summary by cajaId', async () => {
-    paymentRepository.findDailyCashPayments.mockResolvedValue([]);
-
-    const result = await service.getDailyCashSummary({
+    expect(result).toEqual(summary);
+    expect(getDailyCashSummaryUseCase.execute).toHaveBeenCalledWith({
       fecha: '2026-06-18',
-      cajaId: '5',
     });
-
-    expect(result.cajaId).toBe('5');
-    expect(result.totalPagos).toBe(0);
-    expect(result.totalRecaudado).toBe(0);
-    expect(paymentRepository.findDailyCashPayments).toHaveBeenCalledWith(
-      expect.objectContaining({
-        cajaId: 5n,
-      }),
-    );
   });
 
   it('should return available saldo favor for a client', async () => {

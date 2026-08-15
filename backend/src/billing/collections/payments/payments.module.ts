@@ -10,6 +10,7 @@ import { FindOnePaymentUseCase } from './application/use-cases/find-one-payment.
 import { ValidatePaymentUseCase } from './application/use-cases/validate-payment.use-case';
 import { AnnulPaymentUseCase } from './application/use-cases/annul-payment.use-case';
 import { ApplySaldoFavorUseCase } from './application/use-cases/apply-saldo-favor.use-case';
+import { GetDailyCashSummaryUseCase } from './application/use-cases/get-daily-cash-summary.use-case';
 import { PagoValidadoHandler } from './application/handlers/pago-validado.handler';
 import { CuotaPagadaHandler } from './application/handlers/cuota-pagada.handler';
 import { JobsService } from '../../../infrastructure/jobs/jobs.service';
@@ -31,6 +32,7 @@ import { OutboxProcessor } from 'src/shared/outbox/application/outbox.processor'
     ValidatePaymentUseCase,
     AnnulPaymentUseCase,
     ApplySaldoFavorUseCase,
+    GetDailyCashSummaryUseCase,
     PagoValidadoHandler,
     CuotaPagadaHandler,
     { provide: 'JobService', useExisting: JobsService },
