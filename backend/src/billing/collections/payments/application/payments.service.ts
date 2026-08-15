@@ -1,9 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import {
-  EstadoPago,
-  Banco,
-  TarjetaCredito,
-} from 'src/generated/prisma/enums';
+import { EstadoPago, Banco, TarjetaCredito } from 'src/generated/prisma/enums';
 import { CreatePaymentUseCase } from './use-cases/create-payment.use-case';
 import { FindOnePaymentUseCase } from './use-cases/find-one-payment.use-case';
 import { ValidatePaymentUseCase } from './use-cases/validate-payment.use-case';
@@ -57,10 +53,7 @@ export class PaymentsService {
     pagination?: PaginateOptions;
   }): Promise<PaginatedResult<PaymentEntity>> {
     const { pagination = { page: 1, limit: 10 }, ...filters } = params;
-    return this.paymentRepository.paginate(
-      pagination,
-      filters as PaymentFilters,
-    );
+    return this.paymentRepository.paginate(pagination, filters);
   }
 
   async findOne(pagoId: bigint): Promise<PaymentEntity> {

@@ -10,7 +10,9 @@ import type {
 export class GetDailyCashSummaryUseCase {
   constructor(private readonly paymentRepository: PaymentRepository) {}
 
-  async execute(params: DailyCashSummaryParams): Promise<DailyCashSummaryResult> {
+  async execute(
+    params: DailyCashSummaryParams,
+  ): Promise<DailyCashSummaryResult> {
     const fecha = params.fecha ?? new Date().toISOString().split('T')[0];
     const fechaInicio = new Date(`${fecha}T00:00:00.000Z`);
     const fechaFin = new Date(`${fecha}T23:59:59.999Z`);

@@ -57,9 +57,8 @@ export class CuotaPagadaHandler {
       return;
     }
 
-    const cuotas = await this.prefacturaRepository.findCuotasByIds(
-      todasLasCuotaIds,
-    );
+    const cuotas =
+      await this.prefacturaRepository.findCuotasByIds(todasLasCuotaIds);
 
     const todasPagadas =
       cuotas.length === todasLasCuotaIds.length &&

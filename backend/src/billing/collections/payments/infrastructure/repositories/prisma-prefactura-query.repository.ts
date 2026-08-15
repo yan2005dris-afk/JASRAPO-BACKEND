@@ -7,9 +7,7 @@ import type {
 } from '../../domain/types/payment.types';
 
 @Injectable()
-export class PrismaPrefacturaQueryRepository
-  implements PrefacturaQueryRepository
-{
+export class PrismaPrefacturaQueryRepository implements PrefacturaQueryRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async findPrefacturaDetalleByCuotaConvenioId(

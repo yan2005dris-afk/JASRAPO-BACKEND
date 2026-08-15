@@ -4,10 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Decimal } from 'decimal.js';
-import {
-  EstadoPago,
-  TipoDetallePago,
-} from '../../domain/enums';
+import { EstadoPago, TipoDetallePago } from '../../domain/enums';
 import { PaymentRepository } from '../../domain/repositories/payment.repository';
 import type { PaymentEntity } from '../../domain/entities/payment.entity';
 

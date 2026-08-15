@@ -47,10 +47,7 @@ export abstract class PaymentRepository {
     tx?: unknown,
   ): Promise<ComprobanteInfo | null>;
 
-  abstract lockComprobante(
-    comprobanteId: bigint,
-    tx: unknown,
-  ): Promise<void>;
+  abstract lockComprobante(comprobanteId: bigint, tx: unknown): Promise<void>;
 
   abstract findComprobanteAppliedSum(
     comprobanteId: bigint,

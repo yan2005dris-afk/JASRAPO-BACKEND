@@ -37,9 +37,9 @@ describe('CuotaPagadaHandler', () => {
   });
 
   it('should delegate to SRIEmissionDispatcherService when all cuotas are PAGADA', async () => {
-    prefacturaRepository.findPrefacturaDetalleByCuotaConvenioId.mockResolvedValue([
-      { prefacturaId: 100n },
-    ]);
+    prefacturaRepository.findPrefacturaDetalleByCuotaConvenioId.mockResolvedValue(
+      [{ prefacturaId: 100n }],
+    );
     prefacturaRepository.findPrefacturaWithDetails.mockResolvedValue({
       prefacturaId: 100n,
       comprobanteId: 200n,
@@ -56,9 +56,9 @@ describe('CuotaPagadaHandler', () => {
   });
 
   it('should NOT delegate when some cuotas are still not PAGADA', async () => {
-    prefacturaRepository.findPrefacturaDetalleByCuotaConvenioId.mockResolvedValue([
-      { prefacturaId: 100n },
-    ]);
+    prefacturaRepository.findPrefacturaDetalleByCuotaConvenioId.mockResolvedValue(
+      [{ prefacturaId: 100n }],
+    );
     prefacturaRepository.findPrefacturaWithDetails.mockResolvedValue({
       prefacturaId: 100n,
       comprobanteId: 200n,
@@ -81,14 +81,16 @@ describe('CuotaPagadaHandler', () => {
 
     await handler.procesarCuotaPagada(999n);
 
-    expect(prefacturaRepository.findPrefacturaWithDetails).not.toHaveBeenCalled();
+    expect(
+      prefacturaRepository.findPrefacturaWithDetails,
+    ).not.toHaveBeenCalled();
     expect(sriDispatcher.tryEmit).not.toHaveBeenCalled();
   });
 
   it('should no-op when Prefactura has no comprobanteId', async () => {
-    prefacturaRepository.findPrefacturaDetalleByCuotaConvenioId.mockResolvedValue([
-      { prefacturaId: 100n },
-    ]);
+    prefacturaRepository.findPrefacturaDetalleByCuotaConvenioId.mockResolvedValue(
+      [{ prefacturaId: 100n }],
+    );
     prefacturaRepository.findPrefacturaWithDetails.mockResolvedValue({
       prefacturaId: 100n,
       comprobanteId: null,
