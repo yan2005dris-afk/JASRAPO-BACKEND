@@ -9,7 +9,10 @@ import {
   MeterFilters,
 } from '../../domain/repositories/meter.repository';
 import { MeterEntity } from '../../domain/entities/meter.entity';
-import { EntityNotFoundException, EntityAlreadyExistsException } from 'src/shared/domain/exceptions/domain.exception';
+import {
+  EntityNotFoundException,
+  EntityAlreadyExistsException,
+} from 'src/shared/domain/exceptions/domain.exception';
 import { MeterMapper } from '../mappers/meter.mapper';
 
 export const safeMeterSelect = {
@@ -198,7 +201,7 @@ export class PrismaMeterRepository implements MeterRepository {
   async update(
     where: { medidorId: bigint },
     data: UpdateMeterRepositoryData,
-    tx?: any,
+    tx?: Prisma.TransactionClient,
   ): Promise<MeterEntity> {
     const client = tx || this.prisma;
     const record = await client.medidores.update({
@@ -223,7 +226,7 @@ export class PrismaMeterRepository implements MeterRepository {
 
   async createHistory(
     data: CreateMeterHistoryRepositoryData,
-    tx?: any,
+    tx?: Prisma.TransactionClient,
   ): Promise<void> {
     const client = tx || this.prisma;
     await client.historialMedidores.create({
@@ -237,7 +240,9 @@ export class PrismaMeterRepository implements MeterRepository {
     });
   }
 
-  async executeTransaction<T>(callback: (tx: any) => Promise<T>): Promise<T> {
+  async executeTransaction<T>(
+    callback: (tx: Prisma.TransactionClient) => Promise<T>,
+  ): Promise<T> {
     return this.prisma.$transaction(callback);
   }
 

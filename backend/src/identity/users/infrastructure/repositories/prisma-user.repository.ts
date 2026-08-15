@@ -167,7 +167,7 @@ export class PrismaUserRepository implements UserRepository {
   async update(
     usuarioId: number,
     data: UpdateUserRepositoryData,
-    tx?: any,
+    tx?: Prisma.TransactionClient,
   ): Promise<UserEntity> {
     const client = tx || this.prisma;
     const { rolId, ...userData } = data;
@@ -237,7 +237,7 @@ export class PrismaUserRepository implements UserRepository {
   async updatePermissions(
     usuarioId: number,
     permissions: { permisoId: number; permitido?: boolean }[],
-    tx?: any,
+    tx?: Prisma.TransactionClient,
   ): Promise<void> {
     const client = tx || this.prisma;
 
@@ -273,7 +273,7 @@ export class PrismaUserRepository implements UserRepository {
 
     const run = async (innerTx: any) => {
       const permissionsToRemove = [...activePermissionIds].filter(
-        (id) => !newPermissionIds.has(id as number),
+        (id) => !newPermissionIds.has(id),
       );
 
       if (permissionsToRemove.length > 0) {
@@ -356,7 +356,9 @@ export class PrismaUserRepository implements UserRepository {
     }
   }
 
-  async executeTransaction<T>(callback: (tx: any) => Promise<T>): Promise<T> {
+  async executeTransaction<T>(
+    callback: (tx: Prisma.TransactionClient) => Promise<T>,
+  ): Promise<T> {
     return this.prisma.$transaction(callback);
   }
 

@@ -2,6 +2,7 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { InstallMeterUseCase } from './install-meter.use-case';
+import type { TransactionContext } from '../../../meters/domain/repositories/meter.repository';
 import { MeterRepository } from '../../../meters/domain/repositories/meter.repository';
 import { EstadoMedidor, EstadoContrato } from 'src/shared/enums';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
@@ -34,8 +35,8 @@ describe('InstallMeterUseCase', () => {
     findUnique: jest.fn(),
     findActiveContractForMeter: jest.fn(),
     update: jest.fn(),
-    executeTransaction: jest.fn((cb: (tx: any) => Promise<unknown>) =>
-      cb(txMock),
+    executeTransaction: jest.fn(
+      (cb: (tx: TransactionContext) => Promise<unknown>) => cb(txMock),
     ),
   };
 

@@ -1,5 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { UserRepository } from '../../domain/repositories/user.repository';
+import {
+  UserRepository,
+  TransactionContext,
+} from '../../domain/repositories/user.repository';
 import { UserDirectPermissionInput } from '../../domain/types/user.types';
 
 @Injectable()
@@ -9,7 +12,7 @@ export class UpdateUserPermissionsUseCase {
   async execute(
     usuarioId: number,
     permissions: UserDirectPermissionInput[],
-    tx?: any,
+    tx?: TransactionContext,
   ): Promise<void> {
     const user = await this.userRepository.findById(usuarioId);
 

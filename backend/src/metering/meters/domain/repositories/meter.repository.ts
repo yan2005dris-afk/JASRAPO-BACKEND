@@ -13,6 +13,8 @@ export type {
   CreateMeterHistoryRepositoryData,
 };
 
+export type TransactionContext = any;
+
 export abstract class MeterRepository {
   abstract findUnique(where: {
     medidorId?: bigint;
@@ -38,15 +40,17 @@ export abstract class MeterRepository {
   abstract update(
     where: { medidorId: bigint },
     data: UpdateMeterRepositoryData,
-    tx?: any,
+    tx?: TransactionContext,
   ): Promise<MeterEntity>;
 
   abstract createHistory(
     data: CreateMeterHistoryRepositoryData,
-    tx?: any,
+    tx?: TransactionContext,
   ): Promise<void>;
 
-  abstract executeTransaction<T>(callback: (tx: any) => Promise<T>): Promise<T>;
+  abstract executeTransaction<T>(
+    callback: (tx: TransactionContext) => Promise<T>,
+  ): Promise<T>;
 
   abstract findActiveContractForMeter(
     medidorId: bigint,

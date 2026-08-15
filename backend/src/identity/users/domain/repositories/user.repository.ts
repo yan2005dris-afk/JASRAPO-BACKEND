@@ -27,6 +27,8 @@ export type {
   UserRolePermission,
 };
 
+export type TransactionContext = any;
+
 export abstract class UserRepository {
   abstract findById(usuarioId: number): Promise<UserEntity | null>;
 
@@ -50,24 +52,24 @@ export abstract class UserRepository {
   abstract update(
     usuarioId: number,
     data: UpdateUserRepositoryData,
-    tx?: any,
+    tx?: TransactionContext,
   ): Promise<UserEntity>;
 
   abstract findDirectPermissions(
     usuarioId: number,
   ): Promise<UserDirectPermission[]>;
 
-  abstract findRolePermissions(
-    rolId: number,
-  ): Promise<UserRolePermission[]>;
+  abstract findRolePermissions(rolId: number): Promise<UserRolePermission[]>;
 
   abstract updatePermissions(
     usuarioId: number,
     permissions: { permisoId: number; permitido?: boolean }[],
-    tx?: any,
+    tx?: TransactionContext,
   ): Promise<void>;
 
-  abstract executeTransaction<T>(callback: (tx: any) => Promise<T>): Promise<T>;
+  abstract executeTransaction<T>(
+    callback: (tx: TransactionContext) => Promise<T>,
+  ): Promise<T>;
 
   /**
    * Registra un intento de login fallido aplicando la ventana deslizante y el
