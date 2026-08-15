@@ -110,7 +110,9 @@ describe('DiscountsController', () => {
 
   describe('applyToPreinvoice', () => {
     it('should apply discount to preinvoice', async () => {
-      mockDiscountsService.applyToPreinvoice.mockResolvedValue({ prefacturaId: 5 });
+      mockDiscountsService.applyToPreinvoice.mockResolvedValue({
+        prefacturaId: 5,
+      });
 
       const result = await controller.applyToPreinvoice(5, {
         catalogoDescuentoId: 1,

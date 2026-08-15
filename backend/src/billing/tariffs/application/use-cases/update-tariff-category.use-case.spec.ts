@@ -2,7 +2,10 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { UpdateTariffCategoryUseCase } from './update-tariff-category.use-case';
 import { TariffRepository } from '../../domain/repositories/tariff.repository';
-import { EntityNotFoundException, EntityAlreadyExistsException } from 'src/shared/domain/exceptions/domain.exception';
+import {
+  EntityNotFoundException,
+  EntityAlreadyExistsException,
+} from 'src/shared/domain/exceptions/domain.exception';
 import { TariffCategoryEntity } from '../../domain/entities/tariff-category.entity';
 
 describe('UpdateTariffCategoryUseCase', () => {

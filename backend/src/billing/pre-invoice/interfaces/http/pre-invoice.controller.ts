@@ -82,13 +82,17 @@ export class PreInvoiceController {
   async findAll(
     @Query() query: FindAllPreInvoicesDto,
   ): Promise<PaginatedResult<PreInvoiceResponseDto>> {
-    const result = await this.preInvoiceService.findAll(query.page, query.limit, {
-      loteId: query.loteId,
-      periodoId: query.periodoId,
-      estado: query.estado,
-      contratoId: query.contratoId,
-      identificacion: query.identificacion,
-    });
+    const result = await this.preInvoiceService.findAll(
+      query.page,
+      query.limit,
+      {
+        loteId: query.loteId,
+        periodoId: query.periodoId,
+        estado: query.estado,
+        contratoId: query.contratoId,
+        identificacion: query.identificacion,
+      },
+    );
 
     return {
       data: PreInvoiceResponseDto.fromEntityList(result.data),

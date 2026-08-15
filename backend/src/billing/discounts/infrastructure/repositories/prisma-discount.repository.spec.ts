@@ -44,9 +44,7 @@ describe('PrismaDiscountRepository', () => {
       ],
     }).compile();
 
-    repository = module.get<PrismaDiscountRepository>(
-      PrismaDiscountRepository,
-    );
+    repository = module.get<PrismaDiscountRepository>(PrismaDiscountRepository);
   });
 
   afterEach(() => {
@@ -94,7 +92,9 @@ describe('PrismaDiscountRepository', () => {
     it('should return mapped domain entities', async () => {
       prismaMock.catalogoDescuento.findMany.mockResolvedValue([rawDiscount]);
 
-      const result = await repository.findManyCatalogo({ where: { activo: true } });
+      const result = await repository.findManyCatalogo({
+        where: { activo: true },
+      });
 
       expect(result).toHaveLength(1);
       expect(result[0].nombre).toBe('Tercera Edad');
@@ -105,7 +105,9 @@ describe('PrismaDiscountRepository', () => {
     it('should return total count', async () => {
       prismaMock.catalogoDescuento.count.mockResolvedValue(5);
 
-      const result = await repository.countCatalogo({ where: { activo: true } });
+      const result = await repository.countCatalogo({
+        where: { activo: true },
+      });
 
       expect(result).toBe(5);
     });

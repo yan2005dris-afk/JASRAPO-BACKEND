@@ -63,7 +63,9 @@ describe('CreateTariffCategoryUseCase', () => {
 
     expect(result).toBeDefined();
     expect(result.nombre).toBe(dto.nombre);
-    expect(mockTariffRepository.findActiveByNombre).toHaveBeenCalledWith('Residencial');
+    expect(mockTariffRepository.findActiveByNombre).toHaveBeenCalledWith(
+      'Residencial',
+    );
     expect(mockTariffRepository.create).toHaveBeenCalledWith(dto);
   });
 

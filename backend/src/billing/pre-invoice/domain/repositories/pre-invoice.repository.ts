@@ -12,14 +12,10 @@ export abstract class PreInvoiceRepository {
     pagination: PaginateOptions,
   ): Promise<PaginatedResult<PreInvoiceEntity>>;
 
-  abstract findById(
-    id: number | bigint,
-  ): Promise<PreInvoiceEntity | null>;
+  abstract findById(id: number | bigint): Promise<PreInvoiceEntity | null>;
 
   /** Finds pre-invoice IDs for a given batch/lote */
-  abstract findIdsByLoteId(
-    loteId: bigint,
-  ): Promise<{ prefacturaId: bigint }[]>;
+  abstract findIdsByLoteId(loteId: bigint): Promise<{ prefacturaId: bigint }[]>;
 
   abstract updateState(
     id: number | bigint,

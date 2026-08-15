@@ -1,7 +1,4 @@
-import {
-  Injectable,
-  Inject,
-} from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { PreInvoiceRepository } from '../../domain/repositories/pre-invoice.repository';
 import { ComprobanteRepository } from '../../../../sri/emision/domain/repositories/comprobante.repository';
 import { ComprobanteEstado } from '../../../../sri/emision/domain/constants/comprobante-estado.enum';

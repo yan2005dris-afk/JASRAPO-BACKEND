@@ -1,4 +1,4 @@
-import { PreInvoiceDetailEntity } from './pre-invoice-detail.entity';
+import type { PreInvoiceDetailEntity } from './pre-invoice-detail.entity';
 
 export interface PreInvoiceContractRef {
   contratoId: bigint;

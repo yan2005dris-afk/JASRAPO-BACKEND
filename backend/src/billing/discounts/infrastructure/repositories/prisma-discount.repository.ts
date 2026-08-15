@@ -31,7 +31,10 @@ export class PrismaDiscountRepository implements DiscountRepository {
         error instanceof Prisma.PrismaClientKnownRequestError &&
         error.code === 'P2002'
       ) {
-        throw new EntityAlreadyExistsException('CatalogoDescuento', data.nombre);
+        throw new EntityAlreadyExistsException(
+          'CatalogoDescuento',
+          data.nombre,
+        );
       }
       throw error;
     }

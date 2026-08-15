@@ -12,7 +12,9 @@ import type {
 import { Decimal } from 'decimal.js';
 
 export class DiscountMapper {
-  static toDomain(raw: CatalogoDescuento | null | undefined): DiscountEntity | null {
+  static toDomain(
+    raw: CatalogoDescuento | null | undefined,
+  ): DiscountEntity | null {
     if (!raw) return null;
     return new DiscountEntity({
       id: raw.id,
@@ -53,12 +55,16 @@ export class DiscountMapper {
   ): Prisma.CatalogoDescuentoUncheckedUpdateInput {
     return {
       ...(data.nombre !== undefined ? { nombre: data.nombre } : {}),
-      ...(data.descripcion !== undefined ? { descripcion: data.descripcion } : {}),
+      ...(data.descripcion !== undefined
+        ? { descripcion: data.descripcion }
+        : {}),
       ...(data.tipoDescuento !== undefined
         ? { tipoDescuento: data.tipoDescuento as TipoDescuento }
         : {}),
       ...(data.valor !== undefined ? { valor: new Decimal(data.valor) } : {}),
-      ...(data.esPorcentaje !== undefined ? { esPorcentaje: data.esPorcentaje } : {}),
+      ...(data.esPorcentaje !== undefined
+        ? { esPorcentaje: data.esPorcentaje }
+        : {}),
       ...(data.rubroId !== undefined ? { rubroId: data.rubroId } : {}),
       ...(data.aplicaAutomatico !== undefined
         ? { aplicaAutomatico: data.aplicaAutomatico }

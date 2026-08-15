@@ -11,6 +11,9 @@ export class GeneratePreInvoicePdfUseCase {
 
   async execute(id: number): Promise<Buffer> {
     const data = await this.findOne.execute(id);
-    return this.generatePdf.execute('pre-invoice', data as unknown as Record<string, unknown>);
+    return this.generatePdf.execute(
+      'pre-invoice',
+      data as unknown as Record<string, unknown>,
+    );
   }
 }

@@ -93,7 +93,10 @@ describe('PrismaTariffRepository', () => {
       prismaMock.categoriaTarifa.findMany.mockResolvedValue([rawTariff]);
       prismaMock.categoriaTarifa.count.mockResolvedValue(1);
 
-      const result = await repository.paginate({ nombre: 'Residencial' }, { page: 1, limit: 10 });
+      const result = await repository.paginate(
+        { nombre: 'Residencial' },
+        { page: 1, limit: 10 },
+      );
 
       expect(result.data).toHaveLength(1);
       expect(result.meta.total).toBe(1);
@@ -153,7 +156,9 @@ describe('PrismaTariffRepository', () => {
         return callback(tx);
       });
 
-      const result = await repository.createNewVersion(1, { nombre: 'Residencial 2' });
+      const result = await repository.createNewVersion(1, {
+        nombre: 'Residencial 2',
+      });
 
       expect(result.categoriaTarifaId).toBe(2);
       expect(result.nombre).toBe('Residencial 2');
@@ -181,7 +186,10 @@ describe('PrismaTariffRepository', () => {
             findFirst: jest
               .fn()
               .mockResolvedValueOnce(rawTariff)
-              .mockResolvedValueOnce({ categoriaTarifaId: 3, nombre: 'Comercial' }),
+              .mockResolvedValueOnce({
+                categoriaTarifaId: 3,
+                nombre: 'Comercial',
+              }),
           },
         };
         return callback(tx);

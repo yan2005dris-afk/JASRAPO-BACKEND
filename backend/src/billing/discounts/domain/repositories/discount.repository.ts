@@ -13,9 +13,7 @@ export abstract class DiscountRepository {
     params: DiscountFindManyParams,
   ): Promise<DiscountEntity[]>;
 
-  abstract countCatalogo(params: {
-    where?: DiscountFilters;
-  }): Promise<number>;
+  abstract countCatalogo(params: { where?: DiscountFilters }): Promise<number>;
 
   abstract findUniqueCatalogo(id: number): Promise<DiscountEntity | null>;
 
@@ -24,7 +22,5 @@ export abstract class DiscountRepository {
     data: UpdateDiscountData,
   ): Promise<DiscountEntity>;
 
-  abstract executeTransaction<T>(
-    callback: (tx: any) => Promise<T>,
-  ): Promise<T>;
+  abstract executeTransaction<T>(callback: (tx: any) => Promise<T>): Promise<T>;
 }

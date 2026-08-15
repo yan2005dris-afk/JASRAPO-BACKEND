@@ -75,7 +75,9 @@ export class PrismaTariffRepository implements TariffRepository {
   ): Promise<PaginatedResult<TariffCategoryEntity>> {
     const where: Prisma.CategoriaTarifaWhereInput = {
       deletedAt: null,
-      ...(filters.activo !== undefined ? { activo: filters.activo } : { activo: true }),
+      ...(filters.activo !== undefined
+        ? { activo: filters.activo }
+        : { activo: true }),
       ...(filters.nombre
         ? { nombre: { contains: filters.nombre, mode: 'insensitive' } }
         : {}),
@@ -146,7 +148,10 @@ export class PrismaTariffRepository implements TariffRepository {
         }
 
         // Validate unique name if changed
-        if (data.nombre && data.nombre.toLowerCase() !== current.nombre.toLowerCase()) {
+        if (
+          data.nombre &&
+          data.nombre.toLowerCase() !== current.nombre.toLowerCase()
+        ) {
           const existing = await tx.categoriaTarifa.findFirst({
             where: {
               nombre: { equals: data.nombre, mode: 'insensitive' },
@@ -177,7 +182,10 @@ export class PrismaTariffRepository implements TariffRepository {
         const newRecord = await tx.categoriaTarifa.create({
           data: {
             nombre: data.nombre ?? current.nombre,
-            descripcion: data.descripcion !== undefined ? data.descripcion : current.descripcion,
+            descripcion:
+              data.descripcion !== undefined
+                ? data.descripcion
+                : current.descripcion,
             valorBase:
               data.valorBase !== undefined
                 ? new Prisma.Decimal(data.valorBase)

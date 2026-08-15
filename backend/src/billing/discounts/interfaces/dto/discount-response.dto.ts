@@ -21,7 +21,10 @@ export class DiscountResponseDto {
   @ApiProperty({ example: 50, description: 'Valor del descuento' })
   valor: number;
 
-  @ApiProperty({ example: true, description: 'Indica si el valor es un porcentaje' })
+  @ApiProperty({
+    example: true,
+    description: 'Indica si el valor es un porcentaje',
+  })
   esPorcentaje: boolean;
 
   @ApiPropertyOptional({
@@ -31,7 +34,10 @@ export class DiscountResponseDto {
   })
   rubroId: number | null;
 
-  @ApiProperty({ example: true, description: 'Indica si el descuento está activo' })
+  @ApiProperty({
+    example: true,
+    description: 'Indica si el descuento está activo',
+  })
   activo: boolean;
 
   @ApiProperty({

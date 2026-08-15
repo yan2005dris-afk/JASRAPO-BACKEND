@@ -18,7 +18,9 @@ export type TariffCategoryPrismaRaw = Pick<
 >;
 
 export class TariffCategoryMapper {
-  static toDomain(raw: TariffCategoryPrismaRaw | null | undefined): TariffCategoryEntity | null {
+  static toDomain(
+    raw: TariffCategoryPrismaRaw | null | undefined,
+  ): TariffCategoryEntity | null {
     if (!raw) return null;
     return new TariffCategoryEntity({
       categoriaTarifaId: raw.categoriaTarifaId,
@@ -36,7 +38,9 @@ export class TariffCategoryMapper {
     });
   }
 
-  static toDomainList(rawList: TariffCategoryPrismaRaw[]): TariffCategoryEntity[] {
+  static toDomainList(
+    rawList: TariffCategoryPrismaRaw[],
+  ): TariffCategoryEntity[] {
     return rawList
       .map((r) => TariffCategoryMapper.toDomain(r))
       .filter((e): e is TariffCategoryEntity => e !== null);

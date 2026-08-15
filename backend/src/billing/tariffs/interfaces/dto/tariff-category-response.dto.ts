@@ -6,7 +6,10 @@ export class TariffCategoryResponseDto {
   @ApiProperty({ example: 1, description: 'ID de la categoría de tarifa' })
   categoriaTarifaId: number;
 
-  @ApiProperty({ example: 'Residencial', description: 'Nombre de la categoría' })
+  @ApiProperty({
+    example: 'Residencial',
+    description: 'Nombre de la categoría',
+  })
   nombre: string;
 
   @ApiPropertyOptional({
@@ -26,7 +29,10 @@ export class TariffCategoryResponseDto {
   })
   consumoMinimoMensual: number | null;
 
-  @ApiProperty({ example: 0.5, description: 'Valor excedente por m³ adicional' })
+  @ApiProperty({
+    example: 0.5,
+    description: 'Valor excedente por m³ adicional',
+  })
   valorExcedenteM3: number;
 
   @ApiPropertyOptional({
@@ -43,7 +49,10 @@ export class TariffCategoryResponseDto {
   })
   fechaVigenciaHasta: string | null;
 
-  @ApiProperty({ example: true, description: 'Indica si la categoría está activa' })
+  @ApiProperty({
+    example: true,
+    description: 'Indica si la categoría está activa',
+  })
   activo: boolean;
 
   static fromEntity(entity: TariffCategoryEntity): TariffCategoryResponseDto {
@@ -54,13 +63,19 @@ export class TariffCategoryResponseDto {
     dto.valorBase = Number(entity.valorBase);
     dto.consumoMinimoMensual = entity.consumoMinimoMensual ?? null;
     dto.valorExcedenteM3 = Number(entity.valorExcedenteM3);
-    dto.fechaVigenciaDesde = DateUtil.formatForFrontend(entity.fechaVigenciaDesde);
-    dto.fechaVigenciaHasta = DateUtil.formatForFrontend(entity.fechaVigenciaHasta);
+    dto.fechaVigenciaDesde = DateUtil.formatForFrontend(
+      entity.fechaVigenciaDesde,
+    );
+    dto.fechaVigenciaHasta = DateUtil.formatForFrontend(
+      entity.fechaVigenciaHasta,
+    );
     dto.activo = entity.activo;
     return dto;
   }
 
-  static fromEntityList(entities: TariffCategoryEntity[]): TariffCategoryResponseDto[] {
+  static fromEntityList(
+    entities: TariffCategoryEntity[],
+  ): TariffCategoryResponseDto[] {
     return entities.map((e) => TariffCategoryResponseDto.fromEntity(e));
   }
 }

@@ -85,7 +85,8 @@ export class PreInvoiceMapper {
                   nombres: raw.contrato.cliente.nombres,
                   apellidos: raw.contrato.cliente.apellidos,
                   identificacion: raw.contrato.cliente.identificacion,
-                  direccionDomicilio: raw.contrato.cliente.direccionDomicilio ?? null,
+                  direccionDomicilio:
+                    raw.contrato.cliente.direccionDomicilio ?? null,
                   email: raw.contrato.cliente.email ?? null,
                 }
               : null,
@@ -119,7 +120,8 @@ export class PreInvoiceMapper {
                     ? {
                         id: raw.puntoEmision.establecimiento.emisor.id,
                         ruc: raw.puntoEmision.establecimiento.emisor.ruc,
-                        razonSocial: raw.puntoEmision.establecimiento.emisor.razonSocial,
+                        razonSocial:
+                          raw.puntoEmision.establecimiento.emisor.razonSocial,
                       }
                     : null,
                 }

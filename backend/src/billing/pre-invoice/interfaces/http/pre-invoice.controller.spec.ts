@@ -119,7 +119,7 @@ describe('PreInvoiceController', () => {
         contratoId: '1',
         identificacion: '123',
       };
-      const result = await controller.findAll(query as any);
+      const result = await controller.findAll(query);
 
       expect(result.data).toHaveLength(1);
       expect(result.data[0].prefacturaId).toBe(1);

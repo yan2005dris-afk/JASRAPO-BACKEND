@@ -30,7 +30,9 @@ export class PreInvoiceDetailResponseDto {
   @ApiPropertyOptional({ description: 'Discount' })
   descuento?: number;
 
-  static fromEntity(detail: PreInvoiceDetailEntity): PreInvoiceDetailResponseDto {
+  static fromEntity(
+    detail: PreInvoiceDetailEntity,
+  ): PreInvoiceDetailResponseDto {
     const dto = new PreInvoiceDetailResponseDto();
     dto.prefacturaDetalleId = detail.prefacturaDetalleId;
     dto.descripcion = detail.descripcion;

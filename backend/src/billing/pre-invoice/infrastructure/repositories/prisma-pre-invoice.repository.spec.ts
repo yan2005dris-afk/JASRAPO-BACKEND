@@ -64,7 +64,10 @@ describe('PrismaPreInvoiceRepository', () => {
       prismaMock.prefacturas.findMany.mockResolvedValue([rawPreInvoice]);
       prismaMock.prefacturas.count.mockResolvedValue(1);
 
-      const result = await repository.paginate({ estado: 'GENERADA' }, { page: 1, limit: 10 });
+      const result = await repository.paginate(
+        { estado: 'GENERADA' },
+        { page: 1, limit: 10 },
+      );
 
       expect(result.data).toHaveLength(1);
       expect(result.data[0].prefacturaId).toBe(BigInt(1));
@@ -74,7 +77,9 @@ describe('PrismaPreInvoiceRepository', () => {
 
   describe('findIdsByLoteId', () => {
     it('should return list of IDs', async () => {
-      prismaMock.prefacturas.findMany.mockResolvedValue([{ prefacturaId: BigInt(1) }]);
+      prismaMock.prefacturas.findMany.mockResolvedValue([
+        { prefacturaId: BigInt(1) },
+      ]);
 
       const result = await repository.findIdsByLoteId(BigInt(1));
 

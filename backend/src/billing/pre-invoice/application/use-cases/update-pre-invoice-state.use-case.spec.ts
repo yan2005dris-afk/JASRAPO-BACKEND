@@ -176,9 +176,9 @@ describe('UpdatePreInvoiceStateUseCase — comprobante BORRADOR (T-004)', () => 
       }),
     );
 
-    await expect(
-      useCase.execute({ id: 1, accion: 'PAGADA' }),
-    ).rejects.toThrow(InvalidDomainOperationException);
+    await expect(useCase.execute({ id: 1, accion: 'PAGADA' })).rejects.toThrow(
+      InvalidDomainOperationException,
+    );
   });
 
   it('should throw InvalidDomainOperationException if rejection reason is missing on RECHAZADA', async () => {
