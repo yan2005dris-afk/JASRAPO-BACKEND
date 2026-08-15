@@ -4,14 +4,11 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Decimal } from 'decimal.js';
-import {
-  EstadoCuotaConvenio,
-  EstadoPago,
-  TipoDetallePago,
-} from 'src/generated/prisma/enums';
+import { EstadoPago, TipoDetallePago } from 'src/generated/prisma/enums';
 import { ApplySaldoFavorDto } from '../../interfaces/dto/create-payment.dto';
 import { PaymentRepository } from '../../domain/repositories/payment.repository';
 import { EventosPendientesRepository } from 'src/shared/outbox/domain/repositories/eventos-pendientes.repository';
+import type { PaymentEntity } from '../../domain/entities/payment.entity';
 
 @Injectable()
 export class ApplySaldoFavorUseCase {
@@ -20,7 +17,10 @@ export class ApplySaldoFavorUseCase {
     private readonly eventosPendientesRepository: EventosPendientesRepository,
   ) {}
 
-  async execute(dto: ApplySaldoFavorDto, creadoPor = 'SYSTEM') {
+  async execute(
+    dto: ApplySaldoFavorDto,
+    creadoPor = 'SYSTEM',
+  ): Promise<PaymentEntity> {
     if (!dto.comprobanteId && !dto.cuotaConvenioId) {
       throw new BadRequestException(
         'Debe indicar comprobanteId o cuotaConvenioId para aplicar el saldo',
@@ -40,15 +40,8 @@ export class ApplySaldoFavorUseCase {
 
     const pagoId = await this.paymentRepository.executeTransaction(
       async (tx) => {
-        const saldo = await this.paymentRepository.findUniqueSaldoFavor(
-          { saldoFavorId: BigInt(dto.saldoFavorId) },
-          {
-            saldoFavorId: true,
-            clienteId: true,
-            montoSaldo: true,
-            disponibleParaAplicar: true,
-            deletedAt: true,
-          },
+        const saldo = await this.paymentRepository.findSaldoFavorById(
+          BigInt(dto.saldoFavorId),
           tx,
         );
 
@@ -77,19 +70,17 @@ export class ApplySaldoFavorUseCase {
         }
 
         if (dto.comprobanteId) {
-          const comprobante =
-            await this.paymentRepository.findUniqueComprobante(
-              { id: BigInt(dto.comprobanteId) },
-              { id: true, importeTotal: true },
-              tx,
-            );
+          const comprobante = await this.paymentRepository.findComprobanteById(
+            BigInt(dto.comprobanteId),
+            tx,
+          );
           if (!comprobante) {
             throw new NotFoundException(
               `Comprobante ${dto.comprobanteId} no encontrado`,
             );
           }
           if (
-            comprobante.importeTotal &&
+            comprobante.importeTotal !== null &&
             montoAplicar.greaterThan(new Decimal(comprobante.importeTotal))
           ) {
             throw new BadRequestException(
@@ -98,29 +89,27 @@ export class ApplySaldoFavorUseCase {
           }
         }
 
-        const pago = await this.paymentRepository.createPago(
+        const pago = await this.paymentRepository.createPagoRecord(
           {
             clienteId: BigInt(dto.clienteId),
+            cajaId: null,
+            banco: null,
+            tarjetaCredito: null,
             fechaPago: new Date(),
             montoTotalRecibido: montoAplicar.toNumber(),
+            numeroOperacion: null,
             observaciones: dto.observaciones ?? 'Aplicación de saldo a favor',
+            referenciaBanco: null,
+            comprobanteUrl: null,
             estadoPago: EstadoPago.REGISTRADO,
             creadoPor,
           },
-          { pagoId: true },
           tx,
         );
 
         if (dto.cuotaConvenioId) {
-          const cuota = await this.paymentRepository.findUniqueCuotaConvenio(
-            { cuotaConvenioId: BigInt(dto.cuotaConvenioId) },
-            {
-              cuotaConvenioId: true,
-              estado: true,
-              saldoPendiente: true,
-              montoPagado: true,
-              deletedAt: true,
-            },
+          const cuota = await this.paymentRepository.findCuotaConvenioById(
+            BigInt(dto.cuotaConvenioId),
             tx,
           );
 
@@ -130,7 +119,7 @@ export class ApplySaldoFavorUseCase {
             );
           }
 
-          if (cuota.estado === EstadoCuotaConvenio.PAGADA) {
+          if (cuota.estado === 'PAGADA') {
             throw new BadRequestException(
               `La cuota ${dto.cuotaConvenioId} ya está pagada`,
             );
@@ -148,21 +137,19 @@ export class ApplySaldoFavorUseCase {
           const montoPagado = new Decimal(cuota.montoPagado).plus(montoAplicar);
           const pagada = saldoPendiente.equals(0);
 
-          await this.paymentRepository.updateCuotaConvenio(
-            { cuotaConvenioId: BigInt(dto.cuotaConvenioId) },
+          await this.paymentRepository.updateCuotaConvenioPayment(
+            BigInt(dto.cuotaConvenioId),
+            cuota.saldoPendiente,
             {
               montoPagado: montoPagado.toNumber(),
               saldoPendiente: saldoPendiente.toNumber(),
-              estado: pagada
-                ? EstadoCuotaConvenio.PAGADA
-                : EstadoCuotaConvenio.PENDIENTE,
+              estado: pagada ? 'PAGADA' : 'PENDIENTE',
               pagoCompleto: pagada,
               fechaPago: pagada ? new Date() : null,
             },
             tx,
           );
 
-          // T-G2d: Emit cuota.pagada when the cuota becomes fully paid
           if (pagada) {
             await this.eventosPendientesRepository.createPending(
               'cuota.pagada',
@@ -172,42 +159,40 @@ export class ApplySaldoFavorUseCase {
               },
               'CUOTA_CONVENIO',
               dto.cuotaConvenioId.toString(),
-              tx,
+              tx as any,
             );
           }
         }
 
-        await this.paymentRepository.createDetallePago(
-          {
-            pagoId: pago.pagoId,
-            comprobanteId: dto.comprobanteId ? BigInt(dto.comprobanteId) : null,
-            cuotaConvenioId: dto.cuotaConvenioId
-              ? BigInt(dto.cuotaConvenioId)
-              : null,
-            tipoPago: TipoDetallePago.SALDO_FAVOR,
-            montoAbonado: montoAplicar.toNumber(),
-            formaPagoId: dto.formaPagoId,
-            referencia: `SALDO_FAVOR:${dto.saldoFavorId}`,
-            fechaTransaccion: new Date(),
-          },
+        await this.paymentRepository.createDetallesPago(
+          [
+            {
+              pagoId: pago.pagoId,
+              comprobanteId: dto.comprobanteId
+                ? BigInt(dto.comprobanteId)
+                : null,
+              cuotaConvenioId: dto.cuotaConvenioId
+                ? BigInt(dto.cuotaConvenioId)
+                : null,
+              tipoPago: TipoDetallePago.SALDO_FAVOR,
+              montoAbonado: montoAplicar.toNumber(),
+              formaPagoId: dto.formaPagoId,
+              referencia: `SALDO_FAVOR:${dto.saldoFavorId}`,
+              fechaTransaccion: new Date(),
+            },
+          ],
           tx,
         );
 
         const saldoRestante = montoDisponible.minus(montoAplicar);
-        await this.paymentRepository.updateSaldoFavor(
-          { saldoFavorId: BigInt(dto.saldoFavorId) },
+        await this.paymentRepository.updateSaldoFavorRecord(
+          BigInt(dto.saldoFavorId),
           saldoRestante.equals(0)
             ? { disponibleParaAplicar: false }
             : { montoSaldo: saldoRestante.toNumber() },
           tx,
         );
 
-        // G1: emit pago.validado outbox event when the saldo is applied to
-        // a comprobante. The same PagoValidadoHandler that processes
-        // ValidatePaymentUseCase will pick it up and decide whether to
-        // transition the comprobante BORRADOR → ENVIANDO. The write is
-        // inside the same tx as Pago/DetallePago/SaldoFavor updates, so
-        // a failure rolls back the whole operation (atomicity).
         if (dto.comprobanteId) {
           await this.eventosPendientesRepository.createPending(
             'pago.validado',
@@ -219,7 +204,7 @@ export class ApplySaldoFavorUseCase {
             },
             'PAGO',
             pago.pagoId.toString(),
-            tx,
+            tx as any,
           );
         }
 
@@ -227,6 +212,6 @@ export class ApplySaldoFavorUseCase {
       },
     );
 
-    return this.paymentRepository.findUniquePago({ pagoId });
+    return (await this.paymentRepository.findById(pagoId))!;
   }
 }

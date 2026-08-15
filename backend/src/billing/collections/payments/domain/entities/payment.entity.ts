@@ -1,17 +1,7 @@
-export interface IPaymentDetail {
-  detallePagoId: bigint;
-  pagoId: bigint;
-  comprobanteId: bigint | null;
-  cuotaConvenioId: bigint | null;
-  tipoPago: string;
-  montoAbonado: any;
-  formaPagoId: number;
-  referencia: string | null;
-  fechaTransaccion: Date | null;
-  createdAt: Date;
-}
+import type { PaymentDetailEntity } from './payment-detail.entity';
+import type { SaldoFavorEntity } from './saldo-favor.entity';
 
-export interface IPayment {
+export class PaymentEntity {
   pagoId: bigint;
   clienteId: bigint;
   cajaId: bigint | null;
@@ -19,7 +9,7 @@ export interface IPayment {
   tarjetaCredito: string | null;
   comprobanteUrl: string | null;
   fechaPago: Date;
-  montoTotalRecibido: any;
+  montoTotalRecibido: number;
   numeroOperacion: string | null;
   observaciones: string | null;
   referenciaBanco: string | null;
@@ -29,6 +19,13 @@ export interface IPayment {
   fechaAnulacion: Date | null;
   motivoAnulacion: string | null;
   createdAt: Date;
-  updatedAt: Date;
-  detallePago?: IPaymentDetail[];
+  updatedAt?: Date;
+  deletedAt?: Date | null;
+
+  detallePago?: PaymentDetailEntity[];
+  saldosFavor?: SaldoFavorEntity[];
+
+  constructor(partial: Partial<PaymentEntity>) {
+    Object.assign(this, partial);
+  }
 }

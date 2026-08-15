@@ -1,44 +1,63 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
-import { PrefacturaService } from '../../domain/services/prefactura.service';
-import type { Prisma } from 'src/generated/prisma/client';
+import {
+  PrefacturaService,
+  type PrefacturaCuotasInfo,
+  type CuotaConvenioStatus,
+} from '../../domain/services/prefactura.service';
 
 @Injectable()
 export class PrismaPrefacturaService implements PrefacturaService {
   constructor(private readonly prisma: PrismaService) {}
 
-  private client(tx?: Prisma.TransactionClient) {
-    return tx ?? this.prisma;
-  }
-
   async findPrefacturaDetalleByCuotaConvenioId(
     cuotaConvenioId: bigint,
-    tx?: Prisma.TransactionClient,
-  ): Promise<any[]> {
-    return this.client(tx).prefacturaDetalle.findMany({
+  ): Promise<{ prefacturaId: bigint }[]> {
+    const records = await this.prisma.prefacturaDetalle.findMany({
       where: { cuotaConvenioId },
+      select: { prefacturaId: true },
     });
+    return records.map((r) => ({ prefacturaId: BigInt(r.prefacturaId) }));
   }
 
-  async findPrefacturaById(
+  async findPrefacturaWithDetails(
     prefacturaId: bigint,
-    select?: any,
-    tx?: Prisma.TransactionClient,
-  ): Promise<any> {
-    return this.client(tx).prefacturas.findUnique({
-      where: { prefacturaId },
-      ...(select ? { select } : {}),
+  ): Promise<PrefacturaCuotasInfo | null> {
+    const record = await this.prisma.prefacturas.findFirst({
+      where: { prefacturaId, deletedAt: null },
+      select: {
+        prefacturaId: true,
+        comprobanteId: true,
+        prefacturaDetalle: {
+          select: { cuotaConvenioId: true },
+        },
+      },
     });
+
+    if (!record) return null;
+
+    const cuotaConvenioIds = record.prefacturaDetalle
+      .map((d) => (d.cuotaConvenioId ? BigInt(d.cuotaConvenioId) : null))
+      .filter((id): id is bigint => id !== null);
+
+    return {
+      prefacturaId: BigInt(record.prefacturaId),
+      comprobanteId: record.comprobanteId ? BigInt(record.comprobanteId) : null,
+      cuotaConvenioIds,
+    };
   }
 
-  async findManyCuotaConvenio(
-    where: Prisma.CuotaConvenioWhereInput,
-    select?: any,
-    tx?: Prisma.TransactionClient,
-  ): Promise<any[]> {
-    return this.client(tx).cuotaConvenio.findMany({
-      where,
-      ...(select ? { select } : {}),
+  async findCuotasByIds(
+    cuotaConvenioIds: bigint[],
+  ): Promise<CuotaConvenioStatus[]> {
+    const records = await this.prisma.cuotaConvenio.findMany({
+      where: { cuotaConvenioId: { in: cuotaConvenioIds }, deletedAt: null },
+      select: { cuotaConvenioId: true, estado: true },
     });
+
+    return records.map((r) => ({
+      cuotaConvenioId: BigInt(r.cuotaConvenioId),
+      estado: r.estado,
+    }));
   }
 }

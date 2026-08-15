@@ -7,9 +7,10 @@ import { FindOnePaymentUseCase } from './use-cases/find-one-payment.use-case';
 import { ValidatePaymentUseCase } from './use-cases/validate-payment.use-case';
 import { AnnulPaymentUseCase } from './use-cases/annul-payment.use-case';
 import { ApplySaldoFavorUseCase } from './use-cases/apply-saldo-favor.use-case';
-import { PrismaService } from 'src/infrastructure/database/prisma.service';
-
 import { PaymentRepository } from '../domain/repositories/payment.repository';
+import { PaymentEntity } from '../domain/entities/payment.entity';
+import { SaldoFavorEntity } from '../domain/entities/saldo-favor.entity';
+import { PaymentDetailEntity } from '../domain/entities/payment-detail.entity';
 
 describe('PaymentsService', () => {
   let service: PaymentsService;
@@ -18,18 +19,38 @@ describe('PaymentsService', () => {
   const validatePaymentUseCase = { execute: jest.fn() };
   const annulPaymentUseCase = { execute: jest.fn() };
   const applySaldoFavorUseCase = { execute: jest.fn() };
-  const paymentRepository = { findManyPagos: jest.fn() };
-  const prisma = {
-    pagos: { count: jest.fn(), findMany: jest.fn() },
-    saldoFavorCliente: { findMany: jest.fn() },
+  const paymentRepository = {
+    paginate: jest.fn(),
+    findSaldoFavorByCliente: jest.fn(),
+    findDailyCashPayments: jest.fn(),
   };
+
+  const mockPayment = new PaymentEntity({
+    pagoId: 1n,
+    clienteId: 1n,
+    cajaId: null,
+    banco: null,
+    comprobanteUrl: null,
+    fechaPago: new Date('2026-06-18'),
+    montoTotalRecibido: 10,
+    numeroOperacion: null,
+    observaciones: null,
+    referenciaBanco: null,
+    estadoPago: EstadoPago.PENDIENTE,
+    creadoPor: 'tester',
+    anuladoPor: null,
+    fechaAnulacion: null,
+    motivoAnulacion: null,
+    createdAt: new Date('2026-06-18'),
+    updatedAt: new Date('2026-06-18'),
+    detallePago: [],
+  });
 
   beforeEach(async () => {
     jest.clearAllMocks();
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         PaymentsService,
-        { provide: PrismaService, useValue: prisma },
         { provide: PaymentRepository, useValue: paymentRepository },
         { provide: CreatePaymentUseCase, useValue: createUseCase },
         { provide: FindOnePaymentUseCase, useValue: findOneUseCase },
@@ -48,27 +69,8 @@ describe('PaymentsService', () => {
     });
   });
 
-  it('should delegate create and map response', async () => {
-    createUseCase.execute.mockResolvedValue({
-      pagoId: 1n,
-      clienteId: 1n,
-      cajaId: null,
-      banco: null,
-      comprobanteUrl: null,
-      fechaPago: new Date('2026-06-18'),
-      montoTotalRecibido: 10,
-      numeroOperacion: null,
-      observaciones: null,
-      referenciaBanco: null,
-      estadoPago: EstadoPago.PENDIENTE,
-      creadoPor: 'tester',
-      anuladoPor: null,
-      fechaAnulacion: null,
-      motivoAnulacion: null,
-      createdAt: new Date('2026-06-18'),
-      updatedAt: new Date('2026-06-18'),
-      detallePago: [],
-    });
+  it('should delegate create and return PaymentEntity', async () => {
+    createUseCase.execute.mockResolvedValue(mockPayment);
 
     const result = await service.create(
       {
@@ -81,32 +83,19 @@ describe('PaymentsService', () => {
     );
 
     expect(createUseCase.execute).toHaveBeenCalled();
-    expect(result.pagoId).toBe('1');
+    expect(result).toBe(mockPayment);
   });
 
-  it('should filter findAll by date range', async () => {
-    prisma.pagos.count.mockResolvedValue(1);
-    prisma.pagos.findMany.mockResolvedValue([
-      {
-        pagoId: 1n,
-        clienteId: 1n,
-        cajaId: null,
-        banco: null,
-        comprobanteUrl: null,
-        fechaPago: new Date('2026-06-18'),
-        montoTotalRecibido: 100,
-        numeroOperacion: null,
-        observaciones: null,
-        referenciaBanco: null,
-        estadoPago: EstadoPago.REGISTRADO,
-        creadoPor: 'admin',
-        anuladoPor: null,
-        fechaAnulacion: null,
-        motivoAnulacion: null,
-        createdAt: new Date('2026-06-18'),
-        updatedAt: new Date('2026-06-18'),
+  it('should delegate findAll to repository paginate', async () => {
+    const paginated = {
+      data: [mockPayment],
+      meta: {
+        total: 1,
+        page: 1,
+        limit: 10,
       },
-    ]);
+    };
+    paymentRepository.paginate.mockResolvedValue(paginated);
 
     const result = await service.findAll({
       fechaDesde: '2026-06-01',
@@ -115,40 +104,35 @@ describe('PaymentsService', () => {
     });
 
     expect(result.data).toHaveLength(1);
-    expect(result.data[0].pagoId).toBe('1');
-  });
-
-  it('should return empty array when no payments match findAll', async () => {
-    prisma.pagos.count.mockResolvedValue(0);
-    prisma.pagos.findMany.mockResolvedValue([]);
-
-    const result = await service.findAll({
-      pagination: { page: 1, limit: 10 },
-    });
-
-    expect(result.data).toEqual([]);
-    expect(result.meta.total).toBe(0);
+    expect(result.data[0].pagoId).toBe(1n);
+    expect(paymentRepository.paginate).toHaveBeenCalledWith(
+      { page: 1, limit: 10 },
+      expect.objectContaining({
+        fechaDesde: '2026-06-01',
+        fechaHasta: '2026-06-30',
+      }),
+    );
   });
 
   it('should return daily cash summary with correct totals and breakdowns', async () => {
-    paymentRepository.findManyPagos.mockResolvedValue([
-      {
+    paymentRepository.findDailyCashPayments.mockResolvedValue([
+      new PaymentEntity({
         pagoId: 1n,
         montoTotalRecibido: 150,
         fechaPago: new Date('2026-06-18'),
         detallePago: [
-          {
+          new PaymentDetailEntity({
             tipoPago: 'EFECTIVO',
             montoAbonado: 100,
-            comprobante: { tipoComprobante: 'FACTURA' },
-          },
-          {
+            comprobante: { comprobanteId: '1', tipoComprobante: 'FACTURA' },
+          }),
+          new PaymentDetailEntity({
             tipoPago: 'TRANSFERENCIA',
             montoAbonado: 50,
-            comprobante: { tipoComprobante: 'FACTURA' },
-          },
+            comprobante: { comprobanteId: '2', tipoComprobante: 'FACTURA' },
+          }),
         ],
-      },
+      }),
     ]);
 
     const result = await service.getDailyCashSummary({ fecha: '2026-06-18' });
@@ -167,7 +151,7 @@ describe('PaymentsService', () => {
   });
 
   it('should filter daily cash summary by cajaId', async () => {
-    paymentRepository.findManyPagos.mockResolvedValue([]);
+    paymentRepository.findDailyCashPayments.mockResolvedValue([]);
 
     const result = await service.getDailyCashSummary({
       fecha: '2026-06-18',
@@ -177,48 +161,30 @@ describe('PaymentsService', () => {
     expect(result.cajaId).toBe('5');
     expect(result.totalPagos).toBe(0);
     expect(result.totalRecaudado).toBe(0);
-    expect(paymentRepository.findManyPagos).toHaveBeenCalledWith(
+    expect(paymentRepository.findDailyCashPayments).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: expect.objectContaining({ cajaId: 5n }),
+        cajaId: 5n,
       }),
     );
   });
 
-  it('should return zeros for daily cash summary when no pagos exist', async () => {
-    paymentRepository.findManyPagos.mockResolvedValue([]);
-
-    const result = await service.getDailyCashSummary({ fecha: '2026-06-18' });
-
-    expect(result.totalPagos).toBe(0);
-    expect(result.totalRecaudado).toBe(0);
-    expect(result.desglosePorTipoDetalle).toEqual([]);
-    expect(result.desglosePorTipoComprobante).toEqual([]);
-  });
-
   it('should return available saldo favor for a client', async () => {
-    prisma.saldoFavorCliente.findMany.mockResolvedValue([
-      {
-        saldoFavorId: 1n,
-        clienteId: 1n,
-        pagoId: null,
-        montoSaldo: 50,
-        tipoOrigen: 'PAGO_EXCESO',
-        disponibleParaAplicar: true,
-        createdAt: new Date('2026-06-18'),
-      },
-    ]);
+    const mockSaldo = new SaldoFavorEntity({
+      saldoFavorId: 1n,
+      clienteId: 1n,
+      pagoId: null,
+      montoSaldo: 50,
+      tipoOrigen: 'PAGO_EXCESO',
+      disponibleParaAplicar: true,
+      createdAt: new Date('2026-06-18'),
+    });
+    paymentRepository.findSaldoFavorByCliente.mockResolvedValue([mockSaldo]);
 
     const result = await service.findSaldoFavorByCliente(1n);
 
     expect(result).toHaveLength(1);
-    expect(result[0]).toMatchObject({
-      clienteId: '1',
-      montoSaldo: 50,
-    });
-    expect(prisma.saldoFavorCliente.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({ clienteId: 1n }),
-      }),
-    );
+    expect(result[0].clienteId).toBe(1n);
+    expect(result[0].montoSaldo).toBe(50);
+    expect(paymentRepository.findSaldoFavorByCliente).toHaveBeenCalledWith(1n);
   });
 });

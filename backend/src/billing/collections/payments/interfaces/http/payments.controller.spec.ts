@@ -3,6 +3,8 @@ import { Test } from '@nestjs/testing';
 import { EstadoPago } from 'src/generated/prisma/enums';
 import { PaymentsController } from './payments.controller';
 import { PaymentsService } from '../../application/payments.service';
+import { PaymentEntity } from '../../domain/entities/payment.entity';
+import { SaldoFavorEntity } from '../../domain/entities/saldo-favor.entity';
 
 describe('PaymentsController', () => {
   let controller: PaymentsController;
@@ -19,6 +21,37 @@ describe('PaymentsController', () => {
     applySaldoFavor: jest.fn(),
     getDailyCashSummary: jest.fn(),
   };
+
+  const mockPayment = new PaymentEntity({
+    pagoId: 1n,
+    clienteId: 1n,
+    cajaId: null,
+    banco: null,
+    tarjetaCredito: null,
+    comprobanteUrl: null,
+    fechaPago: new Date('2026-06-18'),
+    montoTotalRecibido: 10,
+    numeroOperacion: null,
+    observaciones: null,
+    referenciaBanco: null,
+    estadoPago: EstadoPago.PENDIENTE,
+    creadoPor: 'tester',
+    anuladoPor: null,
+    fechaAnulacion: null,
+    motivoAnulacion: null,
+    createdAt: new Date('2026-06-18'),
+    updatedAt: new Date('2026-06-18'),
+  });
+
+  const mockSaldo = new SaldoFavorEntity({
+    saldoFavorId: 1n,
+    clienteId: 1n,
+    pagoId: null,
+    montoSaldo: 50,
+    tipoOrigen: 'PAGO_EXCESO',
+    disponibleParaAplicar: true,
+    createdAt: new Date('2026-06-18'),
+  });
 
   beforeEach(async () => {
     jest.clearAllMocks();
@@ -39,28 +72,25 @@ describe('PaymentsController', () => {
     ]);
   });
 
-  it('should delegate create with current user', async () => {
-    service.create.mockResolvedValue({ pagoId: '1' });
-    await expect(
-      controller.create(
-        {
-          clienteId: '1',
-          fechaPago: '2026-06-18',
-          montoTotalRecibido: 10,
-          detalle: [
-            { tipoPago: 'PAGO_LIBRE' as any, montoAbonado: 10, formaPagoId: 1 },
-          ],
-        },
-        { email: 'admin@jasrapo.com' },
-      ),
-    ).resolves.toEqual({ pagoId: '1' });
+  it('should delegate create with current user and return response dto', async () => {
+    service.create.mockResolvedValue(mockPayment);
+    const result = await controller.create(
+      {
+        clienteId: '1',
+        fechaPago: '2026-06-18',
+        montoTotalRecibido: 10,
+        detalle: [{ tipoPago: 'PAGO_LIBRE', montoAbonado: 10, formaPagoId: 1 }],
+      },
+      { email: 'admin@jasrapo.com' },
+    );
+    expect(result.pagoId).toBe('1');
     expect(service.create).toHaveBeenCalledWith(
       expect.any(Object),
       'admin@jasrapo.com',
     );
   });
 
-  it('should call findAll on service', async () => {
+  it('should call findAll on service and map response', async () => {
     const query = {
       page: 1,
       limit: 10,
@@ -68,61 +98,57 @@ describe('PaymentsController', () => {
       fechaHasta: '2026-06-30',
     };
     const paginatedResult = {
-      data: [{ pagoId: '1', clienteId: '1', estadoPago: EstadoPago.PENDIENTE }],
+      data: [mockPayment],
       meta: {
         total: 1,
         page: 1,
         limit: 10,
-        ultimaPagina: 1,
-        paginaActual: 1,
-        porPagina: 10,
-        anterior: null,
-        siguiente: null,
+        totalPages: 1,
+        hasNextPage: false,
+        hasPrevPage: false,
       },
     };
     service.findAll.mockResolvedValue(paginatedResult);
 
     const result = await controller.findAll(query);
 
-    expect(result).toEqual(paginatedResult);
+    expect(result.data).toHaveLength(1);
+    expect(result.data[0].pagoId).toBe('1');
     expect(service.findAll).toHaveBeenCalledWith(query);
   });
 
   it('should call findOne with ParseBigIntPipe', async () => {
-    const payment = {
-      pagoId: '1',
-      clienteId: '1',
-      estadoPago: EstadoPago.PENDIENTE,
-    };
-    service.findOne.mockResolvedValue(payment);
+    service.findOne.mockResolvedValue(mockPayment);
 
     const result = await controller.findOne(1n);
 
-    expect(result).toEqual(payment);
+    expect(result.pagoId).toBe('1');
     expect(service.findOne).toHaveBeenCalledWith(1n);
   });
 
   it('should call updateState with params and current user', async () => {
     const dto = { estadoPago: EstadoPago.REGISTRADO };
-    const payment = { pagoId: '1', estadoPago: EstadoPago.REGISTRADO };
-    service.updateState.mockResolvedValue(payment);
+    service.updateState.mockResolvedValue(
+      new PaymentEntity({ ...mockPayment, estadoPago: EstadoPago.REGISTRADO }),
+    );
 
     const result = await controller.updateState(1n, dto, {
       email: 'admin@test.com',
     });
 
-    expect(result).toEqual(payment);
+    expect(result.estadoPago).toBe(EstadoPago.REGISTRADO);
     expect(service.updateState).toHaveBeenCalledWith(1n, dto, 'admin@test.com');
   });
 
   it('should call annul with params and current user', async () => {
     const dto = { motivoAnulacion: 'error en pago' };
-    const payment = { pagoId: '1', estadoPago: EstadoPago.ANULADO };
-    service.annul.mockResolvedValue(payment);
+    service.annul.mockResolvedValue(
+      new PaymentEntity({ ...mockPayment, estadoPago: EstadoPago.ANULADO }),
+    );
 
     const result = await controller.annul(1n, dto, { email: 'admin@test.com' });
 
-    expect(result).toEqual(payment);
+    expect(result.estadoPago).toBe(EstadoPago.ANULADO);
     expect(service.annul).toHaveBeenCalledWith(1n, {
       motivoAnulacion: 'error en pago',
       anuladoPor: 'admin@test.com',
@@ -137,20 +163,26 @@ describe('PaymentsController', () => {
       comprobanteId: '2',
       formaPagoId: 1,
     };
-    const payment = { pagoId: '1' };
-    service.applySaldoFavor.mockResolvedValue(payment);
+    service.applySaldoFavor.mockResolvedValue(mockPayment);
 
     const result = await controller.applySaldoFavor(dto, {
       email: 'admin@test.com',
     });
 
-    expect(result).toEqual(payment);
+    expect(result.pagoId).toBe('1');
     expect(service.applySaldoFavor).toHaveBeenCalledWith(dto, 'admin@test.com');
   });
 
   it('should call getDailyCashSummary with query', async () => {
     const query = { fecha: '2026-06-18' };
-    const summary = { fecha: '2026-06-18', totalPagos: 5, totalRecaudado: 500 };
+    const summary = {
+      fecha: '2026-06-18',
+      cajaId: null,
+      totalPagos: 5,
+      totalRecaudado: 500,
+      desglosePorTipoDetalle: [],
+      desglosePorTipoComprobante: [],
+    };
     service.getDailyCashSummary.mockResolvedValue(summary);
 
     const result = await controller.getDailyCashSummary(query);
@@ -159,13 +191,13 @@ describe('PaymentsController', () => {
     expect(service.getDailyCashSummary).toHaveBeenCalledWith(query);
   });
 
-  it('should call findSaldoFavorByCliente with ParseBigIntPipe', async () => {
-    const saldos = [{ saldoFavorId: '1', clienteId: '1', montoSaldo: 50 }];
-    service.findSaldoFavorByCliente.mockResolvedValue(saldos);
+  it('should call findSaldoFavorByCliente with ParseBigIntPipe and map response', async () => {
+    service.findSaldoFavorByCliente.mockResolvedValue([mockSaldo]);
 
     const result = await controller.findSaldoFavor(1n);
 
-    expect(result).toEqual(saldos);
+    expect(result).toHaveLength(1);
+    expect(result[0].saldoFavorId).toBe('1');
     expect(service.findSaldoFavorByCliente).toHaveBeenCalledWith(1n);
   });
 });

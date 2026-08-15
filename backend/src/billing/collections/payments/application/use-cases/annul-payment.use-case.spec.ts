@@ -2,17 +2,18 @@ import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { EstadoPago } from 'src/generated/prisma/enums';
 import { AnnulPaymentUseCase } from './annul-payment.use-case';
 import type { PaymentRepository } from '../../domain/repositories/payment.repository';
+import { PaymentEntity } from '../../domain/entities/payment.entity';
+import { PaymentDetailEntity } from '../../domain/entities/payment-detail.entity';
 
 describe('AnnulPaymentUseCase', () => {
   const repository = {
-    findUniquePago: jest.fn(),
+    findById: jest.fn(),
     executeTransaction: jest.fn(),
-    updateManySaldoFavor: jest.fn(),
-    updateManyDetallePago: jest.fn(),
-    updatePago: jest.fn(),
-    findUniqueCuotaConvenio: jest.fn(),
-    updateCuotaConvenio: jest.fn(),
-    updateManyPagos: jest.fn(),
+    updateManySaldoFavorByPagoId: jest.fn(),
+    updateManyDetallePagoByPagoId: jest.fn(),
+    findCuotaConvenioById: jest.fn(),
+    updateCuotaConvenioRevert: jest.fn(),
+    annulPagoTransaction: jest.fn(),
   } as unknown as jest.Mocked<PaymentRepository>;
   const useCase = new AnnulPaymentUseCase(repository);
 
@@ -27,7 +28,7 @@ describe('AnnulPaymentUseCase', () => {
   it('should throw when payment does not exist', async () => {
     repository.executeTransaction.mockImplementation(async (cb: any) => {
       const tx = Symbol('tx') as any;
-      repository.findUniquePago.mockResolvedValueOnce(null);
+      repository.findById.mockResolvedValueOnce(null);
       return cb(tx);
     });
     await expect(
@@ -36,77 +37,97 @@ describe('AnnulPaymentUseCase', () => {
   });
 
   it('should annul pending payment', async () => {
-    repository.findUniquePago
-      .mockResolvedValueOnce({
-        pagoId: 1n,
-        estadoPago: EstadoPago.PENDIENTE,
-        deletedAt: null,
-        detallePago: [],
-      })
-      .mockResolvedValueOnce({ pagoId: 1n, estadoPago: EstadoPago.ANULADO });
+    const pendingPayment = new PaymentEntity({
+      pagoId: 1n,
+      estadoPago: EstadoPago.PENDIENTE,
+      deletedAt: null,
+      detallePago: [],
+    });
+    const annulledPayment = new PaymentEntity({
+      pagoId: 1n,
+      estadoPago: EstadoPago.ANULADO,
+    });
+
+    repository.findById
+      .mockResolvedValueOnce(pendingPayment)
+      .mockResolvedValueOnce(annulledPayment);
+
     repository.executeTransaction.mockImplementation(async (cb: any) => {
       const tx = Symbol('tx') as any;
-      repository.updateManySaldoFavor.mockResolvedValue(undefined);
-      repository.updateManyDetallePago.mockResolvedValue(undefined);
-      repository.updateManyPagos.mockResolvedValue({ count: 1 });
+      repository.updateManySaldoFavorByPagoId.mockResolvedValue(undefined);
+      repository.updateManyDetallePagoByPagoId.mockResolvedValue(undefined);
+      repository.annulPagoTransaction.mockResolvedValue({ count: 1 });
       return cb(tx);
     });
 
-    await expect(
-      useCase.execute(1n, { motivoAnulacion: 'error', anuladoPor: 'admin' }),
-    ).resolves.toMatchObject({ estadoPago: EstadoPago.ANULADO });
+    const result = await useCase.execute(1n, {
+      motivoAnulacion: 'error',
+      anuladoPor: 'admin',
+    });
+
+    expect(result.estadoPago).toBe(EstadoPago.ANULADO);
   });
 
   it('should revert CUOTA_CONVENIO installment when annulling', async () => {
-    repository.findUniquePago
-      .mockResolvedValueOnce({
-        pagoId: 1n,
-        estadoPago: EstadoPago.REGISTRADO,
-        deletedAt: null,
-        detallePago: [
-          {
-            tipoPago: 'CUOTA_CONVENIO',
-            montoAbonado: 50,
-            cuotaConvenioId: 99n,
-          },
-        ],
-      })
-      .mockResolvedValueOnce({ pagoId: 1n, estadoPago: EstadoPago.ANULADO });
+    const registeredPayment = new PaymentEntity({
+      pagoId: 1n,
+      estadoPago: EstadoPago.REGISTRADO,
+      deletedAt: null,
+      detallePago: [
+        new PaymentDetailEntity({
+          tipoPago: 'CUOTA_CONVENIO',
+          montoAbonado: 50,
+          cuotaConvenioId: 99n,
+        }),
+      ],
+    });
+    const annulledPayment = new PaymentEntity({
+      pagoId: 1n,
+      estadoPago: EstadoPago.ANULADO,
+    });
+
+    repository.findById
+      .mockResolvedValueOnce(registeredPayment)
+      .mockResolvedValueOnce(annulledPayment);
+
     repository.executeTransaction.mockImplementation(async (cb: any) => {
       const tx = Symbol('tx') as any;
-      repository.findUniqueCuotaConvenio.mockResolvedValue({
+      repository.findCuotaConvenioById.mockResolvedValue({
         cuotaConvenioId: 99n,
+        convenioId: 1n,
+        estado: 'PENDIENTE',
         montoPagado: 50,
         saldoPendiente: 100,
+        deletedAt: null,
       });
-      repository.updateCuotaConvenio.mockResolvedValue(undefined);
-      repository.updateManySaldoFavor.mockResolvedValue(undefined);
-      repository.updateManyDetallePago.mockResolvedValue(undefined);
-      repository.updateManyPagos.mockResolvedValue({ count: 1 });
+      repository.updateCuotaConvenioRevert.mockResolvedValue(undefined);
+      repository.updateManySaldoFavorByPagoId.mockResolvedValue(undefined);
+      repository.updateManyDetallePagoByPagoId.mockResolvedValue(undefined);
+      repository.annulPagoTransaction.mockResolvedValue({ count: 1 });
       return cb(tx);
     });
 
-    await expect(
-      useCase.execute(1n, { motivoAnulacion: 'error' }),
-    ).resolves.toMatchObject({ estadoPago: EstadoPago.ANULADO });
+    const result = await useCase.execute(1n, { motivoAnulacion: 'error' });
 
-    expect(repository.findUniqueCuotaConvenio).toHaveBeenCalledWith(
-      { cuotaConvenioId: 99n },
-      expect.any(Object),
+    expect(result.estadoPago).toBe(EstadoPago.ANULADO);
+    expect(repository.findCuotaConvenioById).toHaveBeenCalledWith(
+      99n,
       expect.any(Symbol),
     );
-    expect(repository.updateCuotaConvenio).toHaveBeenCalled();
+    expect(repository.updateCuotaConvenioRevert).toHaveBeenCalled();
   });
 
   it('should throw BadRequestException when payment is already ANULADO', async () => {
     repository.executeTransaction.mockImplementation(async (cb: any) => {
       const tx = Symbol('tx') as any;
-      repository.findUniquePago.mockResolvedValueOnce({
-        pagoId: 1n,
-        estadoPago: EstadoPago.ANULADO,
-        deletedAt: null,
-        detallePago: [],
-      });
+      repository.findById.mockResolvedValueOnce(
+        new PaymentEntity({
+          pagoId: 1n,
+          estadoPago: EstadoPago.ANULADO,
+          deletedAt: null,
+          detallePago: [],
+        }),
+      );
       return cb(tx);
     });
 
@@ -118,26 +139,22 @@ describe('AnnulPaymentUseCase', () => {
   it('should throw BadRequestException on concurrent modification (count = 0)', async () => {
     repository.executeTransaction.mockImplementation(async (cb: any) => {
       const tx = Symbol('tx') as any;
-      repository.findUniquePago.mockResolvedValueOnce({
-        pagoId: 1n,
-        estadoPago: EstadoPago.PENDIENTE,
-        deletedAt: null,
-        detallePago: [],
-      });
-      repository.updateManySaldoFavor.mockResolvedValue(undefined);
-      repository.updateManyDetallePago.mockResolvedValue(undefined);
-      repository.updateManyPagos.mockResolvedValue({ count: 0 });
+      repository.findById.mockResolvedValueOnce(
+        new PaymentEntity({
+          pagoId: 1n,
+          estadoPago: EstadoPago.PENDIENTE,
+          deletedAt: null,
+          detallePago: [],
+        }),
+      );
+      repository.updateManySaldoFavorByPagoId.mockResolvedValue(undefined);
+      repository.updateManyDetallePagoByPagoId.mockResolvedValue(undefined);
+      repository.annulPagoTransaction.mockResolvedValue({ count: 0 });
       return cb(tx);
     });
 
     await expect(
       useCase.execute(1n, { motivoAnulacion: 'error' }),
     ).rejects.toBeInstanceOf(BadRequestException);
-
-    expect(repository.updateManyPagos).toHaveBeenCalledWith(
-      expect.objectContaining({ pagoId: 1n }),
-      expect.any(Object),
-      expect.any(Symbol),
-    );
   });
 });

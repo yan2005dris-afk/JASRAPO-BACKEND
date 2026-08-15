@@ -24,7 +24,7 @@ import { RequiredPermission } from 'src/infrastructure/common/decorators/require
 import { ParseBigIntPipe } from 'src/infrastructure/common/pipes/parse-bigint.pipe';
 import { ApiPaginatedResponse } from 'src/infrastructure/common/decorators/api-paginated-response.decorator';
 import { PaginationMetaDto } from 'src/infrastructure/common/dtos/pagination-meta.dto';
-import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
+import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
 import { PaymentsService } from '../../application/payments.service';
 import {
   ApplySaldoFavorDto,
@@ -46,7 +46,7 @@ import { SaldoFavorResponseDto } from '../dto/saldo-favor-response.dto';
 
 @ApiTags('payments')
 @ApiBearerAuth()
-@ApiExtraModels(PaymentResponseDto, PaginationMetaDto)
+@ApiExtraModels(PaymentResponseDto, PaginationMetaDto, SaldoFavorResponseDto)
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('payments')
 export class PaymentsController {
@@ -68,7 +68,8 @@ export class PaymentsController {
     @Body() dto: CreatePaymentDto,
     @CurrentUser() user: any,
   ): Promise<PaymentResponseDto> {
-    return this.paymentsService.create(dto, this.getActor(user));
+    const entity = await this.paymentsService.create(dto, this.getActor(user));
+    return PaymentResponseDto.fromEntity(entity);
   }
 
   @ApiOperation({
@@ -82,7 +83,11 @@ export class PaymentsController {
   async findAll(
     @Query() query: FindAllPaymentsDto,
   ): Promise<PaginatedResult<PaymentResponseDto>> {
-    return this.paymentsService.findAll(query);
+    const result = await this.paymentsService.findAll(query);
+    return {
+      data: PaymentResponseDto.fromEntityList(result.data),
+      meta: result.meta,
+    };
   }
 
   @ApiOperation({
@@ -141,7 +146,9 @@ export class PaymentsController {
   async findSaldoFavor(
     @Param('clienteId', ParseBigIntPipe) clienteId: bigint,
   ): Promise<SaldoFavorResponseDto[]> {
-    return this.paymentsService.findSaldoFavorByCliente(clienteId);
+    const saldos =
+      await this.paymentsService.findSaldoFavorByCliente(clienteId);
+    return SaldoFavorResponseDto.fromEntityList(saldos);
   }
 
   @ApiOperation({
@@ -156,7 +163,11 @@ export class PaymentsController {
     @Body() dto: ApplySaldoFavorDto,
     @CurrentUser() user: any,
   ): Promise<PaymentResponseDto> {
-    return this.paymentsService.applySaldoFavor(dto, this.getActor(user));
+    const entity = await this.paymentsService.applySaldoFavor(
+      dto,
+      this.getActor(user),
+    );
+    return PaymentResponseDto.fromEntity(entity);
   }
 
   @ApiOperation({
@@ -170,7 +181,8 @@ export class PaymentsController {
   async findOne(
     @Param('id', ParseBigIntPipe) id: bigint,
   ): Promise<PaymentResponseDto> {
-    return this.paymentsService.findOne(id);
+    const entity = await this.paymentsService.findOne(id);
+    return PaymentResponseDto.fromEntity(entity);
   }
 
   @ApiOperation({
@@ -187,7 +199,12 @@ export class PaymentsController {
     @Body() dto: UpdatePaymentStateDto,
     @CurrentUser() user: any,
   ): Promise<PaymentResponseDto> {
-    return this.paymentsService.updateState(id, dto, this.getActor(user));
+    const entity = await this.paymentsService.updateState(
+      id,
+      dto,
+      this.getActor(user),
+    );
+    return PaymentResponseDto.fromEntity(entity);
   }
 
   @ApiOperation({
@@ -204,10 +221,11 @@ export class PaymentsController {
     @Body() dto: AnnulPaymentDto,
     @CurrentUser() user: any,
   ): Promise<PaymentResponseDto> {
-    return this.paymentsService.annul(id, {
+    const entity = await this.paymentsService.annul(id, {
       motivoAnulacion: dto.motivoAnulacion,
       anuladoPor: this.getActor(user),
     });
+    return PaymentResponseDto.fromEntity(entity);
   }
 
   private getActor(user: any): string {

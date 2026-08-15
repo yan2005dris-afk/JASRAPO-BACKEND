@@ -1,29 +1,21 @@
 import { Injectable } from '@nestjs/common';
 import { Decimal } from 'decimal.js';
-import { Prisma } from 'src/generated/prisma/client';
 import { Banco, EstadoPago, TarjetaCredito } from 'src/generated/prisma/enums';
-import { PrismaService } from 'src/infrastructure/database/prisma.service';
-import {
-  paginate,
-  PaginateOptions,
-} from 'src/infrastructure/common/utils/pagination.util';
-import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
+import type { PaginateOptions } from 'src/infrastructure/common/utils/pagination.util';
+import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
 import {
   CreatePaymentDto,
   ApplySaldoFavorDto,
 } from '../interfaces/dto/create-payment.dto';
 import { UpdatePaymentStateDto } from '../interfaces/dto/update-payment-state.dto';
 import { FindAllPaymentsDto } from '../interfaces/dto/find-all-payments.dto';
-import { PaymentResponseDto } from '../interfaces/dto/payment-response.dto';
-import { SaldoFavorResponseDto } from '../interfaces/dto/saldo-favor-response.dto';
 import { PaymentStateResponseDto } from '../interfaces/dto/payment-state-response.dto';
 import { BankResponseDto } from '../interfaces/dto/bank-response.dto';
 import { CardBrandResponseDto } from '../interfaces/dto/card-brand-response.dto';
 import { PaymentRepository } from '../domain/repositories/payment.repository';
-import {
-  toPaymentResponse,
-  toSaldoFavorResponse,
-} from '../domain/types/paymentsMapper';
+import type { PaymentEntity } from '../domain/entities/payment.entity';
+import type { SaldoFavorEntity } from '../domain/entities/saldo-favor.entity';
+import type { DailyCashSummaryResult } from '../domain/types/payment.types';
 import { CreatePaymentUseCase } from './use-cases/create-payment.use-case';
 import { FindOnePaymentUseCase } from './use-cases/find-one-payment.use-case';
 import { ValidatePaymentUseCase } from './use-cases/validate-payment.use-case';
@@ -53,7 +45,6 @@ const CARD_BRAND_DESCRIPTIONS: Record<TarjetaCredito, string> = {
 @Injectable()
 export class PaymentsService {
   constructor(
-    private readonly prisma: PrismaService,
     private readonly paymentRepository: PaymentRepository,
     private readonly createUseCase: CreatePaymentUseCase,
     private readonly findOneUseCase: FindOnePaymentUseCase,
@@ -65,92 +56,59 @@ export class PaymentsService {
   async create(
     dto: CreatePaymentDto,
     creadoPor?: string,
-  ): Promise<PaymentResponseDto> {
-    const pago = await this.createUseCase.execute(dto, creadoPor);
-    return toPaymentResponse(pago);
+  ): Promise<PaymentEntity> {
+    return this.createUseCase.execute(dto, creadoPor);
   }
 
   async findAll(
     params: FindAllPaymentsDto &
       PaginateOptions & { pagination?: PaginateOptions },
-  ): Promise<PaginatedResult<PaymentResponseDto>> {
+  ): Promise<PaginatedResult<PaymentEntity>> {
     const pagination = params.pagination ?? {
       page: params.page,
       limit: params.limit,
     };
-    const where: Prisma.PagosWhereInput = {
-      deletedAt: null,
-      ...(params.clienteId ? { clienteId: BigInt(params.clienteId) } : {}),
-      ...(params.estadoPago ? { estadoPago: params.estadoPago } : {}),
-      ...(params.banco ? { banco: params.banco } : {}),
-      ...(params.tarjetaCredito
-        ? { tarjetaCredito: params.tarjetaCredito }
-        : {}),
-      ...this.buildDateFilter(params.fechaDesde, params.fechaHasta),
-    };
 
-    const result = await paginate<any>(
-      this.prisma.pagos,
-      {
-        where,
-        orderBy: { fechaPago: 'desc' },
-      },
-      pagination,
-    );
-
-    return {
-      ...result,
-      data: result.data.map(toPaymentResponse),
-    };
+    return this.paymentRepository.paginate(pagination, {
+      clienteId: params.clienteId,
+      estadoPago: params.estadoPago,
+      banco: params.banco,
+      tarjetaCredito: params.tarjetaCredito,
+      fechaDesde: params.fechaDesde,
+      fechaHasta: params.fechaHasta,
+    });
   }
 
-  async findOne(id: bigint): Promise<PaymentResponseDto> {
-    const pago = await this.findOneUseCase.execute(id);
-    return toPaymentResponse(pago);
+  async findOne(id: bigint): Promise<PaymentEntity> {
+    return this.findOneUseCase.execute(id);
   }
 
   async updateState(
     id: bigint,
     dto: UpdatePaymentStateDto,
     actualizadoPor?: string,
-  ): Promise<PaymentResponseDto> {
-    const pago = await this.validatePaymentUseCase.execute(
-      id,
-      dto,
-      actualizadoPor,
-    );
-    return toPaymentResponse(pago);
+  ): Promise<PaymentEntity> {
+    return this.validatePaymentUseCase.execute(id, dto, actualizadoPor);
   }
 
   async annul(
     id: bigint,
     dto: { motivoAnulacion: string; anuladoPor?: string },
-  ): Promise<PaymentResponseDto> {
-    const pago = await this.annulPaymentUseCase.execute(id, dto);
-    return toPaymentResponse(pago);
+  ): Promise<PaymentEntity> {
+    return this.annulPaymentUseCase.execute(id, dto);
   }
 
   async applySaldoFavor(
     dto: ApplySaldoFavorDto,
     creadoPor?: string,
-  ): Promise<PaymentResponseDto> {
-    const pago = await this.applySaldoFavorUseCase.execute(dto, creadoPor);
-    return toPaymentResponse(pago);
+  ): Promise<PaymentEntity> {
+    return this.applySaldoFavorUseCase.execute(dto, creadoPor);
   }
 
   async findSaldoFavorByCliente(
     clienteId: bigint,
-  ): Promise<SaldoFavorResponseDto[]> {
-    const saldos = await this.prisma.saldoFavorCliente.findMany({
-      where: {
-        clienteId,
-        deletedAt: null,
-        disponibleParaAplicar: true,
-      },
-      orderBy: { createdAt: 'desc' },
-    });
-
-    return saldos.map(toSaldoFavorResponse);
+  ): Promise<SaldoFavorEntity[]> {
+    return this.paymentRepository.findSaldoFavorByCliente(clienteId);
   }
 
   async findPaymentStates(): Promise<PaymentStateResponseDto[]> {
@@ -177,7 +135,10 @@ export class PaymentsService {
     });
   }
 
-  async getDailyCashSummary(params: { fecha?: string; cajaId?: string }) {
+  async getDailyCashSummary(params: {
+    fecha?: string;
+    cajaId?: string;
+  }): Promise<DailyCashSummaryResult> {
     const fechaBase = params.fecha ? new Date(params.fecha) : new Date();
     const start = new Date(fechaBase);
     start.setHours(0, 0, 0, 0);
@@ -185,14 +146,10 @@ export class PaymentsService {
     end.setDate(end.getDate() + 1);
     end.setHours(0, 0, 0, 0);
 
-    const pagos = await this.paymentRepository.findManyPagos({
-      where: {
-        deletedAt: null,
-        estadoPago: EstadoPago.REGISTRADO,
-        fechaPago: { gte: start, lt: end },
-        ...(params.cajaId ? { cajaId: BigInt(params.cajaId) } : {}),
-      },
-      orderBy: { fechaPago: 'asc' },
+    const pagos = await this.paymentRepository.findDailyCashPayments({
+      fechaInicio: start,
+      fechaFin: end,
+      cajaId: params.cajaId ? BigInt(params.cajaId) : undefined,
     });
 
     const porTipoDetalle = new Map<string, Decimal>();
@@ -229,41 +186,10 @@ export class PaymentsService {
     };
   }
 
-  private buildDateFilter(
-    fechaDesde?: string,
-    fechaHasta?: string,
-  ): Prisma.PagosWhereInput {
-    if (!fechaDesde && !fechaHasta) return {};
-
-    return {
-      fechaPago: {
-        ...(fechaDesde
-          ? {
-              gte: (() => {
-                const d = new Date(fechaDesde);
-                d.setHours(0, 0, 0, 0);
-                return d;
-              })(),
-            }
-          : {}),
-        ...(fechaHasta
-          ? {
-              lt: (() => {
-                const d = new Date(fechaHasta);
-                d.setDate(d.getDate() + 1);
-                d.setHours(0, 0, 0, 0);
-                return d;
-              })(),
-            }
-          : {}),
-      },
-    };
-  }
-
   private mapToBreakdown(map: Map<string, Decimal>) {
-    return Array.from(map.entries()).map(([codigo, total]) => ({
+    return Array.from(map.entries()).map(([codigo, totalAmount]) => ({
       codigo,
-      total: total.toNumber(),
+      total: totalAmount.toNumber(),
     }));
   }
 }

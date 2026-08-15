@@ -1,260 +1,531 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma } from 'src/generated/prisma/client';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
-import { PaymentRepository } from '../../domain/repositories/payment.repository';
-
-export const safePaymentDetailSelect = {
-  detallePagoId: true,
-  pagoId: true,
-  comprobanteId: true,
-  cuotaConvenioId: true,
-  tipoPago: true,
-  montoAbonado: true,
-  formaPagoId: true,
-  referencia: true,
-  fechaTransaccion: true,
-  createdAt: true,
-  comprobante: {
-    select: {
-      id: true,
-      tipoComprobante: true,
-      secuencial: true,
-      importeTotal: true,
-      estado: true,
-    },
-  },
-} satisfies Prisma.DetallePagoSelect;
-
-export const safeSaldoFavorSelect = {
-  saldoFavorId: true,
-  clienteId: true,
-  pagoId: true,
-  montoSaldo: true,
-  tipoOrigen: true,
-  disponibleParaAplicar: true,
-  createdAt: true,
-} satisfies Prisma.SaldoFavorClienteSelect;
-
-export const safePaymentSelect = {
-  pagoId: true,
-  clienteId: true,
-  cajaId: true,
-  banco: true,
-  tarjetaCredito: true,
-  comprobanteUrl: true,
-  fechaPago: true,
-  montoTotalRecibido: true,
-  numeroOperacion: true,
-  observaciones: true,
-  referenciaBanco: true,
-  estadoPago: true,
-  creadoPor: true,
-  anuladoPor: true,
-  fechaAnulacion: true,
-  motivoAnulacion: true,
-  createdAt: true,
-  updatedAt: true,
-} satisfies Prisma.PagosSelect;
-
-export const safePaymentWithDetailSelect = {
-  ...safePaymentSelect,
-  detallePago: {
-    where: { deletedAt: null },
-    select: safePaymentDetailSelect,
-    orderBy: { createdAt: 'asc' as const },
-  },
-  saldosFavor: {
-    where: { deletedAt: null },
-    select: safeSaldoFavorSelect,
-    orderBy: { createdAt: 'asc' as const },
-  },
-} satisfies Prisma.PagosSelect;
+import {
+  Prisma,
+  EstadoPago,
+  EstadoCaja,
+  EstadoCuotaConvenio,
+  Banco,
+  TarjetaCredito,
+} from 'src/generated/prisma/client';
+import {
+  PaymentRepository,
+  type ComprobanteInfo,
+  type CuotaConvenioPaymentInfo,
+  type CreatePagoRecordData,
+  type CreateDetallePagoData,
+  type CreateSaldoFavorData,
+} from '../../domain/repositories/payment.repository';
+import { PaymentEntity } from '../../domain/entities/payment.entity';
+import { PaymentDetailEntity } from '../../domain/entities/payment-detail.entity';
+import { SaldoFavorEntity } from '../../domain/entities/saldo-favor.entity';
+import { PaymentMapper } from '../mappers/payment.mapper';
+import type { PaymentFilters } from '../../domain/types/payment.types';
+import {
+  paginate,
+  type PaginateOptions,
+} from 'src/infrastructure/common/utils/pagination.util';
+import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
+import { Decimal } from 'decimal.js';
 
 @Injectable()
 export class PrismaPaymentRepository implements PaymentRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  private client(tx?: Prisma.TransactionClient) {
-    return tx ?? this.prisma;
+  private readonly defaultInclude = {
+    detallePago: {
+      where: { deletedAt: null },
+      include: {
+        comprobante: {
+          select: {
+            id: true,
+            tipoComprobante: true,
+            secuencial: true,
+            importeTotal: true,
+            estado: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'asc' as const },
+    },
+    saldosFavor: {
+      where: { deletedAt: null },
+      orderBy: { createdAt: 'desc' as const },
+    },
+  };
+
+  private getClient(tx?: unknown): Prisma.TransactionClient | PrismaService {
+    return (tx as Prisma.TransactionClient) ?? this.prisma;
   }
 
-  async findUniquePago(
-    where: Prisma.PagosWhereUniqueInput,
-    select: Prisma.PagosSelect = safePaymentWithDetailSelect,
-  ): Promise<any> {
-    return this.prisma.pagos.findUnique({ where, select });
+  async findById(id: bigint, tx?: unknown): Promise<PaymentEntity | null> {
+    const client = this.getClient(tx);
+    const record = await client.pagos.findFirst({
+      where: { pagoId: id, deletedAt: null },
+      include: this.defaultInclude,
+    });
+    return PaymentMapper.toDomain(record);
   }
 
-  async findManyPagos(params: {
-    select?: Prisma.PagosSelect;
-    where?: Prisma.PagosWhereInput;
-    orderBy?: Prisma.PagosOrderByWithRelationInput;
-    take?: number;
-    skip?: number;
-  }): Promise<any[]> {
-    return this.prisma.pagos.findMany({
-      ...params,
-      select: params.select ?? safePaymentWithDetailSelect,
+  async paginate(
+    pagination: PaginateOptions,
+    filters?: PaymentFilters,
+  ): Promise<PaginatedResult<PaymentEntity>> {
+    const where: Prisma.PagosWhereInput = {
+      deletedAt: null,
+      ...(filters?.clienteId ? { clienteId: BigInt(filters.clienteId) } : {}),
+      ...(filters?.estadoPago
+        ? { estadoPago: filters.estadoPago as EstadoPago }
+        : {}),
+      ...(filters?.banco ? { banco: filters.banco as Banco } : {}),
+      ...(filters?.tarjetaCredito
+        ? { tarjetaCredito: filters.tarjetaCredito as TarjetaCredito }
+        : {}),
+      ...this.buildDateFilter(filters?.fechaDesde, filters?.fechaHasta),
+    };
+
+    const paginated = await paginate<any>(
+      this.prisma.pagos,
+      {
+        where,
+        include: this.defaultInclude,
+        orderBy: { fechaPago: 'desc' },
+      },
+      pagination,
+    );
+
+    return {
+      data: PaymentMapper.toDomainList(paginated.data),
+      meta: paginated.meta,
+    };
+  }
+
+  async findSaldoFavorByCliente(
+    clienteId: bigint,
+  ): Promise<SaldoFavorEntity[]> {
+    const records = await this.prisma.saldoFavorCliente.findMany({
+      where: {
+        clienteId,
+        deletedAt: null,
+        disponibleParaAplicar: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    return PaymentMapper.toDomainSaldoFavorList(records);
+  }
+
+  async findDailyCashPayments(params: {
+    fechaInicio: Date;
+    fechaFin: Date;
+    cajaId?: bigint;
+  }): Promise<PaymentEntity[]> {
+    const records = await this.prisma.pagos.findMany({
+      where: {
+        deletedAt: null,
+        estadoPago: EstadoPago.REGISTRADO,
+        fechaPago: { gte: params.fechaInicio, lt: params.fechaFin },
+        ...(params.cajaId ? { cajaId: params.cajaId } : {}),
+      },
+      include: this.defaultInclude,
+      orderBy: { fechaPago: 'asc' },
+    });
+    return PaymentMapper.toDomainList(records);
+  }
+
+  async findPaymentDetailsByPagoId(
+    pagoId: bigint,
+  ): Promise<PaymentDetailEntity[]> {
+    const records = await this.prisma.detallePago.findMany({
+      where: { pagoId, deletedAt: null },
+      include: {
+        comprobante: {
+          select: {
+            id: true,
+            tipoComprobante: true,
+            secuencial: true,
+            importeTotal: true,
+            estado: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+    return PaymentMapper.toDomainDetailList(records);
+  }
+
+  async findPaymentDetailsByComprobanteId(
+    comprobanteId: bigint,
+  ): Promise<PaymentDetailEntity[]> {
+    const records = await this.prisma.detallePago.findMany({
+      where: {
+        comprobanteId,
+        deletedAt: null,
+        pago: {
+          deletedAt: null,
+          estadoPago: { not: EstadoPago.ANULADO },
+        },
+      },
+      select: {
+        detallePagoId: true,
+        pagoId: true,
+        comprobanteId: true,
+        cuotaConvenioId: true,
+        tipoPago: true,
+        montoAbonado: true,
+        formaPagoId: true,
+        referencia: true,
+        fechaTransaccion: true,
+        createdAt: true,
+        deletedAt: true,
+      },
+    });
+    return PaymentMapper.toDomainDetailList(records);
+  }
+
+  async clientExists(clienteId: bigint): Promise<boolean> {
+    const count = await this.prisma.clientes.count({
+      where: { clienteId, deletedAt: null },
+    });
+    return count > 0;
+  }
+
+  async isCajaOpen(cajaId: bigint): Promise<boolean> {
+    const count = await this.prisma.cajaSesion.count({
+      where: { cajaId, estado: EstadoCaja.ABIERTA },
+    });
+    return count > 0;
+  }
+
+  async findComprobanteById(
+    comprobanteId: bigint,
+    tx?: unknown,
+  ): Promise<ComprobanteInfo | null> {
+    const client = this.getClient(tx);
+    const record = await client.comprobantes.findFirst({
+      where: { id: comprobanteId },
+      select: { id: true, importeTotal: true },
+    });
+    if (!record) return null;
+    return {
+      id: BigInt(record.id),
+      importeTotal: record.importeTotal ? Number(record.importeTotal) : null,
+    };
+  }
+
+  async lockComprobante(comprobanteId: bigint, tx: unknown): Promise<void> {
+    const client = this.getClient(tx);
+    await client.$queryRaw`
+      SELECT id FROM "comprobantes"
+      WHERE id = ${comprobanteId}
+      FOR UPDATE
+    `;
+  }
+
+  async findComprobanteAppliedSum(
+    comprobanteId: bigint,
+    tx?: unknown,
+  ): Promise<number> {
+    const client = this.getClient(tx);
+    const records = await client.detallePago.findMany({
+      where: {
+        comprobanteId,
+        deletedAt: null,
+        pago: {
+          deletedAt: null,
+          estadoPago: { not: EstadoPago.ANULADO },
+        },
+      },
+      select: { montoAbonado: true },
+    });
+
+    const sum = records.reduce(
+      (acc, r) => acc.plus(new Decimal(r.montoAbonado)),
+      new Decimal(0),
+    );
+    return sum.toNumber();
+  }
+
+  async findCuotaConvenioById(
+    cuotaId: bigint,
+    tx?: unknown,
+  ): Promise<CuotaConvenioPaymentInfo | null> {
+    const client = this.getClient(tx);
+    const record = await client.cuotaConvenio.findFirst({
+      where: { cuotaConvenioId: cuotaId },
+      select: {
+        cuotaConvenioId: true,
+        convenioId: true,
+        estado: true,
+        saldoPendiente: true,
+        montoPagado: true,
+        deletedAt: true,
+      },
+    });
+    if (!record) return null;
+    return {
+      cuotaConvenioId: BigInt(record.cuotaConvenioId),
+      convenioId: BigInt(record.convenioId),
+      estado: record.estado,
+      saldoPendiente: Number(record.saldoPendiente),
+      montoPagado: Number(record.montoPagado),
+      deletedAt: record.deletedAt ?? null,
+    };
+  }
+
+  async findSaldoFavorById(
+    saldoFavorId: bigint,
+    tx?: unknown,
+  ): Promise<SaldoFavorEntity | null> {
+    const client = this.getClient(tx);
+    const record = await client.saldoFavorCliente.findFirst({
+      where: { saldoFavorId },
+    });
+    return PaymentMapper.toDomainSaldoFavor(record);
+  }
+
+  async createPagoRecord(
+    data: CreatePagoRecordData,
+    tx: unknown,
+  ): Promise<{ pagoId: bigint }> {
+    const client = this.getClient(tx);
+    const record = await client.pagos.create({
+      data: {
+        clienteId: data.clienteId,
+        cajaId: data.cajaId,
+        banco: data.banco as Banco | null,
+        tarjetaCredito: data.tarjetaCredito as TarjetaCredito | null,
+        fechaPago: data.fechaPago,
+        montoTotalRecibido: data.montoTotalRecibido,
+        numeroOperacion: data.numeroOperacion,
+        observaciones: data.observaciones,
+        referenciaBanco: data.referenciaBanco,
+        comprobanteUrl: data.comprobanteUrl,
+        estadoPago: data.estadoPago as EstadoPago,
+        creadoPor: data.creadoPor,
+      },
+      select: { pagoId: true },
+    });
+    return { pagoId: BigInt(record.pagoId) };
+  }
+
+  async createDetallesPago(
+    detalles: CreateDetallePagoData[],
+    tx: unknown,
+  ): Promise<void> {
+    const client = this.getClient(tx);
+    await client.detallePago.createMany({
+      data: detalles.map((d) => ({
+        pagoId: d.pagoId,
+        comprobanteId: d.comprobanteId,
+        cuotaConvenioId: d.cuotaConvenioId,
+        tipoPago: d.tipoPago as any,
+        montoAbonado: d.montoAbonado,
+        formaPagoId: d.formaPagoId,
+        referencia: d.referencia,
+        fechaTransaccion: d.fechaTransaccion,
+      })),
     });
   }
 
-  async createPago(
-    data: Prisma.PagosCreateInput | Prisma.PagosUncheckedCreateInput,
-    select: Prisma.PagosSelect = safePaymentWithDetailSelect,
-    tx?: Prisma.TransactionClient,
-  ): Promise<any> {
-    return this.client(tx).pagos.create({ data, select });
-  }
-
-  async updatePago(
-    where: Prisma.PagosWhereUniqueInput,
-    data: Prisma.PagosUpdateInput | Prisma.PagosUncheckedUpdateInput,
-    select: Prisma.PagosSelect = safePaymentWithDetailSelect,
-    tx?: Prisma.TransactionClient,
-  ): Promise<any> {
-    return this.client(tx).pagos.update({ where, data, select });
-  }
-
-  async updateManyPagos(
-    where: Prisma.PagosWhereInput,
-    data: Prisma.PagosUpdateInput | Prisma.PagosUncheckedUpdateInput,
-    tx?: Prisma.TransactionClient,
-  ): Promise<{ count: number }> {
-    return this.client(tx).pagos.updateMany({ where, data });
-  }
-
-  async findManyDetallePago(
-    params: {
-      select?: Prisma.DetallePagoSelect;
-      where?: Prisma.DetallePagoWhereInput;
-      orderBy?: Prisma.DetallePagoOrderByWithRelationInput;
-    },
-    tx?: Prisma.TransactionClient,
-  ): Promise<any[]> {
-    return this.client(tx).detallePago.findMany(params);
-  }
-
-  async createManyDetallePago(
-    data: Prisma.DetallePagoCreateManyInput[],
-    tx?: Prisma.TransactionClient,
-  ): Promise<any> {
-    return this.client(tx).detallePago.createMany({ data });
-  }
-
-  async createDetallePago(
-    data:
-      | Prisma.DetallePagoCreateInput
-      | Prisma.DetallePagoUncheckedCreateInput,
-    tx?: Prisma.TransactionClient,
-  ): Promise<any> {
-    return this.client(tx).detallePago.create({ data });
-  }
-
-  async updateManyDetallePago(
-    where: Prisma.DetallePagoWhereInput,
-    data: Prisma.DetallePagoUpdateInput,
-    tx?: Prisma.TransactionClient,
-  ): Promise<any> {
-    return this.client(tx).detallePago.updateMany({ where, data });
-  }
-
-  async findManySaldoFavor(params: {
-    select?: Prisma.SaldoFavorClienteSelect;
-    where?: Prisma.SaldoFavorClienteWhereInput;
-    orderBy?: Prisma.SaldoFavorClienteOrderByWithRelationInput;
-  }): Promise<any[]> {
-    return this.prisma.saldoFavorCliente.findMany(params);
-  }
-
-  async findUniqueSaldoFavor(
-    where: Prisma.SaldoFavorClienteWhereUniqueInput,
-    select?: Prisma.SaldoFavorClienteSelect,
-    tx?: Prisma.TransactionClient,
-  ): Promise<any> {
-    return this.client(tx).saldoFavorCliente.findUnique({ where, select });
-  }
-
-  async createSaldoFavor(
-    data:
-      | Prisma.SaldoFavorClienteCreateInput
-      | Prisma.SaldoFavorClienteUncheckedCreateInput,
-    select?: Prisma.SaldoFavorClienteSelect,
-    tx?: Prisma.TransactionClient,
-  ): Promise<any> {
-    return this.client(tx).saldoFavorCliente.create({ data, select });
-  }
-
-  async updateSaldoFavor(
-    where: Prisma.SaldoFavorClienteWhereUniqueInput,
-    data:
-      | Prisma.SaldoFavorClienteUpdateInput
-      | Prisma.SaldoFavorClienteUncheckedUpdateInput,
-    tx?: Prisma.TransactionClient,
-  ): Promise<any> {
-    return this.client(tx).saldoFavorCliente.update({ where, data });
-  }
-
-  async updateManySaldoFavor(
-    where: Prisma.SaldoFavorClienteWhereInput,
-    data: Prisma.SaldoFavorClienteUpdateInput,
-    tx?: Prisma.TransactionClient,
-  ): Promise<any> {
-    return this.client(tx).saldoFavorCliente.updateMany({ where, data });
-  }
-
-  async findFirstCajaSesion(
-    where: Prisma.CajaSesionWhereInput,
-    select?: Prisma.CajaSesionSelect,
-  ): Promise<any> {
-    return this.prisma.cajaSesion.findFirst({ where, select });
-  }
-
-  async findUniqueCliente(
-    where: Prisma.ClientesWhereUniqueInput,
-    select?: Prisma.ClientesSelect,
-  ): Promise<any> {
-    return this.prisma.clientes.findUnique({ where, select });
-  }
-
-  async findUniqueComprobante(
-    where: Prisma.ComprobantesWhereUniqueInput,
-    select?: Prisma.ComprobantesSelect,
-    tx?: Prisma.TransactionClient,
-  ): Promise<any> {
-    return this.client(tx).comprobantes.findUnique({ where, select });
-  }
-
-  async findUniqueCuotaConvenio(
-    where: Prisma.CuotaConvenioWhereUniqueInput,
-    select?: Prisma.CuotaConvenioSelect,
-    tx?: Prisma.TransactionClient,
-  ): Promise<any> {
-    return this.client(tx).cuotaConvenio.findUnique({ where, select });
-  }
-
-  async updateCuotaConvenio(
-    where: Prisma.CuotaConvenioWhereUniqueInput,
-    data:
-      | Prisma.CuotaConvenioUpdateInput
-      | Prisma.CuotaConvenioUncheckedUpdateInput,
-    tx?: Prisma.TransactionClient,
-  ): Promise<any> {
-    return this.client(tx).cuotaConvenio.update({ where, data });
-  }
-
-  async lockComprobante(
-    id: bigint,
-    tx: Prisma.TransactionClient,
+  async createSaldoFavorRecord(
+    data: CreateSaldoFavorData,
+    tx: unknown,
   ): Promise<void> {
-    await tx.$queryRawUnsafe(
-      'SELECT id FROM billing.comprobantes WHERE id = $1 FOR UPDATE',
-      id,
-    );
+    const client = this.getClient(tx);
+    await client.saldoFavorCliente.create({
+      data: {
+        clienteId: data.clienteId,
+        pagoId: data.pagoId,
+        montoSaldo: data.montoSaldo,
+        tipoOrigen: data.tipoOrigen as any,
+        disponibleParaAplicar: data.disponibleParaAplicar,
+      },
+    });
+  }
+
+  async updateCuotaConvenioPayment(
+    cuotaConvenioId: bigint,
+    saldoPendienteActual: number,
+    data: {
+      montoPagado: number;
+      saldoPendiente: number;
+      estado: string;
+      pagoCompleto: boolean;
+      fechaPago: Date | null;
+    },
+    tx: unknown,
+  ): Promise<{ count: number }> {
+    const client = this.getClient(tx);
+    const result = await client.cuotaConvenio.updateMany({
+      where: {
+        cuotaConvenioId,
+        saldoPendiente: saldoPendienteActual,
+      },
+      data: {
+        montoPagado: data.montoPagado,
+        saldoPendiente: data.saldoPendiente,
+        estado: data.estado as EstadoCuotaConvenio,
+        pagoCompleto: data.pagoCompleto,
+        fechaPago: data.fechaPago,
+      },
+    });
+    return { count: result.count };
+  }
+
+  async updateCuotaConvenioRevert(
+    cuotaConvenioId: bigint,
+    data: {
+      montoPagado: number;
+      saldoPendiente: number;
+      estado: string;
+      pagoCompleto: boolean;
+      fechaPago?: Date | null;
+    },
+    tx: unknown,
+  ): Promise<void> {
+    const client = this.getClient(tx);
+    await client.cuotaConvenio.update({
+      where: { cuotaConvenioId },
+      data: {
+        montoPagado: data.montoPagado,
+        saldoPendiente: data.saldoPendiente,
+        estado: data.estado as EstadoCuotaConvenio,
+        pagoCompleto: data.pagoCompleto,
+        ...(data.fechaPago !== undefined && { fechaPago: data.fechaPago }),
+      },
+    });
+  }
+
+  async updateSaldoFavorRecord(
+    saldoFavorId: bigint,
+    data: {
+      disponibleParaAplicar?: boolean;
+      montoSaldo?: number;
+      deletedAt?: Date;
+    },
+    tx: unknown,
+  ): Promise<void> {
+    const client = this.getClient(tx);
+    await client.saldoFavorCliente.update({
+      where: { saldoFavorId },
+      data: {
+        ...(data.disponibleParaAplicar !== undefined && {
+          disponibleParaAplicar: data.disponibleParaAplicar,
+        }),
+        ...(data.montoSaldo !== undefined && { montoSaldo: data.montoSaldo }),
+        ...(data.deletedAt !== undefined && { deletedAt: data.deletedAt }),
+      },
+    });
+  }
+
+  async updateManySaldoFavorByPagoId(
+    pagoId: bigint,
+    data: { disponibleParaAplicar: boolean; deletedAt: Date },
+    tx: unknown,
+  ): Promise<void> {
+    const client = this.getClient(tx);
+    await client.saldoFavorCliente.updateMany({
+      where: { pagoId, deletedAt: null },
+      data: {
+        disponibleParaAplicar: data.disponibleParaAplicar,
+        deletedAt: data.deletedAt,
+      },
+    });
+  }
+
+  async updateManyDetallePagoByPagoId(
+    pagoId: bigint,
+    data: { deletedAt: Date },
+    tx: unknown,
+  ): Promise<void> {
+    const client = this.getClient(tx);
+    await client.detallePago.updateMany({
+      where: { pagoId, deletedAt: null },
+      data: { deletedAt: data.deletedAt },
+    });
+  }
+
+  async updatePagoState(
+    pagoId: bigint,
+    estadoPago: string,
+    observaciones?: string,
+    tx?: unknown,
+  ): Promise<void> {
+    const client = this.getClient(tx);
+    await client.pagos.update({
+      where: { pagoId },
+      data: {
+        estadoPago: estadoPago as EstadoPago,
+        ...(observaciones !== undefined && { observaciones }),
+      },
+    });
+  }
+
+  async annulPagoTransaction(
+    pagoId: bigint,
+    currentEstado: string,
+    data: {
+      motivoAnulacion: string;
+      anuladoPor: string;
+      fechaAnulacion: Date;
+      deletedAt: Date;
+    },
+    tx: unknown,
+  ): Promise<{ count: number }> {
+    const client = this.getClient(tx);
+    const result = await client.pagos.updateMany({
+      where: {
+        pagoId,
+        estadoPago: currentEstado as EstadoPago,
+        deletedAt: null,
+      },
+      data: {
+        estadoPago: EstadoPago.ANULADO,
+        motivoAnulacion: data.motivoAnulacion,
+        fechaAnulacion: data.fechaAnulacion,
+        anuladoPor: data.anuladoPor,
+        deletedAt: data.deletedAt,
+      },
+    });
+    return { count: result.count };
   }
 
   async executeTransaction<T>(
-    callback: (tx: Prisma.TransactionClient) => Promise<T>,
+    callback: (tx: unknown) => Promise<T>,
   ): Promise<T> {
-    return this.prisma.$transaction(callback);
+    return this.prisma.$transaction(async (tx) => {
+      return callback(tx);
+    });
+  }
+
+  private buildDateFilter(
+    fechaDesde?: string,
+    fechaHasta?: string,
+  ): Prisma.PagosWhereInput {
+    if (!fechaDesde && !fechaHasta) return {};
+
+    return {
+      fechaPago: {
+        ...(fechaDesde
+          ? {
+              gte: (() => {
+                const d = new Date(fechaDesde);
+                d.setHours(0, 0, 0, 0);
+                return d;
+              })(),
+            }
+          : {}),
+        ...(fechaHasta
+          ? {
+              lt: (() => {
+                const d = new Date(fechaHasta);
+                d.setDate(d.getDate() + 1);
+                d.setHours(0, 0, 0, 0);
+                return d;
+              })(),
+            }
+          : {}),
+      },
+    };
   }
 }

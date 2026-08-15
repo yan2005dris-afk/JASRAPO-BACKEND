@@ -11,7 +11,7 @@ describe('PrismaPrefacturaService', () => {
         findMany: jest.fn(),
       },
       prefacturas: {
-        findUnique: jest.fn(),
+        findFirst: jest.fn(),
       },
       cuotaConvenio: {
         findMany: jest.fn(),
@@ -22,117 +22,64 @@ describe('PrismaPrefacturaService', () => {
   });
 
   describe('findPrefacturaDetalleByCuotaConvenioId', () => {
-    it('delegates to prisma.prefacturaDetalle.findMany with the given cuotaConvenioId', async () => {
-      const expected = [
-        { prefacturaDetalleId: 10n, prefacturaId: 100n, cuotaConvenioId: 5n },
-      ];
-      prisma.prefacturaDetalle.findMany.mockResolvedValue(expected);
+    it('delegates to prisma.prefacturaDetalle.findMany', async () => {
+      prisma.prefacturaDetalle.findMany.mockResolvedValue([
+        { prefacturaId: 100n } as any,
+      ]);
 
       const result = await service.findPrefacturaDetalleByCuotaConvenioId(5n);
 
       expect(prisma.prefacturaDetalle.findMany).toHaveBeenCalledWith({
         where: { cuotaConvenioId: 5n },
+        select: { prefacturaId: true },
       });
-      expect(result).toEqual(expected);
-    });
-
-    it('uses transaction client when tx is provided', async () => {
-      const tx = {
-        prefacturaDetalle: {
-          findMany: jest.fn().mockResolvedValue([]),
-        },
-      } as any;
-
-      await service.findPrefacturaDetalleByCuotaConvenioId(5n, tx);
-
-      expect(tx.prefacturaDetalle.findMany).toHaveBeenCalledWith({
-        where: { cuotaConvenioId: 5n },
-      });
-      expect(prisma.prefacturaDetalle.findMany).not.toHaveBeenCalled();
-    });
-
-    it('returns empty array when no matching records found', async () => {
-      prisma.prefacturaDetalle.findMany.mockResolvedValue([]);
-
-      const result = await service.findPrefacturaDetalleByCuotaConvenioId(999n);
-
-      expect(result).toEqual([]);
+      expect(result).toEqual([{ prefacturaId: 100n }]);
     });
   });
 
-  describe('findPrefacturaById', () => {
-    it('delegates to prisma.prefacturas.findUnique with prefacturaId', async () => {
-      const expected = { prefacturaId: 100n, comprobanteId: 200n };
-      prisma.prefacturas.findUnique.mockResolvedValue(expected);
+  describe('findPrefacturaWithDetails', () => {
+    it('delegates to prisma.prefacturas.findFirst with prefacturaId', async () => {
+      prisma.prefacturas.findFirst.mockResolvedValue({
+        prefacturaId: 100n,
+        comprobanteId: 200n,
+        prefacturaDetalle: [{ cuotaConvenioId: 5n }, { cuotaConvenioId: 6n }],
+      } as any);
 
-      const result = await service.findPrefacturaById(100n);
+      const result = await service.findPrefacturaWithDetails(100n);
 
-      expect(prisma.prefacturas.findUnique).toHaveBeenCalledWith({
-        where: { prefacturaId: 100n },
-      });
-      expect(result).toEqual(expected);
-    });
-
-    it('passes select when provided', async () => {
-      const select = { prefacturaId: true, comprobanteId: true };
-      prisma.prefacturas.findUnique.mockResolvedValue({ prefacturaId: 100n });
-
-      await service.findPrefacturaById(100n, select);
-
-      expect(prisma.prefacturas.findUnique).toHaveBeenCalledWith({
-        where: { prefacturaId: 100n },
-        select,
+      expect(result).toEqual({
+        prefacturaId: 100n,
+        comprobanteId: 200n,
+        cuotaConvenioIds: [5n, 6n],
       });
     });
 
-    it('uses transaction client when tx is provided', async () => {
-      const tx = {
-        prefacturas: {
-          findUnique: jest.fn().mockResolvedValue(null),
-        },
-      } as any;
+    it('returns null when prefactura not found', async () => {
+      prisma.prefacturas.findFirst.mockResolvedValue(null);
 
-      await service.findPrefacturaById(100n, undefined, tx);
+      const result = await service.findPrefacturaWithDetails(999n);
 
-      expect(tx.prefacturas.findUnique).toHaveBeenCalledWith({
-        where: { prefacturaId: 100n },
-      });
-      expect(prisma.prefacturas.findUnique).not.toHaveBeenCalled();
+      expect(result).toBeNull();
     });
   });
 
-  describe('findManyCuotaConvenio', () => {
-    it('delegates to prisma.cuotaConvenio.findMany with where and select', async () => {
-      const where = { cuotaConvenioId: { in: [5n, 6n] } };
-      const select = { cuotaConvenioId: true, estado: true };
-      const expected = [
-        { cuotaConvenioId: 5n, estado: 'PAGADA' },
-        { cuotaConvenioId: 6n, estado: 'PAGADA' },
-      ];
-      prisma.cuotaConvenio.findMany.mockResolvedValue(expected);
+  describe('findCuotasByIds', () => {
+    it('delegates to prisma.cuotaConvenio.findMany with cuota IDs', async () => {
+      prisma.cuotaConvenio.findMany.mockResolvedValue([
+        { cuotaConvenioId: 5n, estado: 'PAGADA' } as any,
+        { cuotaConvenioId: 6n, estado: 'PAGADA' } as any,
+      ]);
 
-      const result = await service.findManyCuotaConvenio(where, select);
+      const result = await service.findCuotasByIds([5n, 6n]);
 
       expect(prisma.cuotaConvenio.findMany).toHaveBeenCalledWith({
-        where,
-        select,
+        where: { cuotaConvenioId: { in: [5n, 6n] }, deletedAt: null },
+        select: { cuotaConvenioId: true, estado: true },
       });
-      expect(result).toEqual(expected);
-    });
-
-    it('uses transaction client when tx is provided', async () => {
-      const tx = {
-        cuotaConvenio: {
-          findMany: jest.fn().mockResolvedValue([]),
-        },
-      } as any;
-
-      await service.findManyCuotaConvenio({}, undefined, tx);
-
-      expect(tx.cuotaConvenio.findMany).toHaveBeenCalledWith({
-        where: {},
-      });
-      expect(prisma.cuotaConvenio.findMany).not.toHaveBeenCalled();
+      expect(result).toEqual([
+        { cuotaConvenioId: 5n, estado: 'PAGADA' },
+        { cuotaConvenioId: 6n, estado: 'PAGADA' },
+      ]);
     });
   });
 });

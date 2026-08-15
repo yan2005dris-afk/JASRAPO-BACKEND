@@ -1,57 +1,44 @@
-import { PrefacturaService } from './prefactura.service';
+import {
+  PrefacturaService,
+  type PrefacturaCuotasInfo,
+  type CuotaConvenioStatus,
+} from './prefactura.service';
 
 describe('PrefacturaService', () => {
-  it('can be extended and findPrefacturaDetalleByCuotaConvenioId returns expected data', async () => {
+  it('can be extended and methods return expected data', async () => {
     class TestPrefacturaService extends PrefacturaService {
       async findPrefacturaDetalleByCuotaConvenioId(
         cuotaConvenioId: bigint,
-        _tx?: any,
-      ): Promise<any[]> {
-        return [{ prefacturaDetalleId: 1n, cuotaConvenioId }];
+      ): Promise<{ prefacturaId: bigint }[]> {
+        return [{ prefacturaId: 100n }];
       }
 
-      async findPrefacturaById(
+      async findPrefacturaWithDetails(
         prefacturaId: bigint,
-        _select?: any,
-        _tx?: any,
-      ): Promise<any> {
-        return { prefacturaId, comprobanteId: 100n };
+      ): Promise<PrefacturaCuotasInfo | null> {
+        return {
+          prefacturaId,
+          comprobanteId: 100n,
+          cuotaConvenioIds: [5n],
+        };
       }
 
-      async findManyCuotaConvenio(
-        where: any,
-        _select?: any,
-        _tx?: any,
-      ): Promise<any[]> {
-        return [{ cuotaConvenioId: 1n, estado: 'PAGADA' }];
+      async findCuotasByIds(
+        cuotaConvenioIds: bigint[],
+      ): Promise<CuotaConvenioStatus[]> {
+        return [{ cuotaConvenioId: cuotaConvenioIds[0], estado: 'PAGADA' }];
       }
     }
 
     const service = new TestPrefacturaService();
     const detalles = await service.findPrefacturaDetalleByCuotaConvenioId(5n);
     expect(detalles).toHaveLength(1);
-    expect(detalles[0].cuotaConvenioId).toBe(5n);
+    expect(detalles[0].prefacturaId).toBe(100n);
 
-    const prefactura = await service.findPrefacturaById(100n);
-    expect(prefactura.comprobanteId).toBe(100n);
+    const prefactura = await service.findPrefacturaWithDetails(100n);
+    expect(prefactura?.comprobanteId).toBe(100n);
 
-    const cuotas = await service.findManyCuotaConvenio({ estado: 'PAGADA' });
+    const cuotas = await service.findCuotasByIds([5n]);
     expect(cuotas[0].estado).toBe('PAGADA');
-  });
-
-  it('enforces that all three abstract methods must be implemented', () => {
-    // This test verifies the abstract class cannot be instantiated directly
-    expect(() => {
-      class IncompletePrefacturaService extends PrefacturaService {
-        async findPrefacturaDetalleByCuotaConvenioId(): Promise<any[]> {
-          return [];
-        }
-        // deliberately not implementing findPrefacturaById and findManyCuotaConvenio
-      }
-      // Should this compile? In TypeScript it will — abstract methods just
-      // throw at runtime if called. Verify the runtime error.
-      const incomplete = new IncompletePrefacturaService();
-      expect(() => incomplete.findPrefacturaById(1n)).toThrow();
-    }).not.toThrow(); // constructing the class is fine
   });
 });

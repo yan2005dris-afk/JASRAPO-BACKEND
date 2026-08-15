@@ -2,6 +2,8 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Banco, EstadoPago, TarjetaCredito } from 'src/generated/prisma/enums';
 import { PaymentDetailResponseDto } from './payment-detail-response.dto';
 import { SaldoFavorResponseDto } from './saldo-favor-response.dto';
+import type { PaymentEntity } from '../../domain/entities/payment.entity';
+import { DateUtil } from 'src/shared/utils/date.util';
 
 export class PaymentResponseDto {
   @ApiProperty({ example: '1', description: 'ID del pago' })
@@ -76,4 +78,37 @@ export class PaymentResponseDto {
 
   @ApiPropertyOptional({ type: [SaldoFavorResponseDto] })
   saldosFavor?: SaldoFavorResponseDto[];
+
+  static fromEntity(entity: PaymentEntity): PaymentResponseDto {
+    const dto = new PaymentResponseDto();
+    dto.pagoId = String(entity.pagoId);
+    dto.clienteId = String(entity.clienteId);
+    dto.cajaId = entity.cajaId ? String(entity.cajaId) : null;
+    dto.banco = entity.banco as Banco | null;
+    dto.tarjetaCredito = entity.tarjetaCredito as TarjetaCredito | null;
+    dto.comprobanteUrl = entity.comprobanteUrl ?? null;
+    dto.fechaPago = DateUtil.formatForFrontend(entity.fechaPago)!;
+    dto.montoTotalRecibido = Number(entity.montoTotalRecibido);
+    dto.numeroOperacion = entity.numeroOperacion ?? null;
+    dto.observaciones = entity.observaciones ?? null;
+    dto.referenciaBanco = entity.referenciaBanco ?? null;
+    dto.estadoPago = entity.estadoPago as EstadoPago;
+    dto.creadoPor = entity.creadoPor;
+    dto.anuladoPor = entity.anuladoPor ?? null;
+    dto.fechaAnulacion = DateUtil.formatForFrontend(entity.fechaAnulacion);
+    dto.motivoAnulacion = entity.motivoAnulacion ?? null;
+    dto.fechaCreacion = DateUtil.formatForFrontend(entity.createdAt)!;
+    dto.fechaActualizacion = DateUtil.formatForFrontend(entity.updatedAt);
+    dto.detallePago = entity.detallePago
+      ? PaymentDetailResponseDto.fromEntityList(entity.detallePago)
+      : undefined;
+    dto.saldosFavor = entity.saldosFavor
+      ? SaldoFavorResponseDto.fromEntityList(entity.saldosFavor)
+      : undefined;
+    return dto;
+  }
+
+  static fromEntityList(entities: PaymentEntity[]): PaymentResponseDto[] {
+    return entities.map(PaymentResponseDto.fromEntity);
+  }
 }

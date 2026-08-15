@@ -5,12 +5,11 @@ import {
 } from '@nestjs/common';
 import { Decimal } from 'decimal.js';
 import {
-  EstadoCuotaConvenio,
   EstadoPago,
   TipoDetallePago,
 } from '../../domain/enums';
-import type { TransactionClient } from '../../domain/types/transaction';
 import { PaymentRepository } from '../../domain/repositories/payment.repository';
+import type { PaymentEntity } from '../../domain/entities/payment.entity';
 
 @Injectable()
 export class AnnulPaymentUseCase {
@@ -19,14 +18,14 @@ export class AnnulPaymentUseCase {
   async execute(
     pagoId: bigint,
     dto: { motivoAnulacion: string; anuladoPor?: string },
-  ) {
+  ): Promise<PaymentEntity> {
     if (!dto.motivoAnulacion?.trim()) {
       throw new BadRequestException('El motivo de anulación es obligatorio');
     }
 
     await this.paymentRepository.executeTransaction(async (tx) => {
       // Re-read inside the transaction to validate state atomically
-      const pago = await this.paymentRepository.findUniquePago({ pagoId });
+      const pago = await this.paymentRepository.findById(pagoId, tx);
 
       if (!pago || pago.deletedAt) {
         throw new NotFoundException(`Pago con ID ${pagoId} no encontrado`);
@@ -36,9 +35,11 @@ export class AnnulPaymentUseCase {
         throw new BadRequestException('El pago ya se encuentra ANULADO');
       }
 
-      if (
-        ![EstadoPago.PENDIENTE, EstadoPago.REGISTRADO].includes(pago.estadoPago)
-      ) {
+      const validForAnnul: string[] = [
+        EstadoPago.PENDIENTE,
+        EstadoPago.REGISTRADO,
+      ];
+      if (!validForAnnul.includes(pago.estadoPago)) {
         throw new BadRequestException(
           `No se puede anular un pago en estado ${pago.estadoPago}`,
         );
@@ -57,8 +58,8 @@ export class AnnulPaymentUseCase {
         }
       }
 
-      await this.paymentRepository.updateManySaldoFavor(
-        { pagoId, deletedAt: null },
+      await this.paymentRepository.updateManySaldoFavorByPagoId(
+        pagoId,
         {
           disponibleParaAplicar: false,
           deletedAt: new Date(),
@@ -66,16 +67,16 @@ export class AnnulPaymentUseCase {
         tx,
       );
 
-      await this.paymentRepository.updateManyDetallePago(
-        { pagoId, deletedAt: null },
+      await this.paymentRepository.updateManyDetallePagoByPagoId(
+        pagoId,
         { deletedAt: new Date() },
         tx,
       );
 
-      const result = await this.paymentRepository.updateManyPagos(
-        { pagoId, estadoPago: pago.estadoPago, deletedAt: null },
+      const result = await this.paymentRepository.annulPagoTransaction(
+        pagoId,
+        pago.estadoPago,
         {
-          estadoPago: EstadoPago.ANULADO,
           motivoAnulacion: dto.motivoAnulacion,
           fechaAnulacion: new Date(),
           anuladoPor: dto.anuladoPor ?? 'SYSTEM',
@@ -91,21 +92,16 @@ export class AnnulPaymentUseCase {
       }
     });
 
-    return this.paymentRepository.findUniquePago({ pagoId });
+    return (await this.paymentRepository.findById(pagoId))!;
   }
 
   private async revertInstallment(
-    tx: TransactionClient,
+    tx: unknown,
     cuotaConvenioId: bigint,
     montoAbonado: any,
   ) {
-    const cuota = await this.paymentRepository.findUniqueCuotaConvenio(
-      { cuotaConvenioId },
-      {
-        cuotaConvenioId: true,
-        montoPagado: true,
-        saldoPendiente: true,
-      },
+    const cuota = await this.paymentRepository.findCuotaConvenioById(
+      cuotaConvenioId,
       tx,
     );
 
@@ -117,12 +113,12 @@ export class AnnulPaymentUseCase {
     );
     const saldoPendiente = new Decimal(cuota.saldoPendiente).plus(montoAbonado);
 
-    await this.paymentRepository.updateCuotaConvenio(
-      { cuotaConvenioId },
+    await this.paymentRepository.updateCuotaConvenioRevert(
+      cuotaConvenioId,
       {
         montoPagado: montoPagado.toNumber(),
         saldoPendiente: saldoPendiente.toNumber(),
-        estado: EstadoCuotaConvenio.PENDIENTE,
+        estado: 'PENDIENTE',
         pagoCompleto: false,
         fechaPago: montoPagado.equals(0) ? null : undefined,
       },

@@ -4,17 +4,15 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Decimal } from 'decimal.js';
-import type { Prisma } from 'src/generated/prisma/client';
 import {
-  EstadoCaja,
   EstadoPago,
-  EstadoCuotaConvenio,
   TipoDetallePago,
   TipoOrigenAbono,
 } from 'src/generated/prisma/enums';
 import { CreatePaymentDto } from '../../interfaces/dto/create-payment.dto';
 import { PaymentRepository } from '../../domain/repositories/payment.repository';
 import { EventosPendientesRepository } from 'src/shared/outbox/domain/repositories/eventos-pendientes.repository';
+import type { PaymentEntity } from '../../domain/entities/payment.entity';
 
 @Injectable()
 export class CreatePaymentUseCase {
@@ -23,7 +21,10 @@ export class CreatePaymentUseCase {
     private readonly eventosPendientesRepository: EventosPendientesRepository,
   ) {}
 
-  async execute(dto: CreatePaymentDto, creadoPor = 'SYSTEM') {
+  async execute(
+    dto: CreatePaymentDto,
+    creadoPor = 'SYSTEM',
+  ): Promise<PaymentEntity> {
     await this.validateHeader(dto);
     this.validateTotals(dto);
 
@@ -31,7 +32,7 @@ export class CreatePaymentUseCase {
       async (tx) => {
         await this.validateDetails(dto, tx);
 
-        const pago = await this.paymentRepository.createPago(
+        const pago = await this.paymentRepository.createPagoRecord(
           {
             clienteId: BigInt(dto.clienteId),
             cajaId: dto.cajaId ? BigInt(dto.cajaId) : null,
@@ -46,11 +47,10 @@ export class CreatePaymentUseCase {
             estadoPago: EstadoPago.PENDIENTE,
             creadoPor,
           },
-          { pagoId: true },
           tx,
         );
 
-        await this.paymentRepository.createManyDetallePago(
+        await this.paymentRepository.createDetallesPago(
           dto.detalle.map((detalle) => ({
             pagoId: pago.pagoId,
             comprobanteId: detalle.comprobanteId
@@ -81,7 +81,7 @@ export class CreatePaymentUseCase {
           }
 
           if (detalle.tipoPago === TipoDetallePago.SALDO_FAVOR) {
-            await this.paymentRepository.createSaldoFavor(
+            await this.paymentRepository.createSaldoFavorRecord(
               {
                 clienteId: BigInt(dto.clienteId),
                 pagoId: pago.pagoId,
@@ -89,7 +89,6 @@ export class CreatePaymentUseCase {
                 tipoOrigen: TipoOrigenAbono.PAGO_EXCESO,
                 disponibleParaAplicar: true,
               },
-              undefined,
               tx,
             );
           }
@@ -99,16 +98,15 @@ export class CreatePaymentUseCase {
       },
     );
 
-    return this.paymentRepository.findUniquePago({ pagoId });
+    return (await this.paymentRepository.findById(pagoId))!;
   }
 
   private async validateHeader(dto: CreatePaymentDto) {
-    const cliente = await this.paymentRepository.findUniqueCliente(
-      { clienteId: BigInt(dto.clienteId) },
-      { clienteId: true },
+    const exists = await this.paymentRepository.clientExists(
+      BigInt(dto.clienteId),
     );
 
-    if (!cliente) {
+    if (!exists) {
       throw new NotFoundException(
         `Cliente con ID ${dto.clienteId} no encontrado`,
       );
@@ -116,12 +114,11 @@ export class CreatePaymentUseCase {
 
     if (!dto.cajaId) return;
 
-    const caja = await this.paymentRepository.findFirstCajaSesion(
-      { cajaId: BigInt(dto.cajaId), estado: EstadoCaja.ABIERTA },
-      { cajaId: true },
+    const cajaAbierta = await this.paymentRepository.isCajaOpen(
+      BigInt(dto.cajaId),
     );
 
-    if (!caja) {
+    if (!cajaAbierta) {
       throw new BadRequestException(
         `La caja ${dto.cajaId} no existe o no se encuentra ABIERTA`,
       );
@@ -144,10 +141,7 @@ export class CreatePaymentUseCase {
     }
   }
 
-  private async validateDetails(
-    dto: CreatePaymentDto,
-    tx: Prisma.TransactionClient,
-  ) {
+  private async validateDetails(dto: CreatePaymentDto, tx: unknown) {
     const comprobanteAcumulado = new Map<string, Decimal>();
 
     for (const detalle of dto.detalle) {
@@ -158,16 +152,14 @@ export class CreatePaymentUseCase {
           );
         }
 
-        // R-B.1: Lock the comprobante row to prevent concurrent payments
-        // from racing on the same comprobante balance.
+        // Lock row to prevent concurrent race
         await this.paymentRepository.lockComprobante(
           BigInt(detalle.comprobanteId),
           tx,
         );
 
-        const comprobante = await this.paymentRepository.findUniqueComprobante(
-          { id: BigInt(detalle.comprobanteId) },
-          { id: true, importeTotal: true },
+        const comprobante = await this.paymentRepository.findComprobanteById(
+          BigInt(detalle.comprobanteId),
           tx,
         );
 
@@ -177,25 +169,11 @@ export class CreatePaymentUseCase {
           );
         }
 
-        const pagosAplicados = await this.paymentRepository.findManyDetallePago(
-          {
-            where: {
-              comprobanteId: BigInt(detalle.comprobanteId),
-              deletedAt: null,
-              pago: {
-                deletedAt: null,
-                estadoPago: { not: EstadoPago.ANULADO },
-              },
-            },
-            select: { montoAbonado: true },
-          },
-          tx,
-        );
-
-        const totalAplicado = pagosAplicados.reduce(
-          (acc, item) => acc.plus(item.montoAbonado),
-          new Decimal(0),
-        );
+        const totalAplicado =
+          await this.paymentRepository.findComprobanteAppliedSum(
+            BigInt(detalle.comprobanteId),
+            tx,
+          );
 
         const montoEnSolicitud =
           comprobanteAcumulado.get(detalle.comprobanteId) ?? new Decimal(0);
@@ -203,8 +181,8 @@ export class CreatePaymentUseCase {
         comprobanteAcumulado.set(detalle.comprobanteId, montoAcumulado);
 
         if (
-          comprobante.importeTotal &&
-          totalAplicado
+          comprobante.importeTotal !== null &&
+          new Decimal(totalAplicado)
             .plus(montoAcumulado)
             .greaterThan(comprobante.importeTotal)
         ) {
@@ -221,14 +199,8 @@ export class CreatePaymentUseCase {
           );
         }
 
-        const cuota = await this.paymentRepository.findUniqueCuotaConvenio(
-          { cuotaConvenioId: BigInt(detalle.cuotaConvenioId) },
-          {
-            cuotaConvenioId: true,
-            estado: true,
-            deletedAt: true,
-            saldoPendiente: true,
-          },
+        const cuota = await this.paymentRepository.findCuotaConvenioById(
+          BigInt(detalle.cuotaConvenioId),
           tx,
         );
 
@@ -238,7 +210,7 @@ export class CreatePaymentUseCase {
           );
         }
 
-        if (cuota.estado === EstadoCuotaConvenio.PAGADA) {
+        if (cuota.estado === 'PAGADA') {
           throw new BadRequestException(
             `La cuota ${detalle.cuotaConvenioId} ya está pagada`,
           );
@@ -252,19 +224,13 @@ export class CreatePaymentUseCase {
   }
 
   private async applyInstallmentPayment(
-    tx: Prisma.TransactionClient,
+    tx: unknown,
     cuotaConvenioId: string,
     montoAbonado: number,
     pagoId?: bigint,
   ) {
-    const cuota = await this.paymentRepository.findUniqueCuotaConvenio(
-      { cuotaConvenioId: BigInt(cuotaConvenioId) },
-      {
-        cuotaConvenioId: true,
-        convenioId: true,
-        montoPagado: true,
-        saldoPendiente: true,
-      },
+    const cuota = await this.paymentRepository.findCuotaConvenioById(
+      BigInt(cuotaConvenioId),
       tx,
     );
 
@@ -286,24 +252,18 @@ export class CreatePaymentUseCase {
     const nuevoSaldo = new Decimal(cuota.saldoPendiente).minus(montoAbonado);
     const estaPagada = nuevoSaldo.equals(0);
 
-    // Use updateMany with optimistic lock to prevent concurrency issues:
-    // if another payment already modified this cuota, the saldoPendiente
-    // won't match and the update will affect 0 rows.
-    const result = await (tx as any).cuotaConvenio.updateMany({
-      where: {
-        cuotaConvenioId: BigInt(cuotaConvenioId),
-        saldoPendiente: cuota.saldoPendiente,
-      },
-      data: {
+    const result = await this.paymentRepository.updateCuotaConvenioPayment(
+      BigInt(cuotaConvenioId),
+      cuota.saldoPendiente,
+      {
         montoPagado: nuevoMontoPagado.toNumber(),
         saldoPendiente: nuevoSaldo.toNumber(),
-        estado: estaPagada
-          ? EstadoCuotaConvenio.PAGADA
-          : EstadoCuotaConvenio.PENDIENTE,
+        estado: estaPagada ? 'PAGADA' : 'PENDIENTE',
         pagoCompleto: estaPagada,
         fechaPago: estaPagada ? new Date() : null,
       },
-    });
+      tx,
+    );
 
     if (result.count === 0) {
       throw new Error(
@@ -311,7 +271,6 @@ export class CreatePaymentUseCase {
       );
     }
 
-    // T-G2c: Emit cuota.pagada when the cuota becomes fully paid
     if (estaPagada && pagoId) {
       await this.eventosPendientesRepository.createPending(
         'cuota.pagada',
@@ -322,7 +281,7 @@ export class CreatePaymentUseCase {
         },
         'CUOTA_CONVENIO',
         cuotaConvenioId.toString(),
-        tx,
+        tx as any,
       );
     }
   }

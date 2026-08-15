@@ -3,9 +3,9 @@ import { EstadoPago } from '../../domain/enums';
 import { UpdatePaymentStateDto } from '../../interfaces/dto/update-payment-state.dto';
 import { PaymentRepository } from '../../domain/repositories/payment.repository';
 import { EventosPendientesRepository } from 'src/shared/outbox/domain/repositories/eventos-pendientes.repository';
-
 import { FindOnePaymentUseCase } from './find-one-payment.use-case';
 import { AnnulPaymentUseCase } from './annul-payment.use-case';
+import type { PaymentEntity } from '../../domain/entities/payment.entity';
 
 const VALID_TRANSITIONS: Record<EstadoPago, EstadoPago[]> = {
   [EstadoPago.PENDIENTE]: [EstadoPago.REGISTRADO, EstadoPago.ANULADO],
@@ -26,7 +26,7 @@ export class ValidatePaymentUseCase {
     pagoId: bigint,
     dto: UpdatePaymentStateDto,
     actualizadoPor = 'SYSTEM',
-  ) {
+  ): Promise<PaymentEntity> {
     const pago = await this.findOneUseCase.execute(pagoId);
 
     if (dto.estadoPago === EstadoPago.ANULADO) {
@@ -46,15 +46,12 @@ export class ValidatePaymentUseCase {
     }
 
     await this.paymentRepository.executeTransaction(async (tx) => {
-      await this.paymentRepository.updatePago(
-        { pagoId },
-        {
-          estadoPago: dto.estadoPago,
-          observaciones: dto.motivo
-            ? `${pago.observaciones ? pago.observaciones + ' | ' : ''}${dto.motivo}`
-            : undefined,
-        },
-        undefined,
+      await this.paymentRepository.updatePagoState(
+        pagoId,
+        dto.estadoPago,
+        dto.motivo
+          ? `${pago.observaciones ? pago.observaciones + ' | ' : ''}${dto.motivo}`
+          : undefined,
         tx,
       );
 
@@ -67,10 +64,10 @@ export class ValidatePaymentUseCase {
         },
         'PAGO',
         pagoId.toString(),
-        tx,
+        tx as any,
       );
     });
 
-    return this.paymentRepository.findUniquePago({ pagoId });
+    return (await this.paymentRepository.findById(pagoId))!;
   }
 }

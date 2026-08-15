@@ -1,27 +1,24 @@
-import type { Prisma } from 'src/generated/prisma/client';
+export interface PrefacturaCuotasInfo {
+  prefacturaId: bigint;
+  comprobanteId: bigint | null;
+  cuotaConvenioIds: bigint[];
+}
 
-/**
- * Service contract for querying prefactura and cuota-convenio data
- * within the payments bounded context.
- *
- * Extracted from PaymentRepository so CuotaPagadaHandler depends on a
- * domain service rather than the repository directly (cleaner SRP).
- */
+export interface CuotaConvenioStatus {
+  cuotaConvenioId: bigint;
+  estado: string;
+}
+
 export abstract class PrefacturaService {
   abstract findPrefacturaDetalleByCuotaConvenioId(
     cuotaConvenioId: bigint,
-    tx?: Prisma.TransactionClient,
-  ): Promise<any[]>;
+  ): Promise<{ prefacturaId: bigint }[]>;
 
-  abstract findPrefacturaById(
+  abstract findPrefacturaWithDetails(
     prefacturaId: bigint,
-    select?: any,
-    tx?: Prisma.TransactionClient,
-  ): Promise<any>;
+  ): Promise<PrefacturaCuotasInfo | null>;
 
-  abstract findManyCuotaConvenio(
-    where: Prisma.CuotaConvenioWhereInput,
-    select?: any,
-    tx?: Prisma.TransactionClient,
-  ): Promise<any[]>;
+  abstract findCuotasByIds(
+    cuotaConvenioIds: bigint[],
+  ): Promise<CuotaConvenioStatus[]>;
 }
