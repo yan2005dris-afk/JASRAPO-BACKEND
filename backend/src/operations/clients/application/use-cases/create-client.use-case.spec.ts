@@ -2,7 +2,10 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { CreateClientUseCase } from './create-client.use-case';
 import { ClientRepository } from '../../domain/repositories/client.repository';
-import { ConflictException, BadRequestException } from '@nestjs/common';
+import {
+  EntityAlreadyExistsException,
+  InvalidDomainOperationException,
+} from 'src/shared/domain/exceptions/domain.exception';
 import { TipoIdentificacionUtil } from 'src/shared/utils/tipo-identificacion.util';
 
 jest.mock('src/shared/utils/tipo-identificacion.util');
@@ -11,14 +14,23 @@ describe('CreateClientUseCase', () => {
   let useCase: CreateClientUseCase;
 
   const mockClientRepository = {
-    findFirst: jest.fn(),
-    findUnique: jest.fn(),
-    findMany: jest.fn(),
+    findById: jest.fn(),
+    findByIdentificacion: jest.fn(),
     create: jest.fn(),
-    update: jest.fn(),
-    updateMany: jest.fn(),
-    findCatalogoTipoIdentificacion: jest.fn(),
-    findManyCatalogoTipoIdentificacion: jest.fn(),
+    updateClient: jest.fn(),
+    softDelete: jest.fn(),
+    findTipoIdentificacionById: jest.fn(),
+    findActiveTipoIdentificaciones: jest.fn(),
+    reactivateOrCreateConsumidorFinal: jest.fn(),
+    paginateClientes: jest.fn(),
+  };
+
+  const baseDto = {
+    tipoIdentificacionId: 1,
+    identificacion: '0926715658',
+    nombres: 'John',
+    apellidos: 'Doe',
+    direccionDomicilio: 'Av. Siempre Viva 123',
   };
 
   beforeEach(async () => {
@@ -35,7 +47,7 @@ describe('CreateClientUseCase', () => {
     useCase = module.get<CreateClientUseCase>(CreateClientUseCase);
 
     (TipoIdentificacionUtil.validar as jest.Mock).mockReturnValue(true);
-    mockClientRepository.findCatalogoTipoIdentificacion.mockResolvedValue({
+    mockClientRepository.findTipoIdentificacionById.mockResolvedValue({
       id: 1,
       codigo: '05', // CÉDULA
     });
@@ -49,23 +61,15 @@ describe('CreateClientUseCase', () => {
     expect(useCase).toBeDefined();
   });
 
-  describe('execute', () => {
+  describe('execute - regular clients', () => {
     it('should create a regular client successfully', async () => {
-      const dto = {
-        tipoIdentificacionId: 1,
-        identificacion: '0926715658',
-        nombres: 'John',
-        apellidos: 'Doe',
-        direccionDomicilio: 'Av. Siempre Viva 123',
-      };
-
-      mockClientRepository.findUnique.mockResolvedValue(null);
+      mockClientRepository.findByIdentificacion.mockResolvedValue(null);
       mockClientRepository.create.mockResolvedValue({
-        ...dto,
+        ...baseDto,
         clienteId: BigInt(1),
       });
 
-      const result = await useCase.execute(dto);
+      const result = await useCase.execute(baseDto);
 
       expect(result).toBeDefined();
       expect(mockClientRepository.create).toHaveBeenCalledWith(
@@ -77,73 +81,165 @@ describe('CreateClientUseCase', () => {
       );
     });
 
-    it('should throw ConflictException if identification already exists', async () => {
-      const dto = {
-        tipoIdentificacionId: 1,
-        identificacion: '0926715658',
-        nombres: 'John',
-        apellidos: 'Doe',
-        direccionDomicilio: 'Av. Siempre Viva 123',
-      };
-
-      mockClientRepository.findUnique.mockResolvedValue({
+    it('should throw EntityAlreadyExistsException if identification already exists (active)', async () => {
+      mockClientRepository.findByIdentificacion.mockResolvedValue({
         clienteId: BigInt(1),
         deletedAt: null,
       });
 
-      await expect(useCase.execute(dto)).rejects.toThrow(ConflictException);
+      await expect(useCase.execute(baseDto)).rejects.toThrow(
+        EntityAlreadyExistsException,
+      );
     });
 
-    it('should reactivate a deleted client if identification matches', async () => {
-      const dto = {
-        tipoIdentificacionId: 1,
-        identificacion: '0926715658',
-        nombres: 'John',
-        apellidos: 'Doe',
-        direccionDomicilio: 'Av. Siempre Viva 123',
-      };
-
-      mockClientRepository.findUnique.mockResolvedValue({
+    it('should reactivate a soft-deleted client with the same identification', async () => {
+      mockClientRepository.findByIdentificacion.mockResolvedValue({
         clienteId: BigInt(1),
         identificacion: '0926715658',
         deletedAt: new Date(),
       });
-      mockClientRepository.update.mockResolvedValue({
-        ...dto,
+      mockClientRepository.updateClient.mockResolvedValue({
+        ...baseDto,
         clienteId: BigInt(1),
         deletedAt: null,
       });
 
-      const result = await useCase.execute(dto);
+      const result = await useCase.execute(baseDto);
 
-      expect(mockClientRepository.update).toHaveBeenCalled();
+      expect(mockClientRepository.updateClient).toHaveBeenCalledWith(
+        BigInt(1),
+        expect.objectContaining({ deletedAt: null }),
+      );
       expect(result).toBeDefined();
     });
 
-    it('should throw BadRequestException if identification is invalid', async () => {
+    it('should throw InvalidDomainOperationException if identification is invalid', async () => {
       (TipoIdentificacionUtil.validar as jest.Mock).mockReturnValue(false);
-      const dto = {
-        tipoIdentificacionId: 1,
-        identificacion: '123',
-        nombres: 'John',
-        apellidos: 'Doe',
-      };
+      const dto = { ...baseDto, identificacion: '123' };
 
-      await expect(useCase.execute(dto)).rejects.toThrow(BadRequestException);
+      await expect(useCase.execute(dto)).rejects.toThrow(
+        InvalidDomainOperationException,
+      );
     });
 
-    it('should throw BadRequestException if tipoIdentificacionId is invalid', async () => {
-      mockClientRepository.findCatalogoTipoIdentificacion.mockResolvedValue(
-        null,
+    it('should throw InvalidDomainOperationException if tipoIdentificacionId is invalid', async () => {
+      mockClientRepository.findTipoIdentificacionById.mockResolvedValue(null);
+      const dto = { ...baseDto, tipoIdentificacionId: 999 };
+
+      await expect(useCase.execute(dto)).rejects.toThrow(
+        InvalidDomainOperationException,
       );
+    });
+
+    it('should throw InvalidDomainOperationException if identification is missing', async () => {
+      const dto = { ...baseDto, identificacion: undefined };
+
+      await expect(useCase.execute(dto)).rejects.toThrow(
+        InvalidDomainOperationException,
+      );
+    });
+
+    it('should throw InvalidDomainOperationException if nombres and apellidos are missing', async () => {
+      const dto = { ...baseDto, nombres: undefined, apellidos: undefined };
+
+      await expect(useCase.execute(dto)).rejects.toThrow(
+        InvalidDomainOperationException,
+      );
+    });
+
+    it('should throw InvalidDomainOperationException if razonSocial is missing for RUC (codigo 04)', async () => {
+      mockClientRepository.findTipoIdentificacionById.mockResolvedValue({
+        id: 1,
+        codigo: '04', // RUC
+      });
       const dto = {
-        tipoIdentificacionId: 999,
-        identificacion: '0926715658',
-        nombres: 'John',
-        apellidos: 'Doe',
+        tipoIdentificacionId: 1,
+        identificacion: '0999999999001',
+        nombres: 'Empresa',
+        apellidos: 'S.A.',
+        direccionDomicilio: 'Av. Siempre Viva 123',
+        razonSocial: undefined,
       };
 
-      await expect(useCase.execute(dto)).rejects.toThrow(BadRequestException);
+      await expect(useCase.execute(dto)).rejects.toThrow(
+        InvalidDomainOperationException,
+      );
+    });
+
+    it('should throw InvalidDomainOperationException if direccionDomicilio is missing', async () => {
+      const dto = { ...baseDto, direccionDomicilio: undefined };
+
+      await expect(useCase.execute(dto)).rejects.toThrow(
+        InvalidDomainOperationException,
+      );
+    });
+
+    it('should pass contact data trimmed for email', async () => {
+      mockClientRepository.findByIdentificacion.mockResolvedValue(null);
+      mockClientRepository.create.mockResolvedValue({
+        ...baseDto,
+        clienteId: BigInt(1),
+      });
+
+      await useCase.execute({ ...baseDto, email: '  JUAN@EXAMPLE.COM ' });
+
+      expect(mockClientRepository.create).toHaveBeenCalledWith(
+        expect.objectContaining({ email: 'juan@example.com' }),
+      );
+    });
+  });
+
+  describe('execute - CONSUMIDOR_FINAL (tipoIdentificacionId 4)', () => {
+    const consumidorDto = {
+      tipoIdentificacionId: 4,
+      email: 'consumidor@example.com',
+      telefono: '0999999999',
+      direccionDomicilio: 'Av. Principal',
+    };
+
+    it('should delegate to reactivateOrCreateConsumidorFinal when no singleton exists', async () => {
+      mockClientRepository.reactivateOrCreateConsumidorFinal.mockResolvedValue({
+        clienteId: BigInt(9),
+        identificacion: '9999999999999',
+      });
+
+      const result = await useCase.execute(consumidorDto);
+
+      expect(
+        mockClientRepository.reactivateOrCreateConsumidorFinal,
+      ).toHaveBeenCalledWith({
+        email: 'consumidor@example.com',
+        telefono: '0999999999',
+        telefonoSecundario: undefined,
+        direccionDomicilio: 'Av. Principal',
+      });
+      expect(result.clienteId).toEqual(BigInt(9));
+    });
+
+    it('should trim and lowercase the email before delegation', async () => {
+      mockClientRepository.reactivateOrCreateConsumidorFinal.mockResolvedValue({
+        clienteId: BigInt(9),
+      });
+
+      await useCase.execute({
+        tipoIdentificacionId: 4,
+        email: '  X@Y.COM ',
+      });
+
+      expect(
+        mockClientRepository.reactivateOrCreateConsumidorFinal,
+      ).toHaveBeenCalledWith(expect.objectContaining({ email: 'x@y.com' }));
+    });
+
+    it('should return the entity (not a {message, data} wrapper)', async () => {
+      const entity = { clienteId: BigInt(9), nombres: 'CONSUMIDOR' };
+      mockClientRepository.reactivateOrCreateConsumidorFinal.mockResolvedValue(
+        entity as any,
+      );
+
+      const result = await useCase.execute(consumidorDto);
+
+      expect(result).toEqual(entity);
     });
   });
 });

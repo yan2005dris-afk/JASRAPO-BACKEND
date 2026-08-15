@@ -1,6 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { Prisma } from 'src/generated/prisma/client';
+import {
+  EntityAlreadyExistsException,
+  EntityNotFoundException,
+} from 'src/shared/domain/exceptions/domain.exception';
 import { ClientRepository } from '../../domain/repositories/client.repository';
 import {
   paginate,
@@ -10,7 +14,15 @@ import { PaginatedResult } from 'src/infrastructure/common/types/paginated-resul
 import { ClientEntity } from '../../domain/entities/client.entity';
 import { ClientMapper } from '../mappers/client.mapper';
 import type { CreateClientData } from '../../domain/types/create-client-data';
+import type { UpdateClientData } from '../../domain/types/update-client-data';
 import type { ClientFilters } from '../../domain/types/client-filters';
+import type { IResponseIdentificacion } from '../../domain/types/IResponseIdentificacion';
+import type { ConsumidorFinalData } from '../../domain/types/consumidor-final-data';
+
+/** CONSUMIDOR_FINAL id in `catalogo_tipos_identificacion` */
+const CONSUMIDOR_FINAL_TIPO_ID = 4;
+/** Fixed identification/naming for the CONSUMIDOR_FINAL singleton */
+const CONSUMIDOR_FINAL_IDENTIFICACION = '9999999999999';
 
 @Injectable()
 export class PrismaClientRepository implements ClientRepository {
@@ -21,96 +33,202 @@ export class PrismaClientRepository implements ClientRepository {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  async findFirst(where: Record<string, any>): Promise<ClientEntity | null> {
+  async findById(id: bigint): Promise<ClientEntity | null> {
     const record = await this.prisma.clientes.findFirst({
-      where: where as Prisma.ClientesWhereInput,
+      where: { clienteId: id, deletedAt: null },
       include: this.defaultInclude,
     });
     return ClientMapper.toDomain(record);
   }
 
-  async findUnique(where: Record<string, any>): Promise<any> {
-    return this.prisma.clientes.findUnique({
-      where: where as Prisma.ClientesWhereUniqueInput,
-    });
-  }
-
-  async findMany(params: {
-    where?: Record<string, any>;
-    orderBy?: Record<string, any>;
-  }): Promise<ClientEntity[]> {
-    const records = await this.prisma.clientes.findMany({
-      where: (params.where ?? {}) as Prisma.ClientesWhereInput,
-      orderBy: params.orderBy as Prisma.ClientesOrderByWithRelationInput,
+  async findByIdentificacion(
+    identificacion: string,
+  ): Promise<ClientEntity | null> {
+    const record = await this.prisma.clientes.findUnique({
+      where: { identificacion },
       include: this.defaultInclude,
     });
-    return ClientMapper.toDomainList(records);
+    return ClientMapper.toDomain(record);
   }
 
   async create(data: CreateClientData): Promise<ClientEntity> {
-    const record = await this.prisma.clientes.create({
-      data: {
-        identificacion: data.identificacion,
-        tipoIdentificacion: {
-          connect: { id: data.tipoIdentificacionId },
+    try {
+      const record = await this.prisma.clientes.create({
+        data: {
+          identificacion: data.identificacion,
+          tipoIdentificacion: {
+            connect: { id: data.tipoIdentificacionId },
+          },
+          nombres: data.nombres,
+          apellidos: data.apellidos,
+          razonSocial: data.razonSocial,
+          email: data.email,
+          telefono: data.telefono,
+          telefonoSecundario: data.telefonoSecundario,
+          direccionDomicilio: data.direccionDomicilio,
+          aplicaTerceraEdad: data.aplicaTerceraEdad,
+          aplicaDiscapacidad: data.aplicaDiscapacidad,
         },
-        nombres: data.nombres,
-        apellidos: data.apellidos,
-        razonSocial: data.razonSocial,
-        email: data.email,
-        telefono: data.telefono,
-        telefonoSecundario: data.telefonoSecundario,
-        direccionDomicilio: data.direccionDomicilio,
-        aplicaTerceraEdad: data.aplicaTerceraEdad,
-        aplicaDiscapacidad: data.aplicaDiscapacidad,
-      },
-      include: this.defaultInclude,
-    });
-    return ClientMapper.toDomain(record)!;
+        include: this.defaultInclude,
+      });
+      return ClientMapper.toDomain(record)!;
+    } catch (error) {
+      if (this.isUniqueViolation(error)) {
+        throw new EntityAlreadyExistsException(
+          'Cliente',
+          'identificacion',
+          data.identificacion,
+        );
+      }
+      throw error;
+    }
   }
 
-  async update(
-    where: Record<string, any>,
-    data: Record<string, any>,
-  ): Promise<any> {
-    return this.prisma.clientes.update({
-      where: where as Prisma.ClientesWhereUniqueInput,
-      data: data as Prisma.ClientesUpdateInput,
-      include: this.defaultInclude,
-    });
+  async updateClient(
+    id: bigint,
+    data: UpdateClientData,
+  ): Promise<ClientEntity> {
+    const updateData: Prisma.ClientesUpdateInput = {};
+
+    if (data.tipoIdentificacionId !== undefined) {
+      updateData.tipoIdentificacion = {
+        connect: { id: data.tipoIdentificacionId },
+      };
+    }
+    if (data.identificacion !== undefined)
+      updateData.identificacion = data.identificacion;
+    if (data.nombres !== undefined) updateData.nombres = data.nombres;
+    if (data.apellidos !== undefined) updateData.apellidos = data.apellidos;
+    if (data.razonSocial !== undefined)
+      updateData.razonSocial = data.razonSocial;
+    if (data.email !== undefined) updateData.email = data.email;
+    if (data.telefono !== undefined) updateData.telefono = data.telefono;
+    if (data.telefonoSecundario !== undefined)
+      updateData.telefonoSecundario = data.telefonoSecundario;
+    if (data.direccionDomicilio !== undefined)
+      updateData.direccionDomicilio = data.direccionDomicilio;
+    if (data.aplicaTerceraEdad !== undefined)
+      updateData.aplicaTerceraEdad = data.aplicaTerceraEdad;
+    if (data.aplicaDiscapacidad !== undefined)
+      updateData.aplicaDiscapacidad = data.aplicaDiscapacidad;
+    if (data.deletedAt !== undefined) updateData.deletedAt = data.deletedAt;
+
+    try {
+      const record = await this.prisma.clientes.update({
+        where: { clienteId: id },
+        data: updateData,
+        include: this.defaultInclude,
+      });
+      return ClientMapper.toDomain(record)!;
+    } catch (error) {
+      if (this.isRecordNotFound(error)) {
+        throw new EntityNotFoundException('Cliente', id);
+      }
+      throw error;
+    }
   }
 
-  async updateMany(
-    where: Record<string, any>,
-    data: Record<string, any>,
-  ): Promise<any> {
-    return this.prisma.clientes.updateMany({
-      where: where as Prisma.ClientesWhereInput,
-      data: data as Prisma.ClientesUpdateManyMutationInput,
-    });
+  async softDelete(id: bigint): Promise<ClientEntity> {
+    try {
+      const record = await this.prisma.clientes.update({
+        where: { clienteId: id },
+        data: { deletedAt: new Date() },
+        include: this.defaultInclude,
+      });
+      return ClientMapper.toDomain(record)!;
+    } catch (error) {
+      if (this.isRecordNotFound(error)) {
+        throw new EntityNotFoundException('Cliente', id);
+      }
+      throw error;
+    }
   }
 
-  async findCatalogoTipoIdentificacion(where: { id: number }): Promise<{
-    id: number;
-    codigo: string;
-    descripcion: string;
-    activo: boolean;
-  } | null> {
+  async findTipoIdentificacionById(
+    id: number,
+  ): Promise<IResponseIdentificacion | null> {
     return this.prisma.catalogoTiposIdentificacion.findUnique({
-      where: { id: where.id },
+      where: { id },
       select: { id: true, codigo: true, descripcion: true, activo: true },
     });
   }
 
-  async findManyCatalogoTipoIdentificacion(params: {
-    where?: Record<string, any>;
-    orderBy?: Record<string, any>;
-  }): Promise<any[]> {
+  async findActiveTipoIdentificaciones(): Promise<IResponseIdentificacion[]> {
     return this.prisma.catalogoTiposIdentificacion.findMany({
-      where: params.where as Prisma.CatalogoTiposIdentificacionWhereInput,
-      orderBy:
-        params.orderBy as Prisma.CatalogoTiposIdentificacionOrderByWithRelationInput,
+      where: { activo: true },
+      orderBy: { id: 'asc' },
+      select: { id: true, codigo: true, descripcion: true, activo: true },
     });
+  }
+
+  /**
+   * Enforce the single-active CONSUMIDOR_FINAL invariant atomically:
+   * create the singleton when none exists, reactivate a soft-deleted principal
+   * (refreshing its contact data), and soft-delete any extra records.
+   */
+  async reactivateOrCreateConsumidorFinal(
+    data: ConsumidorFinalData,
+  ): Promise<ClientEntity> {
+    const record = await this.prisma.$transaction(async (tx) => {
+      const consumidores = await tx.clientes.findMany({
+        where: { tipoIdentificacionId: CONSUMIDOR_FINAL_TIPO_ID },
+        orderBy: { createdAt: 'asc' },
+      });
+
+      const principal = consumidores[0];
+
+      if (principal) {
+        if (consumidores.length > 1) {
+          await tx.clientes.updateMany({
+            where: {
+              clienteId: {
+                in: consumidores.slice(1).map((c) => c.clienteId),
+              },
+            },
+            data: { deletedAt: new Date() },
+          });
+        }
+
+        return tx.clientes.update({
+          where: { clienteId: principal.clienteId },
+          data: {
+            identificacion: CONSUMIDOR_FINAL_IDENTIFICACION,
+            nombres: 'CONSUMIDOR',
+            apellidos: 'FINAL',
+            razonSocial: 'CONSUMIDOR FINAL',
+            email: data.email,
+            telefono: data.telefono,
+            telefonoSecundario: data.telefonoSecundario,
+            direccionDomicilio: data.direccionDomicilio,
+            aplicaTerceraEdad: false,
+            aplicaDiscapacidad: false,
+            deletedAt: null,
+          },
+          include: this.defaultInclude,
+        });
+      }
+
+      return tx.clientes.create({
+        data: {
+          identificacion: CONSUMIDOR_FINAL_IDENTIFICACION,
+          tipoIdentificacion: {
+            connect: { id: CONSUMIDOR_FINAL_TIPO_ID },
+          },
+          nombres: 'CONSUMIDOR',
+          apellidos: 'FINAL',
+          razonSocial: 'CONSUMIDOR FINAL',
+          email: data.email,
+          telefono: data.telefono,
+          telefonoSecundario: data.telefonoSecundario,
+          direccionDomicilio: data.direccionDomicilio,
+          aplicaTerceraEdad: false,
+          aplicaDiscapacidad: false,
+        },
+        include: this.defaultInclude,
+      });
+    });
+
+    return ClientMapper.toDomain(record)!;
   }
 
   async paginateClientes(
@@ -136,6 +254,26 @@ export class PrismaClientRepository implements ClientRepository {
       data: ClientMapper.toDomainList(result.data),
       meta: result.meta,
     };
+  }
+
+  /** Detects Prisma unique-constraint violations (e.g. duplicate identification). */
+  private isUniqueViolation(
+    error: unknown,
+  ): error is Prisma.PrismaClientKnownRequestError {
+    return (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === 'P2002'
+    );
+  }
+
+  /** Detects Prisma P2025 (record not found). */
+  private isRecordNotFound(
+    error: unknown,
+  ): error is Prisma.PrismaClientKnownRequestError {
+    return (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === 'P2025'
+    );
   }
 
   /**

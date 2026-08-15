@@ -2,34 +2,41 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { UpdateClientUseCase } from './update-client.use-case';
 import { ClientRepository } from '../../domain/repositories/client.repository';
-import {
-  NotFoundException,
-  BadRequestException,
-  ConflictException,
-} from '@nestjs/common';
 import { TipoIdentificacionUtil } from 'src/shared/utils/tipo-identificacion.util';
+import {
+  EntityAlreadyExistsException,
+  EntityNotFoundException,
+  InvalidDomainOperationException,
+} from 'src/shared/domain/exceptions/domain.exception';
+
+jest.mock('src/shared/utils/tipo-identificacion.util');
 
 describe('UpdateClientUseCase', () => {
   let useCase: UpdateClientUseCase;
 
   const mockClientRepository = {
-    findFirst: jest.fn(),
-    findUnique: jest.fn(),
-    findMany: jest.fn(),
+    findById: jest.fn(),
+    findByIdentificacion: jest.fn(),
     create: jest.fn(),
-    update: jest.fn(),
-    updateMany: jest.fn(),
-    findCatalogoTipoIdentificacion: jest.fn(),
-    findManyCatalogoTipoIdentificacion: jest.fn(),
+    updateClient: jest.fn(),
+    softDelete: jest.fn(),
+    findTipoIdentificacionById: jest.fn(),
+    findActiveTipoIdentificaciones: jest.fn(),
+    reactivateOrCreateConsumidorFinal: jest.fn(),
+    paginateClientes: jest.fn(),
   };
 
   const mockCliente = {
     clienteId: BigInt(1),
     identificacion: '0926715658',
-    tipoIdentificacionId: 1,
     nombres: 'JOHN',
     apellidos: 'DOE',
     deletedAt: null,
+    tipoIdentificacion: {
+      id: 1,
+      codigo: '05',
+      descripcion: 'CÉDULA',
+    },
   };
 
   beforeEach(async () => {
@@ -44,8 +51,9 @@ describe('UpdateClientUseCase', () => {
     }).compile();
 
     useCase = module.get<UpdateClientUseCase>(UpdateClientUseCase);
-    jest.spyOn(TipoIdentificacionUtil, 'validar').mockReturnValue(true);
-    mockClientRepository.findCatalogoTipoIdentificacion.mockResolvedValue({
+    (TipoIdentificacionUtil.validar as jest.Mock).mockReturnValue(true);
+    mockClientRepository.findById.mockResolvedValue(mockCliente);
+    mockClientRepository.findTipoIdentificacionById.mockResolvedValue({
       id: 1,
       codigo: '05', // CÉDULA
     });
@@ -61,15 +69,7 @@ describe('UpdateClientUseCase', () => {
 
   describe('execute', () => {
     it('should update a client successfully', async () => {
-      mockClientRepository.findFirst.mockResolvedValue({
-        ...mockCliente,
-        tipoIdentificacion: {
-          id: 1,
-          codigo: '05',
-          descripcion: 'CÉDULA',
-        },
-      });
-      mockClientRepository.update.mockResolvedValue({
+      mockClientRepository.updateClient.mockResolvedValue({
         ...mockCliente,
         nombres: 'CARLOS',
       });
@@ -77,59 +77,106 @@ describe('UpdateClientUseCase', () => {
       const result = await useCase.execute(1n, { nombres: 'Carlos' });
 
       expect(result).toBeDefined();
-      expect(mockClientRepository.update).toHaveBeenCalledWith(
-        { clienteId: 1n },
+      expect(mockClientRepository.updateClient).toHaveBeenCalledWith(
+        1n,
         expect.objectContaining({ nombres: 'CARLOS' }),
       );
     });
 
-    it('should throw NotFoundException if client does not exist', async () => {
-      mockClientRepository.findFirst.mockResolvedValue(null);
+    it('should translate the tipoIdentificacion connect inside the repository data', async () => {
+      mockClientRepository.updateClient.mockResolvedValue(mockCliente);
+
+      await useCase.execute(1n, { tipoIdentificacionId: 2 });
+
+      expect(mockClientRepository.updateClient).toHaveBeenCalledWith(
+        1n,
+        expect.objectContaining({ tipoIdentificacionId: 2 }),
+      );
+      expect(
+        mockClientRepository.findTipoIdentificacionById,
+      ).toHaveBeenCalledWith(2);
+    });
+
+    it('should throw EntityNotFoundException if client does not exist', async () => {
+      mockClientRepository.findById.mockResolvedValue(null);
 
       await expect(useCase.execute(1n, { nombres: 'Carlos' })).rejects.toThrow(
-        NotFoundException,
+        EntityNotFoundException,
       );
     });
 
-    it('should throw BadRequestException if new identification is invalid', async () => {
-      mockClientRepository.findFirst.mockResolvedValue({
-        ...mockCliente,
-        tipoIdentificacion: { id: 1, codigo: '05' },
-      });
-      jest.spyOn(TipoIdentificacionUtil, 'validar').mockReturnValue(false);
+    it('should throw InvalidDomainOperationException if new identification is invalid', async () => {
+      (TipoIdentificacionUtil.validar as jest.Mock).mockReturnValue(false);
 
       await expect(
         useCase.execute(1n, { identificacion: '123' }),
-      ).rejects.toThrow(BadRequestException);
+      ).rejects.toThrow(InvalidDomainOperationException);
     });
 
-    it('should throw ConflictException if new identification already exists for another client', async () => {
-      mockClientRepository.findFirst.mockResolvedValue({
-        ...mockCliente,
-        tipoIdentificacion: { id: 1, codigo: '05' },
-      });
-      mockClientRepository.findUnique.mockResolvedValue({
+    it('should throw EntityAlreadyExistsException if new identification already exists for another client', async () => {
+      mockClientRepository.findByIdentificacion.mockResolvedValue({
         clienteId: BigInt(2),
         identificacion: '0926715641',
       });
 
       await expect(
         useCase.execute(1n, { identificacion: '0926715641' }),
-      ).rejects.toThrow(ConflictException);
+      ).rejects.toThrow(EntityAlreadyExistsException);
     });
 
-    it('should throw BadRequestException if tipoIdentificacionId is invalid', async () => {
-      mockClientRepository.findFirst.mockResolvedValue({
-        ...mockCliente,
-        tipoIdentificacion: { id: 1, codigo: '05' },
-      });
-      mockClientRepository.findCatalogoTipoIdentificacion.mockResolvedValue(
-        null,
-      );
+    it('should throw InvalidDomainOperationException if tipoIdentificacionId is invalid', async () => {
+      mockClientRepository.findTipoIdentificacionById.mockResolvedValue(null);
 
       await expect(
         useCase.execute(1n, { tipoIdentificacionId: 999 }),
-      ).rejects.toThrow(BadRequestException);
+      ).rejects.toThrow(InvalidDomainOperationException);
+    });
+
+    it('should throw InvalidDomainOperationException if nombres and apellidos are missing', async () => {
+      mockClientRepository.updateClient.mockResolvedValue(mockCliente);
+
+      await expect(
+        useCase.execute(1n, { nombres: '   ', apellidos: '' }),
+      ).rejects.toThrow(InvalidDomainOperationException);
+    });
+
+    it('should allow missing nombres/apellidos for CONSUMIDOR_FINAL (codigo 07)', async () => {
+      mockClientRepository.findById.mockResolvedValue({
+        ...mockCliente,
+        tipoIdentificacion: {
+          id: 4,
+          codigo: '07',
+          descripcion: 'CONSUMIDOR FINAL',
+        },
+      });
+      mockClientRepository.findTipoIdentificacionById.mockResolvedValue({
+        id: 4,
+        codigo: '07',
+      });
+      mockClientRepository.updateClient.mockResolvedValue(mockCliente);
+
+      const result = await useCase.execute(1n, { nombres: undefined });
+
+      expect(result).toBeDefined();
+      expect(mockClientRepository.updateClient).toHaveBeenCalled();
+    });
+
+    it('should not treat own identification as duplicate', async () => {
+      mockClientRepository.findByIdentificacion.mockResolvedValue({
+        clienteId: BigInt(1),
+        identificacion: '0926715658',
+      });
+      mockClientRepository.updateClient.mockResolvedValue(mockCliente);
+
+      const result = await useCase.execute(1n, {
+        identificacion: '0926715658',
+      });
+
+      expect(result).toBeDefined();
+      expect(mockClientRepository.updateClient).toHaveBeenCalledWith(
+        1n,
+        expect.objectContaining({ identificacion: '0926715658' }),
+      );
     });
   });
 });

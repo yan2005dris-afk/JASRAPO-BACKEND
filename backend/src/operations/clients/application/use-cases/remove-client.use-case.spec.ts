@@ -2,20 +2,21 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { RemoveClientUseCase } from './remove-client.use-case';
 import { ClientRepository } from '../../domain/repositories/client.repository';
-import { NotFoundException } from '@nestjs/common';
+import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 
 describe('RemoveClientUseCase', () => {
   let useCase: RemoveClientUseCase;
 
   const mockClientRepository = {
-    findFirst: jest.fn(),
-    findUnique: jest.fn(),
-    findMany: jest.fn(),
+    findById: jest.fn(),
+    findByIdentificacion: jest.fn(),
     create: jest.fn(),
-    update: jest.fn(),
-    updateMany: jest.fn(),
-    findCatalogoTipoIdentificacion: jest.fn(),
-    findManyCatalogoTipoIdentificacion: jest.fn(),
+    updateClient: jest.fn(),
+    softDelete: jest.fn(),
+    findTipoIdentificacionById: jest.fn(),
+    findActiveTipoIdentificaciones: jest.fn(),
+    reactivateOrCreateConsumidorFinal: jest.fn(),
+    paginateClientes: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -43,25 +44,34 @@ describe('RemoveClientUseCase', () => {
   describe('execute', () => {
     it('should soft delete a client if found', async () => {
       const mockCliente = { clienteId: BigInt(1), deletedAt: null };
-      mockClientRepository.findFirst.mockResolvedValue(mockCliente);
-      mockClientRepository.update.mockResolvedValue({
+      mockClientRepository.findById.mockResolvedValue(mockCliente);
+      mockClientRepository.softDelete.mockResolvedValue({
         ...mockCliente,
         deletedAt: new Date(),
       });
 
       const result = await useCase.execute(1n);
 
+      expect(mockClientRepository.findById).toHaveBeenCalledWith(1n);
+      expect(mockClientRepository.softDelete).toHaveBeenCalledWith(1n);
       expect(result).toBeDefined();
-      expect(mockClientRepository.update).toHaveBeenCalledWith(
-        { clienteId: 1n },
-        { deletedAt: expect.any(Date) },
+    });
+
+    it('should throw EntityNotFoundException if client not found', async () => {
+      mockClientRepository.findById.mockResolvedValue(null);
+
+      await expect(useCase.execute(1n)).rejects.toThrow(
+        EntityNotFoundException,
       );
     });
 
-    it('should throw NotFoundException if client not found', async () => {
-      mockClientRepository.findFirst.mockResolvedValue(null);
+    it('should not call softDelete when client does not exist', async () => {
+      mockClientRepository.findById.mockResolvedValue(null);
 
-      await expect(useCase.execute(1n)).rejects.toThrow(NotFoundException);
+      await expect(useCase.execute(1n)).rejects.toThrow(
+        EntityNotFoundException,
+      );
+      expect(mockClientRepository.softDelete).not.toHaveBeenCalled();
     });
   });
 });

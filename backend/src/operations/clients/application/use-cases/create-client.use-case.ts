@@ -1,27 +1,32 @@
-import {
-  BadRequestException,
-  ConflictException,
-  Injectable,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ClientRepository } from '../../domain/repositories/client.repository';
 import { CreateClientDto } from '../../interfaces/dto/create-client.dto';
 import { TipoIdentificacionUtil } from 'src/shared/utils/tipo-identificacion.util';
 import type { CreateClientData } from '../../domain/types/create-client-data';
+import { InvalidDomainOperationException } from 'src/shared/domain/exceptions/domain.exception';
+import { EntityAlreadyExistsException } from 'src/shared/domain/exceptions/domain.exception';
+import type { ClientEntity } from '../../domain/entities/client.entity';
+
+/** ID of CONSUMIDOR_FINAL in `catalogo_tipos_identificacion` */
+const CONSUMIDOR_FINAL_TIPO_ID = 4;
 
 @Injectable()
 export class CreateClientUseCase {
   constructor(private readonly clientRepository: ClientRepository) {}
 
-  async execute(dto: CreateClientDto) {
-    const tipoId = dto.tipoIdentificacionId;
-
-    // CONSUMIDOR_FINAL has code '07' via catalog, id 4
-    if (dto.tipoIdentificacionId === 4) {
-      return this.handleConsumidorFinal(dto);
+  async execute(dto: CreateClientDto): Promise<ClientEntity> {
+    // CONSUMIDOR_FINAL: the singleton invariant is enforced by the repository
+    if (dto.tipoIdentificacionId === CONSUMIDOR_FINAL_TIPO_ID) {
+      return this.clientRepository.reactivateOrCreateConsumidorFinal({
+        email: dto.email?.trim().toLowerCase(),
+        telefono: dto.telefono,
+        telefonoSecundario: dto.telefonoSecundario,
+        direccionDomicilio: dto.direccionDomicilio,
+      });
     }
 
     if (!dto.identificacion) {
-      throw new BadRequestException(
+      throw new InvalidDomainOperationException(
         'La identificación es requerida para este tipo de cliente',
       );
     }
@@ -29,12 +34,14 @@ export class CreateClientUseCase {
     const identificacion = dto.identificacion.trim();
 
     // Get the catalogo to validate identification type
-    const catalogo = await this.clientRepository.findCatalogoTipoIdentificacion(
-      { id: tipoId },
+    const catalogo = await this.clientRepository.findTipoIdentificacionById(
+      dto.tipoIdentificacionId,
     );
 
     if (!catalogo) {
-      throw new BadRequestException('Tipo de identificación inválido');
+      throw new InvalidDomainOperationException(
+        'Tipo de identificación inválido',
+      );
     }
 
     this.validarIdentificacion(catalogo.codigo, identificacion);
@@ -47,96 +54,38 @@ export class CreateClientUseCase {
       dto.direccionDomicilio,
     );
 
-    const existente = await this.clientRepository.findUnique({
-      identificacion,
-    });
+    const existente =
+      await this.clientRepository.findByIdentificacion(identificacion);
 
     const data = this.buildCreateData(dto, identificacion);
 
     if (existente) {
       if (existente.deletedAt !== null) {
-        return this.clientRepository.update(
-          { clienteId: existente.clienteId },
-          { ...data, deletedAt: null },
-        );
-      }
-      throw new ConflictException('La identificación ya está registrada');
-    }
-
-    try {
-      return await this.clientRepository.create(data);
-    } catch (error: any) {
-      if (error.code === 'P2002')
-        throw new ConflictException('La identificación ya está registrada');
-      throw error;
-    }
-  }
-
-  private async handleConsumidorFinal(dto: CreateClientDto) {
-    const consumidores = await this.clientRepository.findMany({
-      where: { tipoIdentificacionId: 4 }, // CONSUMIDOR_FINAL
-      orderBy: { createdAt: 'asc' },
-    });
-
-    const principal = consumidores[0];
-
-    if (principal) {
-      if (consumidores.length > 1) {
-        const duplicados = consumidores.slice(1);
-        await this.clientRepository.updateMany(
-          { clienteId: { in: duplicados.map((c) => c.clienteId) } },
-          { deletedAt: new Date() },
-        );
-      }
-
-      const updated = await this.clientRepository.update(
-        { clienteId: principal.clienteId },
-        {
-          identificacion: '9999999999999',
-          nombres: 'CONSUMIDOR',
-          apellidos: 'FINAL',
-          razonSocial: 'CONSUMIDOR FINAL',
-          email: dto.email?.trim().toLowerCase(),
-          telefono: dto.telefono,
-          telefonoSecundario: dto.telefonoSecundario,
-          direccionDomicilio: dto.direccionDomicilio,
-          aplicaTerceraEdad: false,
-          aplicaDiscapacidad: false,
+        return this.clientRepository.updateClient(existente.clienteId, {
+          ...data,
           deletedAt: null,
-        },
+        });
+      }
+      throw new EntityAlreadyExistsException(
+        'Cliente',
+        'identificacion',
+        identificacion,
       );
-
-      return {
-        message: 'Consumidor Final reactivado correctamente.',
-        data: updated,
-      };
     }
 
-    const created = await this.clientRepository.create({
-      identificacion: '9999999999999',
-      tipoIdentificacionId: 4, // CONSUMIDOR_FINAL
-      nombres: 'CONSUMIDOR',
-      apellidos: 'FINAL',
-      razonSocial: 'CONSUMIDOR FINAL',
-      email: dto.email?.trim().toLowerCase(),
-      telefono: dto.telefono,
-      telefonoSecundario: dto.telefonoSecundario,
-      direccionDomicilio: dto.direccionDomicilio,
-      aplicaTerceraEdad: false,
-      aplicaDiscapacidad: false,
-    });
-
-    return { message: 'Consumidor Final creado correctamente.', data: created };
+    return this.clientRepository.create(data);
   }
 
   private validarIdentificacion(codigo: string, identificacion: string) {
     if (!codigo)
-      throw new BadRequestException('Tipo de identificación requerido');
+      throw new InvalidDomainOperationException(
+        'Tipo de identificación requerido',
+      );
     if (
       codigo !== '07' && // CONSUMIDOR_FINAL
       !TipoIdentificacionUtil.validar(codigo, identificacion)
     ) {
-      throw new BadRequestException('Identificación inválida');
+      throw new InvalidDomainOperationException('Identificación inválida');
     }
   }
 
@@ -151,16 +100,20 @@ export class CreateClientUseCase {
     if (codigo === '07') return; // CONSUMIDOR_FINAL
 
     if (!nombres || !apellidos) {
-      throw new BadRequestException('Nombres y apellidos son requeridos');
+      throw new InvalidDomainOperationException(
+        'Nombres y apellidos son requeridos',
+      );
     }
 
     if (codigo === '04' && !razonSocial) {
       // RUC
-      throw new BadRequestException('La razón social es obligatoria para RUC');
+      throw new InvalidDomainOperationException(
+        'La razón social es obligatoria para RUC',
+      );
     }
 
     if (!direccionDomicilio) {
-      throw new BadRequestException(
+      throw new InvalidDomainOperationException(
         'La dirección de domicilio es obligatoria para facturación',
       );
     }

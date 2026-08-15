@@ -2,41 +2,47 @@ import type { PaginateOptions } from 'src/infrastructure/common/utils/pagination
 import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
 import type { ClientEntity } from '../entities/client.entity';
 import type { CreateClientData } from '../types/create-client-data';
+import type { UpdateClientData } from '../types/update-client-data';
 import type { ClientFilters } from '../types/client-filters';
+import type { IResponseIdentificacion } from '../types/IResponseIdentificacion';
+import type { ConsumidorFinalData } from '../types/consumidor-final-data';
 
+/**
+ * NOTE (residual): `PaginateOptions`/`PaginatedResult` come from
+ * `src/infrastructure/common/...`, making the domain depend on infrastructure.
+ * This is a cross-cutting issue shared with other modules; moving those types
+ * to the shared domain is out of scope for this refactor and kept as-is.
+ */
 export abstract class ClientRepository {
-  abstract findFirst(where: Record<string, any>): Promise<ClientEntity | null>;
+  abstract findById(id: bigint): Promise<ClientEntity | null>;
 
-  abstract findUnique(where: Record<string, any>): Promise<any>;
-
-  abstract findMany(params: {
-    where?: Record<string, any>;
-    orderBy?: Record<string, any>;
-  }): Promise<ClientEntity[]>;
+  abstract findByIdentificacion(
+    identificacion: string,
+  ): Promise<ClientEntity | null>;
 
   abstract create(data: CreateClientData): Promise<ClientEntity>;
 
-  abstract update(
-    where: Record<string, any>,
-    data: Record<string, any>,
-  ): Promise<any>;
+  abstract updateClient(
+    id: bigint,
+    data: UpdateClientData,
+  ): Promise<ClientEntity>;
 
-  abstract updateMany(
-    where: Record<string, any>,
-    data: Record<string, any>,
-  ): Promise<any>;
+  abstract softDelete(id: bigint): Promise<ClientEntity>;
 
-  abstract findCatalogoTipoIdentificacion(where: { id: number }): Promise<{
-    id: number;
-    codigo: string;
-    descripcion: string;
-    activo: boolean;
-  } | null>;
+  abstract findTipoIdentificacionById(
+    id: number,
+  ): Promise<IResponseIdentificacion | null>;
 
-  abstract findManyCatalogoTipoIdentificacion(params: {
-    where?: Record<string, any>;
-    orderBy?: Record<string, any>;
-  }): Promise<any[]>;
+  abstract findActiveTipoIdentificaciones(): Promise<IResponseIdentificacion[]>;
+
+  /**
+   * Enforce the single-active CONSUMIDOR_FINAL invariant atomically: create the
+   * singleton when none exists, reactivate a soft-deleted principal, and
+   * soft-delete any extra records.
+   */
+  abstract reactivateOrCreateConsumidorFinal(
+    data: ConsumidorFinalData,
+  ): Promise<ClientEntity>;
 
   abstract paginateClientes(
     args: {

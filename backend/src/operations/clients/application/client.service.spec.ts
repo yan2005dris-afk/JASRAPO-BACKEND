@@ -15,13 +15,14 @@ describe('ClientService', () => {
   let removeUseCase: RemoveClientUseCase;
 
   const mockClientRepository = {
-    findFirst: jest.fn(),
-    findUnique: jest.fn(),
+    findById: jest.fn(),
+    findByIdentificacion: jest.fn(),
     create: jest.fn(),
-    update: jest.fn(),
-    updateMany: jest.fn(),
-    findCatalogoTipoIdentificacion: jest.fn(),
-    findManyCatalogoTipoIdentificacion: jest.fn(),
+    updateClient: jest.fn(),
+    softDelete: jest.fn(),
+    findTipoIdentificacionById: jest.fn(),
+    findActiveTipoIdentificaciones: jest.fn(),
+    reactivateOrCreateConsumidorFinal: jest.fn(),
     paginateClientes: jest.fn(),
   };
 
@@ -119,5 +120,22 @@ describe('ClientService', () => {
   it('delete should delegate to RemoveClientUseCase', async () => {
     await service.delete(1n);
     expect(removeUseCase.execute).toHaveBeenCalledWith(1n);
+  });
+
+  it('findAllIdentificaciones should return active identification types from the repository', async () => {
+    const mockIdentificaciones = [
+      { id: 1, codigo: '05', descripcion: 'Cédula', activo: true },
+      { id: 2, codigo: '04', descripcion: 'RUC', activo: true },
+    ];
+    mockClientRepository.findActiveTipoIdentificaciones.mockResolvedValue(
+      mockIdentificaciones,
+    );
+
+    const result = await service.findAllIdentificaciones();
+
+    expect(
+      mockClientRepository.findActiveTipoIdentificaciones,
+    ).toHaveBeenCalled();
+    expect(result).toEqual(mockIdentificaciones);
   });
 });

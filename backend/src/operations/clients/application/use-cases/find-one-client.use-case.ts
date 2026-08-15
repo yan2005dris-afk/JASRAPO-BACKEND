@@ -1,18 +1,16 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ClientRepository } from '../../domain/repositories/client.repository';
 import { ClientEntity } from '../../domain/entities/client.entity';
+import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 
 @Injectable()
 export class FindOneClientUseCase {
   constructor(private readonly clientRepository: ClientRepository) {}
 
   async execute(id: bigint): Promise<ClientEntity> {
-    const cliente = await this.clientRepository.findFirst({
-      clienteId: id,
-      deletedAt: null,
-    });
+    const cliente = await this.clientRepository.findById(id);
 
-    if (!cliente) throw new NotFoundException('Cliente no encontrado');
+    if (!cliente) throw new EntityNotFoundException('Cliente', id);
     return cliente;
   }
 }

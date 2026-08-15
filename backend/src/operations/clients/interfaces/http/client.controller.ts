@@ -82,8 +82,12 @@ export class ClientController {
   @ApiResponse({ status: 403, description: 'Sin permiso clientes:create' })
   @RequiredPermission('clientes', 'create')
   @Post()
-  create(@Body() createClientDto: CreateClientDto): Promise<ClientResponseDto> {
-    return this.clientService.create(createClientDto);
+  async create(
+    @Body() createClientDto: CreateClientDto,
+  ): Promise<ClientResponseDto> {
+    return ClientResponseDto.fromEntity(
+      await this.clientService.create(createClientDto),
+    );
   }
 
   /**
@@ -100,7 +104,11 @@ export class ClientController {
   async findAll(
     @Query() filters: FilterClientDto,
   ): Promise<PaginatedResult<ClientResponseDto>> {
-    return this.clientService.findAll(filters);
+    const result = await this.clientService.findAll(filters);
+    return {
+      data: result.data.map((x) => ClientResponseDto.fromEntity(x)),
+      meta: result.meta,
+    };
   }
 
   /**
@@ -129,7 +137,9 @@ export class ClientController {
   findOne(
     @Param('id', ParseBigIntPipe) id: bigint,
   ): Promise<ClientResponseDto> {
-    return this.clientService.findOne(id);
+    return this.clientService
+      .findOne(id)
+      .then((entity) => ClientResponseDto.fromEntity(entity));
   }
 
   /**
@@ -161,7 +171,9 @@ export class ClientController {
     @Param('id', ParseBigIntPipe) id: bigint,
     @Body() updateClientDto: UpdateClientDto,
   ): Promise<ClientResponseDto> {
-    return this.clientService.update(id, updateClientDto);
+    return this.clientService
+      .update(id, updateClientDto)
+      .then((entity) => ClientResponseDto.fromEntity(entity));
   }
 
   /**
@@ -183,7 +195,9 @@ export class ClientController {
   @ApiResponse({ status: 404, description: 'Cliente no encontrado' })
   @RequiredPermission('clientes', 'delete')
   @Delete(':id')
-  delete(@Param('id', ParseBigIntPipe) id: bigint) {
-    return this.clientService.delete(id);
+  delete(@Param('id', ParseBigIntPipe) id: bigint): Promise<ClientResponseDto> {
+    return this.clientService
+      .delete(id)
+      .then((entity) => ClientResponseDto.fromEntity(entity));
   }
 }

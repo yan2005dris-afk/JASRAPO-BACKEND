@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import type { ClientEntity } from '../../domain/entities/client.entity';
 
 export class TipoIdentificacionResponseDto {
   @ApiProperty({ example: 1, description: 'ID del tipo de identificación' })
@@ -102,4 +103,35 @@ export class ClientResponseDto {
     description: 'Fecha de actualización',
   })
   updatedAt: Date;
+
+  constructor(partial: Partial<ClientResponseDto>) {
+    Object.assign(this, partial);
+  }
+
+  static fromEntity(entity: ClientEntity): ClientResponseDto {
+    return new ClientResponseDto({
+      clienteId: entity.clienteId,
+      identificacion: entity.identificacion,
+      nombres: entity.nombres,
+      apellidos: entity.apellidos,
+      razonSocial: entity.razonSocial,
+      email: entity.email,
+      telefono: entity.telefono,
+      telefonoSecundario: entity.telefonoSecundario,
+      direccionDomicilio: entity.direccionDomicilio,
+      activo: entity.activo,
+      aplicaDiscapacidad: entity.aplicaDiscapacidad,
+      aplicaTerceraEdad: entity.aplicaTerceraEdad,
+      tipoIdentificacion: entity.tipoIdentificacion
+        ? {
+            id: entity.tipoIdentificacion.id,
+            codigo: entity.tipoIdentificacion.codigo,
+            descripcion: entity.tipoIdentificacion.descripcion,
+          }
+        : null,
+      deletedAt: entity.deletedAt,
+      createdAt: entity.createdAt,
+      updatedAt: entity.updatedAt,
+    });
+  }
 }
