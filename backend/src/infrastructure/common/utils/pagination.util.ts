@@ -6,9 +6,21 @@ export interface PaginationParams {
   page: number;
 }
 
+function toFiniteNumberOr(
+  value: number | undefined,
+  fallback: number,
+): number {
+  return typeof value === 'number' && Number.isFinite(value)
+    ? value
+    : fallback;
+}
+
 export function getPagination(page = 1, limit = 10): PaginationParams {
-  const safeLimit = Math.min(limit, 50);
-  const safePage = page < 1 ? 1 : page;
+  const safePage = Math.max(1, Math.floor(toFiniteNumberOr(page, 1)));
+  const safeLimit = Math.min(
+    50,
+    Math.max(1, Math.floor(toFiniteNumberOr(limit, 10))),
+  );
   return {
     skip: (safePage - 1) * safeLimit,
     take: safeLimit,
@@ -26,8 +38,11 @@ export async function paginate<K>(
   args: any = { where: {} },
   options: PaginateOptions = { page: 1, limit: 10 },
 ): Promise<PaginatedResult<K>> {
-  const page = Number(options.page) > 0 ? Number(options.page) : 1;
-  const perPage = Number(options.limit) > 0 ? Number(options.limit) : 10;
+  const page = Math.max(1, Math.floor(toFiniteNumberOr(options.page, 1)));
+  const perPage = Math.min(
+    50,
+    Math.max(1, Math.floor(toFiniteNumberOr(options.limit, 10))),
+  );
 
   const skip = (page - 1) * perPage;
   const [total, data] = await Promise.all([

@@ -176,7 +176,7 @@ describe('FindAllReadingAnomaliesUseCase', () => {
     });
   });
 
-  it('should pass a zero limit through as take 0 (getPagination latent behavior)', async () => {
+  it('should clamp a zero limit to take 1 (getPagination lower clamp)', async () => {
     mockReadingAnomalyRepository.findMany.mockResolvedValue(
       mockAnomalies as any,
     );
@@ -187,21 +187,21 @@ describe('FindAllReadingAnomaliesUseCase', () => {
     expect(mockReadingAnomalyRepository.findMany).toHaveBeenCalledWith({
       where: undefined,
       skip: 0,
-      take: 0,
+      take: 1,
     });
     expect(result.meta).toEqual({
       total: 2,
       page: 1,
-      limit: 0,
-      ultimaPagina: Infinity,
+      limit: 1,
+      ultimaPagina: 2,
       paginaActual: 1,
-      porPagina: 0,
+      porPagina: 1,
       anterior: null,
       siguiente: 2,
     });
   });
 
-  it('should pass a negative limit through as a negative take (getPagination latent behavior)', async () => {
+  it('should clamp a negative limit to take 1 (getPagination lower clamp)', async () => {
     mockReadingAnomalyRepository.findMany.mockResolvedValue(
       mockAnomalies as any,
     );
@@ -211,18 +211,18 @@ describe('FindAllReadingAnomaliesUseCase', () => {
 
     expect(mockReadingAnomalyRepository.findMany).toHaveBeenCalledWith({
       where: undefined,
-      skip: -0,
-      take: -5,
+      skip: 0,
+      take: 1,
     });
     expect(result.meta).toEqual({
       total: 2,
       page: 1,
-      limit: -5,
-      ultimaPagina: -0,
+      limit: 1,
+      ultimaPagina: 2,
       paginaActual: 1,
-      porPagina: -5,
+      porPagina: 1,
       anterior: null,
-      siguiente: null,
+      siguiente: 2,
     });
   });
 });
