@@ -3,6 +3,18 @@ import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { Prisma } from 'src/generated/prisma/client';
 import { TariffRepository } from '../../domain/repositories/tariff.repository';
 
+export const safeTariffCategoriesSelect = {
+  categoriaTarifaId: true,
+  nombre: true,
+  descripcion: true,
+  valorBase: true,
+  consumoMinimoMensual: true,
+  valorExcedenteM3: true,
+  fechaVigenciaDesde: true,
+  fechaVigenciaHasta: true,
+  activo: true,
+} satisfies Prisma.CategoriaTarifaSelect;
+
 @Injectable()
 export class PrismaTariffRepository implements TariffRepository {
   constructor(private readonly prisma: PrismaService) {}

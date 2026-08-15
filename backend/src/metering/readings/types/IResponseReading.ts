@@ -1,5 +1,3 @@
-import type { Prisma } from 'src/generated/prisma/client';
-
 export interface IResponseReading {
   lecturaId: string;
   fecha: Date;
@@ -34,47 +32,3 @@ export interface IResponseReading {
     fechaFin: Date;
   } | null;
 }
-
-export const safeReadingsSelect = {
-  lecturaId: true,
-  fecha: true,
-  lecturaAnterior: true,
-  lecturaActual: true,
-  consumoCalculado: true,
-  descripcionAnomalia: true,
-  fechaValidacion: true,
-  fotoUrl: true,
-  lecturaInicial: true,
-  periodoId: true,
-  estado: true,
-  deletedAt: true,
-  medidor: {
-    select: {
-      medidorId: true,
-      serie: true,
-      marca: true,
-      modelo: true,
-      historial: {
-        where: { fechaHasta: null },
-        select: {
-          contrato: {
-            select: {
-              contratoId: true,
-              numeroGuia: true,
-              direccionSuministro: true,
-              estado: true,
-            },
-          },
-        },
-      },
-    },
-  },
-  periodoRel: {
-    select: {
-      periodoId: true,
-      nombre: true,
-      fechaInicio: true,
-      fechaFin: true,
-    },
-  },
-} satisfies Prisma.LecturasSelect;
