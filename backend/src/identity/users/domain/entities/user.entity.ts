@@ -85,6 +85,32 @@ export class UserProfileEntity {
     nullable: true,
   })
   rol: RoleEntity | null;
+  constructor(partial?: Partial<UserProfileEntity>) {
+    if (partial) {
+      Object.assign(this, partial);
+      this.validateInvariants();
+    }
+  }
+
+  validateInvariants(): void {
+    if (this.email !== undefined && this.email !== null) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(this.email)) {
+        throw new Error('El formato del correo electrónico es inválido');
+      }
+    }
+
+    if (
+      this.telefono !== undefined &&
+      this.telefono !== null &&
+      this.telefono.trim() !== ''
+    ) {
+      const phoneRegex = /^\+?[0-9\s\-]{7,15}$/;
+      if (!phoneRegex.test(this.telefono)) {
+        throw new Error('El formato del teléfono es inválido');
+      }
+    }
+  }
 }
 
 export class UserEntity {
@@ -131,6 +157,61 @@ export class UserEntity {
     nullable: true,
   })
   rol: RoleEntity | null;
+
+  constructor(partial?: Partial<UserEntity>) {
+    if (partial) {
+      Object.assign(this, partial);
+      this.validateInvariants();
+    }
+  }
+
+  static create(props: Partial<UserEntity>): UserEntity {
+    return new UserEntity(props);
+  }
+
+  validateInvariants(): void {
+    if (this.email !== undefined && this.email !== null) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(this.email)) {
+        throw new Error('El formato del correo electrónico es inválido');
+      }
+    }
+
+    if (
+      this.telefono !== undefined &&
+      this.telefono !== null &&
+      this.telefono.trim() !== ''
+    ) {
+      const phoneRegex = /^\+?[0-9\s\-]{7,15}$/;
+      if (!phoneRegex.test(this.telefono)) {
+        throw new Error('El formato del teléfono es inválido');
+      }
+    }
+  }
+
+  changeRole(newRol: RoleEntity | null): void {
+    this.rol = newRol;
+  }
+
+  updateProfile(
+    nombres?: string | null,
+    apellidos?: string | null,
+    telefono?: string | null,
+  ): void {
+    if (nombres !== undefined) this.nombres = nombres;
+    if (apellidos !== undefined) this.apellidos = apellidos;
+    if (telefono !== undefined) this.telefono = telefono;
+    this.validateInvariants();
+  }
+
+  updateEmail(newEmail: string): void {
+    this.email = newEmail;
+    this.validateInvariants();
+  }
+
+  getNombreCompleto(): string {
+    return [this.nombres, this.apellidos].filter(Boolean).join(' ');
+  }
 }
 
 export class UserDetailEntity extends UserEntity {
@@ -145,4 +226,8 @@ export class UserDetailEntity extends UserEntity {
     description: 'Permisos heredados por el rol',
   })
   permisosRol: AuthPermissionEntity[];
+
+  constructor(partial?: Partial<UserDetailEntity>) {
+    super(partial);
+  }
 }

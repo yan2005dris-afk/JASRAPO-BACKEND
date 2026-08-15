@@ -30,5 +30,52 @@ export class DiscountEntity {
 
   constructor(partial: Partial<DiscountEntity>) {
     Object.assign(this, partial);
+    if (partial) {
+      this.validateInvariants();
+    }
+  }
+
+  static create(props: Partial<DiscountEntity>): DiscountEntity {
+    return new DiscountEntity(props);
+  }
+
+  validateInvariants(): void {
+    if (this.valor !== undefined && this.valor !== null) {
+      if (this.esPorcentaje) {
+        if (this.valor < 0 || this.valor > 100) {
+          throw new Error(
+            'El valor del descuento en porcentaje debe estar entre 0 y 100',
+          );
+        }
+      } else {
+        if (this.valor <= 0) {
+          throw new Error('El valor del descuento fijo debe ser mayor a 0');
+        }
+      }
+    }
+  }
+
+  activar(): void {
+    this.activo = true;
+  }
+
+  desactivar(): void {
+    this.activo = false;
+  }
+
+  actualizarValor(nuevoValor: number, esPorcentaje?: boolean): void {
+    if (esPorcentaje !== undefined) {
+      this.esPorcentaje = esPorcentaje;
+    }
+    this.valor = nuevoValor;
+    this.validateInvariants();
+  }
+
+  calcularDescuento(montoBase: number): number {
+    if (!this.activo) return 0;
+    if (this.esPorcentaje) {
+      return (montoBase * this.valor) / 100;
+    }
+    return Math.min(montoBase, this.valor);
   }
 }

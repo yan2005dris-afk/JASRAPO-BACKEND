@@ -110,5 +110,66 @@ export class LecturaEntity {
 
   constructor(partial: Partial<LecturaEntity>) {
     Object.assign(this, partial);
+    this.validateInvariants();
+  }
+
+  static create(props: Partial<LecturaEntity>): LecturaEntity {
+    return new LecturaEntity(props);
+  }
+
+  validateInvariants(): void {
+    if (
+      this.lecturaActual !== undefined &&
+      this.lecturaAnterior !== undefined &&
+      this.lecturaActual !== null &&
+      this.lecturaAnterior !== null
+    ) {
+      if (this.lecturaActual < this.lecturaAnterior) {
+        throw new Error(
+          'La lectura actual no puede ser menor a la lectura anterior',
+        );
+      }
+      this.consumoCalculado = this.lecturaActual - this.lecturaAnterior;
+    }
+
+    if (this.tieneAnomalia) {
+      if (!this.descripcionAnomalia || this.descripcionAnomalia.trim() === '') {
+        throw new Error(
+          'Debe proporcionar una descripción si la lectura tiene anomalía',
+        );
+      }
+    }
+  }
+
+  calcularConsumo(): number {
+    if (
+      this.lecturaActual !== undefined &&
+      this.lecturaAnterior !== undefined &&
+      this.lecturaActual !== null &&
+      this.lecturaAnterior !== null
+    ) {
+      if (this.lecturaActual < this.lecturaAnterior) {
+        throw new Error(
+          'La lectura actual no puede ser menor a la lectura anterior',
+        );
+      }
+      this.consumoCalculado = this.lecturaActual - this.lecturaAnterior;
+      return this.consumoCalculado;
+    }
+    return this.consumoCalculado ?? 0;
+  }
+
+  marcarAnomalia(descripcion: string): void {
+    if (!descripcion || descripcion.trim() === '') {
+      throw new Error('La descripción de la anomalía es requerida');
+    }
+    this.tieneAnomalia = true;
+    this.descripcionAnomalia = descripcion.trim();
+  }
+
+  validarLectura(fechaValidacion: Date = new Date()): void {
+    this.isValidada = true;
+    this.estado = 'VALIDADA';
+    this.fechaValidacion = fechaValidacion;
   }
 }
