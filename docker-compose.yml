@@ -86,11 +86,14 @@ services:
       DATABASE_URL: "postgresql://${POSTGRES_USER:?}:${POSTGRES_PASSWORD:?}@${POSTGRES_HOST:-postgres}:5432/${POSTGRES_DB:?}"
       STORAGE_ENDPOINT: rustfs
       NODE_ENV: production
+      NODE_EXTRA_CA_CERTS: /usr/local/share/ca-certificates/rustfs_cert.crt
       PORT: 3000
       OTEL_EXPORTER_OTLP_ENDPOINT: http://tempo:4318
       OTEL_METRICS_ENABLED: "true"
     ports:
       - "3000:3000"
+    volumes:
+      - ./certs/rustfs_cert.pem:/usr/local/share/ca-certificates/rustfs_cert.crt:ro
     depends_on:
       postgres:
         condition: service_healthy
