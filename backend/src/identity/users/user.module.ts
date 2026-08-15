@@ -7,9 +7,10 @@ import { UpdateUserPermissionsUseCase } from './application/use-cases/update-use
 import { UserRepository } from './domain/repositories/user.repository';
 import { PrismaUserRepository } from './infrastructure/repositories/prisma-user.repository';
 import { UserMapper } from './infrastructure/mappers/user.mapper';
+import { RolesModule } from '../roles/roles.module';
 
 @Module({
-  imports: [],
+  imports: [RolesModule],
   controllers: [UserController],
   providers: [
     UserService,

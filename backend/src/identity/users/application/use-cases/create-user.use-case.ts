@@ -9,11 +9,15 @@ import { CreateUserDto } from '../../interfaces/dto/create-user.dto';
 import { ValidationUtil } from 'src/infrastructure/common/utils/validation.util';
 import { PhoneUtil } from 'src/infrastructure/common/utils/phone.util';
 import { UserRepository } from '../../domain/repositories/user.repository';
+import { RoleRepository } from '../../../roles/domain/repositories/role.repository';
 import { UserEntity } from '../../domain/entities/user.entity';
 
 @Injectable()
 export class CreateUserUseCase {
-  constructor(private readonly userRepository: UserRepository) {}
+  constructor(
+    private readonly userRepository: UserRepository,
+    private readonly roleRepository: RoleRepository,
+  ) {}
 
   async execute(createUsersDto: CreateUserDto): Promise<UserEntity> {
     // Validar campos obligatorios
@@ -44,13 +48,13 @@ export class CreateUserUseCase {
     let roleId: number;
 
     if (createUsersDto.rolId) {
-      const role = await this.userRepository.findRoleById(createUsersDto.rolId);
+      const role = await this.roleRepository.findUnique(createUsersDto.rolId);
       if (!role || role.deletedAt) {
         throw new NotFoundException('Rol no encontrado o eliminado');
       }
       roleId = role.rolId;
     } else {
-      const defaultRole = await this.userRepository.findRoleByName('user');
+      const defaultRole = await this.roleRepository.findByName('user');
       if (!defaultRole) {
         throw new Error('No existe el rol por defecto "user".');
       }

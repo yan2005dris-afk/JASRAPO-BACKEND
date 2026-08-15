@@ -51,10 +51,6 @@ export abstract class UserRepository {
     tx?: any,
   ): Promise<UserEntity>;
 
-  abstract findRoleById(rolId: number): Promise<any>;
-
-  abstract findRoleByName(nombre: string): Promise<any>;
-
   abstract findDirectPermissions(usuarioId: number): Promise<any[]>;
 
   abstract findRolePermissions(rolId: number): Promise<any[]>;

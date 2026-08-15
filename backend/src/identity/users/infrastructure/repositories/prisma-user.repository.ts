@@ -199,15 +199,7 @@ export class PrismaUserRepository implements UserRepository {
     return mapped;
   }
 
-  async findRoleById(rolId: number): Promise<any> {
-    return this.prisma.roles.findUnique({ where: { rolId } });
-  }
 
-  async findRoleByName(nombre: string): Promise<any> {
-    return this.prisma.roles.findFirst({
-      where: { nombre, deletedAt: null },
-    });
-  }
 
   async findDirectPermissions(usuarioId: number): Promise<any[]> {
     return this.prisma.usuarioPermisos.findMany({

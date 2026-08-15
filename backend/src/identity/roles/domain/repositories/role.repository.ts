@@ -22,6 +22,7 @@ export interface RoleWithPermissions {
 export interface SimpleRole {
   rolId: number;
   nombre: string;
+  deletedAt?: Date | null;
 }
 
 export interface RolePermissionAssignment {
@@ -33,6 +34,7 @@ export interface RolePermissionAssignment {
 
 export abstract class RoleRepository {
   abstract findUnique(rolId: number): Promise<RoleWithPermissions | null>;
+  abstract findByName(nombre: string): Promise<SimpleRole | null>;
   abstract findFirstAssignment(
     rolId: number,
     permisoId: number,

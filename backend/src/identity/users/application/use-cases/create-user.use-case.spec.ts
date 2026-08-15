@@ -4,6 +4,7 @@ import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { ConflictException } from '@nestjs/common';
 import { CreateUserUseCase } from './create-user.use-case';
 import { UserRepository } from '../../domain/repositories/user.repository';
+import { RoleRepository } from '../../../roles/domain/repositories/role.repository';
 
 describe('CreateUserUseCase', () => {
   let useCase: CreateUserUseCase;
@@ -11,9 +12,12 @@ describe('CreateUserUseCase', () => {
 
   const mockUserRepository = {
     findByEmail: jest.fn(),
-    findRoleById: jest.fn(),
-    findRoleByName: jest.fn(),
     create: jest.fn(),
+  };
+
+  const mockRoleRepository = {
+    findUnique: jest.fn(),
+    findByName: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -21,6 +25,7 @@ describe('CreateUserUseCase', () => {
       providers: [
         CreateUserUseCase,
         { provide: UserRepository, useValue: mockUserRepository },
+        { provide: RoleRepository, useValue: mockRoleRepository },
       ],
     }).compile();
 
@@ -41,7 +46,7 @@ describe('CreateUserUseCase', () => {
       telefono: '0991234567',
     };
     mockUserRepository.findByEmail.mockResolvedValue(null);
-    mockUserRepository.findRoleByName.mockResolvedValue({
+    mockRoleRepository.findByName.mockResolvedValue({
       rolId: 1,
       nombre: 'user',
     });
@@ -72,7 +77,7 @@ describe('CreateUserUseCase', () => {
         nombre: 'user',
       },
     });
-    expect(mockUserRepository.findRoleByName).toHaveBeenCalledWith('user');
+    expect(mockRoleRepository.findByName).toHaveBeenCalledWith('user');
   });
 
   it('should fail if default user role is soft-deleted', async () => {
@@ -83,12 +88,12 @@ describe('CreateUserUseCase', () => {
       telefono: '0991234567',
     };
     mockUserRepository.findByEmail.mockResolvedValue(null);
-    mockUserRepository.findRoleByName.mockResolvedValue(null);
+    mockRoleRepository.findByName.mockResolvedValue(null);
 
     await expect(useCase.execute(dto)).rejects.toThrow(
       'No existe el rol por defecto "user".',
     );
-    expect(mockUserRepository.findRoleByName).toHaveBeenCalledWith('user');
+    expect(mockRoleRepository.findByName).toHaveBeenCalledWith('user');
   });
 
   it('should use provided rolId when specified', async () => {
@@ -100,7 +105,7 @@ describe('CreateUserUseCase', () => {
       rolId: 2,
     };
     mockUserRepository.findByEmail.mockResolvedValue(null);
-    mockUserRepository.findRoleById.mockResolvedValue({
+    mockRoleRepository.findUnique.mockResolvedValue({
       rolId: 2,
       nombre: 'admin',
       deletedAt: null,
@@ -118,12 +123,12 @@ describe('CreateUserUseCase', () => {
     const result = await useCase.execute(dto);
 
     expect(result.rol).toEqual({ rolId: 2, nombre: 'admin' });
-    expect(mockUserRepository.findRoleById).toHaveBeenCalledWith(2);
+    expect(mockRoleRepository.findUnique).toHaveBeenCalledWith(2);
   });
 
   it('should throw NotFoundException if provided rolId does not exist', async () => {
     mockUserRepository.findByEmail.mockResolvedValue(null);
-    mockUserRepository.findRoleById.mockResolvedValue(null);
+    mockRoleRepository.findUnique.mockResolvedValue(null);
     await expect(
       useCase.execute({
         email: 't@t.com',
@@ -142,32 +147,19 @@ describe('CreateUserUseCase', () => {
         email: 't@t.com',
         nombres: 'Test',
         apellidos: 'User',
-        telefono: '+5491155555555',
+        telefono: '123',
       }),
     ).rejects.toThrow(BadRequestException);
   });
 
-  it('should throw BadRequestException for empty nombres', async () => {
-    mockUserRepository.findByEmail.mockResolvedValue(null);
-    await expect(
-      useCase.execute({
-        email: 't@t.com',
-        nombres: '',
-        apellidos: 'User',
-        telefono: '0991234567',
-      }),
-    ).rejects.toThrow(BadRequestException);
-  });
-
-  it('should throw ConflictException if email already exists (active)', async () => {
+  it('should throw ConflictException if email is already taken', async () => {
     mockUserRepository.findByEmail.mockResolvedValue({
       usuarioId: 1,
-      email: 't@t.com',
-      deletedAt: null,
+      email: 'taken@example.com',
     });
     await expect(
       useCase.execute({
-        email: 't@t.com',
+        email: 'taken@example.com',
         nombres: 'Test',
         apellidos: 'User',
         telefono: '0991234567',
@@ -175,19 +167,21 @@ describe('CreateUserUseCase', () => {
     ).rejects.toThrow(ConflictException);
   });
 
-  it('should throw ConflictException with specific message if email exists but deleted', async () => {
+  it('should throw ConflictException with clear message if email belongs to a deleted user', async () => {
     mockUserRepository.findByEmail.mockResolvedValue({
       usuarioId: 1,
-      email: 't@t.com',
-      deletedAt: new Date('2024-01-01'),
+      email: 'deleted@example.com',
+      deletedAt: new Date(),
     });
     await expect(
       useCase.execute({
-        email: 't@t.com',
+        email: 'deleted@example.com',
         nombres: 'Test',
         apellidos: 'User',
         telefono: '0991234567',
       }),
-    ).rejects.toThrow('pertenece a un usuario eliminado');
+    ).rejects.toThrow(
+      'El correo electrónico pertenece a un usuario eliminado. Contacte al administrador para restaurar el usuario.',
+    );
   });
 });

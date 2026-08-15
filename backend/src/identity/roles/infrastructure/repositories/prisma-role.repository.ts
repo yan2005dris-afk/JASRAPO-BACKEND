@@ -40,6 +40,18 @@ export class PrismaRoleRepository implements RoleRepository {
     return RoleMapper.toWithPermissions(role);
   }
 
+  async findByName(nombre: string): Promise<SimpleRole | null> {
+    const role = await this.prisma.roles.findFirst({
+      where: { nombre, deletedAt: null },
+      select: {
+        rolId: true,
+        nombre: true,
+        deletedAt: true,
+      },
+    });
+    return RoleMapper.toSimple(role);
+  }
+
   async findFirstAssignment(
     rolId: number,
     permisoId: number,

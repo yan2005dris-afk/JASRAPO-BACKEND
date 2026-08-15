@@ -16,6 +16,7 @@ import { PhoneUtil } from 'src/infrastructure/common/utils/phone.util';
 import { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
 import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
 import { UserRepository } from '../domain/repositories/user.repository';
+import { RoleRepository } from '../../roles/domain/repositories/role.repository';
 import {
   UserEntity,
   UserDetailEntity,
@@ -36,6 +37,7 @@ import { LogContext } from 'src/shared/decorators/log-context.decorator';
 export class UserService {
   constructor(
     private readonly userRepository: UserRepository,
+    private readonly roleRepository: RoleRepository,
     private readonly createUserUseCase: CreateUserUseCase,
     private readonly getEffectivePermissionsUseCase: GetEffectivePermissionsUseCase,
     private readonly updateUserPermissionsUseCase: UpdateUserPermissionsUseCase,
@@ -206,7 +208,7 @@ export class UserService {
 
     // Validar rolId si se proporciona
     if (updateData.rolId !== undefined && updateData.rolId !== null) {
-      const role = await this.userRepository.findRoleById(updateData.rolId);
+      const role = await this.roleRepository.findUnique(updateData.rolId);
       if (!role || role.deletedAt) {
         throw new NotFoundException('Rol no encontrado o eliminado');
       }

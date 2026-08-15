@@ -2,6 +2,7 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { UserService } from './user.service';
 import { UserRepository } from '../domain/repositories/user.repository';
+import { RoleRepository } from '../../roles/domain/repositories/role.repository';
 import { CreateUserUseCase } from './use-cases/create-user.use-case';
 import { GetEffectivePermissionsUseCase } from './use-cases/get-effective-permissions.use-case';
 import { UpdateUserPermissionsUseCase } from './use-cases/update-user-permissions.use-case';
@@ -33,6 +34,11 @@ describe('UserService', () => {
     executeTransaction: jest.fn((cb) => cb(null)),
   };
 
+  const mockRoleRepository = {
+    findUnique: jest.fn(),
+    findByName: jest.fn(),
+  };
+
   const mockGetEffectivePermissionsUseCase = {
     execute: jest.fn(),
   };
@@ -43,17 +49,21 @@ describe('UserService', () => {
 
   const mockStorageService = {
     getUrl: jest.fn(),
-    upload: jest.fn(),
-    delete: jest.fn(),
+    uploadFile: jest.fn(),
+    deleteFile: jest.fn(),
+  };
+
+  const mockCreateUserUseCase = {
+    execute: jest.fn(),
   };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        { provide: LoggerService, useValue: mockLogger },
         UserService,
         { provide: UserRepository, useValue: mockUserRepository },
-        { provide: CreateUserUseCase, useValue: {} },
+        { provide: RoleRepository, useValue: mockRoleRepository },
+        { provide: CreateUserUseCase, useValue: mockCreateUserUseCase },
         {
           provide: GetEffectivePermissionsUseCase,
           useValue: mockGetEffectivePermissionsUseCase,
@@ -63,6 +73,7 @@ describe('UserService', () => {
           useValue: mockUpdateUserPermissionsUseCase,
         },
         { provide: StorageService, useValue: mockStorageService },
+        { provide: LoggerService, useValue: mockLogger },
       ],
     }).compile();
 
@@ -167,7 +178,7 @@ describe('UserService', () => {
         usuarioId: 1,
         deletedAt: null,
       } as any);
-      mockUserRepository.findRoleById.mockResolvedValue(null);
+      mockRoleRepository.findUnique.mockResolvedValue(null);
 
       await expect(service.updateUser(1, { rolId: 999 })).rejects.toThrow(
         NotFoundException,
@@ -179,7 +190,7 @@ describe('UserService', () => {
         usuarioId: 1,
         deletedAt: null,
       } as any);
-      mockUserRepository.findRoleById.mockResolvedValue({
+      mockRoleRepository.findUnique.mockResolvedValue({
         rolId: 2,
         deletedAt: new Date(),
       });
