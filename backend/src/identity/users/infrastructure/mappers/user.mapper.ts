@@ -1,8 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import type {
-  UserWithRoleResponse,
-  AvatarResponse,
-} from '../../domain/types/user.types';
+import { UserEntity, AvatarEntity } from '../../domain/entities/user.entity';
 import { SRI_STORAGE_TYPES } from 'src/infrastructure/storage/storage.service';
 import { STORAGE_PROXY_BASE } from 'src/infrastructure/storage-proxy/storage-proxy.constants';
 
@@ -33,7 +30,7 @@ export class UserMapper {
   private async enrichAvatar(
     avatar: unknown,
     fullName: string | null,
-  ): Promise<AvatarResponse> {
+  ): Promise<AvatarEntity> {
     const avatarObj = avatar as { key?: string } | null;
 
     if (avatarObj?.key && UserMapper.AVATAR_KEY_PATTERN.test(avatarObj.key)) {
@@ -50,7 +47,7 @@ export class UserMapper {
     return { url: defaultUrl };
   }
 
-  async toWithRole(rawUser: any): Promise<UserWithRoleResponse | null> {
+  async toWithRole(rawUser: any): Promise<UserEntity | null> {
     if (!rawUser) return null;
 
     const fullName = [rawUser.nombres, rawUser.apellidos]
@@ -77,7 +74,7 @@ export class UserMapper {
 
   async toWithRoleAndClave(
     rawUser: any,
-  ): Promise<(UserWithRoleResponse & { clave: string }) | null> {
+  ): Promise<(UserEntity & { clave: string }) | null> {
     if (!rawUser) return null;
     const base = await this.toWithRole(rawUser);
     if (!base) return null;
@@ -93,7 +90,7 @@ export class UserMapper {
    * (issue #136).
    */
   async toWithPasswordAndLockout(rawUser: any): Promise<
-    | (UserWithRoleResponse & {
+    | (UserEntity & {
         clave: string;
         intentosFallidos: number;
         ultimoIntentoFallidoEn: Date | null;
@@ -113,3 +110,4 @@ export class UserMapper {
     };
   }
 }
+

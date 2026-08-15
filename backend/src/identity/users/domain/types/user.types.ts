@@ -1,4 +1,12 @@
 import type { Prisma } from 'src/generated/prisma/client';
+import {
+  UserEntity,
+  UserDetailEntity,
+  UserProfileEntity,
+  AvatarEntity,
+  AuthPermissionEntity,
+  DirectPermissionEntity,
+} from '../entities/user.entity';
 
 // ============================================
 // Safe Prisma Selects
@@ -43,68 +51,22 @@ export const userWithPasswordAndLockoutSelect = {
 } satisfies Prisma.UsuariosSelect;
 
 // ============================================
-// Frontend Response Types
+// Frontend Response Types (Single Source of Truth: Domain Entities)
 // ============================================
 
-export interface AvatarResponse {
-  url: string;
-  key?: string;
-}
+export type AvatarResponse = AvatarEntity;
+export type UserResponse = UserEntity;
+export type UserWithRoleResponse = UserEntity;
+export type UserWithPermissionsResponse = UserDetailEntity;
+export type ProfileResponse = UserProfileEntity;
 
-export interface UserResponse {
-  usuarioId: number;
-  email: string;
-  nombres: string | null;
-  apellidos: string | null;
-  telefono: string | null;
-  avatar: AvatarResponse | null;
-}
-
-export interface UserWithRoleResponse extends UserResponse {
-  rol: {
-    rolId: number;
-    nombre: string;
-    deletedAt?: Date | null;
-  } | null;
-  deletedAt?: Date | null;
-}
-
-export interface UserWithPermissionsResponse extends UserWithRoleResponse {
-  permisosDirectos: DirectPermissionResponse[];
-  permisosRol: AuthPermissionResponse[];
-}
-
-export interface DirectPermissionResponse {
-  usuarioPermisoId: number;
-  permisoId: number;
-  recurso: string;
-  accion: string;
-  permitido: boolean;
-}
-
-export interface AuthPermissionResponse {
-  recurso: string;
-  accion: string;
-}
-
-export interface RolePermissionResponse {
-  recurso: string;
-  accion: string;
-}
-
-export interface ProfileResponse {
-  usuarioId: number;
-  email: string;
-  nombre: string | null;
-  telefono: string | null;
-  avatar: AvatarResponse | null;
-  rol: {
-    rolId: number;
-    nombre: string;
-  } | null;
-}
+export type DirectPermissionResponse = DirectPermissionEntity;
+export type AuthPermissionResponse = AuthPermissionEntity;
+export type RolePermissionResponse = AuthPermissionEntity;
 
 export interface EffectivePermissionsResponse {
   usuarioId: number;
-  permisos: AuthPermissionResponse[];
+  permisos: AuthPermissionEntity[];
 }
+
+

@@ -1,24 +1,7 @@
 import type { Prisma } from 'src/generated/prisma/client';
+import { ClientEntity } from '../entities/client.entity';
 
-export interface IResponseClient {
-  clienteId: bigint;
-  identificacion: string;
-  nombres: string;
-  apellidos: string;
-  razonSocial: string | null;
-  email: string | null;
-  telefono: string | null;
-  telefonoSecundario: string | null;
-  direccionDomicilio: string | null;
-  activo: boolean;
-  aplicaDiscapacidad: boolean;
-  aplicaTerceraEdad: boolean;
-  tipoIdentificacion: {
-    id: number;
-    codigo: string;
-    descripcion: string;
-  } | null;
-}
+export type IResponseClient = ClientEntity;
 
 export const safeClientesSelect = {
   clienteId: true,

@@ -9,12 +9,13 @@ import { CreateUserDto } from '../../interfaces/dto/create-user.dto';
 import { ValidationUtil } from 'src/infrastructure/common/utils/validation.util';
 import { PhoneUtil } from 'src/infrastructure/common/utils/phone.util';
 import { UserRepository } from '../../domain/repositories/user.repository';
+import { UserEntity } from '../../domain/entities/user.entity';
 
 @Injectable()
 export class CreateUserUseCase {
   constructor(private readonly userRepository: UserRepository) {}
 
-  async execute(createUsersDto: CreateUserDto) {
+  async execute(createUsersDto: CreateUserDto): Promise<UserEntity> {
     // Validar campos obligatorios
     ValidationUtil.requireNonEmpty(createUsersDto.email, 'email');
     ValidationUtil.requireNonEmpty(createUsersDto.nombres, 'nombres');
@@ -41,7 +42,6 @@ export class CreateUserUseCase {
 
     // Determinar el rol a asignar
     let roleId: number;
-    let roleName: string;
 
     if (createUsersDto.rolId) {
       const role = await this.userRepository.findRoleById(createUsersDto.rolId);
@@ -49,14 +49,12 @@ export class CreateUserUseCase {
         throw new NotFoundException('Rol no encontrado o eliminado');
       }
       roleId = role.rolId;
-      roleName = role.nombre;
     } else {
       const defaultRole = await this.userRepository.findRoleByName('user');
       if (!defaultRole) {
         throw new Error('No existe el rol por defecto "user".');
       }
       roleId = defaultRole.rolId;
-      roleName = defaultRole.nombre;
     }
 
     // TODO: Generar contraseña temporal y enviar por email
@@ -65,7 +63,7 @@ export class CreateUserUseCase {
     const hashedPassword = await bcrypt.hash(temporaryPassword, 10);
 
     try {
-      const newUser = await this.userRepository.create({
+      return await this.userRepository.create({
         email: createUsersDto.email,
         clave: hashedPassword,
         nombres: createUsersDto.nombres,
@@ -74,19 +72,6 @@ export class CreateUserUseCase {
         avatar: createUsersDto.avatar,
         rolId: roleId,
       });
-
-      return {
-        usuarioId: newUser.usuarioId,
-        email: newUser.email,
-        nombres: newUser.nombres,
-        apellidos: newUser.apellidos,
-        telefono: newUser.telefono,
-        avatar: newUser.avatar,
-        rol: {
-          rolId: roleId,
-          nombre: roleName,
-        },
-      };
     } catch (error) {
       // Manejar error de constraint único de Prisma
       if (
