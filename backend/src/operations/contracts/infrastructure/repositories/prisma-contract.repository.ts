@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { Prisma } from 'src/generated/prisma/client';
 import { EstadoMedidor } from 'src/shared/enums';
@@ -161,7 +157,7 @@ export class PrismaContractRepository implements ContractRepository {
         where: { medidorId: newMeterId },
       });
       if (!medidor) {
-        throw new NotFoundException(
+        throw new Error(
           `Medidor con ID ${newMeterId} no encontrado`,
         );
       }
@@ -202,7 +198,7 @@ export class PrismaContractRepository implements ContractRepository {
       });
 
       if (!activeLink) {
-        throw new NotFoundException(
+        throw new Error(
           'No hay un vínculo activo para este contrato',
         );
       }
@@ -217,7 +213,7 @@ export class PrismaContractRepository implements ContractRepository {
       });
 
       if (!medidor) {
-        throw new NotFoundException(
+        throw new Error(
           `Medidor con ID ${activeLink.medidorId} no encontrado`,
         );
       }
@@ -339,37 +335,37 @@ export class PrismaContractRepository implements ContractRepository {
     ]);
 
     if (!cliente) {
-      throw new NotFoundException(
+      throw new Error(
         `Cliente con ID ${data.clienteId} no encontrado`,
       );
     }
 
     if (!medidor) {
-      throw new NotFoundException(
+      throw new Error(
         `Medidor con ID ${data.medidorId} no encontrado`,
       );
     }
 
     if (medidor.estado !== EstadoMedidor.BODEGA) {
-      throw new BadRequestException(
+      throw new Error(
         `El medidor debe estar en estado BODEGA para ser vinculado, estado actual: ${medidor.estado}`,
       );
     }
 
     if (!tarifa) {
-      throw new NotFoundException(
+      throw new Error(
         `Categoría de tarifa con ID ${data.categoriaTarifaId} no encontrada`,
       );
     }
 
     if (!comunidad) {
-      throw new NotFoundException(
+      throw new Error(
         `Comunidad con ID ${data.comunidadId} no encontrada`,
       );
     }
 
     if (data.sectorId !== null && !sector) {
-      throw new NotFoundException(
+      throw new Error(
         `Sector con ID ${data.sectorId} no encontrado`,
       );
     }
