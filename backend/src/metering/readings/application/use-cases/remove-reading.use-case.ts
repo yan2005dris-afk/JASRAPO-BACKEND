@@ -1,5 +1,6 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ReadingRepository } from '../../domain/repositories/reading.repository';
+import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 
 @Injectable()
 export class RemoveReadingUseCase {
@@ -10,7 +11,7 @@ export class RemoveReadingUseCase {
       lecturaId: id,
     });
     if (!existing || existing.deletedAt !== null) {
-      throw new NotFoundException(`Lectura con ID ${id} no encontrada`);
+      throw new EntityNotFoundException('Lectura', id);
     }
 
     await this.readingRepository.update(

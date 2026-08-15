@@ -5,6 +5,7 @@ import { ReadingAnomalyRepository } from '../../domain/repositories/reading-anom
 import { ReadingAnomalyEntity } from '../../domain/entities/reading-anomaly.entity';
 import type { CreateReadingAnomalyDto } from '../../interfaces/dto/create-reading-anomaly.dto';
 import { EstadoLectura } from 'src/shared/enums';
+import { InvalidDomainOperationException } from 'src/shared/domain/exceptions/domain.exception';
 
 describe('CreateReadingAnomalyUseCase', () => {
   let useCase: CreateReadingAnomalyUseCase;
@@ -109,5 +110,22 @@ describe('CreateReadingAnomalyUseCase', () => {
     });
     expect(result.anomaliaId).toBe(BigInt(99));
     expect(result.lecturaId).toBe(BigInt(7));
+  });
+
+  it('should throw InvalidDomainOperationException for non-numeric lecturaId', async () => {
+    const invalidDto: CreateReadingAnomalyDto = {
+      lecturaId: 'abc',
+      observacion: 'Fuga de agua en el medidor',
+      tipo: 'FUGA',
+      estado: 'PENDIENTE',
+    };
+
+    await expect(useCase.execute(invalidDto)).rejects.toThrow(
+      InvalidDomainOperationException,
+    );
+
+    expect(
+      mockReadingAnomalyRepository.createAndMarkReadingWithAnomaly,
+    ).not.toHaveBeenCalled();
   });
 });

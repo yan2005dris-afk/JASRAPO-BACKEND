@@ -3,7 +3,10 @@ import { ReadingAnomalyRepository } from '../../domain/repositories/reading-anom
 import { UpdateReadingAnomalyDto } from '../../interfaces/dto/update-reading-anomaly.dto';
 import { ReadingAnomalyEntity } from '../../domain/entities/reading-anomaly.entity';
 import type { UpdateReadingAnomalyRepositoryData } from '../../domain/repositories/reading-anomaly.repository';
-import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
+import {
+  EntityNotFoundException,
+  InvalidDomainOperationException,
+} from 'src/shared/domain/exceptions/domain.exception';
 
 @Injectable()
 export class UpdateReadingAnomalyUseCase {
@@ -25,12 +28,23 @@ export class UpdateReadingAnomalyUseCase {
     const { lecturaId, ...rest } = updateDto;
     const dataToUpdate: UpdateReadingAnomalyRepositoryData = {
       ...rest,
-      ...(lecturaId !== undefined && { lecturaId: BigInt(lecturaId) }),
+      ...(lecturaId !== undefined && {
+        lecturaId: this.validateLecturaId(lecturaId),
+      }),
     };
 
     return this.readingAnomalyRepository.update(
       { anomaliaId: id },
       dataToUpdate,
     );
+  }
+
+  private validateLecturaId(lecturaId: string | number): bigint {
+    if (!/^\d+$/.test(String(lecturaId))) {
+      throw new InvalidDomainOperationException(
+        'lecturaId inválido: debe ser un número entero',
+      );
+    }
+    return BigInt(lecturaId);
   }
 }

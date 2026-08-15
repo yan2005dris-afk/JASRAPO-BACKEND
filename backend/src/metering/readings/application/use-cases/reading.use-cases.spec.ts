@@ -6,7 +6,6 @@ import { FindAllReadingsUseCase } from './find-all-readings.use-case';
 import { FindOneReadingUseCase } from './find-one-reading.use-case';
 import { UpdateReadingUseCase } from './update-reading.use-case';
 import { RemoveReadingUseCase } from './remove-reading.use-case';
-import { NotFoundException } from '@nestjs/common';
 import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 
 describe('Readings Use Cases', () => {
@@ -96,10 +95,10 @@ describe('Readings Use Cases', () => {
       expect(result.lecturaActual).toBe(150);
     });
 
-    it('should throw NotFoundException if not found', async () => {
+    it('should throw EntityNotFoundException if not found', async () => {
       mockReadingRepository.findUnique.mockResolvedValue(null);
       await expect(findOneUseCase.execute(BigInt(1))).rejects.toThrow(
-        NotFoundException,
+        EntityNotFoundException,
       );
     });
   });

@@ -2,7 +2,7 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { FindOneReadingUseCase } from './find-one-reading.use-case';
 import { ReadingRepository } from '../../domain/repositories/reading.repository';
-import { NotFoundException } from '@nestjs/common';
+import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 
 describe('FindOneReadingUseCase', () => {
   let useCase: FindOneReadingUseCase;
@@ -40,21 +40,23 @@ describe('FindOneReadingUseCase', () => {
     expect(result.lecturaActual).toBe(150);
   });
 
-  it('should throw NotFoundException when reading not found', async () => {
+  it('should throw EntityNotFoundException when reading not found', async () => {
     mockReadingRepository.findUnique.mockResolvedValue(null);
 
     await expect(useCase.execute(BigInt(999))).rejects.toThrow(
-      NotFoundException,
+      EntityNotFoundException,
     );
   });
 
-  it('should throw NotFoundException when reading is deleted', async () => {
+  it('should throw EntityNotFoundException when reading is deleted', async () => {
     mockReadingRepository.findUnique.mockResolvedValue({
       ...mockReading,
       deletedAt: new Date(),
     } as any);
 
-    await expect(useCase.execute(BigInt(1))).rejects.toThrow(NotFoundException);
+    await expect(useCase.execute(BigInt(1))).rejects.toThrow(
+      EntityNotFoundException,
+    );
   });
 
   it('should return an active reading when repository resolves deletedAt as null (regression for soft-delete select)', async () => {

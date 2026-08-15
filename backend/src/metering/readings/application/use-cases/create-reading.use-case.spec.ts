@@ -3,7 +3,10 @@ import { Test } from '@nestjs/testing';
 import { CreateReadingUseCase } from './create-reading.use-case';
 import { ReadingRepository } from '../../domain/repositories/reading.repository';
 import { StorageService } from 'src/infrastructure/storage/storage.service';
-import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
+import {
+  EntityNotFoundException,
+  InvalidDomainOperationException,
+} from 'src/shared/domain/exceptions/domain.exception';
 
 describe('CreateReadingUseCase', () => {
   let useCase: CreateReadingUseCase;
@@ -118,5 +121,39 @@ describe('CreateReadingUseCase', () => {
     await expect(useCase.execute(dto)).rejects.toThrow(
       EntityNotFoundException,
     );
+  });
+
+  it('should throw InvalidDomainOperationException for non-numeric medidorId', async () => {
+    const dto = {
+      fecha: '2026-01-15',
+      lecturaAnterior: 100,
+      lecturaActual: 150,
+      medidorId: 'abc',
+      periodoId: 1,
+      lecturaInicial: false,
+    };
+
+    await expect(useCase.execute(dto)).rejects.toThrow(
+      InvalidDomainOperationException,
+    );
+
+    expect(mockReadingRepository.create).not.toHaveBeenCalled();
+  });
+
+  it('should throw InvalidDomainOperationException for invalid fecha', async () => {
+    const dto = {
+      fecha: 'no-es-fecha',
+      lecturaAnterior: 100,
+      lecturaActual: 150,
+      medidorId: '1',
+      periodoId: 1,
+      lecturaInicial: false,
+    };
+
+    await expect(useCase.execute(dto)).rejects.toThrow(
+      InvalidDomainOperationException,
+    );
+
+    expect(mockReadingRepository.create).not.toHaveBeenCalled();
   });
 });

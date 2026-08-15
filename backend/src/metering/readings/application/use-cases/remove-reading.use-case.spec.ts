@@ -2,7 +2,7 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { RemoveReadingUseCase } from './remove-reading.use-case';
 import { ReadingRepository } from '../../domain/repositories/reading.repository';
-import { NotFoundException } from '@nestjs/common';
+import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 
 describe('RemoveReadingUseCase', () => {
   let useCase: RemoveReadingUseCase;
@@ -48,20 +48,22 @@ describe('RemoveReadingUseCase', () => {
     );
   });
 
-  it('should throw NotFoundException when reading not found', async () => {
+  it('should throw EntityNotFoundException when reading not found', async () => {
     mockReadingRepository.findUnique.mockResolvedValue(null);
 
     await expect(useCase.execute(BigInt(999))).rejects.toThrow(
-      NotFoundException,
+      EntityNotFoundException,
     );
   });
 
-  it('should throw NotFoundException when reading is already deleted', async () => {
+  it('should throw EntityNotFoundException when reading is already deleted', async () => {
     mockReadingRepository.findUnique.mockResolvedValue({
       ...mockReading,
       deletedAt: new Date(),
     } as any);
 
-    await expect(useCase.execute(BigInt(1))).rejects.toThrow(NotFoundException);
+    await expect(useCase.execute(BigInt(1))).rejects.toThrow(
+      EntityNotFoundException,
+    );
   });
 });

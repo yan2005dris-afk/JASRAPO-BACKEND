@@ -3,6 +3,7 @@ import { ReadingAnomalyRepository } from '../../domain/repositories/reading-anom
 import { CreateReadingAnomalyDto } from '../../interfaces/dto/create-reading-anomaly.dto';
 import { ReadingAnomalyEntity } from '../../domain/entities/reading-anomaly.entity';
 import { EstadoLectura } from 'src/shared/enums';
+import { InvalidDomainOperationException } from 'src/shared/domain/exceptions/domain.exception';
 
 @Injectable()
 export class CreateReadingAnomalyUseCase {
@@ -13,7 +14,7 @@ export class CreateReadingAnomalyUseCase {
   async execute(
     createDto: CreateReadingAnomalyDto,
   ): Promise<ReadingAnomalyEntity> {
-    const lecturaId = BigInt(createDto.lecturaId);
+    const lecturaId = this.validateLecturaId(createDto.lecturaId);
 
     return this.readingAnomalyRepository.createAndMarkReadingWithAnomaly({
       lecturaId,
@@ -23,5 +24,14 @@ export class CreateReadingAnomalyUseCase {
       fotoUrl: createDto.fotoUrl,
       nextEstadoLectura: EstadoLectura.CON_NOVEDAD,
     });
+  }
+
+  private validateLecturaId(lecturaId: string | number): bigint {
+    if (!/^\d+$/.test(String(lecturaId))) {
+      throw new InvalidDomainOperationException(
+        'lecturaId inválido: debe ser un número entero',
+      );
+    }
+    return BigInt(lecturaId);
   }
 }
