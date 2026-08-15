@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PaymentRepository } from '../../domain/repositories/payment.repository';
 
+
 @Injectable()
 export class FindOnePaymentUseCase {
   constructor(private readonly paymentRepository: PaymentRepository) {}

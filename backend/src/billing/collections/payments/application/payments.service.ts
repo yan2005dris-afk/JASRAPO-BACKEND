@@ -19,7 +19,6 @@ import { SaldoFavorResponseDto } from '../interfaces/dto/saldo-favor-response.dt
 import { PaymentStateResponseDto } from '../interfaces/dto/payment-state-response.dto';
 import { BankResponseDto } from '../interfaces/dto/bank-response.dto';
 import { CardBrandResponseDto } from '../interfaces/dto/card-brand-response.dto';
-
 import { PaymentRepository } from '../domain/repositories/payment.repository';
 import {
   toPaymentResponse,

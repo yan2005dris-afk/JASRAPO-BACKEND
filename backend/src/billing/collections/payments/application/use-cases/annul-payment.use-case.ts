@@ -12,6 +12,7 @@ import {
 import type { TransactionClient } from '../../domain/types/transaction';
 import { PaymentRepository } from '../../domain/repositories/payment.repository';
 
+
 @Injectable()
 export class AnnulPaymentUseCase {
   constructor(private readonly paymentRepository: PaymentRepository) {}

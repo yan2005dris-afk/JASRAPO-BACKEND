@@ -13,6 +13,7 @@ import { ApplySaldoFavorDto } from '../../interfaces/dto/create-payment.dto';
 import { PaymentRepository } from '../../domain/repositories/payment.repository';
 import { EventosPendientesRepository } from 'src/shared/outbox/domain/repositories/eventos-pendientes.repository';
 
+
 @Injectable()
 export class ApplySaldoFavorUseCase {
   constructor(
