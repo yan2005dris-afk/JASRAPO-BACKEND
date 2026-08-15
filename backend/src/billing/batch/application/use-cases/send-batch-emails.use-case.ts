@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import type { Decimal } from 'decimal.js';
 import {
   MailService,
   PLANILLA_BATCH_SIZE,
@@ -19,7 +18,7 @@ export interface SendBatchEmailsResult {
 type PlanillaCliente = {
   email: string;
   nombre: string;
-  monto: Decimal.Value;
+  monto: number;
   pdf: Buffer;
   periodo: string;
 };
@@ -67,7 +66,6 @@ export class SendBatchEmailsUseCase {
     let queued = 0;
     let skipped = 0;
     let batches = 0;
-
     for (
       let index = 0;
       index < prefacturaIds.length;

@@ -1,21 +1,17 @@
+import type { BatchEntity } from '../entities/batch.entity';
+import type { BatchFilters, GenerateBatchData } from '../types/batch.types';
+import type { PaginateOptions } from 'src/infrastructure/common/utils/pagination.util';
+import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
+
 export abstract class BatchRepository {
-  abstract findMany(params: {
-    include?: Record<string, any>;
-    orderBy?: Record<string, any>;
-    skip?: number;
-    take?: number;
-  }): Promise<any[]>;
+  abstract paginate(
+    pagination: PaginateOptions,
+    filters?: BatchFilters,
+  ): Promise<PaginatedResult<BatchEntity>>;
 
-  abstract count(params?: { where?: Record<string, any> }): Promise<number>;
+  abstract findById(id: number | bigint): Promise<BatchEntity | null>;
 
-  abstract findById(
-    id: number | bigint,
-    options?: { include?: Record<string, any> },
-  ): Promise<any>;
+  abstract count(filters?: BatchFilters): Promise<number>;
 
-  abstract generate(
-    periodoId: number,
-    comunidadId: number | null,
-    creadoPor: string,
-  ): Promise<any>;
+  abstract generate(data: GenerateBatchData): Promise<bigint | null>;
 }

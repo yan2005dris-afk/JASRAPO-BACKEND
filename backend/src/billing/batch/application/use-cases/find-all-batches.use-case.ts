@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { BatchRepository } from '../../domain/repositories/batch.repository';
-import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
-import { getPagination } from 'src/infrastructure/common/utils/pagination.util';
+import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
+import type { BatchEntity } from '../../domain/entities/batch.entity';
+import type { BatchFilters } from '../../domain/types/batch.types';
 
 @Injectable()
 export class FindAllBatchesUseCase {
@@ -10,38 +11,8 @@ export class FindAllBatchesUseCase {
   async execute(
     page: number = 1,
     limit: number = 10,
-  ): Promise<PaginatedResult<any>> {
-    const { skip, take } = getPagination(page, limit);
-
-    const [data, total] = await Promise.all([
-      this.batchRepository.findMany({
-        include: {
-          comunidad: true,
-          periodoRel: true,
-        },
-        orderBy: {
-          createdAt: 'desc',
-        },
-        skip,
-        take,
-      }),
-      this.batchRepository.count(),
-    ]);
-
-    const totalPages = Math.ceil(total / take);
-
-    return {
-      data,
-      meta: {
-        total,
-        page,
-        limit: take,
-        ultimaPagina: totalPages,
-        paginaActual: page,
-        porPagina: take,
-        anterior: page > 1 ? page - 1 : null,
-        siguiente: page < totalPages ? page + 1 : null,
-      },
-    };
+    filters?: BatchFilters,
+  ): Promise<PaginatedResult<BatchEntity>> {
+    return this.batchRepository.paginate({ page, limit }, filters);
   }
 }

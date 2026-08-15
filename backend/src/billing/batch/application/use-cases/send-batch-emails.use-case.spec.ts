@@ -13,13 +13,13 @@ jest.mock('pg-boss', () => ({
 
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Decimal } from 'decimal.js';
 import { SendBatchEmailsUseCase } from './send-batch-emails.use-case';
 import { FindOnePreInvoiceUseCase } from '../../../pre-invoice/application/use-cases/find-one-pre-invoice.use-case';
 import { GeneratePreInvoicePdfUseCase } from '../../../pre-invoice/application/use-cases/generate-pre-invoice-pdf.use-case';
 import { MailService } from 'src/infrastructure/mail/application/mail.service';
 import { PreInvoiceRepository } from '../../../pre-invoice/domain/repositories/pre-invoice.repository';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+
 const mockLogger = {
   log: jest.fn(),
   warn: jest.fn(),
@@ -63,13 +63,13 @@ describe('SendBatchEmailsUseCase', () => {
       .mockResolvedValueOnce({
         clienteEmail: 'a@test.com',
         clienteNombre: 'Cliente A',
-        totalPagar: new Decimal('10.00'),
+        totalPagar: 10,
         periodoRel: { nombre: 'Enero 2026' },
       })
       .mockResolvedValueOnce({
         clienteEmail: 'b@test.com',
         clienteNombre: 'Cliente B',
-        totalPagar: new Decimal('20.00'),
+        totalPagar: 20,
         periodoRel: { nombre: 'Febrero 2026' },
       });
 
@@ -109,13 +109,13 @@ describe('SendBatchEmailsUseCase', () => {
       .mockResolvedValueOnce({
         clienteEmail: null,
         clienteNombre: 'Sin Email',
-        totalPagar: new Decimal('10.00'),
+        totalPagar: 10,
         periodoRel: { nombre: 'Enero' },
       })
       .mockResolvedValueOnce({
         clienteEmail: 'b@test.com',
         clienteNombre: 'Cliente B',
-        totalPagar: new Decimal('20.00'),
+        totalPagar: 20,
         periodoRel: { nombre: 'Enero' },
       });
 

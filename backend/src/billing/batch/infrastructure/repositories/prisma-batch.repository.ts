@@ -1,47 +1,103 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
+import { Prisma, EstadoLote } from 'src/generated/prisma/client';
 import { BatchRepository } from '../../domain/repositories/batch.repository';
+import { BatchEntity } from '../../domain/entities/batch.entity';
+import { BatchMapper } from '../mappers/batch.mapper';
+import type {
+  BatchFilters,
+  GenerateBatchData,
+} from '../../domain/types/batch.types';
+import {
+  paginate,
+  type PaginateOptions,
+} from 'src/infrastructure/common/utils/pagination.util';
+import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
 
 @Injectable()
 export class PrismaBatchRepository implements BatchRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findMany(params: {
-    include?: Record<string, any>;
-    orderBy?: Record<string, any>;
-    skip?: number;
-    take?: number;
-  }): Promise<any[]> {
-    return this.prisma.lote.findMany(params);
+  private readonly defaultInclude = {
+    comunidad: true,
+    periodoRel: true,
+  };
+
+  async paginate(
+    pagination: PaginateOptions,
+    filters?: BatchFilters,
+  ): Promise<PaginatedResult<BatchEntity>> {
+    const where: Prisma.LoteWhereInput = {
+      ...(filters?.comunidadId ? { comunidadId: filters.comunidadId } : {}),
+      ...(filters?.periodoId ? { periodoId: filters.periodoId } : {}),
+      ...(filters?.estado ? { estado: filters.estado as EstadoLote } : {}),
+    };
+
+    const paginated = await paginate<any>(
+      this.prisma.lote,
+      {
+        where,
+        include: this.defaultInclude,
+        orderBy: { createdAt: 'desc' },
+      },
+      pagination,
+    );
+
+    return {
+      data: BatchMapper.toDomainList(paginated.data),
+      meta: paginated.meta,
+    };
   }
 
-  async count(params?: { where?: Record<string, any> }): Promise<number> {
-    return this.prisma.lote.count({
-      where: (params?.where ?? {}) as any,
-    });
+  async count(filters?: BatchFilters): Promise<number> {
+    const where: Prisma.LoteWhereInput = {
+      ...(filters?.comunidadId ? { comunidadId: filters.comunidadId } : {}),
+      ...(filters?.periodoId ? { periodoId: filters.periodoId } : {}),
+      ...(filters?.estado ? { estado: filters.estado as EstadoLote } : {}),
+    };
+
+    return this.prisma.lote.count({ where });
   }
 
-  async findById(
-    id: number | bigint,
-    options?: { include?: Record<string, any> },
-  ): Promise<any> {
-    return this.prisma.lote.findUnique({
+  async findById(id: number | bigint): Promise<BatchEntity | null> {
+    const record = await this.prisma.lote.findUnique({
       where: { loteId: BigInt(id) },
-      include: options?.include,
+      include: {
+        ...this.defaultInclude,
+        prefacturas: {
+          take: 10,
+          include: {
+            contrato: {
+              select: {
+                contratoId: true,
+                numeroGuia: true,
+                cliente: {
+                  select: {
+                    clienteId: true,
+                    nombres: true,
+                    apellidos: true,
+                    identificacion: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     });
+
+    return BatchMapper.toDomain(record);
   }
 
-  async generate(
-    periodoId: number,
-    comunidadId: number | null,
-    creadoPor: string,
-  ): Promise<any> {
+  async generate(data: GenerateBatchData): Promise<bigint | null> {
     const result = await this.prisma.$queryRawUnsafe<any[]>(
       `SELECT generar_prefacturas_lote($1, $2, $3) as "loteId"`,
-      periodoId,
-      comunidadId ?? null,
-      creadoPor,
+      data.periodoId,
+      data.comunidadId ?? null,
+      data.creadoPor ?? 'SYSTEM',
     );
-    return result[0]?.loteId;
+
+    const loteId = result[0]?.loteId;
+    return loteId ? BigInt(loteId) : null;
   }
 }

@@ -13,6 +13,7 @@ import {
   ApiOperation,
   ApiResponse,
   ApiTags,
+  ApiExtraModels,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
@@ -21,10 +22,18 @@ import { EnumStateDto } from 'src/shared/enums/state-catalog';
 import { GenerateBatchDto } from '../dto/generate-batch.dto';
 import { BatchService } from '../../application/batch.service';
 import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
+import { PaginationMetaDto } from 'src/infrastructure/common/dtos/pagination-meta.dto';
+import { ApiPaginatedResponse } from 'src/infrastructure/common/decorators/api-paginated-response.decorator';
 import { SendBatchEmailsUseCase } from '../../application/use-cases/send-batch-emails.use-case';
+import {
+  BatchResponseDto,
+  BatchGenerationResponseDto,
+} from '../dto/batch-response.dto';
+import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
 
 @ApiTags('batches')
 @ApiBearerAuth()
+@ApiExtraModels(BatchResponseDto, PaginationMetaDto)
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('batches')
 export class BatchController {
@@ -35,8 +44,15 @@ export class BatchController {
 
   @Post('generate')
   @ApiOperation({ summary: 'Generate a new batch of pre-invoices' })
+  @ApiResponse({
+    status: 201,
+    description: 'Batch generated successfully',
+    type: BatchGenerationResponseDto,
+  })
   @RequiredPermission('batches', 'create')
-  async generate(@Body() dto: GenerateBatchDto) {
+  async generate(
+    @Body() dto: GenerateBatchDto,
+  ): Promise<BatchGenerationResponseDto> {
     return this.batchService.generate(dto);
   }
 
@@ -57,16 +73,36 @@ export class BatchController {
 
   @Get()
   @ApiOperation({ summary: 'List all billing batches' })
+  @ApiPaginatedResponse(BatchResponseDto)
   @RequiredPermission('batches', 'read')
-  async findAll(@Query() paginationDto: PaginationDto) {
-    return this.batchService.findAll(paginationDto.page, paginationDto.limit);
+  async findAll(
+    @Query() paginationDto: PaginationDto,
+  ): Promise<PaginatedResult<BatchResponseDto>> {
+    const result = await this.batchService.findAll(
+      paginationDto.page,
+      paginationDto.limit,
+    );
+
+    return {
+      data: BatchResponseDto.fromEntityList(result.data),
+      meta: result.meta,
+    };
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get batch details by ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Batch found',
+    type: BatchResponseDto,
+  })
+  @ApiResponse({ status: 404, description: 'Batch not found' })
   @RequiredPermission('batches', 'read')
-  async findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.batchService.findOne(id);
+  async findOne(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<BatchResponseDto> {
+    const entity = await this.batchService.findOne(id);
+    return BatchResponseDto.fromEntity(entity);
   }
 
   @Post(':id/send-email')
