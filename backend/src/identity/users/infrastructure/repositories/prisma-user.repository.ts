@@ -199,8 +199,6 @@ export class PrismaUserRepository implements UserRepository {
     return mapped;
   }
 
-
-
   async findDirectPermissions(usuarioId: number): Promise<any[]> {
     return this.prisma.usuarioPermisos.findMany({
       where: {

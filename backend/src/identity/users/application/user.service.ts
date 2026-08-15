@@ -11,7 +11,10 @@ import { SoftDeleteUserUseCase } from './use-cases/soft-delete-user.use-case';
 import { GetEffectivePermissionsUseCase } from './use-cases/get-effective-permissions.use-case';
 import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
 import { UserEntity } from '../domain/entities/user.entity';
-import { UserAvatar, EffectivePermissionsResponse } from '../domain/types/user.types';
+import {
+  UserAvatar,
+  EffectivePermissionsResponse,
+} from '../domain/types/user.types';
 import { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { LogContext } from 'src/shared/decorators/log-context.decorator';

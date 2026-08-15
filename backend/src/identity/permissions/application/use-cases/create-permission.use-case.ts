@@ -4,7 +4,7 @@ import { PermissionRepository } from '../../domain/repositories/permission.repos
 
 @Injectable()
 export class CreatePermissionUseCase {
-  constructor(private readonly permissionRepository: PermissionRepository) { }
+  constructor(private readonly permissionRepository: PermissionRepository) {}
 
   async execute(createPermissionDto: CreatePermissionDto) {
     return this.permissionRepository.create(createPermissionDto);

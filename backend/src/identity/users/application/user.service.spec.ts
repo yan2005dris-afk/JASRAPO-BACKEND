@@ -50,12 +50,21 @@ describe('UserService', () => {
 
     service = module.get<UserService>(UserService);
     createUserUseCase = module.get<CreateUserUseCase>(CreateUserUseCase);
-    getUserDetailUseCase = module.get<GetUserDetailUseCase>(GetUserDetailUseCase);
-    getUserProfileUseCase = module.get<GetUserProfileUseCase>(GetUserProfileUseCase);
-    getActiveUsersUseCase = module.get<GetActiveUsersUseCase>(GetActiveUsersUseCase);
+    getUserDetailUseCase =
+      module.get<GetUserDetailUseCase>(GetUserDetailUseCase);
+    getUserProfileUseCase = module.get<GetUserProfileUseCase>(
+      GetUserProfileUseCase,
+    );
+    getActiveUsersUseCase = module.get<GetActiveUsersUseCase>(
+      GetActiveUsersUseCase,
+    );
     updateUserUseCase = module.get<UpdateUserUseCase>(UpdateUserUseCase);
-    updateUserAvatarUseCase = module.get<UpdateUserAvatarUseCase>(UpdateUserAvatarUseCase);
-    softDeleteUserUseCase = module.get<SoftDeleteUserUseCase>(SoftDeleteUserUseCase);
+    updateUserAvatarUseCase = module.get<UpdateUserAvatarUseCase>(
+      UpdateUserAvatarUseCase,
+    );
+    softDeleteUserUseCase = module.get<SoftDeleteUserUseCase>(
+      SoftDeleteUserUseCase,
+    );
     getEffectivePermissionsUseCase = module.get<GetEffectivePermissionsUseCase>(
       GetEffectivePermissionsUseCase,
     );
@@ -91,7 +100,11 @@ describe('UserService', () => {
   it('should delegate updateUser to UpdateUserUseCase', async () => {
     const updateDto = { nombres: 'Test' };
     await service.updateUser(1, updateDto);
-    expect(updateUserUseCase.execute).toHaveBeenCalledWith(1, updateDto, undefined);
+    expect(updateUserUseCase.execute).toHaveBeenCalledWith(
+      1,
+      updateDto,
+      undefined,
+    );
   });
 
   it('should delegate updateAvatar to UpdateUserAvatarUseCase', async () => {

@@ -5,7 +5,11 @@ import type {
   UpdateRoleRepositoryData,
 } from '../types/role.types';
 
-export type { RolePermission, CreateRoleRepositoryData, UpdateRoleRepositoryData };
+export type {
+  RolePermission,
+  CreateRoleRepositoryData,
+  UpdateRoleRepositoryData,
+};
 
 export abstract class RoleRepository {
   abstract findUnique(rolId: number): Promise<RoleEntity | null>;

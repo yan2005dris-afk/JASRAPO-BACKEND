@@ -1,7 +1,10 @@
-import { RoleEntity, RolePermission } from '../../domain/entities/role.entity';
+import type { RolePermission } from '../../domain/entities/role.entity';
+import { RoleEntity } from '../../domain/entities/role.entity';
 
 export class RoleMapper {
-  static toSimple(raw: any): { rolId: number; nombre: string; deletedAt?: Date | null } | null {
+  static toSimple(
+    raw: any,
+  ): { rolId: number; nombre: string; deletedAt?: Date | null } | null {
     if (!raw) return null;
     return {
       rolId: raw.rolId,

@@ -1,4 +1,4 @@
-import { RolePermission } from '../types/role.types';
+import type { RolePermission } from '../types/role.types';
 
 export type { RolePermission };
 

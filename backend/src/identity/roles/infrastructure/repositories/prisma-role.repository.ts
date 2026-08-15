@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '../../../../generated/prisma/client.js';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
-import { RoleRepository, RolePermission } from '../../domain/repositories/role.repository';
+import {
+  RoleRepository,
+  RolePermission,
+} from '../../domain/repositories/role.repository';
 import { RoleEntity } from '../../domain/entities/role.entity';
 import { RoleMapper } from '../mappers/role.mapper';
 

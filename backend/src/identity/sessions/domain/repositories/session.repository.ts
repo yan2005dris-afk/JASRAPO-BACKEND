@@ -1,4 +1,4 @@
-import { SessionEntity } from '../entities/session.entity';
+import type { SessionEntity } from '../entities/session.entity';
 import type {
   CreateSessionRepositoryData,
   UpdateSessionRepositoryData,

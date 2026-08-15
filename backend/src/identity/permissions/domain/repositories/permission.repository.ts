@@ -1,4 +1,4 @@
-import { PermissionEntity } from '../entities/permission.entity';
+import type { PermissionEntity } from '../entities/permission.entity';
 import type {
   CreatePermissionRepositoryData,
   UpdatePermissionRepositoryData,

@@ -84,29 +84,36 @@ export class UpdateUserUseCase {
     }
 
     try {
-      const result = await this.userRepository.executeTransaction(async (tx) => {
-        if (updateData.directPermissions !== undefined) {
-          await this.updateUserPermissionsUseCase.execute(
-            usuarioId,
-            updateData.directPermissions,
-            tx,
-          );
-        }
+      const result = await this.userRepository.executeTransaction(
+        async (tx) => {
+          if (updateData.directPermissions !== undefined) {
+            await this.updateUserPermissionsUseCase.execute(
+              usuarioId,
+              updateData.directPermissions,
+              tx,
+            );
+          }
 
-        const updatePayload: Record<string, any> = {};
-        if (updateData.email !== undefined) updatePayload.email = updateData.email;
-        if (updateData.nombres !== undefined) updatePayload.nombres = updateData.nombres;
-        if (updateData.apellidos !== undefined) updatePayload.apellidos = updateData.apellidos;
-        if (updateData.telefono !== undefined) updatePayload.telefono = updateData.telefono;
-        if (updateData.rolId !== undefined) updatePayload.rolId = updateData.rolId;
-        if (newAvatarKey) updatePayload.avatar = { key: newAvatarKey };
+          const updatePayload: Record<string, any> = {};
+          if (updateData.email !== undefined)
+            updatePayload.email = updateData.email;
+          if (updateData.nombres !== undefined)
+            updatePayload.nombres = updateData.nombres;
+          if (updateData.apellidos !== undefined)
+            updatePayload.apellidos = updateData.apellidos;
+          if (updateData.telefono !== undefined)
+            updatePayload.telefono = updateData.telefono;
+          if (updateData.rolId !== undefined)
+            updatePayload.rolId = updateData.rolId;
+          if (newAvatarKey) updatePayload.avatar = { key: newAvatarKey };
 
-        if (Object.keys(updatePayload).length > 0) {
-          return this.userRepository.update(usuarioId, updatePayload, tx);
-        }
+          if (Object.keys(updatePayload).length > 0) {
+            return this.userRepository.update(usuarioId, updatePayload, tx);
+          }
 
-        return existingUser;
-      });
+          return existingUser;
+        },
+      );
 
       if (newAvatarKey && oldAvatarKey && oldAvatarKey !== newAvatarKey) {
         this.storageService

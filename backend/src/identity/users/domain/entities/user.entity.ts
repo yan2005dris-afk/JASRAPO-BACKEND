@@ -1,5 +1,5 @@
-import { RoleEntity } from '../../../roles/domain/entities/role.entity';
-import {
+import type { RoleEntity } from '../../../roles/domain/entities/role.entity';
+import type {
   UserAvatar,
   UserDirectPermission,
   UserRolePermission,
