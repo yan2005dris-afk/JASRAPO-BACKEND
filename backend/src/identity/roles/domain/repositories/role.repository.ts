@@ -1,6 +1,11 @@
-import type { RoleEntity, RolePermission } from '../entities/role.entity';
+import type { RoleEntity } from '../entities/role.entity';
+import type {
+  RolePermission,
+  CreateRoleRepositoryData,
+  UpdateRoleRepositoryData,
+} from '../types/role.types';
 
-export type { RolePermission };
+export type { RolePermission, CreateRoleRepositoryData, UpdateRoleRepositoryData };
 
 export abstract class RoleRepository {
   abstract findUnique(rolId: number): Promise<RoleEntity | null>;
@@ -19,7 +24,7 @@ export abstract class RoleRepository {
   abstract create(nombre: string): Promise<RoleEntity>;
   abstract update(
     rolId: number,
-    data: { nombre?: string; deletedAt?: Date | null },
+    data: UpdateRoleRepositoryData,
   ): Promise<RoleEntity>;
   abstract assignPermission(
     rolId: number,

@@ -1,19 +1,13 @@
+import type { MenuEntity } from '../entities/menu.entity';
+
 export interface EffectivePermission {
-  resource: string;
-  action: string;
+  recurso: string;
+  accion: string;
 }
 
 export interface PermissionCondition {
-  resource: string;
-  action: string;
+  recurso: string;
+  accion: string;
 }
 
-export interface MenuRecord {
-  menuId: number;
-  menuPadreId: number | null;
-  nombre: string;
-  ruta: string;
-  icono: string | null;
-  activo: boolean;
-  createdAt?: Date | null;
-}
+export type MenuRecord = MenuEntity;

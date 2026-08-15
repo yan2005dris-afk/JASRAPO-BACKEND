@@ -1,16 +1,6 @@
-export interface RolePermission {
-  rolPermisoId: number;
-  rolId: number;
-  permisoId: number;
-  deletedAt: Date | null;
-  permiso?: {
-    permisoId: number;
-    nombre: string;
-    descripcion: string | null;
-    recurso: string;
-    accion: string;
-  };
-}
+import { RolePermission } from '../types/role.types';
+
+export type { RolePermission };
 
 export class RoleEntity {
   rolId: number;

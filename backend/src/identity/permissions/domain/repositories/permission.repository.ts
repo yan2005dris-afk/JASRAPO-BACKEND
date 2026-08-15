@@ -1,26 +1,14 @@
-export interface CreatePermissionRepositoryData {
-  nombre: string;
-  descripcion: string;
-  recurso: string;
-  accion: string;
-}
+import { PermissionEntity } from '../entities/permission.entity';
+import type {
+  CreatePermissionRepositoryData,
+  UpdatePermissionRepositoryData,
+} from '../types/permission.types';
 
-export interface UpdatePermissionRepositoryData {
-  nombre?: string;
-  descripcion?: string;
-  recurso?: string;
-  accion?: string;
-  deletedAt?: Date | null;
-}
-
-export interface PermissionEntity {
-  permisoId: number;
-  nombre: string;
-  descripcion: string;
-  recurso: string;
-  accion: string;
-  deletedAt: Date | null;
-}
+export type {
+  PermissionEntity,
+  CreatePermissionRepositoryData,
+  UpdatePermissionRepositoryData,
+};
 
 export abstract class PermissionRepository {
   abstract create(
