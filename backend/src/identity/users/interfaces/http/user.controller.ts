@@ -158,13 +158,6 @@ export class UserController {
     @Body() createUserDto: CreateUserDto,
     @UploadedFile() file?: Express.Multer.File,
   ): Promise<UserEntity> {
-    if (typeof createUserDto.rolId === 'string') {
-      const parsed = parseInt(createUserDto.rolId, 10);
-      if (isNaN(parsed)) {
-        throw new BadRequestException('rolId debe ser un número válido');
-      }
-      createUserDto.rolId = parsed;
-    }
     return this.userService.createUser(createUserDto, file);
   }
 
@@ -260,25 +253,6 @@ export class UserController {
     @Body() updateUserDto: UpdateUserDto,
     @UploadedFile() file?: Express.Multer.File,
   ): Promise<UserEntity> {
-    if (typeof updateUserDto.rolId === 'string') {
-      const parsed = parseInt(updateUserDto.rolId, 10);
-      if (isNaN(parsed)) {
-        throw new BadRequestException('rolId debe ser un número válido');
-      }
-      updateUserDto.rolId = parsed;
-    }
-    if (typeof updateUserDto.directPermissions === 'string') {
-      try {
-        updateUserDto.directPermissions = JSON.parse(
-          updateUserDto.directPermissions,
-        );
-      } catch {
-        throw new BadRequestException(
-          'directPermissions debe ser un JSON válido',
-        );
-      }
-    }
-
     const result = await this.userService.updateUser(id, updateUserDto, file);
     if (!result) {
       throw new NotFoundException('Usuario no encontrado');

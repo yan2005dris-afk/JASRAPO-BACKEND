@@ -7,6 +7,7 @@ import {
   MaxLength,
 } from 'class-validator';
 import { ApiProperty, OmitType } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 import { Prisma } from 'src/generated/prisma/client';
 import { IsNotEmptyString } from 'src/infrastructure/common/decorators/is-not-empty-string.decorator';
 import { UserResponseDto } from './user-response.dto';
@@ -44,6 +45,11 @@ export class CreateUserDto extends OmitType(UserResponseDto, [
     required: false,
   })
   @IsOptional()
+  @Transform(({ value }) => {
+    if (value === undefined || value === null || value === '') return undefined;
+    const parsed = Number(value);
+    return isNaN(parsed) ? value : parsed;
+  })
   @IsInt()
   @Min(1)
   rolId?: number;
