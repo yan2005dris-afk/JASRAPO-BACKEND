@@ -72,7 +72,7 @@ export class PrismaUserRepository implements UserRepository {
       where: { usuarioId },
       select: userWithRolesSelect,
     });
-    return await this.userMapper.toWithRole(user);
+    return await this.userMapper.toEntity(user);
   }
 
   async findByEmail(email: string): Promise<UserEntity | null> {
@@ -80,7 +80,7 @@ export class PrismaUserRepository implements UserRepository {
       where: { email },
       select: userWithRolesSelect,
     });
-    return await this.userMapper.toWithRole(user);
+    return await this.userMapper.toEntity(user);
   }
 
   async findByEmailWithPassword(email: string) {
@@ -108,7 +108,7 @@ export class PrismaUserRepository implements UserRepository {
     );
 
     const data = await Promise.all(
-      (result.data as any[]).map((user) => this.userMapper.toWithRole(user)),
+      (result.data as any[]).map((user) => this.userMapper.toEntity(user)),
     );
 
     return {
@@ -141,7 +141,7 @@ export class PrismaUserRepository implements UserRepository {
     );
 
     const data = await Promise.all(
-      (result.data as any[]).map((user) => this.userMapper.toWithRole(user)),
+      (result.data as any[]).map((user) => this.userMapper.toEntity(user)),
     );
 
     return {
@@ -161,7 +161,7 @@ export class PrismaUserRepository implements UserRepository {
       data: createData,
       select: userWithRolesSelect,
     });
-    const mapped = await this.userMapper.toWithRole(user);
+    const mapped = await this.userMapper.toEntity(user);
     if (!mapped) {
       throw new Error(
         `Error al mapear el usuario creado (ID: ${user.usuarioId})`,
@@ -190,7 +190,7 @@ export class PrismaUserRepository implements UserRepository {
       data: updateData,
       select: userWithRolesSelect,
     });
-    const mapped = await this.userMapper.toWithRole(user);
+    const mapped = await this.userMapper.toEntity(user);
     if (!mapped) {
       throw new Error(
         `Error al mapear el usuario actualizado (ID: ${usuarioId})`,

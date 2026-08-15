@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { UserEntity } from '../../domain/entities/user.entity';
-import { UserAvatar } from '../../domain/types/user.types';
+import {
+  UserAvatar,
+  UserWithPasswordAndLockout,
+} from '../../domain/types/user.types';
 import { SRI_STORAGE_TYPES } from 'src/infrastructure/storage/storage.service';
 import { STORAGE_PROXY_BASE } from 'src/infrastructure/storage-proxy/storage-proxy.constants';
 
@@ -27,7 +30,7 @@ export class UserMapper {
     return { url: defaultUrl };
   }
 
-  async toWithRole(rawUser: any): Promise<UserEntity | null> {
+  async toEntity(rawUser: any): Promise<UserEntity | null> {
     if (!rawUser) return null;
 
     const fullName = [rawUser.nombres, rawUser.apellidos]
@@ -52,26 +55,11 @@ export class UserMapper {
     });
   }
 
-  async toWithRoleAndClave(
+  async toWithPasswordAndLockout(
     rawUser: any,
-  ): Promise<(UserEntity & { clave: string }) | null> {
+  ): Promise<UserWithPasswordAndLockout | null> {
     if (!rawUser) return null;
-    const base = await this.toWithRole(rawUser);
-    if (!base) return null;
-    return Object.assign(base, { clave: rawUser.clave });
-  }
-
-  async toWithPasswordAndLockout(rawUser: any): Promise<
-    | (UserEntity & {
-        clave: string;
-        intentosFallidos: number;
-        ultimoIntentoFallidoEn: Date | null;
-        bloqueadoHasta: Date | null;
-      })
-    | null
-  > {
-    if (!rawUser) return null;
-    const base = await this.toWithRole(rawUser);
+    const base = await this.toEntity(rawUser);
     if (!base) return null;
     return Object.assign(base, {
       clave: rawUser.clave,
