@@ -1,36 +1,19 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { TariffRepository } from '../../domain/repositories/tariff.repository';
+import type { TariffCategoryEntity } from '../../domain/entities/tariff-category.entity';
+import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 
 @Injectable()
 export class RemoveTariffCategoryUseCase {
   constructor(private readonly tariffRepository: TariffRepository) {}
 
-  async execute(id: number) {
-    const current = await this.tariffRepository.findFirst({
-      categoriaTarifaId: id,
-      activo: true,
-      deletedAt: null,
-    });
+  async execute(id: number): Promise<TariffCategoryEntity> {
+    const current = await this.tariffRepository.findById(id);
 
     if (!current) {
-      throw new NotFoundException('Categoría no encontrada o ya eliminada');
+      throw new EntityNotFoundException('CategoriaTarifa', id);
     }
 
-    const now = new Date();
-
-    await this.tariffRepository.update(
-      { categoriaTarifaId: id },
-      {
-        activo: false,
-        fechaVigenciaHasta: now,
-        deletedAt: now,
-        updatedAt: now,
-      },
-    );
-
-    return {
-      message: 'Categoría de tarifa eliminada exitosamente',
-      statusCode: 200,
-    };
+    return this.tariffRepository.softDelete(id);
   }
 }

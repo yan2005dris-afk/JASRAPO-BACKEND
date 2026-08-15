@@ -1,35 +1,20 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { TariffRepository } from '../../domain/repositories/tariff.repository';
-import { CreateCategoriaTarifaDto } from '../../interfaces/dto/create-categoria-tarifa.dto';
-import { toTariffCategoryResponse } from '../../types/tariffCategoryMapper';
+import type { CreateCategoriaTarifaDto } from '../../interfaces/dto/create-categoria-tarifa.dto';
+import type { TariffCategoryEntity } from '../../domain/entities/tariff-category.entity';
+import { EntityAlreadyExistsException } from 'src/shared/domain/exceptions/domain.exception';
 
 @Injectable()
 export class CreateTariffCategoryUseCase {
   constructor(private readonly tariffRepository: TariffRepository) {}
 
-  async execute(dto: CreateCategoriaTarifaDto) {
-    const existing = await this.tariffRepository.findFirst({
-      nombre: dto.nombre,
-      activo: true,
-      deletedAt: null,
-    });
+  async execute(dto: CreateCategoriaTarifaDto): Promise<TariffCategoryEntity> {
+    const existing = await this.tariffRepository.findActiveByNombre(dto.nombre);
 
     if (existing) {
-      throw new ConflictException(
-        'Ya existe una categoría activa con ese nombre',
-      );
+      throw new EntityAlreadyExistsException('CategoriaTarifa', dto.nombre);
     }
 
-    const now = new Date();
-
-    const newTariff = await this.tariffRepository.create({
-      ...dto,
-      fechaVigenciaDesde: now,
-      fechaVigenciaHasta: null,
-      activo: true,
-      createdAt: now,
-    });
-
-    return toTariffCategoryResponse(newTariff);
+    return this.tariffRepository.create(dto);
   }
 }

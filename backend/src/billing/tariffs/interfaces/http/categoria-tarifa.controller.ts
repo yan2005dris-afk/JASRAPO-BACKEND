@@ -14,6 +14,7 @@ import { CategoriaTarifaService } from '../../application/categoria-tarifa.servi
 import { CreateCategoriaTarifaDto } from '../dto/create-categoria-tarifa.dto';
 import { UpdateCategoriaTarifaDto } from '../dto/update-categoria-tarifa.dto';
 import { TariffCategoryFilterDto } from '../dto/tariff-category-filter.dto';
+import { TariffCategoryResponseDto } from '../dto/tariff-category-response.dto';
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -24,6 +25,7 @@ import {
 import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
+import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
 
 @ApiTags('tariff-categories')
 @ApiBearerAuth()
@@ -33,28 +35,43 @@ export class CategoriaTarifaController {
   constructor(private readonly service: CategoriaTarifaService) {}
 
   @ApiOperation({ summary: 'Crear categoría tarifa' })
-  @ApiResponse({ status: 201, description: 'Creada correctamente' })
+  @ApiResponse({
+    status: 201,
+    description: 'Creada correctamente',
+    type: TariffCategoryResponseDto,
+  })
   @RequiredPermission('tarifas', 'create')
   @Post()
-  create(@Body() dto: CreateCategoriaTarifaDto) {
-    return this.service.createCategoria(dto);
+  async create(
+    @Body() dto: CreateCategoriaTarifaDto,
+  ): Promise<TariffCategoryResponseDto> {
+    const entity = await this.service.createCategoria(dto);
+    return TariffCategoryResponseDto.fromEntity(entity);
   }
 
-  // LISTADO PRINCIPAL
   @ApiOperation({
     summary: 'Obtener todas las categorías activas con paginación',
   })
+  @ApiResponse({
+    status: 200,
+    description: 'Listado paginado de categorías',
+  })
   @RequiredPermission('tarifas', 'read')
   @Get()
-  findAll(@Query() filterDto: TariffCategoryFilterDto) {
-    return this.service.getCategorias(
+  async findAll(
+    @Query() filterDto: TariffCategoryFilterDto,
+  ): Promise<PaginatedResult<TariffCategoryResponseDto>> {
+    const result = await this.service.getCategorias(
       filterDto.page,
       filterDto.limit,
       filterDto.nombre,
     );
+    return {
+      data: TariffCategoryResponseDto.fromEntityList(result.data),
+      meta: result.meta,
+    };
   }
 
-  // OBTENER UNA CATEGORÍA POR ID
   @ApiOperation({ summary: 'Obtener una categoría de tarifa por ID' })
   @ApiParam({
     name: 'id',
@@ -62,28 +79,49 @@ export class CategoriaTarifaController {
     type: Number,
     example: 1,
   })
-  @ApiResponse({ status: 200, description: 'Categoría encontrada' })
+  @ApiResponse({
+    status: 200,
+    description: 'Categoría encontrada',
+    type: TariffCategoryResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'Categoría no encontrada' })
   @RequiredPermission('tarifas', 'read')
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.service.findOneCategoria(id);
+  async findOne(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<TariffCategoryResponseDto> {
+    const entity = await this.service.findOneCategoria(id);
+    return TariffCategoryResponseDto.fromEntity(entity);
   }
 
   @ApiOperation({ summary: 'Actualizar categoría (crea nueva versión)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Nueva versión creada correctamente',
+    type: TariffCategoryResponseDto,
+  })
   @RequiredPermission('tarifas', 'update')
   @Patch(':id')
-  update(
+  async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateCategoriaTarifaDto,
-  ) {
-    return this.service.updateCategoria(id, dto);
+  ): Promise<TariffCategoryResponseDto> {
+    const entity = await this.service.updateCategoria(id, dto);
+    return TariffCategoryResponseDto.fromEntity(entity);
   }
 
   @ApiOperation({ summary: 'Eliminar categoría (soft delete)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Categoría eliminada exitosamente',
+    type: TariffCategoryResponseDto,
+  })
   @RequiredPermission('tarifas', 'delete')
   @Delete(':id')
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.service.deleteCategoria(id);
+  async remove(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<TariffCategoryResponseDto> {
+    const entity = await this.service.deleteCategoria(id);
+    return TariffCategoryResponseDto.fromEntity(entity);
   }
 }

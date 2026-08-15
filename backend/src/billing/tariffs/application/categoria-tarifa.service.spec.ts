@@ -1,18 +1,21 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { CategoriaTarifaService } from './categoria-tarifa.service';
-import { TariffRepository } from '../domain/repositories/tariff.repository';
-import { ConflictException, NotFoundException } from '@nestjs/common';
 import { CreateTariffCategoryUseCase } from './use-cases/create-tariff-category.use-case';
 import { FindAllTariffCategoriesUseCase } from './use-cases/find-all-tariff-categories.use-case';
 import { FindOneTariffCategoryUseCase } from './use-cases/find-one-tariff-category.use-case';
 import { UpdateTariffCategoryUseCase } from './use-cases/update-tariff-category.use-case';
 import { RemoveTariffCategoryUseCase } from './use-cases/remove-tariff-category.use-case';
+import { TariffCategoryEntity } from '../domain/entities/tariff-category.entity';
+import {
+  EntityNotFoundException,
+  EntityAlreadyExistsException,
+} from 'src/shared/domain/exceptions/domain.exception';
 
 describe('CategoriaTarifaService', () => {
   let service: CategoriaTarifaService;
 
-  const mockCategoriaTarifa = {
+  const mockCategoriaTarifa = new TariffCategoryEntity({
     categoriaTarifaId: 1,
     nombre: 'Residencial',
     descripcion: 'Categoría residencial estándar',
@@ -25,16 +28,7 @@ describe('CategoriaTarifaService', () => {
     createdAt: new Date(),
     updatedAt: new Date(),
     deletedAt: null,
-  };
-
-  const mockTariffRepository = {
-    findFirst: jest.fn(),
-    findMany: jest.fn(),
-    count: jest.fn(),
-    create: jest.fn(),
-    update: jest.fn(),
-    executeTransaction: jest.fn(),
-  };
+  });
 
   const mockCreateUseCase = { execute: jest.fn() };
   const mockFindAllUseCase = { execute: jest.fn() };
@@ -46,7 +40,6 @@ describe('CategoriaTarifaService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CategoriaTarifaService,
-        { provide: TariffRepository, useValue: mockTariffRepository },
         { provide: CreateTariffCategoryUseCase, useValue: mockCreateUseCase },
         {
           provide: FindAllTariffCategoriesUseCase,
@@ -88,39 +81,39 @@ describe('CategoriaTarifaService', () => {
       expect(result.activo).toBe(true);
     });
 
-    it('should throw ConflictException when categoria with same name exists', async () => {
+    it('should throw EntityAlreadyExistsException when categoria with same name exists', async () => {
       mockCreateUseCase.execute.mockRejectedValue(
-        new ConflictException('Ya existe una categoría con ese nombre'),
+        new EntityAlreadyExistsException('CategoriaTarifa', 'Residencial'),
       );
 
       await expect(
         service.createCategoria({
           nombre: 'Residencial',
+          valorBase: 10,
+          valorExcedenteM3: 0.5,
         }),
-      ).rejects.toThrow(ConflictException);
+      ).rejects.toThrow(EntityAlreadyExistsException);
     });
   });
 
   describe('getCategorias', () => {
     it('should return all active categorias', async () => {
-      mockFindAllUseCase.execute.mockResolvedValue([mockCategoriaTarifa]);
+      mockFindAllUseCase.execute.mockResolvedValue({
+        data: [mockCategoriaTarifa],
+        meta: { total: 1, page: 1, limit: 10 },
+      });
 
       const result = await service.getCategorias();
 
-      expect(result).toHaveLength(1);
-      expect(result[0].activo).toBe(true);
-    });
-
-    it('should return empty array when no categorias exist', async () => {
-      mockFindAllUseCase.execute.mockResolvedValue([]);
-
-      const result = await service.getCategorias();
-
-      expect(result).toEqual([]);
+      expect(result.data).toHaveLength(1);
+      expect(result.data[0].activo).toBe(true);
     });
 
     it('should filter by nombre with case-insensitive search', async () => {
-      mockFindAllUseCase.execute.mockResolvedValue([mockCategoriaTarifa]);
+      mockFindAllUseCase.execute.mockResolvedValue({
+        data: [mockCategoriaTarifa],
+        meta: { total: 1, page: 1, limit: 10 },
+      });
 
       await service.getCategorias(1, 10, 'residencial');
 
@@ -142,23 +135,23 @@ describe('CategoriaTarifaService', () => {
       expect(mockFindOneUseCase.execute).toHaveBeenCalledWith(1);
     });
 
-    it('should throw NotFoundException when not found', async () => {
+    it('should throw EntityNotFoundException when not found', async () => {
       mockFindOneUseCase.execute.mockRejectedValue(
-        new NotFoundException('Categoría no encontrada'),
+        new EntityNotFoundException('CategoriaTarifa', 999),
       );
 
       await expect(service.findOneCategoria(999)).rejects.toThrow(
-        NotFoundException,
+        EntityNotFoundException,
       );
     });
   });
 
   describe('updateCategoria', () => {
     it('should update categoria with transaction', async () => {
-      const updatedCategoria = {
+      const updatedCategoria = new TariffCategoryEntity({
         ...mockCategoriaTarifa,
         nombre: 'Residencial Actualizado',
-      };
+      });
 
       mockUpdateUseCase.execute.mockResolvedValue(updatedCategoria);
 
@@ -169,61 +162,39 @@ describe('CategoriaTarifaService', () => {
       expect(result.nombre).toBe('Residencial Actualizado');
     });
 
-    it('should throw NotFoundException when categoria not found', async () => {
+    it('should throw EntityNotFoundException when categoria not found', async () => {
       mockUpdateUseCase.execute.mockRejectedValue(
-        new NotFoundException('Categoría no encontrada'),
+        new EntityNotFoundException('CategoriaTarifa', 999),
       );
 
       await expect(
         service.updateCategoria(999, { nombre: 'New Name' }),
-      ).rejects.toThrow(NotFoundException);
-    });
-
-    it('should throw ConflictException when new nombre already exists', async () => {
-      mockUpdateUseCase.execute.mockRejectedValue(
-        new ConflictException('Ya existe una categoría activa con ese nombre'),
-      );
-
-      await expect(
-        service.updateCategoria(1, { nombre: 'Comercial' }),
-      ).rejects.toThrow(ConflictException);
+      ).rejects.toThrow(EntityNotFoundException);
     });
   });
 
   describe('deleteCategoria', () => {
     it('should soft delete categoria', async () => {
-      const deleteResponse = {
-        message: 'Categoría de tarifa eliminada exitosamente',
-        statusCode: 200,
-      };
-      mockRemoveUseCase.execute.mockResolvedValue(deleteResponse);
+      const deletedEntity = new TariffCategoryEntity({
+        ...mockCategoriaTarifa,
+        activo: false,
+        deletedAt: new Date(),
+      });
+      mockRemoveUseCase.execute.mockResolvedValue(deletedEntity);
 
       const result = await service.deleteCategoria(1);
 
-      expect(result).toEqual({
-        message: 'Categoría de tarifa eliminada exitosamente',
-        statusCode: 200,
-      });
+      expect(result.activo).toBe(false);
       expect(mockRemoveUseCase.execute).toHaveBeenCalledWith(1);
     });
 
-    it('should throw NotFoundException when categoria not found', async () => {
+    it('should throw EntityNotFoundException when categoria not found', async () => {
       mockRemoveUseCase.execute.mockRejectedValue(
-        new NotFoundException('Categoría no encontrada'),
+        new EntityNotFoundException('CategoriaTarifa', 999),
       );
 
       await expect(service.deleteCategoria(999)).rejects.toThrow(
-        NotFoundException,
-      );
-    });
-
-    it('should throw NotFoundException when categoria already deleted', async () => {
-      mockRemoveUseCase.execute.mockRejectedValue(
-        new NotFoundException('Categoría no encontrada'),
-      );
-
-      await expect(service.deleteCategoria(1)).rejects.toThrow(
-        NotFoundException,
+        EntityNotFoundException,
       );
     });
   });

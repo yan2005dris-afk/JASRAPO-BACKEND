@@ -1,25 +1,19 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { TariffRepository } from '../../domain/repositories/tariff.repository';
-import { IResponseTariffCategory } from '../../types/IResponseTariffCategory';
-import { toTariffCategoryResponse } from '../../types/tariffCategoryMapper';
+import type { TariffCategoryEntity } from '../../domain/entities/tariff-category.entity';
+import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 
 @Injectable()
 export class FindOneTariffCategoryUseCase {
   constructor(private readonly tariffRepository: TariffRepository) {}
 
-  async execute(id: number): Promise<IResponseTariffCategory> {
-    const tariff = await this.tariffRepository.findFirst({
-      categoriaTarifaId: id,
-      activo: true,
-      deletedAt: null,
-    });
+  async execute(id: number): Promise<TariffCategoryEntity> {
+    const tariff = await this.tariffRepository.findById(id);
 
     if (!tariff) {
-      throw new NotFoundException(
-        'Categoría de tarifa no encontrada o inactiva',
-      );
+      throw new EntityNotFoundException('CategoriaTarifa', id);
     }
 
-    return toTariffCategoryResponse(tariff);
+    return tariff;
   }
 }

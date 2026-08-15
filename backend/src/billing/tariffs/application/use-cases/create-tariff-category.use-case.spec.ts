@@ -2,18 +2,19 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { CreateTariffCategoryUseCase } from './create-tariff-category.use-case';
 import { TariffRepository } from '../../domain/repositories/tariff.repository';
-import { ConflictException } from '@nestjs/common';
+import { EntityAlreadyExistsException } from 'src/shared/domain/exceptions/domain.exception';
+import { TariffCategoryEntity } from '../../domain/entities/tariff-category.entity';
 
 describe('CreateTariffCategoryUseCase', () => {
   let useCase: CreateTariffCategoryUseCase;
 
   const mockTariffRepository = {
-    findFirst: jest.fn(),
-    findMany: jest.fn(),
-    count: jest.fn(),
+    findById: jest.fn(),
+    findActiveByNombre: jest.fn(),
+    paginate: jest.fn(),
     create: jest.fn(),
-    update: jest.fn(),
-    executeTransaction: jest.fn(),
+    createNewVersion: jest.fn(),
+    softDelete: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -49,30 +50,34 @@ describe('CreateTariffCategoryUseCase', () => {
       valorExcedenteM3: 0.5,
     };
 
-    mockTariffRepository.findFirst.mockResolvedValue(null);
-    mockTariffRepository.create.mockResolvedValue({
-      categoriaTarifaId: 1,
-      ...dto,
-      activo: true,
-    });
+    mockTariffRepository.findActiveByNombre.mockResolvedValue(null);
+    mockTariffRepository.create.mockResolvedValue(
+      new TariffCategoryEntity({
+        categoriaTarifaId: 1,
+        ...dto,
+        activo: true,
+      }),
+    );
 
     const result = await useCase.execute(dto);
 
     expect(result).toBeDefined();
     expect(result.nombre).toBe(dto.nombre);
-    expect(mockTariffRepository.findFirst).toHaveBeenCalled();
-    expect(mockTariffRepository.create).toHaveBeenCalled();
+    expect(mockTariffRepository.findActiveByNombre).toHaveBeenCalledWith('Residencial');
+    expect(mockTariffRepository.create).toHaveBeenCalledWith(dto);
   });
 
-  it('should throw ConflictException if category with same name exists', async () => {
-    const dto = { nombre: 'Residencial' };
-    mockTariffRepository.findFirst.mockResolvedValue({
-      categoriaTarifaId: 1,
-      nombre: 'Residencial',
-    });
+  it('should throw EntityAlreadyExistsException if category with same name exists', async () => {
+    const dto = { nombre: 'Residencial', valorBase: 10, valorExcedenteM3: 0.5 };
+    mockTariffRepository.findActiveByNombre.mockResolvedValue(
+      new TariffCategoryEntity({
+        categoriaTarifaId: 1,
+        nombre: 'Residencial',
+      }),
+    );
 
     await expect(useCase.execute(dto as any)).rejects.toThrow(
-      ConflictException,
+      EntityAlreadyExistsException,
     );
     expect(mockTariffRepository.create).not.toHaveBeenCalled();
   });

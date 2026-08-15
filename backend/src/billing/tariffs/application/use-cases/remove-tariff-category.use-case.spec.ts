@@ -2,18 +2,19 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { RemoveTariffCategoryUseCase } from './remove-tariff-category.use-case';
 import { TariffRepository } from '../../domain/repositories/tariff.repository';
-import { NotFoundException } from '@nestjs/common';
+import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
+import { TariffCategoryEntity } from '../../domain/entities/tariff-category.entity';
 
 describe('RemoveTariffCategoryUseCase', () => {
   let useCase: RemoveTariffCategoryUseCase;
 
   const mockTariffRepository = {
-    findFirst: jest.fn(),
-    findMany: jest.fn(),
-    count: jest.fn(),
+    findById: jest.fn(),
+    findActiveByNombre: jest.fn(),
+    paginate: jest.fn(),
     create: jest.fn(),
-    update: jest.fn(),
-    executeTransaction: jest.fn(),
+    createNewVersion: jest.fn(),
+    softDelete: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -42,36 +43,31 @@ describe('RemoveTariffCategoryUseCase', () => {
 
   it('should soft delete a tariff category', async () => {
     const id = 1;
-    const current = {
+    const current = new TariffCategoryEntity({
       categoriaTarifaId: id,
       nombre: 'Residencial',
       activo: true,
-    };
-
-    mockTariffRepository.findFirst.mockResolvedValue(current);
-    mockTariffRepository.update.mockResolvedValue({
+    });
+    const deleted = new TariffCategoryEntity({
       ...current,
       activo: false,
       deletedAt: new Date(),
     });
 
+    mockTariffRepository.findById.mockResolvedValue(current);
+    mockTariffRepository.softDelete.mockResolvedValue(deleted);
+
     const result = await useCase.execute(id);
 
-    expect(result.message).toBe('Categoría de tarifa eliminada exitosamente');
-    expect(result.statusCode).toBe(200);
-    expect(mockTariffRepository.findFirst).toHaveBeenCalled();
-    expect(mockTariffRepository.update).toHaveBeenCalledWith(
-      { categoriaTarifaId: id },
-      expect.objectContaining({
-        activo: false,
-        deletedAt: expect.any(Date),
-      }),
-    );
+    expect(result.activo).toBe(false);
+    expect(mockTariffRepository.findById).toHaveBeenCalledWith(id);
+    expect(mockTariffRepository.softDelete).toHaveBeenCalledWith(id);
   });
 
-  it('should throw NotFoundException if category does not exist', async () => {
-    mockTariffRepository.findFirst.mockResolvedValue(null);
+  it('should throw EntityNotFoundException if category does not exist', async () => {
+    mockTariffRepository.findById.mockResolvedValue(null);
 
-    await expect(useCase.execute(1)).rejects.toThrow(NotFoundException);
+    await expect(useCase.execute(1)).rejects.toThrow(EntityNotFoundException);
+    expect(mockTariffRepository.findById).toHaveBeenCalledWith(1);
   });
 });

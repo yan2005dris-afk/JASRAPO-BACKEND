@@ -1,26 +1,35 @@
-import type { Prisma } from 'src/generated/prisma/client';
+import type { TariffCategoryEntity } from '../entities/tariff-category.entity';
+import type {
+  CreateTariffCategoryData,
+  UpdateTariffCategoryData,
+  TariffCategoryFilters,
+} from '../types/tariff.types';
+import type { PaginateOptions } from 'src/infrastructure/common/utils/pagination.util';
+import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
 
 export abstract class TariffRepository {
-  abstract findFirst(where: Prisma.CategoriaTarifaWhereInput): Promise<any>;
+  abstract findById(
+    id: number,
+    includeDeleted?: boolean,
+  ): Promise<TariffCategoryEntity | null>;
 
-  abstract findMany(params: {
-    where?: Prisma.CategoriaTarifaWhereInput;
-    orderBy?: Prisma.CategoriaTarifaOrderByWithRelationInput;
-    skip?: number;
-    take?: number;
-    select?: Prisma.CategoriaTarifaSelect;
-  }): Promise<any[]>;
+  abstract findActiveByNombre(
+    nombre: string,
+  ): Promise<TariffCategoryEntity | null>;
 
-  abstract count(params: {
-    where?: Prisma.CategoriaTarifaWhereInput;
-  }): Promise<number>;
+  abstract paginate(
+    filters: TariffCategoryFilters,
+    pagination: PaginateOptions,
+  ): Promise<PaginatedResult<TariffCategoryEntity>>;
 
-  abstract create(data: Prisma.CategoriaTarifaCreateInput): Promise<any>;
+  abstract create(
+    data: CreateTariffCategoryData,
+  ): Promise<TariffCategoryEntity>;
 
-  abstract update(
-    where: Prisma.CategoriaTarifaWhereUniqueInput,
-    data: Prisma.CategoriaTarifaUpdateInput,
-  ): Promise<any>;
+  abstract createNewVersion(
+    currentId: number,
+    data: UpdateTariffCategoryData,
+  ): Promise<TariffCategoryEntity>;
 
-  abstract executeTransaction<T>(callback: (tx: any) => Promise<T>): Promise<T>;
+  abstract softDelete(id: number): Promise<TariffCategoryEntity>;
 }
