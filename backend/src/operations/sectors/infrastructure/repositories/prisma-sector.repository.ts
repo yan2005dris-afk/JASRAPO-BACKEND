@@ -41,9 +41,7 @@ export class PrismaSectorRepository implements SectorRepository {
     return raw ? SectorMapper.toDomain(raw) : null;
   }
 
-  async findComunidadById(
-    comunidadId: number,
-  ): Promise<ComunidadRef | null> {
+  async findComunidadById(comunidadId: number): Promise<ComunidadRef | null> {
     const comunidad = await this.prisma.comunidades.findUnique({
       where: { comunidadId },
     });
@@ -101,10 +99,7 @@ export class PrismaSectorRepository implements SectorRepository {
     }
   }
 
-  async update(
-    id: number,
-    data: UpdateSectorData,
-  ): Promise<SectorEntity> {
+  async update(id: number, data: UpdateSectorData): Promise<SectorEntity> {
     try {
       const raw = await this.prisma.sectores.update({
         where: { sectorId: id },

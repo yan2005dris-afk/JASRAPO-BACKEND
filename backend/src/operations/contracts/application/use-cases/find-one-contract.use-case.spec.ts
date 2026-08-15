@@ -33,7 +33,10 @@ describe('FindOneContractUseCase', () => {
 
   it('should return a contract if it exists', async () => {
     const id = BigInt(1);
-    const mockContract = new ContractEntity({ contratoId: id, deletedAt: null });
+    const mockContract = new ContractEntity({
+      contratoId: id,
+      deletedAt: null,
+    });
     mockContractRepository.findById.mockResolvedValue(mockContract);
 
     const result = await useCase.execute(id);

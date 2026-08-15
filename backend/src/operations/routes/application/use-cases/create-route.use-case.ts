@@ -57,9 +57,7 @@ export class CreateRouteUseCase {
       }
     }
 
-    const periodo = await this.routeRepository.findPeriodo(
-      createDto.periodoId,
-    );
+    const periodo = await this.routeRepository.findPeriodo(createDto.periodoId);
 
     if (!periodo) {
       throw new EntityNotFoundException('Periodo', createDto.periodoId);

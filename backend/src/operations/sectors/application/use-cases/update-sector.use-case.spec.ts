@@ -33,7 +33,12 @@ describe('UpdateSectorUseCase', () => {
   it('should update a sector successfully', async () => {
     const dto = { nombre: 'Sector Updated' };
     const mockExistingSector = new SectorEntity(1, 'Old', 'SEC-001', 1);
-    const mockUpdatedSector = new SectorEntity(1, 'Sector Updated', 'SEC-001', 1);
+    const mockUpdatedSector = new SectorEntity(
+      1,
+      'Sector Updated',
+      'SEC-001',
+      1,
+    );
 
     mockSectorRepository.findById.mockResolvedValue(mockExistingSector);
     mockSectorRepository.update.mockResolvedValue(mockUpdatedSector);

@@ -29,9 +29,7 @@ describe('SectorController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [SectorController],
-      providers: [
-        { provide: SectorService, useValue: mockSectorService },
-      ],
+      providers: [{ provide: SectorService, useValue: mockSectorService }],
     }).compile();
 
     controller = module.get<SectorController>(SectorController);
@@ -94,7 +92,9 @@ describe('SectorController', () => {
     const result = await controller.update(1, { nombre: 'Nuevo Nombre' });
 
     expect(result.sectorId).toBe(1);
-    expect(mockSectorService.actualizarSector).toHaveBeenCalledWith(1, { nombre: 'Nuevo Nombre' });
+    expect(mockSectorService.actualizarSector).toHaveBeenCalledWith(1, {
+      nombre: 'Nuevo Nombre',
+    });
   });
 
   it('remove should return deleted SectorResponseDto', async () => {

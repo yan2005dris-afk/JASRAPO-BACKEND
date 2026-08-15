@@ -1,5 +1,5 @@
 import { PrismaRouteRepository } from './prisma-route.repository';
-import { PrismaService } from 'src/infrastructure/database/prisma.service';
+import type { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { Prisma } from 'src/generated/prisma/client';
 import {
   EntityNotFoundException,
@@ -185,9 +185,9 @@ describe('PrismaRouteRepository', () => {
       });
       prisma.rutas.update.mockRejectedValue(p2025);
 
-      await expect(
-        repository.update(99n, { nombre: 'Test' }),
-      ).rejects.toThrow(EntityNotFoundException);
+      await expect(repository.update(99n, { nombre: 'Test' })).rejects.toThrow(
+        EntityNotFoundException,
+      );
     });
   });
 
@@ -238,7 +238,10 @@ describe('PrismaRouteRepository', () => {
     });
 
     it('findSector should find sector', async () => {
-      prisma.sectores.findUnique.mockResolvedValue({ sectorId: 1, comunidadId: 1 });
+      prisma.sectores.findUnique.mockResolvedValue({
+        sectorId: 1,
+        comunidadId: 1,
+      });
 
       const result = await repository.findSector(1);
 
@@ -246,7 +249,10 @@ describe('PrismaRouteRepository', () => {
     });
 
     it('findPeriodo should find period', async () => {
-      prisma.periodos.findUnique.mockResolvedValue({ periodoId: 1, estado: 'ABIERTO' });
+      prisma.periodos.findUnique.mockResolvedValue({
+        periodoId: 1,
+        estado: 'ABIERTO',
+      });
 
       const result = await repository.findPeriodo(1);
 

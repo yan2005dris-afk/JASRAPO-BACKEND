@@ -31,7 +31,14 @@ describe('DeleteSectorUseCase', () => {
 
   it('should delete a sector successfully when found', async () => {
     const existing = new SectorEntity(1, 'Sector 1', 'SEC-001', 1);
-    const deleted = new SectorEntity(1, 'Sector 1', 'SEC-001', 1, null, new Date());
+    const deleted = new SectorEntity(
+      1,
+      'Sector 1',
+      'SEC-001',
+      1,
+      null,
+      new Date(),
+    );
     mockSectorRepository.findById.mockResolvedValue(existing);
     mockSectorRepository.softDelete.mockResolvedValue(deleted);
 
@@ -45,8 +52,6 @@ describe('DeleteSectorUseCase', () => {
   it('should throw EntityNotFoundException if sector does not exist', async () => {
     mockSectorRepository.findById.mockResolvedValue(null);
 
-    await expect(useCase.execute(999)).rejects.toThrow(
-      EntityNotFoundException,
-    );
+    await expect(useCase.execute(999)).rejects.toThrow(EntityNotFoundException);
   });
 });

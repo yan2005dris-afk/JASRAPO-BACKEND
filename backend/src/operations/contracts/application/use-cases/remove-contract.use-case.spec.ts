@@ -35,7 +35,10 @@ describe('RemoveContractUseCase', () => {
   it('should soft delete a contract if it exists', async () => {
     const id = BigInt(1);
     const existing = new ContractEntity({ contratoId: id, deletedAt: null });
-    const deleted = new ContractEntity({ contratoId: id, deletedAt: new Date() });
+    const deleted = new ContractEntity({
+      contratoId: id,
+      deletedAt: new Date(),
+    });
 
     mockContractRepository.findById.mockResolvedValue(existing);
     mockContractRepository.softDelete.mockResolvedValue(deleted);

@@ -103,7 +103,9 @@ describe('ContratoMedidorController', () => {
   it('actualizarContrato should return ContractResponseDto', async () => {
     mockService.actualizar.mockResolvedValue(sampleContract);
 
-    const result = await controller.actualizarContrato(1n, { estado: 'ACTIVO' });
+    const result = await controller.actualizarContrato(1n, {
+      estado: 'ACTIVO',
+    });
 
     expect(result.contratoId).toBe(1n);
   });

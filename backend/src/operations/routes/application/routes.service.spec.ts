@@ -54,9 +54,8 @@ describe('RoutesService', () => {
       GetEligibleReadingsUseCase,
     );
     createRouteUseCase = module.get<CreateRouteUseCase>(CreateRouteUseCase);
-    findAllRoutesUseCase = module.get<FindAllRoutesUseCase>(
-      FindAllRoutesUseCase,
-    );
+    findAllRoutesUseCase =
+      module.get<FindAllRoutesUseCase>(FindAllRoutesUseCase);
     findOneRouteUseCase = module.get<FindOneRouteUseCase>(FindOneRouteUseCase);
     updateRouteUseCase = module.get<UpdateRouteUseCase>(UpdateRouteUseCase);
     deleteRouteUseCase = module.get<DeleteRouteUseCase>(DeleteRouteUseCase);

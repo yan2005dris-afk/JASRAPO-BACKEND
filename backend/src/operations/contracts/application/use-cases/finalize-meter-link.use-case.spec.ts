@@ -43,7 +43,9 @@ describe('FinalizeMeterLinkUseCase', () => {
     });
 
     mockContractRepository.findById.mockResolvedValue(mockContract);
-    mockContractRepository.finalizeActiveMeterLink.mockResolvedValue(mockContract);
+    mockContractRepository.finalizeActiveMeterLink.mockResolvedValue(
+      mockContract,
+    );
 
     const result = await useCase.execute(contratoId);
 
@@ -62,7 +64,9 @@ describe('FinalizeMeterLinkUseCase', () => {
 
     mockContractRepository.findById.mockResolvedValue(mockContract);
     mockContractRepository.finalizeActiveMeterLink.mockRejectedValue(
-      new InvalidDomainOperationException('No hay un vínculo activo para este contrato'),
+      new InvalidDomainOperationException(
+        'No hay un vínculo activo para este contrato',
+      ),
     );
 
     await expect(useCase.execute(contratoId)).rejects.toThrow(

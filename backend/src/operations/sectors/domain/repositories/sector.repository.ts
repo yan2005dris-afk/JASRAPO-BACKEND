@@ -20,10 +20,7 @@ export abstract class SectorRepository {
 
   abstract create(data: CreateSectorData): Promise<SectorEntity>;
 
-  abstract update(
-    id: number,
-    data: UpdateSectorData,
-  ): Promise<SectorEntity>;
+  abstract update(id: number, data: UpdateSectorData): Promise<SectorEntity>;
 
   abstract softDelete(id: number): Promise<SectorEntity>;
 }

@@ -27,11 +27,14 @@ export abstract class ContractRepository {
     orderBy?: { [key: string]: 'asc' | 'desc' };
   }): Promise<ContractEntity[]>;
 
-  abstract findUnique(
-    where: { contratoId?: bigint; numeroGuia?: string },
-  ): Promise<ContractEntity | null>;
+  abstract findUnique(where: {
+    contratoId?: bigint;
+    numeroGuia?: string;
+  }): Promise<ContractEntity | null>;
 
-  abstract count(params?: { where?: Partial<ContractFilters> }): Promise<number>;
+  abstract count(params?: {
+    where?: Partial<ContractFilters>;
+  }): Promise<number>;
 
   abstract update(
     contratoId: bigint,

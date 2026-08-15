@@ -110,10 +110,7 @@ export class PrismaRouteRepository implements RouteRepository {
     }
   }
 
-  async update(
-    rutaId: bigint,
-    data: UpdateRouteData,
-  ): Promise<RouteEntity> {
+  async update(rutaId: bigint, data: UpdateRouteData): Promise<RouteEntity> {
     try {
       const raw = await this.prisma.rutas.update({
         where: { rutaId },

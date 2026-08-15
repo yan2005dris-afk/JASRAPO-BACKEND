@@ -55,10 +55,7 @@ export abstract class RouteRepository {
 
   abstract create(data: CreateRouteData): Promise<RouteEntity>;
 
-  abstract update(
-    rutaId: bigint,
-    data: UpdateRouteData,
-  ): Promise<RouteEntity>;
+  abstract update(rutaId: bigint, data: UpdateRouteData): Promise<RouteEntity>;
 
   abstract softDelete(rutaId: bigint): Promise<RouteEntity>;
 

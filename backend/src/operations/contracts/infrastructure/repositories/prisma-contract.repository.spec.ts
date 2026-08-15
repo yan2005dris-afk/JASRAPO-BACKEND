@@ -1,5 +1,5 @@
 import { PrismaContractRepository } from './prisma-contract.repository';
-import { PrismaService } from 'src/infrastructure/database/prisma.service';
+import type { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { Prisma } from 'src/generated/prisma/client';
 import { EstadoMedidor } from 'src/shared/enums';
 import {
@@ -139,7 +139,7 @@ describe('PrismaContractRepository', () => {
         numeroGuia: 'G-001',
         direccionSuministro: 'Av. 1',
         comunidadId: 1,
-        estado: 'ACTIVO' as any,
+        estado: 'ACTIVO',
         fechaInicio: new Date('2026-01-01'),
       });
 
@@ -174,7 +174,9 @@ describe('PrismaContractRepository', () => {
         estado: 'SUSPENDIDO',
       });
 
-      const result = await repository.update(1n, { estado: 'SUSPENDIDO' as any });
+      const result = await repository.update(1n, {
+        estado: 'SUSPENDIDO',
+      });
 
       expect(result.estado).toBe('SUSPENDIDO');
     });
@@ -208,7 +210,9 @@ describe('PrismaContractRepository', () => {
   describe('createContractWithMeterHistory', () => {
     it('should execute transactional contract and meter history creation', async () => {
       const txMock = {
-        clientes: { findUnique: jest.fn().mockResolvedValue({ clienteId: 10n }) },
+        clientes: {
+          findUnique: jest.fn().mockResolvedValue({ clienteId: 10n }),
+        },
         medidores: {
           findUnique: jest.fn().mockResolvedValue({
             medidorId: 100n,
@@ -240,7 +244,7 @@ describe('PrismaContractRepository', () => {
         sectorId: null,
         numeroGuia: 'G-001',
         direccionSuministro: 'Av. 1',
-        estado: 'SOLICITUD' as any,
+        estado: 'SOLICITUD',
         lecturaInicial: 0,
       });
 
@@ -253,7 +257,9 @@ describe('PrismaContractRepository', () => {
 
     it('should throw InvalidDomainOperationException if meter is not in BODEGA', async () => {
       const txMock = {
-        clientes: { findUnique: jest.fn().mockResolvedValue({ clienteId: 10n }) },
+        clientes: {
+          findUnique: jest.fn().mockResolvedValue({ clienteId: 10n }),
+        },
         medidores: {
           findUnique: jest.fn().mockResolvedValue({
             medidorId: 100n,

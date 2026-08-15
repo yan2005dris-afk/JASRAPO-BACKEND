@@ -40,7 +40,9 @@ describe('ReassignRouteUseCase', () => {
   it('should throw EntityNotFoundException if route does not exist', async () => {
     mockRouteRepository.findById.mockResolvedValue(null);
 
-    await expect(useCase.execute(1n, 10)).rejects.toThrow(EntityNotFoundException);
+    await expect(useCase.execute(1n, 10)).rejects.toThrow(
+      EntityNotFoundException,
+    );
 
     expect(mockRouteRepository.findById).toHaveBeenCalledWith(1n);
   });
@@ -62,7 +64,9 @@ describe('ReassignRouteUseCase', () => {
     );
     mockRouteRepository.findUsuario.mockResolvedValue(null);
 
-    await expect(useCase.execute(1n, 10)).rejects.toThrow(EntityNotFoundException);
+    await expect(useCase.execute(1n, 10)).rejects.toThrow(
+      EntityNotFoundException,
+    );
 
     expect(mockRouteRepository.findUsuario).toHaveBeenCalledWith(10, {
       includeRole: true,

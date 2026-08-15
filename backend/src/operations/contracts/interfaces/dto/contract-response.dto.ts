@@ -108,7 +108,11 @@ export class ContractResponseDto {
   @ApiProperty({ example: '10', description: 'ID del cliente' })
   clienteId: bigint;
 
-  @ApiPropertyOptional({ example: 1, nullable: true, description: 'ID del sector' })
+  @ApiPropertyOptional({
+    example: 1,
+    nullable: true,
+    description: 'ID del sector',
+  })
   sectorId: number | null;
 
   @ApiProperty({ example: 1, description: 'ID de la categoría de tarifa' })
@@ -120,13 +124,20 @@ export class ContractResponseDto {
   @ApiProperty({ example: '2026-01-01', description: 'Fecha de inicio' })
   fechaInicio: string;
 
-  @ApiProperty({ example: 'Av. Amazonas 123', description: 'Dirección de suministro' })
+  @ApiProperty({
+    example: 'Av. Amazonas 123',
+    description: 'Dirección de suministro',
+  })
   direccionSuministro: string;
 
   @ApiProperty({ example: 'ACTIVO', description: 'Estado del contrato' })
   estado: string;
 
-  @ApiPropertyOptional({ example: 'admin', nullable: true, description: 'Usuario creador' })
+  @ApiPropertyOptional({
+    example: 'admin',
+    nullable: true,
+    description: 'Usuario creador',
+  })
   creadoPor: string | null;
 
   @ApiProperty({ example: 1, description: 'ID de la comunidad' })

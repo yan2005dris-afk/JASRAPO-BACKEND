@@ -104,7 +104,11 @@ describe('RoutesController', () => {
       meta: { total: 1, page: 1, limit: 10 },
     });
 
-    const result = await controller.findAll({ page: 1, limit: 10, estado: 'PENDIENTE' });
+    const result = await controller.findAll({
+      page: 1,
+      limit: 10,
+      estado: 'PENDIENTE',
+    });
 
     expect(result.data).toHaveLength(1);
     expect(result.data[0].rutaId).toBe(1n);

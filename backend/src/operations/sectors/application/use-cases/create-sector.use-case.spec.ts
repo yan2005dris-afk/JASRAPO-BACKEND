@@ -56,8 +56,6 @@ describe('CreateSectorUseCase', () => {
     const dto = { nombre: 'Sector A', codigo: 'SEC-001', comunidadId: 999 };
     mockSectorRepository.findComunidadById.mockResolvedValue(null);
 
-    await expect(useCase.execute(dto)).rejects.toThrow(
-      EntityNotFoundException,
-    );
+    await expect(useCase.execute(dto)).rejects.toThrow(EntityNotFoundException);
   });
 });

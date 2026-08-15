@@ -41,8 +41,6 @@ describe('GetSectorUseCase', () => {
   it('should throw EntityNotFoundException if sector does not exist', async () => {
     mockSectorRepository.findById.mockResolvedValue(null);
 
-    await expect(useCase.execute(999)).rejects.toThrow(
-      EntityNotFoundException,
-    );
+    await expect(useCase.execute(999)).rejects.toThrow(EntityNotFoundException);
   });
 });

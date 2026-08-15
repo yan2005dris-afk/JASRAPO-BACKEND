@@ -1,5 +1,8 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import type { SectorEntity, ComunidadRef } from '../../domain/entities/sector.entity';
+import type {
+  SectorEntity,
+  ComunidadRef,
+} from '../../domain/entities/sector.entity';
 
 export class ComunidadRefDto {
   @ApiProperty({ example: 1, description: 'ID de la comunidad' })

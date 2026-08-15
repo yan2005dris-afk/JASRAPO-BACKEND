@@ -1,5 +1,5 @@
 import { PrismaSectorRepository } from './prisma-sector.repository';
-import { PrismaService } from 'src/infrastructure/database/prisma.service';
+import type { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { Prisma } from 'src/generated/prisma/client';
 import {
   EntityNotFoundException,
@@ -153,10 +153,13 @@ describe('PrismaSectorRepository', () => {
     });
 
     it('should throw EntityAlreadyExistsException on P2002 error', async () => {
-      const p2002Error = new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
-        code: 'P2002',
-        clientVersion: '7.0.0',
-      });
+      const p2002Error = new Prisma.PrismaClientKnownRequestError(
+        'Unique constraint failed',
+        {
+          code: 'P2002',
+          clientVersion: '7.0.0',
+        },
+      );
       prisma.sectores.create.mockRejectedValue(p2002Error);
 
       await expect(
@@ -176,16 +179,21 @@ describe('PrismaSectorRepository', () => {
         nombre: 'Sector Modificado',
       });
 
-      const result = await repository.update(1, { nombre: 'Sector Modificado' });
+      const result = await repository.update(1, {
+        nombre: 'Sector Modificado',
+      });
 
       expect(result.nombre).toBe('Sector Modificado');
     });
 
     it('should throw EntityNotFoundException on P2025 error', async () => {
-      const p2025Error = new Prisma.PrismaClientKnownRequestError('Record not found', {
-        code: 'P2025',
-        clientVersion: '7.0.0',
-      });
+      const p2025Error = new Prisma.PrismaClientKnownRequestError(
+        'Record not found',
+        {
+          code: 'P2025',
+          clientVersion: '7.0.0',
+        },
+      );
       prisma.sectores.update.mockRejectedValue(p2025Error);
 
       await expect(repository.update(99, { nombre: 'Test' })).rejects.toThrow(
@@ -207,10 +215,13 @@ describe('PrismaSectorRepository', () => {
     });
 
     it('should throw EntityNotFoundException on P2025 error', async () => {
-      const p2025Error = new Prisma.PrismaClientKnownRequestError('Record not found', {
-        code: 'P2025',
-        clientVersion: '7.0.0',
-      });
+      const p2025Error = new Prisma.PrismaClientKnownRequestError(
+        'Record not found',
+        {
+          code: 'P2025',
+          clientVersion: '7.0.0',
+        },
+      );
       prisma.sectores.update.mockRejectedValue(p2025Error);
 
       await expect(repository.softDelete(99)).rejects.toThrow(
