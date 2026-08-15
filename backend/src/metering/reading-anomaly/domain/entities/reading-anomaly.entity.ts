@@ -1,4 +1,4 @@
-import { TipoAnomalia, EstadoAnomalia } from 'src/shared/enums';
+import type { TipoAnomalia, EstadoAnomalia } from 'src/shared/enums';
 
 export class ReadingAnomalyEntity {
   anomaliaId: bigint;

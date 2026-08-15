@@ -118,9 +118,7 @@ describe('CreateReadingUseCase', () => {
 
     mockReadingRepository.findActivePeriod.mockResolvedValue(null);
 
-    await expect(useCase.execute(dto)).rejects.toThrow(
-      EntityNotFoundException,
-    );
+    await expect(useCase.execute(dto)).rejects.toThrow(EntityNotFoundException);
   });
 
   it('should throw InvalidDomainOperationException for non-numeric medidorId', async () => {

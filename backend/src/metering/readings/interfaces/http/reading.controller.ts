@@ -188,7 +188,9 @@ export class ReadingController {
   async findOne(
     @Param('id', ParseBigIntPipe) id: bigint,
   ): Promise<ResponseReadingDto> {
-    return ResponseReadingDto.fromEntity(await this.readingService.findOne(id))!;
+    return ResponseReadingDto.fromEntity(
+      await this.readingService.findOne(id),
+    )!;
   }
 
   @ApiOperation({
