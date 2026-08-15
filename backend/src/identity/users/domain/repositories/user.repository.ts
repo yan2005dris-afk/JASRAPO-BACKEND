@@ -7,6 +7,7 @@ import type {
   UserWithPasswordAndLockout,
   FailedLoginAttemptOptions,
   FailedLoginAttemptResult,
+  DomainPaginationParams,
 } from '../types/user.types';
 
 export type {
@@ -17,13 +18,8 @@ export type {
   UserWithPasswordAndLockout,
   FailedLoginAttemptOptions,
   FailedLoginAttemptResult,
+  DomainPaginationParams,
 };
-
-export interface DomainPaginationParams {
-  page?: number;
-  limit?: number;
-  [key: string]: any;
-}
 
 export abstract class UserRepository {
   abstract findById(usuarioId: number): Promise<UserEntity | null>;

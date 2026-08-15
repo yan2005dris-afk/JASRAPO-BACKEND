@@ -1,10 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { UserRepository } from '../../domain/repositories/user.repository';
-
-export interface UserRolePermission {
-  recurso: string;
-  accion: string;
-}
+import { UserRolePermission } from '../../domain/types/user.types';
 
 @Injectable()
 export class GetUserRolePermissionsUseCase {

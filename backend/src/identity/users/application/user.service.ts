@@ -17,12 +17,11 @@ import { PaginatedResult } from 'src/infrastructure/common/types/paginated-resul
 import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
 import { UserRepository } from '../domain/repositories/user.repository';
 import { RoleRepository } from '../../roles/domain/repositories/role.repository';
+import { UserEntity } from '../domain/entities/user.entity';
 import {
-  UserEntity,
   UserAvatar,
-  AvatarEntity,
-} from '../domain/entities/user.entity';
-import { EffectivePermissionsResponse } from '../domain/types/user.types';
+  EffectivePermissionsResponse,
+} from '../domain/types/user.types';
 import {
   StorageService,
   SRI_STORAGE_TYPES,
@@ -247,7 +246,7 @@ export class UserService {
   async updateAvatar(
     usuarioId: number,
     file: Express.Multer.File,
-  ): Promise<AvatarEntity> {
+  ): Promise<UserAvatar> {
     const user = await this.userRepository.findById(usuarioId);
     if (!user || user.deletedAt) {
       throw new NotFoundException('Usuario no encontrado');
@@ -271,7 +270,7 @@ export class UserService {
       }
 
       const updatedUser = await this.userRepository.findById(usuarioId);
-      return updatedUser?.avatar as AvatarEntity;
+      return updatedUser?.avatar as UserAvatar;
     } catch (error) {
       if (newAvatarKey) {
         this.storageService

@@ -1,28 +1,9 @@
 import { RoleEntity } from '../../../roles/domain/entities/role.entity';
-
-export interface UserAvatar {
-  url: string;
-  key?: string;
-}
-
-export type AvatarEntity = UserAvatar;
-
-export interface UserDirectPermission {
-  usuarioPermisoId: number;
-  permisoId: number;
-  recurso: string;
-  accion: string;
-  permitido: boolean;
-}
-
-export type DirectPermissionEntity = UserDirectPermission;
-
-export interface UserRolePermission {
-  recurso: string;
-  accion: string;
-}
-
-export type AuthPermissionEntity = UserRolePermission;
+import {
+  UserAvatar,
+  UserDirectPermission,
+  UserRolePermission,
+} from '../types/user.types';
 
 export class UserEntity {
   usuarioId: number;

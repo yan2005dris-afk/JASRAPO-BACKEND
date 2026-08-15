@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { UserEntity, UserAvatar } from '../../domain/entities/user.entity';
+import { UserEntity } from '../../domain/entities/user.entity';
+import { UserAvatar } from '../../domain/types/user.types';
 import { SRI_STORAGE_TYPES } from 'src/infrastructure/storage/storage.service';
 import { STORAGE_PROXY_BASE } from 'src/infrastructure/storage-proxy/storage-proxy.constants';
 

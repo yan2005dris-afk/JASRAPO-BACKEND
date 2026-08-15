@@ -1,4 +1,33 @@
-import type { AuthPermissionEntity, UserEntity } from '../entities/user.entity';
+import type { UserEntity } from '../entities/user.entity';
+
+export interface UserAvatar {
+  url: string;
+  key?: string;
+}
+
+export interface UserDirectPermission {
+  usuarioPermisoId: number;
+  permisoId: number;
+  recurso: string;
+  accion: string;
+  permitido: boolean;
+}
+
+export interface UserRolePermission {
+  recurso: string;
+  accion: string;
+}
+
+export interface UserDirectPermissionInput {
+  permisoId: number;
+  permitido?: boolean;
+}
+
+export interface DomainPaginationParams {
+  page?: number;
+  limit?: number;
+  [key: string]: any;
+}
 
 export interface FiltroFecha {
   igualA?: Date | null;
@@ -63,5 +92,5 @@ export interface FailedLoginAttemptResult {
 
 export interface EffectivePermissionsResponse {
   usuarioId: number;
-  permisos: AuthPermissionEntity[];
+  permisos: UserRolePermission[];
 }

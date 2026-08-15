@@ -1,10 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { UserRepository } from '../../domain/repositories/user.repository';
-
-export interface UserDirectPermissionInput {
-  permisoId: number;
-  permitido?: boolean;
-}
+import { UserDirectPermissionInput } from '../../domain/types/user.types';
 
 @Injectable()
 export class UpdateUserPermissionsUseCase {
