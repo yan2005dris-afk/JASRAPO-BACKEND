@@ -1,7 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { AgreementRepository } from '../../domain/repositories/agreement.repository';
 
-
 @Injectable()
 export class FindOneAgreementUseCase {
   constructor(private readonly agreementRepository: AgreementRepository) {}

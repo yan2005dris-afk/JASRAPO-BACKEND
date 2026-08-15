@@ -36,7 +36,11 @@ import { PaginatedResult } from 'src/infrastructure/common/types/paginated-resul
 
 @ApiTags('clients')
 @ApiBearerAuth()
-@ApiExtraModels(ClientResponseDto, TipoIdentificacionResponseDto, PaginationMetaDto)
+@ApiExtraModels(
+  ClientResponseDto,
+  TipoIdentificacionResponseDto,
+  PaginationMetaDto,
+)
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('clients')
 export class ClientController {
@@ -122,7 +126,9 @@ export class ClientController {
   @ApiResponse({ status: 404, description: 'Cliente no encontrado' })
   @RequiredPermission('clientes', 'read')
   @Get(':id')
-  findOne(@Param('id', ParseBigIntPipe) id: bigint): Promise<ClientResponseDto> {
+  findOne(
+    @Param('id', ParseBigIntPipe) id: bigint,
+  ): Promise<ClientResponseDto> {
     return this.clientService.findOne(id);
   }
 

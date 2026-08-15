@@ -43,11 +43,7 @@ import { MAX_UPLOAD_SIZE_BYTES } from 'src/infrastructure/config/app.constants';
 
 @ApiTags('users')
 @ApiBearerAuth()
-@ApiExtraModels(
-  UserResponseDto,
-  UserProfileResponseDto,
-  UserDetailResponseDto,
-)
+@ApiExtraModels(UserResponseDto, UserProfileResponseDto, UserDetailResponseDto)
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('users')
 export class UserController {

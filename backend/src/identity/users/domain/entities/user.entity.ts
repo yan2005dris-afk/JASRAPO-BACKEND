@@ -158,4 +158,3 @@ export class UserDetailEntity extends UserEntity {
   })
   permisosRol: AuthPermissionEntity[];
 }
-

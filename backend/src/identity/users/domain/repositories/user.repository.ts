@@ -1,5 +1,5 @@
 import type { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
-import { UserEntity } from '../entities/user.entity';
+import type { UserEntity } from '../entities/user.entity';
 
 export interface FiltroFecha {
   igualA?: Date | null;
@@ -80,9 +80,7 @@ export abstract class UserRepository {
     pagination: PaginationDto,
   ): Promise<{ data: UserEntity[]; meta: any }>;
 
-  abstract create(
-    data: CreateUserRepositoryData,
-  ): Promise<UserEntity>;
+  abstract create(data: CreateUserRepositoryData): Promise<UserEntity>;
 
   abstract update(
     usuarioId: number,

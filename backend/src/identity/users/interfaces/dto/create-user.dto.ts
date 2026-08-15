@@ -48,4 +48,3 @@ export class CreateUserDto extends OmitType(UserEntity, [
   @Min(1)
   rolId?: number;
 }
-

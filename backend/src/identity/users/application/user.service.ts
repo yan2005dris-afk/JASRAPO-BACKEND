@@ -22,9 +22,7 @@ import {
   UserProfileEntity,
   AvatarEntity,
 } from '../domain/entities/user.entity';
-import {
-  EffectivePermissionsResponse,
-} from '../domain/types/user.types';
+import { EffectivePermissionsResponse } from '../domain/types/user.types';
 import {
   StorageService,
   SRI_STORAGE_TYPES,
@@ -111,9 +109,7 @@ export class UserService {
     };
   }
 
-  async users(
-    pagination: PaginationDto,
-  ): Promise<PaginatedResult<UserEntity>> {
+  async users(pagination: PaginationDto): Promise<PaginatedResult<UserEntity>> {
     return this.userRepository.findManyActive(pagination);
   }
 
