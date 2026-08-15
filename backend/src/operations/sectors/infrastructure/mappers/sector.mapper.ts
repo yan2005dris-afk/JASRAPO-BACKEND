@@ -26,16 +26,16 @@ export class SectorMapper {
         : null;
     }
 
-    return new SectorEntity(
-      raw.sectorId,
-      raw.nombre,
-      raw.codigo,
-      raw.comunidadId ?? null,
-      comunidades,
-      raw.deletedAt ?? null,
-      raw.createdAt,
-      raw.updatedAt,
-    );
+    return new SectorEntity({
+      sectorId: raw.sectorId,
+      nombre: raw.nombre,
+      codigo: raw.codigo,
+      comunidadId: raw.comunidadId ?? null,
+      comunidades: comunidades,
+      deletedAt: raw.deletedAt ?? null,
+      createdAt: raw.createdAt,
+      updatedAt: raw.updatedAt,
+    });
   }
 
   static toDomainList(raws: PrismaSectorRaw[]): SectorEntity[] {

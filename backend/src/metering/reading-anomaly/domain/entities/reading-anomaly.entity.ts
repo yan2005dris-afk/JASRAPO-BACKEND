@@ -63,7 +63,20 @@ export class ReadingAnomalyEntity {
     consumoCalculado: number;
   } | null;
 
-  constructor(partial: Partial<ReadingAnomalyEntity>) {
-    Object.assign(this, partial);
+  constructor(partial?: Partial<ReadingAnomalyEntity>) {
+    if (partial) {
+      Object.assign(this, partial);
+      this.validateInvariants();
+    }
+  }
+
+  validateInvariants(): void {
+    if (this.tipo === undefined || this.tipo === null) {
+      throw new Error('El tipo de anomalía es obligatorio');
+    }
+  }
+
+  resolve(): void {
+    this.estado = EstadoAnomalia.RESUELTA;
   }
 }

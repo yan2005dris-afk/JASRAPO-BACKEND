@@ -60,7 +60,26 @@ export class ClientEntity {
   @ApiProperty()
   updatedAt: Date;
 
-  constructor(partial: Partial<ClientEntity>) {
-    Object.assign(this, partial);
+  constructor(partial?: Partial<ClientEntity>) {
+    if (partial) {
+      Object.assign(this, partial);
+      this.validateInvariants();
+    }
+  }
+
+  validateInvariants(): void {
+    if (this.identificacion !== undefined && this.identificacion !== null && this.identificacion.trim() === '') {
+      throw new Error('La identificación del cliente no puede estar vacía');
+    }
+    if (this.email !== undefined && this.email !== null && this.email.trim() !== '') {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(this.email)) {
+        throw new Error('El formato del correo electrónico del cliente es inválido');
+      }
+    }
+  }
+
+  getNombreCompleto(): string {
+    return [this.nombres, this.apellidos].filter(Boolean).join(' ');
   }
 }

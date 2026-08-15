@@ -28,4 +28,20 @@ export class PermissionEntity {
     nullable: true,
   })
   deletedAt: Date | null;
+
+  constructor(partial?: Partial<PermissionEntity>) {
+    if (partial) {
+      Object.assign(this, partial);
+      this.validateInvariants();
+    }
+  }
+
+  validateInvariants(): void {
+    if (this.recurso !== undefined && this.recurso !== null && this.recurso.trim() === '') {
+      throw new Error('El recurso del permiso no puede estar vacío');
+    }
+    if (this.accion !== undefined && this.accion !== null && this.accion.trim() === '') {
+      throw new Error('La acción del permiso no puede estar vacía');
+    }
+  }
 }

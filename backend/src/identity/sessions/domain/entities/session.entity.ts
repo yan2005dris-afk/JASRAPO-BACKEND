@@ -41,4 +41,28 @@ export class SessionEntity {
     description: 'Fecha de creación de la sesión',
   })
   createdAt: Date;
+
+  constructor(partial?: Partial<SessionEntity>) {
+    if (partial) {
+      Object.assign(this, partial);
+      this.validateInvariants();
+    }
+  }
+
+  validateInvariants(): void {
+    if (this.usuarioId !== undefined && this.usuarioId <= 0) {
+      throw new Error('El ID de usuario debe ser mayor a cero');
+    }
+    if (this.tokenVersion !== undefined && this.tokenVersion < 1) {
+      throw new Error('La versión del token debe ser mayor o igual a 1');
+    }
+  }
+
+  revoke(): void {
+    this.revocado = true;
+  }
+
+  isExpired(): boolean {
+    return this.expiraEn ? new Date() > new Date(this.expiraEn) : false;
+  }
 }

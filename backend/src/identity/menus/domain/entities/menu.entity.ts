@@ -39,4 +39,20 @@ export class MenuEntity {
     nullable: true,
   })
   createdAt?: Date | null;
+
+  constructor(partial?: Partial<MenuEntity>) {
+    if (partial) {
+      Object.assign(this, partial);
+      this.validateInvariants();
+    }
+  }
+
+  validateInvariants(): void {
+    if (this.nombre !== undefined && this.nombre !== null && this.nombre.trim() === '') {
+      throw new Error('El nombre del menú no puede estar vacío');
+    }
+    if (this.ruta !== undefined && this.ruta !== null && !this.ruta.startsWith('/')) {
+      throw new Error('La ruta del menú debe comenzar con /');
+    }
+  }
 }

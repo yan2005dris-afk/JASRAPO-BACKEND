@@ -1,4 +1,4 @@
-import type {
+import {
   SimpleRoleEntity,
   RoleEntity,
   RolePermissionAssignmentEntity,
@@ -8,28 +8,27 @@ import type {
 export class RoleMapper {
   static toSimple(raw: any): SimpleRoleEntity | null {
     if (!raw) return null;
-    return {
+    return new SimpleRoleEntity({
       rolId: raw.rolId,
       nombre: raw.nombre,
-    };
+    });
   }
 
   static toRole(raw: any): RoleEntity | null {
     if (!raw) return null;
-    const base = this.toSimple(raw);
-    if (!base) return null;
-    return {
-      ...base,
+    return new RoleEntity({
+      rolId: raw.rolId,
+      nombre: raw.nombre,
       deletedAt: raw.deletedAt,
-    };
+    });
   }
 
   static toWithPermissions(raw: any): RoleWithPermissionsEntity | null {
     if (!raw) return null;
-    const base = this.toRole(raw);
-    if (!base) return null;
-    return {
-      ...base,
+    return new RoleWithPermissionsEntity({
+      rolId: raw.rolId,
+      nombre: raw.nombre,
+      deletedAt: raw.deletedAt,
       rolPermisos: (raw.rolPermisos || []).map((rp: any) => ({
         rolPermisoId: rp.rolPermisoId,
         rolId: rp.rolId,
@@ -45,7 +44,7 @@ export class RoleMapper {
             }
           : null,
       })),
-    };
+    });
   }
 
   static toAssignment(raw: any): RolePermissionAssignmentEntity | null {

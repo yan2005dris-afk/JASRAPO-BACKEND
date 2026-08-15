@@ -3,16 +3,16 @@ import { SectorEntity } from './sector.entity';
 
 describe('SectorEntity', () => {
   it('should create an instance with all required fields', () => {
-    const entity = new SectorEntity(
-      1,
-      'Sector Norte',
-      'SN-001',
-      10,
-      null,
-      null,
-      new Date('2024-01-01'),
-      new Date('2024-06-01'),
-    );
+    const entity = new SectorEntity({
+      sectorId: 1,
+      nombre: 'Sector Norte',
+      codigo: 'SN-001',
+      comunidadId: 10,
+      comunidades: null,
+      deletedAt: null,
+      createdAt: new Date('2024-01-01'),
+      updatedAt: new Date('2024-06-01'),
+    });
 
     expect(entity.sectorId).toBe(1);
     expect(entity.nombre).toBe('Sector Norte');
@@ -31,7 +31,13 @@ describe('SectorEntity', () => {
       nombre: 'Comunidad Central',
     };
 
-    const entity = new SectorEntity(2, 'Sector Sur', 'SS-002', 5, comunidadRef);
+    const entity = new SectorEntity({
+      sectorId: 2,
+      nombre: 'Sector Sur',
+      codigo: 'SS-002',
+      comunidadId: 5,
+      comunidades: comunidadRef,
+    });
 
     expect(entity.sectorId).toBe(2);
     expect(entity.nombre).toBe('Sector Sur');
@@ -43,29 +49,22 @@ describe('SectorEntity', () => {
 
   it('should create an instance with a non-null deletedAt', () => {
     const deletedAt = new Date('2024-12-31');
-    const entity = new SectorEntity(
-      3,
-      'Eliminado',
-      'EL-001',
-      null,
-      null,
-      deletedAt,
-    );
+    const entity = new SectorEntity({
+      sectorId: 3,
+      nombre: 'Eliminado',
+      codigo: 'EL-001',
+      comunidadId: null,
+      comunidades: null,
+      deletedAt: deletedAt,
+    });
 
     expect(entity.sectorId).toBe(3);
     expect(entity.deletedAt).toEqual(deletedAt);
   });
 
-  it('should have readonly properties', () => {
-    const entity = new SectorEntity(1, 'Test', 'T-001', null);
-
-    // Verify properties are not writable (compile-time check)
-    const descriptor = Object.getOwnPropertyDescriptor(
-      Object.getPrototypeOf(entity),
-      'sectorId',
+  it('should throw error when invariants are violated', () => {
+    expect(() => new SectorEntity({ sectorId: 1, nombre: '   ', codigo: 'T-001' })).toThrow(
+      'El nombre del sector no puede estar vacío',
     );
-    // Class field properties are own properties with writable: true by default in TS
-    // but the key point is the TYPE system enforces readonly
-    expect(entity.sectorId).toBeDefined();
   });
 });

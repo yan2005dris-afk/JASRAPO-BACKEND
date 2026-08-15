@@ -6,6 +6,19 @@ export class SimpleRoleEntity {
 
   @ApiProperty({ example: 'admin', description: 'Nombre descriptivo del rol' })
   nombre: string;
+
+  constructor(partial?: Partial<SimpleRoleEntity>) {
+    if (partial) {
+      Object.assign(this, partial);
+      this.validateInvariants();
+    }
+  }
+
+  validateInvariants(): void {
+    if (this.nombre !== undefined && this.nombre !== null && this.nombre.trim() === '') {
+      throw new Error('El nombre del rol no puede estar vacío');
+    }
+  }
 }
 
 export class RoleEntity extends SimpleRoleEntity {
@@ -15,6 +28,10 @@ export class RoleEntity extends SimpleRoleEntity {
     nullable: true,
   })
   deletedAt: Date | null;
+
+  constructor(partial?: Partial<RoleEntity>) {
+    super(partial);
+  }
 }
 
 export class RolePermissionPermisoEntity {
@@ -71,6 +88,10 @@ export class RoleWithPermissionsEntity extends RoleEntity {
     description: 'Permisos asignados al rol',
   })
   rolPermisos: RolePermissionDetailsEntity[];
+
+  constructor(partial?: Partial<RoleWithPermissionsEntity>) {
+    super(partial);
+  }
 }
 
 export class RolePermissionAssignmentEntity {

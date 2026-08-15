@@ -21,11 +21,11 @@ export class RouteMapper {
     return new RouteEntity({
       rutaId: route.rutaId,
       nombre: route.nombre,
-      descripcion: route.descripcion,
+      descripcion: route.descripcion ?? null,
       operarioId: route.operarioId,
       tipoRuta: route.tipoRuta,
       comunidadId: route.comunidadId,
-      sectorId: route.sectorId,
+      sectorId: route.sectorId ?? null,
       periodoId: route.periodoId,
       fechaPlanificada: DateUtil.formatForFrontend(route.createdAt),
       fechaInicio: DateUtil.formatForFrontend(route.fechaInicio),

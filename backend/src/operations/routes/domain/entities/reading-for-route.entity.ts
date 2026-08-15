@@ -19,12 +19,16 @@ export class ReadingForRouteEntity {
   @ApiProperty()
   estadoContrato: string;
 
-  constructor(data: any) {
-    this.lecturaId = data.lecturaId;
-    this.guia = data.guia;
-    this.clienteNombre = data.clienteNombre;
-    this.direccion = data.direccion;
-    this.sector = data.sector;
-    this.estadoContrato = data.estadoContrato;
+  constructor(partial?: Partial<ReadingForRouteEntity>) {
+    if (partial) {
+      Object.assign(this, partial);
+      this.validateInvariants();
+    }
+  }
+
+  validateInvariants(): void {
+    if (this.clienteNombre !== undefined && this.clienteNombre !== null && this.clienteNombre.trim() === '') {
+      throw new Error('El nombre del cliente no puede estar vacío');
+    }
   }
 }
