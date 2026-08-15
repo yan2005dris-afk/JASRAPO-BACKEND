@@ -1,35 +1,17 @@
 import type { MeterEntity } from '../entities/meter.entity';
-import type { MeterFilters } from '../types/meter-filters';
+import type {
+  MeterFilters,
+  CreateMeterRepositoryData,
+  UpdateMeterRepositoryData,
+  CreateMeterHistoryRepositoryData,
+} from '../types/meter.types';
 
-export interface CreateMeterRepositoryData {
-  marca: string;
-  modelo: string;
-  serie: string;
-  estado: MeterEntity['estado'];
-  latitud?: number | null;
-  longitud?: number | null;
-}
-
-export interface UpdateMeterRepositoryData {
-  marca?: string;
-  modelo?: string;
-  serie?: string;
-  estado?: MeterEntity['estado'];
-  fechaInstalacion?: Date | null;
-  fechaBaja?: Date | null;
-  motivo?: string | null;
-  latitud?: number | null;
-  longitud?: number | null;
-  deletedAt?: Date | null;
-}
-
-export interface CreateMeterHistoryRepositoryData {
-  medidorId: bigint;
-  contratoId: bigint;
-  lecturaInicial: number;
-  motivo: string;
-  fechaDesde: Date;
-}
+export type {
+  MeterFilters,
+  CreateMeterRepositoryData,
+  UpdateMeterRepositoryData,
+  CreateMeterHistoryRepositoryData,
+};
 
 export abstract class MeterRepository {
   abstract findUnique(where: {

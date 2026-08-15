@@ -28,7 +28,6 @@ import {
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
 import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
-import { toMeterResponse } from '../../domain/types/metersMapper';
 
 @ApiTags('meters')
 @ApiBearerAuth()
@@ -79,7 +78,8 @@ export class MeterController {
   @RequiredPermission('meters', 'create')
   @Post()
   async create(@Body() createDto: CreateMeterDto): Promise<MeterResponseDto> {
-    return toMeterResponse(await this.meterService.create(createDto));
+    const meter = await this.meterService.create(createDto);
+    return MeterResponseDto.fromEntity(meter);
   }
 
   /**
@@ -129,7 +129,8 @@ export class MeterController {
   async findOne(
     @Param('id', ParseBigIntPipe) id: bigint,
   ): Promise<MeterResponseDto> {
-    return toMeterResponse(await this.meterService.findOne(id));
+    const meter = await this.meterService.findOne(id);
+    return MeterResponseDto.fromEntity(meter);
   }
 
   /**
@@ -162,7 +163,8 @@ export class MeterController {
     @Param('id', ParseBigIntPipe) id: bigint,
     @Body() updateDto: UpdateMeterDto,
   ): Promise<MeterResponseDto> {
-    return toMeterResponse(await this.meterService.update(id, updateDto));
+    const meter = await this.meterService.update(id, updateDto);
+    return MeterResponseDto.fromEntity(meter);
   }
 
   /**

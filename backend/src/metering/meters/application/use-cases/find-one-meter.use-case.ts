@@ -1,6 +1,7 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { MeterRepository } from '../../domain/repositories/meter.repository';
 import { MeterEntity } from '../../domain/entities/meter.entity';
+import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 
 @Injectable()
 export class FindOneMeterUseCase {
@@ -11,7 +12,7 @@ export class FindOneMeterUseCase {
       medidorId: id,
     });
     if (!medidor || medidor.deletedAt) {
-      throw new NotFoundException(`Medidor con ID ${id} no encontrado`);
+      throw new EntityNotFoundException('Medidor', id);
     }
     return medidor;
   }

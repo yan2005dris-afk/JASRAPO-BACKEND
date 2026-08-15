@@ -8,7 +8,7 @@ import { EnumStateDto } from 'src/shared/enums/state-catalog';
 import { CreateMeterUseCase } from './use-cases/create-meter.use-case';
 import { FindOneMeterUseCase } from './use-cases/find-one-meter.use-case';
 import { MeterEntity } from '../domain/entities/meter.entity';
-import { toMeterResponse } from '../domain/types/metersMapper';
+import { MeterResponseDto } from '../interfaces/dto/meter-response.dto';
 import { DateUtil } from 'src/shared/utils/date.util';
 import { METER_STATUS_LIST } from 'src/infrastructure/config/app.constants';
 import { getPagination } from 'src/infrastructure/common/utils/pagination.util';
@@ -32,9 +32,6 @@ export class MeterService {
     const { skip, take, page: safePage } = getPagination(page, limit);
     const meterFilters = filters ? buildMeterFilters(filters) : undefined;
 
-    // Query count: 3 (was 5). findMany + count(meta.total) + single groupBy({ by: ['estado'] })
-    // replaces the prior Promise.all of 4 per-estado counts. The soft-delete predicate is no
-    // longer duplicated across per-status counts.
     const [meters, total, estadoGroups] = await Promise.all([
       this.meterRepository.findMany({ where: meterFilters, skip, take }),
       this.meterRepository.count(meterFilters),
@@ -48,7 +45,7 @@ export class MeterService {
     const totalPages = Math.ceil(total / take);
 
     return {
-      data: meters.map((m) => toMeterResponse(m)),
+      data: meters.map((m) => MeterResponseDto.fromEntity(m)),
       meta: {
         total,
         page: safePage,

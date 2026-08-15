@@ -1,4 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import type { MeterEntity } from '../../domain/entities/meter.entity';
+import { DateUtil } from 'src/shared/utils/date.util';
 
 export class MeterResponseDto {
   @ApiProperty({
@@ -75,6 +77,23 @@ export class MeterResponseDto {
 
   constructor(partial: Partial<MeterResponseDto>) {
     Object.assign(this, partial);
+  }
+
+  static fromEntity(meter: MeterEntity): MeterResponseDto {
+    return new MeterResponseDto({
+      medidorId: String(meter.medidorId),
+      marca: meter.marca,
+      modelo: meter.modelo,
+      serie: meter.serie,
+      estado: meter.estado,
+      fechaInstalacion: DateUtil.formatForFrontend(meter.fechaInstalacion),
+      fechaBaja: DateUtil.formatForFrontend(meter.fechaBaja),
+      motivo: meter.motivo,
+      latitud: meter.latitud != null ? Number(meter.latitud) : null,
+      longitud: meter.longitud != null ? Number(meter.longitud) : null,
+      contratoId: meter.contratoId?.toString() ?? null,
+      clienteNombre: meter.clienteNombre ?? null,
+    });
   }
 }
 

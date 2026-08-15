@@ -6,10 +6,11 @@ import {
   CreateMeterRepositoryData,
   UpdateMeterRepositoryData,
   CreateMeterHistoryRepositoryData,
+  MeterFilters,
 } from '../../domain/repositories/meter.repository';
 import { MeterEntity } from '../../domain/entities/meter.entity';
+import { EntityNotFoundException, EntityAlreadyExistsException } from 'src/shared/domain/exceptions/domain.exception';
 import { MeterMapper } from '../mappers/meter.mapper';
-import { MeterFilters } from '../../domain/types/meter-filters';
 
 export const safeMeterSelect = {
   medidorId: true,
@@ -171,17 +172,27 @@ export class PrismaMeterRepository implements MeterRepository {
   }
 
   async create(data: CreateMeterRepositoryData): Promise<MeterEntity> {
-    const record = await this.prisma.medidores.create({
-      data: {
-        marca: data.marca,
-        modelo: data.modelo,
-        serie: data.serie,
-        estado: data.estado,
-        latitud: data.latitud,
-        longitud: data.longitud,
-      },
-    });
-    return MeterMapper.toDomain(record)!;
+    try {
+      const record = await this.prisma.medidores.create({
+        data: {
+          marca: data.marca,
+          modelo: data.modelo,
+          serie: data.serie,
+          estado: data.estado,
+          latitud: data.latitud,
+          longitud: data.longitud,
+        },
+      });
+      return MeterMapper.toDomain(record)!;
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        throw new EntityAlreadyExistsException('Medidor', 'serie', data.serie);
+      }
+      throw error;
+    }
   }
 
   async update(

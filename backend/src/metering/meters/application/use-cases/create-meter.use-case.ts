@@ -1,5 +1,4 @@
-import { ConflictException, Injectable } from '@nestjs/common';
-import { Prisma } from 'src/generated/prisma/client';
+import { Injectable } from '@nestjs/common';
 import { MeterRepository } from '../../domain/repositories/meter.repository';
 import { CreateMeterDto } from '../../interfaces/dto/create-meter.dto';
 import { MeterEntity } from '../../domain/entities/meter.entity';
@@ -24,16 +23,6 @@ export class CreateMeterUseCase {
         estado: EstadoMedidor.BODEGA,
       });
     } catch (error) {
-      if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === 'P2002'
-      ) {
-        this.logger.warn(
-          `Duplicate meter creation attempt for serial ${createDto.serie}`,
-        );
-        throw this.duplicateSerialException(createDto.serie);
-      }
-
       this.logger.error(
         `Failed to create meter with serial ${createDto.serie}`,
         error instanceof Error ? error.stack : String(error),
@@ -41,11 +30,5 @@ export class CreateMeterUseCase {
       );
       throw error;
     }
-  }
-
-  private duplicateSerialException(serie: string): ConflictException {
-    return new ConflictException(
-      `Ya existe un medidor registrado con el número de serie "${serie}".`,
-    );
   }
 }

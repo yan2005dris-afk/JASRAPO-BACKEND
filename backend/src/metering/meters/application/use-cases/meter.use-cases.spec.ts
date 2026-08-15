@@ -3,7 +3,7 @@ import { Test } from '@nestjs/testing';
 import { MeterRepository } from '../../domain/repositories/meter.repository';
 import { CreateMeterUseCase } from './create-meter.use-case';
 import { FindOneMeterUseCase } from './find-one-meter.use-case';
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 const mockLogger = {
   log: jest.fn(),
@@ -67,10 +67,10 @@ describe('Meter Use Cases', () => {
       expect(result).toHaveProperty('estado');
     });
 
-    it('should throw NotFoundException if not found', async () => {
+    it('should throw EntityNotFoundException if not found', async () => {
       mockMeterRepository.findUnique.mockResolvedValue(null);
       await expect(findOneUseCase.execute(BigInt(1))).rejects.toThrow(
-        NotFoundException,
+        EntityNotFoundException,
       );
     });
   });

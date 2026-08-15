@@ -1,5 +1,5 @@
 import type { FilterMeterDto } from '../../interfaces/dto/filter-meter.dto';
-import type { MeterFilters } from '../../domain/types/meter-filters';
+import type { MeterFilters } from '../../domain/types/meter.types';
 
 /**
  * Builds a MeterFilters object from the incoming FilterMeterDto.

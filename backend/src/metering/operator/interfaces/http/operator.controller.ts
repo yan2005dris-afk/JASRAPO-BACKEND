@@ -31,7 +31,6 @@ import { ActualizarLecturaDto } from 'src/metering/readings/interfaces/dto/updat
 import { ResponseReadingDto } from 'src/metering/readings/interfaces/dto/response-reading.dto';
 import { toReadingResponse } from 'src/metering/readings/types/readingMapper';
 import { MeterResponseDto } from 'src/metering/meters/interfaces/dto/meter-response.dto';
-import { toMeterResponse } from 'src/metering/meters/domain/types/metersMapper';
 import { SyncAllUseCase } from '../../application/use-cases/sync-all.use-case';
 import { DecommissionMeterDto } from './decommission-meter.dto';
 import { GetOperatorTasksUseCase } from '../../application/use-cases/get-operator-tasks.use-case';
@@ -193,7 +192,9 @@ export class OperatorController {
   async install(
     @Param('id', ParseBigIntPipe) id: bigint,
   ): Promise<MeterResponseDto> {
-    return toMeterResponse(await this.installMeterUseCase.execute(id));
+    return MeterResponseDto.fromEntity(
+      await this.installMeterUseCase.execute(id),
+    );
   }
 
   /**
@@ -226,7 +227,9 @@ export class OperatorController {
   async reportDefect(
     @Param('id', ParseBigIntPipe) id: bigint,
   ): Promise<MeterResponseDto> {
-    return toMeterResponse(await this.reportDefectUseCase.execute(id));
+    return MeterResponseDto.fromEntity(
+      await this.reportDefectUseCase.execute(id),
+    );
   }
 
   /**
@@ -263,7 +266,7 @@ export class OperatorController {
     @Param('id', ParseBigIntPipe) id: bigint,
     @Body() dto: DecommissionMeterDto,
   ): Promise<MeterResponseDto> {
-    return toMeterResponse(
+    return MeterResponseDto.fromEntity(
       await this.decommissionMeterUseCase.execute(id, dto.motivoBaja),
     );
   }
@@ -283,7 +286,7 @@ export class OperatorController {
   async syncAll(@CurrentUser() user: JwtPayload): Promise<MeterResponseDto[]> {
     const operarioId = Number(user.sub);
     const meters = await this.syncAllUseCase.execute(operarioId);
-    return meters.map((m) => toMeterResponse(m));
+    return meters.map((m) => MeterResponseDto.fromEntity(m));
   }
 
   // ── Task endpoints (field operator view) ─────────────────────────────
