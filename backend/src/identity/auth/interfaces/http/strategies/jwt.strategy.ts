@@ -4,7 +4,10 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { UserService } from 'src/identity/users/application/user.service';
 import { SessionsService } from '../../../../sessions/application/sessions.service';
-import type { JwtAccessPayload } from '../types/JwtRequest.types';
+import type {
+  JwtAccessPayload,
+  JwtPayload,
+} from '../../../application/types/jwt.types';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -24,7 +27,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(payload: JwtAccessPayload) {
+  async validate(payload: JwtAccessPayload): Promise<JwtPayload> {
     const { sub: usuarioId, sid: sesionId, email } = payload;
     if (!usuarioId || !sesionId) {
       throw new UnauthorizedException('Session invalida');

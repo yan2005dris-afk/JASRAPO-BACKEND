@@ -19,7 +19,7 @@ import {
 import { SriController } from './sri.controller';
 import { SriService } from '../../application/services/sri.service';
 import { EmitirComprobanteManualUseCase } from '../../application/use-cases/emitir-comprobante-manual.use-case';
-import type { JwtPayload } from '../../../../identity/auth/interfaces/dto/auth.dto';
+import type { JwtPayload } from '../../../../identity/auth/application/types/jwt.types';
 import { UserRole } from '../../../../identity/auth/interfaces/dto/auth.dto';
 import { EmisoresService } from '../../../emisores/application/emisores.service';
 import { ConfigService } from '@nestjs/config';
@@ -34,11 +34,12 @@ describe('SriController — emitirManual', () => {
   const CLAVE = '1234567890123456789012345678901234567890123456789';
   const SRI_USER: JwtPayload = {
     sub: 7,
+    usersId: 7,
     sid: 'test-session-id',
     email: 'sri-admin@example.com',
+    permisos: [],
     rol: UserRole.ADMIN, // exact role is enforced by the @RequiredPermission guard,
     //                        not by the controller method itself.
-    tokenVersion: 0,
   };
 
   // Minimal Express request stub: only the fields emitirManual reads.

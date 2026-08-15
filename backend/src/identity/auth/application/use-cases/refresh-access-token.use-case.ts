@@ -7,7 +7,7 @@ import { SessionsService } from '../../../sessions/application/sessions.service'
 import { REFRESH_TOKEN_MAX_AGE_MS } from 'src/infrastructure/config/app.constants';
 import { EcuadorTimezoneUtil } from 'src/shared/utils/ecuador-timezone.util';
 import type { StringValue } from 'ms';
-import type { JwtRefreshPayload } from '../../interfaces/http/types/JwtRequest.types';
+import type { JwtRefreshPayload } from '../types/jwt.types';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
 import { UnauthorizedDomainException } from 'src/shared/domain/exceptions/domain.exception';

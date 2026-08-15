@@ -6,7 +6,7 @@ import { SessionsService } from '../../../../sessions/application/sessions.servi
 import type {
   JwtRefreshPayload,
   RequestWithCookies,
-} from '../types/JwtRequest.types';
+} from '../../../application/types/jwt.types';
 
 @Injectable()
 export class RefreshTokenStrategy extends PassportStrategy(

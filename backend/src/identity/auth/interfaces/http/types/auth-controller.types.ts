@@ -1,5 +1,5 @@
 import type { Response } from 'express';
-import type { RequestWithCookies } from './JwtRequest.types';
+import type { RequestWithCookies } from '../../../application/types/jwt.types';
 
 export type RefreshAuthUser = {
   sessionsId: string;

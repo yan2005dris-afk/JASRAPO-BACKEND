@@ -24,7 +24,7 @@ import { RequiredPermission } from 'src/infrastructure/common/decorators/require
 import { CurrentUser } from 'src/identity/auth/interfaces/http/decorators/current-user.decorator';
 import { ParseBigIntPipe } from 'src/infrastructure/common/pipes/parse-bigint.pipe';
 import { ParseActualizarLecturaPipe } from 'src/infrastructure/common/pipes/parse-actualizar-lectura.pipe';
-import { JwtPayload } from 'src/identity/auth/interfaces/dto/auth.dto';
+import type { JwtPayload } from 'src/identity/auth/application/types/jwt.types';
 import { GetOperatorReadingsUseCase } from '../../application/use-cases/get-operator-readings.use-case';
 import { UpdateOperatorReadingUseCase } from '../../application/use-cases/update-operator-reading.use-case';
 import { ActualizarLecturaDto } from 'src/metering/readings/interfaces/dto/update-lectura.dto';

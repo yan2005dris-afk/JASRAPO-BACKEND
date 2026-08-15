@@ -9,7 +9,7 @@ import {
 } from '@nestjs/swagger';
 import { MenuResponseDto } from '../dto/response-menu.dto';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
-import type { JwtRequest } from 'src/identity/auth/interfaces/http/types/JwtRequest.types';
+import type { JwtRequest } from 'src/identity/auth/application/types/jwt.types';
 
 @ApiTags('menus')
 @ApiBearerAuth()

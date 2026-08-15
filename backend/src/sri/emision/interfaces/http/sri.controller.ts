@@ -32,10 +32,7 @@ import { EmisoresService } from '../../../emisores/application/emisores.service'
 import { EmitirComprobanteManualUseCase } from '../../application/use-cases/emitir-comprobante-manual.use-case';
 import type { EmissionOutcome } from '../../application/services/sri-emission-dispatcher.service';
 import { CurrentUser } from '../../../../identity/auth/interfaces/http/decorators/current-user.decorator';
-import {
-  JwtPayload,
-  UserRole,
-} from '../../../../identity/auth/interfaces/dto/auth.dto';
+import type { JwtPayload } from '../../../../identity/auth/application/types/jwt.types';
 import { JwtAuthGuard } from '../../../../identity/auth/interfaces/http/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../../../../infrastructure/common/guards/permissions.guard';
 import { RequiredPermission } from '../../../../infrastructure/common/decorators/require-permission.decorator';

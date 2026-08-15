@@ -15,12 +15,19 @@ export type JwtRefreshPayload = {
   sessionSecret?: string;
 };
 
+export type JwtPayload = {
+  sub: number;
+  usersId: number;
+  sid: string;
+  email?: string;
+  permisos: { recurso: string; accion: string }[];
+  rol?: string;
+};
+
 export type RequestWithCookies = Request & {
   cookies?: Record<string, unknown>;
 };
 
 export type JwtRequest = Request & {
-  user: {
-    sub: number;
-  };
+  user: JwtPayload;
 };
