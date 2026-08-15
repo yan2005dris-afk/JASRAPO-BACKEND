@@ -11,7 +11,7 @@ import {
 } from '../../domain/enums';
 import type { TransactionClient } from '../../domain/types/transaction';
 import { PaymentRepository } from '../../domain/repositories/payment.repository';
-import { safePaymentWithDetailSelect } from '../../domain/types/IPayment';
+import { safePaymentWithDetailSelect } from '../../infrastructure/repositories/prisma-payment.repository';
 
 @Injectable()
 export class AnnulPaymentUseCase {

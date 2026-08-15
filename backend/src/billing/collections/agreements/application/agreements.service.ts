@@ -18,7 +18,7 @@ import {
   safeInstallmentSelect,
   safeAgreementSelect,
   safeAgreementWithInstallmentsSelect,
-} from '../domain/types/IAgreement';
+} from '../infrastructure/repositories/prisma-agreement.repository';
 import {
   toAgreementResponse,
   toInstallmentResponse,
