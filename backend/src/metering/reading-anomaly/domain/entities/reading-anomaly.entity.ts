@@ -1,4 +1,5 @@
 import type { TipoAnomalia, EstadoAnomalia } from 'src/shared/enums';
+import type { ReadingAnomalyLecturaRef } from '../types/reading-anomaly-relations';
 
 export class ReadingAnomalyEntity {
   anomaliaId: bigint;
@@ -20,12 +21,7 @@ export class ReadingAnomalyEntity {
   fotoUrl: string | null;
 
   // Relaciones opcionales del dominio
-  lectura?: {
-    lecturaId: bigint;
-    fecha: Date;
-    lecturaActual: number;
-    consumoCalculado: number;
-  } | null;
+  lectura?: ReadingAnomalyLecturaRef | null;
 
   constructor(partial: Partial<ReadingAnomalyEntity>) {
     Object.assign(this, partial);

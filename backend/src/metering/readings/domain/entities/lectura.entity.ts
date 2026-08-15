@@ -1,3 +1,9 @@
+import type {
+  ReadingContractRef,
+  ReadingMeterRef,
+  ReadingPeriodRef,
+} from '../types/reading-relations';
+
 export class LecturaEntity {
   lecturaId: bigint;
   fecha: Date;
@@ -18,26 +24,9 @@ export class LecturaEntity {
   deletedAt: Date | null;
 
   // Relaciones opcionales del dominio
-  contrato?: {
-    contratoId: bigint;
-    numeroGuia: string;
-    direccionSuministro: string;
-    estado: string;
-  } | null;
-
-  medidor?: {
-    medidorId: bigint;
-    serie: string;
-    marca: string;
-    modelo: string;
-  } | null;
-
-  periodoRel?: {
-    periodoId: number;
-    nombre: string;
-    fechaInicio: Date;
-    fechaFin: Date;
-  } | null;
+  contrato?: ReadingContractRef | null;
+  medidor?: ReadingMeterRef | null;
+  periodoRel?: ReadingPeriodRef | null;
 
   constructor(partial: Partial<LecturaEntity>) {
     Object.assign(this, partial);
