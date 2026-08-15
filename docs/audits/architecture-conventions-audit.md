@@ -294,7 +294,7 @@ Convenciones a mantener: archivos kebab-case, sufijos `.use-case.ts`/`.repositor
 ### 4.3 Metering y Operations
 
 **Cross-cutting (aplica a todos los módulos)**:
-- Ports filtrando Prisma: `Record<string,any>`/`Promise<any>`/`tx?: any` en clients, communities, contracts, routes, meters, operator.
+- Ports filtrando Prisma: `Record<string,any>`/`Promise<any>`/`tx?: any` en clients, communities, contracts, routes, ~~meters~~ ✅, operator.
 - 6 de 8 entidades importan `@nestjs/swagger`: `lectura.entity.ts:1`, `reading-anomaly.entity.ts:1`, `client.entity.ts:1`, `community.entity.ts:1`, `route.entity.ts:1`, `reading-for-route.entity.ts:1`.
 - Use-cases lanzan HttpExceptions; solo `prisma-contract` traduce a excepciones de dominio compartidas.
 - Application → infra concretos: `PrismaService` (`create-reading.use-case.ts:6`), `Prisma` generado (`create-meter.use-case.ts:2`), `StorageService` (`reading.service.ts:3-10`), `RouteMapper` desde infra (4 use-cases de routes), `GeneratePdfUseCase` (`contrato-medidor.service.ts:19`).
@@ -308,7 +308,7 @@ Convenciones a mantener: archivos kebab-case, sufijos `.use-case.ts`/`.repositor
 
 #### Destacados por módulo
 
-- **Meters**: port de dominio limpio (`meter.repository.ts:34-72`), response DTO mapeado (`toMeterResponse`), repo con `satisfies Prisma.MedidoresSelect`. Violaciones: `domain/types/metersMapper.ts:1` importa `MeterResponseDto` (domain→interfaces), P2002 traducido en application a ConflictException (`create-meter.use-case.ts:27-50`), service con lógica de negocio (KPI `meter.service.ts:44-68`), port filtra `tx?: any`.
+- **Meters** ✅ **RESUELTO (2026-08-15, commits `8a5bec8`/`741c62c4` + `a517aff` + `4d43c1f`)**: port de dominio limpio (`meter.repository.ts`), response DTO mapeado vía `MeterResponseDto.fromEntity()` (antes `toMeterResponse`), repo con `satisfies Prisma.MedidoresSelect`. Violaciones del audit **corregidas**: `metersMapper.ts` eliminado del dominio (mapeo movido al response DTO), P2002 traducido en el repo a `EntityAlreadyExistsException` (antes `ConflictException` en application), service ahora **fachada fina** con `FindAllMetersUseCase` (KPI), `UpdateMeterUseCase` y `RemoveMeterUseCase` extraídos, `tx?: any` reemplazado por `TransactionContext` tipado (domain) / `Prisma.TransactionClient` (infra). Pendientes residuales: `InstallMeterDto` sigue muerto (P1), `findAllStates` devuelve `METER_STATUS_LIST` directo.
 - **Readings**: port limpio con CAS (`reading.repository.ts:38-66`), repo con CAS vía `updateMany` en transacción (`prisma-reading.repository.ts:185-230`). Violaciones: entity con swagger, **PrismaService en use-case** (`create-reading.use-case.ts:6,46-49`), máquina de estados en application, `StorageService` en service, response mapper en `types/` raíz.
 - **Reading-anomaly**: port limpio, response DTO mapeado, composite transaccional `createAndMarkReadingWithAnomaly` (`:94-122`). Violaciones: entity swagger, `StorageService` en service, `dataToUpdate: any` (`update-reading-anomaly.use-case.ts:23`), decisión de negocio "marcar CON_NOVEDAD" ejecutada dentro del repo infra (`prisma-reading-anomaly.repository.ts:113-116`).
 - **Operator**: sin service — controller inyecta 9 use-cases directo (estilo hexagonal válido), transacción atómica task+meter (`prisma-operator.repository.ts:259-297`). Violaciones: port filtra shapes Prisma (`operator.repository.ts:43,46`; `repository-types.ts:2` dice literalmente "These mirror the actual Prisma query shapes"), **duck-typing de P2025 en application** (`update-task-state.use-case.ts:16-22,149-170`), devuelve `TaskResponseDto` de interfaces desde application con **operario falso** (`:199-203`), raw `tx.historialMedidores`/`tx.contratos` (`install-meter.use-case.ts:50-81`), cruce de módulos (`update-operator-reading.use-case.ts:8-9` importa use-case y DTO de readings).
@@ -351,7 +351,7 @@ Convenciones a mantener: archivos kebab-case, sufijos `.use-case.ts`/`.repositor
 2. **Reemplazar HttpExceptions por DomainException en application/domain** y hacer que el filtro global (`global-exception.filter.ts`) las mapee — ya tiene el branch, solo falta que alguien lo lance.
 3. **Limpiar los ports de repositorio**: eliminar `Prisma.*WhereInput/Select`, `Promise<any>`, `tx?: any` de todos los ports; expresarlos en términos de dominio (modelo: `discounts`, `contracts`).
 4. **Eliminar Prisma raw de use-cases/services**: mover queries a los ports (`create-payment.use-case.ts:293`, `create-agreement.use-case.ts:138`, `create-reading.use-case.ts:46`, `agreements.service.ts:79`, `sri-integration.service.ts`).
-5. **Mover mappers a `infrastructure/mappers/`** y quitar imports de interfaces DTOs desde `domain/` (`agreementsMapper.ts`, `paymentsMapper.ts`, `metersMapper.ts`).
+5. **Mover mappers a `infrastructure/mappers/`** y quitar imports de interfaces DTOs desde `domain/` (`agreementsMapper.ts`, `paymentsMapper.ts`; ~~`metersMapper.ts`~~ ✅ resuelto en meters 2026-08-15).
 
 ### P1 — Higiene de dominio e interfaces
 
@@ -359,7 +359,7 @@ Convenciones a mantener: archivos kebab-case, sufijos `.use-case.ts`/`.repositor
 7. **Conectar los response DTOs nominal-only** en clients, communities, routes, identity: agregar mappers reales `toResponse` (modelo: meters/readings/operator).
 8. **Quitar `enableImplicitConversion: true`** (`main.ts:181`); usar `@Type()` explícito.
 9. **Mover response mappers/types** de `domain/types/` y `types/` raíz a `interfaces/dto`/`infrastructure/mappers`.
-10. **Eliminar DTOs muertos**: `InstallMeterDto`, `QueryReadingsDto`, `SearchClientDto`, `FindContractsQueryDto`, `auth.dto.ts` grab-bag.
+10. **Eliminar DTOs muertos**: ~~`InstallMeterDto`~~ *(pendiente)*, `QueryReadingsDto`, `SearchClientDto`, `FindContractsQueryDto`, `auth.dto.ts` grab-bag.
 11. **Derivar update DTOs de create vía PartialType** donde aplique (`update-agreement`, `update-payment-state`, `update-contrato-medidor`).
 
 ### P2 — Modelo de dominio rico (deuda de diseño)
