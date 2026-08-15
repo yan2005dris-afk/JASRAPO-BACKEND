@@ -19,20 +19,28 @@ export interface RouteRaw {
   deletedAt?: Date | null;
 }
 
+function formatDateField(
+  value: Date | string | null | undefined,
+): string | null {
+  if (!value) return null;
+  if (typeof value === 'string') return value;
+  return DateUtil.formatForFrontend(value);
+}
+
 export class RouteMapper {
   static toEntity(route: RouteRaw): RouteEntity {
     return new RouteEntity({
       rutaId: route.rutaId,
       nombre: route.nombre,
-      descripcion: route.descripcion,
+      descripcion: route.descripcion ?? null,
       operarioId: route.operarioId,
       tipoRuta: route.tipoRuta,
       comunidadId: route.comunidadId,
-      sectorId: route.sectorId,
-      periodoId: route.periodoId,
-      fechaPlanificada: DateUtil.formatForFrontend(route.fechaPlanificada),
-      fechaInicio: DateUtil.formatForFrontend(route.fechaInicio),
-      fechaFin: DateUtil.formatForFrontend(route.fechaFin),
+      sectorId: route.sectorId ?? null,
+      periodoId: route.periodoId ?? null,
+      fechaPlanificada: formatDateField(route.fechaPlanificada),
+      fechaInicio: formatDateField(route.fechaInicio),
+      fechaFin: formatDateField(route.fechaFin),
       estado: route.estado,
     });
   }

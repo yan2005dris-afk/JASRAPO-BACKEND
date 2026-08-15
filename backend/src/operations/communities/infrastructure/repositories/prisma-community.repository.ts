@@ -99,7 +99,11 @@ export class PrismaCommunityRepository implements CommunityRepository {
         data: {
           nombre: data.nombre,
           codigo: data.codigo,
-          porcentajeTasaSeguridad: data.porcentajeTasaSeguridad,
+          porcentajeTasaSeguridad:
+            data.porcentajeTasaSeguridad !== undefined &&
+            data.porcentajeTasaSeguridad !== null
+              ? new Prisma.Decimal(data.porcentajeTasaSeguridad)
+              : new Prisma.Decimal(0),
         },
         include: this.defaultInclude,
       });
@@ -125,8 +129,13 @@ export class PrismaCommunityRepository implements CommunityRepository {
         data: {
           ...(data.nombre !== undefined ? { nombre: data.nombre } : {}),
           ...(data.codigo !== undefined ? { codigo: data.codigo } : {}),
-          ...(data.porcentajeTasaSeguridad !== undefined
-            ? { porcentajeTasaSeguridad: data.porcentajeTasaSeguridad }
+          ...(data.porcentajeTasaSeguridad !== undefined &&
+          data.porcentajeTasaSeguridad !== null
+            ? {
+                porcentajeTasaSeguridad: new Prisma.Decimal(
+                  data.porcentajeTasaSeguridad,
+                ),
+              }
             : {}),
         },
         include: this.defaultInclude,
@@ -143,7 +152,10 @@ export class PrismaCommunityRepository implements CommunityRepository {
         error instanceof Prisma.PrismaClientKnownRequestError &&
         error.code === 'P2002'
       ) {
-        throw new EntityAlreadyExistsException('Comunidad', data.codigo ?? id);
+        throw new EntityAlreadyExistsException(
+          'Comunidad',
+          data.codigo ?? id.toString(),
+        );
       }
       throw error;
     }
@@ -157,8 +169,13 @@ export class PrismaCommunityRepository implements CommunityRepository {
       where: { comunidadId: id },
       data: {
         ...(data.nombre !== undefined ? { nombre: data.nombre } : {}),
-        ...(data.porcentajeTasaSeguridad !== undefined
-          ? { porcentajeTasaSeguridad: data.porcentajeTasaSeguridad }
+        ...(data.porcentajeTasaSeguridad !== undefined &&
+        data.porcentajeTasaSeguridad !== null
+          ? {
+              porcentajeTasaSeguridad: new Prisma.Decimal(
+                data.porcentajeTasaSeguridad,
+              ),
+            }
           : {}),
         deletedAt: null,
       },

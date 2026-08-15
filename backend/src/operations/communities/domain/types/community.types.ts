@@ -9,6 +9,7 @@ export interface CreateCommunityData {
   codigo: string;
   nombre: string;
   descripcion?: string | null;
+  porcentajeTasaSeguridad?: number | null;
   activo?: boolean;
 }
 
@@ -16,6 +17,7 @@ export interface UpdateCommunityData {
   codigo?: string;
   nombre?: string;
   descripcion?: string | null;
+  porcentajeTasaSeguridad?: number | null;
   activo?: boolean;
   deletedAt?: Date | null;
 }

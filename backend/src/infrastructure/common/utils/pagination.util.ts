@@ -26,6 +26,8 @@ export function getPagination(page = 1, limit = 10): PaginationParams {
 export interface PaginateOptions {
   page?: number;
   limit?: number;
+  skip?: number;
+  take?: number;
 }
 
 export async function paginate<K>(

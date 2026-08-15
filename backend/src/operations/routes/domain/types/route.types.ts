@@ -15,6 +15,7 @@ export interface CreateRouteData {
   comunidadId: number;
   sectorId?: number | null;
   periodoId?: number | null;
+  medidorId?: number | null;
   estado: string;
   fechaPlanificada?: Date | null;
   fechaInicio?: Date | null;
@@ -29,6 +30,7 @@ export interface UpdateRouteData {
   comunidadId?: number;
   sectorId?: number | null;
   periodoId?: number | null;
+  medidorId?: number | null;
   estado?: string;
   fechaPlanificada?: Date | null;
   fechaInicio?: Date | null;

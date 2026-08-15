@@ -216,7 +216,7 @@ describe('PrismaCommunityRepository', () => {
         where: { comunidadId: 1 },
         data: {
           nombre: 'Comunidad Reactivada',
-          porcentajeTasaSeguridad: 8,
+          porcentajeTasaSeguridad: new Prisma.Decimal(8),
           deletedAt: null,
         },
         include: expect.any(Object),

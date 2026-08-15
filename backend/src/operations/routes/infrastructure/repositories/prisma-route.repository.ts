@@ -122,7 +122,7 @@ export class PrismaRouteRepository implements RouteRepository {
             ? { descripcion: data.descripcion }
             : {}),
           ...(data.operarioId !== undefined
-            ? { operario: { connect: { usuarioId: data.operarioId } } }
+            ? { operarioId: data.operarioId }
             : {}),
           ...(data.estado !== undefined
             ? { estado: data.estado as EstadoRuta }
@@ -131,7 +131,7 @@ export class PrismaRouteRepository implements RouteRepository {
             ? { fechaPlanificada: data.fechaPlanificada }
             : {}),
           ...(data.periodoId !== undefined
-            ? { periodo: { connect: { periodoId: data.periodoId } } }
+            ? { periodoId: data.periodoId }
             : {}),
         },
       });

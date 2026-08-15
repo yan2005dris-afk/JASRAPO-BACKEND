@@ -120,7 +120,7 @@ export class PrismaSectorRepository implements SectorRepository {
         error instanceof Prisma.PrismaClientKnownRequestError &&
         error.code === 'P2002'
       ) {
-        throw new EntityAlreadyExistsException('Sector', data.codigo ?? id);
+        throw new EntityAlreadyExistsException('Sector', id.toString());
       }
       throw error;
     }

@@ -12,8 +12,16 @@ export class EntityNotFoundException extends DomainException {
 }
 
 export class EntityAlreadyExistsException extends DomainException {
-  constructor(entityName: string, fieldName: string, value: string) {
-    super(`${entityName} con ${fieldName} '${value}' ya existe`);
+  constructor(
+    entityName: string,
+    fieldNameOrIdentifier: string,
+    value?: string | number | bigint,
+  ) {
+    if (value !== undefined) {
+      super(`${entityName} con ${fieldNameOrIdentifier} '${value}' ya existe`);
+    } else {
+      super(`${entityName} '${fieldNameOrIdentifier}' ya existe`);
+    }
   }
 }
 
