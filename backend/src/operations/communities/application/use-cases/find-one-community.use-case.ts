@@ -1,18 +1,17 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CommunityRepository } from '../../domain/repositories/community.repository';
+import { CommunityEntity } from '../../domain/entities/community.entity';
+import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 
 @Injectable()
 export class FindOneCommunityUseCase {
   constructor(private readonly communityRepository: CommunityRepository) {}
 
-  async execute(id: number) {
-    const comunidad = await this.communityRepository.findUnique({
-      comunidadId: id,
-      deletedAt: null,
-    });
+  async execute(id: number): Promise<CommunityEntity> {
+    const comunidad = await this.communityRepository.findById(id);
 
     if (!comunidad) {
-      throw new NotFoundException(`Comunidad con ID ${id} no encontrada`);
+      throw new EntityNotFoundException('Comunidad', id);
     }
 
     return comunidad;

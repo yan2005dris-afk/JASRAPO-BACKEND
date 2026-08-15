@@ -1,25 +1,15 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+export interface CommunitySector {
+  sectorId: number;
+  nombre: string;
+  codigo: string;
+}
 
 export class CommunityEntity {
-  @ApiProperty()
   comunidadId: number;
-
-  @ApiProperty()
   nombre: string;
-
-  @ApiProperty()
   codigo: string;
-
-  @ApiPropertyOptional({ nullable: true })
   porcentajeTasaSeguridad: number | null;
-
-  @ApiPropertyOptional({
-    type: () => [Object],
-    nullable: true,
-    description: 'Sectores relacionados',
-  })
-  sectores?: { sectorId: number; nombre: string; codigo: string }[];
-
+  sectores?: CommunitySector[];
   deletedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;

@@ -1,29 +1,37 @@
 import type { CommunityEntity } from '../entities/community.entity';
 import type { CreateCommunityData } from '../types/create-community-data';
+import type { UpdateCommunityData } from '../types/update-community-data';
+import type { CommunityFilters } from '../types/community-filters';
 
 export abstract class CommunityRepository {
-  abstract findUnique(
-    where: Record<string, any>,
+  abstract findById(
+    id: number,
+    includeDeleted?: boolean,
   ): Promise<CommunityEntity | null>;
 
-  abstract findFirst(
-    where: Record<string, any>,
+  abstract findByCodigo(codigo: string): Promise<CommunityEntity | null>;
+
+  abstract findActiveByNameOrCode(
+    nombre: string,
+    codigo: string,
   ): Promise<CommunityEntity | null>;
 
-  abstract findMany(params: {
-    where?: Record<string, any>;
-    orderBy?: Record<string, any>;
-    skip?: number;
-    take?: number;
-    include?: any;
-  }): Promise<CommunityEntity[]>;
-
-  abstract count(params?: { where?: Record<string, any> }): Promise<number>;
+  abstract paginate(
+    filters: CommunityFilters,
+    pagination: { skip: number; take: number },
+  ): Promise<{ data: CommunityEntity[]; total: number }>;
 
   abstract create(data: CreateCommunityData): Promise<CommunityEntity>;
 
   abstract update(
-    where: Record<string, any>,
-    data: Record<string, any>,
+    id: number,
+    data: UpdateCommunityData,
   ): Promise<CommunityEntity>;
+
+  abstract reactivate(
+    id: number,
+    data: Partial<CreateCommunityData>,
+  ): Promise<CommunityEntity>;
+
+  abstract softDelete(id: number): Promise<CommunityEntity>;
 }

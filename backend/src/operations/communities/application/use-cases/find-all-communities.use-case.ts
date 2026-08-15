@@ -16,18 +16,13 @@ export class FindAllCommunitiesUseCase {
   ): Promise<PaginatedResult<CommunityEntity>> {
     const { skip, take } = getPagination(page, limit);
 
-    const where: Record<string, any> = { deletedAt: null };
-    if (filters?.nombre) {
-      where.nombre = { contains: filters.nombre, mode: 'insensitive' };
-    }
-    if (filters?.codigo) {
-      where.codigo = { contains: filters.codigo, mode: 'insensitive' };
-    }
-
-    const [data, total] = await Promise.all([
-      this.communityRepository.findMany({ where, skip, take }),
-      this.communityRepository.count({ where }),
-    ]);
+    const { data, total } = await this.communityRepository.paginate(
+      {
+        nombre: filters?.nombre,
+        codigo: filters?.codigo,
+      },
+      { skip, take },
+    );
 
     const totalPages = Math.ceil(total / take);
 

@@ -2,16 +2,15 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { DeleteCommunityUseCase } from './delete-community.use-case';
 import { CommunityRepository } from '../../domain/repositories/community.repository';
+import { CommunityEntity } from '../../domain/entities/community.entity';
+import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 
 describe('DeleteCommunityUseCase', () => {
   let useCase: DeleteCommunityUseCase;
 
   const mockCommunityRepository = {
-    findUnique: jest.fn(),
-    findFirst: jest.fn(),
-    findMany: jest.fn(),
-    create: jest.fn(),
-    update: jest.fn(),
+    findById: jest.fn(),
+    softDelete: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -23,22 +22,37 @@ describe('DeleteCommunityUseCase', () => {
     }).compile();
 
     useCase = module.get<DeleteCommunityUseCase>(DeleteCommunityUseCase);
+    jest.clearAllMocks();
   });
 
-  it('should delete a community', async () => {
+  it('should soft delete a community when found', async () => {
     const id = 1;
-    mockCommunityRepository.findUnique.mockResolvedValue({
+    const existing = new CommunityEntity({
       comunidadId: id,
+      nombre: 'Comunidad 1',
+      codigo: 'C1',
       deletedAt: null,
     });
-    mockCommunityRepository.update.mockResolvedValue({
+    const deleted = new CommunityEntity({
       comunidadId: id,
+      nombre: 'Comunidad 1',
+      codigo: 'C1',
       deletedAt: new Date(),
     });
 
+    mockCommunityRepository.findById.mockResolvedValue(existing);
+    mockCommunityRepository.softDelete.mockResolvedValue(deleted);
+
     const result = await useCase.execute(id);
 
-    expect(result).toBeDefined();
-    expect(mockCommunityRepository.update).toHaveBeenCalled();
+    expect(result).toEqual(deleted);
+    expect(mockCommunityRepository.findById).toHaveBeenCalledWith(id);
+    expect(mockCommunityRepository.softDelete).toHaveBeenCalledWith(id);
+  });
+
+  it('should throw EntityNotFoundException when community not found', async () => {
+    mockCommunityRepository.findById.mockResolvedValue(null);
+
+    await expect(useCase.execute(99)).rejects.toThrow(EntityNotFoundException);
   });
 });

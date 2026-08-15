@@ -1,24 +1,19 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CommunityRepository } from '../../domain/repositories/community.repository';
+import { CommunityEntity } from '../../domain/entities/community.entity';
+import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 
 @Injectable()
 export class DeleteCommunityUseCase {
   constructor(private readonly communityRepository: CommunityRepository) {}
 
-  async execute(id: number) {
-    const existing = await this.communityRepository.findUnique({
-      comunidadId: id,
-    });
+  async execute(id: number): Promise<CommunityEntity> {
+    const existing = await this.communityRepository.findById(id);
 
     if (!existing) {
-      throw new NotFoundException(`Comunidad con ID ${id} no encontrada`);
+      throw new EntityNotFoundException('Comunidad', id);
     }
 
-    const deleted = await this.communityRepository.update(
-      { comunidadId: id },
-      { deletedAt: new Date() },
-    );
-
-    return deleted;
+    return this.communityRepository.softDelete(id);
   }
 }

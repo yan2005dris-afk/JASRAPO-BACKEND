@@ -1,47 +1,40 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CommunityRepository } from '../../domain/repositories/community.repository';
 import { CreateComunidadDto } from '../../interfaces/dto/create-comunidad.dto';
+import { CommunityEntity } from '../../domain/entities/community.entity';
+import { EntityAlreadyExistsException } from 'src/shared/domain/exceptions/domain.exception';
 
 @Injectable()
 export class CreateCommunityUseCase {
   constructor(private readonly communityRepository: CommunityRepository) {}
 
-  async execute(dto: CreateComunidadDto) {
-    // Buscar comunidad activa por nombre O código
-    const existing = await this.communityRepository.findFirst({
-      deletedAt: null,
-      OR: [
-        { nombre: { equals: dto.nombre, mode: 'insensitive' } },
-        { codigo: dto.codigo },
-      ],
-    });
+  async execute(dto: CreateComunidadDto): Promise<CommunityEntity> {
+    const existing = await this.communityRepository.findActiveByNameOrCode(
+      dto.nombre,
+      dto.codigo,
+    );
 
     if (existing) {
       if (existing.nombre.toLowerCase() === dto.nombre.toLowerCase()) {
-        throw new ConflictException('Ya existe una comunidad con ese nombre');
+        throw new EntityAlreadyExistsException('Comunidad', dto.nombre);
       }
-      throw new ConflictException('Ya existe una comunidad con ese código');
+      throw new EntityAlreadyExistsException('Comunidad', dto.codigo);
     }
 
-    // Si hay código pero está eliminado -> reaccionar
-    const deletedWithCode = await this.communityRepository.findUnique({
-      codigo: dto.codigo,
-    });
+    const deletedWithCode = await this.communityRepository.findByCodigo(
+      dto.codigo,
+    );
 
     if (deletedWithCode?.deletedAt) {
-      const reactivated = await this.communityRepository.update(
-        { comunidadId: deletedWithCode.comunidadId },
+      return this.communityRepository.reactivate(
+        deletedWithCode.comunidadId,
         {
           nombre: dto.nombre,
           porcentajeTasaSeguridad: dto.porcentajeTasaSeguridad,
-          deletedAt: null,
         },
       );
-      return reactivated;
     }
 
-    const created = await this.communityRepository.create(dto);
-
-    return created;
+    return this.communityRepository.create(dto);
   }
 }

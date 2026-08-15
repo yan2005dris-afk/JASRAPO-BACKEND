@@ -29,6 +29,7 @@ import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.
 import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 import { ApiPaginatedResponse } from 'src/infrastructure/common/decorators/api-paginated-response.decorator';
 import { PaginationMetaDto } from 'src/infrastructure/common/dtos/pagination-meta.dto';
+import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
 
 @ApiTags('communities')
 @ApiBearerAuth()
@@ -53,8 +54,11 @@ export class ComunidadController {
   @ApiResponse({ status: 403, description: 'Sin permiso comunidades:create' })
   @RequiredPermission('comunidades', 'create')
   @Post()
-  create(@Body() createComunidadDto: CreateComunidadDto) {
-    return this.comunidadService.create(createComunidadDto);
+  async create(
+    @Body() createComunidadDto: CreateComunidadDto,
+  ): Promise<CommunityResponseDto> {
+    const result = await this.comunidadService.create(createComunidadDto);
+    return CommunityResponseDto.fromEntity(result);
   }
 
   @ApiOperation({
@@ -66,12 +70,18 @@ export class ComunidadController {
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @RequiredPermission('comunidades', 'read')
   @Get()
-  async findAll(@Query() filters: CommunityFilterDto) {
-    return this.comunidadService.findAll(
+  async findAll(
+    @Query() filters: CommunityFilterDto,
+  ): Promise<PaginatedResult<CommunityResponseDto>> {
+    const result = await this.comunidadService.findAll(
       filters.page ?? 1,
       filters.limit ?? 10,
       filters,
     );
+    return {
+      data: CommunityResponseDto.fromEntityList(result.data),
+      meta: result.meta,
+    };
   }
 
   @ApiOperation({
@@ -93,8 +103,11 @@ export class ComunidadController {
   @ApiResponse({ status: 404, description: 'Comunidad no encontrada' })
   @RequiredPermission('comunidades', 'read')
   @Get(':id')
-  async findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.comunidadService.findOne(id);
+  async findOne(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<CommunityResponseDto> {
+    const result = await this.comunidadService.findOne(id);
+    return CommunityResponseDto.fromEntity(result);
   }
 
   @ApiOperation({
@@ -119,11 +132,12 @@ export class ComunidadController {
   @ApiResponse({ status: 404, description: 'Comunidad no encontrada' })
   @RequiredPermission('comunidades', 'update')
   @Patch(':id')
-  update(
+  async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateComunidadDto: UpdateComunidadDto,
-  ) {
-    return this.comunidadService.update(id, updateComunidadDto);
+  ): Promise<CommunityResponseDto> {
+    const result = await this.comunidadService.update(id, updateComunidadDto);
+    return CommunityResponseDto.fromEntity(result);
   }
 
   @ApiOperation({
@@ -142,7 +156,10 @@ export class ComunidadController {
   @ApiResponse({ status: 404, description: 'Comunidad no encontrada' })
   @RequiredPermission('comunidades', 'delete')
   @Delete(':id')
-  delete(@Param('id', ParseIntPipe) id: number) {
-    return this.comunidadService.delete(id);
+  async delete(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<CommunityResponseDto> {
+    const result = await this.comunidadService.delete(id);
+    return CommunityResponseDto.fromEntity(result);
   }
 }
