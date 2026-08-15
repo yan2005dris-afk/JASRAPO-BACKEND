@@ -10,6 +10,11 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { Request, Response } from 'express';
 import { LoggerService } from '../../../infrastructure/observability/logger/logger.service';
+import {
+  DomainException,
+  EntityNotFoundException,
+  InvalidDomainOperationException,
+} from '../../../shared/domain/exceptions/domain.exception';
 
 interface FormattedValidationError {
   field: string;
@@ -63,6 +68,17 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       } else {
         message = exception.message;
       }
+    }
+    // Manejo de excepciones de dominio
+    else if (exception instanceof DomainException) {
+      if (exception instanceof EntityNotFoundException) {
+        status = HttpStatus.NOT_FOUND;
+      } else if (exception instanceof InvalidDomainOperationException) {
+        status = HttpStatus.BAD_REQUEST;
+      } else {
+        status = HttpStatus.BAD_REQUEST;
+      }
+      message = exception.message;
     }
     // Manejo de otros errores HTTP
     else if (exception instanceof HttpException) {

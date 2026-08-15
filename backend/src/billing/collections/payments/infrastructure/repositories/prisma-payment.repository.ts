@@ -3,6 +3,73 @@ import { Prisma } from 'src/generated/prisma/client';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { PaymentRepository } from '../../domain/repositories/payment.repository';
 
+export const safePaymentDetailSelect = {
+  detallePagoId: true,
+  pagoId: true,
+  comprobanteId: true,
+  cuotaConvenioId: true,
+  tipoPago: true,
+  montoAbonado: true,
+  formaPagoId: true,
+  referencia: true,
+  fechaTransaccion: true,
+  createdAt: true,
+  comprobante: {
+    select: {
+      id: true,
+      tipoComprobante: true,
+      secuencial: true,
+      importeTotal: true,
+      estado: true,
+    },
+  },
+} satisfies Prisma.DetallePagoSelect;
+
+export const safeSaldoFavorSelect = {
+  saldoFavorId: true,
+  clienteId: true,
+  pagoId: true,
+  montoSaldo: true,
+  tipoOrigen: true,
+  disponibleParaAplicar: true,
+  createdAt: true,
+} satisfies Prisma.SaldoFavorClienteSelect;
+
+export const safePaymentSelect = {
+  pagoId: true,
+  clienteId: true,
+  cajaId: true,
+  banco: true,
+  tarjetaCredito: true,
+  comprobanteUrl: true,
+  fechaPago: true,
+  montoTotalRecibido: true,
+  numeroOperacion: true,
+  observaciones: true,
+  referenciaBanco: true,
+  estadoPago: true,
+  creadoPor: true,
+  anuladoPor: true,
+  fechaAnulacion: true,
+  motivoAnulacion: true,
+  createdAt: true,
+  updatedAt: true,
+} satisfies Prisma.PagosSelect;
+
+export const safePaymentWithDetailSelect = {
+  ...safePaymentSelect,
+  detallePago: {
+    where: { deletedAt: null },
+    select: safePaymentDetailSelect,
+    orderBy: { createdAt: 'asc' as const },
+  },
+  saldosFavor: {
+    where: { deletedAt: null },
+    select: safeSaldoFavorSelect,
+    orderBy: { createdAt: 'asc' as const },
+  },
+} satisfies Prisma.PagosSelect;
+
 @Injectable()
 export class PrismaPaymentRepository implements PaymentRepository {
   constructor(private readonly prisma: PrismaService) {}

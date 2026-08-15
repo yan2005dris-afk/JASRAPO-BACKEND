@@ -9,7 +9,50 @@ import {
 } from '../../domain/repositories/reading.repository';
 import { LecturaEntity } from '../../domain/entities/lectura.entity';
 import { ReadingMapper } from '../mappers/reading.mapper';
-import { safeReadingsSelect } from '../../types/IResponseReading';
+
+export const safeReadingsSelect = {
+  lecturaId: true,
+  fecha: true,
+  lecturaAnterior: true,
+  lecturaActual: true,
+  consumoCalculado: true,
+  descripcionAnomalia: true,
+  fechaValidacion: true,
+  fotoUrl: true,
+  lecturaInicial: true,
+  periodoId: true,
+  estado: true,
+  deletedAt: true,
+  medidor: {
+    select: {
+      medidorId: true,
+      serie: true,
+      marca: true,
+      modelo: true,
+      historial: {
+        where: { fechaHasta: null },
+        select: {
+          contrato: {
+            select: {
+              contratoId: true,
+              numeroGuia: true,
+              direccionSuministro: true,
+              estado: true,
+            },
+          },
+        },
+      },
+    },
+  },
+  periodoRel: {
+    select: {
+      periodoId: true,
+      nombre: true,
+      fechaInicio: true,
+      fechaFin: true,
+    },
+  },
+} satisfies Prisma.LecturasSelect;
 
 @Injectable()
 export class PrismaReadingRepository implements ReadingRepository {

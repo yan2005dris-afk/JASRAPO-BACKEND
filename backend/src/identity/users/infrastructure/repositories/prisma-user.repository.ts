@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { Prisma } from 'src/generated/prisma/client';
 import {
@@ -10,14 +10,45 @@ import {
   FailedLoginAttemptOptions,
   FailedLoginAttemptResult,
 } from '../../domain/repositories/user.repository';
+import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
 import { paginate } from 'src/infrastructure/common/utils/pagination.util';
-import {
-  userWithRolesSelect,
-  userWithPasswordAndLockoutSelect,
-  UserWithRoleResponse,
-} from '../../domain/types/user.types';
+import { UserWithRoleResponse } from '../../domain/types/user.types';
 import { UserMapper } from '../mappers/user.mapper';
+
+export const safeUserSelect = {
+  usuarioId: true,
+  email: true,
+  nombres: true,
+  apellidos: true,
+  telefono: true,
+  avatar: true,
+} satisfies Prisma.UsuariosSelect;
+
+export const userWithRolesSelect = {
+  usuarioId: true,
+  email: true,
+  nombres: true,
+  apellidos: true,
+  telefono: true,
+  avatar: true,
+  deletedAt: true,
+  rol: {
+    select: {
+      rolId: true,
+      nombre: true,
+      deletedAt: true,
+    },
+  },
+} satisfies Prisma.UsuariosSelect;
+
+export const userWithPasswordAndLockoutSelect = {
+  ...userWithRolesSelect,
+  clave: true,
+  intentosFallidos: true,
+  ultimoIntentoFallidoEn: true,
+  bloqueadoHasta: true,
+} satisfies Prisma.UsuariosSelect;
 
 @Injectable()
 export class PrismaUserRepository implements UserRepository {
@@ -275,9 +306,7 @@ export class PrismaUserRepository implements UserRepository {
         .filter((id) => !validPermissionIds.has(id));
 
       if (invalidIds.length > 0) {
-        throw new BadRequestException(
-          `Permisos no encontrados o eliminados: ${invalidIds.join(', ')}`,
-        );
+        throw new EntityNotFoundException('Permisos', invalidIds.join(', '));
       }
 
       for (const perm of deduplicatedPermissions) {

@@ -3,7 +3,7 @@ import { EstadoPago } from '../../domain/enums';
 import { UpdatePaymentStateDto } from '../../interfaces/dto/update-payment-state.dto';
 import { PaymentRepository } from '../../domain/repositories/payment.repository';
 import { EventosPendientesRepository } from 'src/shared/outbox/domain/repositories/eventos-pendientes.repository';
-import { safePaymentWithDetailSelect } from '../../domain/types/IPayment';
+import { safePaymentWithDetailSelect } from '../../infrastructure/repositories/prisma-payment.repository';
 import { FindOnePaymentUseCase } from './find-one-payment.use-case';
 import { AnnulPaymentUseCase } from './annul-payment.use-case';
 

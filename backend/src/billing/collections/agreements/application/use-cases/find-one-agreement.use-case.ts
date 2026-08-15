@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { AgreementRepository } from '../../domain/repositories/agreement.repository';
-import { safeAgreementWithInstallmentsSelect } from '../../domain/types/IAgreement';
+import { safeAgreementWithInstallmentsSelect } from '../../infrastructure/repositories/prisma-agreement.repository';
 
 @Injectable()
 export class FindOneAgreementUseCase {
