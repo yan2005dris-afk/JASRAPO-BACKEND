@@ -7,8 +7,7 @@ import { FindOneReadingUseCase } from './find-one-reading.use-case';
 import { UpdateReadingUseCase } from './update-reading.use-case';
 import { RemoveReadingUseCase } from './remove-reading.use-case';
 import { NotFoundException } from '@nestjs/common';
-import { PrismaService } from 'src/infrastructure/database/prisma.service';
-import { StorageService } from 'src/infrastructure/storage/storage.service';
+import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 
 describe('Readings Use Cases', () => {
   let createUseCase: CreateReadingUseCase;
@@ -36,13 +35,8 @@ describe('Readings Use Cases', () => {
     findUnique: jest.fn(),
     count: jest.fn(),
     update: jest.fn(),
+    findActivePeriod: jest.fn().mockResolvedValue({ periodoId: 1 }),
   };
-
-  const mockPrisma = {
-    periodos: { findFirst: jest.fn().mockResolvedValue({ periodoId: 1 }) },
-  };
-
-  const mockStorageService = { upload: jest.fn() };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -53,8 +47,6 @@ describe('Readings Use Cases', () => {
         UpdateReadingUseCase,
         RemoveReadingUseCase,
         { provide: ReadingRepository, useValue: mockReadingRepository },
-        { provide: PrismaService, useValue: mockPrisma },
-        { provide: StorageService, useValue: mockStorageService },
       ],
     }).compile();
 
@@ -123,10 +115,10 @@ describe('Readings Use Cases', () => {
       expect(result.lecturaActual).toBe(200);
     });
 
-    it('should throw NotFoundException if not found', async () => {
+    it('should throw EntityNotFoundException if not found', async () => {
       mockReadingRepository.findUnique.mockResolvedValue(null);
       await expect(updateUseCase.execute(BigInt(1), {})).rejects.toThrow(
-        NotFoundException,
+        EntityNotFoundException,
       );
     });
   });

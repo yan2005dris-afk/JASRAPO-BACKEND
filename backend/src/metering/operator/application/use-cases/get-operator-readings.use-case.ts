@@ -1,12 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import type { IResponseReading } from 'src/metering/readings/types/IResponseReading';
+import type { ResponseReadingDto } from 'src/metering/readings/interfaces/dto/response-reading.dto';
 import { OperatorRepository } from '../../domain/repositories/operator.repository';
 
 @Injectable()
 export class GetOperatorReadingsUseCase {
   constructor(private readonly operatorRepository: OperatorRepository) {}
 
-  async execute(operarioId: number): Promise<IResponseReading[]> {
+  async execute(operarioId: number): Promise<ResponseReadingDto[]> {
     // 1. Find the active billing period
     const activePeriod = await this.operatorRepository.findActivePeriod();
 
@@ -44,7 +44,7 @@ export class GetOperatorReadingsUseCase {
         rutaConditions,
       );
 
-    // 6. Map raw Prisma results to IResponseReading
+    // 6. Map raw Prisma results to ResponseReadingDto
     return lecturas.map((lectura) => {
       const activeHistorial = lectura.medidor?.historial?.[0];
       const contrato = activeHistorial?.contrato ?? null;

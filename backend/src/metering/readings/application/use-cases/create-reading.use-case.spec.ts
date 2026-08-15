@@ -1,10 +1,9 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { NotFoundException } from '@nestjs/common';
 import { CreateReadingUseCase } from './create-reading.use-case';
 import { ReadingRepository } from '../../domain/repositories/reading.repository';
-import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { StorageService } from 'src/infrastructure/storage/storage.service';
+import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 
 describe('CreateReadingUseCase', () => {
   let useCase: CreateReadingUseCase;
@@ -15,12 +14,7 @@ describe('CreateReadingUseCase', () => {
     count: jest.fn(),
     create: jest.fn(),
     update: jest.fn(),
-  };
-
-  const mockPrisma = {
-    periodos: {
-      findFirst: jest.fn(),
-    },
+    findActivePeriod: jest.fn(),
   };
 
   const mockStorageService = {
@@ -45,7 +39,6 @@ describe('CreateReadingUseCase', () => {
       providers: [
         CreateReadingUseCase,
         { provide: ReadingRepository, useValue: mockReadingRepository },
-        { provide: PrismaService, useValue: mockPrisma },
         { provide: StorageService, useValue: mockStorageService },
       ],
     }).compile();
@@ -78,7 +71,7 @@ describe('CreateReadingUseCase', () => {
     const result = await useCase.execute(dto);
 
     expect(result.lecturaActual).toBe(150);
-    expect(mockPrisma.periodos.findFirst).not.toHaveBeenCalled();
+    expect(mockReadingRepository.findActivePeriod).not.toHaveBeenCalled();
     expect(mockReadingRepository.create).toHaveBeenCalledWith(
       expect.objectContaining({ medidorId: BigInt(1), periodoId: 1 }),
     );
@@ -93,7 +86,9 @@ describe('CreateReadingUseCase', () => {
       lecturaInicial: false,
     };
 
-    mockPrisma.periodos.findFirst.mockResolvedValue({ periodoId: 5 });
+    mockReadingRepository.findActivePeriod.mockResolvedValue({
+      periodoId: 5,
+    });
     mockReadingRepository.create.mockResolvedValue({
       ...mockReading,
       periodoId: 5,
@@ -105,14 +100,11 @@ describe('CreateReadingUseCase', () => {
 
     const result = await useCase.execute(dto);
 
-    expect(mockPrisma.periodos.findFirst).toHaveBeenCalledWith({
-      where: { estado: 'ABIERTO' },
-      select: { periodoId: true },
-    });
+    expect(mockReadingRepository.findActivePeriod).toHaveBeenCalled();
     expect(result.periodoId).toBe(5);
   });
 
-  it('should throw NotFoundException when no active period exists', async () => {
+  it('should throw EntityNotFoundException when no active period exists', async () => {
     const dto = {
       fecha: '2026-01-15',
       lecturaAnterior: 100,
@@ -121,8 +113,10 @@ describe('CreateReadingUseCase', () => {
       lecturaInicial: false,
     };
 
-    mockPrisma.periodos.findFirst.mockResolvedValue(null);
+    mockReadingRepository.findActivePeriod.mockResolvedValue(null);
 
-    await expect(useCase.execute(dto)).rejects.toThrow(NotFoundException);
+    await expect(useCase.execute(dto)).rejects.toThrow(
+      EntityNotFoundException,
+    );
   });
 });

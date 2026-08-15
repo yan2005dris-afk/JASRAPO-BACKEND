@@ -29,7 +29,6 @@ import { GetOperatorReadingsUseCase } from '../../application/use-cases/get-oper
 import { UpdateOperatorReadingUseCase } from '../../application/use-cases/update-operator-reading.use-case';
 import { ActualizarLecturaDto } from 'src/metering/readings/interfaces/dto/update-lectura.dto';
 import { ResponseReadingDto } from 'src/metering/readings/interfaces/dto/response-reading.dto';
-import { toReadingResponse } from 'src/metering/readings/types/readingMapper';
 import { MeterResponseDto } from 'src/metering/meters/interfaces/dto/meter-response.dto';
 import { SyncAllUseCase } from '../../application/use-cases/sync-all.use-case';
 import { DecommissionMeterDto } from './decommission-meter.dto';
@@ -160,7 +159,7 @@ export class OperatorController {
       operarioId,
       updateDto,
     );
-    return toReadingResponse(updated)!;
+    return ResponseReadingDto.fromEntity(updated)!;
   }
 
   /**

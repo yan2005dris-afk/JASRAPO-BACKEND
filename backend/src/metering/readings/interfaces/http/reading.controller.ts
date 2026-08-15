@@ -34,7 +34,6 @@ import {
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
 import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
-import { toReadingResponse } from '../../types/readingMapper';
 import { ReadingFilters } from '../../domain/repositories/reading.repository';
 import {
   EnumStateDto,
@@ -76,7 +75,7 @@ export class ReadingController {
     @Body() crearLecturaDto: CrearLecturaDto,
     @UploadedFile() file?: Express.Multer.File,
   ): Promise<ResponseReadingDto> {
-    return toReadingResponse(
+    return ResponseReadingDto.fromEntity(
       await this.readingService.create(crearLecturaDto, file),
     )!;
   }
@@ -126,7 +125,7 @@ export class ReadingController {
       filters,
     );
     return {
-      data: result.data.map((x) => toReadingResponse(x)!),
+      data: result.data.map((x) => ResponseReadingDto.fromEntity(x)!),
       meta: result.meta,
     };
   }
@@ -189,7 +188,7 @@ export class ReadingController {
   async findOne(
     @Param('id', ParseBigIntPipe) id: bigint,
   ): Promise<ResponseReadingDto> {
-    return toReadingResponse(await this.readingService.findOne(id))!;
+    return ResponseReadingDto.fromEntity(await this.readingService.findOne(id))!;
   }
 
   @ApiOperation({
@@ -227,7 +226,7 @@ export class ReadingController {
     updateLecturaDto: ActualizarLecturaDto,
     @UploadedFile() file?: Express.Multer.File,
   ): Promise<ResponseReadingDto> {
-    return toReadingResponse(
+    return ResponseReadingDto.fromEntity(
       await this.readingService.update(id, updateLecturaDto, undefined, file),
     )!;
   }

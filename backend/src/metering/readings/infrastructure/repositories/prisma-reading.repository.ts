@@ -9,6 +9,7 @@ import {
 } from '../../domain/repositories/reading.repository';
 import { LecturaEntity } from '../../domain/entities/lectura.entity';
 import { ReadingMapper } from '../mappers/reading.mapper';
+import { EstadoPeriodo } from 'src/shared/enums';
 
 export const safeReadingsSelect = {
   lecturaId: true,
@@ -57,6 +58,13 @@ export const safeReadingsSelect = {
 @Injectable()
 export class PrismaReadingRepository implements ReadingRepository {
   constructor(private readonly prisma: PrismaService) {}
+
+  async findActivePeriod(): Promise<{ periodoId: number } | null> {
+    return this.prisma.periodos.findFirst({
+      where: { estado: EstadoPeriodo.ABIERTO },
+      select: { periodoId: true },
+    });
+  }
 
   async findUnique(where: {
     lecturaId: bigint;

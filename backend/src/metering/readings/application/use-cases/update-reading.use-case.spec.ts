@@ -2,8 +2,11 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { UpdateReadingUseCase } from './update-reading.use-case';
 import { ReadingRepository } from '../../domain/repositories/reading.repository';
-import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { EstadoLectura } from 'src/shared/enums';
+import {
+  EntityNotFoundException,
+  InvalidDomainOperationException,
+} from 'src/shared/domain/exceptions/domain.exception';
 
 describe('UpdateReadingUseCase', () => {
   let useCase: UpdateReadingUseCase;
@@ -63,15 +66,15 @@ describe('UpdateReadingUseCase', () => {
     );
   });
 
-  it('should throw NotFoundException when reading not found', async () => {
+  it('should throw EntityNotFoundException when reading not found', async () => {
     mockReadingRepository.findUnique.mockResolvedValue(null);
 
     await expect(
       useCase.execute(BigInt(999), { lecturaActual: 200 }),
-    ).rejects.toThrow(NotFoundException);
+    ).rejects.toThrow(EntityNotFoundException);
   });
 
-  it('should throw NotFoundException when reading is deleted', async () => {
+  it('should throw EntityNotFoundException when reading is deleted', async () => {
     mockReadingRepository.findUnique.mockResolvedValue({
       ...mockReading,
       deletedAt: new Date(),
@@ -79,7 +82,7 @@ describe('UpdateReadingUseCase', () => {
 
     await expect(
       useCase.execute(BigInt(1), { lecturaActual: 200 }),
-    ).rejects.toThrow(NotFoundException);
+    ).rejects.toThrow(EntityNotFoundException);
   });
 
   it('should transition estado via CAS when targetEstado is provided', async () => {
@@ -104,7 +107,7 @@ describe('UpdateReadingUseCase', () => {
     );
   });
 
-  it('should throw BadRequestException on invalid state transition', async () => {
+  it('should throw InvalidDomainOperationException on invalid state transition', async () => {
     mockReadingRepository.findUnique.mockResolvedValue({
       ...mockReading,
       estado: EstadoLectura.APROBADA,
@@ -116,10 +119,10 @@ describe('UpdateReadingUseCase', () => {
         { lecturaActual: 200 },
         EstadoLectura.POR_REVISION,
       ),
-    ).rejects.toThrow(BadRequestException);
+    ).rejects.toThrow(InvalidDomainOperationException);
   });
 
-  it('should throw BadRequestException on CAS conflict', async () => {
+  it('should throw InvalidDomainOperationException on CAS conflict', async () => {
     mockReadingRepository.findUnique.mockResolvedValue(mockReading as any);
     mockReadingRepository.updateWithCas.mockResolvedValue(null);
 
@@ -129,6 +132,6 @@ describe('UpdateReadingUseCase', () => {
         { lecturaActual: 200 },
         EstadoLectura.POR_REVISION,
       ),
-    ).rejects.toThrow(BadRequestException);
+    ).rejects.toThrow(InvalidDomainOperationException);
   });
 });

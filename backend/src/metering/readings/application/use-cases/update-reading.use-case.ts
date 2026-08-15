@@ -1,38 +1,14 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { EstadoLectura } from 'src/shared/enums';
 import { ReadingRepository } from '../../domain/repositories/reading.repository';
 import type { UpdateReadingRepositoryData } from '../../domain/repositories/reading.repository';
 import { ActualizarLecturaDto } from '../../interfaces/dto/update-lectura.dto';
 import { LecturaEntity } from '../../domain/entities/lectura.entity';
-
-/**
- * State machine: define qué transiciones de estado son válidas.
- *
- * Estados terminales (sin transiciones salientes):
- *   - APROBADA
- *   - RECHAZADA_VERIFICACION
- *   - PLANILLADA (pendiente de definir transiciones)
- *
- * Estados sin transiciones definidas aún:
- *   - ESTIMADA
- *   - PLANILLADA
- *
- * Solo se agregan transiciones explícitas. La ausencia de una transición
- * implica que no está permitida y será rechazada por canTransition().
- */
-const TRANSITIONS: Record<string, Partial<Record<string, true>>> = {
-  [EstadoLectura.PENDIENTE]: {
-    [EstadoLectura.POR_REVISION]: true,
-  },
-  [EstadoLectura.POR_REVISION]: {
-    [EstadoLectura.APROBADA]: true,
-    [EstadoLectura.RECHAZADA_VERIFICACION]: true,
-  },
-};
+import {
+  EntityNotFoundException,
+  InvalidDomainOperationException,
+} from 'src/shared/domain/exceptions/domain.exception';
+import { canTransitionReadingState } from '../../domain/reading-state';
 
 @Injectable()
 export class UpdateReadingUseCase {
@@ -58,7 +34,7 @@ export class UpdateReadingUseCase {
     });
 
     if (!existing || existing.deletedAt) {
-      throw new NotFoundException(`Lectura con ID ${id} no encontrada`);
+      throw new EntityNotFoundException('Lectura', id);
     }
 
     // Build update payload — solo campos que el usuario envió
@@ -69,8 +45,8 @@ export class UpdateReadingUseCase {
     if (targetEstado) {
       // State machine validation
       const currentEstado = existing.estado as EstadoLectura;
-      if (!this.canTransition(currentEstado, targetEstado)) {
-        throw new BadRequestException(
+      if (!canTransitionReadingState(currentEstado, targetEstado)) {
+        throw new InvalidDomainOperationException(
           `No se puede cambiar el estado de ${currentEstado} a ${targetEstado}`,
         );
       }
@@ -84,7 +60,7 @@ export class UpdateReadingUseCase {
       );
 
       if (!updated) {
-        throw new BadRequestException(
+        throw new InvalidDomainOperationException(
           'La lectura fue modificada por otro usuario. Intentalo de nuevo.',
         );
       }
@@ -98,10 +74,5 @@ export class UpdateReadingUseCase {
     }
 
     return this.readingRepository.update({ lecturaId: id }, dataToUpdate);
-  }
-
-  private canTransition(from: EstadoLectura, to: EstadoLectura): boolean {
-    if (from === to) return true;
-    return !!TRANSITIONS[from]?.[to];
   }
 }

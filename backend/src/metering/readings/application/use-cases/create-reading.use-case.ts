@@ -1,16 +1,13 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ReadingRepository } from '../../domain/repositories/reading.repository';
 import { CrearLecturaDto } from '../../interfaces/dto/create-lectura.dto';
-import { EstadoLectura, EstadoPeriodo } from 'src/shared/enums';
+import { EstadoLectura } from 'src/shared/enums';
 import { LecturaEntity } from '../../domain/entities/lectura.entity';
-import { PrismaService } from 'src/infrastructure/database/prisma.service';
+import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 
 @Injectable()
 export class CreateReadingUseCase {
-  constructor(
-    private readonly readingRepository: ReadingRepository,
-    private readonly prisma: PrismaService,
-  ) {}
+  constructor(private readonly readingRepository: ReadingRepository) {}
 
   async execute(createDto: CrearLecturaDto): Promise<LecturaEntity> {
     const periodoId = await this.resolvePeriodoId(createDto.periodoId);
@@ -34,7 +31,7 @@ export class CreateReadingUseCase {
     });
 
     if (!lectura) {
-      throw new NotFoundException('Lectura no encontrada');
+      throw new EntityNotFoundException('Lectura', rawLectura.lecturaId);
     }
 
     return lectura;
@@ -43,15 +40,10 @@ export class CreateReadingUseCase {
   private async resolvePeriodoId(periodoId?: number): Promise<number> {
     if (periodoId) return periodoId;
 
-    const activePeriod = await this.prisma.periodos.findFirst({
-      where: { estado: EstadoPeriodo.ABIERTO },
-      select: { periodoId: true },
-    });
+    const activePeriod = await this.readingRepository.findActivePeriod();
 
     if (!activePeriod) {
-      throw new NotFoundException(
-        'No hay un período de facturación ABIERTO en el sistema',
-      );
+      throw new EntityNotFoundException('Periodo', 'ABIERTO');
     }
 
     return activePeriod.periodoId;

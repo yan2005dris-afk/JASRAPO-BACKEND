@@ -5,12 +5,31 @@ import { safeReadingsSelect } from './prisma-reading.repository';
 describe('PrismaReadingRepository - soft delete select regression', () => {
   const buildPrismaMock = () => {
     const findUnique = jest.fn();
+    const findFirst = jest.fn();
     return {
       lecturas: {
         findUnique,
       },
+      periodos: {
+        findFirst,
+      },
     };
   };
+
+  it('findActivePeriod queries the ABIERTO period and returns its id', async () => {
+    const prisma = buildPrismaMock();
+    const repository = new PrismaReadingRepository(prisma as any);
+
+    prisma.periodos.findFirst.mockResolvedValue({ periodoId: 5 });
+
+    const result = await repository.findActivePeriod();
+
+    expect(prisma.periodos.findFirst).toHaveBeenCalledWith({
+      where: { estado: 'ABIERTO' },
+      select: { periodoId: true },
+    });
+    expect(result).toEqual({ periodoId: 5 });
+  });
 
   it('safeReadingsSelect must request deletedAt so the use case soft-delete guard works', () => {
     expect((safeReadingsSelect as Record<string, unknown>).deletedAt).toBe(

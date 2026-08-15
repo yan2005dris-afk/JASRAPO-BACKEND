@@ -35,7 +35,13 @@ export interface ReadingFilters {
   periodoId?: number;
 }
 
+export interface ActivePeriod {
+  periodoId: number;
+}
+
 export abstract class ReadingRepository {
+  abstract findActivePeriod(): Promise<ActivePeriod | null>;
+
   abstract findUnique(where: {
     lecturaId: bigint;
   }): Promise<LecturaEntity | null>;
