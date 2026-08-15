@@ -10,6 +10,7 @@ import {
   FailedLoginAttemptOptions,
   FailedLoginAttemptResult,
 } from '../../domain/repositories/user.repository';
+import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
 import { paginate } from 'src/infrastructure/common/utils/pagination.util';
 import { UserWithRoleResponse } from '../../domain/types/user.types';
@@ -305,9 +306,7 @@ export class PrismaUserRepository implements UserRepository {
         .filter((id) => !validPermissionIds.has(id));
 
       if (invalidIds.length > 0) {
-        throw new Error(
-          `Permisos no encontrados o eliminados: ${invalidIds.join(', ')}`,
-        );
+        throw new EntityNotFoundException('Permisos', invalidIds.join(', '));
       }
 
       for (const perm of deduplicatedPermissions) {

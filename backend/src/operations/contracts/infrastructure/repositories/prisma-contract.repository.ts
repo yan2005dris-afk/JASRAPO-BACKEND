@@ -2,6 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { Prisma } from 'src/generated/prisma/client';
 import { EstadoMedidor } from 'src/shared/enums';
+import {
+  EntityNotFoundException,
+  InvalidDomainOperationException,
+} from 'src/shared/domain/exceptions/domain.exception';
 import { ContractRepository } from '../../domain/repositories/contract.repository';
 import { ContractEntity } from '../../domain/entities/contract.entity';
 import { CreateContractData } from '../../domain/types/create-contract-data';
@@ -157,9 +161,7 @@ export class PrismaContractRepository implements ContractRepository {
         where: { medidorId: newMeterId },
       });
       if (!medidor) {
-        throw new Error(
-          `Medidor con ID ${newMeterId} no encontrado`,
-        );
+        throw new EntityNotFoundException('Medidor', newMeterId);
       }
 
       await tx.historialMedidores.updateMany({
@@ -198,7 +200,7 @@ export class PrismaContractRepository implements ContractRepository {
       });
 
       if (!activeLink) {
-        throw new Error(
+        throw new InvalidDomainOperationException(
           'No hay un vínculo activo para este contrato',
         );
       }
@@ -213,9 +215,7 @@ export class PrismaContractRepository implements ContractRepository {
       });
 
       if (!medidor) {
-        throw new Error(
-          `Medidor con ID ${activeLink.medidorId} no encontrado`,
-        );
+        throw new EntityNotFoundException('Medidor', activeLink.medidorId);
       }
 
       await tx.medidores.update({
@@ -335,39 +335,32 @@ export class PrismaContractRepository implements ContractRepository {
     ]);
 
     if (!cliente) {
-      throw new Error(
-        `Cliente con ID ${data.clienteId} no encontrado`,
-      );
+      throw new EntityNotFoundException('Cliente', data.clienteId);
     }
 
     if (!medidor) {
-      throw new Error(
-        `Medidor con ID ${data.medidorId} no encontrado`,
-      );
+      throw new EntityNotFoundException('Medidor', data.medidorId);
     }
 
     if (medidor.estado !== EstadoMedidor.BODEGA) {
-      throw new Error(
+      throw new InvalidDomainOperationException(
         `El medidor debe estar en estado BODEGA para ser vinculado, estado actual: ${medidor.estado}`,
       );
     }
 
     if (!tarifa) {
-      throw new Error(
-        `Categoría de tarifa con ID ${data.categoriaTarifaId} no encontrada`,
+      throw new EntityNotFoundException(
+        'Categoría de tarifa',
+        data.categoriaTarifaId,
       );
     }
 
     if (!comunidad) {
-      throw new Error(
-        `Comunidad con ID ${data.comunidadId} no encontrada`,
-      );
+      throw new EntityNotFoundException('Comunidad', data.comunidadId);
     }
 
     if (data.sectorId !== null && !sector) {
-      throw new Error(
-        `Sector con ID ${data.sectorId} no encontrado`,
-      );
+      throw new EntityNotFoundException('Sector', data.sectorId);
     }
   }
 }
