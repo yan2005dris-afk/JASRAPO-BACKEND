@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import type { ReportSpec } from '../../interfaces/report-spec.interface';
-import type { PaymentsReportFilterDto } from '../../dto/payments-report-filter.dto';
+import type { PaymentsReportFilterDto } from '../../interfaces/dto/payments-report-filter.dto';
 
 @Injectable()
 export class PaymentsReportSpec implements ReportSpec<PaymentsReportFilterDto> {

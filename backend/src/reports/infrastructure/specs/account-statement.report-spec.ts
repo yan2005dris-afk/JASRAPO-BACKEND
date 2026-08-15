@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import type { Prisma } from 'src/generated/prisma/client';
 import type { ReportSpec } from '../../interfaces/report-spec.interface';
-import type { AccountStatementFilterDto } from '../../dto/account-statement-filter.dto';
+import type { AccountStatementFilterDto } from '../../interfaces/dto/account-statement-filter.dto';
 
 type LecturaRow = Prisma.lecturasGetPayload<Record<string, never>>;
 

@@ -5,10 +5,10 @@ import { ConnectionHistoryReportSpec } from '../../infrastructure/specs/connecti
 import { AccountStatementReportSpec } from '../../infrastructure/specs/account-statement.report-spec';
 import { ClientsListReportSpec } from '../../infrastructure/specs/clients-list.report-spec';
 import { GetPaymentAgreementPdfDataUseCase } from 'src/billing/collections/agreements/application/use-cases/get-payment-agreement-pdf-data.use-case';
-import type { PaymentsReportFilterDto } from '../../dto/payments-report-filter.dto';
-import type { ConnectionHistoryFilterDto } from '../../dto/connection-history-filter.dto';
-import type { AccountStatementFilterDto } from '../../dto/account-statement-filter.dto';
-import type { ClientsListReportFilterDto } from '../../dto/clients-list-report-filter.dto';
+import type { PaymentsReportFilterDto } from '../../interfaces/dto/payments-report-filter.dto';
+import type { ConnectionHistoryFilterDto } from '../../interfaces/dto/connection-history-filter.dto';
+import type { AccountStatementFilterDto } from '../../interfaces/dto/account-statement-filter.dto';
+import type { ClientsListReportFilterDto } from '../../interfaces/dto/clients-list-report-filter.dto';
 import type { ReportEmailStrategy } from './send-report-by-email.strategy';
 
 /**
