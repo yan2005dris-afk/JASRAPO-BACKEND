@@ -2,19 +2,16 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { UpdateSectorUseCase } from './update-sector.use-case';
 import { SectorRepository } from '../../domain/repositories/sector.repository';
-import { NotFoundException } from '@nestjs/common';
+import { SectorEntity } from '../../domain/entities/sector.entity';
+import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 
 describe('UpdateSectorUseCase', () => {
   let useCase: UpdateSectorUseCase;
 
   const mockSectorRepository = {
-    findUnique: jest.fn(),
+    findById: jest.fn(),
+    findComunidadById: jest.fn(),
     update: jest.fn(),
-    findMany: jest.fn(),
-    count: jest.fn(),
-    create: jest.fn(),
-    delete: jest.fn(),
-    findComunidad: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -26,9 +23,6 @@ describe('UpdateSectorUseCase', () => {
     }).compile();
 
     useCase = module.get<UpdateSectorUseCase>(UpdateSectorUseCase);
-  });
-
-  afterEach(() => {
     jest.clearAllMocks();
   });
 
@@ -38,26 +32,34 @@ describe('UpdateSectorUseCase', () => {
 
   it('should update a sector successfully', async () => {
     const dto = { nombre: 'Sector Updated' };
-    const mockExistingSector = {
-      sectorId: 1,
-      nombre: 'Old',
-      comunidadId: 1,
-      deletedAt: null,
-    };
-    const mockUpdatedSector = {
-      sectorId: 1,
-      nombre: 'Sector Updated',
-      comunidadId: 1,
-    };
-    mockSectorRepository.findUnique.mockResolvedValue(mockExistingSector);
+    const mockExistingSector = new SectorEntity(1, 'Old', 'SEC-001', 1);
+    const mockUpdatedSector = new SectorEntity(1, 'Sector Updated', 'SEC-001', 1);
+
+    mockSectorRepository.findById.mockResolvedValue(mockExistingSector);
     mockSectorRepository.update.mockResolvedValue(mockUpdatedSector);
 
     const result = await useCase.execute(1, dto);
 
     expect(result).toEqual(mockUpdatedSector);
-    expect(mockSectorRepository.update).toHaveBeenCalledWith(
-      { sectorId: 1 },
-      dto,
+    expect(mockSectorRepository.findById).toHaveBeenCalledWith(1);
+    expect(mockSectorRepository.update).toHaveBeenCalledWith(1, dto);
+  });
+
+  it('should throw EntityNotFoundException if sector does not exist', async () => {
+    mockSectorRepository.findById.mockResolvedValue(null);
+
+    await expect(useCase.execute(999, { nombre: 'Test' })).rejects.toThrow(
+      EntityNotFoundException,
+    );
+  });
+
+  it('should throw EntityNotFoundException if updated comunidadId does not exist', async () => {
+    const mockExistingSector = new SectorEntity(1, 'Old', 'SEC-001', 1);
+    mockSectorRepository.findById.mockResolvedValue(mockExistingSector);
+    mockSectorRepository.findComunidadById.mockResolvedValue(null);
+
+    await expect(useCase.execute(1, { comunidadId: 999 })).rejects.toThrow(
+      EntityNotFoundException,
     );
   });
 });

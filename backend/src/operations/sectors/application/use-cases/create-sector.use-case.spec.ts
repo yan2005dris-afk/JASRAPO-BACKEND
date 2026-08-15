@@ -2,19 +2,20 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { CreateSectorUseCase } from './create-sector.use-case';
 import { SectorRepository } from '../../domain/repositories/sector.repository';
-import { NotFoundException, ConflictException } from '@nestjs/common';
+import { SectorEntity } from '../../domain/entities/sector.entity';
+import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 
 describe('CreateSectorUseCase', () => {
   let useCase: CreateSectorUseCase;
 
   const mockSectorRepository = {
-    findUnique: jest.fn(),
-    findMany: jest.fn(),
-    count: jest.fn(),
+    findById: jest.fn(),
+    findByCodigo: jest.fn(),
+    findComunidadById: jest.fn(),
+    paginate: jest.fn(),
     create: jest.fn(),
     update: jest.fn(),
-    delete: jest.fn(),
-    findComunidad: jest.fn(),
+    softDelete: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -26,9 +27,6 @@ describe('CreateSectorUseCase', () => {
     }).compile();
 
     useCase = module.get<CreateSectorUseCase>(CreateSectorUseCase);
-  });
-
-  afterEach(() => {
     jest.clearAllMocks();
   });
 
@@ -36,59 +34,30 @@ describe('CreateSectorUseCase', () => {
     expect(useCase).toBeDefined();
   });
 
-  it('should create a sector successfully', async () => {
-    const dto = { nombre: 'Sector A', comunidadId: 1 };
-    mockSectorRepository.findComunidad.mockResolvedValue({
-      comunidadId: 1,
-    });
-    mockSectorRepository.create.mockResolvedValue({
-      sectorId: 1,
-      ...dto,
-    });
+  it('should create a sector successfully when comunidad exists', async () => {
+    const dto = { nombre: 'Sector A', codigo: 'SEC-001', comunidadId: 1 };
+    const expected = new SectorEntity(1, 'Sector A', 'SEC-001', 1);
 
-    const result = await useCase.execute(dto as any);
-
-    expect(result).toEqual({
-      message: 'Sector creado exitosamente.',
-      statusCode: 201,
-    });
-    expect(mockSectorRepository.findComunidad).toHaveBeenCalledWith({
+    mockSectorRepository.findComunidadById.mockResolvedValue({
       comunidadId: 1,
+      codigo: 'COM-001',
+      nombre: 'Comunidad 1',
     });
+    mockSectorRepository.create.mockResolvedValue(expected);
+
+    const result = await useCase.execute(dto);
+
+    expect(result).toEqual(expected);
+    expect(mockSectorRepository.findComunidadById).toHaveBeenCalledWith(1);
     expect(mockSectorRepository.create).toHaveBeenCalledWith(dto);
   });
 
-  it('should throw NotFoundException if comunidad does not exist', async () => {
-    const dto = { nombre: 'Sector A', comunidadId: 999 };
-    mockSectorRepository.findComunidad.mockResolvedValue(null);
+  it('should throw EntityNotFoundException if comunidad does not exist', async () => {
+    const dto = { nombre: 'Sector A', codigo: 'SEC-001', comunidadId: 999 };
+    mockSectorRepository.findComunidadById.mockResolvedValue(null);
 
-    await expect(useCase.execute(dto as any)).rejects.toThrow(
-      new NotFoundException('La comunidad especificada no existe.'),
+    await expect(useCase.execute(dto)).rejects.toThrow(
+      EntityNotFoundException,
     );
-  });
-
-  it('should throw ConflictException if sector already exists (P2002)', async () => {
-    const dto = { nombre: 'Sector A', comunidadId: 1 };
-    mockSectorRepository.findComunidad.mockResolvedValue({
-      comunidadId: 1,
-    });
-    const error = new Error();
-    (error as any).code = 'P2002';
-    mockSectorRepository.create.mockRejectedValue(error);
-
-    await expect(useCase.execute(dto as any)).rejects.toThrow(
-      new ConflictException('El sector ya existe (código o ID duplicado).'),
-    );
-  });
-
-  it('should rethrow other errors', async () => {
-    const dto = { nombre: 'Sector A', comunidadId: 1 };
-    mockSectorRepository.findComunidad.mockResolvedValue({
-      comunidadId: 1,
-    });
-    const error = new Error('Database error');
-    mockSectorRepository.create.mockRejectedValue(error);
-
-    await expect(useCase.execute(dto as any)).rejects.toThrow('Database error');
   });
 });

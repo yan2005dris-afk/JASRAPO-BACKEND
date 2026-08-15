@@ -4,29 +4,26 @@ import type { UpdateSectorData } from '../types/update-sector-data';
 import type { SectorFilters } from '../types/sector-filters';
 
 export abstract class SectorRepository {
-  abstract findUnique(where: {
-    sectorId: number;
-  }): Promise<SectorEntity | null>;
+  abstract findById(
+    id: number,
+    includeDeleted?: boolean,
+  ): Promise<SectorEntity | null>;
 
-  abstract findMany(params?: {
-    where?: SectorFilters;
-    orderBy?: { sectorId?: 'asc' | 'desc' };
-    skip?: number;
-    take?: number;
-  }): Promise<SectorEntity[]>;
+  abstract findByCodigo(codigo: string): Promise<SectorEntity | null>;
 
-  abstract count(params: { where?: SectorFilters }): Promise<number>;
+  abstract findComunidadById(comunidadId: number): Promise<ComunidadRef | null>;
+
+  abstract paginate(
+    filters: SectorFilters,
+    pagination: { skip: number; take: number },
+  ): Promise<{ data: SectorEntity[]; total: number }>;
 
   abstract create(data: CreateSectorData): Promise<SectorEntity>;
 
   abstract update(
-    where: { sectorId: number },
+    id: number,
     data: UpdateSectorData,
   ): Promise<SectorEntity>;
 
-  abstract delete(where: { sectorId: number }): Promise<SectorEntity>;
-
-  abstract findComunidad(where: {
-    comunidadId: number;
-  }): Promise<ComunidadRef | null>;
+  abstract softDelete(id: number): Promise<SectorEntity>;
 }

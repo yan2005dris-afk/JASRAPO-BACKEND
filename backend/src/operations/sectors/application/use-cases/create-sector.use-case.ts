@@ -1,34 +1,22 @@
-import {
-  Injectable,
-  NotFoundException,
-  ConflictException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { SectorRepository } from '../../domain/repositories/sector.repository';
 import { CreateSectorDto } from '../../interfaces/dto/create-sector.dto';
+import { SectorEntity } from '../../domain/entities/sector.entity';
+import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 
 @Injectable()
 export class CreateSectorUseCase {
   constructor(private readonly sectorRepository: SectorRepository) {}
 
-  async execute(dto: CreateSectorDto) {
-    const comunidad = await this.sectorRepository.findComunidad({
-      comunidadId: dto.comunidadId,
-    });
+  async execute(dto: CreateSectorDto): Promise<SectorEntity> {
+    const comunidad = await this.sectorRepository.findComunidadById(
+      dto.comunidadId,
+    );
 
     if (!comunidad) {
-      throw new NotFoundException('La comunidad especificada no existe.');
+      throw new EntityNotFoundException('Comunidad', dto.comunidadId);
     }
 
-    try {
-      await this.sectorRepository.create(dto);
-      return { message: 'Sector creado exitosamente.', statusCode: 201 };
-    } catch (error: any) {
-      if (error.code === 'P2002') {
-        throw new ConflictException(
-          'El sector ya existe (código o ID duplicado).',
-        );
-      }
-      throw error;
-    }
+    return this.sectorRepository.create(dto);
   }
 }

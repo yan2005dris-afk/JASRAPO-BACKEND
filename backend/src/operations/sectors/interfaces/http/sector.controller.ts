@@ -13,6 +13,7 @@ import {
 import { SectorService } from '../../application/sector.service';
 import { CreateSectorDto } from '../dto/create-sector.dto';
 import { UpdateSectorDto } from '../dto/update-sector.dto';
+import { SectorResponseDto } from '../dto/sector-response.dto';
 import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
 import {
   ApiTags,
@@ -21,13 +22,18 @@ import {
   ApiResponse,
   ApiParam,
   ApiBody,
+  ApiExtraModels,
 } from '@nestjs/swagger';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
 import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
+import { ApiPaginatedResponse } from 'src/infrastructure/common/decorators/api-paginated-response.decorator';
+import { PaginationMetaDto } from 'src/infrastructure/common/dtos/pagination-meta.dto';
+import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
 
 @ApiTags('sectors')
 @ApiBearerAuth()
+@ApiExtraModels(SectorResponseDto, PaginationMetaDto)
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('sectors')
 export class SectorController {
@@ -38,26 +44,42 @@ export class SectorController {
     description: 'Crea un nuevo sector territorial',
   })
   @ApiBody({ type: CreateSectorDto, description: 'Datos del sector' })
-  @ApiResponse({ status: 201, description: 'Sector creado' })
+  @ApiResponse({
+    status: 201,
+    description: 'Sector creado',
+    type: SectorResponseDto,
+  })
   @ApiResponse({ status: 400, description: 'Datos inválidos' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({ status: 403, description: 'Sin permiso sectores:create' })
   @RequiredPermission('sectores', 'create')
   @Post()
-  create(@Body() createSectorDto: CreateSectorDto) {
-    return this.sectorService.crearSector(createSectorDto);
+  async create(
+    @Body() createSectorDto: CreateSectorDto,
+  ): Promise<SectorResponseDto> {
+    const result = await this.sectorService.crearSector(createSectorDto);
+    return SectorResponseDto.fromEntity(result);
   }
 
   @ApiOperation({
     summary: 'Listar sectores',
     description: 'Retorna todos los sectores con paginación',
   })
-  @ApiResponse({ status: 200, description: 'Lista de sectores' })
+  @ApiPaginatedResponse(SectorResponseDto)
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @RequiredPermission('sectores', 'read')
   @Get()
-  findAll(@Query() paginationDto: PaginationDto) {
-    return this.sectorService.findAll(paginationDto.page, paginationDto.limit);
+  async findAll(
+    @Query() paginationDto: PaginationDto,
+  ): Promise<PaginatedResult<SectorResponseDto>> {
+    const result = await this.sectorService.findAll(
+      paginationDto.page,
+      paginationDto.limit,
+    );
+    return {
+      data: SectorResponseDto.fromEntityList(result.data),
+      meta: result.meta,
+    };
   }
 
   @ApiOperation({
@@ -70,13 +92,20 @@ export class SectorController {
     type: Number,
     example: 1,
   })
-  @ApiResponse({ status: 200, description: 'Sector encontrado' })
+  @ApiResponse({
+    status: 200,
+    description: 'Sector encontrado',
+    type: SectorResponseDto,
+  })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({ status: 404, description: 'Sector no encontrado' })
   @RequiredPermission('sectores', 'read')
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.sectorService.findOne(id);
+  async findOne(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<SectorResponseDto> {
+    const result = await this.sectorService.findOne(id);
+    return SectorResponseDto.fromEntity(result);
   }
 
   @ApiOperation({
@@ -90,18 +119,26 @@ export class SectorController {
     example: 1,
   })
   @ApiBody({ type: UpdateSectorDto, description: 'Datos a actualizar' })
-  @ApiResponse({ status: 200, description: 'Sector actualizado' })
+  @ApiResponse({
+    status: 200,
+    description: 'Sector actualizado',
+    type: SectorResponseDto,
+  })
   @ApiResponse({ status: 400, description: 'Datos inválidos' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({ status: 403, description: 'Sin permiso sectores:update' })
   @ApiResponse({ status: 404, description: 'Sector no encontrado' })
   @RequiredPermission('sectores', 'update')
   @Patch(':id')
-  update(
+  async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateSectorDto: UpdateSectorDto,
-  ) {
-    return this.sectorService.actualizarSector(id, updateSectorDto);
+  ): Promise<SectorResponseDto> {
+    const result = await this.sectorService.actualizarSector(
+      id,
+      updateSectorDto,
+    );
+    return SectorResponseDto.fromEntity(result);
   }
 
   @ApiOperation({
@@ -114,13 +151,20 @@ export class SectorController {
     type: Number,
     example: 1,
   })
-  @ApiResponse({ status: 200, description: 'Sector eliminado' })
+  @ApiResponse({
+    status: 200,
+    description: 'Sector eliminado',
+    type: SectorResponseDto,
+  })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({ status: 403, description: 'Sin permiso sectores:delete' })
   @ApiResponse({ status: 404, description: 'Sector no encontrado' })
   @RequiredPermission('sectores', 'delete')
   @Delete(':id')
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.sectorService.eliminarSector(id);
+  async remove(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<SectorResponseDto> {
+    const result = await this.sectorService.eliminarSector(id);
+    return SectorResponseDto.fromEntity(result);
   }
 }

@@ -2,19 +2,15 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { DeleteSectorUseCase } from './delete-sector.use-case';
 import { SectorRepository } from '../../domain/repositories/sector.repository';
-import { NotFoundException } from '@nestjs/common';
+import { SectorEntity } from '../../domain/entities/sector.entity';
+import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 
 describe('DeleteSectorUseCase', () => {
   let useCase: DeleteSectorUseCase;
 
   const mockSectorRepository = {
-    findUnique: jest.fn(),
-    update: jest.fn(),
-    findMany: jest.fn(),
-    count: jest.fn(),
-    create: jest.fn(),
-    delete: jest.fn(),
-    findComunidad: jest.fn(),
+    findById: jest.fn(),
+    softDelete: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -26,9 +22,6 @@ describe('DeleteSectorUseCase', () => {
     }).compile();
 
     useCase = module.get<DeleteSectorUseCase>(DeleteSectorUseCase);
-  });
-
-  afterEach(() => {
     jest.clearAllMocks();
   });
 
@@ -36,32 +29,24 @@ describe('DeleteSectorUseCase', () => {
     expect(useCase).toBeDefined();
   });
 
-  it('should delete a sector successfully', async () => {
-    mockSectorRepository.findUnique.mockResolvedValue({
-      sectorId: 1,
-      deletedAt: null,
-    });
-    mockSectorRepository.delete.mockResolvedValue({ sectorId: 1 });
+  it('should delete a sector successfully when found', async () => {
+    const existing = new SectorEntity(1, 'Sector 1', 'SEC-001', 1);
+    const deleted = new SectorEntity(1, 'Sector 1', 'SEC-001', 1, null, new Date());
+    mockSectorRepository.findById.mockResolvedValue(existing);
+    mockSectorRepository.softDelete.mockResolvedValue(deleted);
 
     const result = await useCase.execute(1);
 
-    expect(result).toEqual({
-      message: 'Sector eliminado exitosamente.',
-      statusCode: 200,
-    });
-    expect(mockSectorRepository.findUnique).toHaveBeenCalledWith({
-      sectorId: 1,
-    });
-    expect(mockSectorRepository.delete).toHaveBeenCalledWith({
-      sectorId: 1,
-    });
+    expect(result).toEqual(deleted);
+    expect(mockSectorRepository.findById).toHaveBeenCalledWith(1);
+    expect(mockSectorRepository.softDelete).toHaveBeenCalledWith(1);
   });
 
-  it('should throw NotFoundException if sector does not exist', async () => {
-    mockSectorRepository.findUnique.mockResolvedValue(null);
+  it('should throw EntityNotFoundException if sector does not exist', async () => {
+    mockSectorRepository.findById.mockResolvedValue(null);
 
     await expect(useCase.execute(999)).rejects.toThrow(
-      new NotFoundException('Sector con ID 999 no encontrado'),
+      EntityNotFoundException,
     );
   });
 });
