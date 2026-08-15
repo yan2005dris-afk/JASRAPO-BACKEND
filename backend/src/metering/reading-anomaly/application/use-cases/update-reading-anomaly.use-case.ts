@@ -1,7 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ReadingAnomalyRepository } from '../../domain/repositories/reading-anomaly.repository';
 import { UpdateReadingAnomalyDto } from '../../interfaces/dto/update-reading-anomaly.dto';
 import { ReadingAnomalyEntity } from '../../domain/entities/reading-anomaly.entity';
+import type { UpdateReadingAnomalyRepositoryData } from '../../domain/repositories/reading-anomaly.repository';
+import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 
 @Injectable()
 export class UpdateReadingAnomalyUseCase {
@@ -17,13 +19,14 @@ export class UpdateReadingAnomalyUseCase {
       anomaliaId: id,
     });
     if (!existing || existing.deletedAt) {
-      throw new NotFoundException(`Anomalía con ID ${id} no encontrada`);
+      throw new EntityNotFoundException('Anomalia de lectura', id);
     }
 
-    const dataToUpdate: any = { ...updateDto };
-    if (updateDto.lecturaId) {
-      dataToUpdate.lecturaId = BigInt(updateDto.lecturaId);
-    }
+    const { lecturaId, ...rest } = updateDto;
+    const dataToUpdate: UpdateReadingAnomalyRepositoryData = {
+      ...rest,
+      ...(lecturaId !== undefined && { lecturaId: BigInt(lecturaId) }),
+    };
 
     return this.readingAnomalyRepository.update(
       { anomaliaId: id },

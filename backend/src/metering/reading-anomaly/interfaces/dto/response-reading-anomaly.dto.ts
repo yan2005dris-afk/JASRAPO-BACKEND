@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IResponseReadingAnomaly } from '../../types/IResponseReadingAnomaly';
+import type { ReadingAnomalyEntity } from '../../domain/entities/reading-anomaly.entity';
 
-export class ResponseReadingAnomalyDto implements IResponseReadingAnomaly {
+export class ResponseReadingAnomalyDto {
   @ApiProperty({ description: 'ID de la anomalía' })
   anomaliaId: string;
 
@@ -27,4 +27,30 @@ export class ResponseReadingAnomalyDto implements IResponseReadingAnomaly {
     lecturaActual: number;
     consumoCalculado: number;
   } | null;
+
+  constructor(partial: Partial<ResponseReadingAnomalyDto>) {
+    Object.assign(this, partial);
+  }
+
+  static fromEntity(
+    anomaly: ReadingAnomalyEntity | null | undefined,
+  ): ResponseReadingAnomalyDto | null {
+    if (!anomaly) return null;
+    return new ResponseReadingAnomalyDto({
+      anomaliaId: anomaly.anomaliaId.toString(),
+      lecturaId: anomaly.lecturaId.toString(),
+      observacion: anomaly.observacion,
+      tipo: anomaly.tipo,
+      estado: anomaly.estado,
+      fotoUrl: anomaly.fotoUrl,
+      lectura: anomaly.lectura
+        ? {
+            lecturaId: anomaly.lectura.lecturaId.toString(),
+            fecha: anomaly.lectura.fecha,
+            lecturaActual: anomaly.lectura.lecturaActual,
+            consumoCalculado: anomaly.lectura.consumoCalculado,
+          }
+        : null,
+    });
+  }
 }

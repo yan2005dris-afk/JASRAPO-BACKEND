@@ -1,6 +1,7 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ReadingAnomalyRepository } from '../../domain/repositories/reading-anomaly.repository';
 import { ReadingAnomalyEntity } from '../../domain/entities/reading-anomaly.entity';
+import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 
 @Injectable()
 export class FindOneReadingAnomalyUseCase {
@@ -13,7 +14,7 @@ export class FindOneReadingAnomalyUseCase {
       anomaliaId: id,
     });
     if (!anomalia || anomalia.deletedAt !== null) {
-      throw new NotFoundException(`Anomalía con ID ${id} no encontrada`);
+      throw new EntityNotFoundException('Anomalia de lectura', id);
     }
     return anomalia;
   }

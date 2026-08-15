@@ -33,7 +33,6 @@ import {
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
 import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
-import { toReadingAnomalyResponse } from '../../types/readingAnomalyMapper';
 import { ReadingAnomalyFilters } from '../../domain/repositories/reading-anomaly.repository';
 import {
   EnumStateDto,
@@ -80,7 +79,7 @@ export class ReadingAnomalyController {
     @Body() createDto: CreateReadingAnomalyDto,
     @UploadedFile() file?: Express.Multer.File,
   ): Promise<ResponseReadingAnomalyDto> {
-    return toReadingAnomalyResponse(
+    return ResponseReadingAnomalyDto.fromEntity(
       await this.readingAnomalyService.create(createDto, file),
     )!;
   }
@@ -137,7 +136,7 @@ export class ReadingAnomalyController {
       filters,
     );
     return {
-      data: result.data.map((x) => toReadingAnomalyResponse(x)!),
+      data: result.data.map((x) => ResponseReadingAnomalyDto.fromEntity(x)!),
       meta: result.meta,
     };
   }
@@ -193,7 +192,7 @@ export class ReadingAnomalyController {
   async findOne(
     @Param('id', ParseBigIntPipe) id: bigint,
   ): Promise<ResponseReadingAnomalyDto> {
-    return toReadingAnomalyResponse(
+    return ResponseReadingAnomalyDto.fromEntity(
       await this.readingAnomalyService.findOne(id),
     )!;
   }
@@ -238,7 +237,7 @@ export class ReadingAnomalyController {
     @Body() updateDto: UpdateReadingAnomalyDto,
     @UploadedFile() file?: Express.Multer.File,
   ): Promise<ResponseReadingAnomalyDto> {
-    return toReadingAnomalyResponse(
+    return ResponseReadingAnomalyDto.fromEntity(
       await this.readingAnomalyService.update(id, updateDto, file),
     )!;
   }

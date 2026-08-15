@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
-import { Prisma } from 'src/generated/prisma/client';
+import { Prisma, $Enums } from 'src/generated/prisma/client';
 import {
   ReadingRepository,
   CreateReadingRepositoryData,
@@ -138,7 +138,7 @@ export class PrismaReadingRepository implements ReadingRepository {
         descripcionAnomalia: data.descripcionAnomalia,
         fechaValidacion: data.fechaValidacion,
         fotoUrl: data.fotoUrl,
-        estado: data.estado as any,
+        estado: data.estado as $Enums.EstadoLectura,
         lecturaInicial: data.lecturaInicial,
         periodoId: data.periodoId,
       },
@@ -174,7 +174,9 @@ export class PrismaReadingRepository implements ReadingRepository {
         ...(data.fotoUrl !== undefined && {
           fotoUrl: data.fotoUrl,
         }),
-        ...(data.estado !== undefined && { estado: data.estado as any }),
+        ...(data.estado !== undefined && {
+          estado: data.estado as $Enums.EstadoLectura,
+        }),
         ...(data.lecturaInicial !== undefined && {
           lecturaInicial: data.lecturaInicial,
         }),
@@ -194,7 +196,7 @@ export class PrismaReadingRepository implements ReadingRepository {
       const { count } = await tx.lecturas.updateMany({
         where: {
           lecturaId: where.lecturaId,
-          estado: where.estado as any,
+          estado: where.estado as $Enums.EstadoLectura,
           deletedAt: null,
         },
         data: {
@@ -218,7 +220,9 @@ export class PrismaReadingRepository implements ReadingRepository {
           ...(data.fotoUrl !== undefined && {
             fotoUrl: data.fotoUrl,
           }),
-          ...(data.estado !== undefined && { estado: data.estado as any }),
+          ...(data.estado !== undefined && {
+            estado: data.estado as $Enums.EstadoLectura,
+          }),
           ...(data.lecturaInicial !== undefined && {
             lecturaInicial: data.lecturaInicial,
           }),
