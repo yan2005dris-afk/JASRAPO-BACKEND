@@ -17,6 +17,7 @@ import { CrearContratoMedidorDto } from '../dto/create-contrato-medidor.dto';
 import { ActualizarContratoMedidorDto } from '../dto/update-contrato-medidor.dto';
 import { buildPdfFileName } from 'src/infrastructure/pdf/utils/pdf-format.utils';
 import { FilterContractsDto } from '../dto/filter-contracts.dto';
+import { ContractResponseDto } from '../dto/contract-response.dto';
 import {
   ApiTags,
   ApiBearerAuth,
@@ -24,14 +25,19 @@ import {
   ApiResponse,
   ApiParam,
   ApiBody,
+  ApiExtraModels,
 } from '@nestjs/swagger';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
 import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 import { EnumStateDto } from 'src/shared/enums/state-catalog';
+import { ApiPaginatedResponse } from 'src/infrastructure/common/decorators/api-paginated-response.decorator';
+import { PaginationMetaDto } from 'src/infrastructure/common/dtos/pagination-meta.dto';
+import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
 
 @ApiTags('contracts')
 @ApiBearerAuth()
+@ApiExtraModels(ContractResponseDto, PaginationMetaDto)
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('contracts')
 export class ContratoMedidorController {
@@ -64,26 +70,39 @@ export class ContratoMedidorController {
     description:
       'Datos del contrato (clienteId, medidorId, categoriaTarifaId, numeroGuia, direccionSuministro, comunidadId obligatorios)',
   })
-  @ApiResponse({ status: 201, description: 'Contrato creado' })
+  @ApiResponse({
+    status: 201,
+    description: 'Contrato creado',
+    type: ContractResponseDto,
+  })
   @ApiResponse({ status: 400, description: 'Datos inválidos' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({ status: 403, description: 'Sin permiso contracts:create' })
   @RequiredPermission('contracts', 'create')
   @Post()
-  crear(@Body() createDto: CrearContratoMedidorDto) {
-    return this.contratoMedidorService.crearContrato(createDto);
+  async crear(
+    @Body() createDto: CrearContratoMedidorDto,
+  ): Promise<ContractResponseDto> {
+    const result = await this.contratoMedidorService.crearContrato(createDto);
+    return ContractResponseDto.fromEntity(result);
   }
 
   @ApiOperation({
     summary: 'Listar contratos',
     description: 'Retorna lista de contratos con paginación y filtros',
   })
-  @ApiResponse({ status: 200, description: 'Lista de contratos' })
+  @ApiPaginatedResponse(ContractResponseDto)
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @RequiredPermission('contracts', 'read')
   @Get()
-  buscarContratos(@Query() filters: FilterContractsDto) {
-    return this.contratoMedidorService.buscarContratos(filters);
+  async buscarContratos(
+    @Query() filters: FilterContractsDto,
+  ): Promise<PaginatedResult<ContractResponseDto>> {
+    const result = await this.contratoMedidorService.buscarContratos(filters);
+    return {
+      data: ContractResponseDto.fromEntityList(result.data),
+      meta: result.meta,
+    };
   }
 
   @ApiOperation({
@@ -96,13 +115,20 @@ export class ContratoMedidorController {
     type: Number,
     example: 1,
   })
-  @ApiResponse({ status: 200, description: 'Contrato encontrado' })
+  @ApiResponse({
+    status: 200,
+    description: 'Contrato encontrado',
+    type: ContractResponseDto,
+  })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({ status: 404, description: 'Contrato no encontrado' })
   @RequiredPermission('contracts', 'read')
   @Get(':id')
-  buscarContrato(@Param('id', ParseBigIntPipe) id: bigint) {
-    return this.contratoMedidorService.buscarContrato(id);
+  async buscarContrato(
+    @Param('id', ParseBigIntPipe) id: bigint,
+  ): Promise<ContractResponseDto> {
+    const result = await this.contratoMedidorService.buscarContrato(id);
+    return ContractResponseDto.fromEntity(result);
   }
 
   @ApiOperation({
@@ -121,18 +147,23 @@ export class ContratoMedidorController {
     description:
       'Campos a actualizar (estado, direccionSuministro, sectorId, medidorId opcional para reemplazo)',
   })
-  @ApiResponse({ status: 200, description: 'Contrato actualizado' })
+  @ApiResponse({
+    status: 200,
+    description: 'Contrato actualizado',
+    type: ContractResponseDto,
+  })
   @ApiResponse({ status: 400, description: 'Datos inválidos' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({ status: 403, description: 'Sin permiso contracts:update' })
   @ApiResponse({ status: 404, description: 'Contrato no encontrado' })
   @RequiredPermission('contracts', 'update')
   @Patch(':id')
-  actualizarContrato(
+  async actualizarContrato(
     @Param('id', ParseBigIntPipe) id: bigint,
     @Body() updateDto: ActualizarContratoMedidorDto,
-  ) {
-    return this.contratoMedidorService.actualizar(id, updateDto);
+  ): Promise<ContractResponseDto> {
+    const result = await this.contratoMedidorService.actualizar(id, updateDto);
+    return ContractResponseDto.fromEntity(result);
   }
 
   @ApiOperation({
@@ -146,13 +177,20 @@ export class ContratoMedidorController {
     type: Number,
     example: 1,
   })
-  @ApiResponse({ status: 200, description: 'Vínculo finalizado' })
+  @ApiResponse({
+    status: 200,
+    description: 'Vínculo finalizado',
+    type: ContractResponseDto,
+  })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({ status: 404, description: 'Contrato no encontrado' })
   @RequiredPermission('contracts', 'update')
   @Post(':id/finalize')
-  finalizarVinculo(@Param('id', ParseBigIntPipe) id: bigint) {
-    return this.contratoMedidorService.finalizarVinculo(id);
+  async finalizarVinculo(
+    @Param('id', ParseBigIntPipe) id: bigint,
+  ): Promise<ContractResponseDto> {
+    const result = await this.contratoMedidorService.finalizarVinculo(id);
+    return ContractResponseDto.fromEntity(result);
   }
 
   @ApiOperation({
@@ -165,14 +203,21 @@ export class ContratoMedidorController {
     type: Number,
     example: 1,
   })
-  @ApiResponse({ status: 200, description: 'Contrato eliminado' })
+  @ApiResponse({
+    status: 200,
+    description: 'Contrato eliminado',
+    type: ContractResponseDto,
+  })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({ status: 403, description: 'Sin permiso contracts:delete' })
   @ApiResponse({ status: 404, description: 'Contrato no encontrado' })
   @RequiredPermission('contracts', 'delete')
   @Delete(':id')
-  eliminarContrato(@Param('id', ParseBigIntPipe) id: bigint) {
-    return this.contratoMedidorService.eliminar(id);
+  async eliminarContrato(
+    @Param('id', ParseBigIntPipe) id: bigint,
+  ): Promise<ContractResponseDto> {
+    const result = await this.contratoMedidorService.eliminar(id);
+    return ContractResponseDto.fromEntity(result);
   }
 
   /**

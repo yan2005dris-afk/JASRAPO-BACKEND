@@ -2,12 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { EstadoContrato } from 'src/shared/enums';
 import { ContractRepository } from '../../domain/repositories/contract.repository';
 import { CrearContratoMedidorDto } from '../../interfaces/dto/create-contrato-medidor.dto';
+import { ContractEntity } from '../../domain/entities/contract.entity';
 
 @Injectable()
 export class CreateContractUseCase {
   constructor(private readonly contractRepository: ContractRepository) {}
 
-  async execute(dto: CrearContratoMedidorDto): Promise<any> {
+  async execute(dto: CrearContratoMedidorDto): Promise<ContractEntity> {
     return this.contractRepository.createContractWithMeterHistory({
       clienteId: BigInt(dto.clienteId),
       categoriaTarifaId: Number(dto.categoriaTarifaId),

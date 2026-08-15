@@ -5,11 +5,13 @@ import { EstadoMedidor } from 'src/shared/enums';
 import {
   EntityNotFoundException,
   InvalidDomainOperationException,
+  EntityAlreadyExistsException,
 } from 'src/shared/domain/exceptions/domain.exception';
 import { ContractRepository } from '../../domain/repositories/contract.repository';
 import { ContractEntity } from '../../domain/entities/contract.entity';
-import { CreateContractData } from '../../domain/types/create-contract-data';
-import { CreateContractWithMeterCommand } from '../../domain/types/create-contract-with-meter-command';
+import type { CreateContractData } from '../../domain/types/create-contract-data';
+import type { CreateContractWithMeterCommand } from '../../domain/types/create-contract-with-meter-command';
+import type { UpdateContractData } from '../../domain/types/update-contract-data';
 import { ContractMapper } from '../mappers/contract.mapper';
 import type { ContractFilters } from '../../domain/types/contract-filters';
 import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
@@ -32,10 +34,24 @@ export class PrismaContractRepository implements ContractRepository {
 
   constructor(private readonly prisma: PrismaService) {}
 
+  async findById(
+    contratoId: bigint,
+    includeDeleted: boolean = false,
+  ): Promise<ContractEntity | null> {
+    const record = await this.prisma.contratos.findFirst({
+      where: {
+        contratoId,
+        ...(includeDeleted ? {} : { deletedAt: null }),
+      },
+      include: this.defaultInclude,
+    });
+    return ContractMapper.toDomain(record);
+  }
+
   async paginateContratos(
     args: {
       filters?: ContractFilters;
-      orderBy?: Record<string, any>;
+      orderBy?: { [key: string]: 'asc' | 'desc' };
     },
     pagination: PaginateOptions,
   ): Promise<PaginatedResult<ContractEntity>> {
@@ -58,30 +74,44 @@ export class PrismaContractRepository implements ContractRepository {
   }
 
   async create(data: CreateContractData): Promise<ContractEntity> {
-    const record = await this.prisma.contratos.create({
-      data: data as Prisma.ContratosUncheckedCreateInput,
-      include: this.defaultInclude,
-    });
-    return ContractMapper.toDomain(record)!;
+    try {
+      const record = await this.prisma.contratos.create({
+        data: data as Prisma.ContratosUncheckedCreateInput,
+        include: this.defaultInclude,
+      });
+      return ContractMapper.toDomain(record)!;
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        throw new EntityAlreadyExistsException('Contrato', data.numeroGuia);
+      }
+      throw error;
+    }
   }
 
   async findMany(params: {
     skip?: number;
     take?: number;
-    where?: Record<string, any>;
-    orderBy?: Record<string, any>;
+    where?: Partial<ContractFilters>;
+    orderBy?: { [key: string]: 'asc' | 'desc' };
   }): Promise<ContractEntity[]> {
+    const where = this.buildContractWhere(params.where);
     const records = await this.prisma.contratos.findMany({
       skip: params.skip,
       take: params.take,
-      where: (params.where ?? {}) as Prisma.ContratosWhereInput,
+      where,
       orderBy: params.orderBy as Prisma.ContratosOrderByWithRelationInput,
       include: this.defaultInclude,
     });
     return ContractMapper.toDomainList(records);
   }
 
-  async findUnique(where: Record<string, any>): Promise<ContractEntity | null> {
+  async findUnique(where: {
+    contratoId?: bigint;
+    numeroGuia?: string;
+  }): Promise<ContractEntity | null> {
     const record = await this.prisma.contratos.findUnique({
       where: where as Prisma.ContratosWhereUniqueInput,
       include: this.defaultInclude,
@@ -89,22 +119,52 @@ export class PrismaContractRepository implements ContractRepository {
     return ContractMapper.toDomain(record);
   }
 
-  async count(params: { where?: Record<string, any> }): Promise<number> {
+  async count(params?: { where?: Partial<ContractFilters> }): Promise<number> {
+    const where = this.buildContractWhere(params?.where);
     return this.prisma.contratos.count({
-      where: params.where as Prisma.ContratosWhereInput,
+      where,
     });
   }
 
   async update(
-    where: Record<string, any>,
-    data: Record<string, any>,
+    contratoId: bigint,
+    data: UpdateContractData,
   ): Promise<ContractEntity> {
-    const record = await this.prisma.contratos.update({
-      where: where as Prisma.ContratosWhereUniqueInput,
-      data: data as Prisma.ContratosUpdateInput,
-      include: this.defaultInclude,
-    });
-    return ContractMapper.toDomain(record)!;
+    try {
+      const record = await this.prisma.contratos.update({
+        where: { contratoId },
+        data: data as Prisma.ContratosUpdateInput,
+        include: this.defaultInclude,
+      });
+      return ContractMapper.toDomain(record)!;
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2025'
+      ) {
+        throw new EntityNotFoundException('Contrato', contratoId.toString());
+      }
+      throw error;
+    }
+  }
+
+  async softDelete(contratoId: bigint): Promise<ContractEntity> {
+    try {
+      const record = await this.prisma.contratos.update({
+        where: { contratoId },
+        data: { deletedAt: new Date() },
+        include: this.defaultInclude,
+      });
+      return ContractMapper.toDomain(record)!;
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2025'
+      ) {
+        throw new EntityNotFoundException('Contrato', contratoId.toString());
+      }
+      throw error;
+    }
   }
 
   // ── Domain-level transactional operations ──────────────────────────────
@@ -154,7 +214,7 @@ export class PrismaContractRepository implements ContractRepository {
     contractId: bigint,
     newMeterId: bigint,
     lecturaInicial: number,
-    contractFields?: Record<string, any>,
+    contractFields?: Partial<CreateContractData>,
   ): Promise<ContractEntity> {
     return this.prisma.$transaction(async (tx) => {
       const medidor = await tx.medidores.findUnique({
@@ -181,7 +241,7 @@ export class PrismaContractRepository implements ContractRepository {
       if (contractFields && Object.keys(contractFields).length > 0) {
         await tx.contratos.update({
           where: { contratoId: contractId },
-          data: contractFields,
+          data: contractFields as Prisma.ContratosUpdateInput,
         });
       }
 

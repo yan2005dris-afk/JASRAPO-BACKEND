@@ -1,16 +1,16 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ContractRepository } from '../../domain/repositories/contract.repository';
+import { ContractEntity } from '../../domain/entities/contract.entity';
+import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 
 @Injectable()
 export class FindOneContractUseCase {
   constructor(private readonly contractRepository: ContractRepository) {}
 
-  async execute(id: bigint): Promise<any> {
-    const registro = await this.contractRepository.findUnique({
-      contratoId: id,
-    });
-    if (!registro || registro.deletedAt) {
-      throw new NotFoundException(`Contrato con ID ${id} no encontrado`);
+  async execute(id: bigint): Promise<ContractEntity> {
+    const registro = await this.contractRepository.findById(id);
+    if (!registro) {
+      throw new EntityNotFoundException('Contrato', id.toString());
     }
     return registro;
   }

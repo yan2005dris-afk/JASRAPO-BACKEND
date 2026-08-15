@@ -1,10 +1,12 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ContractRepository } from '../../domain/repositories/contract.repository';
 import { ActualizarContratoMedidorDto } from '../../interfaces/dto/update-contrato-medidor.dto';
+import { ContractEntity } from '../../domain/entities/contract.entity';
+import {
+  EntityNotFoundException,
+  InvalidDomainOperationException,
+} from 'src/shared/domain/exceptions/domain.exception';
+import type { CreateContractData } from '../../domain/types/create-contract-data';
 
 @Injectable()
 export class UpdateContractUseCase {
@@ -13,12 +15,10 @@ export class UpdateContractUseCase {
   async execute(
     id: bigint,
     updateDto: ActualizarContratoMedidorDto,
-  ): Promise<any> {
-    const registro = await this.contractRepository.findUnique({
-      contratoId: id,
-    });
-    if (!registro || registro.deletedAt) {
-      throw new NotFoundException(`Contrato con ID ${id} no encontrado`);
+  ): Promise<ContractEntity> {
+    const registro = await this.contractRepository.findById(id);
+    if (!registro) {
+      throw new EntityNotFoundException('Contrato', id.toString());
     }
 
     if (updateDto.medidorId) {
@@ -30,7 +30,9 @@ export class UpdateContractUseCase {
         id,
         medidorId,
         lecturaInicial,
-        Object.keys(contractFields).length > 0 ? contractFields : undefined,
+        Object.keys(contractFields).length > 0
+          ? (contractFields as Partial<CreateContractData>)
+          : undefined,
       );
     }
 
@@ -38,14 +40,12 @@ export class UpdateContractUseCase {
     const updateData = this.extractFields(updateDto);
 
     if (Object.keys(updateData).length === 0) {
-      throw new BadRequestException(
+      throw new InvalidDomainOperationException(
         'No se proporcionaron campos para actualizar',
       );
     }
 
-    await this.contractRepository.update({ contratoId: id }, updateData);
-
-    return this.contractRepository.findUnique({ contratoId: id });
+    return this.contractRepository.update(id, updateData);
   }
 
   private extractFields(

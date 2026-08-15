@@ -17,6 +17,8 @@ import { FinalizeMeterLinkUseCase } from './use-cases/finalize-meter-link.use-ca
 import { GetConnectionRequestPdfDataUseCase } from './use-cases/get-connection-request-pdf-data.use-case';
 import { GetResponsibilityAgreementPdfDataUseCase } from './use-cases/get-responsibility-agreement-pdf-data.use-case';
 import { GeneratePdfUseCase } from 'src/infrastructure/pdf/use-cases/generate-pdf.use-case';
+import { ContractEntity } from '../domain/entities/contract.entity';
+import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
 
 @Injectable()
 export class ContratoMedidorService {
@@ -47,11 +49,15 @@ export class ContratoMedidorService {
     });
   }
 
-  async crearContrato(createDto: CrearContratoMedidorDto): Promise<any> {
+  async crearContrato(
+    createDto: CrearContratoMedidorDto,
+  ): Promise<ContractEntity> {
     return this.createContractUseCase.execute(createDto);
   }
 
-  async buscarContratos(filters?: FilterContractsDto) {
+  async buscarContratos(
+    filters?: FilterContractsDto,
+  ): Promise<PaginatedResult<ContractEntity>> {
     const contractFilters = filters ? buildContractFilters(filters) : undefined;
     return this.findAllUseCase.execute(
       filters?.page,
@@ -60,22 +66,22 @@ export class ContratoMedidorService {
     );
   }
 
-  async buscarContrato(id: bigint): Promise<any> {
+  async buscarContrato(id: bigint): Promise<ContractEntity> {
     return this.findOneUseCase.execute(id);
   }
 
   async actualizar(
     id: bigint,
     updateDto: ActualizarContratoMedidorDto,
-  ): Promise<any> {
+  ): Promise<ContractEntity> {
     return this.updateUseCase.execute(id, updateDto);
   }
 
-  async finalizarVinculo(id: bigint): Promise<any> {
+  async finalizarVinculo(id: bigint): Promise<ContractEntity> {
     return this.finalizeLinkUseCase.execute(id);
   }
 
-  async eliminar(id: bigint): Promise<{ message: string }> {
+  async eliminar(id: bigint): Promise<ContractEntity> {
     return this.removeUseCase.execute(id);
   }
 
