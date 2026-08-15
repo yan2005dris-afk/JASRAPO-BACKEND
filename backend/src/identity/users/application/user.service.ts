@@ -19,8 +19,6 @@ import { UserRepository } from '../domain/repositories/user.repository';
 import { RoleRepository } from '../../roles/domain/repositories/role.repository';
 import {
   UserEntity,
-  UserDetailEntity,
-  UserProfileEntity,
   UserAvatar,
   AvatarEntity,
 } from '../domain/entities/user.entity';
@@ -49,7 +47,7 @@ export class UserService {
   async user(criteria: {
     usuarioId?: number;
     email?: string;
-  }): Promise<UserDetailEntity | null> {
+  }): Promise<UserEntity | null> {
     const user = criteria.usuarioId
       ? await this.userRepository.findById(criteria.usuarioId)
       : criteria.email
@@ -90,7 +88,7 @@ export class UserService {
     } as any;
   }
 
-  async findMe(usersId: number): Promise<UserProfileEntity> {
+  async findMe(usersId: number): Promise<UserEntity> {
     const user = await this.userRepository.findById(usersId);
 
     if (!user || user.deletedAt) {
@@ -145,7 +143,7 @@ export class UserService {
     usuarioId: number,
     updateData: UpdateUserDto,
     file?: Express.Multer.File,
-  ): Promise<UserDetailEntity | null> {
+  ): Promise<UserEntity | null> {
     const existingUser = await this.userRepository.findById(usuarioId);
     if (!existingUser) {
       throw new NotFoundException('Usuario no encontrado');

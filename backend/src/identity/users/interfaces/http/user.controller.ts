@@ -22,11 +22,7 @@ import {
   UserResponseDto,
   UserDetailResponseDto,
 } from '../dto/user-response.dto';
-import {
-  UserEntity,
-  UserDetailEntity,
-  UserProfileEntity,
-} from '../../domain/entities/user.entity';
+import { UserEntity } from '../../domain/entities/user.entity';
 import { UserService } from '../../application/user.service';
 import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
 import { AuthUserId } from 'src/infrastructure/common/decorators/auth-user-id.decorator';
@@ -72,7 +68,7 @@ export class UserController {
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @RequiredPermission('users', 'read')
   @Get('me')
-  async findMe(@AuthUserId() usersId: number): Promise<UserProfileEntity> {
+  async findMe(@AuthUserId() usersId: number): Promise<UserEntity> {
     return this.userService.findMe(usersId);
   }
 
@@ -112,7 +108,7 @@ export class UserController {
     @AuthUserId() userId: number,
     @Body() updateDto: UpdateUserDto,
     @UploadedFile() file?: Express.Multer.File,
-  ): Promise<UserDetailEntity> {
+  ): Promise<UserEntity> {
     const {
       rolId: _rolId,
       directPermissions: _directPermissions,
@@ -202,7 +198,7 @@ export class UserController {
   @Get(':id')
   async findOne(
     @Param('id', ParseIntPipe) id: number,
-  ): Promise<UserDetailEntity> {
+  ): Promise<UserEntity> {
     const user = await this.userService.user({ usuarioId: id });
     if (!user) {
       throw new NotFoundException('Usuario no encontrado');
@@ -265,7 +261,7 @@ export class UserController {
     @Param('id', ParseIntPipe) id: number,
     @Body() updateUserDto: UpdateUserDto,
     @UploadedFile() file?: Express.Multer.File,
-  ): Promise<UserDetailEntity> {
+  ): Promise<UserEntity> {
     if (typeof updateUserDto.rolId === 'string') {
       const parsed = parseInt(updateUserDto.rolId, 10);
       if (isNaN(parsed)) {

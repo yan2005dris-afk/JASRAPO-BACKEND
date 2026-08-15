@@ -48,26 +48,13 @@ export class UserEntity {
     this.permisosDirectos = partial?.permisosDirectos ?? [];
     this.permisosRol = partial?.permisosRol ?? [];
   }
-}
 
-export class UserDetailEntity extends UserEntity {
-  permisosDirectos: UserDirectPermission[];
-  permisosRol: UserRolePermission[];
-
-  constructor(partial?: Partial<UserDetailEntity>) {
-    super(partial);
-    this.permisosDirectos = partial?.permisosDirectos ?? [];
-    this.permisosRol = partial?.permisosRol ?? [];
+  get nombre(): string | null {
+    const full = [this.nombres, this.apellidos].filter(Boolean).join(' ');
+    return full || null;
   }
-}
 
-export class UserProfileEntity extends UserEntity {
-  nombre: string | null;
-
-  constructor(partial?: Partial<UserProfileEntity>) {
-    super(partial);
-    this.nombre =
-      partial?.nombre ??
-      (([this.nombres, this.apellidos].filter(Boolean).join(' ')) || null);
+  get nombreCompleto(): string {
+    return this.nombre || '';
   }
 }
