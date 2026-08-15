@@ -96,7 +96,6 @@ describe('UpdateAgreementUseCase', () => {
           fechaProximoPago: null,
           montoPagadoActual: 100,
         },
-        select: expect.any(Object),
       });
       expect(result.montoPagadoActual).toBe(100);
     });
@@ -145,7 +144,6 @@ describe('UpdateAgreementUseCase', () => {
           estado: 'ANULADO',
           deletedAt: expect.any(Date),
         }),
-        expect.any(Object),
       );
     });
   });
@@ -171,7 +169,6 @@ describe('UpdateAgreementUseCase', () => {
           estado: 'ACTIVO',
           fechaAprobacion: expect.any(Date),
         }),
-        expect.any(Object),
       );
     });
 
@@ -200,7 +197,6 @@ describe('UpdateAgreementUseCase', () => {
           estado: 'ACTIVO',
           fechaAprobacion: existingDate,
         },
-        expect.any(Object),
       );
     });
   });

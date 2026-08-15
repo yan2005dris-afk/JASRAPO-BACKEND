@@ -20,7 +20,10 @@ export class PrismaTariffRepository implements TariffRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async findFirst(where: Prisma.CategoriaTarifaWhereInput): Promise<any> {
-    return this.prisma.categoriaTarifa.findFirst({ where });
+    return this.prisma.categoriaTarifa.findFirst({
+      where,
+      select: safeTariffCategoriesSelect,
+    });
   }
 
   async findMany(params: {
@@ -30,7 +33,10 @@ export class PrismaTariffRepository implements TariffRepository {
     take?: number;
     select?: Prisma.CategoriaTarifaSelect;
   }): Promise<any[]> {
-    return this.prisma.categoriaTarifa.findMany(params);
+    return this.prisma.categoriaTarifa.findMany({
+      ...params,
+      select: params.select ?? safeTariffCategoriesSelect,
+    });
   }
 
   async count(params: {
@@ -40,14 +46,21 @@ export class PrismaTariffRepository implements TariffRepository {
   }
 
   async create(data: Prisma.CategoriaTarifaCreateInput): Promise<any> {
-    return this.prisma.categoriaTarifa.create({ data });
+    return this.prisma.categoriaTarifa.create({
+      data,
+      select: safeTariffCategoriesSelect,
+    });
   }
 
   async update(
     where: Prisma.CategoriaTarifaWhereUniqueInput,
     data: Prisma.CategoriaTarifaUpdateInput,
   ): Promise<any> {
-    return this.prisma.categoriaTarifa.update({ where, data });
+    return this.prisma.categoriaTarifa.update({
+      where,
+      data,
+      select: safeTariffCategoriesSelect,
+    });
   }
 
   async executeTransaction<T>(callback: (tx: any) => Promise<T>): Promise<T> {

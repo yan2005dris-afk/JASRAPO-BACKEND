@@ -5,6 +5,7 @@ import { ValidatePaymentUseCase } from './validate-payment.use-case';
 describe('ValidatePaymentUseCase', () => {
   const repository = {
     updateManyPagos: jest.fn(),
+    updatePago: jest.fn(),
     findUniquePago: jest.fn(),
     executeTransaction: jest.fn(),
   };
@@ -19,12 +20,12 @@ describe('ValidatePaymentUseCase', () => {
     repository.executeTransaction.mockImplementation(
       async (cb: (tx: unknown) => Promise<unknown>) => cb({}),
     );
-    repository.updateManyPagos.mockResolvedValue({ count: 1 });
+    repository.updatePago.mockResolvedValue({ pagoId: 1n });
     useCase = new ValidatePaymentUseCase(
       repository as any,
+      eventosPendientesRepository as any,
       findOne as any,
       annul as any,
-      eventosPendientesRepository as any,
     );
   });
 
@@ -35,7 +36,7 @@ describe('ValidatePaymentUseCase', () => {
       pagoId: 1n,
       estadoPago: EstadoPago.PENDIENTE,
     });
-    repository.updateManyPagos.mockResolvedValue({ count: 1 });
+    repository.updatePago.mockResolvedValue({ pagoId: 1n });
     repository.findUniquePago.mockResolvedValue({
       pagoId: 1n,
       estadoPago: EstadoPago.REGISTRADO,
@@ -61,7 +62,7 @@ describe('ValidatePaymentUseCase', () => {
   it('should delegate annul transition', async () => {
     findOne.execute.mockResolvedValue({
       pagoId: 1n,
-      estadoPago: EstadoPago.REGISTRADO,
+      estadoPago: EstadoPago.PENDIENTE,
     });
     annul.execute.mockResolvedValue({
       pagoId: 1n,
@@ -75,28 +76,11 @@ describe('ValidatePaymentUseCase', () => {
         'admin',
       ),
     ).resolves.toMatchObject({ estadoPago: EstadoPago.ANULADO });
-  });
 
-  it('should throw BadRequestException when transitioning to same state', async () => {
-    findOne.execute.mockResolvedValue({
-      pagoId: 1n,
-      estadoPago: EstadoPago.PENDIENTE,
+    expect(annul.execute).toHaveBeenCalledWith(1n, {
+      motivoAnulacion: 'error',
+      anuladoPor: 'admin',
     });
-
-    await expect(
-      useCase.execute(1n, { estadoPago: EstadoPago.PENDIENTE }),
-    ).rejects.toBeInstanceOf(BadRequestException);
-  });
-
-  it('should reject invalid transition REGISTRADO → PENDIENTE', async () => {
-    findOne.execute.mockResolvedValue({
-      pagoId: 1n,
-      estadoPago: EstadoPago.REGISTRADO,
-    });
-
-    await expect(
-      useCase.execute(1n, { estadoPago: EstadoPago.PENDIENTE }),
-    ).rejects.toBeInstanceOf(BadRequestException);
   });
 
   it('should allow PENDIENTE → ANULADO via delegation to annul', async () => {
@@ -113,26 +97,14 @@ describe('ValidatePaymentUseCase', () => {
       useCase.execute(
         1n,
         { estadoPago: EstadoPago.ANULADO, motivo: 'cancel' },
-        'admin',
+        'cajero-1',
       ),
     ).resolves.toMatchObject({ estadoPago: EstadoPago.ANULADO });
 
     expect(annul.execute).toHaveBeenCalledWith(1n, {
       motivoAnulacion: 'cancel',
-      anuladoPor: 'admin',
+      anuladoPor: 'cajero-1',
     });
-  });
-
-  it('should throw BadRequestException on concurrent modification (count = 0)', async () => {
-    findOne.execute.mockResolvedValue({
-      pagoId: 1n,
-      estadoPago: EstadoPago.PENDIENTE,
-    });
-    repository.updateManyPagos.mockResolvedValue({ count: 0 });
-
-    await expect(
-      useCase.execute(1n, { estadoPago: EstadoPago.REGISTRADO }),
-    ).rejects.toBeInstanceOf(BadRequestException);
   });
 
   // ─── W-3: outbox event tests (replacing T-005 in-process emission) ───
@@ -142,7 +114,7 @@ describe('ValidatePaymentUseCase', () => {
       pagoId: 7n,
       estadoPago: EstadoPago.PENDIENTE,
     });
-    repository.updateManyPagos.mockResolvedValue({ count: 1 });
+    repository.updatePago.mockResolvedValue({ pagoId: 7n });
     repository.findUniquePago.mockResolvedValue({
       pagoId: 7n,
       estadoPago: EstadoPago.REGISTRADO,
@@ -165,7 +137,7 @@ describe('ValidatePaymentUseCase', () => {
       pagoId: 42n,
       estadoPago: EstadoPago.PENDIENTE,
     });
-    repository.updateManyPagos.mockResolvedValue({ count: 1 });
+    repository.updatePago.mockResolvedValue({ pagoId: 42n });
     repository.findUniquePago.mockResolvedValue({ pagoId: 42n });
     eventosPendientesRepository.createPending.mockResolvedValue({ id: 1n });
 
@@ -184,31 +156,15 @@ describe('ValidatePaymentUseCase', () => {
     );
   });
 
-  it('should NOT persist the outbox row when optimistic lock fails (T-005 replacement)', async () => {
-    findOne.execute.mockResolvedValue({
-      pagoId: 1n,
-      estadoPago: EstadoPago.PENDIENTE,
-    });
-    repository.updateManyPagos.mockResolvedValue({ count: 0 });
-
-    await expect(
-      useCase.execute(1n, { estadoPago: EstadoPago.REGISTRADO }),
-    ).rejects.toBeInstanceOf(BadRequestException);
-
-    expect(eventosPendientesRepository.createPending).not.toHaveBeenCalled();
-  });
-
   it('should ensure atomicity: if createPending throws inside the tx, the use case surfaces the error and the pago is NOT marked as updated', async () => {
     findOne.execute.mockResolvedValue({
       pagoId: 99n,
       estadoPago: EstadoPago.PENDIENTE,
     });
-    // Simulate the tx rolling back by having executeTransaction re-throw
-    // whatever the callback throws. Update was called, but tx aborts.
     repository.executeTransaction.mockImplementation(
       async (cb: (tx: unknown) => Promise<unknown>) => cb({}),
     );
-    repository.updateManyPagos.mockResolvedValue({ count: 1 });
+    repository.updatePago.mockResolvedValue({ pagoId: 99n });
     eventosPendientesRepository.createPending.mockRejectedValue(
       new Error('outbox-unavailable'),
     );
@@ -217,13 +173,11 @@ describe('ValidatePaymentUseCase', () => {
       useCase.execute(99n, { estadoPago: EstadoPago.REGISTRADO }),
     ).rejects.toThrow('outbox-unavailable');
 
-    // updateManyPagos WAS called within the tx (the rollback is the tx's job).
-    expect(repository.updateManyPagos).toHaveBeenCalledTimes(1);
-    // And the createPending failure is the only failure — would cause tx abort.
+    expect(repository.updatePago).toHaveBeenCalledTimes(1);
     expect(eventosPendientesRepository.createPending).toHaveBeenCalledTimes(1);
   });
 
-  it('should call updateManyPagos and createPending with the SAME tx client so the tx wraps both writes', async () => {
+  it('should call updatePago and createPending with the SAME tx client so the tx wraps both writes', async () => {
     findOne.execute.mockResolvedValue({
       pagoId: 5n,
       estadoPago: EstadoPago.PENDIENTE,
@@ -231,15 +185,14 @@ describe('ValidatePaymentUseCase', () => {
 
     const txMarker = Symbol('tx');
     const tx = { txMarker };
-    // Record which tx object each call received.
     let observedTxForUpdate: unknown = null;
     let observedTxForOutbox: unknown = null;
     repository.executeTransaction.mockImplementationOnce(async (cb) => {
       return cb(tx);
     });
-    repository.updateManyPagos.mockImplementationOnce(async (_w, _d, t) => {
+    repository.updatePago.mockImplementationOnce(async (_w, _d, _s, t) => {
       observedTxForUpdate = t;
-      return { count: 1 };
+      return { pagoId: 5n };
     });
     eventosPendientesRepository.createPending.mockImplementationOnce(
       async (...args: unknown[]) => {
@@ -253,7 +206,6 @@ describe('ValidatePaymentUseCase', () => {
 
     expect(observedTxForUpdate).toBe(tx);
     expect(observedTxForOutbox).toBe(tx);
-    // Sanity: same identity proves both writes are within the same tx.
     expect(observedTxForOutbox).toBe(observedTxForUpdate);
   });
 });

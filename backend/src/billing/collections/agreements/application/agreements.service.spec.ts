@@ -255,8 +255,7 @@ describe('AgreementsService', () => {
   });
 
   it('should cancel agreement with ANULADO status and soft delete date', async () => {
-    mockFindOneUseCase.execute.mockResolvedValue(convenioRecord);
-    mockPrismaService.convenios.update.mockResolvedValue({
+    mockUpdateUseCase.execute.mockResolvedValue({
       ...convenioRecord,
       estado: 'ANULADO',
     });
@@ -264,13 +263,6 @@ describe('AgreementsService', () => {
     const result = await service.cancel(1n);
 
     expect(result.estado.codigo).toBe('ANULADO');
-    expect(mockPrismaService.convenios.update).toHaveBeenCalledWith({
-      where: { convenioId: 1n },
-      data: {
-        estado: 'ANULADO',
-        deletedAt: expect.any(Date),
-      },
-      select: expect.any(Object),
-    });
+    expect(mockUpdateUseCase.execute).toHaveBeenCalledWith(1n, 'ANULADO');
   });
 });

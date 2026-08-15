@@ -5,7 +5,6 @@ import {
 } from '@nestjs/common';
 import { TariffRepository } from '../../domain/repositories/tariff.repository';
 import { UpdateCategoriaTarifaDto } from '../../interfaces/dto/update-categoria-tarifa.dto';
-import { safeTariffCategoriesSelect } from '../../infrastructure/repositories/prisma-tariff.repository';
 import { toTariffCategoryResponse } from '../../types/tariffCategoryMapper';
 
 @Injectable()
@@ -68,7 +67,6 @@ export class UpdateTariffCategoryUseCase {
             activo: true,
             createdAt: now,
           },
-          select: safeTariffCategoriesSelect,
         });
       },
     );

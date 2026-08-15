@@ -9,6 +9,8 @@ import { AnnulPaymentUseCase } from './use-cases/annul-payment.use-case';
 import { ApplySaldoFavorUseCase } from './use-cases/apply-saldo-favor.use-case';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 
+import { PaymentRepository } from '../domain/repositories/payment.repository';
+
 describe('PaymentsService', () => {
   let service: PaymentsService;
   const createUseCase = { execute: jest.fn() };
@@ -16,6 +18,7 @@ describe('PaymentsService', () => {
   const validatePaymentUseCase = { execute: jest.fn() };
   const annulPaymentUseCase = { execute: jest.fn() };
   const applySaldoFavorUseCase = { execute: jest.fn() };
+  const paymentRepository = { findManyPagos: jest.fn() };
   const prisma = {
     pagos: { count: jest.fn(), findMany: jest.fn() },
     saldoFavorCliente: { findMany: jest.fn() },
@@ -27,6 +30,7 @@ describe('PaymentsService', () => {
       providers: [
         PaymentsService,
         { provide: PrismaService, useValue: prisma },
+        { provide: PaymentRepository, useValue: paymentRepository },
         { provide: CreatePaymentUseCase, useValue: createUseCase },
         { provide: FindOnePaymentUseCase, useValue: findOneUseCase },
         { provide: ValidatePaymentUseCase, useValue: validatePaymentUseCase },
@@ -127,7 +131,7 @@ describe('PaymentsService', () => {
   });
 
   it('should return daily cash summary with correct totals and breakdowns', async () => {
-    prisma.pagos.findMany.mockResolvedValue([
+    paymentRepository.findManyPagos.mockResolvedValue([
       {
         pagoId: 1n,
         montoTotalRecibido: 150,
@@ -163,7 +167,7 @@ describe('PaymentsService', () => {
   });
 
   it('should filter daily cash summary by cajaId', async () => {
-    prisma.pagos.findMany.mockResolvedValue([]);
+    paymentRepository.findManyPagos.mockResolvedValue([]);
 
     const result = await service.getDailyCashSummary({
       fecha: '2026-06-18',
@@ -173,7 +177,7 @@ describe('PaymentsService', () => {
     expect(result.cajaId).toBe('5');
     expect(result.totalPagos).toBe(0);
     expect(result.totalRecaudado).toBe(0);
-    expect(prisma.pagos.findMany).toHaveBeenCalledWith(
+    expect(paymentRepository.findManyPagos).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({ cajaId: 5n }),
       }),
@@ -181,7 +185,7 @@ describe('PaymentsService', () => {
   });
 
   it('should return zeros for daily cash summary when no pagos exist', async () => {
-    prisma.pagos.findMany.mockResolvedValue([]);
+    paymentRepository.findManyPagos.mockResolvedValue([]);
 
     const result = await service.getDailyCashSummary({ fecha: '2026-06-18' });
 

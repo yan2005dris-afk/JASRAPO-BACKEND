@@ -14,11 +14,7 @@ import {
   EnumStateDto,
   buildStateCatalog,
 } from 'src/shared/enums/state-catalog';
-import {
-  safeInstallmentSelect,
-  safeAgreementSelect,
-  safeAgreementWithInstallmentsSelect,
-} from '../infrastructure/repositories/prisma-agreement.repository';
+
 import {
   toAgreementResponse,
   toInstallmentResponse,
@@ -87,7 +83,6 @@ export class AgreementsService {
           deletedAt: null,
           ...(contratoId ? { contratoId: BigInt(contratoId) } : {}),
         },
-        select: safeAgreementSelect,
         orderBy: { createdAt: 'desc' },
       },
       pagination,
@@ -111,7 +106,6 @@ export class AgreementsService {
 
     const cuotas = await this.prisma.cuotaConvenio.findMany({
       where: { convenioId: BigInt(convenioId), deletedAt: null },
-      select: safeInstallmentSelect,
       orderBy: { numeroCuota: 'asc' },
     });
 
@@ -127,18 +121,7 @@ export class AgreementsService {
   }
 
   async cancel(id: bigint): Promise<AgreementResponseDto> {
-    await this.findOneUseCase.execute(id);
-
-    const updated = await this.prisma.convenios.update({
-      where: { convenioId: id },
-      data: {
-        estado: 'ANULADO',
-        deletedAt: new Date(),
-      },
-      select: safeAgreementWithInstallmentsSelect,
-    });
-
-    return toAgreementResponse(updated);
+    return this.update(id, { estado: 'ANULADO' });
   }
 
   // ── PDF ──────────────────────────────────────────────────────────────────
