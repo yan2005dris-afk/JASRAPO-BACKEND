@@ -9,10 +9,7 @@ import {
   MeterFilters,
 } from '../../domain/repositories/meter.repository';
 import { MeterEntity } from '../../domain/entities/meter.entity';
-import {
-  EntityNotFoundException,
-  EntityAlreadyExistsException,
-} from 'src/shared/domain/exceptions/domain.exception';
+import { EntityAlreadyExistsException } from 'src/shared/domain/exceptions/domain.exception';
 import type { EstadoMedidor, EstadoContrato } from 'src/shared/enums';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { MeterMapper } from '../mappers/meter.mapper';

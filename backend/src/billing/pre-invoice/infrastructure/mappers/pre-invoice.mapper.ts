@@ -34,7 +34,7 @@ export class PreInvoiceMapper {
     });
   }
 
-  static toDomain(raw: any | null | undefined): PreInvoiceEntity | null {
+  static toDomain(raw: any): PreInvoiceEntity | null {
     if (!raw) return null;
 
     return new PreInvoiceEntity({
