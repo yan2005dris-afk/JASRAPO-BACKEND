@@ -1,7 +1,7 @@
 # Auditoría de Arquitectura — Convenciones NestJS + Prisma vs Backend JASRAPO
 
-> **Fecha**: 2026-08-14
-> **Alcance**: Revisión completa de `backend/src/` (billing, identity, metering, operations, shared, infrastructure, sri) contra las convenciones de arquitectura hexagonal con NestJS + Prisma.
+> **Fecha**: 2026-08-15 (actualizado 2026-08-15 con reports y public-portal)
+> **Alcance**: Revisión completa de `backend/src/` (billing, identity, metering, operations, shared, infrastructure, sri, reports, public-portal) contra las convenciones de arquitectura hexagonal con NestJS + Prisma.
 > **Método**: Investigación de convenciones de referencia (docs oficiales NestJS/Prisma + implementaciones de referencia DDD/hexagonal) y auditoría por dominio con evidencia `file:line`.
 
 ---
@@ -302,7 +302,45 @@ Convenciones a mantener: archivos kebab-case, sufijos `.use-case.ts`/`.repositor
 - **Contracts** ✅ **RESUELTO (2026-08-15, commit `f3193388`)**: port semántico limpio (`findById`, `paginateContratos`, `findMany`, `findUnique`, `count`, `update`, `create`, `softDelete`, `createContractWithMeterHistory`, `replaceMeterInContract`, `finalizeActiveMeterLink`), sin `Record<string,any>`/`Promise<any>`, `ContractResponseDto.fromEntity()` y `fromEntityList()` mapeados en todos los endpoints del controller, use-cases refactorizados para devolver `ContractEntity` y lanzar `EntityNotFoundException`/`InvalidDomainOperationException`, service con tipado fuerte, 12 test suites / 74 tests pasando (`prisma-contract.repository.spec.ts` añadido).
 - **Routes** ✅ **RESUELTO (2026-08-15, commit `f572d644`)**: port semántico limpio (`findById`, `paginateRutas`, `create`, `update`, `softDelete`, `findUsuario`, `findComunidad`, `findSector`, `findPeriodo`, `findMedidor`, `findOverlappingRoutes`, `paginateLecturas`), repo con traducciones P2002/P2025 y encapsulación total de where-clauses de infraestructura (`paginateLecturas`), entities sin Swagger, `RouteResponseDto` y `ReadingForRouteResponseDto` con `fromEntity()` y `fromEntityList()` mapeados en el controller, use-cases usando excepciones de dominio compartidas (`EntityNotFoundException`, `InvalidDomainOperationException`), mapper bug corregido (`fechaPlanificada` mapeado desde `route.fechaPlanificada`), 12 test suites / 81 tests pasando (`prisma-route.repository.spec.ts` añadido).
 
-### 4.4 Shared / Infrastructure / Sri / Wiring raíz
+### 4.4 Reports y Public Portal
+
+#### Reports ✅ **RESUELTO (2026-08-15, commits `bf5c1541` + `80e3cd1e`)**
+
+**Estructura final**:
+```
+reports/
+├── application/
+│   ├── use-cases/send-report-by-email.use-case.ts     ← use-case bien formado
+│   ├── report-style.dispatcher.ts                      ← orquestador Strategy/Registry
+│   └── report-style.service.ts                         ← resolución de estilo desde config
+├── infrastructure/
+│   └── specs/                                          ← query objects con PrismaService
+│       ├── account-statement.report-spec.ts
+│       ├── clients-list.report-spec.ts
+│       ├── connection-history.report-spec.ts
+│       └── payments-report.report-spec.ts
+├── interfaces/
+│   ├── dto/                                            ← filter DTOs y email DTOs
+│   └── http/reports.controller.ts
+├── pdf/                                                ← PDF types y factories
+└── reports.module.ts
+```
+
+**Corregido en `bf5c1541`**: los 4 `*ReportSpec` (query objects con PrismaService) estaban en `reports/specs/` — carpeta ad-hoc sin precedente en el resto del backend. Movidos a `infrastructure/specs/` alineando con la convención de que todo lo que toca Prisma vive en `infrastructure/`. `any[]` en `AccountStatementReportSpec` reemplazado por `Prisma.lecturasGetPayload<Record<string, never>>` desde el cliente generado (`src/generated/prisma/client`).
+
+**Corregido en `80e3cd1e`**: los DTOs de filtro y email estaban en `reports/dto/` (raíz del módulo). Movidos a `reports/interfaces/dto/` conforme a la convención del resto del backend. Imports actualizados en `application/use-cases/`, `infrastructure/specs/`, `interfaces/http/`, y archivos de test.
+
+**Decisión explícita**: `ReportStyleDispatcher` se mantiene en `application/` (no en `use-cases/`). Su método `dispatch()` coordina resolución de estilo → selección de PdfDocumentType → renderizado — patrón Strategy/Registry propio. Un renombre a `GenerateStyledReportUseCase` ocultaría ese semántica. Cohesivo con `ReportStyleService` que también vive en `application/`.
+
+**Pendientes residuales (pre-existentes, no introducidos)**:
+- 9 errores de `fetchSpec` en `send-report-by-email.use-case.spec.ts` y `send-report-by-email.strategies.spec.ts` — `fetchSpec` no está declarado en la interfaz `ReportEmailStrategy`; los mocks usan una propiedad inexistente. Preexistía antes del refactor.
+- Los `*ReportSpec` de `infrastructure/specs/` importan filter DTOs de `interfaces/dto/` — violación de capas menor (infrastructure → interfaces). La corrección completa requiere crear tipos de query en dominio y mapear en el controller; postergado por ser read-side sin lógica de negocio.
+
+#### Public Portal — `public-portal/search/` ✅ **CONFORME (verificado 2026-08-15, sin cambios)**
+
+**Conforme desde el inicio**: `BusquedaPublicaRepository` abstracto sin imports de Prisma, tipos de dominio puros en `domain/types/debt-search.types.ts`, `SearchDeudaPublicaUseCase` que usa solo el port abstracto y mapea a `DeudaPublicaResponseDto` sin tocar infra, implementación Prisma en `infrastructure/`. Sin violaciones de capas.
+
+### 4.5 Shared / Infrastructure / Sri / Wiring raíz
 
 **Conforme**:
 - ValidationPipe global con los 3 flags (`main.ts:174-184`).
