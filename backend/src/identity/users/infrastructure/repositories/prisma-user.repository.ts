@@ -16,15 +16,6 @@ import { paginate } from 'src/infrastructure/common/utils/pagination.util';
 import { UserEntity } from '../../domain/entities/user.entity';
 import { UserMapper } from '../mappers/user.mapper';
 
-export const safeUserSelect = {
-  usuarioId: true,
-  email: true,
-  nombres: true,
-  apellidos: true,
-  telefono: true,
-  avatar: true,
-} satisfies Prisma.UsuariosSelect;
-
 export const userWithRolesSelect = {
   usuarioId: true,
   email: true,

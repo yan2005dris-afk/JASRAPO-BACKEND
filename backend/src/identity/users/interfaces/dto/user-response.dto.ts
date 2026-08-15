@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional, OmitType } from '@nestjs/swagger';
 
 export class RoleResponseDto {
   @ApiProperty({ example: 1, description: 'ID único del rol' })
@@ -46,51 +46,11 @@ export class AvatarResponseDto {
   })
   url: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     example: 'profile-photos/user-1.png',
     description: 'Key del archivo en el storage',
-    required: false,
   })
   key?: string;
-}
-
-export class UserProfileResponseDto {
-  @ApiProperty({ example: 1, description: 'ID único del usuario' })
-  usuarioId: number;
-
-  @ApiProperty({
-    example: 'usuario@jasrapo.com',
-    description: 'Correo electrónico',
-  })
-  email: string;
-
-  @ApiProperty({
-    example: 'Juan Pérez',
-    description: 'Nombre completo',
-    nullable: true,
-  })
-  nombre: string | null;
-
-  @ApiProperty({
-    example: '+593991234567',
-    description: 'Teléfono',
-    nullable: true,
-  })
-  telefono: string | null;
-
-  @ApiProperty({
-    type: () => AvatarResponseDto,
-    description: 'Avatar',
-    nullable: true,
-  })
-  avatar: AvatarResponseDto | null;
-
-  @ApiProperty({
-    type: () => RoleResponseDto,
-    description: 'Rol asignado',
-    nullable: true,
-  })
-  rol: RoleResponseDto | null;
 }
 
 export class UserResponseDto {
@@ -130,13 +90,25 @@ export class UserResponseDto {
   })
   rol: RoleResponseDto | null;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     example: null,
     description: 'Fecha de eliminación',
     nullable: true,
-    required: false,
   })
   deletedAt?: Date | null;
+}
+
+export class UserProfileResponseDto extends OmitType(UserResponseDto, [
+  'nombres',
+  'apellidos',
+  'deletedAt',
+] as const) {
+  @ApiProperty({
+    example: 'Juan Pérez',
+    description: 'Nombre completo del usuario',
+    nullable: true,
+  })
+  nombre: string | null;
 }
 
 export class UserDetailResponseDto extends UserResponseDto {
