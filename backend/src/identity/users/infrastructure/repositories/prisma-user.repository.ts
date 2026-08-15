@@ -13,7 +13,6 @@ import {
 import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
 import { paginate } from 'src/infrastructure/common/utils/pagination.util';
-import { UserWithRoleResponse } from '../../domain/types/user.types';
 import { UserEntity } from '../../domain/entities/user.entity';
 import { UserMapper } from '../mappers/user.mapper';
 
