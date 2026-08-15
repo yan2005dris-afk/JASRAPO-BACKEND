@@ -4,10 +4,44 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { AgreementsController } from './agreements.controller';
 import { AgreementsService } from '../../application/agreements.service';
+import { AgreementEntity } from '../../domain/entities/agreement.entity';
+import { InstallmentEntity } from '../../domain/entities/installment.entity';
 
 describe('AgreementsController', () => {
   let controller: AgreementsController;
   let service: jest.Mocked<AgreementsService>;
+
+  const mockAgreement = new AgreementEntity({
+    convenioId: 1n,
+    contratoId: 10n,
+    numeroCuotas: 2,
+    abonoInicial: 5,
+    deudaTotal: 100,
+    mesesMoraActual: 1,
+    estado: 'PREPARADO',
+    fechaAprobacion: null,
+    fechaPrimerPago: new Date('2026-06-01T00:00:00.000Z'),
+    fechaProximoPago: new Date('2026-06-01T00:00:00.000Z'),
+    montoPagadoActual: 0,
+    motivo: null,
+    createdAt: new Date('2026-05-01T00:00:00.000Z'),
+  });
+
+  const mockInstallment = new InstallmentEntity({
+    cuotaConvenioId: 1n,
+    convenioId: 1n,
+    numeroCuota: 1,
+    valorCuota: 50,
+    fechaVencimiento: new Date('2026-06-01T00:00:00.000Z'),
+    estado: 'PENDIENTE',
+    fechaPago: null,
+    montoPagado: 0,
+    saldoPendiente: 50,
+    diasRetraso: 0,
+    interesMoraAplicado: 0,
+    pagoCompleto: false,
+    fechaPagoAnticipado: null,
+  });
 
   const mockAgreementsService = {
     findAllAgreementStates: jest.fn(),
@@ -64,57 +98,73 @@ describe('AgreementsController', () => {
     expect(service.getDebtSummary).toHaveBeenCalledWith(10n);
   });
 
-  it('should create agreement', async () => {
+  it('should create agreement and return response dto', async () => {
     const dto = {
       contratoId: '10',
       numeroCuotas: 2,
       fechaPrimerPago: '2026-06-01',
     };
-    service.create.mockResolvedValue({ convenioId: '1' } as any);
+    service.create.mockResolvedValue(mockAgreement);
 
-    await expect(controller.create(dto)).resolves.toEqual({ convenioId: '1' });
+    const result = await controller.create(dto);
+    expect(result.convenioId).toBe('1');
     expect(service.create).toHaveBeenCalledWith(dto);
   });
 
   it('should find all agreements with pagination and optional contrato filter', async () => {
-    const paginatedResult = { data: [], meta: {} as any };
+    const paginatedResult = {
+      data: [mockAgreement],
+      meta: { total: 1 } as any,
+    };
     service.findAll.mockResolvedValue(paginatedResult);
 
     const query = { page: 1, limit: 10, contratoId: '10' };
-    await expect(controller.findAll(query)).resolves.toEqual(paginatedResult);
+    const result = await controller.findAll(query);
+    expect(result.data).toHaveLength(1);
+    expect(result.data[0].convenioId).toBe('1');
     expect(service.findAll).toHaveBeenCalledWith({
       pagination: { page: 1, limit: 10 },
       contratoId: '10',
     });
   });
 
-  it('should find one agreement', async () => {
-    service.findOne.mockResolvedValue({ convenioId: '1' } as any);
+  it('should find one agreement and return response dto', async () => {
+    service.findOne.mockResolvedValue(mockAgreement);
 
-    await expect(controller.findOne(1n)).resolves.toEqual({
-      convenioId: '1',
-    });
+    const result = await controller.findOne(1n);
+    expect(result.convenioId).toBe('1');
     expect(service.findOne).toHaveBeenCalledWith(1n);
   });
 
-  it('should cancel agreement', async () => {
-    service.cancel.mockResolvedValue({ convenioId: '1' } as any);
+  it('should find installments and return response dto list', async () => {
+    service.findInstallments.mockResolvedValue([mockInstallment]);
 
-    await expect(controller.cancel(1n)).resolves.toEqual({ convenioId: '1' });
+    const result = await controller.findInstallments('1');
+    expect(result).toHaveLength(1);
+    expect(result[0].cuotaConvenioId).toBe('1');
+    expect(service.findInstallments).toHaveBeenCalledWith('1');
+  });
+
+  it('should cancel agreement', async () => {
+    service.cancel.mockResolvedValue(
+      new AgreementEntity({ ...mockAgreement, estado: 'ANULADO' }),
+    );
+
+    const result = await controller.cancel(1n);
+    expect(result.convenioId).toBe('1');
+    expect(result.estado.codigo).toBe('ANULADO');
     expect(service.cancel).toHaveBeenCalledWith(1n);
   });
 
   it('should update agreement state', async () => {
     const dto = { estado: 'PAGADO' };
-    service.update.mockResolvedValue({
-      convenioId: '1',
-      estado: 'PAGADO',
-    } as any);
+    service.update.mockResolvedValue(
+      new AgreementEntity({ ...mockAgreement, estado: 'PAGADO' }),
+    );
 
-    await expect(controller.update(1n, dto)).resolves.toEqual({
-      convenioId: '1',
-      estado: 'PAGADO',
-    });
+    const result = await controller.update(1n, dto);
+    expect(result.convenioId).toBe('1');
+    expect(result.estado.codigo).toBe('PAGADO');
     expect(service.update).toHaveBeenCalledWith(1n, dto);
   });
 });

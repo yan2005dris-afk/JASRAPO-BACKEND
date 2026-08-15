@@ -1,57 +1,53 @@
-import type { Prisma } from 'src/generated/prisma/client';
+import type { AgreementEntity } from '../entities/agreement.entity';
+import type { InstallmentEntity } from '../entities/installment.entity';
+import type {
+  AgreementFilters,
+  CreateAgreementData,
+  CreateInstallmentData,
+  PrefacturaDeudaRaw,
+  PaymentAgreementPdfData,
+} from '../types/agreement.types';
+import type { PaginateOptions } from 'src/infrastructure/common/utils/pagination.util';
+import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
 
 export abstract class AgreementRepository {
-  abstract findFirstConvenio(
-    where: Prisma.ConveniosWhereInput,
-    select?: Prisma.ConveniosSelect,
-  ): Promise<any>;
+  abstract findById(id: bigint): Promise<AgreementEntity | null>;
 
-  abstract findUniqueConvenio(
-    where: Prisma.ConveniosWhereUniqueInput,
-    select?: Prisma.ConveniosSelect,
-  ): Promise<any>;
+  abstract findActiveByContractId(
+    contratoId: bigint,
+  ): Promise<AgreementEntity | null>;
 
-  abstract findManyConvenios(params: {
-    select?: Prisma.ConveniosSelect;
-    where?: Prisma.ConveniosWhereInput;
-    orderBy?: Prisma.ConveniosOrderByWithRelationInput;
-    take?: number;
-    skip?: number;
-  }): Promise<any[]>;
+  abstract paginate(
+    pagination: PaginateOptions,
+    filters?: AgreementFilters,
+  ): Promise<PaginatedResult<AgreementEntity>>;
 
-  abstract createConvenio(
-    data: Prisma.ConveniosCreateInput,
-    select?: Prisma.ConveniosSelect,
-  ): Promise<any>;
+  abstract findInstallmentsByAgreementId(
+    convenioId: bigint,
+  ): Promise<InstallmentEntity[]>;
 
-  abstract updateConvenio(
-    where: Prisma.ConveniosWhereUniqueInput,
-    data: Prisma.ConveniosUpdateInput,
-    select?: Prisma.ConveniosSelect,
-  ): Promise<any>;
+  abstract create(
+    data: CreateAgreementData,
+    cuotas: CreateInstallmentData[],
+  ): Promise<AgreementEntity>;
 
-  abstract findFirstContrato(
-    where: Prisma.ContratosWhereInput,
-    select?: Prisma.ContratosSelect,
-  ): Promise<any>;
+  abstract updateState(
+    id: bigint,
+    estado: string,
+    data?: { fechaAprobacion?: Date; deletedAt?: Date },
+  ): Promise<AgreementEntity>;
 
-  abstract findFirstParametroTasainteres(
-    where: Prisma.ParametroTasainteresWhereInput,
-    orderBy?: Prisma.ParametroTasainteresOrderByWithRelationInput,
-    select?: Prisma.ParametroTasainteresSelect,
-  ): Promise<any>;
+  abstract markAsPaid(id: bigint): Promise<AgreementEntity>;
 
-  abstract findManyPrefacturas(params: {
-    where: Prisma.PrefacturasWhereInput;
-    select?: Prisma.PrefacturasSelect;
-    orderBy?: Prisma.PrefacturasOrderByWithRelationInput;
-  }): Promise<any[]>;
+  abstract contractExists(contratoId: bigint): Promise<boolean>;
 
-  abstract findManyCuotaConvenio(params: {
-    where: Prisma.CuotaConvenioWhereInput;
-    select?: Prisma.CuotaConvenioSelect;
-    orderBy?: Prisma.CuotaConvenioOrderByWithRelationInput;
-  }): Promise<any[]>;
+  abstract findActiveInterestRate(): Promise<number | null>;
 
-  abstract executeTransaction<T>(callback: (tx: any) => Promise<T>): Promise<T>;
+  abstract findUnpaidPreInvoices(
+    contratoId: bigint,
+  ): Promise<PrefacturaDeudaRaw[]>;
+
+  abstract getPdfData(
+    convenioId: bigint,
+  ): Promise<PaymentAgreementPdfData | null>;
 }

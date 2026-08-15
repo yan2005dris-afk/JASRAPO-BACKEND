@@ -1,5 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { InstallmentResponseDto } from './installment-response.dto';
+import type { AgreementEntity } from '../../domain/entities/agreement.entity';
+import { DateUtil } from 'src/shared/utils/date.util';
 
 export class AgreementResponseDto {
   @ApiProperty({ example: '1', description: 'ID del convenio' })
@@ -73,4 +75,34 @@ export class AgreementResponseDto {
     description: 'Cuotas generadas para este convenio',
   })
   cuotas?: InstallmentResponseDto[];
+
+  static fromEntity(convenio: AgreementEntity): AgreementResponseDto {
+    const dto = new AgreementResponseDto();
+    dto.convenioId = String(convenio.convenioId);
+    dto.contratoId = String(convenio.contratoId);
+    dto.numeroCuotas = convenio.numeroCuotas;
+    dto.abonoInicial = Number(convenio.abonoInicial);
+    dto.deudaTotal = Number(convenio.deudaTotal);
+    dto.mesesMoraActual = convenio.mesesMoraActual;
+    dto.estado = {
+      codigo: convenio.estado,
+      nombre: convenio.estado,
+    };
+    dto.fechaAprobacion = DateUtil.formatForFrontend(convenio.fechaAprobacion);
+    dto.fechaPrimerPago = DateUtil.formatForFrontend(convenio.fechaPrimerPago)!;
+    dto.fechaProximoPago = DateUtil.formatForFrontend(
+      convenio.fechaProximoPago,
+    );
+    dto.montoPagadoActual = Number(convenio.montoPagadoActual);
+    dto.motivo = convenio.motivo ?? null;
+    dto.fechaCreacion = DateUtil.formatForFrontend(convenio.createdAt)!;
+    dto.cuotas = convenio.cuotas
+      ? InstallmentResponseDto.fromEntityList(convenio.cuotas)
+      : undefined;
+    return dto;
+  }
+
+  static fromEntityList(entities: AgreementEntity[]): AgreementResponseDto[] {
+    return entities.map(AgreementResponseDto.fromEntity);
+  }
 }

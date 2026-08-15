@@ -3,28 +3,14 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma } from 'src/generated/prisma/client';
 import { DateUtil } from 'src/shared/utils/date.util';
 import { addMonths } from 'date-fns';
-import { EstadoConvenio } from 'src/shared/enums';
 import { CreateAgreementDto } from '../../interfaces/dto/create-agreement.dto';
-
 import { GetDebtSummaryUseCase } from './get-debt-summary.use-case';
 import { AgreementRepository } from '../../domain/repositories/agreement.repository';
+import type { CreateInstallmentData } from '../../domain/types/agreement.types';
+import type { AgreementEntity } from '../../domain/entities/agreement.entity';
 
-/**
- * Lógica de creación de un convenio de pago:
- *
- * 1. Valida que el contrato existe y no tiene ya un convenio ACTIVO o PENDIENTE_ABONO
- * 2. Calcula la deuda total desde las prefacturas impagadas
- * 3. Calcula el interés por mora según ParametroTasainteres activo
- * 4. Crea el convenio con estado PREPARADO (o PENDIENTE_ABONO si hay abono inicial)
- * 5. Genera N cuotas automáticamente:
- *    - valorCuota = (deudaTotal - abonoInicial + interesesMora) / numeroCuotas
- *    - fechaVencimiento = fechaPrimerPago + (i-1) meses
- *    - saldoPendiente = valorCuota (empieza sin pagar)
- *    - estado = PENDIENTE
- */
 @Injectable()
 export class CreateAgreementUseCase {
   constructor(
@@ -32,31 +18,22 @@ export class CreateAgreementUseCase {
     private readonly getDebtSummaryUseCase: GetDebtSummaryUseCase,
   ) {}
 
-  async execute(dto: CreateAgreementDto) {
+  async execute(dto: CreateAgreementDto): Promise<AgreementEntity> {
     const contratoId = BigInt(dto.contratoId);
 
     // ── 1. Verificar que el contrato existe ──────────────────────────────────
-    const contrato = await this.agreementRepository.findFirstContrato(
-      { contratoId, deletedAt: null },
-      { contratoId: true },
-    );
+    const contractExists =
+      await this.agreementRepository.contractExists(contratoId);
 
-    if (!contrato) {
+    if (!contractExists) {
       throw new NotFoundException(
         `Contrato con ID ${dto.contratoId} no encontrado`,
       );
     }
 
     // ── 2. Verificar que no haya convenio activo o pendiente para este contrato ─
-    const estadosBloquean: EstadoConvenio[] = ['ACTIVO', 'PENDIENTE_ABONO'];
-    const convenioActivo = await this.agreementRepository.findFirstConvenio(
-      {
-        contratoId,
-        deletedAt: null,
-        estado: { in: estadosBloquean },
-      },
-      { convenioId: true, estado: true },
-    );
+    const convenioActivo =
+      await this.agreementRepository.findActiveByContractId(contratoId);
 
     if (convenioActivo) {
       throw new BadRequestException(
@@ -84,21 +61,8 @@ export class CreateAgreementUseCase {
     }
 
     // ── 4. Obtener tasa de interés por mora vigente (ParametroTasainteres) ───
-    const hoy = new Date();
-    const tasaInteresParam =
-      await this.agreementRepository.findFirstParametroTasainteres(
-        {
-          activo: true,
-          vigenteDesde: { lte: hoy },
-          OR: [{ vigenteHasta: null }, { vigenteHasta: { gte: hoy } }],
-          deletedAt: null,
-        },
-        { vigenteDesde: 'desc' },
-        { tasa: true },
-      );
-
-    // tasa en porcentaje (ej: 1.5 = 1.5% mensual)
-    const tasaMensual = tasaInteresParam ? tasaInteresParam.tasa / 100 : 0;
+    const tasaInteres = await this.agreementRepository.findActiveInterestRate();
+    const tasaMensual = tasaInteres ? tasaInteres / 100 : 0;
 
     // ── 5. mesesMoraActual: tomar máximo de meses atrasados desde debtSummary ──
     const mesesMoraActual = debtSummary.maxMesesAtrasado ?? 0;
@@ -124,59 +88,47 @@ export class CreateAgreementUseCase {
         : 0;
 
     // ── 8. Determinar estado del convenio ────────────────────────────────────
-    const estadoConvenio: EstadoConvenio =
-      abonoInicial > 0 ? 'PENDIENTE_ABONO' : 'PREPARADO';
+    const estadoConvenio = abonoInicial > 0 ? 'PENDIENTE_ABONO' : 'PREPARADO';
 
     // ── 9. Parsear fecha primer pago ─────────────────────────────────────────
     const fechaPrimerPago = DateUtil.parseFrontendDateStrict(
       dto.fechaPrimerPago,
     );
 
-    // ── 10. Crear convenio + cuotas en una transacción ───────────────────────
-    const convenioId = await this.agreementRepository.executeTransaction(
-      async (tx) => {
-        const nuevoConvenio = await tx.convenios.create({
-          data: {
-            contratoId,
-            numeroCuotas: dto.numeroCuotas,
-            abonoInicial,
-            deudaTotal,
-            mesesMoraActual,
-            estado: estadoConvenio,
-            fechaPrimerPago,
-            fechaProximoPago: fechaPrimerPago,
-            montoPagadoActual: 0,
-            motivo: dto.motivo ?? null,
-          },
-          select: { convenioId: true },
-        });
+    // ── 10. Crear cuotas en memoria ──────────────────────────────────────────
+    const cuotas: CreateInstallmentData[] = [];
+    for (let i = 1; i <= dto.numeroCuotas; i++) {
+      const valorCuota =
+        i === dto.numeroCuotas ? valorUltimaCuota : valorCuotaBase;
+      const fechaVencimiento = addMonths(fechaPrimerPago, i - 1);
 
-        const cuotas: Prisma.CuotaConvenioCreateManyInput[] = [];
-        for (let i = 1; i <= dto.numeroCuotas; i++) {
-          const valorCuota =
-            i === dto.numeroCuotas ? valorUltimaCuota : valorCuotaBase;
-          const fechaVencimiento = addMonths(fechaPrimerPago, i - 1);
+      cuotas.push({
+        numeroCuota: i,
+        valorCuota,
+        saldoPendiente: valorCuota,
+        fechaVencimiento,
+        estado: 'PENDIENTE',
+        montoPagado: 0,
+        diasRetraso: 0,
+        interesMoraAplicado: interesPorCuota,
+        pagoCompleto: false,
+      });
+    }
 
-          cuotas.push({
-            convenioId: nuevoConvenio.convenioId,
-            numeroCuota: i,
-            valorCuota,
-            saldoPendiente: valorCuota,
-            fechaVencimiento,
-            estado: 'PENDIENTE',
-            montoPagado: 0,
-            diasRetraso: 0,
-            interesMoraAplicado: interesPorCuota,
-            pagoCompleto: false,
-          });
-        }
-
-        await tx.cuotaConvenio.createMany({ data: cuotas });
-
-        return nuevoConvenio.convenioId;
+    return this.agreementRepository.create(
+      {
+        contratoId,
+        numeroCuotas: dto.numeroCuotas,
+        abonoInicial,
+        deudaTotal,
+        mesesMoraActual,
+        estado: estadoConvenio,
+        fechaPrimerPago,
+        fechaProximoPago: fechaPrimerPago,
+        montoPagadoActual: 0,
+        motivo: dto.motivo ?? null,
       },
+      cuotas,
     );
-
-    return this.agreementRepository.findUniqueConvenio({ convenioId });
   }
 }

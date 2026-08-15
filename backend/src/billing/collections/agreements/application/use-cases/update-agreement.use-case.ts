@@ -3,29 +3,19 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Decimal } from 'decimal.js';
 import { AgreementRepository } from '../../domain/repositories/agreement.repository';
+import type { AgreementEntity } from '../../domain/entities/agreement.entity';
 
-/**
- * Actualiza el estado de un convenio.
- *
- * Casos especiales:
- * - PAGADO: marca el convenio como pagado, todas las cuotas PENDIENTE
- *   pasan a PAGADA con fecha de pago = hoy, saldoPendiente = 0,
- *   montoPagadoActual = deudaTotal, fechaProximoPago = null
- * - ANULADO: soft-delete (mismo comportamiento que DELETE)
- * - ACTIVO: aprueba el convenio (PREPARADO/PENDIENTE_ABONO → ACTIVO)
- */
 @Injectable()
 export class UpdateAgreementUseCase {
   constructor(private readonly agreementRepository: AgreementRepository) {}
 
-  async execute(convenioId: bigint, nuevoEstado: string) {
+  async execute(
+    convenioId: bigint,
+    nuevoEstado: string,
+  ): Promise<AgreementEntity> {
     // ── 1. Validar que el convenio existe y no está borrado ──────────────────
-    const convenio = await this.agreementRepository.findFirstConvenio(
-      { convenioId, deletedAt: null },
-      { convenioId: true, estado: true, deudaTotal: true },
-    );
+    const convenio = await this.agreementRepository.findById(convenioId);
 
     if (!convenio) {
       throw new NotFoundException(
@@ -51,90 +41,19 @@ export class UpdateAgreementUseCase {
     // ── 3. Ejecutar la transición ────────────────────────────────────────────
     switch (nuevoEstado) {
       case 'PAGADO':
-        return this.ejecutarPago(convenioId, convenio.deudaTotal);
+        return this.agreementRepository.markAsPaid(convenioId);
       case 'ANULADO':
-        return this.ejecutarAnulacion(convenioId);
+        return this.agreementRepository.updateState(convenioId, 'ANULADO', {
+          deletedAt: new Date(),
+        });
       case 'ACTIVO':
-        return this.ejecutarActivacion(convenioId);
+        return this.agreementRepository.updateState(convenioId, 'ACTIVO', {
+          fechaAprobacion: convenio.fechaAprobacion ?? new Date(),
+        });
       default:
         throw new BadRequestException(
           `Transición a ${nuevoEstado} no soportada`,
         );
     }
-  }
-
-  /**
-   * Marca el convenio como PAGADO:
-   * - Todas las cuotas PENDIENTE → PAGADA con fecha de pago hoy
-   * - montoPagadoActual = deudaTotal
-   * - fechaProximoPago = null
-   * - estado = PAGADO
-   */
-  private async ejecutarPago(convenioId: bigint, deudaTotal: Decimal) {
-    const hoy = new Date();
-
-    return this.agreementRepository.executeTransaction(async (tx) => {
-      // Traer cuotas pendientes con su valor para actualizarlas una por una
-      const cuotasPendientes = await tx.cuotaConvenio.findMany({
-        where: { convenioId, estado: 'PENDIENTE', deletedAt: null },
-        select: { cuotaConvenioId: true, valorCuota: true },
-      });
-
-      for (const cuota of cuotasPendientes) {
-        await tx.cuotaConvenio.update({
-          where: { cuotaConvenioId: cuota.cuotaConvenioId },
-          data: {
-            estado: 'PAGADA',
-            fechaPago: hoy,
-            montoPagado: cuota.valorCuota,
-            saldoPendiente: 0,
-            pagoCompleto: true,
-            diasRetraso: 0,
-          },
-        });
-      }
-
-      // Actualizar el convenio como pagado
-      return tx.convenios.update({
-        where: { convenioId },
-        data: {
-          estado: 'PAGADO',
-          fechaProximoPago: null,
-          montoPagadoActual: deudaTotal,
-        },
-      });
-    });
-  }
-
-  /**
-   * Marca el convenio como ANULADO (soft delete).
-   */
-  private async ejecutarAnulacion(convenioId: bigint) {
-    return this.agreementRepository.updateConvenio(
-      { convenioId },
-      {
-        estado: 'ANULADO',
-        deletedAt: new Date(),
-      },
-    );
-  }
-
-  /**
-   * Activa el convenio (PREPARADO/PENDIENTE_ABONO → ACTIVO).
-   * Fija fechaAprobacion si no tenía.
-   */
-  private async ejecutarActivacion(convenioId: bigint) {
-    const convenio = await this.agreementRepository.findFirstConvenio(
-      { convenioId },
-      { fechaAprobacion: true },
-    );
-
-    return this.agreementRepository.updateConvenio(
-      { convenioId },
-      {
-        estado: 'ACTIVO',
-        fechaAprobacion: convenio?.fechaAprobacion ?? new Date(),
-      },
-    );
   }
 }

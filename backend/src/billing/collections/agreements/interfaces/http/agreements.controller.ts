@@ -24,6 +24,7 @@ import { CreateAgreementDto } from '../dto/create-agreement.dto';
 import { UpdateAgreementDto } from '../dto/update-agreement.dto';
 import { AgreementResponseDto } from '../dto/agreement-response.dto';
 import { DebtSummaryResponseDto } from '../dto/debt-summary-response.dto';
+import { InstallmentResponseDto } from '../dto/installment-response.dto';
 import { EnumStateDto } from 'src/shared/enums/state-catalog';
 import { FindAllAgreementsDto } from '../dto/find-all-agreements.dto';
 import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
@@ -31,12 +32,13 @@ import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.g
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
 import { ParseBigIntPipe } from 'src/infrastructure/common/pipes/parse-bigint.pipe';
 import { ApiPaginatedResponse } from 'src/infrastructure/common/decorators/api-paginated-response.decorator';
-import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
+import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
 import { PaginationMetaDto } from 'src/infrastructure/common/dtos/pagination-meta.dto';
 import { buildPdfFileName } from 'src/infrastructure/pdf/utils/pdf-format.utils';
+
 @ApiTags('agreements')
 @ApiBearerAuth()
-@ApiExtraModels(AgreementResponseDto, PaginationMetaDto)
+@ApiExtraModels(AgreementResponseDto, PaginationMetaDto, InstallmentResponseDto)
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('agreements')
 export class AgreementsController {
@@ -127,7 +129,8 @@ export class AgreementsController {
   @RequiredPermission('agreements', 'create')
   @Post()
   async create(@Body() dto: CreateAgreementDto): Promise<AgreementResponseDto> {
-    return this.agreementsService.create(dto);
+    const entity = await this.agreementsService.create(dto);
+    return AgreementResponseDto.fromEntity(entity);
   }
 
   /**
@@ -156,7 +159,8 @@ export class AgreementsController {
     @Param('id', ParseBigIntPipe) id: bigint,
     @Body() dto: UpdateAgreementDto,
   ): Promise<AgreementResponseDto> {
-    return this.agreementsService.update(id, dto);
+    const entity = await this.agreementsService.update(id, dto);
+    return AgreementResponseDto.fromEntity(entity);
   }
 
   /**
@@ -174,10 +178,15 @@ export class AgreementsController {
   async findAll(
     @Query() query: FindAllAgreementsDto,
   ): Promise<PaginatedResult<AgreementResponseDto>> {
-    return this.agreementsService.findAll({
+    const result = await this.agreementsService.findAll({
       pagination: { page: query.page, limit: query.limit },
       contratoId: query.contratoId,
     });
+
+    return {
+      data: AgreementResponseDto.fromEntityList(result.data),
+      meta: result.meta,
+    };
   }
 
   /**
@@ -205,7 +214,37 @@ export class AgreementsController {
   async findOne(
     @Param('id', ParseBigIntPipe) id: bigint,
   ): Promise<AgreementResponseDto> {
-    return this.agreementsService.findOne(id);
+    const entity = await this.agreementsService.findOne(id);
+    return AgreementResponseDto.fromEntity(entity);
+  }
+
+  /**
+   * GET /agreements/:id/installments
+   * Obtener cuotas de un convenio
+   */
+  @ApiOperation({
+    summary: 'Listar cuotas de un convenio',
+    description:
+      'Retorna la lista de cuotas pertenecientes a un convenio específico',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'ID del convenio',
+    type: String,
+    example: '1',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de cuotas',
+    type: [InstallmentResponseDto],
+  })
+  @RequiredPermission('agreements', 'read')
+  @Get(':id/installments')
+  async findInstallments(
+    @Param('id') id: string,
+  ): Promise<InstallmentResponseDto[]> {
+    const cuotas = await this.agreementsService.findInstallments(id);
+    return InstallmentResponseDto.fromEntityList(cuotas);
   }
 
   /**
@@ -233,7 +272,8 @@ export class AgreementsController {
   async cancel(
     @Param('id', ParseBigIntPipe) id: bigint,
   ): Promise<AgreementResponseDto> {
-    return this.agreementsService.cancel(id);
+    const entity = await this.agreementsService.cancel(id);
+    return AgreementResponseDto.fromEntity(entity);
   }
 
   /**

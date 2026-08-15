@@ -1,4 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import type { InstallmentEntity } from '../../domain/entities/installment.entity';
+import { DateUtil } from 'src/shared/utils/date.util';
 
 export class InstallmentResponseDto {
   @ApiProperty({ example: '1', description: 'ID de la cuota' })
@@ -66,4 +68,31 @@ export class InstallmentResponseDto {
     description: 'Fecha de pago anticipado (YYYY-MM-DD)',
   })
   fechaPagoAnticipado: string | null;
+
+  static fromEntity(cuota: InstallmentEntity): InstallmentResponseDto {
+    const dto = new InstallmentResponseDto();
+    dto.cuotaConvenioId = String(cuota.cuotaConvenioId);
+    dto.convenioId = String(cuota.convenioId);
+    dto.numeroCuota = cuota.numeroCuota;
+    dto.valorCuota = Number(cuota.valorCuota);
+    dto.fechaVencimiento = DateUtil.formatForFrontend(cuota.fechaVencimiento)!;
+    dto.estado = {
+      codigo: cuota.estado,
+      nombre: cuota.estado,
+    };
+    dto.fechaPago = DateUtil.formatForFrontend(cuota.fechaPago);
+    dto.montoPagado = Number(cuota.montoPagado);
+    dto.saldoPendiente = Number(cuota.saldoPendiente);
+    dto.diasRetraso = cuota.diasRetraso;
+    dto.interesMoraAplicado = Number(cuota.interesMoraAplicado);
+    dto.pagoCompleto = cuota.pagoCompleto;
+    dto.fechaPagoAnticipado = DateUtil.formatForFrontend(
+      cuota.fechaPagoAnticipado,
+    );
+    return dto;
+  }
+
+  static fromEntityList(cuotas: InstallmentEntity[]): InstallmentResponseDto[] {
+    return cuotas.map(InstallmentResponseDto.fromEntity);
+  }
 }

@@ -1,24 +1,16 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { EstadoConvenio, EstadoCuotaConvenio } from 'src/shared/enums';
-import {
-  paginate,
-  PaginateOptions,
-} from 'src/infrastructure/common/utils/pagination.util';
-import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
+import type { PaginateOptions } from 'src/infrastructure/common/utils/pagination.util';
+import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
 import { CreateAgreementDto } from '../interfaces/dto/create-agreement.dto';
-import { AgreementResponseDto } from '../interfaces/dto/agreement-response.dto';
-import { InstallmentResponseDto } from '../interfaces/dto/installment-response.dto';
 import { DebtSummaryResponseDto } from '../interfaces/dto/debt-summary-response.dto';
 import {
   EnumStateDto,
   buildStateCatalog,
 } from 'src/shared/enums/state-catalog';
-
-import {
-  toAgreementResponse,
-  toInstallmentResponse,
-} from '../domain/types/agreementsMapper';
+import { AgreementRepository } from '../domain/repositories/agreement.repository';
+import type { AgreementEntity } from '../domain/entities/agreement.entity';
+import type { InstallmentEntity } from '../domain/entities/installment.entity';
 import { CreateAgreementUseCase } from './use-cases/create-agreement.use-case';
 import { FindOneAgreementUseCase } from './use-cases/find-one-agreement.use-case';
 import { GetDebtSummaryUseCase } from './use-cases/get-debt-summary.use-case';
@@ -29,7 +21,7 @@ import { GeneratePdfUseCase } from 'src/infrastructure/pdf/use-cases/generate-pd
 @Injectable()
 export class AgreementsService {
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly agreementRepository: AgreementRepository,
     private readonly createUseCase: CreateAgreementUseCase,
     private readonly findOneUseCase: FindOneAgreementUseCase,
     private readonly getDebtSummaryUseCase: GetDebtSummaryUseCase,
@@ -65,62 +57,35 @@ export class AgreementsService {
 
   // ── CRUD ─────────────────────────────────────────────────────────────────
 
-  async create(dto: CreateAgreementDto): Promise<AgreementResponseDto> {
-    const convenio = await this.createUseCase.execute(dto);
-    return toAgreementResponse(convenio);
+  async create(dto: CreateAgreementDto): Promise<AgreementEntity> {
+    return this.createUseCase.execute(dto);
   }
 
   async findAll(params: {
     pagination: PaginateOptions;
     contratoId?: string;
-  }): Promise<PaginatedResult<AgreementResponseDto>> {
-    const { pagination, contratoId } = params;
-
-    const result = await paginate<any>(
-      this.prisma.convenios,
-      {
-        where: {
-          deletedAt: null,
-          ...(contratoId ? { contratoId: BigInt(contratoId) } : {}),
-        },
-        orderBy: { createdAt: 'desc' },
-      },
-      pagination,
-    );
-
-    return {
-      ...result,
-      data: result.data.map(toAgreementResponse),
-    };
-  }
-
-  async findOne(id: bigint): Promise<AgreementResponseDto> {
-    const convenio = await this.findOneUseCase.execute(id);
-    return toAgreementResponse(convenio);
-  }
-
-  async findInstallments(
-    convenioId: string,
-  ): Promise<InstallmentResponseDto[]> {
-    await this.findOneUseCase.execute(BigInt(convenioId));
-
-    const cuotas = await this.prisma.cuotaConvenio.findMany({
-      where: { convenioId: BigInt(convenioId), deletedAt: null },
-      orderBy: { numeroCuota: 'asc' },
+  }): Promise<PaginatedResult<AgreementEntity>> {
+    return this.agreementRepository.paginate(params.pagination, {
+      contratoId: params.contratoId,
     });
-
-    return cuotas.map(toInstallmentResponse);
   }
 
-  async update(
-    id: bigint,
-    dto: { estado: string },
-  ): Promise<AgreementResponseDto> {
-    const convenio = await this.updateUseCase.execute(id, dto.estado);
-    return toAgreementResponse(convenio);
+  async findOne(id: bigint): Promise<AgreementEntity> {
+    return this.findOneUseCase.execute(id);
   }
 
-  async cancel(id: bigint): Promise<AgreementResponseDto> {
+  async findInstallments(convenioId: string): Promise<InstallmentEntity[]> {
+    await this.findOneUseCase.execute(BigInt(convenioId));
+    return this.agreementRepository.findInstallmentsByAgreementId(
+      BigInt(convenioId),
+    );
+  }
+
+  async update(id: bigint, dto: { estado: string }): Promise<AgreementEntity> {
+    return this.updateUseCase.execute(id, dto.estado);
+  }
+
+  async cancel(id: bigint): Promise<AgreementEntity> {
     return this.update(id, { estado: 'ANULADO' });
   }
 
@@ -132,7 +97,7 @@ export class AgreementsService {
     const raw = await this.getPdfDataUseCase.execute(convenioId);
     const buffer = await this.generatePdfUc.execute(
       'payment-agreement',
-      raw as any,
+      raw as unknown as Record<string, unknown>,
     );
     const cliente = raw.convenio.cliente;
     const clienteNombre =

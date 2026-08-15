@@ -2,14 +2,14 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { AgreementRepository } from '../../domain/repositories/agreement.repository';
-
 import { FindOneAgreementUseCase } from './find-one-agreement.use-case';
+import { AgreementEntity } from '../../domain/entities/agreement.entity';
 
 describe('FindOneAgreementUseCase', () => {
   let useCase: FindOneAgreementUseCase;
 
   const mockAgreementRepository = {
-    findFirstConvenio: jest.fn(),
+    findById: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -31,21 +31,18 @@ describe('FindOneAgreementUseCase', () => {
     expect(useCase).toBeDefined();
   });
 
-  it('should return agreement with installments when found', async () => {
-    const convenio = { convenioId: 1n, contratoId: 10n, cuotaConvenio: [] };
-    mockAgreementRepository.findFirstConvenio.mockResolvedValue(convenio);
+  it('should return agreement when found', async () => {
+    const convenio = new AgreementEntity({ convenioId: 1n, contratoId: 10n });
+    mockAgreementRepository.findById.mockResolvedValue(convenio);
 
     const result = await useCase.execute(1n);
 
     expect(result).toBe(convenio);
-    expect(mockAgreementRepository.findFirstConvenio).toHaveBeenCalledWith({
-      convenioId: 1n,
-      deletedAt: null,
-    });
+    expect(mockAgreementRepository.findById).toHaveBeenCalledWith(1n);
   });
 
   it('should throw NotFoundException when agreement does not exist', async () => {
-    mockAgreementRepository.findFirstConvenio.mockResolvedValue(null);
+    mockAgreementRepository.findById.mockResolvedValue(null);
 
     await expect(useCase.execute(999n)).rejects.toThrow(NotFoundException);
   });
