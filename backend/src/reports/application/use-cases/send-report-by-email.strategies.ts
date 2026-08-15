@@ -1,9 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
-import { PaymentsReportSpec } from '../../specs/payments-report.report-spec';
-import { ConnectionHistoryReportSpec } from '../../specs/connection-history.report-spec';
-import { AccountStatementReportSpec } from '../../specs/account-statement.report-spec';
-import { ClientsListReportSpec } from '../../specs/clients-list.report-spec';
+import { PaymentsReportSpec } from '../../infrastructure/specs/payments-report.report-spec';
+import { ConnectionHistoryReportSpec } from '../../infrastructure/specs/connection-history.report-spec';
+import { AccountStatementReportSpec } from '../../infrastructure/specs/account-statement.report-spec';
+import { ClientsListReportSpec } from '../../infrastructure/specs/clients-list.report-spec';
 import { GetPaymentAgreementPdfDataUseCase } from 'src/billing/collections/agreements/application/use-cases/get-payment-agreement-pdf-data.use-case';
 import type { PaymentsReportFilterDto } from '../../dto/payments-report-filter.dto';
 import type { ConnectionHistoryFilterDto } from '../../dto/connection-history-filter.dto';

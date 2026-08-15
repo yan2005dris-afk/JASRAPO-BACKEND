@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ClientService } from 'src/operations/clients/application/client.service';
-import type { ReportSpec } from '../interfaces/report-spec.interface';
-import type { ClientsListReportFilterDto } from '../dto/clients-list-report-filter.dto';
+import type { ReportSpec } from '../../interfaces/report-spec.interface';
+import type { ClientsListReportFilterDto } from '../../dto/clients-list-report-filter.dto';
 
 @Injectable()
 export class ClientsListReportSpec implements ReportSpec<ClientsListReportFilterDto> {

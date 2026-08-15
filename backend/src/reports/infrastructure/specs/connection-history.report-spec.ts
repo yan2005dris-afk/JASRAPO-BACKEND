@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
-import type { ReportSpec } from '../interfaces/report-spec.interface';
-import type { ConnectionHistoryFilterDto } from '../dto/connection-history-filter.dto';
+import type { ReportSpec } from '../../interfaces/report-spec.interface';
+import type { ConnectionHistoryFilterDto } from '../../dto/connection-history-filter.dto';
 
 @Injectable()
 export class ConnectionHistoryReportSpec implements ReportSpec<ConnectionHistoryFilterDto> {

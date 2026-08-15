@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
-import type { ReportSpec } from '../interfaces/report-spec.interface';
-import type { AccountStatementFilterDto } from '../dto/account-statement-filter.dto';
+import type { Prisma } from 'src/generated/prisma/client';
+import type { ReportSpec } from '../../interfaces/report-spec.interface';
+import type { AccountStatementFilterDto } from '../../dto/account-statement-filter.dto';
+
+type LecturaRow = Prisma.lecturasGetPayload<Record<string, never>>;
 
 @Injectable()
 export class AccountStatementReportSpec implements ReportSpec<AccountStatementFilterDto> {
@@ -69,7 +72,7 @@ export class AccountStatementReportSpec implements ReportSpec<AccountStatementFi
     const medidorId = contrato.historialMedidores[0]?.medidorId;
     const periodIds = prefacturas.map((pf) => pf.periodoId);
 
-    let lecturas: any[] = [];
+    let lecturas: LecturaRow[] = [];
     if (medidorId && periodIds.length > 0) {
       lecturas = await this.prisma.lecturas.findMany({
         where: {
@@ -83,7 +86,7 @@ export class AccountStatementReportSpec implements ReportSpec<AccountStatementFi
     }
 
     // Group lecturas by periodoId
-    const lecturasByPeriod = new Map<number, any[]>();
+    const lecturasByPeriod = new Map<number, LecturaRow[]>();
     for (const l of lecturas) {
       const arr = lecturasByPeriod.get(l.periodoId) ?? [];
       arr.push(l);

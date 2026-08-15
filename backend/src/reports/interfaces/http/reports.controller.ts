@@ -23,13 +23,13 @@ import { JwtAuthGuard } from '../../../identity/auth/interfaces/http/guards/jwt-
 import { PermissionsGuard } from '../../../infrastructure/common/guards/permissions.guard';
 import { RequiredPermission } from '../../../infrastructure/common/decorators/require-permission.decorator';
 import { ClientsListReportFilterDto } from '../../dto/clients-list-report-filter.dto';
-import { ClientsListReportSpec } from '../../specs/clients-list.report-spec';
+import { ClientsListReportSpec } from '../../infrastructure/specs/clients-list.report-spec';
 import { PaymentsReportFilterDto } from '../../dto/payments-report-filter.dto';
-import { PaymentsReportSpec } from '../../specs/payments-report.report-spec';
+import { PaymentsReportSpec } from '../../infrastructure/specs/payments-report.report-spec';
 import { ConnectionHistoryFilterDto } from '../../dto/connection-history-filter.dto';
-import { ConnectionHistoryReportSpec } from '../../specs/connection-history.report-spec';
+import { ConnectionHistoryReportSpec } from '../../infrastructure/specs/connection-history.report-spec';
 import { AccountStatementFilterDto } from '../../dto/account-statement-filter.dto';
-import { AccountStatementReportSpec } from '../../specs/account-statement.report-spec';
+import { AccountStatementReportSpec } from '../../infrastructure/specs/account-statement.report-spec';
 import { PaymentAgreementLegacyFilterDto } from '../../dto/payment-agreement-legacy-filter.dto';
 import { GetPaymentAgreementPdfDataUseCase } from '../../../billing/collections/agreements/application/use-cases/get-payment-agreement-pdf-data.use-case';
 import { ReportStyleDispatcher } from '../../application/report-style.dispatcher';
