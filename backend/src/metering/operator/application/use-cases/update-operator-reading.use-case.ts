@@ -1,10 +1,9 @@
-import {
-  BadRequestException,
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { EstadoLectura } from 'src/shared/enums';
+import {
+  EntityNotFoundException,
+  InvalidDomainOperationException,
+} from 'src/shared/domain/exceptions/domain.exception';
 import { UpdateReadingUseCase } from 'src/metering/readings/application/use-cases/update-reading.use-case';
 import { ActualizarLecturaDto } from 'src/metering/readings/interfaces/dto/update-lectura.dto';
 import { LecturaEntity } from 'src/metering/readings/domain/entities/lectura.entity';
@@ -30,15 +29,13 @@ export class UpdateOperatorReadingUseCase {
     // 1. Validar que la lectura existe y obtener datos de ruta
     const lectura = await this.operatorRepository.findReadingWithDetails(id);
     if (!lectura) {
-      throw new NotFoundException(`Lectura con ID ${id} no encontrada`);
+      throw new EntityNotFoundException('Lectura', id.toString());
     }
 
     // 2. Validar que hay un período activo
     const activePeriod = await this.operatorRepository.findActivePeriod();
     if (!activePeriod) {
-      throw new NotFoundException(
-        'No hay un período de facturación ABIERTO en el sistema',
-      );
+      throw new EntityNotFoundException('Periodo', 'ABIERTO');
     }
 
     // 3. Obtener rutas activas del operador
@@ -47,7 +44,7 @@ export class UpdateOperatorReadingUseCase {
       activePeriod.periodoId,
     );
     if (rutas.length === 0) {
-      throw new ForbiddenException(
+      throw new InvalidDomainOperationException(
         'No tenés rutas asignadas en el período activo',
       );
     }
@@ -56,9 +53,7 @@ export class UpdateOperatorReadingUseCase {
     const activeHistorial = lectura.medidor?.historial?.[0];
     const contrato = activeHistorial?.contrato ?? null;
     if (!contrato) {
-      throw new NotFoundException(
-        'No se encontró un contrato activo para esta lectura',
-      );
+      throw new EntityNotFoundException('Contrato', 'activo');
     }
 
     // 5. Verificar que la lectura pertenezca a alguna ruta del operador
@@ -72,14 +67,14 @@ export class UpdateOperatorReadingUseCase {
     });
 
     if (!lecturaPertenece) {
-      throw new ForbiddenException(
+      throw new InvalidDomainOperationException(
         'Esta lectura no pertenece a tu ruta asignada',
       );
     }
 
     // 6. Validar que la lectura esté en un estado modificable por el operador
     if (!OPERATOR_EDITABLE_ESTADOS.has(lectura.estado as EstadoLectura)) {
-      throw new BadRequestException(
+      throw new InvalidDomainOperationException(
         `La lectura está en estado ${lectura.estado} y no puede ser modificada por el operador`,
       );
     }

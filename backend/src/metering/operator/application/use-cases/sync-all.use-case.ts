@@ -1,6 +1,7 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { MeterEntity } from 'src/metering/meters/domain/entities/meter.entity';
 import { EstadoMedidor } from 'src/shared/enums';
+import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 import { OperatorRepository } from '../../domain/repositories/operator.repository';
 
 @Injectable()
@@ -12,9 +13,7 @@ export class SyncAllUseCase {
     const activePeriod = await this.operatorRepository.findActivePeriod();
 
     if (!activePeriod) {
-      throw new NotFoundException(
-        'No hay un período de facturación ABIERTO en el sistema',
-      );
+      throw new EntityNotFoundException('Periodo', 'ABIERTO');
     }
 
     // 2. Find operator's active rutas for this period
@@ -28,19 +27,10 @@ export class SyncAllUseCase {
       return [];
     }
 
-    // 4. Build OR conditions for each ruta's comunidad/sector combination
-    const rutaConditions = rutas.map((ruta) => ({
-      comunidadId: ruta.comunidadId,
-      ...(ruta.sectorId !== null && ruta.sectorId !== undefined
-        ? { sectorId: ruta.sectorId }
-        : {}),
-    }));
+    // 4. Query meters with active historial matching the operator's routes
+    const meters = await this.operatorRepository.findMetersByRoutes(rutas);
 
-    // 5. Query meters with active historial matching the operator's routes
-    const meters =
-      await this.operatorRepository.findMetersByRoutes(rutaConditions);
-
-    // 6. Map to MeterEntity[]
+    // 5. Map to MeterEntity[]
     return meters.map((m) => {
       const activeHistorial = m.historial?.[0];
       return new MeterEntity({

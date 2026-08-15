@@ -1,22 +1,11 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import {
-  BadRequestException,
-  ConflictException,
-  ForbiddenException,
-  NotFoundException,
-} from '@nestjs/common';
+  EntityNotFoundException,
+  InvalidDomainOperationException,
+} from 'src/shared/domain/exceptions/domain.exception';
 import { UpdateTaskStateUseCase } from './update-task-state.use-case';
 import { OperatorRepository } from '../../domain/repositories/operator.repository';
-import { MeterRepository } from '../../../meters/domain/repositories/meter.repository';
-
-/** Create a duck-typed Prisma P2025 error (matches isP2025Error in the use case). */
-function makeP2025Error(): Error & { code: string } {
-  const err = new Error('RecordNotFound');
-  err.name = 'PrismaClientKnownRequestError';
-  (err as Error & { code: string }).code = 'P2025';
-  return err as Error & { code: string };
-}
 
 describe('UpdateTaskStateUseCase', () => {
   let useCase: UpdateTaskStateUseCase;
@@ -31,11 +20,6 @@ describe('UpdateTaskStateUseCase', () => {
     getMaxOrdenInZona: jest.fn(),
     findMeterContractLocation: jest.fn(),
     findMedidoresById: jest.fn(),
-  };
-
-  const mockMeterRepository = {
-    update: jest.fn(),
-    findUnique: jest.fn(),
   };
 
   const mockActivePeriod = { periodoId: 10 };
@@ -58,6 +42,9 @@ describe('UpdateTaskStateUseCase', () => {
       fechaInicio: null,
       fechaFin: null,
       periodoId: 10,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      deletedAt: null,
       ...overrides,
     };
   }
@@ -79,6 +66,9 @@ describe('UpdateTaskStateUseCase', () => {
       fechaInicio: null,
       fechaFin: null,
       periodoId: 10,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      deletedAt: null,
       ...overrides,
     };
   }
@@ -90,7 +80,6 @@ describe('UpdateTaskStateUseCase', () => {
       providers: [
         UpdateTaskStateUseCase,
         { provide: OperatorRepository, useValue: mockOperatorRepository },
-        { provide: MeterRepository, useValue: mockMeterRepository },
       ],
     }).compile();
 
@@ -102,7 +91,7 @@ describe('UpdateTaskStateUseCase', () => {
   });
 
   describe('ownership validation', () => {
-    it('should throw NotFoundException when task does not exist', async () => {
+    it('should throw EntityNotFoundException when task does not exist', async () => {
       mockOperatorRepository.findActivePeriod.mockResolvedValue(
         mockActivePeriod,
       );
@@ -110,10 +99,10 @@ describe('UpdateTaskStateUseCase', () => {
 
       await expect(
         useCase.execute(BigInt(999), mockOperarioId, { estado: 'EN_PROGRESO' }),
-      ).rejects.toThrow(NotFoundException);
+      ).rejects.toThrow(EntityNotFoundException);
     });
 
-    it('should throw ForbiddenException when task belongs to another operator', async () => {
+    it('should throw InvalidDomainOperationException when task belongs to another operator', async () => {
       mockOperatorRepository.findActivePeriod.mockResolvedValue(
         mockActivePeriod,
       );
@@ -123,7 +112,7 @@ describe('UpdateTaskStateUseCase', () => {
 
       await expect(
         useCase.execute(BigInt(1), mockOperarioId, { estado: 'EN_PROGRESO' }),
-      ).rejects.toThrow(ForbiddenException);
+      ).rejects.toThrow(InvalidDomainOperationException);
     });
   });
 
@@ -202,7 +191,7 @@ describe('UpdateTaskStateUseCase', () => {
         useCase.execute(BigInt(1), mockOperarioId, {
           estado: 'EN_PROGRESO',
         }),
-      ).rejects.toThrow(BadRequestException);
+      ).rejects.toThrow(InvalidDomainOperationException);
     });
 
     it('should reject CANCELADA → EN_PROGRESO (terminal)', async () => {
@@ -217,7 +206,7 @@ describe('UpdateTaskStateUseCase', () => {
         useCase.execute(BigInt(1), mockOperarioId, {
           estado: 'EN_PROGRESO',
         }),
-      ).rejects.toThrow(BadRequestException);
+      ).rejects.toThrow(InvalidDomainOperationException);
     });
 
     it('should reject PENDIENTE → invalid state', async () => {
@@ -232,7 +221,7 @@ describe('UpdateTaskStateUseCase', () => {
         useCase.execute(BigInt(1), mockOperarioId, {
           estado: 'PARCIAL' as any,
         }),
-      ).rejects.toThrow(BadRequestException);
+      ).rejects.toThrow(InvalidDomainOperationException);
     });
   });
 
@@ -249,7 +238,7 @@ describe('UpdateTaskStateUseCase', () => {
         useCase.execute(BigInt(1), mockOperarioId, {
           estado: 'CANCELADA',
         }),
-      ).rejects.toThrow(BadRequestException);
+      ).rejects.toThrow(InvalidDomainOperationException);
     });
 
     it('should reject CANCELADA with empty observacion', async () => {
@@ -265,7 +254,7 @@ describe('UpdateTaskStateUseCase', () => {
           estado: 'CANCELADA',
           observacion: '',
         }),
-      ).rejects.toThrow(BadRequestException);
+      ).rejects.toThrow(InvalidDomainOperationException);
     });
 
     it('should accept CANCELADA with observacion', async () => {
@@ -343,7 +332,6 @@ describe('UpdateTaskStateUseCase', () => {
       expect(
         mockOperatorRepository.completeInstallationTask,
       ).not.toHaveBeenCalled();
-      expect(mockMeterRepository.update).not.toHaveBeenCalled();
     });
 
     it('should NOT update meter when task has no medidorId', async () => {
@@ -368,12 +356,11 @@ describe('UpdateTaskStateUseCase', () => {
       expect(
         mockOperatorRepository.completeInstallationTask,
       ).not.toHaveBeenCalled();
-      expect(mockMeterRepository.update).not.toHaveBeenCalled();
     });
   });
 
   describe('concurrency', () => {
-    it('should detect concurrent modifications and throw ConflictException', async () => {
+    it('should propagate InvalidDomainOperationException from repo (P2025 translated in repo)', async () => {
       mockOperatorRepository.findActivePeriod.mockResolvedValue(
         mockActivePeriod,
       );
@@ -381,17 +368,19 @@ describe('UpdateTaskStateUseCase', () => {
         makeTask({ estado: 'PENDIENTE' }),
       ]);
       mockOperatorRepository.updateTaskState.mockRejectedValueOnce(
-        makeP2025Error(),
+        new InvalidDomainOperationException(
+          'Conflicto de concurrencia: la tarea fue modificada por otro operario',
+        ),
       );
 
       await expect(
         useCase.execute(BigInt(1), mockOperarioId, {
           estado: 'EN_PROGRESO',
         }),
-      ).rejects.toThrow(ConflictException);
+      ).rejects.toThrow(InvalidDomainOperationException);
     });
 
-    it('should handle concurrent INSTALACION completion safely', async () => {
+    it('should propagate InvalidDomainOperationException from INSTALACION completion', async () => {
       mockOperatorRepository.findActivePeriod.mockResolvedValue(
         mockActivePeriod,
       );
@@ -399,17 +388,19 @@ describe('UpdateTaskStateUseCase', () => {
         makeInstallTask(),
       ]);
       mockOperatorRepository.completeInstallationTask.mockRejectedValueOnce(
-        makeP2025Error(),
+        new InvalidDomainOperationException(
+          'Conflicto de concurrencia: la tarea fue modificada por otro operario',
+        ),
       );
 
       await expect(
         useCase.execute(BigInt(1), mockOperarioId, {
           estado: 'COMPLETADA',
         }),
-      ).rejects.toThrow(ConflictException);
+      ).rejects.toThrow(InvalidDomainOperationException);
     });
 
-    it('should propagate non-P2025 errors without masking as ConflictException', async () => {
+    it('should propagate non-P2025 errors without masking', async () => {
       mockOperatorRepository.findActivePeriod.mockResolvedValue(
         mockActivePeriod,
       );
@@ -447,12 +438,12 @@ describe('UpdateTaskStateUseCase', () => {
   });
 
   describe('no active period', () => {
-    it('should throw NotFoundException when no active period', async () => {
+    it('should throw EntityNotFoundException when no active period', async () => {
       mockOperatorRepository.findActivePeriod.mockResolvedValue(null);
 
       await expect(
         useCase.execute(BigInt(1), mockOperarioId, { estado: 'EN_PROGRESO' }),
-      ).rejects.toThrow(NotFoundException);
+      ).rejects.toThrow(EntityNotFoundException);
     });
   });
 });

@@ -1,10 +1,10 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { MeterRepository } from '../../../meters/domain/repositories/meter.repository';
 import { EstadoMedidor } from 'src/shared/enums';
+import {
+  EntityNotFoundException,
+  InvalidDomainOperationException,
+} from 'src/shared/domain/exceptions/domain.exception';
 import type { MeterEntity } from '../../../meters/domain/entities/meter.entity';
 
 @Injectable()
@@ -15,11 +15,11 @@ export class ReportDefectUseCase {
     const meter = await this.meterRepository.findUnique({ medidorId });
 
     if (!meter || meter.deletedAt) {
-      throw new NotFoundException('Meter not found');
+      throw new EntityNotFoundException('Medidor', medidorId.toString());
     }
 
     if (meter.estado !== EstadoMedidor.INSTALADO) {
-      throw new BadRequestException(
+      throw new InvalidDomainOperationException(
         `Only INSTALADO meters can be reported as defective, current state: ${meter.estado}`,
       );
     }

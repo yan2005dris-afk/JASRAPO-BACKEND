@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import type { OperatorTask } from '../../domain/repositories/repository-types';
 
 export class MedidorInfo {
   @ApiProperty({ description: 'ID del medidor', example: '42' })
@@ -107,4 +108,43 @@ export class TaskResponseDto {
     type: [TaskRutaPuntoDto],
   })
   rutaPuntos?: TaskRutaPuntoDto[];
+
+  constructor(partial: Partial<TaskResponseDto>) {
+    Object.assign(this, partial);
+  }
+
+  static fromEntity(task: OperatorTask): TaskResponseDto {
+    return new TaskResponseDto({
+      rutaId: task.rutaId.toString(),
+      tipoRuta: task.tipoRuta,
+      nombre: task.nombre,
+      descripcion: task.descripcion ?? undefined,
+      estado: task.estado,
+      orden: task.orden,
+      observacion: task.observacion ?? undefined,
+      fechaLimite: task.fechaLimite?.toISOString() ?? undefined,
+      operarioId: task.operarioId,
+      comunidadId: task.comunidadId,
+      sectorId: task.sectorId ?? undefined,
+      fechaPlanificada: task.fechaPlanificada?.toISOString() ?? undefined,
+      fechaInicio: task.fechaInicio?.toISOString() ?? undefined,
+      fechaFin: task.fechaFin?.toISOString() ?? undefined,
+      medidor: task.medidor
+        ? {
+            medidorId: task.medidor.medidorId.toString(),
+            serie: task.medidor.serie,
+            latitud: task.medidor.latitud != null ? Number(task.medidor.latitud) : undefined,
+            longitud: task.medidor.longitud != null ? Number(task.medidor.longitud) : undefined,
+          }
+        : null,
+      operario: task.operario
+        ? {
+            usuarioId: task.operario.usuarioId,
+            nombres: task.operario.nombres,
+            apellidos: task.operario.apellidos,
+          }
+        : undefined,
+      rutaPuntos: task.rutaPuntos,
+    });
+  }
 }

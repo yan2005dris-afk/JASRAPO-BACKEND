@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 import { OperatorRepository } from '../../domain/repositories/operator.repository';
 import type { ReadingWithAnomalies } from '../../domain/repositories/repository-types';
 
@@ -10,9 +11,7 @@ export class GetOperatorReadingsWithAnomaliesUseCase {
     const activePeriod = await this.operatorRepository.findActivePeriod();
 
     if (!activePeriod) {
-      throw new NotFoundException(
-        'No hay un período de facturación ABIERTO en el sistema',
-      );
+      throw new EntityNotFoundException('Periodo', 'ABIERTO');
     }
 
     return this.operatorRepository.findReadingsWithPendingAnomalies(

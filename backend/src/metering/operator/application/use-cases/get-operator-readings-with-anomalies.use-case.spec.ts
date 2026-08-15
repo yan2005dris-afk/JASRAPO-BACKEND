@@ -1,6 +1,6 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { NotFoundException } from '@nestjs/common';
+import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 import { GetOperatorReadingsWithAnomaliesUseCase } from './get-operator-readings-with-anomalies.use-case';
 import { OperatorRepository } from '../../domain/repositories/operator.repository';
 
@@ -52,10 +52,10 @@ describe('GetOperatorReadingsWithAnomaliesUseCase', () => {
     expect(useCase).toBeDefined();
   });
 
-  it('should throw NotFoundException when no active period exists', async () => {
+  it('should throw EntityNotFoundException when no active period exists', async () => {
     mockOperatorRepository.findActivePeriod.mockResolvedValue(null);
 
-    await expect(useCase.execute(42)).rejects.toThrow(NotFoundException);
+    await expect(useCase.execute(42)).rejects.toThrow(EntityNotFoundException);
 
     expect(
       mockOperatorRepository.findReadingsWithPendingAnomalies,

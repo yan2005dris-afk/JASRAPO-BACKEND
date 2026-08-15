@@ -13,6 +13,8 @@ import {
   EntityNotFoundException,
   EntityAlreadyExistsException,
 } from 'src/shared/domain/exceptions/domain.exception';
+import type { EstadoMedidor, EstadoContrato } from 'src/shared/enums';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { MeterMapper } from '../mappers/meter.mapper';
 
 export const safeMeterSelect = {
@@ -44,7 +46,10 @@ export const safeMeterSelectWithDelete = {
 
 @Injectable()
 export class PrismaMeterRepository implements MeterRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly logger: LoggerService,
+  ) {}
 
   async findUnique(where: {
     medidorId?: bigint;
@@ -263,5 +268,50 @@ export class PrismaMeterRepository implements MeterRepository {
       contratoId: historial.contratoId,
       estado: historial.contrato.estado,
     };
+  }
+
+  async installMeter(params: {
+    medidorId: bigint;
+    contratoId: bigint;
+    estado: EstadoMedidor;
+    estadoContrato: EstadoContrato;
+    fechaInstalacion: Date;
+  }): Promise<MeterEntity> {
+    const { medidorId, contratoId, estado, estadoContrato, fechaInstalacion } =
+      params;
+
+    const record = await this.prisma.$transaction(async (tx) => {
+      const updatedMeter = await tx.medidores.update({
+        where: { medidorId },
+        data: {
+          estado,
+          fechaInstalacion,
+        },
+      });
+
+      const openHistorial = await tx.historialMedidores.findFirst({
+        where: { contratoId, fechaHasta: null },
+      });
+
+      if (!openHistorial) {
+        this.logger.warn(
+          `Install: no open historialMedidores row for contratoId=${contratoId}; skipping fechaHasta close`,
+        );
+      } else {
+        await tx.historialMedidores.update({
+          where: { historialId: openHistorial.historialId },
+          data: { fechaHasta: fechaInstalacion },
+        });
+      }
+
+      await tx.contratos.update({
+        where: { contratoId },
+        data: { estado: estadoContrato },
+      });
+
+      return updatedMeter;
+    });
+
+    return MeterMapper.toDomain(record)!;
   }
 }

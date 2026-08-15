@@ -2,7 +2,6 @@ import type {
   ReadingWithContractDetail,
   MeterWithContractDetail,
   OperatorTask,
-  MeterBasicInfo,
   ReadingWithAnomalies,
   TaskStateUpdate,
   OperatorUser,
@@ -40,10 +39,10 @@ export abstract class OperatorRepository {
   ): Promise<RouteData[]>;
   abstract findReadingsByPeriodAndRoutes(
     periodoId: number,
-    routeConditions: Record<string, unknown>[],
+    routes: RouteData[],
   ): Promise<ReadingWithContractDetail[]>;
   abstract findMetersByRoutes(
-    routeConditions: Record<string, unknown>[],
+    routes: RouteData[],
   ): Promise<MeterWithContractDetail[]>;
   abstract findReadingWithDetails(
     id: bigint,
@@ -85,7 +84,6 @@ export abstract class OperatorRepository {
     comunidadId: number;
     sectorId: number | null;
   } | null>;
-  abstract findMedidoresById(medidorIds: bigint[]): Promise<MeterBasicInfo[]>;
   abstract findReadingsWithPendingAnomalies(
     operarioId: number,
     periodoId: number,

@@ -1,5 +1,7 @@
 import { TipoRuta } from 'src/shared/enums';
 import { Test } from '@nestjs/testing';
+import { Prisma } from 'src/generated/prisma/client';
+import { InvalidDomainOperationException } from 'src/shared/domain/exceptions/domain.exception';
 import { PrismaOperatorRepository } from './prisma-operator.repository';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 
@@ -61,6 +63,7 @@ describe('Operator Tasks - Schema & Repository', () => {
             comunidadId: 5,
             sectorId: 3,
             orden: 1,
+            tipoRuta: 'INSPECCION',
           },
           {
             rutaId: BigInt(2),
@@ -68,6 +71,7 @@ describe('Operator Tasks - Schema & Repository', () => {
             comunidadId: 5,
             sectorId: 3,
             orden: 2,
+            tipoRuta: 'INSPECCION',
           },
         ];
         prisma.rutas.findMany.mockResolvedValue(mockTasks);
@@ -82,6 +86,19 @@ describe('Operator Tasks - Schema & Repository', () => {
               { sectorId: 'asc' },
               { orden: 'asc' },
             ],
+            include: {
+              operario: {
+                select: { usuarioId: true, nombres: true, apellidos: true },
+              },
+              medidor: {
+                select: {
+                  medidorId: true,
+                  serie: true,
+                  latitud: true,
+                  longitud: true,
+                },
+              },
+            },
           }),
         );
         expect(result).toEqual(mockTasks);
@@ -95,9 +112,59 @@ describe('Operator Tasks - Schema & Repository', () => {
         expect(result).toEqual([]);
         expect(prisma.rutas.findMany).toHaveBeenCalled();
       });
+
+      it('should attach rutaPuntos to TOMA_LECTURA tasks from meters in the route', async () => {
+        prisma.rutas.findMany.mockResolvedValue([
+          {
+            rutaId: BigInt(1),
+            nombre: 'Lectura zona norte',
+            comunidadId: 5,
+            sectorId: 3,
+            orden: 1,
+            tipoRuta: 'TOMA_LECTURA',
+            medidorId: null,
+          },
+        ]);
+        prisma.medidores.findMany.mockResolvedValue([
+          {
+            medidorId: BigInt(7),
+            serie: 'MED-001',
+            latitud: -0.9,
+            longitud: -80.7,
+            historial: [
+              {
+                contrato: {
+                  contratoId: BigInt(11),
+                  comunidadId: 5,
+                  sectorId: 3,
+                  cliente: { nombres: 'Juan', apellidos: 'Perez' },
+                },
+              },
+            ],
+          },
+        ]);
+
+        const result = await repository.findTasksByOperator(10, 20);
+
+        expect(result[0].rutaPuntos).toEqual([
+          {
+            latitud: -0.9,
+            longitud: -80.7,
+            serie: 'MED-001',
+            clienteNombre: 'Juan Perez',
+          },
+        ]);
+      });
     });
 
     describe('updateTaskState', () => {
+      const taskInclude = {
+        operario: { select: { usuarioId: true, nombres: true, apellidos: true } },
+        medidor: {
+          select: { medidorId: true, serie: true, latitud: true, longitud: true },
+        },
+      };
+
       it('should update the estado of a task by rutaId', async () => {
         const mockUpdated = {
           rutaId: BigInt(1),
@@ -113,6 +180,7 @@ describe('Operator Tasks - Schema & Repository', () => {
         expect(prisma.rutas.update).toHaveBeenCalledWith({
           where: { rutaId: BigInt(1), deletedAt: null },
           data: { estado: 'EN_PROGRESO' },
+          include: taskInclude,
         });
         expect(result).toEqual(mockUpdated);
       });
@@ -136,7 +204,49 @@ describe('Operator Tasks - Schema & Repository', () => {
             estado: 'EN_PROGRESO',
             fechaInicio: expect.any(Date),
           }),
+          include: taskInclude,
         });
+      });
+
+      it('should pass expectedEstado in the where for optimistic locking', async () => {
+        prisma.rutas.update.mockResolvedValue({ rutaId: BigInt(1) });
+
+        await repository.updateTaskState(
+          BigInt(1),
+          { estado: 'EN_PROGRESO' },
+          'PENDIENTE',
+        );
+
+        expect(prisma.rutas.update).toHaveBeenCalledWith({
+          where: { rutaId: BigInt(1), deletedAt: null, estado: 'PENDIENTE' },
+          data: expect.objectContaining({ estado: 'EN_PROGRESO' }),
+          include: taskInclude,
+        });
+      });
+
+      it('should translate Prisma P2025 to InvalidDomainOperationException', async () => {
+        const p2025 = new Prisma.PrismaClientKnownRequestError(
+          'Record not found',
+          { code: 'P2025', clientVersion: '7.6.0' },
+        );
+        prisma.rutas.update.mockRejectedValue(p2025);
+
+        await expect(
+          repository.updateTaskState(
+            BigInt(1),
+            { estado: 'EN_PROGRESO' },
+            'PENDIENTE',
+          ),
+        ).rejects.toThrow(InvalidDomainOperationException);
+      });
+
+      it('should rethrow non-P2025 errors unchanged', async () => {
+        const dbError = new Error('Connection refused');
+        prisma.rutas.update.mockRejectedValue(dbError);
+
+        await expect(
+          repository.updateTaskState(BigInt(1), { estado: 'EN_PROGRESO' }),
+        ).rejects.toThrow('Connection refused');
       });
     });
 
@@ -257,30 +367,6 @@ describe('Operator Tasks - Schema & Repository', () => {
           comunidadId: 7,
           sectorId: null,
         });
-      });
-    });
-
-    describe('findMedidoresById', () => {
-      it('should return meters for given ids', async () => {
-        const mockMeters = [
-          {
-            medidorId: BigInt(1),
-            serie: 'M1',
-            marca: 'X',
-            modelo: 'Y',
-            latitud: null,
-            longitud: null,
-          },
-        ];
-        prisma.medidores.findMany.mockResolvedValue(mockMeters);
-
-        const result = await repository.findMedidoresById([BigInt(1)]);
-
-        expect(prisma.medidores.findMany).toHaveBeenCalledWith({
-          where: { medidorId: { in: [BigInt(1)] } },
-          select: expect.objectContaining({ medidorId: true, serie: true }),
-        });
-        expect(result).toEqual(mockMeters);
       });
     });
   });

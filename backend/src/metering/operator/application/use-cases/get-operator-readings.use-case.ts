@@ -1,5 +1,6 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import type { ResponseReadingDto } from 'src/metering/readings/interfaces/dto/response-reading.dto';
+import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 import { OperatorRepository } from '../../domain/repositories/operator.repository';
 
 @Injectable()
@@ -11,9 +12,7 @@ export class GetOperatorReadingsUseCase {
     const activePeriod = await this.operatorRepository.findActivePeriod();
 
     if (!activePeriod) {
-      throw new NotFoundException(
-        'No hay un período de facturación ABIERTO en el sistema',
-      );
+      throw new EntityNotFoundException('Periodo', 'ABIERTO');
     }
 
     // 2. Find operator's active rutas for this period
@@ -27,24 +26,14 @@ export class GetOperatorReadingsUseCase {
       return [];
     }
 
-    // 4. Build OR conditions for each ruta's comunidad/sector combination
-    const rutaConditions = rutas.map((ruta) => ({
-      contrato: {
-        comunidadId: ruta.comunidadId,
-        ...(ruta.sectorId !== null && ruta.sectorId !== undefined
-          ? { sectorId: ruta.sectorId }
-          : {}),
-      },
-    }));
-
-    // 5. Query lecturas that belong to any of the operator's rutas
+    // 4. Query lecturas that belong to any of the operator's rutas
     const lecturas =
       await this.operatorRepository.findReadingsByPeriodAndRoutes(
         activePeriod.periodoId,
-        rutaConditions,
+        rutas,
       );
 
-    // 6. Map raw Prisma results to ResponseReadingDto
+    // 5. Map raw Prisma results to ResponseReadingDto
     return lecturas.map((lectura) => {
       const activeHistorial = lectura.medidor?.historial?.[0];
       const contrato = activeHistorial?.contrato ?? null;

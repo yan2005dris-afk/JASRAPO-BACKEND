@@ -1,25 +1,15 @@
-import {
-  BadRequestException,
-  ConflictException,
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { EstadoRuta, EstadoMedidor } from 'src/shared/enums';
+import {
+  EntityNotFoundException,
+  InvalidDomainOperationException,
+} from 'src/shared/domain/exceptions/domain.exception';
 import { OperatorRepository } from '../../domain/repositories/operator.repository';
-import type { OperatorTask } from '../../domain/repositories/repository-types';
-import { MeterRepository } from '../../../meters/domain/repositories/meter.repository';
-import type { TaskResponseDto } from '../../interfaces/dto/task-response.dto';
+import type {
+  OperatorTask,
+  TaskStateUpdate,
+} from '../../domain/repositories/repository-types';
 import type { UpdateTaskDto } from '../../interfaces/dto/update-task.dto';
-
-/** Duck-type check for Prisma P2025 (record not found / optimistic lock failure). */
-function isP2025Error(error: unknown): error is Error & { code: string } {
-  return (
-    error instanceof Error &&
-    error.name === 'PrismaClientKnownRequestError' &&
-    (error as { code?: string }).code === 'P2025'
-  );
-}
 
 // Valid transitions: current -> set of allowed next states
 const ALLOWED_TRANSITIONS: Record<string, ReadonlySet<string>> = {
@@ -44,22 +34,19 @@ const TERMINAL_STATES = new Set<string>([
 export class UpdateTaskStateUseCase {
   constructor(
     private readonly operatorRepository: OperatorRepository,
-    private readonly meterRepository: MeterRepository,
   ) {}
 
   async execute(
     rutaId: bigint,
     operarioId: number,
     dto: UpdateTaskDto,
-  ): Promise<TaskResponseDto> {
+  ): Promise<OperatorTask> {
     const { estado: nuevoEstado, observacion } = dto;
 
     // 1. Find active period
     const activePeriod = await this.operatorRepository.findActivePeriod();
     if (!activePeriod) {
-      throw new NotFoundException(
-        'No hay un período de facturación ABIERTO en el sistema',
-      );
+      throw new EntityNotFoundException('Periodo', 'ABIERTO');
     }
 
     // 2. Find the task and verify operator ownership
@@ -73,13 +60,11 @@ export class UpdateTaskStateUseCase {
     );
 
     if (!task) {
-      throw new NotFoundException(
-        `Tarea con ID ${rutaId} no encontrada o no pertenece al operador`,
-      );
+      throw new EntityNotFoundException('Tarea', rutaId.toString());
     }
 
     if (task.operarioId !== operarioId) {
-      throw new ForbiddenException(
+      throw new InvalidDomainOperationException(
         'Esta tarea no pertenece al operador autenticado',
       );
     }
@@ -88,14 +73,14 @@ export class UpdateTaskStateUseCase {
     const currentEstado = task.estado;
 
     if (TERMINAL_STATES.has(currentEstado)) {
-      throw new BadRequestException(
+      throw new InvalidDomainOperationException(
         `La tarea está en estado terminal ${currentEstado} y no puede modificarse`,
       );
     }
 
     const allowedNext = ALLOWED_TRANSITIONS[currentEstado];
     if (!allowedNext || !allowedNext.has(nuevoEstado)) {
-      throw new BadRequestException(
+      throw new InvalidDomainOperationException(
         `Transición inválida: de ${currentEstado} a ${nuevoEstado}`,
       );
     }
@@ -105,13 +90,13 @@ export class UpdateTaskStateUseCase {
       nuevoEstado === EstadoRuta.CANCELADA &&
       (!observacion || observacion.trim().length === 0)
     ) {
-      throw new BadRequestException(
+      throw new InvalidDomainOperationException(
         'La cancelación requiere una observación que explique el motivo',
       );
     }
 
     // 5. Build update data with timestamps
-    const updateData: Record<string, any> = { estado: nuevoEstado };
+    const updateData: TaskStateUpdate = { estado: nuevoEstado };
 
     if (nuevoEstado === EstadoRuta.EN_PROGRESO) {
       updateData.fechaInicio = new Date();
@@ -126,81 +111,31 @@ export class UpdateTaskStateUseCase {
     }
 
     // 6. Apply state transition with optimistic concurrency
-    let updated: OperatorTask;
-
+    //    (concurrency conflicts surface as InvalidDomainOperationException
+    //     from the repository, not as Prisma P2025 errors)
     if (
       nuevoEstado === EstadoRuta.COMPLETADA &&
       task.tipoRuta === 'INSTALACION' &&
       task.medidorId != null
     ) {
       // Atomic: task + meter update in a single transaction
-      try {
-        updated = await this.operatorRepository.completeInstallationTask(
-          rutaId,
-          updateData,
-          currentEstado,
-          {
-            medidorId: task.medidorId,
-            estado: EstadoMedidor.INSTALADO,
-            fechaInstalacion: new Date(),
-          },
-        );
-      } catch (error) {
-        if (isP2025Error(error)) {
-          throw new ConflictException(
-            'Conflicto de concurrencia: la tarea fue modificada por otro request',
-          );
-        }
-        throw error;
-      }
-    } else {
-      // Regular transition with optimistic locking
-      try {
-        updated = await this.operatorRepository.updateTaskState(
-          rutaId,
-          updateData,
-          currentEstado,
-        );
-      } catch (error) {
-        if (isP2025Error(error)) {
-          throw new ConflictException(
-            'Conflicto de concurrencia: la tarea fue modificada por otro request',
-          );
-        }
-        throw error;
-      }
+      return this.operatorRepository.completeInstallationTask(
+        rutaId,
+        updateData,
+        currentEstado,
+        {
+          medidorId: task.medidorId,
+          estado: EstadoMedidor.INSTALADO,
+          fechaInstalacion: new Date(),
+        },
+      );
     }
 
-    // 7. Return response DTO
-    return {
-      rutaId: (updated.rutaId ?? rutaId).toString(),
-      tipoRuta: task.tipoRuta,
-      nombre: task.nombre,
-      descripcion: task.descripcion ?? undefined,
-      estado: nuevoEstado,
-      orden: task.orden,
-      observacion: observacion ?? task.observacion ?? undefined,
-      fechaLimite: task.fechaLimite?.toISOString() ?? undefined,
-      operarioId: task.operarioId,
-      comunidadId: task.comunidadId,
-      sectorId: task.sectorId ?? undefined,
-      fechaPlanificada: task.fechaPlanificada?.toISOString() ?? undefined,
-      fechaInicio:
-        updateData.fechaInicio?.toISOString() ??
-        task.fechaInicio?.toISOString() ??
-        undefined,
-      fechaFin:
-        updateData.fechaFin?.toISOString() ??
-        task.fechaFin?.toISOString() ??
-        undefined,
-      medidor: task.medidorId
-        ? { medidorId: task.medidorId.toString(), serie: '' }
-        : null,
-      operario: {
-        usuarioId: operarioId,
-        nombres: '',
-        apellidos: '',
-      },
-    };
+    // Regular transition with optimistic locking
+    return this.operatorRepository.updateTaskState(
+      rutaId,
+      updateData,
+      currentEstado,
+    );
   }
 }

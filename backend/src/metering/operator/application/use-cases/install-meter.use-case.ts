@@ -1,31 +1,25 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { MeterRepository } from '../../../meters/domain/repositories/meter.repository';
 import { EstadoMedidor, EstadoContrato } from 'src/shared/enums';
+import {
+  EntityNotFoundException,
+  InvalidDomainOperationException,
+} from 'src/shared/domain/exceptions/domain.exception';
 import type { MeterEntity } from '../../../meters/domain/entities/meter.entity';
-import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
-import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
-@LogContext()
 @Injectable()
 export class InstallMeterUseCase {
-  constructor(
-    private readonly meterRepository: MeterRepository,
-    private readonly logger: LoggerService,
-  ) {}
+  constructor(private readonly meterRepository: MeterRepository) {}
 
   async execute(medidorId: bigint): Promise<MeterEntity> {
     const meter = await this.meterRepository.findUnique({ medidorId });
 
     if (!meter || meter.deletedAt) {
-      throw new NotFoundException('Meter not found');
+      throw new EntityNotFoundException('Medidor', medidorId.toString());
     }
 
     if (meter.estado !== EstadoMedidor.PENDIENTE) {
-      throw new BadRequestException(
+      throw new InvalidDomainOperationException(
         `Meter must be in PENDIENTE state to be installed, current state: ${meter.estado}`,
       );
     }
@@ -34,50 +28,23 @@ export class InstallMeterUseCase {
       await this.meterRepository.findActiveContractForMeter(medidorId);
 
     if (!contrato) {
-      throw new BadRequestException(
+      throw new InvalidDomainOperationException(
         'El medidor no tiene un contrato activo vinculado',
       );
     }
 
     if (contrato.estado !== EstadoContrato.PENDIENTE_INSTALACION) {
-      throw new BadRequestException(
+      throw new InvalidDomainOperationException(
         `El contrato debe estar en estado PENDIENTE_INSTALACION para instalar el medidor, estado actual: ${contrato.estado}`,
       );
     }
 
-    const now = new Date();
-
-    return this.meterRepository.executeTransaction(async (tx) => {
-      const updatedMeter = await this.meterRepository.update(
-        { medidorId },
-        {
-          estado: EstadoMedidor.INSTALADO,
-          fechaInstalacion: now,
-        },
-        tx,
-      );
-
-      const openHistorial = await tx.historialMedidores.findFirst({
-        where: { contratoId: contrato.contratoId, fechaHasta: null },
-      });
-
-      if (!openHistorial) {
-        this.logger.warn(
-          `Install: no open historialMedidores row for contratoId=${contrato.contratoId}; skipping fechaHasta close`,
-        );
-      } else {
-        await tx.historialMedidores.update({
-          where: { historialId: openHistorial.historialId },
-          data: { fechaHasta: now },
-        });
-      }
-
-      await tx.contratos.update({
-        where: { contratoId: contrato.contratoId },
-        data: { estado: EstadoContrato.ACTIVO },
-      });
-
-      return updatedMeter;
+    return this.meterRepository.installMeter({
+      medidorId,
+      contratoId: contrato.contratoId,
+      estado: EstadoMedidor.INSTALADO,
+      estadoContrato: EstadoContrato.ACTIVO,
+      fechaInstalacion: new Date(),
     });
   }
 }

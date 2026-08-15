@@ -1,5 +1,7 @@
 // ── Repository return type interfaces ─────────────────────────────────
-// These mirror the actual Prisma query shapes returned by each repository method.
+// Domain contracts returned by the OperatorRepository port — framework-free
+// shapes, not Prisma query shapes. Prisma specifics live in the infrastructure
+// implementation.
 
 export interface ReadingWithContractDetail {
   lecturaId: bigint;
@@ -62,6 +64,13 @@ export interface MeterWithContractDetail {
   }>;
 }
 
+export interface TaskRoutePoint {
+  latitud: number;
+  longitud: number;
+  serie: string;
+  clienteNombre: string;
+}
+
 export interface OperatorTask {
   rutaId: bigint;
   nombre: string;
@@ -82,15 +91,18 @@ export interface OperatorTask {
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Date | null;
-}
-
-export interface MeterBasicInfo {
-  medidorId: bigint;
-  serie: string;
-  marca: string;
-  modelo: string;
-  latitud: number | null;
-  longitud: number | null;
+  operario?: {
+    usuarioId: number;
+    nombres: string;
+    apellidos: string;
+  } | null;
+  medidor?: {
+    medidorId: bigint;
+    serie: string;
+    latitud: number | null;
+    longitud: number | null;
+  } | null;
+  rutaPuntos?: TaskRoutePoint[];
 }
 
 export interface ReadingWithAnomalies {

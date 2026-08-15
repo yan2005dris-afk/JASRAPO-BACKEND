@@ -31,11 +31,12 @@ import { ActualizarLecturaDto } from 'src/metering/readings/interfaces/dto/updat
 import { ResponseReadingDto } from 'src/metering/readings/interfaces/dto/response-reading.dto';
 import { MeterResponseDto } from 'src/metering/meters/interfaces/dto/meter-response.dto';
 import { SyncAllUseCase } from '../../application/use-cases/sync-all.use-case';
-import { DecommissionMeterDto } from './decommission-meter.dto';
+import { DecommissionMeterDto } from '../dto/decommission-meter.dto';
 import { GetOperatorTasksUseCase } from '../../application/use-cases/get-operator-tasks.use-case';
 import { UpdateTaskStateUseCase } from '../../application/use-cases/update-task-state.use-case';
 import { UpdateTaskDto } from '../../interfaces/dto/update-task.dto';
 import { TaskResponseDto } from '../../interfaces/dto/task-response.dto';
+import { OperatorReadingAnomalyResponseDto } from '../../interfaces/dto/operator-reading-anomaly-response.dto';
 import { TipoRuta } from 'src/shared/enums';
 import { InstallMeterUseCase } from '../../application/use-cases/install-meter.use-case';
 import { ReportDefectUseCase } from '../../application/use-cases/report-defect.use-case';
@@ -94,6 +95,7 @@ export class OperatorController {
   @ApiResponse({
     status: 200,
     description: 'Lista de lecturas con anomalías pendientes',
+    type: [OperatorReadingAnomalyResponseDto],
   })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({ status: 404, description: 'No hay período activo' })
@@ -101,22 +103,11 @@ export class OperatorController {
   @Get('readings/anomalies')
   async getReadingsWithAnomalies(
     @CurrentUser() user: JwtPayload,
-  ): Promise<any[]> {
+  ): Promise<OperatorReadingAnomalyResponseDto[]> {
     const operarioId = Number(user.sub);
-    const raw =
+    const readings =
       await this.getOperatorReadingsWithAnomaliesUseCase.execute(operarioId);
-    return raw.map((r) => ({
-      lecturaId: r.lecturaId?.toString() ?? null,
-      medidorId: r.medidor?.medidorId?.toString() ?? null,
-      medidorSerie: r.medidor?.serie ?? '',
-      fecha: r.fecha,
-      estado: r.estado,
-      anomalias: (r.lecturaAnomalias ?? []).map((a) => ({
-        tipo: a.tipo,
-        observacion: a.observacion,
-        estado: a.estado,
-      })),
-    }));
+    return readings.map((r) => OperatorReadingAnomalyResponseDto.fromEntity(r));
   }
 
   @ApiOperation({
@@ -320,7 +311,11 @@ export class OperatorController {
     tipoRuta?: TipoRuta,
   ): Promise<TaskResponseDto[]> {
     const operarioId = Number(user.sub);
-    return this.getOperatorTasksUseCase.execute(operarioId, tipoRuta);
+    const tasks = await this.getOperatorTasksUseCase.execute(
+      operarioId,
+      tipoRuta,
+    );
+    return tasks.map((t) => TaskResponseDto.fromEntity(t));
   }
 
   /**
@@ -356,6 +351,11 @@ export class OperatorController {
     @Body() dto: UpdateTaskDto,
   ): Promise<TaskResponseDto> {
     const operarioId = Number(user.sub);
-    return this.updateTaskStateUseCase.execute(id, operarioId, dto);
+    const updated = await this.updateTaskStateUseCase.execute(
+      id,
+      operarioId,
+      dto,
+    );
+    return TaskResponseDto.fromEntity(updated);
   }
 }

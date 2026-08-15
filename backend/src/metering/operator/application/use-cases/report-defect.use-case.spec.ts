@@ -1,6 +1,9 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  EntityNotFoundException,
+  InvalidDomainOperationException,
+} from 'src/shared/domain/exceptions/domain.exception';
 import { ReportDefectUseCase } from './report-defect.use-case';
 import { MeterRepository } from '../../../meters/domain/repositories/meter.repository';
 import { EstadoMedidor } from 'src/shared/enums';
@@ -49,21 +52,31 @@ describe('ReportDefectUseCase', () => {
     expect(useCase).toBeDefined();
   });
 
-  it('should throw NotFoundException when meter does not exist', async () => {
+  it('should throw EntityNotFoundException when meter does not exist', async () => {
     mockMeterRepository.findUnique.mockResolvedValue(null);
 
     await expect(useCase.execute(BigInt(999))).rejects.toThrow(
-      NotFoundException,
+      EntityNotFoundException,
     );
   });
 
-  it('should throw BadRequestException when meter is not in INSTALADO state', async () => {
+  it('should throw EntityNotFoundException when meter is soft-deleted', async () => {
+    mockMeterRepository.findUnique.mockResolvedValue(
+      makeMeter({ deletedAt: new Date() }),
+    );
+
+    await expect(useCase.execute(BigInt(1))).rejects.toThrow(
+      EntityNotFoundException,
+    );
+  });
+
+  it('should throw InvalidDomainOperationException when meter is not in INSTALADO state', async () => {
     mockMeterRepository.findUnique.mockResolvedValue(
       makeMeter({ estado: EstadoMedidor.PENDIENTE }),
     );
 
     await expect(useCase.execute(BigInt(1))).rejects.toThrow(
-      BadRequestException,
+      InvalidDomainOperationException,
     );
   });
 

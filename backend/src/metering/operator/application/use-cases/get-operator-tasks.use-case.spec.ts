@@ -1,6 +1,6 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { NotFoundException } from '@nestjs/common';
+import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 import { GetOperatorTasksUseCase } from './get-operator-tasks.use-case';
 import { OperatorRepository } from '../../domain/repositories/operator.repository';
 
@@ -34,6 +34,20 @@ describe('GetOperatorTasksUseCase', () => {
       fechaInicio: null,
       fechaFin: null,
       periodoId: 10,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      deletedAt: null,
+      operario: {
+        usuarioId: 42,
+        nombres: 'Juan',
+        apellidos: 'Perez',
+      },
+      medidor: {
+        medidorId: BigInt(100),
+        serie: 'MED-001',
+        latitud: -33.45,
+        longitud: -70.66,
+      },
     },
     {
       rutaId: BigInt(2),
@@ -52,17 +66,23 @@ describe('GetOperatorTasksUseCase', () => {
       fechaInicio: new Date(),
       fechaFin: null,
       periodoId: 10,
-    },
-  ];
-
-  const mockMedidores = [
-    {
-      medidorId: BigInt(100),
-      serie: 'MED-001',
-      marca: 'Itron',
-      modelo: 'CX1000',
-      latitud: -33.45,
-      longitud: -70.66,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      deletedAt: null,
+      operario: {
+        usuarioId: 42,
+        nombres: 'Juan',
+        apellidos: 'Perez',
+      },
+      medidor: null,
+      rutaPuntos: [
+        {
+          latitud: -0.9677,
+          longitud: -80.7089,
+          serie: 'MED-101',
+          clienteNombre: 'María López',
+        },
+      ],
     },
   ];
 
@@ -83,33 +103,9 @@ describe('GetOperatorTasksUseCase', () => {
     expect(useCase).toBeDefined();
   });
 
-  it('should return enriched tasks for the operator ordered by comunidad/sector/orden', async () => {
+  it('should return tasks for the operator in the active period', async () => {
     mockOperatorRepository.findActivePeriod.mockResolvedValue(mockActivePeriod);
     mockOperatorRepository.findTasksByOperator.mockResolvedValue(mockTasks);
-    mockOperatorRepository.findMedidoresById.mockResolvedValue(mockMedidores);
-    mockOperatorRepository.findMetersByRoutes.mockResolvedValue([
-      {
-        medidorId: BigInt(101),
-        serie: 'MED-101',
-        marca: 'Itron',
-        modelo: 'CX1000',
-        latitud: -0.9677,
-        longitud: -80.7089,
-        historial: [
-          {
-            contrato: {
-              contratoId: BigInt(10),
-              comunidadId: 5,
-              sectorId: 3,
-              cliente: {
-                nombres: 'María',
-                apellidos: 'López',
-              },
-            },
-          },
-        ],
-      },
-    ]);
 
     const result = await useCase.execute(42);
 
@@ -119,20 +115,17 @@ describe('GetOperatorTasksUseCase', () => {
       10,
       undefined,
     );
-    expect(mockOperatorRepository.findMedidoresById).toHaveBeenCalledWith([
-      BigInt(100),
-    ]);
 
     expect(result).toHaveLength(2);
 
-    expect(result[0].rutaId).toBe('1');
+    expect(result[0].rutaId).toBe(BigInt(1));
     expect(result[0].tipoRuta).toBe('INSTALACION');
     expect(result[0].estado).toBe('PENDIENTE');
     expect(result[0].medidor).toBeDefined();
-    expect(result[0].medidor!.medidorId).toBe('100');
+    expect(result[0].medidor!.medidorId).toBe(BigInt(100));
     expect(result[0].medidor!.serie).toBe('MED-001');
 
-    expect(result[1].rutaId).toBe('2');
+    expect(result[1].rutaId).toBe(BigInt(2));
     expect(result[1].medidor).toBeNull();
     expect(result[1].rutaPuntos).toBeDefined();
     expect(result[1].rutaPuntos).toHaveLength(1);
@@ -147,25 +140,25 @@ describe('GetOperatorTasksUseCase', () => {
     const result = await useCase.execute(42);
 
     expect(result).toEqual([]);
-    expect(mockOperatorRepository.findMedidoresById).not.toHaveBeenCalled();
+    expect(mockOperatorRepository.findTasksByOperator).toHaveBeenCalled();
   });
 
-  it('should throw NotFoundException when no active period exists', async () => {
+  it('should throw EntityNotFoundException when no active period exists', async () => {
     mockOperatorRepository.findActivePeriod.mockResolvedValue(null);
 
-    await expect(useCase.execute(42)).rejects.toThrow(NotFoundException);
+    await expect(useCase.execute(42)).rejects.toThrow(EntityNotFoundException);
     expect(mockOperatorRepository.findTasksByOperator).not.toHaveBeenCalled();
   });
 
   it('should include operario info in each task', async () => {
     mockOperatorRepository.findActivePeriod.mockResolvedValue(mockActivePeriod);
     mockOperatorRepository.findTasksByOperator.mockResolvedValue(mockTasks);
-    mockOperatorRepository.findMedidoresById.mockResolvedValue(mockMedidores);
 
     const result = await useCase.execute(42);
 
     expect(result[0].operario).toBeDefined();
     expect(result[0].operario!.usuarioId).toBe(42);
+    expect(result[0].operario!.nombres).toBe('Juan');
   });
 
   it('should pass tipoRuta filter to repository when provided', async () => {
@@ -173,7 +166,6 @@ describe('GetOperatorTasksUseCase', () => {
     mockOperatorRepository.findTasksByOperator.mockResolvedValue([
       mockTasks[0],
     ]);
-    mockOperatorRepository.findMedidoresById.mockResolvedValue(mockMedidores);
 
     const result = await useCase.execute(42, 'INSTALACION');
 
@@ -189,7 +181,6 @@ describe('GetOperatorTasksUseCase', () => {
   it('should pass undefined tipoRuta filter to repository when not provided', async () => {
     mockOperatorRepository.findActivePeriod.mockResolvedValue(mockActivePeriod);
     mockOperatorRepository.findTasksByOperator.mockResolvedValue(mockTasks);
-    mockOperatorRepository.findMedidoresById.mockResolvedValue(mockMedidores);
 
     await useCase.execute(42);
 
