@@ -4,9 +4,11 @@ import { Prisma } from 'src/generated/prisma/client';
 import { CommunityRepository } from '../../domain/repositories/community.repository';
 import { CommunityEntity } from '../../domain/entities/community.entity';
 import { CommunityMapper } from '../mappers/community.mapper';
-import type { CreateCommunityData } from '../../domain/types/create-community-data';
-import type { UpdateCommunityData } from '../../domain/types/update-community-data';
-import type { CommunityFilters } from '../../domain/types/community-filters';
+import type {
+  CreateCommunityData,
+  UpdateCommunityData,
+  CommunityFilters,
+} from '../../domain/types/community.types';
 import {
   EntityNotFoundException,
   EntityAlreadyExistsException,

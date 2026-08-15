@@ -1,7 +1,9 @@
 import type { SectorEntity, ComunidadRef } from '../entities/sector.entity';
-import type { CreateSectorData } from '../types/create-sector-data';
-import type { UpdateSectorData } from '../types/update-sector-data';
-import type { SectorFilters } from '../types/sector-filters';
+import type {
+  CreateSectorData,
+  UpdateSectorData,
+  SectorFilters,
+} from '../types/sector.types';
 
 export abstract class SectorRepository {
   abstract findById(

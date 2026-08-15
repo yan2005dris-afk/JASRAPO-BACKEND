@@ -1,13 +1,5 @@
-export interface PaginatedResult<T> {
-  data: T[];
-  meta: {
-    total: number;
-    page: number;
-    limit: number;
-    ultimaPagina: number;
-    paginaActual: number;
-    porPagina: number;
-    anterior: number | null;
-    siguiente: number | null;
-  };
-}
+export type {
+  PaginatedResult,
+  PaginationMeta,
+  PaginationParams,
+} from 'src/shared/domain/types/pagination.types';

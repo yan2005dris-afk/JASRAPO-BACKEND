@@ -9,12 +9,14 @@ import {
 } from 'src/shared/domain/exceptions/domain.exception';
 import { ContractRepository } from '../../domain/repositories/contract.repository';
 import { ContractEntity } from '../../domain/entities/contract.entity';
-import type { CreateContractData } from '../../domain/types/create-contract-data';
-import type { CreateContractWithMeterCommand } from '../../domain/types/create-contract-with-meter-command';
-import type { UpdateContractData } from '../../domain/types/update-contract-data';
+import type {
+  CreateContractData,
+  CreateContractWithMeterCommand,
+  UpdateContractData,
+  ContractFilters,
+} from '../../domain/types/contract.types';
 import { ContractMapper } from '../mappers/contract.mapper';
-import type { ContractFilters } from '../../domain/types/contract-filters';
-import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
+import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
 import {
   paginate,
   PaginateOptions,

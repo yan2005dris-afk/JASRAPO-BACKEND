@@ -1,18 +1,14 @@
 import type { PaginateOptions } from 'src/infrastructure/common/utils/pagination.util';
-import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
+import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
 import type { ClientEntity } from '../entities/client.entity';
-import type { CreateClientData } from '../types/create-client-data';
-import type { UpdateClientData } from '../types/update-client-data';
-import type { ClientFilters } from '../types/client-filters';
-import type { IResponseIdentificacion } from '../types/IResponseIdentificacion';
-import type { ConsumidorFinalData } from '../types/consumidor-final-data';
+import type {
+  CreateClientData,
+  UpdateClientData,
+  ClientFilters,
+  IdentificationTypeRef,
+  ConsumidorFinalData,
+} from '../types/client.types';
 
-/**
- * NOTE (residual): `PaginateOptions`/`PaginatedResult` come from
- * `src/infrastructure/common/...`, making the domain depend on infrastructure.
- * This is a cross-cutting issue shared with other modules; moving those types
- * to the shared domain is out of scope for this refactor and kept as-is.
- */
 export abstract class ClientRepository {
   abstract findById(id: bigint): Promise<ClientEntity | null>;
 
@@ -31,9 +27,9 @@ export abstract class ClientRepository {
 
   abstract findTipoIdentificacionById(
     id: number,
-  ): Promise<IResponseIdentificacion | null>;
+  ): Promise<IdentificationTypeRef | null>;
 
-  abstract findActiveTipoIdentificaciones(): Promise<IResponseIdentificacion[]>;
+  abstract findActiveTipoIdentificaciones(): Promise<IdentificationTypeRef[]>;
 
   /**
    * Enforce the single-active CONSUMIDOR_FINAL invariant atomically: create the

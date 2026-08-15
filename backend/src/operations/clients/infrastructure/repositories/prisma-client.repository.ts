@@ -13,11 +13,13 @@ import {
 import { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
 import { ClientEntity } from '../../domain/entities/client.entity';
 import { ClientMapper } from '../mappers/client.mapper';
-import type { CreateClientData } from '../../domain/types/create-client-data';
-import type { UpdateClientData } from '../../domain/types/update-client-data';
-import type { ClientFilters } from '../../domain/types/client-filters';
-import type { IResponseIdentificacion } from '../../domain/types/IResponseIdentificacion';
-import type { ConsumidorFinalData } from '../../domain/types/consumidor-final-data';
+import type {
+  CreateClientData,
+  UpdateClientData,
+  ClientFilters,
+  IdentificationTypeRef,
+  ConsumidorFinalData,
+} from '../../domain/types/client.types';
 
 /** CONSUMIDOR_FINAL id in `catalogo_tipos_identificacion` */
 const CONSUMIDOR_FINAL_TIPO_ID = 4;
@@ -146,14 +148,14 @@ export class PrismaClientRepository implements ClientRepository {
 
   async findTipoIdentificacionById(
     id: number,
-  ): Promise<IResponseIdentificacion | null> {
+  ): Promise<IdentificationTypeRef | null> {
     return this.prisma.catalogoTiposIdentificacion.findUnique({
       where: { id },
       select: { id: true, codigo: true, descripcion: true, activo: true },
     });
   }
 
-  async findActiveTipoIdentificaciones(): Promise<IResponseIdentificacion[]> {
+  async findActiveTipoIdentificaciones(): Promise<IdentificationTypeRef[]> {
     return this.prisma.catalogoTiposIdentificacion.findMany({
       where: { activo: true },
       orderBy: { id: 'asc' },

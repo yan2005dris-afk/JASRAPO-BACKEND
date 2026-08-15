@@ -3,7 +3,7 @@ import { SectorRepository } from '../../domain/repositories/sector.repository';
 import { getPagination } from 'src/infrastructure/common/utils/pagination.util';
 import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
 import { SectorEntity } from '../../domain/entities/sector.entity';
-import type { SectorFilters } from '../../domain/types/sector-filters';
+import type { SectorFilters } from '../../domain/types/sector.types';
 
 @Injectable()
 export class GetAllSectorsUseCase {

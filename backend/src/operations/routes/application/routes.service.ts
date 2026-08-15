@@ -10,8 +10,8 @@ import { FindAllRoutesUseCase } from './use-cases/find-all-routes.use-case';
 import { FindOneRouteUseCase } from './use-cases/find-one-route.use-case';
 import { UpdateRouteUseCase } from './use-cases/update-route.use-case';
 import { DeleteRouteUseCase } from './use-cases/delete-route.use-case';
-import type { RouteFilters } from '../domain/types/route-filters';
-import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
+import type { RouteFilters } from '../domain/types/route.types';
+import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
 
 @Injectable()
 export class RoutesService {

@@ -1,5 +1,5 @@
 import type { FilterContractsDto } from '../../interfaces/dto/filter-contracts.dto';
-import type { ContractFilters } from '../../domain/types/contract-filters';
+import type { ContractFilters } from '../../domain/types/contract.types';
 
 export function buildContractFilters(dto: FilterContractsDto): ContractFilters {
   const filters: ContractFilters = {};

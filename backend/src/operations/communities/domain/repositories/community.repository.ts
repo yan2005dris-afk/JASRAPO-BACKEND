@@ -1,7 +1,9 @@
 import type { CommunityEntity } from '../entities/community.entity';
-import type { CreateCommunityData } from '../types/create-community-data';
-import type { UpdateCommunityData } from '../types/update-community-data';
-import type { CommunityFilters } from '../types/community-filters';
+import type {
+  CreateCommunityData,
+  UpdateCommunityData,
+  CommunityFilters,
+} from '../types/community.types';
 
 export abstract class CommunityRepository {
   abstract findById(

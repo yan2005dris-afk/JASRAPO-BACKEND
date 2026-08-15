@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { RouteRepository } from '../../domain/repositories/route.repository';
 import { CreateRouteDto } from '../../interfaces/dto/create-route.dto';
 import { RouteEntity } from '../../domain/entities/route.entity';
-import type { CreateRouteData } from '../../domain/types/create-route-data';
+import type { CreateRouteData } from '../../domain/types/route.types';
 import { TipoRuta } from 'src/shared/enums';
 import {
   EntityNotFoundException,

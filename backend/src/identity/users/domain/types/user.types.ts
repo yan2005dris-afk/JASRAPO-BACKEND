@@ -1,4 +1,13 @@
 import type { UserEntity } from '../entities/user.entity';
+import type {
+  PaginationParams,
+  PaginationMeta,
+  PaginatedResult,
+} from 'src/shared/domain/types/pagination.types';
+
+export type DomainPaginationParams = PaginationParams;
+export type DomainPaginationMeta = PaginationMeta;
+export type DomainPaginatedResult<T> = PaginatedResult<T>;
 
 export interface UserAvatar {
   url: string;
@@ -25,27 +34,6 @@ export interface UserRolePermission {
 export interface UserDirectPermissionInput {
   permisoId: number;
   permitido?: boolean;
-}
-
-export interface DomainPaginationParams {
-  page?: number;
-  limit?: number;
-}
-
-export interface DomainPaginationMeta {
-  total: number;
-  page: number;
-  limit: number;
-  ultimaPagina: number;
-  paginaActual: number;
-  porPagina: number;
-  anterior: number | null;
-  siguiente: number | null;
-}
-
-export interface DomainPaginatedResult<T> {
-  data: T[];
-  meta: DomainPaginationMeta;
 }
 
 export interface FiltroFecha {

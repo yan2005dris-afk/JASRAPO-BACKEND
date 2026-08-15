@@ -1,10 +1,12 @@
 import type { PaginateOptions } from 'src/infrastructure/common/utils/pagination.util';
-import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
+import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
 import type { RouteEntity } from '../entities/route.entity';
 import type { ReadingForRouteEntity } from '../entities/reading-for-route.entity';
-import type { CreateRouteData } from '../types/create-route-data';
-import type { UpdateRouteData } from '../types/update-route-data';
-import type { RouteFilters } from '../types/route-filters';
+import type {
+  CreateRouteData,
+  UpdateRouteData,
+  RouteFilters,
+} from '../types/route.types';
 
 /**
  * Cross-module lookup interfaces — minimal shapes for domain validation.

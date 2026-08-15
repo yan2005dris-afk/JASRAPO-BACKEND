@@ -6,7 +6,7 @@ import {
   EntityNotFoundException,
   InvalidDomainOperationException,
 } from 'src/shared/domain/exceptions/domain.exception';
-import type { CreateContractData } from '../../domain/types/create-contract-data';
+import type { CreateContractData } from '../../domain/types/contract.types';
 
 @Injectable()
 export class UpdateContractUseCase {

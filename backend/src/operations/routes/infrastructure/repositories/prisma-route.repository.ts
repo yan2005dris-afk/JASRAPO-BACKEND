@@ -20,9 +20,11 @@ import {
   PaginateOptions,
 } from 'src/infrastructure/common/utils/pagination.util';
 import { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
-import type { CreateRouteData } from '../../domain/types/create-route-data';
-import type { UpdateRouteData } from '../../domain/types/update-route-data';
-import type { RouteFilters } from '../../domain/types/route-filters';
+import type {
+  CreateRouteData,
+  UpdateRouteData,
+  RouteFilters,
+} from '../../domain/types/route.types';
 import {
   EntityNotFoundException,
   EntityAlreadyExistsException,

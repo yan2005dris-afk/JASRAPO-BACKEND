@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { ContractRepository } from '../../domain/repositories/contract.repository';
-import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
+import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
 import type { ContractEntity } from '../../domain/entities/contract.entity';
-import type { ContractFilters } from '../../domain/types/contract-filters';
+import type { ContractFilters } from '../../domain/types/contract.types';
 
 @Injectable()
 export class FindAllContractsUseCase {

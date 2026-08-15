@@ -6,9 +6,11 @@ import {
   SectorEntity,
   ComunidadRef,
 } from '../../domain/entities/sector.entity';
-import type { CreateSectorData } from '../../domain/types/create-sector-data';
-import type { UpdateSectorData } from '../../domain/types/update-sector-data';
-import type { SectorFilters } from '../../domain/types/sector-filters';
+import type {
+  CreateSectorData,
+  UpdateSectorData,
+  SectorFilters,
+} from '../../domain/types/sector.types';
 import { SectorMapper } from '../mappers/sector.mapper';
 import {
   EntityNotFoundException,

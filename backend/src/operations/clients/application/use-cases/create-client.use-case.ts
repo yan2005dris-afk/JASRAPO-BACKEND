@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ClientRepository } from '../../domain/repositories/client.repository';
 import { CreateClientDto } from '../../interfaces/dto/create-client.dto';
 import { TipoIdentificacionUtil } from 'src/shared/utils/tipo-identificacion.util';
-import type { CreateClientData } from '../../domain/types/create-client-data';
+import type { CreateClientData } from '../../domain/types/client.types';
 import { InvalidDomainOperationException } from 'src/shared/domain/exceptions/domain.exception';
 import { EntityAlreadyExistsException } from 'src/shared/domain/exceptions/domain.exception';
 import type { ClientEntity } from '../../domain/entities/client.entity';

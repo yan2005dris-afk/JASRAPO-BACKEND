@@ -1,9 +1,11 @@
 import type { ContractEntity } from '../entities/contract.entity';
-import type { CreateContractData } from '../types/create-contract-data';
-import type { CreateContractWithMeterCommand } from '../types/create-contract-with-meter-command';
-import type { ContractFilters } from '../types/contract-filters';
-import type { UpdateContractData } from '../types/update-contract-data';
-import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
+import type {
+  CreateContractData,
+  CreateContractWithMeterCommand,
+  ContractFilters,
+  UpdateContractData,
+} from '../types/contract.types';
+import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
 import type { PaginateOptions } from 'src/infrastructure/common/utils/pagination.util';
 
 export abstract class ContractRepository {

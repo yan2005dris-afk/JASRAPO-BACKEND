@@ -1,5 +1,5 @@
 import type { FilterClientDto } from '../../interfaces/dto/filter-client.dto';
-import type { ClientFilters } from '../../domain/types/client-filters';
+import type { ClientFilters } from '../../domain/types/client.types';
 
 /**
  * Builds a ClientFilters object from the incoming FilterClientDto.
