@@ -13,7 +13,7 @@ import {
 import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
 import { paginate } from 'src/infrastructure/common/utils/pagination.util';
-import { UserWithRoleResponse } from '../../domain/types/user.types';
+import { UserEntity } from '../../domain/entities/user.entity';
 import { UserMapper } from '../mappers/user.mapper';
 
 export const safeUserSelect = {
@@ -67,7 +67,7 @@ export class PrismaUserRepository implements UserRepository {
     };
   }
 
-  async findById(usuarioId: number): Promise<UserWithRoleResponse | null> {
+  async findById(usuarioId: number): Promise<UserEntity | null> {
     const user = await this.prisma.usuarios.findUnique({
       where: { usuarioId },
       select: userWithRolesSelect,
@@ -75,7 +75,7 @@ export class PrismaUserRepository implements UserRepository {
     return await this.userMapper.toWithRole(user);
   }
 
-  async findByEmail(email: string): Promise<UserWithRoleResponse | null> {
+  async findByEmail(email: string): Promise<UserEntity | null> {
     const user = await this.prisma.usuarios.findUnique({
       where: { email },
       select: userWithRolesSelect,
@@ -93,7 +93,7 @@ export class PrismaUserRepository implements UserRepository {
 
   async findManyActive(
     pagination: PaginationDto,
-  ): Promise<{ data: UserWithRoleResponse[]; meta: any }> {
+  ): Promise<{ data: UserEntity[]; meta: any }> {
     const result = await paginate(
       this.prisma.usuarios,
       {
@@ -112,7 +112,7 @@ export class PrismaUserRepository implements UserRepository {
     );
 
     return {
-      data: data.filter((u): u is UserWithRoleResponse => u !== null),
+      data: data.filter((u): u is UserEntity => u !== null),
       meta: result.meta,
     };
   }
@@ -120,7 +120,7 @@ export class PrismaUserRepository implements UserRepository {
   async findMany(
     filters: UserFilters,
     pagination: PaginationDto,
-  ): Promise<{ data: UserWithRoleResponse[]; meta: any }> {
+  ): Promise<{ data: UserEntity[]; meta: any }> {
     const where: Prisma.UsuariosWhereInput = {
       ...(filters.email && { email: filters.email }),
       ...(filters.deletedAt !== undefined && {
@@ -145,12 +145,12 @@ export class PrismaUserRepository implements UserRepository {
     );
 
     return {
-      data: data.filter((u): u is UserWithRoleResponse => u !== null),
+      data: data.filter((u): u is UserEntity => u !== null),
       meta: result.meta,
     };
   }
 
-  async create(data: CreateUserRepositoryData): Promise<UserWithRoleResponse> {
+  async create(data: CreateUserRepositoryData): Promise<UserEntity> {
     const { rolId, ...userData } = data;
     const createData: Prisma.UsuariosCreateInput = {
       ...userData,
@@ -174,7 +174,7 @@ export class PrismaUserRepository implements UserRepository {
     usuarioId: number,
     data: UpdateUserRepositoryData,
     tx?: any,
-  ): Promise<UserWithRoleResponse> {
+  ): Promise<UserEntity> {
     const client = tx || this.prisma;
     const { rolId, ...userData } = data;
     const updateData: Prisma.UsuariosUpdateInput = {

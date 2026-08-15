@@ -1,6 +1,6 @@
 import { TipoRuta } from 'src/shared/enums';
 import { Test } from '@nestjs/testing';
-import { PrismaOperatorRepository } from '../infrastructure/repositories/prisma-operator.repository';
+import { PrismaOperatorRepository } from './prisma-operator.repository';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 
 describe('Operator Tasks - Schema & Repository', () => {

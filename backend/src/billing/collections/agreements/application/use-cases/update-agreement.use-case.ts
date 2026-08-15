@@ -5,7 +5,6 @@ import {
 } from '@nestjs/common';
 import { Decimal } from 'decimal.js';
 import { AgreementRepository } from '../../domain/repositories/agreement.repository';
-import { safeAgreementWithInstallmentsSelect } from '../../infrastructure/repositories/prisma-agreement.repository';
 
 /**
  * Actualiza el estado de un convenio.
@@ -103,7 +102,6 @@ export class UpdateAgreementUseCase {
           fechaProximoPago: null,
           montoPagadoActual: deudaTotal,
         },
-        select: safeAgreementWithInstallmentsSelect,
       });
     });
   }
@@ -118,7 +116,6 @@ export class UpdateAgreementUseCase {
         estado: 'ANULADO',
         deletedAt: new Date(),
       },
-      safeAgreementWithInstallmentsSelect,
     );
   }
 
@@ -138,7 +135,6 @@ export class UpdateAgreementUseCase {
         estado: 'ACTIVO',
         fechaAprobacion: convenio?.fechaAprobacion ?? new Date(),
       },
-      safeAgreementWithInstallmentsSelect,
     );
   }
 }

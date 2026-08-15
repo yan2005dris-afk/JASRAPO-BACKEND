@@ -26,14 +26,21 @@ import { ClientService } from '../../application/client.service';
 import { CreateClientDto } from '../dto/create-client.dto';
 import { UpdateClientDto } from '../dto/update-client.dto';
 import { FilterClientDto } from '../dto/filter-client.dto';
+import {
+  ClientResponseDto,
+  TipoIdentificacionResponseDto,
+} from '../dto/client-response.dto';
 import { ApiPaginatedResponse } from 'src/infrastructure/common/decorators/api-paginated-response.decorator';
-import { ClientEntity } from '../../domain/entities/client.entity';
 import { PaginationMetaDto } from 'src/infrastructure/common/dtos/pagination-meta.dto';
 import { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
 
 @ApiTags('clients')
 @ApiBearerAuth()
-@ApiExtraModels(ClientEntity, PaginationMetaDto)
+@ApiExtraModels(
+  ClientResponseDto,
+  TipoIdentificacionResponseDto,
+  PaginationMetaDto,
+)
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('clients')
 export class ClientController {
@@ -46,7 +53,11 @@ export class ClientController {
     summary: 'Catálogo de tipos de identificación',
     description: 'Retorna lista de tipos de identificación para formularios',
   })
-  @ApiResponse({ status: 200, description: 'Lista de identificaciones' })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de identificaciones',
+    type: [TipoIdentificacionResponseDto],
+  })
   @RequiredPermission('clientes', 'read')
   @Get('identification-types')
   findAllIdentificaciones() {
@@ -61,13 +72,17 @@ export class ClientController {
     description: 'Registra un nuevo cliente en el sistema',
   })
   @ApiBody({ type: CreateClientDto, description: 'Datos del cliente' })
-  @ApiResponse({ status: 201, description: 'Cliente creado' })
+  @ApiResponse({
+    status: 201,
+    description: 'Cliente creado',
+    type: ClientResponseDto,
+  })
   @ApiResponse({ status: 400, description: 'Datos inválidos' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({ status: 403, description: 'Sin permiso clientes:create' })
   @RequiredPermission('clientes', 'create')
   @Post()
-  create(@Body() createClientDto: CreateClientDto) {
+  create(@Body() createClientDto: CreateClientDto): Promise<ClientResponseDto> {
     return this.clientService.create(createClientDto);
   }
 
@@ -79,12 +94,12 @@ export class ClientController {
     summary: 'Listar clientes',
     description: 'Retorna clientes con filtros opcionales y paginación',
   })
-  @ApiPaginatedResponse(ClientEntity)
+  @ApiPaginatedResponse(ClientResponseDto)
   @RequiredPermission('clientes', 'read')
   @Get()
   async findAll(
     @Query() filters: FilterClientDto,
-  ): Promise<PaginatedResult<ClientEntity>> {
+  ): Promise<PaginatedResult<ClientResponseDto>> {
     return this.clientService.findAll(filters);
   }
 
@@ -104,14 +119,16 @@ export class ClientController {
   @ApiResponse({
     status: 200,
     description: 'Cliente encontrado',
-    type: ClientEntity,
+    type: ClientResponseDto,
   })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({ status: 403, description: 'Sin permiso clientes:read' })
   @ApiResponse({ status: 404, description: 'Cliente no encontrado' })
   @RequiredPermission('clientes', 'read')
   @Get(':id')
-  findOne(@Param('id', ParseBigIntPipe) id: bigint) {
+  findOne(
+    @Param('id', ParseBigIntPipe) id: bigint,
+  ): Promise<ClientResponseDto> {
     return this.clientService.findOne(id);
   }
 
@@ -129,7 +146,11 @@ export class ClientController {
     example: 1,
   })
   @ApiBody({ type: UpdateClientDto, description: 'Datos a actualizar' })
-  @ApiResponse({ status: 200, description: 'Cliente actualizado' })
+  @ApiResponse({
+    status: 200,
+    description: 'Cliente actualizado',
+    type: ClientResponseDto,
+  })
   @ApiResponse({ status: 400, description: 'Datos inválidos' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({ status: 403, description: 'Sin permiso clientes:update' })
@@ -139,7 +160,7 @@ export class ClientController {
   update(
     @Param('id', ParseBigIntPipe) id: bigint,
     @Body() updateClientDto: UpdateClientDto,
-  ) {
+  ): Promise<ClientResponseDto> {
     return this.clientService.update(id, updateClientDto);
   }
 

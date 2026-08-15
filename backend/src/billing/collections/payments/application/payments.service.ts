@@ -19,11 +19,7 @@ import { SaldoFavorResponseDto } from '../interfaces/dto/saldo-favor-response.dt
 import { PaymentStateResponseDto } from '../interfaces/dto/payment-state-response.dto';
 import { BankResponseDto } from '../interfaces/dto/bank-response.dto';
 import { CardBrandResponseDto } from '../interfaces/dto/card-brand-response.dto';
-import {
-  safePaymentSelect,
-  safePaymentWithDetailSelect,
-  safeSaldoFavorSelect,
-} from '../infrastructure/repositories/prisma-payment.repository';
+import { PaymentRepository } from '../domain/repositories/payment.repository';
 import {
   toPaymentResponse,
   toSaldoFavorResponse,
@@ -58,6 +54,7 @@ const CARD_BRAND_DESCRIPTIONS: Record<TarjetaCredito, string> = {
 export class PaymentsService {
   constructor(
     private readonly prisma: PrismaService,
+    private readonly paymentRepository: PaymentRepository,
     private readonly createUseCase: CreatePaymentUseCase,
     private readonly findOneUseCase: FindOnePaymentUseCase,
     private readonly validatePaymentUseCase: ValidatePaymentUseCase,
@@ -96,7 +93,6 @@ export class PaymentsService {
       this.prisma.pagos,
       {
         where,
-        select: safePaymentSelect,
         orderBy: { fechaPago: 'desc' },
       },
       pagination,
@@ -151,7 +147,6 @@ export class PaymentsService {
         deletedAt: null,
         disponibleParaAplicar: true,
       },
-      select: safeSaldoFavorSelect,
       orderBy: { createdAt: 'desc' },
     });
 
@@ -190,14 +185,13 @@ export class PaymentsService {
     end.setDate(end.getDate() + 1);
     end.setHours(0, 0, 0, 0);
 
-    const pagos = await this.prisma.pagos.findMany({
+    const pagos = await this.paymentRepository.findManyPagos({
       where: {
         deletedAt: null,
         estadoPago: EstadoPago.REGISTRADO,
         fechaPago: { gte: start, lt: end },
         ...(params.cajaId ? { cajaId: BigInt(params.cajaId) } : {}),
       },
-      select: safePaymentWithDetailSelect,
       orderBy: { fechaPago: 'asc' },
     });
 

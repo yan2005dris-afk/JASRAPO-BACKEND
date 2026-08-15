@@ -51,7 +51,10 @@ describe('CreateUserUseCase', () => {
       nombres: 'Juan',
       apellidos: 'Pérez',
       telefono: '0991234567',
-      rolId: 1,
+      rol: {
+        rolId: 1,
+        nombre: 'user',
+      },
       avatar: null,
     });
 
@@ -108,7 +111,7 @@ describe('CreateUserUseCase', () => {
       nombres: 'Admin',
       apellidos: 'User',
       telefono: '0998765432',
-      rolId: 2,
+      rol: { rolId: 2, nombre: 'admin' },
       avatar: null,
     });
 

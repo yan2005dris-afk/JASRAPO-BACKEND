@@ -80,7 +80,7 @@ export class PrismaPaymentRepository implements PaymentRepository {
 
   async findUniquePago(
     where: Prisma.PagosWhereUniqueInput,
-    select?: Prisma.PagosSelect,
+    select: Prisma.PagosSelect = safePaymentWithDetailSelect,
   ): Promise<any> {
     return this.prisma.pagos.findUnique({ where, select });
   }
@@ -92,12 +92,15 @@ export class PrismaPaymentRepository implements PaymentRepository {
     take?: number;
     skip?: number;
   }): Promise<any[]> {
-    return this.prisma.pagos.findMany(params);
+    return this.prisma.pagos.findMany({
+      ...params,
+      select: params.select ?? safePaymentWithDetailSelect,
+    });
   }
 
   async createPago(
     data: Prisma.PagosCreateInput | Prisma.PagosUncheckedCreateInput,
-    select?: Prisma.PagosSelect,
+    select: Prisma.PagosSelect = safePaymentWithDetailSelect,
     tx?: Prisma.TransactionClient,
   ): Promise<any> {
     return this.client(tx).pagos.create({ data, select });
@@ -106,7 +109,7 @@ export class PrismaPaymentRepository implements PaymentRepository {
   async updatePago(
     where: Prisma.PagosWhereUniqueInput,
     data: Prisma.PagosUpdateInput | Prisma.PagosUncheckedUpdateInput,
-    select?: Prisma.PagosSelect,
+    select: Prisma.PagosSelect = safePaymentWithDetailSelect,
     tx?: Prisma.TransactionClient,
   ): Promise<any> {
     return this.client(tx).pagos.update({ where, data, select });

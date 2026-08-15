@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class RoleEntity {
   @ApiProperty({ example: 1, description: 'ID único del rol' })
@@ -6,6 +6,12 @@ export class RoleEntity {
 
   @ApiProperty({ example: 'admin', description: 'Nombre descriptivo del rol' })
   nombre: string;
+
+  @ApiPropertyOptional({
+    description: 'Fecha de eliminación suave del rol',
+    nullable: true,
+  })
+  deletedAt?: Date | null;
 }
 
 export class AuthPermissionEntity {
@@ -131,6 +137,12 @@ export class UserEntity {
     nullable: true,
   })
   rol: RoleEntity | null;
+
+  @ApiPropertyOptional({
+    description: 'Fecha de eliminación suave',
+    nullable: true,
+  })
+  deletedAt?: Date | null;
 }
 
 export class UserDetailEntity extends UserEntity {

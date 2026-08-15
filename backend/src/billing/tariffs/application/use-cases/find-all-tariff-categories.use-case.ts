@@ -3,7 +3,7 @@ import { TariffRepository } from '../../domain/repositories/tariff.repository';
 import { getPagination } from 'src/infrastructure/common/utils/pagination.util';
 import { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
 import { IResponseTariffCategory } from '../../types/IResponseTariffCategory';
-import { safeTariffCategoriesSelect } from '../../infrastructure/repositories/prisma-tariff.repository';
+
 import { toTariffCategoryResponse } from '../../types/tariffCategoryMapper';
 
 @Injectable()
@@ -32,7 +32,6 @@ export class FindAllTariffCategoriesUseCase {
     const [tariffs, total] = await Promise.all([
       this.tariffRepository.findMany({
         where,
-        select: safeTariffCategoriesSelect,
         skip,
         take,
         orderBy: { createdAt: 'desc' },

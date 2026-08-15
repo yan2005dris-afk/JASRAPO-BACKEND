@@ -1,5 +1,5 @@
 import type { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
-import type { UserWithRoleResponse } from '../types/user.types';
+import type { UserEntity } from '../entities/user.entity';
 
 export interface FiltroFecha {
   igualA?: Date | null;
@@ -37,7 +37,7 @@ export interface UpdateUserRepositoryData {
  * Usuario devuelto por el flujo de login: incluye el hash de la clave y el
  * estado de protección contra fuerza bruta (issue #136).
  */
-export type UserWithPasswordAndLockout = UserWithRoleResponse & {
+export type UserWithPasswordAndLockout = UserEntity & {
   clave: string;
   intentosFallidos: number;
   ultimoIntentoFallidoEn: Date | null;
@@ -63,9 +63,9 @@ export interface FailedLoginAttemptResult {
 }
 
 export abstract class UserRepository {
-  abstract findById(usuarioId: number): Promise<UserWithRoleResponse | null>;
+  abstract findById(usuarioId: number): Promise<UserEntity | null>;
 
-  abstract findByEmail(email: string): Promise<UserWithRoleResponse | null>;
+  abstract findByEmail(email: string): Promise<UserEntity | null>;
 
   abstract findByEmailWithPassword(
     email: string,
@@ -73,22 +73,20 @@ export abstract class UserRepository {
 
   abstract findManyActive(
     pagination: PaginationDto,
-  ): Promise<{ data: UserWithRoleResponse[]; meta: any }>;
+  ): Promise<{ data: UserEntity[]; meta: any }>;
 
   abstract findMany(
     filters: UserFilters,
     pagination: PaginationDto,
-  ): Promise<{ data: UserWithRoleResponse[]; meta: any }>;
+  ): Promise<{ data: UserEntity[]; meta: any }>;
 
-  abstract create(
-    data: CreateUserRepositoryData,
-  ): Promise<UserWithRoleResponse>;
+  abstract create(data: CreateUserRepositoryData): Promise<UserEntity>;
 
   abstract update(
     usuarioId: number,
     data: UpdateUserRepositoryData,
     tx?: any,
-  ): Promise<UserWithRoleResponse>;
+  ): Promise<UserEntity>;
 
   abstract findRoleById(rolId: number): Promise<any>;
 

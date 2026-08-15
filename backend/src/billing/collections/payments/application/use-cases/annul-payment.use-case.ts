@@ -11,7 +11,6 @@ import {
 } from '../../domain/enums';
 import type { TransactionClient } from '../../domain/types/transaction';
 import { PaymentRepository } from '../../domain/repositories/payment.repository';
-import { safePaymentWithDetailSelect } from '../../infrastructure/repositories/prisma-payment.repository';
 
 @Injectable()
 export class AnnulPaymentUseCase {
@@ -27,13 +26,7 @@ export class AnnulPaymentUseCase {
 
     await this.paymentRepository.executeTransaction(async (tx) => {
       // Re-read inside the transaction to validate state atomically
-      const pago = await this.paymentRepository.findUniquePago(
-        { pagoId },
-        {
-          ...safePaymentWithDetailSelect,
-          deletedAt: true,
-        },
-      );
+      const pago = await this.paymentRepository.findUniquePago({ pagoId });
 
       if (!pago || pago.deletedAt) {
         throw new NotFoundException(`Pago con ID ${pagoId} no encontrado`);
@@ -98,13 +91,7 @@ export class AnnulPaymentUseCase {
       }
     });
 
-    return this.paymentRepository.findUniquePago(
-      { pagoId },
-      {
-        ...safePaymentWithDetailSelect,
-        deletedAt: true,
-      },
-    );
+    return this.paymentRepository.findUniquePago({ pagoId });
   }
 
   private async revertInstallment(

@@ -17,12 +17,12 @@ import { PaginatedResult } from 'src/infrastructure/common/types/paginated-resul
 import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
 import { UserRepository } from '../domain/repositories/user.repository';
 import {
-  UserWithPermissionsResponse,
-  UserWithRoleResponse,
-  ProfileResponse,
-  EffectivePermissionsResponse,
-  AvatarResponse,
-} from '../domain/types/user.types';
+  UserEntity,
+  UserDetailEntity,
+  UserProfileEntity,
+  AvatarEntity,
+} from '../domain/entities/user.entity';
+import { EffectivePermissionsResponse } from '../domain/types/user.types';
 import {
   StorageService,
   SRI_STORAGE_TYPES,
@@ -46,7 +46,7 @@ export class UserService {
   async user(criteria: {
     usuarioId?: number;
     email?: string;
-  }): Promise<UserWithPermissionsResponse | null> {
+  }): Promise<UserDetailEntity | null> {
     const user = criteria.usuarioId
       ? await this.userRepository.findById(criteria.usuarioId)
       : criteria.email
@@ -87,7 +87,7 @@ export class UserService {
     };
   }
 
-  async findMe(usersId: number): Promise<ProfileResponse> {
+  async findMe(usersId: number): Promise<UserProfileEntity> {
     const user = await this.userRepository.findById(usersId);
 
     if (!user || user.deletedAt) {
@@ -109,9 +109,7 @@ export class UserService {
     };
   }
 
-  async users(
-    pagination: PaginationDto,
-  ): Promise<PaginatedResult<UserWithRoleResponse>> {
+  async users(pagination: PaginationDto): Promise<PaginatedResult<UserEntity>> {
     return this.userRepository.findManyActive(pagination);
   }
 
@@ -171,7 +169,7 @@ export class UserService {
     usuarioId: number,
     data: UpdateUserDto,
     file?: Express.Multer.File,
-  ): Promise<UserWithPermissionsResponse | null> {
+  ): Promise<UserDetailEntity | null> {
     const { directPermissions, ...userData } = data;
     const updateData: any = { ...userData };
 
@@ -290,7 +288,7 @@ export class UserService {
   async updateAvatar(
     usuarioId: number,
     file: Express.Multer.File,
-  ): Promise<AvatarResponse> {
+  ): Promise<AvatarEntity> {
     const user = await this.userRepository.findById(usuarioId);
     if (!user || user.deletedAt) {
       throw new NotFoundException('Usuario no encontrado');

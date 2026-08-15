@@ -2,7 +2,7 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { AgreementRepository } from '../../domain/repositories/agreement.repository';
-import { safeAgreementWithInstallmentsSelect } from '../../infrastructure/repositories/prisma-agreement.repository';
+
 import { FindOneAgreementUseCase } from './find-one-agreement.use-case';
 
 describe('FindOneAgreementUseCase', () => {
@@ -38,10 +38,10 @@ describe('FindOneAgreementUseCase', () => {
     const result = await useCase.execute(1n);
 
     expect(result).toBe(convenio);
-    expect(mockAgreementRepository.findFirstConvenio).toHaveBeenCalledWith(
-      { convenioId: 1n, deletedAt: null },
-      safeAgreementWithInstallmentsSelect,
-    );
+    expect(mockAgreementRepository.findFirstConvenio).toHaveBeenCalledWith({
+      convenioId: 1n,
+      deletedAt: null,
+    });
   });
 
   it('should throw NotFoundException when agreement does not exist', async () => {
