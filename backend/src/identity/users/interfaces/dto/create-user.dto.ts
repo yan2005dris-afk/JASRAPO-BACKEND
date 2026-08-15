@@ -8,9 +8,9 @@ import {
 } from 'class-validator';
 import { ApiProperty, OmitType } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { Prisma } from 'src/generated/prisma/client';
 import { IsNotEmptyString } from 'src/infrastructure/common/decorators/is-not-empty-string.decorator';
 import { UserResponseDto } from './user-response.dto';
+import type { UserAvatarInput } from '../../domain/types/user.types';
 
 export class CreateUserDto extends OmitType(UserResponseDto, [
   'usuarioId',
@@ -36,7 +36,7 @@ export class CreateUserDto extends OmitType(UserResponseDto, [
 
   @IsOptional()
   @IsObject()
-  avatar?: Prisma.InputJsonValue;
+  avatar?: UserAvatarInput;
 
   @ApiProperty({
     description:

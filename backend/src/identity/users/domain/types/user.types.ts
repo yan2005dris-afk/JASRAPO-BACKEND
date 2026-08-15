@@ -5,6 +5,10 @@ export interface UserAvatar {
   key?: string;
 }
 
+export interface UserAvatarInput {
+  key: string;
+}
+
 export interface UserDirectPermission {
   usuarioPermisoId: number;
   permisoId: number;
@@ -26,7 +30,6 @@ export interface UserDirectPermissionInput {
 export interface DomainPaginationParams {
   page?: number;
   limit?: number;
-  [key: string]: any;
 }
 
 export interface DomainPaginationMeta {
@@ -38,7 +41,6 @@ export interface DomainPaginationMeta {
   porPagina: number;
   anterior: number | null;
   siguiente: number | null;
-  [key: string]: any;
 }
 
 export interface DomainPaginatedResult<T> {
@@ -63,7 +65,7 @@ export interface CreateUserRepositoryData {
   nombres: string;
   apellidos: string;
   telefono: string;
-  avatar?: any;
+  avatar?: UserAvatarInput;
   rolId: number;
 }
 
@@ -73,7 +75,7 @@ export interface UpdateUserRepositoryData {
   nombres?: string;
   apellidos?: string;
   telefono?: string;
-  avatar?: any;
+  avatar?: UserAvatarInput;
   rolId?: number;
   deletedAt?: Date | null;
 }

@@ -14,8 +14,8 @@ export class UserEntity {
   avatar: UserAvatar | null;
   rol: RoleEntity | null;
   deletedAt: Date | null;
-  permisosDirectos?: UserDirectPermission[];
-  permisosRol?: UserRolePermission[];
+  permisosDirectos: UserDirectPermission[];
+  permisosRol: UserRolePermission[];
 
   constructor(partial?: Partial<UserEntity>) {
     this.usuarioId = partial?.usuarioId ?? 0;

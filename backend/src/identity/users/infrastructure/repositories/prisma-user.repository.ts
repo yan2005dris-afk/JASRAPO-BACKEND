@@ -9,12 +9,12 @@ import {
   FiltroFecha,
   FailedLoginAttemptOptions,
   FailedLoginAttemptResult,
+  DomainPaginationParams,
   DomainPaginatedResult,
   UserDirectPermission,
   UserRolePermission,
 } from '../../domain/repositories/user.repository';
 import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
-import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
 import { paginate } from 'src/infrastructure/common/utils/pagination.util';
 import { UserEntity } from '../../domain/entities/user.entity';
 import { UserMapper } from '../mappers/user.mapper';
@@ -86,7 +86,7 @@ export class PrismaUserRepository implements UserRepository {
   }
 
   async findManyActive(
-    pagination: PaginationDto,
+    pagination: DomainPaginationParams,
   ): Promise<DomainPaginatedResult<UserEntity>> {
     const result = await paginate(
       this.prisma.usuarios,
@@ -102,7 +102,7 @@ export class PrismaUserRepository implements UserRepository {
     );
 
     const data = await Promise.all(
-      (result.data as any[]).map((user) => this.userMapper.toEntity(user)),
+      result.data.map((user) => this.userMapper.toEntity(user)),
     );
 
     return {
@@ -113,7 +113,7 @@ export class PrismaUserRepository implements UserRepository {
 
   async findMany(
     filters: UserFilters,
-    pagination: PaginationDto,
+    pagination: DomainPaginationParams,
   ): Promise<DomainPaginatedResult<UserEntity>> {
     const where: Prisma.UsuariosWhereInput = {
       ...(filters.email && { email: filters.email }),
@@ -135,7 +135,7 @@ export class PrismaUserRepository implements UserRepository {
     );
 
     const data = await Promise.all(
-      (result.data as any[]).map((user) => this.userMapper.toEntity(user)),
+      result.data.map((user) => this.userMapper.toEntity(user)),
     );
 
     return {
@@ -148,7 +148,7 @@ export class PrismaUserRepository implements UserRepository {
     const { rolId, ...userData } = data;
     const createData: Prisma.UsuariosCreateInput = {
       ...userData,
-      avatar: userData.avatar as Prisma.InputJsonValue,
+      avatar: userData.avatar as unknown as Prisma.InputJsonValue,
       rol: { connect: { rolId } },
     };
     const user = await this.prisma.usuarios.create({
@@ -157,9 +157,7 @@ export class PrismaUserRepository implements UserRepository {
     });
     const mapped = await this.userMapper.toEntity(user);
     if (!mapped) {
-      throw new Error(
-        `Error al mapear el usuario creado (ID: ${user.usuarioId})`,
-      );
+      throw new EntityNotFoundException('Usuario', user.usuarioId);
     }
     return mapped;
   }
@@ -175,22 +173,27 @@ export class PrismaUserRepository implements UserRepository {
       ...userData,
       avatar:
         userData.avatar !== undefined
-          ? (userData.avatar as Prisma.InputJsonValue)
+          ? (userData.avatar as unknown as Prisma.InputJsonValue)
           : undefined,
       rol: rolId ? { connect: { rolId } } : undefined,
     };
-    const user = await client.usuarios.update({
-      where: { usuarioId },
-      data: updateData,
-      select: userWithRolesSelect,
-    });
-    const mapped = await this.userMapper.toEntity(user);
-    if (!mapped) {
-      throw new Error(
-        `Error al mapear el usuario actualizado (ID: ${usuarioId})`,
-      );
+    try {
+      const user = await client.usuarios.update({
+        where: { usuarioId },
+        data: updateData,
+        select: userWithRolesSelect,
+      });
+      const mapped = await this.userMapper.toEntity(user);
+      if (!mapped) {
+        throw new EntityNotFoundException('Usuario', usuarioId);
+      }
+      return mapped;
+    } catch (error) {
+      if (this.isRecordNotFound(error)) {
+        throw new EntityNotFoundException('Usuario', usuarioId);
+      }
+      throw error;
     }
-    return mapped;
   }
 
   async findDirectPermissions(
@@ -377,9 +380,7 @@ export class PrismaUserRepository implements UserRepository {
       });
 
       if (!current) {
-        throw new Error(
-          `Usuario no encontrado al registrar intento fallido: ${usuarioId}`,
-        );
+        throw new EntityNotFoundException('Usuario', usuarioId);
       }
 
       const now = new Date();
@@ -430,5 +431,15 @@ export class PrismaUserRepository implements UserRepository {
         bloqueadoHasta: null,
       },
     });
+  }
+
+  /** Detects Prisma P2025 (record not found). */
+  private isRecordNotFound(
+    error: unknown,
+  ): error is Prisma.PrismaClientKnownRequestError {
+    return (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === 'P2025'
+    );
   }
 }

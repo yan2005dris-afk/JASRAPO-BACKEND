@@ -2,7 +2,7 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { UpdateUserPermissionsUseCase } from './update-user-permissions.use-case';
 import { UserRepository } from '../../domain/repositories/user.repository';
-import { NotFoundException } from '@nestjs/common';
+import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 
 describe('UpdateUserPermissionsUseCase', () => {
   let useCase: UpdateUserPermissionsUseCase;
@@ -32,15 +32,15 @@ describe('UpdateUserPermissionsUseCase', () => {
     userRepository = module.get<UserRepository>(UserRepository);
   });
 
-  it('should throw NotFoundException if user not found', async () => {
+  it('should throw EntityNotFoundException if user not found', async () => {
     mockUserRepository.findById.mockResolvedValue(null);
 
     await expect(
       useCase.execute(1, [{ permisoId: 1, permitido: true }]),
-    ).rejects.toThrow(NotFoundException);
+    ).rejects.toThrow(EntityNotFoundException);
   });
 
-  it('should throw NotFoundException if user is deleted', async () => {
+  it('should throw EntityNotFoundException if user is deleted', async () => {
     mockUserRepository.findById.mockResolvedValue({
       usuarioId: 1,
       deletedAt: new Date(),
@@ -48,7 +48,7 @@ describe('UpdateUserPermissionsUseCase', () => {
 
     await expect(
       useCase.execute(1, [{ permisoId: 1, permitido: true }]),
-    ).rejects.toThrow(NotFoundException);
+    ).rejects.toThrow(EntityNotFoundException);
   });
 
   it('should call updatePermissions on the repository', async () => {

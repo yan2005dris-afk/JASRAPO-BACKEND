@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { randomUUID } from 'crypto';
 import { UserRepository } from '../../domain/repositories/user.repository';
 import { RoleRepository } from '../../../roles/domain/repositories/role.repository';
 import { UserEntity } from '../../domain/entities/user.entity';
@@ -8,15 +7,17 @@ import { UpdateUserPermissionsUseCase } from './update-user-permissions.use-case
 import { GetUserDetailUseCase } from './get-user-detail.use-case';
 import { ValidationUtil } from 'src/infrastructure/common/utils/validation.util';
 import { PhoneUtil } from 'src/infrastructure/common/utils/phone.util';
-import { ImageProcessorUtil } from 'src/infrastructure/common/utils/image-processor.util';
+import { StorageService } from 'src/infrastructure/storage/storage.service';
 import {
-  StorageService,
-  SRI_STORAGE_TYPES,
-} from 'src/infrastructure/storage/storage.service';
+  uploadAvatar,
+  rollbackAvatarUpload,
+  deleteOldAvatar,
+} from '../avatar-upload.helper';
 import {
   EntityNotFoundException,
   InvalidDomainOperationException,
 } from 'src/shared/domain/exceptions/domain.exception';
+import type { UpdateUserRepositoryData } from '../../domain/types/user.types';
 
 @Injectable()
 export class UpdateUserUseCase {
@@ -72,13 +73,9 @@ export class UpdateUserUseCase {
     let oldAvatarKey: string | undefined;
 
     if (file) {
-      try {
-        const oldAvatar = existingUser.avatar as { key?: string } | null;
-        oldAvatarKey = oldAvatar?.key;
-        newAvatarKey = await this.uploadAndProcessAvatar(file);
-      } catch (error) {
-        throw error;
-      }
+      const oldAvatar = existingUser.avatar as { key?: string } | null;
+      oldAvatarKey = oldAvatar?.key;
+      newAvatarKey = await uploadAvatar(file, this.storageService);
     }
 
     try {
@@ -92,7 +89,7 @@ export class UpdateUserUseCase {
             );
           }
 
-          const updatePayload: Record<string, any> = {};
+          const updatePayload: UpdateUserRepositoryData = {};
           if (updateData.email !== undefined)
             updatePayload.email = updateData.email;
           if (updateData.nombres !== undefined)
@@ -113,40 +110,15 @@ export class UpdateUserUseCase {
         },
       );
 
-      if (newAvatarKey && oldAvatarKey && oldAvatarKey !== newAvatarKey) {
-        this.storageService
-          .delete(SRI_STORAGE_TYPES.PROFILE_PHOTOS, oldAvatarKey)
-          .catch(() => {});
-      }
+      await deleteOldAvatar(oldAvatarKey, newAvatarKey, this.storageService);
 
       return this.getUserDetailUseCase.execute({ usuarioId: result.usuarioId });
     } catch (error) {
       if (newAvatarKey) {
-        this.storageService
-          .delete(SRI_STORAGE_TYPES.PROFILE_PHOTOS, newAvatarKey)
-          .catch(() => {});
+        await rollbackAvatarUpload(newAvatarKey, this.storageService);
       }
 
       throw error;
     }
-  }
-
-  private async uploadAndProcessAvatar(
-    file: Express.Multer.File,
-  ): Promise<string> {
-    const processedBuffer = await ImageProcessorUtil.processProfilePicture(
-      file.buffer,
-    );
-
-    const avatarKey = `avatars/${randomUUID()}.webp`;
-
-    await this.storageService.upload(
-      SRI_STORAGE_TYPES.PROFILE_PHOTOS,
-      avatarKey,
-      processedBuffer,
-      { contentType: 'image/webp' },
-    );
-
-    return avatarKey;
   }
 }

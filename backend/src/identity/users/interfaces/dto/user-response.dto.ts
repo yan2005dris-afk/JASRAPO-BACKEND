@@ -142,7 +142,7 @@ export class UserDetailResponseDto extends UserResponseDto {
   })
   permisosRol: AuthPermissionResponseDto[];
 
-  static fromEntity(user: any): UserDetailResponseDto {
+  static fromEntity(user: UserEntity): UserDetailResponseDto {
     const dto = new UserDetailResponseDto();
     dto.usuarioId = user.usuarioId;
     dto.email = user.email;
@@ -155,8 +155,8 @@ export class UserDetailResponseDto extends UserResponseDto {
     dto.rol = user.rol
       ? { rolId: user.rol.rolId, nombre: user.rol.nombre }
       : null;
-    dto.permisosDirectos = user.permisosDirectos || [];
-    dto.permisosRol = user.permisosRol || [];
+    dto.permisosDirectos = user.permisosDirectos;
+    dto.permisosRol = user.permisosRol;
     return dto;
   }
 }

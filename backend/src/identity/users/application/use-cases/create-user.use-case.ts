@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { randomUUID } from 'crypto';
 import * as bcrypt from 'bcrypt';
 import { CreateUserDto } from '../../interfaces/dto/create-user.dto';
 import { ValidationUtil } from 'src/infrastructure/common/utils/validation.util';
@@ -7,11 +6,8 @@ import { PhoneUtil } from 'src/infrastructure/common/utils/phone.util';
 import { UserRepository } from '../../domain/repositories/user.repository';
 import { RoleRepository } from '../../../roles/domain/repositories/role.repository';
 import { UserEntity } from '../../domain/entities/user.entity';
-import { ImageProcessorUtil } from 'src/infrastructure/common/utils/image-processor.util';
-import {
-  StorageService,
-  SRI_STORAGE_TYPES,
-} from 'src/infrastructure/storage/storage.service';
+import { StorageService } from 'src/infrastructure/storage/storage.service';
+import { uploadAvatar, rollbackAvatarUpload } from '../avatar-upload.helper';
 import {
   EntityNotFoundException,
   EntityAlreadyExistsException,
@@ -75,7 +71,7 @@ export class CreateUserUseCase {
 
     let avatarKey: string | undefined;
     if (file) {
-      avatarKey = await this.uploadAndProcessAvatar(file);
+      avatarKey = await uploadAvatar(file, this.storageService);
       createUsersDto.avatar = { key: avatarKey };
     }
 
@@ -94,30 +90,9 @@ export class CreateUserUseCase {
       });
     } catch (error) {
       if (avatarKey) {
-        this.storageService
-          .delete(SRI_STORAGE_TYPES.PROFILE_PHOTOS, avatarKey)
-          .catch(() => {});
+        await rollbackAvatarUpload(avatarKey, this.storageService);
       }
       throw error;
     }
-  }
-
-  private async uploadAndProcessAvatar(
-    file: Express.Multer.File,
-  ): Promise<string> {
-    const processedBuffer = await ImageProcessorUtil.processProfilePicture(
-      file.buffer,
-    );
-
-    const avatarKey = `avatars/${randomUUID()}.webp`;
-
-    await this.storageService.upload(
-      SRI_STORAGE_TYPES.PROFILE_PHOTOS,
-      avatarKey,
-      processedBuffer,
-      { contentType: 'image/webp' },
-    );
-
-    return avatarKey;
   }
 }

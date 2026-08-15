@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { randomUUID } from 'crypto';
 import { UserRepository } from '../../domain/repositories/user.repository';
 import { UserAvatar } from '../../domain/types/user.types';
-import { ImageProcessorUtil } from 'src/infrastructure/common/utils/image-processor.util';
+import { StorageService } from 'src/infrastructure/storage/storage.service';
 import {
-  StorageService,
-  SRI_STORAGE_TYPES,
-} from 'src/infrastructure/storage/storage.service';
+  uploadAvatar,
+  rollbackAvatarUpload,
+  deleteOldAvatar,
+} from '../avatar-upload.helper';
 import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 
 @Injectable()
@@ -30,46 +30,21 @@ export class UpdateUserAvatarUseCase {
     const oldAvatarKey = oldAvatar?.key;
 
     try {
-      newAvatarKey = await this.uploadAndProcessAvatar(file);
+      newAvatarKey = await uploadAvatar(file, this.storageService);
 
       await this.userRepository.update(usuarioId, {
         avatar: { key: newAvatarKey },
       });
 
-      if (oldAvatarKey && oldAvatarKey !== newAvatarKey) {
-        this.storageService
-          .delete(SRI_STORAGE_TYPES.PROFILE_PHOTOS, oldAvatarKey)
-          .catch(() => {});
-      }
+      await deleteOldAvatar(oldAvatarKey, newAvatarKey, this.storageService);
 
       const updatedUser = await this.userRepository.findById(usuarioId);
       return updatedUser?.avatar as UserAvatar;
     } catch (error) {
       if (newAvatarKey) {
-        this.storageService
-          .delete(SRI_STORAGE_TYPES.PROFILE_PHOTOS, newAvatarKey)
-          .catch(() => {});
+        await rollbackAvatarUpload(newAvatarKey, this.storageService);
       }
       throw error;
     }
-  }
-
-  private async uploadAndProcessAvatar(
-    file: Express.Multer.File,
-  ): Promise<string> {
-    const processedBuffer = await ImageProcessorUtil.processProfilePicture(
-      file.buffer,
-    );
-
-    const avatarKey = `avatars/${randomUUID()}.webp`;
-
-    await this.storageService.upload(
-      SRI_STORAGE_TYPES.PROFILE_PHOTOS,
-      avatarKey,
-      processedBuffer,
-      { contentType: 'image/webp' },
-    );
-
-    return avatarKey;
   }
 }

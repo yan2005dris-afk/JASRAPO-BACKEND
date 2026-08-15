@@ -9,6 +9,16 @@ import {
   EntityNotFoundException,
   EntityAlreadyExistsException,
 } from 'src/shared/domain/exceptions/domain.exception';
+import { uploadAvatar, rollbackAvatarUpload } from '../avatar-upload.helper';
+
+jest.mock('../avatar-upload.helper', () => ({
+  uploadAvatar: jest.fn(),
+  rollbackAvatarUpload: jest.fn(),
+  deleteOldAvatar: jest.fn(),
+}));
+
+const mockedUploadAvatar = uploadAvatar as jest.Mock;
+const mockedRollbackAvatarUpload = rollbackAvatarUpload as jest.Mock;
 
 describe('CreateUserUseCase', () => {
   let useCase: CreateUserUseCase;
@@ -189,5 +199,59 @@ describe('CreateUserUseCase', () => {
         telefono: '0991234567',
       }),
     ).rejects.toThrow(EntityAlreadyExistsException);
+  });
+
+  it('should upload the avatar and pass its key to create when a file is provided', async () => {
+    const dto = {
+      email: 'avatar@example.com',
+      nombres: 'Avatar',
+      apellidos: 'User',
+      telefono: '0991234567',
+    };
+    mockUserRepository.findByEmail.mockResolvedValue(null);
+    mockRoleRepository.findByName.mockResolvedValue({
+      rolId: 1,
+      nombre: 'user',
+    });
+    mockedUploadAvatar.mockResolvedValue('avatars/uuid.webp');
+    mockUserRepository.create.mockResolvedValue({ usuarioId: 1 } as any);
+
+    await useCase.execute(dto, { buffer: Buffer.from('img') } as any);
+
+    expect(mockedUploadAvatar).toHaveBeenCalledWith(
+      expect.anything(),
+      mockStorageService,
+    );
+    expect(mockUserRepository.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        avatar: { key: 'avatars/uuid.webp' },
+        rolId: 1,
+      }),
+    );
+  });
+
+  it('should rollback the uploaded avatar when create fails', async () => {
+    const dto = {
+      email: 'rollback@example.com',
+      nombres: 'Rollback',
+      apellidos: 'User',
+      telefono: '0991234567',
+    };
+    mockUserRepository.findByEmail.mockResolvedValue(null);
+    mockRoleRepository.findByName.mockResolvedValue({
+      rolId: 1,
+      nombre: 'user',
+    });
+    mockedUploadAvatar.mockResolvedValue('avatars/uuid.webp');
+    mockUserRepository.create.mockRejectedValue(new Error('DB down'));
+
+    await expect(
+      useCase.execute(dto, { buffer: Buffer.from('img') } as any),
+    ).rejects.toThrow('DB down');
+
+    expect(mockedRollbackAvatarUpload).toHaveBeenCalledWith(
+      'avatars/uuid.webp',
+      mockStorageService,
+    );
   });
 });
