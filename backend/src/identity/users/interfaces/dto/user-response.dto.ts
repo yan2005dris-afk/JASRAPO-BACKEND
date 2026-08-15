@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional, OmitType } from '@nestjs/swagger';
+import type { UserEntity } from '../../domain/entities/user.entity';
 
 export class RoleResponseDto {
   @ApiProperty({ example: 1, description: 'ID único del rol' })
@@ -83,6 +84,22 @@ export class UserResponseDto {
     nullable: true,
   })
   rol: RoleResponseDto | null;
+
+  static fromEntity(user: UserEntity): UserResponseDto {
+    const dto = new UserResponseDto();
+    dto.usuarioId = user.usuarioId;
+    dto.email = user.email;
+    dto.nombres = user.nombres;
+    dto.apellidos = user.apellidos;
+    dto.telefono = user.telefono;
+    dto.avatar = user.avatar
+      ? { url: user.avatar.url, key: user.avatar.key }
+      : null;
+    dto.rol = user.rol
+      ? { rolId: user.rol.rolId, nombre: user.rol.nombre }
+      : null;
+    return dto;
+  }
 }
 
 export class UserProfileResponseDto extends OmitType(UserResponseDto, [
@@ -95,6 +112,21 @@ export class UserProfileResponseDto extends OmitType(UserResponseDto, [
     nullable: true,
   })
   nombre: string | null;
+
+  static fromEntity(user: UserEntity): UserProfileResponseDto {
+    const dto = new UserProfileResponseDto();
+    dto.usuarioId = user.usuarioId;
+    dto.email = user.email;
+    dto.nombre = user.nombre;
+    dto.telefono = user.telefono;
+    dto.avatar = user.avatar
+      ? { url: user.avatar.url, key: user.avatar.key }
+      : null;
+    dto.rol = user.rol
+      ? { rolId: user.rol.rolId, nombre: user.rol.nombre }
+      : null;
+    return dto;
+  }
 }
 
 export class UserDetailResponseDto extends UserResponseDto {
@@ -109,4 +141,22 @@ export class UserDetailResponseDto extends UserResponseDto {
     description: 'Permisos heredados por el rol',
   })
   permisosRol: AuthPermissionResponseDto[];
+
+  static fromEntity(user: any): UserDetailResponseDto {
+    const dto = new UserDetailResponseDto();
+    dto.usuarioId = user.usuarioId;
+    dto.email = user.email;
+    dto.nombres = user.nombres;
+    dto.apellidos = user.apellidos;
+    dto.telefono = user.telefono;
+    dto.avatar = user.avatar
+      ? { url: user.avatar.url, key: user.avatar.key }
+      : null;
+    dto.rol = user.rol
+      ? { rolId: user.rol.rolId, nombre: user.rol.nombre }
+      : null;
+    dto.permisosDirectos = user.permisosDirectos || [];
+    dto.permisosRol = user.permisosRol || [];
+    return dto;
+  }
 }

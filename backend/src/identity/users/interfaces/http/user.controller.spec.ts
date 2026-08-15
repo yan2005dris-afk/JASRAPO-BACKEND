@@ -2,6 +2,11 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { UserController } from './user.controller';
 import { UserService } from '../../application/user.service';
+import {
+  UserResponseDto,
+  UserDetailResponseDto,
+  UserProfileResponseDto,
+} from '../dto/user-response.dto';
 
 describe('UserController', () => {
   let controller: UserController;
@@ -44,7 +49,15 @@ describe('UserController', () => {
         telefono: '123456',
         rolId: 1,
       };
-      const mockUser = { usuarioId: 1, email: 'test@example.com' };
+      const mockUser = {
+        usuarioId: 1,
+        email: 'test@example.com',
+        nombres: 'Test',
+        apellidos: 'User',
+        telefono: '123456',
+        avatar: null,
+        rol: { rolId: 1, nombre: 'user' },
+      };
 
       jest.spyOn(userService, 'createUser').mockResolvedValue(mockUser as any);
 
@@ -54,7 +67,7 @@ describe('UserController', () => {
         createUserDto,
         undefined,
       );
-      expect(result).toEqual(mockUser);
+      expect(result).toEqual(UserResponseDto.fromEntity(mockUser as any));
     });
   });
 
@@ -74,14 +87,22 @@ describe('UserController', () => {
   describe('findOne', () => {
     it('should call userService.user with correct id', async () => {
       const userId = 1;
-      const mockUser = { usuarioId: userId, email: 'test@example.com' };
+      const mockUser = {
+        usuarioId: userId,
+        email: 'test@example.com',
+        nombres: 'Test',
+        apellidos: 'User',
+        telefono: '123456',
+        avatar: null,
+        rol: null,
+      };
 
       jest.spyOn(userService, 'user').mockResolvedValue(mockUser as any);
 
       const result = await controller.findOne(userId);
 
       expect(userService.user).toHaveBeenCalledWith({ usuarioId: userId });
-      expect(result).toEqual(mockUser);
+      expect(result).toEqual(UserDetailResponseDto.fromEntity(mockUser as any));
     });
   });
 
@@ -91,7 +112,10 @@ describe('UserController', () => {
       const mockProfile = {
         usuarioId: usersId,
         email: 'test@t.com',
-        role: { nombre: 'admin' },
+        nombre: 'Test User',
+        telefono: '123456',
+        avatar: null,
+        rol: { rolId: 1, nombre: 'admin' },
       };
 
       jest.spyOn(userService, 'findMe').mockResolvedValue(mockProfile as any);
@@ -99,7 +123,9 @@ describe('UserController', () => {
       const result = await controller.findMe(usersId);
 
       expect(userService.findMe).toHaveBeenCalledWith(usersId);
-      expect(result).toEqual(mockProfile);
+      expect(result).toEqual(
+        UserProfileResponseDto.fromEntity(mockProfile as any),
+      );
     });
   });
 
@@ -114,6 +140,11 @@ describe('UserController', () => {
       const mockUpdatedUser = {
         usuarioId: userId,
         email: 'newemail@example.com',
+        nombres: 'Updated',
+        apellidos: 'User',
+        telefono: '123456',
+        avatar: null,
+        rol: { rolId: 2, nombre: 'admin' },
       };
 
       jest
@@ -127,7 +158,9 @@ describe('UserController', () => {
         updateUserDto,
         undefined,
       );
-      expect(result).toEqual(mockUpdatedUser);
+      expect(result).toEqual(
+        UserDetailResponseDto.fromEntity(mockUpdatedUser as any),
+      );
     });
   });
 

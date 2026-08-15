@@ -22,7 +22,6 @@ import {
   UserResponseDto,
   UserDetailResponseDto,
 } from '../dto/user-response.dto';
-import { UserEntity } from '../../domain/entities/user.entity';
 import { UserService } from '../../application/user.service';
 import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
 import { AuthUserId } from 'src/infrastructure/common/decorators/auth-user-id.decorator';
@@ -83,8 +82,9 @@ export class UserController {
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @RequiredPermission('users', 'read')
   @Get('me')
-  async findMe(@AuthUserId() usersId: number): Promise<UserEntity> {
-    return this.userService.findMe(usersId);
+  async findMe(@AuthUserId() usersId: number): Promise<UserProfileResponseDto> {
+    const user = await this.userService.findMe(usersId);
+    return UserProfileResponseDto.fromEntity(user);
   }
 
   /**
@@ -108,7 +108,7 @@ export class UserController {
     @AuthUserId() userId: number,
     @Body() updateDto: UpdateUserDto,
     @UploadedFile() file?: Express.Multer.File,
-  ): Promise<UserEntity> {
+  ): Promise<UserDetailResponseDto> {
     const {
       rolId: _rolId,
       directPermissions: _directPermissions,
@@ -119,7 +119,7 @@ export class UserController {
     if (!result) {
       throw new NotFoundException('Usuario no encontrado');
     }
-    return result;
+    return UserDetailResponseDto.fromEntity(result);
   }
 
   /**
@@ -141,11 +141,12 @@ export class UserController {
   @RequiredPermission('users', 'create')
   @Post()
   @UseInterceptors(FileInterceptor('file', AVATAR_UPLOAD_OPTIONS))
-  create(
+  async create(
     @Body() createUserDto: CreateUserDto,
     @UploadedFile() file?: Express.Multer.File,
-  ): Promise<UserEntity> {
-    return this.userService.createUser(createUserDto, file);
+  ): Promise<UserResponseDto> {
+    const user = await this.userService.createUser(createUserDto, file);
+    return UserResponseDto.fromEntity(user);
   }
 
   /**
@@ -156,10 +157,14 @@ export class UserController {
   @ApiPaginatedResponse(UserResponseDto)
   @RequiredPermission('users', 'read')
   @Get()
-  findAll(
+  async findAll(
     @Query() paginationDto: PaginationDto,
-  ): Promise<PaginatedResult<UserEntity>> {
-    return this.userService.users(paginationDto);
+  ): Promise<PaginatedResult<UserResponseDto>> {
+    const result = await this.userService.users(paginationDto);
+    return {
+      data: result.data.map((user) => UserResponseDto.fromEntity(user)),
+      meta: result.meta,
+    };
   }
 
   /**
@@ -176,12 +181,12 @@ export class UserController {
   @ApiResponse({ status: 404, description: 'Usuario no encontrado' })
   @RequiredPermission('users', 'read')
   @Get(':id')
-  async findOne(@Param('id', ParseIntPipe) id: number): Promise<UserEntity> {
+  async findOne(@Param('id', ParseIntPipe) id: number): Promise<UserDetailResponseDto> {
     const user = await this.userService.user({ usuarioId: id });
     if (!user) {
       throw new NotFoundException('Usuario no encontrado');
     }
-    return user;
+    return UserDetailResponseDto.fromEntity(user);
   }
 
   /**
@@ -224,12 +229,12 @@ export class UserController {
     @Param('id', ParseIntPipe) id: number,
     @Body() updateUserDto: UpdateUserDto,
     @UploadedFile() file?: Express.Multer.File,
-  ): Promise<UserEntity> {
+  ): Promise<UserDetailResponseDto> {
     const result = await this.userService.updateUser(id, updateUserDto, file);
     if (!result) {
       throw new NotFoundException('Usuario no encontrado');
     }
-    return result;
+    return UserDetailResponseDto.fromEntity(result);
   }
 
   /**
