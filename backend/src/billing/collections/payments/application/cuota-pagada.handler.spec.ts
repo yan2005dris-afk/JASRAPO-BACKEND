@@ -3,7 +3,7 @@ jest.mock('../../../../infrastructure/audit/audit.service', () => ({
   AuditService: jest.fn(),
 }));
 import { CuotaPagadaHandler } from './cuota-pagada.handler';
-import type { PrefacturaService } from '../domain/services/prefactura.service';
+import type { PrefacturaQueryRepository } from '../domain/repositories/prefactura-query.repository';
 import type { SRIEmissionDispatcherService } from '../../../../sri/emision/application/services/sri-emission-dispatcher.service';
 
 const mockLogger = {
@@ -15,12 +15,12 @@ const mockLogger = {
 };
 
 describe('CuotaPagadaHandler', () => {
-  let prefacturaService: jest.Mocked<PrefacturaService>;
+  let prefacturaRepository: jest.Mocked<PrefacturaQueryRepository>;
   let sriDispatcher: jest.Mocked<SRIEmissionDispatcherService>;
   let handler: CuotaPagadaHandler;
 
   beforeEach(() => {
-    prefacturaService = {
+    prefacturaRepository = {
       findPrefacturaDetalleByCuotaConvenioId: jest.fn(),
       findPrefacturaWithDetails: jest.fn(),
       findCuotasByIds: jest.fn(),
@@ -30,22 +30,22 @@ describe('CuotaPagadaHandler', () => {
     } as unknown as jest.Mocked<SRIEmissionDispatcherService>;
 
     handler = new CuotaPagadaHandler(
-      prefacturaService,
+      prefacturaRepository,
       sriDispatcher,
       mockLogger as any,
     );
   });
 
   it('should delegate to SRIEmissionDispatcherService when all cuotas are PAGADA', async () => {
-    prefacturaService.findPrefacturaDetalleByCuotaConvenioId.mockResolvedValue([
+    prefacturaRepository.findPrefacturaDetalleByCuotaConvenioId.mockResolvedValue([
       { prefacturaId: 100n },
     ]);
-    prefacturaService.findPrefacturaWithDetails.mockResolvedValue({
+    prefacturaRepository.findPrefacturaWithDetails.mockResolvedValue({
       prefacturaId: 100n,
       comprobanteId: 200n,
       cuotaConvenioIds: [5n, 6n],
     });
-    prefacturaService.findCuotasByIds.mockResolvedValue([
+    prefacturaRepository.findCuotasByIds.mockResolvedValue([
       { cuotaConvenioId: 5n, estado: 'PAGADA' },
       { cuotaConvenioId: 6n, estado: 'PAGADA' },
     ]);
@@ -56,15 +56,15 @@ describe('CuotaPagadaHandler', () => {
   });
 
   it('should NOT delegate when some cuotas are still not PAGADA', async () => {
-    prefacturaService.findPrefacturaDetalleByCuotaConvenioId.mockResolvedValue([
+    prefacturaRepository.findPrefacturaDetalleByCuotaConvenioId.mockResolvedValue([
       { prefacturaId: 100n },
     ]);
-    prefacturaService.findPrefacturaWithDetails.mockResolvedValue({
+    prefacturaRepository.findPrefacturaWithDetails.mockResolvedValue({
       prefacturaId: 100n,
       comprobanteId: 200n,
       cuotaConvenioIds: [5n, 6n],
     });
-    prefacturaService.findCuotasByIds.mockResolvedValue([
+    prefacturaRepository.findCuotasByIds.mockResolvedValue([
       { cuotaConvenioId: 5n, estado: 'PAGADA' },
       { cuotaConvenioId: 6n, estado: 'PENDIENTE' },
     ]);
@@ -75,21 +75,21 @@ describe('CuotaPagadaHandler', () => {
   });
 
   it('should gracefully no-op when no PrefacturaDetalle is found', async () => {
-    prefacturaService.findPrefacturaDetalleByCuotaConvenioId.mockResolvedValue(
+    prefacturaRepository.findPrefacturaDetalleByCuotaConvenioId.mockResolvedValue(
       [],
     );
 
     await handler.procesarCuotaPagada(999n);
 
-    expect(prefacturaService.findPrefacturaWithDetails).not.toHaveBeenCalled();
+    expect(prefacturaRepository.findPrefacturaWithDetails).not.toHaveBeenCalled();
     expect(sriDispatcher.tryEmit).not.toHaveBeenCalled();
   });
 
   it('should no-op when Prefactura has no comprobanteId', async () => {
-    prefacturaService.findPrefacturaDetalleByCuotaConvenioId.mockResolvedValue([
+    prefacturaRepository.findPrefacturaDetalleByCuotaConvenioId.mockResolvedValue([
       { prefacturaId: 100n },
     ]);
-    prefacturaService.findPrefacturaWithDetails.mockResolvedValue({
+    prefacturaRepository.findPrefacturaWithDetails.mockResolvedValue({
       prefacturaId: 100n,
       comprobanteId: null,
       cuotaConvenioIds: [5n],

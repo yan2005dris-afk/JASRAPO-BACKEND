@@ -59,3 +59,62 @@ export interface DailyCashSummaryResult {
   desglosePorTipoDetalle: DailyCashSummaryBreakdownItem[];
   desglosePorTipoComprobante: DailyCashSummaryBreakdownItem[];
 }
+
+export interface ComprobanteInfo {
+  id: bigint;
+  importeTotal: number | null;
+}
+
+export interface CuotaConvenioPaymentInfo {
+  cuotaConvenioId: bigint;
+  convenioId: bigint;
+  estado: string;
+  saldoPendiente: number;
+  montoPagado: number;
+  deletedAt: Date | null;
+}
+
+export interface CreatePagoRecordData {
+  clienteId: bigint;
+  cajaId: bigint | null;
+  banco: string | null;
+  tarjetaCredito: string | null;
+  fechaPago: Date;
+  montoTotalRecibido: number;
+  numeroOperacion: string | null;
+  observaciones: string | null;
+  referenciaBanco: string | null;
+  comprobanteUrl: string | null;
+  estadoPago: string;
+  creadoPor: string;
+}
+
+export interface CreateDetallePagoData {
+  pagoId: bigint;
+  comprobanteId: bigint | null;
+  cuotaConvenioId: bigint | null;
+  tipoPago: string;
+  montoAbonado: number;
+  formaPagoId: number;
+  referencia: string | null;
+  fechaTransaccion: Date | null;
+}
+
+export interface CreateSaldoFavorData {
+  clienteId: bigint;
+  pagoId: bigint;
+  montoSaldo: number;
+  tipoOrigen: string;
+  disponibleParaAplicar: boolean;
+}
+
+export interface PrefacturaCuotasInfo {
+  prefacturaId: bigint;
+  comprobanteId: bigint | null;
+  cuotaConvenioIds: bigint[];
+}
+
+export interface CuotaConvenioStatus {
+  cuotaConvenioId: bigint;
+  estado: string;
+}

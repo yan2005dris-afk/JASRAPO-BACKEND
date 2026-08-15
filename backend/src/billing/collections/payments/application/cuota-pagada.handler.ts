@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PrefacturaService } from '../domain/services/prefactura.service';
+import { PrefacturaQueryRepository } from '../domain/repositories/prefactura-query.repository';
 import { SRIEmissionDispatcherService } from '../../../../sri/emision/application/services/sri-emission-dispatcher.service';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
@@ -8,7 +8,7 @@ import { LogContext } from 'src/shared/decorators/log-context.decorator';
 @Injectable()
 export class CuotaPagadaHandler {
   constructor(
-    private readonly prefacturaService: PrefacturaService,
+    private readonly prefacturaRepository: PrefacturaQueryRepository,
     private readonly sriDispatcher: SRIEmissionDispatcherService,
     private readonly logger: LoggerService,
   ) {}
@@ -19,7 +19,7 @@ export class CuotaPagadaHandler {
     );
 
     const detalles =
-      await this.prefacturaService.findPrefacturaDetalleByCuotaConvenioId(
+      await this.prefacturaRepository.findPrefacturaDetalleByCuotaConvenioId(
         cuotaConvenioId,
       );
 
@@ -32,8 +32,9 @@ export class CuotaPagadaHandler {
 
     const prefacturaId = detalles[0].prefacturaId;
 
-    const prefactura =
-      await this.prefacturaService.findPrefacturaWithDetails(prefacturaId);
+    const prefactura = await this.prefacturaRepository.findPrefacturaWithDetails(
+      prefacturaId,
+    );
 
     if (!prefactura) {
       this.logger.warn(
@@ -57,8 +58,9 @@ export class CuotaPagadaHandler {
       return;
     }
 
-    const cuotas =
-      await this.prefacturaService.findCuotasByIds(todasLasCuotaIds);
+    const cuotas = await this.prefacturaRepository.findCuotasByIds(
+      todasLasCuotaIds,
+    );
 
     const todasPagadas =
       cuotas.length === todasLasCuotaIds.length &&

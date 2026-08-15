@@ -1,9 +1,9 @@
-import { PrismaPrefacturaService } from './prisma-prefactura.service';
+import { PrismaPrefacturaQueryRepository } from './prisma-prefactura-query.repository';
 import type { PrismaService } from 'src/infrastructure/database/prisma.service';
 
-describe('PrismaPrefacturaService', () => {
+describe('PrismaPrefacturaQueryRepository', () => {
   let prisma: jest.Mocked<PrismaService>;
-  let service: PrismaPrefacturaService;
+  let repository: PrismaPrefacturaQueryRepository;
 
   beforeEach(() => {
     prisma = {
@@ -18,7 +18,7 @@ describe('PrismaPrefacturaService', () => {
       },
     } as unknown as jest.Mocked<PrismaService>;
 
-    service = new PrismaPrefacturaService(prisma);
+    repository = new PrismaPrefacturaQueryRepository(prisma);
   });
 
   describe('findPrefacturaDetalleByCuotaConvenioId', () => {
@@ -27,7 +27,8 @@ describe('PrismaPrefacturaService', () => {
         { prefacturaId: 100n } as any,
       ]);
 
-      const result = await service.findPrefacturaDetalleByCuotaConvenioId(5n);
+      const result =
+        await repository.findPrefacturaDetalleByCuotaConvenioId(5n);
 
       expect(prisma.prefacturaDetalle.findMany).toHaveBeenCalledWith({
         where: { cuotaConvenioId: 5n },
@@ -45,7 +46,7 @@ describe('PrismaPrefacturaService', () => {
         prefacturaDetalle: [{ cuotaConvenioId: 5n }, { cuotaConvenioId: 6n }],
       } as any);
 
-      const result = await service.findPrefacturaWithDetails(100n);
+      const result = await repository.findPrefacturaWithDetails(100n);
 
       expect(result).toEqual({
         prefacturaId: 100n,
@@ -57,7 +58,7 @@ describe('PrismaPrefacturaService', () => {
     it('returns null when prefactura not found', async () => {
       prisma.prefacturas.findFirst.mockResolvedValue(null);
 
-      const result = await service.findPrefacturaWithDetails(999n);
+      const result = await repository.findPrefacturaWithDetails(999n);
 
       expect(result).toBeNull();
     });
@@ -70,7 +71,7 @@ describe('PrismaPrefacturaService', () => {
         { cuotaConvenioId: 6n, estado: 'PAGADA' } as any,
       ]);
 
-      const result = await service.findCuotasByIds([5n, 6n]);
+      const result = await repository.findCuotasByIds([5n, 6n]);
 
       expect(prisma.cuotaConvenio.findMany).toHaveBeenCalledWith({
         where: { cuotaConvenioId: { in: [5n, 6n] }, deletedAt: null },

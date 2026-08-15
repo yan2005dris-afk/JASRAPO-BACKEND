@@ -1,57 +1,16 @@
 import type { PaymentEntity } from '../entities/payment.entity';
 import type { PaymentDetailEntity } from '../entities/payment-detail.entity';
 import type { SaldoFavorEntity } from '../entities/saldo-favor.entity';
-import type { PaymentFilters } from '../types/payment.types';
+import type {
+  PaymentFilters,
+  ComprobanteInfo,
+  CuotaConvenioPaymentInfo,
+  CreatePagoRecordData,
+  CreateDetallePagoData,
+  CreateSaldoFavorData,
+} from '../types/payment.types';
 import type { PaginateOptions } from 'src/infrastructure/common/utils/pagination.util';
 import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
-
-export interface ComprobanteInfo {
-  id: bigint;
-  importeTotal: number | null;
-}
-
-export interface CuotaConvenioPaymentInfo {
-  cuotaConvenioId: bigint;
-  convenioId: bigint;
-  estado: string;
-  saldoPendiente: number;
-  montoPagado: number;
-  deletedAt: Date | null;
-}
-
-export interface CreatePagoRecordData {
-  clienteId: bigint;
-  cajaId: bigint | null;
-  banco: string | null;
-  tarjetaCredito: string | null;
-  fechaPago: Date;
-  montoTotalRecibido: number;
-  numeroOperacion: string | null;
-  observaciones: string | null;
-  referenciaBanco: string | null;
-  comprobanteUrl: string | null;
-  estadoPago: string;
-  creadoPor: string;
-}
-
-export interface CreateDetallePagoData {
-  pagoId: bigint;
-  comprobanteId: bigint | null;
-  cuotaConvenioId: bigint | null;
-  tipoPago: string;
-  montoAbonado: number;
-  formaPagoId: number;
-  referencia: string | null;
-  fechaTransaccion: Date | null;
-}
-
-export interface CreateSaldoFavorData {
-  clienteId: bigint;
-  pagoId: bigint;
-  montoSaldo: number;
-  tipoOrigen: string;
-  disponibleParaAplicar: boolean;
-}
 
 export abstract class PaymentRepository {
   abstract findById(id: bigint, tx?: unknown): Promise<PaymentEntity | null>;
@@ -88,7 +47,10 @@ export abstract class PaymentRepository {
     tx?: unknown,
   ): Promise<ComprobanteInfo | null>;
 
-  abstract lockComprobante(comprobanteId: bigint, tx: unknown): Promise<void>;
+  abstract lockComprobante(
+    comprobanteId: bigint,
+    tx: unknown,
+  ): Promise<void>;
 
   abstract findComprobanteAppliedSum(
     comprobanteId: bigint,

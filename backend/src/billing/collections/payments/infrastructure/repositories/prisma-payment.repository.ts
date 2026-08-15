@@ -8,19 +8,19 @@ import {
   Banco,
   TarjetaCredito,
 } from 'src/generated/prisma/client';
-import {
-  PaymentRepository,
-  type ComprobanteInfo,
-  type CuotaConvenioPaymentInfo,
-  type CreatePagoRecordData,
-  type CreateDetallePagoData,
-  type CreateSaldoFavorData,
-} from '../../domain/repositories/payment.repository';
+import { PaymentRepository } from '../../domain/repositories/payment.repository';
 import { PaymentEntity } from '../../domain/entities/payment.entity';
 import { PaymentDetailEntity } from '../../domain/entities/payment-detail.entity';
 import { SaldoFavorEntity } from '../../domain/entities/saldo-favor.entity';
 import { PaymentMapper } from '../mappers/payment.mapper';
-import type { PaymentFilters } from '../../domain/types/payment.types';
+import type {
+  PaymentFilters,
+  ComprobanteInfo,
+  CuotaConvenioPaymentInfo,
+  CreatePagoRecordData,
+  CreateDetallePagoData,
+  CreateSaldoFavorData,
+} from '../../domain/types/payment.types';
 import {
   paginate,
   type PaginateOptions,

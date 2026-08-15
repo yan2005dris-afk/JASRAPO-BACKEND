@@ -1,13 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
-import {
-  PrefacturaService,
-  type PrefacturaCuotasInfo,
-  type CuotaConvenioStatus,
-} from '../../domain/services/prefactura.service';
+import { PrefacturaQueryRepository } from '../../domain/repositories/prefactura-query.repository';
+import type {
+  PrefacturaCuotasInfo,
+  CuotaConvenioStatus,
+} from '../../domain/types/payment.types';
 
 @Injectable()
-export class PrismaPrefacturaService implements PrefacturaService {
+export class PrismaPrefacturaQueryRepository
+  implements PrefacturaQueryRepository
+{
   constructor(private readonly prisma: PrismaService) {}
 
   async findPrefacturaDetalleByCuotaConvenioId(

@@ -1,15 +1,9 @@
-export interface PrefacturaCuotasInfo {
-  prefacturaId: bigint;
-  comprobanteId: bigint | null;
-  cuotaConvenioIds: bigint[];
-}
+import type {
+  PrefacturaCuotasInfo,
+  CuotaConvenioStatus,
+} from '../types/payment.types';
 
-export interface CuotaConvenioStatus {
-  cuotaConvenioId: bigint;
-  estado: string;
-}
-
-export abstract class PrefacturaService {
+export abstract class PrefacturaQueryRepository {
   abstract findPrefacturaDetalleByCuotaConvenioId(
     cuotaConvenioId: bigint,
   ): Promise<{ prefacturaId: bigint }[]>;
