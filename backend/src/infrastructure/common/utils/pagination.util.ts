@@ -6,13 +6,8 @@ export interface PaginationParams {
   page: number;
 }
 
-function toFiniteNumberOr(
-  value: number | undefined,
-  fallback: number,
-): number {
-  return typeof value === 'number' && Number.isFinite(value)
-    ? value
-    : fallback;
+function toFiniteNumberOr(value: number | undefined, fallback: number): number {
+  return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
 }
 
 export function getPagination(page = 1, limit = 10): PaginationParams {
