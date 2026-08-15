@@ -7,7 +7,7 @@ import { CreateRoleUseCase } from './use-cases/create-role.use-case';
 import { AssignPermissionToRoleUseCase } from './use-cases/assign-permission-to-role.use-case';
 import { RemovePermissionFromRoleUseCase } from './use-cases/remove-permission-from-role.use-case';
 import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
-import type { SimpleRole } from '../domain/repositories/role.repository';
+import type { RoleEntity } from '../domain/entities/role.entity';
 
 describe('RolesService', () => {
   let service: RolesService;
@@ -58,14 +58,14 @@ describe('RolesService', () => {
   });
 
   it('should return paginated results from findAll', async () => {
-    const mockRoles: SimpleRole[] = [
-      { rolId: 1, nombre: 'Admin' },
-      { rolId: 2, nombre: 'Editor' },
+    const mockRoles: RoleEntity[] = [
+      { rolId: 1, nombre: 'Admin', deletedAt: null },
+      { rolId: 2, nombre: 'Editor', deletedAt: null },
     ];
     mockRoleRepository.findAll.mockResolvedValue(mockRoles);
     mockRoleRepository.count.mockResolvedValue(10);
 
-    const result: PaginatedResult<SimpleRole> = await service.findAll(1, 10);
+    const result: PaginatedResult<RoleEntity> = await service.findAll(1, 10);
 
     expect(mockRoleRepository.findAll).toHaveBeenCalledWith(0, 10);
     expect(mockRoleRepository.count).toHaveBeenCalled();

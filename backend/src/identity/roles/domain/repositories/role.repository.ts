@@ -1,63 +1,33 @@
-export interface RolePermissionDetails {
-  rolPermisoId: number;
-  rolId: number;
-  permisoId: number;
-  deletedAt: Date | null;
-  permiso: {
-    permisoId: number;
-    nombre: string;
-    descripcion: string | null;
-    recurso: string;
-    accion: string;
-  };
-}
+import type { RoleEntity, RolePermission } from '../entities/role.entity';
 
-export interface RoleWithPermissions {
-  rolId: number;
-  nombre: string;
-  deletedAt: Date | null;
-  rolPermisos: RolePermissionDetails[];
-}
-
-export interface SimpleRole {
-  rolId: number;
-  nombre: string;
-  deletedAt?: Date | null;
-}
-
-export interface RolePermissionAssignment {
-  rolPermisoId: number;
-  rolId: number;
-  permisoId: number;
-  deletedAt: Date | null;
-}
+export type { RolePermission };
 
 export abstract class RoleRepository {
-  abstract findUnique(rolId: number): Promise<RoleWithPermissions | null>;
-  abstract findByName(nombre: string): Promise<SimpleRole | null>;
+  abstract findUnique(rolId: number): Promise<RoleEntity | null>;
+  abstract findByName(nombre: string): Promise<RoleEntity | null>;
   abstract findFirstAssignment(
     rolId: number,
     permisoId: number,
-  ): Promise<RolePermissionAssignment | null>;
+  ): Promise<RolePermission | null>;
   abstract findPermission(permisoId: number): Promise<{
     permisoId: number;
     nombre: string;
     deletedAt: Date | null;
   } | null>;
-  abstract findAll(skip?: number, take?: number): Promise<SimpleRole[]>;
+  abstract findAll(skip?: number, take?: number): Promise<RoleEntity[]>;
   abstract count(params?: { where?: Record<string, any> }): Promise<number>;
-  abstract create(nombre: string): Promise<SimpleRole>;
+  abstract create(nombre: string): Promise<RoleEntity>;
   abstract update(
     rolId: number,
     data: { nombre?: string; deletedAt?: Date | null },
-  ): Promise<SimpleRole>;
+  ): Promise<RoleEntity>;
   abstract assignPermission(
     rolId: number,
     permisoId: number,
-  ): Promise<RolePermissionAssignment>;
+  ): Promise<RolePermission>;
   abstract updateAssignment(
     rolPermisoId: number,
     data: { deletedAt?: Date | null },
-  ): Promise<RolePermissionAssignment>;
+  ): Promise<RolePermission>;
   abstract syncSequence(): Promise<void>;
 }

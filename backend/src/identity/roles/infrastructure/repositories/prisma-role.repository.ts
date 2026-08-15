@@ -1,19 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '../../../../generated/prisma/client.js';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
-import {
-  RoleRepository,
-  RoleWithPermissions,
-  SimpleRole,
-  RolePermissionAssignment,
-} from '../../domain/repositories/role.repository';
+import { RoleRepository, RolePermission } from '../../domain/repositories/role.repository';
+import { RoleEntity } from '../../domain/entities/role.entity';
 import { RoleMapper } from '../mappers/role.mapper';
 
 @Injectable()
 export class PrismaRoleRepository implements RoleRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findUnique(rolId: number): Promise<RoleWithPermissions | null> {
+  async findUnique(rolId: number): Promise<RoleEntity | null> {
     const role = await this.prisma.roles.findUnique({
       where: { rolId },
       include: {
@@ -37,10 +33,10 @@ export class PrismaRoleRepository implements RoleRepository {
         },
       },
     });
-    return RoleMapper.toWithPermissions(role);
+    return RoleMapper.toEntity(role);
   }
 
-  async findByName(nombre: string): Promise<SimpleRole | null> {
+  async findByName(nombre: string): Promise<RoleEntity | null> {
     const role = await this.prisma.roles.findFirst({
       where: { nombre, deletedAt: null },
       select: {
@@ -49,13 +45,13 @@ export class PrismaRoleRepository implements RoleRepository {
         deletedAt: true,
       },
     });
-    return RoleMapper.toSimple(role);
+    return RoleMapper.toEntity(role);
   }
 
   async findFirstAssignment(
     rolId: number,
     permisoId: number,
-  ): Promise<RolePermissionAssignment | null> {
+  ): Promise<RolePermission | null> {
     const assignment = await this.prisma.rolPermisos.findFirst({
       where: { rolId, permisoId },
     });
@@ -77,17 +73,18 @@ export class PrismaRoleRepository implements RoleRepository {
     });
   }
 
-  async findAll(skip?: number, take?: number): Promise<SimpleRole[]> {
+  async findAll(skip?: number, take?: number): Promise<RoleEntity[]> {
     const roles = await this.prisma.roles.findMany({
       where: { deletedAt: null },
       select: {
         rolId: true,
         nombre: true,
+        deletedAt: true,
       },
       skip,
       take,
     });
-    return roles.map((role) => RoleMapper.toSimple(role)!);
+    return roles.map((role) => RoleMapper.toEntity(role)!);
   }
 
   async count(params?: { where?: Record<string, any> }): Promise<number> {
@@ -96,36 +93,38 @@ export class PrismaRoleRepository implements RoleRepository {
     });
   }
 
-  async create(nombre: string): Promise<SimpleRole> {
+  async create(nombre: string): Promise<RoleEntity> {
     const role = await this.prisma.roles.create({
       data: { nombre },
       select: {
         rolId: true,
         nombre: true,
+        deletedAt: true,
       },
     });
-    return RoleMapper.toSimple(role)!;
+    return RoleMapper.toEntity(role)!;
   }
 
   async update(
     rolId: number,
     data: { nombre?: string; deletedAt?: Date | null },
-  ): Promise<SimpleRole> {
+  ): Promise<RoleEntity> {
     const role = await this.prisma.roles.update({
       where: { rolId },
       data,
       select: {
         rolId: true,
         nombre: true,
+        deletedAt: true,
       },
     });
-    return RoleMapper.toSimple(role)!;
+    return RoleMapper.toEntity(role)!;
   }
 
   async assignPermission(
     rolId: number,
     permisoId: number,
-  ): Promise<RolePermissionAssignment> {
+  ): Promise<RolePermission> {
     const assignment = await this.prisma.rolPermisos.create({
       data: { rolId, permisoId },
     });
@@ -135,7 +134,7 @@ export class PrismaRoleRepository implements RoleRepository {
   async updateAssignment(
     rolPermisoId: number,
     data: { deletedAt?: Date | null },
-  ): Promise<RolePermissionAssignment> {
+  ): Promise<RolePermission> {
     const assignment = await this.prisma.rolPermisos.update({
       where: { rolPermisoId },
       data,

@@ -4,10 +4,8 @@ import { UpdateRoleDto } from '../interfaces/dto/update-role.dto';
 import { CreateRoleUseCase } from './use-cases/create-role.use-case';
 import { AssignPermissionToRoleUseCase } from './use-cases/assign-permission-to-role.use-case';
 import { RemovePermissionFromRoleUseCase } from './use-cases/remove-permission-from-role.use-case';
-import {
-  RoleRepository,
-  type SimpleRole,
-} from '../domain/repositories/role.repository';
+import { RoleRepository } from '../domain/repositories/role.repository';
+import { RoleEntity } from '../domain/entities/role.entity';
 import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
 import { getPagination } from 'src/infrastructure/common/utils/pagination.util';
 
@@ -27,7 +25,7 @@ export class RolesService {
   async findAll(
     page: number = 1,
     limit: number = 10,
-  ): Promise<PaginatedResult<SimpleRole>> {
+  ): Promise<PaginatedResult<RoleEntity>> {
     const { skip, take } = getPagination(page, limit);
 
     const [data, total] = await Promise.all([
@@ -62,13 +60,13 @@ export class RolesService {
     return {
       rolId: role.rolId,
       nombre: role.nombre,
-      permisos: role.rolPermisos.map((rp: any) => ({
+      permisos: (role.rolPermisos || []).map((rp: any) => ({
         rolPermisoId: rp.rolPermisoId,
         permisoId: rp.permisoId,
-        nombre: rp.permiso.nombre,
-        descripcion: rp.permiso.descripcion,
-        recurso: rp.permiso.recurso,
-        accion: rp.permiso.accion,
+        nombre: rp.permiso?.nombre,
+        descripcion: rp.permiso?.descripcion,
+        recurso: rp.permiso?.recurso,
+        accion: rp.permiso?.accion,
       })),
     };
   }
