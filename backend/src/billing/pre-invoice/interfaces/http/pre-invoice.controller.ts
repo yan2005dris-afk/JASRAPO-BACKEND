@@ -30,7 +30,7 @@ import { buildPdfFileName } from 'src/infrastructure/pdf/utils/pdf-format.utils'
 import { PreInvoiceResponseDto } from '../dto/pre-invoice-response.dto';
 import { PaginationMetaDto } from 'src/infrastructure/common/dtos/pagination-meta.dto';
 import { ApiPaginatedResponse } from 'src/infrastructure/common/decorators/api-paginated-response.decorator';
-import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
+import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
 import { EnumStateDto } from 'src/shared/enums/state-catalog';
 import { GeneratePreInvoicePdfUseCase } from '../../application/use-cases/generate-pre-invoice-pdf.use-case';
 import { SendPreInvoiceByEmailUseCase } from '../../application/use-cases/send-pre-invoice-by-email.use-case';
@@ -81,14 +81,19 @@ export class PreInvoiceController {
   @Get()
   async findAll(
     @Query() query: FindAllPreInvoicesDto,
-  ): Promise<PaginatedResult<any>> {
-    return this.preInvoiceService.findAll(query.page, query.limit, {
+  ): Promise<PaginatedResult<PreInvoiceResponseDto>> {
+    const result = await this.preInvoiceService.findAll(query.page, query.limit, {
       loteId: query.loteId,
       periodoId: query.periodoId,
       estado: query.estado,
       contratoId: query.contratoId,
       identificacion: query.identificacion,
     });
+
+    return {
+      data: PreInvoiceResponseDto.fromEntityList(result.data),
+      meta: result.meta,
+    };
   }
 
   /**
@@ -106,10 +111,19 @@ export class PreInvoiceController {
     type: Number,
     example: 1,
   })
+  @ApiResponse({
+    status: 200,
+    description: 'Pre-invoice found',
+    type: PreInvoiceResponseDto,
+  })
+  @ApiResponse({ status: 404, description: 'Pre-invoice not found' })
   @RequiredPermission('pre-invoices', 'read')
   @Get(':id')
-  async findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.preInvoiceService.findOne(id);
+  async findOne(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<PreInvoiceResponseDto> {
+    const entity = await this.preInvoiceService.findOne(id);
+    return PreInvoiceResponseDto.fromEntity(entity);
   }
 
   /**
@@ -186,18 +200,24 @@ export class PreInvoiceController {
     type: Number,
     example: 1,
   })
+  @ApiResponse({
+    status: 200,
+    description: 'Pre-invoice state changed successfully',
+    type: PreInvoiceResponseDto,
+  })
   @RequiredPermission('pre-invoices', 'update')
   @Patch(':id/state')
   async updateState(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdatePreInvoiceStateDto,
     @CurrentUser() user: any,
-  ) {
-    return this.preInvoiceService.updateState(
+  ): Promise<PreInvoiceResponseDto> {
+    const entity = await this.preInvoiceService.updateState(
       id,
       dto.action,
       user?.email ?? user?.sub?.toString(),
       dto.motivoRechazo,
     );
+    return PreInvoiceResponseDto.fromEntity(entity);
   }
 }

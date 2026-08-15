@@ -1,10 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
-import { PREINVOICE_STATES } from './pre-invoice-states';
+import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
+import { PREINVOICE_STATES } from '../domain/constants/pre-invoice-states';
 import { EnumStateDto } from 'src/shared/enums/state-catalog';
 import { FindAllPreInvoicesUseCase } from './use-cases/find-all-pre-invoices.use-case';
 import { FindOnePreInvoiceUseCase } from './use-cases/find-one-pre-invoice.use-case';
 import { UpdatePreInvoiceStateUseCase } from './use-cases/update-pre-invoice-state.use-case';
+import type { PreInvoiceEntity } from '../domain/entities/pre-invoice.entity';
+import type { PreInvoiceFilters } from '../domain/types/pre-invoice.types';
 
 @Injectable()
 export class PreInvoiceService {
@@ -17,18 +19,12 @@ export class PreInvoiceService {
   async findAll(
     page: number = 1,
     limit: number = 10,
-    filters?: {
-      loteId?: number;
-      periodoId?: number;
-      estado?: string;
-      contratoId?: string;
-      identificacion?: string;
-    },
-  ): Promise<PaginatedResult<any>> {
+    filters?: PreInvoiceFilters,
+  ): Promise<PaginatedResult<PreInvoiceEntity>> {
     return this.findAllUseCase.execute(page, limit, filters);
   }
 
-  async findOne(id: number) {
+  async findOne(id: number): Promise<PreInvoiceEntity> {
     return this.findOneUseCase.execute(id);
   }
 
@@ -37,7 +33,7 @@ export class PreInvoiceService {
     accion: string,
     userId?: string,
     motivoRechazo?: string,
-  ) {
+  ): Promise<PreInvoiceEntity> {
     return this.updateStateUseCase.execute({
       id,
       accion,

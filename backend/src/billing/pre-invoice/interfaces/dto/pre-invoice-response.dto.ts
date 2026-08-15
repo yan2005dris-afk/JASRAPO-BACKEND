@@ -1,4 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import type { PreInvoiceEntity } from '../../domain/entities/pre-invoice.entity';
+import type { PreInvoiceDetailEntity } from '../../domain/entities/pre-invoice-detail.entity';
 
 export class PreInvoiceDetailResponseDto {
   @ApiProperty({ description: 'Detail ID' })
@@ -23,10 +25,24 @@ export class PreInvoiceDetailResponseDto {
   total: number;
 
   @ApiPropertyOptional({ description: 'SRI tax code' })
-  codigoImpuestoSri?: string;
+  codigoImpuestoSri?: string | null;
 
   @ApiPropertyOptional({ description: 'Discount' })
   descuento?: number;
+
+  static fromEntity(detail: PreInvoiceDetailEntity): PreInvoiceDetailResponseDto {
+    const dto = new PreInvoiceDetailResponseDto();
+    dto.prefacturaDetalleId = detail.prefacturaDetalleId;
+    dto.descripcion = detail.descripcion;
+    dto.cantidad = Number(detail.cantidad);
+    dto.precioUnitario = Number(detail.precioUnitario);
+    dto.subtotal = Number(detail.subtotal);
+    dto.iva = Number(detail.iva);
+    dto.total = Number(detail.total);
+    dto.codigoImpuestoSri = detail.codigoImpuestoSri ?? null;
+    dto.descuento = Number(detail.descuento);
+    return dto;
+  }
 }
 
 export class PreInvoiceResponseDto {
@@ -40,7 +56,7 @@ export class PreInvoiceResponseDto {
   contratoId: number;
 
   @ApiPropertyOptional({ description: 'Batch ID' })
-  loteId?: number;
+  loteId?: number | null;
 
   @ApiProperty({ description: 'Period ID' })
   periodoId: number;
@@ -73,19 +89,19 @@ export class PreInvoiceResponseDto {
   estado: string;
 
   @ApiPropertyOptional({ description: 'Client name' })
-  clienteNombre?: string;
+  clienteNombre?: string | null;
 
   @ApiPropertyOptional({ description: 'Client identification' })
-  clienteIdentificacion?: string;
+  clienteIdentificacion?: string | null;
 
   @ApiPropertyOptional({ description: 'Client address' })
-  clienteDireccion?: string;
+  clienteDireccion?: string | null;
 
   @ApiPropertyOptional({ description: 'Client email' })
-  clienteEmail?: string;
+  clienteEmail?: string | null;
 
   @ApiPropertyOptional({ description: 'Tariff name' })
-  tarifaNombre?: string;
+  tarifaNombre?: string | null;
 
   @ApiProperty({ description: 'Creation date' })
   createdAt: Date;
@@ -95,4 +111,35 @@ export class PreInvoiceResponseDto {
 
   @ApiPropertyOptional({ description: 'Pre-invoice details' })
   detalles?: PreInvoiceDetailResponseDto[];
+
+  static fromEntity(entity: PreInvoiceEntity): PreInvoiceResponseDto {
+    const dto = new PreInvoiceResponseDto();
+    dto.prefacturaId = Number(entity.prefacturaId);
+    dto.uuid = entity.uuid;
+    dto.contratoId = Number(entity.contratoId);
+    dto.loteId = entity.loteId ? Number(entity.loteId) : null;
+    dto.periodoId = entity.periodoId;
+    dto.subtotal = Number(entity.subtotal);
+    dto.iva = Number(entity.iva);
+    dto.descuentoTotal = Number(entity.descuentoTotal);
+    dto.totalPagar = Number(entity.totalPagar);
+    dto.deudaAnterior = Number(entity.deudaAnterior);
+    dto.saldoVencido = Number(entity.saldoVencido);
+    dto.abono = Number(entity.abono);
+    dto.saldoActual = Number(entity.saldoActual);
+    dto.estado = entity.estado;
+    dto.clienteNombre = entity.clienteNombre ?? null;
+    dto.clienteIdentificacion = entity.clienteIdentificacion ?? null;
+    dto.clienteDireccion = entity.clienteDireccion ?? null;
+    dto.clienteEmail = entity.clienteEmail ?? null;
+    dto.tarifaNombre = entity.tarifaNombre ?? null;
+    dto.createdAt = entity.createdAt;
+    dto.updatedAt = entity.updatedAt;
+    dto.detalles = entity.detalles?.map(PreInvoiceDetailResponseDto.fromEntity);
+    return dto;
+  }
+
+  static fromEntityList(entities: PreInvoiceEntity[]): PreInvoiceResponseDto[] {
+    return entities.map(PreInvoiceResponseDto.fromEntity);
+  }
 }

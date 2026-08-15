@@ -1,62 +1,138 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
+import { Prisma, EstadoPrefactura } from 'src/generated/prisma/client';
 import { PreInvoiceRepository } from '../../domain/repositories/pre-invoice.repository';
+import { PreInvoiceEntity } from '../../domain/entities/pre-invoice.entity';
+import { PreInvoiceMapper } from '../mappers/pre-invoice.mapper';
+import type {
+  PreInvoiceFilters,
+  UpdatePreInvoiceStateData,
+} from '../../domain/types/pre-invoice.types';
+import {
+  paginate,
+  type PaginateOptions,
+} from 'src/infrastructure/common/utils/pagination.util';
+import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
 
 @Injectable()
 export class PrismaPreInvoiceRepository implements PreInvoiceRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findMany(params: {
-    where?: Record<string, any>;
-    include?: Record<string, any>;
-    orderBy?: Record<string, any>;
-    skip?: number;
-    take?: number;
-  }): Promise<any[]> {
-    return this.prisma.prefacturas.findMany(params);
-  }
+  private readonly defaultInclude = {
+    prefacturaDetalle: {
+      include: { rubro: { select: { nombre: true } } },
+    },
+    contrato: {
+      select: {
+        contratoId: true,
+        numeroGuia: true,
+        cliente: {
+          select: {
+            clienteId: true,
+            nombres: true,
+            apellidos: true,
+            identificacion: true,
+            direccionDomicilio: true,
+            email: true,
+          },
+        },
+      },
+    },
+    lote: {
+      select: {
+        loteId: true,
+        estado: true,
+        comunidad: { select: { nombre: true } },
+      },
+    },
+    periodoRel: {
+      select: { nombre: true, fechaInicio: true, fechaFin: true },
+    },
+    puntoEmision: {
+      select: {
+        id: true,
+        codigo: true,
+        establecimiento: {
+          select: {
+            id: true,
+            codigo: true,
+            emisor: {
+              select: {
+                id: true,
+                ruc: true,
+                razonSocial: true,
+              },
+            },
+          },
+        },
+      },
+    },
+  };
 
-  async count(where?: Record<string, any>): Promise<number> {
-    return this.prisma.prefacturas.count({
-      where: where ?? {},
-    });
+  async paginate(
+    filters: PreInvoiceFilters,
+    pagination: PaginateOptions,
+  ): Promise<PaginatedResult<PreInvoiceEntity>> {
+    const where: Prisma.PrefacturasWhereInput = {
+      deletedAt: null,
+      ...(filters.loteId ? { loteId: BigInt(filters.loteId) } : {}),
+      ...(filters.periodoId ? { periodoId: filters.periodoId } : {}),
+      ...(filters.estado ? { estado: filters.estado as EstadoPrefactura } : {}),
+      ...(filters.contratoId ? { contratoId: BigInt(filters.contratoId) } : {}),
+      ...(filters.identificacion
+        ? {
+            clienteIdentificacion: {
+              contains: filters.identificacion,
+              mode: 'insensitive',
+            },
+          }
+        : {}),
+    };
+
+    const paginated = await paginate<any>(
+      this.prisma.prefacturas,
+      {
+        where,
+        include: this.defaultInclude,
+        orderBy: { createdAt: 'desc' },
+      },
+      pagination,
+    );
+
+    return {
+      data: PreInvoiceMapper.toDomainList(paginated.data),
+      meta: paginated.meta,
+    };
   }
 
   async findIdsByLoteId(loteId: bigint): Promise<{ prefacturaId: bigint }[]> {
     return this.prisma.prefacturas.findMany({
-      where: { loteId },
+      where: { loteId, deletedAt: null },
       select: { prefacturaId: true },
     });
   }
 
-  async findById(
-    id: number | bigint,
-    options?: { include?: Record<string, any> },
-  ): Promise<any> {
-    return this.prisma.prefacturas.findUnique({
+  async findById(id: number | bigint): Promise<PreInvoiceEntity | null> {
+    const record = await this.prisma.prefacturas.findUnique({
       where: { prefacturaId: BigInt(id) },
-      include: options?.include,
+      include: this.defaultInclude,
     });
+    return PreInvoiceMapper.toDomain(record);
   }
 
   async updateState(
     id: number | bigint,
     estado: string,
     estadoEsperado: string,
-    data?: {
-      aprobadaPor?: string;
-      motivoRechazo?: string;
-      fechaAprobacion?: Date;
-      comprobanteId?: bigint;
-    },
+    data?: UpdatePreInvoiceStateData,
   ): Promise<boolean> {
     const result = await this.prisma.prefacturas.updateMany({
       where: {
         prefacturaId: BigInt(id),
-        estado: estadoEsperado as any,
+        estado: estadoEsperado as EstadoPrefactura,
       },
       data: {
-        estado: estado as any,
+        estado: estado as EstadoPrefactura,
         ...(data?.aprobadaPor ? { aprobadaPor: data.aprobadaPor } : {}),
         ...(data?.motivoRechazo ? { motivoRechazo: data.motivoRechazo } : {}),
         ...(data?.fechaAprobacion

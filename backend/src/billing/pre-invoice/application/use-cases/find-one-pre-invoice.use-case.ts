@@ -1,47 +1,17 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PreInvoiceRepository } from '../../domain/repositories/pre-invoice.repository';
+import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
+import type { PreInvoiceEntity } from '../../domain/entities/pre-invoice.entity';
 
 @Injectable()
 export class FindOnePreInvoiceUseCase {
   constructor(private readonly preInvoiceRepository: PreInvoiceRepository) {}
 
-  async execute(id: number) {
-    const preInvoice = await this.preInvoiceRepository.findById(id, {
-      include: {
-        prefacturaDetalle: {
-          include: { rubro: { select: { nombre: true } } },
-        },
-        contrato: {
-          select: {
-            contratoId: true,
-            numeroGuia: true,
-            cliente: {
-              select: {
-                clienteId: true,
-                nombres: true,
-                apellidos: true,
-                identificacion: true,
-                direccionDomicilio: true,
-                email: true,
-              },
-            },
-          },
-        },
-        lote: {
-          select: {
-            loteId: true,
-            estado: true,
-            comunidad: { select: { nombre: true } },
-          },
-        },
-        periodoRel: {
-          select: { nombre: true, fechaInicio: true, fechaFin: true },
-        },
-      },
-    });
+  async execute(id: number): Promise<PreInvoiceEntity> {
+    const preInvoice = await this.preInvoiceRepository.findById(id);
 
     if (!preInvoice) {
-      throw new NotFoundException(`Pre-invoice ${id} not found`);
+      throw new EntityNotFoundException('Prefactura', id);
     }
 
     return preInvoice;

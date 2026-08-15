@@ -47,7 +47,7 @@ describe('SendPreInvoiceByEmailUseCase', () => {
       prefacturaId: 10,
       clienteEmail: 'cliente@test.com',
       clienteNombre: 'Juan Perez',
-      totalPagar: new Decimal('42.50'),
+      totalPagar: 42.5,
       periodoRel: { nombre: 'Enero 2026' },
     });
     mockGeneratePdf.execute.mockResolvedValue(pdfBuffer);
@@ -59,7 +59,7 @@ describe('SendPreInvoiceByEmailUseCase', () => {
       'cliente@test.com',
       'Juan Perez',
       'Enero 2026',
-      new Decimal('42.50'),
+      42.5,
       pdfBuffer,
     );
     expect(result).toEqual({ email: 'cliente@test.com', queued: true });

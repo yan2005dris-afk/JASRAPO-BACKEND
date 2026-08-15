@@ -1,13 +1,16 @@
 import {
   Injectable,
-  BadRequestException,
-  NotFoundException,
   Inject,
 } from '@nestjs/common';
 import { PreInvoiceRepository } from '../../domain/repositories/pre-invoice.repository';
 import { ComprobanteRepository } from '../../../../sri/emision/domain/repositories/comprobante.repository';
 import { ComprobanteEstado } from '../../../../sri/emision/domain/constants/comprobante-estado.enum';
-import { STATE_TRANSITIONS } from '../pre-invoice-states';
+import { STATE_TRANSITIONS } from '../../domain/constants/pre-invoice-states';
+import {
+  EntityNotFoundException,
+  InvalidDomainOperationException,
+} from 'src/shared/domain/exceptions/domain.exception';
+import type { PreInvoiceEntity } from '../../domain/entities/pre-invoice.entity';
 
 @Injectable()
 export class UpdatePreInvoiceStateUseCase {
@@ -22,19 +25,19 @@ export class UpdatePreInvoiceStateUseCase {
     accion: string;
     userId?: string;
     motivoRechazo?: string;
-  }) {
+  }): Promise<PreInvoiceEntity> {
     const { id, accion, userId, motivoRechazo } = params;
 
     const preInvoice = await this.preInvoiceRepository.findById(id);
     if (!preInvoice) {
-      throw new NotFoundException(`Pre-invoice ${id} not found`);
+      throw new EntityNotFoundException('Prefactura', id);
     }
 
     const currentState = preInvoice.estado;
     const allowedTransitions = STATE_TRANSITIONS[currentState];
 
     if (!allowedTransitions || !allowedTransitions.includes(accion)) {
-      throw new BadRequestException(
+      throw new InvalidDomainOperationException(
         `Cannot transition from ${currentState} to ${accion}. ` +
           `Allowed transitions: ${(allowedTransitions ?? []).join(', ') || 'none'}`,
       );
@@ -43,7 +46,9 @@ export class UpdatePreInvoiceStateUseCase {
     const normalizedRejectionReason = motivoRechazo?.trim() || undefined;
 
     if (accion === 'RECHAZADA' && !normalizedRejectionReason) {
-      throw new BadRequestException('A rejection reason must be provided');
+      throw new InvalidDomainOperationException(
+        'A rejection reason must be provided',
+      );
     }
 
     const data: {
@@ -89,11 +94,12 @@ export class UpdatePreInvoiceStateUseCase {
       data,
     );
     if (!updated) {
-      throw new BadRequestException(
+      throw new InvalidDomainOperationException(
         'The pre-invoice changed state during the operation. Please try again.',
       );
     }
 
-    return this.preInvoiceRepository.findById(id);
+    const fresh = await this.preInvoiceRepository.findById(id);
+    return fresh!;
   }
 }

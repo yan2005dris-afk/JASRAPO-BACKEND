@@ -1,31 +1,30 @@
+import type { PreInvoiceEntity } from '../entities/pre-invoice.entity';
+import type {
+  PreInvoiceFilters,
+  UpdatePreInvoiceStateData,
+} from '../types/pre-invoice.types';
+import type { PaginateOptions } from 'src/infrastructure/common/utils/pagination.util';
+import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
+
 export abstract class PreInvoiceRepository {
-  abstract findMany(params: {
-    where?: Record<string, any>;
-    include?: Record<string, any>;
-    orderBy?: Record<string, any>;
-    skip?: number;
-    take?: number;
-  }): Promise<any[]>;
-
-  /** Finds pre-invoice IDs for a given batch/lote */
-  abstract findIdsByLoteId(loteId: bigint): Promise<{ prefacturaId: bigint }[]>;
-
-  abstract count(where?: Record<string, any>): Promise<number>;
+  abstract paginate(
+    filters: PreInvoiceFilters,
+    pagination: PaginateOptions,
+  ): Promise<PaginatedResult<PreInvoiceEntity>>;
 
   abstract findById(
     id: number | bigint,
-    options?: { include?: Record<string, any> },
-  ): Promise<any>;
+  ): Promise<PreInvoiceEntity | null>;
+
+  /** Finds pre-invoice IDs for a given batch/lote */
+  abstract findIdsByLoteId(
+    loteId: bigint,
+  ): Promise<{ prefacturaId: bigint }[]>;
 
   abstract updateState(
     id: number | bigint,
     estado: string,
     estadoEsperado: string,
-    data?: {
-      aprobadaPor?: string;
-      motivoRechazo?: string;
-      fechaAprobacion?: Date;
-      comprobanteId?: bigint;
-    },
+    data?: UpdatePreInvoiceStateData,
   ): Promise<boolean>;
 }

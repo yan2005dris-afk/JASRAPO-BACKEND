@@ -2,10 +2,10 @@ jest.mock('puppeteer', () => ({}));
 
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { NotFoundException } from '@nestjs/common';
 import { GeneratePreInvoicePdfUseCase } from './generate-pre-invoice-pdf.use-case';
 import { FindOnePreInvoiceUseCase } from './find-one-pre-invoice.use-case';
 import { GeneratePdfUseCase } from 'src/infrastructure/pdf/use-cases/generate-pdf.use-case';
+import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 
 describe('GeneratePreInvoicePdfUseCase', () => {
   let useCase: GeneratePreInvoicePdfUseCase;
@@ -64,11 +64,11 @@ describe('GeneratePreInvoicePdfUseCase', () => {
     expect(result).toBe(pdfBuffer);
   });
 
-  it('should propagate NotFoundException from findOne', async () => {
+  it('should propagate EntityNotFoundException from findOne', async () => {
     mockFindOne.execute.mockRejectedValue(
-      new NotFoundException('Pre-invoice 99 not found'),
+      new EntityNotFoundException('Prefactura', 99),
     );
 
-    await expect(useCase.execute(99)).rejects.toThrow(NotFoundException);
+    await expect(useCase.execute(99)).rejects.toThrow(EntityNotFoundException);
   });
 });
