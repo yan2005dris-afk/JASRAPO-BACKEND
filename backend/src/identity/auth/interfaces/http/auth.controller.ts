@@ -2,6 +2,11 @@ import { Body, Controller, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { AuthService } from '../../application/auth.service';
 import { LoginUserDto } from '../dto/login-user.dto';
 import { RegisterDto } from '../dto/register.dto';
+import {
+  RegisterResponseDto,
+  LoginResponseDto,
+  RefreshResponseDto,
+} from '../dto/auth-response.dto';
 import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
@@ -14,6 +19,7 @@ import {
   ApiResponse,
   ApiBody,
   ApiCookieAuth,
+  ApiExtraModels,
 } from '@nestjs/swagger';
 import type { CookieOptions, Response } from 'express';
 import type {
@@ -26,6 +32,7 @@ import { RequiredStringPipe } from 'src/infrastructure/common/pipes/required-str
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 
 @ApiTags('auth')
+@ApiExtraModels(RegisterResponseDto, LoginResponseDto, RefreshResponseDto)
 @Controller('auth')
 @UseGuards(ThrottlerGuard)
 export class AuthController {
@@ -44,13 +51,7 @@ export class AuthController {
   @ApiResponse({
     status: 201,
     description: 'Usuario registrado exitosamente',
-    schema: {
-      example: {
-        usersId: 1,
-        email: 'nuevo@jasrapo.com',
-        createdAt: '2024-01-15T10:30:00Z',
-      },
-    },
+    type: RegisterResponseDto,
   })
   @ApiResponse({ status: 400, description: 'Datos inválidos' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
@@ -63,7 +64,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @RequiredPermission('users', 'create')
   @Post('register')
-  async register(@Body() registerDto: RegisterDto) {
+  async register(@Body() registerDto: RegisterDto): Promise<RegisterResponseDto> {
     return this.authService.register(registerDto);
   }
 
@@ -83,34 +84,18 @@ export class AuthController {
   @ApiResponse({
     status: 200,
     description: 'Login exitoso',
-    schema: {
-      example: {
-        accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-        sid: 'session-id-123',
-        sub: 1,
-        email: 'admin@jasrapo.com',
-        nombre: 'Admin',
-        rolId: 1,
-        nombreRol: 'Administrador',
-        avatar: 'https://example.com/avatar.png',
-        createdAt: '2024-01-15T10:30:00Z',
-        expiresAt: '2024-01-15T11:30:00Z',
-      },
-    },
+    type: LoginResponseDto,
   })
   @ApiResponse({ status: 400, description: 'Credenciales inválidas' })
   @ApiResponse({ status: 401, description: 'Autenticación fallida' })
   @Public()
   @ApiResponse({ status: 429, description: 'Demasiadas solicitudes' })
-  // Tighter per-IP throttle (issue #136): el guard global permite 20/min por
-  // IP para todas las rutas; aquí bajamos a 5/min para endurecer el endpoint
-  // de login antes de que se active el lockout por cuenta.
   @Throttle({ default: { limit: 5, ttl: 60000 } })
   @Post('/login')
   async login(
     @Body() loginUserDto: LoginUserDto,
     @Req() req: LoginRequest,
-    @CookieValue('refreshToken') existingRefreshTokenValue: unknown,
+    @CookieValue('refreshToken') _existingRefreshTokenValue: unknown,
     @Res() res: Response,
   ) {
     const ip = req.ip ?? 'unknown';
@@ -119,7 +104,6 @@ export class AuthController {
       typeof userAgentHeader === 'string' ? userAgentHeader : 'unknown';
     const result = await this.authService.login(loginUserDto, ip, userAgent);
 
-    // Solo guardar refreshToken en cookie, accessToken va en el payload
     const refreshCookieOptions: CookieOptions = {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -154,12 +138,7 @@ export class AuthController {
   @ApiResponse({
     status: 200,
     description: 'Token refrescado exitosamente',
-    schema: {
-      example: {
-        message: 'Token refrescado correctamente',
-        accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-      },
-    },
+    type: RefreshResponseDto,
   })
   @ApiResponse({
     status: 401,
@@ -180,7 +159,6 @@ export class AuthController {
     const userAgent =
       typeof userAgentHeader === 'string' ? userAgentHeader : 'unknown';
 
-    // Usa usersId si existe, si no sub (por compatibilidad)
     const userId = typeof usersId !== 'undefined' ? usersId : sub;
     const tokens = await this.authService.refreshAccessToken(
       sessionsId,
@@ -218,11 +196,6 @@ export class AuthController {
   @ApiResponse({
     status: 200,
     description: 'Sesión cerrada exitosamente',
-    schema: {
-      example: {
-        message: 'Sesión cerrada correctamente',
-      },
-    },
   })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @Public()
@@ -231,7 +204,6 @@ export class AuthController {
   async logout(@Req() req: RefreshRequest, @Res() res: Response) {
     const { sessionsId } = req.user;
 
-    // Marcar la sesión como revocada en BD
     await this.authService.logout(sessionsId);
 
     res.clearCookie('refreshToken', {

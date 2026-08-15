@@ -5,7 +5,7 @@ export type { RolePermission };
 export class RoleEntity {
   rolId: number;
   nombre: string;
-  deletedAt: Date | null;
+  deletedAt?: Date | null;
   rolPermisos?: RolePermission[];
 
   constructor(partial?: Partial<RoleEntity>) {

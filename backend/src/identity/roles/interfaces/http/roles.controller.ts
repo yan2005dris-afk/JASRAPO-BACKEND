@@ -12,6 +12,10 @@ import {
 import { RolesService } from '../../application/roles.service';
 import { CreateRoleDto } from '../dto/create-role.dto';
 import { UpdateRoleDto } from '../dto/update-role.dto';
+import {
+  RoleResponseDto,
+  RoleDetailResponseDto,
+} from '../dto/role-response.dto';
 import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
@@ -22,11 +26,15 @@ import {
   ApiResponse,
   ApiParam,
   ApiBody,
+  ApiExtraModels,
 } from '@nestjs/swagger';
 import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
+import { ApiPaginatedResponse } from 'src/infrastructure/common/decorators/api-paginated-response.decorator';
+import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
 
 @ApiTags('roles')
 @ApiBearerAuth()
+@ApiExtraModels(RoleResponseDto, RoleDetailResponseDto)
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('roles')
 export class RolesController {
@@ -47,12 +55,7 @@ export class RolesController {
   @ApiResponse({
     status: 201,
     description: 'Rol creado exitosamente',
-    schema: {
-      example: {
-        rolId: 1,
-        nombre: 'Administrador',
-      },
-    },
+    type: RoleResponseDto,
   })
   @ApiResponse({ status: 400, description: 'Datos inválidos' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
@@ -63,8 +66,9 @@ export class RolesController {
   @ApiResponse({ status: 409, description: 'Conflicto - El rol ya existe' })
   @RequiredPermission('roles', 'create')
   @Post()
-  createRol(@Body() createRoleDto: CreateRoleDto) {
-    return this.rolesService.create(createRoleDto);
+  async createRol(@Body() createRoleDto: CreateRoleDto): Promise<RoleResponseDto> {
+    const role = await this.rolesService.create(createRoleDto);
+    return RoleResponseDto.fromEntity(role);
   }
 
   /**
@@ -76,10 +80,7 @@ export class RolesController {
     description:
       'Retorna todos los roles registrados en el sistema con paginación.',
   })
-  @ApiResponse({
-    status: 200,
-    description: 'Lista de roles obtenida exitosamente',
-  })
+  @ApiPaginatedResponse(RoleResponseDto)
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({
     status: 403,
@@ -87,8 +88,17 @@ export class RolesController {
   })
   @RequiredPermission('roles', 'read')
   @Get()
-  async findAllRoles(@Query() paginationDto: PaginationDto) {
-    return this.rolesService.findAll(paginationDto.page, paginationDto.limit);
+  async findAllRoles(
+    @Query() paginationDto: PaginationDto,
+  ): Promise<PaginatedResult<RoleResponseDto>> {
+    const result = await this.rolesService.findAll(
+      paginationDto.page,
+      paginationDto.limit,
+    );
+    return {
+      data: result.data.map((role) => RoleResponseDto.fromEntity(role)),
+      meta: result.meta,
+    };
   }
 
   /**
@@ -109,22 +119,7 @@ export class RolesController {
   @ApiResponse({
     status: 200,
     description: 'Rol encontrado exitosamente',
-    schema: {
-      example: {
-        rolId: 1,
-        nombre: 'Administrador',
-        permisos: [
-          {
-            rolPermisoId: 1,
-            permisoId: 1,
-            nombre: 'Consultar Clientes',
-            descripcion: 'Permite consultar registros de clientes',
-            recurso: 'clientes',
-            accion: 'read',
-          },
-        ],
-      },
-    },
+    type: RoleDetailResponseDto,
   })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({
@@ -134,8 +129,11 @@ export class RolesController {
   @ApiResponse({ status: 404, description: 'Rol no encontrado' })
   @RequiredPermission('roles', 'read')
   @Get(':id')
-  findOneRol(@Param('id', ParseIntPipe) id: number) {
-    return this.rolesService.findOne(id);
+  async findOneRol(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<RoleDetailResponseDto> {
+    const role = await this.rolesService.findOne(id);
+    return RoleDetailResponseDto.fromEntity(role);
   }
 
   /**
@@ -157,32 +155,11 @@ export class RolesController {
     type: UpdateRoleDto,
     description:
       'Datos a actualizar: nombre, permisosAsignar (array de IDs), permisosRevocar (array de IDs)',
-    examples: {
-      soloNombre: {
-        summary: 'Solo cambiar nombre',
-        value: { nombre: 'Super Administrador' },
-      },
-      asignarPermisos: {
-        summary: 'Asignar permisos',
-        value: { permisosAsignar: [1, 2, 3, 4] },
-      },
-      revocarPermisos: {
-        summary: 'Revocar permisos',
-        value: { permisosRevocar: [5, 6] },
-      },
-      combinado: {
-        summary: 'Combinado: nombre + asignar + revocar',
-        value: {
-          nombre: 'Editor',
-          permisosAsignar: [7, 8],
-          permisosRevocar: [1, 2],
-        },
-      },
-    },
   })
   @ApiResponse({
     status: 200,
     description: 'Rol actualizado exitosamente',
+    type: RoleDetailResponseDto,
   })
   @ApiResponse({ status: 400, description: 'Datos inválidos' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
@@ -193,10 +170,11 @@ export class RolesController {
   @ApiResponse({ status: 404, description: 'Rol no encontrado' })
   @RequiredPermission('roles', 'update')
   @Patch(':id')
-  updateRol(
+  async updateRol(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateRoleDto: UpdateRoleDto,
-  ) {
-    return this.rolesService.update(id, updateRoleDto);
+  ): Promise<RoleDetailResponseDto> {
+    const role = await this.rolesService.update(id, updateRoleDto);
+    return RoleDetailResponseDto.fromEntity(role);
   }
 }

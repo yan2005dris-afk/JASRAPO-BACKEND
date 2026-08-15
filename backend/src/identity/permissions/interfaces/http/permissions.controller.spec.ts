@@ -37,12 +37,14 @@ describe('PermissionsController', () => {
   });
 
   it('findAllPermissions should call service.findAll with pagination', async () => {
+    mockPermissionsService.findAll.mockResolvedValue({ data: [], meta: {} });
     const paginationDto = { page: 2, limit: 5 };
     await controller.findAllPermissions(paginationDto);
     expect(mockPermissionsService.findAll).toHaveBeenCalledWith(2, 5);
   });
 
   it('findAllPermissions should use defaults when no pagination provided', async () => {
+    mockPermissionsService.findAll.mockResolvedValue({ data: [], meta: {} });
     await controller.findAllPermissions({ page: 1, limit: 10 });
     expect(mockPermissionsService.findAll).toHaveBeenCalledWith(1, 10);
   });

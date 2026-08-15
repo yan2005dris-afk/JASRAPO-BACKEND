@@ -45,8 +45,11 @@ openssl req -x509 -newkey rsa:2048 -nodes \
   -subj "/C=EC/ST=Pichincha/L=Quito/O=JASRAPO/OU=dev/CN=localhost" \
   2>/dev/null
 
-# Private key material is sensitive even for dev certs. Lock it down.
-chmod 600 "${KEY_FILE}"
+# rustfs runs as uid 10001 inside the container and bind-mounts ./certs
+# at /opt/tls. Mode 600 (owner-only) makes the key unreadable to that
+# user and RustFS dies with "Permission denied" on rustfs_key.pem.
+# 644 matches the CI deploy path; these are local self-signed certs.
+chmod 644 "${KEY_FILE}"
 chmod 644 "${CERT_FILE}"
 
 echo "[certs] Generado par self-signed (365d, RSA 2048, CN=localhost)"

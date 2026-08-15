@@ -13,6 +13,7 @@ import {
 import { PermissionsService } from '../../application/permissions.service';
 import { CreatePermissionDto } from '../dto/create-permission.dto';
 import { UpdatePermissionDto } from '../dto/update-permission.dto';
+import { PermissionResponseDto } from '../dto/permission-response.dto';
 import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
@@ -23,11 +24,15 @@ import {
   ApiResponse,
   ApiParam,
   ApiBody,
+  ApiExtraModels,
 } from '@nestjs/swagger';
 import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
+import { ApiPaginatedResponse } from 'src/infrastructure/common/decorators/api-paginated-response.decorator';
+import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
 
 @ApiTags('permissions')
 @ApiBearerAuth()
+@ApiExtraModels(PermissionResponseDto)
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('permissions')
 export class PermissionsController {
@@ -40,23 +45,16 @@ export class PermissionsController {
   @ApiOperation({
     summary: 'Crear permiso',
     description:
-      'Crea un nuevo permiso en el sistema (ej: users:read, users:create).',
+      'Crea un nuevo permiso en el sistema (ej: recurso: users, accion: read).',
   })
   @ApiBody({
     type: CreatePermissionDto,
-    description: 'Datos del permiso a crear (resource y action)',
+    description: 'Datos del permiso a crear',
   })
   @ApiResponse({
     status: 201,
     description: 'Permiso creado exitosamente',
-    schema: {
-      example: {
-        permissionsId: 1,
-        resource: 'users',
-        action: 'read',
-        createdAt: '2024-01-15T10:30:00Z',
-      },
-    },
+    type: PermissionResponseDto,
   })
   @ApiResponse({ status: 400, description: 'Datos inválidos' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
@@ -67,8 +65,13 @@ export class PermissionsController {
   @ApiResponse({ status: 409, description: 'Conflicto - El permiso ya existe' })
   @RequiredPermission('permissions', 'create')
   @Post()
-  createPermissions(@Body() createPermissionDto: CreatePermissionDto) {
-    return this.permissionsService.create(createPermissionDto);
+  async createPermissions(
+    @Body() createPermissionDto: CreatePermissionDto,
+  ): Promise<PermissionResponseDto> {
+    const permission = await this.permissionsService.create(
+      createPermissionDto,
+    );
+    return PermissionResponseDto.fromEntity(permission);
   }
 
   /**
@@ -79,10 +82,7 @@ export class PermissionsController {
     summary: 'Listar permisos',
     description: 'Retorna todos los permisos registrados en el sistema.',
   })
-  @ApiResponse({
-    status: 200,
-    description: 'Lista de permisos obtenida exitosamente',
-  })
+  @ApiPaginatedResponse(PermissionResponseDto)
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({
     status: 403,
@@ -90,11 +90,19 @@ export class PermissionsController {
   })
   @RequiredPermission('permissions', 'read')
   @Get()
-  async findAllPermissions(@Query() paginationDto: PaginationDto) {
-    return this.permissionsService.findAll(
+  async findAllPermissions(
+    @Query() paginationDto: PaginationDto,
+  ): Promise<PaginatedResult<PermissionResponseDto>> {
+    const result = await this.permissionsService.findAll(
       paginationDto.page,
       paginationDto.limit,
     );
+    return {
+      data: result.data.map((permission) =>
+        PermissionResponseDto.fromEntity(permission),
+      ),
+      meta: result.meta,
+    };
   }
 
   /**
@@ -114,6 +122,7 @@ export class PermissionsController {
   @ApiResponse({
     status: 200,
     description: 'Permiso encontrado exitosamente',
+    type: PermissionResponseDto,
   })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({
@@ -123,8 +132,11 @@ export class PermissionsController {
   @ApiResponse({ status: 404, description: 'Permiso no encontrado' })
   @RequiredPermission('permissions', 'read')
   @Get(':id')
-  findOnePermissions(@Param('id', ParseIntPipe) id: number) {
-    return this.permissionsService.findOne(id);
+  async findOnePermissions(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<PermissionResponseDto> {
+    const permission = await this.permissionsService.findOne(id);
+    return PermissionResponseDto.fromEntity(permission);
   }
 
   /**
@@ -133,7 +145,7 @@ export class PermissionsController {
    */
   @ApiOperation({
     summary: 'Actualizar permiso',
-    description: 'Actualiza el resource o action de un permiso existente.',
+    description: 'Actualiza el recurso o acción de un permiso existente.',
   })
   @ApiParam({
     name: 'id',
@@ -143,11 +155,12 @@ export class PermissionsController {
   })
   @ApiBody({
     type: UpdatePermissionDto,
-    description: 'Datos a actualizar (resource y/o action)',
+    description: 'Datos a actualizar',
   })
   @ApiResponse({
     status: 200,
     description: 'Permiso actualizado exitosamente',
+    type: PermissionResponseDto,
   })
   @ApiResponse({ status: 400, description: 'Datos inválidos' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
@@ -158,11 +171,15 @@ export class PermissionsController {
   @ApiResponse({ status: 404, description: 'Permiso no encontrado' })
   @RequiredPermission('permissions', 'update')
   @Patch(':id')
-  updatePermissions(
+  async updatePermissions(
     @Param('id', ParseIntPipe) id: number,
     @Body() updatePermissionDto: UpdatePermissionDto,
-  ) {
-    return this.permissionsService.update(id, updatePermissionDto);
+  ): Promise<PermissionResponseDto> {
+    const permission = await this.permissionsService.update(
+      id,
+      updatePermissionDto,
+    );
+    return PermissionResponseDto.fromEntity(permission);
   }
 
   /**
@@ -191,7 +208,8 @@ export class PermissionsController {
   @ApiResponse({ status: 404, description: 'Permiso no encontrado' })
   @RequiredPermission('permissions', 'delete')
   @Delete(':id')
-  SoftDeletePermissions(@Param('id', ParseIntPipe) id: number) {
-    return this.permissionsService.remove(id);
+  async softDeletePermissions(@Param('id', ParseIntPipe) id: number) {
+    await this.permissionsService.remove(id);
+    return { message: 'Permiso eliminado exitosamente' };
   }
 }
