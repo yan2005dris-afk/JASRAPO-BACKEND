@@ -1,14 +1,16 @@
 import { Injectable } from '@nestjs/common';
-import { CreateDiscountDto } from '../interfaces/dto/create-discount.dto';
-import { UpdateDiscountDto } from '../interfaces/dto/update-discount.dto';
-import { DiscountFilterDto } from '../interfaces/dto/discount-filter.dto';
-import { ApplyDiscountToPreinvoiceDto } from '../interfaces/dto/apply-discount-to-preinvoice.dto';
+import type { CreateDiscountDto } from '../interfaces/dto/create-discount.dto';
+import type { UpdateDiscountDto } from '../interfaces/dto/update-discount.dto';
+import type { DiscountFilterDto } from '../interfaces/dto/discount-filter.dto';
+import type { ApplyDiscountToPreinvoiceDto } from '../interfaces/dto/apply-discount-to-preinvoice.dto';
 import { CreateDiscountUseCase } from './use-cases/create-discount.use-case';
 import { FindAllDiscountsUseCase } from './use-cases/find-all-discounts.use-case';
 import { FindOneDiscountUseCase } from './use-cases/find-one-discount.use-case';
 import { UpdateDiscountUseCase } from './use-cases/update-discount.use-case';
 import { RemoveDiscountUseCase } from './use-cases/remove-discount.use-case';
 import { ApplyDiscountToPreinvoiceUseCase } from './use-cases/apply-discount-to-preinvoice.use-case';
+import type { DiscountEntity } from '../domain/entities/discount.entity';
+import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
 
 @Injectable()
 export class DiscountsService {
@@ -21,27 +23,32 @@ export class DiscountsService {
     private readonly applyToPreinvoiceUseCase: ApplyDiscountToPreinvoiceUseCase,
   ) {}
 
-  create(dto: CreateDiscountDto) {
+  async create(dto: CreateDiscountDto): Promise<DiscountEntity> {
     return this.createUseCase.execute(dto);
   }
 
-  findAll(filter: DiscountFilterDto) {
+  async findAll(
+    filter: DiscountFilterDto,
+  ): Promise<PaginatedResult<DiscountEntity>> {
     return this.findAllUseCase.execute(filter);
   }
 
-  findOne(id: number) {
+  async findOne(id: number): Promise<DiscountEntity> {
     return this.findOneUseCase.execute(id);
   }
 
-  update(id: number, dto: UpdateDiscountDto) {
+  async update(id: number, dto: UpdateDiscountDto): Promise<DiscountEntity> {
     return this.updateUseCase.execute(id, dto);
   }
 
-  remove(id: number) {
+  async remove(id: number): Promise<DiscountEntity> {
     return this.removeUseCase.execute(id);
   }
 
-  applyToPreinvoice(prefacturaId: number, dto: ApplyDiscountToPreinvoiceDto) {
+  async applyToPreinvoice(
+    prefacturaId: number,
+    dto: ApplyDiscountToPreinvoiceDto,
+  ) {
     return this.applyToPreinvoiceUseCase.execute(prefacturaId, dto);
   }
 }

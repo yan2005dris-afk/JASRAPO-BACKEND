@@ -5,14 +5,15 @@ import type {
 } from 'src/generated/prisma/client';
 import { DiscountEntity } from '../../domain/entities/discount.entity';
 import type {
-  DiscountCreateInput,
-  DiscountUpdateInput,
-  DiscountWhereInput,
-} from '../../domain/repositories/discount.repository';
+  CreateDiscountData,
+  UpdateDiscountData,
+  DiscountFilters,
+} from '../../domain/types/discount.types';
 import { Decimal } from 'decimal.js';
 
 export class DiscountMapper {
-  static toDomain(raw: CatalogoDescuento): DiscountEntity {
+  static toDomain(raw: CatalogoDescuento | null | undefined): DiscountEntity | null {
+    if (!raw) return null;
     return new DiscountEntity({
       id: raw.id,
       nombre: raw.nombre,
@@ -28,11 +29,13 @@ export class DiscountMapper {
   }
 
   static toDomainList(rawList: CatalogoDescuento[]): DiscountEntity[] {
-    return rawList.map((raw) => this.toDomain(raw));
+    return rawList
+      .map((raw) => this.toDomain(raw))
+      .filter((e): e is DiscountEntity => e !== null);
   }
 
   static toPrismaCreateInput(
-    data: DiscountCreateInput,
+    data: CreateDiscountData,
   ): Prisma.CatalogoDescuentoUncheckedCreateInput {
     return {
       nombre: data.nombre,
@@ -46,32 +49,36 @@ export class DiscountMapper {
   }
 
   static toPrismaUpdateInput(
-    data: DiscountUpdateInput,
+    data: UpdateDiscountData,
   ): Prisma.CatalogoDescuentoUncheckedUpdateInput {
     return {
-      nombre: data.nombre,
-      descripcion: data.descripcion,
-      tipoDescuento: data.tipoDescuento
-        ? (data.tipoDescuento as TipoDescuento)
-        : undefined,
-      valor: data.valor !== undefined ? new Decimal(data.valor) : undefined,
-      esPorcentaje: data.esPorcentaje,
-      rubroId: data.rubroId,
-      aplicaAutomatico: data.aplicaAutomatico,
-      activo: data.activo,
+      ...(data.nombre !== undefined ? { nombre: data.nombre } : {}),
+      ...(data.descripcion !== undefined ? { descripcion: data.descripcion } : {}),
+      ...(data.tipoDescuento !== undefined
+        ? { tipoDescuento: data.tipoDescuento as TipoDescuento }
+        : {}),
+      ...(data.valor !== undefined ? { valor: new Decimal(data.valor) } : {}),
+      ...(data.esPorcentaje !== undefined ? { esPorcentaje: data.esPorcentaje } : {}),
+      ...(data.rubroId !== undefined ? { rubroId: data.rubroId } : {}),
+      ...(data.aplicaAutomatico !== undefined
+        ? { aplicaAutomatico: data.aplicaAutomatico }
+        : {}),
+      ...(data.activo !== undefined ? { activo: data.activo } : {}),
     };
   }
 
   static toPrismaWhereInput(
-    where?: DiscountWhereInput,
+    where?: DiscountFilters,
   ): Prisma.CatalogoDescuentoWhereInput {
     if (!where) return {};
     return {
-      activo: where.activo,
-      tipoDescuento: where.tipoDescuento
-        ? (where.tipoDescuento as TipoDescuento)
-        : undefined,
-      aplicaAutomatico: where.aplicaAutomatico,
+      ...(where.activo !== undefined ? { activo: where.activo } : {}),
+      ...(where.tipoDescuento
+        ? { tipoDescuento: where.tipoDescuento as TipoDescuento }
+        : {}),
+      ...(where.aplicaAutomatico !== undefined
+        ? { aplicaAutomatico: where.aplicaAutomatico }
+        : {}),
     };
   }
 }

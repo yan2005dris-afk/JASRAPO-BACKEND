@@ -3,25 +3,38 @@ import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { Prisma } from 'src/generated/prisma/client';
 import { DiscountEntity } from '../../domain/entities/discount.entity';
 import { DiscountMapper } from '../mappers/discount.mapper';
-import {
-  DiscountRepository,
-  DiscountCreateInput,
+import { DiscountRepository } from '../../domain/repositories/discount.repository';
+import type {
+  CreateDiscountData,
+  UpdateDiscountData,
+  DiscountFilters,
   DiscountFindManyParams,
-  DiscountUpdateInput,
-  DiscountWhereInput,
-  DiscountWhereUniqueInput,
-} from '../../domain/repositories/discount.repository';
+} from '../../domain/types/discount.types';
+import {
+  EntityNotFoundException,
+  EntityAlreadyExistsException,
+} from 'src/shared/domain/exceptions/domain.exception';
 
 @Injectable()
 export class PrismaDiscountRepository implements DiscountRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async createCatalogo(data: DiscountCreateInput): Promise<DiscountEntity> {
-    const prismaInput = DiscountMapper.toPrismaCreateInput(data);
-    const record = await this.prisma.catalogoDescuento.create({
-      data: prismaInput,
-    });
-    return DiscountMapper.toDomain(record);
+  async createCatalogo(data: CreateDiscountData): Promise<DiscountEntity> {
+    try {
+      const prismaInput = DiscountMapper.toPrismaCreateInput(data);
+      const record = await this.prisma.catalogoDescuento.create({
+        data: prismaInput,
+      });
+      return DiscountMapper.toDomain(record)!;
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        throw new EntityAlreadyExistsException('CatalogoDescuento', data.nombre);
+      }
+      throw error;
+    }
   }
 
   async findManyCatalogo(
@@ -38,28 +51,47 @@ export class PrismaDiscountRepository implements DiscountRepository {
     return DiscountMapper.toDomainList(records);
   }
 
-  async countCatalogo(params: { where?: DiscountWhereInput }): Promise<number> {
+  async countCatalogo(params: { where?: DiscountFilters }): Promise<number> {
     const where = DiscountMapper.toPrismaWhereInput(params.where);
     return this.prisma.catalogoDescuento.count({ where });
   }
 
-  async findUniqueCatalogo(
-    where: DiscountWhereUniqueInput,
-  ): Promise<DiscountEntity | null> {
-    const record = await this.prisma.catalogoDescuento.findUnique({ where });
-    return record ? DiscountMapper.toDomain(record) : null;
+  async findUniqueCatalogo(id: number): Promise<DiscountEntity | null> {
+    const record = await this.prisma.catalogoDescuento.findUnique({
+      where: { id },
+    });
+    return DiscountMapper.toDomain(record);
   }
 
   async updateCatalogo(
-    where: DiscountWhereUniqueInput,
-    data: DiscountUpdateInput,
+    id: number,
+    data: UpdateDiscountData,
   ): Promise<DiscountEntity> {
-    const prismaInput = DiscountMapper.toPrismaUpdateInput(data);
-    const record = await this.prisma.catalogoDescuento.update({
-      where,
-      data: prismaInput,
-    });
-    return DiscountMapper.toDomain(record);
+    try {
+      const prismaInput = DiscountMapper.toPrismaUpdateInput(data);
+      const record = await this.prisma.catalogoDescuento.update({
+        where: { id },
+        data: prismaInput,
+      });
+      return DiscountMapper.toDomain(record)!;
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2025'
+      ) {
+        throw new EntityNotFoundException('CatalogoDescuento', id);
+      }
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        throw new EntityAlreadyExistsException(
+          'CatalogoDescuento',
+          data.nombre ?? id.toString(),
+        );
+      }
+      throw error;
+    }
   }
 
   async executeTransaction<T>(

@@ -1,17 +1,22 @@
 import { Injectable } from '@nestjs/common';
 import { DiscountRepository } from '../../domain/repositories/discount.repository';
-import { DiscountFilterDto } from '../../interfaces/dto/discount-filter.dto';
+import type { DiscountFilterDto } from '../../interfaces/dto/discount-filter.dto';
+import type { DiscountEntity } from '../../domain/entities/discount.entity';
+import type { DiscountFilters } from '../../domain/types/discount.types';
+import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
 
 @Injectable()
 export class FindAllDiscountsUseCase {
   constructor(private readonly discountRepository: DiscountRepository) {}
 
-  async execute(filter: DiscountFilterDto) {
+  async execute(
+    filter: DiscountFilterDto,
+  ): Promise<PaginatedResult<DiscountEntity>> {
     const page = filter.page ?? 1;
     const limit = filter.limit ?? 20;
     const skip = (page - 1) * limit;
 
-    const where: any = { activo: true };
+    const where: DiscountFilters = { activo: true };
 
     if (filter.tipoDescuento) {
       where.tipoDescuento = filter.tipoDescuento;
@@ -30,6 +35,20 @@ export class FindAllDiscountsUseCase {
       this.discountRepository.countCatalogo({ where }),
     ]);
 
-    return { items, total, page, limit };
+    const lastPage = Math.ceil(total / limit);
+
+    return {
+      data: items,
+      meta: {
+        total,
+        page,
+        limit,
+        ultimaPagina: lastPage,
+        paginaActual: page,
+        porPagina: limit,
+        anterior: page > 1 ? page - 1 : null,
+        siguiente: page < lastPage ? page + 1 : null,
+      },
+    };
   }
 }
