@@ -14,7 +14,7 @@ import { ComunidadService } from '../../application/comunidad.service';
 import { CreateComunidadDto } from '../dto/create-comunidad.dto';
 import { UpdateComunidadDto } from '../dto/update-comunidad.dto';
 import { CommunityFilterDto } from '../dto/community-filter.dto';
-import { CommunityEntity } from '../../domain/entities/community.entity';
+import { CommunityResponseDto } from '../dto/community-response.dto';
 import {
   ApiTags,
   ApiBearerAuth,
@@ -32,7 +32,7 @@ import { PaginationMetaDto } from 'src/infrastructure/common/dtos/pagination-met
 
 @ApiTags('communities')
 @ApiBearerAuth()
-@ApiExtraModels(PaginationMetaDto)
+@ApiExtraModels(CommunityResponseDto, PaginationMetaDto)
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('communities')
 export class ComunidadController {
@@ -43,7 +43,11 @@ export class ComunidadController {
     description: 'Crea una nueva comunidad',
   })
   @ApiBody({ type: CreateComunidadDto, description: 'Datos de la comunidad' })
-  @ApiResponse({ status: 201, description: 'Comunidad creada' })
+  @ApiResponse({
+    status: 201,
+    description: 'Comunidad creada',
+    type: CommunityResponseDto,
+  })
   @ApiResponse({ status: 400, description: 'Datos inválidos' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({ status: 403, description: 'Sin permiso comunidades:create' })
@@ -58,7 +62,7 @@ export class ComunidadController {
     description:
       'Retorna todas las comunidades sin sectores, con filtros opcionales',
   })
-  @ApiPaginatedResponse(CommunityEntity)
+  @ApiPaginatedResponse(CommunityResponseDto)
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @RequiredPermission('comunidades', 'read')
   @Get()
@@ -83,7 +87,7 @@ export class ComunidadController {
   @ApiResponse({
     status: 200,
     description: 'Comunidad encontrada',
-    type: CommunityEntity,
+    type: CommunityResponseDto,
   })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({ status: 404, description: 'Comunidad no encontrada' })
@@ -104,7 +108,11 @@ export class ComunidadController {
     example: 1,
   })
   @ApiBody({ type: UpdateComunidadDto, description: 'Datos a actualizar' })
-  @ApiResponse({ status: 200, description: 'Comunidad actualizada' })
+  @ApiResponse({
+    status: 200,
+    description: 'Comunidad actualizada',
+    type: CommunityResponseDto,
+  })
   @ApiResponse({ status: 400, description: 'Datos inválidos' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({ status: 403, description: 'Sin permiso comunidades:update' })

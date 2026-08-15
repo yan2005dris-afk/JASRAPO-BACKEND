@@ -28,15 +28,17 @@ import { UpdateRouteDto } from '../dto/update-route.dto';
 import { ReassignRouteDto } from '../dto/reassign-route.dto';
 import { FilterReadingsDto } from '../dto/filter-readings.dto';
 import { FindAllRoutesDto } from '../dto/find-all-routes.dto';
-import { RouteEntity } from '../../domain/entities/route.entity';
-import { ReadingForRouteEntity } from '../../domain/entities/reading-for-route.entity';
+import {
+  RouteResponseDto,
+  ReadingForRouteResponseDto,
+} from '../dto/route-response.dto';
 import { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
 import { ApiPaginatedResponse } from 'src/infrastructure/common/decorators/api-paginated-response.decorator';
 import { PaginationMetaDto } from 'src/infrastructure/common/dtos/pagination-meta.dto';
 
 @ApiTags('routes')
 @ApiBearerAuth()
-@ApiExtraModels(RouteEntity, ReadingForRouteEntity, PaginationMetaDto)
+@ApiExtraModels(RouteResponseDto, ReadingForRouteResponseDto, PaginationMetaDto)
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('routes')
 export class RoutesController {
@@ -53,12 +55,12 @@ export class RoutesController {
     description:
       'Retorna las lecturas disponibles para asignar a una nueva ruta',
   })
-  @ApiPaginatedResponse(ReadingForRouteEntity)
+  @ApiPaginatedResponse(ReadingForRouteResponseDto)
   @RequiredPermission('routes', 'read')
   @Get('eligible-readings')
   async getEligibleReadings(
     @Query() filterDto: FilterReadingsDto,
-  ): Promise<PaginatedResult<ReadingForRouteEntity>> {
+  ): Promise<PaginatedResult<ReadingForRouteResponseDto>> {
     return this.routesService.getEligibleReadings(filterDto);
   }
 
@@ -72,11 +74,11 @@ export class RoutesController {
   @ApiResponse({
     status: 201,
     description: 'Ruta creada exitosamente',
-    type: RouteEntity,
+    type: RouteResponseDto,
   })
   @RequiredPermission('routes', 'create')
   @Post()
-  async create(@Body() createDto: CreateRouteDto): Promise<RouteEntity> {
+  async create(@Body() createDto: CreateRouteDto): Promise<RouteResponseDto> {
     return this.routesService.create(createDto);
   }
 
@@ -87,12 +89,12 @@ export class RoutesController {
     summary: 'Listar rutas',
     description: 'Retorna lista de rutas con paginación',
   })
-  @ApiPaginatedResponse(RouteEntity)
+  @ApiPaginatedResponse(RouteResponseDto)
   @RequiredPermission('routes', 'read')
   @Get()
   async findAll(
     @Query() query: FindAllRoutesDto,
-  ): Promise<PaginatedResult<RouteEntity>> {
+  ): Promise<PaginatedResult<RouteResponseDto>> {
     const where: any = {};
     if (query.estado) where.estado = query.estado;
 
@@ -121,14 +123,14 @@ export class RoutesController {
   @ApiResponse({
     status: 200,
     description: 'Ruta encontrada',
-    type: RouteEntity,
+    type: RouteResponseDto,
   })
   @ApiResponse({ status: 404, description: 'Ruta no encontrada' })
   @RequiredPermission('routes', 'read')
   @Get(':id')
   async findOne(
     @Param('id', ParseBigIntPipe) id: bigint,
-  ): Promise<RouteEntity> {
+  ): Promise<RouteResponseDto> {
     return this.routesService.findOne(id);
   }
 
@@ -148,14 +150,14 @@ export class RoutesController {
   @ApiResponse({
     status: 200,
     description: 'Ruta actualizada',
-    type: RouteEntity,
+    type: RouteResponseDto,
   })
   @RequiredPermission('routes', 'update')
   @Patch(':id')
   async update(
     @Param('id', ParseBigIntPipe) id: bigint,
     @Body() updateDto: UpdateRouteDto,
-  ): Promise<RouteEntity> {
+  ): Promise<RouteResponseDto> {
     return this.routesService.update(id, updateDto);
   }
 
@@ -175,7 +177,7 @@ export class RoutesController {
   @ApiResponse({
     status: 200,
     description: 'Ruta reasignada',
-    type: RouteEntity,
+    type: RouteResponseDto,
   })
   @ApiResponse({
     status: 403,
@@ -187,7 +189,7 @@ export class RoutesController {
   async reassign(
     @Param('id', ParseBigIntPipe) id: bigint,
     @Body() dto: ReassignRouteDto,
-  ): Promise<RouteEntity> {
+  ): Promise<RouteResponseDto> {
     return this.reassignRouteUseCase.execute(id, dto.operarioId);
   }
 
