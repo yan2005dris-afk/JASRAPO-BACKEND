@@ -166,6 +166,13 @@ export class PrismaComprobanteRepository extends ComprobanteRepository {
     };
   }
 
+  async findRecordById(id: bigint): Promise<ComprobanteRecord | null> {
+    const found = await this.prisma.comprobantes.findUnique({
+      where: { id },
+    });
+    return found ? this.mapComprobanteToRecord(found) : null;
+  }
+
   async findConDetalles(claveAcceso: string): Promise<any> {
     const c = await this.prisma.comprobantes.findUnique({
       where: { claveAcceso },

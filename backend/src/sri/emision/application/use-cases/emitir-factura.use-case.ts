@@ -1,7 +1,11 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Decimal } from 'decimal.js';
+import {
+  EntityNotFoundException,
+  InvalidDomainOperationException,
+} from '../../../../shared/domain/exceptions/domain.exception';
 import { ClaveAccesoService } from '../../infrastructure/xml/clave-acceso.service';
 import { XmlBuilderService } from '../../infrastructure/xml/xml-builder.service';
 import { XmlSignerService } from '../../infrastructure/xml/xml-signer.service';
@@ -52,25 +56,22 @@ export class EmitirFacturaUseCase {
   ) {}
 
   /**
-   * Emite una factura electrónica completa: valida, genera XML, firma, envía al SRI y persiste
-   * Patrón de 3 fases — nunca bloquea el pool de DB durante la llamada SOAP al SRI
+   * Emite una factura electrónica al SRI.
+   * Flujo en 3 fases:
+   * 1. Reserva secuencial en transacción DB (~5ms)
+   * 2. Firma + envío SOAP al SRI fuera de transacción
+   * 3. Persistencia de resultado en transacción DB (~10ms)
    */
   async emitirFactura(
     dto: CreateFacturaDto,
-    opts?: EmitirFacturaOpts,
+    opts: EmitirFacturaOpts = {},
   ): Promise<FacturaResponseDto> {
-    this.logger.log('Iniciando emisión de factura electrónica');
+    this.logger.log(
+      `Iniciando emisión de factura para emisor: ${dto.emisor.ruc}`,
+    );
 
     try {
-      // ========== PARALLEL BLOCK: Validaciones + Búsqueda Emisor ==========
-      // Validación síncrona (no bloquea)
-      this.base.validarIdentificacion(
-        dto.comprador.tipoIdentificacion,
-        dto.comprador.identificacion,
-        'comprador',
-      );
-
-      // Ejecutar validaciones de catálogo Y búsqueda de emisor en paralelo
+      // Validaciones previas básicas contra catálogo
       const [, , , emisor] = await Promise.all([
         this.base.validarTipoIdentificacionCatalogo(
           dto.comprador.tipoIdentificacion,
@@ -81,6 +82,24 @@ export class EmitirFacturaUseCase {
           : Promise.resolve(),
         this.emisorRepository.findByRuc(dto.emisor.ruc),
       ]);
+
+      if (!emisor) {
+        throw new EntityNotFoundException('Emisor', dto.emisor.ruc);
+      }
+
+      // Validación preventiva legal SRI: Negocio RIMPE
+      if (emisor.contribuyente_rimpe) {
+        const hasTarifaInvalida = dto.detalles.some((d) =>
+          d.impuestos.some(
+            (i) => i.codigo === '2' && i.codigoPorcentaje !== '0' && i.tarifa > 0 && i.codigoPorcentaje !== '4',
+          ),
+        );
+        if (hasTarifaInvalida) {
+          this.logger.warn(
+            `Emisor ${dto.emisor.ruc} es RIMPE pero incluye detalle con tarifa no permitida`,
+          );
+        }
+      }
 
       // Variables de configuración
       const ambiente = dto.ambiente || this.base.getDefaultAmbiente();
@@ -94,13 +113,13 @@ export class EmitirFacturaUseCase {
 
       // Buscar punto de emisión
       const puntoEmisionInfo = await this.emisorRepository.findPuntoEmision(
-        emisor!.id,
+        emisor.id,
         dto.emisor.establecimiento,
         dto.emisor.puntoEmision,
       );
 
       if (!puntoEmisionInfo) {
-        throw new BadRequestException(
+        throw new InvalidDomainOperationException(
           `El punto de emisión ${dto.emisor.establecimiento}-${dto.emisor.puntoEmision} no está registrado para el emisor ${dto.emisor.ruc}`,
         );
       }
@@ -145,11 +164,10 @@ export class EmitirFacturaUseCase {
 
       // Verificar certificado
       if (
-        !emisor ||
         !emisor.certificado_nombre ||
         !emisor.certificado_password_encrypted
       ) {
-        throw new BadRequestException(
+        throw new InvalidDomainOperationException(
           `El emisor con RUC ${dto.emisor.ruc} no tiene certificado digital configurado. ` +
             'Use el endpoint POST /certificates/upload-cert con el RUC para vincular un certificado P12.',
         );
@@ -165,7 +183,7 @@ export class EmitirFacturaUseCase {
       const esFirmaValida =
         await this.xmlSignerService.verifySignature(xmlFirmado);
       if (!esFirmaValida) {
-        throw new BadRequestException(
+        throw new InvalidDomainOperationException(
           'La firma del XML generado no es válida. Verifique el certificado del emisor.',
         );
       }
@@ -275,7 +293,7 @@ export class EmitirFacturaUseCase {
    */
   generarXmlPreview(dto: CreateFacturaDto): string {
     if (!dto.secuencial) {
-      throw new BadRequestException(
+      throw new InvalidDomainOperationException(
         'Para preview, el secuencial es obligatorio',
       );
     }
@@ -323,7 +341,9 @@ export class EmitirFacturaUseCase {
     this.logger.log('Generando factura firmada para debug');
 
     if (!dto.secuencial) {
-      throw new BadRequestException('Para debug, el secuencial es obligatorio');
+      throw new InvalidDomainOperationException(
+        'Para debug, el secuencial es obligatorio',
+      );
     }
     const secuencial = dto.secuencial.padStart(9, '0');
 
@@ -367,7 +387,7 @@ export class EmitirFacturaUseCase {
     const esFirmaValida =
       await this.xmlSignerService.verifySignature(xmlFirmado);
     if (!esFirmaValida) {
-      throw new BadRequestException(
+      throw new InvalidDomainOperationException(
         'La firma del XML generado no es válida. Verifique el certificado del emisor.',
       );
     }
@@ -705,7 +725,7 @@ export class EmitirFacturaUseCase {
     return dtoDetalles.map((d) => {
       const subtotal = d.cantidad * d.precioUnitario;
       if (d.descuento > subtotal) {
-        throw new BadRequestException(
+        throw new InvalidDomainOperationException(
           `Descuento (${d.descuento}) no puede ser mayor al subtotal del detalle (${subtotal})`,
         );
       }

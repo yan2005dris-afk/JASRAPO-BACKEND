@@ -10,8 +10,10 @@ jest.mock('../../../../infrastructure/database/prisma.service', () => ({
 
 import { SriIntegrationService } from './sri-integration.service';
 import type { EmitirFacturaUseCase } from '../use-cases/emitir-factura.use-case';
-import { NotFoundException } from '@nestjs/common';
-import { Decimal } from 'decimal.js';
+import { EntityNotFoundException } from '../../../../shared/domain/exceptions/domain.exception';
+import { ComprobanteRepository } from '../../domain/repositories/comprobante.repository';
+import { ComprobanteRecord } from '../../../domain/interfaces/repository.interface';
+
 const mockLogger = {
   log: jest.fn(),
   warn: jest.fn(),
@@ -23,72 +25,48 @@ const mockLogger = {
 describe('SriIntegrationService — emitirDesdeComprobante (T-008)', () => {
   let service: SriIntegrationService;
   let prisma: any;
+  let comprobanteRepository: jest.Mocked<ComprobanteRepository>;
   let emitirFacturaUseCase: jest.Mocked<EmitirFacturaUseCase>;
 
-  const mockComprobante = {
-    id: BigInt(42),
-    estado: 'BORRADOR',
-    importeTotal: 100,
-    emisor_id: 1,
-    secuencial: null,
-  };
-
-  // Prisma returns camelCase (e.g. emisorId). The service must adapt
-  // it to the domain ComprobanteRecord (snake_case) before passing it
-  // to EmitirFacturaUseCase.
-  const mockPrismaComprobante = {
+  const mockDomainComprobante: ComprobanteRecord = {
     id: BigInt(42),
     uuid: 'uuid-42',
-    emisorId: 7,
-    puntoEmisionId: 8,
-    tipoComprobante: '01',
+    emisor_id: 7,
+    punto_emision_id: 8,
+    tipo_comprobante: '01',
     ambiente: '1',
-    tipoEmision: '1',
+    tipo_emision: '1',
     secuencial: '000000001',
-    claveAcceso: 'CLAVE-42',
-    fechaEmision: new Date('2026-07-01T00:00:00Z'),
+    clave_acceso: 'CLAVE-42',
+    fecha_emision: '2026-07-01T00:00:00.000Z',
     estado: 'BORRADOR',
-    estadoSri: null,
-    fechaAutorizacion: null,
-    numeroAutorizacion: null,
-    totalSinImpuestos: new Decimal('100'),
-    totalDescuento: new Decimal('0'),
-    importeTotal: new Decimal('112'),
-    propina: null,
     moneda: 'DOLAR',
-    receptorTipoIdentificacion: '05',
-    receptorIdentificacion: '1234567890',
-    receptorRazonSocial: 'Juan Pérez',
-    receptorDireccion: 'Av. Test 123',
-    receptorEmail: 'juan@test.com',
-    receptorTelefono: '0999999999',
-    docModificadoTipo: null,
-    docModificadoNumero: null,
-    docModificadoFecha: null,
-    motivo: null,
-    valorModificacion: null,
-    rise: null,
-    periodoFiscal: null,
-    idReferenciaExterna: null,
-    tipoSistemaExterno: null,
+    receptor_identificacion: '1234567890',
+    total_sin_impuestos: 100,
+    importe_total: 112,
   };
 
   const mockPrefactura = {
     prefacturaId: BigInt(10),
-    comprobanteId: BigInt(42),
     contratoId: BigInt(1),
-    clienteDireccion: 'Av. Test 123',
-    clienteEmail: 'test@example.com',
+    total: 100,
     totalPagar: 100,
-    createdAt: new Date('2026-07-01'),
+    subtotal: 100,
+    iva: 0,
+    createdAt: new Date('2026-07-01T00:00:00Z'),
     prefacturaDetalle: [
       {
-        rubroId: BigInt(5),
-        cantidad: new Decimal(2),
-        precioUnitario: new Decimal(50),
-        descuento: new Decimal(0),
-        subtotal: new Decimal(100),
-        rubro: { nombre: 'Servicio Test' },
+        id: BigInt(1),
+        rubroId: BigInt(1),
+        cantidad: 1,
+        precioUnitario: 100,
+        subtotal: 100,
+        iva: 0,
+        rubro: {
+          id: BigInt(1),
+          nombre: 'Servicio de Agua',
+          codigo: 'AGUA-01',
+        },
       },
     ],
     contrato: {
@@ -118,11 +96,15 @@ describe('SriIntegrationService — emitirDesdeComprobante (T-008)', () => {
     prisma = {
       prefacturas: {
         findFirst: jest.fn(),
-      },
-      comprobantes: {
-        findUnique: jest.fn(),
+        update: jest.fn(),
       },
     };
+
+    comprobanteRepository = {
+      findRecordById: jest.fn(),
+      findById: jest.fn(),
+      findByClaveAcceso: jest.fn(),
+    } as any;
 
     emitirFacturaUseCase = {
       emitirFactura: jest
@@ -132,15 +114,16 @@ describe('SriIntegrationService — emitirDesdeComprobante (T-008)', () => {
 
     service = new SriIntegrationService(
       prisma,
+      comprobanteRepository,
       {} as any, // SriService (mocked)
       emitirFacturaUseCase,
-      mockLogger,
+      mockLogger as any,
     );
   });
 
   it('should load prefactura + comprobante and call emitirFactura with comprobanteExistente', async () => {
     prisma.prefacturas.findFirst.mockResolvedValue(mockPrefactura);
-    prisma.comprobantes.findUnique.mockResolvedValue(mockComprobante);
+    comprobanteRepository.findRecordById.mockResolvedValue(mockDomainComprobante);
     emitirFacturaUseCase.emitirFactura.mockResolvedValue({
       success: true,
     } as any);
@@ -153,10 +136,8 @@ describe('SriIntegrationService — emitirDesdeComprobante (T-008)', () => {
         where: { comprobanteId: BigInt(42) },
       }),
     );
-    // Verify it queried the existing comprobante
-    expect(prisma.comprobantes.findUnique).toHaveBeenCalledWith({
-      where: { id: BigInt(42) },
-    });
+    // Verify it queried the existing comprobante through repository port
+    expect(comprobanteRepository.findRecordById).toHaveBeenCalledWith(BigInt(42));
     // Verify emitirFactura was called with the comprobanteExistente option
     expect(emitirFacturaUseCase.emitirFactura).toHaveBeenCalledTimes(1);
     const [dto, opts] = emitirFacturaUseCase.emitirFactura.mock.calls[0];
@@ -168,59 +149,23 @@ describe('SriIntegrationService — emitirDesdeComprobante (T-008)', () => {
     );
   });
 
-  it('should throw NotFoundException when prefactura is not found for comprobanteId', async () => {
+  it('should throw EntityNotFoundException when prefactura is not found for comprobanteId', async () => {
     prisma.prefacturas.findFirst.mockResolvedValue(null);
 
     await expect(service.emitirDesdeComprobante(BigInt(99))).rejects.toThrow(
-      NotFoundException,
+      EntityNotFoundException,
     );
-    // Should not try to load comprobante if prefactura is missing
-    expect(prisma.comprobantes.findUnique).not.toHaveBeenCalled();
+    expect(comprobanteRepository.findRecordById).not.toHaveBeenCalled();
     expect(emitirFacturaUseCase.emitirFactura).not.toHaveBeenCalled();
   });
 
-  it('should throw NotFoundException when comprobante is not found', async () => {
+  it('should throw EntityNotFoundException when comprobante is not found', async () => {
     prisma.prefacturas.findFirst.mockResolvedValue(mockPrefactura);
-    prisma.comprobantes.findUnique.mockResolvedValue(null);
+    comprobanteRepository.findRecordById.mockResolvedValue(null);
 
     await expect(service.emitirDesdeComprobante(BigInt(42))).rejects.toThrow(
-      NotFoundException,
+      EntityNotFoundException,
     );
-    // Should not call emitirFactura without comprobanteExistente
     expect(emitirFacturaUseCase.emitirFactura).not.toHaveBeenCalled();
-  });
-
-  // ─── Regression: Prisma camelCase → domain ComprobanteRecord snake_case ───
-  it('should adapt Prisma comprobante (camelCase) to ComprobanteRecord (snake_case) before calling emitirFactura', async () => {
-    prisma.prefacturas.findFirst.mockResolvedValue(mockPrefactura);
-    prisma.comprobantes.findUnique.mockResolvedValue(mockPrismaComprobante);
-    emitirFacturaUseCase.emitirFactura.mockResolvedValue({
-      success: true,
-    } as any);
-
-    await service.emitirDesdeComprobante(BigInt(42));
-
-    expect(emitirFacturaUseCase.emitirFactura).toHaveBeenCalledTimes(1);
-    const [, opts] = emitirFacturaUseCase.emitirFactura.mock.calls[0];
-    const record = opts!.comprobanteExistente as Record<string, unknown>;
-
-    // id and required snake_case fields must be populated from Prisma camelCase
-    expect(record.id).toBe(BigInt(42));
-    expect(record.uuid).toBe('uuid-42');
-    expect(record.emisor_id).toBe(7);
-    expect(record.punto_emision_id).toBe(8);
-    expect(record.tipo_comprobante).toBe('01');
-    expect(record.tipo_emision).toBe('1');
-    expect(record.secuencial).toBe('000000001');
-    expect(record.clave_acceso).toBe('CLAVE-42');
-    expect(record.ambiente).toBe('1');
-    expect(record.estado).toBe('BORRADOR');
-    expect(record.moneda).toBe('DOLAR');
-    expect(record.receptor_identificacion).toBe('1234567890');
-
-    // Decimal fields must be coerced to number, dates to ISO string
-    expect(record.total_sin_impuestos).toBe(100);
-    expect(record.importe_total).toBe(112);
-    expect(record.fecha_emision).toBe('2026-07-01T00:00:00.000Z');
   });
 });

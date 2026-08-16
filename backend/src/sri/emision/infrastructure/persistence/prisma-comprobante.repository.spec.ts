@@ -1,9 +1,16 @@
 import { PrismaComprobanteRepository } from './prisma-comprobante.repository';
-import type { PrismaService } from '../../../../infrastructure/database/prisma.service';
+
+const mockLogger = {
+  log: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+  debug: jest.fn(),
+  verbose: jest.fn(),
+};
 
 describe('PrismaComprobanteRepository — delete methods (T-002)', () => {
   let repository: PrismaComprobanteRepository;
-  let mockPrisma: jest.Mocked<PrismaService>;
+  let mockPrisma: any;
 
   beforeEach(() => {
     mockPrisma = {
@@ -13,9 +20,12 @@ describe('PrismaComprobanteRepository — delete methods (T-002)', () => {
       comprobanteTotales: { deleteMany: jest.fn() },
       infoAdicional: { deleteMany: jest.fn() },
       detallesAdicionales: { deleteMany: jest.fn() },
-    } as any;
+    };
 
-    repository = new PrismaComprobanteRepository(mockPrisma);
+    repository = new PrismaComprobanteRepository(
+      mockPrisma,
+      mockLogger as any,
+    );
   });
 
   describe('deleteDetallesByComprobanteId', () => {

@@ -1,5 +1,6 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
+import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { EmitirFacturaUseCase } from './emitir-factura.use-case';
 import { ClaveAccesoService } from '../../infrastructure/xml/clave-acceso.service';
@@ -56,7 +57,7 @@ describe('EmitirFacturaUseCase — persistirFactura with comprobanteExistente (T
       obligadoContabilidad: 'SI',
     },
     comprador: {
-      tipoIdentificacion: '05',
+      tipoIdentificacion: '05' as any,
       identificacion: '1234567890',
       razonSocial: 'Test Client',
       direccion: 'Test Address',
@@ -79,7 +80,7 @@ describe('EmitirFacturaUseCase — persistirFactura with comprobanteExistente (T
         ],
       },
     ],
-    pagos: [{ formaPago: '01', total: 112 }],
+    pagos: [{ formaPago: '01' as any, total: 112 }],
   };
 
   beforeEach(async () => {
@@ -192,6 +193,7 @@ describe('EmitirFacturaUseCase — persistirFactura with comprobanteExistente (T
           },
         },
         { provide: EventEmitter2, useValue: { emit: jest.fn() } },
+        { provide: ConfigService, useValue: { get: jest.fn().mockReturnValue(undefined) } },
       ],
     }).compile();
 
@@ -260,7 +262,7 @@ describe('EmitirFacturaUseCase — SRI rejection path (E-005)', () => {
   let useCase: EmitirFacturaUseCase;
   let comprobanteRepository: jest.Mocked<ComprobanteRepository>;
   let sriSoapClient: jest.Mocked<SriSoapClient>;
-  let eventEmitterMock: { emit: jest.Mock };
+  let eventEmitterMock: jest.Mock;
   let module: TestingModule;
 
   const mockDto: CreateFacturaDto = {
@@ -274,7 +276,7 @@ describe('EmitirFacturaUseCase — SRI rejection path (E-005)', () => {
       obligadoContabilidad: 'SI',
     },
     comprador: {
-      tipoIdentificacion: '05',
+      tipoIdentificacion: '05' as any,
       identificacion: '1234567890',
       razonSocial: 'Test Client',
       direccion: 'Test Address',
@@ -297,7 +299,7 @@ describe('EmitirFacturaUseCase — SRI rejection path (E-005)', () => {
         ],
       },
     ],
-    pagos: [{ formaPago: '01', total: 112 }],
+    pagos: [{ formaPago: '01' as any, total: 112 }],
   };
 
   const emittedAutorizado = () =>
@@ -413,6 +415,7 @@ describe('EmitirFacturaUseCase — SRI rejection path (E-005)', () => {
           },
         },
         { provide: EventEmitter2, useValue: eventEmitterProvider },
+        { provide: ConfigService, useValue: { get: jest.fn().mockReturnValue(undefined) } },
       ],
     }).compile();
 

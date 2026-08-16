@@ -132,6 +132,7 @@ describe('WebhooksService', () => {
   describe('create', () => {
     it('should create webhook and return secret', async () => {
       const dto: CreateWebhookDto = {
+        emisorId: 1,
         nombre: 'Nuevo Webhook',
         url: 'https://app.com/hook',
         eventos: ['comprobante.autorizado'],

@@ -44,7 +44,7 @@ describe('SRIEmissionDispatcherService', () => {
     service = new SRIEmissionDispatcherService(
       comprobanteRepository,
       jobsService,
-      mockLogger,
+      mockLogger as any,
       sriEmisionModeService as unknown as SriEmisionModeService,
       auditService as unknown as AuditService,
     );

@@ -1,8 +1,9 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { IdentificacionValidatorService } from './identificacion-validator.service';
 import { CatalogoValidatorService } from './catalogo-validator.service';
 import { Ambiente } from '../../domain/constants';
+import { InvalidDomainOperationException } from '../../../../shared/domain/exceptions/domain.exception';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
@@ -33,7 +34,7 @@ export class SriBaseService {
 
   /**
    * Valida una identificación antes de enviar al SRI
-   * @throws BadRequestException si la identificación es inválida
+   * @throws InvalidDomainOperationException si la identificación es inválida
    */
   validarIdentificacion(
     tipoIdentificacion: string,
@@ -49,7 +50,7 @@ export class SriBaseService {
       this.logger.warn(
         `Identificación inválida para ${contexto}: ${resultado.error}`,
       );
-      throw new BadRequestException(
+      throw new InvalidDomainOperationException(
         `Identificación del ${contexto} inválida: ${resultado.error}`,
       );
     }
@@ -90,10 +91,9 @@ export class SriBaseService {
 
     if (!result.valid) {
       this.logger.warn(`Impuestos inválidos: ${result.errors.join(', ')}`);
-      throw new BadRequestException({
-        message: 'Códigos de impuesto inválidos',
-        errors: result.errors,
-      });
+      throw new InvalidDomainOperationException(
+        `Códigos de impuesto inválidos: ${result.errors.join(', ')}`,
+      );
     }
 
     this.logger.log(
@@ -116,10 +116,9 @@ export class SriBaseService {
 
     if (!result.valid) {
       this.logger.warn(`Retenciones inválidas: ${result.errors.join(', ')}`);
-      throw new BadRequestException({
-        message: 'Códigos de retención inválidos',
-        errors: result.errors,
-      });
+      throw new InvalidDomainOperationException(
+        `Códigos de retención inválidos: ${result.errors.join(', ')}`,
+      );
     }
 
     this.logger.log(
@@ -140,10 +139,9 @@ export class SriBaseService {
 
     if (!result.valid) {
       this.logger.warn(`Tipo identificación inválido: ${result.error}`);
-      throw new BadRequestException({
-        message: 'Tipo de identificación inválido',
-        error: result.error,
-      });
+      throw new InvalidDomainOperationException(
+        `Tipo de identificación inválido: ${result.error}`,
+      );
     }
 
     this.logger.log(
@@ -165,10 +163,9 @@ export class SriBaseService {
 
     if (!result.valid) {
       this.logger.warn(`Formas de pago inválidas: ${result.errors.join(', ')}`);
-      throw new BadRequestException({
-        message: 'Formas de pago inválidas',
-        errors: result.errors,
-      });
+      throw new InvalidDomainOperationException(
+        `Formas de pago inválidas: ${result.errors.join(', ')}`,
+      );
     }
 
     this.logger.log(`Validadas ${pagos.length} formas de pago contra catálogo`);
@@ -185,10 +182,9 @@ export class SriBaseService {
 
     if (!result.valid) {
       this.logger.warn(`Documento sustento inválido: ${result.error}`);
-      throw new BadRequestException({
-        message: 'Código de documento sustento inválido',
-        error: result.error,
-      });
+      throw new InvalidDomainOperationException(
+        `Código de documento sustento inválido: ${result.error}`,
+      );
     }
 
     this.logger.log(

@@ -41,6 +41,8 @@ export abstract class ComprobanteRepository {
     select?: { estado?: boolean; id?: boolean },
   ): Promise<{ id: bigint; estado: string } | null>;
 
+  abstract findRecordById(id: bigint): Promise<ComprobanteRecord | null>;
+
   abstract findConDetalles(claveAcceso: string): Promise<any>;
 
   abstract findMany(filters: {

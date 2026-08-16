@@ -1,5 +1,7 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../../infrastructure/database/prisma.service';
+import { ComprobanteRepository } from '../../domain/repositories/comprobante.repository';
+import { EntityNotFoundException } from '../../../../shared/domain/exceptions/domain.exception';
 import { SriService } from './sri.service';
 import { EmitirFacturaUseCase } from '../use-cases/emitir-factura.use-case';
 import { CreateFacturaDto } from '../../interfaces/dto';
@@ -14,6 +16,7 @@ import { LogContext } from 'src/shared/decorators/log-context.decorator';
 export class SriIntegrationService {
   constructor(
     private readonly prisma: PrismaService,
+    private readonly comprobanteRepository: ComprobanteRepository,
     private readonly sriService: SriService,
     private readonly emitirFacturaUseCase: EmitirFacturaUseCase,
     private readonly logger: LoggerService,
@@ -40,7 +43,7 @@ export class SriIntegrationService {
     });
 
     if (!prefactura) {
-      throw new NotFoundException(`Prefactura ${prefacturaId} no encontrada`);
+      throw new EntityNotFoundException('Prefactura', prefacturaId);
     }
 
     // Use shared helper to build DTO
@@ -51,11 +54,11 @@ export class SriIntegrationService {
 
     // Update prefactura with comprobanteId
     if (result && 'claveAcceso' in result) {
-      const comprobante = await this.prisma.comprobantes.findUnique({
-        where: { claveAcceso: result.claveAcceso },
-      });
+      const comprobante = await this.comprobanteRepository.findByClaveAcceso(
+        result.claveAcceso,
+      );
 
-      if (comprobante) {
+      if (comprobante && comprobante.id) {
         await this.prisma.prefacturas.update({
           where: { prefacturaId: BigInt(prefacturaId) },
           data: { comprobanteId: comprobante.id },
@@ -97,8 +100,9 @@ export class SriIntegrationService {
     });
 
     if (!prefactura) {
-      throw new NotFoundException(
-        `Prefactura con comprobanteId ${comprobanteId} no encontrada`,
+      throw new EntityNotFoundException(
+        'Prefactura para comprobante',
+        comprobanteId.toString(),
       );
     }
 
@@ -106,21 +110,16 @@ export class SriIntegrationService {
     const { dto } = this.buildFacturaDtoFromPrefactura(prefactura);
 
     // 3. Fetch existing BORRADOR comprobante to pass as comprobanteExistente
-    const comprobante = await this.prisma.comprobantes.findUnique({
-      where: { id: comprobanteId },
-    });
+    const comprobante =
+      await this.comprobanteRepository.findRecordById(comprobanteId);
 
     if (!comprobante) {
-      throw new NotFoundException(`Comprobante ${comprobanteId} no encontrado`);
+      throw new EntityNotFoundException('Comprobante', comprobanteId.toString());
     }
 
     // 4. Emit using existing comprobante (UPDATE path in persistirFactura).
-    // Adapt the Prisma camelCase model to the domain ComprobanteRecord
-    // (snake_case) required by EmitirFacturaUseCase.
-    const comprobanteExistente = this.toComprobanteRecord(comprobante);
-
     return this.emitirFacturaUseCase.emitirFactura(dto, {
-      comprobanteExistente,
+      comprobanteExistente: comprobante,
     });
   }
 
@@ -171,11 +170,14 @@ export class SriIntegrationService {
       pagos: [
         {
           formaPago: FormaPago.SIN_UTILIZACION_SISTEMA_FINANCIERO,
-          total: Number(prefactura.totalPagar),
+          total: Number(prefactura.totalPagar ?? prefactura.total ?? 0),
         },
       ],
       infoAdicional: [
-        { nombre: 'Contrato', valor: prefactura.contratoId.toString() },
+        {
+          nombre: 'Contrato',
+          valor: prefactura.contratoId?.toString?.() || 'N/A',
+        },
       ],
     };
 

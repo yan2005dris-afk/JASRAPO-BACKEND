@@ -1,7 +1,11 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Decimal } from 'decimal.js';
+import {
+  EntityNotFoundException,
+  InvalidDomainOperationException,
+} from '../../../../shared/domain/exceptions/domain.exception';
 import { ClaveAccesoService } from '../../infrastructure/xml/clave-acceso.service';
 import { XmlBuilderService } from '../../infrastructure/xml/xml-builder.service';
 import { XmlSignerService } from '../../infrastructure/xml/xml-signer.service';
@@ -46,15 +50,15 @@ export class EmitirNotaCreditoUseCase {
   ) {}
 
   /**
-   * Emite una Nota de Crédito electrónica
+   * Emite una nota de crédito electrónica al SRI
    */
   async emitirNotaCredito(
     dto: CreateNotaCreditoDto,
-  ): Promise<NotaCreditoResponseDto> {
-    this.logger.log('Iniciando emisión de nota de crédito');
+  ): Promise<any> {
+    this.logger.log('Iniciando emisión de nota de crédito electrónica');
 
     try {
-      // Validar identificación del comprador
+      // Validaciones previas básicas
       this.base.validarIdentificacion(
         dto.comprador.tipoIdentificacion,
         dto.comprador.identificacion,
@@ -66,7 +70,7 @@ export class EmitirNotaCreditoUseCase {
         dto.comprador.tipoIdentificacion,
       );
 
-      // Validar códigos de impuesto contra catálogo
+      // Validar impuestos contra catálogo
       await this.base.validarImpuestosDetalles(dto.detalles);
 
       // Validar documento sustento contra catálogo
@@ -78,9 +82,7 @@ export class EmitirNotaCreditoUseCase {
       // Get emisor info from database
       const emisor = await this.emisorRepository.findByRuc(dto.emisor.ruc);
       if (!emisor) {
-        throw new BadRequestException(
-          `El emisor con RUC ${dto.emisor.ruc} no está registrado en el sistema`,
-        );
+        throw new EntityNotFoundException('Emisor', dto.emisor.ruc);
       }
 
       const puntoEmisionInfo = await this.emisorRepository.findPuntoEmision(
@@ -90,7 +92,7 @@ export class EmitirNotaCreditoUseCase {
       );
 
       if (!puntoEmisionInfo) {
-        throw new BadRequestException(
+        throw new InvalidDomainOperationException(
           `El punto de emisión ${dto.emisor.establecimiento}-${dto.emisor.puntoEmision} no está registrado para el emisor ${dto.emisor.ruc}`,
         );
       }
@@ -145,7 +147,7 @@ export class EmitirNotaCreditoUseCase {
         !emisor.certificado_nombre ||
         !emisor.certificado_password_encrypted
       ) {
-        throw new BadRequestException(
+        throw new InvalidDomainOperationException(
           `El emisor ${dto.emisor.ruc} no tiene certificado P12 configurado. ` +
             `Use el endpoint /certificates/upload-cert para subir el certificado.`,
         );
@@ -164,7 +166,7 @@ export class EmitirNotaCreditoUseCase {
       const esFirmaValida =
         await this.xmlSignerService.verifySignature(xmlFirmado);
       if (!esFirmaValida) {
-        throw new BadRequestException(
+        throw new InvalidDomainOperationException(
           'La firma del XML generado no es válida. Verifique el certificado del emisor.',
         );
       }

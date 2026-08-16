@@ -61,7 +61,7 @@ describe('SriEmisionProcessor (T-007)', () => {
       emitirNotaDebitoUseCase,
       emitirRetencionUseCase,
       sriIntegrationService,
-      mockLogger,
+      mockLogger as any,
     );
   });
 
