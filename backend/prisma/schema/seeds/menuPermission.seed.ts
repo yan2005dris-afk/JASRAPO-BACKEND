@@ -178,7 +178,7 @@ const PERMISSION_MAP: MenuPermissionMapping[] = [
     ],
   },
   {
-    menuNombre: 'Estado de Cuenta Cliente',
+    menuNombre: 'Estado de Cuenta',
     permisos: [{ recurso: 'reportes', accion: 'read' }],
   },
   {
@@ -191,6 +191,22 @@ const PERMISSION_MAP: MenuPermissionMapping[] = [
   },
   {
     menuNombre: 'Dashboard KPI',
+    permisos: [{ recurso: 'reportes', accion: 'read' }],
+  },
+  {
+    menuNombre: 'Reporte de Abonos',
+    permisos: [{ recurso: 'reportes', accion: 'read' }],
+  },
+  {
+    menuNombre: 'Historial de Conexión',
+    permisos: [{ recurso: 'reportes', accion: 'read' }],
+  },
+  {
+    menuNombre: 'Convenio de Pago',
+    permisos: [{ recurso: 'reportes', accion: 'read' }],
+  },
+  {
+    menuNombre: 'Listado de Clientes',
     permisos: [{ recurso: 'reportes', accion: 'read' }],
   },
 ];

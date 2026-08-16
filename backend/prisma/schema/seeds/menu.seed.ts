@@ -10,7 +10,7 @@ interface MenuSeedEntry {
 const LEVEL_1: Omit<MenuSeedEntry, 'parentNombre'>[] = [
   { nombre: 'Contratos', ruta: '/Contratos', icono: 'water_drop' },
   { nombre: 'Facturación', ruta: '/Facturacion', icono: 'payments' },
-  { nombre: 'Reportes', ruta: '/Reportes', icono: 'menu_book' },
+  { nombre: 'Reportes', ruta: '/reportes', icono: 'menu_book' },
   { nombre: 'Administración', ruta: '/admin', icono: 'settings' },
 ];
 
@@ -131,27 +131,51 @@ const LEVEL_2: MenuSeedEntry[] = [
 
   // ── Reportes ───────────────────────────────────────────────
   {
-    nombre: 'Estado de Cuenta Cliente',
-    ruta: '/Reportes/EstadoCuentaCliente',
+    nombre: 'Estado de Cuenta',
+    ruta: '/reportes/estado-cuenta',
     icono: 'article_person',
     parentNombre: 'Reportes',
   },
   {
     nombre: 'Recaudación y Morosidad',
-    ruta: '/Reportes/RecaudacionMorosida',
+    ruta: '/reportes/recaudacion-morosidad',
     icono: 'money_off',
     parentNombre: 'Reportes',
   },
   {
     nombre: 'Consumo por Zonas',
-    ruta: '/Reportes/ConsumoZonas',
+    ruta: '/reportes/consumo-zonas',
     icono: 'location_on',
     parentNombre: 'Reportes',
   },
   {
     nombre: 'Dashboard KPI',
-    ruta: '/Reportes/DashboardKpi',
+    ruta: '/reportes/dashboard',
     icono: 'dashboard',
+    parentNombre: 'Reportes',
+  },
+  {
+    nombre: 'Reporte de Abonos',
+    ruta: '/reportes/abonos',
+    icono: 'receipt_long',
+    parentNombre: 'Reportes',
+  },
+  {
+    nombre: 'Historial de Conexión',
+    ruta: '/reportes/historial-conexion',
+    icono: 'history',
+    parentNombre: 'Reportes',
+  },
+  {
+    nombre: 'Convenio de Pago',
+    ruta: '/reportes/convenio-pago',
+    icono: 'handshake',
+    parentNombre: 'Reportes',
+  },
+  {
+    nombre: 'Listado de Clientes',
+    ruta: '/reportes/listado-clientes',
+    icono: 'group',
     parentNombre: 'Reportes',
   },
 ];
