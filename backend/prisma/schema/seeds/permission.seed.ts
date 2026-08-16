@@ -36,6 +36,8 @@ export async function seedPermissions(prisma: PrismaClient) {
         "batches",
         "pre-invoices",
         "agreements",
+        "payments",
+        "discounts",
         "planillas",
         "facturacion_electronica",
         "recaudacion",
@@ -73,6 +75,9 @@ export async function seedPermissions(prisma: PrismaClient) {
             permissionsToCreate.push({ resource, action });
         }
     }
+
+    // Acciones especiales fuera del set CRUD estándar (endpoints de transición)
+    permissionsToCreate.push({ resource: "discounts", action: "apply" });
     
     const savedPermissions: Permisos[] = [];
 

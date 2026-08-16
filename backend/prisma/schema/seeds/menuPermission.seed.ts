@@ -29,16 +29,16 @@ const PERMISSION_MAP: MenuPermissionMapping[] = [
     ],
   },
   {
-    menuNombre: 'Inventario de Medidores',
+    menuNombre: 'Convenios de Pago',
     permisos: [
-      { recurso: 'meters', accion: 'read' },
-      { recurso: 'meters', accion: 'create' },
-      { recurso: 'meters', accion: 'update' },
-      { recurso: 'meters', accion: 'delete' },
+      { recurso: 'agreements', accion: 'read' },
+      { recurso: 'agreements', accion: 'create' },
+      { recurso: 'agreements', accion: 'update' },
+      { recurso: 'agreements', accion: 'delete' },
     ],
   },
   {
-    menuNombre: 'Planificación de Rutas',
+    menuNombre: 'Rutas de Lectura',
     permisos: [
       { recurso: 'routes', accion: 'read' },
       { recurso: 'routes', accion: 'create' },
@@ -47,12 +47,21 @@ const PERMISSION_MAP: MenuPermissionMapping[] = [
     ],
   },
   {
-    menuNombre: 'Bandeja de Auditoría',
+    menuNombre: 'Lectura de Consumo',
     permisos: [
       { recurso: 'lecturas', accion: 'read' },
       { recurso: 'lecturas', accion: 'create' },
       { recurso: 'lecturas', accion: 'update' },
       { recurso: 'lecturas', accion: 'delete' },
+    ],
+  },
+  {
+    menuNombre: 'Anomalías de Lectura',
+    permisos: [
+      { recurso: 'reading-anomalies', accion: 'read' },
+      { recurso: 'reading-anomalies', accion: 'create' },
+      { recurso: 'reading-anomalies', accion: 'update' },
+      { recurso: 'reading-anomalies', accion: 'delete' },
     ],
   },
   {
@@ -65,39 +74,21 @@ const PERMISSION_MAP: MenuPermissionMapping[] = [
     ],
   },
   {
-    menuNombre: 'Punto de Recaudación',
+    menuNombre: 'Inventario de Medidores',
     permisos: [
-      { recurso: 'recaudacion', accion: 'read' },
-      { recurso: 'recaudacion', accion: 'create' },
-      { recurso: 'recaudacion', accion: 'update' },
-      { recurso: 'recaudacion', accion: 'delete' },
+      { recurso: 'meters', accion: 'read' },
+      { recurso: 'meters', accion: 'create' },
+      { recurso: 'meters', accion: 'update' },
+      { recurso: 'meters', accion: 'delete' },
     ],
   },
   {
-    menuNombre: 'Caja Diaria',
+    menuNombre: 'Recaudación y Pagos',
     permisos: [
-      { recurso: 'recaudacion', accion: 'read' },
-      { recurso: 'recaudacion', accion: 'create' },
-      { recurso: 'recaudacion', accion: 'update' },
-      { recurso: 'recaudacion', accion: 'delete' },
-    ],
-  },
-  {
-    menuNombre: 'Validación Transferencia',
-    permisos: [
-      { recurso: 'recaudacion', accion: 'read' },
-      { recurso: 'recaudacion', accion: 'create' },
-      { recurso: 'recaudacion', accion: 'update' },
-      { recurso: 'recaudacion', accion: 'delete' },
-    ],
-  },
-  {
-    menuNombre: 'Emisión SRI',
-    permisos: [
-      { recurso: 'facturacion_electronica', accion: 'read' },
-      { recurso: 'facturacion_electronica', accion: 'create' },
-      { recurso: 'facturacion_electronica', accion: 'update' },
-      { recurso: 'facturacion_electronica', accion: 'delete' },
+      { recurso: 'payments', accion: 'read' },
+      { recurso: 'payments', accion: 'create' },
+      { recurso: 'payments', accion: 'update' },
+      { recurso: 'payments', accion: 'delete' },
     ],
   },
   {
@@ -107,10 +98,43 @@ const PERMISSION_MAP: MenuPermissionMapping[] = [
       { recurso: 'pre-invoices', accion: 'create' },
       { recurso: 'pre-invoices', accion: 'update' },
       { recurso: 'pre-invoices', accion: 'delete' },
+    ],
+  },
+  {
+    menuNombre: 'Envío de Facturación',
+    permisos: [
       { recurso: 'batches', accion: 'read' },
       { recurso: 'batches', accion: 'create' },
       { recurso: 'batches', accion: 'update' },
       { recurso: 'batches', accion: 'delete' },
+    ],
+  },
+  {
+    menuNombre: 'Facturación Electrónica',
+    permisos: [
+      { recurso: 'facturacion_electronica', accion: 'read' },
+      { recurso: 'facturacion_electronica', accion: 'create' },
+      { recurso: 'facturacion_electronica', accion: 'update' },
+      { recurso: 'facturacion_electronica', accion: 'delete' },
+    ],
+  },
+  {
+    menuNombre: 'Notas de Crédito/Débito',
+    permisos: [
+      { recurso: 'notas_credito', accion: 'read' },
+      { recurso: 'notas_credito', accion: 'create' },
+      { recurso: 'notas_credito', accion: 'update' },
+      { recurso: 'notas_credito', accion: 'delete' },
+    ],
+  },
+  {
+    menuNombre: 'Descuentos',
+    permisos: [
+      { recurso: 'discounts', accion: 'read' },
+      { recurso: 'discounts', accion: 'create' },
+      { recurso: 'discounts', accion: 'update' },
+      { recurso: 'discounts', accion: 'delete' },
+      { recurso: 'discounts', accion: 'apply' },
     ],
   },
   {
@@ -154,94 +178,20 @@ const PERMISSION_MAP: MenuPermissionMapping[] = [
     ],
   },
   {
-    menuNombre: 'Estado de cuenta Cliente',
-    permisos: [
-      { recurso: 'estado_cuenta', accion: 'read' },
-      { recurso: 'estado_cuenta', accion: 'create' },
-      { recurso: 'estado_cuenta', accion: 'update' },
-      { recurso: 'estado_cuenta', accion: 'delete' },
-    ],
+    menuNombre: 'Estado de Cuenta Cliente',
+    permisos: [{ recurso: 'reportes', accion: 'read' }],
   },
   {
     menuNombre: 'Recaudación y Morosidad',
-    permisos: [
-      { recurso: 'recaudacion_morosidad', accion: 'read' },
-      { recurso: 'recaudacion_morosidad', accion: 'create' },
-      { recurso: 'recaudacion_morosidad', accion: 'update' },
-      { recurso: 'recaudacion_morosidad', accion: 'delete' },
-    ],
+    permisos: [{ recurso: 'reportes', accion: 'read' }],
   },
   {
-    menuNombre: 'ConsumoPorZonas',
-    permisos: [
-      { recurso: 'consumo_zonas', accion: 'read' },
-      { recurso: 'consumo_zonas', accion: 'create' },
-      { recurso: 'consumo_zonas', accion: 'update' },
-      { recurso: 'consumo_zonas', accion: 'delete' },
-    ],
+    menuNombre: 'Consumo por Zonas',
+    permisos: [{ recurso: 'reportes', accion: 'read' }],
   },
   {
-    menuNombre: 'DashboardKPI',
-    permisos: [
-      { recurso: 'dashboard', accion: 'read' },
-      { recurso: 'dashboard', accion: 'create' },
-      { recurso: 'dashboard', accion: 'update' },
-      { recurso: 'dashboard', accion: 'delete' },
-    ],
-  },
-  {
-    menuNombre: 'Reporte de Abonos',
-    permisos: [
-      { recurso: 'abonos', accion: 'read' },
-      { recurso: 'abonos', accion: 'create' },
-      { recurso: 'abonos', accion: 'update' },
-      { recurso: 'abonos', accion: 'delete' },
-    ],
-  },
-  {
-    menuNombre: 'Historial de Conexión',
-    permisos: [
-      { recurso: 'historial_conexion', accion: 'read' },
-      { recurso: 'historial_conexion', accion: 'create' },
-      { recurso: 'historial_conexion', accion: 'update' },
-      { recurso: 'historial_conexion', accion: 'delete' },
-    ],
-  },
-  {
-    menuNombre: 'Convenio de Pago',
-    permisos: [
-      { recurso: 'convenio_pago', accion: 'read' },
-      { recurso: 'convenio_pago', accion: 'create' },
-      { recurso: 'convenio_pago', accion: 'update' },
-      { recurso: 'convenio_pago', accion: 'delete' },
-    ],
-  },
-  {
-    menuNombre: 'Listado de Clientes',
-    permisos: [
-      { recurso: 'listado_clientes', accion: 'read' },
-      { recurso: 'listado_clientes', accion: 'create' },
-      { recurso: 'listado_clientes', accion: 'update' },
-      { recurso: 'listado_clientes', accion: 'delete' },
-    ],
-  },
-  {
-    menuNombre: 'Toma de Lecturas',
-    permisos: [
-      { recurso: 'lecturas', accion: 'read' },
-      { recurso: 'lecturas', accion: 'create' },
-      { recurso: 'lecturas', accion: 'update' },
-      { recurso: 'lecturas', accion: 'delete' },
-    ],
-  },
-  {
-    menuNombre: 'Reporte Novedades',
-    permisos: [
-      { recurso: 'reading-anomalies', accion: 'read' },
-      { recurso: 'reading-anomalies', accion: 'create' },
-      { recurso: 'reading-anomalies', accion: 'update' },
-      { recurso: 'reading-anomalies', accion: 'delete' },
-    ],
+    menuNombre: 'Dashboard KPI',
+    permisos: [{ recurso: 'reportes', accion: 'read' }],
   },
 ];
 
@@ -250,7 +200,16 @@ export async function seedMenuPermissions(
   menus: Menus[],
   permissions: Permisos[],
 ) {
-  const menuByName = new Map(menus.map((m) => [m.nombre, m]));
+  const menuByName = new Map<string, Menus>();
+  for (const m of menus) {
+    const existing = menuByName.get(m.nombre);
+    // Ante nombres duplicados (ej. padre "Contratos" e hijo "Contratos"),
+    // priorizar el hijo (con menuPadreId) que es quien recibe permisos;
+    // los padres se agregan por recursión en GetMyMenusUseCase.
+    if (!existing || (existing.menuPadreId === null && m.menuPadreId !== null)) {
+      menuByName.set(m.nombre, m);
+    }
+  }
   const permissionByKey = new Map(
     permissions.map((p) => [`${p.recurso}:${p.accion}`, p]),
   );

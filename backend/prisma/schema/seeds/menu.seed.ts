@@ -8,82 +8,102 @@ interface MenuSeedEntry {
 }
 
 const LEVEL_1: Omit<MenuSeedEntry, 'parentNombre'>[] = [
-  { nombre: 'Suministro', ruta: '/suministro', icono: 'water_drop' },
-  { nombre: 'Operaciones', ruta: '/operador', icono: 'construction' },
-  { nombre: 'Recaudación', ruta: '/recaudacion', icono: 'payments' },
-  { nombre: 'Reportes', ruta: '/reportes', icono: 'menu_book' },
+  { nombre: 'Contratos', ruta: '/Contratos', icono: 'water_drop' },
+  { nombre: 'Facturación', ruta: '/Facturacion', icono: 'payments' },
+  { nombre: 'Reportes', ruta: '/Reportes', icono: 'menu_book' },
   { nombre: 'Administración', ruta: '/admin', icono: 'settings' },
 ];
 
 const LEVEL_2: MenuSeedEntry[] = [
+  // ── Contratos ──────────────────────────────────────────────
   {
     nombre: 'Clientes',
     ruta: '/Contratos/Cliente',
     icono: 'group',
-    parentNombre: 'Suministro',
+    parentNombre: 'Contratos',
   },
   {
     nombre: 'Contratos',
     ruta: '/Contratos/Contratos',
     icono: 'contract',
-    parentNombre: 'Suministro',
+    parentNombre: 'Contratos',
+  },
+  {
+    nombre: 'Convenios de Pago',
+    ruta: '/Contratos/ConveniosDePago',
+    icono: 'handshake',
+    parentNombre: 'Contratos',
+  },
+  {
+    nombre: 'Rutas de Lectura',
+    ruta: '/Contratos/RutasDeLectura',
+    icono: 'route',
+    parentNombre: 'Contratos',
+  },
+  {
+    nombre: 'Lectura de Consumo',
+    ruta: '/Contratos/LecturaDeConsumo',
+    icono: 'water_drop',
+    parentNombre: 'Contratos',
+  },
+  {
+    nombre: 'Anomalías de Lectura',
+    ruta: '/Contratos/AnomaliasDeLectura',
+    icono: 'warning',
+    parentNombre: 'Contratos',
   },
   {
     nombre: 'Inventario de Medidores',
     ruta: '/Contratos/Medidores',
     icono: 'gas_meter',
-    parentNombre: 'Suministro',
-  },
-  {
-    nombre: 'Planificación de Rutas',
-    ruta: '/Contratos/LecturaDeConsumo',
-    icono: 'route',
-    parentNombre: 'Suministro',
-  },
-  {
-    nombre: 'Bandeja de Auditoría',
-    ruta: '/suministro/auditoria',
-    icono: 'assignment',
-    parentNombre: 'Suministro',
+    parentNombre: 'Contratos',
   },
   {
     nombre: 'Categoría Tarifa',
     ruta: '/Contratos/TarifasYCategorias',
     icono: 'price_change',
-    parentNombre: 'Suministro',
+    parentNombre: 'Contratos',
   },
 
+  // ── Facturación ────────────────────────────────────────────
   {
-    nombre: 'Punto de Recaudación',
-    ruta: '/recaudacion/punto',
+    nombre: 'Recaudación y Pagos',
+    ruta: '/Facturacion/RecaudacionYPagos',
     icono: 'point_of_sale',
-    parentNombre: 'Recaudación',
-  },
-  {
-    nombre: 'Caja Diaria',
-    ruta: '/recaudacion/caja-diaria',
-    icono: 'payments',
-    parentNombre: 'Recaudación',
-  },
-  {
-    nombre: 'Validación Transferencia',
-    ruta: '/recaudacion/validacion',
-    icono: 'verified',
-    parentNombre: 'Recaudación',
-  },
-  {
-    nombre: 'Emisión SRI',
-    ruta: '/recaudacion/emision-sri',
-    icono: 'gavel',
-    parentNombre: 'Recaudación',
+    parentNombre: 'Facturación',
   },
   {
     nombre: 'Generación de Planillas',
-    ruta: '/recaudacion/planillas',
+    ruta: '/Facturacion/GeneracionPlanilla',
     icono: 'description',
-    parentNombre: 'Recaudación',
+    parentNombre: 'Facturación',
+  },
+  {
+    nombre: 'Envío de Facturación',
+    ruta: '/Facturacion/EnvioDeFacturacion',
+    icono: 'send',
+    parentNombre: 'Facturación',
+  },
+  {
+    nombre: 'Facturación Electrónica',
+    ruta: '/Facturacion/FacturacionElectronica',
+    icono: 'gavel',
+    parentNombre: 'Facturación',
+  },
+  {
+    nombre: 'Notas de Crédito/Débito',
+    ruta: '/Facturacion/NotasDeCreditoDebito',
+    icono: 'swap_horizontal',
+    parentNombre: 'Facturación',
+  },
+  {
+    nombre: 'Descuentos',
+    ruta: '/Facturacion/Descuentos',
+    icono: 'percent',
+    parentNombre: 'Facturación',
   },
 
+  // ── Administración ─────────────────────────────────────────
   {
     nombre: 'Usuarios',
     ruta: '/admin/users',
@@ -109,65 +129,30 @@ const LEVEL_2: MenuSeedEntry[] = [
     parentNombre: 'Administración',
   },
 
+  // ── Reportes ───────────────────────────────────────────────
   {
-    nombre: 'Estado de cuenta Cliente',
-    ruta: '/reportes/estado-cuenta',
+    nombre: 'Estado de Cuenta Cliente',
+    ruta: '/Reportes/EstadoCuentaCliente',
     icono: 'article_person',
     parentNombre: 'Reportes',
   },
   {
     nombre: 'Recaudación y Morosidad',
-    ruta: '/reportes/recaudacion-morosidad',
+    ruta: '/Reportes/RecaudacionMorosida',
     icono: 'money_off',
     parentNombre: 'Reportes',
   },
   {
-    nombre: 'ConsumoPorZonas',
-    ruta: '/reportes/consumo-zonas',
+    nombre: 'Consumo por Zonas',
+    ruta: '/Reportes/ConsumoZonas',
     icono: 'location_on',
     parentNombre: 'Reportes',
   },
   {
-    nombre: 'DashboardKPI',
-    ruta: '/reportes/dashboard',
+    nombre: 'Dashboard KPI',
+    ruta: '/Reportes/DashboardKpi',
     icono: 'dashboard',
     parentNombre: 'Reportes',
-  },
-  {
-    nombre: 'Reporte de Abonos',
-    ruta: '/reportes/abonos',
-    icono: 'receipt_long',
-    parentNombre: 'Reportes',
-  },
-  {
-    nombre: 'Historial de Conexión',
-    ruta: '/reportes/historial-conexion',
-    icono: 'history',
-    parentNombre: 'Reportes',
-  },
-  {
-    nombre: 'Convenio de Pago',
-    ruta: '/reportes/convenio-pago',
-    icono: 'handshake',
-    parentNombre: 'Reportes',
-  },
-  {
-    nombre: 'Listado de Clientes',
-    ruta: '/reportes/listado-clientes',
-    icono: 'group',
-    parentNombre: 'Reportes',
-  },
-  {
-    nombre: 'Toma de Lecturas',
-    ruta: '/operador/lecturas',
-    icono: 'water_drop',
-    parentNombre: 'Operaciones',
-  },
-  {
-    nombre: 'Reporte Novedades',
-    ruta: '/operador/novedades',
-    icono: 'warning',
-    parentNombre: 'Operaciones',
   },
 ];
 
@@ -178,8 +163,10 @@ async function upsertMenu(
   icono: string | null,
   menuPadreId: number | null,
 ): Promise<number> {
+  // Buscar por nombre + ruta: evita colisiones como padre "Contratos"
+  // (ruta /Contratos) e hijo "Contratos" (ruta /Contratos/Contratos).
   const existing = await prisma.menus.findFirst({
-    where: { nombre, deletedAt: null },
+    where: { nombre, ruta, deletedAt: null },
     select: { menuId: true },
   });
 

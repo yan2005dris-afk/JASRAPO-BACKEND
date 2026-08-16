@@ -32,7 +32,8 @@ export async function seedRolePermissions(
     const secretaryResources = [
         'clientes',
         'lecturas', 'reading-anomalies',
-        'routes', 'batches'
+        'routes', 'batches',
+        'agreements',
     ];
     const secretaryPerms = permissions.filter(p => secretaryResources.includes(p.recurso));
     for (const perm of secretaryPerms) {
@@ -45,6 +46,7 @@ export async function seedRolePermissions(
     const recaudacionResources = [
         'planillas', 'facturacion_electronica', 'recaudacion',
         'notas_credito', 'envio_facturas', 'batches',
+        'payments', 'pre-invoices', 'discounts',
         'clientes'
     ];
     const recaudacionPerms = permissions.filter(p => recaudacionResources.includes(p.recurso));
