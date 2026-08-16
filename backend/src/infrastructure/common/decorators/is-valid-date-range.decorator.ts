@@ -14,7 +14,12 @@ export class IsValidDateRangeConstraint implements ValidatorConstraintInterface 
     const hasta = (object as Record<string, unknown>).fechaHasta;
 
     // La validación cruzada solo aplica cuando ambos extremos vienen definidos.
-    if (desde === undefined || desde === null || hasta === undefined || hasta === null) {
+    if (
+      desde === undefined ||
+      desde === null ||
+      hasta === undefined ||
+      hasta === null
+    ) {
       return true;
     }
     if (typeof desde !== 'string' || typeof hasta !== 'string') {

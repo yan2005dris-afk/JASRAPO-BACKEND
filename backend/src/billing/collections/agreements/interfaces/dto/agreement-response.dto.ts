@@ -127,10 +127,9 @@ export class AgreementResponseDto {
       dto.numeroGuia = convenio.contrato.numeroGuia;
       const cliente = convenio.contrato.cliente;
       if (cliente) {
-        dto.clienteNombre = (
+        dto.clienteNombre =
           cliente.razonSocial ||
-          `${cliente.nombres ?? ''} ${cliente.apellidos ?? ''}`.trim()
-        );
+          `${cliente.nombres ?? ''} ${cliente.apellidos ?? ''}`.trim();
         dto.clienteIdentificacion = cliente.identificacion;
         dto.clienteEmail = cliente.email ?? null;
       }

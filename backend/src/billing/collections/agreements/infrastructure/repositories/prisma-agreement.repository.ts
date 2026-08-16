@@ -66,7 +66,9 @@ export class PrismaAgreementRepository implements AgreementRepository {
             contrato: {
               deletedAt: null,
               OR: [
-                { numeroGuia: { contains: filters.search, mode: 'insensitive' } },
+                {
+                  numeroGuia: { contains: filters.search, mode: 'insensitive' },
+                },
                 {
                   cliente: {
                     nombres: { contains: filters.search, mode: 'insensitive' },
@@ -74,12 +76,18 @@ export class PrismaAgreementRepository implements AgreementRepository {
                 },
                 {
                   cliente: {
-                    apellidos: { contains: filters.search, mode: 'insensitive' },
+                    apellidos: {
+                      contains: filters.search,
+                      mode: 'insensitive',
+                    },
                   },
                 },
                 {
                   cliente: {
-                    razonSocial: { contains: filters.search, mode: 'insensitive' },
+                    razonSocial: {
+                      contains: filters.search,
+                      mode: 'insensitive',
+                    },
                   },
                 },
                 {
