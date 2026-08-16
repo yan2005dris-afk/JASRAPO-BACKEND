@@ -59,6 +59,45 @@ export class SriBaseService {
   }
 
   /**
+   * Valida la fecha de emisión del comprobante.
+   * Reglas SRI:
+   * 1. No puede ser una fecha futura.
+   * 2. No puede tener una antigüedad mayor a maxDiasRetroactivos (default 3 días / 72h).
+   */
+  validarFechaEmision(
+    fechaEmisionStr: string,
+    maxDiasRetroactivos: number = 3,
+  ): void {
+    const [day, month, year] = fechaEmisionStr.split('/').map(Number);
+    if (!day || !month || !year) {
+      throw new InvalidDomainOperationException(
+        `Formato de fecha de emisión inválido: ${fechaEmisionStr}. Debe ser dd/MM/yyyy`,
+      );
+    }
+
+    const ahora = new Date();
+    const hoy = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate());
+    const fechaEmisionInicio = new Date(year, month - 1, day);
+
+    // Margen de hasta 24h por posibles desfasajes de zona horaria
+    const limiteFuturo = new Date(hoy.getTime() + 24 * 60 * 60 * 1000);
+    if (fechaEmisionInicio > limiteFuturo) {
+      throw new InvalidDomainOperationException(
+        `La fecha de emisión (${fechaEmisionStr}) no puede ser una fecha futura`,
+      );
+    }
+
+    const limitePasado = new Date(
+      hoy.getTime() - maxDiasRetroactivos * 24 * 60 * 60 * 1000,
+    );
+    if (fechaEmisionInicio < limitePasado) {
+      throw new InvalidDomainOperationException(
+        `La fecha de emisión (${fechaEmisionStr}) es extemporánea; no puede exceder ${maxDiasRetroactivos} días de antigüedad según la normativa del SRI`,
+      );
+    }
+  }
+
+  /**
    * Valida los códigos de impuesto de los detalles contra el catálogo
    */
   async validarImpuestosDetalles(

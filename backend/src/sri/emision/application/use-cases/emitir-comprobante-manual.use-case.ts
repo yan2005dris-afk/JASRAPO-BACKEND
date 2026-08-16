@@ -1,8 +1,8 @@
+import { Injectable } from '@nestjs/common';
 import {
-  Injectable,
-  NotFoundException,
-  ConflictException,
-} from '@nestjs/common';
+  EntityNotFoundException,
+  InvalidDomainOperationException,
+} from '../../../../shared/domain/exceptions/domain.exception';
 import { ComprobanteRepository } from '../../domain/repositories/comprobante.repository';
 import {
   SRIEmissionDispatcherService,
@@ -26,19 +26,17 @@ export interface EmitirManualCurrentUser {
  * EmitirComprobanteManualUseCase
  *
  * Operator-triggered emission (sdd/sri-emision-modo-manual-automatico):
- *   1. Look up comprobante by `claveAcceso` — 404 if missing.
+ *   1. Look up comprobante by `claveAcceso` — 404 EntityNotFoundException if missing.
  *   2. Delegate to `SRIEmissionDispatcherService.tryEmitManual()`, which is the
  *      single authority on state eligibility ({BORRADOR, POR_EMITIR}) and
  *      optimistic locking.
  *   3. Write an audit row (`accion='emision-manual'`) recording the attempt —
  *      success OR failure — so every operator-triggered emission is traceable.
- *   4. Map the dispatcher outcome to an HTTP result:
+ *   4. Map the dispatcher outcome:
  *        - EMITTED       → returned to the controller (200)
- *        - INVALID_STATE → 409 ConflictException
- *        - LOCK_LOST     → 409 ConflictException (retryable; another process
- *                          won the race)
- *        - NOT_FOUND     → 404 NotFoundException (comprobante deleted after the
- *                          initial lookup)
+ *        - INVALID_STATE → InvalidDomainOperationException
+ *        - LOCK_LOST     → InvalidDomainOperationException (retryable)
+ *        - NOT_FOUND     → EntityNotFoundException
  *
  * Used by `SriController.emitirManual()` which guards the call with
  * `@RequiredPermission('sri','admin')` at the class level.
@@ -59,9 +57,7 @@ export class EmitirComprobanteManualUseCase {
       await this.comprobanteRepository.findByClaveAcceso(claveAcceso);
 
     if (!comprobante) {
-      throw new NotFoundException(
-        `Comprobante con claveAcceso ${claveAcceso} no encontrado`,
-      );
+      throw new EntityNotFoundException('Comprobante', claveAcceso);
     }
 
     const outcome = await this.sriDispatcher.tryEmitManual(comprobante.id!);
@@ -84,17 +80,15 @@ export class EmitirComprobanteManualUseCase {
 
     switch (outcome) {
       case 'INVALID_STATE':
-        throw new ConflictException(
+        throw new InvalidDomainOperationException(
           `Comprobante en estado ${comprobante.estado} no es elegible para emisión manual; debe estar en BORRADOR o POR_EMITIR`,
         );
       case 'LOCK_LOST':
-        throw new ConflictException(
+        throw new InvalidDomainOperationException(
           `Comprobante ${claveAcceso} está siendo emitido por otra operación; reintente`,
         );
       case 'NOT_FOUND':
-        throw new NotFoundException(
-          `Comprobante con claveAcceso ${claveAcceso} no encontrado`,
-        );
+        throw new EntityNotFoundException('Comprobante', claveAcceso);
       default:
         return outcome;
     }

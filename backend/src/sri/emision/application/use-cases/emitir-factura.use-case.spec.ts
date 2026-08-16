@@ -183,6 +183,7 @@ describe('EmitirFacturaUseCase — persistirFactura with comprobanteExistente (T
         {
           provide: SriBaseService,
           useValue: {
+            validarFechaEmision: jest.fn(),
             validarIdentificacion: jest.fn(),
             validarTipoIdentificacionCatalogo: jest
               .fn()
@@ -405,6 +406,7 @@ describe('EmitirFacturaUseCase — SRI rejection path (E-005)', () => {
         {
           provide: SriBaseService,
           useValue: {
+            validarFechaEmision: jest.fn(),
             validarIdentificacion: jest.fn(),
             validarTipoIdentificacionCatalogo: jest
               .fn()

@@ -59,6 +59,9 @@ export class EmitirNotaDebitoUseCase {
     this.logger.log('Iniciando emisión de nota de débito electrónica');
 
     try {
+      // Validar fecha de emisión
+      this.base.validarFechaEmision(dto.fechaEmision);
+
       // Validaciones previas básicas
       this.base.validarIdentificacion(
         dto.comprador.tipoIdentificacion,

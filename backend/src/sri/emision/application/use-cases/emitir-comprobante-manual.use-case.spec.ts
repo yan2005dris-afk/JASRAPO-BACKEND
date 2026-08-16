@@ -2,7 +2,10 @@
 jest.mock('../../../../infrastructure/audit/audit.service', () => ({
   AuditService: jest.fn(),
 }));
-import { NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  EntityNotFoundException,
+  InvalidDomainOperationException,
+} from '../../../../shared/domain/exceptions/domain.exception';
 import { EmitirComprobanteManualUseCase } from './emitir-comprobante-manual.use-case';
 import { ComprobanteEstado } from '../../domain/constants/comprobante-estado.enum';
 import type { ComprobanteRepository } from '../../domain/repositories/comprobante.repository';
@@ -16,8 +19,8 @@ import type { AuditService } from '../../../../infrastructure/audit/audit.servic
  * Use case `EmitirComprobanteManualUseCase` (sdd/sri-emision-modo-manual-automatico)
  *
  * Responsibilities:
- *   - Look up the comprobante by `claveAcceso`. 404 if missing.
- *   - Validate estado ∈ {BORRADOR, POR_EMITIR}. 409 otherwise.
+ *   - Look up the comprobante by `claveAcceso`. EntityNotFoundException if missing.
+ *   - Validate estado ∈ {BORRADOR, POR_EMITIR}. InvalidDomainOperationException otherwise.
  *   - Delegate emission to `sriDispatcher.tryEmitManual()`.
  *   - Write an audit row recording the operator action.
  */
@@ -62,7 +65,7 @@ describe('EmitirComprobanteManualUseCase', () => {
     );
   });
 
-  it('R-6/S1: POR_EMITIR → calls tryEmitManual + writes emision-manual audit row', async () => {
+  it('R-6/S1: valid POR_EMITIR → optimistic lock succeeds → EMITTED + audit', async () => {
     comprobanteRepository.findByClaveAcceso.mockResolvedValue(COMP as any);
     sriDispatcher.tryEmitManual.mockResolvedValue('EMITTED');
 
@@ -88,7 +91,7 @@ describe('EmitirComprobanteManualUseCase', () => {
     );
   });
 
-  it('R-6/S2: BORRADOR → calls tryEmitManual + writes audit with previousState=BORRADOR', async () => {
+  it('R-6/S2: valid BORRADOR → optimistic lock succeeds → EMITTED + audit', async () => {
     comprobanteRepository.findByClaveAcceso.mockResolvedValue({
       ...COMP,
       estado: ComprobanteEstado.BORRADOR,
@@ -108,7 +111,7 @@ describe('EmitirComprobanteManualUseCase', () => {
     );
   });
 
-  it('R-6/S3: INVALID_STATE from dispatcher → 409 ConflictException + audit(exitoso:false)', async () => {
+  it('R-6/S3: INVALID_STATE from dispatcher → InvalidDomainOperationException + audit(exitoso:false)', async () => {
     comprobanteRepository.findByClaveAcceso.mockResolvedValue({
       ...COMP,
       estado: ComprobanteEstado.AUTORIZADO,
@@ -116,10 +119,8 @@ describe('EmitirComprobanteManualUseCase', () => {
     sriDispatcher.tryEmitManual.mockResolvedValue('INVALID_STATE');
 
     await expect(useCase.execute(CLAVE, CURRENT_USER)).rejects.toBeInstanceOf(
-      ConflictException,
+      InvalidDomainOperationException,
     );
-    // Dispatcher is the single authority on state eligibility, so it IS called,
-    // and the rejected attempt is still audited for traceability.
     expect(sriDispatcher.tryEmitManual).toHaveBeenCalledWith(42n);
     expect(auditService.log).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -129,22 +130,22 @@ describe('EmitirComprobanteManualUseCase', () => {
     );
   });
 
-  it('R-6/S4: unknown claveAcceso → 404 NotFoundException, no dispatcher call, no audit', async () => {
+  it('R-6/S4: unknown claveAcceso → EntityNotFoundException, no dispatcher call, no audit', async () => {
     comprobanteRepository.findByClaveAcceso.mockResolvedValue(null);
 
     await expect(useCase.execute(CLAVE, CURRENT_USER)).rejects.toBeInstanceOf(
-      NotFoundException,
+      EntityNotFoundException,
     );
     expect(sriDispatcher.tryEmitManual).not.toHaveBeenCalled();
     expect(auditService.log).not.toHaveBeenCalled();
   });
 
-  it('LOCK_LOST from dispatcher → 409 ConflictException + audit(exitoso:false)', async () => {
+  it('LOCK_LOST from dispatcher → InvalidDomainOperationException + audit(exitoso:false)', async () => {
     comprobanteRepository.findByClaveAcceso.mockResolvedValue(COMP as any);
     sriDispatcher.tryEmitManual.mockResolvedValue('LOCK_LOST');
 
     await expect(useCase.execute(CLAVE, CURRENT_USER)).rejects.toBeInstanceOf(
-      ConflictException,
+      InvalidDomainOperationException,
     );
     expect(auditService.log).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -154,12 +155,12 @@ describe('EmitirComprobanteManualUseCase', () => {
     );
   });
 
-  it('NOT_FOUND from dispatcher (deleted mid-flight) → 404 NotFoundException', async () => {
+  it('NOT_FOUND from dispatcher (deleted mid-flight) → EntityNotFoundException', async () => {
     comprobanteRepository.findByClaveAcceso.mockResolvedValue(COMP as any);
     sriDispatcher.tryEmitManual.mockResolvedValue('NOT_FOUND');
 
     await expect(useCase.execute(CLAVE, CURRENT_USER)).rejects.toBeInstanceOf(
-      NotFoundException,
+      EntityNotFoundException,
     );
     expect(auditService.log).toHaveBeenCalledWith(
       expect.objectContaining({

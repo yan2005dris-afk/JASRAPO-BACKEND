@@ -58,6 +58,9 @@ export class EmitirNotaCreditoUseCase {
     this.logger.log('Iniciando emisión de nota de crédito electrónica');
 
     try {
+      // Validar fecha de emisión
+      this.base.validarFechaEmision(dto.fechaEmision);
+
       // Validaciones previas básicas
       this.base.validarIdentificacion(
         dto.comprador.tipoIdentificacion,

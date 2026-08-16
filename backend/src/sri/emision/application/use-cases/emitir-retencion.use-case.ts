@@ -53,6 +53,9 @@ export class EmitirRetencionUseCase {
     this.logger.log('Iniciando emisión de comprobante de retención');
 
     try {
+      // Validar fecha de emisión
+      this.base.validarFechaEmision(dto.fechaEmision);
+
       // Validar identificación del sujeto retenido
       this.base.validarIdentificacion(
         dto.sujetoRetenido.tipoIdentificacion,

@@ -71,6 +71,9 @@ export class EmitirFacturaUseCase {
     );
 
     try {
+      // Validar fecha de emisión
+      this.base.validarFechaEmision(dto.fechaEmision);
+
       // Validaciones previas básicas contra catálogo
       const [, , , emisor] = await Promise.all([
         this.base.validarTipoIdentificacionCatalogo(
