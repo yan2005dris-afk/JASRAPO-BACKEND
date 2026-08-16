@@ -5,17 +5,15 @@ import {
   EntityNotFoundException,
   InvalidDomainOperationException,
 } from '../../../../shared/domain/exceptions/domain.exception';
-import {
-  ClaveAccesoPort,
-  XmlBuilderPort,
-  XmlSignerPort,
-  SriSoapClientPort,
-  XmlStoragePort,
-  SriBasePort,
-} from '../../domain/ports';
+import { ClaveAccesoService } from '../../infrastructure/xml/clave-acceso.service';
+import { XmlBuilderService } from '../../infrastructure/xml/xml-builder.service';
+import { XmlSignerService } from '../../infrastructure/xml/xml-signer.service';
+import { SriSoapClient } from '../../infrastructure/soap/sri-soap.client';
 import { ComprobanteRepository } from '../../domain/repositories/comprobante.repository';
 import { EmisorRepository } from '../../../emisores/domain/repositories/emisor.repository';
 import { SecuencialRepository } from '../../domain/repositories/secuencial.repository';
+import { XmlStorageService } from '../../infrastructure/storage/xml-storage.service';
+import { SriBaseService } from '../../infrastructure/xml/sri-base.service';
 import { CatalogoValidatorService } from '../../infrastructure/xml/catalogo-validator.service';
 import {
   CreateNotaDebitoDto,
@@ -37,15 +35,15 @@ import { LogContext } from 'src/shared/decorators/log-context.decorator';
 @Injectable()
 export class EmitirNotaDebitoUseCase {
   constructor(
-    private readonly claveAccesoService: ClaveAccesoPort,
-    private readonly xmlBuilderService: XmlBuilderPort,
-    private readonly xmlSignerService: XmlSignerPort,
-    private readonly sriSoapClient: SriSoapClientPort,
+    private readonly claveAccesoService: ClaveAccesoService,
+    private readonly xmlBuilderService: XmlBuilderService,
+    private readonly xmlSignerService: XmlSignerService,
+    private readonly sriSoapClient: SriSoapClient,
     private readonly comprobanteRepository: ComprobanteRepository,
     private readonly emisorRepository: EmisorRepository,
     private readonly secuencialRepository: SecuencialRepository,
-    private readonly xmlStorage: XmlStoragePort,
-    private readonly base: SriBasePort,
+    private readonly xmlStorage: XmlStorageService,
+    private readonly base: SriBaseService,
     private readonly catalogoValidator: CatalogoValidatorService,
     private readonly eventEmitter: EventEmitter2,
     private readonly logger: LoggerService,

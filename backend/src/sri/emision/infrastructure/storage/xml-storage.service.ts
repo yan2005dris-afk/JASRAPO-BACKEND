@@ -9,8 +9,6 @@ import { Readable } from 'stream';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
-import { XmlStoragePort } from '../../domain/ports/xml-storage.port';
-
 /**
  * Service for storing XML files using IStorageService abstraction
  * Organizes files by RUC/year/month for easy retrieval and 7-year retention
@@ -18,7 +16,7 @@ import { XmlStoragePort } from '../../domain/ports/xml-storage.port';
  */
 @LogContext()
 @Injectable()
-export class XmlStorageService extends XmlStoragePort {
+export class XmlStorageService {
   private readonly baseDir: string;
 
   constructor(
@@ -26,7 +24,6 @@ export class XmlStorageService extends XmlStoragePort {
     private readonly configService: ConfigService,
     private readonly logger: LoggerService,
   ) {
-    super();
     this.baseDir = this.configService.get<string>('XMLS_DIR', '../xmls');
     this.logger.log(`XmlStorageService initialized with S3-compatible storage`);
   }

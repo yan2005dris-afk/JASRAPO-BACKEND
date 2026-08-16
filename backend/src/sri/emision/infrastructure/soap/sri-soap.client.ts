@@ -10,21 +10,17 @@ import {
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
-import { SriSoapClientPort } from '../../domain/ports/sri-soap-client.port';
-
 /**
  * Cliente SOAP para comunicación con los servicios web del SRI Ecuador.
  */
 @LogContext()
 @Injectable()
-export class SriSoapClient extends SriSoapClientPort {
+export class SriSoapClient {
   constructor(
     private readonly configService: ConfigService,
     private readonly soapFactory: SriSoapFactoryService,
     private readonly logger: LoggerService,
-  ) {
-    super();
-  }
+  ) {}
 
   async validarComprobante(
     xmlFirmado: string,

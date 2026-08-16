@@ -16,16 +16,6 @@ import { EmitirNotaDebitoUseCase } from './application/use-cases/emitir-nota-deb
 import { EmitirRetencionUseCase } from './application/use-cases/emitir-retencion.use-case';
 import { EmitirComprobanteManualUseCase } from './application/use-cases/emitir-comprobante-manual.use-case';
 
-// Domain Ports
-import {
-  XmlBuilderPort,
-  XmlSignerPort,
-  ClaveAccesoPort,
-  SriSoapClientPort,
-  XmlStoragePort,
-  SriBasePort,
-} from './domain/ports';
-
 // Infrastructure
 import { ClaveAccesoService } from './infrastructure/xml/clave-acceso.service';
 import { XmlBuilderService } from './infrastructure/xml/xml-builder.service';
@@ -72,15 +62,6 @@ import { JobsService } from '../../infrastructure/jobs/jobs.service';
     EmitirRetencionUseCase,
     EmitirComprobanteManualUseCase,
 
-    // Port Bindings
-    { provide: ClaveAccesoPort, useClass: ClaveAccesoService },
-    { provide: XmlBuilderPort, useClass: XmlBuilderService },
-    { provide: XmlSignerPort, useClass: XmlSignerService },
-    { provide: SriSoapClientPort, useClass: SriSoapClient },
-    { provide: XmlStoragePort, useClass: XmlStorageService },
-    { provide: SriBasePort, useClass: SriBaseService },
-
-    // Concrete classes (for direct consumers / backwards compat)
     ClaveAccesoService,
     XmlBuilderService,
     XmlSignerService,
@@ -128,18 +109,15 @@ import { JobsService } from '../../infrastructure/jobs/jobs.service';
     EmitirRetencionUseCase,
     EmitirComprobanteManualUseCase,
 
-    // Domain Ports
-    ClaveAccesoPort,
-    XmlBuilderPort,
-    XmlSignerPort,
-    SriSoapClientPort,
-    XmlStoragePort,
-    SriBasePort,
-
     // Concrete services
     XmlSignerService,
     PdfService,
     TemplateService,
+    XmlStorageService,
+    SriBaseService,
+    ClaveAccesoService,
+    XmlBuilderService,
+    SriSoapClient,
   ],
 })
 export class EmisionModule {}

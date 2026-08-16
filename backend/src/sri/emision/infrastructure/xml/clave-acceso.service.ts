@@ -20,14 +20,10 @@ import { LogContext } from 'src/shared/decorators/log-context.decorator';
  * - Tipo de emisión (1 dígito): 1=Normal, 2=Contingencia
  * - Dígito verificador Módulo 11 (1 dígito)
  */
-import { ClaveAccesoPort } from '../../domain/ports/clave-acceso.port';
-
 @LogContext()
 @Injectable()
-export class ClaveAccesoService extends ClaveAccesoPort {
-  constructor(private readonly logger: LoggerService) {
-    super();
-  }
+export class ClaveAccesoService {
+  constructor(private readonly logger: LoggerService) {}
 
   /**
    * Genera una clave de acceso de 49 dígitos
