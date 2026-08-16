@@ -1,4 +1,5 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ClaveAccesoService } from '../../infrastructure/xml/clave-acceso.service';
 import { XmlBuilderService } from '../../infrastructure/xml/xml-builder.service';
@@ -42,6 +43,7 @@ export class EmitirNotaDebitoUseCase {
     private readonly catalogoValidator: CatalogoValidatorService,
     private readonly eventEmitter: EventEmitter2,
     private readonly logger: LoggerService,
+    private readonly configService: ConfigService,
   ) {}
 
   /**
@@ -443,6 +445,12 @@ export class EmitirNotaDebitoUseCase {
 
     // Información adicional
     const infoAdicional: any[] = [];
+
+    // Mandatory field: SRI requires the software provider's RUC in every voucher.
+    const developerRuc = this.configService.get<string>('SRI_DEVELOPER_RUC');
+    if (developerRuc) {
+      infoAdicional.push({ nombre: 'RUC Proveedor', valor: developerRuc });
+    }
 
     if (dto.comprador.email) {
       infoAdicional.push({ nombre: 'email', valor: dto.comprador.email });
