@@ -69,6 +69,15 @@ export class PrismaEmisorRepository extends EmisorRepository {
     return emisor;
   }
 
+  async findByCertificadoNombre(
+    certFile: string,
+  ): Promise<EmisorRecord | null> {
+    const empresa = await this.prisma.empresa.findFirst({
+      where: { certificadoNombre: certFile },
+    });
+    return empresa ? this.mapToRecord(empresa) : null;
+  }
+
   async create(data: CreateEmisorInput): Promise<EmisorRecord> {
     try {
       const empresa = await this.prisma.empresa.create({

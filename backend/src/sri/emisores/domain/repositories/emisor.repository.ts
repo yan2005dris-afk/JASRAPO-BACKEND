@@ -30,6 +30,9 @@ export abstract class EmisorRepository {
   abstract findAll(): Promise<EmisorRecord[]>;
   abstract findById(id: number): Promise<EmisorRecord | null>;
   abstract findByRuc(ruc: string): Promise<EmisorRecord | null>;
+  abstract findByCertificadoNombre(
+    certFile: string,
+  ): Promise<EmisorRecord | null>;
 
   abstract create(data: CreateEmisorInput): Promise<EmisorRecord>;
   abstract update(id: number, data: UpdateEmisorInput): Promise<EmisorRecord>;

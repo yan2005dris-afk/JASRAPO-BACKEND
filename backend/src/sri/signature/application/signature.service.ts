@@ -11,7 +11,11 @@ import {
   StorageService,
   SRI_STORAGE_TYPES,
 } from '../../../infrastructure/storage/storage.service';
-import { PrismaService } from '../../../infrastructure/database/prisma.service';
+import { EmisorRepository } from '../../emisores/domain/repositories/emisor.repository';
+import {
+  EntityNotFoundException,
+  InvalidDomainOperationException,
+} from '../../../shared/domain/exceptions/domain.exception';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
@@ -52,7 +56,7 @@ export class SignatureService {
 
   constructor(
     private configService: ConfigService,
-    private readonly prisma: PrismaService,
+    private readonly emisorRepository: EmisorRepository,
     private readonly storageService: StorageService,
     private readonly logger: LoggerService,
   ) {
@@ -267,15 +271,11 @@ export class SignatureService {
       );
 
       // Get the RUC of the emisor associated with this certFile
-      const emisor = await this.prisma.empresa.findFirst({
-        where: { certificadoNombre: certFile },
-        select: { ruc: true },
-      });
+      const emisor =
+        await this.emisorRepository.findByCertificadoNombre(certFile);
 
       if (!emisor) {
-        throw new Error(
-          `No se encontró un emisor asociado al certificado: ${certFile}`,
-        );
+        throw new EntityNotFoundException('Emisor para certificado', certFile);
       }
 
       // Resolve bucket name
@@ -287,9 +287,7 @@ export class SignatureService {
       // Check if certificate exists in centralized storage
       const exists = await this.storageService.exists(bucket, certFile);
       if (!exists) {
-        throw new Error(
-          `El certificado ${certFile} no existe en el almacenamiento centralizado`,
-        );
+        throw new EntityNotFoundException('Certificado en storage', certFile);
       }
 
       // Read P12 certificate from centralized storage

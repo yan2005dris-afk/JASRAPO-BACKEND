@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { existsSync, writeFileSync, mkdirSync } from 'fs';
 import { join, basename } from 'path';
@@ -7,6 +7,7 @@ import { CertificateService } from '../../../certificates/application/certificat
 import { PdfService } from '../../../emision/infrastructure/storage/pdf.service';
 import { TemplateService } from '../../../emision/infrastructure/storage/template.service';
 import { STORAGE_PATHS } from '../../../emision/infrastructure/storage/storage-paths';
+import { InvalidDomainOperationException } from '../../../../shared/domain/exceptions/domain.exception';
 
 export interface GenerateAndSignPdfInput {
   templateId: string;
@@ -54,22 +55,15 @@ export class GenerateAndSignPdfUseCase {
       );
 
       if (!validation.isValid) {
-        throw new BadRequestException({
-          message: `No se puede firmar: ${validation.reason}`,
-          validationDetails: {
-            isExpired: validation.isExpired,
-            isNotYetValid: validation.isNotYetValid,
-            expiryDate: validation.expiryDate,
-            startDate: validation.startDate,
-            subject: validation.subject,
-          },
-        });
+        throw new InvalidDomainOperationException(
+          `No se puede firmar: ${validation.reason}`,
+        );
       }
     } catch (certError) {
-      if (certError instanceof BadRequestException) {
+      if (certError instanceof InvalidDomainOperationException) {
         throw certError;
       }
-      throw new BadRequestException(
+      throw new InvalidDomainOperationException(
         `Error al validar el certificado: ${(certError as Error).message}. Verifique que el archivo existe y la contraseña es correcta.`,
       );
     }
