@@ -1,6 +1,7 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, IsBoolean } from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
 import { Transform } from 'class-transformer';
+import { IsValidDateRange } from 'src/infrastructure/common/decorators/is-valid-date-range.decorator';
 
 export class ClientsListReportFilterDto {
   @ApiPropertyOptional({
@@ -35,12 +36,29 @@ export class ClientsListReportFilterDto {
 
   @ApiPropertyOptional({
     description: 'Filtrar solo activos (true) o inactivos (false)',
+    type: Boolean,
   })
   @IsOptional()
-  @IsBoolean()
   @Transform(({ value }) => {
-    if (value === undefined || value === '') return undefined;
+    if (value === undefined || value === null || value === '') return undefined;
     return value === 'true' || value === true;
   })
-  activo?: boolean;
+  activo?: boolean | string;
+
+  @ApiPropertyOptional({
+    description: 'Clientes ingresados desde esta fecha (YYYY-MM-DD)',
+  })
+  @IsOptional()
+  @IsString()
+  @IsValidDateRange()
+  @Transform(({ value }) => (value === '' ? undefined : value))
+  fechaDesde?: string;
+
+  @ApiPropertyOptional({
+    description: 'Clientes ingresados hasta esta fecha (YYYY-MM-DD)',
+  })
+  @IsOptional()
+  @IsString()
+  @Transform(({ value }) => (value === '' ? undefined : value))
+  fechaHasta?: string;
 }

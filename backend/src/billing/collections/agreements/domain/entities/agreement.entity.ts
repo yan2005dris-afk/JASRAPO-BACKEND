@@ -19,6 +19,17 @@ export class AgreementEntity {
 
   cuotas?: InstallmentEntity[];
 
+  contrato?: {
+    numeroGuia: string;
+    cliente?: {
+      nombres?: string;
+      apellidos?: string;
+      razonSocial?: string | null;
+      identificacion?: string;
+      email?: string | null;
+    };
+  };
+
   constructor(partial: Partial<AgreementEntity>) {
     Object.assign(this, partial);
   }

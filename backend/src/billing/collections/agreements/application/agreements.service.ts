@@ -64,9 +64,11 @@ export class AgreementsService {
   async findAll(params: {
     pagination: PaginateOptions;
     contratoId?: string;
+    search?: string;
   }): Promise<PaginatedResult<AgreementEntity>> {
     return this.agreementRepository.paginate(params.pagination, {
       contratoId: params.contratoId,
+      search: params.search,
     });
   }
 

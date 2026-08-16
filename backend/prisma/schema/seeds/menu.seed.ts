@@ -134,6 +134,30 @@ const LEVEL_2: MenuSeedEntry[] = [
     parentNombre: 'Reportes',
   },
   {
+    nombre: 'Reporte de Abonos',
+    ruta: '/reportes/abonos',
+    icono: 'receipt_long',
+    parentNombre: 'Reportes',
+  },
+  {
+    nombre: 'Historial de Conexión',
+    ruta: '/reportes/historial-conexion',
+    icono: 'history',
+    parentNombre: 'Reportes',
+  },
+  {
+    nombre: 'Convenio de Pago',
+    ruta: '/reportes/convenio-pago',
+    icono: 'handshake',
+    parentNombre: 'Reportes',
+  },
+  {
+    nombre: 'Listado de Clientes',
+    ruta: '/reportes/listado-clientes',
+    icono: 'group',
+    parentNombre: 'Reportes',
+  },
+  {
     nombre: 'Toma de Lecturas',
     ruta: '/operador/lecturas',
     icono: 'water_drop',

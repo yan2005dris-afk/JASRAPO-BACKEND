@@ -61,13 +61,62 @@ export class PrismaAgreementRepository implements AgreementRepository {
       ...(filters?.contratoId
         ? { contratoId: BigInt(filters.contratoId) }
         : {}),
+      ...(filters?.search
+        ? {
+            contrato: {
+              deletedAt: null,
+              OR: [
+                { numeroGuia: { contains: filters.search, mode: 'insensitive' } },
+                {
+                  cliente: {
+                    nombres: { contains: filters.search, mode: 'insensitive' },
+                  },
+                },
+                {
+                  cliente: {
+                    apellidos: { contains: filters.search, mode: 'insensitive' },
+                  },
+                },
+                {
+                  cliente: {
+                    razonSocial: { contains: filters.search, mode: 'insensitive' },
+                  },
+                },
+                {
+                  cliente: {
+                    identificacion: {
+                      contains: filters.search,
+                      mode: 'insensitive',
+                    },
+                  },
+                },
+              ],
+            },
+          }
+        : {}),
     };
 
     const paginated = await paginate<any>(
       this.prisma.convenios,
       {
         where,
-        include: this.defaultInclude,
+        include: {
+          ...this.defaultInclude,
+          contrato: {
+            select: {
+              numeroGuia: true,
+              cliente: {
+                select: {
+                  nombres: true,
+                  apellidos: true,
+                  razonSocial: true,
+                  identificacion: true,
+                  email: true,
+                },
+              },
+            },
+          },
+        },
         orderBy: { createdAt: 'desc' },
       },
       pagination,

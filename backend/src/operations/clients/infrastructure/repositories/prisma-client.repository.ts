@@ -334,6 +334,18 @@ export class PrismaClientRepository implements ClientRepository {
       conditions.push({ activo: filters.activo });
     }
 
+    // Rango de fecha de ingreso (createdAt)
+    if (filters.fechaDesde || filters.fechaHasta) {
+      const fechaRange: Prisma.DateTimeFilter = {};
+      if (filters.fechaDesde) {
+        fechaRange.gte = new Date(`${filters.fechaDesde}T00:00:00.000Z`);
+      }
+      if (filters.fechaHasta) {
+        fechaRange.lte = new Date(`${filters.fechaHasta}T23:59:59.999Z`);
+      }
+      conditions.push({ createdAt: fechaRange });
+    }
+
     if (conditions.length === 1) {
       return conditions[0];
     }

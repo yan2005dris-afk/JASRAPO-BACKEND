@@ -190,6 +190,42 @@ const PERMISSION_MAP: MenuPermissionMapping[] = [
     ],
   },
   {
+    menuNombre: 'Reporte de Abonos',
+    permisos: [
+      { recurso: 'abonos', accion: 'read' },
+      { recurso: 'abonos', accion: 'create' },
+      { recurso: 'abonos', accion: 'update' },
+      { recurso: 'abonos', accion: 'delete' },
+    ],
+  },
+  {
+    menuNombre: 'Historial de Conexión',
+    permisos: [
+      { recurso: 'historial_conexion', accion: 'read' },
+      { recurso: 'historial_conexion', accion: 'create' },
+      { recurso: 'historial_conexion', accion: 'update' },
+      { recurso: 'historial_conexion', accion: 'delete' },
+    ],
+  },
+  {
+    menuNombre: 'Convenio de Pago',
+    permisos: [
+      { recurso: 'convenio_pago', accion: 'read' },
+      { recurso: 'convenio_pago', accion: 'create' },
+      { recurso: 'convenio_pago', accion: 'update' },
+      { recurso: 'convenio_pago', accion: 'delete' },
+    ],
+  },
+  {
+    menuNombre: 'Listado de Clientes',
+    permisos: [
+      { recurso: 'listado_clientes', accion: 'read' },
+      { recurso: 'listado_clientes', accion: 'create' },
+      { recurso: 'listado_clientes', accion: 'update' },
+      { recurso: 'listado_clientes', accion: 'delete' },
+    ],
+  },
+  {
     menuNombre: 'Toma de Lecturas',
     permisos: [
       { recurso: 'lecturas', accion: 'read' },

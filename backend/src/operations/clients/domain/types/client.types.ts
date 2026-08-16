@@ -4,6 +4,8 @@ export interface ClientFilters {
   apellidos?: string;
   nombreCompleto?: string;
   activo?: boolean;
+  fechaDesde?: string;
+  fechaHasta?: string;
 }
 
 export interface CreateClientData {

@@ -53,6 +53,20 @@ export class AgreementMapper {
       cuotas: Array.isArray(raw.cuotaConvenio)
         ? raw.cuotaConvenio.map(AgreementMapper.toDomainInstallment)
         : undefined,
+      contrato: raw.contrato
+        ? {
+            numeroGuia: raw.contrato.numeroGuia,
+            cliente: raw.contrato.cliente
+              ? {
+                  nombres: raw.contrato.cliente.nombres,
+                  apellidos: raw.contrato.cliente.apellidos,
+                  razonSocial: raw.contrato.cliente.razonSocial,
+                  identificacion: raw.contrato.cliente.identificacion,
+                  email: raw.contrato.cliente.email,
+                }
+              : undefined,
+          }
+        : undefined,
     });
   }
 

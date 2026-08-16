@@ -34,6 +34,23 @@ export class ClientsListReportSpec implements ReportSpec<ClientsListReportFilter
     const partes: string[] = [];
     if (filters.activo !== undefined)
       partes.push(filters.activo ? 'Solo activos' : 'Solo inactivos');
+    if (filters.fechaDesde || filters.fechaHasta) {
+      const desde = filters.fechaDesde
+        ? new Date(`${filters.fechaDesde}T00:00:00`).toLocaleDateString('es-EC', {
+            day: '2-digit',
+            month: 'long',
+            year: 'numeric',
+          })
+        : 'inicio';
+      const hasta = filters.fechaHasta
+        ? new Date(`${filters.fechaHasta}T00:00:00`).toLocaleDateString('es-EC', {
+            day: '2-digit',
+            month: 'long',
+            year: 'numeric',
+          })
+        : 'hoy';
+      partes.push(`Ingresados entre ${desde} y ${hasta}`);
+    }
     if (filters.nombres) partes.push(`Nombres: "${filters.nombres}"`);
     if (filters.apellidos) partes.push(`Apellidos: "${filters.apellidos}"`);
     if (filters.identificacion)

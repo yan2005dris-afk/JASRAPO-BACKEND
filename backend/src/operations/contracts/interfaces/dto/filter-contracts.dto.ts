@@ -7,7 +7,7 @@ import { EstadoContrato } from 'src/shared/enums';
 export class FilterContractsDto extends PaginationDto {
   @ApiPropertyOptional({
     description:
-      'Búsqueda global: número de guía, serie de medidor o dirección de suministro',
+      'Búsqueda global: número de guía, serie de medidor, dirección de suministro, nombre/razón social o identificación del cliente',
   })
   @IsOptional()
   @IsString()

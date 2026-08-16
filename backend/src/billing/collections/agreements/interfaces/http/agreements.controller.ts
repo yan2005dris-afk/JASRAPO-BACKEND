@@ -181,6 +181,7 @@ export class AgreementsController {
     const result = await this.agreementsService.findAll({
       pagination: { page: query.page, limit: query.limit },
       contratoId: query.contratoId,
+      search: query.search,
     });
 
     return {

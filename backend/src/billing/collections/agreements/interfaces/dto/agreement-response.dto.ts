@@ -76,6 +76,30 @@ export class AgreementResponseDto {
   })
   cuotas?: InstallmentResponseDto[];
 
+  @ApiPropertyOptional({
+    example: 'GUIA-1-0051',
+    description: 'Número de guía del contrato asociado',
+  })
+  numeroGuia?: string;
+
+  @ApiPropertyOptional({
+    example: 'María Pérez',
+    description: 'Nombre del cliente (razón social o nombres + apellidos)',
+  })
+  clienteNombre?: string;
+
+  @ApiPropertyOptional({
+    example: '1105123456',
+    description: 'Identificación del cliente',
+  })
+  clienteIdentificacion?: string;
+
+  @ApiPropertyOptional({
+    example: 'maria@ejemplo.com',
+    description: 'Email del cliente',
+  })
+  clienteEmail?: string | null;
+
   static fromEntity(convenio: AgreementEntity): AgreementResponseDto {
     const dto = new AgreementResponseDto();
     dto.convenioId = String(convenio.convenioId);
@@ -99,6 +123,18 @@ export class AgreementResponseDto {
     dto.cuotas = convenio.cuotas
       ? InstallmentResponseDto.fromEntityList(convenio.cuotas)
       : undefined;
+    if (convenio.contrato) {
+      dto.numeroGuia = convenio.contrato.numeroGuia;
+      const cliente = convenio.contrato.cliente;
+      if (cliente) {
+        dto.clienteNombre = (
+          cliente.razonSocial ||
+          `${cliente.nombres ?? ''} ${cliente.apellidos ?? ''}`.trim()
+        );
+        dto.clienteIdentificacion = cliente.identificacion;
+        dto.clienteEmail = cliente.email ?? null;
+      }
+    }
     return dto;
   }
 
