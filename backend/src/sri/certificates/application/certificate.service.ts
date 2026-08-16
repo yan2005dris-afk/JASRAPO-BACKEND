@@ -1,8 +1,8 @@
+import { Injectable } from '@nestjs/common';
 import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
+  EntityNotFoundException,
+  InvalidDomainOperationException,
+} from '../../../shared/domain/exceptions/domain.exception';
 import {
   existsSync,
   mkdirSync,
@@ -90,7 +90,7 @@ export class CertificateService {
     const target = resolve(join(base, fileName));
     const basePrefix = base.endsWith(sep) ? base : base + sep;
     if (!target.startsWith(basePrefix) && target !== base) {
-      throw new BadRequestException(
+      throw new InvalidDomainOperationException(
         `Nombre de archivo inválido: contiene secuencias de path no permitidas`,
       );
     }
@@ -182,7 +182,7 @@ export class CertificateService {
    */
   deleteCertificate(fileName: string): boolean {
     if (!fileName || !fileName.toLowerCase().endsWith('.p12')) {
-      throw new BadRequestException(
+      throw new InvalidDomainOperationException(
         'Nombre de archivo inválido. Debe tener extensión .p12',
       );
     }
@@ -190,7 +190,7 @@ export class CertificateService {
     const filePath = this.resolveSafePath(fileName);
 
     if (!existsSync(filePath)) {
-      throw new NotFoundException(`El certificado ${fileName} no existe`);
+      throw new EntityNotFoundException('Certificado', fileName);
     }
 
     unlinkSync(filePath);
@@ -203,7 +203,7 @@ export class CertificateService {
    */
   getCertificateInfo(fileName: string): CertificateInfo & { path: string } {
     if (!this.certificateExists(fileName)) {
-      throw new NotFoundException(`El certificado ${fileName} no existe`);
+      throw new EntityNotFoundException('Certificado', fileName);
     }
 
     const filePath = join(this.certsDir, fileName);
@@ -226,7 +226,7 @@ export class CertificateService {
     password: string,
   ): ExtractedCertInfo {
     if (!this.certificateExists(fileName)) {
-      throw new NotFoundException(`El certificado ${fileName} no existe`);
+      throw new EntityNotFoundException('Certificado', fileName);
     }
 
     const filePath = join(this.certsDir, fileName);
@@ -270,7 +270,9 @@ export class CertificateService {
     });
 
     if (!signingCert) {
-      throw new Error('No se pudo extraer el certificado del archivo P12');
+      throw new InvalidDomainOperationException(
+        'No se pudo extraer el certificado del archivo P12',
+      );
     }
 
     const subject = (signingCert as forge.pki.Certificate).subject;

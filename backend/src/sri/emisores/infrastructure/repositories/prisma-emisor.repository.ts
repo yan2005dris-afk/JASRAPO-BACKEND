@@ -1,6 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Prisma } from 'src/generated/prisma/client';
 import { PrismaService } from '../../../../infrastructure/database/prisma.service';
+import {
+  EntityNotFoundException,
+  EntityAlreadyExistsException,
+} from '../../../../shared/domain/exceptions/domain.exception';
 import {
   EmisorRepository,
   CreateEmisorInput,
@@ -65,49 +70,70 @@ export class PrismaEmisorRepository extends EmisorRepository {
   }
 
   async create(data: CreateEmisorInput): Promise<EmisorRecord> {
-    const empresa = await this.prisma.empresa.create({
-      data: {
-        ruc: data.ruc,
-        razonSocial: data.razon_social,
-        nombreComercial: data.nombre_comercial,
-        direccionMatriz: data.direccion_matriz,
-        obligadoContabilidad: data.obligado_contabilidad ?? false,
-        contribuyenteEspecial: data.contribuyente_especial,
-        agenteRetencion: data.agente_retencion,
-        contribuyenteRimpe: data.contribuyente_rimpe ?? false,
-        ambiente: data.ambiente,
-        estado: data.estado ?? 'ACTIVO',
-      },
-    });
-    return this.mapToRecord(empresa);
+    try {
+      const empresa = await this.prisma.empresa.create({
+        data: {
+          ruc: data.ruc,
+          razonSocial: data.razon_social,
+          nombreComercial: data.nombre_comercial,
+          direccionMatriz: data.direccion_matriz,
+          obligadoContabilidad: data.obligado_contabilidad ?? false,
+          contribuyenteEspecial: data.contribuyente_especial,
+          agenteRetencion: data.agente_retencion,
+          contribuyenteRimpe: data.contribuyente_rimpe ?? false,
+          ambiente: data.ambiente,
+          estado: data.estado ?? 'ACTIVO',
+        },
+      });
+      return this.mapToRecord(empresa);
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === 'P2002') {
+          throw new EntityAlreadyExistsException('Emisor', 'RUC', data.ruc);
+        }
+      }
+      throw error;
+    }
   }
 
   async update(id: number, data: UpdateEmisorInput): Promise<EmisorRecord> {
-    const empresa = await this.prisma.empresa.update({
-      where: { id },
-      data: {
-        razonSocial: data.razon_social,
-        nombreComercial: data.nombre_comercial,
-        direccionMatriz: data.direccion_matriz,
-        obligadoContabilidad: data.obligado_contabilidad,
-        contribuyenteEspecial: data.contribuyente_especial,
-        agenteRetencion: data.agente_retencion,
-        contribuyenteRimpe: data.contribuyente_rimpe,
-        ambiente: data.ambiente,
-        estado: data.estado,
-        certificadoNombre: data.certificado_nombre,
-        certificadoPassword: data.certificado_password_encrypted,
-        certificadoValidoHasta: data.certificado_valido_hasta,
-        certificadoSujeto: data.certificado_sujeto,
-      },
-    });
+    try {
+      const empresa = await this.prisma.empresa.update({
+        where: { id },
+        data: {
+          razonSocial: data.razon_social,
+          nombreComercial: data.nombre_comercial,
+          direccionMatriz: data.direccion_matriz,
+          obligadoContabilidad: data.obligado_contabilidad,
+          contribuyenteEspecial: data.contribuyente_especial,
+          agenteRetencion: data.agente_retencion,
+          contribuyenteRimpe: data.contribuyente_rimpe,
+          ambiente: data.ambiente,
+          estado: data.estado,
+          certificadoNombre: data.certificado_nombre,
+          certificadoPassword: data.certificado_password_encrypted,
+          certificadoValidoHasta: data.certificado_valido_hasta,
+          certificadoSujeto: data.certificado_sujeto,
+        },
+      });
 
-    // Invalidate cache if RUC changed or emisor was updated
-    if (empresa.ruc) {
-      this.emisorCache.delete(empresa.ruc);
+      // Invalidate cache if RUC changed or emisor was updated
+      if (empresa.ruc) {
+        this.emisorCache.delete(empresa.ruc);
+      }
+
+      return this.mapToRecord(empresa);
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === 'P2025') {
+          throw new EntityNotFoundException('Emisor', id);
+        }
+        if (error.code === 'P2002') {
+          throw new EntityAlreadyExistsException('Emisor', 'campo único');
+        }
+      }
+      throw error;
     }
-
-    return this.mapToRecord(empresa);
   }
 
   private mapToRecord(empresa: any): EmisorRecord {

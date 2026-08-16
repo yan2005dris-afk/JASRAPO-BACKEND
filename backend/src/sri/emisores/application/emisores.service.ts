@@ -1,8 +1,9 @@
+import { Injectable } from '@nestjs/common';
 import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
+  EntityNotFoundException,
+  EntityAlreadyExistsException,
+  InvalidDomainOperationException,
+} from '../../../shared/domain/exceptions/domain.exception';
 import {
   CreateEmisorDto,
   UpdateEmisorDto,
@@ -38,7 +39,7 @@ export class EmisoresService {
     const emisor = await this.repository.findById(id);
 
     if (!emisor) {
-      throw new NotFoundException(`Emisor con ID ${id} no encontrado`);
+      throw new EntityNotFoundException('Emisor', id);
     }
 
     return emisor;
@@ -74,7 +75,7 @@ export class EmisoresService {
 
   /**
    * Valida acceso a un emisor por ID.
-   * Retorna el emisor o lanza NotFoundException.
+   * Retorna el emisor o lanza EntityNotFoundException.
    */
   async validateEmisorAccess(emisorId: number): Promise<EmisorResponseDto> {
     return this.findOne(emisorId);
@@ -82,13 +83,13 @@ export class EmisoresService {
 
   /**
    * Valida acceso a un emisor por RUC.
-   * Retorna el emisor o lanza NotFoundException.
+   * Retorna el emisor o lanza EntityNotFoundException.
    */
   async validateRucAccess(ruc: string): Promise<EmisorResponseDto> {
     const emisor = await this.findByRuc(ruc);
 
     if (!emisor) {
-      throw new NotFoundException(`Emisor con RUC ${ruc} no encontrado`);
+      throw new EntityNotFoundException('Emisor', ruc);
     }
 
     return emisor;
@@ -104,7 +105,7 @@ export class EmisoresService {
     // Verificar si ya existe
     const existing = await this.findByRuc(dto.ruc);
     if (existing) {
-      throw new BadRequestException(`Ya existe un emisor con RUC ${dto.ruc}`);
+      throw new EntityAlreadyExistsException('Emisor', 'RUC', dto.ruc);
     }
 
     const emisor = await this.repository.create({
@@ -165,7 +166,9 @@ export class EmisoresService {
 
     // Verificar si ya está inactivo
     if (emisorActual.estado.toUpperCase() === 'INACTIVO') {
-      throw new BadRequestException(`El emisor ya se encuentra inactivo`);
+      throw new InvalidDomainOperationException(
+        `El emisor ya se encuentra inactivo`,
+      );
     }
 
     // Eliminación lógica: cambiar estado a inactivo
@@ -190,8 +193,8 @@ export class EmisoresService {
     try {
       certificateInfo = this.extractCertificateInfo(file, password);
     } catch (error) {
-      throw new BadRequestException(
-        `Error al procesar el certificado: ${error.message}`,
+      throw new InvalidDomainOperationException(
+        `Error al procesar el certificado: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
 
