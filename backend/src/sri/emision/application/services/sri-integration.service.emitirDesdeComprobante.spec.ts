@@ -11,8 +11,8 @@ jest.mock('../../../../infrastructure/database/prisma.service', () => ({
 import { SriIntegrationService } from './sri-integration.service';
 import type { EmitirFacturaUseCase } from '../use-cases/emitir-factura.use-case';
 import { EntityNotFoundException } from '../../../../shared/domain/exceptions/domain.exception';
-import { ComprobanteRepository } from '../../domain/repositories/comprobante.repository';
-import { ComprobanteRecord } from '../../../domain/interfaces/repository.interface';
+import type { ComprobanteRepository } from '../../domain/repositories/comprobante.repository';
+import type { ComprobanteRecord } from '../../../domain/interfaces/repository.interface';
 
 const mockLogger = {
   log: jest.fn(),
@@ -123,7 +123,9 @@ describe('SriIntegrationService — emitirDesdeComprobante (T-008)', () => {
 
   it('should load prefactura + comprobante and call emitirFactura with comprobanteExistente', async () => {
     prisma.prefacturas.findFirst.mockResolvedValue(mockPrefactura);
-    comprobanteRepository.findRecordById.mockResolvedValue(mockDomainComprobante);
+    comprobanteRepository.findRecordById.mockResolvedValue(
+      mockDomainComprobante,
+    );
     emitirFacturaUseCase.emitirFactura.mockResolvedValue({
       success: true,
     } as any);
@@ -137,7 +139,9 @@ describe('SriIntegrationService — emitirDesdeComprobante (T-008)', () => {
       }),
     );
     // Verify it queried the existing comprobante through repository port
-    expect(comprobanteRepository.findRecordById).toHaveBeenCalledWith(BigInt(42));
+    expect(comprobanteRepository.findRecordById).toHaveBeenCalledWith(
+      BigInt(42),
+    );
     // Verify emitirFactura was called with the comprobanteExistente option
     expect(emitirFacturaUseCase.emitirFactura).toHaveBeenCalledTimes(1);
     const [dto, opts] = emitirFacturaUseCase.emitirFactura.mock.calls[0];

@@ -208,7 +208,7 @@ export class WebhooksService {
       id: row.id,
       nombre: row.nombre,
       url: row.url,
-      eventos: row.eventos as WebhookEvent[],
+      eventos: row.eventos,
       emisorId: row.emisorId,
       activo: row.activo,
       reintentosMax: row.reintentosMax,
@@ -229,7 +229,7 @@ export class WebhooksService {
   private mapLogToResponse(row: WebhookLogRecord): WebhookLogResponseDto {
     return {
       id: row.id,
-      evento: row.evento as WebhookEvent,
+      evento: row.evento,
       payload: row.payload,
       statusCode: row.statusCode ?? undefined,
       respuesta: row.respuesta ?? undefined,

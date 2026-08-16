@@ -114,7 +114,10 @@ export class SriIntegrationService {
       await this.comprobanteRepository.findRecordById(comprobanteId);
 
     if (!comprobante) {
-      throw new EntityNotFoundException('Comprobante', comprobanteId.toString());
+      throw new EntityNotFoundException(
+        'Comprobante',
+        comprobanteId.toString(),
+      );
     }
 
     // 4. Emit using existing comprobante (UPDATE path in persistirFactura).

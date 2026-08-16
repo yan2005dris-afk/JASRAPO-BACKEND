@@ -1,4 +1,4 @@
-import { Ambiente, TipoEmision } from '../../../emision/domain/constants';
+import type { Ambiente, TipoEmision } from '../../../emision/domain/constants';
 
 export class EmisorEntity {
   id: number;

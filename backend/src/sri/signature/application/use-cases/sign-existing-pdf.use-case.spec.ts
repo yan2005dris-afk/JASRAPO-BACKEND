@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { SignExistingPdfUseCase } from './sign-existing-pdf.use-case';
 import { SignatureService } from '../signature.service';
@@ -60,10 +61,12 @@ describe('SignExistingPdfUseCase', () => {
   });
 
   it('should throw InvalidDomainOperationException if certificate is expired or invalid', async () => {
-    (certificateService.validateCertificateExpiry as jest.Mock).mockReturnValue({
-      isValid: false,
-      reason: 'Certificado expirado',
-    });
+    (certificateService.validateCertificateExpiry as jest.Mock).mockReturnValue(
+      {
+        isValid: false,
+        reason: 'Certificado expirado',
+      },
+    );
 
     await expect(
       useCase.execute({

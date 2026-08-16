@@ -52,9 +52,7 @@ export class EmitirNotaCreditoUseCase {
   /**
    * Emite una nota de crédito electrónica al SRI
    */
-  async emitirNotaCredito(
-    dto: CreateNotaCreditoDto,
-  ): Promise<any> {
+  async emitirNotaCredito(dto: CreateNotaCreditoDto): Promise<any> {
     this.logger.log('Iniciando emisión de nota de crédito electrónica');
 
     try {

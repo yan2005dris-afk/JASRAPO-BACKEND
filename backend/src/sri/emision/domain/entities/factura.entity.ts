@@ -1,4 +1,10 @@
-import { Factura, InfoTributaria, InfoFactura, DetalleFactura, TotalImpuesto, CampoAdicional } from '../interfaces';
+import type {
+  InfoTributaria,
+  InfoFactura,
+  DetalleFactura,
+  TotalImpuesto,
+  CampoAdicional,
+} from '../interfaces';
 
 export class FacturaEntity {
   id?: string;

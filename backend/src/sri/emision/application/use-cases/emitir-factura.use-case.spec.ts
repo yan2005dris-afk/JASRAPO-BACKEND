@@ -194,7 +194,10 @@ describe('EmitirFacturaUseCase — persistirFactura with comprobanteExistente (T
           },
         },
         { provide: EventEmitter2, useValue: { emit: jest.fn() } },
-        { provide: ConfigService, useValue: { get: jest.fn().mockReturnValue(undefined) } },
+        {
+          provide: ConfigService,
+          useValue: { get: jest.fn().mockReturnValue(undefined) },
+        },
       ],
     }).compile();
 
@@ -417,7 +420,10 @@ describe('EmitirFacturaUseCase — SRI rejection path (E-005)', () => {
           },
         },
         { provide: EventEmitter2, useValue: eventEmitterProvider },
-        { provide: ConfigService, useValue: { get: jest.fn().mockReturnValue(undefined) } },
+        {
+          provide: ConfigService,
+          useValue: { get: jest.fn().mockReturnValue(undefined) },
+        },
       ],
     }).compile();
 

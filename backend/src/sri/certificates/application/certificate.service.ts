@@ -206,7 +206,8 @@ export class CertificateService {
 
       const subject = (signingCert as forge.pki.Certificate).subject;
       const issuer = (signingCert as forge.pki.Certificate).issuer;
-      const validFrom = (signingCert as forge.pki.Certificate).validity.notBefore;
+      const validFrom = (signingCert as forge.pki.Certificate).validity
+        .notBefore;
       const validTo = (signingCert as forge.pki.Certificate).validity.notAfter;
 
       return {
@@ -262,14 +263,20 @@ export class CertificateService {
     if (validation.isExpired) {
       validation.isValid = false;
       validation.reason = `Certificado expirado el ${expiryDate.toLocaleDateString()}`;
-      this.logger.error(`Certificado ${fileName} EXPIRADO: ${validation.reason}`);
+      this.logger.error(
+        `Certificado ${fileName} EXPIRADO: ${validation.reason}`,
+      );
     } else if (validation.isNotYetValid) {
       validation.isValid = false;
       validation.reason = `Certificado no válido hasta ${startDate.toLocaleDateString()}`;
-      this.logger.error(`Certificado ${fileName} NO VÁLIDO AÚN: ${validation.reason}`);
+      this.logger.error(
+        `Certificado ${fileName} NO VÁLIDO AÚN: ${validation.reason}`,
+      );
     } else if (validation.daysUntilExpiry <= 30) {
       validation.warning = `Certificado expira en ${validation.daysUntilExpiry} días`;
-      this.logger.warn(`Certificado ${fileName} próximo a expirar: ${validation.warning}`);
+      this.logger.warn(
+        `Certificado ${fileName} próximo a expirar: ${validation.warning}`,
+      );
     }
 
     return validation;

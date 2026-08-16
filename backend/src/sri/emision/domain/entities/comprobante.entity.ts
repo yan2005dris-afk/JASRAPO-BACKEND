@@ -1,5 +1,5 @@
 import { ComprobanteEstado } from '../constants/comprobante-estado.enum';
-import { TipoComprobante, Ambiente, TipoEmision } from '../constants';
+import type { TipoComprobante, Ambiente, TipoEmision } from '../constants';
 
 export class ComprobanteEntity {
   id: bigint;
@@ -13,7 +13,7 @@ export class ComprobanteEntity {
   fechaEmision: Date;
   estado: ComprobanteEstado;
   estadoSri?: string | null;
-  mensajesSri?: any | null;
+  mensajesSri?: unknown;
   numeroAutorizacion?: string | null;
   fechaAutorizacion?: Date | null;
   xmlSinFirmaKey?: string | null;

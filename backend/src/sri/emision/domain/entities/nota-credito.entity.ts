@@ -1,4 +1,9 @@
-import { InfoTributaria, InfoNotaCredito, DetalleNotaCredito, CampoAdicional } from '../interfaces';
+import type {
+  InfoTributaria,
+  InfoNotaCredito,
+  DetalleNotaCredito,
+  CampoAdicional,
+} from '../interfaces';
 
 export class NotaCreditoEntity {
   id?: string;

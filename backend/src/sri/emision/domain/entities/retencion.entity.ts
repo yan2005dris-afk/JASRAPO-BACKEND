@@ -1,4 +1,9 @@
-import { InfoTributaria, InfoRetencion, ImpuestoRetenido, CampoAdicional } from '../interfaces';
+import type {
+  InfoTributaria,
+  InfoRetencion,
+  ImpuestoRetenido,
+  CampoAdicional,
+} from '../interfaces';
 
 export class RetencionEntity {
   id?: string;

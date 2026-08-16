@@ -22,10 +22,7 @@ describe('PrismaComprobanteRepository — delete methods (T-002)', () => {
       detallesAdicionales: { deleteMany: jest.fn() },
     };
 
-    repository = new PrismaComprobanteRepository(
-      mockPrisma,
-      mockLogger as any,
-    );
+    repository = new PrismaComprobanteRepository(mockPrisma, mockLogger as any);
   });
 
   describe('deleteDetallesByComprobanteId', () => {

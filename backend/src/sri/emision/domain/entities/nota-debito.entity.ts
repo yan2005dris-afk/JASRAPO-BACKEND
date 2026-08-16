@@ -1,4 +1,10 @@
-import { InfoTributaria, InfoNotaDebito, MotivoNotaDebito, TotalImpuesto, CampoAdicional } from '../interfaces';
+import type {
+  InfoTributaria,
+  InfoNotaDebito,
+  MotivoNotaDebito,
+  TotalImpuesto,
+  CampoAdicional,
+} from '../interfaces';
 
 export class NotaDebitoEntity {
   id?: string;

@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { SriBaseService } from './sri-base.service';
 import { IdentificacionValidatorService } from './identificacion-validator.service';
@@ -32,9 +33,13 @@ describe('SriBaseService', () => {
 
   const mockCatalogoValidator = {
     validateImpuestos: jest.fn().mockResolvedValue({ valid: true, errors: [] }),
-    validateRetenciones: jest.fn().mockResolvedValue({ valid: true, errors: [] }),
+    validateRetenciones: jest
+      .fn()
+      .mockResolvedValue({ valid: true, errors: [] }),
     validateTipoIdentificacion: jest.fn().mockResolvedValue({ valid: true }),
-    validateFormasPago: jest.fn().mockResolvedValue({ valid: true, errors: [] }),
+    validateFormasPago: jest
+      .fn()
+      .mockResolvedValue({ valid: true, errors: [] }),
     validateDocumentoSustento: jest.fn().mockResolvedValue({ valid: true }),
   };
 

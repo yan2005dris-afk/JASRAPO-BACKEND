@@ -1,4 +1,4 @@
-import {
+import type {
   CertificateSubject,
   CertificateIssuer,
 } from '../types/certificate.types';

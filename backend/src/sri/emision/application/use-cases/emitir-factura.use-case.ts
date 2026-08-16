@@ -94,7 +94,11 @@ export class EmitirFacturaUseCase {
       if (emisor.contribuyente_rimpe) {
         const hasTarifaInvalida = dto.detalles.some((d) =>
           d.impuestos.some(
-            (i) => i.codigo === '2' && i.codigoPorcentaje !== '0' && i.tarifa > 0 && i.codigoPorcentaje !== '4',
+            (i) =>
+              i.codigo === '2' &&
+              i.codigoPorcentaje !== '0' &&
+              i.tarifa > 0 &&
+              i.codigoPorcentaje !== '4',
           ),
         );
         if (hasTarifaInvalida) {

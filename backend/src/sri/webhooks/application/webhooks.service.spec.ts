@@ -1,16 +1,15 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { WebhooksService } from './webhooks.service';
-import {
-  WebhookRepository,
-  WebhookConfigRecord,
-} from '../domain/repositories/webhook.repository';
+import type { WebhookConfigRecord } from '../domain/repositories/webhook.repository';
+import { WebhookRepository } from '../domain/repositories/webhook.repository';
 import { JobsService } from '../../../infrastructure/jobs/jobs.service';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import {
   EntityNotFoundException,
   InvalidDomainOperationException,
 } from '../../../shared/domain/exceptions/domain.exception';
-import { CreateWebhookDto, UpdateWebhookDto } from '../interfaces/dto';
+import type { CreateWebhookDto, UpdateWebhookDto } from '../interfaces/dto';
 
 jest.mock('pg-boss', () => ({
   PgBoss: jest.fn().mockImplementation(() => ({

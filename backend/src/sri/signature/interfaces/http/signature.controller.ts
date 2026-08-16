@@ -1,11 +1,4 @@
-import {
-  Controller,
-  Post,
-  Param,
-  Body,
-  Res,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Post, Param, Body, Res, UseGuards } from '@nestjs/common';
 import type { Response } from 'express';
 import {
   ApiTags,

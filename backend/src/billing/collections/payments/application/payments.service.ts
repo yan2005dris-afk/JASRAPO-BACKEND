@@ -9,7 +9,6 @@ import { GetDailyCashSummaryUseCase } from './use-cases/get-daily-cash-summary.u
 import { PaymentRepository } from '../domain/repositories/payment.repository';
 import type {
   DailyCashSummaryParams,
-  PaymentFilters,
   DailyCashSummaryResult,
 } from '../domain/types/payment.types';
 import type { PaymentEntity } from '../domain/entities/payment.entity';

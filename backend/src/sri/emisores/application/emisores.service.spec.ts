@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { EmisoresService } from './emisores.service';
 import { EmisorRepository } from '../domain/repositories/emisor.repository';
 import { EncryptionService } from '../../../infrastructure/encryption/encryption.service';
@@ -10,8 +11,8 @@ import {
   EntityAlreadyExistsException,
   InvalidDomainOperationException,
 } from '../../../shared/domain/exceptions/domain.exception';
-import { EmisorRecord } from '../../domain/interfaces/repository.interface';
-import { CreateEmisorDto, UpdateEmisorDto } from '../interfaces/dto';
+import type { EmisorRecord } from '../../domain/interfaces/repository.interface';
+import type { CreateEmisorDto, UpdateEmisorDto } from '../interfaces/dto';
 
 describe('EmisoresService', () => {
   let service: EmisoresService;
@@ -136,9 +137,9 @@ describe('EmisoresService', () => {
     });
 
     it('should throw EntityNotFoundException when RUC does not exist', async () => {
-      await expect(
-        service.validateRucAccess('9999999999001'),
-      ).rejects.toThrow(EntityNotFoundException);
+      await expect(service.validateRucAccess('9999999999001')).rejects.toThrow(
+        EntityNotFoundException,
+      );
     });
   });
 

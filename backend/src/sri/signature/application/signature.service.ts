@@ -12,10 +12,7 @@ import {
   SRI_STORAGE_TYPES,
 } from '../../../infrastructure/storage/storage.service';
 import { EmisorRepository } from '../../emisores/domain/repositories/emisor.repository';
-import {
-  EntityNotFoundException,
-  InvalidDomainOperationException,
-} from '../../../shared/domain/exceptions/domain.exception';
+import { EntityNotFoundException } from '../../../shared/domain/exceptions/domain.exception';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
 

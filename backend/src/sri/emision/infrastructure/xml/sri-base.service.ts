@@ -76,7 +76,11 @@ export class SriBaseService {
     }
 
     const ahora = new Date();
-    const hoy = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate());
+    const hoy = new Date(
+      ahora.getFullYear(),
+      ahora.getMonth(),
+      ahora.getDate(),
+    );
     const fechaEmisionInicio = new Date(year, month - 1, day);
 
     // Margen de hasta 24h por posibles desfasajes de zona horaria
