@@ -1,12 +1,16 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { randomBytes } from 'node:crypto';
-import { PrismaService } from '../../../infrastructure/database/prisma.service';
+import {
+  EntityNotFoundException,
+  InvalidDomainOperationException,
+} from '../../../shared/domain/exceptions/domain.exception';
 import { JobsService } from '../../../infrastructure/jobs/jobs.service';
+import {
+  WebhookRepository,
+  WebhookConfigRecord,
+  WebhookLogRecord,
+} from '../domain/repositories/webhook.repository';
 import {
   CreateWebhookDto,
   UpdateWebhookDto,
@@ -26,7 +30,7 @@ import { LogContext } from 'src/shared/decorators/log-context.decorator';
 @Injectable()
 export class WebhooksService {
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly repository: WebhookRepository,
     private readonly jobsService: JobsService,
     private readonly logger: LoggerService,
   ) {}
@@ -56,20 +60,15 @@ export class WebhooksService {
   // =====================
 
   async findAll(emisorId?: number): Promise<WebhookResponseDto[]> {
-    const configs = await this.prisma.webhookConfigs.findMany({
-      where: emisorId ? { emisorId } : {},
-      orderBy: { createdAt: 'desc' },
-    });
+    const configs = await this.repository.findAll(emisorId);
     return configs.map((config) => this.mapToResponse(config));
   }
 
   async findOne(id: string): Promise<WebhookResponseDto> {
-    const config = await this.prisma.webhookConfigs.findUnique({
-      where: { id },
-    });
+    const config = await this.repository.findById(id);
 
     if (!config) {
-      throw new NotFoundException(`Webhook con ID ${id} no encontrado`);
+      throw new EntityNotFoundException('Webhook', id);
     }
 
     return this.mapToResponse(config);
@@ -78,15 +77,13 @@ export class WebhooksService {
   async create(dto: CreateWebhookDto): Promise<WebhookSecretResponseDto> {
     const secreto = this.generateSecret();
 
-    const config = await this.prisma.webhookConfigs.create({
-      data: {
-        nombre: dto.nombre,
-        url: dto.url,
-        eventos: dto.eventos,
-        emisorId: dto.emisorId,
-        secreto,
-        reintentosMax: dto.reintentosMax || 3,
-      },
+    const config = await this.repository.create({
+      nombre: dto.nombre,
+      url: dto.url,
+      eventos: dto.eventos,
+      emisorId: dto.emisorId,
+      secreto,
+      reintentosMax: dto.reintentosMax || 3,
     });
 
     this.logger.log(`Webhook creado: ${dto.nombre} -> ${dto.url}`);
@@ -96,16 +93,13 @@ export class WebhooksService {
   async update(id: string, dto: UpdateWebhookDto): Promise<WebhookResponseDto> {
     await this.findOne(id);
 
-    const config = await this.prisma.webhookConfigs.update({
-      where: { id },
-      data: {
-        nombre: dto.nombre !== undefined ? dto.nombre : undefined,
-        url: dto.url !== undefined ? dto.url : undefined,
-        eventos: dto.eventos !== undefined ? dto.eventos : undefined,
-        activo: dto.activo !== undefined ? dto.activo : undefined,
-        reintentosMax:
-          dto.reintentosMax !== undefined ? dto.reintentosMax : undefined,
-      },
+    const config = await this.repository.update(id, {
+      nombre: dto.nombre !== undefined ? dto.nombre : undefined,
+      url: dto.url !== undefined ? dto.url : undefined,
+      eventos: dto.eventos !== undefined ? dto.eventos : undefined,
+      activo: dto.activo !== undefined ? dto.activo : undefined,
+      reintentosMax:
+        dto.reintentosMax !== undefined ? dto.reintentosMax : undefined,
     });
 
     this.logger.log(`Webhook actualizado: ${id}`);
@@ -116,13 +110,12 @@ export class WebhooksService {
     const webhook = await this.findOne(id);
 
     if (!webhook.activo) {
-      throw new BadRequestException('El webhook ya se encuentra inactivo');
+      throw new InvalidDomainOperationException(
+        'El webhook ya se encuentra inactivo',
+      );
     }
 
-    const config = await this.prisma.webhookConfigs.update({
-      where: { id },
-      data: { activo: false },
-    });
+    const config = await this.repository.update(id, { activo: false });
 
     this.logger.log(`Webhook inactivado: ${id}`);
     return this.mapToResponse(config);
@@ -132,10 +125,7 @@ export class WebhooksService {
     await this.findOne(id);
     const newSecret = this.generateSecret();
 
-    const config = await this.prisma.webhookConfigs.update({
-      where: { id },
-      data: { secreto: newSecret },
-    });
+    const config = await this.repository.update(id, { secreto: newSecret });
 
     this.logger.log(`Secreto regenerado para webhook: ${id}`);
     return this.mapToSecretResponse(config);
@@ -156,22 +146,12 @@ export class WebhooksService {
     if (limit > 100) limit = 100;
     const offset = (page - 1) * limit;
 
-    const [total, logs] = await Promise.all([
-      this.prisma.webhookLogs.count({
-        where: { configId: id },
-      }),
-      this.prisma.webhookLogs.findMany({
-        where: { configId: id },
-        orderBy: { createdAt: 'desc' },
-        take: limit,
-        skip: offset,
-      }),
-    ]);
+    const [total, logs] = await this.repository.findLogs(id, limit, offset);
 
     const totalPages = Math.ceil(total / limit);
 
     return {
-      data: logs.map((row: any) => this.mapLogToResponse(row)),
+      data: logs.map((row) => this.mapLogToResponse(row)),
       total,
       page,
       totalPages,
@@ -187,15 +167,7 @@ export class WebhooksService {
     payload: Record<string, unknown>,
     emisorId?: number,
   ): Promise<void> {
-    const configs = await this.prisma.webhookConfigs.findMany({
-      where: {
-        activo: true,
-        eventos: {
-          has: evento,
-        },
-        ...(emisorId ? { emisorId } : {}),
-      },
-    });
+    const configs = await this.repository.findActiveByEvent(evento, emisorId);
 
     if (configs.length === 0) {
       return;
@@ -231,39 +203,41 @@ export class WebhooksService {
     return 'whsec_' + randomBytes(24).toString('hex');
   }
 
-  private mapToResponse(row: any): WebhookResponseDto {
+  private mapToResponse(row: WebhookConfigRecord): WebhookResponseDto {
     return {
       id: row.id,
       nombre: row.nombre,
       url: row.url,
-      eventos: row.eventos,
+      eventos: row.eventos as WebhookEvent[],
       emisorId: row.emisorId,
       activo: row.activo,
       reintentosMax: row.reintentosMax,
-      createdAt: row.createdAt?.toISOString(),
-      updatedAt: row.updatedAt?.toISOString(),
+      createdAt: row.createdAt?.toISOString?.() || new Date().toISOString(),
+      updatedAt: row.updatedAt?.toISOString?.() || new Date().toISOString(),
     };
   }
 
-  private mapToSecretResponse(row: any): WebhookSecretResponseDto {
+  private mapToSecretResponse(
+    row: WebhookConfigRecord,
+  ): WebhookSecretResponseDto {
     return {
       ...this.mapToResponse(row),
       secreto: row.secreto,
     };
   }
 
-  private mapLogToResponse(row: any): WebhookLogResponseDto {
+  private mapLogToResponse(row: WebhookLogRecord): WebhookLogResponseDto {
     return {
       id: row.id,
-      evento: row.evento,
+      evento: row.evento as WebhookEvent,
       payload: row.payload,
-      statusCode: row.statusCode,
-      respuesta: row.respuesta,
+      statusCode: row.statusCode ?? undefined,
+      respuesta: row.respuesta ?? undefined,
       intento: row.intento,
       exitoso: row.exitoso,
-      error: row.error,
-      tiempoRespuestaMs: row.tiempoRespuestaMs,
-      createdAt: row.createdAt?.toISOString(),
+      error: row.error ?? undefined,
+      tiempoRespuestaMs: row.tiempoRespuestaMs ?? undefined,
+      createdAt: row.createdAt?.toISOString?.() || new Date().toISOString(),
     };
   }
 }
