@@ -4,14 +4,9 @@ import {
   Param,
   Body,
   Res,
-  BadRequestException,
-  NotFoundException,
   UseGuards,
 } from '@nestjs/common';
 import type { Response } from 'express';
-import { ConfigService } from '@nestjs/config';
-import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs';
-import { join } from 'path';
 import {
   ApiTags,
   ApiOperation,
@@ -20,11 +15,10 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../../identity/auth/interfaces/http/guards/jwt-auth.guard';
-import { SignatureService } from '../../application/signature.service';
-import { CertificateService } from '../../../certificates/application/certificate.service';
 import { GenerateAndSignPdfUseCase } from '../../application/use-cases/generate-and-sign-pdf.use-case';
+import { SignExistingPdfUseCase } from '../../application/use-cases/sign-existing-pdf.use-case';
 import { SignPdfDto, GenerateAndSignPdfDto } from '../dto/signature.dto';
-import { STORAGE_PATHS } from '../../../emision/infrastructure/storage/storage-paths';
+import { InvalidDomainOperationException } from '../../../../shared/domain/exceptions/domain.exception';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
@@ -34,27 +28,11 @@ import { LogContext } from 'src/shared/decorators/log-context.decorator';
 @UseGuards(JwtAuthGuard)
 @Controller('signature')
 export class SignatureController {
-  private readonly publicUrl: string;
-
   constructor(
-    private readonly signatureService: SignatureService,
-    private readonly certificateService: CertificateService,
+    private readonly signExistingPdfUseCase: SignExistingPdfUseCase,
     private readonly generateAndSignPdfUseCase: GenerateAndSignPdfUseCase,
-    private readonly configService: ConfigService,
     private readonly logger: LoggerService,
-  ) {
-    this.publicUrl = this.configService.get<string>(
-      'PUBLIC_URL',
-      'http://localhost:3000',
-    );
-  }
-
-  /**
-   * Get PDF directory from STORAGE_PATHS
-   */
-  private get pdfDir(): string {
-    return STORAGE_PATHS.pdfs;
-  }
+  ) {}
 
   /**
    * POST /signature/sign-pdf/:fileName
@@ -73,89 +51,21 @@ export class SignatureController {
   ) {
     const { certFile, password, position } = body;
 
-    if (!certFile || !password) {
-      throw new BadRequestException(
-        'Se requiere el archivo de certificado y la contraseña',
-      );
-    }
-
-    // Validate certificate exists and is not expired
-    try {
-      const validation = this.certificateService.validateCertificateExpiry(
-        certFile,
-        password,
-      );
-
-      if (!validation.isValid) {
-        throw new BadRequestException({
-          message: `No se puede firmar: ${validation.reason}`,
-          validationDetails: {
-            isExpired: validation.isExpired,
-            isNotYetValid: validation.isNotYetValid,
-            expiryDate: validation.expiryDate,
-            startDate: validation.startDate,
-            subject: validation.subject,
-          },
-        });
-      }
-
-      // Log warning if certificate expires soon
-      if (validation.warning) {
-        this.logger.warn(`ADVERTENCIA: ${validation.warning}`);
-      }
-    } catch (certError) {
-      if (certError instanceof BadRequestException) {
-        throw certError;
-      }
-      throw new BadRequestException(
-        `Error al validar el certificado: ${(certError as Error).message}. Verifique que el archivo existe y la contraseña es correcta.`,
-      );
-    }
-
-    // Search first in 'others' folder
-    let pdfPath = join(this.pdfDir, 'others', fileName);
-
-    // If not in others, search in root for compatibility
-    if (!existsSync(pdfPath)) {
-      pdfPath = join(this.pdfDir, fileName);
-      if (!existsSync(pdfPath)) {
-        throw new NotFoundException('Archivo PDF no encontrado');
-      }
-    }
-
-    // Read PDF
-    const pdfBuffer = readFileSync(pdfPath);
-
-    // Sign PDF with optional position
-    const signedPdfBuffer = await this.signatureService.signPDF(
-      pdfBuffer,
+    const result = await this.signExistingPdfUseCase.execute({
+      fileName,
       certFile,
       password,
-      position || {},
-    );
-
-    // Save signed PDF
-    const signedFileName = `signed_${fileName}`;
-    const signedDir = join(this.pdfDir, 'con_firma');
-
-    if (!existsSync(signedDir)) {
-      mkdirSync(signedDir, { recursive: true });
-    }
-
-    const signedFilePath = join(signedDir, signedFileName);
-    writeFileSync(signedFilePath, signedPdfBuffer);
-
-    // Build file URL
-    const fileUrl = `${this.publicUrl}/pdfs/con_firma/${signedFileName}`;
+      position,
+    });
 
     return {
       success: true,
       data: {
         message: 'PDF firmado correctamente',
-        fileName: signedFileName,
-        fileUrl: fileUrl,
-        fileSize: Buffer.byteLength(signedPdfBuffer),
-        originalFile: fileName,
+        fileName: result.signedFileName,
+        fileUrl: result.fileUrl,
+        fileSize: result.fileSize,
+        originalFile: result.originalFile,
       },
     };
   }
@@ -179,13 +89,13 @@ export class SignatureController {
     const { jsonData, certFile, password, position } = body;
 
     if (!jsonData) {
-      throw new BadRequestException(
+      throw new InvalidDomainOperationException(
         'No se proporcionaron datos JSON para la generación del documento',
       );
     }
 
     if (!certFile || !password) {
-      throw new BadRequestException(
+      throw new InvalidDomainOperationException(
         'Se requiere el archivo de certificado y la contraseña para la firma',
       );
     }
@@ -232,13 +142,13 @@ export class SignatureController {
     const { jsonData, certFile, password, position } = body;
 
     if (!jsonData) {
-      throw new BadRequestException(
+      throw new InvalidDomainOperationException(
         'No se proporcionaron datos JSON para la generación del documento',
       );
     }
 
     if (!certFile || !password) {
-      throw new BadRequestException(
+      throw new InvalidDomainOperationException(
         'Se requiere el archivo de certificado y la contraseña para la firma',
       );
     }
@@ -251,7 +161,6 @@ export class SignatureController {
       position,
     });
 
-    // Set headers and send as download
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader(
       'Content-Disposition',
