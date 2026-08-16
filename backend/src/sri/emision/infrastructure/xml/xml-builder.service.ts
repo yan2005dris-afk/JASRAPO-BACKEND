@@ -21,6 +21,7 @@ import {
   NOTA_DEBITO_VERSION,
   RETENCION_VERSION,
 } from '../../domain/constants';
+import { XmlBuilderPort } from '../../domain/ports/xml-builder.port';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
@@ -30,10 +31,11 @@ import { LogContext } from 'src/shared/decorators/log-context.decorator';
  */
 @LogContext()
 @Injectable()
-export class XmlBuilderService {
+export class XmlBuilderService extends XmlBuilderPort {
   private readonly builder: xml2js.Builder;
 
   constructor(private readonly logger: LoggerService) {
+    super();
     this.builder = new xml2js.Builder({
       xmldec: { version: '1.0', encoding: 'UTF-8' },
       renderOpts: { pretty: true, indent: '  ' },

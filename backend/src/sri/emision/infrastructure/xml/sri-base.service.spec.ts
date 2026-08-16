@@ -69,7 +69,7 @@ describe('SriBaseService', () => {
       expect(() => service.validarFechaEmision(past2DaysStr)).not.toThrow();
     });
 
-    it('should throw InvalidDomainOperationException for dates older than 3 days (retroactive penalty)', () => {
+    it('should throw InvalidDomainOperationException for dates older than 3 days', () => {
       const past5DaysStr = format(subDays(new Date(), 5), 'dd/MM/yyyy');
       expect(() => service.validarFechaEmision(past5DaysStr)).toThrow(
         InvalidDomainOperationException,

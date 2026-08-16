@@ -6,18 +6,20 @@ import {
   EntityNotFoundException,
   InvalidDomainOperationException,
 } from '../../../../shared/domain/exceptions/domain.exception';
-import { ClaveAccesoService } from '../../infrastructure/xml/clave-acceso.service';
-import { XmlBuilderService } from '../../infrastructure/xml/xml-builder.service';
-import { XmlSignerService } from '../../infrastructure/xml/xml-signer.service';
-import { SriSoapClient } from '../../infrastructure/soap/sri-soap.client';
+import {
+  ClaveAccesoPort,
+  XmlBuilderPort,
+  XmlSignerPort,
+  SriSoapClientPort,
+  XmlStoragePort,
+  SriBasePort,
+} from '../../domain/ports';
 import {
   ComprobanteRepository,
   TransactionContext,
 } from '../../domain/repositories/comprobante.repository';
 import { EmisorRepository } from '../../../emisores/domain/repositories/emisor.repository';
 import { SecuencialRepository } from '../../domain/repositories/secuencial.repository';
-import { XmlStorageService } from '../../infrastructure/storage/xml-storage.service';
-import { SriBaseService } from '../../infrastructure/xml/sri-base.service';
 import { CreateFacturaDto, FacturaResponseDto } from '../../interfaces/dto';
 import {
   Factura,
@@ -41,15 +43,15 @@ export interface EmitirFacturaOpts {
 @Injectable()
 export class EmitirFacturaUseCase {
   constructor(
-    private readonly claveAccesoService: ClaveAccesoService,
-    private readonly xmlBuilderService: XmlBuilderService,
-    private readonly xmlSignerService: XmlSignerService,
-    private readonly sriSoapClient: SriSoapClient,
+    private readonly claveAccesoService: ClaveAccesoPort,
+    private readonly xmlBuilderService: XmlBuilderPort,
+    private readonly xmlSignerService: XmlSignerPort,
+    private readonly sriSoapClient: SriSoapClientPort,
     private readonly comprobanteRepository: ComprobanteRepository,
     private readonly emisorRepository: EmisorRepository,
     private readonly secuencialRepository: SecuencialRepository,
-    private readonly xmlStorage: XmlStorageService,
-    private readonly base: SriBaseService,
+    private readonly xmlStorage: XmlStoragePort,
+    private readonly base: SriBasePort,
     private readonly eventEmitter: EventEmitter2,
     private readonly logger: LoggerService,
     private readonly configService: ConfigService,

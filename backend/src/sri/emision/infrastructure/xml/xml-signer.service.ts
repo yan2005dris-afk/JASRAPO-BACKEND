@@ -57,9 +57,11 @@ function getXadesDigestMethodUri(hashAlgorithm: XadesHashAlgorithm): string {
  * Servicio para firmar documentos XML con firma digital XAdES-BES
  * compatible con los requerimientos del SRI Ecuador.
  */
+import { XmlSignerPort } from '../../domain/ports/xml-signer.port';
+
 @LogContext()
 @Injectable()
-export class XmlSignerService implements OnModuleInit {
+export class XmlSignerService extends XmlSignerPort implements OnModuleInit {
   private privateKey: CryptoKey | null = null;
   private certificate: string | null = null;
   private certificateChain: string[] = [];
@@ -84,6 +86,7 @@ export class XmlSignerService implements OnModuleInit {
     private readonly storageService: StorageService,
     private readonly logger: LoggerService,
   ) {
+    super();
     this.crypto = new Crypto();
     this.hashAlgorithm = parseXadesHashAlgorithm(
       this.configService.get<string>(

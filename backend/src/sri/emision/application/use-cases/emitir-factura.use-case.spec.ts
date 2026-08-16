@@ -3,15 +3,17 @@ import { Test } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { EmitirFacturaUseCase } from './emitir-factura.use-case';
-import { ClaveAccesoService } from '../../infrastructure/xml/clave-acceso.service';
-import { XmlBuilderService } from '../../infrastructure/xml/xml-builder.service';
-import { XmlSignerService } from '../../infrastructure/xml/xml-signer.service';
-import { SriSoapClient } from '../../infrastructure/soap/sri-soap.client';
+import {
+  ClaveAccesoPort,
+  XmlBuilderPort,
+  XmlSignerPort,
+  SriSoapClientPort,
+  XmlStoragePort,
+  SriBasePort,
+} from '../../domain/ports';
 import { ComprobanteRepository } from '../../domain/repositories/comprobante.repository';
 import { EmisorRepository } from '../../../emisores/domain/repositories/emisor.repository';
 import { SecuencialRepository } from '../../domain/repositories/secuencial.repository';
-import { XmlStorageService } from '../../infrastructure/storage/xml-storage.service';
-import { SriBaseService } from '../../infrastructure/xml/sri-base.service';
 import type { SriOperationResult } from '../../domain/interfaces';
 import type { CreateFacturaDto } from '../../interfaces/dto';
 import { ComprobanteEstado } from '../../domain/constants/comprobante-estado.enum';
@@ -27,7 +29,7 @@ const mockLogger = {
 describe('EmitirFacturaUseCase — persistirFactura with comprobanteExistente (T-003)', () => {
   let useCase: EmitirFacturaUseCase;
   let comprobanteRepository: jest.Mocked<ComprobanteRepository>;
-  let sriSoapClient: jest.Mocked<SriSoapClient>;
+  let sriSoapClient: jest.Mocked<SriSoapClientPort>;
   let module: TestingModule;
 
   const mockComprobanteRecord = {
@@ -147,7 +149,7 @@ describe('EmitirFacturaUseCase — persistirFactura with comprobanteExistente (T
         { provide: LoggerService, useValue: mockLogger },
         EmitirFacturaUseCase,
         {
-          provide: ClaveAccesoService,
+          provide: ClaveAccesoPort,
           useValue: {
             generate: jest
               .fn()
@@ -157,22 +159,22 @@ describe('EmitirFacturaUseCase — persistirFactura with comprobanteExistente (T
           },
         },
         {
-          provide: XmlBuilderService,
+          provide: XmlBuilderPort,
           useValue: { buildFactura: jest.fn().mockReturnValue('<xml>') },
         },
         {
-          provide: XmlSignerService,
+          provide: XmlSignerPort,
           useValue: {
             signXmlForEmisor: jest.fn().mockResolvedValue('<signed>'),
             verifySignature: jest.fn().mockResolvedValue(true),
           },
         },
-        { provide: SriSoapClient, useValue: sriSoapClient },
+        { provide: SriSoapClientPort, useValue: sriSoapClient },
         { provide: ComprobanteRepository, useValue: comprobanteRepository },
         { provide: EmisorRepository, useValue: mockEmisorRepository },
         { provide: SecuencialRepository, useValue: mockSecuencialRepository },
         {
-          provide: XmlStorageService,
+          provide: XmlStoragePort,
           useValue: {
             saveAllXmls: jest.fn().mockResolvedValue({
               firmadoKey: 'firmado.xml',
@@ -181,7 +183,7 @@ describe('EmitirFacturaUseCase — persistirFactura with comprobanteExistente (T
           },
         },
         {
-          provide: SriBaseService,
+          provide: SriBasePort,
           useValue: {
             validarFechaEmision: jest.fn(),
             validarIdentificacion: jest.fn(),
@@ -262,7 +264,7 @@ describe('EmitirFacturaUseCase — persistirFactura with comprobanteExistente (T
 describe('EmitirFacturaUseCase — SRI rejection path (E-005)', () => {
   let useCase: EmitirFacturaUseCase;
   let comprobanteRepository: jest.Mocked<ComprobanteRepository>;
-  let sriSoapClient: jest.Mocked<SriSoapClient>;
+  let sriSoapClient: jest.Mocked<SriSoapClientPort>;
   let eventEmitterMock: jest.Mock;
   let module: TestingModule;
 
@@ -365,7 +367,7 @@ describe('EmitirFacturaUseCase — SRI rejection path (E-005)', () => {
         { provide: LoggerService, useValue: mockLogger },
         EmitirFacturaUseCase,
         {
-          provide: ClaveAccesoService,
+          provide: ClaveAccesoPort,
           useValue: {
             generate: jest
               .fn()
@@ -375,17 +377,17 @@ describe('EmitirFacturaUseCase — SRI rejection path (E-005)', () => {
           },
         },
         {
-          provide: XmlBuilderService,
+          provide: XmlBuilderPort,
           useValue: { buildFactura: jest.fn().mockReturnValue('<xml>') },
         },
         {
-          provide: XmlSignerService,
+          provide: XmlSignerPort,
           useValue: {
             signXmlForEmisor: jest.fn().mockResolvedValue('<signed>'),
             verifySignature: jest.fn().mockResolvedValue(true),
           },
         },
-        { provide: SriSoapClient, useValue: sriSoapClient },
+        { provide: SriSoapClientPort, useValue: sriSoapClient },
         { provide: ComprobanteRepository, useValue: comprobanteRepository },
         { provide: EmisorRepository, useValue: mockEmisorRepository },
         {
@@ -395,7 +397,7 @@ describe('EmitirFacturaUseCase — SRI rejection path (E-005)', () => {
           },
         },
         {
-          provide: XmlStorageService,
+          provide: XmlStoragePort,
           useValue: {
             saveAllXmls: jest.fn().mockResolvedValue({
               firmadoKey: 'firmado.xml',
@@ -404,7 +406,7 @@ describe('EmitirFacturaUseCase — SRI rejection path (E-005)', () => {
           },
         },
         {
-          provide: SriBaseService,
+          provide: SriBasePort,
           useValue: {
             validarFechaEmision: jest.fn(),
             validarIdentificacion: jest.fn(),

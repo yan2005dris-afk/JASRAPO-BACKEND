@@ -7,19 +7,23 @@ import { InvalidDomainOperationException } from '../../../../shared/domain/excep
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
+import { SriBasePort } from '../../domain/ports/sri-base.port';
+
 /**
  * Servicio base con métodos compartidos entre todos los tipos de comprobante SRI.
  * Contiene validaciones contra catálogos, helpers de ambiente, etc.
  */
 @LogContext()
 @Injectable()
-export class SriBaseService {
+export class SriBaseService extends SriBasePort {
   constructor(
     private readonly configService: ConfigService,
     private readonly identificacionValidator: IdentificacionValidatorService,
     private readonly catalogoValidator: CatalogoValidatorService,
     private readonly logger: LoggerService,
-  ) {}
+  ) {
+    super();
+  }
 
   /**
    * Obtiene el ambiente por defecto desde la configuración
