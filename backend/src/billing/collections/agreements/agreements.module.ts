@@ -1,5 +1,6 @@
-import { Module, OnModuleInit } from '@nestjs/common';
+import { Module, OnModuleInit, forwardRef } from '@nestjs/common';
 import { PdfService } from 'src/infrastructure/pdf/pdf.service';
+import { ReportsModule } from 'src/reports/reports.module';
 import { AgreementsController } from './interfaces/http/agreements.controller';
 import { AgreementsService } from './application/agreements.service';
 import { CreateAgreementUseCase } from './application/use-cases/create-agreement.use-case';
@@ -9,9 +10,9 @@ import { UpdateAgreementUseCase } from './application/use-cases/update-agreement
 import { GetPaymentAgreementPdfDataUseCase } from './application/use-cases/get-payment-agreement-pdf-data.use-case';
 import { AgreementRepository } from './domain/repositories/agreement.repository';
 import { PrismaAgreementRepository } from './infrastructure/repositories/prisma-agreement.repository';
-import { PaymentAgreementPdfDocumentType } from './pdf/payment-agreement.pdf-type';
 
 @Module({
+  imports: [forwardRef(() => ReportsModule)],
   controllers: [AgreementsController],
   providers: [
     { provide: AgreementRepository, useClass: PrismaAgreementRepository },
@@ -29,10 +30,4 @@ import { PaymentAgreementPdfDocumentType } from './pdf/payment-agreement.pdf-typ
     GetPaymentAgreementPdfDataUseCase,
   ],
 })
-export class AgreementsModule implements OnModuleInit {
-  constructor(private readonly pdfService: PdfService) {}
-
-  onModuleInit() {
-    this.pdfService.registerDocumentType(PaymentAgreementPdfDocumentType);
-  }
-}
+export class AgreementsModule {}

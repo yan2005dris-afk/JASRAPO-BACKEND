@@ -1,4 +1,4 @@
-import { Module, OnModuleInit } from '@nestjs/common';
+import { Module, OnModuleInit, forwardRef } from '@nestjs/common';
 import { PdfService } from '../infrastructure/pdf/pdf.service';
 import { ClientModule } from '../operations/clients/client.module';
 import { AgreementsModule } from '../billing/collections/agreements/agreements.module';
@@ -26,7 +26,7 @@ import {
 } from './application/use-cases/send-report-by-email.strategies';
 
 @Module({
-  imports: [ClientModule, AgreementsModule],
+  imports: [ClientModule, forwardRef(() => AgreementsModule)],
   controllers: [ReportsController],
   providers: [
     ClientsListReportSpec,
@@ -43,6 +43,7 @@ import {
     SendReportByEmailUseCase,
     REPORT_EMAIL_STRATEGIES_PROVIDER,
   ],
+  exports: [ReportStyleDispatcher, ReportStyleService],
 })
 export class ReportsModule implements OnModuleInit {
   constructor(private readonly pdfService: PdfService) {}

@@ -16,7 +16,7 @@ import { FindOneAgreementUseCase } from './use-cases/find-one-agreement.use-case
 import { GetDebtSummaryUseCase } from './use-cases/get-debt-summary.use-case';
 import { UpdateAgreementUseCase } from './use-cases/update-agreement.use-case';
 import { GetPaymentAgreementPdfDataUseCase } from './use-cases/get-payment-agreement-pdf-data.use-case';
-import { GeneratePdfUseCase } from 'src/infrastructure/pdf/use-cases/generate-pdf.use-case';
+import { ReportStyleDispatcher } from 'src/reports/application/report-style.dispatcher';
 
 @Injectable()
 export class AgreementsService {
@@ -27,7 +27,7 @@ export class AgreementsService {
     private readonly getDebtSummaryUseCase: GetDebtSummaryUseCase,
     private readonly updateUseCase: UpdateAgreementUseCase,
     private readonly getPdfDataUseCase: GetPaymentAgreementPdfDataUseCase,
-    private readonly generatePdfUc: GeneratePdfUseCase,
+    private readonly dispatcher: ReportStyleDispatcher,
   ) {}
 
   // ── Estado catalogs ──────────────────────────────────────────────────────
@@ -95,9 +95,9 @@ export class AgreementsService {
 
   async generatePdf(
     convenioId: bigint,
-  ): Promise<{ buffer: Buffer; clienteNombre: string }> {
+  ): Promise<{ buffer: Buffer; filename: string; clienteNombre: string }> {
     const raw = await this.getPdfDataUseCase.execute(convenioId);
-    const buffer = await this.generatePdfUc.execute(
+    const { buffer, filename } = await this.dispatcher.dispatch(
       'payment-agreement',
       raw as unknown as Record<string, unknown>,
     );
@@ -107,6 +107,6 @@ export class AgreementsService {
       `${cliente.nombres ?? ''} ${cliente.apellidos ?? ''}`.trim() ||
       convenioId.toString();
 
-    return { buffer, clienteNombre };
+    return { buffer, filename, clienteNombre };
   }
 }
