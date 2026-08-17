@@ -128,22 +128,40 @@ export class PrismaReadingAnomalyRepository implements ReadingAnomalyRepository 
     where: { anomaliaId: bigint },
     data: UpdateReadingAnomalyRepositoryData,
   ): Promise<ReadingAnomalyEntity> {
-    const record = await this.prisma.lecturaAnomalia.update({
-      where: { anomaliaId: where.anomaliaId },
-      data: {
-        ...(data.lecturaId !== undefined && { lecturaId: data.lecturaId }),
-        ...(data.observacion !== undefined && {
-          observacion: data.observacion,
-        }),
-        ...(data.tipo !== undefined && { tipo: data.tipo }),
-        ...(data.estado !== undefined && { estado: data.estado }),
-        ...(data.fotoUrl !== undefined && {
-          fotoUrl: data.fotoUrl,
-        }),
-        ...(data.deletedAt !== undefined && { deletedAt: data.deletedAt }),
-      },
-      select: safeReadingAnomaliesSelect,
+    const record = await this.prisma.$transaction(async (tx) => {
+      const updated = await tx.lecturaAnomalia.update({
+        where: { anomaliaId: where.anomaliaId },
+        data: {
+          ...(data.lecturaId !== undefined && { lecturaId: data.lecturaId }),
+          ...(data.observacion !== undefined && {
+            observacion: data.observacion,
+          }),
+          ...(data.tipo !== undefined && { tipo: data.tipo }),
+          ...(data.estado !== undefined && { estado: data.estado }),
+          ...(data.fotoUrl !== undefined && {
+            fotoUrl: data.fotoUrl,
+          }),
+          ...(data.deletedAt !== undefined && { deletedAt: data.deletedAt }),
+        },
+        select: safeReadingAnomaliesSelect,
+      });
+
+      // Si la anomalía se marca como RESUELTA, actualizar la lectura a APROBADA
+      if (data.estado === 'RESUELTA') {
+        await tx.lecturas.update({
+          where: { lecturaId: updated.lecturaId },
+          data: { estado: EstadoLectura.APROBADA },
+        });
+      } else if (data.estado === 'DESCARTADA') {
+        await tx.lecturas.update({
+          where: { lecturaId: updated.lecturaId },
+          data: { estado: EstadoLectura.PENDIENTE },
+        });
+      }
+
+      return updated;
     });
+
     return ReadingAnomalyMapper.toDomain(record)!;
   }
 }
