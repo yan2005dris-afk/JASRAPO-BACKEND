@@ -148,6 +148,7 @@ async function main() {
         precioUnitario: 0.0,
         tipoRubro: 'VARIABLE' as any,
         tarifaImpuestoId: tarifaIva0.id,
+        esAutomatico: true,
       },
       {
         codigoSri: '002',
@@ -157,6 +158,7 @@ async function main() {
         precioUnitario: 0.0,
         tipoRubro: 'FIJO' as any,
         tarifaImpuestoId: tarifaIva0.id,
+        esAutomatico: true,
       },
       {
         codigoSri: '003',
@@ -165,6 +167,7 @@ async function main() {
         precioUnitario: 0.0,
         tipoRubro: 'MULTA' as any,
         tarifaImpuestoId: tarifaIva0.id,
+        esAutomatico: true,
       },
       {
         codigoSri: '004',
@@ -174,6 +177,7 @@ async function main() {
         precioUnitario: 0.0,
         tipoRubro: 'FIJO' as any,
         tarifaImpuestoId: tarifaIva0.id,
+        esAutomatico: true,
       },
       {
         codigoSri: '005',
@@ -183,6 +187,7 @@ async function main() {
         precioUnitario: 150.0,
         tipoRubro: 'SERVICIO' as any,
         tarifaImpuestoId: tarifaIva12.id,
+        esAutomatico: false,
       },
     ],
     skipDuplicates: true,

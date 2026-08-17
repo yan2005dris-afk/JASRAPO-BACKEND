@@ -42,6 +42,7 @@ export class RubroMapper {
           }
         : undefined,
       activo: raw.activo,
+      esAutomatico: raw.esAutomatico,
       createdAt: raw.createdAt,
       updatedAt: raw.updatedAt,
       deletedAt: raw.deletedAt,
@@ -63,6 +64,7 @@ export class RubroMapper {
       tipoRubro: data.tipoRubro,
       tarifaImpuestoId: data.tarifaImpuestoId,
       activo: data.activo ?? true,
+      esAutomatico: data.esAutomatico ?? false,
     };
   }
 
@@ -83,6 +85,9 @@ export class RubroMapper {
         ? { tarifaImpuestoId: data.tarifaImpuestoId }
         : {}),
       ...(data.activo !== undefined ? { activo: data.activo } : {}),
+      ...(data.esAutomatico !== undefined
+        ? { esAutomatico: data.esAutomatico }
+        : {}),
       ...(data.deletedAt !== undefined ? { deletedAt: data.deletedAt } : {}),
     };
   }
@@ -101,6 +106,9 @@ export class RubroMapper {
         ? { tarifaImpuestoId: where.tarifaImpuestoId }
         : {}),
       ...(where.activo !== undefined ? { activo: where.activo } : {}),
+      ...(where.esAutomatico !== undefined
+        ? { esAutomatico: where.esAutomatico }
+        : {}),
     };
   }
 

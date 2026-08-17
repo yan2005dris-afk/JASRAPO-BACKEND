@@ -39,6 +39,15 @@ export class RubroFilterDto {
   activo?: boolean;
 
   @ApiPropertyOptional({
+    description: 'Filtrar por si es automático o manual',
+    example: false,
+  })
+  @IsOptional()
+  @Type(() => Boolean)
+  @IsBoolean()
+  esAutomatico?: boolean;
+
+  @ApiPropertyOptional({
     description: 'Número de página',
     default: 1,
     example: 1,

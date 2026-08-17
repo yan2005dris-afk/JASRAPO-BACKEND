@@ -74,4 +74,13 @@ export class CreateRubroDto {
   @IsOptional()
   @IsBoolean()
   activo?: boolean;
+
+  @ApiPropertyOptional({
+    description: 'Indica si el rubro es autogenerado por el sistema',
+    default: false,
+    example: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  esAutomatico?: boolean;
 }

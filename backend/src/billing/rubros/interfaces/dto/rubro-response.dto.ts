@@ -66,6 +66,12 @@ export class RubroResponseDto {
   @ApiProperty({ description: 'Estado del rubro', example: true })
   activo!: boolean;
 
+  @ApiProperty({
+    description: 'Indica si el rubro es autogenerado/calculado por el sistema',
+    example: false,
+  })
+  esAutomatico!: boolean;
+
   @ApiProperty({ description: 'Fecha de creación', example: '2026-08-17T00:00:00.000Z' })
   createdAt!: Date;
 

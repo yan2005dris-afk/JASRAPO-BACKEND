@@ -15,6 +15,7 @@ export class RubroEntity {
     descripcion: string;
   };
   activo!: boolean;
+  esAutomatico!: boolean;
   createdAt!: Date;
   updatedAt!: Date;
   deletedAt!: Date | null;

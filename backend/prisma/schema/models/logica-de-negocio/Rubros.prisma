@@ -6,6 +6,7 @@ model Rubros {
   precioUnitario    Decimal             @map("precio_unitario") @db.Decimal(18, 2)
   tipoRubro         TipoRubro           @map("tipo_rubro")
   tarifaImpuestoId  Int                       @map("tarifa_impuesto_id")
+  esAutomatico      Boolean                   @default(false) @map("es_automatico")
   activo            Boolean                   @default(true) @map("activo")
   createdAt         DateTime                  @default(now()) @map("creado_en")
   updatedAt         DateTime                  @updatedAt @map("actualizado_en")

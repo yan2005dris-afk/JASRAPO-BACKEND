@@ -5,6 +5,7 @@ export interface RubroFilters {
   tipoRubro?: TipoRubro;
   tarifaImpuestoId?: number;
   activo?: boolean;
+  esAutomatico?: boolean;
 }
 
 export interface RubroOrderBy {
@@ -28,6 +29,7 @@ export interface CreateRubroData {
   tipoRubro: TipoRubro;
   tarifaImpuestoId: number;
   activo?: boolean;
+  esAutomatico?: boolean;
 }
 
 export interface UpdateRubroData {
@@ -38,6 +40,7 @@ export interface UpdateRubroData {
   tipoRubro?: TipoRubro;
   tarifaImpuestoId?: number;
   activo?: boolean;
+  esAutomatico?: boolean;
   deletedAt?: Date | null;
 }
 
