@@ -10,7 +10,7 @@ import {
 export const PaymentAgreementPdfDocumentType: PdfDocumentType = {
   type: 'payment-agreement',
   name: 'Convenio de Pago',
-  template: 'payment-agreement',
+  template: 'payment-agreement-modern',
 
   adaptData(raw: Record<string, any>): Record<string, any> {
     const c = raw.convenio ?? raw;
