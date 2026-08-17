@@ -178,6 +178,15 @@ const PERMISSION_MAP: MenuPermissionMapping[] = [
     ],
   },
   {
+    menuNombre: 'Configuraciones',
+    permisos: [
+      { recurso: 'configuraciones', accion: 'read' },
+      { recurso: 'configuraciones', accion: 'create' },
+      { recurso: 'configuraciones', accion: 'update' },
+      { recurso: 'configuraciones', accion: 'delete' },
+    ],
+  },
+  {
     menuNombre: 'Estado de Cuenta',
     permisos: [{ recurso: 'reportes', accion: 'read' }],
   },
