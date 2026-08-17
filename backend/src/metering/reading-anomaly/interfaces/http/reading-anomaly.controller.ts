@@ -17,7 +17,10 @@ import { ParseBigIntPipe } from 'src/infrastructure/common/pipes/parse-bigint.pi
 import { ReadingAnomalyService } from '../../application/reading-anomaly.service';
 import { CreateReadingAnomalyDto } from '../dto/create-reading-anomaly.dto';
 import { UpdateReadingAnomalyDto } from '../dto/update-reading-anomaly.dto';
-import { ResponseReadingAnomalyDto } from '../dto/response-reading-anomaly.dto';
+import {
+  ResponseReadingAnomalyDto,
+  ReadingAnomalyFilterDto,
+} from '../dto/response-reading-anomaly.dto';
 import { TipoAnomalia, EstadoAnomalia } from 'src/shared/enums';
 import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
 import {
@@ -113,26 +116,21 @@ export class ReadingAnomalyController {
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @RequiredPermission('reading-anomalies', 'read')
   @Get()
-  async findAll(
-    @Query() paginationDto: PaginationDto,
-    @Query('lecturaId') lecturaId?: string,
-    @Query('tipo') tipo?: TipoAnomalia,
-    @Query('estado') estado?: EstadoAnomalia,
-  ) {
+  async findAll(@Query() filtersDto: ReadingAnomalyFilterDto) {
     const filters: ReadingAnomalyFilters = {};
-    if (lecturaId) {
-      filters.lecturaId = BigInt(lecturaId);
+    if (filtersDto.lecturaId) {
+      filters.lecturaId = BigInt(filtersDto.lecturaId);
     }
-    if (tipo) {
-      filters.tipo = tipo;
+    if (filtersDto.tipo) {
+      filters.tipo = filtersDto.tipo;
     }
-    if (estado) {
-      filters.estado = estado;
+    if (filtersDto.estado) {
+      filters.estado = filtersDto.estado;
     }
 
     const result = await this.readingAnomalyService.findAll(
-      paginationDto.page,
-      paginationDto.limit,
+      filtersDto.page,
+      filtersDto.limit,
       filters,
     );
     return {
