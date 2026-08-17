@@ -140,11 +140,50 @@ async function main() {
 
   await prisma.rubros.createMany({
     data: [
-      { codigoSri: '001', nombre: 'Consumo Agua', descripcion: 'Consumo de agua potable m3', precioUnitario: 0.50, tipoRubro: 'VARIABLE' as any, tarifaImpuestoId: tarifaIva12.id },
-      { codigoSri: '002', nombre: 'Cargo Fijo', descripcion: 'Mantenimiento básico de conexión', precioUnitario: 5.00, tipoRubro: 'FIJO' as any, tarifaImpuestoId: tarifaIva12.id },
-      { codigoSri: '003', nombre: 'Interés Mora', descripcion: 'Interés por falta de pago puntual', precioUnitario: 0.10, tipoRubro: 'MULTA' as any, tarifaImpuestoId: tarifaIva0.id },
-      { codigoSri: '004', nombre: 'Tasa Seguridad', descripcion: 'Tasa de seguridad comunitaria (calculada dinámicamente por % de comunidad)', precioUnitario: 0, tipoRubro: 'FIJO' as any, tarifaImpuestoId: tarifaIva0.id },
-      { codigoSri: '005', nombre: 'Instalación Medidor', descripcion: 'Costo de nueva acometida e instalación', precioUnitario: 150.00, tipoRubro: 'SERVICIO' as any, tarifaImpuestoId: tarifaIva12.id },
+      {
+        codigoSri: '001',
+        nombre: 'Consumo Agua',
+        descripcion:
+          'Consumo mensual de agua potable (calculado según m³ y categoría tarifaria del contrato)',
+        precioUnitario: 0.0,
+        tipoRubro: 'VARIABLE' as any,
+        tarifaImpuestoId: tarifaIva0.id,
+      },
+      {
+        codigoSri: '002',
+        nombre: 'Cargo Fijo',
+        descripcion:
+          'Valor base mensual por mantenimiento de conexión (determinado por la categoría tarifaria del contrato)',
+        precioUnitario: 0.0,
+        tipoRubro: 'FIJO' as any,
+        tarifaImpuestoId: tarifaIva0.id,
+      },
+      {
+        codigoSri: '003',
+        nombre: 'Interés Mora',
+        descripcion: 'Recargo por mora en planillas vencidas',
+        precioUnitario: 0.0,
+        tipoRubro: 'MULTA' as any,
+        tarifaImpuestoId: tarifaIva0.id,
+      },
+      {
+        codigoSri: '004',
+        nombre: 'Tasa Seguridad',
+        descripcion:
+          'Aporte de seguridad ciudadana (calculado por % de la comunidad)',
+        precioUnitario: 0.0,
+        tipoRubro: 'FIJO' as any,
+        tarifaImpuestoId: tarifaIva0.id,
+      },
+      {
+        codigoSri: '005',
+        nombre: 'Instalación Medidor',
+        descripcion:
+          'Costo por nueva acometida e instalación física de medidor',
+        precioUnitario: 150.0,
+        tipoRubro: 'SERVICIO' as any,
+        tarifaImpuestoId: tarifaIva12.id,
+      },
     ],
     skipDuplicates: true,
   });
