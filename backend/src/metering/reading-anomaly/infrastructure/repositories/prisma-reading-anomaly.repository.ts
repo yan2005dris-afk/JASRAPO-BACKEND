@@ -18,6 +18,9 @@ export const safeReadingAnomaliesSelect = {
   tipo: true,
   estado: true,
   fotoUrl: true,
+  createdAt: true,
+  updatedAt: true,
+  deletedAt: true,
   lectura: {
     select: {
       lecturaId: true,
