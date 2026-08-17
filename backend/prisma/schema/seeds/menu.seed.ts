@@ -128,6 +128,12 @@ const LEVEL_2: MenuSeedEntry[] = [
     icono: 'map',
     parentNombre: 'Administración',
   },
+  {
+    nombre: 'Configuraciones',
+    ruta: '/admin/config',
+    icono: 'settings',
+    parentNombre: 'Administración',
+  },
 
   // ── Reportes ───────────────────────────────────────────────
   {
