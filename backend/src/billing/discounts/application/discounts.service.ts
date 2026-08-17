@@ -9,6 +9,7 @@ import { FindOneDiscountUseCase } from './use-cases/find-one-discount.use-case';
 import { UpdateDiscountUseCase } from './use-cases/update-discount.use-case';
 import { RemoveDiscountUseCase } from './use-cases/remove-discount.use-case';
 import { ApplyDiscountToPreinvoiceUseCase } from './use-cases/apply-discount-to-preinvoice.use-case';
+import { GetDiscountRubrosUseCase } from './use-cases/get-discount-rubros.use-case';
 import type { DiscountEntity } from '../domain/entities/discount.entity';
 import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
 
@@ -21,7 +22,12 @@ export class DiscountsService {
     private readonly updateUseCase: UpdateDiscountUseCase,
     private readonly removeUseCase: RemoveDiscountUseCase,
     private readonly applyToPreinvoiceUseCase: ApplyDiscountToPreinvoiceUseCase,
+    private readonly getRubrosUseCase: GetDiscountRubrosUseCase,
   ) {}
+
+  async getRubros() {
+    return this.getRubrosUseCase.execute();
+  }
 
   async create(dto: CreateDiscountDto): Promise<DiscountEntity> {
     return this.createUseCase.execute(dto);

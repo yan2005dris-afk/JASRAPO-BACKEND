@@ -33,6 +33,17 @@ import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
 export class DiscountsController {
   constructor(private readonly discountsService: DiscountsService) {}
 
+  @Get('rubros')
+  @RequiredPermission('discounts', 'read')
+  @ApiOperation({ summary: 'Listar rubros disponibles para asociar a descuentos' })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de rubros activos',
+  })
+  async getRubros() {
+    return this.discountsService.getRubros();
+  }
+
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @RequiredPermission('discounts', 'create')

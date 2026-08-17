@@ -97,6 +97,20 @@ export class PrismaDiscountRepository implements DiscountRepository {
     }
   }
 
+  async findRubros(): Promise<Array<{ rubroId: number; nombre: string; tipoRubro: string; precioUnitario: any }>> {
+    const records = await this.prisma.rubros.findMany({
+      where: { activo: true, deletedAt: null },
+      select: {
+        rubroId: true,
+        nombre: true,
+        tipoRubro: true,
+        precioUnitario: true,
+      },
+      orderBy: { nombre: 'asc' },
+    });
+    return records;
+  }
+
   async executeTransaction<T>(
     callback: (tx: Prisma.TransactionClient) => Promise<T>,
   ): Promise<T> {

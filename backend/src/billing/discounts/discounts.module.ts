@@ -10,6 +10,7 @@ import { FindOneDiscountUseCase } from './application/use-cases/find-one-discoun
 import { UpdateDiscountUseCase } from './application/use-cases/update-discount.use-case';
 import { RemoveDiscountUseCase } from './application/use-cases/remove-discount.use-case';
 import { ApplyDiscountToPreinvoiceUseCase } from './application/use-cases/apply-discount-to-preinvoice.use-case';
+import { GetDiscountRubrosUseCase } from './application/use-cases/get-discount-rubros.use-case';
 
 @Module({
   imports: [DatabaseModule],
@@ -23,6 +24,7 @@ import { ApplyDiscountToPreinvoiceUseCase } from './application/use-cases/apply-
     UpdateDiscountUseCase,
     RemoveDiscountUseCase,
     ApplyDiscountToPreinvoiceUseCase,
+    GetDiscountRubrosUseCase,
   ],
   exports: [DiscountRepository, DiscountsService, FindOneDiscountUseCase],
 })
