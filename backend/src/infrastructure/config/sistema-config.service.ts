@@ -68,6 +68,19 @@ export class SistemaConfigService {
    * first. Cache miss or expired entry triggers a single repository read
    * whose result (including `null`) is stored with a fresh `expiresAt`.
    */
+  async getAll(): Promise<any[]> {
+    return this.repository.findAll();
+  }
+
+  async getRecord(clave: string): Promise<any | null> {
+    return this.repository.findRecordByClave(clave);
+  }
+
+  /**
+   * Returns the valor for the given clave, hitting the in-memory cache
+   * first. Cache miss or expired entry triggers a single repository read
+   * whose result (including `null`) is stored with a fresh `expiresAt`.
+   */
   async getString(clave: string): Promise<string | null> {
     const now = Date.now();
     const hit = CACHE.get(clave);
@@ -81,6 +94,31 @@ export class SistemaConfigService {
       expiresAt: now + this.ttlMs,
     });
     return fresh;
+  }
+
+  async create(data: {
+    clave: string;
+    valor: string;
+    descripcion?: string | null;
+  }): Promise<any> {
+    const created = await this.repository.create(data);
+    CACHE.delete(data.clave);
+    return created;
+  }
+
+  async update(
+    clave: string,
+    data: { valor?: string; descripcion?: string | null },
+  ): Promise<any> {
+    const updated = await this.repository.update(clave, data);
+    CACHE.delete(clave);
+    return updated;
+  }
+
+  async delete(clave: string): Promise<any> {
+    const deleted = await this.repository.delete(clave);
+    CACHE.delete(clave);
+    return deleted;
   }
 
   /**

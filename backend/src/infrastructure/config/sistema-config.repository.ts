@@ -17,28 +17,44 @@ export class SistemaConfigRepositoryError extends Error {
   }
 }
 
+export interface SistemaConfigRecord {
+  id: number;
+  clave: string;
+  valor: string;
+  descripcion: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 /**
- * Read-only access to the `sistema_config` key/value table.
- *
- * `sistema_config` is a project-wide, non-tenant-scoped key/value store.
- * It is used by application modules (e.g. the reports dispatcher) to look
- * up operator-tunable configuration without a redeploy.
- *
- * This repository is intentionally thin: a single `findByClave` method
- * that returns the stored `valor` (or `null` when the key is absent).
- * All caching, fallback chains, and validation live in
- * `SistemaConfigService` / `ReportStyleService`.
+ * Repository access to the `sistema_config` key/value table.
  */
 @Injectable()
 export class SistemaConfigRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   /**
+   * Returns all config entries ordered by id
+   */
+  async findAll(): Promise<SistemaConfigRecord[]> {
+    try {
+      return await this.prisma.sistemaConfig.findMany({
+        orderBy: { id: 'asc' },
+      });
+    } catch (err) {
+      if (err instanceof Prisma.PrismaClientKnownRequestError) {
+        throw new SistemaConfigRepositoryError(
+          'Failed to read all sistema_config entries',
+          err,
+        );
+      }
+      throw err;
+    }
+  }
+
+  /**
    * Returns the `valor` column for the given `clave`, or `null` if no row
    * exists with that key.
-   *
-   * @throws {SistemaConfigRepositoryError} when the underlying Prisma call
-   *   fails with a known request error (network, timeout, etc.).
    */
   async findByClave(clave: string): Promise<string | null> {
     try {
@@ -51,6 +67,97 @@ export class SistemaConfigRepository {
       if (err instanceof Prisma.PrismaClientKnownRequestError) {
         throw new SistemaConfigRepositoryError(
           `Failed to read sistema_config[clave=${clave}]`,
+          err,
+        );
+      }
+      throw err;
+    }
+  }
+
+  /**
+   * Returns the full record for the given `clave`, or `null` if not found.
+   */
+  async findRecordByClave(clave: string): Promise<SistemaConfigRecord | null> {
+    try {
+      return await this.prisma.sistemaConfig.findUnique({
+        where: { clave },
+      });
+    } catch (err) {
+      if (err instanceof Prisma.PrismaClientKnownRequestError) {
+        throw new SistemaConfigRepositoryError(
+          `Failed to read sistema_config[clave=${clave}]`,
+          err,
+        );
+      }
+      throw err;
+    }
+  }
+
+  /**
+   * Creates a new config entry or throws if key exists
+   */
+  async create(data: {
+    clave: string;
+    valor: string;
+    descripcion?: string | null;
+  }): Promise<SistemaConfigRecord> {
+    try {
+      return await this.prisma.sistemaConfig.create({
+        data: {
+          clave: data.clave,
+          valor: data.valor,
+          descripcion: data.descripcion ?? null,
+        },
+      });
+    } catch (err) {
+      if (err instanceof Prisma.PrismaClientKnownRequestError) {
+        throw new SistemaConfigRepositoryError(
+          `Failed to create sistema_config[clave=${data.clave}]`,
+          err,
+        );
+      }
+      throw err;
+    }
+  }
+
+  /**
+   * Updates an existing config entry by clave
+   */
+  async update(
+    clave: string,
+    data: { valor?: string; descripcion?: string | null },
+  ): Promise<SistemaConfigRecord> {
+    try {
+      return await this.prisma.sistemaConfig.update({
+        where: { clave },
+        data: {
+          ...(data.valor !== undefined && { valor: data.valor }),
+          ...(data.descripcion !== undefined && { descripcion: data.descripcion }),
+        },
+      });
+    } catch (err) {
+      if (err instanceof Prisma.PrismaClientKnownRequestError) {
+        throw new SistemaConfigRepositoryError(
+          `Failed to update sistema_config[clave=${clave}]`,
+          err,
+        );
+      }
+      throw err;
+    }
+  }
+
+  /**
+   * Deletes a config entry by clave
+   */
+  async delete(clave: string): Promise<SistemaConfigRecord> {
+    try {
+      return await this.prisma.sistemaConfig.delete({
+        where: { clave },
+      });
+    } catch (err) {
+      if (err instanceof Prisma.PrismaClientKnownRequestError) {
+        throw new SistemaConfigRepositoryError(
+          `Failed to delete sistema_config[clave=${clave}]`,
           err,
         );
       }

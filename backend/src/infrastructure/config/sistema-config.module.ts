@@ -19,9 +19,12 @@ import { SistemaConfigService } from './sistema-config.service';
  *     surface, along with the repository in case any consumer needs
  *     direct access to the underlying `findByClave` for tests.
  */
+import { SistemaConfigController } from './sistema-config.controller';
+
 @Global()
 @Module({
   imports: [ConfigModule, DatabaseModule],
+  controllers: [SistemaConfigController],
   providers: [SistemaConfigRepository, SistemaConfigService],
   exports: [SistemaConfigService, SistemaConfigRepository],
 })
