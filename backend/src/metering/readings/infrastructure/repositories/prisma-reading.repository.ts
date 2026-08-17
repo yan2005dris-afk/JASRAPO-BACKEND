@@ -151,40 +151,72 @@ export class PrismaReadingRepository implements ReadingRepository {
     where: { lecturaId: bigint },
     data: UpdateReadingRepositoryData,
   ): Promise<LecturaEntity> {
-    const record = await this.prisma.lecturas.update({
-      where: { lecturaId: where.lecturaId },
-      data: {
-        ...(data.fecha !== undefined && { fecha: data.fecha }),
-        ...(data.lecturaAnterior !== undefined && {
-          lecturaAnterior: data.lecturaAnterior,
-        }),
-        ...(data.lecturaActual !== undefined && {
-          lecturaActual: data.lecturaActual,
-        }),
-        ...(data.consumoCalculado !== undefined && {
-          consumoCalculado: data.consumoCalculado,
-        }),
-        ...(data.medidorId !== undefined && { medidorId: data.medidorId }),
-        ...(data.descripcionAnomalia !== undefined && {
-          descripcionAnomalia: data.descripcionAnomalia,
-        }),
-        ...(data.fechaValidacion !== undefined && {
-          fechaValidacion: data.fechaValidacion,
-        }),
-        ...(data.fotoUrl !== undefined && {
-          fotoUrl: data.fotoUrl,
-        }),
-        ...(data.estado !== undefined && {
-          estado: data.estado as $Enums.EstadoLectura,
-        }),
-        ...(data.lecturaInicial !== undefined && {
-          lecturaInicial: data.lecturaInicial,
-        }),
-        ...(data.periodoId !== undefined && { periodoId: data.periodoId }),
-        ...(data.deletedAt !== undefined && { deletedAt: data.deletedAt }),
-      },
-      select: safeReadingsSelect,
+    const record = await this.prisma.$transaction(async (tx) => {
+      const updated = await tx.lecturas.update({
+        where: { lecturaId: where.lecturaId },
+        data: {
+          ...(data.fecha !== undefined && { fecha: data.fecha }),
+          ...(data.lecturaAnterior !== undefined && {
+            lecturaAnterior: data.lecturaAnterior,
+          }),
+          ...(data.lecturaActual !== undefined && {
+            lecturaActual: data.lecturaActual,
+          }),
+          ...(data.consumoCalculado !== undefined && {
+            consumoCalculado: data.consumoCalculado,
+          }),
+          ...(data.medidorId !== undefined && { medidorId: data.medidorId }),
+          ...(data.descripcionAnomalia !== undefined && {
+            descripcionAnomalia: data.descripcionAnomalia,
+          }),
+          ...(data.fechaValidacion !== undefined && {
+            fechaValidacion: data.fechaValidacion,
+          }),
+          ...(data.fotoUrl !== undefined && {
+            fotoUrl: data.fotoUrl,
+          }),
+          ...(data.estado !== undefined && {
+            estado: data.estado as $Enums.EstadoLectura,
+          }),
+          ...(data.lecturaInicial !== undefined && {
+            lecturaInicial: data.lecturaInicial,
+          }),
+          ...(data.periodoId !== undefined && { periodoId: data.periodoId }),
+          ...(data.deletedAt !== undefined && { deletedAt: data.deletedAt }),
+        },
+        select: safeReadingsSelect,
+      });
+
+      // Si la lectura se marca como CON_NOVEDAD, garantizar que exista en lectura_anomalia
+      if (data.estado === 'CON_NOVEDAD') {
+        const existingAnomaly = await tx.lecturaAnomalia.findFirst({
+          where: {
+            lecturaId: where.lecturaId,
+            deletedAt: null,
+          },
+        });
+
+        if (!existingAnomaly) {
+          await tx.lecturaAnomalia.create({
+            data: {
+              lecturaId: where.lecturaId,
+              tipo: $Enums.TipoAnomalia.OTRO,
+              estado: $Enums.EstadoAnomalia.PENDIENTE,
+              observacion: data.descripcionAnomalia || 'Novedad reportada desde ruta de lectura',
+              fotoUrl: data.fotoUrl || null,
+            },
+          });
+        } else if (existingAnomaly.estado !== $Enums.EstadoAnomalia.PENDIENTE && existingAnomaly.estado !== $Enums.EstadoAnomalia.EN_REVISION) {
+          await tx.lecturaAnomalia.update({
+            where: { anomaliaId: existingAnomaly.anomaliaId },
+            data: { estado: $Enums.EstadoAnomalia.PENDIENTE },
+          });
+        }
+      }
+
+      return updated;
     });
+
     return ReadingMapper.toDomain(record)!;
   }
 
