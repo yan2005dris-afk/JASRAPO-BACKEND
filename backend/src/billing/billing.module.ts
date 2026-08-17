@@ -6,6 +6,7 @@ import { PreInvoiceModule } from './pre-invoice/pre-invoice.module';
 import { PaymentsModule } from './collections/payments/payments.module';
 import { DiscountsModule } from './discounts/discounts.module';
 import { PeriodsModule } from './periods/periods.module';
+import { RubrosModule } from './rubros/rubros.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { PeriodsModule } from './periods/periods.module';
     PaymentsModule,
     DiscountsModule,
     PeriodsModule,
+    RubrosModule,
   ],
   exports: [
     CategoriaTarifaModule,
@@ -25,6 +27,8 @@ import { PeriodsModule } from './periods/periods.module';
     PaymentsModule,
     DiscountsModule,
     PeriodsModule,
+    RubrosModule,
   ],
 })
 export class BillingModule {}
+

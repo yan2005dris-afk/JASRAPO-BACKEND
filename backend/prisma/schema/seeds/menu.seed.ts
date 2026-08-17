@@ -102,6 +102,12 @@ const LEVEL_2: MenuSeedEntry[] = [
     icono: 'percent',
     parentNombre: 'Facturación',
   },
+  {
+    nombre: 'Rubros',
+    ruta: '/Facturacion/Rubros',
+    icono: 'category',
+    parentNombre: 'Facturación',
+  },
 
   // ── Administración ─────────────────────────────────────────
   {

@@ -46,7 +46,7 @@ export async function seedRolePermissions(
     const recaudacionResources = [
         'planillas', 'facturacion_electronica', 'recaudacion',
         'notas_credito', 'envio_facturas', 'batches',
-        'payments', 'pre-invoices', 'discounts',
+        'payments', 'pre-invoices', 'discounts', 'rubros',
         'clientes'
     ];
     const recaudacionPerms = permissions.filter(p => recaudacionResources.includes(p.recurso));

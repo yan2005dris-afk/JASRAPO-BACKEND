@@ -138,6 +138,15 @@ const PERMISSION_MAP: MenuPermissionMapping[] = [
     ],
   },
   {
+    menuNombre: 'Rubros',
+    permisos: [
+      { recurso: 'rubros', accion: 'read' },
+      { recurso: 'rubros', accion: 'create' },
+      { recurso: 'rubros', accion: 'update' },
+      { recurso: 'rubros', accion: 'delete' },
+    ],
+  },
+  {
     menuNombre: 'Usuarios',
     permisos: [
       { recurso: 'users', accion: 'read' },
