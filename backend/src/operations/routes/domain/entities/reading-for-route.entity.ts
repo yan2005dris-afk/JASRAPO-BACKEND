@@ -5,6 +5,11 @@ export interface ReadingForRouteEntityProps {
   direccion: string;
   sector?: string;
   estadoContrato: string;
+  medidorSerie?: string;
+  lecturaAnterior?: number;
+  lecturaActual?: number;
+  consumoCalculado?: number;
+  estadoLectura?: string;
 }
 
 export class ReadingForRouteEntity {
@@ -14,6 +19,11 @@ export class ReadingForRouteEntity {
   direccion: string;
   sector?: string;
   estadoContrato: string;
+  medidorSerie?: string;
+  lecturaAnterior?: number;
+  lecturaActual?: number;
+  consumoCalculado?: number;
+  estadoLectura?: string;
 
   constructor(props: ReadingForRouteEntityProps) {
     this.lecturaId = props.lecturaId;
@@ -22,5 +32,10 @@ export class ReadingForRouteEntity {
     this.direccion = props.direccion;
     this.sector = props.sector;
     this.estadoContrato = props.estadoContrato;
+    this.medidorSerie = props.medidorSerie;
+    this.lecturaAnterior = props.lecturaAnterior;
+    this.lecturaActual = props.lecturaActual;
+    this.consumoCalculado = props.consumoCalculado;
+    this.estadoLectura = props.estadoLectura;
   }
 }

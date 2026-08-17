@@ -27,4 +27,6 @@ export class CrearLecturaDto {
 
   @IsNotEmpty() @IsBoolean() lecturaInicial: boolean;
   @IsOptional() @IsNumber() periodoId?: number;
+  @IsOptional() @IsString() estado?: string;
+  @IsOptional() @IsString() estadoAsignacion?: string;
 }

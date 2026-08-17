@@ -16,10 +16,12 @@ export class GetEligibleReadingsUseCase {
     tipoRuta: 'TOMA_LECTURA' | 'RECONEXION';
     comunidadId: number;
     sectorId?: number;
+    periodoId?: number;
+    fechaPlanificada?: string;
     search?: string;
     pagination: { page?: number; limit?: number };
   }): Promise<PaginatedResult<ReadingForRouteEntity>> {
-    const { tipoRuta, comunidadId, sectorId, search, pagination } = params;
+    const { tipoRuta, comunidadId, sectorId, periodoId, fechaPlanificada, search, pagination } = params;
 
     const comunidad = await this.routeRepository.findComunidad(comunidadId);
     if (!comunidad) {
@@ -38,19 +40,20 @@ export class GetEligibleReadingsUseCase {
       }
     }
 
-    const { skip, take, page } = getPagination(
-      pagination.page ?? 1,
-      pagination.limit ?? 10,
-    );
+    const page = pagination.page ?? 1;
+    const limit = pagination.limit ?? 10;
+    const { skip, take } = getPagination(page, limit);
 
     return this.routeRepository.paginateLecturas(
       {
         tipoRuta,
         comunidadId,
         sectorId,
+        periodoId,
+        fechaPlanificada,
         search,
       },
-      { skip, take, page },
+      { page, limit, skip, take },
     );
   }
 }

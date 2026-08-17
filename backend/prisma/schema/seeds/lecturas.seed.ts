@@ -1,11 +1,10 @@
-import { PrismaClient, EstadoMedidor } from "src/generated/prisma/client";
-
-export async function seedLecturas(prisma: PrismaClient) {
+export async function seedLecturas(prisma: any) {
     // Un periodo por año (regla de negocio: un periodo anual)
     const periodos = [
         { nombre: '2024', fechaInicio: '2024-01-01', fechaFin: '2024-12-31', vencimiento: '2025-01-15' },
         { nombre: '2025', fechaInicio: '2025-01-01', fechaFin: '2025-12-31', vencimiento: '2026-01-15' },
         { nombre: '2026', fechaInicio: '2026-01-01', fechaFin: '2026-12-31', vencimiento: '2027-01-15' },
+        { nombre: '2027', fechaInicio: '2027-01-01', fechaFin: '2027-12-31', vencimiento: '2028-01-15' },
     ];
 
     // Primero creamos los periodos si no existen para que las lecturas tengan a qué apuntar
@@ -74,7 +73,7 @@ export async function seedLecturas(prisma: PrismaClient) {
                 fechaInstalacion: new Date('2024-01-01'),
                 latitud: finalLat,
                 longitud: finalLng,
-                estado: 'INSTALADO' as EstadoMedidor,
+                estado: 'INSTALADO' as any,
                 createdAt: new Date(),
                 updatedAt: new Date(),
                 deletedAt: null,
@@ -97,15 +96,16 @@ export async function seedLecturas(prisma: PrismaClient) {
         let lecturaAnterior = 0;
 
         for (const pDb of periodosDb) {
+            const año = parseInt(pDb.nombre, 10);
+            
+            // Para años cerrados (2024, 2025): 12 meses históricos aprobados
+            // Para el año actual (2026): histórico aprobado hasta Julio (meses 0 a 6). 
+            // Agosto (mes 7) en adelante queda libre para crear la ruta de trabajo y probar la toma en campo.
+            const maxMeses = (año < 2026) ? 12 : (año === 2026 ? 7 : 0);
 
-            // 12 lecturas mensuales por período (año)
-            const año = parseInt(pDb.nombre, 10); // Usar el nombre del período (e.g. "2024") para evitar timezone offset
-            for (let mes = 0; mes < 12; mes++) {
-                // Usar constructora UTC para evitar rollover de días por timezone
-                // (new Date('2024-01-01') es Dec 31 en Ecuador, causando getFullYear() → 2023)
+            for (let mes = 0; mes < maxMeses; mes++) {
                 const fechaLectura = new Date(Date.UTC(año, mes, 15, 12, 0, 0));
-
-                const consumo = Math.floor(Math.random() * 30) + 5;
+                const consumo = Math.floor(Math.random() * 20) + 10;
                 const lecturaActual = lecturaAnterior + consumo;
 
                 await prisma.lecturas.create({
@@ -117,9 +117,11 @@ export async function seedLecturas(prisma: PrismaClient) {
                         lecturaActual,
                         consumoCalculado: consumo,
                         estado: "APROBADA",
+                        estadoAsignacion: "ASIGNADA",
                         lecturaInicial: lecturaAnterior === 0,
                     },
                 });
+
                 lecturaAnterior = lecturaActual;
             }
         }

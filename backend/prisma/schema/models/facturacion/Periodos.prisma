@@ -7,6 +7,9 @@ model Periodos {
   estado           EstadoPeriodo     @default(ABIERTO) @map("estado")
   createdAt        DateTime          @default(now()) @map("creado_en")
   updatedAt        DateTime          @updatedAt @map("actualizado_en")
+  deletedAt        DateTime?         @map("borrado_en")
+  creadoPor        String?           @map("creado_por")
+  actualizadoPor   String?           @map("actualizado_por")
   lecturas         Lecturas[]
   lotes            Lote[]
   prefacturas      Prefacturas[]

@@ -48,6 +48,19 @@ export class RoutesController {
   ) {}
 
   /**
+   * Obtener periodos disponibles
+   */
+  @ApiOperation({
+    summary: 'Obtener periodos',
+    description: 'Retorna la lista de periodos contables para asignación o filtro de rutas',
+  })
+  @RequiredPermission('routes', 'read')
+  @Get('periods')
+  async getPeriods() {
+    return this.routesService.getPeriodos();
+  }
+
+  /**
    * Obtener lecturas elegibles para crear una ruta
    */
   @ApiOperation({
@@ -102,6 +115,10 @@ export class RoutesController {
   ): Promise<PaginatedResult<RouteResponseDto>> {
     const where: any = {};
     if (query.estado) where.estado = query.estado;
+    if (query.operarioId !== undefined) where.operarioId = query.operarioId;
+    if (query.comunidadId !== undefined) where.comunidadId = query.comunidadId;
+    if (query.periodoId !== undefined) where.periodoId = query.periodoId;
+    if (query.tipoRuta) where.tipoRuta = query.tipoRuta;
 
     const result = await this.routesService.findAll({
       pagination: {

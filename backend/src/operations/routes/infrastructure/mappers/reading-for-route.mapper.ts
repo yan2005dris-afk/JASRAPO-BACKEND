@@ -13,7 +13,12 @@ export interface ReadingHistoryRaw {
 
 export interface ReadingWithRelationsRaw {
   lecturaId: bigint;
+  lecturaAnterior?: any;
+  lecturaActual?: any;
+  consumoCalculado?: any;
+  estado?: string;
   medidor?: {
+    serie?: string;
     historial?: ReadingHistoryRaw[];
   } | null;
 }
@@ -30,6 +35,11 @@ export class ReadingForRouteMapper {
       ? [cliente.nombres, cliente.apellidos].filter(Boolean).join(' ').trim()
       : 'Sin cliente';
 
+    const isPending = lectura.estado === 'PENDIENTE' || Number(lectura.lecturaActual ?? 0) === 0;
+    const rawActual = lectura.lecturaActual !== undefined ? Number(lectura.lecturaActual) : 0;
+    const rawAnterior = lectura.lecturaAnterior !== undefined ? Number(lectura.lecturaAnterior) : 0;
+    const rawConsumo = isPending ? 0 : Math.max(0, rawActual - rawAnterior);
+
     return new ReadingForRouteEntity({
       lecturaId: lectura.lecturaId,
       guia: contrato?.numeroGuia ?? 'Sin guía',
@@ -37,6 +47,11 @@ export class ReadingForRouteMapper {
       direccion: contrato?.direccionSuministro ?? 'Sin dirección',
       sector: contrato?.sector?.nombre ?? 'Sin sector',
       estadoContrato: contrato?.estado ?? 'DESCONOCIDO',
+      medidorSerie: lectura.medidor?.serie ?? undefined,
+      lecturaAnterior: rawAnterior,
+      lecturaActual: isPending ? null as any : rawActual,
+      consumoCalculado: rawConsumo,
+      estadoLectura: lectura.estado ?? undefined,
     });
   }
 

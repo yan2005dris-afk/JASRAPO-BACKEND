@@ -108,6 +108,21 @@ export class ReadingForRouteResponseDto {
   @ApiProperty({ example: 'ACTIVO', description: 'Estado del contrato' })
   estadoContrato: string;
 
+  @ApiPropertyOptional({ example: 'SER-1234', description: 'Serie del medidor' })
+  medidorSerie?: string;
+
+  @ApiPropertyOptional({ example: 120, description: 'Lectura anterior' })
+  lecturaAnterior?: number;
+
+  @ApiPropertyOptional({ example: 145, description: 'Lectura actual' })
+  lecturaActual?: number;
+
+  @ApiPropertyOptional({ example: 25, description: 'Consumo calculado en m3' })
+  consumoCalculado?: number;
+
+  @ApiPropertyOptional({ example: 'PENDIENTE', description: 'Estado de la lectura' })
+  estadoLectura?: string;
+
   static fromEntity(entity: ReadingForRouteEntity): ReadingForRouteResponseDto {
     const dto = new ReadingForRouteResponseDto();
     dto.lecturaId = entity.lecturaId;
@@ -116,6 +131,11 @@ export class ReadingForRouteResponseDto {
     dto.direccion = entity.direccion;
     dto.sector = entity.sector;
     dto.estadoContrato = entity.estadoContrato;
+    dto.medidorSerie = entity.medidorSerie;
+    dto.lecturaAnterior = entity.lecturaAnterior;
+    dto.lecturaActual = entity.lecturaActual;
+    dto.consumoCalculado = entity.consumoCalculado;
+    dto.estadoLectura = entity.estadoLectura;
     return dto;
   }
 

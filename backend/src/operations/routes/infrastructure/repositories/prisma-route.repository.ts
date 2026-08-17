@@ -60,6 +60,9 @@ export class PrismaRouteRepository implements RouteRepository {
       ...(filters.comunidadId !== undefined
         ? { comunidadId: filters.comunidadId }
         : {}),
+      ...(filters.periodoId !== undefined
+        ? { periodoId: filters.periodoId }
+        : {}),
       ...(filters.tipoRuta ? { tipoRuta: filters.tipoRuta as TipoRuta } : {}),
     };
 
@@ -190,6 +193,22 @@ export class PrismaRouteRepository implements RouteRepository {
   async findPeriodo(periodoId: number): Promise<PeriodoRef | null> {
     return this.prisma.periodos.findUnique({
       where: { periodoId },
+      select: {
+        periodoId: true,
+        nombre: true,
+        estado: true,
+      },
+    });
+  }
+
+  async findAllPeriodos(): Promise<PeriodoRef[]> {
+    return this.prisma.periodos.findMany({
+      select: {
+        periodoId: true,
+        nombre: true,
+        estado: true,
+      },
+      orderBy: { fechaInicio: 'desc' },
     });
   }
 
@@ -211,49 +230,92 @@ export class PrismaRouteRepository implements RouteRepository {
     comunidadId: number,
     periodoId: number,
     sectorId?: number,
+    fechaPlanificada?: Date | null,
+    tipoRuta?: string,
   ): Promise<RouteEntity[]> {
     const where: Prisma.RutasWhereInput = {
       comunidadId,
       periodoId,
       deletedAt: null,
+      ...(tipoRuta ? { tipoRuta: tipoRuta as any } : {}),
     };
 
     if (sectorId != null) {
       where.OR = [{ sectorId: null }, { sectorId }];
     }
 
+    if (fechaPlanificada) {
+      const year = fechaPlanificada.getFullYear();
+      const month = fechaPlanificada.getMonth();
+      const startOfMonth = new Date(Date.UTC(year, month, 1, 0, 0, 0, 0));
+      const endOfMonth = new Date(Date.UTC(year, month + 1, 0, 23, 59, 59, 999));
+
+      where.fechaPlanificada = {
+        gte: startOfMonth,
+        lte: endOfMonth,
+      };
+    }
+
     const records = await this.prisma.rutas.findMany({ where });
     return RouteMapper.toEntityList(records);
+  }
+
+  async initializeMonthlyReadings(
+    comunidadId: number,
+    periodoId: number,
+    fechaPlanificada: Date,
+    sectorId?: number | null,
+  ): Promise<number> {
+    const result = await this.prisma.$queryRawUnsafe<any[]>(
+      `SELECT public.inicializar_lecturas_ruta($1, $2, $3, $4) as count`,
+      comunidadId,
+      periodoId,
+      fechaPlanificada,
+      sectorId ?? null,
+    );
+
+    return Number(result[0]?.count ?? 0);
   }
 
   async paginateLecturas(
     criteria: EligibleReadingsCriteria,
     pagination: PaginateOptions,
   ): Promise<PaginatedResult<ReadingForRouteEntity>> {
-    const { tipoRuta, comunidadId, sectorId, search } = criteria;
+    const { tipoRuta, comunidadId, sectorId, periodoId, fechaPlanificada, search } = criteria;
     const estadoContratoEsperado: EstadoContrato =
       tipoRuta === 'TOMA_LECTURA'
         ? EstadoContrato.ACTIVO
         : EstadoContrato.RECONEXION;
 
     const where: Prisma.LecturasWhereInput = {
-      estadoAsignacion: 'NO_ASIGNADA',
-      estado: { in: ['PENDIENTE', 'POR_REVISION'] },
       deletedAt: null,
+      ...(periodoId ? { periodoId } : {}),
       medidor: {
         historial: {
           some: {
             fechaHasta: null,
             contrato: {
-              estado: estadoContratoEsperado,
               comunidadId,
-              ...(sectorId && { sectorId }),
+              ...(sectorId ? { sectorId } : {}),
               deletedAt: null,
             },
           },
         },
       },
     };
+
+    if (fechaPlanificada) {
+      const planDate = new Date(fechaPlanificada);
+      const year = planDate.getUTCFullYear();
+      const month = planDate.getUTCMonth();
+      const startOfMonth = new Date(Date.UTC(year, month, 1, 0, 0, 0, 0));
+      const endOfMonth = new Date(Date.UTC(year, month + 1, 0, 23, 59, 59, 999));
+
+      where.fecha = {
+        gte: startOfMonth,
+        lte: endOfMonth,
+      };
+    }
 
     const q = search?.trim();
     if (q) {

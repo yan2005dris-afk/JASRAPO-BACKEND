@@ -10,12 +10,14 @@ import { FindAllRoutesUseCase } from './use-cases/find-all-routes.use-case';
 import { FindOneRouteUseCase } from './use-cases/find-one-route.use-case';
 import { UpdateRouteUseCase } from './use-cases/update-route.use-case';
 import { DeleteRouteUseCase } from './use-cases/delete-route.use-case';
+import { RouteRepository } from '../domain/repositories/route.repository';
 import type { RouteFilters } from '../domain/types/route.types';
 import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
 
 @Injectable()
 export class RoutesService {
   constructor(
+    private readonly routeRepository: RouteRepository,
     private readonly getEligibleReadingsUseCase: GetEligibleReadingsUseCase,
     private readonly createRouteUseCase: CreateRouteUseCase,
     private readonly findAllRoutesUseCase: FindAllRoutesUseCase,
@@ -31,6 +33,8 @@ export class RoutesService {
       tipoRuta: filterDto.tipoRuta,
       comunidadId: filterDto.comunidadId,
       sectorId: filterDto.sectorId,
+      periodoId: filterDto.periodoId,
+      fechaPlanificada: filterDto.fechaPlanificada,
       search: filterDto.search,
       pagination: {
         page: filterDto.page,
@@ -60,5 +64,9 @@ export class RoutesService {
 
   async delete(id: bigint): Promise<RouteEntity> {
     return this.deleteRouteUseCase.execute(id);
+  }
+
+  async getPeriodos() {
+    return this.routeRepository.findAllPeriodos();
   }
 }

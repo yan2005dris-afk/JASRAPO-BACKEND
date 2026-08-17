@@ -79,9 +79,9 @@ const LEVEL_2: MenuSeedEntry[] = [
     parentNombre: 'Facturación',
   },
   {
-    nombre: 'Envío de Facturación',
+    nombre: 'Lotes de Prefacturas',
     ruta: '/Facturacion/EnvioDeFacturacion',
-    icono: 'send',
+    icono: 'collection',
     parentNombre: 'Facturación',
   },
   {

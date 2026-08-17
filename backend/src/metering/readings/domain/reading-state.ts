@@ -16,10 +16,18 @@ import { EstadoLectura } from 'src/shared/enums';
  * implica que no está permitida y será rechazada por canTransitionReadingState().
  */
 export const READING_STATE_TRANSITIONS: Record<string, string[]> = {
-  [EstadoLectura.PENDIENTE]: [EstadoLectura.POR_REVISION],
+  [EstadoLectura.PENDIENTE]: [
+    EstadoLectura.POR_REVISION,
+    EstadoLectura.APROBADA,
+  ],
   [EstadoLectura.POR_REVISION]: [
     EstadoLectura.APROBADA,
     EstadoLectura.RECHAZADA_VERIFICACION,
+    EstadoLectura.PENDIENTE,
+  ],
+  [EstadoLectura.RECHAZADA_VERIFICACION]: [
+    EstadoLectura.PENDIENTE,
+    EstadoLectura.POR_REVISION,
   ],
 };
 

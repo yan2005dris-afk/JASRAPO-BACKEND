@@ -87,17 +87,23 @@ export class CreateRouteUseCase {
       }
     }
 
-    // Overlap check applies only to periodic community routes
+    // Overlap check applies only to periodic community routes (validating the same month/year planificada)
     if (!isWorkOrder) {
+      const fechaPlan = createDto.fechaPlanificada
+        ? new Date(createDto.fechaPlanificada)
+        : null;
+
       const overlapping = await this.routeRepository.findOverlappingRoutes(
         createDto.comunidadId,
         createDto.periodoId,
         createDto.sectorId,
+        fechaPlan,
+        createDto.tipoRuta,
       );
 
       if (overlapping.length > 0) {
         throw new InvalidDomainOperationException(
-          'Ya existe una ruta para esta comunidad y periodo',
+          'Ya existe una ruta planificada para esta comunidad en el mismo mes y período',
         );
       }
     }
@@ -117,6 +123,18 @@ export class CreateRouteUseCase {
       medidorId: createDto.medidorId,
     };
 
-    return this.routeRepository.create(createData);
+    const route = await this.routeRepository.create(createData);
+
+    // Si es TOMA_LECTURA periódica, inicializar automáticamente las lecturas PENDIENTES para este mes
+    if (createDto.tipoRuta === TipoRuta.TOMA_LECTURA && createDto.fechaPlanificada) {
+      await this.routeRepository.initializeMonthlyReadings(
+        createDto.comunidadId,
+        createDto.periodoId,
+        new Date(createDto.fechaPlanificada),
+        createDto.sectorId,
+      );
+    }
+
+    return route;
   }
 }

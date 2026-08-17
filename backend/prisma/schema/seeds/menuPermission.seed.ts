@@ -101,7 +101,7 @@ const PERMISSION_MAP: MenuPermissionMapping[] = [
     ],
   },
   {
-    menuNombre: 'Envío de Facturación',
+    menuNombre: 'Lotes de Prefacturas',
     permisos: [
       { recurso: 'batches', accion: 'read' },
       { recurso: 'batches', accion: 'create' },

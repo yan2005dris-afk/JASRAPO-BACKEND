@@ -29,6 +29,7 @@ export interface SectorRef {
 
 export interface PeriodoRef {
   periodoId: number;
+  nombre?: string;
   estado: string;
 }
 
@@ -41,6 +42,8 @@ export interface EligibleReadingsCriteria {
   tipoRuta: string;
   comunidadId: number;
   sectorId?: number;
+  periodoId?: number;
+  fechaPlanificada?: Date | string;
   search?: string;
 }
 
@@ -72,13 +75,24 @@ export abstract class RouteRepository {
 
   abstract findPeriodo(periodoId: number): Promise<PeriodoRef | null>;
 
+  abstract findAllPeriodos(): Promise<PeriodoRef[]>;
+
   abstract findMedidor(medidorId: number): Promise<MedidorRef | null>;
 
   abstract findOverlappingRoutes(
     comunidadId: number,
     periodoId: number,
     sectorId?: number,
+    fechaPlanificada?: Date | null,
+    tipoRuta?: string,
   ): Promise<RouteEntity[]>;
+
+  abstract initializeMonthlyReadings(
+    comunidadId: number,
+    periodoId: number,
+    fechaPlanificada: Date,
+    sectorId?: number | null,
+  ): Promise<number>;
 
   abstract paginateLecturas(
     criteria: EligibleReadingsCriteria,

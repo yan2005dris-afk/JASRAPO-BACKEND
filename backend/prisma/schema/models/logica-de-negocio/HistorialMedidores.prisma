@@ -10,6 +10,9 @@ model HistorialMedidores {
   observacion          String?   @map("observacion")
   createdAt            DateTime  @default(now()) @map("creado_en")
   updatedAt            DateTime  @updatedAt @map("actualizado_en")
+  deletedAt            DateTime? @map("borrado_en")
+  creadoPor            String?   @map("creado_por")
+  actualizadoPor        String?   @map("actualizado_por")
   saldoPendienteCambio Decimal?  @default(0) @map("saldo_pendiente_cambio") @db.Decimal
   contrato             Contratos @relation(fields: [contratoId], references: [contratoId])
   medidor              Medidores @relation(fields: [medidorId], references: [medidorId])

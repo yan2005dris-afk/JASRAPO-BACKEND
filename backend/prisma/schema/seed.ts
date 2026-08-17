@@ -16,6 +16,7 @@ import { seedCategoriaTarifa } from './seeds/categoriaTarifa.seed';
 import { seedMedidores } from './seeds/medidores.seed';
 import { seedClientes } from './seeds/clientes.seed';
 import { seedContratos } from './seeds/contratos.seed';
+import { seedPeriodos } from './seeds/periodos.seed';
 import { seedLecturas } from './seeds/lecturas.seed';
 import { seedCatalogoDescuento } from './seeds/catalogoDescuento.seed';
 import { seedFacturacion } from './seeds/facturacion.seed';
@@ -113,6 +114,9 @@ async function main() {
   await seedContratos(prisma);
   console.log('✅ Contratos creados.');
 
+  await seedPeriodos(prisma);
+  console.log('✅ Períodos creados.');
+
   await seedLecturas(prisma);
   console.log('✅ Lecturas creadas.');
 
@@ -153,12 +157,9 @@ async function main() {
   // === PREFACTURAS PARA AGREEMENTS ===
   await seedAgreementsPrefacturas(prisma);
 
-  // === PAGOS Y COMPROBANTES ===
-  await seedPagos(prisma);
-  console.log('✅ Pagos y comprobantes creados.');
-
-  // === RUTAS ===
-  await seedRoutes(prisma);
+  // === RUTAS (Omitidas en seed para permitir crear y probar rutas limpias desde la UI) ===
+  // await seedRoutes(prisma);
+  console.log('✅ Base de datos lista para pruebas de rutas.');
   console.log('✅ Rutas creadas correctamente.');
 
   // === AGREEMENTS ===

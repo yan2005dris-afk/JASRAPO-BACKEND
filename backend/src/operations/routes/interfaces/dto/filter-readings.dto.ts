@@ -38,6 +38,25 @@ export class FilterReadingsDto extends PaginationDto {
   sectorId?: number;
 
   @ApiProperty({
+    description: 'ID del periodo (opcional)',
+    required: false,
+    example: 3,
+  })
+  @IsOptional()
+  @IsNumber()
+  @Type(() => Number)
+  periodoId?: number;
+
+  @ApiProperty({
+    description: 'Fecha planificada de la ruta (YYYY-MM-DD)',
+    required: false,
+    example: '2026-08-15',
+  })
+  @IsOptional()
+  @IsString()
+  fechaPlanificada?: string;
+
+  @ApiProperty({
     description: 'Buscar por número de guía o nombre de cliente',
     required: false,
   })

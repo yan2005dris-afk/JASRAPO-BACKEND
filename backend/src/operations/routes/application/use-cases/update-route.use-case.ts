@@ -6,6 +6,7 @@ import {
   EntityNotFoundException,
   InvalidDomainOperationException,
 } from 'src/shared/domain/exceptions/domain.exception';
+import { canTransitionRouteState } from '../../domain/route-state';
 
 @Injectable()
 export class UpdateRouteUseCase {
@@ -21,6 +22,14 @@ export class UpdateRouteUseCase {
       throw new EntityNotFoundException('Ruta', rutaId.toString());
     }
 
+    if (updateDto.estado !== undefined && updateDto.estado !== ruta.estado) {
+      if (!canTransitionRouteState(ruta.estado, updateDto.estado)) {
+        throw new InvalidDomainOperationException(
+          `No se puede cambiar el estado de la ruta de ${ruta.estado} a ${updateDto.estado}`,
+        );
+      }
+    }
+
     if (updateDto.periodoId !== undefined) {
       const periodo = await this.routeRepository.findPeriodo(
         updateDto.periodoId,
@@ -34,20 +43,28 @@ export class UpdateRouteUseCase {
         throw new InvalidDomainOperationException('El periodo no está abierto');
       }
 
+      const fechaPlan = updateDto.fechaPlanificada
+        ? new Date(updateDto.fechaPlanificada)
+        : ruta.fechaPlanificada
+          ? new Date(ruta.fechaPlanificada)
+          : null;
+
       const overlapping = await this.routeRepository.findOverlappingRoutes(
         ruta.comunidadId,
         updateDto.periodoId,
         ruta.sectorId ?? undefined,
+        fechaPlan,
+        ruta.tipoRuta,
       );
 
       if (overlapping.some((r) => r.rutaId !== rutaId)) {
         throw new InvalidDomainOperationException(
-          'Ya existe una ruta para esta comunidad y periodo',
+          'Ya existe una ruta planificada para esta comunidad en el mismo mes y período',
         );
       }
     }
 
-    return this.routeRepository.update(rutaId, {
+    const payload: any = {
       ...(updateDto.nombre !== undefined && { nombre: updateDto.nombre }),
       ...(updateDto.descripcion !== undefined && {
         descripcion: updateDto.descripcion,
@@ -61,6 +78,14 @@ export class UpdateRouteUseCase {
       ...(updateDto.periodoId !== undefined && {
         periodoId: updateDto.periodoId,
       }),
-    });
+    };
+
+    if (updateDto.estado === 'EN_PROGRESO' && !ruta.fechaInicio) {
+      payload.fechaInicio = new Date();
+    } else if (updateDto.estado === 'COMPLETADA' && !ruta.fechaFin) {
+      payload.fechaFin = new Date();
+    }
+
+    return this.routeRepository.update(rutaId, payload);
   }
 }
