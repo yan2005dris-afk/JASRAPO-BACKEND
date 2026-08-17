@@ -34,6 +34,12 @@ export class DiscountResponseDto {
   })
   rubroId: number | null;
 
+  @ApiPropertyOptional({
+    description: 'Datos del rubro asociado',
+    nullable: true,
+  })
+  rubro?: { rubroId: number; nombre: string; tipoRubro: string; precioUnitario: any } | null;
+
   @ApiProperty({
     example: true,
     description: 'Indica si el descuento está activo',
@@ -55,6 +61,7 @@ export class DiscountResponseDto {
     dto.valor = Number(entity.valor);
     dto.esPorcentaje = entity.esPorcentaje;
     dto.rubroId = entity.rubroId ?? null;
+    dto.rubro = entity.rubro ?? null;
     dto.activo = entity.activo;
     dto.aplicaAutomatico = entity.aplicaAutomatico;
     return dto;

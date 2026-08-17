@@ -46,6 +46,7 @@ export class PrismaDiscountRepository implements DiscountRepository {
     const where = DiscountMapper.toPrismaWhereInput(params.where);
     const records = await this.prisma.catalogoDescuento.findMany({
       where,
+      include: { rubro: true },
       orderBy:
         params.orderBy as Prisma.CatalogoDescuentoOrderByWithRelationInput,
       skip: params.skip,
@@ -62,6 +63,7 @@ export class PrismaDiscountRepository implements DiscountRepository {
   async findUniqueCatalogo(id: number): Promise<DiscountEntity | null> {
     const record = await this.prisma.catalogoDescuento.findUnique({
       where: { id },
+      include: { rubro: true },
     });
     return DiscountMapper.toDomain(record);
   }
@@ -97,7 +99,7 @@ export class PrismaDiscountRepository implements DiscountRepository {
     }
   }
 
-  async findRubros(): Promise<Array<{ rubroId: number; nombre: string; tipoRubro: string; precioUnitario: any }>> {
+  async findRubros(): Promise<Array<{ rubroId: number; nombre: string; tipoRubro: string; precioUnitario: number }>> {
     const records = await this.prisma.rubros.findMany({
       where: { activo: true, deletedAt: null },
       select: {
@@ -108,7 +110,12 @@ export class PrismaDiscountRepository implements DiscountRepository {
       },
       orderBy: { nombre: 'asc' },
     });
-    return records;
+    return records.map((r) => ({
+      rubroId: r.rubroId,
+      nombre: r.nombre,
+      tipoRubro: r.tipoRubro,
+      precioUnitario: Number(r.precioUnitario),
+    }));
   }
 
   async executeTransaction<T>(

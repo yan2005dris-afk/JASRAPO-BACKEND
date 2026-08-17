@@ -13,7 +13,7 @@ import { Decimal } from 'decimal.js';
 
 export class DiscountMapper {
   static toDomain(
-    raw: CatalogoDescuento | null | undefined,
+    raw: (CatalogoDescuento & { rubro?: any }) | null | undefined,
   ): DiscountEntity | null {
     if (!raw) return null;
     return new DiscountEntity({
@@ -25,12 +25,20 @@ export class DiscountMapper {
         raw.valor instanceof Decimal ? raw.valor.toNumber() : Number(raw.valor),
       esPorcentaje: raw.esPorcentaje,
       rubroId: raw.rubroId,
+      rubro: raw.rubro
+        ? {
+            rubroId: raw.rubro.rubroId,
+            nombre: raw.rubro.nombre,
+            tipoRubro: raw.rubro.tipoRubro,
+            precioUnitario: raw.rubro.precioUnitario,
+          }
+        : null,
       activo: raw.activo,
       aplicaAutomatico: raw.aplicaAutomatico,
     });
   }
 
-  static toDomainList(rawList: CatalogoDescuento[]): DiscountEntity[] {
+  static toDomainList(rawList: Array<CatalogoDescuento & { rubro?: any }>): DiscountEntity[] {
     return rawList
       .map((raw) => this.toDomain(raw))
       .filter((e): e is DiscountEntity => e !== null);
