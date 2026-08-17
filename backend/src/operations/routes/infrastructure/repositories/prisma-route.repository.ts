@@ -357,30 +357,48 @@ export class PrismaRouteRepository implements RouteRepository {
       ];
     }
 
-    const result = await paginate<any>(
-      this.prisma.lecturas,
-      {
-        where,
-        include: {
-          medidor: {
-            include: {
-              historial: {
-                where: { fechaHasta: null },
-                include: {
-                  contrato: { include: { cliente: true, sector: true } },
+    const [result, estadoGroups] = await Promise.all([
+      paginate<any>(
+        this.prisma.lecturas,
+        {
+          where,
+          include: {
+            medidor: {
+              include: {
+                historial: {
+                  where: { fechaHasta: null },
+                  include: {
+                    contrato: { include: { cliente: true, sector: true } },
+                  },
                 },
               },
             },
-          },
-        } satisfies Prisma.LecturasInclude,
-        orderBy: [{ medidor: { historial: { _count: 'desc' } } }],
-      },
-      pagination,
+          } satisfies Prisma.LecturasInclude,
+          orderBy: [{ medidor: { historial: { _count: 'desc' } } }],
+        },
+        pagination,
+      ),
+      this.prisma.lecturas.groupBy({
+        by: ['estado'],
+        where,
+        _count: { _all: true },
+      }),
+    ]);
+
+    const countByEstado = new Map<string, number>(
+      estadoGroups.map((g) => [g.estado, g._count._all]),
     );
 
     return {
       data: ReadingForRouteMapper.toEntityList(result.data),
       meta: result.meta,
+      kpis: {
+        total: result.meta.total,
+        aprobadas: countByEstado.get('APROBADA') ?? 0,
+        pendientes: (countByEstado.get('PENDIENTE') ?? 0) + (countByEstado.get('POR_REVISION') ?? 0),
+        conNovedad: countByEstado.get('CON_NOVEDAD') ?? 0,
+        rechazadas: countByEstado.get('RECHAZADA_VERIFICACION') ?? 0,
+      },
     };
   }
 }

@@ -78,6 +78,7 @@ export class RoutesController {
     return {
       data: ReadingForRouteResponseDto.fromEntityList(result.data),
       meta: result.meta,
+      kpis: result.kpis,
     };
   }
 

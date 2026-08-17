@@ -14,7 +14,8 @@ export interface PaginationMeta {
   siguiente: number | null;
 }
 
-export interface PaginatedResult<T> {
+export interface PaginatedResult<T, K = Record<string, any>> {
   data: T[];
   meta: PaginationMeta;
+  kpis?: K;
 }
