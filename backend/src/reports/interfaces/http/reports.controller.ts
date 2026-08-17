@@ -184,9 +184,9 @@ export class ReportsController {
   @Get('clients-list')
   @RequiredPermission('reportes', 'read')
   @ApiOperation({
-    summary: 'Reporte de Listado de Clientes',
+    summary: 'Reporte de Listado de Clientes (estilo configurable)',
     description:
-      'Genera un PDF con todos los clientes, o devuelve los datos crudos en JSON según el header `Accept`. Soporta los mismos filtros que el listado de clientes. Sin paginación — incluye todos los registros que coincidan.',
+      'Genera un PDF con todos los clientes, o devuelve los datos crudos en JSON según el header `Accept`. El estilo (legacy|modern) se resuelve desde sistema_config (`reporte.estilo`).',
   })
   @ApiResponse({
     status: 200,
@@ -205,21 +205,19 @@ export class ReportsController {
       `Generating clients-list — filters: ${JSON.stringify(filters)}`,
     );
     const data = await this.clientsListSpec.fetchData(filters);
-    const buffer = await this.generatePdf.execute('clients-list', data);
-    this.respondWithContentNegotiation(
-      res,
+    const { buffer, filename } = await this.dispatcher.dispatch(
+      'clients-list',
       data,
-      buffer,
-      'clientes-General.pdf',
     );
+    this.respondWithContentNegotiation(res, data, buffer, filename);
   }
 
   @Get('account-statement')
   @RequiredPermission('reportes', 'read')
   @ApiOperation({
-    summary: 'Reporte de Estado de Cuenta',
+    summary: 'Reporte de Estado de Cuenta (estilo configurable)',
     description:
-      'Genera un PDF con el estado de cuenta de un contrato, o devuelve los datos crudos en JSON según el header `Accept`. Filtros opcionales por rango de fechas (fechaDesde/fechaHasta). Por defecto trae los últimos 6 períodos.',
+      'Genera un PDF con el estado de cuenta de un contrato, o devuelve los datos crudos en JSON según el header `Accept`. El estilo (legacy|modern) se resuelve desde sistema_config (`reporte.estilo`).',
   })
   @ApiResponse({
     status: 200,
@@ -238,13 +236,11 @@ export class ReportsController {
       `Generating account-statement — filters: ${JSON.stringify(filters)}`,
     );
     const data = await this.accountStatementSpec.fetchData(filters);
-    const buffer = await this.generatePdf.execute('account-statement', data);
-    this.respondWithContentNegotiation(
-      res,
+    const { buffer, filename } = await this.dispatcher.dispatch(
+      'account-statement',
       data,
-      buffer,
-      'estado-cuenta-General.pdf',
     );
+    this.respondWithContentNegotiation(res, data, buffer, filename);
   }
 
   // ─── Email send endpoints (report-endpoint-send-email) ───────────────────────

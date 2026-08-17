@@ -14,7 +14,9 @@ import { LogContext } from 'src/shared/decorators/log-context.decorator';
 export type ReportKey =
   | 'payments-report'
   | 'connection-history'
-  | 'payment-agreement';
+  | 'payment-agreement'
+  | 'clients-list'
+  | 'account-statement';
 
 /**
  * Style resolved for a given report. Maps 1:1 to the set of pdf-type

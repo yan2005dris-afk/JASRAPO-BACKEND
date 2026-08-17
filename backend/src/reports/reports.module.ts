@@ -13,6 +13,8 @@ import { PaymentsReportLegacyPdfDocumentType } from './pdf/payments-report-legac
 import { PaymentsReportModernPdfDocumentType } from './pdf/payments-report-modern.pdf-type';
 import { createPaymentAgreementPdfDocumentType } from './pdf/factories/payment-agreement.factory';
 import { createConnectionHistoryPdfDocumentType } from './pdf/factories/connection-history.factory';
+import { createClientsListPdfDocumentType } from './pdf/factories/clients-list.factory';
+import { createAccountStatementPdfDocumentType } from './pdf/factories/account-statement.factory';
 import { ReportStyleService } from './application/report-style.service';
 import { ReportStyleDispatcher } from './application/report-style.dispatcher';
 import { SendReportByEmailUseCase } from './application/use-cases/send-report-by-email.use-case';
@@ -49,8 +51,18 @@ export class ReportsModule implements OnModuleInit {
   constructor(private readonly pdfService: PdfService) {}
 
   onModuleInit() {
-    this.pdfService.registerDocumentType(ClientsListPdfDocumentType);
-    this.pdfService.registerDocumentType(AccountStatementPdfDocumentType);
+    this.pdfService.registerDocumentType(
+      createClientsListPdfDocumentType('legacy'),
+    );
+    this.pdfService.registerDocumentType(
+      createClientsListPdfDocumentType('modern'),
+    );
+    this.pdfService.registerDocumentType(
+      createAccountStatementPdfDocumentType('legacy'),
+    );
+    this.pdfService.registerDocumentType(
+      createAccountStatementPdfDocumentType('modern'),
+    );
     this.pdfService.registerDocumentType(
       createPaymentAgreementPdfDocumentType('legacy'),
     );
