@@ -55,6 +55,20 @@ export class PagoValidadoHandler {
         continue;
       }
 
+      // Marcar prefactura vinculada como PAGADA
+      await this.paymentRepository.executeTransaction?.(async (tx: any) => {
+        const prismaClient = tx ?? (this.paymentRepository as any).prisma;
+        await prismaClient.prefacturas.updateMany({
+          where: { comprobanteId, deletedAt: null },
+          data: {
+            estado: 'PAGADA',
+            saldoActual: 0,
+            saldoVencido: 0,
+            abono: totalAbonado,
+          },
+        });
+      });
+
       const outcome = await this.sriDispatcher.tryEmit(comprobanteId);
       this.logger.log(
         `Comprobante ${comprobanteId}: dispatch outcome=${outcome}`,

@@ -44,7 +44,7 @@ export class CreatePaymentUseCase {
             observaciones: dto.observaciones ?? null,
             referenciaBanco: dto.referenciaBanco ?? null,
             comprobanteUrl: dto.comprobanteUrl ?? null,
-            estadoPago: EstadoPago.PENDIENTE,
+            estadoPago: EstadoPago.REGISTRADO,
             creadoPor,
           },
           tx,
@@ -93,6 +93,19 @@ export class CreatePaymentUseCase {
             );
           }
         }
+
+        // Si el pago nace como REGISTRADO (pagos en caja/efectivo), registrar evento outbox pago.validado
+        await this.eventosPendientesRepository.createPending(
+          'pago.validado',
+          {
+            pagoId: pago.pagoId.toString(),
+            estadoPago: EstadoPago.REGISTRADO,
+            creadoPor,
+          },
+          'PAGO',
+          pago.pagoId.toString(),
+          tx as any,
+        );
 
         return pago.pagoId;
       },
