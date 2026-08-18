@@ -27,6 +27,8 @@ import {
   REPORT_EMAIL_STRATEGIES_PROVIDER,
 } from './application/use-cases/send-report-by-email.strategies';
 
+import { OverdueAccountsReportSpec } from './infrastructure/specs/overdue-accounts.report-spec';
+
 @Module({
   imports: [ClientModule, forwardRef(() => AgreementsModule)],
   controllers: [ReportsController],
@@ -35,6 +37,7 @@ import {
     PaymentsReportSpec,
     ConnectionHistoryReportSpec,
     AccountStatementReportSpec,
+    OverdueAccountsReportSpec,
     ReportStyleService,
     ReportStyleDispatcher,
     PaymentsReportEmailStrategy,
