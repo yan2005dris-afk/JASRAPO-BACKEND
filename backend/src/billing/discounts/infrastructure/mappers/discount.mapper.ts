@@ -38,7 +38,9 @@ export class DiscountMapper {
     });
   }
 
-  static toDomainList(rawList: Array<CatalogoDescuento & { rubro?: any }>): DiscountEntity[] {
+  static toDomainList(
+    rawList: Array<CatalogoDescuento & { rubro?: any }>,
+  ): DiscountEntity[] {
     return rawList
       .map((raw) => this.toDomain(raw))
       .filter((e): e is DiscountEntity => e !== null);

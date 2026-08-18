@@ -9,7 +9,12 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
@@ -52,10 +57,14 @@ export class SistemaConfigController {
   @ApiResponse({ status: 404, description: 'Configuración no encontrada' })
   @RequiredPermission('configuraciones', 'read')
   @Get(':clave')
-  async findOne(@Param('clave') clave: string): Promise<SistemaConfigResponseDto> {
+  async findOne(
+    @Param('clave') clave: string,
+  ): Promise<SistemaConfigResponseDto> {
     const record = await this.configService.getRecord(clave);
     if (!record) {
-      throw new NotFoundException(`Configuración con clave "${clave}" no encontrada`);
+      throw new NotFoundException(
+        `Configuración con clave "${clave}" no encontrada`,
+      );
     }
     return record;
   }
@@ -93,7 +102,9 @@ export class SistemaConfigController {
   ): Promise<SistemaConfigResponseDto> {
     const existing = await this.configService.getRecord(clave);
     if (!existing) {
-      throw new NotFoundException(`Configuración con clave "${clave}" no encontrada`);
+      throw new NotFoundException(
+        `Configuración con clave "${clave}" no encontrada`,
+      );
     }
     return this.configService.update(clave, updateDto);
   }
@@ -109,10 +120,14 @@ export class SistemaConfigController {
   @ApiResponse({ status: 404, description: 'Configuración no encontrada' })
   @RequiredPermission('configuraciones', 'delete')
   @Delete(':clave')
-  async delete(@Param('clave') clave: string): Promise<SistemaConfigResponseDto> {
+  async delete(
+    @Param('clave') clave: string,
+  ): Promise<SistemaConfigResponseDto> {
     const existing = await this.configService.getRecord(clave);
     if (!existing) {
-      throw new NotFoundException(`Configuración con clave "${clave}" no encontrada`);
+      throw new NotFoundException(
+        `Configuración con clave "${clave}" no encontrada`,
+      );
     }
     return this.configService.delete(clave);
   }

@@ -46,13 +46,19 @@ export class GenerateBatchUseCase {
       );
     }
 
-    if (ruta.periodoId !== null && Number(ruta.periodoId) !== Number(data.periodoId)) {
+    if (
+      ruta.periodoId !== null &&
+      Number(ruta.periodoId) !== Number(data.periodoId)
+    ) {
       throw new InvalidDomainOperationException(
         'La ruta seleccionada pertenece a un período diferente al indicado.',
       );
     }
 
-    if (data.comunidadId && Number(ruta.comunidadId) !== Number(data.comunidadId)) {
+    if (
+      data.comunidadId &&
+      Number(ruta.comunidadId) !== Number(data.comunidadId)
+    ) {
       throw new InvalidDomainOperationException(
         'La ruta seleccionada pertenece a una comunidad diferente a la indicada.',
       );
@@ -96,7 +102,10 @@ export class GenerateBatchUseCase {
         throw err;
       }
       const rawMessage = err?.message || '';
-      if (rawMessage.includes('uk_lote_comunidad_periodo_mes') || rawMessage.includes('unique constraint')) {
+      if (
+        rawMessage.includes('uk_lote_comunidad_periodo_mes') ||
+        rawMessage.includes('unique constraint')
+      ) {
         throw new InvalidDomainOperationException(
           'Ya existe un lote de prefacturas registrado para esta comunidad y período.',
         );

@@ -31,4 +31,3 @@ import { RubrosModule } from './rubros/rubros.module';
   ],
 })
 export class BillingModule {}
-

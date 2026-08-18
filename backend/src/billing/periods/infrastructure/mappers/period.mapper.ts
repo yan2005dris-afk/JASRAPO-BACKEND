@@ -1,7 +1,4 @@
-import type {
-  Periodos,
-  Prisma,
-} from 'src/generated/prisma/client';
+import type { Periodos, Prisma } from 'src/generated/prisma/client';
 import { EstadoPeriodo } from 'src/generated/prisma/enums';
 import { PeriodEntity } from '../../domain/entities/period.entity';
 import type {
@@ -20,7 +17,7 @@ export class PeriodMapper {
       fechaInicio: raw.fechaInicio,
       fechaFin: raw.fechaFin,
       fechaVencimiento: raw.fechaVencimiento,
-      estado: raw.estado as EstadoPeriodo,
+      estado: raw.estado,
       createdAt: raw.createdAt,
       updatedAt: raw.updatedAt,
     });
@@ -36,7 +33,8 @@ export class PeriodMapper {
     data: CreatePeriodData,
   ): Prisma.PeriodosUncheckedCreateInput {
     const fechaInicio =
-      DateUtil.parseFrontendDate(data.fechaInicio) ?? new Date(data.fechaInicio);
+      DateUtil.parseFrontendDate(data.fechaInicio) ??
+      new Date(data.fechaInicio);
     const fechaFin =
       DateUtil.parseFrontendDate(data.fechaFin) ?? new Date(data.fechaFin);
     const fechaVencimiento =
@@ -48,7 +46,7 @@ export class PeriodMapper {
       fechaInicio,
       fechaFin,
       fechaVencimiento,
-      estado: (data.estado as EstadoPeriodo) ?? EstadoPeriodo.ABIERTO,
+      estado: data.estado ?? EstadoPeriodo.ABIERTO,
     };
   }
 
@@ -75,7 +73,7 @@ export class PeriodMapper {
         new Date(data.fechaVencimiento);
     }
     if (data.estado !== undefined) {
-      input.estado = data.estado as EstadoPeriodo;
+      input.estado = data.estado;
     }
 
     return input;
@@ -88,7 +86,7 @@ export class PeriodMapper {
     const where: Prisma.PeriodosWhereInput = {};
 
     if (filters.estado) {
-      where.estado = filters.estado as EstadoPeriodo;
+      where.estado = filters.estado;
     }
 
     const searchTerm = (filters.search ?? filters.nombre ?? '').trim();
@@ -101,12 +99,12 @@ export class PeriodMapper {
 
     if (filters.fechaInicioDesde || filters.fechaInicioHasta) {
       const gte = filters.fechaInicioDesde
-        ? DateUtil.parseFrontendDate(filters.fechaInicioDesde) ??
-          new Date(filters.fechaInicioDesde)
+        ? (DateUtil.parseFrontendDate(filters.fechaInicioDesde) ??
+          new Date(filters.fechaInicioDesde))
         : undefined;
       const lte = filters.fechaInicioHasta
-        ? DateUtil.parseFrontendDate(filters.fechaInicioHasta) ??
-          new Date(filters.fechaInicioHasta)
+        ? (DateUtil.parseFrontendDate(filters.fechaInicioHasta) ??
+          new Date(filters.fechaInicioHasta))
         : undefined;
 
       where.fechaInicio = {

@@ -9,9 +9,13 @@ export class CreateRubroUseCase {
 
   async execute(data: CreateRubroData): Promise<RubroEntity> {
     if (data.codigoSri?.trim()) {
-      const existing = await this.rubroRepository.findByCodigoSri(data.codigoSri.trim());
+      const existing = await this.rubroRepository.findByCodigoSri(
+        data.codigoSri.trim(),
+      );
       if (existing) {
-        throw new ConflictException(`Ya existe un rubro con el código SRI '${data.codigoSri}'`);
+        throw new ConflictException(
+          `Ya existe un rubro con el código SRI '${data.codigoSri}'`,
+        );
       }
     }
 

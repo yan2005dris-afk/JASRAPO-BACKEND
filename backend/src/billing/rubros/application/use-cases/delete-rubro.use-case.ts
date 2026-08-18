@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { RubroRepository } from '../../domain/repositories/rubro.repository';
 import type { RubroEntity } from '../../domain/entities/rubro.entity';
 
@@ -12,7 +16,8 @@ export class DeleteRubroUseCase {
       throw new NotFoundException(`Rubro con ID ${id} no encontrado`);
     }
 
-    const references = await this.rubroRepository.countPrefacturaDetalleReferences(id);
+    const references =
+      await this.rubroRepository.countPrefacturaDetalleReferences(id);
     if (references > 0) {
       throw new BadRequestException(
         `No se puede eliminar el rubro porque está referenciado en ${references} detalles de prefactura/facturación. Puede desactivarlo en su lugar.`,

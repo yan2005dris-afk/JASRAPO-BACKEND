@@ -132,7 +132,9 @@ export class SistemaConfigRepository {
         where: { clave },
         data: {
           ...(data.valor !== undefined && { valor: data.valor }),
-          ...(data.descripcion !== undefined && { descripcion: data.descripcion }),
+          ...(data.descripcion !== undefined && {
+            descripcion: data.descripcion,
+          }),
         },
       });
     } catch (err) {

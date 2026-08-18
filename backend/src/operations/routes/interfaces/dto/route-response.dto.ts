@@ -108,7 +108,10 @@ export class ReadingForRouteResponseDto {
   @ApiProperty({ example: 'ACTIVO', description: 'Estado del contrato' })
   estadoContrato: string;
 
-  @ApiPropertyOptional({ example: 'SER-1234', description: 'Serie del medidor' })
+  @ApiPropertyOptional({
+    example: 'SER-1234',
+    description: 'Serie del medidor',
+  })
   medidorSerie?: string;
 
   @ApiPropertyOptional({ example: 120, description: 'Lectura anterior' })
@@ -120,7 +123,10 @@ export class ReadingForRouteResponseDto {
   @ApiPropertyOptional({ example: 25, description: 'Consumo calculado en m3' })
   consumoCalculado?: number;
 
-  @ApiPropertyOptional({ example: 'PENDIENTE', description: 'Estado de la lectura' })
+  @ApiPropertyOptional({
+    example: 'PENDIENTE',
+    description: 'Estado de la lectura',
+  })
   estadoLectura?: string;
 
   static fromEntity(entity: ReadingForRouteEntity): ReadingForRouteResponseDto {

@@ -1,11 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import { CreateRubroUseCase } from './use-cases/create-rubro.use-case';
-import { FindAllRubrosUseCase, type FindAllRubrosParams } from './use-cases/find-all-rubros.use-case';
+import {
+  FindAllRubrosUseCase,
+  type FindAllRubrosParams,
+} from './use-cases/find-all-rubros.use-case';
 import { FindOneRubroUseCase } from './use-cases/find-one-rubro.use-case';
 import { UpdateRubroUseCase } from './use-cases/update-rubro.use-case';
 import { DeleteRubroUseCase } from './use-cases/delete-rubro.use-case';
 import { GetTarifasImpuestoUseCase } from './use-cases/get-tarifas-impuesto.use-case';
-import type { CreateRubroData, UpdateRubroData, TarifaImpuestoInfo } from '../domain/types/rubro.types';
+import type {
+  CreateRubroData,
+  UpdateRubroData,
+  TarifaImpuestoInfo,
+} from '../domain/types/rubro.types';
 import type { RubroEntity } from '../domain/entities/rubro.entity';
 import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
 
@@ -24,7 +31,9 @@ export class RubrosService {
     return this.createRubroUseCase.execute(data);
   }
 
-  async findAll(params: FindAllRubrosParams): Promise<PaginatedResult<RubroEntity>> {
+  async findAll(
+    params: FindAllRubrosParams,
+  ): Promise<PaginatedResult<RubroEntity>> {
     return this.findAllRubrosUseCase.execute(params);
   }
 

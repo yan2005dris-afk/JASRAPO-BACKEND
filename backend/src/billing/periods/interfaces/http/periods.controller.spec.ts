@@ -104,7 +104,9 @@ describe('PeriodsController', () => {
         estado: EstadoPeriodo.CERRADO,
       }),
     );
-    const result = await controller.update(1, { estado: EstadoPeriodo.CERRADO });
+    const result = await controller.update(1, {
+      estado: EstadoPeriodo.CERRADO,
+    });
     expect(result.estado).toBe(EstadoPeriodo.CERRADO);
   });
 

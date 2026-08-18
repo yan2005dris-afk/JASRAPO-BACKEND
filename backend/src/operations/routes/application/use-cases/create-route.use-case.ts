@@ -126,7 +126,10 @@ export class CreateRouteUseCase {
     const route = await this.routeRepository.create(createData);
 
     // Si es TOMA_LECTURA periódica, inicializar automáticamente las lecturas PENDIENTES para este mes
-    if (createDto.tipoRuta === TipoRuta.TOMA_LECTURA && createDto.fechaPlanificada) {
+    if (
+      createDto.tipoRuta === TipoRuta.TOMA_LECTURA &&
+      createDto.fechaPlanificada
+    ) {
       await this.routeRepository.initializeMonthlyReadings(
         createDto.comunidadId,
         createDto.periodoId,

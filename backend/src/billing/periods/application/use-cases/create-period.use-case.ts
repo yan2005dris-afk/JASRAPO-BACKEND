@@ -22,7 +22,8 @@ export class CreatePeriodUseCase {
     }
 
     const fechaInicio =
-      DateUtil.parseFrontendDate(data.fechaInicio) ?? new Date(data.fechaInicio);
+      DateUtil.parseFrontendDate(data.fechaInicio) ??
+      new Date(data.fechaInicio);
     const fechaFin =
       DateUtil.parseFrontendDate(data.fechaFin) ?? new Date(data.fechaFin);
     const fechaVencimiento =

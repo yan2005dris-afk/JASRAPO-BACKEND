@@ -11,14 +11,18 @@ export function createAccountStatementPdfDocumentType(
   return {
     type: isLegacy ? 'account-statement-legacy' : 'account-statement-modern',
     name: isLegacy ? 'Estado de Cuenta (Legacy)' : 'Estado de Cuenta (Moderno)',
-    template: isLegacy ? 'account-statement-legacy' : 'account-statement-modern',
+    template: isLegacy
+      ? 'account-statement-legacy'
+      : 'account-statement-modern',
 
     adaptData(raw: Record<string, unknown>): Record<string, unknown> {
       const contrato = raw['contrato'] as Record<string, unknown> | undefined;
       const cliente = contrato?.['cliente'] as
         | Record<string, unknown>
         | undefined;
-      const sector = contrato?.['sector'] as Record<string, unknown> | undefined;
+      const sector = contrato?.['sector'] as
+        | Record<string, unknown>
+        | undefined;
       const categoriaTarifa = contrato?.['categoriaTarifa'] as
         | Record<string, unknown>
         | undefined;
@@ -29,7 +33,9 @@ export function createAccountStatementPdfDocumentType(
         historial?.[0]?.['medidor'] as Record<string, unknown> | undefined
       )?.['serie'] as string | undefined;
 
-      const consumoBase = Number(categoriaTarifa?.['consumoMinimoMensual'] ?? 0);
+      const consumoBase = Number(
+        categoriaTarifa?.['consumoMinimoMensual'] ?? 0,
+      );
       const valorBase = Number(categoriaTarifa?.['valorBase'] ?? 0);
       const valorExcedente = Number(categoriaTarifa?.['valorExcedenteM3'] ?? 0);
 
@@ -39,8 +45,11 @@ export function createAccountStatementPdfDocumentType(
 
       for (const period of periods) {
         const pf = period['prefactura'] as Record<string, unknown> | undefined;
-        const periodo = pf?.['periodoRel'] as Record<string, unknown> | undefined;
-        const lecturas = (period['lecturas'] as Record<string, unknown>[]) ?? [];
+        const periodo = pf?.['periodoRel'] as
+          | Record<string, unknown>
+          | undefined;
+        const lecturas =
+          (period['lecturas'] as Record<string, unknown>[]) ?? [];
 
         const abonoAnual = Number(pf?.['abono'] ?? 0);
 
@@ -87,7 +96,8 @@ export function createAccountStatementPdfDocumentType(
           0,
         );
         const pagosTotal = meses.reduce((acc, m) => acc + Number(m.pagos), 0);
-        const saldoFinal = meses.length > 0 ? Number(meses[meses.length - 1]?.saldo ?? 0) : 0;
+        const saldoFinal =
+          meses.length > 0 ? Number(meses[meses.length - 1]?.saldo ?? 0) : 0;
         totalDeuda += saldoFinal;
 
         years.push({

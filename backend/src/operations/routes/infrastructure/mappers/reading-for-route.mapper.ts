@@ -35,9 +35,15 @@ export class ReadingForRouteMapper {
       ? [cliente.nombres, cliente.apellidos].filter(Boolean).join(' ').trim()
       : 'Sin cliente';
 
-    const isPending = lectura.estado === 'PENDIENTE' || Number(lectura.lecturaActual ?? 0) === 0;
-    const rawActual = lectura.lecturaActual !== undefined ? Number(lectura.lecturaActual) : 0;
-    const rawAnterior = lectura.lecturaAnterior !== undefined ? Number(lectura.lecturaAnterior) : 0;
+    const isPending =
+      lectura.estado === 'PENDIENTE' ||
+      Number(lectura.lecturaActual ?? 0) === 0;
+    const rawActual =
+      lectura.lecturaActual !== undefined ? Number(lectura.lecturaActual) : 0;
+    const rawAnterior =
+      lectura.lecturaAnterior !== undefined
+        ? Number(lectura.lecturaAnterior)
+        : 0;
     const rawConsumo = isPending ? 0 : Math.max(0, rawActual - rawAnterior);
 
     return new ReadingForRouteEntity({
@@ -49,7 +55,7 @@ export class ReadingForRouteMapper {
       estadoContrato: contrato?.estado ?? 'DESCONOCIDO',
       medidorSerie: lectura.medidor?.serie ?? undefined,
       lecturaAnterior: rawAnterior,
-      lecturaActual: isPending ? null as any : rawActual,
+      lecturaActual: isPending ? (null as any) : rawActual,
       consumoCalculado: rawConsumo,
       estadoLectura: lectura.estado ?? undefined,
     });

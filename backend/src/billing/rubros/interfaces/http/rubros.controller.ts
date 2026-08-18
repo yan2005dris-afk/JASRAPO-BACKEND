@@ -84,8 +84,12 @@ export class RubrosController {
       nombre: filterDto.nombre,
       tipoRubro: filterDto.tipoRubro,
       tarifaImpuestoId: filterDto.tarifaImpuestoId,
-      activo: typeof filterDto.activo === 'boolean' ? filterDto.activo : undefined,
-      esAutomatico: typeof filterDto.esAutomatico === 'boolean' ? filterDto.esAutomatico : undefined,
+      activo:
+        typeof filterDto.activo === 'boolean' ? filterDto.activo : undefined,
+      esAutomatico:
+        typeof filterDto.esAutomatico === 'boolean'
+          ? filterDto.esAutomatico
+          : undefined,
     });
   }
 
@@ -145,7 +149,10 @@ export class RubrosController {
     description: 'Rubro eliminado exitosamente',
     type: RubroResponseDto,
   })
-  @ApiResponse({ status: 400, description: 'Rubro referenciado en facturación' })
+  @ApiResponse({
+    status: 400,
+    description: 'Rubro referenciado en facturación',
+  })
   @ApiResponse({ status: 404, description: 'Rubro no encontrado' })
   @RequiredPermission('rubros', 'delete')
   @Delete(':id')

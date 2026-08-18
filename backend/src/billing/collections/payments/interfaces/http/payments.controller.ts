@@ -88,7 +88,10 @@ export class PaymentsController {
     @Body() dto: CreateCobroPuntualDto,
     @CurrentUser() user: any,
   ): Promise<PaymentResponseDto> {
-    const entity = await this.paymentsService.createCobroPuntual(dto, this.getActor(user));
+    const entity = await this.paymentsService.createCobroPuntual(
+      dto,
+      this.getActor(user),
+    );
     return PaymentResponseDto.fromEntity(entity);
   }
 

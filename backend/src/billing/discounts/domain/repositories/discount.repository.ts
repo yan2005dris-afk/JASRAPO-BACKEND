@@ -22,7 +22,14 @@ export abstract class DiscountRepository {
     data: UpdateDiscountData,
   ): Promise<DiscountEntity>;
 
-  abstract findRubros(): Promise<Array<{ rubroId: number; nombre: string; tipoRubro: string; precioUnitario: any }>>;
+  abstract findRubros(): Promise<
+    Array<{
+      rubroId: number;
+      nombre: string;
+      tipoRubro: string;
+      precioUnitario: any;
+    }>
+  >;
 
   abstract executeTransaction<T>(callback: (tx: any) => Promise<T>): Promise<T>;
 }

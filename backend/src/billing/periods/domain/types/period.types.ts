@@ -1,4 +1,4 @@
-import { EstadoPeriodo } from 'src/generated/prisma/enums';
+import type { EstadoPeriodo } from 'src/generated/prisma/enums';
 
 export interface CreatePeriodData {
   nombre: string;

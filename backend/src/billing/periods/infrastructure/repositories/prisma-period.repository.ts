@@ -33,7 +33,11 @@ export class PrismaPeriodRepository implements PeriodRepository {
         error instanceof Prisma.PrismaClientKnownRequestError &&
         error.code === 'P2002'
       ) {
-        throw new EntityAlreadyExistsException('Periodo', 'nombre', data.nombre);
+        throw new EntityAlreadyExistsException(
+          'Periodo',
+          'nombre',
+          data.nombre,
+        );
       }
       throw error;
     }

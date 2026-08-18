@@ -248,7 +248,9 @@ export class PrismaRouteRepository implements RouteRepository {
       const year = fechaPlanificada.getFullYear();
       const month = fechaPlanificada.getMonth();
       const startOfMonth = new Date(Date.UTC(year, month, 1, 0, 0, 0, 0));
-      const endOfMonth = new Date(Date.UTC(year, month + 1, 0, 23, 59, 59, 999));
+      const endOfMonth = new Date(
+        Date.UTC(year, month + 1, 0, 23, 59, 59, 999),
+      );
 
       where.fechaPlanificada = {
         gte: startOfMonth,
@@ -283,7 +285,14 @@ export class PrismaRouteRepository implements RouteRepository {
     criteria: EligibleReadingsCriteria,
     pagination: PaginateOptions,
   ): Promise<PaginatedResult<ReadingForRouteEntity>> {
-    const { tipoRuta, comunidadId, sectorId, periodoId, fechaPlanificada, search } = criteria;
+    const {
+      tipoRuta,
+      comunidadId,
+      sectorId,
+      periodoId,
+      fechaPlanificada,
+      search,
+    } = criteria;
     const estadoContratoEsperado: EstadoContrato =
       tipoRuta === 'TOMA_LECTURA'
         ? EstadoContrato.ACTIVO
@@ -311,7 +320,9 @@ export class PrismaRouteRepository implements RouteRepository {
       const year = planDate.getUTCFullYear();
       const month = planDate.getUTCMonth();
       const startOfMonth = new Date(Date.UTC(year, month, 1, 0, 0, 0, 0));
-      const endOfMonth = new Date(Date.UTC(year, month + 1, 0, 23, 59, 59, 999));
+      const endOfMonth = new Date(
+        Date.UTC(year, month + 1, 0, 23, 59, 59, 999),
+      );
 
       where.fecha = {
         gte: startOfMonth,
@@ -397,7 +408,9 @@ export class PrismaRouteRepository implements RouteRepository {
       kpis: {
         total: result.meta.total,
         aprobadas: countByEstado.get('APROBADA') ?? 0,
-        pendientes: (countByEstado.get('PENDIENTE') ?? 0) + (countByEstado.get('POR_REVISION') ?? 0),
+        pendientes:
+          (countByEstado.get('PENDIENTE') ?? 0) +
+          (countByEstado.get('POR_REVISION') ?? 0),
         conNovedad: countByEstado.get('CON_NOVEDAD') ?? 0,
         rechazadas: countByEstado.get('RECHAZADA_VERIFICACION') ?? 0,
       },

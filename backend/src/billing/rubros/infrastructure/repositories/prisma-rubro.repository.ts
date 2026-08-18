@@ -35,7 +35,11 @@ export class PrismaRubroRepository implements RubroRepository {
         error instanceof Prisma.PrismaClientKnownRequestError &&
         error.code === 'P2002'
       ) {
-        throw new EntityAlreadyExistsException('Rubro', 'codigoSri', data.codigoSri ?? '');
+        throw new EntityAlreadyExistsException(
+          'Rubro',
+          'codigoSri',
+          data.codigoSri ?? '',
+        );
       }
       throw error;
     }

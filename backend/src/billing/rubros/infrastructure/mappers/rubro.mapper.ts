@@ -55,7 +55,9 @@ export class RubroMapper {
       .filter((e): e is RubroEntity => e !== null);
   }
 
-  static toPrismaCreateInput(data: CreateRubroData): Prisma.RubrosUncheckedCreateInput {
+  static toPrismaCreateInput(
+    data: CreateRubroData,
+  ): Prisma.RubrosUncheckedCreateInput {
     return {
       codigoSri: data.codigoSri?.trim() ? data.codigoSri.trim() : null,
       nombre: data.nombre.trim(),
@@ -68,7 +70,9 @@ export class RubroMapper {
     };
   }
 
-  static toPrismaUpdateInput(data: UpdateRubroData): Prisma.RubrosUncheckedUpdateInput {
+  static toPrismaUpdateInput(
+    data: UpdateRubroData,
+  ): Prisma.RubrosUncheckedUpdateInput {
     return {
       ...(data.codigoSri !== undefined
         ? { codigoSri: data.codigoSri?.trim() ? data.codigoSri.trim() : null }
@@ -112,7 +116,9 @@ export class RubroMapper {
     };
   }
 
-  static toTarifaImpuestoInfo(raw: CatalogoTarifasImpuesto): TarifaImpuestoInfo {
+  static toTarifaImpuestoInfo(
+    raw: CatalogoTarifasImpuesto,
+  ): TarifaImpuestoInfo {
     return {
       id: raw.id,
       impuestoId: raw.impuestoId,

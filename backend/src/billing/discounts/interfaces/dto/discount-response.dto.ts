@@ -38,7 +38,12 @@ export class DiscountResponseDto {
     description: 'Datos del rubro asociado',
     nullable: true,
   })
-  rubro?: { rubroId: number; nombre: string; tipoRubro: string; precioUnitario: any } | null;
+  rubro?: {
+    rubroId: number;
+    nombre: string;
+    tipoRubro: string;
+    precioUnitario: any;
+  } | null;
 
   @ApiProperty({
     example: true,

@@ -49,7 +49,9 @@ export class CreateCobroPuntualUseCase {
     }
 
     if (contrato.estado !== 'ACTIVO') {
-      throw new BadRequestException(`El contrato ${dto.contratoId} no está ACTIVO`);
+      throw new BadRequestException(
+        `El contrato ${dto.contratoId} no está ACTIVO`,
+      );
     }
 
     const cliente = contrato.cliente;
@@ -72,7 +74,9 @@ export class CreateCobroPuntualUseCase {
       });
 
       if (!rubro) {
-        throw new NotFoundException(`Rubro ${item.rubroId} no encontrado o inactivo`);
+        throw new NotFoundException(
+          `Rubro ${item.rubroId} no encontrado o inactivo`,
+        );
       }
 
       const cantidad = new Decimal(item.cantidad);
@@ -118,7 +122,9 @@ export class CreateCobroPuntualUseCase {
         });
       }
       if (!periodoActivo) {
-        throw new BadRequestException('No hay períodos configurados en el sistema');
+        throw new BadRequestException(
+          'No hay períodos configurados en el sistema',
+        );
       }
 
       // b. Get first puntosEmision

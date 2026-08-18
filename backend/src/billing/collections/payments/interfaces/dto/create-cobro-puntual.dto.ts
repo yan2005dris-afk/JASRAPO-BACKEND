@@ -29,7 +29,10 @@ export class CobroPuntualItemDto {
   descripcion?: string;
 }
 
-export class CreateCobroPuntualDto extends OmitType(CreatePaymentDto, ['detalle', 'montoTotalRecibido'] as const) {
+export class CreateCobroPuntualDto extends OmitType(CreatePaymentDto, [
+  'detalle',
+  'montoTotalRecibido',
+] as const) {
   @IsString()
   @Matches(/^\d+$/)
   contratoId: string;

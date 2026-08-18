@@ -68,9 +68,9 @@ describe('UpdatePeriodUseCase', () => {
   it('should throw EntityNotFoundException if period does not exist', async () => {
     mockPeriodRepository.findById.mockResolvedValue(null);
 
-    await expect(
-      useCase.execute(99, { nombre: '2026-02' }),
-    ).rejects.toThrow(EntityNotFoundException);
+    await expect(useCase.execute(99, { nombre: '2026-02' })).rejects.toThrow(
+      EntityNotFoundException,
+    );
   });
 
   it('should throw EntityAlreadyExistsException if updated name belongs to another period', async () => {
@@ -82,9 +82,9 @@ describe('UpdatePeriodUseCase', () => {
       }),
     );
 
-    await expect(
-      useCase.execute(1, { nombre: '2026-02' }),
-    ).rejects.toThrow(EntityAlreadyExistsException);
+    await expect(useCase.execute(1, { nombre: '2026-02' })).rejects.toThrow(
+      EntityAlreadyExistsException,
+    );
   });
 
   it('should throw InvalidDomainOperationException if dates are invalid', async () => {

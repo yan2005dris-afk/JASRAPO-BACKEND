@@ -35,7 +35,9 @@ export class DiscountsController {
 
   @Get('rubros')
   @RequiredPermission('discounts', 'read')
-  @ApiOperation({ summary: 'Listar rubros disponibles para asociar a descuentos' })
+  @ApiOperation({
+    summary: 'Listar rubros disponibles para asociar a descuentos',
+  })
   @ApiResponse({
     status: 200,
     description: 'Lista de rubros activos',

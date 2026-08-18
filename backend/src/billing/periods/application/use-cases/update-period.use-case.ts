@@ -28,7 +28,8 @@ export class UpdatePeriodUseCase {
         );
       }
       if (trimmedName !== existing.nombre) {
-        const withSameName = await this.periodRepository.findByName(trimmedName);
+        const withSameName =
+          await this.periodRepository.findByName(trimmedName);
         if (withSameName && withSameName.periodoId !== id) {
           throw new EntityAlreadyExistsException(
             'Periodo',
@@ -42,20 +43,19 @@ export class UpdatePeriodUseCase {
     // Validate dates if any date is being changed
     const effectiveFechaInicio =
       data.fechaInicio !== undefined
-        ? DateUtil.parseFrontendDate(data.fechaInicio) ??
-          new Date(data.fechaInicio)
+        ? (DateUtil.parseFrontendDate(data.fechaInicio) ??
+          new Date(data.fechaInicio))
         : existing.fechaInicio;
 
     const effectiveFechaFin =
       data.fechaFin !== undefined
-        ? DateUtil.parseFrontendDate(data.fechaFin) ??
-          new Date(data.fechaFin)
+        ? (DateUtil.parseFrontendDate(data.fechaFin) ?? new Date(data.fechaFin))
         : existing.fechaFin;
 
     const effectiveFechaVencimiento =
       data.fechaVencimiento !== undefined
-        ? DateUtil.parseFrontendDate(data.fechaVencimiento) ??
-          new Date(data.fechaVencimiento)
+        ? (DateUtil.parseFrontendDate(data.fechaVencimiento) ??
+          new Date(data.fechaVencimiento))
         : existing.fechaVencimiento;
 
     if (isNaN(effectiveFechaInicio.getTime())) {

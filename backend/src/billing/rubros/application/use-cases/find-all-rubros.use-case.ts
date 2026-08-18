@@ -18,7 +18,9 @@ export interface FindAllRubrosParams {
 export class FindAllRubrosUseCase {
   constructor(private readonly rubroRepository: RubroRepository) {}
 
-  async execute(params: FindAllRubrosParams): Promise<PaginatedResult<RubroEntity>> {
+  async execute(
+    params: FindAllRubrosParams,
+  ): Promise<PaginatedResult<RubroEntity>> {
     const page = params.page && params.page > 0 ? params.page : 1;
     const limit = params.limit && params.limit > 0 ? params.limit : 10;
     const skip = (page - 1) * limit;

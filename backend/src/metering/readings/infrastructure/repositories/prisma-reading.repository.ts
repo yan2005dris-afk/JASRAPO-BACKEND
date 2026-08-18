@@ -202,11 +202,16 @@ export class PrismaReadingRepository implements ReadingRepository {
               lecturaId: where.lecturaId,
               tipo: $Enums.TipoAnomalia.OTRO,
               estado: $Enums.EstadoAnomalia.PENDIENTE,
-              observacion: data.descripcionAnomalia || 'Novedad reportada desde ruta de lectura',
+              observacion:
+                data.descripcionAnomalia ||
+                'Novedad reportada desde ruta de lectura',
               fotoUrl: data.fotoUrl || null,
             },
           });
-        } else if (existingAnomaly.estado !== $Enums.EstadoAnomalia.PENDIENTE && existingAnomaly.estado !== $Enums.EstadoAnomalia.EN_REVISION) {
+        } else if (
+          existingAnomaly.estado !== $Enums.EstadoAnomalia.PENDIENTE &&
+          existingAnomaly.estado !== $Enums.EstadoAnomalia.EN_REVISION
+        ) {
           await tx.lecturaAnomalia.update({
             where: { anomaliaId: existingAnomaly.anomaliaId },
             data: { estado: $Enums.EstadoAnomalia.PENDIENTE },

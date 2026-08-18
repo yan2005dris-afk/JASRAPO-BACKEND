@@ -10,24 +10,26 @@ export function createClientsListPdfDocumentType(
 
   return {
     type: isLegacy ? 'clients-list-legacy' : 'clients-list-modern',
-    name: isLegacy ? 'Listado de Clientes (Legacy)' : 'Listado de Clientes (Moderno)',
+    name: isLegacy
+      ? 'Listado de Clientes (Legacy)'
+      : 'Listado de Clientes (Moderno)',
     template: isLegacy ? 'clients-list-legacy' : 'clients-list-modern',
 
     adaptData(raw: Record<string, unknown>): Record<string, unknown> {
-      const clientes = ((raw['clientes'] as Record<string, unknown>[]) ?? []).map(
-        (c) => ({
-          identificacion: c['identificacion'] ?? '',
-          nombre: resolveClientName(c as any),
-          email: c['email'] ?? '—',
-          telefono: c['telefono'] ?? '—',
-          direccion: c['direccionDomicilio'] ?? '—',
-          activo: c['activo'] ? 'Activo' : 'Inactivo',
-          tipoId:
-            (c['tipoIdentificacion'] as Record<string, unknown> | null)?.[
-              'descripcion'
-            ] ?? '—',
-        }),
-      );
+      const clientes = (
+        (raw['clientes'] as Record<string, unknown>[]) ?? []
+      ).map((c) => ({
+        identificacion: c['identificacion'] ?? '',
+        nombre: resolveClientName(c as any),
+        email: c['email'] ?? '—',
+        telefono: c['telefono'] ?? '—',
+        direccion: c['direccionDomicilio'] ?? '—',
+        activo: c['activo'] ? 'Activo' : 'Inactivo',
+        tipoId:
+          (c['tipoIdentificacion'] as Record<string, unknown> | null)?.[
+            'descripcion'
+          ] ?? '—',
+      }));
 
       return {
         reporte: {

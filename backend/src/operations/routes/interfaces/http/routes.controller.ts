@@ -52,7 +52,8 @@ export class RoutesController {
    */
   @ApiOperation({
     summary: 'Obtener periodos',
-    description: 'Retorna la lista de periodos contables para asignación o filtro de rutas',
+    description:
+      'Retorna la lista de periodos contables para asignación o filtro de rutas',
   })
   @RequiredPermission('routes', 'read')
   @Get('periods')

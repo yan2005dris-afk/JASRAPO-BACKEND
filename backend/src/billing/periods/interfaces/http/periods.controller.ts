@@ -49,7 +49,10 @@ export class PeriodsController {
     description: 'Periodo creado exitosamente',
     type: PeriodResponseDto,
   })
-  @ApiResponse({ status: 400, description: 'Datos inválidos o inconsistencia en fechas' })
+  @ApiResponse({
+    status: 400,
+    description: 'Datos inválidos o inconsistencia en fechas',
+  })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({ status: 403, description: 'Sin permiso periodos:create' })
   @ApiResponse({ status: 409, description: 'Periodo con ese nombre ya existe' })
@@ -127,7 +130,10 @@ export class PeriodsController {
     description: 'Periodo actualizado exitosamente',
     type: PeriodResponseDto,
   })
-  @ApiResponse({ status: 400, description: 'Datos inválidos o inconsistencia en fechas' })
+  @ApiResponse({
+    status: 400,
+    description: 'Datos inválidos o inconsistencia en fechas',
+  })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({ status: 403, description: 'Sin permiso periodos:update' })
   @ApiResponse({ status: 404, description: 'Periodo no encontrado' })
@@ -158,7 +164,10 @@ export class PeriodsController {
     description: 'Periodo eliminado exitosamente',
     type: PeriodResponseDto,
   })
-  @ApiResponse({ status: 400, description: 'Periodo tiene dependencias asociadas' })
+  @ApiResponse({
+    status: 400,
+    description: 'Periodo tiene dependencias asociadas',
+  })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({ status: 403, description: 'Sin permiso periodos:delete' })
   @ApiResponse({ status: 404, description: 'Periodo no encontrado' })

@@ -55,7 +55,9 @@ export class SistemaConfigResponseDto {
   @ApiProperty({ example: 'modern' })
   valor!: string;
 
-  @ApiPropertyOptional({ example: 'Estilo global para todos los reportes PDF (legacy|modern)' })
+  @ApiPropertyOptional({
+    example: 'Estilo global para todos los reportes PDF (legacy|modern)',
+  })
   descripcion?: string | null;
 
   @ApiProperty({ example: '2026-08-17T02:46:32.048Z' })

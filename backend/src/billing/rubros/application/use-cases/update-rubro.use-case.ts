@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { RubroRepository } from '../../domain/repositories/rubro.repository';
 import type { UpdateRubroData } from '../../domain/types/rubro.types';
 import type { RubroEntity } from '../../domain/entities/rubro.entity';
@@ -14,7 +18,9 @@ export class UpdateRubroUseCase {
     }
 
     if (data.codigoSri?.trim()) {
-      const codeOwner = await this.rubroRepository.findByCodigoSri(data.codigoSri.trim());
+      const codeOwner = await this.rubroRepository.findByCodigoSri(
+        data.codigoSri.trim(),
+      );
       if (codeOwner && codeOwner.rubroId !== id) {
         throw new ConflictException(
           `Ya existe otro rubro con el código SRI '${data.codigoSri}'`,
