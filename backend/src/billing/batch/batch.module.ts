@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { DatabaseModule } from '../../infrastructure/database/prisma.module';
 import { PreInvoiceModule } from '../pre-invoice/pre-invoice.module';
+import { RoutesModule } from '../../operations/routes/routes.module';
 import { BatchController } from './interfaces/http/batch.controller';
 import { BatchService } from './application/batch.service';
 import { BatchRepository } from './domain/repositories/batch.repository';
@@ -11,7 +12,7 @@ import { FindOneBatchUseCase } from './application/use-cases/find-one-batch.use-
 import { SendBatchEmailsUseCase } from './application/use-cases/send-batch-emails.use-case';
 
 @Module({
-  imports: [DatabaseModule, PreInvoiceModule],
+  imports: [DatabaseModule, PreInvoiceModule, RoutesModule],
   controllers: [BatchController],
   providers: [
     { provide: BatchRepository, useClass: PrismaBatchRepository },

@@ -21,6 +21,7 @@ export class PrismaBatchRepository implements BatchRepository {
   private readonly defaultInclude = {
     comunidad: true,
     periodoRel: true,
+    ruta: true,
   };
 
   async paginate(
@@ -30,6 +31,8 @@ export class PrismaBatchRepository implements BatchRepository {
     const where: Prisma.LoteWhereInput = {
       ...(filters?.comunidadId ? { comunidadId: filters.comunidadId } : {}),
       ...(filters?.periodoId ? { periodoId: filters.periodoId } : {}),
+      ...(filters?.mes ? { mes: filters.mes } : {}),
+      ...(filters?.rutaId ? { rutaId: BigInt(filters.rutaId) } : {}),
       ...(filters?.estado ? { estado: filters.estado as EstadoLote } : {}),
     };
 
@@ -53,6 +56,8 @@ export class PrismaBatchRepository implements BatchRepository {
     const where: Prisma.LoteWhereInput = {
       ...(filters?.comunidadId ? { comunidadId: filters.comunidadId } : {}),
       ...(filters?.periodoId ? { periodoId: filters.periodoId } : {}),
+      ...(filters?.mes ? { mes: filters.mes } : {}),
+      ...(filters?.rutaId ? { rutaId: BigInt(filters.rutaId) } : {}),
       ...(filters?.estado ? { estado: filters.estado as EstadoLote } : {}),
     };
 
@@ -90,11 +95,15 @@ export class PrismaBatchRepository implements BatchRepository {
   }
 
   async generate(data: GenerateBatchData): Promise<bigint | null> {
+    const currentMonth = new Date().getMonth() + 1;
+    const mes = data.mes ?? currentMonth;
     const result = await this.prisma.$queryRawUnsafe<any[]>(
-      `SELECT generar_prefacturas_lote($1, $2, $3) as "loteId"`,
+      `SELECT generar_prefacturas_lote($1, $2, $3, $4, $5) as "loteId"`,
       data.periodoId,
       data.comunidadId ?? null,
       data.creadoPor ?? 'SYSTEM',
+      mes,
+      BigInt(data.rutaId),
     );
 
     const loteId = result[0]?.loteId;

@@ -87,6 +87,18 @@ export class PrismaPreInvoiceRepository implements PreInvoiceRepository {
             },
           }
         : {}),
+      ...(filters.fechaDesde || filters.fechaHasta
+        ? {
+            createdAt: {
+              ...(filters.fechaDesde
+                ? { gte: this.parseDateStart(filters.fechaDesde) }
+                : {}),
+              ...(filters.fechaHasta
+                ? { lte: this.parseDateEnd(filters.fechaHasta) }
+                : {}),
+            },
+          }
+        : {}),
     };
 
     const paginated = await paginate<any>(
@@ -110,6 +122,27 @@ export class PrismaPreInvoiceRepository implements PreInvoiceRepository {
       where: { loteId, deletedAt: null },
       select: { prefacturaId: true },
     });
+  }
+
+  private parseDateStart(value: string): Date {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+      return new Date(value + 'T00:00:00.000');
+    }
+    return date;
+  }
+
+  private parseDateEnd(value: string): Date {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+      return new Date(value + 'T23:59:59.999');
+    }
+    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+      const end = new Date(date.getTime());
+      end.setHours(23, 59, 59, 999);
+      return end;
+    }
+    return date;
   }
 
   async findById(id: number | bigint): Promise<PreInvoiceEntity | null> {

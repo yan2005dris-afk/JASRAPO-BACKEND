@@ -92,6 +92,7 @@ export abstract class RouteRepository {
     periodoId: number,
     fechaPlanificada: Date,
     sectorId?: number | null,
+    rutaId?: bigint | null,
   ): Promise<number>;
 
   abstract paginateLecturas(

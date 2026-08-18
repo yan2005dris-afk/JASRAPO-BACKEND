@@ -64,4 +64,20 @@ export class FindAllPreInvoicesDto extends PaginationDto {
   @IsOptional()
   @IsString()
   identificacion?: string;
+
+  @ApiPropertyOptional({
+    description: 'Filter by creation date from (ISO or yyyy-MM-dd)',
+    example: '2026-08-01',
+  })
+  @IsOptional()
+  @IsString()
+  fechaDesde?: string;
+
+  @ApiPropertyOptional({
+    description: 'Filter by creation date until (ISO or yyyy-MM-dd)',
+    example: '2026-08-31',
+  })
+  @IsOptional()
+  @IsString()
+  fechaHasta?: string;
 }

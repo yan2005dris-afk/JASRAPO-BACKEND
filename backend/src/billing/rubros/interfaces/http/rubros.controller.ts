@@ -84,7 +84,8 @@ export class RubrosController {
       nombre: filterDto.nombre,
       tipoRubro: filterDto.tipoRubro,
       tarifaImpuestoId: filterDto.tarifaImpuestoId,
-      activo: filterDto.activo,
+      activo: typeof filterDto.activo === 'boolean' ? filterDto.activo : undefined,
+      esAutomatico: typeof filterDto.esAutomatico === 'boolean' ? filterDto.esAutomatico : undefined,
     });
   }
 

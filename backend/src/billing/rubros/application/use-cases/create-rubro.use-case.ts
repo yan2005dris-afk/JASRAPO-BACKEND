@@ -22,6 +22,7 @@ export class CreateRubroUseCase {
       descripcion: data.descripcion.trim(),
       precioUnitario: Number(data.precioUnitario),
       activo: data.activo ?? true,
+      esAutomatico: false,
     });
   }
 }

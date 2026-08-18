@@ -11,6 +11,7 @@ export interface FindAllRubrosParams {
   tipoRubro?: string;
   tarifaImpuestoId?: number;
   activo?: boolean;
+  esAutomatico?: boolean;
 }
 
 @Injectable()
@@ -34,6 +35,9 @@ export class FindAllRubrosUseCase {
     }
     if (params.activo !== undefined) {
       where.activo = params.activo;
+    }
+    if (params.esAutomatico !== undefined) {
+      where.esAutomatico = params.esAutomatico;
     }
 
     const [items, total] = await Promise.all([

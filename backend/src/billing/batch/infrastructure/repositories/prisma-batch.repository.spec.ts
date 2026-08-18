@@ -96,16 +96,20 @@ describe('PrismaBatchRepository', () => {
 
       const result = await repository.generate({
         periodoId: 1,
+        mes: 8,
         comunidadId: 2,
+        rutaId: 5,
         creadoPor: 'admin',
       });
 
       expect(result).toBe(BigInt(42));
       expect(prismaMock.$queryRawUnsafe).toHaveBeenCalledWith(
-        'SELECT generar_prefacturas_lote($1, $2, $3) as "loteId"',
+        'SELECT generar_prefacturas_lote($1, $2, $3, $4, $5) as "loteId"',
         1,
         2,
         'admin',
+        8,
+        BigInt(5),
       );
     });
 
@@ -114,6 +118,7 @@ describe('PrismaBatchRepository', () => {
 
       const result = await repository.generate({
         periodoId: 1,
+        rutaId: 5,
       });
 
       expect(result).toBeNull();

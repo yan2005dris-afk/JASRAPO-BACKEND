@@ -132,6 +132,7 @@ export class CreateRouteUseCase {
         createDto.periodoId,
         new Date(createDto.fechaPlanificada),
         createDto.sectorId,
+        route.rutaId,
       );
     }
 

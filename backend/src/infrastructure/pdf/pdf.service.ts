@@ -67,6 +67,11 @@ export class PdfService
       }
     });
     Handlebars.registerHelper('eq', (a: unknown, b: unknown) => a === b);
+    Handlebars.registerHelper('ne', (a: unknown, b: unknown) => a !== b);
+    Handlebars.registerHelper('gt', (a: any, b: any) => Number(a) > Number(b));
+    Handlebars.registerHelper('gte', (a: any, b: any) => Number(a) >= Number(b));
+    Handlebars.registerHelper('lt', (a: any, b: any) => Number(a) < Number(b));
+    Handlebars.registerHelper('lte', (a: any, b: any) => Number(a) <= Number(b));
   }
 
   private registerPartials(): void {

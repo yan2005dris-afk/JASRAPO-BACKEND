@@ -21,6 +21,14 @@ export class BatchMapper {
       notas: raw.notas ?? null,
       creadoPor: raw.creadoPor ?? null,
       totalEmisiones: raw.totalEmisiones ?? 0,
+      mes: raw.mes ?? 1,
+      rutaId: raw.rutaId ? BigInt(raw.rutaId) : null,
+      ruta: raw.ruta
+        ? {
+            rutaId: BigInt(raw.ruta.rutaId),
+            nombre: raw.ruta.nombre ?? null,
+          }
+        : null,
       createdAt: raw.createdAt,
       updatedAt: raw.updatedAt,
       comunidad: raw.comunidad

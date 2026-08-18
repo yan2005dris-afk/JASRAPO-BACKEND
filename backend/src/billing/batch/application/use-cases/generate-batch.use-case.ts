@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { BatchRepository } from '../../domain/repositories/batch.repository';
+import { RouteRepository } from 'src/operations/routes/domain/repositories/route.repository';
 import type {
   GenerateBatchData,
   GenerateBatchResult,
@@ -16,28 +17,67 @@ import {
 export class GenerateBatchUseCase {
   constructor(
     private readonly batchRepository: BatchRepository,
+    private readonly routeRepository: RouteRepository,
     private readonly logger: LoggerService,
   ) {}
 
   async execute(data: GenerateBatchData): Promise<GenerateBatchResult> {
     this.logger.log(`Starting batch generation for period ${data.periodoId}`);
 
-    // 1. Validar si ya existe un lote para este período y comunidad
+    // 0. La generación SIEMPRE sale de una ruta de trabajo de TOMA_LECTURA COMPLETADA
+    const rutaId = BigInt(data.rutaId);
+    const ruta = await this.routeRepository.findById(rutaId);
+
+    if (!ruta) {
+      throw new InvalidDomainOperationException(
+        'La ruta de trabajo seleccionada no existe o fue eliminada.',
+      );
+    }
+
+    if (ruta.tipoRuta !== 'TOMA_LECTURA') {
+      throw new InvalidDomainOperationException(
+        'Solo se pueden generar lotes de prefacturas desde rutas de tipo TOMA_LECTURA.',
+      );
+    }
+
+    if (ruta.estado !== 'COMPLETADA') {
+      throw new InvalidDomainOperationException(
+        'La ruta de trabajo debe estar en estado COMPLETADA para generar el lote de prefacturas.',
+      );
+    }
+
+    if (ruta.periodoId !== null && Number(ruta.periodoId) !== Number(data.periodoId)) {
+      throw new InvalidDomainOperationException(
+        'La ruta seleccionada pertenece a un período diferente al indicado.',
+      );
+    }
+
+    if (data.comunidadId && Number(ruta.comunidadId) !== Number(data.comunidadId)) {
+      throw new InvalidDomainOperationException(
+        'La ruta seleccionada pertenece a una comunidad diferente a la indicada.',
+      );
+    }
+
+    // 1. Validar si ya existe un lote generado desde esta misma ruta
     const existingCount = await this.batchRepository.count({
       periodoId: data.periodoId,
+      mes: data.mes,
+      rutaId,
       ...(data.comunidadId ? { comunidadId: data.comunidadId } : {}),
     });
 
     if (existingCount > 0) {
       throw new InvalidDomainOperationException(
-        'Ya existe un lote de prefacturas generado para este período y comunidad. Revise el listado de lotes para consultar o aprobar.',
+        'Ya existe un lote de prefacturas generado para esta ruta, período, mes y comunidad. Revise el listado de lotes para consultar o aprobar.',
       );
     }
 
     try {
       const loteId = await this.batchRepository.generate({
         periodoId: data.periodoId,
-        comunidadId: data.comunidadId ?? null,
+        mes: data.mes,
+        comunidadId: data.comunidadId ?? ruta.comunidadId,
+        rutaId,
         creadoPor: data.creadoPor ?? 'SYSTEM',
       });
 
@@ -56,7 +96,7 @@ export class GenerateBatchUseCase {
         throw err;
       }
       const rawMessage = err?.message || '';
-      if (rawMessage.includes('uk_lote_comunidad_periodo') || rawMessage.includes('unique constraint')) {
+      if (rawMessage.includes('uk_lote_comunidad_periodo_mes') || rawMessage.includes('unique constraint')) {
         throw new InvalidDomainOperationException(
           'Ya existe un lote de prefacturas registrado para esta comunidad y período.',
         );

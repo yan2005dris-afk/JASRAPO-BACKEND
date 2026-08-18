@@ -1,5 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import { IsBoolean, IsEnum, IsInt, IsOptional, IsString, Min } from 'class-validator';
 import { TipoRubro } from 'src/generated/prisma/client';
 
@@ -31,21 +31,31 @@ export class RubroFilterDto {
 
   @ApiPropertyOptional({
     description: 'Filtrar por estado activo/inactivo',
+    type: Boolean,
     example: true,
   })
   @IsOptional()
-  @Type(() => Boolean)
-  @IsBoolean()
-  activo?: boolean;
+  @Transform(({ value }) => {
+    if (value === '' || value === undefined || value === null) return undefined;
+    if (value === 'true' || value === true) return true;
+    if (value === 'false' || value === false) return false;
+    return undefined;
+  })
+  activo?: boolean | string;
 
   @ApiPropertyOptional({
     description: 'Filtrar por si es automático o manual',
+    type: Boolean,
     example: false,
   })
   @IsOptional()
-  @Type(() => Boolean)
-  @IsBoolean()
-  esAutomatico?: boolean;
+  @Transform(({ value }) => {
+    if (value === '' || value === undefined || value === null) return undefined;
+    if (value === 'true' || value === true) return true;
+    if (value === 'false' || value === false) return false;
+    return undefined;
+  })
+  esAutomatico?: boolean | string;
 
   @ApiPropertyOptional({
     description: 'Número de página',

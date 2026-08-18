@@ -11,30 +11,33 @@ ENV PNPM_CONFIG_PACKAGE_IMPORT_METHOD=copy
 ENV PRISMA_SKIP_POSTINSTALL_GENERATE=true
 # Prevent Puppeteer from downloading Chrome in the builder stage (it runs postinstall)
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
-RUN corepack enable && corepack prepare pnpm@11.1.1 --activate
+RUN corepack enable && corepack prepare pnpm@11.22.0 --activate
 
 WORKDIR /app
 
 # ─── Stage: Builder ───────────────────────────────────────────────────────────
 FROM base AS builder
 
-# pnpm fetch downloads all packages to the virtual store using the lockfile only.
-# This layer is cached as long as pnpm-lock.yaml does not change — subsequent
-# builds with only source changes skip the network entirely.
-COPY pnpm-lock.yaml pnpm-workspace.yaml ./
-RUN pnpm fetch
-
-# Install from local store (offline — no network access)
-COPY package.json ./
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
 COPY backend/package.json ./backend/
-RUN pnpm install --frozen-lockfile --offline
 
-COPY backend/ ./backend/
+# Cache persistente del store de pnpm (BuildKit)
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+    pnpm install --frozen-lockfile
 
-RUN pnpm --filter backend exec prisma generate && pnpm --filter backend run build
+# 1. Copiar primero el esquema, config y scripts para generar Prisma de forma aislada y cacheada
+COPY backend/prisma ./backend/prisma
+COPY backend/scripts ./backend/scripts
+COPY backend/prisma.config.ts backend/tsconfig*.json backend/nest-cli.json ./backend/
+RUN pnpm --filter backend exec prisma generate
 
-# Resolve prod deps from local store into a self-contained dir
-RUN pnpm deploy --filter=backend --prod --legacy /prod/backend
+# 2. Copiar código fuente y compilar el backend
+COPY backend/src ./backend/src
+RUN pnpm --filter backend run build
+
+# 3. Resolver dependencias de producción usando la caché del store
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+    pnpm deploy --filter=backend --prod --legacy /prod/backend
 
 # ─── Stage: Runner (Producción) ───────────────────────────────────────────────
 FROM node:22-alpine AS runner

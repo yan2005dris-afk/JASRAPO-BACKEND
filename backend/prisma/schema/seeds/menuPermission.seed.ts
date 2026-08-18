@@ -92,7 +92,7 @@ const PERMISSION_MAP: MenuPermissionMapping[] = [
     ],
   },
   {
-    menuNombre: 'Generación de Planillas',
+    menuNombre: 'Prefacturas',
     permisos: [
       { recurso: 'pre-invoices', accion: 'read' },
       { recurso: 'pre-invoices', accion: 'create' },
@@ -101,7 +101,7 @@ const PERMISSION_MAP: MenuPermissionMapping[] = [
     ],
   },
   {
-    menuNombre: 'Lotes de Prefacturas',
+    menuNombre: 'Generación de Planillas',
     permisos: [
       { recurso: 'batches', accion: 'read' },
       { recurso: 'batches', accion: 'create' },

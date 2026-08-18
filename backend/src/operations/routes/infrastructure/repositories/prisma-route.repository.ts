@@ -265,13 +265,15 @@ export class PrismaRouteRepository implements RouteRepository {
     periodoId: number,
     fechaPlanificada: Date,
     sectorId?: number | null,
+    rutaId?: bigint | null,
   ): Promise<number> {
     const result = await this.prisma.$queryRawUnsafe<any[]>(
-      `SELECT public.inicializar_lecturas_ruta($1, $2, $3, $4) as count`,
+      `SELECT public.inicializar_lecturas_ruta($1, $2, $3, $4, $5) as count`,
       comunidadId,
       periodoId,
       fechaPlanificada,
       sectorId ?? null,
+      rutaId ?? null,
     );
 
     return Number(result[0]?.count ?? 0);

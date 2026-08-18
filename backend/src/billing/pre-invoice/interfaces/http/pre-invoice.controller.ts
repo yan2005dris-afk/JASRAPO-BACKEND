@@ -91,6 +91,8 @@ export class PreInvoiceController {
         estado: query.estado,
         contratoId: query.contratoId,
         identificacion: query.identificacion,
+        fechaDesde: query.fechaDesde,
+        fechaHasta: query.fechaHasta,
       },
     );
 

@@ -10,6 +10,9 @@ export class BatchEntity {
   notas: string | null;
   creadoPor: string | null;
   totalEmisiones: number;
+  mes: number;
+  rutaId?: bigint | null;
+  ruta?: { rutaId: bigint; nombre?: string | null } | null;
   createdAt: Date;
   updatedAt: Date;
 

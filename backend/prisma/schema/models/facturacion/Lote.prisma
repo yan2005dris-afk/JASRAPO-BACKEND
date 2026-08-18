@@ -17,13 +17,18 @@ model Lote {
   creadoPor      String?       @map("creado_por")
   actualizadoPor String?       @map("actualizado_por")
   totalEmisiones Int           @default(0) @map("total_emisiones")
+  mes            Int           @default(1) @map("mes")
+  rutaId         BigInt?       @map("ruta_id")
   comunidad      Comunidades   @relation(fields: [comunidadId], references: [comunidadId])
   periodoRel     Periodos      @relation(fields: [periodoId], references: [periodoId])
+  ruta           Rutas?        @relation(fields: [rutaId], references: [rutaId], onDelete: SetNull)
   prefacturas    Prefacturas[]
 
-  @@unique([comunidadId, periodoId], name: "uk_lote_comunidad_periodo")
+  @@unique([comunidadId, periodoId, mes], name: "uk_lote_comunidad_periodo_mes")
   @@index([comunidadId])
   @@index([periodoId])
+  @@index([mes])
   @@index([creadoPor])
+  @@index([rutaId])
   @@map("lote")
 }

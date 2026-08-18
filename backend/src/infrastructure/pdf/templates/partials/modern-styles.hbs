@@ -4,10 +4,11 @@
         --brand-light: var(--primary-color-light, #f0fdf4);
         --brand-dark: #166534;
         --brand-accent: #15803d;
-        --text-main: #333;
-        --text-light: var(--text-muted, #666);
+        --text-main: #333333;
+        --text-muted: #64748b;
+        --text-light: var(--text-muted, #666666);
         --text-lighter: #94a3b8;
-        --border-color: #ddd;
+        --border-color: #e2e8f0;
     }
 
     @page {
@@ -31,30 +32,43 @@
         box-sizing: inherit;
     }
 
-    .container {
+    .container, .page-container {
         width: 100%;
         padding: 0 10px;
     }
 
-    /* Header */
+    /* Modern Flex & Table Headers */
     .header {
         display: flex;
         align-items: flex-start;
         justify-content: space-between;
         border-bottom: 3px solid var(--brand-main);
-        padding-bottom: 20px;
-        margin-bottom: 24px;
+        padding-bottom: 16px;
+        margin-bottom: 20px;
+    }
+
+    .header-table {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        border-bottom: 2px solid var(--brand-main);
+        padding-bottom: 14px;
+        margin-bottom: 18px;
     }
 
     .header-left {
         display: flex;
         align-items: center;
-        gap: 20px;
+        gap: 16px;
+    }
+
+    .header-right {
+        text-align: right;
     }
 
     .logo-container {
-        width: 60px;
-        height: 60px;
+        width: 50px;
+        height: 50px;
         flex-shrink: 0;
     }
 
@@ -64,8 +78,32 @@
         object-fit: contain;
     }
 
+    .brand-title {
+        font-size: 18px;
+        font-weight: 800;
+        color: var(--brand-dark);
+        letter-spacing: -0.5px;
+    }
+
+    .brand-subtitle {
+        font-size: 10px;
+        color: var(--brand-accent);
+        font-weight: 600;
+    }
+
+    .report-title-main {
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--brand-dark);
+    }
+
+    .report-meta-text {
+        font-size: 9px;
+        color: var(--text-muted);
+    }
+
     .title {
-        font-size: 22px;
+        font-size: 20px;
         font-weight: 700;
         color: var(--brand-dark);
         letter-spacing: -0.5px;
@@ -91,5 +129,61 @@
     .date-info span {
         font-weight: 600;
         color: var(--brand-main);
+    }
+
+    .total-label-sm {
+        font-size: 9px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-muted);
+        font-weight: 700;
+        margin: 0 0 2px 0;
+    }
+
+    .total-amount-lg {
+        font-size: 22px;
+        font-weight: 800;
+        color: var(--brand-dark);
+        margin: 0;
+    }
+
+    /* Modern Table Styles */
+    .modern-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 12px;
+        font-size: 9px;
+    }
+
+    .modern-table th {
+        background-color: var(--brand-main);
+        color: #ffffff;
+        padding: 7px 8px;
+        text-align: left;
+        font-weight: 700;
+        font-size: 8.5px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border: none;
+    }
+
+    .modern-table td {
+        padding: 6px 8px;
+        border-bottom: 1px solid #f1f5f9;
+        font-size: 9px;
+        color: var(--text-main);
+        vertical-align: middle;
+    }
+
+    .modern-table tr:nth-child(even) td {
+        background-color: #f8fafc;
+    }
+
+    .footer-note {
+        text-align: center;
+        font-size: 8.5px;
+        color: var(--text-lighter);
+        border-top: 1px solid #e2e8f0;
+        padding-top: 10px;
     }
 </style>

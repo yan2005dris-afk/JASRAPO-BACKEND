@@ -35,6 +35,7 @@ model Prefacturas {
   tarifaValorBase       Decimal?            @map("tarifa_valor_base") @db.Decimal(18, 2)
   tarifaValorExcedente  Decimal?            @map("tarifa_valor_excedente") @db.Decimal(18, 2)
   lecturaId             BigInt?             @map("lectura_id")
+  mes                   Int                 @default(1) @map("mes")
   tasaInteresUsada      Decimal             @default(0) @map("tasa_interes_usada") @db.Decimal(18, 4)
   comprobanteId         BigInt?             @unique @map("comprobante_id")
   comprobante           Comprobantes?       @relation(fields: [comprobanteId], references: [id])
@@ -45,8 +46,9 @@ model Prefacturas {
   periodoRel            Periodos            @relation(fields: [periodoId], references: [periodoId], onUpdate: NoAction)
   puntoEmision          PuntosEmision       @relation(fields: [puntoEmisionId], references: [id], onUpdate: NoAction)
 
-  @@unique([contratoId, periodoId])
+  @@unique([contratoId, periodoId, mes], name: "uk_prefacturas_contrato_periodo_mes")
   @@index([periodoId])
+  @@index([mes])
   @@index([contratoId])
   @@index([puntoEmisionId])
   @@map("prefacturas")

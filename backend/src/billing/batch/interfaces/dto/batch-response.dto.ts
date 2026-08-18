@@ -24,6 +24,14 @@ export class BatchPeriodoResponseDto {
   fechaFin?: Date | null;
 }
 
+export class BatchRutaResponseDto {
+  @ApiProperty({ description: 'Work route ID' })
+  rutaId: number;
+
+  @ApiPropertyOptional({ description: 'Work route name' })
+  nombre?: string | null;
+}
+
 export class BatchGenerationResponseDto {
   @ApiProperty({
     description: 'Operation status message',
@@ -60,6 +68,21 @@ export class BatchResponseDto {
   @ApiProperty({ description: 'Total emissions count' })
   totalEmisiones: number;
 
+  @ApiProperty({ description: 'Billing month (1-12)', example: 8 })
+  mes: number;
+
+  @ApiPropertyOptional({
+    description: 'Work route ID that generated the batch',
+    example: 2,
+  })
+  rutaId?: number | null;
+
+  @ApiPropertyOptional({
+    description: 'Work route information',
+    type: BatchRutaResponseDto,
+  })
+  ruta?: BatchRutaResponseDto | null;
+
   @ApiProperty({ description: 'Creation date' })
   createdAt: Date;
 
@@ -89,6 +112,14 @@ export class BatchResponseDto {
     dto.loteId = Number(entity.loteId);
     dto.comunidadId = entity.comunidadId;
     dto.periodoId = entity.periodoId;
+    dto.mes = entity.mes;
+    dto.rutaId = entity.rutaId ? Number(entity.rutaId) : null;
+    dto.ruta = entity.ruta
+      ? {
+          rutaId: Number(entity.ruta.rutaId),
+          nombre: entity.ruta.nombre ?? null,
+        }
+      : null;
     dto.estado = entity.estado;
     dto.totalMonto = Number(entity.totalMonto);
     dto.notas = entity.notas ?? null;

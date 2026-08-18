@@ -23,6 +23,8 @@ export class BatchService {
   async generate(dto: GenerateBatchDto): Promise<GenerateBatchResult> {
     return this.generateUseCase.execute({
       periodoId: dto.periodoId,
+      rutaId: dto.rutaId,
+      mes: dto.mes,
       comunidadId: dto.comunidadId ?? null,
       creadoPor: dto.creadoPor ?? 'SYSTEM',
     });

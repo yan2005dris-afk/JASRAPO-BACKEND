@@ -13,12 +13,16 @@ export interface BatchPeriodoRef {
 export interface BatchFilters {
   comunidadId?: number;
   periodoId?: number;
+  mes?: number;
+  rutaId?: bigint | number;
   estado?: string;
 }
 
 export interface GenerateBatchData {
   periodoId: number;
+  mes?: number;
   comunidadId?: number | null;
+  rutaId: bigint | number;
   creadoPor?: string;
 }
 

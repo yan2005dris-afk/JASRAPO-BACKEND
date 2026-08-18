@@ -73,13 +73,13 @@ const LEVEL_2: MenuSeedEntry[] = [
     parentNombre: 'Facturación',
   },
   {
-    nombre: 'Generación de Planillas',
+    nombre: 'Prefacturas',
     ruta: '/Facturacion/GeneracionPlanilla',
-    icono: 'description',
+    icono: 'receipt_cutoff',
     parentNombre: 'Facturación',
   },
   {
-    nombre: 'Lotes de Prefacturas',
+    nombre: 'Generación de Planillas',
     ruta: '/Facturacion/EnvioDeFacturacion',
     icono: 'collection',
     parentNombre: 'Facturación',
@@ -199,17 +199,17 @@ async function upsertMenu(
   icono: string | null,
   menuPadreId: number | null,
 ): Promise<number> {
-  // Buscar por nombre + ruta: evita colisiones como padre "Contratos"
-  // (ruta /Contratos) e hijo "Contratos" (ruta /Contratos/Contratos).
+  // Buscar por ruta (identificador único del módulo):
+  // permite renombrar el título del menú sin duplicarlo en la base de datos.
   const existing = await prisma.menus.findFirst({
-    where: { nombre, ruta, deletedAt: null },
+    where: { ruta, deletedAt: null },
     select: { menuId: true },
   });
 
   if (existing) {
     await prisma.menus.update({
       where: { menuId: existing.menuId },
-      data: { ruta, icono, menuPadreId, activo: true },
+      data: { nombre, icono, menuPadreId, activo: true },
     });
     return existing.menuId;
   }

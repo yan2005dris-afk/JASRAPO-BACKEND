@@ -23,7 +23,9 @@ model Rutas {
   sector              Sectores?          @relation(fields: [sectorId], references: [sectorId], onDelete: SetNull)
   periodo             Periodos?          @relation(fields: [periodoId], references: [periodoId])
   medidor             Medidores?         @relation(fields: [medidorId], references: [medidorId])
-  
+  lecturas            Lecturas[]
+  lotes               Lote[]
+
   @@index([operarioId])
   @@index([comunidadId])
   @@index([sectorId])

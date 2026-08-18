@@ -4,7 +4,7 @@
   "description": "",
   "author": "",
   "private": true,
-  "packageManager": "pnpm@11.1.1",
+  "packageManager": "pnpm@11.22.0",
   "license": "UNLICENSED",
   "scripts": {
     "prisma:generate": "prisma generate && npm run enums:generate",
