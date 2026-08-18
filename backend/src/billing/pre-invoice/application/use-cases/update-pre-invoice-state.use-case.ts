@@ -70,12 +70,28 @@ export class UpdatePreInvoiceStateUseCase {
         secuencial: '',
         clave_acceso: '',
         fecha_emision: new Date().toISOString().split('T')[0],
+        total_sin_impuestos: Number(preInvoice.subtotal) || 0,
         importe_total: Number(preInvoice.totalPagar) || 0,
         receptor_identificacion: preInvoice.clienteIdentificacion ?? undefined,
         receptor_razon_social: preInvoice.clienteNombre ?? undefined,
         receptor_direccion: preInvoice.clienteDireccion ?? undefined,
         receptor_email: preInvoice.clienteEmail ?? undefined,
       });
+
+      // Populate comprobante_detalles from prefactura detalles
+      if (preInvoice.detalles && preInvoice.detalles.length > 0) {
+        const detallesToCreate = preInvoice.detalles.map((d, index) => ({
+          comprobante_id: comprobante.id,
+          codigo_principal: String(d.rubroId || index + 1),
+          descripcion: d.descripcion || d.rubro?.nombre || 'Rubro',
+          cantidad: Number(d.cantidad) || 1,
+          precio_unitario: Number(d.precioUnitario) || 0,
+          descuento: Number(d.descuento) || 0,
+          precio_total_sin_impuesto: Number(d.subtotal) || 0,
+          orden: index + 1,
+        }));
+        await this.comprobanteRepository.createDetalles(detallesToCreate);
+      }
 
       data.comprobanteId = comprobante.id;
     }
