@@ -136,11 +136,16 @@ export class OverdueAccountsReportSpec implements ReportSpec<OverdueAccountsFilt
     const mayorDeuda = morosos.length > 0 ? morosos[0].saldoPendienteNum : 0;
 
     return {
-      morosos,
-      totalMorosos: morosos.length,
-      totalMorosidad: totalMorosidad.toFixed(2),
-      mayorDeuda: mayorDeuda.toFixed(2),
-      fechaCorte: fechaCorte.toLocaleDateString('es-EC'),
+      data: morosos,
+      meta: {
+        total: morosos.length,
+        fechaCorte: fechaCorte.toLocaleDateString('es-EC'),
+      },
+      kpis: {
+        totalMorosidad: totalMorosidad.toFixed(2),
+        totalMorosos: morosos.length,
+        mayorDeuda: mayorDeuda.toFixed(2),
+      },
     };
   }
 }
