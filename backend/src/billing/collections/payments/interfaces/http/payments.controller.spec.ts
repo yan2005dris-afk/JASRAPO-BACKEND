@@ -1,3 +1,5 @@
+import { RequestMethod } from '@nestjs/common';
+import { METHOD_METADATA, PATH_METADATA } from '@nestjs/common/constants';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { EstadoPago } from 'src/generated/prisma/enums';
@@ -10,6 +12,7 @@ describe('PaymentsController', () => {
   let controller: PaymentsController;
   const service = {
     create: jest.fn(),
+    createCobroPuntual: jest.fn(),
     findAll: jest.fn(),
     findOne: jest.fn(),
     updateState: jest.fn(),
@@ -86,6 +89,38 @@ describe('PaymentsController', () => {
     expect(result.pagoId).toBe('1');
     expect(service.create).toHaveBeenCalledWith(
       expect.any(Object),
+      'admin@jasrapo.com',
+    );
+  });
+
+  it('should expose POST /payments/cobro-puntual', () => {
+    expect(Reflect.getMetadata(PATH_METADATA, PaymentsController)).toBe(
+      'payments',
+    );
+    expect(
+      Reflect.getMetadata(PATH_METADATA, controller.createCobroPuntual),
+    ).toBe('cobro-puntual');
+    expect(
+      Reflect.getMetadata(METHOD_METADATA, controller.createCobroPuntual),
+    ).toBe(RequestMethod.POST);
+  });
+
+  it('should delegate cobro puntual creation with the current user', async () => {
+    const dto = {
+      clienteId: '1',
+      contratoId: '1',
+      fechaPago: '2026-06-18',
+      items: [{ rubroId: 1, cantidad: 1 }],
+    };
+    service.createCobroPuntual.mockResolvedValue(mockPayment);
+
+    const result = await controller.createCobroPuntual(dto, {
+      email: 'admin@jasrapo.com',
+    });
+
+    expect(result.pagoId).toBe('1');
+    expect(service.createCobroPuntual).toHaveBeenCalledWith(
+      dto,
       'admin@jasrapo.com',
     );
   });

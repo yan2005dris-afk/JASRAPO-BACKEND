@@ -6,6 +6,7 @@ import { PrismaPaymentRepository } from './infrastructure/repositories/prisma-pa
 import { PrefacturaQueryRepository } from './domain/repositories/prefactura-query.repository';
 import { PrismaPrefacturaQueryRepository } from './infrastructure/repositories/prisma-prefactura-query.repository';
 import { CreatePaymentUseCase } from './application/use-cases/create-payment.use-case';
+import { CreateCobroPuntualUseCase } from './application/use-cases/create-cobro-puntual.use-case';
 import { FindOnePaymentUseCase } from './application/use-cases/find-one-payment.use-case';
 import { ValidatePaymentUseCase } from './application/use-cases/validate-payment.use-case';
 import { AnnulPaymentUseCase } from './application/use-cases/annul-payment.use-case';
@@ -28,6 +29,7 @@ import { OutboxProcessor } from 'src/shared/outbox/application/outbox.processor'
     },
     PaymentsService,
     CreatePaymentUseCase,
+    CreateCobroPuntualUseCase,
     FindOnePaymentUseCase,
     ValidatePaymentUseCase,
     AnnulPaymentUseCase,

@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { EstadoPago, Banco, TarjetaCredito } from 'src/generated/prisma/enums';
 import { CreatePaymentUseCase } from './use-cases/create-payment.use-case';
+import { CreateCobroPuntualUseCase } from './use-cases/create-cobro-puntual.use-case';
 import { FindOnePaymentUseCase } from './use-cases/find-one-payment.use-case';
 import { ValidatePaymentUseCase } from './use-cases/validate-payment.use-case';
 import { AnnulPaymentUseCase } from './use-cases/annul-payment.use-case';
@@ -19,6 +20,7 @@ import type {
   CreatePaymentDto,
   ApplySaldoFavorDto,
 } from '../interfaces/dto/create-payment.dto';
+import type { CreateCobroPuntualDto } from '../interfaces/dto/create-cobro-puntual.dto';
 import type { PaymentStateResponseDto } from '../interfaces/dto/payment-state-response.dto';
 import type { BankResponseDto } from '../interfaces/dto/bank-response.dto';
 import type { CardBrandResponseDto } from '../interfaces/dto/card-brand-response.dto';
@@ -28,6 +30,7 @@ export class PaymentsService {
   constructor(
     private readonly paymentRepository: PaymentRepository,
     private readonly createUseCase: CreatePaymentUseCase,
+    private readonly createCobroPuntualUseCase: CreateCobroPuntualUseCase,
     private readonly findOneUseCase: FindOnePaymentUseCase,
     private readonly validatePaymentUseCase: ValidatePaymentUseCase,
     private readonly annulPaymentUseCase: AnnulPaymentUseCase,
@@ -40,6 +43,13 @@ export class PaymentsService {
     creadoPor: string,
   ): Promise<PaymentEntity> {
     return this.createUseCase.execute(dto, creadoPor);
+  }
+
+  async createCobroPuntual(
+    dto: CreateCobroPuntualDto,
+    creadoPor: string,
+  ): Promise<PaymentEntity> {
+    return this.createCobroPuntualUseCase.execute(dto, creadoPor);
   }
 
   async findAll(params: {

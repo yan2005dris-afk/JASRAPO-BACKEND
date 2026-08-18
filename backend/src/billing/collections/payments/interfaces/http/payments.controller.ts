@@ -30,6 +30,7 @@ import {
   ApplySaldoFavorDto,
   CreatePaymentDto,
 } from '../dto/create-payment.dto';
+import { CreateCobroPuntualDto } from '../dto/create-cobro-puntual.dto';
 import {
   AnnulPaymentDto,
   UpdatePaymentStateDto,
@@ -69,6 +70,25 @@ export class PaymentsController {
     @CurrentUser() user: any,
   ): Promise<PaymentResponseDto> {
     const entity = await this.paymentsService.create(dto, this.getActor(user));
+    return PaymentResponseDto.fromEntity(entity);
+  }
+
+  @ApiOperation({
+    summary: 'Crear cobro puntual',
+    description: 'Registra un cobro puntual sin prefactura previa.',
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Cobro puntual creado',
+    type: PaymentResponseDto,
+  })
+  @RequiredPermission('payments', 'create')
+  @Post('cobro-puntual')
+  async createCobroPuntual(
+    @Body() dto: CreateCobroPuntualDto,
+    @CurrentUser() user: any,
+  ): Promise<PaymentResponseDto> {
+    const entity = await this.paymentsService.createCobroPuntual(dto, this.getActor(user));
     return PaymentResponseDto.fromEntity(entity);
   }
 
