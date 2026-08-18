@@ -550,18 +550,46 @@ export class PrismaComprobanteRepository extends ComprobanteRepository {
       orderBy: { orden: 'asc' },
     });
 
-    return detalles.map((d) => ({
-      id: d.id,
-      codigo_principal: d.codigoPrincipal,
-      codigo_auxiliar: d.codigoAuxiliar,
-      descripcion: d.descripcion,
-      cantidad: Number(d.cantidad),
-      precio_unitario: Number(d.precioUnitario),
-      descuento: Number(d.descuento),
-      subtotal: d.precioTotalSinImpuesto
-        ? Number(d.precioTotalSinImpuesto)
-        : null,
-    }));
+    if (detalles.length > 0) {
+      return detalles.map((d) => ({
+        id: d.id,
+        codigo_principal: d.codigoPrincipal,
+        codigo_auxiliar: d.codigoAuxiliar,
+        descripcion: d.descripcion,
+        cantidad: Number(d.cantidad),
+        precio_unitario: Number(d.precioUnitario),
+        descuento: Number(d.descuento),
+        subtotal: d.precioTotalSinImpuesto
+          ? Number(d.precioTotalSinImpuesto)
+          : null,
+      }));
+    }
+
+    // Fallback: Si no existen comprobante_detalles, obtener de prefacturas -> prefactura_detalle
+    const prefactura = await this.prisma.prefacturas.findFirst({
+      where: { comprobanteId, deletedAt: null },
+      include: {
+        prefacturaDetalle: {
+          where: { deletedAt: null },
+          include: { rubro: true },
+        },
+      },
+    });
+
+    if (prefactura && prefactura.prefacturaDetalle.length > 0) {
+      return prefactura.prefacturaDetalle.map((pd) => ({
+        id: String(pd.prefacturaDetalleId),
+        codigo_principal: pd.rubro?.codigoSri || String(pd.rubroId),
+        codigo_auxiliar: null,
+        descripcion: pd.descripcion || pd.rubro?.nombre || 'Rubro',
+        cantidad: Number(pd.cantidad),
+        precio_unitario: Number(pd.precioUnitario),
+        descuento: Number(pd.descuento || 0),
+        subtotal: Number(pd.subtotal),
+      }));
+    }
+
+    return [];
   }
 
   async findInfoAdicionalByComprobanteId(
