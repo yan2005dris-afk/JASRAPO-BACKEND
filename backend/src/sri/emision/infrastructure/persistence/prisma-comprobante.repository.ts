@@ -274,6 +274,13 @@ export class PrismaComprobanteRepository extends ComprobanteRepository {
       where.estado = filters.estado;
     }
 
+    // Regla de Facturación Electrónica: Solo mostrar comprobantes independientes (cobros puntuales)
+    // o comprobantes cuya prefactura vinculada esté PAGADA al 100%.
+    where.OR = [
+      { prefactura: null },
+      { prefactura: { estado: 'PAGADA' } },
+    ];
+
     if (filters.fechaDesde || filters.fechaHasta) {
       where.fechaEmision = {
         ...(filters.fechaDesde && { gte: new Date(filters.fechaDesde) }),
