@@ -41,8 +41,8 @@ export class PrismaComprobanteRepository extends ComprobanteRepository {
         tipoComprobante: data.tipo_comprobante,
         ambiente: data.ambiente,
         tipoEmision: data.tipo_emision,
-        secuencial: data.secuencial,
-        claveAcceso: data.clave_acceso,
+        secuencial: data.secuencial || '',
+        claveAcceso: data.clave_acceso ? data.clave_acceso : undefined,
         fechaEmision: data.fecha_emision
           ? new Date(data.fecha_emision)
           : new Date(),
@@ -180,12 +180,47 @@ export class PrismaComprobanteRepository extends ComprobanteRepository {
         emisor: true,
         puntoEmision: { include: { establecimiento: true } },
         xmls: true,
+        prefactura: {
+          include: {
+            contrato: {
+              include: {
+                cliente: true,
+              },
+            },
+          },
+        },
       },
     });
 
     if (!c) return null;
 
     const record = this.mapComprobanteToRecord(c);
+
+    const clientePrefactura = c.prefactura?.contrato?.cliente;
+    const clienteNombre =
+      c.receptorRazonSocial ||
+      [clientePrefactura?.nombres, clientePrefactura?.apellidos]
+        .filter(Boolean)
+        .join(' ') ||
+      clientePrefactura?.razonSocial ||
+      'CONSUMIDOR FINAL';
+
+    const identificacion =
+      c.receptorIdentificacion ||
+      clientePrefactura?.identificacion ||
+      '9999999999999';
+
+    const subtotal = c.totalSinImpuestos
+      ? Number(c.totalSinImpuestos)
+      : c.prefactura?.subtotal
+        ? Number(c.prefactura.subtotal)
+        : null;
+
+    const total = c.importeTotal
+      ? Number(c.importeTotal)
+      : c.prefactura?.totalPagar
+        ? Number(c.prefactura.totalPagar)
+        : null;
 
     return {
       ...record,
@@ -194,10 +229,10 @@ export class PrismaComprobanteRepository extends ComprobanteRepository {
       razon_social_emisor: c.emisor?.razonSocial,
       establecimiento: c.puntoEmision?.establecimiento?.codigo,
       punto_emision: c.puntoEmision?.codigo,
-      subtotal: c.totalSinImpuestos ? Number(c.totalSinImpuestos) : null,
-      total: c.importeTotal ? Number(c.importeTotal) : null,
-      identificacion_comprador: c.receptorIdentificacion,
-      razon_social_comprador: c.receptorRazonSocial,
+      subtotal,
+      total,
+      identificacion_comprador: identificacion,
+      razon_social_comprador: clienteNombre,
       num_autorizacion: c.numeroAutorizacion,
       xml_disponible: c.xmls !== null,
     };
@@ -264,6 +299,15 @@ export class PrismaComprobanteRepository extends ComprobanteRepository {
           emisor: true,
           puntoEmision: { include: { establecimiento: true } },
           xmls: { select: { id: true } },
+          prefactura: {
+            include: {
+              contrato: {
+                include: {
+                  cliente: true,
+                },
+              },
+            },
+          },
         },
         skip: offset,
         take: filters.limit,
@@ -272,29 +316,57 @@ export class PrismaComprobanteRepository extends ComprobanteRepository {
       this.prisma.comprobantes.count({ where }),
     ]);
 
-    const data = rows.map((c) => ({
-      id: c.id.toString(),
-      uuid: c.uuid,
-      emisor_id: c.emisorId,
-      clave_acceso: c.claveAcceso,
-      tipo_comprobante: c.tipoComprobante,
-      ambiente: c.ambiente,
-      fecha_emision: c.fechaEmision,
-      secuencial: c.secuencial,
-      estado: c.estado,
-      fecha_autorizacion: c.fechaAutorizacion,
-      num_autorizacion: c.numeroAutorizacion,
-      subtotal: c.totalSinImpuestos ? Number(c.totalSinImpuestos) : null,
-      total: c.importeTotal ? Number(c.importeTotal) : null,
-      identificacion_comprador: c.receptorIdentificacion,
-      razon_social_comprador: c.receptorRazonSocial,
-      ruc_emisor: c.emisor?.ruc,
-      razon_social_emisor: c.emisor?.razonSocial,
-      establecimiento: c.puntoEmision?.establecimiento?.codigo,
-      punto_emision: c.puntoEmision?.codigo,
-      created_at: c.createdAt,
-      updated_at: c.updatedAt,
-    }));
+    const data = rows.map((c) => {
+      const clientePrefactura = c.prefactura?.contrato?.cliente;
+      const clienteNombre =
+        c.receptorRazonSocial ||
+        [clientePrefactura?.nombres, clientePrefactura?.apellidos]
+          .filter(Boolean)
+          .join(' ') ||
+        clientePrefactura?.razonSocial ||
+        'CONSUMIDOR FINAL';
+
+      const identificacion =
+        c.receptorIdentificacion ||
+        clientePrefactura?.identificacion ||
+        '9999999999999';
+
+      const subtotal = c.totalSinImpuestos
+        ? Number(c.totalSinImpuestos)
+        : c.prefactura?.subtotal
+          ? Number(c.prefactura.subtotal)
+          : null;
+
+      const total = c.importeTotal
+        ? Number(c.importeTotal)
+        : c.prefactura?.totalPagar
+          ? Number(c.prefactura.totalPagar)
+          : null;
+
+      return {
+        id: c.id.toString(),
+        uuid: c.uuid,
+        emisor_id: c.emisorId,
+        clave_acceso: c.claveAcceso,
+        tipo_comprobante: c.tipoComprobante,
+        ambiente: c.ambiente,
+        fecha_emision: c.fechaEmision,
+        secuencial: c.secuencial,
+        estado: c.estado,
+        fecha_autorizacion: c.fechaAutorizacion,
+        num_autorizacion: c.numeroAutorizacion,
+        subtotal,
+        total,
+        identificacion_comprador: identificacion,
+        razon_social_comprador: clienteNombre,
+        ruc_emisor: c.emisor?.ruc,
+        razon_social_emisor: c.emisor?.razonSocial,
+        establecimiento: c.puntoEmision?.establecimiento?.codigo,
+        punto_emision: c.puntoEmision?.codigo,
+        created_at: c.createdAt,
+        updated_at: c.updatedAt,
+      };
+    });
 
     return { data, total };
   }
