@@ -96,9 +96,6 @@ export class PrismaRouteRepository implements RouteRepository {
           periodo: data.periodoId
             ? { connect: { periodoId: data.periodoId } }
             : undefined,
-          medidor: data.medidorId
-            ? { connect: { medidorId: BigInt(data.medidorId) } }
-            : undefined,
           fechaPlanificada: data.fechaPlanificada ?? null,
           estado: (data.estado ?? 'PENDIENTE') as EstadoRuta,
         },

@@ -11,7 +11,6 @@ model Rutas {
   fechaPlanificada    DateTime?          @map("fecha_planificada")
   fechaInicio         DateTime?          @map("fecha_inicio")
   fechaFin            DateTime?          @map("fecha_fin")
-  medidorId           BigInt?            @map("medidor_id")
   orden               Int                @default(0) @map("orden")
   observacion         String?            @map("observacion")
   fechaLimite         DateTime?          @map("fecha_limite")
@@ -32,7 +31,6 @@ model Rutas {
   @@index([estado])
   @@index([tipoRuta])
   @@index([fechaPlanificada])
-  @@index([medidorId])
   @@index([orden])
   @@map("rutas")
 }
