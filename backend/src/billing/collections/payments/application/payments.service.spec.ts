@@ -3,6 +3,7 @@ import { Test } from '@nestjs/testing';
 import { EstadoPago } from 'src/generated/prisma/enums';
 import { PaymentsService } from './payments.service';
 import { CreatePaymentUseCase } from './use-cases/create-payment.use-case';
+import { CreateCobroPuntualUseCase } from './use-cases/create-cobro-puntual.use-case';
 import { FindOnePaymentUseCase } from './use-cases/find-one-payment.use-case';
 import { ValidatePaymentUseCase } from './use-cases/validate-payment.use-case';
 import { AnnulPaymentUseCase } from './use-cases/annul-payment.use-case';
@@ -11,15 +12,18 @@ import { GetDailyCashSummaryUseCase } from './use-cases/get-daily-cash-summary.u
 import { PaymentRepository } from '../domain/repositories/payment.repository';
 import { PaymentEntity } from '../domain/entities/payment.entity';
 import { SaldoFavorEntity } from '../domain/entities/saldo-favor.entity';
+import { StorageService } from 'src/infrastructure/storage/storage.service';
 
 describe('PaymentsService', () => {
   let service: PaymentsService;
   const createUseCase = { execute: jest.fn() };
+  const createCobroPuntualUseCase = { execute: jest.fn() };
   const findOneUseCase = { execute: jest.fn() };
   const validatePaymentUseCase = { execute: jest.fn() };
   const annulPaymentUseCase = { execute: jest.fn() };
   const applySaldoFavorUseCase = { execute: jest.fn() };
   const getDailyCashSummaryUseCase = { execute: jest.fn() };
+  const storageService = { upload: jest.fn(), getUrl: jest.fn() };
   const paymentRepository = {
     paginate: jest.fn(),
     findSaldoFavorByCliente: jest.fn(),
@@ -54,6 +58,10 @@ describe('PaymentsService', () => {
         PaymentsService,
         { provide: PaymentRepository, useValue: paymentRepository },
         { provide: CreatePaymentUseCase, useValue: createUseCase },
+        {
+          provide: CreateCobroPuntualUseCase,
+          useValue: createCobroPuntualUseCase,
+        },
         { provide: FindOnePaymentUseCase, useValue: findOneUseCase },
         { provide: ValidatePaymentUseCase, useValue: validatePaymentUseCase },
         { provide: AnnulPaymentUseCase, useValue: annulPaymentUseCase },
@@ -62,6 +70,7 @@ describe('PaymentsService', () => {
           provide: GetDailyCashSummaryUseCase,
           useValue: getDailyCashSummaryUseCase,
         },
+        { provide: StorageService, useValue: storageService },
       ],
     }).compile();
 

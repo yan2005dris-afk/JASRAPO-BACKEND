@@ -182,6 +182,8 @@ describe('CreateRouteUseCase', () => {
       1,
       1,
       undefined,
+      null,
+      undefined,
     );
   });
 
@@ -227,6 +229,8 @@ describe('CreateRouteUseCase', () => {
       1,
       1,
       2,
+      null,
+      undefined,
     );
   });
 
@@ -274,6 +278,8 @@ describe('CreateRouteUseCase', () => {
       1,
       1,
       3,
+      null,
+      'TOMA_LECTURA',
     );
     expect(mockRouteRepository.create).toHaveBeenCalledWith(
       expect.objectContaining({ sectorId: 3 }),

@@ -35,6 +35,7 @@ describe('PrismaRouteRepository', () => {
     lecturas: {
       findMany: jest.Mock;
       count: jest.Mock;
+      groupBy: jest.Mock;
     };
   };
 
@@ -84,6 +85,7 @@ describe('PrismaRouteRepository', () => {
       lecturas: {
         findMany: jest.fn(),
         count: jest.fn(),
+        groupBy: jest.fn(),
       },
     };
     repository = new PrismaRouteRepository(prisma as unknown as PrismaService);
@@ -303,6 +305,9 @@ describe('PrismaRouteRepository', () => {
 
       prisma.lecturas.findMany.mockResolvedValue([rawLectura]);
       prisma.lecturas.count.mockResolvedValue(1);
+      prisma.lecturas.groupBy.mockResolvedValue([
+        { estado: 'PENDIENTE', _count: { _all: 1 } },
+      ]);
 
       const result = await repository.paginateLecturas(
         {

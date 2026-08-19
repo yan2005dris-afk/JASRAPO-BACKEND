@@ -31,6 +31,7 @@ import { ClientsListReportSpec } from '../../infrastructure/specs/clients-list.r
 import { PaymentsReportSpec } from '../../infrastructure/specs/payments-report.report-spec';
 import { ConnectionHistoryReportSpec } from '../../infrastructure/specs/connection-history.report-spec';
 import { AccountStatementReportSpec } from '../../infrastructure/specs/account-statement.report-spec';
+import { OverdueAccountsReportSpec } from '../../infrastructure/specs/overdue-accounts.report-spec';
 import { GetPaymentAgreementPdfDataUseCase } from '../../../billing/collections/agreements/application/use-cases/get-payment-agreement-pdf-data.use-case';
 import { ReportStyleDispatcher } from '../../application/report-style.dispatcher';
 import { SendReportByEmailUseCase } from '../../application/use-cases/send-report-by-email.use-case';
@@ -87,10 +88,10 @@ describe('ReportsController — class-level auth wiring (REQ-5)', () => {
 });
 
 describe('ReportsController — consolidated endpoints exist (REQ-1/2/3, REQ-9, REQ-10)', () => {
-  it('exposes exactly 5 @Get handlers (3 consolidated + clients-list + account-statement)', () => {
+  it('exposes exactly 6 @Get handlers (5 consolidated + overdue-accounts)', () => {
     // Walk the prototype chain to enumerate `@Get` route paths.
     const paths = collectGetPaths(ReportsController.prototype);
-    expect(paths).toHaveLength(5);
+    expect(paths).toHaveLength(6);
     expect(paths.map((p) => p.toLowerCase())).toEqual(
       expect.arrayContaining([
         'payments-report',
@@ -98,6 +99,7 @@ describe('ReportsController — consolidated endpoints exist (REQ-1/2/3, REQ-9, 
         'payment-agreement',
         'clients-list',
         'account-statement',
+        'overdue-accounts',
       ]),
     );
   });
@@ -219,6 +221,10 @@ describe('ReportsController — handler wiring (REQ-1/2/3 + dispatcher)', () => 
         {
           provide: AccountStatementReportSpec,
           useValue: { fetchData: jest.fn(), type: 'account-statement' },
+        },
+        {
+          provide: OverdueAccountsReportSpec,
+          useValue: { fetchData: jest.fn(), type: 'overdue-accounts' },
         },
         {
           provide: GetPaymentAgreementPdfDataUseCase,
@@ -347,26 +353,31 @@ describe('ReportsController — handler wiring (REQ-1/2/3 + dispatcher)', () => 
     );
   });
 
-  it('clientsListPdf: does NOT route through the dispatcher (untouched)', async () => {
+  it('clientsListPdf: routes through the dispatcher', async () => {
     clientsSpec.fetchData.mockResolvedValue({ clientes: [] });
-    generatePdf.execute.mockResolvedValue(FAKE_PDF);
+    dispatcher.dispatch.mockResolvedValue({
+      buffer: FAKE_PDF,
+      filename: 'clients-list-auto.pdf',
+    });
     const res = mockRes();
 
     await controller.clientsListPdf({}, res);
 
     expect(clientsSpec.fetchData).toHaveBeenCalledWith({});
-    expect(generatePdf.execute).toHaveBeenCalledWith(
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
       'clients-list',
       expect.objectContaining({ clientes: [] }),
     );
-    expect(dispatcher.dispatch).not.toHaveBeenCalled();
   });
 
-  it('accountStatementPdf: does NOT route through the dispatcher (untouched)', async () => {
+  it('accountStatementPdf: routes through the dispatcher', async () => {
     accountSpec.fetchData.mockResolvedValue({
       reporte: { clienteNombre: 'Acme' },
     });
-    generatePdf.execute.mockResolvedValue(FAKE_PDF);
+    dispatcher.dispatch.mockResolvedValue({
+      buffer: FAKE_PDF,
+      filename: 'account-statement-auto.pdf',
+    });
     const res = mockRes();
 
     await controller.accountStatementPdf({ contratoId: '42' }, res);
@@ -374,11 +385,10 @@ describe('ReportsController — handler wiring (REQ-1/2/3 + dispatcher)', () => 
     expect(accountSpec.fetchData).toHaveBeenCalledWith({
       contratoId: '42',
     });
-    expect(generatePdf.execute).toHaveBeenCalledWith(
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
       'account-statement',
       expect.objectContaining({ reporte: expect.any(Object) }),
     );
-    expect(dispatcher.dispatch).not.toHaveBeenCalled();
   });
 });
 
@@ -433,6 +443,10 @@ describe('ReportsController — content negotiation (Accept header)', () => {
         {
           provide: AccountStatementReportSpec,
           useValue: { fetchData: jest.fn(), type: 'account-statement' },
+        },
+        {
+          provide: OverdueAccountsReportSpec,
+          useValue: { fetchData: jest.fn(), type: 'overdue-accounts' },
         },
         {
           provide: GetPaymentAgreementPdfDataUseCase,
@@ -581,7 +595,10 @@ describe('ReportsController — content negotiation (Accept header)', () => {
   it('clientsListPdf: returns PDF only with explicit Accept: application/pdf', async () => {
     const rawData = { clientes: [{ id: 1, nombre: 'Acme' }] };
     clientsSpec.fetchData.mockResolvedValue(rawData);
-    generatePdf.execute.mockResolvedValue(FAKE_PDF);
+    dispatcher.dispatch.mockResolvedValue({
+      buffer: FAKE_PDF,
+      filename: 'clients-list.pdf',
+    });
     const res = mockRes('application/pdf');
 
     await controller.clientsListPdf({}, res);
@@ -677,6 +694,7 @@ describe('ReportsController — POST /email routes (PR 3)', () => {
         { provide: PaymentsReportSpec, useValue: {} },
         { provide: ConnectionHistoryReportSpec, useValue: {} },
         { provide: AccountStatementReportSpec, useValue: {} },
+        { provide: OverdueAccountsReportSpec, useValue: {} },
         {
           provide: GetPaymentAgreementPdfDataUseCase,
           useValue: { execute: jest.fn() },
@@ -803,23 +821,23 @@ describe('ReportsController — POST /email routes (PR 3)', () => {
 // ---------------------------------------------------------------------------
 // PR 4 — PDF-generation timeout integration test.
 // Uses a real SendReportByEmailUseCase wired with a tiny `pdfTimeoutMs` so
-// the test runs in milliseconds, and mocks GeneratePdfUseCase.execute to
+// the test runs in milliseconds, and mocks ReportStyleDispatcher.dispatch to
 // return a promise that never resolves. The use case must convert the
 // underlying TimeoutError into a ServiceUnavailableException (HTTP 503),
 // and the controller must surface it correctly.
 // ---------------------------------------------------------------------------
 describe('ReportsController — PDF generation timeout (PR 4)', () => {
   let slowApp: INestApplication;
-  let slowPdfExecute: jest.Mock;
+  let slowPdfDispatch: jest.Mock;
 
   beforeAll(async () => {
-    slowPdfExecute = jest.fn().mockImplementation(
+    slowPdfDispatch = jest.fn().mockImplementation(
       () => new Promise<Buffer>(() => undefined), // never resolves
     );
 
     const realUseCase = new SendReportByEmailUseCase(
       { sendReport: jest.fn() } as unknown as MailService,
-      { execute: slowPdfExecute } as unknown as GeneratePdfUseCase,
+      { dispatch: slowPdfDispatch } as unknown as ReportStyleDispatcher,
       {
         'payments-report': {
           reportType: 'payments-report',
@@ -842,11 +860,13 @@ describe('ReportsController — PDF generation timeout (PR 4)', () => {
         { provide: LoggerService, useValue: mockLogger },
         { provide: SendReportByEmailUseCase, useValue: realUseCase },
         { provide: PdfService, useValue: {} },
-        { provide: GeneratePdfUseCase, useValue: { execute: slowPdfExecute } },
+        { provide: GeneratePdfUseCase, useValue: {} },
         { provide: ClientsListReportSpec, useValue: {} },
         { provide: PaymentsReportSpec, useValue: {} },
         { provide: ConnectionHistoryReportSpec, useValue: {} },
         { provide: AccountStatementReportSpec, useValue: {} },
+        { provide: OverdueAccountsReportSpec, useValue: {} },
+        { provide: OverdueAccountsReportSpec, useValue: {} },
         {
           provide: GetPaymentAgreementPdfDataUseCase,
           useValue: { execute: jest.fn() },
@@ -874,7 +894,7 @@ describe('ReportsController — PDF generation timeout (PR 4)', () => {
     await slowApp?.close();
   });
 
-  it('returns 503 with "PDF generation timeout" when GeneratePdfUseCase hangs past the timeout', async () => {
+  it('returns 503 with "PDF generation timeout" when ReportStyleDispatcher.dispatch hangs past the timeout', async () => {
     const res = await request(slowApp.getHttpServer())
       .post('/reports/payments-report/email')
       .send({ clienteId: '1' })
@@ -884,7 +904,7 @@ describe('ReportsController — PDF generation timeout (PR 4)', () => {
       message: expect.stringContaining('PDF generation timeout'),
       statusCode: 503,
     });
-    expect(slowPdfExecute).toHaveBeenCalledTimes(1);
+    expect(slowPdfDispatch).toHaveBeenCalledTimes(1);
   });
 });
 

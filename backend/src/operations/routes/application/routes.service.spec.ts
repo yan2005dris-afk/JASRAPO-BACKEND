@@ -7,6 +7,7 @@ import { FindAllRoutesUseCase } from './use-cases/find-all-routes.use-case';
 import { FindOneRouteUseCase } from './use-cases/find-one-route.use-case';
 import { UpdateRouteUseCase } from './use-cases/update-route.use-case';
 import { DeleteRouteUseCase } from './use-cases/delete-route.use-case';
+import { RouteRepository } from '../domain/repositories/route.repository';
 import { RouteEntity } from '../domain/entities/route.entity';
 
 describe('RoutesService', () => {
@@ -37,6 +38,10 @@ describe('RoutesService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         RoutesService,
+        {
+          provide: RouteRepository,
+          useValue: { findAllPeriodos: jest.fn() },
+        },
         {
           provide: GetEligibleReadingsUseCase,
           useValue: { execute: jest.fn() },
