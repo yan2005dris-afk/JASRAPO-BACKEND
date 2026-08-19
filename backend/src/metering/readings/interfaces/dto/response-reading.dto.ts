@@ -109,6 +109,20 @@ export class ResponseReadingDto {
             numeroGuia: activeContrato.numeroGuia,
             direccionSuministro: activeContrato.direccionSuministro,
             estado: activeContrato.estado,
+            sector: activeContrato.sector
+              ? {
+                  nombre: activeContrato.sector.nombre,
+                }
+              : null,
+            cliente: activeContrato.cliente
+              ? {
+                  clienteId: activeContrato.cliente.clienteId.toString(),
+                  nombres: activeContrato.cliente.nombres,
+                  apellidos: activeContrato.cliente.apellidos,
+                  razonSocial: activeContrato.cliente.razonSocial,
+                  identificacion: activeContrato.cliente.identificacion,
+                }
+              : null,
           }
         : null,
       medidor: reading.medidor
