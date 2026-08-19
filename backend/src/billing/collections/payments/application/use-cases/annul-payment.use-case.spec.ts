@@ -2,6 +2,7 @@ import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { EstadoPago } from 'src/generated/prisma/enums';
 import { AnnulPaymentUseCase } from './annul-payment.use-case';
 import type { PaymentRepository } from '../../domain/repositories/payment.repository';
+import type { EventosPendientesRepository } from 'src/shared/outbox/domain/repositories/eventos-pendientes.repository';
 import { PaymentEntity } from '../../domain/entities/payment.entity';
 import { PaymentDetailEntity } from '../../domain/entities/payment-detail.entity';
 
@@ -15,7 +16,12 @@ describe('AnnulPaymentUseCase', () => {
     updateCuotaConvenioRevert: jest.fn(),
     annulPagoTransaction: jest.fn(),
   } as unknown as jest.Mocked<PaymentRepository>;
-  const useCase = new AnnulPaymentUseCase(repository);
+
+  const outboxRepo = {
+    createPending: jest.fn().mockResolvedValue({}),
+  } as unknown as jest.Mocked<EventosPendientesRepository>;
+
+  const useCase = new AnnulPaymentUseCase(repository, outboxRepo);
 
   beforeEach(() => jest.clearAllMocks());
 

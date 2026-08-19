@@ -5,6 +5,8 @@ import { RegisterUseCase } from './use-cases/register.use-case';
 import { LogoutUseCase } from './use-cases/logout.use-case';
 import { LoginUseCase } from './use-cases/login.use-case';
 import { RefreshAccessTokenUseCase } from './use-cases/refresh-access-token.use-case';
+import { UnlockUserAccountUseCase } from './use-cases/unlock-user-account.use-case';
+import { UnlockAccountDto } from '../interfaces/dto/unlock-account.dto';
 
 @Injectable()
 export class AuthService {
@@ -13,10 +15,15 @@ export class AuthService {
     private readonly logoutUseCase: LogoutUseCase,
     private readonly loginUseCase: LoginUseCase,
     private readonly refreshUseCase: RefreshAccessTokenUseCase,
+    private readonly unlockUserAccountUseCase: UnlockUserAccountUseCase,
   ) {}
 
   async register(registerDto: RegisterDto) {
     return this.registerUseCase.execute(registerDto);
+  }
+
+  async unlockAccount(dto: UnlockAccountDto, adminUsuarioId: number) {
+    return this.unlockUserAccountUseCase.execute(dto, adminUsuarioId);
   }
 
   async login(loginUserDto: LoginUserDto, ip?: string, userAgent?: string) {

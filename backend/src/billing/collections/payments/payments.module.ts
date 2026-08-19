@@ -14,12 +14,14 @@ import { ApplySaldoFavorUseCase } from './application/use-cases/apply-saldo-favo
 import { GetDailyCashSummaryUseCase } from './application/use-cases/get-daily-cash-summary.use-case';
 import { PagoValidadoHandler } from './application/handlers/pago-validado.handler';
 import { CuotaPagadaHandler } from './application/handlers/cuota-pagada.handler';
+import { PagoAnuladoHandler } from './application/handlers/pago-anulado.handler';
 import { JobsService } from '../../../infrastructure/jobs/jobs.service';
 import { OutboxModule } from 'src/shared/outbox/outbox.module';
 import { OutboxProcessor } from 'src/shared/outbox/application/outbox.processor';
+import { EmisionModule } from 'src/sri/emision/emision.module';
 
 @Module({
-  imports: [OutboxModule],
+  imports: [OutboxModule, EmisionModule],
   controllers: [PaymentsController],
   providers: [
     { provide: PaymentRepository, useClass: PrismaPaymentRepository },
@@ -37,6 +39,7 @@ import { OutboxProcessor } from 'src/shared/outbox/application/outbox.processor'
     GetDailyCashSummaryUseCase,
     PagoValidadoHandler,
     CuotaPagadaHandler,
+    PagoAnuladoHandler,
     { provide: 'JobService', useExisting: JobsService },
   ],
   exports: [PaymentRepository, PaymentsService],
@@ -46,6 +49,7 @@ export class PaymentsModule implements OnModuleInit {
     private readonly outboxProcessor: OutboxProcessor,
     private readonly pagoValidadoHandler: PagoValidadoHandler,
     private readonly cuotaPagadaHandler: CuotaPagadaHandler,
+    private readonly pagoAnuladoHandler: PagoAnuladoHandler,
   ) {}
 
   onModuleInit(): void {
@@ -59,6 +63,12 @@ export class PaymentsModule implements OnModuleInit {
         evento.payload['cuotaConvenioId'] as string,
       );
       await this.cuotaPagadaHandler.procesarCuotaPagada(cuotaConvenioId);
+    });
+
+    this.outboxProcessor.registerHandler('pago.anulado', async (evento) => {
+      const pagoId = BigInt(evento.payload['pagoId'] as string);
+      const motivo = (evento.payload['motivoAnulacion'] as string) || '';
+      await this.pagoAnuladoHandler.procesarPagoAnulado(pagoId, motivo);
     });
   }
 }

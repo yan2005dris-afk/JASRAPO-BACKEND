@@ -32,6 +32,8 @@ import { CatalogoValidatorService } from './infrastructure/xml/catalogo-validato
 import { IdentificacionValidatorService } from './infrastructure/xml/identificacion-validator.service';
 import { SriEmisionProcessor } from './infrastructure/queue/processors/sri-emision.processor';
 
+import { SriReconciliationService } from './application/services/sri-reconciliation.service';
+
 // Repositories
 import { ComprobanteRepository } from './domain/repositories/comprobante.repository';
 import { SecuencialRepository } from './domain/repositories/secuencial.repository';
@@ -76,6 +78,7 @@ import { JobsService } from '../../infrastructure/jobs/jobs.service';
     CatalogoValidatorService,
     IdentificacionValidatorService,
     SriEmisionProcessor,
+    SriReconciliationService,
     { provide: 'JobService', useExisting: JobsService },
     {
       provide: ComprobanteRepository,
