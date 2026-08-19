@@ -12,6 +12,7 @@ import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.
 import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
 import { CurrentUser } from 'src/identity/auth/interfaces/http/decorators/current-user.decorator';
+import type { JwtPayload } from 'src/identity/auth/application/types/jwt.types';
 import { PrismaCashSessionRepository } from '../../infrastructure/repositories/prisma-cash-session.repository';
 import {
   OpenCashSessionDto,
@@ -31,16 +32,20 @@ export class CashSessionsController {
   @Get('current')
   @RequiredPermission('payments', 'read')
   @ApiOperation({ summary: 'Obtiene la sesión de caja activa del usuario' })
-  async getCurrent(@CurrentUser() user: any) {
-    const email = user?.email || user?.username;
+  async getCurrent(@CurrentUser() user?: JwtPayload) {
+    const email = user?.email || (user?.sub ? `user_${user.sub}` : undefined);
     return this.cashSessionRepository.getCurrentSession(email);
   }
 
   @Post('open')
   @RequiredPermission('payments', 'create')
   @ApiOperation({ summary: 'Abre una nueva sesión de caja diaria' })
-  async open(@Body() dto: OpenCashSessionDto, @CurrentUser() user: any) {
-    const email = user?.email || user?.username || 'admin@jasrapo.com';
+  async open(
+    @Body() dto: OpenCashSessionDto,
+    @CurrentUser() user?: JwtPayload,
+  ) {
+    const email =
+      user?.email || (user?.sub ? `user_${user.sub}` : 'admin@jasrapo.com');
     return this.cashSessionRepository.openSession(dto, email);
   }
 
@@ -52,9 +57,10 @@ export class CashSessionsController {
   async addMovement(
     @Param('id') id: string,
     @Body() dto: CreateCashMovementDto,
-    @CurrentUser() user: any,
+    @CurrentUser() user?: JwtPayload,
   ) {
-    const email = user?.email || user?.username || 'admin@jasrapo.com';
+    const email =
+      user?.email || (user?.sub ? `user_${user.sub}` : 'admin@jasrapo.com');
     return this.cashSessionRepository.addMovement(BigInt(id), dto, email);
   }
 
@@ -66,9 +72,10 @@ export class CashSessionsController {
   async close(
     @Param('id') id: string,
     @Body() dto: CloseCashSessionDto,
-    @CurrentUser() user: any,
+    @CurrentUser() user?: JwtPayload,
   ) {
-    const email = user?.email || user?.username || 'admin@jasrapo.com';
+    const email =
+      user?.email || (user?.sub ? `user_${user.sub}` : 'admin@jasrapo.com');
     return this.cashSessionRepository.closeSession(BigInt(id), dto, email);
   }
 

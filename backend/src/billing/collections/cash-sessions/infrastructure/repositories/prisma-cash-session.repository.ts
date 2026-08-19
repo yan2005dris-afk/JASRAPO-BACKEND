@@ -1,9 +1,10 @@
-import {
-  Injectable,
-  BadRequestException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
+import {
+  EntityNotFoundException,
+  EntityAlreadyExistsException,
+  InvalidDomainOperationException,
+} from 'src/shared/domain/exceptions/domain.exception';
 import {
   OpenCashSessionDto,
   CreateCashMovementDto,
@@ -149,8 +150,10 @@ export class PrismaCashSessionRepository {
     });
 
     if (existing) {
-      throw new BadRequestException(
-        'Ya existe una sesión de caja abierta para este usuario',
+      throw new EntityAlreadyExistsException(
+        'Sesión de caja',
+        'usuario',
+        creadoPor,
       );
     }
 
@@ -181,11 +184,11 @@ export class PrismaCashSessionRepository {
     });
 
     if (!session) {
-      throw new NotFoundException('Sesión de caja no encontrada');
+      throw new EntityNotFoundException('Sesión de caja', cajaId);
     }
 
     if (session.estado !== 'ABIERTA') {
-      throw new BadRequestException(
+      throw new InvalidDomainOperationException(
         'No se pueden registrar gastos en una caja cerrada',
       );
     }
@@ -226,11 +229,11 @@ export class PrismaCashSessionRepository {
     });
 
     if (!session) {
-      throw new NotFoundException('Sesión de caja no encontrada');
+      throw new EntityNotFoundException('Sesión de caja', cajaId);
     }
 
     if (session.estado !== 'ABIERTA') {
-      throw new BadRequestException(
+      throw new InvalidDomainOperationException(
         'La sesión de caja ya se encuentra cerrada',
       );
     }
