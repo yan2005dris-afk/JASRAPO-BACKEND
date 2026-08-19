@@ -50,6 +50,16 @@ export class ResponseReadingDto {
     numeroGuia: string;
     direccionSuministro: string;
     estado: string;
+    sector?: {
+      nombre: string;
+    } | null;
+    cliente?: {
+      clienteId: string;
+      nombres: string;
+      apellidos: string;
+      razonSocial?: string | null;
+      identificacion: string;
+    } | null;
   } | null;
 
   @ApiProperty({ description: 'Medidor asociado', required: false })

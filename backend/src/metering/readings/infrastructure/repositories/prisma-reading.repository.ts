@@ -39,6 +39,20 @@ export const safeReadingsSelect = {
               numeroGuia: true,
               direccionSuministro: true,
               estado: true,
+              sector: {
+                select: {
+                  nombre: true,
+                },
+              },
+              cliente: {
+                select: {
+                  clienteId: true,
+                  nombres: true,
+                  apellidos: true,
+                  razonSocial: true,
+                  identificacion: true,
+                },
+              },
             },
           },
         },
