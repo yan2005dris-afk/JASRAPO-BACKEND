@@ -1,20 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import type { OperatorTask } from '../../domain/repositories/repository-types';
 
-export class MedidorInfo {
-  @ApiProperty({ description: 'ID del medidor', example: '42' })
-  medidorId: string;
-
-  @ApiProperty({ description: 'Serie del medidor', example: 'MED-001' })
-  serie: string;
-
-  @ApiPropertyOptional({ description: 'Latitud', example: -33.45 })
-  latitud?: number;
-
-  @ApiPropertyOptional({ description: 'Longitud', example: -70.66 })
-  longitud?: number;
-}
-
 export class OperarioInfo {
   @ApiProperty({ description: 'ID del usuario', example: 10 })
   usuarioId: number;
@@ -90,13 +76,6 @@ export class TaskResponseDto {
   fechaFin?: string;
 
   @ApiPropertyOptional({
-    description: 'Información del medidor asociado',
-    type: () => MedidorInfo,
-    nullable: true,
-  })
-  medidor?: MedidorInfo | null;
-
-  @ApiPropertyOptional({
     description: 'Información del operario asignado',
     type: () => OperarioInfo,
   })
@@ -129,20 +108,6 @@ export class TaskResponseDto {
       fechaPlanificada: task.fechaPlanificada?.toISOString() ?? undefined,
       fechaInicio: task.fechaInicio?.toISOString() ?? undefined,
       fechaFin: task.fechaFin?.toISOString() ?? undefined,
-      medidor: task.medidor
-        ? {
-            medidorId: task.medidor.medidorId.toString(),
-            serie: task.medidor.serie,
-            latitud:
-              task.medidor.latitud != null
-                ? Number(task.medidor.latitud)
-                : undefined,
-            longitud:
-              task.medidor.longitud != null
-                ? Number(task.medidor.longitud)
-                : undefined,
-          }
-        : null,
       operario: task.operario
         ? {
             usuarioId: task.operario.usuarioId,

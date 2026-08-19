@@ -19,6 +19,7 @@ model Contratos {
   convenios           Convenios[]
   historialMedidores  HistorialMedidores[]
   prefacturas         Prefacturas[]
+  ordenesTrabajo      OrdenesTrabajo[]
 
   @@index([clienteId])
   @@index([comunidadId])

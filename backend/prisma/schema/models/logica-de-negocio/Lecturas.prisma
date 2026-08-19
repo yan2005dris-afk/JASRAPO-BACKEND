@@ -15,20 +15,16 @@ model Lecturas {
 
   medidorId           BigInt             @map("medidor_id")
   estado              EstadoLectura      @default(PENDIENTE) @map("estado")
-  estadoAsignacion    EstadoAsignacion   @default(NO_ASIGNADA) @map("estado_asignacion")
-  rutaId              BigInt?            @map("ruta_id")
   medidor             Medidores          @relation(fields: [medidorId], references: [medidorId], onDelete: Restrict)
   periodoRel          Periodos           @relation(fields: [periodoId], references: [periodoId])
-  ruta                Rutas?             @relation(fields: [rutaId], references: [rutaId], onDelete: SetNull)
-  lecturaAnomalias LecturaAnomalia[]
+  ordenesTrabajo      OrdenesTrabajo[]
+  lecturaAnomalias    LecturaAnomalia[]
   prefacturas         Prefacturas[]
 
   @@index([periodoId])
   @@index([medidorId])
   @@index([fecha])
   @@index([estado, periodoId])
-  @@index([estadoAsignacion])
-  @@index([rutaId])
   @@map("lecturas")
   
 }

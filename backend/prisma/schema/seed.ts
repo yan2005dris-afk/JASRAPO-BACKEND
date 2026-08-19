@@ -201,10 +201,9 @@ async function main() {
   // === PREFACTURAS PARA AGREEMENTS ===
   await seedAgreementsPrefacturas(prisma);
 
-  // === RUTAS (Omitidas en seed para permitir crear y probar rutas limpias desde la UI) ===
-  // await seedRoutes(prisma);
-  console.log('✅ Base de datos lista para pruebas de rutas.');
-  console.log('✅ Rutas creadas correctamente.');
+  // === RUTAS Y ÓRDENES DE TRABAJO ===
+  await seedRoutes(prisma);
+  console.log('✅ Rutas y órdenes de trabajo creadas correctamente.');
 
   // === AGREEMENTS ===
   await seedAgreements(prisma);

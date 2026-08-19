@@ -31,16 +31,8 @@ const taskOperarioSelect = {
   apellidos: true,
 } satisfies Prisma.UsuariosSelect;
 
-const taskMedidorSelect = {
-  medidorId: true,
-  serie: true,
-  latitud: true,
-  longitud: true,
-} satisfies Prisma.MedidoresSelect;
-
 const taskInclude = {
   operario: { select: taskOperarioSelect },
-  medidor: { select: taskMedidorSelect },
 } satisfies Prisma.RutasInclude;
 
 @Injectable()
@@ -280,7 +272,7 @@ export class PrismaOperatorRepository extends OperatorRepository {
 
     const readingTasks = tasks.filter(
       (t) => t.tipoRuta === 'TOMA_LECTURA',
-    ) as Array<OperatorTask & { medidorId: bigint | null }>;
+    ) as unknown as OperatorTask[];
 
     if (readingTasks.length === 0) {
       return tasks as unknown as OperatorTask[];

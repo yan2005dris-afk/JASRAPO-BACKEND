@@ -67,25 +67,7 @@ export class CreateRouteUseCase {
       throw new InvalidDomainOperationException('El periodo no está abierto');
     }
 
-    // Work orders (INSTALACION / INSPECCION) require a medidor
     const isWorkOrder = WORK_ORDER_TYPES.has(createDto.tipoRuta);
-
-    if (isWorkOrder && createDto.medidorId == null) {
-      throw new InvalidDomainOperationException(
-        'medidorId es obligatorio para rutas de INSTALACION/INSPECCION',
-      );
-    }
-
-    // Validate medidor when provided
-    if (createDto.medidorId != null) {
-      const medidor = await this.routeRepository.findMedidor(
-        createDto.medidorId,
-      );
-
-      if (!medidor) {
-        throw new EntityNotFoundException('Medidor', createDto.medidorId);
-      }
-    }
 
     // Overlap check applies only to periodic community routes (validating the same month/year planificada)
     if (!isWorkOrder) {
@@ -120,7 +102,6 @@ export class CreateRouteUseCase {
         ? new Date(createDto.fechaPlanificada)
         : null,
       estado: 'PENDIENTE',
-      medidorId: createDto.medidorId,
     };
 
     const route = await this.routeRepository.create(createData);

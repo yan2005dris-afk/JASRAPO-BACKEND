@@ -90,14 +90,6 @@ describe('Operator Tasks - Schema & Repository', () => {
               operario: {
                 select: { usuarioId: true, nombres: true, apellidos: true },
               },
-              medidor: {
-                select: {
-                  medidorId: true,
-                  serie: true,
-                  latitud: true,
-                  longitud: true,
-                },
-              },
             },
           }),
         );
@@ -187,7 +179,11 @@ describe('Operator Tasks - Schema & Repository', () => {
         expect(prisma.rutas.update).toHaveBeenCalledWith({
           where: { rutaId: BigInt(1), deletedAt: null },
           data: { estado: 'EN_PROGRESO' },
-          include: taskInclude,
+          include: {
+            operario: {
+              select: { usuarioId: true, nombres: true, apellidos: true },
+            },
+          },
         });
         expect(result).toEqual(mockUpdated);
       });
@@ -211,7 +207,11 @@ describe('Operator Tasks - Schema & Repository', () => {
             estado: 'EN_PROGRESO',
             fechaInicio: expect.any(Date),
           }),
-          include: taskInclude,
+          include: {
+            operario: {
+              select: { usuarioId: true, nombres: true, apellidos: true },
+            },
+          },
         });
       });
 
@@ -227,7 +227,11 @@ describe('Operator Tasks - Schema & Repository', () => {
         expect(prisma.rutas.update).toHaveBeenCalledWith({
           where: { rutaId: BigInt(1), deletedAt: null, estado: 'PENDIENTE' },
           data: expect.objectContaining({ estado: 'EN_PROGRESO' }),
-          include: taskInclude,
+          include: {
+            operario: {
+              select: { usuarioId: true, nombres: true, apellidos: true },
+            },
+          },
         });
       });
 
