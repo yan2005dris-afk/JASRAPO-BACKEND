@@ -9,8 +9,13 @@ import type { MeterFilters } from '../../domain/types/meter.types';
 export function buildMeterFilters(
   filters: FilterMeterDto | ExportMeterDto,
 ): MeterFilters {
-  const { estado, marca, modelo, serie, search } = filters;
-  const meterFilters = { estado, marca, modelo, serie, search };
+  const meterFilters: MeterFilters = {
+    estado: filters.estado,
+    search: filters.search,
+    ...('marca' in filters && { marca: filters.marca }),
+    ...('modelo' in filters && { modelo: filters.modelo }),
+    ...('serie' in filters && { serie: filters.serie }),
+  };
 
   // Eliminar campos undefined
   return Object.fromEntries(
