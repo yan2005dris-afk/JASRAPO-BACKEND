@@ -1,5 +1,5 @@
 import type { LecturaEntity } from '../entities/lectura.entity';
-import { Decimal } from 'decimal.js';
+import type { Decimal } from 'decimal.js';
 
 export interface ReadingSnapshot {
   lecturaAnterior: Decimal;

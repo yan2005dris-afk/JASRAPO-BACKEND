@@ -262,8 +262,6 @@ describe('PrismaReadingRepository - soft delete select regression', () => {
       };
       const repository = new PrismaReadingRepository(prisma as any);
 
-      const { Decimal } = require('decimal.js');
-
       await expect(
         repository.createWithAtomicSnapshot({
           fecha: new Date('2026-02-01'),

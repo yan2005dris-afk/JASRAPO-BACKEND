@@ -138,7 +138,9 @@ describe('CreateReadingUseCase', () => {
       InvalidDomainOperationException,
     );
 
-    expect(mockReadingRepository.createWithAtomicSnapshot).not.toHaveBeenCalled();
+    expect(
+      mockReadingRepository.createWithAtomicSnapshot,
+    ).not.toHaveBeenCalled();
   });
 
   it('should throw InvalidDomainOperationException for invalid fecha', async () => {
@@ -153,7 +155,9 @@ describe('CreateReadingUseCase', () => {
       InvalidDomainOperationException,
     );
 
-    expect(mockReadingRepository.createWithAtomicSnapshot).not.toHaveBeenCalled();
+    expect(
+      mockReadingRepository.createWithAtomicSnapshot,
+    ).not.toHaveBeenCalled();
   });
 
   it('should throw InvalidDomainOperationException for invalid lecturaActual', async () => {
@@ -168,6 +172,8 @@ describe('CreateReadingUseCase', () => {
       InvalidDomainOperationException,
     );
 
-    expect(mockReadingRepository.createWithAtomicSnapshot).not.toHaveBeenCalled();
+    expect(
+      mockReadingRepository.createWithAtomicSnapshot,
+    ).not.toHaveBeenCalled();
   });
 });

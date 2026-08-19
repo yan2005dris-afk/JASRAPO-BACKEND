@@ -74,12 +74,10 @@ describe('Readings Use Cases', () => {
         fecha: '2024-01-01',
         lecturaActual: 150,
         medidorId: '1',
-      } as any);
+      });
       expect(result).toBeDefined();
       expect(result.lecturaActual).toBe(150);
-      expect(
-        mockReadingRepository.createWithAtomicSnapshot,
-      ).toHaveBeenCalled();
+      expect(mockReadingRepository.createWithAtomicSnapshot).toHaveBeenCalled();
     });
   });
 
