@@ -7,10 +7,7 @@ import type {
 } from '../../domain/types/batch.types';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
-import {
-  InvalidDomainOperationException,
-  EntityAlreadyExistsException,
-} from 'src/shared/domain/exceptions/domain.exception';
+import { InvalidDomainOperationException } from 'src/shared/domain/exceptions/domain.exception';
 
 @LogContext()
 @Injectable()

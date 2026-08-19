@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { EstadoRuta, EstadoMedidor } from 'src/shared/enums';
+import { EstadoRuta } from 'src/shared/enums';
 import {
   EntityNotFoundException,
   InvalidDomainOperationException,

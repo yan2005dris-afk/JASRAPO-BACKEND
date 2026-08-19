@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { Prisma } from 'src/generated/prisma/client';
-import { EstadoRuta, TipoRuta, EstadoContrato } from 'src/shared/enums';
+import { EstadoRuta, TipoRuta } from 'src/shared/enums';
 import {
   RouteRepository,
   UsuarioRef,
@@ -282,19 +282,8 @@ export class PrismaRouteRepository implements RouteRepository {
     criteria: EligibleReadingsCriteria,
     pagination: PaginateOptions,
   ): Promise<PaginatedResult<ReadingForRouteEntity>> {
-    const {
-      tipoRuta,
-      comunidadId,
-      sectorId,
-      periodoId,
-      fechaPlanificada,
-      search,
-    } = criteria;
-    const estadoContratoEsperado: EstadoContrato =
-      tipoRuta === 'TOMA_LECTURA'
-        ? EstadoContrato.ACTIVO
-        : EstadoContrato.RECONEXION;
-
+    const { comunidadId, sectorId, periodoId, fechaPlanificada, search } =
+      criteria;
     const where: Prisma.LecturasWhereInput = {
       deletedAt: null,
       ...(periodoId ? { periodoId } : {}),
