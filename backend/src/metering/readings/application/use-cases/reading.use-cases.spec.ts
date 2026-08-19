@@ -35,6 +35,8 @@ describe('Readings Use Cases', () => {
     count: jest.fn(),
     update: jest.fn(),
     findActivePeriod: jest.fn().mockResolvedValue({ periodoId: 1 }),
+    findLastApprovedActualByMeter: jest.fn().mockResolvedValue(100),
+    findActiveInitialReadingByMeter: jest.fn(),
   };
 
   beforeEach(async () => {

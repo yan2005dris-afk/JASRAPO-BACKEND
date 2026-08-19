@@ -16,16 +16,19 @@ export class CreateReadingUseCase {
     const periodoId = await this.resolvePeriodoId(createDto.periodoId);
     const fotoUrl = createDto.fotoUrl;
     const fecha = this.validateFecha(createDto.fecha);
+    const medidorId = this.validateMedidorId(createDto.medidorId);
+
+    const snapshot = await this.resolveReadingSnapshot(medidorId);
 
     const rawLectura = await this.readingRepository.create({
       fecha,
-      lecturaAnterior: createDto.lecturaAnterior,
+      lecturaAnterior: snapshot.lecturaAnterior,
       lecturaActual: createDto.lecturaActual,
-      consumoCalculado: createDto.consumoCalculado ?? 0,
-      medidorId: this.validateMedidorId(createDto.medidorId),
+      consumoCalculado: createDto.lecturaActual - snapshot.lecturaAnterior,
+      medidorId,
       descripcionAnomalia: createDto.descripcionAnomalia,
       fotoUrl,
-      lecturaInicial: createDto.lecturaInicial,
+      lecturaInicial: snapshot.lecturaInicial,
       periodoId,
       estado: EstadoLectura.POR_REVISION,
     });
@@ -39,6 +42,36 @@ export class CreateReadingUseCase {
     }
 
     return lectura;
+  }
+
+  private async resolveReadingSnapshot(medidorId: bigint): Promise<{
+    lecturaAnterior: number;
+    lecturaInicial: boolean;
+  }> {
+    const lastApprovedActual =
+      await this.readingRepository.findLastApprovedActualByMeter(medidorId);
+
+    if (lastApprovedActual !== null) {
+      return {
+        lecturaAnterior: lastApprovedActual,
+        lecturaInicial: false,
+      };
+    }
+
+    const initialFromHistory =
+      await this.readingRepository.findActiveInitialReadingByMeter(medidorId);
+
+    if (initialFromHistory === null) {
+      throw new EntityNotFoundException(
+        'HistorialMedidores',
+        medidorId.toString(),
+      );
+    }
+
+    return {
+      lecturaAnterior: initialFromHistory,
+      lecturaInicial: true,
+    };
   }
 
   private validateMedidorId(medidorId: string | number): bigint {

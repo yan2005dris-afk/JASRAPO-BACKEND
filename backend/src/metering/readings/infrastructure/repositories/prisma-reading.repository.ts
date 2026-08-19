@@ -9,7 +9,7 @@ import {
 } from '../../domain/repositories/reading.repository';
 import { LecturaEntity } from '../../domain/entities/lectura.entity';
 import { ReadingMapper } from '../mappers/reading.mapper';
-import { EstadoPeriodo } from 'src/shared/enums';
+import { EstadoPeriodo, EstadoLectura } from 'src/shared/enums';
 
 export const safeReadingsSelect = {
   lecturaId: true,
@@ -78,6 +78,34 @@ export class PrismaReadingRepository implements ReadingRepository {
       where: { estado: EstadoPeriodo.ABIERTO },
       select: { periodoId: true },
     });
+  }
+
+  async findLastApprovedActualByMeter(
+    medidorId: bigint,
+  ): Promise<number | null> {
+    const reading = await this.prisma.lecturas.findFirst({
+      where: { medidorId, estado: EstadoLectura.APROBADA, deletedAt: null },
+      orderBy: { fecha: 'desc' },
+      select: { lecturaActual: true },
+    });
+    if (!reading) {
+      return null;
+    }
+    return Number(reading.lecturaActual);
+  }
+
+  async findActiveInitialReadingByMeter(
+    medidorId: bigint,
+  ): Promise<number | null> {
+    const history = await this.prisma.historialMedidores.findFirst({
+      where: { medidorId, fechaHasta: null, deletedAt: null },
+      orderBy: { fechaDesde: 'desc' },
+      select: { lecturaInicial: true },
+    });
+    if (!history) {
+      return null;
+    }
+    return Number(history.lecturaInicial);
   }
 
   async findUnique(where: {

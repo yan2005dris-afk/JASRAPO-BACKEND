@@ -42,6 +42,14 @@ export interface ActivePeriod {
 export abstract class ReadingRepository {
   abstract findActivePeriod(): Promise<ActivePeriod | null>;
 
+  abstract findLastApprovedActualByMeter(
+    medidorId: bigint,
+  ): Promise<number | null>;
+
+  abstract findActiveInitialReadingByMeter(
+    medidorId: bigint,
+  ): Promise<number | null>;
+
   abstract findUnique(where: {
     lecturaId: bigint;
   }): Promise<LecturaEntity | null>;

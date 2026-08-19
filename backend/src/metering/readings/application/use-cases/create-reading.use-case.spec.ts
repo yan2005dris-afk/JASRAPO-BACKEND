@@ -18,6 +18,8 @@ describe('CreateReadingUseCase', () => {
     create: jest.fn(),
     update: jest.fn(),
     findActivePeriod: jest.fn(),
+    findLastApprovedActualByMeter: jest.fn(),
+    findActiveInitialReadingByMeter: jest.fn(),
   };
 
   const mockStorageService = {
@@ -68,6 +70,7 @@ describe('CreateReadingUseCase', () => {
       lecturaInicial: false,
     };
 
+    mockReadingRepository.findLastApprovedActualByMeter.mockResolvedValue(100);
     mockReadingRepository.create.mockResolvedValue(mockReading as any);
     mockReadingRepository.findUnique.mockResolvedValue(mockReading as any);
 
@@ -76,7 +79,13 @@ describe('CreateReadingUseCase', () => {
     expect(result.lecturaActual).toBe(150);
     expect(mockReadingRepository.findActivePeriod).not.toHaveBeenCalled();
     expect(mockReadingRepository.create).toHaveBeenCalledWith(
-      expect.objectContaining({ medidorId: BigInt(1), periodoId: 1 }),
+      expect.objectContaining({
+        medidorId: BigInt(1),
+        periodoId: 1,
+        lecturaAnterior: 100,
+        lecturaInicial: false,
+        consumoCalculado: 50,
+      }),
     );
   });
 
@@ -92,6 +101,7 @@ describe('CreateReadingUseCase', () => {
     mockReadingRepository.findActivePeriod.mockResolvedValue({
       periodoId: 5,
     });
+    mockReadingRepository.findLastApprovedActualByMeter.mockResolvedValue(100);
     mockReadingRepository.create.mockResolvedValue({
       ...mockReading,
       periodoId: 5,
@@ -152,6 +162,54 @@ describe('CreateReadingUseCase', () => {
       InvalidDomainOperationException,
     );
 
+    expect(mockReadingRepository.create).not.toHaveBeenCalled();
+  });
+
+  it('should snapshot historial inicial when there is no approved reading', async () => {
+    const dto = {
+      fecha: '2026-01-15',
+      lecturaAnterior: 0,
+      lecturaActual: 25,
+      medidorId: '1',
+      periodoId: 1,
+      lecturaInicial: false,
+    };
+
+    mockReadingRepository.findLastApprovedActualByMeter.mockResolvedValue(null);
+    mockReadingRepository.findActiveInitialReadingByMeter.mockResolvedValue(10);
+    mockReadingRepository.create.mockResolvedValue(mockReading as any);
+    mockReadingRepository.findUnique.mockResolvedValue(mockReading as any);
+
+    await useCase.execute(dto);
+
+    expect(
+      mockReadingRepository.findActiveInitialReadingByMeter,
+    ).toHaveBeenCalledWith(BigInt(1));
+    expect(mockReadingRepository.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        lecturaAnterior: 10,
+        lecturaInicial: true,
+        consumoCalculado: 15,
+      }),
+    );
+  });
+
+  it('should throw EntityNotFoundException when meter has no active history', async () => {
+    const dto = {
+      fecha: '2026-01-15',
+      lecturaAnterior: 0,
+      lecturaActual: 25,
+      medidorId: '1',
+      periodoId: 1,
+      lecturaInicial: false,
+    };
+
+    mockReadingRepository.findLastApprovedActualByMeter.mockResolvedValue(null);
+    mockReadingRepository.findActiveInitialReadingByMeter.mockResolvedValue(
+      null,
+    );
+
+    await expect(useCase.execute(dto)).rejects.toThrow(EntityNotFoundException);
     expect(mockReadingRepository.create).not.toHaveBeenCalled();
   });
 });
