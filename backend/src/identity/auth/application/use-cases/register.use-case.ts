@@ -6,6 +6,17 @@ import {
   InvalidDomainOperationException,
 } from 'src/shared/domain/exceptions/domain.exception';
 
+/**
+ * Caso de uso para registro de nuevos usuarios.
+ *
+ * @security Issue #194 / OWASP A01:
+ * El endpoint que expone este caso de uso (`POST /auth/register`) está estrictamente
+ * protegido por `JwtAuthGuard` + `PermissionsGuard` requiriendo el permiso administrativo
+ * `users:create`. En el modelo RBAC actual, `users:create` implica confianza total para
+ * la provisión y asignación de rol (`rolId`). Si en el futuro se desea granularidad
+ * por tiers (e.g. un operador de soporte con `users:create` sin capacidad de elevar roles),
+ * se deberá agregar un guard/permiso explícito `users:assign-role`.
+ */
 @Injectable()
 export class RegisterUseCase {
   constructor(private readonly userService: UserService) {}

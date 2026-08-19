@@ -3,6 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import Decimal from 'decimal.js';
 import { DateUtil } from 'src/shared/utils/date.util';
 import { addMonths } from 'date-fns';
 import { CreateAgreementDto } from '../../interfaces/dto/create-agreement.dto';
@@ -67,25 +68,41 @@ export class CreateAgreementUseCase {
     // ── 5. mesesMoraActual: tomar máximo de meses atrasados desde debtSummary ──
     const mesesMoraActual = debtSummary.maxMesesAtrasado ?? 0;
 
-    // ── 6. Calcular intereses sobre el monto a financiar ─────────────────────
-    const montoAFinanciar = deudaTotal - abonoInicial;
-    const interesesTotales =
-      Math.round(montoAFinanciar * tasaMensual * dto.numeroCuotas * 100) / 100;
+    // ── 6. Calcular intereses sobre el monto a financiar con Decimal.js ────
+    const dDeudaTotal = new Decimal(deudaTotal);
+    const dAbonoInicial = new Decimal(abonoInicial);
+    const dMontoAFinanciar = dDeudaTotal.minus(dAbonoInicial);
+    const dNumeroCuotas = new Decimal(dto.numeroCuotas);
+    const dTasaMensual = new Decimal(tasaMensual);
+
+    const dInteresesTotales = dMontoAFinanciar
+      .times(dTasaMensual)
+      .times(dNumeroCuotas)
+      .toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
 
     // Monto total a distribuir en cuotas: deuda neta + intereses
-    const totalADistribuir = montoAFinanciar + interesesTotales;
+    const dTotalADistribuir = dMontoAFinanciar.plus(dInteresesTotales);
 
-    // ── 7. Calcular valor de cada cuota ──────────────────────────────────────
-    const valorCuotaBase =
-      Math.floor((totalADistribuir / dto.numeroCuotas) * 100) / 100;
-    const totalDistribuido = valorCuotaBase * (dto.numeroCuotas - 1);
-    const valorUltimaCuota =
-      Math.round((totalADistribuir - totalDistribuido) * 100) / 100;
+    // ── 7. Calcular valor de cada cuota (base y residuo de última cuota) ──────
+    const dValorCuotaBase = dTotalADistribuir
+      .dividedBy(dNumeroCuotas)
+      .toDecimalPlaces(2, Decimal.ROUND_DOWN);
 
-    const interesPorCuota =
+    const dTotalDistribuido = dValorCuotaBase.times(dNumeroCuotas.minus(1));
+    const dValorUltimaCuota = dTotalADistribuir
+      .minus(dTotalDistribuido)
+      .toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
+
+    const dInteresPorCuota =
       dto.numeroCuotas > 0
-        ? Math.round((interesesTotales / dto.numeroCuotas) * 100) / 100
-        : 0;
+        ? dInteresesTotales
+            .dividedBy(dNumeroCuotas)
+            .toDecimalPlaces(2, Decimal.ROUND_HALF_UP)
+        : new Decimal(0);
+
+    const valorCuotaBase = dValorCuotaBase.toNumber();
+    const valorUltimaCuota = dValorUltimaCuota.toNumber();
+    const interesPorCuota = dInteresPorCuota.toNumber();
 
     // ── 8. Determinar estado del convenio ────────────────────────────────────
     const estadoConvenio = abonoInicial > 0 ? 'PENDIENTE_ABONO' : 'PREPARADO';

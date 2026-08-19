@@ -49,6 +49,14 @@ export class SriService {
   // FACTURA — Delegado a EmitirFacturaUseCase
   // ==========================================
 
+  // Opciones de reintento con backoff exponencial para fallos transitorios de red/SOAP (Issue #204)
+  private readonly sriJobSendOptions = {
+    retryLimit: 3,
+    retryDelay: 15, // 15s iniciales
+    retryDelayMax: 300, // hasta 5 minutos
+    retryBackoff: true,
+  };
+
   async emitirFactura(
     dto: CreateFacturaDto,
   ): Promise<EmisionEncoladaResponseDto | FacturaResponseDto> {
@@ -57,10 +65,14 @@ export class SriService {
     if (!isAsync) {
       return this.emitirFacturaUseCase.emitirFactura(dto);
     }
-    const jobId = await this.jobsService.send(SRI_EMISION_JOB, {
-      tipo: 'FACTURA',
-      dto,
-    });
+    const jobId = await this.jobsService.send(
+      SRI_EMISION_JOB,
+      {
+        tipo: 'FACTURA',
+        dto,
+      },
+      this.sriJobSendOptions,
+    );
     this.logger.log(`Factura encolada con Job ID: ${jobId}`);
     return {
       mensaje: 'Factura encolada para emisión asíncrona',
@@ -93,10 +105,14 @@ export class SriService {
     if (!isAsync) {
       return this.emitirNotaCreditoUseCase.emitirNotaCredito(dto);
     }
-    const jobId = await this.jobsService.send(SRI_EMISION_JOB, {
-      tipo: 'NOTA_CREDITO',
-      dto,
-    });
+    const jobId = await this.jobsService.send(
+      SRI_EMISION_JOB,
+      {
+        tipo: 'NOTA_CREDITO',
+        dto,
+      },
+      this.sriJobSendOptions,
+    );
     this.logger.log(`Nota de crédito encolada con Job ID: ${jobId}`);
     return {
       mensaje: 'Nota de crédito encolada para emisión asíncrona',
@@ -117,10 +133,14 @@ export class SriService {
     if (!isAsync) {
       return this.emitirNotaDebitoUseCase.emitirNotaDebito(dto);
     }
-    const jobId = await this.jobsService.send(SRI_EMISION_JOB, {
-      tipo: 'NOTA_DEBITO',
-      dto,
-    });
+    const jobId = await this.jobsService.send(
+      SRI_EMISION_JOB,
+      {
+        tipo: 'NOTA_DEBITO',
+        dto,
+      },
+      this.sriJobSendOptions,
+    );
     this.logger.log(`Nota de débito encolada con Job ID: ${jobId}`);
     return {
       mensaje: 'Nota de débito encolada para emisión asíncrona',
@@ -141,10 +161,14 @@ export class SriService {
     if (!isAsync) {
       return this.emitirRetencionUseCase.emitirRetencion(dto);
     }
-    const jobId = await this.jobsService.send(SRI_EMISION_JOB, {
-      tipo: 'RETENCION',
-      dto,
-    });
+    const jobId = await this.jobsService.send(
+      SRI_EMISION_JOB,
+      {
+        tipo: 'RETENCION',
+        dto,
+      },
+      this.sriJobSendOptions,
+    );
     this.logger.log(`Retención encolada con Job ID: ${jobId}`);
     return {
       mensaje: 'Retención encolada para emisión asíncrona',

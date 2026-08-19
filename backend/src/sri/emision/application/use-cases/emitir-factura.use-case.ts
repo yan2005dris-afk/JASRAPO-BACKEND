@@ -131,10 +131,26 @@ export class EmitirFacturaUseCase {
         );
       }
 
-      // ─── FASE 1: Transacción corta (~5ms) — Solo reservar secuencial ───
+      // ─── FASE 1: Transacción corta (~5ms) — Solo reservar secuencial si no existe ───
       let secuencial: string;
-      if (dto.secuencial) {
+      let claveAcceso: string;
+
+      if (opts?.comprobanteExistente?.secuencial && opts?.comprobanteExistente?.clave_acceso) {
+        // Idempotencia en reintentos de emisión: reutilizar secuencial y clave_acceso ya asignados
+        secuencial = opts.comprobanteExistente.secuencial;
+        claveAcceso = opts.comprobanteExistente.clave_acceso;
+      } else if (dto.secuencial) {
         secuencial = dto.secuencial.padStart(9, '0');
+        claveAcceso = this.claveAccesoService.generate({
+          fechaEmision,
+          tipoComprobante: TipoComprobante.FACTURA,
+          ruc: dto.emisor.ruc,
+          ambiente,
+          establecimiento: dto.emisor.establecimiento,
+          puntoEmision: dto.emisor.puntoEmision,
+          secuencial,
+          tipoEmision,
+        });
       } else {
         secuencial = await this.comprobanteRepository.executeTransaction(
           async (tx) => {
@@ -145,20 +161,17 @@ export class EmitirFacturaUseCase {
             );
           },
         );
+        claveAcceso = this.claveAccesoService.generate({
+          fechaEmision,
+          tipoComprobante: TipoComprobante.FACTURA,
+          ruc: dto.emisor.ruc,
+          ambiente,
+          establecimiento: dto.emisor.establecimiento,
+          puntoEmision: dto.emisor.puntoEmision,
+          secuencial,
+          tipoEmision,
+        });
       }
-
-      // ─── FASE 2: Fuera de transacción — Firma + Envío al SRI ───
-      // Sin conexión de DB abierta. El pool queda libre para otros usuarios.
-      const claveAcceso = this.claveAccesoService.generate({
-        fechaEmision,
-        tipoComprobante: TipoComprobante.FACTURA,
-        ruc: dto.emisor.ruc,
-        ambiente,
-        establecimiento: dto.emisor.establecimiento,
-        puntoEmision: dto.emisor.puntoEmision,
-        secuencial,
-        tipoEmision,
-      });
 
       const factura = this.buildFacturaFromDto(
         dto,

@@ -70,11 +70,20 @@ describe('SRIEmissionDispatcherService', () => {
       ComprobanteEstado.BORRADOR,
       ComprobanteEstado.ENVIANDO,
     );
-    expect(jobsService.send).toHaveBeenCalledWith(SRI_EMISION_JOB, {
-      tipo: 'FACTURA_DESDE_PREFACTURA',
-      comprobanteId: 42n,
-      origen: 'auto',
-    });
+    expect(jobsService.send).toHaveBeenCalledWith(
+      SRI_EMISION_JOB,
+      {
+        tipo: 'FACTURA_DESDE_PREFACTURA',
+        comprobanteId: 42n,
+        origen: 'auto',
+      },
+      expect.objectContaining({
+        retryLimit: 3,
+        retryDelay: 15,
+        retryDelayMax: 300,
+        retryBackoff: true,
+      }),
+    );
   });
 
   it('NOT_FOUND: returns NOT_FOUND when comprobante does not exist', async () => {
@@ -247,11 +256,20 @@ describe('SRIEmissionDispatcherService', () => {
         ComprobanteEstado.BORRADOR,
         ComprobanteEstado.ENVIANDO,
       );
-      expect(jobsService.send).toHaveBeenCalledWith(SRI_EMISION_JOB, {
-        tipo: 'FACTURA_DESDE_PREFACTURA',
-        comprobanteId: 42n,
-        origen: 'manual',
-      });
+      expect(jobsService.send).toHaveBeenCalledWith(
+        SRI_EMISION_JOB,
+        {
+          tipo: 'FACTURA_DESDE_PREFACTURA',
+          comprobanteId: 42n,
+          origen: 'manual',
+        },
+        expect.objectContaining({
+          retryLimit: 3,
+          retryDelay: 15,
+          retryDelayMax: 300,
+          retryBackoff: true,
+        }),
+      );
     });
 
     it('S4: POR_EMITIR → locks to ENVIANDO + sends job with origen="manual" → EMITTED', async () => {
@@ -270,11 +288,20 @@ describe('SRIEmissionDispatcherService', () => {
         ComprobanteEstado.POR_EMITIR,
         ComprobanteEstado.ENVIANDO,
       );
-      expect(jobsService.send).toHaveBeenCalledWith(SRI_EMISION_JOB, {
-        tipo: 'FACTURA_DESDE_PREFACTURA',
-        comprobanteId: 42n,
-        origen: 'manual',
-      });
+      expect(jobsService.send).toHaveBeenCalledWith(
+        SRI_EMISION_JOB,
+        {
+          tipo: 'FACTURA_DESDE_PREFACTURA',
+          comprobanteId: 42n,
+          origen: 'manual',
+        },
+        expect.objectContaining({
+          retryLimit: 3,
+          retryDelay: 15,
+          retryDelayMax: 300,
+          retryBackoff: true,
+        }),
+      );
     });
 
     it('S5: AUTORIZADO → returns INVALID_STATE, no lock, no send', async () => {

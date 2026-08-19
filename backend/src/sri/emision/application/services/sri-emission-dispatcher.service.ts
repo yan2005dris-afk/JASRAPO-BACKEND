@@ -205,11 +205,20 @@ export class SRIEmissionDispatcherService {
     }
 
     try {
-      await this.jobsService.send(SRI_EMISION_JOB, {
-        tipo: 'FACTURA_DESDE_PREFACTURA',
-        comprobanteId,
-        origen,
-      });
+      await this.jobsService.send(
+        SRI_EMISION_JOB,
+        {
+          tipo: 'FACTURA_DESDE_PREFACTURA',
+          comprobanteId,
+          origen,
+        },
+        {
+          retryLimit: 3,
+          retryDelay: 15,
+          retryDelayMax: 300,
+          retryBackoff: true,
+        },
+      );
     } catch (err) {
       try {
         await this.comprobanteRepository.updateEstadoWithLock(

@@ -1,98 +1,345 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
   <meta charset="utf-8" />
   <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, Helvetica, sans-serif;
+    }
     body {
-      font-family: 'Segoe UI', Arial, sans-serif;
+      font-size: 8.5pt;
+      color: #111;
+      padding: 10mm;
+      background: #fff;
+    }
+    .header-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 10px 0;
+      margin-bottom: 12px;
+    }
+    .header-col-left {
+      width: 48%;
+      vertical-align: top;
+      border: 1px solid #999;
+      border-radius: 8px;
+      padding: 12px;
+    }
+    .header-col-right {
+      width: 52%;
+      vertical-align: top;
+      border: 1px solid #999;
+      border-radius: 8px;
+      padding: 12px;
+      background-color: #fafafa;
+    }
+    .company-logo {
+      max-height: 55px;
+      margin-bottom: 8px;
+    }
+    .company-title {
       font-size: 11pt;
-      line-height: 1.5;
-      color: #333;
-      padding: 20mm 15mm;
+      font-weight: bold;
+      color: #0b3c5d;
+      margin-bottom: 4px;
+      text-transform: uppercase;
     }
-    h1 {
-      font-size: 16pt;
-      color: #1a5276;
-      border-bottom: 2px solid #1a5276;
-      padding-bottom: 8px;
-      margin-bottom: 20px;
+    .company-sub {
+      font-size: 8.5pt;
+      margin-bottom: 3px;
     }
-    table {
+    .sri-box-title {
+      font-size: 10pt;
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+    .sri-ruc {
+      font-size: 11pt;
+      font-weight: bold;
+      color: #0b3c5d;
+      margin-bottom: 4px;
+    }
+    .sri-doc-type {
+      font-size: 12pt;
+      font-weight: bold;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+    .sri-doc-num {
+      font-size: 11pt;
+      font-weight: bold;
+      color: #c0392b;
+      margin-bottom: 6px;
+    }
+    .clave-acceso-container {
+      margin-top: 6px;
+      padding: 6px;
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      text-align: center;
+    }
+    .clave-acceso-text {
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 7.5pt;
+      font-weight: bold;
+      letter-spacing: 0.5px;
+      word-break: break-all;
+      margin-top: 4px;
+    }
+    .client-card {
+      width: 100%;
+      border: 1px solid #999;
+      border-radius: 8px;
+      padding: 8px 12px;
+      margin-bottom: 12px;
+    }
+    .client-table {
       width: 100%;
       border-collapse: collapse;
-      margin-bottom: 15px;
     }
-    th, td {
-      border: 1px solid #ccc;
-      padding: 6px 10px;
+    .client-table td {
+      padding: 2px 4px;
+      font-size: 8.5pt;
+    }
+    .label {
+      font-weight: bold;
+      color: #333;
+    }
+    .items-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 12px;
+    }
+    .items-table th {
+      background-color: #0b3c5d;
+      color: #fff;
+      font-weight: bold;
+      font-size: 8pt;
+      padding: 5px 6px;
+      border: 1px solid #0b3c5d;
       text-align: left;
+    }
+    .items-table td {
+      padding: 4px 6px;
+      border: 1px solid #ccc;
+      font-size: 8pt;
+    }
+    .text-center { text-align: center; }
+    .text-right { text-align: right; }
+    
+    .bottom-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 10px 0;
+    }
+    .bottom-col-info {
+      width: 55%;
+      vertical-align: top;
+      border: 1px solid #999;
+      border-radius: 8px;
+      padding: 10px;
+    }
+    .bottom-col-totals {
+      width: 45%;
       vertical-align: top;
     }
-    th {
-      background-color: #f0f4f8;
-      font-weight: 600;
-      width: 30%;
+    .totals-table {
+      width: 100%;
+      border-collapse: collapse;
     }
-    td {
-      width: 70%;
+    .totals-table td {
+      padding: 3px 6px;
+      border: 1px solid #999;
+      font-size: 8pt;
+    }
+    .totals-table td.total-label {
+      font-weight: bold;
+      background: #f0f4f8;
+      width: 65%;
+    }
+    .totals-table td.grand-total {
+      font-weight: bold;
+      font-size: 9.5pt;
+      background: #e8f4f8;
+      color: #0b3c5d;
     }
     .footer {
-      margin-top: 30px;
-      font-size: 9pt;
-      color: #888;
+      margin-top: 15px;
       text-align: center;
-      border-top: 1px solid #ddd;
-      padding-top: 10px;
-    }
-    .badge {
-      display: inline-block;
-      background: #1a5276;
-      color: white;
-      padding: 2px 10px;
-      border-radius: 3px;
-      font-size: 9pt;
+      font-size: 7.5pt;
+      color: #777;
+      border-top: 1px dashed #ccc;
+      padding-top: 6px;
     }
   </style>
 </head>
 <body>
-  <h1>{{title}}</h1>
-  <p><span class="badge">Generado: {{generatedAt}}</span></p>
 
-  <table>
-    {{#each data}}
+  <!-- HEADER: 2 Columnas Estándar RIDE SRI -->
+  <table class="header-table">
+    <tr>
+      <!-- Columna Izquierda: Datos del Emisor -->
+      <td class="header-col-left">
+        {{#if emisor.logoUrl}}
+          <img src="{{emisor.logoUrl}}" alt="Logo" class="company-logo" />
+        {{/if}}
+        <div class="company-title">{{emisor.razonSocial}}</div>
+        {{#if emisor.nombreComercial}}
+          <div class="company-sub"><strong>Nombre Comercial:</strong> {{emisor.nombreComercial}}</div>
+        {{/if}}
+        <div class="company-sub"><strong>Matriz:</strong> {{emisor.dirMatriz}}</div>
+        {{#if emisor.dirEstablecimiento}}
+          <div class="company-sub"><strong>Sucursal:</strong> {{emisor.dirEstablecimiento}}</div>
+        {{/if}}
+        {{#if emisor.contribuyenteEspecial}}
+          <div class="company-sub"><strong>Contribuyente Especial Nro:</strong> {{emisor.contribuyenteEspecial}}</div>
+        {{/if}}
+        <div class="company-sub">
+          <strong>Obligado a Llevar Contabilidad:</strong> {{#if emisor.obligadoContabilidad}}SÍ{{else}}NO{{/if}}
+        </div>
+        {{#if emisor.regimenRimpe}}
+          <div class="company-sub"><strong>Régimen:</strong> {{emisor.regimenRimpe}}</div>
+        {{/if}}
+      </td>
+
+      <!-- Columna Derecha: Recuadro Tributario SRI -->
+      <td class="header-col-right">
+        <div class="sri-ruc">R.U.C.: {{emisor.ruc}}</div>
+        <div class="sri-doc-type">{{tipoDocumento}}</div>
+        <div class="sri-doc-num">No. {{numeroComprobante}}</div>
+        
+        <div class="company-sub"><strong>NÚMERO DE AUTORIZACIÓN:</strong></div>
+        <div class="clave-acceso-text" style="margin-bottom: 4px;">{{numeroAutorizacion}}</div>
+        
+        <div class="company-sub"><strong>FECHA Y HORA DE AUTORIZACIÓN:</strong> {{fechaAutorizacion}}</div>
+        <div class="company-sub"><strong>AMBIENTE:</strong> {{ambiente}}</div>
+        <div class="company-sub"><strong>EMISIÓN:</strong> {{tipoEmision}}</div>
+        
+        <div class="clave-acceso-container">
+          <div class="sri-box-title" style="font-size: 8pt; margin-bottom: 2px;">CLAVE DE ACCESO</div>
+          <div class="clave-acceso-text">{{claveAcceso}}</div>
+        </div>
+      </td>
+    </tr>
+  </table>
+
+  <!-- DATOS DEL CLIENTE / RECEPTOR -->
+  <div class="client-card">
+    <table class="client-table">
       <tr>
-        <th>{{@key}}</th>
-        <td>
-          {{#if (isObject this)}}
-            <pre>{{json this}}</pre>
-          {{else if (isArray this)}}
-            {{#if (isPrimitiveArray this)}}
-              <ul>
-                {{#each this}}
-                  <li>{{this}}</li>
-                {{/each}}
-              </ul>
-            {{else}}
-              <table>
-                {{#each this}}
-                  <tr>
-                    {{#each this}}
-                      <td>{{this}}</td>
-                    {{/each}}
-                  </tr>
-                {{/each}}
-              </table>
-            {{/if}}
-          {{else}}
-            {{this}}
-          {{/if}}
-        </td>
+        <td style="width: 60%;"><span class="label">Razón Social / Nombres:</span> {{comprador.razonSocial}}</td>
+        <td style="width: 40%;"><span class="label">Identificación:</span> {{comprador.identificacion}}</td>
       </tr>
-    {{/each}}
+      <tr>
+        <td><span class="label">Fecha Emisión:</span> {{fechaEmision}}</td>
+        <td><span class="label">Guía de Remisión:</span> {{comprador.guiaRemision}}</td>
+      </tr>
+      <tr>
+        <td><span class="label">Dirección:</span> {{comprador.direccion}}</td>
+        <td><span class="label">Email:</span> {{comprador.email}}</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- TABLA DE DETALLES / ITEMS -->
+  <table class="items-table">
+    <thead>
+      <tr>
+        <th style="width: 12%;">Cod. Principal</th>
+        <th style="width: 8%;" class="text-center">Cant.</th>
+        <th>Descripción</th>
+        <th style="width: 12%;" class="text-right">Precio Unit.</th>
+        <th style="width: 10%;" class="text-right">Descuento</th>
+        <th style="width: 12%;" class="text-right">Precio Total</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#each detalles}}
+        <tr>
+          <td>{{this.codigoPrincipal}}</td>
+          <td class="text-center">{{this.cantidad}}</td>
+          <td>{{this.descripcion}}</td>
+          <td class="text-right">${{this.precioUnitario}}</td>
+          <td class="text-right">${{this.descuento}}</td>
+          <td class="text-right">${{this.precioTotalSinImpuesto}}</td>
+        </tr>
+      {{/each}}
+    </tbody>
+  </table>
+
+  <!-- SECCIÓN INFERIOR: INFORMACIÓN ADICIONAL Y TOTALES -->
+  <table class="bottom-table">
+    <tr>
+      <!-- Información adicional / Forma de pago -->
+      <td class="bottom-col-info">
+        <div class="sri-box-title" style="color: #0b3c5d; border-bottom: 1px solid #ccc; padding-bottom: 2px; margin-bottom: 6px;">
+          INFORMACIÓN ADICIONAL
+        </div>
+        {{#if infoAdicional}}
+          {{#each infoAdicional}}
+            <div class="company-sub"><strong>{{this.nombre}}:</strong> {{this.valor}}</div>
+          {{/each}}
+        {{else}}
+          <div class="company-sub text-muted">Servicio de Agua Potable y Alcantarillado</div>
+        {{/if}}
+
+        {{#if pagos}}
+          <div class="sri-box-title" style="color: #0b3c5d; border-bottom: 1px solid #ccc; padding-bottom: 2px; margin-top: 10px; margin-bottom: 6px;">
+            FORMAS DE PAGO
+          </div>
+          {{#each pagos}}
+            <div class="company-sub"><strong>{{this.formaPago}}:</strong> ${{this.total}} (Plazo: {{this.plazo}} {{this.unidadTiempo}})</div>
+          {{/each}}
+        {{/if}}
+      </td>
+
+      <!-- Desglose de Totales e Impuestos SRI -->
+      <td class="bottom-col-totals">
+        <table class="totals-table">
+          <tr>
+            <td class="total-label">SUBTOTAL 15%</td>
+            <td class="text-right">${{totales.subtotal15}}</td>
+          </tr>
+          <tr>
+            <td class="total-label">SUBTOTAL 0%</td>
+            <td class="text-right">${{totales.subtotal0}}</td>
+          </tr>
+          <tr>
+            <td class="total-label">SUBTOTAL NO OBJETO DE IVA</td>
+            <td class="text-right">${{totales.subtotalNoObjeto}}</td>
+          </tr>
+          <tr>
+            <td class="total-label">SUBTOTAL EXENTO DE IVA</td>
+            <td class="text-right">${{totales.subtotalExento}}</td>
+          </tr>
+          <tr>
+            <td class="total-label">SUBTOTAL SIN IMPUESTOS</td>
+            <td class="text-right">${{totales.totalSinImpuestos}}</td>
+          </tr>
+          <tr>
+            <td class="total-label">TOTAL DESCUENTO</td>
+            <td class="text-right">${{totales.totalDescuento}}</td>
+          </tr>
+          <tr>
+            <td class="total-label">IVA 15%</td>
+            <td class="text-right">${{totales.iva15}}</td>
+          </tr>
+          <tr>
+            <td class="total-label grand-total">VALOR TOTAL</td>
+            <td class="text-right grand-total">${{totales.importeTotal}}</td>
+          </tr>
+        </table>
+      </td>
+    </tr>
   </table>
 
   <div class="footer">
-    Documento generado electrónicamente - {{generatedAt}}
+    RIDE generado conforme a la Ficha Técnica de Comprobantes Electrónicos del SRI del Ecuador.
   </div>
+
 </body>
 </html>

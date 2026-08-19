@@ -1,43 +1,72 @@
+import Decimal from 'decimal.js';
+
 export interface IPrefacturaParaCalculo {
-  totalPagar: number | { toNumber?: () => number };
-  abono: number | { toNumber?: () => number };
+  totalPagar:
+    | number
+    | string
+    | Decimal
+    | { toString?: () => string; toNumber?: () => number };
+  abono:
+    | number
+    | string
+    | Decimal
+    | { toString?: () => string; toNumber?: () => number };
   periodoId: number;
 }
 
-function toNum(val: number | { toNumber?: () => number }): number {
+function toDecimal(
+  val:
+    | number
+    | string
+    | Decimal
+    | { toString?: () => string; toNumber?: () => number },
+): Decimal {
+  if (val instanceof Decimal) {
+    return val;
+  }
   if (
     typeof val === 'object' &&
     val !== null &&
     typeof (val as any).toNumber === 'function'
   ) {
-    return (val as any).toNumber();
+    return new Decimal((val as any).toNumber());
   }
-  const n = Number(val);
-  if (!Number.isFinite(n)) {
+  try {
+    const d = new Decimal(val as any);
+    if (!d.isFinite()) {
+      throw new TypeError('Valor numérico inválido en cálculo de deuda');
+    }
+    return d;
+  } catch {
     throw new TypeError('Valor numérico inválido en cálculo de deuda');
   }
-  return n;
 }
 
 export class DebtCalculatorHelper {
   static saldoPendienteItem(p: IPrefacturaParaCalculo): number {
-    return (
-      Math.round(Math.max(0, toNum(p.totalPagar) - toNum(p.abono)) * 100) / 100
-    );
+    const totalPagar = toDecimal(p.totalPagar);
+    const abono = toDecimal(p.abono);
+    const saldo = Decimal.max(0, totalPagar.minus(abono));
+    return saldo.toDecimalPlaces(2, Decimal.ROUND_HALF_UP).toNumber();
   }
 
   static calcularSaldoVencido(prefacturas: IPrefacturaParaCalculo[]): number {
-    const total = prefacturas.reduce(
-      (acc, p) => acc + Math.max(0, toNum(p.totalPagar) - toNum(p.abono)),
-      0,
-    );
-    return Math.round(total * 100) / 100;
+    const total = prefacturas.reduce((acc, p) => {
+      const totalPagar = toDecimal(p.totalPagar);
+      const abono = toDecimal(p.abono);
+      const saldo = Decimal.max(0, totalPagar.minus(abono));
+      return acc.plus(saldo);
+    }, new Decimal(0));
+
+    return total.toDecimalPlaces(2, Decimal.ROUND_HALF_UP).toNumber();
   }
 
   static calcularMesesAtrasado(prefacturas: IPrefacturaParaCalculo[]): number {
-    return prefacturas.filter(
-      (p) => Math.max(0, toNum(p.totalPagar) - toNum(p.abono)) > 0,
-    ).length;
+    return prefacturas.filter((p) => {
+      const totalPagar = toDecimal(p.totalPagar);
+      const abono = toDecimal(p.abono);
+      return totalPagar.minus(abono).greaterThan(0);
+    }).length;
   }
 
   static calcularDeudaAnterior(prefacturas: IPrefacturaParaCalculo[]): number {
@@ -45,10 +74,10 @@ export class DebtCalculatorHelper {
     const maxPeriodoId = Math.max(...prefacturas.map((p) => p.periodoId));
     const anterior = prefacturas.find((p) => p.periodoId === maxPeriodoId - 1);
     if (!anterior) return 0;
-    return (
-      Math.round(
-        Math.max(0, toNum(anterior.totalPagar) - toNum(anterior.abono)) * 100,
-      ) / 100
-    );
+
+    const totalPagar = toDecimal(anterior.totalPagar);
+    const abono = toDecimal(anterior.abono);
+    const saldo = Decimal.max(0, totalPagar.minus(abono));
+    return saldo.toDecimalPlaces(2, Decimal.ROUND_HALF_UP).toNumber();
   }
 }
