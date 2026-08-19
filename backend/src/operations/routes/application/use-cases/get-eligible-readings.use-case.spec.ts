@@ -120,7 +120,7 @@ describe('GetEligibleReadingsUseCase', () => {
         sectorId: undefined,
         search: 'Juan',
       },
-      { skip: 15, take: 15, page: 2 },
+      { skip: 15, take: 15, page: 2, limit: 15 },
     );
 
     expect(result.meta.total).toBe(1);

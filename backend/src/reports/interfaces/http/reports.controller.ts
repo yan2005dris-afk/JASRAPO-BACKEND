@@ -258,9 +258,7 @@ export class ReportsController {
     status: 200,
     description: 'Datos de morosidad en formato JSON',
   })
-  async overdueAccounts(
-    @Query() filters: OverdueAccountsFilterDto,
-  ) {
+  async overdueAccounts(@Query() filters: OverdueAccountsFilterDto) {
     this.logger.log(
       `Generating overdue-accounts — filters: ${JSON.stringify(filters)}`,
     );

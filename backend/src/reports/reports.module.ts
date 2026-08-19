@@ -7,8 +7,6 @@ import { ClientsListReportSpec } from './infrastructure/specs/clients-list.repor
 import { PaymentsReportSpec } from './infrastructure/specs/payments-report.report-spec';
 import { ConnectionHistoryReportSpec } from './infrastructure/specs/connection-history.report-spec';
 import { AccountStatementReportSpec } from './infrastructure/specs/account-statement.report-spec';
-import { ClientsListPdfDocumentType } from './pdf/clients-list.pdf-type';
-import { AccountStatementPdfDocumentType } from './pdf/account-statement.pdf-type';
 import { PaymentsReportLegacyPdfDocumentType } from './pdf/payments-report-legacy.pdf-type';
 import { PaymentsReportModernPdfDocumentType } from './pdf/payments-report-modern.pdf-type';
 import { createPaymentAgreementPdfDocumentType } from './pdf/factories/payment-agreement.factory';

@@ -79,7 +79,11 @@ export class UpdatePreInvoiceStateUseCase {
       });
 
       // Populate comprobante_detalles from prefactura detalles
-      if (comprobante.id && preInvoice.detalles && preInvoice.detalles.length > 0) {
+      if (
+        comprobante.id &&
+        preInvoice.detalles &&
+        preInvoice.detalles.length > 0
+      ) {
         const comprobanteId = comprobante.id;
         const detallesToCreate = preInvoice.detalles.map((d, index) => ({
           comprobante_id: comprobanteId,

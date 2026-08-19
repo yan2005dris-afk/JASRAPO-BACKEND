@@ -25,14 +25,18 @@ export class OverdueAccountsReportSpec implements ReportSpec<OverdueAccountsFilt
   async fetchData(
     filters: OverdueAccountsFilterDto,
   ): Promise<Record<string, unknown>> {
-    const fechaCorte = filters.fechaCorte ? new Date(filters.fechaCorte) : new Date();
+    const fechaCorte = filters.fechaCorte
+      ? new Date(filters.fechaCorte)
+      : new Date();
 
     const prefacturas = await this.prisma.prefacturas.findMany({
       where: {
         deletedAt: null,
         estado: { notIn: ['ANULADA', 'PAGADA'] },
         saldoActual: { gt: 0 },
-        ...(filters.contratoId ? { contratoId: BigInt(filters.contratoId) } : {}),
+        ...(filters.contratoId
+          ? { contratoId: BigInt(filters.contratoId) }
+          : {}),
         ...(filters.clienteId
           ? { contrato: { clienteId: BigInt(filters.clienteId) } }
           : {}),
@@ -70,17 +74,20 @@ export class OverdueAccountsReportSpec implements ReportSpec<OverdueAccountsFilt
     });
 
     // Agrupar por contratoId
-    const contratosMap = new Map<string, {
-      contratoId: string;
-      numeroGuia: string;
-      clienteNombre: string;
-      identificacion: string;
-      sectorNombre: string;
-      medidorSerie: string;
-      prefacturas: typeof prefacturas;
-      totalSaldo: number;
-      ultimaEmision: string;
-    }>();
+    const contratosMap = new Map<
+      string,
+      {
+        contratoId: string;
+        numeroGuia: string;
+        clienteNombre: string;
+        identificacion: string;
+        sectorNombre: string;
+        medidorSerie: string;
+        prefacturas: typeof prefacturas;
+        totalSaldo: number;
+        ultimaEmision: string;
+      }
+    >();
 
     for (const pf of prefacturas) {
       const cId = String(pf.contratoId);
@@ -92,7 +99,8 @@ export class OverdueAccountsReportSpec implements ReportSpec<OverdueAccountsFilt
       const identificacion = cliente?.identificacion || '—';
       const sectorNombre = pf.contrato?.sector?.nombre || '—';
       const numeroGuia = pf.contrato?.numeroGuia || cId;
-      const medidorSerie = pf.contrato?.historialMedidores?.[0]?.medidor?.serie || '—';
+      const medidorSerie =
+        pf.contrato?.historialMedidores?.[0]?.medidor?.serie || '—';
       const saldo = Number(pf.saldoActual || 0);
       const emision = pf.periodoRel?.nombre || '—';
 
@@ -116,23 +124,28 @@ export class OverdueAccountsReportSpec implements ReportSpec<OverdueAccountsFilt
       item.ultimaEmision = emision;
     }
 
-    const morosos: MorosoItem[] = Array.from(contratosMap.values()).map((c) => ({
-      contratoId: c.contratoId,
-      numeroGuia: c.numeroGuia,
-      clienteNombre: c.clienteNombre,
-      identificacion: c.identificacion,
-      sectorNombre: c.sectorNombre,
-      mesesVencidos: c.prefacturas.length,
-      saldoPendiente: c.totalSaldo.toFixed(2),
-      saldoPendienteNum: c.totalSaldo,
-      ultimaEmision: c.ultimaEmision,
-      medidorSerie: c.medidorSerie,
-    }));
+    const morosos: MorosoItem[] = Array.from(contratosMap.values()).map(
+      (c) => ({
+        contratoId: c.contratoId,
+        numeroGuia: c.numeroGuia,
+        clienteNombre: c.clienteNombre,
+        identificacion: c.identificacion,
+        sectorNombre: c.sectorNombre,
+        mesesVencidos: c.prefacturas.length,
+        saldoPendiente: c.totalSaldo.toFixed(2),
+        saldoPendienteNum: c.totalSaldo,
+        ultimaEmision: c.ultimaEmision,
+        medidorSerie: c.medidorSerie,
+      }),
+    );
 
     // Ordenar de mayor a menor deuda
     morosos.sort((a, b) => b.saldoPendienteNum - a.saldoPendienteNum);
 
-    const totalMorosidad = morosos.reduce((acc, m) => acc + m.saldoPendienteNum, 0);
+    const totalMorosidad = morosos.reduce(
+      (acc, m) => acc + m.saldoPendienteNum,
+      0,
+    );
     const mayorDeuda = morosos.length > 0 ? morosos[0].saldoPendienteNum : 0;
 
     return {

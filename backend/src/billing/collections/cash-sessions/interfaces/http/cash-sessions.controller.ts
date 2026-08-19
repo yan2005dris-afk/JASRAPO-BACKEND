@@ -46,7 +46,9 @@ export class CashSessionsController {
 
   @Post(':id/movements')
   @RequiredPermission('payments', 'create')
-  @ApiOperation({ summary: 'Registra un gasto menor / egreso en la caja activa' })
+  @ApiOperation({
+    summary: 'Registra un gasto menor / egreso en la caja activa',
+  })
   async addMovement(
     @Param('id') id: string,
     @Body() dto: CreateCashMovementDto,
@@ -58,7 +60,9 @@ export class CashSessionsController {
 
   @Post(':id/close')
   @RequiredPermission('payments', 'update')
-  @ApiOperation({ summary: 'Cierra la sesión de caja con arqueo físico y reporte' })
+  @ApiOperation({
+    summary: 'Cierra la sesión de caja con arqueo físico y reporte',
+  })
   async close(
     @Param('id') id: string,
     @Body() dto: CloseCashSessionDto,

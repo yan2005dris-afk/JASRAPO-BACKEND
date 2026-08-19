@@ -12,7 +12,12 @@ import {
   ParseIntPipe,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiConsumes,
+} from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
@@ -37,7 +42,9 @@ export class EmpresaAdminController {
 
   @Get()
   @RequiredPermission('emisores', 'read')
-  @ApiOperation({ summary: 'Obtener información de la empresa con establecimientos y cajas' })
+  @ApiOperation({
+    summary: 'Obtener información de la empresa con establecimientos y cajas',
+  })
   async getEmpresaCompleta() {
     const emisor = await this.prisma.empresa.findFirst({
       orderBy: { id: 'asc' },
@@ -130,7 +137,9 @@ export class EmpresaAdminController {
 
   @Post('establecimientos/:id/puntos-emision')
   @RequiredPermission('emisores', 'create')
-  @ApiOperation({ summary: 'Crear una nueva caja / punto de emisión en un establecimiento' })
+  @ApiOperation({
+    summary: 'Crear una nueva caja / punto de emisión en un establecimiento',
+  })
   async createPuntoEmision(
     @Param('id', ParseIntPipe) establecimientoId: number,
     @Body() dto: CreatePuntoEmisionDto,
@@ -147,7 +156,10 @@ export class EmpresaAdminController {
 
   @Get('puntos-emision/active')
   @RequiredPermission('payments', 'read')
-  @ApiOperation({ summary: 'Listar puntos de emisión activos para selector de apertura de caja' })
+  @ApiOperation({
+    summary:
+      'Listar puntos de emisión activos para selector de apertura de caja',
+  })
   async getActivePuntosEmision() {
     const puntos = await this.prisma.puntosEmision.findMany({
       where: { estado: 'ACTIVO' },
@@ -190,7 +202,11 @@ export class EmpresaAdminController {
     @UploadedFile() file: Express.Multer.File,
     @Body() dto: UploadCertificadoDto,
   ) {
-    return this.emisoresService.uploadCertificado(id, file.buffer, dto.password);
+    return this.emisoresService.uploadCertificado(
+      id,
+      file.buffer,
+      dto.password,
+    );
   }
 
   @Delete(':id/certificado')

@@ -1,6 +1,14 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
-import { OpenCashSessionDto, CreateCashMovementDto, CloseCashSessionDto } from '../../interfaces/dto/cash-session.dto';
+import {
+  OpenCashSessionDto,
+  CreateCashMovementDto,
+  CloseCashSessionDto,
+} from '../../interfaces/dto/cash-session.dto';
 
 @Injectable()
 export class PrismaCashSessionRepository {
@@ -46,7 +54,9 @@ export class PrismaCashSessionRepository {
     }
 
     // Calcular KPIs y totales acumulados de la sesión
-    const pagosValidos = session.pagos.filter((p) => p.estadoPago !== 'ANULADO');
+    const pagosValidos = session.pagos.filter(
+      (p) => p.estadoPago !== 'ANULADO',
+    );
 
     let totalRecaudado = 0;
     let totalEfectivo = 0;
@@ -79,7 +89,8 @@ export class PrismaCashSessionRepository {
     }
 
     const montoApertura = Number(session.montoApertura) || 0;
-    const efectivoEsperado = montoApertura + totalEfectivo + totalIngresosExtra - totalEgresos;
+    const efectivoEsperado =
+      montoApertura + totalEfectivo + totalIngresosExtra - totalEgresos;
 
     return {
       cajaId: session.cajaId.toString(),
@@ -117,7 +128,11 @@ export class PrismaCashSessionRepository {
         clienteIdentificacion: p.cliente?.identificacion,
         montoTotalRecibido: Number(p.montoTotalRecibido),
         fechaPago: p.fechaPago,
-        metodo: p.banco ? `BANCO: ${p.banco}` : p.tarjetaCredito ? `TARJETA: ${p.tarjetaCredito}` : 'EFECTIVO',
+        metodo: p.banco
+          ? `BANCO: ${p.banco}`
+          : p.tarjetaCredito
+            ? `TARJETA: ${p.tarjetaCredito}`
+            : 'EFECTIVO',
         numeroOperacion: p.numeroOperacion,
         referenciaBanco: p.referenciaBanco,
       })),
@@ -134,7 +149,9 @@ export class PrismaCashSessionRepository {
     });
 
     if (existing) {
-      throw new BadRequestException('Ya existe una sesión de caja abierta para este usuario');
+      throw new BadRequestException(
+        'Ya existe una sesión de caja abierta para este usuario',
+      );
     }
 
     const session = await this.prisma.cajaSesion.create({
@@ -154,7 +171,11 @@ export class PrismaCashSessionRepository {
     };
   }
 
-  async addMovement(cajaId: bigint, dto: CreateCashMovementDto, creadoPor: string) {
+  async addMovement(
+    cajaId: bigint,
+    dto: CreateCashMovementDto,
+    creadoPor: string,
+  ) {
     const session = await this.prisma.cajaSesion.findUnique({
       where: { cajaId },
     });
@@ -164,7 +185,9 @@ export class PrismaCashSessionRepository {
     }
 
     if (session.estado !== 'ABIERTA') {
-      throw new BadRequestException('No se pueden registrar gastos en una caja cerrada');
+      throw new BadRequestException(
+        'No se pueden registrar gastos en una caja cerrada',
+      );
     }
 
     const mov = await this.prisma.cajaMovimiento.create({
@@ -189,7 +212,11 @@ export class PrismaCashSessionRepository {
     };
   }
 
-  async closeSession(cajaId: bigint, dto: CloseCashSessionDto, _cerradoPor: string) {
+  async closeSession(
+    cajaId: bigint,
+    dto: CloseCashSessionDto,
+    _cerradoPor: string,
+  ) {
     const session = await this.prisma.cajaSesion.findUnique({
       where: { cajaId },
       include: {
@@ -203,7 +230,9 @@ export class PrismaCashSessionRepository {
     }
 
     if (session.estado !== 'ABIERTA') {
-      throw new BadRequestException('La sesión de caja ya se encuentra cerrada');
+      throw new BadRequestException(
+        'La sesión de caja ya se encuentra cerrada',
+      );
     }
 
     // 1. Calcular arqueo físico real
@@ -221,7 +250,9 @@ export class PrismaCashSessionRepository {
     });
 
     // 2. Calcular sistema
-    const pagosValidos = session.pagos.filter((p) => p.estadoPago !== 'ANULADO');
+    const pagosValidos = session.pagos.filter(
+      (p) => p.estadoPago !== 'ANULADO',
+    );
     let totalEfectivo = 0;
     for (const p of pagosValidos) {
       if (!p.banco && !p.tarjetaCredito) {
@@ -239,9 +270,16 @@ export class PrismaCashSessionRepository {
 
     const montoApertura = Number(session.montoApertura) || 0;
     const montoCierreSistema = Number(
-      (montoApertura + totalEfectivo + totalIngresosExtra - totalEgresos).toFixed(2),
+      (
+        montoApertura +
+        totalEfectivo +
+        totalIngresosExtra -
+        totalEgresos
+      ).toFixed(2),
     );
-    const diferencia = Number((montoCierreReal - montoCierreSistema).toFixed(2));
+    const diferencia = Number(
+      (montoCierreReal - montoCierreSistema).toFixed(2),
+    );
     const nuevoEstado = Math.abs(diferencia) < 0.01 ? 'CERRADA' : 'DESCUADRADA';
 
     return await this.prisma.$transaction(async (tx) => {
@@ -259,7 +297,9 @@ export class PrismaCashSessionRepository {
           montoCierreSistema,
           montoCierreReal,
           totalTransferenciasDeclaradas: dto.totalTransferenciasDeclaradas ?? 0,
-          novedadCierre: dto.novedadCierre || (diferencia !== 0 ? `Diferencia: $${diferencia}` : undefined),
+          novedadCierre:
+            dto.novedadCierre ||
+            (diferencia !== 0 ? `Diferencia: $${diferencia}` : undefined),
           estado: nuevoEstado,
         },
       });
@@ -298,7 +338,9 @@ export class PrismaCashSessionRepository {
         creadoPor: s.creadoPor,
         fechaApertura: s.fechaApertura,
         montoApertura: Number(s.montoApertura),
-        montoCierreSistema: s.montoCierreSistema ? Number(s.montoCierreSistema) : null,
+        montoCierreSistema: s.montoCierreSistema
+          ? Number(s.montoCierreSistema)
+          : null,
         montoCierreReal: s.montoCierreReal ? Number(s.montoCierreReal) : null,
         estado: s.estado,
         novedadCierre: s.novedadCierre,

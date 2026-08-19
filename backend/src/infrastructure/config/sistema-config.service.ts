@@ -72,7 +72,7 @@ export class SistemaConfigService {
     return this.repository.findAll();
   }
 
-  async getRecord(clave: string): Promise<any | null> {
+  async getRecord(clave: string): Promise<any> {
     return this.repository.findRecordByClave(clave);
   }
 

@@ -78,7 +78,8 @@ export class PaymentsController {
 
   @ApiOperation({
     summary: 'Subir comprobante de transferencia o depósito',
-    description: 'Sube un archivo de imagen o PDF a RustFS/S3 y retorna la clave y URL prefirmada.',
+    description:
+      'Sube un archivo de imagen o PDF a RustFS/S3 y retorna la clave y URL prefirmada.',
   })
   @ApiResponse({ status: 201, description: 'Comprobante subido exitosamente' })
   @RequiredPermission('payments', 'create')
@@ -96,14 +97,13 @@ export class PaymentsController {
 
   @ApiOperation({
     summary: 'Obtener URL prefirmada de un comprobante',
-    description: 'Genera una URL temporal para visualizar o descargar el comprobante desde RustFS/S3.',
+    description:
+      'Genera una URL temporal para visualizar o descargar el comprobante desde RustFS/S3.',
   })
   @ApiResponse({ status: 200, description: 'URL prefirmada generada' })
   @RequiredPermission('payments', 'read')
   @Get('comprobante-url')
-  async getComprobanteUrl(
-    @Query('key') key: string,
-  ): Promise<{ url: string }> {
+  async getComprobanteUrl(@Query('key') key: string): Promise<{ url: string }> {
     const url = await this.paymentsService.getComprobanteUrl(key);
     return { url };
   }

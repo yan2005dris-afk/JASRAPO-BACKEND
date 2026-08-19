@@ -150,7 +150,9 @@ export class PreInvoiceResponseDto {
     dto.periodoFechaInicio = entity.periodoRel?.fechaInicio ?? null;
     dto.periodoFechaFin = entity.periodoRel?.fechaFin ?? null;
     dto.tarifaNombre = entity.tarifaNombre ?? null;
-    dto.comprobanteId = entity.comprobanteId ? String(entity.comprobanteId) : null;
+    dto.comprobanteId = entity.comprobanteId
+      ? String(entity.comprobanteId)
+      : null;
     dto.createdAt = entity.createdAt;
     dto.updatedAt = entity.updatedAt;
     dto.detalles = entity.detalles?.map(PreInvoiceDetailResponseDto.fromEntity);
