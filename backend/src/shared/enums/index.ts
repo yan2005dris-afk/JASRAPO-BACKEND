@@ -155,6 +155,19 @@ export type EstadoMedidor = (typeof EstadoMedidor)[keyof typeof EstadoMedidor];
 
 // Fuente: models/logica-de-negocio/Medidores.prisma
 
+export const EstadoOrdenTrabajo = {
+  PENDIENTE: 'PENDIENTE',
+  EN_PROGRESO: 'EN_PROGRESO',
+  COMPLETADA: 'COMPLETADA',
+  CANCELADA: 'CANCELADA',
+  FALLIDA: 'FALLIDA',
+} as const;
+
+export type EstadoOrdenTrabajo =
+  (typeof EstadoOrdenTrabajo)[keyof typeof EstadoOrdenTrabajo];
+
+// Fuente: models/logica-de-negocio/OrdenTrabajo.prisma
+
 export const EstadoPago = {
   PENDIENTE: 'PENDIENTE',
   REGISTRADO: 'REGISTRADO',
@@ -189,6 +202,17 @@ export type EstadoPrefactura =
 
 // Fuente: models/facturacion/Prefacturas.prisma
 
+export const EstadoResolucionConsumo = {
+  PENDIENTE: 'PENDIENTE',
+  APLICADA: 'APLICADA',
+  ANULADA: 'ANULADA',
+} as const;
+
+export type EstadoResolucionConsumo =
+  (typeof EstadoResolucionConsumo)[keyof typeof EstadoResolucionConsumo];
+
+// Fuente: models/logica-de-negocio/ReemplazoMedidor.prisma
+
 export const EstadoRuta = {
   PENDIENTE: 'PENDIENTE',
   EN_PROGRESO: 'EN_PROGRESO',
@@ -214,6 +238,33 @@ export type EstadoValidacionPago =
 
 // Fuente: models/logica-de-negocio/Pagos.prisma
 
+export const MotivoReemplazoMedidor = {
+  DANO: 'DANO',
+  MANTENIMIENTO_PREVENTIVO: 'MANTENIMIENTO_PREVENTIVO',
+  CALIBRACION: 'CALIBRACION',
+  REUBICACION: 'REUBICACION',
+  FIN_VIDA_UTIL: 'FIN_VIDA_UTIL',
+  OTRO: 'OTRO',
+} as const;
+
+export type MotivoReemplazoMedidor =
+  (typeof MotivoReemplazoMedidor)[keyof typeof MotivoReemplazoMedidor];
+
+// Fuente: models/logica-de-negocio/ReemplazoMedidor.prisma
+
+export const ResponsabilidadDano = {
+  USUARIO: 'USUARIO',
+  JUNTA: 'JUNTA',
+  TERCERO: 'TERCERO',
+  NO_DETERMINADA: 'NO_DETERMINADA',
+  NO_APLICA: 'NO_APLICA',
+} as const;
+
+export type ResponsabilidadDano =
+  (typeof ResponsabilidadDano)[keyof typeof ResponsabilidadDano];
+
+// Fuente: models/logica-de-negocio/ReemplazoMedidor.prisma
+
 export const TarjetaCredito = {
   DINERS: 'DINERS',
   MASTERCARD: 'MASTERCARD',
@@ -225,6 +276,18 @@ export type TarjetaCredito =
   (typeof TarjetaCredito)[keyof typeof TarjetaCredito];
 
 // Fuente: models/logica-de-negocio/Pagos.prisma
+
+export const TipoActividadOrden = {
+  INSTALACION: 'INSTALACION',
+  LECTURA: 'LECTURA',
+  RECONEXION: 'RECONEXION',
+  INSPECCION: 'INSPECCION',
+} as const;
+
+export type TipoActividadOrden =
+  (typeof TipoActividadOrden)[keyof typeof TipoActividadOrden];
+
+// Fuente: models/logica-de-negocio/OrdenTrabajo.prisma
 
 export const TipoAnomalia = {
   FUGA: 'FUGA',
@@ -262,6 +325,15 @@ export type TipoDetallePago =
 
 // Fuente: models/logica-de-negocio/DetallePago.prisma
 
+export const TipoMovCaja = {
+  EGRESO: 'EGRESO',
+  INGRESO_EXTRA: 'INGRESO_EXTRA',
+} as const;
+
+export type TipoMovCaja = (typeof TipoMovCaja)[keyof typeof TipoMovCaja];
+
+// Fuente: models/logica-de-negocio/CajaMovimiento.prisma
+
 export const TipoOrigenAbono = {
   PAGO_EXCESO: 'PAGO_EXCESO',
   AJUSTE_RECLAMO: 'AJUSTE_RECLAMO',
@@ -296,3 +368,25 @@ export const TipoRuta = {
 export type TipoRuta = (typeof TipoRuta)[keyof typeof TipoRuta];
 
 // Fuente: models/logica-de-negocio/Rutas.prisma
+
+export const TratamientoEntrante = {
+  FACTURAR_PERIODO_ACTUAL: 'FACTURAR_PERIODO_ACTUAL',
+  DIFERIR_SIGUIENTE_PERIODO: 'DIFERIR_SIGUIENTE_PERIODO',
+} as const;
+
+export type TratamientoEntrante =
+  (typeof TratamientoEntrante)[keyof typeof TratamientoEntrante];
+
+// Fuente: models/logica-de-negocio/ReemplazoMedidor.prisma
+
+export const TratamientoSaliente = {
+  COBRO_REAL: 'COBRO_REAL',
+  PROMEDIO_HISTORICO: 'PROMEDIO_HISTORICO',
+  EXONERADO: 'EXONERADO',
+  COBRO_PARCIAL: 'COBRO_PARCIAL',
+} as const;
+
+export type TratamientoSaliente =
+  (typeof TratamientoSaliente)[keyof typeof TratamientoSaliente];
+
+// Fuente: models/logica-de-negocio/ReemplazoMedidor.prisma

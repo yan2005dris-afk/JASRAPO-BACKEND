@@ -1,0 +1,89 @@
+model ReemplazoMedidor {
+  reemplazoId                 BigInt                  @id @default(autoincrement()) @map("reemplazo_id")
+  contratoId                  BigInt                  @map("contrato_id")
+  historialSalienteId         BigInt                  @unique @map("historial_saliente_id")
+  historialEntranteId         BigInt                  @unique @map("historial_entrante_id")
+  lecturaFinalSalienteId      BigInt?                 @map("lectura_final_saliente_id")
+  lecturaInicialEntranteId    BigInt?                 @map("lectura_inicial_entrante_id")
+  ordenTrabajoId              BigInt?                 @map("orden_trabajo_id")
+  periodoOrigenId             Int                     @map("periodo_origen_id")
+  periodoDestinoId            Int?                    @map("periodo_destino_id")
+  motivo                      MotivoReemplazoMedidor  @map("motivo")
+  responsabilidadDano         ResponsabilidadDano     @default(NO_APLICA) @map("responsabilidad_dano")
+  detalleMotivo               String?                 @map("detalle_motivo")
+  tratamientoSaliente         TratamientoSaliente     @map("tratamiento_saliente")
+  tratamientoEntrante         TratamientoEntrante     @map("tratamiento_entrante")
+  consumoMedidoSaliente       Decimal                 @default(0) @map("consumo_medido_saliente") @db.Decimal(18, 2)
+  consumoFacturableSaliente   Decimal                 @default(0) @map("consumo_facturable_saliente") @db.Decimal(18, 2)
+  consumoMedidoEntrante       Decimal                 @default(0) @map("consumo_medido_entrante") @db.Decimal(18, 2)
+  consumoFacturableEntrante   Decimal                 @default(0) @map("consumo_facturable_entrante") @db.Decimal(18, 2)
+  consumoDiferidoEntrante     Decimal                 @default(0) @map("consumo_diferido_entrante") @db.Decimal(18, 2)
+  ventanaPromedio             Int?                    @map("ventana_promedio")
+  promedioCalculado           Decimal?                @map("promedio_calculado") @db.Decimal(18, 2)
+  porcentajeCobro             Decimal?                @map("porcentaje_cobro") @db.Decimal(5, 2)
+  tarifaOrigenSnapshot        Json?                   @map("tarifa_origen_snapshot")
+  prefacturaDetalleSalienteId BigInt?                 @map("prefactura_detalle_saliente_id")
+  prefacturaDetalleEntranteId BigInt?                 @unique @map("prefactura_detalle_entrante_id")
+  estado                      EstadoResolucionConsumo @default(PENDIENTE) @map("estado")
+  solicitadoPorUsuarioId      String?                 @map("solicitado_por_usuario_id")
+  autorizadoPorUsuarioId      String?                 @map("autorizado_por_usuario_id")
+  autorizadoEn                DateTime?               @map("autorizado_en")
+  createdAt                   DateTime                @default(now()) @map("creado_en")
+  updatedAt                   DateTime                @updatedAt @map("actualizado_en")
+  deletedAt                   DateTime?               @map("borrado_en")
+  creadoPor                   String?                 @map("creado_por")
+  actualizadoPor              String?                 @map("actualizado_por")
+
+  contrato                    Contratos               @relation(fields: [contratoId], references: [contratoId])
+  historialSaliente           HistorialMedidores      @relation("ReemplazoMedidorSaliente", fields: [historialSalienteId], references: [historialId])
+  historialEntrante           HistorialMedidores      @relation("ReemplazoMedidorEntrante", fields: [historialEntranteId], references: [historialId])
+  lecturaFinalSaliente        Lecturas?               @relation("LecturaFinalSaliente", fields: [lecturaFinalSalienteId], references: [lecturaId])
+  lecturaInicialEntrante      Lecturas?               @relation("LecturaInicialEntrante", fields: [lecturaInicialEntranteId], references: [lecturaId])
+  ordenTrabajo                OrdenesTrabajo?         @relation(fields: [ordenTrabajoId], references: [ordenTrabajoId])
+  periodoOrigen               Periodos                @relation("ReemplazoPeriodoOrigen", fields: [periodoOrigenId], references: [periodoId])
+  periodoDestino              Periodos?               @relation("ReemplazoPeriodoDestino", fields: [periodoDestinoId], references: [periodoId])
+  prefacturaDetalleSaliente   PrefacturaDetalle?      @relation("ReemplazoPrefacturaDetalleSaliente", fields: [prefacturaDetalleSalienteId], references: [prefacturaDetalleId])
+  prefacturaDetalleEntrante   PrefacturaDetalle?      @relation("ReemplazoPrefacturaDetalleEntrante", fields: [prefacturaDetalleEntranteId], references: [prefacturaDetalleId])
+
+  @@index([contratoId])
+  @@index([periodoOrigenId])
+  @@index([periodoDestinoId])
+  @@index([prefacturaDetalleSalienteId])
+  @@index([prefacturaDetalleEntranteId])
+  @@map("reemplazos_medidor")
+}
+
+enum MotivoReemplazoMedidor {
+  DANO
+  MANTENIMIENTO_PREVENTIVO
+  CALIBRACION
+  REUBICACION
+  FIN_VIDA_UTIL
+  OTRO
+}
+
+enum ResponsabilidadDano {
+  USUARIO
+  JUNTA
+  TERCERO
+  NO_DETERMINADA
+  NO_APLICA
+}
+
+enum TratamientoSaliente {
+  COBRO_REAL
+  PROMEDIO_HISTORICO
+  EXONERADO
+  COBRO_PARCIAL
+}
+
+enum TratamientoEntrante {
+  FACTURAR_PERIODO_ACTUAL
+  DIFERIR_SIGUIENTE_PERIODO
+}
+
+enum EstadoResolucionConsumo {
+  PENDIENTE
+  APLICADA
+  ANULADA
+}

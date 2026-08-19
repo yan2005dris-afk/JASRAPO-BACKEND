@@ -4,6 +4,8 @@ import type {
   CreateMeterRepositoryData,
   UpdateMeterRepositoryData,
   CreateMeterHistoryRepositoryData,
+  ReplaceMeterRepositoryData,
+  ReplaceMeterResult,
 } from '../types/meter.types';
 import type { EstadoMedidor, EstadoContrato } from 'src/shared/enums';
 
@@ -12,6 +14,8 @@ export type {
   CreateMeterRepositoryData,
   UpdateMeterRepositoryData,
   CreateMeterHistoryRepositoryData,
+  ReplaceMeterRepositoryData,
+  ReplaceMeterResult,
 };
 
 export type TransactionContext = any;
@@ -66,4 +70,10 @@ export abstract class MeterRepository {
     estadoContrato: EstadoContrato;
     fechaInstalacion: Date;
   }): Promise<MeterEntity>;
+
+  /** Atomically replace a meter in a contract, recording telemetry,
+   *  physical readings, and audit resolution. */
+  abstract replaceMeter(
+    params: ReplaceMeterRepositoryData,
+  ): Promise<ReplaceMeterResult>;
 }

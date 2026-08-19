@@ -20,6 +20,8 @@ model Lecturas {
   ordenesTrabajo      OrdenesTrabajo[]
   lecturaAnomalias    LecturaAnomalia[]
   prefacturas         Prefacturas[]
+  reemplazosSaliente  ReemplazoMedidor[] @relation("LecturaFinalSaliente")
+  reemplazosEntrante  ReemplazoMedidor[] @relation("LecturaInicialEntrante")
 
   @@index([periodoId])
   @@index([medidorId])

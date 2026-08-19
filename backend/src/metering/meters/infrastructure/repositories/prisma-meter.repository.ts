@@ -1,18 +1,26 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { Prisma } from 'src/generated/prisma/client';
+import { Decimal } from 'decimal.js';
 import {
   MeterRepository,
   CreateMeterRepositoryData,
   UpdateMeterRepositoryData,
   CreateMeterHistoryRepositoryData,
+  ReplaceMeterRepositoryData,
+  ReplaceMeterResult,
   MeterFilters,
 } from '../../domain/repositories/meter.repository';
 import { MeterEntity } from '../../domain/entities/meter.entity';
-import { EntityAlreadyExistsException } from 'src/shared/domain/exceptions/domain.exception';
+import {
+  EntityAlreadyExistsException,
+  EntityNotFoundException,
+  InvalidDomainOperationException,
+} from 'src/shared/domain/exceptions/domain.exception';
 import type { EstadoMedidor, EstadoContrato } from 'src/shared/enums';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { MeterMapper } from '../mappers/meter.mapper';
+import { ReemplazoMedidorMapper } from '../mappers/reemplazo-medidor.mapper';
 
 export const safeMeterSelect = {
   medidorId: true,
@@ -310,5 +318,317 @@ export class PrismaMeterRepository implements MeterRepository {
     });
 
     return MeterMapper.toDomain(record)!;
+  }
+
+  async replaceMeter(
+    params: ReplaceMeterRepositoryData,
+  ): Promise<ReplaceMeterResult> {
+    const {
+      contratoId,
+      nuevoMedidorId,
+      lecturaFinalSaliente,
+      lecturaInicialEntrante = new Decimal(0),
+      motivo,
+      responsabilidadDano = 'NO_APLICA',
+      detalleMotivo,
+      tratamientoSaliente,
+      tratamientoEntrante,
+      porcentajeCobro,
+      ventanaPromedio,
+      periodoOrigenId,
+      periodoDestinoId,
+      ordenTrabajoId,
+      solicitadoPorUsuarioId,
+      autorizadoPorUsuarioId,
+      autorizadoEn,
+      fechaReemplazo = new Date(),
+    } = params;
+
+    return this.prisma.$transaction(async (tx) => {
+      // 1. Validar contrato existente y obtener historial abierto
+      const contrato = await tx.contratos.findUnique({
+        where: { contratoId },
+        include: {
+          categoriaTarifa: true,
+          historialMedidores: {
+            where: { fechaHasta: null, deletedAt: null },
+            include: { medidor: true },
+          },
+        },
+      });
+
+      if (!contrato) {
+        throw new EntityNotFoundException('Contrato', contratoId);
+      }
+
+      const openHistorial = contrato.historialMedidores[0];
+      if (!openHistorial) {
+        throw new InvalidDomainOperationException(
+          `El contrato #${contratoId} no tiene un medidor asignado actualmente para ser reemplazado`,
+        );
+      }
+
+      const medidorSalienteId = openHistorial.medidorId;
+
+      if (medidorSalienteId === nuevoMedidorId) {
+        throw new InvalidDomainOperationException(
+          'El nuevo medidor debe ser distinto del medidor saliente',
+        );
+      }
+
+      // 2. Validar nuevo medidor disponible
+      const nuevoMedidor = await tx.medidores.findUnique({
+        where: { medidorId: nuevoMedidorId },
+        include: {
+          historial: {
+            where: { fechaHasta: null, deletedAt: null },
+          },
+        },
+      });
+
+      if (!nuevoMedidor || nuevoMedidor.deletedAt) {
+        throw new EntityNotFoundException('Medidor', nuevoMedidorId);
+      }
+
+      if (nuevoMedidor.historial.length > 0) {
+        throw new InvalidDomainOperationException(
+          `El medidor #${nuevoMedidorId} ya se encuentra asignado al contrato #${nuevoMedidor.historial[0].contratoId}`,
+        );
+      }
+
+      // 3. Obtener última lectura aprobada o lectura inicial del historial saliente
+      const lastApprovedReading = await tx.lecturas.findFirst({
+        where: {
+          medidorId: medidorSalienteId,
+          fecha: { gte: openHistorial.fechaDesde, lte: fechaReemplazo },
+          estado: 'APROBADA',
+          deletedAt: null,
+        },
+        orderBy: [{ fecha: 'desc' }, { lecturaId: 'desc' }],
+      });
+
+      const baseReadingSaliente = lastApprovedReading
+        ? new Decimal(lastApprovedReading.lecturaActual.toString())
+        : new Decimal(openHistorial.lecturaInicial.toString());
+
+      // 4. Calcular consumo físico medido del saliente
+      const finalSalienteDec = new Decimal(lecturaFinalSaliente.toString());
+      if (finalSalienteDec.lt(baseReadingSaliente)) {
+        throw new InvalidDomainOperationException(
+          `La lectura final de retiro (${finalSalienteDec.toString()}) no puede ser menor a la lectura base previa (${baseReadingSaliente.toString()})`,
+        );
+      }
+
+      const consumoMedidoSaliente = finalSalienteDec.minus(baseReadingSaliente);
+
+      // 5. Calcular consumo facturable según política saliente
+      let consumoFacturableSaliente = new Decimal(0);
+      let promedioCalculado: Decimal | null = null;
+
+      if (tratamientoSaliente === 'COBRO_REAL') {
+        consumoFacturableSaliente = consumoMedidoSaliente;
+      } else if (tratamientoSaliente === 'EXONERADO') {
+        consumoFacturableSaliente = new Decimal(0);
+      } else if (tratamientoSaliente === 'PROMEDIO_HISTORICO') {
+        const limitMonths = ventanaPromedio || 3;
+        const pastReadings = await tx.lecturas.findMany({
+          where: {
+            medidorId: medidorSalienteId,
+            estado: 'APROBADA',
+            deletedAt: null,
+          },
+          orderBy: { fecha: 'desc' },
+          take: limitMonths,
+        });
+
+        if (pastReadings.length > 0) {
+          const sum = pastReadings.reduce(
+            (acc, curr) =>
+              acc.plus(new Decimal(curr.consumoCalculado.toString())),
+            new Decimal(0),
+          );
+          promedioCalculado = sum
+            .dividedBy(pastReadings.length)
+            .toDecimalPlaces(2);
+          consumoFacturableSaliente = promedioCalculado;
+        } else {
+          // Fallback a consumo mínimo de tarifa
+          const baseTariff = contrato.categoriaTarifa?.consumoMinimoMensual
+            ? new Decimal(
+                contrato.categoriaTarifa.consumoMinimoMensual.toString(),
+              )
+            : new Decimal(0);
+          promedioCalculado = baseTariff;
+          consumoFacturableSaliente = baseTariff;
+        }
+      } else if (tratamientoSaliente === 'COBRO_PARCIAL') {
+        if (porcentajeCobro) {
+          const pct = new Decimal(porcentajeCobro.toString()).dividedBy(100);
+          consumoFacturableSaliente = consumoMedidoSaliente
+            .mul(pct)
+            .toDecimalPlaces(2);
+        } else {
+          consumoFacturableSaliente = consumoMedidoSaliente;
+        }
+      }
+
+      // 6. Tratamiento entrante
+      const consumoMedidoEntrante = new Decimal(0);
+      const consumoFacturableEntrante = new Decimal(0);
+      const consumoDiferidoEntrante =
+        tratamientoEntrante === 'DIFERIR_SIGUIENTE_PERIODO'
+          ? new Decimal(0)
+          : new Decimal(0);
+
+      // 7. Registrar lectura física de retiro en Lecturas
+      const lecturaFinalRecord = await tx.lecturas.create({
+        data: {
+          medidorId: medidorSalienteId,
+          periodoId: periodoOrigenId,
+          fecha: fechaReemplazo,
+          lecturaAnterior: new Prisma.Decimal(baseReadingSaliente.toString()),
+          lecturaActual: new Prisma.Decimal(finalSalienteDec.toString()),
+          consumoCalculado: new Prisma.Decimal(
+            consumoMedidoSaliente.toString(),
+          ),
+          lecturaInicial: false,
+          estado: 'APROBADA',
+          creadoPor: solicitadoPorUsuarioId,
+        },
+      });
+
+      // 8. Cerrar historial saliente
+      await tx.historialMedidores.update({
+        where: { historialId: openHistorial.historialId },
+        data: {
+          fechaHasta: fechaReemplazo,
+          lecturaFinal: new Prisma.Decimal(finalSalienteDec.toString()),
+          motivo: `${motivo}${detalleMotivo ? ': ' + detalleMotivo : ''}`,
+          actualizadoPor: solicitadoPorUsuarioId,
+        },
+      });
+
+      // 9. Actualizar estado de medidor saliente
+      const estadoFinalSaliente =
+        motivo === 'DANO'
+          ? 'DANADO'
+          : motivo === 'FIN_VIDA_UTIL'
+            ? 'BAJA'
+            : 'BODEGA';
+
+      await tx.medidores.update({
+        where: { medidorId: medidorSalienteId },
+        data: {
+          estado: estadoFinalSaliente,
+          fechaBaja: fechaReemplazo,
+          motivo: `${motivo}${detalleMotivo ? ': ' + detalleMotivo : ''}`,
+        },
+      });
+
+      // 10. Abrir historial entrante
+      const initialEntranteDec = new Decimal(lecturaInicialEntrante.toString());
+      const nuevoHistorial = await tx.historialMedidores.create({
+        data: {
+          contratoId,
+          medidorId: nuevoMedidorId,
+          fechaDesde: fechaReemplazo,
+          lecturaInicial: new Prisma.Decimal(initialEntranteDec.toString()),
+          motivo: 'Instalación por reemplazo',
+          creadoPor: solicitadoPorUsuarioId,
+        },
+      });
+
+      // 11. Registrar lectura física inicial del entrante
+      const lecturaInicialRecord = await tx.lecturas.create({
+        data: {
+          medidorId: nuevoMedidorId,
+          periodoId: periodoOrigenId,
+          fecha: fechaReemplazo,
+          lecturaAnterior: new Prisma.Decimal(initialEntranteDec.toString()),
+          lecturaActual: new Prisma.Decimal(initialEntranteDec.toString()),
+          consumoCalculado: new Prisma.Decimal('0'),
+          lecturaInicial: true,
+          estado: 'APROBADA',
+          creadoPor: solicitadoPorUsuarioId,
+        },
+      });
+
+      // 12. Actualizar estado de medidor entrante
+      await tx.medidores.update({
+        where: { medidorId: nuevoMedidorId },
+        data: {
+          estado: 'INSTALADO',
+          fechaInstalacion: fechaReemplazo,
+        },
+      });
+
+      // 13. Snapshot de tarifa de origen
+      const tarifaSnapshot = contrato.categoriaTarifa
+        ? {
+            categoriaTarifaId: contrato.categoriaTarifa.categoriaTarifaId,
+            nombre: contrato.categoriaTarifa.nombre,
+            cargoFijo: contrato.categoriaTarifa.cargoFijo?.toString(),
+            tarifaBasica: contrato.categoriaTarifa.tarifaBasica?.toString(),
+            consumoMinimoMensual:
+              contrato.categoriaTarifa.consumoMinimoMensual?.toString(),
+          }
+        : null;
+
+      // 14. Crear registro auditable en ReemplazoMedidor
+      const reemplazoRecord = await tx.reemplazoMedidor.create({
+        data: {
+          contratoId,
+          historialSalienteId: openHistorial.historialId,
+          historialEntranteId: nuevoHistorial.historialId,
+          lecturaFinalSalienteId: lecturaFinalRecord.lecturaId,
+          lecturaInicialEntranteId: lecturaInicialRecord.lecturaId,
+          ordenTrabajoId: ordenTrabajoId ?? null,
+          periodoOrigenId,
+          periodoDestinoId: periodoDestinoId ?? null,
+          motivo,
+          responsabilidadDano,
+          detalleMotivo: detalleMotivo ?? null,
+          tratamientoSaliente,
+          tratamientoEntrante,
+          consumoMedidoSaliente: new Prisma.Decimal(
+            consumoMedidoSaliente.toString(),
+          ),
+          consumoFacturableSaliente: new Prisma.Decimal(
+            consumoFacturableSaliente.toString(),
+          ),
+          consumoMedidoEntrante: new Prisma.Decimal(
+            consumoMedidoEntrante.toString(),
+          ),
+          consumoFacturableEntrante: new Prisma.Decimal(
+            consumoFacturableEntrante.toString(),
+          ),
+          consumoDiferidoEntrante: new Prisma.Decimal(
+            consumoDiferidoEntrante.toString(),
+          ),
+          ventanaPromedio: ventanaPromedio ?? null,
+          promedioCalculado: promedioCalculado
+            ? new Prisma.Decimal(promedioCalculado.toString())
+            : null,
+          porcentajeCobro: porcentajeCobro
+            ? new Prisma.Decimal(porcentajeCobro.toString())
+            : null,
+          tarifaOrigenSnapshot: (tarifaSnapshot as any) ?? Prisma.JsonNull,
+          estado: 'APLICADA',
+          solicitadoPorUsuarioId: solicitadoPorUsuarioId ?? null,
+          autorizadoPorUsuarioId: autorizadoPorUsuarioId ?? null,
+          autorizadoEn: autorizadoEn ?? fechaReemplazo,
+          creadoPor: solicitadoPorUsuarioId ?? null,
+        },
+      });
+
+      return {
+        reemplazo: ReemplazoMedidorMapper.toDomain(reemplazoRecord)!,
+        historialSalienteId: openHistorial.historialId,
+        historialEntranteId: nuevoHistorial.historialId,
+        consumoMedidoSaliente,
+        consumoFacturableSaliente,
+        consumoDiferidoEntrante,
+      };
+    });
   }
 }

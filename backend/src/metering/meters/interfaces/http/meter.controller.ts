@@ -15,6 +15,8 @@ import { CreateMeterDto } from '../dto/create-meter.dto';
 import { UpdateMeterDto } from '../dto/update-meter.dto';
 import { MeterResponseDto } from '../dto/meter-response.dto';
 import { FilterMeterDto } from '../dto/filter-meter.dto';
+import { ReplaceMeterDto } from '../dto/replace-meter.dto';
+import { ReemplazoMedidorResponseDto } from '../dto/reemplazo-medidor-response.dto';
 import { PaginatedMeterResponse } from '../types/paginated-meter-response.type';
 import { EnumStateDto } from 'src/shared/enums/state-catalog';
 import {
@@ -28,6 +30,7 @@ import {
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
 import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
+import { CurrentUser } from 'src/identity/auth/interfaces/http/decorators/current-user.decorator';
 
 @ApiTags('meters')
 @ApiBearerAuth()
@@ -191,5 +194,71 @@ export class MeterController {
     @Param('id', ParseBigIntPipe) id: bigint,
   ): Promise<{ message: string }> {
     return this.meterService.remove(id);
+  }
+
+  /**
+   * Reemplazar / Cambiar medidor en contrato con resolución económica auditable
+   * POST /meters/replace
+   */
+  @ApiOperation({
+    summary: 'Reemplazar medidor en contrato',
+    description:
+      'Ejecuta el ciclo de reemplazo de medidor de forma transaccional, registrando telemetría y resolución económica.',
+  })
+  @ApiBody({ type: ReplaceMeterDto })
+  @ApiResponse({
+    status: 201,
+    description: 'Reemplazo efectuado exitosamente',
+    type: ReemplazoMedidorResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Datos inválidos o lectura inconsistente',
+  })
+  @ApiResponse({ status: 404, description: 'Contrato o medidor no encontrado' })
+  @RequiredPermission('meters', 'update')
+  @Post('replace')
+  async replace(
+    @Body() replaceDto: ReplaceMeterDto,
+    @CurrentUser() user?: { id?: string; usuarioId?: string; sub?: string },
+  ): Promise<ReemplazoMedidorResponseDto> {
+    const userId = user?.usuarioId || user?.id || user?.sub;
+    const result = await this.meterService.replaceMeter(replaceDto, userId);
+    const r = result.reemplazo;
+    return {
+      reemplazoId: r.reemplazoId.toString(),
+      contratoId: r.contratoId.toString(),
+      historialSalienteId: r.historialSalienteId.toString(),
+      historialEntranteId: r.historialEntranteId.toString(),
+      lecturaFinalSalienteId: r.lecturaFinalSalienteId
+        ? r.lecturaFinalSalienteId.toString()
+        : null,
+      lecturaInicialEntranteId: r.lecturaInicialEntranteId
+        ? r.lecturaInicialEntranteId.toString()
+        : null,
+      ordenTrabajoId: r.ordenTrabajoId ? r.ordenTrabajoId.toString() : null,
+      periodoOrigenId: r.periodoOrigenId,
+      periodoDestinoId: r.periodoDestinoId ?? null,
+      motivo: r.motivo,
+      responsabilidadDano: r.responsabilidadDano,
+      detalleMotivo: r.detalleMotivo ?? null,
+      tratamientoSaliente: r.tratamientoSaliente,
+      tratamientoEntrante: r.tratamientoEntrante,
+      consumoMedidoSaliente: Number(r.consumoMedidoSaliente),
+      consumoFacturableSaliente: Number(r.consumoFacturableSaliente),
+      consumoMedidoEntrante: Number(r.consumoMedidoEntrante),
+      consumoFacturableEntrante: Number(r.consumoFacturableEntrante),
+      consumoDiferidoEntrante: Number(r.consumoDiferidoEntrante),
+      ventanaPromedio: r.ventanaPromedio ?? null,
+      promedioCalculado: r.promedioCalculado
+        ? Number(r.promedioCalculado)
+        : null,
+      porcentajeCobro: r.porcentajeCobro ? Number(r.porcentajeCobro) : null,
+      estado: r.estado,
+      solicitadoPorUsuarioId: r.solicitadoPorUsuarioId ?? null,
+      autorizadoPorUsuarioId: r.autorizadoPorUsuarioId ?? null,
+      autorizadoEn: r.autorizadoEn ?? null,
+      createdAt: r.createdAt,
+    };
   }
 }
