@@ -14,14 +14,16 @@
 --      de generar_prefacturas_lote)
 
 -- 1. lecturas.ruta_id
-ALTER TABLE "lecturas" ADD COLUMN "ruta_id" BIGINT;
+ALTER TABLE "lecturas" ADD COLUMN IF NOT EXISTS "ruta_id" BIGINT;
+ALTER TABLE "lecturas" DROP CONSTRAINT IF EXISTS "lecturas_ruta_id_fkey";
 ALTER TABLE "lecturas" ADD CONSTRAINT "lecturas_ruta_id_fkey" FOREIGN KEY ("ruta_id") REFERENCES "rutas"("ruta_id") ON DELETE SET NULL ON UPDATE CASCADE;
-CREATE INDEX "lecturas_ruta_id_idx" ON "lecturas"("ruta_id");
+CREATE INDEX IF NOT EXISTS "lecturas_ruta_id_idx" ON "lecturas"("ruta_id");
 
 -- 2. lote.ruta_id
-ALTER TABLE "lote" ADD COLUMN "ruta_id" BIGINT;
+ALTER TABLE "lote" ADD COLUMN IF NOT EXISTS "ruta_id" BIGINT;
+ALTER TABLE "lote" DROP CONSTRAINT IF EXISTS "lote_ruta_id_fkey";
 ALTER TABLE "lote" ADD CONSTRAINT "lote_ruta_id_fkey" FOREIGN KEY ("ruta_id") REFERENCES "rutas"("ruta_id") ON DELETE SET NULL ON UPDATE CASCADE;
-CREATE INDEX "lote_ruta_id_idx" ON "lote"("ruta_id");
+CREATE INDEX IF NOT EXISTS "lote_ruta_id_idx" ON "lote"("ruta_id");
 
 -- 3. Backfill: asignar la ruta de TOMA_LECTURA COMPLETADA a lecturas existentes
 --    que coincidan por periodo + mes de la fecha planificada + comunidad del contrato
