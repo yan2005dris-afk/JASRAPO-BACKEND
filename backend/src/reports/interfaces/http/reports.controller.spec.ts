@@ -871,7 +871,7 @@ describe('ReportsController — PDF generation timeout (PR 4)', () => {
   });
 
   afterAll(async () => {
-    await slowApp.close();
+    await slowApp?.close();
   });
 
   it('returns 503 with "PDF generation timeout" when GeneratePdfUseCase hangs past the timeout', async () => {

@@ -30,6 +30,7 @@ overrides:
   tmp: '^0.2.4'                                 # GHSA-ph9p-34f9-6g65 (Path Traversal, high)
   form-data: '^4.0.4'                           # GHSA-fjxv-7rqg-78g4 / GHSA-hmw2-7cc7-3qxx (unsafe random CRITICAL + CRLF)
   semver: '^7.6.4'                              # GHSA-c2qf-rxjj-qqgw (ReDoS, high)
+  deepmerge-ts: '^8.0.0'                        # GHSA-ggr8-5vv4-36mx (Stack exhaustion, high)
 
 allowBuilds:
   '@nestjs/core': true
