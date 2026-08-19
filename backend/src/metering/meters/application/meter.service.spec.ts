@@ -6,6 +6,7 @@ import { FindOneMeterUseCase } from './use-cases/find-one-meter.use-case';
 import { FindAllMetersUseCase } from './use-cases/find-all-meters.use-case';
 import { UpdateMeterUseCase } from './use-cases/update-meter.use-case';
 import { RemoveMeterUseCase } from './use-cases/remove-meter.use-case';
+import { ExportMetersUseCase } from './use-cases/export-meters.use-case';
 
 describe('MeterService', () => {
   let service: MeterService;
@@ -14,6 +15,7 @@ describe('MeterService', () => {
   let findAllUseCase: FindAllMetersUseCase;
   let updateUseCase: UpdateMeterUseCase;
   let removeUseCase: RemoveMeterUseCase;
+  let exportMetersUseCase: ExportMetersUseCase;
 
   const mockMedidor = {
     medidorId: BigInt(1),
@@ -55,6 +57,7 @@ describe('MeterService', () => {
         { provide: FindAllMetersUseCase, useValue: { execute: jest.fn() } },
         { provide: UpdateMeterUseCase, useValue: { execute: jest.fn() } },
         { provide: RemoveMeterUseCase, useValue: { execute: jest.fn() } },
+        { provide: ExportMetersUseCase, useValue: { execute: jest.fn() } },
       ],
     }).compile();
 
@@ -64,6 +67,7 @@ describe('MeterService', () => {
     findAllUseCase = module.get<FindAllMetersUseCase>(FindAllMetersUseCase);
     updateUseCase = module.get<UpdateMeterUseCase>(UpdateMeterUseCase);
     removeUseCase = module.get<RemoveMeterUseCase>(RemoveMeterUseCase);
+    exportMetersUseCase = module.get<ExportMetersUseCase>(ExportMetersUseCase);
   });
 
   it('should be defined', () => {
@@ -121,5 +125,38 @@ describe('MeterService', () => {
     const result = await service.remove(id);
     expect(result).toBe(message);
     expect(removeUseCase.execute).toHaveBeenCalledWith(id);
+  });
+
+  it('exportCsv should apply filters and include inventory columns', async () => {
+    jest
+      .spyOn(exportMetersUseCase, 'execute')
+      .mockResolvedValue([mockMedidor] as any);
+
+    const stream = await service.exportCsv({ search: 'MED-001' });
+    const chunks: string[] = [];
+    for await (const chunk of stream) chunks.push(String(chunk));
+
+    expect(exportMetersUseCase.execute).toHaveBeenCalledWith({
+      search: 'MED-001',
+    });
+    expect(chunks.join('')).toContain(
+      'Serie,Marca,Modelo,Estado,Contrato,Cliente',
+    );
+    expect(chunks.join('')).toContain('MED-001,Itron,CX1000,BODEGA');
+  });
+
+  it('exportPdf should return a PDF document with filtered inventory', async () => {
+    jest
+      .spyOn(exportMetersUseCase, 'execute')
+      .mockResolvedValue([mockMedidor] as any);
+
+    const pdf = await service.exportPdf({
+      estado: 'BODEGA',
+    } as any);
+
+    expect(exportMetersUseCase.execute).toHaveBeenCalledWith({
+      estado: 'BODEGA',
+    });
+    expect(Buffer.from(pdf).subarray(0, 5).toString()).toBe('%PDF-');
   });
 });

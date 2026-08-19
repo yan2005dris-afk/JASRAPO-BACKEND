@@ -8,7 +8,9 @@ import {
   Delete,
   Query,
   UseGuards,
+  Res,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { ParseBigIntPipe } from 'src/infrastructure/common/pipes/parse-bigint.pipe';
 import { MeterService } from '../../application/meter.service';
 import { CreateMeterDto } from '../dto/create-meter.dto';
@@ -28,6 +30,7 @@ import {
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
 import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
+import { ExportMeterDto } from '../dto/export-meter.dto';
 
 @ApiTags('meters')
 @ApiBearerAuth()
@@ -101,6 +104,38 @@ export class MeterController {
     @Query() filterDto: FilterMeterDto,
   ): Promise<PaginatedMeterResponse> {
     return this.meterService.findAll(filterDto);
+  }
+
+  @ApiOperation({ summary: 'Exportar inventario de medidores a CSV' })
+  @RequiredPermission('meters', 'read')
+  @Get('export/csv')
+  async exportCsv(
+    @Query() filters: ExportMeterDto,
+    @Res() response: Response,
+  ): Promise<void> {
+    const stream = await this.meterService.exportCsv(filters);
+    response.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    response.setHeader(
+      'Content-Disposition',
+      'attachment; filename="inventario-medidores.csv"',
+    );
+    stream.pipe(response);
+  }
+
+  @ApiOperation({ summary: 'Exportar inventario de medidores a PDF' })
+  @RequiredPermission('meters', 'read')
+  @Get('export/pdf')
+  async exportPdf(
+    @Query() filters: ExportMeterDto,
+    @Res() response: Response,
+  ): Promise<void> {
+    const pdf = await this.meterService.exportPdf(filters);
+    response.setHeader('Content-Type', 'application/pdf');
+    response.setHeader(
+      'Content-Disposition',
+      'attachment; filename="inventario-medidores.pdf"',
+    );
+    response.send(Buffer.from(pdf));
   }
 
   /**

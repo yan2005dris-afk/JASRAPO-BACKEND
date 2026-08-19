@@ -6,6 +6,7 @@ import { FindOneMeterUseCase } from './application/use-cases/find-one-meter.use-
 import { FindAllMetersUseCase } from './application/use-cases/find-all-meters.use-case';
 import { UpdateMeterUseCase } from './application/use-cases/update-meter.use-case';
 import { RemoveMeterUseCase } from './application/use-cases/remove-meter.use-case';
+import { ExportMetersUseCase } from './application/use-cases/export-meters.use-case';
 import { MeterRepository } from './domain/repositories/meter.repository';
 import { PrismaMeterRepository } from './infrastructure/repositories/prisma-meter.repository';
 
@@ -22,6 +23,7 @@ import { PrismaMeterRepository } from './infrastructure/repositories/prisma-mete
     FindAllMetersUseCase,
     UpdateMeterUseCase,
     RemoveMeterUseCase,
+    ExportMetersUseCase,
   ],
   exports: [MeterRepository, CreateMeterUseCase, FindOneMeterUseCase],
 })
