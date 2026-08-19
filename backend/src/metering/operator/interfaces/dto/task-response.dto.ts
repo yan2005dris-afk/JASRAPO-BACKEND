@@ -1,20 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import type { OperatorTask } from '../../domain/repositories/repository-types';
 
-export class MedidorInfo {
-  @ApiProperty({ description: 'ID del medidor', example: '42' })
-  medidorId: string;
-
-  @ApiProperty({ description: 'Serie del medidor', example: 'MED-001' })
-  serie: string;
-
-  @ApiPropertyOptional({ description: 'Latitud', example: -33.45 })
-  latitud?: number;
-
-  @ApiPropertyOptional({ description: 'Longitud', example: -70.66 })
-  longitud?: number;
-}
-
 export class OperarioInfo {
   @ApiProperty({ description: 'ID del usuario', example: 10 })
   usuarioId: number;
@@ -88,13 +74,6 @@ export class TaskResponseDto {
 
   @ApiPropertyOptional({ description: 'Fecha de fin' })
   fechaFin?: string;
-
-  @ApiPropertyOptional({
-    description: 'Información del medidor asociado',
-    type: () => MedidorInfo,
-    nullable: true,
-  })
-  medidor?: MedidorInfo | null;
 
   @ApiPropertyOptional({
     description: 'Información del operario asignado',

@@ -4,6 +4,40 @@ CREATE INDEX IF NOT EXISTS "ordenes_trabajo_lectura_id_idx" ON "ordenes_trabajo"
 ALTER TABLE "ordenes_trabajo" DROP CONSTRAINT IF EXISTS "ordenes_trabajo_lectura_id_fkey";
 ALTER TABLE "ordenes_trabajo" ADD CONSTRAINT "ordenes_trabajo_lectura_id_fkey" FOREIGN KEY ("lectura_id") REFERENCES "lecturas"("lectura_id") ON DELETE SET NULL ON UPDATE CASCADE;
 
+-- 1.1 Lossless backfill: Asegurar que toda lectura con ruta_id tenga su orden_trabajo creada y enlazada
+INSERT INTO "ordenes_trabajo" ("ruta_id", "contrato_id", "medidor_id", "lectura_id", "tipo_actividad", "estado", "orden_visita", "creado_en", "actualizado_en")
+SELECT DISTINCT
+    l.ruta_id,
+    c.contrato_id,
+    l.medidor_id,
+    l.lectura_id,
+    'LECTURA'::"TipoActividadOrden",
+    CASE WHEN l.estado = 'APROBADA' THEN 'COMPLETADA'::"EstadoOrdenTrabajo" ELSE 'PENDIENTE'::"EstadoOrdenTrabajo" END,
+    0,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+FROM lecturas l
+JOIN historial_medidores hm ON hm.medidor_id = l.medidor_id AND hm.fecha_hasta IS NULL AND hm.borrado_en IS NULL
+JOIN contratos c ON c.contrato_id = hm.contrato_id AND c.borrado_en IS NULL
+WHERE l.ruta_id IS NOT NULL
+  AND l.borrado_en IS NULL
+  AND NOT EXISTS (
+      SELECT 1 FROM ordenes_trabajo ot
+      WHERE ot.ruta_id = l.ruta_id
+        AND ot.lectura_id = l.lectura_id
+  );
+
+-- Actualizar lectura_id en ordenes_trabajo existentes que coincidían por ruta_id y contrato_id pero tenían lectura_id null
+UPDATE ordenes_trabajo ot
+SET lectura_id = l.lectura_id
+FROM lecturas l
+JOIN historial_medidores hm ON hm.medidor_id = l.medidor_id AND hm.fecha_hasta IS NULL AND hm.borrado_en IS NULL
+WHERE ot.ruta_id = l.ruta_id
+  AND ot.contrato_id = hm.contrato_id
+  AND ot.lectura_id IS NULL
+  AND ot.tipo_actividad = 'LECTURA'
+  AND l.borrado_en IS NULL;
+
 -- 2. Eliminar foreign key, index y columna ruta_id de lecturas (idempotent)
 ALTER TABLE "lecturas" DROP CONSTRAINT IF EXISTS "lecturas_ruta_id_fkey";
 DROP INDEX IF EXISTS "lecturas_ruta_id_idx";
@@ -277,25 +311,27 @@ BEGIN
       AND (cti.vigente_desde IS NULL OR cti.vigente_desde <= CURRENT_TIMESTAMP)
       AND (cti.vigente_hasta IS NULL OR cti.vigente_hasta >= CURRENT_TIMESTAMP);
 
-    -- 3. Cachear configuración de descuentos dinámicos
-    SELECT valor, es_porcentaje, id
+    -- 3. Cachear descuentos automáticos desde catalogo_descuento
+    SELECT cd.valor, cd.es_porcentaje, cd.catalogo_descuento_id
     INTO v_descuento_tercera_valor, v_descuento_tercera_pct, v_descuento_tercera_id
-    FROM catalogo_descuento
-    WHERE tipo = 'TERCERA_EDAD' AND activo AND borrado_en IS NULL
+    FROM catalogo_descuento cd
+    WHERE cd.tipo_descuento = 'TERCERA_EDAD' AND cd.activo AND cd.aplica_automatico
     LIMIT 1;
 
-    SELECT valor, es_porcentaje, id
+    SELECT cd.valor, cd.es_porcentaje, cd.catalogo_descuento_id
     INTO v_descuento_disc_valor, v_descuento_disc_pct, v_descuento_disc_id
-    FROM catalogo_descuento
-    WHERE tipo = 'DISCAPACIDAD' AND activo AND borrado_en IS NULL
+    FROM catalogo_descuento cd
+    WHERE cd.tipo_descuento = 'DISCAPACIDAD' AND cd.activo AND cd.aplica_automatico
     LIMIT 1;
 
-    -- 4. Cachear tasa de interés por mora desde parametro_tasa_interes
-    SELECT COALESCE(porcentaje, 0) / 100
+    -- 4. Cachear tasa de interés mora desde parametro_tasa_interes
+    SELECT COALESCE(pti.tasa, 0)
     INTO v_tasa_interes
-    FROM parametro_tasa_interes
-    WHERE borrado_en IS NULL
-    ORDER BY creado_en DESC
+    FROM parametro_tasa_interes pti
+    WHERE pti.activo
+      AND (pti.vigente_desde IS NULL OR pti.vigente_desde <= CURRENT_TIMESTAMP)
+      AND (pti.vigente_hasta IS NULL OR pti.vigente_hasta >= CURRENT_TIMESTAMP)
+    ORDER BY pti.vigente_desde DESC NULLS LAST
     LIMIT 1;
 
     -- 5. Validar que no exista lote previo
