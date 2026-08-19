@@ -280,15 +280,14 @@ describe('UpdateTaskStateUseCase', () => {
     });
   });
 
-  describe('COMPLETADA de INSTALACION actualiza medidor', () => {
-    it('should update meter to INSTALADO atomically when completing INSTALACION task', async () => {
+    it('should update task state when completing task', async () => {
       mockOperatorRepository.findActivePeriod.mockResolvedValue(
         mockActivePeriod,
       );
       mockOperatorRepository.findTasksByOperator.mockResolvedValue([
         makeInstallTask(),
       ]);
-      mockOperatorRepository.completeInstallationTask.mockResolvedValue(
+      mockOperatorRepository.updateTaskState.mockResolvedValue(
         makeInstallTask({ estado: 'COMPLETADA', fechaFin: new Date() }),
       );
 
@@ -296,69 +295,12 @@ describe('UpdateTaskStateUseCase', () => {
         estado: 'COMPLETADA',
       });
 
-      expect(
-        mockOperatorRepository.completeInstallationTask,
-      ).toHaveBeenCalledWith(
+      expect(mockOperatorRepository.updateTaskState).toHaveBeenCalledWith(
         BigInt(1),
         expect.objectContaining({ estado: 'COMPLETADA' }),
         'PENDIENTE',
-        {
-          medidorId: BigInt(100),
-          estado: 'INSTALADO',
-          fechaInstalacion: expect.any(Date),
-        },
       );
     });
-
-    it('should NOT update meter when completing non-INSTALACION task', async () => {
-      mockOperatorRepository.findActivePeriod.mockResolvedValue(
-        mockActivePeriod,
-      );
-      mockOperatorRepository.findTasksByOperator.mockResolvedValue([
-        makeTask({ tipoRuta: 'INSPECCION', medidorId: null }),
-      ]);
-      mockOperatorRepository.updateTaskState.mockResolvedValue(
-        makeTask({
-          tipoRuta: 'INSPECCION',
-          estado: 'COMPLETADA',
-          fechaFin: new Date(),
-        }),
-      );
-
-      await useCase.execute(BigInt(1), mockOperarioId, {
-        estado: 'COMPLETADA',
-      });
-
-      expect(
-        mockOperatorRepository.completeInstallationTask,
-      ).not.toHaveBeenCalled();
-    });
-
-    it('should NOT update meter when task has no medidorId', async () => {
-      mockOperatorRepository.findActivePeriod.mockResolvedValue(
-        mockActivePeriod,
-      );
-      mockOperatorRepository.findTasksByOperator.mockResolvedValue([
-        makeInstallTask({ medidorId: null }),
-      ]);
-      mockOperatorRepository.updateTaskState.mockResolvedValue(
-        makeInstallTask({
-          estado: 'COMPLETADA',
-          medidorId: null,
-          fechaFin: new Date(),
-        }),
-      );
-
-      await useCase.execute(BigInt(1), mockOperarioId, {
-        estado: 'COMPLETADA',
-      });
-
-      expect(
-        mockOperatorRepository.completeInstallationTask,
-      ).not.toHaveBeenCalled();
-    });
-  });
-
   describe('concurrency', () => {
     it('should propagate InvalidDomainOperationException from repo (P2025 translated in repo)', async () => {
       mockOperatorRepository.findActivePeriod.mockResolvedValue(
@@ -380,26 +322,6 @@ describe('UpdateTaskStateUseCase', () => {
       ).rejects.toThrow(InvalidDomainOperationException);
     });
 
-    it('should propagate InvalidDomainOperationException from INSTALACION completion', async () => {
-      mockOperatorRepository.findActivePeriod.mockResolvedValue(
-        mockActivePeriod,
-      );
-      mockOperatorRepository.findTasksByOperator.mockResolvedValue([
-        makeInstallTask(),
-      ]);
-      mockOperatorRepository.completeInstallationTask.mockRejectedValueOnce(
-        new InvalidDomainOperationException(
-          'Conflicto de concurrencia: la tarea fue modificada por otro operario',
-        ),
-      );
-
-      await expect(
-        useCase.execute(BigInt(1), mockOperarioId, {
-          estado: 'COMPLETADA',
-        }),
-      ).rejects.toThrow(InvalidDomainOperationException);
-    });
-
     it('should propagate non-P2025 errors without masking', async () => {
       mockOperatorRepository.findActivePeriod.mockResolvedValue(
         mockActivePeriod,
@@ -413,25 +335,6 @@ describe('UpdateTaskStateUseCase', () => {
       await expect(
         useCase.execute(BigInt(1), mockOperarioId, {
           estado: 'EN_PROGRESO',
-        }),
-      ).rejects.toThrow('Connection refused');
-    });
-
-    it('should propagate non-P2025 errors from INSTALACION completion', async () => {
-      mockOperatorRepository.findActivePeriod.mockResolvedValue(
-        mockActivePeriod,
-      );
-      mockOperatorRepository.findTasksByOperator.mockResolvedValue([
-        makeInstallTask(),
-      ]);
-      const dbError = new Error('Connection refused');
-      mockOperatorRepository.completeInstallationTask.mockRejectedValueOnce(
-        dbError,
-      );
-
-      await expect(
-        useCase.execute(BigInt(1), mockOperarioId, {
-          estado: 'COMPLETADA',
         }),
       ).rejects.toThrow('Connection refused');
     });

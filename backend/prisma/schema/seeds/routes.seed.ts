@@ -143,17 +143,33 @@ export async function seedRoutes(prisma: PrismaClient) {
       { tipo: 'INSPECCION' as const, nombre: 'Inspección - muestra' },
     ];
     for (let i = 0; i < workOrders.length; i++) {
-      await prisma.rutas.create({
+      const ruta = await prisma.rutas.create({
         data: {
           nombre: workOrders[i].nombre,
           tipoRuta: workOrders[i].tipo,
           operarioId: operadores[i % operadores.length].usuarioId,
           comunidadId: firstZone.comunidadId,
           sectorId: firstZone.sectorId,
-          medidorId: firstZone.medidorIds[i],
           estado: 'PENDIENTE',
         },
       });
+
+      const contrato = await prisma.contratos.findFirst({
+        where: { comunidadId: firstZone.comunidadId },
+      });
+
+      if (contrato) {
+        await prisma.ordenesTrabajo.create({
+          data: {
+            rutaId: ruta.rutaId,
+            contratoId: contrato.contratoId,
+            medidorId: firstZone.medidorIds[i],
+            tipoActividad: workOrders[i].tipo as any,
+            estado: 'PENDIENTE',
+            ordenVisita: 1,
+          },
+        });
+      }
       rutasCount++;
     }
   }
