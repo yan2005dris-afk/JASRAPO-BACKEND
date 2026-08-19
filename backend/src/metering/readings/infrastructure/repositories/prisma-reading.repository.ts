@@ -6,10 +6,17 @@ import {
   CreateReadingRepositoryData,
   UpdateReadingRepositoryData,
   ReadingFilters,
+  ReadingSnapshot,
 } from '../../domain/repositories/reading.repository';
 import { LecturaEntity } from '../../domain/entities/lectura.entity';
 import { ReadingMapper } from '../mappers/reading.mapper';
 import { EstadoPeriodo, EstadoLectura } from 'src/shared/enums';
+import {
+  EntityNotFoundException,
+  InvalidDomainOperationException,
+} from 'src/shared/domain/exceptions/domain.exception';
+
+import { Decimal } from 'decimal.js';
 
 export const safeReadingsSelect = {
   lecturaId: true,
@@ -80,32 +87,124 @@ export class PrismaReadingRepository implements ReadingRepository {
     });
   }
 
+  /**
+   * Resuelve el snapshot histórico (lecturaAnterior y lecturaInicial) para un medidor
+   * en la fecha objetivo, considerando la asignación al contrato y preservando precisión Decimal.
+   */
+  async findReadingSnapshot(
+    medidorId: bigint,
+    fecha: Date,
+    txClient?: Prisma.TransactionClient,
+  ): Promise<ReadingSnapshot | null> {
+    const client = txClient ?? this.prisma;
+
+    // 1. Buscar asignación histórica vigente en la fecha de la lectura
+    let history = await client.historialMedidores.findFirst({
+      where: {
+        medidorId,
+        deletedAt: null,
+        fechaDesde: { lte: fecha },
+        OR: [{ fechaHasta: null }, { fechaHasta: { gte: fecha } }],
+      },
+      orderBy: { fechaDesde: 'desc' },
+      select: {
+        historialId: true,
+        fechaDesde: true,
+        lecturaInicial: true,
+      },
+    });
+
+    if (!history) {
+      // Fallback: Si no hay historial con fechaDesde <= fecha, buscar la asignación activa
+      history = await client.historialMedidores.findFirst({
+        where: {
+          medidorId,
+          fechaHasta: null,
+          deletedAt: null,
+        },
+        orderBy: { fechaDesde: 'desc' },
+        select: {
+          historialId: true,
+          fechaDesde: true,
+          lecturaInicial: true,
+        },
+      });
+
+      if (!history) {
+        return null;
+      }
+    }
+
+    // 2. Buscar última lectura aprobada estrictamente anterior dentro de la misma asignación
+    const lastApproved = await client.lecturas.findFirst({
+      where: {
+        medidorId,
+        estado: EstadoLectura.APROBADA,
+        deletedAt: null,
+        fecha: {
+          lt: fecha,
+          gte: history.fechaDesde,
+        },
+      },
+      orderBy: { fecha: 'desc' },
+      select: { lecturaActual: true },
+    });
+
+    if (lastApproved) {
+      return {
+        lecturaAnterior: new Decimal(lastApproved.lecturaActual.toString()),
+        lecturaInicial: false,
+      };
+    }
+
+    return {
+      lecturaAnterior: new Decimal(history.lecturaInicial.toString()),
+      lecturaInicial: true,
+    };
+  }
+
   async findLastApprovedActualByMeter(
     medidorId: bigint,
-  ): Promise<number | null> {
+    fecha?: Date,
+  ): Promise<Decimal | null> {
     const reading = await this.prisma.lecturas.findFirst({
-      where: { medidorId, estado: EstadoLectura.APROBADA, deletedAt: null },
+      where: {
+        medidorId,
+        estado: EstadoLectura.APROBADA,
+        deletedAt: null,
+        ...(fecha && { fecha: { lt: fecha } }),
+      },
       orderBy: { fecha: 'desc' },
       select: { lecturaActual: true },
     });
     if (!reading) {
       return null;
     }
-    return Number(reading.lecturaActual);
+    return new Decimal(reading.lecturaActual.toString());
   }
 
   async findActiveInitialReadingByMeter(
     medidorId: bigint,
-  ): Promise<number | null> {
+    fecha?: Date,
+  ): Promise<Decimal | null> {
     const history = await this.prisma.historialMedidores.findFirst({
-      where: { medidorId, fechaHasta: null, deletedAt: null },
+      where: {
+        medidorId,
+        deletedAt: null,
+        ...(fecha
+          ? {
+              fechaDesde: { lte: fecha },
+              OR: [{ fechaHasta: null }, { fechaHasta: { gte: fecha } }],
+            }
+          : { fechaHasta: null }),
+      },
       orderBy: { fechaDesde: 'desc' },
       select: { lecturaInicial: true },
     });
     if (!history) {
       return null;
     }
-    return Number(history.lecturaInicial);
+    return new Decimal(history.lecturaInicial.toString());
   }
 
   async findUnique(where: {
@@ -170,22 +269,135 @@ export class PrismaReadingRepository implements ReadingRepository {
   }
 
   async create(data: CreateReadingRepositoryData): Promise<LecturaEntity> {
-    const record = await this.prisma.lecturas.create({
-      data: {
-        fecha: data.fecha,
-        lecturaAnterior: data.lecturaAnterior,
-        lecturaActual: data.lecturaActual,
-        consumoCalculado: data.consumoCalculado,
-        medidorId: data.medidorId,
-        descripcionAnomalia: data.descripcionAnomalia,
-        fechaValidacion: data.fechaValidacion,
-        fotoUrl: data.fotoUrl,
-        estado: data.estado as $Enums.EstadoLectura,
-        lecturaInicial: data.lecturaInicial,
-        periodoId: data.periodoId,
-      },
-      select: safeReadingsSelect,
+    const estado =
+      data.estado ??
+      (data.descripcionAnomalia
+        ? EstadoLectura.CON_NOVEDAD
+        : EstadoLectura.POR_REVISION);
+
+    const record = await this.prisma.$transaction(async (tx) => {
+      const created = await tx.lecturas.create({
+        data: {
+          fecha: data.fecha,
+          lecturaAnterior: data.lecturaAnterior,
+          lecturaActual: data.lecturaActual,
+          consumoCalculado: data.consumoCalculado,
+          medidorId: data.medidorId,
+          descripcionAnomalia: data.descripcionAnomalia,
+          fechaValidacion: data.fechaValidacion,
+          fotoUrl: data.fotoUrl,
+          estado: estado as $Enums.EstadoLectura,
+          lecturaInicial: data.lecturaInicial,
+          periodoId: data.periodoId,
+        },
+        select: safeReadingsSelect,
+      });
+
+      if (estado === EstadoLectura.CON_NOVEDAD) {
+        await tx.lecturaAnomalia.create({
+          data: {
+            lecturaId: created.lecturaId,
+            tipo: $Enums.TipoAnomalia.OTRO,
+            estado: $Enums.EstadoAnomalia.PENDIENTE,
+            observacion:
+              data.descripcionAnomalia ||
+              'Novedad reportada desde ruta de lectura',
+            fotoUrl: data.fotoUrl || null,
+          },
+        });
+      }
+
+      return created;
     });
+
+    return ReadingMapper.toDomain(record)!;
+  }
+
+  /**
+   * Operación atómica: resuelve el snapshot temporal y persiste la lectura en una sola transacción.
+   */
+  async createWithAtomicSnapshot(params: {
+    fecha: Date;
+    lecturaActual: Decimal;
+    medidorId: bigint;
+    periodoId: number;
+    descripcionAnomalia?: string | null;
+    fotoUrl?: string | null;
+    estado?: string;
+  }): Promise<LecturaEntity> {
+    const record = await this.prisma.$transaction(async (tx) => {
+      const snapshot = await this.findReadingSnapshot(
+        params.medidorId,
+        params.fecha,
+        tx,
+      );
+
+      if (!snapshot) {
+        throw new EntityNotFoundException(
+          'HistorialMedidores',
+          params.medidorId.toString(),
+        );
+      }
+
+      const consumoCalculado = params.lecturaActual.minus(
+        snapshot.lecturaAnterior,
+      );
+
+      // Domain invariant: Rechazar consumo negativo si no hay anomalía explícita
+      if (consumoCalculado.isNegative()) {
+        const hasAnomaly =
+          params.descripcionAnomalia &&
+          params.descripcionAnomalia.trim().length > 0;
+        if (!hasAnomaly) {
+          throw new InvalidDomainOperationException(
+            `La lectura actual (${params.lecturaActual.toString()}) no puede ser menor a la lectura anterior (${snapshot.lecturaAnterior.toString()}) sin registrar una anomalía o novedad`,
+          );
+        }
+      }
+
+      let estado = params.estado ?? EstadoLectura.POR_REVISION;
+      if (
+        params.descripcionAnomalia &&
+        params.descripcionAnomalia.trim().length > 0
+      ) {
+        estado = EstadoLectura.CON_NOVEDAD;
+      }
+
+      const created = await tx.lecturas.create({
+        data: {
+          fecha: params.fecha,
+          lecturaAnterior: new Prisma.Decimal(
+            snapshot.lecturaAnterior.toString(),
+          ),
+          lecturaActual: new Prisma.Decimal(params.lecturaActual.toString()),
+          consumoCalculado: new Prisma.Decimal(consumoCalculado.toString()),
+          medidorId: params.medidorId,
+          descripcionAnomalia: params.descripcionAnomalia,
+          fotoUrl: params.fotoUrl,
+          estado: estado as $Enums.EstadoLectura,
+          lecturaInicial: snapshot.lecturaInicial,
+          periodoId: params.periodoId,
+        },
+        select: safeReadingsSelect,
+      });
+
+      if (estado === EstadoLectura.CON_NOVEDAD) {
+        await tx.lecturaAnomalia.create({
+          data: {
+            lecturaId: created.lecturaId,
+            tipo: $Enums.TipoAnomalia.OTRO,
+            estado: $Enums.EstadoAnomalia.PENDIENTE,
+            observacion:
+              params.descripcionAnomalia ||
+              'Novedad reportada desde ruta de lectura',
+            fotoUrl: params.fotoUrl || null,
+          },
+        });
+      }
+
+      return created;
+    });
+
     return ReadingMapper.toDomain(record)!;
   }
 
