@@ -9,8 +9,8 @@ import type { MeterFilters } from '../../domain/types/meter.types';
 export function buildMeterFilters(
   filters: FilterMeterDto | ExportMeterDto,
 ): MeterFilters {
-  // Excluir explícitamente los campos de paginación
-  const { page: _page, limit: _limit, ...meterFilters } = filters;
+  const { estado, marca, modelo, serie, search } = filters;
+  const meterFilters = { estado, marca, modelo, serie, search };
 
   // Eliminar campos undefined
   return Object.fromEntries(
