@@ -280,27 +280,25 @@ describe('UpdateTaskStateUseCase', () => {
     });
   });
 
-    it('should update task state when completing task', async () => {
-      mockOperatorRepository.findActivePeriod.mockResolvedValue(
-        mockActivePeriod,
-      );
-      mockOperatorRepository.findTasksByOperator.mockResolvedValue([
-        makeInstallTask(),
-      ]);
-      mockOperatorRepository.updateTaskState.mockResolvedValue(
-        makeInstallTask({ estado: 'COMPLETADA', fechaFin: new Date() }),
-      );
+  it('should update task state when completing task', async () => {
+    mockOperatorRepository.findActivePeriod.mockResolvedValue(mockActivePeriod);
+    mockOperatorRepository.findTasksByOperator.mockResolvedValue([
+      makeInstallTask(),
+    ]);
+    mockOperatorRepository.updateTaskState.mockResolvedValue(
+      makeInstallTask({ estado: 'COMPLETADA', fechaFin: new Date() }),
+    );
 
-      await useCase.execute(BigInt(1), mockOperarioId, {
-        estado: 'COMPLETADA',
-      });
-
-      expect(mockOperatorRepository.updateTaskState).toHaveBeenCalledWith(
-        BigInt(1),
-        expect.objectContaining({ estado: 'COMPLETADA' }),
-        'PENDIENTE',
-      );
+    await useCase.execute(BigInt(1), mockOperarioId, {
+      estado: 'COMPLETADA',
     });
+
+    expect(mockOperatorRepository.updateTaskState).toHaveBeenCalledWith(
+      BigInt(1),
+      expect.objectContaining({ estado: 'COMPLETADA' }),
+      'PENDIENTE',
+    );
+  });
   describe('concurrency', () => {
     it('should propagate InvalidDomainOperationException from repo (P2025 translated in repo)', async () => {
       mockOperatorRepository.findActivePeriod.mockResolvedValue(
