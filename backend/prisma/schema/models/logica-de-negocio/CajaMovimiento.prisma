@@ -1,0 +1,19 @@
+model CajaMovimiento {
+  id              BigInt          @id @default(autoincrement()) @map("id")
+  cajaId          BigInt          @map("caja_id")
+  tipoMovimiento  TipoMovCaja     @map("tipo_movimiento")
+  monto           Decimal         @map("monto") @db.Decimal(12, 2)
+  motivo          String          @map("motivo")
+  comprobanteRef  String?         @map("comprobante_ref")
+  creadoPor       String          @map("creado_por")
+  createdAt       DateTime        @default(now()) @map("creado_en")
+  cajaSesion      CajaSesion      @relation(fields: [cajaId], references: [cajaId])
+
+  @@index([cajaId])
+  @@map("caja_movimientos")
+}
+
+enum TipoMovCaja {
+  EGRESO
+  INGRESO_EXTRA
+}

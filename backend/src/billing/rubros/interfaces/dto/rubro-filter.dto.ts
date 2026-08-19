@@ -20,6 +20,14 @@ export class RubroFilterDto {
   nombre?: string;
 
   @ApiPropertyOptional({
+    description: 'Búsqueda general por texto (alias de nombre)',
+    example: 'Instalación',
+  })
+  @IsOptional()
+  @IsString()
+  search?: string;
+
+  @ApiPropertyOptional({
     description: 'Filtrar por tipo de rubro',
     enum: TipoRubro,
   })

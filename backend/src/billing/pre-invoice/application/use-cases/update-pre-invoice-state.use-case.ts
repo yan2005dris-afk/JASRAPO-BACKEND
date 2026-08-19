@@ -79,11 +79,12 @@ export class UpdatePreInvoiceStateUseCase {
       });
 
       // Populate comprobante_detalles from prefactura detalles
-      if (preInvoice.detalles && preInvoice.detalles.length > 0) {
+      if (comprobante.id && preInvoice.detalles && preInvoice.detalles.length > 0) {
+        const comprobanteId = comprobante.id;
         const detallesToCreate = preInvoice.detalles.map((d, index) => ({
-          comprobante_id: comprobante.id,
+          comprobante_id: comprobanteId,
           codigo_principal: String(d.rubroId || index + 1),
-          descripcion: d.descripcion || d.rubro?.nombre || 'Rubro',
+          descripcion: d.descripcion || d.rubroNombre || 'Rubro',
           cantidad: Number(d.cantidad) || 1,
           precio_unitario: Number(d.precioUnitario) || 0,
           descuento: Number(d.descuento) || 0,

@@ -12,6 +12,7 @@ model CajaSesion {
   totalChequesDeclarados        Decimal?            @default(0) @map("total_cheques_declarados") @db.Decimal
   totalTransferenciasDeclaradas Decimal?            @default(0) @map("total_transferencias_declaradas") @db.Decimal
   arqueoDetalle                 CajaArqueoDetalle[]
+  movimientos                   CajaMovimiento[]
   pagos                         Pagos[]
 
   @@index([creadoPor])

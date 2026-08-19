@@ -24,6 +24,16 @@ export class PaymentEntity {
 
   detallePago?: PaymentDetailEntity[];
   saldosFavor?: SaldoFavorEntity[];
+  cliente?: {
+    clienteId: bigint;
+    nombres: string;
+    apellidos: string;
+    razonSocial: string | null;
+    identificacion: string;
+    email: string | null;
+    telefono: string | null;
+    direccionDomicilio: string | null;
+  };
 
   constructor(partial: Partial<PaymentEntity>) {
     Object.assign(this, partial);

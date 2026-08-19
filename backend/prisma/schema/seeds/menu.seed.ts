@@ -73,6 +73,12 @@ const LEVEL_2: MenuSeedEntry[] = [
     parentNombre: 'Facturación',
   },
   {
+    nombre: 'Cuadro y Cierre de Caja',
+    ruta: '/Facturacion/CuadroDeCaja',
+    icono: 'account_balance_wallet',
+    parentNombre: 'Facturación',
+  },
+  {
     nombre: 'Prefacturas',
     ruta: '/Facturacion/GeneracionPlanilla',
     icono: 'receipt_cutoff',

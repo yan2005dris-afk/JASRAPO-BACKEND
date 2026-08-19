@@ -37,7 +37,7 @@ export class OverdueAccountsReportSpec implements ReportSpec<OverdueAccountsFilt
           ? { contrato: { clienteId: BigInt(filters.clienteId) } }
           : {}),
         ...(filters.sectorId
-          ? { contrato: { sectorId: BigInt(filters.sectorId) } }
+          ? { contrato: { sectorId: Number(filters.sectorId) } }
           : {}),
         periodoRel: {
           fechaFin: { lte: fechaCorte },

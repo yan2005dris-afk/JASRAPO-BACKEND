@@ -168,3 +168,28 @@ export class UploadCertificadoDto {
   @MaxLength(128)
   password: string;
 }
+
+export class CreateEstablecimientoDto {
+  @ApiProperty({ description: 'Código SRI del establecimiento (ej: 001, 002)', example: '001' })
+  @IsNotEmptyString()
+  @Length(3, 3)
+  codigo: string;
+
+  @ApiProperty({ description: 'Dirección física de la sucursal/establecimiento', example: 'Calle Principal Olón' })
+  @IsNotEmptyString()
+  @MaxLength(300)
+  direccion: string;
+}
+
+export class CreatePuntoEmisionDto {
+  @ApiProperty({ description: 'Código SRI del punto de emisión / caja (ej: 001, 002)', example: '001' })
+  @IsNotEmptyString()
+  @Length(3, 3)
+  codigo: string;
+
+  @ApiPropertyOptional({ description: 'Descripción o nombre de la caja/ventanilla', example: 'Ventanilla 1 - Cobros' })
+  @IsOptional()
+  @IsString()
+  descripcion?: string;
+}
+

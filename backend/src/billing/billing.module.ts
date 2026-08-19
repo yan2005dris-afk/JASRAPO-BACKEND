@@ -7,6 +7,7 @@ import { PaymentsModule } from './collections/payments/payments.module';
 import { DiscountsModule } from './discounts/discounts.module';
 import { PeriodsModule } from './periods/periods.module';
 import { RubrosModule } from './rubros/rubros.module';
+import { CashSessionsModule } from './collections/cash-sessions/cash-sessions.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { RubrosModule } from './rubros/rubros.module';
     DiscountsModule,
     PeriodsModule,
     RubrosModule,
+    CashSessionsModule,
   ],
   exports: [
     CategoriaTarifaModule,
@@ -28,6 +30,7 @@ import { RubrosModule } from './rubros/rubros.module';
     DiscountsModule,
     PeriodsModule,
     RubrosModule,
+    CashSessionsModule,
   ],
 })
 export class BillingModule {}

@@ -8,7 +8,10 @@ import {
   Post,
   Query,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiBearerAuth,
   ApiExtraModels,
@@ -71,6 +74,38 @@ export class PaymentsController {
   ): Promise<PaymentResponseDto> {
     const entity = await this.paymentsService.create(dto, this.getActor(user));
     return PaymentResponseDto.fromEntity(entity);
+  }
+
+  @ApiOperation({
+    summary: 'Subir comprobante de transferencia o depósito',
+    description: 'Sube un archivo de imagen o PDF a RustFS/S3 y retorna la clave y URL prefirmada.',
+  })
+  @ApiResponse({ status: 201, description: 'Comprobante subido exitosamente' })
+  @RequiredPermission('payments', 'create')
+  @Post('upload-comprobante')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
+    }),
+  )
+  async uploadComprobante(
+    @UploadedFile() file: Express.Multer.File,
+  ): Promise<{ key: string; url: string }> {
+    return this.paymentsService.uploadComprobante(file);
+  }
+
+  @ApiOperation({
+    summary: 'Obtener URL prefirmada de un comprobante',
+    description: 'Genera una URL temporal para visualizar o descargar el comprobante desde RustFS/S3.',
+  })
+  @ApiResponse({ status: 200, description: 'URL prefirmada generada' })
+  @RequiredPermission('payments', 'read')
+  @Get('comprobante-url')
+  async getComprobanteUrl(
+    @Query('key') key: string,
+  ): Promise<{ url: string }> {
+    const url = await this.paymentsService.getComprobanteUrl(key);
+    return { url };
   }
 
   @ApiOperation({

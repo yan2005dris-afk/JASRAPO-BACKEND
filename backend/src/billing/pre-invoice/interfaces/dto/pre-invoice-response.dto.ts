@@ -102,6 +102,15 @@ export class PreInvoiceResponseDto {
   @ApiPropertyOptional({ description: 'Client email' })
   clienteEmail?: string | null;
 
+  @ApiPropertyOptional({ description: 'Period name' })
+  periodoNombre?: string | null;
+
+  @ApiPropertyOptional({ description: 'Period start date' })
+  periodoFechaInicio?: Date | null;
+
+  @ApiPropertyOptional({ description: 'Period end date' })
+  periodoFechaFin?: Date | null;
+
   @ApiPropertyOptional({ description: 'Tariff name' })
   tarifaNombre?: string | null;
 
@@ -113,6 +122,9 @@ export class PreInvoiceResponseDto {
 
   @ApiPropertyOptional({ description: 'Pre-invoice details' })
   detalles?: PreInvoiceDetailResponseDto[];
+
+  @ApiPropertyOptional({ description: 'Comprobante ID' })
+  comprobanteId?: string | null;
 
   static fromEntity(entity: PreInvoiceEntity): PreInvoiceResponseDto {
     const dto = new PreInvoiceResponseDto();
@@ -134,7 +146,11 @@ export class PreInvoiceResponseDto {
     dto.clienteIdentificacion = entity.clienteIdentificacion ?? null;
     dto.clienteDireccion = entity.clienteDireccion ?? null;
     dto.clienteEmail = entity.clienteEmail ?? null;
+    dto.periodoNombre = entity.periodoRel?.nombre ?? null;
+    dto.periodoFechaInicio = entity.periodoRel?.fechaInicio ?? null;
+    dto.periodoFechaFin = entity.periodoRel?.fechaFin ?? null;
     dto.tarifaNombre = entity.tarifaNombre ?? null;
+    dto.comprobanteId = entity.comprobanteId ? String(entity.comprobanteId) : null;
     dto.createdAt = entity.createdAt;
     dto.updatedAt = entity.updatedAt;
     dto.detalles = entity.detalles?.map(PreInvoiceDetailResponseDto.fromEntity);

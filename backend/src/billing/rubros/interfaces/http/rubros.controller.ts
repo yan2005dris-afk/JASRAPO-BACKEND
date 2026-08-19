@@ -82,6 +82,7 @@ export class RubrosController {
       page: filterDto.page,
       limit: filterDto.limit,
       nombre: filterDto.nombre,
+      search: filterDto.search,
       tipoRubro: filterDto.tipoRubro,
       tarifaImpuestoId: filterDto.tarifaImpuestoId,
       activo:

@@ -21,6 +21,7 @@ export const SRI_STORAGE_TYPES = {
   PROFILE_PHOTOS: 'profile-photos',
   READINGS: 'readings',
   READING_NEWS: 'reading-news',
+  COMPROBANTES: 'comprobantes',
 } as const;
 
 export type SriStorageType =
@@ -52,6 +53,7 @@ export const SRI_BUCKETS = {
   PROFILE_PHOTOS: 'profile-photos',
   READINGS: 'readings',
   READING_NEWS: 'reading-news',
+  COMPROBANTES: 'comprobantes',
 } as const;
 
 // Deep freeze for runtime immutability
