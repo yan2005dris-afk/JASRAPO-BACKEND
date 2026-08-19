@@ -1,5 +1,4 @@
-import { Module, OnModuleInit, forwardRef } from '@nestjs/common';
-import { PdfService } from 'src/infrastructure/pdf/pdf.service';
+import { Module, forwardRef } from '@nestjs/common';
 import { ReportsModule } from 'src/reports/reports.module';
 import { AgreementsController } from './interfaces/http/agreements.controller';
 import { AgreementsService } from './application/agreements.service';

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { EstadoRuta, EstadoMedidor } from 'src/shared/enums';
+import { EstadoRuta } from 'src/shared/enums';
 import {
   EntityNotFoundException,
   InvalidDomainOperationException,
@@ -111,25 +111,6 @@ export class UpdateTaskStateUseCase {
     // 6. Apply state transition with optimistic concurrency
     //    (concurrency conflicts surface as InvalidDomainOperationException
     //     from the repository, not as Prisma P2025 errors)
-    if (
-      nuevoEstado === EstadoRuta.COMPLETADA &&
-      task.tipoRuta === 'INSTALACION' &&
-      task.medidorId != null
-    ) {
-      // Atomic: task + meter update in a single transaction
-      return this.operatorRepository.completeInstallationTask(
-        rutaId,
-        updateData,
-        currentEstado,
-        {
-          medidorId: task.medidorId,
-          estado: EstadoMedidor.INSTALADO,
-          fechaInstalacion: new Date(),
-        },
-      );
-    }
-
-    // Regular transition with optimistic locking
     return this.operatorRepository.updateTaskState(
       rutaId,
       updateData,

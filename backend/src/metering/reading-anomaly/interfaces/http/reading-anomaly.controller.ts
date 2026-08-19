@@ -22,7 +22,6 @@ import {
   ReadingAnomalyFilterDto,
 } from '../dto/response-reading-anomaly.dto';
 import { TipoAnomalia, EstadoAnomalia } from 'src/shared/enums';
-import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
 import {
   ApiTags,
   ApiBearerAuth,

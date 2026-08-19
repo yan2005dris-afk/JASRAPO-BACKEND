@@ -84,7 +84,6 @@ export interface OperatorTask {
   fechaPlanificada: Date | null;
   fechaInicio: Date | null;
   fechaFin: Date | null;
-  medidorId: bigint | null;
   orden: number;
   observacion: string | null;
   fechaLimite: Date | null;
@@ -95,12 +94,6 @@ export interface OperatorTask {
     usuarioId: number;
     nombres: string;
     apellidos: string;
-  } | null;
-  medidor?: {
-    medidorId: bigint;
-    serie: string;
-    latitud: number | null;
-    longitud: number | null;
   } | null;
   rutaPuntos?: TaskRoutePoint[];
 }

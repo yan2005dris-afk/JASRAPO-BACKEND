@@ -49,17 +49,6 @@ export class CreateRouteDto {
   tipoRuta!: TipoRuta;
 
   @ApiProperty({
-    description:
-      'ID del medidor asociado (opcional; se valida en la lógica de negocio según tipo de ruta)',
-    required: false,
-    example: 42,
-  })
-  @IsOptional()
-  @IsNumber()
-  @Type(() => Number)
-  medidorId?: number;
-
-  @ApiProperty({
     description: 'ID de la comunidad donde se aplicará la ruta',
     example: 1,
   })

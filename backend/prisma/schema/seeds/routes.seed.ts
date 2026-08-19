@@ -87,8 +87,9 @@ export async function seedRoutes(prisma: PrismaClient) {
       select: { rutaId: true },
     });
 
-    if (!existingRuta) {
-      await prisma.rutas.create({
+    let createdRuta = existingRuta;
+    if (!createdRuta) {
+      createdRuta = await prisma.rutas.create({
         data: {
           nombre: rutaNombre,
           tipoRuta: 'TOMA_LECTURA',
@@ -102,56 +103,134 @@ export async function seedRoutes(prisma: PrismaClient) {
       rutasCount++;
     }
 
-    // Initialize one reading per meter for the active period (lecturaActual = 0)
+    // Initialize readings and linked ordenesTrabajo per meter for the active period
+    let visitOrder = 1;
     for (const medidorId of zone.medidorIds) {
       const existingLectura = await prisma.lecturas.findFirst({
         where: { medidorId, periodoId: periodo.periodoId },
         select: { lecturaId: true },
       });
 
-      if (existingLectura) continue;
+      let currentLecturaId = existingLectura?.lecturaId;
 
-      const prevLectura = await prisma.lecturas.findFirst({
-        where: { medidorId },
-        orderBy: { fecha: 'desc' },
-        select: { lecturaActual: true },
+      if (!existingLectura) {
+        const prevLectura = await prisma.lecturas.findFirst({
+          where: { medidorId },
+          orderBy: { fecha: 'desc' },
+          select: { lecturaActual: true },
+        });
+
+        const seedDate = new Date(Date.UTC(2026, 0, 1, 12, 0, 0));
+        const newLectura = await prisma.lecturas.create({
+          data: {
+            medidorId,
+            periodoId: periodo.periodoId,
+            fecha: seedDate,
+            lecturaAnterior: prevLectura?.lecturaActual ?? 0,
+            lecturaActual: 0,
+            consumoCalculado: 0,
+            estado: 'PENDIENTE',
+            lecturaInicial: prevLectura == null,
+          },
+        });
+        currentLecturaId = newLectura.lecturaId;
+        lecturasCount++;
+      }
+
+      // Create linked orden_trabajo of type LECTURA
+      const contractHist = await prisma.historialMedidores.findFirst({
+        where: { medidorId, fechaHasta: null },
+        select: { contratoId: true },
       });
 
-      const seedDate = new Date(Date.UTC(2026, 0, 1, 12, 0, 0));
-      await prisma.lecturas.create({
-        data: {
-          medidorId,
-          periodoId: periodo.periodoId,
-          fecha: seedDate,
-          lecturaAnterior: prevLectura?.lecturaActual ?? 0,
-          lecturaActual: 0,
-          consumoCalculado: 0,
-          estado: 'PENDIENTE',
-          lecturaInicial: prevLectura == null,
-        },
-      });
-      lecturasCount++;
+      if (contractHist && createdRuta) {
+        const existingOT = await prisma.ordenesTrabajo.findFirst({
+          where: {
+            rutaId: createdRuta.rutaId,
+            contratoId: contractHist.contratoId,
+            tipoActividad: 'LECTURA',
+          },
+        });
+
+        if (!existingOT) {
+          await prisma.ordenesTrabajo.create({
+            data: {
+              rutaId: createdRuta.rutaId,
+              contratoId: contractHist.contratoId,
+              medidorId,
+              lecturaId: currentLecturaId,
+              tipoActividad: 'LECTURA',
+              estado: 'PENDIENTE',
+              ordenVisita: visitOrder++,
+            },
+          });
+        }
+      }
     }
   }
 
-  // Sample work-order routes (RECONEXION, INSTALACION, INSPECCION) using meters from the first zone
-  const firstZone = [...zonesMap.values()].find((z) => z.medidorIds.length >= 3);
-  if (firstZone) {
-    const workOrders = [
-      { tipo: 'RECONEXION' as const, nombre: 'Reconexión - muestra' },
-      { tipo: 'INSTALACION' as const, nombre: 'Instalación - muestra' },
-      { tipo: 'INSPECCION' as const, nombre: 'Inspección - muestra' },
+  // Sample work-order routes (INSTALACION, RECONEXION, INSPECCION)
+  const allActiveContratos = await prisma.contratos.findMany({
+    where: { deletedAt: null },
+    include: {
+      historialMedidores: { where: { fechaHasta: null } },
+      cliente: true,
+    },
+    take: 10,
+  });
+
+  if (allActiveContratos.length >= 3) {
+    const workRouteDefs = [
+      {
+        tipo: 'INSTALACION' as const,
+        nombre: 'Ruta Instalación de Medidores - Nueva Alborada',
+        contratoIdx: 0,
+        estado: 'PENDIENTE' as const,
+        obs: 'Instalación programada de medidor de 1/2 pulgada.',
+      },
+      {
+        tipo: 'RECONEXION' as const,
+        nombre: 'Ruta Reconexión - Sector Central',
+        contratoIdx: 1,
+        estado: 'EN_PROGRESO' as const,
+        obs: 'Reconexión tras pago de saldo pendiente.',
+      },
+      {
+        tipo: 'INSPECCION' as const,
+        nombre: 'Ruta Inspección Técnica por Fuga / Anomalía',
+        contratoIdx: 2,
+        estado: 'COMPLETADA' as const,
+        obs: 'Inspección técnica de presión y verificación de sello.',
+      },
     ];
-    for (let i = 0; i < workOrders.length; i++) {
-      await prisma.rutas.create({
+
+    for (let i = 0; i < workRouteDefs.length; i++) {
+      const def = workRouteDefs[i];
+      const targetContrato = allActiveContratos[def.contratoIdx];
+      const assignedMedidorId = targetContrato.historialMedidores[0]?.medidorId ?? null;
+
+      const ruta = await prisma.rutas.create({
         data: {
-          nombre: workOrders[i].nombre,
-          tipoRuta: workOrders[i].tipo,
+          nombre: def.nombre,
+          tipoRuta: def.tipo,
           operarioId: operadores[i % operadores.length].usuarioId,
-          comunidadId: firstZone.comunidadId,
-          sectorId: firstZone.sectorId,
-          medidorId: firstZone.medidorIds[i],
-          estado: 'PENDIENTE',
+          comunidadId: targetContrato.comunidadId,
+          sectorId: targetContrato.sectorId,
+          estado: def.estado,
+          fechaPlanificada: new Date(Date.UTC(2026, 7, 20, 9, 0, 0)),
+        },
+      });
+
+      await prisma.ordenesTrabajo.create({
+        data: {
+          rutaId: ruta.rutaId,
+          contratoId: targetContrato.contratoId,
+          medidorId: assignedMedidorId,
+          tipoActividad: def.tipo,
+          estado: def.estado === 'COMPLETADA' ? 'COMPLETADA' : def.estado === 'EN_PROGRESO' ? 'EN_PROGRESO' : 'PENDIENTE',
+          ordenVisita: 1,
+          resultadoObservacion: def.obs,
+          completadoEn: def.estado === 'COMPLETADA' ? new Date() : null,
         },
       });
       rutasCount++;
