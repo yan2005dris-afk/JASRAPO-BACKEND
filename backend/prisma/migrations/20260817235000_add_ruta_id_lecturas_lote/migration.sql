@@ -78,7 +78,7 @@ BEGIN
         SELECT
             c.contrato_id,
             hm.medidor_id,
-            hm.lectura_inicial
+            hm.lectura_inicial_historial AS lectura_inicial
         FROM contratos c
         JOIN historial_medidores hm ON hm.contrato_id = c.contrato_id AND hm.fecha_hasta IS NULL
         JOIN medidores m ON m.medidor_id = hm.medidor_id
