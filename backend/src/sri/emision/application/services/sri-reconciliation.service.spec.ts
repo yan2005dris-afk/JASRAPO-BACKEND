@@ -1,6 +1,11 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { SriReconciliationService, SRI_RECONCILIATION_JOB } from './sri-reconciliation.service';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
+import {
+  SriReconciliationService,
+  SRI_RECONCILIATION_JOB,
+} from './sri-reconciliation.service';
 import { SriService } from './sri.service';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 
 describe('SriReconciliationService', () => {
   let service: SriReconciliationService;
@@ -17,10 +22,17 @@ describe('SriReconciliationService', () => {
       work: jest.fn().mockResolvedValue(undefined),
     };
 
+    const mockLogger = {
+      log: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         SriReconciliationService,
         { provide: SriService, useValue: mockSriService },
+        { provide: LoggerService, useValue: mockLogger },
         { provide: 'JobService', useValue: mockJobService },
       ],
     }).compile();

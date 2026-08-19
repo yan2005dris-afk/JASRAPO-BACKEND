@@ -10,10 +10,12 @@ jest.mock('pg-boss', () => ({
   })),
 }));
 
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { UnlockUserAccountUseCase } from './unlock-user-account.use-case';
 import { UserRepository } from '../../../users/domain/repositories/user.repository';
 import { AuditService } from 'src/infrastructure/audit/audit.service';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 
 describe('UnlockUserAccountUseCase', () => {
@@ -31,11 +33,18 @@ describe('UnlockUserAccountUseCase', () => {
       log: jest.fn().mockResolvedValue(undefined),
     };
 
+    const mockLogger = {
+      log: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UnlockUserAccountUseCase,
         { provide: UserRepository, useValue: mockUserRepo },
         { provide: AuditService, useValue: mockAuditService },
+        { provide: LoggerService, useValue: mockLogger },
       ],
     }).compile();
 

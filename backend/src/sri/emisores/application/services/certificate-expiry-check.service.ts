@@ -1,5 +1,7 @@
-import { Injectable, Logger, OnModuleInit, Inject, Optional } from '@nestjs/common';
+import { Injectable, OnModuleInit, Inject, Optional } from '@nestjs/common';
 import { EmisorRepository } from '../../domain/repositories/emisor.repository';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
 export const CERTIFICATE_EXPIRY_CHECK_JOB = 'sri-certificate-expiry-check';
 
@@ -14,17 +16,24 @@ export interface CertificateExpiryAlert {
 }
 
 export interface ICertificateJobScheduler {
-  schedule(name: string, cron: string, data?: object, options?: any): Promise<any>;
+  schedule(
+    name: string,
+    cron: string,
+    data?: object,
+    options?: any,
+  ): Promise<any>;
   work(name: string, handler: (jobs: any[]) => Promise<any>): Promise<any>;
 }
 
+@LogContext()
 @Injectable()
 export class CertificateExpiryCheckService implements OnModuleInit {
-  private readonly logger = new Logger(CertificateExpiryCheckService.name);
-
   constructor(
     private readonly emisorRepository: EmisorRepository,
-    @Optional() @Inject('JobService') private readonly jobsService?: ICertificateJobScheduler,
+    private readonly logger: LoggerService,
+    @Optional()
+    @Inject('JobService')
+    private readonly jobsService?: ICertificateJobScheduler,
   ) {}
 
   async onModuleInit() {
@@ -38,16 +47,17 @@ export class CertificateExpiryCheckService implements OnModuleInit {
           { singletonKey: CERTIFICATE_EXPIRY_CHECK_JOB },
         );
 
-        await this.jobsService.work(
-          CERTIFICATE_EXPIRY_CHECK_JOB,
-          async () => {
-            await this.checkAllCertificates();
-          },
-        );
+        await this.jobsService.work(CERTIFICATE_EXPIRY_CHECK_JOB, async () => {
+          await this.checkAllCertificates();
+        });
 
-        this.logger.log('Job programado de verificación de certificados SRI registrado (08:00 AM diario)');
+        this.logger.log(
+          'Job programado de verificación de certificados SRI registrado (08:00 AM diario)',
+        );
       } catch (err: any) {
-        this.logger.warn(`No se pudo programar el job en PgBoss: ${err?.message || err}`);
+        this.logger.warn(
+          `No se pudo programar el job en PgBoss: ${err?.message || err}`,
+        );
       }
     }
   }

@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { PagoAnuladoHandler } from './pago-anulado.handler';
 import { PaymentRepository } from '../../domain/repositories/payment.repository';
 import { ComprobanteRepository } from '../../../../../sri/emision/domain/repositories/comprobante.repository';
@@ -59,7 +60,7 @@ describe('PagoAnuladoHandler', () => {
       id: 100n,
       estado: 'AUTORIZADO',
       secuencial: '000000123',
-      clave_acceso: '1234567890123456789012345678901234567890123456789',
+      clave_acceso: '180820260109999999990011001001000000123123456781',
       fecha_emision: '18/08/2026',
       total_sin_impuestos: 25.5,
       receptor_identificacion: '0999999999001',
@@ -70,9 +71,8 @@ describe('PagoAnuladoHandler', () => {
 
     expect(emitirNotaCreditoUseCase.emitirNotaCredito).toHaveBeenCalledWith(
       expect.objectContaining({
-        docModificado: expect.objectContaining({
-          numero: '000000123',
-        }),
+        codDocModificado: '01',
+        numDocModificado: '001-001-000000123',
         motivo: 'Error en cobro de ventanilla',
       }),
     );

@@ -1,6 +1,8 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { CertificateExpiryCheckService } from './certificate-expiry-check.service';
 import { EmisorRepository } from '../../domain/repositories/emisor.repository';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 
 describe('CertificateExpiryCheckService', () => {
   let service: CertificateExpiryCheckService;
@@ -12,6 +14,12 @@ describe('CertificateExpiryCheckService', () => {
       findAll: jest.fn(),
     };
 
+    const mockLogger = {
+      log: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
+
     mockJobService = {
       schedule: jest.fn().mockResolvedValue(undefined),
       work: jest.fn().mockResolvedValue(undefined),
@@ -21,11 +29,14 @@ describe('CertificateExpiryCheckService', () => {
       providers: [
         CertificateExpiryCheckService,
         { provide: EmisorRepository, useValue: mockEmisorRepo },
+        { provide: LoggerService, useValue: mockLogger },
         { provide: 'JobService', useValue: mockJobService },
       ],
     }).compile();
 
-    service = module.get<CertificateExpiryCheckService>(CertificateExpiryCheckService);
+    service = module.get<CertificateExpiryCheckService>(
+      CertificateExpiryCheckService,
+    );
     emisorRepository = module.get(EmisorRepository);
   });
 

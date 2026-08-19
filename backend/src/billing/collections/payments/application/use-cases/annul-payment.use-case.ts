@@ -100,6 +100,8 @@ export class AnnulPaymentUseCase {
           motivoAnulacion: dto.motivoAnulacion,
           anuladoPor: dto.anuladoPor ?? 'SYSTEM',
         },
+        'PAGO',
+        pagoId.toString(),
         tx,
       );
     });

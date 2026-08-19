@@ -5,6 +5,8 @@ import { LogContext } from 'src/shared/decorators/log-context.decorator';
 import { EmitirNotaCreditoUseCase } from '../../../../../sri/emision/application/use-cases/emitir-nota-credito.use-case';
 import { ComprobanteRepository } from '../../../../../sri/emision/domain/repositories/comprobante.repository';
 
+import { TipoIdentificacion } from '../../../../../sri/emision/domain/constants/sri.enums';
+
 @LogContext()
 @Injectable()
 export class PagoAnuladoHandler {
@@ -19,9 +21,12 @@ export class PagoAnuladoHandler {
     pagoId: bigint,
     motivoAnulacion: string,
   ): Promise<void> {
-    this.logger.log(`Procesando pago.anulado: pagoId=${pagoId}, motivo=${motivoAnulacion}`);
+    this.logger.log(
+      `Procesando pago.anulado: pagoId=${pagoId}, motivo=${motivoAnulacion}`,
+    );
 
-    const detalles = await this.paymentRepository.findPaymentDetailsByPagoId(pagoId);
+    const detalles =
+      await this.paymentRepository.findPaymentDetailsByPagoId(pagoId);
 
     const comprobanteIdsUnicos = [
       ...new Set(
@@ -32,10 +37,13 @@ export class PagoAnuladoHandler {
     ];
 
     for (const comprobanteId of comprobanteIdsUnicos) {
-      const comprobante = await this.comprobanteRepository.findRecordById(comprobanteId);
+      const comprobante =
+        await this.comprobanteRepository.findRecordById(comprobanteId);
 
       if (!comprobante) {
-        this.logger.warn(`Comprobante ${comprobanteId} no encontrado para pago anulado ${pagoId}`);
+        this.logger.warn(
+          `Comprobante ${comprobanteId} no encontrado para pago anulado ${pagoId}`,
+        );
         continue;
       }
 
@@ -54,7 +62,9 @@ export class PagoAnuladoHandler {
       try {
         await this.emitirNotaCreditoUseCase.emitirNotaCredito({
           emisor: {
-            ruc: comprobante.receptor_identificacion ? '0999999999001' : '0999999999001',
+            ruc: comprobante.receptor_identificacion
+              ? '0999999999001'
+              : '0999999999001',
             razonSocial: 'JASRAPO',
             dirMatriz: 'Matriz Principal',
             establecimiento: '001',
@@ -62,26 +72,38 @@ export class PagoAnuladoHandler {
             obligadoContabilidad: 'NO',
           },
           comprador: {
-            tipoIdentificacion: comprobante.receptor_tipo_identificacion || '07',
-            identificacion: comprobante.receptor_identificacion || '9999999999999',
-            razonSocial: comprobante.receptor_razon_social || 'CONSUMIDOR FINAL',
+            tipoIdentificacion:
+              (comprobante.receptor_tipo_identificacion as TipoIdentificacion) ||
+              TipoIdentificacion.CONSUMIDOR_FINAL,
+            identificacion:
+              comprobante.receptor_identificacion || '9999999999999',
+            razonSocial:
+              comprobante.receptor_razon_social || 'CONSUMIDOR FINAL',
             direccion: comprobante.receptor_direccion || 'S/N',
             email: comprobante.receptor_email || undefined,
           },
-          docModificado: {
-            tipo: '01',
-            numero: `${comprobante.secuencial}`,
-            fechaEmision: comprobante.fecha_emision,
-          },
+          codDocModificado: '01',
+          numDocModificado: `${comprobante.clave_acceso ? comprobante.clave_acceso.slice(24, 27) : '001'}-${comprobante.clave_acceso ? comprobante.clave_acceso.slice(27, 30) : '001'}-${comprobante.secuencial.padStart(9, '0')}`,
+          fechaEmision: new Date().toLocaleDateString('es-EC', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+          }),
+          fechaEmisionDocSustento:
+            comprobante.fecha_emision ||
+            new Date().toLocaleDateString('es-EC', {
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric',
+            }),
           motivo: motivoAnulacion || 'Anulación de pago / transacción',
           detalles: [
             {
-              codigoInterno: 'ANUL-01',
+              codigoPrincipal: 'ANUL-01',
               descripcion: `Anulación de comprobante ${comprobante.secuencial}`,
               cantidad: 1,
               precioUnitario: Number(comprobante.total_sin_impuestos || 0),
               descuento: 0,
-              precioTotalSinImpuesto: Number(comprobante.total_sin_impuestos || 0),
               impuestos: [
                 {
                   codigo: '2',

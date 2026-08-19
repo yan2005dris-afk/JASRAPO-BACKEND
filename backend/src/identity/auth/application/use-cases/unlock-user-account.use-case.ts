@@ -1,16 +1,21 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { UserRepository } from '../../../users/domain/repositories/user.repository';
 import { AuditService } from 'src/infrastructure/audit/audit.service';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+import { LogContext } from 'src/shared/decorators/log-context.decorator';
 import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
-import { UnlockAccountDto, UnlockAccountResponseDto } from '../../interfaces/dto/unlock-account.dto';
+import {
+  UnlockAccountDto,
+  UnlockAccountResponseDto,
+} from '../../interfaces/dto/unlock-account.dto';
 
+@LogContext()
 @Injectable()
 export class UnlockUserAccountUseCase {
-  private readonly logger = new Logger(UnlockUserAccountUseCase.name);
-
   constructor(
     private readonly userRepository: UserRepository,
     private readonly auditService: AuditService,
+    private readonly logger: LoggerService,
   ) {}
 
   async execute(
@@ -40,7 +45,8 @@ export class UnlockUserAccountUseCase {
         targetUsuarioId: user.usuarioId,
         targetEmail: dto.email,
         adminUsuarioId,
-        motivo: dto.motivo || 'Desbloqueo administrativo por superusuario/admin',
+        motivo:
+          dto.motivo || 'Desbloqueo administrativo por superusuario/admin',
         timestamp: now.toISOString(),
       },
     });

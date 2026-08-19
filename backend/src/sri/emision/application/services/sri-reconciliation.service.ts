@@ -1,20 +1,29 @@
-import { Injectable, Logger, OnModuleInit, Inject, Optional } from '@nestjs/common';
+import { Injectable, OnModuleInit, Inject, Optional } from '@nestjs/common';
 import { SriService } from './sri.service';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
 export const SRI_RECONCILIATION_JOB = 'sri-reconciliation-job';
 
 export interface ISriReconciliationScheduler {
-  schedule(name: string, cron: string, data?: object, options?: any): Promise<any>;
+  schedule(
+    name: string,
+    cron: string,
+    data?: object,
+    options?: any,
+  ): Promise<any>;
   work(name: string, handler: (jobs: any[]) => Promise<any>): Promise<any>;
 }
 
+@LogContext()
 @Injectable()
 export class SriReconciliationService implements OnModuleInit {
-  private readonly logger = new Logger(SriReconciliationService.name);
-
   constructor(
     private readonly sriService: SriService,
-    @Optional() @Inject('JobService') private readonly jobsService?: ISriReconciliationScheduler,
+    private readonly logger: LoggerService,
+    @Optional()
+    @Inject('JobService')
+    private readonly jobsService?: ISriReconciliationScheduler,
   ) {}
 
   async onModuleInit() {
@@ -28,16 +37,17 @@ export class SriReconciliationService implements OnModuleInit {
           { singletonKey: SRI_RECONCILIATION_JOB },
         );
 
-        await this.jobsService.work(
-          SRI_RECONCILIATION_JOB,
-          async () => {
-            await this.reconcilePendingComprobantes();
-          },
-        );
+        await this.jobsService.work(SRI_RECONCILIATION_JOB, async () => {
+          await this.reconcilePendingComprobantes();
+        });
 
-        this.logger.log('Job programado de reconciliación SRI registrado (cada 15 minutos)');
+        this.logger.log(
+          'Job programado de reconciliación SRI registrado (cada 15 minutos)',
+        );
       } catch (err: any) {
-        this.logger.warn(`No se pudo programar el job de reconciliación en PgBoss: ${err?.message || err}`);
+        this.logger.warn(
+          `No se pudo programar el job de reconciliación en PgBoss: ${err?.message || err}`,
+        );
       }
     }
   }
@@ -46,7 +56,9 @@ export class SriReconciliationService implements OnModuleInit {
    * Ejecuta la reconciliación periódica de comprobantes pendientes / en proceso / firmados
    */
   async reconcilePendingComprobantes(): Promise<any> {
-    this.logger.log('Iniciando reconciliación automática de comprobantes con el SRI...');
+    this.logger.log(
+      'Iniciando reconciliación automática de comprobantes con el SRI...',
+    );
     try {
       const result = await this.sriService.sincronizarConSri({
         estados: ['PENDIENTE', 'EN_PROCESO', 'FIRMADO', 'DEVUELTA'],
@@ -59,7 +71,10 @@ export class SriReconciliationService implements OnModuleInit {
       );
       return result;
     } catch (err: any) {
-      this.logger.error(`Error durante la reconciliación automática SRI: ${err.message}`, err.stack);
+      this.logger.error(
+        `Error durante la reconciliación automática SRI: ${err.message}`,
+        err.stack,
+      );
       throw err;
     }
   }

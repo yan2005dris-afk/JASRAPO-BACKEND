@@ -135,7 +135,10 @@ export class EmitirFacturaUseCase {
       let secuencial: string;
       let claveAcceso: string;
 
-      if (opts?.comprobanteExistente?.secuencial && opts?.comprobanteExistente?.clave_acceso) {
+      if (
+        opts?.comprobanteExistente?.secuencial &&
+        opts?.comprobanteExistente?.clave_acceso
+      ) {
         // Idempotencia en reintentos de emisión: reutilizar secuencial y clave_acceso ya asignados
         secuencial = opts.comprobanteExistente.secuencial;
         claveAcceso = opts.comprobanteExistente.clave_acceso;

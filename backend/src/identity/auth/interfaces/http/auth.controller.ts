@@ -233,15 +233,15 @@ export class AuthController {
   @ApiOperation({
     summary: 'Desbloquear cuenta de usuario',
     description:
-      'Desbloquea una cuenta bloqueada por intentos fallidos de inicio de sesión. Requiere permiso users:update.',
+      'Desbloquea una cuenta de usuario que fue bloqueada por múltiples intentos fallidos de autenticación (fuerza bruta). Limpia los intentos fallidos, el bloqueo temporal y registra la auditoría.',
   })
-  @ApiBody({ type: UnlockAccountDto, description: 'Email del usuario a desbloquear y motivo opcional' })
+  @ApiBody({ type: UnlockAccountDto })
   @ApiResponse({
     status: 200,
     description: 'Cuenta desbloqueada exitosamente',
     type: UnlockAccountResponseDto,
   })
-  @ApiResponse({ status: 400, description: 'Datos inválidos' })
+  @ApiResponse({ status: 400, description: 'La cuenta no está bloqueada' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({
     status: 403,
@@ -256,7 +256,7 @@ export class AuthController {
     @Body() dto: UnlockAccountDto,
     @Req() req: AuthenticatedRequest,
   ): Promise<UnlockAccountResponseDto> {
-    const adminUsuarioId = req.user.usersId;
+    const adminUsuarioId = req.user?.usersId ?? 0;
     return this.authService.unlockAccount(dto, adminUsuarioId);
   }
 }

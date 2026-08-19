@@ -21,5 +21,9 @@ export interface JobSendOptions {
 }
 
 export abstract class JobService {
-  abstract send(name: string, data: object, options?: JobSendOptions): Promise<string>;
+  abstract send(
+    name: string,
+    data: object,
+    options?: JobSendOptions,
+  ): Promise<string>;
 }
