@@ -147,3 +147,64 @@ jobs:
         # de producción. continue-on-error queda en false: un hallazgo debe romper
         # el check, no solo reportarse en el log.
         run: pnpm audit --prod --audit-level=high
+
+  docker-smoke:
+    name: Docker Compose Build & Smoke Test
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Prepare environment file
+        run: cp .env.example .env
+
+      - name: Ensure RustFS TLS certificates
+        run: |
+          mkdir -p certs
+          if [ ! -f certs/rustfs_cert.pem ] || [ ! -f certs/rustfs_key.pem ]; then
+            openssl req -x509 -newkey rsa:2048 -nodes \
+              -keyout certs/rustfs_key.pem \
+              -out certs/rustfs_cert.pem \
+              -days 365 \
+              -subj "/C=EC/ST=Pichincha/L=Quito/O=JASRAPO/OU=ci/CN=localhost" \
+              2>/dev/null
+          fi
+          chmod 644 certs/rustfs_key.pem certs/rustfs_cert.pem
+
+      - name: Build and Start Services
+        env:
+          DOCKER_BUILDKIT: 1
+          COMPOSE_DOCKER_CLI_BUILD: 1
+        run: |
+          docker compose up --build -d postgres rustfs backend
+
+      - name: Wait for Backend Health
+        run: |
+          echo "Waiting for services to become healthy and up..."
+          # Reintenta hasta 60s esperando que el backend o Postgres respondan
+          for i in {1..20}; do
+            if docker compose ps backend | grep -q "Up"; then
+              echo "Backend container is running."
+              break
+            fi
+            echo "Waiting... ($i/20)"
+            sleep 3
+          done
+          sleep 10
+          docker compose ps
+
+      - name: Inspect Backend Logs on Failure
+        if: failure()
+        run: |
+          docker compose logs backend
+          docker compose logs postgres
+          docker compose logs rustfs
+
+      - name: Teardown Services
+        if: always()
+        run: |
+          docker compose down -v
+
