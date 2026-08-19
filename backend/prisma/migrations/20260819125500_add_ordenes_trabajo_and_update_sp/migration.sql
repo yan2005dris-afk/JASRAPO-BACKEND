@@ -1,11 +1,16 @@
--- CreateEnum
-CREATE TYPE "TipoActividadOrden" AS ENUM ('INSTALACION', 'LECTURA', 'RECONEXION', 'INSPECCION');
+-- CreateEnum (idempotent)
+DO $$ BEGIN
+  CREATE TYPE "TipoActividadOrden" AS ENUM ('INSTALACION', 'LECTURA', 'RECONEXION', 'INSPECCION');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
--- CreateEnum
-CREATE TYPE "EstadoOrdenTrabajo" AS ENUM ('PENDIENTE', 'EN_PROGRESO', 'COMPLETADA', 'CANCELADA', 'FALLIDA');
+DO $$ BEGIN
+  CREATE TYPE "EstadoOrdenTrabajo" AS ENUM ('PENDIENTE', 'EN_PROGRESO', 'COMPLETADA', 'CANCELADA', 'FALLIDA');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
--- CreateTable
-CREATE TABLE "ordenes_trabajo" (
+-- CreateTable (idempotent)
+CREATE TABLE IF NOT EXISTS "ordenes_trabajo" (
     "orden_trabajo_id" BIGSERIAL NOT NULL,
     "ruta_id" BIGINT NOT NULL,
     "contrato_id" BIGINT NOT NULL,
@@ -23,14 +28,17 @@ CREATE TABLE "ordenes_trabajo" (
     CONSTRAINT "ordenes_trabajo_pkey" PRIMARY KEY ("orden_trabajo_id")
 );
 
--- CreateIndexes
-CREATE INDEX "ordenes_trabajo_ruta_id_idx" ON "ordenes_trabajo"("ruta_id");
-CREATE INDEX "ordenes_trabajo_contrato_id_idx" ON "ordenes_trabajo"("contrato_id");
-CREATE INDEX "ordenes_trabajo_medidor_id_idx" ON "ordenes_trabajo"("medidor_id");
-CREATE INDEX "ordenes_trabajo_estado_idx" ON "ordenes_trabajo"("estado");
-CREATE INDEX "ordenes_trabajo_tipo_actividad_idx" ON "ordenes_trabajo"("tipo_actividad");
+-- CreateIndexes (idempotent)
+CREATE INDEX IF NOT EXISTS "ordenes_trabajo_ruta_id_idx" ON "ordenes_trabajo"("ruta_id");
+CREATE INDEX IF NOT EXISTS "ordenes_trabajo_contrato_id_idx" ON "ordenes_trabajo"("contrato_id");
+CREATE INDEX IF NOT EXISTS "ordenes_trabajo_medidor_id_idx" ON "ordenes_trabajo"("medidor_id");
+CREATE INDEX IF NOT EXISTS "ordenes_trabajo_estado_idx" ON "ordenes_trabajo"("estado");
+CREATE INDEX IF NOT EXISTS "ordenes_trabajo_tipo_actividad_idx" ON "ordenes_trabajo"("tipo_actividad");
 
--- AddForeignKeys
+-- AddForeignKeys (idempotent)
+ALTER TABLE "ordenes_trabajo" DROP CONSTRAINT IF EXISTS "ordenes_trabajo_ruta_id_fkey";
+ALTER TABLE "ordenes_trabajo" DROP CONSTRAINT IF EXISTS "ordenes_trabajo_contrato_id_fkey";
+ALTER TABLE "ordenes_trabajo" DROP CONSTRAINT IF EXISTS "ordenes_trabajo_medidor_id_fkey";
 ALTER TABLE "ordenes_trabajo" ADD CONSTRAINT "ordenes_trabajo_ruta_id_fkey" FOREIGN KEY ("ruta_id") REFERENCES "rutas"("ruta_id") ON DELETE CASCADE ON UPDATE CASCADE;
 ALTER TABLE "ordenes_trabajo" ADD CONSTRAINT "ordenes_trabajo_contrato_id_fkey" FOREIGN KEY ("contrato_id") REFERENCES "contratos"("contrato_id") ON DELETE RESTRICT ON UPDATE CASCADE;
 ALTER TABLE "ordenes_trabajo" ADD CONSTRAINT "ordenes_trabajo_medidor_id_fkey" FOREIGN KEY ("medidor_id") REFERENCES "medidores"("medidor_id") ON DELETE SET NULL ON UPDATE CASCADE;
@@ -48,7 +56,8 @@ SELECT DISTINCT
 FROM lecturas l
 JOIN historial_medidores hm ON hm.medidor_id = l.medidor_id AND hm.fecha_hasta IS NULL AND hm.borrado_en IS NULL
 JOIN contratos c ON c.contrato_id = hm.contrato_id AND c.borrado_en IS NULL
-WHERE l.ruta_id IS NOT NULL AND l.borrado_en IS NULL;
+WHERE l.ruta_id IS NOT NULL AND l.borrado_en IS NULL
+ON CONFLICT DO NOTHING;
 
 -- Actualizar Stored Procedure inicializar_lecturas_ruta para sincronizar ordenes_trabajo
 CREATE OR REPLACE FUNCTION public.inicializar_lecturas_ruta(
