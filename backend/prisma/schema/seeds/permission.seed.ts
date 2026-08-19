@@ -65,7 +65,8 @@ export async function seedPermissions(prisma: PrismaClient) {
         "menus",
         "catalogos",
         "rubros",
-        "configuraciones"
+        "configuraciones",
+        "empresa"
     ];
 
     const actions = ["read", "create", "update", "delete"];
