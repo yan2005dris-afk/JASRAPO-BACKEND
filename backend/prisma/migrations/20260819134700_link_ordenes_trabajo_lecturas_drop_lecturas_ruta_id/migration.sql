@@ -1,9 +1,10 @@
--- 1. Agregar lectura_id a ordenes_trabajo
-ALTER TABLE "ordenes_trabajo" ADD COLUMN "lectura_id" BIGINT;
-CREATE INDEX "ordenes_trabajo_lectura_id_idx" ON "ordenes_trabajo"("lectura_id");
+-- 1. Agregar lectura_id a ordenes_trabajo (idempotent)
+ALTER TABLE "ordenes_trabajo" ADD COLUMN IF NOT EXISTS "lectura_id" BIGINT;
+CREATE INDEX IF NOT EXISTS "ordenes_trabajo_lectura_id_idx" ON "ordenes_trabajo"("lectura_id");
+ALTER TABLE "ordenes_trabajo" DROP CONSTRAINT IF EXISTS "ordenes_trabajo_lectura_id_fkey";
 ALTER TABLE "ordenes_trabajo" ADD CONSTRAINT "ordenes_trabajo_lectura_id_fkey" FOREIGN KEY ("lectura_id") REFERENCES "lecturas"("lectura_id") ON DELETE SET NULL ON UPDATE CASCADE;
 
--- 2. Eliminar foreign key, index y columna ruta_id de lecturas
+-- 2. Eliminar foreign key, index y columna ruta_id de lecturas (idempotent)
 ALTER TABLE "lecturas" DROP CONSTRAINT IF EXISTS "lecturas_ruta_id_fkey";
 DROP INDEX IF EXISTS "lecturas_ruta_id_idx";
 ALTER TABLE "lecturas" DROP COLUMN IF EXISTS "ruta_id";
