@@ -84,6 +84,20 @@ export class ContractMedidorDetalleDto {
   modelo: string;
 }
 
+export class ContractApprovedReadingDto {
+  @ApiProperty({ example: '101' })
+  lecturaId: bigint;
+
+  @ApiProperty({ example: '2026-08-19' })
+  fecha: string;
+
+  @ApiProperty({ example: 530 })
+  lecturaActual: number;
+
+  @ApiProperty({ example: 500 })
+  lecturaAnterior: number;
+}
+
 export class ContractHistorialMedidorDto {
   @ApiProperty({ example: '1' })
   historialId: bigint;
@@ -96,6 +110,15 @@ export class ContractHistorialMedidorDto {
 
   @ApiPropertyOptional({ example: null, nullable: true })
   fechaHasta: string | null;
+
+  @ApiProperty({ example: 0 })
+  lecturaInicial: number;
+
+  @ApiPropertyOptional({ example: null, nullable: true })
+  lecturaFinal: number | null;
+
+  @ApiPropertyOptional({ type: ContractApprovedReadingDto, nullable: true })
+  ultimaLecturaAprobada: ContractApprovedReadingDto | null;
 
   @ApiProperty({ type: ContractMedidorDetalleDto })
   medidor: ContractMedidorDetalleDto;
@@ -180,6 +203,18 @@ export class ContractResponseDto {
           medidorId: h.medidorId,
           fechaDesde: DateUtil.formatForFrontend(h.fechaDesde) ?? '',
           fechaHasta: DateUtil.formatForFrontend(h.fechaHasta),
+          lecturaInicial: h.lecturaInicial,
+          lecturaFinal: h.lecturaFinal,
+          ultimaLecturaAprobada: h.ultimaLecturaAprobada
+            ? {
+                lecturaId: h.ultimaLecturaAprobada.lecturaId,
+                fecha:
+                  DateUtil.formatForFrontend(h.ultimaLecturaAprobada.fecha) ??
+                  '',
+                lecturaActual: h.ultimaLecturaAprobada.lecturaActual,
+                lecturaAnterior: h.ultimaLecturaAprobada.lecturaAnterior,
+              }
+            : null,
           medidor: h.medidor,
         }))
       : null;

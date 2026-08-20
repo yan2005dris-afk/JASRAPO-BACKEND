@@ -1,7 +1,8 @@
 import { ContractEntity } from '../../domain/entities/contract.entity';
+import type { ContractRecord } from '../repositories/prisma-contract.repository';
 
 export class ContractMapper {
-  static toDomain(raw: any): ContractEntity | null {
+  static toDomain(raw: ContractRecord | null): ContractEntity | null {
     if (!raw) return null;
 
     return new ContractEntity({
@@ -57,23 +58,41 @@ export class ContractMapper {
           }
         : null,
       historialMedidores: raw.historialMedidores
-        ? raw.historialMedidores.map((h: any) => ({
+        ? raw.historialMedidores.map((h) => ({
             historialId: h.historialId,
             medidorId: h.medidorId,
             fechaDesde: h.fechaDesde,
             fechaHasta: h.fechaHasta,
+            lecturaInicial: Number(h.lecturaInicial),
+            lecturaFinal:
+              h.lecturaFinal !== null && h.lecturaFinal !== undefined
+                ? Number(h.lecturaFinal)
+                : null,
             medidor: {
               medidorId: h.medidor.medidorId,
               serie: h.medidor.serie,
               marca: h.medidor.marca,
               modelo: h.medidor.modelo,
             },
+            ultimaLecturaAprobada:
+              h.fechaHasta === null &&
+              h.medidor.lecturas?.[0] &&
+              h.medidor.lecturas[0].fecha >= h.fechaDesde
+                ? {
+                    lecturaId: h.medidor.lecturas[0].lecturaId,
+                    fecha: h.medidor.lecturas[0].fecha,
+                    lecturaActual: Number(h.medidor.lecturas[0].lecturaActual),
+                    lecturaAnterior: Number(
+                      h.medidor.lecturas[0].lecturaAnterior,
+                    ),
+                  }
+                : null,
           }))
         : null,
     });
   }
 
-  static toDomainList(rawList: any[]): ContractEntity[] {
+  static toDomainList(rawList: ContractRecord[]): ContractEntity[] {
     return rawList
       .map((raw) => this.toDomain(raw))
       .filter((item): item is ContractEntity => item !== null);

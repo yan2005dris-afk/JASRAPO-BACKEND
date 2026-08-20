@@ -11,9 +11,11 @@ model Periodos {
   creadoPor        String?           @map("creado_por")
   actualizadoPor   String?           @map("actualizado_por")
   lecturas         Lecturas[]
-  lotes            Lote[]
-  prefacturas      Prefacturas[]
-  rutas            Rutas[]
+  lotes              Lote[]
+  prefacturas        Prefacturas[]
+  rutas              Rutas[]
+  reemplazosOrigen   ReemplazoMedidor[] @relation("ReemplazoPeriodoOrigen")
+  reemplazosDestino  ReemplazoMedidor[] @relation("ReemplazoPeriodoDestino")
 
   @@map("periodos")
 }

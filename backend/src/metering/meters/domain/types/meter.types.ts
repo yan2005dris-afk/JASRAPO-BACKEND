@@ -1,4 +1,12 @@
 import type { MeterEntity } from '../entities/meter.entity';
+import type { ReemplazoMedidorEntity } from '../entities/reemplazo-medidor.entity';
+import type { Decimal } from 'decimal.js';
+import type {
+  MotivoReemplazoMedidor,
+  ResponsabilidadDano,
+  TratamientoSaliente,
+  TratamientoEntrante,
+} from 'src/shared/enums';
 
 export interface MeterFilters {
   estado?: MeterEntity['estado'];
@@ -36,4 +44,44 @@ export interface CreateMeterHistoryRepositoryData {
   lecturaInicial: number;
   motivo: string;
   fechaDesde: Date;
+}
+
+export interface ReplaceMeterRepositoryData {
+  contratoId: bigint;
+  nuevoMedidorId: bigint;
+  lecturaFinalSaliente: Decimal;
+  lecturaInicialEntrante?: Decimal;
+  motivo: MotivoReemplazoMedidor;
+  responsabilidadDano?: ResponsabilidadDano;
+  detalleMotivo?: string;
+  tratamientoSaliente: TratamientoSaliente;
+  tratamientoEntrante: TratamientoEntrante;
+  porcentajeCobro?: Decimal;
+  ventanaPromedio?: number;
+  periodoOrigenId: number;
+  periodoDestinoId?: number;
+  mesOrigen?: number;
+  mesDestino?: number;
+  ordenTrabajoId?: bigint;
+  solicitadoPorUsuarioId: number;
+  autorizadoPorUsuarioId?: number;
+  autorizadoEn?: Date;
+  fechaReemplazo?: Date;
+  claveIdempotencia: string;
+  huellaSolicitud: string;
+  requiereAprobacion: boolean;
+}
+
+export interface ReplaceMeterResult {
+  reemplazo: ReemplazoMedidorEntity;
+  historialSalienteId: bigint;
+  historialEntranteId: bigint;
+  consumoMedidoSaliente: Decimal;
+  consumoFacturableSaliente: Decimal;
+  consumoDiferidoEntrante: Decimal;
+}
+
+export interface ApproveMeterReplacementRepositoryData {
+  reemplazoId: bigint;
+  autorizadoPorUsuarioId: number;
 }
