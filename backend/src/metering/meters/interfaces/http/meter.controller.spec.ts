@@ -64,7 +64,7 @@ describe('MeterController', () => {
       update: jest.fn(() => Promise.resolve(mockMeterEntity)),
       remove: jest.fn(() => Promise.resolve(undefined)),
       exportCsv: jest.fn(() => Promise.resolve(Readable.from(['csv']))),
-      exportPdf: jest.fn(() => Promise.resolve(new Uint8Array([1, 2, 3]))),
+      exportPdf: jest.fn(() => Promise.resolve(Buffer.from('%PDF-1.4'))),
     } as any;
 
     const module: TestingModule = await Test.createTestingModule({
@@ -135,19 +135,35 @@ describe('MeterController', () => {
         'Content-Type',
         'text/csv; charset=utf-8',
       );
+      expect(response.setHeader).toHaveBeenCalledWith(
+        'Content-Disposition',
+        expect.stringMatching(
+          /^attachment; filename="inventario-medidores-\d{4}-\d{2}-\d{2}\.csv"$/,
+        ),
+      );
     });
 
     it('should send PDF with download headers', async () => {
       const response = {
         setHeader: jest.fn(),
-        send: jest.fn(),
+        end: jest.fn(),
       } as any;
       const filters = { estado: EstadoMedidor.BODEGA };
 
       await controller.exportPdf(filters, response);
 
       expect(service.exportPdf).toHaveBeenCalledWith(filters);
-      expect(response.send).toHaveBeenCalledWith(Buffer.from([1, 2, 3]));
+      expect(response.setHeader).toHaveBeenCalledWith(
+        'Content-Type',
+        'application/pdf',
+      );
+      expect(response.setHeader).toHaveBeenCalledWith(
+        'Content-Disposition',
+        expect.stringMatching(
+          /^attachment; filename="inventario-medidores-\d{4}-\d{2}-\d{2}\.pdf"$/,
+        ),
+      );
+      expect(response.end).toHaveBeenCalledWith(Buffer.from('%PDF-1.4'));
     });
   });
 

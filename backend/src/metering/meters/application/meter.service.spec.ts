@@ -7,6 +7,7 @@ import { FindAllMetersUseCase } from './use-cases/find-all-meters.use-case';
 import { UpdateMeterUseCase } from './use-cases/update-meter.use-case';
 import { RemoveMeterUseCase } from './use-cases/remove-meter.use-case';
 import { ExportMetersUseCase } from './use-cases/export-meters.use-case';
+import { ExportMetersPdfUseCase } from './use-cases/export-meters-pdf.use-case';
 
 describe('MeterService', () => {
   let service: MeterService;
@@ -16,6 +17,7 @@ describe('MeterService', () => {
   let updateUseCase: UpdateMeterUseCase;
   let removeUseCase: RemoveMeterUseCase;
   let exportMetersUseCase: ExportMetersUseCase;
+  let exportMetersPdfUseCase: ExportMetersPdfUseCase;
 
   const mockMedidor = {
     medidorId: BigInt(1),
@@ -58,6 +60,7 @@ describe('MeterService', () => {
         { provide: UpdateMeterUseCase, useValue: { execute: jest.fn() } },
         { provide: RemoveMeterUseCase, useValue: { execute: jest.fn() } },
         { provide: ExportMetersUseCase, useValue: { execute: jest.fn() } },
+        { provide: ExportMetersPdfUseCase, useValue: { execute: jest.fn() } },
       ],
     }).compile();
 
@@ -68,6 +71,9 @@ describe('MeterService', () => {
     updateUseCase = module.get<UpdateMeterUseCase>(UpdateMeterUseCase);
     removeUseCase = module.get<RemoveMeterUseCase>(RemoveMeterUseCase);
     exportMetersUseCase = module.get<ExportMetersUseCase>(ExportMetersUseCase);
+    exportMetersPdfUseCase = module.get<ExportMetersPdfUseCase>(
+      ExportMetersPdfUseCase,
+    );
   });
 
   it('should be defined', () => {
@@ -145,18 +151,25 @@ describe('MeterService', () => {
     expect(chunks.join('')).toContain('MED-001,Itron,CX1000,BODEGA');
   });
 
-  it('exportPdf should return a PDF document with filtered inventory', async () => {
-    jest
-      .spyOn(exportMetersUseCase, 'execute')
-      .mockResolvedValue([mockMedidor] as any);
+  it('exportCsv should prepend a UTF-8 BOM so Excel keeps the accents', async () => {
+    jest.spyOn(exportMetersUseCase, 'execute').mockResolvedValue([]);
 
-    const pdf = await service.exportPdf({
-      estado: 'BODEGA',
-    } as any);
+    const stream = await service.exportCsv();
+    const chunks: string[] = [];
+    for await (const chunk of stream) chunks.push(String(chunk));
 
-    expect(exportMetersUseCase.execute).toHaveBeenCalledWith({
+    expect(chunks.join('').startsWith('\uFEFF')).toBe(true);
+  });
+
+  it('exportPdf should delegate to ExportMetersPdfUseCase with the active filters', async () => {
+    const buffer = Buffer.from('%PDF-1.4');
+    jest.spyOn(exportMetersPdfUseCase, 'execute').mockResolvedValue(buffer);
+
+    const result = await service.exportPdf({ estado: 'BODEGA' } as any);
+
+    expect(exportMetersPdfUseCase.execute).toHaveBeenCalledWith({
       estado: 'BODEGA',
     });
-    expect(Buffer.from(pdf).subarray(0, 5).toString()).toBe('%PDF-');
+    expect(result).toBe(buffer);
   });
 });

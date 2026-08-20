@@ -3,7 +3,6 @@ import {
   NestInterceptor,
   ExecutionContext,
   CallHandler,
-  StreamableFile,
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -39,11 +38,7 @@ export class AuditFieldsInterceptor implements NestInterceptor {
       return value;
     }
 
-    if (
-      value instanceof Date ||
-      value instanceof RegExp ||
-      value instanceof StreamableFile
-    ) {
+    if (value instanceof Date || value instanceof RegExp) {
       return value;
     }
 
