@@ -99,4 +99,9 @@ export abstract class RouteRepository {
     criteria: EligibleReadingsCriteria,
     pagination: PaginateOptions,
   ): Promise<PaginatedResult<ReadingForRouteEntity>>;
+
+  abstract paginateLecturasByRutaId(
+    rutaId: bigint,
+    pagination: PaginateOptions,
+  ): Promise<PaginatedResult<ReadingForRouteEntity>>;
 }

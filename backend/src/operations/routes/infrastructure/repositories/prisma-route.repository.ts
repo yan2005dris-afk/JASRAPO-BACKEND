@@ -402,4 +402,71 @@ export class PrismaRouteRepository implements RouteRepository {
       },
     };
   }
+
+  async paginateLecturasByRutaId(
+    rutaId: bigint,
+    pagination: PaginateOptions,
+  ): Promise<PaginatedResult<ReadingForRouteEntity>> {
+    const where: Prisma.OrdenesTrabajoWhereInput = {
+      rutaId,
+      tipoActividad: 'LECTURA',
+      deletedAt: null,
+      lecturaId: { not: null },
+    };
+
+    const [result, estadoGroups] = await Promise.all([
+      paginate<any>(
+        this.prisma.ordenesTrabajo,
+        {
+          where,
+          include: {
+            lectura: {
+              include: {
+                medidor: {
+                  include: {
+                    historial: {
+                      where: { fechaHasta: null },
+                      include: {
+                        contrato: { include: { cliente: true, sector: true } },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          } satisfies Prisma.OrdenesTrabajoInclude,
+          orderBy: { ordenVisita: 'asc' },
+        },
+        pagination,
+      ),
+      this.prisma.ordenesTrabajo.groupBy({
+        by: ['estado'],
+        where,
+        _count: { _all: true },
+      }),
+    ]);
+
+    // Extract readings from ordenes_trabajo rows
+    const lecturasRaw = result.data
+      .filter((ot) => ot.lectura != null)
+      .map((ot) => ot.lectura);
+
+    const countByEstado = new Map<string, number>(
+      estadoGroups.map((g) => [g.estado, g._count._all]),
+    );
+
+    return {
+      data: ReadingForRouteMapper.toEntityList(lecturasRaw),
+      meta: result.meta,
+      kpis: {
+        total: result.meta.total,
+        aprobadas: countByEstado.get('COMPLETADA') ?? 0,
+        pendientes:
+          (countByEstado.get('PENDIENTE') ?? 0) +
+          (countByEstado.get('EN_PROGRESO') ?? 0),
+        conNovedad: countByEstado.get('FALLIDA') ?? 0,
+        rechazadas: 0,
+      },
+    };
+  }
 }

@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { RoutesService } from './application/routes.service';
 import { RoutesController } from './interfaces/http/routes.controller';
 import { GetEligibleReadingsUseCase } from './application/use-cases/get-eligible-readings.use-case';
+import { GetReadingsByRutaUseCase } from './application/use-cases/get-readings-by-ruta.use-case';
 import { CreateRouteUseCase } from './application/use-cases/create-route.use-case';
 import { FindAllRoutesUseCase } from './application/use-cases/find-all-routes.use-case';
 import { FindOneRouteUseCase } from './application/use-cases/find-one-route.use-case';
@@ -17,6 +18,7 @@ import { OrdenesTrabajoModule } from './ordenes-trabajo.module';
   providers: [
     RoutesService,
     GetEligibleReadingsUseCase,
+    GetReadingsByRutaUseCase,
     CreateRouteUseCase,
     FindAllRoutesUseCase,
     FindOneRouteUseCase,
@@ -28,6 +30,7 @@ import { OrdenesTrabajoModule } from './ordenes-trabajo.module';
     RepositoriesModule,
     RoutesService,
     GetEligibleReadingsUseCase,
+    GetReadingsByRutaUseCase,
     CreateRouteUseCase,
     FindAllRoutesUseCase,
     FindOneRouteUseCase,

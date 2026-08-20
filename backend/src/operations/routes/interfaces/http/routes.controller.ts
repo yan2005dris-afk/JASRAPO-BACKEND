@@ -38,6 +38,7 @@ import { OrderWorkResponseDto } from '../dto/orden-trabajo-response.dto';
 import { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
 import { ApiPaginatedResponse } from 'src/infrastructure/common/decorators/api-paginated-response.decorator';
 import { PaginationMetaDto } from 'src/infrastructure/common/dtos/pagination-meta.dto';
+import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
 
 @ApiTags('routes')
 @ApiBearerAuth()
@@ -85,6 +86,33 @@ export class RoutesController {
     @Query() filterDto: FilterReadingsDto,
   ): Promise<PaginatedResult<ReadingForRouteResponseDto>> {
     const result = await this.routesService.getEligibleReadings(filterDto);
+    return {
+      data: ReadingForRouteResponseDto.fromEntityList(result.data),
+      meta: result.meta,
+      kpis: result.kpis,
+    };
+  }
+
+  /**
+   * Obtener lecturas vinculadas a una ruta específica
+   */
+  @ApiOperation({
+    summary: 'Obtener lecturas de ruta',
+    description:
+      'Retorna las lecturas ya vinculadas a una ruta de tipo TOMA_LECTURA (a través de ordenes_trabajo)',
+  })
+  @ApiPaginatedResponse(ReadingForRouteResponseDto)
+  @ApiParam({ name: 'rutaId', description: 'ID de la ruta', type: String })
+  @RequiredPermission('routes', 'read')
+  @Get(':rutaId/readings')
+  async getReadingsByRuta(
+    @Param('rutaId', ParseBigIntPipe) rutaId: bigint,
+    @Query() paginationDto: PaginationDto,
+  ): Promise<PaginatedResult<ReadingForRouteResponseDto>> {
+    const result = await this.routesService.getReadingsByRuta(rutaId, {
+      page: paginationDto.page,
+      limit: paginationDto.limit,
+    });
     return {
       data: ReadingForRouteResponseDto.fromEntityList(result.data),
       meta: result.meta,
