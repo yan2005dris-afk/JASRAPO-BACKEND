@@ -75,9 +75,15 @@ export class DateUtil {
   }
 
   /**
-   * Formatea una fecha para el frontend (YYYY-MM-DD)
+   * Formatea una fecha para el frontend como date-only (YYYY-MM-DD).
+   *
+   * El frontend DEBE parsear este string como componentes locales (vía
+   * LocalDatePipe) y NO con `new Date(value)`, porque `new Date('YYYY-MM-DD')`
+   * se interpreta como UTC midnight y provoca un shift de un día en zonas con
+   * offset UTC negativo (ej. Argentina UTC-3).
+   *
    * @param date Fecha a formatear
-   * @returns String en formato YYYY-MM-DD
+   * @returns String en formato YYYY-MM-DD o null si la fecha es inválida
    */
   public static formatForFrontend(
     date: Date | null | undefined,
@@ -85,14 +91,10 @@ export class DateUtil {
     if (!date || !isValid(date)) {
       return null;
     }
-    // Use local time to build the string so that when the frontend parses it
-    // with `new Date(string)`, JavaScript interprets it as local time (not UTC).
-    // Appending "T00:00:00" prevents the UTC-midnight interpretation that causes
-    // dates to shift by one day in negative-UTC-offset zones.
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}T00:00:00`;
+    return `${year}-${month}-${day}`;
   }
 
   /**
