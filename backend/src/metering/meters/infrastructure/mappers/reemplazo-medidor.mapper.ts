@@ -14,6 +14,8 @@ export class ReemplazoMedidorMapper {
       ordenTrabajoId: raw.ordenTrabajoId ?? null,
       periodoOrigenId: raw.periodoOrigenId,
       periodoDestinoId: raw.periodoDestinoId ?? null,
+      mesOrigen: raw.mesOrigen,
+      mesDestino: raw.mesDestino ?? null,
       motivo: raw.motivo,
       responsabilidadDano: raw.responsabilidadDano,
       detalleMotivo: raw.detalleMotivo ?? null,

@@ -8,6 +8,8 @@ model ReemplazoMedidor {
   ordenTrabajoId              BigInt?                 @map("orden_trabajo_id")
   periodoOrigenId             Int                     @map("periodo_origen_id")
   periodoDestinoId            Int?                    @map("periodo_destino_id")
+  mesOrigen                   Int                     @default(1) @map("mes_origen")
+  mesDestino                  Int?                    @map("mes_destino")
   motivo                      MotivoReemplazoMedidor  @map("motivo")
   responsabilidadDano         ResponsabilidadDano     @default(NO_APLICA) @map("responsabilidad_dano")
   detalleMotivo               String?                 @map("detalle_motivo")

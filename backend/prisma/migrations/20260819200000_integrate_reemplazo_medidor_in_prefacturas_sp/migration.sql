@@ -1,4 +1,10 @@
--- Actualizar Stored Procedure generar_prefacturas_lote para integrar el ciclo de vida de reemplazo_medidor
+-- 1. Agregar columnas mes_origen y mes_destino a reemplazos_medidor
+ALTER TABLE "reemplazos_medidor" ADD COLUMN IF NOT EXISTS "mes_origen" INTEGER NOT NULL DEFAULT 1;
+ALTER TABLE "reemplazos_medidor" ADD COLUMN IF NOT EXISTS "mes_destino" INTEGER;
+CREATE INDEX IF NOT EXISTS "reemplazos_medidor_mes_origen_idx" ON "reemplazos_medidor"("mes_origen");
+CREATE INDEX IF NOT EXISTS "reemplazos_medidor_mes_destino_idx" ON "reemplazos_medidor"("mes_destino");
+
+-- 2. Actualizar Stored Procedure generar_prefacturas_lote para integrar el ciclo de vida de reemplazos_medidor
 CREATE OR REPLACE FUNCTION public.generar_prefacturas_lote(
     p_periodo_id INTEGER,
     p_comunidad_id INTEGER DEFAULT NULL,
@@ -35,14 +41,14 @@ DECLARE
     v_mes INTEGER := COALESCE(p_mes, EXTRACT(MONTH FROM CURRENT_DATE)::INTEGER);
 
     -- Variables de Reemplazo de Medidor
-    v_reemplazo_id BIGINT;
+    v_reemplazos_count INTEGER := 0;
     v_consumo_facturable_saliente NUMERIC := 0;
     v_consumo_facturable_entrante NUMERIC := 0;
     v_consumo_fisico_entrante NUMERIC := 0;
     v_consumo_diferido_a_guardar NUMERIC := 0;
     v_consumo_diferido_a_cobrar NUMERIC := 0;
-    v_tratamiento_saliente TEXT;
     v_tratamiento_entrante TEXT;
+    v_prefactura_detalle_consumo_id BIGINT;
 
     -- Tasas de impuestos dinámicas para el cálculo
     v_iva_consumo NUMERIC := 0;
@@ -69,7 +75,6 @@ DECLARE
     v_descuento_disc_valor NUMERIC;
     v_descuento_disc_pct BOOLEAN;
     v_descuento_disc_id INTEGER;
-    v_prefactura_detalle_id BIGINT;
 
     -- Tasa de interés mora desde parámetros
     v_tasa_interes NUMERIC := 0;
@@ -204,7 +209,7 @@ BEGIN
           AND (ct.fecha_vigencia_hasta IS NULL OR ct.fecha_vigencia_hasta >= CURRENT_DATE)
           AND (p_comunidad_id IS NULL OR c.comunidad_id = p_comunidad_id)
     LOOP
-        -- Buscar lectura APROBADA (directa o a través de ordenes_trabajo de la ruta si se especificó p_ruta_id)
+        -- Buscar lectura APROBADA
         IF p_ruta_id IS NOT NULL THEN
             SELECT l.lectura_id, l.lectura_anterior, l.lectura_actual
             INTO v_lectura_id, v_lectura_anterior, v_lectura_actual
@@ -236,43 +241,51 @@ BEGIN
             CONTINUE;
         END IF;
 
-        -- 8.1 Verificar si hubo reemplazo de medidor en el período origen
-        v_reemplazo_id := NULL;
+        -- 8.1 Verificar reemplazos de medidor en este ciclo (periodo_origen_id y mes_origen)
+        v_reemplazos_count := 0;
         v_consumo_facturable_saliente := 0;
         v_consumo_facturable_entrante := 0;
         v_consumo_fisico_entrante := 0;
         v_consumo_diferido_a_guardar := 0;
-        v_tratamiento_saliente := NULL;
         v_tratamiento_entrante := NULL;
 
         SELECT
-            rm.reemplazo_id,
-            rm.consumo_facturable_saliente,
-            rm.tratamiento_saliente::TEXT,
-            rm.tratamiento_entrante::TEXT
+            COUNT(*),
+            COALESCE(SUM(rm.consumo_facturable_saliente), 0)
         INTO
-            v_reemplazo_id,
-            v_consumo_facturable_saliente,
-            v_tratamiento_saliente,
-            v_tratamiento_entrante
-        FROM reemplazo_medidor rm
+            v_reemplazos_count,
+            v_consumo_facturable_saliente
+        FROM reemplazos_medidor rm
         WHERE rm.contrato_id = contrato_row.contrato_id
           AND rm.periodo_origen_id = p_periodo_id
-          AND rm.borrado_en IS NULL
-        ORDER BY rm.creado_en DESC
-        LIMIT 1;
+          AND rm.mes_origen = v_mes
+          AND rm.estado = 'PENDIENTE'::"EstadoResolucionConsumo"
+          AND rm.borrado_en IS NULL;
 
-        -- 8.2 Verificar si hay consumos diferidos pendientes de cobrar en este período
+        -- 8.2 Verificar si hay consumos diferidos pendientes de cobrar en este ciclo
         SELECT COALESCE(SUM(rm_dif.consumo_diferido_entrante), 0)
         INTO v_consumo_diferido_a_cobrar
-        FROM reemplazo_medidor rm_dif
+        FROM reemplazos_medidor rm_dif
         WHERE rm_dif.contrato_id = contrato_row.contrato_id
           AND rm_dif.periodo_destino_id = p_periodo_id
-          AND rm_dif.estado = 'APROBADA'::"EstadoResolucionConsumo"
+          AND rm_dif.mes_destino = v_mes
+          AND rm_dif.estado = 'PENDIENTE'::"EstadoResolucionConsumo"
           AND rm_dif.borrado_en IS NULL;
 
         -- 8.3 Calcular consumo total según reemplazo o lectura regular
-        IF v_reemplazo_id IS NOT NULL THEN
+        IF v_reemplazos_count > 0 THEN
+            -- Obtener tratamiento entrante del reemplazo activo más reciente
+            SELECT rm.tratamiento_entrante::TEXT
+            INTO v_tratamiento_entrante
+            FROM reemplazos_medidor rm
+            WHERE rm.contrato_id = contrato_row.contrato_id
+              AND rm.periodo_origen_id = p_periodo_id
+              AND rm.mes_origen = v_mes
+              AND rm.estado = 'PENDIENTE'::"EstadoResolucionConsumo"
+              AND rm.borrado_en IS NULL
+            ORDER BY rm.creado_en DESC
+            LIMIT 1;
+
             v_consumo_fisico_entrante := GREATEST(0, v_lectura_actual - v_lectura_anterior);
             IF v_tratamiento_entrante = 'DIFERIR_SIGUIENTE_PERIODO' THEN
                 v_consumo_facturable_entrante := 0;
@@ -298,7 +311,7 @@ BEGIN
             v_tasa_seguridad := 0;
         END IF;
 
-        -- Seguimiento de Deuda (períodos/meses anteriores)
+        -- Seguimiento de Deuda (períodos/meses anteriores) con COALESCE estricto
         SELECT COALESCE(SUM(total_pagar - abono), 0), COUNT(*)
         INTO v_saldo_vencido, v_meses_atrasado
         FROM prefacturas
@@ -306,6 +319,9 @@ BEGIN
           AND estado NOT IN ('PAGADA'::"EstadoPrefactura", 'ANULADA'::"EstadoPrefactura")
           AND (periodo_id < p_periodo_id OR (periodo_id = p_periodo_id AND mes < v_mes))
           AND borrado_en IS NULL;
+
+        v_saldo_vencido := COALESCE(v_saldo_vencido, 0);
+        v_meses_atrasado := COALESCE(v_meses_atrasado, 0);
 
         SELECT COALESCE(total_pagar - abono, 0)
         INTO v_deuda_anterior
@@ -316,6 +332,8 @@ BEGIN
           AND borrado_en IS NULL
         ORDER BY periodo_id DESC, mes DESC
         LIMIT 1;
+
+        v_deuda_anterior := COALESCE(v_deuda_anterior, 0);
 
         -- Interés por mora si tiene meses atrasados
         IF v_meses_atrasado > 0 AND v_saldo_vencido > 0 AND v_tasa_interes > 0 THEN
@@ -380,10 +398,12 @@ BEGIN
         INSERT INTO prefactura_detalle (prefactura_id, rubro_id, descripcion, cantidad, precio_unitario, subtotal, iva, descuento, total, tarifa_impuesto, creado_en, actualizado_en)
         VALUES (v_prefactura_id, v_rubro_cargo_fijo, 'Cargo Fijo Mensual', 1, v_cargo_fijo, v_cargo_fijo, (v_cargo_fijo * v_iva_cargo_fijo), 0, (v_cargo_fijo * (1 + v_iva_cargo_fijo)), (v_iva_cargo_fijo * 100), CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
-        -- Insertar PrefacturaDetalle: Consumo Excedente (si existe)
+        -- Insertar PrefacturaDetalle: Consumo Excedente
+        v_prefactura_detalle_consumo_id := NULL;
         IF v_excedente > 0 THEN
             INSERT INTO prefactura_detalle (prefactura_id, rubro_id, descripcion, cantidad, precio_unitario, subtotal, iva, descuento, total, tarifa_impuesto, creado_en, actualizado_en)
-            VALUES (v_prefactura_id, v_rubro_consumo, 'Consumo Excedente Agua Potable', (v_consumo - contrato_row.consumo_minimo_mensual), contrato_row.valor_excedente_m3, v_excedente, (v_excedente * v_iva_consumo), 0, (v_excedente * (1 + v_iva_consumo)), (v_iva_consumo * 100), CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+            VALUES (v_prefactura_id, v_rubro_consumo, 'Consumo Excedente Agua Potable', (v_consumo - contrato_row.consumo_minimo_mensual), contrato_row.valor_excedente_m3, v_excedente, (v_excedente * v_iva_consumo), 0, (v_excedente * (1 + v_iva_consumo)), (v_iva_consumo * 100), CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+            RETURNING prefactura_detalle_id INTO v_prefactura_detalle_consumo_id;
         END IF;
 
         -- Insertar PrefacturaDetalle: Tasa Seguridad (si existe)
@@ -398,25 +418,32 @@ BEGIN
             VALUES (v_prefactura_id, v_rubro_interes, 'Interés por Mora (' || v_meses_atrasado || ' meses atrasados)', 1, v_interes_mora, v_interes_mora, (v_interes_mora * v_iva_interes), 0, (v_interes_mora * (1 + v_iva_interes)), (v_iva_interes * 100), CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
         END IF;
 
-        -- 8.4 Actualizar ReemplazoMedidor si aplicó en este período
-        IF v_reemplazo_id IS NOT NULL THEN
-            UPDATE reemplazo_medidor
-            SET consumo_medido_entrante = v_consumo_fisico_entrante,
+        -- 8.4 Actualizar y enlazar reemplazos_medidor del ciclo a APLICADA
+        IF v_reemplazos_count > 0 THEN
+            UPDATE reemplazos_medidor
+            SET prefactura_detalle_saliente_id = COALESCE(v_prefactura_detalle_consumo_id, prefactura_detalle_saliente_id),
+                prefactura_detalle_entrante_id = COALESCE(v_prefactura_detalle_consumo_id, prefactura_detalle_entrante_id),
+                consumo_medido_entrante = v_consumo_fisico_entrante,
                 consumo_facturable_entrante = v_consumo_facturable_entrante,
                 consumo_diferido_entrante = v_consumo_diferido_a_guardar,
                 estado = 'APLICADA'::"EstadoResolucionConsumo",
                 actualizado_en = CURRENT_TIMESTAMP
-            WHERE reemplazo_id = v_reemplazo_id;
+            WHERE contrato_id = contrato_row.contrato_id
+              AND periodo_origen_id = p_periodo_id
+              AND mes_origen = v_mes
+              AND estado = 'PENDIENTE'::"EstadoResolucionConsumo"
+              AND borrado_en IS NULL;
         END IF;
 
-        -- 8.5 Actualizar ReemplazoMedidor diferido que venció en este período
+        -- 8.5 Actualizar resoluciones diferidas que maduraron en este ciclo
         IF v_consumo_diferido_a_cobrar > 0 THEN
-            UPDATE reemplazo_medidor
+            UPDATE reemplazos_medidor
             SET estado = 'APLICADA'::"EstadoResolucionConsumo",
                 actualizado_en = CURRENT_TIMESTAMP
             WHERE contrato_id = contrato_row.contrato_id
               AND periodo_destino_id = p_periodo_id
-              AND estado = 'APROBADA'::"EstadoResolucionConsumo"
+              AND mes_destino = v_mes
+              AND estado = 'PENDIENTE'::"EstadoResolucionConsumo"
               AND borrado_en IS NULL;
         END IF;
 

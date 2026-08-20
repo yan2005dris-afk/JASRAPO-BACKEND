@@ -17,6 +17,8 @@ export class ReemplazoMedidorEntity {
   ordenTrabajoId?: bigint | null;
   periodoOrigenId: number;
   periodoDestinoId?: number | null;
+  mesOrigen: number;
+  mesDestino?: number | null;
   motivo: MotivoReemplazoMedidor;
   responsabilidadDano: ResponsabilidadDano;
   detalleMotivo?: string | null;

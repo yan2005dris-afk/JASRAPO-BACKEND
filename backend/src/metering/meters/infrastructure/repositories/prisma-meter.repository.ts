@@ -598,6 +598,8 @@ export class PrismaMeterRepository implements MeterRepository {
           ordenTrabajoId: ordenTrabajoId ?? null,
           periodoOrigenId,
           periodoDestinoId: periodoDestinoId ?? null,
+          mesOrigen: params.mesOrigen ?? new Date().getMonth() + 1,
+          mesDestino: params.mesDestino ?? null,
           motivo,
           responsabilidadDano,
           detalleMotivo: detalleMotivo ?? null,
@@ -626,7 +628,7 @@ export class PrismaMeterRepository implements MeterRepository {
             ? new Prisma.Decimal(porcentajeCobro.toString())
             : null,
           tarifaOrigenSnapshot: (tarifaSnapshot as any) ?? Prisma.JsonNull,
-          estado: 'APLICADA',
+          estado: 'PENDIENTE',
           solicitadoPorUsuarioId: solicitadoPorUsuarioId ?? null,
           autorizadoPorUsuarioId: autorizadoPorUsuarioId ?? null,
           autorizadoEn: autorizadoEn ?? fechaReemplazo,

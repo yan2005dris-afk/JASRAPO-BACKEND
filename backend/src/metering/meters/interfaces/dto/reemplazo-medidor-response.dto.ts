@@ -36,6 +36,12 @@ export class ReemplazoMedidorResponseDto {
   @ApiPropertyOptional({ example: 2 })
   periodoDestinoId?: number | null;
 
+  @ApiProperty({ example: 8 })
+  mesOrigen: number;
+
+  @ApiPropertyOptional({ example: 9 })
+  mesDestino?: number | null;
+
   @ApiProperty({ enum: MotivoReemplazoMedidor })
   motivo: MotivoReemplazoMedidor;
 
@@ -109,6 +115,8 @@ export class ReemplazoMedidorResponseDto {
       ordenTrabajoId: r.ordenTrabajoId ? r.ordenTrabajoId.toString() : null,
       periodoOrigenId: r.periodoOrigenId,
       periodoDestinoId: r.periodoDestinoId ?? null,
+      mesOrigen: r.mesOrigen,
+      mesDestino: r.mesDestino ?? null,
       motivo: r.motivo,
       responsabilidadDano: r.responsabilidadDano,
       detalleMotivo: r.detalleMotivo ?? null,

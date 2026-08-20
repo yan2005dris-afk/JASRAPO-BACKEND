@@ -60,6 +60,8 @@ export interface ReplaceMeterRepositoryData {
   ventanaPromedio?: number;
   periodoOrigenId: number;
   periodoDestinoId?: number;
+  mesOrigen?: number;
+  mesDestino?: number;
   ordenTrabajoId?: bigint;
   solicitadoPorUsuarioId?: string;
   autorizadoPorUsuarioId?: string;

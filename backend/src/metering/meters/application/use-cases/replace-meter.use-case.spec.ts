@@ -56,6 +56,7 @@ describe('ReplaceMeterUseCase', () => {
       tratamientoSaliente: TratamientoSaliente.COBRO_REAL,
       tratamientoEntrante: TratamientoEntrante.FACTURAR_PERIODO_ACTUAL,
       periodoOrigenId: 1,
+      mesOrigen: 8,
     };
 
     const expectedResult = {
@@ -82,6 +83,7 @@ describe('ReplaceMeterUseCase', () => {
         nuevoMedidorId: BigInt(2),
         lecturaFinalSaliente: new Decimal(530),
         lecturaInicialEntrante: new Decimal(0),
+        mesOrigen: 8,
       }),
     );
   });
@@ -144,7 +146,7 @@ describe('ReplaceMeterUseCase', () => {
     );
   });
 
-  it('should reject missing or equal destination period on deferred treatment', async () => {
+  it('should reject missing or non-subsequent cycle on deferred treatment', async () => {
     const inputNoDestino = {
       contratoId: BigInt(1),
       nuevoMedidorId: BigInt(2),
@@ -153,19 +155,21 @@ describe('ReplaceMeterUseCase', () => {
       tratamientoSaliente: TratamientoSaliente.COBRO_REAL,
       tratamientoEntrante: TratamientoEntrante.DIFERIR_SIGUIENTE_PERIODO,
       periodoOrigenId: 1,
+      mesOrigen: 8,
     };
 
     await expect(useCase.execute(inputNoDestino)).rejects.toThrow(
-      'El período destino es obligatorio cuando se difiere el cobro del medidor entrante',
+      'El período y mes destino son obligatorios cuando se difiere el cobro del medidor entrante',
     );
 
-    const inputSameDestino = {
+    const inputPriorCycle = {
       ...inputNoDestino,
       periodoDestinoId: 1,
+      mesDestino: 7, // Earlier month in same period
     };
 
-    await expect(useCase.execute(inputSameDestino)).rejects.toThrow(
-      'El período destino no puede ser igual al período origen al diferir el cobro',
+    await expect(useCase.execute(inputPriorCycle)).rejects.toThrow(
+      'El ciclo de facturación destino (período y mes) debe ser posterior al ciclo de origen al diferir el cobro',
     );
   });
 });

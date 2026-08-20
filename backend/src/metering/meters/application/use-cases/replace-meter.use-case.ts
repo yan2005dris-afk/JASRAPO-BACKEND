@@ -26,6 +26,8 @@ export interface ReplaceMeterInput {
   ventanaPromedio?: number;
   periodoOrigenId: number;
   periodoDestinoId?: number;
+  mesOrigen?: number;
+  mesDestino?: number;
   ordenTrabajoId?: bigint;
   solicitadoPorUsuarioId?: string;
   autorizadoPorUsuarioId?: string;
@@ -62,7 +64,10 @@ export class ReplaceMeterUseCase {
       }
 
       if (input.tratamientoSaliente === TratamientoSaliente.COBRO_PARCIAL) {
-        if (input.porcentajeCobro === undefined || input.porcentajeCobro === null) {
+        if (
+          input.porcentajeCobro === undefined ||
+          input.porcentajeCobro === null
+        ) {
           throw new InvalidDomainOperationException(
             'El porcentaje de cobro es obligatorio cuando el tratamiento es COBRO_PARCIAL',
           );
@@ -75,7 +80,9 @@ export class ReplaceMeterUseCase {
         }
       }
 
-      if (input.tratamientoSaliente === TratamientoSaliente.PROMEDIO_HISTORICO) {
+      if (
+        input.tratamientoSaliente === TratamientoSaliente.PROMEDIO_HISTORICO
+      ) {
         if (!input.ventanaPromedio || input.ventanaPromedio <= 0) {
           throw new InvalidDomainOperationException(
             'La ventana de promedio histórico debe ser de al menos 1 mes',
@@ -83,18 +90,26 @@ export class ReplaceMeterUseCase {
         }
       }
 
+      const mesOrigen = input.mesOrigen || new Date().getMonth() + 1;
+
       if (
         input.tratamientoEntrante ===
         TratamientoEntrante.DIFERIR_SIGUIENTE_PERIODO
       ) {
-        if (!input.periodoDestinoId) {
+        if (!input.periodoDestinoId || !input.mesDestino) {
           throw new InvalidDomainOperationException(
-            'El período destino es obligatorio cuando se difiere el cobro del medidor entrante',
+            'El período y mes destino son obligatorios cuando se difiere el cobro del medidor entrante',
           );
         }
-        if (input.periodoDestinoId === input.periodoOrigenId) {
+
+        const esPosterior =
+          input.periodoDestinoId > input.periodoOrigenId ||
+          (input.periodoDestinoId === input.periodoOrigenId &&
+            input.mesDestino > mesOrigen);
+
+        if (!esPosterior) {
           throw new InvalidDomainOperationException(
-            'El período destino no puede ser igual al período origen al diferir el cobro',
+            'El ciclo de facturación destino (período y mes) debe ser posterior al ciclo de origen al diferir el cobro',
           );
         }
       }
@@ -118,6 +133,8 @@ export class ReplaceMeterUseCase {
         ventanaPromedio: input.ventanaPromedio,
         periodoOrigenId: input.periodoOrigenId,
         periodoDestinoId: input.periodoDestinoId,
+        mesOrigen,
+        mesDestino: input.mesDestino,
         ordenTrabajoId: input.ordenTrabajoId,
         solicitadoPorUsuarioId: input.solicitadoPorUsuarioId,
         autorizadoPorUsuarioId: input.autorizadoPorUsuarioId,
