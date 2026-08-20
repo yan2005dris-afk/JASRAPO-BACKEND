@@ -3,6 +3,7 @@ import {
   ExecutionContext,
   Injectable,
   NestInterceptor,
+  StreamableFile,
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -25,7 +26,7 @@ export class BigIntInterceptor implements NestInterceptor {
       return value.toString();
     }
 
-    if (value instanceof Date) {
+    if (value instanceof Date || value instanceof StreamableFile) {
       return value;
     }
 
