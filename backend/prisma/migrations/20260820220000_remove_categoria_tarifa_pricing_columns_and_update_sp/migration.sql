@@ -1,9 +1,12 @@
--- 1. Eliminar columnas de precio obsoletas en categoria_tarifa
+-- 1. Eliminar columnas de precio obsoletas en categoria_tarifa (manteniendo consumo_minimo_mensual)
 ALTER TABLE "categoria_tarifa" DROP COLUMN IF EXISTS "valor_base";
-ALTER TABLE "categoria_tarifa" DROP COLUMN IF EXISTS "consumo_minimo_mensual";
 ALTER TABLE "categoria_tarifa" DROP COLUMN IF EXISTS "valor_excedente_m3";
 
--- 2. Actualizar Stored Procedure generar_prefacturas_lote para usar rubros por categoria
+-- 2. Permitir que multiples rubros compartan el mismo codigo_sri (ej: 001 cargo fijo, 002 consumo agua)
+DROP INDEX IF EXISTS "rubros_codigo_sri_key";
+CREATE INDEX IF NOT EXISTS "rubros_codigo_sri_idx" ON "rubros"("codigo_sri");
+
+-- 3. Actualizar Stored Procedure generar_prefacturas_lote para usar rubros por categoria
 CREATE OR REPLACE FUNCTION public.generar_prefacturas_lote(
     p_periodo_id INTEGER,
     p_comunidad_id INTEGER DEFAULT NULL,
@@ -327,9 +330,12 @@ BEGIN
             v_consumo := GREATEST(0, v_lectura_actual - v_lectura_anterior) + v_consumo_facturable_saliente + v_consumo_diferido_a_cobrar;
         END IF;
 
+        -- Excedente sobre el consumo mínimo mensual de la categoría (default 10 m³)
+        v_excedente := GREATEST(0, v_consumo - COALESCE(contrato_row.consumo_minimo_mensual, 10));
+
         -- 8.3 Tasa de Seguridad
         IF v_porcentaje_tasa > 0 THEN
-            v_tasa_seguridad := (v_cargo_fijo + (v_consumo * v_precio_variable)) * (v_porcentaje_tasa / 100);
+            v_tasa_seguridad := (v_cargo_fijo + (v_excedente * v_precio_variable)) * (v_porcentaje_tasa / 100);
         ELSE
             v_tasa_seguridad := 0;
         END IF;
@@ -384,10 +390,10 @@ BEGIN
         END IF;
 
         -- Subtotal
-        v_subtotal := v_cargo_fijo + (v_consumo * v_precio_variable) + v_tasa_seguridad + v_interes_mora - v_descuento;
+        v_subtotal := v_cargo_fijo + (v_excedente * v_precio_variable) + v_tasa_seguridad + v_interes_mora - v_descuento;
 
         -- Cálculo dinámico de IVA
-        v_iva_total := ((v_consumo * v_precio_variable) * v_iva_consumo) +
+        v_iva_total := ((v_excedente * v_precio_variable) * v_iva_consumo) +
                        (v_cargo_fijo * v_iva_cargo_fijo) +
                        (v_interes_mora * v_iva_interes) +
                        (v_tasa_seguridad * v_iva_tasa_seguridad);
@@ -423,11 +429,11 @@ BEGIN
             VALUES (v_prefactura_id, v_rubro_cargo_fijo_id, 'Cargo Fijo Mensual', 1, v_cargo_fijo, v_cargo_fijo, (v_cargo_fijo * v_iva_cargo_fijo), 0, (v_cargo_fijo * (1 + v_iva_cargo_fijo)), (v_iva_cargo_fijo * 100), CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
         END IF;
 
-        -- Insertar PrefacturaDetalle: Consumo de Agua
+        -- Insertar PrefacturaDetalle: Consumo Excedente de Agua
         v_prefactura_detalle_consumo_id := NULL;
-        IF v_rubro_consumo_id IS NOT NULL AND v_consumo > 0 THEN
+        IF v_rubro_consumo_id IS NOT NULL AND v_excedente > 0 THEN
             INSERT INTO prefactura_detalle (prefactura_id, rubro_id, descripcion, cantidad, precio_unitario, subtotal, iva, descuento, total, tarifa_impuesto, creado_en, actualizado_en)
-            VALUES (v_prefactura_id, v_rubro_consumo_id, 'Consumo de Agua Potable', v_consumo, v_precio_variable, (v_consumo * v_precio_variable), ((v_consumo * v_precio_variable) * v_iva_consumo), 0, ((v_consumo * v_precio_variable) * (1 + v_iva_consumo)), (v_iva_consumo * 100), CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+            VALUES (v_prefactura_id, v_rubro_consumo_id, 'Consumo Excedente Agua Potable', v_excedente, v_precio_variable, (v_excedente * v_precio_variable), ((v_excedente * v_precio_variable) * v_iva_consumo), 0, ((v_excedente * v_precio_variable) * (1 + v_iva_consumo)), (v_iva_consumo * 100), CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
             RETURNING prefactura_detalle_id INTO v_prefactura_detalle_consumo_id;
         END IF;
 

@@ -4,6 +4,7 @@ export class TariffCategoryEntity {
   categoriaTarifaId: number;
   nombre: string;
   descripcion: string | null;
+  consumoMinimoMensual: number | null;
   fechaVigenciaDesde: Date | null;
   fechaVigenciaHasta: Date | null;
   activo: boolean;

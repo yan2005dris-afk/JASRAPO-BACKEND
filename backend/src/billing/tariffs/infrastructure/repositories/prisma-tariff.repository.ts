@@ -26,6 +26,7 @@ export const safeTariffCategoriesSelect = {
   categoriaTarifaId: true,
   nombre: true,
   descripcion: true,
+  consumoMinimoMensual: true,
   fechaVigenciaDesde: true,
   fechaVigenciaHasta: true,
   activo: true,
@@ -107,6 +108,7 @@ export class PrismaTariffRepository implements TariffRepository {
         data: {
           nombre: data.nombre,
           descripcion: data.descripcion,
+          consumoMinimoMensual: data.consumoMinimoMensual ?? 10,
           fechaVigenciaDesde: data.fechaVigenciaDesde ?? now,
           fechaVigenciaHasta: data.fechaVigenciaHasta ?? null,
           activo: data.activo ?? true,
@@ -184,6 +186,10 @@ export class PrismaTariffRepository implements TariffRepository {
               data.descripcion !== undefined
                 ? data.descripcion
                 : current.descripcion,
+            consumoMinimoMensual:
+              data.consumoMinimoMensual !== undefined
+                ? data.consumoMinimoMensual
+                : current.consumoMinimoMensual,
             fechaVigenciaDesde: now,
             fechaVigenciaHasta: null,
             activo: true,

@@ -2,6 +2,7 @@ model CategoriaTarifa {
   categoriaTarifaId    Int         @id @default(autoincrement()) @map("categoria_tarifa_id")
   nombre               String      @map("nombre")
   descripcion          String?     @map("descripcion")
+  consumoMinimoMensual Int?        @default(10) @map("consumo_minimo_mensual")
   fechaVigenciaDesde   DateTime?   @map("fecha_vigencia_desde") @db.Date
   fechaVigenciaHasta   DateTime?   @map("fecha_vigencia_hasta") @db.Date
   activo               Boolean     @default(true) @map("activo")

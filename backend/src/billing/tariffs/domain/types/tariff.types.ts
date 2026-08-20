@@ -6,6 +6,7 @@ export interface TariffCategoryFilters {
 export interface CreateTariffCategoryData {
   nombre: string;
   descripcion?: string | null;
+  consumoMinimoMensual?: number | null;
   fechaVigenciaDesde?: Date | null;
   fechaVigenciaHasta?: Date | null;
   activo?: boolean;
@@ -14,6 +15,7 @@ export interface CreateTariffCategoryData {
 export interface UpdateTariffCategoryData {
   nombre?: string;
   descripcion?: string | null;
+  consumoMinimoMensual?: number | null;
   fechaVigenciaDesde?: Date | null;
   fechaVigenciaHasta?: Date | null;
   activo?: boolean;

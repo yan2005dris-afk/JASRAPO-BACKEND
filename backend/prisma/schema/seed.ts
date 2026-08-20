@@ -164,7 +164,7 @@ async function main() {
 
       // ─── Categoría 2: COMERCIAL ───
       {
-        codigoSri: '003',
+        codigoSri: '001',
         nombre: 'Cargo Fijo Comercial',
         descripcion: 'Valor base mensual de conexión comercial',
         precioUnitario: 7.5,
@@ -174,7 +174,7 @@ async function main() {
         esAutomatico: true,
       },
       {
-        codigoSri: '004',
+        codigoSri: '002',
         nombre: 'Consumo Agua Comercial',
         descripcion: 'Consumo por m³ de agua potable comercial',
         precioUnitario: 0.75,
@@ -186,7 +186,7 @@ async function main() {
 
       // ─── Categoría 3: INDUSTRIAL ───
       {
-        codigoSri: '005',
+        codigoSri: '001',
         nombre: 'Cargo Fijo Industrial',
         descripcion: 'Valor base mensual de conexión industrial',
         precioUnitario: 15.0,
@@ -196,7 +196,7 @@ async function main() {
         esAutomatico: true,
       },
       {
-        codigoSri: '006',
+        codigoSri: '002',
         nombre: 'Consumo Agua Industrial',
         descripcion: 'Consumo por m³ de agua potable industrial',
         precioUnitario: 1.5,

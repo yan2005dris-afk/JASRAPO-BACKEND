@@ -21,6 +21,13 @@ export class TariffCategoryResponseDto {
   descripcion: string | null;
 
   @ApiPropertyOptional({
+    example: 10,
+    nullable: true,
+    description: 'Consumo mínimo mensual en m³',
+  })
+  consumoMinimoMensual: number | null;
+
+  @ApiPropertyOptional({
     example: '2026-01-01',
     nullable: true,
     description: 'Fecha de inicio de vigencia',
@@ -52,6 +59,7 @@ export class TariffCategoryResponseDto {
     dto.categoriaTarifaId = entity.categoriaTarifaId;
     dto.nombre = entity.nombre;
     dto.descripcion = entity.descripcion ?? null;
+    dto.consumoMinimoMensual = entity.consumoMinimoMensual ?? null;
     dto.fechaVigenciaDesde = DateUtil.formatForFrontend(
       entity.fechaVigenciaDesde,
     );

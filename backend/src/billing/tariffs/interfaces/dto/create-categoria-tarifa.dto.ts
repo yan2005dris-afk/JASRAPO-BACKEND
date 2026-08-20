@@ -14,22 +14,12 @@ export class CreateCategoriaTarifaDto {
 
   @IsOptional()
   @Type(() => Number)
-  @IsNumber()
-  valorBase?: number;
-
-  @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
+  @IsInt()
   consumoMinimoMensual?: number;
-
-  @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  valorExcedenteM3?: number;
 
   /**
    * ID de la tarifa de impuesto (CatalogoTarifasImpuesto) que se asigna a
-   * los 3 Rubros auto-creados. Si no se pasa, se usa la primera activa.
+   * los Rubros auto-creados. Si no se pasa, se usa la primera activa.
    */
   @IsOptional()
   @Type(() => Number)

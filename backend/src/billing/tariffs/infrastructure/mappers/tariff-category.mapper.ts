@@ -7,6 +7,7 @@ export type TariffCategoryPrismaRaw = Pick<
   | 'categoriaTarifaId'
   | 'nombre'
   | 'descripcion'
+  | 'consumoMinimoMensual'
   | 'fechaVigenciaDesde'
   | 'fechaVigenciaHasta'
   | 'activo'
@@ -34,6 +35,7 @@ export class TariffCategoryMapper {
       categoriaTarifaId: raw.categoriaTarifaId,
       nombre: raw.nombre,
       descripcion: raw.descripcion,
+      consumoMinimoMensual: raw.consumoMinimoMensual,
       fechaVigenciaDesde: raw.fechaVigenciaDesde,
       fechaVigenciaHasta: raw.fechaVigenciaHasta,
       activo: raw.activo,

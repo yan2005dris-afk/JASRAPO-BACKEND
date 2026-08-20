@@ -1,6 +1,6 @@
 model Rubros {
   rubroId           Int                 @id @default(autoincrement()) @map("rubro_id")
-  codigoSri         String?             @unique @map("codigo_sri")
+  codigoSri         String?             @map("codigo_sri")
   nombre            String              @default("") @map("nombre")
   descripcion       String              @map("descripcion")
   precioUnitario    Decimal             @map("precio_unitario") @db.Decimal(18, 2)
@@ -19,6 +19,7 @@ model Rubros {
 
   @@index([tarifaImpuestoId])
   @@index([categoriaTarifaId])
+  @@index([codigoSri])
   @@map("rubros")
 }
 
