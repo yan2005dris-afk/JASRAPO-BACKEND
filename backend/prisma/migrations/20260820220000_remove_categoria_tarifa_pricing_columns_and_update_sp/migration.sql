@@ -246,25 +246,15 @@ BEGIN
           AND r.borrado_en IS NULL
         LIMIT 1;
 
-        -- Fallback a rubros globales si la categoría no tiene asignados rubros específicos
+        -- Validación estricta: La categoría debe tener configurados sus rubros obligatorios activos
         IF v_rubro_cargo_fijo_id IS NULL THEN
-            SELECT r.rubro_id, r.precio_unitario, COALESCE(cti.porcentaje, 0) / 100, ci.codigo, cti.codigo_porcentaje
-            INTO v_rubro_cargo_fijo_id, v_cargo_fijo, v_iva_cargo_fijo, v_cod_imp_fijo, v_por_imp_fijo
-            FROM rubros r
-            JOIN catalogo_tarifas_impuesto cti ON r.tarifa_impuesto_id = cti.id
-            JOIN catalogo_impuestos ci ON cti.impuesto_id = ci.id
-            WHERE r.tipo_rubro = 'FIJO'::"TipoRubro" AND (r.codigo_sri = '002' OR r.codigo_sri = '001') AND r.borrado_en IS NULL
-            LIMIT 1;
+            RAISE EXCEPTION 'La categoría de tarifa "%" (ID %) asociada al contrato % no tiene configurado un rubro activo de Cargo Fijo (tipo FIJO). Configure los rubros de la categoría antes de facturar.',
+                contrato_row.categoria_nombre, contrato_row.categoria_tarifa_id, contrato_row.contrato_id;
         END IF;
 
         IF v_rubro_consumo_id IS NULL THEN
-            SELECT r.rubro_id, r.precio_unitario, COALESCE(cti.porcentaje, 0) / 100, ci.codigo, cti.codigo_porcentaje
-            INTO v_rubro_consumo_id, v_precio_variable, v_iva_consumo, v_cod_imp_consumo, v_por_imp_consumo
-            FROM rubros r
-            JOIN catalogo_tarifas_impuesto cti ON r.tarifa_impuesto_id = cti.id
-            JOIN catalogo_impuestos ci ON cti.impuesto_id = ci.id
-            WHERE r.tipo_rubro = 'VARIABLE'::"TipoRubro" AND (r.codigo_sri = '001' OR r.codigo_sri = '002') AND r.borrado_en IS NULL
-            LIMIT 1;
+            RAISE EXCEPTION 'La categoría de tarifa "%" (ID %) asociada al contrato % no tiene configurado un rubro activo de Consumo de Agua (tipo VARIABLE). Configure los rubros de la categoría antes de facturar.',
+                contrato_row.categoria_nombre, contrato_row.categoria_tarifa_id, contrato_row.contrato_id;
         END IF;
 
         v_cargo_fijo := COALESCE(v_cargo_fijo, 0);
