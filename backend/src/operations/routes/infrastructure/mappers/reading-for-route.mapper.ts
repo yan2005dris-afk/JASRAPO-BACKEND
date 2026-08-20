@@ -40,8 +40,7 @@ export class ReadingForRouteMapper {
       lectura.lecturaActual !== undefined &&
       Number(lectura.lecturaActual) > 0;
 
-    const isPending =
-      lectura.estado === 'PENDIENTE' && !hasActualReading;
+    const isPending = lectura.estado === 'PENDIENTE' && !hasActualReading;
 
     const rawActual =
       lectura.lecturaActual !== undefined && lectura.lecturaActual !== null
