@@ -97,6 +97,9 @@ export class RubroMapper {
       ...(data.tarifaImpuestoId !== undefined
         ? { tarifaImpuestoId: data.tarifaImpuestoId }
         : {}),
+      ...(data.categoriaTarifaId !== undefined
+        ? { categoriaTarifaId: data.categoriaTarifaId }
+        : {}),
       ...(data.activo !== undefined ? { activo: data.activo } : {}),
       ...(data.esAutomatico !== undefined
         ? { esAutomatico: data.esAutomatico }

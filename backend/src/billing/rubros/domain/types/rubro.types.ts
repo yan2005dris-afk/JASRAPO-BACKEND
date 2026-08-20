@@ -41,6 +41,7 @@ export interface UpdateRubroData {
   precioUnitario?: number;
   tipoRubro?: TipoRubro;
   tarifaImpuestoId?: number;
+  categoriaTarifaId?: number | null;
   activo?: boolean;
   esAutomatico?: boolean;
   deletedAt?: Date | null;

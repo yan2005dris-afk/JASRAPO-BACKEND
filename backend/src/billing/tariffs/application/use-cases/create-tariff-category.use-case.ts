@@ -28,15 +28,10 @@ export class CreateTariffCategoryUseCase {
     // 2. Crear la CategoriaTarifa
     const categoria = await this.tariffRepository.create(dto);
 
-    // 3. Auto-crear los 3 Rubros default vinculados a la categoria
+    // 3. Auto-crear los 2 Rubros default vinculados a la categoria (Cargo Fijo y Consumo Agua)
     await this.createDefaultRubros(
       categoria.categoriaTarifaId,
       tarifaImpuestoId,
-      {
-        valorBase: dto.valorBase,
-        consumoMinimoMensual: dto.consumoMinimoMensual,
-        valorExcedenteM3: dto.valorExcedenteM3,
-      },
     );
 
     return categoria;
@@ -57,32 +52,20 @@ export class CreateTariffCategoryUseCase {
   private async createDefaultRubros(
     categoriaTarifaId: number,
     tarifaImpuestoId: number,
-    prices: {
-      valorBase?: number;
-      consumoMinimoMensual?: number;
-      valorExcedenteM3?: number;
-    },
   ): Promise<void> {
     const defaults = [
       {
-        codigoSri: `CARGO-FIJO-${categoriaTarifaId}`,
+        codigoSri: '001',
         nombre: 'Cargo fijo',
         descripcion: 'Cargo fijo mensual por servicio',
-        precioUnitario: prices.valorBase ?? 0,
+        precioUnitario: 0,
         tipoRubro: 'FIJO' as const,
       },
       {
-        codigoSri: `CONS-MIN-${categoriaTarifaId}`,
-        nombre: 'Consumo mínimo',
-        descripcion: 'Cargo por consumo mínimo mensual (m³)',
-        precioUnitario: prices.consumoMinimoMensual ?? 0,
-        tipoRubro: 'VARIABLE' as const,
-      },
-      {
-        codigoSri: `EXC-M3-${categoriaTarifaId}`,
-        nombre: 'Excedente m³',
-        descripcion: 'Cargo por metro cúbico excedente',
-        precioUnitario: prices.valorExcedenteM3 ?? 0,
+        codigoSri: '002',
+        nombre: 'Consumo de agua potable',
+        descripcion: 'Consumo por metro cúbico excedente',
+        precioUnitario: 0,
         tipoRubro: 'VARIABLE' as const,
       },
     ];
