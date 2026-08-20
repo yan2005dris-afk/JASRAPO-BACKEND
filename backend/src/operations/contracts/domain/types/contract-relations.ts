@@ -42,5 +42,7 @@ export interface ContractMeterHistoryRef {
   medidorId: bigint;
   fechaDesde: Date;
   fechaHasta: Date | null;
+  lecturaInicial: number;
+  lecturaFinal: number | null;
   medidor: ContractMeterRef;
 }

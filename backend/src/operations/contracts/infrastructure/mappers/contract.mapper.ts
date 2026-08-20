@@ -62,6 +62,11 @@ export class ContractMapper {
             medidorId: h.medidorId,
             fechaDesde: h.fechaDesde,
             fechaHasta: h.fechaHasta,
+            lecturaInicial: Number(h.lecturaInicial ?? 0),
+            lecturaFinal:
+              h.lecturaFinal !== null && h.lecturaFinal !== undefined
+                ? Number(h.lecturaFinal)
+                : null,
             medidor: {
               medidorId: h.medidor.medidorId,
               serie: h.medidor.serie,

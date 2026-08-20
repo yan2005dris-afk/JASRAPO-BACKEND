@@ -97,6 +97,12 @@ export class ContractHistorialMedidorDto {
   @ApiPropertyOptional({ example: null, nullable: true })
   fechaHasta: string | null;
 
+  @ApiProperty({ example: 0 })
+  lecturaInicial: number;
+
+  @ApiPropertyOptional({ example: null, nullable: true })
+  lecturaFinal: number | null;
+
   @ApiProperty({ type: ContractMedidorDetalleDto })
   medidor: ContractMedidorDetalleDto;
 }
@@ -180,6 +186,8 @@ export class ContractResponseDto {
           medidorId: h.medidorId,
           fechaDesde: DateUtil.formatForFrontend(h.fechaDesde) ?? '',
           fechaHasta: DateUtil.formatForFrontend(h.fechaHasta),
+          lecturaInicial: h.lecturaInicial,
+          lecturaFinal: h.lecturaFinal,
           medidor: h.medidor,
         }))
       : null;

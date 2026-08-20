@@ -245,7 +245,7 @@ BEGIN
             CONTINUE;
         END IF;
 
-        -- 8.1 Verificar reemplazos de medidor pendientes en este ciclo (periodo_origen_id y mes_origen)
+        -- 8.1 Verificar reemplazos de medidor pendientes en este ciclo origen (no facturados aún en saliente)
         v_reemplazos_count := 0;
         v_ultimo_reemplazo_id := NULL;
         v_consumo_facturable_saliente := 0;
@@ -264,6 +264,7 @@ BEGIN
         WHERE rm.contrato_id = contrato_row.contrato_id
           AND rm.periodo_origen_id = p_periodo_id
           AND rm.mes_origen = v_mes
+          AND rm.prefactura_detalle_saliente_id IS NULL
           AND rm.estado = 'PENDIENTE'::"EstadoResolucionConsumo"
           AND rm.borrado_en IS NULL;
 
@@ -277,20 +278,22 @@ BEGIN
           AND rm_dif.estado = 'PENDIENTE'::"EstadoResolucionConsumo"
           AND rm_dif.borrado_en IS NULL;
 
-        -- 8.3 Calcular consumo total según reemplazo o lectura regular
-        IF v_reemplazos_count > 0 THEN
-            -- Obtener el reemplazo que instaló el medidor activo
-            SELECT rm.reemplazo_id, rm.tratamiento_entrante::TEXT
-            INTO v_ultimo_reemplazo_id, v_tratamiento_entrante
-            FROM reemplazos_medidor rm
-            WHERE rm.contrato_id = contrato_row.contrato_id
-              AND rm.periodo_origen_id = p_periodo_id
-              AND rm.mes_origen = v_mes
-              AND rm.estado = 'PENDIENTE'::"EstadoResolucionConsumo"
-              AND rm.borrado_en IS NULL
-            ORDER BY rm.creado_en DESC
-            LIMIT 1;
+        -- 8.3 Identificar reemplazo del medidor activo actual
+        SELECT rm.reemplazo_id, rm.tratamiento_entrante::TEXT
+        INTO v_ultimo_reemplazo_id, v_tratamiento_entrante
+        FROM reemplazos_medidor rm
+        JOIN historial_medidores hm ON rm.historial_entrante_id = hm.historial_id
+        WHERE rm.contrato_id = contrato_row.contrato_id
+          AND hm.fecha_hasta IS NULL
+          AND hm.borrado_en IS NULL
+          AND rm.periodo_origen_id = p_periodo_id
+          AND rm.mes_origen = v_mes
+          AND rm.estado = 'PENDIENTE'::"EstadoResolucionConsumo"
+          AND rm.borrado_en IS NULL
+        ORDER BY rm.creado_en DESC, rm.reemplazo_id DESC
+        LIMIT 1;
 
+        IF v_ultimo_reemplazo_id IS NOT NULL THEN
             v_consumo_fisico_entrante := GREATEST(0, v_lectura_actual - v_lectura_anterior);
             IF v_tratamiento_entrante = 'DIFERIR_SIGUIENTE_PERIODO' THEN
                 v_consumo_facturable_entrante := 0;
@@ -302,7 +305,7 @@ BEGIN
 
             v_consumo := v_consumo_facturable_saliente + v_consumo_facturable_entrante + v_consumo_diferido_a_cobrar;
         ELSE
-            v_consumo := GREATEST(0, v_lectura_actual - v_lectura_anterior) + v_consumo_diferido_a_cobrar;
+            v_consumo := GREATEST(0, v_lectura_actual - v_lectura_anterior) + v_consumo_facturable_saliente + v_consumo_diferido_a_cobrar;
         END IF;
 
         -- Cálculos de excedente y cargo fijo
@@ -432,6 +435,7 @@ BEGIN
             WHERE contrato_id = contrato_row.contrato_id
               AND periodo_origen_id = p_periodo_id
               AND mes_origen = v_mes
+              AND prefactura_detalle_saliente_id IS NULL
               AND estado = 'PENDIENTE'::"EstadoResolucionConsumo"
               AND borrado_en IS NULL;
 
