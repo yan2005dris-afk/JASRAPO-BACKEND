@@ -10,7 +10,7 @@ import { IsNotEmptyString } from 'src/infrastructure/common/decorators/is-not-em
 
 export class CrearLecturaDto {
   @IsNotEmpty() fecha: string;
-  @IsNotEmpty() @IsNumber() lecturaAnterior: number;
+  @IsOptional() @IsNumber() lecturaAnterior?: number;
   @IsNotEmpty() @IsNumber() lecturaActual: number;
   @IsOptional() @IsNumber() consumoCalculado?: number;
   @IsNotEmpty() medidorId: string | number;
@@ -25,7 +25,7 @@ export class CrearLecturaDto {
   @IsNotEmptyString()
   fotoUrl?: string;
 
-  @IsNotEmpty() @IsBoolean() lecturaInicial: boolean;
+  @IsOptional() @IsBoolean() lecturaInicial?: boolean;
   @IsOptional() @IsNumber() periodoId?: number;
   @IsOptional() @IsString() estado?: string;
   @IsOptional() @IsString() estadoAsignacion?: string;
