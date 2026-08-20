@@ -118,4 +118,54 @@ describe('ReplaceMeterUseCase', () => {
       InvalidDomainOperationException,
     );
   });
+
+  it('should reject invalid percentage on partial charge', async () => {
+    const inputWithoutPct = {
+      contratoId: BigInt(1),
+      nuevoMedidorId: BigInt(2),
+      lecturaFinalSaliente: 100,
+      motivo: MotivoReemplazoMedidor.DANO,
+      tratamientoSaliente: TratamientoSaliente.COBRO_PARCIAL,
+      tratamientoEntrante: TratamientoEntrante.FACTURAR_PERIODO_ACTUAL,
+      periodoOrigenId: 1,
+    };
+
+    await expect(useCase.execute(inputWithoutPct)).rejects.toThrow(
+      'El porcentaje de cobro es obligatorio cuando el tratamiento es COBRO_PARCIAL',
+    );
+
+    const inputOutOfRange = {
+      ...inputWithoutPct,
+      porcentajeCobro: 150,
+    };
+
+    await expect(useCase.execute(inputOutOfRange)).rejects.toThrow(
+      'El porcentaje de cobro parcial debe estar entre 1% y 100%',
+    );
+  });
+
+  it('should reject missing or equal destination period on deferred treatment', async () => {
+    const inputNoDestino = {
+      contratoId: BigInt(1),
+      nuevoMedidorId: BigInt(2),
+      lecturaFinalSaliente: 100,
+      motivo: MotivoReemplazoMedidor.DANO,
+      tratamientoSaliente: TratamientoSaliente.COBRO_REAL,
+      tratamientoEntrante: TratamientoEntrante.DIFERIR_SIGUIENTE_PERIODO,
+      periodoOrigenId: 1,
+    };
+
+    await expect(useCase.execute(inputNoDestino)).rejects.toThrow(
+      'El período destino es obligatorio cuando se difiere el cobro del medidor entrante',
+    );
+
+    const inputSameDestino = {
+      ...inputNoDestino,
+      periodoDestinoId: 1,
+    };
+
+    await expect(useCase.execute(inputSameDestino)).rejects.toThrow(
+      'El período destino no puede ser igual al período origen al diferir el cobro',
+    );
+  });
 });

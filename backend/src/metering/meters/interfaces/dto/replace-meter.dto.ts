@@ -4,6 +4,7 @@ import {
   IsNumber,
   IsOptional,
   IsString,
+  Max,
   Min,
   ValidateIf,
 } from 'class-validator';
@@ -102,18 +103,31 @@ export class ReplaceMeterDto {
     description: 'Porcentaje de cobro (1-100) en caso de COBRO_PARCIAL',
     example: 50,
   })
+  @ValidateIf((o) => o.tratamientoSaliente === TratamientoSaliente.COBRO_PARCIAL)
+  @IsNotEmpty({
+    message: 'El porcentaje de cobro es obligatorio para COBRO_PARCIAL',
+  })
+  @IsNumber({}, { message: 'El porcentaje de cobro debe ser numérico' })
+  @Min(1, { message: 'El porcentaje de cobro mínimo es 1%' })
+  @Max(100, { message: 'El porcentaje de cobro máximo es 100%' })
   @IsOptional()
-  @IsNumber()
-  @Min(1)
   porcentajeCobro?: number;
 
   @ApiPropertyOptional({
     description:
-      'Cantidad de meses para el cálculo del promedio histórico (3 o 6)',
+      'Cantidad de meses para el cálculo del promedio histórico (ej. 3 o 6)',
     example: 3,
   })
+  @ValidateIf(
+    (o) => o.tratamientoSaliente === TratamientoSaliente.PROMEDIO_HISTORICO,
+  )
+  @IsNotEmpty({
+    message: 'La ventana de promedio es obligatoria para PROMEDIO_HISTORICO',
+  })
+  @IsNumber({}, { message: 'La ventana de promedio debe ser numérica' })
+  @Min(1, { message: 'La ventana de promedio mínima es 1 mes' })
+  @Max(24, { message: 'La ventana de promedio máxima es 24 meses' })
   @IsOptional()
-  @IsNumber()
   ventanaPromedio?: number;
 
   @ApiProperty({
@@ -127,8 +141,16 @@ export class ReplaceMeterDto {
     description: 'ID del período destino si se difiere el cobro',
     example: 2,
   })
+  @ValidateIf(
+    (o) =>
+      o.tratamientoEntrante ===
+      TratamientoEntrante.DIFERIR_SIGUIENTE_PERIODO,
+  )
+  @IsNotEmpty({
+    message: 'El período destino es obligatorio al diferir el cobro',
+  })
+  @IsNumber({}, { message: 'El ID del período destino debe ser un número' })
   @IsOptional()
-  @IsNumber()
   periodoDestinoId?: number;
 
   @ApiPropertyOptional({

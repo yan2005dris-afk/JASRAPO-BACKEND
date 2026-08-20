@@ -433,7 +433,17 @@ export class PrismaMeterRepository implements MeterRepository {
         const limitMonths = ventanaPromedio || 3;
         const pastReadings = await tx.lecturas.findMany({
           where: {
-            medidorId: medidorSalienteId,
+            medidor: {
+              historial: {
+                some: {
+                  contratoId,
+                  deletedAt: null,
+                },
+              },
+            },
+            periodoId: {
+              lt: periodoOrigenId,
+            },
             estado: 'APROBADA',
             deletedAt: null,
           },
@@ -493,7 +503,6 @@ export class PrismaMeterRepository implements MeterRepository {
           ),
           lecturaInicial: false,
           estado: 'APROBADA',
-          creadoPor: solicitadoPorUsuarioId,
         },
       });
 
@@ -549,7 +558,6 @@ export class PrismaMeterRepository implements MeterRepository {
           consumoCalculado: new Prisma.Decimal('0'),
           lecturaInicial: true,
           estado: 'APROBADA',
-          creadoPor: solicitadoPorUsuarioId,
         },
       });
 
@@ -567,10 +575,15 @@ export class PrismaMeterRepository implements MeterRepository {
         ? {
             categoriaTarifaId: contrato.categoriaTarifa.categoriaTarifaId,
             nombre: contrato.categoriaTarifa.nombre,
-            cargoFijo: contrato.categoriaTarifa.cargoFijo?.toString(),
-            tarifaBasica: contrato.categoriaTarifa.tarifaBasica?.toString(),
+            valorBase: contrato.categoriaTarifa.valorBase?.toString(),
+            valorExcedenteM3:
+              contrato.categoriaTarifa.valorExcedenteM3?.toString(),
             consumoMinimoMensual:
               contrato.categoriaTarifa.consumoMinimoMensual?.toString(),
+            fechaVigenciaDesde:
+              contrato.categoriaTarifa.fechaVigenciaDesde?.toISOString(),
+            fechaVigenciaHasta:
+              contrato.categoriaTarifa.fechaVigenciaHasta?.toISOString(),
           }
         : null;
 

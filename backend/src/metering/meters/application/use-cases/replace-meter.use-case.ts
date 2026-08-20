@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Decimal } from 'decimal.js';
 import { MeterRepository } from '../../domain/repositories/meter.repository';
 import type { ReplaceMeterResult } from '../../domain/types/meter.types';
-import type {
+import {
   MotivoReemplazoMedidor,
   ResponsabilidadDano,
   TratamientoSaliente,
@@ -61,8 +61,46 @@ export class ReplaceMeterUseCase {
         );
       }
 
+      if (input.tratamientoSaliente === TratamientoSaliente.COBRO_PARCIAL) {
+        if (input.porcentajeCobro === undefined || input.porcentajeCobro === null) {
+          throw new InvalidDomainOperationException(
+            'El porcentaje de cobro es obligatorio cuando el tratamiento es COBRO_PARCIAL',
+          );
+        }
+        const pct = new Decimal(input.porcentajeCobro.toString());
+        if (pct.lessThan(1) || pct.greaterThan(100)) {
+          throw new InvalidDomainOperationException(
+            'El porcentaje de cobro parcial debe estar entre 1% y 100%',
+          );
+        }
+      }
+
+      if (input.tratamientoSaliente === TratamientoSaliente.PROMEDIO_HISTORICO) {
+        if (!input.ventanaPromedio || input.ventanaPromedio <= 0) {
+          throw new InvalidDomainOperationException(
+            'La ventana de promedio histórico debe ser de al menos 1 mes',
+          );
+        }
+      }
+
+      if (
+        input.tratamientoEntrante ===
+        TratamientoEntrante.DIFERIR_SIGUIENTE_PERIODO
+      ) {
+        if (!input.periodoDestinoId) {
+          throw new InvalidDomainOperationException(
+            'El período destino es obligatorio cuando se difiere el cobro del medidor entrante',
+          );
+        }
+        if (input.periodoDestinoId === input.periodoOrigenId) {
+          throw new InvalidDomainOperationException(
+            'El período destino no puede ser igual al período origen al diferir el cobro',
+          );
+        }
+      }
+
       const pctCobro =
-        input.porcentajeCobro !== undefined
+        input.porcentajeCobro !== undefined && input.porcentajeCobro !== null
           ? new Decimal(input.porcentajeCobro.toString())
           : undefined;
 
