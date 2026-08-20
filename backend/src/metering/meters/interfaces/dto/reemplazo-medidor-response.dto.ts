@@ -6,6 +6,7 @@ import {
   TratamientoEntrante,
   EstadoResolucionConsumo,
 } from 'src/shared/enums';
+import type { ReemplazoMedidorEntity } from '../../domain/entities/reemplazo-medidor.entity';
 
 export class ReemplazoMedidorResponseDto {
   @ApiProperty({ example: '1' })
@@ -88,4 +89,46 @@ export class ReemplazoMedidorResponseDto {
 
   @ApiProperty()
   createdAt: Date;
+
+  constructor(partial: Partial<ReemplazoMedidorResponseDto>) {
+    Object.assign(this, partial);
+  }
+
+  static fromEntity(r: ReemplazoMedidorEntity): ReemplazoMedidorResponseDto {
+    return new ReemplazoMedidorResponseDto({
+      reemplazoId: r.reemplazoId.toString(),
+      contratoId: r.contratoId.toString(),
+      historialSalienteId: r.historialSalienteId.toString(),
+      historialEntranteId: r.historialEntranteId.toString(),
+      lecturaFinalSalienteId: r.lecturaFinalSalienteId
+        ? r.lecturaFinalSalienteId.toString()
+        : null,
+      lecturaInicialEntranteId: r.lecturaInicialEntranteId
+        ? r.lecturaInicialEntranteId.toString()
+        : null,
+      ordenTrabajoId: r.ordenTrabajoId ? r.ordenTrabajoId.toString() : null,
+      periodoOrigenId: r.periodoOrigenId,
+      periodoDestinoId: r.periodoDestinoId ?? null,
+      motivo: r.motivo,
+      responsabilidadDano: r.responsabilidadDano,
+      detalleMotivo: r.detalleMotivo ?? null,
+      tratamientoSaliente: r.tratamientoSaliente,
+      tratamientoEntrante: r.tratamientoEntrante,
+      consumoMedidoSaliente: Number(r.consumoMedidoSaliente),
+      consumoFacturableSaliente: Number(r.consumoFacturableSaliente),
+      consumoMedidoEntrante: Number(r.consumoMedidoEntrante),
+      consumoFacturableEntrante: Number(r.consumoFacturableEntrante),
+      consumoDiferidoEntrante: Number(r.consumoDiferidoEntrante),
+      ventanaPromedio: r.ventanaPromedio ?? null,
+      promedioCalculado: r.promedioCalculado
+        ? Number(r.promedioCalculado)
+        : null,
+      porcentajeCobro: r.porcentajeCobro ? Number(r.porcentajeCobro) : null,
+      estado: r.estado,
+      solicitadoPorUsuarioId: r.solicitadoPorUsuarioId ?? null,
+      autorizadoPorUsuarioId: r.autorizadoPorUsuarioId ?? null,
+      autorizadoEn: r.autorizadoEn ?? null,
+      createdAt: r.createdAt,
+    });
+  }
 }
