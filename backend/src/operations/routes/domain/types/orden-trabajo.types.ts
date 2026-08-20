@@ -31,3 +31,17 @@ export interface OrdenTrabajoKpis {
   conNovedad: number;
   canceladas: number;
 }
+
+/**
+ * Resumen agregado de lecturas vinculadas a una ruta.
+ * Los nombres de los campos reflejan el enum `EstadoLectura` (no
+ * `EstadoOrdenTrabajo`) porque los kpis se computan sobre la lectura
+ * misma, no sobre la orden que la disparó.
+ */
+export interface LecturaKpis {
+  total: number;
+  aprobadas: number;
+  pendientes: number;
+  conNovedad: number;
+  rechazadas: number;
+}

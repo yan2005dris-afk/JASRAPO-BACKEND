@@ -7,6 +7,7 @@ import type {
   UpdateRouteData,
   RouteFilters,
 } from '../types/route.types';
+import type { LecturaKpis } from '../types/orden-trabajo.types';
 
 /**
  * Cross-module lookup interfaces — minimal shapes for domain validation.
@@ -103,5 +104,5 @@ export abstract class RouteRepository {
   abstract paginateLecturasByRutaId(
     rutaId: bigint,
     pagination: PaginateOptions,
-  ): Promise<PaginatedResult<ReadingForRouteEntity>>;
+  ): Promise<PaginatedResult<ReadingForRouteEntity, LecturaKpis>>;
 }

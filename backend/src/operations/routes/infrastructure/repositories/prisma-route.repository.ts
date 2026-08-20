@@ -20,6 +20,7 @@ import {
   PaginateOptions,
 } from 'src/infrastructure/common/utils/pagination.util';
 import { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
+import type { LecturaKpis } from '../../domain/types/orden-trabajo.types';
 import type {
   CreateRouteData,
   UpdateRouteData,
@@ -406,66 +407,68 @@ export class PrismaRouteRepository implements RouteRepository {
   async paginateLecturasByRutaId(
     rutaId: bigint,
     pagination: PaginateOptions,
-  ): Promise<PaginatedResult<ReadingForRouteEntity>> {
-    const where: Prisma.OrdenesTrabajoWhereInput = {
-      rutaId,
-      tipoActividad: 'LECTURA',
+  ): Promise<PaginatedResult<ReadingForRouteEntity, LecturaKpis>> {
+    // Filtramos lecturas a través de la relación reversa con ordenes_trabajo,
+    // no al revés. Esto garantiza:
+    //   (a) que la lectura realmente existe (FK consistente),
+    //   (b) que los kpis se computan sobre `lectura.estado` (EstadoLectura)
+    //       y no sobre `orden.estado` (EstadoOrdenTrabajo) — son enums distintos.
+    const where: Prisma.LecturasWhereInput = {
       deletedAt: null,
-      lecturaId: { not: null },
+      ordenesTrabajo: {
+        some: {
+          rutaId,
+          tipoActividad: 'LECTURA',
+          deletedAt: null,
+        },
+      },
     };
 
     const [result, estadoGroups] = await Promise.all([
       paginate<any>(
-        this.prisma.ordenesTrabajo,
+        this.prisma.lecturas,
         {
           where,
           include: {
-            lectura: {
+            medidor: {
               include: {
-                medidor: {
+                historial: {
+                  where: { fechaHasta: null },
                   include: {
-                    historial: {
-                      where: { fechaHasta: null },
-                      include: {
-                        contrato: { include: { cliente: true, sector: true } },
-                      },
-                    },
+                    contrato: { include: { cliente: true, sector: true } },
                   },
                 },
               },
             },
-          } satisfies Prisma.OrdenesTrabajoInclude,
-          orderBy: { ordenVisita: 'asc' },
+          } satisfies Prisma.LecturasInclude,
+          orderBy: { fecha: 'desc' },
         },
         pagination,
       ),
-      this.prisma.ordenesTrabajo.groupBy({
+      this.prisma.lecturas.groupBy({
         by: ['estado'],
         where,
         _count: { _all: true },
       }),
     ]);
 
-    // Extract readings from ordenes_trabajo rows
-    const lecturasRaw = result.data
-      .filter((ot) => ot.lectura != null)
-      .map((ot) => ot.lectura);
-
     const countByEstado = new Map<string, number>(
       estadoGroups.map((g) => [g.estado, g._count._all]),
     );
 
     return {
-      data: ReadingForRouteMapper.toEntityList(lecturasRaw),
+      data: ReadingForRouteMapper.toEntityList(result.data),
       meta: result.meta,
       kpis: {
         total: result.meta.total,
-        aprobadas: countByEstado.get('COMPLETADA') ?? 0,
+        aprobadas: countByEstado.get('APROBADA') ?? 0,
         pendientes:
           (countByEstado.get('PENDIENTE') ?? 0) +
-          (countByEstado.get('EN_PROGRESO') ?? 0),
-        conNovedad: countByEstado.get('FALLIDA') ?? 0,
-        rechazadas: 0,
+          (countByEstado.get('POR_REVISION') ?? 0) +
+          (countByEstado.get('ESTIMADA') ?? 0) +
+          (countByEstado.get('PLANILLADA') ?? 0),
+        conNovedad: countByEstado.get('CON_NOVEDAD') ?? 0,
+        rechazadas: countByEstado.get('RECHAZADA_VERIFICACION') ?? 0,
       },
     };
   }
