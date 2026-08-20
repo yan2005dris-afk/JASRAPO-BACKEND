@@ -14,6 +14,15 @@ export interface LinkLecturaData {
   lecturaId: bigint;
 }
 
+export interface CreateOrdenTrabajoData {
+  rutaId: bigint;
+  contratoId: bigint;
+  medidorId?: bigint | null;
+  tipoActividad: string;
+  estado?: string;
+  ordenVisita?: number;
+}
+
 export interface FindOrdenesByRutaParams {
   filters: OrdenTrabajoFilters;
   pagination: PaginateOptions;

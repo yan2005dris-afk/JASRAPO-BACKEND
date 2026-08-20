@@ -1,14 +1,17 @@
-import { IsNotEmpty, IsNumber } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 
 export class ReassignRouteDto {
   @ApiProperty({
-    description: 'ID del nuevo operario asignado a la ruta',
+    description:
+      'ID del operario a asignar. Opcional: pasar `null` para desasignar la ruta (queda en bandeja de secretaría).',
+    required: false,
     example: 15,
+    nullable: true,
   })
-  @IsNotEmpty()
+  @IsOptional()
   @IsNumber()
   @Type(() => Number)
-  operarioId!: number;
+  operarioId?: number;
 }

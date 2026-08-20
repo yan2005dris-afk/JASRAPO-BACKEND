@@ -31,10 +31,19 @@ export const EstadoAnomalia = {
   DESCARTADA: 'DESCARTADA',
 } as const;
 
-export type EstadoAnomalia =
-  (typeof EstadoAnomalia)[keyof typeof EstadoAnomalia];
+export type EstadoAnomalia = (typeof EstadoAnomalia)[keyof typeof EstadoAnomalia];
 
 // Fuente: models/logica-de-negocio/LecturaAnomalia.prisma
+
+export const EstadoAprobacionReemplazo = {
+  PENDIENTE: 'PENDIENTE',
+  APROBADA: 'APROBADA',
+  RECHAZADA: 'RECHAZADA',
+} as const;
+
+export type EstadoAprobacionReemplazo = (typeof EstadoAprobacionReemplazo)[keyof typeof EstadoAprobacionReemplazo];
+
+// Fuente: models/logica-de-negocio/ReemplazoMedidor.prisma
 
 export const EstadoAsignacion = {
   NO_ASIGNADA: 'NO_ASIGNADA',
@@ -43,8 +52,7 @@ export const EstadoAsignacion = {
   COMPLETADA: 'COMPLETADA',
 } as const;
 
-export type EstadoAsignacion =
-  (typeof EstadoAsignacion)[keyof typeof EstadoAsignacion];
+export type EstadoAsignacion = (typeof EstadoAsignacion)[keyof typeof EstadoAsignacion];
 
 // Fuente: models/logica-de-negocio/Rutas.prisma
 
@@ -71,8 +79,7 @@ export const EstadoContrato = {
   RECONEXION: 'RECONEXION',
 } as const;
 
-export type EstadoContrato =
-  (typeof EstadoContrato)[keyof typeof EstadoContrato];
+export type EstadoContrato = (typeof EstadoContrato)[keyof typeof EstadoContrato];
 
 // Fuente: models/logica-de-negocio/Contratos.prisma
 
@@ -84,8 +91,7 @@ export const EstadoConvenio = {
   PAGADO: 'PAGADO',
 } as const;
 
-export type EstadoConvenio =
-  (typeof EstadoConvenio)[keyof typeof EstadoConvenio];
+export type EstadoConvenio = (typeof EstadoConvenio)[keyof typeof EstadoConvenio];
 
 // Fuente: models/logica-de-negocio/Convenios.prisma
 
@@ -94,8 +100,7 @@ export const EstadoCuotaConvenio = {
   PAGADA: 'PAGADA',
 } as const;
 
-export type EstadoCuotaConvenio =
-  (typeof EstadoCuotaConvenio)[keyof typeof EstadoCuotaConvenio];
+export type EstadoCuotaConvenio = (typeof EstadoCuotaConvenio)[keyof typeof EstadoCuotaConvenio];
 
 // Fuente: models/logica-de-negocio/CuotaConvenio.prisma
 
@@ -163,8 +168,7 @@ export const EstadoOrdenTrabajo = {
   FALLIDA: 'FALLIDA',
 } as const;
 
-export type EstadoOrdenTrabajo =
-  (typeof EstadoOrdenTrabajo)[keyof typeof EstadoOrdenTrabajo];
+export type EstadoOrdenTrabajo = (typeof EstadoOrdenTrabajo)[keyof typeof EstadoOrdenTrabajo];
 
 // Fuente: models/logica-de-negocio/OrdenTrabajo.prisma
 
@@ -197,8 +201,7 @@ export const EstadoPrefactura = {
   PAGADA: 'PAGADA',
 } as const;
 
-export type EstadoPrefactura =
-  (typeof EstadoPrefactura)[keyof typeof EstadoPrefactura];
+export type EstadoPrefactura = (typeof EstadoPrefactura)[keyof typeof EstadoPrefactura];
 
 // Fuente: models/facturacion/Prefacturas.prisma
 
@@ -208,8 +211,7 @@ export const EstadoResolucionConsumo = {
   ANULADA: 'ANULADA',
 } as const;
 
-export type EstadoResolucionConsumo =
-  (typeof EstadoResolucionConsumo)[keyof typeof EstadoResolucionConsumo];
+export type EstadoResolucionConsumo = (typeof EstadoResolucionConsumo)[keyof typeof EstadoResolucionConsumo];
 
 // Fuente: models/logica-de-negocio/ReemplazoMedidor.prisma
 
@@ -233,8 +235,7 @@ export const EstadoValidacionPago = {
   CONCILIADO: 'CONCILIADO',
 } as const;
 
-export type EstadoValidacionPago =
-  (typeof EstadoValidacionPago)[keyof typeof EstadoValidacionPago];
+export type EstadoValidacionPago = (typeof EstadoValidacionPago)[keyof typeof EstadoValidacionPago];
 
 // Fuente: models/logica-de-negocio/Pagos.prisma
 
@@ -247,8 +248,7 @@ export const MotivoReemplazoMedidor = {
   OTRO: 'OTRO',
 } as const;
 
-export type MotivoReemplazoMedidor =
-  (typeof MotivoReemplazoMedidor)[keyof typeof MotivoReemplazoMedidor];
+export type MotivoReemplazoMedidor = (typeof MotivoReemplazoMedidor)[keyof typeof MotivoReemplazoMedidor];
 
 // Fuente: models/logica-de-negocio/ReemplazoMedidor.prisma
 
@@ -260,8 +260,7 @@ export const ResponsabilidadDano = {
   NO_APLICA: 'NO_APLICA',
 } as const;
 
-export type ResponsabilidadDano =
-  (typeof ResponsabilidadDano)[keyof typeof ResponsabilidadDano];
+export type ResponsabilidadDano = (typeof ResponsabilidadDano)[keyof typeof ResponsabilidadDano];
 
 // Fuente: models/logica-de-negocio/ReemplazoMedidor.prisma
 
@@ -272,8 +271,7 @@ export const TarjetaCredito = {
   AMEX: 'AMEX',
 } as const;
 
-export type TarjetaCredito =
-  (typeof TarjetaCredito)[keyof typeof TarjetaCredito];
+export type TarjetaCredito = (typeof TarjetaCredito)[keyof typeof TarjetaCredito];
 
 // Fuente: models/logica-de-negocio/Pagos.prisma
 
@@ -284,8 +282,7 @@ export const TipoActividadOrden = {
   INSPECCION: 'INSPECCION',
 } as const;
 
-export type TipoActividadOrden =
-  (typeof TipoActividadOrden)[keyof typeof TipoActividadOrden];
+export type TipoActividadOrden = (typeof TipoActividadOrden)[keyof typeof TipoActividadOrden];
 
 // Fuente: models/logica-de-negocio/OrdenTrabajo.prisma
 
@@ -320,8 +317,7 @@ export const TipoDetallePago = {
   SALDO_FAVOR: 'SALDO_FAVOR',
 } as const;
 
-export type TipoDetallePago =
-  (typeof TipoDetallePago)[keyof typeof TipoDetallePago];
+export type TipoDetallePago = (typeof TipoDetallePago)[keyof typeof TipoDetallePago];
 
 // Fuente: models/logica-de-negocio/DetallePago.prisma
 
@@ -340,8 +336,7 @@ export const TipoOrigenAbono = {
   OTROS: 'OTROS',
 } as const;
 
-export type TipoOrigenAbono =
-  (typeof TipoOrigenAbono)[keyof typeof TipoOrigenAbono];
+export type TipoOrigenAbono = (typeof TipoOrigenAbono)[keyof typeof TipoOrigenAbono];
 
 // Fuente: models/logica-de-negocio/SaldoFavorCliente.prisma
 
@@ -374,8 +369,7 @@ export const TratamientoEntrante = {
   DIFERIR_SIGUIENTE_PERIODO: 'DIFERIR_SIGUIENTE_PERIODO',
 } as const;
 
-export type TratamientoEntrante =
-  (typeof TratamientoEntrante)[keyof typeof TratamientoEntrante];
+export type TratamientoEntrante = (typeof TratamientoEntrante)[keyof typeof TratamientoEntrante];
 
 // Fuente: models/logica-de-negocio/ReemplazoMedidor.prisma
 
@@ -386,7 +380,6 @@ export const TratamientoSaliente = {
   COBRO_PARCIAL: 'COBRO_PARCIAL',
 } as const;
 
-export type TratamientoSaliente =
-  (typeof TratamientoSaliente)[keyof typeof TratamientoSaliente];
+export type TratamientoSaliente = (typeof TratamientoSaliente)[keyof typeof TratamientoSaliente];
 
 // Fuente: models/logica-de-negocio/ReemplazoMedidor.prisma

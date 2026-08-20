@@ -2,7 +2,7 @@ export interface RouteEntityProps {
   rutaId: bigint;
   nombre: string;
   descripcion?: string | null;
-  operarioId: number;
+  operarioId: number | null;
   tipoRuta: string;
   comunidadId: number;
   sectorId?: number | null;
@@ -17,7 +17,7 @@ export class RouteEntity {
   rutaId: bigint;
   nombre: string;
   descripcion?: string | null;
-  operarioId: number;
+  operarioId: number | null;
   tipoRuta: string;
   comunidadId: number;
   sectorId?: number | null;

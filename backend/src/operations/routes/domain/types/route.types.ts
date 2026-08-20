@@ -10,7 +10,7 @@ export interface RouteFilters {
 export interface CreateRouteData {
   nombre: string;
   descripcion?: string | null;
-  operarioId: number;
+  operarioId?: number | null;
   tipoRuta: string;
   comunidadId: number;
   sectorId?: number | null;
@@ -24,7 +24,7 @@ export interface CreateRouteData {
 export interface UpdateRouteData {
   nombre?: string;
   descripcion?: string | null;
-  operarioId?: number;
+  operarioId?: number | null;
   tipoRuta?: string;
   comunidadId?: number;
   sectorId?: number | null;
