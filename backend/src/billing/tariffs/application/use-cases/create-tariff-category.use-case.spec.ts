@@ -77,8 +77,8 @@ describe('CreateTariffCategoryUseCase', () => {
     expect(result).toBeDefined();
     expect(result.nombre).toBe(dto.nombre);
     expect(mockTariffRepository.create).toHaveBeenCalledWith(dto);
-    // 3 Rubros auto-creados con categoriaTarifaId y tarifaImpuestoId
-    expect(mockRubroRepository.create).toHaveBeenCalledTimes(3);
+    // 2 Rubros auto-creados con categoriaTarifaId y tarifaImpuestoId (FIJO y VARIABLE)
+    expect(mockRubroRepository.create).toHaveBeenCalledTimes(2);
     expect(mockRubroRepository.create).toHaveBeenNthCalledWith(
       1,
       expect.objectContaining({
@@ -90,15 +90,6 @@ describe('CreateTariffCategoryUseCase', () => {
     );
     expect(mockRubroRepository.create).toHaveBeenNthCalledWith(
       2,
-      expect.objectContaining({
-        categoriaTarifaId: 1,
-        tarifaImpuestoId: 2,
-        tipoRubro: 'VARIABLE',
-        esAutomatico: true,
-      }),
-    );
-    expect(mockRubroRepository.create).toHaveBeenNthCalledWith(
-      3,
       expect.objectContaining({
         categoriaTarifaId: 1,
         tarifaImpuestoId: 2,

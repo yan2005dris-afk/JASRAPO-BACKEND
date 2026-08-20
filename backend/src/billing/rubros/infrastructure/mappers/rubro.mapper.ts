@@ -74,7 +74,7 @@ export class RubroMapper {
       return {
         ...base,
         categoriaTarifaId: data.categoriaTarifaId,
-      } as Prisma.RubrosUncheckedCreateInput;
+      };
     }
     return base;
   }

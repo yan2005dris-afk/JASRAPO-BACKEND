@@ -52,7 +52,9 @@ async function main() {
       .join(', ');
 
     if (tables.length > 0) {
-      await prisma.$executeRawUnsafe(`TRUNCATE TABLE ${tables} RESTART IDENTITY CASCADE;`);
+      await prisma.$executeRawUnsafe(
+        `TRUNCATE TABLE ${tables} RESTART IDENTITY CASCADE;`,
+      );
     }
     console.log('✅ Base de datos limpiada correctamente desde 0.');
   } catch (error) {
@@ -69,7 +71,7 @@ async function main() {
 
   // Roles-Permisos
   await seedRolePermissions(prisma, roles, permissions);
-  console.log('✅ Roles y Permisos asignados correctamente.')
+  console.log('✅ Roles y Permisos asignados correctamente.');
 
   // Usuarios
   await seedUSers(prisma, roles);
@@ -128,15 +130,21 @@ async function main() {
   console.log('✅ Catálogo de descuentos creado.');
 
   // Rubros — lookup tariff IDs from new catalog tables (seeded by seedCatalogosSriInit above)
-  const ivaImpuesto = await prisma.catalogoImpuestos.findUnique({ where: { codigo: '2' } });
-  if (!ivaImpuesto) throw new Error('IVA impuesto not found in catalog — seed order issue');
+  const ivaImpuesto = await prisma.catalogoImpuestos.findUnique({
+    where: { codigo: '2' },
+  });
+  if (!ivaImpuesto)
+    throw new Error('IVA impuesto not found in catalog — seed order issue');
   const tarifaIva0 = await prisma.catalogoTarifasImpuesto.findFirst({
     where: { impuestoId: ivaImpuesto.id, codigoPorcentaje: '0' },
   });
   const tarifaIva15 = await prisma.catalogoTarifasImpuesto.findFirst({
     where: { impuestoId: ivaImpuesto.id, codigoPorcentaje: '4' },
   });
-  if (!tarifaIva0 || !tarifaIva15) throw new Error('IVA tariff records (0% / 15%) not found — seed order issue');
+  if (!tarifaIva0 || !tarifaIva15)
+    throw new Error(
+      'IVA tariff records (0% / 15%) not found — seed order issue',
+    );
 
   await prisma.rubros.createMany({
     data: [
@@ -210,7 +218,8 @@ async function main() {
       {
         codigoSri: 'SERV-INST-01',
         nombre: 'Instalación y Acometida Tipo 1 (Básica)',
-        descripcion: 'Mano de obra y servicio técnico de instalación de acometida corta (hasta 10m)',
+        descripcion:
+          'Mano de obra y servicio técnico de instalación de acometida corta (hasta 10m)',
         precioUnitario: 50.0,
         tipoRubro: 'SERVICIO' as any,
         tarifaImpuestoId: tarifaIva15.id,
@@ -219,7 +228,8 @@ async function main() {
       {
         codigoSri: 'SERV-INST-02',
         nombre: 'Instalación y Acometida Tipo 2 (Extendida)',
-        descripcion: 'Mano de obra y servicio técnico de instalación de acometida larga / cruce de vía',
+        descripcion:
+          'Mano de obra y servicio técnico de instalación de acometida larga / cruce de vía',
         precioUnitario: 90.0,
         tipoRubro: 'SERVICIO' as any,
         tarifaImpuestoId: tarifaIva15.id,
@@ -246,7 +256,8 @@ async function main() {
       {
         codigoSri: 'SERV-GUIA-01',
         nombre: 'Emisión de Guía de Remisión Tipo 1 (Transporte Local)',
-        descripcion: 'Tasa administrativa por emisión y autorización de guía de remisión local',
+        descripcion:
+          'Tasa administrativa por emisión y autorización de guía de remisión local',
         precioUnitario: 1.0,
         tipoRubro: 'SERVICIO' as any,
         tarifaImpuestoId: tarifaIva15.id,
@@ -255,7 +266,8 @@ async function main() {
       {
         codigoSri: 'SERV-GUIA-02',
         nombre: 'Emisión de Guía de Remisión Tipo 2 (Interprovincial)',
-        descripcion: 'Tasa administrativa por emisión de guía de remisión para transporte de materiales',
+        descripcion:
+          'Tasa administrativa por emisión de guía de remisión para transporte de materiales',
         precioUnitario: 2.0,
         tipoRubro: 'SERVICIO' as any,
         tarifaImpuestoId: tarifaIva15.id,
@@ -275,7 +287,8 @@ async function main() {
       {
         codigoSri: 'BIEN-MED-02',
         nombre: 'Medidor de Agua Chorro Múltiple 3/4 pulgada',
-        descripcion: 'Medidor de alta precisión para acometidas comerciales/industriales',
+        descripcion:
+          'Medidor de alta precisión para acometidas comerciales/industriales',
         precioUnitario: 55.0,
         tipoRubro: 'BIEN' as any,
         tarifaImpuestoId: tarifaIva15.id,
@@ -293,7 +306,8 @@ async function main() {
       {
         codigoSri: 'BIEN-LLAV-01',
         nombre: 'Válvula de Paso / Llave de Corte Antifraude',
-        descripcion: 'Llave de paso esférica de bronce con candado de seguridad',
+        descripcion:
+          'Llave de paso esférica de bronce con candado de seguridad',
         precioUnitario: 8.5,
         tipoRubro: 'BIEN' as any,
         tarifaImpuestoId: tarifaIva15.id,
@@ -313,7 +327,8 @@ async function main() {
       {
         codigoSri: 'MULT-BYPASS-01',
         nombre: 'Multa por Infracción o Conexión Clandestina',
-        descripcion: 'Sanción por bypass, ruptura de sellos o manipulación de medidor',
+        descripcion:
+          'Sanción por bypass, ruptura de sellos o manipulación de medidor',
         precioUnitario: 50.0,
         tipoRubro: 'MULTA' as any,
         tarifaImpuestoId: tarifaIva0.id,
@@ -322,7 +337,8 @@ async function main() {
       {
         codigoSri: 'TASA-SEG-01',
         nombre: 'Tasa de Seguridad y Vigilancia de Redes',
-        descripcion: 'Aporte comunitario de seguridad y preservación de fuentes de agua',
+        descripcion:
+          'Aporte comunitario de seguridad y preservación de fuentes de agua',
         precioUnitario: 1.0,
         tipoRubro: 'FIJO' as any,
         tarifaImpuestoId: tarifaIva0.id,
@@ -372,4 +388,3 @@ main()
       console.error('❌ Error cerrando el pool de conexiones de pg:', error);
     }
   });
-
