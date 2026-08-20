@@ -169,7 +169,7 @@ BEGIN
     FOR contrato_row IN
         SELECT
             c.contrato_id, c.cliente_id, c.numero_guia, c.direccion_suministro,
-            c.categoria_tarifa_id, ct.nombre AS categoria_nombre,
+            c.categoria_tarifa_id, ct.nombre AS categoria_nombre, ct.consumo_minimo_mensual,
             cl.aplica_tercera_edad, cl.aplica_discapacidad,
             (cl.nombres || ' ' || cl.apellidos) AS cliente_nombre,
             cl.identificacion AS cliente_identificacion, cl.email
@@ -510,7 +510,6 @@ BEGIN
     SET total_monto = v_total_lote_monto,
         total_emisiones = v_count,
         notas = v_observaciones_lote,
-        estado = 'GENERADO'::"EstadoLote",
         actualizado_en = CURRENT_TIMESTAMP
     WHERE lote_id = v_lote_id;
 
