@@ -75,9 +75,15 @@ export class DateUtil {
   }
 
   /**
-   * Formatea una fecha para el frontend (YYYY-MM-DD)
+   * Formatea una fecha para el frontend como date-only (YYYY-MM-DD).
+   *
+   * El frontend DEBE parsear este string como componentes locales (vía
+   * LocalDatePipe) y NO con `new Date(value)`, porque `new Date('YYYY-MM-DD')`
+   * se interpreta como UTC midnight y provoca un shift de un día en zonas con
+   * offset UTC negativo (ej. Argentina UTC-3).
+   *
    * @param date Fecha a formatear
-   * @returns String en formato YYYY-MM-DD
+   * @returns String en formato YYYY-MM-DD o null si la fecha es inválida
    */
   public static formatForFrontend(
     date: Date | null | undefined,

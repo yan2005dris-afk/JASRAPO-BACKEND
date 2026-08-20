@@ -22,28 +22,38 @@ import { RequiredPermission } from 'src/infrastructure/common/decorators/require
 import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 import { RoutesService } from '../../application/routes.service';
+import { OrdenesTrabajoService } from '../../application/ordenes-trabajo.service';
 import { ReassignRouteUseCase } from '../../application/use-cases/reassign-route.use-case';
 import { CreateRouteDto } from '../dto/create-route.dto';
 import { UpdateRouteDto } from '../dto/update-route.dto';
 import { ReassignRouteDto } from '../dto/reassign-route.dto';
 import { FilterReadingsDto } from '../dto/filter-readings.dto';
 import { FindAllRoutesDto } from '../dto/find-all-routes.dto';
+import { FindOrdenesByRutaDto } from '../dto/find-ordenes-by-ruta.dto';
 import {
   RouteResponseDto,
   ReadingForRouteResponseDto,
 } from '../dto/route-response.dto';
+import { OrderWorkResponseDto } from '../dto/orden-trabajo-response.dto';
 import { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
 import { ApiPaginatedResponse } from 'src/infrastructure/common/decorators/api-paginated-response.decorator';
 import { PaginationMetaDto } from 'src/infrastructure/common/dtos/pagination-meta.dto';
+import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
 
 @ApiTags('routes')
 @ApiBearerAuth()
-@ApiExtraModels(RouteResponseDto, ReadingForRouteResponseDto, PaginationMetaDto)
+@ApiExtraModels(
+  RouteResponseDto,
+  ReadingForRouteResponseDto,
+  OrderWorkResponseDto,
+  PaginationMetaDto,
+)
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('routes')
 export class RoutesController {
   constructor(
     private readonly routesService: RoutesService,
+    private readonly ordenesTrabajoService: OrdenesTrabajoService,
     private readonly reassignRouteUseCase: ReassignRouteUseCase,
   ) {}
 
@@ -76,6 +86,33 @@ export class RoutesController {
     @Query() filterDto: FilterReadingsDto,
   ): Promise<PaginatedResult<ReadingForRouteResponseDto>> {
     const result = await this.routesService.getEligibleReadings(filterDto);
+    return {
+      data: ReadingForRouteResponseDto.fromEntityList(result.data),
+      meta: result.meta,
+      kpis: result.kpis,
+    };
+  }
+
+  /**
+   * Obtener lecturas vinculadas a una ruta específica
+   */
+  @ApiOperation({
+    summary: 'Obtener lecturas de ruta',
+    description:
+      'Retorna las lecturas ya vinculadas a una ruta de tipo TOMA_LECTURA (a través de ordenes_trabajo)',
+  })
+  @ApiPaginatedResponse(ReadingForRouteResponseDto)
+  @ApiParam({ name: 'rutaId', description: 'ID de la ruta', type: String })
+  @RequiredPermission('routes', 'read')
+  @Get(':rutaId/readings')
+  async getReadingsByRuta(
+    @Param('rutaId', ParseBigIntPipe) rutaId: bigint,
+    @Query() paginationDto: PaginationDto,
+  ): Promise<PaginatedResult<ReadingForRouteResponseDto>> {
+    const result = await this.routesService.getReadingsByRuta(rutaId, {
+      page: paginationDto.page,
+      limit: paginationDto.limit,
+    });
     return {
       data: ReadingForRouteResponseDto.fromEntityList(result.data),
       meta: result.meta,
@@ -161,6 +198,50 @@ export class RoutesController {
   ): Promise<RouteResponseDto> {
     const result = await this.routesService.findOne(id);
     return RouteResponseDto.fromEntity(result);
+  }
+
+  /**
+   * Obtener órdenes de trabajo de una ruta
+   */
+  @ApiOperation({
+    summary: 'Obtener órdenes de trabajo de una ruta',
+    description:
+      'Retorna las órdenes de trabajo asociadas a una ruta específica con paginación y filtro opcional por estado',
+  })
+  @ApiPaginatedResponse(OrderWorkResponseDto)
+  @ApiParam({
+    name: 'id',
+    description: 'ID de la ruta (bigint serializado como string)',
+    type: String,
+    example: '1',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Órdenes encontradas',
+    type: OrderWorkResponseDto,
+  })
+  @ApiResponse({ status: 404, description: 'Ruta no encontrada' })
+  @RequiredPermission('routes', 'read')
+  @Get(':id/ordenes')
+  async findOrdenesByRuta(
+    @Param('id', ParseBigIntPipe) id: bigint,
+    @Query() query: FindOrdenesByRutaDto,
+  ): Promise<PaginatedResult<OrderWorkResponseDto>> {
+    const result = await this.ordenesTrabajoService.findByRuta({
+      rutaId: id,
+      filters: {
+        estado: query.estado,
+      },
+      pagination: {
+        page: query.page,
+        limit: query.limit,
+      },
+    });
+    return {
+      data: OrderWorkResponseDto.fromEntityList(result.data),
+      meta: result.meta,
+      kpis: result.kpis,
+    };
   }
 
   /**
