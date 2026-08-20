@@ -5,7 +5,10 @@ import { OrdenTrabajoRepository } from '../../domain/repositories/orden-trabajo.
 import { RouteRepository } from '../../domain/repositories/route.repository';
 import { OrdenTrabajoEntity } from '../../domain/entities/orden-trabajo.entity';
 import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
-import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
+import type {
+  PaginatedResult,
+  PaginationMeta,
+} from 'src/shared/domain/types/pagination.types';
 import type { PaginateOptions } from 'src/infrastructure/common/utils/pagination.util';
 
 describe('FindOrdenesByRutaUseCase', () => {
@@ -18,6 +21,17 @@ describe('FindOrdenesByRutaUseCase', () => {
   const mockRouteRepository = {
     findById: jest.fn(),
   };
+
+  const makeMeta = (total: number, page = 1, limit = 10): PaginationMeta => ({
+    total,
+    page,
+    limit,
+    ultimaPagina: Math.max(1, Math.ceil(total / limit)),
+    paginaActual: page,
+    porPagina: limit,
+    anterior: page > 1 ? page - 1 : null,
+    siguiente: total > page * limit ? page + 1 : null,
+  });
 
   const sampleOrden = new OrdenTrabajoEntity({
     ordenTrabajoId: 1n,
@@ -86,7 +100,7 @@ describe('FindOrdenesByRutaUseCase', () => {
     mockRouteRepository.findById.mockResolvedValue(sampleRuta);
     const paginatedResult: PaginatedResult<OrdenTrabajoEntity> = {
       data: [sampleOrden],
-      meta: { total: 1, page: 1, limit: 10 },
+      meta: makeMeta(1),
     };
     mockOrdenTrabajoRepository.findByRutaId.mockResolvedValue(paginatedResult);
 
@@ -111,7 +125,7 @@ describe('FindOrdenesByRutaUseCase', () => {
     mockRouteRepository.findById.mockResolvedValue(sampleRuta);
     mockOrdenTrabajoRepository.findByRutaId.mockResolvedValue({
       data: [],
-      meta: { total: 0, page: 1, limit: 10 },
+      meta: makeMeta(0),
     });
 
     await useCase.execute({ rutaId: 10n, pagination });
@@ -127,12 +141,37 @@ describe('FindOrdenesByRutaUseCase', () => {
     mockRouteRepository.findById.mockResolvedValue(sampleRuta);
     mockOrdenTrabajoRepository.findByRutaId.mockResolvedValue({
       data: [],
-      meta: { total: 0, page: 1, limit: 10 },
+      meta: makeMeta(0),
     });
 
     const result = await useCase.execute({ rutaId: 10n, pagination });
 
     expect(result.data).toEqual([]);
     expect(result.meta.total).toBe(0);
+  });
+
+  it('should pass through kpis from the repository', async () => {
+    mockRouteRepository.findById.mockResolvedValue(sampleRuta);
+    mockOrdenTrabajoRepository.findByRutaId.mockResolvedValue({
+      data: [sampleOrden],
+      meta: { total: 3, page: 1, limit: 10 },
+      kpis: {
+        total: 3,
+        completadas: 1,
+        pendientes: 1,
+        conNovedad: 1,
+        canceladas: 0,
+      },
+    });
+
+    const result = await useCase.execute({ rutaId: 10n, pagination });
+
+    expect(result.kpis).toEqual({
+      total: 3,
+      completadas: 1,
+      pendientes: 1,
+      conNovedad: 1,
+      canceladas: 0,
+    });
   });
 });

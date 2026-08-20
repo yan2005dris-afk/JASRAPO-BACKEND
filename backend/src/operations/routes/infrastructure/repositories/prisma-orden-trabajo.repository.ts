@@ -12,6 +12,7 @@ import { PaginatedResult } from 'src/infrastructure/common/types/paginated-resul
 import type { OrdenTrabajoEntity } from '../../domain/entities/orden-trabajo.entity';
 import type {
   OrdenTrabajoFilters,
+  OrdenTrabajoKpis,
   UpdateOrdenEstadoData,
   LinkLecturaData,
 } from '../../domain/types/orden-trabajo.types';
@@ -73,7 +74,7 @@ export class PrismaOrdenTrabajoRepository implements OrdenTrabajoRepository {
     rutaId: bigint,
     filters: OrdenTrabajoFilters,
     pagination: PaginateOptions,
-  ): Promise<PaginatedResult<OrdenTrabajoEntity>> {
+  ): Promise<PaginatedResult<OrdenTrabajoEntity, OrdenTrabajoKpis>> {
     const where: Prisma.OrdenesTrabajoWhereInput = {
       rutaId,
       deletedAt: null,
@@ -82,37 +83,48 @@ export class PrismaOrdenTrabajoRepository implements OrdenTrabajoRepository {
         : {}),
     };
 
-    const result = await paginate<OrdenTrabajoPrismaResult>(
-      this.prisma.ordenesTrabajo,
-      {
-        where,
-        include: {
-          contrato: {
-            select: {
-              numeroGuia: true,
-              direccionSuministro: true,
-              cliente: {
-                select: {
-                  nombres: true,
-                  apellidos: true,
+    const [result, estadoGroups] = await Promise.all([
+      paginate<OrdenTrabajoPrismaResult>(
+        this.prisma.ordenesTrabajo,
+        {
+          where,
+          include: {
+            contrato: {
+              select: {
+                numeroGuia: true,
+                direccionSuministro: true,
+                cliente: {
+                  select: {
+                    nombres: true,
+                    apellidos: true,
+                  },
                 },
               },
             },
-          },
-          medidor: {
-            select: {
-              serie: true,
+            medidor: {
+              select: {
+                serie: true,
+              },
+            },
+            lectura: {
+              select: {
+                lecturaId: true,
+              },
             },
           },
-          lectura: {
-            select: {
-              lecturaId: true,
-            },
-          },
+          orderBy: { ordenVisita: 'asc' },
         },
-        orderBy: { ordenVisita: 'asc' },
-      },
-      pagination,
+        pagination,
+      ),
+      this.prisma.ordenesTrabajo.groupBy({
+        by: ['estado'],
+        where,
+        _count: { _all: true },
+      }),
+    ]);
+
+    const countByEstado = new Map<string, number>(
+      estadoGroups.map((g) => [g.estado, g._count._all]),
     );
 
     const data = result.data.map((raw) =>
@@ -145,6 +157,15 @@ export class PrismaOrdenTrabajoRepository implements OrdenTrabajoRepository {
     return {
       data,
       meta: result.meta,
+      kpis: {
+        total: result.meta.total,
+        completadas: countByEstado.get(EstadoOrdenTrabajo.COMPLETADA) ?? 0,
+        pendientes:
+          (countByEstado.get(EstadoOrdenTrabajo.PENDIENTE) ?? 0) +
+          (countByEstado.get(EstadoOrdenTrabajo.EN_PROGRESO) ?? 0),
+        conNovedad: countByEstado.get(EstadoOrdenTrabajo.FALLIDA) ?? 0,
+        canceladas: countByEstado.get(EstadoOrdenTrabajo.CANCELADA) ?? 0,
+      },
     };
   }
 

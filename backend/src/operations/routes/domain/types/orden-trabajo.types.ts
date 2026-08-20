@@ -18,3 +18,16 @@ export interface FindOrdenesByRutaParams {
   filters: OrdenTrabajoFilters;
   pagination: PaginateOptions;
 }
+
+/**
+ * Resumen agregado de órdenes de trabajo para una ruta.
+ * Refleja los conteos por estado sobre el set completo filtrado
+ * (no solo la página actual).
+ */
+export interface OrdenTrabajoKpis {
+  total: number;
+  completadas: number;
+  pendientes: number;
+  conNovedad: number;
+  canceladas: number;
+}

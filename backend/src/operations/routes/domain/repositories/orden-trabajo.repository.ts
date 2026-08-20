@@ -1,6 +1,7 @@
 import type { OrdenTrabajoEntity } from '../entities/orden-trabajo.entity';
 import type {
   OrdenTrabajoFilters,
+  OrdenTrabajoKpis,
   UpdateOrdenEstadoData,
   LinkLecturaData,
 } from '../types/orden-trabajo.types';
@@ -17,7 +18,7 @@ export abstract class OrdenTrabajoRepository {
     rutaId: bigint,
     filters: OrdenTrabajoFilters,
     pagination: PaginateOptions,
-  ): Promise<PaginatedResult<OrdenTrabajoEntity>>;
+  ): Promise<PaginatedResult<OrdenTrabajoEntity, OrdenTrabajoKpis>>;
 
   abstract updateEstado(
     ordenTrabajoId: bigint,

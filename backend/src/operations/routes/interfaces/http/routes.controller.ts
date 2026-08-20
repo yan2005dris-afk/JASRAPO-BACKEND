@@ -240,6 +240,7 @@ export class RoutesController {
     return {
       data: OrderWorkResponseDto.fromEntityList(result.data),
       meta: result.meta,
+      kpis: result.kpis,
     };
   }
 
