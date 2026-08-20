@@ -8,6 +8,7 @@ export class RubroEntity {
   precioUnitario!: number;
   tipoRubro!: TipoRubro;
   tarifaImpuestoId!: number;
+  categoriaTarifaId!: number | null;
   tarifaImpuesto?: {
     id: number;
     codigoPorcentaje: string;

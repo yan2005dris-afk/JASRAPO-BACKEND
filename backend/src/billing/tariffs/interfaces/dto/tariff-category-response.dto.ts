@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import type { TariffCategoryEntity } from '../../domain/entities/tariff-category.entity';
 import { DateUtil } from 'src/shared/utils/date.util';
+import { RubroResponseDto } from '../../../rubros/interfaces/dto/rubro-response.dto';
 
 export class TariffCategoryResponseDto {
   @ApiProperty({ example: 1, description: 'ID de la categoría de tarifa' })
@@ -55,6 +56,13 @@ export class TariffCategoryResponseDto {
   })
   activo: boolean;
 
+  @ApiPropertyOptional({
+    description: 'Rubros asociados a esta categoría (los 3 default + extras)',
+    type: () => RubroResponseDto,
+    isArray: true,
+  })
+  rubros?: RubroResponseDto[];
+
   static fromEntity(entity: TariffCategoryEntity): TariffCategoryResponseDto {
     const dto = new TariffCategoryResponseDto();
     dto.categoriaTarifaId = entity.categoriaTarifaId;
@@ -70,6 +78,9 @@ export class TariffCategoryResponseDto {
       entity.fechaVigenciaHasta,
     );
     dto.activo = entity.activo;
+    if (entity.rubros) {
+      dto.rubros = entity.rubros.map((r) => RubroResponseDto.fromEntity(r));
+    }
     return dto;
   }
 

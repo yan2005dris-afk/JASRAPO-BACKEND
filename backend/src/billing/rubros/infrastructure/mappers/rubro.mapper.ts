@@ -14,6 +14,7 @@ import { Decimal } from 'decimal.js';
 
 export type RubroWithTarifa = Rubros & {
   tarifaImpuesto?: CatalogoTarifasImpuesto | null;
+  categoriaTarifaId?: number | null;
 };
 
 export class RubroMapper {
@@ -30,6 +31,7 @@ export class RubroMapper {
           : Number(raw.precioUnitario),
       tipoRubro: raw.tipoRubro,
       tarifaImpuestoId: raw.tarifaImpuestoId,
+      categoriaTarifaId: raw.categoriaTarifaId,
       tarifaImpuesto: raw.tarifaImpuesto
         ? {
             id: raw.tarifaImpuesto.id,
@@ -58,7 +60,7 @@ export class RubroMapper {
   static toPrismaCreateInput(
     data: CreateRubroData,
   ): Prisma.RubrosUncheckedCreateInput {
-    return {
+    const base: Prisma.RubrosUncheckedCreateInput = {
       codigoSri: data.codigoSri?.trim() ? data.codigoSri.trim() : null,
       nombre: data.nombre.trim(),
       descripcion: data.descripcion.trim(),
@@ -68,6 +70,13 @@ export class RubroMapper {
       activo: data.activo ?? true,
       esAutomatico: data.esAutomatico ?? false,
     };
+    if (data.categoriaTarifaId !== undefined) {
+      return {
+        ...base,
+        categoriaTarifaId: data.categoriaTarifaId,
+      } as Prisma.RubrosUncheckedCreateInput;
+    }
+    return base;
   }
 
   static toPrismaUpdateInput(
@@ -108,6 +117,9 @@ export class RubroMapper {
       ...(where.tipoRubro ? { tipoRubro: where.tipoRubro } : {}),
       ...(where.tarifaImpuestoId !== undefined
         ? { tarifaImpuestoId: where.tarifaImpuestoId }
+        : {}),
+      ...((where as any).categoriaTarifaId !== undefined
+        ? { categoriaTarifaId: (where as any).categoriaTarifaId }
         : {}),
       ...(where.activo !== undefined ? { activo: where.activo } : {}),
       ...(where.esAutomatico !== undefined

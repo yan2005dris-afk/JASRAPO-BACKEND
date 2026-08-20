@@ -35,7 +35,11 @@ export const safeTariffCategoriesSelect = {
   createdAt: true,
   updatedAt: true,
   deletedAt: true,
-} satisfies Prisma.CategoriaTarifaSelect;
+  rubros: {
+    where: { deletedAt: null },
+    orderBy: { rubroId: 'asc' },
+  },
+} as Prisma.CategoriaTarifaSelect;
 
 @Injectable()
 export class PrismaTariffRepository implements TariffRepository {

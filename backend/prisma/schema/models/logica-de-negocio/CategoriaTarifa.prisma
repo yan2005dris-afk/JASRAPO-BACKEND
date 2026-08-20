@@ -12,6 +12,7 @@ model CategoriaTarifa {
   updatedAt            DateTime    @updatedAt @map("actualizado_en")
   deletedAt            DateTime?   @map("borrado_en")
   contratos            Contratos[]
+  rubros               Rubros[]
 
   @@map("categoria_tarifa")
 }

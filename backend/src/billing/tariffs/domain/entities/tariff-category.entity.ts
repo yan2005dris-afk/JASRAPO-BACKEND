@@ -1,3 +1,5 @@
+import type { RubroEntity } from '../../../rubros/domain/entities/rubro.entity';
+
 export class TariffCategoryEntity {
   categoriaTarifaId: number;
   nombre: string;
@@ -11,6 +13,7 @@ export class TariffCategoryEntity {
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Date | null;
+  rubros?: RubroEntity[];
 
   constructor(partial: Partial<TariffCategoryEntity>) {
     Object.assign(this, partial);
