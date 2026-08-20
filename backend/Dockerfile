@@ -37,7 +37,7 @@ RUN pnpm --filter backend run build
 
 # 3. Resolver dependencias de producción usando la caché del store
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-    pnpm deploy --filter=backend --prod --legacy /prod/backend
+    pnpm deploy --filter=backend --prod /prod/backend
 
 # ─── Stage: Runner (Producción) ───────────────────────────────────────────────
 FROM node:22-alpine AS runner

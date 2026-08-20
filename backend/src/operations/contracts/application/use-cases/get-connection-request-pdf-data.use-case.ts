@@ -88,12 +88,9 @@ export class GetConnectionRequestPdfDataUseCase {
         tarifa: {
           nombre: tipoNombre,
           tipo: tipoNombre,
-          valorBase: Number(contrato.categoriaTarifa?.valorBase ?? 4),
-          consumoMinimoMensual:
-            contrato.categoriaTarifa?.consumoMinimoMensual ?? 10,
-          valorExcedenteM3: Number(
-            contrato.categoriaTarifa?.valorExcedenteM3 ?? 0.4,
-          ),
+          valorBase: 0,
+          consumoMinimoMensual: 0,
+          valorExcedenteM3: 0,
         },
         costos: {
           derechoInspeccion,

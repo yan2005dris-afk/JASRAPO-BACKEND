@@ -87,7 +87,6 @@ describe('ContractMapper', () => {
       // CategoriaTarifa relation
       expect(result!.categoriaTarifa).toBeDefined();
       expect(result!.categoriaTarifa!.nombre).toBe('Residencial');
-      expect(result!.categoriaTarifa!.valorBase).toBe(150.5);
 
       // Cliente relation
       expect(result!.cliente).toBeDefined();

@@ -24,11 +24,6 @@ export class ContractMapper {
             categoriaTarifaId: raw.categoriaTarifa.categoriaTarifaId,
             nombre: raw.categoriaTarifa.nombre,
             descripcion: raw.categoriaTarifa.descripcion,
-            valorBase: Number(raw.categoriaTarifa.valorBase),
-            consumoMinimoMensual: raw.categoriaTarifa.consumoMinimoMensual,
-            valorExcedenteM3: raw.categoriaTarifa.valorExcedenteM3
-              ? Number(raw.categoriaTarifa.valorExcedenteM3)
-              : null,
           }
         : null,
       cliente: raw.cliente

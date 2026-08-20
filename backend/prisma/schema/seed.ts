@@ -140,28 +140,75 @@ async function main() {
 
   await prisma.rubros.createMany({
     data: [
+      // ─── Categoría 1: RESIDENCIAL ───
       {
         codigoSri: '001',
-        nombre: 'Consumo Agua',
-        descripcion:
-          'Consumo mensual de agua potable (calculado según m³ y categoría tarifaria del contrato)',
-        precioUnitario: 0.0,
-        tipoRubro: 'VARIABLE' as any,
+        nombre: 'Cargo Fijo Residencial',
+        descripcion: 'Valor base mensual de conexión residencial',
+        precioUnitario: 4.0,
+        tipoRubro: 'FIJO' as any,
+        categoriaTarifaId: 1,
         tarifaImpuestoId: tarifaIva0.id,
         esAutomatico: true,
       },
       {
         codigoSri: '002',
-        nombre: 'Cargo Fijo',
-        descripcion:
-          'Valor base mensual por mantenimiento de conexión (determinado por la categoría tarifaria del contrato)',
-        precioUnitario: 0.0,
+        nombre: 'Consumo Agua Residencial',
+        descripcion: 'Consumo por m³ de agua potable residencial',
+        precioUnitario: 0.4,
+        tipoRubro: 'VARIABLE' as any,
+        categoriaTarifaId: 1,
+        tarifaImpuestoId: tarifaIva0.id,
+        esAutomatico: true,
+      },
+
+      // ─── Categoría 2: COMERCIAL ───
+      {
+        codigoSri: '003',
+        nombre: 'Cargo Fijo Comercial',
+        descripcion: 'Valor base mensual de conexión comercial',
+        precioUnitario: 7.5,
         tipoRubro: 'FIJO' as any,
+        categoriaTarifaId: 2,
         tarifaImpuestoId: tarifaIva0.id,
         esAutomatico: true,
       },
       {
-        codigoSri: '003',
+        codigoSri: '004',
+        nombre: 'Consumo Agua Comercial',
+        descripcion: 'Consumo por m³ de agua potable comercial',
+        precioUnitario: 0.75,
+        tipoRubro: 'VARIABLE' as any,
+        categoriaTarifaId: 2,
+        tarifaImpuestoId: tarifaIva0.id,
+        esAutomatico: true,
+      },
+
+      // ─── Categoría 3: INDUSTRIAL ───
+      {
+        codigoSri: '005',
+        nombre: 'Cargo Fijo Industrial',
+        descripcion: 'Valor base mensual de conexión industrial',
+        precioUnitario: 15.0,
+        tipoRubro: 'FIJO' as any,
+        categoriaTarifaId: 3,
+        tarifaImpuestoId: tarifaIva0.id,
+        esAutomatico: true,
+      },
+      {
+        codigoSri: '006',
+        nombre: 'Consumo Agua Industrial',
+        descripcion: 'Consumo por m³ de agua potable industrial',
+        precioUnitario: 1.5,
+        tipoRubro: 'VARIABLE' as any,
+        categoriaTarifaId: 3,
+        tarifaImpuestoId: tarifaIva0.id,
+        esAutomatico: true,
+      },
+
+      // ─── Rubros Generales / Multas / Servicios ───
+      {
+        codigoSri: '007',
         nombre: 'Interés Mora',
         descripcion: 'Recargo por mora en planillas vencidas',
         precioUnitario: 0.0,
@@ -170,7 +217,7 @@ async function main() {
         esAutomatico: true,
       },
       {
-        codigoSri: '004',
+        codigoSri: '008',
         nombre: 'Tasa Seguridad',
         descripcion:
           'Aporte de seguridad ciudadana (calculado por % de la comunidad)',
@@ -180,7 +227,7 @@ async function main() {
         esAutomatico: true,
       },
       {
-        codigoSri: '005',
+        codigoSri: '009',
         nombre: 'Instalación Medidor',
         descripcion:
           'Costo por nueva acometida e instalación física de medidor',
@@ -192,7 +239,7 @@ async function main() {
     ],
     skipDuplicates: true,
   });
-  console.log('✅ Rubros creados');
+  console.log('✅ Rubros creados con asignación a categorías');
 
   // === FACTURACIÓN ===
   await seedFacturacion(prisma);

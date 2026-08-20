@@ -20,22 +20,6 @@ export class TariffCategoryResponseDto {
   })
   descripcion: string | null;
 
-  @ApiProperty({ example: 3.5, description: 'Valor base de la tarifa' })
-  valorBase: number;
-
-  @ApiPropertyOptional({
-    example: 10,
-    nullable: true,
-    description: 'Consumo mínimo mensual en m³',
-  })
-  consumoMinimoMensual: number | null;
-
-  @ApiProperty({
-    example: 0.5,
-    description: 'Valor excedente por m³ adicional',
-  })
-  valorExcedenteM3: number;
-
   @ApiPropertyOptional({
     example: '2026-01-01',
     nullable: true,
@@ -57,7 +41,7 @@ export class TariffCategoryResponseDto {
   activo: boolean;
 
   @ApiPropertyOptional({
-    description: 'Rubros asociados a esta categoría (los 3 default + extras)',
+    description: 'Rubros asociados a esta categoría',
     type: () => RubroResponseDto,
     isArray: true,
   })
@@ -68,9 +52,6 @@ export class TariffCategoryResponseDto {
     dto.categoriaTarifaId = entity.categoriaTarifaId;
     dto.nombre = entity.nombre;
     dto.descripcion = entity.descripcion ?? null;
-    dto.valorBase = Number(entity.valorBase);
-    dto.consumoMinimoMensual = entity.consumoMinimoMensual ?? null;
-    dto.valorExcedenteM3 = Number(entity.valorExcedenteM3);
     dto.fechaVigenciaDesde = DateUtil.formatForFrontend(
       entity.fechaVigenciaDesde,
     );
