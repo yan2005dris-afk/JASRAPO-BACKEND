@@ -15,9 +15,7 @@ import type {
   UpdateOrdenEstadoData,
   LinkLecturaData,
 } from '../../domain/types/orden-trabajo.types';
-import {
-  EntityNotFoundException,
-} from 'src/shared/domain/exceptions/domain.exception';
+import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 
 interface OrdenTrabajoPrismaResult {
   ordenTrabajoId: bigint;
@@ -132,10 +130,9 @@ export class PrismaOrdenTrabajoRepository implements OrdenTrabajoRepository {
         lecturaId: raw.lecturaId,
 
         contratoNumeroContrato: raw.contrato?.numeroGuia ?? null,
-        contratoClienteNombre:
-          raw.contrato?.cliente
-            ? `${raw.contrato.cliente.nombres} ${raw.contrato.cliente.apellidos}`.trim()
-            : null,
+        contratoClienteNombre: raw.contrato?.cliente
+          ? `${raw.contrato.cliente.nombres} ${raw.contrato.cliente.apellidos}`.trim()
+          : null,
         contratoDireccion: raw.contrato?.direccionSuministro ?? null,
         medidorNumeroSerie: raw.medidor?.serie ?? null,
         lecturaLecturaId: raw.lectura?.lecturaId ?? null,
@@ -158,7 +155,10 @@ export class PrismaOrdenTrabajoRepository implements OrdenTrabajoRepository {
       });
 
       if (!current) {
-        throw new EntityNotFoundException('Orden de Trabajo', ordenTrabajoId.toString());
+        throw new EntityNotFoundException(
+          'Orden de Trabajo',
+          ordenTrabajoId.toString(),
+        );
       }
 
       const isCompleting =
@@ -190,7 +190,10 @@ export class PrismaOrdenTrabajoRepository implements OrdenTrabajoRepository {
         error instanceof Prisma.PrismaClientKnownRequestError &&
         error.code === 'P2025'
       ) {
-        throw new EntityNotFoundException('Orden de Trabajo', ordenTrabajoId.toString());
+        throw new EntityNotFoundException(
+          'Orden de Trabajo',
+          ordenTrabajoId.toString(),
+        );
       }
       throw error;
     }
@@ -206,7 +209,10 @@ export class PrismaOrdenTrabajoRepository implements OrdenTrabajoRepository {
       });
 
       if (!orden) {
-        throw new EntityNotFoundException('Orden de Trabajo', ordenTrabajoId.toString());
+        throw new EntityNotFoundException(
+          'Orden de Trabajo',
+          ordenTrabajoId.toString(),
+        );
       }
 
       const lectura = await this.prisma.lecturas.findUnique({
@@ -232,13 +238,16 @@ export class PrismaOrdenTrabajoRepository implements OrdenTrabajoRepository {
         error instanceof Prisma.PrismaClientKnownRequestError &&
         error.code === 'P2025'
       ) {
-        throw new EntityNotFoundException('Orden de Trabajo', ordenTrabajoId.toString());
+        throw new EntityNotFoundException(
+          'Orden de Trabajo',
+          ordenTrabajoId.toString(),
+        );
       }
       throw error;
     }
   }
 
-  async findLecturaById(lecturaId: bigint): Promise<any | null> {
+  async findLecturaById(lecturaId: bigint): Promise<any> {
     return this.prisma.lecturas.findUnique({
       where: { lecturaId },
     });

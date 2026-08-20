@@ -41,7 +41,12 @@ import { PaginationMetaDto } from 'src/infrastructure/common/dtos/pagination-met
 
 @ApiTags('routes')
 @ApiBearerAuth()
-@ApiExtraModels(RouteResponseDto, ReadingForRouteResponseDto, OrderWorkResponseDto, PaginationMetaDto)
+@ApiExtraModels(
+  RouteResponseDto,
+  ReadingForRouteResponseDto,
+  OrderWorkResponseDto,
+  PaginationMetaDto,
+)
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('routes')
 export class RoutesController {

@@ -9,12 +9,18 @@ export class OrdenTrabajoContratoDto {
   @ApiProperty({ example: 'Juan Pérez', description: 'Nombre del cliente' })
   clienteNombre: string;
 
-  @ApiProperty({ example: 'Av. Amazonas 123', description: 'Dirección de suministro' })
+  @ApiProperty({
+    example: 'Av. Amazonas 123',
+    description: 'Dirección de suministro',
+  })
   direccion: string;
 }
 
 export class OrdenTrabajoMedidorDto {
-  @ApiProperty({ example: 'SER-1234', description: 'Número de serie del medidor' })
+  @ApiProperty({
+    example: 'SER-1234',
+    description: 'Número de serie del medidor',
+  })
   numeroSerie: string;
 }
 
@@ -62,10 +68,16 @@ export class OrderWorkResponseDto {
   })
   lecturaId?: bigint | null;
 
-  @ApiProperty({ type: OrdenTrabajoContratoDto, description: 'Datos del contrato' })
+  @ApiProperty({
+    type: OrdenTrabajoContratoDto,
+    description: 'Datos del contrato',
+  })
   contrato: OrdenTrabajoContratoDto;
 
-  @ApiPropertyOptional({ type: OrdenTrabajoMedidorDto, description: 'Datos del medidor' })
+  @ApiPropertyOptional({
+    type: OrdenTrabajoMedidorDto,
+    description: 'Datos del medidor',
+  })
   medidor?: OrdenTrabajoMedidorDto | null;
 
   static fromEntity(entity: OrdenTrabajoEntity): OrderWorkResponseDto {
@@ -97,7 +109,9 @@ export class OrderWorkResponseDto {
     return dto;
   }
 
-  static fromEntityList(entities: OrdenTrabajoEntity[]): OrderWorkResponseDto[] {
+  static fromEntityList(
+    entities: OrdenTrabajoEntity[],
+  ): OrderWorkResponseDto[] {
     return entities.map((e) => OrderWorkResponseDto.fromEntity(e));
   }
 }

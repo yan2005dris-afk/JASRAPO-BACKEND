@@ -29,5 +29,5 @@ export abstract class OrdenTrabajoRepository {
     data: LinkLecturaData,
   ): Promise<OrdenTrabajoEntity>;
 
-  abstract findLecturaById(lecturaId: bigint): Promise<any | null>;
+  abstract findLecturaById(lecturaId: bigint): Promise<any>;
 }

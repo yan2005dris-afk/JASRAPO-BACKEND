@@ -5,7 +5,9 @@ import type { LinkLecturaData } from '../../domain/types/orden-trabajo.types';
 
 @Injectable()
 export class LinkLecturaUseCase {
-  constructor(private readonly ordenTrabajoRepository: OrdenTrabajoRepository) {}
+  constructor(
+    private readonly ordenTrabajoRepository: OrdenTrabajoRepository,
+  ) {}
 
   async execute(
     ordenTrabajoId: bigint,

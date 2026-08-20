@@ -1,12 +1,4 @@
-import {
-  Controller,
-  Get,
-  Patch,
-  Param,
-  Query,
-  Body,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Patch, Param, Body, UseGuards } from '@nestjs/common';
 import { ParseBigIntPipe } from 'src/infrastructure/common/pipes/parse-bigint.pipe';
 import {
   ApiTags,
@@ -21,10 +13,8 @@ import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.
 import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 import { OrdenesTrabajoService } from '../../application/ordenes-trabajo.service';
 import { OrderWorkResponseDto } from '../dto/orden-trabajo-response.dto';
-import { FindOrdenesByRutaDto } from '../dto/find-ordenes-by-ruta.dto';
 import { UpdateOrdenEstadoDto } from '../dto/update-orden-estado.dto';
 import { LinkLecturaDto } from '../dto/link-lectura.dto';
-import { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
 import { PaginationMetaDto } from 'src/infrastructure/common/dtos/pagination-meta.dto';
 
 @ApiTags('ordenes')

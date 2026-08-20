@@ -1,13 +1,4 @@
 import { OrdenTrabajoEntity } from '../../domain/entities/orden-trabajo.entity';
-import { DateUtil } from 'src/shared/utils/date.util';
-
-function formatDateField(
-  value: Date | string | null | undefined,
-): string | null {
-  if (!value) return null;
-  if (typeof value === 'string') return value;
-  return DateUtil.formatForFrontend(value);
-}
 
 export class OrdenTrabajoMapper {
   static toEntity(raw: {

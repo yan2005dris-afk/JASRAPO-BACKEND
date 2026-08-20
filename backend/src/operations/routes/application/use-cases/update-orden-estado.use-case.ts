@@ -6,7 +6,9 @@ import type { UpdateOrdenEstadoData } from '../../domain/types/orden-trabajo.typ
 
 @Injectable()
 export class UpdateOrdenEstadoUseCase {
-  constructor(private readonly ordenTrabajoRepository: OrdenTrabajoRepository) {}
+  constructor(
+    private readonly ordenTrabajoRepository: OrdenTrabajoRepository,
+  ) {}
 
   async execute(
     ordenTrabajoId: bigint,
