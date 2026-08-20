@@ -1,6 +1,7 @@
--- 1. Eliminar columnas de precio obsoletas en categoria_tarifa (manteniendo consumo_minimo_mensual)
+-- 1. Eliminar columnas de precio obsoletas en categoria_tarifa y asegurar consumo_minimo_mensual
 ALTER TABLE "categoria_tarifa" DROP COLUMN IF EXISTS "valor_base";
 ALTER TABLE "categoria_tarifa" DROP COLUMN IF EXISTS "valor_excedente_m3";
+ALTER TABLE "categoria_tarifa" ADD COLUMN IF NOT EXISTS "consumo_minimo_mensual" INTEGER DEFAULT 10;
 
 -- 2. Permitir que multiples rubros compartan el mismo codigo_sri (ej: 001 cargo fijo, 002 consumo agua)
 DROP INDEX IF EXISTS "rubros_codigo_sri_key";
@@ -21,6 +22,7 @@ DECLARE
     v_lectura_anterior NUMERIC;
     v_lectura_actual NUMERIC;
     v_consumo NUMERIC;
+    v_excedente NUMERIC := 0;
     contrato_row RECORD;
     v_cargo_fijo NUMERIC := 0;
     v_precio_variable NUMERIC := 0;
