@@ -18,6 +18,7 @@ describe('PrismaMeterRepository - replaceMeter', () => {
   beforeEach(() => {
     mockPrisma = {
       $transaction: jest.fn().mockImplementation(async (cb) => cb(mockPrisma)),
+      $queryRaw: jest.fn().mockResolvedValue([{ contrato_id: BigInt(1) }]),
       contratos: {
         findUnique: jest.fn(),
         update: jest.fn(),
@@ -38,10 +39,15 @@ describe('PrismaMeterRepository - replaceMeter', () => {
       },
       reemplazoMedidor: {
         create: jest.fn(),
+        findUnique: jest.fn().mockResolvedValue(null),
+        findFirst: jest.fn().mockResolvedValue(null),
+        update: jest.fn(),
       },
     };
 
-    repository = new PrismaMeterRepository(mockPrisma);
+    repository = new PrismaMeterRepository(mockPrisma, {
+      warn: jest.fn(),
+    } as any);
   });
 
   it('should successfully execute replaceMeter with COBRO_REAL', async () => {
@@ -108,6 +114,10 @@ describe('PrismaMeterRepository - replaceMeter', () => {
       tratamientoSaliente: TratamientoSaliente.COBRO_REAL,
       tratamientoEntrante: TratamientoEntrante.FACTURAR_PERIODO_ACTUAL,
       periodoOrigenId: 1,
+      solicitadoPorUsuarioId: 1,
+      claveIdempotencia: 'key-1',
+      huellaSolicitud: 'fingerprint-1',
+      requiereAprobacion: false,
     });
 
     expect(result.consumoMedidoSaliente).toEqual(new Decimal(30));
@@ -149,6 +159,13 @@ describe('PrismaMeterRepository - replaceMeter', () => {
 
     mockPrisma.contratos.findUnique.mockResolvedValue(contratoMock);
     mockPrisma.medidores.findUnique.mockResolvedValue(nuevoMedidorMock);
+    mockPrisma.$queryRaw
+      .mockResolvedValueOnce([{ contrato_id: BigInt(1) }])
+      .mockResolvedValueOnce([
+        { consumo_calculado: '20' },
+        { consumo_calculado: '25' },
+        { consumo_calculado: '15' },
+      ]);
     mockPrisma.lecturas.findFirst.mockResolvedValue({
       lecturaActual: '500',
     });
@@ -174,6 +191,7 @@ describe('PrismaMeterRepository - replaceMeter', () => {
       tratamientoEntrante: TratamientoEntrante.FACTURAR_PERIODO_ACTUAL,
       consumoMedidoSaliente: '50',
       consumoFacturableSaliente: '20',
+      consumoDiferidoEntrante: '0',
       promedioCalculado: '20',
       estado: 'APLICADA',
       createdAt: new Date(),
@@ -191,6 +209,10 @@ describe('PrismaMeterRepository - replaceMeter', () => {
       tratamientoEntrante: TratamientoEntrante.FACTURAR_PERIODO_ACTUAL,
       periodoOrigenId: 1,
       ventanaPromedio: 3,
+      solicitadoPorUsuarioId: 1,
+      claveIdempotencia: 'key-2',
+      huellaSolicitud: 'fingerprint-2',
+      requiereAprobacion: true,
     });
 
     expect(result.consumoMedidoSaliente).toEqual(new Decimal(50));
@@ -209,6 +231,10 @@ describe('PrismaMeterRepository - replaceMeter', () => {
         tratamientoSaliente: TratamientoSaliente.COBRO_REAL,
         tratamientoEntrante: TratamientoEntrante.FACTURAR_PERIODO_ACTUAL,
         periodoOrigenId: 1,
+        solicitadoPorUsuarioId: 1,
+        claveIdempotencia: 'key-3',
+        huellaSolicitud: 'fingerprint-3',
+        requiereAprobacion: false,
       }),
     ).rejects.toThrow(EntityNotFoundException);
   });
@@ -248,6 +274,10 @@ describe('PrismaMeterRepository - replaceMeter', () => {
         tratamientoSaliente: TratamientoSaliente.COBRO_REAL,
         tratamientoEntrante: TratamientoEntrante.FACTURAR_PERIODO_ACTUAL,
         periodoOrigenId: 1,
+        solicitadoPorUsuarioId: 1,
+        claveIdempotencia: 'key-4',
+        huellaSolicitud: 'fingerprint-4',
+        requiereAprobacion: false,
       }),
     ).rejects.toThrow(InvalidDomainOperationException);
   });

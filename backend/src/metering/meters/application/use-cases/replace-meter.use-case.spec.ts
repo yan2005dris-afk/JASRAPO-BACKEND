@@ -57,6 +57,8 @@ describe('ReplaceMeterUseCase', () => {
       tratamientoEntrante: TratamientoEntrante.FACTURAR_PERIODO_ACTUAL,
       periodoOrigenId: 1,
       mesOrigen: 8,
+      solicitadoPorUsuarioId: 1,
+      claveIdempotencia: '123e4567-e89b-42d3-a456-426614174000',
     };
 
     const expectedResult = {
@@ -97,6 +99,8 @@ describe('ReplaceMeterUseCase', () => {
       tratamientoSaliente: TratamientoSaliente.COBRO_REAL,
       tratamientoEntrante: TratamientoEntrante.FACTURAR_PERIODO_ACTUAL,
       periodoOrigenId: 1,
+      solicitadoPorUsuarioId: 1,
+      claveIdempotencia: '123e4567-e89b-42d3-a456-426614174001',
     };
 
     await expect(useCase.execute(input)).rejects.toThrow(
@@ -114,6 +118,8 @@ describe('ReplaceMeterUseCase', () => {
       tratamientoSaliente: TratamientoSaliente.COBRO_REAL,
       tratamientoEntrante: TratamientoEntrante.FACTURAR_PERIODO_ACTUAL,
       periodoOrigenId: 1,
+      solicitadoPorUsuarioId: 1,
+      claveIdempotencia: '123e4567-e89b-42d3-a456-426614174002',
     };
 
     await expect(useCase.execute(input)).rejects.toThrow(
@@ -127,9 +133,12 @@ describe('ReplaceMeterUseCase', () => {
       nuevoMedidorId: BigInt(2),
       lecturaFinalSaliente: 100,
       motivo: MotivoReemplazoMedidor.DANO,
+      responsabilidadDano: ResponsabilidadDano.JUNTA,
       tratamientoSaliente: TratamientoSaliente.COBRO_PARCIAL,
       tratamientoEntrante: TratamientoEntrante.FACTURAR_PERIODO_ACTUAL,
       periodoOrigenId: 1,
+      solicitadoPorUsuarioId: 1,
+      claveIdempotencia: '123e4567-e89b-42d3-a456-426614174003',
     };
 
     await expect(useCase.execute(inputWithoutPct)).rejects.toThrow(
@@ -152,10 +161,13 @@ describe('ReplaceMeterUseCase', () => {
       nuevoMedidorId: BigInt(2),
       lecturaFinalSaliente: 100,
       motivo: MotivoReemplazoMedidor.DANO,
+      responsabilidadDano: ResponsabilidadDano.JUNTA,
       tratamientoSaliente: TratamientoSaliente.COBRO_REAL,
       tratamientoEntrante: TratamientoEntrante.DIFERIR_SIGUIENTE_PERIODO,
       periodoOrigenId: 1,
       mesOrigen: 8,
+      solicitadoPorUsuarioId: 1,
+      claveIdempotencia: '123e4567-e89b-42d3-a456-426614174004',
     };
 
     await expect(useCase.execute(inputNoDestino)).rejects.toThrow(
@@ -169,7 +181,52 @@ describe('ReplaceMeterUseCase', () => {
     };
 
     await expect(useCase.execute(inputPriorCycle)).rejects.toThrow(
-      'El ciclo de facturación destino (período y mes) debe ser posterior al ciclo de origen al diferir el cobro',
+      'El ciclo destino debe ser el ciclo mensual inmediatamente posterior al origen',
     );
+  });
+
+  it('should require a separate approval for exceptional treatments', async () => {
+    mockMeterRepository.replaceMeter.mockResolvedValue({});
+
+    await useCase.execute({
+      contratoId: 1n,
+      nuevoMedidorId: 2n,
+      lecturaFinalSaliente: 100,
+      motivo: MotivoReemplazoMedidor.MANTENIMIENTO_PREVENTIVO,
+      responsabilidadDano: ResponsabilidadDano.NO_APLICA,
+      tratamientoSaliente: TratamientoSaliente.EXONERADO,
+      tratamientoEntrante: TratamientoEntrante.FACTURAR_PERIODO_ACTUAL,
+      periodoOrigenId: 1,
+      mesOrigen: 8,
+      solicitadoPorUsuarioId: 10,
+      autorizadoPorUsuarioId: 10,
+      claveIdempotencia: '123e4567-e89b-42d3-a456-426614174005',
+    });
+
+    expect(mockMeterRepository.replaceMeter).toHaveBeenCalledWith(
+      expect.objectContaining({
+        requiereAprobacion: true,
+        autorizadoPorUsuarioId: undefined,
+      }),
+    );
+  });
+
+  it('should reject irrelevant conditional fields', async () => {
+    await expect(
+      useCase.execute({
+        contratoId: 1n,
+        nuevoMedidorId: 2n,
+        lecturaFinalSaliente: 100,
+        motivo: MotivoReemplazoMedidor.MANTENIMIENTO_PREVENTIVO,
+        responsabilidadDano: ResponsabilidadDano.NO_APLICA,
+        tratamientoSaliente: TratamientoSaliente.COBRO_REAL,
+        tratamientoEntrante: TratamientoEntrante.FACTURAR_PERIODO_ACTUAL,
+        porcentajeCobro: 50,
+        periodoOrigenId: 1,
+        mesOrigen: 8,
+        solicitadoPorUsuarioId: 10,
+        claveIdempotencia: '123e4567-e89b-42d3-a456-426614174006',
+      }),
+    ).rejects.toThrow('El porcentaje de cobro solo aplica a COBRO_PARCIAL');
   });
 });

@@ -24,7 +24,8 @@ model Lote {
   ruta           Rutas?        @relation(fields: [rutaId], references: [rutaId], onDelete: SetNull)
   prefacturas    Prefacturas[]
 
-  @@unique([comunidadId, periodoId, mes], name: "uk_lote_comunidad_periodo_mes")
+  // Active uniqueness is enforced by a PostgreSQL partial expression index because
+  // Prisma cannot represent COALESCE(ruta_id) plus borrado_en IS NULL.
   @@index([comunidadId])
   @@index([periodoId])
   @@index([mes])

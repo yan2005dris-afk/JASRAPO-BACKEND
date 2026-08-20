@@ -6,8 +6,10 @@ import type {
   CreateMeterHistoryRepositoryData,
   ReplaceMeterRepositoryData,
   ReplaceMeterResult,
+  ApproveMeterReplacementRepositoryData,
 } from '../types/meter.types';
 import type { EstadoMedidor, EstadoContrato } from 'src/shared/enums';
+import type { Prisma } from 'src/generated/prisma/client';
 
 export type {
   MeterFilters,
@@ -16,9 +18,10 @@ export type {
   CreateMeterHistoryRepositoryData,
   ReplaceMeterRepositoryData,
   ReplaceMeterResult,
+  ApproveMeterReplacementRepositoryData,
 };
 
-export type TransactionContext = any;
+export type TransactionContext = Prisma.TransactionClient;
 
 export abstract class MeterRepository {
   abstract findUnique(where: {
@@ -75,5 +78,9 @@ export abstract class MeterRepository {
    *  physical readings, and audit resolution. */
   abstract replaceMeter(
     params: ReplaceMeterRepositoryData,
+  ): Promise<ReplaceMeterResult>;
+
+  abstract approveReplacement(
+    params: ApproveMeterReplacementRepositoryData,
   ): Promise<ReplaceMeterResult>;
 }

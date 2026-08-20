@@ -31,6 +31,7 @@ import { RequiredPermission } from 'src/infrastructure/common/decorators/require
 import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 import { CurrentUser } from 'src/identity/auth/interfaces/http/decorators/current-user.decorator';
+import type { JwtPayload } from 'src/identity/auth/application/types/jwt.types';
 
 @ApiTags('meters')
 @ApiBearerAuth()
@@ -220,10 +221,21 @@ export class MeterController {
   @Post('replace')
   async replace(
     @Body() replaceDto: ReplaceMeterDto,
-    @CurrentUser() user?: { id?: string; usuarioId?: string; sub?: string },
+    @CurrentUser() user: JwtPayload,
   ): Promise<ReemplazoMedidorResponseDto> {
-    const userId = user?.usuarioId || user?.id || user?.sub;
-    const result = await this.meterService.replaceMeter(replaceDto, userId);
+    const result = await this.meterService.replaceMeter(replaceDto, user.sub);
+    return ReemplazoMedidorResponseDto.fromEntity(result.reemplazo);
+  }
+
+  @ApiOperation({ summary: 'Aprobar tratamiento económico excepcional' })
+  @ApiResponse({ status: 200, type: ReemplazoMedidorResponseDto })
+  @RequiredPermission('meter-replacements', 'approve')
+  @Post('replacements/:id/approve')
+  async approveReplacement(
+    @Param('id', ParseBigIntPipe) id: bigint,
+    @CurrentUser() user: JwtPayload,
+  ): Promise<ReemplazoMedidorResponseDto> {
+    const result = await this.meterService.approveReplacement(id, user.sub);
     return ReemplazoMedidorResponseDto.fromEntity(result.reemplazo);
   }
 }

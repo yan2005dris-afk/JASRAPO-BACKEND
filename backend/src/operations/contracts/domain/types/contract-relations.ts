@@ -37,6 +37,12 @@ export interface ContractMeterRef {
   modelo: string;
 }
 
+export interface ContractApprovedReadingRef {
+  lecturaId: bigint;
+  fecha: Date;
+  lecturaActual: number;
+}
+
 export interface ContractMeterHistoryRef {
   historialId: bigint;
   medidorId: bigint;
@@ -45,4 +51,5 @@ export interface ContractMeterHistoryRef {
   lecturaInicial: number;
   lecturaFinal: number | null;
   medidor: ContractMeterRef;
+  ultimaLecturaAprobada: ContractApprovedReadingRef | null;
 }

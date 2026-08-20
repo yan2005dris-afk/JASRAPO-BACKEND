@@ -63,10 +63,13 @@ export interface ReplaceMeterRepositoryData {
   mesOrigen?: number;
   mesDestino?: number;
   ordenTrabajoId?: bigint;
-  solicitadoPorUsuarioId?: string;
-  autorizadoPorUsuarioId?: string;
+  solicitadoPorUsuarioId: number;
+  autorizadoPorUsuarioId?: number;
   autorizadoEn?: Date;
   fechaReemplazo?: Date;
+  claveIdempotencia: string;
+  huellaSolicitud: string;
+  requiereAprobacion: boolean;
 }
 
 export interface ReplaceMeterResult {
@@ -76,4 +79,9 @@ export interface ReplaceMeterResult {
   consumoMedidoSaliente: Decimal;
   consumoFacturableSaliente: Decimal;
   consumoDiferidoEntrante: Decimal;
+}
+
+export interface ApproveMeterReplacementRepositoryData {
+  reemplazoId: bigint;
+  autorizadoPorUsuarioId: number;
 }

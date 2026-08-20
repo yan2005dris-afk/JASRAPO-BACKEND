@@ -4,6 +4,9 @@ import {
   IsNumber,
   IsOptional,
   IsString,
+  IsUUID,
+  IsISO8601,
+  IsIn,
   Max,
   Min,
   ValidateIf,
@@ -17,6 +20,10 @@ import {
 } from 'src/shared/enums';
 
 export class ReplaceMeterDto {
+  @ApiProperty({ description: 'UUID estable para reintentos idempotentes' })
+  @IsUUID('4', { message: 'La clave de idempotencia debe ser un UUID v4' })
+  claveIdempotencia: string;
+
   @ApiProperty({
     description: 'ID del contrato donde se realiza el cambio',
     example: '1',
@@ -79,7 +86,6 @@ export class ReplaceMeterDto {
   @IsNotEmpty({
     message: 'El detalle del motivo es obligatorio cuando el motivo es OTRO',
   })
-  @IsOptional()
   @IsString()
   detalleMotivo?: string;
 
@@ -112,7 +118,6 @@ export class ReplaceMeterDto {
   @IsNumber({}, { message: 'El porcentaje de cobro debe ser numérico' })
   @Min(1, { message: 'El porcentaje de cobro mínimo es 1%' })
   @Max(100, { message: 'El porcentaje de cobro máximo es 100%' })
-  @IsOptional()
   porcentajeCobro?: number;
 
   @ApiPropertyOptional({
@@ -127,9 +132,7 @@ export class ReplaceMeterDto {
     message: 'La ventana de promedio es obligatoria para PROMEDIO_HISTORICO',
   })
   @IsNumber({}, { message: 'La ventana de promedio debe ser numérica' })
-  @Min(1, { message: 'La ventana de promedio mínima es 1 mes' })
-  @Max(24, { message: 'La ventana de promedio máxima es 24 meses' })
-  @IsOptional()
+  @IsIn([3, 6], { message: 'La ventana de promedio debe ser 3 o 6 meses' })
   ventanaPromedio?: number;
 
   @ApiProperty({
@@ -161,7 +164,6 @@ export class ReplaceMeterDto {
     message: 'El período destino es obligatorio al diferir el cobro',
   })
   @IsNumber({}, { message: 'El ID del período destino debe ser un número' })
-  @IsOptional()
   periodoDestinoId?: number;
 
   @ApiPropertyOptional({
@@ -178,7 +180,6 @@ export class ReplaceMeterDto {
   @IsNumber({}, { message: 'El mes destino debe ser numérico' })
   @Min(1, { message: 'El mes destino mínimo es 1' })
   @Max(12, { message: 'El mes destino máximo es 12' })
-  @IsOptional()
   mesDestino?: number;
 
   @ApiPropertyOptional({
@@ -192,6 +193,6 @@ export class ReplaceMeterDto {
     description: 'Fecha en que se efectuó el reemplazo (ISO Date String)',
   })
   @IsOptional()
-  @IsString()
+  @IsISO8601({}, { message: 'La fecha de reemplazo debe ser ISO 8601' })
   fechaReemplazo?: string;
 }

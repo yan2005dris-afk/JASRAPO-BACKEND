@@ -85,13 +85,22 @@ export class ReemplazoMedidorResponseDto {
   estado: EstadoResolucionConsumo;
 
   @ApiPropertyOptional()
-  solicitadoPorUsuarioId?: string | null;
+  solicitadoPorUsuarioId: number;
 
   @ApiPropertyOptional()
-  autorizadoPorUsuarioId?: string | null;
+  autorizadoPorUsuarioId?: number | null;
 
   @ApiPropertyOptional()
   autorizadoEn?: Date | null;
+
+  @ApiProperty({ enum: ['PENDIENTE', 'APROBADA', 'RECHAZADA'] })
+  estadoAprobacion: 'PENDIENTE' | 'APROBADA' | 'RECHAZADA';
+
+  @ApiPropertyOptional()
+  origenProcesadoEn?: Date | null;
+
+  @ApiPropertyOptional()
+  destinoProcesadoEn?: Date | null;
 
   @ApiProperty()
   createdAt: Date;
@@ -136,6 +145,9 @@ export class ReemplazoMedidorResponseDto {
       solicitadoPorUsuarioId: r.solicitadoPorUsuarioId ?? null,
       autorizadoPorUsuarioId: r.autorizadoPorUsuarioId ?? null,
       autorizadoEn: r.autorizadoEn ?? null,
+      estadoAprobacion: r.estadoAprobacion,
+      origenProcesadoEn: r.origenProcesadoEn ?? null,
+      destinoProcesadoEn: r.destinoProcesadoEn ?? null,
       createdAt: r.createdAt,
     });
   }

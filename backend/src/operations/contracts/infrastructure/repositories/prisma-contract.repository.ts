@@ -22,17 +22,33 @@ import {
   PaginateOptions,
 } from 'src/infrastructure/common/utils/pagination.util';
 
+export const contractDefaultInclude = {
+  categoriaTarifa: true,
+  cliente: true,
+  comunidad: true,
+  sector: true,
+  historialMedidores: {
+    include: {
+      medidor: {
+        include: {
+          lecturas: {
+            where: { estado: 'APROBADA', deletedAt: null },
+            orderBy: [{ fecha: 'desc' }, { lecturaId: 'desc' }],
+            take: 1,
+          },
+        },
+      },
+    },
+  },
+} satisfies Prisma.ContratosInclude;
+
+export type ContractRecord = Prisma.ContratosGetPayload<{
+  include: typeof contractDefaultInclude;
+}>;
+
 @Injectable()
 export class PrismaContractRepository implements ContractRepository {
-  private readonly defaultInclude = {
-    categoriaTarifa: true,
-    cliente: true,
-    comunidad: true,
-    sector: true,
-    historialMedidores: {
-      include: { medidor: true },
-    },
-  } satisfies Prisma.ContratosInclude;
+  private readonly defaultInclude = contractDefaultInclude;
 
   constructor(private readonly prisma: PrismaService) {}
 

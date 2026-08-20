@@ -11,6 +11,7 @@ import {
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
 import { InvalidDomainOperationException } from 'src/shared/domain/exceptions/domain.exception';
+import { createHash } from 'node:crypto';
 
 export interface ReplaceMeterInput {
   contratoId: bigint;
@@ -29,10 +30,11 @@ export interface ReplaceMeterInput {
   mesOrigen?: number;
   mesDestino?: number;
   ordenTrabajoId?: bigint;
-  solicitadoPorUsuarioId?: string;
-  autorizadoPorUsuarioId?: string;
+  solicitadoPorUsuarioId: number;
+  autorizadoPorUsuarioId?: number;
   autorizadoEn?: Date;
   fechaReemplazo?: Date;
+  claveIdempotencia: string;
 }
 
 @LogContext()
@@ -63,6 +65,8 @@ export class ReplaceMeterUseCase {
         );
       }
 
+      this.validateConditionalFields(input);
+
       if (input.tratamientoSaliente === TratamientoSaliente.COBRO_PARCIAL) {
         if (
           input.porcentajeCobro === undefined ||
@@ -83,9 +87,9 @@ export class ReplaceMeterUseCase {
       if (
         input.tratamientoSaliente === TratamientoSaliente.PROMEDIO_HISTORICO
       ) {
-        if (!input.ventanaPromedio || input.ventanaPromedio <= 0) {
+        if (![3, 6].includes(input.ventanaPromedio ?? 0)) {
           throw new InvalidDomainOperationException(
-            'La ventana de promedio histórico debe ser de al menos 1 mes',
+            'La ventana de promedio histórico debe ser de 3 o 6 meses',
           );
         }
       }
@@ -102,14 +106,17 @@ export class ReplaceMeterUseCase {
           );
         }
 
-        const esPosterior =
-          input.periodoDestinoId > input.periodoOrigenId ||
-          (input.periodoDestinoId === input.periodoOrigenId &&
-            input.mesDestino > mesOrigen);
+        const esPosteriorInmediato =
+          (mesOrigen < 12 &&
+            input.periodoDestinoId === input.periodoOrigenId &&
+            input.mesDestino === mesOrigen + 1) ||
+          (mesOrigen === 12 &&
+            input.periodoDestinoId !== input.periodoOrigenId &&
+            input.mesDestino === 1);
 
-        if (!esPosterior) {
+        if (!esPosteriorInmediato) {
           throw new InvalidDomainOperationException(
-            'El ciclo de facturación destino (período y mes) debe ser posterior al ciclo de origen al diferir el cobro',
+            'El ciclo destino debe ser el ciclo mensual inmediatamente posterior al origen',
           );
         }
       }
@@ -118,6 +125,11 @@ export class ReplaceMeterUseCase {
         input.porcentajeCobro !== undefined && input.porcentajeCobro !== null
           ? new Decimal(input.porcentajeCobro.toString())
           : undefined;
+      const requiereAprobacion =
+        input.tratamientoSaliente !== TratamientoSaliente.COBRO_REAL ||
+        input.tratamientoEntrante !==
+          TratamientoEntrante.FACTURAR_PERIODO_ACTUAL;
+      const huellaSolicitud = this.createFingerprint(input, mesOrigen);
 
       return await this.meterRepository.replaceMeter({
         contratoId: input.contratoId,
@@ -137,9 +149,16 @@ export class ReplaceMeterUseCase {
         mesDestino: input.mesDestino,
         ordenTrabajoId: input.ordenTrabajoId,
         solicitadoPorUsuarioId: input.solicitadoPorUsuarioId,
-        autorizadoPorUsuarioId: input.autorizadoPorUsuarioId,
-        autorizadoEn: input.autorizadoEn,
+        autorizadoPorUsuarioId: requiereAprobacion
+          ? undefined
+          : input.solicitadoPorUsuarioId,
+        autorizadoEn: requiereAprobacion
+          ? undefined
+          : (input.autorizadoEn ?? new Date()),
         fechaReemplazo: input.fechaReemplazo || new Date(),
+        claveIdempotencia: input.claveIdempotencia,
+        huellaSolicitud,
+        requiereAprobacion,
       });
     } catch (error) {
       this.logger.error(
@@ -149,5 +168,87 @@ export class ReplaceMeterUseCase {
       );
       throw error;
     }
+  }
+
+  async approve(
+    reemplazoId: bigint,
+    autorizadoPorUsuarioId: number,
+  ): Promise<ReplaceMeterResult> {
+    return this.meterRepository.approveReplacement({
+      reemplazoId,
+      autorizadoPorUsuarioId,
+    });
+  }
+
+  private validateConditionalFields(input: ReplaceMeterInput): void {
+    if (
+      input.motivo === MotivoReemplazoMedidor.OTRO &&
+      !input.detalleMotivo?.trim()
+    ) {
+      throw new InvalidDomainOperationException(
+        'El detalle del motivo es obligatorio cuando el motivo es OTRO',
+      );
+    }
+    if (
+      input.motivo === MotivoReemplazoMedidor.DANO &&
+      (!input.responsabilidadDano ||
+        input.responsabilidadDano === ResponsabilidadDano.NO_APLICA)
+    ) {
+      throw new InvalidDomainOperationException(
+        'Debe establecer la responsabilidad cuando el motivo es DANO',
+      );
+    }
+    if (
+      input.motivo !== MotivoReemplazoMedidor.DANO &&
+      input.responsabilidadDano &&
+      input.responsabilidadDano !== ResponsabilidadDano.NO_APLICA
+    ) {
+      throw new InvalidDomainOperationException(
+        'La responsabilidad de daño solo aplica cuando el motivo es DANO',
+      );
+    }
+    if (
+      input.tratamientoSaliente !== TratamientoSaliente.COBRO_PARCIAL &&
+      input.porcentajeCobro !== undefined
+    ) {
+      throw new InvalidDomainOperationException(
+        'El porcentaje de cobro solo aplica a COBRO_PARCIAL',
+      );
+    }
+    if (
+      input.tratamientoSaliente !== TratamientoSaliente.PROMEDIO_HISTORICO &&
+      input.ventanaPromedio !== undefined
+    ) {
+      throw new InvalidDomainOperationException(
+        'La ventana de promedio solo aplica a PROMEDIO_HISTORICO',
+      );
+    }
+    if (
+      input.tratamientoEntrante !==
+        TratamientoEntrante.DIFERIR_SIGUIENTE_PERIODO &&
+      (input.periodoDestinoId !== undefined || input.mesDestino !== undefined)
+    ) {
+      throw new InvalidDomainOperationException(
+        'El ciclo destino solo aplica cuando el consumo se difiere',
+      );
+    }
+  }
+
+  private createFingerprint(
+    input: ReplaceMeterInput,
+    mesOrigen: number,
+  ): string {
+    const canonical = JSON.stringify({
+      ...input,
+      contratoId: input.contratoId.toString(),
+      nuevoMedidorId: input.nuevoMedidorId.toString(),
+      ordenTrabajoId: input.ordenTrabajoId?.toString(),
+      lecturaFinalSaliente: input.lecturaFinalSaliente.toString(),
+      lecturaInicialEntrante: input.lecturaInicialEntrante?.toString() ?? '0',
+      porcentajeCobro: input.porcentajeCobro?.toString(),
+      mesOrigen,
+      fechaReemplazo: input.fechaReemplazo?.toISOString(),
+    });
+    return createHash('sha256').update(canonical).digest('hex');
   }
 }

@@ -127,6 +127,7 @@ describe('MeterService', () => {
 
   it('replaceMeter should delegate to ReplaceMeterUseCase', async () => {
     const dto = {
+      claveIdempotencia: '123e4567-e89b-42d3-a456-426614174000',
       contratoId: '1',
       nuevoMedidorId: '2',
       lecturaFinalSaliente: 530,
@@ -139,7 +140,7 @@ describe('MeterService', () => {
     };
     const expected = { reemplazo: {} } as any;
     jest.spyOn(replaceUseCase, 'execute').mockResolvedValue(expected);
-    const result = await service.replaceMeter(dto, 'user-1');
+    const result = await service.replaceMeter(dto, 1);
     expect(result).toBe(expected);
     expect(replaceUseCase.execute).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -148,7 +149,7 @@ describe('MeterService', () => {
         lecturaFinalSaliente: 530,
         mesOrigen: 8,
         mesDestino: 9,
-        solicitadoPorUsuarioId: 'user-1',
+        solicitadoPorUsuarioId: 1,
       }),
     );
   });

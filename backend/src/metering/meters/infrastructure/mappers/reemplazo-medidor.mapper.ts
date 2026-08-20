@@ -1,8 +1,11 @@
 import { Decimal } from 'decimal.js';
+import type { Prisma } from 'src/generated/prisma/client';
 import { ReemplazoMedidorEntity } from '../../domain/entities/reemplazo-medidor.entity';
 
 export class ReemplazoMedidorMapper {
-  static toDomain(raw: any): ReemplazoMedidorEntity | null {
+  static toDomain(
+    raw: Prisma.ReemplazoMedidorGetPayload<object> | null,
+  ): ReemplazoMedidorEntity | null {
     if (!raw) return null;
     return new ReemplazoMedidorEntity({
       reemplazoId: raw.reemplazoId,
@@ -51,6 +54,10 @@ export class ReemplazoMedidorMapper {
       solicitadoPorUsuarioId: raw.solicitadoPorUsuarioId ?? null,
       autorizadoPorUsuarioId: raw.autorizadoPorUsuarioId ?? null,
       autorizadoEn: raw.autorizadoEn ?? null,
+      estadoAprobacion: raw.estadoAprobacion,
+      claveIdempotencia: raw.claveIdempotencia,
+      origenProcesadoEn: raw.origenProcesadoEn ?? null,
+      destinoProcesadoEn: raw.destinoProcesadoEn ?? null,
       createdAt: raw.createdAt,
       updatedAt: raw.updatedAt,
       deletedAt: raw.deletedAt ?? null,

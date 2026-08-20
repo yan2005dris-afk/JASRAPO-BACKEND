@@ -36,9 +36,13 @@ export class ReemplazoMedidorEntity {
   prefacturaDetalleSalienteId?: bigint | null;
   prefacturaDetalleEntranteId?: bigint | null;
   estado: EstadoResolucionConsumo;
-  solicitadoPorUsuarioId?: string | null;
-  autorizadoPorUsuarioId?: string | null;
+  solicitadoPorUsuarioId: number;
+  autorizadoPorUsuarioId?: number | null;
   autorizadoEn?: Date | null;
+  estadoAprobacion: 'PENDIENTE' | 'APROBADA' | 'RECHAZADA';
+  claveIdempotencia: string;
+  origenProcesadoEn?: Date | null;
+  destinoProcesadoEn?: Date | null;
   createdAt: Date;
   updatedAt: Date;
   deletedAt?: Date | null;

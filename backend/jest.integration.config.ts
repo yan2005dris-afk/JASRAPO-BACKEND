@@ -14,7 +14,8 @@ const config: Config = {
   ...baseConfig,
   rootDir: '.',
   testRegex: 'test/integration/.*\\.int-spec\\.ts$',
-  testPathIgnorePatterns: ['/node_modules/'],
+  testPathIgnorePatterns: ['/node_modules/', '/dist/'],
+  modulePathIgnorePatterns: ['<rootDir>/dist/'],
   testTimeout: 180_000,
   transform: {
     ...baseConfig.transform,

@@ -48,7 +48,7 @@ export class MeterService {
 
   async replaceMeter(
     dto: ReplaceMeterDto,
-    userId?: string,
+    userId: number,
   ): Promise<ReplaceMeterResult> {
     return this.replaceMeterUseCase.execute({
       contratoId: BigInt(dto.contratoId),
@@ -71,10 +71,18 @@ export class MeterService {
         : undefined,
       solicitadoPorUsuarioId: userId,
       autorizadoPorUsuarioId: userId,
+      claveIdempotencia: dto.claveIdempotencia,
       fechaReemplazo: dto.fechaReemplazo
         ? new Date(dto.fechaReemplazo)
         : undefined,
     });
+  }
+
+  async approveReplacement(
+    reemplazoId: bigint,
+    userId: number,
+  ): Promise<ReplaceMeterResult> {
+    return this.replaceMeterUseCase.approve(reemplazoId, userId);
   }
 
   async findAllStates(): Promise<EnumStateDto[]> {
