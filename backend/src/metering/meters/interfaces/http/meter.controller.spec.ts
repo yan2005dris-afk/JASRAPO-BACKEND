@@ -3,6 +3,7 @@ import { Test } from '@nestjs/testing';
 import { MeterController } from './meter.controller';
 import { MeterService } from '../../application/meter.service';
 import { EstadoMedidor } from 'src/shared/enums';
+import { Readable } from 'node:stream';
 
 describe('MeterController', () => {
   let controller: MeterController;
@@ -62,6 +63,8 @@ describe('MeterController', () => {
       findOne: jest.fn(() => Promise.resolve(mockMeterEntity)),
       update: jest.fn(() => Promise.resolve(mockMeterEntity)),
       remove: jest.fn(() => Promise.resolve(undefined)),
+      exportCsv: jest.fn(() => Promise.resolve(Readable.from(['csv']))),
+      exportPdf: jest.fn(() => Promise.resolve(Buffer.from('%PDF-1.4'))),
     } as any;
 
     const module: TestingModule = await Test.createTestingModule({
@@ -112,6 +115,55 @@ describe('MeterController', () => {
 
       expect(service.findOne).toHaveBeenCalledWith(1n);
       expect(result).toEqual(expectedDto);
+    });
+  });
+
+  describe('export', () => {
+    it('should stream CSV with download headers', async () => {
+      const response = {
+        setHeader: jest.fn(),
+      } as any;
+      const filters = { search: 'MED-001' };
+      const pipe = jest.fn();
+      jest.spyOn(service, 'exportCsv').mockResolvedValue({ pipe } as any);
+
+      await controller.exportCsv(filters, response);
+
+      expect(service.exportCsv).toHaveBeenCalledWith(filters);
+      expect(pipe).toHaveBeenCalledWith(response);
+      expect(response.setHeader).toHaveBeenCalledWith(
+        'Content-Type',
+        'text/csv; charset=utf-8',
+      );
+      expect(response.setHeader).toHaveBeenCalledWith(
+        'Content-Disposition',
+        expect.stringMatching(
+          /^attachment; filename="inventario-medidores-\d{4}-\d{2}-\d{2}\.csv"$/,
+        ),
+      );
+    });
+
+    it('should send PDF with download headers', async () => {
+      const response = {
+        setHeader: jest.fn(),
+        end: jest.fn(),
+      } as any;
+      const filters = { estado: EstadoMedidor.BODEGA };
+
+      await controller.exportPdf(filters, response);
+
+      expect(service.exportPdf).toHaveBeenCalledWith(filters);
+      expect(response.setHeader).toHaveBeenCalledWith(
+        'Content-Type',
+        'application/pdf',
+      );
+      expect(response.setHeader).toHaveBeenCalledWith(
+        'Content-Disposition',
+        expect.stringMatching(
+          /^attachment; filename="inventario-medidores-\d{4}-\d{2}-\d{2}\.pdf"$/,
+        ),
+      );
+      expect(response.end).toHaveBeenCalledWith(Buffer.from('%PDF-1.4'));
     });
   });
 

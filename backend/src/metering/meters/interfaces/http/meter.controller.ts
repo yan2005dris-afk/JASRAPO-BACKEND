@@ -8,7 +8,9 @@ import {
   Delete,
   Query,
   UseGuards,
+  Res,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { ParseBigIntPipe } from 'src/infrastructure/common/pipes/parse-bigint.pipe';
 import { MeterService } from '../../application/meter.service';
 import { CreateMeterDto } from '../dto/create-meter.dto';
@@ -30,6 +32,7 @@ import {
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
 import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
+import { ExportMeterDto } from '../dto/export-meter.dto';
 import { CurrentUser } from 'src/identity/auth/interfaces/http/decorators/current-user.decorator';
 import type { JwtPayload } from 'src/identity/auth/application/types/jwt.types';
 
@@ -105,6 +108,61 @@ export class MeterController {
     @Query() filterDto: FilterMeterDto,
   ): Promise<PaginatedMeterResponse> {
     return this.meterService.findAll(filterDto);
+  }
+
+  @ApiOperation({
+    summary: 'Exportar inventario de medidores a CSV',
+    description:
+      'Descarga el inventario en CSV aplicando los mismos filtros de la pantalla (estado y búsqueda).',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'CSV generado',
+    content: { 'text/csv': {} },
+  })
+  @ApiResponse({ status: 401, description: 'No autorizado' })
+  @ApiResponse({ status: 403, description: 'Sin permiso: meters:read' })
+  @RequiredPermission('meters', 'read')
+  @Get('export/csv')
+  async exportCsv(
+    @Query() filters: ExportMeterDto,
+    @Res() response: Response,
+  ): Promise<void> {
+    const stream = await this.meterService.exportCsv(filters);
+    response.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    response.setHeader(
+      'Content-Disposition',
+      `attachment; filename="${buildExportFileName('csv')}"`,
+    );
+    stream.pipe(response);
+  }
+
+  @ApiOperation({
+    summary: 'Exportar inventario de medidores a PDF',
+    description:
+      'Genera el reporte con cabecera oficial de JASRAPO, KPIs por estado y el detalle de medidores, aplicando los mismos filtros de la pantalla.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'PDF generado',
+    content: { 'application/pdf': {} },
+  })
+  @ApiResponse({ status: 401, description: 'No autorizado' })
+  @ApiResponse({ status: 403, description: 'Sin permiso: meters:read' })
+  @RequiredPermission('meters', 'read')
+  @Get('export/pdf')
+  async exportPdf(
+    @Query() filters: ExportMeterDto,
+    @Res() response: Response,
+  ): Promise<void> {
+    const pdf = await this.meterService.exportPdf(filters);
+    response.setHeader('Content-Type', 'application/pdf');
+    response.setHeader(
+      'Content-Disposition',
+      `attachment; filename="${buildExportFileName('pdf')}"`,
+    );
+    response.setHeader('Content-Length', pdf.length);
+    response.end(pdf);
   }
 
   /**
@@ -238,4 +296,9 @@ export class MeterController {
     const result = await this.meterService.approveReplacement(id, user.sub);
     return ReemplazoMedidorResponseDto.fromEntity(result.reemplazo);
   }
+}
+
+function buildExportFileName(extension: 'csv' | 'pdf'): string {
+  const today = new Date().toISOString().slice(0, 10);
+  return `inventario-medidores-${today}.${extension}`;
 }
