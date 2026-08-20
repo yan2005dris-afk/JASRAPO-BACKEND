@@ -7,6 +7,7 @@ import {
   InvalidDomainOperationException,
 } from 'src/shared/domain/exceptions/domain.exception';
 import { canTransitionRouteState } from '../../domain/route-state';
+import { DateUtil } from 'src/shared/utils/date.util';
 
 @Injectable()
 export class UpdateRouteUseCase {
@@ -44,9 +45,9 @@ export class UpdateRouteUseCase {
       }
 
       const fechaPlan = updateDto.fechaPlanificada
-        ? new Date(updateDto.fechaPlanificada)
+        ? DateUtil.parseFrontendDate(updateDto.fechaPlanificada)
         : ruta.fechaPlanificada
-          ? new Date(ruta.fechaPlanificada)
+          ? DateUtil.parseFrontendDate(ruta.fechaPlanificada)
           : null;
 
       const overlapping = await this.routeRepository.findOverlappingRoutes(
@@ -71,9 +72,9 @@ export class UpdateRouteUseCase {
       }),
       ...(updateDto.estado !== undefined && { estado: updateDto.estado }),
       ...(updateDto.fechaPlanificada !== undefined && {
-        fechaPlanificada: updateDto.fechaPlanificada
-          ? new Date(updateDto.fechaPlanificada)
-          : null,
+        fechaPlanificada: DateUtil.parseFrontendDate(
+          updateDto.fechaPlanificada ?? null,
+        ),
       }),
       ...(updateDto.periodoId !== undefined && {
         periodoId: updateDto.periodoId,
