@@ -85,10 +85,14 @@ export class DateUtil {
     if (!date || !isValid(date)) {
       return null;
     }
+    // Use local time to build the string so that when the frontend parses it
+    // with `new Date(string)`, JavaScript interprets it as local time (not UTC).
+    // Appending "T00:00:00" prevents the UTC-midnight interpretation that causes
+    // dates to shift by one day in negative-UTC-offset zones.
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+    return `${year}-${month}-${day}T00:00:00`;
   }
 
   /**

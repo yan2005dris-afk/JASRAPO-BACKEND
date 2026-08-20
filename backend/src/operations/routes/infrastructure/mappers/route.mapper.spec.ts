@@ -35,9 +35,9 @@ describe('RouteMapper', () => {
       expect(result.sectorId).toBe(2);
       expect(result.periodoId).toBe(5);
       expect(result.estado).toBe('PENDIENTE');
-      expect(result.fechaPlanificada).toBe('2025-06-01');
-      expect(result.fechaInicio).toBe('2025-06-02');
-      expect(result.fechaFin).toBe('2025-06-02');
+      expect(result.fechaPlanificada).toBe('2025-06-01T00:00:00');
+      expect(result.fechaInicio).toBe('2025-06-02T00:00:00');
+      expect(result.fechaFin).toBe('2025-06-02T00:00:00');
     });
 
     it('should handle null optional fields', () => {
