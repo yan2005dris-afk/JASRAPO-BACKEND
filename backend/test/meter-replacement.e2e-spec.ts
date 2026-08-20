@@ -5,10 +5,7 @@ import type { App } from 'supertest/types';
 import { v4 as uuidv4 } from 'uuid';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/infrastructure/database/prisma.service';
-import {
-  beforeAllHook,
-  isE2E,
-} from './setup';
+import { beforeAllHook, isE2E } from './setup';
 import {
   MotivoReemplazoMedidor,
   ResponsabilidadDano,
@@ -125,22 +122,42 @@ describe('Meter Replacement E2E (All Treatments & Validation Cases)', () => {
     oldMeterId = oldMeter.medidorId;
 
     const m1 = await prisma.medidores.create({
-      data: { serie: `NEW1-${Date.now()}`, marca: 'Itron', modelo: 'A200', estado: 'BODEGA' },
+      data: {
+        serie: `NEW1-${Date.now()}`,
+        marca: 'Itron',
+        modelo: 'A200',
+        estado: 'BODEGA',
+      },
     });
     newMeterId1 = m1.medidorId;
 
     const m2 = await prisma.medidores.create({
-      data: { serie: `NEW2-${Date.now()}`, marca: 'Itron', modelo: 'A200', estado: 'BODEGA' },
+      data: {
+        serie: `NEW2-${Date.now()}`,
+        marca: 'Itron',
+        modelo: 'A200',
+        estado: 'BODEGA',
+      },
     });
     newMeterId2 = m2.medidorId;
 
     const m3 = await prisma.medidores.create({
-      data: { serie: `NEW3-${Date.now()}`, marca: 'Itron', modelo: 'A200', estado: 'BODEGA' },
+      data: {
+        serie: `NEW3-${Date.now()}`,
+        marca: 'Itron',
+        modelo: 'A200',
+        estado: 'BODEGA',
+      },
     });
     newMeterId3 = m3.medidorId;
 
     const m4 = await prisma.medidores.create({
-      data: { serie: `NEW4-${Date.now()}`, marca: 'Itron', modelo: 'A200', estado: 'BODEGA' },
+      data: {
+        serie: `NEW4-${Date.now()}`,
+        marca: 'Itron',
+        modelo: 'A200',
+        estado: 'BODEGA',
+      },
     });
     newMeterId4 = m4.medidorId;
 
@@ -211,7 +228,9 @@ describe('Meter Replacement E2E (All Treatments & Validation Cases)', () => {
 
       expect(res.body).toHaveProperty('reemplazoId');
       expect(res.body.tratamientoSaliente).toBe(TratamientoSaliente.COBRO_REAL);
-      expect(res.body.tratamientoEntrante).toBe(TratamientoEntrante.FACTURAR_PERIODO_ACTUAL);
+      expect(res.body.tratamientoEntrante).toBe(
+        TratamientoEntrante.FACTURAR_PERIODO_ACTUAL,
+      );
       expect(Number(res.body.lecturaFinalSaliente)).toBe(180);
     });
 
@@ -239,7 +258,9 @@ describe('Meter Replacement E2E (All Treatments & Validation Cases)', () => {
         .send(payload)
         .expect(201);
 
-      expect(res.body.tratamientoSaliente).toBe(TratamientoSaliente.PROMEDIO_HISTORICO);
+      expect(res.body.tratamientoSaliente).toBe(
+        TratamientoSaliente.PROMEDIO_HISTORICO,
+      );
       expect(res.body.ventanaPromedio).toBe(3);
     });
 
@@ -267,7 +288,9 @@ describe('Meter Replacement E2E (All Treatments & Validation Cases)', () => {
         .send(payload)
         .expect(201);
 
-      expect(res.body.tratamientoSaliente).toBe(TratamientoSaliente.COBRO_PARCIAL);
+      expect(res.body.tratamientoSaliente).toBe(
+        TratamientoSaliente.COBRO_PARCIAL,
+      );
       expect(Number(res.body.porcentajeCobro)).toBe(50);
     });
 
@@ -297,7 +320,9 @@ describe('Meter Replacement E2E (All Treatments & Validation Cases)', () => {
         .expect(201);
 
       expect(res.body.tratamientoSaliente).toBe(TratamientoSaliente.EXONERADO);
-      expect(res.body.tratamientoEntrante).toBe(TratamientoEntrante.DIFERIR_SIGUIENTE_PERIODO);
+      expect(res.body.tratamientoEntrante).toBe(
+        TratamientoEntrante.DIFERIR_SIGUIENTE_PERIODO,
+      );
       expect(res.body.mesDestino).toBe(6);
     });
   });
@@ -325,7 +350,9 @@ describe('Meter Replacement E2E (All Treatments & Validation Cases)', () => {
         .expect(400);
 
       expect(res.body.message).toEqual(
-        expect.arrayContaining([expect.stringMatching(/no puede ser negativa/i)]),
+        expect.arrayContaining([
+          expect.stringMatching(/no puede ser negativa/i),
+        ]),
       );
     });
 
@@ -352,7 +379,9 @@ describe('Meter Replacement E2E (All Treatments & Validation Cases)', () => {
         .expect(400);
 
       expect(res.body.message).toEqual(
-        expect.arrayContaining([expect.stringMatching(/detalle del motivo es obligatorio/i)]),
+        expect.arrayContaining([
+          expect.stringMatching(/detalle del motivo es obligatorio/i),
+        ]),
       );
     });
 
@@ -406,7 +435,9 @@ describe('Meter Replacement E2E (All Treatments & Validation Cases)', () => {
         .expect(400);
 
       expect(res.body.message).toEqual(
-        expect.arrayContaining([expect.stringMatching(/ventana de promedio debe ser 3 o 6/i)]),
+        expect.arrayContaining([
+          expect.stringMatching(/ventana de promedio debe ser 3 o 6/i),
+        ]),
       );
     });
 
