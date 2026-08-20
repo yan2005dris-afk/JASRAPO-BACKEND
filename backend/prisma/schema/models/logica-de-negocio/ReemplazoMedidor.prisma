@@ -25,7 +25,7 @@ model ReemplazoMedidor {
   porcentajeCobro             Decimal?                @map("porcentaje_cobro") @db.Decimal(5, 2)
   tarifaOrigenSnapshot        Json?                   @map("tarifa_origen_snapshot")
   prefacturaDetalleSalienteId BigInt?                 @map("prefactura_detalle_saliente_id")
-  prefacturaDetalleEntranteId BigInt?                 @unique @map("prefactura_detalle_entrante_id")
+  prefacturaDetalleEntranteId BigInt?                 @map("prefactura_detalle_entrante_id")
   estado                      EstadoResolucionConsumo @default(PENDIENTE) @map("estado")
   solicitadoPorUsuarioId      String?                 @map("solicitado_por_usuario_id")
   autorizadoPorUsuarioId      String?                 @map("autorizado_por_usuario_id")

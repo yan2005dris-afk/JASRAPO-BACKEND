@@ -23,7 +23,7 @@ model PrefacturaDetalle {
   prefactura          Prefacturas        @relation(fields: [prefacturaId], references: [prefacturaId], onDelete: Cascade)
   rubro               Rubros             @relation(fields: [rubroId], references: [rubroId])
   reemplazosSaliente  ReemplazoMedidor[] @relation("ReemplazoPrefacturaDetalleSaliente")
-  reemplazosEntrante  ReemplazoMedidor?  @relation("ReemplazoPrefacturaDetalleEntrante")
+  reemplazosEntrante  ReemplazoMedidor[] @relation("ReemplazoPrefacturaDetalleEntrante")
 
   @@index([cuotaConvenioId])
   @@map("prefactura_detalle")

@@ -64,6 +64,8 @@ export class MeterService {
       ventanaPromedio: dto.ventanaPromedio,
       periodoOrigenId: dto.periodoOrigenId,
       periodoDestinoId: dto.periodoDestinoId,
+      mesOrigen: dto.mesOrigen,
+      mesDestino: dto.mesDestino,
       ordenTrabajoId: dto.ordenTrabajoId
         ? BigInt(dto.ordenTrabajoId)
         : undefined,

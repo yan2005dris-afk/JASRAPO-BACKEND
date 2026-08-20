@@ -134,6 +134,8 @@ describe('MeterService', () => {
       tratamientoSaliente: 'COBRO_REAL' as any,
       tratamientoEntrante: 'FACTURAR_PERIODO_ACTUAL' as any,
       periodoOrigenId: 1,
+      mesOrigen: 8,
+      mesDestino: 9,
     };
     const expected = { reemplazo: {} } as any;
     jest.spyOn(replaceUseCase, 'execute').mockResolvedValue(expected);
@@ -144,6 +146,8 @@ describe('MeterService', () => {
         contratoId: BigInt(1),
         nuevoMedidorId: BigInt(2),
         lecturaFinalSaliente: 530,
+        mesOrigen: 8,
+        mesDestino: 9,
         solicitadoPorUsuarioId: 'user-1',
       }),
     );

@@ -1,6 +1,7 @@
--- 1. Agregar columnas mes_origen y mes_destino a reemplazos_medidor
+-- 1. Agregar columnas mes_origen y mes_destino a reemplazos_medidor y remover constraint unique en prefactura_detalle_entrante_id
 ALTER TABLE "reemplazos_medidor" ADD COLUMN IF NOT EXISTS "mes_origen" INTEGER NOT NULL DEFAULT 1;
 ALTER TABLE "reemplazos_medidor" ADD COLUMN IF NOT EXISTS "mes_destino" INTEGER;
+DROP INDEX IF EXISTS "reemplazos_medidor_prefactura_detalle_entrante_id_key";
 CREATE INDEX IF NOT EXISTS "reemplazos_medidor_mes_origen_idx" ON "reemplazos_medidor"("mes_origen");
 CREATE INDEX IF NOT EXISTS "reemplazos_medidor_mes_destino_idx" ON "reemplazos_medidor"("mes_destino");
 
@@ -209,7 +210,7 @@ BEGIN
           AND (ct.fecha_vigencia_hasta IS NULL OR ct.fecha_vigencia_hasta >= CURRENT_DATE)
           AND (p_comunidad_id IS NULL OR c.comunidad_id = p_comunidad_id)
     LOOP
-        -- Buscar lectura APROBADA
+        -- Buscar lectura APROBADA determinista (ordenada por fecha y lectura_id descendente)
         IF p_ruta_id IS NOT NULL THEN
             SELECT l.lectura_id, l.lectura_anterior, l.lectura_actual
             INTO v_lectura_id, v_lectura_anterior, v_lectura_actual
@@ -222,6 +223,7 @@ BEGIN
               AND l.estado = 'APROBADA'::"EstadoLectura"
               AND ot.borrado_en IS NULL
               AND l.borrado_en IS NULL
+            ORDER BY l.fecha DESC, l.lectura_id DESC
             LIMIT 1;
         ELSE
             SELECT l.lectura_id, l.lectura_anterior, l.lectura_actual
@@ -233,6 +235,7 @@ BEGIN
               AND EXTRACT(MONTH FROM l.fecha) = v_mes
               AND l.estado = 'APROBADA'::"EstadoLectura"
               AND l.borrado_en IS NULL
+            ORDER BY l.fecha DESC, l.lectura_id DESC
             LIMIT 1;
         END IF;
 
@@ -241,7 +244,7 @@ BEGIN
             CONTINUE;
         END IF;
 
-        -- 8.1 Verificar reemplazos de medidor en este ciclo (periodo_origen_id y mes_origen)
+        -- 8.1 Verificar reemplazos de medidor pendientes en este ciclo (periodo_origen_id y mes_origen)
         v_reemplazos_count := 0;
         v_consumo_facturable_saliente := 0;
         v_consumo_facturable_entrante := 0;
@@ -262,7 +265,7 @@ BEGIN
           AND rm.estado = 'PENDIENTE'::"EstadoResolucionConsumo"
           AND rm.borrado_en IS NULL;
 
-        -- 8.2 Verificar si hay consumos diferidos pendientes de cobrar en este ciclo
+        -- 8.2 Verificar si hay consumos diferidos pendientes de cobrar en este ciclo destino
         SELECT COALESCE(SUM(rm_dif.consumo_diferido_entrante), 0)
         INTO v_consumo_diferido_a_cobrar
         FROM reemplazos_medidor rm_dif
@@ -274,7 +277,7 @@ BEGIN
 
         -- 8.3 Calcular consumo total según reemplazo o lectura regular
         IF v_reemplazos_count > 0 THEN
-            -- Obtener tratamiento entrante del reemplazo activo más reciente
+            -- Obtener tratamiento entrante del reemplazo más reciente en este ciclo
             SELECT rm.tratamiento_entrante::TEXT
             INTO v_tratamiento_entrante
             FROM reemplazos_medidor rm
@@ -311,7 +314,7 @@ BEGIN
             v_tasa_seguridad := 0;
         END IF;
 
-        -- Seguimiento de Deuda (períodos/meses anteriores) con COALESCE estricto
+        -- Seguimiento de Deuda con COALESCE garantizado
         SELECT COALESCE(SUM(total_pagar - abono), 0), COUNT(*)
         INTO v_saldo_vencido, v_meses_atrasado
         FROM prefacturas
@@ -418,27 +421,45 @@ BEGIN
             VALUES (v_prefactura_id, v_rubro_interes, 'Interés por Mora (' || v_meses_atrasado || ' meses atrasados)', 1, v_interes_mora, v_interes_mora, (v_interes_mora * v_iva_interes), 0, (v_interes_mora * (1 + v_iva_interes)), (v_iva_interes * 100), CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
         END IF;
 
-        -- 8.4 Actualizar y enlazar reemplazos_medidor del ciclo a APLICADA
+        -- 8.4 Actualizar reemplazos de medidor de origen
         IF v_reemplazos_count > 0 THEN
+            -- Caso 1: Tratamiento NO diferido -> pasa a APLICADA
             UPDATE reemplazos_medidor
-            SET prefactura_detalle_saliente_id = COALESCE(v_prefactura_detalle_consumo_id, prefactura_detalle_saliente_id),
-                prefactura_detalle_entrante_id = COALESCE(v_prefactura_detalle_consumo_id, prefactura_detalle_entrante_id),
+            SET prefactura_detalle_saliente_id = v_prefactura_detalle_consumo_id,
+                prefactura_detalle_entrante_id = v_prefactura_detalle_consumo_id,
                 consumo_medido_entrante = v_consumo_fisico_entrante,
                 consumo_facturable_entrante = v_consumo_facturable_entrante,
-                consumo_diferido_entrante = v_consumo_diferido_a_guardar,
+                consumo_diferido_entrante = 0,
                 estado = 'APLICADA'::"EstadoResolucionConsumo",
                 actualizado_en = CURRENT_TIMESTAMP
             WHERE contrato_id = contrato_row.contrato_id
               AND periodo_origen_id = p_periodo_id
               AND mes_origen = v_mes
+              AND tratamiento_entrante = 'FACTURAR_PERIODO_ACTUAL'::"TratamientoEntrante"
+              AND estado = 'PENDIENTE'::"EstadoResolucionConsumo"
+              AND borrado_en IS NULL;
+
+            -- Caso 2: Tratamiento DIFERIDO -> guarda diferido y PERMANECE PENDIENTE para ciclo destino
+            UPDATE reemplazos_medidor
+            SET prefactura_detalle_saliente_id = v_prefactura_detalle_consumo_id,
+                consumo_medido_entrante = v_consumo_fisico_entrante,
+                consumo_facturable_entrante = 0,
+                consumo_diferido_entrante = v_consumo_fisico_entrante,
+                estado = 'PENDIENTE'::"EstadoResolucionConsumo",
+                actualizado_en = CURRENT_TIMESTAMP
+            WHERE contrato_id = contrato_row.contrato_id
+              AND periodo_origen_id = p_periodo_id
+              AND mes_origen = v_mes
+              AND tratamiento_entrante = 'DIFERIR_SIGUIENTE_PERIODO'::"TratamientoEntrante"
               AND estado = 'PENDIENTE'::"EstadoResolucionConsumo"
               AND borrado_en IS NULL;
         END IF;
 
-        -- 8.5 Actualizar resoluciones diferidas que maduraron en este ciclo
+        -- 8.5 Actualizar resoluciones diferidas que maduraron en este ciclo destino -> pasan a APLICADA
         IF v_consumo_diferido_a_cobrar > 0 THEN
             UPDATE reemplazos_medidor
-            SET estado = 'APLICADA'::"EstadoResolucionConsumo",
+            SET prefactura_detalle_entrante_id = v_prefactura_detalle_consumo_id,
+                estado = 'APLICADA'::"EstadoResolucionConsumo",
                 actualizado_en = CURRENT_TIMESTAMP
             WHERE contrato_id = contrato_row.contrato_id
               AND periodo_destino_id = p_periodo_id
