@@ -1,5 +1,3 @@
-import { parse } from 'useragent';
-
 const REDACTED = '***';
 const UNKNOWN = 'Unknown';
 
@@ -64,11 +62,25 @@ function redactIpv6(ip: string): string {
 export function parseUserAgent(ua: string): string {
   if (!ua || typeof ua !== 'string') return UNKNOWN;
 
-  const result = parse(ua);
-  const family =
-    result.family && result.family !== 'Other' ? result.family : UNKNOWN;
-  const major = result.major && result.major !== '0' ? result.major : '';
+  const trimmed = ua.trim();
+  if (!trimmed) return UNKNOWN;
 
-  if (major) return `${family} ${major}`;
-  return family;
+  // Custom quick patterns for CLI / API tools (curl/8.4.0 -> curl 8)
+  const cliMatch = trimmed.match(
+    /^(curl|PostmanRuntime|Wget|HTTPie|insomnia)\/(\d+)/i,
+  );
+  if (cliMatch) {
+    return `${cliMatch[1]} ${cliMatch[2]}`;
+  }
+
+  // Standard browser patterns (Chrome/124.0.0.0 -> Chrome 124)
+  const browserMatch = trimmed.match(
+    /(Chrome|Firefox|Safari|Edge|Opera|MSIE)\/(\d+)/i,
+  );
+  if (browserMatch) {
+    return `${browserMatch[1]} ${browserMatch[2]}`;
+  }
+
+  const firstToken = trimmed.split(/[/ ]/)[0];
+  return firstToken || UNKNOWN;
 }
