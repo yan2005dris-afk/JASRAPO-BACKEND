@@ -25,6 +25,7 @@ import { OrdenesTrabajoModule } from './ordenes-trabajo.module';
     ReassignRouteUseCase,
   ],
   exports: [
+    RepositoriesModule,
     RoutesService,
     GetEligibleReadingsUseCase,
     CreateRouteUseCase,
