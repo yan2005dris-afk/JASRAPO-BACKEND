@@ -25,14 +25,14 @@ COPY backend/package.json ./backend/
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install --frozen-lockfile
 
-# 1. Copiar primero el esquema, config y scripts para generar Prisma de forma aislada y cacheada
+# 1. Copiar esquema, config, scripts y código fuente
 COPY backend/prisma ./backend/prisma
 COPY backend/scripts ./backend/scripts
 COPY backend/prisma.config.ts backend/tsconfig*.json backend/nest-cli.json ./backend/
-RUN pnpm --filter backend exec prisma generate
-
-# 2. Copiar código fuente y compilar el backend
 COPY backend/src ./backend/src
+
+# 2. Generar cliente Prisma (escribe en src/generated/prisma) y compilar backend
+RUN pnpm --filter backend exec prisma generate
 RUN pnpm --filter backend run build
 
 # 3. Resolver dependencias de producción usando la caché del store
