@@ -24,10 +24,20 @@ export abstract class OrdenTrabajoRepository {
     data: UpdateOrdenEstadoData,
   ): Promise<OrdenTrabajoEntity>;
 
+  /**
+   * Vincula una lectura existente a una orden de trabajo.
+   * Operación PURA: solo escribe `lecturaId`, no cambia el estado de la orden
+   * ni `completadoEn`. Si el caller necesita marcar la orden como completada,
+   * debe invocar `updateEstado` por separado.
+   *
+   * Garantías:
+   * - Atomicidad: lectura + update ejecutan en una sola transacción de Prisma.
+   * - Integridad de dominio: si la orden tiene `medidorId`, la lectura debe
+   *   pertenecer al mismo medidor. Si no coincide, lanza InvalidDomainOperation.
+   * - 404 si la orden o la lectura no existen.
+   */
   abstract linkLectura(
     ordenTrabajoId: bigint,
     data: LinkLecturaData,
   ): Promise<OrdenTrabajoEntity>;
-
-  abstract findLecturaById(lecturaId: bigint): Promise<any>;
 }

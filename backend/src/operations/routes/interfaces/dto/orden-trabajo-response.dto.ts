@@ -68,15 +68,19 @@ export class OrderWorkResponseDto {
   })
   lecturaId?: bigint | null;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     type: OrdenTrabajoContratoDto,
-    description: 'Datos del contrato',
+    nullable: true,
+    description:
+      'Datos del contrato (null si la orden no tiene contrato asociado)',
   })
-  contrato: OrdenTrabajoContratoDto;
+  contrato?: OrdenTrabajoContratoDto | null;
 
   @ApiPropertyOptional({
     type: OrdenTrabajoMedidorDto,
-    description: 'Datos del medidor',
+    nullable: true,
+    description:
+      'Datos del medidor (null si la orden no tiene medidor asociado)',
   })
   medidor?: OrdenTrabajoMedidorDto | null;
 
@@ -96,11 +100,13 @@ export class OrderWorkResponseDto {
       : null;
     dto.lecturaId = entity.lecturaId;
 
-    dto.contrato = {
-      numeroContrato: entity.contratoNumeroContrato ?? '',
-      clienteNombre: entity.contratoClienteNombre ?? '',
-      direccion: entity.contratoDireccion ?? '',
-    };
+    dto.contrato = entity.contratoNumeroContrato
+      ? {
+          numeroContrato: entity.contratoNumeroContrato,
+          clienteNombre: entity.contratoClienteNombre ?? '',
+          direccion: entity.contratoDireccion ?? '',
+        }
+      : null;
 
     dto.medidor = entity.medidorNumeroSerie
       ? { numeroSerie: entity.medidorNumeroSerie }
