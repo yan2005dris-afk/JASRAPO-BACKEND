@@ -8,13 +8,13 @@ import { FindOneRouteUseCase } from './application/use-cases/find-one-route.use-
 import { UpdateRouteUseCase } from './application/use-cases/update-route.use-case';
 import { DeleteRouteUseCase } from './application/use-cases/delete-route.use-case';
 import { ReassignRouteUseCase } from './application/use-cases/reassign-route.use-case';
-import { RouteRepository } from './domain/repositories/route.repository';
-import { PrismaRouteRepository } from './infrastructure/repositories/prisma-route.repository';
+import { RepositoriesModule } from './repositories.module';
+import { OrdenesTrabajoModule } from './ordenes-trabajo.module';
 
 @Module({
+  imports: [RepositoriesModule, OrdenesTrabajoModule],
   controllers: [RoutesController],
   providers: [
-    { provide: RouteRepository, useClass: PrismaRouteRepository },
     RoutesService,
     GetEligibleReadingsUseCase,
     CreateRouteUseCase,
@@ -25,7 +25,7 @@ import { PrismaRouteRepository } from './infrastructure/repositories/prisma-rout
     ReassignRouteUseCase,
   ],
   exports: [
-    RouteRepository,
+    RoutesService,
     GetEligibleReadingsUseCase,
     CreateRouteUseCase,
     FindAllRoutesUseCase,
@@ -33,6 +33,7 @@ import { PrismaRouteRepository } from './infrastructure/repositories/prisma-rout
     UpdateRouteUseCase,
     DeleteRouteUseCase,
     ReassignRouteUseCase,
+    OrdenesTrabajoModule,
   ],
 })
 export class RoutesModule {}
