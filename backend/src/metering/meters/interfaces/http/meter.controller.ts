@@ -17,6 +17,8 @@ import { CreateMeterDto } from '../dto/create-meter.dto';
 import { UpdateMeterDto } from '../dto/update-meter.dto';
 import { MeterResponseDto } from '../dto/meter-response.dto';
 import { FilterMeterDto } from '../dto/filter-meter.dto';
+import { ReplaceMeterDto } from '../dto/replace-meter.dto';
+import { ReemplazoMedidorResponseDto } from '../dto/reemplazo-medidor-response.dto';
 import { PaginatedMeterResponse } from '../types/paginated-meter-response.type';
 import { EnumStateDto } from 'src/shared/enums/state-catalog';
 import {
@@ -31,6 +33,8 @@ import { RequiredPermission } from 'src/infrastructure/common/decorators/require
 import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 import { ExportMeterDto } from '../dto/export-meter.dto';
+import { CurrentUser } from 'src/identity/auth/interfaces/http/decorators/current-user.decorator';
+import type { JwtPayload } from 'src/identity/auth/application/types/jwt.types';
 
 @ApiTags('meters')
 @ApiBearerAuth()
@@ -249,6 +253,48 @@ export class MeterController {
     @Param('id', ParseBigIntPipe) id: bigint,
   ): Promise<{ message: string }> {
     return this.meterService.remove(id);
+  }
+
+  /**
+   * Reemplazar / Cambiar medidor en contrato con resolución económica auditable
+   * POST /meters/replace
+   */
+  @ApiOperation({
+    summary: 'Reemplazar medidor en contrato',
+    description:
+      'Ejecuta el ciclo de reemplazo de medidor de forma transaccional, registrando telemetría y resolución económica.',
+  })
+  @ApiBody({ type: ReplaceMeterDto })
+  @ApiResponse({
+    status: 201,
+    description: 'Reemplazo efectuado exitosamente',
+    type: ReemplazoMedidorResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Datos inválidos o lectura inconsistente',
+  })
+  @ApiResponse({ status: 404, description: 'Contrato o medidor no encontrado' })
+  @RequiredPermission('meters', 'update')
+  @Post('replace')
+  async replace(
+    @Body() replaceDto: ReplaceMeterDto,
+    @CurrentUser() user: JwtPayload,
+  ): Promise<ReemplazoMedidorResponseDto> {
+    const result = await this.meterService.replaceMeter(replaceDto, user.sub);
+    return ReemplazoMedidorResponseDto.fromEntity(result.reemplazo);
+  }
+
+  @ApiOperation({ summary: 'Aprobar tratamiento económico excepcional' })
+  @ApiResponse({ status: 200, type: ReemplazoMedidorResponseDto })
+  @RequiredPermission('meter-replacements', 'approve')
+  @Post('replacements/:id/approve')
+  async approveReplacement(
+    @Param('id', ParseBigIntPipe) id: bigint,
+    @CurrentUser() user: JwtPayload,
+  ): Promise<ReemplazoMedidorResponseDto> {
+    const result = await this.meterService.approveReplacement(id, user.sub);
+    return ReemplazoMedidorResponseDto.fromEntity(result.reemplazo);
   }
 }
 

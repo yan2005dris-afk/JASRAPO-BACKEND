@@ -9,6 +9,7 @@ import { UpdateMeterUseCase } from './application/use-cases/update-meter.use-cas
 import { RemoveMeterUseCase } from './application/use-cases/remove-meter.use-case';
 import { ExportMetersUseCase } from './application/use-cases/export-meters.use-case';
 import { ExportMetersPdfUseCase } from './application/use-cases/export-meters-pdf.use-case';
+import { ReplaceMeterUseCase } from './application/use-cases/replace-meter.use-case';
 import { MeterRepository } from './domain/repositories/meter.repository';
 import { PrismaMeterRepository } from './infrastructure/repositories/prisma-meter.repository';
 import { MetersInventoryPdfDocumentType } from './pdf/meters-inventory.pdf-type';
@@ -28,8 +29,14 @@ import { MetersInventoryPdfDocumentType } from './pdf/meters-inventory.pdf-type'
     RemoveMeterUseCase,
     ExportMetersUseCase,
     ExportMetersPdfUseCase,
+    ReplaceMeterUseCase,
   ],
-  exports: [MeterRepository, CreateMeterUseCase, FindOneMeterUseCase],
+  exports: [
+    MeterRepository,
+    CreateMeterUseCase,
+    FindOneMeterUseCase,
+    ReplaceMeterUseCase,
+  ],
 })
 export class MeterModule implements OnModuleInit {
   constructor(private readonly pdfService: PdfService) {}

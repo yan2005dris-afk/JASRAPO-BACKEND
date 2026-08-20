@@ -14,8 +14,10 @@ model HistorialMedidores {
   creadoPor            String?   @map("creado_por")
   actualizadoPor        String?   @map("actualizado_por")
   saldoPendienteCambio Decimal?  @default(0) @map("saldo_pendiente_cambio") @db.Decimal
-  contrato             Contratos @relation(fields: [contratoId], references: [contratoId])
-  medidor              Medidores @relation(fields: [medidorId], references: [medidorId])
+  contrato             Contratos          @relation(fields: [contratoId], references: [contratoId])
+  medidor              Medidores          @relation(fields: [medidorId], references: [medidorId])
+  reemplazosSaliente   ReemplazoMedidor?  @relation("ReemplazoMedidorSaliente")
+  reemplazosEntrante   ReemplazoMedidor?  @relation("ReemplazoMedidorEntrante")
 
   @@index([medidorId])
   @@index([contratoId])

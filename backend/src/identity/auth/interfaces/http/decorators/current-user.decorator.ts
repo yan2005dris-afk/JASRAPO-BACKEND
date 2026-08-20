@@ -7,7 +7,10 @@ import type { JwtPayload } from '../../../application/types/jwt.types';
  * Ejemplo: @CurrentUser() user: JwtPayload
  */
 export const CurrentUser = createParamDecorator(
-  (data: keyof JwtPayload | undefined, ctx: ExecutionContext): any => {
+  (
+    data: keyof JwtPayload | undefined,
+    ctx: ExecutionContext,
+  ): JwtPayload | JwtPayload[keyof JwtPayload] | undefined => {
     const request = ctx.switchToHttp().getRequest<{ user: JwtPayload }>();
     const user = request.user;
 

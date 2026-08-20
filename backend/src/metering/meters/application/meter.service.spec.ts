@@ -8,6 +8,7 @@ import { UpdateMeterUseCase } from './use-cases/update-meter.use-case';
 import { RemoveMeterUseCase } from './use-cases/remove-meter.use-case';
 import { ExportMetersUseCase } from './use-cases/export-meters.use-case';
 import { ExportMetersPdfUseCase } from './use-cases/export-meters-pdf.use-case';
+import { ReplaceMeterUseCase } from './use-cases/replace-meter.use-case';
 
 describe('MeterService', () => {
   let service: MeterService;
@@ -18,6 +19,7 @@ describe('MeterService', () => {
   let removeUseCase: RemoveMeterUseCase;
   let exportMetersUseCase: ExportMetersUseCase;
   let exportMetersPdfUseCase: ExportMetersPdfUseCase;
+  let replaceUseCase: ReplaceMeterUseCase;
 
   const mockMedidor = {
     medidorId: BigInt(1),
@@ -30,17 +32,15 @@ describe('MeterService', () => {
     motivo: null,
     latitud: null,
     longitud: null,
-    deletedAt: null,
     createdAt: new Date(),
     updatedAt: new Date(),
+    deletedAt: null,
   };
 
   const mockPaginatedResponse = {
-    data: [mockMedidor],
-    meta: {
+    datos: [mockMedidor],
+    paginacion: {
       total: 1,
-      page: 1,
-      limit: 10,
       ultimaPagina: 1,
       paginaActual: 1,
       porPagina: 10,
@@ -61,6 +61,7 @@ describe('MeterService', () => {
         { provide: RemoveMeterUseCase, useValue: { execute: jest.fn() } },
         { provide: ExportMetersUseCase, useValue: { execute: jest.fn() } },
         { provide: ExportMetersPdfUseCase, useValue: { execute: jest.fn() } },
+        { provide: ReplaceMeterUseCase, useValue: { execute: jest.fn() } },
       ],
     }).compile();
 
@@ -74,6 +75,7 @@ describe('MeterService', () => {
     exportMetersPdfUseCase = module.get<ExportMetersPdfUseCase>(
       ExportMetersPdfUseCase,
     );
+    replaceUseCase = module.get<ReplaceMeterUseCase>(ReplaceMeterUseCase);
   });
 
   it('should be defined', () => {
@@ -171,5 +173,34 @@ describe('MeterService', () => {
       estado: 'BODEGA',
     });
     expect(result).toBe(buffer);
+  });
+
+  it('replaceMeter should delegate to ReplaceMeterUseCase', async () => {
+    const dto = {
+      claveIdempotencia: '123e4567-e89b-42d3-a456-426614174000',
+      contratoId: '1',
+      nuevoMedidorId: '2',
+      lecturaFinalSaliente: 530,
+      motivo: 'DANO' as any,
+      tratamientoSaliente: 'COBRO_REAL' as any,
+      tratamientoEntrante: 'FACTURAR_PERIODO_ACTUAL' as any,
+      periodoOrigenId: 1,
+      mesOrigen: 8,
+      mesDestino: 9,
+    };
+    const expected = { reemplazo: {} } as any;
+    jest.spyOn(replaceUseCase, 'execute').mockResolvedValue(expected);
+    const result = await service.replaceMeter(dto, 1);
+    expect(result).toBe(expected);
+    expect(replaceUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        contratoId: BigInt(1),
+        nuevoMedidorId: BigInt(2),
+        lecturaFinalSaliente: 530,
+        mesOrigen: 8,
+        mesDestino: 9,
+        solicitadoPorUsuarioId: 1,
+      }),
+    );
   });
 });

@@ -10,10 +10,13 @@ import { UpdateMeterUseCase } from './use-cases/update-meter.use-case';
 import { RemoveMeterUseCase } from './use-cases/remove-meter.use-case';
 import { ExportMetersUseCase } from './use-cases/export-meters.use-case';
 import { ExportMetersPdfUseCase } from './use-cases/export-meters-pdf.use-case';
+import { ReplaceMeterUseCase } from './use-cases/replace-meter.use-case';
 import { MeterEntity } from '../domain/entities/meter.entity';
 import { METER_STATUS_LIST } from 'src/infrastructure/config/app.constants';
 import { PaginatedMeterResponse } from '../interfaces/types/paginated-meter-response.type';
 import { ExportMeterDto } from '../interfaces/dto/export-meter.dto';
+import { ReplaceMeterDto } from '../interfaces/dto/replace-meter.dto';
+import type { ReplaceMeterResult } from '../domain/types/meter.types';
 import { Readable } from 'node:stream';
 
 const UTF8_BOM = '\uFEFF';
@@ -28,6 +31,7 @@ export class MeterService {
     private readonly removeUseCase: RemoveMeterUseCase,
     private readonly exportMetersUseCase: ExportMetersUseCase,
     private readonly exportMetersPdfUseCase: ExportMetersPdfUseCase,
+    private readonly replaceMeterUseCase: ReplaceMeterUseCase,
   ) {}
 
   async create(createDto: CreateMeterDto): Promise<MeterEntity> {
@@ -48,6 +52,45 @@ export class MeterService {
 
   async remove(id: bigint): Promise<{ message: string }> {
     return this.removeUseCase.execute(id);
+  }
+
+  async replaceMeter(
+    dto: ReplaceMeterDto,
+    userId: number,
+  ): Promise<ReplaceMeterResult> {
+    return this.replaceMeterUseCase.execute({
+      contratoId: BigInt(dto.contratoId),
+      nuevoMedidorId: BigInt(dto.nuevoMedidorId),
+      lecturaFinalSaliente: dto.lecturaFinalSaliente,
+      lecturaInicialEntrante: dto.lecturaInicialEntrante,
+      motivo: dto.motivo,
+      responsabilidadDano: dto.responsabilidadDano,
+      detalleMotivo: dto.detalleMotivo,
+      tratamientoSaliente: dto.tratamientoSaliente,
+      tratamientoEntrante: dto.tratamientoEntrante,
+      porcentajeCobro: dto.porcentajeCobro,
+      ventanaPromedio: dto.ventanaPromedio,
+      periodoOrigenId: dto.periodoOrigenId,
+      periodoDestinoId: dto.periodoDestinoId,
+      mesOrigen: dto.mesOrigen,
+      mesDestino: dto.mesDestino,
+      ordenTrabajoId: dto.ordenTrabajoId
+        ? BigInt(dto.ordenTrabajoId)
+        : undefined,
+      solicitadoPorUsuarioId: userId,
+      autorizadoPorUsuarioId: userId,
+      claveIdempotencia: dto.claveIdempotencia,
+      fechaReemplazo: dto.fechaReemplazo
+        ? new Date(dto.fechaReemplazo)
+        : undefined,
+    });
+  }
+
+  async approveReplacement(
+    reemplazoId: bigint,
+    userId: number,
+  ): Promise<ReplaceMeterResult> {
+    return this.replaceMeterUseCase.approve(reemplazoId, userId);
   }
 
   async findAllStates(): Promise<EnumStateDto[]> {
