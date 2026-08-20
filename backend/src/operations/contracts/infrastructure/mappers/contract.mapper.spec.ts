@@ -64,6 +64,7 @@ describe('ContractMapper', () => {
                   lecturaId: 301n,
                   fecha: new Date('2024-06-15T12:00:00Z'),
                   lecturaActual: '125',
+                  lecturaAnterior: '100',
                 },
               ],
             },

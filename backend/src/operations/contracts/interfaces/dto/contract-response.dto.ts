@@ -93,6 +93,9 @@ export class ContractApprovedReadingDto {
 
   @ApiProperty({ example: 530 })
   lecturaActual: number;
+
+  @ApiProperty({ example: 500 })
+  lecturaAnterior: number;
 }
 
 export class ContractHistorialMedidorDto {
@@ -209,6 +212,7 @@ export class ContractResponseDto {
                   DateUtil.formatForFrontend(h.ultimaLecturaAprobada.fecha) ??
                   '',
                 lecturaActual: h.ultimaLecturaAprobada.lecturaActual,
+                lecturaAnterior: h.ultimaLecturaAprobada.lecturaAnterior,
               }
             : null,
           medidor: h.medidor,

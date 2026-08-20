@@ -41,6 +41,7 @@ export interface ContractApprovedReadingRef {
   lecturaId: bigint;
   fecha: Date;
   lecturaActual: number;
+  lecturaAnterior: number;
 }
 
 export interface ContractMeterHistoryRef {

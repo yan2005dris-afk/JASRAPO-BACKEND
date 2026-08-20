@@ -82,6 +82,7 @@ export class ContractMapper {
                     lecturaId: h.medidor.lecturas[0].lecturaId,
                     fecha: h.medidor.lecturas[0].fecha,
                     lecturaActual: Number(h.medidor.lecturas[0].lecturaActual),
+                    lecturaAnterior: Number(h.medidor.lecturas[0].lecturaAnterior),
                   }
                 : null,
           }))
