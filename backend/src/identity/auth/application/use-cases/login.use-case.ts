@@ -23,7 +23,7 @@ import { UnauthorizedDomainException } from 'src/shared/domain/exceptions/domain
 interface ValidatedUser {
   usuarioId: number;
   email: string;
-  clave: string;
+  clave: string | null;
   deletedAt?: Date | null;
   nombres: string | null;
   apellidos: string | null;
@@ -127,6 +127,16 @@ export class LoginUseCase {
       );
       throw new UnauthorizedDomainException(
         `Cuenta bloqueada temporalmente. Intenta en ${minutesRemaining} minutos.`,
+      );
+    }
+
+    // Usuario nuevo sin contraseña aceptada (aún pendiente de invitación)
+    if (!user.clave) {
+      this.logger.warn(
+        `[LOGIN] Intento de login en usuario sin contraseña configurada: user=${user.usuarioId}`,
+      );
+      throw new UnauthorizedDomainException(
+        'Debe aceptar la invitación por email antes de iniciar sesión.',
       );
     }
 
