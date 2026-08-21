@@ -1,18 +1,21 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { UserRepository } from '../../domain/repositories/user.repository';
-import { InvitationService } from '../../../auth/application/services/invitation.service';
 import { PrismaService } from 'src/infrastructure/prisma/prisma.service';
+import { MailService } from 'src/infrastructure/mail/application/mail.service';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
 import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
+import { InvitationTokenGeneratorService } from '../../../auth/application/services/invitation-token-generator.service';
+import { createHash } from 'crypto';
 
 @LogContext()
 @Injectable()
 export class ResendInvitationUseCase {
   constructor(
     private readonly userRepository: UserRepository,
-    private readonly invitationService: InvitationService,
     private readonly prisma: PrismaService,
+    private readonly mailService: MailService,
+    private readonly tokenGenerator: InvitationTokenGeneratorService,
     private readonly logger: LoggerService,
   ) {}
 
@@ -41,44 +44,46 @@ export class ResendInvitationUseCase {
       );
     }
 
-    // 3. Reenviar (reutilizando mismo token)
+    // 3. Generar nuevo token y reenviar
     try {
-      // Generador no se llama aquí, reutilizamos el token existente
-      // El token plaintext NO está en BD, pero podemos regenerarlo si es necesario
-      // Por ahora: marcar emailSentAt = now, decrementar intentos si es necesario
+      const ttlHours = parseInt(process.env.INVITATION_TTL_HOURS || '48', 10);
+      const { tokenPlain, tokenHash } = this.tokenGenerator.generate();
+
+      const expiresAt = new Date();
+      expiresAt.setHours(expiresAt.getHours() + ttlHours);
 
       await this.prisma.usuarioInvitacion.update({
         where: { usuarioInvitacionId: invitation.usuarioInvitacionId },
         data: {
+          tokenHash,
+          expiresAt,
           emailSentAt: new Date(),
           emailAttempts: { increment: 1 },
+          emailFailedAt: null,
           updatedAt: new Date(),
         },
       });
 
-      // TODO: Disparar email con token plaintext
-      // Por ahora: solo marcamos que se intentó reenviar
-      // mailService.sendInvitationEmail(user.email, tokenPlain);
+      await this.mailService.sendInvitation(
+        user.email,
+        user.nombres || '',
+        tokenPlain,
+        expiresAt,
+      );
 
       this.logger.log(
         `Invitation re-sent for user ${usuarioId} by admin ${adminId}`,
-        {
-          invitationId: invitation.usuarioInvitacionId,
-          adminId,
-        },
       );
 
       return {
         message: 'Invitación reenviada exitosamente',
         invitationId: invitation.usuarioInvitacionId,
-        expiresAt: invitation.expiresAt,
+        expiresAt,
       };
     } catch (error) {
-      this.logger.error('Error resending invitation', {
-        usuarioId,
-        invitationId: invitation.usuarioInvitacionId,
-        error: (error as Error).message,
-      });
+      this.logger.error(
+        `Error resending invitation: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
       throw error;
     }
   }

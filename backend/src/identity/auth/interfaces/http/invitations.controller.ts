@@ -5,11 +5,16 @@ import {
   ApiResponse,
   ApiBody,
   ApiParam,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 import { Public } from 'src/infrastructure/common/decorators/public.decorator';
+import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 import { AcceptInvitationUseCase } from '../../application/use-cases/accept-invitation.use-case';
 import { InvitationService } from '../../application/services/invitation.service';
+import { InvitationMetricsService } from '../../application/services/invitation-metrics.service';
 import { AcceptInvitationDto } from '../dto/accept-invitation.dto';
 import { InvitationPreviewDto } from '../dto/invitation-preview.dto';
 
@@ -20,6 +25,7 @@ export class InvitationsController {
   constructor(
     private readonly acceptInvitationUseCase: AcceptInvitationUseCase,
     private readonly invitationService: InvitationService,
+    private readonly metricsService: InvitationMetricsService,
   ) {}
 
   @ApiOperation({
@@ -100,5 +106,22 @@ export class InvitationsController {
       usuarioId: usuario.usuarioId,
       email: usuario.email,
     };
+  }
+
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Obtener métricas de invitaciones',
+    description:
+      'Retorna estadísticas sobre el proceso de invitaciones: creadas, aceptadas, pendientes, etc.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Métricas de invitaciones',
+  })
+  @RequiredPermission('users', 'read')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Get('metrics')
+  async getMetrics() {
+    return await this.metricsService.getMetrics();
   }
 }

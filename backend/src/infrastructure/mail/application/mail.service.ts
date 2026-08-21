@@ -201,4 +201,31 @@ export class MailService {
       },
     ];
   }
+
+  async sendInvitation(
+    to: string,
+    nombres: string,
+    token: string,
+    expiresAt: Date,
+  ): Promise<string> {
+    const ttlHours = Math.ceil(
+      (expiresAt.getTime() - new Date().getTime()) / (1000 * 60 * 60),
+    );
+
+    const jobId = await this.sendQueued({
+      version: 2,
+      to,
+      subject: 'Completa tu registro en JASRAPO-Olon',
+      template: 'invitation',
+      context: {
+        nombres: nombres || to.split('@')[0],
+        token,
+        acceptUrl: `${process.env.APP_URL || 'https://app.jasrapo.com'}/auth/accept-invitation?token=${encodeURIComponent(token)}`,
+        expiresInHours: ttlHours,
+      },
+    });
+
+    this.logger.log(`Invitation email queued for ${to} (jobId=${jobId})`);
+    return jobId;
+  }
 }

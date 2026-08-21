@@ -1,8 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from 'src/infrastructure/prisma/prisma.service';
 import { InvitationTokenGeneratorService } from './invitation-token-generator.service';
 import { createHash } from 'crypto';
+import { MailService } from 'src/infrastructure/mail/application/mail.service';
 import {
   InvitationNotFoundException,
   InvitationExpiredException,
@@ -12,9 +13,12 @@ import { Usuarios, UsuarioInvitacion } from '@prisma/client';
 
 @Injectable()
 export class InvitationService {
+  private readonly logger = new Logger(InvitationService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly tokenGenerator: InvitationTokenGeneratorService,
+    private readonly mailService: MailService,
   ) {}
 
   async createAndSendInvitation(
@@ -34,6 +38,7 @@ export class InvitationService {
         expiresAt,
         invitedByUserId: invitedByUserId ?? null,
         termsVersion: 'v0',
+        emailSentAt: new Date(),
       },
       include: {
         usuario: true,
@@ -41,8 +46,28 @@ export class InvitationService {
       },
     });
 
-    // TODO: Implementar envío de email con token plaintext
-    // mailService.sendInvitationEmail(usuario.email, tokenPlain);
+    try {
+      await this.mailService.sendInvitation(
+        usuario.email,
+        usuario.nombres || '',
+        tokenPlain,
+        expiresAt,
+      );
+      this.logger.log(
+        `Invitation email queued for usuario=${usuario.usuarioId} (${usuario.email})`,
+      );
+    } catch (error) {
+      this.logger.error(
+        `Failed to queue invitation email for usuario=${usuario.usuarioId}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
+      await this.prisma.usuarioInvitacion.update({
+        where: { usuarioInvitacionId: invitation.usuarioInvitacionId },
+        data: {
+          emailFailedAt: new Date(),
+          emailAttempts: 1,
+        },
+      });
+    }
 
     return invitation;
   }

@@ -18,7 +18,11 @@ import { UnlockUserAccountUseCase } from './application/use-cases/unlock-user-ac
 import { AcceptInvitationUseCase } from './application/use-cases/accept-invitation.use-case';
 import { InvitationService } from './application/services/invitation.service';
 import { InvitationTokenGeneratorService } from './application/services/invitation-token-generator.service';
+import { InvitationRetryService } from './application/services/invitation-retry.service';
+import { InvitationRetryHandler } from './application/services/invitation-retry.handler';
+import { InvitationMetricsService } from './application/services/invitation-metrics.service';
 import { AuditModule } from 'src/infrastructure/audit/audit.module';
+import { MailModule } from 'src/infrastructure/mail/mail.module';
 import { PrismaService } from 'src/infrastructure/prisma/prisma.service';
 import { UserRepository } from 'src/identity/users/domain/repositories/user.repository';
 import type { StringValue } from 'ms';
@@ -28,6 +32,7 @@ import type { StringValue } from 'ms';
     forwardRef(() => UserModule),
     SessionsModule,
     AuditModule,
+    MailModule,
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
@@ -55,6 +60,9 @@ import type { StringValue } from 'ms';
     AcceptInvitationUseCase,
     InvitationService,
     InvitationTokenGeneratorService,
+    InvitationRetryService,
+    InvitationRetryHandler,
+    InvitationMetricsService,
     PrismaService,
   ],
   exports: [
@@ -66,6 +74,8 @@ import type { StringValue } from 'ms';
     UnlockUserAccountUseCase,
     AcceptInvitationUseCase,
     InvitationService,
+    InvitationTokenGeneratorService,
+    InvitationRetryService,
   ],
 })
 export class AuthModule {}
