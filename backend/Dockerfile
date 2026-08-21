@@ -36,8 +36,9 @@ RUN pnpm --filter backend exec prisma generate
 RUN pnpm --filter backend run build
 
 # 3. Resolver dependencias de producción usando la caché del store
+# --legacy: pnpm v10+ requires inject-workspace-packages by default; legacy restores previous behavior
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-    pnpm deploy --filter=backend --prod /prod/backend
+    pnpm deploy --filter=backend --prod --legacy /prod/backend
 
 # ─── Stage: Runner (Producción) ───────────────────────────────────────────────
 FROM node:22-alpine AS runner
