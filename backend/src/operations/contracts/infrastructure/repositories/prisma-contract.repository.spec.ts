@@ -228,10 +228,11 @@ describe('PrismaContractRepository', () => {
         },
         sectores: { findUnique: jest.fn() },
         contratos: {
-          create: jest.fn().mockResolvedValue(rawContract),
-          findUnique: jest.fn().mockResolvedValue(rawContract),
+          create: jest.fn().mockResolvedValue({ ...rawContract, estado: 'PENDIENTE_PAGO' }),
+          findUnique: jest.fn().mockResolvedValue({ ...rawContract, estado: 'PENDIENTE_PAGO' }),
         },
         historialMedidores: { create: jest.fn() },
+        $executeRaw: jest.fn().mockResolvedValue(1),
       };
 
       prisma.$transaction.mockImplementation((callback) => callback(txMock));
@@ -244,7 +245,7 @@ describe('PrismaContractRepository', () => {
         sectorId: null,
         numeroGuia: 'G-001',
         direccionSuministro: 'Av. 1',
-        estado: 'SOLICITUD',
+        estado: 'PENDIENTE_PAGO',
         lecturaInicial: 0,
       });
 
@@ -253,6 +254,7 @@ describe('PrismaContractRepository', () => {
         where: { medidorId: 100n },
         data: { estado: EstadoMedidor.PENDIENTE },
       });
+      expect(txMock.$executeRaw).toHaveBeenCalled();
     });
 
     it('should throw InvalidDomainOperationException if meter is not in BODEGA', async () => {
@@ -286,7 +288,7 @@ describe('PrismaContractRepository', () => {
           sectorId: null,
           numeroGuia: 'G-001',
           direccionSuministro: 'Av. 1',
-          estado: 'SOLICITUD' as any,
+          estado: 'PENDIENTE_PAGO' as any,
           lecturaInicial: 0,
         }),
       ).rejects.toThrow(InvalidDomainOperationException);

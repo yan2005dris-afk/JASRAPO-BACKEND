@@ -151,4 +151,56 @@ describe('PagoValidadoHandler (T-006, post-refactor RF-002)', () => {
     expect(sriDispatcher.tryEmit).toHaveBeenCalledTimes(1);
     expect(sriDispatcher.tryEmit).toHaveBeenCalledWith(BigInt(42));
   });
+
+  it('should transition contract to PENDIENTE_INSTALACION when prefactura mes is 0', async () => {
+    const mockTx = {
+      prefacturas: {
+        findMany: jest.fn().mockResolvedValue([
+          { prefacturaId: BigInt(10), contratoId: BigInt(99), mes: 0 },
+        ]),
+        updateMany: jest.fn().mockResolvedValue({ count: 1 }),
+      },
+      contratos: {
+        updateMany: jest.fn().mockResolvedValue({ count: 1 }),
+      },
+    };
+
+    paymentRepository.executeTransaction = jest.fn().mockImplementation(async (cb) => {
+      return cb(mockTx);
+    });
+
+    paymentRepository.findPaymentDetailsByPagoId.mockResolvedValue([
+      createDetallePago({ comprobanteId: BigInt(42), montoAbonado: 100 }),
+    ]);
+    paymentRepository.findPaymentDetailsByComprobanteId.mockResolvedValue([
+      createDetallePago({ comprobanteId: BigInt(42), montoAbonado: 100 }),
+    ]);
+    paymentRepository.findComprobanteById.mockResolvedValue({
+      id: BigInt(42),
+      importeTotal: 100,
+    });
+    sriDispatcher.tryEmit.mockResolvedValue('EMITTED');
+
+    await handler.procesarPagoValidado(BigInt(1));
+
+    expect(mockTx.prefacturas.updateMany).toHaveBeenCalledWith({
+      where: { comprobanteId: BigInt(42), deletedAt: null },
+      data: {
+        estado: 'PAGADA',
+        saldoActual: 0,
+        saldoVencido: 0,
+        abono: 100,
+      },
+    });
+    expect(mockTx.contratos.updateMany).toHaveBeenCalledWith({
+      where: {
+        contratoId: { in: [BigInt(99)] },
+        estado: 'PENDIENTE_PAGO',
+        deletedAt: null,
+      },
+      data: {
+        estado: 'PENDIENTE_INSTALACION',
+      },
+    });
+  });
 });

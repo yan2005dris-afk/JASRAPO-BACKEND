@@ -50,7 +50,7 @@ describe('CreateContractUseCase', () => {
 
     mockContractRepository.createContractWithMeterHistory.mockResolvedValue({
       contratoId: BigInt(1),
-      estado: 'SOLICITUD',
+      estado: 'PENDIENTE_PAGO',
     });
 
     const result = await useCase.execute(dto);
@@ -65,11 +65,11 @@ describe('CreateContractUseCase', () => {
       sectorId: null,
       numeroGuia: 'GUIA-001',
       direccionSuministro: 'Av. Principal 123',
-      estado: 'SOLICITUD',
+      estado: 'PENDIENTE_PAGO',
       creadoPor: undefined,
       lecturaInicial: 0,
     });
-    expect(result).toEqual({ contratoId: BigInt(1), estado: 'SOLICITUD' });
+    expect(result).toEqual({ contratoId: BigInt(1), estado: 'PENDIENTE_PAGO' });
   });
 
   it('should create contract with optional fields (S1.2)', async () => {
