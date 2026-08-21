@@ -64,6 +64,11 @@ export class ReportsModule implements OnModuleInit {
     this.pdfService.registerDocumentType(
       createAccountStatementPdfDocumentType('modern'),
     );
+    // payment-agreement is canonical-only (PDF-01): the dispatcher routes it
+    // to `-unique`. Legacy/modern stay registered for backward compatibility.
+    this.pdfService.registerDocumentType(
+      createPaymentAgreementPdfDocumentType('unique'),
+    );
     this.pdfService.registerDocumentType(
       createPaymentAgreementPdfDocumentType('legacy'),
     );
