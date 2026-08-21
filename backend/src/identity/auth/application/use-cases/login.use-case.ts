@@ -23,7 +23,7 @@ import { UnauthorizedDomainException } from 'src/shared/domain/exceptions/domain
 interface ValidatedUser {
   usuarioId: number;
   email: string;
-  clave: string;
+  clave: string | null;
   deletedAt?: Date | null;
   nombres: string | null;
   apellidos: string | null;

@@ -20,6 +20,7 @@ import { InvitationService } from './application/services/invitation.service';
 import { InvitationTokenGeneratorService } from './application/services/invitation-token-generator.service';
 import { AuditModule } from 'src/infrastructure/audit/audit.module';
 import { PrismaService } from 'src/infrastructure/prisma/prisma.service';
+import { UserRepository } from 'src/identity/users/domain/repositories/user.repository';
 import type { StringValue } from 'ms';
 
 @Module({
