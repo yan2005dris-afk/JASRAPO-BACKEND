@@ -25,6 +25,7 @@ export class PreInvoiceEntity {
   abono: number;
   saldoActual: number;
   mesesAtrasado: number;
+  mes: number;
   estado: string;
   aprobadaPor: string | null;
   fechaAprobacion: Date | null;

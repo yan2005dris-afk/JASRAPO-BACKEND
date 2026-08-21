@@ -43,6 +43,7 @@ openssl req -x509 -newkey rsa:2048 -nodes \
   -out    "${CERT_FILE}" \
   -days 365 \
   -subj "/C=EC/ST=Pichincha/L=Quito/O=JASRAPO/OU=dev/CN=localhost" \
+  -addext "subjectAltName=DNS:localhost,DNS:rustfs,IP:127.0.0.1" \
   2>/dev/null
 
 # rustfs runs as uid 10001 inside the container and bind-mounts ./certs

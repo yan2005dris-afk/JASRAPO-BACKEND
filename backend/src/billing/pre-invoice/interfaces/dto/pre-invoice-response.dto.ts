@@ -63,6 +63,11 @@ export class PreInvoiceResponseDto {
   @ApiProperty({ description: 'Period ID' })
   periodoId: number;
 
+  @ApiProperty({
+    description: 'Month (0 for one-off installation, 1-12 for monthly)',
+  })
+  mes: number;
+
   @ApiProperty({ description: 'Subtotal' })
   subtotal: number;
 
@@ -133,6 +138,7 @@ export class PreInvoiceResponseDto {
     dto.contratoId = Number(entity.contratoId);
     dto.loteId = entity.loteId ? Number(entity.loteId) : null;
     dto.periodoId = entity.periodoId;
+    dto.mes = entity.mes ?? 1;
     dto.subtotal = Number(entity.subtotal);
     dto.iva = Number(entity.iva);
     dto.descuentoTotal = Number(entity.descuentoTotal);
