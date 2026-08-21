@@ -63,7 +63,9 @@ export class PreInvoiceResponseDto {
   @ApiProperty({ description: 'Period ID' })
   periodoId: number;
 
-  @ApiProperty({ description: 'Month (0 for one-off installation, 1-12 for monthly)' })
+  @ApiProperty({
+    description: 'Month (0 for one-off installation, 1-12 for monthly)',
+  })
   mes: number;
 
   @ApiProperty({ description: 'Subtotal' })

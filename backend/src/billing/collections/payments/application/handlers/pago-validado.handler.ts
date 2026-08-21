@@ -58,7 +58,7 @@ export class PagoValidadoHandler {
       // Marcar prefactura vinculada como PAGADA y actualizar contratos de instalación (mes = 0)
       await this.paymentRepository.executeTransaction?.(async (tx: any) => {
         const prismaClient = tx ?? (this.paymentRepository as any).prisma;
-        
+
         const prefacturas = await prismaClient.prefacturas.findMany({
           where: { comprobanteId, deletedAt: null },
           select: { prefacturaId: true, contratoId: true, mes: true },

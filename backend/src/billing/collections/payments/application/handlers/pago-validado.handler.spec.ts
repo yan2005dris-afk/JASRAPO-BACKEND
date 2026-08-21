@@ -155,9 +155,11 @@ describe('PagoValidadoHandler (T-006, post-refactor RF-002)', () => {
   it('should transition contract to PENDIENTE_INSTALACION when prefactura mes is 0', async () => {
     const mockTx = {
       prefacturas: {
-        findMany: jest.fn().mockResolvedValue([
-          { prefacturaId: BigInt(10), contratoId: BigInt(99), mes: 0 },
-        ]),
+        findMany: jest
+          .fn()
+          .mockResolvedValue([
+            { prefacturaId: BigInt(10), contratoId: BigInt(99), mes: 0 },
+          ]),
         updateMany: jest.fn().mockResolvedValue({ count: 1 }),
       },
       contratos: {
@@ -165,9 +167,11 @@ describe('PagoValidadoHandler (T-006, post-refactor RF-002)', () => {
       },
     };
 
-    paymentRepository.executeTransaction = jest.fn().mockImplementation(async (cb) => {
-      return cb(mockTx);
-    });
+    paymentRepository.executeTransaction = jest
+      .fn()
+      .mockImplementation(async (cb) => {
+        return cb(mockTx);
+      });
 
     paymentRepository.findPaymentDetailsByPagoId.mockResolvedValue([
       createDetallePago({ comprobanteId: BigInt(42), montoAbonado: 100 }),

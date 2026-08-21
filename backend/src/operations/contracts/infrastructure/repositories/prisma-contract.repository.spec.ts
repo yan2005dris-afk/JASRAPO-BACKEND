@@ -228,8 +228,12 @@ describe('PrismaContractRepository', () => {
         },
         sectores: { findUnique: jest.fn() },
         contratos: {
-          create: jest.fn().mockResolvedValue({ ...rawContract, estado: 'PENDIENTE_PAGO' }),
-          findUnique: jest.fn().mockResolvedValue({ ...rawContract, estado: 'PENDIENTE_PAGO' }),
+          create: jest
+            .fn()
+            .mockResolvedValue({ ...rawContract, estado: 'PENDIENTE_PAGO' }),
+          findUnique: jest
+            .fn()
+            .mockResolvedValue({ ...rawContract, estado: 'PENDIENTE_PAGO' }),
         },
         historialMedidores: { create: jest.fn() },
         $executeRaw: jest.fn().mockResolvedValue(1),
