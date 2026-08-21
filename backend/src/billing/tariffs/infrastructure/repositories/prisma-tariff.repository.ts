@@ -26,16 +26,18 @@ export const safeTariffCategoriesSelect = {
   categoriaTarifaId: true,
   nombre: true,
   descripcion: true,
-  valorBase: true,
   consumoMinimoMensual: true,
-  valorExcedenteM3: true,
   fechaVigenciaDesde: true,
   fechaVigenciaHasta: true,
   activo: true,
   createdAt: true,
   updatedAt: true,
   deletedAt: true,
-} satisfies Prisma.CategoriaTarifaSelect;
+  rubros: {
+    where: { deletedAt: null },
+    orderBy: { rubroId: 'asc' },
+  },
+} as Prisma.CategoriaTarifaSelect;
 
 @Injectable()
 export class PrismaTariffRepository implements TariffRepository {
@@ -106,9 +108,7 @@ export class PrismaTariffRepository implements TariffRepository {
         data: {
           nombre: data.nombre,
           descripcion: data.descripcion,
-          valorBase: new Prisma.Decimal(data.valorBase ?? 0),
-          consumoMinimoMensual: data.consumoMinimoMensual,
-          valorExcedenteM3: new Prisma.Decimal(data.valorExcedenteM3 ?? 0),
+          consumoMinimoMensual: data.consumoMinimoMensual ?? 10,
           fechaVigenciaDesde: data.fechaVigenciaDesde ?? now,
           fechaVigenciaHasta: data.fechaVigenciaHasta ?? null,
           activo: data.activo ?? true,
@@ -186,18 +186,10 @@ export class PrismaTariffRepository implements TariffRepository {
               data.descripcion !== undefined
                 ? data.descripcion
                 : current.descripcion,
-            valorBase:
-              data.valorBase !== undefined
-                ? new Prisma.Decimal(data.valorBase)
-                : current.valorBase,
             consumoMinimoMensual:
               data.consumoMinimoMensual !== undefined
                 ? data.consumoMinimoMensual
                 : current.consumoMinimoMensual,
-            valorExcedenteM3:
-              data.valorExcedenteM3 !== undefined
-                ? new Prisma.Decimal(data.valorExcedenteM3)
-                : current.valorExcedenteM3,
             fechaVigenciaDesde: now,
             fechaVigenciaHasta: null,
             activo: true,

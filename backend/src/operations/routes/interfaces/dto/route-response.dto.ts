@@ -16,8 +16,12 @@ export class RouteResponseDto {
   })
   descripcion?: string | null;
 
-  @ApiProperty({ example: 10, description: 'ID del operario asignado' })
-  operarioId: number;
+  @ApiPropertyOptional({
+    example: 10,
+    nullable: true,
+    description: 'ID del operario asignado',
+  })
+  operarioId: number | null;
 
   @ApiProperty({ example: 'REGULAR', description: 'Tipo de ruta' })
   tipoRuta: string;

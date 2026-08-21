@@ -2,9 +2,6 @@ export interface ContractTariffCategoryRef {
   categoriaTarifaId: number;
   nombre: string;
   descripcion: string | null;
-  valorBase: number;
-  consumoMinimoMensual: number | null;
-  valorExcedenteM3: number | null;
 }
 
 export interface ContractClientRef {

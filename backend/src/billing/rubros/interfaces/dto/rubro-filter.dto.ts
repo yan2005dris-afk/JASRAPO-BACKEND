@@ -38,6 +38,16 @@ export class RubroFilterDto {
   tarifaImpuestoId?: number;
 
   @ApiPropertyOptional({
+    description:
+      'Filtrar por categoría de tarifa (SC-241). Si se omite, se listan rubros de todas las categorías (incluyendo los sin categoría).',
+    example: 1,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  categoriaTarifaId?: number;
+
+  @ApiPropertyOptional({
     description: 'Filtrar por estado activo/inactivo',
     type: Boolean,
     example: true,

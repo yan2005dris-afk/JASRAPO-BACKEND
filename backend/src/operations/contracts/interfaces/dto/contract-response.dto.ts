@@ -11,15 +11,6 @@ export class ContractCategoriaTarifaDto {
 
   @ApiPropertyOptional({ example: 'Tarifa básica residencial', nullable: true })
   descripcion: string | null;
-
-  @ApiProperty({ example: 3.5 })
-  valorBase: number;
-
-  @ApiPropertyOptional({ example: 10, nullable: true })
-  consumoMinimoMensual: number | null;
-
-  @ApiPropertyOptional({ example: 0.5, nullable: true })
-  valorExcedenteM3: number | null;
 }
 
 export class ContractClienteDto {

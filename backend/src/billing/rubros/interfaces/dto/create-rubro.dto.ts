@@ -67,6 +67,15 @@ export class CreateRubroDto {
   tarifaImpuestoId!: number;
 
   @ApiPropertyOptional({
+    description: 'ID de la categoría tarifaria asociada',
+    example: 1,
+    nullable: true,
+  })
+  @IsOptional()
+  @IsInt({ message: 'La categoría tarifaria debe ser un entero' })
+  categoriaTarifaId?: number | null;
+
+  @ApiPropertyOptional({
     description: 'Estado de activación del rubro',
     default: true,
     example: true,

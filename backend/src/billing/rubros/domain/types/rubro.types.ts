@@ -4,6 +4,7 @@ export interface RubroFilters {
   nombre?: string;
   tipoRubro?: TipoRubro;
   tarifaImpuestoId?: number;
+  categoriaTarifaId?: number;
   activo?: boolean;
   esAutomatico?: boolean;
 }
@@ -28,6 +29,7 @@ export interface CreateRubroData {
   precioUnitario: number;
   tipoRubro: TipoRubro;
   tarifaImpuestoId: number;
+  categoriaTarifaId?: number | null;
   activo?: boolean;
   esAutomatico?: boolean;
 }
@@ -39,6 +41,7 @@ export interface UpdateRubroData {
   precioUnitario?: number;
   tipoRubro?: TipoRubro;
   tarifaImpuestoId?: number;
+  categoriaTarifaId?: number | null;
   activo?: boolean;
   esAutomatico?: boolean;
   deletedAt?: Date | null;

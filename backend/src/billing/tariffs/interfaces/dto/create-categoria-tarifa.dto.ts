@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsInt, IsOptional, IsString } from 'class-validator';
 import { IsNotEmptyString } from 'src/infrastructure/common/decorators/is-not-empty-string.decorator';
 
 export class CreateCategoriaTarifaDto {
@@ -14,16 +14,15 @@ export class CreateCategoriaTarifaDto {
 
   @IsOptional()
   @Type(() => Number)
-  @IsNumber()
-  valorBase?: number;
-
-  @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
+  @IsInt()
   consumoMinimoMensual?: number;
 
+  /**
+   * ID de la tarifa de impuesto (CatalogoTarifasImpuesto) que se asigna a
+   * los Rubros auto-creados. Si no se pasa, se usa la primera activa.
+   */
   @IsOptional()
   @Type(() => Number)
-  @IsNumber()
-  valorExcedenteM3?: number;
+  @IsInt()
+  tarifaImpuestoId?: number;
 }

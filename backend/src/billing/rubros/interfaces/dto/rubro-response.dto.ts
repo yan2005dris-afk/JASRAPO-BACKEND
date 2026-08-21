@@ -103,4 +103,24 @@ export class RubroResponseDto {
     nullable: true,
   })
   deletedAt!: Date | null;
+
+  static fromEntity(entity: any): RubroResponseDto {
+    const dto = new RubroResponseDto();
+    dto.rubroId = entity.rubroId;
+    dto.codigoSri = entity.codigoSri;
+    dto.nombre = entity.nombre;
+    dto.descripcion = entity.descripcion;
+    dto.precioUnitario = Number(entity.precioUnitario);
+    dto.tipoRubro = entity.tipoRubro;
+    dto.tarifaImpuestoId = entity.tarifaImpuestoId;
+    if (entity.tarifaImpuesto) {
+      dto.tarifaImpuesto = entity.tarifaImpuesto;
+    }
+    dto.activo = entity.activo;
+    dto.esAutomatico = entity.esAutomatico;
+    dto.createdAt = entity.createdAt;
+    dto.updatedAt = entity.updatedAt;
+    dto.deletedAt = entity.deletedAt;
+    return dto;
+  }
 }
