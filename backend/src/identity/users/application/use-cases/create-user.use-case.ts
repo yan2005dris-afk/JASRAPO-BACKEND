@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import * as bcrypt from 'bcrypt';
 import { CreateUserDto } from '../../interfaces/dto/create-user.dto';
 import { ValidationUtil } from 'src/infrastructure/common/utils/validation.util';
 import { PhoneUtil } from 'src/infrastructure/common/utils/phone.util';
@@ -75,13 +74,10 @@ export class CreateUserUseCase {
       createUsersDto.avatar = { key: avatarKey };
     }
 
-    const temporaryPassword = 'TEMP_' + Date.now();
-    const hashedPassword = await bcrypt.hash(temporaryPassword, 10);
-
     try {
       return await this.userRepository.create({
         email: createUsersDto.email,
-        clave: hashedPassword,
+        clave: null, // Usuario nuevo sin contraseña hasta aceptar invitación
         nombres: createUsersDto.nombres,
         apellidos: createUsersDto.apellidos,
         telefono: cleanPhone,

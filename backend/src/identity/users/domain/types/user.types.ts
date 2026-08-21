@@ -49,7 +49,7 @@ export interface UserFilters {
 
 export interface CreateUserRepositoryData {
   email: string;
-  clave: string;
+  clave: string | null; // null para usuarios nuevos pendientes de aceptar invitación
   nombres: string;
   apellidos: string;
   telefono: string;
@@ -69,7 +69,7 @@ export interface UpdateUserRepositoryData {
 }
 
 export type UserWithPasswordAndLockout = UserEntity & {
-  clave: string;
+  clave: string | null; // null si el usuario no aceptó invitación aún
   intentosFallidos: number;
   ultimoIntentoFallidoEn: Date | null;
   bloqueadoHasta: Date | null;

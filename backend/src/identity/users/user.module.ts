@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { UserService } from './application/user.service';
 import { UserController } from './interfaces/http/user.controller';
 import { CreateUserUseCase } from './application/use-cases/create-user.use-case';
@@ -10,13 +10,16 @@ import { UpdateUserAvatarUseCase } from './application/use-cases/update-user-ava
 import { SoftDeleteUserUseCase } from './application/use-cases/soft-delete-user.use-case';
 import { GetEffectivePermissionsUseCase } from './application/use-cases/get-effective-permissions.use-case';
 import { UpdateUserPermissionsUseCase } from './application/use-cases/update-user-permissions.use-case';
+import { ResendInvitationUseCase } from './application/use-cases/resend-invitation.use-case';
+import { GetPendingInvitationsUseCase } from './application/use-cases/get-pending-invitations.use-case';
 import { UserRepository } from './domain/repositories/user.repository';
 import { PrismaUserRepository } from './infrastructure/repositories/prisma-user.repository';
 import { UserMapper } from './infrastructure/mappers/user.mapper';
 import { RolesModule } from '../roles/roles.module';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [RolesModule],
+  imports: [RolesModule, forwardRef(() => AuthModule)],
   controllers: [UserController],
   providers: [
     UserService,
@@ -29,6 +32,8 @@ import { RolesModule } from '../roles/roles.module';
     SoftDeleteUserUseCase,
     GetEffectivePermissionsUseCase,
     UpdateUserPermissionsUseCase,
+    ResendInvitationUseCase,
+    GetPendingInvitationsUseCase,
     UserMapper,
     {
       provide: UserRepository,

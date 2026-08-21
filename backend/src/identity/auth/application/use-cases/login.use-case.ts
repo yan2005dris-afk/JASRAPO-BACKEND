@@ -130,6 +130,16 @@ export class LoginUseCase {
       );
     }
 
+    // Usuario nuevo sin contraseña aceptada (aún pendiente de invitación)
+    if (!user.clave) {
+      this.logger.warn(
+        `[LOGIN] Intento de login en usuario sin contraseña configurada: user=${user.usuarioId}`,
+      );
+      throw new UnauthorizedDomainException(
+        'Debe aceptar la invitación por email antes de iniciar sesión.',
+      );
+    }
+
     const isPasswordValid = await bcrypt.compare(password, user.clave);
     if (!isPasswordValid) {
       try {

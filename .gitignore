@@ -3,6 +3,7 @@ FRONT/
 FRONT.rar
 .agents
 .atl
+JASRAPO-FRONTEND
 
 # --- Persistencia de Datos (Docker) ---
 backend-db/postgres-data/

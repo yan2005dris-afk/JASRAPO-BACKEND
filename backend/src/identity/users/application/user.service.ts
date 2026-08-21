@@ -1,6 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, forwardRef, Inject } from '@nestjs/common';
 import { CreateUserDto } from '../interfaces/dto/create-user.dto';
 import { UpdateUserDto } from '../interfaces/dto/update-user.dto';
+import { UserRepository } from '../domain/repositories/user.repository';
 import { CreateUserUseCase } from './use-cases/create-user.use-case';
 import { GetUserDetailUseCase } from './use-cases/get-user-detail.use-case';
 import { GetUserProfileUseCase } from './use-cases/get-user-profile.use-case';
@@ -9,6 +10,8 @@ import { UpdateUserUseCase } from './use-cases/update-user.use-case';
 import { UpdateUserAvatarUseCase } from './use-cases/update-user-avatar.use-case';
 import { SoftDeleteUserUseCase } from './use-cases/soft-delete-user.use-case';
 import { GetEffectivePermissionsUseCase } from './use-cases/get-effective-permissions.use-case';
+import { ResendInvitationUseCase } from './use-cases/resend-invitation.use-case';
+import { GetPendingInvitationsUseCase, PendingInvitation } from './use-cases/get-pending-invitations.use-case';
 import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
 import { UserEntity } from '../domain/entities/user.entity';
 import {
@@ -18,11 +21,13 @@ import {
 import { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
+import { InvitationService } from 'src/identity/auth/application/services/invitation.service';
 
 @LogContext()
 @Injectable()
 export class UserService {
   constructor(
+    private readonly userRepository: UserRepository,
     private readonly createUserUseCase: CreateUserUseCase,
     private readonly getUserDetailUseCase: GetUserDetailUseCase,
     private readonly getUserProfileUseCase: GetUserProfileUseCase,
@@ -31,7 +36,11 @@ export class UserService {
     private readonly updateUserAvatarUseCase: UpdateUserAvatarUseCase,
     private readonly softDeleteUserUseCase: SoftDeleteUserUseCase,
     private readonly getEffectivePermissionsUseCase: GetEffectivePermissionsUseCase,
+    private readonly resendInvitationUseCase: ResendInvitationUseCase,
+    private readonly getPendingInvitationsUseCase: GetPendingInvitationsUseCase,
     private readonly logger: LoggerService,
+    @Inject(forwardRef(() => InvitationService))
+    private readonly invitationService?: InvitationService,
   ) {}
 
   async user(criteria: {
@@ -48,8 +57,34 @@ export class UserService {
   async createUser(
     dto: CreateUserDto,
     file?: Express.Multer.File,
+    adminUserId?: number,
   ): Promise<UserEntity> {
-    return this.createUserUseCase.execute(dto, file);
+    const user = await this.createUserUseCase.execute(dto, file);
+
+    // Disparar creación de invitación después de crear el usuario
+    if (this.invitationService) {
+      try {
+        // InvitationService carga el usuario de la BD, solo necesita ID
+        const dbUser = await this.userRepository.findById(user.usuarioId);
+        if (dbUser) {
+          await this.invitationService.createAndSendInvitation(
+            {
+              usuarioId: dbUser.usuarioId,
+              email: dbUser.email,
+              nombres: dbUser.nombres,
+              apellidos: dbUser.apellidos,
+            } as any,
+            adminUserId,
+          );
+        }
+      } catch (error) {
+        this.logger.warn(
+          `Error creando invitación para usuario ${user.usuarioId}: ${(error as Error).message}`,
+        );
+      }
+    }
+
+    return user;
   }
 
   async users(
@@ -89,5 +124,16 @@ export class UserService {
         accion: p.accion,
       })),
     };
+  }
+
+  async resendInvitation(
+    usuarioId: number,
+    adminId: number,
+  ): Promise<{ message: string; invitationId: number; expiresAt: Date }> {
+    return this.resendInvitationUseCase.execute(usuarioId, adminId);
+  }
+
+  async getPendingInvitations(): Promise<PendingInvitation[]> {
+    return this.getPendingInvitationsUseCase.execute();
   }
 }
