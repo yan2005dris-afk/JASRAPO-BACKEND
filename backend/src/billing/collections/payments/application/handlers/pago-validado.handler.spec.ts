@@ -253,4 +253,3 @@ describe('PagoValidadoHandler (T-006, post-refactor RF-002)', () => {
     expect(mockTx.contratos.updateMany).toHaveBeenCalledTimes(2);
   });
 });
-
