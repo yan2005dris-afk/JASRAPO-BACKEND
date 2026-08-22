@@ -21,6 +21,7 @@ model Lecturas {
   periodoRel          Periodos           @relation(fields: [periodoId], references: [periodoId])
   ruta                Rutas?             @relation(fields: [rutaId], references: [rutaId], onDelete: SetNull)
   lecturaAnomalias LecturaAnomalia[]
+  ordenesTrabajo   OrdenesTrabajo[]
   prefacturas         Prefacturas[]
 
   @@index([periodoId])

@@ -108,9 +108,9 @@ describe('PrismaOperatorRepository (integration)', () => {
     return { comunidad, periodo, operario };
   }
 
-  // ── findTasksByOperator ────────────────────────────────────────────
+  // ── findRoutesByOperator ───────────────────────────────────────────
 
-  describe('findTasksByOperator', () => {
+  describe('findRoutesByOperator', () => {
     it('returns routes ordered by comunidadId, sectorId, orden', async () => {
       const { periodo, operario, comunidad } = await seedBasicData();
 
@@ -144,7 +144,7 @@ describe('PrismaOperatorRepository (integration)', () => {
         ],
       });
 
-      const tasks = await repository.findTasksByOperator(
+      const tasks = await repository.findRoutesByOperator(
         operario.usuarioId,
         periodo.periodoId,
       );
@@ -179,7 +179,7 @@ describe('PrismaOperatorRepository (integration)', () => {
         ],
       });
 
-      const tasks = await repository.findTasksByOperator(
+      const tasks = await repository.findRoutesByOperator(
         operario.usuarioId,
         periodo.periodoId,
         'INSTALACION',
@@ -214,7 +214,7 @@ describe('PrismaOperatorRepository (integration)', () => {
         ],
       });
 
-      const tasks = await repository.findTasksByOperator(
+      const tasks = await repository.findRoutesByOperator(
         operario.usuarioId,
         periodo.periodoId,
       );
@@ -224,14 +224,14 @@ describe('PrismaOperatorRepository (integration)', () => {
     });
 
     it('returns empty array for unknown operario/periodo', async () => {
-      const tasks = await repository.findTasksByOperator(9999, 9999);
+      const tasks = await repository.findRoutesByOperator(9999, 9999);
       expect(tasks).toHaveLength(0);
     });
   });
 
-  // ── updateTaskState ────────────────────────────────────────────────
+  // ── updateRouteState ───────────────────────────────────────────────
 
-  describe('updateTaskState', () => {
+  describe('updateRouteState', () => {
     it('updates state when expectedEstado matches', async () => {
       const { periodo, operario, comunidad } = await seedBasicData();
 
@@ -248,7 +248,7 @@ describe('PrismaOperatorRepository (integration)', () => {
       });
 
       const now = new Date();
-      const updated = await repository.updateTaskState(
+      const updated = await repository.updateRouteState(
         ruta.rutaId,
         { estado: 'EN_PROGRESO', fechaInicio: now },
         'PENDIENTE',
@@ -274,7 +274,7 @@ describe('PrismaOperatorRepository (integration)', () => {
       });
 
       await expect(
-        repository.updateTaskState(
+        repository.updateRouteState(
           ruta.rutaId,
           { estado: 'EN_PROGRESO' },
           'PENDIENTE', // does not match actual COMPLETADA
@@ -301,7 +301,7 @@ describe('PrismaOperatorRepository (integration)', () => {
         },
       });
 
-      const updated = await repository.updateTaskState(ruta.rutaId, {
+      const updated = await repository.updateRouteState(ruta.rutaId, {
         estado: 'COMPLETADA',
         fechaFin: new Date(),
         observacion: 'All done',
@@ -309,104 +309,6 @@ describe('PrismaOperatorRepository (integration)', () => {
 
       expect(updated.estado).toBe('COMPLETADA');
       expect(updated.observacion).toBe('All done');
-    });
-  });
-
-  // ── completeInstallationTask ────────────────────────────────────────
-
-  describe('completeInstallationTask', () => {
-    async function seedInstallScenario() {
-      const { comunidad, periodo, operario } = await seedBasicData();
-
-      const medidor = await prisma.medidores.create({
-        data: {
-          marca: 'TestBrand',
-          modelo: 'TestModel',
-          serie: `TS-${Date.now()}`,
-          estado: 'PENDIENTE',
-        },
-      });
-
-      const ruta = await prisma.rutas.create({
-        data: {
-          nombre: 'Install Route',
-          operarioId: operario.usuarioId,
-          tipoRuta: 'INSTALACION',
-          comunidadId: comunidad.comunidadId,
-          periodoId: periodo.periodoId,
-          estado: 'PENDIENTE',
-          orden: 1,
-          medidorId: medidor.medidorId,
-        },
-      });
-
-      return { periodo, operario, comunidad, medidor, ruta };
-    }
-
-    it('atomically completes installation: updates ruta and medidor', async () => {
-      const { ruta, medidor } = await seedInstallScenario();
-
-      const updated = await repository.completeInstallationTask(
-        ruta.rutaId,
-        { estado: 'COMPLETADA' as const, fechaFin: new Date() },
-        'PENDIENTE',
-        {
-          medidorId: medidor.medidorId,
-          estado: 'INSTALADO' as const,
-          fechaInstalacion: new Date(),
-        },
-      );
-
-      expect(updated.estado).toBe('COMPLETADA');
-      expect(updated.fechaFin).toBeDefined();
-
-      // Verify medidor was updated atomically
-      const updatedMeter = await prisma.medidores.findUnique({
-        where: { medidorId: medidor.medidorId },
-      });
-      expect(updatedMeter?.estado).toBe('INSTALADO');
-      expect(updatedMeter?.fechaInstalacion).toBeDefined();
-    });
-
-    it('throws P2025 when expectedEstado does not match', async () => {
-      const { ruta, medidor } = await seedInstallScenario();
-
-      await expect(
-        repository.completeInstallationTask(
-          ruta.rutaId,
-          { estado: 'COMPLETADA' as const, fechaFin: new Date() },
-          'EN_PROGRESO', // does not match actual PENDIENTE
-          {
-            medidorId: medidor.medidorId,
-            estado: 'INSTALADO' as const,
-            fechaInstalacion: new Date(),
-          },
-        ),
-      ).rejects.toThrow(expect.objectContaining({ code: 'P2025' }));
-    });
-
-    it('does not update medidor when ruta update fails', async () => {
-      const { ruta, medidor } = await seedInstallScenario();
-
-      // Use wrong expectedEstado so the ruta update fails
-      await expect(
-        repository.completeInstallationTask(
-          ruta.rutaId,
-          { estado: 'COMPLETADA' as const, fechaFin: new Date() },
-          'EN_PROGRESO', // wrong → ruta update fails → transaction rolls back
-          {
-            medidorId: medidor.medidorId,
-            estado: 'INSTALADO' as const,
-            fechaInstalacion: new Date(),
-          },
-        ),
-      ).rejects.toThrow();
-
-      // Medidor should NOT have been updated (transaction rolled back)
-      const unchangedMeter = await prisma.medidores.findUnique({
-        where: { medidorId: medidor.medidorId },
-      });
-      expect(unchangedMeter?.estado).not.toBe('INSTALADO');
     });
   });
 

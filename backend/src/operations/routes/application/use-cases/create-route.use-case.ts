@@ -12,6 +12,7 @@ import {
 /** Route types that target a specific meter work order (not community-periodic). */
 const WORK_ORDER_TYPES = new Set<string>([
   TipoRuta.INSTALACION,
+  TipoRuta.RECONEXION,
   TipoRuta.INSPECCION,
 ]);
 
@@ -67,12 +68,12 @@ export class CreateRouteUseCase {
       throw new InvalidDomainOperationException('El periodo no está abierto');
     }
 
-    // Work orders (INSTALACION / INSPECCION) require a medidor
+    // Meter-specific work orders require a medidor.
     const isWorkOrder = WORK_ORDER_TYPES.has(createDto.tipoRuta);
 
     if (isWorkOrder && createDto.medidorId == null) {
       throw new InvalidDomainOperationException(
-        'medidorId es obligatorio para rutas de INSTALACION/INSPECCION',
+        'medidorId es obligatorio para rutas de INSTALACION/RECONEXION/INSPECCION',
       );
     }
 
@@ -138,6 +139,8 @@ export class CreateRouteUseCase {
         route.rutaId,
       );
     }
+
+    await this.routeRepository.createWorkOrdersForRoute(route.rutaId);
 
     return route;
   }

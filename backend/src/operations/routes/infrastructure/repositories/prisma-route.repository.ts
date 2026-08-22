@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
-import { Prisma } from 'src/generated/prisma/client';
+import { Prisma, TipoActividadOrdenTrabajo } from 'src/generated/prisma/client';
 import { EstadoRuta, TipoRuta, EstadoContrato } from 'src/shared/enums';
 import {
   RouteRepository,
@@ -279,6 +279,99 @@ export class PrismaRouteRepository implements RouteRepository {
     );
 
     return Number(result[0]?.count ?? 0);
+  }
+
+  async createWorkOrdersForRoute(rutaId: bigint): Promise<number> {
+    const route = await this.prisma.rutas.findUnique({
+      where: { rutaId, deletedAt: null },
+      select: {
+        rutaId: true,
+        tipoRuta: true,
+        medidorId: true,
+        lecturas: {
+          where: { deletedAt: null },
+          orderBy: { lecturaId: 'asc' },
+          select: {
+            lecturaId: true,
+            medidorId: true,
+            medidor: {
+              select: {
+                historial: {
+                  where: { fechaHasta: null, deletedAt: null },
+                  orderBy: { fechaDesde: 'desc' },
+                  take: 1,
+                  select: { contratoId: true },
+                },
+              },
+            },
+          },
+        },
+        medidor: {
+          select: {
+            historial: {
+              where: { fechaHasta: null, deletedAt: null },
+              orderBy: { fechaDesde: 'desc' },
+              take: 1,
+              select: { contratoId: true },
+            },
+          },
+        },
+      },
+    });
+
+    if (!route) {
+      throw new EntityNotFoundException('Ruta', rutaId.toString());
+    }
+
+    const tipoActividadByRoute: Record<string, TipoActividadOrdenTrabajo> = {
+      [TipoRuta.TOMA_LECTURA]: TipoActividadOrdenTrabajo.LECTURA,
+      [TipoRuta.INSTALACION]: TipoActividadOrdenTrabajo.INSTALACION,
+      [TipoRuta.RECONEXION]: TipoActividadOrdenTrabajo.RECONEXION,
+      [TipoRuta.INSPECCION]: TipoActividadOrdenTrabajo.INSPECCION,
+    };
+    const tipoActividad = tipoActividadByRoute[route.tipoRuta];
+
+    if (!tipoActividad) return 0;
+
+    const workOrders =
+      route.tipoRuta === TipoRuta.TOMA_LECTURA
+        ? route.lecturas.flatMap((reading, index) => {
+            const contratoId = reading.medidor.historial[0]?.contratoId;
+            return contratoId == null
+              ? []
+              : [
+                  {
+                    rutaId: route.rutaId,
+                    contratoId,
+                    medidorId: reading.medidorId,
+                    lecturaId: reading.lecturaId,
+                    tipoActividad,
+                    ordenVisita: index + 1,
+                  },
+                ];
+          })
+        : route.medidorId != null &&
+            route.medidor?.historial[0]?.contratoId != null
+          ? [
+              {
+                rutaId: route.rutaId,
+                contratoId: route.medidor.historial[0].contratoId,
+                medidorId: route.medidorId,
+                lecturaId: null,
+                tipoActividad,
+                ordenVisita: 1,
+              },
+            ]
+          : [];
+
+    if (workOrders.length === 0) return 0;
+
+    const result = await this.prisma.ordenesTrabajo.createMany({
+      data: workOrders,
+      skipDuplicates: true,
+    });
+
+    return result.count;
   }
 
   async paginateLecturas(

@@ -24,6 +24,7 @@ model Rutas {
   periodo             Periodos?          @relation(fields: [periodoId], references: [periodoId])
   medidor             Medidores?         @relation(fields: [medidorId], references: [medidorId])
   lecturas            Lecturas[]
+  ordenesTrabajo      OrdenesTrabajo[]
   lotes               Lote[]
 
   @@index([operarioId])

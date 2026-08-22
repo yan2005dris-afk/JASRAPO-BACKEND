@@ -18,11 +18,15 @@ describe('CreateRouteUseCase', () => {
     findPeriodo: jest.fn(),
     findMedidor: jest.fn(),
     findOverlappingRoutes: jest.fn(),
+    initializeMonthlyReadings: jest.fn(),
+    createWorkOrdersForRoute: jest.fn(),
     create: jest.fn(),
   };
 
   beforeEach(async () => {
     jest.clearAllMocks();
+    mockRouteRepository.initializeMonthlyReadings.mockResolvedValue(0);
+    mockRouteRepository.createWorkOrdersForRoute.mockResolvedValue(0);
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -182,6 +186,8 @@ describe('CreateRouteUseCase', () => {
       1,
       1,
       undefined,
+      null,
+      undefined,
     );
   });
 
@@ -227,6 +233,8 @@ describe('CreateRouteUseCase', () => {
       1,
       1,
       2,
+      null,
+      undefined,
     );
   });
 
@@ -274,6 +282,8 @@ describe('CreateRouteUseCase', () => {
       1,
       1,
       3,
+      null,
+      'TOMA_LECTURA',
     );
     expect(mockRouteRepository.create).toHaveBeenCalledWith(
       expect.objectContaining({ sectorId: 3 }),
