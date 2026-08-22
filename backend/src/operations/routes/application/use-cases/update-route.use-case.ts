@@ -29,6 +29,16 @@ export class UpdateRouteUseCase {
           `No se puede cambiar el estado de la ruta de ${ruta.estado} a ${updateDto.estado}`,
         );
       }
+
+      if (
+        updateDto.estado === 'EN_PROGRESO' &&
+        !ruta.operarioId &&
+        updateDto.operarioId === undefined
+      ) {
+        throw new InvalidDomainOperationException(
+          'No se puede iniciar la ruta: debe asignar un operario responsable antes de enviarla a campo',
+        );
+      }
     }
 
     if (updateDto.periodoId !== undefined) {
@@ -69,6 +79,9 @@ export class UpdateRouteUseCase {
       ...(updateDto.nombre !== undefined && { nombre: updateDto.nombre }),
       ...(updateDto.descripcion !== undefined && {
         descripcion: updateDto.descripcion,
+      }),
+      ...(updateDto.operarioId !== undefined && {
+        operarioId: updateDto.operarioId,
       }),
       ...(updateDto.estado !== undefined && { estado: updateDto.estado }),
       ...(updateDto.fechaPlanificada !== undefined && {
