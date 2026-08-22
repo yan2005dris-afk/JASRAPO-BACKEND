@@ -58,9 +58,9 @@ export class InvitationsController {
     const invitation = await this.invitationService.previewInvitation(token);
 
     return {
-      email: invitation.usuario.email,
-      nombres: invitation.usuario.nombres,
-      apellidos: invitation.usuario.apellidos,
+      email: invitation.usuario?.email || '',
+      nombres: invitation.usuario?.nombres || '',
+      apellidos: invitation.usuario?.apellidos || '',
       expiresAt: invitation.expiresAt,
       isAccepted: invitation.acceptedAt !== null,
     };
