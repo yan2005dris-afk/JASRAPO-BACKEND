@@ -1,6 +1,6 @@
 model UsuarioInvitacion {
   usuarioInvitacionId Int       @id @default(autoincrement()) @map("usuario_invitacion_id")
-  usuario             Usuarios  @relation("invitaciones", fields: [usuarioId], references: [usuarioId], onDelete: SetNull)
+  usuario             Usuarios? @relation("invitaciones", fields: [usuarioId], references: [usuarioId], onDelete: SetNull)
   usuarioId           Int?      @map("usuario_id")
   tokenHash           String    @unique @map("token_hash")
   expiresAt           DateTime  @map("expira_en")
