@@ -30,6 +30,10 @@ DECLARE
     v_iva NUMERIC(18,2);
     v_total NUMERIC(18,2);
     v_prefactura_id BIGINT;
+    v_emisor_id INT;
+    v_punto_emision_id INT;
+    v_ambiente TEXT;
+    v_comprobante_id BIGINT;
 BEGIN
     -- 1. Lock + snapshot: validar contrato y estado PENDIENTE_PAGO
     SELECT 
@@ -129,12 +133,84 @@ BEGIN
     -- 5. Mes real actual
     v_mes_actual := EXTRACT(MONTH FROM CURRENT_DATE)::INT;
 
-    -- 6. Cálculo
+    -- 6. Emisor y punto de emisión para comprobante borrador
+    SELECT e.id, pe.id, e.ambiente
+    INTO v_emisor_id, v_punto_emision_id, v_ambiente
+    FROM puntos_emision pe
+    JOIN establecimientos est ON pe.establecimiento_id = est.id
+    JOIN emisores e ON est.emisor_id = e.id
+    WHERE pe.id = 1
+    LIMIT 1;
+
+    -- 7. Cálculo
     v_subtotal := v_precio_unitario;
     v_iva := ROUND(v_subtotal * v_tasa, 2);
     v_total := v_subtotal + v_iva;
 
-    -- 7. Insertar Prefactura de instalación con mes real
+    -- 8. Crear Comprobante BORRADOR
+    INSERT INTO comprobantes (
+        emisor_id,
+        punto_emision_id,
+        tipo_comprobante,
+        ambiente,
+        tipo_emision,
+        secuencial,
+        fecha_emision,
+        estado,
+        total_sin_impuestos,
+        total_descuento,
+        importe_total,
+        moneda,
+        receptor_identificacion,
+        receptor_razon_social,
+        receptor_direccion,
+        receptor_email,
+        created_at,
+        updated_at
+    ) VALUES (
+        COALESCE(v_emisor_id, 1),
+        COALESCE(v_punto_emision_id, 1),
+        '01', -- FACTURA
+        COALESCE(v_ambiente, '1'),
+        '1',
+        '',
+        CURRENT_DATE,
+        'BORRADOR',
+        v_subtotal,
+        0,
+        v_total,
+        'DOLAR',
+        v_contrato.cliente_identificacion,
+        v_contrato.cliente_nombre,
+        v_contrato.cliente_direccion,
+        v_contrato.cliente_email,
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+    )
+    RETURNING id INTO v_comprobante_id;
+
+    -- 9. Detalle del Comprobante
+    INSERT INTO comprobante_detalles (
+        comprobante_id,
+        codigo_principal,
+        descripcion,
+        cantidad,
+        precio_unitario,
+        descuento,
+        precio_total_sin_impuesto,
+        orden
+    ) VALUES (
+        v_comprobante_id,
+        v_rubro_id::TEXT,
+        v_rubro_nombre,
+        1,
+        v_precio_unitario,
+        0,
+        v_subtotal,
+        1
+    );
+
+    -- 10. Insertar Prefactura de instalación en estado APROBADA con comprobante_id enlazado
     INSERT INTO prefacturas (
         contrato_id,
         lote_id,
@@ -154,6 +230,8 @@ BEGIN
         meses_atrasado,
         estado,
         creado_por,
+        aprobada_por,
+        fecha_aprobacion,
         interes_mora,
         cliente_direccion,
         cliente_email,
@@ -163,6 +241,7 @@ BEGIN
         tarifa_valor_base,
         tarifa_valor_excedente,
         lectura_id,
+        comprobante_id,
         mes,
         tasa_interes_usada,
         creado_en,
@@ -171,7 +250,7 @@ BEGIN
         p_contrato_id,
         NULL,
         v_periodo_id,
-        1,
+        COALESCE(v_punto_emision_id, 1),
         0,
         0,
         0,
@@ -184,8 +263,10 @@ BEGIN
         0,
         v_total,
         0,
-        'GENERADA'::"EstadoPrefactura",
+        'APROBADA'::"EstadoPrefactura",
         p_creado_por,
+        p_creado_por,
+        CURRENT_TIMESTAMP,
         0,
         v_contrato.cliente_direccion,
         v_contrato.cliente_email,
@@ -195,6 +276,7 @@ BEGIN
         0,
         0,
         NULL,
+        v_comprobante_id,
         v_mes_actual,
         0,
         CURRENT_TIMESTAMP,
@@ -202,7 +284,7 @@ BEGIN
     )
     RETURNING prefactura_id INTO v_prefactura_id;
 
-    -- 8. Insertar detalle
+    -- 11. Insertar detalle de prefactura
     INSERT INTO prefactura_detalle (
         prefactura_id,
         rubro_id,
