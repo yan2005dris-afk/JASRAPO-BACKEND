@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { PrismaService } from 'src/infrastructure/prisma/prisma.service';
+import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { MailService } from 'src/infrastructure/mail/application/mail.service';
 import { createHash } from 'crypto';
 

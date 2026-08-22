@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { PrismaService } from 'src/infrastructure/prisma/prisma.service';
+import { PrismaService } from 'src/infrastructure/database/prisma.service';
 
 export interface InvitationMetrics {
   totalCreated: number;
@@ -47,13 +47,6 @@ export class InvitationMetricsService {
       totalCreated > 0 ? (totalAccepted / totalCreated) * 100 : 0;
 
     // Calcular promedio de tiempo a aceptación para invitaciones aceptadas
-    const avgTimeQuery = await this.prisma.usuarioInvitacion.aggregate({
-      where: { acceptedAt: { not: null } },
-      _avg: {
-        createdAt: true,
-      },
-    });
-
     const acceptedWithTime = await this.prisma.usuarioInvitacion.findMany({
       where: { acceptedAt: { not: null } },
       select: { createdAt: true, acceptedAt: true },

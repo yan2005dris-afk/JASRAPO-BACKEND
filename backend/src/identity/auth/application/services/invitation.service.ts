@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
-import { PrismaService } from 'src/infrastructure/prisma/prisma.service';
+import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { InvitationTokenGeneratorService } from './invitation-token-generator.service';
 import { createHash } from 'crypto';
 import { MailService } from 'src/infrastructure/mail/application/mail.service';
@@ -9,7 +9,6 @@ import {
   InvitationExpiredException,
   InvitationAlreadyUsedException,
 } from '../domain/exceptions/invitation.exceptions';
-import { Usuarios, UsuarioInvitacion } from '@prisma/client';
 
 @Injectable()
 export class InvitationService {
@@ -22,9 +21,9 @@ export class InvitationService {
   ) {}
 
   async createAndSendInvitation(
-    usuario: Usuarios,
+    usuario: any,
     invitedByUserId?: number,
-  ): Promise<UsuarioInvitacion> {
+  ) {
     const ttlHours = parseInt(process.env.INVITATION_TTL_HOURS || '48', 10);
     const { tokenPlain, tokenHash } = this.tokenGenerator.generate();
 
@@ -72,9 +71,7 @@ export class InvitationService {
     return invitation;
   }
 
-  async previewInvitation(
-    tokenPlain: string,
-  ): Promise<{ usuario: Usuarios; expiresAt: Date; acceptedAt: Date | null }> {
+  async previewInvitation(tokenPlain: string) {
     const tokenHash = createHash('sha256').update(tokenPlain).digest('hex');
 
     const invitation = await this.prisma.usuarioInvitacion.findUnique({
@@ -105,7 +102,7 @@ export class InvitationService {
     tokenPlain: string,
     password: string,
     termsVersion: string,
-  ): Promise<Usuarios> {
+  ) {
     const tokenHash = createHash('sha256').update(tokenPlain).digest('hex');
 
     const invitation = await this.prisma.usuarioInvitacion.findUnique({
@@ -149,7 +146,7 @@ export class InvitationService {
 
       // Update user with hashed password
       const updatedUser = await tx.usuarios.update({
-        where: { usuarioId: invitation.usuarioId },
+        where: { usuarioId: invitation.usuarioId ?? undefined },
         data: {
           clave: hashedPassword,
           updatedAt: new Date(),

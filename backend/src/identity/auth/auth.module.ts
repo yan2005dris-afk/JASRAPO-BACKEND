@@ -23,7 +23,7 @@ import { InvitationRetryHandler } from './application/services/invitation-retry.
 import { InvitationMetricsService } from './application/services/invitation-metrics.service';
 import { AuditModule } from 'src/infrastructure/audit/audit.module';
 import { MailModule } from 'src/infrastructure/mail/mail.module';
-import { PrismaService } from 'src/infrastructure/prisma/prisma.service';
+import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { UserRepository } from 'src/identity/users/domain/repositories/user.repository';
 import type { StringValue } from 'ms';
 

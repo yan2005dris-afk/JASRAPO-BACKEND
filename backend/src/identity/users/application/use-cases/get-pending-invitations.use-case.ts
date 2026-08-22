@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/infrastructure/prisma/prisma.service';
+import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
 export interface PendingInvitation {
