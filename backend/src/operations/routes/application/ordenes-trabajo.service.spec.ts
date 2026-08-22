@@ -6,13 +6,27 @@ import { UpdateOrdenEstadoUseCase } from './use-cases/update-orden-estado.use-ca
 import { LinkLecturaUseCase } from './use-cases/link-lectura.use-case';
 import { OrdenTrabajoRepository } from '../domain/repositories/orden-trabajo.repository';
 import { OrdenTrabajoEntity } from '../domain/entities/orden-trabajo.entity';
-import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
+import type {
+  PaginatedResult,
+  PaginationMeta,
+} from 'src/shared/domain/types/pagination.types';
 import type { PaginateOptions } from 'src/infrastructure/common/utils/pagination.util';
 
 describe('OrdenesTrabajoService', () => {
   let service: OrdenesTrabajoService;
 
   const mockUseCase = { execute: jest.fn() };
+
+  const makeMeta = (total: number, page = 1, limit = 10): PaginationMeta => ({
+    total,
+    page,
+    limit,
+    ultimaPagina: Math.max(1, Math.ceil(total / limit)),
+    paginaActual: page,
+    porPagina: limit,
+    anterior: page > 1 ? page - 1 : null,
+    siguiente: total > page * limit ? page + 1 : null,
+  });
 
   const sampleOrden = new OrdenTrabajoEntity({
     ordenTrabajoId: 1n,
@@ -55,7 +69,7 @@ describe('OrdenesTrabajoService', () => {
       const pagination: PaginateOptions = { page: 1, limit: 10 };
       const paginated: PaginatedResult<OrdenTrabajoEntity> = {
         data: [sampleOrden],
-        meta: { total: 1, page: 1, limit: 10 },
+        meta: makeMeta(1),
       };
       mockUseCase.execute.mockResolvedValue(paginated);
 

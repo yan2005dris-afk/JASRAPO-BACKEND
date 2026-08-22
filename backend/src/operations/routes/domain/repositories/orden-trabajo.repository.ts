@@ -4,6 +4,7 @@ import type {
   OrdenTrabajoKpis,
   UpdateOrdenEstadoData,
   LinkLecturaData,
+  CreateOrdenTrabajoData,
 } from '../types/orden-trabajo.types';
 import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
 import type { PaginateOptions } from 'src/infrastructure/common/utils/pagination.util';
@@ -41,4 +42,10 @@ export abstract class OrdenTrabajoRepository {
     ordenTrabajoId: bigint,
     data: LinkLecturaData,
   ): Promise<OrdenTrabajoEntity>;
+
+  /**
+   * Crea una nueva orden de trabajo asociada a una ruta existente.
+   * Usado por el flujo "Asignar contrato a ruta de instalación" (SC-174).
+   */
+  abstract create(data: CreateOrdenTrabajoData): Promise<OrdenTrabajoEntity>;
 }

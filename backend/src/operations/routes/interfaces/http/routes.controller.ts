@@ -301,7 +301,10 @@ export class RoutesController {
     @Param('id', ParseBigIntPipe) id: bigint,
     @Body() dto: ReassignRouteDto,
   ): Promise<RouteResponseDto> {
-    const result = await this.reassignRouteUseCase.execute(id, dto.operarioId);
+    const result = await this.reassignRouteUseCase.execute(
+      id,
+      dto.operarioId ?? null,
+    );
     return RouteResponseDto.fromEntity(result);
   }
 

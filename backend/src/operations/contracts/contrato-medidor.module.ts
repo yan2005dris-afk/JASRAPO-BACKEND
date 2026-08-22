@@ -14,8 +14,10 @@ import { ContractRepository } from './domain/repositories/contract.repository';
 import { PrismaContractRepository } from './infrastructure/repositories/prisma-contract.repository';
 import { ConnectionRequestPdfDocumentType } from './pdf/connection-request.pdf-type';
 import { ResponsibilityAgreementPdfDocumentType } from './pdf/responsibility-agreement.pdf-type';
+import { RepositoriesModule } from '../routes/repositories.module';
 
 @Module({
+  imports: [RepositoriesModule],
   controllers: [ContratoMedidorController],
   providers: [
     { provide: ContractRepository, useClass: PrismaContractRepository },
