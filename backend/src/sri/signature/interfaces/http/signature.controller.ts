@@ -16,7 +16,7 @@ import { LoggerService } from 'src/infrastructure/observability/logger/logger.se
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
 @LogContext()
-@ApiTags('[En Desarrollo] Signature')
+@ApiTags('[SRI] Firma (XAdES-BES)')
 @ApiBearerAuth('JWT')
 @UseGuards(JwtAuthGuard)
 @Controller('signature')

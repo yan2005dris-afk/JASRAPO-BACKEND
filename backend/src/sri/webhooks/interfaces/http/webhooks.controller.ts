@@ -15,7 +15,7 @@ import { RequiredPermission } from '../../../../infrastructure/common/decorators
 import { WebhooksService } from '../../application/webhooks.service';
 import { CreateWebhookDto, UpdateWebhookDto } from '../dto';
 
-@ApiTags('[En Desarrollo] SRI - Webhooks')
+@ApiTags('[SRI] Webhooks')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('sri/webhooks')

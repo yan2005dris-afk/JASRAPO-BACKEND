@@ -616,7 +616,7 @@ Estas actividades buscan **detectar defectos** antes de la entrega al usuario:
 ### 6.2 Plan de Respuesta a Riesgos Críticos
 
 #### R-01 — Cambios SRI
-**Acción preventiva:** El módulo `open-api-facturacion-sri-main` está desacoplado del backend principal, permitiendo actualización independiente.  
+**Acción preventiva:** El módulo en `external/open-api-facturacion-sri/` (deprecado, referencia histórica) está desacoplado del backend principal, permitiendo actualización independiente.  
 **Acción correctiva:** Al detectar un cambio en la normativa SRI, suspender el envío automático de comprobantes y activar el modo manual hasta completar la actualización.
 
 #### R-02 — Backup de Base de Datos
@@ -658,7 +658,7 @@ Estas actividades buscan **detectar defectos** antes de la entrega al usuario:
 | Contenedores | Docker + Docker Compose | - |
 | Proxy / Acceso Público | Cloudflare Tunnel | - |
 | Observabilidad | Prometheus + Grafana + OpenTelemetry | - |
-| Firma Electrónica SRI | Módulo open-api-facturacion-sri | - |
+| Firma Electrónica SRI | Módulo en `external/open-api-facturacion-sri/` (deprecado, referencia histórica) | - |
 
 ---
 

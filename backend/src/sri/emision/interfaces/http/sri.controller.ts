@@ -58,7 +58,7 @@ import { LoggerService } from 'src/infrastructure/observability/logger/logger.se
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
 @LogContext()
-@ApiTags('[En Desarrollo] SRI - Facturación Electrónica')
+@ApiTags('[SRI] Facturación Electrónica')
 @ApiBearerAuth('JWT')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 @RequiredPermission('facturacion_electronica', 'read')
