@@ -51,6 +51,8 @@ export class SyncAllUseCase {
         clienteNombre: activeHistorial?.contrato?.cliente
           ? `${activeHistorial.contrato.cliente.nombres} ${activeHistorial.contrato.cliente.apellidos}`.trim()
           : null,
+        direccionSuministro:
+          activeHistorial?.contrato?.direccionSuministro ?? null,
       });
     });
   }

@@ -59,19 +59,53 @@ export interface MeterWithContractDetail {
       contratoId: bigint;
       comunidadId: number;
       sectorId: number | null;
+      direccionSuministro: string;
       cliente: { nombres: string; apellidos: string };
     } | null;
   }>;
 }
 
-export interface TaskRoutePoint {
+export interface OperatorRouteStop {
+  ordenTrabajoId: bigint;
   latitud: number;
   longitud: number;
   serie: string;
   clienteNombre: string;
+  tipoActividad: string;
+  estado: string;
+  direccionSuministro?: string;
 }
 
-export interface OperatorTask {
+export interface OperatorWorkOrder {
+  ordenTrabajoId: bigint;
+  rutaId: bigint;
+  contratoId: bigint;
+  medidorId: bigint | null;
+  lecturaId: bigint | null;
+  tipoActividad: string;
+  estado: string;
+  ordenVisita: number;
+  resultadoObservacion: string | null;
+  evidenciaFotoUrl: string | null;
+  completadoEn: Date | null;
+  contrato: {
+    numeroGuia: string;
+    direccionSuministro: string;
+    cliente: {
+      nombres: string;
+      apellidos: string;
+      razonSocial: string | null;
+    };
+  };
+  medidor: {
+    medidorId: bigint;
+    serie: string;
+    latitud: number | null;
+    longitud: number | null;
+  } | null;
+}
+
+export interface OperatorRoute {
   rutaId: bigint;
   nombre: string;
   descripcion: string | null;
@@ -102,7 +136,8 @@ export interface OperatorTask {
     latitud: number | null;
     longitud: number | null;
   } | null;
-  rutaPuntos?: TaskRoutePoint[];
+  ordenesTrabajo: OperatorWorkOrder[];
+  paradas: OperatorRouteStop[];
 }
 
 export interface ReadingWithAnomalies {
@@ -129,8 +164,8 @@ export interface ReadingWithAnomalies {
   }>;
 }
 
-/** Fields that can be updated when transitioning a task's state. */
-export interface TaskStateUpdate {
+/** Fields that can be updated when transitioning a route's state. */
+export interface RouteStateUpdate {
   estado?: string;
   fechaInicio?: Date;
   fechaFin?: Date;

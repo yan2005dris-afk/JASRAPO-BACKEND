@@ -1,0 +1,231 @@
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import type { OperatorRoute } from '../../domain/repositories/repository-types';
+
+export class OperatorMeterDto {
+  @ApiProperty({ description: 'ID del medidor', example: '42' })
+  medidorId: string;
+
+  @ApiProperty({ description: 'Serie del medidor', example: 'MED-001' })
+  serie: string;
+
+  @ApiPropertyOptional({ description: 'Latitud', example: -0.9677 })
+  latitud?: number;
+
+  @ApiPropertyOptional({ description: 'Longitud', example: -80.7089 })
+  longitud?: number;
+}
+
+export class OperatorInfoDto {
+  @ApiProperty({ description: 'ID del usuario', example: 10 })
+  usuarioId: number;
+
+  @ApiProperty({ description: 'Nombres del operario', example: 'Juan' })
+  nombres: string;
+
+  @ApiProperty({ description: 'Apellidos del operario', example: 'Pérez' })
+  apellidos: string;
+}
+
+export class OperatorWorkOrderContractDto {
+  @ApiProperty({ description: 'Número de contrato', example: 'GUIA-001' })
+  numeroContrato: string;
+
+  @ApiProperty({ description: 'Nombre del cliente', example: 'Juan Pérez' })
+  clienteNombre: string;
+
+  @ApiProperty({ description: 'Dirección del suministro' })
+  direccion: string;
+}
+
+export class OperatorWorkOrderDto {
+  @ApiProperty({ description: 'ID de la orden de trabajo', example: '100' })
+  ordenTrabajoId: string;
+
+  @ApiProperty({ description: 'ID de la ruta', example: '1' })
+  rutaId: string;
+
+  @ApiProperty({ description: 'Tipo de actividad', example: 'LECTURA' })
+  tipoActividad: string;
+
+  @ApiProperty({ description: 'Estado de la orden', example: 'PENDIENTE' })
+  estado: string;
+
+  @ApiProperty({ description: 'Orden de visita', example: 1 })
+  ordenVisita: number;
+
+  @ApiPropertyOptional({ description: 'Resultado u observación de campo' })
+  resultadoObservacion?: string;
+
+  @ApiPropertyOptional({ description: 'URL de la evidencia fotográfica' })
+  evidenciaFotoUrl?: string;
+
+  @ApiPropertyOptional({ description: 'Fecha de finalización' })
+  completadoEn?: string;
+
+  @ApiPropertyOptional({ description: 'ID de la lectura', example: '25' })
+  lecturaId?: string;
+
+  @ApiProperty({ type: () => OperatorWorkOrderContractDto })
+  contrato: OperatorWorkOrderContractDto;
+
+  @ApiPropertyOptional({ type: () => OperatorMeterDto, nullable: true })
+  medidor?: OperatorMeterDto | null;
+}
+
+export class OperatorRouteStopDto {
+  @ApiProperty({ description: 'ID de la orden de trabajo', example: '100' })
+  ordenTrabajoId: string;
+
+  @ApiProperty({ description: 'Latitud del punto', example: -0.9677 })
+  latitud: number;
+
+  @ApiProperty({ description: 'Longitud del punto', example: -80.7089 })
+  longitud: number;
+
+  @ApiProperty({ description: 'Serie del medidor', example: 'MED-001' })
+  serie: string;
+
+  @ApiProperty({ description: 'Nombre completo del cliente' })
+  clienteNombre: string;
+
+  @ApiProperty({ description: 'Tipo de actividad', example: 'LECTURA' })
+  tipoActividad: string;
+
+  @ApiProperty({ description: 'Estado de la orden', example: 'PENDIENTE' })
+  estado: string;
+
+  @ApiPropertyOptional({ description: 'Dirección del suministro' })
+  direccionSuministro?: string;
+}
+
+export class OperatorRouteResponseDto {
+  @ApiProperty({ description: 'ID de la ruta', example: '1' })
+  rutaId: string;
+
+  @ApiProperty({ description: 'Tipo de ruta', example: 'INSTALACION' })
+  tipoRuta: string;
+
+  @ApiProperty({ description: 'Nombre de la ruta' })
+  nombre: string;
+
+  @ApiPropertyOptional({ description: 'Descripción de la ruta' })
+  descripcion?: string;
+
+  @ApiProperty({ description: 'Estado actual', example: 'PENDIENTE' })
+  estado: string;
+
+  @ApiProperty({ description: 'Orden geográfico', example: 1 })
+  orden: number;
+
+  @ApiPropertyOptional({ description: 'Observación' })
+  observacion?: string;
+
+  @ApiPropertyOptional({ description: 'Fecha límite' })
+  fechaLimite?: string;
+
+  @ApiProperty({ description: 'ID del operario asignado', example: 10 })
+  operarioId: number;
+
+  @ApiProperty({ description: 'ID de la comunidad', example: 5 })
+  comunidadId: number;
+
+  @ApiPropertyOptional({ description: 'ID del sector', example: 3 })
+  sectorId?: number;
+
+  @ApiPropertyOptional({ description: 'Fecha planificada' })
+  fechaPlanificada?: string;
+
+  @ApiPropertyOptional({ description: 'Fecha de inicio' })
+  fechaInicio?: string;
+
+  @ApiPropertyOptional({ description: 'Fecha de fin' })
+  fechaFin?: string;
+
+  @ApiPropertyOptional({ type: () => OperatorMeterDto, nullable: true })
+  medidor?: OperatorMeterDto | null;
+
+  @ApiPropertyOptional({ type: () => OperatorInfoDto })
+  operario?: OperatorInfoDto;
+
+  @ApiProperty({ type: [OperatorWorkOrderDto] })
+  ordenesTrabajo: OperatorWorkOrderDto[];
+
+  @ApiProperty({ type: [OperatorRouteStopDto] })
+  paradas: OperatorRouteStopDto[];
+
+  constructor(partial: Partial<OperatorRouteResponseDto>) {
+    Object.assign(this, partial);
+  }
+
+  static fromEntity(route: OperatorRoute): OperatorRouteResponseDto {
+    const mapMeter = (meter: OperatorRoute['medidor']) =>
+      meter
+        ? {
+            medidorId: meter.medidorId.toString(),
+            serie: meter.serie,
+            latitud: meter.latitud == null ? undefined : Number(meter.latitud),
+            longitud:
+              meter.longitud == null ? undefined : Number(meter.longitud),
+          }
+        : null;
+
+    return new OperatorRouteResponseDto({
+      rutaId: route.rutaId.toString(),
+      tipoRuta: route.tipoRuta,
+      nombre: route.nombre,
+      descripcion: route.descripcion ?? undefined,
+      estado: route.estado,
+      orden: route.orden,
+      observacion: route.observacion ?? undefined,
+      fechaLimite: route.fechaLimite?.toISOString() ?? undefined,
+      operarioId: route.operarioId,
+      comunidadId: route.comunidadId,
+      sectorId: route.sectorId ?? undefined,
+      fechaPlanificada: route.fechaPlanificada?.toISOString() ?? undefined,
+      fechaInicio: route.fechaInicio?.toISOString() ?? undefined,
+      fechaFin: route.fechaFin?.toISOString() ?? undefined,
+      medidor: mapMeter(route.medidor),
+      operario: route.operario ?? undefined,
+      ordenesTrabajo: route.ordenesTrabajo.map((order) => {
+        const customer = order.contrato.cliente;
+        return {
+          ordenTrabajoId: order.ordenTrabajoId.toString(),
+          rutaId: order.rutaId.toString(),
+          tipoActividad: order.tipoActividad,
+          estado: order.estado,
+          ordenVisita: order.ordenVisita,
+          resultadoObservacion: order.resultadoObservacion ?? undefined,
+          evidenciaFotoUrl: order.evidenciaFotoUrl ?? undefined,
+          completadoEn: order.completadoEn?.toISOString() ?? undefined,
+          lecturaId: order.lecturaId?.toString(),
+          contrato: {
+            numeroContrato: order.contrato.numeroGuia,
+            clienteNombre:
+              customer.razonSocial?.trim() ||
+              `${customer.nombres} ${customer.apellidos}`.trim(),
+            direccion: order.contrato.direccionSuministro,
+          },
+          medidor: order.medidor
+            ? {
+                medidorId: order.medidor.medidorId.toString(),
+                serie: order.medidor.serie,
+                latitud:
+                  order.medidor.latitud == null
+                    ? undefined
+                    : Number(order.medidor.latitud),
+                longitud:
+                  order.medidor.longitud == null
+                    ? undefined
+                    : Number(order.medidor.longitud),
+              }
+            : null,
+        };
+      }),
+      paradas: route.paradas.map((stop) => ({
+        ...stop,
+        ordenTrabajoId: stop.ordenTrabajoId.toString(),
+        direccionSuministro: stop.direccionSuministro,
+      })),
+    });
+  }
+}

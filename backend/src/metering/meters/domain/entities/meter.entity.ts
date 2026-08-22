@@ -31,6 +31,8 @@ export class MeterEntity {
 
   clienteNombre?: string | null;
 
+  direccionSuministro?: string | null;
+
   constructor(partial: Partial<MeterEntity>) {
     Object.assign(this, partial);
   }
