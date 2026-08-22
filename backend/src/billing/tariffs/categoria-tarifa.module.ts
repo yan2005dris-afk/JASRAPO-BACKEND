@@ -8,8 +8,10 @@ import { RemoveTariffCategoryUseCase } from './application/use-cases/remove-tari
 import { FindOneTariffCategoryUseCase } from './application/use-cases/find-one-tariff-category.use-case';
 import { TariffRepository } from './domain/repositories/tariff.repository';
 import { PrismaTariffRepository } from './infrastructure/repositories/prisma-tariff.repository';
+import { RubrosModule } from '../rubros/rubros.module';
 
 @Module({
+  imports: [RubrosModule],
   controllers: [CategoriaTarifaController],
   providers: [
     { provide: TariffRepository, useClass: PrismaTariffRepository },

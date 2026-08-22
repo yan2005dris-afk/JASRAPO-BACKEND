@@ -24,6 +24,17 @@ export type Banco = (typeof Banco)[keyof typeof Banco];
 
 // Fuente: models/logica-de-negocio/Pagos.prisma
 
+export const CodigoSistemaRubro = {
+  INSTALACION: 'INSTALACION',
+  RECONEXION: 'RECONEXION',
+  INSPECCION: 'INSPECCION',
+} as const;
+
+export type CodigoSistemaRubro =
+  (typeof CodigoSistemaRubro)[keyof typeof CodigoSistemaRubro];
+
+// Fuente: models/logica-de-negocio/Rubros.prisma
+
 export const EstadoAnomalia = {
   PENDIENTE: 'PENDIENTE',
   EN_REVISION: 'EN_REVISION',

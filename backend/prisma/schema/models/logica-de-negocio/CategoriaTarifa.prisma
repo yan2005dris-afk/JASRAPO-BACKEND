@@ -2,9 +2,7 @@ model CategoriaTarifa {
   categoriaTarifaId    Int         @id @default(autoincrement()) @map("categoria_tarifa_id")
   nombre               String      @map("nombre")
   descripcion          String?     @map("descripcion")
-  valorBase            Decimal?    @default(0) @map("valor_base") @db.Decimal(18, 6)
-  consumoMinimoMensual Int?        @default(0) @map("consumo_minimo_mensual")
-  valorExcedenteM3     Decimal?    @default(0) @map("valor_excedente_m3") @db.Decimal(18, 6)
+  consumoMinimoMensual Int?        @default(10) @map("consumo_minimo_mensual")
   fechaVigenciaDesde   DateTime?   @map("fecha_vigencia_desde") @db.Date
   fechaVigenciaHasta   DateTime?   @map("fecha_vigencia_hasta") @db.Date
   activo               Boolean     @default(true) @map("activo")
@@ -12,6 +10,7 @@ model CategoriaTarifa {
   updatedAt            DateTime    @updatedAt @map("actualizado_en")
   deletedAt            DateTime?   @map("borrado_en")
   contratos            Contratos[]
+  rubros               Rubros[]
 
   @@map("categoria_tarifa")
 }

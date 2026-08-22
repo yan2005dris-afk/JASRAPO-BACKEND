@@ -13,6 +13,7 @@ export class PreInvoiceDetailEntity {
   codigoImpuestoSri?: string | null;
   codigoPorcentajeSri?: string | null;
   rubroNombre?: string | null;
+  codigoSistemaRubro?: string | null;
 
   constructor(partial: Partial<PreInvoiceDetailEntity>) {
     Object.assign(this, partial);

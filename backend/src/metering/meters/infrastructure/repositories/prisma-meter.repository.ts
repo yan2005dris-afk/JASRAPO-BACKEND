@@ -539,13 +539,8 @@ export class PrismaMeterRepository implements MeterRepository {
                   .toDecimalPlaces(2);
                 consumoFacturableSaliente = promedioCalculado;
               } else {
-                // Fallback a consumo mínimo de tarifa
-                const baseTariff = contrato.categoriaTarifa
-                  ?.consumoMinimoMensual
-                  ? new Decimal(
-                      contrato.categoriaTarifa.consumoMinimoMensual.toString(),
-                    )
-                  : new Decimal(0);
+                // Fallback a 0 si no hay lecturas pasadas
+                const baseTariff = new Decimal(0);
                 promedioCalculado = baseTariff;
                 consumoFacturableSaliente = baseTariff;
               }
@@ -693,11 +688,6 @@ export class PrismaMeterRepository implements MeterRepository {
               ? {
                   categoriaTarifaId: contrato.categoriaTarifa.categoriaTarifaId,
                   nombre: contrato.categoriaTarifa.nombre,
-                  valorBase: contrato.categoriaTarifa.valorBase?.toString(),
-                  valorExcedenteM3:
-                    contrato.categoriaTarifa.valorExcedenteM3?.toString(),
-                  consumoMinimoMensual:
-                    contrato.categoriaTarifa.consumoMinimoMensual?.toString(),
                   fechaVigenciaDesde:
                     contrato.categoriaTarifa.fechaVigenciaDesde?.toISOString(),
                   fechaVigenciaHasta:

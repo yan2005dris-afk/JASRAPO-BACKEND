@@ -31,6 +31,7 @@ export class PreInvoiceMapper {
       codigoImpuestoSri: raw.codigoImpuestoSri ?? null,
       codigoPorcentajeSri: raw.codigoPorcentajeSri ?? null,
       rubroNombre: raw.rubro?.nombre ?? null,
+      codigoSistemaRubro: raw.rubro?.codigoSistemaRubro ?? null,
     });
   }
 
@@ -55,7 +56,8 @@ export class PreInvoiceMapper {
       saldoVencido: toNumber(raw.saldoVencido),
       abono: toNumber(raw.abono),
       saldoActual: toNumber(raw.saldoActual),
-      mesesAtrasado: raw.meses_atrasado ?? 0,
+      mesesAtrasado: raw.meses_atrasado ?? raw.mesesAtrasado ?? 0,
+      mes: raw.mes ?? 1,
       estado: raw.estado,
       aprobadaPor: raw.aprobadaPor ?? null,
       fechaAprobacion: raw.fechaAprobacion ?? null,

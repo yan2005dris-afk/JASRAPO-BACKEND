@@ -23,7 +23,7 @@ backend/postgres/.env
 .DS_Store
 
 # --- Plantillas (no son código productivo) ---
-open-api-facturacion-sri-main/package-lock.json
+external/open-api-facturacion-sri/package-lock.json
 
 *.zip
 CLAUDE

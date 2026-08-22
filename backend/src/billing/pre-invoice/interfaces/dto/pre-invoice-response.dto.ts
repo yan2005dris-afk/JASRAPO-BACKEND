@@ -27,6 +27,13 @@ export class PreInvoiceDetailResponseDto {
   @ApiPropertyOptional({ description: 'SRI tax code' })
   codigoImpuestoSri?: string | null;
 
+  @ApiPropertyOptional({
+    description: 'Internal system code for the line item',
+    example: 'INSTALACION',
+    nullable: true,
+  })
+  codigoSistemaRubro?: string | null;
+
   @ApiPropertyOptional({ description: 'Discount' })
   descuento?: number;
 
@@ -42,6 +49,7 @@ export class PreInvoiceDetailResponseDto {
     dto.iva = Number(detail.iva);
     dto.total = Number(detail.total);
     dto.codigoImpuestoSri = detail.codigoImpuestoSri ?? null;
+    dto.codigoSistemaRubro = detail.codigoSistemaRubro ?? null;
     dto.descuento = Number(detail.descuento);
     return dto;
   }
@@ -62,6 +70,11 @@ export class PreInvoiceResponseDto {
 
   @ApiProperty({ description: 'Period ID' })
   periodoId: number;
+
+  @ApiProperty({
+    description: 'Month (0 for one-off installation, 1-12 for monthly)',
+  })
+  mes: number;
 
   @ApiProperty({ description: 'Subtotal' })
   subtotal: number;
@@ -133,6 +146,7 @@ export class PreInvoiceResponseDto {
     dto.contratoId = Number(entity.contratoId);
     dto.loteId = entity.loteId ? Number(entity.loteId) : null;
     dto.periodoId = entity.periodoId;
+    dto.mes = entity.mes ?? 1;
     dto.subtotal = Number(entity.subtotal);
     dto.iva = Number(entity.iva);
     dto.descuentoTotal = Number(entity.descuentoTotal);

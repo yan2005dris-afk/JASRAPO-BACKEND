@@ -1,4 +1,4 @@
-import type { TipoRubro } from 'src/generated/prisma/client';
+import type { TipoRubro, CodigoSistemaRubro } from '../../../../shared/enums';
 
 export class RubroEntity {
   rubroId!: number;
@@ -7,7 +7,9 @@ export class RubroEntity {
   descripcion!: string;
   precioUnitario!: number;
   tipoRubro!: TipoRubro;
+  codigoSistemaRubro!: CodigoSistemaRubro | null;
   tarifaImpuestoId!: number;
+  categoriaTarifaId!: number | null;
   tarifaImpuesto?: {
     id: number;
     codigoPorcentaje: string;

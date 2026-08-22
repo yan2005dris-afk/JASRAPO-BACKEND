@@ -182,9 +182,7 @@ describe('GetConnectionRequestPdfDataUseCase', () => {
     it('should map tarifa values from categoriaTarifa', async () => {
       mockContractRepository.findUnique.mockResolvedValue(makeContrato());
       const result = await useCase.execute(BigInt(1));
-      expect(result.solicitud.tarifa.valorBase).toBe(4);
-      expect(result.solicitud.tarifa.consumoMinimoMensual).toBe(10);
-      expect(result.solicitud.tarifa.valorExcedenteM3).toBe(0.4);
+      expect(result.solicitud.tarifa.nombre).toBe('Tipo 1');
     });
   });
 });

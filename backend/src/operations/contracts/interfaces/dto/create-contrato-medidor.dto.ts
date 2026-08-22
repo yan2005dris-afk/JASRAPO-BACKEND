@@ -71,7 +71,7 @@ export class CrearContratoMedidorDto {
   @ApiPropertyOptional({
     description: 'Estado inicial del contrato',
     enum: EstadoContrato,
-    default: EstadoContrato.SOLICITUD,
+    default: EstadoContrato.PENDIENTE_PAGO,
   })
   @IsOptional()
   @IsString()
