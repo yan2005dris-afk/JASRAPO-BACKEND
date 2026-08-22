@@ -68,7 +68,7 @@ export class PagoValidadoHandler {
               where: {
                 deletedAt: null,
                 rubro: {
-                  codigoSri: { startsWith: 'SERV-GUIA-' },
+                  codigoSistemaRubro: 'INSTALACION',
                   deletedAt: null,
                 },
               },

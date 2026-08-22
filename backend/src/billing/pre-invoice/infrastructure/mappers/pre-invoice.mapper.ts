@@ -31,6 +31,7 @@ export class PreInvoiceMapper {
       codigoImpuestoSri: raw.codigoImpuestoSri ?? null,
       codigoPorcentajeSri: raw.codigoPorcentajeSri ?? null,
       rubroNombre: raw.rubro?.nombre ?? null,
+      codigoSistemaRubro: raw.rubro?.codigoSistemaRubro ?? null,
     });
   }
 

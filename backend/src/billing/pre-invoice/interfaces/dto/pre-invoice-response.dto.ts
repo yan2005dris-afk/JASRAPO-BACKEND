@@ -27,6 +27,13 @@ export class PreInvoiceDetailResponseDto {
   @ApiPropertyOptional({ description: 'SRI tax code' })
   codigoImpuestoSri?: string | null;
 
+  @ApiPropertyOptional({
+    description: 'Internal system code for the line item',
+    example: 'INSTALACION',
+    nullable: true,
+  })
+  codigoSistemaRubro?: string | null;
+
   @ApiPropertyOptional({ description: 'Discount' })
   descuento?: number;
 
@@ -42,6 +49,7 @@ export class PreInvoiceDetailResponseDto {
     dto.iva = Number(detail.iva);
     dto.total = Number(detail.total);
     dto.codigoImpuestoSri = detail.codigoImpuestoSri ?? null;
+    dto.codigoSistemaRubro = detail.codigoSistemaRubro ?? null;
     dto.descuento = Number(detail.descuento);
     return dto;
   }

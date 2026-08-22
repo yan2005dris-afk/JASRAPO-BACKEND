@@ -1,7 +1,7 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
 import { IsEnum, IsInt, IsOptional, IsString, Min } from 'class-validator';
-import { TipoRubro } from 'src/generated/prisma/client';
+import { TipoRubro } from '../../../../shared/enums';
 
 export class RubroFilterDto {
   @ApiPropertyOptional({

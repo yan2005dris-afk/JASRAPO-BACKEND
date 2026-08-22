@@ -76,6 +76,13 @@ export class RubroResponseDto {
   })
   tarifaImpuesto?: TarifaImpuestoNestedDto;
 
+  @ApiPropertyOptional({
+    description: 'Código de sistema interno del rubro',
+    example: 'INSTALACION',
+    nullable: true,
+  })
+  codigoSistemaRubro?: string | null;
+
   @ApiProperty({ description: 'Estado del rubro', example: true })
   activo!: boolean;
 
@@ -112,6 +119,7 @@ export class RubroResponseDto {
     dto.descripcion = entity.descripcion;
     dto.precioUnitario = Number(entity.precioUnitario);
     dto.tipoRubro = entity.tipoRubro;
+    dto.codigoSistemaRubro = entity.codigoSistemaRubro ?? null;
     dto.tarifaImpuestoId = entity.tarifaImpuestoId;
     if (entity.tarifaImpuesto) {
       dto.tarifaImpuesto = entity.tarifaImpuesto;

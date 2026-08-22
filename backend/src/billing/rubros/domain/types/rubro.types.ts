@@ -1,4 +1,4 @@
-import type { TipoRubro } from 'src/generated/prisma/client';
+import type { TipoRubro } from '../../../../shared/enums';
 
 export interface RubroFilters {
   nombre?: string;
