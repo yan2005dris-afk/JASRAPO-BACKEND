@@ -22,6 +22,9 @@ import type { EstadoMedidor, EstadoContrato } from 'src/shared/enums';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { MeterMapper } from '../mappers/meter.mapper';
 import { ReemplazoMedidorMapper } from '../mappers/reemplazo-medidor.mapper';
+import { MeterHistoryMapper } from '../mappers/meter-history.mapper';
+import { MeterHistoryEntity } from '../../domain/entities/meter-history.entity';
+import { ReemplazoMedidorEntity } from '../../domain/entities/reemplazo-medidor.entity';
 
 export const safeMeterSelect = {
   medidorId: true,
@@ -828,6 +831,29 @@ export class PrismaMeterRepository implements MeterRepository {
       },
       { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
     );
+  }
+
+  async findHistoryByMeter(medidorId: bigint): Promise<MeterHistoryEntity[]> {
+    const rows = await this.prisma.historialMedidores.findMany({
+      where: { medidorId, deletedAt: null },
+      orderBy: { fechaDesde: 'desc' },
+      include: {
+        medidor: true,
+        contrato: { include: { cliente: true } },
+        reemplazosSaliente: { select: { reemplazoId: true } },
+        reemplazosEntrante: { select: { reemplazoId: true } },
+      },
+    });
+    return MeterHistoryMapper.toDomainList(rows);
+  }
+
+  async findReplacementById(
+    reemplazoId: bigint,
+  ): Promise<ReemplazoMedidorEntity | null> {
+    const record = await this.prisma.reemplazoMedidor.findUnique({
+      where: { reemplazoId },
+    });
+    return ReemplazoMedidorMapper.toDomain(record);
   }
 
   private toReplaceMeterResult(
