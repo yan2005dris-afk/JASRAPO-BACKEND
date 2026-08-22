@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { RouteRepository } from '../../domain/repositories/route.repository';
 import { UpdateRouteDto } from '../../interfaces/dto/update-route.dto';
 import { RouteEntity } from '../../domain/entities/route.entity';
+import type { UpdateRouteData } from '../../domain/types/route.types';
 import {
   EntityNotFoundException,
   InvalidDomainOperationException,
@@ -75,7 +76,7 @@ export class UpdateRouteUseCase {
       }
     }
 
-    const payload: any = {
+    const payload: UpdateRouteData = {
       ...(updateDto.nombre !== undefined && { nombre: updateDto.nombre }),
       ...(updateDto.descripcion !== undefined && {
         descripcion: updateDto.descripcion,
