@@ -1,4 +1,4 @@
-import { ReportKey, ReportStyle } from './report-style.service';
+import type { ReportKey, ReportStyle } from './report-style.service';
 
 /**
  * ─── Report-style catalog (PDF-01) ──────────────────────────────────────────

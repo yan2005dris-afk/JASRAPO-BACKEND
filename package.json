@@ -7,5 +7,15 @@
     "pnpm": ">=8",
     "npm": ">=999.0.0",
     "yarn": ">=999.0.0"
+  },
+  "scripts": {
+    "ci": "pnpm --filter backend run ci",
+    "ci:fix": "pnpm --filter backend run ci:fix",
+    "format:check": "pnpm --filter backend run format:check",
+    "format:fix": "pnpm --filter backend run format:fix",
+    "lint": "pnpm --filter backend run lint",
+    "lint:fix": "pnpm --filter backend run lint:fix",
+    "build": "pnpm --filter backend run build",
+    "test": "pnpm --filter backend test"
   }
 }

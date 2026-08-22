@@ -301,10 +301,7 @@ Para consultas o soporte, contacta al equipo de desarrollo del Backend.
     .addTag('[SRI] Catálogos', 'Catálogos oficiales del SRI')
     .addTag('[SRI] Emisores', 'Gestión de emisores de comprobantes')
     .addTag('[SRI] Firma (XAdES-BES)', 'Firma electrónica de documentos')
-    .addTag(
-      '[SRI] Webhooks',
-      'Webhooks para notificaciones del SRI',
-    )
+    .addTag('[SRI] Webhooks', 'Webhooks para notificaciones del SRI')
     .addTag('[SRI] Certificados', 'Gestión de certificados digitales')
     .addTag(
       '[No Aplicable] Métricas para Prometheus (scraping)',
