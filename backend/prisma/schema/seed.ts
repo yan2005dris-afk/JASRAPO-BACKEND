@@ -19,6 +19,7 @@ import { seedContratos } from './seeds/contratos.seed';
 import { seedPeriodos } from './seeds/periodos.seed';
 import { seedLecturas } from './seeds/lecturas.seed';
 import { seedCatalogoDescuento } from './seeds/catalogoDescuento.seed';
+import { seedRubros } from './seeds/rubros.seed';
 import { seedFacturacion } from './seeds/facturacion.seed';
 import { seedSriCatalogs } from './seeds/sri.seed';
 import { seedCatalogosSriInit } from './seeds/catalogosSriInit.seed';
@@ -52,7 +53,9 @@ async function main() {
       .join(', ');
 
     if (tables.length > 0) {
-      await prisma.$executeRawUnsafe(`TRUNCATE TABLE ${tables} RESTART IDENTITY CASCADE;`);
+      await prisma.$executeRawUnsafe(
+        `TRUNCATE TABLE ${tables} RESTART IDENTITY CASCADE;`,
+      );
     }
     console.log('✅ Base de datos limpiada correctamente desde 0.');
   } catch (error) {
@@ -69,7 +72,7 @@ async function main() {
 
   // Roles-Permisos
   await seedRolePermissions(prisma, roles, permissions);
-  console.log('✅ Roles y Permisos asignados correctamente.')
+  console.log('✅ Roles y Permisos asignados correctamente.');
 
   // Usuarios
   await seedUSers(prisma, roles);
@@ -127,72 +130,9 @@ async function main() {
   await seedCatalogoDescuento(prisma);
   console.log('✅ Catálogo de descuentos creado.');
 
-  // Rubros — lookup tariff IDs from new catalog tables (seeded by seedCatalogosSriInit above)
-  const ivaImpuesto = await prisma.catalogoImpuestos.findUnique({ where: { codigo: '2' } });
-  if (!ivaImpuesto) throw new Error('IVA impuesto not found in catalog — seed order issue');
-  const tarifaIva0 = await prisma.catalogoTarifasImpuesto.findFirst({
-    where: { impuestoId: ivaImpuesto.id, codigoPorcentaje: '0' },
-  });
-  const tarifaIva12 = await prisma.catalogoTarifasImpuesto.findFirst({
-    where: { impuestoId: ivaImpuesto.id, codigoPorcentaje: '2' },
-  });
-  if (!tarifaIva12 || !tarifaIva0) throw new Error('IVA tariff records not found — seed order issue');
-
-  await prisma.rubros.createMany({
-    data: [
-      {
-        codigoSri: '001',
-        nombre: 'Consumo Agua',
-        descripcion:
-          'Consumo mensual de agua potable (calculado según m³ y categoría tarifaria del contrato)',
-        precioUnitario: 0.0,
-        tipoRubro: 'VARIABLE' as any,
-        tarifaImpuestoId: tarifaIva0.id,
-        esAutomatico: true,
-      },
-      {
-        codigoSri: '002',
-        nombre: 'Cargo Fijo',
-        descripcion:
-          'Valor base mensual por mantenimiento de conexión (determinado por la categoría tarifaria del contrato)',
-        precioUnitario: 0.0,
-        tipoRubro: 'FIJO' as any,
-        tarifaImpuestoId: tarifaIva0.id,
-        esAutomatico: true,
-      },
-      {
-        codigoSri: '003',
-        nombre: 'Interés Mora',
-        descripcion: 'Recargo por mora en planillas vencidas',
-        precioUnitario: 0.0,
-        tipoRubro: 'MULTA' as any,
-        tarifaImpuestoId: tarifaIva0.id,
-        esAutomatico: true,
-      },
-      {
-        codigoSri: '004',
-        nombre: 'Tasa Seguridad',
-        descripcion:
-          'Aporte de seguridad ciudadana (calculado por % de la comunidad)',
-        precioUnitario: 0.0,
-        tipoRubro: 'FIJO' as any,
-        tarifaImpuestoId: tarifaIva0.id,
-        esAutomatico: true,
-      },
-      {
-        codigoSri: '005',
-        nombre: 'Instalación Medidor',
-        descripcion:
-          'Costo por nueva acometida e instalación física de medidor',
-        precioUnitario: 150.0,
-        tipoRubro: 'SERVICIO' as any,
-        tarifaImpuestoId: tarifaIva12.id,
-        esAutomatico: false,
-      },
-    ],
-    skipDuplicates: true,
-  });
-  console.log('✅ Rubros creados');
+  // Rubros — extraído a seeds/rubros.seed.ts (requiere catálogos SRI cargados)
+  await seedRubros(prisma);
+  console.log('✅ Rubros creados con asignación a categorías.');
 
   // === FACTURACIÓN ===
   await seedFacturacion(prisma);
@@ -233,4 +173,3 @@ main()
       console.error('❌ Error cerrando el pool de conexiones de pg:', error);
     }
   });
-

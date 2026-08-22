@@ -1,4 +1,11 @@
 {
   "name": "jasrapo-root",
-  "private": true
+  "private": true,
+  "packageManager": "pnpm@11.22.0",
+  "engines": {
+    "node": ">=18",
+    "pnpm": ">=8",
+    "npm": ">=999.0.0",
+    "yarn": ">=999.0.0"
+  }
 }

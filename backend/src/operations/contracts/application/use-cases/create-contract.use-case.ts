@@ -17,7 +17,7 @@ export class CreateContractUseCase {
       sectorId: dto.sectorId ? Number(dto.sectorId) : null,
       numeroGuia: dto.numeroGuia,
       direccionSuministro: dto.direccionSuministro,
-      estado: (dto.estado || EstadoContrato.SOLICITUD) as EstadoContrato,
+      estado: (dto.estado || EstadoContrato.PENDIENTE_PAGO) as EstadoContrato,
       creadoPor: dto.creadoPor,
       lecturaInicial: dto.lecturaInicial ?? 0,
     });

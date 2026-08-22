@@ -1,7 +1,7 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
 import { IsEnum, IsInt, IsOptional, IsString, Min } from 'class-validator';
-import { TipoRubro } from 'src/generated/prisma/client';
+import { TipoRubro } from '../../../../shared/enums';
 
 export class RubroFilterDto {
   @ApiPropertyOptional({
@@ -36,6 +36,16 @@ export class RubroFilterDto {
   @Type(() => Number)
   @IsInt()
   tarifaImpuestoId?: number;
+
+  @ApiPropertyOptional({
+    description:
+      'Filtrar por categoría de tarifa (SC-241). Si se omite, se listan rubros de todas las categorías (incluyendo los sin categoría).',
+    example: 1,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  categoriaTarifaId?: number;
 
   @ApiPropertyOptional({
     description: 'Filtrar por estado activo/inactivo',

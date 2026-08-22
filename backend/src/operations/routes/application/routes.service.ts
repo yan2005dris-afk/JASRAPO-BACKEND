@@ -5,6 +5,7 @@ import { FilterReadingsDto } from '../interfaces/dto/filter-readings.dto';
 import { RouteEntity } from '../domain/entities/route.entity';
 import { ReadingForRouteEntity } from '../domain/entities/reading-for-route.entity';
 import { GetEligibleReadingsUseCase } from './use-cases/get-eligible-readings.use-case';
+import { GetReadingsByRutaUseCase } from './use-cases/get-readings-by-ruta.use-case';
 import { CreateRouteUseCase } from './use-cases/create-route.use-case';
 import { FindAllRoutesUseCase } from './use-cases/find-all-routes.use-case';
 import { FindOneRouteUseCase } from './use-cases/find-one-route.use-case';
@@ -19,6 +20,7 @@ export class RoutesService {
   constructor(
     private readonly routeRepository: RouteRepository,
     private readonly getEligibleReadingsUseCase: GetEligibleReadingsUseCase,
+    private readonly getReadingsByRutaUseCase: GetReadingsByRutaUseCase,
     private readonly createRouteUseCase: CreateRouteUseCase,
     private readonly findAllRoutesUseCase: FindAllRoutesUseCase,
     private readonly findOneRouteUseCase: FindOneRouteUseCase,
@@ -41,6 +43,13 @@ export class RoutesService {
         limit: filterDto.limit,
       },
     });
+  }
+
+  async getReadingsByRuta(
+    rutaId: bigint,
+    pagination: { page?: number; limit?: number },
+  ): Promise<PaginatedResult<ReadingForRouteEntity>> {
+    return this.getReadingsByRutaUseCase.execute({ rutaId, pagination });
   }
 
   async create(createDto: CreateRouteDto): Promise<RouteEntity> {

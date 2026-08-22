@@ -8,6 +8,7 @@ import {
   EntityNotFoundException,
   InvalidDomainOperationException,
 } from 'src/shared/domain/exceptions/domain.exception';
+import { DateUtil } from 'src/shared/utils/date.util';
 
 /** Route types that target a specific meter work order (not community-periodic). */
 const WORK_ORDER_TYPES = new Set<string>([
@@ -71,9 +72,9 @@ export class CreateRouteUseCase {
 
     // Overlap check applies only to periodic community routes (validating the same month/year planificada)
     if (!isWorkOrder) {
-      const fechaPlan = createDto.fechaPlanificada
-        ? new Date(createDto.fechaPlanificada)
-        : null;
+      const fechaPlan = DateUtil.parseFrontendDate(
+        createDto.fechaPlanificada ?? null,
+      );
 
       const overlapping = await this.routeRepository.findOverlappingRoutes(
         createDto.comunidadId,
@@ -98,9 +99,9 @@ export class CreateRouteUseCase {
       comunidadId: createDto.comunidadId,
       sectorId: createDto.sectorId,
       periodoId: createDto.periodoId,
-      fechaPlanificada: createDto.fechaPlanificada
-        ? new Date(createDto.fechaPlanificada)
-        : null,
+      fechaPlanificada: DateUtil.parseFrontendDate(
+        createDto.fechaPlanificada ?? null,
+      ),
       estado: 'PENDIENTE',
     };
 
@@ -114,7 +115,7 @@ export class CreateRouteUseCase {
       await this.routeRepository.initializeMonthlyReadings(
         createDto.comunidadId,
         createDto.periodoId,
-        new Date(createDto.fechaPlanificada),
+        DateUtil.parseFrontendDateStrict(createDto.fechaPlanificada),
         createDto.sectorId,
         route.rutaId,
       );

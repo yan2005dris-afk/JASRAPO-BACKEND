@@ -10,7 +10,7 @@ import {
   MaxLength,
   Min,
 } from 'class-validator';
-import { TipoRubro } from 'src/generated/prisma/client';
+import { TipoRubro } from '../../../../shared/enums';
 
 export class CreateRubroDto {
   @ApiPropertyOptional({
@@ -65,6 +65,15 @@ export class CreateRubroDto {
   })
   @IsInt({ message: 'La tarifa de impuesto debe ser un entero' })
   tarifaImpuestoId!: number;
+
+  @ApiPropertyOptional({
+    description: 'ID de la categoría tarifaria asociada',
+    example: 1,
+    nullable: true,
+  })
+  @IsOptional()
+  @IsInt({ message: 'La categoría tarifaria debe ser un entero' })
+  categoriaTarifaId?: number | null;
 
   @ApiPropertyOptional({
     description: 'Estado de activación del rubro',

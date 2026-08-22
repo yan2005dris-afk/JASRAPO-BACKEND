@@ -11,6 +11,7 @@ export interface FindAllRubrosParams {
   search?: string;
   tipoRubro?: string;
   tarifaImpuestoId?: number;
+  categoriaTarifaId?: number;
   activo?: boolean;
   esAutomatico?: boolean;
 }
@@ -37,6 +38,9 @@ export class FindAllRubrosUseCase {
     }
     if (params.tarifaImpuestoId !== undefined) {
       where.tarifaImpuestoId = Number(params.tarifaImpuestoId);
+    }
+    if (params.categoriaTarifaId !== undefined) {
+      where.categoriaTarifaId = Number(params.categoriaTarifaId);
     }
     if (params.activo !== undefined) {
       where.activo = params.activo;

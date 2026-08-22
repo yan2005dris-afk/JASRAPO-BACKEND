@@ -2,6 +2,7 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { RoutesController } from './routes.controller';
 import { RoutesService } from '../../application/routes.service';
+import { OrdenesTrabajoService } from '../../application/ordenes-trabajo.service';
 import { ReassignRouteUseCase } from '../../application/use-cases/reassign-route.use-case';
 import { RouteEntity } from '../../domain/entities/route.entity';
 import { ReadingForRouteEntity } from '../../domain/entities/reading-for-route.entity';
@@ -20,6 +21,12 @@ describe('RoutesController', () => {
 
   const mockReassignRouteUseCase = {
     execute: jest.fn(),
+  };
+
+  const mockOrdenestrabajoService = {
+    findByRutaId: jest.fn(),
+    updateEstado: jest.fn(),
+    linkLectura: jest.fn(),
   };
 
   const sampleRoute = new RouteEntity({
@@ -51,6 +58,10 @@ describe('RoutesController', () => {
         {
           provide: RoutesService,
           useValue: mockRoutesService,
+        },
+        {
+          provide: OrdenesTrabajoService,
+          useValue: mockOrdenestrabajoService,
         },
         {
           provide: ReassignRouteUseCase,
