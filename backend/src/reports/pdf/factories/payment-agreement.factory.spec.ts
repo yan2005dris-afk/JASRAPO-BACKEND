@@ -130,6 +130,43 @@ describe('createPaymentAgreementPdfDocumentType', () => {
     });
   });
 
+  describe('unique (canonical) variant', () => {
+    let pdfType: PdfDocumentType;
+
+    beforeEach(() => {
+      pdfType = createPaymentAgreementPdfDocumentType('unique');
+    });
+
+    it('exposes the canonical type/name and reuses the legacy template', () => {
+      expect(pdfType.type).toBe('payment-agreement-unique');
+      expect(pdfType.name).toBe('Convenio de Pago');
+      // Canonical reuses the legacy layout for now (finalized with the team).
+      expect(pdfType.template).toBe('payment-agreement-legacy');
+    });
+
+    it('keeps periodoInicio (shares the legacy data shape)', () => {
+      const raw = {
+        convenio: {
+          createdAt: '2024-05-10T10:00:00.000Z',
+          fechaInicio: '2024-05-01T00:00:00.000Z',
+          fechaPrimerPago: '2024-06-01T00:00:00.000Z',
+          cuotaMensual: 25.5,
+          deudaTotal: 500,
+          abonoInicial: 100,
+          numeroCuotas: 12,
+          cliente: { nombres: 'Ana', apellidos: 'Pérez' },
+          contrato: { numeroGuia: 'G-777' },
+        },
+      };
+
+      const result = pdfType.adaptData(raw) as Record<string, unknown>;
+      const convenio = result['convenio'] as Record<string, unknown>;
+      expect(convenio['clienteNombre']).toBe('Ana Pérez');
+      expect(convenio['numeroGuia']).toBe('G-777');
+      expect(convenio['periodoInicio']).toEqual(expect.any(String));
+    });
+  });
+
   describe('factory discrimination', () => {
     it('returns different name and template for each style', () => {
       const legacy = createPaymentAgreementPdfDocumentType('legacy');
