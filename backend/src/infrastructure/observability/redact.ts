@@ -64,7 +64,9 @@ export function parseUserAgent(ua: string): string {
   if (!trimmed) return UNKNOWN;
 
   // Check common CLI tools (e.g. curl/8.4.0, PostmanRuntime/7.32.3, etc.)
-  const cliMatch = trimmed.match(/^(curl|PostmanRuntime|insomnia|Wget)\/(\d+)/i);
+  const cliMatch = trimmed.match(
+    /^(curl|PostmanRuntime|insomnia|Wget)\/(\d+)/i,
+  );
   if (cliMatch) {
     return `${cliMatch[1]} ${cliMatch[2]}`;
   }
