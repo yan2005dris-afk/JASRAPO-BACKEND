@@ -209,4 +209,48 @@ describe('PagoValidadoHandler (T-006, post-refactor RF-002)', () => {
       },
     });
   });
+
+  it('should be idempotent when called twice for the same payment/comprobante', async () => {
+    const mockTx = {
+      prefacturas: {
+        findMany: jest.fn().mockResolvedValue([
+          {
+            prefacturaId: BigInt(10),
+            contratoId: BigInt(99),
+            prefacturaDetalle: [{ prefacturaDetalleId: BigInt(1) }],
+          },
+        ]),
+        updateMany: jest.fn().mockResolvedValue({ count: 1 }),
+      },
+      contratos: {
+        updateMany: jest.fn().mockResolvedValue({ count: 1 }),
+      },
+    };
+
+    paymentRepository.executeTransaction = jest
+      .fn()
+      .mockImplementation(async (cb) => cb(mockTx));
+
+    paymentRepository.findPaymentDetailsByPagoId.mockResolvedValue([
+      createDetallePago({ comprobanteId: BigInt(42), montoAbonado: 100 }),
+    ]);
+    paymentRepository.findPaymentDetailsByComprobanteId.mockResolvedValue([
+      createDetallePago({ comprobanteId: BigInt(42), montoAbonado: 100 }),
+    ]);
+    paymentRepository.findComprobanteById.mockResolvedValue({
+      id: BigInt(42),
+      importeTotal: 100,
+    });
+    sriDispatcher.tryEmit.mockResolvedValue('EMITTED');
+
+    // First call
+    await handler.procesarPagoValidado(BigInt(1));
+    // Second call (retry)
+    await handler.procesarPagoValidado(BigInt(1));
+
+    expect(sriDispatcher.tryEmit).toHaveBeenCalledTimes(2);
+    expect(mockTx.prefacturas.updateMany).toHaveBeenCalledTimes(2);
+    expect(mockTx.contratos.updateMany).toHaveBeenCalledTimes(2);
+  });
 });
+

@@ -20,7 +20,14 @@ export class PrismaPreInvoiceRepository implements PreInvoiceRepository {
 
   private readonly defaultInclude = {
     prefacturaDetalle: {
-      include: { rubro: { select: { nombre: true } } },
+      include: {
+        rubro: {
+          select: {
+            nombre: true,
+            codigoSistemaRubro: true,
+          },
+        },
+      },
     },
     contrato: {
       select: {
