@@ -146,6 +146,45 @@ describe('PrismaAgreementRepository', () => {
     });
   });
 
+  describe('getPdfData', () => {
+    it('projects the contractual start and first installment concepts', async () => {
+      prismaMock.convenios.findFirst.mockResolvedValue({
+        ...rawConvenio,
+        abonoInicial: new Prisma.Decimal(5),
+        contrato: {
+          numeroGuia: 'G-001',
+          direccionSuministro: 'Olón',
+          fechaInicio: new Date('2020-01-01T00:00:00.000Z'),
+          cliente: {
+            nombres: 'Ana',
+            apellidos: 'Pérez',
+            razonSocial: null,
+            identificacion: '0912345678',
+          },
+        },
+        cuotaConvenio: [{ valorCuota: new Prisma.Decimal(50) }],
+      });
+
+      const result = await repository.getPdfData(1n);
+
+      expect(result?.convenio.periodoInicio).toBe('2020-01-01T00:00:00.000Z');
+      expect(result?.convenio.primeraCuota).toBe(50);
+      expect(result?.convenio.abonoInicial).toBe(5);
+      expect(prismaMock.convenios.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          include: expect.objectContaining({
+            contrato: expect.objectContaining({
+              select: expect.objectContaining({ fechaInicio: true }),
+            }),
+            cuotaConvenio: expect.objectContaining({
+              where: { numeroCuota: 1, deletedAt: null },
+            }),
+          }),
+        }),
+      );
+    });
+  });
+
   describe('contractExists', () => {
     it('should return true when count > 0', async () => {
       prismaMock.contratos.count.mockResolvedValue(1);

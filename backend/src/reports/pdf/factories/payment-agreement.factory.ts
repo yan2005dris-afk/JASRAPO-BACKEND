@@ -33,9 +33,10 @@ export type PaymentAgreementStyle = 'legacy' | 'modern' | 'unique';
 export interface PaymentAgreementPdfRawData {
   convenio: {
     createdAt: string;
-    fechaInicio: string;
+    periodoInicio: string;
     fechaPrimerPago: string;
     cuotaMensual: number | string;
+    primeraCuota: number | string;
     deudaTotal: number | string;
     abonoInicial: number | string;
     numeroCuotas: number;
@@ -107,9 +108,7 @@ export function createPaymentAgreementPdfDocumentType(
       const cliente = c?.cliente ?? {};
       const contrato = c?.contrato ?? {};
       const createdAt = c?.createdAt ?? (raw['createdAt'] as string);
-      const fechaInicio = (c?.fechaInicio ??
-        raw['fechaInicio'] ??
-        createdAt) as string;
+      const periodoInicio = c?.periodoInicio;
 
       return {
         logoUrl: getPdfLogoUrl(),
@@ -119,12 +118,19 @@ export function createPaymentAgreementPdfDocumentType(
           clienteNombre: resolveClientName(cliente),
           clienteCI: cliente.identificacion ?? '',
           cuotaMensual: formatCurrency(Number(c?.cuotaMensual ?? 0)),
+          primeraCuota: formatCurrency(Number(c?.primeraCuota ?? 0)),
           deudaTotal: formatCurrency(Number(c?.deudaTotal ?? 0)),
           abonoInicial: formatCurrency(Number(c?.abonoInicial ?? 0)),
           numeroCuotas: c?.numeroCuotas ?? 0,
-          mesPrimerPago: formatMonthYear(c?.fechaPrimerPago ?? createdAt),
+          mesPrimerPago: c?.fechaPrimerPago
+            ? formatMonthYear(c.fechaPrimerPago)
+            : undefined,
           ...(usesLegacyShape
-            ? { periodoInicio: formatMonthYear(fechaInicio) }
+            ? {
+                periodoInicio: periodoInicio
+                  ? formatMonthYear(periodoInicio)
+                  : undefined,
+              }
             : {}),
           fechaActual: formatDateInWords(createdAt),
         },
