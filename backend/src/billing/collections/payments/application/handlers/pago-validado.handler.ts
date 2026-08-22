@@ -61,7 +61,20 @@ export class PagoValidadoHandler {
 
         const prefacturas = await prismaClient.prefacturas.findMany({
           where: { comprobanteId, deletedAt: null },
-          select: { prefacturaId: true, contratoId: true, mes: true },
+          select: {
+            prefacturaId: true,
+            contratoId: true,
+            prefacturaDetalle: {
+              where: {
+                deletedAt: null,
+                rubro: {
+                  codigoSri: { startsWith: 'SERV-GUIA-' },
+                  deletedAt: null,
+                },
+              },
+              select: { prefacturaDetalleId: true },
+            },
+          },
         });
 
         await prismaClient.prefacturas.updateMany({
@@ -75,7 +88,11 @@ export class PagoValidadoHandler {
         });
 
         const contratosInstalacionIds = prefacturas
-          .filter((p: any) => p.mes === 0)
+          .filter(
+            (p: any) =>
+              Array.isArray(p.prefacturaDetalle) &&
+              p.prefacturaDetalle.length > 0,
+          )
           .map((p: any) => p.contratoId);
 
         if (contratosInstalacionIds.length > 0) {

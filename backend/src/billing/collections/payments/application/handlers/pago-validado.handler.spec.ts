@@ -152,14 +152,16 @@ describe('PagoValidadoHandler (T-006, post-refactor RF-002)', () => {
     expect(sriDispatcher.tryEmit).toHaveBeenCalledWith(BigInt(42));
   });
 
-  it('should transition contract to PENDIENTE_INSTALACION when prefactura mes is 0', async () => {
+  it('should transition contract to PENDIENTE_INSTALACION when prefactura has installation rubro', async () => {
     const mockTx = {
       prefacturas: {
-        findMany: jest
-          .fn()
-          .mockResolvedValue([
-            { prefacturaId: BigInt(10), contratoId: BigInt(99), mes: 0 },
-          ]),
+        findMany: jest.fn().mockResolvedValue([
+          {
+            prefacturaId: BigInt(10),
+            contratoId: BigInt(99),
+            prefacturaDetalle: [{ prefacturaDetalleId: BigInt(1) }],
+          },
+        ]),
         updateMany: jest.fn().mockResolvedValue({ count: 1 }),
       },
       contratos: {
