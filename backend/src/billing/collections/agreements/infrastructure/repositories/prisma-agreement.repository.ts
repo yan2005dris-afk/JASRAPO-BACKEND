@@ -330,6 +330,7 @@ export class PrismaAgreementRepository implements AgreementRepository {
           select: {
             numeroGuia: true,
             direccionSuministro: true,
+            fechaInicio: true,
             cliente: {
               select: {
                 nombres: true,
@@ -350,6 +351,8 @@ export class PrismaAgreementRepository implements AgreementRepository {
 
     if (!convenio) return null;
 
+    const firstInstallment = Number(convenio.cuotaConvenio[0]?.valorCuota ?? 0);
+
     return {
       convenio: {
         convenioId: String(convenio.convenioId),
@@ -358,9 +361,11 @@ export class PrismaAgreementRepository implements AgreementRepository {
         abonoInicial: Number(convenio.abonoInicial),
         numeroCuotas: convenio.numeroCuotas,
         fechaPrimerPago: convenio.fechaPrimerPago.toISOString(),
+        periodoInicio: convenio.contrato.fechaInicio.toISOString(),
         motivo: convenio.motivo,
         createdAt: convenio.createdAt.toISOString(),
-        cuotaMensual: Number(convenio.cuotaConvenio[0]?.valorCuota ?? 0),
+        cuotaMensual: firstInstallment,
+        primeraCuota: firstInstallment,
         contrato: {
           numeroGuia: convenio.contrato.numeroGuia,
           direccionSuministro: convenio.contrato.direccionSuministro,

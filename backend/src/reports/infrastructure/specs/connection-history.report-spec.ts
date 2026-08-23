@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import type { ReportSpec } from '../../interfaces/report-spec.interface';
 import type { ConnectionHistoryFilterDto } from '../../interfaces/dto/connection-history-filter.dto';
+import { normalizeReportDateRange } from './report-date-range';
 
 @Injectable()
 export class ConnectionHistoryReportSpec implements ReportSpec<ConnectionHistoryFilterDto> {
@@ -12,6 +13,10 @@ export class ConnectionHistoryReportSpec implements ReportSpec<ConnectionHistory
   async fetchData(
     filters: ConnectionHistoryFilterDto,
   ): Promise<Record<string, unknown>> {
+    const { startInclusive, endExclusive } = normalizeReportDateRange(
+      filters.fechaDesde,
+      filters.fechaHasta,
+    );
     const prefacturas = await this.prisma.prefacturas.findMany({
       where: {
         contratoId: BigInt(filters.contratoId),
@@ -20,12 +25,10 @@ export class ConnectionHistoryReportSpec implements ReportSpec<ConnectionHistory
         ...(filters.fechaDesde || filters.fechaHasta
           ? {
               periodoRel: {
-                ...(filters.fechaDesde
-                  ? { fechaInicio: { gte: new Date(filters.fechaDesde) } }
+                ...(startInclusive
+                  ? { fechaInicio: { gte: startInclusive } }
                   : {}),
-                ...(filters.fechaHasta
-                  ? { fechaFin: { lte: new Date(filters.fechaHasta) } }
-                  : {}),
+                ...(endExclusive ? { fechaFin: { lt: endExclusive } } : {}),
               },
             }
           : {}),

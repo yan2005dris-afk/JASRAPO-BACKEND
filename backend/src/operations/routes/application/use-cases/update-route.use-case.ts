@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { RouteRepository } from '../../domain/repositories/route.repository';
 import { UpdateRouteDto } from '../../interfaces/dto/update-route.dto';
 import { RouteEntity } from '../../domain/entities/route.entity';
+import type { UpdateRouteData } from '../../domain/types/route.types';
 import {
   EntityNotFoundException,
   InvalidDomainOperationException,
@@ -27,6 +28,16 @@ export class UpdateRouteUseCase {
       if (!canTransitionRouteState(ruta.estado, updateDto.estado)) {
         throw new InvalidDomainOperationException(
           `No se puede cambiar el estado de la ruta de ${ruta.estado} a ${updateDto.estado}`,
+        );
+      }
+
+      if (
+        updateDto.estado === 'EN_PROGRESO' &&
+        !ruta.operarioId &&
+        updateDto.operarioId === undefined
+      ) {
+        throw new InvalidDomainOperationException(
+          'No se puede iniciar la ruta: debe asignar un operario responsable antes de enviarla a campo',
         );
       }
     }
@@ -65,10 +76,13 @@ export class UpdateRouteUseCase {
       }
     }
 
-    const payload: any = {
+    const payload: UpdateRouteData = {
       ...(updateDto.nombre !== undefined && { nombre: updateDto.nombre }),
       ...(updateDto.descripcion !== undefined && {
         descripcion: updateDto.descripcion,
+      }),
+      ...(updateDto.operarioId !== undefined && {
+        operarioId: updateDto.operarioId,
       }),
       ...(updateDto.estado !== undefined && { estado: updateDto.estado }),
       ...(updateDto.fechaPlanificada !== undefined && {

@@ -209,4 +209,20 @@ describe('createConnectionHistoryPdfDocumentType', () => {
       expect(reporte['filas']).toEqual([]);
     });
   });
+
+  it('connectionHistoryTotalSumsOutstandingBalances', () => {
+    const pdfType = createConnectionHistoryPdfDocumentType('legacy');
+    const result = pdfType.adaptData({
+      contratoId: '88',
+      prefacturas: [
+        { saldoActual: 15, contrato: {} },
+        { saldoActual: '25.50', contrato: {} },
+        { saldoActual: 1, contrato: {} },
+      ],
+    });
+
+    const reporte = result['reporte'] as Record<string, unknown>;
+    expect(reporte['saldoFinal']).toBe('41.50');
+    expect(reporte['saldoFinal']).not.toBe('1.00');
+  });
 });

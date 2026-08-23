@@ -12,6 +12,8 @@ import { FinalizeMeterLinkUseCase } from './use-cases/finalize-meter-link.use-ca
 import { GetConnectionRequestPdfDataUseCase } from './use-cases/get-connection-request-pdf-data.use-case';
 import { GetResponsibilityAgreementPdfDataUseCase } from './use-cases/get-responsibility-agreement-pdf-data.use-case';
 import { GeneratePdfUseCase } from 'src/infrastructure/pdf/use-cases/generate-pdf.use-case';
+import { RouteRepository } from '../../routes/domain/repositories/route.repository';
+import { OrdenTrabajoRepository } from '../../routes/domain/repositories/orden-trabajo.repository';
 
 describe('ContratoMedidorService', () => {
   let service: ContratoMedidorService;
@@ -25,6 +27,13 @@ describe('ContratoMedidorService', () => {
   const mockGetConnectionRequestPdfData = { execute: jest.fn() };
   const mockGetResponsibilityAgreementPdfData = { execute: jest.fn() };
   const mockGeneratePdf = { execute: jest.fn() };
+  const mockRouteRepository = {
+    create: jest.fn(),
+    findById: jest.fn(),
+  };
+  const mockOrdenTrabajoRepository = {
+    create: jest.fn(),
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -48,6 +57,11 @@ describe('ContratoMedidorService', () => {
           useValue: mockGetResponsibilityAgreementPdfData,
         },
         { provide: GeneratePdfUseCase, useValue: mockGeneratePdf },
+        { provide: RouteRepository, useValue: mockRouteRepository },
+        {
+          provide: OrdenTrabajoRepository,
+          useValue: mockOrdenTrabajoRepository,
+        },
       ],
     }).compile();
 

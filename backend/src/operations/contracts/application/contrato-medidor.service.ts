@@ -19,6 +19,16 @@ import { GetResponsibilityAgreementPdfDataUseCase } from './use-cases/get-respon
 import { GeneratePdfUseCase } from 'src/infrastructure/pdf/use-cases/generate-pdf.use-case';
 import { ContractEntity } from '../domain/entities/contract.entity';
 import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
+import { TipoRuta, EstadoRuta } from 'src/shared/enums';
+import { RouteRepository } from '../../routes/domain/repositories/route.repository';
+import { OrdenTrabajoRepository } from '../../routes/domain/repositories/orden-trabajo.repository';
+import {
+  EntityNotFoundException,
+  InvalidDomainOperationException,
+} from 'src/shared/domain/exceptions/domain.exception';
+import { DateUtil } from 'src/shared/utils/date.util';
+import type { AssignInstallationRouteDto } from '../interfaces/dto/assign-installation-route.dto';
+import { RouteEntity } from '../../routes/domain/entities/route.entity';
 
 @Injectable()
 export class ContratoMedidorService {
@@ -32,6 +42,8 @@ export class ContratoMedidorService {
     private readonly getConnectionRequestPdfDataUseCase: GetConnectionRequestPdfDataUseCase,
     private readonly getResponsibilityAgreementPdfDataUseCase: GetResponsibilityAgreementPdfDataUseCase,
     private readonly generatePdf: GeneratePdfUseCase,
+    private readonly routeRepository: RouteRepository,
+    private readonly ordenTrabajoRepository: OrdenTrabajoRepository,
   ) {}
 
   getContractStatesCatalog(): EnumStateDto[] {
@@ -83,6 +95,78 @@ export class ContratoMedidorService {
 
   async eliminar(id: bigint): Promise<ContractEntity> {
     return this.removeUseCase.execute(id);
+  }
+
+  // ── Asignar contrato a ruta de instalación (SC-174) ─────────────────────
+
+  /**
+   * Asigna un contrato en estado PENDIENTE_INSTALACION a una ruta de
+   * instalacion. Si `dto.routeId` es null/undefined, crea una nueva ruta
+   * INSTALACION sin operario asignado. Si se pasa `dto.routeId`, valida
+   * que la ruta destino sea de tipo INSTALACION y este en PENDIENTE.
+   *
+   * En ambos casos crea una orden_trabajo (INSTALACION) para el contrato
+   * y la vincula a la ruta (nueva o existente).
+   */
+  async assignInstallationRoute(
+    contratoId: bigint,
+    dto: AssignInstallationRouteDto,
+  ): Promise<RouteEntity> {
+    // 1. Buscar el contrato y validar estado
+    const contrato = await this.findOneUseCase.execute(contratoId);
+
+    if (contrato.estado !== EstadoContrato.PENDIENTE_INSTALACION) {
+      throw new InvalidDomainOperationException(
+        `El contrato debe estar en estado PENDIENTE_INSTALACION (actual: ${contrato.estado})`,
+      );
+    }
+
+    // 2. Resolver la ruta (crear nueva o usar existente)
+    let ruta: RouteEntity;
+
+    if (dto.routeId !== undefined && dto.routeId !== null) {
+      const existing = await this.routeRepository.findById(BigInt(dto.routeId));
+      if (!existing) {
+        throw new EntityNotFoundException('Ruta', dto.routeId.toString());
+      }
+      if (existing.tipoRuta !== TipoRuta.INSTALACION) {
+        throw new InvalidDomainOperationException(
+          `La ruta debe ser de tipo INSTALACION (actual: ${existing.tipoRuta})`,
+        );
+      }
+      if (existing.estado !== EstadoRuta.PENDIENTE) {
+        throw new InvalidDomainOperationException(
+          `La ruta debe estar en estado PENDIENTE (actual: ${existing.estado})`,
+        );
+      }
+      ruta = existing;
+    } else {
+      // Crear nueva ruta INSTALACION sin operario
+      ruta = await this.routeRepository.create({
+        nombre: `Instalaciones ${contrato.numeroGuia ?? contratoId}`,
+        descripcion: null,
+        operarioId: null,
+        tipoRuta: TipoRuta.INSTALACION,
+        comunidadId: Number(contrato.comunidadId),
+        sectorId: null,
+        periodoId: null,
+        estado: EstadoRuta.PENDIENTE,
+        fechaPlanificada: dto.fechaPlanificada
+          ? DateUtil.parseFrontendDate(dto.fechaPlanificada)
+          : null,
+      });
+    }
+
+    // 3. Crear la orden_trabajo vinculada al contrato
+    await this.ordenTrabajoRepository.create({
+      rutaId: ruta.rutaId,
+      contratoId,
+      medidorId: contrato.historialMedidores?.[0]?.medidorId ?? null,
+      tipoActividad: 'INSTALACION',
+      estado: 'PENDIENTE',
+    });
+
+    return ruta;
   }
 
   // ── PDF ──────────────────────────────────────────────────────────────────

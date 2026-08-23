@@ -80,12 +80,9 @@ export function createConnectionHistoryPdfDocumentType(
       const totalAbonos = prefacturas
         .reduce((s, pf) => s + Number(pf['abono'] ?? 0), 0)
         .toFixed(2);
-      const saldoFinal =
-        prefacturas.length > 0
-          ? Number(
-              prefacturas[prefacturas.length - 1]['saldoActual'] ?? 0,
-            ).toFixed(2)
-          : '0.00';
+      const saldoFinal = prefacturas
+        .reduce((sum, pf) => sum + Number(pf['saldoActual'] ?? 0), 0)
+        .toFixed(2);
 
       return {
         ...(isLegacy ? {} : { logoUrl: getPdfLogoUrl() }),

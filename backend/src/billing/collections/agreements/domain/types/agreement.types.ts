@@ -45,9 +45,11 @@ export interface PaymentAgreementPdfData {
     abonoInicial: number;
     numeroCuotas: number;
     fechaPrimerPago: string;
+    periodoInicio: string;
     motivo: string | null;
     createdAt: string;
     cuotaMensual: number;
+    primeraCuota: number;
     contrato: {
       numeroGuia: string;
       direccionSuministro: string;

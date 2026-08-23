@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { Prisma } from 'src/generated/prisma/client';
-import { EstadoOrdenTrabajo } from 'src/shared/enums';
+import { EstadoOrdenTrabajo, TipoActividadOrden } from 'src/shared/enums';
 import { OrdenTrabajoRepository } from '../../domain/repositories/orden-trabajo.repository';
 import { OrdenTrabajoMapper } from '../mappers/orden-trabajo.mapper';
 import {
@@ -15,6 +15,7 @@ import type {
   OrdenTrabajoKpis,
   UpdateOrdenEstadoData,
   LinkLecturaData,
+  CreateOrdenTrabajoData,
 } from '../../domain/types/orden-trabajo.types';
 import {
   EntityNotFoundException,
@@ -283,5 +284,20 @@ export class PrismaOrdenTrabajoRepository implements OrdenTrabajoRepository {
       }
       throw error;
     }
+  }
+
+  async create(data: CreateOrdenTrabajoData): Promise<OrdenTrabajoEntity> {
+    const raw = await this.prisma.ordenesTrabajo.create({
+      data: {
+        rutaId: data.rutaId,
+        contratoId: data.contratoId,
+        medidorId: data.medidorId ?? null,
+        tipoActividad: data.tipoActividad as TipoActividadOrden,
+        estado: (data.estado ??
+          EstadoOrdenTrabajo.PENDIENTE) as EstadoOrdenTrabajo,
+        ordenVisita: data.ordenVisita ?? 0,
+      },
+    });
+    return OrdenTrabajoMapper.toEntity(raw);
   }
 }
