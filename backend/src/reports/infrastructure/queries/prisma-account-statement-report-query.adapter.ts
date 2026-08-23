@@ -84,6 +84,22 @@ export class PrismaAccountStatementReportQueryAdapter extends AccountStatementRe
       readingsByPeriod.set(reading.periodoId, current);
     }
 
+    const tariffId = contract.categoriaTarifaId;
+    const rubros = tariffId
+      ? await this.prisma.rubros.findMany({
+          where: {
+            categoriaTarifaId: tariffId,
+            deletedAt: null,
+            activo: true,
+          },
+        })
+      : [];
+
+    const cargoFijoRubro = rubros.find((r) => r.tipoRubro === 'FIJO');
+    const variableRubro = rubros.find((r) => r.tipoRubro === 'VARIABLE');
+    const baseValue = Number(cargoFijoRubro?.precioUnitario ?? 0);
+    const excessValuePerM3 = Number(variableRubro?.precioUnitario ?? 0);
+
     return {
       contractId: filters.contratoId,
       contract: {
@@ -94,8 +110,8 @@ export class PrismaAccountStatementReportQueryAdapter extends AccountStatementRe
         minimumMonthlyConsumption: Number(
           contract.categoriaTarifa?.consumoMinimoMensual ?? 0,
         ),
-        baseValue: 0,
-        excessValuePerM3: 0,
+        baseValue,
+        excessValuePerM3,
         meterSerial: contract.historialMedidores[0]?.medidor.serie ?? null,
         client: {
           nombres: contract.cliente.nombres,
