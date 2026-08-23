@@ -1,4 +1,6 @@
 import type { MeterEntity } from '../entities/meter.entity';
+import type { MeterHistoryEntity } from '../entities/meter-history.entity';
+import type { ReemplazoMedidorEntity } from '../entities/reemplazo-medidor.entity';
 import type {
   MeterFilters,
   CreateMeterRepositoryData,
@@ -83,4 +85,10 @@ export abstract class MeterRepository {
   abstract approveReplacement(
     params: ApproveMeterReplacementRepositoryData,
   ): Promise<ReplaceMeterResult>;
+
+  abstract findHistoryByMeter(medidorId: bigint): Promise<MeterHistoryEntity[]>;
+
+  abstract findReplacementById(
+    reemplazoId: bigint,
+  ): Promise<ReemplazoMedidorEntity | null>;
 }

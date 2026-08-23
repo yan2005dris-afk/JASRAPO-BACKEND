@@ -11,7 +11,11 @@ import { RemoveMeterUseCase } from './use-cases/remove-meter.use-case';
 import { ExportMetersUseCase } from './use-cases/export-meters.use-case';
 import { ExportMetersPdfUseCase } from './use-cases/export-meters-pdf.use-case';
 import { ReplaceMeterUseCase } from './use-cases/replace-meter.use-case';
+import { FindMeterHistoryUseCase } from './use-cases/find-meter-history.use-case';
+import { FindReplacementUseCase } from './use-cases/find-replacement.use-case';
 import { MeterEntity } from '../domain/entities/meter.entity';
+import { MeterHistoryEntity } from '../domain/entities/meter-history.entity';
+import { ReemplazoMedidorEntity } from '../domain/entities/reemplazo-medidor.entity';
 import { METER_STATUS_LIST } from 'src/infrastructure/config/app.constants';
 import { PaginatedMeterResponse } from '../interfaces/types/paginated-meter-response.type';
 import { ExportMeterDto } from '../interfaces/dto/export-meter.dto';
@@ -32,6 +36,8 @@ export class MeterService {
     private readonly exportMetersUseCase: ExportMetersUseCase,
     private readonly exportMetersPdfUseCase: ExportMetersPdfUseCase,
     private readonly replaceMeterUseCase: ReplaceMeterUseCase,
+    private readonly findMeterHistoryUseCase: FindMeterHistoryUseCase,
+    private readonly findReplacementUseCase: FindReplacementUseCase,
   ) {}
 
   async create(createDto: CreateMeterDto): Promise<MeterEntity> {
@@ -91,6 +97,14 @@ export class MeterService {
     userId: number,
   ): Promise<ReplaceMeterResult> {
     return this.replaceMeterUseCase.approve(reemplazoId, userId);
+  }
+
+  async getHistory(medidorId: bigint): Promise<MeterHistoryEntity[]> {
+    return this.findMeterHistoryUseCase.execute(medidorId);
+  }
+
+  async findReplacement(reemplazoId: bigint): Promise<ReemplazoMedidorEntity> {
+    return this.findReplacementUseCase.execute(reemplazoId);
   }
 
   async findAllStates(): Promise<EnumStateDto[]> {
