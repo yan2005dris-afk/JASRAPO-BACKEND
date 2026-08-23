@@ -21,7 +21,11 @@ import {
 import { SendReportByEmailUseCase } from './send-report-by-email.use-case';
 import type { MailService } from 'src/infrastructure/mail/application/mail.service';
 import type { ReportStyleDispatcher } from '../report-style.dispatcher';
-import type { ReportEmailStrategy } from './send-report-by-email.strategy';
+import type {
+  ReportEmailStrategyMap,
+  ReportEmailStrategy,
+} from './send-report-by-email.strategies';
+import type { ReportKey } from '../report-style.service';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 const mockLogger = {
   log: jest.fn(),
@@ -43,18 +47,44 @@ describe('SendReportByEmailUseCase (skeleton)', () => {
   const mockMailService = { sendReport: jest.fn() };
   const mockDispatcher = { dispatch: jest.fn() };
 
+  type TestStrategyOverrides = Partial<ReportEmailStrategy> & {
+    fetchSpec?: jest.Mock;
+  };
+
   const buildStrategy = (
-    overrides: Partial<ReportEmailStrategy<Record<string, unknown>>> = {},
-  ): ReportEmailStrategy<Record<string, unknown>> => ({
-    reportType: 'payments-report',
-    recipientResolver: jest.fn().mockResolvedValue('client@example.com'),
-    subjectBuilder: jest.fn().mockReturnValue('Reporte de Abonos — Cliente #1'),
-    fetchSpec: jest.fn().mockResolvedValue({ pagos: [] }),
-    ...overrides,
-  });
+    overrides: TestStrategyOverrides = {},
+  ): ReportEmailStrategy => {
+    const { fetchSpec, ...typedOverrides } = overrides;
+    const defaultDocument = {
+      reporte: {
+        titulo: 'Listado de Clientes',
+        fecha: '',
+        filtrosAplicados: '',
+        totalClientes: 0,
+        clientes: [],
+      },
+    };
+    const defaultFetchReport: ReportEmailStrategy['fetchReport'] = jest.fn(
+      async (filters: unknown) => ({
+        document: fetchSpec ? await fetchSpec(filters) : defaultDocument,
+        recipientEmail: 'client@example.com',
+      }),
+    );
+    const fetchReport = typedOverrides.fetchReport ?? defaultFetchReport;
+
+    return {
+      reportType: 'payments-report',
+      recipientResolver: jest.fn().mockResolvedValue('client@example.com'),
+      subjectBuilder: jest
+        .fn()
+        .mockReturnValue('Reporte de Abonos — Cliente #1'),
+      ...typedOverrides,
+      fetchReport,
+    };
+  };
 
   const compile = async (
-    strategies: Record<string, ReportEmailStrategy<Record<string, unknown>>>,
+    strategies: Partial<Record<ReportKey, ReportEmailStrategy>>,
     pdfTimeoutMs: number = TEST_PDF_TIMEOUT_MS,
   ): Promise<SendReportByEmailUseCase> => {
     const module: TestingModule = await Test.createTestingModule({
@@ -66,7 +96,7 @@ describe('SendReportByEmailUseCase (skeleton)', () => {
             new SendReportByEmailUseCase(
               mockMailService as unknown as MailService,
               mockDispatcher as unknown as ReportStyleDispatcher,
-              strategies,
+              strategies as ReportEmailStrategyMap,
               pdfTimeoutMs,
               mockLogger,
             ),
@@ -449,7 +479,9 @@ describe('SendReportByEmailUseCase (skeleton)', () => {
     expect(recipientResolver).toHaveBeenCalledWith(
       { contratoId: '12' },
       expect.objectContaining({
-        contrato: { cliente: { email: 'derived@example.com' } },
+        document: {
+          contrato: { cliente: { email: 'derived@example.com' } },
+        },
       }),
     );
   });

@@ -19,9 +19,8 @@ export type ReportKey =
   | 'account-statement';
 
 /**
- * Style resolved for a given report. Maps 1:1 to the set of pdf-type
- * suffixes (`*-legacy` | `*-modern` | `*-unique`) registered with
- * `PdfService`.
+ * Estilo resuelto para cada reporte. Las familias con dos diseños usan los
+ * sufijos `*-legacy` y `*-modern`; una familia canónica usa su clave base.
  *
  * `unique` is the canonical-only modality (PDF-01, Yandris 2026-08-19):
  * a report family that ships a single official template and ignores the

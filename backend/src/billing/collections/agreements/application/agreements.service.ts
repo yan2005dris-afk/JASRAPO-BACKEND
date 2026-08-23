@@ -17,6 +17,7 @@ import { GetDebtSummaryUseCase } from './use-cases/get-debt-summary.use-case';
 import { UpdateAgreementUseCase } from './use-cases/update-agreement.use-case';
 import { GetPaymentAgreementPdfDataUseCase } from './use-cases/get-payment-agreement-pdf-data.use-case';
 import { ReportStyleDispatcher } from 'src/reports/application/report-style.dispatcher';
+import { projectPaymentAgreementReport } from 'src/reports/application/definitions/payment-agreement-report.definition';
 
 @Injectable()
 export class AgreementsService {
@@ -97,9 +98,10 @@ export class AgreementsService {
     convenioId: bigint,
   ): Promise<{ buffer: Buffer; filename: string; clienteNombre: string }> {
     const raw = await this.getPdfDataUseCase.execute(convenioId);
+    const { document } = projectPaymentAgreementReport(raw);
     const { buffer, filename } = await this.dispatcher.dispatch(
       'payment-agreement',
-      raw as unknown as Record<string, unknown>,
+      document,
     );
     const cliente = raw.convenio.cliente;
     const clienteNombre =

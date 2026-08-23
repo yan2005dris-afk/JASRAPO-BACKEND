@@ -5,13 +5,11 @@
  * Design decisions (PR 4, see engram `sdd/report-endpoint-send-email/design`
  * revision 2, observation #1886):
  *
- * 1. **PDF generation timeout (30s).** Puppeteer's `page.pdf(...)` does not
- *    propagate a timeout option through `GeneratePdfUseCase`. Rather than
- *    thread a timeout through the PDF use case (larger blast radius), we
- *    wrap the call in `withTimeout(...)` here and convert the resulting
- *    `TimeoutError` into a `ServiceUnavailableException` (HTTP 503). 503 is
- *    the correct response code for a transient upstream failure and signals
- *    to clients/load balancers that retry is safe.
+ * 1. **Tiempo máximo de generación (30s).** `page.pdf(...)` de Puppeteer no
+ *    propaga esta opción a través del dispatcher. Para no extender el cambio
+ *    por todo el flujo de renderizado, la llamada se envuelve aquí con
+ *    `withTimeout(...)`. Si se supera el tiempo, se responde con HTTP 503 para
+ *    indicar que es un fallo temporal y que el cliente puede reintentar.
  *
  * 2. **PII-safe logging.** The use case runs per HTTP request, so the
  *    resolved recipient email is PII. Per design rev 2 (decision #6 / item
@@ -50,7 +48,7 @@ import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
 export interface SendReportByEmailParams {
   reportType: string;
-  filters: Record<string, unknown>;
+  filters: unknown;
   destinatarioOverride?: string;
   subjectOverride?: string;
 }
@@ -84,24 +82,21 @@ export class SendReportByEmailUseCase {
   async execute(
     params: SendReportByEmailParams,
   ): Promise<SendReportByEmailResult> {
-    const strategy = this.strategies[params.reportType];
+    const strategy = this.strategies[params.reportType as ReportKey];
     if (!strategy) {
       throw new NotFoundException(
         `Report type '${params.reportType}' is not supported for email sending`,
       );
     }
 
-    // Pull spec data first — it's needed both by the recipient resolver
-    // (account-statement prefers the already-loaded contrato.cliente.email)
-    // and by the PDF renderer (templates expect the spec output shape, not
-    // the raw filters).
-    const specData = await strategy.fetchSpec(params.filters);
+    // La definición prepara una sola proyección para resolver el destinatario
+    // y generar el PDF sin volver a consultar ni recalcular el reporte.
+    const report = await strategy.fetchReport(params.filters);
 
-    // SUG #1 fix: skip the recipient lookup when an override is supplied so
-    // we never hit the DB unnecessarily.
+    // Si llega un destinatario explícito, no hace falta resolver otro.
     const derivedRecipient = params.destinatarioOverride
       ? null
-      : await strategy.recipientResolver(params.filters, specData);
+      : await strategy.recipientResolver(params.filters, report);
     const destinatario = params.destinatarioOverride ?? derivedRecipient;
 
     // PII: surface recipient resolution at DEBUG only. The recipient email
@@ -128,7 +123,10 @@ export class SendReportByEmailUseCase {
     let pdfBuffer: Buffer;
     try {
       const { buffer } = await withTimeout(
-        this.dispatcher.dispatch(params.reportType as ReportKey, specData),
+        this.dispatcher.dispatch(
+          params.reportType as ReportKey,
+          report.document,
+        ),
         this.pdfTimeoutMs,
         'pdf-generation',
       );

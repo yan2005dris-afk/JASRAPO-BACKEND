@@ -19,10 +19,8 @@ import type { ReportKey, ReportStyle } from './report-style.service';
  * exactly `['unique']`. Otherwise it is a dual-style family that resolves
  * `legacy` | `modern` from `sistema_config`.
  *
- * NOTE (team plan): the concrete migration of each family's templates — e.g.
- * building the final canonical `payment-agreement` template — is tracked
- * separately. This catalog only declares the contract; the dispatcher and
- * the registered pdf-types must stay in sync with it.
+ * El catálogo, los tipos PDF registrados y las plantillas deben mantenerse
+ * sincronizados para no publicar variantes sin respaldo del producto.
  */
 export const REPORT_STYLE_CATALOG: Readonly<
   Record<ReportKey, readonly ReportStyle[]>

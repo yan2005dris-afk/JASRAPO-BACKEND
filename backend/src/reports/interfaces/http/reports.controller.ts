@@ -18,20 +18,14 @@ import {
   ApiBody,
 } from '@nestjs/swagger';
 import type { Response } from 'express';
-import { GeneratePdfUseCase } from '../../../infrastructure/pdf/use-cases/generate-pdf.use-case';
 import { JwtAuthGuard } from '../../../identity/auth/interfaces/http/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../../../infrastructure/common/guards/permissions.guard';
 import { RequiredPermission } from '../../../infrastructure/common/decorators/require-permission.decorator';
 import { ClientsListReportFilterDto } from '../dto/clients-list-report-filter.dto';
-import { ClientsListReportSpec } from '../../infrastructure/specs/clients-list.report-spec';
 import { PaymentsReportFilterDto } from '../dto/payments-report-filter.dto';
-import { PaymentsReportSpec } from '../../infrastructure/specs/payments-report.report-spec';
 import { ConnectionHistoryFilterDto } from '../dto/connection-history-filter.dto';
-import { ConnectionHistoryReportSpec } from '../../infrastructure/specs/connection-history.report-spec';
 import { AccountStatementFilterDto } from '../dto/account-statement-filter.dto';
-import { AccountStatementReportSpec } from '../../infrastructure/specs/account-statement.report-spec';
-import { PaymentAgreementLegacyFilterDto } from '../dto/payment-agreement-legacy-filter.dto';
-import { GetPaymentAgreementPdfDataUseCase } from '../../../billing/collections/agreements/application/use-cases/get-payment-agreement-pdf-data.use-case';
+import { PaymentAgreementFilterDto } from '../dto/payment-agreement-filter.dto';
 import { ReportStyleDispatcher } from '../../application/report-style.dispatcher';
 import { SendReportEmailDto } from '../dto/send-report-email.dto';
 import { SendClientsListEmailDto } from '../dto/send-clients-list-email.dto';
@@ -40,27 +34,19 @@ import { LoggerService } from 'src/infrastructure/observability/logger/logger.se
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
 /**
- * Reports HTTP surface.
+ * Frontera HTTP de reportes.
  *
- * Reduced from 10 endpoints to 5 by PR2 of `report-style-system-config`:
- *   - GET /reports/payments-report        ← consolidated (formerly -legacy/-modern)
- *   - GET /reports/connection-history     ← consolidated (formerly -legacy/-modern)
- *   - GET /reports/payment-agreement      ← consolidated (formerly -legacy/-modern)
- *   - GET /reports/clients-list           ← untouched
- *   - GET /reports/account-statement      ← untouched
- *
- * The consolidated endpoints route through `ReportStyleDispatcher`, which
- * resolves the report style (`legacy` | `modern`) from `sistema_config`
- * and dispatches to the matching pdf-type. The two untouched endpoints
- * keep the original `GeneratePdfUseCase.execute(type, data)` flow.
- *
- * Auth (REQ-5/6): class-level `@UseGuards(JwtAuthGuard, PermissionsGuard)`
- * + class-level `@ApiBearerAuth()` for OpenAPI. Per-endpoint permission
- * is explicit via `@RequiredPermission('reportes', 'read')` instead of
- * relying on the guard's convention-based inference.
+ * Cada endpoint obtiene un documento desde su definición tipada. Ese mismo
+ * documento se entrega como JSON o se envía al dispatcher para generar el PDF.
+ * Los permisos se declaran de forma explícita en cada operación.
  */
 import { OverdueAccountsFilterDto } from '../dto/overdue-accounts-filter.dto';
-import { OverdueAccountsReportSpec } from '../../infrastructure/specs/overdue-accounts.report-spec';
+import { ClientsListReportDefinition } from '../../application/definitions/clients-list-report.definition';
+import { PaymentsReportDefinition } from '../../application/definitions/payments-report.definition';
+import { ConnectionHistoryReportDefinition } from '../../application/definitions/connection-history-report.definition';
+import { AccountStatementReportDefinition } from '../../application/definitions/account-statement-report.definition';
+import { PaymentAgreementReportDefinition } from '../../application/definitions/payment-agreement-report.definition';
+import { OverdueAccountsReportDefinition } from '../../application/definitions/overdue-accounts-report.definition';
 
 @LogContext()
 @ApiTags('reports')
@@ -69,31 +55,29 @@ import { OverdueAccountsReportSpec } from '../../infrastructure/specs/overdue-ac
 @Controller('reports')
 export class ReportsController {
   constructor(
-    private readonly generatePdf: GeneratePdfUseCase,
-    private readonly clientsListSpec: ClientsListReportSpec,
-    private readonly paymentsReportSpec: PaymentsReportSpec,
-    private readonly connectionHistorySpec: ConnectionHistoryReportSpec,
-    private readonly accountStatementSpec: AccountStatementReportSpec,
-    private readonly overdueAccountsSpec: OverdueAccountsReportSpec,
-    private readonly paymentAgreementPdfData: GetPaymentAgreementPdfDataUseCase,
+    private readonly clientsListDefinition: ClientsListReportDefinition,
+    private readonly paymentsReportDefinition: PaymentsReportDefinition,
+    private readonly connectionHistoryDefinition: ConnectionHistoryReportDefinition,
+    private readonly accountStatementDefinition: AccountStatementReportDefinition,
+    private readonly overdueAccountsDefinition: OverdueAccountsReportDefinition,
+    private readonly paymentAgreementDefinition: PaymentAgreementReportDefinition,
     private readonly dispatcher: ReportStyleDispatcher,
     private readonly sendReportByEmail: SendReportByEmailUseCase,
     private readonly logger: LoggerService,
   ) {}
 
-  // ─── Consolidated dispatcher endpoints (REQ-1/2/3) ──────────────────────────
+  // ─── Reportes con salida JSON o PDF ──────────────────────────────────────
 
   @Get('payments-report')
   @RequiredPermission('reportes', 'read')
   @ApiOperation({
     summary: 'Reporte de Abonos (estilo configurable)',
     description:
-      'Genera un PDF con los pagos aplicados a facturas, o devuelve los datos crudos en JSON según el header `Accept`. El estilo (legacy|modern) se resuelve desde sistema_config (`reporte.estilo`).',
+      'Genera un PDF con los pagos aplicados a facturas, o devuelve el mismo modelo proyectado en JSON según el header `Accept`. El estilo (legacy|modern) se resuelve desde sistema_config (`reporte.estilo`).',
   })
   @ApiResponse({
     status: 200,
-    description:
-      'PDF generado (binary) o JSON con los datos crudos según Accept',
+    description: 'PDF generado o JSON con el modelo proyectado según Accept',
     content: {
       'application/pdf': {},
       'application/json': {},
@@ -106,12 +90,12 @@ export class ReportsController {
     this.logger.log(
       `Generating payments-report — filters: ${JSON.stringify(filters)}`,
     );
-    const data = await this.paymentsReportSpec.fetchData(filters);
+    const { document } = await this.paymentsReportDefinition.generate(filters);
     const { buffer, filename } = await this.dispatcher.dispatch(
       'payments-report',
-      data,
+      document,
     );
-    this.respondWithContentNegotiation(res, data, buffer, filename);
+    this.respondWithContentNegotiation(res, document, buffer, filename);
   }
 
   @Get('connection-history')
@@ -119,12 +103,11 @@ export class ReportsController {
   @ApiOperation({
     summary: 'Reporte de Historial de Conexión (estilo configurable)',
     description:
-      'Genera un PDF con el historial de facturación por período, o devuelve los datos crudos en JSON según el header `Accept`. El estilo se resuelve desde sistema_config (`reporte.estilo`).',
+      'Genera un PDF con el historial de facturación por período, o devuelve el mismo modelo proyectado en JSON según el header `Accept`. El estilo se resuelve desde sistema_config (`reporte.estilo`).',
   })
   @ApiResponse({
     status: 200,
-    description:
-      'PDF generado (binary) o JSON con los datos crudos según Accept',
+    description: 'PDF generado o JSON con el modelo proyectado según Accept',
     content: {
       'application/pdf': {},
       'application/json': {},
@@ -137,12 +120,13 @@ export class ReportsController {
     this.logger.log(
       `Generating connection-history — filters: ${JSON.stringify(filters)}`,
     );
-    const data = await this.connectionHistorySpec.fetchData(filters);
+    const { document } =
+      await this.connectionHistoryDefinition.generate(filters);
     const { buffer, filename } = await this.dispatcher.dispatch(
       'connection-history',
-      data,
+      document,
     );
-    this.respondWithContentNegotiation(res, data, buffer, filename);
+    this.respondWithContentNegotiation(res, document, buffer, filename);
   }
 
   @Get('payment-agreement')
@@ -150,37 +134,30 @@ export class ReportsController {
   @ApiOperation({
     summary: 'Reporte de Convenio de Pago (estilo configurable)',
     description:
-      'Genera el PDF del convenio de pago, o devuelve los datos crudos en JSON según el header `Accept`. El estilo se resuelve desde sistema_config (`reporte.estilo`).',
+      'Genera el PDF canónico del convenio de pago, o devuelve el mismo modelo proyectado en JSON según el header `Accept`.',
   })
   @ApiResponse({
     status: 200,
-    description:
-      'PDF generado (binary) o JSON con los datos crudos según Accept',
+    description: 'PDF generado o JSON con el modelo proyectado según Accept',
     content: {
       'application/pdf': {},
       'application/json': {},
     },
   })
   async paymentAgreementPdf(
-    @Query() filters: PaymentAgreementLegacyFilterDto,
+    @Query() filters: PaymentAgreementFilterDto,
     @Res() res: Response,
   ) {
     this.logger.log(
       `Generating payment-agreement — filters: ${JSON.stringify(filters)}`,
     );
-    const data = await this.paymentAgreementPdfData.execute(
-      BigInt(filters.convenioId),
-    );
+    const { document } =
+      await this.paymentAgreementDefinition.generate(filters);
     const { buffer, filename } = await this.dispatcher.dispatch(
       'payment-agreement',
-      data as unknown as Record<string, unknown>,
+      document,
     );
-    this.respondWithContentNegotiation(
-      res,
-      data as unknown as Record<string, unknown>,
-      buffer,
-      filename,
-    );
+    this.respondWithContentNegotiation(res, document, buffer, filename);
   }
 
   // ─── Untouched endpoints (REQ-10) ───────────────────────────────────────────
@@ -190,12 +167,11 @@ export class ReportsController {
   @ApiOperation({
     summary: 'Reporte de Listado de Clientes (estilo configurable)',
     description:
-      'Genera un PDF con todos los clientes, o devuelve los datos crudos en JSON según el header `Accept`. El estilo (legacy|modern) se resuelve desde sistema_config (`reporte.estilo`).',
+      'Genera un PDF con todos los clientes, o devuelve el mismo modelo proyectado en JSON según el header `Accept`. El estilo (legacy|modern) se resuelve desde sistema_config (`reporte.estilo`).',
   })
   @ApiResponse({
     status: 200,
-    description:
-      'PDF generado (binary) o JSON con los datos crudos según Accept',
+    description: 'PDF generado o JSON con el modelo proyectado según Accept',
     content: {
       'application/pdf': {},
       'application/json': {},
@@ -208,12 +184,12 @@ export class ReportsController {
     this.logger.log(
       `Generating clients-list — filters: ${JSON.stringify(filters)}`,
     );
-    const data = await this.clientsListSpec.fetchData(filters);
+    const { document } = await this.clientsListDefinition.generate(filters);
     const { buffer, filename } = await this.dispatcher.dispatch(
       'clients-list',
-      data,
+      document,
     );
-    this.respondWithContentNegotiation(res, data, buffer, filename);
+    this.respondWithContentNegotiation(res, document, buffer, filename);
   }
 
   @Get('account-statement')
@@ -221,12 +197,11 @@ export class ReportsController {
   @ApiOperation({
     summary: 'Reporte de Estado de Cuenta (estilo configurable)',
     description:
-      'Genera un PDF con el estado de cuenta de un contrato, o devuelve los datos crudos en JSON según el header `Accept`. El estilo (legacy|modern) se resuelve desde sistema_config (`reporte.estilo`).',
+      'Genera un PDF con el estado de cuenta de un contrato, o devuelve el mismo modelo proyectado en JSON según el header `Accept`. El estilo (legacy|modern) se resuelve desde sistema_config (`reporte.estilo`).',
   })
   @ApiResponse({
     status: 200,
-    description:
-      'PDF generado (binary) o JSON con los datos crudos según Accept',
+    description: 'PDF generado o JSON con el modelo proyectado según Accept',
     content: {
       'application/pdf': {},
       'application/json': {},
@@ -239,12 +214,13 @@ export class ReportsController {
     this.logger.log(
       `Generating account-statement — filters: ${JSON.stringify(filters)}`,
     );
-    const data = await this.accountStatementSpec.fetchData(filters);
+    const { document } =
+      await this.accountStatementDefinition.generate(filters);
     const { buffer, filename } = await this.dispatcher.dispatch(
       'account-statement',
-      data,
+      document,
     );
-    this.respondWithContentNegotiation(res, data, buffer, filename);
+    this.respondWithContentNegotiation(res, document, buffer, filename);
   }
 
   @Get('overdue-accounts')
@@ -262,7 +238,8 @@ export class ReportsController {
     this.logger.log(
       `Generating overdue-accounts — filters: ${JSON.stringify(filters)}`,
     );
-    return this.overdueAccountsSpec.fetchData(filters);
+    const { document } = await this.overdueAccountsDefinition.generate(filters);
+    return document;
   }
 
   // ─── Email send endpoints (report-endpoint-send-email) ───────────────────────
@@ -358,7 +335,7 @@ export class ReportsController {
     }
     return this.sendReportByEmail.execute({
       reportType: 'clients-list',
-      filters: (body.filtros as unknown as Record<string, unknown>) ?? {},
+      filters: body.filtros ?? {},
       destinatarioOverride: body.destinatario,
       subjectOverride: body.subject,
     });
@@ -367,27 +344,18 @@ export class ReportsController {
   // ─── Private helpers ────────────────────────────────────────────────────────
 
   /**
-   * Content negotiation based on the `Accept` request header.
-   *
-   *   - `Accept: application/json` → JSON payload (raw spec data).
-   *   - `Accept: application/pdf` → PDF binary.
-   *   - wildcard or missing header → JSON (default).
-   *
-   * JSON wins if the client sends both `application/json` and `application/pdf`.
-   * The BigInt-safe JSON.stringify wrapper handles BigInt values that bypass
-   * the global BigIntInterceptor when @Res() is used.
+   * Responde con PDF solo cuando el cliente lo solicita de forma explícita.
+   * Para cualquier otro valor de `Accept`, devuelve el documento proyectado
+   * como JSON y convierte los valores BigInt de manera segura.
    */
   private respondWithContentNegotiation(
     res: Response,
-    data: Record<string, unknown>,
+    data: object,
     buffer: Buffer,
     pdfFilename: string,
   ): void {
     const accept = (res.req.headers.accept ?? '').toLowerCase();
-    // PDF is opt-in: only when the client sends EXACTLY `application/pdf` (or
-    // a comma-separated list where application/pdf is the only listed type).
-    // Anything else — including missing header, */*, application/json, or a
-    // mix of both — falls through to JSON, the API default.
+    // El PDF es opcional: todos los tipos aceptados deben ser application/pdf.
     const acceptedTypes = accept
       .split(',')
       .map((s) => s.trim().split(';')[0].trim())
@@ -402,7 +370,7 @@ export class ReportsController {
         'Content-Type': 'application/json; charset=utf-8',
         'Content-Disposition': `inline; filename="${jsonFilename}"`,
       });
-      // BigInt-safe serialization: @Res() bypasses the global BigIntInterceptor
+      // @Res() evita el interceptor global, por eso se convierten los BigInt aquí.
       const safeJson = JSON.stringify(data, (_key, value) =>
         typeof value === 'bigint' ? value.toString() : value,
       );

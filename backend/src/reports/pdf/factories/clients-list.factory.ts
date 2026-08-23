@@ -1,11 +1,11 @@
 import type { PdfDocumentType } from 'src/infrastructure/pdf/document-type.interface';
-import { resolveClientName } from 'src/infrastructure/pdf/utils/pdf-format.utils';
+import type { ClientsListReportDocument } from '../../application/read-models/clients-list.read-model';
 
 export type ClientsListStyle = 'legacy' | 'modern';
 
 export function createClientsListPdfDocumentType(
   style: ClientsListStyle,
-): PdfDocumentType {
+): PdfDocumentType<ClientsListReportDocument, ClientsListReportDocument> {
   const isLegacy = style === 'legacy';
 
   return {
@@ -14,32 +14,6 @@ export function createClientsListPdfDocumentType(
       ? 'Listado de Clientes (Legacy)'
       : 'Listado de Clientes (Moderno)',
     template: isLegacy ? 'clients-list-legacy' : 'clients-list-modern',
-
-    adaptData(raw: Record<string, unknown>): Record<string, unknown> {
-      const clientes = (
-        (raw['clientes'] as Record<string, unknown>[]) ?? []
-      ).map((c) => ({
-        identificacion: c['identificacion'] ?? '',
-        nombre: resolveClientName(c as any),
-        email: c['email'] ?? '—',
-        telefono: c['telefono'] ?? '—',
-        direccion: c['direccionDomicilio'] ?? '—',
-        activo: c['activo'] ? 'Activo' : 'Inactivo',
-        tipoId:
-          (c['tipoIdentificacion'] as Record<string, unknown> | null)?.[
-            'descripcion'
-          ] ?? '—',
-      }));
-
-      return {
-        reporte: {
-          titulo: 'Listado de Clientes',
-          fecha: raw['fecha'] ?? new Date().toLocaleDateString('es-EC'),
-          filtrosAplicados: raw['filtrosAplicados'] ?? '',
-          totalClientes: clientes.length,
-          clientes,
-        },
-      };
-    },
+    adaptData: (document) => document,
   };
 }
