@@ -36,15 +36,33 @@ export class PrismaPaymentsReportQueryAdapter extends PaymentsReportQueryPort {
           ...(filters.clienteId
             ? { clienteId: BigInt(filters.clienteId) }
             : {}),
-          detallePago: { some: { tipoPago: 'COMPROBANTE', deletedAt: null } },
+          detallePago: { some: { deletedAt: null } },
         },
         include: {
           cliente: {
             select: { nombres: true, apellidos: true, razonSocial: true },
           },
           detallePago: {
-            where: { tipoPago: 'COMPROBANTE', deletedAt: null },
+            where: { deletedAt: null },
             include: {
+              cuotaConvenio: {
+                include: {
+                  convenio: {
+                    include: {
+                      contrato: {
+                        select: {
+                          contratoId: true,
+                          historialMedidores: {
+                            where: { fechaHasta: null },
+                            take: 1,
+                            select: { medidor: { select: { serie: true } } },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
               comprobante: {
                 include: {
                   prefactura: {
@@ -87,10 +105,30 @@ export class PrismaPaymentsReportQueryAdapter extends PaymentsReportQueryPort {
         },
         details: payment.detallePago.map((detail) => {
           const preInvoice = detail.comprobante?.prefactura;
-          const contract = preInvoice?.contrato;
+          const invoiceContract = preInvoice?.contrato;
+          const convenioContract = detail.cuotaConvenio?.convenio?.contrato;
+          const contract = invoiceContract ?? convenioContract;
+
+          let invoiceNumber = detail.comprobante?.secuencial ?? null;
+          if (!invoiceNumber) {
+            if (detail.tipoPago === 'PAGO_LIBRE') {
+              invoiceNumber = detail.referencia || 'Cobro Libre';
+            } else if (detail.tipoPago === 'CUOTA_CONVENIO') {
+              invoiceNumber = `Convenio #${detail.cuotaConvenio?.convenioId ?? ''}`;
+            } else {
+              invoiceNumber = detail.referencia || 'Recibo';
+            }
+          }
+
+          const billedPeriod =
+            preInvoice?.periodoRel?.nombre ??
+            (detail.tipoPago === 'CUOTA_CONVENIO' && detail.cuotaConvenio?.numeroCuota
+              ? `Cuota ${detail.cuotaConvenio.numeroCuota}`
+              : 'Directo');
+
           return {
-            invoiceNumber: detail.comprobante?.secuencial ?? null,
-            billedPeriodName: preInvoice?.periodoRel?.nombre ?? null,
+            invoiceNumber,
+            billedPeriodName: billedPeriod,
             contractId: contract ? String(contract.contratoId) : null,
             meterSerial: contract?.historialMedidores[0]?.medidor.serie ?? null,
             amount: Number(detail.montoAbonado),
