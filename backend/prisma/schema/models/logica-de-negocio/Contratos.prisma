@@ -18,7 +18,6 @@ model Contratos {
   sector              Sectores?            @relation(fields: [sectorId], references: [sectorId], onDelete: Restrict)
   convenios           Convenios[]
   historialMedidores  HistorialMedidores[]
-  ordenesTrabajo      OrdenesTrabajo[]
   prefacturas         Prefacturas[]
   ordenesTrabajo      OrdenesTrabajo[]
   reemplazosMedidor   ReemplazoMedidor[]
