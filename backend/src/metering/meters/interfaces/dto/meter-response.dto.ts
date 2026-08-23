@@ -75,6 +75,12 @@ export class MeterResponseDto {
   })
   clienteNombre: string | null;
 
+  @ApiPropertyOptional({
+    description: 'Dirección del suministro (útil para operar offline sin mapa)',
+    example: 'Av. Principal 123',
+  })
+  direccionSuministro: string | null;
+
   constructor(partial: Partial<MeterResponseDto>) {
     Object.assign(this, partial);
   }
@@ -93,6 +99,7 @@ export class MeterResponseDto {
       longitud: meter.longitud != null ? Number(meter.longitud) : null,
       contratoId: meter.contratoId?.toString() ?? null,
       clienteNombre: meter.clienteNombre ?? null,
+      direccionSuministro: meter.direccionSuministro ?? null,
     });
   }
 }

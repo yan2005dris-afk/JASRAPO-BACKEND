@@ -3,9 +3,9 @@ import { IsEnum, IsOptional, IsString, IsNotEmpty } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { EstadoRuta } from 'src/shared/enums';
 
-export class UpdateTaskDto {
+export class UpdateRouteStateDto {
   @ApiProperty({
-    description: 'Nuevo estado de la tarea',
+    description: 'Nuevo estado de la ruta',
     enum: EstadoRuta,
     example: EstadoRuta.EN_PROGRESO,
   })

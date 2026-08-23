@@ -6,10 +6,10 @@ import {
 } from 'src/shared/domain/exceptions/domain.exception';
 import { OperatorRepository } from '../../domain/repositories/operator.repository';
 import type {
-  OperatorTask,
-  TaskStateUpdate,
+  OperatorRoute,
+  RouteStateUpdate,
 } from '../../domain/repositories/repository-types';
-import type { UpdateTaskDto } from '../../interfaces/dto/update-task.dto';
+import type { UpdateRouteStateDto } from '../../interfaces/dto/update-route-state.dto';
 
 // Valid transitions: current -> set of allowed next states
 const ALLOWED_TRANSITIONS: Record<string, ReadonlySet<string>> = {
@@ -31,14 +31,14 @@ const TERMINAL_STATES = new Set<string>([
 ]);
 
 @Injectable()
-export class UpdateTaskStateUseCase {
+export class UpdateRouteStateUseCase {
   constructor(private readonly operatorRepository: OperatorRepository) {}
 
   async execute(
     rutaId: bigint,
     operarioId: number,
-    dto: UpdateTaskDto,
-  ): Promise<OperatorTask> {
+    dto: UpdateRouteStateDto,
+  ): Promise<OperatorRoute> {
     const { estado: nuevoEstado, observacion } = dto;
 
     // 1. Find active period
@@ -47,32 +47,34 @@ export class UpdateTaskStateUseCase {
       throw new EntityNotFoundException('Periodo', 'ABIERTO');
     }
 
-    // 2. Find the task and verify operator ownership
-    const tasks = await this.operatorRepository.findTasksByOperator(
+    // 2. Find the route and verify operator ownership
+    const routes = await this.operatorRepository.findRoutesByOperator(
       operarioId,
       activePeriod.periodoId,
     );
 
-    const task = tasks.find(
-      (t) => t.rutaId === rutaId || t.rutaId?.toString() === rutaId?.toString(),
+    const route = routes.find(
+      (item) =>
+        item.rutaId === rutaId ||
+        item.rutaId?.toString() === rutaId?.toString(),
     );
 
-    if (!task) {
-      throw new EntityNotFoundException('Tarea', rutaId.toString());
+    if (!route) {
+      throw new EntityNotFoundException('Ruta', rutaId.toString());
     }
 
-    if (task.operarioId !== operarioId) {
+    if (route.operarioId !== operarioId) {
       throw new InvalidDomainOperationException(
-        'Esta tarea no pertenece al operador autenticado',
+        'Esta ruta no pertenece al operador autenticado',
       );
     }
 
     // 3. Validate state transition
-    const currentEstado = task.estado;
+    const currentEstado = route.estado;
 
     if (TERMINAL_STATES.has(currentEstado)) {
       throw new InvalidDomainOperationException(
-        `La tarea está en estado terminal ${currentEstado} y no puede modificarse`,
+        `La ruta está en estado terminal ${currentEstado} y no puede modificarse`,
       );
     }
 
@@ -94,7 +96,7 @@ export class UpdateTaskStateUseCase {
     }
 
     // 5. Build update data with timestamps
-    const updateData: TaskStateUpdate = { estado: nuevoEstado };
+    const updateData: RouteStateUpdate = { estado: nuevoEstado };
 
     if (nuevoEstado === EstadoRuta.EN_PROGRESO) {
       updateData.fechaInicio = new Date();
@@ -111,7 +113,8 @@ export class UpdateTaskStateUseCase {
     // 6. Apply state transition with optimistic concurrency
     //    (concurrency conflicts surface as InvalidDomainOperationException
     //     from the repository, not as Prisma P2025 errors)
-    return this.operatorRepository.updateTaskState(
+    // Regular transition with optimistic locking
+    return this.operatorRepository.updateRouteState(
       rutaId,
       updateData,
       currentEstado,
