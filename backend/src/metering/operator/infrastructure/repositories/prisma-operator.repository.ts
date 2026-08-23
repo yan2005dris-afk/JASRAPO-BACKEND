@@ -295,63 +295,7 @@ export class PrismaOperatorRepository extends OperatorRepository {
       include: operatorRouteInclude,
     });
 
-<<<<<<< HEAD
     return routes.map((route) => this.toOperatorRoute(route));
-=======
-    const readingTasks = tasks.filter(
-      (t) => t.tipoRuta === 'TOMA_LECTURA',
-    ) as unknown as OperatorTask[];
-
-    if (readingTasks.length === 0) {
-      return tasks as unknown as OperatorTask[];
-    }
-
-    const meters = await this.findMetersByRoutes(
-      readingTasks.map((t) => ({
-        rutaId: t.rutaId,
-        comunidadId: t.comunidadId,
-        sectorId: t.sectorId,
-      })),
-    );
-
-    const pointsByTask = new Map<bigint, TaskRoutePoint[]>();
-
-    for (const task of readingTasks) {
-      const matchingMeters = meters.filter((m) => {
-        const contrato = m.historial?.[0]?.contrato;
-        if (!contrato) return false;
-        const sameSector =
-          task.sectorId === null || task.sectorId === undefined
-            ? true
-            : contrato.sectorId === task.sectorId;
-        return contrato.comunidadId === task.comunidadId && sameSector;
-      });
-
-      matchingMeters.sort((a, b) => a.serie.localeCompare(b.serie));
-
-      pointsByTask.set(
-        task.rutaId,
-        matchingMeters
-          .map((m) => ({
-            latitud: m.latitud != null ? Number(m.latitud) : null,
-            longitud: m.longitud != null ? Number(m.longitud) : null,
-            serie: m.serie,
-            clienteNombre: m.historial?.[0]?.contrato?.cliente
-              ? `${m.historial[0].contrato.cliente.nombres} ${m.historial[0].contrato.cliente.apellidos}`.trim()
-              : '',
-          }))
-          .filter(
-            (pt): pt is TaskRoutePoint =>
-              pt.latitud != null && pt.longitud != null,
-          ),
-      );
-    }
-
-    return tasks.map((t) => ({
-      ...t,
-      rutaPuntos: pointsByTask.get(t.rutaId),
-    })) as unknown as OperatorTask[];
->>>>>>> origin/develop
   }
 
   async updateRouteState(
@@ -450,22 +394,9 @@ export class PrismaOperatorRepository extends OperatorRepository {
 
     return {
       ...route,
-      medidor: route.medidor
-        ? {
-            ...route.medidor,
-            latitud:
-              route.medidor.latitud == null
-                ? null
-                : Number(route.medidor.latitud),
-            longitud:
-              route.medidor.longitud == null
-                ? null
-                : Number(route.medidor.longitud),
-          }
-        : null,
       ordenesTrabajo,
       paradas,
-    } as OperatorRoute;
+    } as unknown as OperatorRoute;
   }
 
   async findOperatorsByGeography(

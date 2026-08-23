@@ -22,6 +22,7 @@ describe('MeterController', () => {
     longitud: null,
     contratoId: null,
     clienteNombre: null,
+    direccionSuministro: null,
   };
 
   const expectedDto = {
@@ -37,6 +38,7 @@ describe('MeterController', () => {
     longitud: null,
     contratoId: null,
     clienteNombre: null,
+    direccionSuministro: null,
   };
 
   const mockPaginatedResponse = {

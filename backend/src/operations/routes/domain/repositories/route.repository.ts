@@ -96,8 +96,6 @@ export abstract class RouteRepository {
     rutaId?: bigint | null,
   ): Promise<number>;
 
-  abstract createWorkOrdersForRoute(rutaId: bigint): Promise<number>;
-
   abstract paginateLecturas(
     criteria: EligibleReadingsCriteria,
     pagination: PaginateOptions,

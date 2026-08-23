@@ -128,6 +128,13 @@ export interface OperatorRoute {
     usuarioId: number;
     nombres: string;
     apellidos: string;
+  } | null;
+  medidor?: {
+    medidorId: bigint;
+    serie: string;
+    latitud: number | null;
+    longitud: number | null;
+  } | null;
   ordenesTrabajo: OperatorWorkOrder[];
   paradas: OperatorRouteStop[];
 }
