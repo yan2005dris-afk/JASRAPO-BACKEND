@@ -850,8 +850,8 @@ export class PrismaMeterRepository implements MeterRepository {
   async findReplacementById(
     reemplazoId: bigint,
   ): Promise<ReemplazoMedidorEntity | null> {
-    const record = await this.prisma.reemplazoMedidor.findUnique({
-      where: { reemplazoId },
+    const record = await this.prisma.reemplazoMedidor.findFirst({
+      where: { reemplazoId, deletedAt: null },
     });
     return ReemplazoMedidorMapper.toDomain(record);
   }
