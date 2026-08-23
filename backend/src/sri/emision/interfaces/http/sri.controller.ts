@@ -58,10 +58,10 @@ import { LoggerService } from 'src/infrastructure/observability/logger/logger.se
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
 @LogContext()
-@ApiTags('[En Desarrollo] SRI - Facturación Electrónica')
+@ApiTags('[SRI] Facturación Electrónica')
 @ApiBearerAuth('JWT')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
-@RequiredPermission('sri', 'admin')
+@RequiredPermission('facturacion_electronica', 'read')
 @Controller('sri')
 export class SriController {
   constructor(
@@ -82,6 +82,7 @@ export class SriController {
   }
 
   @Post('emitir/factura')
+  @RequiredPermission('facturacion_electronica', 'create')
   @HttpCode(HttpStatus.CREATED)
   @Throttle({ default: { limit: 10, ttl: 60000 } })
   @ApiOperation({
@@ -109,6 +110,7 @@ export class SriController {
   }
 
   @Post('emitir/nota-credito')
+  @RequiredPermission('facturacion_electronica', 'create')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
     summary: 'Emitir nota de crédito electrónica',
@@ -123,6 +125,7 @@ export class SriController {
   }
 
   @Post('emitir/nota-debito')
+  @RequiredPermission('facturacion_electronica', 'create')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
     summary: 'Emitir nota de débito electrónica',
@@ -137,6 +140,7 @@ export class SriController {
   }
 
   @Post('emitir/retencion')
+  @RequiredPermission('facturacion_electronica', 'create')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
     summary: 'Emitir comprobante de retención electrónico',
@@ -258,6 +262,7 @@ export class SriController {
   }
 
   @Patch('comprobantes/:claveAcceso/anular')
+  @RequiredPermission('facturacion_electronica', 'delete')
   @ApiOperation({
     summary: 'Anular comprobante',
   })
@@ -269,6 +274,7 @@ export class SriController {
   }
 
   @Post('comprobantes/:claveAcceso/reintentar')
+  @RequiredPermission('facturacion_electronica', 'update')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Reintentar comprobante fallido',
@@ -301,6 +307,7 @@ export class SriController {
    * @see sdd/sri-emision-modo-manual-automatico for context.
    */
   @Post('comprobantes/:claveAcceso/emitir-manual')
+  @RequiredPermission('facturacion_electronica', 'update')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Emitir manualmente un comprobante (modo manual)',
@@ -345,6 +352,7 @@ export class SriController {
   }
 
   @Post('sincronizar')
+  @RequiredPermission('facturacion_electronica', 'update')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Sincronizar comprobantes con SRI',

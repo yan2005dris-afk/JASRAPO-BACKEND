@@ -38,12 +38,13 @@ import {
   ServiceUnavailableException,
 } from '@nestjs/common';
 import { MailService } from 'src/infrastructure/mail/application/mail.service';
-import { GeneratePdfUseCase } from 'src/infrastructure/pdf/use-cases/generate-pdf.use-case';
+import { ReportStyleDispatcher } from '../report-style.dispatcher';
 import { TimeoutError, withTimeout } from 'src/common/async/with-timeout';
 import {
   REPORT_EMAIL_STRATEGIES,
   type ReportEmailStrategyMap,
 } from './send-report-by-email.strategies';
+import type { ReportKey } from '../report-style.service';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
@@ -72,7 +73,7 @@ export const DEFAULT_PDF_TIMEOUT_MS = 30_000;
 export class SendReportByEmailUseCase {
   constructor(
     private readonly mailService: MailService,
-    private readonly generatePdf: GeneratePdfUseCase,
+    private readonly dispatcher: ReportStyleDispatcher,
     @Inject(REPORT_EMAIL_STRATEGIES)
     private readonly strategies: ReportEmailStrategyMap,
     @Optional()
@@ -126,11 +127,12 @@ export class SendReportByEmailUseCase {
     // cancellation token through Puppeteer.
     let pdfBuffer: Buffer;
     try {
-      pdfBuffer = await withTimeout(
-        this.generatePdf.execute(params.reportType, specData),
+      const { buffer } = await withTimeout(
+        this.dispatcher.dispatch(params.reportType as ReportKey, specData),
         this.pdfTimeoutMs,
         'pdf-generation',
       );
+      pdfBuffer = buffer;
     } catch (err) {
       if (err instanceof TimeoutError) {
         throw new ServiceUnavailableException('PDF generation timeout');

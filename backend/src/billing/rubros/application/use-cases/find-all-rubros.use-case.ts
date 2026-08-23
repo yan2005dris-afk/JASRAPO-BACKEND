@@ -8,8 +8,10 @@ export interface FindAllRubrosParams {
   page?: number;
   limit?: number;
   nombre?: string;
+  search?: string;
   tipoRubro?: string;
   tarifaImpuestoId?: number;
+  categoriaTarifaId?: number;
   activo?: boolean;
   esAutomatico?: boolean;
 }
@@ -25,15 +27,20 @@ export class FindAllRubrosUseCase {
     const limit = params.limit && params.limit > 0 ? params.limit : 10;
     const skip = (page - 1) * limit;
 
+    const searchTerm = params.search?.trim() || params.nombre?.trim();
+
     const where: RubroFilters = {};
-    if (params.nombre?.trim()) {
-      where.nombre = params.nombre.trim();
+    if (searchTerm) {
+      where.nombre = searchTerm;
     }
     if (params.tipoRubro) {
       where.tipoRubro = params.tipoRubro as any;
     }
     if (params.tarifaImpuestoId !== undefined) {
       where.tarifaImpuestoId = Number(params.tarifaImpuestoId);
+    }
+    if (params.categoriaTarifaId !== undefined) {
+      where.categoriaTarifaId = Number(params.categoriaTarifaId);
     }
     if (params.activo !== undefined) {
       where.activo = params.activo;

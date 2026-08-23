@@ -1,6 +1,7 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { RubroRepository } from '../../domain/repositories/rubro.repository';
 import type { RubroEntity } from '../../domain/entities/rubro.entity';
+import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 
 @Injectable()
 export class FindOneRubroUseCase {
@@ -9,7 +10,7 @@ export class FindOneRubroUseCase {
   async execute(id: number): Promise<RubroEntity> {
     const rubro = await this.rubroRepository.findById(id);
     if (!rubro) {
-      throw new NotFoundException(`Rubro con ID ${id} no encontrado`);
+      throw new EntityNotFoundException('Rubro', id);
     }
     return rubro;
   }

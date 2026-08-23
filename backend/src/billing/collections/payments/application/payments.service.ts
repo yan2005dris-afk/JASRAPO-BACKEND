@@ -25,6 +25,13 @@ import type { PaymentStateResponseDto } from '../interfaces/dto/payment-state-re
 import type { BankResponseDto } from '../interfaces/dto/bank-response.dto';
 import type { CardBrandResponseDto } from '../interfaces/dto/card-brand-response.dto';
 
+import {
+  StorageService,
+  SRI_STORAGE_TYPES,
+} from 'src/infrastructure/storage/storage.service';
+import { randomUUID } from 'crypto';
+import { BadRequestException } from '@nestjs/common';
+
 @Injectable()
 export class PaymentsService {
   constructor(
@@ -36,7 +43,59 @@ export class PaymentsService {
     private readonly annulPaymentUseCase: AnnulPaymentUseCase,
     private readonly applySaldoFavorUseCase: ApplySaldoFavorUseCase,
     private readonly getDailyCashSummaryUseCase: GetDailyCashSummaryUseCase,
+    private readonly storageService: StorageService,
   ) {}
+
+  async uploadComprobante(
+    file: Express.Multer.File,
+  ): Promise<{ key: string; url: string }> {
+    if (!file) {
+      throw new BadRequestException('No se ha proporcionado ningún archivo');
+    }
+
+    const allowedMimeTypes = [
+      'image/jpeg',
+      'image/png',
+      'image/webp',
+      'application/pdf',
+    ];
+    if (!allowedMimeTypes.includes(file.mimetype)) {
+      throw new BadRequestException(
+        'Formato de comprobante no válido. Solo se admiten JPG, PNG, WEBP o PDF',
+      );
+    }
+
+    const ext =
+      file.originalname?.split('.').pop() ||
+      (file.mimetype === 'application/pdf' ? 'pdf' : 'jpg');
+    const key = `comprobantes/${Date.now()}-${randomUUID()}.${ext}`;
+
+    await this.storageService.upload(
+      SRI_STORAGE_TYPES.COMPROBANTES,
+      key,
+      file.buffer,
+      { contentType: file.mimetype },
+    );
+
+    const url = await this.storageService.getUrl(
+      SRI_STORAGE_TYPES.COMPROBANTES,
+      key,
+      3600,
+    );
+
+    return { key, url };
+  }
+
+  async getComprobanteUrl(key: string): Promise<string> {
+    if (!key) {
+      throw new BadRequestException('Clave de comprobante no especificada');
+    }
+    return this.storageService.getUrl(
+      SRI_STORAGE_TYPES.COMPROBANTES,
+      key,
+      3600,
+    );
+  }
 
   async create(
     dto: CreatePaymentDto,

@@ -4,6 +4,13 @@ export interface ComprobantePaymentRef {
   secuencial?: string;
   importeTotal?: number | null;
   estado?: string;
+  prefactura?: {
+    prefacturaId: string;
+    mes?: number;
+    totalPagar?: number;
+    consumoM3?: number | null;
+    periodoNombre?: string;
+  };
 }
 
 export class PaymentDetailEntity {

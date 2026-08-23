@@ -33,6 +33,18 @@ export class PrismaPaymentRepository implements PaymentRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   private readonly defaultInclude = {
+    cliente: {
+      select: {
+        clienteId: true,
+        nombres: true,
+        apellidos: true,
+        razonSocial: true,
+        identificacion: true,
+        email: true,
+        telefono: true,
+        direccionDomicilio: true,
+      },
+    },
     detallePago: {
       where: { deletedAt: null },
       include: {
@@ -43,6 +55,19 @@ export class PrismaPaymentRepository implements PaymentRepository {
             secuencial: true,
             importeTotal: true,
             estado: true,
+            prefactura: {
+              select: {
+                prefacturaId: true,
+                mes: true,
+                totalPagar: true,
+                consumoM3: true,
+                periodoRel: {
+                  select: {
+                    nombre: true,
+                  },
+                },
+              },
+            },
           },
         },
       },

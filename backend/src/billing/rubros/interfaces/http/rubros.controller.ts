@@ -82,8 +82,10 @@ export class RubrosController {
       page: filterDto.page,
       limit: filterDto.limit,
       nombre: filterDto.nombre,
+      search: filterDto.search,
       tipoRubro: filterDto.tipoRubro,
       tarifaImpuestoId: filterDto.tarifaImpuestoId,
+      categoriaTarifaId: filterDto.categoriaTarifaId,
       activo:
         typeof filterDto.activo === 'boolean' ? filterDto.activo : undefined,
       esAutomatico:

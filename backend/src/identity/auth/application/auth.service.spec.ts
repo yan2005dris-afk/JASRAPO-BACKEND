@@ -5,6 +5,7 @@ import { RegisterUseCase } from './use-cases/register.use-case';
 import { LogoutUseCase } from './use-cases/logout.use-case';
 import { LoginUseCase } from './use-cases/login.use-case';
 import { RefreshAccessTokenUseCase } from './use-cases/refresh-access-token.use-case';
+import { UnlockUserAccountUseCase } from './use-cases/unlock-user-account.use-case';
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -12,6 +13,7 @@ describe('AuthService', () => {
   let loginUseCase: jest.Mocked<LoginUseCase>;
   let logoutUseCase: jest.Mocked<LogoutUseCase>;
   let refreshUseCase: jest.Mocked<RefreshAccessTokenUseCase>;
+  let unlockUserAccountUseCase: jest.Mocked<UnlockUserAccountUseCase>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -33,6 +35,10 @@ describe('AuthService', () => {
           provide: RefreshAccessTokenUseCase,
           useValue: { execute: jest.fn() },
         },
+        {
+          provide: UnlockUserAccountUseCase,
+          useValue: { execute: jest.fn() },
+        },
       ],
     }).compile();
 
@@ -41,6 +47,7 @@ describe('AuthService', () => {
     loginUseCase = module.get(LoginUseCase);
     logoutUseCase = module.get(LogoutUseCase);
     refreshUseCase = module.get(RefreshAccessTokenUseCase);
+    unlockUserAccountUseCase = module.get(UnlockUserAccountUseCase);
   });
 
   it('should be defined', () => {

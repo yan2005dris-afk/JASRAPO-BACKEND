@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { ReadingRepository } from '../../domain/repositories/reading.repository';
 import { CrearLecturaDto } from '../../interfaces/dto/create-lectura.dto';
-import { EstadoLectura } from 'src/shared/enums';
 import { LecturaEntity } from '../../domain/entities/lectura.entity';
 import {
   EntityNotFoundException,
   InvalidDomainOperationException,
 } from 'src/shared/domain/exceptions/domain.exception';
+import { Decimal } from 'decimal.js';
 
 @Injectable()
 export class CreateReadingUseCase {
@@ -16,29 +16,33 @@ export class CreateReadingUseCase {
     const periodoId = await this.resolvePeriodoId(createDto.periodoId);
     const fotoUrl = createDto.fotoUrl;
     const fecha = this.validateFecha(createDto.fecha);
+    const medidorId = this.validateMedidorId(createDto.medidorId);
+    const lecturaActual = this.validateLecturaActual(createDto.lecturaActual);
 
-    const rawLectura = await this.readingRepository.create({
+    const lectura = await this.readingRepository.createWithAtomicSnapshot({
       fecha,
-      lecturaAnterior: createDto.lecturaAnterior,
-      lecturaActual: createDto.lecturaActual,
-      consumoCalculado: createDto.consumoCalculado ?? 0,
-      medidorId: this.validateMedidorId(createDto.medidorId),
+      lecturaActual,
+      medidorId,
+      periodoId,
       descripcionAnomalia: createDto.descripcionAnomalia,
       fotoUrl,
-      lecturaInicial: createDto.lecturaInicial,
-      periodoId,
-      estado: EstadoLectura.POR_REVISION,
+      estado: createDto.estado,
     });
-
-    const lectura = await this.readingRepository.findUnique({
-      lecturaId: rawLectura.lecturaId,
-    });
-
-    if (!lectura) {
-      throw new EntityNotFoundException('Lectura', rawLectura.lecturaId);
-    }
 
     return lectura;
+  }
+
+  private validateLecturaActual(lecturaActual: number | string): Decimal {
+    if (
+      lecturaActual === undefined ||
+      lecturaActual === null ||
+      isNaN(Number(lecturaActual))
+    ) {
+      throw new InvalidDomainOperationException(
+        'lecturaActual inválida: debe ser un número válido',
+      );
+    }
+    return new Decimal(lecturaActual);
   }
 
   private validateMedidorId(medidorId: string | number): bigint {

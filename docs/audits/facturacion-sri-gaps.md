@@ -2,7 +2,7 @@
 
 > Estado al 2026-07-23. Comparado contra `docs/guides/FACTURACION_FISCAL.md`,
 > `docs/billing-rules.md` y la implementación de referencia vendorizada en
-> `open-api-facturacion-sri-main/`. Alcance: `backend/src/sri/` y
+> `external/open-api-facturacion-sri/` (deprecado, referencia histórica). Alcance: `backend/src/sri/` y
 > `backend/src/billing/`. Auditoría de solo lectura — no se modificó código.
 
 ## 1. Tabla resumen
@@ -86,7 +86,7 @@ acceso y enviando los documentos diferidos apenas el servicio se restablece.
 Sin esto, cualquier caída del SRI bloquea toda la operación de facturación
 de la empresa mientras dure la caída.
 
-**Nota de contexto**: la implementación de referencia (`open-api-facturacion-sri-main`)
+**Nota de contexto**: la implementación de referencia (`external/open-api-facturacion-sri/`, deprecado, referencia histórica)
 tampoco lo implementa más allá de su propio enum — no es una regresión
 respecto al baseline, es una brecha compartida. Prioridad más baja que 2.1 y
 2.2, pero real para un rollout de producción sin intervención manual.
@@ -309,7 +309,7 @@ ningún test.
 ## 4. Metodología
 
 Auditoría realizada con `rg`/`fd` sobre `backend/src/sri/`,
-`backend/src/billing/` y `open-api-facturacion-sri-main/`, más lectura
+`backend/src/billing/` y `external/open-api-facturacion-sri/` (deprecado, referencia histórica), más lectura
 puntual de los archivos citados. No se encontraron marcadores literales
 `TODO`/`FIXME`/`throw new Error('not implemented')` — las brechas
 identificadas son omisiones estructurales (código no escrito o no

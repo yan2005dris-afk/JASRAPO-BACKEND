@@ -15,9 +15,6 @@ describe('PrismaTariffRepository', () => {
     categoriaTarifaId: 1,
     nombre: 'Residencial',
     descripcion: 'Tarifa básica',
-    valorBase: new Prisma.Decimal(5),
-    consumoMinimoMensual: 10,
-    valorExcedenteM3: new Prisma.Decimal(0.5),
     fechaVigenciaDesde: new Date('2026-01-01'),
     fechaVigenciaHasta: null,
     activo: true,
@@ -65,7 +62,6 @@ describe('PrismaTariffRepository', () => {
       expect(result).not.toBeNull();
       expect(result?.categoriaTarifaId).toBe(1);
       expect(result?.nombre).toBe('Residencial');
-      expect(result?.valorBase).toBe(5);
     });
 
     it('should return null when not found', async () => {

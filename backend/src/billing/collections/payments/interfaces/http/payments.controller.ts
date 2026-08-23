@@ -8,7 +8,10 @@ import {
   Post,
   Query,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiBearerAuth,
   ApiExtraModels,
@@ -19,6 +22,7 @@ import {
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
 import { CurrentUser } from 'src/identity/auth/interfaces/http/decorators/current-user.decorator';
+import type { JwtPayload } from 'src/identity/auth/application/types/jwt.types';
 import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
 import { ParseBigIntPipe } from 'src/infrastructure/common/pipes/parse-bigint.pipe';
@@ -67,10 +71,42 @@ export class PaymentsController {
   @Post()
   async create(
     @Body() dto: CreatePaymentDto,
-    @CurrentUser() user: any,
+    @CurrentUser() user: JwtPayload,
   ): Promise<PaymentResponseDto> {
     const entity = await this.paymentsService.create(dto, this.getActor(user));
     return PaymentResponseDto.fromEntity(entity);
+  }
+
+  @ApiOperation({
+    summary: 'Subir comprobante de transferencia o depósito',
+    description:
+      'Sube un archivo de imagen o PDF a RustFS/S3 y retorna la clave y URL prefirmada.',
+  })
+  @ApiResponse({ status: 201, description: 'Comprobante subido exitosamente' })
+  @RequiredPermission('payments', 'create')
+  @Post('upload-comprobante')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
+    }),
+  )
+  async uploadComprobante(
+    @UploadedFile() file: Express.Multer.File,
+  ): Promise<{ key: string; url: string }> {
+    return this.paymentsService.uploadComprobante(file);
+  }
+
+  @ApiOperation({
+    summary: 'Obtener URL prefirmada de un comprobante',
+    description:
+      'Genera una URL temporal para visualizar o descargar el comprobante desde RustFS/S3.',
+  })
+  @ApiResponse({ status: 200, description: 'URL prefirmada generada' })
+  @RequiredPermission('payments', 'read')
+  @Get('comprobante-url')
+  async getComprobanteUrl(@Query('key') key: string): Promise<{ url: string }> {
+    const url = await this.paymentsService.getComprobanteUrl(key);
+    return { url };
   }
 
   @ApiOperation({
@@ -175,7 +211,7 @@ export class PaymentsController {
   }
 
   @ApiOperation({
-    summary: 'Aplicar saldo a favor',
+    summary: 'Aplica saldo a favor',
     description:
       'Aplica un saldo disponible a un comprobante o cuota de convenio.',
   })
@@ -184,7 +220,7 @@ export class PaymentsController {
   @Post('apply-saldo-favor')
   async applySaldoFavor(
     @Body() dto: ApplySaldoFavorDto,
-    @CurrentUser() user: any,
+    @CurrentUser() user?: JwtPayload,
   ): Promise<PaymentResponseDto> {
     const entity = await this.paymentsService.applySaldoFavor(
       dto,
@@ -220,7 +256,7 @@ export class PaymentsController {
   async updateState(
     @Param('id', ParseBigIntPipe) id: bigint,
     @Body() dto: UpdatePaymentStateDto,
-    @CurrentUser() user: any,
+    @CurrentUser() user?: JwtPayload,
   ): Promise<PaymentResponseDto> {
     const entity = await this.paymentsService.updateState(
       id,
@@ -242,7 +278,7 @@ export class PaymentsController {
   async annul(
     @Param('id', ParseBigIntPipe) id: bigint,
     @Body() dto: AnnulPaymentDto,
-    @CurrentUser() user: any,
+    @CurrentUser() user?: JwtPayload,
   ): Promise<PaymentResponseDto> {
     const entity = await this.paymentsService.annul(id, {
       motivoAnulacion: dto.motivoAnulacion,
@@ -251,7 +287,7 @@ export class PaymentsController {
     return PaymentResponseDto.fromEntity(entity);
   }
 
-  private getActor(user: any): string {
-    return user?.email ?? user?.sub?.toString() ?? 'SYSTEM';
+  private getActor(user?: JwtPayload): string {
+    return user?.email ?? (user?.sub ? user.sub.toString() : 'SYSTEM');
   }
 }

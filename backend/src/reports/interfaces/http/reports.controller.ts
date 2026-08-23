@@ -59,6 +59,9 @@ import { LogContext } from 'src/shared/decorators/log-context.decorator';
  * is explicit via `@RequiredPermission('reportes', 'read')` instead of
  * relying on the guard's convention-based inference.
  */
+import { OverdueAccountsFilterDto } from '../dto/overdue-accounts-filter.dto';
+import { OverdueAccountsReportSpec } from '../../infrastructure/specs/overdue-accounts.report-spec';
+
 @LogContext()
 @ApiTags('reports')
 @ApiBearerAuth()
@@ -71,6 +74,7 @@ export class ReportsController {
     private readonly paymentsReportSpec: PaymentsReportSpec,
     private readonly connectionHistorySpec: ConnectionHistoryReportSpec,
     private readonly accountStatementSpec: AccountStatementReportSpec,
+    private readonly overdueAccountsSpec: OverdueAccountsReportSpec,
     private readonly paymentAgreementPdfData: GetPaymentAgreementPdfDataUseCase,
     private readonly dispatcher: ReportStyleDispatcher,
     private readonly sendReportByEmail: SendReportByEmailUseCase,
@@ -241,6 +245,24 @@ export class ReportsController {
       data,
     );
     this.respondWithContentNegotiation(res, data, buffer, filename);
+  }
+
+  @Get('overdue-accounts')
+  @RequiredPermission('reportes', 'read')
+  @ApiOperation({
+    summary: 'Reporte de Recaudación y Morosidad',
+    description:
+      'Retorna el listado de cuentas con valores pendientes de pago y métricas de morosidad.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Datos de morosidad en formato JSON',
+  })
+  async overdueAccounts(@Query() filters: OverdueAccountsFilterDto) {
+    this.logger.log(
+      `Generating overdue-accounts — filters: ${JSON.stringify(filters)}`,
+    );
+    return this.overdueAccountsSpec.fetchData(filters);
   }
 
   // ─── Email send endpoints (report-endpoint-send-email) ───────────────────────

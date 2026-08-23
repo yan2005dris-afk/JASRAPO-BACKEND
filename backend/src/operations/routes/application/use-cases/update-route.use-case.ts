@@ -2,11 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { RouteRepository } from '../../domain/repositories/route.repository';
 import { UpdateRouteDto } from '../../interfaces/dto/update-route.dto';
 import { RouteEntity } from '../../domain/entities/route.entity';
+import type { UpdateRouteData } from '../../domain/types/route.types';
 import {
   EntityNotFoundException,
   InvalidDomainOperationException,
 } from 'src/shared/domain/exceptions/domain.exception';
 import { canTransitionRouteState } from '../../domain/route-state';
+import { DateUtil } from 'src/shared/utils/date.util';
 
 @Injectable()
 export class UpdateRouteUseCase {
@@ -28,6 +30,16 @@ export class UpdateRouteUseCase {
           `No se puede cambiar el estado de la ruta de ${ruta.estado} a ${updateDto.estado}`,
         );
       }
+
+      if (
+        updateDto.estado === 'EN_PROGRESO' &&
+        !ruta.operarioId &&
+        updateDto.operarioId === undefined
+      ) {
+        throw new InvalidDomainOperationException(
+          'No se puede iniciar la ruta: debe asignar un operario responsable antes de enviarla a campo',
+        );
+      }
     }
 
     if (updateDto.periodoId !== undefined) {
@@ -44,9 +56,9 @@ export class UpdateRouteUseCase {
       }
 
       const fechaPlan = updateDto.fechaPlanificada
-        ? new Date(updateDto.fechaPlanificada)
+        ? DateUtil.parseFrontendDate(updateDto.fechaPlanificada)
         : ruta.fechaPlanificada
-          ? new Date(ruta.fechaPlanificada)
+          ? DateUtil.parseFrontendDate(ruta.fechaPlanificada)
           : null;
 
       const overlapping = await this.routeRepository.findOverlappingRoutes(
@@ -64,16 +76,19 @@ export class UpdateRouteUseCase {
       }
     }
 
-    const payload: any = {
+    const payload: UpdateRouteData = {
       ...(updateDto.nombre !== undefined && { nombre: updateDto.nombre }),
       ...(updateDto.descripcion !== undefined && {
         descripcion: updateDto.descripcion,
       }),
+      ...(updateDto.operarioId !== undefined && {
+        operarioId: updateDto.operarioId,
+      }),
       ...(updateDto.estado !== undefined && { estado: updateDto.estado }),
       ...(updateDto.fechaPlanificada !== undefined && {
-        fechaPlanificada: updateDto.fechaPlanificada
-          ? new Date(updateDto.fechaPlanificada)
-          : null,
+        fechaPlanificada: DateUtil.parseFrontendDate(
+          updateDto.fechaPlanificada ?? null,
+        ),
       }),
       ...(updateDto.periodoId !== undefined && {
         periodoId: updateDto.periodoId,

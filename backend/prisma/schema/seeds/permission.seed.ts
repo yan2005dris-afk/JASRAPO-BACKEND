@@ -65,7 +65,8 @@ export async function seedPermissions(prisma: PrismaClient) {
         "menus",
         "catalogos",
         "rubros",
-        "configuraciones"
+        "configuraciones",
+        "empresa"
     ];
 
     const actions = ["read", "create", "update", "delete"];
@@ -80,6 +81,7 @@ export async function seedPermissions(prisma: PrismaClient) {
 
     // Acciones especiales fuera del set CRUD estándar (endpoints de transición)
     permissionsToCreate.push({ resource: "discounts", action: "apply" });
+    permissionsToCreate.push({ resource: "meter-replacements", action: "approve" });
     
     const savedPermissions: Permisos[] = [];
 

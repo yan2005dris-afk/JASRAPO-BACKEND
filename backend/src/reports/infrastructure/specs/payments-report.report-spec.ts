@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import type { ReportSpec } from '../../interfaces/report-spec.interface';
 import type { PaymentsReportFilterDto } from '../../interfaces/dto/payments-report-filter.dto';
+import { normalizeReportDateRange } from './report-date-range';
 
 @Injectable()
 export class PaymentsReportSpec implements ReportSpec<PaymentsReportFilterDto> {
@@ -12,6 +13,10 @@ export class PaymentsReportSpec implements ReportSpec<PaymentsReportFilterDto> {
   async fetchData(
     filters: PaymentsReportFilterDto,
   ): Promise<Record<string, unknown>> {
+    const { startInclusive, endExclusive } = normalizeReportDateRange(
+      filters.fechaDesde,
+      filters.fechaHasta,
+    );
     const pagos = await this.prisma.pagos.findMany({
       where: {
         deletedAt: null,
@@ -19,12 +24,8 @@ export class PaymentsReportSpec implements ReportSpec<PaymentsReportFilterDto> {
         ...(filters.fechaDesde || filters.fechaHasta
           ? {
               fechaPago: {
-                ...(filters.fechaDesde
-                  ? { gte: new Date(filters.fechaDesde) }
-                  : {}),
-                ...(filters.fechaHasta
-                  ? { lte: new Date(filters.fechaHasta) }
-                  : {}),
+                ...(startInclusive ? { gte: startInclusive } : {}),
+                ...(endExclusive ? { lt: endExclusive } : {}),
               },
             }
           : {}),
@@ -87,13 +88,7 @@ export class PaymentsReportSpec implements ReportSpec<PaymentsReportFilterDto> {
         const medidor =
           prefactura?.contrato?.historialMedidores?.[0]?.medidor?.serie ?? '—';
         const factura = comprobante?.secuencial ?? '—';
-        const emision = comprobante?.fechaEmision
-          ? new Date(comprobante.fechaEmision).toLocaleDateString('es-EC', {
-              day: '2-digit',
-              month: '2-digit',
-              year: 'numeric',
-            })
-          : '—';
+        const emision = prefactura?.periodoRel?.nombre ?? '—';
         const valorNum = Number(detalle.montoAbonado);
 
         rows.push({

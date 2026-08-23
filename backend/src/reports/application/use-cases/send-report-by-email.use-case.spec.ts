@@ -20,7 +20,7 @@ import {
 } from '@nestjs/common';
 import { SendReportByEmailUseCase } from './send-report-by-email.use-case';
 import type { MailService } from 'src/infrastructure/mail/application/mail.service';
-import type { GeneratePdfUseCase } from 'src/infrastructure/pdf/use-cases/generate-pdf.use-case';
+import type { ReportStyleDispatcher } from '../report-style.dispatcher';
 import type { ReportEmailStrategy } from './send-report-by-email.strategy';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 const mockLogger = {
@@ -41,7 +41,7 @@ describe('SendReportByEmailUseCase (skeleton)', () => {
   // Specs inject custom strategies so we can prove the execute() contract
   // without depending on the real implementations (those land in PR 2).
   const mockMailService = { sendReport: jest.fn() };
-  const mockGeneratePdf = { execute: jest.fn() };
+  const mockDispatcher = { dispatch: jest.fn() };
 
   const buildStrategy = (
     overrides: Partial<ReportEmailStrategy<Record<string, unknown>>> = {},
@@ -65,7 +65,7 @@ describe('SendReportByEmailUseCase (skeleton)', () => {
           useFactory: () =>
             new SendReportByEmailUseCase(
               mockMailService as unknown as MailService,
-              mockGeneratePdf as unknown as GeneratePdfUseCase,
+              mockDispatcher as unknown as ReportStyleDispatcher,
               strategies,
               pdfTimeoutMs,
               mockLogger,
@@ -79,7 +79,9 @@ describe('SendReportByEmailUseCase (skeleton)', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockMailService.sendReport.mockResolvedValue({ jobId: 'job-abc' });
-    mockGeneratePdf.execute.mockResolvedValue(Buffer.from('pdf-bytes'));
+    mockDispatcher.dispatch.mockResolvedValue({
+      buffer: Buffer.from('pdf-bytes'),
+    });
   });
 
   it('returns the queued envelope shape on success', async () => {
@@ -203,7 +205,7 @@ describe('SendReportByEmailUseCase (skeleton)', () => {
       useCase.execute({ reportType: 'unknown', filters: {} }),
     ).rejects.toThrow(NotFoundException);
 
-    expect(mockGeneratePdf.execute).not.toHaveBeenCalled();
+    expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
     expect(mockMailService.sendReport).not.toHaveBeenCalled();
   });
 
@@ -224,12 +226,12 @@ describe('SendReportByEmailUseCase (skeleton)', () => {
       }),
     ).rejects.toThrow(BadRequestException);
 
-    expect(mockGeneratePdf.execute).not.toHaveBeenCalled();
+    expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
     expect(mockMailService.sendReport).not.toHaveBeenCalled();
   });
 
   it('propagates PDF generation errors and never queues mail', async () => {
-    mockGeneratePdf.execute.mockRejectedValueOnce(new Error('puppeteer boom'));
+    mockDispatcher.dispatch.mockRejectedValueOnce(new Error('puppeteer boom'));
 
     const strategy = buildStrategy();
     const useCase = await compile({ 'payments-report': strategy });
@@ -262,9 +264,9 @@ describe('SendReportByEmailUseCase (skeleton)', () => {
   });
 
   // PR 2: the use case now calls strategy.fetchSpec(filters) and passes the
-  // SPEC DATA (not the raw filters) to GeneratePdfUseCase.execute. The PDF
-  // templates expect the spec output shape (e.g. `pagos`, `fechaDesde`).
-  it('passes the spec data (not the raw filters) to GeneratePdfUseCase.execute', async () => {
+  // SPEC DATA (not the raw filters) to ReportStyleDispatcher.dispatch. The
+  // PDF templates expect the spec output shape (e.g. `pagos`, `fechaDesde`).
+  it('passes the spec data (not the raw filters) to ReportStyleDispatcher.dispatch', async () => {
     const fetchSpec = jest.fn().mockResolvedValue({
       pagos: [{ factura: 'F1', valorNum: 10 }],
       totalGeneral: '10.00',
@@ -280,7 +282,7 @@ describe('SendReportByEmailUseCase (skeleton)', () => {
     });
 
     expect(fetchSpec).toHaveBeenCalledWith({ clienteId: '7' });
-    expect(mockGeneratePdf.execute).toHaveBeenCalledWith('payments-report', {
+    expect(mockDispatcher.dispatch).toHaveBeenCalledWith('payments-report', {
       pagos: [{ factura: 'F1', valorNum: 10 }],
       totalGeneral: '10.00',
       totalRegistros: 1,
@@ -335,7 +337,7 @@ describe('SendReportByEmailUseCase (skeleton)', () => {
         destinatario: recipient,
         subject,
       });
-      expect(mockGeneratePdf.execute).toHaveBeenCalledWith(reportType, {
+      expect(mockDispatcher.dispatch).toHaveBeenCalledWith(reportType, {
         stub: true,
       });
       expect(mockMailService.sendReport).toHaveBeenCalledWith(
@@ -363,7 +365,7 @@ describe('SendReportByEmailUseCase (skeleton)', () => {
       useCase.execute({ reportType: 'clients-list', filters: {} }),
     ).rejects.toThrow(BadRequestException);
 
-    expect(mockGeneratePdf.execute).not.toHaveBeenCalled();
+    expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
     expect(mockMailService.sendReport).not.toHaveBeenCalled();
   });
 
@@ -460,7 +462,7 @@ describe('SendReportByEmailUseCase (skeleton)', () => {
     // Simulate a hung PDF renderer. The promise never resolves; the use
     // case's `withTimeout` wrapper must convert the TimeoutError into a
     // 503-mapped ServiceUnavailableException for the controller.
-    mockGeneratePdf.execute.mockImplementation(
+    mockDispatcher.dispatch.mockImplementation(
       () => new Promise<Buffer>(() => undefined),
     );
 
@@ -479,7 +481,7 @@ describe('SendReportByEmailUseCase (skeleton)', () => {
   });
 
   it('exposes the PDF timeout error message as "PDF generation timeout"', async () => {
-    mockGeneratePdf.execute.mockImplementation(
+    mockDispatcher.dispatch.mockImplementation(
       () => new Promise<Buffer>(() => undefined),
     );
 

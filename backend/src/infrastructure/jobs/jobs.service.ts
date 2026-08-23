@@ -77,6 +77,20 @@ export class JobsService implements OnModuleInit, OnModuleDestroy {
     return this.boss.insert(name, jobs);
   }
 
+  async schedule(
+    name: string,
+    cron: string,
+    data?: object,
+    options?: SendOptions,
+  ) {
+    await this.ensureQueue(name);
+    return this.boss.schedule(name, cron, data || {}, options);
+  }
+
+  async unschedule(name: string) {
+    return this.boss.unschedule(name);
+  }
+
   async work(name: string, handler: WorkHandler<any>) {
     await this.ensureQueue(name);
     return this.boss.work(name, handler);

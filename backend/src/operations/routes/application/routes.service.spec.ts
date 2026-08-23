@@ -2,16 +2,19 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { RoutesService } from './routes.service';
 import { GetEligibleReadingsUseCase } from './use-cases/get-eligible-readings.use-case';
+import { GetReadingsByRutaUseCase } from './use-cases/get-readings-by-ruta.use-case';
 import { CreateRouteUseCase } from './use-cases/create-route.use-case';
 import { FindAllRoutesUseCase } from './use-cases/find-all-routes.use-case';
 import { FindOneRouteUseCase } from './use-cases/find-one-route.use-case';
 import { UpdateRouteUseCase } from './use-cases/update-route.use-case';
 import { DeleteRouteUseCase } from './use-cases/delete-route.use-case';
+import { RouteRepository } from '../domain/repositories/route.repository';
 import { RouteEntity } from '../domain/entities/route.entity';
 
 describe('RoutesService', () => {
   let service: RoutesService;
   let getEligibleReadingsUseCase: GetEligibleReadingsUseCase;
+  let getReadingsByRutaUseCase: GetReadingsByRutaUseCase;
   let createRouteUseCase: CreateRouteUseCase;
   let findAllRoutesUseCase: FindAllRoutesUseCase;
   let findOneRouteUseCase: FindOneRouteUseCase;
@@ -38,7 +41,15 @@ describe('RoutesService', () => {
       providers: [
         RoutesService,
         {
+          provide: RouteRepository,
+          useValue: { findAllPeriodos: jest.fn() },
+        },
+        {
           provide: GetEligibleReadingsUseCase,
+          useValue: { execute: jest.fn() },
+        },
+        {
+          provide: GetReadingsByRutaUseCase,
           useValue: { execute: jest.fn() },
         },
         { provide: CreateRouteUseCase, useValue: { execute: jest.fn() } },
@@ -52,6 +63,9 @@ describe('RoutesService', () => {
     service = module.get<RoutesService>(RoutesService);
     getEligibleReadingsUseCase = module.get<GetEligibleReadingsUseCase>(
       GetEligibleReadingsUseCase,
+    );
+    getReadingsByRutaUseCase = module.get<GetReadingsByRutaUseCase>(
+      GetReadingsByRutaUseCase,
     );
     createRouteUseCase = module.get<CreateRouteUseCase>(CreateRouteUseCase);
     findAllRoutesUseCase =

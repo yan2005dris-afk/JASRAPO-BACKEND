@@ -52,11 +52,21 @@ describe('ContractMapper', () => {
             medidorId: BigInt(200),
             fechaDesde: new Date('2024-01-15'),
             fechaHasta: null,
+            lecturaInicial: '10',
+            lecturaFinal: null,
             medidor: {
               medidorId: BigInt(200),
               serie: 'SER-12345',
               marca: 'MarcaX',
               modelo: 'ModeloZ',
+              lecturas: [
+                {
+                  lecturaId: 301n,
+                  fecha: new Date('2024-06-15T12:00:00Z'),
+                  lecturaActual: '125',
+                  lecturaAnterior: '100',
+                },
+              ],
             },
           },
         ],
@@ -77,7 +87,6 @@ describe('ContractMapper', () => {
       // CategoriaTarifa relation
       expect(result!.categoriaTarifa).toBeDefined();
       expect(result!.categoriaTarifa!.nombre).toBe('Residencial');
-      expect(result!.categoriaTarifa!.valorBase).toBe(150.5);
 
       // Cliente relation
       expect(result!.cliente).toBeDefined();
@@ -95,6 +104,10 @@ describe('ContractMapper', () => {
       // HistorialMedidores relation
       expect(result!.historialMedidores).toHaveLength(1);
       expect(result!.historialMedidores![0].medidor.serie).toBe('SER-12345');
+      expect(
+        result!.historialMedidores![0].ultimaLecturaAprobada,
+      ).toMatchObject({ lecturaId: 301n, lecturaActual: 125 });
+      expect(result!.historialMedidores![0].lecturaInicial).toBe(10);
     });
 
     it('should handle null optional relations', () => {

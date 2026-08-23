@@ -27,6 +27,15 @@ export class PaymentDetailComprobanteDto {
     description: 'Estado actual del comprobante',
   })
   estado: string;
+
+  @ApiPropertyOptional({ description: 'Datos de la prefactura asociada' })
+  prefactura?: {
+    prefacturaId: string;
+    mes?: number;
+    totalPagar?: number;
+    consumoM3?: number | null;
+    periodoNombre?: string;
+  };
 }
 
 export class PaymentDetailResponseDto {
@@ -98,6 +107,15 @@ export class PaymentDetailResponseDto {
           secuencial: entity.comprobante.secuencial ?? '',
           importeTotal: entity.comprobante.importeTotal ?? null,
           estado: entity.comprobante.estado ?? '',
+          prefactura: entity.comprobante.prefactura
+            ? {
+                prefacturaId: entity.comprobante.prefactura.prefacturaId,
+                mes: entity.comprobante.prefactura.mes,
+                totalPagar: entity.comprobante.prefactura.totalPagar,
+                consumoM3: entity.comprobante.prefactura.consumoM3,
+                periodoNombre: entity.comprobante.prefactura.periodoNombre,
+              }
+            : undefined,
         }
       : undefined;
     return dto;

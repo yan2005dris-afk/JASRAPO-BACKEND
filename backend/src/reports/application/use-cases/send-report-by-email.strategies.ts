@@ -35,6 +35,8 @@ export const REPORT_EMAIL_STRATEGIES = 'REPORT_EMAIL_STRATEGIES';
  */
 export interface ReportEmailStrategyV2 {
   readonly reportType: string;
+  /** PDF registry key — defaults to `reportType` when omitted. */
+  readonly pdfType?: string;
   fetchSpec(filters: unknown): Promise<Record<string, unknown>>;
   recipientResolver(
     filters: unknown,

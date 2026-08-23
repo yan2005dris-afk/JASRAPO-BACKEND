@@ -3,6 +3,16 @@ export interface ReadingContractRef {
   numeroGuia: string;
   direccionSuministro: string;
   estado: string;
+  sector?: {
+    nombre: string;
+  } | null;
+  cliente?: {
+    clienteId: bigint;
+    nombres: string;
+    apellidos: string;
+    razonSocial?: string | null;
+    identificacion: string;
+  } | null;
 }
 
 export interface ReadingMeterRef {

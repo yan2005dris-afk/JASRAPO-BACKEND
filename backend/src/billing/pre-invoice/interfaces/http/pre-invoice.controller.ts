@@ -23,6 +23,7 @@ import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.
 import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
 import { CurrentUser } from 'src/identity/auth/interfaces/http/decorators/current-user.decorator';
+import type { JwtPayload } from 'src/identity/auth/application/types/jwt.types';
 import { PreInvoiceService } from '../../application/pre-invoice.service';
 import { FindAllPreInvoicesDto } from '../dto/find-all-pre-invoices.dto';
 import { UpdatePreInvoiceStateDto } from '../dto/update-pre-invoice-state.dto';
@@ -216,12 +217,12 @@ export class PreInvoiceController {
   async updateState(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdatePreInvoiceStateDto,
-    @CurrentUser() user: any,
+    @CurrentUser() user?: JwtPayload,
   ): Promise<PreInvoiceResponseDto> {
     const entity = await this.preInvoiceService.updateState(
       id,
       dto.action,
-      user?.email ?? user?.sub?.toString(),
+      user?.email ?? (user?.sub ? user.sub.toString() : undefined),
       dto.motivoRechazo,
     );
     return PreInvoiceResponseDto.fromEntity(entity);

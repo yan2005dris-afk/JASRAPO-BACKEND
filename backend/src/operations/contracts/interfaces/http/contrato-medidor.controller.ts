@@ -17,7 +17,9 @@ import { CrearContratoMedidorDto } from '../dto/create-contrato-medidor.dto';
 import { ActualizarContratoMedidorDto } from '../dto/update-contrato-medidor.dto';
 import { buildPdfFileName } from 'src/infrastructure/pdf/utils/pdf-format.utils';
 import { FilterContractsDto } from '../dto/filter-contracts.dto';
+import { AssignInstallationRouteDto } from '../dto/assign-installation-route.dto';
 import { ContractResponseDto } from '../dto/contract-response.dto';
+import { RouteResponseDto } from '../../../routes/interfaces/dto/route-response.dto';
 import {
   ApiTags,
   ApiBearerAuth,
@@ -218,6 +220,34 @@ export class ContratoMedidorController {
   ): Promise<ContractResponseDto> {
     const result = await this.contratoMedidorService.eliminar(id);
     return ContractResponseDto.fromEntity(result);
+  }
+
+  @ApiOperation({
+    summary: 'Asignar contrato a ruta de instalación',
+    description:
+      'Asigna un contrato en estado PENDIENTE_INSTALACION a una ruta de instalacion. Si no se pasa routeId, crea una nueva ruta INSTALACION sin operario. Si se pasa routeId, valida que la ruta destino sea INSTALACION y este en PENDIENTE. En ambos casos crea la orden_trabajo correspondiente.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Ruta creada o encontrada',
+    type: RouteResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Contrato no esta en PENDIENTE_INSTALACION o ruta invalida',
+  })
+  @ApiResponse({ status: 404, description: 'Contrato o ruta no encontrado' })
+  @RequiredPermission('contracts', 'update')
+  @Post(':id/assign-installation-route')
+  async assignInstallationRoute(
+    @Param('id', ParseBigIntPipe) id: bigint,
+    @Body() dto: AssignInstallationRouteDto,
+  ): Promise<RouteResponseDto> {
+    const route = await this.contratoMedidorService.assignInstallationRoute(
+      id,
+      dto,
+    );
+    return RouteResponseDto.fromEntity(route);
   }
 
   /**

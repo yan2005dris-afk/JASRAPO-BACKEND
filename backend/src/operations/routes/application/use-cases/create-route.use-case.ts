@@ -8,11 +8,11 @@ import {
   EntityNotFoundException,
   InvalidDomainOperationException,
 } from 'src/shared/domain/exceptions/domain.exception';
+import { DateUtil } from 'src/shared/utils/date.util';
 
 /** Route types that target a specific meter work order (not community-periodic). */
 const WORK_ORDER_TYPES = new Set<string>([
   TipoRuta.INSTALACION,
-  TipoRuta.RECONEXION,
   TipoRuta.INSPECCION,
 ]);
 
@@ -21,19 +21,23 @@ export class CreateRouteUseCase {
   constructor(private readonly routeRepository: RouteRepository) {}
 
   async execute(createDto: CreateRouteDto): Promise<RouteEntity> {
-    const operario = await this.routeRepository.findUsuario(
-      createDto.operarioId,
-      { includeRole: true },
-    );
-
-    if (!operario) {
-      throw new EntityNotFoundException('Operario', createDto.operarioId);
-    }
-
-    if (operario.rol?.nombre !== 'operadores') {
-      throw new InvalidDomainOperationException(
-        'Solo se pueden asignar operadores',
+    // operarioId es opcional: las rutas INSTALACION se crean sin operario
+    // y se despachan después desde la bandeja de secretaría (SC-174).
+    if (createDto.operarioId !== undefined && createDto.operarioId !== null) {
+      const operario = await this.routeRepository.findUsuario(
+        createDto.operarioId,
+        { includeRole: true },
       );
+
+      if (!operario) {
+        throw new EntityNotFoundException('Operario', createDto.operarioId);
+      }
+
+      if (operario.rol?.nombre !== 'operadores') {
+        throw new InvalidDomainOperationException(
+          'Solo se pueden asignar operadores',
+        );
+      }
     }
 
     const comunidad = await this.routeRepository.findComunidad(
@@ -68,31 +72,13 @@ export class CreateRouteUseCase {
       throw new InvalidDomainOperationException('El periodo no está abierto');
     }
 
-    // Meter-specific work orders require a medidor.
     const isWorkOrder = WORK_ORDER_TYPES.has(createDto.tipoRuta);
-
-    if (isWorkOrder && createDto.medidorId == null) {
-      throw new InvalidDomainOperationException(
-        'medidorId es obligatorio para rutas de INSTALACION/RECONEXION/INSPECCION',
-      );
-    }
-
-    // Validate medidor when provided
-    if (createDto.medidorId != null) {
-      const medidor = await this.routeRepository.findMedidor(
-        createDto.medidorId,
-      );
-
-      if (!medidor) {
-        throw new EntityNotFoundException('Medidor', createDto.medidorId);
-      }
-    }
 
     // Overlap check applies only to periodic community routes (validating the same month/year planificada)
     if (!isWorkOrder) {
-      const fechaPlan = createDto.fechaPlanificada
-        ? new Date(createDto.fechaPlanificada)
-        : null;
+      const fechaPlan = DateUtil.parseFrontendDate(
+        createDto.fechaPlanificada ?? null,
+      );
 
       const overlapping = await this.routeRepository.findOverlappingRoutes(
         createDto.comunidadId,
@@ -112,16 +98,15 @@ export class CreateRouteUseCase {
     const createData: CreateRouteData = {
       nombre: createDto.nombre,
       descripcion: createDto.descripcion,
-      operarioId: createDto.operarioId,
+      operarioId: createDto.operarioId ?? null,
       tipoRuta: createDto.tipoRuta,
       comunidadId: createDto.comunidadId,
       sectorId: createDto.sectorId,
       periodoId: createDto.periodoId,
-      fechaPlanificada: createDto.fechaPlanificada
-        ? new Date(createDto.fechaPlanificada)
-        : null,
+      fechaPlanificada: DateUtil.parseFrontendDate(
+        createDto.fechaPlanificada ?? null,
+      ),
       estado: 'PENDIENTE',
-      medidorId: createDto.medidorId,
     };
 
     const route = await this.routeRepository.create(createData);
@@ -134,13 +119,11 @@ export class CreateRouteUseCase {
       await this.routeRepository.initializeMonthlyReadings(
         createDto.comunidadId,
         createDto.periodoId,
-        new Date(createDto.fechaPlanificada),
+        DateUtil.parseFrontendDateStrict(createDto.fechaPlanificada),
         createDto.sectorId,
         route.rutaId,
       );
     }
-
-    await this.routeRepository.createWorkOrdersForRoute(route.rutaId);
 
     return route;
   }

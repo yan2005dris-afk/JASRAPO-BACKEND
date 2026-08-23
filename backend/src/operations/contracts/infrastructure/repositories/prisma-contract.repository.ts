@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { Prisma } from 'src/generated/prisma/client';
-import { EstadoMedidor } from 'src/shared/enums';
+import { EstadoContrato, EstadoMedidor } from 'src/shared/enums';
 import {
   EntityNotFoundException,
   InvalidDomainOperationException,
@@ -22,17 +22,33 @@ import {
   PaginateOptions,
 } from 'src/infrastructure/common/utils/pagination.util';
 
+export const contractDefaultInclude = {
+  categoriaTarifa: true,
+  cliente: true,
+  comunidad: true,
+  sector: true,
+  historialMedidores: {
+    include: {
+      medidor: {
+        include: {
+          lecturas: {
+            where: { estado: 'APROBADA', deletedAt: null },
+            orderBy: [{ fecha: 'desc' }, { lecturaId: 'desc' }],
+            take: 1,
+          },
+        },
+      },
+    },
+  },
+} satisfies Prisma.ContratosInclude;
+
+export type ContractRecord = Prisma.ContratosGetPayload<{
+  include: typeof contractDefaultInclude;
+}>;
+
 @Injectable()
 export class PrismaContractRepository implements ContractRepository {
-  private readonly defaultInclude = {
-    categoriaTarifa: true,
-    cliente: true,
-    comunidad: true,
-    sector: true,
-    historialMedidores: {
-      include: { medidor: true },
-    },
-  } satisfies Prisma.ContratosInclude;
+  private readonly defaultInclude = contractDefaultInclude;
 
   constructor(private readonly prisma: PrismaService) {}
 
@@ -203,6 +219,10 @@ export class PrismaContractRepository implements ContractRepository {
         where: { medidorId: data.medidorId },
         data: { estado: EstadoMedidor.PENDIENTE },
       });
+
+      if (contrato.estado === EstadoContrato.PENDIENTE_PAGO) {
+        await tx.$executeRaw`SELECT generar_prefactura_instalacion(${contrato.contratoId}, ${data.creadoPor || 'SYSTEM'})`;
+      }
 
       const createdRecord = await tx.contratos.findUnique({
         where: { contratoId: contrato.contratoId },

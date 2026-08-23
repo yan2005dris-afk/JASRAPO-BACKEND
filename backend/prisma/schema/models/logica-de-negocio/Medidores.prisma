@@ -23,7 +23,6 @@ model Medidores {
   historial        HistorialMedidores[]
   lecturas         Lecturas[]
   ordenesTrabajo   OrdenesTrabajo[]
-  rutas            Rutas[]
 
   @@map("medidores")
 }

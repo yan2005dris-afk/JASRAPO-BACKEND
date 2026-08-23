@@ -30,11 +30,15 @@ describe('Readings Use Cases', () => {
 
   const mockReadingRepository = {
     create: jest.fn(),
+    createWithAtomicSnapshot: jest.fn(),
     findMany: jest.fn(),
     findUnique: jest.fn(),
     count: jest.fn(),
     update: jest.fn(),
     findActivePeriod: jest.fn().mockResolvedValue({ periodoId: 1 }),
+    findReadingSnapshot: jest.fn(),
+    findLastApprovedActualByMeter: jest.fn().mockResolvedValue(100),
+    findActiveInitialReadingByMeter: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -63,17 +67,17 @@ describe('Readings Use Cases', () => {
 
   describe('CreateReadingUseCase', () => {
     it('should create a reading', async () => {
-      mockReadingRepository.create.mockResolvedValue(mockLectura);
-      mockReadingRepository.findUnique.mockResolvedValue(mockLectura);
+      mockReadingRepository.createWithAtomicSnapshot.mockResolvedValue(
+        mockLectura,
+      );
       const result = await createUseCase.execute({
         fecha: '2024-01-01',
-        lecturaAnterior: 100,
         lecturaActual: 150,
         medidorId: '1',
-      } as any);
+      });
       expect(result).toBeDefined();
       expect(result.lecturaActual).toBe(150);
-      expect(mockReadingRepository.create).toHaveBeenCalled();
+      expect(mockReadingRepository.createWithAtomicSnapshot).toHaveBeenCalled();
     });
   });
 

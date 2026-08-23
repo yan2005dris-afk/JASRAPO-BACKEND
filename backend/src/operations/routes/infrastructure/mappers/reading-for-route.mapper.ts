@@ -35,13 +35,19 @@ export class ReadingForRouteMapper {
       ? [cliente.nombres, cliente.apellidos].filter(Boolean).join(' ').trim()
       : 'Sin cliente';
 
-    const isPending =
-      lectura.estado === 'PENDIENTE' ||
-      Number(lectura.lecturaActual ?? 0) === 0;
+    const hasActualReading =
+      lectura.lecturaActual !== null &&
+      lectura.lecturaActual !== undefined &&
+      Number(lectura.lecturaActual) > 0;
+
+    const isPending = lectura.estado === 'PENDIENTE' && !hasActualReading;
+
     const rawActual =
-      lectura.lecturaActual !== undefined ? Number(lectura.lecturaActual) : 0;
+      lectura.lecturaActual !== undefined && lectura.lecturaActual !== null
+        ? Number(lectura.lecturaActual)
+        : 0;
     const rawAnterior =
-      lectura.lecturaAnterior !== undefined
+      lectura.lecturaAnterior !== undefined && lectura.lecturaAnterior !== null
         ? Number(lectura.lecturaAnterior)
         : 0;
     const rawConsumo = isPending ? 0 : Math.max(0, rawActual - rawAnterior);

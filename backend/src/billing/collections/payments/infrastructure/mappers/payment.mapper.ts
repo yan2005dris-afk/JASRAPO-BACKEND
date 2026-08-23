@@ -32,6 +32,17 @@ export class PaymentMapper {
               ? toNumber(raw.comprobante.importeTotal)
               : null,
             estado: raw.comprobante.estado,
+            prefactura: raw.comprobante.prefactura
+              ? {
+                  prefacturaId: String(raw.comprobante.prefactura.prefacturaId),
+                  mes: raw.comprobante.prefactura.mes,
+                  totalPagar: toNumber(raw.comprobante.prefactura.totalPagar),
+                  consumoM3: raw.comprobante.prefactura.consumoM3
+                    ? toNumber(raw.comprobante.prefactura.consumoM3)
+                    : null,
+                  periodoNombre: raw.comprobante.prefactura.periodoRel?.nombre,
+                }
+              : undefined,
           }
         : undefined,
     });
@@ -87,6 +98,18 @@ export class PaymentMapper {
         : undefined,
       saldosFavor: Array.isArray(raw.saldosFavor)
         ? raw.saldosFavor.map(PaymentMapper.toDomainSaldoFavor)
+        : undefined,
+      cliente: raw.cliente
+        ? {
+            clienteId: BigInt(raw.cliente.clienteId),
+            nombres: raw.cliente.nombres,
+            apellidos: raw.cliente.apellidos,
+            razonSocial: raw.cliente.razonSocial ?? null,
+            identificacion: raw.cliente.identificacion,
+            email: raw.cliente.email ?? null,
+            telefono: raw.cliente.telefono ?? null,
+            direccionDomicilio: raw.cliente.direccionDomicilio ?? null,
+          }
         : undefined,
     });
   }

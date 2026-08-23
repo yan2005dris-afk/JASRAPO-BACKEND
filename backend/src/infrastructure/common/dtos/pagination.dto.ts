@@ -20,12 +20,12 @@ export class PaginationDto {
     description: 'Cantidad de registros por página',
     default: 10,
     minimum: 1,
-    maximum: 100,
+    maximum: 1000,
   })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(1)
-  @Max(100)
+  @Max(1000)
   limit?: number = 10;
 }

@@ -74,6 +74,11 @@ describe('ReportStyleDispatcher', () => {
       'payment-agreement-modern',
       'Acuerdo de Pago (Moderno)',
     ),
+    'payment-agreement-unique': buildDocType(
+      'payment-agreement-unique',
+      'payment-agreement-legacy',
+      'Convenio de Pago',
+    ),
   });
 
   const docTypes = makeDocTypes();
@@ -128,8 +133,6 @@ describe('ReportStyleDispatcher', () => {
       ['payments-report', 'modern', 'payments-report-modern'],
       ['connection-history', 'legacy', 'connection-history-legacy'],
       ['connection-history', 'modern', 'connection-history-modern'],
-      ['payment-agreement', 'legacy', 'payment-agreement-legacy'],
-      ['payment-agreement', 'modern', 'payment-agreement-modern'],
     ])(
       'routes %s + %s to pdf-type %s',
       async (reportKey, style, expectedType) => {
@@ -147,6 +150,24 @@ describe('ReportStyleDispatcher', () => {
         );
       },
     );
+  });
+
+  describe('dispatch — canonical-only (unique) routing', () => {
+    it('routes payment-agreement to -unique and ignores the global style config', async () => {
+      // A canonical-only report must never read the global `reporte.estilo`
+      // and must render the single official template. We intentionally do NOT
+      // queue a resolveStyle value: the dispatcher must not consume it.
+      await dispatcher.dispatch('payment-agreement', { foo: 'bar' });
+
+      expect(mockStyleService.resolveStyle).not.toHaveBeenCalled();
+      expect(mockPdfService.getDocumentType).toHaveBeenCalledWith(
+        'payment-agreement-unique',
+      );
+      expect(mockPdfService.render).toHaveBeenCalledWith(
+        'payment-agreement-legacy', // the canonical template the -unique type points at
+        expect.objectContaining({ adaptedBy: 'payment-agreement-legacy' }),
+      );
+    });
   });
 
   describe('dispatch — return value', () => {

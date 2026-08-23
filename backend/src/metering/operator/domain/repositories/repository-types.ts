@@ -118,7 +118,6 @@ export interface OperatorRoute {
   fechaPlanificada: Date | null;
   fechaInicio: Date | null;
   fechaFin: Date | null;
-  medidorId: bigint | null;
   orden: number;
   observacion: string | null;
   fechaLimite: Date | null;
@@ -129,13 +128,6 @@ export interface OperatorRoute {
     usuarioId: number;
     nombres: string;
     apellidos: string;
-  } | null;
-  medidor?: {
-    medidorId: bigint;
-    serie: string;
-    latitud: number | null;
-    longitud: number | null;
-  } | null;
   ordenesTrabajo: OperatorWorkOrder[];
   paradas: OperatorRouteStop[];
 }

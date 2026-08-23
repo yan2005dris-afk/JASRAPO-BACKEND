@@ -11,6 +11,19 @@
  * never instantiate it; the concrete binding comes from `JobsService` via the
  * `'JobService'` injection token supplied by `PaymentsModule`.
  */
+export interface JobSendOptions {
+  retryLimit?: number;
+  retryDelay?: number;
+  retryDelayMax?: number;
+  retryBackoff?: boolean;
+  expireInSeconds?: number;
+  [key: string]: any;
+}
+
 export abstract class JobService {
-  abstract send(name: string, data: object): Promise<string>;
+  abstract send(
+    name: string,
+    data: object,
+    options?: JobSendOptions,
+  ): Promise<string>;
 }

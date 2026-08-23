@@ -10,10 +10,16 @@ import { getPdfLogoUrl } from '../../../infrastructure/pdf/utils/pdf-logo-loader
 
 /**
  * Style discriminator passed to `createPaymentAgreementPdfDocumentType`.
- * Mirrors the values persisted in `sistema_config` and the suffixes of
- * the registered pdf-type keys (`payment-agreement-{style}`).
+ * Mirrors the suffixes of the registered pdf-type keys
+ * (`payment-agreement-{style}`).
+ *
+ * Per PDF-01, payment-agreement is a legal document and its official
+ * modality is `unique` (canonical-only) — see `report-style.catalog.ts`.
+ * `legacy` / `modern` are retained for backward compatibility with existing
+ * registrations and tests; the dispatcher routes production traffic to
+ * `unique`.
  */
-export type PaymentAgreementStyle = 'legacy' | 'modern';
+export type PaymentAgreementStyle = 'legacy' | 'modern' | 'unique';
 
 /**
  * Shape of the data returned by `GetPaymentAgreementPdfDataUseCase.execute(...)`.
@@ -27,9 +33,10 @@ export type PaymentAgreementStyle = 'legacy' | 'modern';
 export interface PaymentAgreementPdfRawData {
   convenio: {
     createdAt: string;
-    fechaInicio: string;
+    periodoInicio: string;
     fechaPrimerPago: string;
     cuotaMensual: number | string;
+    primeraCuota: number | string;
     deudaTotal: number | string;
     abonoInicial: number | string;
     numeroCuotas: number;
@@ -63,13 +70,32 @@ export function createPaymentAgreementPdfDocumentType(
   style: PaymentAgreementStyle,
 ): PdfDocumentType {
   const isLegacy = style === 'legacy';
+  const isModern = style === 'modern';
+  const isUnique = style === 'unique';
+
+  // The canonical (`unique`) document reuses the legacy layout as its official
+  // template for now; the final canonical template is finalized with the team.
+  // `unique` shares the legacy data shape (it keeps `periodoInicio`).
+  const usesLegacyShape = isLegacy || isUnique;
+
+  const type = isModern
+    ? 'payment-agreement-modern'
+    : isUnique
+      ? 'payment-agreement-unique'
+      : 'payment-agreement-legacy';
+  const name = isModern
+    ? 'Acuerdo de Pago (Moderno)'
+    : isUnique
+      ? 'Convenio de Pago'
+      : 'Convenio de Pago (Legacy)';
+  const template = usesLegacyShape
+    ? 'payment-agreement-legacy'
+    : 'payment-agreement-modern';
 
   return {
-    type: isLegacy ? 'payment-agreement-legacy' : 'payment-agreement-modern',
-    name: isLegacy ? 'Convenio de Pago (Legacy)' : 'Acuerdo de Pago (Moderno)',
-    template: isLegacy
-      ? 'payment-agreement-legacy'
-      : 'payment-agreement-modern',
+    type,
+    name,
+    template,
 
     adaptData(raw: Record<string, unknown>): Record<string, unknown> {
       const root = raw as unknown as PaymentAgreementPdfRawData | undefined;
@@ -82,9 +108,7 @@ export function createPaymentAgreementPdfDocumentType(
       const cliente = c?.cliente ?? {};
       const contrato = c?.contrato ?? {};
       const createdAt = c?.createdAt ?? (raw['createdAt'] as string);
-      const fechaInicio = (c?.fechaInicio ??
-        raw['fechaInicio'] ??
-        createdAt) as string;
+      const periodoInicio = c?.periodoInicio;
 
       return {
         logoUrl: getPdfLogoUrl(),
@@ -94,11 +118,20 @@ export function createPaymentAgreementPdfDocumentType(
           clienteNombre: resolveClientName(cliente),
           clienteCI: cliente.identificacion ?? '',
           cuotaMensual: formatCurrency(Number(c?.cuotaMensual ?? 0)),
+          primeraCuota: formatCurrency(Number(c?.primeraCuota ?? 0)),
           deudaTotal: formatCurrency(Number(c?.deudaTotal ?? 0)),
           abonoInicial: formatCurrency(Number(c?.abonoInicial ?? 0)),
           numeroCuotas: c?.numeroCuotas ?? 0,
-          mesPrimerPago: formatMonthYear(c?.fechaPrimerPago ?? createdAt),
-          ...(isLegacy ? { periodoInicio: formatMonthYear(fechaInicio) } : {}),
+          mesPrimerPago: c?.fechaPrimerPago
+            ? formatMonthYear(c.fechaPrimerPago)
+            : undefined,
+          ...(usesLegacyShape
+            ? {
+                periodoInicio: periodoInicio
+                  ? formatMonthYear(periodoInicio)
+                  : undefined,
+              }
+            : {}),
           fechaActual: formatDateInWords(createdAt),
         },
       };

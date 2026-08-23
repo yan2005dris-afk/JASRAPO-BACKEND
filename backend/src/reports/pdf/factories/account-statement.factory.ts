@@ -109,8 +109,10 @@ export function createAccountStatementPdfDocumentType(
         });
       }
 
+      const clienteNombres = (cliente?.['nombres'] as string) ?? '';
+      const clienteApellidos = (cliente?.['apellidos'] as string) ?? '';
       const clienteNombre = cliente
-        ? `${cliente['nombres'] ?? ''} ${cliente['apellidos'] ?? ''}`.trim()
+        ? `${clienteNombres} ${clienteApellidos}`.trim()
         : '—';
 
       return {
@@ -118,17 +120,18 @@ export function createAccountStatementPdfDocumentType(
         reporte: {
           titulo: 'Estado de Cuenta',
           fechaEmision: new Date().toLocaleDateString('es-EC'),
-          sector: sector?.['nombre'] ?? '—',
-          cuenta: contrato?.['numeroGuia'] ?? '—',
+          sector: (sector?.['nombre'] as string) ?? '—',
+          cuenta: (contrato?.['numeroGuia'] as string) ?? '—',
           medidor: medidorSerie ?? '—',
-          tarifaTipo: categoriaTarifa?.['nombre'] ?? '—',
+          tarifaTipo: (categoriaTarifa?.['nombre'] as string) ?? '—',
           clienteNombre,
-          clienteIdentificacion: cliente?.['identificacion'] ?? '—',
-          clienteDireccion: contrato?.['direccionSuministro'] ?? '—',
+          clienteIdentificacion: (cliente?.['identificacion'] as string) ?? '—',
+          clienteDireccion:
+            (contrato?.['direccionSuministro'] as string) ?? '—',
           cargoFijo: valorBase.toFixed(2),
           factor: valorExcedente.toFixed(2),
           years,
-          deudaTotal: totalDeuda.toFixed(2),
+          totalDeuda: totalDeuda.toFixed(2),
         },
       };
     },

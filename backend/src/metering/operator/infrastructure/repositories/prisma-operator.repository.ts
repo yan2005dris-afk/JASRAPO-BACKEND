@@ -39,7 +39,6 @@ const routeMedidorSelect = {
 
 const operatorRouteInclude = {
   operario: { select: routeOperarioSelect },
-  medidor: { select: routeMedidorSelect },
   ordenesTrabajo: {
     where: { deletedAt: null },
     orderBy: [{ ordenVisita: 'asc' }, { ordenTrabajoId: 'asc' }],
@@ -296,7 +295,63 @@ export class PrismaOperatorRepository extends OperatorRepository {
       include: operatorRouteInclude,
     });
 
+<<<<<<< HEAD
     return routes.map((route) => this.toOperatorRoute(route));
+=======
+    const readingTasks = tasks.filter(
+      (t) => t.tipoRuta === 'TOMA_LECTURA',
+    ) as unknown as OperatorTask[];
+
+    if (readingTasks.length === 0) {
+      return tasks as unknown as OperatorTask[];
+    }
+
+    const meters = await this.findMetersByRoutes(
+      readingTasks.map((t) => ({
+        rutaId: t.rutaId,
+        comunidadId: t.comunidadId,
+        sectorId: t.sectorId,
+      })),
+    );
+
+    const pointsByTask = new Map<bigint, TaskRoutePoint[]>();
+
+    for (const task of readingTasks) {
+      const matchingMeters = meters.filter((m) => {
+        const contrato = m.historial?.[0]?.contrato;
+        if (!contrato) return false;
+        const sameSector =
+          task.sectorId === null || task.sectorId === undefined
+            ? true
+            : contrato.sectorId === task.sectorId;
+        return contrato.comunidadId === task.comunidadId && sameSector;
+      });
+
+      matchingMeters.sort((a, b) => a.serie.localeCompare(b.serie));
+
+      pointsByTask.set(
+        task.rutaId,
+        matchingMeters
+          .map((m) => ({
+            latitud: m.latitud != null ? Number(m.latitud) : null,
+            longitud: m.longitud != null ? Number(m.longitud) : null,
+            serie: m.serie,
+            clienteNombre: m.historial?.[0]?.contrato?.cliente
+              ? `${m.historial[0].contrato.cliente.nombres} ${m.historial[0].contrato.cliente.apellidos}`.trim()
+              : '',
+          }))
+          .filter(
+            (pt): pt is TaskRoutePoint =>
+              pt.latitud != null && pt.longitud != null,
+          ),
+      );
+    }
+
+    return tasks.map((t) => ({
+      ...t,
+      rutaPuntos: pointsByTask.get(t.rutaId),
+    })) as unknown as OperatorTask[];
+>>>>>>> origin/develop
   }
 
   async updateRouteState(

@@ -13,12 +13,15 @@ import { RegisterUseCase } from './application/use-cases/register.use-case';
 import { LogoutUseCase } from './application/use-cases/logout.use-case';
 import { LoginUseCase } from './application/use-cases/login.use-case';
 import { RefreshAccessTokenUseCase } from './application/use-cases/refresh-access-token.use-case';
+import { UnlockUserAccountUseCase } from './application/use-cases/unlock-user-account.use-case';
+import { AuditModule } from 'src/infrastructure/audit/audit.module';
 import type { StringValue } from 'ms';
 
 @Module({
   imports: [
     forwardRef(() => UserModule),
     SessionsModule,
+    AuditModule,
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
@@ -42,6 +45,7 @@ import type { StringValue } from 'ms';
     LogoutUseCase,
     LoginUseCase,
     RefreshAccessTokenUseCase,
+    UnlockUserAccountUseCase,
   ],
   exports: [
     JwtModule,
@@ -49,6 +53,7 @@ import type { StringValue } from 'ms';
     LogoutUseCase,
     LoginUseCase,
     RefreshAccessTokenUseCase,
+    UnlockUserAccountUseCase,
   ],
 })
 export class AuthModule {}

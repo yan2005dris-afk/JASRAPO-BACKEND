@@ -16,6 +16,10 @@ export abstract class RubroRepository {
 
   abstract findById(id: number): Promise<RubroEntity | null>;
 
+  abstract findByCategoriaTarifaId(
+    categoriaTarifaId: number,
+  ): Promise<RubroEntity[]>;
+
   abstract findByCodigoSri(codigoSri: string): Promise<RubroEntity | null>;
 
   abstract update(id: number, data: UpdateRubroData): Promise<RubroEntity>;

@@ -34,7 +34,6 @@ import { ParseBigIntPipe } from 'src/infrastructure/common/pipes/parse-bigint.pi
 import { ApiPaginatedResponse } from 'src/infrastructure/common/decorators/api-paginated-response.decorator';
 import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
 import { PaginationMetaDto } from 'src/infrastructure/common/dtos/pagination-meta.dto';
-import { buildPdfFileName } from 'src/infrastructure/pdf/utils/pdf-format.utils';
 
 @ApiTags('agreements')
 @ApiBearerAuth()

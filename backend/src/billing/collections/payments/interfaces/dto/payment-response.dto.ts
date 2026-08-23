@@ -79,6 +79,18 @@ export class PaymentResponseDto {
   @ApiPropertyOptional({ type: [SaldoFavorResponseDto] })
   saldosFavor?: SaldoFavorResponseDto[];
 
+  @ApiPropertyOptional({ description: 'Datos del cliente' })
+  cliente?: {
+    clienteId: string;
+    nombres: string;
+    apellidos: string;
+    razonSocial: string | null;
+    identificacion: string;
+    email: string | null;
+    telefono: string | null;
+    direccionDomicilio: string | null;
+  };
+
   static fromEntity(entity: PaymentEntity): PaymentResponseDto {
     const dto = new PaymentResponseDto();
     dto.pagoId = String(entity.pagoId);
@@ -104,6 +116,18 @@ export class PaymentResponseDto {
       : undefined;
     dto.saldosFavor = entity.saldosFavor
       ? SaldoFavorResponseDto.fromEntityList(entity.saldosFavor)
+      : undefined;
+    dto.cliente = entity.cliente
+      ? {
+          clienteId: String(entity.cliente.clienteId),
+          nombres: entity.cliente.nombres,
+          apellidos: entity.cliente.apellidos,
+          razonSocial: entity.cliente.razonSocial,
+          identificacion: entity.cliente.identificacion,
+          email: entity.cliente.email,
+          telefono: entity.cliente.telefono,
+          direccionDomicilio: entity.cliente.direccionDomicilio,
+        }
       : undefined;
     return dto;
   }

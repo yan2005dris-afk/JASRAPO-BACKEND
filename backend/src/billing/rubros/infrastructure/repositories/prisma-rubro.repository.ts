@@ -74,6 +74,19 @@ export class PrismaRubroRepository implements RubroRepository {
     return RubroMapper.toDomain(record);
   }
 
+  async findByCategoriaTarifaId(
+    categoriaTarifaId: number,
+  ): Promise<RubroEntity[]> {
+    const records = await this.prisma.rubros.findMany({
+      where: { categoriaTarifaId, deletedAt: null },
+      include: {
+        tarifaImpuesto: true,
+      },
+      orderBy: { rubroId: 'asc' },
+    });
+    return RubroMapper.toDomainList(records);
+  }
+
   async findByCodigoSri(codigoSri: string): Promise<RubroEntity | null> {
     const record = await this.prisma.rubros.findFirst({
       where: { codigoSri, deletedAt: null },

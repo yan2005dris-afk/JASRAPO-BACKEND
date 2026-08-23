@@ -31,13 +31,15 @@ export class CreateRouteDto {
   descripcion?: string;
 
   @ApiProperty({
-    description: 'ID del usuario operario responsable',
+    description:
+      'ID del usuario operario responsable. Opcional: las rutas pueden crearse sin operario (ej. rutas INSTALACION que se despachan después desde la bandeja de secretaría).',
+    required: false,
     example: 5,
   })
-  @IsNotEmpty()
+  @IsOptional()
   @IsNumber()
   @Type(() => Number)
-  operarioId!: number;
+  operarioId?: number;
 
   @ApiProperty({
     description: 'Tipo de ruta a crear',
@@ -47,17 +49,6 @@ export class CreateRouteDto {
   @IsNotEmpty()
   @IsEnum(TipoRuta)
   tipoRuta!: TipoRuta;
-
-  @ApiProperty({
-    description:
-      'ID del medidor asociado (opcional; se valida en la lógica de negocio según tipo de ruta)',
-    required: false,
-    example: 42,
-  })
-  @IsOptional()
-  @IsNumber()
-  @Type(() => Number)
-  medidorId?: number;
 
   @ApiProperty({
     description: 'ID de la comunidad donde se aplicará la ruta',

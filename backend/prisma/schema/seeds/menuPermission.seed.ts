@@ -83,6 +83,24 @@ const PERMISSION_MAP: MenuPermissionMapping[] = [
     ],
   },
   {
+    menuNombre: 'Toma de Lecturas',
+    permisos: [
+      { recurso: 'lecturas', accion: 'read' },
+      { recurso: 'lecturas', accion: 'create' },
+      { recurso: 'lecturas', accion: 'update' },
+      { recurso: 'lecturas', accion: 'delete' },
+    ],
+  },
+  {
+    menuNombre: 'Reporte Novedades',
+    permisos: [
+      { recurso: 'reading-anomalies', accion: 'read' },
+      { recurso: 'reading-anomalies', accion: 'create' },
+      { recurso: 'reading-anomalies', accion: 'update' },
+      { recurso: 'reading-anomalies', accion: 'delete' },
+    ],
+  },
+  {
     menuNombre: 'Recaudación y Pagos',
     permisos: [
       { recurso: 'payments', accion: 'read' },
@@ -184,6 +202,15 @@ const PERMISSION_MAP: MenuPermissionMapping[] = [
       { recurso: 'sectores', accion: 'create' },
       { recurso: 'sectores', accion: 'update' },
       { recurso: 'sectores', accion: 'delete' },
+    ],
+  },
+  {
+    menuNombre: 'Empresa y Sucursales',
+    permisos: [
+      { recurso: 'empresa', accion: 'read' },
+      { recurso: 'empresa', accion: 'create' },
+      { recurso: 'empresa', accion: 'update' },
+      { recurso: 'empresa', accion: 'delete' },
     ],
   },
   {

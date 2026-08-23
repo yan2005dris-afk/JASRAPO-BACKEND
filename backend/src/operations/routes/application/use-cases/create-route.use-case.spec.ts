@@ -369,32 +369,6 @@ describe('CreateRouteUseCase', () => {
     expect(result.periodoId).toBe(5);
   });
 
-  it('should throw EntityNotFoundException if medidorId is provided but medidor not found', async () => {
-    mockRouteRepository.findUsuario.mockResolvedValue({
-      usuarioId: 1,
-      rol: { nombre: 'operadores' },
-    });
-    mockRouteRepository.findComunidad.mockResolvedValue({ comunidadId: 1 });
-    mockRouteRepository.findPeriodo.mockResolvedValue({
-      periodoId: 1,
-      estado: 'ABIERTO',
-    });
-    mockRouteRepository.findMedidor.mockResolvedValue(null);
-
-    await expect(
-      useCase.execute({
-        operarioId: 1,
-        comunidadId: 1,
-        tipoRuta: 'INSTALACION',
-        nombre: 'Install Task',
-        periodoId: 1,
-        medidorId: 99,
-      } as any),
-    ).rejects.toThrow(EntityNotFoundException);
-
-    expect(mockRouteRepository.findMedidor).toHaveBeenCalledWith(99);
-  });
-
   it('should allow creating INSTALACION routes without overlap validation', async () => {
     mockRouteRepository.findUsuario.mockResolvedValue({
       usuarioId: 1,
@@ -405,14 +379,10 @@ describe('CreateRouteUseCase', () => {
       periodoId: 1,
       estado: 'ABIERTO',
     });
-    mockRouteRepository.findMedidor.mockResolvedValue({
-      medidorId: 42,
-      serie: 'MED-042',
-    });
 
     const mockCreatedRoute = new RouteEntity({
       rutaId: 500n,
-      nombre: 'Instalación MED-042',
+      nombre: 'Instalación Olón',
       operarioId: 1,
       comunidadId: 1,
       tipoRuta: 'INSTALACION',
@@ -428,14 +398,13 @@ describe('CreateRouteUseCase', () => {
       operarioId: 1,
       comunidadId: 1,
       tipoRuta: 'INSTALACION',
-      nombre: 'Instalación MED-042',
+      nombre: 'Instalación Olón',
       periodoId: 1,
-      medidorId: 42,
     } as any);
 
     expect(mockRouteRepository.findOverlappingRoutes).not.toHaveBeenCalled();
     expect(mockRouteRepository.create).toHaveBeenCalledWith(
-      expect.objectContaining({ medidorId: 42, tipoRuta: 'INSTALACION' }),
+      expect.objectContaining({ tipoRuta: 'INSTALACION' }),
     );
   });
 
@@ -449,10 +418,6 @@ describe('CreateRouteUseCase', () => {
       periodoId: 1,
       estado: 'ABIERTO',
     });
-    mockRouteRepository.findMedidor.mockResolvedValue({
-      medidorId: 50,
-      serie: 'MED-050',
-    });
 
     const mockCreatedRoute = new RouteEntity({
       rutaId: 501n,
@@ -461,7 +426,6 @@ describe('CreateRouteUseCase', () => {
       comunidadId: 1,
       tipoRuta: 'INSPECCION',
       periodoId: 1,
-      medidorId: 50,
       estado: 'PENDIENTE',
       fechaPlanificada: null,
       fechaInicio: null,
@@ -475,7 +439,6 @@ describe('CreateRouteUseCase', () => {
       tipoRuta: 'INSPECCION',
       nombre: 'Inspección Comunidad 1',
       periodoId: 1,
-      medidorId: 50,
     } as any);
 
     expect(mockRouteRepository.findOverlappingRoutes).not.toHaveBeenCalled();

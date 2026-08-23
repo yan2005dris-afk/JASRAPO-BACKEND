@@ -7,8 +7,6 @@ import { ClientsListReportSpec } from './infrastructure/specs/clients-list.repor
 import { PaymentsReportSpec } from './infrastructure/specs/payments-report.report-spec';
 import { ConnectionHistoryReportSpec } from './infrastructure/specs/connection-history.report-spec';
 import { AccountStatementReportSpec } from './infrastructure/specs/account-statement.report-spec';
-import { ClientsListPdfDocumentType } from './pdf/clients-list.pdf-type';
-import { AccountStatementPdfDocumentType } from './pdf/account-statement.pdf-type';
 import { PaymentsReportLegacyPdfDocumentType } from './pdf/payments-report-legacy.pdf-type';
 import { PaymentsReportModernPdfDocumentType } from './pdf/payments-report-modern.pdf-type';
 import { createPaymentAgreementPdfDocumentType } from './pdf/factories/payment-agreement.factory';
@@ -27,6 +25,8 @@ import {
   REPORT_EMAIL_STRATEGIES_PROVIDER,
 } from './application/use-cases/send-report-by-email.strategies';
 
+import { OverdueAccountsReportSpec } from './infrastructure/specs/overdue-accounts.report-spec';
+
 @Module({
   imports: [ClientModule, forwardRef(() => AgreementsModule)],
   controllers: [ReportsController],
@@ -35,6 +35,7 @@ import {
     PaymentsReportSpec,
     ConnectionHistoryReportSpec,
     AccountStatementReportSpec,
+    OverdueAccountsReportSpec,
     ReportStyleService,
     ReportStyleDispatcher,
     PaymentsReportEmailStrategy,
@@ -62,6 +63,11 @@ export class ReportsModule implements OnModuleInit {
     );
     this.pdfService.registerDocumentType(
       createAccountStatementPdfDocumentType('modern'),
+    );
+    // payment-agreement is canonical-only (PDF-01): the dispatcher routes it
+    // to `-unique`. Legacy/modern stay registered for backward compatibility.
+    this.pdfService.registerDocumentType(
+      createPaymentAgreementPdfDocumentType('unique'),
     );
     this.pdfService.registerDocumentType(
       createPaymentAgreementPdfDocumentType('legacy'),

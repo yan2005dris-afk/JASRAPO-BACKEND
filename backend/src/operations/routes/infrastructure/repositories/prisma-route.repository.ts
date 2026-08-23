@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
-import { Prisma, TipoActividadOrdenTrabajo } from 'src/generated/prisma/client';
-import { EstadoRuta, TipoRuta, EstadoContrato } from 'src/shared/enums';
+import { Prisma } from 'src/generated/prisma/client';
+import { EstadoRuta, TipoRuta } from 'src/shared/enums';
 import {
   RouteRepository,
   UsuarioRef,
@@ -20,6 +20,7 @@ import {
   PaginateOptions,
 } from 'src/infrastructure/common/utils/pagination.util';
 import { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
+import type { LecturaKpis } from '../../domain/types/orden-trabajo.types';
 import type {
   CreateRouteData,
   UpdateRouteData,
@@ -87,18 +88,11 @@ export class PrismaRouteRepository implements RouteRepository {
         data: {
           nombre: data.nombre,
           descripcion: data.descripcion,
-          operario: { connect: { usuarioId: data.operarioId } },
+          operarioId: data.operarioId ?? null,
           tipoRuta: data.tipoRuta as TipoRuta,
-          comunidad: { connect: { comunidadId: data.comunidadId } },
-          sector: data.sectorId
-            ? { connect: { sectorId: data.sectorId } }
-            : undefined,
-          periodo: data.periodoId
-            ? { connect: { periodoId: data.periodoId } }
-            : undefined,
-          medidor: data.medidorId
-            ? { connect: { medidorId: BigInt(data.medidorId) } }
-            : undefined,
+          comunidadId: data.comunidadId,
+          sectorId: data.sectorId ?? null,
+          periodoId: data.periodoId ?? null,
           fechaPlanificada: data.fechaPlanificada ?? null,
           estado: (data.estado ?? 'PENDIENTE') as EstadoRuta,
         },
@@ -117,26 +111,36 @@ export class PrismaRouteRepository implements RouteRepository {
 
   async update(rutaId: bigint, data: UpdateRouteData): Promise<RouteEntity> {
     try {
+      const updateData: Prisma.RutasUncheckedUpdateInput = {
+        ...(data.nombre !== undefined ? { nombre: data.nombre } : {}),
+        ...(data.descripcion !== undefined
+          ? { descripcion: data.descripcion }
+          : {}),
+        ...(data.operarioId !== undefined
+          ? { operarioId: data.operarioId }
+          : {}),
+        ...(data.tipoRuta !== undefined
+          ? { tipoRuta: data.tipoRuta as TipoRuta }
+          : {}),
+        ...(data.comunidadId !== undefined
+          ? { comunidadId: data.comunidadId }
+          : {}),
+        ...(data.sectorId !== undefined ? { sectorId: data.sectorId } : {}),
+        ...(data.periodoId !== undefined ? { periodoId: data.periodoId } : {}),
+        ...(data.estado !== undefined
+          ? { estado: data.estado as EstadoRuta }
+          : {}),
+        ...(data.fechaPlanificada !== undefined
+          ? { fechaPlanificada: data.fechaPlanificada }
+          : {}),
+        ...(data.fechaInicio !== undefined
+          ? { fechaInicio: data.fechaInicio }
+          : {}),
+        ...(data.fechaFin !== undefined ? { fechaFin: data.fechaFin } : {}),
+      };
       const raw = await this.prisma.rutas.update({
         where: { rutaId },
-        data: {
-          ...(data.nombre !== undefined ? { nombre: data.nombre } : {}),
-          ...(data.descripcion !== undefined
-            ? { descripcion: data.descripcion }
-            : {}),
-          ...(data.operarioId !== undefined
-            ? { operarioId: data.operarioId }
-            : {}),
-          ...(data.estado !== undefined
-            ? { estado: data.estado as EstadoRuta }
-            : {}),
-          ...(data.fechaPlanificada !== undefined
-            ? { fechaPlanificada: data.fechaPlanificada }
-            : {}),
-          ...(data.periodoId !== undefined
-            ? { periodoId: data.periodoId }
-            : {}),
-        },
+        data: updateData,
       });
       return RouteMapper.toEntity(raw);
     } catch (error) {
@@ -281,116 +285,12 @@ export class PrismaRouteRepository implements RouteRepository {
     return Number(result[0]?.count ?? 0);
   }
 
-  async createWorkOrdersForRoute(rutaId: bigint): Promise<number> {
-    const route = await this.prisma.rutas.findUnique({
-      where: { rutaId, deletedAt: null },
-      select: {
-        rutaId: true,
-        tipoRuta: true,
-        medidorId: true,
-        lecturas: {
-          where: { deletedAt: null },
-          orderBy: { lecturaId: 'asc' },
-          select: {
-            lecturaId: true,
-            medidorId: true,
-            medidor: {
-              select: {
-                historial: {
-                  where: { fechaHasta: null, deletedAt: null },
-                  orderBy: { fechaDesde: 'desc' },
-                  take: 1,
-                  select: { contratoId: true },
-                },
-              },
-            },
-          },
-        },
-        medidor: {
-          select: {
-            historial: {
-              where: { fechaHasta: null, deletedAt: null },
-              orderBy: { fechaDesde: 'desc' },
-              take: 1,
-              select: { contratoId: true },
-            },
-          },
-        },
-      },
-    });
-
-    if (!route) {
-      throw new EntityNotFoundException('Ruta', rutaId.toString());
-    }
-
-    const tipoActividadByRoute: Record<string, TipoActividadOrdenTrabajo> = {
-      [TipoRuta.TOMA_LECTURA]: TipoActividadOrdenTrabajo.LECTURA,
-      [TipoRuta.INSTALACION]: TipoActividadOrdenTrabajo.INSTALACION,
-      [TipoRuta.RECONEXION]: TipoActividadOrdenTrabajo.RECONEXION,
-      [TipoRuta.INSPECCION]: TipoActividadOrdenTrabajo.INSPECCION,
-    };
-    const tipoActividad = tipoActividadByRoute[route.tipoRuta];
-
-    if (!tipoActividad) return 0;
-
-    const workOrders =
-      route.tipoRuta === TipoRuta.TOMA_LECTURA
-        ? route.lecturas.flatMap((reading, index) => {
-            const contratoId = reading.medidor.historial[0]?.contratoId;
-            return contratoId == null
-              ? []
-              : [
-                  {
-                    rutaId: route.rutaId,
-                    contratoId,
-                    medidorId: reading.medidorId,
-                    lecturaId: reading.lecturaId,
-                    tipoActividad,
-                    ordenVisita: index + 1,
-                  },
-                ];
-          })
-        : route.medidorId != null &&
-            route.medidor?.historial[0]?.contratoId != null
-          ? [
-              {
-                rutaId: route.rutaId,
-                contratoId: route.medidor.historial[0].contratoId,
-                medidorId: route.medidorId,
-                lecturaId: null,
-                tipoActividad,
-                ordenVisita: 1,
-              },
-            ]
-          : [];
-
-    if (workOrders.length === 0) return 0;
-
-    const result = await this.prisma.ordenesTrabajo.createMany({
-      data: workOrders,
-      skipDuplicates: true,
-    });
-
-    return result.count;
-  }
-
   async paginateLecturas(
     criteria: EligibleReadingsCriteria,
     pagination: PaginateOptions,
   ): Promise<PaginatedResult<ReadingForRouteEntity>> {
-    const {
-      tipoRuta,
-      comunidadId,
-      sectorId,
-      periodoId,
-      fechaPlanificada,
-      search,
-    } = criteria;
-    const estadoContratoEsperado: EstadoContrato =
-      tipoRuta === 'TOMA_LECTURA'
-        ? EstadoContrato.ACTIVO
-        : EstadoContrato.RECONEXION;
-
+    const { comunidadId, sectorId, periodoId, fechaPlanificada, search } =
+      criteria;
     const where: Prisma.LecturasWhereInput = {
       deletedAt: null,
       ...(periodoId ? { periodoId } : {}),
@@ -504,6 +404,75 @@ export class PrismaRouteRepository implements RouteRepository {
         pendientes:
           (countByEstado.get('PENDIENTE') ?? 0) +
           (countByEstado.get('POR_REVISION') ?? 0),
+        conNovedad: countByEstado.get('CON_NOVEDAD') ?? 0,
+        rechazadas: countByEstado.get('RECHAZADA_VERIFICACION') ?? 0,
+      },
+    };
+  }
+
+  async paginateLecturasByRutaId(
+    rutaId: bigint,
+    pagination: PaginateOptions,
+  ): Promise<PaginatedResult<ReadingForRouteEntity, LecturaKpis>> {
+    // Filtramos lecturas a través de la relación reversa con ordenes_trabajo,
+    // no al revés. Esto garantiza:
+    //   (a) que la lectura realmente existe (FK consistente),
+    //   (b) que los kpis se computan sobre `lectura.estado` (EstadoLectura)
+    //       y no sobre `orden.estado` (EstadoOrdenTrabajo) — son enums distintos.
+    const where: Prisma.LecturasWhereInput = {
+      deletedAt: null,
+      ordenesTrabajo: {
+        some: {
+          rutaId,
+          tipoActividad: 'LECTURA',
+          deletedAt: null,
+        },
+      },
+    };
+
+    const [result, estadoGroups] = await Promise.all([
+      paginate<any>(
+        this.prisma.lecturas,
+        {
+          where,
+          include: {
+            medidor: {
+              include: {
+                historial: {
+                  where: { fechaHasta: null },
+                  include: {
+                    contrato: { include: { cliente: true, sector: true } },
+                  },
+                },
+              },
+            },
+          } satisfies Prisma.LecturasInclude,
+          orderBy: { fecha: 'desc' },
+        },
+        pagination,
+      ),
+      this.prisma.lecturas.groupBy({
+        by: ['estado'],
+        where,
+        _count: { _all: true },
+      }),
+    ]);
+
+    const countByEstado = new Map<string, number>(
+      estadoGroups.map((g) => [g.estado, g._count._all]),
+    );
+
+    return {
+      data: ReadingForRouteMapper.toEntityList(result.data),
+      meta: result.meta,
+      kpis: {
+        total: result.meta.total,
+        aprobadas: countByEstado.get('APROBADA') ?? 0,
+        pendientes:
+          (countByEstado.get('PENDIENTE') ?? 0) +
+          (countByEstado.get('POR_REVISION') ?? 0) +
+          (countByEstado.get('ESTIMADA') ?? 0) +
+          (countByEstado.get('PLANILLADA') ?? 0),
         conNovedad: countByEstado.get('CON_NOVEDAD') ?? 0,
         rechazadas: countByEstado.get('RECHAZADA_VERIFICACION') ?? 0,
       },

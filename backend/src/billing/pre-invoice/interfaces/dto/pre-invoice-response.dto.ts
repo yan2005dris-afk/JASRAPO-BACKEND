@@ -27,6 +27,13 @@ export class PreInvoiceDetailResponseDto {
   @ApiPropertyOptional({ description: 'SRI tax code' })
   codigoImpuestoSri?: string | null;
 
+  @ApiPropertyOptional({
+    description: 'Internal system code for the line item',
+    example: 'INSTALACION',
+    nullable: true,
+  })
+  codigoSistemaRubro?: string | null;
+
   @ApiPropertyOptional({ description: 'Discount' })
   descuento?: number;
 
@@ -42,6 +49,7 @@ export class PreInvoiceDetailResponseDto {
     dto.iva = Number(detail.iva);
     dto.total = Number(detail.total);
     dto.codigoImpuestoSri = detail.codigoImpuestoSri ?? null;
+    dto.codigoSistemaRubro = detail.codigoSistemaRubro ?? null;
     dto.descuento = Number(detail.descuento);
     return dto;
   }
@@ -62,6 +70,11 @@ export class PreInvoiceResponseDto {
 
   @ApiProperty({ description: 'Period ID' })
   periodoId: number;
+
+  @ApiProperty({
+    description: 'Month (0 for one-off installation, 1-12 for monthly)',
+  })
+  mes: number;
 
   @ApiProperty({ description: 'Subtotal' })
   subtotal: number;
@@ -102,6 +115,15 @@ export class PreInvoiceResponseDto {
   @ApiPropertyOptional({ description: 'Client email' })
   clienteEmail?: string | null;
 
+  @ApiPropertyOptional({ description: 'Period name' })
+  periodoNombre?: string | null;
+
+  @ApiPropertyOptional({ description: 'Period start date' })
+  periodoFechaInicio?: Date | null;
+
+  @ApiPropertyOptional({ description: 'Period end date' })
+  periodoFechaFin?: Date | null;
+
   @ApiPropertyOptional({ description: 'Tariff name' })
   tarifaNombre?: string | null;
 
@@ -114,6 +136,9 @@ export class PreInvoiceResponseDto {
   @ApiPropertyOptional({ description: 'Pre-invoice details' })
   detalles?: PreInvoiceDetailResponseDto[];
 
+  @ApiPropertyOptional({ description: 'Comprobante ID' })
+  comprobanteId?: string | null;
+
   static fromEntity(entity: PreInvoiceEntity): PreInvoiceResponseDto {
     const dto = new PreInvoiceResponseDto();
     dto.prefacturaId = Number(entity.prefacturaId);
@@ -121,6 +146,7 @@ export class PreInvoiceResponseDto {
     dto.contratoId = Number(entity.contratoId);
     dto.loteId = entity.loteId ? Number(entity.loteId) : null;
     dto.periodoId = entity.periodoId;
+    dto.mes = entity.mes ?? 1;
     dto.subtotal = Number(entity.subtotal);
     dto.iva = Number(entity.iva);
     dto.descuentoTotal = Number(entity.descuentoTotal);
@@ -134,7 +160,13 @@ export class PreInvoiceResponseDto {
     dto.clienteIdentificacion = entity.clienteIdentificacion ?? null;
     dto.clienteDireccion = entity.clienteDireccion ?? null;
     dto.clienteEmail = entity.clienteEmail ?? null;
+    dto.periodoNombre = entity.periodoRel?.nombre ?? null;
+    dto.periodoFechaInicio = entity.periodoRel?.fechaInicio ?? null;
+    dto.periodoFechaFin = entity.periodoRel?.fechaFin ?? null;
     dto.tarifaNombre = entity.tarifaNombre ?? null;
+    dto.comprobanteId = entity.comprobanteId
+      ? String(entity.comprobanteId)
+      : null;
     dto.createdAt = entity.createdAt;
     dto.updatedAt = entity.updatedAt;
     dto.detalles = entity.detalles?.map(PreInvoiceDetailResponseDto.fromEntity);

@@ -9,6 +9,7 @@ import { GetDebtSummaryUseCase } from './use-cases/get-debt-summary.use-case';
 import { UpdateAgreementUseCase } from './use-cases/update-agreement.use-case';
 import { GetPaymentAgreementPdfDataUseCase } from './use-cases/get-payment-agreement-pdf-data.use-case';
 import { GeneratePdfUseCase } from 'src/infrastructure/pdf/use-cases/generate-pdf.use-case';
+import { ReportStyleDispatcher } from 'src/reports/application/report-style.dispatcher';
 import { AgreementsService } from './agreements.service';
 import { AgreementEntity } from '../domain/entities/agreement.entity';
 import { InstallmentEntity } from '../domain/entities/installment.entity';
@@ -27,6 +28,9 @@ describe('AgreementsService', () => {
   const mockUpdateUseCase = { execute: jest.fn() };
   const mockGetPaymentAgreementPdfData = { execute: jest.fn() };
   const mockGeneratePdf = { execute: jest.fn() };
+  const mockReportStyleDispatcher = {
+    dispatch: jest.fn().mockResolvedValue({ buffer: Buffer.from('pdf') }),
+  };
 
   const convenioRecord = new AgreementEntity({
     convenioId: 1n,
@@ -75,6 +79,10 @@ describe('AgreementsService', () => {
           useValue: mockGetPaymentAgreementPdfData,
         },
         { provide: GeneratePdfUseCase, useValue: mockGeneratePdf },
+        {
+          provide: ReportStyleDispatcher,
+          useValue: mockReportStyleDispatcher,
+        },
       ],
     }).compile();
 

@@ -1,10 +1,16 @@
 import type { LecturaEntity } from '../entities/lectura.entity';
+import type { Decimal } from 'decimal.js';
+
+export interface ReadingSnapshot {
+  lecturaAnterior: Decimal;
+  lecturaInicial: boolean;
+}
 
 export interface CreateReadingRepositoryData {
   fecha: Date;
-  lecturaAnterior: number;
-  lecturaActual: number;
-  consumoCalculado: number;
+  lecturaAnterior: Decimal | number | string;
+  lecturaActual: Decimal | number | string;
+  consumoCalculado: Decimal | number | string;
   medidorId: bigint;
   descripcionAnomalia?: string | null;
   fechaValidacion?: Date | null;
@@ -16,9 +22,9 @@ export interface CreateReadingRepositoryData {
 
 export interface UpdateReadingRepositoryData {
   fecha?: Date;
-  lecturaAnterior?: number;
-  lecturaActual?: number;
-  consumoCalculado?: number;
+  lecturaAnterior?: Decimal | number | string;
+  lecturaActual?: Decimal | number | string;
+  consumoCalculado?: Decimal | number | string;
   medidorId?: bigint;
   descripcionAnomalia?: string | null;
   fechaValidacion?: Date | null;
@@ -42,6 +48,21 @@ export interface ActivePeriod {
 export abstract class ReadingRepository {
   abstract findActivePeriod(): Promise<ActivePeriod | null>;
 
+  abstract findReadingSnapshot(
+    medidorId: bigint,
+    fecha: Date,
+  ): Promise<ReadingSnapshot | null>;
+
+  abstract findLastApprovedActualByMeter(
+    medidorId: bigint,
+    fecha?: Date,
+  ): Promise<Decimal | null>;
+
+  abstract findActiveInitialReadingByMeter(
+    medidorId: bigint,
+    fecha?: Date,
+  ): Promise<Decimal | null>;
+
   abstract findUnique(where: {
     lecturaId: bigint;
   }): Promise<LecturaEntity | null>;
@@ -55,6 +76,16 @@ export abstract class ReadingRepository {
   abstract count(params: { where?: ReadingFilters }): Promise<number>;
 
   abstract create(data: CreateReadingRepositoryData): Promise<LecturaEntity>;
+
+  abstract createWithAtomicSnapshot(params: {
+    fecha: Date;
+    lecturaActual: Decimal;
+    medidorId: bigint;
+    periodoId: number;
+    descripcionAnomalia?: string | null;
+    fotoUrl?: string | null;
+    estado?: string;
+  }): Promise<LecturaEntity>;
 
   abstract update(
     where: { lecturaId: bigint },

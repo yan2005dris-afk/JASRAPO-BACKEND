@@ -12,7 +12,7 @@ import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.g
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
 import { CertificateService } from '../../application/certificate.service';
 
-@ApiTags('[En Desarrollo] Certificados')
+@ApiTags('[SRI] Certificados')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('sri/certificates')

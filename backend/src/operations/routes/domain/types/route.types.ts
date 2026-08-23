@@ -10,12 +10,11 @@ export interface RouteFilters {
 export interface CreateRouteData {
   nombre: string;
   descripcion?: string | null;
-  operarioId: number;
+  operarioId?: number | null;
   tipoRuta: string;
   comunidadId: number;
   sectorId?: number | null;
   periodoId?: number | null;
-  medidorId?: number | null;
   estado: string;
   fechaPlanificada?: Date | null;
   fechaInicio?: Date | null;
@@ -25,12 +24,11 @@ export interface CreateRouteData {
 export interface UpdateRouteData {
   nombre?: string;
   descripcion?: string | null;
-  operarioId?: number;
+  operarioId?: number | null;
   tipoRuta?: string;
   comunidadId?: number;
   sectorId?: number | null;
   periodoId?: number | null;
-  medidorId?: number | null;
   estado?: string;
   fechaPlanificada?: Date | null;
   fechaInicio?: Date | null;

@@ -6,11 +6,15 @@ import {
 import { Decimal } from 'decimal.js';
 import { EstadoPago, TipoDetallePago } from '../../domain/enums';
 import { PaymentRepository } from '../../domain/repositories/payment.repository';
+import { EventosPendientesRepository } from 'src/shared/outbox/domain/repositories/eventos-pendientes.repository';
 import type { PaymentEntity } from '../../domain/entities/payment.entity';
 
 @Injectable()
 export class AnnulPaymentUseCase {
-  constructor(private readonly paymentRepository: PaymentRepository) {}
+  constructor(
+    private readonly paymentRepository: PaymentRepository,
+    private readonly eventosPendientesRepository: EventosPendientesRepository,
+  ) {}
 
   async execute(
     pagoId: bigint,
@@ -87,6 +91,19 @@ export class AnnulPaymentUseCase {
           'El pago fue modificado por otra solicitud concurrente',
         );
       }
+
+      // Escribir evento outbox para disparar la emisión de Nota de Crédito en SRI (Issue #200)
+      await this.eventosPendientesRepository.createPending(
+        'pago.anulado',
+        {
+          pagoId: pagoId.toString(),
+          motivoAnulacion: dto.motivoAnulacion,
+          anuladoPor: dto.anuladoPor ?? 'SYSTEM',
+        },
+        'PAGO',
+        pagoId.toString(),
+        tx,
+      );
     });
 
     return (await this.paymentRepository.findById(pagoId))!;

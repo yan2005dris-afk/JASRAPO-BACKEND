@@ -9,7 +9,7 @@ import {
 import { PrismaService } from '../../../database/prisma.service';
 import { RequiredPermission } from '../../../common/decorators/require-permission.decorator';
 
-@ApiTags('[Posible Implementación] Monitoreo de Correos')
+@ApiTags('[Mail] Monitoreo de Correos')
 @ApiBearerAuth()
 @Controller('mail/metrics')
 export class MailMetricsController {

@@ -7,6 +7,11 @@ import {
   LoginResponseDto,
   RefreshResponseDto,
 } from '../dto/auth-response.dto';
+import {
+  UnlockAccountDto,
+  UnlockAccountResponseDto,
+} from '../dto/unlock-account.dto';
+import type { AuthenticatedRequest } from 'src/infrastructure/common/types/auth-request.types';
 import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
@@ -32,7 +37,12 @@ import { RequiredStringPipe } from 'src/infrastructure/common/pipes/required-str
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 
 @ApiTags('auth')
-@ApiExtraModels(RegisterResponseDto, LoginResponseDto, RefreshResponseDto)
+@ApiExtraModels(
+  RegisterResponseDto,
+  LoginResponseDto,
+  RefreshResponseDto,
+  UnlockAccountResponseDto,
+)
 @Controller('auth')
 @UseGuards(ThrottlerGuard)
 export class AuthController {
@@ -214,5 +224,39 @@ export class AuthController {
       sameSite: 'lax',
     });
     res.json({ message: 'Sesión cerrada correctamente' });
+  }
+
+  /**
+   * Desbloqueo administrativo de cuenta de usuario bloqueada por fuerza bruta (Issue #176).
+   * Requiere permiso 'users:update' (administrador/superusuario).
+   */
+  @ApiOperation({
+    summary: 'Desbloquear cuenta de usuario',
+    description:
+      'Desbloquea una cuenta de usuario que fue bloqueada por múltiples intentos fallidos de autenticación (fuerza bruta). Limpia los intentos fallidos, el bloqueo temporal y registra la auditoría.',
+  })
+  @ApiBody({ type: UnlockAccountDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Cuenta desbloqueada exitosamente',
+    type: UnlockAccountResponseDto,
+  })
+  @ApiResponse({ status: 400, description: 'La cuenta no está bloqueada' })
+  @ApiResponse({ status: 401, description: 'No autorizado' })
+  @ApiResponse({
+    status: 403,
+    description: 'Prohibido - Sin permiso users:update',
+  })
+  @ApiResponse({ status: 404, description: 'Usuario no encontrado' })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequiredPermission('users', 'update')
+  @Post('admin/unlock-account')
+  async unlockAccount(
+    @Body() dto: UnlockAccountDto,
+    @Req() req: AuthenticatedRequest,
+  ): Promise<UnlockAccountResponseDto> {
+    const adminUsuarioId = req.user?.usersId ?? 0;
+    return this.authService.unlockAccount(dto, adminUsuarioId);
   }
 }

@@ -7,6 +7,7 @@ import { FindOneDiscountUseCase } from './use-cases/find-one-discount.use-case';
 import { UpdateDiscountUseCase } from './use-cases/update-discount.use-case';
 import { RemoveDiscountUseCase } from './use-cases/remove-discount.use-case';
 import { ApplyDiscountToPreinvoiceUseCase } from './use-cases/apply-discount-to-preinvoice.use-case';
+import { GetDiscountRubrosUseCase } from './use-cases/get-discount-rubros.use-case';
 import { DiscountEntity } from '../domain/entities/discount.entity';
 
 describe('DiscountsService', () => {
@@ -30,6 +31,7 @@ describe('DiscountsService', () => {
   const mockUpdate = { execute: jest.fn() };
   const mockRemove = { execute: jest.fn() };
   const mockApply = { execute: jest.fn() };
+  const mockGetRubros = { execute: jest.fn() };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -41,6 +43,7 @@ describe('DiscountsService', () => {
         { provide: UpdateDiscountUseCase, useValue: mockUpdate },
         { provide: RemoveDiscountUseCase, useValue: mockRemove },
         { provide: ApplyDiscountToPreinvoiceUseCase, useValue: mockApply },
+        { provide: GetDiscountRubrosUseCase, useValue: mockGetRubros },
       ],
     }).compile();
 

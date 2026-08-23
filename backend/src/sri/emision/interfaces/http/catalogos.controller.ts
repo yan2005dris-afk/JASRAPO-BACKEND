@@ -6,7 +6,7 @@ import { LogContext } from 'src/shared/decorators/log-context.decorator';
 import { RequiredPermission } from '../../../../infrastructure/common/decorators/require-permission.decorator';
 
 @LogContext()
-@ApiTags('[En Desarrollo] Catálogos SRI')
+@ApiTags('[SRI] Catálogos')
 @RequiredPermission('catalogos', 'read')
 @Controller('catalogos')
 export class CatalogosController {
