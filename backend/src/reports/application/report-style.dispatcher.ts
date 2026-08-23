@@ -13,14 +13,14 @@ import {
 } from './report-style.catalog';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
+import type { ReportDocument } from './models/report-projection';
 
 /**
  * Wire the resolved style to the matching pdf-type and render the PDF.
  *
- * Pulls style from `ReportStyleService`, composes the `${reportKey}-${style}`
- * composite key, fetches the `PdfDocumentType`, calls `adaptData(raw)` and
- * hands the result to `PdfService.render`. The returned `{ buffer, filename }`
- * bundle is what the controller pipes to the HTTP response.
+ * Las familias con dos estilos se resuelven con la clave
+ * `${reportKey}-${style}`. Las familias canónicas usan directamente
+ * `reportKey`. Después adapta solo detalles de presentación y renderiza el PDF.
  *
  * The dispatcher's job is orchestration only — caching, style resolution and
  * template rendering live in their respective services.
@@ -42,7 +42,7 @@ export class ReportStyleDispatcher {
    */
   async dispatch(
     reportKey: ReportKey,
-    raw: Record<string, unknown>,
+    document: ReportDocument,
     hash?: string,
   ): Promise<{ buffer: Buffer; filename: string }> {
     const allowed = getAllowedStyles(reportKey);
@@ -54,17 +54,21 @@ export class ReportStyleDispatcher {
 
     const style = await this.resolveAllowedStyle(reportKey, allowed);
 
-    const compositeKey = `${reportKey}-${style}`;
-    const pdfType = this.pdfService.getDocumentType(compositeKey);
+    const documentTypeKey = isCanonicalOnly(reportKey)
+      ? reportKey
+      : `${reportKey}-${style}`;
+    const pdfType = this.pdfService.getDocumentType<ReportDocument, object>(
+      documentTypeKey,
+    );
     if (!pdfType) {
       throw new NotFoundException(
-        `PDF type "${compositeKey}" not registered. Available: ${this.pdfService
+        `PDF type "${documentTypeKey}" not registered. Available: ${this.pdfService
           .getAvailableTypes()
           .join(', ')}`,
       );
     }
 
-    const adapted = pdfType.adaptData(raw);
+    const adapted = pdfType.adaptData(document);
     const buffer = await this.pdfService.render(pdfType.template, adapted);
     const filename = buildPdfFileName(reportKey, hash);
 

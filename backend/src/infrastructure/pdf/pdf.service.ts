@@ -27,7 +27,10 @@ export class PdfService
 {
   private readonly logger = new Logger(PdfService.name);
   private readonly templatesDir: string;
-  private readonly documentTypes = new Map<string, PdfDocumentType>();
+  private readonly documentTypes = new Map<
+    string,
+    PdfDocumentType<never, object>
+  >();
   private readonly templateCache = new Map<
     string,
     HandlebarsTemplateDelegate
@@ -153,7 +156,9 @@ export class PdfService
     }
   }
 
-  registerDocumentType(docType: PdfDocumentType): void {
+  registerDocumentType<TInput, TOutput extends object>(
+    docType: PdfDocumentType<TInput, TOutput>,
+  ): void {
     if (this.documentTypes.has(docType.type)) {
       this.logger.warn(
         `Document type '${docType.type}' already registered, overriding.`,
@@ -163,10 +168,7 @@ export class PdfService
     this.logger.log(`Registered PDF type: ${docType.type}`);
   }
 
-  async render(
-    templateName: string,
-    data: Record<string, unknown>,
-  ): Promise<Buffer> {
+  async render(templateName: string, data: object): Promise<Buffer> {
     const templateFile = path.join(this.templatesDir, `${templateName}.hbs`);
     if (!fs.existsSync(templateFile)) {
       throw new NotFoundException(`Template not found: ${templateName}.hbs`);
@@ -175,10 +177,7 @@ export class PdfService
     return this.htmlToPdf(html);
   }
 
-  private renderTemplate(
-    templateName: string,
-    data: Record<string, unknown>,
-  ): string {
+  private renderTemplate(templateName: string, data: object): string {
     let tpl = this.templateCache.get(templateName);
     if (!tpl) {
       // Cold-start / dev-injected template: compile on demand and cache
@@ -274,8 +273,12 @@ export class PdfService
     return Array.from(this.documentTypes.keys());
   }
 
-  getDocumentType(type: string): PdfDocumentType | undefined {
-    return this.documentTypes.get(type);
+  getDocumentType<TInput = object, TOutput extends object = object>(
+    type: string,
+  ): PdfDocumentType<TInput, TOutput> | undefined {
+    return this.documentTypes.get(type) as
+      | PdfDocumentType<TInput, TOutput>
+      | undefined;
   }
 
   getHealthStatus() {

@@ -10,7 +10,7 @@ import type {
   CreateAgreementData,
   CreateInstallmentData,
   PrefacturaDeudaRaw,
-  PaymentAgreementPdfData,
+  PaymentAgreementReportReadModel,
 } from '../../domain/types/agreement.types';
 import {
   paginate,
@@ -322,7 +322,7 @@ export class PrismaAgreementRepository implements AgreementRepository {
 
   async getPdfData(
     convenioId: bigint,
-  ): Promise<PaymentAgreementPdfData | null> {
+  ): Promise<PaymentAgreementReportReadModel | null> {
     const convenio = await this.prisma.convenios.findFirst({
       where: { convenioId, deletedAt: null },
       include: {
@@ -337,6 +337,7 @@ export class PrismaAgreementRepository implements AgreementRepository {
                 apellidos: true,
                 razonSocial: true,
                 identificacion: true,
+                email: true,
               },
             },
           },
@@ -375,6 +376,7 @@ export class PrismaAgreementRepository implements AgreementRepository {
           apellidos: convenio.contrato.cliente.apellidos,
           razonSocial: convenio.contrato.cliente.razonSocial,
           identificacion: convenio.contrato.cliente.identificacion,
+          email: convenio.contrato.cliente.email,
         },
       },
     };
