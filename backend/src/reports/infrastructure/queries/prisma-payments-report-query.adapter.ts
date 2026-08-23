@@ -122,7 +122,8 @@ export class PrismaPaymentsReportQueryAdapter extends PaymentsReportQueryPort {
 
           const billedPeriod =
             preInvoice?.periodoRel?.nombre ??
-            (detail.tipoPago === 'CUOTA_CONVENIO' && detail.cuotaConvenio?.numeroCuota
+            (detail.tipoPago === 'CUOTA_CONVENIO' &&
+            detail.cuotaConvenio?.numeroCuota
               ? `Cuota ${detail.cuotaConvenio.numeroCuota}`
               : 'Directo');
 
