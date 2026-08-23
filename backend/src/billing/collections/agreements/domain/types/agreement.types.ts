@@ -37,7 +37,7 @@ export interface PrefacturaDeudaRaw {
   createdAt: Date;
 }
 
-export interface PaymentAgreementPdfData {
+export interface PaymentAgreementReportReadModel {
   convenio: {
     convenioId: string;
     contratoId: string;
@@ -59,6 +59,7 @@ export interface PaymentAgreementPdfData {
       apellidos: string;
       razonSocial: string | null;
       identificacion: string;
+      email: string | null;
     };
   };
 }
