@@ -20,6 +20,14 @@ export interface ActivePeriod {
 export interface ReadingWithDetails {
   lecturaId: bigint;
   estado: string;
+  ordenesTrabajo?: Array<{
+    rutaId: bigint;
+    operarioId?: number;
+    ruta?: {
+      operarioId: number | null;
+      periodoId: number | null;
+    } | null;
+  }>;
   medidor: {
     historial: Array<{
       contrato: {

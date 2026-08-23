@@ -222,11 +222,23 @@ export class PrismaOperatorRepository extends OperatorRepository {
   }
 
   async findReadingWithDetails(id: bigint): Promise<ReadingWithDetails | null> {
-    return this.prisma.lecturas.findUnique({
+    const result = await this.prisma.lecturas.findUnique({
       where: { lecturaId: id, deletedAt: null },
       select: {
         lecturaId: true,
         estado: true,
+        ordenesTrabajo: {
+          where: { deletedAt: null },
+          select: {
+            rutaId: true,
+            ruta: {
+              select: {
+                operarioId: true,
+                periodoId: true,
+              },
+            },
+          },
+        },
         medidor: {
           select: {
             historial: {
@@ -245,6 +257,7 @@ export class PrismaOperatorRepository extends OperatorRepository {
         },
       },
     });
+    return result;
   }
 
   /** Translate RouteData[] into Prisma OR conditions scoped by contract. */
