@@ -27,9 +27,10 @@ describe('createPaymentAgreementPdfDocumentType', () => {
       const raw = {
         convenio: {
           createdAt: '2024-05-10T10:00:00.000Z',
-          fechaInicio: '2024-05-01T00:00:00.000Z',
+          periodoInicio: '2024-05-01T00:00:00.000Z',
           fechaPrimerPago: '2024-06-01T00:00:00.000Z',
           cuotaMensual: 25.5,
+          primeraCuota: 25.5,
           deudaTotal: 500,
           abonoInicial: 100,
           numeroCuotas: 12,
@@ -50,6 +51,7 @@ describe('createPaymentAgreementPdfDocumentType', () => {
       expect(convenio['clienteNombre']).toBe('María Gómez');
       expect(convenio['clienteCI']).toBe('1791234567001');
       expect(convenio['cuotaMensual']).toBe('25.50');
+      expect(convenio['primeraCuota']).toBe('25.50');
       expect(convenio['deudaTotal']).toBe('500.00');
       expect(convenio['abonoInicial']).toBe('100.00');
       expect(convenio['numeroCuotas']).toBe(12);
@@ -65,9 +67,10 @@ describe('createPaymentAgreementPdfDocumentType', () => {
     it('falls back to a flat raw object when raw.convenio is missing', () => {
       const flatRaw = {
         createdAt: '2024-05-10T10:00:00.000Z',
-        fechaInicio: '2024-05-01T00:00:00.000Z',
+        periodoInicio: '2024-05-01T00:00:00.000Z',
         fechaPrimerPago: '2024-06-01T00:00:00.000Z',
         cuotaMensual: 10,
+        primeraCuota: 10,
         deudaTotal: 0,
         abonoInicial: 0,
         numeroCuotas: 1,
@@ -103,9 +106,10 @@ describe('createPaymentAgreementPdfDocumentType', () => {
       const raw = {
         convenio: {
           createdAt: '2024-05-10T10:00:00.000Z',
-          fechaInicio: '2024-05-01T00:00:00.000Z',
+          periodoInicio: '2024-05-01T00:00:00.000Z',
           fechaPrimerPago: '2024-06-01T00:00:00.000Z',
           cuotaMensual: 25.5,
+          primeraCuota: 25.5,
           deudaTotal: 500,
           abonoInicial: 100,
           numeroCuotas: 12,
@@ -148,9 +152,10 @@ describe('createPaymentAgreementPdfDocumentType', () => {
       const raw = {
         convenio: {
           createdAt: '2024-05-10T10:00:00.000Z',
-          fechaInicio: '2024-05-01T00:00:00.000Z',
+          periodoInicio: '2024-05-01T00:00:00.000Z',
           fechaPrimerPago: '2024-06-01T00:00:00.000Z',
           cuotaMensual: 25.5,
+          primeraCuota: 25.5,
           deudaTotal: 500,
           abonoInicial: 100,
           numeroCuotas: 12,
@@ -165,6 +170,50 @@ describe('createPaymentAgreementPdfDocumentType', () => {
       expect(convenio['numeroGuia']).toBe('G-777');
       expect(convenio['periodoInicio']).toEqual(expect.any(String));
     });
+  });
+
+  it('paymentAgreementUsesContractualStartPeriod', () => {
+    const pdfType = createPaymentAgreementPdfDocumentType('legacy');
+    const result = pdfType.adaptData({
+      convenio: {
+        createdAt: '2024-05-10T10:00:00.000Z',
+        periodoInicio: '2023-02-01T00:00:00.000Z',
+        fechaPrimerPago: '2024-06-01T00:00:00.000Z',
+        cuotaMensual: 25,
+        primeraCuota: 25,
+        deudaTotal: 100,
+        abonoInicial: 10,
+        numeroCuotas: 4,
+        cliente: {},
+        contrato: {},
+      },
+    });
+
+    const convenio = result['convenio'] as Record<string, unknown>;
+    expect(convenio['periodoInicio']).toBe('febrero de 2023');
+    expect(convenio['periodoInicio']).not.toBe('mayo de 2024');
+  });
+
+  it('paymentAgreementUsesContractualFirstInstallmentConcept', () => {
+    const pdfType = createPaymentAgreementPdfDocumentType('legacy');
+    const result = pdfType.adaptData({
+      convenio: {
+        createdAt: '2024-05-10T10:00:00.000Z',
+        periodoInicio: '2023-02-01T00:00:00.000Z',
+        fechaPrimerPago: '2024-06-01T00:00:00.000Z',
+        cuotaMensual: 25,
+        primeraCuota: 25,
+        deudaTotal: 100,
+        abonoInicial: 10,
+        numeroCuotas: 4,
+        cliente: {},
+        contrato: {},
+      },
+    });
+
+    const convenio = result['convenio'] as Record<string, unknown>;
+    expect(convenio['primeraCuota']).toBe('25.00');
+    expect(convenio['primeraCuota']).not.toBe(convenio['abonoInicial']);
   });
 
   describe('factory discrimination', () => {
