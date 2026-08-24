@@ -8,6 +8,7 @@ import { FindAllRoutesUseCase } from './use-cases/find-all-routes.use-case';
 import { FindOneRouteUseCase } from './use-cases/find-one-route.use-case';
 import { UpdateRouteUseCase } from './use-cases/update-route.use-case';
 import { DeleteRouteUseCase } from './use-cases/delete-route.use-case';
+import { ExportFieldSheetPdfUseCase } from './use-cases/export-field-sheet-pdf.use-case';
 import { RouteRepository } from '../domain/repositories/route.repository';
 import { RouteEntity } from '../domain/entities/route.entity';
 
@@ -20,6 +21,7 @@ describe('RoutesService', () => {
   let findOneRouteUseCase: FindOneRouteUseCase;
   let updateRouteUseCase: UpdateRouteUseCase;
   let deleteRouteUseCase: DeleteRouteUseCase;
+  let exportFieldSheetPdfUseCase: ExportFieldSheetPdfUseCase;
 
   const mockUseCase = { execute: jest.fn() };
 
@@ -57,6 +59,10 @@ describe('RoutesService', () => {
         { provide: FindOneRouteUseCase, useValue: { execute: jest.fn() } },
         { provide: UpdateRouteUseCase, useValue: { execute: jest.fn() } },
         { provide: DeleteRouteUseCase, useValue: { execute: jest.fn() } },
+        {
+          provide: ExportFieldSheetPdfUseCase,
+          useValue: { execute: jest.fn() },
+        },
       ],
     }).compile();
 
@@ -73,6 +79,9 @@ describe('RoutesService', () => {
     findOneRouteUseCase = module.get<FindOneRouteUseCase>(FindOneRouteUseCase);
     updateRouteUseCase = module.get<UpdateRouteUseCase>(UpdateRouteUseCase);
     deleteRouteUseCase = module.get<DeleteRouteUseCase>(DeleteRouteUseCase);
+    exportFieldSheetPdfUseCase = module.get<ExportFieldSheetPdfUseCase>(
+      ExportFieldSheetPdfUseCase,
+    );
     jest.clearAllMocks();
   });
 
