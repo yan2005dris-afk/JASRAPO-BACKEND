@@ -1,24 +1,49 @@
 import {
   Injectable,
+  Inject,
   Logger,
   NotFoundException,
   OnApplicationBootstrap,
   OnApplicationShutdown,
+  Optional,
 } from '@nestjs/common';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import Handlebars from 'handlebars';
 import puppeteer, { type Browser, type Page } from 'puppeteer';
 import type { PdfDocumentType } from './document-type.interface';
-import { withTimeout } from '../../common/async/with-timeout';
+import { MetricsService } from '../observability/metrics/metrics.service';
+import {
+  buildPdfRuntimeOptions,
+  PDF_RUNTIME_OPTIONS,
+  type PdfRuntimeOptions,
+} from './pdf-runtime.config';
+import {
+  PdfGenerationTimeoutException,
+  PdfQueueSaturatedException,
+  PdfRequestCancelledException,
+} from './pdf.exceptions';
 
-const PDF_CONCURRENCY = Number(process.env['PDF_CONCURRENCY']) || 4;
-const PDF_TIMEOUT_MS = Number(process.env['PDF_TIMEOUT_MS']) || 30_000;
+export interface PdfRenderOptions {
+  signal?: AbortSignal;
+  timeoutMs?: number;
+  documentType?: string;
+}
 
 interface SemaphoreTask {
-  fn: () => Promise<Buffer>;
+  fn: (signal: AbortSignal) => Promise<Buffer>;
   resolve: (value: Buffer) => void;
   reject: (reason: unknown) => void;
+  documentType: string;
+  requestedAt: number;
+  enqueuedAt: number;
+  deadlineAt: number;
+  timeoutMs: number;
+  abortController: AbortController;
+  externalSignal?: AbortSignal;
+  externalAbortHandler?: () => void;
+  timeoutHandle?: ReturnType<typeof setTimeout>;
+  state: 'queued' | 'running' | 'settled';
 }
 
 @Injectable()
@@ -35,21 +60,39 @@ export class PdfService
     string,
     HandlebarsTemplateDelegate
   >();
-  browser: Browser | null = null; // exposed for health checks
 
-  // Concurrency semaphore
-  readonly concurrency = PDF_CONCURRENCY;
+  browser: Browser | null = null;
+  private browserLaunchPromise: Promise<Browser> | null = null;
+  private hasLaunchedBrowser = false;
+  private browserLaunchTime = 0;
+
+  readonly concurrency: number;
+  readonly maxQueueSize: number;
+  readonly totalTimeoutMs: number;
+  private readonly retryAfterSeconds: number;
   private readonly queue: SemaphoreTask[] = [];
   private activeCount = 0;
 
-  // Health metrics
-  private browserLaunchTime = 0;
   private totalRenders = 0;
   private totalErrors = 0;
+  private totalTimeouts = 0;
+  private totalRejections = 0;
+  private totalCancellations = 0;
+  private browserRestarts = 0;
   private lastErrorAt: string | null = null;
   private lastErrorMessage: string | null = null;
 
-  constructor() {
+  constructor(
+    @Optional()
+    @Inject(PDF_RUNTIME_OPTIONS)
+    runtimeOptions?: PdfRuntimeOptions,
+    @Optional() private readonly metrics?: MetricsService,
+  ) {
+    const options = runtimeOptions ?? buildPdfRuntimeOptions();
+    this.concurrency = options.concurrency;
+    this.maxQueueSize = options.maxQueueSize;
+    this.totalTimeoutMs = options.totalTimeoutMs;
+    this.retryAfterSeconds = options.retryAfterSeconds;
     this.templatesDir = path.join(__dirname, 'templates');
     this.registerHandlebarsHelpers();
   }
@@ -71,26 +114,30 @@ export class PdfService
     });
     Handlebars.registerHelper('eq', (a: unknown, b: unknown) => a === b);
     Handlebars.registerHelper('ne', (a: unknown, b: unknown) => a !== b);
-    Handlebars.registerHelper('gt', (a: any, b: any) => Number(a) > Number(b));
+    Handlebars.registerHelper(
+      'gt',
+      (a: unknown, b: unknown) => Number(a) > Number(b),
+    );
     Handlebars.registerHelper(
       'gte',
-      (a: any, b: any) => Number(a) >= Number(b),
+      (a: unknown, b: unknown) => Number(a) >= Number(b),
     );
-    Handlebars.registerHelper('lt', (a: any, b: any) => Number(a) < Number(b));
+    Handlebars.registerHelper(
+      'lt',
+      (a: unknown, b: unknown) => Number(a) < Number(b),
+    );
     Handlebars.registerHelper(
       'lte',
-      (a: any, b: any) => Number(a) <= Number(b),
+      (a: unknown, b: unknown) => Number(a) <= Number(b),
     );
   }
 
   private registerPartials(): void {
-    // Register base styles partial
     const stylesPath = path.join(this.templatesDir, 'styles.hbs');
     if (fs.existsSync(stylesPath)) {
       Handlebars.registerPartial('styles', fs.readFileSync(stylesPath, 'utf8'));
     }
 
-    // Register modern-styles partial (extracted CSS chrome)
     const modernStylesPath = path.join(
       this.templatesDir,
       'partials',
@@ -104,31 +151,54 @@ export class PdfService
     }
   }
 
+  /** Concurrent recovery callers await this same launch operation. */
   private async getBrowser(): Promise<Browser> {
-    if (!this.browser || !this.browser.connected) {
-      this.browser = await puppeteer.launch({
-        headless: true,
-        executablePath: process.env['PUPPETEER_EXECUTABLE_PATH'],
-        args: [
-          '--no-sandbox',
-          '--disable-setuid-sandbox',
-          '--disable-dev-shm-usage',
-        ],
-      });
+    if (this.browser?.connected) return this.browser;
+    if (this.browserLaunchPromise) return this.browserLaunchPromise;
+
+    const isRestart = this.hasLaunchedBrowser;
+    const launchPromise = puppeteer.launch({
+      headless: true,
+      executablePath: process.env['PUPPETEER_EXECUTABLE_PATH'],
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+      ],
+    });
+    this.browserLaunchPromise = launchPromise;
+
+    try {
+      const browser = await launchPromise;
+      this.browser = browser;
       this.browserLaunchTime = Date.now();
-      this.logger.log('Puppeteer browser launched (or re-launched)');
+      this.hasLaunchedBrowser = true;
+      if (isRestart) {
+        this.browserRestarts++;
+        this.metrics?.pdfBrowserRestartsTotal.inc();
+      }
+      this.logger.log(
+        isRestart
+          ? 'Puppeteer browser re-launched'
+          : 'Puppeteer browser launched',
+      );
+      return browser;
+    } finally {
+      if (this.browserLaunchPromise === launchPromise) {
+        this.browserLaunchPromise = null;
+      }
     }
-    return this.browser;
+  }
+
+  markBrowserUnavailable(): void {
+    this.browser = null;
   }
 
   async onApplicationBootstrap(): Promise<void> {
     this.logger.log('Warming up Puppeteer browser...');
     await this.getBrowser();
-
-    // Register Handlebars partials (styles + modern-styles)
     this.registerPartials();
 
-    // Pre-compile all registered templates into the cache
     const types = this.getAvailableTypes();
     this.logger.log(`Pre-compiling ${types.length} templates...`);
     for (const type of types) {
@@ -149,11 +219,12 @@ export class PdfService
   }
 
   async onApplicationShutdown(): Promise<void> {
-    if (this.browser?.connected) {
+    const browser = this.browser ?? (await this.browserLaunchPromise);
+    if (browser?.connected) {
       this.logger.log('Closing Puppeteer browser...');
-      await this.browser.close();
-      this.browser = null;
+      await browser.close();
     }
+    this.browser = null;
   }
 
   registerDocumentType<TInput, TOutput extends object>(
@@ -168,105 +239,337 @@ export class PdfService
     this.logger.log(`Registered PDF type: ${docType.type}`);
   }
 
-  async render(templateName: string, data: object): Promise<Buffer> {
+  async render(
+    templateName: string,
+    data: object,
+    options: PdfRenderOptions = {},
+  ): Promise<Buffer> {
+    const requestedAt = Date.now();
     const templateFile = path.join(this.templatesDir, `${templateName}.hbs`);
     if (!fs.existsSync(templateFile)) {
       throw new NotFoundException(`Template not found: ${templateName}.hbs`);
     }
+
     const html = this.renderTemplate(templateName, data);
-    return this.htmlToPdf(html);
+    const documentType = options.documentType ?? templateName;
+    return this.runWithSemaphore(
+      (signal) => this.htmlToPdf(html, signal, documentType),
+      {
+        documentType,
+        requestedAt,
+        timeoutMs: options.timeoutMs ?? this.totalTimeoutMs,
+        externalSignal: options.signal,
+      },
+    );
   }
 
   private renderTemplate(templateName: string, data: object): string {
-    let tpl = this.templateCache.get(templateName);
-    if (!tpl) {
+    let template = this.templateCache.get(templateName);
+    if (!template) {
       // Cold-start / dev-injected template: compile on demand and cache
       const templateFile = path.join(this.templatesDir, `${templateName}.hbs`);
       const source = fs.readFileSync(templateFile, 'utf8');
-      tpl = Handlebars.compile(source);
-      this.templateCache.set(templateName, tpl);
+      template = Handlebars.compile(source);
+      this.templateCache.set(templateName, template);
     }
-    return tpl(data);
+    return template(data);
   }
 
-  private async htmlToPdf(html: string): Promise<Buffer> {
+  private async htmlToPdf(
+    html: string,
+    signal: AbortSignal,
+    documentType: string,
+  ): Promise<Buffer> {
+    const renderStartedAt = Date.now();
+    let status = 'success';
+    let page: Page | null = null;
+
     try {
-      const result = await this.runWithSemaphore(async () => {
-        const browser = await this.getBrowser();
-        const page: Page = await browser.newPage();
-        try {
-          await withTimeout(
-            page.setContent(html, { waitUntil: 'load' }),
-            PDF_TIMEOUT_MS,
-            'page.setContent',
-          );
-          const pdf = await withTimeout(
-            page.pdf({
-              format: 'A4',
-              printBackground: true,
-              displayHeaderFooter: true,
-              headerTemplate: '<span></span>',
-              footerTemplate:
-                '<div style="width: 100%; text-align: right; font-size: 9px; padding-right: 15mm; color: #666;">Pág. <span class="pageNumber"></span> de <span class="totalPages"></span></div>',
-              margin: {
-                top: '20mm',
-                right: '15mm',
-                bottom: '20mm',
-                left: '15mm',
-              },
-            }),
-            PDF_TIMEOUT_MS,
-            'page.pdf',
-          );
-          return Buffer.from(pdf);
-        } finally {
-          await page.close();
-        }
-      });
-      this.totalRenders++;
-      return result;
-    } catch (err) {
-      this.totalErrors++;
-      this.lastErrorAt = new Date().toISOString();
-      this.lastErrorMessage = (err as Error).message ?? String(err);
-      throw err;
+      const browser = await this.raceWithAbort(this.getBrowser(), signal);
+      page = await this.raceWithAbort(browser.newPage(), signal);
+      await this.raceWithAbort(
+        page.setContent(html, { waitUntil: 'load' }),
+        signal,
+      );
+      const pdf = await this.raceWithAbort(
+        page.pdf({
+          format: 'A4',
+          printBackground: true,
+          displayHeaderFooter: true,
+          headerTemplate: '<span></span>',
+          footerTemplate:
+            '<div style="width: 100%; text-align: right; font-size: 9px; padding-right: 15mm; color: #666;">Pág. <span class="pageNumber"></span> de <span class="totalPages"></span></div>',
+          margin: {
+            top: '20mm',
+            right: '15mm',
+            bottom: '20mm',
+            left: '15mm',
+          },
+        }),
+        signal,
+      );
+      return Buffer.from(pdf);
+    } catch (error) {
+      status = this.metricStatus(error);
+      if (this.browser && !this.browser.connected) {
+        this.markBrowserUnavailable();
+      }
+      throw error;
+    } finally {
+      if (page) await page.close().catch(() => undefined);
+      this.metrics?.pdfRenderDuration.observe(
+        { document_type: documentType, status },
+        (Date.now() - renderStartedAt) / 1000,
+      );
     }
   }
 
-  /**
-   * Simple concurrency semaphore: at most `this.concurrency` tasks run in
-   * parallel.  If the limit is reached, further calls queue until a slot
-   * opens up.  Errors inside `fn` release the slot immediately.
-   */
-  private async runWithSemaphore(fn: () => Promise<Buffer>): Promise<Buffer> {
-    if (this.activeCount < this.concurrency) {
-      this.activeCount++;
-      try {
-        return await fn();
-      } finally {
-        this.activeCount--;
-        this.processQueue();
-      }
+  private runWithSemaphore(
+    fn: (signal: AbortSignal) => Promise<Buffer>,
+    admission: {
+      documentType: string;
+      requestedAt: number;
+      timeoutMs: number;
+      externalSignal?: AbortSignal;
+    },
+  ): Promise<Buffer> {
+    if (admission.externalSignal?.aborted) {
+      const error = new PdfRequestCancelledException();
+      this.recordImmediateFailure(
+        admission.documentType,
+        admission.requestedAt,
+        error,
+      );
+      return Promise.reject(error);
     }
 
     return new Promise<Buffer>((resolve, reject) => {
-      this.queue.push({ fn, resolve, reject });
+      const now = Date.now();
+      const task: SemaphoreTask = {
+        fn,
+        resolve,
+        reject,
+        documentType: admission.documentType,
+        requestedAt: admission.requestedAt,
+        enqueuedAt: now,
+        deadlineAt: admission.requestedAt + admission.timeoutMs,
+        timeoutMs: admission.timeoutMs,
+        abortController: new AbortController(),
+        externalSignal: admission.externalSignal,
+        state: 'queued',
+      };
+
+      if (this.activeCount >= this.concurrency) {
+        if (this.queue.length >= this.maxQueueSize) {
+          const error = new PdfQueueSaturatedException(this.retryAfterSeconds);
+          this.recordImmediateFailure(
+            task.documentType,
+            task.requestedAt,
+            error,
+          );
+          reject(error);
+          return;
+        }
+        this.queue.push(task);
+        this.updateCapacityMetrics();
+      }
+
+      const remainingMs = task.deadlineAt - Date.now();
+      if (remainingMs <= 0) {
+        this.abortTask(task, new PdfGenerationTimeoutException(task.timeoutMs));
+        return;
+      }
+
+      task.timeoutHandle = setTimeout(
+        () =>
+          this.abortTask(
+            task,
+            new PdfGenerationTimeoutException(task.timeoutMs),
+          ),
+        remainingMs,
+      );
+
+      if (task.externalSignal) {
+        task.externalAbortHandler = () =>
+          this.abortTask(task, new PdfRequestCancelledException());
+        task.externalSignal.addEventListener(
+          'abort',
+          task.externalAbortHandler,
+          { once: true },
+        );
+        if (task.externalSignal.aborted) task.externalAbortHandler();
+      }
+
+      if (this.activeCount < this.concurrency && !this.queue.includes(task)) {
+        this.startTask(task);
+      }
     });
   }
 
   private processQueue(): void {
     while (this.activeCount < this.concurrency && this.queue.length > 0) {
       const task = this.queue.shift()!;
-      this.activeCount++;
-      task
-        .fn()
-        .then(task.resolve)
-        .catch(task.reject)
-        .finally(() => {
-          this.activeCount--;
-          this.processQueue();
-        });
+      this.updateCapacityMetrics();
+      if (task.state === 'queued') this.startTask(task);
     }
+  }
+
+  private startTask(task: SemaphoreTask): void {
+    if (task.state !== 'queued') return;
+    if (Date.now() >= task.deadlineAt) {
+      this.abortTask(task, new PdfGenerationTimeoutException(task.timeoutMs));
+      return;
+    }
+
+    task.state = 'running';
+    this.activeCount++;
+    this.updateCapacityMetrics();
+    this.metrics?.pdfQueueWaitDuration.observe(
+      { document_type: task.documentType },
+      (Date.now() - task.enqueuedAt) / 1000,
+    );
+
+    task
+      .fn(task.abortController.signal)
+      .then((buffer) => {
+        if (task.abortController.signal.aborted) {
+          throw this.abortReason(task.abortController.signal);
+        }
+        this.settleTask(task, undefined, buffer);
+      })
+      .catch((error: unknown) => this.settleTask(task, error))
+      .finally(() => {
+        this.activeCount--;
+        this.updateCapacityMetrics();
+        this.processQueue();
+      });
+  }
+
+  private abortTask(task: SemaphoreTask, error: Error): void {
+    if (task.state === 'settled') return;
+    if (task.state === 'queued') {
+      const index = this.queue.indexOf(task);
+      if (index >= 0) this.queue.splice(index, 1);
+      this.updateCapacityMetrics();
+      this.settleTask(task, error);
+      return;
+    }
+    if (!task.abortController.signal.aborted) {
+      task.abortController.abort(error);
+    }
+  }
+
+  private settleTask(
+    task: SemaphoreTask,
+    error?: unknown,
+    buffer?: Buffer,
+  ): void {
+    if (task.state === 'settled') return;
+    task.state = 'settled';
+    this.cleanupTask(task);
+
+    const status = error ? this.metricStatus(error) : 'success';
+    this.metrics?.pdfTotalDuration.observe(
+      { document_type: task.documentType, status },
+      (Date.now() - task.requestedAt) / 1000,
+    );
+    this.metrics?.samplePdfProcessResources();
+
+    if (error) {
+      this.recordFailure(task.documentType, error);
+      task.reject(error);
+      return;
+    }
+
+    this.totalRenders++;
+    task.resolve(buffer!);
+  }
+
+  private cleanupTask(task: SemaphoreTask): void {
+    if (task.timeoutHandle) clearTimeout(task.timeoutHandle);
+    if (task.externalSignal && task.externalAbortHandler) {
+      task.externalSignal.removeEventListener(
+        'abort',
+        task.externalAbortHandler,
+      );
+    }
+  }
+
+  private recordImmediateFailure(
+    documentType: string,
+    requestedAt: number,
+    error: Error,
+  ): void {
+    this.metrics?.pdfTotalDuration.observe(
+      { document_type: documentType, status: this.metricStatus(error) },
+      (Date.now() - requestedAt) / 1000,
+    );
+    this.recordFailure(documentType, error);
+  }
+
+  private recordFailure(documentType: string, error: unknown): void {
+    this.totalErrors++;
+    this.lastErrorAt = new Date().toISOString();
+    this.lastErrorMessage =
+      error instanceof Error ? error.message : String(error);
+
+    if (error instanceof PdfGenerationTimeoutException) {
+      this.totalTimeouts++;
+      this.metrics?.pdfTimeoutsTotal.inc({ document_type: documentType });
+    } else if (error instanceof PdfQueueSaturatedException) {
+      this.totalRejections++;
+      this.metrics?.pdfRejectionsTotal.inc({ document_type: documentType });
+    } else if (error instanceof PdfRequestCancelledException) {
+      this.totalCancellations++;
+      this.metrics?.pdfCancellationsTotal.inc({
+        document_type: documentType,
+      });
+    }
+  }
+
+  private metricStatus(error: unknown): string {
+    if (error instanceof PdfGenerationTimeoutException) return 'timeout';
+    if (error instanceof PdfQueueSaturatedException) return 'rejected';
+    if (error instanceof PdfRequestCancelledException) return 'cancelled';
+    return 'error';
+  }
+
+  private abortReason(signal: AbortSignal): Error {
+    return signal.reason instanceof Error
+      ? signal.reason
+      : new PdfRequestCancelledException();
+  }
+
+  private raceWithAbort<T>(
+    operation: Promise<T>,
+    signal: AbortSignal,
+  ): Promise<T> {
+    if (signal.aborted) {
+      return Promise.reject(this.abortReason(signal));
+    }
+
+    return new Promise<T>((resolve, reject) => {
+      const onAbort = () => {
+        signal.removeEventListener('abort', onAbort);
+        reject(this.abortReason(signal));
+      };
+      signal.addEventListener('abort', onAbort, { once: true });
+      operation.then(
+        (value) => {
+          signal.removeEventListener('abort', onAbort);
+          resolve(value);
+        },
+        (error) => {
+          signal.removeEventListener('abort', onAbort);
+          reject(error instanceof Error ? error : new Error(String(error)));
+        },
+      );
+    });
+  }
+
+  private updateCapacityMetrics(): void {
+    this.metrics?.pdfQueueDepth.set(this.queue.length);
+    this.metrics?.pdfActiveRenders.set(this.activeCount);
   }
 
   getAvailableTypes(): string[] {
@@ -282,16 +585,19 @@ export class PdfService
   }
 
   getHealthStatus() {
+    this.metrics?.samplePdfProcessResources();
     return {
       status: this.browser?.connected ? 'healthy' : 'unhealthy',
       browser: {
         connected: this.browser?.connected ?? false,
+        launchInFlight: this.browserLaunchPromise !== null,
         uptimeMs: this.browser?.connected
           ? Date.now() - this.browserLaunchTime
           : 0,
       },
       semaphore: {
         concurrency: this.concurrency,
+        maxQueueSize: this.maxQueueSize,
         activeSlots: this.activeCount,
         availableSlots: this.concurrency - this.activeCount,
         queueLength: this.queue.length,
@@ -299,8 +605,16 @@ export class PdfService
       metrics: {
         totalRenders: this.totalRenders,
         totalErrors: this.totalErrors,
+        totalTimeouts: this.totalTimeouts,
+        totalRejections: this.totalRejections,
+        totalCancellations: this.totalCancellations,
+        browserRestarts: this.browserRestarts,
         lastErrorAt: this.lastErrorAt,
         lastErrorMessage: this.lastErrorMessage,
+      },
+      process: {
+        memory: process.memoryUsage(),
+        cpu: process.cpuUsage(),
       },
       timestamp: new Date().toISOString(),
     };

@@ -4,6 +4,7 @@ import { JobsService } from '../../../jobs/jobs.service';
 import { MailProviderFactory } from '../providers/provider.factory';
 import { StorageService } from '../../../storage/storage.service';
 import type { SendMailOptions } from '../../domain/interfaces/mail-provider.interface';
+import type { SendOptions } from 'pg-boss';
 
 export const MAIL_JOB_NAME = 'send-mail';
 const S3_URL_REGEX = /^s3:\/\/([^/]+)\/(.+)$/;
@@ -46,12 +47,16 @@ export class MailQueueService implements OnModuleInit {
    * the widening only adds a transparent pass-through of `JobsService.send`,
    * which already returns `string | null`.
    */
-  async queueMail(options: SendMailOptions): Promise<string | null> {
+  async queueMail(
+    options: SendMailOptions,
+    jobOptions: SendOptions = {},
+  ): Promise<string | null> {
     return this.jobsService.send(MAIL_JOB_NAME, options, {
       retryLimit: 3,
       retryDelay: 5, // 5 segundos iniciales
       retryDelayMax: 300, // Máximo 5 minutos
       retryBackoff: true,
+      ...jobOptions,
     });
   }
 

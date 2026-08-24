@@ -96,12 +96,14 @@ export class AgreementsService {
 
   async generatePdf(
     convenioId: bigint,
+    signal?: AbortSignal,
   ): Promise<{ buffer: Buffer; filename: string; clienteNombre: string }> {
     const raw = await this.getPdfDataUseCase.execute(convenioId);
     const { document } = projectPaymentAgreementReport(raw);
     const { buffer, filename } = await this.dispatcher.dispatch(
       'payment-agreement',
       document,
+      { signal },
     );
     const cliente = raw.convenio.cliente;
     const clienteNombre =

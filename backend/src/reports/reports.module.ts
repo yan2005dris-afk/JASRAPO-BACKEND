@@ -40,6 +40,8 @@ import { PrismaConnectionHistoryReportQueryAdapter } from './infrastructure/quer
 import { PrismaAccountStatementReportQueryAdapter } from './infrastructure/queries/prisma-account-statement-report-query.adapter';
 import { PrismaOverdueAccountsReportQueryAdapter } from './infrastructure/queries/prisma-overdue-accounts-report-query.adapter';
 import { AgreementPaymentAgreementReportQueryAdapter } from './infrastructure/queries/agreement-payment-agreement-report-query.adapter';
+import { ReportEmailQueue } from './application/report-email-queue.port';
+import { ReportEmailJobService } from './infrastructure/report-email-job.service';
 
 @Module({
   imports: [ClientModule, forwardRef(() => AgreementsModule)],
@@ -82,8 +84,10 @@ import { AgreementPaymentAgreementReportQueryAdapter } from './infrastructure/qu
     PaymentAgreementReportEmailStrategy,
     AccountStatementReportEmailStrategy,
     ClientsListReportEmailStrategy,
-    SendReportByEmailUseCase,
     REPORT_EMAIL_STRATEGIES_PROVIDER,
+    ReportEmailJobService,
+    { provide: ReportEmailQueue, useExisting: ReportEmailJobService },
+    SendReportByEmailUseCase,
   ],
   exports: [ReportStyleDispatcher, ReportStyleService],
 })

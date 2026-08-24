@@ -3,11 +3,19 @@ import type { Response } from 'express';
 import { ReportsController } from './reports.controller';
 
 function response(accept = '') {
+  const req = {
+    headers: { accept },
+    once: jest.fn(),
+    removeListener: jest.fn(),
+  };
   return {
-    req: { headers: { accept } },
+    req,
     set: jest.fn(),
     send: jest.fn(),
     end: jest.fn(),
+    once: jest.fn(),
+    removeListener: jest.fn(),
+    writableEnded: false,
   } as unknown as Response;
 }
 
@@ -64,6 +72,7 @@ describe('ReportsController', () => {
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
       'payments-report',
       document,
+      expect.objectContaining({ signal: expect.any(AbortSignal) }),
     );
     expect(res.send).toHaveBeenCalledWith(JSON.stringify(document));
   });
@@ -73,6 +82,11 @@ describe('ReportsController', () => {
 
     await controller.clientsListPdf({}, res);
 
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
+      'clients-list',
+      document,
+      expect.objectContaining({ signal: expect.any(AbortSignal) }),
+    );
     expect(res.end).toHaveBeenCalledWith(Buffer.from('pdf'));
     expect(res.send).not.toHaveBeenCalled();
   });
@@ -86,6 +100,7 @@ describe('ReportsController', () => {
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
       'payment-agreement',
       document,
+      expect.objectContaining({ signal: expect.any(AbortSignal) }),
     );
   });
 
@@ -114,6 +129,7 @@ describe('ReportsController', () => {
       filters: { contratoId: '12' },
       destinatarioOverride: 'ana@example.com',
       subjectOverride: undefined,
+      idempotencyKey: undefined,
     });
   });
 });

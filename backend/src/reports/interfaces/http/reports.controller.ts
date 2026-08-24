@@ -32,6 +32,7 @@ import { SendClientsListEmailDto } from '../dto/send-clients-list-email.dto';
 import { SendReportByEmailUseCase } from '../../application/use-cases/send-report-by-email.use-case';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
+import { observePdfRequestAbort } from 'src/infrastructure/pdf/pdf-request-abort.util';
 
 /**
  * Frontera HTTP de reportes.
@@ -87,15 +88,19 @@ export class ReportsController {
     @Query() filters: PaymentsReportFilterDto,
     @Res() res: Response,
   ) {
-    this.logger.log(
-      `Generating payments-report — filters: ${JSON.stringify(filters)}`,
-    );
-    const { document } = await this.paymentsReportDefinition.generate(filters);
-    const { buffer, filename } = await this.dispatcher.dispatch(
-      'payments-report',
-      document,
-    );
-    this.respondWithContentNegotiation(res, document, buffer, filename);
+    return this.withPdfRequestAbort(res, async (signal) => {
+      this.logger.log(
+        `Generating payments-report — filters: ${JSON.stringify(filters)}`,
+      );
+      const { document } =
+        await this.paymentsReportDefinition.generate(filters);
+      const { buffer, filename } = await this.dispatcher.dispatch(
+        'payments-report',
+        document,
+        { signal },
+      );
+      this.respondWithContentNegotiation(res, document, buffer, filename);
+    });
   }
 
   @Get('connection-history')
@@ -117,16 +122,19 @@ export class ReportsController {
     @Query() filters: ConnectionHistoryFilterDto,
     @Res() res: Response,
   ) {
-    this.logger.log(
-      `Generating connection-history — filters: ${JSON.stringify(filters)}`,
-    );
-    const { document } =
-      await this.connectionHistoryDefinition.generate(filters);
-    const { buffer, filename } = await this.dispatcher.dispatch(
-      'connection-history',
-      document,
-    );
-    this.respondWithContentNegotiation(res, document, buffer, filename);
+    return this.withPdfRequestAbort(res, async (signal) => {
+      this.logger.log(
+        `Generating connection-history — filters: ${JSON.stringify(filters)}`,
+      );
+      const { document } =
+        await this.connectionHistoryDefinition.generate(filters);
+      const { buffer, filename } = await this.dispatcher.dispatch(
+        'connection-history',
+        document,
+        { signal },
+      );
+      this.respondWithContentNegotiation(res, document, buffer, filename);
+    });
   }
 
   @Get('payment-agreement')
@@ -148,16 +156,19 @@ export class ReportsController {
     @Query() filters: PaymentAgreementFilterDto,
     @Res() res: Response,
   ) {
-    this.logger.log(
-      `Generating payment-agreement — filters: ${JSON.stringify(filters)}`,
-    );
-    const { document } =
-      await this.paymentAgreementDefinition.generate(filters);
-    const { buffer, filename } = await this.dispatcher.dispatch(
-      'payment-agreement',
-      document,
-    );
-    this.respondWithContentNegotiation(res, document, buffer, filename);
+    return this.withPdfRequestAbort(res, async (signal) => {
+      this.logger.log(
+        `Generating payment-agreement — filters: ${JSON.stringify(filters)}`,
+      );
+      const { document } =
+        await this.paymentAgreementDefinition.generate(filters);
+      const { buffer, filename } = await this.dispatcher.dispatch(
+        'payment-agreement',
+        document,
+        { signal },
+      );
+      this.respondWithContentNegotiation(res, document, buffer, filename);
+    });
   }
 
   // ─── Untouched endpoints (REQ-10) ───────────────────────────────────────────
@@ -181,15 +192,18 @@ export class ReportsController {
     @Query() filters: ClientsListReportFilterDto,
     @Res() res: Response,
   ) {
-    this.logger.log(
-      `Generating clients-list — filters: ${JSON.stringify(filters)}`,
-    );
-    const { document } = await this.clientsListDefinition.generate(filters);
-    const { buffer, filename } = await this.dispatcher.dispatch(
-      'clients-list',
-      document,
-    );
-    this.respondWithContentNegotiation(res, document, buffer, filename);
+    return this.withPdfRequestAbort(res, async (signal) => {
+      this.logger.log(
+        `Generating clients-list — filters: ${JSON.stringify(filters)}`,
+      );
+      const { document } = await this.clientsListDefinition.generate(filters);
+      const { buffer, filename } = await this.dispatcher.dispatch(
+        'clients-list',
+        document,
+        { signal },
+      );
+      this.respondWithContentNegotiation(res, document, buffer, filename);
+    });
   }
 
   @Get('account-statement')
@@ -211,16 +225,19 @@ export class ReportsController {
     @Query() filters: AccountStatementFilterDto,
     @Res() res: Response,
   ) {
-    this.logger.log(
-      `Generating account-statement — filters: ${JSON.stringify(filters)}`,
-    );
-    const { document } =
-      await this.accountStatementDefinition.generate(filters);
-    const { buffer, filename } = await this.dispatcher.dispatch(
-      'account-statement',
-      document,
-    );
-    this.respondWithContentNegotiation(res, document, buffer, filename);
+    return this.withPdfRequestAbort(res, async (signal) => {
+      this.logger.log(
+        `Generating account-statement — filters: ${JSON.stringify(filters)}`,
+      );
+      const { document } =
+        await this.accountStatementDefinition.generate(filters);
+      const { buffer, filename } = await this.dispatcher.dispatch(
+        'account-statement',
+        document,
+        { signal },
+      );
+      this.respondWithContentNegotiation(res, document, buffer, filename);
+    });
   }
 
   @Get('overdue-accounts')
@@ -260,6 +277,7 @@ export class ReportsController {
       filters: { clienteId: body.clienteId },
       destinatarioOverride: body.destinatario,
       subjectOverride: body.subject,
+      idempotencyKey: body.idempotencyKey,
     });
   }
 
@@ -279,6 +297,7 @@ export class ReportsController {
       filters: { contratoId: body.contratoId },
       destinatarioOverride: body.destinatario,
       subjectOverride: body.subject,
+      idempotencyKey: body.idempotencyKey,
     });
   }
 
@@ -298,6 +317,7 @@ export class ReportsController {
       filters: { convenioId: body.convenioId },
       destinatarioOverride: body.destinatario,
       subjectOverride: body.subject,
+      idempotencyKey: body.idempotencyKey,
     });
   }
 
@@ -317,6 +337,7 @@ export class ReportsController {
       filters: { contratoId: body.contratoId },
       destinatarioOverride: body.destinatario,
       subjectOverride: body.subject,
+      idempotencyKey: body.idempotencyKey,
     });
   }
 
@@ -338,10 +359,23 @@ export class ReportsController {
       filters: body.filtros ?? {},
       destinatarioOverride: body.destinatario,
       subjectOverride: body.subject,
+      idempotencyKey: body.idempotencyKey,
     });
   }
 
   // ─── Private helpers ────────────────────────────────────────────────────────
+
+  private async withPdfRequestAbort<T>(
+    res: Response,
+    operation: (signal: AbortSignal) => Promise<T>,
+  ): Promise<T> {
+    const requestAbort = observePdfRequestAbort(res);
+    try {
+      return await operation(requestAbort.signal);
+    } finally {
+      requestAbort.dispose();
+    }
+  }
 
   /**
    * Responde con PDF solo cuando el cliente lo solicita de forma explícita.

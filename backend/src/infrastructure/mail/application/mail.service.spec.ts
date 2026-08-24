@@ -186,6 +186,7 @@ describe('MailService', () => {
             }),
           ],
         }),
+        {},
       );
       // Guard against accidental legacy shape (no `url`, has `content`).
       const queued = mockQueueService.queueMail.mock.calls[0]?.[0] ?? {};
@@ -204,6 +205,31 @@ describe('MailService', () => {
           Buffer.from('pdf-bytes'),
         ),
       ).rejects.toThrow(InternalServerErrorException);
+    });
+
+    it('deduplicates delivery retries with the report idempotency key', async () => {
+      mockQueueService.queueMail.mockResolvedValue(null);
+
+      const result = await service.sendReport(
+        'client@example.com',
+        'Reporte',
+        'payments-report',
+        Buffer.from('pdf-bytes'),
+        {
+          idempotencyKey: '4b35520c-b4ae-41af-a136-a53ba5a8fd94',
+        },
+      );
+
+      expect(result).toEqual({
+        jobId: 'report-email-delivery:4b35520c-b4ae-41af-a136-a53ba5a8fd94',
+      });
+      expect(mockQueueService.queueMail).toHaveBeenCalledWith(
+        expect.any(Object),
+        expect.objectContaining({
+          singletonKey:
+            'report-email-delivery:4b35520c-b4ae-41af-a136-a53ba5a8fd94',
+        }),
+      );
     });
 
     it('references a generic-report.hbs template that resolves on disk', () => {

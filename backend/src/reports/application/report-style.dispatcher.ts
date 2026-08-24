@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PdfService } from '../../infrastructure/pdf/pdf.service';
+import type { PdfRenderOptions } from '../../infrastructure/pdf/pdf.service';
 import { buildPdfFileName } from '../../infrastructure/pdf/utils/pdf-format.utils';
 import {
   ReportKey,
@@ -43,8 +44,12 @@ export class ReportStyleDispatcher {
   async dispatch(
     reportKey: ReportKey,
     document: ReportDocument,
-    hash?: string,
+    hashOrOptions?: string | (PdfRenderOptions & { hash?: string }),
   ): Promise<{ buffer: Buffer; filename: string }> {
+    const options =
+      typeof hashOrOptions === 'string'
+        ? { hash: hashOrOptions }
+        : (hashOrOptions ?? {});
     const allowed = getAllowedStyles(reportKey);
     if (allowed.length === 0) {
       throw new NotFoundException(
@@ -69,8 +74,12 @@ export class ReportStyleDispatcher {
     }
 
     const adapted = pdfType.adaptData(document);
-    const buffer = await this.pdfService.render(pdfType.template, adapted);
-    const filename = buildPdfFileName(reportKey, hash);
+    const buffer = await this.pdfService.render(pdfType.template, adapted, {
+      signal: options.signal,
+      timeoutMs: options.timeoutMs,
+      documentType: options.documentType ?? reportKey,
+    });
+    const filename = buildPdfFileName(reportKey, options.hash);
 
     return { buffer, filename };
   }

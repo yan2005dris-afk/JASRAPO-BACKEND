@@ -34,6 +34,7 @@ import { ParseBigIntPipe } from 'src/infrastructure/common/pipes/parse-bigint.pi
 import { ApiPaginatedResponse } from 'src/infrastructure/common/decorators/api-paginated-response.decorator';
 import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
 import { PaginationMetaDto } from 'src/infrastructure/common/dtos/pagination-meta.dto';
+import { observePdfRequestAbort } from 'src/infrastructure/pdf/pdf-request-abort.util';
 
 @ApiTags('agreements')
 @ApiBearerAuth()
@@ -293,12 +294,20 @@ export class AgreementsController {
     @Param('id', ParseBigIntPipe) id: bigint,
     @Res() res: Response,
   ) {
-    const { buffer, filename } = await this.agreementsService.generatePdf(id);
-    res.set({
-      'Content-Type': 'application/pdf',
-      'Content-Disposition': `inline; filename="${filename}"`,
-      'Content-Length': buffer.length,
-    });
-    res.end(buffer);
+    const requestAbort = observePdfRequestAbort(res);
+    try {
+      const { buffer, filename } = await this.agreementsService.generatePdf(
+        id,
+        requestAbort.signal,
+      );
+      res.set({
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `inline; filename="${filename}"`,
+        'Content-Length': buffer.length,
+      });
+      res.end(buffer);
+    } finally {
+      requestAbort.dispose();
+    }
   }
 }
