@@ -4,6 +4,15 @@ import { Transform } from 'class-transformer';
 import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
 
 export class FilterClientDto extends PaginationDto {
+  @ApiPropertyOptional({
+    description:
+      'Búsqueda global: identificación, nombres, apellidos, razón social, email o teléfono',
+  })
+  @IsOptional()
+  @IsString()
+  @Transform(({ value }) => (value === '' ? undefined : value))
+  search?: string;
+
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()

@@ -11,6 +11,7 @@ export interface ContractFilters {
   estado?: string;
   ubicacion?: string;
   search?: string;
+  hasDebt?: boolean;
 }
 
 export interface CreateContractData {

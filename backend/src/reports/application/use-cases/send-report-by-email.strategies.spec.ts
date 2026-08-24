@@ -10,6 +10,8 @@ import {
   PaymentAgreementReportEmailStrategy,
   PaymentsReportEmailStrategy,
 } from './send-report-by-email.strategies';
+import { ReportRequestContextFactory } from '../report-request-context.factory';
+import type { ReportKey } from '../report-style.service';
 
 const report: ProjectedReport<ReportDocument> = {
   document: {
@@ -23,6 +25,15 @@ const report: ProjectedReport<ReportDocument> = {
   },
   recipientEmail: 'cliente@example.com',
 };
+const contextFactory = new ReportRequestContextFactory();
+
+function context(reportType: ReportKey, filters: object = {}) {
+  return contextFactory.create({
+    reportType,
+    actor: { usersId: 7 },
+    filters,
+  });
+}
 
 function definition() {
   return { generate: jest.fn().mockResolvedValue(report) };
@@ -38,25 +49,29 @@ describe('report email strategies', () => {
     const sharedDefinition = definition();
     const strategy = new Strategy(sharedDefinition as never).build();
 
-    const result = await strategy.fetchReport({ id: '1' });
+    const requestContext = context(key as ReportKey, { id: '1' });
+    const result = await strategy.fetchReport(requestContext);
 
     expect(strategy.reportType).toBe(key);
     expect(result).toBe(report);
-    expect(strategy.recipientResolver({}, result)).toBe('cliente@example.com');
+    expect(strategy.recipientResolver(requestContext, result)).toBe(
+      'cliente@example.com',
+    );
     expect(sharedDefinition.generate).toHaveBeenCalledTimes(1);
   });
 
-  it('clients-list extrae filtros anidados y requiere destinatario explícito', async () => {
+  it('clients-list usa el contexto compartido y requiere destinatario explícito', async () => {
     const sharedDefinition = definition();
     const strategy = new ClientsListReportEmailStrategy(
       sharedDefinition as never,
     ).build();
 
-    const result = await strategy.fetchReport({ filtros: { activo: false } });
+    const requestContext = context('clients-list', { activo: false });
+    const result = await strategy.fetchReport(requestContext);
 
-    expect(sharedDefinition.generate).toHaveBeenCalledWith({ activo: false });
-    expect(strategy.recipientResolver({}, result)).toBeNull();
-    expect(strategy.subjectBuilder({ activo: false })).toContain('Inactivos');
+    expect(sharedDefinition.generate).toHaveBeenCalledWith(requestContext);
+    expect(strategy.recipientResolver(requestContext, result)).toBeNull();
+    expect(strategy.subjectBuilder(requestContext)).toContain('Inactivos');
   });
 
   it('construye el mapa completo de estrategias', () => {

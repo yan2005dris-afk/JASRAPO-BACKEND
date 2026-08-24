@@ -74,6 +74,7 @@ describe('GeneratePdfUseCase', () => {
       expect(mockPdfService.render).toHaveBeenCalledWith(
         'test-template',
         adapted,
+        { documentType: 'test-doc' },
       );
     });
 

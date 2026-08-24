@@ -122,15 +122,70 @@ describe('PrismaAgreementRepository', () => {
   });
 
   describe('paginate', () => {
-    it('should return paginated domain entities', async () => {
+    const capturedWhere = () =>
+      prismaMock.convenios.findMany.mock.calls[0][0].where;
+
+    beforeEach(() => {
       prismaMock.convenios.findMany.mockResolvedValue([rawConvenio]);
       prismaMock.convenios.count.mockResolvedValue(1);
+    });
 
+    it('should return paginated domain entities', async () => {
       const result = await repository.paginate({ page: 1, limit: 10 });
 
       expect(result.data).toHaveLength(1);
       expect(result.data[0].convenioId).toBe(1n);
       expect(result.meta.total).toBe(1);
+    });
+
+    it('should not add a search filter when no term is provided', async () => {
+      await repository.paginate({ page: 1, limit: 10 });
+
+      expect(capturedWhere()).toEqual({ deletedAt: null });
+    });
+
+    it('should match guía and client data for a text term', async () => {
+      await repository.paginate({ page: 1, limit: 10 }, { search: 'María' });
+
+      const or = capturedWhere().OR;
+      expect(or).toHaveLength(1);
+      expect(or[0].contrato.OR).toEqual(
+        expect.arrayContaining([
+          { numeroGuia: { contains: 'María', mode: 'insensitive' } },
+          { cliente: { nombres: { contains: 'María', mode: 'insensitive' } } },
+        ]),
+      );
+    });
+
+    it('should also match agreement and contract ids for a numeric term', async () => {
+      await repository.paginate({ page: 1, limit: 10 }, { search: '227' });
+
+      const or = capturedWhere().OR;
+      expect(or).toHaveLength(3);
+      expect(or).toEqual(
+        expect.arrayContaining([{ convenioId: 227n }, { contratoId: 227n }]),
+      );
+    });
+
+    it('should ignore numeric terms that overflow a bigint column', async () => {
+      await repository.paginate(
+        { page: 1, limit: 10 },
+        { search: '99999999999999999999' },
+      );
+
+      expect(capturedWhere().OR).toHaveLength(1);
+    });
+
+    it('should combine the contratoId and estado filters with the search term', async () => {
+      await repository.paginate(
+        { page: 1, limit: 10 },
+        { contratoId: '10', estado: 'ACTIVO', search: '227' },
+      );
+
+      const where = capturedWhere();
+      expect(where.contratoId).toBe(10n);
+      expect(where.estado).toBe('ACTIVO');
+      expect(where.OR).toHaveLength(3);
     });
   });
 

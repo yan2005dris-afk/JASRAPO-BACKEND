@@ -5,11 +5,21 @@ import { GeneratePdfToFileUseCase } from './use-cases/generate-pdf-to-file.use-c
 import { PdfHealthService } from './pdf-health.service';
 import { PdfHealthController } from './pdf-health.controller';
 import { PdfAttachmentCleanupService } from './pdf-attachment-cleanup.service';
+import { MetricsModule } from '../observability/metrics/metrics.module';
+import {
+  buildPdfRuntimeOptions,
+  PDF_RUNTIME_OPTIONS,
+} from './pdf-runtime.config';
 
 @Global()
 @Module({
+  imports: [MetricsModule],
   controllers: [PdfHealthController],
   providers: [
+    {
+      provide: PDF_RUNTIME_OPTIONS,
+      useFactory: buildPdfRuntimeOptions,
+    },
     PdfService,
     PdfHealthService,
     PdfAttachmentCleanupService,

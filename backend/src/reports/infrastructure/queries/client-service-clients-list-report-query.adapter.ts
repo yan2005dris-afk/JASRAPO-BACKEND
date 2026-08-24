@@ -5,6 +5,7 @@ import type {
   ClientsListReportFilters,
   ClientsListReportReadModel,
 } from '../../application/read-models/clients-list.read-model';
+import type { ReportRequestContext } from '../../application/models/report-request-context';
 
 @Injectable()
 export class ClientServiceClientsListReportQueryAdapter extends ClientsListReportQueryPort {
@@ -13,8 +14,9 @@ export class ClientServiceClientsListReportQueryAdapter extends ClientsListRepor
   }
 
   async query(
-    filters: ClientsListReportFilters,
+    context: ReportRequestContext<ClientsListReportFilters>,
   ): Promise<ClientsListReportReadModel> {
+    const { filters } = context;
     const result = await this.clientService.findAll({
       ...filters,
       page: 1,
