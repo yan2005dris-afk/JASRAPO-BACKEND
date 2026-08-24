@@ -495,7 +495,10 @@ export class ReportsController {
   private async executeEmailRequest<TFilters extends object>(
     reportType: ReportKey,
     filters: TFilters,
-    options: Pick<SendReportEmailDto, 'destinatario' | 'subject' | 'idempotencyKey'>,
+    options: Pick<
+      SendReportEmailDto,
+      'destinatario' | 'subject' | 'idempotencyKey'
+    >,
     actor: JwtPayload,
     timeZone?: string,
     locale?: string,
