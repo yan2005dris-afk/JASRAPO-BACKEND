@@ -45,17 +45,102 @@ export class PrismaReadingAnomalyRepository implements ReadingAnomalyRepository 
     return ReadingAnomalyMapper.toDomain(record);
   }
 
+  private buildWhereClause(
+    filters?: ReadingAnomalyFilters,
+  ): Prisma.LecturaAnomaliaWhereInput {
+    const whereClause: Prisma.LecturaAnomaliaWhereInput = {
+      deletedAt: null,
+      ...(filters?.lecturaId && { lecturaId: filters.lecturaId }),
+      ...(filters?.tipo && { tipo: filters.tipo }),
+      ...(filters?.estado && { estado: filters.estado }),
+    };
+
+    if (filters?.search) {
+      const search = filters.search.trim();
+      whereClause.OR = [
+        { observacion: { contains: search, mode: 'insensitive' } },
+        {
+          lectura: {
+            OR: [
+              {
+                medidor: {
+                  serie: { contains: search, mode: 'insensitive' },
+                },
+              },
+              {
+                medidor: {
+                  historial: {
+                    some: {
+                      fechaHasta: null,
+                      contrato: {
+                        OR: [
+                          {
+                            numeroGuia: {
+                              contains: search,
+                              mode: 'insensitive',
+                            },
+                          },
+                          {
+                            cliente: {
+                              nombres: {
+                                contains: search,
+                                mode: 'insensitive',
+                              },
+                            },
+                          },
+                          {
+                            cliente: {
+                              apellidos: {
+                                contains: search,
+                                mode: 'insensitive',
+                              },
+                            },
+                          },
+                          {
+                            cliente: {
+                              razonSocial: {
+                                contains: search,
+                                mode: 'insensitive',
+                              },
+                            },
+                          },
+                          {
+                            cliente: {
+                              identificacion: {
+                                contains: search,
+                                mode: 'insensitive',
+                              },
+                            },
+                          },
+                        ],
+                      },
+                    },
+                  },
+                },
+              },
+            ],
+          },
+        },
+      ];
+
+      const numericId = /^\d+$/.test(search) ? BigInt(search) : null;
+      if (numericId !== null) {
+        whereClause.OR.push(
+          { anomaliaId: numericId },
+          { lecturaId: numericId },
+        );
+      }
+    }
+
+    return whereClause;
+  }
+
   async findMany(params: {
     skip?: number;
     take?: number;
     where?: ReadingAnomalyFilters;
   }): Promise<ReadingAnomalyEntity[]> {
-    const whereClause: Prisma.LecturaAnomaliaWhereInput = {
-      deletedAt: null,
-      ...(params.where?.lecturaId && { lecturaId: params.where.lecturaId }),
-      ...(params.where?.tipo && { tipo: params.where.tipo }),
-      ...(params.where?.estado && { estado: params.where.estado }),
-    };
+    const whereClause = this.buildWhereClause(params.where);
 
     const records = await this.prisma.lecturaAnomalia.findMany({
       where: whereClause,
@@ -68,12 +153,7 @@ export class PrismaReadingAnomalyRepository implements ReadingAnomalyRepository 
   }
 
   async count(params: { where?: ReadingAnomalyFilters }): Promise<number> {
-    const whereClause: Prisma.LecturaAnomaliaWhereInput = {
-      deletedAt: null,
-      ...(params.where?.lecturaId && { lecturaId: params.where.lecturaId }),
-      ...(params.where?.tipo && { tipo: params.where.tipo }),
-      ...(params.where?.estado && { estado: params.where.estado }),
-    };
+    const whereClause = this.buildWhereClause(params.where);
 
     return this.prisma.lecturaAnomalia.count({ where: whereClause });
   }
