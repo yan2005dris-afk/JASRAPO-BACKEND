@@ -176,14 +176,15 @@ describe('PrismaAgreementRepository', () => {
       expect(capturedWhere().OR).toHaveLength(1);
     });
 
-    it('should combine the contratoId filter with the search term', async () => {
+    it('should combine the contratoId and estado filters with the search term', async () => {
       await repository.paginate(
         { page: 1, limit: 10 },
-        { contratoId: '10', search: '227' },
+        { contratoId: '10', estado: 'ACTIVO', search: '227' },
       );
 
       const where = capturedWhere();
       expect(where.contratoId).toBe(10n);
+      expect(where.estado).toBe('ACTIVO');
       expect(where.OR).toHaveLength(3);
     });
   });

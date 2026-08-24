@@ -114,6 +114,12 @@ export class PrismaAgreementRepository implements AgreementRepository {
       ...(filters?.contratoId
         ? { contratoId: BigInt(filters.contratoId) }
         : {}),
+      ...(filters?.estado
+        ? {
+            estado:
+              filters.estado as Prisma.EnumEstadoConvenioFilter<'Convenios'>['equals'],
+          }
+        : {}),
       ...(filters?.search
         ? { OR: this.buildSearchConditions(filters.search) }
         : {}),

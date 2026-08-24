@@ -1,7 +1,8 @@
-import { IsOptional, IsString, Matches } from 'class-validator';
+import { IsEnum, IsOptional, IsString, Matches } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { PaginationDto } from '../../../../../infrastructure/common/dtos/pagination.dto';
+import { EstadoConvenio } from 'src/shared/enums';
 
 export class FindAllAgreementsDto extends PaginationDto {
   @ApiPropertyOptional({
@@ -11,6 +12,15 @@ export class FindAllAgreementsDto extends PaginationDto {
   @IsOptional()
   @Matches(/^\d+$/, { message: 'contratoId must be a positive integer' })
   contratoId?: string;
+
+  @ApiPropertyOptional({
+    description: 'Filtrar por estado del convenio',
+    enum: EstadoConvenio,
+    example: EstadoConvenio.ACTIVO,
+  })
+  @IsOptional()
+  @IsEnum(EstadoConvenio)
+  estado?: EstadoConvenio;
 
   @ApiPropertyOptional({
     description:
