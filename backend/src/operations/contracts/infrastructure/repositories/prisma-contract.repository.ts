@@ -427,6 +427,26 @@ export class PrismaContractRepository implements ContractRepository {
       conditions.push({ estado: filters.estado as any });
     }
 
+    if (filters.hasDebt === true) {
+      conditions.push({
+        prefacturas: {
+          some: {
+            deletedAt: null,
+            estado: { in: ['GENERADA', 'EN_REVISION', 'APROBADA'] as any },
+          },
+        },
+      });
+    } else if (filters.hasDebt === false) {
+      conditions.push({
+        prefacturas: {
+          none: {
+            deletedAt: null,
+            estado: { in: ['GENERADA', 'EN_REVISION', 'APROBADA'] as any },
+          },
+        },
+      });
+    }
+
     return conditions.length === 1 ? conditions[0] : { AND: conditions };
   }
 

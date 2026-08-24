@@ -65,4 +65,16 @@ export class FilterContractsDto extends PaginationDto {
   @IsOptional()
   @IsEnum(EstadoContrato)
   estado?: EstadoContrato;
+
+  @ApiPropertyOptional({
+    description: 'Filtrar solo contratos con prefacturas impagadas',
+    type: Boolean,
+  })
+  @IsOptional()
+  @Transform(({ value }) => {
+    if (value === 'true' || value === true || value === 1 || value === '1') return true;
+    if (value === 'false' || value === false || value === 0 || value === '0') return false;
+    return undefined;
+  })
+  hasDebt?: boolean;
 }
