@@ -14,17 +14,20 @@ import type { PaymentsReportFilters } from '../read-models/payments-report.read-
 import type { ConnectionHistoryReportFilters } from '../read-models/connection-history.read-model';
 import type { AccountStatementReportFilters } from '../read-models/account-statement.read-model';
 import type { ReportKey } from '../report-style.service';
+import type { ReportRequestContext } from '../models/report-request-context';
 
 export const REPORT_EMAIL_STRATEGIES = 'REPORT_EMAIL_STRATEGIES';
 
 export interface ReportEmailStrategy {
   readonly reportType: ReportKey;
-  fetchReport(filters: unknown): Promise<ProjectedReport<ReportDocument>>;
+  fetchReport(
+    context: ReportRequestContext,
+  ): Promise<ProjectedReport<ReportDocument>>;
   recipientResolver(
-    filters: unknown,
+    context: ReportRequestContext,
     report: ProjectedReport<ReportDocument>,
   ): Promise<string | null> | string | null;
-  subjectBuilder(filters: unknown): string;
+  subjectBuilder(context: ReportRequestContext): string;
 }
 
 @Injectable()
@@ -34,11 +37,10 @@ export class PaymentsReportEmailStrategy {
   build(): ReportEmailStrategy {
     return {
       reportType: 'payments-report',
-      fetchReport: (filters) =>
-        this.definition.generate(filters as PaymentsReportFilters),
-      recipientResolver: (_filters, report) => report.recipientEmail,
-      subjectBuilder: (filters) => {
-        const typedFilters = filters as PaymentsReportFilters;
+      fetchReport: (context) => this.definition.generate(context),
+      recipientResolver: (_context, report) => report.recipientEmail,
+      subjectBuilder: (context) => {
+        const typedFilters = context.filters as PaymentsReportFilters;
         return `Reporte de Abonos — Cliente #${typedFilters.clienteId ?? '?'}`;
       },
     };
@@ -52,11 +54,13 @@ export class ConnectionHistoryReportEmailStrategy {
   build(): ReportEmailStrategy {
     return {
       reportType: 'connection-history',
-      fetchReport: (filters) =>
-        this.definition.generate(filters as ConnectionHistoryReportFilters),
-      recipientResolver: (_filters, report) => report.recipientEmail,
-      subjectBuilder: (filters) => {
-        const typedFilters = filters as ConnectionHistoryReportFilters;
+      fetchReport: (context) =>
+        this.definition.generate(
+          context as ReportRequestContext<ConnectionHistoryReportFilters>,
+        ),
+      recipientResolver: (_context, report) => report.recipientEmail,
+      subjectBuilder: (context) => {
+        const typedFilters = context.filters as ConnectionHistoryReportFilters;
         return `Historial de Conexión — Contrato #${typedFilters.contratoId ?? '?'}`;
       },
     };
@@ -70,11 +74,13 @@ export class PaymentAgreementReportEmailStrategy {
   build(): ReportEmailStrategy {
     return {
       reportType: 'payment-agreement',
-      fetchReport: (filters) =>
-        this.definition.generate(filters as PaymentAgreementReportFilters),
-      recipientResolver: (_filters, report) => report.recipientEmail,
-      subjectBuilder: (filters) => {
-        const typedFilters = filters as PaymentAgreementReportFilters;
+      fetchReport: (context) =>
+        this.definition.generate(
+          context as ReportRequestContext<PaymentAgreementReportFilters>,
+        ),
+      recipientResolver: (_context, report) => report.recipientEmail,
+      subjectBuilder: (context) => {
+        const typedFilters = context.filters as PaymentAgreementReportFilters;
         return `Convenio de Pago #${typedFilters.convenioId}`;
       },
     };
@@ -88,11 +94,13 @@ export class AccountStatementReportEmailStrategy {
   build(): ReportEmailStrategy {
     return {
       reportType: 'account-statement',
-      fetchReport: (filters) =>
-        this.definition.generate(filters as AccountStatementReportFilters),
-      recipientResolver: (_filters, report) => report.recipientEmail,
-      subjectBuilder: (filters) => {
-        const typedFilters = filters as AccountStatementReportFilters;
+      fetchReport: (context) =>
+        this.definition.generate(
+          context as ReportRequestContext<AccountStatementReportFilters>,
+        ),
+      recipientResolver: (_context, report) => report.recipientEmail,
+      subjectBuilder: (context) => {
+        const typedFilters = context.filters as AccountStatementReportFilters;
         return `Estado de Cuenta — Contrato #${typedFilters.contratoId ?? '?'}`;
       },
     };
@@ -106,16 +114,10 @@ export class ClientsListReportEmailStrategy {
   build(): ReportEmailStrategy {
     return {
       reportType: 'clients-list',
-      fetchReport: (filters) => {
-        const directFilters = filters as ClientsListReportFilters;
-        const nestedFilters = filters as {
-          filtros?: ClientsListReportFilters;
-        };
-        return this.definition.generate(nestedFilters.filtros ?? directFilters);
-      },
+      fetchReport: (context) => this.definition.generate(context),
       recipientResolver: () => null,
-      subjectBuilder: (filters) => {
-        const typedFilters = filters as ClientsListReportFilters;
+      subjectBuilder: (context) => {
+        const typedFilters = context.filters as ClientsListReportFilters;
         return `Listado de Clientes${typedFilters.activo === false ? ' (Inactivos)' : ''}`;
       },
     };

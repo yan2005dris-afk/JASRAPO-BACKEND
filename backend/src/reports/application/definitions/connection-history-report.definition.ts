@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { resolveClientName } from 'src/infrastructure/pdf/utils/pdf-format.utils';
 import type { ProjectedReport } from '../models/report-projection';
+import type { ReportRequestContext } from '../models/report-request-context';
 import { ConnectionHistoryReportQueryPort } from '../ports/report-query.ports';
 import type {
   ConnectionHistoryReportDocument,
@@ -64,8 +65,8 @@ export class ConnectionHistoryReportDefinition {
   constructor(private readonly queryPort: ConnectionHistoryReportQueryPort) {}
 
   async generate(
-    filters: ConnectionHistoryReportFilters,
+    context: ReportRequestContext<ConnectionHistoryReportFilters>,
   ): Promise<ProjectedReport<ConnectionHistoryReportDocument>> {
-    return projectConnectionHistoryReport(await this.queryPort.query(filters));
+    return projectConnectionHistoryReport(await this.queryPort.query(context));
   }
 }

@@ -1,6 +1,8 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsEmail, IsOptional, IsString, MaxLength } from 'class-validator';
+import { Transform } from 'class-transformer';
 import { IsNotEmptyString } from 'src/infrastructure/common/decorators/is-not-empty-string.decorator';
+import { IsValidDateRange } from 'src/infrastructure/common/decorators/is-valid-date-range.decorator';
 
 /**
  * Shared body for every POST /reports/.../email endpoint.
@@ -24,6 +26,24 @@ import { IsNotEmptyString } from 'src/infrastructure/common/decorators/is-not-em
  * recipient for the client listing.
  */
 export class SendReportEmailDto {
+  @ApiPropertyOptional({
+    description:
+      'Fecha inicial del reporte (mismo filtro que el endpoint GET).',
+  })
+  @IsOptional()
+  @IsString()
+  @IsValidDateRange()
+  @Transform(({ value }) => (value === '' ? undefined : value))
+  fechaDesde?: string;
+
+  @ApiPropertyOptional({
+    description: 'Fecha final del reporte (mismo filtro que el endpoint GET).',
+  })
+  @IsOptional()
+  @IsString()
+  @Transform(({ value }) => (value === '' ? undefined : value))
+  fechaHasta?: string;
+
   @ApiPropertyOptional({
     description:
       'ID del cliente (BigInt como string). Requerido para POST /reports/payments-report/email.',

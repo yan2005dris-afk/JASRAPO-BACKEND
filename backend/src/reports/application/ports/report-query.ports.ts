@@ -22,9 +22,10 @@ import type {
   PaymentsReportFilters,
   PaymentsReportReadModel,
 } from '../read-models/payments-report.read-model';
+import type { ReportRequestContext } from '../models/report-request-context';
 
-export interface ReportQueryPort<TFilters, TReadModel> {
-  query(filters: TFilters): Promise<TReadModel>;
+export interface ReportQueryPort<TFilters extends object, TReadModel> {
+  query(context: ReportRequestContext<TFilters>): Promise<TReadModel>;
 }
 
 export abstract class ClientsListReportQueryPort implements ReportQueryPort<
@@ -32,7 +33,7 @@ export abstract class ClientsListReportQueryPort implements ReportQueryPort<
   ClientsListReportReadModel
 > {
   abstract query(
-    filters: ClientsListReportFilters,
+    context: ReportRequestContext<ClientsListReportFilters>,
   ): Promise<ClientsListReportReadModel>;
 }
 
@@ -41,7 +42,7 @@ export abstract class PaymentsReportQueryPort implements ReportQueryPort<
   PaymentsReportReadModel
 > {
   abstract query(
-    filters: PaymentsReportFilters,
+    context: ReportRequestContext<PaymentsReportFilters>,
   ): Promise<PaymentsReportReadModel>;
 }
 
@@ -50,7 +51,7 @@ export abstract class ConnectionHistoryReportQueryPort implements ReportQueryPor
   ConnectionHistoryReportReadModel
 > {
   abstract query(
-    filters: ConnectionHistoryReportFilters,
+    context: ReportRequestContext<ConnectionHistoryReportFilters>,
   ): Promise<ConnectionHistoryReportReadModel>;
 }
 
@@ -59,7 +60,7 @@ export abstract class AccountStatementReportQueryPort implements ReportQueryPort
   AccountStatementReportReadModel
 > {
   abstract query(
-    filters: AccountStatementReportFilters,
+    context: ReportRequestContext<AccountStatementReportFilters>,
   ): Promise<AccountStatementReportReadModel>;
 }
 
@@ -68,7 +69,7 @@ export abstract class OverdueAccountsReportQueryPort implements ReportQueryPort<
   OverdueAccountsReportReadModel
 > {
   abstract query(
-    filters: OverdueAccountsReportFilters,
+    context: ReportRequestContext<OverdueAccountsReportFilters>,
   ): Promise<OverdueAccountsReportReadModel>;
 }
 
@@ -77,6 +78,6 @@ export abstract class PaymentAgreementReportQueryPort implements ReportQueryPort
   PaymentAgreementReportReadModel
 > {
   abstract query(
-    filters: PaymentAgreementReportFilters,
+    context: ReportRequestContext<PaymentAgreementReportFilters>,
   ): Promise<PaymentAgreementReportReadModel>;
 }
