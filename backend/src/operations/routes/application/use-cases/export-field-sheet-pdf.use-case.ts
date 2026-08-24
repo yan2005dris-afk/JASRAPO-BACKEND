@@ -116,8 +116,9 @@ export class ExportFieldSheetPdfUseCase {
         pendientes: ruta.ordenesTrabajo.filter(
           (o) => o.estado === 'PENDIENTE' || o.estado === 'EN_PROGRESO',
         ).length,
-        completadas: ruta.ordenesTrabajo.filter((o) => o.estado === 'COMPLETADA')
-          .length,
+        completadas: ruta.ordenesTrabajo.filter(
+          (o) => o.estado === 'COMPLETADA',
+        ).length,
         conNovedad: ruta.ordenesTrabajo.filter(
           (o) => o.estado === 'FALLIDA' || o.estado === 'CANCELADA',
         ).length,

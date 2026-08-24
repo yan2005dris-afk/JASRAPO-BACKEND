@@ -59,7 +59,10 @@ describe('RoutesService', () => {
         { provide: FindOneRouteUseCase, useValue: { execute: jest.fn() } },
         { provide: UpdateRouteUseCase, useValue: { execute: jest.fn() } },
         { provide: DeleteRouteUseCase, useValue: { execute: jest.fn() } },
-        { provide: ExportFieldSheetPdfUseCase, useValue: { execute: jest.fn() } },
+        {
+          provide: ExportFieldSheetPdfUseCase,
+          useValue: { execute: jest.fn() },
+        },
       ],
     }).compile();
 
