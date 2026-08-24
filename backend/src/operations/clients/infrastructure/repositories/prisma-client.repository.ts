@@ -293,6 +293,21 @@ export class PrismaClientRepository implements ClientRepository {
       return conditions.length === 1 ? conditions[0] : { AND: conditions };
     }
 
+    if (filters.search) {
+      const search = filters.search.trim();
+      conditions.push({
+        OR: [
+          { identificacion: { contains: search, mode: 'insensitive' } },
+          { nombres: { contains: search, mode: 'insensitive' } },
+          { apellidos: { contains: search, mode: 'insensitive' } },
+          { razonSocial: { contains: search, mode: 'insensitive' } },
+          { email: { contains: search, mode: 'insensitive' } },
+          { telefono: { contains: search, mode: 'insensitive' } },
+          { direccionDomicilio: { contains: search, mode: 'insensitive' } },
+        ],
+      });
+    }
+
     if (filters.identificacion) {
       conditions.push({
         identificacion: {

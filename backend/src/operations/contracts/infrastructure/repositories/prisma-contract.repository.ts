@@ -346,6 +346,21 @@ export class PrismaContractRepository implements ContractRepository {
             },
           },
           {
+            categoriaTarifa: {
+              nombre: { contains: filters.search, mode: 'insensitive' },
+            },
+          },
+          {
+            comunidad: {
+              nombre: { contains: filters.search, mode: 'insensitive' },
+            },
+          },
+          {
+            sector: {
+              nombre: { contains: filters.search, mode: 'insensitive' },
+            },
+          },
+          {
             cliente: {
               OR: [
                 {
