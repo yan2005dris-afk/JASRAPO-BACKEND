@@ -212,6 +212,11 @@ export class MailService {
       (expiresAt.getTime() - new Date().getTime()) / (1000 * 60 * 60),
     );
 
+    const appUrl = process.env.APP_URL ||
+      (process.env.NODE_ENV === 'production'
+        ? 'https://app.jasrapo.com'
+        : 'http://localhost:4300');
+
     const jobId = await this.sendQueued({
       version: 2,
       to,
@@ -220,7 +225,7 @@ export class MailService {
       context: {
         nombres: nombres || to.split('@')[0],
         token,
-        acceptUrl: `${process.env.APP_URL || 'https://app.jasrapo.com'}/auth/accept-invitation?token=${encodeURIComponent(token)}`,
+        acceptUrl: `${appUrl}/accept-invite?token=${encodeURIComponent(token)}`,
         expiresInHours: ttlHours,
       },
     });
