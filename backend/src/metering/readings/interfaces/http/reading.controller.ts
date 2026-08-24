@@ -104,6 +104,18 @@ export class ReadingController {
     required: false,
     type: String,
   })
+  @ApiQuery({
+    name: 'estado',
+    description: 'Filtrar por estado de lectura',
+    required: false,
+    enum: EstadoLectura,
+  })
+  @ApiQuery({
+    name: 'search',
+    description: 'Buscar por medidor, guía o cliente',
+    required: false,
+    type: String,
+  })
   @ApiResponse({
     status: 200,
     description: 'Lista de lecturas paginada',
@@ -114,10 +126,18 @@ export class ReadingController {
   async findAll(
     @Query() paginationDto: PaginationDto,
     @Query('contratoId') contratoId?: string,
+    @Query('estado') estado?: string,
+    @Query('search') search?: string,
   ) {
     const filters: ReadingFilters = {};
     if (contratoId) {
       filters.contratoId = BigInt(contratoId);
+    }
+    if (estado) {
+      filters.estado = estado;
+    }
+    if (search) {
+      filters.search = search;
     }
     const result = await this.readingService.findAll(
       paginationDto.page,

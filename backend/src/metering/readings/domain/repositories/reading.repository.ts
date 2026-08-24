@@ -39,6 +39,8 @@ export interface ReadingFilters {
   contratoId?: bigint;
   medidorId?: bigint;
   periodoId?: number;
+  estado?: string;
+  search?: string;
 }
 
 export interface ActivePeriod {
