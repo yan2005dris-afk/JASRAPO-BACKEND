@@ -1,5 +1,11 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEmail, IsOptional, IsString, MaxLength } from 'class-validator';
+import {
+  IsEmail,
+  IsOptional,
+  IsString,
+  IsUUID,
+  MaxLength,
+} from 'class-validator';
 import { Transform } from 'class-transformer';
 import { IsNotEmptyString } from 'src/infrastructure/common/decorators/is-not-empty-string.decorator';
 import { IsValidDateRange } from 'src/infrastructure/common/decorators/is-valid-date-range.decorator';
@@ -26,6 +32,14 @@ import { IsValidDateRange } from 'src/infrastructure/common/decorators/is-valid-
  * recipient for the client listing.
  */
 export class SendReportEmailDto {
+  @ApiPropertyOptional({
+    description:
+      'UUID v4 estable para que reintentos de la misma solicitud no dupliquen el correo.',
+  })
+  @IsOptional()
+  @IsUUID('4', { message: 'idempotencyKey must be a UUID v4' })
+  idempotencyKey?: string;
+
   @ApiPropertyOptional({
     description:
       'Fecha inicial del reporte (mismo filtro que el endpoint GET).',

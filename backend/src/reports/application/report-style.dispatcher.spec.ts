@@ -137,6 +137,7 @@ describe('ReportStyleDispatcher', () => {
         expect(mockPdfService.render).toHaveBeenCalledWith(
           expectedType,
           expect.objectContaining({ adaptedBy: expectedType, foo: 'bar' }),
+          expect.objectContaining({ documentType: reportKey }),
         );
       },
     );
@@ -156,6 +157,7 @@ describe('ReportStyleDispatcher', () => {
       expect(mockPdfService.render).toHaveBeenCalledWith(
         'payment-agreement',
         expect.objectContaining({ adaptedBy: 'payment-agreement' }),
+        expect.objectContaining({ documentType: 'payment-agreement' }),
       );
     });
   });

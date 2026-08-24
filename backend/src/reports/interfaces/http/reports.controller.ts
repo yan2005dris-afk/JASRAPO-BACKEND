@@ -35,6 +35,7 @@ import { SendClientsListEmailDto } from '../dto/send-clients-list-email.dto';
 import { SendReportByEmailUseCase } from '../../application/use-cases/send-report-by-email.use-case';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
+import { observePdfRequestAbort } from 'src/infrastructure/pdf/pdf-request-abort.util';
 import { OverdueAccountsFilterDto } from '../dto/overdue-accounts-filter.dto';
 import { ClientsListReportDefinition } from '../../application/definitions/clients-list-report.definition';
 import { PaymentsReportDefinition } from '../../application/definitions/payments-report.definition';
@@ -461,6 +462,18 @@ export class ReportsController {
 
   // ─── Private helpers ────────────────────────────────────────────────────────
 
+  private async withPdfRequestAbort<T>(
+    res: Response,
+    operation: (signal: AbortSignal) => Promise<T>,
+  ): Promise<T> {
+    const requestAbort = observePdfRequestAbort(res);
+    try {
+      return await operation(requestAbort.signal);
+    } finally {
+      requestAbort.dispose();
+    }
+  }
+
   private createContext<TFilters extends object>(
     reportType: ReportType,
     actor: JwtPayload,
@@ -482,7 +495,10 @@ export class ReportsController {
   private async executeEmailRequest<TFilters extends object>(
     reportType: ReportKey,
     filters: TFilters,
-    options: Pick<SendReportEmailDto, 'destinatario' | 'subject'>,
+    options: Pick<
+      SendReportEmailDto,
+      'destinatario' | 'subject' | 'idempotencyKey'
+    >,
     actor: JwtPayload,
     timeZone?: string,
     locale?: string,
@@ -499,6 +515,7 @@ export class ReportsController {
         context,
         destinatarioOverride: options.destinatario,
         subjectOverride: options.subject,
+        idempotencyKey: options.idempotencyKey,
       });
     } catch (error: unknown) {
       throw new ReportRequestContextException(error, context);
@@ -528,11 +545,14 @@ export class ReportsController {
         return;
       }
 
-      const { buffer, filename } = await this.dispatcher.dispatch(
-        reportType,
-        document,
-      );
-      this.respondWithPdf(res, buffer, filename);
+      await this.withPdfRequestAbort(res, async (signal) => {
+        const { buffer, filename } = await this.dispatcher.dispatch(
+          reportType,
+          document,
+          { signal },
+        );
+        this.respondWithPdf(res, buffer, filename);
+      });
     } catch (error: unknown) {
       throw new ReportRequestContextException(error, context);
     }

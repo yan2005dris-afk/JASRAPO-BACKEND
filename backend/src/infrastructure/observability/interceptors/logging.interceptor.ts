@@ -40,12 +40,16 @@ export class LoggingInterceptor implements NestInterceptor {
           const durationSec = durationMs / 1000;
           const status = response.statusCode.toString();
 
-          this.logger.log(
-            `${method} ${originalUrl} ${status} ${durationMs}ms - ${redactIp(ip ?? '')} ${parseUserAgent(userAgentString)}`,
-            'HTTP',
-          );
+          // Skip INFO log for observability scrape endpoints to reduce noise.
+          // Errors from these routes still surface below.
+          if (!this.isScrapeEndpoint(originalUrl)) {
+            this.logger.log(
+              `${method} ${originalUrl} ${status} ${durationMs}ms - ${redactIp(ip ?? '')} ${parseUserAgent(userAgentString)}`,
+              'HTTP',
+            );
+          }
 
-          // Record metrics
+          // Record metrics regardless of log suppression
           this.metricsService.incrementHttpRequest(method, status, route);
           this.metricsService.observeHttpDuration(method, route, durationSec);
         },
@@ -83,6 +87,17 @@ export class LoggingInterceptor implements NestInterceptor {
         // This ensures the counter always decrements, even on error or cancellation
         this.metricsService.decrementHttpInProgress(method, route);
       }),
+    );
+  }
+
+  /**
+   * Returns true for endpoints that are polled by Prometheus or similar
+   * scraping agents and would otherwise flood the logs with low-value entries.
+   */
+  private isScrapeEndpoint(url: string): boolean {
+    const path = url.split('?')[0];
+    return (
+      path === '/api/v1/metrics' || path === '/metrics' || path === '/health'
     );
   }
 

@@ -6,11 +6,19 @@ import { ReportRequestContextException } from '../../application/report-request-
 import { ReportsController } from './reports.controller';
 
 function response(accept = '') {
+  const req = {
+    headers: { accept },
+    once: jest.fn(),
+    removeListener: jest.fn(),
+  };
   return {
-    req: { headers: { accept } },
+    req,
     set: jest.fn(),
     send: jest.fn(),
     end: jest.fn(),
+    once: jest.fn(),
+    removeListener: jest.fn(),
+    writableEnded: false,
   } as unknown as Response;
 }
 
@@ -92,7 +100,11 @@ describe('ReportsController', () => {
 
     await controller.clientsListPdf({}, actor, timeZone, locale, res);
 
-    expect(dispatcher.dispatch).toHaveBeenCalledWith('clients-list', document);
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
+      'clients-list',
+      document,
+      expect.objectContaining({ signal: expect.any(AbortSignal) }),
+    );
     expect(res.end).toHaveBeenCalledWith(Buffer.from('pdf'));
     expect(res.send).not.toHaveBeenCalled();
   });
@@ -117,6 +129,7 @@ describe('ReportsController', () => {
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
       'payment-agreement',
       document,
+      expect.objectContaining({ signal: expect.any(AbortSignal) }),
     );
   });
 
@@ -156,6 +169,7 @@ describe('ReportsController', () => {
       }),
       destinatarioOverride: 'ana@example.com',
       subjectOverride: undefined,
+      idempotencyKey: undefined,
     });
   });
 

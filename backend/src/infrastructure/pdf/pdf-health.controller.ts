@@ -24,6 +24,7 @@ export class PdfHealthController {
         browser: { connected: true, uptimeMs: 300000 },
         semaphore: {
           concurrency: 4,
+          maxQueueSize: 32,
           activeSlots: 2,
           availableSlots: 2,
           queueLength: 0,
@@ -31,6 +32,10 @@ export class PdfHealthController {
         metrics: {
           totalRenders: 150,
           totalErrors: 0,
+          totalTimeouts: 0,
+          totalRejections: 0,
+          totalCancellations: 0,
+          browserRestarts: 0,
           lastErrorAt: null,
           lastErrorMessage: null,
         },
