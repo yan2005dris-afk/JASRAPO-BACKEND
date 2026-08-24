@@ -11,6 +11,7 @@ import { FindAllRoutesUseCase } from './use-cases/find-all-routes.use-case';
 import { FindOneRouteUseCase } from './use-cases/find-one-route.use-case';
 import { UpdateRouteUseCase } from './use-cases/update-route.use-case';
 import { DeleteRouteUseCase } from './use-cases/delete-route.use-case';
+import { ExportFieldSheetPdfUseCase } from './use-cases/export-field-sheet-pdf.use-case';
 import { RouteRepository } from '../domain/repositories/route.repository';
 import type { RouteFilters } from '../domain/types/route.types';
 import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
@@ -26,7 +27,12 @@ export class RoutesService {
     private readonly findOneRouteUseCase: FindOneRouteUseCase,
     private readonly updateRouteUseCase: UpdateRouteUseCase,
     private readonly deleteRouteUseCase: DeleteRouteUseCase,
+    private readonly exportFieldSheetPdfUseCase: ExportFieldSheetPdfUseCase,
   ) {}
+
+  async exportPdf(rutaId: bigint): Promise<Buffer> {
+    return this.exportFieldSheetPdfUseCase.execute(rutaId);
+  }
 
   async getEligibleReadings(
     filterDto: FilterReadingsDto,
