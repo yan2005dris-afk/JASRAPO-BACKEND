@@ -14,7 +14,8 @@ export class FindAllAgreementsDto extends PaginationDto {
 
   @ApiPropertyOptional({
     description:
-      'Buscar por número de guía, nombre, razón social o identificación del cliente',
+      'Buscar por número de guía, nombre, razón social o identificación del cliente. ' +
+      'Si el término es numérico también coincide con el ID de convenio o de contrato',
     example: 'GUIA-1-0051',
   })
   @IsOptional()

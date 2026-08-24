@@ -19,6 +19,20 @@ import {
 import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
 import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 
+/** Límite de PostgreSQL para columnas bigint (int8). */
+const PG_BIGINT_MAX = 9223372036854775807n;
+
+/**
+ * Convierte un término de búsqueda a bigint solo si es un entero positivo que
+ * cabe en una columna int8. Cualquier otro valor devuelve null para que el
+ * término se trate únicamente como texto.
+ */
+function parseIdSearchTerm(search: string): bigint | null {
+  if (!/^\d+$/.test(search)) return null;
+  const value = BigInt(search);
+  return value <= PG_BIGINT_MAX ? value : null;
+}
+
 @Injectable()
 export class PrismaAgreementRepository implements AgreementRepository {
   constructor(private readonly prisma: PrismaService) {}
@@ -52,6 +66,45 @@ export class PrismaAgreementRepository implements AgreementRepository {
     return AgreementMapper.toDomain(record);
   }
 
+  /**
+   * Condiciones del buscador de texto libre del listado de convenios: número de
+   * guía y datos del cliente, más los identificadores de convenio y contrato
+   * cuando el término es numérico, porque la tabla los muestra en pantalla.
+   */
+  private buildSearchConditions(search: string): Prisma.ConveniosWhereInput[] {
+    const conditions: Prisma.ConveniosWhereInput[] = [
+      {
+        contrato: {
+          deletedAt: null,
+          OR: [
+            { numeroGuia: { contains: search, mode: 'insensitive' } },
+            { cliente: { nombres: { contains: search, mode: 'insensitive' } } },
+            {
+              cliente: { apellidos: { contains: search, mode: 'insensitive' } },
+            },
+            {
+              cliente: {
+                razonSocial: { contains: search, mode: 'insensitive' },
+              },
+            },
+            {
+              cliente: {
+                identificacion: { contains: search, mode: 'insensitive' },
+              },
+            },
+          ],
+        },
+      },
+    ];
+
+    const id = parseIdSearchTerm(search);
+    if (id !== null) {
+      conditions.push({ convenioId: id }, { contratoId: id });
+    }
+
+    return conditions;
+  }
+
   async paginate(
     pagination: PaginateOptions,
     filters?: AgreementFilters,
@@ -62,45 +115,7 @@ export class PrismaAgreementRepository implements AgreementRepository {
         ? { contratoId: BigInt(filters.contratoId) }
         : {}),
       ...(filters?.search
-        ? {
-            contrato: {
-              deletedAt: null,
-              OR: [
-                {
-                  numeroGuia: { contains: filters.search, mode: 'insensitive' },
-                },
-                {
-                  cliente: {
-                    nombres: { contains: filters.search, mode: 'insensitive' },
-                  },
-                },
-                {
-                  cliente: {
-                    apellidos: {
-                      contains: filters.search,
-                      mode: 'insensitive',
-                    },
-                  },
-                },
-                {
-                  cliente: {
-                    razonSocial: {
-                      contains: filters.search,
-                      mode: 'insensitive',
-                    },
-                  },
-                },
-                {
-                  cliente: {
-                    identificacion: {
-                      contains: filters.search,
-                      mode: 'insensitive',
-                    },
-                  },
-                },
-              ],
-            },
-          }
+        ? { OR: this.buildSearchConditions(filters.search) }
         : {}),
     };
 
