@@ -225,8 +225,7 @@ export class PrismaReadingRepository implements ReadingRepository {
       ...(filters?.medidorId && { medidorId: filters.medidorId }),
       ...(filters?.periodoId && { periodoId: filters.periodoId }),
       ...(filters?.estado && {
-        estado:
-          filters.estado as Prisma.EnumEstadoLecturaFilter<'Lecturas'>['equals'],
+        estado: filters.estado as EstadoLectura,
       }),
       ...(filters?.contratoId && {
         medidor: {

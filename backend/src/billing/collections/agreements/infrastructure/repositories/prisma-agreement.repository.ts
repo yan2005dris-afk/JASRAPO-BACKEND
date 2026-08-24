@@ -116,8 +116,7 @@ export class PrismaAgreementRepository implements AgreementRepository {
         : {}),
       ...(filters?.estado
         ? {
-            estado:
-              filters.estado as Prisma.EnumEstadoConvenioFilter<'Convenios'>['equals'],
+            estado: filters.estado as EstadoConvenio,
           }
         : {}),
       ...(filters?.search
