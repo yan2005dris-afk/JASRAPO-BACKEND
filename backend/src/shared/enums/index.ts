@@ -30,10 +30,9 @@ export const CodigoSistemaRubro = {
   INSPECCION: 'INSPECCION',
 } as const;
 
-export type CodigoSistemaRubro =
-  (typeof CodigoSistemaRubro)[keyof typeof CodigoSistemaRubro];
+export type CodigoSistemaRubro = (typeof CodigoSistemaRubro)[keyof typeof CodigoSistemaRubro];
 
-// Fuente: models/logica-de-negocio/Rubros.prisma
+// Fuente: models\logica-de-negocio\Rubros.prisma
 
 export const EstadoAnomalia = {
   PENDIENTE: 'PENDIENTE',
@@ -55,17 +54,6 @@ export const EstadoAprobacionReemplazo = {
 export type EstadoAprobacionReemplazo = (typeof EstadoAprobacionReemplazo)[keyof typeof EstadoAprobacionReemplazo];
 
 // Fuente: models\logica-de-negocio\ReemplazoMedidor.prisma
-
-export const EstadoAprobacionReemplazo = {
-  PENDIENTE: 'PENDIENTE',
-  APROBADA: 'APROBADA',
-  RECHAZADA: 'RECHAZADA',
-} as const;
-
-export type EstadoAprobacionReemplazo =
-  (typeof EstadoAprobacionReemplazo)[keyof typeof EstadoAprobacionReemplazo];
-
-// Fuente: models/logica-de-negocio/ReemplazoMedidor.prisma
 
 export const EstadoAsignacion = {
   NO_ASIGNADA: 'NO_ASIGNADA',
@@ -273,6 +261,18 @@ export const MotivoReemplazoMedidor = {
 export type MotivoReemplazoMedidor = (typeof MotivoReemplazoMedidor)[keyof typeof MotivoReemplazoMedidor];
 
 // Fuente: models\logica-de-negocio\ReemplazoMedidor.prisma
+
+export const ResolucionEconomicaAnomalia = {
+  COBRO_REAL: 'COBRO_REAL',
+  PROMEDIO_HISTORICO: 'PROMEDIO_HISTORICO',
+  EXONERACION_PARCIAL: 'EXONERACION_PARCIAL',
+  EXONERACION_TOTAL: 'EXONERACION_TOTAL',
+  AJUSTE_LECTURA: 'AJUSTE_LECTURA',
+} as const;
+
+export type ResolucionEconomicaAnomalia = (typeof ResolucionEconomicaAnomalia)[keyof typeof ResolucionEconomicaAnomalia];
+
+// Fuente: models\logica-de-negocio\LecturaAnomalia.prisma
 
 export const ResponsabilidadDano = {
   USUARIO: 'USUARIO',
