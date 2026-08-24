@@ -7,6 +7,7 @@ import {
   resolveClientName,
 } from 'src/infrastructure/pdf/utils/pdf-format.utils';
 import type { ProjectedReport } from '../models/report-projection';
+import type { ReportRequestContext } from '../models/report-request-context';
 import { PaymentAgreementReportQueryPort } from '../ports/report-query.ports';
 import type {
   PaymentAgreementReportDocument,
@@ -49,8 +50,8 @@ export class PaymentAgreementReportDefinition {
   constructor(private readonly queryPort: PaymentAgreementReportQueryPort) {}
 
   async generate(
-    filters: PaymentAgreementReportFilters,
+    context: ReportRequestContext<PaymentAgreementReportFilters>,
   ): Promise<ProjectedReport<PaymentAgreementReportDocument>> {
-    return projectPaymentAgreementReport(await this.queryPort.query(filters));
+    return projectPaymentAgreementReport(await this.queryPort.query(context));
   }
 }

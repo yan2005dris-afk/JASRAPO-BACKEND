@@ -6,6 +6,7 @@ export interface ClientFilters {
   activo?: boolean;
   fechaDesde?: string;
   fechaHasta?: string;
+  search?: string;
 }
 
 export interface CreateClientData {

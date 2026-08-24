@@ -42,6 +42,7 @@ import { PrismaOverdueAccountsReportQueryAdapter } from './infrastructure/querie
 import { AgreementPaymentAgreementReportQueryAdapter } from './infrastructure/queries/agreement-payment-agreement-report-query.adapter';
 import { ReportEmailQueue } from './application/report-email-queue.port';
 import { ReportEmailJobService } from './infrastructure/report-email-job.service';
+import { ReportRequestContextFactory } from './application/report-request-context.factory';
 
 @Module({
   imports: [ClientModule, forwardRef(() => AgreementsModule)],
@@ -53,6 +54,7 @@ import { ReportEmailJobService } from './infrastructure/report-email-job.service
     AccountStatementReportDefinition,
     OverdueAccountsReportDefinition,
     PaymentAgreementReportDefinition,
+    ReportRequestContextFactory,
     {
       provide: ClientsListReportQueryPort,
       useClass: ClientServiceClientsListReportQueryAdapter,

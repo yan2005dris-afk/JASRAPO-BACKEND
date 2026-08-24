@@ -3,6 +3,7 @@ import {
   Body,
   Controller,
   Get,
+  Headers,
   HttpCode,
   HttpStatus,
   Post,
@@ -18,7 +19,9 @@ import {
   ApiBody,
 } from '@nestjs/swagger';
 import type { Response } from 'express';
+import type { JwtPayload } from '../../../identity/auth/application/types/jwt.types';
 import { JwtAuthGuard } from '../../../identity/auth/interfaces/http/guards/jwt-auth.guard';
+import { CurrentUser } from '../../../identity/auth/interfaces/http/decorators/current-user.decorator';
 import { PermissionsGuard } from '../../../infrastructure/common/guards/permissions.guard';
 import { RequiredPermission } from '../../../infrastructure/common/decorators/require-permission.decorator';
 import { ClientsListReportFilterDto } from '../dto/clients-list-report-filter.dto';
@@ -33,6 +36,25 @@ import { SendReportByEmailUseCase } from '../../application/use-cases/send-repor
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
 import { observePdfRequestAbort } from 'src/infrastructure/pdf/pdf-request-abort.util';
+import { OverdueAccountsFilterDto } from '../dto/overdue-accounts-filter.dto';
+import { ClientsListReportDefinition } from '../../application/definitions/clients-list-report.definition';
+import { PaymentsReportDefinition } from '../../application/definitions/payments-report.definition';
+import { ConnectionHistoryReportDefinition } from '../../application/definitions/connection-history-report.definition';
+import { AccountStatementReportDefinition } from '../../application/definitions/account-statement-report.definition';
+import { PaymentAgreementReportDefinition } from '../../application/definitions/payment-agreement-report.definition';
+import { OverdueAccountsReportDefinition } from '../../application/definitions/overdue-accounts-report.definition';
+import { ReportRequestContextFactory } from '../../application/report-request-context.factory';
+import { ReportRequestContextException } from '../../application/report-request-context.exception';
+import type {
+  ReportRequestContext,
+  ReportType,
+} from '../../application/models/report-request-context';
+import type {
+  ProjectedReport,
+  ReportDocument,
+} from '../../application/models/report-projection';
+import type { ReportKey } from '../../application/report-style.service';
+import { buildPdfFileName } from '../../../infrastructure/pdf/utils/pdf-format.utils';
 
 /**
  * Frontera HTTP de reportes.
@@ -41,13 +63,15 @@ import { observePdfRequestAbort } from 'src/infrastructure/pdf/pdf-request-abort
  * documento se entrega como JSON o se envía al dispatcher para generar el PDF.
  * Los permisos se declaran de forma explícita en cada operación.
  */
-import { OverdueAccountsFilterDto } from '../dto/overdue-accounts-filter.dto';
-import { ClientsListReportDefinition } from '../../application/definitions/clients-list-report.definition';
-import { PaymentsReportDefinition } from '../../application/definitions/payments-report.definition';
-import { ConnectionHistoryReportDefinition } from '../../application/definitions/connection-history-report.definition';
-import { AccountStatementReportDefinition } from '../../application/definitions/account-statement-report.definition';
-import { PaymentAgreementReportDefinition } from '../../application/definitions/payment-agreement-report.definition';
-import { OverdueAccountsReportDefinition } from '../../application/definitions/overdue-accounts-report.definition';
+
+interface ReportDefinition<
+  TFilters extends object,
+  TDocument extends ReportDocument,
+> {
+  generate(
+    context: ReportRequestContext<TFilters>,
+  ): Promise<ProjectedReport<TDocument>>;
+}
 
 @LogContext()
 @ApiTags('reports')
@@ -62,6 +86,7 @@ export class ReportsController {
     private readonly accountStatementDefinition: AccountStatementReportDefinition,
     private readonly overdueAccountsDefinition: OverdueAccountsReportDefinition,
     private readonly paymentAgreementDefinition: PaymentAgreementReportDefinition,
+    private readonly contextFactory: ReportRequestContextFactory,
     private readonly dispatcher: ReportStyleDispatcher,
     private readonly sendReportByEmail: SendReportByEmailUseCase,
     private readonly logger: LoggerService,
@@ -86,21 +111,24 @@ export class ReportsController {
   })
   async paymentsReportPdf(
     @Query() filters: PaymentsReportFilterDto,
+    @CurrentUser() actor: JwtPayload,
+    @Headers('x-time-zone') timeZone: string | undefined,
+    @Headers('accept-language') locale: string | undefined,
     @Res() res: Response,
   ) {
-    return this.withPdfRequestAbort(res, async (signal) => {
-      this.logger.log(
-        `Generating payments-report — filters: ${JSON.stringify(filters)}`,
-      );
-      const { document } =
-        await this.paymentsReportDefinition.generate(filters);
-      const { buffer, filename } = await this.dispatcher.dispatch(
-        'payments-report',
-        document,
-        { signal },
-      );
-      this.respondWithContentNegotiation(res, document, buffer, filename);
-    });
+    const context = this.createContext(
+      'payments-report',
+      actor,
+      filters,
+      timeZone,
+      locale,
+    );
+    return this.handleNegotiatedReport(
+      'payments-report',
+      context,
+      this.paymentsReportDefinition,
+      res,
+    );
   }
 
   @Get('connection-history')
@@ -120,21 +148,24 @@ export class ReportsController {
   })
   async connectionHistoryPdf(
     @Query() filters: ConnectionHistoryFilterDto,
+    @CurrentUser() actor: JwtPayload,
+    @Headers('x-time-zone') timeZone: string | undefined,
+    @Headers('accept-language') locale: string | undefined,
     @Res() res: Response,
   ) {
-    return this.withPdfRequestAbort(res, async (signal) => {
-      this.logger.log(
-        `Generating connection-history — filters: ${JSON.stringify(filters)}`,
-      );
-      const { document } =
-        await this.connectionHistoryDefinition.generate(filters);
-      const { buffer, filename } = await this.dispatcher.dispatch(
-        'connection-history',
-        document,
-        { signal },
-      );
-      this.respondWithContentNegotiation(res, document, buffer, filename);
-    });
+    const context = this.createContext(
+      'connection-history',
+      actor,
+      filters,
+      timeZone,
+      locale,
+    );
+    return this.handleNegotiatedReport(
+      'connection-history',
+      context,
+      this.connectionHistoryDefinition,
+      res,
+    );
   }
 
   @Get('payment-agreement')
@@ -154,24 +185,27 @@ export class ReportsController {
   })
   async paymentAgreementPdf(
     @Query() filters: PaymentAgreementFilterDto,
+    @CurrentUser() actor: JwtPayload,
+    @Headers('x-time-zone') timeZone: string | undefined,
+    @Headers('accept-language') locale: string | undefined,
     @Res() res: Response,
   ) {
-    return this.withPdfRequestAbort(res, async (signal) => {
-      this.logger.log(
-        `Generating payment-agreement — filters: ${JSON.stringify(filters)}`,
-      );
-      const { document } =
-        await this.paymentAgreementDefinition.generate(filters);
-      const { buffer, filename } = await this.dispatcher.dispatch(
-        'payment-agreement',
-        document,
-        { signal },
-      );
-      this.respondWithContentNegotiation(res, document, buffer, filename);
-    });
+    const context = this.createContext(
+      'payment-agreement',
+      actor,
+      filters,
+      timeZone,
+      locale,
+    );
+    return this.handleNegotiatedReport(
+      'payment-agreement',
+      context,
+      this.paymentAgreementDefinition,
+      res,
+    );
   }
 
-  // ─── Untouched endpoints (REQ-10) ───────────────────────────────────────────
+  // ─── Reportes adicionales ───────────────────────────────────────────────────
 
   @Get('clients-list')
   @RequiredPermission('reportes', 'read')
@@ -190,20 +224,24 @@ export class ReportsController {
   })
   async clientsListPdf(
     @Query() filters: ClientsListReportFilterDto,
+    @CurrentUser() actor: JwtPayload,
+    @Headers('x-time-zone') timeZone: string | undefined,
+    @Headers('accept-language') locale: string | undefined,
     @Res() res: Response,
   ) {
-    return this.withPdfRequestAbort(res, async (signal) => {
-      this.logger.log(
-        `Generating clients-list — filters: ${JSON.stringify(filters)}`,
-      );
-      const { document } = await this.clientsListDefinition.generate(filters);
-      const { buffer, filename } = await this.dispatcher.dispatch(
-        'clients-list',
-        document,
-        { signal },
-      );
-      this.respondWithContentNegotiation(res, document, buffer, filename);
-    });
+    const context = this.createContext(
+      'clients-list',
+      actor,
+      filters,
+      timeZone,
+      locale,
+    );
+    return this.handleNegotiatedReport(
+      'clients-list',
+      context,
+      this.clientsListDefinition,
+      res,
+    );
   }
 
   @Get('account-statement')
@@ -223,21 +261,24 @@ export class ReportsController {
   })
   async accountStatementPdf(
     @Query() filters: AccountStatementFilterDto,
+    @CurrentUser() actor: JwtPayload,
+    @Headers('x-time-zone') timeZone: string | undefined,
+    @Headers('accept-language') locale: string | undefined,
     @Res() res: Response,
   ) {
-    return this.withPdfRequestAbort(res, async (signal) => {
-      this.logger.log(
-        `Generating account-statement — filters: ${JSON.stringify(filters)}`,
-      );
-      const { document } =
-        await this.accountStatementDefinition.generate(filters);
-      const { buffer, filename } = await this.dispatcher.dispatch(
-        'account-statement',
-        document,
-        { signal },
-      );
-      this.respondWithContentNegotiation(res, document, buffer, filename);
-    });
+    const context = this.createContext(
+      'account-statement',
+      actor,
+      filters,
+      timeZone,
+      locale,
+    );
+    return this.handleNegotiatedReport(
+      'account-statement',
+      context,
+      this.accountStatementDefinition,
+      res,
+    );
   }
 
   @Get('overdue-accounts')
@@ -251,12 +292,26 @@ export class ReportsController {
     status: 200,
     description: 'Datos de morosidad en formato JSON',
   })
-  async overdueAccounts(@Query() filters: OverdueAccountsFilterDto) {
-    this.logger.log(
-      `Generating overdue-accounts — filters: ${JSON.stringify(filters)}`,
+  async overdueAccounts(
+    @Query() filters: OverdueAccountsFilterDto,
+    @CurrentUser() actor: JwtPayload,
+    @Headers('x-time-zone') timeZone: string | undefined,
+    @Headers('accept-language') locale: string | undefined,
+  ) {
+    const context = this.createContext(
+      'overdue-accounts',
+      actor,
+      filters,
+      timeZone,
+      locale,
     );
-    const { document } = await this.overdueAccountsDefinition.generate(filters);
-    return document;
+    try {
+      const { document } =
+        await this.overdueAccountsDefinition.generate(context);
+      return document;
+    } catch (error: unknown) {
+      throw new ReportRequestContextException(error, context);
+    }
   }
 
   // ─── Email send endpoints (report-endpoint-send-email) ───────────────────────
@@ -268,17 +323,27 @@ export class ReportsController {
   @ApiBody({ type: SendReportEmailDto })
   @ApiResponse({ status: 400, description: 'Falta clienteId' })
   @ApiResponse({ status: 403, description: 'Sin permiso reportes:read' })
-  sendPaymentsReportEmail(@Body() body: SendReportEmailDto) {
+  sendPaymentsReportEmail(
+    @Body() body: SendReportEmailDto,
+    @CurrentUser() actor: JwtPayload,
+    @Headers('x-time-zone') timeZone: string | undefined,
+    @Headers('accept-language') locale: string | undefined,
+  ) {
     if (!body.clienteId) {
       throw new BadRequestException('clienteId es requerido');
     }
-    return this.sendReportByEmail.execute({
-      reportType: 'payments-report',
-      filters: { clienteId: body.clienteId },
-      destinatarioOverride: body.destinatario,
-      subjectOverride: body.subject,
-      idempotencyKey: body.idempotencyKey,
-    });
+    return this.executeEmailRequest(
+      'payments-report',
+      {
+        clienteId: body.clienteId,
+        fechaDesde: body.fechaDesde,
+        fechaHasta: body.fechaHasta,
+      },
+      body,
+      actor,
+      timeZone,
+      locale,
+    );
   }
 
   @Post('connection-history/email')
@@ -288,17 +353,27 @@ export class ReportsController {
   @ApiBody({ type: SendReportEmailDto })
   @ApiResponse({ status: 400, description: 'Falta contratoId' })
   @ApiResponse({ status: 403, description: 'Sin permiso reportes:read' })
-  sendConnectionHistoryEmail(@Body() body: SendReportEmailDto) {
+  sendConnectionHistoryEmail(
+    @Body() body: SendReportEmailDto,
+    @CurrentUser() actor: JwtPayload,
+    @Headers('x-time-zone') timeZone: string | undefined,
+    @Headers('accept-language') locale: string | undefined,
+  ) {
     if (!body.contratoId) {
       throw new BadRequestException('contratoId es requerido');
     }
-    return this.sendReportByEmail.execute({
-      reportType: 'connection-history',
-      filters: { contratoId: body.contratoId },
-      destinatarioOverride: body.destinatario,
-      subjectOverride: body.subject,
-      idempotencyKey: body.idempotencyKey,
-    });
+    return this.executeEmailRequest(
+      'connection-history',
+      {
+        contratoId: body.contratoId,
+        fechaDesde: body.fechaDesde,
+        fechaHasta: body.fechaHasta,
+      },
+      body,
+      actor,
+      timeZone,
+      locale,
+    );
   }
 
   @Post('payment-agreement/email')
@@ -308,17 +383,23 @@ export class ReportsController {
   @ApiBody({ type: SendReportEmailDto })
   @ApiResponse({ status: 400, description: 'Falta convenioId' })
   @ApiResponse({ status: 403, description: 'Sin permiso reportes:read' })
-  sendPaymentAgreementEmail(@Body() body: SendReportEmailDto) {
+  sendPaymentAgreementEmail(
+    @Body() body: SendReportEmailDto,
+    @CurrentUser() actor: JwtPayload,
+    @Headers('x-time-zone') timeZone: string | undefined,
+    @Headers('accept-language') locale: string | undefined,
+  ) {
     if (!body.convenioId) {
       throw new BadRequestException('convenioId es requerido');
     }
-    return this.sendReportByEmail.execute({
-      reportType: 'payment-agreement',
-      filters: { convenioId: body.convenioId },
-      destinatarioOverride: body.destinatario,
-      subjectOverride: body.subject,
-      idempotencyKey: body.idempotencyKey,
-    });
+    return this.executeEmailRequest(
+      'payment-agreement',
+      { convenioId: body.convenioId },
+      body,
+      actor,
+      timeZone,
+      locale,
+    );
   }
 
   @Post('account-statement/email')
@@ -328,17 +409,27 @@ export class ReportsController {
   @ApiBody({ type: SendReportEmailDto })
   @ApiResponse({ status: 400, description: 'Falta contratoId' })
   @ApiResponse({ status: 403, description: 'Sin permiso reportes:read' })
-  sendAccountStatementEmail(@Body() body: SendReportEmailDto) {
+  sendAccountStatementEmail(
+    @Body() body: SendReportEmailDto,
+    @CurrentUser() actor: JwtPayload,
+    @Headers('x-time-zone') timeZone: string | undefined,
+    @Headers('accept-language') locale: string | undefined,
+  ) {
     if (!body.contratoId) {
       throw new BadRequestException('contratoId es requerido');
     }
-    return this.sendReportByEmail.execute({
-      reportType: 'account-statement',
-      filters: { contratoId: body.contratoId },
-      destinatarioOverride: body.destinatario,
-      subjectOverride: body.subject,
-      idempotencyKey: body.idempotencyKey,
-    });
+    return this.executeEmailRequest(
+      'account-statement',
+      {
+        contratoId: body.contratoId,
+        fechaDesde: body.fechaDesde,
+        fechaHasta: body.fechaHasta,
+      },
+      body,
+      actor,
+      timeZone,
+      locale,
+    );
   }
 
   @Post('clients/email')
@@ -348,19 +439,25 @@ export class ReportsController {
   @ApiBody({ type: SendClientsListEmailDto })
   @ApiResponse({ status: 400, description: 'Falta destinatario' })
   @ApiResponse({ status: 403, description: 'Sin permiso reportes:read' })
-  sendClientsListEmail(@Body() body: SendClientsListEmailDto) {
+  sendClientsListEmail(
+    @Body() body: SendClientsListEmailDto,
+    @CurrentUser() actor: JwtPayload,
+    @Headers('x-time-zone') timeZone: string | undefined,
+    @Headers('accept-language') locale: string | undefined,
+  ) {
     if (!body.destinatario) {
       throw new BadRequestException(
         'destinatario es obligatorio para el listado de clientes',
       );
     }
-    return this.sendReportByEmail.execute({
-      reportType: 'clients-list',
-      filters: body.filtros ?? {},
-      destinatarioOverride: body.destinatario,
-      subjectOverride: body.subject,
-      idempotencyKey: body.idempotencyKey,
-    });
+    return this.executeEmailRequest(
+      'clients-list',
+      body.filtros ?? {},
+      body,
+      actor,
+      timeZone,
+      locale,
+    );
   }
 
   // ─── Private helpers ────────────────────────────────────────────────────────
@@ -377,44 +474,122 @@ export class ReportsController {
     }
   }
 
-  /**
-   * Responde con PDF solo cuando el cliente lo solicita de forma explícita.
-   * Para cualquier otro valor de `Accept`, devuelve el documento proyectado
-   * como JSON y convierte los valores BigInt de manera segura.
-   */
-  private respondWithContentNegotiation(
-    res: Response,
-    data: object,
-    buffer: Buffer,
-    pdfFilename: string,
-  ): void {
-    const accept = (res.req.headers.accept ?? '').toLowerCase();
-    // El PDF es opcional: todos los tipos aceptados deben ser application/pdf.
-    const acceptedTypes = accept
-      .split(',')
-      .map((s) => s.trim().split(';')[0].trim())
-      .filter(Boolean);
-    const wantsPdf =
-      acceptedTypes.length > 0 &&
-      acceptedTypes.every((t) => t === 'application/pdf');
+  private createContext<TFilters extends object>(
+    reportType: ReportType,
+    actor: JwtPayload,
+    filters: TFilters,
+    timeZone?: string,
+    locale?: string,
+  ): ReportRequestContext<TFilters> {
+    const context = this.contextFactory.create({
+      reportType,
+      actor,
+      filters,
+      timeZone,
+      locale,
+    });
+    this.logger.log(`Generating ${reportType} actorId=${context.actor.userId}`);
+    return context;
+  }
 
-    if (!wantsPdf) {
-      const jsonFilename = pdfFilename.replace(/\.pdf$/i, '.json');
-      res.set({
-        'Content-Type': 'application/json; charset=utf-8',
-        'Content-Disposition': `inline; filename="${jsonFilename}"`,
+  private async executeEmailRequest<TFilters extends object>(
+    reportType: ReportKey,
+    filters: TFilters,
+    options: Pick<SendReportEmailDto, 'destinatario' | 'subject' | 'idempotencyKey'>,
+    actor: JwtPayload,
+    timeZone?: string,
+    locale?: string,
+  ) {
+    const context = this.createContext(
+      reportType,
+      actor,
+      filters,
+      timeZone,
+      locale,
+    );
+    try {
+      return await this.sendReportByEmail.execute({
+        context,
+        destinatarioOverride: options.destinatario,
+        subjectOverride: options.subject,
+        idempotencyKey: options.idempotencyKey,
       });
-      // @Res() evita el interceptor global, por eso se convierten los BigInt aquí.
-      const safeJson = JSON.stringify(data, (_key, value) =>
-        typeof value === 'bigint' ? value.toString() : value,
-      );
-      res.send(safeJson);
-      return;
+    } catch (error: unknown) {
+      throw new ReportRequestContextException(error, context);
     }
+  }
 
+  /** Negotiates the output adapter before any call to the PDF dispatcher. */
+  private async handleNegotiatedReport<
+    TFilters extends object,
+    TDocument extends ReportDocument,
+  >(
+    reportType: ReportKey,
+    context: ReportRequestContext<TFilters>,
+    definition: ReportDefinition<TFilters, TDocument>,
+    res: Response,
+  ): Promise<void> {
+    const wantsPdf = this.acceptsOnlyPdf(res.req.headers.accept);
+
+    try {
+      const { document } = await definition.generate(context);
+      if (!wantsPdf) {
+        const filename = buildPdfFileName(reportType).replace(
+          /\.pdf$/i,
+          '.json',
+        );
+        this.respondWithJson(res, document, filename);
+        return;
+      }
+
+      await this.withPdfRequestAbort(res, async (signal) => {
+        const { buffer, filename } = await this.dispatcher.dispatch(
+          reportType,
+          document,
+          { signal },
+        );
+        this.respondWithPdf(res, buffer, filename);
+      });
+    } catch (error: unknown) {
+      throw new ReportRequestContextException(error, context);
+    }
+  }
+
+  private acceptsOnlyPdf(accept?: string): boolean {
+    const acceptedTypes = (accept ?? '')
+      .toLowerCase()
+      .split(',')
+      .map((value) => value.trim().split(';')[0].trim())
+      .filter(Boolean);
+    return (
+      acceptedTypes.length > 0 &&
+      acceptedTypes.every((type) => type === 'application/pdf')
+    );
+  }
+
+  private respondWithJson(
+    res: Response,
+    data: ReportDocument,
+    filename: string,
+  ): void {
+    res.set({
+      'Content-Type': 'application/json; charset=utf-8',
+      'Content-Disposition': `inline; filename="${filename}"`,
+    });
+    const safeJson = JSON.stringify(data, (_key, value) =>
+      typeof value === 'bigint' ? value.toString() : value,
+    );
+    res.send(safeJson);
+  }
+
+  private respondWithPdf(
+    res: Response,
+    buffer: Buffer,
+    filename: string,
+  ): void {
     res.set({
       'Content-Type': 'application/pdf',
-      'Content-Disposition': `inline; filename="${pdfFilename}"`,
+      'Content-Disposition': `inline; filename="${filename}"`,
       'Content-Length': buffer.length,
     });
     res.end(buffer);

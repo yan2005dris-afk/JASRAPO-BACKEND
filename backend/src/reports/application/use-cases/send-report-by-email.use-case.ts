@@ -12,10 +12,14 @@ import {
   REPORT_EMAIL_STRATEGIES,
   type ReportEmailStrategyMap,
 } from './send-report-by-email.strategies';
+import {
+  summarizeReportRequestContext,
+  type ReportRequestContext,
+  type ReportRequestContextSummary,
+} from '../models/report-request-context';
 
 export interface SendReportByEmailParams {
-  reportType: string;
-  filters: unknown;
+  context: ReportRequestContext;
   destinatarioOverride?: string;
   subjectOverride?: string;
   idempotencyKey?: string;
@@ -26,6 +30,7 @@ export interface SendReportByEmailResult {
   jobId: string;
   destinatario: string;
   subject: string;
+  context: ReportRequestContextSummary;
 }
 
 @LogContext()
@@ -41,44 +46,54 @@ export class SendReportByEmailUseCase {
   async execute(
     params: SendReportByEmailParams,
   ): Promise<SendReportByEmailResult> {
-    const strategy = this.strategies[params.reportType as ReportKey];
+    const { context } = params;
+    const reportType = context.reportType as ReportKey;
+    const strategy = this.strategies[reportType];
     if (!strategy) {
       throw new NotFoundException(
-        `Report type '${params.reportType}' is not supported for email sending`,
+        `Report type '${context.reportType}' is not supported for email sending`,
       );
     }
 
-    // Build the typed projection once. The worker receives this exact document
-    // and performs only the expensive PDF rendering and mail delivery.
-    const report = await strategy.fetchReport(params.filters);
+    // Build the typed projection once with the normalized context.
+    const report = await strategy.fetchReport(context);
+
     const derivedRecipient = params.destinatarioOverride
       ? null
-      : await strategy.recipientResolver(params.filters, report);
+      : await strategy.recipientResolver(context, report);
     const destinatario = params.destinatarioOverride ?? derivedRecipient;
+
+    // PII: surface recipient resolution at DEBUG only.
+    this.logger.debug(
+      `recipient resolved reportType=${context.reportType}`,
+      SendReportByEmailUseCase.name,
+    );
+
     if (!destinatario) {
       throw new BadRequestException(
         'Recipient email is required (no override and no derivation resolved one)',
       );
     }
 
-    const subject =
-      params.subjectOverride ?? strategy.subjectBuilder(params.filters);
+    const subject = params.subjectOverride ?? strategy.subjectBuilder(context);
     const { jobId, deduplicated } = await this.reportEmailJobs.enqueue({
-      reportType: params.reportType as ReportKey,
+      reportType,
       document: report.document,
       destinatario,
       subject,
       idempotencyKey: params.idempotencyKey,
     });
 
-    this.logger.debug(
-      `recipient resolved reportType=${params.reportType}`,
-      SendReportByEmailUseCase.name,
-    );
     this.logger.log(
-      `SendReportByEmailUseCase: ${deduplicated ? 'deduplicated' : 'queued'} ${params.reportType} jobId=${jobId}`,
+      `SendReportByEmailUseCase: ${deduplicated ? 'deduplicated' : 'queued'} ${context.reportType} jobId=${jobId}`,
     );
 
-    return { queued: true, jobId, destinatario, subject };
+    return {
+      queued: true,
+      jobId,
+      destinatario,
+      subject,
+      context: summarizeReportRequestContext(context),
+    };
   }
 }

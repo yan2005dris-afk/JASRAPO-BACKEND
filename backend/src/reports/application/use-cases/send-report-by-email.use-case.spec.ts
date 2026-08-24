@@ -7,6 +7,7 @@ import type {
   ReportEmailStrategyMap,
 } from './send-report-by-email.strategies';
 import { SendReportByEmailUseCase } from './send-report-by-email.use-case';
+import { ReportRequestContextFactory } from '../report-request-context.factory';
 
 describe('SendReportByEmailUseCase', () => {
   const reportEmailJobs = { enqueue: jest.fn() };
@@ -17,6 +18,7 @@ describe('SendReportByEmailUseCase', () => {
     debug: jest.fn(),
     verbose: jest.fn(),
   };
+  const contextFactory = new ReportRequestContextFactory();
   const document: ReportDocument = {
     reporte: {
       titulo: 'Listado de Clientes',
@@ -60,22 +62,32 @@ describe('SendReportByEmailUseCase', () => {
   it('queues the exact projected document and returns the accepted job', async () => {
     const strategy = buildStrategy();
     const useCase = buildUseCase({ 'payments-report': strategy });
+    const context = contextFactory.create({
+      reportType: 'payments-report',
+      actor: { usersId: 7 },
+      filters: { clienteId: '1' },
+    });
 
     const result = await useCase.execute({
-      reportType: 'payments-report',
-      filters: { clienteId: '1' },
+      context,
       idempotencyKey: '4b35520c-b4ae-41af-a136-a53ba5a8fd94',
     });
 
-    expect(result).toEqual({
-      queued: true,
-      jobId: 'job-abc',
-      destinatario: 'client@example.com',
-      subject: 'Reporte de Abonos - Cliente #1',
-    });
-    expect(strategy.fetchReport).toHaveBeenCalledTimes(1);
+    expect(result).toEqual(
+      expect.objectContaining({
+        queued: true,
+        jobId: 'job-abc',
+        destinatario: 'client@example.com',
+        subject: 'Reporte de Abonos - Cliente #1',
+        context: expect.objectContaining({
+          reportType: 'payments-report',
+          actorId: 7,
+        }),
+      }),
+    );
+    expect(strategy.fetchReport).toHaveBeenCalledWith(context);
     expect(strategy.recipientResolver).toHaveBeenCalledWith(
-      { clienteId: '1' },
+      context,
       expect.objectContaining({ document }),
     );
     expect(reportEmailJobs.enqueue).toHaveBeenCalledWith({
@@ -90,15 +102,19 @@ describe('SendReportByEmailUseCase', () => {
   it('skips recipient lookup when an override is supplied', async () => {
     const strategy = buildStrategy();
     const useCase = buildUseCase({ 'payments-report': strategy });
+    const context = contextFactory.create({
+      reportType: 'payments-report',
+      actor: { usersId: 7 },
+      filters: { clienteId: '1' },
+    });
 
     await useCase.execute({
-      reportType: 'payments-report',
-      filters: { clienteId: '1' },
+      context,
       destinatarioOverride: 'override@example.com',
       subjectOverride: 'Custom subject',
     });
 
-    expect(strategy.fetchReport).toHaveBeenCalledTimes(1);
+    expect(strategy.fetchReport).toHaveBeenCalledWith(context);
     expect(strategy.recipientResolver).not.toHaveBeenCalled();
     expect(reportEmailJobs.enqueue).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -111,10 +127,18 @@ describe('SendReportByEmailUseCase', () => {
 
   it('rejects an unsupported report before projecting or enqueueing', async () => {
     const useCase = buildUseCase({});
+    const context = {
+      ...contextFactory.create({
+        reportType: 'payments-report',
+        actor: { usersId: 7 },
+        filters: {},
+      }),
+      reportType: 'unknown' as never,
+    };
 
-    await expect(
-      useCase.execute({ reportType: 'unknown', filters: {} }),
-    ).rejects.toThrow(NotFoundException);
+    await expect(useCase.execute({ context })).rejects.toThrow(
+      NotFoundException,
+    );
     expect(reportEmailJobs.enqueue).not.toHaveBeenCalled();
   });
 
@@ -124,10 +148,15 @@ describe('SendReportByEmailUseCase', () => {
       recipientResolver: jest.fn().mockResolvedValue(null),
     });
     const useCase = buildUseCase({ 'clients-list': strategy });
+    const context = contextFactory.create({
+      reportType: 'clients-list',
+      actor: { usersId: 7 },
+      filters: {},
+    });
 
-    await expect(
-      useCase.execute({ reportType: 'clients-list', filters: {} }),
-    ).rejects.toThrow(BadRequestException);
+    await expect(useCase.execute({ context })).rejects.toThrow(
+      BadRequestException,
+    );
     expect(reportEmailJobs.enqueue).not.toHaveBeenCalled();
   });
 
@@ -136,13 +165,15 @@ describe('SendReportByEmailUseCase', () => {
     const useCase = buildUseCase({
       'payments-report': buildStrategy(),
     });
+    const context = contextFactory.create({
+      reportType: 'payments-report',
+      actor: { usersId: 7 },
+      filters: { clienteId: '1' },
+    });
 
-    await expect(
-      useCase.execute({
-        reportType: 'payments-report',
-        filters: { clienteId: '1' },
-      }),
-    ).rejects.toThrow('pg-boss unavailable');
+    await expect(useCase.execute({ context })).rejects.toThrow(
+      'pg-boss unavailable',
+    );
   });
 
   it('does not place the recipient address in INFO logs', async () => {
@@ -151,14 +182,37 @@ describe('SendReportByEmailUseCase', () => {
         recipientResolver: jest.fn().mockResolvedValue('pii@example.com'),
       }),
     });
-
-    await useCase.execute({
+    const context = contextFactory.create({
       reportType: 'payments-report',
+      actor: { usersId: 7 },
       filters: { clienteId: '1' },
     });
+
+    await useCase.execute({ context });
 
     const infoOutput = logger.log.mock.calls.flat().join(' ');
     expect(infoOutput).not.toContain('pii@example.com');
     expect(infoOutput).toContain('job-abc');
+  });
+
+  it('reportRetryReusesNormalizedContext', async () => {
+    const strategy = buildStrategy();
+    const useCase = buildUseCase({ 'payments-report': strategy });
+    const context = contextFactory.create({
+      reportType: 'payments-report',
+      actor: { usersId: 7 },
+      filters: {
+        clienteId: '25',
+        fechaDesde: '2026-08-01',
+        fechaHasta: '2026-08-24',
+      },
+    });
+
+    await useCase.execute({ context });
+    await useCase.execute({ context });
+
+    const fetchReport = strategy.fetchReport as jest.Mock;
+    expect(fetchReport).toHaveBeenNthCalledWith(1, context);
+    expect(fetchReport).toHaveBeenNthCalledWith(2, context);
   });
 });

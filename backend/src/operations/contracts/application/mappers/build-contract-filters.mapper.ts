@@ -13,6 +13,7 @@ export function buildContractFilters(dto: FilterContractsDto): ContractFilters {
     filters.categoriaTarifaId = Number(dto.categoriaTarifaId);
   if (dto.ubicacion) filters.ubicacion = dto.ubicacion;
   if (dto.estado) filters.estado = dto.estado;
+  if (dto.hasDebt !== undefined) filters.hasDebt = dto.hasDebt;
 
   return filters;
 }

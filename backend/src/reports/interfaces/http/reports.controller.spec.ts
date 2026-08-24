@@ -1,5 +1,8 @@
 import { BadRequestException } from '@nestjs/common';
 import type { Response } from 'express';
+import type { JwtPayload } from 'src/identity/auth/application/types/jwt.types';
+import { ReportRequestContextFactory } from '../../application/report-request-context.factory';
+import { ReportRequestContextException } from '../../application/report-request-context.exception';
 import { ReportsController } from './reports.controller';
 
 function response(accept = '') {
@@ -18,6 +21,17 @@ function response(accept = '') {
     writableEnded: false,
   } as unknown as Response;
 }
+
+const actor: JwtPayload = {
+  sub: 7,
+  usersId: 7,
+  sid: 'session-7',
+  email: 'operator@example.com',
+  rol: 'operador',
+  permisos: [{ recurso: 'reportes', accion: 'read' }],
+};
+const timeZone = 'America/Guayaquil';
+const locale = 'es-EC';
 
 describe('ReportsController', () => {
   const document = {
@@ -41,6 +55,7 @@ describe('ReportsController', () => {
     }),
   };
   const agreement = { generate: jest.fn().mockResolvedValue(projection) };
+  const contextFactory = new ReportRequestContextFactory();
   const dispatcher = {
     dispatch: jest.fn().mockResolvedValue({
       buffer: Buffer.from('pdf'),
@@ -56,6 +71,7 @@ describe('ReportsController', () => {
     account as never,
     overdue as never,
     agreement as never,
+    contextFactory,
     dispatcher as never,
     sendEmail as never,
     logger as never,
@@ -63,24 +79,26 @@ describe('ReportsController', () => {
 
   beforeEach(() => jest.clearAllMocks());
 
-  it('usa la definición compartida para JSON y PDF', async () => {
-    const res = response();
+  it('jsonAcceptDoesNotInvokePdfRenderer', async () => {
+    const res = response('application/json');
 
-    await controller.paymentsReportPdf({}, res);
+    await controller.paymentsReportPdf({}, actor, timeZone, locale, res);
 
-    expect(payments.generate).toHaveBeenCalledWith({});
-    expect(dispatcher.dispatch).toHaveBeenCalledWith(
-      'payments-report',
-      document,
-      expect.objectContaining({ signal: expect.any(AbortSignal) }),
+    expect(payments.generate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        reportType: 'payments-report',
+        actor: expect.objectContaining({ userId: 7 }),
+        filters: {},
+      }),
     );
+    expect(dispatcher.dispatch).not.toHaveBeenCalled();
     expect(res.send).toHaveBeenCalledWith(JSON.stringify(document));
   });
 
   it('entrega el PDF cuando Accept solicita únicamente application/pdf', async () => {
     const res = response('application/pdf');
 
-    await controller.clientsListPdf({}, res);
+    await controller.clientsListPdf({}, actor, timeZone, locale, res);
 
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
       'clients-list',
@@ -92,11 +110,22 @@ describe('ReportsController', () => {
   });
 
   it('genera el convenio mediante su definición canónica', async () => {
-    const res = response();
+    const res = response('application/pdf');
 
-    await controller.paymentAgreementPdf({ convenioId: '7' }, res);
+    await controller.paymentAgreementPdf(
+      { convenioId: '7' },
+      actor,
+      timeZone,
+      locale,
+      res,
+    );
 
-    expect(agreement.generate).toHaveBeenCalledWith({ convenioId: '7' });
+    expect(agreement.generate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        reportType: 'payment-agreement',
+        filters: { convenioId: '7' },
+      }),
+    );
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
       'payment-agreement',
       document,
@@ -105,7 +134,9 @@ describe('ReportsController', () => {
   });
 
   it('devuelve la proyección tipada de morosidad', async () => {
-    await expect(controller.overdueAccounts({})).resolves.toEqual({
+    await expect(
+      controller.overdueAccounts({}, actor, timeZone, locale),
+    ).resolves.toEqual({
       data: [],
       meta: { total: 0 },
       kpis: {},
@@ -113,23 +144,98 @@ describe('ReportsController', () => {
   });
 
   it('valida el identificador antes de enviar un reporte por correo', () => {
-    expect(() => controller.sendPaymentsReportEmail({})).toThrow(
-      BadRequestException,
-    );
+    expect(() =>
+      controller.sendPaymentsReportEmail({}, actor, timeZone, locale),
+    ).toThrow(BadRequestException);
   });
 
-  it('delega el envío de correo con filtros tipados', () => {
-    void controller.sendConnectionHistoryEmail({
-      contratoId: '12',
-      destinatario: 'ana@example.com',
-    });
+  it('delega el envío de correo con contexto normalizado', () => {
+    void controller.sendConnectionHistoryEmail(
+      {
+        contratoId: '12',
+        destinatario: 'ana@example.com',
+      },
+      actor,
+      timeZone,
+      locale,
+    );
 
     expect(sendEmail.execute).toHaveBeenCalledWith({
-      reportType: 'connection-history',
-      filters: { contratoId: '12' },
+      context: expect.objectContaining({
+        reportType: 'connection-history',
+        filters: { contratoId: '12' },
+        timeZone,
+        locale,
+      }),
       destinatarioOverride: 'ana@example.com',
       subjectOverride: undefined,
       idempotencyKey: undefined,
     });
+  });
+
+  it('reportRequestContextIsIdenticalAcrossJsonPdfAndEmail', async () => {
+    const sharedFilters = {
+      clienteId: '25',
+      fechaDesde: '2026-08-01',
+      fechaHasta: '2026-08-24',
+    };
+
+    await controller.paymentsReportPdf(
+      sharedFilters,
+      actor,
+      timeZone,
+      locale,
+      response('application/json'),
+    );
+    await controller.paymentsReportPdf(
+      sharedFilters,
+      actor,
+      timeZone,
+      locale,
+      response('application/pdf'),
+    );
+    await controller.sendPaymentsReportEmail(
+      sharedFilters,
+      actor,
+      timeZone,
+      locale,
+    );
+
+    const jsonContext = payments.generate.mock.calls[0]?.[0];
+    const pdfContext = payments.generate.mock.calls[1]?.[0];
+    const emailContext = sendEmail.execute.mock.calls[0]?.[0]?.context;
+
+    expect(pdfContext).toEqual(jsonContext);
+    expect(emailContext).toEqual(jsonContext);
+  });
+
+  it('conserva el contexto normalizado cuando falla la proyección', async () => {
+    payments.generate.mockRejectedValueOnce(
+      new BadRequestException('invalid report filters'),
+    );
+
+    let caught: unknown;
+    try {
+      await controller.paymentsReportPdf(
+        { clienteId: '25', fechaDesde: '2026-08-01' },
+        actor,
+        timeZone,
+        locale,
+        response('application/json'),
+      );
+    } catch (error: unknown) {
+      caught = error;
+    }
+
+    expect(caught).toBeInstanceOf(ReportRequestContextException);
+    expect((caught as ReportRequestContextException).getResponse()).toEqual(
+      expect.objectContaining({
+        reportContext: expect.objectContaining({
+          reportType: 'payments-report',
+          actorId: 7,
+          filters: { clienteId: '25', fechaDesde: '2026-08-01' },
+        }),
+      }),
+    );
   });
 });
