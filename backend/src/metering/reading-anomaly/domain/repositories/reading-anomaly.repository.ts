@@ -23,6 +23,7 @@ export interface UpdateReadingAnomalyRepositoryData {
 }
 
 export interface ReadingAnomalyFilters {
+  search?: string;
   lecturaId?: bigint;
   tipo?: TipoAnomalia;
   estado?: EstadoAnomalia;

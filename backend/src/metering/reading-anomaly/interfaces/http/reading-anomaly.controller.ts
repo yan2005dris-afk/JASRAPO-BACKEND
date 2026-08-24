@@ -117,6 +117,9 @@ export class ReadingAnomalyController {
   @Get()
   async findAll(@Query() filtersDto: ReadingAnomalyFilterDto) {
     const filters: ReadingAnomalyFilters = {};
+    if (filtersDto.search?.trim()) {
+      filters.search = filtersDto.search.trim();
+    }
     if (filtersDto.lecturaId) {
       filters.lecturaId = BigInt(filtersDto.lecturaId);
     }
