@@ -5,7 +5,7 @@ import type {
   PaymentsReportFilters,
   PaymentsReportReadModel,
 } from '../../application/read-models/payments-report.read-model';
-import { normalizeReportDateRange } from './report-date-range';
+import type { ReportRequestContext } from '../../application/models/report-request-context';
 
 @Injectable()
 export class PrismaPaymentsReportQueryAdapter extends PaymentsReportQueryPort {
@@ -14,12 +14,10 @@ export class PrismaPaymentsReportQueryAdapter extends PaymentsReportQueryPort {
   }
 
   async query(
-    filters: PaymentsReportFilters,
+    context: ReportRequestContext<PaymentsReportFilters>,
   ): Promise<PaymentsReportReadModel> {
-    const { startInclusive, endExclusive } = normalizeReportDateRange(
-      filters.fechaDesde,
-      filters.fechaHasta,
-    );
+    const { filters, period } = context;
+    const { startInclusive, endExclusive } = period;
     const [payments, recipient] = await Promise.all([
       this.prisma.pagos.findMany({
         where: {

@@ -27,6 +27,8 @@ import type {
 } from './send-report-by-email.strategies';
 import type { ReportKey } from '../report-style.service';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+import { ReportRequestContextFactory } from '../report-request-context.factory';
+import type { SendReportByEmailParams } from './send-report-by-email.use-case';
 const mockLogger = {
   log: jest.fn(),
   warn: jest.fn(),
@@ -39,6 +41,35 @@ const mockLogger = {
 // default is 30s but that would make the timeout test path take ~30s — we
 // keep the same code path but speed up the test by passing a tiny value.
 const TEST_PDF_TIMEOUT_MS = 50;
+const contextFactory = new ReportRequestContextFactory();
+
+interface LegacyTestParams {
+  reportType: string;
+  filters: object;
+  destinatarioOverride?: string;
+  subjectOverride?: string;
+}
+
+interface TestUseCase {
+  execute(
+    params: LegacyTestParams,
+  ): ReturnType<SendReportByEmailUseCase['execute']>;
+  executeContext(
+    params: SendReportByEmailParams,
+  ): ReturnType<SendReportByEmailUseCase['execute']>;
+}
+
+function toContextParams(params: LegacyTestParams): SendReportByEmailParams {
+  const { reportType, filters, ...overrides } = params;
+  return {
+    context: contextFactory.create({
+      reportType: reportType as ReportKey,
+      actor: { usersId: 7 },
+      filters,
+    }),
+    ...overrides,
+  };
+}
 
 describe('SendReportByEmailUseCase (skeleton)', () => {
   // PR 1 builds the skeleton with a constructor-injectable strategies map.
@@ -65,8 +96,10 @@ describe('SendReportByEmailUseCase (skeleton)', () => {
       },
     };
     const defaultFetchReport: ReportEmailStrategy['fetchReport'] = jest.fn(
-      async (filters: unknown) => ({
-        document: fetchSpec ? await fetchSpec(filters) : defaultDocument,
+      async (context) => ({
+        document: fetchSpec
+          ? await fetchSpec(context.filters)
+          : defaultDocument,
         recipientEmail: 'client@example.com',
       }),
     );
@@ -86,7 +119,7 @@ describe('SendReportByEmailUseCase (skeleton)', () => {
   const compile = async (
     strategies: Partial<Record<ReportKey, ReportEmailStrategy>>,
     pdfTimeoutMs: number = TEST_PDF_TIMEOUT_MS,
-  ): Promise<SendReportByEmailUseCase> => {
+  ): Promise<TestUseCase> => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         { provide: LoggerService, useValue: mockLogger },
@@ -98,12 +131,16 @@ describe('SendReportByEmailUseCase (skeleton)', () => {
               mockDispatcher as unknown as ReportStyleDispatcher,
               strategies as ReportEmailStrategyMap,
               pdfTimeoutMs,
-              mockLogger,
+              mockLogger as unknown as LoggerService,
             ),
         },
       ],
     }).compile();
-    return module.get(SendReportByEmailUseCase);
+    const useCase = module.get(SendReportByEmailUseCase);
+    return {
+      execute: (params) => useCase.execute(toContextParams(params)),
+      executeContext: (params) => useCase.execute(params),
+    };
   };
 
   beforeEach(() => {
@@ -123,12 +160,14 @@ describe('SendReportByEmailUseCase (skeleton)', () => {
       filters: { clienteId: '1' },
     });
 
-    expect(result).toEqual({
-      queued: true,
-      jobId: 'job-abc',
-      destinatario: 'client@example.com',
-      subject: 'Reporte de Abonos — Cliente #1',
-    });
+    expect(result).toEqual(
+      expect.objectContaining({
+        queued: true,
+        jobId: 'job-abc',
+        destinatario: 'client@example.com',
+        subject: 'Reporte de Abonos — Cliente #1',
+      }),
+    );
   });
 
   it('resolves recipient via strategy.recipientResolver when no override is provided', async () => {
@@ -149,7 +188,7 @@ describe('SendReportByEmailUseCase (skeleton)', () => {
     });
 
     expect(recipientResolver).toHaveBeenCalledWith(
-      { contratoId: '5' },
+      expect.objectContaining({ filters: { contratoId: '5' } }),
       expect.any(Object),
     );
     expect(mockMailService.sendReport).toHaveBeenCalledWith(
@@ -293,10 +332,10 @@ describe('SendReportByEmailUseCase (skeleton)', () => {
     ).rejects.toThrow('Mail queue rejected the job');
   });
 
-  // PR 2: the use case now calls strategy.fetchSpec(filters) and passes the
-  // SPEC DATA (not the raw filters) to ReportStyleDispatcher.dispatch. The
+  // The strategy receives the shared context and passes the projected
+  // document (not the filters) to ReportStyleDispatcher.dispatch. The
   // PDF templates expect the spec output shape (e.g. `pagos`, `fechaDesde`).
-  it('passes the spec data (not the raw filters) to ReportStyleDispatcher.dispatch', async () => {
+  it('passes the projected document to ReportStyleDispatcher.dispatch', async () => {
     const fetchSpec = jest.fn().mockResolvedValue({
       pagos: [{ factura: 'F1', valorNum: 10 }],
       totalGeneral: '10.00',
@@ -361,12 +400,14 @@ describe('SendReportByEmailUseCase (skeleton)', () => {
 
       const result = await useCase.execute({ reportType, filters });
 
-      expect(result).toEqual({
-        queued: true,
-        jobId: 'job-abc',
-        destinatario: recipient,
-        subject,
-      });
+      expect(result).toEqual(
+        expect.objectContaining({
+          queued: true,
+          jobId: 'job-abc',
+          destinatario: recipient,
+          subject,
+        }),
+      );
       expect(mockDispatcher.dispatch).toHaveBeenCalledWith(reportType, {
         stub: true,
       });
@@ -477,7 +518,7 @@ describe('SendReportByEmailUseCase (skeleton)', () => {
     expect(fetchSpec).toHaveBeenCalled();
     // Resolver was invoked with (filters, specData).
     expect(recipientResolver).toHaveBeenCalledWith(
-      { contratoId: '12' },
+      expect.objectContaining({ filters: { contratoId: '12' } }),
       expect.objectContaining({
         document: {
           contrato: { cliente: { email: 'derived@example.com' } },
@@ -617,5 +658,26 @@ describe('SendReportByEmailUseCase (skeleton)', () => {
     expect(matched).toBe(true);
 
     debugSpy.mockRestore();
+  });
+
+  it('reportRetryReusesNormalizedContext', async () => {
+    const strategy = buildStrategy();
+    const useCase = await compile({ 'payments-report': strategy });
+    const context = contextFactory.create({
+      reportType: 'payments-report',
+      actor: { usersId: 7 },
+      filters: {
+        clienteId: '25',
+        fechaDesde: '2026-08-01',
+        fechaHasta: '2026-08-24',
+      },
+    });
+
+    await useCase.executeContext({ context });
+    await useCase.executeContext({ context });
+
+    const fetchReport = strategy.fetchReport as jest.Mock;
+    expect(fetchReport).toHaveBeenNthCalledWith(1, context);
+    expect(fetchReport).toHaveBeenNthCalledWith(2, context);
   });
 });

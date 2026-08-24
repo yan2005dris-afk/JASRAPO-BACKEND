@@ -45,10 +45,14 @@ import {
 import type { ReportKey } from '../report-style.service';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
+import {
+  summarizeReportRequestContext,
+  type ReportRequestContext,
+  type ReportRequestContextSummary,
+} from '../models/report-request-context';
 
 export interface SendReportByEmailParams {
-  reportType: string;
-  filters: unknown;
+  context: ReportRequestContext;
   destinatarioOverride?: string;
   subjectOverride?: string;
 }
@@ -58,6 +62,7 @@ export interface SendReportByEmailResult {
   jobId: string;
   destinatario: string;
   subject: string;
+  context: ReportRequestContextSummary;
 }
 
 /**
@@ -82,27 +87,29 @@ export class SendReportByEmailUseCase {
   async execute(
     params: SendReportByEmailParams,
   ): Promise<SendReportByEmailResult> {
-    const strategy = this.strategies[params.reportType as ReportKey];
+    const { context } = params;
+    const reportType = context.reportType as ReportKey;
+    const strategy = this.strategies[reportType];
     if (!strategy) {
       throw new NotFoundException(
-        `Report type '${params.reportType}' is not supported for email sending`,
+        `Report type '${context.reportType}' is not supported for email sending`,
       );
     }
 
     // La definición prepara una sola proyección para resolver el destinatario
     // y generar el PDF sin volver a consultar ni recalcular el reporte.
-    const report = await strategy.fetchReport(params.filters);
+    const report = await strategy.fetchReport(context);
 
     // Si llega un destinatario explícito, no hace falta resolver otro.
     const derivedRecipient = params.destinatarioOverride
       ? null
-      : await strategy.recipientResolver(params.filters, report);
+      : await strategy.recipientResolver(context, report);
     const destinatario = params.destinatarioOverride ?? derivedRecipient;
 
     // PII: surface recipient resolution at DEBUG only. The recipient email
     // must never enter INFO logs at the use-case layer (see header docs).
     this.logger.debug(
-      `recipient resolved reportType=${params.reportType}`,
+      `recipient resolved reportType=${context.reportType}`,
       SendReportByEmailUseCase.name,
     );
 
@@ -112,8 +119,7 @@ export class SendReportByEmailUseCase {
       );
     }
 
-    const subject =
-      params.subjectOverride ?? strategy.subjectBuilder(params.filters);
+    const subject = params.subjectOverride ?? strategy.subjectBuilder(context);
 
     // Wrap PDF generation in a 30s timeout. On overrun we surface 503
     // (transient upstream failure, retryable). The original pdf promise is
@@ -123,10 +129,7 @@ export class SendReportByEmailUseCase {
     let pdfBuffer: Buffer;
     try {
       const { buffer } = await withTimeout(
-        this.dispatcher.dispatch(
-          params.reportType as ReportKey,
-          report.document,
-        ),
+        this.dispatcher.dispatch(reportType, report.document),
         this.pdfTimeoutMs,
         'pdf-generation',
       );
@@ -141,14 +144,14 @@ export class SendReportByEmailUseCase {
     const { jobId } = await this.mailService.sendReport(
       destinatario,
       subject,
-      params.reportType,
+      reportType,
       pdfBuffer,
     );
 
     // PII-safe INFO line: reportType + jobId only. The recipient is logged
     // at DEBUG above (per-request correlation, not in INFO aggregators).
     this.logger.log(
-      `SendReportByEmailUseCase: queued ${params.reportType} jobId=${jobId}`,
+      `SendReportByEmailUseCase: queued ${context.reportType} jobId=${jobId}`,
     );
 
     return {
@@ -156,6 +159,7 @@ export class SendReportByEmailUseCase {
       jobId,
       destinatario,
       subject,
+      context: summarizeReportRequestContext(context),
     };
   }
 }

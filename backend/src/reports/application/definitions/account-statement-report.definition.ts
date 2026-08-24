@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { resolveClientName } from 'src/infrastructure/pdf/utils/pdf-format.utils';
 import type { ProjectedReport } from '../models/report-projection';
+import type { ReportRequestContext } from '../models/report-request-context';
 import { AccountStatementReportQueryPort } from '../ports/report-query.ports';
 import type {
   AccountStatementReportDocument,
@@ -108,8 +109,8 @@ export class AccountStatementReportDefinition {
   constructor(private readonly queryPort: AccountStatementReportQueryPort) {}
 
   async generate(
-    filters: AccountStatementReportFilters,
+    context: ReportRequestContext<AccountStatementReportFilters>,
   ): Promise<ProjectedReport<AccountStatementReportDocument>> {
-    return projectAccountStatementReport(await this.queryPort.query(filters));
+    return projectAccountStatementReport(await this.queryPort.query(context));
   }
 }

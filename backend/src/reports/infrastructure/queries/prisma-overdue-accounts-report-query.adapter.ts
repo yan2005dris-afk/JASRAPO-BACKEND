@@ -5,6 +5,7 @@ import type {
   OverdueAccountsReportFilters,
   OverdueAccountsReportReadModel,
 } from '../../application/read-models/overdue-accounts.read-model';
+import type { ReportRequestContext } from '../../application/models/report-request-context';
 
 @Injectable()
 export class PrismaOverdueAccountsReportQueryAdapter extends OverdueAccountsReportQueryPort {
@@ -13,11 +14,10 @@ export class PrismaOverdueAccountsReportQueryAdapter extends OverdueAccountsRepo
   }
 
   async query(
-    filters: OverdueAccountsReportFilters,
+    context: ReportRequestContext<OverdueAccountsReportFilters>,
   ): Promise<OverdueAccountsReportReadModel> {
-    const cutoffDate = filters.fechaCorte
-      ? new Date(filters.fechaCorte)
-      : new Date();
+    const { filters } = context;
+    const cutoffDate = context.period.cutoffInclusive ?? new Date();
     const preInvoices = await this.prisma.prefacturas.findMany({
       where: {
         deletedAt: null,

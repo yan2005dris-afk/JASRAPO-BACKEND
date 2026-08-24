@@ -4,12 +4,20 @@ import { ClientServiceClientsListReportQueryAdapter } from '../infrastructure/qu
 import { ClientsListReportDefinition } from './definitions/clients-list-report.definition';
 import { ClientsListReportEmailStrategy } from './use-cases/send-report-by-email.strategies';
 import { createClientsListPdfDocumentType } from '../pdf/factories/clients-list.factory';
+import { ReportRequestContextFactory } from './report-request-context.factory';
 
 const REPORTS_ROOT = path.resolve(__dirname, '..');
 const TEMPLATES_ROOT = path.resolve(
   REPORTS_ROOT,
   '../infrastructure/pdf/templates',
 );
+const contextFactory = new ReportRequestContextFactory();
+const actor = {
+  sub: 7,
+  usersId: 7,
+  sid: 'session-7',
+  permisos: [{ recurso: 'reportes', accion: 'read' }],
+};
 
 function readTypeScriptFiles(directory: string): string {
   return fs
@@ -48,7 +56,12 @@ describe('PDF-03 report architecture', () => {
       clientService as never,
     );
 
-    const readModel = await port.query({ activo: true });
+    const context = contextFactory.create({
+      reportType: 'clients-list',
+      actor,
+      filters: { activo: true },
+    });
+    const readModel = await port.query(context);
 
     expect(readModel.clients[0]).toEqual(
       expect.objectContaining({
@@ -68,13 +81,18 @@ describe('PDF-03 report architecture', () => {
       }),
     };
     const definition = new ClientsListReportDefinition(queryPort);
-    const jsonProjection = await definition.generate({});
+    const context = contextFactory.create({
+      reportType: 'clients-list',
+      actor,
+      filters: {},
+    });
+    const jsonProjection = await definition.generate(context);
     const pdfProjection = createClientsListPdfDocumentType('legacy').adaptData(
       jsonProjection.document,
     );
     const emailProjection = await new ClientsListReportEmailStrategy(definition)
       .build()
-      .fetchReport({});
+      .fetchReport(context);
 
     expect(pdfProjection).toEqual(jsonProjection.document);
     expect(emailProjection.document).toEqual(jsonProjection.document);

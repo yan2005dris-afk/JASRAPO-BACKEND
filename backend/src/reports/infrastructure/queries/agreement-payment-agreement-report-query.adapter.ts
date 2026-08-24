@@ -5,6 +5,7 @@ import type {
   PaymentAgreementReportFilters,
   PaymentAgreementReportReadModel,
 } from '../../application/read-models/payment-agreement.read-model';
+import type { ReportRequestContext } from '../../application/models/report-request-context';
 
 @Injectable()
 export class AgreementPaymentAgreementReportQueryAdapter extends PaymentAgreementReportQueryPort {
@@ -13,8 +14,9 @@ export class AgreementPaymentAgreementReportQueryAdapter extends PaymentAgreemen
   }
 
   async query(
-    filters: PaymentAgreementReportFilters,
+    context: ReportRequestContext<PaymentAgreementReportFilters>,
   ): Promise<PaymentAgreementReportReadModel> {
+    const { filters } = context;
     const data = await this.agreementRepository.getPdfData(
       BigInt(filters.convenioId),
     );

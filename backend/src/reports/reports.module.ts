@@ -40,6 +40,7 @@ import { PrismaConnectionHistoryReportQueryAdapter } from './infrastructure/quer
 import { PrismaAccountStatementReportQueryAdapter } from './infrastructure/queries/prisma-account-statement-report-query.adapter';
 import { PrismaOverdueAccountsReportQueryAdapter } from './infrastructure/queries/prisma-overdue-accounts-report-query.adapter';
 import { AgreementPaymentAgreementReportQueryAdapter } from './infrastructure/queries/agreement-payment-agreement-report-query.adapter';
+import { ReportRequestContextFactory } from './application/report-request-context.factory';
 
 @Module({
   imports: [ClientModule, forwardRef(() => AgreementsModule)],
@@ -51,6 +52,7 @@ import { AgreementPaymentAgreementReportQueryAdapter } from './infrastructure/qu
     AccountStatementReportDefinition,
     OverdueAccountsReportDefinition,
     PaymentAgreementReportDefinition,
+    ReportRequestContextFactory,
     {
       provide: ClientsListReportQueryPort,
       useClass: ClientServiceClientsListReportQueryAdapter,
