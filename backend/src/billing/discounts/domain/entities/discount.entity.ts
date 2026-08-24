@@ -10,7 +10,7 @@ export class DiscountEntity {
     rubroId: number;
     nombre: string;
     tipoRubro: string;
-    precioUnitario: any;
+    precioUnitario: number;
   } | null;
   activo: boolean;
   aplicaAutomatico: boolean;

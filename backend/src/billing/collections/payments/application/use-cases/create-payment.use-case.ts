@@ -104,7 +104,7 @@ export class CreatePaymentUseCase {
           },
           'PAGO',
           pago.pagoId.toString(),
-          tx as any,
+          tx,
         );
 
         return pago.pagoId;
@@ -294,7 +294,7 @@ export class CreatePaymentUseCase {
         },
         'CUOTA_CONVENIO',
         cuotaConvenioId.toString(),
-        tx as any,
+        tx,
       );
     }
   }

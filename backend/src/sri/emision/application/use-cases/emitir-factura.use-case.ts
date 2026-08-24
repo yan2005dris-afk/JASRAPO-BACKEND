@@ -10,10 +10,8 @@ import { ClaveAccesoService } from '../../infrastructure/xml/clave-acceso.servic
 import { XmlBuilderService } from '../../infrastructure/xml/xml-builder.service';
 import { XmlSignerService } from '../../infrastructure/xml/xml-signer.service';
 import { SriSoapClient } from '../../infrastructure/soap/sri-soap.client';
-import {
-  ComprobanteRepository,
-  TransactionContext,
-} from '../../domain/repositories/comprobante.repository';
+import { ComprobanteRepository } from '../../domain/repositories/comprobante.repository';
+import type { TransactionContext } from 'src/shared/domain/types/transaction';
 import { EmisorRepository } from '../../../emisores/domain/repositories/emisor.repository';
 import { SecuencialRepository } from '../../domain/repositories/secuencial.repository';
 import { XmlStorageService } from '../../infrastructure/storage/xml-storage.service';

@@ -246,7 +246,7 @@ export class CreateCobroPuntualUseCase {
         },
         'PAGO',
         pago.pagoId.toString(),
-        tx as any,
+        tx,
       );
 
       return pago.pagoId;

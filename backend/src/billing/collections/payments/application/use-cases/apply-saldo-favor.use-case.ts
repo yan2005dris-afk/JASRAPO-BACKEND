@@ -159,7 +159,7 @@ export class ApplySaldoFavorUseCase {
               },
               'CUOTA_CONVENIO',
               dto.cuotaConvenioId.toString(),
-              tx as any,
+              tx,
             );
           }
         }
@@ -204,7 +204,7 @@ export class ApplySaldoFavorUseCase {
             },
             'PAGO',
             pago.pagoId.toString(),
-            tx as any,
+            tx,
           );
         }
 
