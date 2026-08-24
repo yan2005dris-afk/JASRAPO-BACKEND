@@ -10,7 +10,7 @@ import type {
   CreateAgreementData,
   CreateInstallmentData,
   PrefacturaDeudaRaw,
-  PaymentAgreementPdfData,
+  PaymentAgreementReportReadModel,
 } from '../../domain/types/agreement.types';
 import {
   paginate,
@@ -322,7 +322,7 @@ export class PrismaAgreementRepository implements AgreementRepository {
 
   async getPdfData(
     convenioId: bigint,
-  ): Promise<PaymentAgreementPdfData | null> {
+  ): Promise<PaymentAgreementReportReadModel | null> {
     const convenio = await this.prisma.convenios.findFirst({
       where: { convenioId, deletedAt: null },
       include: {
@@ -330,12 +330,14 @@ export class PrismaAgreementRepository implements AgreementRepository {
           select: {
             numeroGuia: true,
             direccionSuministro: true,
+            fechaInicio: true,
             cliente: {
               select: {
                 nombres: true,
                 apellidos: true,
                 razonSocial: true,
                 identificacion: true,
+                email: true,
               },
             },
           },
@@ -350,6 +352,8 @@ export class PrismaAgreementRepository implements AgreementRepository {
 
     if (!convenio) return null;
 
+    const firstInstallment = Number(convenio.cuotaConvenio[0]?.valorCuota ?? 0);
+
     return {
       convenio: {
         convenioId: String(convenio.convenioId),
@@ -358,9 +362,11 @@ export class PrismaAgreementRepository implements AgreementRepository {
         abonoInicial: Number(convenio.abonoInicial),
         numeroCuotas: convenio.numeroCuotas,
         fechaPrimerPago: convenio.fechaPrimerPago.toISOString(),
+        periodoInicio: convenio.contrato.fechaInicio.toISOString(),
         motivo: convenio.motivo,
         createdAt: convenio.createdAt.toISOString(),
-        cuotaMensual: Number(convenio.cuotaConvenio[0]?.valorCuota ?? 0),
+        cuotaMensual: firstInstallment,
+        primeraCuota: firstInstallment,
         contrato: {
           numeroGuia: convenio.contrato.numeroGuia,
           direccionSuministro: convenio.contrato.direccionSuministro,
@@ -370,6 +376,7 @@ export class PrismaAgreementRepository implements AgreementRepository {
           apellidos: convenio.contrato.cliente.apellidos,
           razonSocial: convenio.contrato.cliente.razonSocial,
           identificacion: convenio.contrato.cliente.identificacion,
+          email: convenio.contrato.cliente.email,
         },
       },
     };

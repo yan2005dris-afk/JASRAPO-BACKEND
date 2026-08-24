@@ -9,6 +9,8 @@ import { RemoveMeterUseCase } from './use-cases/remove-meter.use-case';
 import { ExportMetersUseCase } from './use-cases/export-meters.use-case';
 import { ExportMetersPdfUseCase } from './use-cases/export-meters-pdf.use-case';
 import { ReplaceMeterUseCase } from './use-cases/replace-meter.use-case';
+import { FindMeterHistoryUseCase } from './use-cases/find-meter-history.use-case';
+import { FindReplacementUseCase } from './use-cases/find-replacement.use-case';
 
 describe('MeterService', () => {
   let service: MeterService;
@@ -20,6 +22,8 @@ describe('MeterService', () => {
   let exportMetersUseCase: ExportMetersUseCase;
   let exportMetersPdfUseCase: ExportMetersPdfUseCase;
   let replaceUseCase: ReplaceMeterUseCase;
+  let findMeterHistoryUseCase: FindMeterHistoryUseCase;
+  let findReplacementUseCase: FindReplacementUseCase;
 
   const mockMedidor = {
     medidorId: BigInt(1),
@@ -62,6 +66,8 @@ describe('MeterService', () => {
         { provide: ExportMetersUseCase, useValue: { execute: jest.fn() } },
         { provide: ExportMetersPdfUseCase, useValue: { execute: jest.fn() } },
         { provide: ReplaceMeterUseCase, useValue: { execute: jest.fn() } },
+        { provide: FindMeterHistoryUseCase, useValue: { execute: jest.fn() } },
+        { provide: FindReplacementUseCase, useValue: { execute: jest.fn() } },
       ],
     }).compile();
 
@@ -76,6 +82,12 @@ describe('MeterService', () => {
       ExportMetersPdfUseCase,
     );
     replaceUseCase = module.get<ReplaceMeterUseCase>(ReplaceMeterUseCase);
+    findMeterHistoryUseCase = module.get<FindMeterHistoryUseCase>(
+      FindMeterHistoryUseCase,
+    );
+    findReplacementUseCase = module.get<FindReplacementUseCase>(
+      FindReplacementUseCase,
+    );
   });
 
   it('should be defined', () => {
@@ -133,6 +145,24 @@ describe('MeterService', () => {
     const result = await service.remove(id);
     expect(result).toBe(message);
     expect(removeUseCase.execute).toHaveBeenCalledWith(id);
+  });
+
+  it('getHistory should delegate to FindMeterHistoryUseCase', async () => {
+    const id = BigInt(1);
+    const history = [{ historialId: BigInt(10) }] as any;
+    jest.spyOn(findMeterHistoryUseCase, 'execute').mockResolvedValue(history);
+    const result = await service.getHistory(id);
+    expect(result).toBe(history);
+    expect(findMeterHistoryUseCase.execute).toHaveBeenCalledWith(id);
+  });
+
+  it('findReplacement should delegate to FindReplacementUseCase', async () => {
+    const id = BigInt(5);
+    const reemplazo = { reemplazoId: BigInt(5) } as any;
+    jest.spyOn(findReplacementUseCase, 'execute').mockResolvedValue(reemplazo);
+    const result = await service.findReplacement(id);
+    expect(result).toBe(reemplazo);
+    expect(findReplacementUseCase.execute).toHaveBeenCalledWith(id);
   });
 
   it('exportCsv should apply filters and include inventory columns', async () => {

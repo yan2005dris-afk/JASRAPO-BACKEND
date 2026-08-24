@@ -18,21 +18,47 @@ import {
 import type {
   ReadingWithContractDetail,
   MeterWithContractDetail,
-  OperatorTask,
+  OperatorRoute,
   ReadingWithAnomalies,
-  TaskStateUpdate,
+  RouteStateUpdate,
   OperatorUser,
-  TaskRoutePoint,
 } from '../../domain/repositories/repository-types';
 
-const taskOperarioSelect = {
+const routeOperarioSelect = {
   usuarioId: true,
   nombres: true,
   apellidos: true,
 } satisfies Prisma.UsuariosSelect;
 
-const taskInclude = {
-  operario: { select: taskOperarioSelect },
+const routeMedidorSelect = {
+  medidorId: true,
+  serie: true,
+  latitud: true,
+  longitud: true,
+} satisfies Prisma.MedidoresSelect;
+
+const operatorRouteInclude = {
+  operario: { select: routeOperarioSelect },
+  ordenesTrabajo: {
+    where: { deletedAt: null },
+    orderBy: [{ ordenVisita: 'asc' }, { ordenTrabajoId: 'asc' }],
+    include: {
+      contrato: {
+        select: {
+          numeroGuia: true,
+          direccionSuministro: true,
+          cliente: {
+            select: {
+              nombres: true,
+              apellidos: true,
+              razonSocial: true,
+            },
+          },
+        },
+      },
+      medidor: { select: routeMedidorSelect },
+    },
+  },
 } satisfies Prisma.RutasInclude;
 
 @Injectable()
@@ -178,6 +204,7 @@ export class PrismaOperatorRepository extends OperatorRepository {
                 contratoId: true,
                 comunidadId: true,
                 sectorId: true,
+                direccionSuministro: true,
                 cliente: {
                   select: {
                     nombres: true,
@@ -195,11 +222,23 @@ export class PrismaOperatorRepository extends OperatorRepository {
   }
 
   async findReadingWithDetails(id: bigint): Promise<ReadingWithDetails | null> {
-    return this.prisma.lecturas.findUnique({
+    const result = await this.prisma.lecturas.findUnique({
       where: { lecturaId: id, deletedAt: null },
       select: {
         lecturaId: true,
         estado: true,
+        ordenesTrabajo: {
+          where: { deletedAt: null },
+          select: {
+            rutaId: true,
+            ruta: {
+              select: {
+                operarioId: true,
+                periodoId: true,
+              },
+            },
+          },
+        },
         medidor: {
           select: {
             historial: {
@@ -218,9 +257,8 @@ export class PrismaOperatorRepository extends OperatorRepository {
         },
       },
     });
+    return result;
   }
-
-  // ── Task methods (operator-tareas) ──────────────────────────────
 
   /** Translate RouteData[] into Prisma OR conditions scoped by contract. */
   private toReadingRouteConditions(
@@ -249,11 +287,11 @@ export class PrismaOperatorRepository extends OperatorRepository {
     }));
   }
 
-  async findTasksByOperator(
+  async findRoutesByOperator(
     operarioId: number,
     periodoId: number,
     tipoRuta?: string,
-  ): Promise<OperatorTask[]> {
+  ): Promise<OperatorRoute[]> {
     const where: Prisma.RutasWhereInput = {
       operarioId,
       periodoId,
@@ -264,72 +302,20 @@ export class PrismaOperatorRepository extends OperatorRepository {
       where.tipoRuta = tipoRuta as Prisma.RutasWhereInput['tipoRuta'];
     }
 
-    const tasks = await this.prisma.rutas.findMany({
+    const routes = await this.prisma.rutas.findMany({
       where,
       orderBy: [{ comunidadId: 'asc' }, { sectorId: 'asc' }, { orden: 'asc' }],
-      include: taskInclude,
+      include: operatorRouteInclude,
     });
 
-    const readingTasks = tasks.filter(
-      (t) => t.tipoRuta === 'TOMA_LECTURA',
-    ) as unknown as OperatorTask[];
-
-    if (readingTasks.length === 0) {
-      return tasks as unknown as OperatorTask[];
-    }
-
-    const meters = await this.findMetersByRoutes(
-      readingTasks.map((t) => ({
-        rutaId: t.rutaId,
-        comunidadId: t.comunidadId,
-        sectorId: t.sectorId,
-      })),
-    );
-
-    const pointsByTask = new Map<bigint, TaskRoutePoint[]>();
-
-    for (const task of readingTasks) {
-      const matchingMeters = meters.filter((m) => {
-        const contrato = m.historial?.[0]?.contrato;
-        if (!contrato) return false;
-        const sameSector =
-          task.sectorId === null || task.sectorId === undefined
-            ? true
-            : contrato.sectorId === task.sectorId;
-        return contrato.comunidadId === task.comunidadId && sameSector;
-      });
-
-      matchingMeters.sort((a, b) => a.serie.localeCompare(b.serie));
-
-      pointsByTask.set(
-        task.rutaId,
-        matchingMeters
-          .map((m) => ({
-            latitud: m.latitud != null ? Number(m.latitud) : null,
-            longitud: m.longitud != null ? Number(m.longitud) : null,
-            serie: m.serie,
-            clienteNombre: m.historial?.[0]?.contrato?.cliente
-              ? `${m.historial[0].contrato.cliente.nombres} ${m.historial[0].contrato.cliente.apellidos}`.trim()
-              : '',
-          }))
-          .filter(
-            (pt): pt is TaskRoutePoint =>
-              pt.latitud != null && pt.longitud != null,
-          ),
-      );
-    }
-
-    return tasks.map((t) => ({
-      ...t,
-      rutaPuntos: pointsByTask.get(t.rutaId),
-    })) as unknown as OperatorTask[];
+    return routes.map((route) => this.toOperatorRoute(route));
   }
 
-  async updateTaskState(
+  async updateRouteState(
     rutaId: bigint,
-    data: TaskStateUpdate,
+    data: RouteStateUpdate,
     expectedEstado?: string,
-  ): Promise<OperatorTask> {
+  ): Promise<OperatorRoute> {
     const updateData: Prisma.RutasUpdateInput = {};
 
     if (data.estado !== undefined)
@@ -349,65 +335,16 @@ export class PrismaOperatorRepository extends OperatorRepository {
     };
 
     try {
-      return (await this.prisma.rutas.update({
+      const route = await this.prisma.rutas.update({
         where,
         data: updateData,
-        include: taskInclude,
-      })) as unknown as OperatorTask;
+        include: operatorRouteInclude,
+      });
+      return this.toOperatorRoute(route);
     } catch (error) {
       if (this.isOptimisticLockFailure(error)) {
         throw new InvalidDomainOperationException(
-          'Conflicto de concurrencia: la tarea fue modificada por otro operario',
-        );
-      }
-      throw error;
-    }
-  }
-
-  async completeInstallationTask(
-    rutaId: bigint,
-    taskUpdateData: TaskStateUpdate,
-    expectedEstado: string,
-    meterUpdateData: {
-      medidorId: bigint;
-      estado: string;
-      fechaInstalacion: Date;
-    },
-  ): Promise<OperatorTask> {
-    try {
-      return (await this.prisma.$transaction(async (tx) => {
-        const taskUpdate: Prisma.RutasUpdateInput = {};
-        if (taskUpdateData.estado !== undefined)
-          taskUpdate.estado = taskUpdateData.estado as EstadoRuta;
-        if (taskUpdateData.fechaFin !== undefined)
-          taskUpdate.fechaFin = taskUpdateData.fechaFin;
-        if (taskUpdateData.observacion !== undefined)
-          taskUpdate.observacion = taskUpdateData.observacion;
-
-        const updated = await tx.rutas.update({
-          where: {
-            rutaId,
-            deletedAt: null,
-            estado: expectedEstado as EstadoRuta,
-          },
-          data: taskUpdate,
-          include: taskInclude,
-        });
-
-        await tx.medidores.update({
-          where: { medidorId: meterUpdateData.medidorId },
-          data: {
-            estado: meterUpdateData.estado as EstadoMedidor,
-            fechaInstalacion: meterUpdateData.fechaInstalacion,
-          },
-        });
-
-        return updated;
-      })) as unknown as OperatorTask;
-    } catch (error) {
-      if (this.isOptimisticLockFailure(error)) {
-        throw new InvalidDomainOperationException(
-          'Conflicto de concurrencia: la tarea fue modificada por otro operario',
+          'Conflicto de concurrencia: la ruta fue modificada por otro operario',
         );
       }
       throw error;
@@ -422,6 +359,57 @@ export class PrismaOperatorRepository extends OperatorRepository {
       error instanceof Prisma.PrismaClientKnownRequestError &&
       error.code === 'P2025'
     );
+  }
+
+  private toOperatorRoute(
+    route: Prisma.RutasGetPayload<{ include: typeof operatorRouteInclude }>,
+  ): OperatorRoute {
+    const ordenesTrabajo = route.ordenesTrabajo.map((order) => ({
+      ...order,
+      medidor: order.medidor
+        ? {
+            ...order.medidor,
+            latitud:
+              order.medidor.latitud == null
+                ? null
+                : Number(order.medidor.latitud),
+            longitud:
+              order.medidor.longitud == null
+                ? null
+                : Number(order.medidor.longitud),
+          }
+        : null,
+    }));
+
+    const paradas = ordenesTrabajo.flatMap((order) => {
+      if (order.medidor?.latitud == null || order.medidor.longitud == null) {
+        return [];
+      }
+
+      const customer = order.contrato.cliente;
+      const clienteNombre =
+        customer.razonSocial?.trim() ||
+        `${customer.nombres} ${customer.apellidos}`.trim();
+
+      return [
+        {
+          ordenTrabajoId: order.ordenTrabajoId,
+          latitud: order.medidor.latitud,
+          longitud: order.medidor.longitud,
+          serie: order.medidor.serie,
+          clienteNombre,
+          tipoActividad: order.tipoActividad,
+          estado: order.estado,
+          direccionSuministro: order.contrato.direccionSuministro,
+        },
+      ];
+    });
+
+    return {
+      ...route,
+      ordenesTrabajo,
+      paradas,
+    } as unknown as OperatorRoute;
   }
 
   async findOperatorsByGeography(

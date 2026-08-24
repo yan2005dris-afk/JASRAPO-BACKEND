@@ -55,9 +55,28 @@ export class PagoValidadoHandler {
         continue;
       }
 
-      // Marcar prefactura vinculada como PAGADA
+      // Marcar prefactura vinculada como PAGADA y actualizar contratos de instalación (mes = 0)
       await this.paymentRepository.executeTransaction?.(async (tx: any) => {
         const prismaClient = tx ?? (this.paymentRepository as any).prisma;
+
+        const prefacturas = await prismaClient.prefacturas.findMany({
+          where: { comprobanteId, deletedAt: null },
+          select: {
+            prefacturaId: true,
+            contratoId: true,
+            prefacturaDetalle: {
+              where: {
+                deletedAt: null,
+                rubro: {
+                  codigoSistemaRubro: 'INSTALACION',
+                  deletedAt: null,
+                },
+              },
+              select: { prefacturaDetalleId: true },
+            },
+          },
+        });
+
         await prismaClient.prefacturas.updateMany({
           where: { comprobanteId, deletedAt: null },
           data: {
@@ -67,6 +86,27 @@ export class PagoValidadoHandler {
             abono: totalAbonado,
           },
         });
+
+        const contratosInstalacionIds = prefacturas
+          .filter(
+            (p: any) =>
+              Array.isArray(p.prefacturaDetalle) &&
+              p.prefacturaDetalle.length > 0,
+          )
+          .map((p: any) => p.contratoId);
+
+        if (contratosInstalacionIds.length > 0) {
+          await prismaClient.contratos.updateMany({
+            where: {
+              contratoId: { in: contratosInstalacionIds },
+              estado: 'PENDIENTE_PAGO',
+              deletedAt: null,
+            },
+            data: {
+              estado: 'PENDIENTE_INSTALACION',
+            },
+          });
+        }
       });
 
       const outcome = await this.sriDispatcher.tryEmit(comprobanteId);

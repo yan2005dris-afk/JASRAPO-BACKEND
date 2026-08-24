@@ -295,17 +295,14 @@ Para consultas o soporte, contacta al equipo de desarrollo del Backend.
     .addTag('agreements', 'Payment agreements')
     .addTag('reports', 'Generación de reportes y documentos PDF')
     .addTag(
-      '[En Desarrollo] SRI - Facturación Electrónica',
+      '[SRI] Facturación Electrónica',
       'Módulo de facturación electrónica SRI',
     )
-    .addTag('[En Desarrollo] Catálogos SRI', 'Catálogos oficiales del SRI')
-    .addTag('[En Desarrollo] Emisores', 'Gestión de emisores de comprobantes')
-    .addTag('[En Desarrollo] Signature', 'Firma electrónica de documentos')
-    .addTag(
-      '[En Desarrollo] SRI - Webhooks',
-      'Webhooks para notificaciones del SRI',
-    )
-    .addTag('[En Desarrollo] Certificados', 'Gestión de certificados digitales')
+    .addTag('[SRI] Catálogos', 'Catálogos oficiales del SRI')
+    .addTag('[SRI] Emisores', 'Gestión de emisores de comprobantes')
+    .addTag('[SRI] Firma (XAdES-BES)', 'Firma electrónica de documentos')
+    .addTag('[SRI] Webhooks', 'Webhooks para notificaciones del SRI')
+    .addTag('[SRI] Certificados', 'Gestión de certificados digitales')
     .addTag(
       '[No Aplicable] Métricas para Prometheus (scraping)',
       'Métricas para Prometheus (scraping)',

@@ -10,6 +10,8 @@ import { RemoveMeterUseCase } from './application/use-cases/remove-meter.use-cas
 import { ExportMetersUseCase } from './application/use-cases/export-meters.use-case';
 import { ExportMetersPdfUseCase } from './application/use-cases/export-meters-pdf.use-case';
 import { ReplaceMeterUseCase } from './application/use-cases/replace-meter.use-case';
+import { FindMeterHistoryUseCase } from './application/use-cases/find-meter-history.use-case';
+import { FindReplacementUseCase } from './application/use-cases/find-replacement.use-case';
 import { MeterRepository } from './domain/repositories/meter.repository';
 import { PrismaMeterRepository } from './infrastructure/repositories/prisma-meter.repository';
 import { MetersInventoryPdfDocumentType } from './pdf/meters-inventory.pdf-type';
@@ -30,6 +32,8 @@ import { MetersInventoryPdfDocumentType } from './pdf/meters-inventory.pdf-type'
     ExportMetersUseCase,
     ExportMetersPdfUseCase,
     ReplaceMeterUseCase,
+    FindMeterHistoryUseCase,
+    FindReplacementUseCase,
   ],
   exports: [
     MeterRepository,

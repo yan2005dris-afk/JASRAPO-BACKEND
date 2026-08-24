@@ -19,6 +19,7 @@ import { MeterResponseDto } from '../dto/meter-response.dto';
 import { FilterMeterDto } from '../dto/filter-meter.dto';
 import { ReplaceMeterDto } from '../dto/replace-meter.dto';
 import { ReemplazoMedidorResponseDto } from '../dto/reemplazo-medidor-response.dto';
+import { MeterHistoryResponseDto } from '../dto/meter-history-response.dto';
 import { PaginatedMeterResponse } from '../types/paginated-meter-response.type';
 import { EnumStateDto } from 'src/shared/enums/state-catalog';
 import {
@@ -163,6 +164,59 @@ export class MeterController {
     );
     response.setHeader('Content-Length', pdf.length);
     response.end(pdf);
+  }
+
+  @ApiOperation({
+    summary: 'Historial del medidor',
+    description:
+      'Lista las asignaciones del medidor con indicador de reemplazo por registro',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'ID único del medidor',
+    type: Number,
+    example: 1,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Historial del medidor',
+    type: [MeterHistoryResponseDto],
+  })
+  @ApiResponse({ status: 401, description: 'No autorizado' })
+  @ApiResponse({ status: 404, description: 'Medidor no encontrado' })
+  @RequiredPermission('meters', 'read')
+  @Get(':id/history')
+  async findHistory(
+    @Param('id', ParseBigIntPipe) id: bigint,
+  ): Promise<MeterHistoryResponseDto[]> {
+    const history = await this.meterService.getHistory(id);
+    return history.map((item) => MeterHistoryResponseDto.fromEntity(item));
+  }
+
+  @ApiOperation({
+    summary: 'Detalle de reemplazo de medidor',
+    description: 'Retorna el detalle completo de un cambio de medidor',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'ID único del reemplazo',
+    type: Number,
+    example: 1,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Reemplazo encontrado',
+    type: ReemplazoMedidorResponseDto,
+  })
+  @ApiResponse({ status: 401, description: 'No autorizado' })
+  @ApiResponse({ status: 404, description: 'Reemplazo no encontrado' })
+  @RequiredPermission('meters', 'read')
+  @Get('replacements/:id')
+  async findReplacement(
+    @Param('id', ParseBigIntPipe) id: bigint,
+  ): Promise<ReemplazoMedidorResponseDto> {
+    const reemplazo = await this.meterService.findReplacement(id);
+    return ReemplazoMedidorResponseDto.fromEntity(reemplazo);
   }
 
   /**

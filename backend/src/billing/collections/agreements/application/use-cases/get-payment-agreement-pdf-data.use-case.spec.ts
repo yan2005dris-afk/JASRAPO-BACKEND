@@ -12,9 +12,11 @@ const mockPdfData = {
     abonoInicial: 100.0,
     numeroCuotas: 4,
     fechaPrimerPago: new Date('2024-02-01').toISOString(),
+    periodoInicio: new Date('2020-01-01').toISOString(),
     motivo: 'Deuda acumulada',
     createdAt: new Date('2024-01-15').toISOString(),
     cuotaMensual: 100.0,
+    primeraCuota: 100.0,
     contrato: {
       numeroGuia: 'NG-001',
       direccionSuministro: 'Av. Principal 123',

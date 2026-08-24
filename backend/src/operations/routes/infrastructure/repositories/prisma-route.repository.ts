@@ -88,15 +88,11 @@ export class PrismaRouteRepository implements RouteRepository {
         data: {
           nombre: data.nombre,
           descripcion: data.descripcion,
-          operario: { connect: { usuarioId: data.operarioId } },
+          operarioId: data.operarioId ?? null,
           tipoRuta: data.tipoRuta as TipoRuta,
-          comunidad: { connect: { comunidadId: data.comunidadId } },
-          sector: data.sectorId
-            ? { connect: { sectorId: data.sectorId } }
-            : undefined,
-          periodo: data.periodoId
-            ? { connect: { periodoId: data.periodoId } }
-            : undefined,
+          comunidadId: data.comunidadId,
+          sectorId: data.sectorId ?? null,
+          periodoId: data.periodoId ?? null,
           fechaPlanificada: data.fechaPlanificada ?? null,
           estado: (data.estado ?? 'PENDIENTE') as EstadoRuta,
         },
@@ -115,26 +111,36 @@ export class PrismaRouteRepository implements RouteRepository {
 
   async update(rutaId: bigint, data: UpdateRouteData): Promise<RouteEntity> {
     try {
+      const updateData: Prisma.RutasUncheckedUpdateInput = {
+        ...(data.nombre !== undefined ? { nombre: data.nombre } : {}),
+        ...(data.descripcion !== undefined
+          ? { descripcion: data.descripcion }
+          : {}),
+        ...(data.operarioId !== undefined
+          ? { operarioId: data.operarioId }
+          : {}),
+        ...(data.tipoRuta !== undefined
+          ? { tipoRuta: data.tipoRuta as TipoRuta }
+          : {}),
+        ...(data.comunidadId !== undefined
+          ? { comunidadId: data.comunidadId }
+          : {}),
+        ...(data.sectorId !== undefined ? { sectorId: data.sectorId } : {}),
+        ...(data.periodoId !== undefined ? { periodoId: data.periodoId } : {}),
+        ...(data.estado !== undefined
+          ? { estado: data.estado as EstadoRuta }
+          : {}),
+        ...(data.fechaPlanificada !== undefined
+          ? { fechaPlanificada: data.fechaPlanificada }
+          : {}),
+        ...(data.fechaInicio !== undefined
+          ? { fechaInicio: data.fechaInicio }
+          : {}),
+        ...(data.fechaFin !== undefined ? { fechaFin: data.fechaFin } : {}),
+      };
       const raw = await this.prisma.rutas.update({
         where: { rutaId },
-        data: {
-          ...(data.nombre !== undefined ? { nombre: data.nombre } : {}),
-          ...(data.descripcion !== undefined
-            ? { descripcion: data.descripcion }
-            : {}),
-          ...(data.operarioId !== undefined
-            ? { operarioId: data.operarioId }
-            : {}),
-          ...(data.estado !== undefined
-            ? { estado: data.estado as EstadoRuta }
-            : {}),
-          ...(data.fechaPlanificada !== undefined
-            ? { fechaPlanificada: data.fechaPlanificada }
-            : {}),
-          ...(data.periodoId !== undefined
-            ? { periodoId: data.periodoId }
-            : {}),
-        },
+        data: updateData,
       });
       return RouteMapper.toEntity(raw);
     } catch (error) {

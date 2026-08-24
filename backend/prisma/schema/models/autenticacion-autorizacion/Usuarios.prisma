@@ -21,6 +21,7 @@ model Usuarios {
   permisosUsuario        UsuarioPermisos[]
   reemplazosSolicitados  ReemplazoMedidor[]   @relation("ReemplazoSolicitante")
   reemplazosAutorizados  ReemplazoMedidor[]   @relation("ReemplazoAutorizador")
+  anomaliasResueltas     LecturaAnomalia[]    @relation("AnomaliaResueltaPor")
   invitaciones           UsuarioInvitacion[]  @relation("invitaciones")
   invitacionesEnviadas   UsuarioInvitacion[]  @relation("invitadoPor")
   rol                    Roles?               @relation(fields: [rolId], references: [rolId])

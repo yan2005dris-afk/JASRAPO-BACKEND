@@ -24,6 +24,17 @@ export type Banco = (typeof Banco)[keyof typeof Banco];
 
 // Fuente: models\logica-de-negocio\Pagos.prisma
 
+export const CodigoSistemaRubro = {
+  INSTALACION: 'INSTALACION',
+  RECONEXION: 'RECONEXION',
+  INSPECCION: 'INSPECCION',
+} as const;
+
+export type CodigoSistemaRubro =
+  (typeof CodigoSistemaRubro)[keyof typeof CodigoSistemaRubro];
+
+// Fuente: models/logica-de-negocio/Rubros.prisma
+
 export const EstadoAnomalia = {
   PENDIENTE: 'PENDIENTE',
   EN_REVISION: 'EN_REVISION',
@@ -44,6 +55,17 @@ export const EstadoAprobacionReemplazo = {
 export type EstadoAprobacionReemplazo = (typeof EstadoAprobacionReemplazo)[keyof typeof EstadoAprobacionReemplazo];
 
 // Fuente: models\logica-de-negocio\ReemplazoMedidor.prisma
+
+export const EstadoAprobacionReemplazo = {
+  PENDIENTE: 'PENDIENTE',
+  APROBADA: 'APROBADA',
+  RECHAZADA: 'RECHAZADA',
+} as const;
+
+export type EstadoAprobacionReemplazo =
+  (typeof EstadoAprobacionReemplazo)[keyof typeof EstadoAprobacionReemplazo];
+
+// Fuente: models/logica-de-negocio/ReemplazoMedidor.prisma
 
 export const EstadoAsignacion = {
   NO_ASIGNADA: 'NO_ASIGNADA',

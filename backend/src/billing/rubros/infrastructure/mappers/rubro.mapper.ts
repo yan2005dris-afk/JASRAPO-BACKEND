@@ -30,6 +30,7 @@ export class RubroMapper {
           ? raw.precioUnitario.toNumber()
           : Number(raw.precioUnitario),
       tipoRubro: raw.tipoRubro,
+      codigoSistemaRubro: raw.codigoSistemaRubro,
       tarifaImpuestoId: raw.tarifaImpuestoId,
       categoriaTarifaId: raw.categoriaTarifaId,
       tarifaImpuesto: raw.tarifaImpuesto

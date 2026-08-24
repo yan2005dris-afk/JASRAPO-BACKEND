@@ -361,7 +361,7 @@ reports/
 - HttpExceptions masivas en sri: `emitir-factura.use-case.ts:1,101,150,166,276,324,368,700`; `emitir-nota-credito.use-case.ts`; `webhooks.service.ts:3-4,72,119`; `emisores.service.ts:3-4,41,91,107,168,193`; `certificate.service.ts:3-4,93,185,193,206,229`.
 - Token string sin tipo: `{ provide: 'JobService', useExisting: JobsService }` (`emision.module.ts:78`) consumido con `@Inject('JobService')`.
 - **Concretos exportados en vez de ports**: `emision.module.ts:96-111` exporta `SriService`, `SriIntegrationService`, `Emitir*UseCase`, `XmlSignerService`, etc.
-- **`open-api-facturacion-sri-main/` es un proyecto NestJS paralelo** (own package.json) no integrado al module graph — cero matches de import en `backend/src`; dos stacks SRI que pueden divergir.
+- **`external/open-api-facturacion-sri/` (deprecado, referencia histórica) es un proyecto NestJS paralelo** (own package.json) no integrado al module graph — cero matches de import en `backend/src`; dos stacks SRI que pueden divergir.
 - **Prisma schema naming inconsistente**: `Convenios.prisma:22-24` columnas de auditoría en español (`actualizado_en`) vs `Comprobantes.prisma:41-42` en inglés (`created_at`); `Prefacturas.prisma:19` `meses_atrasado` snake_case sin mapping camelCase; modelo `Empresa` vs lenguaje de dominio "Emisores" (`Emisores.prisma:1`).
 
 ---
@@ -398,7 +398,7 @@ reports/
 17. `search.client.dto.ts` → kebab; `decommission-meter.dto.ts` → `interfaces/dto/`.
 18. Unificar columnas de auditoría en Prisma (español vs inglés) y `meses_atrasado`.
 19. Resolver drift `Empresa` vs `Emisores`.
-20. Evaluar `open-api-facturacion-sri-main/`: integrar o deprecar (dos stacks SRI).
+20. Evaluar `external/open-api-facturacion-sri/` (deprecado, referencia histórica): integrar o deprecar (dos stacks SRI).
 
 ---
 

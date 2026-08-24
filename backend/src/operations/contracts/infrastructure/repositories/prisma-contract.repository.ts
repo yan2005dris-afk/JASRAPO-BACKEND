@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { Prisma } from 'src/generated/prisma/client';
-import { EstadoMedidor } from 'src/shared/enums';
+import { EstadoContrato, EstadoMedidor } from 'src/shared/enums';
 import {
   EntityNotFoundException,
   InvalidDomainOperationException,
@@ -219,6 +219,10 @@ export class PrismaContractRepository implements ContractRepository {
         where: { medidorId: data.medidorId },
         data: { estado: EstadoMedidor.PENDIENTE },
       });
+
+      if (contrato.estado === EstadoContrato.PENDIENTE_PAGO) {
+        await tx.$executeRaw`SELECT generar_prefactura_instalacion(${contrato.contratoId}, ${data.creadoPor || 'SYSTEM'})`;
+      }
 
       const createdRecord = await tx.contratos.findUnique({
         where: { contratoId: contrato.contratoId },

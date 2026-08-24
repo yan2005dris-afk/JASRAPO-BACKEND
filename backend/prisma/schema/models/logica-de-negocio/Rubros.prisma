@@ -7,6 +7,7 @@ model Rubros {
   tipoRubro         TipoRubro           @map("tipo_rubro")
   tarifaImpuestoId  Int                       @map("tarifa_impuesto_id")
   categoriaTarifaId Int?                     @map("categoria_tarifa_id")
+  codigoSistemaRubro CodigoSistemaRubro?     @map("codigo_sistema_rubro")
   esAutomatico      Boolean                   @default(false) @map("es_automatico")
   activo            Boolean                   @default(true) @map("activo")
   createdAt         DateTime                  @default(now()) @map("creado_en")
@@ -20,7 +21,14 @@ model Rubros {
   @@index([tarifaImpuestoId])
   @@index([categoriaTarifaId])
   @@index([codigoSri])
+  @@index([codigoSistemaRubro])
   @@map("rubros")
+}
+
+enum CodigoSistemaRubro {
+  INSTALACION
+  RECONEXION
+  INSPECCION
 }
 
 enum TipoRubro {

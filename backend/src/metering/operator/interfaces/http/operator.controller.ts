@@ -8,7 +8,11 @@ import {
   UseGuards,
   Post,
   ParseEnumPipe,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiTags,
   ApiBearerAuth,
@@ -17,6 +21,7 @@ import {
   ApiParam,
   ApiBody,
   ApiQuery,
+  ApiConsumes,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
@@ -32,16 +37,21 @@ import { ResponseReadingDto } from 'src/metering/readings/interfaces/dto/respons
 import { MeterResponseDto } from 'src/metering/meters/interfaces/dto/meter-response.dto';
 import { SyncAllUseCase } from '../../application/use-cases/sync-all.use-case';
 import { DecommissionMeterDto } from '../dto/decommission-meter.dto';
-import { GetOperatorTasksUseCase } from '../../application/use-cases/get-operator-tasks.use-case';
-import { UpdateTaskStateUseCase } from '../../application/use-cases/update-task-state.use-case';
-import { UpdateTaskDto } from '../../interfaces/dto/update-task.dto';
-import { TaskResponseDto } from '../../interfaces/dto/task-response.dto';
+import { GetOperatorRoutesUseCase } from '../../application/use-cases/get-operator-routes.use-case';
+import { UpdateRouteStateUseCase } from '../../application/use-cases/update-route-state.use-case';
+import { UpdateRouteStateDto } from '../../interfaces/dto/update-route-state.dto';
+import { OperatorRouteResponseDto } from '../../interfaces/dto/operator-route-response.dto';
 import { OperatorReadingAnomalyResponseDto } from '../../interfaces/dto/operator-reading-anomaly-response.dto';
 import { TipoRuta } from 'src/shared/enums';
 import { InstallMeterUseCase } from '../../application/use-cases/install-meter.use-case';
 import { ReportDefectUseCase } from '../../application/use-cases/report-defect.use-case';
 import { DecommissionMeterUseCase } from '../../application/use-cases/decommission-meter.use-case';
 import { GetOperatorReadingsWithAnomaliesUseCase } from '../../application/use-cases/get-operator-readings-with-anomalies.use-case';
+import { StorageService } from 'src/infrastructure/storage/storage.service';
+import {
+  uploadReadingPhoto,
+  rollbackReadingPhoto,
+} from '../../application/reading-upload.helper';
 
 @ApiTags('operator')
 @ApiBearerAuth()
@@ -55,9 +65,10 @@ export class OperatorController {
     private readonly reportDefectUseCase: ReportDefectUseCase,
     private readonly decommissionMeterUseCase: DecommissionMeterUseCase,
     private readonly syncAllUseCase: SyncAllUseCase,
-    private readonly getOperatorTasksUseCase: GetOperatorTasksUseCase,
-    private readonly updateTaskStateUseCase: UpdateTaskStateUseCase,
+    private readonly getOperatorRoutesUseCase: GetOperatorRoutesUseCase,
+    private readonly updateRouteStateUseCase: UpdateRouteStateUseCase,
     private readonly getOperatorReadingsWithAnomaliesUseCase: GetOperatorReadingsWithAnomaliesUseCase,
+    private readonly storageService: StorageService,
   ) {}
 
   @ApiOperation({
@@ -113,8 +124,10 @@ export class OperatorController {
   @ApiOperation({
     summary: 'Actualizar lectura del operario',
     description:
-      'Permite al operario actualizar una lectura de su ruta y transicionarla a POR_REVISION',
+      'Permite al operario actualizar una lectura de su ruta. Acepta multipart/form-data: ' +
+      'todos los campos del DTO como strings de formulario más un archivo opcional `foto`.',
   })
+  @ApiConsumes('multipart/form-data')
   @ApiParam({
     name: 'id',
     description: 'ID de la lectura',
@@ -122,8 +135,18 @@ export class OperatorController {
     example: 1,
   })
   @ApiBody({
-    type: ActualizarLecturaDto,
-    description: 'Datos a actualizar de la lectura',
+    description: 'Datos de lectura + foto opcional (multipart/form-data)',
+    schema: {
+      type: 'object',
+      properties: {
+        lecturaActual: { type: 'number' },
+        lecturaAnterior: { type: 'number' },
+        fecha: { type: 'string' },
+        lecturaInicial: { type: 'boolean' },
+        descripcionAnomalia: { type: 'string' },
+        foto: { type: 'string', format: 'binary' },
+      },
+    },
   })
   @ApiResponse({
     status: 200,
@@ -138,19 +161,50 @@ export class OperatorController {
   })
   @ApiResponse({ status: 404, description: 'Lectura no encontrada' })
   @RequiredPermission('lecturas', 'update')
+  @UseInterceptors(
+    FileInterceptor('foto', {
+      limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
+      fileFilter: (_req, file, cb) => {
+        if (!file.mimetype.startsWith('image/')) {
+          return cb(
+            new BadRequestException('Solo se permiten archivos de imagen'),
+            false,
+          );
+        }
+        cb(null, true);
+      },
+    }),
+  )
   @Patch('readings/:id')
   async updateOperatorReading(
     @Param('id', ParseBigIntPipe) id: bigint,
     @CurrentUser() user: JwtPayload,
     @Body(new ParseActualizarLecturaPipe()) updateDto: ActualizarLecturaDto,
+    @UploadedFile() foto?: Express.Multer.File,
   ): Promise<ResponseReadingDto> {
     const operarioId = Number(user.sub);
-    const updated = await this.updateOperatorReadingUseCase.execute(
-      id,
-      operarioId,
-      updateDto,
-    );
-    return ResponseReadingDto.fromEntity(updated)!;
+
+    // If a photo file was attached, upload it and inject the key into the DTO
+    let uploadedKey: string | undefined;
+    if (foto) {
+      uploadedKey = await uploadReadingPhoto(foto, this.storageService);
+      updateDto.fotoUrl = uploadedKey;
+    }
+
+    try {
+      const updated = await this.updateOperatorReadingUseCase.execute(
+        id,
+        operarioId,
+        updateDto,
+      );
+      return ResponseReadingDto.fromEntity(updated)!;
+    } catch (error) {
+      // Rollback the uploaded photo to avoid orphaned objects
+      if (uploadedKey) {
+        await rollbackReadingPhoto(uploadedKey, this.storageService);
+      }
+      throw error;
+    }
   }
 
   /**
@@ -279,83 +333,83 @@ export class OperatorController {
     return meters.map((m) => MeterResponseDto.fromEntity(m));
   }
 
-  // ── Task endpoints (field operator view) ─────────────────────────────
+  // ── Route endpoints (field operator view) ────────────────────────────
 
   /**
-   * Listar tareas del operario
-   * GET /operator/tasks
+   * Listar rutas del operario
+   * GET /operator/routes
    */
   @ApiOperation({
-    summary: 'Listar tareas del operario',
+    summary: 'Listar rutas del operario',
     description:
-      'Retorna las tareas del período activo asignadas al operario autenticado',
+      'Retorna las rutas del período activo con sus órdenes de trabajo y paradas asignadas al operario autenticado',
   })
   @ApiQuery({
     name: 'tipoRuta',
     required: false,
     enum: TipoRuta,
-    description: 'Filter tasks by route type',
+    description: 'Filtrar rutas por tipo',
   })
   @ApiResponse({
     status: 200,
-    description: 'Lista de tareas del operario',
-    type: [TaskResponseDto],
+    description: 'Lista de rutas del operario',
+    type: [OperatorRouteResponseDto],
   })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({ status: 404, description: 'No hay período activo' })
   @RequiredPermission('lecturas', 'read')
-  @Get('tasks')
-  async getOperatorTasks(
+  @Get('routes')
+  async getOperatorRoutes(
     @CurrentUser() user: JwtPayload,
     @Query('tipoRuta', new ParseEnumPipe(TipoRuta, { optional: true }))
     tipoRuta?: TipoRuta,
-  ): Promise<TaskResponseDto[]> {
+  ): Promise<OperatorRouteResponseDto[]> {
     const operarioId = Number(user.sub);
-    const tasks = await this.getOperatorTasksUseCase.execute(
+    const routes = await this.getOperatorRoutesUseCase.execute(
       operarioId,
       tipoRuta,
     );
-    return tasks.map((t) => TaskResponseDto.fromEntity(t));
+    return routes.map((route) => OperatorRouteResponseDto.fromEntity(route));
   }
 
   /**
-   * Actualizar estado de una tarea
-   * PATCH /operator/tasks/:id
+   * Actualizar estado de una ruta
+   * PATCH /operator/routes/:id/state
    */
   @ApiOperation({
-    summary: 'Actualizar estado de tarea',
+    summary: 'Actualizar estado de ruta',
     description:
-      'Permite al operario actualizar el estado de una tarea asignada',
+      'Permite al operario actualizar el estado de una ruta asignada',
   })
   @ApiParam({
     name: 'id',
-    description: 'ID de la tarea (ruta)',
+    description: 'ID de la ruta',
     type: Number,
     example: 1,
   })
-  @ApiBody({ type: UpdateTaskDto })
+  @ApiBody({ type: UpdateRouteStateDto })
   @ApiResponse({
     status: 200,
-    description: 'Tarea actualizada',
-    type: TaskResponseDto,
+    description: 'Ruta actualizada',
+    type: OperatorRouteResponseDto,
   })
   @ApiResponse({ status: 400, description: 'Transición inválida' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
-  @ApiResponse({ status: 403, description: 'Tarea no pertenece al operador' })
-  @ApiResponse({ status: 404, description: 'Tarea no encontrada' })
+  @ApiResponse({ status: 403, description: 'Ruta no pertenece al operador' })
+  @ApiResponse({ status: 404, description: 'Ruta no encontrada' })
   @RequiredPermission('lecturas', 'update')
-  @Patch('tasks/:id')
-  async updateTaskState(
+  @Patch('routes/:id/state')
+  async updateRouteState(
     @Param('id', ParseBigIntPipe) id: bigint,
     @CurrentUser() user: JwtPayload,
-    @Body() dto: UpdateTaskDto,
-  ): Promise<TaskResponseDto> {
+    @Body() dto: UpdateRouteStateDto,
+  ): Promise<OperatorRouteResponseDto> {
     const operarioId = Number(user.sub);
-    const updated = await this.updateTaskStateUseCase.execute(
+    const updated = await this.updateRouteStateUseCase.execute(
       id,
       operarioId,
       dto,
     );
-    return TaskResponseDto.fromEntity(updated);
+    return OperatorRouteResponseDto.fromEntity(updated);
   }
 }

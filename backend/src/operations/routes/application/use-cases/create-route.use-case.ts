@@ -21,19 +21,23 @@ export class CreateRouteUseCase {
   constructor(private readonly routeRepository: RouteRepository) {}
 
   async execute(createDto: CreateRouteDto): Promise<RouteEntity> {
-    const operario = await this.routeRepository.findUsuario(
-      createDto.operarioId,
-      { includeRole: true },
-    );
-
-    if (!operario) {
-      throw new EntityNotFoundException('Operario', createDto.operarioId);
-    }
-
-    if (operario.rol?.nombre !== 'operadores') {
-      throw new InvalidDomainOperationException(
-        'Solo se pueden asignar operadores',
+    // operarioId es opcional: las rutas INSTALACION se crean sin operario
+    // y se despachan después desde la bandeja de secretaría (SC-174).
+    if (createDto.operarioId !== undefined && createDto.operarioId !== null) {
+      const operario = await this.routeRepository.findUsuario(
+        createDto.operarioId,
+        { includeRole: true },
       );
+
+      if (!operario) {
+        throw new EntityNotFoundException('Operario', createDto.operarioId);
+      }
+
+      if (operario.rol?.nombre !== 'operadores') {
+        throw new InvalidDomainOperationException(
+          'Solo se pueden asignar operadores',
+        );
+      }
     }
 
     const comunidad = await this.routeRepository.findComunidad(
@@ -94,7 +98,7 @@ export class CreateRouteUseCase {
     const createData: CreateRouteData = {
       nombre: createDto.nombre,
       descripcion: createDto.descripcion,
-      operarioId: createDto.operarioId,
+      operarioId: createDto.operarioId ?? null,
       tipoRuta: createDto.tipoRuta,
       comunidadId: createDto.comunidadId,
       sectorId: createDto.sectorId,

@@ -49,27 +49,35 @@ export class UpdateOperatorReadingUseCase {
       );
     }
 
-    // 4. Obtener el contrato activo de la lectura
-    const activeHistorial = lectura.medidor?.historial?.[0];
-    const contrato = activeHistorial?.contrato ?? null;
-    if (!contrato) {
-      throw new EntityNotFoundException('Contrato', 'activo');
-    }
+    // 4. Verificar si la lectura está asignada explícitamente a una orden de trabajo del operario
+    const hasWorkOrder = lectura.ordenesTrabajo?.some(
+      (ot) =>
+        ot.ruta?.operarioId === operarioId &&
+        ot.ruta?.periodoId === activePeriod.periodoId,
+    );
 
-    // 5. Verificar que la lectura pertenezca a alguna ruta del operador
-    const lecturaPertenece = rutas.some((ruta) => {
-      const comunidadMatch = ruta.comunidadId === contrato.comunidadId;
-      const sectorMatch =
-        ruta.sectorId === null || ruta.sectorId === undefined
-          ? true
-          : ruta.sectorId === contrato.sectorId;
-      return comunidadMatch && sectorMatch;
-    });
+    if (!hasWorkOrder) {
+      // Fallback a pertenencia comunitaria/sectorial en rutas activas
+      const activeHistorial = lectura.medidor?.historial?.[0];
+      const contrato = activeHistorial?.contrato ?? null;
+      if (!contrato) {
+        throw new EntityNotFoundException('Contrato', 'activo');
+      }
 
-    if (!lecturaPertenece) {
-      throw new InvalidDomainOperationException(
-        'Esta lectura no pertenece a tu ruta asignada',
-      );
+      const lecturaPertenece = rutas.some((ruta) => {
+        const comunidadMatch = ruta.comunidadId === contrato.comunidadId;
+        const sectorMatch =
+          ruta.sectorId === null || ruta.sectorId === undefined
+            ? true
+            : ruta.sectorId === contrato.sectorId;
+        return comunidadMatch && sectorMatch;
+      });
+
+      if (!lecturaPertenece) {
+        throw new InvalidDomainOperationException(
+          'Esta lectura no pertenece a tu ruta asignada',
+        );
+      }
     }
 
     // 6. Validar que la lectura esté en un estado modificable por el operador

@@ -8,7 +8,9 @@ import {
   Delete,
   Query,
   UseGuards,
+  Res,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { ParseBigIntPipe } from 'src/infrastructure/common/pipes/parse-bigint.pipe';
 import {
   ApiTags,
@@ -201,6 +203,41 @@ export class RoutesController {
   }
 
   /**
+   * Exportar Hoja de Campo en PDF
+   */
+  @ApiOperation({
+    summary: 'Exportar Hoja de Campo en PDF',
+    description:
+      'Genera y descarga la hoja de campo membretada oficial con todas las órdenes/lecturas para impresión operativa.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'ID de la ruta',
+    type: String,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'PDF generado',
+    content: { 'application/pdf': {} },
+  })
+  @ApiResponse({ status: 404, description: 'Ruta no encontrada' })
+  @RequiredPermission('routes', 'read')
+  @Get(':id/pdf')
+  async exportPdf(
+    @Param('id', ParseBigIntPipe) id: bigint,
+    @Res() res: any,
+  ): Promise<void> {
+    const pdfBuffer = await this.routesService.exportPdf(id);
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader(
+      'Content-Disposition',
+      `inline; filename="Hoja_Campo_Ruta_${id}_${new Date().toISOString().slice(0, 10)}.pdf"`,
+    );
+    res.setHeader('Content-Length', pdfBuffer.length);
+    res.end(pdfBuffer);
+  }
+
+  /**
    * Obtener órdenes de trabajo de una ruta
    */
   @ApiOperation({
@@ -301,7 +338,10 @@ export class RoutesController {
     @Param('id', ParseBigIntPipe) id: bigint,
     @Body() dto: ReassignRouteDto,
   ): Promise<RouteResponseDto> {
-    const result = await this.reassignRouteUseCase.execute(id, dto.operarioId);
+    const result = await this.reassignRouteUseCase.execute(
+      id,
+      dto.operarioId ?? null,
+    );
     return RouteResponseDto.fromEntity(result);
   }
 

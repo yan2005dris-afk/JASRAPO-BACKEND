@@ -8,6 +8,7 @@ export class UpdateRouteDto extends PartialType(
   PickType(CreateRouteDto, [
     'nombre',
     'descripcion',
+    'operarioId',
     'fechaPlanificada',
     'periodoId',
   ] as const),

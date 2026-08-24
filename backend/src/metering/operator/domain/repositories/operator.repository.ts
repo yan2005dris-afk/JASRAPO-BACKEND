@@ -1,9 +1,9 @@
 import type {
   ReadingWithContractDetail,
   MeterWithContractDetail,
-  OperatorTask,
+  OperatorRoute,
   ReadingWithAnomalies,
-  TaskStateUpdate,
+  RouteStateUpdate,
   OperatorUser,
 } from './repository-types';
 
@@ -20,6 +20,14 @@ export interface ActivePeriod {
 export interface ReadingWithDetails {
   lecturaId: bigint;
   estado: string;
+  ordenesTrabajo?: Array<{
+    rutaId: bigint;
+    operarioId?: number;
+    ruta?: {
+      operarioId: number | null;
+      periodoId: number | null;
+    } | null;
+  }>;
   medidor: {
     historial: Array<{
       contrato: {
@@ -48,29 +56,16 @@ export abstract class OperatorRepository {
     id: bigint,
   ): Promise<ReadingWithDetails | null>;
 
-  // Task methods (operator-tareas)
-  abstract findTasksByOperator(
+  abstract findRoutesByOperator(
     operarioId: number,
     periodoId: number,
     tipoRuta?: string,
-  ): Promise<OperatorTask[]>;
-  abstract updateTaskState(
+  ): Promise<OperatorRoute[]>;
+  abstract updateRouteState(
     rutaId: bigint,
-    data: TaskStateUpdate,
+    data: RouteStateUpdate,
     expectedEstado?: string,
-  ): Promise<OperatorTask>;
-
-  /** Atomically complete an INSTALACION task and update meter to INSTALADO. */
-  abstract completeInstallationTask(
-    rutaId: bigint,
-    taskUpdateData: TaskStateUpdate,
-    expectedEstado: string,
-    meterUpdateData: {
-      medidorId: bigint;
-      estado: string;
-      fechaInstalacion: Date;
-    },
-  ): Promise<OperatorTask>;
+  ): Promise<OperatorRoute>;
   abstract findOperatorsByGeography(
     comunidadId: number,
     sectorId: number | null,

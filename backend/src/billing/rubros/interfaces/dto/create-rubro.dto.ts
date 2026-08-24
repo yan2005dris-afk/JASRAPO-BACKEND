@@ -10,7 +10,7 @@ import {
   MaxLength,
   Min,
 } from 'class-validator';
-import { TipoRubro } from 'src/generated/prisma/client';
+import { TipoRubro } from '../../../../shared/enums';
 
 export class CreateRubroDto {
   @ApiPropertyOptional({

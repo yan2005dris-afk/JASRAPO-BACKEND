@@ -19,10 +19,17 @@ export type ReportKey =
   | 'account-statement';
 
 /**
- * Style resolved for a given report. Maps 1:1 to the set of pdf-type
- * suffixes (`*-legacy` | `*-modern`) registered with `PdfService`.
+ * Estilo resuelto para cada reporte. Las familias con dos diseños usan los
+ * sufijos `*-legacy` y `*-modern`; una familia canónica usa su clave base.
+ *
+ * `unique` is the canonical-only modality (PDF-01, Yandris 2026-08-19):
+ * a report family that ships a single official template and ignores the
+ * global `reporte.estilo`. Legal/contractual docs (e.g. payment-agreement)
+ * use it. The global `reporte.estilo` row itself only ever holds
+ * `legacy` | `modern` — `unique` is declared per report in
+ * `report-style.catalog.ts`, never in `sistema_config`.
  */
-export type ReportStyle = 'legacy' | 'modern';
+export type ReportStyle = 'legacy' | 'modern' | 'unique';
 
 /**
  * Hard-coded last-resort fallback when the `reporte.estilo` row is missing

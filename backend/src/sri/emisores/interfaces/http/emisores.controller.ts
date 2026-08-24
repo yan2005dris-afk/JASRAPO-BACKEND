@@ -24,7 +24,7 @@ import { LoggerService } from 'src/infrastructure/observability/logger/logger.se
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
 @LogContext()
-@ApiTags('[En Desarrollo] Emisores')
+@ApiTags('[SRI] Emisores')
 @ApiBearerAuth('JWT')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('emisores')

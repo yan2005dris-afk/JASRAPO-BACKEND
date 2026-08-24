@@ -5,7 +5,7 @@ import type {
   CreateAgreementData,
   CreateInstallmentData,
   PrefacturaDeudaRaw,
-  PaymentAgreementPdfData,
+  PaymentAgreementReportReadModel,
 } from '../types/agreement.types';
 import type { PaginateOptions } from 'src/infrastructure/common/utils/pagination.util';
 import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
@@ -49,5 +49,5 @@ export abstract class AgreementRepository {
 
   abstract getPdfData(
     convenioId: bigint,
-  ): Promise<PaymentAgreementPdfData | null>;
+  ): Promise<PaymentAgreementReportReadModel | null>;
 }

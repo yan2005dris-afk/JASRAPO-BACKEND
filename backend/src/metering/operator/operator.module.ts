@@ -3,8 +3,8 @@ import { OperatorController } from './interfaces/http/operator.controller';
 import { GetOperatorReadingsUseCase } from './application/use-cases/get-operator-readings.use-case';
 import { UpdateOperatorReadingUseCase } from './application/use-cases/update-operator-reading.use-case';
 import { SyncAllUseCase } from './application/use-cases/sync-all.use-case';
-import { GetOperatorTasksUseCase } from './application/use-cases/get-operator-tasks.use-case';
-import { UpdateTaskStateUseCase } from './application/use-cases/update-task-state.use-case';
+import { GetOperatorRoutesUseCase } from './application/use-cases/get-operator-routes.use-case';
+import { UpdateRouteStateUseCase } from './application/use-cases/update-route-state.use-case';
 import { InstallMeterUseCase } from './application/use-cases/install-meter.use-case';
 import { ReportDefectUseCase } from './application/use-cases/report-defect.use-case';
 import { DecommissionMeterUseCase } from './application/use-cases/decommission-meter.use-case';
@@ -21,8 +21,8 @@ import { ReadingModule } from '../readings/reading.module';
     GetOperatorReadingsUseCase,
     UpdateOperatorReadingUseCase,
     SyncAllUseCase,
-    GetOperatorTasksUseCase,
-    UpdateTaskStateUseCase,
+    GetOperatorRoutesUseCase,
+    UpdateRouteStateUseCase,
     InstallMeterUseCase,
     ReportDefectUseCase,
     DecommissionMeterUseCase,

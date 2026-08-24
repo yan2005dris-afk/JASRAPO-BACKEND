@@ -60,28 +60,31 @@ function redactIpv6(ip: string): string {
 }
 
 export function parseUserAgent(ua: string): string {
-  if (!ua || typeof ua !== 'string') return UNKNOWN;
+  const trimmed = ua.trim();
+  if (!trimmed) return UNKNOWN;
 
   // Check common CLI tools (e.g. curl/8.4.0, PostmanRuntime/7.32.3, etc.)
-  const cliMatch = ua.match(/^(curl|PostmanRuntime|insomnia|Wget)\/(\d+)/i);
+  const cliMatch = trimmed.match(
+    /^(curl|PostmanRuntime|insomnia|Wget)\/(\d+)/i,
+  );
   if (cliMatch) {
     return `${cliMatch[1]} ${cliMatch[2]}`;
   }
 
   // Standard browsers in order of specificity
-  const edgeMatch = ua.match(/Edg(?:e|A|iOS)?\/(\d+)/);
+  const edgeMatch = trimmed.match(/Edg(?:e|A|iOS)?\/(\d+)/);
   if (edgeMatch) return `Edge ${edgeMatch[1]}`;
 
-  const operaMatch = ua.match(/(?:OPR|Opera)\/(\d+)/);
+  const operaMatch = trimmed.match(/(?:OPR|Opera)\/(\d+)/);
   if (operaMatch) return `Opera ${operaMatch[1]}`;
 
-  const chromeMatch = ua.match(/(?:Chrome|CriOS)\/(\d+)/);
+  const chromeMatch = trimmed.match(/(?:Chrome|CriOS)\/(\d+)/);
   if (chromeMatch) return `Chrome ${chromeMatch[1]}`;
 
-  const firefoxMatch = ua.match(/(?:Firefox|FxiOS)\/(\d+)/);
+  const firefoxMatch = trimmed.match(/(?:Firefox|FxiOS)\/(\d+)/);
   if (firefoxMatch) return `Firefox ${firefoxMatch[1]}`;
 
-  const safariMatch = ua.match(/Version\/(\d+).*Safari/);
+  const safariMatch = trimmed.match(/Version\/(\d+).*Safari/);
   if (safariMatch) return `Safari ${safariMatch[1]}`;
 
   return UNKNOWN;
