@@ -11,8 +11,12 @@ import type {
   DetalleAdicionalRecord,
   MotivoNotaDebitoRecord,
 } from '../../../domain/interfaces/repository.interface';
+import type { TransactionContext } from 'src/shared/domain/types/transaction';
 
-export type TransactionContext = any;
+// Re-exportar para mantener compatibilidad con consumidores del módulo
+// que ya importaban `TransactionContext` desde acá. Una vez migrados los
+// consumidores, este re-export se puede eliminar.
+export type { TransactionContext };
 
 export abstract class ComprobanteRepository {
   abstract create(
@@ -43,6 +47,18 @@ export abstract class ComprobanteRepository {
 
   abstract findRecordById(id: bigint): Promise<ComprobanteRecord | null>;
 
+  // NOTA SC-187: `findConDetalles`, `findMany`, `findDetallesByComprobanteId`
+  // y `findInfoAdicionalByComprobanteId` siguen con `any` porque sus
+  // consumidores (`sri.service.ts`, use-cases de emisión) leen campos que
+  // no están modelados en `ComprobanteRecord` ni `DetalleRecord`
+  // (p. ej. `total_impuestos`, `created_at`, `subtotal` como campo del
+  // detalle). Tipar el contrato del puerto con un `ComprobanteResumenRecord`
+  // exige refactorizar los consumidores para usar el tipo correcto. Ese
+  // refactor excede el alcance de SC-187 (puertos de dominio) y entra en
+  // SC-188 (aislar application de infra). Se introdujo
+  // `TransactionContext` en los métodos que ya estaban correctos (`create`,
+  // `update`, `createDetalles`, etc.) y se dejó el resto con la nota
+  // correspondiente.
   abstract findConDetalles(claveAcceso: string): Promise<any>;
 
   abstract findMany(filters: {
