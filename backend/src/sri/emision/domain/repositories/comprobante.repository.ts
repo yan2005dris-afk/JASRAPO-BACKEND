@@ -13,11 +13,6 @@ import type {
 } from '../../../domain/interfaces/repository.interface';
 import type { TransactionContext } from 'src/shared/domain/types/transaction';
 
-// Re-exportar para mantener compatibilidad con consumidores del módulo
-// que ya importaban `TransactionContext` desde acá. Una vez migrados los
-// consumidores, este re-export se puede eliminar.
-export type { TransactionContext };
-
 export abstract class ComprobanteRepository {
   abstract create(
     data: ComprobanteRecord,

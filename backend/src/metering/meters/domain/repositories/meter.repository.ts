@@ -11,7 +11,7 @@ import type {
   ApproveMeterReplacementRepositoryData,
 } from '../types/meter.types';
 import type { EstadoMedidor, EstadoContrato } from 'src/shared/enums';
-import type { Prisma } from 'src/generated/prisma/client';
+import type { TransactionContext } from 'src/shared/domain/types/transaction';
 
 export type {
   MeterFilters,
@@ -22,8 +22,7 @@ export type {
   ReplaceMeterResult,
   ApproveMeterReplacementRepositoryData,
 };
-
-export type TransactionContext = Prisma.TransactionClient;
+export type { TransactionContext };
 
 export abstract class MeterRepository {
   abstract findUnique(where: {

@@ -12,6 +12,7 @@ import type {
   UserDirectPermission,
   UserRolePermission,
 } from '../types/user.types';
+import type { TransactionContext } from 'src/shared/domain/types/transaction';
 
 export type {
   FiltroFecha,
@@ -26,8 +27,7 @@ export type {
   UserDirectPermission,
   UserRolePermission,
 };
-
-export type TransactionContext = any;
+export type { TransactionContext };
 
 export abstract class UserRepository {
   abstract findById(usuarioId: number): Promise<UserEntity | null>;
