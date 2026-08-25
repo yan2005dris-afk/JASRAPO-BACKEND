@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <style>
+    :root {
+      --primary-color: #0c9ea1;
+      --primary-color-light: #dbf7f8;
+      --text-main: #0e2728;
+      --text-muted: #597b7d;
+      --border-color: #cbdedf;
+      --estado-activo: #10b981;
+      --estado-inactivo: #ef4444;
+    }
+  </style>    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Convenio de Pago - Olón</title>
+    <style>
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            background-color: #ffffff;
+            margin: 0;
+            padding: 0;
+        }
+
+        @page {
+            margin: 0;
+            size: A4 portrait;
+        }
+
+        .document-container {
+            width: 100%;
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+            box-sizing: border-box;
+            padding: 20px 40px;
+        }
+
+        /* Marca de agua simulada en el fondo */
+        .watermark {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+            opacity: 0.25; /* Transparencia ajustada para que sea visible */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .watermark img {
+            width: 85%;
+            height: 85%;
+            object-fit: contain;
+        }
+
+        /* Cabecera */
+        .header {
+            position: relative;
+            background: linear-gradient(to bottom, #dbeff8, #c4e4f3);
+            margin: 20px;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #5aa5c9;
+            z-index: 1;
+        }
+
+        /* Logos simulados */
+        .logo-left, .logo-right {
+            width: 100px;
+            height: 100px;
+            background-color: #fff;
+            border: 2px solid #888;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 10px;
+            text-align: center;
+            color: #555;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        .logo-right-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .logo-right-text {
+            font-family: Arial, sans-serif;
+            font-size: 8px;
+            color: #2b7095;
+            margin-top: 5px;
+            text-align: center;
+        }
+
+        /* Texto de cabecera */
+        .header-text {
+            flex-grow: 1;
+            text-align: center;
+            padding: 0 10px;
+        }
+
+        .header-text h1 {
+            font-size: 18px;
+            margin: 0 0 5px 0;
+            color: #333;
+        }
+
+        .header-text h2 {
+            font-size: 26px;
+            margin: 0;
+            color: #c0392b; /* Rojo para OLÓN */
+            font-weight: bold;
+            font-family: Georgia, serif;
+            letter-spacing: 2px;
+        }
+
+        .header-text p {
+            margin: 3px 0;
+            font-size: 12px;
+            color: #333;
+        }
+
+        /* Contenido Principal */
+        .content {
+            position: relative;
+            z-index: 1;
+            padding: 40px 60px;
+            line-height: 1.5;
+            color: #222;
+        }
+
+        .title {
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 20px;
+            margin-bottom: 40px;
+        }
+
+        .content p {
+            text-align: justify;
+            margin-bottom: 15px;
+            font-size: 15px;
+            text-indent: 50px; /* Sangría de primera línea */
+        }
+
+        .closing {
+            margin-top: 40px;
+            font-size: 15px;
+        }
+
+        /* Firmas */
+        .signatures-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 100px;
+            padding: 0 40px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .signature-block {
+            text-align: center;
+            width: 45%;
+        }
+
+        .signature-text {
+            font-size: 15px;
+            margin: 2px 0;
+        }
+
+        /* Footer */
+        .footer {
+            position: absolute;
+            bottom: 40px;
+            left: 60px;
+            right: 60px;
+            font-family: Arial, sans-serif;
+            font-size: 13px;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .footer p {
+            margin: 0;
+        }
+
+        .footer a {
+            color: #5aa5c9;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+<div class="document-container">
+
+    <div class="watermark">
+            <img src="data:image/jpeg;base64,PDF_LOGO_DATA" alt="Watermark Logo">
+    </div>
+
+    <div class="header">
+        <div class="logo-left">
+              <img src="data:image/jpeg;base64,PDF_LOGO_DATA" alt="Logo 1" style="width:100%; height:100%; object-fit:contain;">
+        </div>
+
+        <div class="header-text">
+            <h1>Junta Administradora del Sistema Regional de Agua Potable</h1>
+            <h2>"OLÓN"</h2>
+            <p>Decreto No. 3327 Reg. Ofic. No. 802 29 de Marzo de 1979</p>
+            <p>FUNDADA EL 11 DE SEPTIEMBRE DE 1982</p>
+            <p>R.U.C. No.: 2490016050001</p>
+        </div>
+
+
+    </div>
+
+    <div class="content">
+        <div class="title">CONVENIO DE PAGO</div>
+
+        <p>En las oficinas de la Junta del Sistema Regional de Agua Potable Olón a los diez días del mes de mayo del dos mil veinticuatro se realiza el presente convenio donde se compromete el usuario de la guía G-001 a nombre del Sr(a) Ana Pérez comprometiéndose a cancelar en cuotas $50.00 mensuales más el consumo generado por meses consecutivos, convenio que rige a partir del periodo enero de 2020. Al dar fiel cumplimiento a lo acordado.</p>
+
+        <p>Las cuotas se cancelan en efectivo a partir de junio de 2024 en adelante y así los meses posteriores hasta cancelar la deuda de $200.00.</p>
+
+        <p>Comprometiéndose a cancelar la primera cuota de $50.00.</p>
+
+        <div class="closing">
+            Atentamente
+        </div>
+    </div>
+
+    <div class="signatures-container">
+        <div class="signature-block">
+            <br><br><br>
+            <div class="signature-text">Sr(a). Ana Pérez</div>
+            <div class="signature-text">C.I. 0912345678</div>
+            <div class="signature-text">USUARIO</div>
+        </div>
+
+        <div class="signature-block">
+            <br><br><br>
+            <div class="signature-text">Sr. Humberto Salinas Neira.</div>
+            <div class="signature-text">C.I. 0915233670</div>
+            <div class="signature-text">REPRESENTANTE JASRAPO</div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>Dirección: Av. Santa Lucia e Intiñan (esquina)</p>
+        <p>E-mail <a href="mailto:juntaaguaolon2017@yahoo.com">juntaaguaolon2017@yahoo.com</a></p>
+        <p><a href="tel:2788051">TEL:2788051</a> Celular: 0983717499, Presidencia; 0999896280, Tesorería; 0998945560, Secretaría.</p>
+    </div>
+
+</div>
+
+</body>
+</html>

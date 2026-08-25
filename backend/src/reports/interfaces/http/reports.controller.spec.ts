@@ -95,6 +95,21 @@ describe('ReportsController', () => {
     expect(res.send).toHaveBeenCalledWith(JSON.stringify(document));
   });
 
+  it('jsonResponseNeverInvokesPdfRenderer', async () => {
+    for (const accept of ['application/json', 'application/json, */*', '*/*']) {
+      await controller.clientsListPdf(
+        {},
+        actor,
+        timeZone,
+        locale,
+        response(accept),
+      );
+    }
+
+    expect(dispatcher.dispatch).not.toHaveBeenCalled();
+    expect(clients.generate).toHaveBeenCalledTimes(3);
+  });
+
   it('entrega el PDF cuando Accept solicita únicamente application/pdf', async () => {
     const res = response('application/pdf');
 

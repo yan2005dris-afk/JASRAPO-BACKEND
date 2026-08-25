@@ -1,4 +1,5 @@
 import {
+  ConflictException,
   Injectable,
   Inject,
   Logger,
@@ -60,6 +61,7 @@ export class PdfService
     string,
     HandlebarsTemplateDelegate
   >();
+  private partialsRegistered = false;
 
   browser: Browser | null = null;
   private browserLaunchPromise: Promise<Browser> | null = null;
@@ -133,6 +135,8 @@ export class PdfService
   }
 
   private registerPartials(): void {
+    if (this.partialsRegistered) return;
+
     const stylesPath = path.join(this.templatesDir, 'styles.hbs');
     if (fs.existsSync(stylesPath)) {
       Handlebars.registerPartial('styles', fs.readFileSync(stylesPath, 'utf8'));
@@ -149,6 +153,8 @@ export class PdfService
         fs.readFileSync(modernStylesPath, 'utf8'),
       );
     }
+
+    this.partialsRegistered = true;
   }
 
   /** Concurrent recovery callers await this same launch operation. */
@@ -208,10 +214,13 @@ export class PdfService
         this.templatesDir,
         `${docType.template}.hbs`,
       );
-      if (fs.existsSync(templatePath)) {
-        const source = fs.readFileSync(templatePath, 'utf8');
-        this.templateCache.set(docType.template, Handlebars.compile(source));
+      if (!fs.existsSync(templatePath)) {
+        throw new NotFoundException(
+          `Registered template not found: ${docType.template}.hbs`,
+        );
       }
+      const source = fs.readFileSync(templatePath, 'utf8');
+      this.templateCache.set(docType.template, Handlebars.compile(source));
     }
     this.logger.log(
       `Template cache populated with ${this.templateCache.size} entries.`,
@@ -231,8 +240,8 @@ export class PdfService
     docType: PdfDocumentType<TInput, TOutput>,
   ): void {
     if (this.documentTypes.has(docType.type)) {
-      this.logger.warn(
-        `Document type '${docType.type}' already registered, overriding.`,
+      throw new ConflictException(
+        `Document type '${docType.type}' is already registered`,
       );
     }
     this.documentTypes.set(docType.type, docType);
@@ -245,12 +254,7 @@ export class PdfService
     options: PdfRenderOptions = {},
   ): Promise<Buffer> {
     const requestedAt = Date.now();
-    const templateFile = path.join(this.templatesDir, `${templateName}.hbs`);
-    if (!fs.existsSync(templateFile)) {
-      throw new NotFoundException(`Template not found: ${templateName}.hbs`);
-    }
-
-    const html = this.renderTemplate(templateName, data);
+    const html = this.renderHtml(templateName, data);
     const documentType = options.documentType ?? templateName;
     return this.runWithSemaphore(
       (signal) => this.htmlToPdf(html, signal, documentType),
@@ -261,6 +265,16 @@ export class PdfService
         externalSignal: options.signal,
       },
     );
+  }
+
+  /** Deterministic Handlebars output used by contract and golden tests. */
+  renderHtml(templateName: string, data: object): string {
+    const templateFile = path.join(this.templatesDir, `${templateName}.hbs`);
+    if (!fs.existsSync(templateFile)) {
+      throw new NotFoundException(`Template not found: ${templateName}.hbs`);
+    }
+    this.registerPartials();
+    return this.renderTemplate(templateName, data);
   }
 
   private renderTemplate(templateName: string, data: object): string {

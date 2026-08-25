@@ -3,11 +3,7 @@ import { PdfService } from '../infrastructure/pdf/pdf.service';
 import { ClientModule } from '../operations/clients/client.module';
 import { AgreementsModule } from '../billing/collections/agreements/agreements.module';
 import { ReportsController } from './interfaces/http/reports.controller';
-import { createConnectionHistoryPdfDocumentType } from './pdf/factories/connection-history.factory';
-import { createClientsListPdfDocumentType } from './pdf/factories/clients-list.factory';
-import { createAccountStatementPdfDocumentType } from './pdf/factories/account-statement.factory';
-import { createPaymentsReportPdfDocumentType } from './pdf/factories/payments-report.factory';
-import { PaymentAgreementPdfDocumentType } from '../billing/collections/agreements/pdf/payment-agreement.pdf-type';
+import { REPORT_PDF_DOCUMENT_TYPES } from './pdf/report-pdf-document-types';
 import { ReportStyleService } from './application/report-style.service';
 import { ReportStyleDispatcher } from './application/report-style.dispatcher';
 import { SendReportByEmailUseCase } from './application/use-cases/send-report-by-email.use-case';
@@ -97,30 +93,8 @@ export class ReportsModule implements OnModuleInit {
   constructor(private readonly pdfService: PdfService) {}
 
   onModuleInit() {
-    this.pdfService.registerDocumentType(
-      createClientsListPdfDocumentType('legacy'),
-    );
-    this.pdfService.registerDocumentType(
-      createClientsListPdfDocumentType('modern'),
-    );
-    this.pdfService.registerDocumentType(
-      createAccountStatementPdfDocumentType('legacy'),
-    );
-    this.pdfService.registerDocumentType(
-      createAccountStatementPdfDocumentType('modern'),
-    );
-    this.pdfService.registerDocumentType(PaymentAgreementPdfDocumentType);
-    this.pdfService.registerDocumentType(
-      createPaymentsReportPdfDocumentType('legacy'),
-    );
-    this.pdfService.registerDocumentType(
-      createPaymentsReportPdfDocumentType('modern'),
-    );
-    this.pdfService.registerDocumentType(
-      createConnectionHistoryPdfDocumentType('legacy'),
-    );
-    this.pdfService.registerDocumentType(
-      createConnectionHistoryPdfDocumentType('modern'),
-    );
+    for (const documentType of REPORT_PDF_DOCUMENT_TYPES) {
+      this.pdfService.registerDocumentType(documentType);
+    }
   }
 }

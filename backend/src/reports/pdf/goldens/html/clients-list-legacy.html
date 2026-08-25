@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <style>
+    :root {
+      --primary-color: #0c9ea1;
+      --primary-color-light: #dbf7f8;
+      --text-main: #0e2728;
+      --text-muted: #597b7d;
+      --border-color: #cbdedf;
+      --estado-activo: #10b981;
+      --estado-inactivo: #ef4444;
+    }
+  </style>  <meta charset="UTF-8">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; font-size: 11px; color: #333; }
+    .container { width: 100%; padding: 20px; }
+
+    .header { border-bottom: 2px solid var(--primary-color); padding-bottom: 12px; margin-bottom: 16px; }
+    .header table { width: 100%; border-collapse: collapse; }
+    .header td { border: none; vertical-align: middle; padding: 0; }
+    .header td.right { text-align: right; }
+    .company-name { font-size: 16px; font-weight: bold; color: var(--primary-color); }
+    .company-sub { font-size: 10px; color: #666; }
+    .report-title { font-size: 18px; font-weight: bold; color: var(--primary-color); }
+    .report-meta { font-size: 10px; color: #666; margin-top: 4px; }
+
+    .summary { margin-bottom: 14px; }
+    .badge { display: inline-block; background: var(--primary-color); color: white; padding: 4px 12px; font-size: 11px; font-weight: bold; }
+
+    table.clients { width: 100%; border-collapse: collapse; margin-top: 8px; }
+    table.clients th {
+      background-color: var(--primary-color);
+      color: white;
+      padding: 7px 8px;
+      text-align: left;
+      font-size: 10px;
+      font-weight: bold;
+    }
+    table.clients td { padding: 6px 8px; border-bottom: 1px solid #e0e0e0; font-size: 10px; vertical-align: top; }
+    table.clients tr.even td { background-color: var(--primary-color-light); }
+    table.clients .estado-activo { color: #1a7a2e; font-weight: bold; }
+    table.clients .estado-inactivo { color: #c0392b; font-weight: bold; }
+
+    .footer { margin-top: 24px; text-align: center; font-size: 9px; color: #aaa; border-top: 1px solid #ddd; padding-top: 8px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- Header -->
+    <div class="header">
+      <table>
+        <tr>
+          <td>
+            <div class="company-name">JASRAPO</div>
+            <div class="company-sub">Junta de Agua Potable y Alcantarillado</div>
+            <div class="company-sub">Olón - Santa Elena</div>
+          </td>
+          <td class="right">
+            <div class="report-title">Listado de Clientes</div>
+            <div class="report-meta">Fecha de emisión: 20 de mayo de 2024</div>
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- Resumen -->
+    <div class="summary">
+      <span class="badge">Total de clientes: 2</span>
+      <span style="margin-left:12px; font-size:10px; color:#666;">Filtros: Solo activos</span>
+    </div>
+
+    <!-- Tabla de clientes -->
+    <table class="clients">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Identificación</th>
+          <th>Tipo</th>
+          <th>Nombre / Razón Social</th>
+          <th>Email</th>
+          <th>Teléfono</th>
+          <th>Dirección</th>
+          <th>Estado</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="">
+          <td>1</td>
+          <td>0912345678</td>
+          <td>CÉDULA</td>
+          <td>Ana Pérez</td>
+          <td>ana@example.com</td>
+          <td>0999999999</td>
+          <td>Olón</td>
+          <td class="estado-activo">
+            Activo
+          </td>
+        </tr>
+        <tr class="">
+          <td>2</td>
+          <td>0999999999001</td>
+          <td>RUC</td>
+          <td>Comercial Olón</td>
+          <td>—</td>
+          <td>—</td>
+          <td>—</td>
+          <td class="estado-inactivo">
+            Inactivo
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Footer -->
+    <div class="footer">
+      <p>Reporte generado por el sistema JASRAPO. Documento de uso interno.</p>
+    </div>
+
+  </div>
+</body>
+</html>

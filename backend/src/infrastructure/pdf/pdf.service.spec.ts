@@ -69,6 +69,27 @@ describe('PdfService', () => {
   // Bootstrap — template pre-compilation (REQ-23)
   // ---------------------------------------------------------------------------
   describe('onApplicationBootstrap — template cache', () => {
+    it('rejects duplicate document type registrations', () => {
+      expect(() =>
+        service.registerDocumentType({
+          type: 'payments-report-modern',
+          name: 'duplicate',
+          template: 'payments-report-modern',
+          adaptData: (raw: Record<string, unknown>) => raw,
+        }),
+      ).toThrow(/already registered/);
+    });
+
+    it('fails bootstrap when a registered template is missing', async () => {
+      (fsMock.existsSync as jest.Mock).mockImplementation((filePath) =>
+        String(filePath).endsWith('payments-report-modern.hbs') ? false : true,
+      );
+
+      await expect(service.onApplicationBootstrap()).rejects.toThrow(
+        /Registered template not found/,
+      );
+    });
+
     it('compiles templates for every registered pdf-type', async () => {
       compileSpy.mockClear();
 
@@ -330,6 +351,40 @@ describe('PdfService', () => {
       expect(Date.now() - startedAt).toBeLessThan(5_000);
       expect(operationalService.getHealthStatus().metrics.totalRejections).toBe(
         0,
+      );
+    });
+
+    it('boundedPdfQueueSurvivesLoadAndRecovers', async () => {
+      const gate = deferred<Buffer>();
+      mockPage.pdf.mockImplementation(() => gate.promise);
+      const operationalService = await buildOperationalService();
+
+      const active = operationalService.render('test-report', { request: 1 });
+      await nextTurn();
+      const queued = operationalService.render('test-report', { request: 2 });
+      const rejected = operationalService.render('test-report', { request: 3 });
+
+      await expect(rejected).rejects.toThrow(PdfQueueSaturatedException);
+      gate.resolve(Buffer.from('pdf'));
+      await Promise.all([active, queued]);
+      await nextTurn();
+
+      mockPage.pdf.mockResolvedValue(Buffer.from('recovered-pdf'));
+      await expect(
+        operationalService.render('test-report', { request: 4 }),
+      ).resolves.toEqual(Buffer.from('recovered-pdf'));
+
+      expect(operationalService.getHealthStatus()).toEqual(
+        expect.objectContaining({
+          semaphore: expect.objectContaining({
+            activeSlots: 0,
+            queueLength: 0,
+          }),
+          metrics: expect.objectContaining({
+            totalRenders: 3,
+            totalRejections: 1,
+          }),
+        }),
       );
     });
   });
