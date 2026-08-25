@@ -1,9 +1,10 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { InvitationTokenGeneratorService } from './invitation-token-generator.service';
 import { createHash } from 'crypto';
 import { MailService } from 'src/infrastructure/mail/application/mail.service';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import {
   InvitationNotFoundException,
   InvitationExpiredException,
@@ -12,18 +13,14 @@ import {
 
 @Injectable()
 export class InvitationService {
-  private readonly logger = new Logger(InvitationService.name);
-
   constructor(
     private readonly prisma: PrismaService,
     private readonly tokenGenerator: InvitationTokenGeneratorService,
     private readonly mailService: MailService,
+    private readonly logger: LoggerService,
   ) {}
 
-  async createAndSendInvitation(
-    usuario: any,
-    invitedByUserId?: number,
-  ) {
+  async createAndSendInvitation(usuario: any, invitedByUserId?: number) {
     const ttlHours = parseInt(process.env.INVITATION_TTL_HOURS || '48', 10);
     const { tokenPlain, tokenHash } = this.tokenGenerator.generate();
 
@@ -137,6 +134,7 @@ export class InvitationService {
         where: { tokenHash },
         data: {
           acceptedAt: new Date(),
+          termsVersion,
           updatedAt: new Date(),
         },
       });

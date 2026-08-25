@@ -165,7 +165,10 @@ describe('LoginUseCase', () => {
       });
 
       await expect(
-        useCase.execute({ email: 'newuser@test.com', password: 'Password123!' }),
+        useCase.execute({
+          email: 'newuser@test.com',
+          password: 'Password123!',
+        }),
       ).rejects.toThrow(/Debe aceptar la invitación/);
 
       // No debe registrar intento fallido porque el usuario no existe aún

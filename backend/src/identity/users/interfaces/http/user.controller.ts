@@ -127,7 +127,8 @@ export class UserController {
    */
   @ApiOperation({
     summary: 'Crear usuario',
-    description: 'Crea un nuevo usuario y envía invitación por email para establecer contraseña',
+    description:
+      'Crea un nuevo usuario y envía invitación por email para establecer contraseña',
   })
   @ApiConsumes('multipart/form-data')
   @ApiResponse({
@@ -148,7 +149,11 @@ export class UserController {
     @AuthUserId() adminUserId: number,
     @UploadedFile() file?: Express.Multer.File,
   ): Promise<UserResponseDto> {
-    const user = await this.userService.createUser(createUserDto, file, adminUserId);
+    const user = await this.userService.createUser(
+      createUserDto,
+      file,
+      adminUserId,
+    );
     return UserResponseDto.fromEntity(user);
   }
 
@@ -263,10 +268,14 @@ export class UserController {
    */
   @ApiOperation({
     summary: 'Reenviar invitación',
-    description: 'Reenvía la invitación por email si la anterior falló o no fue recibida',
+    description:
+      'Reenvía la invitación por email si la anterior falló o no fue recibida',
   })
   @ApiParam({ name: 'id', description: 'ID del usuario', type: Number })
-  @ApiResponse({ status: 200, description: 'Invitación reenviada exitosamente' })
+  @ApiResponse({
+    status: 200,
+    description: 'Invitación reenviada exitosamente',
+  })
   @ApiResponse({ status: 400, description: 'No hay invitación pendiente' })
   @ApiResponse({ status: 404, description: 'Usuario no encontrado' })
   @RequiredPermission('users', 'update')

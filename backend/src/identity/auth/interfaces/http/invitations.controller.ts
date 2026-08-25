@@ -97,9 +97,8 @@ export class InvitationsController {
   async accept(
     @Body() acceptInvitationDto: AcceptInvitationDto,
   ): Promise<{ message: string; usuarioId: number; email: string }> {
-    const usuario = await this.acceptInvitationUseCase.execute(
-      acceptInvitationDto,
-    );
+    const usuario =
+      await this.acceptInvitationUseCase.execute(acceptInvitationDto);
 
     return {
       message: 'Invitación aceptada correctamente',

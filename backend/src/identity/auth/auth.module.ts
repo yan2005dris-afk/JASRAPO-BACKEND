@@ -24,7 +24,6 @@ import { InvitationMetricsService } from './application/services/invitation-metr
 import { AuditModule } from 'src/infrastructure/audit/audit.module';
 import { MailModule } from 'src/infrastructure/mail/mail.module';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
-import { UserRepository } from 'src/identity/users/domain/repositories/user.repository';
 import type { StringValue } from 'ms';
 
 @Module({

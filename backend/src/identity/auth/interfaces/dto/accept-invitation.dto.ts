@@ -1,4 +1,10 @@
-import { IsStrongPassword, MaxLength, IsBoolean, Equals, ValidateIf } from 'class-validator';
+import {
+  IsStrongPassword,
+  MaxLength,
+  IsBoolean,
+  Equals,
+  ValidateIf,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmptyString } from 'src/infrastructure/common/decorators/is-not-empty-string.decorator';
 
@@ -13,7 +19,8 @@ export class AcceptInvitationDto {
   token!: string;
 
   @ApiProperty({
-    description: 'Contraseña del usuario (mínimo 8 caracteres, mayúsculas, números, caracteres especiales)',
+    description:
+      'Contraseña del usuario (mínimo 8 caracteres, mayúsculas, números, caracteres especiales)',
     example: 'SecurePass123!',
     required: true,
   })

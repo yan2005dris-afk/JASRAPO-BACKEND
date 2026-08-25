@@ -6,7 +6,6 @@ import { LoggerService } from 'src/infrastructure/observability/logger/logger.se
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
 import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 import { InvitationTokenGeneratorService } from '../../../auth/application/services/invitation-token-generator.service';
-import { createHash } from 'crypto';
 
 @LogContext()
 @Injectable()

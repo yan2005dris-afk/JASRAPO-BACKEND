@@ -1,5 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 
 export interface InvitationMetrics {
   totalCreated: number;
@@ -13,9 +14,10 @@ export interface InvitationMetrics {
 
 @Injectable()
 export class InvitationMetricsService {
-  private readonly logger = new Logger(InvitationMetricsService.name);
-
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly logger: LoggerService,
+  ) {}
 
   async getMetrics(): Promise<InvitationMetrics> {
     const now = new Date();
@@ -57,11 +59,11 @@ export class InvitationMetricsService {
     if (acceptedWithTime.length > 0) {
       const totalMs = acceptedWithTime.reduce((sum, inv) => {
         return (
-          sum +
-          (inv.acceptedAt!.getTime() - (inv.createdAt?.getTime() || 0))
+          sum + (inv.acceptedAt!.getTime() - (inv.createdAt?.getTime() || 0))
         );
       }, 0);
-      avgTimeToAcceptance = (totalMs / acceptedWithTime.length) / (1000 * 60 * 60); // convertir a horas
+      avgTimeToAcceptance =
+        totalMs / acceptedWithTime.length / (1000 * 60 * 60); // convertir a horas
     }
 
     return {

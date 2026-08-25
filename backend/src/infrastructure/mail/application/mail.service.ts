@@ -244,7 +244,8 @@ export class MailService {
       (expiresAt.getTime() - new Date().getTime()) / (1000 * 60 * 60),
     );
 
-    const appUrl = process.env.APP_URL ||
+    const appUrl =
+      process.env.APP_URL ||
       (process.env.NODE_ENV === 'production'
         ? 'https://app.jasrapo.com'
         : 'http://localhost:4300');

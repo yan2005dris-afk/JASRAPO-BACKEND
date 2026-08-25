@@ -1,17 +1,17 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { JobsService } from 'src/infrastructure/jobs/jobs.service';
 import { InvitationRetryService } from './invitation-retry.service';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 
 const QUEUE_NAME = 'retry-invitations';
 const CRON_PATTERN = '0 */30 * * * *'; // Cada 30 minutos
 
 @Injectable()
 export class InvitationRetryHandler implements OnModuleInit {
-  private readonly logger = new Logger(InvitationRetryHandler.name);
-
   constructor(
     private readonly jobsService: JobsService,
     private readonly retryService: InvitationRetryService,
+    private readonly logger: LoggerService,
   ) {}
 
   async onModuleInit() {

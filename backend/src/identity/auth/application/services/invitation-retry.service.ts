@@ -1,15 +1,15 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { MailService } from 'src/infrastructure/mail/application/mail.service';
-import { createHash } from 'crypto';
+import { createHash, randomBytes } from 'crypto';
+import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 
 const DEFAULT_MAX_RETRIES = 3;
 const DEFAULT_BACKOFF_MS = 5 * 60 * 1000; // 5 minutos
 
 @Injectable()
 export class InvitationRetryService {
-  private readonly logger = new Logger(InvitationRetryService.name);
   private readonly maxRetries: number;
   private readonly backoffMs: number;
 
@@ -17,13 +17,16 @@ export class InvitationRetryService {
     private readonly prisma: PrismaService,
     private readonly mailService: MailService,
     private readonly config: ConfigService,
+    private readonly logger: LoggerService,
   ) {
     this.maxRetries = parseInt(
-      this.config.get('INVITATION_MAX_RETRIES') || DEFAULT_MAX_RETRIES.toString(),
+      this.config.get('INVITATION_MAX_RETRIES') ||
+        DEFAULT_MAX_RETRIES.toString(),
       10,
     );
     this.backoffMs = parseInt(
-      this.config.get('INVITATION_RETRY_BACKOFF_MS') || DEFAULT_BACKOFF_MS.toString(),
+      this.config.get('INVITATION_RETRY_BACKOFF_MS') ||
+        DEFAULT_BACKOFF_MS.toString(),
       10,
     );
   }
@@ -70,7 +73,9 @@ export class InvitationRetryService {
         // Reconstruir token desde tokenHash no es posible (es one-way hash)
         // En su lugar, generar nuevo token y actualizar
         const newTokenPlain = this.generateNewToken();
-        const newTokenHash = createHash('sha256').update(newTokenPlain).digest('hex');
+        const newTokenHash = createHash('sha256')
+          .update(newTokenPlain)
+          .digest('hex');
 
         const expiresAt = new Date();
         expiresAt.setHours(
@@ -79,7 +84,7 @@ export class InvitationRetryService {
         );
 
         // Actualizar invitation con nuevo token
-        const updated = await this.prisma.usuarioInvitacion.update({
+        await this.prisma.usuarioInvitacion.update({
           where: { usuarioInvitacionId: invitation.usuarioInvitacionId },
           data: {
             tokenHash: newTokenHash,
@@ -132,7 +137,6 @@ export class InvitationRetryService {
   }
 
   private generateNewToken(): string {
-    const { randomBytes } = require('crypto');
     return randomBytes(64).toString('hex');
   }
 }

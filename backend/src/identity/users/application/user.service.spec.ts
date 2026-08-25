@@ -11,12 +11,23 @@ import { SoftDeleteUserUseCase } from './use-cases/soft-delete-user.use-case';
 import { GetEffectivePermissionsUseCase } from './use-cases/get-effective-permissions.use-case';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 
+import { UserRepository } from '../domain/repositories/user.repository';
+import { ResendInvitationUseCase } from './use-cases/resend-invitation.use-case';
+import { GetPendingInvitationsUseCase } from './use-cases/get-pending-invitations.use-case';
+import { InvitationService } from 'src/identity/auth/application/services/invitation.service';
+
 const mockLogger = {
   log: jest.fn(),
   warn: jest.fn(),
   error: jest.fn(),
   debug: jest.fn(),
   verbose: jest.fn(),
+};
+
+const mockUserRepository = {
+  findById: jest.fn(),
+  findByEmail: jest.fn(),
+  findByEmailWithPassword: jest.fn(),
 };
 
 describe('UserService', () => {
@@ -29,13 +40,17 @@ describe('UserService', () => {
   let updateUserAvatarUseCase: UpdateUserAvatarUseCase;
   let softDeleteUserUseCase: SoftDeleteUserUseCase;
   let getEffectivePermissionsUseCase: GetEffectivePermissionsUseCase;
+  let resendInvitationUseCase: ResendInvitationUseCase;
+  let getPendingInvitationsUseCase: GetPendingInvitationsUseCase;
 
   const mockUseCase = { execute: jest.fn() };
+  const mockInvitationService = { createAndSendInvitation: jest.fn() };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UserService,
+        { provide: UserRepository, useValue: mockUserRepository },
         { provide: CreateUserUseCase, useValue: mockUseCase },
         { provide: GetUserDetailUseCase, useValue: mockUseCase },
         { provide: GetUserProfileUseCase, useValue: mockUseCase },
@@ -44,6 +59,9 @@ describe('UserService', () => {
         { provide: UpdateUserAvatarUseCase, useValue: mockUseCase },
         { provide: SoftDeleteUserUseCase, useValue: mockUseCase },
         { provide: GetEffectivePermissionsUseCase, useValue: mockUseCase },
+        { provide: ResendInvitationUseCase, useValue: mockUseCase },
+        { provide: GetPendingInvitationsUseCase, useValue: mockUseCase },
+        { provide: InvitationService, useValue: mockInvitationService },
         { provide: LoggerService, useValue: mockLogger },
       ],
     }).compile();

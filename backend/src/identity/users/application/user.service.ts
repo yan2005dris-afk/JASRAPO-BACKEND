@@ -11,7 +11,10 @@ import { UpdateUserAvatarUseCase } from './use-cases/update-user-avatar.use-case
 import { SoftDeleteUserUseCase } from './use-cases/soft-delete-user.use-case';
 import { GetEffectivePermissionsUseCase } from './use-cases/get-effective-permissions.use-case';
 import { ResendInvitationUseCase } from './use-cases/resend-invitation.use-case';
-import { GetPendingInvitationsUseCase, PendingInvitation } from './use-cases/get-pending-invitations.use-case';
+import {
+  GetPendingInvitationsUseCase,
+  PendingInvitation,
+} from './use-cases/get-pending-invitations.use-case';
 import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
 import { UserEntity } from '../domain/entities/user.entity';
 import {
@@ -62,7 +65,7 @@ export class UserService {
     const user = await this.createUserUseCase.execute(dto, file);
 
     // Disparar creación de invitación después de crear el usuario
-    if (this.invitationService) {
+    if (user && this.invitationService) {
       try {
         // InvitationService carga el usuario de la BD, solo necesita ID
         const dbUser = await this.userRepository.findById(user.usuarioId);

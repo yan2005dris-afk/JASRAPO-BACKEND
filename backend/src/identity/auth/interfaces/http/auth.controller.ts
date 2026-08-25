@@ -1,10 +1,7 @@
 import { Body, Controller, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { AuthService } from '../../application/auth.service';
 import { LoginUserDto } from '../dto/login-user.dto';
-import {
-  LoginResponseDto,
-  RefreshResponseDto,
-} from '../dto/auth-response.dto';
+import { LoginResponseDto, RefreshResponseDto } from '../dto/auth-response.dto';
 import {
   UnlockAccountDto,
   UnlockAccountResponseDto,
@@ -33,17 +30,11 @@ import { RequiredStringPipe } from 'src/infrastructure/common/pipes/required-str
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 
 @ApiTags('auth')
-@ApiExtraModels(
-  LoginResponseDto,
-  RefreshResponseDto,
-  UnlockAccountResponseDto,
-)
+@ApiExtraModels(LoginResponseDto, RefreshResponseDto, UnlockAccountResponseDto)
 @Controller('auth')
 @UseGuards(ThrottlerGuard)
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
-
-
 
   /**
    * Iniciar sesión en el sistema.

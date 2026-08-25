@@ -1,4 +1,4 @@
-import { BadRequestException, GoneException, NotFoundException } from '@nestjs/common';
+import { GoneException, NotFoundException } from '@nestjs/common';
 
 export class InvitationNotFoundException extends NotFoundException {
   constructor() {

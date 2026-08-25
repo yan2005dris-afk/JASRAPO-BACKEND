@@ -26,7 +26,9 @@ export class AcceptInvitationUseCase {
       dto.terms_version || 'v0',
     );
 
-    return (await this.userRepository.findById(usuario.usuarioId)) ||
-      new UserEntity({ usuarioId: usuario.usuarioId });
+    return (
+      (await this.userRepository.findById(usuario.usuarioId)) ||
+      new UserEntity({ usuarioId: usuario.usuarioId })
+    );
   }
 }
