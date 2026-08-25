@@ -1,12 +1,9 @@
 import type { PdfDocumentType } from 'src/infrastructure/pdf/document-type.interface';
-import { getPdfLogoUrl } from 'src/infrastructure/pdf/utils/pdf-logo-loader.util';
 import type { PaymentsReportDocument } from '../../application/read-models/payments-report.read-model';
 
 export type PaymentsReportStyle = 'legacy' | 'modern';
 
-export interface PaymentsReportPdfViewModel extends PaymentsReportDocument {
-  logoUrl?: string;
-}
+export type PaymentsReportPdfViewModel = PaymentsReportDocument;
 
 export function createPaymentsReportPdfDocumentType(
   style: PaymentsReportStyle,
@@ -21,7 +18,6 @@ export function createPaymentsReportPdfDocumentType(
     template: isLegacy ? 'payments-report-legacy' : 'payments-report-modern',
     adaptData: (document) => ({
       ...document,
-      ...(isLegacy ? {} : { logoUrl: getPdfLogoUrl() }),
       reporte: {
         ...document.reporte,
         titulo: isLegacy ? 'REPORTE DE ABONOS' : 'Reporte Detallado de Abonos',

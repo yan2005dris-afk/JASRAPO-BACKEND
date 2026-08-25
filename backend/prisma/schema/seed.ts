@@ -28,6 +28,7 @@ import { seedAgreements } from './seeds/agreements.seed';
 import { seedAgreementsPrefacturas } from './seeds/agreements-prefacturas.seed';
 import { seedPagos } from './seeds/pagos.seed';
 import { syncSequences } from './seeds/sync-sequences';
+import { seedInstitutionalProfile } from './seeds/institutional-profile.seed';
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
@@ -77,6 +78,9 @@ async function main() {
   // Usuarios
   await seedUSers(prisma, roles);
   console.log('✅ Usuarios creados correctamente.');
+
+  await seedInstitutionalProfile(prisma);
+  console.log('✅ Perfil institucional y activos de marca creados.');
 
   // Menus
   const menus = await seedMenus(prisma);

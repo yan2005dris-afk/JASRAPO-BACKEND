@@ -43,9 +43,9 @@
       <table>
         <tr>
           <td>
-            <div class="company-name">JASRAPO</div>
-            <div class="company-sub">Junta Administradora del Sistema Regional de Agua Potable Olón</div>
-            <div class="company-sub">RUC: 0960005820001 &nbsp;|&nbsp; Olón - Santa Elena</div>
+            <div class="company-name">{{institucion.siglas}}</div>
+            <div class="company-sub">{{institucion.nombreLegal}}</div>
+            <div class="company-sub">RUC: {{institucion.ruc}} &nbsp;|&nbsp; {{institucion.ubicacion.localidad}} - {{institucion.ubicacion.provincia}}</div>
           </td>
         </tr>
       </table>
@@ -58,45 +58,23 @@
 
     <!-- Body -->
     <div class="body-text">
-      En las oficinas de la Junta Administradora del Sistema Regional de Agua Potable Olón
+      {{institucion.textosLegales.actaResponsabilidad.introduccionOficina}}
       Yo <strong>{{acta.clienteNombre}}</strong> portador de la C.I. <strong>{{acta.identificacion}}</strong>
-      en mi calidad de usuario, asumo el compromiso de cumplir con lo establecido en la Institución:
+      {{institucion.textosLegales.actaResponsabilidad.compromisoUsuario}}
     </div>
 
     <!-- Clauses -->
     <ol class="clause-list">
-      <li>
-        <span class="clause-num">1.</span>
-        No utilizar el Agua para otros fines, ya que es mi obligación priorizar el líquido vital para el consumo humano
-        en esta época de escasez (Emergencia Hídrica) como lo manda la Ley Orgánica de Recursos Hídricos Uso y
-        Aprovechamiento del Agua en su Artículo # 86 de los Usos del Agua cuya prioridad A es para el
-        <strong>Consumo Humano</strong>.
-      </li>
-      <li>
-        <span class="clause-num">2.</span>
-        En caso de no cumplir la Junta Administradora del Sistema Regional de Agua Potable &quot;Olón&quot; tiene la
-        potestad de sancionar y reflejar en las planillas sin previa notificación.
-      </li>
-      <li>
-        <span class="clause-num">3.</span>
-        No obstruir, manipular, ni mover el medidor de la ubicación respectiva sin previo aviso evitando ser sancionado
-        por infracciones por la Junta Administradora del Sistema Regional de Agua Potable &quot;Olón&quot;.
-      </li>
-      <li>
-        <span class="clause-num">4.</span>
-        No proveer del líquido vital a terceros ya que cada medidor es para un solo domicilio.
-      </li>
-      <li>
-        <span class="clause-num">5.</span>
-        Por morosidad durante un año perderá los derechos de usuario, se retirará el medidor y a futuro que desee
-        solicitar una nueva guía deberá cancelar el valor adeudado que refleja en el sistema para de esta manera
-        proceder con los trámites de rigor para la obtención del nuevo medidor.
-      </li>
+      {{#each institucion.textosLegales.actaResponsabilidad.clausulas}}
+        <li>
+          <span class="clause-num">{{math @index "+" 1}}.</span>
+          {{this}}
+        </li>
+      {{/each}}
     </ol>
 
     <div class="closing-text">
-      Este compromiso se asume para su cumplimiento dentro de las leyes y reglamentos internos de la Junta
-      y garantía del uso del agua.
+      {{institucion.textosLegales.actaResponsabilidad.cierre}}
     </div>
 
     <div class="body-text">
@@ -114,7 +92,7 @@
 
     <!-- Footer -->
     <div class="footer">
-      <p>Junta Administradora del Sistema Regional de Agua Potable Olón &nbsp;|&nbsp; Olón, Santa Elena, Ecuador</p>
+      <p>{{institucion.nombreLegal}} &nbsp;|&nbsp; {{institucion.ubicacion.localidad}}, {{institucion.ubicacion.provincia}}, {{institucion.ubicacion.pais}}</p>
     </div>
 
   </div>

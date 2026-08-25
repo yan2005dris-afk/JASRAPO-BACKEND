@@ -184,9 +184,7 @@
     <tr>
       <!-- Columna Izquierda: Datos del Emisor -->
       <td class="header-col-left">
-        {{#if emisor.logoUrl}}
-          <img src="{{emisor.logoUrl}}" alt="Logo" class="company-logo" />
-        {{/if}}
+        <img src="{{institucion.branding.logo.url}}" alt="Logo institucional" class="company-logo" />
         <div class="company-title">{{emisor.razonSocial}}</div>
         {{#if emisor.nombreComercial}}
           <div class="company-sub"><strong>Nombre Comercial:</strong> {{emisor.nombreComercial}}</div>

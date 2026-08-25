@@ -6,6 +6,7 @@ import { NotFoundException } from '@nestjs/common';
 import { GeneratePdfUseCase } from './generate-pdf.use-case';
 import { PdfService } from '../pdf.service';
 import type { PdfDocumentType } from '../document-type.interface';
+import { InstitutionalProfileResolver } from 'src/institutional-profile/application/institutional-profile.resolver';
 
 const mockDocumentType: PdfDocumentType = {
   type: 'test-doc',
@@ -23,12 +24,25 @@ describe('GeneratePdfUseCase', () => {
     render: jest.fn(),
     registerDocumentType: jest.fn(),
   };
+  const institutional = {
+    institucion: { version: 'test-v1' },
+    metadatosDocumento: {
+      perfilInstitucional: { version: 'test-v1' },
+    },
+  };
+  const mockInstitutionalProfiles = {
+    resolve: jest.fn().mockResolvedValue(institutional),
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         GeneratePdfUseCase,
         { provide: PdfService, useValue: mockPdfService },
+        {
+          provide: InstitutionalProfileResolver,
+          useValue: mockInstitutionalProfiles,
+        },
       ],
     }).compile();
 
@@ -73,7 +87,7 @@ describe('GeneratePdfUseCase', () => {
 
       expect(mockPdfService.render).toHaveBeenCalledWith(
         'test-template',
-        adapted,
+        { ...adapted, ...institutional },
         { documentType: 'test-doc' },
       );
     });

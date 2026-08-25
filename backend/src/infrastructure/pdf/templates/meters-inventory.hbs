@@ -75,13 +75,11 @@
     <div class="header-table">
       <div class="header-left">
         <div class="logo-container">
-          {{#if logoUrl}}
-            <img src="{{logoUrl}}" alt="JASRAPO Logo">
-          {{/if}}
+          <img src="{{institucion.branding.logo.url}}" alt="Logo institucional">
         </div>
         <div>
-          <div class="brand-title">JASRAPO</div>
-          <div class="brand-subtitle">Junta Administradora del Sistema Regional de Agua Potable "Olón"</div>
+          <div class="brand-title">{{institucion.siglas}}</div>
+          <div class="brand-subtitle">{{institucion.nombreLegal}}</div>
           <div class="report-title-main" style="margin-top: 8px;">{{reporte.titulo}}</div>
           <div class="report-meta-text">Fecha de emisión: {{reporte.fechaEmision}}</div>
         </div>
@@ -138,7 +136,7 @@
     </table>
 
     <div class="footer-note" style="margin-top: 24px;">
-      Documento generado automáticamente por JASRAPO Cloud Management System · {{reporte.fechaEmision}}
+      Documento generado automáticamente por {{institucion.siglas}} Cloud Management System · {{reporte.fechaEmision}}
     </div>
   </div>
 </body>

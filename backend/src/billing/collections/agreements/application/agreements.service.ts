@@ -18,6 +18,7 @@ import { UpdateAgreementUseCase } from './use-cases/update-agreement.use-case';
 import { GetPaymentAgreementPdfDataUseCase } from './use-cases/get-payment-agreement-pdf-data.use-case';
 import { ReportStyleDispatcher } from 'src/reports/application/report-style.dispatcher';
 import { projectPaymentAgreementReport } from 'src/reports/application/definitions/payment-agreement-report.definition';
+import { InstitutionalProfileResolver } from 'src/institutional-profile/application/institutional-profile.resolver';
 
 @Injectable()
 export class AgreementsService {
@@ -29,6 +30,7 @@ export class AgreementsService {
     private readonly updateUseCase: UpdateAgreementUseCase,
     private readonly getPdfDataUseCase: GetPaymentAgreementPdfDataUseCase,
     private readonly dispatcher: ReportStyleDispatcher,
+    private readonly institutionalProfiles: InstitutionalProfileResolver,
   ) {}
 
   // ── Estado catalogs ──────────────────────────────────────────────────────
@@ -101,7 +103,12 @@ export class AgreementsService {
     signal?: AbortSignal,
   ): Promise<{ buffer: Buffer; filename: string; clienteNombre: string }> {
     const raw = await this.getPdfDataUseCase.execute(convenioId);
-    const { document } = projectPaymentAgreementReport(raw);
+    const projection = projectPaymentAgreementReport(raw);
+    const institutional = await this.institutionalProfiles.resolve(new Date());
+    const document = this.institutionalProfiles.attach(
+      projection.document,
+      institutional,
+    );
     const { buffer, filename } = await this.dispatcher.dispatch(
       'payment-agreement',
       document,

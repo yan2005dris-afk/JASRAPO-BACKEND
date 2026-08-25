@@ -13,6 +13,7 @@ import { ReportStyleDispatcher } from 'src/reports/application/report-style.disp
 import { AgreementsService } from './agreements.service';
 import { AgreementEntity } from '../domain/entities/agreement.entity';
 import { InstallmentEntity } from '../domain/entities/installment.entity';
+import { InstitutionalProfileResolver } from 'src/institutional-profile/application/institutional-profile.resolver';
 
 describe('AgreementsService', () => {
   let service: AgreementsService;
@@ -30,6 +31,15 @@ describe('AgreementsService', () => {
   const mockGeneratePdf = { execute: jest.fn() };
   const mockReportStyleDispatcher = {
     dispatch: jest.fn().mockResolvedValue({ buffer: Buffer.from('pdf') }),
+  };
+  const mockInstitutionalProfiles = {
+    resolve: jest.fn().mockResolvedValue({
+      institucion: { version: 'test-v1' },
+      metadatosDocumento: {
+        perfilInstitucional: { version: 'test-v1' },
+      },
+    }),
+    attach: jest.fn((document, context) => ({ ...document, ...context })),
   };
 
   const convenioRecord = new AgreementEntity({
@@ -82,6 +92,10 @@ describe('AgreementsService', () => {
         {
           provide: ReportStyleDispatcher,
           useValue: mockReportStyleDispatcher,
+        },
+        {
+          provide: InstitutionalProfileResolver,
+          useValue: mockInstitutionalProfiles,
         },
       ],
     }).compile();

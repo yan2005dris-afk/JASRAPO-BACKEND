@@ -17,8 +17,8 @@ export interface PaymentAgreementReportDocument {
     deudaTotal: string;
     abonoInicial: string;
     numeroCuotas: number;
-    mesPrimerPago?: string;
-    periodoInicio?: string;
+    mesPrimerPago: string;
+    periodoInicio: string;
     fechaActual: string;
   };
 }

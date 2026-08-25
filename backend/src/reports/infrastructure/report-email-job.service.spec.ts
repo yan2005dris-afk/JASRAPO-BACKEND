@@ -22,6 +22,8 @@ describe('ReportEmailJobService', () => {
       totalClientes: 0,
       clientes: [],
     },
+    institucion: {} as never,
+    metadatosDocumento: {} as never,
   };
 
   const buildService = () =>

@@ -1,6 +1,5 @@
 import type { PdfDocumentType } from 'src/infrastructure/pdf/document-type.interface';
 import { currentDateLabel } from 'src/infrastructure/pdf/utils/pdf-format.utils';
-import { getPdfLogoUrl } from 'src/infrastructure/pdf/utils/pdf-logo-loader.util';
 
 export interface FieldSheetData {
   ruta: {
@@ -57,7 +56,6 @@ export const FieldSheetPdfDocumentType: PdfDocumentType = {
       : 'Sin fecha planificada';
 
     return {
-      logoUrl: getPdfLogoUrl(),
       reporte: {
         rutaId: ruta.rutaId.toString(),
         rutaNombre: ruta.nombre,

@@ -10,10 +10,11 @@ import {
   buildPdfRuntimeOptions,
   PDF_RUNTIME_OPTIONS,
 } from './pdf-runtime.config';
+import { InstitutionalProfileModule } from 'src/institutional-profile/institutional-profile.module';
 
 @Global()
 @Module({
-  imports: [MetricsModule],
+  imports: [MetricsModule, InstitutionalProfileModule],
   controllers: [PdfHealthController],
   providers: [
     {

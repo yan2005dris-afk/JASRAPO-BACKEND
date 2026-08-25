@@ -13,6 +13,53 @@ const TEMPLATES_DIR = path.resolve(
   '../../infrastructure/pdf/templates',
 );
 
+const institutionalFixture = {
+  institucion: {
+    nombreLegal: 'Institución de prueba',
+    nombreComercial: 'Marca de prueba',
+    siglas: 'TEST',
+    ruc: '9999999999999',
+    decretoNumero: null,
+    registroOficialNumero: null,
+    registroOficialFechaTexto: null,
+    fechaFundacionTexto: null,
+    direccion: 'Dirección de prueba',
+    correo: 'test@example.com',
+    telefonos: [],
+    ubicacion: {
+      localidad: 'Localidad',
+      provincia: 'Provincia',
+      pais: 'Ecuador',
+    },
+    representantePrincipal: {
+      nombres: 'Representante',
+      identificacion: '0000000000',
+      cargo: 'Representante',
+    },
+    branding: {
+      logo: { url: 'data:image/png;base64,dGVzdA==' },
+      marcaAgua: { url: 'data:image/png;base64,dGVzdA==' },
+    },
+    textosLegales: {
+      convenioPago: {
+        introduccionOficina: 'En las oficinas a los',
+        compromisoUsuario: 'se acuerda con la guía',
+        identificacionUsuario: 'a nombre de',
+        cuotasMensuales: 'cancelar en cuotas de',
+        inicioConvenio: 'desde el periodo',
+        cumplimiento: 'Conforme a lo acordado.',
+        pagoEfectivo: 'Las cuotas se pagan desde',
+        pagosPosteriores: 'hasta cancelar la deuda de',
+        primeraCuota: 'Comprometiéndose a cancelar la primera cuota de',
+        cierre: 'Atentamente',
+      },
+    },
+  },
+  metadatosDocumento: {
+    perfilInstitucional: { version: 'test-v1' },
+  },
+};
+
 function renderLegacyFixture(template: string, data: object): string {
   const styles = fs.readFileSync(
     path.join(TEMPLATES_DIR, 'styles.hbs'),
@@ -87,7 +134,10 @@ describe('legacy PDF contractual fixtures', () => {
     });
     const agreementHtml = renderLegacyFixture(
       PaymentAgreementPdfDocumentType.template,
-      PaymentAgreementPdfDocumentType.adaptData(agreementProjection.document),
+      PaymentAgreementPdfDocumentType.adaptData({
+        ...agreementProjection.document,
+        ...institutionalFixture,
+      }),
     );
 
     const paymentsType = createPaymentsReportPdfDocumentType('legacy');
