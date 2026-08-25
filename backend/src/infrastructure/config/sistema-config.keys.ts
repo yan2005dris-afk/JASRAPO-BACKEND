@@ -30,3 +30,14 @@ export const REPORTE_ESTILO = 'reporte.estilo';
  * See `sdd/sri-emision-modo-manual-automatico`.
  */
 export const SRI_EMISION_MODO = 'sri.emision.modo';
+
+/**
+ * Base URL for frontend client applications, used in notification and invitation emails.
+ *
+ * Fallback hierarchy in consumers (e.g. `MailService`):
+ *   1. `sistema_config` (clave `FRONTEND_URL`)
+ *   2. `process.env.APP_URL`
+ *   3. `http://localhost:4200`
+ */
+export const FRONTEND_URL = 'FRONTEND_URL';
+
