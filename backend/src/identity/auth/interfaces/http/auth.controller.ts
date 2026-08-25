@@ -13,8 +13,6 @@ import {
 } from '../dto/unlock-account.dto';
 import type { AuthenticatedRequest } from 'src/infrastructure/common/types/auth-request.types';
 import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
-import { JwtAuthGuard } from './guards/jwt-auth.guard';
-import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 import { Public } from 'src/infrastructure/common/decorators/public.decorator';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
 import {
@@ -71,7 +69,6 @@ export class AuthController {
   })
   @ApiResponse({ status: 409, description: 'El correo electrónico ya existe' })
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @RequiredPermission('users', 'create')
   @Post('register')
   async register(
@@ -249,7 +246,6 @@ export class AuthController {
   })
   @ApiResponse({ status: 404, description: 'Usuario no encontrado' })
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @RequiredPermission('users', 'update')
   @Post('admin/unlock-account')
   async unlockAccount(

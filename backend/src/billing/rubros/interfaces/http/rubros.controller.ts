@@ -7,7 +7,6 @@ import {
   Param,
   Delete,
   Query,
-  UseGuards,
   ParseIntPipe,
   HttpCode,
   HttpStatus,
@@ -27,14 +26,11 @@ import {
   RubroResponseDto,
   TarifaImpuestoResponseDto,
 } from '../dto/rubro-response.dto';
-import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
-import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
 import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
 
 @ApiTags('Rubros')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('rubros')
 export class RubrosController {
   constructor(private readonly rubrosService: RubrosService) {}

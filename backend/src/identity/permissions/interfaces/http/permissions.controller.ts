@@ -6,7 +6,6 @@ import {
   Patch,
   Param,
   Delete,
-  UseGuards,
   ParseIntPipe,
   Query,
 } from '@nestjs/common';
@@ -14,8 +13,6 @@ import { PermissionsService } from '../../application/permissions.service';
 import { CreatePermissionDto } from '../dto/create-permission.dto';
 import { UpdatePermissionDto } from '../dto/update-permission.dto';
 import { PermissionResponseDto } from '../dto/permission-response.dto';
-import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
-import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
 import {
   ApiBearerAuth,
@@ -33,7 +30,6 @@ import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-
 @ApiTags('permissions')
 @ApiBearerAuth()
 @ApiExtraModels(PermissionResponseDto)
-@UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('permissions')
 export class PermissionsController {
   constructor(private readonly permissionsService: PermissionsService) {}

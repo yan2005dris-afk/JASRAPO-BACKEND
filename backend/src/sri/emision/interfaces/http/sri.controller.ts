@@ -14,7 +14,6 @@ import {
   NotFoundException,
   UseInterceptors,
   UploadedFile,
-  UseGuards,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import type { Request, Response } from 'express';
@@ -34,8 +33,6 @@ import type { EmissionOutcome } from '../../application/services/sri-emission-di
 import { CurrentUser } from '../../../../identity/auth/interfaces/http/decorators/current-user.decorator';
 import type { JwtPayload } from '../../../../identity/auth/application/types/jwt.types';
 import { UserRole } from '../../../../identity/auth/interfaces/dto/auth.dto';
-import { JwtAuthGuard } from '../../../../identity/auth/interfaces/http/guards/jwt-auth.guard';
-import { PermissionsGuard } from '../../../../infrastructure/common/guards/permissions.guard';
 import { RequiredPermission } from '../../../../infrastructure/common/decorators/require-permission.decorator';
 import { ConfigService } from '@nestjs/config';
 import { extractRucFromClaveAcceso } from '../../infrastructure/xml/clave-acceso.utils';
@@ -60,7 +57,6 @@ import { LogContext } from 'src/shared/decorators/log-context.decorator';
 @LogContext()
 @ApiTags('[SRI] Facturación Electrónica')
 @ApiBearerAuth('JWT')
-@UseGuards(JwtAuthGuard, PermissionsGuard)
 @RequiredPermission('facturacion_electronica', 'read')
 @Controller('sri')
 export class SriController {

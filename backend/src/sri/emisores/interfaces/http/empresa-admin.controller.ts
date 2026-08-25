@@ -6,7 +6,6 @@ import {
   Delete,
   Body,
   Param,
-  UseGuards,
   UseInterceptors,
   UploadedFile,
   ParseIntPipe,
@@ -18,8 +17,6 @@ import {
   ApiBearerAuth,
   ApiConsumes,
 } from '@nestjs/swagger';
-import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
-import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { EmisoresService } from '../../application/emisores.service';
@@ -32,7 +29,6 @@ import {
 
 @ApiTags('Administración / Empresa, Establecimientos y Cajas')
 @ApiBearerAuth('JWT')
-@UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('admin/empresa')
 export class EmpresaAdminController {
   constructor(

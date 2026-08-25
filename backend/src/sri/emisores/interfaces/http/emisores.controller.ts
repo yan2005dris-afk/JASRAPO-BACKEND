@@ -6,7 +6,6 @@ import {
   Delete,
   Body,
   Param,
-  UseGuards,
   ParseIntPipe,
 } from '@nestjs/common';
 import {
@@ -17,8 +16,6 @@ import {
 } from '@nestjs/swagger';
 import { EmisoresService } from '../../application/emisores.service';
 import { CreateEmisorDto, UpdateEmisorDto, EmisorResponseDto } from '../dto';
-import { JwtAuthGuard } from '../../../../identity/auth/interfaces/http/guards/jwt-auth.guard';
-import { PermissionsGuard } from '../../../../infrastructure/common/guards/permissions.guard';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
@@ -26,7 +23,6 @@ import { LogContext } from 'src/shared/decorators/log-context.decorator';
 @LogContext()
 @ApiTags('[SRI] Emisores')
 @ApiBearerAuth('JWT')
-@UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('emisores')
 export class EmisoresController {
   constructor(

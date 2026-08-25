@@ -8,7 +8,6 @@ import {
   Post,
   Query,
   Res,
-  UseGuards,
 } from '@nestjs/common';
 import type { Response } from 'express';
 import {
@@ -27,8 +26,6 @@ import { DebtSummaryResponseDto } from '../dto/debt-summary-response.dto';
 import { InstallmentResponseDto } from '../dto/installment-response.dto';
 import { EnumStateDto } from 'src/shared/enums/state-catalog';
 import { FindAllAgreementsDto } from '../dto/find-all-agreements.dto';
-import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
-import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
 import { ParseBigIntPipe } from 'src/infrastructure/common/pipes/parse-bigint.pipe';
 import { ApiPaginatedResponse } from 'src/infrastructure/common/decorators/api-paginated-response.decorator';
@@ -39,7 +36,6 @@ import { observePdfRequestAbort } from 'src/infrastructure/pdf/pdf-request-abort
 @ApiTags('agreements')
 @ApiBearerAuth()
 @ApiExtraModels(AgreementResponseDto, PaginationMetaDto, InstallmentResponseDto)
-@UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('agreements')
 export class AgreementsController {
   constructor(private readonly agreementsService: AgreementsService) {}

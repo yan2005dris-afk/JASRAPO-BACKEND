@@ -6,7 +6,6 @@ import {
   ParseIntPipe,
   Post,
   Query,
-  UseGuards,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -15,8 +14,6 @@ import {
   ApiTags,
   ApiExtraModels,
 } from '@nestjs/swagger';
-import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
-import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
 import { EnumStateDto } from 'src/shared/enums/state-catalog';
 import { GenerateBatchDto } from '../dto/generate-batch.dto';
@@ -34,7 +31,6 @@ import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
 @ApiTags('batches')
 @ApiBearerAuth()
 @ApiExtraModels(BatchResponseDto, PaginationMetaDto)
-@UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('batches')
 export class BatchController {
   constructor(

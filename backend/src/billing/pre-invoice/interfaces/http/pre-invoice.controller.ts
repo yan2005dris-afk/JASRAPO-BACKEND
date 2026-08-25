@@ -6,7 +6,6 @@ import {
   Param,
   Query,
   Body,
-  UseGuards,
   ParseIntPipe,
   Res,
 } from '@nestjs/common';
@@ -19,8 +18,6 @@ import {
   ApiResponse,
 } from '@nestjs/swagger';
 import type { Response } from 'express';
-import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
-import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
 import { CurrentUser } from 'src/identity/auth/interfaces/http/decorators/current-user.decorator';
 import type { JwtPayload } from 'src/identity/auth/application/types/jwt.types';
@@ -39,7 +36,6 @@ import { SendPreInvoiceByEmailUseCase } from '../../application/use-cases/send-p
 @ApiTags('pre-invoices')
 @ApiBearerAuth()
 @ApiExtraModels(PreInvoiceResponseDto, PaginationMetaDto)
-@UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('pre-invoices')
 export class PreInvoiceController {
   constructor(

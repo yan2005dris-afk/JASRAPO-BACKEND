@@ -6,18 +6,14 @@ import {
   Param,
   Put,
   Delete,
-  UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags, ApiOperation } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../../../../identity/auth/interfaces/http/guards/jwt-auth.guard';
-import { PermissionsGuard } from '../../../../infrastructure/common/guards/permissions.guard';
 import { RequiredPermission } from '../../../../infrastructure/common/decorators/require-permission.decorator';
 import { WebhooksService } from '../../application/webhooks.service';
 import { CreateWebhookDto, UpdateWebhookDto } from '../dto';
 
 @ApiTags('[SRI] Webhooks')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('sri/webhooks')
 export class WebhooksController {
   constructor(private readonly webhooksService: WebhooksService) {}
