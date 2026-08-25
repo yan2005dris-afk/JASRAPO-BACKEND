@@ -1,4 +1,4 @@
-import { Controller, Patch, Param, Body, UseGuards } from '@nestjs/common';
+import { Controller, Patch, Param, Body } from '@nestjs/common';
 import { ParseBigIntPipe } from 'src/infrastructure/common/pipes/parse-bigint.pipe';
 import {
   ApiTags,
@@ -9,8 +9,6 @@ import {
   ApiExtraModels,
 } from '@nestjs/swagger';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
-import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
-import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 import { OrdenesTrabajoService } from '../../application/ordenes-trabajo.service';
 import { OrderWorkResponseDto } from '../dto/orden-trabajo-response.dto';
 import { UpdateOrdenEstadoDto } from '../dto/update-orden-estado.dto';
@@ -20,7 +18,6 @@ import { PaginationMetaDto } from 'src/infrastructure/common/dtos/pagination-met
 @ApiTags('ordenes')
 @ApiBearerAuth()
 @ApiExtraModels(OrderWorkResponseDto, PaginationMetaDto)
-@UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('ordenes')
 export class OrdenesTrabajoController {
   constructor(private readonly ordenesTrabajoService: OrdenesTrabajoService) {}

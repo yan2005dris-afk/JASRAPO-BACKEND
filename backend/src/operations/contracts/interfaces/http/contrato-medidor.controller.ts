@@ -7,7 +7,6 @@ import {
   Param,
   Delete,
   Query,
-  UseGuards,
   Res,
 } from '@nestjs/common';
 import { ParseBigIntPipe } from 'src/infrastructure/common/pipes/parse-bigint.pipe';
@@ -30,8 +29,6 @@ import {
   ApiExtraModels,
 } from '@nestjs/swagger';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
-import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
-import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 import { EnumStateDto } from 'src/shared/enums/state-catalog';
 import { ApiPaginatedResponse } from 'src/infrastructure/common/decorators/api-paginated-response.decorator';
 import { PaginationMetaDto } from 'src/infrastructure/common/dtos/pagination-meta.dto';
@@ -40,7 +37,6 @@ import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-
 @ApiTags('contracts')
 @ApiBearerAuth()
 @ApiExtraModels(ContractResponseDto, PaginationMetaDto)
-@UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('contracts')
 export class ContratoMedidorController {
   constructor(

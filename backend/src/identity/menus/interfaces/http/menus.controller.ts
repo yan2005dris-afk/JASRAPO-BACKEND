@@ -1,5 +1,4 @@
-import { Controller, Get, Req, UseGuards } from '@nestjs/common';
-import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
+import { Controller, Get, Req } from '@nestjs/common';
 import { MenusService } from '../../application/menus.service';
 import {
   ApiBearerAuth,
@@ -13,7 +12,6 @@ import type { JwtRequest } from 'src/identity/auth/application/types/jwt.types';
 
 @ApiTags('menus')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
 @Controller('menus')
 export class MenusController {
   constructor(private readonly menusService: MenusService) {}

@@ -1,4 +1,4 @@
-import { Controller, Post, Param, Body, Res, UseGuards } from '@nestjs/common';
+import { Controller, Post, Param, Body, Res } from '@nestjs/common';
 import type { Response } from 'express';
 import {
   ApiTags,
@@ -7,7 +7,6 @@ import {
   ApiParam,
   ApiBearerAuth,
 } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../../../../identity/auth/interfaces/http/guards/jwt-auth.guard';
 import { GenerateAndSignPdfUseCase } from '../../application/use-cases/generate-and-sign-pdf.use-case';
 import { SignExistingPdfUseCase } from '../../application/use-cases/sign-existing-pdf.use-case';
 import { SignPdfDto, GenerateAndSignPdfDto } from '../dto/signature.dto';
@@ -15,10 +14,12 @@ import { InvalidDomainOperationException } from '../../../../shared/domain/excep
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
+import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
+
 @LogContext()
 @ApiTags('[SRI] Firma (XAdES-BES)')
 @ApiBearerAuth('JWT')
-@UseGuards(JwtAuthGuard)
+@RequiredPermission('facturacion_electronica', 'create')
 @Controller('signature')
 export class SignatureController {
   constructor(

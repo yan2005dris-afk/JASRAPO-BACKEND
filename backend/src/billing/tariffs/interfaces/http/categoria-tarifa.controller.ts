@@ -7,7 +7,6 @@ import {
   Param,
   Delete,
   Query,
-  UseGuards,
   ParseIntPipe,
 } from '@nestjs/common';
 import { CategoriaTarifaService } from '../../application/categoria-tarifa.service';
@@ -22,14 +21,11 @@ import {
   ApiTags,
   ApiParam,
 } from '@nestjs/swagger';
-import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
-import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
 import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
 
 @ApiTags('tariff-categories')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('tariff-categories')
 export class CategoriaTarifaController {
   constructor(private readonly service: CategoriaTarifaService) {}

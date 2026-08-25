@@ -31,17 +31,10 @@ export class PermissionsGuard implements CanActivate {
       return true;
     }
 
-    let required = this.reflector.get<PermissionConfig>(
+    const required = this.reflector.getAllAndOverride<PermissionConfig>(
       PERMISSION_KEY,
-      context.getHandler(),
+      [context.getHandler(), context.getClass()],
     );
-
-    if (!required) {
-      required = this.reflector.get<PermissionConfig>(
-        PERMISSION_KEY,
-        context.getClass(),
-      );
-    }
 
     if (!required) {
       this.logger.error(

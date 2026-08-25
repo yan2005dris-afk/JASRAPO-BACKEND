@@ -9,7 +9,6 @@ import {
   Post,
   Query,
   Res,
-  UseGuards,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -20,9 +19,7 @@ import {
 } from '@nestjs/swagger';
 import type { Response } from 'express';
 import type { JwtPayload } from '../../../identity/auth/application/types/jwt.types';
-import { JwtAuthGuard } from '../../../identity/auth/interfaces/http/guards/jwt-auth.guard';
 import { CurrentUser } from '../../../identity/auth/interfaces/http/decorators/current-user.decorator';
-import { PermissionsGuard } from '../../../infrastructure/common/guards/permissions.guard';
 import { RequiredPermission } from '../../../infrastructure/common/decorators/require-permission.decorator';
 import { ClientsListReportFilterDto } from '../dto/clients-list-report-filter.dto';
 import { PaymentsReportFilterDto } from '../dto/payments-report-filter.dto';
@@ -76,7 +73,6 @@ interface ReportDefinition<
 @LogContext()
 @ApiTags('reports')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('reports')
 export class ReportsController {
   constructor(

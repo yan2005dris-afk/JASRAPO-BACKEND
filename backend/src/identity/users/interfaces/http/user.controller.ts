@@ -8,7 +8,6 @@ import {
   Patch,
   Post,
   Query,
-  UseGuards,
   NotFoundException,
   UseInterceptors,
   UploadedFile,
@@ -23,9 +22,7 @@ import {
   UserDetailResponseDto,
 } from '../dto/user-response.dto';
 import { UserService } from '../../application/user.service';
-import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
 import { AuthUserId } from 'src/infrastructure/common/decorators/auth-user-id.decorator';
-import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
 import {
   ApiBearerAuth,
@@ -60,7 +57,6 @@ const AVATAR_UPLOAD_OPTIONS = {
 @ApiTags('users')
 @ApiBearerAuth()
 @ApiExtraModels(UserResponseDto, UserDetailResponseDto, UserProfileResponseDto)
-@UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}

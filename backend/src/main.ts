@@ -1,30 +1,20 @@
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';
-import { GlobalExceptionFilter } from './infrastructure/common/filters/global-exception.filter';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import ms from 'ms';
 import { AppModule } from './app.module';
-import { ThrottlerExceptionFilter } from './infrastructure/common/filters/throttler-exception.filter';
-import { AuditFieldsInterceptor } from './infrastructure/common/interceptors/audit-fields.interceptor';
-import { BigIntInterceptor } from './infrastructure/common/interceptors/bigint.interceptor';
-import { DecimalToStringInterceptor } from './infrastructure/common/interceptors/decimal-to-string.interceptor';
 import {
   TRUST_PROXY_HOPS,
   TRUST_PROXY_KEY,
 } from './infrastructure/config/app.constants';
 import { resolveCorsOptions } from './infrastructure/config/cors.options';
 import { assertAllSecrets } from './infrastructure/config/config.validator';
-import { LoggingInterceptor } from './infrastructure/observability/interceptors/logging.interceptor';
 import { TracingService } from './infrastructure/observability/tracing/tracing.service';
 import { LoggerService } from './infrastructure/observability/logger/logger.service';
-
-type ProxyAwareHttpApp = {
-  set: (key: typeof TRUST_PROXY_KEY, value: number) => void;
-};
 
 type CookieParserMiddleware = (
   req: unknown,
@@ -127,36 +117,11 @@ async function bootstrap() {
   // Nota: Esto solo aplica a JSON/URL-encoded. Las subidas de archivos (multipart/form-data)
   // se manejan de forma independiente mediante interceptores en los controladores.
   app.useBodyParser('json', { limit: '10mb' });
-  app.useBodyParser('urlencoded', { extended: true, limit: '10mb' });
-
-  // Audit fields interceptor (strips createdAt, updatedAt, deletedAt from all responses)
-  app.useGlobalInterceptors(new AuditFieldsInterceptor());
-
-  //BigInt interceptor
-  app.useGlobalInterceptors(new BigIntInterceptor());
-
-  //Decimal to String interceptor (lossless wire format — no float drift)
-  app.useGlobalInterceptors(new DecimalToStringInterceptor());
-
-  // Logging and Metrics Interceptor
-  app.useGlobalInterceptors(app.get(LoggingInterceptor));
-
-  // filtro para throttler
-  app.useGlobalFilters(new ThrottlerExceptionFilter());
-
   // Con Nginx como reverse proxy, la IP real del cliente viene en el
   // header X-Forwarded-For. "trust proxy = 1" le dice a Express que
   // confíe en un nivel de proxy y use ese header para req.ip.
-  const httpInstance: unknown = app.getHttpAdapter().getInstance();
-  if (httpInstance && typeof httpInstance === 'object') {
-    const maybeSet = (httpInstance as { set?: unknown }).set;
-    if (typeof maybeSet === 'function') {
-      (httpInstance as ProxyAwareHttpApp).set(
-        TRUST_PROXY_KEY,
-        TRUST_PROXY_HOPS,
-      );
-    }
-  }
+  app.set(TRUST_PROXY_KEY, TRUST_PROXY_HOPS);
+
   const createCookieParser = cookieParser as unknown as CookieParserFactory;
   app.use(createCookieParser());
   const configService = app.get(ConfigService);
@@ -181,11 +146,6 @@ async function bootstrap() {
         enableImplicitConversion: true,
       },
     }),
-  );
-
-  // Filtro global de excepciones
-  app.useGlobalFilters(
-    new GlobalExceptionFilter(app.get(ConfigService), app.get(LoggerService)),
   );
 
   const config = new DocumentBuilder()
