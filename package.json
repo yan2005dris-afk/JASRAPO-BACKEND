@@ -16,6 +16,7 @@
     "lint": "pnpm --filter backend run lint",
     "lint:fix": "pnpm --filter backend run lint:fix",
     "build": "pnpm --filter backend run build",
-    "test": "pnpm --filter backend test"
+    "test": "pnpm --filter backend test",
+    "test:integration": "pnpm --filter backend run test:integration"
   }
 }
