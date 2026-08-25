@@ -392,6 +392,16 @@ describe('PrismaMeterRepository - replaceMeter', () => {
     const contratoId = BigInt(1);
     const now = new Date();
 
+    mockPrisma.contratos.findUnique.mockResolvedValue({
+      contratoId,
+      estado: 'PENDIENTE_INSTALACION',
+      deletedAt: null,
+    });
+    mockPrisma.medidores.findUnique.mockResolvedValue({
+      medidorId,
+      estado: 'PENDIENTE',
+      deletedAt: null,
+    });
     mockPrisma.medidores.update.mockResolvedValue({
       medidorId,
       estado: 'INSTALADO',
@@ -420,11 +430,91 @@ describe('PrismaMeterRepository - replaceMeter', () => {
         data: { fechaDesde: now },
       }),
     );
-    // Debe NO haber seteado fechaHasta en el historial abierto
     expect(mockPrisma.historialMedidores.update).not.toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({ fechaHasta: expect.anything() }),
       }),
     );
+  });
+
+  it('should throw InvalidDomainOperationException if contract has no active history during installMeter', async () => {
+    const medidorId = BigInt(100);
+    const contratoId = BigInt(1);
+
+    mockPrisma.contratos.findUnique.mockResolvedValue({
+      contratoId,
+      estado: 'PENDIENTE_INSTALACION',
+      deletedAt: null,
+    });
+    mockPrisma.medidores.findUnique.mockResolvedValue({
+      medidorId,
+      estado: 'PENDIENTE',
+      deletedAt: null,
+    });
+    mockPrisma.historialMedidores.findFirst.mockResolvedValue(null);
+
+    await expect(
+      repository.installMeter({
+        medidorId,
+        contratoId,
+        estado: 'INSTALADO' as any,
+        estadoContrato: 'ACTIVO' as any,
+        fechaInstalacion: new Date(),
+      }),
+    ).rejects.toThrow(/no tiene un historial de medidor activo/);
+  });
+
+  it('should throw InvalidDomainOperationException if active history belongs to a different meter (interleaving race condition)', async () => {
+    const medidorId = BigInt(100);
+    const contratoId = BigInt(1);
+
+    mockPrisma.contratos.findUnique.mockResolvedValue({
+      contratoId,
+      estado: 'PENDIENTE_INSTALACION',
+      deletedAt: null,
+    });
+    mockPrisma.medidores.findUnique.mockResolvedValue({
+      medidorId,
+      estado: 'PENDIENTE',
+      deletedAt: null,
+    });
+    // Simulando que un reemplazo concurrente cambió el vínculo activo a medidor #200
+    mockPrisma.historialMedidores.findFirst.mockResolvedValue({
+      historialId: BigInt(9),
+      medidorId: BigInt(200),
+      contratoId,
+      fechaHasta: null,
+    });
+
+    await expect(
+      repository.installMeter({
+        medidorId,
+        contratoId,
+        estado: 'INSTALADO' as any,
+        estadoContrato: 'ACTIVO' as any,
+        fechaInstalacion: new Date(),
+      }),
+    ).rejects.toThrow(/Conflicto de concurrencia: el contrato #1 está vinculado al medidor #200, no al #100/);
+  });
+
+  it('should throw InvalidDomainOperationException if contract is not in PENDIENTE_INSTALACION during installMeter', async () => {
+    const medidorId = BigInt(100);
+    const contratoId = BigInt(1);
+
+    mockPrisma.contratos.findUnique.mockResolvedValue({
+      contratoId,
+      estado: 'ACTIVO',
+      deletedAt: null,
+    });
+
+    await expect(
+      repository.installMeter({
+        medidorId,
+        contratoId,
+        estado: 'INSTALADO' as any,
+        estadoContrato: 'ACTIVO' as any,
+        fechaInstalacion: new Date(),
+      }),
+    ).rejects.toThrow(/El contrato debe estar en estado PENDIENTE_INSTALACION/);
   });
 });

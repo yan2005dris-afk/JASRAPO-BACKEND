@@ -290,6 +290,52 @@ export class PrismaMeterRepository implements MeterRepository {
       params;
 
     const record = await this.prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT contrato_id FROM contratos WHERE contrato_id = ${contratoId} FOR UPDATE`;
+
+      const contrato = await tx.contratos.findUnique({
+        where: { contratoId },
+      });
+
+      if (!contrato || contrato.deletedAt) {
+        throw new EntityNotFoundException('Contrato', contratoId);
+      }
+
+      if (contrato.estado !== ('PENDIENTE_INSTALACION' as EstadoContrato)) {
+        throw new InvalidDomainOperationException(
+          `El contrato debe estar en estado PENDIENTE_INSTALACION para instalar el medidor, estado actual: ${contrato.estado}`,
+        );
+      }
+
+      const meter = await tx.medidores.findUnique({
+        where: { medidorId },
+      });
+
+      if (!meter || meter.deletedAt) {
+        throw new EntityNotFoundException('Medidor', medidorId);
+      }
+
+      if (meter.estado !== ('PENDIENTE' as EstadoMedidor)) {
+        throw new InvalidDomainOperationException(
+          `Meter must be in PENDIENTE state to be installed, current state: ${meter.estado}`,
+        );
+      }
+
+      const openHistorial = await tx.historialMedidores.findFirst({
+        where: { contratoId, fechaHasta: null, deletedAt: null },
+      });
+
+      if (!openHistorial) {
+        throw new InvalidDomainOperationException(
+          `El contrato #${contratoId} no tiene un historial de medidor activo vinculado`,
+        );
+      }
+
+      if (openHistorial.medidorId !== medidorId) {
+        throw new InvalidDomainOperationException(
+          `Conflicto de concurrencia: el contrato #${contratoId} está vinculado al medidor #${openHistorial.medidorId}, no al #${medidorId}`,
+        );
+      }
+
       const updatedMeter = await tx.medidores.update({
         where: { medidorId },
         data: {
@@ -298,40 +344,10 @@ export class PrismaMeterRepository implements MeterRepository {
         },
       });
 
-      const openHistorial = await tx.historialMedidores.findFirst({
-        where: { contratoId, fechaHasta: null },
+      await tx.historialMedidores.update({
+        where: { historialId: openHistorial.historialId },
+        data: { fechaDesde: fechaInstalacion },
       });
-
-      if (!openHistorial) {
-        await tx.historialMedidores.create({
-          data: {
-            medidorId,
-            contratoId,
-            fechaDesde: fechaInstalacion,
-            lecturaInicial: new Prisma.Decimal(0),
-            motivo: 'Instalación de medidor',
-          },
-        });
-      } else if (openHistorial.medidorId !== medidorId) {
-        await tx.historialMedidores.update({
-          where: { historialId: openHistorial.historialId },
-          data: { fechaHasta: fechaInstalacion },
-        });
-        await tx.historialMedidores.create({
-          data: {
-            medidorId,
-            contratoId,
-            fechaDesde: fechaInstalacion,
-            lecturaInicial: new Prisma.Decimal(0),
-            motivo: 'Instalación de medidor',
-          },
-        });
-      } else {
-        await tx.historialMedidores.update({
-          where: { historialId: openHistorial.historialId },
-          data: { fechaDesde: fechaInstalacion },
-        });
-      }
 
       await tx.contratos.update({
         where: { contratoId },
