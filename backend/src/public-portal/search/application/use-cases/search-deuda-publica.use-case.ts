@@ -1,10 +1,10 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { BusquedaPublicaRepository } from '../../domain/repositories/busqueda-publica.repository';
 import { DebtCalculatorHelper } from 'src/shared/utils/debt-calculator.util';
+import {
+  DomainValidationException,
+  EntityNotFoundException,
+} from 'src/shared/domain/exceptions/domain.exception';
 import type {
   IClienteConContratosRaw,
   TipoBusquedaDeuda,
@@ -24,7 +24,9 @@ export class SearchDeudaPublicaUseCase {
   ): Promise<DeudaPublicaResponseDto> {
     const normalizedValor = valor?.trim();
     if (!normalizedValor) {
-      throw new BadRequestException('El valor de búsqueda es obligatorio');
+      throw new DomainValidationException(
+        'El valor de búsqueda es obligatorio',
+      );
     }
 
     let resultado: DeudaPublicaResponseDto | null = null;
@@ -50,8 +52,9 @@ export class SearchDeudaPublicaUseCase {
     }
 
     if (!resultado) {
-      throw new NotFoundException(
-        'No se encontró registro de deuda para el parámetro ingresado',
+      throw new EntityNotFoundException(
+        'Búsqueda de deuda para el parámetro ingresado',
+        normalizedValor,
       );
     }
 

@@ -1,4 +1,5 @@
 import type { EstadoEvento } from 'src/shared/enums';
+import type { TransactionContext } from 'src/shared/domain/types/transaction';
 
 export interface EventoPendiente {
   id: bigint;
@@ -24,7 +25,7 @@ export abstract class EventosPendientesRepository {
     payload: Record<string, unknown>,
     aggregateType?: string,
     aggregateId?: string,
-    tx?: any,
+    tx?: TransactionContext,
   ): Promise<EventoPendiente>;
 
   /**

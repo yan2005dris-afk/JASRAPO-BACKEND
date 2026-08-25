@@ -64,7 +64,7 @@ export class ValidatePaymentUseCase {
         },
         'PAGO',
         pagoId.toString(),
-        tx as any,
+        tx,
       );
     });
 

@@ -17,7 +17,9 @@ export interface JobSendOptions {
   retryDelayMax?: number;
   retryBackoff?: boolean;
   expireInSeconds?: number;
-  [key: string]: any;
+  // Opciones adicionales se manejan a nivel de implementación concreta
+  // (PgBoss). Si el dominio necesita alguna, se agrega acá como campo
+  // tipado, no como index signature genérico.
 }
 
 export abstract class JobService {

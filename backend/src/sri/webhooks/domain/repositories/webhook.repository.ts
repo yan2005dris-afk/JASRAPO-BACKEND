@@ -1,3 +1,5 @@
+import type { JsonValue } from 'src/shared/domain/types/json';
+
 export interface WebhookConfigRecord {
   id: string;
   nombre: string;
@@ -15,7 +17,7 @@ export interface WebhookLogRecord {
   id: string;
   configId: string;
   evento: string;
-  payload: any;
+  payload: JsonValue;
   statusCode?: number | null;
   respuesta?: string | null;
   intento: number;
