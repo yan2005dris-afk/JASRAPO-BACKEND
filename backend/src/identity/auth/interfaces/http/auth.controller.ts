@@ -1,12 +1,7 @@
 import { Body, Controller, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { AuthService } from '../../application/auth.service';
 import { LoginUserDto } from '../dto/login-user.dto';
-import { RegisterDto } from '../dto/register.dto';
-import {
-  RegisterResponseDto,
-  LoginResponseDto,
-  RefreshResponseDto,
-} from '../dto/auth-response.dto';
+import { LoginResponseDto, RefreshResponseDto } from '../dto/auth-response.dto';
 import {
   UnlockAccountDto,
   UnlockAccountResponseDto,
@@ -35,47 +30,11 @@ import { RequiredStringPipe } from 'src/infrastructure/common/pipes/required-str
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 
 @ApiTags('auth')
-@ApiExtraModels(
-  RegisterResponseDto,
-  LoginResponseDto,
-  RefreshResponseDto,
-  UnlockAccountResponseDto,
-)
+@ApiExtraModels(LoginResponseDto, RefreshResponseDto, UnlockAccountResponseDto)
 @Controller('auth')
 @UseGuards(ThrottlerGuard)
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
-
-  /**
-   * Registrar un nuevo usuario en el sistema.
-   * Requiere autenticación JWT y permiso 'users:create'.
-   */
-  @ApiOperation({
-    summary: 'Registrar nuevo usuario',
-    description:
-      'Crea un nuevo usuario en el sistema. Requiere permiso users:create.',
-  })
-  @ApiBody({ type: RegisterDto, description: 'Datos del usuario a registrar' })
-  @ApiResponse({
-    status: 201,
-    description: 'Usuario registrado exitosamente',
-    type: RegisterResponseDto,
-  })
-  @ApiResponse({ status: 400, description: 'Datos inválidos' })
-  @ApiResponse({ status: 401, description: 'No autorizado' })
-  @ApiResponse({
-    status: 403,
-    description: 'Prohibido - Sin permiso users:create',
-  })
-  @ApiResponse({ status: 409, description: 'El correo electrónico ya existe' })
-  @ApiBearerAuth()
-  @RequiredPermission('users', 'create')
-  @Post('register')
-  async register(
-    @Body() registerDto: RegisterDto,
-  ): Promise<RegisterResponseDto> {
-    return this.authService.register(registerDto);
-  }
 
   /**
    * Iniciar sesión en el sistema.

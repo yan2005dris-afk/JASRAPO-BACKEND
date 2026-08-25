@@ -1,28 +1,30 @@
 model Usuarios {
-  usuarioId              Int                @id @default(autoincrement()) @map("usuario_id")
-  email                  String             @unique @map("email")
-  clave                  String             @map("contrasenia")
-  rolId                  Int?               @map("rol_id")
-  deletedAt              DateTime?          @map("borrado_en")
+  usuarioId              Int                   @id @default(autoincrement()) @map("usuario_id")
+  email                  String                @unique @map("email")
+  clave                  String?               @map("contrasenia")
+  rolId                  Int?                  @map("rol_id")
+  deletedAt              DateTime?             @map("borrado_en")
   // Campos de perfil anteriormente en tabla Perfiles
-  nombres                String?            @map("primer_nombre")
-  apellidos              String?            @map("apellido")
-  telefono               String?            @map("telefono")
-  avatar                 Json?              @map("avatar")
+  nombres                String?               @map("primer_nombre")
+  apellidos              String?               @map("apellido")
+  telefono               String?               @map("telefono")
+  avatar                 Json?                 @map("avatar")
   // Protección contra fuerza bruta por cuenta (issue #136)
-  intentosFallidos       Int                @default(0) @map("intentos_fallidos")
-  ultimoIntentoFallidoEn DateTime?          @map("ultimo_intento_fallido_en")
-  bloqueadoHasta         DateTime?          @map("bloqueado_hasta")
-  createdAt              DateTime?          @default(now()) @map("creado_en")
-  updatedAt              DateTime?          @updatedAt @map("actualizado_en")
+  intentosFallidos       Int                   @default(0) @map("intentos_fallidos")
+  ultimoIntentoFallidoEn DateTime?             @map("ultimo_intento_fallido_en")
+  bloqueadoHasta         DateTime?             @map("bloqueado_hasta")
+  createdAt              DateTime?             @default(now()) @map("creado_en")
+  updatedAt              DateTime?             @updatedAt @map("actualizado_en")
   // Relaciones
   rutas                  Rutas[]
   sesiones               Sesiones[]
   permisosUsuario        UsuarioPermisos[]
-  reemplazosSolicitados  ReemplazoMedidor[] @relation("ReemplazoSolicitante")
-  reemplazosAutorizados  ReemplazoMedidor[] @relation("ReemplazoAutorizador")
-  anomaliasResueltas     LecturaAnomalia[]  @relation("AnomaliaResueltaPor")
-  rol                    Roles?             @relation(fields: [rolId], references: [rolId])
+  reemplazosSolicitados  ReemplazoMedidor[]   @relation("ReemplazoSolicitante")
+  reemplazosAutorizados  ReemplazoMedidor[]   @relation("ReemplazoAutorizador")
+  anomaliasResueltas     LecturaAnomalia[]    @relation("AnomaliaResueltaPor")
+  invitaciones           UsuarioInvitacion[]  @relation("invitaciones")
+  invitacionesEnviadas   UsuarioInvitacion[]  @relation("invitadoPor")
+  rol                    Roles?               @relation(fields: [rolId], references: [rolId])
 
   @@map("usuarios")
 }

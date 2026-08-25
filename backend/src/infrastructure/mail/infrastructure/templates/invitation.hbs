@@ -1,0 +1,33 @@
+<h2>¡Bienvenido a JASRAPO-Olon!</h2>
+
+<p>Hola {{nombres}},</p>
+
+<p>Hemos creado tu cuenta en JASRAPO-Olon. Para completar tu registro y establecer tu contraseña,
+haz clic en el siguiente enlace:</p>
+
+<div style="text-align: center; margin: 30px 0;">
+  <a href="{{acceptUrl}}"
+     style="background-color: #1a5276;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 4px;
+            display: inline-block;">
+    Completar mi registro
+  </a>
+</div>
+
+<p><strong>Importante:</strong></p>
+<ul>
+  <li>Este enlace expira en {{expiresInHours}} horas</li>
+  <li>La contraseña debe tener al menos 8 caracteres, mayúsculas, minúsculas, números y símbolos</li>
+  <li>Si no solicitaste esta invitación, ignora este mensaje</li>
+</ul>
+
+<p>Si el botón no funciona, copia y pega el siguiente enlace en tu navegador:</p>
+<p style="word-break: break-all; color: #0c9ea1;"><a href="{{acceptUrl}}" style="color: #0c9ea1;">{{acceptUrl}}</a></p>
+
+<p>Si tienes problemas para acceder o no reconoces esta solicitud, contacta al equipo de administración.</p>
+
+<p>Saludos,<br/>
+El equipo de JASRAPO-Olon</p>

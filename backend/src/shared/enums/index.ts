@@ -274,6 +274,19 @@ export type MotivoReemplazoMedidor =
 
 // Fuente: models/logica-de-negocio/ReemplazoMedidor.prisma
 
+export const ResolucionEconomicaAnomalia = {
+  COBRO_REAL: 'COBRO_REAL',
+  PROMEDIO_HISTORICO: 'PROMEDIO_HISTORICO',
+  EXONERACION_PARCIAL: 'EXONERACION_PARCIAL',
+  EXONERACION_TOTAL: 'EXONERACION_TOTAL',
+  AJUSTE_LECTURA: 'AJUSTE_LECTURA',
+} as const;
+
+export type ResolucionEconomicaAnomalia =
+  (typeof ResolucionEconomicaAnomalia)[keyof typeof ResolucionEconomicaAnomalia];
+
+// Fuente: models/logica-de-negocio/LecturaAnomalia.prisma
+
 export const ResponsabilidadDano = {
   USUARIO: 'USUARIO',
   JUNTA: 'JUNTA',

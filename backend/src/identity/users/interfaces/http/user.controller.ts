@@ -121,12 +121,19 @@ export class UserController {
   /**
    * Crea un nuevo usuario con avatar opcional.
    * Requiere permiso: users:create
+   *
+   * El usuario se crea sin contraseña (password=null) y se envía un email
+   * con un link de invitación para que establezca su propia contraseña.
    */
-  @ApiOperation({ summary: 'Crear usuario' })
+  @ApiOperation({
+    summary: 'Crear usuario',
+    description:
+      'Crea un nuevo usuario y envía invitación por email para establecer contraseña',
+  })
   @ApiConsumes('multipart/form-data')
   @ApiResponse({
     status: 201,
-    description: 'Usuario creado exitosamente',
+    description: 'Usuario creado exitosamente, invitación enviada por email',
     type: UserResponseDto,
   })
   @ApiResponse({ status: 400, description: 'Datos de entrada no válidos' })
@@ -139,9 +146,14 @@ export class UserController {
   @UseInterceptors(FileInterceptor('file', AVATAR_UPLOAD_OPTIONS))
   async create(
     @Body() createUserDto: CreateUserDto,
+    @AuthUserId() adminUserId: number,
     @UploadedFile() file?: Express.Multer.File,
   ): Promise<UserResponseDto> {
-    const user = await this.userService.createUser(createUserDto, file);
+    const user = await this.userService.createUser(
+      createUserDto,
+      file,
+      adminUserId,
+    );
     return UserResponseDto.fromEntity(user);
   }
 
@@ -248,5 +260,49 @@ export class UserController {
   async remove(@Param('id', ParseIntPipe) id: number) {
     await this.userService.softDeleteUser(id);
     return { message: 'Usuario eliminado exitosamente' };
+  }
+
+  /**
+   * Reenviar invitación a usuario pendiente.
+   * Requiere permiso: users:update
+   */
+  @ApiOperation({
+    summary: 'Reenviar invitación',
+    description:
+      'Reenvía la invitación por email si la anterior falló o no fue recibida',
+  })
+  @ApiParam({ name: 'id', description: 'ID del usuario', type: Number })
+  @ApiResponse({
+    status: 200,
+    description: 'Invitación reenviada exitosamente',
+  })
+  @ApiResponse({ status: 400, description: 'No hay invitación pendiente' })
+  @ApiResponse({ status: 404, description: 'Usuario no encontrado' })
+  @RequiredPermission('users', 'update')
+  @Post(':id/resend-invitation')
+  async resendInvitation(
+    @Param('id', ParseIntPipe) id: number,
+    @AuthUserId() adminId: number,
+  ) {
+    return await this.userService.resendInvitation(id, adminId);
+  }
+
+  /**
+   * Obtener invitaciones pendientes.
+   * Dashboard admin para ver estado de invitaciones.
+   * Requiere permiso: users:read
+   */
+  @ApiOperation({
+    summary: 'Listar invitaciones pendientes',
+    description: 'Lista todas las invitaciones pendientes de aceptar',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de invitaciones',
+  })
+  @RequiredPermission('users', 'read')
+  @Get('invitations/pending')
+  async getPendingInvitations() {
+    return await this.userService.getPendingInvitations();
   }
 }

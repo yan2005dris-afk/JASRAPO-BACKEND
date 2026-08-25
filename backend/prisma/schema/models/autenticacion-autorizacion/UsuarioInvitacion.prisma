@@ -1,0 +1,20 @@
+model UsuarioInvitacion {
+  usuarioInvitacionId Int       @id @default(autoincrement()) @map("usuario_invitacion_id")
+  usuario             Usuarios? @relation("invitaciones", fields: [usuarioId], references: [usuarioId], onDelete: SetNull)
+  usuarioId           Int?      @map("usuario_id")
+  tokenHash           String    @unique @map("token_hash")
+  expiresAt           DateTime  @map("expira_en")
+  acceptedAt          DateTime? @map("aceptado_en")
+  termsVersion        String    @default("v0") @map("version_terminos")
+  invitedBy           Usuarios? @relation("invitadoPor", fields: [invitedByUserId], references: [usuarioId], onDelete: SetNull)
+  invitedByUserId     Int?      @map("invitado_por_usuario_id")
+  emailSentAt         DateTime? @map("email_enviado_en")
+  emailFailedAt       DateTime? @map("email_fallido_en")
+  emailAttempts       Int       @default(0) @map("email_intentos")
+  createdAt           DateTime? @default(now()) @map("creado_en")
+  updatedAt           DateTime? @updatedAt @map("actualizado_en")
+
+  @@index([usuarioId, acceptedAt])
+  @@index([emailSentAt, emailFailedAt])
+  @@map("usuarios_invitaciones")
+}

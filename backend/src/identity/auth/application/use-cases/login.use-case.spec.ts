@@ -158,6 +158,23 @@ describe('LoginUseCase', () => {
       ).rejects.toThrow(UnauthorizedDomainException);
     });
 
+    it('should throw UnauthorizedDomainException when password is null (new user pending invitation)', async () => {
+      (userRepository.findByEmailWithPassword as jest.Mock).mockResolvedValue({
+        ...baseUserMock,
+        clave: null, // Usuario nuevo sin contraseña
+      });
+
+      await expect(
+        useCase.execute({
+          email: 'newuser@test.com',
+          password: 'Password123!',
+        }),
+      ).rejects.toThrow(/Debe aceptar la invitación/);
+
+      // No debe registrar intento fallido porque el usuario no existe aún
+      expect(userRepository.recordFailedLoginAttempt).not.toHaveBeenCalled();
+    });
+
     it('should throw UnauthorizedDomainException when password invalid', async () => {
       (userRepository.findByEmailWithPassword as jest.Mock).mockResolvedValue({
         ...baseUserMock,
