@@ -303,13 +303,33 @@ export class PrismaMeterRepository implements MeterRepository {
       });
 
       if (!openHistorial) {
-        this.logger.warn(
-          `Install: no open historialMedidores row for contratoId=${contratoId}; skipping fechaHasta close`,
-        );
-      } else {
+        await tx.historialMedidores.create({
+          data: {
+            medidorId,
+            contratoId,
+            fechaDesde: fechaInstalacion,
+            lecturaInicial: new Prisma.Decimal(0),
+            motivo: 'Instalación de medidor',
+          },
+        });
+      } else if (openHistorial.medidorId !== medidorId) {
         await tx.historialMedidores.update({
           where: { historialId: openHistorial.historialId },
           data: { fechaHasta: fechaInstalacion },
+        });
+        await tx.historialMedidores.create({
+          data: {
+            medidorId,
+            contratoId,
+            fechaDesde: fechaInstalacion,
+            lecturaInicial: new Prisma.Decimal(0),
+            motivo: 'Instalación de medidor',
+          },
+        });
+      } else {
+        await tx.historialMedidores.update({
+          where: { historialId: openHistorial.historialId },
+          data: { fechaDesde: fechaInstalacion },
         });
       }
 
@@ -420,7 +440,13 @@ export class PrismaMeterRepository implements MeterRepository {
             const contrato = await tx.contratos.findUnique({
               where: { contratoId },
               include: {
-                categoriaTarifa: true,
+                categoriaTarifa: {
+                  include: {
+                    rubros: {
+                      where: { activo: true, deletedAt: null },
+                    },
+                  },
+                },
                 historialMedidores: {
                   where: { fechaHasta: null, deletedAt: null },
                   include: { medidor: true },
@@ -691,10 +717,26 @@ export class PrismaMeterRepository implements MeterRepository {
               ? {
                   categoriaTarifaId: contrato.categoriaTarifa.categoriaTarifaId,
                   nombre: contrato.categoriaTarifa.nombre,
+                  descripcion: contrato.categoriaTarifa.descripcion ?? null,
+                  consumoMinimoMensual:
+                    contrato.categoriaTarifa.consumoMinimoMensual ?? null,
                   fechaVigenciaDesde:
-                    contrato.categoriaTarifa.fechaVigenciaDesde?.toISOString(),
+                    contrato.categoriaTarifa.fechaVigenciaDesde?.toISOString() ??
+                    null,
                   fechaVigenciaHasta:
-                    contrato.categoriaTarifa.fechaVigenciaHasta?.toISOString(),
+                    contrato.categoriaTarifa.fechaVigenciaHasta?.toISOString() ??
+                    null,
+                  rubros: (contrato.categoriaTarifa.rubros || []).map((r) => ({
+                    rubroId: r.rubroId,
+                    codigoSri: r.codigoSri ?? null,
+                    nombre: r.nombre,
+                    descripcion: r.descripcion,
+                    precioUnitario: r.precioUnitario.toString(),
+                    tipoRubro: r.tipoRubro,
+                    codigoSistemaRubro: r.codigoSistemaRubro ?? null,
+                    esAutomatico: r.esAutomatico,
+                    tarifaImpuestoId: r.tarifaImpuestoId,
+                  })),
                 }
               : null;
 

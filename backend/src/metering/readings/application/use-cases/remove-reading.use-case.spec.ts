@@ -2,7 +2,10 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { RemoveReadingUseCase } from './remove-reading.use-case';
 import { ReadingRepository } from '../../domain/repositories/reading.repository';
-import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
+import {
+  EntityNotFoundException,
+  InvalidDomainOperationException,
+} from 'src/shared/domain/exceptions/domain.exception';
 
 describe('RemoveReadingUseCase', () => {
   let useCase: RemoveReadingUseCase;
@@ -10,6 +13,7 @@ describe('RemoveReadingUseCase', () => {
   const mockReadingRepository = {
     findUnique: jest.fn(),
     update: jest.fn(),
+    isReadingLinkedToReplacement: jest.fn().mockResolvedValue(false),
   };
 
   const mockReading = {
@@ -64,6 +68,15 @@ describe('RemoveReadingUseCase', () => {
 
     await expect(useCase.execute(BigInt(1))).rejects.toThrow(
       EntityNotFoundException,
+    );
+  });
+
+  it('should throw InvalidDomainOperationException when reading is linked to a replacement', async () => {
+    mockReadingRepository.findUnique.mockResolvedValue(mockReading as any);
+    mockReadingRepository.isReadingLinkedToReplacement.mockResolvedValue(true);
+
+    await expect(useCase.execute(BigInt(1))).rejects.toThrow(
+      InvalidDomainOperationException,
     );
   });
 });

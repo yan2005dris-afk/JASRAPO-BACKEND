@@ -1,10 +1,8 @@
 import {
   IsNumberString,
   IsOptional,
-  IsNumber,
   IsString,
   IsIn,
-  Min,
 } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsNotEmptyString } from 'src/infrastructure/common/decorators/is-not-empty-string.decorator';
@@ -57,23 +55,4 @@ export class ActualizarContratoMedidorDto {
   @IsOptional()
   @IsNumberString()
   sectorId?: string;
-
-  @ApiPropertyOptional({
-    description: 'ID del nuevo medidor (dispara reemplazo de medidor)',
-    example: '200',
-  })
-  @IsOptional()
-  @IsNumberString()
-  medidorId?: string;
-
-  @ApiPropertyOptional({
-    description:
-      'Lectura inicial del nuevo medidor (requerida si se cambia medidor)',
-    example: 0,
-    default: 0,
-  })
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  lecturaInicial?: number;
 }

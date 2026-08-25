@@ -577,4 +577,17 @@ export class PrismaReadingRepository implements ReadingRepository {
 
     return ReadingMapper.toDomain(record);
   }
+
+  async isReadingLinkedToReplacement(lecturaId: bigint): Promise<boolean> {
+    const count = await this.prisma.reemplazoMedidor.count({
+      where: {
+        OR: [
+          { lecturaFinalSalienteId: lecturaId },
+          { lecturaInicialEntranteId: lecturaId },
+        ],
+        deletedAt: null,
+      },
+    });
+    return count > 0;
+  }
 }
