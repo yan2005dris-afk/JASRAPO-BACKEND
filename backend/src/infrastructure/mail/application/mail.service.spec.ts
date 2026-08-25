@@ -257,12 +257,16 @@ describe('MailService', () => {
 
   describe('getFrontendUrl', () => {
     it('returns FRONTEND_URL from sistemaConfigService when configured in DB', async () => {
-      mockSistemaConfigService.getString.mockResolvedValue('https://clientes.jasrapo.com');
+      mockSistemaConfigService.getString.mockResolvedValue(
+        'https://clientes.jasrapo.com',
+      );
       process.env.APP_URL = 'https://staging.jasrapo.com';
 
       const url = await service.getFrontendUrl();
 
-      expect(mockSistemaConfigService.getString).toHaveBeenCalledWith(FRONTEND_URL);
+      expect(mockSistemaConfigService.getString).toHaveBeenCalledWith(
+        FRONTEND_URL,
+      );
       expect(url).toBe('https://clientes.jasrapo.com');
     });
 
@@ -272,7 +276,9 @@ describe('MailService', () => {
 
       const url = await service.getFrontendUrl();
 
-      expect(mockSistemaConfigService.getString).toHaveBeenCalledWith(FRONTEND_URL);
+      expect(mockSistemaConfigService.getString).toHaveBeenCalledWith(
+        FRONTEND_URL,
+      );
       expect(url).toBe('https://staging.jasrapo.com');
     });
 
@@ -297,7 +303,9 @@ describe('MailService', () => {
 
   describe('sendInvitation', () => {
     it('queues invitation email using dynamic frontend url', async () => {
-      mockSistemaConfigService.getString.mockResolvedValue('https://app.jasrapo.com');
+      mockSistemaConfigService.getString.mockResolvedValue(
+        'https://app.jasrapo.com',
+      );
       mockQueueService.queueMail.mockResolvedValue('job-inv-1');
 
       const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
@@ -318,7 +326,8 @@ describe('MailService', () => {
           context: expect.objectContaining({
             nombres: 'Juan Perez',
             token: 'sample-token-123',
-            acceptUrl: 'https://app.jasrapo.com/auth/invitations/accept?token=sample-token-123',
+            acceptUrl:
+              'https://app.jasrapo.com/auth/invitations/accept?token=sample-token-123',
             expiresInHours: 24,
           }),
         }),
@@ -326,4 +335,3 @@ describe('MailService', () => {
     });
   });
 });
-

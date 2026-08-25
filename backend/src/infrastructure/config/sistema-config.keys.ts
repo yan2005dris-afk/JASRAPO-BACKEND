@@ -40,4 +40,3 @@ export const SRI_EMISION_MODO = 'sri.emision.modo';
  *   3. `http://localhost:4200`
  */
 export const FRONTEND_URL = 'FRONTEND_URL';
-
