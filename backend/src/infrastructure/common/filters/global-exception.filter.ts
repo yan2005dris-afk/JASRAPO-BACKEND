@@ -17,6 +17,7 @@ import {
   InvalidDomainOperationException,
   UnauthorizedDomainException,
   ForbiddenDomainException,
+  DomainValidationException,
 } from '../../../shared/domain/exceptions/domain.exception';
 
 interface FormattedValidationError {
@@ -82,6 +83,8 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         status = HttpStatus.UNAUTHORIZED;
       } else if (exception instanceof ForbiddenDomainException) {
         status = HttpStatus.FORBIDDEN;
+      } else if (exception instanceof DomainValidationException) {
+        status = HttpStatus.BAD_REQUEST;
       } else if (exception instanceof InvalidDomainOperationException) {
         status = HttpStatus.BAD_REQUEST;
       } else {

@@ -42,3 +42,24 @@ export class ForbiddenDomainException extends DomainException {
     super(message);
   }
 }
+
+/**
+ * Error de validación de input en un use-case.
+ *
+ * Es la versión de dominio de `BadRequestException` de Nest. Use-cases y
+ * application services deben tirar esta excepción cuando un input del
+ * caller no cumple las invariantes del dominio (formato, rangos,
+ * campos requeridos). El `GlobalExceptionFilter` la traduce a HTTP 400.
+ *
+ * Los controllers de Nest SÍ pueden usar `BadRequestException` cuando
+ * reciben un input que ni siquiera pasa la capa HTTP (ej: shape
+ * incorrecto del body antes de llegar al use-case). El acoplamiento
+ * que SC-188 busca eliminar es el de los use-cases al framework.
+ */
+export class DomainValidationException extends DomainException {
+  readonly details?: Record<string, string[]>;
+  constructor(message: string, details?: Record<string, string[]>) {
+    super(message);
+    this.details = details;
+  }
+}
