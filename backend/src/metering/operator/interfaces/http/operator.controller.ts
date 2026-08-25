@@ -5,7 +5,6 @@ import {
   Param,
   Body,
   Query,
-  UseGuards,
   Post,
   ParseEnumPipe,
   UseInterceptors,
@@ -23,8 +22,6 @@ import {
   ApiQuery,
   ApiConsumes,
 } from '@nestjs/swagger';
-import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
-import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
 import { CurrentUser } from 'src/identity/auth/interfaces/http/decorators/current-user.decorator';
 import { ParseBigIntPipe } from 'src/infrastructure/common/pipes/parse-bigint.pipe';
@@ -55,7 +52,6 @@ import {
 
 @ApiTags('operator')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('operator')
 export class OperatorController {
   constructor(

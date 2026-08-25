@@ -6,7 +6,6 @@ import {
   Patch,
   Param,
   Query,
-  UseGuards,
   ParseIntPipe,
 } from '@nestjs/common';
 import { RolesService } from '../../application/roles.service';
@@ -16,8 +15,6 @@ import {
   RoleResponseDto,
   RoleDetailResponseDto,
 } from '../dto/role-response.dto';
-import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
-import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
 import {
   ApiBearerAuth,
@@ -35,7 +32,6 @@ import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-
 @ApiTags('roles')
 @ApiBearerAuth()
 @ApiExtraModels(RoleResponseDto, RoleDetailResponseDto)
-@UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('roles')
 export class RolesController {
   constructor(private readonly rolesService: RolesService) {}

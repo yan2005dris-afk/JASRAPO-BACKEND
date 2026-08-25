@@ -11,8 +11,6 @@ import {
 } from '../dto/unlock-account.dto';
 import type { AuthenticatedRequest } from 'src/infrastructure/common/types/auth-request.types';
 import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
-import { JwtAuthGuard } from './guards/jwt-auth.guard';
-import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 import { Public } from 'src/infrastructure/common/decorators/public.decorator';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
 import {
@@ -45,13 +43,7 @@ import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  /**
-   * DEPRECATED: El endpoint POST /auth/register ha sido reemplazado por:
-   * - POST /users (admin crea usuario) → dispara invitación automática
-   * - POST /auth/invitations/accept (usuario acepta invitación con contraseña)
-   *
-   * Este endpoint se mantiene solo para documentación. No debe ser usado.
-   */
+
 
   /**
    * Iniciar sesión en el sistema.
@@ -222,7 +214,6 @@ export class AuthController {
   })
   @ApiResponse({ status: 404, description: 'Usuario no encontrado' })
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @RequiredPermission('users', 'update')
   @Post('admin/unlock-account')
   async unlockAccount(

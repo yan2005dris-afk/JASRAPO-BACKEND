@@ -1,7 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { SistemaConfigService } from '../../infrastructure/config/sistema-config.service';
 import { REPORTE_ESTILO } from '../../infrastructure/config/sistema-config.keys';
-import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+import {
+  LOGGER_PORT,
+  type LoggerPort,
+} from 'src/shared/domain/ports/logger.port';
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
 /**
@@ -67,7 +70,7 @@ const VALID_STYLES: readonly ReportStyle[] = ['legacy', 'modern'];
 export class ReportStyleService {
   constructor(
     private readonly config: SistemaConfigService,
-    private readonly logger: LoggerService,
+    @Inject(LOGGER_PORT) private readonly logger: LoggerPort,
   ) {}
 
   /**

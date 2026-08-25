@@ -7,7 +7,6 @@ import {
   Param,
   Delete,
   Query,
-  UseGuards,
   ParseIntPipe,
 } from '@nestjs/common';
 import { ComunidadService } from '../../application/comunidad.service';
@@ -25,8 +24,6 @@ import {
   ApiExtraModels,
 } from '@nestjs/swagger';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
-import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
-import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 import { ApiPaginatedResponse } from 'src/infrastructure/common/decorators/api-paginated-response.decorator';
 import { PaginationMetaDto } from 'src/infrastructure/common/dtos/pagination-meta.dto';
 import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
@@ -34,7 +31,6 @@ import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-
 @ApiTags('communities')
 @ApiBearerAuth()
 @ApiExtraModels(CommunityResponseDto, PaginationMetaDto)
-@UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('communities')
 export class ComunidadController {
   constructor(private readonly comunidadService: ComunidadService) {}

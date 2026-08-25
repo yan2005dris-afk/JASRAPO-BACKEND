@@ -7,7 +7,6 @@ import {
   Patch,
   Post,
   Query,
-  UseGuards,
 } from '@nestjs/common';
 import { ParseBigIntPipe } from 'src/infrastructure/common/pipes/parse-bigint.pipe';
 import {
@@ -20,8 +19,6 @@ import {
   ApiExtraModels,
 } from '@nestjs/swagger';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
-import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
-import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 import { ClientService } from '../../application/client.service';
 import { CreateClientDto } from '../dto/create-client.dto';
 import { UpdateClientDto } from '../dto/update-client.dto';
@@ -41,7 +38,6 @@ import { PaginatedResult } from 'src/infrastructure/common/types/paginated-resul
   TipoIdentificacionResponseDto,
   PaginationMetaDto,
 )
-@UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('clients')
 export class ClientController {
   constructor(private readonly clientService: ClientService) {}

@@ -36,7 +36,8 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "test:integration": "NODE_OPTIONS=--experimental-vm-modules jest --config ./jest.integration.config.ts --verbose",
+    "test:integration": "tsx --test --test-concurrency=1 test/integration/*.int-spec.ts test/integration/**/*.int-spec.ts",
+    "test:load:pdf": "k6 run test/load/pdf-generation.k6.js",
     "pgboss:dashboard": "export $(grep -v '^#' ../.env | xargs) && PGBOSS_SCHEMA=jobs PORT=3002 npx pg-boss-dashboard"
   },
   "prisma": {
@@ -45,10 +46,8 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1067.0",
     "@aws-sdk/s3-request-presigner": "^3.1067.0",
-    "@smithy/node-http-handler": "^4.7.6",
     "@nestjs-modules/mailer": "2.3.6",
     "@nestjs/axios": "^4.0.1",
-    "@nestjs/cache-manager": "^3.1.2",
     "@nestjs/common": "^11.1.16",
     "@nestjs/config": "^4.0.3",
     "@nestjs/core": "^11.0.1",
@@ -80,11 +79,11 @@
     "@signpdf/signer-p12": "^3.3.0",
     "@signpdf/signpdf": "^3.3.0",
     "@signpdf/utils": "^3.3.0",
+    "@smithy/node-http-handler": "^4.7.6",
     "@types/nodemailer": "^8.0.0",
     "@xmldom/xmldom": "^0.9.7",
     "axios": "^1.7.9",
     "bcrypt": "^6.0.0",
-    "cache-manager": "^7.2.8",
     "class-transformer": "^0.5.1",
     "class-validator": "0.14.3",
     "cookie-parser": "1.4.7",

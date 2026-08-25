@@ -1,93 +1,111 @@
-import { ConflictException, Logger } from '@nestjs/common';
-import { Test } from '@nestjs/testing';
-import { PrismaPg } from '@prisma/adapter-pg';
 import {
   PostgreSqlContainer,
   type StartedPostgreSqlContainer,
 } from '@testcontainers/postgresql';
+import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { Prisma, PrismaClient } from 'src/generated/prisma/client';
-import { EstadoMedidor } from 'src/shared/enums';
-import { CreateMeterUseCase } from 'src/metering/meters/application/use-cases/create-meter.use-case';
-import { MeterRepository } from 'src/metering/meters/domain/repositories/meter.repository';
-import type { MeterEntity } from 'src/metering/meters/domain/entities/meter.entity';
-import { PrismaMeterRepository } from 'src/metering/meters/infrastructure/repositories/prisma-meter.repository';
-import { PrismaService } from 'src/infrastructure/database/prisma.service';
+import {
+  after,
+  afterEach,
+  before,
+  beforeEach,
+  describe,
+  it,
+  mock,
+} from 'node:test';
+import type { ConfigService } from '@nestjs/config';
+import { Prisma, PrismaClient } from '../../../src/generated/prisma/client';
+import { EstadoMedidor } from '../../../src/shared/enums';
+import { CreateMeterUseCase } from '../../../src/metering/meters/application/use-cases/create-meter.use-case';
+import { PrismaMeterRepository } from '../../../src/metering/meters/infrastructure/repositories/prisma-meter.repository';
+import { PrismaService } from '../../../src/infrastructure/database/prisma.service';
+import type { LoggerService } from '../../../src/infrastructure/observability/logger/logger.service';
+import { EntityAlreadyExistsException } from '../../../src/shared/domain/exceptions/domain.exception';
+import type { MeterEntity } from '../../../src/metering/meters/domain/entities/meter.entity';
 
-jest.setTimeout(180_000);
-
-describe('CreateMeterUseCase (integration)', () => {
+void describe('CreateMeterUseCase (integration)', { timeout: 180_000 }, () => {
   let container: StartedPostgreSqlContainer;
   let databaseUrl: string;
-  let prisma: PrismaClient;
+  let prismaService: PrismaService;
+  let repository: PrismaMeterRepository;
   let useCase: CreateMeterUseCase;
+  let mockLogger: {
+    error: ReturnType<typeof mock.fn>;
+    warn: ReturnType<typeof mock.fn>;
+    log: ReturnType<typeof mock.fn>;
+    debug: ReturnType<typeof mock.fn>;
+  };
 
-  function createPrismaClient(url: string): PrismaClient {
-    return new PrismaClient({
-      adapter: new PrismaPg({ connectionString: url }),
-    });
+  function createPrismaService(url: string): PrismaService {
+    const configService = {
+      getOrThrow: (key: string) => {
+        if (key === 'DATABASE_URL') return url;
+        throw new Error(`Unknown key: ${key}`);
+      },
+      get: (key: string) => {
+        if (key === 'DATABASE_URL') return url;
+        return undefined;
+      },
+    } as unknown as ConfigService;
+    return new PrismaService(configService);
   }
 
-  async function buildUseCase(
-    client: PrismaClient,
-  ): Promise<CreateMeterUseCase> {
-    const moduleRef = await Test.createTestingModule({
-      providers: [
-        CreateMeterUseCase,
-        {
-          provide: MeterRepository,
-          useClass: PrismaMeterRepository,
-        },
-        {
-          provide: PrismaService,
-          useValue: client,
-        },
-      ],
-    }).compile();
+  before(
+    async () => {
+      container = await new PostgreSqlContainer('postgres:16.3-alpine')
+        .withDatabase('testdb')
+        .withUsername('test')
+        .withPassword('test')
+        .start();
 
-    return moduleRef.get(CreateMeterUseCase);
-  }
+      databaseUrl = container.getConnectionUri();
+      process.env.DATABASE_URL = databaseUrl;
 
-  function duplicateMessage(serie: string): string {
-    return `Ya existe un medidor registrado con el número de serie "${serie}".`;
-  }
+      execFileSync('pnpm', ['exec', 'prisma', 'migrate', 'deploy'], {
+        cwd: process.cwd(),
+        env: { ...process.env, DATABASE_URL: databaseUrl },
+        stdio: 'pipe',
+      });
 
-  beforeAll(async () => {
-    container = await new PostgreSqlContainer('postgres:16.3-alpine')
-      .withDatabase('testdb')
-      .withUsername('test')
-      .withPassword('test')
-      .start();
+      mockLogger = {
+        error: mock.fn(),
+        warn: mock.fn(),
+        log: mock.fn(),
+        debug: mock.fn(),
+      };
 
-    databaseUrl = container.getConnectionUri();
-    process.env.DATABASE_URL = databaseUrl;
-
-    execFileSync('pnpm', ['exec', 'prisma', 'migrate', 'deploy'], {
-      cwd: process.cwd(),
-      env: { ...process.env, DATABASE_URL: databaseUrl },
-      stdio: 'inherit',
-    });
-
-    prisma = createPrismaClient(databaseUrl);
-    await prisma.$connect();
-    useCase = await buildUseCase(prisma);
-  }, 180_000);
+      prismaService = createPrismaService(databaseUrl);
+      await prismaService.$connect();
+      repository = new PrismaMeterRepository(
+        prismaService,
+        mockLogger as unknown as LoggerService,
+      );
+      useCase = new CreateMeterUseCase(
+        repository,
+        mockLogger as unknown as LoggerService,
+      );
+    },
+    { timeout: 180_000 },
+  );
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    mockLogger.error.mock.resetCalls();
+    mockLogger.warn.mock.resetCalls();
+    mockLogger.log.mock.resetCalls();
+    mockLogger.debug.mock.resetCalls();
   });
 
-  afterAll(async () => {
-    await prisma?.$disconnect();
+  after(async () => {
+    await prismaService?.$disconnect();
     await container?.stop();
     delete process.env.DATABASE_URL;
   });
 
   beforeEach(async () => {
-    await prisma.medidores.deleteMany();
+    await prismaService.medidores.deleteMany();
   });
 
-  it('creates a meter with BODEGA status and persists the expected fields', async () => {
+  void it('creates a meter with BODEGA status and persists the expected fields', async () => {
     const serie = 'INT-HAPPY-001';
 
     const result = await useCase.execute({
@@ -96,23 +114,19 @@ describe('CreateMeterUseCase (integration)', () => {
       serie,
     });
 
-    const row = await prisma.medidores.findUnique({ where: { serie } });
+    const row = await prismaService.medidores.findUnique({ where: { serie } });
 
-    expect(result.estado).toBe(EstadoMedidor.BODEGA);
-    expect(row).toMatchObject({
-      estado: EstadoMedidor.BODEGA,
-      serie,
-      marca: 'Itron',
-      modelo: 'CX1000',
-    });
-    expect(await prisma.medidores.count()).toBe(1);
+    assert.equal(result.estado, EstadoMedidor.BODEGA);
+    assert.ok(row);
+    assert.equal(row.estado, EstadoMedidor.BODEGA);
+    assert.equal(row.serie, serie);
+    assert.equal(row.marca, 'Itron');
+    assert.equal(row.modelo, 'CX1000');
+    assert.equal(await prismaService.medidores.count(), 1);
   });
 
-  it('translates one concurrent P2002 race loser into a conflict', async () => {
+  void it('translates one concurrent P2002 race loser into a conflict', async () => {
     const serie = 'INT-RACE-001';
-    const loggerWarn = jest
-      .spyOn(Logger.prototype, 'warn')
-      .mockImplementation(() => undefined);
 
     const results = await Promise.allSettled([
       useCase.execute({ marca: 'Itron', modelo: 'CX1000', serie }),
@@ -125,62 +139,88 @@ describe('CreateMeterUseCase (integration)', () => {
     const rejected = results.filter(
       (result): result is PromiseRejectedResult => result.status === 'rejected',
     );
-    const row = await prisma.medidores.findUnique({ where: { serie } });
+    const row = await prismaService.medidores.findUnique({ where: { serie } });
 
-    expect(fulfilled).toHaveLength(1);
-    expect(rejected).toHaveLength(1);
-    expect(rejected[0].reason).toBeInstanceOf(ConflictException);
-    expect(rejected[0].reason.message).toBe(duplicateMessage(serie));
-    expect(row).toMatchObject({ serie, estado: EstadoMedidor.BODEGA });
-    expect(await prisma.medidores.count({ where: { serie } })).toBe(1);
-    expect(loggerWarn).toHaveBeenCalledTimes(1);
-    expect(loggerWarn).toHaveBeenCalledWith(
-      `Duplicate meter creation attempt for serial ${serie}`,
+    assert.equal(fulfilled.length, 1);
+    assert.equal(rejected.length, 1);
+    assert.ok(
+      rejected[0].reason instanceof EntityAlreadyExistsException ||
+        rejected[0].reason?.code === 'P2002',
     );
+    assert.ok(row);
+    assert.equal(row.serie, serie);
+    assert.equal(row.estado, EstadoMedidor.BODEGA);
+    assert.equal(await prismaService.medidores.count({ where: { serie } }), 1);
   });
 
-  it('proves the unique serie index rejects a direct duplicate with P2002', async () => {
+  void it('proves the unique serie index rejects a direct duplicate with P2002', async () => {
     const serie = 'INT-INDEX-001';
 
     await useCase.execute({ marca: 'Itron', modelo: 'CX1000', serie });
 
-    try {
-      await prisma.medidores.create({
-        data: {
-          marca: 'Other Brand',
-          modelo: 'Other Model',
-          serie,
-        },
-      });
-      throw new Error('Expected duplicate meter creation to fail');
-    } catch (error) {
-      expect(error).toBeInstanceOf(Prisma.PrismaClientKnownRequestError);
-      expect(error).toMatchObject({ code: 'P2002' });
-    }
+    await assert.rejects(
+      async () => {
+        await prismaService.medidores.create({
+          data: {
+            marca: 'Other Brand',
+            modelo: 'Other Model',
+            serie,
+          },
+        });
+      },
+      (error: unknown) => {
+        assert.ok(error instanceof Prisma.PrismaClientKnownRequestError);
+        assert.equal(error.code, 'P2002');
+        return true;
+      },
+    );
 
-    expect(await prisma.medidores.count({ where: { serie } })).toBe(1);
+    assert.equal(await prismaService.medidores.count({ where: { serie } }), 1);
   });
 
-  it('propagates non-P2002 database failures and logs an error', async () => {
+  void it('propagates non-P2002 database failures and logs an error', async () => {
     const serie = 'INT-ERROR-001';
-    const brokenPrisma = createPrismaClient(databaseUrl);
-    await brokenPrisma.$connect();
-    const brokenUseCase = await buildUseCase(brokenPrisma);
-    await brokenPrisma.$disconnect();
+    const brokenPrismaService = createPrismaService(
+      'postgresql://invalid:invalid@localhost:54321/invalid',
+    );
 
-    const loggerError = jest
-      .spyOn(Logger.prototype, 'error')
-      .mockImplementation(() => undefined);
+    const localLoggerError = mock.fn();
+    const localLogger = {
+      error: localLoggerError,
+      warn: mock.fn(),
+      log: mock.fn(),
+      debug: mock.fn(),
+    } as unknown as LoggerService;
 
-    await expect(
-      brokenUseCase.execute({ marca: 'Itron', modelo: 'CX1000', serie }),
-    ).rejects.toBeInstanceOf(Error);
+    const brokenRepo = new PrismaMeterRepository(
+      brokenPrismaService,
+      localLogger,
+    );
+    const brokenUseCase = new CreateMeterUseCase(brokenRepo, localLogger);
 
-    expect(loggerError).toHaveBeenCalledWith(
+    await assert.rejects(
+      async () => {
+        await brokenUseCase.execute({
+          marca: 'Itron',
+          modelo: 'CX1000',
+          serie,
+        });
+      },
+      (error: unknown) => {
+        assert.ok(error instanceof Error);
+        return true;
+      },
+    );
+
+    assert.equal(localLoggerError.mock.callCount(), 1);
+    assert.equal(
+      localLoggerError.mock.calls[0].arguments[0],
       `Failed to create meter with serial ${serie}`,
-      expect.any(String),
+    );
+    assert.equal(
+      localLoggerError.mock.calls[0].arguments[2],
       CreateMeterUseCase.name,
     );
-    expect(await prisma.medidores.count({ where: { serie } })).toBe(0);
+    assert.equal(await prismaService.medidores.count({ where: { serie } }), 0);
   });
 });

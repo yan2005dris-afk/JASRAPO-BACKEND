@@ -7,7 +7,6 @@ import {
   Param,
   Delete,
   Query,
-  UseGuards,
   UseInterceptors,
   UploadedFile,
 } from '@nestjs/common';
@@ -32,8 +31,6 @@ import {
   ApiConsumes,
 } from '@nestjs/swagger';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
-import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
-import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 import { ReadingFilters } from '../../domain/repositories/reading.repository';
 import {
   EnumStateDto,
@@ -44,7 +41,6 @@ import { MAX_UPLOAD_SIZE_BYTES } from 'src/infrastructure/config/app.constants';
 
 @ApiTags('readings')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('readings')
 export class ReadingController {
   constructor(private readonly readingService: ReadingService) {}
@@ -104,6 +100,18 @@ export class ReadingController {
     required: false,
     type: String,
   })
+  @ApiQuery({
+    name: 'estado',
+    description: 'Filtrar por estado de lectura',
+    required: false,
+    enum: EstadoLectura,
+  })
+  @ApiQuery({
+    name: 'search',
+    description: 'Buscar por medidor, guía o cliente',
+    required: false,
+    type: String,
+  })
   @ApiResponse({
     status: 200,
     description: 'Lista de lecturas paginada',
@@ -114,10 +122,18 @@ export class ReadingController {
   async findAll(
     @Query() paginationDto: PaginationDto,
     @Query('contratoId') contratoId?: string,
+    @Query('estado') estado?: string,
+    @Query('search') search?: string,
   ) {
     const filters: ReadingFilters = {};
     if (contratoId) {
       filters.contratoId = BigInt(contratoId);
+    }
+    if (estado) {
+      filters.estado = estado;
+    }
+    if (search) {
+      filters.search = search;
     }
     const result = await this.readingService.findAll(
       paginationDto.page,

@@ -1,5 +1,6 @@
 export interface AgreementFilters {
   contratoId?: string | bigint;
+  estado?: string;
   search?: string;
 }
 

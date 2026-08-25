@@ -77,9 +77,6 @@ describe('PermissionsGuard', () => {
 
     (reflector.getAllAndOverride as jest.Mock).mockImplementation((key) => {
       if (key === IS_PUBLIC_KEY) return false;
-      return undefined;
-    });
-    (reflector.get as jest.Mock).mockImplementation((key) => {
       if (key === PERMISSION_KEY) {
         return { recurso: 'test', accion: 'read' };
       }
@@ -106,9 +103,6 @@ describe('PermissionsGuard', () => {
 
     (reflector.getAllAndOverride as jest.Mock).mockImplementation((key) => {
       if (key === IS_PUBLIC_KEY) return false;
-      return undefined;
-    });
-    (reflector.get as jest.Mock).mockImplementation((key) => {
       if (key === PERMISSION_KEY) {
         return { recurso: 'test', accion: 'read' };
       }
@@ -132,9 +126,6 @@ describe('PermissionsGuard', () => {
 
     (reflector.getAllAndOverride as jest.Mock).mockImplementation((key) => {
       if (key === IS_PUBLIC_KEY) return false;
-      return undefined;
-    });
-    (reflector.get as jest.Mock).mockImplementation((key) => {
       if (key === PERMISSION_KEY) {
         return { recurso: 'test', accion: 'read' };
       }
@@ -163,11 +154,8 @@ describe('PermissionsGuard', () => {
       if (key === IS_PUBLIC_KEY) return true;
       return undefined;
     });
-    const getSpy = reflector.get as jest.Mock;
-    getSpy.mockClear();
 
     expect(guard.canActivate(mockContext)).toBe(true);
-    expect(getSpy).not.toHaveBeenCalledWith(PERMISSION_KEY, expect.anything());
   });
 
   it('should never invent a permission from controller name + HTTP verb (regression: inferPermission removed)', () => {
@@ -189,7 +177,6 @@ describe('PermissionsGuard', () => {
       if (key === IS_PUBLIC_KEY) return false;
       return undefined;
     });
-    (reflector.get as jest.Mock).mockReturnValue(undefined);
 
     expect(() => guard.canActivate(mockContext)).toThrow(ForbiddenException);
     expect(() => guard.canActivate(mockContext)).toThrow(

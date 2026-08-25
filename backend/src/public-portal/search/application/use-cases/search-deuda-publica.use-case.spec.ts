@@ -1,4 +1,7 @@
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  DomainValidationException,
+  EntityNotFoundException,
+} from 'src/shared/domain/exceptions/domain.exception';
 import { SearchDeudaPublicaUseCase } from './search-deuda-publica.use-case';
 import type {
   IClienteConContratosRaw,
@@ -148,19 +151,19 @@ describe('SearchDeudaPublicaUseCase', () => {
   });
 
   describe('not found / validation', () => {
-    it('throws NotFoundException when no client or contract is found', async () => {
+    it('throws EntityNotFoundException when no client or contract is found', async () => {
       const useCase = new SearchDeudaPublicaUseCase(createMockRepo([], []));
 
       await expect(
         useCase.execute('identificacion', '0000000000'),
-      ).rejects.toThrow(NotFoundException);
+      ).rejects.toThrow(EntityNotFoundException);
     });
 
-    it('throws BadRequestException when valor is blank', async () => {
+    it('throws DomainValidationException when valor is blank', async () => {
       const useCase = new SearchDeudaPublicaUseCase(createMockRepo());
 
       await expect(useCase.execute('identificacion', '   ')).rejects.toThrow(
-        BadRequestException,
+        DomainValidationException,
       );
     });
   });

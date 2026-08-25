@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import type { ProjectedReport } from '../models/report-projection';
+import type { ReportRequestContext } from '../models/report-request-context';
 import { OverdueAccountsReportQueryPort } from '../ports/report-query.ports';
 import type {
   OverdueAccountItem,
@@ -74,8 +75,8 @@ export class OverdueAccountsReportDefinition {
   constructor(private readonly queryPort: OverdueAccountsReportQueryPort) {}
 
   async generate(
-    filters: OverdueAccountsReportFilters,
+    context: ReportRequestContext<OverdueAccountsReportFilters>,
   ): Promise<ProjectedReport<OverdueAccountsReportDocument>> {
-    return projectOverdueAccountsReport(await this.queryPort.query(filters));
+    return projectOverdueAccountsReport(await this.queryPort.query(context));
   }
 }

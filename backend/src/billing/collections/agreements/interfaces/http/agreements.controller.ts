@@ -8,7 +8,6 @@ import {
   Post,
   Query,
   Res,
-  UseGuards,
 } from '@nestjs/common';
 import type { Response } from 'express';
 import {
@@ -27,18 +26,16 @@ import { DebtSummaryResponseDto } from '../dto/debt-summary-response.dto';
 import { InstallmentResponseDto } from '../dto/installment-response.dto';
 import { EnumStateDto } from 'src/shared/enums/state-catalog';
 import { FindAllAgreementsDto } from '../dto/find-all-agreements.dto';
-import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
-import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
 import { ParseBigIntPipe } from 'src/infrastructure/common/pipes/parse-bigint.pipe';
 import { ApiPaginatedResponse } from 'src/infrastructure/common/decorators/api-paginated-response.decorator';
 import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
 import { PaginationMetaDto } from 'src/infrastructure/common/dtos/pagination-meta.dto';
+import { observePdfRequestAbort } from 'src/infrastructure/pdf/pdf-request-abort.util';
 
 @ApiTags('agreements')
 @ApiBearerAuth()
 @ApiExtraModels(AgreementResponseDto, PaginationMetaDto, InstallmentResponseDto)
-@UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('agreements')
 export class AgreementsController {
   constructor(private readonly agreementsService: AgreementsService) {}
@@ -180,6 +177,7 @@ export class AgreementsController {
     const result = await this.agreementsService.findAll({
       pagination: { page: query.page, limit: query.limit },
       contratoId: query.contratoId,
+      estado: query.estado,
       search: query.search,
     });
 
@@ -293,12 +291,20 @@ export class AgreementsController {
     @Param('id', ParseBigIntPipe) id: bigint,
     @Res() res: Response,
   ) {
-    const { buffer, filename } = await this.agreementsService.generatePdf(id);
-    res.set({
-      'Content-Type': 'application/pdf',
-      'Content-Disposition': `inline; filename="${filename}"`,
-      'Content-Length': buffer.length,
-    });
-    res.end(buffer);
+    const requestAbort = observePdfRequestAbort(res);
+    try {
+      const { buffer, filename } = await this.agreementsService.generatePdf(
+        id,
+        requestAbort.signal,
+      );
+      res.set({
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `inline; filename="${filename}"`,
+        'Content-Length': buffer.length,
+      });
+      res.end(buffer);
+    } finally {
+      requestAbort.dispose();
+    }
   }
 }

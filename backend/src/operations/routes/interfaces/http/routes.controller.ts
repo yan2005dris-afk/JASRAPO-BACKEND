@@ -7,7 +7,6 @@ import {
   Param,
   Delete,
   Query,
-  UseGuards,
   Res,
 } from '@nestjs/common';
 import type { Response } from 'express';
@@ -21,8 +20,6 @@ import {
   ApiExtraModels,
 } from '@nestjs/swagger';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
-import { JwtAuthGuard } from 'src/identity/auth/interfaces/http/guards/jwt-auth.guard';
-import { PermissionsGuard } from 'src/infrastructure/common/guards/permissions.guard';
 import { RoutesService } from '../../application/routes.service';
 import { OrdenesTrabajoService } from '../../application/ordenes-trabajo.service';
 import { ReassignRouteUseCase } from '../../application/use-cases/reassign-route.use-case';
@@ -50,7 +47,6 @@ import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
   OrderWorkResponseDto,
   PaginationMetaDto,
 )
-@UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('routes')
 export class RoutesController {
   constructor(

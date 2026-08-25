@@ -13,9 +13,19 @@ import type {
   MailResult,
   SendMailOptions,
 } from '../domain/interfaces/mail-provider.interface';
+import {
+  getPdfEmailIdempotencySeconds,
+  getPdfEmailMaxAttachmentBytes,
+} from '../../pdf/pdf-email.config';
+import { PdfAttachmentTooLargeException } from '../../pdf/pdf.exceptions';
 
 export const PLANILLA_BATCH_SIZE = 25;
 const PLANILLA_STORAGE_BUCKET = 'sri-pdfs';
+
+export interface SendReportOptions {
+  idempotencyKey?: string;
+  maxAttachmentBytes?: number;
+}
 
 @Injectable()
 export class MailService {
@@ -49,16 +59,26 @@ export class MailService {
    * attachment — matches `sendPlanilla`'s fallback path so the worker's
    * `resolveAttachments` branch picks the `content` arm.
    *
-   * Returns the pg-boss jobId once accepted. If pg-boss rejects the send
-   * (returns null), surfaces an InternalServerErrorException so the controller
-   * never returns a fake 200.
+   * Returns the pg-boss jobId once accepted. With an idempotency key, a null
+   * result means the delivery already exists and returns its stable singleton
+   * identity. Without idempotency, null remains an operational error.
    */
   async sendReport(
     to: string,
     subject: string,
     reportType: string,
     pdfBuffer: Buffer,
+    sendOptions: SendReportOptions = {},
   ): Promise<{ jobId: string }> {
+    const maxAttachmentBytes =
+      sendOptions.maxAttachmentBytes ?? getPdfEmailMaxAttachmentBytes();
+    if (pdfBuffer.length > maxAttachmentBytes) {
+      throw new PdfAttachmentTooLargeException(
+        pdfBuffer.length,
+        maxAttachmentBytes,
+      );
+    }
+
     const options: SendMailOptions = {
       version: 2,
       to,
@@ -74,8 +94,20 @@ export class MailService {
       ],
     };
 
-    const jobId = await this.queueService.queueMail(options);
+    const singletonKey = sendOptions.idempotencyKey
+      ? `report-email-delivery:${sendOptions.idempotencyKey}`
+      : undefined;
+    const jobId = await this.queueService.queueMail(
+      options,
+      singletonKey
+        ? {
+            singletonKey,
+            singletonSeconds: getPdfEmailIdempotencySeconds(),
+          }
+        : {},
+    );
     if (!jobId) {
+      if (singletonKey) return { jobId: singletonKey };
       throw new InternalServerErrorException(
         `Mail queue rejected the report email (reportType=${reportType})`,
       );

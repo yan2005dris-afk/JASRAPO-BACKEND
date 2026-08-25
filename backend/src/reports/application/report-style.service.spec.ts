@@ -3,7 +3,7 @@ import { Test } from '@nestjs/testing';
 import { ReportStyleService } from './report-style.service';
 import { SistemaConfigService } from '../../infrastructure/config/sistema-config.service';
 import { REPORTE_ESTILO } from '../../infrastructure/config/sistema-config.keys';
-import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+import { LOGGER_PORT } from 'src/shared/domain/ports/logger.port';
 const mockLogger = {
   log: jest.fn(),
   warn: jest.fn(),
@@ -24,7 +24,7 @@ describe('ReportStyleService', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        { provide: LoggerService, useValue: mockLogger },
+        { provide: LOGGER_PORT, useValue: mockLogger },
         ReportStyleService,
         { provide: SistemaConfigService, useValue: mockConfig },
       ],

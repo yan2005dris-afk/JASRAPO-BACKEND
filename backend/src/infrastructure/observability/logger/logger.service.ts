@@ -3,9 +3,10 @@ import { ConfigService } from '@nestjs/config';
 import * as http from 'http';
 import pino, { Logger } from 'pino';
 import { buildPinoOptions } from './logger.config';
+import type { LoggerPort } from 'src/shared/domain/ports/logger.port';
 
 @Injectable()
-export class LoggerService implements NestLoggerService {
+export class LoggerService implements NestLoggerService, LoggerPort {
   private logger: Logger;
   private lokiUrl: string;
   private labels: Record<string, string>;
