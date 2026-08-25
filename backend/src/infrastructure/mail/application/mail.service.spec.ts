@@ -19,6 +19,8 @@ import { Decimal } from 'decimal.js';
 import { MailService } from './mail.service';
 import { MailProviderFactory } from '../infrastructure/providers/provider.factory';
 import { MailQueueService } from '../infrastructure/queue/mail-queue.service';
+import { SistemaConfigService } from '../../config/sistema-config.service';
+import { FRONTEND_URL } from '../../config/sistema-config.keys';
 
 describe('MailService', () => {
   let service: MailService;
@@ -32,17 +34,29 @@ describe('MailService', () => {
     queueBulkMails: jest.fn(),
   };
 
+  const mockSistemaConfigService = {
+    getString: jest.fn(),
+  };
+
+  const originalEnv = process.env;
+
   beforeEach(async () => {
+    process.env = { ...originalEnv };
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         MailService,
         { provide: MailProviderFactory, useValue: mockProviderFactory },
         { provide: MailQueueService, useValue: mockQueueService },
+        { provide: SistemaConfigService, useValue: mockSistemaConfigService },
       ],
     }).compile();
 
     service = module.get(MailService);
     jest.clearAllMocks();
+  });
+
+  afterAll(() => {
+    process.env = originalEnv;
   });
 
   it('should send synchronously through provider factory', async () => {
@@ -238,6 +252,86 @@ describe('MailService', () => {
       // .hbs file together so the worker never crashes with ENOENT.
       const templateDir = join(__dirname, '..', 'infrastructure', 'templates');
       expect(existsSync(join(templateDir, 'generic-report.hbs'))).toBe(true);
+    });
+  });
+
+  describe('getFrontendUrl', () => {
+    it('returns FRONTEND_URL from sistemaConfigService when configured in DB', async () => {
+      mockSistemaConfigService.getString.mockResolvedValue(
+        'https://clientes.jasrapo.com',
+      );
+      process.env.APP_URL = 'https://staging.jasrapo.com';
+
+      const url = await service.getFrontendUrl();
+
+      expect(mockSistemaConfigService.getString).toHaveBeenCalledWith(
+        FRONTEND_URL,
+      );
+      expect(url).toBe('https://clientes.jasrapo.com');
+    });
+
+    it('falls back to process.env.APP_URL when DB value is null', async () => {
+      mockSistemaConfigService.getString.mockResolvedValue(null);
+      process.env.APP_URL = 'https://staging.jasrapo.com';
+
+      const url = await service.getFrontendUrl();
+
+      expect(mockSistemaConfigService.getString).toHaveBeenCalledWith(
+        FRONTEND_URL,
+      );
+      expect(url).toBe('https://staging.jasrapo.com');
+    });
+
+    it('falls back to process.env.APP_URL when DB value is empty whitespace', async () => {
+      mockSistemaConfigService.getString.mockResolvedValue('   ');
+      process.env.APP_URL = 'https://staging.jasrapo.com';
+
+      const url = await service.getFrontendUrl();
+
+      expect(url).toBe('https://staging.jasrapo.com');
+    });
+
+    it('falls back to default http://localhost:4200 when both DB and process.env.APP_URL are empty', async () => {
+      mockSistemaConfigService.getString.mockResolvedValue(null);
+      delete process.env.APP_URL;
+
+      const url = await service.getFrontendUrl();
+
+      expect(url).toBe('http://localhost:4200');
+    });
+  });
+
+  describe('sendInvitation', () => {
+    it('queues invitation email using dynamic frontend url', async () => {
+      mockSistemaConfigService.getString.mockResolvedValue(
+        'https://app.jasrapo.com',
+      );
+      mockQueueService.queueMail.mockResolvedValue('job-inv-1');
+
+      const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      const jobId = await service.sendInvitation(
+        'nuevo@jasrapo.com',
+        'Juan Perez',
+        'sample-token-123',
+        expiresAt,
+      );
+
+      expect(jobId).toBe('job-inv-1');
+      expect(mockQueueService.queueMail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          version: 2,
+          to: 'nuevo@jasrapo.com',
+          subject: 'Completa tu registro en JASRAPO-Olon',
+          template: 'invitation',
+          context: expect.objectContaining({
+            nombres: 'Juan Perez',
+            token: 'sample-token-123',
+            acceptUrl:
+              'https://app.jasrapo.com/auth/invitations/accept?token=sample-token-123',
+            expiresInHours: 24,
+          }),
+        }),
+      );
     });
   });
 });

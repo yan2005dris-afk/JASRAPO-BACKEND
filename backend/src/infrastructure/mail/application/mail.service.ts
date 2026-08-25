@@ -18,9 +18,12 @@ import {
   getPdfEmailMaxAttachmentBytes,
 } from '../../pdf/pdf-email.config';
 import { PdfAttachmentTooLargeException } from '../../pdf/pdf.exceptions';
+import { SistemaConfigService } from '../../config/sistema-config.service';
+import { FRONTEND_URL } from '../../config/sistema-config.keys';
 
 export const PLANILLA_BATCH_SIZE = 25;
 const PLANILLA_STORAGE_BUCKET = 'sri-pdfs';
+export const DEFAULT_FRONTEND_URL = 'http://localhost:4200';
 
 export interface SendReportOptions {
   idempotencyKey?: string;
@@ -34,6 +37,7 @@ export class MailService {
   constructor(
     private readonly providerFactory: MailProviderFactory,
     private readonly queueService: MailQueueService,
+    private readonly sistemaConfigService: SistemaConfigService,
     @Optional() private readonly storageService?: StorageService,
   ) {}
 
@@ -234,6 +238,25 @@ export class MailService {
     ];
   }
 
+  /**
+   * Resolves base frontend URL using the hierarchical precedence:
+   * 1. sistema_config (clave: FRONTEND_URL)
+   * 2. process.env.APP_URL
+   * 3. http://localhost:4200 (fallback)
+   */
+  async getFrontendUrl(): Promise<string> {
+    const configUrl = await this.sistemaConfigService.getString(FRONTEND_URL);
+    if (configUrl && configUrl.trim().length > 0) {
+      return configUrl.trim();
+    }
+
+    if (process.env.APP_URL && process.env.APP_URL.trim().length > 0) {
+      return process.env.APP_URL.trim();
+    }
+
+    return DEFAULT_FRONTEND_URL;
+  }
+
   async sendInvitation(
     to: string,
     nombres: string,
@@ -244,11 +267,7 @@ export class MailService {
       (expiresAt.getTime() - new Date().getTime()) / (1000 * 60 * 60),
     );
 
-    const appUrl =
-      process.env.APP_URL ||
-      (process.env.NODE_ENV === 'production'
-        ? 'https://app.jasrapo.com'
-        : 'http://localhost:4200');
+    const appUrl = await this.getFrontendUrl();
 
     const jobId = await this.sendQueued({
       version: 2,
