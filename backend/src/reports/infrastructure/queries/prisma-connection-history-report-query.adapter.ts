@@ -5,7 +5,7 @@ import type {
   ConnectionHistoryReportFilters,
   ConnectionHistoryReportReadModel,
 } from '../../application/read-models/connection-history.read-model';
-import { normalizeReportDateRange } from './report-date-range';
+import type { ReportRequestContext } from '../../application/models/report-request-context';
 
 @Injectable()
 export class PrismaConnectionHistoryReportQueryAdapter extends ConnectionHistoryReportQueryPort {
@@ -14,13 +14,11 @@ export class PrismaConnectionHistoryReportQueryAdapter extends ConnectionHistory
   }
 
   async query(
-    filters: ConnectionHistoryReportFilters,
+    context: ReportRequestContext<ConnectionHistoryReportFilters>,
   ): Promise<ConnectionHistoryReportReadModel> {
+    const { filters, period } = context;
     const contractId = BigInt(filters.contratoId);
-    const { startInclusive, endExclusive } = normalizeReportDateRange(
-      filters.fechaDesde,
-      filters.fechaHasta,
-    );
+    const { startInclusive, endExclusive } = period;
     const [contract, preInvoices] = await Promise.all([
       this.prisma.contratos.findFirst({
         where: { contratoId: contractId, deletedAt: null },

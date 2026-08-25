@@ -19,6 +19,19 @@ export class MetricsService {
   public activeConnections: Gauge<string>;
   public errorTotal: Counter<string>;
 
+  // PDF operational metrics (PDF-05)
+  public pdfQueueDepth: Gauge<string>;
+  public pdfActiveRenders: Gauge<string>;
+  public pdfQueueWaitDuration: Histogram<string>;
+  public pdfRenderDuration: Histogram<string>;
+  public pdfTotalDuration: Histogram<string>;
+  public pdfTimeoutsTotal: Counter<string>;
+  public pdfRejectionsTotal: Counter<string>;
+  public pdfCancellationsTotal: Counter<string>;
+  public pdfBrowserRestartsTotal: Counter<string>;
+  public pdfProcessMemoryBytes: Gauge<string>;
+  public pdfProcessCpuSeconds: Gauge<string>;
+
   constructor() {
     this.registry = new Registry();
     this.initMetrics();
@@ -91,6 +104,83 @@ export class MetricsService {
       registers: [this.registry],
     });
 
+    this.pdfQueueDepth = new Gauge({
+      name: 'pdf_queue_depth',
+      help: 'Number of PDF requests waiting for a render slot',
+      registers: [this.registry],
+    });
+
+    this.pdfActiveRenders = new Gauge({
+      name: 'pdf_active_renders',
+      help: 'Number of PDF renders currently using Puppeteer',
+      registers: [this.registry],
+    });
+
+    this.pdfQueueWaitDuration = new Histogram({
+      name: 'pdf_queue_wait_duration_seconds',
+      help: 'Time spent waiting for a PDF render slot',
+      labelNames: ['document_type'],
+      buckets: [0.01, 0.05, 0.1, 0.25, 0.5, 1, 2, 5, 10, 30],
+      registers: [this.registry],
+    });
+
+    this.pdfRenderDuration = new Histogram({
+      name: 'pdf_render_duration_seconds',
+      help: 'Time spent rendering HTML through Puppeteer',
+      labelNames: ['document_type', 'status'],
+      buckets: [0.05, 0.1, 0.25, 0.5, 1, 2, 3, 5, 10, 30],
+      registers: [this.registry],
+    });
+
+    this.pdfTotalDuration = new Histogram({
+      name: 'pdf_total_duration_seconds',
+      help: 'Total PDF latency from admission through final result',
+      labelNames: ['document_type', 'status'],
+      buckets: [0.05, 0.1, 0.25, 0.5, 1, 2, 3, 5, 10, 30],
+      registers: [this.registry],
+    });
+
+    this.pdfTimeoutsTotal = new Counter({
+      name: 'pdf_timeouts_total',
+      help: 'PDF requests whose total admission-to-result budget expired',
+      labelNames: ['document_type'],
+      registers: [this.registry],
+    });
+
+    this.pdfRejectionsTotal = new Counter({
+      name: 'pdf_rejections_total',
+      help: 'PDF requests rejected by bounded backpressure',
+      labelNames: ['document_type'],
+      registers: [this.registry],
+    });
+
+    this.pdfCancellationsTotal = new Counter({
+      name: 'pdf_cancellations_total',
+      help: 'PDF requests abandoned after client cancellation',
+      labelNames: ['document_type'],
+      registers: [this.registry],
+    });
+
+    this.pdfBrowserRestartsTotal = new Counter({
+      name: 'pdf_browser_restarts_total',
+      help: 'Puppeteer browser relaunches after the initial launch',
+      registers: [this.registry],
+    });
+
+    this.pdfProcessMemoryBytes = new Gauge({
+      name: 'pdf_process_memory_bytes',
+      help: 'Node process memory sampled by the PDF runtime',
+      labelNames: ['kind'],
+      registers: [this.registry],
+    });
+
+    this.pdfProcessCpuSeconds = new Gauge({
+      name: 'pdf_process_cpu_seconds',
+      help: 'Cumulative Node process CPU sampled by the PDF runtime',
+      labelNames: ['mode'],
+      registers: [this.registry],
+    });
+
     // Add default metrics
     this.registry.setDefaultLabels({
       app: 'jasrapo-backend',
@@ -148,5 +238,16 @@ export class MetricsService {
 
   incrementError(type: string, code: string): void {
     this.errorTotal.inc({ type, code });
+  }
+
+  samplePdfProcessResources(): void {
+    const memory = process.memoryUsage();
+    this.pdfProcessMemoryBytes.set({ kind: 'rss' }, memory.rss);
+    this.pdfProcessMemoryBytes.set({ kind: 'heap_used' }, memory.heapUsed);
+    this.pdfProcessMemoryBytes.set({ kind: 'external' }, memory.external);
+
+    const cpu = process.cpuUsage();
+    this.pdfProcessCpuSeconds.set({ mode: 'user' }, cpu.user / 1_000_000);
+    this.pdfProcessCpuSeconds.set({ mode: 'system' }, cpu.system / 1_000_000);
   }
 }

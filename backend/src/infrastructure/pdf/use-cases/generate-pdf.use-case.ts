@@ -1,5 +1,5 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { PdfService } from '../pdf.service';
+import { PdfService, type PdfRenderOptions } from '../pdf.service';
 
 @Injectable()
 export class GeneratePdfUseCase {
@@ -7,7 +7,11 @@ export class GeneratePdfUseCase {
 
   constructor(private readonly pdfService: PdfService) {}
 
-  async execute(type: string, raw: Record<string, unknown>): Promise<Buffer> {
+  async execute(
+    type: string,
+    raw: Record<string, unknown>,
+    options: PdfRenderOptions = {},
+  ): Promise<Buffer> {
     const docType = this.pdfService.getDocumentType(type);
     if (!docType) {
       const available =
@@ -19,7 +23,10 @@ export class GeneratePdfUseCase {
 
     this.logger.log(`Generating PDF: type=${type}`);
     const data = docType.adaptData(raw);
-    const pdf = await this.pdfService.render(docType.template, data);
+    const pdf = await this.pdfService.render(docType.template, data, {
+      ...options,
+      documentType: options.documentType ?? type,
+    });
     this.logger.log(`PDF ready: ${type} (${pdf.length} bytes)`);
     return pdf;
   }

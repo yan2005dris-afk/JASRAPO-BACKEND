@@ -6,6 +6,14 @@ import { IsEnum, IsOptional, IsString } from 'class-validator';
 
 export class ReadingAnomalyFilterDto extends PaginationDto {
   @ApiPropertyOptional({
+    description:
+      'Búsqueda global: observación, tipo, número de guía, medidor, o datos del cliente',
+  })
+  @IsOptional()
+  @IsString()
+  search?: string;
+
+  @ApiPropertyOptional({
     description: 'Filtrar por ID de lectura',
     example: '1',
   })

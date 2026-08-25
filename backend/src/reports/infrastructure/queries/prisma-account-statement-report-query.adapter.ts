@@ -5,6 +5,7 @@ import type {
   AccountStatementReportFilters,
   AccountStatementReportReadModel,
 } from '../../application/read-models/account-statement.read-model';
+import type { ReportRequestContext } from '../../application/models/report-request-context';
 
 @Injectable()
 export class PrismaAccountStatementReportQueryAdapter extends AccountStatementReportQueryPort {
@@ -13,8 +14,9 @@ export class PrismaAccountStatementReportQueryAdapter extends AccountStatementRe
   }
 
   async query(
-    filters: AccountStatementReportFilters,
+    context: ReportRequestContext<AccountStatementReportFilters>,
   ): Promise<AccountStatementReportReadModel> {
+    const { filters, period } = context;
     const contractId = BigInt(filters.contratoId);
     const contract = await this.prisma.contratos.findFirst({
       where: { contratoId: contractId, deletedAt: null },
@@ -44,14 +46,14 @@ export class PrismaAccountStatementReportQueryAdapter extends AccountStatementRe
         contratoId: contractId,
         deletedAt: null,
         estado: { notIn: ['ANULADA'] },
-        ...(filters.fechaDesde || filters.fechaHasta
+        ...(period.startInclusive || period.endExclusive
           ? {
               periodoRel: {
-                ...(filters.fechaDesde
-                  ? { fechaInicio: { gte: new Date(filters.fechaDesde) } }
+                ...(period.startInclusive
+                  ? { fechaInicio: { gte: period.startInclusive } }
                   : {}),
-                ...(filters.fechaHasta
-                  ? { fechaFin: { lte: new Date(filters.fechaHasta) } }
+                ...(period.endExclusive
+                  ? { fechaFin: { lt: period.endExclusive } }
                   : {}),
               },
             }

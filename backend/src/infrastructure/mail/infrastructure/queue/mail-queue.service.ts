@@ -4,9 +4,30 @@ import { JobsService } from '../../../jobs/jobs.service';
 import { MailProviderFactory } from '../providers/provider.factory';
 import { StorageService } from '../../../storage/storage.service';
 import type { SendMailOptions } from '../../domain/interfaces/mail-provider.interface';
+import type { SendOptions } from 'pg-boss';
 
 export const MAIL_JOB_NAME = 'send-mail';
 const S3_URL_REGEX = /^s3:\/\/([^/]+)\/(.+)$/;
+
+interface SerializedBuffer {
+  type: 'Buffer';
+  data: number[];
+}
+
+function isSerializedBuffer(value: unknown): value is SerializedBuffer {
+  if (!value || typeof value !== 'object') return false;
+
+  const candidate = value as Partial<SerializedBuffer>;
+  return candidate.type === 'Buffer' && Array.isArray(candidate.data);
+}
+
+function restoreSerializedBuffer(
+  content: unknown,
+): Buffer | string | undefined {
+  return isSerializedBuffer(content)
+    ? Buffer.from(content.data)
+    : (content as Buffer | string | undefined);
+}
 
 /**
  * Servicio de Cola de Correos migrado a PostgreSQL (pg-boss).
@@ -46,12 +67,16 @@ export class MailQueueService implements OnModuleInit {
    * the widening only adds a transparent pass-through of `JobsService.send`,
    * which already returns `string | null`.
    */
-  async queueMail(options: SendMailOptions): Promise<string | null> {
+  async queueMail(
+    options: SendMailOptions,
+    jobOptions: SendOptions = {},
+  ): Promise<string | null> {
     return this.jobsService.send(MAIL_JOB_NAME, options, {
       retryLimit: 3,
       retryDelay: 5, // 5 segundos iniciales
       retryDelayMax: 300, // Máximo 5 minutos
       retryBackoff: true,
+      ...jobOptions,
     });
   }
 
@@ -96,7 +121,7 @@ export class MailQueueService implements OnModuleInit {
    *
    * - version:1 | undefined → legacy: reconstruct Buffer from {type:'Buffer', data:[...]}
    * - version:2 with url → download via StorageService.getObject()
-   * - version:2 with content → use directly
+   * - version:2 with content → reconstruct serialized Buffers or use directly
    */
   private async resolveAttachments(
     data: SendMailOptions,
@@ -109,18 +134,11 @@ export class MailQueueService implements OnModuleInit {
 
     const resolvedAttachments = await Promise.all(
       data.attachments.map(async (attachment) => {
+        const inlineContent = restoreSerializedBuffer(attachment.content);
+
         // version:1 or undefined — legacy Buffer reconstruction
         if (version === 1) {
-          let content = attachment.content as any;
-          if (
-            content &&
-            typeof content === 'object' &&
-            content.type === 'Buffer' &&
-            Array.isArray(content.data)
-          ) {
-            content = Buffer.from(content.data);
-          }
-          return { ...attachment, content, url: undefined };
+          return { ...attachment, content: inlineContent, url: undefined };
         }
 
         // version:2 — resolve url or use content directly
@@ -165,8 +183,12 @@ export class MailQueueService implements OnModuleInit {
           }
 
           // version:2 with content directly (inline fallback)
-          if (attachment.content) {
-            return { ...attachment, url: undefined };
+          if (inlineContent !== undefined) {
+            return {
+              ...attachment,
+              content: inlineContent,
+              url: undefined,
+            };
           }
         }
 

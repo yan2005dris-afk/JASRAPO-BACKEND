@@ -48,10 +48,7 @@ export class PdfHealthService
       this.logger.warn(
         'Puppeteer browser is disconnected — will auto-recover on next request',
       );
-      // The browser process is gone; nullifying lets getBrowser() re-launch.
-      // The previous browser reference was already disconnected, so no
-      // explicit close is needed.
-      (this.pdfService as unknown as { browser: null }).browser = null;
+      this.pdfService.markBrowserUnavailable();
     }
   }
 

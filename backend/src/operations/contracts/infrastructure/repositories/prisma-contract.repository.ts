@@ -346,6 +346,21 @@ export class PrismaContractRepository implements ContractRepository {
             },
           },
           {
+            categoriaTarifa: {
+              nombre: { contains: filters.search, mode: 'insensitive' },
+            },
+          },
+          {
+            comunidad: {
+              nombre: { contains: filters.search, mode: 'insensitive' },
+            },
+          },
+          {
+            sector: {
+              nombre: { contains: filters.search, mode: 'insensitive' },
+            },
+          },
+          {
             cliente: {
               OR: [
                 {
@@ -425,6 +440,26 @@ export class PrismaContractRepository implements ContractRepository {
 
     if (filters.estado) {
       conditions.push({ estado: filters.estado as any });
+    }
+
+    if (filters.hasDebt === true) {
+      conditions.push({
+        prefacturas: {
+          some: {
+            deletedAt: null,
+            estado: { in: ['GENERADA', 'EN_REVISION', 'APROBADA'] as any },
+          },
+        },
+      });
+    } else if (filters.hasDebt === false) {
+      conditions.push({
+        prefacturas: {
+          none: {
+            deletedAt: null,
+            estado: { in: ['GENERADA', 'EN_REVISION', 'APROBADA'] as any },
+          },
+        },
+      });
     }
 
     return conditions.length === 1 ? conditions[0] : { AND: conditions };

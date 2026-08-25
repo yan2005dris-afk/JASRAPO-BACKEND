@@ -217,20 +217,21 @@ export class PrismaReadingRepository implements ReadingRepository {
     return ReadingMapper.toDomain(record);
   }
 
-  async findMany(params: {
-    skip?: number;
-    take?: number;
-    where?: ReadingFilters;
-  }): Promise<LecturaEntity[]> {
+  private buildWhereClause(
+    filters?: ReadingFilters,
+  ): Prisma.LecturasWhereInput {
     const whereClause: Prisma.LecturasWhereInput = {
       deletedAt: null,
-      ...(params.where?.medidorId && { medidorId: params.where.medidorId }),
-      ...(params.where?.periodoId && { periodoId: params.where.periodoId }),
-      ...(params.where?.contratoId && {
+      ...(filters?.medidorId && { medidorId: filters.medidorId }),
+      ...(filters?.periodoId && { periodoId: filters.periodoId }),
+      ...(filters?.estado && {
+        estado: filters.estado as EstadoLectura,
+      }),
+      ...(filters?.contratoId && {
         medidor: {
           historial: {
             some: {
-              contratoId: params.where.contratoId,
+              contratoId: filters.contratoId,
               fechaHasta: null,
             },
           },
@@ -238,8 +239,64 @@ export class PrismaReadingRepository implements ReadingRepository {
       }),
     };
 
+    if (filters?.search) {
+      const search = filters.search.trim();
+      whereClause.OR = [
+        {
+          medidor: {
+            serie: { contains: search, mode: 'insensitive' },
+          },
+        },
+        {
+          medidor: {
+            historial: {
+              some: {
+                fechaHasta: null,
+                contrato: {
+                  OR: [
+                    { numeroGuia: { contains: search, mode: 'insensitive' } },
+                    {
+                      cliente: {
+                        nombres: { contains: search, mode: 'insensitive' },
+                      },
+                    },
+                    {
+                      cliente: {
+                        apellidos: { contains: search, mode: 'insensitive' },
+                      },
+                    },
+                    {
+                      cliente: {
+                        razonSocial: { contains: search, mode: 'insensitive' },
+                      },
+                    },
+                    {
+                      cliente: {
+                        identificacion: {
+                          contains: search,
+                          mode: 'insensitive',
+                        },
+                      },
+                    },
+                  ],
+                },
+              },
+            },
+          },
+        },
+      ];
+    }
+
+    return whereClause;
+  }
+
+  async findMany(params: {
+    skip?: number;
+    take?: number;
+    where?: ReadingFilters;
+  }): Promise<LecturaEntity[]> {
     const records = await this.prisma.lecturas.findMany({
-      where: whereClause,
+      where: this.buildWhereClause(params.where),
       skip: params.skip,
       take: params.take,
       orderBy: { fecha: 'desc' },
@@ -249,23 +306,9 @@ export class PrismaReadingRepository implements ReadingRepository {
   }
 
   async count(params: { where?: ReadingFilters }): Promise<number> {
-    const whereClause: Prisma.LecturasWhereInput = {
-      deletedAt: null,
-      ...(params.where?.medidorId && { medidorId: params.where.medidorId }),
-      ...(params.where?.periodoId && { periodoId: params.where.periodoId }),
-      ...(params.where?.contratoId && {
-        medidor: {
-          historial: {
-            some: {
-              contratoId: params.where.contratoId,
-              fechaHasta: null,
-            },
-          },
-        },
-      }),
-    };
-
-    return this.prisma.lecturas.count({ where: whereClause });
+    return this.prisma.lecturas.count({
+      where: this.buildWhereClause(params.where),
+    });
   }
 
   async create(data: CreateReadingRepositoryData): Promise<LecturaEntity> {

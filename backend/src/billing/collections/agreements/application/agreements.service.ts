@@ -65,10 +65,12 @@ export class AgreementsService {
   async findAll(params: {
     pagination: PaginateOptions;
     contratoId?: string;
+    estado?: string;
     search?: string;
   }): Promise<PaginatedResult<AgreementEntity>> {
     return this.agreementRepository.paginate(params.pagination, {
       contratoId: params.contratoId,
+      estado: params.estado,
       search: params.search,
     });
   }
@@ -96,12 +98,14 @@ export class AgreementsService {
 
   async generatePdf(
     convenioId: bigint,
+    signal?: AbortSignal,
   ): Promise<{ buffer: Buffer; filename: string; clienteNombre: string }> {
     const raw = await this.getPdfDataUseCase.execute(convenioId);
     const { document } = projectPaymentAgreementReport(raw);
     const { buffer, filename } = await this.dispatcher.dispatch(
       'payment-agreement',
       document,
+      { signal },
     );
     const cliente = raw.convenio.cliente;
     const clienteNombre =
