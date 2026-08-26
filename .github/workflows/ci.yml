@@ -151,7 +151,27 @@ jobs:
           fetch-depth: 1
 
       - name: Prepare environment file
-        run: cp .env.example .env
+        run: |
+          set -euo pipefail
+          cp .env.example .env
+          python3 <<'PY'
+          import re
+          import subprocess
+          from pathlib import Path
+
+          env_path = Path('.env')
+          content = env_path.read_text()
+          for key in ('JWT_ACCESS_SECRET', 'JWT_REFRESH_SECRET', 'ENCRYPTION_KEY'):
+              value = subprocess.check_output(
+                  ['openssl', 'rand', '-hex', '32'], text=True
+              ).strip()
+              content, replacements = re.subn(
+                  rf'(?m)^{re.escape(key)}=.*$', f'{key}={value}', content, count=1
+              )
+              if replacements != 1:
+                  raise RuntimeError(f'{key} was not found exactly once in .env')
+          env_path.write_text(content)
+          PY
 
       - name: Ensure RustFS TLS certificates
         run: |

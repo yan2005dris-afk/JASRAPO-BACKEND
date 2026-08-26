@@ -88,6 +88,7 @@ services:
       NODE_ENV: production
       NODE_EXTRA_CA_CERTS: /usr/local/share/ca-certificates/rustfs_cert.crt
       PORT: 3000
+      PUPPETEER_EXECUTABLE_PATH: /usr/bin/chromium
       OTEL_EXPORTER_OTLP_ENDPOINT: http://tempo:4318
       OTEL_METRICS_ENABLED: "true"
     ports:
