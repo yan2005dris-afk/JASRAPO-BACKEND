@@ -156,14 +156,14 @@ jobs:
       - name: Ensure RustFS TLS certificates
         run: |
           mkdir -p certs
-          if [ ! -f certs/rustfs_cert.pem ] || [ ! -f certs/rustfs_key.pem ]; then
-            openssl req -x509 -newkey rsa:2048 -nodes \
-              -keyout certs/rustfs_key.pem \
-              -out certs/rustfs_cert.pem \
-              -days 365 \
-              -subj "/C=EC/ST=Pichincha/L=Quito/O=JASRAPO/OU=ci/CN=localhost" \
-              2>/dev/null
-          fi
+          rm -f certs/rustfs_cert.pem certs/rustfs_key.pem
+          openssl req -x509 -newkey rsa:2048 -nodes \
+            -keyout certs/rustfs_key.pem \
+            -out certs/rustfs_cert.pem \
+            -days 365 \
+            -subj "/C=EC/ST=Pichincha/L=Quito/O=JASRAPO/OU=ci/CN=localhost" \
+            -addext "subjectAltName=DNS:rustfs,DNS:localhost,IP:127.0.0.1" \
+            2>/dev/null
           chmod 644 certs/rustfs_key.pem certs/rustfs_cert.pem
 
       - name: Build Backend Image
