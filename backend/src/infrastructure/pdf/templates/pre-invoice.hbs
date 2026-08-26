@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Prefactura - JASRAPO</title>
+  <title>Prefactura - {{institucion.siglas}}</title>
   {{> styles}}
   {{> modern-styles}}
   <style>
@@ -91,14 +91,12 @@
     <!-- Header -->
     <div class="header-table">
       <div class="header-left">
-        {{#if emisor.logoUrl}}
-          <div class="logo-container">
-            <img src="{{emisor.logoUrl}}" alt="Logo JASRAPO" />
-          </div>
-        {{/if}}
+        <div class="logo-container">
+          <img src="{{institucion.branding.logo.url}}" alt="Logo institucional" />
+        </div>
         <div>
-          <div class="brand-title">JASRAPO</div>
-          <div class="brand-subtitle">Junta de Agua Potable y Alcantarillado · Olón</div>
+          <div class="brand-title">{{institucion.siglas}}</div>
+          <div class="brand-subtitle">{{institucion.nombreLegal}} · {{institucion.ubicacion.localidad}}</div>
           <div class="report-title-main" style="margin-top: 6px;">Prefactura de Servicio de Agua</div>
           <div class="report-meta-text">Fecha de emisión: {{prefactura.createdAt}}</div>
         </div>

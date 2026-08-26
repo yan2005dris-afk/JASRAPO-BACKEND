@@ -88,12 +88,26 @@ services:
       NODE_ENV: production
       NODE_EXTRA_CA_CERTS: /usr/local/share/ca-certificates/rustfs_cert.crt
       PORT: 3000
+      PUPPETEER_EXECUTABLE_PATH: /usr/bin/chromium
       OTEL_EXPORTER_OTLP_ENDPOINT: http://tempo:4318
       OTEL_METRICS_ENABLED: "true"
     ports:
       - "3000:3000"
     volumes:
       - ./certs/rustfs_cert.pem:/usr/local/share/ca-certificates/rustfs_cert.crt:ro
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - >-
+          fetch('http://127.0.0.1:3000/api/v1/health/pdf')
+          .then(response => process.exit(response.ok ? 0 : 1))
+          .catch(() => process.exit(1))
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 60s
     depends_on:
       postgres:
         condition: service_healthy

@@ -1,4 +1,7 @@
 import { Injectable } from '@nestjs/common';
+import { InstitutionalProfileResolver } from 'src/institutional-profile/application/institutional-profile.resolver';
+import type { OfficialDocument } from 'src/institutional-profile/domain/institutional-profile.types';
+import { attachInstitutionalProfile } from '../models/institutional-report';
 import {
   formatCurrency,
   formatDate,
@@ -34,10 +37,10 @@ export function projectPaymentAgreementReport(
         numeroCuotas: agreement.numeroCuotas,
         mesPrimerPago: agreement.fechaPrimerPago
           ? formatMonthYear(agreement.fechaPrimerPago)
-          : undefined,
+          : 'No especificada',
         periodoInicio: agreement.periodoInicio
           ? formatMonthYear(agreement.periodoInicio)
-          : undefined,
+          : 'No especificado',
         fechaActual: formatDateInWords(agreement.createdAt),
       },
     },
@@ -47,11 +50,23 @@ export function projectPaymentAgreementReport(
 
 @Injectable()
 export class PaymentAgreementReportDefinition {
-  constructor(private readonly queryPort: PaymentAgreementReportQueryPort) {}
+  constructor(
+    private readonly queryPort: PaymentAgreementReportQueryPort,
+    private readonly institutionalProfiles: InstitutionalProfileResolver,
+  ) {}
 
   async generate(
     context: ReportRequestContext<PaymentAgreementReportFilters>,
-  ): Promise<ProjectedReport<PaymentAgreementReportDocument>> {
-    return projectPaymentAgreementReport(await this.queryPort.query(context));
+  ): Promise<
+    ProjectedReport<OfficialDocument<PaymentAgreementReportDocument>>
+  > {
+    const [readModel, institutional] = await Promise.all([
+      this.queryPort.query(context),
+      this.institutionalProfiles.resolve(new Date()),
+    ]);
+    return attachInstitutionalProfile(
+      projectPaymentAgreementReport(readModel),
+      institutional,
+    );
   }
 }

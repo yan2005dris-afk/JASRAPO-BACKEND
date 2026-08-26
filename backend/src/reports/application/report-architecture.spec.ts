@@ -80,7 +80,18 @@ describe('PDF-03 report architecture', () => {
         generatedAt: new Date('2024-05-20T00:00:00.000Z'),
       }),
     };
-    const definition = new ClientsListReportDefinition(queryPort);
+    const institutionalProfiles = {
+      resolve: jest.fn().mockResolvedValue({
+        institucion: { version: 'test-v1' },
+        metadatosDocumento: {
+          perfilInstitucional: { version: 'test-v1' },
+        },
+      }),
+    };
+    const definition = new ClientsListReportDefinition(
+      queryPort,
+      institutionalProfiles as never,
+    );
     const context = contextFactory.create({
       reportType: 'clients-list',
       actor,

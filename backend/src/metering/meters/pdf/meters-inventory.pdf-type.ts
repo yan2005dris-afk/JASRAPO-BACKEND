@@ -1,6 +1,5 @@
 import type { PdfDocumentType } from 'src/infrastructure/pdf/document-type.interface';
 import { currentDateLabel } from 'src/infrastructure/pdf/utils/pdf-format.utils';
-import { getPdfLogoUrl } from 'src/infrastructure/pdf/utils/pdf-logo-loader.util';
 import { METER_STATUS_LIST } from 'src/infrastructure/config/app.constants';
 import { EstadoMedidor } from 'src/shared/enums';
 
@@ -66,7 +65,6 @@ export const MetersInventoryPdfDocumentType: PdfDocumentType = {
     );
 
     return {
-      logoUrl: getPdfLogoUrl(),
       reporte: {
         titulo: 'Inventario de Medidores',
         fechaEmision: currentDateLabel(),

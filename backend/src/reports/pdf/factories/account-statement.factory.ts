@@ -1,12 +1,9 @@
 import type { PdfDocumentType } from 'src/infrastructure/pdf/document-type.interface';
-import { getPdfLogoUrl } from 'src/infrastructure/pdf/utils/pdf-logo-loader.util';
 import type { AccountStatementReportDocument } from '../../application/read-models/account-statement.read-model';
 
 export type AccountStatementStyle = 'legacy' | 'modern';
 
-export interface AccountStatementPdfViewModel extends AccountStatementReportDocument {
-  logoUrl?: string;
-}
+export type AccountStatementPdfViewModel = AccountStatementReportDocument;
 
 export function createAccountStatementPdfDocumentType(
   style: AccountStatementStyle,
@@ -22,7 +19,6 @@ export function createAccountStatementPdfDocumentType(
     template: isLegacy
       ? 'account-statement-legacy'
       : 'account-statement-modern',
-    adaptData: (document) =>
-      isLegacy ? document : { ...document, logoUrl: getPdfLogoUrl() },
+    adaptData: (document) => document,
   };
 }

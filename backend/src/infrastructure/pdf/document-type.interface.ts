@@ -15,6 +15,13 @@ export interface PdfDocumentType<
   readonly template: string;
 
   /**
+   * Indica si este tipo de documento requiere obligatoriamente un perfil institucional.
+   * Por defecto es true para reportes, contratos y convenios.
+   * Documentos basados únicamente en datos fiscales de Emisor (ej. SRI RIDE) pueden definirlo en false.
+   */
+  readonly requiresInstitutionalProfile?: boolean;
+
+  /**
    * Transforma datos crudos en la estructura esperada por la plantilla.
    * Aquí es donde mapeas las entidades del dominio a objetos amigables para la plantilla.
    */

@@ -5,12 +5,33 @@
   <meta charset="UTF-8">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: Arial, sans-serif; font-size: 12px; color: #333; }
-    .container { width: 100%; padding: 30px 40px; }
+    body { font-family: Arial, sans-serif; font-size: 12px; color: #333; position: relative; }
+    .container { width: 100%; padding: 30px 40px; position: relative; z-index: 1; }
+
+    .watermark {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0.15;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .watermark img {
+      width: 60%;
+      max-height: 60%;
+      object-fit: contain;
+    }
 
     .header { width: 100%; border-bottom: 2px solid var(--primary-color); padding-bottom: 15px; margin-bottom: 25px; }
     .header table { width: 100%; border-collapse: collapse; }
     .header td { vertical-align: middle; padding: 0; border: none; }
+    .header-logo { width: 70px; vertical-align: middle; padding-right: 15px; }
+    .header-logo img { max-width: 60px; max-height: 60px; object-fit: contain; }
     .company-name { font-size: 20px; font-weight: bold; color: var(--primary-color); }
     .company-sub { font-size: 11px; color: #666; margin-top: 2px; }
 
@@ -36,16 +57,26 @@
   </style>
 </head>
 <body>
+  {{#if institucion.branding.marcaAgua.url}}
+  <div class="watermark">
+    <img src="{{institucion.branding.marcaAgua.url}}" alt="Marca de agua institucional">
+  </div>
+  {{/if}}
   <div class="container">
 
     <!-- Header -->
     <div class="header">
       <table>
         <tr>
+          {{#if institucion.branding.logo.url}}
+          <td class="header-logo">
+            <img src="{{institucion.branding.logo.url}}" alt="Logo">
+          </td>
+          {{/if}}
           <td>
-            <div class="company-name">JASRAPO</div>
-            <div class="company-sub">Junta Administradora del Sistema Regional de Agua Potable Olón</div>
-            <div class="company-sub">RUC: 0960005820001 &nbsp;|&nbsp; Olón - Santa Elena</div>
+            <div class="company-name">{{institucion.siglas}}</div>
+            <div class="company-sub">{{institucion.nombreLegal}}</div>
+            <div class="company-sub">RUC: {{institucion.ruc}} &nbsp;|&nbsp; {{institucion.ubicacion.localidad}} - {{institucion.ubicacion.provincia}}</div>
           </td>
         </tr>
       </table>
@@ -58,45 +89,23 @@
 
     <!-- Body -->
     <div class="body-text">
-      En las oficinas de la Junta Administradora del Sistema Regional de Agua Potable Olón
+      {{institucion.textosLegales.actaResponsabilidad.introduccionOficina}}
       Yo <strong>{{acta.clienteNombre}}</strong> portador de la C.I. <strong>{{acta.identificacion}}</strong>
-      en mi calidad de usuario, asumo el compromiso de cumplir con lo establecido en la Institución:
+      {{institucion.textosLegales.actaResponsabilidad.compromisoUsuario}}
     </div>
 
     <!-- Clauses -->
     <ol class="clause-list">
-      <li>
-        <span class="clause-num">1.</span>
-        No utilizar el Agua para otros fines, ya que es mi obligación priorizar el líquido vital para el consumo humano
-        en esta época de escasez (Emergencia Hídrica) como lo manda la Ley Orgánica de Recursos Hídricos Uso y
-        Aprovechamiento del Agua en su Artículo # 86 de los Usos del Agua cuya prioridad A es para el
-        <strong>Consumo Humano</strong>.
-      </li>
-      <li>
-        <span class="clause-num">2.</span>
-        En caso de no cumplir la Junta Administradora del Sistema Regional de Agua Potable &quot;Olón&quot; tiene la
-        potestad de sancionar y reflejar en las planillas sin previa notificación.
-      </li>
-      <li>
-        <span class="clause-num">3.</span>
-        No obstruir, manipular, ni mover el medidor de la ubicación respectiva sin previo aviso evitando ser sancionado
-        por infracciones por la Junta Administradora del Sistema Regional de Agua Potable &quot;Olón&quot;.
-      </li>
-      <li>
-        <span class="clause-num">4.</span>
-        No proveer del líquido vital a terceros ya que cada medidor es para un solo domicilio.
-      </li>
-      <li>
-        <span class="clause-num">5.</span>
-        Por morosidad durante un año perderá los derechos de usuario, se retirará el medidor y a futuro que desee
-        solicitar una nueva guía deberá cancelar el valor adeudado que refleja en el sistema para de esta manera
-        proceder con los trámites de rigor para la obtención del nuevo medidor.
-      </li>
+      {{#each institucion.textosLegales.actaResponsabilidad.clausulas}}
+        <li>
+          <span class="clause-num">{{math @index "+" 1}}.</span>
+          {{this}}
+        </li>
+      {{/each}}
     </ol>
 
     <div class="closing-text">
-      Este compromiso se asume para su cumplimiento dentro de las leyes y reglamentos internos de la Junta
-      y garantía del uso del agua.
+      {{institucion.textosLegales.actaResponsabilidad.cierre}}
     </div>
 
     <div class="body-text">
@@ -114,7 +123,7 @@
 
     <!-- Footer -->
     <div class="footer">
-      <p>Junta Administradora del Sistema Regional de Agua Potable Olón &nbsp;|&nbsp; Olón, Santa Elena, Ecuador</p>
+      <p>{{institucion.nombreLegal}} &nbsp;|&nbsp; {{institucion.ubicacion.localidad}}, {{institucion.ubicacion.provincia}}, {{institucion.ubicacion.pais}}</p>
     </div>
 
   </div>

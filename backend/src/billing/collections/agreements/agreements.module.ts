@@ -9,9 +9,10 @@ import { UpdateAgreementUseCase } from './application/use-cases/update-agreement
 import { GetPaymentAgreementPdfDataUseCase } from './application/use-cases/get-payment-agreement-pdf-data.use-case';
 import { AgreementRepository } from './domain/repositories/agreement.repository';
 import { PrismaAgreementRepository } from './infrastructure/repositories/prisma-agreement.repository';
+import { InstitutionalProfileModule } from 'src/institutional-profile/institutional-profile.module';
 
 @Module({
-  imports: [forwardRef(() => ReportsModule)],
+  imports: [forwardRef(() => ReportsModule), InstitutionalProfileModule],
   controllers: [AgreementsController],
   providers: [
     { provide: AgreementRepository, useClass: PrismaAgreementRepository },

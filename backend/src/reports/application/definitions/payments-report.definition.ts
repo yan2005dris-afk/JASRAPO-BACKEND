@@ -1,4 +1,7 @@
 import { Injectable } from '@nestjs/common';
+import { InstitutionalProfileResolver } from 'src/institutional-profile/application/institutional-profile.resolver';
+import type { OfficialDocument } from 'src/institutional-profile/domain/institutional-profile.types';
+import { attachInstitutionalProfile } from '../models/institutional-report';
 import { resolveClientName } from 'src/infrastructure/pdf/utils/pdf-format.utils';
 import type { ProjectedReport } from '../models/report-projection';
 import type { ReportRequestContext } from '../models/report-request-context';
@@ -85,11 +88,21 @@ export function projectPaymentsReport(
 
 @Injectable()
 export class PaymentsReportDefinition {
-  constructor(private readonly queryPort: PaymentsReportQueryPort) {}
+  constructor(
+    private readonly queryPort: PaymentsReportQueryPort,
+    private readonly institutionalProfiles: InstitutionalProfileResolver,
+  ) {}
 
   async generate(
     context: ReportRequestContext<PaymentsReportFilters>,
-  ): Promise<ProjectedReport<PaymentsReportDocument>> {
-    return projectPaymentsReport(await this.queryPort.query(context));
+  ): Promise<ProjectedReport<OfficialDocument<PaymentsReportDocument>>> {
+    const [readModel, institutional] = await Promise.all([
+      this.queryPort.query(context),
+      this.institutionalProfiles.resolve(new Date()),
+    ]);
+    return attachInstitutionalProfile(
+      projectPaymentsReport(readModel),
+      institutional,
+    );
   }
 }

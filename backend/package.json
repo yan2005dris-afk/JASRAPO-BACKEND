@@ -14,7 +14,7 @@
   "license": "UNLICENSED",
   "scripts": {
     "prisma:generate": "prisma generate && pnpm run enums:generate",
-    "enums:generate": "tsx scripts/generate-enums.ts",
+    "enums:generate": "tsx scripts/generate-enums.ts && prettier --write src/shared/enums/index.ts",
     "prestart": "pnpm run prisma:generate",
     "prestart:dev": "pnpm run prisma:generate",
     "prestart:debug": "pnpm run prisma:generate",

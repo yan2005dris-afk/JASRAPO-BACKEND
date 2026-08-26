@@ -191,13 +191,11 @@
     <header class="header">
         <div class="header-left">
             <div class="logo-container">
-                {{#if logoUrl}}
-                    <img src="{{logoUrl}}" alt="JASRAPO Logo">
-                {{/if}}
+                <img src="{{institucion.branding.logo.url}}" alt="Logo institucional">
             </div>
             <div>
                 <h1 class="title">{{reporte.titulo}}</h1>
-                <p class="subtitle">Junta Administradora del Sistema Regional de Agua Potable "Olón"</p>
+                <p class="subtitle">{{institucion.nombreLegal}}</p>
                 <p class="date-info">Generado el: <span>{{reporte.fechaEmision}}</span></p>
             </div>
         </div>

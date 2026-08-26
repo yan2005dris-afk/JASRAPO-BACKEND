@@ -1,12 +1,9 @@
 import type { PdfDocumentType } from 'src/infrastructure/pdf/document-type.interface';
-import { getPdfLogoUrl } from 'src/infrastructure/pdf/utils/pdf-logo-loader.util';
 import type { ConnectionHistoryReportDocument } from '../../application/read-models/connection-history.read-model';
 
 export type ConnectionHistoryStyle = 'legacy' | 'modern';
 
-export interface ConnectionHistoryPdfViewModel extends ConnectionHistoryReportDocument {
-  logoUrl?: string;
-}
+export type ConnectionHistoryPdfViewModel = ConnectionHistoryReportDocument;
 
 export function createConnectionHistoryPdfDocumentType(
   style: ConnectionHistoryStyle,
@@ -26,7 +23,6 @@ export function createConnectionHistoryPdfDocumentType(
       : 'connection-history-modern',
     adaptData: (document) => ({
       ...document,
-      ...(isLegacy ? {} : { logoUrl: getPdfLogoUrl() }),
       reporte: {
         ...document.reporte,
         titulo: isLegacy
