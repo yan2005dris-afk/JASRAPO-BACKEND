@@ -1,4 +1,9 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { Prisma } from 'src/generated/prisma/client';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { InstitutionalProfileQueryPort } from '../application/ports/institutional-profile.ports';
@@ -42,6 +47,26 @@ export class PrismaInstitutionalProfileQueryAdapter extends InstitutionalProfile
   }
 
   async findValidAt(at: Date): Promise<readonly InstitutionalProfile[]> {
+    const activeEmisores = await this.prisma.$queryRaw<{ id: number }[]>(
+      Prisma.sql`
+        SELECT id FROM emisores WHERE estado = 'ACTIVO' LIMIT 2
+      `,
+    );
+
+    if (activeEmisores.length === 0) {
+      throw new NotFoundException(
+        'No existe ningún emisor activo configurado en el sistema',
+      );
+    }
+
+    if (activeEmisores.length > 1) {
+      throw new ConflictException(
+        'Existe más de un emisor activo configurado en el sistema; debe existir exactamente uno',
+      );
+    }
+
+    const emisorId = activeEmisores[0].id;
+
     const rows = await this.prisma.$queryRaw<InstitutionalProfileRow[]>(
       Prisma.sql`
         SELECT
@@ -68,7 +93,8 @@ export class PrismaInstitutionalProfileQueryAdapter extends InstitutionalProfile
           p.textos_legales AS "textosLegales"
         FROM perfiles_institucionales p
         JOIN emisores e ON e.id = p.emisor_id
-        WHERE p.vigente_desde <= ${at}
+        WHERE p.emisor_id = ${emisorId}
+          AND p.vigente_desde <= ${at}
           AND (p.vigente_hasta IS NULL OR ${at} < p.vigente_hasta)
         ORDER BY p.vigente_desde DESC
         LIMIT 2
