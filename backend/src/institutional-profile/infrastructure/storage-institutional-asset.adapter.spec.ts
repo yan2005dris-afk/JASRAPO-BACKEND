@@ -37,4 +37,15 @@ describe('StorageInstitutionalAssetAdapter', () => {
     );
     expect(storage.getObject).not.toHaveBeenCalled();
   });
+
+  it('falla si el activo excede el límite máximo de 5MB', async () => {
+    storage.exists.mockResolvedValue(true);
+    const largeChunk = Buffer.alloc(6 * 1024 * 1024); // 6MB
+    storage.getObject.mockResolvedValue(Readable.from([largeChunk]));
+    const adapter = new StorageInstitutionalAssetAdapter(storage as never);
+
+    await expect(adapter.resolve(reference)).rejects.toThrow(
+      /excede el tamaño máximo permitido/,
+    );
+  });
 });

@@ -14,14 +14,62 @@ import {
   InstitutionalProfileQueryPort,
 } from './ports/institutional-profile.ports';
 
+interface CacheEntry {
+  context: InstitutionalDocumentContext;
+  expiresAt: number;
+}
+
 @Injectable()
 export class InstitutionalProfileResolver {
+  private readonly cache = new Map<string, CacheEntry>();
+  private readonly inFlightResolutions = new Map<
+    string,
+    Promise<InstitutionalDocumentContext>
+  >();
+  private readonly ttlMs = 5 * 60 * 1000; // 5 minutes
+
   constructor(
     private readonly profiles: InstitutionalProfileQueryPort,
     private readonly assets: InstitutionalAssetPort,
   ) {}
 
+  clearCache(): void {
+    this.cache.clear();
+    this.inFlightResolutions.clear();
+  }
+
   async resolve(at: Date): Promise<InstitutionalDocumentContext> {
+    const key = at.toISOString().slice(0, 10);
+    const now = Date.now();
+
+    const cached = this.cache.get(key);
+    if (cached && cached.expiresAt > now) {
+      return cached.context;
+    }
+
+    const inFlight = this.inFlightResolutions.get(key);
+    if (inFlight) {
+      return inFlight;
+    }
+
+    const resolutionPromise = this.resolveInternal(at)
+      .then((context) => {
+        this.cache.set(key, { context, expiresAt: Date.now() + this.ttlMs });
+        this.inFlightResolutions.delete(key);
+        return context;
+      })
+      .catch((err) => {
+        this.inFlightResolutions.delete(key);
+        throw err;
+      });
+
+    this.inFlightResolutions.set(key, resolutionPromise);
+    return resolutionPromise;
+  }
+
+  private async resolveInternal(
+    at: Date,
+  ): Promise<InstitutionalDocumentContext> {
     const matches = await this.profiles.findValidAt(at);
     if (matches.length === 0) {
       throw new NotFoundException(

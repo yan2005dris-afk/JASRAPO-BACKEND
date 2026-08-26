@@ -1,6 +1,7 @@
 import {
   CreateBucketCommand,
   HeadBucketCommand,
+  HeadObjectCommand,
   PutObjectCommand,
   S3Client,
 } from '@aws-sdk/client-s3';
@@ -19,21 +20,31 @@ export async function seedInstitutionalProfile(
 ): Promise<void> {
   await uploadInstitutionalAssets();
 
+  const emisor = await prisma.empresa.findFirst({
+    orderBy: { id: 'asc' },
+  });
+
+  if (!emisor) {
+    console.warn(
+      '⚠️ No se encontró ningún emisor para asociar al perfil institucional.',
+    );
+    return;
+  }
+
   await prisma.perfilInstitucional.upsert({
     where: { version: 'v1' },
-    update: {},
+    update: {
+      emisorId: emisor.id,
+    },
     create: {
+      emisorId: emisor.id,
       version: 'v1',
       vigenteDesde: new Date('1970-01-01T00:00:00.000Z'),
-      nombreLegal: 'Junta Administradora del Sistema Regional de Agua Potable',
-      nombreComercial: 'OLÓN',
       siglas: 'JASRAPO',
-      ruc: '2490016050001',
       decretoNumero: '3327',
       registroOficialNumero: '802',
       registroOficialFecha: new Date('1979-03-29T00:00:00.000Z'),
       fechaFundacion: new Date('1982-09-11T00:00:00.000Z'),
-      direccion: 'Av. Santa Lucía e Intiñan (esquina)',
       ubicacion: {
         localidad: 'Olón',
         parroquia: 'Colonche',
@@ -127,17 +138,24 @@ async function uploadInstitutionalAssets(): Promise<void> {
     await client.send(new CreateBucketCommand({ Bucket: ASSET_BUCKET }));
   }
 
-  const logoPath = path.resolve(
-    __dirname,
-    '../../../src/infrastructure/pdf/assets/Logo.jpeg',
-  );
-  await client.send(
-    new PutObjectCommand({
-      Bucket: ASSET_BUCKET,
-      Key: ASSET_KEY,
-      Body: await readFile(logoPath),
-      ContentType: 'image/jpeg',
-    }),
-  );
+  try {
+    await client.send(
+      new HeadObjectCommand({ Bucket: ASSET_BUCKET, Key: ASSET_KEY }),
+    );
+  } catch {
+    const logoPath = path.resolve(
+      __dirname,
+      '../../../src/infrastructure/pdf/assets/Logo.jpeg',
+    );
+    await client.send(
+      new PutObjectCommand({
+        Bucket: ASSET_BUCKET,
+        Key: ASSET_KEY,
+        Body: await readFile(logoPath),
+        ContentType: 'image/jpeg',
+      }),
+    );
+  }
+
   client.destroy();
 }

@@ -167,6 +167,36 @@ describe('Institutional document templates', () => {
     );
   });
 
+  it('acta de responsabilidad renderiza branding institucional y textos legales dinámicos', () => {
+    const source = fs.readFileSync(
+      path.join(templatesRoot, 'responsibility-agreement.hbs'),
+      'utf8',
+    );
+    Handlebars.registerPartial('styles', '');
+    Handlebars.registerHelper(
+      'math',
+      (a: number, _op: string, b: number) => a + b,
+    );
+    const context = institutionalContext();
+    const html = Handlebars.compile(source)({
+      ...context,
+      acta: {
+        clienteNombre: 'JUAN PEREZ',
+        identificacion: '0987654321',
+        medidorSerie: 'MED-001',
+        comunidad: 'Olón',
+        sector: 'Centro',
+        fechaEmision: '25 de agosto de 2026',
+        numeroActa: 'ACT-001',
+      },
+    });
+
+    expect(html).toContain('data:image/png;base64,dGVzdA');
+    expect(html).toContain('Texto legal configurable de prueba');
+    expect(html).toContain('Cláusula configurable');
+    expect(html).toContain('JUAN PEREZ');
+  });
+
   it('la migración impide vigencias superpuestas en la base de datos', () => {
     const migration = fs.readFileSync(
       path.resolve(

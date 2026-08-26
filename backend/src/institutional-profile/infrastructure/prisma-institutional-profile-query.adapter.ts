@@ -45,31 +45,32 @@ export class PrismaInstitutionalProfileQueryAdapter extends InstitutionalProfile
     const rows = await this.prisma.$queryRaw<InstitutionalProfileRow[]>(
       Prisma.sql`
         SELECT
-          perfil_institucional_id AS "perfilInstitucionalId",
-          version,
-          vigente_desde AS "vigenteDesde",
-          vigente_hasta AS "vigenteHasta",
-          nombre_legal AS "nombreLegal",
-          nombre_comercial AS "nombreComercial",
-          siglas,
-          ruc,
-          decreto_numero AS "decretoNumero",
-          decreto_fecha AS "decretoFecha",
-          registro_oficial_numero AS "registroOficialNumero",
-          registro_oficial_fecha AS "registroOficialFecha",
-          fecha_fundacion AS "fechaFundacion",
-          direccion,
-          ubicacion,
-          correo,
-          telefonos,
-          representantes,
-          logo_referencia AS "logoReferencia",
-          marca_agua_referencia AS "marcaAguaReferencia",
-          textos_legales AS "textosLegales"
-        FROM perfiles_institucionales
-        WHERE vigente_desde <= ${at}
-          AND (vigente_hasta IS NULL OR ${at} < vigente_hasta)
-        ORDER BY vigente_desde DESC
+          p.perfil_institucional_id AS "perfilInstitucionalId",
+          p.version,
+          p.vigente_desde AS "vigenteDesde",
+          p.vigente_hasta AS "vigenteHasta",
+          e.razon_social AS "nombreLegal",
+          COALESCE(e.nombre_comercial, e.razon_social) AS "nombreComercial",
+          p.siglas,
+          e.ruc,
+          p.decreto_numero AS "decretoNumero",
+          p.decreto_fecha AS "decretoFecha",
+          p.registro_oficial_numero AS "registroOficialNumero",
+          p.registro_oficial_fecha AS "registroOficialFecha",
+          p.fecha_fundacion AS "fechaFundacion",
+          e.direccion_matriz AS "direccion",
+          p.ubicacion,
+          p.correo,
+          p.telefonos,
+          p.representantes,
+          p.logo_referencia AS "logoReferencia",
+          p.marca_agua_referencia AS "marcaAguaReferencia",
+          p.textos_legales AS "textosLegales"
+        FROM perfiles_institucionales p
+        JOIN emisores e ON e.id = p.emisor_id
+        WHERE p.vigente_desde <= ${at}
+          AND (p.vigente_hasta IS NULL OR ${at} < p.vigente_hasta)
+        ORDER BY p.vigente_desde DESC
         LIMIT 2
       `,
     );

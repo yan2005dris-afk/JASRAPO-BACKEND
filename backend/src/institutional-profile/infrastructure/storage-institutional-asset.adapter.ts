@@ -6,6 +6,8 @@ import type {
   ResolvedInstitutionalAsset,
 } from '../domain/institutional-profile.types';
 
+const MAX_INSTITUTIONAL_ASSET_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
+
 @Injectable()
 export class StorageInstitutionalAssetAdapter extends InstitutionalAssetPort {
   constructor(private readonly storage: StorageService) {
@@ -30,8 +32,17 @@ export class StorageInstitutionalAssetAdapter extends InstitutionalAssetPort {
       reference.clave,
     );
     const chunks: Buffer[] = [];
+    let totalBytes = 0;
+
     for await (const chunk of stream) {
-      chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+      const buf = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+      totalBytes += buf.length;
+      if (totalBytes > MAX_INSTITUTIONAL_ASSET_SIZE_BYTES) {
+        throw new UnprocessableEntityException(
+          `El activo institucional ${reference.contenedor}/${reference.clave} excede el tamaño máximo permitido de 5MB`,
+        );
+      }
+      chunks.push(buf);
     }
 
     return {

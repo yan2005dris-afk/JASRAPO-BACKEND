@@ -164,4 +164,41 @@ describe('InstitutionalProfileResolver', () => {
     ).rejects.toBeInstanceOf(NotFoundException);
     expect(assets.resolve).not.toHaveBeenCalled();
   });
+
+  it('usa cache en memoria y evita reconsultar BD y storage en llamadas subsecuentes', async () => {
+    const validProfile = profile('v1', '2025-01-01T00:00:00.000Z', null);
+    const findValidAt = jest.fn().mockResolvedValue([validProfile]);
+    const profiles: InstitutionalProfileQueryPort = { findValidAt };
+    const resolver = new InstitutionalProfileResolver(profiles, assets);
+
+    const first = await resolver.resolve(new Date('2026-08-24T12:00:00.000Z'));
+    const second = await resolver.resolve(new Date('2026-08-24T15:30:00.000Z'));
+
+    expect(first.institucion.version).toBe('v1');
+    expect(second.institucion.version).toBe('v1');
+    expect(findValidAt).toHaveBeenCalledTimes(1);
+  });
+
+  it('deduplica resoluciones concurrentes para la misma fecha', async () => {
+    const validProfile = profile('v1', '2025-01-01T00:00:00.000Z', null);
+    const findValidAt = jest
+      .fn()
+      .mockImplementation(
+        () =>
+          new Promise((resolve) =>
+            setTimeout(() => resolve([validProfile]), 20),
+          ),
+      );
+    const profiles: InstitutionalProfileQueryPort = { findValidAt };
+    const resolver = new InstitutionalProfileResolver(profiles, assets);
+
+    const [first, second] = await Promise.all([
+      resolver.resolve(new Date('2026-08-24T12:00:00.000Z')),
+      resolver.resolve(new Date('2026-08-24T12:00:00.000Z')),
+    ]);
+
+    expect(first.institucion.version).toBe('v1');
+    expect(second.institucion.version).toBe('v1');
+    expect(findValidAt).toHaveBeenCalledTimes(1);
+  });
 });

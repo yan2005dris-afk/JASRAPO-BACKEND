@@ -1,8 +1,8 @@
 # Perfil institucional de documentos
 
-Los documentos oficiales resuelven una sola versión de `perfiles_institucionales` antes de adaptar o renderizar la plantilla. La vigencia usa el intervalo semiabierto `[vigente_desde, vigente_hasta)`: el inicio está incluido y el final pertenece a la siguiente versión.
+Los documentos oficiales resuelven una sola versión de `perfiles_institucionales` vinculada al `Emisor` (`emisores`) antes de adaptar o renderizar la plantilla. `Emisor` actúa como **fuente única de verdad** para los datos fiscales y jurídicos (`ruc`, `razon_social`, `nombre_comercial`, `direccion_matriz`), mientras que `PerfilInstitucional` versiona el branding (`logo`, `marca_agua`), autoridades, decretos, ubicación y textos legales. La vigencia usa el intervalo semiabierto `[vigente_desde, vigente_hasta)`: el inicio está incluido y el final pertenece a la siguiente versión.
 
-La base de datos impide superposiciones mediante una restricción de exclusión. La aplicación también falla de forma explícita si no encuentra una versión o si recibe más de una. Cada modelo preparado incluye `metadatosDocumento.perfilInstitucional` con el identificador, versión y vigencia usados; el trabajo asíncrono de correo conserva ese mismo modelo y no vuelve a resolver el perfil.
+La base de datos impide superposiciones por emisor mediante una restricción de exclusión (`EXCLUDE USING gist (emisor_id WITH =, tstzrange(...) WITH &&)`). La aplicación también falla de forma explícita si no encuentra una versión o si recibe más de una. Cada modelo preparado incluye `metadatosDocumento.perfilInstitucional` con el identificador, versión y vigencia usados; el trabajo asíncrono de correo conserva ese mismo modelo y no vuelve a resolver el perfil.
 
 El logo y la marca de agua se guardan como referencias versionadas al almacenamiento de objetos. Se convierten a `data:` URL al construir el modelo para que Puppeteer no dependa de una URL temporal durante el renderizado.
 

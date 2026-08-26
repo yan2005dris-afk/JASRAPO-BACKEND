@@ -1,18 +1,15 @@
 model PerfilInstitucional {
   perfilInstitucionalId BigInt    @id @default(autoincrement()) @map("perfil_institucional_id")
+  emisorId               Int       @map("emisor_id")
   version                String    @unique @db.VarChar(64)
   vigenteDesde           DateTime  @map("vigente_desde")
   vigenteHasta           DateTime? @map("vigente_hasta")
-  nombreLegal            String    @map("nombre_legal")
-  nombreComercial        String    @map("nombre_comercial")
   siglas                 String    @db.VarChar(32)
-  ruc                    String    @db.VarChar(13)
   decretoNumero          String?   @map("decreto_numero")
   decretoFecha           DateTime? @map("decreto_fecha") @db.Date
   registroOficialNumero  String?   @map("registro_oficial_numero")
   registroOficialFecha   DateTime? @map("registro_oficial_fecha") @db.Date
   fechaFundacion         DateTime? @map("fecha_fundacion") @db.Date
-  direccion              String
   ubicacion              Json
   correo                 String
   telefonos              Json
@@ -23,6 +20,9 @@ model PerfilInstitucional {
   creadoPor              Int?      @map("creado_por")
   createdAt              DateTime  @default(now()) @map("created_at")
 
+  emisor                 Empresa   @relation(fields: [emisorId], references: [id], onDelete: Cascade)
+
+  @@index([emisorId])
   @@index([vigenteDesde, vigenteHasta])
   @@map("perfiles_institucionales")
 }

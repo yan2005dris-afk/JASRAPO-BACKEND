@@ -20,6 +20,7 @@ model Empresa {
   establecimientos      Establecimientos[]
   comprobantes          Comprobantes[]
   webhooks              WebhookConfigs[]
+  perfilesInstitucionales PerfilInstitucional[]
 
   @@map("emisores")
 }

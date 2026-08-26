@@ -1,15 +1,12 @@
 INSERT INTO "perfiles_institucionales" (
+    "emisor_id",
     "version",
     "vigente_desde",
-    "nombre_legal",
-    "nombre_comercial",
     "siglas",
-    "ruc",
     "decreto_numero",
     "registro_oficial_numero",
     "registro_oficial_fecha",
     "fecha_fundacion",
-    "direccion",
     "ubicacion",
     "correo",
     "telefonos",
@@ -17,18 +14,16 @@ INSERT INTO "perfiles_institucionales" (
     "logo_referencia",
     "marca_agua_referencia",
     "textos_legales"
-) VALUES (
+) 
+SELECT
+    id,
     'v1',
     '1970-01-01T00:00:00.000Z',
-    'Junta Administradora del Sistema Regional de Agua Potable',
-    'OLÓN',
     'JASRAPO',
-    '2490016050001',
     '3327',
     '802',
     '1979-03-29',
     '1982-09-11',
-    'Av. Santa Lucía e Intiñan (esquina)',
     jsonb_build_object(
         'localidad', 'Olón',
         'parroquia', 'Colonche',
@@ -87,7 +82,9 @@ INSERT INTO "perfiles_institucionales" (
             'cierre', 'Este compromiso se asume para su cumplimiento dentro de las leyes y reglamentos internos de la Junta y garantía del uso del agua.'
         )
     )
-)
+FROM "emisores"
+ORDER BY id ASC
+LIMIT 1
 ON CONFLICT ("version") DO NOTHING;
 
 COMMENT ON COLUMN "perfiles_institucionales"."version" IS
