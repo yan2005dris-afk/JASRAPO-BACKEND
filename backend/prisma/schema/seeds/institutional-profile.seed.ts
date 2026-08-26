@@ -21,12 +21,13 @@ export async function seedInstitutionalProfile(
   await uploadInstitutionalAssets();
 
   const emisor = await prisma.empresa.findFirst({
+    where: { estado: 'ACTIVO' },
     orderBy: { id: 'asc' },
   });
 
   if (!emisor) {
     console.warn(
-      '⚠️ No se encontró ningún emisor para asociar al perfil institucional.',
+      '⚠️ No se encontró ningún emisor activo para asociar al perfil institucional.',
     );
     return;
   }

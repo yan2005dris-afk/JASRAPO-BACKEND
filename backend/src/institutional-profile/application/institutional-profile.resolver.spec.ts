@@ -172,7 +172,7 @@ describe('InstitutionalProfileResolver', () => {
     const resolver = new InstitutionalProfileResolver(profiles, assets);
 
     const first = await resolver.resolve(new Date('2026-08-24T12:00:00.000Z'));
-    const second = await resolver.resolve(new Date('2026-08-24T15:30:00.000Z'));
+    const second = await resolver.resolve(new Date('2026-08-24T12:02:00.000Z'));
 
     expect(first.institucion.version).toBe('v1');
     expect(second.institucion.version).toBe('v1');

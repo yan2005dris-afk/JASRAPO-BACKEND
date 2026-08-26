@@ -39,7 +39,8 @@ export class InstitutionalProfileResolver {
   }
 
   async resolve(at: Date): Promise<InstitutionalDocumentContext> {
-    const key = at.toISOString().slice(0, 10);
+    const bucket = Math.floor(at.getTime() / this.ttlMs);
+    const key = `${at.toISOString().slice(0, 10)}:${bucket}`;
     const now = Date.now();
 
     const cached = this.cache.get(key);

@@ -83,6 +83,7 @@ SELECT
         )
     )
 FROM "emisores"
+WHERE estado = 'ACTIVO'
 ORDER BY id ASC
 LIMIT 1
 ON CONFLICT ("version") DO NOTHING;

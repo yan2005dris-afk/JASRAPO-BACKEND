@@ -110,5 +110,25 @@ describe('GeneratePdfUseCase', () => {
         "PDF type 'missing' not registered. Available: type-a, type-b",
       );
     });
+
+    it('should fallback gracefully and render when institutional profile resolution fails', async () => {
+      const raw = { field: 'value' };
+      const adapted = { adapted: raw };
+      const pdfBuffer = Buffer.from('pdf-content');
+      mockPdfService.getDocumentType.mockReturnValue(mockDocumentType);
+      mockPdfService.render.mockResolvedValue(pdfBuffer);
+      mockInstitutionalProfiles.resolve.mockRejectedValueOnce(
+        new Error('No institutional profile found'),
+      );
+
+      const result = await useCase.execute('test-doc', raw);
+
+      expect(result).toBe(pdfBuffer);
+      expect(mockPdfService.render).toHaveBeenCalledWith(
+        'test-template',
+        adapted,
+        { documentType: 'test-doc' },
+      );
+    });
   });
 });

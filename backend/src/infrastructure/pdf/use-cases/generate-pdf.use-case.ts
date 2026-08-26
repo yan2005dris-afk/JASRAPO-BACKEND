@@ -26,10 +26,23 @@ export class GeneratePdfUseCase {
     }
 
     this.logger.log(`Generating PDF: type=${type}`);
-    const institutional = await this.institutionalProfiles.resolve(new Date());
+    let institutionalContext: Record<string, unknown> = {};
+    if (!('institucion' in raw && raw.institucion)) {
+      try {
+        institutionalContext = (await this.institutionalProfiles.resolve(
+          new Date(),
+        )) as unknown as Record<string, unknown>;
+      } catch (error) {
+        this.logger.warn(
+          `No se pudo resolver el perfil institucional para el documento '${type}': ${error instanceof Error ? error.message : String(error)}. Continuando con renderizado estándar.`,
+        );
+      }
+    }
+
+    const adapted = docType.adaptData(raw);
     const data = {
-      ...docType.adaptData(raw),
-      ...institutional,
+      ...institutionalContext,
+      ...adapted,
     };
     const pdf = await this.pdfService.render(docType.template, data, {
       ...options,
