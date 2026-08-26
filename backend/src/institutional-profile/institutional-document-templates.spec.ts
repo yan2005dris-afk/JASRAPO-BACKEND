@@ -209,4 +209,22 @@ describe('Institutional document templates', () => {
     expect(migration).toContain('EXCLUDE USING gist');
     expect(migration).toContain("'[)'");
   });
+
+  it('la migración del perfil exige exactamente un emisor activo y es idempotente', () => {
+    const migration = fs.readFileSync(
+      path.resolve(
+        __dirname,
+        '../../prisma/migrations/20260824011000_seed_initial_institutional_profile/migration.sql',
+      ),
+      'utf8',
+    );
+
+    expect(migration).toContain('active_emisor_count');
+    expect(migration).toContain('se requiere exactamente un emisor activo');
+    expect(migration).toContain('RAISE EXCEPTION');
+    expect(migration).toContain('active_emisor_id');
+    expect(migration).toContain('ON CONFLICT ("version") DO NOTHING');
+    expect(migration).not.toMatch(/ORDER BY\s+id\s+ASC/i);
+    expect(migration).not.toMatch(/LIMIT\s+1/i);
+  });
 });

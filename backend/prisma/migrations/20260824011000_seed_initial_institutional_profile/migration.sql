@@ -1,4 +1,23 @@
-INSERT INTO "perfiles_institucionales" (
+DO $$
+DECLARE
+    active_emisor_count integer;
+    active_emisor_id "emisores"."id"%TYPE;
+BEGIN
+    SELECT COUNT(*), MIN("id")
+    INTO active_emisor_count, active_emisor_id
+    FROM "emisores"
+    WHERE "estado" = 'ACTIVO';
+
+    IF active_emisor_count = 0 THEN
+        RAISE EXCEPTION
+            'No se puede sembrar el perfil institucional: se requiere exactamente un emisor activo, pero no existe ninguno.';
+    ELSIF active_emisor_count > 1 THEN
+        RAISE EXCEPTION
+            'No se puede sembrar el perfil institucional: se requiere exactamente un emisor activo, pero existen %.',
+            active_emisor_count;
+    END IF;
+
+    INSERT INTO "perfiles_institucionales" (
     "emisor_id",
     "version",
     "vigente_desde",
@@ -14,9 +33,9 @@ INSERT INTO "perfiles_institucionales" (
     "logo_referencia",
     "marca_agua_referencia",
     "textos_legales"
-) 
-SELECT
-    id,
+    )
+    VALUES (
+    active_emisor_id,
     'v1',
     '1970-01-01T00:00:00.000Z',
     'JASRAPO',
@@ -82,11 +101,8 @@ SELECT
             'cierre', 'Este compromiso se asume para su cumplimiento dentro de las leyes y reglamentos internos de la Junta y garantía del uso del agua.'
         )
     )
-FROM "emisores"
-WHERE estado = 'ACTIVO'
-ORDER BY id ASC
-LIMIT 1
-ON CONFLICT ("version") DO NOTHING;
+    ON CONFLICT ("version") DO NOTHING;
+END $$;
 
 COMMENT ON COLUMN "perfiles_institucionales"."version" IS
     'El perfil v1 conserva el documento legal canónico aprobado en PDF-03; una corrección oficial requiere una nueva versión.';
