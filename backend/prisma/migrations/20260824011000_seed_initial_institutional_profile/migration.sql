@@ -101,6 +101,7 @@ BEGIN
             'cierre', 'Este compromiso se asume para su cumplimiento dentro de las leyes y reglamentos internos de la Junta y garantía del uso del agua.'
         )
     )
+    )
     ON CONFLICT ("version") DO NOTHING;
 END $$;
 
