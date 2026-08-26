@@ -70,7 +70,6 @@ export interface ReplaceMeterRepositoryData {
   claveIdempotencia: string;
   huellaSolicitud: string;
   requiereAprobacion: boolean;
-  _onLockAcquired?: () => Promise<void> | void;
 }
 
 export interface ReplaceMeterResult {
