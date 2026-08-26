@@ -4,6 +4,7 @@ export const SriDocumentPdfType: PdfDocumentType = {
   type: 'sri-document',
   name: 'Documento SRI (RIDE)',
   template: 'sri-document',
+  requiresInstitutionalProfile: false,
   adaptData(raw: Record<string, any>): Record<string, any> {
     const emisor = raw.emisor || {};
     const comprador = raw.comprador || {};

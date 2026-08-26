@@ -111,23 +111,42 @@ describe('GeneratePdfUseCase', () => {
       );
     });
 
-    it('should fallback gracefully and render when institutional profile resolution fails', async () => {
+    it('should fail explicitly when document requires institutional profile and resolution fails', async () => {
       const raw = { field: 'value' };
-      const adapted = { adapted: raw };
-      const pdfBuffer = Buffer.from('pdf-content');
       mockPdfService.getDocumentType.mockReturnValue(mockDocumentType);
-      mockPdfService.render.mockResolvedValue(pdfBuffer);
       mockInstitutionalProfiles.resolve.mockRejectedValueOnce(
-        new Error('No institutional profile found'),
+        new NotFoundException(
+          'No active emisor or institutional profile found',
+        ),
       );
 
-      const result = await useCase.execute('test-doc', raw);
+      await expect(useCase.execute('test-doc', raw)).rejects.toThrow(
+        NotFoundException,
+      );
+      expect(mockPdfService.render).not.toHaveBeenCalled();
+    });
+
+    it('should skip institutional profile resolution when document type specifies requiresInstitutionalProfile: false', async () => {
+      const docTypeWithoutProfile: PdfDocumentType = {
+        type: 'sri-doc',
+        name: 'SRI Document',
+        template: 'sri-template',
+        requiresInstitutionalProfile: false,
+        adaptData: jest.fn((raw) => ({ adaptedSri: raw })),
+      };
+      const raw = { emisor: { ruc: '123' } };
+      const pdfBuffer = Buffer.from('sri-pdf');
+      mockPdfService.getDocumentType.mockReturnValue(docTypeWithoutProfile);
+      mockPdfService.render.mockResolvedValue(pdfBuffer);
+
+      const result = await useCase.execute('sri-doc', raw);
 
       expect(result).toBe(pdfBuffer);
+      expect(mockInstitutionalProfiles.resolve).not.toHaveBeenCalled();
       expect(mockPdfService.render).toHaveBeenCalledWith(
-        'test-template',
-        adapted,
-        { documentType: 'test-doc' },
+        'sri-template',
+        { adaptedSri: raw },
+        { documentType: 'sri-doc' },
       );
     });
   });

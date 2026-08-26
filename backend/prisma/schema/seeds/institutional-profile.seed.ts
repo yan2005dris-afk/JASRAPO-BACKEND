@@ -20,23 +20,27 @@ export async function seedInstitutionalProfile(
 ): Promise<void> {
   await uploadInstitutionalAssets();
 
-  const emisor = await prisma.empresa.findFirst({
+  const emisoresActivos = await prisma.empresa.findMany({
     where: { estado: 'ACTIVO' },
-    orderBy: { id: 'asc' },
   });
 
-  if (!emisor) {
-    console.warn(
-      '⚠️ No se encontró ningún emisor activo para asociar al perfil institucional.',
+  if (emisoresActivos.length === 0) {
+    throw new Error(
+      'No se encontró ningún emisor activo para asociar al perfil institucional.',
     );
-    return;
   }
+
+  if (emisoresActivos.length > 1) {
+    throw new Error(
+      'Existe más de un emisor activo configurado; el perfil institucional requiere exactamente un emisor activo.',
+    );
+  }
+
+  const emisor = emisoresActivos[0];
 
   await prisma.perfilInstitucional.upsert({
     where: { version: 'v1' },
-    update: {
-      emisorId: emisor.id,
-    },
+    update: {},
     create: {
       emisorId: emisor.id,
       version: 'v1',
