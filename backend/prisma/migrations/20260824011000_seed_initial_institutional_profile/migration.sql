@@ -1,3 +1,5 @@
+-- Esta migración es segura durante el bootstrap de una base vacía: si aún no
+-- existe un emisor, el seed posterior creará los datos dependientes del emisor.
 DO $$
 DECLARE
     active_emisor_count integer;
@@ -9,15 +11,13 @@ BEGIN
     WHERE "estado" = 'ACTIVO';
 
     IF active_emisor_count = 0 THEN
-        RAISE EXCEPTION
-            'No se puede sembrar el perfil institucional: se requiere exactamente un emisor activo, pero no existe ninguno.';
+        NULL;
     ELSIF active_emisor_count > 1 THEN
         RAISE EXCEPTION
             'No se puede sembrar el perfil institucional: se requiere exactamente un emisor activo, pero existen %.',
             active_emisor_count;
-    END IF;
-
-    INSERT INTO "perfiles_institucionales" (
+    ELSE
+        INSERT INTO "perfiles_institucionales" (
     "emisor_id",
     "version",
     "vigente_desde",
@@ -32,10 +32,10 @@ BEGIN
     "representantes",
     "logo_referencia",
     "marca_agua_referencia",
-    "textos_legales"
-    )
-    VALUES (
-    active_emisor_id,
+        "textos_legales"
+        )
+        VALUES (
+        active_emisor_id,
     'v1',
     '1970-01-01T00:00:00.000Z',
     'JASRAPO',
@@ -43,7 +43,7 @@ BEGIN
     '802',
     '1979-03-29',
     '1982-09-11',
-    jsonb_build_object(
+        jsonb_build_object(
         'localidad', 'Olón',
         'parroquia', 'Colonche',
         'canton', 'Santa Elena',
@@ -100,9 +100,10 @@ BEGIN
             ),
             'cierre', 'Este compromiso se asume para su cumplimiento dentro de las leyes y reglamentos internos de la Junta y garantía del uso del agua.'
         )
-    )
-    )
-    ON CONFLICT ("version") DO NOTHING;
+        )
+        )
+        ON CONFLICT ("version") DO NOTHING;
+    END IF;
 END $$;
 
 COMMENT ON COLUMN "perfiles_institucionales"."version" IS
