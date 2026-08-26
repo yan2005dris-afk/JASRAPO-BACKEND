@@ -272,4 +272,41 @@ describe('PrismaReadingRepository - soft delete select regression', () => {
       ).rejects.toThrow(/sin registrar una anomalía o novedad/);
     });
   });
+
+  describe('isReadingLinkedToReplacement', () => {
+    it('returns true when reading is linked to an active replacement as final or initial', async () => {
+      const prisma = {
+        reemplazoMedidor: {
+          count: jest.fn().mockResolvedValue(1),
+        },
+      };
+      const repository = new PrismaReadingRepository(prisma as any);
+
+      const result = await repository.isReadingLinkedToReplacement(BigInt(100));
+
+      expect(result).toBe(true);
+      expect(prisma.reemplazoMedidor.count).toHaveBeenCalledWith({
+        where: {
+          OR: [
+            { lecturaFinalSalienteId: BigInt(100) },
+            { lecturaInicialEntranteId: BigInt(100) },
+          ],
+          deletedAt: null,
+        },
+      });
+    });
+
+    it('returns false when reading is not linked to any replacement', async () => {
+      const prisma = {
+        reemplazoMedidor: {
+          count: jest.fn().mockResolvedValue(0),
+        },
+      };
+      const repository = new PrismaReadingRepository(prisma as any);
+
+      const result = await repository.isReadingLinkedToReplacement(BigInt(200));
+
+      expect(result).toBe(false);
+    });
+  });
 });

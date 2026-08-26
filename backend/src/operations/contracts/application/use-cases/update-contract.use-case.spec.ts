@@ -14,7 +14,6 @@ describe('UpdateContractUseCase', () => {
   const mockContractRepository = {
     findById: jest.fn(),
     update: jest.fn(),
-    replaceMeterInContract: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -58,40 +57,12 @@ describe('UpdateContractUseCase', () => {
     expect(result).toMatchObject({ contratoId: id, estado: 'ACTIVO' });
   });
 
-  it('should replace contract meter', async () => {
-    const id = BigInt(1);
-    const updateDto = { medidorId: '2', lecturaInicial: 150 };
-
-    mockContractRepository.findById.mockResolvedValue(
-      new ContractEntity({
-        contratoId: id,
-        deletedAt: null,
-      }),
-    );
-    mockContractRepository.replaceMeterInContract.mockResolvedValue(
-      new ContractEntity({
-        contratoId: id,
-        estado: 'SOLICITUD',
-      }),
-    );
-
-    const result = await useCase.execute(id, updateDto);
-
-    expect(mockContractRepository.replaceMeterInContract).toHaveBeenCalledWith(
-      id,
-      BigInt(2),
-      150,
-      undefined,
-    );
-    expect(result).toBeDefined();
-  });
-
-  it('should replace meter with contract field updates', async () => {
+  it('should update multiple contract fields', async () => {
     const id = BigInt(1);
     const updateDto = {
-      medidorId: '3',
       estado: 'ACTIVO',
       direccionSuministro: 'Nueva Dir',
+      sectorId: '4',
     };
 
     mockContractRepository.findById.mockResolvedValue(
@@ -100,21 +71,22 @@ describe('UpdateContractUseCase', () => {
         deletedAt: null,
       }),
     );
-    mockContractRepository.replaceMeterInContract.mockResolvedValue(
+    mockContractRepository.update.mockResolvedValue(
       new ContractEntity({
         contratoId: id,
         estado: 'ACTIVO',
+        direccionSuministro: 'Nueva Dir',
+        sectorId: 4,
       }),
     );
 
     const result = await useCase.execute(id, updateDto);
 
-    expect(mockContractRepository.replaceMeterInContract).toHaveBeenCalledWith(
-      id,
-      BigInt(3),
-      0,
-      { estado: 'ACTIVO', direccionSuministro: 'Nueva Dir' },
-    );
+    expect(mockContractRepository.update).toHaveBeenCalledWith(id, {
+      estado: 'ACTIVO',
+      direccionSuministro: 'Nueva Dir',
+      sectorId: 4,
+    });
     expect(result).toBeDefined();
   });
 

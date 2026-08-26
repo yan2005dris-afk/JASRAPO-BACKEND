@@ -102,4 +102,6 @@ export abstract class ReadingRepository {
     where: { lecturaId: bigint; estado: string },
     data: UpdateReadingRepositoryData,
   ): Promise<LecturaEntity | null>;
+
+  abstract isReadingLinkedToReplacement(lecturaId: bigint): Promise<boolean>;
 }

@@ -6,7 +6,6 @@ import {
   EntityNotFoundException,
   InvalidDomainOperationException,
 } from 'src/shared/domain/exceptions/domain.exception';
-import type { CreateContractData } from '../../domain/types/contract.types';
 
 @Injectable()
 export class UpdateContractUseCase {
@@ -21,22 +20,6 @@ export class UpdateContractUseCase {
       throw new EntityNotFoundException('Contrato', id.toString());
     }
 
-    if (updateDto.medidorId) {
-      const medidorId = BigInt(updateDto.medidorId);
-      const lecturaInicial = updateDto.lecturaInicial ?? 0;
-      const contractFields = this.extractFields(updateDto);
-
-      return this.contractRepository.replaceMeterInContract(
-        id,
-        medidorId,
-        lecturaInicial,
-        Object.keys(contractFields).length > 0
-          ? (contractFields as Partial<CreateContractData>)
-          : undefined,
-      );
-    }
-
-    // Only update contract fields (no meter replacement)
     const updateData = this.extractFields(updateDto);
 
     if (Object.keys(updateData).length === 0) {

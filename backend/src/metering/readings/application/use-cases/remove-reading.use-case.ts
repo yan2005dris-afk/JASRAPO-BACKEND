@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { ReadingRepository } from '../../domain/repositories/reading.repository';
-import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
+import {
+  EntityNotFoundException,
+  InvalidDomainOperationException,
+} from 'src/shared/domain/exceptions/domain.exception';
 
 @Injectable()
 export class RemoveReadingUseCase {
@@ -12,6 +15,14 @@ export class RemoveReadingUseCase {
     });
     if (!existing || existing.deletedAt !== null) {
       throw new EntityNotFoundException('Lectura', id);
+    }
+
+    const isLinked =
+      await this.readingRepository.isReadingLinkedToReplacement(id);
+    if (isLinked) {
+      throw new InvalidDomainOperationException(
+        'No se puede eliminar una lectura vinculada a un reemplazo de medidor auditado',
+      );
     }
 
     await this.readingRepository.update(

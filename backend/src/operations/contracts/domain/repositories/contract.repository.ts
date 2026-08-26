@@ -53,12 +53,5 @@ export abstract class ContractRepository {
     data: CreateContractWithMeterCommand,
   ): Promise<ContractEntity>;
 
-  abstract replaceMeterInContract(
-    contractId: bigint,
-    newMeterId: bigint,
-    lecturaInicial: number,
-    contractFields?: Partial<CreateContractData>,
-  ): Promise<ContractEntity>;
-
   abstract finalizeActiveMeterLink(contratoId: bigint): Promise<ContractEntity>;
 }
