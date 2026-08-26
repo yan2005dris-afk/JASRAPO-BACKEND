@@ -19,7 +19,7 @@ import { PrismaMeterRepository } from '../../../src/metering/meters/infrastructu
 import { PrismaService } from '../../../src/infrastructure/database/prisma.service';
 import type { LoggerService } from '../../../src/infrastructure/observability/logger/logger.service';
 
-describe(
+void describe(
   'Install & Replace Concurrency Integration Tests (Real PostgreSQL)',
   { timeout: 180_000 },
   () => {
@@ -258,7 +258,7 @@ describe(
       });
     });
 
-    it('barrier test: replaceMeter acquires the contract lock before installMeter', async () => {
+    void it('barrier test: replaceMeter acquires the contract lock before installMeter', async () => {
       const initialMeter = await prismaService.medidores.create({
         data: {
           serie: 'METER-INITIAL-LATCH1',
@@ -405,7 +405,7 @@ describe(
       assert.equal(readings.length, 2);
     });
 
-    it('barrier test: installMeter acquires the contract lock before replaceMeter', async () => {
+    void it('barrier test: installMeter acquires the contract lock before replaceMeter', async () => {
       const initialMeter = await prismaService.medidores.create({
         data: {
           serie: 'METER-INITIAL-LATCH2',
@@ -545,7 +545,7 @@ describe(
       assert.equal(readings.length, 0);
     });
 
-    it('proves post-replacement preemption: after replaceMeter completes, installMeter for replaced meter is rejected', async () => {
+    void it('proves post-replacement preemption: after replaceMeter completes, installMeter for replaced meter is rejected', async () => {
       const initialMeter = await prismaService.medidores.create({
         data: {
           serie: 'METER-INITIAL-SEQ1',
@@ -653,7 +653,7 @@ describe(
       );
     });
 
-    it('proves post-installation serialization: after installMeter completes, replaceMeter executes cleanly on installed meter with valid reading', async () => {
+    void it('proves post-installation serialization: after installMeter completes, replaceMeter executes cleanly on installed meter with valid reading', async () => {
       const initialMeter = await prismaService.medidores.create({
         data: {
           serie: 'METER-INITIAL-SEQ2',
@@ -773,7 +773,7 @@ describe(
       assert.equal(readings.length, 2);
     });
 
-    it('rejects installMeter if active history belongs to a different meter (simulating post-replacement race)', async () => {
+    void it('rejects installMeter if active history belongs to a different meter (simulating post-replacement race)', async () => {
       const initialMeter = await prismaService.medidores.create({
         data: {
           serie: 'METER-STALE-01',
@@ -854,7 +854,7 @@ describe(
       assert.equal(ledgers.length, 0);
     });
 
-    it('rejects installMeter when contract has no active history at all', async () => {
+    void it('rejects installMeter when contract has no active history at all', async () => {
       const meter = await prismaService.medidores.create({
         data: {
           serie: 'METER-ORPHAN-01',

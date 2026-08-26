@@ -47,4 +47,3 @@ export class UpdateContractUseCase {
     return fields;
   }
 }
-

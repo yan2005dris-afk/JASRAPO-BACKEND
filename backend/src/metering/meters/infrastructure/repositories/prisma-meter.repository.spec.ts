@@ -419,8 +419,8 @@ describe('PrismaMeterRepository - replaceMeter', () => {
     await repository.installMeter({
       medidorId,
       contratoId,
-      estado: 'INSTALADO' as any,
-      estadoContrato: 'ACTIVO' as any,
+      estado: 'INSTALADO',
+      estadoContrato: 'ACTIVO',
       fechaInstalacion: now,
     });
 
@@ -494,7 +494,9 @@ describe('PrismaMeterRepository - replaceMeter', () => {
         estadoContrato: 'ACTIVO' as any,
         fechaInstalacion: new Date(),
       }),
-    ).rejects.toThrow(/Conflicto de concurrencia: el contrato #1 está vinculado al medidor #200, no al #100/);
+    ).rejects.toThrow(
+      /Conflicto de concurrencia: el contrato #1 está vinculado al medidor #200, no al #100/,
+    );
   });
 
   it('should throw InvalidDomainOperationException if contract is not in PENDIENTE_INSTALACION during installMeter', async () => {
