@@ -73,6 +73,7 @@ export abstract class MeterRepository {
     estado: EstadoMedidor;
     estadoContrato: EstadoContrato;
     fechaInstalacion: Date;
+    _onLockAcquired?: () => Promise<void> | void;
   }): Promise<MeterEntity>;
 
   /** Atomically replace a meter in a contract, recording telemetry,

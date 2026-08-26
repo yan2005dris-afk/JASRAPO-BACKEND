@@ -285,16 +285,28 @@ export class PrismaMeterRepository implements MeterRepository {
     estado: EstadoMedidor;
     estadoContrato: EstadoContrato;
     fechaInstalacion: Date;
+    _onLockAcquired?: () => Promise<void> | void;
   }): Promise<MeterEntity> {
-    const { medidorId, contratoId, estado, estadoContrato, fechaInstalacion } =
-      params;
+    const {
+      medidorId,
+      contratoId,
+      estado,
+      estadoContrato,
+      fechaInstalacion,
+      _onLockAcquired,
+    } = params;
 
-    const record = await this.prisma.$transaction(async (tx) => {
-      await tx.$queryRaw`SELECT contrato_id FROM contratos WHERE contrato_id = ${contratoId} FOR UPDATE`;
+    const record = await this.prisma.$transaction(
+      async (tx) => {
+        await tx.$queryRaw`SELECT contrato_id FROM contratos WHERE contrato_id = ${contratoId} FOR UPDATE`;
 
-      const contrato = await tx.contratos.findUnique({
-        where: { contratoId },
-      });
+        if (_onLockAcquired) {
+          await _onLockAcquired();
+        }
+
+        const contrato = await tx.contratos.findUnique({
+          where: { contratoId },
+        });
 
       if (!contrato || contrato.deletedAt) {
         throw new EntityNotFoundException('Contrato', contratoId);
@@ -355,7 +367,7 @@ export class PrismaMeterRepository implements MeterRepository {
       });
 
       return updatedMeter;
-    });
+    }, { timeout: 15000, maxWait: 10000 });
 
     return MeterMapper.toDomain(record)!;
   }
@@ -410,6 +422,10 @@ export class PrismaMeterRepository implements MeterRepository {
             }
 
             await tx.$queryRaw`SELECT contrato_id FROM contratos WHERE contrato_id = ${contratoId} FOR UPDATE`;
+
+            if (params._onLockAcquired) {
+              await params._onLockAcquired();
+            }
 
             if (
               tratamientoEntrante === 'DIFERIR_SIGUIENTE_PERIODO' &&
@@ -817,7 +833,11 @@ export class PrismaMeterRepository implements MeterRepository {
 
             return this.toReplaceMeterResult(reemplazoRecord);
           },
-          { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+          {
+            isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+            timeout: 15000,
+            maxWait: 10000,
+          },
         );
       } catch (error) {
         const retryable =

@@ -26,6 +26,7 @@ void describe(
     let container: StartedPostgreSqlContainer;
     let databaseUrl: string;
     let prismaService: PrismaService;
+    let monitorPrisma: PrismaService;
     let repository: PrismaMeterRepository;
 
     const mockLogger = {
@@ -51,15 +52,15 @@ void describe(
 
     async function waitForContractRowLock(
       client: PrismaService,
-      timeoutMs = 5000,
+      timeoutMs = 4000,
     ): Promise<boolean> {
       const start = Date.now();
       while (Date.now() - start < timeoutMs) {
         const result = await client.$queryRawUnsafe<Array<{ count: bigint }>>(`
           SELECT count(*)::bigint AS count
-          FROM pg_catalog.pg_locks l
-          JOIN pg_catalog.pg_class c ON c.oid = l.relation
-          WHERE c.relname = 'contratos' AND NOT l.granted;
+          FROM pg_stat_activity a
+          JOIN pg_locks l ON l.pid = a.pid
+          WHERE NOT l.granted AND a.query ILIKE '%contratos%FOR UPDATE%';
         `);
         if (result.length > 0 && Number(result[0].count) > 0) {
           return true;
@@ -88,7 +89,9 @@ void describe(
         });
 
         prismaService = createPrismaService(databaseUrl);
+        monitorPrisma = createPrismaService(databaseUrl);
         await prismaService.$connect();
+        await monitorPrisma.$connect();
         repository = new PrismaMeterRepository(prismaService, mockLogger);
 
         // Seed basic tax & catalog dependencies
@@ -114,6 +117,7 @@ void describe(
     );
 
     after(async () => {
+      await monitorPrisma?.$disconnect();
       await prismaService?.$disconnect();
       await container?.stop();
       delete process.env.DATABASE_URL;
@@ -180,10 +184,10 @@ void describe(
       });
     });
 
-    void it('concurrent race between production methods: replaceMeter and installMeter compete directly for the same contract lock', async () => {
+    void it('barrier test: replaceMeter acquires lock -> installMeter blocks on pg_locks -> replaceMeter commits -> installMeter unblocks and is rejected', async () => {
       const initialMeter = await prismaService.medidores.create({
         data: {
-          serie: 'METER-INITIAL-PROD-RACE',
+          serie: 'METER-INITIAL-LATCH1',
           marca: 'Actaris',
           modelo: 'A1',
           estado: EstadoMedidor.PENDIENTE,
@@ -192,7 +196,7 @@ void describe(
 
       const replacementMeter = await prismaService.medidores.create({
         data: {
-          serie: 'METER-REPLACEMENT-PROD-RACE',
+          serie: 'METER-REPLACEMENT-LATCH1',
           marca: 'Actaris',
           modelo: 'A2',
           estado: EstadoMedidor.BODEGA,
@@ -201,7 +205,7 @@ void describe(
 
       const contract = await prismaService.contratos.create({
         data: {
-          numeroGuia: 'CTR-PROD-RACE-01',
+          numeroGuia: 'CTR-LATCH-01',
           direccionSuministro: 'Av Central 123',
           estado: EstadoContrato.PENDIENTE_INSTALACION,
           categoriaTarifaId: testCategory.categoriaTarifaId,
@@ -219,124 +223,243 @@ void describe(
         },
       });
 
-      // Launch both production methods directly and concurrently
-      const replacePromise = repository.replaceMeter({
-        contratoId: contract.contratoId,
-        nuevoMedidorId: replacementMeter.medidorId,
-        lecturaFinalSaliente: new Decimal(150),
-        lecturaInicialEntrante: new Decimal(0),
-        motivo: MotivoReemplazoMedidor.DANO,
-        tratamientoSaliente: TratamientoSaliente.COBRO_REAL,
-        tratamientoEntrante: TratamientoEntrante.FACTURAR_PERIODO_ACTUAL,
-        periodoOrigenId: testPeriod.periodoId,
-        solicitadoPorUsuarioId: testUser.usuarioId,
-        claveIdempotencia: 'idemp-prod-race-01',
-        huellaSolicitud: 'fingerprint-prod-race-01',
-        requiereAprobacion: false,
+      let releaseReplaceLock: () => void = () => {};
+      const replaceLockHeld = new Promise<void>((resolve) => {
+        void repository.replaceMeter({
+          contratoId: contract.contratoId,
+          nuevoMedidorId: replacementMeter.medidorId,
+          lecturaFinalSaliente: new Decimal(150),
+          lecturaInicialEntrante: new Decimal(0),
+          motivo: MotivoReemplazoMedidor.DANO,
+          tratamientoSaliente: TratamientoSaliente.COBRO_REAL,
+          tratamientoEntrante: TratamientoEntrante.FACTURAR_PERIODO_ACTUAL,
+          periodoOrigenId: testPeriod.periodoId,
+          solicitadoPorUsuarioId: testUser.usuarioId,
+          claveIdempotencia: 'idemp-latch1-01',
+          huellaSolicitud: 'fingerprint-latch1-01',
+          requiereAprobacion: false,
+          _onLockAcquired: async () => {
+            resolve();
+            await new Promise<void>((cont) => {
+              releaseReplaceLock = cont;
+            });
+          },
+        });
       });
 
-      const installPromise = repository.installMeter({
-        contratoId: contract.contratoId,
-        medidorId: initialMeter.medidorId,
-        estado: EstadoMedidor.INSTALADO,
-        estadoContrato: EstadoContrato.ACTIVO,
-        fechaInstalacion: new Date(),
-      });
+      // 1. Wait until replaceMeter has physically acquired the FOR UPDATE lock in PostgreSQL
+      await replaceLockHeld;
 
-      const [replaceResult, installResult] = await Promise.allSettled([
-        replacePromise,
-        installPromise,
-      ]);
+      try {
+        // 2. Launch installMeter - it must physically block on the locked contract row
+        const installPromise = repository.installMeter({
+          contratoId: contract.contratoId,
+          medidorId: initialMeter.medidorId,
+          estado: EstadoMedidor.INSTALADO,
+          estadoContrato: EstadoContrato.ACTIVO,
+          fechaInstalacion: new Date(),
+        });
 
-      // Exactly one operation must succeed and the other must be rejected
-      const fulfilledCount = [replaceResult, installResult].filter(
-        (r) => r.status === 'fulfilled',
-      ).length;
-      const rejectedCount = [replaceResult, installResult].filter(
-        (r) => r.status === 'rejected',
-      ).length;
+        // 3. Prove via pg_locks that installMeter is blocked on table 'contratos'
+        const isBlocked = await waitForContractRowLock(monitorPrisma);
+        assert.equal(
+          isBlocked,
+          true,
+          'installMeter must be physically blocked on the contratos row lock held by replaceMeter',
+        );
 
-      assert.equal(fulfilledCount, 1, 'Exactly one transaction must succeed');
-      assert.equal(rejectedCount, 1, 'Exactly one transaction must fail');
+        // 4. Release replaceMeter lock to let it finish and commit
+        releaseReplaceLock();
 
-      // Verify that there is strictly ONE active history row in the database
+        // 5. installMeter unblocks and is rejected because replaceMeter changed invariants
+        await assert.rejects(
+          installPromise,
+          (error: unknown) => {
+            assert.ok(error instanceof Error);
+            assert.match(
+              error.message,
+              /Meter must be in PENDIENTE state|Conflicto de concurrencia|could not serialize access/,
+            );
+            return true;
+          },
+        );
+      } finally {
+        releaseReplaceLock();
+      }
+
+      // 6. Complete DB state assertions:
       const activeHistories = await prismaService.historialMedidores.findMany({
         where: { contratoId: contract.contratoId, fechaHasta: null },
       });
       assert.equal(activeHistories.length, 1);
+      assert.equal(activeHistories[0].medidorId, replacementMeter.medidorId);
 
-      if (replaceResult.status === 'fulfilled') {
-        // replaceMeter took the lock first
-        assert.equal(installResult.status, 'rejected');
-        assert.match(
-          (installResult as PromiseRejectedResult).reason?.message ?? '',
-          /Meter must be in PENDIENTE state|Conflicto de concurrencia|could not serialize access/,
-        );
+      const closedHistory = await prismaService.historialMedidores.findUnique({
+        where: { historialId: initialHistorial.historialId },
+      });
+      assert.ok(closedHistory?.fechaHasta !== null);
 
-        // Active history points to replacement meter
-        assert.equal(activeHistories[0].medidorId, replacementMeter.medidorId);
+      const dbInitialMeter = await prismaService.medidores.findUnique({
+        where: { medidorId: initialMeter.medidorId },
+      });
+      const dbReplacementMeter = await prismaService.medidores.findUnique({
+        where: { medidorId: replacementMeter.medidorId },
+      });
+      assert.equal(dbInitialMeter?.estado, EstadoMedidor.DANADO);
+      assert.ok(dbInitialMeter?.fechaBaja !== null);
+      assert.equal(dbReplacementMeter?.estado, EstadoMedidor.INSTALADO);
+      assert.ok(dbReplacementMeter?.fechaInstalacion !== null);
 
-        // Initial meter marked as DANADO, replacement meter as INSTALADO
-        const dbInitial = await prismaService.medidores.findUnique({
-          where: { medidorId: initialMeter.medidorId },
-        });
-        const dbReplacement = await prismaService.medidores.findUnique({
-          where: { medidorId: replacementMeter.medidorId },
-        });
-        assert.equal(dbInitial?.estado, EstadoMedidor.DANADO);
-        assert.equal(dbReplacement?.estado, EstadoMedidor.INSTALADO);
+      const ledgers = await prismaService.reemplazoMedidor.findMany({
+        where: { contratoId: contract.contratoId },
+      });
+      assert.equal(ledgers.length, 1);
+      assert.equal(ledgers[0].historialSalienteId, initialHistorial.historialId);
+      assert.equal(ledgers[0].historialEntranteId, activeHistories[0].historialId);
 
-        // Exactly 1 ledger entry
-        const ledgers = await prismaService.reemplazoMedidor.findMany({
-          where: { contratoId: contract.contratoId },
-        });
-        assert.equal(ledgers.length, 1);
-        assert.equal(ledgers[0].historialSalienteId, initialHistorial.historialId);
-        assert.equal(ledgers[0].historialEntranteId, activeHistories[0].historialId);
+      const readings = await prismaService.lecturas.findMany({
+        where: {
+          medidorId: { in: [initialMeter.medidorId, replacementMeter.medidorId] },
+        },
+      });
+      assert.equal(readings.length, 2);
+    });
 
-        // Exactly 2 readings recorded
-        const readings = await prismaService.lecturas.findMany({
-          where: {
-            medidorId: { in: [initialMeter.medidorId, replacementMeter.medidorId] },
+    void it('barrier test: installMeter acquires lock -> replaceMeter blocks on pg_locks -> installMeter commits -> replaceMeter unblocks and fails serialization', async () => {
+      const initialMeter = await prismaService.medidores.create({
+        data: {
+          serie: 'METER-INITIAL-LATCH2',
+          marca: 'Actaris',
+          modelo: 'A1',
+          estado: EstadoMedidor.PENDIENTE,
+        },
+      });
+
+      const replacementMeter = await prismaService.medidores.create({
+        data: {
+          serie: 'METER-REPLACEMENT-LATCH2',
+          marca: 'Actaris',
+          modelo: 'A2',
+          estado: EstadoMedidor.BODEGA,
+        },
+      });
+
+      const contract = await prismaService.contratos.create({
+        data: {
+          numeroGuia: 'CTR-LATCH-02',
+          direccionSuministro: 'Av Central 456',
+          estado: EstadoContrato.PENDIENTE_INSTALACION,
+          categoriaTarifaId: testCategory.categoriaTarifaId,
+          comunidadId: testCommunity.comunidadId,
+          clienteId: testClient.clienteId,
+        },
+      });
+
+      const initialHistorial = await prismaService.historialMedidores.create({
+        data: {
+          contratoId: contract.contratoId,
+          medidorId: initialMeter.medidorId,
+          lecturaInicial: new Prisma.Decimal(100),
+          motivo: 'VINCULACION INICIAL',
+        },
+      });
+
+      let releaseInstallLock: () => void = () => {};
+      const installLockHeld = new Promise<void>((resolve) => {
+        void repository.installMeter({
+          contratoId: contract.contratoId,
+          medidorId: initialMeter.medidorId,
+          estado: EstadoMedidor.INSTALADO,
+          estadoContrato: EstadoContrato.ACTIVO,
+          fechaInstalacion: new Date(),
+          _onLockAcquired: async () => {
+            resolve();
+            await new Promise<void>((cont) => {
+              releaseInstallLock = cont;
+            });
           },
         });
-        assert.equal(readings.length, 2);
-      } else {
-        // installMeter took the lock first
-        assert.equal(installResult.status, 'fulfilled');
-        assert.equal(replaceResult.status, 'rejected');
-        assert.match(
-          (replaceResult as PromiseRejectedResult).reason?.message ?? '',
-          /could not serialize access|El contrato .* no tiene un medidor asignado/,
+      });
+
+      // 1. Wait until installMeter has physically acquired the FOR UPDATE lock in PostgreSQL
+      await installLockHeld;
+
+      try {
+        // 2. Launch replaceMeter with valid reading (150 >= 100) - it must block on the locked contract row
+        const replacePromise = repository.replaceMeter({
+          contratoId: contract.contratoId,
+          nuevoMedidorId: replacementMeter.medidorId,
+          lecturaFinalSaliente: new Decimal(150),
+          lecturaInicialEntrante: new Decimal(0),
+          motivo: MotivoReemplazoMedidor.DANO,
+          tratamientoSaliente: TratamientoSaliente.COBRO_REAL,
+          tratamientoEntrante: TratamientoEntrante.FACTURAR_PERIODO_ACTUAL,
+          periodoOrigenId: testPeriod.periodoId,
+          solicitadoPorUsuarioId: testUser.usuarioId,
+          claveIdempotencia: 'idemp-latch2-01',
+          huellaSolicitud: 'fingerprint-latch2-01',
+          requiereAprobacion: false,
+        });
+
+        // 3. Prove via pg_locks that replaceMeter is blocked on table 'contratos'
+        const isBlocked = await waitForContractRowLock(monitorPrisma);
+        assert.equal(
+          isBlocked,
+          true,
+          'replaceMeter must be physically blocked on the contratos row lock held by installMeter',
         );
 
-        // Active history points to initial meter
-        assert.equal(activeHistories[0].medidorId, initialMeter.medidorId);
+        // 4. Release installMeter lock to let it finish and commit
+        releaseInstallLock();
 
-        // Initial meter marked as INSTALADO, replacement meter remains in BODEGA
-        const dbInitial = await prismaService.medidores.findUnique({
-          where: { medidorId: initialMeter.medidorId },
-        });
-        const dbReplacement = await prismaService.medidores.findUnique({
-          where: { medidorId: replacementMeter.medidorId },
-        });
-        assert.equal(dbInitial?.estado, EstadoMedidor.INSTALADO);
-        assert.equal(dbReplacement?.estado, EstadoMedidor.BODEGA);
-
-        // 0 ledger records (no partial writes!)
-        const ledgers = await prismaService.reemplazoMedidor.findMany({
-          where: { contratoId: contract.contratoId },
-        });
-        assert.equal(ledgers.length, 0);
-
-        // 0 replacement readings
-        const readings = await prismaService.lecturas.findMany({
-          where: {
-            medidorId: { in: [initialMeter.medidorId, replacementMeter.medidorId] },
+        // 5. replaceMeter unblocks and is aborted by PostgreSQL serialization (40001)
+        await assert.rejects(
+          replacePromise,
+          (error: unknown) => {
+            assert.ok(error instanceof Error);
+            assert.match(error.message, /could not serialize access/);
+            return true;
           },
-        });
-        assert.equal(readings.length, 0);
+        );
+      } finally {
+        releaseInstallLock();
       }
+
+      // 6. Complete DB state assertions:
+      const dbContract = await prismaService.contratos.findUnique({
+        where: { contratoId: contract.contratoId },
+      });
+      assert.equal(dbContract?.estado, EstadoContrato.ACTIVO);
+
+      const dbInitialMeter = await prismaService.medidores.findUnique({
+        where: { medidorId: initialMeter.medidorId },
+      });
+      assert.equal(dbInitialMeter?.estado, EstadoMedidor.INSTALADO);
+      assert.equal(dbInitialMeter?.fechaBaja, null);
+
+      const dbReplacementMeter = await prismaService.medidores.findUnique({
+        where: { medidorId: replacementMeter.medidorId },
+      });
+      assert.equal(dbReplacementMeter?.estado, EstadoMedidor.BODEGA);
+
+      const activeHistories = await prismaService.historialMedidores.findMany({
+        where: { contratoId: contract.contratoId, fechaHasta: null },
+      });
+      assert.equal(activeHistories.length, 1);
+      assert.equal(activeHistories[0].medidorId, initialMeter.medidorId);
+      assert.equal(activeHistories[0].historialId, initialHistorial.historialId);
+
+      const ledgers = await prismaService.reemplazoMedidor.findMany({
+        where: { contratoId: contract.contratoId },
+      });
+      assert.equal(ledgers.length, 0);
+
+      const readings = await prismaService.lecturas.findMany({
+        where: {
+          medidorId: { in: [initialMeter.medidorId, replacementMeter.medidorId] },
+        },
+      });
+      assert.equal(readings.length, 0);
     });
 
     void it('proves post-replacement preemption: after replaceMeter completes, installMeter for replaced meter is rejected', async () => {
