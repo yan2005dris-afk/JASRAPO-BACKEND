@@ -24,6 +24,73 @@ export interface ReportTemplateFixture {
   data: object;
 }
 
+const institutionalFixture = {
+  institucion: {
+    nombreLegal: 'JUNTA ADMINISTRADORA DE AGUA POTABLE OLON',
+    nombreComercial: 'JAAP OLON',
+    siglas: 'JASRAPO',
+    ruc: '2490012345001',
+    decretoNumero: '3327',
+    registroOficialNumero: '802',
+    registroOficialFechaTexto: '29 de marzo de 1979',
+    fechaFundacionTexto: '11 de septiembre de 1982',
+    direccion: 'Calle Principal Olón',
+    correo: 'juntaaguaolon2017@yahoo.com',
+    telefonos: [
+      { etiqueta: 'Teléfono', numero: '2788051' },
+      { etiqueta: 'Presidencia', numero: '0983717499' },
+      { etiqueta: 'Tesorería', numero: '0999896280' },
+      { etiqueta: 'Secretaría', numero: '0998945560' },
+    ],
+    ubicacion: {
+      localidad: 'Olón',
+      parroquia: 'Colonche',
+      canton: 'Santa Elena',
+      provincia: 'Santa Elena',
+      pais: 'Ecuador',
+    },
+    representantePrincipal: {
+      nombres: 'Sr. Humberto Salinas Neira',
+      identificacion: '0915233670',
+      cargo: 'Representante JASRAPO',
+    },
+    branding: {
+      logo: { url: 'data:image/jpeg;base64,dGVzdA==' },
+      marcaAgua: { url: 'data:image/jpeg;base64,dGVzdA==' },
+    },
+    textosLegales: {
+      convenioPago: {
+        introduccionOficina:
+          'En las oficinas de la Junta del Sistema Regional de Agua Potable Olón a los',
+        compromisoUsuario:
+          'se realiza el presente convenio donde se compromete el usuario de la guía',
+        identificacionUsuario: 'a nombre del Sr(a)',
+        cuotasMensuales: 'comprometiéndose a cancelar en cuotas',
+        inicioConvenio:
+          'mensuales más el consumo generado por meses consecutivos, convenio que rige a partir del periodo',
+        cumplimiento: 'Al dar fiel cumplimiento a lo acordado.',
+        pagoEfectivo: 'Las cuotas se cancelan en efectivo a partir de',
+        pagosPosteriores:
+          'en adelante y así los meses posteriores hasta cancelar la deuda de',
+        primeraCuota: 'Comprometiéndose a cancelar la primera cuota de',
+        cierre: 'Atentamente',
+      },
+      actaResponsabilidad: {
+        introduccionOficina:
+          'En las oficinas de la Junta Administradora del Sistema Regional de Agua Potable Olón',
+        compromisoUsuario:
+          'en mi calidad de usuario, asumo el compromiso de cumplir con lo establecido en la Institución:',
+        clausulas: [],
+        cierre:
+          'Este compromiso se asume para su cumplimiento dentro de las leyes y reglamentos internos de la Junta y como garantía del uso del agua.',
+      },
+    },
+  },
+  metadatosDocumento: {
+    perfilInstitucional: { version: 'v1' },
+  },
+};
+
 const accountStatementDocument = projectAccountStatementReport({
   contractId: '10',
   contract: {
@@ -116,7 +183,10 @@ function createFixture<TInput, TOutput extends object>(
     style,
     type: documentType.type,
     template: documentType.template,
-    data: documentType.adaptData(input),
+    data: {
+      ...documentType.adaptData(input),
+      ...institutionalFixture,
+    },
   };
 }
 
