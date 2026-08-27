@@ -37,6 +37,7 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "test:integration": "tsx --test --test-concurrency=1 test/integration/*.int-spec.ts test/integration/**/*.int-spec.ts",
+    "test:pdf:contract": "tsx --test --test-concurrency=1 test/pdf/*.contract-spec.ts",
     "test:load:pdf": "k6 run test/load/pdf-generation.k6.js",
     "pgboss:dashboard": "export $(grep -v '^#' ../.env | xargs) && PGBOSS_SCHEMA=jobs PORT=3002 npx pg-boss-dashboard"
   },

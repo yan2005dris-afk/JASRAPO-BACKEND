@@ -7,6 +7,12 @@ import { projectPaymentAgreementReport } from '../application/definitions/paymen
 import { projectPaymentsReport } from '../application/definitions/payments-report.definition';
 import { createConnectionHistoryPdfDocumentType } from './factories/connection-history.factory';
 import { createPaymentsReportPdfDocumentType } from './factories/payments-report.factory';
+import {
+  LEGACY_CONNECTION_HISTORY_FIXTURE,
+  LEGACY_PAYMENT_AGREEMENT_FIXTURE,
+  LEGACY_PAYMENTS_REPORT_FIXTURE,
+} from './fixtures/legacy-report-contract.fixture';
+import { normalizeReportDateRange } from '../application/report-period.normalizer';
 
 const TEMPLATES_DIR = path.resolve(
   __dirname,
@@ -74,64 +80,47 @@ function renderLegacyFixture(template: string, data: object): string {
 }
 
 describe('legacy PDF contractual fixtures', () => {
+  it('legacyReportFixturesPreserveContractValues', () => {
+    const connection = projectConnectionHistoryReport(
+      LEGACY_CONNECTION_HISTORY_FIXTURE,
+    ).document;
+    const agreement = projectPaymentAgreementReport(
+      LEGACY_PAYMENT_AGREEMENT_FIXTURE,
+    ).document;
+    const payments = projectPaymentsReport(
+      LEGACY_PAYMENTS_REPORT_FIXTURE,
+    ).document;
+    const range = normalizeReportDateRange(
+      LEGACY_PAYMENTS_REPORT_FIXTURE.filters.fechaDesde,
+      LEGACY_PAYMENTS_REPORT_FIXTURE.filters.fechaHasta,
+      'America/Guayaquil',
+    );
+
+    expect(connection.reporte.saldoFinal).toBe('30.00');
+    expect(connection.reporte.filas.map(({ emision }) => emision)).toEqual([
+      'ENERO 2024',
+      'FEBRERO 2024',
+    ]);
+    expect(agreement.convenio.periodoInicio).toBe('enero de 2020');
+    expect(agreement.convenio.primeraCuota).toBe('50.00');
+    expect(agreement.convenio.abonoInicial).toBe('10.00');
+    expect(payments.reporte.grupos[0].filas[0].emision).toBe('ABRIL 2024');
+    expect(range.endExclusive?.toISOString()).toBe('2024-05-21T05:00:00.000Z');
+  });
+
   it('legacyPdfContractFixturesRemainValid', () => {
     const connectionType = createConnectionHistoryPdfDocumentType('legacy');
-    const connectionProjection = projectConnectionHistoryReport({
-      contractId: '10',
-      client: { nombres: 'Ana', apellidos: 'Pérez', razonSocial: null },
-      meterSerial: 'M-001',
-      invoices: [
-        {
-          periodName: 'ENERO 2024',
-          currentReading: 10,
-          previousReading: 5,
-          consumption: 5,
-          billedAmount: 50,
-          paidAmount: 30,
-          outstandingBalance: 20,
-        },
-        {
-          periodName: 'FEBRERO 2024',
-          currentReading: 15,
-          previousReading: 10,
-          consumption: 5,
-          billedAmount: 10,
-          paidAmount: 0,
-          outstandingBalance: 10,
-        },
-      ],
-      filters: { contratoId: '10' },
-      recipientEmail: 'ana@example.com',
-      generatedAt: new Date('2024-05-20T00:00:00.000Z'),
-    });
+    const connectionProjection = projectConnectionHistoryReport(
+      LEGACY_CONNECTION_HISTORY_FIXTURE,
+    );
     const connectionHtml = renderLegacyFixture(
       connectionType.template,
       connectionType.adaptData(connectionProjection.document),
     );
 
-    const agreementProjection = projectPaymentAgreementReport({
-      convenio: {
-        convenioId: '1',
-        contratoId: '10',
-        createdAt: '2024-05-10T10:00:00.000Z',
-        periodoInicio: '2020-01-01T00:00:00.000Z',
-        fechaPrimerPago: '2024-06-01T00:00:00.000Z',
-        cuotaMensual: 50,
-        primeraCuota: 50,
-        deudaTotal: 200,
-        abonoInicial: 10,
-        numeroCuotas: 4,
-        motivo: null,
-        cliente: {
-          nombres: 'Ana',
-          apellidos: 'Pérez',
-          razonSocial: null,
-          identificacion: '0912345678',
-          email: 'ana@example.com',
-        },
-        contrato: { numeroGuia: 'G-001', direccionSuministro: 'Olón' },
-      },
-    });
+    const agreementProjection = projectPaymentAgreementReport(
+      LEGACY_PAYMENT_AGREEMENT_FIXTURE,
+    );
     const agreementHtml = renderLegacyFixture(
       PaymentAgreementPdfDocumentType.template,
       PaymentAgreementPdfDocumentType.adaptData({
@@ -141,26 +130,9 @@ describe('legacy PDF contractual fixtures', () => {
     );
 
     const paymentsType = createPaymentsReportPdfDocumentType('legacy');
-    const paymentsProjection = projectPaymentsReport({
-      payments: [
-        {
-          paymentDate: new Date('2024-05-20T15:00:00.000Z'),
-          client: { nombres: 'Ana', apellidos: 'Pérez', razonSocial: null },
-          details: [
-            {
-              invoiceNumber: 'F-001',
-              billedPeriodName: 'ABRIL 2024',
-              contractId: '10',
-              meterSerial: 'M-001',
-              amount: 25,
-            },
-          ],
-        },
-      ],
-      filters: {},
-      recipientEmail: null,
-      generatedAt: new Date('2024-05-20T00:00:00.000Z'),
-    });
+    const paymentsProjection = projectPaymentsReport(
+      LEGACY_PAYMENTS_REPORT_FIXTURE,
+    );
     const paymentsHtml = renderLegacyFixture(
       paymentsType.template,
       paymentsType.adaptData(paymentsProjection.document),

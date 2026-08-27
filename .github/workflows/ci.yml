@@ -112,6 +112,44 @@ jobs:
       - name: Build application
         run: pnpm --filter backend run build
 
+  pdf-contract:
+    name: PDF contract (real Chromium)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install pinned Chromium
+        run: pnpm --filter backend exec puppeteer browsers install chrome
+
+      - name: Render every registered PDF family
+        env:
+          PDF_CONTRACT_OUTPUT_DIR: tmp/pdfs/pdf-contract
+        run: pnpm --filter backend run test:pdf:contract
+
+      - name: Upload reviewed PDF candidates
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pdf-contract-renders
+          path: backend/tmp/pdfs/pdf-contract
+          retention-days: 7
+
   audit:
     name: Dependency audit (high+)
     runs-on: ubuntu-latest

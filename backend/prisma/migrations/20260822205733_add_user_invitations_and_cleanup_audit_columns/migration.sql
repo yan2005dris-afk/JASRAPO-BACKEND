@@ -130,4 +130,3 @@ BEGIN
     ALTER INDEX "reemplazos_medidor_solicitante_idempotencia_key" RENAME TO "reemplazos_medidor_solicitado_por_usuario_id_clave_idempote_key";
   END IF;
 END $$;
-
