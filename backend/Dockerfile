@@ -53,7 +53,7 @@ RUN apk add --no-cache \
     ttf-freefont
 
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
 WORKDIR /app
 
@@ -64,6 +64,7 @@ COPY --chown=node:node --from=builder /prod/backend/package.json  ./backend/pack
 COPY --chown=node:node --from=builder /app/backend/dist           ./backend/dist
 COPY --chown=node:node --from=builder /app/backend/prisma         ./backend/prisma
 COPY --chown=node:node --from=builder /app/backend/src/generated  ./backend/src/generated
+COPY --chown=node:node --from=builder /app/backend/src/infrastructure/pdf/assets ./backend/src/infrastructure/pdf/assets
 COPY --chown=node:node --from=builder /app/backend/prisma.config.ts ./backend/prisma.config.ts
 
 WORKDIR /app/backend

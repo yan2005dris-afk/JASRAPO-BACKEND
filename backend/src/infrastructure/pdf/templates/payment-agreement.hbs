@@ -4,7 +4,7 @@
   {{> styles}}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Convenio de Pago - Olón</title>
+    <title>Convenio de Pago - {{institucion.nombreComercial}}</title>
     <style>
         body {
             font-family: 'Times New Roman', Times, serif;
@@ -107,7 +107,7 @@
         .header-text h2 {
             font-size: 26px;
             margin: 0;
-            color: #c0392b; /* Rojo para OLÓN */
+            color: #c0392b;
             font-weight: bold;
             font-family: Georgia, serif;
             letter-spacing: 2px;
@@ -195,26 +195,20 @@
 <div class="document-container">
     
     <div class="watermark">
-        {{#if logoUrl}}
-            <img src="{{logoUrl}}" alt="Watermark Logo">
-        {{/if}}
+        <img src="{{institucion.branding.marcaAgua.url}}" alt="Marca de agua institucional">
     </div>
 
     <div class="header">
         <div class="logo-left">
-            {{#if logoUrl}}
-              <img src="{{logoUrl}}" alt="Logo 1" style="width:100%; height:100%; object-fit:contain;">
-            {{else}}
-              [Logo<br>Árbol/Grifo]
-            {{/if}}
+            <img src="{{institucion.branding.logo.url}}" alt="Logo institucional" style="width:100%; height:100%; object-fit:contain;">
         </div>
         
         <div class="header-text">
-            <h1>Junta Administradora del Sistema Regional de Agua Potable</h1>
-            <h2>"OLÓN"</h2>
-            <p>Decreto No. 3327 Reg. Ofic. No. 802 29 de Marzo de 1979</p>
-            <p>FUNDADA EL 11 DE SEPTIEMBRE DE 1982</p>
-            <p>R.U.C. No.: 2490016050001</p>
+            <h1>{{institucion.nombreLegal}}</h1>
+            <h2>"{{institucion.nombreComercial}}"</h2>
+            {{#if institucion.decretoNumero}}<p>Decreto No. {{institucion.decretoNumero}}{{#if institucion.registroOficialNumero}} Reg. Ofic. No. {{institucion.registroOficialNumero}}{{/if}}{{#if institucion.registroOficialFechaTexto}} {{institucion.registroOficialFechaTexto}}{{/if}}</p>{{/if}}
+            {{#if institucion.fechaFundacionTexto}}<p>FUNDADA EL {{institucion.fechaFundacionTexto}}</p>{{/if}}
+            <p>R.U.C. No.: {{institucion.ruc}}</p>
         </div>
 
 
@@ -223,14 +217,14 @@
     <div class="content">
         <div class="title">CONVENIO DE PAGO</div>
 
-        <p>En las oficinas de la Junta del Sistema Regional de Agua Potable Olón a los {{convenio.fechaActual}} se realiza el presente convenio donde se compromete el usuario de la guía {{convenio.numeroGuia}} a nombre del Sr(a) {{convenio.clienteNombre}} comprometiéndose a cancelar en cuotas ${{convenio.cuotaMensual}} mensuales más el consumo generado por meses consecutivos, convenio que rige a partir del periodo {{#if convenio.periodoInicio}}{{convenio.periodoInicio}}{{else}}No especificado{{/if}}. Al dar fiel cumplimiento a lo acordado.</p>
+        <p>{{institucion.textosLegales.convenioPago.introduccionOficina}} {{convenio.fechaActual}} {{institucion.textosLegales.convenioPago.compromisoUsuario}} {{convenio.numeroGuia}} {{institucion.textosLegales.convenioPago.identificacionUsuario}} {{convenio.clienteNombre}} {{institucion.textosLegales.convenioPago.cuotasMensuales}} ${{convenio.cuotaMensual}} {{institucion.textosLegales.convenioPago.inicioConvenio}} {{convenio.periodoInicio}}. {{institucion.textosLegales.convenioPago.cumplimiento}}</p>
 
-        <p>Las cuotas se cancelan en efectivo a partir de {{#if convenio.mesPrimerPago}}{{convenio.mesPrimerPago}}{{else}}No especificada{{/if}} en adelante y así los meses posteriores hasta cancelar la deuda de ${{convenio.deudaTotal}}.</p>
+        <p>{{institucion.textosLegales.convenioPago.pagoEfectivo}} {{convenio.mesPrimerPago}} {{institucion.textosLegales.convenioPago.pagosPosteriores}} ${{convenio.deudaTotal}}.</p>
 
-        <p>Comprometiéndose a cancelar la primera cuota de ${{convenio.primeraCuota}}.</p>
+        <p>{{institucion.textosLegales.convenioPago.primeraCuota}} ${{convenio.primeraCuota}}.</p>
 
         <div class="closing">
-            Atentamente
+            {{institucion.textosLegales.convenioPago.cierre}}
         </div>
     </div>
 
@@ -244,16 +238,16 @@
 
         <div class="signature-block">
             <br><br><br>
-            <div class="signature-text">Sr. Humberto Salinas Neira.</div>
-            <div class="signature-text">C.I. 0915233670</div>
-            <div class="signature-text">REPRESENTANTE JASRAPO</div>
+            <div class="signature-text">{{institucion.representantePrincipal.nombres}}</div>
+            <div class="signature-text">C.I. {{institucion.representantePrincipal.identificacion}}</div>
+            <div class="signature-text">{{institucion.representantePrincipal.cargo}}</div>
         </div>
     </div>
 
     <div class="footer">
-        <p>Dirección: Av. Santa Lucia e Intiñan (esquina)</p>
-        <p>E-mail <a href="mailto:juntaaguaolon2017@yahoo.com">juntaaguaolon2017@yahoo.com</a></p>
-        <p><a href="tel:2788051">TEL:2788051</a> Celular: 0983717499, Presidencia; 0999896280, Tesorería; 0998945560, Secretaría.</p>
+        <p>Dirección: {{institucion.direccion}}</p>
+        <p>E-mail <a href="mailto:{{institucion.correo}}">{{institucion.correo}}</a></p>
+        <p>{{#each institucion.telefonos}}{{etiqueta}}: {{numero}}{{#unless @last}}; {{/unless}}{{/each}}</p>
     </div>
 
 </div>

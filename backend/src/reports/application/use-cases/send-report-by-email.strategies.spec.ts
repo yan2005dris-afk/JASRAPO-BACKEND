@@ -13,7 +13,7 @@ import {
 import { ReportRequestContextFactory } from '../report-request-context.factory';
 import type { ReportKey } from '../report-style.service';
 
-const report: ProjectedReport<ReportDocument> = {
+const report = {
   document: {
     reporte: {
       titulo: 'Listado de Clientes',
@@ -22,9 +22,11 @@ const report: ProjectedReport<ReportDocument> = {
       totalClientes: 0,
       clientes: [],
     },
+    institucion: {} as never,
+    metadatosDocumento: {} as never,
   },
   recipientEmail: 'cliente@example.com',
-};
+} as ProjectedReport<ReportDocument>;
 const contextFactory = new ReportRequestContextFactory();
 
 function context(reportType: ReportKey, filters: object = {}) {

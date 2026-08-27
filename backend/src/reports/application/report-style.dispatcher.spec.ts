@@ -128,7 +128,7 @@ describe('ReportStyleDispatcher', () => {
       async (reportKey, style, expectedType) => {
         mockStyleService.resolveStyle.mockResolvedValueOnce(style);
 
-        await dispatcher.dispatch(reportKey, { foo: 'bar' });
+        await dispatcher.dispatch(reportKey, { foo: 'bar' } as never);
 
         expect(mockStyleService.resolveStyle).toHaveBeenCalledWith(reportKey);
         expect(mockPdfService.getDocumentType).toHaveBeenCalledWith(
@@ -148,7 +148,7 @@ describe('ReportStyleDispatcher', () => {
       // A canonical-only report must never read the global `reporte.estilo`
       // and must render the single official template. We intentionally do NOT
       // queue a resolveStyle value: the dispatcher must not consume it.
-      await dispatcher.dispatch('payment-agreement', { foo: 'bar' });
+      await dispatcher.dispatch('payment-agreement', { foo: 'bar' } as never);
 
       expect(mockStyleService.resolveStyle).not.toHaveBeenCalled();
       expect(mockPdfService.getDocumentType).toHaveBeenCalledWith(
@@ -166,7 +166,9 @@ describe('ReportStyleDispatcher', () => {
     it('returns the PDF buffer and a deterministic filename', async () => {
       mockStyleService.resolveStyle.mockResolvedValueOnce('modern');
 
-      const result = await dispatcher.dispatch('payments-report', { ok: 1 });
+      const result = await dispatcher.dispatch('payments-report', {
+        ok: 1,
+      } as never);
 
       expect(result.buffer).toBe(fakeBuffer);
       expect(result.filename).toBe('payments-report-auto.pdf');
@@ -180,7 +182,7 @@ describe('ReportStyleDispatcher', () => {
     it('forwards the explicit hash when provided', async () => {
       mockStyleService.resolveStyle.mockResolvedValueOnce('legacy');
 
-      await dispatcher.dispatch('connection-history', {}, 'deadbeef');
+      await dispatcher.dispatch('connection-history', {} as never, 'deadbeef');
 
       expect(buildPdfFileNameMock).toHaveBeenCalledWith(
         'connection-history',
@@ -194,7 +196,7 @@ describe('ReportStyleDispatcher', () => {
       mockStyleService.resolveStyle.mockResolvedValueOnce('modern');
       const modernType = docTypes['payments-report-modern'];
 
-      await dispatcher.dispatch('payments-report', { raw: true });
+      await dispatcher.dispatch('payments-report', { raw: true } as never);
 
       expect(modernType.adaptData).toHaveBeenCalledWith({ raw: true });
       const renderMock = mockPdfService.render as jest.Mock;
@@ -212,7 +214,7 @@ describe('ReportStyleDispatcher', () => {
       // dispatcher re-validates as belt-and-suspenders (REQ-16).
       mockStyleService.resolveStyle.mockResolvedValueOnce('midnight');
 
-      const result = await dispatcher.dispatch('payments-report', {});
+      const result = await dispatcher.dispatch('payments-report', {} as never);
 
       expect(result.filename).toBe('payments-report-auto.pdf');
       expect(loggerWarnSpy).toHaveBeenCalledTimes(1);
@@ -230,9 +232,9 @@ describe('ReportStyleDispatcher', () => {
       mockStyleService.resolveStyle.mockResolvedValueOnce('modern');
       mockPdfService.getDocumentType.mockReturnValueOnce(undefined);
 
-      await expect(dispatcher.dispatch('payments-report', {})).rejects.toThrow(
-        /payments-report-modern/,
-      );
+      await expect(
+        dispatcher.dispatch('payments-report', {} as never),
+      ).rejects.toThrow(/payments-report-modern/);
     });
   });
 });

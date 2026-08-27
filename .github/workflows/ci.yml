@@ -189,51 +189,127 @@ jobs:
           fetch-depth: 1
 
       - name: Prepare environment file
-        run: cp .env.example .env
+        run: |
+          set -euo pipefail
+          cp .env.example .env
+          python3 <<'PY'
+          import re
+          import subprocess
+          from pathlib import Path
+
+          env_path = Path('.env')
+          content = env_path.read_text()
+          for key in ('JWT_ACCESS_SECRET', 'JWT_REFRESH_SECRET', 'ENCRYPTION_KEY'):
+              value = subprocess.check_output(
+                  ['openssl', 'rand', '-hex', '32'], text=True
+              ).strip()
+              content, replacements = re.subn(
+                  rf'(?m)^{re.escape(key)}=.*$', f'{key}={value}', content, count=1
+              )
+              if replacements != 1:
+                  raise RuntimeError(f'{key} was not found exactly once in .env')
+          env_path.write_text(content)
+          PY
 
       - name: Ensure RustFS TLS certificates
         run: |
           mkdir -p certs
-          if [ ! -f certs/rustfs_cert.pem ] || [ ! -f certs/rustfs_key.pem ]; then
-            openssl req -x509 -newkey rsa:2048 -nodes \
-              -keyout certs/rustfs_key.pem \
-              -out certs/rustfs_cert.pem \
-              -days 365 \
-              -subj "/C=EC/ST=Pichincha/L=Quito/O=JASRAPO/OU=ci/CN=localhost" \
-              2>/dev/null
-          fi
+          rm -f certs/rustfs_cert.pem certs/rustfs_key.pem
+          openssl req -x509 -newkey rsa:2048 -nodes \
+            -keyout certs/rustfs_key.pem \
+            -out certs/rustfs_cert.pem \
+            -days 365 \
+            -subj "/C=EC/ST=Pichincha/L=Quito/O=JASRAPO/OU=ci/CN=localhost" \
+            -addext "subjectAltName=DNS:rustfs,DNS:localhost,IP:127.0.0.1" \
+            2>/dev/null
           chmod 644 certs/rustfs_key.pem certs/rustfs_cert.pem
 
-      - name: Build and Start Services
+      - name: Build Backend Image
         env:
           DOCKER_BUILDKIT: 1
           COMPOSE_DOCKER_CLI_BUILD: 1
+        run: docker compose build backend
+
+      - name: Start Database and Storage
+        run: docker compose up -d postgres rustfs
+
+      - name: Wait for Database and Storage Health
         run: |
-          docker compose up --build -d postgres rustfs backend
+          set -euo pipefail
+          for i in {1..30}; do
+            all_healthy=true
+            for service in postgres rustfs; do
+              container_id="$(docker compose ps -q "$service")"
+              if [ -z "$container_id" ]; then
+                all_healthy=false
+                continue
+              fi
+
+              state="$(docker inspect --format '{{.State.Status}}' "$container_id")"
+              health="$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' "$container_id")"
+              if [ "$state" = "exited" ] || [ "$state" = "dead" ] || [ "$health" = "unhealthy" ]; then
+                echo "$service failed: state=$state health=$health" >&2
+                exit 1
+              fi
+              if [ "$health" != "healthy" ]; then
+                all_healthy=false
+              fi
+            done
+
+            if [ "$all_healthy" = true ]; then
+              echo "Postgres and RustFS are healthy."
+              exit 0
+            fi
+            echo "Waiting for Postgres and RustFS... ($i/30)"
+            sleep 5
+          done
+          echo "Timed out waiting for Postgres and RustFS health." >&2
+          exit 1
+
+      - name: Migrate and Seed Database
+        run: >-
+          docker compose run --rm --no-deps backend sh -c
+          './node_modules/.bin/prisma migrate deploy &&
+          ./node_modules/.bin/tsx prisma/schema/seed.ts'
+
+      - name: Start Backend
+        run: docker compose up -d backend
 
       - name: Wait for Backend Health
         run: |
-          echo "Waiting for services to become healthy and up..."
-          # Reintenta hasta 60s esperando que el backend o Postgres respondan
-          for i in {1..20}; do
-            if docker compose ps backend | grep -q "Up"; then
-              echo "Backend container is running."
-              break
+          set -euo pipefail
+          for i in {1..36}; do
+            container_id="$(docker compose ps -q backend)"
+            if [ -z "$container_id" ]; then
+              echo "Backend container was not created." >&2
+              exit 1
             fi
-            echo "Waiting... ($i/20)"
-            sleep 3
+
+            state="$(docker inspect --format '{{.State.Status}}' "$container_id")"
+            health="$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' "$container_id")"
+            if [ "$state" = "exited" ] || [ "$state" = "dead" ] || [ "$health" = "unhealthy" ]; then
+              echo "Backend failed: state=$state health=$health" >&2
+              exit 1
+            fi
+            if [ "$state" = "running" ] && [ "$health" = "healthy" ]; then
+              echo "Backend is healthy."
+              exit 0
+            fi
+            echo "Waiting for backend health... ($i/36) state=$state health=$health"
+            sleep 5
           done
-          sleep 10
-          docker compose ps
+          echo "Timed out waiting for backend health." >&2
+          exit 1
+
+      - name: Smoke Test Health Endpoint
+        run: curl --fail-with-body http://localhost:3000/api/v1/health/pdf
 
       - name: Inspect Backend Logs on Failure
         if: failure()
         run: |
-          docker compose logs backend
-          docker compose logs postgres
-          docker compose logs rustfs
+          docker compose logs --no-color backend postgres rustfs || true
 
       - name: Teardown Services
         if: always()
         run: |
-          docker compose down -v
+          docker compose down

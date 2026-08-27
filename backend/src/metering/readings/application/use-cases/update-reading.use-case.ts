@@ -37,6 +37,14 @@ export class UpdateReadingUseCase {
       throw new EntityNotFoundException('Lectura', id);
     }
 
+    const isLinked =
+      await this.readingRepository.isReadingLinkedToReplacement(id);
+    if (isLinked) {
+      throw new InvalidDomainOperationException(
+        'No se puede modificar una lectura vinculada a un reemplazo de medidor auditado',
+      );
+    }
+
     // Build update payload — solo campos que el usuario envió
     const dataToUpdate = Object.fromEntries(
       Object.entries(updateDto).filter(([_, v]) => v !== undefined),

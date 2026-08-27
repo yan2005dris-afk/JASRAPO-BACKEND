@@ -80,8 +80,8 @@
     <!-- Header -->
     <div class="header-table">
       <div class="header-left">
-        <div class="brand-title">JASRAPO</div>
-        <div class="brand-subtitle">Junta de Agua Potable y Alcantarillado · Olón</div>
+        <div class="brand-title">{{institucion.siglas}}</div>
+        <div class="brand-subtitle">{{institucion.nombreLegal}} · {{institucion.ubicacion.localidad}}</div>
         <div class="report-title-main" style="margin-top: 8px;">Estado de Cuenta</div>
         <div class="report-meta-text">Fecha de emisión: {{reporte.fechaEmision}}</div>
       </div>
@@ -186,7 +186,7 @@
     </div>
 
     <div class="footer-note" style="margin-top: 24px;">
-      Documento generado automáticamente por JASRAPO Cloud Management System · {{reporte.fechaEmision}}
+      Documento generado automáticamente por {{institucion.siglas}} Cloud Management System · {{reporte.fechaEmision}}
     </div>
   </div>
 </body>

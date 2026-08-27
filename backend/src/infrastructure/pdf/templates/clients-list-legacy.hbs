@@ -45,9 +45,9 @@
       <table>
         <tr>
           <td>
-            <div class="company-name">JASRAPO</div>
-            <div class="company-sub">Junta de Agua Potable y Alcantarillado</div>
-            <div class="company-sub">Olón - Santa Elena</div>
+            <div class="company-name">{{institucion.siglas}}</div>
+            <div class="company-sub">{{institucion.nombreLegal}}</div>
+            <div class="company-sub">{{institucion.ubicacion.localidad}} - {{institucion.ubicacion.provincia}}</div>
           </td>
           <td class="right">
             <div class="report-title">{{reporte.titulo}}</div>
@@ -99,7 +99,7 @@
 
     <!-- Footer -->
     <div class="footer">
-      <p>Reporte generado por el sistema JASRAPO. Documento de uso interno.</p>
+      <p>Reporte generado por el sistema {{institucion.siglas}}. Documento de uso interno.</p>
     </div>
 
   </div>

@@ -289,37 +289,76 @@ export class PrismaMeterRepository implements MeterRepository {
     const { medidorId, contratoId, estado, estadoContrato, fechaInstalacion } =
       params;
 
-    const record = await this.prisma.$transaction(async (tx) => {
-      const updatedMeter = await tx.medidores.update({
-        where: { medidorId },
-        data: {
-          estado,
-          fechaInstalacion,
-        },
-      });
+    const record = await this.prisma.$transaction(
+      async (tx) => {
+        await tx.$queryRaw`SELECT contrato_id FROM contratos WHERE contrato_id = ${contratoId} FOR UPDATE`;
 
-      const openHistorial = await tx.historialMedidores.findFirst({
-        where: { contratoId, fechaHasta: null },
-      });
+        const contrato = await tx.contratos.findUnique({
+          where: { contratoId },
+        });
 
-      if (!openHistorial) {
-        this.logger.warn(
-          `Install: no open historialMedidores row for contratoId=${contratoId}; skipping fechaHasta close`,
-        );
-      } else {
+        if (!contrato || contrato.deletedAt) {
+          throw new EntityNotFoundException('Contrato', contratoId);
+        }
+
+        if (contrato.estado !== ('PENDIENTE_INSTALACION' as EstadoContrato)) {
+          throw new InvalidDomainOperationException(
+            `El contrato debe estar en estado PENDIENTE_INSTALACION para instalar el medidor, estado actual: ${contrato.estado}`,
+          );
+        }
+
+        const meter = await tx.medidores.findUnique({
+          where: { medidorId },
+        });
+
+        if (!meter || meter.deletedAt) {
+          throw new EntityNotFoundException('Medidor', medidorId);
+        }
+
+        if (meter.estado !== ('PENDIENTE' as EstadoMedidor)) {
+          throw new InvalidDomainOperationException(
+            `Meter must be in PENDIENTE state to be installed, current state: ${meter.estado}`,
+          );
+        }
+
+        const openHistorial = await tx.historialMedidores.findFirst({
+          where: { contratoId, fechaHasta: null, deletedAt: null },
+        });
+
+        if (!openHistorial) {
+          throw new InvalidDomainOperationException(
+            `El contrato #${contratoId} no tiene un historial de medidor activo vinculado`,
+          );
+        }
+
+        if (openHistorial.medidorId !== medidorId) {
+          throw new InvalidDomainOperationException(
+            `Conflicto de concurrencia: el contrato #${contratoId} está vinculado al medidor #${openHistorial.medidorId}, no al #${medidorId}`,
+          );
+        }
+
+        const updatedMeter = await tx.medidores.update({
+          where: { medidorId },
+          data: {
+            estado,
+            fechaInstalacion,
+          },
+        });
+
         await tx.historialMedidores.update({
           where: { historialId: openHistorial.historialId },
-          data: { fechaHasta: fechaInstalacion },
+          data: { fechaDesde: fechaInstalacion },
         });
-      }
 
-      await tx.contratos.update({
-        where: { contratoId },
-        data: { estado: estadoContrato },
-      });
+        await tx.contratos.update({
+          where: { contratoId },
+          data: { estado: estadoContrato },
+        });
 
-      return updatedMeter;
-    });
+        return updatedMeter;
+      },
+      { timeout: 15000, maxWait: 10000 },
+    );
 
     return MeterMapper.toDomain(record)!;
   }
@@ -420,7 +459,13 @@ export class PrismaMeterRepository implements MeterRepository {
             const contrato = await tx.contratos.findUnique({
               where: { contratoId },
               include: {
-                categoriaTarifa: true,
+                categoriaTarifa: {
+                  include: {
+                    rubros: {
+                      where: { activo: true, deletedAt: null },
+                    },
+                  },
+                },
                 historialMedidores: {
                   where: { fechaHasta: null, deletedAt: null },
                   include: { medidor: true },
@@ -691,10 +736,26 @@ export class PrismaMeterRepository implements MeterRepository {
               ? {
                   categoriaTarifaId: contrato.categoriaTarifa.categoriaTarifaId,
                   nombre: contrato.categoriaTarifa.nombre,
+                  descripcion: contrato.categoriaTarifa.descripcion ?? null,
+                  consumoMinimoMensual:
+                    contrato.categoriaTarifa.consumoMinimoMensual ?? null,
                   fechaVigenciaDesde:
-                    contrato.categoriaTarifa.fechaVigenciaDesde?.toISOString(),
+                    contrato.categoriaTarifa.fechaVigenciaDesde?.toISOString() ??
+                    null,
                   fechaVigenciaHasta:
-                    contrato.categoriaTarifa.fechaVigenciaHasta?.toISOString(),
+                    contrato.categoriaTarifa.fechaVigenciaHasta?.toISOString() ??
+                    null,
+                  rubros: (contrato.categoriaTarifa.rubros || []).map((r) => ({
+                    rubroId: r.rubroId,
+                    codigoSri: r.codigoSri ?? null,
+                    nombre: r.nombre,
+                    descripcion: r.descripcion,
+                    precioUnitario: r.precioUnitario.toString(),
+                    tipoRubro: r.tipoRubro,
+                    codigoSistemaRubro: r.codigoSistemaRubro ?? null,
+                    esAutomatico: r.esAutomatico,
+                    tarifaImpuestoId: r.tarifaImpuestoId,
+                  })),
                 }
               : null;
 
@@ -759,7 +820,11 @@ export class PrismaMeterRepository implements MeterRepository {
 
             return this.toReplaceMeterResult(reemplazoRecord);
           },
-          { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+          {
+            isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+            timeout: 15000,
+            maxWait: 10000,
+          },
         );
       } catch (error) {
         const retryable =

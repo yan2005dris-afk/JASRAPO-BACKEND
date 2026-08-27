@@ -18,6 +18,7 @@ describe('UpdateReadingUseCase', () => {
     create: jest.fn(),
     update: jest.fn(),
     updateWithCas: jest.fn(),
+    isReadingLinkedToReplacement: jest.fn().mockResolvedValue(false),
   };
 
   const mockReading = {
@@ -132,6 +133,15 @@ describe('UpdateReadingUseCase', () => {
         { lecturaActual: 200 },
         EstadoLectura.POR_REVISION,
       ),
+    ).rejects.toThrow(InvalidDomainOperationException);
+  });
+
+  it('should throw InvalidDomainOperationException when reading is linked to a replacement', async () => {
+    mockReadingRepository.findUnique.mockResolvedValue(mockReading as any);
+    mockReadingRepository.isReadingLinkedToReplacement.mockResolvedValue(true);
+
+    await expect(
+      useCase.execute(BigInt(1), { lecturaActual: 200 }),
     ).rejects.toThrow(InvalidDomainOperationException);
   });
 });

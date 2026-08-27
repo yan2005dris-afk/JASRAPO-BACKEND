@@ -1,5 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { resolveClientName } from 'src/infrastructure/pdf/utils/pdf-format.utils';
+import { InstitutionalProfileResolver } from 'src/institutional-profile/application/institutional-profile.resolver';
+import type { OfficialDocument } from 'src/institutional-profile/domain/institutional-profile.types';
+import { attachInstitutionalProfile } from '../models/institutional-report';
 import type { ProjectedReport } from '../models/report-projection';
 import type { ReportRequestContext } from '../models/report-request-context';
 import { ConnectionHistoryReportQueryPort } from '../ports/report-query.ports';
@@ -62,11 +65,23 @@ export function projectConnectionHistoryReport(
 
 @Injectable()
 export class ConnectionHistoryReportDefinition {
-  constructor(private readonly queryPort: ConnectionHistoryReportQueryPort) {}
+  constructor(
+    private readonly queryPort: ConnectionHistoryReportQueryPort,
+    private readonly institutionalProfiles: InstitutionalProfileResolver,
+  ) {}
 
   async generate(
     context: ReportRequestContext<ConnectionHistoryReportFilters>,
-  ): Promise<ProjectedReport<ConnectionHistoryReportDocument>> {
-    return projectConnectionHistoryReport(await this.queryPort.query(context));
+  ): Promise<
+    ProjectedReport<OfficialDocument<ConnectionHistoryReportDocument>>
+  > {
+    const [readModel, institutional] = await Promise.all([
+      this.queryPort.query(context),
+      this.institutionalProfiles.resolve(new Date()),
+    ]);
+    return attachInstitutionalProfile(
+      projectConnectionHistoryReport(readModel),
+      institutional,
+    );
   }
 }

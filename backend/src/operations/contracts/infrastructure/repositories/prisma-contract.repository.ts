@@ -232,49 +232,6 @@ export class PrismaContractRepository implements ContractRepository {
     });
   }
 
-  async replaceMeterInContract(
-    contractId: bigint,
-    newMeterId: bigint,
-    lecturaInicial: number,
-    contractFields?: Partial<CreateContractData>,
-  ): Promise<ContractEntity> {
-    return this.prisma.$transaction(async (tx) => {
-      const medidor = await tx.medidores.findUnique({
-        where: { medidorId: newMeterId },
-      });
-      if (!medidor) {
-        throw new EntityNotFoundException('Medidor', newMeterId);
-      }
-
-      await tx.historialMedidores.updateMany({
-        where: { contratoId: contractId, fechaHasta: null },
-        data: { fechaHasta: new Date() },
-      });
-
-      await tx.historialMedidores.create({
-        data: {
-          medidorId: newMeterId,
-          contratoId: contractId,
-          lecturaInicial: new Prisma.Decimal(lecturaInicial),
-          motivo: 'REEMPLAZO',
-        },
-      });
-
-      if (contractFields && Object.keys(contractFields).length > 0) {
-        await tx.contratos.update({
-          where: { contratoId: contractId },
-          data: contractFields,
-        });
-      }
-
-      const updatedRecord = await tx.contratos.findUnique({
-        where: { contratoId: contractId },
-        include: this.defaultInclude,
-      });
-      return ContractMapper.toDomain(updatedRecord)!;
-    });
-  }
-
   async finalizeActiveMeterLink(contratoId: bigint): Promise<ContractEntity> {
     return this.prisma.$transaction(async (tx) => {
       const activeLink = await tx.historialMedidores.findFirst({

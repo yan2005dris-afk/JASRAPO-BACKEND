@@ -6,6 +6,7 @@ import { NotFoundException } from '@nestjs/common';
 import { GeneratePdfUseCase } from './generate-pdf.use-case';
 import { PdfService } from '../pdf.service';
 import type { PdfDocumentType } from '../document-type.interface';
+import { InstitutionalProfileResolver } from 'src/institutional-profile/application/institutional-profile.resolver';
 
 const mockDocumentType: PdfDocumentType = {
   type: 'test-doc',
@@ -23,12 +24,25 @@ describe('GeneratePdfUseCase', () => {
     render: jest.fn(),
     registerDocumentType: jest.fn(),
   };
+  const institutional = {
+    institucion: { version: 'test-v1' },
+    metadatosDocumento: {
+      perfilInstitucional: { version: 'test-v1' },
+    },
+  };
+  const mockInstitutionalProfiles = {
+    resolve: jest.fn().mockResolvedValue(institutional),
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         GeneratePdfUseCase,
         { provide: PdfService, useValue: mockPdfService },
+        {
+          provide: InstitutionalProfileResolver,
+          useValue: mockInstitutionalProfiles,
+        },
       ],
     }).compile();
 
@@ -73,7 +87,7 @@ describe('GeneratePdfUseCase', () => {
 
       expect(mockPdfService.render).toHaveBeenCalledWith(
         'test-template',
-        adapted,
+        { ...adapted, ...institutional },
         { documentType: 'test-doc' },
       );
     });
@@ -94,6 +108,45 @@ describe('GeneratePdfUseCase', () => {
 
       await expect(useCase.execute('missing', {})).rejects.toThrow(
         "PDF type 'missing' not registered. Available: type-a, type-b",
+      );
+    });
+
+    it('should fail explicitly when document requires institutional profile and resolution fails', async () => {
+      const raw = { field: 'value' };
+      mockPdfService.getDocumentType.mockReturnValue(mockDocumentType);
+      mockInstitutionalProfiles.resolve.mockRejectedValueOnce(
+        new NotFoundException(
+          'No active emisor or institutional profile found',
+        ),
+      );
+
+      await expect(useCase.execute('test-doc', raw)).rejects.toThrow(
+        NotFoundException,
+      );
+      expect(mockPdfService.render).not.toHaveBeenCalled();
+    });
+
+    it('should skip institutional profile resolution when document type specifies requiresInstitutionalProfile: false', async () => {
+      const docTypeWithoutProfile: PdfDocumentType = {
+        type: 'sri-doc',
+        name: 'SRI Document',
+        template: 'sri-template',
+        requiresInstitutionalProfile: false,
+        adaptData: jest.fn((raw) => ({ adaptedSri: raw })),
+      };
+      const raw = { emisor: { ruc: '123' } };
+      const pdfBuffer = Buffer.from('sri-pdf');
+      mockPdfService.getDocumentType.mockReturnValue(docTypeWithoutProfile);
+      mockPdfService.render.mockResolvedValue(pdfBuffer);
+
+      const result = await useCase.execute('sri-doc', raw);
+
+      expect(result).toBe(pdfBuffer);
+      expect(mockInstitutionalProfiles.resolve).not.toHaveBeenCalled();
+      expect(mockPdfService.render).toHaveBeenCalledWith(
+        'sri-template',
+        { adaptedSri: raw },
+        { documentType: 'sri-doc' },
       );
     });
   });

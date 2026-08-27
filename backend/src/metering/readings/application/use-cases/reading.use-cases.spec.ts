@@ -39,6 +39,7 @@ describe('Readings Use Cases', () => {
     findReadingSnapshot: jest.fn(),
     findLastApprovedActualByMeter: jest.fn().mockResolvedValue(100),
     findActiveInitialReadingByMeter: jest.fn(),
+    isReadingLinkedToReplacement: jest.fn().mockResolvedValue(false),
   };
 
   beforeEach(async () => {

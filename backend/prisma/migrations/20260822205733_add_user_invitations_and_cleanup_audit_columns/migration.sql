@@ -109,14 +109,24 @@ ALTER TABLE "usuarios_invitaciones" ADD CONSTRAINT "usuarios_invitaciones_invita
 -- AddForeignKey
 ALTER TABLE "reemplazos_medidor" ADD CONSTRAINT "reemplazos_medidor_autorizado_por_usuario_id_fkey" FOREIGN KEY ("autorizado_por_usuario_id") REFERENCES "usuarios"("usuario_id") ON DELETE SET NULL ON UPDATE CASCADE;
 
--- RenameIndex
-ALTER INDEX "uk_prefacturas_contrato_periodo_mes" RENAME TO "prefacturas_contrato_id_periodo_id_mes_key";
+-- RenameIndex (Conditional & Safe)
+DO $$
+BEGIN
+  -- uk_prefacturas_contrato_periodo_mes: only rename if the legacy index exists
+  IF EXISTS (SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE c.relname = 'uk_prefacturas_contrato_periodo_mes' AND n.nspname = 'public') THEN
+    ALTER INDEX "uk_prefacturas_contrato_periodo_mes" RENAME TO "prefacturas_contrato_id_periodo_id_mes_key";
+  END IF;
 
--- RenameIndex
-ALTER INDEX "reemplazos_medidor_aprobacion_ciclo_idx" RENAME TO "reemplazos_medidor_estado_aprobacion_periodo_origen_id_mes__idx";
+  -- reemplazos_medidor renames
+  IF EXISTS (SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE c.relname = 'reemplazos_medidor_aprobacion_ciclo_idx' AND n.nspname = 'public') THEN
+    ALTER INDEX "reemplazos_medidor_aprobacion_ciclo_idx" RENAME TO "reemplazos_medidor_estado_aprobacion_periodo_origen_id_mes__idx";
+  END IF;
 
--- RenameIndex
-ALTER INDEX "reemplazos_medidor_autorizador_idx" RENAME TO "reemplazos_medidor_autorizado_por_usuario_id_idx";
+  IF EXISTS (SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE c.relname = 'reemplazos_medidor_autorizador_idx' AND n.nspname = 'public') THEN
+    ALTER INDEX "reemplazos_medidor_autorizador_idx" RENAME TO "reemplazos_medidor_autorizado_por_usuario_id_idx";
+  END IF;
 
--- RenameIndex
-ALTER INDEX "reemplazos_medidor_solicitante_idempotencia_key" RENAME TO "reemplazos_medidor_solicitado_por_usuario_id_clave_idempote_key";
+  IF EXISTS (SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE c.relname = 'reemplazos_medidor_solicitante_idempotencia_key' AND n.nspname = 'public') THEN
+    ALTER INDEX "reemplazos_medidor_solicitante_idempotencia_key" RENAME TO "reemplazos_medidor_solicitado_por_usuario_id_clave_idempote_key";
+  END IF;
+END $$;

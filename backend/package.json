@@ -14,7 +14,7 @@
   "license": "UNLICENSED",
   "scripts": {
     "prisma:generate": "prisma generate && pnpm run enums:generate",
-    "enums:generate": "tsx scripts/generate-enums.ts",
+    "enums:generate": "tsx scripts/generate-enums.ts && prettier --write src/shared/enums/index.ts",
     "prestart": "pnpm run prisma:generate",
     "prestart:dev": "pnpm run prisma:generate",
     "prestart:debug": "pnpm run prisma:generate",
@@ -147,6 +147,7 @@
     "eslint-plugin-jest": "^29.15.2",
     "eslint-plugin-prettier": "^5.2.2",
     "eslint-plugin-unicorn": "^64.0.0",
+    "express": "^5.2.1",
     "glob": "^13.0.6",
     "globals": "^16.0.0",
     "jest": "^30.0.0",

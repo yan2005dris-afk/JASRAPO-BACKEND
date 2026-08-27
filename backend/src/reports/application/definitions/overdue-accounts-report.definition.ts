@@ -1,4 +1,7 @@
 import { Injectable } from '@nestjs/common';
+import { InstitutionalProfileResolver } from 'src/institutional-profile/application/institutional-profile.resolver';
+import type { OfficialDocument } from 'src/institutional-profile/domain/institutional-profile.types';
+import { attachInstitutionalProfile } from '../models/institutional-report';
 import type { ProjectedReport } from '../models/report-projection';
 import type { ReportRequestContext } from '../models/report-request-context';
 import { OverdueAccountsReportQueryPort } from '../ports/report-query.ports';
@@ -72,11 +75,21 @@ export function projectOverdueAccountsReport(
 
 @Injectable()
 export class OverdueAccountsReportDefinition {
-  constructor(private readonly queryPort: OverdueAccountsReportQueryPort) {}
+  constructor(
+    private readonly queryPort: OverdueAccountsReportQueryPort,
+    private readonly institutionalProfiles: InstitutionalProfileResolver,
+  ) {}
 
   async generate(
     context: ReportRequestContext<OverdueAccountsReportFilters>,
-  ): Promise<ProjectedReport<OverdueAccountsReportDocument>> {
-    return projectOverdueAccountsReport(await this.queryPort.query(context));
+  ): Promise<ProjectedReport<OfficialDocument<OverdueAccountsReportDocument>>> {
+    const [readModel, institutional] = await Promise.all([
+      this.queryPort.query(context),
+      this.institutionalProfiles.resolve(new Date()),
+    ]);
+    return attachInstitutionalProfile(
+      projectOverdueAccountsReport(readModel),
+      institutional,
+    );
   }
 }

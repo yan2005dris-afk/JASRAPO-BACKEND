@@ -28,6 +28,7 @@ import { seedAgreements } from './seeds/agreements.seed';
 import { seedAgreementsPrefacturas } from './seeds/agreements-prefacturas.seed';
 import { seedPagos } from './seeds/pagos.seed';
 import { syncSequences } from './seeds/sync-sequences';
+import { seedInstitutionalProfile } from './seeds/institutional-profile.seed';
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
@@ -78,6 +79,14 @@ async function main() {
   await seedUSers(prisma, roles);
   console.log('✅ Usuarios creados correctamente.');
 
+  // SRI Catalogs (legacy)
+  console.log('🏛️ Cargando catálogos SRI (legacy)...');
+  await seedSriCatalogs(prisma);
+  console.log('✅ Catálogos SRI (legacy) cargados.');
+
+  await seedInstitutionalProfile(prisma);
+  console.log('✅ Perfil institucional y activos de marca creados.');
+
   // Menus
   const menus = await seedMenus(prisma);
   console.log('✅ Menus creados correctamente.');
@@ -85,11 +94,6 @@ async function main() {
   // Menus-Permisos
   await seedMenuPermissions(prisma, menus, permissions);
   console.log('✅ Permisos asignados a Menus correctamente.');
-
-  // SRI Catalogs (legacy)
-  console.log('🏛️ Cargando catálogos SRI (legacy)...');
-  await seedSriCatalogs(prisma);
-  console.log('✅ Catálogos SRI (legacy) cargados.');
 
   // SRI Catalogs (init.sql — modelos nuevos priorizando estructura de referencia)
   console.log('📋 Cargando catálogos SRI desde init.sql...');

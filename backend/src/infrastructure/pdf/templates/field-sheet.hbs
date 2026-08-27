@@ -86,13 +86,11 @@
     <div class="header-table">
       <div class="header-left">
         <div class="logo-container">
-          {{#if logoUrl}}
-            <img src="{{logoUrl}}" alt="JASRAPO Logo">
-          {{/if}}
+          <img src="{{institucion.branding.logo.url}}" alt="Logo institucional">
         </div>
         <div>
-          <div class="brand-title">JASRAPO</div>
-          <div class="brand-subtitle">Junta Administradora del Sistema Regional de Agua Potable "Olón"</div>
+          <div class="brand-title">{{institucion.siglas}}</div>
+          <div class="brand-subtitle">{{institucion.nombreLegal}}</div>
           <div class="report-title-main" style="margin-top: 6px;">HOJA DE CAMPO · {{reporte.tipoRutaLabel}}</div>
           <div class="report-meta-text">Ruta: <strong>#{{reporte.rutaId}} - {{reporte.rutaNombre}}</strong></div>
         </div>
@@ -214,12 +212,12 @@
       </div>
       <div class="signature-line">
         Supervisor / Entrega de Hoja<br>
-        <span style="font-size: 7.5px; font-weight: normal; color: #64748b;">JASRAPO Administración</span>
+        <span style="font-size: 7.5px; font-weight: normal; color: #64748b;">{{institucion.siglas}} Administración</span>
       </div>
     </div>
 
     <div class="footer-note" style="margin-top: 30px;">
-      Documento oficial de campo generado por JASRAPO Cloud Management System · {{reporte.fechaEmision}}
+      Documento oficial de campo generado por {{institucion.siglas}} Cloud Management System · {{reporte.fechaEmision}}
     </div>
   </div>
 </body>

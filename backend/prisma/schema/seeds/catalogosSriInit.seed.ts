@@ -431,6 +431,11 @@ export async function seedCatalogosSriInit(prisma: PrismaClient) {
       valor: 'modern',
       descripcion: 'Estilo global para todos los reportes PDF (legacy|modern)',
     },
+    {
+      clave: 'FRONTEND_URL',
+      valor: 'http://localhost:4200',
+      descripcion: 'URL base del frontend para enlaces en correos y notificaciones',
+    },
   ];
 
   for (const s of sistemaConfig) {
