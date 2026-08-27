@@ -1,4 +1,4 @@
-import { PrismaClient } from "src/generated/prisma/client";
+import { PrismaClient } from 'src/generated/prisma/client';
 
 export async function seedRoutes(prisma: PrismaClient) {
   const periodo = await prisma.periodos.findFirst({
@@ -25,7 +25,11 @@ export async function seedRoutes(prisma: PrismaClient) {
   // Group active contracts by comunidad+sector to derive TOMA_LECTURA zones
   const contratos = await prisma.contratos.findMany({
     where: { estado: 'ACTIVO', deletedAt: null },
-    orderBy: [{ comunidadId: 'asc' }, { sectorId: 'asc' }, { contratoId: 'asc' }],
+    orderBy: [
+      { comunidadId: 'asc' },
+      { sectorId: 'asc' },
+      { contratoId: 'asc' },
+    ],
     select: {
       comunidadId: true,
       sectorId: true,
@@ -38,11 +42,14 @@ export async function seedRoutes(prisma: PrismaClient) {
     },
   });
 
-  const zonesMap = new Map<string, {
-    comunidadId: number;
-    sectorId: number | null;
-    medidorIds: bigint[];
-  }>();
+  const zonesMap = new Map<
+    string,
+    {
+      comunidadId: number;
+      sectorId: number | null;
+      medidorIds: bigint[];
+    }
+  >();
 
   for (const contrato of contratos) {
     const key = `${contrato.comunidadId}:${contrato.sectorId ?? 'null'}`;
@@ -207,7 +214,8 @@ export async function seedRoutes(prisma: PrismaClient) {
     for (let i = 0; i < workRouteDefs.length; i++) {
       const def = workRouteDefs[i];
       const targetContrato = allActiveContratos[def.contratoIdx];
-      const assignedMedidorId = targetContrato.historialMedidores[0]?.medidorId ?? null;
+      const assignedMedidorId =
+        targetContrato.historialMedidores[0]?.medidorId ?? null;
 
       const ruta = await prisma.rutas.create({
         data: {
@@ -216,6 +224,11 @@ export async function seedRoutes(prisma: PrismaClient) {
           operarioId: operadores[i % operadores.length].usuarioId,
           comunidadId: targetContrato.comunidadId,
           sectorId: targetContrato.sectorId,
+          // FIX: asignar al mismo período activo que las rutas TOMA_LECTURA.
+          // Sin esto, las rutas de INSTALACION/RECONEXION/INSPECCION quedan
+          // huérfanas (periodo_id NULL) y el backend las excluye del GET /operator/routes
+          // porque filtra por WHERE periodoId = periodoActivo.
+          periodoId: periodo.periodoId,
           estado: def.estado,
           fechaPlanificada: new Date(Date.UTC(2026, 7, 20, 9, 0, 0)),
         },
@@ -227,7 +240,12 @@ export async function seedRoutes(prisma: PrismaClient) {
           contratoId: targetContrato.contratoId,
           medidorId: assignedMedidorId,
           tipoActividad: def.tipo,
-          estado: def.estado === 'COMPLETADA' ? 'COMPLETADA' : def.estado === 'EN_PROGRESO' ? 'EN_PROGRESO' : 'PENDIENTE',
+          estado:
+            def.estado === 'COMPLETADA'
+              ? 'COMPLETADA'
+              : def.estado === 'EN_PROGRESO'
+                ? 'EN_PROGRESO'
+                : 'PENDIENTE',
           ordenVisita: 1,
           resultadoObservacion: def.obs,
           completadoEn: def.estado === 'COMPLETADA' ? new Date() : null,
@@ -237,6 +255,8 @@ export async function seedRoutes(prisma: PrismaClient) {
     }
   }
 
-  console.log(`✅ ${rutasCount} routes created, ${lecturasCount} readings initialized to 0.`);
+  console.log(
+    `✅ ${rutasCount} routes created, ${lecturasCount} readings initialized to 0.`,
+  );
   return { rutasCreadas: rutasCount, lecturasInicializadas: lecturasCount };
 }
