@@ -104,4 +104,10 @@ export abstract class ReadingRepository {
   ): Promise<LecturaEntity | null>;
 
   abstract isReadingLinkedToReplacement(lecturaId: bigint): Promise<boolean>;
+
+  /**
+   * Estado de la ruta a la que pertenece la lectura (vía ordenes_trabajo),
+   * o null si la lectura no está asociada a ninguna ruta.
+   */
+  abstract findRouteStateByReadingId(lecturaId: bigint): Promise<string | null>;
 }

@@ -40,6 +40,7 @@ describe('Readings Use Cases', () => {
     findLastApprovedActualByMeter: jest.fn().mockResolvedValue(100),
     findActiveInitialReadingByMeter: jest.fn(),
     isReadingLinkedToReplacement: jest.fn().mockResolvedValue(false),
+    findRouteStateByReadingId: jest.fn().mockResolvedValue(null),
   };
 
   beforeEach(async () => {

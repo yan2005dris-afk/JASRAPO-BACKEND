@@ -105,4 +105,6 @@ export abstract class RouteRepository {
     rutaId: bigint,
     pagination: PaginateOptions,
   ): Promise<PaginatedResult<ReadingForRouteEntity, LecturaKpis>>;
+
+  abstract getReadingKpisByRutaId(rutaId: bigint): Promise<LecturaKpis>;
 }

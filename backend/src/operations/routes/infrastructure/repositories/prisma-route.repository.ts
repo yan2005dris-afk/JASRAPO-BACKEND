@@ -478,4 +478,41 @@ export class PrismaRouteRepository implements RouteRepository {
       },
     };
   }
+
+  async getReadingKpisByRutaId(rutaId: bigint): Promise<LecturaKpis> {
+    const where: Prisma.LecturasWhereInput = {
+      deletedAt: null,
+      ordenesTrabajo: {
+        some: {
+          rutaId,
+          tipoActividad: 'LECTURA',
+          deletedAt: null,
+        },
+      },
+    };
+
+    const estadoGroups = await this.prisma.lecturas.groupBy({
+      by: ['estado'],
+      where,
+      _count: { _all: true },
+    });
+
+    const countByEstado = new Map<string, number>(
+      estadoGroups.map((g) => [g.estado, g._count._all]),
+    );
+
+    const total = estadoGroups.reduce((acc, g) => acc + g._count._all, 0);
+
+    return {
+      total,
+      aprobadas: countByEstado.get('APROBADA') ?? 0,
+      pendientes:
+        (countByEstado.get('PENDIENTE') ?? 0) +
+        (countByEstado.get('POR_REVISION') ?? 0) +
+        (countByEstado.get('ESTIMADA') ?? 0) +
+        (countByEstado.get('PLANILLADA') ?? 0),
+      conNovedad: countByEstado.get('CON_NOVEDAD') ?? 0,
+      rechazadas: countByEstado.get('RECHAZADA_VERIFICACION') ?? 0,
+    };
+  }
 }

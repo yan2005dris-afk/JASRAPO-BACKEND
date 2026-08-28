@@ -19,6 +19,7 @@ describe('UpdateReadingUseCase', () => {
     update: jest.fn(),
     updateWithCas: jest.fn(),
     isReadingLinkedToReplacement: jest.fn().mockResolvedValue(false),
+    findRouteStateByReadingId: jest.fn().mockResolvedValue(null),
   };
 
   const mockReading = {
@@ -143,5 +144,30 @@ describe('UpdateReadingUseCase', () => {
     await expect(
       useCase.execute(BigInt(1), { lecturaActual: 200 }),
     ).rejects.toThrow(InvalidDomainOperationException);
+  });
+
+  it('should throw when the reading route is not EN_PROGRESO', async () => {
+    mockReadingRepository.findUnique.mockResolvedValue(mockReading as any);
+    mockReadingRepository.isReadingLinkedToReplacement.mockResolvedValue(false);
+    mockReadingRepository.findRouteStateByReadingId.mockResolvedValue(
+      'PENDIENTE',
+    );
+
+    await expect(
+      useCase.execute(BigInt(1), { lecturaActual: 200 }),
+    ).rejects.toThrow(InvalidDomainOperationException);
+  });
+
+  it('should allow the update when the reading route is EN_PROGRESO', async () => {
+    mockReadingRepository.findUnique.mockResolvedValue(mockReading as any);
+    mockReadingRepository.isReadingLinkedToReplacement.mockResolvedValue(false);
+    mockReadingRepository.findRouteStateByReadingId.mockResolvedValue(
+      'EN_PROGRESO',
+    );
+    mockReadingRepository.update.mockResolvedValue(mockUpdatedReading as any);
+
+    const result = await useCase.execute(BigInt(1), { lecturaActual: 200 });
+
+    expect(result).toBe(mockUpdatedReading);
   });
 });

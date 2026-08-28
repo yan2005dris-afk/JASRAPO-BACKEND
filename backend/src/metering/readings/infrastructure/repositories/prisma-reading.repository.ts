@@ -590,4 +590,16 @@ export class PrismaReadingRepository implements ReadingRepository {
     });
     return count > 0;
   }
+
+  async findRouteStateByReadingId(lecturaId: bigint): Promise<string | null> {
+    const orden = await this.prisma.ordenesTrabajo.findFirst({
+      where: {
+        lecturaId,
+        tipoActividad: 'LECTURA',
+        deletedAt: null,
+      },
+      select: { ruta: { select: { estado: true } } },
+    });
+    return orden?.ruta?.estado ?? null;
+  }
 }
