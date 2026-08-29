@@ -64,6 +64,8 @@ describe('OperatorRouteResponseDto', () => {
     expect(dto.rutaId).toBe('1');
     expect(dto.ordenesTrabajo[0].ordenTrabajoId).toBe('9');
     expect(dto.ordenesTrabajo[0].rutaId).toBe('1');
+    expect(dto.ordenesTrabajo[0].contratoId).toBe('2');
+    expect(dto.ordenesTrabajo[0].medidorId).toBeNull();
     expect(dto.ordenesTrabajo[0].lecturaId).toBe('3');
     expect(dto.paradas[0].ordenTrabajoId).toBe('9');
     expect(() => JSON.stringify(dto)).not.toThrow();
