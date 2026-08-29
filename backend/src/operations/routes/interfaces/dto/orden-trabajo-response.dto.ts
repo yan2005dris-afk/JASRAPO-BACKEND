@@ -31,6 +31,16 @@ export class OrderWorkResponseDto {
   @ApiProperty({ example: '1', description: 'ID de la ruta' })
   rutaId: string;
 
+  @ApiProperty({ example: '9', description: 'ID del contrato' })
+  contratoId: string;
+
+  @ApiPropertyOptional({
+    example: '42',
+    nullable: true,
+    description: 'ID del medidor (null si no aplica)',
+  })
+  medidorId?: string | null;
+
   @ApiProperty({ example: 'INSTALACION', description: 'Tipo de actividad' })
   tipoActividad: string;
 
@@ -88,6 +98,8 @@ export class OrderWorkResponseDto {
     const dto = new OrderWorkResponseDto();
     dto.ordenTrabajoId = entity.ordenTrabajoId.toString();
     dto.rutaId = entity.rutaId.toString();
+    dto.contratoId = entity.contratoId.toString();
+    dto.medidorId = entity.medidorId ? entity.medidorId.toString() : null;
     dto.tipoActividad = entity.tipoActividad;
     dto.estado = entity.estado;
     dto.ordenVisita = entity.ordenVisita;

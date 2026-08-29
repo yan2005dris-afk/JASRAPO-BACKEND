@@ -44,6 +44,16 @@ export class OperatorWorkOrderDto {
   @ApiProperty({ description: 'ID de la ruta', example: '1' })
   rutaId: string;
 
+  @ApiProperty({ description: 'ID del contrato', example: '9' })
+  contratoId: string;
+
+  @ApiPropertyOptional({
+    description: 'ID del medidor',
+    example: '42',
+    nullable: true,
+  })
+  medidorId?: string | null;
+
   @ApiProperty({ description: 'Tipo de actividad', example: 'LECTURA' })
   tipoActividad: string;
 
@@ -191,6 +201,8 @@ export class OperatorRouteResponseDto {
         return {
           ordenTrabajoId: order.ordenTrabajoId.toString(),
           rutaId: order.rutaId.toString(),
+          contratoId: order.contratoId.toString(),
+          medidorId: order.medidorId ? order.medidorId.toString() : null,
           tipoActividad: order.tipoActividad,
           estado: order.estado,
           ordenVisita: order.ordenVisita,

@@ -1,6 +1,7 @@
 import {
   IsNotEmpty,
-  IsNumber,
+  IsInt,
+  Min,
   IsOptional,
   IsEnum,
   IsDateString,
@@ -37,8 +38,9 @@ export class CreateRouteDto {
     example: 5,
   })
   @IsOptional()
-  @IsNumber()
   @Type(() => Number)
+  @IsInt()
+  @Min(1)
   operarioId?: number;
 
   @ApiProperty({
@@ -55,8 +57,9 @@ export class CreateRouteDto {
     example: 1,
   })
   @IsNotEmpty()
-  @IsNumber()
   @Type(() => Number)
+  @IsInt()
+  @Min(1)
   comunidadId!: number;
 
   @ApiProperty({
@@ -65,8 +68,9 @@ export class CreateRouteDto {
     example: 2,
   })
   @IsOptional()
-  @IsNumber()
   @Type(() => Number)
+  @IsInt()
+  @Min(1)
   sectorId?: number;
 
   @ApiProperty({
@@ -74,8 +78,9 @@ export class CreateRouteDto {
     example: 1,
   })
   @IsNotEmpty()
-  @IsNumber()
   @Type(() => Number)
+  @IsInt()
+  @Min(1)
   periodoId!: number;
 
   @ApiProperty({

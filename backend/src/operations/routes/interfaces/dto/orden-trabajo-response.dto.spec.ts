@@ -28,6 +28,8 @@ describe('OrderWorkResponseDto', () => {
 
     expect(dto.ordenTrabajoId).toBe('42');
     expect(dto.rutaId).toBe('8');
+    expect(dto.contratoId).toBe('9');
+    expect(dto.medidorId).toBeNull();
     expect(dto.lecturaId).toBe('13');
     expect(() => JSON.stringify(dto)).not.toThrow();
   });

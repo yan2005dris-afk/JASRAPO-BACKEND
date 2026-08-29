@@ -2,7 +2,8 @@ import {
   IsNotEmpty,
   IsOptional,
   IsIn,
-  IsNumber,
+  IsInt,
+  Min,
   IsString,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
@@ -23,8 +24,9 @@ export class FilterReadingsDto extends PaginationDto {
     example: 1,
   })
   @IsNotEmpty()
-  @IsNumber()
   @Type(() => Number)
+  @IsInt()
+  @Min(1)
   comunidadId!: number;
 
   @ApiProperty({
@@ -33,8 +35,9 @@ export class FilterReadingsDto extends PaginationDto {
     example: 2,
   })
   @IsOptional()
-  @IsNumber()
   @Type(() => Number)
+  @IsInt()
+  @Min(1)
   sectorId?: number;
 
   @ApiProperty({
@@ -43,8 +46,9 @@ export class FilterReadingsDto extends PaginationDto {
     example: 3,
   })
   @IsOptional()
-  @IsNumber()
   @Type(() => Number)
+  @IsInt()
+  @Min(1)
   periodoId?: number;
 
   @ApiProperty({

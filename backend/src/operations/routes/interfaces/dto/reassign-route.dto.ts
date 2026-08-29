@@ -1,4 +1,4 @@
-import { IsNumber, IsOptional } from 'class-validator';
+import { IsInt, Min, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 
@@ -11,7 +11,8 @@ export class ReassignRouteDto {
     nullable: true,
   })
   @IsOptional()
-  @IsNumber()
   @Type(() => Number)
+  @IsInt()
+  @Min(1)
   operarioId?: number;
 }
