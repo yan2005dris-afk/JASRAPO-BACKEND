@@ -11,6 +11,7 @@ import {
 
 describe('OperatorController work-order update', () => {
   const useCase = { execute: jest.fn() };
+  const routesUseCase = { execute: jest.fn() };
   const storage = { upload: jest.fn(), delete: jest.fn() };
   let controller: OperatorController;
   const entity = {
@@ -39,12 +40,20 @@ describe('OperatorController work-order update', () => {
       undefined as any,
       undefined as any,
       undefined as any,
-      undefined as any,
+      routesUseCase as any,
       undefined as any,
       undefined as any,
       storage as any,
     );
     useCase.execute.mockResolvedValue(entity);
+    routesUseCase.execute.mockResolvedValue([]);
+  });
+
+  it('forwards the operator identity and route filter', async () => {
+    await expect(
+      controller.getOperatorRoutes({ sub: '17' } as any, 'LECTURA' as any),
+    ).resolves.toEqual([]);
+    expect(routesUseCase.execute).toHaveBeenCalledWith(17, 'LECTURA');
   });
 
   it('passes the returned RustFS key and converts response IDs', async () => {

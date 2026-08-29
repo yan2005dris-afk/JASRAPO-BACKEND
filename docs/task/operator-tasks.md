@@ -7,9 +7,9 @@ Hoy el operador tiene dos sistemas de trabajo desconectados:
 | Sistema | Cómo se asignan | Endpoint |
 |---------|----------------|----------|
 | **Rutas** (lecturas) | Asignadas por período + comunidad/sector | `GET /operator/readings` |
-| **Tareas sueltas** (instalar, reportar daño, dar de baja) | Cualquier operador, sin restricción geográfica | `POST /operator/:id/install` etc. |
+| **Órdenes de trabajo** (instalación, reconexión, inspección) | Asignadas por ruta y operador | `GET/PATCH /operator/tasks` |
 
-Esto genera que el operador haga zigzag geográfico: lecturas en Sector A, instalación en Sector B, reconexión en Sector A de vuelta. No hay planificación de recorrido.
+La vista unificada de órdenes permite planificar el recorrido por zona y evita mezclar contratos fuera de la asignación del operador.
 
 ## Objetivo
 
@@ -134,7 +134,7 @@ Como **Rutas = Tareas**, no hay migración de datos. El cambio es evolutivo:
 
 - `GET /operator/readings` sigue funcionando — es una view filtrada de Rutas tipo TOMA_LECTURA con sus lecturas
 - `GET /operator/tasks` es la view unificada — devuelve TODAS las Rutas del operador
-- Los endpoints `install`/`report-defect`/`decommission` pasan a crear Rutas con tipo INSTALACION/INSPECCION y actualizan el medidor en la misma transacción
+- La instalación administrativa válida es `POST /meters/:id/install`; las órdenes de campo se actualizan mediante `PATCH /operator/tasks/:id`
 - El flujo de asignación geográfica se aplica al crear tareas nuevas (buscar operador con rutas en esa zona)
 
 ## Lo que NO cambia
@@ -143,7 +143,7 @@ Como **Rutas = Tareas**, no hay migración de datos. El cambio es evolutivo:
 - `Medidores` y su state machine no cambian
 - `Lecturas` y sus transiciones no cambian
 - `Rutas` como modelo NO se reemplaza — se **extiende**
-- Los endpoints legacy de readings siguen funcionando sin cambios
+- El histórico de endpoints legacy se conserva solo como referencia ADR; no debe usarse para integrar clientes nuevos
 
 ## Orden automático por coordenadas
 

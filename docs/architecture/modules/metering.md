@@ -28,11 +28,12 @@ El **Core** del sistema. Se encarga de todo lo relacionado con la medición del 
 
 | Método | Endpoint | Descripción |
 |--------|----------|-------------|
-| `POST` | `/readings` | Crear una nueva lectura |
 | `GET` | `/readings` | Listar todas las lecturas |
 | `GET` | `/readings/:id` | Obtener una lectura específica |
 | `PATCH` | `/readings/:id` | Actualizar una lectura |
 | `DELETE` | `/readings/:id` | Eliminar una lectura |
+
+La foto normal de una lectura de campo se almacena en `OrdenesTrabajo.evidenciaFotoUrl` como clave de objeto RustFS. `LecturaAnomalia.fotoUrl` se reserva para evidencia de anomalías.
 
 ### Query Parameters
 

@@ -579,9 +579,10 @@ GET          /meters/search           Búsqueda avanzada
 | `/medidores/get-one/:id` | `GET /meters/:id` |
 | `/medidores/update` | `PATCH /meters/:id` |
 | `/medidores/remove/:id` | `DELETE /meters/:id` |
-| `/lecturas/create` | `POST /readings` |
 | `/lecturas/get-all` | `GET /readings` |
 | `/lecturas/get-one/:id` | `GET /readings/:id` |
+
+> La fila histórica `/lecturas/create` se conserva fuera del contrato vigente: no existe un `POST /readings` standalone.
 
 ### Excepciones Válidas
 
