@@ -23,6 +23,16 @@ export interface CreateOrdenTrabajoData {
   ordenVisita?: number;
 }
 
+export interface UpdateOperatorWorkOrderData {
+  estado?: string;
+  resultadoObservacion?: string | null;
+  evidenciaFotoUrl?: string | null;
+  completadoEn?: Date | null;
+  estadoSellos?: string | null;
+  hayFugas?: boolean | null;
+  confirmacionRetiroSello?: boolean | null;
+}
+
 export interface FindOrdenesByRutaParams {
   filters: OrdenTrabajoFilters;
   pagination: PaginateOptions;

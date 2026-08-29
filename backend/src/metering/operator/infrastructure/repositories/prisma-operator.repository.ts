@@ -8,7 +8,10 @@ import {
   EstadoLectura,
   EstadoAnomalia,
 } from 'src/shared/enums';
-import { InvalidDomainOperationException } from 'src/shared/domain/exceptions/domain.exception';
+import {
+  EntityNotFoundException,
+  InvalidDomainOperationException,
+} from 'src/shared/domain/exceptions/domain.exception';
 import {
   OperatorRepository,
   type ActivePeriod,
@@ -74,6 +77,40 @@ export class PrismaOperatorRepository extends OperatorRepository {
     });
   }
 
+  async verifyMeterOwnership(
+    operarioId: number,
+    medidorId: bigint,
+  ): Promise<void> {
+    const activePeriod = await this.findActivePeriod();
+    if (!activePeriod) {
+      throw new EntityNotFoundException('Periodo', 'ABIERTO');
+    }
+
+    const route = await this.prisma.rutas.findFirst({
+      where: {
+        operarioId,
+        periodoId: activePeriod.periodoId,
+        estado: {
+          notIn: [EstadoRuta.CANCELADA, EstadoRuta.COMPLETADA],
+        },
+        deletedAt: null,
+        ordenesTrabajo: {
+          some: {
+            medidorId,
+            deletedAt: null,
+          },
+        },
+      },
+      select: { rutaId: true },
+    });
+
+    if (!route) {
+      throw new InvalidDomainOperationException(
+        'El medidor no pertenece a tu ruta asignada',
+      );
+    }
+  }
+
   async findActiveRoutes(
     operarioId: number,
     periodoId: number,
@@ -99,7 +136,7 @@ export class PrismaOperatorRepository extends OperatorRepository {
     periodoId: number,
     routes: RouteData[],
   ): Promise<ReadingWithContractDetail[]> {
-    const result = await this.prisma.lecturas.findMany({
+    const result: any = await this.prisma.lecturas.findMany({
       where: {
         periodoId,
         deletedAt: null,
@@ -120,7 +157,6 @@ export class PrismaOperatorRepository extends OperatorRepository {
         consumoCalculado: true,
         descripcionAnomalia: true,
         fechaValidacion: true,
-        fotoUrl: true,
         lecturaInicial: true,
         periodoId: true,
         estado: true,
@@ -161,9 +197,19 @@ export class PrismaOperatorRepository extends OperatorRepository {
             fechaFin: true,
           },
         },
+        ordenesTrabajo: {
+          where: { deletedAt: null },
+          select: { evidenciaFotoUrl: true },
+          orderBy: { updatedAt: 'desc' },
+        },
       },
     });
-    return result as unknown as ReadingWithContractDetail[];
+    return result.map((reading) => ({
+      ...reading,
+      evidenciaFotoUrl:
+        reading.ordenesTrabajo?.find((order) => order.evidenciaFotoUrl)
+          ?.evidenciaFotoUrl ?? null,
+    }));
   }
 
   async findMetersByRoutes(

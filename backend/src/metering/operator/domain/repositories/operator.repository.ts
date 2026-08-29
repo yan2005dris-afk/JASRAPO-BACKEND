@@ -41,6 +41,10 @@ export interface ReadingWithDetails {
 
 export abstract class OperatorRepository {
   abstract findActivePeriod(): Promise<ActivePeriod | null>;
+  abstract verifyMeterOwnership(
+    operarioId: number,
+    medidorId: bigint,
+  ): Promise<void>;
   abstract findActiveRoutes(
     operarioId: number,
     periodoId: number,

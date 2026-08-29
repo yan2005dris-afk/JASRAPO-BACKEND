@@ -29,6 +29,9 @@ import { ParseActualizarLecturaPipe } from 'src/infrastructure/common/pipes/pars
 import type { JwtPayload } from 'src/identity/auth/application/types/jwt.types';
 import { GetOperatorReadingsUseCase } from '../../application/use-cases/get-operator-readings.use-case';
 import { UpdateOperatorReadingUseCase } from '../../application/use-cases/update-operator-reading.use-case';
+import { UpdateOperatorWorkOrderUseCase } from '../../application/use-cases/update-operator-work-order.use-case';
+import { UpdateOperatorWorkOrderDto } from '../dto/update-operator-work-order.dto';
+import { OrderWorkResponseDto } from 'src/operations/routes/interfaces/dto/orden-trabajo-response.dto';
 import { ActualizarLecturaDto } from 'src/metering/readings/interfaces/dto/update-lectura.dto';
 import { ResponseReadingDto } from 'src/metering/readings/interfaces/dto/response-reading.dto';
 import { MeterResponseDto } from 'src/metering/meters/interfaces/dto/meter-response.dto';
@@ -40,7 +43,6 @@ import { UpdateRouteStateDto } from '../../interfaces/dto/update-route-state.dto
 import { OperatorRouteResponseDto } from '../../interfaces/dto/operator-route-response.dto';
 import { OperatorReadingAnomalyResponseDto } from '../../interfaces/dto/operator-reading-anomaly-response.dto';
 import { TipoRuta } from 'src/shared/enums';
-import { InstallMeterUseCase } from '../../application/use-cases/install-meter.use-case';
 import { ReportDefectUseCase } from '../../application/use-cases/report-defect.use-case';
 import { DecommissionMeterUseCase } from '../../application/use-cases/decommission-meter.use-case';
 import { GetOperatorReadingsWithAnomaliesUseCase } from '../../application/use-cases/get-operator-readings-with-anomalies.use-case';
@@ -57,7 +59,7 @@ export class OperatorController {
   constructor(
     private readonly getOperatorReadingsUseCase: GetOperatorReadingsUseCase,
     private readonly updateOperatorReadingUseCase: UpdateOperatorReadingUseCase,
-    private readonly installMeterUseCase: InstallMeterUseCase,
+    private readonly updateOperatorWorkOrderUseCase: UpdateOperatorWorkOrderUseCase,
     private readonly reportDefectUseCase: ReportDefectUseCase,
     private readonly decommissionMeterUseCase: DecommissionMeterUseCase,
     private readonly syncAllUseCase: SyncAllUseCase,
@@ -184,7 +186,9 @@ export class OperatorController {
     let uploadedKey: string | undefined;
     if (foto) {
       uploadedKey = await uploadReadingPhoto(foto, this.storageService);
-      updateDto.fotoUrl = uploadedKey;
+      (
+        updateDto as ActualizarLecturaDto & { evidenciaFotoUrl?: string }
+      ).evidenciaFotoUrl = uploadedKey;
     }
 
     try {
@@ -203,38 +207,69 @@ export class OperatorController {
     }
   }
 
-  /**
-   * Instalar un medidor y crear tarea de instalación
-   * POST /operator/:id/install
-   */
   @ApiOperation({
-    summary: 'Instalar medidor',
-    description: 'Cambia el estado del medidor de PENDIENTE a INSTALADO.',
+    summary: 'Actualizar orden de trabajo del operario',
+    description:
+      'Actualiza una orden no relacionada con lecturas y sus datos de ejecución.',
   })
+  @ApiConsumes('multipart/form-data')
   @ApiParam({
     name: 'id',
-    description: 'ID del medidor',
+    description: 'ID de la orden de trabajo',
     type: Number,
-    example: 1,
   })
+  @ApiBody({ type: UpdateOperatorWorkOrderDto })
   @ApiResponse({
     status: 200,
-    description: 'Medidor instalado',
-    type: MeterResponseDto,
+    description: 'Orden actualizada',
+    type: OrderWorkResponseDto,
   })
-  @ApiResponse({
-    status: 400,
-    description: 'Datos inválidos - el medidor debe estar en estado PENDIENTE',
-  })
-  @ApiResponse({ status: 404, description: 'Medidor no encontrado' })
-  @RequiredPermission('meters', 'update')
-  @Post(':id/install')
-  async install(
+  @RequiredPermission('routes', 'update')
+  @UseInterceptors(
+    FileInterceptor('foto', {
+      limits: { fileSize: 10 * 1024 * 1024 },
+      fileFilter: (_req, file, cb) => {
+        if (!file.mimetype.startsWith('image/')) {
+          return cb(
+            new BadRequestException('Solo se permiten archivos de imagen'),
+            false,
+          );
+        }
+        cb(null, true);
+      },
+    }),
+  )
+  @Patch('work-orders/:id')
+  async updateOperatorWorkOrder(
     @Param('id', ParseBigIntPipe) id: bigint,
-  ): Promise<MeterResponseDto> {
-    return MeterResponseDto.fromEntity(
-      await this.installMeterUseCase.execute(id),
-    );
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: UpdateOperatorWorkOrderDto,
+    @UploadedFile() foto?: Express.Multer.File,
+  ): Promise<OrderWorkResponseDto> {
+    let uploadedKey: string | undefined;
+    if (foto) {
+      uploadedKey = await uploadReadingPhoto(foto, this.storageService);
+    }
+    try {
+      const entity = await this.updateOperatorWorkOrderUseCase.execute(
+        id,
+        Number(user.sub),
+        dto,
+        uploadedKey,
+      );
+      const response = OrderWorkResponseDto.fromEntity(entity);
+      return {
+        ...response,
+        ordenTrabajoId: entity.ordenTrabajoId.toString(),
+        rutaId: entity.rutaId.toString(),
+        lecturaId: entity.lecturaId?.toString() ?? null,
+      } as unknown as OrderWorkResponseDto;
+    } catch (error) {
+      if (uploadedKey) {
+        await rollbackReadingPhoto(uploadedKey, this.storageService);
+      }
+      throw error;
+    }
   }
 
   /**
@@ -266,9 +301,10 @@ export class OperatorController {
   @Post(':id/report-defect')
   async reportDefect(
     @Param('id', ParseBigIntPipe) id: bigint,
+    @CurrentUser() user: JwtPayload,
   ): Promise<MeterResponseDto> {
     return MeterResponseDto.fromEntity(
-      await this.reportDefectUseCase.execute(id),
+      await this.reportDefectUseCase.execute(id, Number(user.sub)),
     );
   }
 
@@ -305,9 +341,14 @@ export class OperatorController {
   async decommission(
     @Param('id', ParseBigIntPipe) id: bigint,
     @Body() dto: DecommissionMeterDto,
+    @CurrentUser() user: JwtPayload,
   ): Promise<MeterResponseDto> {
     return MeterResponseDto.fromEntity(
-      await this.decommissionMeterUseCase.execute(id, dto.motivoBaja),
+      await this.decommissionMeterUseCase.execute(
+        id,
+        dto.motivoBaja,
+        Number(user.sub),
+      ),
     );
   }
 

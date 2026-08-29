@@ -47,7 +47,7 @@ export class GetOperatorReadingsUseCase {
         contratoId: contrato ? contrato.contratoId.toString() : '',
         descripcionAnomalia: lectura.descripcionAnomalia,
         fechaValidacion: lectura.fechaValidacion,
-        fotoUrl: lectura.fotoUrl,
+        evidenciaFotoUrl: lectura.evidenciaFotoUrl,
         // Computed fields — not stored in DB
         isValidada: lectura.estado !== 'PENDIENTE',
         tieneAnomalia: !!lectura.descripcionAnomalia,

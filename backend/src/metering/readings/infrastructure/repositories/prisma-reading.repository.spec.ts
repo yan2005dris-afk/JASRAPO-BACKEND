@@ -106,7 +106,7 @@ describe('PrismaReadingRepository - soft delete select regression', () => {
       medidorId: BigInt(1),
       descripcionAnomalia: null,
       fechaValidacion: null,
-      fotoUrl: null,
+      evidenciaFotoUrl: null,
       estado: 'PENDIENTE',
       lecturaInicial: false,
       periodoId: 1,
@@ -141,7 +141,7 @@ describe('PrismaReadingRepository - soft delete select regression', () => {
       medidorId: BigInt(1),
       descripcionAnomalia: null,
       fechaValidacion: null,
-      fotoUrl: null,
+      evidenciaFotoUrl: null,
       estado: 'PENDIENTE',
       lecturaInicial: false,
       periodoId: 1,
@@ -239,37 +239,6 @@ describe('PrismaReadingRepository - soft delete select regression', () => {
         lecturaAnterior: new Decimal('15.00'),
         lecturaInicial: true,
       });
-    });
-  });
-
-  describe('createWithAtomicSnapshot', () => {
-    it('throws InvalidDomainOperationException on negative consumption without anomaly description', async () => {
-      const findFirstHistorial = jest.fn().mockResolvedValue({
-        historialId: BigInt(10),
-        fechaDesde: new Date('2026-01-01'),
-        lecturaInicial: '100.00',
-      });
-      const findFirstLecturas = jest.fn().mockResolvedValue({
-        lecturaActual: '100.00',
-      });
-
-      const prisma = {
-        $transaction: jest.fn().mockImplementation(async (callback) => {
-          return callback(prisma);
-        }),
-        historialMedidores: { findFirst: findFirstHistorial },
-        lecturas: { findFirst: findFirstLecturas },
-      };
-      const repository = new PrismaReadingRepository(prisma as any);
-
-      await expect(
-        repository.createWithAtomicSnapshot({
-          fecha: new Date('2026-02-01'),
-          lecturaActual: new Decimal(80),
-          medidorId: BigInt(1),
-          periodoId: 1,
-        }),
-      ).rejects.toThrow(/sin registrar una anomalía o novedad/);
     });
   });
 

@@ -1,22 +1,16 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
+  Get,
+  Param,
+  Patch,
   Query,
-  UseInterceptors,
-  UploadedFile,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { createImageFileFilter } from 'src/infrastructure/common/utils/evidence-upload.util';
 import { NotEmptyBodyPipe } from 'src/infrastructure/common/pipes/not-empty-body.pipe';
 import { ParseBigIntPipe } from 'src/infrastructure/common/pipes/parse-bigint.pipe';
 import { ParseActualizarLecturaPipe } from 'src/infrastructure/common/pipes/parse-actualizar-lectura.pipe';
 import { ReadingService } from '../../application/reading.service';
-import { CrearLecturaDto } from '../dto/create-lectura.dto';
 import { ActualizarLecturaDto } from '../dto/update-lectura.dto';
 import { ResponseReadingDto } from '../dto/response-reading.dto';
 import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
@@ -28,7 +22,6 @@ import {
   ApiParam,
   ApiQuery,
   ApiBody,
-  ApiConsumes,
 } from '@nestjs/swagger';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
 import { ReadingFilters } from '../../domain/repositories/reading.repository';
@@ -37,7 +30,6 @@ import {
   buildStateCatalog,
 } from 'src/shared/enums/state-catalog';
 import { EstadoLectura } from 'src/shared/enums';
-import { MAX_UPLOAD_SIZE_BYTES } from 'src/infrastructure/config/app.constants';
 
 @ApiTags('readings')
 @ApiBearerAuth()
@@ -46,76 +38,15 @@ export class ReadingController {
   constructor(private readonly readingService: ReadingService) {}
 
   @ApiOperation({
-    summary: 'Crear lectura',
-    description: 'Registra una nueva lectura de medidor',
-  })
-  @ApiBody({ type: CrearLecturaDto, description: 'Datos de la lectura' })
-  @ApiResponse({
-    status: 201,
-    description: 'Lectura creada',
-    type: ResponseReadingDto,
-  })
-  @ApiResponse({ status: 400, description: 'Datos inválidos' })
-  @ApiResponse({ status: 401, description: 'No autorizado' })
-  @ApiResponse({ status: 403, description: 'Sin permiso lecturas:create' })
-  @ApiConsumes('multipart/form-data', 'application/json')
-  @RequiredPermission('lecturas', 'create')
-  @Post()
-  @UseInterceptors(
-    FileInterceptor('file', {
-      limits: { fileSize: MAX_UPLOAD_SIZE_BYTES },
-      fileFilter: createImageFileFilter(),
-    }),
-  )
-  async create(
-    @Body() crearLecturaDto: CrearLecturaDto,
-    @UploadedFile() file?: Express.Multer.File,
-  ): Promise<ResponseReadingDto> {
-    return ResponseReadingDto.fromEntity(
-      await this.readingService.create(crearLecturaDto, file),
-    )!;
-  }
-
-  @ApiOperation({
     summary: 'Listar lecturas',
     description: 'Retorna lista de lecturas con paginación',
   })
-  @ApiQuery({
-    name: 'page',
-    description: 'Número de página (empieza en 1)',
-    required: false,
-    type: Number,
-    example: 1,
-  })
-  @ApiQuery({
-    name: 'limit',
-    description: 'Registros por página (máx 100)',
-    required: false,
-    type: Number,
-    example: 10,
-  })
-  @ApiQuery({
-    name: 'contratoId',
-    description: 'Filtrar por ID de contrato',
-    required: false,
-    type: String,
-  })
-  @ApiQuery({
-    name: 'estado',
-    description: 'Filtrar por estado de lectura',
-    required: false,
-    enum: EstadoLectura,
-  })
-  @ApiQuery({
-    name: 'search',
-    description: 'Buscar por medidor, guía o cliente',
-    required: false,
-    type: String,
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Lista de lecturas paginada',
-  })
+  @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
+  @ApiQuery({ name: 'limit', required: false, type: Number, example: 10 })
+  @ApiQuery({ name: 'contratoId', required: false, type: String })
+  @ApiQuery({ name: 'estado', required: false, enum: EstadoLectura })
+  @ApiQuery({ name: 'search', required: false, type: String })
+  @ApiResponse({ status: 200, description: 'Lista de lecturas paginada' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @RequiredPermission('lecturas', 'read')
   @Get()
@@ -126,15 +57,9 @@ export class ReadingController {
     @Query('search') search?: string,
   ) {
     const filters: ReadingFilters = {};
-    if (contratoId) {
-      filters.contratoId = BigInt(contratoId);
-    }
-    if (estado) {
-      filters.estado = estado;
-    }
-    if (search) {
-      filters.search = search;
-    }
+    if (contratoId) filters.contratoId = BigInt(contratoId);
+    if (estado) filters.estado = estado;
+    if (search) filters.search = search;
     const result = await this.readingService.findAll(
       paginationDto.page,
       paginationDto.limit,
@@ -146,16 +71,8 @@ export class ReadingController {
     };
   }
 
-  @ApiOperation({
-    summary: 'Catálogo de estados de lectura',
-    description:
-      'Retorna todos los estados posibles de una lectura (EstadoLectura).',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Lista de estados',
-    type: [EnumStateDto],
-  })
+  @ApiOperation({ summary: 'Catálogo de estados de lectura' })
+  @ApiResponse({ status: 200, type: [EnumStateDto] })
   @RequiredPermission('lecturas', 'read')
   @Get('estados')
   getEstados(): EnumStateDto[] {
@@ -186,18 +103,8 @@ export class ReadingController {
     summary: 'Obtener lectura',
     description: 'Retorna una lectura por ID',
   })
-  @ApiParam({
-    name: 'id',
-    description: 'ID de la lectura',
-    type: Number,
-    example: 1,
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Lectura encontrada',
-    type: ResponseReadingDto,
-  })
-  @ApiResponse({ status: 401, description: 'No autorizado' })
+  @ApiParam({ name: 'id', description: 'ID de la lectura', type: Number })
+  @ApiResponse({ status: 200, type: ResponseReadingDto })
   @ApiResponse({ status: 404, description: 'Lectura no encontrada' })
   @RequiredPermission('lecturas', 'read')
   @Get(':id')
@@ -211,41 +118,20 @@ export class ReadingController {
 
   @ApiOperation({
     summary: 'Actualizar lectura',
-    description: 'Actualiza una lectura',
+    description: 'Actualiza campos no fotográficos de una lectura',
   })
-  @ApiParam({
-    name: 'id',
-    description: 'ID de la lectura',
-    type: Number,
-    example: 1,
-  })
-  @ApiBody({ type: ActualizarLecturaDto, description: 'Datos a actualizar' })
-  @ApiResponse({
-    status: 200,
-    description: 'Lectura actualizada',
-    type: ResponseReadingDto,
-  })
-  @ApiResponse({ status: 400, description: 'Datos inválidos' })
-  @ApiResponse({ status: 401, description: 'No autorizado' })
-  @ApiResponse({ status: 403, description: 'Sin permiso lecturas:update' })
-  @ApiResponse({ status: 404, description: 'Lectura no encontrada' })
-  @ApiConsumes('multipart/form-data', 'application/json')
+  @ApiParam({ name: 'id', type: Number })
+  @ApiBody({ type: ActualizarLecturaDto })
+  @ApiResponse({ status: 200, type: ResponseReadingDto })
   @RequiredPermission('lecturas', 'update')
   @Patch(':id')
-  @UseInterceptors(
-    FileInterceptor('file', {
-      limits: { fileSize: MAX_UPLOAD_SIZE_BYTES },
-      fileFilter: createImageFileFilter(),
-    }),
-  )
   async actualizarLectura(
     @Param('id', ParseBigIntPipe) id: bigint,
     @Body(new NotEmptyBodyPipe(), new ParseActualizarLecturaPipe())
     updateLecturaDto: ActualizarLecturaDto,
-    @UploadedFile() file?: Express.Multer.File,
   ): Promise<ResponseReadingDto> {
     return ResponseReadingDto.fromEntity(
-      await this.readingService.update(id, updateLecturaDto, undefined, file),
+      await this.readingService.update(id, updateLecturaDto),
     )!;
   }
 
@@ -253,16 +139,8 @@ export class ReadingController {
     summary: 'Eliminar lectura',
     description: 'Elimina una lectura (soft delete)',
   })
-  @ApiParam({
-    name: 'id',
-    description: 'ID de la lectura',
-    type: Number,
-    example: 1,
-  })
+  @ApiParam({ name: 'id', type: Number })
   @ApiResponse({ status: 200, description: 'Lectura eliminada' })
-  @ApiResponse({ status: 401, description: 'No autorizado' })
-  @ApiResponse({ status: 403, description: 'Sin permiso lecturas:delete' })
-  @ApiResponse({ status: 404, description: 'Lectura no encontrada' })
   @RequiredPermission('lecturas', 'delete')
   @Delete(':id')
   async eliminarLectura(@Param('id', ParseBigIntPipe) id: bigint) {

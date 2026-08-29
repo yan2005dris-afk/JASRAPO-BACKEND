@@ -12,7 +12,15 @@ export class LinkLecturaUseCase {
   async execute(
     ordenTrabajoId: bigint,
     data: LinkLecturaData,
+    operarioId?: number,
   ): Promise<OrdenTrabajoEntity> {
+    if (operarioId !== undefined) {
+      await this.ordenTrabajoRepository.verifyOperatorWorkOrderOwnership(
+        operarioId,
+        ordenTrabajoId,
+      );
+    }
+
     return this.ordenTrabajoRepository.linkLectura(ordenTrabajoId, data);
   }
 }

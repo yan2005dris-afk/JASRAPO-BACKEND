@@ -34,7 +34,8 @@ model OrdenesTrabajo {
   contrato             Contratos            @relation(fields: [contratoId], references: [contratoId], onDelete: Restrict)
   medidor              Medidores?           @relation(fields: [medidorId], references: [medidorId], onDelete: SetNull)
   lectura              Lecturas?            @relation(fields: [lecturaId], references: [lecturaId], onDelete: SetNull)
-  reemplazosMedidor    ReemplazoMedidor[]
+  reemplazosMedidor     ReemplazoMedidor[]
+  ejecucionOrdenTrabajo EjecucionesOrdenTrabajo?
 
   @@index([rutaId])
   @@index([contratoId])

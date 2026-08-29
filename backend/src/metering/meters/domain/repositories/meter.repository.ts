@@ -10,7 +10,6 @@ import type {
   ReplaceMeterResult,
   ApproveMeterReplacementRepositoryData,
 } from '../types/meter.types';
-import type { EstadoMedidor, EstadoContrato } from 'src/shared/enums';
 import type { TransactionContext } from 'src/shared/domain/types/transaction';
 
 export type {
@@ -64,16 +63,6 @@ export abstract class MeterRepository {
   abstract findActiveContractForMeter(
     medidorId: bigint,
   ): Promise<{ contratoId: bigint; estado: string } | null>;
-
-  /** Atomically install a meter: update meter state, close the open
-   *  historialMedidores row, and activate the linked contract. */
-  abstract installMeter(params: {
-    medidorId: bigint;
-    contratoId: bigint;
-    estado: EstadoMedidor;
-    estadoContrato: EstadoContrato;
-    fechaInstalacion: Date;
-  }): Promise<MeterEntity>;
 
   /** Atomically replace a meter in a contract, recording telemetry,
    *  physical readings, and audit resolution. */

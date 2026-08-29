@@ -5,6 +5,7 @@ import type {
   UpdateOrdenEstadoData,
   LinkLecturaData,
   CreateOrdenTrabajoData,
+  UpdateOperatorWorkOrderData,
 } from '../types/orden-trabajo.types';
 import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
 import type { PaginateOptions } from 'src/infrastructure/common/utils/pagination.util';
@@ -24,6 +25,16 @@ export abstract class OrdenTrabajoRepository {
   abstract updateEstado(
     ordenTrabajoId: bigint,
     data: UpdateOrdenEstadoData,
+  ): Promise<OrdenTrabajoEntity>;
+
+  abstract verifyOperatorWorkOrderOwnership(
+    operarioId: number,
+    ordenTrabajoId: bigint,
+  ): Promise<void>;
+
+  abstract updateOperatorWorkOrder(
+    ordenTrabajoId: bigint,
+    data: UpdateOperatorWorkOrderData,
   ): Promise<OrdenTrabajoEntity>;
 
   /**

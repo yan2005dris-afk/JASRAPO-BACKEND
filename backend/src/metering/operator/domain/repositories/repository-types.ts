@@ -11,7 +11,7 @@ export interface ReadingWithContractDetail {
   consumoCalculado: number;
   descripcionAnomalia: string | null;
   fechaValidacion: Date | null;
-  fotoUrl: string | null;
+  evidenciaFotoUrl: string | null;
   lecturaInicial: boolean;
   periodoId: number;
   estado: string;

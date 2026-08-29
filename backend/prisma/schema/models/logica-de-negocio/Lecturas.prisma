@@ -7,7 +7,6 @@ model Lecturas {
   deletedAt           DateTime?          @map("borrado_en")
   createdAt           DateTime           @default(now()) @map("creado_en")
   fechaValidacion     DateTime?          @map("fecha_validacion")
-  fotoUrl             String?            @map("foto_url")
   lecturaInicial      Boolean            @default(false) @map("lectura_inicial")
   periodoId           Int                @map("periodo_id")
   descripcionAnomalia String?            @map("descripcion_anomalia")

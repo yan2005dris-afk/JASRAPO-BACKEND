@@ -18,7 +18,6 @@ import {
   EntityNotFoundException,
   InvalidDomainOperationException,
 } from 'src/shared/domain/exceptions/domain.exception';
-import type { EstadoMedidor, EstadoContrato } from 'src/shared/enums';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { MeterMapper } from '../mappers/meter.mapper';
 import { ReemplazoMedidorMapper } from '../mappers/reemplazo-medidor.mapper';
@@ -277,90 +276,6 @@ export class PrismaMeterRepository implements MeterRepository {
       contratoId: historial.contratoId,
       estado: historial.contrato.estado,
     };
-  }
-
-  async installMeter(params: {
-    medidorId: bigint;
-    contratoId: bigint;
-    estado: EstadoMedidor;
-    estadoContrato: EstadoContrato;
-    fechaInstalacion: Date;
-  }): Promise<MeterEntity> {
-    const { medidorId, contratoId, estado, estadoContrato, fechaInstalacion } =
-      params;
-
-    const record = await this.prisma.$transaction(
-      async (tx) => {
-        await tx.$queryRaw`SELECT contrato_id FROM contratos WHERE contrato_id = ${contratoId} FOR UPDATE`;
-
-        const contrato = await tx.contratos.findUnique({
-          where: { contratoId },
-        });
-
-        if (!contrato || contrato.deletedAt) {
-          throw new EntityNotFoundException('Contrato', contratoId);
-        }
-
-        if (contrato.estado !== ('PENDIENTE_INSTALACION' as EstadoContrato)) {
-          throw new InvalidDomainOperationException(
-            `El contrato debe estar en estado PENDIENTE_INSTALACION para instalar el medidor, estado actual: ${contrato.estado}`,
-          );
-        }
-
-        const meter = await tx.medidores.findUnique({
-          where: { medidorId },
-        });
-
-        if (!meter || meter.deletedAt) {
-          throw new EntityNotFoundException('Medidor', medidorId);
-        }
-
-        if (meter.estado !== ('PENDIENTE' as EstadoMedidor)) {
-          throw new InvalidDomainOperationException(
-            `Meter must be in PENDIENTE state to be installed, current state: ${meter.estado}`,
-          );
-        }
-
-        const openHistorial = await tx.historialMedidores.findFirst({
-          where: { contratoId, fechaHasta: null, deletedAt: null },
-        });
-
-        if (!openHistorial) {
-          throw new InvalidDomainOperationException(
-            `El contrato #${contratoId} no tiene un historial de medidor activo vinculado`,
-          );
-        }
-
-        if (openHistorial.medidorId !== medidorId) {
-          throw new InvalidDomainOperationException(
-            `Conflicto de concurrencia: el contrato #${contratoId} está vinculado al medidor #${openHistorial.medidorId}, no al #${medidorId}`,
-          );
-        }
-
-        const updatedMeter = await tx.medidores.update({
-          where: { medidorId },
-          data: {
-            estado,
-            fechaInstalacion,
-          },
-        });
-
-        await tx.historialMedidores.update({
-          where: { historialId: openHistorial.historialId },
-          data: { fechaDesde: fechaInstalacion },
-        });
-
-        await tx.contratos.update({
-          where: { contratoId },
-          data: { estado: estadoContrato },
-        });
-
-        return updatedMeter;
-      },
-      { timeout: 15000, maxWait: 10000 },
-    );
-
-    return MeterMapper.toDomain(record)!;
   }
 
   async replaceMeter(

@@ -1,7 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { Prisma } from 'src/generated/prisma/client';
-import { EstadoOrdenTrabajo, TipoActividadOrden } from 'src/shared/enums';
+import {
+  EstadoOrdenTrabajo,
+  EstadoPeriodo,
+  EstadoRuta,
+  TipoActividadOrden,
+} from 'src/shared/enums';
 import { OrdenTrabajoRepository } from '../../domain/repositories/orden-trabajo.repository';
 import { OrdenTrabajoMapper } from '../mappers/orden-trabajo.mapper';
 import {
@@ -16,6 +21,7 @@ import type {
   UpdateOrdenEstadoData,
   LinkLecturaData,
   CreateOrdenTrabajoData,
+  UpdateOperatorWorkOrderData,
 } from '../../domain/types/orden-trabajo.types';
 import {
   EntityNotFoundException,
@@ -170,6 +176,36 @@ export class PrismaOrdenTrabajoRepository implements OrdenTrabajoRepository {
     };
   }
 
+  async verifyOperatorWorkOrderOwnership(
+    operarioId: number,
+    ordenTrabajoId: bigint,
+  ): Promise<void> {
+    const order = await this.prisma.ordenesTrabajo.findFirst({
+      where: {
+        ordenTrabajoId,
+        deletedAt: null,
+        ruta: {
+          operarioId,
+          deletedAt: null,
+          estado: {
+            notIn: [EstadoRuta.CANCELADA, EstadoRuta.COMPLETADA],
+          },
+          periodo: {
+            estado: EstadoPeriodo.ABIERTO,
+            deletedAt: null,
+          },
+        },
+      },
+      select: { ordenTrabajoId: true },
+    });
+
+    if (!order) {
+      throw new InvalidDomainOperationException(
+        'La orden de trabajo no pertenece a tu ruta asignada activa',
+      );
+    }
+  }
+
   async updateEstado(
     ordenTrabajoId: bigint,
     data: UpdateOrdenEstadoData,
@@ -210,6 +246,93 @@ export class PrismaOrdenTrabajoRepository implements OrdenTrabajoRepository {
       });
 
       return OrdenTrabajoMapper.toEntity(raw);
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2025'
+      ) {
+        throw new EntityNotFoundException(
+          'Orden de Trabajo',
+          ordenTrabajoId.toString(),
+        );
+      }
+      throw error;
+    }
+  }
+
+  async updateOperatorWorkOrder(
+    ordenTrabajoId: bigint,
+    data: UpdateOperatorWorkOrderData,
+  ): Promise<OrdenTrabajoEntity> {
+    try {
+      return await this.prisma.$transaction(async (tx) => {
+        const current = await tx.ordenesTrabajo.findUnique({
+          where: { ordenTrabajoId },
+        });
+
+        if (!current) {
+          throw new EntityNotFoundException(
+            'Orden de Trabajo',
+            ordenTrabajoId.toString(),
+          );
+        }
+
+        const isCompleting =
+          data.estado === EstadoOrdenTrabajo.COMPLETADA ||
+          data.estado === EstadoOrdenTrabajo.FALLIDA ||
+          data.estado === EstadoOrdenTrabajo.CANCELADA;
+        const isReopening =
+          data.estado === EstadoOrdenTrabajo.PENDIENTE ||
+          data.estado === EstadoOrdenTrabajo.EN_PROGRESO;
+        const completionUpdate =
+          data.completadoEn !== undefined
+            ? { completadoEn: data.completadoEn }
+            : isCompleting && !current.completadoEn
+              ? { completadoEn: new Date() }
+              : isReopening
+                ? { completadoEn: null }
+                : {};
+
+        const raw = await tx.ordenesTrabajo.update({
+          where: { ordenTrabajoId },
+          data: {
+            ...(data.estado !== undefined
+              ? { estado: data.estado as EstadoOrdenTrabajo }
+              : {}),
+            ...(data.resultadoObservacion !== undefined
+              ? { resultadoObservacion: data.resultadoObservacion }
+              : {}),
+            ...(data.evidenciaFotoUrl !== undefined
+              ? { evidenciaFotoUrl: data.evidenciaFotoUrl }
+              : {}),
+            ...completionUpdate,
+          },
+        });
+
+        const executionData = Object.fromEntries(
+          Object.entries({
+            estadoSellos: data.estadoSellos,
+            hayFugas: data.hayFugas,
+            confirmacionRetiroSello: data.confirmacionRetiroSello,
+          }).filter(([, value]) => value !== undefined),
+        );
+        if (Object.keys(executionData).length > 0) {
+          const executionModel = (
+            tx as unknown as {
+              ejecucionesOrdenTrabajo: {
+                upsert(args: unknown): Promise<unknown>;
+              };
+            }
+          ).ejecucionesOrdenTrabajo;
+          await executionModel.upsert({
+            where: { ordenTrabajoId },
+            create: { ordenTrabajoId, ...executionData },
+            update: executionData,
+          });
+        }
+
+        return OrdenTrabajoMapper.toEntity(raw);
+      });
     } catch (error) {
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
