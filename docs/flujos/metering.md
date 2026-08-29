@@ -30,9 +30,15 @@ Estados: `BODEGA`, `INSTALADO`, `DANADO`, `PENDIENTE`, `BAJA`.
 
 ## 3. Alta y actualización de lecturas
 
-Las lecturas se generan dentro de los procesos de asignación de rutas; no se documenta un endpoint standalone `POST /readings`. La actualización administrativa usa `PATCH /readings/:id` y el operador usa `PATCH /operator/readings/:id`.
+Las lecturas se generan dentro de los procesos de asignación de rutas. La actualización administrativa usa `PATCH /readings/:id` y el operador usa `PATCH /operator/readings/:id`.
+
+### Histórico / Legacy — no es contrato vigente
+
+En SC-283 se retiraron de la documentación contractual el endpoint standalone `POST /readings` y `CreateReadingUseCase` como vía de alta. Las lecturas ahora nacen dentro de rutas u órdenes de trabajo y se actualizan mediante los endpoints PATCH vigentes.
 
 La evidencia fotográfica normal pertenece a la orden de trabajo vinculada (`OrdenesTrabajo.evidenciaFotoUrl`) y se guarda como clave de objeto RustFS. `LecturaAnomalia.fotoUrl` se conserva exclusivamente para fotos de anomalías.
+
+Como referencia histórica, las tareas del operador se nombraban `POST /operator/:id/install`, `report-defect` y `decommission`; esos endpoints no son contrato vigente y fueron reemplazados por la instalación administrativa `POST /meters/:id/install` y la gestión de órdenes mediante `PATCH /operator/tasks/:id`.
 
 ## 4. Revisión de la lectura
 

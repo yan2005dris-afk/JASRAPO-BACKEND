@@ -197,9 +197,13 @@ El sistema **JASRAPO** es una plataforma integral para automatizar la gestión t
 - **Para** mantener el parque de medidores operativo y las lecturas al día.
 
 **Criterios de Aceptación:**
-- **Escenario 1 (Instalación):** La instalación administrativa usa `POST /meters/:id/install`; una orden de campo pasa de PENDIENTE a completada mediante `update-task-state` y `get-operator-tasks`.
+- **Escenario 1 (Instalación):** La instalación administrativa usa `POST /meters/:id/install`; una orden de campo pasa de PENDIENTE a completada mediante `update-operator-work-order` y `get-operator-routes`.
 - **Escenario 2 (Defecto y Baja):** Un medidor instalado pasa a DANADO al reportarse un defecto (`report-defect`) y de DANADO a BAJA al darse de baja (`decommission-meter`).
 - **Escenario 3 (Lecturas del Operador):** El operador consulta y actualiza sus lecturas (`get-operator-readings`, `get-operator-readings-with-anomalies`, `update-operator-reading`) solo cuando la lectura está en estado PENDIENTE o RECHAZADA_VERIFICACION; la foto normal se guarda en `OrdenesTrabajo.evidenciaFotoUrl` como clave RustFS y la sincronización consolida el trabajo (`sync-all`).
+
+### Histórico / Legacy — no es contrato vigente
+
+En SC-283 se retiraron los nombres y rutas anteriores de la documentación contractual para conservarlos como referencia histórica. `POST /operator/:id/install`, `report-defect` y `decommission` como tareas del operador, junto con `install-meter`, `update-task-state` y `get-operator-tasks`, ya no deben integrarse. La instalación administrativa vigente es `POST /meters/:id/install`; las órdenes se gestionan con `update-operator-work-order` y `get-operator-routes`.
 
 ---
 

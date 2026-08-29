@@ -582,7 +582,13 @@ GET          /meters/search           Búsqueda avanzada
 | `/lecturas/get-all` | `GET /readings` |
 | `/lecturas/get-one/:id` | `GET /readings/:id` |
 
-> La fila histórica `/lecturas/create` se conserva fuera del contrato vigente: no existe un `POST /readings` standalone.
+### Histórico / Legacy — no es contrato vigente
+
+| Referencia histórica | Reemplazo vigente |
+|----------------------|-------------------|
+| `/lecturas/create` / `POST /readings` standalone | Las lecturas se generan dentro de rutas u órdenes de trabajo; se actualizan con `PATCH /readings/:id` o `PATCH /operator/readings/:id`. |
+
+En SC-283 se retiró `CreateReadingUseCase` como vía documentada de alta. Esta tabla es solo contexto histórico y no agrega rutas al contrato OpenAPI.
 
 ### Excepciones Válidas
 
