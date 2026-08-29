@@ -11,6 +11,10 @@ Hoy el operador tiene dos sistemas de trabajo desconectados:
 
 La vista unificada de órdenes permite planificar el recorrido por zona y evita mezclar contratos fuera de la asignación del operador.
 
+### Histórico / Legacy — no es contrato vigente
+
+En SC-283 se reemplazó el esquema de tareas sueltas y sus endpoints `POST /operator/:id/install`, `report-defect` y `decommission`. También quedan como nombres históricos `install-meter`, `update-task-state` y `get-operator-tasks`; no deben usarse para nuevas integraciones. La instalación administrativa vigente es `POST /meters/:id/install` y las órdenes se gestionan mediante `GET/PATCH /operator/tasks`.
+
 ## Objetivo
 
 Unificar TODO el trabajo del operador en un sistema de tareas con **conocimiento geográfico**, donde:
@@ -117,7 +121,7 @@ model Rutas {
 
 - **TOMA_LECTURA**: cuando se asigna una ruta de período al operador (como hoy)
 - **INSTALACION/RECONEXION/INSPECCION**: se crean como filas en `Rutas` con el nuevo `tipoRuta`
-- Las tareas no-lectura se crean desde el sistema (admin) o desde los endpoints de operador (install/report-defect/decommission)
+- Las tareas no-lectura se crean desde el sistema (admin) y se gestionan mediante las órdenes de trabajo asignadas.
 
 ### Endpoints
 
@@ -143,7 +147,7 @@ Como **Rutas = Tareas**, no hay migración de datos. El cambio es evolutivo:
 - `Medidores` y su state machine no cambian
 - `Lecturas` y sus transiciones no cambian
 - `Rutas` como modelo NO se reemplaza — se **extiende**
-- El histórico de endpoints legacy se conserva solo como referencia ADR; no debe usarse para integrar clientes nuevos
+- El histórico de endpoints legacy se conserva en la sección **Histórico / Legacy — no es contrato vigente**; no debe usarse para integrar clientes nuevos
 
 ## Orden automático por coordenadas
 
