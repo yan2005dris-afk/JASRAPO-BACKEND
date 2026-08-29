@@ -17,4 +17,6 @@ export class ActualizarLecturaDto {
   @IsOptional() @IsBoolean() lecturaInicial?: boolean;
   @IsOptional() @IsNumber() periodoId?: number;
   @IsOptional() @IsString() estado?: string;
+  /** RustFS object key persisted on the linked work order evidence. */
+  @IsOptional() @IsString() evidenciaFotoUrl?: string;
 }

@@ -123,7 +123,7 @@ export class OperatorController {
     summary: 'Actualizar lectura del operario',
     description:
       'Permite al operario actualizar una lectura de su ruta. Acepta multipart/form-data: ' +
-      'todos los campos del DTO como strings de formulario más un archivo opcional `foto`.',
+      'Todos los campos del DTO como strings de formulario más un archivo opcional `foto`. La foto se guarda como evidenciaFotoUrl (clave de objeto RustFS) en la orden de trabajo vinculada.',
   })
   @ApiConsumes('multipart/form-data')
   @ApiParam({
@@ -133,7 +133,8 @@ export class OperatorController {
     example: 1,
   })
   @ApiBody({
-    description: 'Datos de lectura + foto opcional (multipart/form-data)',
+    description:
+      'Datos de lectura + foto opcional (multipart/form-data). `foto` es evidencia de la orden de trabajo y se persiste como clave de objeto RustFS.',
     schema: {
       type: 'object',
       properties: {
@@ -186,9 +187,7 @@ export class OperatorController {
     let uploadedKey: string | undefined;
     if (foto) {
       uploadedKey = await uploadReadingPhoto(foto, this.storageService);
-      (
-        updateDto as ActualizarLecturaDto & { evidenciaFotoUrl?: string }
-      ).evidenciaFotoUrl = uploadedKey;
+      updateDto.evidenciaFotoUrl = uploadedKey;
     }
 
     try {
@@ -218,7 +217,22 @@ export class OperatorController {
     description: 'ID de la orden de trabajo',
     type: Number,
   })
-  @ApiBody({ type: UpdateOperatorWorkOrderDto })
+  @ApiBody({
+    description:
+      'Datos de ejecución. `foto` es opcional y se persiste como clave de objeto RustFS en evidenciaFotoUrl.',
+    schema: {
+      type: 'object',
+      properties: {
+        estado: { type: 'string' },
+        resultadoObservacion: { type: 'string' },
+        completadoEn: { type: 'string', format: 'date-time' },
+        estadoSellos: { type: 'string' },
+        hayFugas: { type: 'boolean' },
+        confirmacionRetiroSello: { type: 'boolean' },
+        foto: { type: 'string', format: 'binary' },
+      },
+    },
+  })
   @ApiResponse({
     status: 200,
     description: 'Orden actualizada',
@@ -257,13 +271,7 @@ export class OperatorController {
         dto,
         uploadedKey,
       );
-      const response = OrderWorkResponseDto.fromEntity(entity);
-      return {
-        ...response,
-        ordenTrabajoId: entity.ordenTrabajoId.toString(),
-        rutaId: entity.rutaId.toString(),
-        lecturaId: entity.lecturaId?.toString() ?? null,
-      } as unknown as OrderWorkResponseDto;
+      return OrderWorkResponseDto.fromEntity(entity);
     } catch (error) {
       if (uploadedKey) {
         await rollbackReadingPhoto(uploadedKey, this.storageService);
@@ -394,7 +402,7 @@ export class OperatorController {
   })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({ status: 404, description: 'No hay período activo' })
-  @RequiredPermission('lecturas', 'read')
+  @RequiredPermission('routes', 'read')
   @Get('routes')
   async getOperatorRoutes(
     @CurrentUser() user: JwtPayload,
@@ -434,7 +442,7 @@ export class OperatorController {
   @ApiResponse({ status: 401, description: 'No autorizado' })
   @ApiResponse({ status: 403, description: 'Ruta no pertenece al operador' })
   @ApiResponse({ status: 404, description: 'Ruta no encontrada' })
-  @RequiredPermission('lecturas', 'update')
+  @RequiredPermission('routes', 'update')
   @Patch('routes/:id/state')
   async updateRouteState(
     @Param('id', ParseBigIntPipe) id: bigint,

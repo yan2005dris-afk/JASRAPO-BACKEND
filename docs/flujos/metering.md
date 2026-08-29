@@ -24,19 +24,21 @@ Estados: `BODEGA`, `INSTALADO`, `DANADO`, `PENDIENTE`, `BAJA`.
 
 - `GET /operator/readings` — lecturas asignadas a la ruta/tarea del operador.
 - `GET /operator/readings/anomalies` — cola de lecturas con anomalías reportadas.
-- `PATCH /operator/readings/:id` — el operador registra/actualiza una lectura (incluye foto).
-- `POST /operator/:id/install` / `report-defect` / `decommission` — mismas transiciones de medidor, expuestas también desde el flujo de campo.
+- `PATCH /operator/readings/:id` — el operador registra/actualiza una lectura; `foto` se guarda como clave de objeto RustFS en `OrdenesTrabajo.evidenciaFotoUrl` de la orden vinculada.
 - `GET /operator/tasks` / `PATCH /operator/tasks/:id` — órdenes de trabajo asignadas al operador y su estado.
 - `GET /operator/sync` — endpoint de sincronización (soporta app con capacidad offline).
 
-## 3. Creación de una lectura
+## 3. Alta y actualización de lecturas
 
-`CreateReadingUseCase` (`backend/src/metering/readings/application/use-cases/create-reading.use-case.ts`):
+Las lecturas se generan dentro de los procesos de asignación de rutas. La actualización administrativa usa `PATCH /readings/:id` y el operador usa `PATCH /operator/readings/:id`.
 
-1. Si no se indica `periodoId`, resuelve el período `ABIERTO` activo (solo puede haber uno; si no hay ninguno, rechaza).
-2. Inserta la lectura **siempre** en estado `POR_REVISION` — nunca directo a `APROBADA`, sin importar quién la cree.
-3. `consumoCalculado` por defecto es `0` en la creación (el cálculo real de consumo para facturación ocurre en `generar_prefacturas_lote`, no aquí).
-4. Admite `fotoUrl` y `descripcionAnomalia` opcionales.
+### Histórico / Legacy — no es contrato vigente
+
+En SC-283 se retiraron de la documentación contractual el endpoint standalone `POST /readings` y `CreateReadingUseCase` como vía de alta. Las lecturas ahora nacen dentro de rutas u órdenes de trabajo y se actualizan mediante los endpoints PATCH vigentes.
+
+La evidencia fotográfica normal pertenece a la orden de trabajo vinculada (`OrdenesTrabajo.evidenciaFotoUrl`) y se guarda como clave de objeto RustFS. `LecturaAnomalia.fotoUrl` se conserva exclusivamente para fotos de anomalías.
+
+Como referencia histórica, las tareas del operador se nombraban `POST /operator/:id/install`, `report-defect` y `decommission`; esos endpoints no son contrato vigente y fueron reemplazados por la instalación administrativa `POST /meters/:id/install` y la gestión de órdenes mediante `PATCH /operator/tasks/:id`.
 
 ## 4. Revisión de la lectura
 

@@ -17,6 +17,8 @@ export interface UpdateReadingRepositoryData {
   lecturaInicial?: boolean;
   periodoId?: number;
   deletedAt?: Date | null;
+  /** RustFS object key stored on the linked work order. */
+  evidenciaFotoUrl?: string | null;
 }
 export interface ReadingFilters {
   contratoId?: bigint;

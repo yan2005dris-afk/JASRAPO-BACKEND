@@ -10,6 +10,7 @@ import {
 import { LecturaEntity } from '../../domain/entities/lectura.entity';
 import { ReadingMapper } from '../mappers/reading.mapper';
 import { EstadoPeriodo, EstadoLectura } from 'src/shared/enums';
+import { InvalidDomainOperationException } from 'src/shared/domain/exceptions/domain.exception';
 import { Decimal } from 'decimal.js';
 
 export const safeReadingsSelect = {
@@ -314,6 +315,18 @@ export class PrismaReadingRepository implements ReadingRepository {
     data: UpdateReadingRepositoryData,
   ): Promise<LecturaEntity> {
     const record = await this.prisma.$transaction(async (tx) => {
+      if (data.evidenciaFotoUrl !== undefined) {
+        const linked = await tx.ordenesTrabajo.updateMany({
+          where: { lecturaId: where.lecturaId, deletedAt: null },
+          data: { evidenciaFotoUrl: data.evidenciaFotoUrl },
+        });
+        if (linked.count === 0) {
+          throw new InvalidDomainOperationException(
+            'La lectura no tiene una orden de trabajo vinculada para guardar la evidencia fotográfica',
+          );
+        }
+      }
+
       const updated = await tx.lecturas.update({
         where: { lecturaId: where.lecturaId },
         data: {
@@ -426,6 +439,18 @@ export class PrismaReadingRepository implements ReadingRepository {
 
       if (count === 0) {
         return null;
+      }
+
+      if (data.evidenciaFotoUrl !== undefined) {
+        const linked = await tx.ordenesTrabajo.updateMany({
+          where: { lecturaId: where.lecturaId, deletedAt: null },
+          data: { evidenciaFotoUrl: data.evidenciaFotoUrl },
+        });
+        if (linked.count === 0) {
+          throw new InvalidDomainOperationException(
+            'La lectura no tiene una orden de trabajo vinculada para guardar la evidencia fotográfica',
+          );
+        }
       }
 
       return tx.lecturas.findUnique({

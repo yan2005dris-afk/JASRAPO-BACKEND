@@ -26,7 +26,10 @@ export class ResponseReadingDto {
   @ApiProperty({ description: 'Fecha de validación', required: false })
   fechaValidacion: Date | null;
 
-  @ApiProperty({ description: 'URL de la foto', required: false })
+  @ApiProperty({
+    description: 'Clave de evidencia fotográfica en RustFS',
+    required: false,
+  })
   evidenciaFotoUrl: string | null;
 
   @ApiProperty({ description: 'Indica si está validada' })

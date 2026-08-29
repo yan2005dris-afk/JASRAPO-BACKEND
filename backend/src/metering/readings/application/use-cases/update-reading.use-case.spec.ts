@@ -67,6 +67,24 @@ describe('UpdateReadingUseCase', () => {
     );
   });
 
+  it('forwards photo evidence as a RustFS key for the linked work order', async () => {
+    mockReadingRepository.findUnique.mockResolvedValue(mockReading as any);
+    mockReadingRepository.update.mockResolvedValue(mockUpdatedReading as any);
+
+    await useCase.execute(BigInt(1), {
+      lecturaActual: 200,
+      evidenciaFotoUrl: 'readings/evidence.jpg',
+    });
+
+    expect(mockReadingRepository.update).toHaveBeenCalledWith(
+      { lecturaId: BigInt(1) },
+      expect.objectContaining({
+        lecturaActual: 200,
+        evidenciaFotoUrl: 'readings/evidence.jpg',
+      }),
+    );
+  });
+
   it('should throw EntityNotFoundException when reading not found', async () => {
     mockReadingRepository.findUnique.mockResolvedValue(null);
 
