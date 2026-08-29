@@ -27,7 +27,7 @@ export class ResponseReadingDto {
   fechaValidacion: Date | null;
 
   @ApiProperty({ description: 'URL de la foto', required: false })
-  fotoUrl: string | null;
+  evidenciaFotoUrl: string | null;
 
   @ApiProperty({ description: 'Indica si está validada' })
   isValidada: boolean;
@@ -97,7 +97,7 @@ export class ResponseReadingDto {
       contratoId: activeContrato ? activeContrato.contratoId.toString() : '',
       descripcionAnomalia: reading.descripcionAnomalia,
       fechaValidacion: reading.fechaValidacion,
-      fotoUrl: reading.fotoUrl,
+      evidenciaFotoUrl: reading.evidenciaFotoUrl,
       isValidada: reading.isValidada,
       lecturaInicial: reading.lecturaInicial,
       periodoId: reading.periodoId,

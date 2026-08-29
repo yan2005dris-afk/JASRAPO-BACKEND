@@ -1,4 +1,6 @@
 import { Controller, Patch, Param, Body } from '@nestjs/common';
+import { CurrentUser } from '../../../../identity/auth/interfaces/http/decorators/current-user.decorator';
+import type { JwtPayload } from '../../../../identity/auth/application/types/jwt.types';
 import { ParseBigIntPipe } from 'src/infrastructure/common/pipes/parse-bigint.pipe';
 import {
   ApiTags,
@@ -46,12 +48,17 @@ export class OrdenesTrabajoController {
   @Patch(':id/estado')
   async updateEstado(
     @Param('id', ParseBigIntPipe) id: bigint,
+    @CurrentUser() user: JwtPayload,
     @Body() dto: UpdateOrdenEstadoDto,
   ): Promise<OrderWorkResponseDto> {
-    const result = await this.ordenesTrabajoService.updateEstado(id, {
-      estado: dto.estado,
-      resultadoObservacion: dto.resultadoObservacion,
-    });
+    const result = await this.ordenesTrabajoService.updateEstado(
+      id,
+      {
+        estado: dto.estado,
+        resultadoObservacion: dto.resultadoObservacion,
+      },
+      Number(user.sub),
+    );
     return OrderWorkResponseDto.fromEntity(result);
   }
 
@@ -79,12 +86,15 @@ export class OrdenesTrabajoController {
   @Patch(':id/lectura')
   async linkLectura(
     @Param('id', ParseBigIntPipe) id: bigint,
+    @CurrentUser() user: JwtPayload,
     @Body() dto: LinkLecturaDto,
   ): Promise<OrderWorkResponseDto> {
     const lecturaIdBigInt = BigInt(dto.lecturaId);
-    const result = await this.ordenesTrabajoService.linkLectura(id, {
-      lecturaId: lecturaIdBigInt,
-    });
+    const result = await this.ordenesTrabajoService.linkLectura(
+      id,
+      { lecturaId: lecturaIdBigInt },
+      Number(user.sub),
+    );
     return OrderWorkResponseDto.fromEntity(result);
   }
 }

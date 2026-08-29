@@ -32,14 +32,20 @@ export class OrdenesTrabajoService {
   async updateEstado(
     ordenTrabajoId: bigint,
     data: UpdateOrdenEstadoData,
+    operarioId?: number,
   ): Promise<OrdenTrabajoEntity> {
-    return this.updateOrdenEstadoUseCase.execute(ordenTrabajoId, data);
+    return operarioId === undefined
+      ? this.updateOrdenEstadoUseCase.execute(ordenTrabajoId, data)
+      : this.updateOrdenEstadoUseCase.execute(ordenTrabajoId, data, operarioId);
   }
 
   async linkLectura(
     ordenTrabajoId: bigint,
     data: LinkLecturaData,
+    operarioId?: number,
   ): Promise<OrdenTrabajoEntity> {
-    return this.linkLecturaUseCase.execute(ordenTrabajoId, data);
+    return operarioId === undefined
+      ? this.linkLecturaUseCase.execute(ordenTrabajoId, data)
+      : this.linkLecturaUseCase.execute(ordenTrabajoId, data, operarioId);
   }
 }

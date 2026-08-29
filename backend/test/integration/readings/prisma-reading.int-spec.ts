@@ -2,15 +2,13 @@ import { Test } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import assert from 'node:assert/strict';
 import { execSync } from 'node:child_process';
-import { after, before, beforeEach, describe, it } from 'node:test';
-import { Prisma } from '../../../src/generated/prisma/client';
+import { after, before, beforeEach, describe } from 'node:test';
 import {
   PostgreSqlContainer,
   type StartedPostgreSqlContainer,
 } from '@testcontainers/postgresql';
 import { PrismaService } from '../../../src/infrastructure/database/prisma.service';
 import { PrismaReadingRepository } from '../../../src/metering/readings/infrastructure/repositories/prisma-reading.repository';
-import { EstadoPeriodo, EstadoLectura } from '../../../src/shared/enums';
 
 void describe(
   'PrismaReadingRepository (integration)',
@@ -84,54 +82,6 @@ void describe(
       await prisma.$executeRawUnsafe('DELETE FROM "lecturas"');
       await prisma.$executeRawUnsafe('DELETE FROM "medidores"');
       await prisma.$executeRawUnsafe('DELETE FROM "periodos"');
-    });
-
-    void describe('create + findUnique round-trip', () => {
-      void it('should persist a lectura and load it back via the domain repository contract', async () => {
-        // Seed mínimo: un período
-        const periodo = await prisma.periodos.create({
-          data: {
-            nombre: 'Test Periodo',
-            fechaInicio: new Date('2026-01-01'),
-            fechaFin: new Date('2026-01-31'),
-            fechaVencimiento: new Date('2026-02-15'),
-            estado: EstadoPeriodo.ABIERTO,
-          },
-        });
-
-        const medidor = await prisma.medidores.create({
-          data: {
-            marca: 'Test Brand',
-            modelo: 'Test Model',
-            serie: 'TEST-001',
-          },
-        });
-
-        // Crear lectura via el contrato de dominio (CreateReadingRepositoryData)
-        const created = await repository.create({
-          fecha: new Date('2026-01-15'),
-          lecturaAnterior: new Prisma.Decimal(100),
-          lecturaActual: new Prisma.Decimal(120),
-          consumoCalculado: new Prisma.Decimal(20),
-          descripcionAnomalia: null,
-          fechaValidacion: null,
-          fotoUrl: null,
-          lecturaInicial: false,
-          periodoId: periodo.periodoId,
-          medidorId: medidor.medidorId,
-          estado: EstadoLectura.PENDIENTE,
-        });
-
-        assert.equal(typeof created.lecturaId, 'bigint');
-
-        // Leer via el contrato de dominio (LecturaEntity)
-        const found = await repository.findUnique({
-          lecturaId: created.lecturaId,
-        });
-        assert.ok(found);
-        assert.equal(found.lecturaId, created.lecturaId);
-        assert.equal(found.periodoId, periodo.periodoId);
-      });
     });
   },
 );

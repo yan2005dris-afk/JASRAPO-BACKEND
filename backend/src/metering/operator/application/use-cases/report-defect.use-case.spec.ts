@@ -7,6 +7,7 @@ import {
 import { ReportDefectUseCase } from './report-defect.use-case';
 import { MeterRepository } from '../../../meters/domain/repositories/meter.repository';
 import { EstadoMedidor } from 'src/shared/enums';
+import { OperatorRepository } from '../../domain/repositories/operator.repository';
 
 describe('ReportDefectUseCase', () => {
   let useCase: ReportDefectUseCase;
@@ -14,6 +15,7 @@ describe('ReportDefectUseCase', () => {
   const mockMeterRepository = {
     findUnique: jest.fn(),
     update: jest.fn(),
+    verifyMeterOwnership: jest.fn(),
   };
 
   function makeMeter(overrides: Record<string, unknown> = {}) {
@@ -37,11 +39,13 @@ describe('ReportDefectUseCase', () => {
 
   beforeEach(async () => {
     jest.clearAllMocks();
+    mockMeterRepository.verifyMeterOwnership.mockResolvedValue(undefined);
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ReportDefectUseCase,
         { provide: MeterRepository, useValue: mockMeterRepository },
+        { provide: OperatorRepository, useValue: mockMeterRepository },
       ],
     }).compile();
 
@@ -93,5 +97,19 @@ describe('ReportDefectUseCase', () => {
       { estado: EstadoMedidor.DANADO },
     );
     expect(result.estado).toBe(EstadoMedidor.DANADO);
+  });
+
+  it('should reject a meter not owned by the operator', async () => {
+    mockMeterRepository.findUnique.mockResolvedValue(makeMeter());
+    mockMeterRepository.verifyMeterOwnership.mockRejectedValue(
+      new InvalidDomainOperationException(
+        'El medidor no pertenece a tu ruta asignada',
+      ),
+    );
+
+    await expect(useCase.execute(BigInt(1), 7)).rejects.toThrow(
+      InvalidDomainOperationException,
+    );
+    expect(mockMeterRepository.update).not.toHaveBeenCalled();
   });
 });

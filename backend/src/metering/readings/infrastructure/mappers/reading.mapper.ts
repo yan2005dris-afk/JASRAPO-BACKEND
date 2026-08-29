@@ -15,7 +15,9 @@ export class ReadingMapper {
       medidorId: raw.medidorId,
       descripcionAnomalia: raw.descripcionAnomalia,
       fechaValidacion: raw.fechaValidacion,
-      fotoUrl: raw.fotoUrl,
+      evidenciaFotoUrl:
+        raw.ordenesTrabajo?.find((order: any) => order.evidenciaFotoUrl)
+          ?.evidenciaFotoUrl ?? null,
       estado: raw.estado,
       isValidada: raw.estado !== 'PENDIENTE',
       lecturaInicial: raw.lecturaInicial,

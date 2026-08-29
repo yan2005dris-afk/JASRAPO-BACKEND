@@ -14,12 +14,20 @@ export class UpdateOrdenEstadoUseCase {
   async execute(
     ordenTrabajoId: bigint,
     data: UpdateOrdenEstadoData,
+    operarioId?: number,
   ): Promise<OrdenTrabajoEntity> {
     // Validate estado is valid (defense in depth — DTO @IsEnum should catch first)
     const validEstados = Object.values(EstadoOrdenTrabajo);
     if (!validEstados.includes(data.estado as EstadoOrdenTrabajo)) {
       throw new InvalidDomainOperationException(
         `Estado inválido: ${data.estado}`,
+      );
+    }
+
+    if (operarioId !== undefined) {
+      await this.ordenTrabajoRepository.verifyOperatorWorkOrderOwnership(
+        operarioId,
+        ordenTrabajoId,
       );
     }
 
