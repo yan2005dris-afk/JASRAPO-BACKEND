@@ -43,7 +43,6 @@ describe('OperatorController work-order update', () => {
       useCase as any,
       undefined as any,
       undefined as any,
-      undefined as any,
       routesUseCase as any,
       undefined as any,
       undefined as any,
@@ -53,7 +52,7 @@ describe('OperatorController work-order update', () => {
     routesUseCase.execute.mockResolvedValue([]);
   });
 
-  it('protects the manifest with operator-sync:read and keeps legacy sync wired', async () => {
+  it('protects the manifest with operator-sync:read', () => {
     expect(
       Reflect.getMetadata(
         PERMISSION_KEY,
@@ -63,29 +62,6 @@ describe('OperatorController work-order update', () => {
     expect(
       Reflect.getMetadata('path', OperatorController.prototype.syncManifest),
     ).toEqual('sync/manifest');
-    expect(
-      Reflect.getMetadata(PERMISSION_KEY, OperatorController.prototype.syncAll),
-    ).toEqual({ recurso: 'meters', accion: 'read' });
-    expect(
-      Reflect.getMetadata('path', OperatorController.prototype.syncAll),
-    ).toEqual('sync');
-
-    const legacySync = { execute: jest.fn().mockResolvedValue([]) };
-    const wired = new OperatorController(
-      undefined as any,
-      undefined as any,
-      undefined as any,
-      undefined as any,
-      undefined as any,
-      legacySync as any,
-      undefined as any,
-      undefined as any,
-      undefined as any,
-      storage as any,
-      undefined as any,
-    );
-    await expect(wired.syncAll({ sub: '17' } as any)).resolves.toEqual([]);
-    expect(legacySync.execute).toHaveBeenCalledWith(17);
   });
 
   it('wires the paginated sync manifest to the authenticated operator', async () => {
@@ -93,7 +69,6 @@ describe('OperatorController work-order update', () => {
       execute: jest.fn().mockResolvedValue({ complete: true }),
     };
     const wired = new OperatorController(
-      undefined as any,
       undefined as any,
       undefined as any,
       undefined as any,

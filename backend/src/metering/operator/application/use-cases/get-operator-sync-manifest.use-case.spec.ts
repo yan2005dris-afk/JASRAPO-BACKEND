@@ -54,6 +54,7 @@ describe('GetOperatorSyncManifestUseCase', () => {
   it('returns the first bounded page and complete semantics', async () => {
     const result = await useCase.execute(10, undefined, 2);
     expect(result.complete).toBe(true);
+    expect(result.mode).toBe('snapshot');
     expect(result.snapshotVersion).toBeTruthy();
     expect(repository.findSyncReadings).toHaveBeenCalledWith(
       7,
@@ -67,8 +68,10 @@ describe('GetOperatorSyncManifestUseCase', () => {
 
   it('transitions to incremental mode after initial collections complete', async () => {
     const initial = await useCase.execute(10, undefined, 2);
-    await useCase.execute(10, initial.nextCursor!, 2);
+    const incremental = await useCase.execute(10, initial.nextCursor!, 2);
 
+    expect(initial.mode).toBe('snapshot');
+    expect(incremental.mode).toBe('incremental');
     expect(repository.findSyncChanges).toHaveBeenCalledWith(
       7,
       expect.any(Array),
@@ -116,6 +119,7 @@ describe('GetOperatorSyncManifestUseCase', () => {
     });
 
     const result = await useCase.execute(10, initial.nextCursor);
+    expect(result.mode).toBe('incremental');
     expect(result.changes).toEqual([
       expect.objectContaining({
         sequenceId: '13',

@@ -203,6 +203,7 @@ export class GetOperatorSyncManifestUseCase {
       page.nextCursor = page.hasMore ? nextCursor : null;
     return new OperatorSyncManifestDto({
       snapshotVersion: snapshot.toISOString(),
+      mode: 'snapshot',
       periodId: period.periodoId,
       cursor: cursor ?? null,
       nextCursor,
@@ -235,6 +236,7 @@ export class GetOperatorSyncManifestUseCase {
     const changes = page.items.map((change) => this.changeDto(change));
     return new OperatorSyncManifestDto({
       snapshotVersion: state.snapshotVersion,
+      mode: 'incremental',
       periodId,
       cursor: null,
       nextCursor: page.hasMore ? nextCursor : nextCursor,

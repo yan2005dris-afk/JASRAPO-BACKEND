@@ -11,6 +11,9 @@ export class OperatorSyncManifestDto {
   @ApiProperty({ description: 'Version opaca de la lectura del manifiesto' })
   snapshotVersion: string;
 
+  @ApiProperty({ enum: ['snapshot', 'incremental'] })
+  mode: 'snapshot' | 'incremental';
+
   @ApiProperty()
   periodId: number;
 

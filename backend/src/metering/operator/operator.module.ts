@@ -3,7 +3,6 @@ import { OperatorController } from './interfaces/http/operator.controller';
 import { GetOperatorReadingsUseCase } from './application/use-cases/get-operator-readings.use-case';
 import { UpdateOperatorReadingUseCase } from './application/use-cases/update-operator-reading.use-case';
 import { UpdateOperatorWorkOrderUseCase } from './application/use-cases/update-operator-work-order.use-case';
-import { SyncAllUseCase } from './application/use-cases/sync-all.use-case';
 import { GetOperatorRoutesUseCase } from './application/use-cases/get-operator-routes.use-case';
 import { UpdateRouteStateUseCase } from './application/use-cases/update-route-state.use-case';
 import { ReportDefectUseCase } from './application/use-cases/report-defect.use-case';
@@ -24,7 +23,6 @@ import { OrdenTrabajoRepository } from 'src/operations/routes/domain/repositorie
     GetOperatorReadingsUseCase,
     UpdateOperatorReadingUseCase,
     UpdateOperatorWorkOrderUseCase,
-    SyncAllUseCase,
     GetOperatorRoutesUseCase,
     UpdateRouteStateUseCase,
     ReportDefectUseCase,
