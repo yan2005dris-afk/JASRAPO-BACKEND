@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { EstadoLectura } from 'src/shared/enums';
 import {
   EntityNotFoundException,
+  ForbiddenDomainException,
   InvalidDomainOperationException,
 } from 'src/shared/domain/exceptions/domain.exception';
 import { UpdateReadingUseCase } from 'src/metering/readings/application/use-cases/update-reading.use-case';
@@ -55,31 +56,14 @@ export class UpdateOperatorReadingUseCase {
     const hasWorkOrder = lectura.ordenesTrabajo?.some(
       (ot) =>
         ot.ruta?.operarioId === operarioId &&
-        ot.ruta?.periodoId === activePeriod.periodoId,
+        ot.ruta?.periodoId === activePeriod.periodoId &&
+        rutas.some((ruta) => ruta.rutaId === ot.rutaId),
     );
 
     if (!hasWorkOrder) {
-      // Fallback a pertenencia comunitaria/sectorial en rutas activas
-      const activeHistorial = lectura.medidor?.historial?.[0];
-      const contrato = activeHistorial?.contrato ?? null;
-      if (!contrato) {
-        throw new EntityNotFoundException('Contrato', 'activo');
-      }
-
-      const lecturaPertenece = rutas.some((ruta) => {
-        const comunidadMatch = ruta.comunidadId === contrato.comunidadId;
-        const sectorMatch =
-          ruta.sectorId === null || ruta.sectorId === undefined
-            ? true
-            : ruta.sectorId === contrato.sectorId;
-        return comunidadMatch && sectorMatch;
-      });
-
-      if (!lecturaPertenece) {
-        throw new InvalidDomainOperationException(
-          'Esta lectura no pertenece a tu ruta asignada',
-        );
-      }
+      throw new ForbiddenDomainException(
+        'Esta lectura no está asignada a una orden de trabajo de tu ruta activa',
+      );
     }
 
     // 6. Validar que la lectura esté en un estado modificable por el operador

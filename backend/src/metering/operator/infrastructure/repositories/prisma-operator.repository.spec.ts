@@ -1,6 +1,6 @@
 import { Test } from '@nestjs/testing';
 import { Prisma } from 'src/generated/prisma/client';
-import { InvalidDomainOperationException } from 'src/shared/domain/exceptions/domain.exception';
+import { ConflictDomainException } from 'src/shared/domain/exceptions/domain.exception';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { PrismaOperatorRepository } from './prisma-operator.repository';
 
@@ -118,6 +118,6 @@ describe('PrismaOperatorRepository routes', () => {
 
     await expect(
       repository.updateRouteState(1n, { estado: 'EN_PROGRESO' }, 'PENDIENTE'),
-    ).rejects.toBeInstanceOf(InvalidDomainOperationException);
+    ).rejects.toBeInstanceOf(ConflictDomainException);
   });
 });

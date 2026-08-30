@@ -9,6 +9,7 @@ import {
   EstadoAnomalia,
 } from 'src/shared/enums';
 import {
+  ConflictDomainException,
   EntityNotFoundException,
   InvalidDomainOperationException,
 } from 'src/shared/domain/exceptions/domain.exception';
@@ -389,7 +390,7 @@ export class PrismaOperatorRepository extends OperatorRepository {
       return this.toOperatorRoute(route);
     } catch (error) {
       if (this.isOptimisticLockFailure(error)) {
-        throw new InvalidDomainOperationException(
+        throw new ConflictDomainException(
           'Conflicto de concurrencia: la ruta fue modificada por otro operario',
         );
       }
