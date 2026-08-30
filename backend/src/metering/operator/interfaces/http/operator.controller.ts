@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Controller,
   Get,
   Patch,
@@ -86,7 +87,7 @@ export class OperatorController {
   async getOperatorReadings(
     @CurrentUser() user: JwtPayload,
   ): Promise<ResponseReadingDto[]> {
-    const operarioId = Number(user.sub);
+    const operarioId = this.getAuthenticatedOperatorId(user);
     return this.getOperatorReadingsUseCase.execute(operarioId);
   }
 
@@ -112,7 +113,7 @@ export class OperatorController {
   async getReadingsWithAnomalies(
     @CurrentUser() user: JwtPayload,
   ): Promise<OperatorReadingAnomalyResponseDto[]> {
-    const operarioId = Number(user.sub);
+    const operarioId = this.getAuthenticatedOperatorId(user);
     const readings =
       await this.getOperatorReadingsWithAnomaliesUseCase.execute(operarioId);
     return readings.map((r) => OperatorReadingAnomalyResponseDto.fromEntity(r));
@@ -167,7 +168,7 @@ export class OperatorController {
     @Body() updateDto: UpdateOperatorReadingDto,
     @UploadedFile() foto?: Express.Multer.File,
   ): Promise<ResponseReadingDto> {
-    const operarioId = Number(user.sub);
+    const operarioId = this.getAuthenticatedOperatorId(user);
     let uploadedKey: string | undefined;
     if (foto) {
       uploadedKey = await uploadReadingPhoto(foto, this.storageService);
@@ -230,6 +231,7 @@ export class OperatorController {
     @Body() dto: UpdateOperatorWorkOrderDto,
     @UploadedFile() foto?: Express.Multer.File,
   ): Promise<OrderWorkResponseDto> {
+    const operarioId = this.getAuthenticatedOperatorId(user);
     let uploadedKey: string | undefined;
     if (foto) {
       uploadedKey = await uploadReadingPhoto(foto, this.storageService);
@@ -237,7 +239,7 @@ export class OperatorController {
     try {
       const entity = await this.updateOperatorWorkOrderUseCase.execute(
         id,
-        Number(user.sub),
+        operarioId,
         dto,
         uploadedKey,
       );
@@ -282,7 +284,10 @@ export class OperatorController {
     @CurrentUser() user: JwtPayload,
   ): Promise<MeterResponseDto> {
     return MeterResponseDto.fromEntity(
-      await this.reportDefectUseCase.execute(id, Number(user.sub)),
+      await this.reportDefectUseCase.execute(
+        id,
+        this.getAuthenticatedOperatorId(user),
+      ),
     );
   }
 
@@ -325,7 +330,7 @@ export class OperatorController {
       await this.decommissionMeterUseCase.execute(
         id,
         dto.motivoBaja,
-        Number(user.sub),
+        this.getAuthenticatedOperatorId(user),
       ),
     );
   }
@@ -343,7 +348,7 @@ export class OperatorController {
   @RequiredPermission('meters', 'read')
   @Get('sync')
   async syncAll(@CurrentUser() user: JwtPayload): Promise<MeterResponseDto[]> {
-    const operarioId = Number(user.sub);
+    const operarioId = this.getAuthenticatedOperatorId(user);
     const meters = await this.syncAllUseCase.execute(operarioId);
     return meters.map((m) => MeterResponseDto.fromEntity(m));
   }
@@ -379,7 +384,7 @@ export class OperatorController {
     @Query('tipoRuta', new ParseEnumPipe(TipoRuta, { optional: true }))
     tipoRuta?: TipoRuta,
   ): Promise<OperatorRouteResponseDto[]> {
-    const operarioId = Number(user.sub);
+    const operarioId = this.getAuthenticatedOperatorId(user);
     const routes = await this.getOperatorRoutesUseCase.execute(
       operarioId,
       tipoRuta,
@@ -419,12 +424,22 @@ export class OperatorController {
     @CurrentUser() user: JwtPayload,
     @Body() dto: UpdateRouteStateDto,
   ): Promise<OperatorRouteResponseDto> {
-    const operarioId = Number(user.sub);
+    const operarioId = this.getAuthenticatedOperatorId(user);
     const updated = await this.updateRouteStateUseCase.execute(
       id,
       operarioId,
       dto,
     );
     return OperatorRouteResponseDto.fromEntity(updated);
+  }
+
+  private getAuthenticatedOperatorId(user: JwtPayload): number {
+    const operarioId = Number(user.sub);
+    if (!Number.isSafeInteger(operarioId) || operarioId <= 0) {
+      throw new BadRequestException(
+        'El identificador del operador debe ser un entero positivo seguro',
+      );
+    }
+    return operarioId;
   }
 }

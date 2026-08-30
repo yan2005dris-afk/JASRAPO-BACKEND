@@ -1,4 +1,7 @@
+import { BadRequestException } from '@nestjs/common';
+import { validate } from 'class-validator';
 import { OperatorController } from './operator.controller';
+import { UpdateOperatorWorkOrderDto } from '../dto/update-operator-work-order.dto';
 jest.mock('../../application/reading-upload.helper', () => ({
   uploadReadingPhoto: jest.fn().mockResolvedValue('readings/deterministic.jpg'),
   rollbackReadingPhoto: jest.fn().mockResolvedValue(undefined),
@@ -54,6 +57,40 @@ describe('OperatorController work-order update', () => {
       controller.getOperatorRoutes({ sub: '17' } as any, 'LECTURA' as any),
     ).resolves.toEqual([]);
     expect(routesUseCase.execute).toHaveBeenCalledWith(17, 'LECTURA');
+  });
+
+  it.each([
+    undefined,
+    0,
+    -1,
+    NaN,
+    Infinity,
+    Number.MAX_SAFE_INTEGER + 1,
+    'not-a-number',
+  ])('rejects an invalid authenticated operator ID (%p)', async (sub) => {
+    await expect(
+      controller.getOperatorRoutes({ sub } as any),
+    ).rejects.toBeInstanceOf(BadRequestException);
+    expect(routesUseCase.execute).not.toHaveBeenCalled();
+  });
+
+  it('rejects an invalid operator ID before uploading work-order evidence', async () => {
+    await expect(
+      controller.updateOperatorWorkOrder(42n, { sub: 0 } as any, {}, {
+        buffer: Buffer.from('x'),
+      } as any),
+    ).rejects.toBeInstanceOf(BadRequestException);
+    expect(uploadReadingPhoto).not.toHaveBeenCalled();
+    expect(useCase.execute).not.toHaveBeenCalled();
+  });
+
+  it('rejects empty multipart estadoSellos values', async () => {
+    for (const estadoSellos of ['', '  ', '""', "''"]) {
+      const errors = await validate(
+        Object.assign(new UpdateOperatorWorkOrderDto(), { estadoSellos }),
+      );
+      expect(errors.map((error) => error.property)).toContain('estadoSellos');
+    }
   });
 
   it('passes the returned RustFS key and converts response IDs', async () => {
