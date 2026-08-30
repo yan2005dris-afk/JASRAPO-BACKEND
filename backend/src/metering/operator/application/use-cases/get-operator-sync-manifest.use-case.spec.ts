@@ -35,7 +35,12 @@ describe('GetOperatorSyncManifestUseCase', () => {
     repository.findSyncMeters.mockResolvedValue(page());
     repository.findSyncReadings.mockResolvedValue(page());
     repository.findSyncPendingAnomalies.mockResolvedValue(page());
-    useCase = new GetOperatorSyncManifestUseCase(repository as any);
+    useCase = new GetOperatorSyncManifestUseCase(
+      repository as any,
+      {
+        get: jest.fn().mockReturnValue('test-cursor-secret'),
+      } as any,
+    );
   });
 
   it('returns the first bounded page and complete semantics', async () => {
@@ -72,6 +77,14 @@ describe('GetOperatorSyncManifestUseCase', () => {
       );
     },
   );
+
+  it('rejects a tampered signed cursor', async () => {
+    repository.findSyncRoutes.mockResolvedValue(page(true));
+    const cursor = (await useCase.execute(10)).routes.nextCursor!;
+    await expect(useCase.execute(10, `${cursor}x`)).rejects.toBeInstanceOf(
+      DomainValidationException,
+    );
+  });
 
   it('fails closed for the wrong operator and changed route scope', async () => {
     repository.findSyncRoutes.mockResolvedValue(page(true));

@@ -58,7 +58,8 @@ export async function seedRolePermissions(
 
     // 4. OPERADORES: Solo lo necesario para su pantalla de lecturas
     const operadorPermissionKeys = new Set([
-        'meters:read',              // sync offline PWA
+        'meters:read',                     // legacy sync endpoint until frontend migration
+        'operator-sync:read',              // paginated offline manifest
         'lecturas:read',            // ver lecturas asignadas
         'lecturas:update',          // modificar lectura (PENDIENTE → POR_REVISION)
         'reading-anomalies:create', // reportar novedad/daño

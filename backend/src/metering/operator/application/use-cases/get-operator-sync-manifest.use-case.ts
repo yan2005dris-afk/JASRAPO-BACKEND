@@ -1,5 +1,6 @@
-import { createHash } from 'node:crypto';
+import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
 import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { MeterEntity } from 'src/metering/meters/domain/entities/meter.entity';
 import {
   EntityNotFoundException,
@@ -29,17 +30,22 @@ type Collection =
   | 'readings'
   | 'pendingAnomalies';
 type Cursor = {
-  v: 1;
+  v: 2;
   operatorId: number;
   periodId: number;
   snapshotVersion: string;
   scope: string;
-  positions: Partial<Record<Collection, { updatedAt: string; id: string }>>;
+  positions: Partial<
+    Record<Collection, { updatedAt: string; id: string; completed: boolean }>
+  >;
 };
 
 @Injectable()
 export class GetOperatorSyncManifestUseCase {
-  constructor(private readonly repository: OperatorRepository) {}
+  constructor(
+    private readonly repository: OperatorRepository,
+    private readonly config: ConfigService,
+  ) {}
 
   async execute(
     operatorId: number,
@@ -75,47 +81,65 @@ export class GetOperatorSyncManifestUseCase {
         ? { updatedAt: new Date(value.updatedAt), id: BigInt(value.id) }
         : null;
     };
+    const completed = (name: Collection) =>
+      state?.positions[name]?.completed === true;
+    const emptyPage = <T>(): SyncPage<T> => ({
+      items: [],
+      total: 0,
+      hasMore: false,
+      nextPosition: null,
+    });
     const [routePage, orderPage, meterPage, readingPage, anomalyPage] =
       await Promise.all([
-        this.repository.findSyncRoutes(
-          operatorId,
-          period.periodoId,
-          snapshot,
-          position('routes'),
-          limit,
-        ),
-        this.repository.findSyncWorkOrders(
-          operatorId,
-          period.periodoId,
-          routes.flatMap((r) => (r.rutaId ? [r.rutaId] : [])),
-          snapshot,
-          position('workOrders'),
-          limit,
-        ),
-        this.repository.findSyncMeters(
-          routes,
-          snapshot,
-          position('meters'),
-          limit,
-        ),
-        this.repository.findSyncReadings(
-          period.periodoId,
-          routes,
-          snapshot,
-          position('readings'),
-          limit,
-        ),
-        this.repository.findSyncPendingAnomalies(
-          operatorId,
-          period.periodoId,
-          routes,
-          snapshot,
-          position('pendingAnomalies'),
-          limit,
-        ),
+        completed('routes')
+          ? emptyPage()
+          : this.repository.findSyncRoutes(
+              operatorId,
+              period.periodoId,
+              snapshot,
+              position('routes'),
+              limit,
+            ),
+        completed('workOrders')
+          ? emptyPage()
+          : this.repository.findSyncWorkOrders(
+              operatorId,
+              period.periodoId,
+              routes.flatMap((r) => (r.rutaId ? [r.rutaId] : [])),
+              snapshot,
+              position('workOrders'),
+              limit,
+            ),
+        completed('meters')
+          ? emptyPage()
+          : this.repository.findSyncMeters(
+              routes,
+              snapshot,
+              position('meters'),
+              limit,
+            ),
+        completed('readings')
+          ? emptyPage()
+          : this.repository.findSyncReadings(
+              period.periodoId,
+              routes,
+              snapshot,
+              position('readings'),
+              limit,
+            ),
+        completed('pendingAnomalies')
+          ? emptyPage()
+          : this.repository.findSyncPendingAnomalies(
+              operatorId,
+              period.periodoId,
+              routes,
+              snapshot,
+              position('pendingAnomalies'),
+              limit,
+            ),
       ]);
     const pages: Record<Collection, OperatorSyncPage<unknown>> = {
-      routes: this.mapPage(routePage, (item) =>
+      routes: this.mapPage(routePage as SyncPage<any>, (item) =>
         OperatorRouteResponseDto.fromEntity(item),
       ),
       workOrders: this.mapPage(orderPage, (item) => this.workOrderDto(item)),
@@ -123,12 +147,12 @@ export class GetOperatorSyncManifestUseCase {
         MeterResponseDto.fromEntity(this.toMeterEntity(item)),
       ),
       readings: this.mapPage(readingPage, (item) => this.readingDto(item)),
-      pendingAnomalies: this.mapPage(anomalyPage, (item) =>
+      pendingAnomalies: this.mapPage(anomalyPage as SyncPage<any>, (item) =>
         OperatorReadingAnomalyResponseDto.fromEntity(item),
       ),
     };
     const nextState: Cursor = {
-      v: 1,
+      v: 2,
       operatorId,
       periodId: period.periodoId,
       snapshotVersion: snapshot.toISOString(),
@@ -147,11 +171,18 @@ export class GetOperatorSyncManifestUseCase {
           ] as Collection[]
         ).indexOf(name)
       ];
-      if (page.nextPosition)
-        nextState.positions[name] = {
-          updatedAt: page.nextPosition.updatedAt.toISOString(),
-          id: page.nextPosition.id.toString(),
-        };
+      const previous = state?.positions[name];
+      nextState.positions[name] = page.nextPosition
+        ? {
+            updatedAt: page.nextPosition.updatedAt.toISOString(),
+            id: page.nextPosition.id.toString(),
+            completed: false,
+          }
+        : {
+            updatedAt: previous?.updatedAt ?? snapshot.toISOString(),
+            id: previous?.id ?? '0',
+            completed: true,
+          };
     }
     const encoded = this.encodeCursor(nextState);
     for (const page of Object.values(pages))
@@ -179,13 +210,26 @@ export class GetOperatorSyncManifestUseCase {
 
   private decodeCursor(value: string): Cursor {
     try {
-      if (!/^[A-Za-z0-9_-]+$/.test(value) || value.length > 4096)
+      const [encoded, signature] = value.split('.');
+      if (
+        !encoded ||
+        !signature ||
+        !/^[A-Za-z0-9_-]+$/.test(encoded) ||
+        !/^[A-Za-z0-9_-]+$/.test(signature) ||
+        value.length > 4096
+      )
+        throw new Error();
+      const expected = this.sign(encoded);
+      if (
+        signature.length !== expected.length ||
+        !timingSafeEqual(Buffer.from(signature), Buffer.from(expected))
+      )
         throw new Error();
       const decoded = JSON.parse(
-        Buffer.from(value, 'base64url').toString('utf8'),
+        Buffer.from(encoded, 'base64url').toString('utf8'),
       ) as Cursor;
       if (
-        decoded.v !== 1 ||
+        decoded.v !== 2 ||
         !Number.isSafeInteger(decoded.operatorId) ||
         !Number.isSafeInteger(decoded.periodId) ||
         typeof decoded.scope !== 'string' ||
@@ -197,6 +241,7 @@ export class GetOperatorSyncManifestUseCase {
       for (const position of Object.values(decoded.positions)) {
         if (
           !position ||
+          typeof position.completed !== 'boolean' ||
           !/^[0-9]+$/.test(position.id) ||
           !Number.isFinite(new Date(position.updatedAt).getTime())
         )
@@ -209,7 +254,15 @@ export class GetOperatorSyncManifestUseCase {
   }
 
   private encodeCursor(value: Cursor): string {
-    return Buffer.from(JSON.stringify(value)).toString('base64url');
+    const encoded = Buffer.from(JSON.stringify(value)).toString('base64url');
+    return `${encoded}.${this.sign(encoded)}`;
+  }
+
+  private sign(value: string): string {
+    const secret = this.config.get<string>('JWT_ACCESS_SECRET');
+    if (!secret)
+      throw new Error('JWT_ACCESS_SECRET es requerido para firmar cursores');
+    return createHmac('sha256', secret).update(value).digest('base64url');
   }
 
   private scopeFingerprint(routes: RouteData[]): string {
