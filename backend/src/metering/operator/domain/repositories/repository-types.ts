@@ -15,6 +15,21 @@ export interface SyncPage<T> {
   nextPosition: SyncCursorPosition | null;
 }
 
+export interface OperatorSyncChange {
+  sequenceId: bigint;
+  entityType: string;
+  entityId: bigint;
+  operation: 'CREATE' | 'UPDATE' | 'DELETE';
+  changedAt: Date;
+  data: Record<string, unknown>;
+}
+
+export interface SyncChangePage {
+  items: OperatorSyncChange[];
+  hasMore: boolean;
+  nextSequence: bigint | null;
+}
+
 export interface ReadingWithContractDetail {
   lecturaId: bigint;
   fecha: Date;

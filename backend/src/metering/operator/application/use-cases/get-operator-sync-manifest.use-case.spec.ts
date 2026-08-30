@@ -22,6 +22,8 @@ describe('GetOperatorSyncManifestUseCase', () => {
     findSyncMeters: jest.fn(),
     findSyncReadings: jest.fn(),
     findSyncPendingAnomalies: jest.fn(),
+    findSyncChanges: jest.fn(),
+    getSyncWatermark: jest.fn(),
   };
   let useCase: GetOperatorSyncManifestUseCase;
   beforeEach(() => {
@@ -35,6 +37,12 @@ describe('GetOperatorSyncManifestUseCase', () => {
     repository.findSyncMeters.mockResolvedValue(page());
     repository.findSyncReadings.mockResolvedValue(page());
     repository.findSyncPendingAnomalies.mockResolvedValue(page());
+    repository.getSyncWatermark.mockResolvedValue(12n);
+    repository.findSyncChanges.mockResolvedValue({
+      items: [],
+      hasMore: false,
+      nextSequence: null,
+    });
     useCase = new GetOperatorSyncManifestUseCase(
       repository as any,
       {
@@ -55,6 +63,115 @@ describe('GetOperatorSyncManifestUseCase', () => {
       2,
     );
     expect(result.routes.nextCursor).toBeNull();
+  });
+
+  it('transitions to incremental mode after initial collections complete', async () => {
+    const initial = await useCase.execute(10, undefined, 2);
+    await useCase.execute(10, initial.nextCursor!, 2);
+
+    expect(repository.findSyncChanges).toHaveBeenCalledWith(
+      7,
+      expect.any(Array),
+      12n,
+      2,
+    );
+    expect(repository.findSyncRoutes).toHaveBeenCalledTimes(1);
+    expect(repository.findSyncWorkOrders).toHaveBeenCalledTimes(1);
+    expect(repository.findSyncMeters).toHaveBeenCalledTimes(1);
+    expect(repository.findSyncReadings).toHaveBeenCalledTimes(1);
+    expect(repository.findSyncPendingAnomalies).toHaveBeenCalledTimes(1);
+  });
+
+  it('maps incremental CREATE, UPDATE, and DELETE changes without BigInt leakage', async () => {
+    const initial = await useCase.execute(10);
+    repository.findSyncChanges.mockResolvedValue({
+      items: [
+        {
+          sequenceId: 13n,
+          entityType: 'rutas',
+          entityId: 3n,
+          operation: 'CREATE',
+          changedAt: new Date('2026-01-02T00:00:00Z'),
+          data: { rutaId: '3' },
+        },
+        {
+          sequenceId: 14n,
+          entityType: 'medidores',
+          entityId: 8n,
+          operation: 'UPDATE',
+          changedAt: new Date('2026-01-02T00:01:00Z'),
+          data: { serie: 'M-8' },
+        },
+        {
+          sequenceId: 15n,
+          entityType: 'ordenes_trabajo',
+          entityId: 9n,
+          operation: 'DELETE',
+          changedAt: new Date('2026-01-02T00:02:00Z'),
+          data: {},
+        },
+      ],
+      hasMore: false,
+      nextSequence: null,
+    });
+
+    const result = await useCase.execute(10, initial.nextCursor);
+    expect(result.changes).toEqual([
+      expect.objectContaining({
+        sequenceId: '13',
+        entityId: '3',
+        operation: 'CREATE',
+      }),
+      expect.objectContaining({
+        sequenceId: '14',
+        entityId: '8',
+        operation: 'UPDATE',
+      }),
+      expect.objectContaining({
+        sequenceId: '15',
+        entityId: '9',
+        operation: 'DELETE',
+        data: {},
+      }),
+    ]);
+    expect(() => JSON.stringify(result)).not.toThrow();
+  });
+
+  it('continues the incremental cursor watermark from the last sequence', async () => {
+    const initial = await useCase.execute(10);
+    repository.findSyncChanges
+      .mockResolvedValueOnce({
+        items: [
+          {
+            sequenceId: 13n,
+            entityType: 'rutas',
+            entityId: 3n,
+            operation: 'UPDATE',
+            changedAt: new Date(),
+            data: {},
+          },
+          {
+            sequenceId: 14n,
+            entityType: 'rutas',
+            entityId: 4n,
+            operation: 'UPDATE',
+            changedAt: new Date(),
+            data: {},
+          },
+        ],
+        hasMore: true,
+        nextSequence: 14n,
+      })
+      .mockResolvedValueOnce({ items: [], hasMore: false, nextSequence: null });
+
+    const next = await useCase.execute(10, initial.nextCursor, 2);
+    await useCase.execute(10, next.nextCursor, 2);
+    expect(repository.findSyncChanges.mock.calls.at(-1)).toEqual([
+      7,
+      expect.any(Array),
+      14n,
+      2,
+    ]);
   });
 
   it('continues independently from an opaque cursor', async () => {

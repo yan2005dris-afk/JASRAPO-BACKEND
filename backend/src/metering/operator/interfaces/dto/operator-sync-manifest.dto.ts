@@ -4,7 +4,7 @@ export interface OperatorSyncPage<T> {
   items: T[];
   nextCursor: string | null;
   hasMore: boolean;
-  total: number;
+  total?: number;
 }
 
 export class OperatorSyncManifestDto {
@@ -19,6 +19,12 @@ export class OperatorSyncManifestDto {
 
   @ApiProperty()
   complete: boolean;
+
+  @ApiProperty({ nullable: true })
+  nextCursor: string | null;
+
+  @ApiProperty({ type: [Object] })
+  changes: Array<Record<string, unknown>>;
 
   @ApiProperty()
   routes: OperatorSyncPage<unknown>;
