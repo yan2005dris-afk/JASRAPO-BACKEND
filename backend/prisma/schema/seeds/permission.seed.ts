@@ -28,6 +28,7 @@ export async function seedPermissions(prisma: PrismaClient) {
         "clientes",
         "contracts",
         "meters",
+        "operator-sync",
         "tarifas",
         "lecturas",
         "reading-anomalies",

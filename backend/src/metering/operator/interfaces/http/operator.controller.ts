@@ -10,7 +10,6 @@ import {
   ParseEnumPipe,
   UseInterceptors,
   UploadedFile,
-  Optional,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
@@ -128,8 +127,7 @@ export class OperatorController {
     private readonly updateRouteStateUseCase: UpdateRouteStateUseCase,
     private readonly getOperatorReadingsWithAnomaliesUseCase: GetOperatorReadingsWithAnomaliesUseCase,
     private readonly storageService: StorageService,
-    @Optional()
-    private readonly getOperatorSyncManifestUseCase?: GetOperatorSyncManifestUseCase,
+    private readonly getOperatorSyncManifestUseCase: GetOperatorSyncManifestUseCase,
   ) {}
 
   @ApiOperation({
@@ -456,16 +454,13 @@ export class OperatorController {
   )
   @ApiQuery({ name: 'cursor', required: false })
   @ApiQuery({ name: 'limit', required: false, type: Number })
-  @RequiredPermission('meters', 'read')
+  @RequiredPermission('operator-sync', 'read')
   @Get('sync/manifest')
   async syncManifest(
     @CurrentUser() user: JwtPayload,
     @Query('cursor') cursor?: string,
     @Query('limit') limit?: string,
   ): Promise<OperatorSyncManifestDto> {
-    if (!this.getOperatorSyncManifestUseCase) {
-      throw new Error('El manifiesto de sincronización no está configurado');
-    }
     return this.getOperatorSyncManifestUseCase.execute(
       this.getAuthenticatedOperatorId(user),
       cursor,
