@@ -7,6 +7,7 @@ import {
   IsString,
 } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
+import { IsNotEmptyString } from 'src/infrastructure/common/decorators/is-not-empty-string.decorator';
 import { EstadoOrdenTrabajo } from 'src/shared/enums';
 
 const emptyToUndefined = ({ value }: { value: unknown }) =>
@@ -39,6 +40,7 @@ export class UpdateOperatorWorkOrderDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
+  @IsNotEmptyString()
   estadoSellos?: string;
 
   @ApiPropertyOptional()

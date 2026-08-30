@@ -7,10 +7,12 @@ import {
   BadRequestException,
   ValidationError,
 } from '@nestjs/common';
+import { randomUUID } from 'node:crypto';
 import { ConfigService } from '@nestjs/config';
 import { Request, Response } from 'express';
 import { LoggerService } from '../../../infrastructure/observability/logger/logger.service';
 import {
+  ConflictDomainException,
   DomainException,
   EntityNotFoundException,
   EntityAlreadyExistsException,
@@ -34,7 +36,23 @@ interface ErrorResponse {
   method: string;
   message: string;
   errors?: string[] | FormattedValidationError[];
+  code: string;
+  retryable: boolean;
+  correlationId: string;
 }
+
+const ERROR_CODES: Readonly<Record<number, string>> = {
+  [HttpStatus.BAD_REQUEST]: 'VALIDATION_ERROR',
+  [HttpStatus.UNAUTHORIZED]: 'UNAUTHORIZED',
+  [HttpStatus.FORBIDDEN]: 'FORBIDDEN',
+  [HttpStatus.NOT_FOUND]: 'NOT_FOUND',
+  [HttpStatus.CONFLICT]: 'CONFLICT',
+  [HttpStatus.INTERNAL_SERVER_ERROR]: 'INTERNAL_SERVER_ERROR',
+};
+
+const RETRYABLE_STATUS_CODES: ReadonlySet<number> = new Set([
+  HttpStatus.CONFLICT,
+]);
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
@@ -48,9 +66,10 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
 
-    let status = HttpStatus.INTERNAL_SERVER_ERROR;
+    let status: number = HttpStatus.INTERNAL_SERVER_ERROR;
     let message = 'Error interno del servidor';
     let errors: (string | ValidationError)[] | undefined;
+    const correlationId = this.extractCorrelationId(request) ?? randomUUID();
 
     // Manejo de errores de validación (class-validator)
     if (exception instanceof BadRequestException) {
@@ -77,6 +96,8 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     else if (exception instanceof DomainException) {
       if (exception instanceof EntityNotFoundException) {
         status = HttpStatus.NOT_FOUND;
+      } else if (exception instanceof ConflictDomainException) {
+        status = HttpStatus.CONFLICT;
       } else if (exception instanceof EntityAlreadyExistsException) {
         status = HttpStatus.CONFLICT;
       } else if (exception instanceof UnauthorizedDomainException) {
@@ -117,7 +138,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     }
 
     if (!(exception instanceof HttpException) && exception instanceof Error) {
-      const requestId = this.extractRequestId(request);
+      const requestId = correlationId;
       this.loggerService.error(
         exception.message,
         exception.stack,
@@ -132,6 +153,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
           path: request.url,
           method: request.method,
           requestId,
+          correlationId,
         }),
         'GlobalExceptionFilter',
       );
@@ -143,6 +165,9 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       path: request.url,
       method: request.method,
       message,
+      code: this.getErrorCode(status),
+      retryable: RETRYABLE_STATUS_CODES.has(status) || status >= 500,
+      correlationId,
     };
 
     if (errors && errors.length > 0) {
@@ -155,13 +180,19 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     response.status(status).json(errorResponse);
   }
 
-  private extractRequestId(request: Request): string | undefined {
-    const headerValue =
-      (request.headers['x-request-id'] as string | undefined) ??
-      (request.headers['x-correlation-id'] as string | undefined);
-    return typeof headerValue === 'string' && headerValue.length > 0
-      ? headerValue
-      : undefined;
+  private extractCorrelationId(request: Request): string | undefined {
+    const headerValues = [
+      request.headers['x-request-id'],
+      request.headers['x-correlation-id'],
+    ];
+
+    return headerValues.find(
+      (value): value is string => typeof value === 'string' && value.length > 0,
+    );
+  }
+
+  private getErrorCode(status: number): string {
+    return ERROR_CODES[status] ?? 'HTTP_ERROR';
   }
 
   private formatValidationErrors(
