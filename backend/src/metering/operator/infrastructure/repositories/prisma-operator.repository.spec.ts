@@ -8,6 +8,7 @@ describe('PrismaOperatorRepository routes', () => {
   const prisma = {
     rutas: {
       findMany: jest.fn(),
+      count: jest.fn(),
       update: jest.fn(),
     },
   };
@@ -23,6 +24,33 @@ describe('PrismaOperatorRepository routes', () => {
       ],
     }).compile();
     repository = module.get(PrismaOperatorRepository);
+  });
+
+  it('uses bounded keyset predicates for sync routes', async () => {
+    prisma.rutas.findMany.mockResolvedValue([]);
+    prisma.rutas.count.mockResolvedValue(3);
+    await repository.findSyncRoutes(
+      10,
+      20,
+      new Date('2026-01-02T00:00:00Z'),
+      { updatedAt: new Date('2026-01-01T00:00:00Z'), id: 4n },
+      2,
+    );
+    expect(prisma.rutas.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        take: 3,
+        orderBy: [{ updatedAt: 'asc' }, { rutaId: 'asc' }],
+        where: expect.objectContaining({
+          updatedAt: expect.objectContaining({
+            lte: new Date('2026-01-02T00:00:00Z'),
+          }),
+          OR: [
+            { updatedAt: { gt: new Date('2026-01-01T00:00:00Z') } },
+            { updatedAt: new Date('2026-01-01T00:00:00Z'), rutaId: { gt: 4n } },
+          ],
+        }),
+      }),
+    );
   });
 
   it('builds route stops exclusively from assigned work orders', async () => {

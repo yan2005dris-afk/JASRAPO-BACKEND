@@ -52,6 +52,27 @@ describe('OperatorController work-order update', () => {
     routesUseCase.execute.mockResolvedValue([]);
   });
 
+  it('wires the paginated sync manifest to the authenticated operator', async () => {
+    const manifest = {
+      execute: jest.fn().mockResolvedValue({ complete: true }),
+    };
+    const wired = new OperatorController(
+      undefined as any,
+      undefined as any,
+      undefined as any,
+      undefined as any,
+      undefined as any,
+      undefined as any,
+      undefined as any,
+      undefined as any,
+      undefined as any,
+      storage as any,
+      manifest as any,
+    );
+    await wired.syncManifest({ sub: '17' } as any, 'opaque-cursor', '25');
+    expect(manifest.execute).toHaveBeenCalledWith(17, 'opaque-cursor', 25);
+  });
+
   it('forwards the operator identity and route filter', async () => {
     await expect(
       controller.getOperatorRoutes({ sub: '17' } as any, 'LECTURA' as any),

@@ -23,9 +23,12 @@ import type {
   ReadingWithContractDetail,
   MeterWithContractDetail,
   OperatorRoute,
+  OperatorWorkOrder,
   ReadingWithAnomalies,
   RouteStateUpdate,
   OperatorUser,
+  SyncCursorPosition,
+  SyncPage,
 } from '../../domain/repositories/repository-types';
 
 const routeOperarioSelect = {
@@ -332,6 +335,325 @@ export class PrismaOperatorRepository extends OperatorRepository {
         ? { sectorId: r.sectorId }
         : {}),
     }));
+  }
+
+  async findSyncRoutes(
+    operarioId: number,
+    periodoId: number,
+    snapshotVersion: Date,
+    after: SyncCursorPosition | null,
+    limit: number,
+  ): Promise<SyncPage<OperatorRoute>> {
+    const where: any = {
+      operarioId,
+      periodoId,
+      deletedAt: null,
+      updatedAt: { lte: snapshotVersion },
+      ...(after ? this.keyset(after, 'rutaId') : {}),
+    };
+    const [items, total] = await Promise.all([
+      this.prisma.rutas.findMany({
+        where,
+        orderBy: [{ updatedAt: 'asc' }, { rutaId: 'asc' }],
+        take: limit + 1,
+        include: {
+          operario: { select: routeOperarioSelect },
+          ordenesTrabajo: false,
+        },
+      }),
+      this.prisma.rutas.count({ where }),
+    ]);
+    const pageItems = items.slice(0, limit).map((route: any) => ({
+      ...route,
+      ordenesTrabajo: [],
+      paradas: [],
+    })) as OperatorRoute[];
+    return this.page(pageItems, total, items.length > limit, 'rutaId');
+  }
+
+  async findSyncWorkOrders(
+    operarioId: number,
+    periodoId: number,
+    routeIds: bigint[],
+    snapshotVersion: Date,
+    after: SyncCursorPosition | null,
+    limit: number,
+  ): Promise<SyncPage<OperatorWorkOrder>> {
+    const where: any = {
+      rutaId: { in: routeIds },
+      deletedAt: null,
+      updatedAt: { lte: snapshotVersion },
+      ruta: { operarioId, periodoId, deletedAt: null },
+      ...(after ? this.keyset(after, 'ordenTrabajoId') : {}),
+    };
+    const [items, total] = await Promise.all([
+      this.prisma.ordenesTrabajo.findMany({
+        where,
+        orderBy: [{ updatedAt: 'asc' }, { ordenTrabajoId: 'asc' }],
+        take: limit + 1,
+        include: {
+          contrato: {
+            select: {
+              numeroGuia: true,
+              direccionSuministro: true,
+              cliente: {
+                select: { nombres: true, apellidos: true, razonSocial: true },
+              },
+            },
+          },
+          medidor: { select: routeMedidorSelect },
+        },
+      }),
+      this.prisma.ordenesTrabajo.count({ where }),
+    ]);
+    return this.page(
+      items.slice(0, limit) as OperatorWorkOrder[],
+      total,
+      items.length > limit,
+      'ordenTrabajoId',
+    );
+  }
+
+  async findSyncMeters(
+    routes: RouteData[],
+    snapshotVersion: Date,
+    after: SyncCursorPosition | null,
+    limit: number,
+  ): Promise<SyncPage<MeterWithContractDetail>> {
+    const where: any = {
+      estado: EstadoMedidor.INSTALADO,
+      deletedAt: null,
+      updatedAt: { lte: snapshotVersion },
+      historial: {
+        some: {
+          fechaHasta: null,
+          contrato: { OR: this.toMeterRouteConditions(routes) },
+        },
+      },
+      ...(after ? this.keyset(after, 'medidorId') : {}),
+    };
+    const [items, total] = await Promise.all([
+      this.prisma.medidores.findMany({
+        where,
+        orderBy: [{ updatedAt: 'asc' }, { medidorId: 'asc' }],
+        take: limit + 1,
+        select: {
+          medidorId: true,
+          marca: true,
+          modelo: true,
+          serie: true,
+          estado: true,
+          fechaInstalacion: true,
+          fechaBaja: true,
+          motivo: true,
+          latitud: true,
+          longitud: true,
+          createdAt: true,
+          updatedAt: true,
+          deletedAt: true,
+          historial: {
+            where: { fechaHasta: null },
+            take: 1,
+            select: {
+              contrato: {
+                select: {
+                  contratoId: true,
+                  comunidadId: true,
+                  sectorId: true,
+                  direccionSuministro: true,
+                  cliente: { select: { nombres: true, apellidos: true } },
+                },
+              },
+            },
+          },
+        },
+      }),
+      this.prisma.medidores.count({ where }),
+    ]);
+    return this.page(
+      items.slice(0, limit) as MeterWithContractDetail[],
+      total,
+      items.length > limit,
+      'medidorId',
+    );
+  }
+
+  async findSyncReadings(
+    periodoId: number,
+    routes: RouteData[],
+    snapshotVersion: Date,
+    after: SyncCursorPosition | null,
+    limit: number,
+  ): Promise<SyncPage<ReadingWithContractDetail>> {
+    const where: any = {
+      periodoId,
+      deletedAt: null,
+      updatedAt: { lte: snapshotVersion },
+      medidor: {
+        historial: {
+          some: { fechaHasta: null, OR: this.toReadingRouteConditions(routes) },
+        },
+      },
+      ...(after ? this.keyset(after, 'lecturaId') : {}),
+    };
+    const [items, total] = await Promise.all([
+      this.prisma.lecturas.findMany({
+        where,
+        orderBy: [{ updatedAt: 'asc' }, { lecturaId: 'asc' }],
+        take: limit + 1,
+        select: {
+          lecturaId: true,
+          fecha: true,
+          lecturaAnterior: true,
+          lecturaActual: true,
+          consumoCalculado: true,
+          descripcionAnomalia: true,
+          fechaValidacion: true,
+          lecturaInicial: true,
+          periodoId: true,
+          estado: true,
+          updatedAt: true,
+          medidor: {
+            select: {
+              medidorId: true,
+              serie: true,
+              marca: true,
+              modelo: true,
+              historial: {
+                where: { fechaHasta: null },
+                select: {
+                  contrato: {
+                    select: {
+                      contratoId: true,
+                      numeroGuia: true,
+                      direccionSuministro: true,
+                      estado: true,
+                      comunidadId: true,
+                      sectorId: true,
+                      cliente: { select: { nombres: true, apellidos: true } },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          periodoRel: {
+            select: {
+              periodoId: true,
+              nombre: true,
+              fechaInicio: true,
+              fechaFin: true,
+            },
+          },
+          ordenesTrabajo: {
+            where: { deletedAt: null },
+            select: { evidenciaFotoUrl: true },
+            orderBy: { updatedAt: 'desc' },
+          },
+        },
+      }),
+      this.prisma.lecturas.count({ where }),
+    ]);
+    const mapped = items.slice(0, limit).map((reading: any) => ({
+      ...reading,
+      evidenciaFotoUrl:
+        reading.ordenesTrabajo?.find((o: any) => o.evidenciaFotoUrl)
+          ?.evidenciaFotoUrl ?? null,
+    }));
+    return this.page(
+      mapped as ReadingWithContractDetail[],
+      total,
+      items.length > limit,
+      'lecturaId',
+    );
+  }
+
+  async findSyncPendingAnomalies(
+    operarioId: number,
+    periodoId: number,
+    routes: RouteData[],
+    snapshotVersion: Date,
+    after: SyncCursorPosition | null,
+    limit: number,
+  ): Promise<SyncPage<ReadingWithAnomalies>> {
+    const where: any = {
+      periodoId,
+      deletedAt: null,
+      updatedAt: { lte: snapshotVersion },
+      estado: EstadoLectura.CON_NOVEDAD,
+      lecturaAnomalias: {
+        some: { estado: EstadoAnomalia.PENDIENTE, deletedAt: null },
+      },
+      medidor: {
+        historial: {
+          some: { fechaHasta: null, OR: this.toReadingRouteConditions(routes) },
+        },
+      },
+      ...(after ? this.keyset(after, 'lecturaId') : {}),
+    };
+    const [items, total] = await Promise.all([
+      this.prisma.lecturas.findMany({
+        where,
+        orderBy: [{ updatedAt: 'asc' }, { lecturaId: 'asc' }],
+        take: limit + 1,
+        select: {
+          lecturaId: true,
+          updatedAt: true,
+          fecha: true,
+          lecturaAnterior: true,
+          lecturaActual: true,
+          consumoCalculado: true,
+          estado: true,
+          periodoId: true,
+          descripcionAnomalia: true,
+          medidor: {
+            select: { medidorId: true, serie: true, marca: true, modelo: true },
+          },
+          lecturaAnomalias: {
+            where: { estado: EstadoAnomalia.PENDIENTE, deletedAt: null },
+            select: {
+              anomaliaId: true,
+              tipo: true,
+              estado: true,
+              observacion: true,
+              createdAt: true,
+            },
+          },
+        },
+      }),
+      this.prisma.lecturas.count({ where }),
+    ]);
+    return this.page(
+      items.slice(0, limit) as unknown as ReadingWithAnomalies[],
+      total,
+      items.length > limit,
+      'lecturaId',
+    );
+  }
+
+  private keyset(after: SyncCursorPosition, id: string): any {
+    return {
+      OR: [
+        { updatedAt: { gt: after.updatedAt } },
+        { updatedAt: after.updatedAt, [id]: { gt: after.id } },
+      ],
+    };
+  }
+
+  private page<T>(
+    items: T[],
+    total: number,
+    hasMore: boolean,
+    id: string,
+  ): SyncPage<T> {
+    const last: any = items.at(-1);
+    return {
+      items,
+      total,
+      hasMore,
+      nextPosition:
+        hasMore && last ? { updatedAt: last.updatedAt, id: last[id] } : null,
+    };
   }
 
   async findRoutesByOperator(

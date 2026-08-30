@@ -2,9 +2,12 @@ import type {
   ReadingWithContractDetail,
   MeterWithContractDetail,
   OperatorRoute,
+  OperatorWorkOrder,
   ReadingWithAnomalies,
   RouteStateUpdate,
   OperatorUser,
+  SyncCursorPosition,
+  SyncPage,
 } from './repository-types';
 
 export interface RouteData {
@@ -87,4 +90,41 @@ export abstract class OperatorRepository {
     operarioId: number,
     periodoId: number,
   ): Promise<ReadingWithAnomalies[]>;
+
+  abstract findSyncRoutes(
+    operarioId: number,
+    periodoId: number,
+    snapshotVersion: Date,
+    after: SyncCursorPosition | null,
+    limit: number,
+  ): Promise<SyncPage<OperatorRoute>>;
+  abstract findSyncWorkOrders(
+    operarioId: number,
+    periodoId: number,
+    routeIds: bigint[],
+    snapshotVersion: Date,
+    after: SyncCursorPosition | null,
+    limit: number,
+  ): Promise<SyncPage<OperatorWorkOrder>>;
+  abstract findSyncMeters(
+    routes: RouteData[],
+    snapshotVersion: Date,
+    after: SyncCursorPosition | null,
+    limit: number,
+  ): Promise<SyncPage<MeterWithContractDetail>>;
+  abstract findSyncReadings(
+    periodoId: number,
+    routes: RouteData[],
+    snapshotVersion: Date,
+    after: SyncCursorPosition | null,
+    limit: number,
+  ): Promise<SyncPage<ReadingWithContractDetail>>;
+  abstract findSyncPendingAnomalies(
+    operarioId: number,
+    periodoId: number,
+    routes: RouteData[],
+    snapshotVersion: Date,
+    after: SyncCursorPosition | null,
+    limit: number,
+  ): Promise<SyncPage<ReadingWithAnomalies>>;
 }

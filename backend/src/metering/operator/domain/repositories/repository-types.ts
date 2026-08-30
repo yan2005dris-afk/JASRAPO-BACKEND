@@ -3,6 +3,18 @@
 // shapes, not Prisma query shapes. Prisma specifics live in the infrastructure
 // implementation.
 
+export interface SyncCursorPosition {
+  updatedAt: Date;
+  id: bigint;
+}
+
+export interface SyncPage<T> {
+  items: T[];
+  total: number;
+  hasMore: boolean;
+  nextPosition: SyncCursorPosition | null;
+}
+
 export interface ReadingWithContractDetail {
   lecturaId: bigint;
   fecha: Date;
@@ -32,6 +44,7 @@ export interface ReadingWithContractDetail {
       } | null;
     }>;
   } | null;
+  updatedAt: Date;
   periodoRel: {
     periodoId: number;
     nombre: string;
@@ -141,6 +154,7 @@ export interface OperatorRoute {
 
 export interface ReadingWithAnomalies {
   lecturaId: bigint;
+  updatedAt: Date;
   fecha?: Date;
   lecturaAnterior?: number;
   lecturaActual?: number;
