@@ -6,6 +6,7 @@ import {
 } from 'src/shared/domain/exceptions/domain.exception';
 import { UpdateReadingUseCase } from 'src/metering/readings/application/use-cases/update-reading.use-case';
 import { ActualizarLecturaDto } from 'src/metering/readings/interfaces/dto/update-lectura.dto';
+import { UpdateOperatorReadingDto } from '../../interfaces/dto/update-operator-reading.dto';
 import { LecturaEntity } from 'src/metering/readings/domain/entities/lectura.entity';
 import { OperatorRepository } from '../../domain/repositories/operator.repository';
 
@@ -24,7 +25,8 @@ export class UpdateOperatorReadingUseCase {
   async execute(
     id: bigint,
     operarioId: number,
-    updateDto: ActualizarLecturaDto,
+    updateDto: UpdateOperatorReadingDto,
+    evidenciaFotoUrl?: string,
   ): Promise<LecturaEntity> {
     // 1. Validar que la lectura existe y obtener datos de ruta
     const lectura = await this.operatorRepository.findReadingWithDetails(id);
@@ -90,7 +92,10 @@ export class UpdateOperatorReadingUseCase {
     // 7. Delegar al UpdateReadingUseCase unificado con state machine
     return this.updateReadingUseCase.execute(
       id,
-      updateDto,
+      {
+        ...(updateDto as ActualizarLecturaDto),
+        ...(evidenciaFotoUrl ? { evidenciaFotoUrl } : {}),
+      },
       EstadoLectura.POR_REVISION,
     );
   }
