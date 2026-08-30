@@ -32,6 +32,7 @@ export class UpdateOperatorWorkOrderDto {
 
   @ApiPropertyOptional({ description: 'ISO-8601 completion timestamp' })
   @IsOptional()
+  @Transform(emptyToUndefined)
   @IsDateString()
   completadoEn?: string;
 

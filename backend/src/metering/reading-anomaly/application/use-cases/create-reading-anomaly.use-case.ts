@@ -5,6 +5,10 @@ import { ReadingAnomalyEntity } from '../../domain/entities/reading-anomaly.enti
 import { EstadoLectura } from 'src/shared/enums';
 import { InvalidDomainOperationException } from 'src/shared/domain/exceptions/domain.exception';
 
+type CreateReadingAnomalyCommand = CreateReadingAnomalyDto & {
+  fotoUrl?: string;
+};
+
 @Injectable()
 export class CreateReadingAnomalyUseCase {
   constructor(
@@ -12,7 +16,7 @@ export class CreateReadingAnomalyUseCase {
   ) {}
 
   async execute(
-    createDto: CreateReadingAnomalyDto,
+    createDto: CreateReadingAnomalyCommand,
   ): Promise<ReadingAnomalyEntity> {
     const lecturaId = this.validateLecturaId(createDto.lecturaId);
 

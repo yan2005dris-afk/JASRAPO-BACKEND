@@ -50,8 +50,16 @@ export class ReadingAnomalyController {
     description: 'Registra una anomalía encontrada al tomar una lectura',
   })
   @ApiBody({
-    type: CreateReadingAnomalyDto,
-    description: 'Datos de la anomalía',
+    description: 'Datos de la anomalía y evidencia fotográfica opcional',
+    schema: {
+      allOf: [
+        { $ref: '#/components/schemas/CreateReadingAnomalyDto' },
+        {
+          type: 'object',
+          properties: { file: { type: 'string', format: 'binary' } },
+        },
+      ],
+    },
   })
   @ApiResponse({
     status: 201,
@@ -204,8 +212,16 @@ export class ReadingAnomalyController {
     example: 1,
   })
   @ApiBody({
-    type: UpdateReadingAnomalyDto,
-    description: 'Datos a actualizar',
+    description: 'Datos a actualizar y evidencia fotográfica opcional',
+    schema: {
+      allOf: [
+        { $ref: '#/components/schemas/UpdateReadingAnomalyDto' },
+        {
+          type: 'object',
+          properties: { file: { type: 'string', format: 'binary' } },
+        },
+      ],
+    },
   })
   @ApiResponse({
     status: 200,

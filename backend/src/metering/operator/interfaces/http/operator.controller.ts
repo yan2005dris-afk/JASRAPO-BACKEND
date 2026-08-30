@@ -9,7 +9,6 @@ import {
   ParseEnumPipe,
   UseInterceptors,
   UploadedFile,
-  BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
@@ -25,14 +24,14 @@ import {
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
 import { CurrentUser } from 'src/identity/auth/interfaces/http/decorators/current-user.decorator';
 import { ParseBigIntPipe } from 'src/infrastructure/common/pipes/parse-bigint.pipe';
-import { ParseActualizarLecturaPipe } from 'src/infrastructure/common/pipes/parse-actualizar-lectura.pipe';
 import type { JwtPayload } from 'src/identity/auth/application/types/jwt.types';
 import { GetOperatorReadingsUseCase } from '../../application/use-cases/get-operator-readings.use-case';
 import { UpdateOperatorReadingUseCase } from '../../application/use-cases/update-operator-reading.use-case';
 import { UpdateOperatorWorkOrderUseCase } from '../../application/use-cases/update-operator-work-order.use-case';
 import { UpdateOperatorWorkOrderDto } from '../dto/update-operator-work-order.dto';
+import { UpdateOperatorReadingDto } from '../dto/update-operator-reading.dto';
+import { OPERATOR_IMAGE_UPLOAD_OPTIONS } from './operator-image-upload.options';
 import { OrderWorkResponseDto } from 'src/operations/routes/interfaces/dto/orden-trabajo-response.dto';
-import { ActualizarLecturaDto } from 'src/metering/readings/interfaces/dto/update-lectura.dto';
 import { ResponseReadingDto } from 'src/metering/readings/interfaces/dto/response-reading.dto';
 import { MeterResponseDto } from 'src/metering/meters/interfaces/dto/meter-response.dto';
 import { SyncAllUseCase } from '../../application/use-cases/sync-all.use-case';
@@ -160,34 +159,18 @@ export class OperatorController {
   })
   @ApiResponse({ status: 404, description: 'Lectura no encontrada' })
   @RequiredPermission('lecturas', 'update')
-  @UseInterceptors(
-    FileInterceptor('foto', {
-      limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
-      fileFilter: (_req, file, cb) => {
-        if (!file.mimetype.startsWith('image/')) {
-          return cb(
-            new BadRequestException('Solo se permiten archivos de imagen'),
-            false,
-          );
-        }
-        cb(null, true);
-      },
-    }),
-  )
+  @UseInterceptors(FileInterceptor('foto', OPERATOR_IMAGE_UPLOAD_OPTIONS))
   @Patch('readings/:id')
   async updateOperatorReading(
     @Param('id', ParseBigIntPipe) id: bigint,
     @CurrentUser() user: JwtPayload,
-    @Body(new ParseActualizarLecturaPipe()) updateDto: ActualizarLecturaDto,
+    @Body() updateDto: UpdateOperatorReadingDto,
     @UploadedFile() foto?: Express.Multer.File,
   ): Promise<ResponseReadingDto> {
     const operarioId = Number(user.sub);
-
-    // If a photo file was attached, upload it and inject the key into the DTO
     let uploadedKey: string | undefined;
     if (foto) {
       uploadedKey = await uploadReadingPhoto(foto, this.storageService);
-      updateDto.evidenciaFotoUrl = uploadedKey;
     }
 
     try {
@@ -195,10 +178,10 @@ export class OperatorController {
         id,
         operarioId,
         updateDto,
+        uploadedKey,
       );
       return ResponseReadingDto.fromEntity(updated)!;
     } catch (error) {
-      // Rollback the uploaded photo to avoid orphaned objects
       if (uploadedKey) {
         await rollbackReadingPhoto(uploadedKey, this.storageService);
       }
@@ -239,20 +222,7 @@ export class OperatorController {
     type: OrderWorkResponseDto,
   })
   @RequiredPermission('routes', 'update')
-  @UseInterceptors(
-    FileInterceptor('foto', {
-      limits: { fileSize: 10 * 1024 * 1024 },
-      fileFilter: (_req, file, cb) => {
-        if (!file.mimetype.startsWith('image/')) {
-          return cb(
-            new BadRequestException('Solo se permiten archivos de imagen'),
-            false,
-          );
-        }
-        cb(null, true);
-      },
-    }),
-  )
+  @UseInterceptors(FileInterceptor('foto', OPERATOR_IMAGE_UPLOAD_OPTIONS))
   @Patch('work-orders/:id')
   async updateOperatorWorkOrder(
     @Param('id', ParseBigIntPipe) id: bigint,

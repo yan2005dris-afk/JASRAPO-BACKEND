@@ -8,6 +8,10 @@ import {
   InvalidDomainOperationException,
 } from 'src/shared/domain/exceptions/domain.exception';
 
+type UpdateReadingAnomalyCommand = UpdateReadingAnomalyDto & {
+  fotoUrl?: string;
+};
+
 @Injectable()
 export class UpdateReadingAnomalyUseCase {
   constructor(
@@ -16,7 +20,7 @@ export class UpdateReadingAnomalyUseCase {
 
   async execute(
     id: bigint,
-    updateDto: UpdateReadingAnomalyDto,
+    updateDto: UpdateReadingAnomalyCommand,
   ): Promise<ReadingAnomalyEntity> {
     const existing = await this.readingAnomalyRepository.findUnique({
       anomaliaId: id,
