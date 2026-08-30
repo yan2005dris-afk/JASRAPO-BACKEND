@@ -7,6 +7,7 @@ import type {
   RouteStateUpdate,
   OperatorUser,
   SyncCursorPosition,
+  SyncSnapshotContext,
   SyncPage,
   SyncChangePage,
 } from './repository-types';
@@ -129,6 +130,7 @@ export abstract class OperatorRepository {
     limit: number,
   ): Promise<SyncPage<ReadingWithAnomalies>>;
   abstract getSyncWatermark(): Promise<bigint>;
+  abstract getSyncSnapshotContext(): Promise<SyncSnapshotContext>;
   abstract findSyncChanges(
     periodoId: number,
     routes: RouteData[],

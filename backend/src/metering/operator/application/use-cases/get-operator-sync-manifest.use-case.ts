@@ -81,13 +81,24 @@ export class GetOperatorSyncManifestUseCase {
     if (state?.initialComplete)
       return this.incremental(period.periodoId, routes, state, limit);
 
-    const snapshot = state ? new Date(state.snapshotVersion) : new Date();
-    const watermark =
-      state?.watermark ??
-      (this.repository.getSyncWatermark
-        ? await this.repository.getSyncWatermark()
-        : 0n
-      ).toString();
+    let snapshot: Date;
+    let watermark: string;
+
+    if (state) {
+      snapshot = new Date(state.snapshotVersion);
+      watermark = state.watermark;
+    } else {
+      const context = this.repository.getSyncSnapshotContext
+        ? await this.repository.getSyncSnapshotContext()
+        : {
+            snapshotVersion: new Date(),
+            watermark: this.repository.getSyncWatermark
+              ? await this.repository.getSyncWatermark()
+              : 0n,
+          };
+      snapshot = context.snapshotVersion;
+      watermark = context.watermark.toString();
+    }
     const position = (name: Collection): SyncCursorPosition | null => {
       const value = state?.positions[name];
       return value
@@ -348,46 +359,68 @@ export class GetOperatorSyncManifestUseCase {
       )
       .digest('base64url');
   }
+  private sanitizeBigInt(value: unknown): unknown {
+    if (typeof value === 'bigint') return value.toString();
+    if (value instanceof Date) return value.toISOString();
+    if (Array.isArray(value)) return value.map((v) => this.sanitizeBigInt(v));
+    if (value && typeof value === 'object') {
+      const sanitized: Record<string, unknown> = {};
+      for (const [k, v] of Object.entries(value)) {
+        sanitized[k] = this.sanitizeBigInt(v);
+      }
+      return sanitized;
+    }
+    return value;
+  }
+
   private toMeterEntity(m: any): MeterEntity {
     const h = m.historial?.[0]?.contrato;
     return new MeterEntity({
       ...m,
+      medidorId: BigInt(m.medidorId),
       latitud: m.latitud == null ? null : Number(m.latitud),
       longitud: m.longitud == null ? null : Number(m.longitud),
-      contratoId: h?.contratoId ?? null,
+      contratoId: h?.contratoId ? BigInt(h.contratoId) : null,
       clienteNombre: h?.cliente
         ? `${h.cliente.nombres} ${h.cliente.apellidos}`.trim()
         : null,
       direccionSuministro: h?.direccionSuministro ?? null,
     });
   }
+
   private readingDto(r: any): Record<string, unknown> {
     const c = r.medidor?.historial?.[0]?.contrato;
+    const sanitizedMedidor = r.medidor
+      ? (this.sanitizeBigInt(r.medidor) as Record<string, unknown>)
+      : null;
     return {
-      ...r,
+      ...(this.sanitizeBigInt(r) as Record<string, unknown>),
       lecturaId: r.lecturaId.toString(),
       lecturaAnterior: Number(r.lecturaAnterior),
       lecturaActual: Number(r.lecturaActual),
       consumoCalculado: Number(r.consumoCalculado),
       contratoId: c?.contratoId?.toString() ?? '',
-      fechaValidacion: r.fechaValidacion,
+      fechaValidacion: r.fechaValidacion
+        ? new Date(r.fechaValidacion).toISOString()
+        : null,
       evidenciaFotoUrl: r.evidenciaFotoUrl,
       isValidada: r.estado !== 'PENDIENTE',
-      medidor: r.medidor
-        ? { ...r.medidor, medidorId: r.medidor.medidorId.toString() }
-        : null,
+      medidor: sanitizedMedidor,
     };
   }
+
   private workOrderDto(order: any): Record<string, unknown> {
     return {
-      ...order,
+      ...(this.sanitizeBigInt(order) as Record<string, unknown>),
       ordenTrabajoId: order.ordenTrabajoId.toString(),
       rutaId: order.rutaId.toString(),
+      contratoId: order.contratoId ? order.contratoId.toString() : '',
+      medidorId: order.medidorId?.toString() ?? null,
       lecturaId: order.lecturaId?.toString() ?? null,
-      completadoEn: order.completadoEn?.toISOString(),
-      medidor: order.medidor
-        ? { ...order.medidor, medidorId: order.medidor.medidorId.toString() }
+      completadoEn: order.completadoEn
+        ? new Date(order.completadoEn).toISOString()
         : null,
+      medidor: order.medidor ? this.sanitizeBigInt(order.medidor) : null,
     };
   }
 }

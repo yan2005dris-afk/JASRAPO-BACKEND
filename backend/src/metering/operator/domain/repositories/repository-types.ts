@@ -8,6 +8,11 @@ export interface SyncCursorPosition {
   id: bigint;
 }
 
+export interface SyncSnapshotContext {
+  snapshotVersion: Date;
+  watermark: bigint;
+}
+
 export interface SyncPage<T> {
   items: T[];
   total: number;

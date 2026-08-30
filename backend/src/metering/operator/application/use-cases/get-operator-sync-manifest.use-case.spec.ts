@@ -24,6 +24,7 @@ describe('GetOperatorSyncManifestUseCase', () => {
     findSyncPendingAnomalies: jest.fn(),
     findSyncChanges: jest.fn(),
     getSyncWatermark: jest.fn(),
+    getSyncSnapshotContext: jest.fn(),
   };
   let useCase: GetOperatorSyncManifestUseCase;
   beforeEach(() => {
@@ -38,6 +39,10 @@ describe('GetOperatorSyncManifestUseCase', () => {
     repository.findSyncReadings.mockResolvedValue(page());
     repository.findSyncPendingAnomalies.mockResolvedValue(page());
     repository.getSyncWatermark.mockResolvedValue(12n);
+    repository.getSyncSnapshotContext.mockResolvedValue({
+      snapshotVersion: new Date('2026-01-01T00:00:00Z'),
+      watermark: 12n,
+    });
     repository.findSyncChanges.mockResolvedValue({
       items: [],
       hasMore: false,
@@ -64,6 +69,57 @@ describe('GetOperatorSyncManifestUseCase', () => {
       2,
     );
     expect(result.routes.nextCursor).toBeNull();
+  });
+
+  it('serializes readings and work orders without BigInt leakage in snapshot mode', async () => {
+    repository.findSyncReadings.mockResolvedValue({
+      items: [
+        {
+          lecturaId: 101n,
+          fecha: new Date('2026-01-01T00:00:00Z'),
+          lecturaAnterior: 10,
+          lecturaActual: 15,
+          consumoCalculado: 5,
+          descripcionAnomalia: null,
+          fechaValidacion: null,
+          evidenciaFotoUrl: null,
+          lecturaInicial: false,
+          periodoId: 7,
+          estado: 'LEIDA',
+          updatedAt: new Date('2026-01-01T00:00:00Z'),
+          medidor: {
+            medidorId: 55n,
+            serie: 'MED-55',
+            marca: 'Marca',
+            modelo: 'Mod',
+            historial: [
+              {
+                contrato: {
+                  contratoId: 99n,
+                  numeroGuia: 'G-1',
+                  direccionSuministro: 'Dir',
+                  estado: 'ACTIVO',
+                  comunidadId: 1,
+                  sectorId: null,
+                  cliente: { nombres: 'Ana', apellidos: 'Gómez' },
+                },
+              },
+            ],
+          },
+          periodoRel: null,
+        },
+      ],
+      total: 1,
+      hasMore: false,
+      nextPosition: null,
+    });
+
+    const result = await useCase.execute(10);
+    // JSON.stringify will throw if any BigInt remained un-serialized
+    expect(() => JSON.stringify(result)).not.toThrow();
+    expect((result.readings.items[0] as any).lecturaId).toBe('101');
+    expect((result.readings.items[0] as any).contratoId).toBe('99');
+    expect((result.readings.items[0] as any).medidor.medidorId).toBe('55');
   });
 
   it('transitions to incremental mode after initial collections complete', async () => {

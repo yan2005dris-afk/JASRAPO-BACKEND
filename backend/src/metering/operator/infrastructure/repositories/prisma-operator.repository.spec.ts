@@ -15,6 +15,7 @@ describe('PrismaOperatorRepository routes', () => {
       findMany: jest.fn(),
       findFirst: jest.fn(),
     },
+    $queryRaw: jest.fn(),
   };
 
   let repository: PrismaOperatorRepository;
@@ -108,6 +109,9 @@ describe('PrismaOperatorRepository routes', () => {
         take: 3,
         orderBy: [{ updatedAt: 'asc' }, { rutaId: 'asc' }],
         where: expect.objectContaining({
+          estado: {
+            notIn: ['CANCELADA', 'COMPLETADA'],
+          },
           updatedAt: expect.objectContaining({
             lte: new Date('2026-01-02T00:00:00Z'),
           }),
@@ -214,5 +218,18 @@ describe('PrismaOperatorRepository routes', () => {
     await expect(
       repository.updateRouteState(1n, { estado: 'EN_PROGRESO' }, 'PENDIENTE'),
     ).rejects.toBeInstanceOf(ConflictDomainException);
+  });
+
+  it('captures atomic snapshot version and watermark in getSyncSnapshotContext', async () => {
+    const date = new Date('2026-01-01T00:00:00.000Z');
+    prisma.$queryRaw.mockResolvedValue([
+      { snapshot_version: date, watermark: 15n },
+    ]);
+
+    const context = await repository.getSyncSnapshotContext();
+    expect(context).toEqual({
+      snapshotVersion: date,
+      watermark: 15n,
+    });
   });
 });
