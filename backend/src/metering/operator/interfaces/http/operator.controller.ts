@@ -10,6 +10,7 @@ import {
   ParseEnumPipe,
   UseInterceptors,
   UploadedFile,
+  Optional,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
@@ -48,6 +49,8 @@ import { ReportDefectUseCase } from '../../application/use-cases/report-defect.u
 import { DecommissionMeterUseCase } from '../../application/use-cases/decommission-meter.use-case';
 import { GetOperatorReadingsWithAnomaliesUseCase } from '../../application/use-cases/get-operator-readings-with-anomalies.use-case';
 import { StorageService } from 'src/infrastructure/storage/storage.service';
+import { GetOperatorSyncManifestUseCase } from '../../application/use-cases/get-operator-sync-manifest.use-case';
+import { OperatorSyncManifestDto } from '../dto/operator-sync-manifest.dto';
 import {
   uploadReadingPhoto,
   rollbackReadingPhoto,
@@ -125,6 +128,8 @@ export class OperatorController {
     private readonly updateRouteStateUseCase: UpdateRouteStateUseCase,
     private readonly getOperatorReadingsWithAnomaliesUseCase: GetOperatorReadingsWithAnomaliesUseCase,
     private readonly storageService: StorageService,
+    @Optional()
+    private readonly getOperatorSyncManifestUseCase?: GetOperatorSyncManifestUseCase,
   ) {}
 
   @ApiOperation({
@@ -439,6 +444,33 @@ export class OperatorController {
     const operarioId = this.getAuthenticatedOperatorId(user);
     const meters = await this.syncAllUseCase.execute(operarioId);
     return meters.map((m) => MeterResponseDto.fromEntity(m));
+  }
+
+  @ApiOperation({ summary: 'Manifiesto paginado de sincronización offline' })
+  @ApiResponse({ status: 200, type: OperatorSyncManifestDto })
+  @ApiResponse(
+    operatorErrorResponse(
+      409,
+      'El alcance de rutas asignadas cambió durante la sincronización',
+    ),
+  )
+  @ApiQuery({ name: 'cursor', required: false })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @RequiredPermission('meters', 'read')
+  @Get('sync/manifest')
+  async syncManifest(
+    @CurrentUser() user: JwtPayload,
+    @Query('cursor') cursor?: string,
+    @Query('limit') limit?: string,
+  ): Promise<OperatorSyncManifestDto> {
+    if (!this.getOperatorSyncManifestUseCase) {
+      throw new Error('El manifiesto de sincronización no está configurado');
+    }
+    return this.getOperatorSyncManifestUseCase.execute(
+      this.getAuthenticatedOperatorId(user),
+      cursor,
+      limit == null ? 100 : Number(limit),
+    );
   }
 
   // ── Route endpoints (field operator view) ────────────────────────────
