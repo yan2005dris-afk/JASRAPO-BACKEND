@@ -151,7 +151,7 @@ describe('GetOperatorSyncManifestUseCase', () => {
           entityId: 3n,
           operation: 'CREATE',
           changedAt: new Date('2026-01-02T00:00:00Z'),
-          data: { rutaId: '3' },
+          data: { rutaId: '3', nested: { ids: [3n] } },
         },
         {
           sequenceId: 14n,
@@ -195,6 +195,37 @@ describe('GetOperatorSyncManifestUseCase', () => {
       }),
     ]);
     expect(() => JSON.stringify(result)).not.toThrow();
+  });
+
+  it('delivers a tombstone when an assigned route leaves active scope', async () => {
+    const initial = await useCase.execute(10);
+    repository.findActiveRoutes.mockResolvedValue([]);
+    repository.findSyncChanges.mockResolvedValue({
+      items: [
+        {
+          sequenceId: 13n,
+          entityType: 'rutas',
+          entityId: 3n,
+          operation: 'DELETE',
+          changedAt: new Date('2026-01-02T00:00:00Z'),
+          data: { rutaId: '3' },
+        },
+      ],
+      hasMore: false,
+      nextSequence: null,
+    });
+
+    const result = await useCase.execute(10, initial.nextCursor);
+
+    expect(result.changes).toEqual([
+      expect.objectContaining({ operation: 'DELETE', entityId: '3' }),
+    ]);
+    expect(repository.findSyncChanges).toHaveBeenLastCalledWith(
+      7,
+      [{ rutaId: 3n, comunidadId: 1, sectorId: null }],
+      12n,
+      100,
+    );
   });
 
   it('continues the incremental cursor watermark from the last sequence', async () => {

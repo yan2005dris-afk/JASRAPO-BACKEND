@@ -655,7 +655,7 @@ export class PrismaOperatorRepository extends OperatorRepository {
     const result = await this.prisma.$queryRaw<
       Array<{ snapshot_version: Date; watermark: bigint }>
     >`
-      SELECT 
+      SELECT
         CURRENT_TIMESTAMP(3) AS snapshot_version,
         COALESCE(MAX(sequence_id), 0)::bigint AS watermark
       FROM operator_sync_changes;

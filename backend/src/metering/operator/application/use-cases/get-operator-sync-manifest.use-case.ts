@@ -31,12 +31,18 @@ type Collection =
   | 'readings'
   | 'pendingAnomalies';
 type Position = { updatedAt: string; id: string; completed: boolean };
+type CursorScopeRoute = {
+  rutaId: string | null;
+  comunidadId: number;
+  sectorId: number | null;
+};
 type Cursor = {
   v: 3;
   operatorId: number;
   periodId: number;
   snapshotVersion: string;
   scope: string;
+  scopeRoutes?: CursorScopeRoute[];
   initialComplete: boolean;
   watermark: string;
   positions: Partial<Record<Collection, Position>>;
@@ -72,14 +78,33 @@ export class GetOperatorSyncManifestUseCase {
         'El cursor no pertenece al operador o período activo',
       );
     }
-    if (state && state.scope !== scope) {
+    const scopeChanged = state && state.scope !== scope;
+    const previousRoutes = state?.scopeRoutes;
+    const isActiveScopeRemoval =
+      scopeChanged === true &&
+      previousRoutes !== undefined &&
+      routes.every((route) =>
+        previousRoutes.some(
+          (previous) =>
+            previous.rutaId === (route.rutaId?.toString() ?? null) &&
+            previous.comunidadId === route.comunidadId &&
+            previous.sectorId === (route.sectorId ?? null),
+        ),
+      );
+    if (scopeChanged && !isActiveScopeRemoval) {
       throw new ConflictDomainException(
         'El alcance de rutas asignadas cambió durante la sincronización',
       );
     }
 
     if (state?.initialComplete)
-      return this.incremental(period.periodoId, routes, state, limit);
+      return this.incremental(
+        period.periodoId,
+        routes,
+        state,
+        limit,
+        isActiveScopeRemoval ? this.routesFromCursor(state) : routes,
+      );
 
     let snapshot: Date;
     let watermark: string;
@@ -205,6 +230,11 @@ export class GetOperatorSyncManifestUseCase {
       periodId: period.periodoId,
       snapshotVersion: snapshot.toISOString(),
       scope,
+      scopeRoutes: routes.map((route) => ({
+        rutaId: route.rutaId?.toString() ?? null,
+        comunidadId: route.comunidadId,
+        sectorId: route.sectorId ?? null,
+      })),
       initialComplete: complete,
       watermark,
       positions,
@@ -229,10 +259,11 @@ export class GetOperatorSyncManifestUseCase {
     routes: RouteData[],
     state: Cursor,
     limit: number,
+    changeRoutes = routes,
   ): Promise<OperatorSyncManifestDto> {
     const page = await this.repository.findSyncChanges(
       periodId,
-      routes,
+      changeRoutes,
       BigInt(state.sequence),
       limit,
     );
@@ -261,6 +292,14 @@ export class GetOperatorSyncManifestUseCase {
     });
   }
 
+  private routesFromCursor(state: Cursor): RouteData[] {
+    return (state.scopeRoutes ?? []).map((route) => ({
+      rutaId: route.rutaId == null ? undefined : BigInt(route.rutaId),
+      comunidadId: route.comunidadId,
+      sectorId: route.sectorId,
+    }));
+  }
+
   private emptyResponsePage(): OperatorSyncPage<unknown> {
     return { items: [], total: undefined, hasMore: false, nextCursor: null };
   }
@@ -271,7 +310,7 @@ export class GetOperatorSyncManifestUseCase {
       entityId: change.entityId.toString(),
       operation: change.operation,
       changedAt: change.changedAt.toISOString(),
-      data: change.data,
+      data: this.sanitizeBigInt(change.data),
     };
   }
   private mapPage<T, R>(
