@@ -29,6 +29,7 @@ import type {
   OperatorUser,
   SyncCursorPosition,
   SyncPage,
+  SyncChangePage,
 } from '../../domain/repositories/repository-types';
 
 const routeOperarioSelect = {
@@ -629,6 +630,82 @@ export class PrismaOperatorRepository extends OperatorRepository {
       items.length > limit,
       'lecturaId',
     );
+  }
+
+  async getSyncWatermark(): Promise<bigint> {
+    const latest = await this.prisma.operatorSyncChange.findFirst({
+      orderBy: { sequenceId: 'desc' },
+      select: { sequenceId: true },
+    });
+    return latest?.sequenceId ?? 0n;
+  }
+
+  async findSyncChanges(
+    periodoId: number,
+    routes: RouteData[],
+    afterSequence: bigint,
+    limit: number,
+  ): Promise<SyncChangePage> {
+    const scope = routes.flatMap((route) => {
+      const geography =
+        route.sectorId == null
+          ? { comunidadId: route.comunidadId }
+          : { comunidadId: route.comunidadId, sectorId: route.sectorId };
+      return [
+        ...(route.rutaId === undefined
+          ? []
+          : [
+              {
+                rutaId: route.rutaId,
+                entityType: { in: ['rutas', 'ordenes_trabajo'] },
+              },
+            ]),
+        {
+          ...geography,
+          periodoId,
+          entityType: { in: ['lecturas', 'lectura_anomalia'] },
+        },
+        { ...geography, entityType: { in: ['medidores'] } },
+      ];
+    });
+    if (!scope.length) return { items: [], hasMore: false, nextSequence: null };
+    const rows = await this.prisma.operatorSyncChange.findMany({
+      where: {
+        sequenceId: { gt: afterSequence },
+        OR: scope,
+        entityType: {
+          in: [
+            'rutas',
+            'ordenes_trabajo',
+            'lecturas',
+            'medidores',
+            'lectura_anomalia',
+          ],
+        },
+      },
+      orderBy: { sequenceId: 'asc' },
+      take: limit + 1,
+    });
+    const hasMore = rows.length > limit;
+    const items = rows.slice(0, limit).map((row: any) => {
+      const payload = row.payload as { data?: unknown };
+      const data = payload?.data;
+      return {
+        sequenceId: row.sequenceId,
+        entityType: row.entityType,
+        entityId: row.entityId,
+        operation: row.operation,
+        changedAt: row.changedAt,
+        data: (data && typeof data === 'object' && !Array.isArray(data)
+          ? data
+          : {}) as Record<string, unknown>,
+      };
+    });
+    return {
+      items,
+      hasMore,
+      nextSequence: hasMore ? (items.at(-1)?.sequenceId ?? null) : null,
+    };
   }
 
   private keyset(after: SyncCursorPosition, id: string): any {

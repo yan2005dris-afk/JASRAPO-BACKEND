@@ -2,6 +2,7 @@ import { BadRequestException } from '@nestjs/common';
 import { validate } from 'class-validator';
 import { OperatorController } from './operator.controller';
 import { UpdateOperatorWorkOrderDto } from '../dto/update-operator-work-order.dto';
+import { PERMISSION_KEY } from 'src/infrastructure/common/decorators/require-permission.decorator';
 jest.mock('../../application/reading-upload.helper', () => ({
   uploadReadingPhoto: jest.fn().mockResolvedValue('readings/deterministic.jpg'),
   rollbackReadingPhoto: jest.fn().mockResolvedValue(undefined),
@@ -50,6 +51,41 @@ describe('OperatorController work-order update', () => {
     );
     useCase.execute.mockResolvedValue(entity);
     routesUseCase.execute.mockResolvedValue([]);
+  });
+
+  it('protects the manifest with operator-sync:read and keeps legacy sync wired', async () => {
+    expect(
+      Reflect.getMetadata(
+        PERMISSION_KEY,
+        OperatorController.prototype.syncManifest,
+      ),
+    ).toEqual({ recurso: 'operator-sync', accion: 'read' });
+    expect(
+      Reflect.getMetadata('path', OperatorController.prototype.syncManifest),
+    ).toEqual('sync/manifest');
+    expect(
+      Reflect.getMetadata(PERMISSION_KEY, OperatorController.prototype.syncAll),
+    ).toEqual({ recurso: 'meters', accion: 'read' });
+    expect(
+      Reflect.getMetadata('path', OperatorController.prototype.syncAll),
+    ).toEqual('sync');
+
+    const legacySync = { execute: jest.fn().mockResolvedValue([]) };
+    const wired = new OperatorController(
+      undefined as any,
+      undefined as any,
+      undefined as any,
+      undefined as any,
+      undefined as any,
+      legacySync as any,
+      undefined as any,
+      undefined as any,
+      undefined as any,
+      storage as any,
+      undefined as any,
+    );
+    await expect(wired.syncAll({ sub: '17' } as any)).resolves.toEqual([]);
+    expect(legacySync.execute).toHaveBeenCalledWith(17);
   });
 
   it('wires the paginated sync manifest to the authenticated operator', async () => {

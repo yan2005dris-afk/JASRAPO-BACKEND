@@ -14,6 +14,7 @@ import {
 import type {
   SyncCursorPosition,
   SyncPage,
+  OperatorSyncChange,
 } from '../../domain/repositories/repository-types';
 import { OperatorRouteResponseDto } from '../../interfaces/dto/operator-route-response.dto';
 import { OperatorReadingAnomalyResponseDto } from '../../interfaces/dto/operator-reading-anomaly-response.dto';
@@ -29,15 +30,17 @@ type Collection =
   | 'meters'
   | 'readings'
   | 'pendingAnomalies';
+type Position = { updatedAt: string; id: string; completed: boolean };
 type Cursor = {
-  v: 2;
+  v: 3;
   operatorId: number;
   periodId: number;
   snapshotVersion: string;
   scope: string;
-  positions: Partial<
-    Record<Collection, { updatedAt: string; id: string; completed: boolean }>
-  >;
+  initialComplete: boolean;
+  watermark: string;
+  positions: Partial<Record<Collection, Position>>;
+  sequence: string;
 };
 
 @Injectable()
@@ -74,7 +77,17 @@ export class GetOperatorSyncManifestUseCase {
         'El alcance de rutas asignadas cambió durante la sincronización',
       );
     }
+
+    if (state?.initialComplete)
+      return this.incremental(period.periodoId, routes, state, limit);
+
     const snapshot = state ? new Date(state.snapshotVersion) : new Date();
+    const watermark =
+      state?.watermark ??
+      (this.repository.getSyncWatermark
+        ? await this.repository.getSyncWatermark()
+        : 0n
+      ).toString();
     const position = (name: Collection): SyncCursorPosition | null => {
       const value = state?.positions[name];
       return value
@@ -139,40 +152,30 @@ export class GetOperatorSyncManifestUseCase {
             ),
       ]);
     const pages: Record<Collection, OperatorSyncPage<unknown>> = {
-      routes: this.mapPage(routePage as SyncPage<any>, (item) =>
-        OperatorRouteResponseDto.fromEntity(item),
+      routes: this.mapPage(routePage, (item) =>
+        OperatorRouteResponseDto.fromEntity(item as any),
       ),
       workOrders: this.mapPage(orderPage, (item) => this.workOrderDto(item)),
       meters: this.mapPage(meterPage, (item) =>
         MeterResponseDto.fromEntity(this.toMeterEntity(item)),
       ),
       readings: this.mapPage(readingPage, (item) => this.readingDto(item)),
-      pendingAnomalies: this.mapPage(anomalyPage as SyncPage<any>, (item) =>
-        OperatorReadingAnomalyResponseDto.fromEntity(item),
+      pendingAnomalies: this.mapPage(anomalyPage, (item) =>
+        OperatorReadingAnomalyResponseDto.fromEntity(item as any),
       ),
     };
-    const nextState: Cursor = {
-      v: 2,
-      operatorId,
-      periodId: period.periodoId,
-      snapshotVersion: snapshot.toISOString(),
-      scope,
-      positions: {},
+    const rawPages = {
+      routes: routePage,
+      workOrders: orderPage,
+      meters: meterPage,
+      readings: readingPage,
+      pendingAnomalies: anomalyPage,
     };
-    for (const name of Object.keys(pages) as Collection[]) {
-      const page = [routePage, orderPage, meterPage, readingPage, anomalyPage][
-        (
-          [
-            'routes',
-            'workOrders',
-            'meters',
-            'readings',
-            'pendingAnomalies',
-          ] as Collection[]
-        ).indexOf(name)
-      ];
+    const positions: Partial<Record<Collection, Position>> = {};
+    for (const name of Object.keys(rawPages) as Collection[]) {
+      const page = rawPages[name];
       const previous = state?.positions[name];
-      nextState.positions[name] = page.nextPosition
+      positions[name] = page.nextPosition
         ? {
             updatedAt: page.nextPosition.updatedAt.toISOString(),
             id: page.nextPosition.id.toString(),
@@ -184,18 +187,80 @@ export class GetOperatorSyncManifestUseCase {
             completed: true,
           };
     }
-    const encoded = this.encodeCursor(nextState);
+    const complete = Object.values(pages).every((page) => !page.hasMore);
+    const nextCursor = this.encodeCursor({
+      v: 3,
+      operatorId,
+      periodId: period.periodoId,
+      snapshotVersion: snapshot.toISOString(),
+      scope,
+      initialComplete: complete,
+      watermark,
+      positions,
+      sequence: watermark,
+    });
     for (const page of Object.values(pages))
-      page.nextCursor = page.hasMore ? encoded : null;
+      page.nextCursor = page.hasMore ? nextCursor : null;
     return new OperatorSyncManifestDto({
       snapshotVersion: snapshot.toISOString(),
       periodId: period.periodoId,
       cursor: cursor ?? null,
-      complete: Object.values(pages).every((page) => !page.hasMore),
+      nextCursor,
+      complete,
+      changes: [],
       ...pages,
     });
   }
 
+  private async incremental(
+    periodId: number,
+    routes: RouteData[],
+    state: Cursor,
+    limit: number,
+  ): Promise<OperatorSyncManifestDto> {
+    const page = await this.repository.findSyncChanges(
+      periodId,
+      routes,
+      BigInt(state.sequence),
+      limit,
+    );
+    const nextSequence =
+      page.nextSequence ??
+      page.items.at(-1)?.sequenceId ??
+      BigInt(state.sequence);
+    const nextCursor = this.encodeCursor({
+      ...state,
+      sequence: nextSequence.toString(),
+    });
+    const changes = page.items.map((change) => this.changeDto(change));
+    return new OperatorSyncManifestDto({
+      snapshotVersion: state.snapshotVersion,
+      periodId,
+      cursor: null,
+      nextCursor: page.hasMore ? nextCursor : nextCursor,
+      complete: !page.hasMore,
+      changes,
+      routes: this.emptyResponsePage(),
+      workOrders: this.emptyResponsePage(),
+      meters: this.emptyResponsePage(),
+      readings: this.emptyResponsePage(),
+      pendingAnomalies: this.emptyResponsePage(),
+    });
+  }
+
+  private emptyResponsePage(): OperatorSyncPage<unknown> {
+    return { items: [], total: undefined, hasMore: false, nextCursor: null };
+  }
+  private changeDto(change: OperatorSyncChange): Record<string, unknown> {
+    return {
+      sequenceId: change.sequenceId.toString(),
+      entityType: change.entityType,
+      entityId: change.entityId.toString(),
+      operation: change.operation,
+      changedAt: change.changedAt.toISOString(),
+      data: change.data,
+    };
+  }
   private mapPage<T, R>(
     page: SyncPage<T>,
     map: (item: T) => R,
@@ -229,42 +294,43 @@ export class GetOperatorSyncManifestUseCase {
         Buffer.from(encoded, 'base64url').toString('utf8'),
       ) as Cursor;
       if (
-        decoded.v !== 2 ||
+        decoded.v !== 3 ||
         !Number.isSafeInteger(decoded.operatorId) ||
         !Number.isSafeInteger(decoded.periodId) ||
         typeof decoded.scope !== 'string' ||
         typeof decoded.snapshotVersion !== 'string' ||
+        typeof decoded.watermark !== 'string' ||
+        typeof decoded.sequence !== 'string' ||
         !decoded.positions ||
-        !Number.isFinite(new Date(decoded.snapshotVersion).getTime())
+        typeof decoded.initialComplete !== 'boolean' ||
+        !Number.isFinite(new Date(decoded.snapshotVersion).getTime()) ||
+        !/^\d+$/.test(decoded.watermark) ||
+        !/^\d+$/.test(decoded.sequence)
       )
         throw new Error();
-      for (const position of Object.values(decoded.positions)) {
+      for (const position of Object.values(decoded.positions))
         if (
           !position ||
           typeof position.completed !== 'boolean' ||
-          !/^[0-9]+$/.test(position.id) ||
+          !/^\d+$/.test(position.id) ||
           !Number.isFinite(new Date(position.updatedAt).getTime())
         )
           throw new Error();
-      }
       return decoded;
     } catch {
       throw new DomainValidationException('Cursor de sincronización inválido');
     }
   }
-
   private encodeCursor(value: Cursor): string {
     const encoded = Buffer.from(JSON.stringify(value)).toString('base64url');
     return `${encoded}.${this.sign(encoded)}`;
   }
-
   private sign(value: string): string {
     const secret = this.config.get<string>('JWT_ACCESS_SECRET');
     if (!secret)
       throw new Error('JWT_ACCESS_SECRET es requerido para firmar cursores');
     return createHmac('sha256', secret).update(value).digest('base64url');
   }
-
   private scopeFingerprint(routes: RouteData[]): string {
     return createHash('sha256')
       .update(
@@ -280,7 +346,6 @@ export class GetOperatorSyncManifestUseCase {
       )
       .digest('base64url');
   }
-
   private toMeterEntity(m: any): MeterEntity {
     const h = m.historial?.[0]?.contrato;
     return new MeterEntity({
@@ -297,43 +362,27 @@ export class GetOperatorSyncManifestUseCase {
   private readingDto(r: any): Record<string, unknown> {
     const c = r.medidor?.historial?.[0]?.contrato;
     return {
+      ...r,
       lecturaId: r.lecturaId.toString(),
-      fecha: r.fecha,
       lecturaAnterior: Number(r.lecturaAnterior),
       lecturaActual: Number(r.lecturaActual),
       consumoCalculado: Number(r.consumoCalculado),
       contratoId: c?.contratoId?.toString() ?? '',
-      descripcionAnomalia: r.descripcionAnomalia,
       fechaValidacion: r.fechaValidacion,
       evidenciaFotoUrl: r.evidenciaFotoUrl,
       isValidada: r.estado !== 'PENDIENTE',
-      lecturaInicial: r.lecturaInicial,
-      periodoId: r.periodoId,
-      tieneAnomalia: !!r.descripcionAnomalia,
-      estado: r.estado,
       medidor: r.medidor
         ? { ...r.medidor, medidorId: r.medidor.medidorId.toString() }
         : null,
-      periodoRel: r.periodoRel,
     };
   }
   private workOrderDto(order: any): Record<string, unknown> {
     return {
+      ...order,
       ordenTrabajoId: order.ordenTrabajoId.toString(),
       rutaId: order.rutaId.toString(),
-      tipoActividad: order.tipoActividad,
-      estado: order.estado,
-      ordenVisita: order.ordenVisita,
-      resultadoObservacion: order.resultadoObservacion,
-      evidenciaFotoUrl: order.evidenciaFotoUrl,
-      completadoEn: order.completadoEn?.toISOString(),
       lecturaId: order.lecturaId?.toString() ?? null,
-      contrato: {
-        numeroContrato: order.contrato.numeroGuia,
-        clienteNombre:
-          `${order.contrato.cliente.nombres} ${order.contrato.cliente.apellidos}`.trim(),
-        direccion: order.contrato.direccionSuministro,
-      },
+      completadoEn: order.completadoEn?.toISOString(),
       medidor: order.medidor
         ? { ...order.medidor, medidorId: order.medidor.medidorId.toString() }
         : null,

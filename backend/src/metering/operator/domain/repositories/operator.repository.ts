@@ -8,6 +8,7 @@ import type {
   OperatorUser,
   SyncCursorPosition,
   SyncPage,
+  SyncChangePage,
 } from './repository-types';
 
 export interface RouteData {
@@ -127,4 +128,11 @@ export abstract class OperatorRepository {
     after: SyncCursorPosition | null,
     limit: number,
   ): Promise<SyncPage<ReadingWithAnomalies>>;
+  abstract getSyncWatermark(): Promise<bigint>;
+  abstract findSyncChanges(
+    periodoId: number,
+    routes: RouteData[],
+    afterSequence: bigint,
+    limit: number,
+  ): Promise<SyncChangePage>;
 }
