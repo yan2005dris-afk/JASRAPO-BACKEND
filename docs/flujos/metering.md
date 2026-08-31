@@ -26,7 +26,6 @@ Estados: `BODEGA`, `INSTALADO`, `DANADO`, `PENDIENTE`, `BAJA`.
 - `GET /operator/readings/anomalies` — cola de lecturas con anomalías reportadas.
 - `PATCH /operator/readings/:id` — el operador registra/actualiza una lectura; `foto` se guarda como clave de objeto RustFS en `OrdenesTrabajo.evidenciaFotoUrl` de la orden vinculada.
 - `GET /operator/tasks` / `PATCH /operator/tasks/:id` — órdenes de trabajo asignadas al operador y su estado.
-- `GET /operator/sync` — endpoint de sincronización (soporta app con capacidad offline).
 
 ## 3. Alta y actualización de lecturas
 

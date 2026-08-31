@@ -2,6 +2,7 @@ import { BadRequestException } from '@nestjs/common';
 import { validate } from 'class-validator';
 import { OperatorController } from './operator.controller';
 import { UpdateOperatorWorkOrderDto } from '../dto/update-operator-work-order.dto';
+import { PERMISSION_KEY } from 'src/infrastructure/common/decorators/require-permission.decorator';
 jest.mock('../../application/reading-upload.helper', () => ({
   uploadReadingPhoto: jest.fn().mockResolvedValue('readings/deterministic.jpg'),
   rollbackReadingPhoto: jest.fn().mockResolvedValue(undefined),
@@ -42,7 +43,6 @@ describe('OperatorController work-order update', () => {
       useCase as any,
       undefined as any,
       undefined as any,
-      undefined as any,
       routesUseCase as any,
       undefined as any,
       undefined as any,
@@ -52,12 +52,23 @@ describe('OperatorController work-order update', () => {
     routesUseCase.execute.mockResolvedValue([]);
   });
 
+  it('protects the manifest with operator-sync:read', () => {
+    expect(
+      Reflect.getMetadata(
+        PERMISSION_KEY,
+        OperatorController.prototype.syncManifest,
+      ),
+    ).toEqual({ recurso: 'operator-sync', accion: 'read' });
+    expect(
+      Reflect.getMetadata('path', OperatorController.prototype.syncManifest),
+    ).toEqual('sync/manifest');
+  });
+
   it('wires the paginated sync manifest to the authenticated operator', async () => {
     const manifest = {
       execute: jest.fn().mockResolvedValue({ complete: true }),
     };
     const wired = new OperatorController(
-      undefined as any,
       undefined as any,
       undefined as any,
       undefined as any,

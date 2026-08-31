@@ -10,7 +10,6 @@ import {
   ParseEnumPipe,
   UseInterceptors,
   UploadedFile,
-  Optional,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
@@ -37,7 +36,6 @@ import { OPERATOR_IMAGE_UPLOAD_OPTIONS } from './operator-image-upload.options';
 import { OrderWorkResponseDto } from 'src/operations/routes/interfaces/dto/orden-trabajo-response.dto';
 import { ResponseReadingDto } from 'src/metering/readings/interfaces/dto/response-reading.dto';
 import { MeterResponseDto } from 'src/metering/meters/interfaces/dto/meter-response.dto';
-import { SyncAllUseCase } from '../../application/use-cases/sync-all.use-case';
 import { DecommissionMeterDto } from '../dto/decommission-meter.dto';
 import { GetOperatorRoutesUseCase } from '../../application/use-cases/get-operator-routes.use-case';
 import { UpdateRouteStateUseCase } from '../../application/use-cases/update-route-state.use-case';
@@ -123,13 +121,11 @@ export class OperatorController {
     private readonly updateOperatorWorkOrderUseCase: UpdateOperatorWorkOrderUseCase,
     private readonly reportDefectUseCase: ReportDefectUseCase,
     private readonly decommissionMeterUseCase: DecommissionMeterUseCase,
-    private readonly syncAllUseCase: SyncAllUseCase,
     private readonly getOperatorRoutesUseCase: GetOperatorRoutesUseCase,
     private readonly updateRouteStateUseCase: UpdateRouteStateUseCase,
     private readonly getOperatorReadingsWithAnomaliesUseCase: GetOperatorReadingsWithAnomaliesUseCase,
     private readonly storageService: StorageService,
-    @Optional()
-    private readonly getOperatorSyncManifestUseCase?: GetOperatorSyncManifestUseCase,
+    private readonly getOperatorSyncManifestUseCase: GetOperatorSyncManifestUseCase,
   ) {}
 
   @ApiOperation({
@@ -418,34 +414,6 @@ export class OperatorController {
     );
   }
 
-  /**
-   * Sincronización offline PWA — devuelve todos los medidores sin paginación
-   * GET /operator/sync
-   */
-  @ApiOperation({
-    summary: 'Sync offline de medidores',
-    description:
-      'Retorna los medidores del operador según sus rutas asignadas en el período activo',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Lista de medidores del operador',
-    type: [MeterResponseDto],
-  })
-  @ApiResponse(
-    operatorErrorResponse(400, 'Identificador del operador inválido'),
-  )
-  @ApiResponse(operatorErrorResponse(401, 'No autenticado'))
-  @ApiResponse(operatorErrorResponse(403, 'Sin permiso meters:read'))
-  @ApiResponse(operatorErrorResponse(404, 'No hay período activo'))
-  @RequiredPermission('meters', 'read')
-  @Get('sync')
-  async syncAll(@CurrentUser() user: JwtPayload): Promise<MeterResponseDto[]> {
-    const operarioId = this.getAuthenticatedOperatorId(user);
-    const meters = await this.syncAllUseCase.execute(operarioId);
-    return meters.map((m) => MeterResponseDto.fromEntity(m));
-  }
-
   @ApiOperation({ summary: 'Manifiesto paginado de sincronización offline' })
   @ApiResponse({ status: 200, type: OperatorSyncManifestDto })
   @ApiResponse(
@@ -456,16 +424,13 @@ export class OperatorController {
   )
   @ApiQuery({ name: 'cursor', required: false })
   @ApiQuery({ name: 'limit', required: false, type: Number })
-  @RequiredPermission('meters', 'read')
+  @RequiredPermission('operator-sync', 'read')
   @Get('sync/manifest')
   async syncManifest(
     @CurrentUser() user: JwtPayload,
     @Query('cursor') cursor?: string,
     @Query('limit') limit?: string,
   ): Promise<OperatorSyncManifestDto> {
-    if (!this.getOperatorSyncManifestUseCase) {
-      throw new Error('El manifiesto de sincronización no está configurado');
-    }
     return this.getOperatorSyncManifestUseCase.execute(
       this.getAuthenticatedOperatorId(user),
       cursor,

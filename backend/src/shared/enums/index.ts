@@ -274,6 +274,17 @@ export type MotivoReemplazoMedidor =
 
 // Fuente: models/logica-de-negocio/ReemplazoMedidor.prisma
 
+export const OperatorSyncChangeOperation = {
+  CREATE: 'CREATE',
+  UPDATE: 'UPDATE',
+  DELETE: 'DELETE',
+} as const;
+
+export type OperatorSyncChangeOperation =
+  (typeof OperatorSyncChangeOperation)[keyof typeof OperatorSyncChangeOperation];
+
+// Fuente: models/infrastructure/OperatorSyncChange.prisma
+
 export const ResolucionEconomicaAnomalia = {
   COBRO_REAL: 'COBRO_REAL',
   PROMEDIO_HISTORICO: 'PROMEDIO_HISTORICO',

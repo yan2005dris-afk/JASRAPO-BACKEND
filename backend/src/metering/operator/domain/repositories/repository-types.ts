@@ -8,11 +8,31 @@ export interface SyncCursorPosition {
   id: bigint;
 }
 
+export interface SyncSnapshotContext {
+  snapshotVersion: Date;
+  watermark: bigint;
+}
+
 export interface SyncPage<T> {
   items: T[];
   total: number;
   hasMore: boolean;
   nextPosition: SyncCursorPosition | null;
+}
+
+export interface OperatorSyncChange {
+  sequenceId: bigint;
+  entityType: string;
+  entityId: bigint;
+  operation: 'CREATE' | 'UPDATE' | 'DELETE';
+  changedAt: Date;
+  data: Record<string, unknown>;
+}
+
+export interface SyncChangePage {
+  items: OperatorSyncChange[];
+  hasMore: boolean;
+  nextSequence: bigint | null;
 }
 
 export interface ReadingWithContractDetail {
