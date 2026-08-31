@@ -20,6 +20,7 @@ import { ReadingAnomalyFilters } from '../domain/repositories/reading-anomaly.re
 import { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
+import { MAX_UPLOAD_SIZE_BYTES } from 'src/infrastructure/config/app.constants';
 
 @LogContext()
 @Injectable()
@@ -50,6 +51,7 @@ export class ReadingAnomalyService {
         SRI_STORAGE_TYPES.READING_NEWS,
         'reading-news',
         this.logger,
+        MAX_UPLOAD_SIZE_BYTES,
       );
       fotoUrl = uploadedKey;
     }
@@ -102,6 +104,7 @@ export class ReadingAnomalyService {
         SRI_STORAGE_TYPES.READING_NEWS,
         'reading-news',
         this.logger,
+        MAX_UPLOAD_SIZE_BYTES,
       );
     }
 

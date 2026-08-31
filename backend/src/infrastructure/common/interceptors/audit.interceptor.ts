@@ -51,10 +51,15 @@ export class AuditInterceptor implements NestInterceptor {
       (request.params?.['id'] as string) ||
       (request.params?.['claveAcceso'] as string);
     const accion = this.methodToAccion(method, url);
-
     return next.handle().pipe(
       tap(() => {
         const duracionMs = Date.now() - startTime;
+        const evidenceMetadata = (
+          request as Request & { file?: { evidenceMetadata?: unknown } }
+        ).file?.evidenceMetadata;
+        const evidenceMetadataFields = evidenceMetadata
+          ? { evidence: evidenceMetadata }
+          : {};
         // Fire-and-forget — no bloquear la respuesta
         void this.auditService.log({
           usuarioId: user?.sub,
@@ -69,6 +74,7 @@ export class AuditInterceptor implements NestInterceptor {
           metadata: {
             statusCode: response.statusCode,
             path: url,
+            ...evidenceMetadataFields,
           },
           exitoso: true,
           duracionMs,
@@ -76,6 +82,12 @@ export class AuditInterceptor implements NestInterceptor {
       }),
       catchError((error: Error) => {
         const duracionMs = Date.now() - startTime;
+        const evidenceMetadata = (
+          request as Request & { file?: { evidenceMetadata?: unknown } }
+        ).file?.evidenceMetadata;
+        const evidenceMetadataFields = evidenceMetadata
+          ? { evidence: evidenceMetadata }
+          : {};
         // Registrar operaciones fallidas también
         void this.auditService.log({
           usuarioId: user?.sub,
@@ -90,6 +102,7 @@ export class AuditInterceptor implements NestInterceptor {
           metadata: {
             path: url,
             errorName: error?.name,
+            ...evidenceMetadataFields,
           },
           exitoso: false,
           error: error?.message,
