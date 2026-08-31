@@ -283,6 +283,7 @@ export class PrismaOperatorRepository extends OperatorRepository {
           where: { deletedAt: null },
           select: {
             rutaId: true,
+            evidenciaFotoUrl: true,
             ruta: {
               select: {
                 operarioId: true,

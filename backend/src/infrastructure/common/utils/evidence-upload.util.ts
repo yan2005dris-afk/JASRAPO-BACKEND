@@ -108,19 +108,23 @@ export async function validateEvidenceImage(
   }
 }
 
-/** Synchronous first-line filter; full decoding is performed before storage. */
+/** Transport-only filter; authoritative validation runs after Multer populates buffer. */
 export function createImageFileFilter() {
   return (
     _req: unknown,
     file: Express.Multer.File,
     callback: (error: Error | null, acceptFile: boolean) => void,
   ): void => {
-    try {
-      detectImageFormat(file.buffer);
-      callback(null, true);
-    } catch (error) {
-      callback(error as Error, false);
+    if (!EVIDENCE_IMAGE_TYPES.test(file.mimetype)) {
+      callback(
+        new BadRequestException(
+          'Solo se permiten archivos de imagen JPEG, PNG o WebP',
+        ),
+        false,
+      );
+      return;
     }
+    callback(null, true);
   };
 }
 

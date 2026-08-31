@@ -1,4 +1,4 @@
-import { uploadEvidence } from './evidence-upload.util';
+import { createImageFileFilter, uploadEvidence } from './evidence-upload.util';
 import { SRI_STORAGE_TYPES } from 'src/infrastructure/storage/storage.service';
 
 const png = Buffer.from(
@@ -10,6 +10,18 @@ const file = {
   buffer: png,
   size: png.length,
 } as Express.Multer.File;
+
+describe('createImageFileFilter', () => {
+  it('does not inspect the buffer before memory storage populates it', () => {
+    const callback = jest.fn();
+    createImageFileFilter()(
+      {},
+      { mimetype: 'image/jpeg', buffer: undefined },
+      callback,
+    );
+    expect(callback).toHaveBeenCalledWith(null, true);
+  });
+});
 
 describe('uploadEvidence', () => {
   it('deletes the generated key when storage upload fails', async () => {

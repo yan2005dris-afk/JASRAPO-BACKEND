@@ -50,6 +50,25 @@ export async function uploadReadingPhoto(
   return key;
 }
 
+export async function deleteOldReadingPhoto(
+  oldKey: string,
+  newKey: string,
+  storageService: StorageService,
+  logger?: EvidenceLogger,
+): Promise<void> {
+  if (!oldKey || !newKey || oldKey === newKey) return;
+  try {
+    await storageService.delete(SRI_STORAGE_TYPES.READINGS, oldKey);
+    logger?.debug(
+      `[OPERATOR] evidence_cleanup outcome=old_deleted key=${oldKey}`,
+    );
+  } catch (error) {
+    logger?.warn(
+      `[OPERATOR] evidence_cleanup outcome=failed key=${oldKey} error=${(error as Error).message}`,
+    );
+  }
+}
+
 export async function rollbackReadingPhoto(
   key: string,
   storageService: StorageService,
