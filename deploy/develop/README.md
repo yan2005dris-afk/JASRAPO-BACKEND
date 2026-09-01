@@ -16,6 +16,7 @@ STORAGE_SECRET_KEY="$(openssl rand -hex 32)"
 JWT_ACCESS_SECRET="$(openssl rand -hex 32)"
 JWT_REFRESH_SECRET="$(openssl rand -hex 32)"
 ENCRYPTION_KEY="$(openssl rand -hex 32)"
+ENCRYPTION_SALT="$(openssl rand -hex 32)"
 kubectl -n "$NS" create secret generic jasrapo-backend-runtime \
   --from-literal=POSTGRES_USER="$DB_USER" \
   --from-literal=POSTGRES_PASSWORD="$DB_PASSWORD" \
@@ -25,8 +26,9 @@ kubectl -n "$NS" create secret generic jasrapo-backend-runtime \
   --from-literal=STORAGE_SECRET_KEY="$STORAGE_SECRET_KEY" \
   --from-literal=JWT_ACCESS_SECRET="$JWT_ACCESS_SECRET" \
   --from-literal=JWT_REFRESH_SECRET="$JWT_REFRESH_SECRET" \
-  --from-literal=ENCRYPTION_KEY="$ENCRYPTION_KEY"
-unset DB_PASSWORD STORAGE_ACCESS_KEY STORAGE_SECRET_KEY JWT_ACCESS_SECRET JWT_REFRESH_SECRET ENCRYPTION_KEY
+  --from-literal=ENCRYPTION_KEY="$ENCRYPTION_KEY" \
+  --from-literal=ENCRYPTION_SALT="$ENCRYPTION_SALT"
+unset DB_PASSWORD STORAGE_ACCESS_KEY STORAGE_SECRET_KEY JWT_ACCESS_SECRET JWT_REFRESH_SECRET ENCRYPTION_KEY ENCRYPTION_SALT
 ```
 
 The application source requires `DATABASE_URL`, `STORAGE_ACCESS_KEY`, and `STORAGE_SECRET_KEY` to start. The JWT and encryption keys above cover the security configuration used by this deployment; add any other application-specific settings required by the selected environment to the same existing Secret. PostgreSQL and RustFS consume their credentials from this Secret too.
