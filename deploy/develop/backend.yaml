@@ -29,6 +29,8 @@ spec:
       labels:
         app.kubernetes.io/name: backend
     spec:
+      imagePullSecrets:
+        - name: ghcr-pull
       containers:
         - name: backend
           image: ghcr.io/yan2005dris-afk/jasrapo-backend:develop

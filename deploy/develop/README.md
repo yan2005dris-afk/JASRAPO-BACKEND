@@ -47,4 +47,4 @@ kubectl apply -f argocd/applications/jasrapo-backend-develop.yaml
 
 The Application targets `develop` at `deploy/develop`, creates the `jasrapo-backend` namespace, and enables automated sync, prune, and self-heal. The backend Service is cluster-internal; no Ingress is included because no DNS hostname was supplied. Expose it intentionally through the cluster's edge routing after selecting a hostname.
 
-If GHCR is private, create an image pull secret out-of-band and add it to the backend Pod spec through a reviewed change; never commit a registry token.
+The backend Pod references the out-of-band image pull Secret `ghcr-pull` because this GHCR package is private. Create that Secret before syncing; never commit a registry token.
