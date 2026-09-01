@@ -1,0 +1,22 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: jasrapo-backend-develop
+  namespace: argocd
+  labels:
+    app.kubernetes.io/part-of: jasrapo
+spec:
+  project: default
+  source:
+    repoURL: git@github.com:yan2005dris-afk/JASRAPO-BACKEND.git
+    targetRevision: develop
+    path: deploy/develop
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: jasrapo-backend
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
