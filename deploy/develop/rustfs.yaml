@@ -37,6 +37,8 @@ spec:
         - name: rustfs
           image: rustfs/rustfs:latest
           imagePullPolicy: IfNotPresent
+          args:
+            - /data
           ports:
             - name: s3
               containerPort: 9000
@@ -55,17 +57,19 @@ spec:
                   key: STORAGE_SECRET_KEY
             - name: RUSTFS_ADDRESS
               value: ":9000"
+            - name: RUSTFS_CONSOLE_ADDRESS
+              value: ":9001"
             - name: RUSTFS_CONSOLE_ENABLE
               value: "true"
           readinessProbe:
             httpGet:
-              path: /
+              path: /health
               port: s3
             initialDelaySeconds: 20
             periodSeconds: 15
           livenessProbe:
             httpGet:
-              path: /
+              path: /health
               port: s3
             initialDelaySeconds: 45
             periodSeconds: 30
