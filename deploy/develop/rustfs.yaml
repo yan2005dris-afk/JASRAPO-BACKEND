@@ -62,14 +62,12 @@ spec:
             - name: RUSTFS_CONSOLE_ENABLE
               value: "true"
           readinessProbe:
-            httpGet:
-              path: /health
+            tcpSocket:
               port: s3
             initialDelaySeconds: 20
             periodSeconds: 15
           livenessProbe:
-            httpGet:
-              path: /health
+            tcpSocket:
               port: s3
             initialDelaySeconds: 45
             periodSeconds: 30
