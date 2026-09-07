@@ -11,7 +11,13 @@ ENV PNPM_CONFIG_PACKAGE_IMPORT_METHOD=copy
 ENV PRISMA_SKIP_POSTINSTALL_GENERATE=true
 # Prevent Puppeteer from downloading Chrome in the builder stage (it runs postinstall)
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
-RUN corepack enable && corepack prepare pnpm@11.22.0 --activate
+ENV SHELL=/bin/sh
+ENV ENV=/root/.profile
+RUN wget --no-verbose --output-document=- https://get.pnpm.io/install.sh \
+    | env PNPM_VERSION=12.3.4 sh - \
+    && . /root/.profile \
+    && ln -sf "$(command -v pnpm)" /usr/local/bin/pnpm \
+    && pnpm --version
 
 WORKDIR /app
 
@@ -36,9 +42,8 @@ RUN pnpm --filter backend exec prisma generate
 RUN pnpm --filter backend run build
 
 # 3. Resolver dependencias de producción usando la caché del store
-# --legacy: pnpm v10+ requires inject-workspace-packages by default; legacy restores previous behavior
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-    pnpm deploy --filter=backend --prod --legacy /prod/backend
+    pnpm deploy --filter=backend --prod /prod/backend
 
 # ─── Stage: Runner (Producción) ───────────────────────────────────────────────
 FROM node:22-alpine AS runner

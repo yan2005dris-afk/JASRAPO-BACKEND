@@ -8,8 +8,8 @@ on:
 
 defaults:
   run:
-    # Ejecutar desde la raíz del workspace para evitar el bug de
-    # pnpm 11 con runDepsStatusCheck desde subdirectorios
+    # Ejecutar desde la raíz del workspace para mantener consistentes
+    # la resolución del lockfile y los scripts filtrados.
     working-directory: ./
 
 jobs:
@@ -24,6 +24,8 @@ jobs:
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
+        with:
+          version: 12.3.4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -52,6 +54,8 @@ jobs:
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
+        with:
+          version: 12.3.4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -95,6 +99,8 @@ jobs:
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
+        with:
+          version: 12.3.4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -123,6 +129,8 @@ jobs:
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
+        with:
+          version: 12.3.4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -161,6 +169,8 @@ jobs:
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
+        with:
+          version: 12.3.4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
