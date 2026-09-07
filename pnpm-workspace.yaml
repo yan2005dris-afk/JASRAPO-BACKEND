@@ -24,6 +24,7 @@ overrides:
   browserslist: '^4.28.7'
   nanoid: '^3.3.18'
   postcss: '^8.5.18'
+  mysql2: '^3.22.0'
   # --- security audit overrides (added 2026-07-22) ---
   multer: '^2.2.0'                              # GHSA-72gw-mp4g-v24j
   nodemailer: '^9.0.1'                          # GHSA-p6gq-j5cr-w38f
