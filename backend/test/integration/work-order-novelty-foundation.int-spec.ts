@@ -5,6 +5,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { Client, type QueryResultRow } from 'pg';
 import { assertExecutionHistoryMetadata } from './execution-history-metadata.assertions';
+import { assertExecutionCapturedContent } from './execution-captured-content.assertions';
 
 const image = process.env.B02_POSTGRES_IMAGE_ID;
 const containerName = `b02-${process.pid}-${Math.random().toString(16).slice(2)}`;
@@ -209,6 +210,28 @@ test('execution history metadata preserves legacy data and enforces its contract
     ),
   ));
 
+test('execution captured content migration preserves legacy nulls', () =>
+  transaction(async () => {
+    await client!.query(
+      readFileSync(
+        resolve(
+          __dirname,
+          '../../prisma/migrations/20260830000003_add_execution_history_metadata/migration.sql',
+        ),
+        'utf8',
+      ),
+    );
+    await assertExecutionCapturedContent(
+      client!,
+      readFileSync(
+        resolve(
+          __dirname,
+          '../../prisma/migrations/20260830000004_add_execution_captured_content/migration.sql',
+        ),
+        'utf8',
+      ),
+    );
+  }));
 test('multiple novelties share one order and execution', () =>
   transaction(async () => {
     await insertNovelty({ execution: 20, reading: 3 });

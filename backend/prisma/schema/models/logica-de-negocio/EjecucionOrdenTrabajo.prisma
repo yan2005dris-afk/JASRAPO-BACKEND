@@ -22,6 +22,9 @@ model EjecucionesOrdenTrabajo {
   enviadoEn               DateTime?            @map("enviado_en")
   canceladoEn             DateTime?            @map("cancelado_en")
   version                 Int                  @default(1)
+  // Dormant nullable storage preserves captured values; absent values are not reconstructed.
+  resultadoObservacion    String?              @map("resultado_observacion") @db.Text
+  evidenciaFotoUrl        String?              @map("evidencia_foto_url") @db.Text
 
   ordenTrabajo OrdenesTrabajo          @relation(fields: [ordenTrabajoId], references: [ordenTrabajoId], onDelete: Cascade)
   creadoPor    Usuarios?               @relation("EjecucionCreadaPor", fields: [creadoPorUsuarioId], references: [usuarioId], onDelete: Restrict)

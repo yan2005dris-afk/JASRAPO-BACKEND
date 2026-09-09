@@ -36,6 +36,58 @@ const withProvenance: Prisma.NovedadesOrdenTrabajoUncheckedCreateInput = {
   tipo: TipoNovedadOrden.OTRO,
   observacion: 'Bound to execution and reading',
 };
+const capturedExecution: Prisma.EjecucionesOrdenTrabajoUncheckedCreateInput = {
+  ordenTrabajoId: 1n,
+  resultadoObservacion: 'Unicode ✓\nmultiline observation',
+  evidenciaFotoUrl: 'objects/work-orders/1/photo.webp',
+};
+const capturedSelection = {
+  resultadoObservacion: true,
+  evidenciaFotoUrl: true,
+} satisfies Prisma.EjecucionesOrdenTrabajoSelect;
+type CapturedResult = Prisma.EjecucionesOrdenTrabajoGetPayload<{
+  select: typeof capturedSelection;
+}>;
+const capturedResultString: CapturedResult = {
+  resultadoObservacion: 'observed',
+  evidenciaFotoUrl: 'objects/photo.webp',
+};
+const capturedResultNull: CapturedResult = {
+  resultadoObservacion: null,
+  evidenciaFotoUrl: null,
+};
+const capturedResultFields: {
+  resultadoObservacion: string | null;
+  evidenciaFotoUrl: string | null;
+} = capturedResultString;
+const explicitNullCapturedExecution: Prisma.EjecucionesOrdenTrabajoUncheckedCreateInput =
+  {
+    ordenTrabajoId: 1n,
+    resultadoObservacion: null,
+    evidenciaFotoUrl: null,
+  };
+const capturedUpdate: Prisma.EjecucionesOrdenTrabajoUncheckedUpdateInput = {
+  resultadoObservacion: 'updated',
+  evidenciaFotoUrl: 'objects/updated-photo.webp',
+};
+const omittedUpdate: Prisma.EjecucionesOrdenTrabajoUncheckedUpdateInput = {
+  ordenTrabajoId: 1n,
+};
+const nullableCapturedExecution: Prisma.EjecucionesOrdenTrabajoUncheckedUpdateInput =
+  {
+    resultadoObservacion: null,
+    evidenciaFotoUrl: null,
+  };
+const invalidCapturedObservationUpdate: Prisma.EjecucionesOrdenTrabajoUncheckedUpdateInput =
+  {
+    // @ts-expect-error update observation rejects inappropriate numeric values
+    resultadoObservacion: 42,
+  };
+const invalidCapturedEvidenceUpdate: Prisma.EjecucionesOrdenTrabajoUncheckedUpdateInput =
+  {
+    // @ts-expect-error update evidence rejects inappropriate numeric values
+    evidenciaFotoUrl: 42,
+  };
 const legacyExecution: Prisma.EjecucionesOrdenTrabajoCreateInput = {
   ordenTrabajo: { connect: { ordenTrabajoId: 1n } },
 };
@@ -115,6 +167,15 @@ void [
   submittedExecution,
   canceledExecution,
   legacyUpsert,
+  capturedExecution,
+  nullableCapturedExecution,
+  capturedSelection,
+  capturedResultString,
+  capturedResultNull,
+  capturedResultFields,
+  explicitNullCapturedExecution,
+  capturedUpdate,
+  omittedUpdate,
   allTypes,
   allStates,
   [
@@ -151,6 +212,18 @@ const missingResponsible: Prisma.NovedadesOrdenTrabajoCreateInput = {
   tipo: TipoNovedadOrden.OTRO,
   observacion: 'invalid',
 };
+const invalidCapturedExecution: Prisma.EjecucionesOrdenTrabajoUncheckedCreateInput =
+  {
+    ordenTrabajoId: 1n,
+    // @ts-expect-error captured content fields reject inappropriate numeric values
+    resultadoObservacion: 42,
+  };
+const invalidCapturedEvidence: Prisma.EjecucionesOrdenTrabajoUncheckedCreateInput =
+  {
+    ordenTrabajoId: 1n,
+    // @ts-expect-error captured content fields reject inappropriate numeric values
+    evidenciaFotoUrl: 42,
+  };
 const bigintCreator: Prisma.EjecucionesOrdenTrabajoUncheckedCreateInput = {
   // @ts-expect-error Prisma Int actor fields reject bigint values
   creadoPorUsuarioId: 10n,
@@ -184,4 +257,8 @@ void [
   bigintSubmitter,
   stringOrderId,
   stringExecutionId,
+  invalidCapturedExecution,
+  invalidCapturedEvidence,
+  invalidCapturedObservationUpdate,
+  invalidCapturedEvidenceUpdate,
 ];
