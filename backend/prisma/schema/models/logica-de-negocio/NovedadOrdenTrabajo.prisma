@@ -1,0 +1,40 @@
+enum TipoNovedadOrden {
+  FUGA
+  MEDIDOR_DAÑADO
+  LECTURA_ERRONEA
+  OTRO
+}
+
+enum EstadoNovedadOrden {
+  PENDIENTE
+  EN_SEGUIMIENTO
+  RESUELTA
+}
+
+model NovedadesOrdenTrabajo {
+  novedadId             BigInt             @id @default(autoincrement()) @map("novedad_id")
+  ordenTrabajoId        BigInt             @map("orden_trabajo_id")
+  ejecucionId           BigInt?            @map("ejecucion_id")
+  lecturaId             BigInt?            @map("lectura_id")
+  reportadoPorUsuarioId Int                @map("reportado_por_usuario_id")
+  responsableUsuarioId  Int                @map("responsable_usuario_id")
+  tipo                  TipoNovedadOrden   @map("tipo")
+  estado                EstadoNovedadOrden @default(PENDIENTE) @map("estado")
+  observacion           String             @map("observacion") @db.Text
+  version               Int                @default(1) @map("version")
+  createdAt             DateTime           @default(now()) @map("creado_en")
+  updatedAt             DateTime           @updatedAt @map("actualizado_en")
+
+  ordenTrabajo OrdenesTrabajo           @relation(fields: [ordenTrabajoId], references: [ordenTrabajoId], onDelete: Restrict, onUpdate: Cascade)
+  ejecucion    EjecucionesOrdenTrabajo? @relation(fields: [ejecucionId, ordenTrabajoId], references: [ejecucionId, ordenTrabajoId], onDelete: Restrict, onUpdate: Cascade)
+  lectura      Lecturas?                @relation(fields: [lecturaId], references: [lecturaId], onDelete: Restrict, onUpdate: Cascade)
+  reportadoPor Usuarios                 @relation("NovedadReportadaPor", fields: [reportadoPorUsuarioId], references: [usuarioId], onDelete: Restrict, onUpdate: Cascade)
+  responsable  Usuarios                 @relation("NovedadResponsable", fields: [responsableUsuarioId], references: [usuarioId], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([ordenTrabajoId, createdAt])
+  @@index([responsableUsuarioId, estado, updatedAt])
+  @@index([lecturaId, estado, tipo])
+  @@index([ejecucionId, ordenTrabajoId])
+  @@index([reportadoPorUsuarioId])
+  @@map("novedades_ordenes_trabajo")
+}

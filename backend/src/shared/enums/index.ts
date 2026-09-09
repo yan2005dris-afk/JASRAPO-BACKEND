@@ -177,6 +177,17 @@ export type EstadoMedidor = (typeof EstadoMedidor)[keyof typeof EstadoMedidor];
 
 // Fuente: models/logica-de-negocio/Medidores.prisma
 
+export const EstadoNovedadOrden = {
+  PENDIENTE: 'PENDIENTE',
+  EN_SEGUIMIENTO: 'EN_SEGUIMIENTO',
+  RESUELTA: 'RESUELTA',
+} as const;
+
+export type EstadoNovedadOrden =
+  (typeof EstadoNovedadOrden)[keyof typeof EstadoNovedadOrden];
+
+// Fuente: models/logica-de-negocio/NovedadOrdenTrabajo.prisma
+
 export const EstadoOrdenTrabajo = {
   PENDIENTE: 'PENDIENTE',
   EN_PROGRESO: 'EN_PROGRESO',
@@ -379,6 +390,18 @@ export const TipoMovCaja = {
 export type TipoMovCaja = (typeof TipoMovCaja)[keyof typeof TipoMovCaja];
 
 // Fuente: models/logica-de-negocio/CajaMovimiento.prisma
+
+export const TipoNovedadOrden = {
+  FUGA: 'FUGA',
+  MEDIDOR_DAÑADO: 'MEDIDOR_DAÑADO',
+  LECTURA_ERRONEA: 'LECTURA_ERRONEA',
+  OTRO: 'OTRO',
+} as const;
+
+export type TipoNovedadOrden =
+  (typeof TipoNovedadOrden)[keyof typeof TipoNovedadOrden];
+
+// Fuente: models/logica-de-negocio/NovedadOrdenTrabajo.prisma
 
 export const TipoOrigenAbono = {
   PAGO_EXCESO: 'PAGO_EXCESO',

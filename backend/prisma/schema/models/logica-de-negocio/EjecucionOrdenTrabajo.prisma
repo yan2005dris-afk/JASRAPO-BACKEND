@@ -1,14 +1,16 @@
 model EjecucionesOrdenTrabajo {
-  ejecucionId             BigInt          @id @default(autoincrement()) @map("ejecucion_id")
-  ordenTrabajoId          BigInt          @unique @map("orden_trabajo_id")
-  estadoSellos            String?         @map("estado_sellos")
-  hayFugas                Boolean?        @map("hay_fugas")
-  confirmacionRetiroSello Boolean?        @map("confirmacion_retiro_sello")
-  createdAt               DateTime        @default(now()) @map("creado_en")
-  updatedAt               DateTime        @updatedAt @map("actualizado_en")
-  deletedAt               DateTime?       @map("borrado_en")
+  ejecucionId             BigInt    @id @default(autoincrement()) @map("ejecucion_id")
+  ordenTrabajoId          BigInt    @unique @map("orden_trabajo_id")
+  estadoSellos            String?   @map("estado_sellos")
+  hayFugas                Boolean?  @map("hay_fugas")
+  confirmacionRetiroSello Boolean?  @map("confirmacion_retiro_sello")
+  createdAt               DateTime  @default(now()) @map("creado_en")
+  updatedAt               DateTime  @updatedAt @map("actualizado_en")
+  deletedAt               DateTime? @map("borrado_en")
 
-  ordenTrabajo OrdenesTrabajo @relation(fields: [ordenTrabajoId], references: [ordenTrabajoId], onDelete: Cascade)
+  ordenTrabajo OrdenesTrabajo          @relation(fields: [ordenTrabajoId], references: [ordenTrabajoId], onDelete: Cascade)
+  novedades    NovedadesOrdenTrabajo[]
 
+  @@unique([ejecucionId, ordenTrabajoId])
   @@map("ejecuciones_ordenes_trabajo")
 }

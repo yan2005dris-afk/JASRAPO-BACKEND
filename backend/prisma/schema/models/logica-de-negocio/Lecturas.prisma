@@ -1,33 +1,33 @@
 model Lecturas {
-  lecturaId           BigInt             @id @default(autoincrement()) @map("lectura_id")
-  fecha               DateTime           @map("fecha")
-  lecturaAnterior     Decimal            @map("lectura_anterior") @db.Decimal
-  lecturaActual       Decimal            @map("lectura_actual") @db.Decimal
-  consumoCalculado    Decimal            @map("consumo_calculado") @db.Decimal
-  deletedAt           DateTime?          @map("borrado_en")
-  createdAt           DateTime           @default(now()) @map("creado_en")
-  fechaValidacion     DateTime?          @map("fecha_validacion")
-  lecturaInicial      Boolean            @default(false) @map("lectura_inicial")
-  periodoId           Int                @map("periodo_id")
-  descripcionAnomalia String?            @map("descripcion_anomalia")
-  updatedAt           DateTime           @updatedAt @map("actualizado_en")
+  lecturaId           BigInt    @id @default(autoincrement()) @map("lectura_id")
+  fecha               DateTime  @map("fecha")
+  lecturaAnterior     Decimal   @map("lectura_anterior") @db.Decimal
+  lecturaActual       Decimal   @map("lectura_actual") @db.Decimal
+  consumoCalculado    Decimal   @map("consumo_calculado") @db.Decimal
+  deletedAt           DateTime? @map("borrado_en")
+  createdAt           DateTime  @default(now()) @map("creado_en")
+  fechaValidacion     DateTime? @map("fecha_validacion")
+  lecturaInicial      Boolean   @default(false) @map("lectura_inicial")
+  periodoId           Int       @map("periodo_id")
+  descripcionAnomalia String?   @map("descripcion_anomalia")
+  updatedAt           DateTime  @updatedAt @map("actualizado_en")
 
-  medidorId           BigInt             @map("medidor_id")
-  estado              EstadoLectura      @default(PENDIENTE) @map("estado")
-  medidor             Medidores          @relation(fields: [medidorId], references: [medidorId], onDelete: Restrict)
-  periodoRel          Periodos           @relation(fields: [periodoId], references: [periodoId])
-  ordenesTrabajo      OrdenesTrabajo[]
-  lecturaAnomalias    LecturaAnomalia[]
-  prefacturas         Prefacturas[]
-  reemplazosSaliente  ReemplazoMedidor[] @relation("LecturaFinalSaliente")
-  reemplazosEntrante  ReemplazoMedidor[] @relation("LecturaInicialEntrante")
+  medidorId          BigInt                  @map("medidor_id")
+  estado             EstadoLectura           @default(PENDIENTE) @map("estado")
+  medidor            Medidores               @relation(fields: [medidorId], references: [medidorId], onDelete: Restrict)
+  periodoRel         Periodos                @relation(fields: [periodoId], references: [periodoId])
+  ordenesTrabajo     OrdenesTrabajo[]
+  novedadesOrden     NovedadesOrdenTrabajo[]
+  lecturaAnomalias   LecturaAnomalia[]
+  prefacturas        Prefacturas[]
+  reemplazosSaliente ReemplazoMedidor[]      @relation("LecturaFinalSaliente")
+  reemplazosEntrante ReemplazoMedidor[]      @relation("LecturaInicialEntrante")
 
   @@index([periodoId])
   @@index([medidorId])
   @@index([fecha])
   @@index([estado, periodoId])
   @@map("lecturas")
-  
 }
 
 enum EstadoLectura {
