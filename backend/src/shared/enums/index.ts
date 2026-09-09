@@ -131,6 +131,18 @@ export type EstadoDeuda = (typeof EstadoDeuda)[keyof typeof EstadoDeuda];
 
 // Fuente: models/logica-de-negocio/Contratos.prisma
 
+export const EstadoEjecucionOrden = {
+  LEGACY_UNKNOWN: 'LEGACY_UNKNOWN',
+  DRAFT: 'DRAFT',
+  SUBMITTED: 'SUBMITTED',
+  CANCELED: 'CANCELED',
+} as const;
+
+export type EstadoEjecucionOrden =
+  (typeof EstadoEjecucionOrden)[keyof typeof EstadoEjecucionOrden];
+
+// Fuente: models/logica-de-negocio/EjecucionOrdenTrabajo.prisma
+
 export const EstadoEvento = {
   PENDIENTE: 'PENDIENTE',
   PROCESADO: 'PROCESADO',

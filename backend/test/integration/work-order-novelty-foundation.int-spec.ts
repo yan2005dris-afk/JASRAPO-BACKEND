@@ -4,6 +4,7 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { Client, type QueryResultRow } from 'pg';
+import { assertExecutionHistoryMetadata } from './execution-history-metadata.assertions';
 
 const image = process.env.B02_POSTGRES_IMAGE_ID;
 const containerName = `b02-${process.pid}-${Math.random().toString(16).slice(2)}`;
@@ -193,6 +194,20 @@ test.before(async () => {
   );
   assert.deepEqual(await snapshot(), before);
 });
+
+test('execution history metadata preserves legacy data and enforces its contract', () =>
+  transaction(() =>
+    assertExecutionHistoryMetadata(
+      client!,
+      readFileSync(
+        resolve(
+          __dirname,
+          '../../prisma/migrations/20260830000003_add_execution_history_metadata/migration.sql',
+        ),
+        'utf8',
+      ),
+    ),
+  ));
 
 test('multiple novelties share one order and execution', () =>
   transaction(async () => {

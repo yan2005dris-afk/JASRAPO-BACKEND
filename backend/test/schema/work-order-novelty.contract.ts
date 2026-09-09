@@ -2,10 +2,12 @@ import type { Prisma } from '../../src/generated/prisma/client';
 import {
   EstadoNovedadOrden,
   TipoNovedadOrden,
+  EstadoEjecucionOrden,
 } from '../../src/generated/prisma/enums';
 import {
   EstadoNovedadOrden as SharedState,
   TipoNovedadOrden as SharedType,
+  EstadoEjecucionOrden as SharedExecutionState,
 } from '../../src/shared/enums';
 
 const valid: Prisma.NovedadesOrdenTrabajoCreateInput = {
@@ -36,6 +38,30 @@ const withProvenance: Prisma.NovedadesOrdenTrabajoUncheckedCreateInput = {
 };
 const legacyExecution: Prisma.EjecucionesOrdenTrabajoCreateInput = {
   ordenTrabajo: { connect: { ordenTrabajoId: 1n } },
+};
+const draftExecution: Prisma.EjecucionesOrdenTrabajoUncheckedCreateInput = {
+  ordenTrabajoId: 1n,
+  estado: EstadoEjecucionOrden.DRAFT,
+  creadoPorUsuarioId: 10,
+  propietarioUsuarioId: 11,
+  version: 1,
+};
+const submittedExecution: Prisma.EjecucionesOrdenTrabajoUncheckedCreateInput = {
+  ordenTrabajoId: 2n,
+  estado: EstadoEjecucionOrden.SUBMITTED,
+  creadoPorUsuarioId: 10,
+  propietarioUsuarioId: 11,
+  enviadoPorUsuarioId: 12,
+  enviadoEn: new Date('2026-01-01T00:00:00.000Z'),
+  version: 2,
+};
+const canceledExecution: Prisma.EjecucionesOrdenTrabajoUncheckedCreateInput = {
+  ordenTrabajoId: 3n,
+  estado: EstadoEjecucionOrden.CANCELED,
+  creadoPorUsuarioId: 10,
+  propietarioUsuarioId: 11,
+  canceladoEn: new Date('2026-01-02T00:00:00.000Z'),
+  version: 1,
 };
 const legacyUpsert: Prisma.EjecucionesOrdenTrabajoUpsertArgs = {
   where: { ordenTrabajoId: 1n },
@@ -72,13 +98,33 @@ const collection: Prisma.EjecucionesOrdenTrabajoCreateInput = {
   novedades: { connect: [{ novedadId: 1n }] },
 };
 
+const executionParity: {
+  [K in keyof typeof EstadoEjecucionOrden]: (typeof EstadoEjecucionOrden)[K];
+} = SharedExecutionState;
+type GeneratedExecutionKeys = keyof typeof EstadoEjecucionOrden;
+type SharedExecutionKeys = keyof typeof SharedExecutionState;
+const noExtraSharedExecutionKeys: Record<
+  Exclude<SharedExecutionKeys, GeneratedExecutionKeys>,
+  never
+> = {};
 void [
   valid,
   optionalLinks,
   withProvenance,
+  draftExecution,
+  submittedExecution,
+  canceledExecution,
   legacyUpsert,
   allTypes,
   allStates,
+  [
+    EstadoEjecucionOrden.LEGACY_UNKNOWN,
+    EstadoEjecucionOrden.DRAFT,
+    EstadoEjecucionOrden.SUBMITTED,
+    EstadoEjecucionOrden.CANCELED,
+  ],
+  executionParity,
+  noExtraSharedExecutionKeys,
   sharedTypes,
   sharedStates,
   collection,
@@ -105,4 +151,37 @@ const missingResponsible: Prisma.NovedadesOrdenTrabajoCreateInput = {
   tipo: TipoNovedadOrden.OTRO,
   observacion: 'invalid',
 };
-void [missingOrder, missingReporter, missingResponsible];
+const bigintCreator: Prisma.EjecucionesOrdenTrabajoUncheckedCreateInput = {
+  // @ts-expect-error Prisma Int actor fields reject bigint values
+  creadoPorUsuarioId: 10n,
+  ordenTrabajoId: 1n,
+};
+const bigintOwner: Prisma.EjecucionesOrdenTrabajoUncheckedCreateInput = {
+  // @ts-expect-error Prisma Int actor fields reject bigint values
+  propietarioUsuarioId: 10n,
+  ordenTrabajoId: 1n,
+};
+const bigintSubmitter: Prisma.EjecucionesOrdenTrabajoUncheckedCreateInput = {
+  // @ts-expect-error Prisma Int actor fields reject bigint values
+  enviadoPorUsuarioId: 10n,
+  ordenTrabajoId: 1n,
+};
+const stringOrderId: Prisma.EjecucionesOrdenTrabajoUncheckedCreateInput = {
+  // @ts-expect-error Prisma BigInt IDs reject string values
+  ordenTrabajoId: '1',
+};
+const stringExecutionId: Prisma.EjecucionesOrdenTrabajoUncheckedCreateInput = {
+  // @ts-expect-error Prisma BigInt IDs reject string values
+  ejecucionId: '1',
+  ordenTrabajoId: 1n,
+};
+void [
+  missingOrder,
+  missingReporter,
+  missingResponsible,
+  bigintCreator,
+  bigintOwner,
+  bigintSubmitter,
+  stringOrderId,
+  stringExecutionId,
+];

@@ -26,8 +26,11 @@ model Usuarios {
   invitacionesEnviadas   UsuarioInvitacion[] @relation("invitadoPor")
   rol                    Roles?              @relation(fields: [rolId], references: [rolId])
 
-  novedadesReportadas  NovedadesOrdenTrabajo[] @relation("NovedadReportadaPor")
-  novedadesResponsable NovedadesOrdenTrabajo[] @relation("NovedadResponsable")
+  novedadesReportadas    NovedadesOrdenTrabajo[]   @relation("NovedadReportadaPor")
+  novedadesResponsable   NovedadesOrdenTrabajo[]   @relation("NovedadResponsable")
+  ejecucionesCreadas     EjecucionesOrdenTrabajo[] @relation("EjecucionCreadaPor")
+  ejecucionesPropietario EjecucionesOrdenTrabajo[] @relation("EjecucionPropietario")
+  ejecucionesEnviadas    EjecucionesOrdenTrabajo[] @relation("EjecucionEnviadaPor")
 
   @@map("usuarios")
 }

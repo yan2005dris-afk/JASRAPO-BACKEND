@@ -1,14 +1,32 @@
+// Lifecycle conditional checks are SQL-owned; nullable actor fields preserve legacy compatibility.
+enum EstadoEjecucionOrden {
+  LEGACY_UNKNOWN
+  DRAFT
+  SUBMITTED
+  CANCELED
+}
+
 model EjecucionesOrdenTrabajo {
-  ejecucionId             BigInt    @id @default(autoincrement()) @map("ejecucion_id")
-  ordenTrabajoId          BigInt    @unique @map("orden_trabajo_id")
-  estadoSellos            String?   @map("estado_sellos")
-  hayFugas                Boolean?  @map("hay_fugas")
-  confirmacionRetiroSello Boolean?  @map("confirmacion_retiro_sello")
-  createdAt               DateTime  @default(now()) @map("creado_en")
-  updatedAt               DateTime  @updatedAt @map("actualizado_en")
-  deletedAt               DateTime? @map("borrado_en")
+  ejecucionId             BigInt               @id @default(autoincrement()) @map("ejecucion_id")
+  ordenTrabajoId          BigInt               @unique @map("orden_trabajo_id")
+  estadoSellos            String?              @map("estado_sellos")
+  hayFugas                Boolean?             @map("hay_fugas")
+  confirmacionRetiroSello Boolean?             @map("confirmacion_retiro_sello")
+  createdAt               DateTime             @default(now()) @map("creado_en")
+  updatedAt               DateTime             @updatedAt @map("actualizado_en")
+  deletedAt               DateTime?            @map("borrado_en")
+  estado                  EstadoEjecucionOrden @default(LEGACY_UNKNOWN)
+  creadoPorUsuarioId      Int?                 @map("creado_por_usuario_id")
+  propietarioUsuarioId    Int?                 @map("propietario_usuario_id")
+  enviadoPorUsuarioId     Int?                 @map("enviado_por_usuario_id")
+  enviadoEn               DateTime?            @map("enviado_en")
+  canceladoEn             DateTime?            @map("cancelado_en")
+  version                 Int                  @default(1)
 
   ordenTrabajo OrdenesTrabajo          @relation(fields: [ordenTrabajoId], references: [ordenTrabajoId], onDelete: Cascade)
+  creadoPor    Usuarios?               @relation("EjecucionCreadaPor", fields: [creadoPorUsuarioId], references: [usuarioId], onDelete: Restrict)
+  propietario  Usuarios?               @relation("EjecucionPropietario", fields: [propietarioUsuarioId], references: [usuarioId], onDelete: Restrict)
+  enviadoPor   Usuarios?               @relation("EjecucionEnviadaPor", fields: [enviadoPorUsuarioId], references: [usuarioId], onDelete: Restrict)
   novedades    NovedadesOrdenTrabajo[]
 
   @@unique([ejecucionId, ordenTrabajoId])
