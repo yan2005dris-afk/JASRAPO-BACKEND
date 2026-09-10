@@ -7,24 +7,33 @@ enum EstadoEjecucionOrden {
 }
 
 model EjecucionesOrdenTrabajo {
-  ejecucionId             BigInt               @id @default(autoincrement()) @map("ejecucion_id")
-  ordenTrabajoId          BigInt               @unique @map("orden_trabajo_id")
-  estadoSellos            String?              @map("estado_sellos")
-  hayFugas                Boolean?             @map("hay_fugas")
-  confirmacionRetiroSello Boolean?             @map("confirmacion_retiro_sello")
-  createdAt               DateTime             @default(now()) @map("creado_en")
-  updatedAt               DateTime             @updatedAt @map("actualizado_en")
-  deletedAt               DateTime?            @map("borrado_en")
-  estado                  EstadoEjecucionOrden @default(LEGACY_UNKNOWN)
-  creadoPorUsuarioId      Int?                 @map("creado_por_usuario_id")
-  propietarioUsuarioId    Int?                 @map("propietario_usuario_id")
-  enviadoPorUsuarioId     Int?                 @map("enviado_por_usuario_id")
-  enviadoEn               DateTime?            @map("enviado_en")
-  canceladoEn             DateTime?            @map("cancelado_en")
-  version                 Int                  @default(1)
+  ejecucionId              BigInt               @id @default(autoincrement()) @map("ejecucion_id")
+  ordenTrabajoId           BigInt               @unique @map("orden_trabajo_id")
+  estadoSellos             String?              @map("estado_sellos")
+  hayFugas                 Boolean?             @map("hay_fugas")
+  confirmacionRetiroSello  Boolean?             @map("confirmacion_retiro_sello")
+  createdAt                DateTime             @default(now()) @map("creado_en")
+  updatedAt                DateTime             @updatedAt @map("actualizado_en")
+  deletedAt                DateTime?            @map("borrado_en")
+  estado                   EstadoEjecucionOrden @default(LEGACY_UNKNOWN)
+  creadoPorUsuarioId       Int?                 @map("creado_por_usuario_id")
+  propietarioUsuarioId     Int?                 @map("propietario_usuario_id")
+  enviadoPorUsuarioId      Int?                 @map("enviado_por_usuario_id")
+  enviadoEn                DateTime?            @map("enviado_en")
+  canceladoEn              DateTime?            @map("cancelado_en")
+  version                  Int                  @default(1)
   // Dormant nullable storage preserves captured values; absent values are not reconstructed.
-  resultadoObservacion    String?              @map("resultado_observacion") @db.Text
-  evidenciaFotoUrl        String?              @map("evidencia_foto_url") @db.Text
+  resultadoObservacion     String?              @map("resultado_observacion") @db.Text
+  evidenciaFotoUrl         String?              @map("evidencia_foto_url") @db.Text
+  // SQL-owned all-or-none check keeps this dormant snapshot internally consistent.
+  lecturaSnapshotId        BigInt?              @map("lectura_snapshot_id")
+  lecturaSnapshotAnterior  Decimal?             @map("lectura_snapshot_anterior") @db.Decimal
+  lecturaSnapshotActual    Decimal?             @map("lectura_snapshot_actual") @db.Decimal
+  lecturaSnapshotConsumo   Decimal?             @map("lectura_snapshot_consumo") @db.Decimal
+  lecturaSnapshotFecha     DateTime?            @map("lectura_snapshot_fecha") @db.Timestamp(3)
+  lecturaSnapshotInicial   Boolean?             @map("lectura_snapshot_inicial")
+  lecturaSnapshotMedidorId BigInt?              @map("lectura_snapshot_medidor_id")
+  lecturaSnapshotPeriodoId Int?                 @map("lectura_snapshot_periodo_id")
 
   ordenTrabajo OrdenesTrabajo          @relation(fields: [ordenTrabajoId], references: [ordenTrabajoId], onDelete: Cascade)
   creadoPor    Usuarios?               @relation("EjecucionCreadaPor", fields: [creadoPorUsuarioId], references: [usuarioId], onDelete: Restrict)

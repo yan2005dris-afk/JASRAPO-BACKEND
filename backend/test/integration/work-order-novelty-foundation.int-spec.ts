@@ -6,6 +6,7 @@ import { resolve } from 'node:path';
 import { Client, type QueryResultRow } from 'pg';
 import { assertExecutionHistoryMetadata } from './execution-history-metadata.assertions';
 import { assertExecutionCapturedContent } from './execution-captured-content.assertions';
+import { assertExecutionReadingSnapshot } from './execution-reading-snapshot.assertions';
 
 const image = process.env.B02_POSTGRES_IMAGE_ID;
 const containerName = `b02-${process.pid}-${Math.random().toString(16).slice(2)}`;
@@ -227,6 +228,38 @@ test('execution captured content migration preserves legacy nulls', () =>
         resolve(
           __dirname,
           '../../prisma/migrations/20260830000004_add_execution_captured_content/migration.sql',
+        ),
+        'utf8',
+      ),
+    );
+  }));
+test('reading snapshot is nullable and all-or-none', () =>
+  transaction(async () => {
+    await client!.query('insert into ordenes_trabajo values (3), (4)');
+    await client!.query(
+      readFileSync(
+        resolve(
+          __dirname,
+          '../../prisma/migrations/20260830000003_add_execution_history_metadata/migration.sql',
+        ),
+        'utf8',
+      ),
+    );
+    await client!.query(
+      readFileSync(
+        resolve(
+          __dirname,
+          '../../prisma/migrations/20260830000004_add_execution_captured_content/migration.sql',
+        ),
+        'utf8',
+      ),
+    );
+    await assertExecutionReadingSnapshot(
+      client!,
+      readFileSync(
+        resolve(
+          __dirname,
+          '../../prisma/migrations/20260830000005_add_execution_reading_snapshot/migration.sql',
         ),
         'utf8',
       ),

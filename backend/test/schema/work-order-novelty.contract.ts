@@ -1,4 +1,4 @@
-import type { Prisma } from '../../src/generated/prisma/client';
+import { Prisma } from '../../src/generated/prisma/client';
 import {
   EstadoNovedadOrden,
   TipoNovedadOrden,
@@ -41,6 +41,110 @@ const capturedExecution: Prisma.EjecucionesOrdenTrabajoUncheckedCreateInput = {
   resultadoObservacion: 'Unicode ✓\nmultiline observation',
   evidenciaFotoUrl: 'objects/work-orders/1/photo.webp',
 };
+const snapshotSelection = {
+  lecturaSnapshotId: true,
+  lecturaSnapshotAnterior: true,
+  lecturaSnapshotActual: true,
+  lecturaSnapshotConsumo: true,
+  lecturaSnapshotFecha: true,
+  lecturaSnapshotInicial: true,
+  lecturaSnapshotMedidorId: true,
+  lecturaSnapshotPeriodoId: true,
+} satisfies Prisma.EjecucionesOrdenTrabajoSelect;
+type SnapshotInput = Pick<
+  Prisma.EjecucionesOrdenTrabajoUncheckedCreateInput,
+  keyof typeof snapshotSelection
+>;
+const snapshotPopulated = {
+  lecturaSnapshotId: 3n,
+  lecturaSnapshotAnterior: new Prisma.Decimal('9007199254740993.123456789'),
+  lecturaSnapshotActual: new Prisma.Decimal('9007199254740994.123456789'),
+  lecturaSnapshotConsumo: new Prisma.Decimal('0.000000000000000000123'),
+  lecturaSnapshotFecha: new Date('2026-02-03T04:05:06.123Z'),
+  lecturaSnapshotInicial: false,
+  lecturaSnapshotMedidorId: 77n,
+  lecturaSnapshotPeriodoId: 202602,
+} satisfies SnapshotInput;
+const snapshotNull = {
+  lecturaSnapshotId: null,
+  lecturaSnapshotAnterior: null,
+  lecturaSnapshotActual: null,
+  lecturaSnapshotConsumo: null,
+  lecturaSnapshotFecha: null,
+  lecturaSnapshotInicial: null,
+  lecturaSnapshotMedidorId: null,
+  lecturaSnapshotPeriodoId: null,
+} satisfies SnapshotInput;
+const snapshotCases = [snapshotPopulated, snapshotNull, {}] as const;
+const snapshotCreates = snapshotCases.map((snapshot) => ({
+  ordenTrabajoId: 1n,
+  ...snapshot,
+})) satisfies Prisma.EjecucionesOrdenTrabajoUncheckedCreateInput[];
+const snapshotCheckedCreates = snapshotCases.map((snapshot) => ({
+  ordenTrabajo: { connect: { ordenTrabajoId: 1n } },
+  ...snapshot,
+})) satisfies Prisma.EjecucionesOrdenTrabajoCreateInput[];
+const snapshotCheckedUpdates = snapshotCases.map((snapshot) => ({
+  ordenTrabajo: { connect: { ordenTrabajoId: 1n } },
+  ...snapshot,
+})) satisfies Prisma.EjecucionesOrdenTrabajoUpdateInput[];
+const snapshotUncheckedUpdates =
+  snapshotCases satisfies readonly Prisma.EjecucionesOrdenTrabajoUncheckedUpdateInput[];
+type SnapshotResult = Prisma.EjecucionesOrdenTrabajoGetPayload<{
+  select: typeof snapshotSelection;
+}>;
+type Equal<A, B> =
+  (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2
+    ? true
+    : false;
+type Assert<T extends true> = T;
+type SnapshotTypes = Assert<
+  Equal<
+    SnapshotResult,
+    {
+      lecturaSnapshotId: bigint | null;
+      lecturaSnapshotAnterior: Prisma.Decimal | null;
+      lecturaSnapshotActual: Prisma.Decimal | null;
+      lecturaSnapshotConsumo: Prisma.Decimal | null;
+      lecturaSnapshotFecha: Date | null;
+      lecturaSnapshotInicial: boolean | null;
+      lecturaSnapshotMedidorId: bigint | null;
+      lecturaSnapshotPeriodoId: number | null;
+    }
+  >
+>;
+const snapshotResult: SnapshotResult = { ...snapshotPopulated };
+const snapshotResultNull: SnapshotResult = { ...snapshotNull };
+const invalidSnapshotDecimal = {
+  ordenTrabajoId: 1n,
+  // @ts-expect-error decimal input rejects booleans
+  lecturaSnapshotAnterior: true,
+} satisfies Prisma.EjecucionesOrdenTrabajoUncheckedCreateInput;
+const invalidSnapshotBigInt = {
+  ordenTrabajoId: 1n,
+  // @ts-expect-error BigInt input rejects strings
+  lecturaSnapshotMedidorId: '77',
+} satisfies Prisma.EjecucionesOrdenTrabajoUncheckedCreateInput;
+const invalidSnapshotInt = {
+  ordenTrabajoId: 1n,
+  // @ts-expect-error Int input rejects bigint
+  lecturaSnapshotPeriodoId: 202602n,
+} satisfies Prisma.EjecucionesOrdenTrabajoUncheckedCreateInput;
+const invalidSnapshotBoolean = {
+  ordenTrabajoId: 1n,
+  // @ts-expect-error boolean input rejects strings
+  lecturaSnapshotInicial: 'false',
+} satisfies Prisma.EjecucionesOrdenTrabajoUncheckedCreateInput;
+const invalidSnapshotDate = {
+  ordenTrabajoId: 1n,
+  // @ts-expect-error DateTime input rejects numbers
+  lecturaSnapshotFecha: 42,
+} satisfies Prisma.EjecucionesOrdenTrabajoUncheckedCreateInput;
+// @ts-expect-error result decimal fields must be Decimal or null
+const invalidSnapshotResultValue: SnapshotResult['lecturaSnapshotActual'] = {};
+type InvalidSnapshotSelection =
+  // @ts-expect-error selection rejects unknown fields
+  Prisma.EjecucionesOrdenTrabajoSelect['notAField'];
 const capturedSelection = {
   resultadoObservacion: true,
   evidenciaFotoUrl: true,
@@ -168,6 +272,11 @@ void [
   canceledExecution,
   legacyUpsert,
   capturedExecution,
+  snapshotCreates,
+  snapshotCheckedCreates,
+  snapshotCheckedUpdates,
+  snapshotUncheckedUpdates,
+  snapshotResult,
   nullableCapturedExecution,
   capturedSelection,
   capturedResultString,
