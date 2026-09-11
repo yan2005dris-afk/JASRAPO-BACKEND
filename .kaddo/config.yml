@@ -1,0 +1,29 @@
+version: 1
+project:
+  name: jasrapo-backend
+  state: pre-ai
+  structure: multirepo
+  language: es
+  role: core
+  domains: []
+team:
+  size: small
+knowledge:
+  default_level: K2
+guard:
+  silent_without_ownership: true
+system:
+  name: jasrapo-backend
+multirepo:
+  role: core
+  modules_file: .kaddo/modules.yml
+  workspace_roots:
+    - ..
+scan:
+  language: javascript
+  framework: unknown
+  packageManager: pnpm
+  codeDirs: []
+  infraFiles:
+    - docker-compose.yml
+    - .github/workflows/

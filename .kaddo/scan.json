@@ -1,0 +1,118 @@
+{
+  "version": "1",
+  "generatedAt": "2026-09-08T15:13:12.459Z",
+  "project": {
+    "state": "pre-ai",
+    "structure": "multirepo",
+    "teamSize": "small"
+  },
+  "detected": {
+    "languages": [
+      "javascript"
+    ],
+    "frameworks": [],
+    "packageManagers": [
+      "pnpm"
+    ],
+    "sourceDirectories": [],
+    "migrationDirectories": [],
+    "contractFiles": [],
+    "infrastructureFiles": [
+      "docker-compose.yml",
+      ".github/workflows/"
+    ],
+    "testDirectories": []
+  },
+  "signals": {
+    "auth": [],
+    "payments": [],
+    "webhooks": [],
+    "storage": [],
+    "background_jobs": [],
+    "email": [],
+    "database": [],
+    "migrations": [],
+    "api_routes": [],
+    "tests": [
+      {
+        "type": "tests",
+        "label": "No test directory detected",
+        "confidence": "high",
+        "evidence": [],
+        "recommended_review": "Confirm how this project is validated before production changes."
+      }
+    ],
+    "security": [
+      {
+        "type": "security",
+        "label": "Secret-bearing environment variables",
+        "confidence": "medium",
+        "evidence": [
+          "EMAIL_PASSWORD",
+          "ENCRYPTION_KEY",
+          "JWT_ACCESS_SECRET",
+          "JWT_REFRESH_SECRET",
+          "POSTGRES_PASSWORD",
+          "SHORTCUT_TOKEN",
+          "STORAGE_ACCESS_KEY",
+          "STORAGE_SECRET_KEY"
+        ],
+        "recommended_review": "Confirm secret rotation and endpoint protection strategy."
+      }
+    ],
+    "infrastructure": [
+      {
+        "type": "infrastructure",
+        "label": "Docker Compose",
+        "confidence": "high",
+        "evidence": [
+          "docker-compose.yml"
+        ]
+      },
+      {
+        "type": "infrastructure",
+        "label": "GitHub Actions",
+        "confidence": "high",
+        "evidence": [
+          ".github/workflows/"
+        ]
+      }
+    ],
+    "external_integrations": [],
+    "environment": [
+      {
+        "type": "environment",
+        "label": "81 environment variable(s) detected",
+        "confidence": "high",
+        "evidence": [
+          "ALLOW_LONG_REFRESH",
+          "APP_URL",
+          "BACKEND_PORT",
+          "BCRYPT_COST",
+          "BREVO_SMTP_HOST",
+          "BREVO_SMTP_PASS",
+          "BREVO_SMTP_PORT",
+          "BREVO_SMTP_USER",
+          "CACHE_CERT_TTL_MS",
+          "CERTS_DIR",
+          "CORS_ORIGIN",
+          "DATABASE_URL",
+          "DB_CONNECTION_TIMEOUT",
+          "DB_POOL_IDLE_TIMEOUT",
+          "DB_POOL_MAX",
+          "EMAIL_FROM",
+          "EMAIL_FROM_NAME",
+          "EMAIL_HOST",
+          "EMAIL_PASSWORD",
+          "EMAIL_PORT"
+        ]
+      }
+    ]
+  },
+  "suggestions": {
+    "possibleDomains": [],
+    "openQuestions": [
+      "No test directory detected — confirm how this project is tested."
+    ]
+  }
+}
