@@ -195,6 +195,13 @@ export interface ReadingWithAnomalies {
     observacion: string | null;
     createdAt: Date;
   }>;
+  novedadesOrdenTrabajo?: Array<{
+    novedadId: bigint;
+    tipo: string;
+    estado: string;
+    observacion: string | null;
+    createdAt: Date;
+  }>;
 }
 
 /** Fields that can be updated when transitioning a route's state. */
