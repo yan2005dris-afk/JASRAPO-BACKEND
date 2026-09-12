@@ -18,6 +18,7 @@ model Lecturas {
   periodoRel          Periodos           @relation(fields: [periodoId], references: [periodoId])
   ordenesTrabajo      OrdenesTrabajo[]
   lecturaAnomalias    LecturaAnomalia[]
+  novedadesOrdenTrabajo NovedadOrdenTrabajo[]
   prefacturas         Prefacturas[]
   reemplazosSaliente  ReemplazoMedidor[] @relation("LecturaFinalSaliente")
   reemplazosEntrante  ReemplazoMedidor[] @relation("LecturaInicialEntrante")

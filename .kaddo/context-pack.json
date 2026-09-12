@@ -1,0 +1,458 @@
+{
+  "version": "1",
+  "generatedAt": "2026-09-11T23:33:00.348Z",
+  "project": {
+    "name": "jasrapo-backend",
+    "state": "pre-ai",
+    "teamSize": "small",
+    "structure": "multirepo",
+    "language": "Spanish"
+  },
+  "scan": {
+    "available": true,
+    "languages": [
+      "javascript"
+    ],
+    "frameworks": [],
+    "packageManagers": [
+      "pnpm"
+    ],
+    "sourceDirectories": [],
+    "migrationDirectories": [],
+    "contractFiles": [],
+    "infrastructureFiles": [
+      "docker-compose.yml",
+      ".github/workflows/"
+    ]
+  },
+  "knowledge": {
+    "summary": "> What is true about this product right now.",
+    "roadmapSummary": "> What we intend to build and why.",
+    "inventoryAvailable": true,
+    "workItems": [],
+    "activeWorkItems": [],
+    "completedWorkItems": [],
+    "archivedWorkItems": [],
+    "allWorkItems": [],
+    "artifacts": []
+  },
+  "layers": [
+    {
+      "layer": "Business",
+      "status": "Missing",
+      "detected": []
+    },
+    {
+      "layer": "Product",
+      "status": "Missing",
+      "detected": []
+    },
+    {
+      "layer": "Tech",
+      "status": "Structured",
+      "detected": [
+        "knowledge.md",
+        "modules.md",
+        "system-context.md"
+      ]
+    },
+    {
+      "layer": "Delivery",
+      "status": "Partial",
+      "detected": [
+        "roadmap.md"
+      ]
+    }
+  ],
+  "knowledgeQuality": {
+    "business": {
+      "status": "Missing",
+      "artifacts": {
+        "knowledge/business/business.md": "missing"
+      }
+    },
+    "product": {
+      "status": "Missing",
+      "artifacts": {
+        "knowledge/product/product.md": "missing",
+        "knowledge/product/capabilities.md": "missing"
+      }
+    },
+    "tech": {
+      "status": "Structured",
+      "artifacts": {
+        "knowledge/tech/codebase.md": "missing",
+        "knowledge/tech/current-state.md": "missing"
+      }
+    },
+    "delivery": {
+      "status": "Partial",
+      "artifacts": {
+        "knowledge/delivery/roadmap.md": "placeholder"
+      }
+    }
+  },
+  "roadmap": {
+    "present": true,
+    "initiatives": 0,
+    "work_item_candidates": 0,
+    "materialized_work_items": 0,
+    "remaining_work_item_candidates": 0,
+    "candidates": 0,
+    "materialized": 0,
+    "remaining": 0
+  },
+  "phase": {
+    "phase": "Discovery",
+    "reasons": [
+      "Roadmap available",
+      "0 materialized work item(s)"
+    ],
+    "recommendedAgents": [
+      "business-agent"
+    ],
+    "nextStep": "Run `kaddo modules discover` to find sibling module repositories.",
+    "llmInstructions": [
+      "Use the business-agent to fill the missing base knowledge.",
+      "Do not write code."
+    ]
+  },
+  "nextStepRecommendation": {
+    "id": "modules-discover",
+    "phase": "Setup",
+    "label": "Run `kaddo modules discover` to find sibling module repositories.",
+    "command": "kaddo modules discover",
+    "reason": "No modules are mapped for this core repository."
+  },
+  "deliveryState": {
+    "phase": "Setup",
+    "draft_work_items": 0,
+    "refined_draft_work_items": 0,
+    "refined_draft_ids": [],
+    "ready_work_items": 0,
+    "ready_work_item_ids": [],
+    "ready_multirepo_wi_ids": [],
+    "in_progress_work_items": 0,
+    "blocked_work_items": 0,
+    "total_work_items": 0,
+    "ownership_coverage": "0/0",
+    "remaining_work_item_candidates": 0,
+    "decision_candidates": 0,
+    "accepted_adrs": 0,
+    "adapters_installed": 0
+  },
+  "techDecisions": {
+    "status": "none",
+    "candidates": 0,
+    "adrs": 0,
+    "draft_adrs": 0,
+    "accepted_adrs": 0,
+    "candidate_list": [],
+    "candidates_source": null,
+    "candidates_legacy_location": false,
+    "candidates_both_exist": false
+  },
+  "techKnowledge": {
+    "core": {
+      "current-state.md": false,
+      "codebase.md": false
+    },
+    "decisions": {
+      "adrs": 0,
+      "dir": false
+    },
+    "discovery": {
+      "architecture-notes.md": false,
+      "decision-candidates.md": false,
+      "legacyLocation": false
+    }
+  },
+  "roadmapQuality": {
+    "initiatives": {
+      "total": 0,
+      "grounded": 0,
+      "with_related_domain": 0,
+      "with_related_capability": 0,
+      "with_source_signals": 0,
+      "needs_refinement": false,
+      "items": []
+    },
+    "work_item_candidates": {
+      "total": 0,
+      "with_source_initiative": 0,
+      "with_related_domain": 0,
+      "with_related_capability": 0
+    }
+  },
+  "installedAssets": {
+    "version": "3.68.0",
+    "agents": {
+      "total": 20,
+      "installed": 0,
+      "outdated": 0,
+      "unknown_version": 0,
+      "modified": 0
+    },
+    "skills": {
+      "total": 8,
+      "installed": 0,
+      "outdated": 0,
+      "unknown_version": 0,
+      "modified": 0
+    }
+  },
+  "workItemSummary": {
+    "total": 0,
+    "active": 0,
+    "draft": 0,
+    "ready": 0,
+    "in_progress": 0,
+    "blocked": 0,
+    "completed": 0,
+    "archived": 0,
+    "summary": "none"
+  },
+  "deliveryMix": {},
+  "external": [],
+  "graph": null,
+  "graphHints": null,
+  "skills": [],
+  "scanSignals": {
+    "auth": [],
+    "payments": [],
+    "webhooks": [],
+    "storage": [],
+    "background_jobs": [],
+    "email": [],
+    "database": [],
+    "migrations": [],
+    "api_routes": [],
+    "tests": [
+      {
+        "type": "tests",
+        "label": "No test directory detected",
+        "confidence": "high",
+        "evidence": [],
+        "recommended_review": "Confirm how this project is validated before production changes."
+      }
+    ],
+    "security": [
+      {
+        "type": "security",
+        "label": "Secret-bearing environment variables",
+        "confidence": "medium",
+        "evidence": [
+          "EMAIL_PASSWORD",
+          "ENCRYPTION_KEY",
+          "JWT_ACCESS_SECRET",
+          "JWT_REFRESH_SECRET",
+          "POSTGRES_PASSWORD",
+          "SHORTCUT_TOKEN",
+          "STORAGE_ACCESS_KEY",
+          "STORAGE_SECRET_KEY"
+        ],
+        "recommended_review": "Confirm secret rotation and endpoint protection strategy."
+      }
+    ],
+    "infrastructure": [
+      {
+        "type": "infrastructure",
+        "label": "Docker Compose",
+        "confidence": "high",
+        "evidence": [
+          "docker-compose.yml"
+        ]
+      },
+      {
+        "type": "infrastructure",
+        "label": "GitHub Actions",
+        "confidence": "high",
+        "evidence": [
+          ".github/workflows/"
+        ]
+      }
+    ],
+    "external_integrations": [],
+    "environment": [
+      {
+        "type": "environment",
+        "label": "81 environment variable(s) detected",
+        "confidence": "high",
+        "evidence": [
+          "ALLOW_LONG_REFRESH",
+          "APP_URL",
+          "BACKEND_PORT",
+          "BCRYPT_COST",
+          "BREVO_SMTP_HOST",
+          "BREVO_SMTP_PASS",
+          "BREVO_SMTP_PORT",
+          "BREVO_SMTP_USER",
+          "CACHE_CERT_TTL_MS",
+          "CERTS_DIR",
+          "CORS_ORIGIN",
+          "DATABASE_URL",
+          "DB_CONNECTION_TIMEOUT",
+          "DB_POOL_IDLE_TIMEOUT",
+          "DB_POOL_MAX",
+          "EMAIL_FROM",
+          "EMAIL_FROM_NAME",
+          "EMAIL_HOST",
+          "EMAIL_PASSWORD",
+          "EMAIL_PORT"
+        ]
+      }
+    ]
+  },
+  "projectRoute": {
+    "type": "pre-ai",
+    "currentStep": "scan-repository",
+    "completed": 2,
+    "total": 16,
+    "progressPercent": 13,
+    "steps": [
+      {
+        "id": "enable-kaddo",
+        "label": "Enable Kaddo",
+        "status": "done",
+        "evidence": [
+          ".kaddo/config.yml"
+        ]
+      },
+      {
+        "id": "scan-repository",
+        "label": "Scan repository",
+        "status": "warning",
+        "evidence": [
+          ".kaddo/scan.json"
+        ],
+        "reason": "Scan has warnings (e.g. no test directory detected).",
+        "command": "kaddo scan"
+      },
+      {
+        "id": "bootstrap",
+        "label": "Bootstrap knowledge baseline",
+        "status": "pending",
+        "command": "kaddo bootstrap",
+        "reason": "The knowledge baseline is incomplete."
+      },
+      {
+        "id": "define-business",
+        "label": "Define business context",
+        "status": "pending",
+        "agent": "business-agent"
+      },
+      {
+        "id": "define-product",
+        "label": "Define product context",
+        "status": "pending",
+        "agent": "capability-agent"
+      },
+      {
+        "id": "discover-capabilities",
+        "label": "Discover capabilities",
+        "status": "pending",
+        "agent": "capability-agent"
+      },
+      {
+        "id": "describe-architecture",
+        "label": "Describe current architecture",
+        "status": "pending",
+        "agent": "architecture-agent"
+      },
+      {
+        "id": "capture-technical-decisions",
+        "label": "Capture technical decisions",
+        "status": "optional",
+        "reason": "No decision candidates found."
+      },
+      {
+        "id": "create-work-source",
+        "label": "Create or connect work source",
+        "status": "done",
+        "evidence": [
+          "knowledge/delivery/roadmap.md"
+        ]
+      },
+      {
+        "id": "materialize-work-item",
+        "label": "Materialize first Work Item",
+        "status": "pending"
+      },
+      {
+        "id": "refine-work-item",
+        "label": "Refine Work Item",
+        "status": "pending"
+      },
+      {
+        "id": "suggest-ownership",
+        "label": "Suggest ownership",
+        "status": "pending"
+      },
+      {
+        "id": "resolve-adrs",
+        "label": "Resolve ADRs if needed",
+        "status": "optional"
+      },
+      {
+        "id": "prepare-implementation",
+        "label": "Prepare implementation",
+        "status": "pending"
+      },
+      {
+        "id": "run-guard",
+        "label": "Run guard",
+        "status": "pending"
+      },
+      {
+        "id": "capture-learning",
+        "label": "Capture learning",
+        "status": "optional",
+        "reason": "Project is still in early discovery."
+      }
+    ]
+  },
+  "metadataHealth": {
+    "findings": [
+      {
+        "file": "knowledge/delivery/roadmap.md",
+        "field": "generated_by",
+        "issue": "missing",
+        "detail": "Missing `generated_by` in frontmatter."
+      },
+      {
+        "file": "knowledge/delivery/roadmap.md",
+        "field": "template_version",
+        "issue": "missing",
+        "detail": "Missing `template_version` in frontmatter."
+      }
+    ],
+    "healthy": 0,
+    "drifted": 1
+  },
+  "mappedModules": [],
+  "moduleStatuses": {},
+  "affectedModuleContexts": {},
+  "isModuleRepo": false,
+  "missing": [
+    "No work items found."
+  ],
+  "handoff": {
+    "recommendedAgents": [
+      "business-agent"
+    ],
+    "nextSteps": [
+      "Run `kaddo modules discover` to find sibling module repositories."
+    ],
+    "instructions": [
+      "Use the business-agent to fill the missing base knowledge.",
+      "Do not write code."
+    ],
+    "operatingRules": [
+      "**Never run `git commit`, `git push` or `git merge` without explicit human confirmation.**",
+      "Never push or merge automatically — ever. Suggest a Conventional Commit message and wait.",
+      "When implementing a Work Item, create a branch FIRST (per the project Git strategy, `.kaddo/git.yml`, default `feature/<id>-<slug>`). Never work directly on `main`.",
+      "After significant changes run `kaddo scan`, `kaddo owners suggest` and `kaddo guard`, and update the affected knowledge (ADR / capabilities / current-state).",
+      "Kaddo itself never calls an LLM and never runs git — every git action is the human’s."
+    ]
+  }
+}

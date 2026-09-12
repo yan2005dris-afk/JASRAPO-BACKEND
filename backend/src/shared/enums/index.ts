@@ -177,6 +177,17 @@ export type EstadoMedidor = (typeof EstadoMedidor)[keyof typeof EstadoMedidor];
 
 // Fuente: models/logica-de-negocio/Medidores.prisma
 
+export const EstadoNovedad = {
+  OPEN: 'OPEN',
+  IN_PROGRESS: 'IN_PROGRESS',
+  RESOLVED: 'RESOLVED',
+  CANCELLED: 'CANCELLED',
+} as const;
+
+export type EstadoNovedad = (typeof EstadoNovedad)[keyof typeof EstadoNovedad];
+
+// Fuente: models/logica-de-negocio/NovedadOrdenTrabajo.prisma
+
 export const EstadoOrdenTrabajo = {
   PENDIENTE: 'PENDIENTE',
   EN_PROGRESO: 'EN_PROGRESO',
