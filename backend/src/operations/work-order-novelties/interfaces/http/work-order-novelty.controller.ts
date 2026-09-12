@@ -8,7 +8,6 @@ import {
   Query,
   UseInterceptors,
   UploadedFile,
-  Req,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
@@ -18,6 +17,7 @@ import {
   ApiConsumes,
   ApiResponse,
 } from '@nestjs/swagger';
+import { AuthUserId } from 'src/infrastructure/common/decorators/auth-user-id.decorator';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
 import { ParseBigIntPipe } from 'src/infrastructure/common/pipes/parse-bigint.pipe';
 import { createImageFileFilter } from 'src/infrastructure/common/utils/evidence-upload.util';
@@ -100,10 +100,9 @@ export class WorkOrderNoveltyController {
   async update(
     @Param('id', ParseBigIntPipe) id: bigint,
     @Body() dto: UpdateWorkOrderNoveltyDto,
-    @Req() req: any,
+    @AuthUserId() actorUserId: number,
     @UploadedFile() file?: Express.Multer.File,
   ): Promise<ResponseWorkOrderNoveltyDto> {
-    const actorUserId = req.user?.usuarioId;
     const updated = await this.service.update(id, dto, file, actorUserId);
     return ResponseWorkOrderNoveltyDto.fromEntity(updated);
   }
