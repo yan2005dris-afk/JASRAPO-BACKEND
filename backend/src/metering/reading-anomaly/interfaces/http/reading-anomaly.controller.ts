@@ -46,8 +46,10 @@ export class ReadingAnomalyController {
   constructor(private readonly readingAnomalyService: ReadingAnomalyService) {}
 
   @ApiOperation({
-    summary: 'Crear anomalía de lectura',
-    description: 'Registra una anomalía encontrada al tomar una lectura',
+    summary: 'Crear anomalía de lectura (DEPRECATED: Usar /work-order-novelties)',
+    description:
+      '[DEPRECATED - ADR-005] Registra una anomalía de lectura legacy. Utilice POST /work-order-novelties asociando la orden de trabajo originadora.',
+    deprecated: true,
   })
   @ApiBody({
     description: 'Datos de la anomalía y evidencia fotográfica opcional',
