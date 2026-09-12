@@ -248,6 +248,7 @@ Para consultas o soporte, contacta al equipo de desarrollo del Backend.
     .addTag('meters', 'Gestión de medidores')
     .addTag('readings', 'Lecturas de medidores')
     .addTag('routes', 'Planificación y gestión de rutas de lectura')
+    .addTag('work-orders', 'Órdenes de trabajo')
     .addTag('search', 'Búsqueda pública de información')
     .addTag('batches', 'Billing batch management')
     .addTag('pre-invoices', 'Gestión de prefacturas')
