@@ -1,5 +1,4 @@
 import { Module, forwardRef } from '@nestjs/common';
-import { ReadingAnomalyController } from './interfaces/http/reading-anomaly.controller';
 import { ReadingAnomalyService } from './application/reading-anomaly.service';
 import { CreateReadingAnomalyUseCase } from './application/use-cases/create-reading-anomaly.use-case';
 import { FindAllReadingAnomaliesUseCase } from './application/use-cases/find-all-reading-anomalies.use-case';
@@ -12,7 +11,7 @@ import { ReadingModule } from '../readings/reading.module';
 
 @Module({
   imports: [forwardRef(() => ReadingModule)],
-  controllers: [ReadingAnomalyController],
+  controllers: [],
   providers: [
     {
       provide: ReadingAnomalyRepository,
