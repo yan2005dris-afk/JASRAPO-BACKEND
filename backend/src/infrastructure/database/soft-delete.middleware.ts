@@ -5,7 +5,6 @@
 // Modelos que implementan soft delete (tienen campo deletedAt)
 const SOFT_DELETE_MODELS = [
   'lecturas',
-  'lecturaAnomalia',
   'medidores',
   'clientes',
   'contratos',

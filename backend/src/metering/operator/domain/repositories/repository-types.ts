@@ -188,13 +188,6 @@ export interface ReadingWithAnomalies {
     marca: string;
     modelo: string;
   } | null;
-  lecturaAnomalias: Array<{
-    anomaliaId: bigint;
-    tipo: string;
-    estado: string;
-    observacion: string | null;
-    createdAt: Date;
-  }>;
   novedadesOrdenTrabajo?: Array<{
     novedadId: bigint;
     tipo: string;

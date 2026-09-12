@@ -32,3 +32,18 @@ enum EstadoNovedad {
   RESOLVED
   CANCELLED
 }
+
+enum TipoAnomalia {
+  FUGA
+  MEDIDOR_DAÑADO
+  LECTURA_ERRONEA
+  OTRO
+}
+
+enum ResolucionEconomicaAnomalia {
+  COBRO_REAL
+  PROMEDIO_HISTORICO
+  EXONERACION_PARCIAL
+  EXONERACION_TOTAL
+  AJUSTE_LECTURA
+}

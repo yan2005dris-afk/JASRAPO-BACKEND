@@ -6,7 +6,6 @@ import {
   EstadoRuta,
   EstadoMedidor,
   EstadoLectura,
-  EstadoAnomalia,
   EstadoNovedad,
 } from 'src/shared/enums';
 import {
@@ -594,18 +593,9 @@ export class PrismaOperatorRepository extends OperatorRepository {
       deletedAt: null,
       updatedAt: { lte: snapshotVersion },
       estado: EstadoLectura.CON_NOVEDAD,
-      OR: [
-        {
-          lecturaAnomalias: {
-            some: { estado: EstadoAnomalia.PENDIENTE, deletedAt: null },
-          },
-        },
-        {
-          novedadesOrdenTrabajo: {
-            some: { estado: EstadoNovedad.OPEN, deletedAt: null },
-          },
-        },
-      ],
+      novedadesOrdenTrabajo: {
+        some: { estado: EstadoNovedad.OPEN, deletedAt: null },
+      },
       medidor: {
         historial: {
           some: { fechaHasta: null, OR: this.toReadingRouteConditions(routes) },
@@ -630,16 +620,6 @@ export class PrismaOperatorRepository extends OperatorRepository {
           descripcionAnomalia: true,
           medidor: {
             select: { medidorId: true, serie: true, marca: true, modelo: true },
-          },
-          lecturaAnomalias: {
-            where: { estado: EstadoAnomalia.PENDIENTE, deletedAt: null },
-            select: {
-              anomaliaId: true,
-              tipo: true,
-              estado: true,
-              observacion: true,
-              createdAt: true,
-            },
           },
           novedadesOrdenTrabajo: {
             where: { estado: EstadoNovedad.OPEN, deletedAt: null },
@@ -710,7 +690,7 @@ export class PrismaOperatorRepository extends OperatorRepository {
         {
           ...geography,
           periodoId,
-          entityType: { in: ['lecturas', 'lectura_anomalia'] },
+          entityType: { in: ['lecturas'] },
         },
         { ...geography, entityType: { in: ['medidores'] } },
       ];
@@ -721,13 +701,7 @@ export class PrismaOperatorRepository extends OperatorRepository {
         sequenceId: { gt: afterSequence },
         OR: scope,
         entityType: {
-          in: [
-            'rutas',
-            'ordenes_trabajo',
-            'lecturas',
-            'medidores',
-            'lectura_anomalia',
-          ],
+          in: ['rutas', 'ordenes_trabajo', 'lecturas', 'medidores'],
         },
       },
       orderBy: { sequenceId: 'asc' },
@@ -1000,18 +974,9 @@ export class PrismaOperatorRepository extends OperatorRepository {
         periodoId,
         deletedAt: null,
         estado: EstadoLectura.CON_NOVEDAD,
-        OR: [
-          {
-            lecturaAnomalias: {
-              some: { estado: EstadoAnomalia.PENDIENTE, deletedAt: null },
-            },
-          },
-          {
-            novedadesOrdenTrabajo: {
-              some: { estado: EstadoNovedad.OPEN, deletedAt: null },
-            },
-          },
-        ],
+        novedadesOrdenTrabajo: {
+          some: { estado: EstadoNovedad.OPEN, deletedAt: null },
+        },
         medidor: {
           historial: {
             some: {
@@ -1036,16 +1001,6 @@ export class PrismaOperatorRepository extends OperatorRepository {
             serie: true,
             marca: true,
             modelo: true,
-          },
-        },
-        lecturaAnomalias: {
-          where: { estado: EstadoAnomalia.PENDIENTE, deletedAt: null },
-          select: {
-            anomaliaId: true,
-            tipo: true,
-            estado: true,
-            observacion: true,
-            createdAt: true,
           },
         },
         novedadesOrdenTrabajo: {

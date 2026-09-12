@@ -247,7 +247,6 @@ Para consultas o soporte, contacta al equipo de desarrollo del Backend.
     .addTag('tariff-categories', 'Categorías tarifarias (tarifas por consumo)')
     .addTag('meters', 'Gestión de medidores')
     .addTag('readings', 'Lecturas de medidores')
-    .addTag('reading-anomalies', 'Anomalías de lecturas (fugas, daños)')
     .addTag('routes', 'Planificación y gestión de rutas de lectura')
     .addTag('search', 'Búsqueda pública de información')
     .addTag('batches', 'Billing batch management')
