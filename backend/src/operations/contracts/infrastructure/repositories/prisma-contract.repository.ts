@@ -66,6 +66,36 @@ export class PrismaContractRepository implements ContractRepository {
     return ContractMapper.toDomain(record);
   }
 
+  async getConnectionCosts(categoriaTarifaId: number): Promise<{
+    costoGuia: number | null;
+    derechoInspeccion: number | null;
+  }> {
+    const [guia, inspeccion] = await Promise.all([
+      this.prisma.rubros.findFirst({
+        where: {
+          categoriaTarifaId,
+          codigoSri: { startsWith: 'SERV-GUIA' },
+          activo: true,
+          deletedAt: null,
+        },
+        orderBy: { rubroId: 'asc' },
+      }),
+      this.prisma.rubros.findFirst({
+        where: {
+          codigoSri: 'SERV-INSP-01',
+          activo: true,
+          deletedAt: null,
+        },
+        orderBy: { rubroId: 'asc' },
+      }),
+    ]);
+
+    return {
+      costoGuia: guia ? Number(guia.precioUnitario) : null,
+      derechoInspeccion: inspeccion ? Number(inspeccion.precioUnitario) : null,
+    };
+  }
+
   async paginateContratos(
     args: {
       filters?: ContractFilters;
