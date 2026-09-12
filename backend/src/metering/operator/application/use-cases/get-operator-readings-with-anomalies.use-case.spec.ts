@@ -19,16 +19,28 @@ describe('GetOperatorReadingsWithAnomaliesUseCase', () => {
       lecturaId: BigInt(10),
       estado: 'CON_NOVEDAD',
       medidor: { serie: 'MED-001' },
-      lecturaAnomalias: [
-        { anomaliaId: BigInt(1), estado: 'PENDIENTE', tipo: 'FUGA' },
+      novedadesOrdenTrabajo: [
+        {
+          novedadId: BigInt(1),
+          estado: 'OPEN',
+          tipo: 'FUGA',
+          observacion: null,
+          createdAt: new Date(),
+        },
       ],
     },
     {
       lecturaId: BigInt(20),
       estado: 'CON_NOVEDAD',
       medidor: { serie: 'MED-002' },
-      lecturaAnomalias: [
-        { anomaliaId: BigInt(2), estado: 'PENDIENTE', tipo: 'LECTURA_ERRONEA' },
+      novedadesOrdenTrabajo: [
+        {
+          novedadId: BigInt(2),
+          estado: 'OPEN',
+          tipo: 'LECTURA_ERRONEA',
+          observacion: null,
+          createdAt: new Date(),
+        },
       ],
     },
   ];
@@ -91,6 +103,6 @@ describe('GetOperatorReadingsWithAnomaliesUseCase', () => {
     expect(result).toBe(mockReadings);
     expect(result).toHaveLength(2);
     expect(result[0].estado).toBe('CON_NOVEDAD');
-    expect(result[0].lecturaAnomalias[0].estado).toBe('PENDIENTE');
+    expect(result[0].novedadesOrdenTrabajo![0].estado).toBe('OPEN');
   });
 });

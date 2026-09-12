@@ -96,15 +96,23 @@ describe('OrdenesTrabajoService', () => {
       });
       mockUseCase.execute.mockResolvedValue(updatedOrden);
 
-      const result = await service.updateEstado(1n, {
-        estado: 'COMPLETADA',
-        resultadoObservacion: 'all good',
-      });
+      const result = await service.updateEstado(
+        1n,
+        {
+          estado: 'COMPLETADA',
+          resultadoObservacion: 'all good',
+        },
+        42,
+      );
 
-      expect(mockUseCase.execute).toHaveBeenCalledWith(1n, {
-        estado: 'COMPLETADA',
-        resultadoObservacion: 'all good',
-      });
+      expect(mockUseCase.execute).toHaveBeenCalledWith(
+        1n,
+        {
+          estado: 'COMPLETADA',
+          resultadoObservacion: 'all good',
+        },
+        42,
+      );
       expect(result).toBe(updatedOrden);
     });
   });
@@ -117,9 +125,13 @@ describe('OrdenesTrabajoService', () => {
       });
       mockUseCase.execute.mockResolvedValue(linked);
 
-      const result = await service.linkLectura(1n, { lecturaId: 999n });
+      const result = await service.linkLectura(1n, { lecturaId: 999n }, 42);
 
-      expect(mockUseCase.execute).toHaveBeenCalledWith(1n, { lecturaId: 999n });
+      expect(mockUseCase.execute).toHaveBeenCalledWith(
+        1n,
+        { lecturaId: 999n },
+        42,
+      );
       expect(result).toBe(linked);
       expect(result.lecturaId).toBe(999n);
     });

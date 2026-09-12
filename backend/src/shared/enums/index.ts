@@ -35,18 +35,6 @@ export type CodigoSistemaRubro =
 
 // Fuente: models/logica-de-negocio/Rubros.prisma
 
-export const EstadoAnomalia = {
-  PENDIENTE: 'PENDIENTE',
-  EN_REVISION: 'EN_REVISION',
-  RESUELTA: 'RESUELTA',
-  DESCARTADA: 'DESCARTADA',
-} as const;
-
-export type EstadoAnomalia =
-  (typeof EstadoAnomalia)[keyof typeof EstadoAnomalia];
-
-// Fuente: models/logica-de-negocio/LecturaAnomalia.prisma
-
 export const EstadoAprobacionReemplazo = {
   PENDIENTE: 'PENDIENTE',
   APROBADA: 'APROBADA',
@@ -307,7 +295,7 @@ export const ResolucionEconomicaAnomalia = {
 export type ResolucionEconomicaAnomalia =
   (typeof ResolucionEconomicaAnomalia)[keyof typeof ResolucionEconomicaAnomalia];
 
-// Fuente: models/logica-de-negocio/LecturaAnomalia.prisma
+// Fuente: models/logica-de-negocio/NovedadOrdenTrabajo.prisma
 
 export const ResponsabilidadDano = {
   USUARIO: 'USUARIO',
@@ -355,7 +343,7 @@ export const TipoAnomalia = {
 
 export type TipoAnomalia = (typeof TipoAnomalia)[keyof typeof TipoAnomalia];
 
-// Fuente: models/logica-de-negocio/LecturaAnomalia.prisma
+// Fuente: models/logica-de-negocio/NovedadOrdenTrabajo.prisma
 
 export const TipoDescuento = {
   TERCERA_EDAD: 'TERCERA_EDAD',

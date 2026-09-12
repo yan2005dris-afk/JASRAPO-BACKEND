@@ -21,7 +21,6 @@ model Usuarios {
   permisosUsuario        UsuarioPermisos[]
   reemplazosSolicitados  ReemplazoMedidor[]   @relation("ReemplazoSolicitante")
   reemplazosAutorizados  ReemplazoMedidor[]   @relation("ReemplazoAutorizador")
-  anomaliasResueltas     LecturaAnomalia[]    @relation("AnomaliaResueltaPor")
   novedadesResueltas     NovedadOrdenTrabajo[] @relation("NovedadResueltaPor")
   invitaciones           UsuarioInvitacion[]  @relation("invitaciones")
   invitacionesEnviadas   UsuarioInvitacion[]  @relation("invitadoPor")
