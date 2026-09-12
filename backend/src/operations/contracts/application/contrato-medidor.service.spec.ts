@@ -14,6 +14,10 @@ import { GetResponsibilityAgreementPdfDataUseCase } from './use-cases/get-respon
 import { GeneratePdfUseCase } from 'src/infrastructure/pdf/use-cases/generate-pdf.use-case';
 import { RouteRepository } from '../../routes/domain/repositories/route.repository';
 import { OrdenTrabajoRepository } from '../../routes/domain/repositories/orden-trabajo.repository';
+import {
+  EntityNotFoundException,
+  InvalidDomainOperationException,
+} from 'src/shared/domain/exceptions/domain.exception';
 
 describe('ContratoMedidorService', () => {
   let service: ContratoMedidorService;
@@ -159,6 +163,137 @@ describe('ContratoMedidorService', () => {
 
       expect(result).toEqual({ message: 'Deleted' });
       expect(mockRemoveUseCase.execute).toHaveBeenCalledWith(id);
+    });
+  });
+
+  describe('assignInstallationRoute', () => {
+    const makeContrato = (overrides: Record<string, any> = {}) => ({
+      contratoId: BigInt(1),
+      numeroGuia: 'NG-001',
+      comunidadId: 1,
+      estado: 'PENDIENTE_INSTALACION',
+      historialMedidores: [{ medidorId: BigInt(50) }],
+      ...overrides,
+    });
+
+    it('creates a new INSTALACION route and its work order when no routeId is given', async () => {
+      mockFindOneUseCase.execute.mockResolvedValue(makeContrato());
+      const ruta = {
+        rutaId: BigInt(99),
+        tipoRuta: 'INSTALACION',
+        estado: 'PENDIENTE',
+      };
+      mockRouteRepository.create.mockResolvedValue(ruta);
+
+      const result = await service.assignInstallationRoute(BigInt(1), {});
+
+      expect(mockRouteRepository.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          tipoRuta: 'INSTALACION',
+          estado: 'PENDIENTE',
+          comunidadId: 1,
+          operarioId: null,
+        }),
+      );
+      expect(mockOrdenTrabajoRepository.create).toHaveBeenCalledWith({
+        rutaId: BigInt(99),
+        contratoId: BigInt(1),
+        medidorId: BigInt(50),
+        tipoActividad: 'INSTALACION',
+        estado: 'PENDIENTE',
+      });
+      expect(result).toBe(ruta);
+    });
+
+    it('uses an existing PENDIENTE INSTALACION route when routeId is given', async () => {
+      mockFindOneUseCase.execute.mockResolvedValue(makeContrato());
+      const existing = {
+        rutaId: BigInt(42),
+        tipoRuta: 'INSTALACION',
+        estado: 'PENDIENTE',
+      };
+      mockRouteRepository.findById.mockResolvedValue(existing);
+
+      const result = await service.assignInstallationRoute(BigInt(1), {
+        routeId: 42,
+      });
+
+      expect(mockRouteRepository.findById).toHaveBeenCalledWith(BigInt(42));
+      expect(mockRouteRepository.create).not.toHaveBeenCalled();
+      expect(mockOrdenTrabajoRepository.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          rutaId: BigInt(42),
+          tipoActividad: 'INSTALACION',
+        }),
+      );
+      expect(result).toBe(existing);
+    });
+
+    it('rejects when the contract is not in PENDIENTE_INSTALACION', async () => {
+      mockFindOneUseCase.execute.mockResolvedValue(
+        makeContrato({ estado: 'ACTIVO' }),
+      );
+
+      await expect(
+        service.assignInstallationRoute(BigInt(1), {}),
+      ).rejects.toThrow(InvalidDomainOperationException);
+      expect(mockRouteRepository.create).not.toHaveBeenCalled();
+      expect(mockOrdenTrabajoRepository.create).not.toHaveBeenCalled();
+    });
+
+    it('rejects when the given route does not exist', async () => {
+      mockFindOneUseCase.execute.mockResolvedValue(makeContrato());
+      mockRouteRepository.findById.mockResolvedValue(null);
+
+      await expect(
+        service.assignInstallationRoute(BigInt(1), { routeId: 42 }),
+      ).rejects.toThrow(EntityNotFoundException);
+      expect(mockOrdenTrabajoRepository.create).not.toHaveBeenCalled();
+    });
+
+    it('rejects when the given route is not of type INSTALACION', async () => {
+      mockFindOneUseCase.execute.mockResolvedValue(makeContrato());
+      mockRouteRepository.findById.mockResolvedValue({
+        rutaId: BigInt(42),
+        tipoRuta: 'TOMA_LECTURA',
+        estado: 'PENDIENTE',
+      });
+
+      await expect(
+        service.assignInstallationRoute(BigInt(1), { routeId: 42 }),
+      ).rejects.toThrow(InvalidDomainOperationException);
+      expect(mockOrdenTrabajoRepository.create).not.toHaveBeenCalled();
+    });
+
+    it('rejects when the given route is not in PENDIENTE state', async () => {
+      mockFindOneUseCase.execute.mockResolvedValue(makeContrato());
+      mockRouteRepository.findById.mockResolvedValue({
+        rutaId: BigInt(42),
+        tipoRuta: 'INSTALACION',
+        estado: 'EN_PROGRESO',
+      });
+
+      await expect(
+        service.assignInstallationRoute(BigInt(1), { routeId: 42 }),
+      ).rejects.toThrow(InvalidDomainOperationException);
+      expect(mockOrdenTrabajoRepository.create).not.toHaveBeenCalled();
+    });
+
+    it('links the work order with null medidorId when the contract has no meter history', async () => {
+      mockFindOneUseCase.execute.mockResolvedValue(
+        makeContrato({ historialMedidores: [] }),
+      );
+      mockRouteRepository.create.mockResolvedValue({
+        rutaId: BigInt(99),
+        tipoRuta: 'INSTALACION',
+        estado: 'PENDIENTE',
+      });
+
+      await service.assignInstallationRoute(BigInt(1), {});
+
+      expect(mockOrdenTrabajoRepository.create).toHaveBeenCalledWith(
+        expect.objectContaining({ medidorId: null }),
+      );
     });
   });
 });
