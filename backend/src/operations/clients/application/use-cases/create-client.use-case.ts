@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ClientRepository } from '../../domain/repositories/client.repository';
 import { CreateClientDto } from '../../interfaces/dto/create-client.dto';
 import { TipoIdentificacionUtil } from 'src/shared/utils/tipo-identificacion.util';
+import { TerceraEdadUtil } from '../../domain/tercera-edad.util';
 import type { CreateClientData } from '../../domain/types/client.types';
 import { InvalidDomainOperationException } from 'src/shared/domain/exceptions/domain.exception';
 import { EntityAlreadyExistsException } from 'src/shared/domain/exceptions/domain.exception';
@@ -133,7 +134,7 @@ export class CreateClientUseCase {
       telefono: dto.telefono,
       telefonoSecundario: dto.telefonoSecundario,
       direccionDomicilio: dto.direccionDomicilio,
-      aplicaTerceraEdad: dto.aplicaTerceraEdad ?? false,
+      aplicaTerceraEdad: TerceraEdadUtil.aplica(dto.fechaNacimiento),
       aplicaDiscapacidad: dto.aplicaDiscapacidad ?? false,
     };
   }

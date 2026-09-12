@@ -5,6 +5,7 @@ import {
   ValidateIf,
   IsEmail,
   IsBoolean,
+  IsDateString,
   Min,
   Length,
   MaxLength,
@@ -79,10 +80,14 @@ export class CreateClientDto {
   @Length(9, 10)
   telefonoSecundario?: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({
+    description:
+      'Fecha de nacimiento (ISO). Se usa para calcular automáticamente el beneficio de tercera edad; no se persiste.',
+    example: '1955-04-20',
+  })
   @IsOptional()
-  @IsBoolean()
-  aplicaTerceraEdad?: boolean;
+  @IsDateString()
+  fechaNacimiento?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
