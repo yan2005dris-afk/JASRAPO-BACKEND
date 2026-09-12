@@ -6,6 +6,7 @@ import {
   EntityNotFoundException,
   InvalidDomainOperationException,
 } from 'src/shared/domain/exceptions/domain.exception';
+import { canTransitionContractState } from '../../domain/contract-state';
 
 @Injectable()
 export class UpdateContractUseCase {
@@ -18,6 +19,17 @@ export class UpdateContractUseCase {
     const registro = await this.contractRepository.findById(id);
     if (!registro) {
       throw new EntityNotFoundException('Contrato', id.toString());
+    }
+
+    if (
+      updateDto.estado !== undefined &&
+      registro.estado &&
+      updateDto.estado !== registro.estado &&
+      !canTransitionContractState(registro.estado, updateDto.estado)
+    ) {
+      throw new InvalidDomainOperationException(
+        `No se puede cambiar el estado del contrato de ${registro.estado} a ${updateDto.estado}`,
+      );
     }
 
     const updateData = this.extractFields(updateDto);
