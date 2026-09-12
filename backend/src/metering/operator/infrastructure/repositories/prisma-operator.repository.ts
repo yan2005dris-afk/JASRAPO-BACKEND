@@ -7,6 +7,7 @@ import {
   EstadoMedidor,
   EstadoLectura,
   EstadoAnomalia,
+  EstadoNovedad,
 } from 'src/shared/enums';
 import {
   ConflictDomainException,
@@ -593,9 +594,18 @@ export class PrismaOperatorRepository extends OperatorRepository {
       deletedAt: null,
       updatedAt: { lte: snapshotVersion },
       estado: EstadoLectura.CON_NOVEDAD,
-      lecturaAnomalias: {
-        some: { estado: EstadoAnomalia.PENDIENTE, deletedAt: null },
-      },
+      OR: [
+        {
+          lecturaAnomalias: {
+            some: { estado: EstadoAnomalia.PENDIENTE, deletedAt: null },
+          },
+        },
+        {
+          novedadesOrdenTrabajo: {
+            some: { estado: EstadoNovedad.OPEN, deletedAt: null },
+          },
+        },
+      ],
       medidor: {
         historial: {
           some: { fechaHasta: null, OR: this.toReadingRouteConditions(routes) },
@@ -625,6 +635,16 @@ export class PrismaOperatorRepository extends OperatorRepository {
             where: { estado: EstadoAnomalia.PENDIENTE, deletedAt: null },
             select: {
               anomaliaId: true,
+              tipo: true,
+              estado: true,
+              observacion: true,
+              createdAt: true,
+            },
+          },
+          novedadesOrdenTrabajo: {
+            where: { estado: EstadoNovedad.OPEN, deletedAt: null },
+            select: {
+              novedadId: true,
               tipo: true,
               estado: true,
               observacion: true,
@@ -980,9 +1000,18 @@ export class PrismaOperatorRepository extends OperatorRepository {
         periodoId,
         deletedAt: null,
         estado: EstadoLectura.CON_NOVEDAD,
-        lecturaAnomalias: {
-          some: { estado: EstadoAnomalia.PENDIENTE, deletedAt: null },
-        },
+        OR: [
+          {
+            lecturaAnomalias: {
+              some: { estado: EstadoAnomalia.PENDIENTE, deletedAt: null },
+            },
+          },
+          {
+            novedadesOrdenTrabajo: {
+              some: { estado: EstadoNovedad.OPEN, deletedAt: null },
+            },
+          },
+        ],
         medidor: {
           historial: {
             some: {
@@ -1013,6 +1042,16 @@ export class PrismaOperatorRepository extends OperatorRepository {
           where: { estado: EstadoAnomalia.PENDIENTE, deletedAt: null },
           select: {
             anomaliaId: true,
+            tipo: true,
+            estado: true,
+            observacion: true,
+            createdAt: true,
+          },
+        },
+        novedadesOrdenTrabajo: {
+          where: { estado: EstadoNovedad.OPEN, deletedAt: null },
+          select: {
+            novedadId: true,
             tipo: true,
             estado: true,
             observacion: true,

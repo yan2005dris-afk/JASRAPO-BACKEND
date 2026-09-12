@@ -359,8 +359,45 @@ export class PrismaReadingRepository implements ReadingRepository {
         select: safeReadingsSelect,
       });
 
-      // Si la lectura se marca como CON_NOVEDAD, garantizar que exista en lectura_anomalia
+      // Si la lectura se marca como CON_NOVEDAD, registrar o actualizar la novedad
       if (data.estado === 'CON_NOVEDAD') {
+        const workOrder = await tx.ordenesTrabajo.findFirst({
+          where: { lecturaId: where.lecturaId, deletedAt: null },
+          select: { ordenTrabajoId: true },
+        });
+
+        if (workOrder) {
+          const existingNovelty = await tx.novedadOrdenTrabajo.findFirst({
+            where: {
+              ordenTrabajoId: workOrder.ordenTrabajoId,
+              deletedAt: null,
+            },
+          });
+
+          if (!existingNovelty) {
+            await tx.novedadOrdenTrabajo.create({
+              data: {
+                ordenTrabajoId: workOrder.ordenTrabajoId,
+                lecturaId: where.lecturaId,
+                tipo: $Enums.TipoAnomalia.OTRO,
+                estado: $Enums.EstadoNovedad.OPEN,
+                observacion:
+                  data.descripcionAnomalia ||
+                  'Novedad reportada desde ruta de lectura',
+                fotoUrl: null,
+              },
+            });
+          } else if (
+            existingNovelty.estado !== $Enums.EstadoNovedad.OPEN &&
+            existingNovelty.estado !== $Enums.EstadoNovedad.IN_PROGRESS
+          ) {
+            await tx.novedadOrdenTrabajo.update({
+              where: { novedadId: existingNovelty.novedadId },
+              data: { estado: $Enums.EstadoNovedad.OPEN },
+            });
+          }
+        }
+
         const existingAnomaly = await tx.lecturaAnomalia.findFirst({
           where: {
             lecturaId: where.lecturaId,
