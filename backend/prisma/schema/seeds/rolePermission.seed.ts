@@ -64,14 +64,14 @@ export async function seedRolePermissions(
     });
   }
 
-  // 4. OPERADORES: Solo lo necesario para su pantalla de lecturas y perfil
+  // 4. OPERADORES: Solo lo necesario para su pantalla de lecturas y perfil propio
   const operadorPermissionKeys = new Set([
     'operator-sync:read', // paginated offline manifest
     'routes:read', // listar rutas asignadas
     'lecturas:read', // ver lecturas asignadas
     'lecturas:update', // modificar lectura (PENDIENTE → POR_REVISION)
-    'users:read', // ver su propio perfil
-    'users:update', // actualizar su propio perfil
+    'profile:read', // ver su propio perfil
+    'profile:update', // actualizar su propio perfil
   ]);
   const operadorPerms = permissions.filter((p) =>
     operadorPermissionKeys.has(`${p.recurso}:${p.accion}`),

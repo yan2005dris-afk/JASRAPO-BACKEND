@@ -63,7 +63,7 @@ export class UserController {
 
   /**
    * Obtiene el perfil del usuario autenticado.
-   * Requiere permiso: users:read
+   * Requiere permiso: profile:read
    */
   @ApiOperation({
     summary: 'Obtener mi perfil',
@@ -76,7 +76,7 @@ export class UserController {
     type: UserProfileResponseDto,
   })
   @ApiResponse({ status: 401, description: 'No autorizado' })
-  @RequiredPermission('users', 'read')
+  @RequiredPermission('profile', 'read')
   @Get('me')
   async findMe(@AuthUserId() usersId: number): Promise<UserProfileResponseDto> {
     const user = await this.userService.findMe(usersId);
@@ -97,7 +97,7 @@ export class UserController {
     description: 'Perfil actualizado exitosamente',
     type: UserDetailResponseDto,
   })
-  @RequiredPermission('users', 'update')
+  @RequiredPermission('profile', 'update')
   @Patch('me')
   @UseInterceptors(FileInterceptor('file', AVATAR_UPLOAD_OPTIONS))
   async updateMe(
