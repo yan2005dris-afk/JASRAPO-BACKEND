@@ -7,6 +7,7 @@ import { ConfigService } from '@nestjs/config';
 import { SessionsService } from '../../../sessions/application/sessions.service';
 import { InternalServerErrorException } from '@nestjs/common';
 import { UnauthorizedDomainException } from 'src/shared/domain/exceptions/domain.exception';
+import { GetEffectivePermissionsUseCase } from '../../../users/application/use-cases/get-effective-permissions.use-case';
 import * as bcrypt from 'bcrypt';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 const mockLogger = {
@@ -87,6 +88,14 @@ describe('LoginUseCase', () => {
             createSession: jest.fn(),
           },
         },
+        {
+          provide: GetEffectivePermissionsUseCase,
+          useValue: {
+            getCapabilities: jest.fn().mockResolvedValue([
+              { resource: 'operator', action: 'read' },
+            ]),
+          },
+        },
       ],
     }).compile();
 
@@ -140,12 +149,56 @@ describe('LoginUseCase', () => {
         },
         rolId: 1,
         nombreRol: 'admin',
+        capabilities: [{ resource: 'operator', action: 'read' }],
       });
 
       expect(sessionsService.createSession).toHaveBeenCalled();
       expect(userRepository.findByEmailWithPassword).toHaveBeenCalledTimes(1);
       expect(userRepository.clearFailedLoginAttempts).toHaveBeenCalledWith(1);
       expect(userRepository.recordFailedLoginAttempt).not.toHaveBeenCalled();
+    });
+
+    it('should return capabilities and preserve all existing session fields on successful login', async () => {
+      const loginDto = {
+        email: 'test@jasrapo.com',
+        password: 'Password123!',
+      };
+
+      (userRepository.findByEmailWithPassword as jest.Mock).mockResolvedValue(
+        baseUserMock,
+      );
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+      (bcrypt.getRounds as jest.Mock).mockReturnValue(12);
+
+      jwtService.signAsync
+        .mockResolvedValueOnce('access-token')
+        .mockResolvedValueOnce('refresh-token');
+
+      jwtService.decode
+        .mockReturnValueOnce({ iat: 1000, exp: 2000 })
+        .mockReturnValueOnce({ iat: 1000, exp: 2000 });
+
+      sessionsService.createSession.mockResolvedValue({} as any);
+
+      const result = await useCase.execute(loginDto, '127.0.0.1', 'Chrome');
+
+      // Verify all required existing fields are present
+      expect(result).toHaveProperty('sub', 1);
+      expect(result).toHaveProperty('sid', 'test-uuid-1234-5678');
+      expect(result).toHaveProperty('nombre', 'Juan Pérez');
+      expect(result).toHaveProperty('avatar');
+      expect(result).toHaveProperty('email', 'test@jasrapo.com');
+      expect(result).toHaveProperty('rolId', 1);
+      expect(result).toHaveProperty('nombreRol', 'admin');
+      expect(result).toHaveProperty('roles', [1]);
+      expect(result).toHaveProperty('accessToken', 'access-token');
+      expect(result).toHaveProperty('refreshToken', 'refresh-token');
+      expect(result).toHaveProperty('accessTokenInfo');
+      expect(result).toHaveProperty('refreshTokenInfo');
+      // Verify new additive field
+      expect(result).toHaveProperty('capabilities', [
+        { resource: 'operator', action: 'read' },
+      ]);
     });
 
     it('should throw UnauthorizedDomainException when user not found', async () => {

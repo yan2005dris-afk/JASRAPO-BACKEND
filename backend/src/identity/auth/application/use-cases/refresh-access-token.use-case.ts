@@ -1,8 +1,17 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+  forwardRef,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { randomBytes, timingSafeEqual } from 'crypto';
 import { UserRepository } from '../../../users/domain/repositories/user.repository';
+import {
+  GetEffectivePermissionsUseCase,
+  SessionCapability,
+} from '../../../users/application/use-cases/get-effective-permissions.use-case';
 import { SessionsService } from '../../../sessions/application/sessions.service';
 import { REFRESH_TOKEN_MAX_AGE_MS } from 'src/infrastructure/config/app.constants';
 import { EcuadorTimezoneUtil } from 'src/shared/utils/ecuador-timezone.util';
@@ -21,6 +30,8 @@ export class RefreshAccessTokenUseCase {
     private readonly config: ConfigService,
     private readonly sessionsService: SessionsService,
     private readonly logger: LoggerService,
+    @Inject(forwardRef(() => GetEffectivePermissionsUseCase))
+    private readonly getEffectivePermissionsUseCase: GetEffectivePermissionsUseCase,
   ) {}
 
   async execute(
@@ -97,10 +108,14 @@ export class RefreshAccessTokenUseCase {
       throw new UnauthorizedDomainException('Refresh token replay detected');
     }
 
+    const capabilities =
+      await this.getEffectivePermissionsUseCase.getCapabilities(usuarioId);
+
     return {
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
       accessTokenInfo: this.buildTokenInfo(tokens.accessToken),
+      capabilities,
     };
   }
 

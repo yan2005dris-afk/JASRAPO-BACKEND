@@ -11,6 +11,14 @@ export class RegisterResponseDto {
   usuarioId: number;
 }
 
+export class SessionCapabilityDto {
+  @ApiProperty({ example: 'contracts', description: 'Recurso del sistema' })
+  resource: string;
+
+  @ApiProperty({ example: 'read', description: 'Acción permitida' })
+  action: string;
+}
+
 export class LoginResponseDto {
   @ApiProperty({
     example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
@@ -59,6 +67,12 @@ export class LoginResponseDto {
     description: 'Fecha de expiración',
   })
   expiresAt: Date | string;
+
+  @ApiProperty({
+    type: [SessionCapabilityDto],
+    description: 'Capacidades efectivas del usuario',
+  })
+  capabilities: SessionCapabilityDto[];
 }
 
 export class RefreshResponseDto {
@@ -85,4 +99,10 @@ export class RefreshResponseDto {
     description: 'Fecha de expiración',
   })
   expiresAt: Date | string;
+
+  @ApiProperty({
+    type: [SessionCapabilityDto],
+    description: 'Capacidades efectivas del usuario',
+  })
+  capabilities: SessionCapabilityDto[];
 }

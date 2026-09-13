@@ -90,6 +90,7 @@ export class AuthController {
       avatar: result.avatar,
       createdAt: result.accessTokenInfo.iatDate,
       expiresAt: result.accessTokenInfo.expDate,
+      capabilities: result.capabilities,
     });
   }
 
@@ -148,6 +149,7 @@ export class AuthController {
       accessToken: tokens.accessToken,
       createdAt: tokens.accessTokenInfo.iatDate,
       expiresAt: tokens.accessTokenInfo.expDate,
+      capabilities: tokens.capabilities,
     });
   }
 

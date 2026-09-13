@@ -1,4 +1,9 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+  forwardRef,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { SessionsService } from '../../../sessions/application/sessions.service';
@@ -16,6 +21,10 @@ import type { DecodedJwt } from '../types/auth-service.types';
 import type { StringValue } from 'ms';
 
 import { UserRepository } from '../../../users/domain/repositories/user.repository';
+import {
+  GetEffectivePermissionsUseCase,
+  SessionCapability,
+} from '../../../users/application/use-cases/get-effective-permissions.use-case';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
 import { UnauthorizedDomainException } from 'src/shared/domain/exceptions/domain.exception';
@@ -50,6 +59,8 @@ export class LoginUseCase {
     private readonly config: ConfigService,
     private readonly sessionsService: SessionsService,
     private readonly logger: LoggerService,
+    @Inject(forwardRef(() => GetEffectivePermissionsUseCase))
+    private readonly getEffectivePermissionsUseCase: GetEffectivePermissionsUseCase,
   ) {}
 
   async execute(
@@ -104,7 +115,10 @@ export class LoginUseCase {
       );
     }
 
-    return this.buildLoginResponse(user, sesionId, tokens);
+    const capabilities =
+      await this.getEffectivePermissionsUseCase.getCapabilities(user.usuarioId);
+
+    return this.buildLoginResponse(user, sesionId, tokens, capabilities);
   }
 
   private async validateUser(
@@ -249,6 +263,7 @@ export class LoginUseCase {
     user: ValidatedUser,
     sesionId: string,
     tokens: { accessToken: string; refreshToken: string },
+    capabilities: SessionCapability[],
   ) {
     const decodedAccess = this.decodeJwtClaims(
       this.jwtService.decode(tokens.accessToken),
@@ -290,6 +305,7 @@ export class LoginUseCase {
         iatDate: toDate(decodedRefresh?.iat),
         expDate: toDate(decodedRefresh?.exp),
       },
+      capabilities,
     };
   }
 

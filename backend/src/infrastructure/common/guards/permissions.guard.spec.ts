@@ -183,4 +183,45 @@ describe('PermissionsGuard', () => {
       'Missing @RequiredPermission decorator on protected route',
     );
   });
+
+  it('should reject a request when the frontend supplies tampered capabilities but backend permissions lack it', () => {
+    const mockContext = {
+      getHandler: jest.fn(),
+      getClass: jest.fn().mockReturnValue({ name: 'AdminProtectedController' }),
+      switchToHttp: jest.fn().mockReturnValue({
+        getRequest: jest.fn().mockReturnValue({
+          method: 'POST',
+          headers: {
+            'x-client-capabilities': JSON.stringify([
+              { resource: 'admin', action: 'manage' },
+              { resource: 'users', action: 'delete' },
+            ]),
+          },
+          body: {
+            capabilities: [
+              { resource: 'admin', action: 'manage' },
+              { resource: 'users', action: 'delete' },
+            ],
+          },
+          user: {
+            usersId: 42,
+            permisos: [{ recurso: 'operator', accion: 'read' }], // actual backend permissions
+          },
+        }),
+      }),
+    } as unknown as ExecutionContext;
+
+    (reflector.getAllAndOverride as jest.Mock).mockImplementation((key) => {
+      if (key === IS_PUBLIC_KEY) return false;
+      if (key === PERMISSION_KEY) {
+        return { recurso: 'admin', accion: 'manage' };
+      }
+      return undefined;
+    });
+
+    expect(() => guard.canActivate(mockContext)).toThrow(ForbiddenException);
+    expect(() => guard.canActivate(mockContext)).toThrow(
+      'No tienes permiso para la acción "manage" en "admin"',
+    );
+  });
 });

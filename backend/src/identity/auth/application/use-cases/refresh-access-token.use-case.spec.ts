@@ -6,6 +6,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { SessionsService } from '../../../sessions/application/sessions.service';
 import { UnauthorizedDomainException } from 'src/shared/domain/exceptions/domain.exception';
+import { GetEffectivePermissionsUseCase } from '../../../users/application/use-cases/get-effective-permissions.use-case';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 const mockLogger = {
   log: jest.fn(),
@@ -72,6 +73,14 @@ describe('RefreshAccessTokenUseCase', () => {
             revokeAllUserSessions: jest.fn().mockResolvedValue(1),
           },
         },
+        {
+          provide: GetEffectivePermissionsUseCase,
+          useValue: {
+            getCapabilities: jest.fn().mockResolvedValue([
+              { resource: 'billing', action: 'read' },
+            ]),
+          },
+        },
       ],
     }).compile();
 
@@ -115,6 +124,7 @@ describe('RefreshAccessTokenUseCase', () => {
           iatDate: expect.any(String),
           expDate: expect.any(String),
         },
+        capabilities: [{ resource: 'billing', action: 'read' }],
       });
       expect(sessionsService.rotateSession).toHaveBeenCalledWith(
         'sid',
@@ -133,6 +143,38 @@ describe('RefreshAccessTokenUseCase', () => {
         expect.objectContaining({ tokenVersion: 2 }),
         expect.any(Object),
       );
+    });
+
+    it('should recalculate capabilities for the user and preserve all previous fields on refresh', async () => {
+      const mockSession = {
+        sesionId: 'sid-recalc',
+        sessionSecret,
+        tokenVersion: 2,
+        revocado: false,
+        expiraEn: new Date(Date.now() + 100000),
+      };
+
+      sessionsService.getSession.mockResolvedValue(mockSession as any);
+      (jwtService.verifyAsync as jest.Mock).mockResolvedValue({
+        ...refreshPayload,
+        sid: 'sid-recalc',
+        tokenVersion: 2,
+      });
+      (userRepository.findById as jest.Mock).mockResolvedValue({
+        email: 'test@test.com',
+      });
+      jwtService.signAsync.mockResolvedValue('new-token');
+      jwtService.decode.mockReturnValue({ iat: 100, exp: 200 });
+      sessionsService.rotateSession.mockResolvedValue(1);
+
+      const result = await useCase.execute('sid-recalc', 'rt', 'ip', 'ua', 1);
+
+      expect(result).toHaveProperty('accessToken', 'new-token');
+      expect(result).toHaveProperty('refreshToken', 'new-token');
+      expect(result).toHaveProperty('accessTokenInfo');
+      expect(result).toHaveProperty('capabilities', [
+        { resource: 'billing', action: 'read' },
+      ]);
     });
 
     it('should allow only one concurrent refresh for the same tokenVersion', async () => {

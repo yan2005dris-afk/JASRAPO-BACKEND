@@ -80,6 +80,46 @@ describe('GetEffectivePermissionsUseCase', () => {
     });
   });
 
+  it('should return capabilities deduplicated and stably sorted by resource then action', async () => {
+    mockUserRepository.findById.mockResolvedValue({
+      usuarioId: 1,
+      deletedAt: null,
+      rol: { rolId: 1, nombre: 'admin' },
+    } as any);
+    mockUserRepository.findRolePermissions.mockResolvedValue([
+      { recurso: 'users', accion: 'update' },
+      { recurso: 'contracts', accion: 'read' },
+      { recurso: 'users', accion: 'create' },
+    ]);
+    mockUserRepository.findDirectPermissions.mockResolvedValue([
+      { permitido: true, recurso: 'contracts', accion: 'read' }, // duplicate
+      { permitido: true, recurso: 'billing', accion: 'export' },
+    ]);
+
+    const capabilities = await (useCase as any).getCapabilities(1);
+
+    expect(capabilities).toEqual([
+      { resource: 'billing', action: 'export' },
+      { resource: 'contracts', action: 'read' },
+      { resource: 'users', action: 'create' },
+      { resource: 'users', action: 'update' },
+    ]);
+  });
+
+  it('should return empty array if user has no permissions', async () => {
+    mockUserRepository.findById.mockResolvedValue({
+      usuarioId: 2,
+      deletedAt: null,
+      rol: null,
+    } as any);
+    mockUserRepository.findRolePermissions.mockResolvedValue([]);
+    mockUserRepository.findDirectPermissions.mockResolvedValue([]);
+
+    const capabilities = await (useCase as any).getCapabilities(2);
+
+    expect(capabilities).toEqual([]);
+  });
+
   it('should throw EntityNotFoundException if user not found or deleted', async () => {
     mockUserRepository.findById.mockResolvedValue(null);
 
