@@ -5,10 +5,11 @@ describe('AuditInterceptor', () => {
   function makeContext(request: any, response: any = { statusCode: 201 }) {
     return {
       switchToHttp: () => ({
+        getType: () => 'http',
         getRequest: () => request,
         getResponse: () => response,
       }),
-    };
+    } as any;
   }
 
   const baseRequest = {
@@ -97,10 +98,7 @@ describe('AuditInterceptor', () => {
     expect(auditService.log).toHaveBeenCalledWith(
       expect.objectContaining({
         metadata: expect.objectContaining({
-          evidence: [
-            { storageKey: 'a.webp' },
-            { storageKey: 'b.webp' },
-          ],
+          evidence: [{ storageKey: 'a.webp' }, { storageKey: 'b.webp' }],
         }),
       }),
     );

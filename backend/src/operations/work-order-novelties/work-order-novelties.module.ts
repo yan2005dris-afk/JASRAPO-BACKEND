@@ -4,6 +4,7 @@ import { WorkOrderNoveltyController } from './interfaces/http/work-order-novelty
 import { WorkOrderNoveltyService } from './application/services/work-order-novelty.service';
 import { WORK_ORDER_NOVELTY_REPOSITORY } from './domain/repositories/work-order-novelty.repository';
 import { PrismaWorkOrderNoveltyRepository } from './infrastructure/repositories/prisma-work-order-novelty.repository';
+import { NoveltyEvidenceGcService } from './infrastructure/novelty-evidence-gc.service';
 
 @Module({
   imports: [StorageModule],
@@ -14,6 +15,7 @@ import { PrismaWorkOrderNoveltyRepository } from './infrastructure/repositories/
       provide: WORK_ORDER_NOVELTY_REPOSITORY,
       useClass: PrismaWorkOrderNoveltyRepository,
     },
+    NoveltyEvidenceGcService,
   ],
   exports: [WorkOrderNoveltyService, WORK_ORDER_NOVELTY_REPOSITORY],
 })

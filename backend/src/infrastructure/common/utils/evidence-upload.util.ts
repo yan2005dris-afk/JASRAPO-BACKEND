@@ -5,6 +5,13 @@ import type {
   StorageService,
   SriStorageType,
 } from 'src/infrastructure/storage/storage.service';
+import {
+  EVIDENCE_IMAGE_QUALITY,
+  EVIDENCE_MAX_INPUT_HEIGHT_PX,
+  EVIDENCE_MAX_INPUT_WIDTH_PX,
+  EVIDENCE_MAX_PIXELS,
+  EVIDENCE_MAX_WIDTH_PX,
+} from 'src/infrastructure/config/app.constants';
 import { ImageProcessorUtil } from './image-processor.util';
 
 export type EvidenceLogger = {
@@ -12,12 +19,17 @@ export type EvidenceLogger = {
   warn(message: string): void;
 };
 
+/**
+ * Allow-list regex for evidence MIME types — kept here because it's a structural
+ * pattern (not a configurable value) and is referenced by the Multer fileFilter.
+ */
 export const EVIDENCE_IMAGE_TYPES = /^image\/(jpg|jpeg|png|webp)$/i;
-export const EVIDENCE_IMAGE_MAX_WIDTH = 1024;
-export const EVIDENCE_IMAGE_MAX_INPUT_WIDTH = 10000;
-export const EVIDENCE_IMAGE_MAX_INPUT_HEIGHT = 10000;
-export const EVIDENCE_IMAGE_MAX_PIXELS = 40_000_000;
-export const EVIDENCE_IMAGE_QUALITY = 80;
+
+/**
+ * @deprecated Use EVIDENCE_MAX_WIDTH_PX from app.constants.
+ * Retained as alias for backward-compatibility with existing callers.
+ */
+export const EVIDENCE_IMAGE_MAX_WIDTH = EVIDENCE_MAX_WIDTH_PX;
 
 export type DetectedImageFormat = 'jpeg' | 'png' | 'webp';
 export interface EvidenceImageMetadata {
@@ -80,14 +92,14 @@ export async function validateEvidenceImage(
   const format = detectImageFormat(buffer);
   try {
     const metadata = await sharp(buffer, {
-      limitInputPixels: EVIDENCE_IMAGE_MAX_PIXELS,
+      limitInputPixels: EVIDENCE_MAX_PIXELS,
       failOn: 'error',
     }).metadata();
     if (
       !metadata.width ||
       !metadata.height ||
-      metadata.width > EVIDENCE_IMAGE_MAX_INPUT_WIDTH ||
-      metadata.height > EVIDENCE_IMAGE_MAX_INPUT_HEIGHT
+      metadata.width > EVIDENCE_MAX_INPUT_WIDTH_PX ||
+      metadata.height > EVIDENCE_MAX_INPUT_HEIGHT_PX
     ) {
       throw new BadRequestException(
         'Las dimensiones de la evidencia exceden el límite permitido',
@@ -144,7 +156,7 @@ export async function uploadEvidence(
     `Procesando evidencia (${file.size} bytes, ${metadata.format}, ${metadata.width}x${metadata.height})`,
   );
   const processedBuffer = await ImageProcessorUtil.toWebP(file.buffer, {
-    width: EVIDENCE_IMAGE_MAX_WIDTH,
+    width: EVIDENCE_MAX_WIDTH_PX,
     quality: EVIDENCE_IMAGE_QUALITY,
   });
   const key = `${keyPrefix}/${randomUUID()}.webp`;

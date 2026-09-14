@@ -108,7 +108,9 @@ export class WorkOrderNoveltyController {
     return ResponseWorkOrderNoveltyDto.fromEntity(updated);
   }
 
-  @ApiOperation({ summary: 'Eliminar (soft delete) novedad de orden de trabajo' })
+  @ApiOperation({
+    summary: 'Eliminar (soft delete) novedad de orden de trabajo',
+  })
   @ApiResponse({ status: 200, description: 'Novedad eliminada' })
   @ApiResponse({ status: 404, description: 'Novedad no encontrada' })
   @RequiredPermission('work-order-novelties', 'delete')

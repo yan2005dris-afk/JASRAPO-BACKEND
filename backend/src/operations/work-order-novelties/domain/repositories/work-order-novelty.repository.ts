@@ -45,10 +45,17 @@ export interface WorkOrderNoveltyRepository {
     id: bigint,
     data: UpdateWorkOrderNoveltyData,
   ): Promise<WorkOrderNoveltyEntity>;
-  softDelete(
-    id: bigint,
-    deletedAt: Date,
-  ): Promise<WorkOrderNoveltyEntity>;
+  softDelete(id: bigint, deletedAt: Date): Promise<WorkOrderNoveltyEntity>;
+  /**
+   * Returns soft-deleted novelties that still reference an evidence key
+   * (used by the GC job to reconcile orphaned bucket objects).
+   */
+  findSoftDeletedWithEvidence(limit: number): Promise<WorkOrderNoveltyEntity[]>;
+  /**
+   * Clears the `fotoUrl` of a novelty after its evidence has been confirmed
+   * deleted from storage (used by the GC job to drop the dangling reference).
+   */
+  clearEvidenceReference(id: bigint): Promise<void>;
   findMany(
     filters: WorkOrderNoveltyFilters,
   ): Promise<{ data: WorkOrderNoveltyEntity[]; total: number }>;

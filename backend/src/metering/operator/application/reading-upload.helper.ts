@@ -1,12 +1,11 @@
 import { randomUUID } from 'crypto';
 import type { StorageService } from 'src/infrastructure/storage/storage.service';
 import { SRI_STORAGE_TYPES } from 'src/infrastructure/storage/storage.service';
+import { OPERATOR_MAX_UPLOAD_BYTES } from 'src/infrastructure/config/app.constants';
 import {
   validateEvidenceImage,
   type EvidenceLogger,
 } from 'src/infrastructure/common/utils/evidence-upload.util';
-
-const OPERATOR_MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
 
 export async function uploadReadingPhoto(
   file: Express.Multer.File,

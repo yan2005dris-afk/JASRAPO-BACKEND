@@ -29,6 +29,68 @@ export const MAX_UPLOAD_SIZE_MB =
     : 5;
 export const MAX_UPLOAD_SIZE_BYTES = MAX_UPLOAD_SIZE_MB * 1024 * 1024;
 
+/**
+ * CONFIGURACIÓN DE EVIDENCIA FOTOGRÁFICA (lecturas de operador y novedades/anomalías)
+ *
+ * El tamaño máximo de la foto del operador es más permisivo (10 MB por defecto)
+ * que el de novedades (MAX_UPLOAD_SIZE_BYTES) porque las fotos del operador
+ * vienen de cámaras de celular sin compresión previa. Las novedades
+ * generalmente pasan por un proceso de upload más controlado.
+ *
+ * Las dimensiones y píxeles máximos defienden contra pixel-flood y bombas de
+ * descompresión: sharp rechaza el archivo antes de subirlo al bucket.
+ */
+const parsedOperatorMax = parseInt(
+  process.env.OPERATOR_MAX_UPLOAD_SIZE_MB || '10',
+  10,
+);
+export const OPERATOR_MAX_UPLOAD_SIZE_MB =
+  Number.isFinite(parsedOperatorMax) && parsedOperatorMax > 0
+    ? parsedOperatorMax
+    : 10;
+export const OPERATOR_MAX_UPLOAD_BYTES =
+  OPERATOR_MAX_UPLOAD_SIZE_MB * 1024 * 1024;
+
+const parsedMaxWidth = parseInt(
+  process.env.EVIDENCE_MAX_WIDTH_PX || '1024',
+  10,
+);
+export const EVIDENCE_MAX_WIDTH_PX =
+  Number.isFinite(parsedMaxWidth) && parsedMaxWidth > 0 ? parsedMaxWidth : 1024;
+
+const parsedMaxInputWidth = parseInt(
+  process.env.EVIDENCE_MAX_INPUT_WIDTH_PX || '10000',
+  10,
+);
+export const EVIDENCE_MAX_INPUT_WIDTH_PX =
+  Number.isFinite(parsedMaxInputWidth) && parsedMaxInputWidth > 0
+    ? parsedMaxInputWidth
+    : 10000;
+
+const parsedMaxInputHeight = parseInt(
+  process.env.EVIDENCE_MAX_INPUT_HEIGHT_PX || '10000',
+  10,
+);
+export const EVIDENCE_MAX_INPUT_HEIGHT_PX =
+  Number.isFinite(parsedMaxInputHeight) && parsedMaxInputHeight > 0
+    ? parsedMaxInputHeight
+    : 10000;
+
+const parsedMaxPixels = parseInt(
+  process.env.EVIDENCE_MAX_PIXELS || '40000000',
+  10,
+);
+export const EVIDENCE_MAX_PIXELS =
+  Number.isFinite(parsedMaxPixels) && parsedMaxPixels > 0
+    ? parsedMaxPixels
+    : 40_000_000;
+
+const parsedQuality = parseInt(process.env.EVIDENCE_IMAGE_QUALITY || '80', 10);
+export const EVIDENCE_IMAGE_QUALITY =
+  Number.isFinite(parsedQuality) && parsedQuality > 0 && parsedQuality <= 100
+    ? parsedQuality
+    : 80;
+
 import { EstadoMedidor, EstadoLote } from 'src/shared/enums';
 import { buildStateCatalog } from 'src/shared/enums/state-catalog';
 

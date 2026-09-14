@@ -22,6 +22,8 @@ describe('WorkOrderNoveltyService', () => {
       findByWorkOrderId: jest.fn(),
       update: jest.fn(),
       softDelete: jest.fn(),
+      findSoftDeletedWithEvidence: jest.fn(),
+      clearEvidenceReference: jest.fn(),
       findMany: jest.fn(),
     };
     prismaMock = { ordenesTrabajo: { findUnique: jest.fn() } };
@@ -181,9 +183,7 @@ describe('WorkOrderNoveltyService', () => {
           deletedAt: new Date(),
         }),
       );
-      storageMock.delete.mockRejectedValue(
-        new Error('storage unavailable'),
-      );
+      storageMock.delete.mockRejectedValue(new Error('storage unavailable'));
 
       const res = await service.softDelete(1n, 42);
       expect(res.deletedAt).toBeInstanceOf(Date);
@@ -213,9 +213,7 @@ describe('WorkOrderNoveltyService', () => {
 
     it('throws when novelty is missing or already deleted', async () => {
       repoMock.findById.mockResolvedValue(null);
-      await expect(service.softDelete(999n)).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.softDelete(999n)).rejects.toThrow(NotFoundException);
 
       repoMock.findById.mockResolvedValue(
         new WorkOrderNoveltyEntity({
@@ -225,9 +223,7 @@ describe('WorkOrderNoveltyService', () => {
           deletedAt: new Date(),
         }),
       );
-      await expect(service.softDelete(1n)).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.softDelete(1n)).rejects.toThrow(NotFoundException);
       expect(repoMock.softDelete).not.toHaveBeenCalled();
     });
   });
