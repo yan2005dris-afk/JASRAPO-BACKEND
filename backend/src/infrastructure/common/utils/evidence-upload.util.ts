@@ -25,12 +25,6 @@ export type EvidenceLogger = {
  */
 export const EVIDENCE_IMAGE_TYPES = /^image\/(jpg|jpeg|png|webp)$/i;
 
-/**
- * @deprecated Use EVIDENCE_MAX_WIDTH_PX from app.constants.
- * Retained as alias for backward-compatibility with existing callers.
- */
-export const EVIDENCE_IMAGE_MAX_WIDTH = EVIDENCE_MAX_WIDTH_PX;
-
 export type DetectedImageFormat = 'jpeg' | 'png' | 'webp';
 export interface EvidenceImageMetadata {
   format: DetectedImageFormat;

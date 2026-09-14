@@ -5,6 +5,7 @@ import { WORK_ORDER_NOVELTY_REPOSITORY } from '../../domain/repositories/work-or
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { StorageService } from 'src/infrastructure/storage/storage.service';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+import { NoveltyEvidenceQueueService } from '../../infrastructure/novelty-evidence-queue.service';
 import { EstadoNovedad, TipoAnomalia } from 'src/shared/enums';
 import { WorkOrderNoveltyEntity } from '../../domain/entities/work-order-novelty.entity';
 
@@ -14,6 +15,7 @@ describe('WorkOrderNoveltyService', () => {
   let prismaMock: any;
   let storageMock: any;
   let loggerMock: any;
+  let evidenceQueueMock: any;
 
   beforeEach(async () => {
     repoMock = {
@@ -37,6 +39,9 @@ describe('WorkOrderNoveltyService', () => {
       error: jest.fn(),
       debug: jest.fn(),
     };
+    evidenceQueueMock = {
+      enqueueCleanup: jest.fn().mockResolvedValue(undefined),
+    };
     const module = await Test.createTestingModule({
       providers: [
         WorkOrderNoveltyService,
@@ -44,6 +49,7 @@ describe('WorkOrderNoveltyService', () => {
         { provide: PrismaService, useValue: prismaMock },
         { provide: StorageService, useValue: storageMock },
         { provide: LoggerService, useValue: loggerMock },
+        { provide: NoveltyEvidenceQueueService, useValue: evidenceQueueMock },
       ],
     }).compile();
     service = module.get<WorkOrderNoveltyService>(WorkOrderNoveltyService);
@@ -143,33 +149,7 @@ describe('WorkOrderNoveltyService', () => {
   });
 
   describe('softDelete', () => {
-    it('soft deletes and removes persisted evidence after the DB update', async () => {
-      const existing = new WorkOrderNoveltyEntity({
-        novedadId: 1n,
-        ordenTrabajoId: 10n,
-        estado: EstadoNovedad.OPEN,
-        fotoUrl: 'work-order-novelties/evidence.webp',
-      });
-      repoMock.findById.mockResolvedValue(existing);
-      repoMock.softDelete.mockImplementation(async () => {
-        expect(storageMock.delete).not.toHaveBeenCalled();
-        return new WorkOrderNoveltyEntity({
-          ...existing,
-          deletedAt: new Date(),
-        });
-      });
-      storageMock.delete.mockResolvedValue(undefined);
-
-      const res = await service.softDelete(1n, 42);
-
-      expect(res.deletedAt).toBeInstanceOf(Date);
-      expect(storageMock.delete).toHaveBeenCalledWith(
-        'reading-news',
-        'work-order-novelties/evidence.webp',
-      );
-    });
-
-    it('does not fail the soft delete when evidence cleanup fails', async () => {
+    it('soft deletes and enqueues an evidence cleanup job', async () => {
       const existing = new WorkOrderNoveltyEntity({
         novedadId: 1n,
         ordenTrabajoId: 10n,
@@ -183,16 +163,18 @@ describe('WorkOrderNoveltyService', () => {
           deletedAt: new Date(),
         }),
       );
-      storageMock.delete.mockRejectedValue(new Error('storage unavailable'));
 
       const res = await service.softDelete(1n, 42);
+
       expect(res.deletedAt).toBeInstanceOf(Date);
-      expect(loggerMock.error).toHaveBeenCalledWith(
-        expect.stringContaining('evidence_cleanup outcome=failed'),
+      expect(evidenceQueueMock.enqueueCleanup).toHaveBeenCalledWith(
+        1n,
+        'work-order-novelties/evidence.webp',
       );
+      expect(storageMock.delete).not.toHaveBeenCalled();
     });
 
-    it('does not call storage delete when the novelty has no fotoUrl', async () => {
+    it('does not enqueue when the novelty has no fotoUrl', async () => {
       const existing = new WorkOrderNoveltyEntity({
         novedadId: 1n,
         ordenTrabajoId: 10n,
@@ -208,7 +190,32 @@ describe('WorkOrderNoveltyService', () => {
       );
 
       await service.softDelete(1n, 42);
-      expect(storageMock.delete).not.toHaveBeenCalled();
+      expect(evidenceQueueMock.enqueueCleanup).not.toHaveBeenCalled();
+    });
+
+    it('soft delete succeeds even when enqueue throws (reconciler will catch it)', async () => {
+      const existing = new WorkOrderNoveltyEntity({
+        novedadId: 1n,
+        ordenTrabajoId: 10n,
+        estado: EstadoNovedad.OPEN,
+        fotoUrl: 'work-order-novelties/evidence.webp',
+      });
+      repoMock.findById.mockResolvedValue(existing);
+      repoMock.softDelete.mockResolvedValue(
+        new WorkOrderNoveltyEntity({
+          ...existing,
+          deletedAt: new Date(),
+        }),
+      );
+      evidenceQueueMock.enqueueCleanup.mockRejectedValue(
+        new Error('pg-boss down'),
+      );
+
+      const res = await service.softDelete(1n, 42);
+      expect(res.deletedAt).toBeInstanceOf(Date);
+      expect(loggerMock.warn).toHaveBeenCalledWith(
+        expect.stringContaining('enqueue_failed'),
+      );
     });
 
     it('throws when novelty is missing or already deleted', async () => {

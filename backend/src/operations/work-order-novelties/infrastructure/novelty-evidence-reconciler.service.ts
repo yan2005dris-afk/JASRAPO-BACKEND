@@ -1,10 +1,10 @@
 import {
-  ConsoleLogger,
   Inject,
   Injectable,
   OnApplicationBootstrap,
   OnApplicationShutdown,
 } from '@nestjs/common';
+import { ConsoleLogger } from '@nestjs/common';
 import {
   WORK_ORDER_NOVELTY_REPOSITORY,
   type WorkOrderNoveltyRepository,
@@ -14,42 +14,45 @@ import {
   StorageService,
 } from 'src/infrastructure/storage/storage.service';
 
-const DEFAULT_INTERVAL_MS = 60 * 60 * 1000; // 1 hora
-const DEFAULT_BATCH_SIZE = 50;
+const DEFAULT_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000; // 7 días
 
-const envInterval = Number(process.env['NOVELTY_EVIDENCE_GC_INTERVAL_MS']);
-const envBatch = Number(process.env['NOVELTY_EVIDENCE_GC_BATCH_SIZE']);
+const envInterval = Number(process.env['NOVELTY_EVIDENCE_RECONCILER_MS']);
 const INTERVAL_MS =
   Number.isFinite(envInterval) && envInterval > 0
     ? envInterval
     : DEFAULT_INTERVAL_MS;
+
+const DEFAULT_BATCH_SIZE = 50;
+const envBatch = Number(process.env['NOVELTY_EVIDENCE_RECONCILER_BATCH']);
 const BATCH_SIZE =
   Number.isFinite(envBatch) && envBatch > 0 ? envBatch : DEFAULT_BATCH_SIZE;
 
 /**
- * Reconciles orphaned evidence in the S3 bucket against soft-deleted novelties.
+ * Safety-net reconciler for evidence orphaned before the pg-boss queue was
+ * introduced (or while it was unavailable).
  *
- * Background:
- *   `WorkOrderNoveltyService.softDelete()` does a DB-first soft delete and then
- *   best-effort deletes the evidence from storage. If the storage call fails,
- *   the soft-deleted row keeps its `fotoUrl`, leaving an orphan in the bucket.
+ * The PRIMARY cleanup path is now pg-boss-driven (see
+ * NoveltyEvidenceQueueService) — when softDelete() runs, it enqueues a job
+ * that fires within seconds and clears the dangling fotoUrl reference.
  *
- * This job periodically scans for soft-deleted rows that still reference a
- * `fotoUrl`, attempts the storage delete, and clears the dangling reference on
- * success. Idempotent — safe to run as often as desired.
+ * This reconciler exists only to clean up evidence that became orphaned
+ * before the queue was wired up, or during a pg-boss outage. It runs weekly
+ * by default, processes batches of 50, and stops as soon as no candidates
+ * remain (so it self-throttles after the backlog is drained).
  *
  * Tunable via env:
- *   - NOVELTY_EVIDENCE_GC_INTERVAL_MS (default 3600000 = 1h)
- *   - NOVELTY_EVIDENCE_GC_BATCH_SIZE (default 50)
+ *   - NOVELTY_EVIDENCE_RECONCILER_MS (default 604800000 = 7d)
+ *   - NOVELTY_EVIDENCE_RECONCILER_BATCH (default 50)
  *
- * Disable at runtime by setting NOVELTY_EVIDENCE_GC_INTERVAL_MS=0 (the service
- * still registers so DI is consistent, but it never schedules a tick).
+ * Disable with NOVELTY_EVIDENCE_RECONCILER_MS=0.
  */
 @Injectable()
-export class NoveltyEvidenceGcService
+export class NoveltyEvidenceReconcilerService
   implements OnApplicationBootstrap, OnApplicationShutdown
 {
-  private readonly logger = new ConsoleLogger(NoveltyEvidenceGcService.name);
+  private readonly logger = new ConsoleLogger(
+    NoveltyEvidenceReconcilerService.name,
+  );
   private timer: ReturnType<typeof setInterval> | null = null;
 
   constructor(
@@ -60,20 +63,19 @@ export class NoveltyEvidenceGcService
 
   onApplicationBootstrap(): void {
     if (INTERVAL_MS <= 0) {
-      this.logger.log('Novelty evidence GC disabled (interval <= 0)');
+      this.logger.log('Novelty evidence reconciler disabled (interval <= 0)');
       return;
     }
-    // Run once at startup, then on each interval.
     this.reconcile().catch((err) =>
-      this.logger.error('Initial novelty evidence GC failed', err),
+      this.logger.error('Initial novelty evidence reconcile failed', err),
     );
     this.timer = setInterval(() => {
       this.reconcile().catch((err) =>
-        this.logger.error('Scheduled novelty evidence GC failed', err),
+        this.logger.error('Scheduled novelty evidence reconcile failed', err),
       );
     }, INTERVAL_MS);
     this.logger.log(
-      `Novelty evidence GC scheduled every ${INTERVAL_MS / 1000}s (batch=${BATCH_SIZE})`,
+      `Novelty evidence reconciler scheduled every ${INTERVAL_MS / 1000}s (batch=${BATCH_SIZE})`,
     );
   }
 
@@ -86,7 +88,6 @@ export class NoveltyEvidenceGcService
 
   /**
    * Public for ad-hoc invocation (tests, manual triggers, ops scripts).
-   * Returns a summary so callers can decide whether to re-run immediately.
    */
   async reconcile(): Promise<{
     inspected: number;
@@ -113,22 +114,22 @@ export class NoveltyEvidenceGcService
           await this.repository.clearEvidenceReference(novelty.novedadId);
           cleared++;
           this.logger.debug(
-            `[NOVELTY-EVIDENCE-GC] outcome=cleared novedad=${novedadIdString(novelty.novedadId)} key=${key}`,
+            `[NOVELTY-EVIDENCE-RECONCILER] outcome=cleared novedad=${novedadIdString(novelty.novedadId)} key=${key}`,
           );
         } catch (err) {
           failed++;
           this.logger.warn(
-            `[NOVELTY-EVIDENCE-GC] outcome=failed novedad=${novedadIdString(novelty.novedadId)} key=${key} error=${(err as Error).message}`,
+            `[NOVELTY-EVIDENCE-RECONCILER] outcome=failed novedad=${novedadIdString(novelty.novedadId)} key=${key} error=${(err as Error).message}`,
           );
         }
       }
 
       this.logger.log(
-        `Novelty evidence GC complete: ${cleared} cleared, ${failed} failed (inspected=${inspected})`,
+        `Novelty evidence reconcile complete: ${cleared} cleared, ${failed} failed (inspected=${inspected})`,
       );
     } catch (err) {
       this.logger.error(
-        `Novelty evidence GC cycle failed: ${(err as Error).message}`,
+        `Novelty evidence reconcile cycle failed: ${(err as Error).message}`,
       );
     }
 

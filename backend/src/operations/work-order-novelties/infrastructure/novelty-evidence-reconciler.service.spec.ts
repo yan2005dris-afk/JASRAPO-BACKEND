@@ -1,4 +1,4 @@
-import { NoveltyEvidenceGcService } from './novelty-evidence-gc.service';
+import { NoveltyEvidenceReconcilerService } from './novelty-evidence-reconciler.service';
 import { WORK_ORDER_NOVELTY_REPOSITORY } from '../domain/repositories/work-order-novelty.repository';
 import {
   SRI_STORAGE_TYPES,
@@ -7,8 +7,8 @@ import {
 import { WorkOrderNoveltyEntity } from '../domain/entities/work-order-novelty.entity';
 import { EstadoNovedad, TipoAnomalia } from 'src/shared/enums';
 
-describe('NoveltyEvidenceGcService', () => {
-  let service: NoveltyEvidenceGcService;
+describe('NoveltyEvidenceReconcilerService', () => {
+  let service: NoveltyEvidenceReconcilerService;
   let repoMock: any;
   let storageMock: any;
 
@@ -18,7 +18,7 @@ describe('NoveltyEvidenceGcService', () => {
       clearEvidenceReference: jest.fn(),
     };
     storageMock = { delete: jest.fn() };
-    service = new NoveltyEvidenceGcService(repoMock, storageMock);
+    service = new NoveltyEvidenceReconcilerService(repoMock, storageMock);
   });
 
   it('returns zeros when there are no candidates', async () => {
@@ -93,23 +93,5 @@ describe('NoveltyEvidenceGcService', () => {
 
     expect(result).toEqual({ inspected: 0, cleared: 0, failed: 0 });
     expect(storageMock.delete).not.toHaveBeenCalled();
-  });
-
-  it('skips entries with empty fotoUrl defensively', async () => {
-    const novelty = new WorkOrderNoveltyEntity({
-      novedadId: 1n,
-      ordenTrabajoId: 10n,
-      tipo: TipoAnomalia.FUGA,
-      estado: EstadoNovedad.OPEN,
-      deletedAt: new Date('2026-09-01'),
-      fotoUrl: null,
-    });
-    repoMock.findSoftDeletedWithEvidence.mockResolvedValue([novelty]);
-
-    const result = await service.reconcile();
-
-    expect(storageMock.delete).not.toHaveBeenCalled();
-    expect(repoMock.clearEvidenceReference).not.toHaveBeenCalled();
-    expect(result).toEqual({ inspected: 1, cleared: 0, failed: 0 });
   });
 });

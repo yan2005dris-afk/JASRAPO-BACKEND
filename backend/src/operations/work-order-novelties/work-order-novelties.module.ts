@@ -1,13 +1,15 @@
 import { Module } from '@nestjs/common';
 import { StorageModule } from 'src/infrastructure/storage/storage.module';
+import { JobsModule } from 'src/infrastructure/jobs/jobs.module';
 import { WorkOrderNoveltyController } from './interfaces/http/work-order-novelty.controller';
 import { WorkOrderNoveltyService } from './application/services/work-order-novelty.service';
 import { WORK_ORDER_NOVELTY_REPOSITORY } from './domain/repositories/work-order-novelty.repository';
 import { PrismaWorkOrderNoveltyRepository } from './infrastructure/repositories/prisma-work-order-novelty.repository';
-import { NoveltyEvidenceGcService } from './infrastructure/novelty-evidence-gc.service';
+import { NoveltyEvidenceQueueService } from './infrastructure/novelty-evidence-queue.service';
+import { NoveltyEvidenceReconcilerService } from './infrastructure/novelty-evidence-reconciler.service';
 
 @Module({
-  imports: [StorageModule],
+  imports: [StorageModule, JobsModule],
   controllers: [WorkOrderNoveltyController],
   providers: [
     WorkOrderNoveltyService,
@@ -15,7 +17,8 @@ import { NoveltyEvidenceGcService } from './infrastructure/novelty-evidence-gc.s
       provide: WORK_ORDER_NOVELTY_REPOSITORY,
       useClass: PrismaWorkOrderNoveltyRepository,
     },
-    NoveltyEvidenceGcService,
+    NoveltyEvidenceQueueService,
+    NoveltyEvidenceReconcilerService,
   ],
   exports: [WorkOrderNoveltyService, WORK_ORDER_NOVELTY_REPOSITORY],
 })

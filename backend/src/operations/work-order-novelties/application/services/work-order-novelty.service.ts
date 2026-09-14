@@ -18,6 +18,7 @@ import {
 } from 'src/infrastructure/storage/storage.service';
 import { uploadEvidence } from 'src/infrastructure/common/utils/evidence-upload.util';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
+import { NoveltyEvidenceQueueService } from '../../infrastructure/novelty-evidence-queue.service';
 import {
   EstadoNovedad,
   TipoAnomalia,
@@ -51,6 +52,7 @@ export class WorkOrderNoveltyService {
     private readonly prisma: PrismaService,
     private readonly storageService: StorageService,
     private readonly logger: LoggerService,
+    private readonly evidenceQueue: NoveltyEvidenceQueueService,
   ) {}
 
   async create(
@@ -159,13 +161,13 @@ export class WorkOrderNoveltyService {
   }
 
   /**
-   * Soft-deletes a novelty and removes its persisted evidence from storage.
+   * Soft-deletes a novelty and enqueues an evidence cleanup job.
    *
-   * Sequence: DB soft-delete FIRST, then storage delete. If the storage
-   * delete fails, we log and continue — the DB row is the source of truth
-   * for visibility (the `deletedAt` filter excludes it from queries). A
-   * follow-up GC job can reconcile orphaned evidence in the bucket against
-   * soft-deleted rows.
+   * Sequence: DB soft-delete FIRST, then enqueue pg-boss job for the storage
+   * delete. The job runs within seconds and retries with exponential backoff
+   * if storage is temporarily unavailable. If pg-boss is down at enqueue
+   * time, the soft delete still succeeds and the weekly reconciler
+   * (NoveltyEvidenceReconcilerService) catches the orphan on its next run.
    */
   async softDelete(
     id: bigint,
@@ -180,16 +182,17 @@ export class WorkOrderNoveltyService {
 
     if (existing.fotoUrl) {
       try {
-        await this.storageService.delete(
-          SRI_STORAGE_TYPES.READING_NEWS,
+        await this.evidenceQueue.enqueueCleanup(
+          softDeleted.novedadId,
           existing.fotoUrl,
         );
         this.logger.debug(
-          `[WORK-ORDER-NOVELTY] evidence_cleanup outcome=deleted key=${existing.fotoUrl} actor=${actorUserId ?? 'system'}`,
+          `[WORK-ORDER-NOVELTY] evidence_cleanup outcome=enqueued novedad=${softDeleted.novedadId} key=${existing.fotoUrl} actor=${actorUserId ?? 'system'}`,
         );
       } catch (error) {
-        this.logger.error(
-          `[WORK-ORDER-NOVELTY] evidence_cleanup outcome=failed key=${existing.fotoUrl} actor=${actorUserId ?? 'system'} error=${(error as Error).message}`,
+        // Queue unavailable — log and rely on the reconciler.
+        this.logger.warn(
+          `[WORK-ORDER-NOVELTY] evidence_cleanup outcome=enqueue_failed novedad=${softDeleted.novedadId} key=${existing.fotoUrl} actor=${actorUserId ?? 'system'} error=${(error as Error).message}`,
         );
       }
     }
