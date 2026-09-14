@@ -40,7 +40,11 @@ describe('UpdateContractUseCase', () => {
     const updateDto = { estado: 'ACTIVO' };
 
     mockContractRepository.findById.mockResolvedValue(
-      new ContractEntity({ contratoId: id, deletedAt: null }),
+      new ContractEntity({
+        contratoId: id,
+        estado: 'EN_MORA',
+        deletedAt: null,
+      }),
     );
     mockContractRepository.update.mockResolvedValue(
       new ContractEntity({
@@ -68,6 +72,7 @@ describe('UpdateContractUseCase', () => {
     mockContractRepository.findById.mockResolvedValue(
       new ContractEntity({
         contratoId: id,
+        estado: 'EN_MORA',
         deletedAt: null,
       }),
     );
@@ -97,6 +102,42 @@ describe('UpdateContractUseCase', () => {
     await expect(useCase.execute(id, { estado: 'ACTIVO' })).rejects.toThrow(
       EntityNotFoundException,
     );
+  });
+
+  it('should reject a non-authorized estado transition without modifying the contract', async () => {
+    const id = BigInt(1);
+    mockContractRepository.findById.mockResolvedValue(
+      new ContractEntity({
+        contratoId: id,
+        estado: 'RETIRADO',
+        deletedAt: null,
+      }),
+    );
+
+    await expect(useCase.execute(id, { estado: 'ACTIVO' })).rejects.toThrow(
+      InvalidDomainOperationException,
+    );
+    expect(mockContractRepository.update).not.toHaveBeenCalled();
+  });
+
+  it('should allow updating other fields keeping the same estado', async () => {
+    const id = BigInt(1);
+    mockContractRepository.findById.mockResolvedValue(
+      new ContractEntity({ contratoId: id, estado: 'ACTIVO', deletedAt: null }),
+    );
+    mockContractRepository.update.mockResolvedValue(
+      new ContractEntity({ contratoId: id, estado: 'ACTIVO' }),
+    );
+
+    await useCase.execute(id, {
+      estado: 'ACTIVO',
+      direccionSuministro: 'Otra',
+    });
+
+    expect(mockContractRepository.update).toHaveBeenCalledWith(id, {
+      estado: 'ACTIVO',
+      direccionSuministro: 'Otra',
+    });
   });
 
   it('should throw InvalidDomainOperationException when updateData is empty', async () => {
