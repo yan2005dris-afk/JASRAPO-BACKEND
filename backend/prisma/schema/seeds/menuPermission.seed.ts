@@ -74,15 +74,6 @@ const PERMISSION_MAP: MenuPermissionMapping[] = [
     ],
   },
   {
-    menuNombre: 'Toma de Lecturas',
-    permisos: [
-      { recurso: 'lecturas', accion: 'read' },
-      { recurso: 'lecturas', accion: 'create' },
-      { recurso: 'lecturas', accion: 'update' },
-      { recurso: 'lecturas', accion: 'delete' },
-    ],
-  },
-  {
     menuNombre: 'Recaudación y Pagos',
     permisos: [
       { recurso: 'payments', accion: 'read' },
