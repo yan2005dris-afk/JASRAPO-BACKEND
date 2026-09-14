@@ -9,7 +9,7 @@ interface MenuSeedEntry {
 
 const LEVEL_1: Omit<MenuSeedEntry, 'parentNombre'>[] = [
   { nombre: 'Contratos', ruta: '/Contratos', icono: 'water_drop' },
-  { nombre: 'Operaciones', ruta: '/operador', icono: 'construction' },
+  { nombre: 'Operaciones', ruta: '/operator', icono: 'construction' },
   { nombre: 'Facturación', ruta: '/Facturacion', icono: 'payments' },
   { nombre: 'Reportes', ruta: '/reportes', icono: 'menu_book' },
   { nombre: 'Administración', ruta: '/admin', icono: 'settings' },
@@ -63,13 +63,13 @@ const LEVEL_2: MenuSeedEntry[] = [
   // ── Operaciones ────────────────────────────────────────────
   {
     nombre: 'Toma de Lecturas',
-    ruta: '/operador/lecturas',
+    ruta: '/operator/readings',
     icono: 'water_drop',
     parentNombre: 'Operaciones',
   },
   {
     nombre: 'Reporte Novedades',
-    ruta: '/operador/novedades',
+    ruta: '/operator/novelties',
     icono: 'warning',
     parentNombre: 'Operaciones',
   },
