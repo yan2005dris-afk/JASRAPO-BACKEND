@@ -40,11 +40,17 @@ export const WORK_ORDER_NOVELTY_REPOSITORY = Symbol(
 export interface WorkOrderNoveltyRepository {
   create(data: CreateWorkOrderNoveltyData): Promise<WorkOrderNoveltyEntity>;
   findById(id: bigint): Promise<WorkOrderNoveltyEntity | null>;
-  findByWorkOrderId(workOrderId: bigint): Promise<WorkOrderNoveltyEntity[]>;
   update(
     id: bigint,
     data: UpdateWorkOrderNoveltyData,
   ): Promise<WorkOrderNoveltyEntity>;
+  softDelete(id: bigint, deletedAt: Date): Promise<WorkOrderNoveltyEntity>;
+  /**
+   * Clears the expected `fotoUrl` after its evidence has been deleted from
+   * storage. The URL condition prevents stale cleanup jobs from clearing a
+   * newer evidence reference.
+   */
+  clearEvidenceReference(id: bigint, expectedFotoUrl: string): Promise<void>;
   findMany(
     filters: WorkOrderNoveltyFilters,
   ): Promise<{ data: WorkOrderNoveltyEntity[]; total: number }>;

@@ -141,7 +141,10 @@ export class StorageService implements IStorageService, OnModuleInit {
   ): Promise<UploadResult> {
     const contentType = options?.contentType || 'application/octet-stream';
 
-    await this.s3Client.uploadFile(bucket, key, buffer);
+    await this.s3Client.uploadFile(bucket, key, buffer, {
+      contentType,
+      metadata: options?.metadata,
+    });
 
     this.logger.debug(
       `[STORAGE:UPLOAD] ${bucket}/${key} (${buffer.length} bytes)`,

@@ -1,17 +1,10 @@
-import {
-  Injectable,
-  Inject,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import {
   WORK_ORDER_NOVELTY_REPOSITORY,
   type WorkOrderNoveltyRepository,
-  type WorkOrderNoveltyFilters,
 } from '../../domain/repositories/work-order-novelty.repository';
 import { WorkOrderNoveltyEntity } from '../../domain/entities/work-order-novelty.entity';
 import { NoveltyLifecyclePolicy } from '../../domain/policies/novelty-lifecycle.policy';
-import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import {
   StorageService,
   SRI_STORAGE_TYPES,
@@ -20,19 +13,12 @@ import { uploadEvidence } from 'src/infrastructure/common/utils/evidence-upload.
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import {
   EstadoNovedad,
-  TipoAnomalia,
   ResolucionEconomicaAnomalia,
+  TipoAnomalia,
 } from 'src/shared/enums';
+import { FindWorkOrderNoveltyUseCase } from './find-work-order-novelty.use-case';
 
-export interface CreateWorkOrderNoveltyDtoInput {
-  ordenTrabajoId: string;
-  lecturaId?: string | null;
-  observacion?: string | null;
-  tipo: TipoAnomalia;
-  fotoUrl?: string | null;
-}
-
-export interface UpdateWorkOrderNoveltyDtoInput {
+export interface UpdateWorkOrderNoveltyInput {
   ordenTrabajoId?: string;
   observacion?: string | null;
   tipo?: TipoAnomalia;
@@ -44,80 +30,22 @@ export interface UpdateWorkOrderNoveltyDtoInput {
 }
 
 @Injectable()
-export class WorkOrderNoveltyService {
+export class UpdateWorkOrderNoveltyUseCase {
   constructor(
     @Inject(WORK_ORDER_NOVELTY_REPOSITORY)
     private readonly repository: WorkOrderNoveltyRepository,
-    private readonly prisma: PrismaService,
+    private readonly findUseCase: FindWorkOrderNoveltyUseCase,
     private readonly storageService: StorageService,
     private readonly logger: LoggerService,
   ) {}
 
-  async create(
-    dto: CreateWorkOrderNoveltyDtoInput,
-    file?: Express.Multer.File,
-  ): Promise<WorkOrderNoveltyEntity> {
-    const ordenTrabajoId = BigInt(dto.ordenTrabajoId);
-    const order = await this.prisma.ordenesTrabajo.findUnique({
-      where: { ordenTrabajoId },
-      select: { ordenTrabajoId: true, lecturaId: true },
-    });
-
-    if (!order) {
-      throw new NotFoundException(
-        `Orden de trabajo con ID ${dto.ordenTrabajoId} no encontrada`,
-      );
-    }
-
-    let lecturaId: bigint | null = null;
-    if (dto.lecturaId) {
-      lecturaId = BigInt(dto.lecturaId);
-      if (order.lecturaId === null || order.lecturaId !== lecturaId) {
-        throw new BadRequestException(
-          `La lectura ${dto.lecturaId} no pertenece a la orden de trabajo ${dto.ordenTrabajoId}`,
-        );
-      }
-    }
-
-    let fotoUrl = dto.fotoUrl ?? null;
-    if (file) {
-      fotoUrl = await uploadEvidence(
-        file,
-        this.storageService,
-        SRI_STORAGE_TYPES.READING_NEWS,
-        'work-order-novelties',
-        this.logger,
-      );
-    }
-
-    return this.repository.create({
-      ordenTrabajoId,
-      lecturaId,
-      observacion: dto.observacion ?? null,
-      tipo: dto.tipo,
-      fotoUrl,
-    });
-  }
-
-  async findById(id: bigint): Promise<WorkOrderNoveltyEntity> {
-    const novelty = await this.repository.findById(id);
-    if (!novelty) {
-      throw new NotFoundException(`Novedad con ID ${id} no encontrada`);
-    }
-    return novelty;
-  }
-
-  async findAll(filters: WorkOrderNoveltyFilters) {
-    return this.repository.findMany(filters);
-  }
-
-  async update(
+  async execute(
     id: bigint,
-    dto: UpdateWorkOrderNoveltyDtoInput,
+    dto: UpdateWorkOrderNoveltyInput,
     file?: Express.Multer.File,
     actorUserId?: number,
   ): Promise<WorkOrderNoveltyEntity> {
-    const existing = await this.findById(id);
+    const existing = await this.findUseCase.execute(id);
 
     if (
       dto.ordenTrabajoId &&

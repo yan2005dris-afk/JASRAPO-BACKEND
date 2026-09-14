@@ -52,6 +52,7 @@ import { OperatorSyncManifestDto } from '../dto/operator-sync-manifest.dto';
 import {
   uploadReadingPhoto,
   rollbackReadingPhoto,
+  deleteOldReadingPhoto,
 } from '../../application/reading-upload.helper';
 
 const OPERATOR_ERROR_SCHEMA = {
@@ -244,6 +245,10 @@ export class OperatorController {
         operarioId,
         updateDto,
         uploadedKey,
+        uploadedKey
+          ? (oldKey: string, newKey: string) =>
+              deleteOldReadingPhoto(oldKey, newKey, this.storageService)
+          : undefined,
       );
       return ResponseReadingDto.fromEntity(updated)!;
     } catch (error) {
@@ -311,6 +316,10 @@ export class OperatorController {
         operarioId,
         dto,
         uploadedKey,
+        uploadedKey
+          ? (oldKey: string, newKey: string) =>
+              deleteOldReadingPhoto(oldKey, newKey, this.storageService)
+          : undefined,
       );
       return OrderWorkResponseDto.fromEntity(entity);
     } catch (error) {
