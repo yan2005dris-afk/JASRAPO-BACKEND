@@ -1,10 +1,5 @@
 import { NoveltyEvidenceQueueService } from './novelty-evidence-queue.service';
-import { WORK_ORDER_NOVELTY_REPOSITORY } from '../domain/repositories/work-order-novelty.repository';
-import {
-  SRI_STORAGE_TYPES,
-  StorageService,
-} from 'src/infrastructure/storage/storage.service';
-import { JobsService } from 'src/infrastructure/jobs/jobs.service';
+import { SRI_STORAGE_TYPES } from 'src/infrastructure/storage/storage.service';
 
 describe('NoveltyEvidenceQueueService', () => {
   let service: NoveltyEvidenceQueueService;
@@ -17,7 +12,10 @@ describe('NoveltyEvidenceQueueService', () => {
       clearEvidenceReference: jest.fn(),
     };
     storageMock = { delete: jest.fn() };
-    jobsMock = { send: jest.fn().mockResolvedValue('job-id-1') };
+    jobsMock = {
+      send: jest.fn().mockResolvedValue('job-id-1'),
+      work: jest.fn().mockResolvedValue('worker-id-1'),
+    };
     service = new NoveltyEvidenceQueueService(repoMock, storageMock, jobsMock);
   });
 
@@ -30,7 +28,7 @@ describe('NoveltyEvidenceQueueService', () => {
     await service.enqueueCleanup(1n, 'work-order-novelties/abc.webp');
     expect(jobsMock.send).toHaveBeenCalledWith(
       'cleanup-novedad-evidence',
-      { novedadId: 1, fotoUrl: 'work-order-novelties/abc.webp' },
+      { novedadId: '1', fotoUrl: 'work-order-novelties/abc.webp' },
       {
         retryLimit: 5,
         retryDelay: 10,
@@ -40,30 +38,31 @@ describe('NoveltyEvidenceQueueService', () => {
     );
   });
 
-  it('processes a job by deleting storage and clearing the DB reference', async () => {
-    storageMock.delete.mockResolvedValue(undefined);
-    repoMock.clearEvidenceReference.mockResolvedValue(undefined);
+  it('processes the registered worker callback in storage-then-DB order', async () => {
+    const events: string[] = [];
+    storageMock.delete.mockImplementation(async () => events.push('storage'));
+    repoMock.clearEvidenceReference.mockImplementation(async () =>
+      events.push('database'),
+    );
 
-    // Reach into the private handler via the public jobsMock.send callback.
-    // We instead simulate what the worker does by invoking the public send
-    // and inspecting that the job payload is what the handler expects.
+    await service.onApplicationBootstrap();
+    const worker = jobsMock.work.mock.calls[0][1];
     await service.enqueueCleanup(42n, 'work-order-novelties/x.webp');
-    const handler = jobsMock.send.mock.calls[0];
-    const payload = handler[1];
+    const payload = jobsMock.send.mock.calls[0][1];
+    await worker([{ data: payload }]);
+
     expect(payload).toEqual({
-      novedadId: 42,
+      novedadId: '42',
       fotoUrl: 'work-order-novelties/x.webp',
     });
-
-    // Simulate the handler invocation to assert cleanup wiring.
-    const job = { data: payload };
-    await storageMock.delete(SRI_STORAGE_TYPES.READING_NEWS, job.data.fotoUrl);
-    await repoMock.clearEvidenceReference(BigInt(job.data.novedadId));
-
     expect(storageMock.delete).toHaveBeenCalledWith(
       SRI_STORAGE_TYPES.READING_NEWS,
       'work-order-novelties/x.webp',
     );
-    expect(repoMock.clearEvidenceReference).toHaveBeenCalledWith(42n);
+    expect(repoMock.clearEvidenceReference).toHaveBeenCalledWith(
+      42n,
+      'work-order-novelties/x.webp',
+    );
+    expect(events).toEqual(['storage', 'database']);
   });
 });

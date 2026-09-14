@@ -12,7 +12,7 @@ import { JobsService } from 'src/infrastructure/jobs/jobs.service';
 export const NOVELTY_EVIDENCE_CLEANUP_JOB = 'cleanup-novedad-evidence';
 
 export interface NoveltyEvidenceCleanupJob {
-  novedadId: number;
+  novedadId: string;
   fotoUrl: string;
 }
 
@@ -32,9 +32,9 @@ export interface NoveltyEvidenceCleanupJob {
  *     → storageService.delete()
  *     → repository.clearEvidenceReference()
  *
- * If pg-boss is down at enqueue time, the soft delete still succeeds and the
- * warn is logged. The orphan remains in the bucket until pg-boss recovers
- * and the job is retried (5 attempts with exponential backoff up to 10min).
+ * If pg-boss is down at enqueue time, the soft delete still succeeds and a
+ * warning is logged. The cleanup is not queued; production recovery would
+ * require an explicit outbox or reconciliation mechanism.
  */
 @Injectable()
 export class NoveltyEvidenceQueueService implements OnApplicationBootstrap {
@@ -67,7 +67,7 @@ export class NoveltyEvidenceQueueService implements OnApplicationBootstrap {
     await this.jobsService.send(
       NOVELTY_EVIDENCE_CLEANUP_JOB,
       {
-        novedadId: Number(novedadId),
+        novedadId: novedadId.toString(),
         fotoUrl,
       },
       {
@@ -84,6 +84,9 @@ export class NoveltyEvidenceQueueService implements OnApplicationBootstrap {
       SRI_STORAGE_TYPES.READING_NEWS,
       data.fotoUrl,
     );
-    await this.repository.clearEvidenceReference(BigInt(data.novedadId));
+    await this.repository.clearEvidenceReference(
+      BigInt(data.novedadId),
+      data.fotoUrl,
+    );
   }
 }
