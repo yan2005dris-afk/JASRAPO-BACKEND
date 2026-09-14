@@ -25,23 +25,24 @@ void describe(
     let container: StartedPostgreSqlContainer;
     let client: Client;
 
-    before(async () => {
-      container = await new PostgreSqlContainer('postgres:16.3-alpine')
-        .withDatabase('jasrapo_test')
-        .withUsername('test')
-        .withPassword('test')
-        .start();
+    before(
+      async () => {
+        container = await new PostgreSqlContainer('postgres:16.3-alpine')
+          .withDatabase('jasrapo_test')
+          .withUsername('test')
+          .withPassword('test')
+          .start();
 
-      const uri = container.getConnectionUri();
-      execFileSync('pnpm', ['exec', 'prisma', 'migrate', 'deploy'], {
-        cwd: process.cwd(),
-        env: { ...process.env, DATABASE_URL: uri },
-        stdio: 'pipe',
-      });
+        const uri = container.getConnectionUri();
+        execFileSync('pnpm', ['exec', 'prisma', 'migrate', 'deploy'], {
+          cwd: process.cwd(),
+          env: { ...process.env, DATABASE_URL: uri },
+          stdio: 'pipe',
+        });
 
-      client = new Client({ connectionString: uri });
-      await client.connect();
-      await client.query(`
+        client = new Client({ connectionString: uri });
+        await client.connect();
+        await client.query(`
       INSERT INTO catalogo_impuestos(codigo, nombre, activo, created_at, updated_at) VALUES ('99', 'Z', true, now(), now()) ON CONFLICT DO NOTHING;
       INSERT INTO catalogo_tarifas_impuesto(impuesto_id, codigo_porcentaje, descripcion, porcentaje, vigente_desde, activo, created_at, updated_at)
       VALUES ((SELECT id FROM catalogo_impuestos WHERE codigo = '99'), '0', 'Zero', 0, '2026-01-01', true, now(), now()) ON CONFLICT DO NOTHING;
@@ -49,7 +50,9 @@ void describe(
       SELECT code, code, code, 0, kind::"TipoRubro", (SELECT id FROM catalogo_tarifas_impuesto WHERE descripcion = 'Zero'), now(), now()
       FROM (VALUES ('001', 'VARIABLE'), ('002', 'FIJO')) v(code, kind) ON CONFLICT DO NOTHING;
     `);
-    }, { timeout: 180_000 });
+      },
+      { timeout: 180_000 },
+    );
 
     after(async () => {
       await client?.end();

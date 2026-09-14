@@ -1,6 +1,6 @@
 import { Test } from '@nestjs/testing';
 import { WorkOrderNoveltyController } from './work-order-novelty.controller';
-import { WorkOrderNoveltyService } from '../../application/services/work-order-novelty.service';
+import { WorkOrderNoveltyService } from '../../application/work-order-novelty.service';
 import { WorkOrderNoveltyEntity } from '../../domain/entities/work-order-novelty.entity';
 import { EstadoNovedad, TipoAnomalia } from 'src/shared/enums';
 

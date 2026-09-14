@@ -23,7 +23,7 @@ import { RequiredPermission } from 'src/infrastructure/common/decorators/require
 import { ParseBigIntPipe } from 'src/infrastructure/common/pipes/parse-bigint.pipe';
 import { createImageFileFilter } from 'src/infrastructure/common/utils/evidence-upload.util';
 import { MAX_UPLOAD_SIZE_BYTES } from 'src/infrastructure/config/app.constants';
-import { WorkOrderNoveltyService } from '../../application/services/work-order-novelty.service';
+import { WorkOrderNoveltyService } from '../../application/work-order-novelty.service';
 import { CreateWorkOrderNoveltyDto } from '../dto/create-work-order-novelty.dto';
 import { UpdateWorkOrderNoveltyDto } from '../dto/update-work-order-novelty.dto';
 import { ResponseWorkOrderNoveltyDto } from '../dto/response-work-order-novelty.dto';
