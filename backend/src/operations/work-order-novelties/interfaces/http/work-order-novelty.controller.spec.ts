@@ -77,7 +77,7 @@ describe('WorkOrderNoveltyController', () => {
     const updated = await controller.update(
       102n,
       { estado: EstadoNovedad.RESOLVED },
-      { user: { usuarioId: 7 } },
+      7,
     );
     expect(updated.novedadId).toBe('102');
     expect(serviceMock.update).toHaveBeenCalledWith(

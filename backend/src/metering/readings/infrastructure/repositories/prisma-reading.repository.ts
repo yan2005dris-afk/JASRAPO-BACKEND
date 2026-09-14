@@ -397,35 +397,6 @@ export class PrismaReadingRepository implements ReadingRepository {
             });
           }
         }
-
-        const existingAnomaly = await tx.lecturaAnomalia.findFirst({
-          where: {
-            lecturaId: where.lecturaId,
-            deletedAt: null,
-          },
-        });
-
-        if (!existingAnomaly) {
-          await tx.lecturaAnomalia.create({
-            data: {
-              lecturaId: where.lecturaId,
-              tipo: $Enums.TipoAnomalia.OTRO,
-              estado: $Enums.EstadoAnomalia.PENDIENTE,
-              observacion:
-                data.descripcionAnomalia ||
-                'Novedad reportada desde ruta de lectura',
-              fotoUrl: null,
-            },
-          });
-        } else if (
-          existingAnomaly.estado !== $Enums.EstadoAnomalia.PENDIENTE &&
-          existingAnomaly.estado !== $Enums.EstadoAnomalia.EN_REVISION
-        ) {
-          await tx.lecturaAnomalia.update({
-            where: { anomaliaId: existingAnomaly.anomaliaId },
-            data: { estado: $Enums.EstadoAnomalia.PENDIENTE },
-          });
-        }
       }
 
       return updated;
