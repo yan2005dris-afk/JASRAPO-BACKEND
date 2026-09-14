@@ -264,7 +264,6 @@ describe('PrismaReadingRepository - soft delete select regression', () => {
           updateMany: jest.fn().mockResolvedValue({ count: 1 }),
         },
         lecturas: { update: jest.fn().mockResolvedValue(updated) },
-        lecturaAnomalia: { findFirst: jest.fn() },
       };
       const prisma = {
         $transaction: jest.fn(

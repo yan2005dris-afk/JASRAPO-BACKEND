@@ -17,10 +17,10 @@ import { UpdateOrdenEstadoDto } from '../dto/update-orden-estado.dto';
 import { LinkLecturaDto } from '../dto/link-lectura.dto';
 import { PaginationMetaDto } from 'src/infrastructure/common/dtos/pagination-meta.dto';
 
-@ApiTags('ordenes')
+@ApiTags('work-orders')
 @ApiBearerAuth()
 @ApiExtraModels(OrderWorkResponseDto, PaginationMetaDto)
-@Controller('ordenes')
+@Controller('work-orders')
 export class OrdenesTrabajoController {
   constructor(private readonly ordenesTrabajoService: OrdenesTrabajoService) {}
 
@@ -45,7 +45,7 @@ export class OrdenesTrabajoController {
   })
   @ApiResponse({ status: 404, description: 'Orden no encontrada' })
   @RequiredPermission('routes', 'update')
-  @Patch(':id/estado')
+  @Patch(':id/state')
   async updateEstado(
     @Param('id', ParseBigIntPipe) id: bigint,
     @CurrentUser() user: JwtPayload,
@@ -83,7 +83,7 @@ export class OrdenesTrabajoController {
   })
   @ApiResponse({ status: 404, description: 'Orden o lectura no encontrada' })
   @RequiredPermission('routes', 'update')
-  @Patch(':id/lectura')
+  @Patch(':id/reading')
   async linkLectura(
     @Param('id', ParseBigIntPipe) id: bigint,
     @CurrentUser() user: JwtPayload,

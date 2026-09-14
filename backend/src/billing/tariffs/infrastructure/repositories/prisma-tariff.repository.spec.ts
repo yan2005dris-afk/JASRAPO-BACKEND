@@ -97,6 +97,29 @@ describe('PrismaTariffRepository', () => {
       expect(result.data).toHaveLength(1);
       expect(result.meta.total).toBe(1);
     });
+
+    it('should match nombre or descripcion for a search term', async () => {
+      prismaMock.categoriaTarifa.findMany.mockResolvedValue([rawTariff]);
+      prismaMock.categoriaTarifa.count.mockResolvedValue(1);
+
+      await repository.paginate({ search: 'resid' }, { page: 1, limit: 10 });
+
+      const where = prismaMock.categoriaTarifa.findMany.mock.calls[0][0].where;
+      expect(where.OR).toEqual([
+        { nombre: { contains: 'resid', mode: 'insensitive' } },
+        { descripcion: { contains: 'resid', mode: 'insensitive' } },
+      ]);
+    });
+
+    it('should not add a search filter when no term is provided', async () => {
+      prismaMock.categoriaTarifa.findMany.mockResolvedValue([]);
+      prismaMock.categoriaTarifa.count.mockResolvedValue(0);
+
+      await repository.paginate({}, { page: 1, limit: 10 });
+
+      const where = prismaMock.categoriaTarifa.findMany.mock.calls[0][0].where;
+      expect(where.OR).toBeUndefined();
+    });
   });
 
   describe('create', () => {

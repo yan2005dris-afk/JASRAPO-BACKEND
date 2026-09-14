@@ -9,6 +9,7 @@ import type { OrdenTrabajoEntity } from 'src/operations/routes/domain/entities/o
 import type { UpdateOperatorWorkOrderData } from 'src/operations/routes/domain/types/orden-trabajo.types';
 import { OperatorRepository } from '../../domain/repositories/operator.repository';
 import { UpdateOperatorWorkOrderDto } from '../../interfaces/dto/update-operator-work-order.dto';
+import type { EvidenceReplacementCleanup } from './update-operator-reading.use-case';
 
 @Injectable()
 export class UpdateOperatorWorkOrderUseCase {
@@ -22,6 +23,7 @@ export class UpdateOperatorWorkOrderUseCase {
     operarioId: number,
     dto: UpdateOperatorWorkOrderDto,
     evidenciaFotoUrl?: string,
+    cleanupOldEvidence?: EvidenceReplacementCleanup,
   ): Promise<OrdenTrabajoEntity> {
     const order = await this.ordenTrabajoRepository.findById(id);
     if (!order) {
@@ -74,6 +76,13 @@ export class UpdateOperatorWorkOrderUseCase {
       confirmacionRetiroSello: dto.confirmacionRetiroSello,
     };
 
-    return this.ordenTrabajoRepository.updateOperatorWorkOrder(id, data);
+    const updated = await this.ordenTrabajoRepository.updateOperatorWorkOrder(
+      id,
+      data,
+    );
+    if (evidenciaFotoUrl && order.evidenciaFotoUrl && cleanupOldEvidence) {
+      await cleanupOldEvidence(order.evidenciaFotoUrl, evidenciaFotoUrl);
+    }
+    return updated;
   }
 }

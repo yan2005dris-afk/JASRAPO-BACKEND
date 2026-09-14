@@ -1,5 +1,7 @@
 export interface TariffCategoryFilters {
   nombre?: string;
+  /** Texto libre del buscador del listado: coincide con nombre o descripción. */
+  search?: string;
   activo?: boolean;
 }
 

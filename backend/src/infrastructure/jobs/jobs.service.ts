@@ -103,8 +103,4 @@ export class JobsService implements OnModuleInit, OnModuleDestroy {
     await this.ensureQueue(name);
     return this.boss.work(name, { includeMetadata: true }, handler);
   }
-
-  getBossInstance(): PgBoss {
-    return this.boss;
-  }
 }

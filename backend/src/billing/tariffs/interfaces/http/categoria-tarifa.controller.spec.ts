@@ -78,7 +78,23 @@ describe('CategoriaTarifaController', () => {
 
       expect(result.data).toHaveLength(1);
       expect(result.data[0].categoriaTarifaId).toBe(1);
-      expect(mockService.getCategorias).toHaveBeenCalledWith(1, 10, undefined);
+      expect(mockService.getCategorias).toHaveBeenCalledWith(
+        1,
+        10,
+        undefined,
+        undefined,
+      );
+    });
+
+    it('should forward the search term from the query', async () => {
+      await controller.findAll({ page: 1, limit: 10, search: 'resid' });
+
+      expect(mockService.getCategorias).toHaveBeenCalledWith(
+        1,
+        10,
+        undefined,
+        'resid',
+      );
     });
   });
 

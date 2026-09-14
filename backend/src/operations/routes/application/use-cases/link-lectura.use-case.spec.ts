@@ -9,6 +9,7 @@ describe('LinkLecturaUseCase', () => {
 
   const mockOrdenTrabajoRepository = {
     linkLectura: jest.fn(),
+    verifyOperatorWorkOrderOwnership: jest.fn(),
   };
 
   const sampleOrden = new OrdenTrabajoEntity({
@@ -52,13 +53,16 @@ describe('LinkLecturaUseCase', () => {
     expect(useCase).toBeDefined();
   });
 
-  it('should delegate to repository.linkLectura and return the result', async () => {
+  it('should verify ownership, delegate to repository.linkLectura, and return the result', async () => {
     mockOrdenTrabajoRepository.linkLectura.mockResolvedValue(
       sampleOrdenAfterLink,
     );
 
-    const result = await useCase.execute(1n, { lecturaId: 999n });
+    const result = await useCase.execute(1n, { lecturaId: 999n }, 42);
 
+    expect(
+      mockOrdenTrabajoRepository.verifyOperatorWorkOrderOwnership,
+    ).toHaveBeenCalledWith(42, 1n);
     expect(mockOrdenTrabajoRepository.linkLectura).toHaveBeenCalledWith(1n, {
       lecturaId: 999n,
     });
@@ -70,7 +74,7 @@ describe('LinkLecturaUseCase', () => {
     const repoError = new Error('Orden not found');
     mockOrdenTrabajoRepository.linkLectura.mockRejectedValue(repoError);
 
-    await expect(useCase.execute(1n, { lecturaId: 999n })).rejects.toBe(
+    await expect(useCase.execute(1n, { lecturaId: 999n }, 42)).rejects.toBe(
       repoError,
     );
   });
