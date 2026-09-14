@@ -1,0 +1,169 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Arquitectura del backend Jasrapo",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/yan2005dris-afk/JASRAPO-BACKEND.git",
+      "revision": "cd7cd71a2eeb0c530982a163045f2fbcf18b2f3b"
+    },
+    "viewBox": [1100, 620],
+    "views": [
+      {
+        "id": "request-path",
+        "label": "Flujo de requests",
+        "focus": ["frontend", "backend", "postgres", "rustfs"],
+        "note": "Seguí el request desde el cliente hasta la API y sus servicios de persistencia."
+      },
+      {
+        "id": "document-generation",
+        "label": "Documentos y PDF",
+        "focus": ["backend", "chromium", "rustfs"],
+        "note": "La API genera documentos con Chromium y usa RustFS como almacenamiento S3."
+      },
+      {
+        "id": "observability",
+        "label": "Observabilidad",
+        "focus": ["backend", "observability", "grafana"],
+        "note": "Métricas, trazas y logs se recolectan en el stack local de observabilidad."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "frontend",
+      "type": "external",
+      "label": "Jasrapo Frontend",
+      "sublabel": "Angular web app",
+      "tag": "client",
+      "pos": [40, 260],
+      "size": [160, 70]
+    },
+    {
+      "id": "backend",
+      "type": "backend",
+      "label": "Jasrapo Backend",
+      "sublabel": "NestJS API :3000",
+      "tag": "runtime",
+      "sources": [
+        { "path": "backend/src/main.ts", "label": "Nest bootstrap" },
+        { "path": "backend/src/app.module.ts", "label": "root module" },
+        { "path": "backend/Dockerfile", "label": "container build" }
+      ],
+      "pos": [300, 260],
+      "size": [180, 70]
+    },
+    {
+      "id": "postgres",
+      "type": "database",
+      "label": "PostgreSQL",
+      "sublabel": "Prisma + pg",
+      "tag": "state",
+      "sources": [
+        { "path": "backend/prisma/schema/base.prisma", "label": "Prisma schema" },
+        { "path": "docker-compose.yml", "label": "database service" }
+      ],
+      "pos": [570, 120],
+      "size": [160, 70]
+    },
+    {
+      "id": "rustfs",
+      "type": "cloud",
+      "label": "RustFS",
+      "sublabel": "S3-compatible storage",
+      "tag": "objects",
+      "sources": [
+        { "path": "docker-compose.yml", "label": "RustFS service" },
+        { "path": "backend/src/infrastructure/database/s3-client/s3-client.service.ts", "label": "S3 adapter" }
+      ],
+      "pos": [570, 270],
+      "size": [160, 70]
+    },
+    {
+      "id": "chromium",
+      "type": "external",
+      "label": "Chromium",
+      "sublabel": "Puppeteer PDF runtime",
+      "tag": "documents",
+      "sources": [
+        { "path": "backend/Dockerfile", "label": "Chromium package" }
+      ],
+      "pos": [570, 420],
+      "size": [160, 70]
+    },
+    {
+      "id": "observability",
+      "type": "messagebus",
+      "label": "Telemetry stack",
+      "sublabel": "Prometheus · Tempo · Loki",
+      "tag": "signals",
+      "sources": [
+        { "path": "docker-compose.yml", "label": "observability services" }
+      ],
+      "pos": [800, 180],
+      "size": [180, 70]
+    },
+    {
+      "id": "grafana",
+      "type": "cloud",
+      "label": "Grafana",
+      "sublabel": "dashboards :3001",
+      "tag": "operator",
+      "sources": [{ "path": "docker-compose.yml", "label": "Grafana service" }],
+      "pos": [810, 360],
+      "size": [160, 70]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Jasrapo Docker Compose stack",
+      "wraps": ["backend", "postgres", "rustfs", "chromium", "observability", "grafana"],
+      "pad": 24
+    },
+    {
+      "kind": "security-group",
+      "label": "Internal services network",
+      "wraps": ["backend", "postgres", "rustfs", "chromium", "observability", "grafana"],
+      "pad": 14
+    }
+  ],
+  "connections": [
+    { "from": "frontend", "to": "backend", "label": "HTTP / REST", "variant": "emphasis" },
+    { "from": "backend", "to": "postgres", "label": "Prisma / SQL", "variant": "emphasis", "labelDx": -70 },
+    { "from": "backend", "to": "rustfs", "label": "S3 objects", "variant": "default", "labelAt": [450, 370] },
+    { "from": "backend", "to": "chromium", "label": "Puppeteer / PDF", "variant": "dashed" },
+    { "from": "backend", "to": "observability", "label": "metrics · traces · logs", "variant": "dashed", "labelDx": 92 },
+    { "from": "observability", "to": "grafana", "label": "dashboards", "variant": "default", "fromSide": "bottom", "toSide": "top", "route": "straight", "labelAt": [895, 264] }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Request boundary",
+      "items": [
+        "Angular consume la API NestJS por HTTP / REST",
+        "La API concentra autenticación, dominio y persistencia",
+        "Los servicios internos no se exponen al cliente"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "State and documents",
+      "items": [
+        "PostgreSQL conserva el estado transaccional",
+        "RustFS almacena objetos mediante una interfaz compatible con S3",
+        "Chromium se usa para renderizar documentos PDF"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Operational signals",
+      "items": [
+        "Prometheus, Tempo y Loki reciben señales del backend",
+        "Grafana presenta dashboards para operadores",
+        "La topología refleja la configuración versionada del Compose"
+      ]
+    }
+  ]
+}

@@ -188,8 +188,8 @@ export interface ReadingWithAnomalies {
     marca: string;
     modelo: string;
   } | null;
-  lecturaAnomalias: Array<{
-    anomaliaId: bigint;
+  novedadesOrdenTrabajo?: Array<{
+    novedadId: bigint;
     tipo: string;
     estado: string;
     observacion: string | null;

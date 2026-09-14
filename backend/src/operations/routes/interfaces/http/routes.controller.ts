@@ -255,7 +255,7 @@ export class RoutesController {
   })
   @ApiResponse({ status: 404, description: 'Ruta no encontrada' })
   @RequiredPermission('routes', 'read')
-  @Get(':id/ordenes')
+  @Get(':id/work-orders')
   async findOrdenesByRuta(
     @Param('id', ParseBigIntPipe) id: bigint,
     @Query() query: FindOrdenesByRutaDto,

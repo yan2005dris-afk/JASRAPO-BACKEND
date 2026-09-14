@@ -50,7 +50,7 @@ export class OperatorReadingAnomalyResponseDto {
       medidorSerie: reading.medidor?.serie ?? '',
       fecha: reading.fecha,
       estado: reading.estado,
-      anomalias: (reading.lecturaAnomalias ?? []).map((a) => ({
+      anomalias: (reading.novedadesOrdenTrabajo ?? []).map((a) => ({
         tipo: a.tipo,
         observacion: a.observacion,
         estado: a.estado,

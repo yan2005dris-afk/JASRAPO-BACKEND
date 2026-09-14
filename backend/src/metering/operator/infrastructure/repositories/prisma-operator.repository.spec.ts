@@ -75,7 +75,7 @@ describe('PrismaOperatorRepository routes', () => {
             comunidadId: 3,
             sectorId: 4,
             periodoId: 20,
-            entityType: { in: ['lecturas', 'lectura_anomalia'] },
+            entityType: { in: ['lecturas'] },
           },
           { comunidadId: 3, sectorId: 4, entityType: { in: ['medidores'] } },
         ]),

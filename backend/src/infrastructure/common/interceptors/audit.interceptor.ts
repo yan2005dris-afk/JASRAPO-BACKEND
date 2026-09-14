@@ -14,6 +14,20 @@ interface RequestUser {
   email?: string;
 }
 
+type MulterFileWithMetadata = Express.Multer.File & {
+  evidenceMetadata?: unknown;
+};
+type RequestWithEvidence = Request & {
+  /**
+   * Evidence metadata attached by uploadEvidence() / uploadReadingPhoto().
+   * The interceptor reads from this first; falls back to `file`/`files` for
+   * callers that haven't been migrated yet.
+   */
+  evidenceMetadata?: unknown;
+  file?: MulterFileWithMetadata;
+  files?: MulterFileWithMetadata | MulterFileWithMetadata[];
+};
+
 /**
  * Interceptor global de auditoría.
  * Captura automáticamente todas las operaciones mutantes (POST, PUT, PATCH, DELETE)
@@ -34,7 +48,7 @@ export class AuditInterceptor implements NestInterceptor {
   constructor(private readonly auditService: AuditService) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
-    const request = context.switchToHttp().getRequest<Request>();
+    const request = context.switchToHttp().getRequest<RequestWithEvidence>();
     const response = context.switchToHttp().getResponse<Response>();
     const method = request.method?.toUpperCase();
 
@@ -54,12 +68,7 @@ export class AuditInterceptor implements NestInterceptor {
     return next.handle().pipe(
       tap(() => {
         const duracionMs = Date.now() - startTime;
-        const evidenceMetadata = (
-          request as Request & { file?: { evidenceMetadata?: unknown } }
-        ).file?.evidenceMetadata;
-        const evidenceMetadataFields = evidenceMetadata
-          ? { evidence: evidenceMetadata }
-          : {};
+        const evidenceMetadataFields = this.extractEvidenceMetadata(request);
         // Fire-and-forget — no bloquear la respuesta
         void this.auditService.log({
           usuarioId: user?.sub,
@@ -82,12 +91,7 @@ export class AuditInterceptor implements NestInterceptor {
       }),
       catchError((error: Error) => {
         const duracionMs = Date.now() - startTime;
-        const evidenceMetadata = (
-          request as Request & { file?: { evidenceMetadata?: unknown } }
-        ).file?.evidenceMetadata;
-        const evidenceMetadataFields = evidenceMetadata
-          ? { evidence: evidenceMetadata }
-          : {};
+        const evidenceMetadataFields = this.extractEvidenceMetadata(request);
         // Registrar operaciones fallidas también
         void this.auditService.log({
           usuarioId: user?.sub,
@@ -111,6 +115,43 @@ export class AuditInterceptor implements NestInterceptor {
         return throwError(() => error);
       }),
     );
+  }
+
+  /**
+   * Reads evidence metadata from any of:
+   *   1. `request.evidenceMetadata` (preferred — set by the controller/use-case).
+   *   2. `request.file.evidenceMetadata` (legacy single upload).
+   *   3. `request.files[*].evidenceMetadata` (multi-upload via FilesInterceptor).
+   *
+   * Returns an object suitable to spread into the audit `metadata` payload.
+   * Single source → `{ evidence: <meta> }`. Multi source → `{ evidence: [<meta>, ...] }`.
+   * No evidence → `{}`.
+   */
+  private extractEvidenceMetadata(
+    request: RequestWithEvidence,
+  ): Record<string, unknown> {
+    if (request.evidenceMetadata) {
+      return { evidence: request.evidenceMetadata };
+    }
+    if (request.file?.evidenceMetadata) {
+      return { evidence: request.file.evidenceMetadata };
+    }
+    if (Array.isArray(request.files)) {
+      const list = request.files
+        .map((f) => f?.evidenceMetadata)
+        .filter((m): m is unknown => m !== undefined && m !== null);
+      if (list.length > 0) {
+        return { evidence: list };
+      }
+    } else if (
+      request.files &&
+      !Array.isArray(request.files) &&
+      'evidenceMetadata' in request.files &&
+      request.files.evidenceMetadata
+    ) {
+      return { evidence: request.files.evidenceMetadata };
+    }
+    return {};
   }
 
   /**

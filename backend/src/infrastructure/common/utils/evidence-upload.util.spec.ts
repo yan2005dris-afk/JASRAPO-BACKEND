@@ -16,7 +16,7 @@ describe('createImageFileFilter', () => {
     const callback = jest.fn();
     createImageFileFilter()(
       {},
-      { mimetype: 'image/jpeg', buffer: undefined },
+      { mimetype: 'image/jpeg' } as Express.Multer.File,
       callback,
     );
     expect(callback).toHaveBeenCalledWith(null, true);

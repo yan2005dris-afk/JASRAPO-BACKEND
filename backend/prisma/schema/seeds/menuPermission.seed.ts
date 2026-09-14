@@ -56,15 +56,6 @@ const PERMISSION_MAP: MenuPermissionMapping[] = [
     ],
   },
   {
-    menuNombre: 'Anomalías de Lectura',
-    permisos: [
-      { recurso: 'reading-anomalies', accion: 'read' },
-      { recurso: 'reading-anomalies', accion: 'create' },
-      { recurso: 'reading-anomalies', accion: 'update' },
-      { recurso: 'reading-anomalies', accion: 'delete' },
-    ],
-  },
-  {
     menuNombre: 'Categoría Tarifa',
     permisos: [
       { recurso: 'tarifas', accion: 'read' },
@@ -89,15 +80,6 @@ const PERMISSION_MAP: MenuPermissionMapping[] = [
       { recurso: 'lecturas', accion: 'create' },
       { recurso: 'lecturas', accion: 'update' },
       { recurso: 'lecturas', accion: 'delete' },
-    ],
-  },
-  {
-    menuNombre: 'Reporte Novedades',
-    permisos: [
-      { recurso: 'reading-anomalies', accion: 'read' },
-      { recurso: 'reading-anomalies', accion: 'create' },
-      { recurso: 'reading-anomalies', accion: 'update' },
-      { recurso: 'reading-anomalies', accion: 'delete' },
     ],
   },
   {
@@ -267,7 +249,10 @@ export async function seedMenuPermissions(
     // Ante nombres duplicados (ej. padre "Contratos" e hijo "Contratos"),
     // priorizar el hijo (con menuPadreId) que es quien recibe permisos;
     // los padres se agregan por recursión en GetMyMenusUseCase.
-    if (!existing || (existing.menuPadreId === null && m.menuPadreId !== null)) {
+    if (
+      !existing ||
+      (existing.menuPadreId === null && m.menuPadreId !== null)
+    ) {
       menuByName.set(m.nombre, m);
     }
   }
