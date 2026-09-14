@@ -165,9 +165,8 @@ export class WorkOrderNoveltyService {
    *
    * Sequence: DB soft-delete FIRST, then enqueue pg-boss job for the storage
    * delete. The job runs within seconds and retries with exponential backoff
-   * if storage is temporarily unavailable. If pg-boss is down at enqueue
-   * time, the soft delete still succeeds and the weekly reconciler
-   * (NoveltyEvidenceReconcilerService) catches the orphan on its next run.
+   * (5 attempts, up to 10min). If pg-boss is down at enqueue time, the soft
+   * delete still succeeds and the warn is logged.
    */
   async softDelete(
     id: bigint,

@@ -107,20 +107,6 @@ export class PrismaWorkOrderNoveltyRepository implements WorkOrderNoveltyReposit
     return this.toDomain(updated);
   }
 
-  async findSoftDeletedWithEvidence(
-    limit: number,
-  ): Promise<WorkOrderNoveltyEntity[]> {
-    const rows = await this.prisma.novedadOrdenTrabajo.findMany({
-      where: {
-        deletedAt: { not: null },
-        fotoUrl: { not: null },
-      },
-      orderBy: { deletedAt: 'asc' },
-      take: limit,
-    });
-    return rows.map((r) => this.toDomain(r));
-  }
-
   async clearEvidenceReference(id: bigint): Promise<void> {
     await this.prisma.novedadOrdenTrabajo.update({
       where: { novedadId: id },

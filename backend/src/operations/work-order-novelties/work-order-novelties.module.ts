@@ -6,7 +6,6 @@ import { WorkOrderNoveltyService } from './application/services/work-order-novel
 import { WORK_ORDER_NOVELTY_REPOSITORY } from './domain/repositories/work-order-novelty.repository';
 import { PrismaWorkOrderNoveltyRepository } from './infrastructure/repositories/prisma-work-order-novelty.repository';
 import { NoveltyEvidenceQueueService } from './infrastructure/novelty-evidence-queue.service';
-import { NoveltyEvidenceReconcilerService } from './infrastructure/novelty-evidence-reconciler.service';
 
 @Module({
   imports: [StorageModule, JobsModule],
@@ -18,7 +17,6 @@ import { NoveltyEvidenceReconcilerService } from './infrastructure/novelty-evide
       useClass: PrismaWorkOrderNoveltyRepository,
     },
     NoveltyEvidenceQueueService,
-    NoveltyEvidenceReconcilerService,
   ],
   exports: [WorkOrderNoveltyService, WORK_ORDER_NOVELTY_REPOSITORY],
 })

@@ -24,7 +24,6 @@ describe('WorkOrderNoveltyService', () => {
       findByWorkOrderId: jest.fn(),
       update: jest.fn(),
       softDelete: jest.fn(),
-      findSoftDeletedWithEvidence: jest.fn(),
       clearEvidenceReference: jest.fn(),
       findMany: jest.fn(),
     };

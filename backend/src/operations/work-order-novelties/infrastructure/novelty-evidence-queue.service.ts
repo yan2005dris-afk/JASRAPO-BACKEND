@@ -19,11 +19,10 @@ export interface NoveltyEvidenceCleanupJob {
 /**
  * Pushes evidence cleanup jobs onto pg-boss (PostgreSQL-backed queue).
  *
- * Why pg-boss and not polling:
- *   - pg-boss is already wired up in the repo (see infrastructure/jobs).
+ * Why pg-boss:
+ *   - Already wired up in the repo (see infrastructure/jobs).
  *   - PostgreSQL is the only infra needed; no Redis/RabbitMQ/Kafka.
- *   - Built-in retry with exponential backoff (retryBackoff: true).
- *   - Latency <1s vs the previous 1h polling interval.
+ *   - Built-in retry with exponential backoff.
  *
  * Flow:
  *   WorkOrderNoveltyService.softDelete()
@@ -33,9 +32,9 @@ export interface NoveltyEvidenceCleanupJob {
  *     → storageService.delete()
  *     → repository.clearEvidenceReference()
  *
- * If pg-boss is down at enqueue time, the soft delete still succeeds; the
- * reconciler (novelty-evidence-reconciler.service.ts) will catch the orphan
- * on its next cron tick.
+ * If pg-boss is down at enqueue time, the soft delete still succeeds and the
+ * warn is logged. The orphan remains in the bucket until pg-boss recovers
+ * and the job is retried (5 attempts with exponential backoff up to 10min).
  */
 @Injectable()
 export class NoveltyEvidenceQueueService implements OnApplicationBootstrap {
