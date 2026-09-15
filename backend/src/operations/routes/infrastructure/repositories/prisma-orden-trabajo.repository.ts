@@ -41,7 +41,7 @@ interface OrdenTrabajoPrismaResult {
   updatedAt: Date;
   deletedAt: Date | null;
   lecturaId: bigint | null;
-  ruta: { activityType: { codigo: string } };
+  ruta: { tipoActividad: { codigo: string } };
 
   contrato: {
     numeroGuia: string;
@@ -69,7 +69,7 @@ export class PrismaOrdenTrabajoRepository implements OrdenTrabajoRepository {
   ): Promise<OrdenTrabajoEntity | null> {
     const raw = await this.prisma.ordenesTrabajo.findFirst({
       include: {
-        ruta: { include: { activityType: { select: { codigo: true } } } },
+        ruta: { include: { tipoActividad: { select: { codigo: true } } } },
       },
       where: {
         ordenTrabajoId,
@@ -98,7 +98,7 @@ export class PrismaOrdenTrabajoRepository implements OrdenTrabajoRepository {
         {
           where,
           include: {
-            ruta: { include: { activityType: { select: { codigo: true } } } },
+            ruta: { include: { tipoActividad: { select: { codigo: true } } } },
             contrato: {
               select: {
                 numeroGuia: true,
@@ -216,7 +216,7 @@ export class PrismaOrdenTrabajoRepository implements OrdenTrabajoRepository {
     try {
       const current = await this.prisma.ordenesTrabajo.findUnique({
         include: {
-          ruta: { include: { activityType: { select: { codigo: true } } } },
+          ruta: { include: { tipoActividad: { select: { codigo: true } } } },
         },
         where: { ordenTrabajoId },
       });
@@ -239,7 +239,7 @@ export class PrismaOrdenTrabajoRepository implements OrdenTrabajoRepository {
 
       const raw = await this.prisma.ordenesTrabajo.update({
         include: {
-          ruta: { include: { activityType: { select: { codigo: true } } } },
+          ruta: { include: { tipoActividad: { select: { codigo: true } } } },
         },
         where: { ordenTrabajoId },
         data: {
@@ -277,7 +277,7 @@ export class PrismaOrdenTrabajoRepository implements OrdenTrabajoRepository {
       return await this.prisma.$transaction(async (tx) => {
         const current = await tx.ordenesTrabajo.findUnique({
           include: {
-            ruta: { include: { activityType: { select: { codigo: true } } } },
+            ruta: { include: { tipoActividad: { select: { codigo: true } } } },
           },
           where: { ordenTrabajoId },
         });
@@ -307,7 +307,7 @@ export class PrismaOrdenTrabajoRepository implements OrdenTrabajoRepository {
 
         const raw = await tx.ordenesTrabajo.update({
           include: {
-            ruta: { include: { activityType: { select: { codigo: true } } } },
+            ruta: { include: { tipoActividad: { select: { codigo: true } } } },
           },
           where: { ordenTrabajoId },
           data: {
@@ -370,7 +370,7 @@ export class PrismaOrdenTrabajoRepository implements OrdenTrabajoRepository {
       return await this.prisma.$transaction(async (tx) => {
         const orden = await tx.ordenesTrabajo.findUnique({
           include: {
-            ruta: { include: { activityType: { select: { codigo: true } } } },
+            ruta: { include: { tipoActividad: { select: { codigo: true } } } },
           },
           where: { ordenTrabajoId },
         });
@@ -406,7 +406,7 @@ export class PrismaOrdenTrabajoRepository implements OrdenTrabajoRepository {
         // marcar la orden como completada, debe invocar `updateEstado`.
         const raw = await tx.ordenesTrabajo.update({
           include: {
-            ruta: { include: { activityType: { select: { codigo: true } } } },
+            ruta: { include: { tipoActividad: { select: { codigo: true } } } },
           },
           where: { ordenTrabajoId },
           data: {
@@ -433,7 +433,7 @@ export class PrismaOrdenTrabajoRepository implements OrdenTrabajoRepository {
   async create(data: CreateOrdenTrabajoData): Promise<OrdenTrabajoEntity> {
     const raw = await this.prisma.ordenesTrabajo.create({
       include: {
-        ruta: { include: { activityType: { select: { codigo: true } } } },
+        ruta: { include: { tipoActividad: { select: { codigo: true } } } },
       },
       data: {
         rutaId: data.rutaId,

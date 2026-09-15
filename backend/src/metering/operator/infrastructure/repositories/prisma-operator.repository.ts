@@ -47,7 +47,7 @@ const routeMedidorSelect = {
 } satisfies Prisma.MedidoresSelect;
 
 const operatorRouteInclude = {
-  activityType: { select: { codigo: true } },
+  tipoActividad: { select: { codigo: true } },
   operario: { select: routeOperarioSelect },
   ordenesTrabajo: {
     where: { deletedAt: null },
@@ -67,7 +67,7 @@ const operatorRouteInclude = {
         },
       },
       medidor: { select: routeMedidorSelect },
-      ruta: { select: { activityType: { select: { codigo: true } } } },
+      ruta: { select: { tipoActividad: { select: { codigo: true } } } },
     },
   },
 } satisfies Prisma.RutasInclude;
@@ -417,7 +417,7 @@ export class PrismaOperatorRepository extends OperatorRepository {
             },
           },
           medidor: { select: routeMedidorSelect },
-          ruta: { select: { activityType: { select: { codigo: true } } } },
+          ruta: { select: { tipoActividad: { select: { codigo: true } } } },
         },
       }),
       this.prisma.ordenesTrabajo.count({ where }),
@@ -425,7 +425,7 @@ export class PrismaOperatorRepository extends OperatorRepository {
     return this.page(
       items.slice(0, limit).map((item) => ({
         ...item,
-        tipoActividad: item.ruta.activityType.codigo,
+        tipoActividad: item.ruta.tipoActividad.codigo,
       })) as OperatorWorkOrder[],
       total,
       items.length > limit,
@@ -773,7 +773,7 @@ export class PrismaOperatorRepository extends OperatorRepository {
     };
 
     if (tipoRuta != null) {
-      where.activityType = { codigo: tipoRuta };
+      where.tipoActividad = { codigo: tipoRuta };
     }
 
     const routes = await this.prisma.rutas.findMany({
@@ -872,7 +872,7 @@ export class PrismaOperatorRepository extends OperatorRepository {
           longitud: order.medidor.longitud,
           serie: order.medidor.serie,
           clienteNombre,
-          tipoActividad: route.activityType.codigo,
+          tipoActividad: route.tipoActividad.codigo,
           estado: order.estado,
           direccionSuministro: order.contrato.direccionSuministro,
         },

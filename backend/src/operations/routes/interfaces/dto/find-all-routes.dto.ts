@@ -1,7 +1,7 @@
 import { IsOptional, IsEnum, IsInt } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
-import { EstadoRuta, ActivityTypeCodes } from 'src/shared/enums';
+import { EstadoRuta, TipoActividadCodes } from 'src/shared/enums';
 import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
 
 export class FindAllRoutesDto extends PaginationDto {
@@ -28,8 +28,8 @@ export class FindAllRoutesDto extends PaginationDto {
   @IsInt()
   periodoId?: number;
 
-  @ApiProperty({ required: false, enum: ActivityTypeCodes })
+  @ApiProperty({ required: false, enum: TipoActividadCodes })
   @IsOptional()
-  @IsEnum(ActivityTypeCodes)
-  tipoRuta?: ActivityTypeCodes;
+  @IsEnum(TipoActividadCodes)
+  tipoRuta?: TipoActividadCodes;
 }

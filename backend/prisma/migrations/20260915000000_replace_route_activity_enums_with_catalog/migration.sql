@@ -1,11 +1,11 @@
 -- Atomic migration: route-owned activity catalog replaces persisted route/order enums.
 CREATE TABLE "tipos_actividad" (
-  "activity_type_id" BIGSERIAL NOT NULL,
+  "tipo_actividad_id" BIGSERIAL NOT NULL,
   "codigo" TEXT NOT NULL,
   "nombre" TEXT NOT NULL,
   "descripcion" TEXT,
   "activo" BOOLEAN NOT NULL DEFAULT true,
-  CONSTRAINT "tipos_actividad_pkey" PRIMARY KEY ("activity_type_id")
+  CONSTRAINT "tipos_actividad_pkey" PRIMARY KEY ("tipo_actividad_id")
 );
 CREATE UNIQUE INDEX "tipos_actividad_codigo_key" ON "tipos_actividad"("codigo");
 CREATE INDEX "tipos_actividad_activo_idx" ON "tipos_actividad"("activo");
@@ -17,21 +17,21 @@ INSERT INTO "tipos_actividad" ("codigo", "nombre") VALUES
   ('CORTE', 'Corte'),
   ('RECONEXION', 'Reconexión');
 
-ALTER TABLE "rutas" ADD COLUMN "activity_type_id" BIGINT;
-UPDATE "rutas" SET "activity_type_id" = at."activity_type_id"
+ALTER TABLE "rutas" ADD COLUMN "tipo_actividad_id" BIGINT;
+UPDATE "rutas" SET "tipo_actividad_id" = at."tipo_actividad_id"
 FROM "tipos_actividad" at
 WHERE at."codigo" = CASE "tipo_ruta"::text WHEN 'TOMA_LECTURA' THEN 'LECTURA' ELSE "tipo_ruta"::text END;
 DO $$ BEGIN
-  IF EXISTS (SELECT 1 FROM "rutas" WHERE "activity_type_id" IS NULL) THEN
+  IF EXISTS (SELECT 1 FROM "rutas" WHERE "tipo_actividad_id" IS NULL) THEN
     RAISE EXCEPTION 'Every route must resolve to an activity type';
   END IF;
 END $$;
-ALTER TABLE "rutas" ALTER COLUMN "activity_type_id" SET NOT NULL;
-ALTER TABLE "rutas" ADD CONSTRAINT "rutas_activity_type_id_fkey" FOREIGN KEY ("activity_type_id") REFERENCES "tipos_actividad"("activity_type_id") ON DELETE RESTRICT ON UPDATE CASCADE;
-CREATE INDEX "rutas_activity_type_id_idx" ON "rutas"("activity_type_id");
+ALTER TABLE "rutas" ALTER COLUMN "tipo_actividad_id" SET NOT NULL;
+ALTER TABLE "rutas" ADD CONSTRAINT "rutas_tipo_actividad_id_fkey" FOREIGN KEY ("tipo_actividad_id") REFERENCES "tipos_actividad"("tipo_actividad_id") ON DELETE RESTRICT ON UPDATE CASCADE;
+CREATE INDEX "rutas_tipo_actividad_id_idx" ON "rutas"("tipo_actividad_id");
 
 DO $$ BEGIN
-  IF EXISTS (SELECT 1 FROM "ordenes_trabajo" ot LEFT JOIN "rutas" r ON r."ruta_id" = ot."ruta_id" WHERE r."activity_type_id" IS NULL) THEN
+  IF EXISTS (SELECT 1 FROM "ordenes_trabajo" ot LEFT JOIN "rutas" r ON r."ruta_id" = ot."ruta_id" WHERE r."tipo_actividad_id" IS NULL) THEN
     RAISE EXCEPTION 'Every work order must resolve through its route activity type';
   END IF;
 END $$;
@@ -63,7 +63,7 @@ BEGIN
     v_orden_visita := v_orden_visita + 1;
     IF p_ruta_id IS NOT NULL AND NOT EXISTS (
       SELECT 1 FROM ordenes_trabajo ot JOIN rutas rt ON rt.ruta_id = ot.ruta_id
-      JOIN tipos_actividad at ON at.activity_type_id = rt.activity_type_id
+      JOIN tipos_actividad at ON at.tipo_actividad_id = rt.tipo_actividad_id
       WHERE ot.ruta_id = p_ruta_id AND ot.contrato_id = r.contrato_id AND at.codigo = 'LECTURA' AND ot.borrado_en IS NULL
     ) THEN
       INSERT INTO ordenes_trabajo (ruta_id, contrato_id, medidor_id, estado, orden_visita, creado_en, actualizado_en)

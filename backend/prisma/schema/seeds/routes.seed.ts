@@ -12,11 +12,11 @@ export async function seedRoutes(prisma: PrismaClient) {
     return { rutasCreadas: 0, lecturasInicializadas: 0 };
   }
 
-  const activityTypes = await prisma.activityType.findMany({
-    select: { activityTypeId: true, codigo: true },
+  const tipoActividads = await prisma.tipoActividad.findMany({
+    select: { tipoActividadId: true, codigo: true },
   });
-  const activityTypeIdByCode = new Map(
-    activityTypes.map((type) => [type.codigo, type.activityTypeId]),
+  const tipoActividadIdByCode = new Map(
+    tipoActividads.map((type) => [type.codigo, type.tipoActividadId]),
   );
 
   const operadores = await prisma.usuarios.findMany({
@@ -108,7 +108,7 @@ export async function seedRoutes(prisma: PrismaClient) {
 
     const existingRuta = await prisma.rutas.findFirst({
       where: {
-        activityType: { codigo: 'LECTURA' },
+        tipoActividad: { codigo: 'LECTURA' },
         comunidadId: zone.comunidadId,
         sectorId: zone.sectorId,
         periodoId: periodo.periodoId,
@@ -122,7 +122,7 @@ export async function seedRoutes(prisma: PrismaClient) {
       createdRuta = await prisma.rutas.create({
         data: {
           nombre: rutaNombre,
-          activityTypeId: activityTypeIdByCode.get('LECTURA')!,
+          tipoActividadId: tipoActividadIdByCode.get('LECTURA')!,
           operarioId,
           comunidadId: zone.comunidadId,
           sectorId: zone.sectorId,
@@ -243,7 +243,7 @@ export async function seedRoutes(prisma: PrismaClient) {
       const ruta = await prisma.rutas.create({
         data: {
           nombre: def.nombre,
-          activityTypeId: activityTypeIdByCode.get(def.tipo)!,
+          tipoActividadId: tipoActividadIdByCode.get(def.tipo)!,
           operarioId: operadores[i % operadores.length].usuarioId,
           comunidadId: targetContrato.comunidadId,
           sectorId: targetContrato.sectorId,

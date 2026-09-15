@@ -87,15 +87,15 @@ function generateFile(enums: EnumDef[]): string {
   }
 
   lines.push(
-    "export const ActivityTypeCodes = { LECTURA: 'LECTURA', INSPECCION: 'INSPECCION', INSTALACION: 'INSTALACION', CORTE: 'CORTE', RECONEXION: 'RECONEXION' } as const;",
+    "export const TipoActividadCodes = { LECTURA: 'LECTURA', INSPECCION: 'INSPECCION', INSTALACION: 'INSTALACION', CORTE: 'CORTE', RECONEXION: 'RECONEXION' } as const;",
   );
   lines.push('');
   lines.push(
-    'export type ActivityTypeCodes = (typeof ActivityTypeCodes)[keyof typeof ActivityTypeCodes];',
+    'export type TipoActividadCodes = (typeof TipoActividadCodes)[keyof typeof TipoActividadCodes];',
   );
-  lines.push('export type ActivityTypeCode = ActivityTypeCodes;');
+  lines.push('export type TipoActividadCode = TipoActividadCodes;');
   lines.push(
-    "export const CORE_ACTIVITY_TYPE_CODES = ['LECTURA', 'INSPECCION', 'INSTALACION', 'CORTE', 'RECONEXION'] as const;",
+    "export const CORE_TIPO_ACTIVIDAD_CODES = ['LECTURA', 'INSPECCION', 'INSTALACION', 'CORTE', 'RECONEXION'] as const;",
   );
   lines.push('');
   lines.push('');

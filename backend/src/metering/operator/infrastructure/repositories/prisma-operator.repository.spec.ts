@@ -128,7 +128,7 @@ describe('PrismaOperatorRepository routes', () => {
     prisma.rutas.findMany.mockResolvedValue([
       {
         rutaId: 1n,
-        activityType: { codigo: 'LECTURA' },
+        tipoActividad: { codigo: 'LECTURA' },
         nombre: 'Ruta norte',
         medidor: null,
         ordenesTrabajo: [

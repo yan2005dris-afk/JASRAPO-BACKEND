@@ -260,8 +260,8 @@ void describe(
        VALUES ('migration@test.local', 'not-used', now(), now()) RETURNING usuario_id`,
       );
       const route = await client.query<{ ruta_id: string }>(
-        `INSERT INTO rutas(nombre, operario_id, activity_type_id, comunidad_id, periodo_id, creado_en, actualizado_en)
-           SELECT 'Route A', $1, activity_type_id, $2, $3, now(), now() FROM tipos_actividad WHERE codigo = 'LECTURA' RETURNING ruta_id`,
+        `INSERT INTO rutas(nombre, operario_id, tipo_actividad_id, comunidad_id, periodo_id, creado_en, actualizado_en)
+           SELECT 'Route A', $1, tipo_actividad_id, $2, $3, now(), now() FROM tipos_actividad WHERE codigo = 'LECTURA' RETURNING ruta_id`,
         [
           user.rows[0].usuario_id,
           community.rows[0].comunidad_id,

@@ -5,7 +5,7 @@ describe('PrismaOrdenTrabajoRepository.updateOperatorWorkOrder', () => {
     const updated = {
       ordenTrabajoId: 1n,
       rutaId: 2n,
-      ruta: { activityType: { codigo: 'INSPECCION' } },
+      ruta: { tipoActividad: { codigo: 'INSPECCION' } },
       contratoId: 3n,
       medidorId: 4n,
       estado: 'COMPLETADA',
@@ -50,7 +50,7 @@ describe('PrismaOrdenTrabajoRepository.updateOperatorWorkOrder', () => {
     expect(update).toHaveBeenCalledWith(
       expect.objectContaining({
         include: {
-          ruta: { include: { activityType: { select: { codigo: true } } } },
+          ruta: { include: { tipoActividad: { select: { codigo: true } } } },
         },
       }),
     );

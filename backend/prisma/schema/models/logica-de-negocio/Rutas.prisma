@@ -3,7 +3,7 @@ model Rutas {
   nombre              String             @map("nombre")
   descripcion         String?            @map("descripcion")
   operarioId          Int?               @map("operario_id")
-  activityTypeId      BigInt             @map("activity_type_id")
+  tipoActividadId      BigInt             @map("tipo_actividad_id")
   comunidadId         Int                @map("comunidad_id")
   sectorId            Int?               @map("sector_id")
   periodoId           Int?               @map("periodo_id")
@@ -23,14 +23,14 @@ model Rutas {
   periodo             Periodos?          @relation(fields: [periodoId], references: [periodoId])
   lotes               Lote[]
   ordenesTrabajo      OrdenesTrabajo[]
-  activityType        ActivityType       @relation(fields: [activityTypeId], references: [activityTypeId], onDelete: Restrict)
+  tipoActividad        TipoActividad       @relation(fields: [tipoActividadId], references: [tipoActividadId], onDelete: Restrict)
 
   @@index([operarioId])
   @@index([comunidadId])
   @@index([sectorId])
   @@index([periodoId])
   @@index([estado])
-  @@index([activityTypeId])
+  @@index([tipoActividadId])
   @@index([fechaPlanificada])
   @@index([orden])
   @@map("rutas")

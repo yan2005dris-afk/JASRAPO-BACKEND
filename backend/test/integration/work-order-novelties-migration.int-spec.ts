@@ -76,9 +76,9 @@ void describe(
             co AS (INSERT INTO contratos(cliente_id, categoria_tarifa_id, numero_guia, direccion_suministro, estado, comunidad_id, creado_en, actualizado_en)
                    SELECT cl.cliente_id, t.categoria_tarifa_id, $7, 'D', 'ACTIVO', c.comunidad_id, now(), now() FROM cl, t, c RETURNING contrato_id),
             m AS (INSERT INTO medidores(marca, modelo, serie, estado, creado_en, actualizado_en) VALUES ('M', '1', $8, 'INSTALADO', now(), now()) RETURNING medidor_id),
-            at AS (SELECT activity_type_id FROM tipos_actividad WHERE codigo = 'LECTURA'),
-                r AS (INSERT INTO rutas(nombre, operario_id, activity_type_id, comunidad_id, periodo_id, creado_en, actualizado_en)
-                      SELECT 'R', u.usuario_id, at.activity_type_id, c.comunidad_id, pr.periodo_id, now(), now() FROM u, c, pr, at RETURNING ruta_id)
+            at AS (SELECT tipo_actividad_id FROM tipos_actividad WHERE codigo = 'LECTURA'),
+                r AS (INSERT INTO rutas(nombre, operario_id, tipo_actividad_id, comunidad_id, periodo_id, creado_en, actualizado_en)
+                      SELECT 'R', u.usuario_id, at.tipo_actividad_id, c.comunidad_id, pr.periodo_id, now(), now() FROM u, c, pr, at RETURNING ruta_id)
        SELECT c.comunidad_id, pr.periodo_id, u.usuario_id, co.contrato_id, m.medidor_id, r.ruta_id FROM c, pr, u, co, m, r`,
         [
           `${p} C`,

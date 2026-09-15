@@ -437,7 +437,7 @@ export type TratamientoSaliente =
 
 // Fuente: models/logica-de-negocio/ReemplazoMedidor.prisma
 
-export const ActivityTypeCodes = {
+export const TipoActividadCodes = {
   LECTURA: 'LECTURA',
   INSPECCION: 'INSPECCION',
   INSTALACION: 'INSTALACION',
@@ -445,10 +445,10 @@ export const ActivityTypeCodes = {
   RECONEXION: 'RECONEXION',
 } as const;
 
-export type ActivityTypeCodes =
-  (typeof ActivityTypeCodes)[keyof typeof ActivityTypeCodes];
-export type ActivityTypeCode = ActivityTypeCodes;
-export const CORE_ACTIVITY_TYPE_CODES = [
+export type TipoActividadCodes =
+  (typeof TipoActividadCodes)[keyof typeof TipoActividadCodes];
+export type TipoActividadCode = TipoActividadCodes;
+export const CORE_TIPO_ACTIVIDAD_CODES = [
   'LECTURA',
   'INSPECCION',
   'INSTALACION',

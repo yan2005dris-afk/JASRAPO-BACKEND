@@ -1,5 +1,5 @@
 import { UpdateOperatorWorkOrderUseCase } from './update-operator-work-order.use-case';
-import { ActivityTypeCodes } from 'src/shared/enums';
+import { TipoActividadCodes } from 'src/shared/enums';
 import {
   EntityNotFoundException,
   InvalidDomainOperationException,
@@ -36,9 +36,9 @@ describe('UpdateOperatorWorkOrderUseCase', () => {
       orders as any,
       operators as any,
     );
-    orders.findById.mockResolvedValue(order(ActivityTypeCodes.INSTALACION));
+    orders.findById.mockResolvedValue(order(TipoActividadCodes.INSTALACION));
     orders.updateOperatorWorkOrder.mockResolvedValue(
-      order(ActivityTypeCodes.INSTALACION),
+      order(TipoActividadCodes.INSTALACION),
     );
   });
 
@@ -51,8 +51,8 @@ describe('UpdateOperatorWorkOrderUseCase', () => {
   });
 
   it.each([
-    [ActivityTypeCodes.LECTURA, 10n, 'flujo de lecturas'],
-    [ActivityTypeCodes.INSTALACION, null, 'medidor asignado'],
+    [TipoActividadCodes.LECTURA, 10n, 'flujo de lecturas'],
+    [TipoActividadCodes.INSTALACION, null, 'medidor asignado'],
   ])(
     'rejects invalid order prerequisites (%s)',
     async (type, meter, message) => {
@@ -76,14 +76,14 @@ describe('UpdateOperatorWorkOrderUseCase', () => {
   });
 
   it('rejects reconnection without seal confirmation', async () => {
-    orders.findById.mockResolvedValue(order(ActivityTypeCodes.RECONEXION));
+    orders.findById.mockResolvedValue(order(TipoActividadCodes.RECONEXION));
     await expect(
       useCase.execute(1n, 7, { confirmacionRetiroSello: false }, undefined),
     ).rejects.toThrow('retiro del sello');
   });
 
   it('rejects partial inspection execution fields', async () => {
-    orders.findById.mockResolvedValue(order(ActivityTypeCodes.INSPECCION));
+    orders.findById.mockResolvedValue(order(TipoActividadCodes.INSPECCION));
     await expect(
       useCase.execute(1n, 7, { estadoSellos: 'INTEGRO' }, undefined),
     ).rejects.toThrow('estado de sellos');

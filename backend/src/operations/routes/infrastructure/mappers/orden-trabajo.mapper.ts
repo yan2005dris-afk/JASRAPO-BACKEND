@@ -6,7 +6,7 @@ export class OrdenTrabajoMapper {
     rutaId: bigint;
     contratoId: bigint;
     medidorId?: bigint | null;
-    ruta: { activityType: { codigo: string } };
+    ruta: { tipoActividad: { codigo: string } };
     estado: string;
     ordenVisita: number;
     resultadoObservacion?: string | null;
@@ -28,7 +28,7 @@ export class OrdenTrabajoMapper {
       rutaId: raw.rutaId,
       contratoId: raw.contratoId,
       medidorId: raw.medidorId ?? null,
-      tipoActividad: raw.ruta.activityType.codigo,
+      tipoActividad: raw.ruta.tipoActividad.codigo,
       estado: raw.estado,
       ordenVisita: raw.ordenVisita,
       resultadoObservacion: raw.resultadoObservacion ?? null,
@@ -53,7 +53,7 @@ export class OrdenTrabajoMapper {
       rutaId: bigint;
       contratoId: bigint;
       medidorId?: bigint | null;
-      ruta: { activityType: { codigo: string } };
+      ruta: { tipoActividad: { codigo: string } };
       estado: string;
       ordenVisita: number;
       resultadoObservacion?: string | null;

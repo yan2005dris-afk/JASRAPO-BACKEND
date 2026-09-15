@@ -44,7 +44,7 @@ describe('PrismaRouteRepository', () => {
     nombre: 'Ruta 1',
     descripcion: 'Desc',
     operarioId: 10,
-    activityType: { codigo: 'LECTURA' },
+    tipoActividad: { codigo: 'LECTURA' },
     comunidadId: 1,
     sectorId: null,
     periodoId: 1,
@@ -88,8 +88,8 @@ describe('PrismaRouteRepository', () => {
         groupBy: jest.fn(),
       },
     };
-    (prisma as any).activityType = {
-      findUnique: jest.fn().mockResolvedValue({ activityTypeId: 1n }),
+    (prisma as any).tipoActividad = {
+      findUnique: jest.fn().mockResolvedValue({ tipoActividadId: 1n }),
     };
     repository = new PrismaRouteRepository(prisma as unknown as PrismaService);
   });
@@ -135,7 +135,7 @@ describe('PrismaRouteRepository', () => {
       expect(result.data[0].tipoRuta).toBe('LECTURA');
       expect(prisma.rutas.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          include: { activityType: { select: { codigo: true } } },
+          include: { tipoActividad: { select: { codigo: true } } },
         }),
       );
       expect(result.data).toHaveLength(1);
@@ -321,7 +321,7 @@ describe('PrismaRouteRepository', () => {
 
       const result = await repository.paginateLecturas(
         {
-          activityType: { codigo: 'LECTURA' },
+          tipoActividad: { codigo: 'LECTURA' },
           comunidadId: 1,
           search: 'Juan',
         },

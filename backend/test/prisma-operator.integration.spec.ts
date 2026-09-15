@@ -78,10 +78,10 @@ describe('PrismaOperatorRepository (integration)', () => {
 
   // ── helpers ────────────────────────────────────────────────────────
 
-  async function activityTypeId(codigo: string): Promise<bigint> {
-    const type = await prisma.activityType.findUnique({ where: { codigo } });
+  async function tipoActividadId(codigo: string): Promise<bigint> {
+    const type = await prisma.tipoActividad.findUnique({ where: { codigo } });
     if (!type) throw new Error(`Missing activity type ${codigo}`);
-    return type.activityTypeId;
+    return type.tipoActividadId;
   }
 
   async function seedBasicData() {
@@ -126,7 +126,7 @@ describe('PrismaOperatorRepository (integration)', () => {
           {
             nombre: 'Ruta C',
             operarioId: operario.usuarioId,
-            activityTypeId: await activityTypeId('LECTURA'),
+            tipoActividadId: await tipoActividadId('LECTURA'),
             comunidadId: comunidad.comunidadId,
             periodoId: periodo.periodoId,
             orden: 3,
@@ -134,7 +134,7 @@ describe('PrismaOperatorRepository (integration)', () => {
           {
             nombre: 'Ruta A',
             operarioId: operario.usuarioId,
-            activityTypeId: await activityTypeId('LECTURA'),
+            tipoActividadId: await tipoActividadId('LECTURA'),
             comunidadId: comunidad.comunidadId,
             periodoId: periodo.periodoId,
             orden: 1,
@@ -142,7 +142,7 @@ describe('PrismaOperatorRepository (integration)', () => {
           {
             nombre: 'Ruta B',
             operarioId: operario.usuarioId,
-            activityTypeId: await activityTypeId('LECTURA'),
+            tipoActividadId: await tipoActividadId('LECTURA'),
             comunidadId: comunidad.comunidadId,
             periodoId: periodo.periodoId,
             orden: 2,
@@ -169,7 +169,7 @@ describe('PrismaOperatorRepository (integration)', () => {
           {
             nombre: 'Lectura Route',
             operarioId: operario.usuarioId,
-            activityTypeId: await activityTypeId('LECTURA'),
+            tipoActividadId: await tipoActividadId('LECTURA'),
             comunidadId: comunidad.comunidadId,
             periodoId: periodo.periodoId,
             orden: 1,
@@ -177,7 +177,7 @@ describe('PrismaOperatorRepository (integration)', () => {
           {
             nombre: 'Install Route',
             operarioId: operario.usuarioId,
-            activityTypeId: await activityTypeId('INSTALACION'),
+            tipoActividadId: await tipoActividadId('INSTALACION'),
             comunidadId: comunidad.comunidadId,
             periodoId: periodo.periodoId,
             orden: 2,
@@ -192,7 +192,7 @@ describe('PrismaOperatorRepository (integration)', () => {
       );
 
       expect(tasks).toHaveLength(1);
-      expect(tasks[0].activityType.codigo).toBe('INSTALACION');
+      expect(tasks[0].tipoActividad.codigo).toBe('INSTALACION');
     });
 
     it('excludes soft-deleted routes (deletedAt IS NOT NULL)', async () => {
@@ -203,7 +203,7 @@ describe('PrismaOperatorRepository (integration)', () => {
           {
             nombre: 'Active Route',
             operarioId: operario.usuarioId,
-            activityTypeId: await activityTypeId('LECTURA'),
+            tipoActividadId: await tipoActividadId('LECTURA'),
             comunidadId: comunidad.comunidadId,
             periodoId: periodo.periodoId,
             orden: 1,
@@ -211,7 +211,7 @@ describe('PrismaOperatorRepository (integration)', () => {
           {
             nombre: 'Deleted Route',
             operarioId: operario.usuarioId,
-            activityTypeId: await activityTypeId('LECTURA'),
+            tipoActividadId: await tipoActividadId('LECTURA'),
             comunidadId: comunidad.comunidadId,
             periodoId: periodo.periodoId,
             orden: 2,
@@ -245,7 +245,7 @@ describe('PrismaOperatorRepository (integration)', () => {
         data: {
           nombre: 'Concurrency OK',
           operarioId: operario.usuarioId,
-          activityTypeId: await activityTypeId('LECTURA'),
+          tipoActividadId: await tipoActividadId('LECTURA'),
           comunidadId: comunidad.comunidadId,
           periodoId: periodo.periodoId,
           estado: 'PENDIENTE',
@@ -271,7 +271,7 @@ describe('PrismaOperatorRepository (integration)', () => {
         data: {
           nombre: 'Wrong expected estado',
           operarioId: operario.usuarioId,
-          activityTypeId: await activityTypeId('LECTURA'),
+          tipoActividadId: await tipoActividadId('LECTURA'),
           comunidadId: comunidad.comunidadId,
           periodoId: periodo.periodoId,
           estado: 'COMPLETADA',
@@ -299,7 +299,7 @@ describe('PrismaOperatorRepository (integration)', () => {
         data: {
           nombre: 'No guard check',
           operarioId: operario.usuarioId,
-          activityTypeId: await activityTypeId('LECTURA'),
+          tipoActividadId: await tipoActividadId('LECTURA'),
           comunidadId: comunidad.comunidadId,
           periodoId: periodo.periodoId,
           estado: 'PENDIENTE',
@@ -365,7 +365,7 @@ describe('PrismaOperatorRepository (integration)', () => {
           {
             nombre: 'Pending',
             operarioId: operario.usuarioId,
-            activityTypeId: await activityTypeId('LECTURA'),
+            tipoActividadId: await tipoActividadId('LECTURA'),
             comunidadId: comunidad.comunidadId,
             periodoId: periodo.periodoId,
             estado: 'PENDIENTE',
@@ -374,7 +374,7 @@ describe('PrismaOperatorRepository (integration)', () => {
           {
             nombre: 'In Progress',
             operarioId: operario.usuarioId,
-            activityTypeId: await activityTypeId('LECTURA'),
+            tipoActividadId: await tipoActividadId('LECTURA'),
             comunidadId: comunidad.comunidadId,
             periodoId: periodo.periodoId,
             estado: 'EN_PROGRESO',
@@ -383,7 +383,7 @@ describe('PrismaOperatorRepository (integration)', () => {
           {
             nombre: 'Cancelled',
             operarioId: operario.usuarioId,
-            activityTypeId: await activityTypeId('LECTURA'),
+            tipoActividadId: await tipoActividadId('LECTURA'),
             comunidadId: comunidad.comunidadId,
             periodoId: periodo.periodoId,
             estado: 'CANCELADA',
@@ -392,7 +392,7 @@ describe('PrismaOperatorRepository (integration)', () => {
           {
             nombre: 'Completed',
             operarioId: operario.usuarioId,
-            activityTypeId: await activityTypeId('LECTURA'),
+            tipoActividadId: await tipoActividadId('LECTURA'),
             comunidadId: comunidad.comunidadId,
             periodoId: periodo.periodoId,
             estado: 'COMPLETADA',
@@ -425,7 +425,7 @@ describe('PrismaOperatorRepository (integration)', () => {
           {
             nombre: 'R1',
             operarioId: operario.usuarioId,
-            activityTypeId: await activityTypeId('LECTURA'),
+            tipoActividadId: await tipoActividadId('LECTURA'),
             comunidadId: comunidad.comunidadId,
             periodoId: periodo.periodoId,
             orden: 5,
@@ -433,7 +433,7 @@ describe('PrismaOperatorRepository (integration)', () => {
           {
             nombre: 'R2',
             operarioId: operario.usuarioId,
-            activityTypeId: await activityTypeId('LECTURA'),
+            tipoActividadId: await tipoActividadId('LECTURA'),
             comunidadId: comunidad.comunidadId,
             periodoId: periodo.periodoId,
             orden: 42,

@@ -9,7 +9,7 @@ import {
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsNotEmptyString } from 'src/infrastructure/common/decorators/is-not-empty-string.decorator';
-import { ActivityTypeCodes } from 'src/shared/enums';
+import { TipoActividadCodes } from 'src/shared/enums';
 
 export class CreateRouteDto {
   @ApiProperty({
@@ -43,12 +43,12 @@ export class CreateRouteDto {
 
   @ApiProperty({
     description: 'Tipo de ruta a crear',
-    enum: ActivityTypeCodes,
-    example: ActivityTypeCodes.LECTURA,
+    enum: TipoActividadCodes,
+    example: TipoActividadCodes.LECTURA,
   })
   @IsNotEmpty()
-  @IsEnum(ActivityTypeCodes)
-  tipoRuta!: ActivityTypeCodes;
+  @IsEnum(TipoActividadCodes)
+  tipoRuta!: TipoActividadCodes;
 
   @ApiProperty({
     description: 'ID de la comunidad donde se aplicará la ruta',

@@ -40,7 +40,7 @@ export class PrismaRouteRepository implements RouteRepository {
     includeDeleted: boolean = false,
   ): Promise<RouteEntity | null> {
     const raw = await this.prisma.rutas.findFirst({
-      include: { activityType: { select: { codigo: true } } },
+      include: { tipoActividad: { select: { codigo: true } } },
       where: {
         rutaId,
         ...(includeDeleted ? {} : { deletedAt: null }),
@@ -66,7 +66,7 @@ export class PrismaRouteRepository implements RouteRepository {
         ? { periodoId: filters.periodoId }
         : {}),
       ...(filters.tipoRuta
-        ? { activityType: { codigo: filters.tipoRuta } }
+        ? { tipoActividad: { codigo: filters.tipoRuta } }
         : {}),
     };
 
@@ -74,7 +74,7 @@ export class PrismaRouteRepository implements RouteRepository {
       this.prisma.rutas,
       {
         where,
-        include: { activityType: { select: { codigo: true } } },
+        include: { tipoActividad: { select: { codigo: true } } },
         orderBy: { createdAt: 'desc' },
       },
       pagination,
@@ -88,25 +88,25 @@ export class PrismaRouteRepository implements RouteRepository {
 
   async create(data: CreateRouteData): Promise<RouteEntity> {
     try {
-      const activityType = await this.prisma.activityType.findUnique({
+      const tipoActividad = await this.prisma.tipoActividad.findUnique({
         where: { codigo: data.tipoRuta },
-        select: { activityTypeId: true },
+        select: { tipoActividadId: true },
       });
-      if (!activityType)
+      if (!tipoActividad)
         throw new EntityNotFoundException('Tipo de actividad', data.tipoRuta);
       const raw = await this.prisma.rutas.create({
         data: {
           nombre: data.nombre,
           descripcion: data.descripcion,
           operarioId: data.operarioId ?? null,
-          activityTypeId: activityType.activityTypeId,
+          tipoActividadId: tipoActividad.tipoActividadId,
           comunidadId: data.comunidadId,
           sectorId: data.sectorId ?? null,
           periodoId: data.periodoId ?? null,
           fechaPlanificada: data.fechaPlanificada ?? null,
           estado: (data.estado ?? 'PENDIENTE') as EstadoRuta,
         },
-        include: { activityType: { select: { codigo: true } } },
+        include: { tipoActividad: { select: { codigo: true } } },
       });
       return RouteMapper.toEntity(raw);
     } catch (error) {
@@ -122,13 +122,13 @@ export class PrismaRouteRepository implements RouteRepository {
 
   async update(rutaId: bigint, data: UpdateRouteData): Promise<RouteEntity> {
     try {
-      const activityType = data.tipoRuta
-        ? await this.prisma.activityType.findUnique({
+      const tipoActividad = data.tipoRuta
+        ? await this.prisma.tipoActividad.findUnique({
             where: { codigo: data.tipoRuta },
-            select: { activityTypeId: true },
+            select: { tipoActividadId: true },
           })
         : null;
-      if (data.tipoRuta && !activityType)
+      if (data.tipoRuta && !tipoActividad)
         throw new EntityNotFoundException('Tipo de actividad', data.tipoRuta);
       const updateData: Prisma.RutasUncheckedUpdateInput = {
         ...(data.nombre !== undefined ? { nombre: data.nombre } : {}),
@@ -139,7 +139,7 @@ export class PrismaRouteRepository implements RouteRepository {
           ? { operarioId: data.operarioId }
           : {}),
         ...(data.tipoRuta !== undefined
-          ? { activityTypeId: activityType!.activityTypeId }
+          ? { tipoActividadId: tipoActividad!.tipoActividadId }
           : {}),
         ...(data.comunidadId !== undefined
           ? { comunidadId: data.comunidadId }
@@ -160,7 +160,7 @@ export class PrismaRouteRepository implements RouteRepository {
       const raw = await this.prisma.rutas.update({
         where: { rutaId },
         data: updateData,
-        include: { activityType: { select: { codigo: true } } },
+        include: { tipoActividad: { select: { codigo: true } } },
       });
       return RouteMapper.toEntity(raw);
     } catch (error) {
@@ -179,7 +179,7 @@ export class PrismaRouteRepository implements RouteRepository {
       const raw = await this.prisma.rutas.update({
         where: { rutaId },
         data: { deletedAt: new Date() },
-        include: { activityType: { select: { codigo: true } } },
+        include: { tipoActividad: { select: { codigo: true } } },
       });
       return RouteMapper.toEntity(raw);
     } catch (error) {
@@ -262,7 +262,7 @@ export class PrismaRouteRepository implements RouteRepository {
       comunidadId,
       periodoId,
       deletedAt: null,
-      ...(tipoRuta ? { activityType: { codigo: tipoRuta } } : {}),
+      ...(tipoRuta ? { tipoActividad: { codigo: tipoRuta } } : {}),
     };
 
     if (sectorId != null) {
@@ -284,7 +284,7 @@ export class PrismaRouteRepository implements RouteRepository {
     }
 
     const records = await this.prisma.rutas.findMany({
-      include: { activityType: { select: { codigo: true } } },
+      include: { tipoActividad: { select: { codigo: true } } },
       where,
     });
     return RouteMapper.toEntityList(records);
@@ -448,7 +448,7 @@ export class PrismaRouteRepository implements RouteRepository {
       ordenesTrabajo: {
         some: {
           rutaId,
-          ruta: { activityType: { codigo: 'LECTURA' } },
+          ruta: { tipoActividad: { codigo: 'LECTURA' } },
           deletedAt: null,
         },
       },

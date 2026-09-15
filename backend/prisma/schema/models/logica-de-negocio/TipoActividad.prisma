@@ -1,5 +1,5 @@
-model ActivityType {
-  activityTypeId BigInt   @id @default(autoincrement()) @map("activity_type_id")
+model TipoActividad {
+  tipoActividadId BigInt   @id @default(autoincrement()) @map("tipo_actividad_id")
   codigo         String   @unique @map("codigo")
   nombre         String   @map("nombre")
   descripcion    String?  @map("descripcion")
