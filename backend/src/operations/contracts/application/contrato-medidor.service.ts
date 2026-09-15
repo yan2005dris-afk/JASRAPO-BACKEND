@@ -19,7 +19,12 @@ import { GetResponsibilityAgreementPdfDataUseCase } from './use-cases/get-respon
 import { GeneratePdfUseCase } from 'src/infrastructure/pdf/use-cases/generate-pdf.use-case';
 import { ContractEntity } from '../domain/entities/contract.entity';
 import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
-import { TipoActividadCodes, EstadoRuta } from 'src/shared/enums';
+import {
+  EstadoOrdenTrabajo,
+  EstadoRuta,
+  EstadoServicioContrato,
+  TipoActividadCodes,
+} from 'src/shared/enums';
 import { RouteRepository } from '../../routes/domain/repositories/route.repository';
 import { OrdenTrabajoRepository } from '../../routes/domain/repositories/orden-trabajo.repository';
 import {
@@ -115,9 +120,11 @@ export class ContratoMedidorService {
     // 1. Buscar el contrato y validar estado
     const contrato = await this.findOneUseCase.execute(contratoId);
 
-    if (contrato.estado !== EstadoContrato.PENDIENTE_INSTALACION) {
+    if (
+      contrato.estadoServicio !== EstadoServicioContrato.PENDIENTE_INSTALACION
+    ) {
       throw new InvalidDomainOperationException(
-        `El contrato debe estar en estado PENDIENTE_INSTALACION (actual: ${contrato.estado})`,
+        `El contrato debe estar en estado PENDIENTE_INSTALACION (actual: ${contrato.estadoServicio})`,
       );
     }
 
@@ -162,8 +169,7 @@ export class ContratoMedidorService {
       rutaId: ruta.rutaId,
       contratoId,
       medidorId: contrato.historialMedidores?.[0]?.medidorId ?? null,
-      tipoActividad: 'INSTALACION',
-      estado: 'PENDIENTE',
+      estado: EstadoOrdenTrabajo.PENDIENTE,
     });
 
     return ruta;
