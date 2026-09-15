@@ -14,6 +14,14 @@ import { GetResponsibilityAgreementPdfDataUseCase } from './use-cases/get-respon
 import { GeneratePdfUseCase } from 'src/infrastructure/pdf/use-cases/generate-pdf.use-case';
 import { RouteRepository } from '../../routes/domain/repositories/route.repository';
 import { OrdenTrabajoRepository } from '../../routes/domain/repositories/orden-trabajo.repository';
+import {
+  EstadoOrdenTrabajo,
+  EstadoRuta,
+  EstadoServicioContrato,
+  TipoActividadCodes,
+} from 'src/shared/enums';
+import { ContractEntity } from '../domain/entities/contract.entity';
+import { RouteEntity } from '../../routes/domain/entities/route.entity';
 
 describe('ContratoMedidorService', () => {
   let service: ContratoMedidorService;
@@ -159,6 +167,104 @@ describe('ContratoMedidorService', () => {
 
       expect(result).toEqual({ message: 'Deleted' });
       expect(mockRemoveUseCase.execute).toHaveBeenCalledWith(id);
+    });
+  });
+
+  describe('assignInstallationRoute', () => {
+    const contratoId = 10n;
+    const contrato = new ContractEntity({
+      contratoId,
+      estado: 'ACTIVO',
+      estadoServicio: EstadoServicioContrato.PENDIENTE_INSTALACION,
+      estadoCobranza: 'PENDIENTE',
+      numeroGuia: 'GUIA-010',
+      comunidadId: 3,
+      historialMedidores: null,
+    });
+    const existingRoute = new RouteEntity({
+      rutaId: 20n,
+      nombre: 'Instalaciones existentes',
+      tipoRuta: TipoActividadCodes.INSTALACION,
+      comunidadId: 3,
+      periodoId: null,
+      estado: EstadoRuta.PENDIENTE,
+      fechaPlanificada: null,
+      fechaInicio: null,
+      fechaFin: null,
+    });
+
+    beforeEach(() => {
+      mockFindOneUseCase.execute.mockResolvedValue(contrato);
+      mockOrdenTrabajoRepository.create.mockResolvedValue({});
+    });
+
+    it('assigns a contract to a valid pending installation route', async () => {
+      mockRouteRepository.findById.mockResolvedValue(existingRoute);
+
+      const result = await service.assignInstallationRoute(contratoId, {
+        routeId: 20,
+      });
+
+      expect(result).toBe(existingRoute);
+      expect(mockOrdenTrabajoRepository.create).toHaveBeenCalledWith({
+        rutaId: 20n,
+        contratoId,
+        medidorId: null,
+        estado: EstadoOrdenTrabajo.PENDIENTE,
+      });
+      expect(
+        mockOrdenTrabajoRepository.create.mock.calls[0][0],
+      ).not.toHaveProperty('tipoActividad');
+    });
+
+    it('rejects a contract whose service lifecycle is not pending installation', async () => {
+      mockFindOneUseCase.execute.mockResolvedValue(
+        new ContractEntity({
+          ...contrato,
+          estado: 'PENDIENTE_INSTALACION',
+          estadoServicio: EstadoServicioContrato.ACTIVO,
+        }),
+      );
+
+      await expect(
+        service.assignInstallationRoute(contratoId, { routeId: 20 }),
+      ).rejects.toThrow('PENDIENTE_INSTALACION');
+      expect(mockRouteRepository.findById).not.toHaveBeenCalled();
+    });
+
+    it('rejects an existing route with a non-installation activity code', async () => {
+      mockRouteRepository.findById.mockResolvedValue(
+        new RouteEntity({
+          ...existingRoute,
+          tipoRuta: TipoActividadCodes.LECTURA,
+        }),
+      );
+
+      await expect(
+        service.assignInstallationRoute(contratoId, { routeId: 20 }),
+      ).rejects.toThrow('tipo INSTALACION');
+      expect(mockOrdenTrabajoRepository.create).not.toHaveBeenCalled();
+    });
+
+    it('creates a new pending installation route when routeId is omitted', async () => {
+      mockRouteRepository.create.mockResolvedValue(existingRoute);
+
+      const result = await service.assignInstallationRoute(contratoId, {
+        fechaPlanificada: '2026-08-20',
+      });
+
+      expect(result).toBe(existingRoute);
+      expect(mockRouteRepository.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          nombre: 'Instalaciones GUIA-010',
+          tipoRuta: TipoActividadCodes.INSTALACION,
+          estado: EstadoRuta.PENDIENTE,
+          operarioId: null,
+        }),
+      );
+      expect(mockOrdenTrabajoRepository.create).toHaveBeenCalledWith(
+        expect.objectContaining({ rutaId: existingRoute.rutaId }),
+      );
     });
   });
 });

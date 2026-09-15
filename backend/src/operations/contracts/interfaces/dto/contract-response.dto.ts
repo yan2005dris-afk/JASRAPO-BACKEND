@@ -1,6 +1,10 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import type { ContractEntity } from '../../domain/entities/contract.entity';
 import { DateUtil } from 'src/shared/utils/date.util';
+import {
+  EstadoServicioContrato,
+  type EstadoServicioContrato as EstadoServicioContratoType,
+} from 'src/shared/enums';
 
 export class ContractCategoriaTarifaDto {
   @ApiProperty({ example: 1 })
@@ -147,6 +151,13 @@ export class ContractResponseDto {
   @ApiProperty({ example: 'ACTIVO', description: 'Estado del contrato' })
   estado: string;
 
+  @ApiProperty({
+    enum: EstadoServicioContrato,
+    example: EstadoServicioContrato.ACTIVO,
+    description: 'Estado del ciclo de vida del servicio',
+  })
+  estadoServicio: EstadoServicioContratoType;
+
   @ApiPropertyOptional({
     example: 'admin',
     nullable: true,
@@ -182,6 +193,7 @@ export class ContractResponseDto {
     dto.fechaInicio = DateUtil.formatForFrontend(entity.fechaInicio) ?? '';
     dto.direccionSuministro = entity.direccionSuministro;
     dto.estado = entity.estado;
+    dto.estadoServicio = entity.estadoServicio;
     dto.creadoPor = entity.creadoPor ?? null;
     dto.comunidadId = entity.comunidadId;
     dto.categoriaTarifa = entity.categoriaTarifa ?? null;

@@ -56,3 +56,42 @@ describe('PrismaOrdenTrabajoRepository.updateOperatorWorkOrder', () => {
     );
   });
 });
+
+describe('PrismaOrdenTrabajoRepository.create', () => {
+  it('persists the route relation without an independent activity type', async () => {
+    const created = {
+      ordenTrabajoId: 1n,
+      rutaId: 2n,
+      ruta: { tipoActividad: { codigo: 'INSTALACION' } },
+      contratoId: 3n,
+      medidorId: null,
+      estado: 'PENDIENTE',
+      ordenVisita: 0,
+    };
+    const create = jest.fn().mockResolvedValue(created);
+    const prisma = { ordenesTrabajo: { create } };
+
+    const result = await new PrismaOrdenTrabajoRepository(prisma as any).create(
+      {
+        rutaId: 2n,
+        contratoId: 3n,
+        medidorId: null,
+        estado: 'PENDIENTE',
+      },
+    );
+
+    expect(create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: {
+          rutaId: 2n,
+          contratoId: 3n,
+          medidorId: null,
+          estado: 'PENDIENTE',
+          ordenVisita: 0,
+        },
+      }),
+    );
+    expect(create.mock.calls[0][0].data).not.toHaveProperty('tipoActividad');
+    expect(result.tipoActividad).toBe('INSTALACION');
+  });
+});

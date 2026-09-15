@@ -8,6 +8,7 @@ on:
 permissions:
   contents: read
   packages: write
+  actions: write
 
 env:
   IMAGE_NAME: ghcr.io/yan2005dris-afk/jasrapo-backend:develop
@@ -33,3 +34,5 @@ jobs:
           file: backend/Dockerfile
           push: true
           tags: ${{ env.IMAGE_NAME }}
+          cache-from: type=gha,scope=backend-image
+          cache-to: type=gha,mode=max,scope=backend-image
