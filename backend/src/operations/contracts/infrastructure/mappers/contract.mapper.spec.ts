@@ -191,6 +191,85 @@ describe('ContractMapper', () => {
     });
   });
 
+  it('should map persisted lifecycle fields while keeping the legacy state', () => {
+    const raw = {
+      contratoId: 4n,
+      clienteId: 40n,
+      sectorId: null,
+      categoriaTarifaId: 1,
+      numeroGuia: 'GUIA-004',
+      fechaInicio: new Date('2024-04-01'),
+      direccionSuministro: 'Dir 4',
+      estado: 'EN_CONVENIO',
+      estadoServicio: 'ACTIVO',
+      estadoCobranza: 'EN_CONVENIO',
+      creadoPor: null,
+      comunidadId: 4,
+      deletedAt: null,
+      createdAt: new Date('2024-04-01'),
+      updatedAt: new Date('2024-06-01'),
+    };
+
+    const result = ContractMapper.toDomain(raw);
+
+    expect(result).toMatchObject({
+      estado: 'EN_CONVENIO',
+      estadoServicio: 'ACTIVO',
+      estadoCobranza: 'EN_CONVENIO',
+    });
+  });
+
+  it('should derive bridge fields from legacy state when raw callers omit them', () => {
+    const raw = {
+      contratoId: 5n,
+      clienteId: 50n,
+      sectorId: null,
+      categoriaTarifaId: 1,
+      numeroGuia: 'GUIA-005',
+      fechaInicio: new Date('2024-05-01'),
+      direccionSuministro: 'Dir 5',
+      estado: 'ACTIVO',
+      creadoPor: null,
+      comunidadId: 5,
+      deletedAt: null,
+      createdAt: new Date('2024-05-01'),
+      updatedAt: new Date('2024-06-01'),
+    };
+
+    const result = ContractMapper.toDomain(raw);
+
+    expect(result!.estadoServicio).toBe('ACTIVO');
+    expect(result!.estadoCobranza).toBe('AL_DIA');
+  });
+
+  it('should preserve legacy semantics for a post-migration row with bridge fields', () => {
+    const raw = {
+      contratoId: 6n,
+      clienteId: 60n,
+      sectorId: null,
+      categoriaTarifaId: 1,
+      numeroGuia: 'GUIA-006',
+      fechaInicio: new Date('2024-06-01'),
+      direccionSuministro: 'Dir 6',
+      estado: 'EN_MORA',
+      estadoServicio: 'ACTIVO',
+      estadoCobranza: 'EN_MORA',
+      creadoPor: null,
+      comunidadId: 6,
+      deletedAt: null,
+      createdAt: new Date('2024-06-01'),
+      updatedAt: new Date('2024-06-01'),
+    };
+
+    const result = ContractMapper.toDomain(raw);
+
+    expect(result).toMatchObject({
+      estado: 'EN_MORA',
+      estadoServicio: 'ACTIVO',
+      estadoCobranza: 'EN_MORA',
+    });
+  });
+
   describe('toDomainList', () => {
     it('should convert an array of Prisma raw objects', () => {
       const rawList = [

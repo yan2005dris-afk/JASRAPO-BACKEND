@@ -1,4 +1,8 @@
-import type { EstadoContrato } from 'src/shared/enums';
+import type {
+  EstadoCobranzaContrato,
+  EstadoContrato,
+  EstadoServicioContrato,
+} from 'src/shared/enums';
 
 export interface ContractFilters {
   contratoId?: bigint;
@@ -21,6 +25,8 @@ export interface CreateContractData {
   fechaInicio?: Date;
   direccionSuministro: string;
   estado: EstadoContrato;
+  estadoServicio?: EstadoServicioContrato;
+  estadoCobranza?: EstadoCobranzaContrato;
   creadoPor?: string | null;
   comunidadId: number;
   sectorId?: number | null;

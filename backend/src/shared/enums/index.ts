@@ -86,6 +86,26 @@ export type EstadoContrato =
 
 // Fuente: models/logica-de-negocio/Contratos.prisma
 
+export const EstadoServicioContrato = {
+  PENDIENTE_PAGO: 'PENDIENTE_PAGO',
+  PENDIENTE_INSTALACION: 'PENDIENTE_INSTALACION',
+  ACTIVO: 'ACTIVO',
+  SUSPENDIDO: 'SUSPENDIDO',
+  RETIRADO: 'RETIRADO',
+} as const;
+
+export type EstadoServicioContrato =
+  (typeof EstadoServicioContrato)[keyof typeof EstadoServicioContrato];
+
+export const EstadoCobranzaContrato = {
+  AL_DIA: 'AL_DIA',
+  EN_MORA: 'EN_MORA',
+  EN_CONVENIO: 'EN_CONVENIO',
+} as const;
+
+export type EstadoCobranzaContrato =
+  (typeof EstadoCobranzaContrato)[keyof typeof EstadoCobranzaContrato];
+
 export const EstadoConvenio = {
   ACTIVO: 'ACTIVO',
   PENDIENTE_ABONO: 'PENDIENTE_ABONO',
