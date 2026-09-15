@@ -5,6 +5,7 @@ jest.mock('../../../../../infrastructure/audit/audit.service', () => ({
 import { PagoValidadoHandler } from './pago-validado.handler';
 import type { SRIEmissionDispatcherService } from '../../../../../sri/emision/application/services/sri-emission-dispatcher.service';
 import { PaymentDetailEntity } from '../../domain/entities/payment-detail.entity';
+import { EstadoServicioContrato } from 'src/shared/enums';
 
 const mockLogger = {
   log: jest.fn(),
@@ -206,6 +207,7 @@ describe('PagoValidadoHandler (T-006, post-refactor RF-002)', () => {
       },
       data: {
         estado: 'PENDIENTE_INSTALACION',
+        estadoServicio: EstadoServicioContrato.PENDIENTE_INSTALACION,
       },
     });
   });
