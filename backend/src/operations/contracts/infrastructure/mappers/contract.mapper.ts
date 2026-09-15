@@ -1,9 +1,11 @@
 import { ContractEntity } from '../../domain/entities/contract.entity';
+import { ContractState } from '../../domain/contract-state';
 import type { ContractRecord } from '../repositories/prisma-contract.repository';
-
 export class ContractMapper {
   static toDomain(raw: ContractRecord | null): ContractEntity | null {
     if (!raw) return null;
+
+    const legacyProjection = ContractState.fromLegacyState(raw.estado);
 
     return new ContractEntity({
       contratoId: raw.contratoId,
@@ -14,6 +16,8 @@ export class ContractMapper {
       fechaInicio: raw.fechaInicio,
       direccionSuministro: raw.direccionSuministro,
       estado: raw.estado,
+      estadoServicio: raw.estadoServicio ?? legacyProjection.estadoServicio,
+      estadoCobranza: raw.estadoCobranza ?? legacyProjection.estadoCobranza,
       creadoPor: raw.creadoPor,
       comunidadId: raw.comunidadId,
       deletedAt: raw.deletedAt,
