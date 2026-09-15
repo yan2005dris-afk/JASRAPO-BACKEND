@@ -5,7 +5,6 @@ import {
   EstadoOrdenTrabajo,
   EstadoPeriodo,
   EstadoRuta,
-  TipoActividadOrden,
 } from 'src/shared/enums';
 import { OrdenTrabajoRepository } from '../../domain/repositories/orden-trabajo.repository';
 import { OrdenTrabajoMapper } from '../mappers/orden-trabajo.mapper';
@@ -33,7 +32,6 @@ interface OrdenTrabajoPrismaResult {
   rutaId: bigint;
   contratoId: bigint;
   medidorId: bigint | null;
-  tipoActividad: string;
   estado: string;
   ordenVisita: number;
   resultadoObservacion: string | null;
@@ -43,6 +41,7 @@ interface OrdenTrabajoPrismaResult {
   updatedAt: Date;
   deletedAt: Date | null;
   lecturaId: bigint | null;
+  ruta: { activityType: { codigo: string } };
 
   contrato: {
     numeroGuia: string;
@@ -69,6 +68,9 @@ export class PrismaOrdenTrabajoRepository implements OrdenTrabajoRepository {
     includeDeleted: boolean = false,
   ): Promise<OrdenTrabajoEntity | null> {
     const raw = await this.prisma.ordenesTrabajo.findFirst({
+      include: {
+        ruta: { include: { activityType: { select: { codigo: true } } } },
+      },
       where: {
         ordenTrabajoId,
         ...(includeDeleted ? {} : { deletedAt: null }),
@@ -96,6 +98,7 @@ export class PrismaOrdenTrabajoRepository implements OrdenTrabajoRepository {
         {
           where,
           include: {
+            ruta: { include: { activityType: { select: { codigo: true } } } },
             contrato: {
               select: {
                 numeroGuia: true,
@@ -140,7 +143,7 @@ export class PrismaOrdenTrabajoRepository implements OrdenTrabajoRepository {
         rutaId: raw.rutaId,
         contratoId: raw.contratoId,
         medidorId: raw.medidorId,
-        tipoActividad: raw.tipoActividad,
+        ruta: raw.ruta,
         estado: raw.estado,
         ordenVisita: raw.ordenVisita,
         resultadoObservacion: raw.resultadoObservacion,
@@ -212,6 +215,9 @@ export class PrismaOrdenTrabajoRepository implements OrdenTrabajoRepository {
   ): Promise<OrdenTrabajoEntity> {
     try {
       const current = await this.prisma.ordenesTrabajo.findUnique({
+        include: {
+          ruta: { include: { activityType: { select: { codigo: true } } } },
+        },
         where: { ordenTrabajoId },
       });
 
@@ -232,6 +238,9 @@ export class PrismaOrdenTrabajoRepository implements OrdenTrabajoRepository {
         data.estado === EstadoOrdenTrabajo.EN_PROGRESO;
 
       const raw = await this.prisma.ordenesTrabajo.update({
+        include: {
+          ruta: { include: { activityType: { select: { codigo: true } } } },
+        },
         where: { ordenTrabajoId },
         data: {
           estado: data.estado as EstadoOrdenTrabajo,
@@ -267,6 +276,9 @@ export class PrismaOrdenTrabajoRepository implements OrdenTrabajoRepository {
     try {
       return await this.prisma.$transaction(async (tx) => {
         const current = await tx.ordenesTrabajo.findUnique({
+          include: {
+            ruta: { include: { activityType: { select: { codigo: true } } } },
+          },
           where: { ordenTrabajoId },
         });
 
@@ -294,6 +306,9 @@ export class PrismaOrdenTrabajoRepository implements OrdenTrabajoRepository {
                 : {};
 
         const raw = await tx.ordenesTrabajo.update({
+          include: {
+            ruta: { include: { activityType: { select: { codigo: true } } } },
+          },
           where: { ordenTrabajoId },
           data: {
             ...(data.estado !== undefined
@@ -354,6 +369,9 @@ export class PrismaOrdenTrabajoRepository implements OrdenTrabajoRepository {
     try {
       return await this.prisma.$transaction(async (tx) => {
         const orden = await tx.ordenesTrabajo.findUnique({
+          include: {
+            ruta: { include: { activityType: { select: { codigo: true } } } },
+          },
           where: { ordenTrabajoId },
         });
 
@@ -387,6 +405,9 @@ export class PrismaOrdenTrabajoRepository implements OrdenTrabajoRepository {
         // Operación PURA: solo escribe `lecturaId`. Si el caller quiere
         // marcar la orden como completada, debe invocar `updateEstado`.
         const raw = await tx.ordenesTrabajo.update({
+          include: {
+            ruta: { include: { activityType: { select: { codigo: true } } } },
+          },
           where: { ordenTrabajoId },
           data: {
             lecturaId: data.lecturaId,
@@ -411,11 +432,13 @@ export class PrismaOrdenTrabajoRepository implements OrdenTrabajoRepository {
 
   async create(data: CreateOrdenTrabajoData): Promise<OrdenTrabajoEntity> {
     const raw = await this.prisma.ordenesTrabajo.create({
+      include: {
+        ruta: { include: { activityType: { select: { codigo: true } } } },
+      },
       data: {
         rutaId: data.rutaId,
         contratoId: data.contratoId,
         medidorId: data.medidorId ?? null,
-        tipoActividad: data.tipoActividad as TipoActividadOrden,
         estado: (data.estado ??
           EstadoOrdenTrabajo.PENDIENTE) as EstadoOrdenTrabajo,
         ordenVisita: data.ordenVisita ?? 0,

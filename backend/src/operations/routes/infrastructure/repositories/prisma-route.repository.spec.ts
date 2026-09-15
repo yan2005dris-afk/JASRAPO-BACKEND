@@ -44,7 +44,7 @@ describe('PrismaRouteRepository', () => {
     nombre: 'Ruta 1',
     descripcion: 'Desc',
     operarioId: 10,
-    tipoRuta: 'TOMA_LECTURA',
+    activityType: { codigo: 'LECTURA' },
     comunidadId: 1,
     sectorId: null,
     periodoId: 1,
@@ -88,6 +88,9 @@ describe('PrismaRouteRepository', () => {
         groupBy: jest.fn(),
       },
     };
+    (prisma as any).activityType = {
+      findUnique: jest.fn().mockResolvedValue({ activityTypeId: 1n }),
+    };
     repository = new PrismaRouteRepository(prisma as unknown as PrismaService);
   });
 
@@ -98,9 +101,9 @@ describe('PrismaRouteRepository', () => {
       const result = await repository.findById(1n);
 
       expect(result?.rutaId).toBe(1n);
-      expect(prisma.rutas.findFirst).toHaveBeenCalledWith({
-        where: { rutaId: 1n, deletedAt: null },
-      });
+      expect(prisma.rutas.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { rutaId: 1n, deletedAt: null } }),
+      );
     });
 
     it('should find route including deleted when requested', async () => {
@@ -112,9 +115,9 @@ describe('PrismaRouteRepository', () => {
       const result = await repository.findById(1n, true);
 
       expect(result?.rutaId).toBe(1n);
-      expect(prisma.rutas.findFirst).toHaveBeenCalledWith({
-        where: { rutaId: 1n },
-      });
+      expect(prisma.rutas.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { rutaId: 1n } }),
+      );
     });
   });
 
@@ -129,6 +132,12 @@ describe('PrismaRouteRepository', () => {
       );
 
       expect(result.meta.total).toBe(1);
+      expect(result.data[0].tipoRuta).toBe('LECTURA');
+      expect(prisma.rutas.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          include: { activityType: { select: { codigo: true } } },
+        }),
+      );
       expect(result.data).toHaveLength(1);
       expect(result.data[0].rutaId).toBe(1n);
     });
@@ -141,12 +150,13 @@ describe('PrismaRouteRepository', () => {
       const result = await repository.create({
         nombre: 'Ruta 1',
         operarioId: 10,
-        tipoRuta: 'TOMA_LECTURA',
+        tipoRuta: 'LECTURA',
         comunidadId: 1,
         periodoId: 1,
       });
 
       expect(result.rutaId).toBe(1n);
+      expect(result.tipoRuta).toBe('LECTURA');
     });
 
     it('should throw EntityAlreadyExistsException on P2002 error', async () => {
@@ -160,7 +170,7 @@ describe('PrismaRouteRepository', () => {
         repository.create({
           nombre: 'Ruta 1',
           operarioId: 10,
-          tipoRuta: 'TOMA_LECTURA',
+          tipoRuta: 'LECTURA',
           comunidadId: 1,
           periodoId: 1,
         }),
@@ -311,7 +321,7 @@ describe('PrismaRouteRepository', () => {
 
       const result = await repository.paginateLecturas(
         {
-          tipoRuta: 'TOMA_LECTURA',
+          activityType: { codigo: 'LECTURA' },
           comunidadId: 1,
           search: 'Juan',
         },

@@ -42,7 +42,7 @@ import { UpdateRouteStateUseCase } from '../../application/use-cases/update-rout
 import { UpdateRouteStateDto } from '../../interfaces/dto/update-route-state.dto';
 import { OperatorRouteResponseDto } from '../../interfaces/dto/operator-route-response.dto';
 import { OperatorReadingAnomalyResponseDto } from '../../interfaces/dto/operator-reading-anomaly-response.dto';
-import { TipoRuta } from 'src/shared/enums';
+import { ActivityTypeCodes } from 'src/shared/enums';
 import { ReportDefectUseCase } from '../../application/use-cases/report-defect.use-case';
 import { DecommissionMeterUseCase } from '../../application/use-cases/decommission-meter.use-case';
 import { GetOperatorReadingsWithAnomaliesUseCase } from '../../application/use-cases/get-operator-readings-with-anomalies.use-case';
@@ -461,7 +461,7 @@ export class OperatorController {
   @ApiQuery({
     name: 'tipoRuta',
     required: false,
-    enum: TipoRuta,
+    enum: ActivityTypeCodes,
     description: 'Filtrar rutas por tipo',
   })
   @ApiResponse({
@@ -479,8 +479,8 @@ export class OperatorController {
   @Get('routes')
   async getOperatorRoutes(
     @CurrentUser() user: JwtPayload,
-    @Query('tipoRuta', new ParseEnumPipe(TipoRuta, { optional: true }))
-    tipoRuta?: TipoRuta,
+    @Query('tipoRuta', new ParseEnumPipe(ActivityTypeCodes, { optional: true }))
+    tipoRuta?: ActivityTypeCodes,
   ): Promise<OperatorRouteResponseDto[]> {
     const operarioId = this.getAuthenticatedOperatorId(user);
     const routes = await this.getOperatorRoutesUseCase.execute(

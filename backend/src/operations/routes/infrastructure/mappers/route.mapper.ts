@@ -6,7 +6,7 @@ export interface RouteRaw {
   nombre: string;
   descripcion?: string | null;
   operarioId?: number | null;
-  tipoRuta: string;
+  activityType: { codigo: string };
   comunidadId: number;
   sectorId?: number | null;
   periodoId?: number | null;
@@ -34,7 +34,7 @@ export class RouteMapper {
       nombre: route.nombre,
       descripcion: route.descripcion ?? null,
       operarioId: route.operarioId ?? null,
-      tipoRuta: route.tipoRuta,
+      tipoRuta: route.activityType.codigo,
       comunidadId: route.comunidadId,
       sectorId: route.sectorId ?? null,
       periodoId: route.periodoId ?? null,

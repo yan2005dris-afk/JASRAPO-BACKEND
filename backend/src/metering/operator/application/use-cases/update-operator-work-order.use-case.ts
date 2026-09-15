@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { TipoActividadOrden } from 'src/shared/enums';
+import { ActivityTypeCodes } from 'src/shared/enums';
 import {
   EntityNotFoundException,
   InvalidDomainOperationException,
@@ -30,7 +30,7 @@ export class UpdateOperatorWorkOrderUseCase {
       throw new EntityNotFoundException('Orden de Trabajo', id.toString());
     }
 
-    if (order.tipoActividad === TipoActividadOrden.LECTURA) {
+    if (order.tipoActividad === ActivityTypeCodes.LECTURA) {
       throw new InvalidDomainOperationException(
         'Las órdenes de lectura deben actualizarse mediante el flujo de lecturas',
       );
@@ -47,7 +47,7 @@ export class UpdateOperatorWorkOrderUseCase {
     );
 
     if (
-      order.tipoActividad === TipoActividadOrden.RECONEXION &&
+      order.tipoActividad === ActivityTypeCodes.RECONEXION &&
       dto.confirmacionRetiroSello === false
     ) {
       throw new InvalidDomainOperationException(
@@ -58,7 +58,7 @@ export class UpdateOperatorWorkOrderUseCase {
     const hasSeal = dto.estadoSellos !== undefined;
     const hasLeak = dto.hayFugas !== undefined;
     if (
-      order.tipoActividad === TipoActividadOrden.INSPECCION &&
+      order.tipoActividad === ActivityTypeCodes.INSPECCION &&
       hasSeal !== hasLeak
     ) {
       throw new InvalidDomainOperationException(

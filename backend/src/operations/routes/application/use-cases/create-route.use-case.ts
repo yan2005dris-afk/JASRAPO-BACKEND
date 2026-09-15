@@ -3,7 +3,7 @@ import { RouteRepository } from '../../domain/repositories/route.repository';
 import { CreateRouteDto } from '../../interfaces/dto/create-route.dto';
 import { RouteEntity } from '../../domain/entities/route.entity';
 import type { CreateRouteData } from '../../domain/types/route.types';
-import { TipoRuta } from 'src/shared/enums';
+import { ActivityTypeCodes } from 'src/shared/enums';
 import {
   EntityNotFoundException,
   InvalidDomainOperationException,
@@ -12,8 +12,8 @@ import { DateUtil } from 'src/shared/utils/date.util';
 
 /** Route types that target a specific meter work order (not community-periodic). */
 const WORK_ORDER_TYPES = new Set<string>([
-  TipoRuta.INSTALACION,
-  TipoRuta.INSPECCION,
+  ActivityTypeCodes.INSTALACION,
+  ActivityTypeCodes.INSPECCION,
 ]);
 
 @Injectable()
@@ -111,9 +111,9 @@ export class CreateRouteUseCase {
 
     const route = await this.routeRepository.create(createData);
 
-    // Si es TOMA_LECTURA periódica, inicializar automáticamente las lecturas PENDIENTES para este mes
+    // Si es LECTURA periódica, inicializar automáticamente las lecturas PENDIENTES para este mes
     if (
-      createDto.tipoRuta === TipoRuta.TOMA_LECTURA &&
+      createDto.tipoRuta === ActivityTypeCodes.LECTURA &&
       createDto.fechaPlanificada
     ) {
       await this.routeRepository.initializeMonthlyReadings(

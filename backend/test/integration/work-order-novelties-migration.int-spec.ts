@@ -76,8 +76,9 @@ void describe(
             co AS (INSERT INTO contratos(cliente_id, categoria_tarifa_id, numero_guia, direccion_suministro, estado, comunidad_id, creado_en, actualizado_en)
                    SELECT cl.cliente_id, t.categoria_tarifa_id, $7, 'D', 'ACTIVO', c.comunidad_id, now(), now() FROM cl, t, c RETURNING contrato_id),
             m AS (INSERT INTO medidores(marca, modelo, serie, estado, creado_en, actualizado_en) VALUES ('M', '1', $8, 'INSTALADO', now(), now()) RETURNING medidor_id),
-            r AS (INSERT INTO rutas(nombre, operario_id, tipo_ruta, comunidad_id, periodo_id, creado_en, actualizado_en)
-                  SELECT 'R', u.usuario_id, 'TOMA_LECTURA', c.comunidad_id, pr.periodo_id, now(), now() FROM u, c, pr RETURNING ruta_id)
+            at AS (SELECT activity_type_id FROM activity_types WHERE codigo = 'LECTURA'),
+                r AS (INSERT INTO rutas(nombre, operario_id, activity_type_id, comunidad_id, periodo_id, creado_en, actualizado_en)
+                      SELECT 'R', u.usuario_id, at.activity_type_id, c.comunidad_id, pr.periodo_id, now(), now() FROM u, c, pr, at RETURNING ruta_id)
        SELECT c.comunidad_id, pr.periodo_id, u.usuario_id, co.contrato_id, m.medidor_id, r.ruta_id FROM c, pr, u, co, m, r`,
         [
           `${p} C`,
@@ -108,8 +109,8 @@ void describe(
       readingId: string,
     ) {
       const res = await client.query<{ orden_trabajo_id: string }>(
-        `INSERT INTO ordenes_trabajo(ruta_id, contrato_id, lectura_id, tipo_actividad, estado, creado_en, actualizado_en)
-       VALUES ($1, $2, $3, 'LECTURA', 'COMPLETADA', now(), now()) RETURNING orden_trabajo_id`,
+        `INSERT INTO ordenes_trabajo(ruta_id, contrato_id, lectura_id, estado, creado_en, actualizado_en)
+           VALUES ($1, $2, $3, 'COMPLETADA', now(), now()) RETURNING orden_trabajo_id`,
         [routeId, contractId, readingId],
       );
       return res.rows[0].orden_trabajo_id;

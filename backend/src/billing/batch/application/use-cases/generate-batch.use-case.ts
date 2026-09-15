@@ -21,7 +21,7 @@ export class GenerateBatchUseCase {
   async execute(data: GenerateBatchData): Promise<GenerateBatchResult> {
     this.logger.log(`Starting batch generation for period ${data.periodoId}`);
 
-    // 0. La generación SIEMPRE sale de una ruta de trabajo de TOMA_LECTURA COMPLETADA
+    // 0. La generación SIEMPRE sale de una ruta de trabajo de LECTURA COMPLETADA
     const rutaId = BigInt(data.rutaId);
     const ruta = await this.routeRepository.findById(rutaId);
 
@@ -31,9 +31,9 @@ export class GenerateBatchUseCase {
       );
     }
 
-    if (ruta.tipoRuta !== 'TOMA_LECTURA') {
+    if (ruta.tipoRuta !== 'LECTURA') {
       throw new InvalidDomainOperationException(
-        'Solo se pueden generar lotes de prefacturas desde rutas de tipo TOMA_LECTURA.',
+        'Solo se pueden generar lotes de prefacturas desde rutas de tipo LECTURA.',
       );
     }
 

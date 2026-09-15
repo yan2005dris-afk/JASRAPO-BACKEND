@@ -13,7 +13,7 @@ describe('RouteMapper', () => {
         nombre: 'Ruta Norte',
         descripcion: 'Descripción de prueba',
         operarioId: 5,
-        tipoRuta: 'TOMA_LECTURA',
+        activityType: { codigo: 'LECTURA' },
         comunidadId: 1,
         sectorId: 2,
         periodoId: 5,
@@ -30,7 +30,7 @@ describe('RouteMapper', () => {
       expect(result.nombre).toBe('Ruta Norte');
       expect(result.descripcion).toBe('Descripción de prueba');
       expect(result.operarioId).toBe(5);
-      expect(result.tipoRuta).toBe('TOMA_LECTURA');
+      expect(result.tipoRuta).toBe('LECTURA');
       expect(result.comunidadId).toBe(1);
       expect(result.sectorId).toBe(2);
       expect(result.periodoId).toBe(5);
@@ -46,7 +46,7 @@ describe('RouteMapper', () => {
         nombre: 'Ruta Test',
         descripcion: null,
         operarioId: 3,
-        tipoRuta: 'RECONEXION',
+        activityType: { codigo: 'RECONEXION' },
         comunidadId: 2,
         sectorId: null,
         periodoId: null,
@@ -71,7 +71,7 @@ describe('RouteMapper', () => {
         rutaId: 102n,
         nombre: 'Minimal Route',
         operarioId: 1,
-        tipoRuta: 'TOMA_LECTURA',
+        activityType: { codigo: 'LECTURA' },
         comunidadId: 1,
         estado: 'PENDIENTE',
       };
