@@ -7,5 +7,5 @@ model ActivityType {
   rutas          Rutas[]
 
   @@index([activo])
-  @@map("activity_types")
+  @@map("tipos_actividad")
 }

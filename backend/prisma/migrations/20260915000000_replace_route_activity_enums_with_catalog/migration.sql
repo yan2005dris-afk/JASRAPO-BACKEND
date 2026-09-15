@@ -1,16 +1,16 @@
 -- Atomic migration: route-owned activity catalog replaces persisted route/order enums.
-CREATE TABLE "activity_types" (
+CREATE TABLE "tipos_actividad" (
   "activity_type_id" BIGSERIAL NOT NULL,
   "codigo" TEXT NOT NULL,
   "nombre" TEXT NOT NULL,
   "descripcion" TEXT,
   "activo" BOOLEAN NOT NULL DEFAULT true,
-  CONSTRAINT "activity_types_pkey" PRIMARY KEY ("activity_type_id")
+  CONSTRAINT "tipos_actividad_pkey" PRIMARY KEY ("activity_type_id")
 );
-CREATE UNIQUE INDEX "activity_types_codigo_key" ON "activity_types"("codigo");
-CREATE INDEX "activity_types_activo_idx" ON "activity_types"("activo");
+CREATE UNIQUE INDEX "tipos_actividad_codigo_key" ON "tipos_actividad"("codigo");
+CREATE INDEX "tipos_actividad_activo_idx" ON "tipos_actividad"("activo");
 
-INSERT INTO "activity_types" ("codigo", "nombre") VALUES
+INSERT INTO "tipos_actividad" ("codigo", "nombre") VALUES
   ('LECTURA', 'Lectura'),
   ('INSPECCION', 'Inspección'),
   ('INSTALACION', 'Instalación'),
@@ -19,7 +19,7 @@ INSERT INTO "activity_types" ("codigo", "nombre") VALUES
 
 ALTER TABLE "rutas" ADD COLUMN "activity_type_id" BIGINT;
 UPDATE "rutas" SET "activity_type_id" = at."activity_type_id"
-FROM "activity_types" at
+FROM "tipos_actividad" at
 WHERE at."codigo" = CASE "tipo_ruta"::text WHEN 'TOMA_LECTURA' THEN 'LECTURA' ELSE "tipo_ruta"::text END;
 DO $$ BEGIN
   IF EXISTS (SELECT 1 FROM "rutas" WHERE "activity_type_id" IS NULL) THEN
@@ -27,7 +27,7 @@ DO $$ BEGIN
   END IF;
 END $$;
 ALTER TABLE "rutas" ALTER COLUMN "activity_type_id" SET NOT NULL;
-ALTER TABLE "rutas" ADD CONSTRAINT "rutas_activity_type_id_fkey" FOREIGN KEY ("activity_type_id") REFERENCES "activity_types"("activity_type_id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "rutas" ADD CONSTRAINT "rutas_activity_type_id_fkey" FOREIGN KEY ("activity_type_id") REFERENCES "tipos_actividad"("activity_type_id") ON DELETE RESTRICT ON UPDATE CASCADE;
 CREATE INDEX "rutas_activity_type_id_idx" ON "rutas"("activity_type_id");
 
 DO $$ BEGIN
@@ -63,7 +63,7 @@ BEGIN
     v_orden_visita := v_orden_visita + 1;
     IF p_ruta_id IS NOT NULL AND NOT EXISTS (
       SELECT 1 FROM ordenes_trabajo ot JOIN rutas rt ON rt.ruta_id = ot.ruta_id
-      JOIN activity_types at ON at.activity_type_id = rt.activity_type_id
+      JOIN tipos_actividad at ON at.activity_type_id = rt.activity_type_id
       WHERE ot.ruta_id = p_ruta_id AND ot.contrato_id = r.contrato_id AND at.codigo = 'LECTURA' AND ot.borrado_en IS NULL
     ) THEN
       INSERT INTO ordenes_trabajo (ruta_id, contrato_id, medidor_id, estado, orden_visita, creado_en, actualizado_en)

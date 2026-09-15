@@ -238,6 +238,13 @@ void describe(
       assert.ok(result.rows[0].definition.includes('v_lote_id'));
     });
 
+    void it('creates the activity catalog with its Spanish physical table name', async () => {
+      const table = await client.query<{ table_name: string | null }>(
+        `SELECT to_regclass('public.tipos_actividad')::text AS table_name`,
+      );
+      assert.equal(table.rows[0].table_name, 'tipos_actividad');
+    });
+
     void it('enforces route-aware active lot uniqueness including NULL routes', async () => {
       const community = await client.query<{ comunidad_id: number }>(
         `INSERT INTO comunidades(nombre, codigo, porcentaje_tasa_seguridad, creado_en, actualizado_en)
@@ -254,7 +261,7 @@ void describe(
       );
       const route = await client.query<{ ruta_id: string }>(
         `INSERT INTO rutas(nombre, operario_id, activity_type_id, comunidad_id, periodo_id, creado_en, actualizado_en)
-           SELECT 'Route A', $1, activity_type_id, $2, $3, now(), now() FROM activity_types WHERE codigo = 'LECTURA' RETURNING ruta_id`,
+           SELECT 'Route A', $1, activity_type_id, $2, $3, now(), now() FROM tipos_actividad WHERE codigo = 'LECTURA' RETURNING ruta_id`,
         [
           user.rows[0].usuario_id,
           community.rows[0].comunidad_id,
