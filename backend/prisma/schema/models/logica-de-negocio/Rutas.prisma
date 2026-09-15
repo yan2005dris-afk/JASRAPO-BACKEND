@@ -3,7 +3,7 @@ model Rutas {
   nombre              String             @map("nombre")
   descripcion         String?            @map("descripcion")
   operarioId          Int?               @map("operario_id")
-  tipoRuta            TipoRuta           @map("tipo_ruta")
+  tipoActividadId      BigInt             @map("tipo_actividad_id")
   comunidadId         Int                @map("comunidad_id")
   sectorId            Int?               @map("sector_id")
   periodoId           Int?               @map("periodo_id")
@@ -23,24 +23,19 @@ model Rutas {
   periodo             Periodos?          @relation(fields: [periodoId], references: [periodoId])
   lotes               Lote[]
   ordenesTrabajo      OrdenesTrabajo[]
+  tipoActividad        TipoActividad       @relation(fields: [tipoActividadId], references: [tipoActividadId], onDelete: Restrict)
 
   @@index([operarioId])
   @@index([comunidadId])
   @@index([sectorId])
   @@index([periodoId])
   @@index([estado])
-  @@index([tipoRuta])
+  @@index([tipoActividadId])
   @@index([fechaPlanificada])
   @@index([orden])
   @@map("rutas")
 }
 
-enum TipoRuta {
-  TOMA_LECTURA
-  RECONEXION
-  INSTALACION
-  INSPECCION
-}
 
 enum EstadoRuta {
   PENDIENTE

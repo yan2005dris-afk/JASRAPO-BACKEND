@@ -13,7 +13,7 @@ export class GetEligibleReadingsUseCase {
   constructor(private readonly routeRepository: RouteRepository) {}
 
   async execute(params: {
-    tipoRuta: 'TOMA_LECTURA' | 'RECONEXION';
+    tipoRuta: 'LECTURA' | 'RECONEXION';
     comunidadId: number;
     sectorId?: number;
     periodoId?: number;

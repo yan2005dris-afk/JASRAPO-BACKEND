@@ -19,7 +19,7 @@ import { GetResponsibilityAgreementPdfDataUseCase } from './use-cases/get-respon
 import { GeneratePdfUseCase } from 'src/infrastructure/pdf/use-cases/generate-pdf.use-case';
 import { ContractEntity } from '../domain/entities/contract.entity';
 import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
-import { TipoRuta, EstadoRuta } from 'src/shared/enums';
+import { TipoActividadCodes, EstadoRuta } from 'src/shared/enums';
 import { RouteRepository } from '../../routes/domain/repositories/route.repository';
 import { OrdenTrabajoRepository } from '../../routes/domain/repositories/orden-trabajo.repository';
 import {
@@ -129,7 +129,7 @@ export class ContratoMedidorService {
       if (!existing) {
         throw new EntityNotFoundException('Ruta', dto.routeId.toString());
       }
-      if (existing.tipoRuta !== TipoRuta.INSTALACION) {
+      if (existing.tipoRuta !== TipoActividadCodes.INSTALACION) {
         throw new InvalidDomainOperationException(
           `La ruta debe ser de tipo INSTALACION (actual: ${existing.tipoRuta})`,
         );
@@ -146,7 +146,7 @@ export class ContratoMedidorService {
         nombre: `Instalaciones ${contrato.numeroGuia ?? contratoId}`,
         descripcion: null,
         operarioId: null,
-        tipoRuta: TipoRuta.INSTALACION,
+        tipoRuta: TipoActividadCodes.INSTALACION,
         comunidadId: Number(contrato.comunidadId),
         sectorId: null,
         periodoId: null,

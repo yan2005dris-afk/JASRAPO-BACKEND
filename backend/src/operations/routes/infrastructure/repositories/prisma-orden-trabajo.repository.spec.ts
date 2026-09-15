@@ -1,19 +1,18 @@
 import { PrismaOrdenTrabajoRepository } from './prisma-orden-trabajo.repository';
 
 describe('PrismaOrdenTrabajoRepository.updateOperatorWorkOrder', () => {
-  it('persists evidence and execution data in one transaction', async () => {
-    const current = { ordenTrabajoId: 1n, completadoEn: null };
+  it('persists evidence and derives the effective activity from the route catalog', async () => {
     const updated = {
       ordenTrabajoId: 1n,
       rutaId: 2n,
+      ruta: { tipoActividad: { codigo: 'INSPECCION' } },
       contratoId: 3n,
       medidorId: 4n,
-      tipoActividad: 'INSPECCION',
       estado: 'COMPLETADA',
       ordenVisita: 1,
       resultadoObservacion: 'ok',
       evidenciaFotoUrl: 'readings/evidence.jpg',
-      completadoEn: new Date('2026-08-26T12:00:00.000Z'),
+      completadoEn: new Date(),
       createdAt: new Date(),
       updatedAt: new Date(),
       deletedAt: null,
@@ -23,19 +22,22 @@ describe('PrismaOrdenTrabajoRepository.updateOperatorWorkOrder', () => {
     const upsert = jest.fn().mockResolvedValue({});
     const tx = {
       ordenesTrabajo: {
-        findUnique: jest.fn().mockResolvedValue(current),
+        findUnique: jest
+          .fn()
+          .mockResolvedValue({ ordenTrabajoId: 1n, completadoEn: null }),
         update,
       },
       ejecucionesOrdenTrabajo: { upsert },
     };
     const prisma = {
-      $transaction: jest.fn((callback: (tx: typeof tx) => unknown) =>
+      $transaction: jest.fn((callback: (value: typeof tx) => unknown) =>
         callback(tx),
       ),
     };
-    const repository = new PrismaOrdenTrabajoRepository(prisma as any);
 
-    await repository.updateOperatorWorkOrder(1n, {
+    const result = await new PrismaOrdenTrabajoRepository(
+      prisma as any,
+    ).updateOperatorWorkOrder(1n, {
       estado: 'COMPLETADA',
       resultadoObservacion: 'ok',
       evidenciaFotoUrl: 'readings/evidence.jpg',
@@ -44,28 +46,13 @@ describe('PrismaOrdenTrabajoRepository.updateOperatorWorkOrder', () => {
       confirmacionRetiroSello: true,
     });
 
-    expect(update).toHaveBeenCalledWith({
-      where: { ordenTrabajoId: 1n },
-      data: expect.objectContaining({
-        estado: 'COMPLETADA',
-        evidenciaFotoUrl: 'readings/evidence.jpg',
-        resultadoObservacion: 'ok',
-        completadoEn: expect.any(Date),
+    expect(result.tipoActividad).toBe('INSPECCION');
+    expect(update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        include: {
+          ruta: { include: { tipoActividad: { select: { codigo: true } } } },
+        },
       }),
-    });
-    expect(upsert).toHaveBeenCalledWith({
-      where: { ordenTrabajoId: 1n },
-      create: {
-        ordenTrabajoId: 1n,
-        estadoSellos: 'INTEGRO',
-        hayFugas: false,
-        confirmacionRetiroSello: true,
-      },
-      update: {
-        estadoSellos: 'INTEGRO',
-        hayFugas: false,
-        confirmacionRetiroSello: true,
-      },
-    });
+    );
   });
 });

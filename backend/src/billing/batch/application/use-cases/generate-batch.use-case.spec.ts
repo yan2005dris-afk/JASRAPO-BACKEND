@@ -19,7 +19,7 @@ const completedReadingRoute = {
   nombre: 'Agosto',
   descripcion: null,
   operarioId: 1,
-  tipoRuta: 'TOMA_LECTURA',
+  tipoRuta: 'LECTURA',
   comunidadId: 1,
   sectorId: null,
   periodoId: 3,
@@ -103,7 +103,7 @@ describe('GenerateBatchUseCase', () => {
 
     await expect(
       useCase.execute({ periodoId: 3, rutaId: 2, mes: 8 }),
-    ).rejects.toThrow(/TOMA_LECTURA/);
+    ).rejects.toThrow(/LECTURA/);
   });
 
   it('should reject a route that is not COMPLETADA', async () => {

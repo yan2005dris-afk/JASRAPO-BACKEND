@@ -42,7 +42,7 @@ describe('GetEligibleReadingsUseCase', () => {
     mockRouteRepository.findComunidad.mockResolvedValue(null);
     await expect(
       useCase.execute({
-        tipoRuta: 'TOMA_LECTURA',
+        tipoRuta: 'LECTURA',
         comunidadId: 1,
         pagination: { page: 1, limit: 10 },
       }),
@@ -55,7 +55,7 @@ describe('GetEligibleReadingsUseCase', () => {
 
     await expect(
       useCase.execute({
-        tipoRuta: 'TOMA_LECTURA',
+        tipoRuta: 'LECTURA',
         comunidadId: 1,
         sectorId: 2,
         pagination: { page: 1, limit: 10 },
@@ -72,7 +72,7 @@ describe('GetEligibleReadingsUseCase', () => {
 
     await expect(
       useCase.execute({
-        tipoRuta: 'TOMA_LECTURA',
+        tipoRuta: 'LECTURA',
         comunidadId: 1,
         sectorId: 2,
         pagination: { page: 1, limit: 10 },
@@ -107,7 +107,7 @@ describe('GetEligibleReadingsUseCase', () => {
     });
 
     const result = await useCase.execute({
-      tipoRuta: 'TOMA_LECTURA',
+      tipoRuta: 'LECTURA',
       comunidadId: 1,
       pagination: { page: 2, limit: 15 },
       search: 'Juan',
@@ -115,7 +115,7 @@ describe('GetEligibleReadingsUseCase', () => {
 
     expect(mockRouteRepository.paginateLecturas).toHaveBeenCalledWith(
       {
-        tipoRuta: 'TOMA_LECTURA',
+        tipoRuta: 'LECTURA',
         comunidadId: 1,
         sectorId: undefined,
         search: 'Juan',
