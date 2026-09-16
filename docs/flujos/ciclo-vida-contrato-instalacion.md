@@ -113,6 +113,30 @@ Convenio vigente
 
 La regla no significa que la deuda del convenio desaparezca ni que el convenio se considere liquidado. El sistema debe conservar por separado el saldo y el estado del convenio. El tratamiento de una cuota vencida e impaga del convenio queda deliberadamente sin automatización hasta que se defina un umbral y una acción formal.
 
+## Política vigente de evaluación de cobranza y corte
+
+La evaluación mensual usa `cobranza.dia_corte_mensual = 15`, considera
+`meses_para_mora = 3` períodos corrientes vencidos para `EN_MORA` y
+`meses_para_corte = 5` períodos corrientes vencidos para quedar elegible a
+corte. La consulta usa `periodo.fechaVencimiento`, registros activos/no
+anulados y saldo positivo; deuda y cuotas de convenio se mantienen fuera de
+este cálculo. `tieneConvenioActivo` se deriva de `Convenios`.
+
+El job de pg-boss usa `0 5 * * *` en UTC. Como Ecuador continental permanece
+en UTC-5 y pg-boss no configura zona horaria para el cron, las 05:00 UTC son
+las 00:00 de Ecuador y el job verifica el día calendario ecuatoriano mediante
+`America/Guayaquil`. Los candidatos con menos de 3 períodos se exponen como
+`DEUDA_PENDIENTE` y conservan `AL_DIA`; no se persisten como `EN_MORA`.
+
+Esta primera slice sólo expone `GET /reports/collection-cutoff-candidates` y
+actualiza condicionalmente `estadoCobranza`; no crea órdenes `CORTE`. Las
+cuotas de convenio vencidas no producen consecuencias automáticas todavía. Un
+convenio activo protege de corte cuando las planillas corrientes están pagadas,
+aunque queden cuotas futuras. El endpoint es informativo: `elegibleParaCorte`
+significa únicamente que se alcanzaron 5 períodos de servicio vencidos; no
+crea una orden ni cambia `estadoServicio` o el `estado` legacy. `EN_CONVENIO`
+se conserva para consumidores legacy.
+
 ## 3. Registro y validación del pago
 
 ### Registro: `POST /payments`

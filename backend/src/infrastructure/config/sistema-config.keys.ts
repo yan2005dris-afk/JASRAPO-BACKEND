@@ -40,3 +40,8 @@ export const SRI_EMISION_MODO = 'sri.emision.modo';
  *   3. `http://localhost:4200`
  */
 export const FRONTEND_URL = 'FRONTEND_URL';
+
+/** Collection/cutoff policy keys stored in `sistema_config`. */
+export const COBRANZA_DIA_CORTE_MENSUAL = 'cobranza.dia_corte_mensual';
+export const COBRANZA_MESES_PARA_MORA = 'cobranza.meses_para_mora';
+export const COBRANZA_MESES_PARA_CORTE = 'cobranza.meses_para_corte';
