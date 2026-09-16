@@ -20,7 +20,14 @@ export class ContratoDeudaPublicaDto {
   numeroGuia!: string;
 
   @ApiProperty({ example: 'ACTIVO' })
+  /** @deprecated Compatibility field; use estadoServicio and estadoCobranza. */
   estado!: string;
+
+  @ApiProperty({ example: 'ACTIVO', required: false })
+  estadoServicio?: string;
+
+  @ApiProperty({ example: 'AL_DIA', required: false })
+  estadoCobranza?: string;
 
   @ApiProperty({
     example: 150.0,

@@ -71,6 +71,27 @@ describe('ContractState', () => {
     );
   });
 
+  it('projects explicit separated fields deterministically for compatibility', () => {
+    expect(
+      ContractState.projectLegacyState(
+        EstadoServicioContrato.ACTIVO,
+        EstadoCobranzaContrato.EN_MORA,
+      ),
+    ).toBe(EstadoContrato.EN_MORA);
+    expect(
+      ContractState.projectLegacyState(
+        EstadoServicioContrato.ACTIVO,
+        EstadoCobranzaContrato.AL_DIA,
+      ),
+    ).toBe(EstadoContrato.ACTIVO);
+    expect(
+      ContractState.projectLegacyState(
+        EstadoServicioContrato.PENDIENTE_PAGO,
+        EstadoCobranzaContrato.EN_MORA,
+      ),
+    ).toBe(EstadoContrato.PENDIENTE_PAGO);
+  });
+
   it('treats RETIRADO as terminal', () => {
     expect(ContractState.isTerminal(EstadoServicioContrato.RETIRADO)).toBe(
       true,

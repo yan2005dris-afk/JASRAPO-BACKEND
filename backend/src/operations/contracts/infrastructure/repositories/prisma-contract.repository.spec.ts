@@ -228,12 +228,16 @@ describe('PrismaContractRepository', () => {
         },
         sectores: { findUnique: jest.fn() },
         contratos: {
-          create: jest
-            .fn()
-            .mockResolvedValue({ ...rawContract, estado: 'PENDIENTE_PAGO' }),
-          findUnique: jest
-            .fn()
-            .mockResolvedValue({ ...rawContract, estado: 'PENDIENTE_PAGO' }),
+          create: jest.fn().mockResolvedValue({
+            ...rawContract,
+            estado: 'PENDIENTE_PAGO',
+            estadoServicio: 'PENDIENTE_PAGO',
+          }),
+          findUnique: jest.fn().mockResolvedValue({
+            ...rawContract,
+            estado: 'PENDIENTE_PAGO',
+            estadoServicio: 'PENDIENTE_PAGO',
+          }),
         },
         historialMedidores: { create: jest.fn() },
         $executeRaw: jest.fn().mockResolvedValue(1),
@@ -250,6 +254,8 @@ describe('PrismaContractRepository', () => {
         numeroGuia: 'G-001',
         direccionSuministro: 'Av. 1',
         estado: 'PENDIENTE_PAGO',
+        estadoServicio: 'PENDIENTE_PAGO',
+        estadoCobranza: 'AL_DIA',
         lecturaInicial: 0,
       });
 
@@ -293,6 +299,8 @@ describe('PrismaContractRepository', () => {
           numeroGuia: 'G-001',
           direccionSuministro: 'Av. 1',
           estado: 'PENDIENTE_PAGO' as any,
+          estadoServicio: 'PENDIENTE_PAGO' as any,
+          estadoCobranza: 'AL_DIA' as any,
           lecturaInicial: 0,
         }),
       ).rejects.toThrow(InvalidDomainOperationException);

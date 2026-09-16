@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ContractRepository } from '../../domain/repositories/contract.repository';
 import { ActualizarContratoMedidorDto } from '../../interfaces/dto/update-contrato-medidor.dto';
 import { ContractEntity } from '../../domain/entities/contract.entity';
+import { ContractState } from '../../domain/contract-state';
 import {
   EntityNotFoundException,
   InvalidDomainOperationException,
@@ -20,7 +21,7 @@ export class UpdateContractUseCase {
       throw new EntityNotFoundException('Contrato', id.toString());
     }
 
-    const updateData = this.extractFields(updateDto);
+    const updateData = this.extractFields(updateDto, registro);
 
     if (Object.keys(updateData).length === 0) {
       throw new InvalidDomainOperationException(
@@ -33,10 +34,35 @@ export class UpdateContractUseCase {
 
   private extractFields(
     dto: ActualizarContratoMedidorDto,
+    current: ContractEntity,
   ): Record<string, any> {
     const fields: Record<string, any> = {};
     if (dto.clienteId !== undefined) fields.clienteId = BigInt(dto.clienteId);
-    if (dto.estado !== undefined) fields.estado = dto.estado;
+    if (
+      dto.estado !== undefined ||
+      dto.estadoServicio !== undefined ||
+      dto.estadoCobranza !== undefined
+    ) {
+      const legacyProjection = ContractState.fromLegacyState(
+        dto.estado ?? current.estado,
+      );
+      const estadoServicio =
+        dto.estadoServicio ??
+        (dto.estado !== undefined
+          ? legacyProjection.estadoServicio
+          : current.estadoServicio);
+      const estadoCobranza =
+        dto.estadoCobranza ??
+        (dto.estado !== undefined
+          ? legacyProjection.estadoCobranza
+          : current.estadoCobranza);
+      fields.estado = ContractState.projectLegacyState(
+        estadoServicio,
+        estadoCobranza,
+      );
+      fields.estadoServicio = estadoServicio;
+      fields.estadoCobranza = estadoCobranza;
+    }
     if (dto.direccionSuministro !== undefined)
       fields.direccionSuministro = dto.direccionSuministro;
     if (dto.sectorId !== undefined) fields.sectorId = Number(dto.sectorId);

@@ -9,7 +9,11 @@ import {
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsNotEmptyString } from 'src/infrastructure/common/decorators/is-not-empty-string.decorator';
-import { EstadoContrato } from 'src/shared/enums';
+import {
+  EstadoCobranzaContrato,
+  EstadoContrato,
+  EstadoServicioContrato,
+} from 'src/shared/enums';
 
 export class CrearContratoMedidorDto {
   @ApiProperty({ description: 'ID del cliente', example: '1' })
@@ -77,6 +81,18 @@ export class CrearContratoMedidorDto {
   @IsString()
   @IsIn(Object.values(EstadoContrato))
   estado?: string;
+
+  @ApiPropertyOptional({ enum: EstadoServicioContrato })
+  @IsOptional()
+  @IsString()
+  @IsIn(Object.values(EstadoServicioContrato))
+  estadoServicio?: EstadoServicioContrato;
+
+  @ApiPropertyOptional({ enum: EstadoCobranzaContrato })
+  @IsOptional()
+  @IsString()
+  @IsIn(Object.values(EstadoCobranzaContrato))
+  estadoCobranza?: EstadoCobranzaContrato;
 
   @ApiPropertyOptional({
     description: 'Usuario que crea el contrato',

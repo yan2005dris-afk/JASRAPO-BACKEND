@@ -202,7 +202,7 @@ describe('PagoValidadoHandler (T-006, post-refactor RF-002)', () => {
     expect(mockTx.contratos.updateMany).toHaveBeenCalledWith({
       where: {
         contratoId: { in: [BigInt(99)] },
-        estado: 'PENDIENTE_PAGO',
+        estadoServicio: EstadoServicioContrato.PENDIENTE_PAGO,
         deletedAt: null,
       },
       data: {

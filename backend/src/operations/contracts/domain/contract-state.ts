@@ -20,6 +20,32 @@ const SERVICE_TRANSITIONS: Record<
 };
 
 export class ContractState {
+  static projectLegacyState(
+    estadoServicio: EstadoServicioContrato,
+    estadoCobranza: EstadoCobranzaContrato,
+  ): EstadoContrato {
+    if (
+      estadoServicio === EstadoServicioContrato.ACTIVO &&
+      estadoCobranza === EstadoCobranzaContrato.EN_MORA
+    ) {
+      return EstadoContrato.EN_MORA;
+    }
+
+    switch (estadoServicio) {
+      case EstadoServicioContrato.PENDIENTE_INSTALACION:
+        return EstadoContrato.PENDIENTE_INSTALACION;
+      case EstadoServicioContrato.ACTIVO:
+        return EstadoContrato.ACTIVO;
+      case EstadoServicioContrato.SUSPENDIDO:
+        return EstadoContrato.SUSPENDIDO;
+      case EstadoServicioContrato.RETIRADO:
+        return EstadoContrato.RETIRADO;
+      case EstadoServicioContrato.PENDIENTE_PAGO:
+      default:
+        return EstadoContrato.PENDIENTE_PAGO;
+    }
+  }
+
   static canTransition(
     current: EstadoServicioContrato,
     next: EstadoServicioContrato,

@@ -80,7 +80,7 @@ Si falla la función de prefacturación, una relación o cualquier escritura de 
 
 ### Estado inicial
 
-Con la entrada normal, el contrato queda en `estado = PENDIENTE_PAGO`. El esquema define además `estadoServicio = PENDIENTE_PAGO` y `estadoCobranza = AL_DIA` como valores predeterminados, aunque la escritura de esta operación pasa explícitamente el campo legacy `estado` y depende de los defaults de Prisma para los campos nuevos.
+Con la entrada normal, el contrato queda sincronizado en `estado = PENDIENTE_PAGO`, `estadoServicio = PENDIENTE_PAGO` y `estadoCobranza = AL_DIA`. Durante la compatibilidad, los tres campos se escriben juntos; si llegan campos separados, estos son autoritativos y `estado` se proyecta solo para consumidores legacy.
 
 ## 2. Convenio de pago, cuando corresponde
 
@@ -239,7 +239,7 @@ La flecha `PENDIENTE_INSTALACION → ACTIVO` representa el objetivo del ciclo de
 
 - `ContractMapper.toDomain` usa `estadoServicio` y `estadoCobranza` cuando existen; si faltan, proyecta valores desde `ContractState.fromLegacyState(raw.estado)`.
 - `ContractResponseDto.fromEntity` expone `estado` y `estadoServicio`, pero el campo de cobranza no forma parte de la respuesta mostrada en el DTO inspeccionado.
-- `GET /contracts` filtra por `estado` legacy, no por `estadoServicio`.
+- `GET /contracts` conserva el filtro legacy `estado` y admite los filtros separados `estadoServicio` y `estadoCobranza`.
 - Procedimientos, consumidores antiguos o integraciones que solo lean `estado` pueden observar un valor diferente al de la dimensión de servicio.
 - Cambiar manualmente solo uno de los campos puede crear divergencia y ocultar la acción en frontend o producir filtros inconsistentes.
 

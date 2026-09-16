@@ -100,7 +100,7 @@ export class PagoValidadoHandler {
           await prismaClient.contratos.updateMany({
             where: {
               contratoId: { in: contratosInstalacionIds },
-              estado: 'PENDIENTE_PAGO',
+              estadoServicio: EstadoServicioContrato.PENDIENTE_PAGO,
               deletedAt: null,
             },
             data: {

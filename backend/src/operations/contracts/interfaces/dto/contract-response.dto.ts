@@ -151,6 +151,7 @@ export class ContractResponseDto {
   direccionSuministro: string;
 
   @ApiProperty({ example: 'ACTIVO', description: 'Estado del contrato' })
+  /** @deprecated Compatibility field; use estadoServicio and estadoCobranza. */
   estado: string;
 
   @ApiProperty({

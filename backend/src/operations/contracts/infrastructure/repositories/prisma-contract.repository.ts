@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { Prisma } from 'src/generated/prisma/client';
-import { EstadoContrato, EstadoMedidor } from 'src/shared/enums';
+import { EstadoMedidor } from 'src/shared/enums';
 import {
   EntityNotFoundException,
   InvalidDomainOperationException,
@@ -16,6 +16,7 @@ import type {
   ContractFilters,
 } from '../../domain/types/contract.types';
 import { ContractMapper } from '../mappers/contract.mapper';
+import { ContractState } from '../../domain/contract-state';
 import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
 import {
   paginate,
@@ -100,9 +101,22 @@ export class PrismaContractRepository implements ContractRepository {
   }
 
   async create(data: CreateContractData): Promise<ContractEntity> {
+    const legacyProjection = ContractState.fromLegacyState(data.estado);
+    const estadoServicio =
+      data.estadoServicio ?? legacyProjection.estadoServicio;
+    const estadoCobranza =
+      data.estadoCobranza ?? legacyProjection.estadoCobranza;
     try {
       const record = await this.prisma.contratos.create({
-        data: data,
+        data: {
+          ...data,
+          estado: ContractState.projectLegacyState(
+            estadoServicio,
+            estadoCobranza,
+          ),
+          estadoServicio,
+          estadoCobranza,
+        },
         include: this.defaultInclude,
       });
       return ContractMapper.toDomain(record)!;
@@ -209,6 +223,8 @@ export class PrismaContractRepository implements ContractRepository {
           direccionSuministro: data.direccionSuministro,
           comunidadId: data.comunidadId,
           estado: data.estado as any,
+          estadoServicio: data.estadoServicio,
+          estadoCobranza: data.estadoCobranza,
           ...(data.sectorId !== null ? { sectorId: data.sectorId } : {}),
           ...(data.creadoPor ? { creadoPor: data.creadoPor } : {}),
         },
@@ -228,7 +244,7 @@ export class PrismaContractRepository implements ContractRepository {
         data: { estado: EstadoMedidor.PENDIENTE },
       });
 
-      if (contrato.estado === EstadoContrato.PENDIENTE_PAGO) {
+      if (contrato.estadoServicio === 'PENDIENTE_PAGO') {
         await tx.$executeRaw`SELECT generar_prefactura_instalacion(${contrato.contratoId}, ${data.creadoPor || 'SYSTEM'})`;
       }
 
@@ -405,6 +421,14 @@ export class PrismaContractRepository implements ContractRepository {
 
     if (filters.estado) {
       conditions.push({ estado: filters.estado as any });
+    }
+
+    if (filters.estadoServicio) {
+      conditions.push({ estadoServicio: filters.estadoServicio });
+    }
+
+    if (filters.estadoCobranza) {
+      conditions.push({ estadoCobranza: filters.estadoCobranza });
     }
 
     if (filters.hasDebt === true) {
