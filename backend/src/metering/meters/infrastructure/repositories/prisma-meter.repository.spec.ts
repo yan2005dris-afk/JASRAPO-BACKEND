@@ -387,3 +387,95 @@ describe('PrismaMeterRepository - replaceMeter', () => {
     );
   });
 });
+
+describe('PrismaMeterRepository - create', () => {
+  let repository: PrismaMeterRepository;
+  let mockPrisma: any;
+
+  const sequenceConfig = {
+    secuencia_medidor_id: 1,
+    prefijo: 'MED',
+    longitud: 6,
+  };
+
+  const createData = {
+    marca: 'Itron',
+    modelo: 'CX1000',
+    serie: 'SN-0001',
+    estado: 'BODEGA' as any,
+  };
+
+  beforeEach(() => {
+    mockPrisma = {
+      $transaction: jest.fn().mockImplementation(async (cb) => cb(mockPrisma)),
+      $queryRaw: jest.fn().mockResolvedValue([sequenceConfig]),
+      secuenciaMedidor: {
+        update: jest.fn().mockResolvedValue({ ultimoValor: 7 }),
+      },
+      medidores: {
+        create: jest.fn().mockImplementation(({ data }) => ({
+          medidorId: BigInt(1),
+          ...data,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          deletedAt: null,
+        })),
+      },
+    };
+
+    repository = new PrismaMeterRepository(mockPrisma, {
+      warn: jest.fn(),
+      error: jest.fn(),
+    } as any);
+  });
+
+  it('should assign the next correlative code padded to the configured length', async () => {
+    const result = await repository.create(createData);
+
+    expect(result.codigo).toBe('MED-000007');
+    expect(mockPrisma.medidores.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ codigo: 'MED-000007' }),
+      }),
+    );
+  });
+
+  it('should lock the counter row before taking the next value', async () => {
+    await repository.create(createData);
+
+    const [rawQuery] = mockPrisma.$queryRaw.mock.calls[0] as [string[]];
+    expect(rawQuery.join('')).toContain('FOR UPDATE');
+    expect(mockPrisma.secuenciaMedidor.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { secuenciaMedidorId: 1 },
+        data: { ultimoValor: { increment: 1 } },
+      }),
+    );
+  });
+
+  it('should take the code inside the same transaction as the insert', async () => {
+    await repository.create(createData);
+
+    expect(mockPrisma.$transaction).toHaveBeenCalledTimes(1);
+  });
+
+  it('should honour a different prefix and length from the configuration', async () => {
+    mockPrisma.$queryRaw.mockResolvedValue([
+      { secuencia_medidor_id: 1, prefijo: 'JAS', longitud: 4 },
+    ]);
+    mockPrisma.secuenciaMedidor.update.mockResolvedValue({ ultimoValor: 42 });
+
+    const result = await repository.create(createData);
+
+    expect(result.codigo).toBe('JAS-0042');
+  });
+
+  it('should fail when the sequence configuration row is missing', async () => {
+    mockPrisma.$queryRaw.mockResolvedValue([]);
+
+    await expect(repository.create(createData)).rejects.toBeInstanceOf(
+      InvalidDomainOperationException,
+    );
+    expect(mockPrisma.medidores.create).not.toHaveBeenCalled();
+  });
+});
