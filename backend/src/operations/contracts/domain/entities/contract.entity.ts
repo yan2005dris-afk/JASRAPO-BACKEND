@@ -21,6 +21,7 @@ export class ContractEntity {
   estado: string;
   estadoServicio: EstadoServicioContrato;
   estadoCobranza: EstadoCobranzaContrato;
+  tieneConvenioActivo: boolean;
   creadoPor: string | null;
   comunidadId: number;
 

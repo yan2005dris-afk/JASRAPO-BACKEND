@@ -71,7 +71,6 @@ export type EstadoCaja = (typeof EstadoCaja)[keyof typeof EstadoCaja];
 export const EstadoCobranzaContrato = {
   AL_DIA: 'AL_DIA',
   EN_MORA: 'EN_MORA',
-  EN_CONVENIO: 'EN_CONVENIO',
 } as const;
 
 export type EstadoCobranzaContrato =

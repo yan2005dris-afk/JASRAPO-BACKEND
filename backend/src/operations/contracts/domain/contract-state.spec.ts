@@ -42,7 +42,7 @@ describe('ContractState', () => {
   it('keeps collection status independent from service lifecycle', () => {
     expect(
       ContractState.canTransitionCollectionStatus(
-        EstadoCobranzaContrato.EN_CONVENIO,
+        EstadoCobranzaContrato.AL_DIA,
         EstadoCobranzaContrato.AL_DIA,
       ),
     ).toBe(true);
@@ -61,8 +61,14 @@ describe('ContractState', () => {
     });
     expect(ContractState.fromLegacyState(EstadoContrato.EN_CONVENIO)).toEqual({
       estadoServicio: EstadoServicioContrato.ACTIVO,
-      estadoCobranza: EstadoCobranzaContrato.EN_CONVENIO,
+      estadoCobranza: EstadoCobranzaContrato.AL_DIA,
     });
+  });
+
+  it('normalizes the removed agreement marker to current-service current', () => {
+    expect(ContractState.normalizeCollectionStatus('EN_CONVENIO')).toBe(
+      EstadoCobranzaContrato.AL_DIA,
+    );
   });
 
   it('treats RETIRADO as terminal', () => {

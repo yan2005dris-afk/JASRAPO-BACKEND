@@ -136,13 +136,15 @@ las 00:00 de Ecuador y el job verifica el día calendario ecuatoriano mediante
 `DEUDA_PENDIENTE` y conservan `AL_DIA`; no se persisten como `EN_MORA`.
 
 Esta primera slice sólo expone `GET /reports/collection-cutoff-candidates` y
-actualiza condicionalmente `estadoCobranza`; no crea órdenes `CORTE`. Las
+actualiza condicionalmente `estadoCobranza` (`AL_DIA`/`EN_MORA`); no crea órdenes `CORTE`. Las
 cuotas de convenio vencidas no producen consecuencias automáticas todavía. Un
 convenio activo protege de corte cuando las planillas corrientes están pagadas,
 aunque queden cuotas futuras. El endpoint es informativo: `elegibleParaCorte`
 significa únicamente que se alcanzaron 5 períodos de servicio vencidos; no
-crea una orden ni cambia `estadoServicio` o el `estado` legacy. `EN_CONVENIO`
-se conserva para consumidores legacy.
+crea una orden ni cambia `estadoServicio` o el `estado` legacy. El convenio
+activo se deriva de `Convenios`; el `estado` legacy y
+`EstadoContrato.EN_CONVENIO` se conservan temporalmente, pero no se copian a
+`estadoCobranza`.
 
 La asociación histórica entre deudas financiadas y sus detalles de convenio no
 se reconstruye en esta slice. Los casos históricos sin asociación quedan como

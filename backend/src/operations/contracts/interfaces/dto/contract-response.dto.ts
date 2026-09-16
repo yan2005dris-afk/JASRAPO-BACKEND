@@ -4,6 +4,8 @@ import { DateUtil } from 'src/shared/utils/date.util';
 import {
   EstadoServicioContrato,
   type EstadoServicioContrato as EstadoServicioContratoType,
+  EstadoCobranzaContrato,
+  type EstadoCobranzaContrato as EstadoCobranzaContratoType,
 } from 'src/shared/enums';
 
 export class ContractCategoriaTarifaDto {
@@ -158,6 +160,19 @@ export class ContractResponseDto {
   })
   estadoServicio: EstadoServicioContratoType;
 
+  @ApiProperty({
+    enum: EstadoCobranzaContrato,
+    example: EstadoCobranzaContrato.AL_DIA,
+    description: 'Estado de cobranza de la deuda del servicio corriente',
+  })
+  estadoCobranza: EstadoCobranzaContratoType;
+
+  @ApiProperty({
+    example: false,
+    description: 'Indica si existe un convenio activo derivado de Convenios',
+  })
+  tieneConvenioActivo: boolean;
+
   @ApiPropertyOptional({
     example: 'admin',
     nullable: true,
@@ -194,6 +209,8 @@ export class ContractResponseDto {
     dto.direccionSuministro = entity.direccionSuministro;
     dto.estado = entity.estado;
     dto.estadoServicio = entity.estadoServicio;
+    dto.estadoCobranza = entity.estadoCobranza;
+    dto.tieneConvenioActivo = entity.tieneConvenioActivo;
     dto.creadoPor = entity.creadoPor ?? null;
     dto.comunidadId = entity.comunidadId;
     dto.categoriaTarifa = entity.categoriaTarifa ?? null;
