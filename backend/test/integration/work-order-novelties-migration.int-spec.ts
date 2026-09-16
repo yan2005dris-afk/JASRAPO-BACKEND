@@ -73,8 +73,8 @@ void describe(
             u AS (INSERT INTO usuarios(email, contrasenia, creado_en, actualizado_en) VALUES ($4, 'h', now(), now()) RETURNING usuario_id),
             t AS (INSERT INTO categoria_tarifa(nombre, consumo_minimo_mensual, activo, creado_en, actualizado_en) VALUES ($5, 0, true, now(), now()) RETURNING categoria_tarifa_id),
             cl AS (INSERT INTO clientes(apellidos, identificacion, nombres, creado_en, actualizado_en) VALUES ('T', $6, 'B', now(), now()) RETURNING cliente_id),
-            co AS (INSERT INTO contratos(cliente_id, categoria_tarifa_id, numero_guia, direccion_suministro, estado, comunidad_id, creado_en, actualizado_en)
-                   SELECT cl.cliente_id, t.categoria_tarifa_id, $7, 'D', 'ACTIVO', c.comunidad_id, now(), now() FROM cl, t, c RETURNING contrato_id),
+            co AS (INSERT INTO contratos(cliente_id, categoria_tarifa_id, numero_guia, direccion_suministro, estado_servicio, estado_cobranza, comunidad_id, creado_en, actualizado_en)
+                   SELECT cl.cliente_id, t.categoria_tarifa_id, $7, 'D', 'ACTIVO', 'AL_DIA', c.comunidad_id, now(), now() FROM cl, t, c RETURNING contrato_id),
             m AS (INSERT INTO medidores(marca, modelo, serie, estado, creado_en, actualizado_en) VALUES ('M', '1', $8, 'INSTALADO', now(), now()) RETURNING medidor_id),
             at AS (SELECT tipo_actividad_id FROM tipos_actividad WHERE codigo = 'LECTURA'),
                 r AS (INSERT INTO rutas(nombre, operario_id, tipo_actividad_id, comunidad_id, periodo_id, creado_en, actualizado_en)
