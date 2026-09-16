@@ -35,9 +35,9 @@ describe('UpdateContractUseCase', () => {
     expect(useCase).toBeDefined();
   });
 
-  it('should update contract estado only', async () => {
+  it('should update contract service state only', async () => {
     const id = BigInt(1);
-    const updateDto = { estado: 'ACTIVO' };
+    const updateDto = { estadoServicio: 'ACTIVO' as const };
 
     mockContractRepository.findById.mockResolvedValue(
       new ContractEntity({ contratoId: id, deletedAt: null }),
@@ -45,24 +45,23 @@ describe('UpdateContractUseCase', () => {
     mockContractRepository.update.mockResolvedValue(
       new ContractEntity({
         contratoId: id,
-        estado: 'ACTIVO',
+        estadoServicio: 'ACTIVO',
       }),
     );
 
     const result = await useCase.execute(id, updateDto);
 
     expect(mockContractRepository.update).toHaveBeenCalledWith(id, {
-      estado: 'ACTIVO',
       estadoServicio: 'ACTIVO',
       estadoCobranza: 'AL_DIA',
     });
-    expect(result).toMatchObject({ contratoId: id, estado: 'ACTIVO' });
+    expect(result).toMatchObject({ contratoId: id, estadoServicio: 'ACTIVO' });
   });
 
   it('should update multiple contract fields', async () => {
     const id = BigInt(1);
     const updateDto = {
-      estado: 'ACTIVO',
+      estadoServicio: 'ACTIVO' as const,
       direccionSuministro: 'Nueva Dir',
       sectorId: '4',
     };
@@ -76,7 +75,7 @@ describe('UpdateContractUseCase', () => {
     mockContractRepository.update.mockResolvedValue(
       new ContractEntity({
         contratoId: id,
-        estado: 'ACTIVO',
+        estadoServicio: 'ACTIVO',
         direccionSuministro: 'Nueva Dir',
         sectorId: 4,
       }),
@@ -85,7 +84,6 @@ describe('UpdateContractUseCase', () => {
     const result = await useCase.execute(id, updateDto);
 
     expect(mockContractRepository.update).toHaveBeenCalledWith(id, {
-      estado: 'ACTIVO',
       estadoServicio: 'ACTIVO',
       estadoCobranza: 'AL_DIA',
       direccionSuministro: 'Nueva Dir',
@@ -98,9 +96,9 @@ describe('UpdateContractUseCase', () => {
     const id = BigInt(999);
     mockContractRepository.findById.mockResolvedValue(null);
 
-    await expect(useCase.execute(id, { estado: 'ACTIVO' })).rejects.toThrow(
-      EntityNotFoundException,
-    );
+    await expect(
+      useCase.execute(id, { estadoServicio: 'ACTIVO' }),
+    ).rejects.toThrow(EntityNotFoundException);
   });
 
   it('should throw InvalidDomainOperationException when updateData is empty', async () => {

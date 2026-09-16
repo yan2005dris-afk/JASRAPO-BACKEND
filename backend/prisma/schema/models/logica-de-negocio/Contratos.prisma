@@ -6,7 +6,6 @@ model Contratos {
   numeroGuia          String               @unique @map("numero_guia")
   fechaInicio         DateTime             @default(now()) @map("fecha_inicio")
   direccionSuministro String               @map("direccion_suministro")
-  estado              EstadoContrato       @map("estado")
   estadoServicio      EstadoServicioContrato @default(PENDIENTE_PAGO) @map("estado_servicio")
   estadoCobranza      EstadoCobranzaContrato @default(NO_APLICA) @map("estado_cobranza")
   createdAt           DateTime             @default(now()) @map("creado_en")
@@ -29,19 +28,6 @@ model Contratos {
   @@index([sectorId])
   @@index([categoriaTarifaId])
   @@map("contratos")
-}
-
-enum EstadoContrato {
-  SOLICITUD
-  PENDIENTE_PAGO
-  PENDIENTE_INSTALACION
-  ACTIVO
-  EN_MORA
-  ORDEN_CORTE
-  SUSPENDIDO
-  EN_CONVENIO
-  RETIRADO
-  RECONEXION
 }
 
 enum EstadoServicioContrato {

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { Prisma } from 'src/generated/prisma/client';
-import { EstadoMedidor } from 'src/shared/enums';
+import { EstadoMedidor, EstadoServicioContrato } from 'src/shared/enums';
 import {
   EntityNotFoundException,
   InvalidDomainOperationException,
@@ -101,21 +101,25 @@ export class PrismaContractRepository implements ContractRepository {
   }
 
   async create(data: CreateContractData): Promise<ContractEntity> {
-    const legacyProjection = ContractState.fromLegacyState(data.estado);
     const estadoServicio =
-      data.estadoServicio ?? legacyProjection.estadoServicio;
-    const estadoCobranza =
-      data.estadoCobranza ?? legacyProjection.estadoCobranza;
+      data.estadoServicio ?? EstadoServicioContrato.PENDIENTE_PAGO;
+    const estadoCobranza = ContractState.normalizeCollectionStatus(
+      data.estadoCobranza,
+      estadoServicio,
+    );
     try {
       const record = await this.prisma.contratos.create({
         data: {
-          ...data,
-          estado: ContractState.projectLegacyState(
-            estadoServicio,
-            estadoCobranza,
-          ),
+          clienteId: data.clienteId,
+          categoriaTarifaId: data.categoriaTarifaId,
+          numeroGuia: data.numeroGuia,
+          fechaInicio: data.fechaInicio,
+          direccionSuministro: data.direccionSuministro,
           estadoServicio,
           estadoCobranza,
+          creadoPor: data.creadoPor,
+          comunidadId: data.comunidadId,
+          sectorId: data.sectorId,
         },
         include: this.defaultInclude,
       });
@@ -227,10 +231,6 @@ export class PrismaContractRepository implements ContractRepository {
           numeroGuia: data.numeroGuia,
           direccionSuministro: data.direccionSuministro,
           comunidadId: data.comunidadId,
-          estado: ContractState.projectLegacyState(
-            data.estadoServicio,
-            estadoCobranza,
-          ) as any,
           estadoServicio: data.estadoServicio,
           estadoCobranza,
           ...(data.sectorId !== null ? { sectorId: data.sectorId } : {}),
@@ -425,10 +425,6 @@ export class PrismaContractRepository implements ContractRepository {
           mode: 'insensitive',
         },
       });
-    }
-
-    if (filters.estado) {
-      conditions.push({ estado: filters.estado as any });
     }
 
     if (filters.estadoServicio) {

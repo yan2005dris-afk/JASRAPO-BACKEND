@@ -9,7 +9,7 @@
 
 ## Decision
 
-Add two persisted fields while retaining `Contratos.estado` as a compatibility bridge:
+Use two persisted fields and remove `Contratos.estado` after the staged rollout:
 
 - `estadoServicio`: `PENDIENTE_PAGO -> PENDIENTE_INSTALACION -> ACTIVO -> SUSPENDIDO -> RETIRADO`.
 - `estadoCobranza`: `NO_APLICA` while service activation is pending, `AL_DIA` for active service without current-service mora, or `EN_MORA` when the configured current-service threshold is reached.
@@ -18,18 +18,16 @@ Add two persisted fields while retaining `Contratos.estado` as a compatibility b
 
 `RETIRADO` is terminal. Completing installation activates a service. Reconnection activates service only after a completed reconnection work order; a payment or agreement alone never reactivates it. The legacy `Contratos.estado = EN_CONVENIO` remains supported temporarily, but convenio is separate and must never be shown or repopulated as `estadoCobranza`.
 
-The migration is additive and supplies defaults. The domain mapper reads the new fields when present and projects legacy `estado` when older callers omit them. This compatibility slice dual-writes all three contract state fields, makes explicit separated fields authoritative, and migrates unambiguous payment, installation, filtering, and stored-procedure decisions. Legacy `estado` filters/catalog/response remain deprecated compatibility surfaces.
+The migration is additive and supplies defaults. The final cutover removes the legacy column and enum; contract DTOs, mappers, repositories, operator responses, and stored procedures use only the separated fields. Legacy API state input/output is not retained because the coordinated frontend no longer sends or reads it.
 
 ## Consequences
 
 - New domain code can reason about service and collection independently.
-- Existing callers and the legacy column remain build-compatible during the chained migration.
+- The frontend deployment must follow the backend consumer-migration release and precede this final schema-removal migration.
 - Defaults do not rewrite historical `estado` values; later work units must migrate writes and reads deliberately.
 
 ## Follow-up work
 
-1. Migrate remaining payment and agreement handlers to `estadoCobranza` without changing service lifecycle implicitly.
-2. Migrate remaining installation and reconnection work-order completion flows to `estadoServicio`.
-3. Audit remaining operator/public response ports and route/reading consumers for additive separated-state fields.
-4. Define authoritative historical convenio-debt allocation and resolve payment/evaluator race semantics.
-5. A later final PR may remove `Contratos.estado` and `EstadoContrato.EN_CONVENIO` only after all consumers, seeds, SQL procedures, and external clients have migrated; this PR deliberately does not remove either symbol.
+1. Deploy the backend consumer migration (PR #290) first.
+2. Deploy frontend PR #119 (commit `44a2dbe`) so clients stop sending and reading legacy `estado`.
+3. Deploy this final backend cutover, including the schema migration that replaces installed routines and drops `Contratos.estado` and `EstadoContrato`.

@@ -1,6 +1,5 @@
 import {
   EstadoCobranzaContrato,
-  EstadoContrato,
   EstadoServicioContrato,
 } from 'src/shared/enums';
 
@@ -20,32 +19,6 @@ const SERVICE_TRANSITIONS: Record<
 };
 
 export class ContractState {
-  static projectLegacyState(
-    estadoServicio: EstadoServicioContrato,
-    estadoCobranza: EstadoCobranzaContrato,
-  ): EstadoContrato {
-    if (
-      estadoServicio === EstadoServicioContrato.ACTIVO &&
-      estadoCobranza === EstadoCobranzaContrato.EN_MORA
-    ) {
-      return EstadoContrato.EN_MORA;
-    }
-
-    switch (estadoServicio) {
-      case EstadoServicioContrato.PENDIENTE_INSTALACION:
-        return EstadoContrato.PENDIENTE_INSTALACION;
-      case EstadoServicioContrato.ACTIVO:
-        return EstadoContrato.ACTIVO;
-      case EstadoServicioContrato.SUSPENDIDO:
-        return EstadoContrato.SUSPENDIDO;
-      case EstadoServicioContrato.RETIRADO:
-        return EstadoContrato.RETIRADO;
-      case EstadoServicioContrato.PENDIENTE_PAGO:
-      default:
-        return EstadoContrato.PENDIENTE_PAGO;
-    }
-  }
-
   static canTransition(
     current: EstadoServicioContrato,
     next: EstadoServicioContrato,
@@ -66,43 +39,9 @@ export class ContractState {
     return state === EstadoServicioContrato.RETIRADO;
   }
 
-  static fromLegacyState(legacyState: string): {
-    estadoServicio: EstadoServicioContrato;
-    estadoCobranza: EstadoCobranzaContrato;
-  } {
-    const estadoServicio =
-      legacyState === EstadoContrato.PENDIENTE_INSTALACION
-        ? EstadoServicioContrato.PENDIENTE_INSTALACION
-        : legacyState === EstadoContrato.ACTIVO ||
-            legacyState === EstadoContrato.EN_MORA ||
-            legacyState === EstadoContrato.EN_CONVENIO
-          ? EstadoServicioContrato.ACTIVO
-          : legacyState === EstadoContrato.SUSPENDIDO ||
-              legacyState === EstadoContrato.ORDEN_CORTE ||
-              legacyState === EstadoContrato.RECONEXION
-            ? EstadoServicioContrato.SUSPENDIDO
-            : legacyState === EstadoContrato.RETIRADO
-              ? EstadoServicioContrato.RETIRADO
-              : EstadoServicioContrato.PENDIENTE_PAGO;
-
-    return {
-      estadoServicio,
-      estadoCobranza: this.normalizeCollectionStatus(
-        legacyState === EstadoContrato.EN_MORA
-          ? EstadoCobranzaContrato.EN_MORA
-          : EstadoCobranzaContrato.AL_DIA,
-        estadoServicio,
-      ),
-    };
-  }
-
-  /**
-   * Normalizes values from pre-decoupling rows/callers without treating an
-   * agreement marker as current-service debt.
-   */
   static normalizeCollectionStatus(
     value: unknown,
-    estadoServicio?: EstadoServicioContrato,
+    estadoServicio: EstadoServicioContrato,
   ): EstadoCobranzaContrato {
     if (
       estadoServicio === EstadoServicioContrato.PENDIENTE_PAGO ||

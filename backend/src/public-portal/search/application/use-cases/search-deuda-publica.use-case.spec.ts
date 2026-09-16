@@ -27,7 +27,8 @@ const makeContratoRaw = (
 ): IContratoConDeudaRaw => ({
   contratoId: 1n,
   numeroGuia: 'G-001',
-  estado: 'ACTIVO',
+  estadoServicio: 'ACTIVO',
+  estadoCobranza: 'AL_DIA',
   cliente: {
     clienteId: 1n,
     identificacion: '0912345678',
@@ -105,7 +106,8 @@ describe('SearchDeudaPublicaUseCase', () => {
           {
             contratoId: 1n,
             numeroGuia: 'G-001',
-            estado: 'ACTIVO',
+            estadoServicio: 'ACTIVO',
+            estadoCobranza: 'AL_DIA',
             prefacturasImpagadas: prefacturas,
           },
         ],

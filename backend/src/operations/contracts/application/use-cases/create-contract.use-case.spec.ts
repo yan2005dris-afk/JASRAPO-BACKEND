@@ -50,7 +50,6 @@ describe('CreateContractUseCase', () => {
 
     mockContractRepository.createContractWithMeterHistory.mockResolvedValue({
       contratoId: BigInt(1),
-      estado: 'PENDIENTE_PAGO',
       estadoServicio: 'PENDIENTE_PAGO',
       estadoCobranza: 'NO_APLICA',
     });
@@ -67,7 +66,6 @@ describe('CreateContractUseCase', () => {
       sectorId: null,
       numeroGuia: 'GUIA-001',
       direccionSuministro: 'Av. Principal 123',
-      estado: 'PENDIENTE_PAGO',
       estadoServicio: 'PENDIENTE_PAGO',
       estadoCobranza: 'NO_APLICA',
       creadoPor: undefined,
@@ -75,7 +73,6 @@ describe('CreateContractUseCase', () => {
     });
     expect(result).toEqual({
       contratoId: BigInt(1),
-      estado: 'PENDIENTE_PAGO',
       estadoServicio: 'PENDIENTE_PAGO',
       estadoCobranza: 'NO_APLICA',
     });
@@ -92,14 +89,12 @@ describe('CreateContractUseCase', () => {
       sectorId: '10',
       lecturaInicial: 500,
       creadoPor: 'admin',
-      estado: 'ACTIVO',
-      estadoServicio: 'ACTIVO',
-      estadoCobranza: 'AL_DIA',
+      estadoServicio: 'ACTIVO' as const,
+      estadoCobranza: 'AL_DIA' as const,
     };
 
     mockContractRepository.createContractWithMeterHistory.mockResolvedValue({
       contratoId: BigInt(2),
-      estado: 'ACTIVO',
       sector: { sectorId: 10, codigo: 'SEC-A', nombre: 'Sector A' },
     });
 
@@ -115,7 +110,6 @@ describe('CreateContractUseCase', () => {
       sectorId: 10,
       numeroGuia: 'GUIA-002',
       direccionSuministro: 'Calle Secundaria 456',
-      estado: 'ACTIVO',
       estadoServicio: 'ACTIVO',
       estadoCobranza: 'AL_DIA',
       creadoPor: 'admin',
@@ -123,12 +117,11 @@ describe('CreateContractUseCase', () => {
     });
     expect(result).toEqual({
       contratoId: BigInt(2),
-      estado: 'ACTIVO',
       sector: { sectorId: 10, codigo: 'SEC-A', nombre: 'Sector A' },
     });
   });
 
-  it('uses explicit separated states as authoritative over legacy estado', async () => {
+  it('uses explicit separated states without dual-writing a legacy state', async () => {
     const dto = {
       clienteId: '20',
       categoriaTarifaId: '5',
@@ -136,7 +129,6 @@ describe('CreateContractUseCase', () => {
       numeroGuia: 'GUIA-EXPLICIT',
       direccionSuministro: 'Calle Secundaria 456',
       comunidadId: '3',
-      estado: 'EN_MORA',
       estadoServicio: 'ACTIVO' as const,
       estadoCobranza: 'AL_DIA' as const,
     };
@@ -149,7 +141,6 @@ describe('CreateContractUseCase', () => {
       mockContractRepository.createContractWithMeterHistory,
     ).toHaveBeenCalledWith(
       expect.objectContaining({
-        estado: 'ACTIVO',
         estadoServicio: 'ACTIVO',
         estadoCobranza: 'AL_DIA',
       }),

@@ -18,7 +18,6 @@ export class ContractEntity {
   numeroGuia: string;
   fechaInicio: Date;
   direccionSuministro: string;
-  estado: string;
   estadoServicio: EstadoServicioContrato;
   estadoCobranza: EstadoCobranzaContrato;
   tieneConvenioActivo: boolean;

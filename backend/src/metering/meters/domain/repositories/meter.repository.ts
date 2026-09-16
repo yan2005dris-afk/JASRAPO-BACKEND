@@ -62,7 +62,7 @@ export abstract class MeterRepository {
 
   abstract findActiveContractForMeter(
     medidorId: bigint,
-  ): Promise<{ contratoId: bigint; estado: string } | null>;
+  ): Promise<{ contratoId: bigint; estadoServicio: string } | null>;
 
   /** Atomically replace a meter in a contract, recording telemetry,
    *  physical readings, and audit resolution. */

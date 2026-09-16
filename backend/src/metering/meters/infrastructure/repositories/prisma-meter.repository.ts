@@ -261,12 +261,12 @@ export class PrismaMeterRepository implements MeterRepository {
 
   async findActiveContractForMeter(
     medidorId: bigint,
-  ): Promise<{ contratoId: bigint; estado: string } | null> {
+  ): Promise<{ contratoId: bigint; estadoServicio: string } | null> {
     const historial = await this.prisma.historialMedidores.findFirst({
       where: { medidorId, fechaHasta: null },
       select: {
         contratoId: true,
-        contrato: { select: { estado: true } },
+        contrato: { select: { estadoServicio: true } },
       },
     });
 
@@ -274,7 +274,7 @@ export class PrismaMeterRepository implements MeterRepository {
 
     return {
       contratoId: historial.contratoId,
-      estado: historial.contrato.estado,
+      estadoServicio: historial.contrato.estadoServicio,
     };
   }
 

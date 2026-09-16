@@ -4,7 +4,6 @@ import { IsEnum, IsOptional, IsString } from 'class-validator';
 import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
 import {
   EstadoCobranzaContrato,
-  EstadoContrato,
   EstadoServicioContrato,
 } from 'src/shared/enums';
 
@@ -61,15 +60,6 @@ export class FilterContractsDto extends PaginationDto {
   @IsString()
   @Transform(({ value }) => (value === '' ? undefined : value))
   ubicacion?: string;
-
-  @ApiPropertyOptional({
-    description: 'Filtrar por estado del contrato',
-    enum: EstadoContrato,
-  })
-  @IsOptional()
-  @IsEnum(EstadoContrato)
-  /** @deprecated Use estadoServicio or estadoCobranza for separated filtering. */
-  estado?: EstadoContrato;
 
   @ApiPropertyOptional({ enum: EstadoServicioContrato })
   @IsOptional()

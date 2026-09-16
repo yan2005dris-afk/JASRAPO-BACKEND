@@ -38,29 +38,11 @@ export class UpdateContractUseCase {
   ): Record<string, any> {
     const fields: Record<string, any> = {};
     if (dto.clienteId !== undefined) fields.clienteId = BigInt(dto.clienteId);
-    if (
-      dto.estado !== undefined ||
-      dto.estadoServicio !== undefined ||
-      dto.estadoCobranza !== undefined
-    ) {
-      const legacyProjection = ContractState.fromLegacyState(
-        dto.estado ?? current.estado,
-      );
-      const estadoServicio =
-        dto.estadoServicio ??
-        (dto.estado !== undefined
-          ? legacyProjection.estadoServicio
-          : current.estadoServicio);
+    if (dto.estadoServicio !== undefined || dto.estadoCobranza !== undefined) {
+      const estadoServicio = dto.estadoServicio ?? current.estadoServicio;
       const estadoCobranza = ContractState.normalizeCollectionStatus(
-        dto.estadoCobranza ??
-          (dto.estado !== undefined
-            ? legacyProjection.estadoCobranza
-            : current.estadoCobranza),
+        dto.estadoCobranza ?? current.estadoCobranza,
         estadoServicio,
-      );
-      fields.estado = ContractState.projectLegacyState(
-        estadoServicio,
-        estadoCobranza,
       );
       fields.estadoServicio = estadoServicio;
       fields.estadoCobranza = estadoCobranza;

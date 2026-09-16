@@ -57,7 +57,7 @@ export interface ReadingWithContractDetail {
         contratoId: bigint;
         numeroGuia: string;
         direccionSuministro: string;
-        estado: string;
+        estadoServicio: string;
         comunidadId: number;
         sectorId: number | null;
         cliente: { nombres: string; apellidos: string };

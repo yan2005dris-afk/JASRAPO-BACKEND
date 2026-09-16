@@ -150,10 +150,6 @@ export class ContractResponseDto {
   })
   direccionSuministro: string;
 
-  @ApiProperty({ example: 'ACTIVO', description: 'Estado del contrato' })
-  /** @deprecated Compatibility field; use estadoServicio and estadoCobranza. */
-  estado: string;
-
   @ApiProperty({
     enum: EstadoServicioContrato,
     example: EstadoServicioContrato.ACTIVO,
@@ -208,7 +204,6 @@ export class ContractResponseDto {
     dto.numeroGuia = entity.numeroGuia;
     dto.fechaInicio = DateUtil.formatForFrontend(entity.fechaInicio) ?? '';
     dto.direccionSuministro = entity.direccionSuministro;
-    dto.estado = entity.estado;
     dto.estadoServicio = entity.estadoServicio;
     dto.estadoCobranza = entity.estadoCobranza;
     dto.tieneConvenioActivo = entity.tieneConvenioActivo;

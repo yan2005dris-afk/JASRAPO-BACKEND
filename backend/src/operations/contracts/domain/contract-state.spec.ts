@@ -1,130 +1,41 @@
+import { ContractState } from './contract-state';
 import {
   EstadoCobranzaContrato,
-  EstadoContrato,
   EstadoServicioContrato,
 } from 'src/shared/enums';
-import { ContractState } from './contract-state';
 
 describe('ContractState', () => {
-  it('allows only the service lifecycle transitions', () => {
-    expect(
-      ContractState.canTransition(
-        EstadoServicioContrato.PENDIENTE_PAGO,
-        EstadoServicioContrato.PENDIENTE_INSTALACION,
-      ),
-    ).toBe(true);
-    expect(
-      ContractState.canTransition(
-        EstadoServicioContrato.PENDIENTE_INSTALACION,
-        EstadoServicioContrato.ACTIVO,
-      ),
-    ).toBe(true);
-    expect(
-      ContractState.canTransition(
-        EstadoServicioContrato.ACTIVO,
-        EstadoServicioContrato.SUSPENDIDO,
-      ),
-    ).toBe(true);
-    expect(
-      ContractState.canTransition(
-        EstadoServicioContrato.SUSPENDIDO,
-        EstadoServicioContrato.RETIRADO,
-      ),
-    ).toBe(true);
-    expect(
-      ContractState.canTransition(
-        EstadoServicioContrato.RETIRADO,
-        EstadoServicioContrato.ACTIVO,
-      ),
-    ).toBe(false);
-  });
-
-  it('keeps collection status independent from service lifecycle', () => {
-    expect(
-      ContractState.canTransitionCollectionStatus(
-        EstadoCobranzaContrato.AL_DIA,
-        EstadoCobranzaContrato.AL_DIA,
-      ),
-    ).toBe(true);
-    expect(
-      ContractState.canTransition(
-        EstadoServicioContrato.ACTIVO,
-        EstadoServicioContrato.ACTIVO,
-      ),
-    ).toBe(true);
-  });
-
-  it('provides a compatibility projection from the legacy mixed state', () => {
-    expect(
-      ContractState.fromLegacyState(EstadoContrato.PENDIENTE_PAGO),
-    ).toEqual({
-      estadoServicio: EstadoServicioContrato.PENDIENTE_PAGO,
-      estadoCobranza: EstadoCobranzaContrato.NO_APLICA,
-    });
-    expect(
-      ContractState.fromLegacyState(EstadoContrato.PENDIENTE_INSTALACION),
-    ).toEqual({
-      estadoServicio: EstadoServicioContrato.PENDIENTE_INSTALACION,
-      estadoCobranza: EstadoCobranzaContrato.NO_APLICA,
-    });
-    expect(ContractState.fromLegacyState(EstadoContrato.ACTIVO)).toEqual({
-      estadoServicio: EstadoServicioContrato.ACTIVO,
-      estadoCobranza: EstadoCobranzaContrato.AL_DIA,
-    });
-    expect(ContractState.fromLegacyState(EstadoContrato.EN_CONVENIO)).toEqual({
-      estadoServicio: EstadoServicioContrato.ACTIVO,
-      estadoCobranza: EstadoCobranzaContrato.AL_DIA,
-    });
-  });
-
-  it('normalizes the removed agreement marker to current-service current', () => {
-    expect(ContractState.normalizeCollectionStatus('EN_CONVENIO')).toBe(
-      EstadoCobranzaContrato.AL_DIA,
-    );
-  });
-
-  it('normalizes impossible collection combinations by service state', () => {
+  it.each([
+    EstadoServicioContrato.PENDIENTE_PAGO,
+    EstadoServicioContrato.PENDIENTE_INSTALACION,
+  ])('returns NO_APLICA for pending service %s', (estadoServicio) => {
     expect(
       ContractState.normalizeCollectionStatus(
         EstadoCobranzaContrato.EN_MORA,
-        EstadoServicioContrato.PENDIENTE_INSTALACION,
+        estadoServicio,
       ),
     ).toBe(EstadoCobranzaContrato.NO_APLICA);
+  });
+
+  it('preserves AL_DIA and EN_MORA for an active service', () => {
     expect(
       ContractState.normalizeCollectionStatus(
-        EstadoCobranzaContrato.NO_APLICA,
+        EstadoCobranzaContrato.AL_DIA,
         EstadoServicioContrato.ACTIVO,
       ),
     ).toBe(EstadoCobranzaContrato.AL_DIA);
+    expect(
+      ContractState.normalizeCollectionStatus(
+        EstadoCobranzaContrato.EN_MORA,
+        EstadoServicioContrato.ACTIVO,
+      ),
+    ).toBe(EstadoCobranzaContrato.EN_MORA);
   });
 
-  it('projects explicit separated fields deterministically for compatibility', () => {
+  it('does not treat agreement presence as a contract state', () => {
+    expect(EstadoCobranzaContrato).not.toHaveProperty('EN_CONVENIO');
     expect(
-      ContractState.projectLegacyState(
-        EstadoServicioContrato.ACTIVO,
-        EstadoCobranzaContrato.EN_MORA,
-      ),
-    ).toBe(EstadoContrato.EN_MORA);
-    expect(
-      ContractState.projectLegacyState(
-        EstadoServicioContrato.ACTIVO,
-        EstadoCobranzaContrato.AL_DIA,
-      ),
-    ).toBe(EstadoContrato.ACTIVO);
-    expect(
-      ContractState.projectLegacyState(
-        EstadoServicioContrato.PENDIENTE_PAGO,
-        EstadoCobranzaContrato.EN_MORA,
-      ),
-    ).toBe(EstadoContrato.PENDIENTE_PAGO);
-  });
-
-  it('treats RETIRADO as terminal', () => {
-    expect(ContractState.isTerminal(EstadoServicioContrato.RETIRADO)).toBe(
-      true,
-    );
-    expect(ContractState.isTerminal(EstadoServicioContrato.SUSPENDIDO)).toBe(
-      false,
-    );
+      ContractState.canTransitionCollectionStatus('AL_DIA', 'EN_MORA'),
+    ).toBe(true);
   });
 });

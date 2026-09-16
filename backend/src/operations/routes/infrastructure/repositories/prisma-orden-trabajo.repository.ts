@@ -4,7 +4,6 @@ import { Prisma } from 'src/generated/prisma/client';
 import {
   EstadoOrdenTrabajo,
   EstadoCobranzaContrato,
-  EstadoContrato,
   EstadoPeriodo,
   EstadoRuta,
   EstadoServicioContrato,
@@ -418,7 +417,6 @@ export class PrismaOrdenTrabajoRepository implements OrdenTrabajoRepository {
     await tx.contratos.update({
       where: { contratoId: current.contratoId },
       data: {
-        estado: EstadoContrato.ACTIVO,
         estadoServicio: EstadoServicioContrato.ACTIVO,
         estadoCobranza: EstadoCobranzaContrato.AL_DIA,
       },

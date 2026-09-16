@@ -1,6 +1,5 @@
 import type {
   EstadoCobranzaContrato,
-  EstadoContrato,
   EstadoServicioContrato,
 } from 'src/shared/enums';
 
@@ -12,7 +11,6 @@ export interface ContractFilters {
   categoriaTarifaId?: number;
   medidorId?: bigint;
   medidorSerie?: string;
-  estado?: string;
   estadoServicio?: EstadoServicioContrato;
   estadoCobranza?: EstadoCobranzaContrato;
   ubicacion?: string;
@@ -26,7 +24,6 @@ export interface CreateContractData {
   numeroGuia: string;
   fechaInicio?: Date;
   direccionSuministro: string;
-  estado: EstadoContrato;
   estadoServicio?: EstadoServicioContrato;
   estadoCobranza?: EstadoCobranzaContrato;
   creadoPor?: string | null;
@@ -40,7 +37,6 @@ export interface CreateContractWithMeterCommand {
   medidorId: bigint;
   numeroGuia: string;
   direccionSuministro: string;
-  estado: EstadoContrato;
   estadoServicio: EstadoServicioContrato;
   estadoCobranza: EstadoCobranzaContrato;
   creadoPor?: string;

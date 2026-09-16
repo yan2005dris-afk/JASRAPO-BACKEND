@@ -11,9 +11,8 @@ export interface IPrefacturaParaCalculo {
 export interface IContratoConDeudaRaw {
   contratoId: bigint;
   numeroGuia: string;
-  estado: string;
-  estadoServicio?: string;
-  estadoCobranza?: EstadoCobranzaContrato;
+  estadoServicio: string;
+  estadoCobranza: EstadoCobranzaContrato;
   cliente: {
     clienteId: bigint;
     identificacion: string | null;
@@ -26,9 +25,8 @@ export interface IContratoConDeudaRaw {
 export interface IContratoResumenRaw {
   contratoId: bigint;
   numeroGuia: string;
-  estado: string;
-  estadoServicio?: string;
-  estadoCobranza?: EstadoCobranzaContrato;
+  estadoServicio: string;
+  estadoCobranza: EstadoCobranzaContrato;
   prefacturasImpagadas: IPrefacturaParaCalculo[];
 }
 
