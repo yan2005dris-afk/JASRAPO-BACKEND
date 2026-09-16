@@ -26,7 +26,7 @@ export async function seedLecturas(prisma: any) {
     }
 
     const contratos = await prisma.contratos.findMany({
-        where: { estado: "ACTIVO" },
+        where: { estadoServicio: "ACTIVO" },
     });
 
     // Encontrar el medidorId máximo existente para generar nuevos IDs únicos
