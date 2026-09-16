@@ -1,9 +1,10 @@
 import type { PrismaClient } from '../../../src/generated/prisma/client';
-import {
-  COBRANZA_DIA_CORTE_MENSUAL,
-  COBRANZA_MESES_PARA_CORTE,
-  COBRANZA_MESES_PARA_MORA,
-} from '../../../src/infrastructure/config/sistema-config.keys';
+
+// Keep the seed self-contained: the production image includes generated
+// Prisma artifacts but not the complete `src` tree used by the application.
+const COBRANZA_DIA_CORTE_MENSUAL = 'cobranza.dia_corte_mensual';
+const COBRANZA_MESES_PARA_MORA = 'cobranza.meses_para_mora';
+const COBRANZA_MESES_PARA_CORTE = 'cobranza.meses_para_corte';
 
 const CONFIGS = [
   [
