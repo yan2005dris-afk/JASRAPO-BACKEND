@@ -5,6 +5,8 @@ import {
   EstadoOrdenTrabajo,
   EstadoPeriodo,
   EstadoRuta,
+  EstadoServicioContrato,
+  TipoActividadCodes,
 } from 'src/shared/enums';
 import { OrdenTrabajoRepository } from '../../domain/repositories/orden-trabajo.repository';
 import { OrdenTrabajoMapper } from '../mappers/orden-trabajo.mapper';
@@ -214,44 +216,48 @@ export class PrismaOrdenTrabajoRepository implements OrdenTrabajoRepository {
     data: UpdateOrdenEstadoData,
   ): Promise<OrdenTrabajoEntity> {
     try {
-      const current = await this.prisma.ordenesTrabajo.findUnique({
-        include: {
-          ruta: { include: { tipoActividad: { select: { codigo: true } } } },
-        },
-        where: { ordenTrabajoId },
-      });
+      const raw = await this.prisma.$transaction(async (tx) => {
+        const current = await tx.ordenesTrabajo.findUnique({
+          include: {
+            ruta: { include: { tipoActividad: { select: { codigo: true } } } },
+          },
+          where: { ordenTrabajoId },
+        });
 
-      if (!current) {
-        throw new EntityNotFoundException(
-          'Orden de Trabajo',
-          ordenTrabajoId.toString(),
-        );
-      }
+        if (!current) {
+          throw new EntityNotFoundException(
+            'Orden de Trabajo',
+            ordenTrabajoId.toString(),
+          );
+        }
 
-      const isCompleting =
-        data.estado === EstadoOrdenTrabajo.COMPLETADA ||
-        data.estado === EstadoOrdenTrabajo.FALLIDA ||
-        data.estado === EstadoOrdenTrabajo.CANCELADA;
+        await this.applyContractLifecycleTransition(tx, current, data.estado);
 
-      const isReopening =
-        data.estado === EstadoOrdenTrabajo.PENDIENTE ||
-        data.estado === EstadoOrdenTrabajo.EN_PROGRESO;
+        const isCompleting =
+          data.estado === EstadoOrdenTrabajo.COMPLETADA ||
+          data.estado === EstadoOrdenTrabajo.FALLIDA ||
+          data.estado === EstadoOrdenTrabajo.CANCELADA;
 
-      const raw = await this.prisma.ordenesTrabajo.update({
-        include: {
-          ruta: { include: { tipoActividad: { select: { codigo: true } } } },
-        },
-        where: { ordenTrabajoId },
-        data: {
-          estado: data.estado as EstadoOrdenTrabajo,
-          ...(data.resultadoObservacion !== undefined
-            ? { resultadoObservacion: data.resultadoObservacion }
-            : {}),
-          ...(isCompleting && !current.completadoEn
-            ? { completadoEn: new Date() }
-            : {}),
-          ...(isReopening ? { completadoEn: null } : {}),
-        },
+        const isReopening =
+          data.estado === EstadoOrdenTrabajo.PENDIENTE ||
+          data.estado === EstadoOrdenTrabajo.EN_PROGRESO;
+
+        return tx.ordenesTrabajo.update({
+          include: {
+            ruta: { include: { tipoActividad: { select: { codigo: true } } } },
+          },
+          where: { ordenTrabajoId },
+          data: {
+            estado: data.estado as EstadoOrdenTrabajo,
+            ...(data.resultadoObservacion !== undefined
+              ? { resultadoObservacion: data.resultadoObservacion }
+              : {}),
+            ...(isCompleting && !current.completadoEn
+              ? { completadoEn: new Date() }
+              : {}),
+            ...(isReopening ? { completadoEn: null } : {}),
+          },
+        });
       });
 
       return OrdenTrabajoMapper.toEntity(raw);
@@ -288,6 +294,8 @@ export class PrismaOrdenTrabajoRepository implements OrdenTrabajoRepository {
             ordenTrabajoId.toString(),
           );
         }
+
+        await this.applyContractLifecycleTransition(tx, current, data.estado);
 
         const isCompleting =
           data.estado === EstadoOrdenTrabajo.COMPLETADA ||
@@ -360,6 +368,55 @@ export class PrismaOrdenTrabajoRepository implements OrdenTrabajoRepository {
       }
       throw error;
     }
+  }
+
+  private async applyContractLifecycleTransition(
+    tx: Prisma.TransactionClient,
+    current: {
+      estado: string;
+      contratoId: bigint;
+      ruta: { tipoActividad: { codigo: string } };
+    },
+    targetState: string | undefined,
+  ): Promise<void> {
+    if (
+      targetState !== EstadoOrdenTrabajo.COMPLETADA ||
+      current.estado === EstadoOrdenTrabajo.COMPLETADA
+    ) {
+      return;
+    }
+
+    const requiredSourceState =
+      current.ruta.tipoActividad.codigo === TipoActividadCodes.INSTALACION
+        ? EstadoServicioContrato.PENDIENTE_INSTALACION
+        : current.ruta.tipoActividad.codigo === TipoActividadCodes.RECONEXION
+          ? EstadoServicioContrato.SUSPENDIDO
+          : null;
+
+    if (!requiredSourceState) return;
+
+    const contract = await tx.contratos.findUnique({
+      where: { contratoId: current.contratoId },
+      select: { estadoServicio: true },
+    });
+
+    if (!contract) {
+      throw new EntityNotFoundException(
+        'Contrato',
+        current.contratoId.toString(),
+      );
+    }
+
+    if (contract.estadoServicio !== requiredSourceState) {
+      throw new InvalidDomainOperationException(
+        `El contrato debe estar en ${requiredSourceState} para completar una orden de ${current.ruta.tipoActividad.codigo}`,
+      );
+    }
+
+    await tx.contratos.update({
+      where: { contratoId: current.contratoId },
+      data: { estadoServicio: EstadoServicioContrato.ACTIVO },
+    });
   }
 
   async linkLectura(
