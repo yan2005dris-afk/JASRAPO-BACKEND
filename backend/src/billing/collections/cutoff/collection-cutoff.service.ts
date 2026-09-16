@@ -8,7 +8,6 @@ import {
   COBRANZA_MESES_PARA_MORA,
 } from 'src/infrastructure/config/sistema-config.keys';
 import { EstadoCobranzaContrato } from 'src/shared/enums';
-import { ContractState } from 'src/operations/contracts/domain/contract-state';
 import { DebtCalculatorHelper } from 'src/shared/utils/debt-calculator.util';
 import {
   COLLECTION_CUTOFF_DEFAULTS,
@@ -229,9 +228,7 @@ export class CollectionCutoffService {
           contratoId: BigInt(candidate.contratoId),
           deletedAt: null,
           updatedAt: { lte: evaluatedAt },
-          estadoCobranza: ContractState.normalizeCollectionStatus(
-            candidate.estadoCobranzaPersistido,
-          ),
+          estadoCobranza: candidate.estadoCobranzaPersistido,
         },
         data: { estadoCobranza: candidate.estadoCobranza },
       });

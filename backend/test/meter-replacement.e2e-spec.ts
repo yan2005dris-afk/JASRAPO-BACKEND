@@ -169,7 +169,8 @@ describe('Meter Replacement E2E (All Treatments & Validation Cases)', () => {
         categoriaTarifaId: category.categoriaTarifaId,
         numeroGuia: `GUI-E2E-${Date.now()}`,
         direccionSuministro: 'Calle E2E 123',
-        estado: 'ACTIVO',
+        estadoServicio: 'ACTIVO',
+        estadoCobranza: 'AL_DIA',
         comunidadId: testCommunityId,
         historialMedidores: {
           create: {

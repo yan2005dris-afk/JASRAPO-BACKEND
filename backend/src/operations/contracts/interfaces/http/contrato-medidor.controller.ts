@@ -29,7 +29,6 @@ import {
   ApiExtraModels,
 } from '@nestjs/swagger';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
-import { EnumStateDto } from 'src/shared/enums/state-catalog';
 import { ApiPaginatedResponse } from 'src/infrastructure/common/decorators/api-paginated-response.decorator';
 import { PaginationMetaDto } from 'src/infrastructure/common/dtos/pagination-meta.dto';
 import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
@@ -42,22 +41,6 @@ export class ContratoMedidorController {
   constructor(
     private readonly contratoMedidorService: ContratoMedidorService,
   ) {}
-
-  @ApiOperation({
-    summary: 'Catálogo de estados de contrato',
-    description:
-      'Retorna la lista de estados legacy disponibles para contratos; la respuesta del contrato expone estadoServicio y estadoCobranza (NO_APLICA, AL_DIA o EN_MORA) por separado.',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Lista de estados de contrato',
-    type: [EnumStateDto],
-  })
-  @RequiredPermission('contracts', 'read')
-  @Get('states')
-  getContractStates(): EnumStateDto[] {
-    return this.contratoMedidorService.getContractStatesCatalog();
-  }
 
   @ApiOperation({
     summary: 'Crear contrato',
@@ -133,7 +116,7 @@ export class ContratoMedidorController {
   @ApiOperation({
     summary: 'Actualizar contrato',
     description:
-      'Actualiza campos del contrato (estado, direccionSuministro, sectorId). Si se envía medidorId, reemplaza el medidor en una transacción.',
+      'Actualiza estados separados del contrato, direccionSuministro o sectorId. Si se envía medidorId, reemplaza el medidor en una transacción.',
   })
   @ApiParam({
     name: 'id',
@@ -144,7 +127,7 @@ export class ContratoMedidorController {
   @ApiBody({
     type: ActualizarContratoMedidorDto,
     description:
-      'Campos a actualizar (estado, direccionSuministro, sectorId, medidorId opcional para reemplazo)',
+      'Campos a actualizar (estadoServicio, estadoCobranza, direccionSuministro, sectorId, medidorId opcional para reemplazo)',
   })
   @ApiResponse({
     status: 200,

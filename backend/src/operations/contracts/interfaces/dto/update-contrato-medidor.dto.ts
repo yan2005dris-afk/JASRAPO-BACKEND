@@ -3,20 +3,10 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsNotEmptyString } from 'src/infrastructure/common/decorators/is-not-empty-string.decorator';
 import {
   EstadoCobranzaContrato,
-  EstadoContrato,
   EstadoServicioContrato,
 } from 'src/shared/enums';
 
 export class ActualizarContratoMedidorDto {
-  @ApiPropertyOptional({
-    description: 'Nuevo estado del contrato',
-    enum: EstadoContrato,
-  })
-  @IsOptional()
-  @IsString()
-  @IsIn(Object.values(EstadoContrato))
-  estado?: string;
-
   @ApiPropertyOptional({ enum: EstadoServicioContrato })
   @IsOptional()
   @IsString()

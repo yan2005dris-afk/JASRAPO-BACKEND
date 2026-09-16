@@ -1,6 +1,9 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsEnum, IsOptional, IsString } from 'class-validator';
-import { EstadoContrato } from 'src/shared/enums';
+import {
+  EstadoCobranzaContrato,
+  EstadoServicioContrato,
+} from 'src/shared/enums';
 
 export class FindContractsQueryDto {
   @ApiPropertyOptional({
@@ -48,11 +51,13 @@ export class FindContractsQueryDto {
   @IsString()
   ubicacion?: string;
 
-  @ApiPropertyOptional({
-    description: 'Filtrar por estado del contrato',
-    enum: EstadoContrato,
-  })
+  @ApiPropertyOptional({ enum: EstadoServicioContrato })
   @IsOptional()
-  @IsEnum(EstadoContrato)
-  estado?: EstadoContrato;
+  @IsEnum(EstadoServicioContrato)
+  estadoServicio?: EstadoServicioContrato;
+
+  @ApiPropertyOptional({ enum: EstadoCobranzaContrato })
+  @IsOptional()
+  @IsEnum(EstadoCobranzaContrato)
+  estadoCobranza?: EstadoCobranzaContrato;
 }

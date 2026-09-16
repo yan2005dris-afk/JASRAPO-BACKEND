@@ -39,7 +39,7 @@ export const safeReadingsSelect = {
               contratoId: true,
               numeroGuia: true,
               direccionSuministro: true,
-              estado: true,
+              estadoServicio: true,
               sector: {
                 select: {
                   nombre: true,

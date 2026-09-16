@@ -590,7 +590,8 @@ describe('Auth E2E (Real Database)', () => {
       const contrato = await prisma.contratos.create({
         data: {
           clienteId: client.clienteId,
-          estado: 'ACTIVO',
+          estadoServicio: 'ACTIVO',
+          estadoCobranza: 'AL_DIA',
           fechaInicio: new Date(),
           comunidadId: 1,
           categoriaTarifaId: 1,

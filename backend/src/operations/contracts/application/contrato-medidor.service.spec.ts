@@ -136,7 +136,7 @@ describe('ContratoMedidorService', () => {
   describe('actualizar', () => {
     it('should delegate to UpdateContractUseCase', async () => {
       const id = BigInt(1);
-      const dto = { estado: 'ACTIVO' };
+      const dto = { estadoServicio: 'ACTIVO' as const };
       mockUpdateUseCase.execute.mockResolvedValue({ id: 1 });
 
       const result = await service.actualizar(id, dto);
@@ -174,9 +174,8 @@ describe('ContratoMedidorService', () => {
     const contratoId = 10n;
     const contrato = new ContractEntity({
       contratoId,
-      estado: 'ACTIVO',
       estadoServicio: EstadoServicioContrato.PENDIENTE_INSTALACION,
-      estadoCobranza: 'PENDIENTE',
+      estadoCobranza: 'NO_APLICA',
       numeroGuia: 'GUIA-010',
       comunidadId: 3,
       historialMedidores: null,
@@ -221,7 +220,6 @@ describe('ContratoMedidorService', () => {
       mockFindOneUseCase.execute.mockResolvedValue(
         new ContractEntity({
           ...contrato,
-          estado: 'PENDIENTE_INSTALACION',
           estadoServicio: EstadoServicioContrato.ACTIVO,
         }),
       );

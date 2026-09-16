@@ -201,7 +201,7 @@ export async function seedRoutes(prisma: PrismaClient) {
 
   // Sample work-order routes (INSTALACION, RECONEXION, INSPECCION)
   const allActiveContratos = await prisma.contratos.findMany({
-    where: { deletedAt: null },
+    where: { estadoServicio: 'ACTIVO', deletedAt: null },
     include: {
       historialMedidores: { where: { fechaHasta: null } },
       cliente: true,

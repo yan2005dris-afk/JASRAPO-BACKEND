@@ -79,24 +79,6 @@ export type EstadoCobranzaContrato =
 
 // Fuente: models/logica-de-negocio/Contratos.prisma
 
-export const EstadoContrato = {
-  SOLICITUD: 'SOLICITUD',
-  PENDIENTE_PAGO: 'PENDIENTE_PAGO',
-  PENDIENTE_INSTALACION: 'PENDIENTE_INSTALACION',
-  ACTIVO: 'ACTIVO',
-  EN_MORA: 'EN_MORA',
-  ORDEN_CORTE: 'ORDEN_CORTE',
-  SUSPENDIDO: 'SUSPENDIDO',
-  EN_CONVENIO: 'EN_CONVENIO',
-  RETIRADO: 'RETIRADO',
-  RECONEXION: 'RECONEXION',
-} as const;
-
-export type EstadoContrato =
-  (typeof EstadoContrato)[keyof typeof EstadoContrato];
-
-// Fuente: models/logica-de-negocio/Contratos.prisma
-
 export const EstadoConvenio = {
   ACTIVO: 'ACTIVO',
   PENDIENTE_ABONO: 'PENDIENTE_ABONO',

@@ -39,7 +39,7 @@ describe('FinalizeMeterLinkUseCase', () => {
     const contratoId = BigInt(1);
     const mockContract = new ContractEntity({
       contratoId,
-      estado: 'ACTIVO',
+      estadoServicio: 'ACTIVO',
     });
 
     mockContractRepository.findById.mockResolvedValue(mockContract);
@@ -53,7 +53,7 @@ describe('FinalizeMeterLinkUseCase', () => {
     expect(mockContractRepository.finalizeActiveMeterLink).toHaveBeenCalledWith(
       contratoId,
     );
-    expect(result).toMatchObject({ contratoId, estado: 'ACTIVO' });
+    expect(result).toMatchObject({ contratoId, estadoServicio: 'ACTIVO' });
   });
 
   it('should throw InvalidDomainOperationException when no active link exists', async () => {

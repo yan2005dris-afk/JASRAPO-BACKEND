@@ -52,7 +52,7 @@ export class ResponseReadingDto {
     contratoId: string;
     numeroGuia: string;
     direccionSuministro: string;
-    estado: string;
+    estadoServicio: string;
     sector?: {
       nombre: string;
     } | null;
@@ -111,7 +111,7 @@ export class ResponseReadingDto {
             contratoId: activeContrato.contratoId.toString(),
             numeroGuia: activeContrato.numeroGuia,
             direccionSuministro: activeContrato.direccionSuministro,
-            estado: activeContrato.estado,
+            estadoServicio: activeContrato.estadoServicio,
             sector: activeContrato.sector
               ? {
                   nombre: activeContrato.sector.nombre,
