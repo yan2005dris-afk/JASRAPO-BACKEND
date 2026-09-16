@@ -40,6 +40,14 @@ export const contractDefaultInclude = {
       },
     },
   },
+  convenios: {
+    where: {
+      deletedAt: null,
+      estado: { in: ['ACTIVO', 'PENDIENTE_ABONO'] },
+    },
+    select: { convenioId: true },
+    take: 1,
+  },
 } satisfies Prisma.ContratosInclude;
 
 export type ContractRecord = Prisma.ContratosGetPayload<{

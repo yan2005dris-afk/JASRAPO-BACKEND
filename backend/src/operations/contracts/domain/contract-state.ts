@@ -47,9 +47,7 @@ export class ContractState {
     const estadoCobranza =
       legacyState === EstadoContrato.EN_MORA
         ? EstadoCobranzaContrato.EN_MORA
-        : legacyState === EstadoContrato.EN_CONVENIO
-          ? EstadoCobranzaContrato.EN_CONVENIO
-          : EstadoCobranzaContrato.AL_DIA;
+        : EstadoCobranzaContrato.AL_DIA;
 
     const estadoServicio =
       legacyState === EstadoContrato.PENDIENTE_INSTALACION
@@ -67,5 +65,15 @@ export class ContractState {
               : EstadoServicioContrato.PENDIENTE_PAGO;
 
     return { estadoServicio, estadoCobranza };
+  }
+
+  /**
+   * Normalizes values from pre-decoupling rows/callers without treating an
+   * agreement marker as current-service debt.
+   */
+  static normalizeCollectionStatus(value: unknown): EstadoCobranzaContrato {
+    return value === EstadoCobranzaContrato.EN_MORA
+      ? EstadoCobranzaContrato.EN_MORA
+      : EstadoCobranzaContrato.AL_DIA;
   }
 }

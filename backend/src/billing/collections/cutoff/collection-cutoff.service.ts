@@ -8,6 +8,7 @@ import {
   COBRANZA_MESES_PARA_MORA,
 } from 'src/infrastructure/config/sistema-config.keys';
 import { EstadoCobranzaContrato } from 'src/shared/enums';
+import { ContractState } from 'src/operations/contracts/domain/contract-state';
 import { DebtCalculatorHelper } from 'src/shared/utils/debt-calculator.util';
 import {
   COLLECTION_CUTOFF_DEFAULTS,
@@ -220,13 +221,6 @@ export class CollectionCutoffService {
     const evaluatedAt = new Date();
     const candidates = await this.evaluate(now);
     for (const candidate of candidates) {
-      if (
-        candidate.estadoCobranzaPersistido !== EstadoCobranzaContrato.AL_DIA &&
-        candidate.estadoCobranzaPersistido !== EstadoCobranzaContrato.EN_MORA
-      ) {
-        // Preserve legacy EN_CONVENIO (and any future non-collection state).
-        continue;
-      }
       if (candidate.estadoCobranzaPersistido === candidate.estadoCobranza) {
         continue;
       }
@@ -235,8 +229,9 @@ export class CollectionCutoffService {
           contratoId: BigInt(candidate.contratoId),
           deletedAt: null,
           updatedAt: { lte: evaluatedAt },
-          // EN_CONVENIO remains a compatibility value owned by legacy consumers.
-          estadoCobranza: candidate.estadoCobranzaPersistido,
+          estadoCobranza: ContractState.normalizeCollectionStatus(
+            candidate.estadoCobranzaPersistido,
+          ),
         },
         data: { estadoCobranza: candidate.estadoCobranza },
       });

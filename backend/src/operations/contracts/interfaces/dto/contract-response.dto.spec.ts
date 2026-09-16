@@ -14,6 +14,8 @@ describe('ContractResponseDto', () => {
       direccionSuministro: 'Av. Amazonas 123',
       estado: 'EN_CONVENIO',
       estadoServicio: EstadoServicioContrato.ACTIVO,
+      estadoCobranza: 'AL_DIA',
+      tieneConvenioActivo: true,
       creadoPor: null,
       comunidadId: 1,
       historialMedidores: null,
@@ -24,6 +26,8 @@ describe('ContractResponseDto', () => {
     expect(response).toMatchObject({
       estado: 'EN_CONVENIO',
       estadoServicio: EstadoServicioContrato.ACTIVO,
+      estadoCobranza: 'AL_DIA',
+      tieneConvenioActivo: true,
     });
   });
 });

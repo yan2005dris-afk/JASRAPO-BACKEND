@@ -216,7 +216,7 @@ describe('CollectionCutoffService', () => {
     expect(prisma.contratos.updateMany).not.toHaveBeenCalled();
   });
 
-  it('preserves EN_CONVENIO and only updates the collection status field', async () => {
+  it('updates only the current-service collection status field', async () => {
     const { service, prisma } = makeService();
     prisma.prefacturas.findMany.mockResolvedValue(debtRows(5));
     prisma.contratos.findMany.mockResolvedValue([]);
@@ -236,7 +236,7 @@ describe('CollectionCutoffService', () => {
     );
   });
 
-  it('does not overwrite a contract already marked EN_CONVENIO', async () => {
+  it('recalculates a legacy agreement marker as current before migration', async () => {
     const { service, prisma } = makeService();
     prisma.prefacturas.findMany.mockResolvedValue([
       {
@@ -247,6 +247,23 @@ describe('CollectionCutoffService', () => {
 
     await service.evaluateAndUpdateStatus(new Date('2026-12-01'));
 
-    expect(prisma.contratos.updateMany).not.toHaveBeenCalled();
+    expect(prisma.contratos.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: { estadoCobranza: 'AL_DIA' },
+      }),
+    );
+  });
+
+  it('never writes EN_CONVENIO to estadoCobranza', async () => {
+    const { service, prisma } = makeService();
+    prisma.prefacturas.findMany.mockResolvedValue(debtRows(5));
+    prisma.contratos.findMany.mockResolvedValue([]);
+
+    await service.evaluateAndUpdateStatus(new Date('2026-12-01'));
+
+    for (const call of prisma.contratos.updateMany.mock.calls) {
+      expect(call[0].data.estadoCobranza).toBe('EN_MORA');
+      expect(call[0].data.estadoCobranza).not.toBe('EN_CONVENIO');
+    }
   });
 });

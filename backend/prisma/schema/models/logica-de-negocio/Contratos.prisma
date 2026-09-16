@@ -55,7 +55,6 @@ enum EstadoServicioContrato {
 enum EstadoCobranzaContrato {
   AL_DIA
   EN_MORA
-  EN_CONVENIO
 }
 
 enum EstadoDeuda {
