@@ -32,5 +32,22 @@ describe('TerceraEdadUtil', () => {
       expect(TerceraEdadUtil.aplica('')).toBe(false);
       expect(TerceraEdadUtil.aplica('no-es-fecha')).toBe(false);
     });
+
+    it('retorna false con 64 años y 11 meses (cumple mañana)', () => {
+      const fecha = new Date();
+      fecha.setFullYear(fecha.getFullYear() - 65);
+      fecha.setDate(fecha.getDate() + 1);
+      expect(TerceraEdadUtil.aplica(fecha.toISOString().slice(0, 10))).toBe(
+        false,
+      );
+    });
+
+    it('retorna true con 65 años justos (mismo día)', () => {
+      const fecha = new Date();
+      fecha.setFullYear(fecha.getFullYear() - 65);
+      expect(TerceraEdadUtil.aplica(fecha.toISOString().slice(0, 10))).toBe(
+        true,
+      );
+    });
   });
 });

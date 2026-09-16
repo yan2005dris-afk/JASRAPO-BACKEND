@@ -178,5 +178,36 @@ describe('UpdateClientUseCase', () => {
         expect.objectContaining({ identificacion: '0926715658' }),
       );
     });
+
+    it('conserva aplicaTerceraEdad cuando fechaNacimiento llega vacío', async () => {
+      mockClientRepository.findById.mockResolvedValue({
+        ...mockCliente,
+        aplicaTerceraEdad: true,
+      });
+      mockClientRepository.updateClient.mockResolvedValue(mockCliente);
+
+      await useCase.execute(1n, { fechaNacimiento: '' });
+
+      expect(mockClientRepository.updateClient).toHaveBeenCalledWith(
+        1n,
+        expect.objectContaining({ aplicaTerceraEdad: true }),
+      );
+    });
+
+    it('recalcula aplicaTerceraEdad cuando llega una fecha de nacimiento válida', async () => {
+      const anio = new Date().getFullYear() - 70;
+      mockClientRepository.findById.mockResolvedValue({
+        ...mockCliente,
+        aplicaTerceraEdad: false,
+      });
+      mockClientRepository.updateClient.mockResolvedValue(mockCliente);
+
+      await useCase.execute(1n, { fechaNacimiento: `${anio}-01-01` });
+
+      expect(mockClientRepository.updateClient).toHaveBeenCalledWith(
+        1n,
+        expect.objectContaining({ aplicaTerceraEdad: true }),
+      );
+    });
   });
 });

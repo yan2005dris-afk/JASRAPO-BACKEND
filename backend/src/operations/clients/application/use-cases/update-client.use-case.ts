@@ -76,7 +76,7 @@ export class UpdateClientUseCase {
       telefonoSecundario: dto.telefonoSecundario ?? cliente.telefonoSecundario,
       direccionDomicilio: dto.direccionDomicilio ?? cliente.direccionDomicilio,
       aplicaTerceraEdad:
-        dto.fechaNacimiento !== undefined
+        dto.fechaNacimiento !== undefined && dto.fechaNacimiento !== ''
           ? TerceraEdadUtil.aplica(dto.fechaNacimiento)
           : cliente.aplicaTerceraEdad,
       aplicaDiscapacidad: dto.aplicaDiscapacidad ?? cliente.aplicaDiscapacidad,

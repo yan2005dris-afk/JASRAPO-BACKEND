@@ -1,15 +1,18 @@
 export class TerceraEdadUtil {
   static readonly EDAD_MINIMA = 65;
 
+  // Se compara en UTC para que el resultado no dependa de la zona horaria del servidor.
   static calcularEdad(
     fechaNacimiento: Date,
     referencia: Date = new Date(),
   ): number {
-    let edad = referencia.getFullYear() - fechaNacimiento.getFullYear();
-    const diferenciaMes = referencia.getMonth() - fechaNacimiento.getMonth();
+    let edad = referencia.getUTCFullYear() - fechaNacimiento.getUTCFullYear();
+    const diferenciaMes =
+      referencia.getUTCMonth() - fechaNacimiento.getUTCMonth();
     if (
       diferenciaMes < 0 ||
-      (diferenciaMes === 0 && referencia.getDate() < fechaNacimiento.getDate())
+      (diferenciaMes === 0 &&
+        referencia.getUTCDate() < fechaNacimiento.getUTCDate())
     ) {
       edad--;
     }
