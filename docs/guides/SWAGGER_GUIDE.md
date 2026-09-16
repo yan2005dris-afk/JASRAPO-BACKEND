@@ -579,9 +579,16 @@ GET          /meters/search           Búsqueda avanzada
 | `/medidores/get-one/:id` | `GET /meters/:id` |
 | `/medidores/update` | `PATCH /meters/:id` |
 | `/medidores/remove/:id` | `DELETE /meters/:id` |
-| `/lecturas/create` | `POST /readings` |
 | `/lecturas/get-all` | `GET /readings` |
 | `/lecturas/get-one/:id` | `GET /readings/:id` |
+
+### Histórico / Legacy — no es contrato vigente
+
+| Referencia histórica | Reemplazo vigente |
+|----------------------|-------------------|
+| `/lecturas/create` / `POST /readings` standalone | Las lecturas se generan dentro de rutas u órdenes de trabajo; se actualizan con `PATCH /readings/:id` o `PATCH /operator/readings/:id`. |
+
+En SC-283 se retiró `CreateReadingUseCase` como vía documentada de alta. Esta tabla es solo contexto histórico y no agrega rutas al contrato OpenAPI.
 
 ### Excepciones Válidas
 

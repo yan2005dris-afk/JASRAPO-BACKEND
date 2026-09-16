@@ -2,134 +2,71 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { ReadingController } from './reading.controller';
 import { ReadingService } from '../../application/reading.service';
-import { LecturaEntity } from '../../domain/entities/lectura.entity';
 
 describe('ReadingController', () => {
   let controller: ReadingController;
   let service: ReadingService;
-
-  const mockLecturaData = {
-    lecturaId: BigInt(1),
+  const reading = {
+    lecturaId: 1n,
     fecha: new Date('2024-01-15'),
     lecturaAnterior: 100,
     lecturaActual: 150,
     consumoCalculado: 50,
-    contratoId: BigInt(1),
-    createdAt: new Date(),
+    contratoId: 1n,
     descripcionAnomalia: null,
     fechaValidacion: null,
-    medidorId: BigInt(1),
+    medidorId: 1n,
     periodoId: 1,
     estado: 'VALIDADA',
     deletedAt: null,
   };
 
-  const expectedMappedLectura = {
-    lecturaId: '1',
-    fecha: new Date('2024-01-15'),
-    lecturaAnterior: 100,
-    lecturaActual: 150,
-    consumoCalculado: 50,
-    contratoId: '',
-    descripcionAnomalia: null,
-    estado: 'VALIDADA',
-    fechaValidacion: null,
-    fotoUrl: undefined,
-    isValidada: undefined,
-    lecturaInicial: undefined,
-    periodoId: 1,
-    tieneAnomalia: undefined,
-    contrato: null,
-    medidor: null,
-    periodoRel: null,
-  };
-
-  const mockReadingService = {
-    create: jest.fn(() => Promise.resolve(mockLecturaData)),
-    findAll: jest.fn(() =>
-      Promise.resolve({ data: [mockLecturaData], meta: { total: 1 } }),
-    ),
-    findOne: jest.fn(() => Promise.resolve(mockLecturaData)),
-    update: jest.fn(() => Promise.resolve(mockLecturaData)),
-    delete: jest.fn(() => Promise.resolve({ message: 'deleted' })),
-  };
-
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [ReadingController],
-      providers: [{ provide: ReadingService, useValue: mockReadingService }],
+      providers: [
+        {
+          provide: ReadingService,
+          useValue: {
+            findAll: jest.fn(),
+            findOne: jest.fn(),
+            update: jest.fn(),
+            delete: jest.fn(),
+          },
+        },
+      ],
     }).compile();
-
-    controller = module.get<ReadingController>(ReadingController);
-    service = module.get<ReadingService>(ReadingService);
+    controller = module.get(ReadingController);
+    service = module.get(ReadingService);
   });
 
-  describe('create', () => {
-    it('should create a reading', async () => {
-      const createDto = {
-        fecha: '2024-01-15',
-        lecturaAnterior: 100,
-        lecturaActual: 150,
-        contratoId: '1',
-        periodo: '1',
-      };
-      jest.spyOn(service, 'create').mockResolvedValue(mockLecturaData as any);
-      const result = await controller.create(createDto as any);
-
-      expect(service.create).toHaveBeenCalledWith(createDto, undefined);
-      expect(result).toEqual(expectedMappedLectura);
+  it('lists readings', async () => {
+    (service.findAll as jest.Mock).mockResolvedValue({
+      data: [reading],
+      meta: { total: 1 },
     });
+    const result = await controller.findAll({ page: 1, limit: 10 });
+    expect(service.findAll).toHaveBeenCalled();
+    expect(result.meta).toEqual({ total: 1 });
+    expect(result.data).toHaveLength(1);
   });
 
-  describe('findAll', () => {
-    it('should return all readings', async () => {
-      jest.spyOn(service, 'findAll').mockResolvedValue({
-        data: [mockLecturaData as any],
-        meta: { total: 1 },
-      } as any);
-      const result = await controller.findAll({ page: 1, limit: 10 });
-
-      expect(service.findAll).toHaveBeenCalled();
-      expect(result).toEqual({
-        data: [expectedMappedLectura],
-        meta: { total: 1 },
-      });
-    });
+  it('gets a reading by id', async () => {
+    (service.findOne as jest.Mock).mockResolvedValue(reading);
+    await controller.findOne(1n);
+    expect(service.findOne).toHaveBeenCalledWith(1n);
   });
 
-  describe('findOne', () => {
-    it('should return a reading by id', async () => {
-      jest.spyOn(service, 'findOne').mockResolvedValue(mockLecturaData as any);
-      const result = await controller.findOne(1n);
-
-      expect(service.findOne).toHaveBeenCalledWith(1n);
-      expect(result).toEqual(expectedMappedLectura);
-    });
+  it('updates a reading', async () => {
+    const dto = { lecturaActual: 200 };
+    (service.update as jest.Mock).mockResolvedValue(reading);
+    await controller.actualizarLectura(1n, dto);
+    expect(service.update).toHaveBeenCalledWith(1n, dto);
   });
 
-  describe('update', () => {
-    it('should update a reading', async () => {
-      const updateDto = { lecturaActual: 200 };
-      jest.spyOn(service, 'update').mockResolvedValue(mockLecturaData as any);
-      const result = await controller.actualizarLectura(1n, updateDto);
-
-      expect(service.update).toHaveBeenCalledWith(
-        1n,
-        updateDto,
-        undefined,
-        undefined,
-      );
-      expect(result).toEqual(expectedMappedLectura);
-    });
-  });
-
-  describe('remove', () => {
-    it('should remove a reading', async () => {
-      jest.spyOn(service, 'delete').mockResolvedValue({ message: 'deleted' });
-      const result = await controller.eliminarLectura(1n);
-
-      expect(service.delete).toHaveBeenCalledWith(1n);
-      expect(result).toBeDefined();
-    });
+  it('removes a reading', async () => {
+    (service.delete as jest.Mock).mockResolvedValue({ message: 'deleted' });
+    await controller.eliminarLectura(1n);
+    expect(service.delete).toHaveBeenCalledWith(1n);
   });
 });

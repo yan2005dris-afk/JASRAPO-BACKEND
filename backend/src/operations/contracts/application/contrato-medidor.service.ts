@@ -3,11 +3,6 @@ import { CrearContratoMedidorDto } from '../interfaces/dto/create-contrato-medid
 import { ActualizarContratoMedidorDto } from '../interfaces/dto/update-contrato-medidor.dto';
 import { FilterContractsDto } from '../interfaces/dto/filter-contracts.dto';
 import { buildContractFilters } from './mappers/build-contract-filters.mapper';
-import { EstadoContrato } from 'src/shared/enums';
-import {
-  EnumStateDto,
-  buildStateCatalog,
-} from 'src/shared/enums/state-catalog';
 import { CreateContractUseCase } from './use-cases/create-contract.use-case';
 import { FindAllContractsUseCase } from './use-cases/find-all-contracts.use-case';
 import { FindOneContractUseCase } from './use-cases/find-one-contract.use-case';
@@ -19,7 +14,12 @@ import { GetResponsibilityAgreementPdfDataUseCase } from './use-cases/get-respon
 import { GeneratePdfUseCase } from 'src/infrastructure/pdf/use-cases/generate-pdf.use-case';
 import { ContractEntity } from '../domain/entities/contract.entity';
 import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
-import { TipoRuta, EstadoRuta } from 'src/shared/enums';
+import {
+  EstadoOrdenTrabajo,
+  EstadoRuta,
+  EstadoServicioContrato,
+  TipoActividadCodes,
+} from 'src/shared/enums';
 import { RouteRepository } from '../../routes/domain/repositories/route.repository';
 import { OrdenTrabajoRepository } from '../../routes/domain/repositories/orden-trabajo.repository';
 import {
@@ -45,21 +45,6 @@ export class ContratoMedidorService {
     private readonly routeRepository: RouteRepository,
     private readonly ordenTrabajoRepository: OrdenTrabajoRepository,
   ) {}
-
-  getContractStatesCatalog(): EnumStateDto[] {
-    return buildStateCatalog(EstadoContrato, {
-      [EstadoContrato.SOLICITUD]: 'Solicitud',
-      [EstadoContrato.PENDIENTE_PAGO]: 'Pendiente Pago',
-      [EstadoContrato.PENDIENTE_INSTALACION]: 'Pendiente Instalación',
-      [EstadoContrato.ACTIVO]: 'Activo',
-      [EstadoContrato.EN_MORA]: 'En Mora',
-      [EstadoContrato.ORDEN_CORTE]: 'Orden Corte',
-      [EstadoContrato.SUSPENDIDO]: 'Suspendido',
-      [EstadoContrato.EN_CONVENIO]: 'En Convenio',
-      [EstadoContrato.RETIRADO]: 'Retirado',
-      [EstadoContrato.RECONEXION]: 'Reconexión',
-    });
-  }
 
   async crearContrato(
     createDto: CrearContratoMedidorDto,
@@ -115,9 +100,11 @@ export class ContratoMedidorService {
     // 1. Buscar el contrato y validar estado
     const contrato = await this.findOneUseCase.execute(contratoId);
 
-    if (contrato.estado !== EstadoContrato.PENDIENTE_INSTALACION) {
+    if (
+      contrato.estadoServicio !== EstadoServicioContrato.PENDIENTE_INSTALACION
+    ) {
       throw new InvalidDomainOperationException(
-        `El contrato debe estar en estado PENDIENTE_INSTALACION (actual: ${contrato.estado})`,
+        `El contrato debe estar en estado PENDIENTE_INSTALACION (actual: ${contrato.estadoServicio})`,
       );
     }
 
@@ -129,7 +116,7 @@ export class ContratoMedidorService {
       if (!existing) {
         throw new EntityNotFoundException('Ruta', dto.routeId.toString());
       }
-      if (existing.tipoRuta !== TipoRuta.INSTALACION) {
+      if (existing.tipoRuta !== TipoActividadCodes.INSTALACION) {
         throw new InvalidDomainOperationException(
           `La ruta debe ser de tipo INSTALACION (actual: ${existing.tipoRuta})`,
         );
@@ -146,7 +133,7 @@ export class ContratoMedidorService {
         nombre: `Instalaciones ${contrato.numeroGuia ?? contratoId}`,
         descripcion: null,
         operarioId: null,
-        tipoRuta: TipoRuta.INSTALACION,
+        tipoRuta: TipoActividadCodes.INSTALACION,
         comunidadId: Number(contrato.comunidadId),
         sectorId: null,
         periodoId: null,
@@ -162,8 +149,7 @@ export class ContratoMedidorService {
       rutaId: ruta.rutaId,
       contratoId,
       medidorId: contrato.historialMedidores?.[0]?.medidorId ?? null,
-      tipoActividad: 'INSTALACION',
-      estado: 'PENDIENTE',
+      estado: EstadoOrdenTrabajo.PENDIENTE,
     });
 
     return ruta;

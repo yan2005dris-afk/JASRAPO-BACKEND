@@ -106,7 +106,7 @@ describe('PrismaReadingRepository - soft delete select regression', () => {
       medidorId: BigInt(1),
       descripcionAnomalia: null,
       fechaValidacion: null,
-      fotoUrl: null,
+      evidenciaFotoUrl: null,
       estado: 'PENDIENTE',
       lecturaInicial: false,
       periodoId: 1,
@@ -141,7 +141,7 @@ describe('PrismaReadingRepository - soft delete select regression', () => {
       medidorId: BigInt(1),
       descripcionAnomalia: null,
       fechaValidacion: null,
-      fotoUrl: null,
+      evidenciaFotoUrl: null,
       estado: 'PENDIENTE',
       lecturaInicial: false,
       periodoId: 1,
@@ -242,34 +242,69 @@ describe('PrismaReadingRepository - soft delete select regression', () => {
     });
   });
 
-  describe('createWithAtomicSnapshot', () => {
-    it('throws InvalidDomainOperationException on negative consumption without anomaly description', async () => {
-      const findFirstHistorial = jest.fn().mockResolvedValue({
-        historialId: BigInt(10),
-        fechaDesde: new Date('2026-01-01'),
-        lecturaInicial: '100.00',
-      });
-      const findFirstLecturas = jest.fn().mockResolvedValue({
-        lecturaActual: '100.00',
-      });
-
+  describe('photo evidence atomicity', () => {
+    it('updates the linked work order evidence in the same transaction as the reading', async () => {
+      const updated = {
+        lecturaId: BigInt(1),
+        fecha: new Date(),
+        lecturaAnterior: 100,
+        lecturaActual: 150,
+        consumoCalculado: 50,
+        medidorId: BigInt(1),
+        estado: 'PENDIENTE',
+        lecturaInicial: false,
+        periodoId: 1,
+        deletedAt: null,
+        medidor: null,
+        periodoRel: null,
+        ordenesTrabajo: [],
+      };
+      const tx = {
+        ordenesTrabajo: {
+          updateMany: jest.fn().mockResolvedValue({ count: 1 }),
+        },
+        lecturas: { update: jest.fn().mockResolvedValue(updated) },
+      };
       const prisma = {
-        $transaction: jest.fn().mockImplementation(async (callback) => {
-          return callback(prisma);
-        }),
-        historialMedidores: { findFirst: findFirstHistorial },
-        lecturas: { findFirst: findFirstLecturas },
+        $transaction: jest.fn(
+          async (callback: (client: typeof tx) => unknown) => callback(tx),
+        ),
+      };
+      const repository = new PrismaReadingRepository(prisma as any);
+
+      await repository.update(
+        { lecturaId: BigInt(1) },
+        { evidenciaFotoUrl: 'readings/evidence.jpg' },
+      );
+
+      expect(tx.ordenesTrabajo.updateMany).toHaveBeenCalledWith({
+        where: { lecturaId: BigInt(1), deletedAt: null },
+        data: { evidenciaFotoUrl: 'readings/evidence.jpg' },
+      });
+      expect(prisma.$transaction).toHaveBeenCalledTimes(1);
+    });
+
+    it('rejects photo evidence when no active linked work order exists', async () => {
+      const tx = {
+        ordenesTrabajo: {
+          updateMany: jest.fn().mockResolvedValue({ count: 0 }),
+        },
+        lecturas: { update: jest.fn() },
+      };
+      const prisma = {
+        $transaction: jest.fn(
+          async (callback: (client: typeof tx) => unknown) => callback(tx),
+        ),
       };
       const repository = new PrismaReadingRepository(prisma as any);
 
       await expect(
-        repository.createWithAtomicSnapshot({
-          fecha: new Date('2026-02-01'),
-          lecturaActual: new Decimal(80),
-          medidorId: BigInt(1),
-          periodoId: 1,
-        }),
-      ).rejects.toThrow(/sin registrar una anomalía o novedad/);
+        repository.update(
+          { lecturaId: BigInt(1) },
+          { evidenciaFotoUrl: 'readings/evidence.jpg' },
+        ),
+      ).rejects.toThrow('orden de trabajo vinculada');
+      expect(tx.lecturas.update).not.toHaveBeenCalled();
     });
   });
 

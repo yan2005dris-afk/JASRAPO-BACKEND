@@ -26,10 +26,10 @@ export class OrdenTrabajoMedidorDto {
 
 export class OrderWorkResponseDto {
   @ApiProperty({ example: '1', description: 'ID de la orden de trabajo' })
-  ordenTrabajoId: bigint;
+  ordenTrabajoId: string;
 
   @ApiProperty({ example: '1', description: 'ID de la ruta' })
-  rutaId: bigint;
+  rutaId: string;
 
   @ApiProperty({ example: 'INSTALACION', description: 'Tipo de actividad' })
   tipoActividad: string;
@@ -66,7 +66,7 @@ export class OrderWorkResponseDto {
     nullable: true,
     description: 'ID de la lectura vinculada',
   })
-  lecturaId?: bigint | null;
+  lecturaId?: string | null;
 
   @ApiPropertyOptional({
     type: OrdenTrabajoContratoDto,
@@ -86,8 +86,8 @@ export class OrderWorkResponseDto {
 
   static fromEntity(entity: OrdenTrabajoEntity): OrderWorkResponseDto {
     const dto = new OrderWorkResponseDto();
-    dto.ordenTrabajoId = entity.ordenTrabajoId;
-    dto.rutaId = entity.rutaId;
+    dto.ordenTrabajoId = entity.ordenTrabajoId.toString();
+    dto.rutaId = entity.rutaId.toString();
     dto.tipoActividad = entity.tipoActividad;
     dto.estado = entity.estado;
     dto.ordenVisita = entity.ordenVisita;
@@ -98,7 +98,7 @@ export class OrderWorkResponseDto {
         ? entity.completadoEn
         : DateUtil.formatForFrontend(entity.completadoEn)
       : null;
-    dto.lecturaId = entity.lecturaId;
+    dto.lecturaId = entity.lecturaId?.toString() ?? null;
 
     dto.contrato = entity.contratoNumeroContrato
       ? {

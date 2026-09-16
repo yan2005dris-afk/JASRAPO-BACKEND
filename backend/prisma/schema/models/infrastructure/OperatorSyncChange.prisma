@@ -1,0 +1,26 @@
+enum OperatorSyncChangeOperation {
+  CREATE
+  UPDATE
+  DELETE
+}
+
+model OperatorSyncChange {
+  sequenceId  BigInt                      @id @default(autoincrement()) @map("sequence_id")
+  entityType  String                      @map("entity_type")
+  entityId    BigInt                      @map("entity_id")
+  operation   OperatorSyncChangeOperation @map("operation")
+  changedAt   DateTime                    @default(now()) @map("changed_at")
+  periodoId   Int?                        @map("periodo_id")
+  rutaId      BigInt?                     @map("ruta_id")
+  comunidadId Int?                        @map("comunidad_id")
+  sectorId    Int?                        @map("sector_id")
+  medidorId   BigInt?                     @map("medidor_id")
+  payload     Json
+
+  @@index([sequenceId])
+  @@index([changedAt, sequenceId])
+  @@index([periodoId, comunidadId, sectorId, sequenceId])
+  @@index([rutaId, sequenceId])
+  @@index([medidorId, sequenceId])
+  @@map("operator_sync_changes")
+}

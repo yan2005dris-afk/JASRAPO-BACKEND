@@ -1,10 +1,3 @@
-enum TipoActividadOrden {
-  INSTALACION
-  LECTURA
-  RECONEXION
-  INSPECCION
-}
-
 enum EstadoOrdenTrabajo {
   PENDIENTE
   EN_PROGRESO
@@ -18,7 +11,6 @@ model OrdenesTrabajo {
   rutaId               BigInt               @map("ruta_id")
   contratoId           BigInt               @map("contrato_id")
   medidorId            BigInt?              @map("medidor_id")
-  tipoActividad        TipoActividadOrden   @default(LECTURA) @map("tipo_actividad")
   estado               EstadoOrdenTrabajo   @default(PENDIENTE) @map("estado")
   ordenVisita          Int                  @default(0) @map("orden_visita")
   resultadoObservacion String?              @map("resultado_observacion")
@@ -34,13 +26,14 @@ model OrdenesTrabajo {
   contrato             Contratos            @relation(fields: [contratoId], references: [contratoId], onDelete: Restrict)
   medidor              Medidores?           @relation(fields: [medidorId], references: [medidorId], onDelete: SetNull)
   lectura              Lecturas?            @relation(fields: [lecturaId], references: [lecturaId], onDelete: SetNull)
-  reemplazosMedidor    ReemplazoMedidor[]
+  reemplazosMedidor     ReemplazoMedidor[]
+  ejecucionOrdenTrabajo EjecucionesOrdenTrabajo?
+  novedades             NovedadOrdenTrabajo[]
 
   @@index([rutaId])
   @@index([contratoId])
   @@index([medidorId])
   @@index([lecturaId])
   @@index([estado])
-  @@index([tipoActividad])
   @@map("ordenes_trabajo")
 }

@@ -61,6 +61,7 @@ export class CategoriaTarifaController {
       filterDto.page,
       filterDto.limit,
       filterDto.nombre,
+      filterDto.search,
     );
     return {
       data: TariffCategoryResponseDto.fromEntityList(result.data),

@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { MeterRepository } from '../../../meters/domain/repositories/meter.repository';
+import { OperatorRepository } from '../../domain/repositories/operator.repository';
 import { EstadoMedidor } from 'src/shared/enums';
 import {
   EntityNotFoundException,
@@ -9,9 +10,16 @@ import type { MeterEntity } from '../../../meters/domain/entities/meter.entity';
 
 @Injectable()
 export class DecommissionMeterUseCase {
-  constructor(private readonly meterRepository: MeterRepository) {}
+  constructor(
+    private readonly meterRepository: MeterRepository,
+    private readonly operatorRepository: OperatorRepository,
+  ) {}
 
-  async execute(medidorId: bigint, motivo: string): Promise<MeterEntity> {
+  async execute(
+    medidorId: bigint,
+    motivo: string,
+    operarioId = 0,
+  ): Promise<MeterEntity> {
     const meter = await this.meterRepository.findUnique({ medidorId });
 
     if (!meter || meter.deletedAt) {
@@ -23,6 +31,8 @@ export class DecommissionMeterUseCase {
         `Meter must be in DANADO state to be decommissioned, current state: ${meter.estado}`,
       );
     }
+
+    await this.operatorRepository.verifyMeterOwnership(operarioId, medidorId);
 
     return this.meterRepository.update(
       { medidorId },

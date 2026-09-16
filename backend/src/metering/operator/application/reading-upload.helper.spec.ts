@@ -4,19 +4,19 @@ import {
 } from './reading-upload.helper';
 import { SRI_STORAGE_TYPES } from 'src/infrastructure/storage/storage.service';
 
-const mockStorageService = {
-  upload: jest.fn(),
-  delete: jest.fn(),
-};
-
+const mockStorageService = { upload: jest.fn(), delete: jest.fn() };
+const png = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
+  'base64',
+);
 const fakeFile = (
   overrides: Partial<Express.Multer.File> = {},
 ): Express.Multer.File => ({
   fieldname: 'foto',
   originalname: 'photo.jpg',
   mimetype: 'image/jpeg',
-  buffer: Buffer.from('fake-image-data'),
-  size: 15,
+  buffer: png,
+  size: png.length,
   encoding: '7bit',
   destination: '',
   filename: '',
@@ -26,84 +26,57 @@ const fakeFile = (
 });
 
 describe('reading-upload.helper', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
+  beforeEach(() => jest.clearAllMocks());
+
+  it('validates binary format and uploads using the detected format', async () => {
+    mockStorageService.upload.mockResolvedValue({});
+    const key = await uploadReadingPhoto(fakeFile(), mockStorageService as any);
+    expect(mockStorageService.upload).toHaveBeenCalledWith(
+      SRI_STORAGE_TYPES.READINGS,
+      expect.stringMatching(/^readings\/.+\.png$/),
+      png,
+      { contentType: 'image/png' },
+    );
+    expect(key).toMatch(/^readings\/.+\.png$/);
   });
 
-  describe('uploadReadingPhoto', () => {
-    it('uploads to the READINGS bucket and returns a storage key', async () => {
-      mockStorageService.upload.mockResolvedValue({
-        key: 'readings/uuid.jpg',
-        size: 15,
-        contentType: 'image/jpeg',
-      });
-
-      const key = await uploadReadingPhoto(
-        fakeFile(),
+  it('rejects MIME/extension spoofing and malformed bytes before storage', async () => {
+    await expect(
+      uploadReadingPhoto(
+        fakeFile({
+          mimetype: 'image/png',
+          originalname: 'x.png',
+          buffer: Buffer.from('not-an-image'),
+        }),
         mockStorageService as any,
-      );
-
-      expect(mockStorageService.upload).toHaveBeenCalledWith(
-        SRI_STORAGE_TYPES.READINGS,
-        expect.stringMatching(/^readings\/.+\.jpg$/),
-        expect.any(Buffer),
-        { contentType: 'image/jpeg' },
-      );
-      expect(key).toMatch(/^readings\/.+\.jpg$/);
-    });
-
-    it('preserves the original file extension', async () => {
-      mockStorageService.upload.mockResolvedValue({});
-
-      const key = await uploadReadingPhoto(
-        fakeFile({ originalname: 'evidence.png', mimetype: 'image/png' }),
-        mockStorageService as any,
-      );
-
-      expect(key).toMatch(/^readings\/.+\.png$/);
-    });
-
-    it('uses the full filename as extension when there is no dot separator', async () => {
-      mockStorageService.upload.mockResolvedValue({});
-
-      const key = await uploadReadingPhoto(
-        fakeFile({ originalname: 'noext' }),
-        mockStorageService as any,
-      );
-
-      // split('.').pop() returns the full string when there is no '.', so the
-      // resulting key ends with ".noext" — this is acceptable for edge cases
-      // where the frontend sends a filename without an extension.
-      expect(key).toMatch(/^readings\/.+\.noext$/);
-    });
+      ),
+    ).rejects.toThrow();
+    expect(mockStorageService.upload).not.toHaveBeenCalled();
   });
 
-  describe('rollbackReadingPhoto', () => {
-    it('deletes the key from the READINGS bucket', async () => {
-      mockStorageService.delete.mockResolvedValue(undefined);
+  it('deletes the generated key when storage upload fails', async () => {
+    mockStorageService.upload.mockRejectedValue(
+      new Error('storage unavailable'),
+    );
 
-      await rollbackReadingPhoto(
-        'readings/some-uuid.jpg',
-        mockStorageService as any,
-      );
+    await expect(
+      uploadReadingPhoto(fakeFile(), mockStorageService as any),
+    ).rejects.toThrow('storage unavailable');
 
-      expect(mockStorageService.delete).toHaveBeenCalledWith(
-        SRI_STORAGE_TYPES.READINGS,
-        'readings/some-uuid.jpg',
-      );
-    });
+    expect(mockStorageService.delete).toHaveBeenCalledWith(
+      SRI_STORAGE_TYPES.READINGS,
+      expect.stringMatching(/^readings\/.+\.png$/),
+    );
+  });
 
-    it('does not throw when the delete fails (fire-and-forget)', async () => {
-      mockStorageService.delete.mockRejectedValue(
-        new Error('bucket unreachable'),
-      );
-
-      await expect(
-        rollbackReadingPhoto(
-          'readings/some-uuid.jpg',
-          mockStorageService as any,
-        ),
-      ).resolves.toBeUndefined();
-    });
+  it('removes an uploaded photo on rollback without masking the original failure', async () => {
+    mockStorageService.delete.mockRejectedValue(new Error('unavailable'));
+    await expect(
+      rollbackReadingPhoto('readings/key.png', mockStorageService as any),
+    ).resolves.toBeUndefined();
+    expect(mockStorageService.delete).toHaveBeenCalledWith(
+      SRI_STORAGE_TYPES.READINGS,
+      'readings/key.png',
+    );
   });
 });

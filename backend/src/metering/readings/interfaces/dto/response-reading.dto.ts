@@ -26,8 +26,11 @@ export class ResponseReadingDto {
   @ApiProperty({ description: 'Fecha de validación', required: false })
   fechaValidacion: Date | null;
 
-  @ApiProperty({ description: 'URL de la foto', required: false })
-  fotoUrl: string | null;
+  @ApiProperty({
+    description: 'Clave de evidencia fotográfica en RustFS',
+    required: false,
+  })
+  evidenciaFotoUrl: string | null;
 
   @ApiProperty({ description: 'Indica si está validada' })
   isValidada: boolean;
@@ -49,7 +52,7 @@ export class ResponseReadingDto {
     contratoId: string;
     numeroGuia: string;
     direccionSuministro: string;
-    estado: string;
+    estadoServicio: string;
     sector?: {
       nombre: string;
     } | null;
@@ -97,7 +100,7 @@ export class ResponseReadingDto {
       contratoId: activeContrato ? activeContrato.contratoId.toString() : '',
       descripcionAnomalia: reading.descripcionAnomalia,
       fechaValidacion: reading.fechaValidacion,
-      fotoUrl: reading.fotoUrl,
+      evidenciaFotoUrl: reading.evidenciaFotoUrl,
       isValidada: reading.isValidada,
       lecturaInicial: reading.lecturaInicial,
       periodoId: reading.periodoId,
@@ -108,7 +111,7 @@ export class ResponseReadingDto {
             contratoId: activeContrato.contratoId.toString(),
             numeroGuia: activeContrato.numeroGuia,
             direccionSuministro: activeContrato.direccionSuministro,
-            estado: activeContrato.estado,
+            estadoServicio: activeContrato.estadoServicio,
             sector: activeContrato.sector
               ? {
                   nombre: activeContrato.sector.nombre,

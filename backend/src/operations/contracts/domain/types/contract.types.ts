@@ -1,4 +1,7 @@
-import type { EstadoContrato } from 'src/shared/enums';
+import type {
+  EstadoCobranzaContrato,
+  EstadoServicioContrato,
+} from 'src/shared/enums';
 
 export interface ContractFilters {
   contratoId?: bigint;
@@ -8,7 +11,8 @@ export interface ContractFilters {
   categoriaTarifaId?: number;
   medidorId?: bigint;
   medidorSerie?: string;
-  estado?: string;
+  estadoServicio?: EstadoServicioContrato;
+  estadoCobranza?: EstadoCobranzaContrato;
   ubicacion?: string;
   search?: string;
   hasDebt?: boolean;
@@ -20,7 +24,8 @@ export interface CreateContractData {
   numeroGuia: string;
   fechaInicio?: Date;
   direccionSuministro: string;
-  estado: EstadoContrato;
+  estadoServicio?: EstadoServicioContrato;
+  estadoCobranza?: EstadoCobranzaContrato;
   creadoPor?: string | null;
   comunidadId: number;
   sectorId?: number | null;
@@ -32,7 +37,8 @@ export interface CreateContractWithMeterCommand {
   medidorId: bigint;
   numeroGuia: string;
   direccionSuministro: string;
-  estado: EstadoContrato;
+  estadoServicio: EstadoServicioContrato;
+  estadoCobranza: EstadoCobranzaContrato;
   creadoPor?: string;
   comunidadId: number;
   sectorId: number | null;

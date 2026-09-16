@@ -7,4 +7,13 @@ export class TariffCategoryFilterDto extends PaginationDto {
   @IsOptional()
   @IsString()
   nombre?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Buscar por nombre o descripción de la categoría (los campos visibles del listado)',
+    example: 'residencial',
+  })
+  @IsOptional()
+  @IsString()
+  search?: string;
 }

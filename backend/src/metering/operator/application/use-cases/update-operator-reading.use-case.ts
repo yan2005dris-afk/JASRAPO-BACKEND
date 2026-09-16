@@ -2,12 +2,19 @@ import { Injectable } from '@nestjs/common';
 import { EstadoLectura } from 'src/shared/enums';
 import {
   EntityNotFoundException,
+  ForbiddenDomainException,
   InvalidDomainOperationException,
 } from 'src/shared/domain/exceptions/domain.exception';
 import { UpdateReadingUseCase } from 'src/metering/readings/application/use-cases/update-reading.use-case';
 import { ActualizarLecturaDto } from 'src/metering/readings/interfaces/dto/update-lectura.dto';
+import { UpdateOperatorReadingDto } from '../../interfaces/dto/update-operator-reading.dto';
 import { LecturaEntity } from 'src/metering/readings/domain/entities/lectura.entity';
 import { OperatorRepository } from '../../domain/repositories/operator.repository';
+
+export type EvidenceReplacementCleanup = (
+  oldKey: string,
+  newKey: string,
+) => Promise<void>;
 
 const OPERATOR_EDITABLE_ESTADOS: ReadonlySet<EstadoLectura> = new Set([
   EstadoLectura.PENDIENTE,
@@ -24,7 +31,9 @@ export class UpdateOperatorReadingUseCase {
   async execute(
     id: bigint,
     operarioId: number,
-    updateDto: ActualizarLecturaDto,
+    updateDto: UpdateOperatorReadingDto,
+    evidenciaFotoUrl?: string,
+    cleanupOldEvidence?: EvidenceReplacementCleanup,
   ): Promise<LecturaEntity> {
     // 1. Validar que la lectura existe y obtener datos de ruta
     const lectura = await this.operatorRepository.findReadingWithDetails(id);
@@ -53,31 +62,14 @@ export class UpdateOperatorReadingUseCase {
     const hasWorkOrder = lectura.ordenesTrabajo?.some(
       (ot) =>
         ot.ruta?.operarioId === operarioId &&
-        ot.ruta?.periodoId === activePeriod.periodoId,
+        ot.ruta?.periodoId === activePeriod.periodoId &&
+        rutas.some((ruta) => ruta.rutaId === ot.rutaId),
     );
 
     if (!hasWorkOrder) {
-      // Fallback a pertenencia comunitaria/sectorial en rutas activas
-      const activeHistorial = lectura.medidor?.historial?.[0];
-      const contrato = activeHistorial?.contrato ?? null;
-      if (!contrato) {
-        throw new EntityNotFoundException('Contrato', 'activo');
-      }
-
-      const lecturaPertenece = rutas.some((ruta) => {
-        const comunidadMatch = ruta.comunidadId === contrato.comunidadId;
-        const sectorMatch =
-          ruta.sectorId === null || ruta.sectorId === undefined
-            ? true
-            : ruta.sectorId === contrato.sectorId;
-        return comunidadMatch && sectorMatch;
-      });
-
-      if (!lecturaPertenece) {
-        throw new InvalidDomainOperationException(
-          'Esta lectura no pertenece a tu ruta asignada',
-        );
-      }
+      throw new ForbiddenDomainException(
+        'Esta lectura no está asignada a una orden de trabajo de tu ruta activa',
+      );
     }
 
     // 6. Validar que la lectura esté en un estado modificable por el operador
@@ -88,10 +80,20 @@ export class UpdateOperatorReadingUseCase {
     }
 
     // 7. Delegar al UpdateReadingUseCase unificado con state machine
-    return this.updateReadingUseCase.execute(
+    const oldEvidenceKey = lectura.ordenesTrabajo?.find(
+      (order) => order.evidenciaFotoUrl,
+    )?.evidenciaFotoUrl;
+    const updated = await this.updateReadingUseCase.execute(
       id,
-      updateDto,
+      {
+        ...(updateDto as ActualizarLecturaDto),
+        ...(evidenciaFotoUrl ? { evidenciaFotoUrl } : {}),
+      },
       EstadoLectura.POR_REVISION,
     );
+    if (evidenciaFotoUrl && oldEvidenceKey && cleanupOldEvidence) {
+      await cleanupOldEvidence(oldEvidenceKey, evidenciaFotoUrl);
+    }
+    return updated;
   }
 }

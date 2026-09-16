@@ -1,0 +1,9 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: jasrapo-backend
+resources:
+  - namespace.yaml
+  - postgres.yaml
+  - rustfs.yaml
+  - backend.yaml
+  - backend-ingress.yaml

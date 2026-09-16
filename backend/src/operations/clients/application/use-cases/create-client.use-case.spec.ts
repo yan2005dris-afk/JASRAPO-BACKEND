@@ -174,6 +174,50 @@ describe('CreateClientUseCase', () => {
       );
     });
 
+    it('should compute aplicaTerceraEdad = true when fechaNacimiento is 65+', async () => {
+      mockClientRepository.findByIdentificacion.mockResolvedValue(null);
+      mockClientRepository.create.mockResolvedValue({
+        ...baseDto,
+        clienteId: BigInt(1),
+      });
+      const anio = new Date().getFullYear() - 70;
+
+      await useCase.execute({ ...baseDto, fechaNacimiento: `${anio}-01-01` });
+
+      expect(mockClientRepository.create).toHaveBeenCalledWith(
+        expect.objectContaining({ aplicaTerceraEdad: true }),
+      );
+    });
+
+    it('should compute aplicaTerceraEdad = false when younger than 65', async () => {
+      mockClientRepository.findByIdentificacion.mockResolvedValue(null);
+      mockClientRepository.create.mockResolvedValue({
+        ...baseDto,
+        clienteId: BigInt(1),
+      });
+      const anio = new Date().getFullYear() - 40;
+
+      await useCase.execute({ ...baseDto, fechaNacimiento: `${anio}-01-01` });
+
+      expect(mockClientRepository.create).toHaveBeenCalledWith(
+        expect.objectContaining({ aplicaTerceraEdad: false }),
+      );
+    });
+
+    it('should default aplicaTerceraEdad = false when no fechaNacimiento', async () => {
+      mockClientRepository.findByIdentificacion.mockResolvedValue(null);
+      mockClientRepository.create.mockResolvedValue({
+        ...baseDto,
+        clienteId: BigInt(1),
+      });
+
+      await useCase.execute(baseDto);
+
+      expect(mockClientRepository.create).toHaveBeenCalledWith(
+        expect.objectContaining({ aplicaTerceraEdad: false }),
+      );
+    });
+
     it('should pass contact data trimmed for email', async () => {
       mockClientRepository.findByIdentificacion.mockResolvedValue(null);
       mockClientRepository.create.mockResolvedValue({

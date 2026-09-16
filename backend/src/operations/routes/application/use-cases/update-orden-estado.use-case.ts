@@ -14,6 +14,7 @@ export class UpdateOrdenEstadoUseCase {
   async execute(
     ordenTrabajoId: bigint,
     data: UpdateOrdenEstadoData,
+    operarioId: number,
   ): Promise<OrdenTrabajoEntity> {
     // Validate estado is valid (defense in depth — DTO @IsEnum should catch first)
     const validEstados = Object.values(EstadoOrdenTrabajo);
@@ -22,6 +23,11 @@ export class UpdateOrdenEstadoUseCase {
         `Estado inválido: ${data.estado}`,
       );
     }
+
+    await this.ordenTrabajoRepository.verifyOperatorWorkOrderOwnership(
+      operarioId,
+      ordenTrabajoId,
+    );
 
     return this.ordenTrabajoRepository.updateEstado(ordenTrabajoId, data);
   }

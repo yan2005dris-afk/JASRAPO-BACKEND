@@ -12,6 +12,13 @@ export async function seedRoutes(prisma: PrismaClient) {
     return { rutasCreadas: 0, lecturasInicializadas: 0 };
   }
 
+  const tipoActividads = await prisma.tipoActividad.findMany({
+    select: { tipoActividadId: true, codigo: true },
+  });
+  const tipoActividadIdByCode = new Map(
+    tipoActividads.map((type) => [type.codigo, type.tipoActividadId]),
+  );
+
   const operadores = await prisma.usuarios.findMany({
     where: { rol: { nombre: 'operadores' } },
     select: { usuarioId: true },
@@ -23,8 +30,24 @@ export async function seedRoutes(prisma: PrismaClient) {
   }
 
   // Group active contracts by comunidad+sector to derive TOMA_LECTURA zones
+  // Keep the development dataset ready for manual operator testing on every seed run.
+  // Historical readings remain untouched; only active-period operational work is reset.
+  await prisma.ordenesTrabajo.updateMany({
+    where: { ruta: { periodoId: periodo.periodoId } },
+    data: {
+      estado: 'PENDIENTE',
+      resultadoObservacion: null,
+      evidenciaFotoUrl: null,
+      completadoEn: null,
+    },
+  });
+  await prisma.rutas.updateMany({
+    where: { periodoId: periodo.periodoId },
+    data: { estado: 'PENDIENTE' },
+  });
+
   const contratos = await prisma.contratos.findMany({
-    where: { estado: 'ACTIVO', deletedAt: null },
+    where: { estadoServicio: 'ACTIVO', deletedAt: null },
     orderBy: [
       { comunidadId: 'asc' },
       { sectorId: 'asc' },
@@ -85,7 +108,7 @@ export async function seedRoutes(prisma: PrismaClient) {
 
     const existingRuta = await prisma.rutas.findFirst({
       where: {
-        tipoRuta: 'TOMA_LECTURA',
+        tipoActividad: { codigo: 'LECTURA' },
         comunidadId: zone.comunidadId,
         sectorId: zone.sectorId,
         periodoId: periodo.periodoId,
@@ -99,7 +122,7 @@ export async function seedRoutes(prisma: PrismaClient) {
       createdRuta = await prisma.rutas.create({
         data: {
           nombre: rutaNombre,
-          tipoRuta: 'TOMA_LECTURA',
+          tipoActividadId: tipoActividadIdByCode.get('LECTURA')!,
           operarioId,
           comunidadId: zone.comunidadId,
           sectorId: zone.sectorId,
@@ -113,8 +136,11 @@ export async function seedRoutes(prisma: PrismaClient) {
     // Initialize readings and linked ordenesTrabajo per meter for the active period
     let visitOrder = 1;
     for (const medidorId of zone.medidorIds) {
+      // Keep approved historical readings immutable. The route gets a dedicated
+      // operational reading so the operator starts from PENDIENTE.
+      const seedDate = new Date(Date.UTC(2026, 7, 1, 12, 0, 0));
       const existingLectura = await prisma.lecturas.findFirst({
-        where: { medidorId, periodoId: periodo.periodoId },
+        where: { medidorId, periodoId: periodo.periodoId, fecha: seedDate },
         select: { lecturaId: true },
       });
 
@@ -127,7 +153,6 @@ export async function seedRoutes(prisma: PrismaClient) {
           select: { lecturaActual: true },
         });
 
-        const seedDate = new Date(Date.UTC(2026, 0, 1, 12, 0, 0));
         const newLectura = await prisma.lecturas.create({
           data: {
             medidorId,
@@ -155,7 +180,6 @@ export async function seedRoutes(prisma: PrismaClient) {
           where: {
             rutaId: createdRuta.rutaId,
             contratoId: contractHist.contratoId,
-            tipoActividad: 'LECTURA',
           },
         });
 
@@ -166,7 +190,6 @@ export async function seedRoutes(prisma: PrismaClient) {
               contratoId: contractHist.contratoId,
               medidorId,
               lecturaId: currentLecturaId,
-              tipoActividad: 'LECTURA',
               estado: 'PENDIENTE',
               ordenVisita: visitOrder++,
             },
@@ -178,7 +201,7 @@ export async function seedRoutes(prisma: PrismaClient) {
 
   // Sample work-order routes (INSTALACION, RECONEXION, INSPECCION)
   const allActiveContratos = await prisma.contratos.findMany({
-    where: { deletedAt: null },
+    where: { estadoServicio: 'ACTIVO', deletedAt: null },
     include: {
       historialMedidores: { where: { fechaHasta: null } },
       cliente: true,
@@ -199,14 +222,14 @@ export async function seedRoutes(prisma: PrismaClient) {
         tipo: 'RECONEXION' as const,
         nombre: 'Ruta Reconexión - Sector Central',
         contratoIdx: 1,
-        estado: 'EN_PROGRESO' as const,
+        estado: 'PENDIENTE' as const,
         obs: 'Reconexión tras pago de saldo pendiente.',
       },
       {
         tipo: 'INSPECCION' as const,
         nombre: 'Ruta Inspección Técnica por Fuga / Anomalía',
         contratoIdx: 2,
-        estado: 'COMPLETADA' as const,
+        estado: 'PENDIENTE' as const,
         obs: 'Inspección técnica de presión y verificación de sello.',
       },
     ];
@@ -220,7 +243,7 @@ export async function seedRoutes(prisma: PrismaClient) {
       const ruta = await prisma.rutas.create({
         data: {
           nombre: def.nombre,
-          tipoRuta: def.tipo,
+          tipoActividadId: tipoActividadIdByCode.get(def.tipo)!,
           operarioId: operadores[i % operadores.length].usuarioId,
           comunidadId: targetContrato.comunidadId,
           sectorId: targetContrato.sectorId,
@@ -239,16 +262,10 @@ export async function seedRoutes(prisma: PrismaClient) {
           rutaId: ruta.rutaId,
           contratoId: targetContrato.contratoId,
           medidorId: assignedMedidorId,
-          tipoActividad: def.tipo,
-          estado:
-            def.estado === 'COMPLETADA'
-              ? 'COMPLETADA'
-              : def.estado === 'EN_PROGRESO'
-                ? 'EN_PROGRESO'
-                : 'PENDIENTE',
+          estado: 'PENDIENTE',
           ordenVisita: 1,
-          resultadoObservacion: def.obs,
-          completadoEn: def.estado === 'COMPLETADA' ? new Date() : null,
+          resultadoObservacion: null,
+          completadoEn: null,
         },
       });
       rutasCount++;

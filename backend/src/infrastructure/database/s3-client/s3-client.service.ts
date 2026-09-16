@@ -144,11 +144,18 @@ export class S3ClientService implements OnModuleInit {
     bucketName: string,
     fileName: string,
     buffer: Buffer,
+    options: { contentType?: string; metadata?: Record<string, string> } = {},
   ): Promise<string> {
     this.ensureAvailable();
     await this.ensureBucket(bucketName);
     await this.s3Client!.send(
-      new PutObjectCommand({ Bucket: bucketName, Key: fileName, Body: buffer }),
+      new PutObjectCommand({
+        Bucket: bucketName,
+        Key: fileName,
+        Body: buffer,
+        ContentType: options.contentType,
+        Metadata: options.metadata,
+      }),
     );
     return fileName;
   }

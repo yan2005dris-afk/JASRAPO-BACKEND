@@ -43,6 +43,12 @@ export class ForbiddenDomainException extends DomainException {
   }
 }
 
+export class ConflictDomainException extends DomainException {
+  constructor(message: string = 'Conflicto de concurrencia') {
+    super(message);
+  }
+}
+
 /**
  * Error de validación de input en un use-case.
  *

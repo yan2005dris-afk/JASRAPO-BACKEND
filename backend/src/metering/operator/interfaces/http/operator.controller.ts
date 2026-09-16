@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Controller,
   Get,
   Patch,
@@ -9,7 +10,6 @@ import {
   ParseEnumPipe,
   UseInterceptors,
   UploadedFile,
-  BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
@@ -21,34 +21,96 @@ import {
   ApiBody,
   ApiQuery,
   ApiConsumes,
+  type ApiResponseOptions,
 } from '@nestjs/swagger';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
 import { CurrentUser } from 'src/identity/auth/interfaces/http/decorators/current-user.decorator';
 import { ParseBigIntPipe } from 'src/infrastructure/common/pipes/parse-bigint.pipe';
-import { ParseActualizarLecturaPipe } from 'src/infrastructure/common/pipes/parse-actualizar-lectura.pipe';
 import type { JwtPayload } from 'src/identity/auth/application/types/jwt.types';
 import { GetOperatorReadingsUseCase } from '../../application/use-cases/get-operator-readings.use-case';
 import { UpdateOperatorReadingUseCase } from '../../application/use-cases/update-operator-reading.use-case';
-import { ActualizarLecturaDto } from 'src/metering/readings/interfaces/dto/update-lectura.dto';
+import { UpdateOperatorWorkOrderUseCase } from '../../application/use-cases/update-operator-work-order.use-case';
+import { UpdateOperatorWorkOrderDto } from '../dto/update-operator-work-order.dto';
+import { UpdateOperatorReadingDto } from '../dto/update-operator-reading.dto';
+import { OPERATOR_IMAGE_UPLOAD_OPTIONS } from './operator-image-upload.options';
+import { OrderWorkResponseDto } from 'src/operations/routes/interfaces/dto/orden-trabajo-response.dto';
 import { ResponseReadingDto } from 'src/metering/readings/interfaces/dto/response-reading.dto';
 import { MeterResponseDto } from 'src/metering/meters/interfaces/dto/meter-response.dto';
-import { SyncAllUseCase } from '../../application/use-cases/sync-all.use-case';
 import { DecommissionMeterDto } from '../dto/decommission-meter.dto';
 import { GetOperatorRoutesUseCase } from '../../application/use-cases/get-operator-routes.use-case';
 import { UpdateRouteStateUseCase } from '../../application/use-cases/update-route-state.use-case';
 import { UpdateRouteStateDto } from '../../interfaces/dto/update-route-state.dto';
 import { OperatorRouteResponseDto } from '../../interfaces/dto/operator-route-response.dto';
 import { OperatorReadingAnomalyResponseDto } from '../../interfaces/dto/operator-reading-anomaly-response.dto';
-import { TipoRuta } from 'src/shared/enums';
-import { InstallMeterUseCase } from '../../application/use-cases/install-meter.use-case';
+import { TipoActividadCodes } from 'src/shared/enums';
 import { ReportDefectUseCase } from '../../application/use-cases/report-defect.use-case';
 import { DecommissionMeterUseCase } from '../../application/use-cases/decommission-meter.use-case';
 import { GetOperatorReadingsWithAnomaliesUseCase } from '../../application/use-cases/get-operator-readings-with-anomalies.use-case';
 import { StorageService } from 'src/infrastructure/storage/storage.service';
+import { GetOperatorSyncManifestUseCase } from '../../application/use-cases/get-operator-sync-manifest.use-case';
+import { OperatorSyncManifestDto } from '../dto/operator-sync-manifest.dto';
 import {
   uploadReadingPhoto,
   rollbackReadingPhoto,
+  deleteOldReadingPhoto,
 } from '../../application/reading-upload.helper';
+
+const OPERATOR_ERROR_SCHEMA = {
+  type: 'object',
+  required: [
+    'statusCode',
+    'timestamp',
+    'path',
+    'method',
+    'message',
+    'code',
+    'retryable',
+    'correlationId',
+  ],
+  properties: {
+    statusCode: { type: 'number', example: 400 },
+    timestamp: { type: 'string', format: 'date-time' },
+    path: { type: 'string', example: '/operator/readings' },
+    method: { type: 'string', example: 'PATCH' },
+    message: { type: 'string', example: 'Error de validación' },
+    errors: {
+      type: 'array',
+      items: {
+        oneOf: [
+          { type: 'string' },
+          {
+            type: 'object',
+            properties: {
+              field: { type: 'string' },
+              message: { type: 'string' },
+              constraints: { type: 'array', items: { type: 'string' } },
+            },
+          },
+        ],
+      },
+    },
+    code: { type: 'string', example: 'VALIDATION_ERROR' },
+    retryable: { type: 'boolean', example: false },
+    correlationId: {
+      type: 'string',
+      format: 'uuid',
+      example: '550e8400-e29b-41d4-a716-446655440000',
+    },
+  },
+};
+
+const operatorErrorResponse = (
+  status: number,
+  description: string,
+): ApiResponseOptions => ({
+  status,
+  description,
+  content: {
+    'application/json': {
+      schema: OPERATOR_ERROR_SCHEMA,
+    },
+  },
+});
 
 @ApiTags('operator')
 @ApiBearerAuth()
@@ -57,14 +119,14 @@ export class OperatorController {
   constructor(
     private readonly getOperatorReadingsUseCase: GetOperatorReadingsUseCase,
     private readonly updateOperatorReadingUseCase: UpdateOperatorReadingUseCase,
-    private readonly installMeterUseCase: InstallMeterUseCase,
+    private readonly updateOperatorWorkOrderUseCase: UpdateOperatorWorkOrderUseCase,
     private readonly reportDefectUseCase: ReportDefectUseCase,
     private readonly decommissionMeterUseCase: DecommissionMeterUseCase,
-    private readonly syncAllUseCase: SyncAllUseCase,
     private readonly getOperatorRoutesUseCase: GetOperatorRoutesUseCase,
     private readonly updateRouteStateUseCase: UpdateRouteStateUseCase,
     private readonly getOperatorReadingsWithAnomaliesUseCase: GetOperatorReadingsWithAnomaliesUseCase,
     private readonly storageService: StorageService,
+    private readonly getOperatorSyncManifestUseCase: GetOperatorSyncManifestUseCase,
   ) {}
 
   @ApiOperation({
@@ -77,15 +139,18 @@ export class OperatorController {
     description: 'Lista de lecturas del operario',
     type: [ResponseReadingDto],
   })
-  @ApiResponse({ status: 401, description: 'No autorizado' })
-  @ApiResponse({ status: 403, description: 'Sin permiso lecturas:read' })
-  @ApiResponse({ status: 404, description: 'No hay período activo' })
+  @ApiResponse(
+    operatorErrorResponse(400, 'Identificador del operador inválido'),
+  )
+  @ApiResponse(operatorErrorResponse(401, 'No autenticado'))
+  @ApiResponse(operatorErrorResponse(403, 'Sin permiso lecturas:read'))
+  @ApiResponse(operatorErrorResponse(404, 'No hay período activo'))
   @RequiredPermission('lecturas', 'read')
   @Get('readings')
   async getOperatorReadings(
     @CurrentUser() user: JwtPayload,
   ): Promise<ResponseReadingDto[]> {
-    const operarioId = Number(user.sub);
+    const operarioId = this.getAuthenticatedOperatorId(user);
     return this.getOperatorReadingsUseCase.execute(operarioId);
   }
 
@@ -104,14 +169,18 @@ export class OperatorController {
     description: 'Lista de lecturas con anomalías pendientes',
     type: [OperatorReadingAnomalyResponseDto],
   })
-  @ApiResponse({ status: 401, description: 'No autorizado' })
-  @ApiResponse({ status: 404, description: 'No hay período activo' })
+  @ApiResponse(
+    operatorErrorResponse(400, 'Identificador del operador inválido'),
+  )
+  @ApiResponse(operatorErrorResponse(401, 'No autenticado'))
+  @ApiResponse(operatorErrorResponse(403, 'Sin permiso lecturas:read'))
+  @ApiResponse(operatorErrorResponse(404, 'No hay período activo'))
   @RequiredPermission('lecturas', 'read')
   @Get('readings/anomalies')
   async getReadingsWithAnomalies(
     @CurrentUser() user: JwtPayload,
   ): Promise<OperatorReadingAnomalyResponseDto[]> {
-    const operarioId = Number(user.sub);
+    const operarioId = this.getAuthenticatedOperatorId(user);
     const readings =
       await this.getOperatorReadingsWithAnomaliesUseCase.execute(operarioId);
     return readings.map((r) => OperatorReadingAnomalyResponseDto.fromEntity(r));
@@ -121,7 +190,7 @@ export class OperatorController {
     summary: 'Actualizar lectura del operario',
     description:
       'Permite al operario actualizar una lectura de su ruta. Acepta multipart/form-data: ' +
-      'todos los campos del DTO como strings de formulario más un archivo opcional `foto`.',
+      'Todos los campos del DTO como strings de formulario más un archivo opcional `foto`. La foto se guarda como evidenciaFotoUrl (clave de objeto RustFS) en la orden de trabajo vinculada.',
   })
   @ApiConsumes('multipart/form-data')
   @ApiParam({
@@ -131,7 +200,8 @@ export class OperatorController {
     example: 1,
   })
   @ApiBody({
-    description: 'Datos de lectura + foto opcional (multipart/form-data)',
+    description:
+      'Datos de lectura + foto opcional (multipart/form-data). `foto` es evidencia de la orden de trabajo y se persiste como clave de objeto RustFS.',
     schema: {
       type: 'object',
       properties: {
@@ -149,42 +219,24 @@ export class OperatorController {
     description: 'Lectura actualizada',
     type: ResponseReadingDto,
   })
-  @ApiResponse({ status: 400, description: 'Estado no modificable' })
-  @ApiResponse({ status: 401, description: 'No autorizado' })
-  @ApiResponse({
-    status: 403,
-    description: 'Lectura fuera de la ruta asignada',
-  })
-  @ApiResponse({ status: 404, description: 'Lectura no encontrada' })
+  @ApiResponse(operatorErrorResponse(400, 'Validación o estado no modificable'))
+  @ApiResponse(operatorErrorResponse(401, 'No autenticado'))
+  @ApiResponse(operatorErrorResponse(403, 'Lectura fuera de la ruta asignada'))
+  @ApiResponse(operatorErrorResponse(404, 'Lectura no encontrada'))
+  @ApiResponse(operatorErrorResponse(409, 'Conflicto de concurrencia'))
   @RequiredPermission('lecturas', 'update')
-  @UseInterceptors(
-    FileInterceptor('foto', {
-      limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
-      fileFilter: (_req, file, cb) => {
-        if (!file.mimetype.startsWith('image/')) {
-          return cb(
-            new BadRequestException('Solo se permiten archivos de imagen'),
-            false,
-          );
-        }
-        cb(null, true);
-      },
-    }),
-  )
+  @UseInterceptors(FileInterceptor('foto', OPERATOR_IMAGE_UPLOAD_OPTIONS))
   @Patch('readings/:id')
   async updateOperatorReading(
     @Param('id', ParseBigIntPipe) id: bigint,
     @CurrentUser() user: JwtPayload,
-    @Body(new ParseActualizarLecturaPipe()) updateDto: ActualizarLecturaDto,
+    @Body() updateDto: UpdateOperatorReadingDto,
     @UploadedFile() foto?: Express.Multer.File,
   ): Promise<ResponseReadingDto> {
-    const operarioId = Number(user.sub);
-
-    // If a photo file was attached, upload it and inject the key into the DTO
+    const operarioId = this.getAuthenticatedOperatorId(user);
     let uploadedKey: string | undefined;
     if (foto) {
       uploadedKey = await uploadReadingPhoto(foto, this.storageService);
-      updateDto.fotoUrl = uploadedKey;
     }
 
     try {
@@ -192,10 +244,14 @@ export class OperatorController {
         id,
         operarioId,
         updateDto,
+        uploadedKey,
+        uploadedKey
+          ? (oldKey: string, newKey: string) =>
+              deleteOldReadingPhoto(oldKey, newKey, this.storageService)
+          : undefined,
       );
       return ResponseReadingDto.fromEntity(updated)!;
     } catch (error) {
-      // Rollback the uploaded photo to avoid orphaned objects
       if (uploadedKey) {
         await rollbackReadingPhoto(uploadedKey, this.storageService);
       }
@@ -203,38 +259,75 @@ export class OperatorController {
     }
   }
 
-  /**
-   * Instalar un medidor y crear tarea de instalación
-   * POST /operator/:id/install
-   */
   @ApiOperation({
-    summary: 'Instalar medidor',
-    description: 'Cambia el estado del medidor de PENDIENTE a INSTALADO.',
+    summary: 'Actualizar orden de trabajo del operario',
+    description:
+      'Actualiza una orden no relacionada con lecturas y sus datos de ejecución.',
   })
+  @ApiConsumes('multipart/form-data')
   @ApiParam({
     name: 'id',
-    description: 'ID del medidor',
+    description: 'ID de la orden de trabajo',
     type: Number,
-    example: 1,
+  })
+  @ApiBody({
+    description:
+      'Datos de ejecución. `foto` es opcional y se persiste como clave de objeto RustFS en evidenciaFotoUrl.',
+    schema: {
+      type: 'object',
+      properties: {
+        estado: { type: 'string' },
+        resultadoObservacion: { type: 'string' },
+        completadoEn: { type: 'string', format: 'date-time' },
+        estadoSellos: { type: 'string' },
+        hayFugas: { type: 'boolean' },
+        confirmacionRetiroSello: { type: 'boolean' },
+        foto: { type: 'string', format: 'binary' },
+      },
+    },
   })
   @ApiResponse({
     status: 200,
-    description: 'Medidor instalado',
-    type: MeterResponseDto,
+    description: 'Orden actualizada',
+    type: OrderWorkResponseDto,
   })
-  @ApiResponse({
-    status: 400,
-    description: 'Datos inválidos - el medidor debe estar en estado PENDIENTE',
-  })
-  @ApiResponse({ status: 404, description: 'Medidor no encontrado' })
-  @RequiredPermission('meters', 'update')
-  @Post(':id/install')
-  async install(
+  @ApiResponse(operatorErrorResponse(400, 'Validación o estado inválido'))
+  @ApiResponse(operatorErrorResponse(401, 'No autenticado'))
+  @ApiResponse(operatorErrorResponse(403, 'Orden fuera de la ruta asignada'))
+  @ApiResponse(operatorErrorResponse(404, 'Orden no encontrada'))
+  @ApiResponse(operatorErrorResponse(409, 'Conflicto de concurrencia'))
+  @RequiredPermission('routes', 'update')
+  @UseInterceptors(FileInterceptor('foto', OPERATOR_IMAGE_UPLOAD_OPTIONS))
+  @Patch('work-orders/:id')
+  async updateOperatorWorkOrder(
     @Param('id', ParseBigIntPipe) id: bigint,
-  ): Promise<MeterResponseDto> {
-    return MeterResponseDto.fromEntity(
-      await this.installMeterUseCase.execute(id),
-    );
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: UpdateOperatorWorkOrderDto,
+    @UploadedFile() foto?: Express.Multer.File,
+  ): Promise<OrderWorkResponseDto> {
+    const operarioId = this.getAuthenticatedOperatorId(user);
+    let uploadedKey: string | undefined;
+    if (foto) {
+      uploadedKey = await uploadReadingPhoto(foto, this.storageService);
+    }
+    try {
+      const entity = await this.updateOperatorWorkOrderUseCase.execute(
+        id,
+        operarioId,
+        dto,
+        uploadedKey,
+        uploadedKey
+          ? (oldKey: string, newKey: string) =>
+              deleteOldReadingPhoto(oldKey, newKey, this.storageService)
+          : undefined,
+      );
+      return OrderWorkResponseDto.fromEntity(entity);
+    } catch (error) {
+      if (uploadedKey) {
+        await rollbackReadingPhoto(uploadedKey, this.storageService);
+      }
+      throw error;
+    }
   }
 
   /**
@@ -257,18 +350,27 @@ export class OperatorController {
     description: 'Daño reportado',
     type: MeterResponseDto,
   })
-  @ApiResponse({
-    status: 400,
-    description: 'El medidor debe estar en estado INSTALADO',
-  })
-  @ApiResponse({ status: 404, description: 'Medidor no encontrado' })
+  @ApiResponse(
+    operatorErrorResponse(
+      400,
+      'Identificador inválido o el medidor no está en estado INSTALADO',
+    ),
+  )
+  @ApiResponse(operatorErrorResponse(401, 'No autenticado'))
+  @ApiResponse(operatorErrorResponse(403, 'Medidor fuera de la ruta asignada'))
+  @ApiResponse(operatorErrorResponse(404, 'Medidor no encontrado'))
+  @ApiResponse(operatorErrorResponse(409, 'Conflicto de concurrencia'))
   @RequiredPermission('meters', 'update')
   @Post(':id/report-defect')
   async reportDefect(
     @Param('id', ParseBigIntPipe) id: bigint,
+    @CurrentUser() user: JwtPayload,
   ): Promise<MeterResponseDto> {
     return MeterResponseDto.fromEntity(
-      await this.reportDefectUseCase.execute(id),
+      await this.reportDefectUseCase.execute(
+        id,
+        this.getAuthenticatedOperatorId(user),
+      ),
     );
   }
 
@@ -295,38 +397,54 @@ export class OperatorController {
     description: 'Medidor dado de baja',
     type: MeterResponseDto,
   })
-  @ApiResponse({
-    status: 400,
-    description: 'El medidor debe estar en estado DANADO',
-  })
-  @ApiResponse({ status: 404, description: 'Medidor no encontrado' })
+  @ApiResponse(
+    operatorErrorResponse(
+      400,
+      'Identificador inválido o el medidor no está en estado DANADO',
+    ),
+  )
+  @ApiResponse(operatorErrorResponse(401, 'No autenticado'))
+  @ApiResponse(operatorErrorResponse(403, 'Medidor fuera de la ruta asignada'))
+  @ApiResponse(operatorErrorResponse(404, 'Medidor no encontrado'))
+  @ApiResponse(operatorErrorResponse(409, 'Conflicto de concurrencia'))
   @RequiredPermission('meters', 'delete')
   @Post(':id/decommission')
   async decommission(
     @Param('id', ParseBigIntPipe) id: bigint,
     @Body() dto: DecommissionMeterDto,
+    @CurrentUser() user: JwtPayload,
   ): Promise<MeterResponseDto> {
     return MeterResponseDto.fromEntity(
-      await this.decommissionMeterUseCase.execute(id, dto.motivoBaja),
+      await this.decommissionMeterUseCase.execute(
+        id,
+        dto.motivoBaja,
+        this.getAuthenticatedOperatorId(user),
+      ),
     );
   }
 
-  /**
-   * Sincronización offline PWA — devuelve todos los medidores sin paginación
-   * GET /operator/sync
-   */
-  @ApiOperation({
-    summary: 'Sync offline de medidores',
-    description:
-      'Retorna los medidores del operador según sus rutas asignadas en el período activo',
-  })
-  @ApiResponse({ status: 200, description: 'Lista de medidores del operador' })
-  @RequiredPermission('meters', 'read')
-  @Get('sync')
-  async syncAll(@CurrentUser() user: JwtPayload): Promise<MeterResponseDto[]> {
-    const operarioId = Number(user.sub);
-    const meters = await this.syncAllUseCase.execute(operarioId);
-    return meters.map((m) => MeterResponseDto.fromEntity(m));
+  @ApiOperation({ summary: 'Manifiesto paginado de sincronización offline' })
+  @ApiResponse({ status: 200, type: OperatorSyncManifestDto })
+  @ApiResponse(
+    operatorErrorResponse(
+      409,
+      'El alcance de rutas asignadas cambió durante la sincronización',
+    ),
+  )
+  @ApiQuery({ name: 'cursor', required: false })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @RequiredPermission('operator-sync', 'read')
+  @Get('sync/manifest')
+  async syncManifest(
+    @CurrentUser() user: JwtPayload,
+    @Query('cursor') cursor?: string,
+    @Query('limit') limit?: string,
+  ): Promise<OperatorSyncManifestDto> {
+    return this.getOperatorSyncManifestUseCase.execute(
+      this.getAuthenticatedOperatorId(user),
+      cursor,
+      limit == null ? 100 : Number(limit),
+    );
   }
 
   // ── Route endpoints (field operator view) ────────────────────────────
@@ -343,7 +461,7 @@ export class OperatorController {
   @ApiQuery({
     name: 'tipoRuta',
     required: false,
-    enum: TipoRuta,
+    enum: TipoActividadCodes,
     description: 'Filtrar rutas por tipo',
   })
   @ApiResponse({
@@ -351,16 +469,23 @@ export class OperatorController {
     description: 'Lista de rutas del operario',
     type: [OperatorRouteResponseDto],
   })
-  @ApiResponse({ status: 401, description: 'No autorizado' })
-  @ApiResponse({ status: 404, description: 'No hay período activo' })
-  @RequiredPermission('lecturas', 'read')
+  @ApiResponse(
+    operatorErrorResponse(400, 'Identificador del operador o filtro inválido'),
+  )
+  @ApiResponse(operatorErrorResponse(401, 'No autenticado'))
+  @ApiResponse(operatorErrorResponse(403, 'Sin permiso routes:read'))
+  @ApiResponse(operatorErrorResponse(404, 'No hay período activo'))
+  @RequiredPermission('routes', 'read')
   @Get('routes')
   async getOperatorRoutes(
     @CurrentUser() user: JwtPayload,
-    @Query('tipoRuta', new ParseEnumPipe(TipoRuta, { optional: true }))
-    tipoRuta?: TipoRuta,
+    @Query(
+      'tipoRuta',
+      new ParseEnumPipe(TipoActividadCodes, { optional: true }),
+    )
+    tipoRuta?: TipoActividadCodes,
   ): Promise<OperatorRouteResponseDto[]> {
-    const operarioId = Number(user.sub);
+    const operarioId = this.getAuthenticatedOperatorId(user);
     const routes = await this.getOperatorRoutesUseCase.execute(
       operarioId,
       tipoRuta,
@@ -389,23 +514,34 @@ export class OperatorController {
     description: 'Ruta actualizada',
     type: OperatorRouteResponseDto,
   })
-  @ApiResponse({ status: 400, description: 'Transición inválida' })
-  @ApiResponse({ status: 401, description: 'No autorizado' })
-  @ApiResponse({ status: 403, description: 'Ruta no pertenece al operador' })
-  @ApiResponse({ status: 404, description: 'Ruta no encontrada' })
-  @RequiredPermission('lecturas', 'update')
+  @ApiResponse(operatorErrorResponse(400, 'Validación o transición inválida'))
+  @ApiResponse(operatorErrorResponse(401, 'No autenticado'))
+  @ApiResponse(operatorErrorResponse(403, 'Ruta no pertenece al operador'))
+  @ApiResponse(operatorErrorResponse(404, 'Ruta no encontrada'))
+  @ApiResponse(operatorErrorResponse(409, 'Conflicto de concurrencia'))
+  @RequiredPermission('routes', 'update')
   @Patch('routes/:id/state')
   async updateRouteState(
     @Param('id', ParseBigIntPipe) id: bigint,
     @CurrentUser() user: JwtPayload,
     @Body() dto: UpdateRouteStateDto,
   ): Promise<OperatorRouteResponseDto> {
-    const operarioId = Number(user.sub);
+    const operarioId = this.getAuthenticatedOperatorId(user);
     const updated = await this.updateRouteStateUseCase.execute(
       id,
       operarioId,
       dto,
     );
     return OperatorRouteResponseDto.fromEntity(updated);
+  }
+
+  private getAuthenticatedOperatorId(user: JwtPayload): number {
+    const operarioId = Number(user.sub);
+    if (!Number.isSafeInteger(operarioId) || operarioId <= 0) {
+      throw new BadRequestException(
+        'El identificador del operador debe ser un entero positivo seguro',
+      );
+    }
+    return operarioId;
   }
 }

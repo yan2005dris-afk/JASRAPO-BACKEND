@@ -1,4 +1,6 @@
 import { Controller, Patch, Param, Body } from '@nestjs/common';
+import { CurrentUser } from '../../../../identity/auth/interfaces/http/decorators/current-user.decorator';
+import type { JwtPayload } from '../../../../identity/auth/application/types/jwt.types';
 import { ParseBigIntPipe } from 'src/infrastructure/common/pipes/parse-bigint.pipe';
 import {
   ApiTags,
@@ -15,10 +17,10 @@ import { UpdateOrdenEstadoDto } from '../dto/update-orden-estado.dto';
 import { LinkLecturaDto } from '../dto/link-lectura.dto';
 import { PaginationMetaDto } from 'src/infrastructure/common/dtos/pagination-meta.dto';
 
-@ApiTags('ordenes')
+@ApiTags('work-orders')
 @ApiBearerAuth()
 @ApiExtraModels(OrderWorkResponseDto, PaginationMetaDto)
-@Controller('ordenes')
+@Controller('work-orders')
 export class OrdenesTrabajoController {
   constructor(private readonly ordenesTrabajoService: OrdenesTrabajoService) {}
 
@@ -43,15 +45,20 @@ export class OrdenesTrabajoController {
   })
   @ApiResponse({ status: 404, description: 'Orden no encontrada' })
   @RequiredPermission('routes', 'update')
-  @Patch(':id/estado')
+  @Patch(':id/state')
   async updateEstado(
     @Param('id', ParseBigIntPipe) id: bigint,
+    @CurrentUser() user: JwtPayload,
     @Body() dto: UpdateOrdenEstadoDto,
   ): Promise<OrderWorkResponseDto> {
-    const result = await this.ordenesTrabajoService.updateEstado(id, {
-      estado: dto.estado,
-      resultadoObservacion: dto.resultadoObservacion,
-    });
+    const result = await this.ordenesTrabajoService.updateEstado(
+      id,
+      {
+        estado: dto.estado,
+        resultadoObservacion: dto.resultadoObservacion,
+      },
+      Number(user.sub),
+    );
     return OrderWorkResponseDto.fromEntity(result);
   }
 
@@ -76,15 +83,18 @@ export class OrdenesTrabajoController {
   })
   @ApiResponse({ status: 404, description: 'Orden o lectura no encontrada' })
   @RequiredPermission('routes', 'update')
-  @Patch(':id/lectura')
+  @Patch(':id/reading')
   async linkLectura(
     @Param('id', ParseBigIntPipe) id: bigint,
+    @CurrentUser() user: JwtPayload,
     @Body() dto: LinkLecturaDto,
   ): Promise<OrderWorkResponseDto> {
     const lecturaIdBigInt = BigInt(dto.lecturaId);
-    const result = await this.ordenesTrabajoService.linkLectura(id, {
-      lecturaId: lecturaIdBigInt,
-    });
+    const result = await this.ordenesTrabajoService.linkLectura(
+      id,
+      { lecturaId: lecturaIdBigInt },
+      Number(user.sub),
+    );
     return OrderWorkResponseDto.fromEntity(result);
   }
 }

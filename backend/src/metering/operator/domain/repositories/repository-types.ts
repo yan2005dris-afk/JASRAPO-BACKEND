@@ -3,6 +3,38 @@
 // shapes, not Prisma query shapes. Prisma specifics live in the infrastructure
 // implementation.
 
+export interface SyncCursorPosition {
+  updatedAt: Date;
+  id: bigint;
+}
+
+export interface SyncSnapshotContext {
+  snapshotVersion: Date;
+  watermark: bigint;
+}
+
+export interface SyncPage<T> {
+  items: T[];
+  total: number;
+  hasMore: boolean;
+  nextPosition: SyncCursorPosition | null;
+}
+
+export interface OperatorSyncChange {
+  sequenceId: bigint;
+  entityType: string;
+  entityId: bigint;
+  operation: 'CREATE' | 'UPDATE' | 'DELETE';
+  changedAt: Date;
+  data: Record<string, unknown>;
+}
+
+export interface SyncChangePage {
+  items: OperatorSyncChange[];
+  hasMore: boolean;
+  nextSequence: bigint | null;
+}
+
 export interface ReadingWithContractDetail {
   lecturaId: bigint;
   fecha: Date;
@@ -11,7 +43,7 @@ export interface ReadingWithContractDetail {
   consumoCalculado: number;
   descripcionAnomalia: string | null;
   fechaValidacion: Date | null;
-  fotoUrl: string | null;
+  evidenciaFotoUrl: string | null;
   lecturaInicial: boolean;
   periodoId: number;
   estado: string;
@@ -25,13 +57,14 @@ export interface ReadingWithContractDetail {
         contratoId: bigint;
         numeroGuia: string;
         direccionSuministro: string;
-        estado: string;
+        estadoServicio: string;
         comunidadId: number;
         sectorId: number | null;
         cliente: { nombres: string; apellidos: string };
       } | null;
     }>;
   } | null;
+  updatedAt: Date;
   periodoRel: {
     periodoId: number;
     nombre: string;
@@ -141,6 +174,7 @@ export interface OperatorRoute {
 
 export interface ReadingWithAnomalies {
   lecturaId: bigint;
+  updatedAt: Date;
   fecha?: Date;
   lecturaAnterior?: number;
   lecturaActual?: number;
@@ -154,8 +188,8 @@ export interface ReadingWithAnomalies {
     marca: string;
     modelo: string;
   } | null;
-  lecturaAnomalias: Array<{
-    anomaliaId: bigint;
+  novedadesOrdenTrabajo?: Array<{
+    novedadId: bigint;
     tipo: string;
     estado: string;
     observacion: string | null;

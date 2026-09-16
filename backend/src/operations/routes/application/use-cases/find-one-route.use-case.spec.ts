@@ -41,7 +41,7 @@ describe('FindOneRouteUseCase', () => {
       rutaId: 1n,
       nombre: 'Route 1',
       operarioId: 1,
-      tipoRuta: 'TOMA_LECTURA',
+      tipoRuta: 'LECTURA',
       comunidadId: 1,
       periodoId: 1,
       estado: 'PENDIENTE',

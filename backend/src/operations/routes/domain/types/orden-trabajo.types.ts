@@ -18,9 +18,18 @@ export interface CreateOrdenTrabajoData {
   rutaId: bigint;
   contratoId: bigint;
   medidorId?: bigint | null;
-  tipoActividad: string;
   estado?: string;
   ordenVisita?: number;
+}
+
+export interface UpdateOperatorWorkOrderData {
+  estado?: string;
+  resultadoObservacion?: string | null;
+  evidenciaFotoUrl?: string | null;
+  completadoEn?: Date | null;
+  estadoSellos?: string | null;
+  hayFugas?: boolean | null;
+  confirmacionRetiroSello?: boolean | null;
 }
 
 export interface FindOrdenesByRutaParams {

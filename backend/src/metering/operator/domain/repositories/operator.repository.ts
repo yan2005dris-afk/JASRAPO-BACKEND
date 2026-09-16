@@ -2,9 +2,14 @@ import type {
   ReadingWithContractDetail,
   MeterWithContractDetail,
   OperatorRoute,
+  OperatorWorkOrder,
   ReadingWithAnomalies,
   RouteStateUpdate,
   OperatorUser,
+  SyncCursorPosition,
+  SyncSnapshotContext,
+  SyncPage,
+  SyncChangePage,
 } from './repository-types';
 
 export interface RouteData {
@@ -22,6 +27,7 @@ export interface ReadingWithDetails {
   estado: string;
   ordenesTrabajo?: Array<{
     rutaId: bigint;
+    evidenciaFotoUrl?: string | null;
     operarioId?: number;
     ruta?: {
       operarioId: number | null;
@@ -41,6 +47,10 @@ export interface ReadingWithDetails {
 
 export abstract class OperatorRepository {
   abstract findActivePeriod(): Promise<ActivePeriod | null>;
+  abstract verifyMeterOwnership(
+    operarioId: number,
+    medidorId: bigint,
+  ): Promise<void>;
   abstract findActiveRoutes(
     operarioId: number,
     periodoId: number,
@@ -83,4 +93,49 @@ export abstract class OperatorRepository {
     operarioId: number,
     periodoId: number,
   ): Promise<ReadingWithAnomalies[]>;
+
+  abstract findSyncRoutes(
+    operarioId: number,
+    periodoId: number,
+    snapshotVersion: Date,
+    after: SyncCursorPosition | null,
+    limit: number,
+  ): Promise<SyncPage<OperatorRoute>>;
+  abstract findSyncWorkOrders(
+    operarioId: number,
+    periodoId: number,
+    routeIds: bigint[],
+    snapshotVersion: Date,
+    after: SyncCursorPosition | null,
+    limit: number,
+  ): Promise<SyncPage<OperatorWorkOrder>>;
+  abstract findSyncMeters(
+    routes: RouteData[],
+    snapshotVersion: Date,
+    after: SyncCursorPosition | null,
+    limit: number,
+  ): Promise<SyncPage<MeterWithContractDetail>>;
+  abstract findSyncReadings(
+    periodoId: number,
+    routes: RouteData[],
+    snapshotVersion: Date,
+    after: SyncCursorPosition | null,
+    limit: number,
+  ): Promise<SyncPage<ReadingWithContractDetail>>;
+  abstract findSyncPendingAnomalies(
+    operarioId: number,
+    periodoId: number,
+    routes: RouteData[],
+    snapshotVersion: Date,
+    after: SyncCursorPosition | null,
+    limit: number,
+  ): Promise<SyncPage<ReadingWithAnomalies>>;
+  abstract getSyncWatermark(): Promise<bigint>;
+  abstract getSyncSnapshotContext(): Promise<SyncSnapshotContext>;
+  abstract findSyncChanges(
+    periodoId: number,
+    routes: RouteData[],
+    afterSequence: bigint,
+    limit: number,
+  ): Promise<SyncChangePage>;
 }

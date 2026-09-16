@@ -1,6 +1,5 @@
 import { ContractEntity } from '../../domain/entities/contract.entity';
 import type { ContractRecord } from '../repositories/prisma-contract.repository';
-
 export class ContractMapper {
   static toDomain(raw: ContractRecord | null): ContractEntity | null {
     if (!raw) return null;
@@ -13,7 +12,9 @@ export class ContractMapper {
       numeroGuia: raw.numeroGuia,
       fechaInicio: raw.fechaInicio,
       direccionSuministro: raw.direccionSuministro,
-      estado: raw.estado,
+      estadoServicio: raw.estadoServicio,
+      estadoCobranza: raw.estadoCobranza,
+      tieneConvenioActivo: (raw.convenios?.length ?? 0) > 0,
       creadoPor: raw.creadoPor,
       comunidadId: raw.comunidadId,
       deletedAt: raw.deletedAt,

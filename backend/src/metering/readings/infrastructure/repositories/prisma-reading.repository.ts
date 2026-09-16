@@ -3,7 +3,6 @@ import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { Prisma, $Enums } from 'src/generated/prisma/client';
 import {
   ReadingRepository,
-  CreateReadingRepositoryData,
   UpdateReadingRepositoryData,
   ReadingFilters,
   ReadingSnapshot,
@@ -11,11 +10,7 @@ import {
 import { LecturaEntity } from '../../domain/entities/lectura.entity';
 import { ReadingMapper } from '../mappers/reading.mapper';
 import { EstadoPeriodo, EstadoLectura } from 'src/shared/enums';
-import {
-  EntityNotFoundException,
-  InvalidDomainOperationException,
-} from 'src/shared/domain/exceptions/domain.exception';
-
+import { InvalidDomainOperationException } from 'src/shared/domain/exceptions/domain.exception';
 import { Decimal } from 'decimal.js';
 
 export const safeReadingsSelect = {
@@ -26,7 +21,6 @@ export const safeReadingsSelect = {
   consumoCalculado: true,
   descripcionAnomalia: true,
   fechaValidacion: true,
-  fotoUrl: true,
   lecturaInicial: true,
   periodoId: true,
   estado: true,
@@ -45,7 +39,7 @@ export const safeReadingsSelect = {
               contratoId: true,
               numeroGuia: true,
               direccionSuministro: true,
-              estado: true,
+              estadoServicio: true,
               sector: {
                 select: {
                   nombre: true,
@@ -73,6 +67,11 @@ export const safeReadingsSelect = {
       fechaInicio: true,
       fechaFin: true,
     },
+  },
+  ordenesTrabajo: {
+    where: { deletedAt: null },
+    select: { evidenciaFotoUrl: true },
+    orderBy: { updatedAt: 'desc' },
   },
 } satisfies Prisma.LecturasSelect;
 
@@ -311,144 +310,23 @@ export class PrismaReadingRepository implements ReadingRepository {
     });
   }
 
-  async create(data: CreateReadingRepositoryData): Promise<LecturaEntity> {
-    const estado =
-      data.estado ??
-      (data.descripcionAnomalia
-        ? EstadoLectura.CON_NOVEDAD
-        : EstadoLectura.POR_REVISION);
-
-    const record = await this.prisma.$transaction(async (tx) => {
-      const created = await tx.lecturas.create({
-        data: {
-          fecha: data.fecha,
-          lecturaAnterior: data.lecturaAnterior,
-          lecturaActual: data.lecturaActual,
-          consumoCalculado: data.consumoCalculado,
-          medidorId: data.medidorId,
-          descripcionAnomalia: data.descripcionAnomalia,
-          fechaValidacion: data.fechaValidacion,
-          fotoUrl: data.fotoUrl,
-          estado: estado as $Enums.EstadoLectura,
-          lecturaInicial: data.lecturaInicial,
-          periodoId: data.periodoId,
-        },
-        select: safeReadingsSelect,
-      });
-
-      if (estado === EstadoLectura.CON_NOVEDAD) {
-        await tx.lecturaAnomalia.create({
-          data: {
-            lecturaId: created.lecturaId,
-            tipo: $Enums.TipoAnomalia.OTRO,
-            estado: $Enums.EstadoAnomalia.PENDIENTE,
-            observacion:
-              data.descripcionAnomalia ||
-              'Novedad reportada desde ruta de lectura',
-            fotoUrl: data.fotoUrl || null,
-          },
-        });
-      }
-
-      return created;
-    });
-
-    return ReadingMapper.toDomain(record)!;
-  }
-
-  /**
-   * Operación atómica: resuelve el snapshot temporal y persiste la lectura en una sola transacción.
-   */
-  async createWithAtomicSnapshot(params: {
-    fecha: Date;
-    lecturaActual: Decimal;
-    medidorId: bigint;
-    periodoId: number;
-    descripcionAnomalia?: string | null;
-    fotoUrl?: string | null;
-    estado?: string;
-  }): Promise<LecturaEntity> {
-    const record = await this.prisma.$transaction(async (tx) => {
-      const snapshot = await this.findReadingSnapshot(
-        params.medidorId,
-        params.fecha,
-        tx,
-      );
-
-      if (!snapshot) {
-        throw new EntityNotFoundException(
-          'HistorialMedidores',
-          params.medidorId.toString(),
-        );
-      }
-
-      const consumoCalculado = params.lecturaActual.minus(
-        snapshot.lecturaAnterior,
-      );
-
-      // Domain invariant: Rechazar consumo negativo si no hay anomalía explícita
-      if (consumoCalculado.isNegative()) {
-        const hasAnomaly =
-          params.descripcionAnomalia &&
-          params.descripcionAnomalia.trim().length > 0;
-        if (!hasAnomaly) {
-          throw new InvalidDomainOperationException(
-            `La lectura actual (${params.lecturaActual.toString()}) no puede ser menor a la lectura anterior (${snapshot.lecturaAnterior.toString()}) sin registrar una anomalía o novedad`,
-          );
-        }
-      }
-
-      let estado = params.estado ?? EstadoLectura.POR_REVISION;
-      if (
-        params.descripcionAnomalia &&
-        params.descripcionAnomalia.trim().length > 0
-      ) {
-        estado = EstadoLectura.CON_NOVEDAD;
-      }
-
-      const created = await tx.lecturas.create({
-        data: {
-          fecha: params.fecha,
-          lecturaAnterior: new Prisma.Decimal(
-            snapshot.lecturaAnterior.toString(),
-          ),
-          lecturaActual: new Prisma.Decimal(params.lecturaActual.toString()),
-          consumoCalculado: new Prisma.Decimal(consumoCalculado.toString()),
-          medidorId: params.medidorId,
-          descripcionAnomalia: params.descripcionAnomalia,
-          fotoUrl: params.fotoUrl,
-          estado: estado as $Enums.EstadoLectura,
-          lecturaInicial: snapshot.lecturaInicial,
-          periodoId: params.periodoId,
-        },
-        select: safeReadingsSelect,
-      });
-
-      if (estado === EstadoLectura.CON_NOVEDAD) {
-        await tx.lecturaAnomalia.create({
-          data: {
-            lecturaId: created.lecturaId,
-            tipo: $Enums.TipoAnomalia.OTRO,
-            estado: $Enums.EstadoAnomalia.PENDIENTE,
-            observacion:
-              params.descripcionAnomalia ||
-              'Novedad reportada desde ruta de lectura',
-            fotoUrl: params.fotoUrl || null,
-          },
-        });
-      }
-
-      return created;
-    });
-
-    return ReadingMapper.toDomain(record)!;
-  }
-
   async update(
     where: { lecturaId: bigint },
     data: UpdateReadingRepositoryData,
   ): Promise<LecturaEntity> {
     const record = await this.prisma.$transaction(async (tx) => {
+      if (data.evidenciaFotoUrl !== undefined) {
+        const linked = await tx.ordenesTrabajo.updateMany({
+          where: { lecturaId: where.lecturaId, deletedAt: null },
+          data: { evidenciaFotoUrl: data.evidenciaFotoUrl },
+        });
+        if (linked.count === 0) {
+          throw new InvalidDomainOperationException(
+            'La lectura no tiene una orden de trabajo vinculada para guardar la evidencia fotográfica',
+          );
+        }
+      }
+
       const updated = await tx.lecturas.update({
         where: { lecturaId: where.lecturaId },
         data: {
@@ -469,9 +347,6 @@ export class PrismaReadingRepository implements ReadingRepository {
           ...(data.fechaValidacion !== undefined && {
             fechaValidacion: data.fechaValidacion,
           }),
-          ...(data.fotoUrl !== undefined && {
-            fotoUrl: data.fotoUrl,
-          }),
           ...(data.estado !== undefined && {
             estado: data.estado as $Enums.EstadoLectura,
           }),
@@ -484,35 +359,43 @@ export class PrismaReadingRepository implements ReadingRepository {
         select: safeReadingsSelect,
       });
 
-      // Si la lectura se marca como CON_NOVEDAD, garantizar que exista en lectura_anomalia
+      // Si la lectura se marca como CON_NOVEDAD, registrar o actualizar la novedad
       if (data.estado === 'CON_NOVEDAD') {
-        const existingAnomaly = await tx.lecturaAnomalia.findFirst({
-          where: {
-            lecturaId: where.lecturaId,
-            deletedAt: null,
-          },
+        const workOrder = await tx.ordenesTrabajo.findFirst({
+          where: { lecturaId: where.lecturaId, deletedAt: null },
+          select: { ordenTrabajoId: true },
         });
 
-        if (!existingAnomaly) {
-          await tx.lecturaAnomalia.create({
-            data: {
-              lecturaId: where.lecturaId,
-              tipo: $Enums.TipoAnomalia.OTRO,
-              estado: $Enums.EstadoAnomalia.PENDIENTE,
-              observacion:
-                data.descripcionAnomalia ||
-                'Novedad reportada desde ruta de lectura',
-              fotoUrl: data.fotoUrl || null,
+        if (workOrder) {
+          const existingNovelty = await tx.novedadOrdenTrabajo.findFirst({
+            where: {
+              ordenTrabajoId: workOrder.ordenTrabajoId,
+              deletedAt: null,
             },
           });
-        } else if (
-          existingAnomaly.estado !== $Enums.EstadoAnomalia.PENDIENTE &&
-          existingAnomaly.estado !== $Enums.EstadoAnomalia.EN_REVISION
-        ) {
-          await tx.lecturaAnomalia.update({
-            where: { anomaliaId: existingAnomaly.anomaliaId },
-            data: { estado: $Enums.EstadoAnomalia.PENDIENTE },
-          });
+
+          if (!existingNovelty) {
+            await tx.novedadOrdenTrabajo.create({
+              data: {
+                ordenTrabajoId: workOrder.ordenTrabajoId,
+                lecturaId: where.lecturaId,
+                tipo: $Enums.TipoAnomalia.OTRO,
+                estado: $Enums.EstadoNovedad.OPEN,
+                observacion:
+                  data.descripcionAnomalia ||
+                  'Novedad reportada desde ruta de lectura',
+                fotoUrl: null,
+              },
+            });
+          } else if (
+            existingNovelty.estado !== $Enums.EstadoNovedad.OPEN &&
+            existingNovelty.estado !== $Enums.EstadoNovedad.IN_PROGRESS
+          ) {
+            await tx.novedadOrdenTrabajo.update({
+              where: { novedadId: existingNovelty.novedadId },
+              data: { estado: $Enums.EstadoNovedad.OPEN },
+            });
+          }
         }
       }
 
@@ -551,9 +434,6 @@ export class PrismaReadingRepository implements ReadingRepository {
           ...(data.fechaValidacion !== undefined && {
             fechaValidacion: data.fechaValidacion,
           }),
-          ...(data.fotoUrl !== undefined && {
-            fotoUrl: data.fotoUrl,
-          }),
           ...(data.estado !== undefined && {
             estado: data.estado as $Enums.EstadoLectura,
           }),
@@ -567,6 +447,18 @@ export class PrismaReadingRepository implements ReadingRepository {
 
       if (count === 0) {
         return null;
+      }
+
+      if (data.evidenciaFotoUrl !== undefined) {
+        const linked = await tx.ordenesTrabajo.updateMany({
+          where: { lecturaId: where.lecturaId, deletedAt: null },
+          data: { evidenciaFotoUrl: data.evidenciaFotoUrl },
+        });
+        if (linked.count === 0) {
+          throw new InvalidDomainOperationException(
+            'La lectura no tiene una orden de trabajo vinculada para guardar la evidencia fotográfica',
+          );
+        }
       }
 
       return tx.lecturas.findUnique({

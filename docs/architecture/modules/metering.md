@@ -28,11 +28,16 @@ El **Core** del sistema. Se encarga de todo lo relacionado con la medición del 
 
 | Método | Endpoint | Descripción |
 |--------|----------|-------------|
-| `POST` | `/readings` | Crear una nueva lectura |
 | `GET` | `/readings` | Listar todas las lecturas |
 | `GET` | `/readings/:id` | Obtener una lectura específica |
 | `PATCH` | `/readings/:id` | Actualizar una lectura |
 | `DELETE` | `/readings/:id` | Eliminar una lectura |
+
+### Histórico / Legacy — no es contrato vigente
+
+En SC-283 se retiró `POST /readings` standalone, asociado históricamente a `CreateReadingUseCase`. Las lecturas se generan dentro de rutas u órdenes de trabajo; para actualizar una lectura se usa `PATCH /readings/:id` o `PATCH /operator/readings/:id`.
+
+La foto normal de una lectura de campo se almacena en `OrdenesTrabajo.evidenciaFotoUrl` como clave de objeto RustFS. `LecturaAnomalia.fotoUrl` se reserva para evidencia de anomalías.
 
 ### Query Parameters
 

@@ -206,6 +206,40 @@ describe('EmisoresService', () => {
     });
   });
 
+  describe('uploadCertificado', () => {
+    it('stores the certificate and clears the signer cache', async () => {
+      jest.spyOn(service as any, 'extractCertificateInfo').mockReturnValue({
+        validoHasta: new Date('2030-01-01T00:00:00.000Z'),
+        sujeto: 'CN=JASRAPO',
+      });
+
+      const result = await service.uploadCertificado(
+        1,
+        Buffer.from('certificate'),
+        'secret',
+      );
+
+      expect(storageService.upload).toHaveBeenCalledWith(
+        'sri-certs',
+        'cert_1.p12',
+        Buffer.from('certificate'),
+        { contentType: 'application/x-pkcs12' },
+      );
+      expect(encryptionService.encrypt).toHaveBeenCalledWith('secret');
+      expect(repository.update).toHaveBeenCalledWith(
+        1,
+        expect.objectContaining({
+          certificado_nombre: 'cert_1.p12',
+          certificado_sujeto: 'CN=JASRAPO',
+        }),
+      );
+      expect(xmlSignerService.clearEmisorCache).toHaveBeenCalledWith(
+        mockEmisorRecord.ruc,
+      );
+      expect(result.tieneCertificado).toBe(true);
+    });
+  });
+
   describe('deleteCertificado', () => {
     it('should clear certificate metadata and call xmlSignerService.clearEmisorCache', async () => {
       const emisorWithCert: EmisorRecord = {

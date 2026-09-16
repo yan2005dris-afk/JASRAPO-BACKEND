@@ -1,7 +1,6 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { ReadingRepository } from '../../domain/repositories/reading.repository';
-import { CreateReadingUseCase } from './create-reading.use-case';
 import { FindAllReadingsUseCase } from './find-all-readings.use-case';
 import { FindOneReadingUseCase } from './find-one-reading.use-case';
 import { UpdateReadingUseCase } from './update-reading.use-case';
@@ -9,7 +8,6 @@ import { RemoveReadingUseCase } from './remove-reading.use-case';
 import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 
 describe('Readings Use Cases', () => {
-  let createUseCase: CreateReadingUseCase;
   let findAllUseCase: FindAllReadingsUseCase;
   let findOneUseCase: FindOneReadingUseCase;
   let updateUseCase: UpdateReadingUseCase;
@@ -29,8 +27,6 @@ describe('Readings Use Cases', () => {
   };
 
   const mockReadingRepository = {
-    create: jest.fn(),
-    createWithAtomicSnapshot: jest.fn(),
     findMany: jest.fn(),
     findUnique: jest.fn(),
     count: jest.fn(),
@@ -46,7 +42,6 @@ describe('Readings Use Cases', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        CreateReadingUseCase,
         FindAllReadingsUseCase,
         FindOneReadingUseCase,
         UpdateReadingUseCase,
@@ -55,7 +50,6 @@ describe('Readings Use Cases', () => {
       ],
     }).compile();
 
-    createUseCase = module.get<CreateReadingUseCase>(CreateReadingUseCase);
     findAllUseCase = module.get<FindAllReadingsUseCase>(FindAllReadingsUseCase);
     findOneUseCase = module.get<FindOneReadingUseCase>(FindOneReadingUseCase);
     updateUseCase = module.get<UpdateReadingUseCase>(UpdateReadingUseCase);
@@ -65,22 +59,6 @@ describe('Readings Use Cases', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
-  });
-
-  describe('CreateReadingUseCase', () => {
-    it('should create a reading', async () => {
-      mockReadingRepository.createWithAtomicSnapshot.mockResolvedValue(
-        mockLectura,
-      );
-      const result = await createUseCase.execute({
-        fecha: '2024-01-01',
-        lecturaActual: 150,
-        medidorId: '1',
-      });
-      expect(result).toBeDefined();
-      expect(result.lecturaActual).toBe(150);
-      expect(mockReadingRepository.createWithAtomicSnapshot).toHaveBeenCalled();
-    });
   });
 
   describe('FindAllReadingsUseCase', () => {

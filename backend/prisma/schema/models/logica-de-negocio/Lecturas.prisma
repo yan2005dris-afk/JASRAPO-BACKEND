@@ -7,7 +7,6 @@ model Lecturas {
   deletedAt           DateTime?          @map("borrado_en")
   createdAt           DateTime           @default(now()) @map("creado_en")
   fechaValidacion     DateTime?          @map("fecha_validacion")
-  fotoUrl             String?            @map("foto_url")
   lecturaInicial      Boolean            @default(false) @map("lectura_inicial")
   periodoId           Int                @map("periodo_id")
   descripcionAnomalia String?            @map("descripcion_anomalia")
@@ -18,7 +17,7 @@ model Lecturas {
   medidor             Medidores          @relation(fields: [medidorId], references: [medidorId], onDelete: Restrict)
   periodoRel          Periodos           @relation(fields: [periodoId], references: [periodoId])
   ordenesTrabajo      OrdenesTrabajo[]
-  lecturaAnomalias    LecturaAnomalia[]
+  novedadesOrdenTrabajo NovedadOrdenTrabajo[]
   prefacturas         Prefacturas[]
   reemplazosSaliente  ReemplazoMedidor[] @relation("LecturaFinalSaliente")
   reemplazosEntrante  ReemplazoMedidor[] @relation("LecturaInicialEntrante")

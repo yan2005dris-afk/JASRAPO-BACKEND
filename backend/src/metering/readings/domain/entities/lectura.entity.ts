@@ -13,7 +13,8 @@ export class LecturaEntity {
   medidorId: bigint;
   descripcionAnomalia: string | null;
   fechaValidacion: Date | null;
-  fotoUrl: string | null;
+  /** Evidence projected from the linked work order. */
+  evidenciaFotoUrl: string | null;
   isValidada: boolean;
   lecturaInicial: boolean;
   periodoId: number;
