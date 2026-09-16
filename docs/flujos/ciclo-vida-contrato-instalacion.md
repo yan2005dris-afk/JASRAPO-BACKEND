@@ -99,6 +99,20 @@ El convenio es una alternativa para deuda pendiente y no es requerido para pagar
 
 El código inspeccionado no usa la creación del convenio para promover el servicio a `ACTIVO` ni a `PENDIENTE_INSTALACION`. El pago de cuotas se procesa como detalles `CUOTA_CONVENIO` y tiene su propio evento `cuota.pagada` cuando una cuota queda completamente pagada.
 
+### Regla operativa acordada para convenios
+
+La cobranza debe distinguir entre la deuda histórica financiada por el convenio y las planillas corrientes del servicio. Por decisión operativa, mientras el cliente mantenga sus planillas corrientes al día, un convenio vigente con cuotas futuras pendientes —o incluso con una cuota del convenio aún no definida como causal de corte— **no debe generar una orden de corte**.
+
+Este criterio expresa una política flexible:
+
+```text
+Convenio vigente
++ planillas corrientes pagadas
+→ no generar orden CORTE por el saldo histórico del convenio
+```
+
+La regla no significa que la deuda del convenio desaparezca ni que el convenio se considere liquidado. El sistema debe conservar por separado el saldo y el estado del convenio. El tratamiento de una cuota vencida e impaga del convenio queda deliberadamente sin automatización hasta que se defina un umbral y una acción formal.
+
 ## 3. Registro y validación del pago
 
 ### Registro: `POST /payments`
@@ -299,6 +313,7 @@ sequenceDiagram
 | Comunidad/rubro/período faltante al crear contrato | Falla la transacción o la función SQL. | Verificar cliente, medidor en `BODEGA`, tarifa, comunidad, rubro `INSTALACION` activo y período `ABIERTO`. |
 | Ruta creada sin orden | Posible si falla la segunda escritura, porque asignación no es una transacción conjunta. | Buscar rutas `INSTALACION` recientes sin `ordenesTrabajo` y corregir mediante operación controlada. |
 | Divergencia de estados | Legacy y servicio pueden mostrar valores distintos. | Comparar `estado`, `estadoServicio`, `estadoCobranza`; no corregir solo la UI. |
+| Convenio con planillas corrientes al día | El saldo histórico del convenio permanece, pero no genera orden de corte por sí solo. | Revisar estado del convenio, cuotas vencidas y pagos corrientes antes de incluir el contrato en el listado de corte. |
 
 ## Trazabilidad
 
@@ -347,6 +362,7 @@ Usar una base de pruebas y valores existentes o crear previamente los catálogos
 - ¿Debe la finalización de una orden `INSTALACION` actualizar `estadoServicio` a `ACTIVO` y, en ese caso, bajo qué condiciones adicionales?
 - ¿Debe esa finalización también sincronizar `estado` legacy, o debe mantenerse solo como puente de compatibilidad?
 - ¿Debe `estadoCobranza` pasar explícitamente de `AL_DIA` a otro valor durante la creación o liquidación de deuda de instalación?
+- Si una cuota vencida del convenio queda impaga, ¿qué umbral y qué autorización son necesarios para que deje de aplicar la protección contra corte?
 - ¿Se requiere una transacción única para crear una ruta nueva y su primera orden de trabajo?
 - ¿Qué componente procesa y reintenta exactamente `EventosPendientes` en el despliegue actual y cuál es su política de deduplicación?
 - ¿La API debe incluir `estadoCobranza` en `ContractResponseDto` para que los consumidores no dependan de inferencias sobre `estado`?
