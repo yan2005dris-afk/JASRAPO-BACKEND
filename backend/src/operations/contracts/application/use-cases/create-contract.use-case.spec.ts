@@ -52,7 +52,7 @@ describe('CreateContractUseCase', () => {
       contratoId: BigInt(1),
       estado: 'PENDIENTE_PAGO',
       estadoServicio: 'PENDIENTE_PAGO',
-      estadoCobranza: 'AL_DIA',
+      estadoCobranza: 'NO_APLICA',
     });
 
     const result = await useCase.execute(dto);
@@ -69,7 +69,7 @@ describe('CreateContractUseCase', () => {
       direccionSuministro: 'Av. Principal 123',
       estado: 'PENDIENTE_PAGO',
       estadoServicio: 'PENDIENTE_PAGO',
-      estadoCobranza: 'AL_DIA',
+      estadoCobranza: 'NO_APLICA',
       creadoPor: undefined,
       lecturaInicial: 0,
     });
@@ -77,7 +77,7 @@ describe('CreateContractUseCase', () => {
       contratoId: BigInt(1),
       estado: 'PENDIENTE_PAGO',
       estadoServicio: 'PENDIENTE_PAGO',
-      estadoCobranza: 'AL_DIA',
+      estadoCobranza: 'NO_APLICA',
     });
   });
 

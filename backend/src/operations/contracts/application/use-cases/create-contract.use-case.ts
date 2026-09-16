@@ -15,8 +15,10 @@ export class CreateContractUseCase {
     const legacyProjection = ContractState.fromLegacyState(legacyState);
     const estadoServicio =
       dto.estadoServicio ?? legacyProjection.estadoServicio;
-    const estadoCobranza =
-      dto.estadoCobranza ?? legacyProjection.estadoCobranza;
+    const estadoCobranza = ContractState.normalizeCollectionStatus(
+      dto.estadoCobranza ?? legacyProjection.estadoCobranza,
+      estadoServicio,
+    );
 
     return this.contractRepository.createContractWithMeterHistory({
       clienteId: BigInt(dto.clienteId),

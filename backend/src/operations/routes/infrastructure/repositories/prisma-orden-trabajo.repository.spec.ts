@@ -120,7 +120,11 @@ describe('PrismaOrdenTrabajoRepository contract lifecycle effects', () => {
 
     expect(contractUpdate).toHaveBeenCalledWith({
       where: { contratoId: 3n },
-      data: { estadoServicio: 'ACTIVO' },
+      data: {
+        estado: 'ACTIVO',
+        estadoServicio: 'ACTIVO',
+        estadoCobranza: 'AL_DIA',
+      },
     });
   });
 
@@ -208,7 +212,11 @@ describe('PrismaOrdenTrabajoRepository contract lifecycle effects', () => {
 
     expect(contractUpdate).toHaveBeenCalledWith({
       where: { contratoId: 3n },
-      data: { estadoServicio: 'ACTIVO' },
+      data: {
+        estado: 'ACTIVO',
+        estadoServicio: 'ACTIVO',
+        estadoCobranza: 'AL_DIA',
+      },
     });
   });
 });

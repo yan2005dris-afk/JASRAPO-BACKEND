@@ -12,11 +12,11 @@
 Add two persisted fields while retaining `Contratos.estado` as a compatibility bridge:
 
 - `estadoServicio`: `PENDIENTE_PAGO -> PENDIENTE_INSTALACION -> ACTIVO -> SUSPENDIDO -> RETIRADO`.
-- `estadoCobranza`: `AL_DIA` or `EN_MORA`, based only on current-service debt.
+- `estadoCobranza`: `NO_APLICA` while service activation is pending, `AL_DIA` for active service without current-service mora, or `EN_MORA` when the configured current-service threshold is reached.
 - `tieneConvenioActivo`: a derived read-model flag from active `Convenios`; it is
   metadata/protection and never a collection status.
 
-`RETIRADO` is terminal. Completing installation activates a service. Reconnection activates service only after a completed reconnection work order; a payment or agreement alone never reactivates it. The legacy `Contratos.estado = EN_CONVENIO` remains supported temporarily, but it must not repopulate `estadoCobranza`.
+`RETIRADO` is terminal. Completing installation activates a service. Reconnection activates service only after a completed reconnection work order; a payment or agreement alone never reactivates it. The legacy `Contratos.estado = EN_CONVENIO` remains supported temporarily, but convenio is separate and must never be shown or repopulated as `estadoCobranza`.
 
 The migration is additive and supplies defaults. The domain mapper reads the new fields when present and projects legacy `estado` when older callers omit them. This compatibility slice dual-writes all three contract state fields, makes explicit separated fields authoritative, and migrates unambiguous payment, installation, filtering, and stored-procedure decisions. Legacy `estado` filters/catalog/response remain deprecated compatibility surfaces.
 

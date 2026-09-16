@@ -212,6 +212,11 @@ export class PrismaContractRepository implements ContractRepository {
   async createContractWithMeterHistory(
     data: CreateContractWithMeterCommand,
   ): Promise<ContractEntity> {
+    const estadoCobranza = ContractState.normalizeCollectionStatus(
+      data.estadoCobranza,
+      data.estadoServicio,
+    );
+
     return this.prisma.$transaction(async (tx) => {
       await this.validateContractDependencies(tx, data);
 
@@ -222,9 +227,12 @@ export class PrismaContractRepository implements ContractRepository {
           numeroGuia: data.numeroGuia,
           direccionSuministro: data.direccionSuministro,
           comunidadId: data.comunidadId,
-          estado: data.estado as any,
+          estado: ContractState.projectLegacyState(
+            data.estadoServicio,
+            estadoCobranza,
+          ) as any,
           estadoServicio: data.estadoServicio,
-          estadoCobranza: data.estadoCobranza,
+          estadoCobranza,
           ...(data.sectorId !== null ? { sectorId: data.sectorId } : {}),
           ...(data.creadoPor ? { creadoPor: data.creadoPor } : {}),
         },

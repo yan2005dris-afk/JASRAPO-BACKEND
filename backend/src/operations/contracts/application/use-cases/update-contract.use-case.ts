@@ -51,11 +51,13 @@ export class UpdateContractUseCase {
         (dto.estado !== undefined
           ? legacyProjection.estadoServicio
           : current.estadoServicio);
-      const estadoCobranza =
+      const estadoCobranza = ContractState.normalizeCollectionStatus(
         dto.estadoCobranza ??
-        (dto.estado !== undefined
-          ? legacyProjection.estadoCobranza
-          : current.estadoCobranza);
+          (dto.estado !== undefined
+            ? legacyProjection.estadoCobranza
+            : current.estadoCobranza),
+        estadoServicio,
+      );
       fields.estado = ContractState.projectLegacyState(
         estadoServicio,
         estadoCobranza,

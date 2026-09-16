@@ -8,7 +8,7 @@ model Contratos {
   direccionSuministro String               @map("direccion_suministro")
   estado              EstadoContrato       @map("estado")
   estadoServicio      EstadoServicioContrato @default(PENDIENTE_PAGO) @map("estado_servicio")
-  estadoCobranza      EstadoCobranzaContrato @default(AL_DIA) @map("estado_cobranza")
+  estadoCobranza      EstadoCobranzaContrato @default(NO_APLICA) @map("estado_cobranza")
   createdAt           DateTime             @default(now()) @map("creado_en")
   updatedAt           DateTime             @updatedAt @map("actualizado_en")
   deletedAt           DateTime?            @map("borrado_en")
@@ -53,6 +53,7 @@ enum EstadoServicioContrato {
 }
 
 enum EstadoCobranzaContrato {
+  NO_APLICA
   AL_DIA
   EN_MORA
 }

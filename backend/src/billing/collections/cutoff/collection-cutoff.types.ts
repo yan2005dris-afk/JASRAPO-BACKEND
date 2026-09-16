@@ -1,4 +1,5 @@
 import { COLLECTION_CUTOFF_DEFAULTS } from 'src/infrastructure/config/sistema-config.keys';
+import type { EstadoCobranzaContrato } from 'src/shared/enums';
 
 export { COLLECTION_CUTOFF_DEFAULTS };
 
@@ -23,8 +24,8 @@ export interface CollectionCutoffCandidate {
   comunidad: CollectionCutoffCommunity;
   totalDeuda: number;
   periodosVencidos: number;
-  estadoCobranza: 'AL_DIA' | 'EN_MORA';
-  estadoCobranzaPersistido: string;
+  estadoCobranza: EstadoCobranzaContrato;
+  estadoCobranzaPersistido: EstadoCobranzaContrato;
   estadoEvaluacion: CollectionCutoffEvaluationStatus;
   tieneConvenioActivo: boolean;
   elegibleParaCorte: boolean;
