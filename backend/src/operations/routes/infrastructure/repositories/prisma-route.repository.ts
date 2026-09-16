@@ -29,6 +29,7 @@ import type {
 import {
   EntityNotFoundException,
   EntityAlreadyExistsException,
+  InvalidDomainOperationException,
 } from 'src/shared/domain/exceptions/domain.exception';
 
 @Injectable()
@@ -172,6 +173,88 @@ export class PrismaRouteRepository implements RouteRepository {
       }
       throw error;
     }
+  }
+
+  async updateWithReadingKpis(
+    rutaId: bigint,
+    expectedEstado: string,
+    data: UpdateRouteData,
+  ): Promise<RouteEntity> {
+    return this.prisma.$transaction(
+      async (tx) => {
+        const route = await tx.rutas.findFirst({
+          where: {
+            rutaId,
+            estado: expectedEstado as EstadoRuta,
+            deletedAt: null,
+          },
+          include: { tipoActividad: { select: { codigo: true } } },
+        });
+        if (!route) {
+          throw new InvalidDomainOperationException(
+            'La ruta fue modificada por otro usuario. Intentalo de nuevo.',
+          );
+        }
+
+        let estado = data.estado;
+        if (
+          data.estado === 'COMPLETADA' &&
+          route.tipoActividad.codigo === 'LECTURA'
+        ) {
+          const estadoGroups = await tx.lecturas.groupBy({
+            by: ['estado'],
+            where: {
+              deletedAt: null,
+              ordenesTrabajo: {
+                some: {
+                  rutaId,
+                  ruta: { tipoActividad: { codigo: 'LECTURA' } },
+                  deletedAt: null,
+                },
+              },
+            },
+            _count: { _all: true },
+          });
+          const total = estadoGroups.reduce(
+            (sum, group) => sum + group._count._all,
+            0,
+          );
+          const aprobadas =
+            estadoGroups.find((group) => group.estado === 'APROBADA')?._count
+              ._all ?? 0;
+          if (total > aprobadas) estado = 'PARCIAL';
+        }
+
+        const raw = await tx.rutas.update({
+          where: { rutaId },
+          data: {
+            ...(data.nombre !== undefined && { nombre: data.nombre }),
+            ...(data.descripcion !== undefined && {
+              descripcion: data.descripcion,
+            }),
+            ...(data.operarioId !== undefined && {
+              operarioId: data.operarioId,
+            }),
+            ...(data.comunidadId !== undefined && {
+              comunidadId: data.comunidadId,
+            }),
+            ...(data.sectorId !== undefined && { sectorId: data.sectorId }),
+            ...(data.periodoId !== undefined && { periodoId: data.periodoId }),
+            ...(estado !== undefined && { estado: estado as EstadoRuta }),
+            ...(data.fechaPlanificada !== undefined && {
+              fechaPlanificada: data.fechaPlanificada,
+            }),
+            ...(data.fechaInicio !== undefined && {
+              fechaInicio: data.fechaInicio,
+            }),
+            ...(data.fechaFin !== undefined && { fechaFin: data.fechaFin }),
+          },
+          include: { tipoActividad: { select: { codigo: true } } },
+        });
+        return RouteMapper.toEntity(raw);
+      },
+      { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+    );
   }
 
   async softDelete(rutaId: bigint): Promise<RouteEntity> {
@@ -509,7 +592,7 @@ export class PrismaRouteRepository implements RouteRepository {
       ordenesTrabajo: {
         some: {
           rutaId,
-          tipoActividad: 'LECTURA',
+          ruta: { tipoActividad: { codigo: 'LECTURA' } },
           deletedAt: null,
         },
       },

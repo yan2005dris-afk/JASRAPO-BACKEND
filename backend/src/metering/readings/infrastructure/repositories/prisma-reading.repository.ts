@@ -70,7 +70,10 @@ export const safeReadingsSelect = {
   },
   ordenesTrabajo: {
     where: { deletedAt: null },
-    select: { evidenciaFotoUrl: true },
+    select: {
+      evidenciaFotoUrl: true,
+      ruta: { select: { estado: true } },
+    },
     orderBy: { updatedAt: 'desc' },
   },
 } satisfies Prisma.LecturasSelect;
@@ -314,93 +317,108 @@ export class PrismaReadingRepository implements ReadingRepository {
     where: { lecturaId: bigint },
     data: UpdateReadingRepositoryData,
   ): Promise<LecturaEntity> {
-    const record = await this.prisma.$transaction(async (tx) => {
-      if (data.evidenciaFotoUrl !== undefined) {
-        const linked = await tx.ordenesTrabajo.updateMany({
-          where: { lecturaId: where.lecturaId, deletedAt: null },
-          data: { evidenciaFotoUrl: data.evidenciaFotoUrl },
+    const record = await this.prisma.$transaction(
+      async (tx) => {
+        const linkedRoute = await tx.ordenesTrabajo.findFirst({
+          where: {
+            lecturaId: where.lecturaId,
+            deletedAt: null,
+          },
+          select: { ordenTrabajoId: true, ruta: { select: { estado: true } } },
         });
-        if (linked.count === 0) {
+        if (linkedRoute && linkedRoute.ruta.estado !== 'EN_PROGRESO') {
           throw new InvalidDomainOperationException(
-            'La lectura no tiene una orden de trabajo vinculada para guardar la evidencia fotográfica',
+            'No se pueden registrar lecturas en una ruta pendiente',
           );
         }
-      }
-
-      const updated = await tx.lecturas.update({
-        where: { lecturaId: where.lecturaId },
-        data: {
-          ...(data.fecha !== undefined && { fecha: data.fecha }),
-          ...(data.lecturaAnterior !== undefined && {
-            lecturaAnterior: data.lecturaAnterior,
-          }),
-          ...(data.lecturaActual !== undefined && {
-            lecturaActual: data.lecturaActual,
-          }),
-          ...(data.consumoCalculado !== undefined && {
-            consumoCalculado: data.consumoCalculado,
-          }),
-          ...(data.medidorId !== undefined && { medidorId: data.medidorId }),
-          ...(data.descripcionAnomalia !== undefined && {
-            descripcionAnomalia: data.descripcionAnomalia,
-          }),
-          ...(data.fechaValidacion !== undefined && {
-            fechaValidacion: data.fechaValidacion,
-          }),
-          ...(data.estado !== undefined && {
-            estado: data.estado as $Enums.EstadoLectura,
-          }),
-          ...(data.lecturaInicial !== undefined && {
-            lecturaInicial: data.lecturaInicial,
-          }),
-          ...(data.periodoId !== undefined && { periodoId: data.periodoId }),
-          ...(data.deletedAt !== undefined && { deletedAt: data.deletedAt }),
-        },
-        select: safeReadingsSelect,
-      });
-
-      // Si la lectura se marca como CON_NOVEDAD, registrar o actualizar la novedad
-      if (data.estado === 'CON_NOVEDAD') {
-        const workOrder = await tx.ordenesTrabajo.findFirst({
-          where: { lecturaId: where.lecturaId, deletedAt: null },
-          select: { ordenTrabajoId: true },
-        });
-
-        if (workOrder) {
-          const existingNovelty = await tx.novedadOrdenTrabajo.findFirst({
-            where: {
-              ordenTrabajoId: workOrder.ordenTrabajoId,
-              deletedAt: null,
-            },
+        if (data.evidenciaFotoUrl !== undefined) {
+          const linked = await tx.ordenesTrabajo.updateMany({
+            where: { lecturaId: where.lecturaId, deletedAt: null },
+            data: { evidenciaFotoUrl: data.evidenciaFotoUrl },
           });
-
-          if (!existingNovelty) {
-            await tx.novedadOrdenTrabajo.create({
-              data: {
-                ordenTrabajoId: workOrder.ordenTrabajoId,
-                lecturaId: where.lecturaId,
-                tipo: $Enums.TipoAnomalia.OTRO,
-                estado: $Enums.EstadoNovedad.OPEN,
-                observacion:
-                  data.descripcionAnomalia ||
-                  'Novedad reportada desde ruta de lectura',
-                fotoUrl: null,
-              },
-            });
-          } else if (
-            existingNovelty.estado !== $Enums.EstadoNovedad.OPEN &&
-            existingNovelty.estado !== $Enums.EstadoNovedad.IN_PROGRESS
-          ) {
-            await tx.novedadOrdenTrabajo.update({
-              where: { novedadId: existingNovelty.novedadId },
-              data: { estado: $Enums.EstadoNovedad.OPEN },
-            });
+          if (linked.count === 0) {
+            throw new InvalidDomainOperationException(
+              'La lectura no tiene una orden de trabajo vinculada para guardar la evidencia fotográfica',
+            );
           }
         }
-      }
 
-      return updated;
-    });
+        const updated = await tx.lecturas.update({
+          where: { lecturaId: where.lecturaId },
+          data: {
+            ...(data.fecha !== undefined && { fecha: data.fecha }),
+            ...(data.lecturaAnterior !== undefined && {
+              lecturaAnterior: data.lecturaAnterior,
+            }),
+            ...(data.lecturaActual !== undefined && {
+              lecturaActual: data.lecturaActual,
+            }),
+            ...(data.consumoCalculado !== undefined && {
+              consumoCalculado: data.consumoCalculado,
+            }),
+            ...(data.medidorId !== undefined && { medidorId: data.medidorId }),
+            ...(data.descripcionAnomalia !== undefined && {
+              descripcionAnomalia: data.descripcionAnomalia,
+            }),
+            ...(data.fechaValidacion !== undefined && {
+              fechaValidacion: data.fechaValidacion,
+            }),
+            ...(data.estado !== undefined && {
+              estado: data.estado as $Enums.EstadoLectura,
+            }),
+            ...(data.lecturaInicial !== undefined && {
+              lecturaInicial: data.lecturaInicial,
+            }),
+            ...(data.periodoId !== undefined && { periodoId: data.periodoId }),
+            ...(data.deletedAt !== undefined && { deletedAt: data.deletedAt }),
+          },
+          select: safeReadingsSelect,
+        });
+
+        // Si la lectura se marca como CON_NOVEDAD, registrar o actualizar la novedad
+        if (data.estado === 'CON_NOVEDAD') {
+          const workOrder = await tx.ordenesTrabajo.findFirst({
+            where: { lecturaId: where.lecturaId, deletedAt: null },
+            select: { ordenTrabajoId: true },
+          });
+
+          if (workOrder) {
+            const existingNovelty = await tx.novedadOrdenTrabajo.findFirst({
+              where: {
+                ordenTrabajoId: workOrder.ordenTrabajoId,
+                deletedAt: null,
+              },
+            });
+
+            if (!existingNovelty) {
+              await tx.novedadOrdenTrabajo.create({
+                data: {
+                  ordenTrabajoId: workOrder.ordenTrabajoId,
+                  lecturaId: where.lecturaId,
+                  tipo: $Enums.TipoAnomalia.OTRO,
+                  estado: $Enums.EstadoNovedad.OPEN,
+                  observacion:
+                    data.descripcionAnomalia ||
+                    'Novedad reportada desde ruta de lectura',
+                  fotoUrl: null,
+                },
+              });
+            } else if (
+              existingNovelty.estado !== $Enums.EstadoNovedad.OPEN &&
+              existingNovelty.estado !== $Enums.EstadoNovedad.IN_PROGRESS
+            ) {
+              await tx.novedadOrdenTrabajo.update({
+                where: { novedadId: existingNovelty.novedadId },
+                data: { estado: $Enums.EstadoNovedad.OPEN },
+              });
+            }
+          }
+        }
+
+        return updated;
+      },
+      { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+    );
 
     return ReadingMapper.toDomain(record)!;
   }
@@ -409,63 +427,75 @@ export class PrismaReadingRepository implements ReadingRepository {
     where: { lecturaId: bigint; estado: string },
     data: UpdateReadingRepositoryData,
   ): Promise<LecturaEntity | null> {
-    const record = await this.prisma.$transaction(async (tx) => {
-      const { count } = await tx.lecturas.updateMany({
-        where: {
-          lecturaId: where.lecturaId,
-          estado: where.estado as $Enums.EstadoLectura,
-          deletedAt: null,
-        },
-        data: {
-          ...(data.fecha !== undefined && { fecha: data.fecha }),
-          ...(data.lecturaAnterior !== undefined && {
-            lecturaAnterior: data.lecturaAnterior,
-          }),
-          ...(data.lecturaActual !== undefined && {
-            lecturaActual: data.lecturaActual,
-          }),
-          ...(data.consumoCalculado !== undefined && {
-            consumoCalculado: data.consumoCalculado,
-          }),
-          ...(data.medidorId !== undefined && { medidorId: data.medidorId }),
-          ...(data.descripcionAnomalia !== undefined && {
-            descripcionAnomalia: data.descripcionAnomalia,
-          }),
-          ...(data.fechaValidacion !== undefined && {
-            fechaValidacion: data.fechaValidacion,
-          }),
-          ...(data.estado !== undefined && {
-            estado: data.estado as $Enums.EstadoLectura,
-          }),
-          ...(data.lecturaInicial !== undefined && {
-            lecturaInicial: data.lecturaInicial,
-          }),
-          ...(data.periodoId !== undefined && { periodoId: data.periodoId }),
-          ...(data.deletedAt !== undefined && { deletedAt: data.deletedAt }),
-        },
-      });
-
-      if (count === 0) {
-        return null;
-      }
-
-      if (data.evidenciaFotoUrl !== undefined) {
-        const linked = await tx.ordenesTrabajo.updateMany({
-          where: { lecturaId: where.lecturaId, deletedAt: null },
-          data: { evidenciaFotoUrl: data.evidenciaFotoUrl },
+    const record = await this.prisma.$transaction(
+      async (tx) => {
+        const linkedRoute = await tx.ordenesTrabajo.findFirst({
+          where: {
+            lecturaId: where.lecturaId,
+            deletedAt: null,
+          },
+          select: { ordenTrabajoId: true, ruta: { select: { estado: true } } },
         });
-        if (linked.count === 0) {
-          throw new InvalidDomainOperationException(
-            'La lectura no tiene una orden de trabajo vinculada para guardar la evidencia fotográfica',
-          );
-        }
-      }
+        if (linkedRoute && linkedRoute.ruta.estado !== 'EN_PROGRESO')
+          return null;
+        const { count } = await tx.lecturas.updateMany({
+          where: {
+            lecturaId: where.lecturaId,
+            estado: where.estado as $Enums.EstadoLectura,
+            deletedAt: null,
+          },
+          data: {
+            ...(data.fecha !== undefined && { fecha: data.fecha }),
+            ...(data.lecturaAnterior !== undefined && {
+              lecturaAnterior: data.lecturaAnterior,
+            }),
+            ...(data.lecturaActual !== undefined && {
+              lecturaActual: data.lecturaActual,
+            }),
+            ...(data.consumoCalculado !== undefined && {
+              consumoCalculado: data.consumoCalculado,
+            }),
+            ...(data.medidorId !== undefined && { medidorId: data.medidorId }),
+            ...(data.descripcionAnomalia !== undefined && {
+              descripcionAnomalia: data.descripcionAnomalia,
+            }),
+            ...(data.fechaValidacion !== undefined && {
+              fechaValidacion: data.fechaValidacion,
+            }),
+            ...(data.estado !== undefined && {
+              estado: data.estado as $Enums.EstadoLectura,
+            }),
+            ...(data.lecturaInicial !== undefined && {
+              lecturaInicial: data.lecturaInicial,
+            }),
+            ...(data.periodoId !== undefined && { periodoId: data.periodoId }),
+            ...(data.deletedAt !== undefined && { deletedAt: data.deletedAt }),
+          },
+        });
 
-      return tx.lecturas.findUnique({
-        where: { lecturaId: where.lecturaId },
-        select: safeReadingsSelect,
-      });
-    });
+        if (count === 0) {
+          return null;
+        }
+
+        if (data.evidenciaFotoUrl !== undefined) {
+          const linked = await tx.ordenesTrabajo.updateMany({
+            where: { lecturaId: where.lecturaId, deletedAt: null },
+            data: { evidenciaFotoUrl: data.evidenciaFotoUrl },
+          });
+          if (linked.count === 0) {
+            throw new InvalidDomainOperationException(
+              'La lectura no tiene una orden de trabajo vinculada para guardar la evidencia fotográfica',
+            );
+          }
+        }
+
+        return tx.lecturas.findUnique({
+          where: { lecturaId: where.lecturaId },
+          select: safeReadingsSelect,
+        });
+      },
+      { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+    );
 
     return ReadingMapper.toDomain(record);
   }
@@ -487,7 +517,7 @@ export class PrismaReadingRepository implements ReadingRepository {
     const orden = await this.prisma.ordenesTrabajo.findFirst({
       where: {
         lecturaId,
-        tipoActividad: 'LECTURA',
+        ruta: { tipoActividad: { codigo: 'LECTURA' } },
         deletedAt: null,
       },
       select: { ruta: { select: { estado: true } } },

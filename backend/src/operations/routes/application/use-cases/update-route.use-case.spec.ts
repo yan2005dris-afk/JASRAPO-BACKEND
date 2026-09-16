@@ -16,6 +16,7 @@ describe('UpdateRouteUseCase', () => {
     findPeriodo: jest.fn(),
     findOverlappingRoutes: jest.fn(),
     update: jest.fn(),
+    updateWithReadingKpis: jest.fn(),
     getReadingKpisByRutaId: jest.fn(),
   };
 
@@ -199,12 +200,13 @@ describe('UpdateRouteUseCase', () => {
       conNovedad: 0,
       rechazadas: 0,
     });
-    mockRouteRepository.update.mockResolvedValue(existing);
+    mockRouteRepository.updateWithReadingKpis.mockResolvedValue(existing);
 
     await useCase.execute(1n, { estado: 'COMPLETADA' } as any);
 
-    expect(mockRouteRepository.update).toHaveBeenCalledWith(
+    expect(mockRouteRepository.updateWithReadingKpis).toHaveBeenCalledWith(
       1n,
+      'EN_PROGRESO',
       expect.objectContaining({ estado: 'COMPLETADA' }),
     );
   });
@@ -231,13 +233,14 @@ describe('UpdateRouteUseCase', () => {
       conNovedad: 0,
       rechazadas: 0,
     });
-    mockRouteRepository.update.mockResolvedValue(existing);
+    mockRouteRepository.updateWithReadingKpis.mockResolvedValue(existing);
 
     await useCase.execute(1n, { estado: 'COMPLETADA' } as any);
 
-    expect(mockRouteRepository.update).toHaveBeenCalledWith(
+    expect(mockRouteRepository.updateWithReadingKpis).toHaveBeenCalledWith(
       1n,
-      expect.objectContaining({ estado: 'PARCIAL' }),
+      'EN_PROGRESO',
+      expect.objectContaining({ estado: 'COMPLETADA' }),
     );
   });
 });

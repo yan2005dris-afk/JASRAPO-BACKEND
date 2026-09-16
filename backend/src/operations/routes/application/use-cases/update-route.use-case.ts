@@ -76,14 +76,7 @@ export class UpdateRouteUseCase {
       }
     }
 
-    let estadoFinal = updateDto.estado;
-    if (updateDto.estado === 'COMPLETADA') {
-      const kpis = await this.routeRepository.getReadingKpisByRutaId(rutaId);
-      const noAprobadas = kpis.total - kpis.aprobadas;
-      if (noAprobadas > 0) {
-        estadoFinal = 'PARCIAL';
-      }
-    }
+    const estadoFinal = updateDto.estado;
 
     const payload: UpdateRouteData = {
       ...(updateDto.nombre !== undefined && { nombre: updateDto.nombre }),
@@ -113,6 +106,8 @@ export class UpdateRouteUseCase {
       payload.fechaFin = new Date();
     }
 
-    return this.routeRepository.update(rutaId, payload);
+    return updateDto.estado !== undefined
+      ? this.routeRepository.updateWithReadingKpis(rutaId, ruta.estado, payload)
+      : this.routeRepository.update(rutaId, payload);
   }
 }
