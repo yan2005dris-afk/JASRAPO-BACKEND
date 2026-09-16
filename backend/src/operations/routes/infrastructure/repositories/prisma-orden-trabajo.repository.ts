@@ -207,7 +207,7 @@ export class PrismaOrdenTrabajoRepository implements OrdenTrabajoRepository {
 
     if (!order) {
       throw new InvalidDomainOperationException(
-        'La orden de trabajo no pertenece a tu ruta asignada activa',
+        'No puedes iniciar esta operación porque no estás asignado como operario a esta orden de trabajo.',
       );
     }
   }
