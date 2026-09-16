@@ -1,14 +1,6 @@
-import {
-  COBRANZA_DIA_CORTE_MENSUAL,
-  COBRANZA_MESES_PARA_CORTE,
-  COBRANZA_MESES_PARA_MORA,
-} from 'src/infrastructure/config/sistema-config.keys';
+import { COLLECTION_CUTOFF_DEFAULTS } from 'src/infrastructure/config/sistema-config.keys';
 
-export const COLLECTION_CUTOFF_DEFAULTS = {
-  [COBRANZA_DIA_CORTE_MENSUAL]: 15,
-  [COBRANZA_MESES_PARA_MORA]: 3,
-  [COBRANZA_MESES_PARA_CORTE]: 5,
-} as const;
+export { COLLECTION_CUTOFF_DEFAULTS };
 
 export interface CollectionCutoffConfig {
   diaCorteMensual: number;

@@ -1,4 +1,7 @@
-import { CollectionCutoffService } from './collection-cutoff.service';
+import {
+  CollectionCutoffService,
+  deriveMonthlyDueDate,
+} from './collection-cutoff.service';
 import {
   COBRANZA_DIA_CORTE_MENSUAL,
   COBRANZA_MESES_PARA_CORTE,
@@ -34,8 +37,11 @@ describe('CollectionCutoffService', () => {
     Array.from({ length: count }, (_, index) => ({
       contratoId: 7n,
       periodoId: index + 1,
+      mes: index + 1,
+      totalPagar: 10,
+      abono: 0,
       saldoActual: 10,
-      periodoRel: { fechaVencimiento: new Date(`2026-0${index + 1}-15`) },
+      periodoRel: { fechaVencimiento: new Date('2026-01-15T00:00:00.000Z') },
       prefacturaDetalle: convenio
         ? [{ cuotaConvenioId: 90n, deletedAt: null }]
         : [],
@@ -83,6 +89,16 @@ describe('CollectionCutoffService', () => {
     ).toBe(false);
   });
 
+  it('normalizes configured day 31 to the last Ecuador calendar day', () => {
+    const { service } = makeService();
+    expect(
+      service.isConfiguredEvaluationDay(new Date('2026-02-28T05:00:00Z'), 31),
+    ).toBe(true);
+    expect(
+      service.isConfiguredEvaluationDay(new Date('2026-03-30T05:00:00Z'), 31),
+    ).toBe(false);
+  });
+
   it.each([
     [2, 'DEUDA_PENDIENTE', 'AL_DIA', false],
     [3, 'EN_MORA', 'EN_MORA', false],
@@ -116,7 +132,8 @@ describe('CollectionCutoffService', () => {
     expect(prisma.prefacturas.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
-          estado: { notIn: ['ANULADA', 'PAGADA'] },
+          estado: { in: ['GENERADA', 'EN_REVISION', 'APROBADA'] },
+          mes: { gt: 0 },
           saldoActual: { gt: 0 },
           prefacturaDetalle: {
             none: { deletedAt: null, cuotaConvenioId: { not: null } },
@@ -124,6 +141,71 @@ describe('CollectionCutoffService', () => {
         }),
       }),
     );
+  });
+
+  it('derives the active convenio flag without counting financed rows toward cutoff', async () => {
+    const { service, prisma } = makeService();
+    prisma.prefacturas.findMany.mockResolvedValue(debtRows(4));
+
+    const [candidate] = await service.evaluate(
+      new Date('2026-12-31T00:00:00.000Z'),
+    );
+
+    expect(candidate).toMatchObject({
+      tieneConvenioActivo: true,
+      periodosVencidos: 4,
+      elegibleParaCorte: false,
+    });
+  });
+
+  it.each([
+    [2026, 1, 31, '2026-01-31'],
+    [2026, 2, 31, '2026-02-28'],
+    [2024, 2, 31, '2024-02-29'],
+    [2026, 12, 31, '2026-12-31'],
+  ])(
+    'derives a calendar-safe monthly due date',
+    (year, month, day, expected) => {
+      expect(
+        deriveMonthlyDueDate(
+          new Date(Date.UTC(year, 11, day)),
+          month,
+        ).toISOString(),
+      ).toBe(`${expected}T00:00:00.000Z`);
+    },
+  );
+
+  it('uses each invoice month instead of the annual period month', async () => {
+    const { service, prisma } = makeService();
+    prisma.prefacturas.findMany.mockResolvedValue([
+      { ...debtRows(1)[0], mes: 1 },
+      { ...debtRows(1)[0], periodoId: 2, mes: 2 },
+    ]);
+
+    const [candidate] = await service.evaluate(
+      new Date('2026-02-28T00:00:00.000Z'),
+    );
+
+    expect(candidate.periodosVencidos).toBe(2);
+  });
+
+  it('excludes installation invoices and carry-forward-only balances', async () => {
+    const { service, prisma } = makeService();
+    prisma.prefacturas.findMany.mockResolvedValue([
+      { ...debtRows(1)[0], mes: 0, totalPagar: 10, abono: 0 },
+      {
+        ...debtRows(1)[0],
+        periodoId: 2,
+        mes: 1,
+        totalPagar: 0,
+        abono: 0,
+        saldoActual: 50,
+      },
+    ]);
+
+    await expect(
+      service.evaluate(new Date('2026-12-31T00:00:00.000Z')),
+    ).resolves.toEqual([]);
   });
 
   it('does not turn paid current service into a cut candidate because of an active convenio', async () => {

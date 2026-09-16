@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { formatInTimeZone } from 'date-fns-tz';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { SistemaConfigService } from 'src/infrastructure/config/sistema-config.service';
@@ -17,6 +17,19 @@ import {
 } from './collection-cutoff.types';
 
 const ECUADOR_TIME_ZONE = 'America/Guayaquil';
+
+/**
+ * Periodos stores one annual due date. Prefacturas.mes identifies the
+ * monthly service invoice, so its due date must be reconstructed as a
+ * calendar date in the period year. Dates are treated as date-only UTC
+ * values, as they are persisted by the billing schema.
+ */
+export function deriveMonthlyDueDate(annualDueDate: Date, month: number): Date {
+  const year = annualDueDate.getUTCFullYear();
+  const dueDay = annualDueDate.getUTCDate();
+  const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  return new Date(Date.UTC(year, month - 1, Math.min(dueDay, daysInMonth)));
+}
 
 @Injectable()
 export class CollectionCutoffService {
@@ -52,7 +65,7 @@ export class CollectionCutoffService {
       ),
     };
     if (parsed.mesesParaCorte < parsed.mesesParaMora) {
-      throw new Error(
+      throw new BadRequestException(
         `${COBRANZA_MESES_PARA_CORTE} debe ser mayor o igual que ${COBRANZA_MESES_PARA_MORA}`,
       );
     }
@@ -60,7 +73,11 @@ export class CollectionCutoffService {
   }
 
   isConfiguredEvaluationDay(now: Date, day: number): boolean {
-    return Number(formatInTimeZone(now, ECUADOR_TIME_ZONE, 'd')) === day;
+    const year = Number(formatInTimeZone(now, ECUADOR_TIME_ZONE, 'yyyy'));
+    const month = Number(formatInTimeZone(now, ECUADOR_TIME_ZONE, 'M'));
+    const calendarDay = Number(formatInTimeZone(now, ECUADOR_TIME_ZONE, 'd'));
+    const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
+    return calendarDay === Math.min(day, lastDay);
   }
 
   async evaluate(now = new Date()): Promise<CollectionCutoffCandidate[]> {
@@ -68,13 +85,14 @@ export class CollectionCutoffService {
     const rows = await this.prisma.prefacturas.findMany({
       where: {
         deletedAt: null,
-        estado: { notIn: ['ANULADA', 'PAGADA'] },
+        estado: { in: ['GENERADA', 'EN_REVISION', 'APROBADA'] },
         saldoActual: { gt: 0 },
+        mes: { gt: 0 },
         contrato: {
           deletedAt: null,
           estadoServicio: { not: 'RETIRADO' },
         },
-        periodoRel: { fechaVencimiento: { lte: now }, deletedAt: null },
+        periodoRel: { deletedAt: null },
         // An agreement installment is not current service debt.
         prefacturaDetalle: {
           none: { deletedAt: null, cuotaConvenioId: { not: null } },
@@ -83,6 +101,9 @@ export class CollectionCutoffService {
       select: {
         contratoId: true,
         periodoId: true,
+        mes: true,
+        totalPagar: true,
+        abono: true,
         saldoActual: true,
         periodoRel: { select: { fechaVencimiento: true } },
         contrato: {
@@ -109,11 +130,36 @@ export class CollectionCutoffService {
           },
         },
       },
-      orderBy: { periodoRel: { fechaVencimiento: 'asc' } },
     });
 
-    const rowsByContract = new Map<string, typeof rows>();
-    for (const row of rows) {
+    const dueRows = rows
+      .filter((row) => {
+        if (row.mes < 1 || row.mes > 12) return false;
+        const dueDate = deriveMonthlyDueDate(
+          row.periodoRel.fechaVencimiento,
+          row.mes,
+        );
+        const ownPeriodBalance = DebtCalculatorHelper.saldoPendienteItem({
+          totalPagar: row.totalPagar,
+          abono: row.abono,
+          periodoId: row.periodoId,
+        });
+        return dueDate <= now && ownPeriodBalance > 0;
+      })
+      .sort((a, b) => {
+        const aDueDate = deriveMonthlyDueDate(
+          a.periodoRel.fechaVencimiento,
+          a.mes,
+        );
+        const bDueDate = deriveMonthlyDueDate(
+          b.periodoRel.fechaVencimiento,
+          b.mes,
+        );
+        return aDueDate.getTime() - bDueDate.getTime();
+      });
+
+    const rowsByContract = new Map<string, typeof dueRows>();
+    for (const row of dueRows) {
       const contratoId = String(row.contratoId);
       const current = rowsByContract.get(contratoId) ?? [];
       current.push(row);
@@ -125,15 +171,15 @@ export class CollectionCutoffService {
       const first = contractRows[0];
       const totalDeuda = DebtCalculatorHelper.calcularSaldoVencido(
         contractRows.map((row) => ({
-          totalPagar: row.saldoActual,
-          abono: 0,
+          totalPagar: row.totalPagar,
+          abono: row.abono,
           periodoId: row.periodoId,
         })),
       );
       const periodosVencidos = DebtCalculatorHelper.calcularMesesAtrasado(
         contractRows.map((row) => ({
-          totalPagar: row.saldoActual,
-          abono: 0,
+          totalPagar: row.totalPagar,
+          abono: row.abono,
           periodoId: row.periodoId,
         })),
       );
@@ -181,6 +227,9 @@ export class CollectionCutoffService {
         // Preserve legacy EN_CONVENIO (and any future non-collection state).
         continue;
       }
+      if (candidate.estadoCobranzaPersistido === candidate.estadoCobranza) {
+        continue;
+      }
       await this.prisma.contratos.updateMany({
         where: {
           contratoId: BigInt(candidate.contratoId),
@@ -196,19 +245,19 @@ export class CollectionCutoffService {
       where: { deletedAt: null, estadoServicio: { not: 'RETIRADO' } },
       select: { contratoId: true },
     });
-    const debtContractIds = new Set(
-      candidates.map((candidate) => candidate.contratoId),
+    const debtContractIds = candidates.map((candidate) =>
+      BigInt(candidate.contratoId),
     );
-    for (const contract of activeContracts) {
-      if (debtContractIds.has(String(contract.contratoId))) continue;
+    if (activeContracts.length > 0) {
       await this.prisma.contratos.updateMany({
         where: {
-          contratoId: contract.contratoId,
           deletedAt: null,
+          estadoServicio: { not: 'RETIRADO' },
+          estadoCobranza: EstadoCobranzaContrato.EN_MORA,
+          ...(debtContractIds.length > 0 && {
+            contratoId: { notIn: debtContractIds },
+          }),
           updatedAt: { lte: evaluatedAt },
-          estadoCobranza: {
-            in: [EstadoCobranzaContrato.AL_DIA, EstadoCobranzaContrato.EN_MORA],
-          },
         },
         data: { estadoCobranza: EstadoCobranzaContrato.AL_DIA },
       });
@@ -224,11 +273,11 @@ export class CollectionCutoffService {
   ): number {
     if (raw === null) return fallback;
     if (!/^\d+$/.test(raw.trim())) {
-      throw new Error(`${key} debe ser un entero positivo`);
+      throw new BadRequestException(`${key} debe ser un entero positivo`);
     }
     const value = Number(raw);
     if (!Number.isSafeInteger(value) || value < 1 || value > max) {
-      throw new Error(`${key} debe estar entre 1 y ${max}`);
+      throw new BadRequestException(`${key} debe estar entre 1 y ${max}`);
     }
     return value;
   }
