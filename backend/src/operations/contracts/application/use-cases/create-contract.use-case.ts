@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { ContractState } from '../../domain/contract-state';
 import { EstadoContrato } from 'src/shared/enums';
 import { ContractRepository } from '../../domain/repositories/contract.repository';
 import { CrearContratoMedidorDto } from '../../interfaces/dto/create-contrato-medidor.dto';
@@ -9,6 +10,16 @@ export class CreateContractUseCase {
   constructor(private readonly contractRepository: ContractRepository) {}
 
   async execute(dto: CrearContratoMedidorDto): Promise<ContractEntity> {
+    const legacyState = (dto.estado ||
+      EstadoContrato.PENDIENTE_PAGO) as EstadoContrato;
+    const legacyProjection = ContractState.fromLegacyState(legacyState);
+    const estadoServicio =
+      dto.estadoServicio ?? legacyProjection.estadoServicio;
+    const estadoCobranza = ContractState.normalizeCollectionStatus(
+      dto.estadoCobranza ?? legacyProjection.estadoCobranza,
+      estadoServicio,
+    );
+
     return this.contractRepository.createContractWithMeterHistory({
       clienteId: BigInt(dto.clienteId),
       categoriaTarifaId: Number(dto.categoriaTarifaId),
@@ -17,7 +28,9 @@ export class CreateContractUseCase {
       sectorId: dto.sectorId ? Number(dto.sectorId) : null,
       numeroGuia: dto.numeroGuia,
       direccionSuministro: dto.direccionSuministro,
-      estado: (dto.estado || EstadoContrato.PENDIENTE_PAGO) as EstadoContrato,
+      estado: ContractState.projectLegacyState(estadoServicio, estadoCobranza),
+      estadoServicio,
+      estadoCobranza,
       creadoPor: dto.creadoPor,
       lecturaInicial: dto.lecturaInicial ?? 0,
     });

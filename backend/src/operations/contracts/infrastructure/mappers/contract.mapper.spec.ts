@@ -203,6 +203,7 @@ describe('ContractMapper', () => {
       estado: 'EN_CONVENIO',
       estadoServicio: 'ACTIVO',
       estadoCobranza: 'EN_CONVENIO',
+      convenios: [{ convenioId: 1n }],
       creadoPor: null,
       comunidadId: 4,
       deletedAt: null,
@@ -215,7 +216,8 @@ describe('ContractMapper', () => {
     expect(result).toMatchObject({
       estado: 'EN_CONVENIO',
       estadoServicio: 'ACTIVO',
-      estadoCobranza: 'EN_CONVENIO',
+      estadoCobranza: 'AL_DIA',
+      tieneConvenioActivo: true,
     });
   });
 

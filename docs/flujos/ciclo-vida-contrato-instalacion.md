@@ -80,7 +80,7 @@ Si falla la función de prefacturación, una relación o cualquier escritura de 
 
 ### Estado inicial
 
-Con la entrada normal, el contrato queda en `estado = PENDIENTE_PAGO`. El esquema define además `estadoServicio = PENDIENTE_PAGO` y `estadoCobranza = AL_DIA` como valores predeterminados, aunque la escritura de esta operación pasa explícitamente el campo legacy `estado` y depende de los defaults de Prisma para los campos nuevos.
+Con la entrada normal, el contrato queda sincronizado en `estado = PENDIENTE_PAGO`, `estadoServicio = PENDIENTE_PAGO` y `estadoCobranza = NO_APLICA`. Durante la compatibilidad, los tres campos se escriben juntos; si llegan campos separados, estos son autoritativos y `estado` se proyecta solo para consumidores legacy.
 
 ## 2. Convenio de pago, cuando corresponde
 
@@ -98,6 +98,59 @@ El convenio es una alternativa para deuda pendiente y no es requerido para pagar
 8. crea el convenio y sus cuotas mediante `AgreementRepository.create`.
 
 El código inspeccionado no usa la creación del convenio para promover el servicio a `ACTIVO` ni a `PENDIENTE_INSTALACION`. El pago de cuotas se procesa como detalles `CUOTA_CONVENIO` y tiene su propio evento `cuota.pagada` cuando una cuota queda completamente pagada.
+
+### Regla operativa acordada para convenios
+
+La cobranza debe distinguir entre la deuda histórica financiada por el convenio y las planillas corrientes del servicio. Por decisión operativa, mientras el cliente mantenga sus planillas corrientes al día, un convenio vigente con cuotas futuras pendientes —o incluso con una cuota del convenio aún no definida como causal de corte— **no debe generar una orden de corte**.
+
+Este criterio expresa una política flexible:
+
+```text
+Convenio vigente
++ planillas corrientes pagadas
+→ no generar orden CORTE por el saldo histórico del convenio
+```
+
+La regla no significa que la deuda del convenio desaparezca ni que el convenio se considere liquidado. El sistema debe conservar por separado el saldo y el estado del convenio. El tratamiento de una cuota vencida e impaga del convenio queda deliberadamente sin automatización hasta que se defina un umbral y una acción formal.
+
+## Política vigente de evaluación de cobranza y corte
+
+La evaluación mensual usa `cobranza.dia_corte_mensual = 15`, considera
+`meses_para_mora = 3` períodos corrientes vencidos para `EN_MORA` y
+`meses_para_corte = 5` períodos corrientes vencidos para quedar elegible a
+corte. La consulta usa `periodo.fechaVencimiento`, registros activos/no
+anulados y saldo positivo; `Periodos.fechaVencimiento` es anual, por lo que
+cada prefactura deriva su vencimiento con el año del período, `Prefacturas.mes`
+y el día configurado en el período. Si el día no existe en el mes, se usa el
+último día calendario. Las fechas se tratan como fechas sin hora del calendario
+de Ecuador. Sólo se consideran estados `GENERADA`, `EN_REVISION` y `APROBADA`;
+`mes = 0` (instalación) queda fuera. El saldo propio se calcula como
+`totalPagar - abono`, sin volver a sumar `saldoVencido`, que puede contener
+saldo arrastrado. Deuda y cuotas de convenio vinculadas se mantienen fuera de
+este cálculo. `tieneConvenioActivo` se deriva de `Convenios`.
+
+El job de pg-boss usa `0 5 * * *` en UTC. Como Ecuador continental permanece
+en UTC-5 y pg-boss no configura zona horaria para el cron, las 05:00 UTC son
+las 00:00 de Ecuador y el job verifica el día calendario ecuatoriano mediante
+`America/Guayaquil`. Los candidatos con menos de 3 períodos se exponen como
+`DEUDA_PENDIENTE` y conservan `AL_DIA`; no se persisten como `EN_MORA`. La
+evaluación sólo consulta contratos con `estadoServicio = ACTIVO`; los estados
+pendientes conservan `NO_APLICA`.
+
+Esta primera slice sólo expone `GET /reports/collection-cutoff-candidates` y
+actualiza condicionalmente `estadoCobranza` (`AL_DIA`/`EN_MORA` para servicios activos); no crea órdenes `CORTE`. Las
+cuotas de convenio vencidas no producen consecuencias automáticas todavía. Un
+convenio activo protege de corte cuando las planillas corrientes están pagadas,
+aunque queden cuotas futuras. El endpoint es informativo: `elegibleParaCorte`
+significa únicamente que se alcanzaron 5 períodos de servicio vencidos; no
+crea una orden ni cambia `estadoServicio` o el `estado` legacy. El convenio
+activo se deriva de `Convenios`; el `estado` legacy y
+`EstadoContrato.EN_CONVENIO` se conservan temporalmente, pero no se copian a
+`estadoCobranza`.
+
+La asociación histórica entre deudas financiadas y sus detalles de convenio no
+se reconstruye en esta slice. Los casos históricos sin asociación quedan como
+seguimiento diferido; no se crea una asociación ni una migración aquí.
 
 ## 3. Registro y validación del pago
 
@@ -168,7 +221,7 @@ El modelo tiene tres dimensiones. No deben tratarse como sinónimos.
 |---|---|---|---|
 | `estado` | `Contratos.estado`, `EstadoContrato` | `SOLICITUD`, `PENDIENTE_PAGO`, `PENDIENTE_INSTALACION`, `ACTIVO`, `EN_MORA`, `ORDEN_CORTE`, `SUSPENDIDO`, `EN_CONVENIO`, `RETIRADO`, `RECONEXION` | Campo legacy que siguen usando filtros, procedimientos y algunas reglas. |
 | `estadoServicio` | `Contratos.estadoServicio`, `EstadoServicioContrato` | `PENDIENTE_PAGO`, `PENDIENTE_INSTALACION`, `ACTIVO`, `SUSPENDIDO`, `RETIRADO` | Ciclo operativo del servicio; es el campo que consume la acción de instalación del frontend. |
-| `estadoCobranza` | `Contratos.estadoCobranza`, `EstadoCobranzaContrato` | `AL_DIA`, `EN_MORA`, `EN_CONVENIO` | Situación de cobro independiente del servicio. |
+| `estadoCobranza` | `Contratos.estadoCobranza`, `EstadoCobranzaContrato` | `NO_APLICA`, `AL_DIA`, `EN_MORA` | Situación de cobro independiente del convenio; convenio permanece separado. |
 
 ### Transición documentada
 
@@ -188,7 +241,7 @@ La flecha `PENDIENTE_INSTALACION → ACTIVO` representa el objetivo del ciclo de
 
 - `ContractMapper.toDomain` usa `estadoServicio` y `estadoCobranza` cuando existen; si faltan, proyecta valores desde `ContractState.fromLegacyState(raw.estado)`.
 - `ContractResponseDto.fromEntity` expone `estado` y `estadoServicio`, pero el campo de cobranza no forma parte de la respuesta mostrada en el DTO inspeccionado.
-- `GET /contracts` filtra por `estado` legacy, no por `estadoServicio`.
+- `GET /contracts` conserva el filtro legacy `estado` y admite los filtros separados `estadoServicio` y `estadoCobranza`.
 - Procedimientos, consumidores antiguos o integraciones que solo lean `estado` pueden observar un valor diferente al de la dimensión de servicio.
 - Cambiar manualmente solo uno de los campos puede crear divergencia y ocultar la acción en frontend o producir filtros inconsistentes.
 
@@ -299,6 +352,7 @@ sequenceDiagram
 | Comunidad/rubro/período faltante al crear contrato | Falla la transacción o la función SQL. | Verificar cliente, medidor en `BODEGA`, tarifa, comunidad, rubro `INSTALACION` activo y período `ABIERTO`. |
 | Ruta creada sin orden | Posible si falla la segunda escritura, porque asignación no es una transacción conjunta. | Buscar rutas `INSTALACION` recientes sin `ordenesTrabajo` y corregir mediante operación controlada. |
 | Divergencia de estados | Legacy y servicio pueden mostrar valores distintos. | Comparar `estado`, `estadoServicio`, `estadoCobranza`; no corregir solo la UI. |
+| Convenio con planillas corrientes al día | El saldo histórico del convenio permanece, pero no genera orden de corte por sí solo. | Revisar estado del convenio, cuotas vencidas y pagos corrientes antes de incluir el contrato en el listado de corte. |
 
 ## Trazabilidad
 
@@ -347,6 +401,7 @@ Usar una base de pruebas y valores existentes o crear previamente los catálogos
 - ¿Debe la finalización de una orden `INSTALACION` actualizar `estadoServicio` a `ACTIVO` y, en ese caso, bajo qué condiciones adicionales?
 - ¿Debe esa finalización también sincronizar `estado` legacy, o debe mantenerse solo como puente de compatibilidad?
 - ¿Debe `estadoCobranza` pasar explícitamente de `AL_DIA` a otro valor durante la creación o liquidación de deuda de instalación?
+- Si una cuota vencida del convenio queda impaga, ¿qué umbral y qué autorización son necesarios para que deje de aplicar la protección contra corte?
 - ¿Se requiere una transacción única para crear una ruta nueva y su primera orden de trabajo?
 - ¿Qué componente procesa y reintenta exactamente `EventosPendientes` en el despliegue actual y cuál es su política de deduplicación?
 - ¿La API debe incluir `estadoCobranza` en `ContractResponseDto` para que los consumidores no dependan de inferencias sobre `estado`?

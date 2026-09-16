@@ -104,6 +104,8 @@ export class PrismaBusquedaPublicaRepository implements BusquedaPublicaRepositor
       contratoId: r.contratoId,
       numeroGuia: r.numeroGuia,
       estado: r.estado,
+      estadoServicio: r.estadoServicio,
+      estadoCobranza: r.estadoCobranza,
       cliente: r.cliente,
       prefacturasImpagadas: r.prefacturas,
     }));

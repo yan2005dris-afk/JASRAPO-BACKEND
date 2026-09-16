@@ -17,7 +17,11 @@ export class ContractMapper {
       direccionSuministro: raw.direccionSuministro,
       estado: raw.estado,
       estadoServicio: raw.estadoServicio ?? legacyProjection.estadoServicio,
-      estadoCobranza: raw.estadoCobranza ?? legacyProjection.estadoCobranza,
+      estadoCobranza: ContractState.normalizeCollectionStatus(
+        raw.estadoCobranza ?? legacyProjection.estadoCobranza,
+        raw.estadoServicio ?? legacyProjection.estadoServicio,
+      ),
+      tieneConvenioActivo: (raw.convenios?.length ?? 0) > 0,
       creadoPor: raw.creadoPor,
       comunidadId: raw.comunidadId,
       deletedAt: raw.deletedAt,

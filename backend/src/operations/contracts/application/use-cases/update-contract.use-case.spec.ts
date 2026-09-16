@@ -53,6 +53,8 @@ describe('UpdateContractUseCase', () => {
 
     expect(mockContractRepository.update).toHaveBeenCalledWith(id, {
       estado: 'ACTIVO',
+      estadoServicio: 'ACTIVO',
+      estadoCobranza: 'AL_DIA',
     });
     expect(result).toMatchObject({ contratoId: id, estado: 'ACTIVO' });
   });
@@ -84,6 +86,8 @@ describe('UpdateContractUseCase', () => {
 
     expect(mockContractRepository.update).toHaveBeenCalledWith(id, {
       estado: 'ACTIVO',
+      estadoServicio: 'ACTIVO',
+      estadoCobranza: 'AL_DIA',
       direccionSuministro: 'Nueva Dir',
       sectorId: 4,
     });

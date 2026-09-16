@@ -45,7 +45,8 @@ export class ContratoMedidorController {
 
   @ApiOperation({
     summary: 'Catálogo de estados de contrato',
-    description: 'Retorna la lista de estados disponibles para contratos',
+    description:
+      'Retorna la lista de estados legacy disponibles para contratos; la respuesta del contrato expone estadoServicio y estadoCobranza (NO_APLICA, AL_DIA o EN_MORA) por separado.',
   })
   @ApiResponse({
     status: 200,

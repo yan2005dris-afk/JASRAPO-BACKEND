@@ -47,7 +47,7 @@ export async function seedRoutes(prisma: PrismaClient) {
   });
 
   const contratos = await prisma.contratos.findMany({
-    where: { estado: 'ACTIVO', deletedAt: null },
+    where: { estadoServicio: 'ACTIVO', deletedAt: null },
     orderBy: [
       { comunidadId: 'asc' },
       { sectorId: 'asc' },
