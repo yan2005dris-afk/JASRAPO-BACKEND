@@ -10,7 +10,7 @@ export class GenerateBatchDto {
 
   @ApiProperty({
     description:
-      'Completed TOMA_LECTURA work route ID. The batch is generated from the readings of this route.',
+      'Completed LECTURA work route ID. The batch is generated from the readings of this route.',
     example: 2,
   })
   @Type(() => Number)

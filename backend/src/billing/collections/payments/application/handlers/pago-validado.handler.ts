@@ -3,6 +3,7 @@ import { PaymentRepository } from '../../domain/repositories/payment.repository'
 import { SRIEmissionDispatcherService } from '../../../../../sri/emision/application/services/sri-emission-dispatcher.service';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
+import { EstadoServicioContrato } from 'src/shared/enums';
 
 @LogContext()
 @Injectable()
@@ -104,6 +105,7 @@ export class PagoValidadoHandler {
             },
             data: {
               estado: 'PENDIENTE_INSTALACION',
+              estadoServicio: EstadoServicioContrato.PENDIENTE_INSTALACION,
             },
           });
         }

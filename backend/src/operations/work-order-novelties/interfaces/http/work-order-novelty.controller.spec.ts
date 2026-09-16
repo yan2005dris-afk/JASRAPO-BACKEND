@@ -1,6 +1,6 @@
 import { Test } from '@nestjs/testing';
 import { WorkOrderNoveltyController } from './work-order-novelty.controller';
-import { WorkOrderNoveltyService } from '../../application/services/work-order-novelty.service';
+import { WorkOrderNoveltyService } from '../../application/work-order-novelty.service';
 import { WorkOrderNoveltyEntity } from '../../domain/entities/work-order-novelty.entity';
 import { EstadoNovedad, TipoAnomalia } from 'src/shared/enums';
 
@@ -14,6 +14,7 @@ describe('WorkOrderNoveltyController', () => {
       findAll: jest.fn(),
       findById: jest.fn(),
       update: jest.fn(),
+      softDelete: jest.fn(),
     };
     const module = await Test.createTestingModule({
       controllers: [WorkOrderNoveltyController],
@@ -86,5 +87,12 @@ describe('WorkOrderNoveltyController', () => {
       undefined,
       7,
     );
+  });
+
+  it('soft deletes a novelty and returns confirmation', async () => {
+    serviceMock.softDelete.mockResolvedValue(undefined);
+    const res = await controller.remove(102n, 7);
+    expect(res).toEqual({ message: 'Novedad eliminada correctamente' });
+    expect(serviceMock.softDelete).toHaveBeenCalledWith(102n, 7);
   });
 });

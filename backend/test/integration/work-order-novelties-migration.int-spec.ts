@@ -25,23 +25,24 @@ void describe(
     let container: StartedPostgreSqlContainer;
     let client: Client;
 
-    before(async () => {
-      container = await new PostgreSqlContainer('postgres:16.3-alpine')
-        .withDatabase('jasrapo_test')
-        .withUsername('test')
-        .withPassword('test')
-        .start();
+    before(
+      async () => {
+        container = await new PostgreSqlContainer('postgres:16.3-alpine')
+          .withDatabase('jasrapo_test')
+          .withUsername('test')
+          .withPassword('test')
+          .start();
 
-      const uri = container.getConnectionUri();
-      execFileSync('pnpm', ['exec', 'prisma', 'migrate', 'deploy'], {
-        cwd: process.cwd(),
-        env: { ...process.env, DATABASE_URL: uri },
-        stdio: 'pipe',
-      });
+        const uri = container.getConnectionUri();
+        execFileSync('pnpm', ['exec', 'prisma', 'migrate', 'deploy'], {
+          cwd: process.cwd(),
+          env: { ...process.env, DATABASE_URL: uri },
+          stdio: 'pipe',
+        });
 
-      client = new Client({ connectionString: uri });
-      await client.connect();
-      await client.query(`
+        client = new Client({ connectionString: uri });
+        await client.connect();
+        await client.query(`
       INSERT INTO catalogo_impuestos(codigo, nombre, activo, created_at, updated_at) VALUES ('99', 'Z', true, now(), now()) ON CONFLICT DO NOTHING;
       INSERT INTO catalogo_tarifas_impuesto(impuesto_id, codigo_porcentaje, descripcion, porcentaje, vigente_desde, activo, created_at, updated_at)
       VALUES ((SELECT id FROM catalogo_impuestos WHERE codigo = '99'), '0', 'Zero', 0, '2026-01-01', true, now(), now()) ON CONFLICT DO NOTHING;
@@ -49,7 +50,9 @@ void describe(
       SELECT code, code, code, 0, kind::"TipoRubro", (SELECT id FROM catalogo_tarifas_impuesto WHERE descripcion = 'Zero'), now(), now()
       FROM (VALUES ('001', 'VARIABLE'), ('002', 'FIJO')) v(code, kind) ON CONFLICT DO NOTHING;
     `);
-    }, 180_000);
+      },
+      { timeout: 180_000 },
+    );
 
     after(async () => {
       await client?.end();
@@ -73,8 +76,9 @@ void describe(
             co AS (INSERT INTO contratos(cliente_id, categoria_tarifa_id, numero_guia, direccion_suministro, estado, comunidad_id, creado_en, actualizado_en)
                    SELECT cl.cliente_id, t.categoria_tarifa_id, $7, 'D', 'ACTIVO', c.comunidad_id, now(), now() FROM cl, t, c RETURNING contrato_id),
             m AS (INSERT INTO medidores(marca, modelo, serie, estado, creado_en, actualizado_en) VALUES ('M', '1', $8, 'INSTALADO', now(), now()) RETURNING medidor_id),
-            r AS (INSERT INTO rutas(nombre, operario_id, tipo_ruta, comunidad_id, periodo_id, creado_en, actualizado_en)
-                  SELECT 'R', u.usuario_id, 'TOMA_LECTURA', c.comunidad_id, pr.periodo_id, now(), now() FROM u, c, pr RETURNING ruta_id)
+            at AS (SELECT tipo_actividad_id FROM tipos_actividad WHERE codigo = 'LECTURA'),
+                r AS (INSERT INTO rutas(nombre, operario_id, tipo_actividad_id, comunidad_id, periodo_id, creado_en, actualizado_en)
+                      SELECT 'R', u.usuario_id, at.tipo_actividad_id, c.comunidad_id, pr.periodo_id, now(), now() FROM u, c, pr, at RETURNING ruta_id)
        SELECT c.comunidad_id, pr.periodo_id, u.usuario_id, co.contrato_id, m.medidor_id, r.ruta_id FROM c, pr, u, co, m, r`,
         [
           `${p} C`,
@@ -105,8 +109,8 @@ void describe(
       readingId: string,
     ) {
       const res = await client.query<{ orden_trabajo_id: string }>(
-        `INSERT INTO ordenes_trabajo(ruta_id, contrato_id, lectura_id, tipo_actividad, estado, creado_en, actualizado_en)
-       VALUES ($1, $2, $3, 'LECTURA', 'COMPLETADA', now(), now()) RETURNING orden_trabajo_id`,
+        `INSERT INTO ordenes_trabajo(ruta_id, contrato_id, lectura_id, estado, creado_en, actualizado_en)
+           VALUES ($1, $2, $3, 'COMPLETADA', now(), now()) RETURNING orden_trabajo_id`,
         [routeId, contractId, readingId],
       );
       return res.rows[0].orden_trabajo_id;

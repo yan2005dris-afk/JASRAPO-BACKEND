@@ -24,6 +24,7 @@ import { seedFacturacion } from './seeds/facturacion.seed';
 import { seedSriCatalogs } from './seeds/sri.seed';
 import { seedCatalogosSriInit } from './seeds/catalogosSriInit.seed';
 import { seedRoutes } from './seeds/routes.seed';
+import { seedTiposActividad } from './seeds/tipos-actividad.seed';
 import { seedAgreements } from './seeds/agreements.seed';
 import { seedAgreementsPrefacturas } from './seeds/agreements-prefacturas.seed';
 import { seedPagos } from './seeds/pagos.seed';
@@ -144,6 +145,9 @@ async function main() {
 
   // === PREFACTURAS PARA AGREEMENTS ===
   await seedAgreementsPrefacturas(prisma);
+
+  // === CATÁLOGO DE ACTIVIDADES ===
+  await seedTiposActividad(prisma);
 
   // === RUTAS Y ÓRDENES DE TRABAJO ===
   await seedRoutes(prisma);

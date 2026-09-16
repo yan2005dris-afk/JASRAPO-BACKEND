@@ -12,11 +12,11 @@ import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
 export class FilterReadingsDto extends PaginationDto {
   @ApiProperty({
     description: 'Tipo de ruta para filtrar lecturas elegibles',
-    enum: ['TOMA_LECTURA', 'RECONEXION'],
+    enum: ['LECTURA', 'RECONEXION'],
   })
   @IsNotEmpty()
-  @IsIn(['TOMA_LECTURA', 'RECONEXION'])
-  tipoRuta!: 'TOMA_LECTURA' | 'RECONEXION';
+  @IsIn(['LECTURA', 'RECONEXION'])
+  tipoRuta!: 'LECTURA' | 'RECONEXION';
 
   @ApiProperty({
     description: 'ID de la comunidad',

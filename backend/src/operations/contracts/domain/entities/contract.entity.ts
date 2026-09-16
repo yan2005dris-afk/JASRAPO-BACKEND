@@ -5,6 +5,10 @@ import type {
   ContractSectorRef,
   ContractMeterHistoryRef,
 } from '../types/contract-relations';
+import type {
+  EstadoCobranzaContrato,
+  EstadoServicioContrato,
+} from 'src/shared/enums';
 
 export class ContractEntity {
   contratoId: bigint;
@@ -15,6 +19,8 @@ export class ContractEntity {
   fechaInicio: Date;
   direccionSuministro: string;
   estado: string;
+  estadoServicio: EstadoServicioContrato;
+  estadoCobranza: EstadoCobranzaContrato;
   creadoPor: string | null;
   comunidadId: number;
 

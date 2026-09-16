@@ -42,7 +42,7 @@ import { UpdateRouteStateUseCase } from '../../application/use-cases/update-rout
 import { UpdateRouteStateDto } from '../../interfaces/dto/update-route-state.dto';
 import { OperatorRouteResponseDto } from '../../interfaces/dto/operator-route-response.dto';
 import { OperatorReadingAnomalyResponseDto } from '../../interfaces/dto/operator-reading-anomaly-response.dto';
-import { TipoRuta } from 'src/shared/enums';
+import { TipoActividadCodes } from 'src/shared/enums';
 import { ReportDefectUseCase } from '../../application/use-cases/report-defect.use-case';
 import { DecommissionMeterUseCase } from '../../application/use-cases/decommission-meter.use-case';
 import { GetOperatorReadingsWithAnomaliesUseCase } from '../../application/use-cases/get-operator-readings-with-anomalies.use-case';
@@ -52,6 +52,7 @@ import { OperatorSyncManifestDto } from '../dto/operator-sync-manifest.dto';
 import {
   uploadReadingPhoto,
   rollbackReadingPhoto,
+  deleteOldReadingPhoto,
 } from '../../application/reading-upload.helper';
 
 const OPERATOR_ERROR_SCHEMA = {
@@ -244,6 +245,10 @@ export class OperatorController {
         operarioId,
         updateDto,
         uploadedKey,
+        uploadedKey
+          ? (oldKey: string, newKey: string) =>
+              deleteOldReadingPhoto(oldKey, newKey, this.storageService)
+          : undefined,
       );
       return ResponseReadingDto.fromEntity(updated)!;
     } catch (error) {
@@ -311,6 +316,10 @@ export class OperatorController {
         operarioId,
         dto,
         uploadedKey,
+        uploadedKey
+          ? (oldKey: string, newKey: string) =>
+              deleteOldReadingPhoto(oldKey, newKey, this.storageService)
+          : undefined,
       );
       return OrderWorkResponseDto.fromEntity(entity);
     } catch (error) {
@@ -452,7 +461,7 @@ export class OperatorController {
   @ApiQuery({
     name: 'tipoRuta',
     required: false,
-    enum: TipoRuta,
+    enum: TipoActividadCodes,
     description: 'Filtrar rutas por tipo',
   })
   @ApiResponse({
@@ -470,8 +479,11 @@ export class OperatorController {
   @Get('routes')
   async getOperatorRoutes(
     @CurrentUser() user: JwtPayload,
-    @Query('tipoRuta', new ParseEnumPipe(TipoRuta, { optional: true }))
-    tipoRuta?: TipoRuta,
+    @Query(
+      'tipoRuta',
+      new ParseEnumPipe(TipoActividadCodes, { optional: true }),
+    )
+    tipoRuta?: TipoActividadCodes,
   ): Promise<OperatorRouteResponseDto[]> {
     const operarioId = this.getAuthenticatedOperatorId(user);
     const routes = await this.getOperatorRoutesUseCase.execute(

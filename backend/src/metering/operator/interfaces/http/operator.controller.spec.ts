@@ -6,6 +6,7 @@ import { PERMISSION_KEY } from 'src/infrastructure/common/decorators/require-per
 jest.mock('../../application/reading-upload.helper', () => ({
   uploadReadingPhoto: jest.fn().mockResolvedValue('readings/deterministic.jpg'),
   rollbackReadingPhoto: jest.fn().mockResolvedValue(undefined),
+  deleteOldReadingPhoto: jest.fn().mockResolvedValue(undefined),
 }));
 
 import {
@@ -47,6 +48,7 @@ describe('OperatorController work-order update', () => {
       undefined as any,
       undefined as any,
       storage as any,
+      undefined as any,
     );
     useCase.execute.mockResolvedValue(entity);
     routesUseCase.execute.mockResolvedValue([]);
@@ -142,6 +144,7 @@ describe('OperatorController work-order update', () => {
       17,
       { estado: 'COMPLETADA' },
       'readings/deterministic.jpg',
+      expect.any(Function),
     );
     expect(response.ordenTrabajoId).toBe('42');
     expect(response.rutaId).toBe('8');

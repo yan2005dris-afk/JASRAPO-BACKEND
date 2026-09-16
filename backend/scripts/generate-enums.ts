@@ -35,11 +35,18 @@ function parseEnums(content: string, filePath: string): EnumDef[] {
     const values = body
       .split('\n')
       .map((line) => line.trim())
-      .filter((line) => line.length > 0 && !line.startsWith('//') && !line.startsWith('@@'))
+      .filter(
+        (line) =>
+          line.length > 0 && !line.startsWith('//') && !line.startsWith('@@'),
+      )
       .map((line) => line.split(/\s+/)[0]!);
 
     if (values.length > 0) {
-      enums.push({ name, values, sourceFile: path.relative(SCHEMA_DIR, filePath) });
+      enums.push({
+        name,
+        values,
+        sourceFile: path.relative(SCHEMA_DIR, filePath),
+      });
     }
   }
 
@@ -79,6 +86,21 @@ function generateFile(enums: EnumDef[]): string {
     lines.push('');
   }
 
+  lines.push(
+    "export const TipoActividadCodes = { LECTURA: 'LECTURA', INSPECCION: 'INSPECCION', INSTALACION: 'INSTALACION', CORTE: 'CORTE', RECONEXION: 'RECONEXION' } as const;",
+  );
+  lines.push('');
+  lines.push(
+    'export type TipoActividadCodes = (typeof TipoActividadCodes)[keyof typeof TipoActividadCodes];',
+  );
+  lines.push('export type TipoActividadCode = TipoActividadCodes;');
+  lines.push(
+    "export const CORE_TIPO_ACTIVIDAD_CODES = ['LECTURA', 'INSPECCION', 'INSTALACION', 'CORTE', 'RECONEXION'] as const;",
+  );
+  lines.push('');
+  lines.push('');
+  lines.push('');
+
   return lines.join('\n');
 }
 
@@ -101,7 +123,9 @@ async function main() {
 
     for (const e of enums) {
       if (seen.has(e.name)) {
-        console.error(`❌ Error: Enum duplicado "${e.name}" detectado en ${relativePath} (ya definido previamente).`);
+        console.error(
+          `❌ Error: Enum duplicado "${e.name}" detectado en ${relativePath} (ya definido previamente).`,
+        );
         process.exit(1);
       }
       seen.add(e.name);

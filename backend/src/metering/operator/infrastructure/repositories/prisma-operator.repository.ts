@@ -47,6 +47,7 @@ const routeMedidorSelect = {
 } satisfies Prisma.MedidoresSelect;
 
 const operatorRouteInclude = {
+  tipoActividad: { select: { codigo: true } },
   operario: { select: routeOperarioSelect },
   ordenesTrabajo: {
     where: { deletedAt: null },
@@ -66,6 +67,7 @@ const operatorRouteInclude = {
         },
       },
       medidor: { select: routeMedidorSelect },
+      ruta: { select: { tipoActividad: { select: { codigo: true } } } },
     },
   },
 } satisfies Prisma.RutasInclude;
@@ -283,6 +285,7 @@ export class PrismaOperatorRepository extends OperatorRepository {
           where: { deletedAt: null },
           select: {
             rutaId: true,
+            evidenciaFotoUrl: true,
             ruta: {
               select: {
                 operarioId: true,
@@ -414,12 +417,16 @@ export class PrismaOperatorRepository extends OperatorRepository {
             },
           },
           medidor: { select: routeMedidorSelect },
+          ruta: { select: { tipoActividad: { select: { codigo: true } } } },
         },
       }),
       this.prisma.ordenesTrabajo.count({ where }),
     ]);
     return this.page(
-      items.slice(0, limit) as OperatorWorkOrder[],
+      items.slice(0, limit).map((item) => ({
+        ...item,
+        tipoActividad: item.ruta.tipoActividad.codigo,
+      })) as OperatorWorkOrder[],
       total,
       items.length > limit,
       'ordenTrabajoId',
@@ -766,7 +773,7 @@ export class PrismaOperatorRepository extends OperatorRepository {
     };
 
     if (tipoRuta != null) {
-      where.tipoRuta = tipoRuta as Prisma.RutasWhereInput['tipoRuta'];
+      where.tipoActividad = { codigo: tipoRuta };
     }
 
     const routes = await this.prisma.rutas.findMany({
@@ -865,7 +872,7 @@ export class PrismaOperatorRepository extends OperatorRepository {
           longitud: order.medidor.longitud,
           serie: order.medidor.serie,
           clienteNombre,
-          tipoActividad: order.tipoActividad,
+          tipoActividad: route.tipoActividad.codigo,
           estado: order.estado,
           direccionSuministro: order.contrato.direccionSuministro,
         },

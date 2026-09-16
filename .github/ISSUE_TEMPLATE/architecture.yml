@@ -1,0 +1,38 @@
+name: Architecture Proposal
+description: Propose an architectural decision, refactoring, or design change
+title: "[Arch]: "
+labels: ["architecture"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form to propose architectural changes, modular designs, or system refactors.
+  - type: input
+    id: summary
+    attributes:
+      label: Summary
+      description: Brief summary of the architecture change
+      placeholder: E.g., Decouple operator synchronization from work orders
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Context & Problem Statement
+      description: What architectural gap, technical debt, or requirement is being addressed?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed Architecture & Boundaries
+      description: Describe the design, modules, domain boundaries, and contracts.
+    validations:
+      required: true
+  - type: textarea
+    id: impact
+    attributes:
+      label: Consequences & Alternatives
+      description: What alternatives were evaluated, and what are the trade-offs?
+    validations:
+      required: false

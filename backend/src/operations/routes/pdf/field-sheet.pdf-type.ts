@@ -35,7 +35,7 @@ export interface FieldSheetData {
 }
 
 const TIPO_RUTA_LABELS: Record<string, string> = {
-  TOMA_LECTURA: 'Toma de Lecturas',
+  LECTURA: 'Toma de Lecturas',
   INSTALACION: 'Instalación de Medidores',
   CORTE: 'Corte de Servicio',
   RECONEXION: 'Reconexión de Servicio',

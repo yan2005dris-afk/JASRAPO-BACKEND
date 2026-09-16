@@ -55,16 +55,6 @@ export class PrismaWorkOrderNoveltyRepository implements WorkOrderNoveltyReposit
     return row ? this.toDomain(row) : null;
   }
 
-  async findByWorkOrderId(
-    workOrderId: bigint,
-  ): Promise<WorkOrderNoveltyEntity[]> {
-    const rows = await this.prisma.novedadOrdenTrabajo.findMany({
-      where: { ordenTrabajoId: workOrderId },
-      orderBy: { createdAt: 'desc' },
-    });
-    return rows.map((r) => this.toDomain(r));
-  }
-
   async update(
     id: bigint,
     data: UpdateWorkOrderNoveltyData,
@@ -94,6 +84,27 @@ export class PrismaWorkOrderNoveltyRepository implements WorkOrderNoveltyReposit
       },
     });
     return this.toDomain(updated);
+  }
+
+  async softDelete(
+    id: bigint,
+    deletedAt: Date,
+  ): Promise<WorkOrderNoveltyEntity> {
+    const updated = await this.prisma.novedadOrdenTrabajo.update({
+      where: { novedadId: id },
+      data: { deletedAt },
+    });
+    return this.toDomain(updated);
+  }
+
+  async clearEvidenceReference(
+    id: bigint,
+    expectedFotoUrl: string,
+  ): Promise<void> {
+    await this.prisma.novedadOrdenTrabajo.updateMany({
+      where: { novedadId: id, fotoUrl: expectedFotoUrl },
+      data: { fotoUrl: null },
+    });
   }
 
   async findMany(

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { TipoActividadOrden } from 'src/shared/enums';
+import { TipoActividadCodes } from 'src/shared/enums';
 import {
   EntityNotFoundException,
   InvalidDomainOperationException,
@@ -9,6 +9,7 @@ import type { OrdenTrabajoEntity } from 'src/operations/routes/domain/entities/o
 import type { UpdateOperatorWorkOrderData } from 'src/operations/routes/domain/types/orden-trabajo.types';
 import { OperatorRepository } from '../../domain/repositories/operator.repository';
 import { UpdateOperatorWorkOrderDto } from '../../interfaces/dto/update-operator-work-order.dto';
+import type { EvidenceReplacementCleanup } from './update-operator-reading.use-case';
 
 @Injectable()
 export class UpdateOperatorWorkOrderUseCase {
@@ -22,13 +23,14 @@ export class UpdateOperatorWorkOrderUseCase {
     operarioId: number,
     dto: UpdateOperatorWorkOrderDto,
     evidenciaFotoUrl?: string,
+    cleanupOldEvidence?: EvidenceReplacementCleanup,
   ): Promise<OrdenTrabajoEntity> {
     const order = await this.ordenTrabajoRepository.findById(id);
     if (!order) {
       throw new EntityNotFoundException('Orden de Trabajo', id.toString());
     }
 
-    if (order.tipoActividad === TipoActividadOrden.LECTURA) {
+    if (order.tipoActividad === TipoActividadCodes.LECTURA) {
       throw new InvalidDomainOperationException(
         'Las órdenes de lectura deben actualizarse mediante el flujo de lecturas',
       );
@@ -45,7 +47,7 @@ export class UpdateOperatorWorkOrderUseCase {
     );
 
     if (
-      order.tipoActividad === TipoActividadOrden.RECONEXION &&
+      order.tipoActividad === TipoActividadCodes.RECONEXION &&
       dto.confirmacionRetiroSello === false
     ) {
       throw new InvalidDomainOperationException(
@@ -56,7 +58,7 @@ export class UpdateOperatorWorkOrderUseCase {
     const hasSeal = dto.estadoSellos !== undefined;
     const hasLeak = dto.hayFugas !== undefined;
     if (
-      order.tipoActividad === TipoActividadOrden.INSPECCION &&
+      order.tipoActividad === TipoActividadCodes.INSPECCION &&
       hasSeal !== hasLeak
     ) {
       throw new InvalidDomainOperationException(
@@ -74,6 +76,13 @@ export class UpdateOperatorWorkOrderUseCase {
       confirmacionRetiroSello: dto.confirmacionRetiroSello,
     };
 
-    return this.ordenTrabajoRepository.updateOperatorWorkOrder(id, data);
+    const updated = await this.ordenTrabajoRepository.updateOperatorWorkOrder(
+      id,
+      data,
+    );
+    if (evidenciaFotoUrl && order.evidenciaFotoUrl && cleanupOldEvidence) {
+      await cleanupOldEvidence(order.evidenciaFotoUrl, evidenciaFotoUrl);
+    }
+    return updated;
   }
 }

@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Patch,
+  Delete,
   Param,
   Body,
   Query,
@@ -22,7 +23,7 @@ import { RequiredPermission } from 'src/infrastructure/common/decorators/require
 import { ParseBigIntPipe } from 'src/infrastructure/common/pipes/parse-bigint.pipe';
 import { createImageFileFilter } from 'src/infrastructure/common/utils/evidence-upload.util';
 import { MAX_UPLOAD_SIZE_BYTES } from 'src/infrastructure/config/app.constants';
-import { WorkOrderNoveltyService } from '../../application/services/work-order-novelty.service';
+import { WorkOrderNoveltyService } from '../../application/work-order-novelty.service';
 import { CreateWorkOrderNoveltyDto } from '../dto/create-work-order-novelty.dto';
 import { UpdateWorkOrderNoveltyDto } from '../dto/update-work-order-novelty.dto';
 import { ResponseWorkOrderNoveltyDto } from '../dto/response-work-order-novelty.dto';
@@ -105,5 +106,20 @@ export class WorkOrderNoveltyController {
   ): Promise<ResponseWorkOrderNoveltyDto> {
     const updated = await this.service.update(id, dto, file, actorUserId);
     return ResponseWorkOrderNoveltyDto.fromEntity(updated);
+  }
+
+  @ApiOperation({
+    summary: 'Eliminar (soft delete) novedad de orden de trabajo',
+  })
+  @ApiResponse({ status: 200, description: 'Novedad eliminada' })
+  @ApiResponse({ status: 404, description: 'Novedad no encontrada' })
+  @RequiredPermission('work-order-novelties', 'delete')
+  @Delete(':id')
+  async remove(
+    @Param('id', ParseBigIntPipe) id: bigint,
+    @AuthUserId() actorUserId: number,
+  ): Promise<{ message: string }> {
+    await this.service.softDelete(id, actorUserId);
+    return { message: 'Novedad eliminada correctamente' };
   }
 }

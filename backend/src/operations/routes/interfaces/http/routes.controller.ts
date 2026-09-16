@@ -97,7 +97,7 @@ export class RoutesController {
   @ApiOperation({
     summary: 'Obtener lecturas de ruta',
     description:
-      'Retorna las lecturas ya vinculadas a una ruta de tipo TOMA_LECTURA (a través de ordenes_trabajo)',
+      'Retorna las lecturas ya vinculadas a una ruta de tipo LECTURA (a través de ordenes_trabajo)',
   })
   @ApiPaginatedResponse(ReadingForRouteResponseDto)
   @ApiParam({ name: 'rutaId', description: 'ID de la ruta', type: String })
