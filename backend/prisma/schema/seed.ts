@@ -30,6 +30,7 @@ import { seedAgreementsPrefacturas } from './seeds/agreements-prefacturas.seed';
 import { seedPagos } from './seeds/pagos.seed';
 import { syncSequences } from './seeds/sync-sequences';
 import { seedInstitutionalProfile } from './seeds/institutional-profile.seed';
+import { seedCollectionCutoffConfig } from './seeds/collectionCutoffConfig.seed';
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
@@ -87,6 +88,7 @@ async function main() {
 
   await seedInstitutionalProfile(prisma);
   console.log('✅ Perfil institucional y activos de marca creados.');
+  await seedCollectionCutoffConfig(prisma);
 
   // Menus
   const menus = await seedMenus(prisma);
