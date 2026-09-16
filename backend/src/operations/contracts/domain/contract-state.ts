@@ -20,6 +20,32 @@ const SERVICE_TRANSITIONS: Record<
 };
 
 export class ContractState {
+  static projectLegacyState(
+    estadoServicio: EstadoServicioContrato,
+    estadoCobranza: EstadoCobranzaContrato,
+  ): EstadoContrato {
+    if (
+      estadoServicio === EstadoServicioContrato.ACTIVO &&
+      estadoCobranza === EstadoCobranzaContrato.EN_MORA
+    ) {
+      return EstadoContrato.EN_MORA;
+    }
+
+    switch (estadoServicio) {
+      case EstadoServicioContrato.PENDIENTE_INSTALACION:
+        return EstadoContrato.PENDIENTE_INSTALACION;
+      case EstadoServicioContrato.ACTIVO:
+        return EstadoContrato.ACTIVO;
+      case EstadoServicioContrato.SUSPENDIDO:
+        return EstadoContrato.SUSPENDIDO;
+      case EstadoServicioContrato.RETIRADO:
+        return EstadoContrato.RETIRADO;
+      case EstadoServicioContrato.PENDIENTE_PAGO:
+      default:
+        return EstadoContrato.PENDIENTE_PAGO;
+    }
+  }
+
   static canTransition(
     current: EstadoServicioContrato,
     next: EstadoServicioContrato,
@@ -44,11 +70,6 @@ export class ContractState {
     estadoServicio: EstadoServicioContrato;
     estadoCobranza: EstadoCobranzaContrato;
   } {
-    const estadoCobranza =
-      legacyState === EstadoContrato.EN_MORA
-        ? EstadoCobranzaContrato.EN_MORA
-        : EstadoCobranzaContrato.AL_DIA;
-
     const estadoServicio =
       legacyState === EstadoContrato.PENDIENTE_INSTALACION
         ? EstadoServicioContrato.PENDIENTE_INSTALACION
@@ -64,14 +85,32 @@ export class ContractState {
               ? EstadoServicioContrato.RETIRADO
               : EstadoServicioContrato.PENDIENTE_PAGO;
 
-    return { estadoServicio, estadoCobranza };
+    return {
+      estadoServicio,
+      estadoCobranza: this.normalizeCollectionStatus(
+        legacyState === EstadoContrato.EN_MORA
+          ? EstadoCobranzaContrato.EN_MORA
+          : EstadoCobranzaContrato.AL_DIA,
+        estadoServicio,
+      ),
+    };
   }
 
   /**
    * Normalizes values from pre-decoupling rows/callers without treating an
    * agreement marker as current-service debt.
    */
-  static normalizeCollectionStatus(value: unknown): EstadoCobranzaContrato {
+  static normalizeCollectionStatus(
+    value: unknown,
+    estadoServicio?: EstadoServicioContrato,
+  ): EstadoCobranzaContrato {
+    if (
+      estadoServicio === EstadoServicioContrato.PENDIENTE_PAGO ||
+      estadoServicio === EstadoServicioContrato.PENDIENTE_INSTALACION
+    ) {
+      return EstadoCobranzaContrato.NO_APLICA;
+    }
+
     return value === EstadoCobranzaContrato.EN_MORA
       ? EstadoCobranzaContrato.EN_MORA
       : EstadoCobranzaContrato.AL_DIA;

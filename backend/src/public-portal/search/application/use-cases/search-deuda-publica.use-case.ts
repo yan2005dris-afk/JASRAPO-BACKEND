@@ -70,6 +70,8 @@ export class SearchDeudaPublicaUseCase {
           contratoId: String(c.contratoId),
           numeroGuia: c.numeroGuia,
           estado: c.estado,
+          estadoServicio: c.estadoServicio,
+          estadoCobranza: c.estadoCobranza,
           saldoVencido: DebtCalculatorHelper.calcularSaldoVencido(
             c.prefacturasImpagadas,
           ),
@@ -123,6 +125,8 @@ export class SearchDeudaPublicaUseCase {
         contratoId: String(contrato.contratoId),
         numeroGuia: contrato.numeroGuia,
         estado: contrato.estado,
+        estadoServicio: contrato.estadoServicio,
+        estadoCobranza: contrato.estadoCobranza,
         saldoVencido: DebtCalculatorHelper.calcularSaldoVencido(
           contrato.prefacturasImpagadas,
         ),

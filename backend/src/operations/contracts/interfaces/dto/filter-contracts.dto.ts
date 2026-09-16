@@ -2,7 +2,11 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import { IsEnum, IsOptional, IsString } from 'class-validator';
 import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
-import { EstadoContrato } from 'src/shared/enums';
+import {
+  EstadoCobranzaContrato,
+  EstadoContrato,
+  EstadoServicioContrato,
+} from 'src/shared/enums';
 
 export class FilterContractsDto extends PaginationDto {
   @ApiPropertyOptional({
@@ -64,7 +68,18 @@ export class FilterContractsDto extends PaginationDto {
   })
   @IsOptional()
   @IsEnum(EstadoContrato)
+  /** @deprecated Use estadoServicio or estadoCobranza for separated filtering. */
   estado?: EstadoContrato;
+
+  @ApiPropertyOptional({ enum: EstadoServicioContrato })
+  @IsOptional()
+  @IsEnum(EstadoServicioContrato)
+  estadoServicio?: EstadoServicioContrato;
+
+  @ApiPropertyOptional({ enum: EstadoCobranzaContrato })
+  @IsOptional()
+  @IsEnum(EstadoCobranzaContrato)
+  estadoCobranza?: EstadoCobranzaContrato;
 
   @ApiPropertyOptional({
     description: 'Filtrar solo contratos con prefacturas impagadas',

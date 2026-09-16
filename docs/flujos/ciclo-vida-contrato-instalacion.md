@@ -80,7 +80,7 @@ Si falla la función de prefacturación, una relación o cualquier escritura de 
 
 ### Estado inicial
 
-Con la entrada normal, el contrato queda en `estado = PENDIENTE_PAGO`. El esquema define además `estadoServicio = PENDIENTE_PAGO` y `estadoCobranza = AL_DIA` como valores predeterminados, aunque la escritura de esta operación pasa explícitamente el campo legacy `estado` y depende de los defaults de Prisma para los campos nuevos.
+Con la entrada normal, el contrato queda sincronizado en `estado = PENDIENTE_PAGO`, `estadoServicio = PENDIENTE_PAGO` y `estadoCobranza = NO_APLICA`. Durante la compatibilidad, los tres campos se escriben juntos; si llegan campos separados, estos son autoritativos y `estado` se proyecta solo para consumidores legacy.
 
 ## 2. Convenio de pago, cuando corresponde
 
@@ -133,10 +133,12 @@ El job de pg-boss usa `0 5 * * *` en UTC. Como Ecuador continental permanece
 en UTC-5 y pg-boss no configura zona horaria para el cron, las 05:00 UTC son
 las 00:00 de Ecuador y el job verifica el día calendario ecuatoriano mediante
 `America/Guayaquil`. Los candidatos con menos de 3 períodos se exponen como
-`DEUDA_PENDIENTE` y conservan `AL_DIA`; no se persisten como `EN_MORA`.
+`DEUDA_PENDIENTE` y conservan `AL_DIA`; no se persisten como `EN_MORA`. La
+evaluación sólo consulta contratos con `estadoServicio = ACTIVO`; los estados
+pendientes conservan `NO_APLICA`.
 
 Esta primera slice sólo expone `GET /reports/collection-cutoff-candidates` y
-actualiza condicionalmente `estadoCobranza` (`AL_DIA`/`EN_MORA`); no crea órdenes `CORTE`. Las
+actualiza condicionalmente `estadoCobranza` (`AL_DIA`/`EN_MORA` para servicios activos); no crea órdenes `CORTE`. Las
 cuotas de convenio vencidas no producen consecuencias automáticas todavía. Un
 convenio activo protege de corte cuando las planillas corrientes están pagadas,
 aunque queden cuotas futuras. El endpoint es informativo: `elegibleParaCorte`
@@ -219,7 +221,7 @@ El modelo tiene tres dimensiones. No deben tratarse como sinónimos.
 |---|---|---|---|
 | `estado` | `Contratos.estado`, `EstadoContrato` | `SOLICITUD`, `PENDIENTE_PAGO`, `PENDIENTE_INSTALACION`, `ACTIVO`, `EN_MORA`, `ORDEN_CORTE`, `SUSPENDIDO`, `EN_CONVENIO`, `RETIRADO`, `RECONEXION` | Campo legacy que siguen usando filtros, procedimientos y algunas reglas. |
 | `estadoServicio` | `Contratos.estadoServicio`, `EstadoServicioContrato` | `PENDIENTE_PAGO`, `PENDIENTE_INSTALACION`, `ACTIVO`, `SUSPENDIDO`, `RETIRADO` | Ciclo operativo del servicio; es el campo que consume la acción de instalación del frontend. |
-| `estadoCobranza` | `Contratos.estadoCobranza`, `EstadoCobranzaContrato` | `AL_DIA`, `EN_MORA`, `EN_CONVENIO` | Situación de cobro independiente del servicio. |
+| `estadoCobranza` | `Contratos.estadoCobranza`, `EstadoCobranzaContrato` | `NO_APLICA`, `AL_DIA`, `EN_MORA` | Situación de cobro independiente del convenio; convenio permanece separado. |
 
 ### Transición documentada
 
@@ -239,7 +241,7 @@ La flecha `PENDIENTE_INSTALACION → ACTIVO` representa el objetivo del ciclo de
 
 - `ContractMapper.toDomain` usa `estadoServicio` y `estadoCobranza` cuando existen; si faltan, proyecta valores desde `ContractState.fromLegacyState(raw.estado)`.
 - `ContractResponseDto.fromEntity` expone `estado` y `estadoServicio`, pero el campo de cobranza no forma parte de la respuesta mostrada en el DTO inspeccionado.
-- `GET /contracts` filtra por `estado` legacy, no por `estadoServicio`.
+- `GET /contracts` conserva el filtro legacy `estado` y admite los filtros separados `estadoServicio` y `estadoCobranza`.
 - Procedimientos, consumidores antiguos o integraciones que solo lean `estado` pueden observar un valor diferente al de la dimensión de servicio.
 - Cambiar manualmente solo uno de los campos puede crear divergencia y ocultar la acción en frontend o producir filtros inconsistentes.
 

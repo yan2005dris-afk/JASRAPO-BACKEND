@@ -91,7 +91,7 @@ export class CollectionCutoffService {
         mes: { gt: 0 },
         contrato: {
           deletedAt: null,
-          estadoServicio: { not: 'RETIRADO' },
+          estadoServicio: 'ACTIVO',
         },
         periodoRel: { deletedAt: null },
         // An agreement installment is not current service debt.
@@ -237,7 +237,7 @@ export class CollectionCutoffService {
       });
     }
     const activeContracts = await this.prisma.contratos.findMany({
-      where: { deletedAt: null, estadoServicio: { not: 'RETIRADO' } },
+      where: { deletedAt: null, estadoServicio: 'ACTIVO' },
       select: { contratoId: true },
     });
     const debtContractIds = candidates.map((candidate) =>
@@ -247,7 +247,7 @@ export class CollectionCutoffService {
       await this.prisma.contratos.updateMany({
         where: {
           deletedAt: null,
-          estadoServicio: { not: 'RETIRADO' },
+          estadoServicio: 'ACTIVO',
           estadoCobranza: EstadoCobranzaContrato.EN_MORA,
           ...(debtContractIds.length > 0 && {
             contratoId: { notIn: debtContractIds },

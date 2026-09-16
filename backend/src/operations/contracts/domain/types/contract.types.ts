@@ -13,6 +13,8 @@ export interface ContractFilters {
   medidorId?: bigint;
   medidorSerie?: string;
   estado?: string;
+  estadoServicio?: EstadoServicioContrato;
+  estadoCobranza?: EstadoCobranzaContrato;
   ubicacion?: string;
   search?: string;
   hasDebt?: boolean;
@@ -39,6 +41,8 @@ export interface CreateContractWithMeterCommand {
   numeroGuia: string;
   direccionSuministro: string;
   estado: EstadoContrato;
+  estadoServicio: EstadoServicioContrato;
+  estadoCobranza: EstadoCobranzaContrato;
   creadoPor?: string;
   comunidadId: number;
   sectorId: number | null;

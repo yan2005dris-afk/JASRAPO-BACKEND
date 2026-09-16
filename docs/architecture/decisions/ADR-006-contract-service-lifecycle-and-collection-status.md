@@ -12,13 +12,13 @@
 Add two persisted fields while retaining `Contratos.estado` as a compatibility bridge:
 
 - `estadoServicio`: `PENDIENTE_PAGO -> PENDIENTE_INSTALACION -> ACTIVO -> SUSPENDIDO -> RETIRADO`.
-- `estadoCobranza`: `AL_DIA` or `EN_MORA`, based only on current-service debt.
+- `estadoCobranza`: `NO_APLICA` while service activation is pending, `AL_DIA` for active service without current-service mora, or `EN_MORA` when the configured current-service threshold is reached.
 - `tieneConvenioActivo`: a derived read-model flag from active `Convenios`; it is
   metadata/protection and never a collection status.
 
-`RETIRADO` is terminal. Completing installation activates a service. Reconnection activates service only after a completed reconnection work order; a payment or agreement alone never reactivates it. The legacy `Contratos.estado = EN_CONVENIO` remains supported temporarily, but it must not repopulate `estadoCobranza`.
+`RETIRADO` is terminal. Completing installation activates a service. Reconnection activates service only after a completed reconnection work order; a payment or agreement alone never reactivates it. The legacy `Contratos.estado = EN_CONVENIO` remains supported temporarily, but convenio is separate and must never be shown or repopulated as `estadoCobranza`.
 
-The migration is additive and supplies defaults. The domain mapper reads the new fields when present and projects legacy `estado` when older callers omit them. No existing payment, work-order, HTTP, stored-procedure, route, or reading behavior changes in this work unit.
+The migration is additive and supplies defaults. The domain mapper reads the new fields when present and projects legacy `estado` when older callers omit them. This compatibility slice dual-writes all three contract state fields, makes explicit separated fields authoritative, and migrates unambiguous payment, installation, filtering, and stored-procedure decisions. Legacy `estado` filters/catalog/response remain deprecated compatibility surfaces.
 
 ## Consequences
 
@@ -28,8 +28,8 @@ The migration is additive and supplies defaults. The domain mapper reads the new
 
 ## Follow-up work
 
-1. Migrate payment and agreement handlers to `estadoCobranza` without changing service lifecycle implicitly.
-2. Migrate installation and reconnection work-order completion flows to `estadoServicio`.
-3. Update HTTP contracts/catalogs, stored procedures, and route/reading consumers.
+1. Migrate remaining payment and agreement handlers to `estadoCobranza` without changing service lifecycle implicitly.
+2. Migrate remaining installation and reconnection work-order completion flows to `estadoServicio`.
+3. Audit remaining operator/public response ports and route/reading consumers for additive separated-state fields.
 4. Define authoritative historical convenio-debt allocation and resolve payment/evaluator race semantics.
-5. Remove `Contratos.estado` and `EstadoContrato.EN_CONVENIO` only in a later PR, after all legacy consumers are migrated.
+5. A later final PR may remove `Contratos.estado` and `EstadoContrato.EN_CONVENIO` only after all consumers, seeds, SQL procedures, and external clients have migrated; this PR deliberately does not remove either symbol.

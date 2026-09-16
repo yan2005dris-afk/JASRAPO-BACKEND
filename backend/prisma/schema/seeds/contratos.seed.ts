@@ -47,6 +47,8 @@ export async function seedContratos(prisma: PrismaClient) {
         numeroGuia: c.numeroGuia,
         direccionSuministro: `Direccion contrato ${c.contratoId}`,
         estado: 'ACTIVO',
+        estadoServicio: 'ACTIVO',
+        estadoCobranza: 'AL_DIA',
       },
     });
     contratos.push(created);
@@ -78,6 +80,8 @@ export async function seedContratos(prisma: PrismaClient) {
         numeroGuia: `GUIA-${comunidadId}-${nextContratoId.toString().padStart(4, '0')}`,
         direccionSuministro: `Direccion contrato ${nextContratoId}`,
         estado: 'ACTIVO',
+        estadoServicio: 'ACTIVO',
+        estadoCobranza: 'AL_DIA',
       },
     });
     contratos.push(created);

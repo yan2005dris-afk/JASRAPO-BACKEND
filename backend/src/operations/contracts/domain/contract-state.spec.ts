@@ -55,6 +55,18 @@ describe('ContractState', () => {
   });
 
   it('provides a compatibility projection from the legacy mixed state', () => {
+    expect(
+      ContractState.fromLegacyState(EstadoContrato.PENDIENTE_PAGO),
+    ).toEqual({
+      estadoServicio: EstadoServicioContrato.PENDIENTE_PAGO,
+      estadoCobranza: EstadoCobranzaContrato.NO_APLICA,
+    });
+    expect(
+      ContractState.fromLegacyState(EstadoContrato.PENDIENTE_INSTALACION),
+    ).toEqual({
+      estadoServicio: EstadoServicioContrato.PENDIENTE_INSTALACION,
+      estadoCobranza: EstadoCobranzaContrato.NO_APLICA,
+    });
     expect(ContractState.fromLegacyState(EstadoContrato.ACTIVO)).toEqual({
       estadoServicio: EstadoServicioContrato.ACTIVO,
       estadoCobranza: EstadoCobranzaContrato.AL_DIA,
@@ -69,6 +81,42 @@ describe('ContractState', () => {
     expect(ContractState.normalizeCollectionStatus('EN_CONVENIO')).toBe(
       EstadoCobranzaContrato.AL_DIA,
     );
+  });
+
+  it('normalizes impossible collection combinations by service state', () => {
+    expect(
+      ContractState.normalizeCollectionStatus(
+        EstadoCobranzaContrato.EN_MORA,
+        EstadoServicioContrato.PENDIENTE_INSTALACION,
+      ),
+    ).toBe(EstadoCobranzaContrato.NO_APLICA);
+    expect(
+      ContractState.normalizeCollectionStatus(
+        EstadoCobranzaContrato.NO_APLICA,
+        EstadoServicioContrato.ACTIVO,
+      ),
+    ).toBe(EstadoCobranzaContrato.AL_DIA);
+  });
+
+  it('projects explicit separated fields deterministically for compatibility', () => {
+    expect(
+      ContractState.projectLegacyState(
+        EstadoServicioContrato.ACTIVO,
+        EstadoCobranzaContrato.EN_MORA,
+      ),
+    ).toBe(EstadoContrato.EN_MORA);
+    expect(
+      ContractState.projectLegacyState(
+        EstadoServicioContrato.ACTIVO,
+        EstadoCobranzaContrato.AL_DIA,
+      ),
+    ).toBe(EstadoContrato.ACTIVO);
+    expect(
+      ContractState.projectLegacyState(
+        EstadoServicioContrato.PENDIENTE_PAGO,
+        EstadoCobranzaContrato.EN_MORA,
+      ),
+    ).toBe(EstadoContrato.PENDIENTE_PAGO);
   });
 
   it('treats RETIRADO as terminal', () => {
