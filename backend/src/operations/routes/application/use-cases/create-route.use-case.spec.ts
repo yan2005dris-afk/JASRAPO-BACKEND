@@ -160,7 +160,7 @@ describe('CreateRouteUseCase', () => {
         rutaId: 1n,
         nombre: 'Overlapping',
         operarioId: 1,
-        tipoRuta: 'TOMA_LECTURA',
+        tipoRuta: 'LECTURA',
         comunidadId: 1,
         periodoId: 1,
         estado: 'PENDIENTE',
@@ -206,7 +206,7 @@ describe('CreateRouteUseCase', () => {
         rutaId: 1n,
         nombre: 'Overlapping',
         operarioId: 1,
-        tipoRuta: 'TOMA_LECTURA',
+        tipoRuta: 'LECTURA',
         comunidadId: 1,
         periodoId: 1,
         estado: 'PENDIENTE',
@@ -255,7 +255,7 @@ describe('CreateRouteUseCase', () => {
       nombre: 'Different Sector Route',
       operarioId: 1,
       comunidadId: 1,
-      tipoRuta: 'TOMA_LECTURA',
+      tipoRuta: 'LECTURA',
       periodoId: 1,
       sectorId: 3,
       estado: 'PENDIENTE',
@@ -268,7 +268,7 @@ describe('CreateRouteUseCase', () => {
     const result = await useCase.execute({
       operarioId: 1,
       comunidadId: 1,
-      tipoRuta: 'TOMA_LECTURA',
+      tipoRuta: 'LECTURA',
       nombre: 'Different Sector Route',
       periodoId: 1,
       sectorId: 3,
@@ -279,7 +279,7 @@ describe('CreateRouteUseCase', () => {
       1,
       3,
       null,
-      'TOMA_LECTURA',
+      'LECTURA',
     );
     expect(mockRouteRepository.create).toHaveBeenCalledWith(
       expect.objectContaining({ sectorId: 3 }),
@@ -304,7 +304,7 @@ describe('CreateRouteUseCase', () => {
       nombre: 'Route With Periodo',
       operarioId: 1,
       comunidadId: 1,
-      tipoRuta: 'TOMA_LECTURA',
+      tipoRuta: 'LECTURA',
       periodoId: 1,
       estado: 'PENDIENTE',
       fechaPlanificada: null,
@@ -316,7 +316,7 @@ describe('CreateRouteUseCase', () => {
     const result = await useCase.execute({
       operarioId: 1,
       comunidadId: 1,
-      tipoRuta: 'TOMA_LECTURA',
+      tipoRuta: 'LECTURA',
       nombre: 'Route With Periodo',
       periodoId: 1,
     } as any);
@@ -342,7 +342,7 @@ describe('CreateRouteUseCase', () => {
       nombre: 'Periodo Test',
       operarioId: 1,
       comunidadId: 1,
-      tipoRuta: 'TOMA_LECTURA',
+      tipoRuta: 'LECTURA',
       periodoId: 5,
       estado: 'PENDIENTE',
       fechaPlanificada: null,
@@ -354,7 +354,7 @@ describe('CreateRouteUseCase', () => {
     const result = await useCase.execute({
       operarioId: 1,
       comunidadId: 1,
-      tipoRuta: 'TOMA_LECTURA',
+      tipoRuta: 'LECTURA',
       nombre: 'Periodo Test',
       periodoId: 5,
     } as any);
@@ -457,7 +457,7 @@ describe('CreateRouteUseCase', () => {
       nombre: 'Test Route',
       operarioId: 1,
       comunidadId: 1,
-      tipoRuta: 'TOMA_LECTURA',
+      tipoRuta: 'LECTURA',
       periodoId: 1,
       estado: 'PENDIENTE',
       fechaPlanificada: null,
@@ -469,7 +469,7 @@ describe('CreateRouteUseCase', () => {
     const result = await useCase.execute({
       operarioId: 1,
       comunidadId: 1,
-      tipoRuta: 'TOMA_LECTURA',
+      tipoRuta: 'LECTURA',
       nombre: 'Test Route',
       periodoId: 1,
     } as any);

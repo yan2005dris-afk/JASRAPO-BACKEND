@@ -1,4 +1,5 @@
 import type { ConfigService } from '@nestjs/config';
+import { BadRequestException } from '@nestjs/common';
 import type { SistemaConfigRepository } from './sistema-config.repository';
 import {
   __resetSistemaConfigCache,
@@ -7,7 +8,9 @@ import {
 
 describe('SistemaConfigService', () => {
   let service: SistemaConfigService;
-  let repository: jest.Mocked<Pick<SistemaConfigRepository, 'findByClave'>>;
+  let repository: jest.Mocked<
+    Pick<SistemaConfigRepository, 'findByClave' | 'create' | 'update'>
+  >;
   let configService: jest.Mocked<Pick<ConfigService, 'get'>>;
 
   const makeConfig = (ttl: number | undefined) =>
@@ -23,7 +26,11 @@ describe('SistemaConfigService', () => {
   const makeRepository = () =>
     ({
       findByClave: jest.fn(),
-    }) as unknown as jest.Mocked<Pick<SistemaConfigRepository, 'findByClave'>>;
+      create: jest.fn(),
+      update: jest.fn(),
+    }) as unknown as jest.Mocked<
+      Pick<SistemaConfigRepository, 'findByClave' | 'create' | 'update'>
+    >;
 
   beforeEach(() => {
     jest.useFakeTimers();
@@ -204,6 +211,32 @@ describe('SistemaConfigService', () => {
       );
 
       expect(freshService.cacheSize).toBe(0);
+    });
+  });
+
+  describe('collection cutoff validation', () => {
+    it('returns HTTP validation exceptions for invalid values', async () => {
+      await expect(
+        service.update('cobranza.dia_corte_mensual', { valor: '0' }),
+      ).rejects.toBeInstanceOf(BadRequestException);
+    });
+
+    it('validates the effective threshold invariant before updating', async () => {
+      repository.findByClave.mockResolvedValue('5');
+
+      await expect(
+        service.update('cobranza.meses_para_mora', { valor: '6' }),
+      ).rejects.toThrow(BadRequestException);
+      expect(repository.update).not.toHaveBeenCalled();
+    });
+
+    it('validates the effective threshold invariant before creating', async () => {
+      repository.findByClave.mockResolvedValue('3');
+
+      await expect(
+        service.create({ clave: 'cobranza.meses_para_corte', valor: '2' }),
+      ).rejects.toThrow(BadRequestException);
+      expect(repository.create).not.toHaveBeenCalled();
     });
   });
 });

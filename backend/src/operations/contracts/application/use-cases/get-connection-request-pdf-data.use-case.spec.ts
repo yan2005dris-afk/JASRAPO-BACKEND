@@ -16,7 +16,7 @@ const makeContrato = (
     numeroGuia: 'NG-001',
     fechaInicio: new Date('2024-01-01'),
     direccionSuministro: 'Calle 1',
-    estado: 'ACTIVO',
+    estadoServicio: 'ACTIVO',
     creadoPor: null,
     comunidadId: 1,
     deletedAt: null,
@@ -38,9 +38,6 @@ const makeContrato = (
       categoriaTarifaId: 1,
       nombre: 'Tipo 1',
       descripcion: null,
-      valorBase: 4,
-      consumoMinimoMensual: 10,
-      valorExcedenteM3: 0.4,
     },
     ...overrides,
   });
@@ -53,6 +50,7 @@ describe('GetConnectionRequestPdfDataUseCase', () => {
     findMany: jest.fn(),
     count: jest.fn(),
     update: jest.fn(),
+    getConnectionCosts: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -66,6 +64,11 @@ describe('GetConnectionRequestPdfDataUseCase', () => {
     useCase = module.get<GetConnectionRequestPdfDataUseCase>(
       GetConnectionRequestPdfDataUseCase,
     );
+
+    mockContractRepository.getConnectionCosts.mockResolvedValue({
+      costoGuia: 0,
+      derechoInspeccion: 0,
+    });
   });
 
   afterEach(() => jest.clearAllMocks());
@@ -113,58 +116,56 @@ describe('GetConnectionRequestPdfDataUseCase', () => {
       expect(result.solicitud.formaPago).toBe('CONTADO');
     });
 
-    it('should set costoGuia=120 when tarifa nombre includes "1"', async () => {
-      mockContractRepository.findUnique.mockResolvedValue(
-        makeContrato({
-          categoriaTarifa: {
-            categoriaTarifaId: 1,
-            nombre: 'Tipo 1',
-            descripcion: null,
-            valorBase: 4,
-            consumoMinimoMensual: 10,
-            valorExcedenteM3: 0.4,
-          },
-        }),
-      );
+    it('should source guía and inspección costs from rubros (by categoriaTarifaId)', async () => {
+      mockContractRepository.findUnique.mockResolvedValue(makeContrato());
+      mockContractRepository.getConnectionCosts.mockResolvedValue({
+        costoGuia: 1,
+        derechoInspeccion: 5,
+      });
+
       const result = await useCase.execute(BigInt(1));
-      expect(result.solicitud.costos.costoGuia).toBe(120);
-      expect(result.solicitud.costos.total).toBe(123);
+
+      expect(mockContractRepository.getConnectionCosts).toHaveBeenCalledWith(1);
+      expect(result.solicitud.costos.costoGuia).toBe(1);
+      expect(result.solicitud.costos.derechoInspeccion).toBe(5);
+      expect(result.solicitud.costos.total).toBe(6);
     });
 
-    it('should set costoGuia=150 when tarifa nombre includes "2"', async () => {
+    it('should reflect a different tariff rule from rubros', async () => {
       mockContractRepository.findUnique.mockResolvedValue(
         makeContrato({
+          categoriaTarifaId: 2,
           categoriaTarifa: {
             categoriaTarifaId: 2,
             nombre: 'Tipo 2',
             descripcion: null,
-            valorBase: 6,
-            consumoMinimoMensual: 15,
-            valorExcedenteM3: 0.5,
           },
         }),
       );
+      mockContractRepository.getConnectionCosts.mockResolvedValue({
+        costoGuia: 2,
+        derechoInspeccion: 5,
+      });
+
       const result = await useCase.execute(BigInt(1));
-      expect(result.solicitud.costos.costoGuia).toBe(150);
-      expect(result.solicitud.costos.total).toBe(153);
+
+      expect(mockContractRepository.getConnectionCosts).toHaveBeenCalledWith(2);
+      expect(result.solicitud.costos.costoGuia).toBe(2);
+      expect(result.solicitud.costos.total).toBe(7);
     });
 
-    it('should set costoGuia=200 for unknown tarifa type', async () => {
-      mockContractRepository.findUnique.mockResolvedValue(
-        makeContrato({
-          categoriaTarifa: {
-            categoriaTarifaId: 3,
-            nombre: 'Tipo 3',
-            descripcion: null,
-            valorBase: 8,
-            consumoMinimoMensual: 20,
-            valorExcedenteM3: 0.6,
-          },
-        }),
-      );
+    it('should default missing rubro costs to 0', async () => {
+      mockContractRepository.findUnique.mockResolvedValue(makeContrato());
+      mockContractRepository.getConnectionCosts.mockResolvedValue({
+        costoGuia: null,
+        derechoInspeccion: null,
+      });
+
       const result = await useCase.execute(BigInt(1));
-      expect(result.solicitud.costos.costoGuia).toBe(200);
-      expect(result.solicitud.costos.total).toBe(203);
+
+      expect(result.solicitud.costos.costoGuia).toBe(0);
+      expect(result.solicitud.costos.derechoInspeccion).toBe(0);
+      expect(result.solicitud.costos.total).toBe(0);
     });
 
     it('should include sector when present', async () => {

@@ -48,7 +48,7 @@ export class CreateCobroPuntualUseCase {
       throw new NotFoundException(`Contrato ${dto.contratoId} no encontrado`);
     }
 
-    if (contrato.estado !== 'ACTIVO') {
+    if (contrato.estadoServicio !== 'ACTIVO') {
       throw new BadRequestException(
         `El contrato ${dto.contratoId} no está ACTIVO`,
       );

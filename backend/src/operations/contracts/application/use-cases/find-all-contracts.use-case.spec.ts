@@ -58,7 +58,7 @@ describe('FindAllContractsUseCase', () => {
   });
 
   it('should pass filters to paginateContratos', async () => {
-    const filters = { estado: 'ACTIVO', numeroGuia: 'GU-001' };
+    const filters = { estadoServicio: 'ACTIVO' as const, numeroGuia: 'GU-001' };
     const paginatedResult = {
       data: [],
       meta: {

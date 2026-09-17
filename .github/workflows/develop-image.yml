@@ -8,6 +8,7 @@ on:
 permissions:
   contents: read
   packages: write
+  actions: write
 
 env:
   IMAGE_NAME: ghcr.io/yan2005dris-afk/jasrapo-backend:develop
@@ -26,6 +27,11 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver: docker-container
+
       - name: Build and push backend image
         uses: docker/build-push-action@v6
         with:
@@ -33,3 +39,5 @@ jobs:
           file: backend/Dockerfile
           push: true
           tags: ${{ env.IMAGE_NAME }}
+          cache-from: type=gha,scope=backend-image
+          cache-to: type=gha,mode=max,scope=backend-image

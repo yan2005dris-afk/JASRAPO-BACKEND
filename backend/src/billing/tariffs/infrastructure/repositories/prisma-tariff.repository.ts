@@ -83,6 +83,17 @@ export class PrismaTariffRepository implements TariffRepository {
       ...(filters.nombre
         ? { nombre: { contains: filters.nombre, mode: 'insensitive' } }
         : {}),
+      // Buscador de texto libre del listado: cubre las columnas visibles.
+      ...(filters.search
+        ? {
+            OR: [
+              { nombre: { contains: filters.search, mode: 'insensitive' } },
+              {
+                descripcion: { contains: filters.search, mode: 'insensitive' },
+              },
+            ],
+          }
+        : {}),
     };
 
     const paginated = await paginate<TariffCategoryPrismaRaw>(

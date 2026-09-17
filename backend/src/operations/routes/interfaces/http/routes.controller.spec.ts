@@ -33,7 +33,7 @@ describe('RoutesController', () => {
     rutaId: 1n,
     nombre: 'Ruta 1',
     operarioId: 10,
-    tipoRuta: 'TOMA_LECTURA',
+    tipoRuta: 'LECTURA',
     comunidadId: 1,
     periodoId: 1,
     estado: 'PENDIENTE',
@@ -85,7 +85,7 @@ describe('RoutesController', () => {
     });
 
     const result = await controller.getEligibleReadings({
-      tipoRuta: 'TOMA_LECTURA',
+      tipoRuta: 'LECTURA',
       comunidadId: 1,
     } as any);
 
@@ -100,7 +100,7 @@ describe('RoutesController', () => {
     const result = await controller.create({
       nombre: 'Ruta 1',
       operarioId: 10,
-      tipoRuta: 'TOMA_LECTURA',
+      tipoRuta: 'LECTURA',
       comunidadId: 1,
       periodoId: 1,
     });

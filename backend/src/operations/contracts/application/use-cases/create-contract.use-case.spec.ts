@@ -50,7 +50,8 @@ describe('CreateContractUseCase', () => {
 
     mockContractRepository.createContractWithMeterHistory.mockResolvedValue({
       contratoId: BigInt(1),
-      estado: 'PENDIENTE_PAGO',
+      estadoServicio: 'PENDIENTE_PAGO',
+      estadoCobranza: 'NO_APLICA',
     });
 
     const result = await useCase.execute(dto);
@@ -65,11 +66,16 @@ describe('CreateContractUseCase', () => {
       sectorId: null,
       numeroGuia: 'GUIA-001',
       direccionSuministro: 'Av. Principal 123',
-      estado: 'PENDIENTE_PAGO',
+      estadoServicio: 'PENDIENTE_PAGO',
+      estadoCobranza: 'NO_APLICA',
       creadoPor: undefined,
       lecturaInicial: 0,
     });
-    expect(result).toEqual({ contratoId: BigInt(1), estado: 'PENDIENTE_PAGO' });
+    expect(result).toEqual({
+      contratoId: BigInt(1),
+      estadoServicio: 'PENDIENTE_PAGO',
+      estadoCobranza: 'NO_APLICA',
+    });
   });
 
   it('should create contract with optional fields (S1.2)', async () => {
@@ -83,12 +89,12 @@ describe('CreateContractUseCase', () => {
       sectorId: '10',
       lecturaInicial: 500,
       creadoPor: 'admin',
-      estado: 'ACTIVO',
+      estadoServicio: 'ACTIVO' as const,
+      estadoCobranza: 'AL_DIA' as const,
     };
 
     mockContractRepository.createContractWithMeterHistory.mockResolvedValue({
       contratoId: BigInt(2),
-      estado: 'ACTIVO',
       sector: { sectorId: 10, codigo: 'SEC-A', nombre: 'Sector A' },
     });
 
@@ -104,15 +110,41 @@ describe('CreateContractUseCase', () => {
       sectorId: 10,
       numeroGuia: 'GUIA-002',
       direccionSuministro: 'Calle Secundaria 456',
-      estado: 'ACTIVO',
+      estadoServicio: 'ACTIVO',
+      estadoCobranza: 'AL_DIA',
       creadoPor: 'admin',
       lecturaInicial: 500,
     });
     expect(result).toEqual({
       contratoId: BigInt(2),
-      estado: 'ACTIVO',
       sector: { sectorId: 10, codigo: 'SEC-A', nombre: 'Sector A' },
     });
+  });
+
+  it('uses explicit separated states without dual-writing a legacy state', async () => {
+    const dto = {
+      clienteId: '20',
+      categoriaTarifaId: '5',
+      medidorId: '300',
+      numeroGuia: 'GUIA-EXPLICIT',
+      direccionSuministro: 'Calle Secundaria 456',
+      comunidadId: '3',
+      estadoServicio: 'ACTIVO' as const,
+      estadoCobranza: 'AL_DIA' as const,
+    };
+
+    mockContractRepository.createContractWithMeterHistory.mockResolvedValue({});
+
+    await useCase.execute(dto);
+
+    expect(
+      mockContractRepository.createContractWithMeterHistory,
+    ).toHaveBeenCalledWith(
+      expect.objectContaining({
+        estadoServicio: 'ACTIVO',
+        estadoCobranza: 'AL_DIA',
+      }),
+    );
   });
 
   it('should throw NotFoundException when cliente does not exist (S1.4)', async () => {

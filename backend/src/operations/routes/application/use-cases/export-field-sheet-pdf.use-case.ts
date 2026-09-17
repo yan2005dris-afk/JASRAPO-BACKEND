@@ -17,6 +17,7 @@ export class ExportFieldSheetPdfUseCase {
     const ruta = await this.prisma.rutas.findUnique({
       where: { rutaId },
       include: {
+        tipoActividad: { select: { codigo: true } },
         comunidad: true,
         sector: true,
         operario: true,
@@ -38,7 +39,7 @@ export class ExportFieldSheetPdfUseCase {
       throw new EntityNotFoundException('Ruta', rutaId.toString());
     }
 
-    const isLectura = ruta.tipoRuta === 'TOMA_LECTURA';
+    const isLectura = ruta.tipoActividad.codigo === 'LECTURA';
     let items: Array<{
       ordenVisita?: number;
       guia?: string;
@@ -106,7 +107,7 @@ export class ExportFieldSheetPdfUseCase {
           cliente: clienteNom || 'Sin cliente',
           direccion: o.contrato?.direccionSuministro || '—',
           medidor: o.medidor?.serie || '—',
-          tipoActividad: o.tipoActividad || ruta.tipoRuta,
+          tipoActividad: ruta.tipoActividad.codigo,
           estado: o.estado || 'PENDIENTE',
         };
       });
@@ -134,7 +135,7 @@ export class ExportFieldSheetPdfUseCase {
       ruta: {
         rutaId: ruta.rutaId,
         nombre: ruta.nombre,
-        tipoRuta: ruta.tipoRuta,
+        tipoRuta: ruta.tipoActividad.codigo,
         descripcion: ruta.descripcion,
         estado: ruta.estado,
         fechaPlanificada: ruta.fechaPlanificada,

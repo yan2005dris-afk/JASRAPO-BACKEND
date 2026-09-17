@@ -35,18 +35,6 @@ export type CodigoSistemaRubro =
 
 // Fuente: models/logica-de-negocio/Rubros.prisma
 
-export const EstadoAnomalia = {
-  PENDIENTE: 'PENDIENTE',
-  EN_REVISION: 'EN_REVISION',
-  RESUELTA: 'RESUELTA',
-  DESCARTADA: 'DESCARTADA',
-} as const;
-
-export type EstadoAnomalia =
-  (typeof EstadoAnomalia)[keyof typeof EstadoAnomalia];
-
-// Fuente: models/logica-de-negocio/LecturaAnomalia.prisma
-
 export const EstadoAprobacionReemplazo = {
   PENDIENTE: 'PENDIENTE',
   APROBADA: 'APROBADA',
@@ -80,21 +68,14 @@ export type EstadoCaja = (typeof EstadoCaja)[keyof typeof EstadoCaja];
 
 // Fuente: models/logica-de-negocio/CajaSesion.prisma
 
-export const EstadoContrato = {
-  SOLICITUD: 'SOLICITUD',
-  PENDIENTE_PAGO: 'PENDIENTE_PAGO',
-  PENDIENTE_INSTALACION: 'PENDIENTE_INSTALACION',
-  ACTIVO: 'ACTIVO',
+export const EstadoCobranzaContrato = {
+  NO_APLICA: 'NO_APLICA',
+  AL_DIA: 'AL_DIA',
   EN_MORA: 'EN_MORA',
-  ORDEN_CORTE: 'ORDEN_CORTE',
-  SUSPENDIDO: 'SUSPENDIDO',
-  EN_CONVENIO: 'EN_CONVENIO',
-  RETIRADO: 'RETIRADO',
-  RECONEXION: 'RECONEXION',
 } as const;
 
-export type EstadoContrato =
-  (typeof EstadoContrato)[keyof typeof EstadoContrato];
+export type EstadoCobranzaContrato =
+  (typeof EstadoCobranzaContrato)[keyof typeof EstadoCobranzaContrato];
 
 // Fuente: models/logica-de-negocio/Contratos.prisma
 
@@ -177,6 +158,17 @@ export type EstadoMedidor = (typeof EstadoMedidor)[keyof typeof EstadoMedidor];
 
 // Fuente: models/logica-de-negocio/Medidores.prisma
 
+export const EstadoNovedad = {
+  OPEN: 'OPEN',
+  IN_PROGRESS: 'IN_PROGRESS',
+  RESOLVED: 'RESOLVED',
+  CANCELLED: 'CANCELLED',
+} as const;
+
+export type EstadoNovedad = (typeof EstadoNovedad)[keyof typeof EstadoNovedad];
+
+// Fuente: models/logica-de-negocio/NovedadOrdenTrabajo.prisma
+
 export const EstadoOrdenTrabajo = {
   PENDIENTE: 'PENDIENTE',
   EN_PROGRESO: 'EN_PROGRESO',
@@ -247,6 +239,19 @@ export type EstadoRuta = (typeof EstadoRuta)[keyof typeof EstadoRuta];
 
 // Fuente: models/logica-de-negocio/Rutas.prisma
 
+export const EstadoServicioContrato = {
+  PENDIENTE_PAGO: 'PENDIENTE_PAGO',
+  PENDIENTE_INSTALACION: 'PENDIENTE_INSTALACION',
+  ACTIVO: 'ACTIVO',
+  SUSPENDIDO: 'SUSPENDIDO',
+  RETIRADO: 'RETIRADO',
+} as const;
+
+export type EstadoServicioContrato =
+  (typeof EstadoServicioContrato)[keyof typeof EstadoServicioContrato];
+
+// Fuente: models/logica-de-negocio/Contratos.prisma
+
 export const EstadoValidacionPago = {
   REPORTADO: 'REPORTADO',
   VALIDANDO: 'VALIDANDO',
@@ -296,7 +301,7 @@ export const ResolucionEconomicaAnomalia = {
 export type ResolucionEconomicaAnomalia =
   (typeof ResolucionEconomicaAnomalia)[keyof typeof ResolucionEconomicaAnomalia];
 
-// Fuente: models/logica-de-negocio/LecturaAnomalia.prisma
+// Fuente: models/logica-de-negocio/NovedadOrdenTrabajo.prisma
 
 export const ResponsabilidadDano = {
   USUARIO: 'USUARIO',
@@ -323,18 +328,6 @@ export type TarjetaCredito =
 
 // Fuente: models/logica-de-negocio/Pagos.prisma
 
-export const TipoActividadOrden = {
-  INSTALACION: 'INSTALACION',
-  LECTURA: 'LECTURA',
-  RECONEXION: 'RECONEXION',
-  INSPECCION: 'INSPECCION',
-} as const;
-
-export type TipoActividadOrden =
-  (typeof TipoActividadOrden)[keyof typeof TipoActividadOrden];
-
-// Fuente: models/logica-de-negocio/OrdenTrabajo.prisma
-
 export const TipoAnomalia = {
   FUGA: 'FUGA',
   MEDIDOR_DAÑADO: 'MEDIDOR_DAÑADO',
@@ -344,7 +337,7 @@ export const TipoAnomalia = {
 
 export type TipoAnomalia = (typeof TipoAnomalia)[keyof typeof TipoAnomalia];
 
-// Fuente: models/logica-de-negocio/LecturaAnomalia.prisma
+// Fuente: models/logica-de-negocio/NovedadOrdenTrabajo.prisma
 
 export const TipoDescuento = {
   TERCERA_EDAD: 'TERCERA_EDAD',
@@ -404,17 +397,6 @@ export type TipoRubro = (typeof TipoRubro)[keyof typeof TipoRubro];
 
 // Fuente: models/logica-de-negocio/Rubros.prisma
 
-export const TipoRuta = {
-  TOMA_LECTURA: 'TOMA_LECTURA',
-  RECONEXION: 'RECONEXION',
-  INSTALACION: 'INSTALACION',
-  INSPECCION: 'INSPECCION',
-} as const;
-
-export type TipoRuta = (typeof TipoRuta)[keyof typeof TipoRuta];
-
-// Fuente: models/logica-de-negocio/Rutas.prisma
-
 export const TratamientoEntrante = {
   FACTURAR_PERIODO_ACTUAL: 'FACTURAR_PERIODO_ACTUAL',
   DIFERIR_SIGUIENTE_PERIODO: 'DIFERIR_SIGUIENTE_PERIODO',
@@ -436,3 +418,22 @@ export type TratamientoSaliente =
   (typeof TratamientoSaliente)[keyof typeof TratamientoSaliente];
 
 // Fuente: models/logica-de-negocio/ReemplazoMedidor.prisma
+
+export const TipoActividadCodes = {
+  LECTURA: 'LECTURA',
+  INSPECCION: 'INSPECCION',
+  INSTALACION: 'INSTALACION',
+  CORTE: 'CORTE',
+  RECONEXION: 'RECONEXION',
+} as const;
+
+export type TipoActividadCodes =
+  (typeof TipoActividadCodes)[keyof typeof TipoActividadCodes];
+export type TipoActividadCode = TipoActividadCodes;
+export const CORE_TIPO_ACTIVIDAD_CODES = [
+  'LECTURA',
+  'INSPECCION',
+  'INSTALACION',
+  'CORTE',
+  'RECONEXION',
+] as const;

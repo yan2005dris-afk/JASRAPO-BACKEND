@@ -6,7 +6,7 @@ import {
   EstadoRuta,
   EstadoMedidor,
   EstadoLectura,
-  EstadoAnomalia,
+  EstadoNovedad,
 } from 'src/shared/enums';
 import {
   ConflictDomainException,
@@ -47,6 +47,7 @@ const routeMedidorSelect = {
 } satisfies Prisma.MedidoresSelect;
 
 const operatorRouteInclude = {
+  tipoActividad: { select: { codigo: true } },
   operario: { select: routeOperarioSelect },
   ordenesTrabajo: {
     where: { deletedAt: null },
@@ -66,6 +67,7 @@ const operatorRouteInclude = {
         },
       },
       medidor: { select: routeMedidorSelect },
+      ruta: { select: { tipoActividad: { select: { codigo: true } } } },
     },
   },
 } satisfies Prisma.RutasInclude;
@@ -180,7 +182,7 @@ export class PrismaOperatorRepository extends OperatorRepository {
                     contratoId: true,
                     numeroGuia: true,
                     direccionSuministro: true,
-                    estado: true,
+                    estadoServicio: true,
                     comunidadId: true,
                     sectorId: true,
                     cliente: {
@@ -283,6 +285,7 @@ export class PrismaOperatorRepository extends OperatorRepository {
           where: { deletedAt: null },
           select: {
             rutaId: true,
+            evidenciaFotoUrl: true,
             ruta: {
               select: {
                 operarioId: true,
@@ -414,12 +417,16 @@ export class PrismaOperatorRepository extends OperatorRepository {
             },
           },
           medidor: { select: routeMedidorSelect },
+          ruta: { select: { tipoActividad: { select: { codigo: true } } } },
         },
       }),
       this.prisma.ordenesTrabajo.count({ where }),
     ]);
     return this.page(
-      items.slice(0, limit) as OperatorWorkOrder[],
+      items.slice(0, limit).map((item) => ({
+        ...item,
+        tipoActividad: item.ruta.tipoActividad.codigo,
+      })) as OperatorWorkOrder[],
       total,
       items.length > limit,
       'ordenTrabajoId',
@@ -539,7 +546,7 @@ export class PrismaOperatorRepository extends OperatorRepository {
                       contratoId: true,
                       numeroGuia: true,
                       direccionSuministro: true,
-                      estado: true,
+                      estadoServicio: true,
                       comunidadId: true,
                       sectorId: true,
                       cliente: { select: { nombres: true, apellidos: true } },
@@ -593,8 +600,8 @@ export class PrismaOperatorRepository extends OperatorRepository {
       deletedAt: null,
       updatedAt: { lte: snapshotVersion },
       estado: EstadoLectura.CON_NOVEDAD,
-      lecturaAnomalias: {
-        some: { estado: EstadoAnomalia.PENDIENTE, deletedAt: null },
+      novedadesOrdenTrabajo: {
+        some: { estado: EstadoNovedad.OPEN, deletedAt: null },
       },
       medidor: {
         historial: {
@@ -621,10 +628,10 @@ export class PrismaOperatorRepository extends OperatorRepository {
           medidor: {
             select: { medidorId: true, serie: true, marca: true, modelo: true },
           },
-          lecturaAnomalias: {
-            where: { estado: EstadoAnomalia.PENDIENTE, deletedAt: null },
+          novedadesOrdenTrabajo: {
+            where: { estado: EstadoNovedad.OPEN, deletedAt: null },
             select: {
-              anomaliaId: true,
+              novedadId: true,
               tipo: true,
               estado: true,
               observacion: true,
@@ -690,7 +697,7 @@ export class PrismaOperatorRepository extends OperatorRepository {
         {
           ...geography,
           periodoId,
-          entityType: { in: ['lecturas', 'lectura_anomalia'] },
+          entityType: { in: ['lecturas'] },
         },
         { ...geography, entityType: { in: ['medidores'] } },
       ];
@@ -701,13 +708,7 @@ export class PrismaOperatorRepository extends OperatorRepository {
         sequenceId: { gt: afterSequence },
         OR: scope,
         entityType: {
-          in: [
-            'rutas',
-            'ordenes_trabajo',
-            'lecturas',
-            'medidores',
-            'lectura_anomalia',
-          ],
+          in: ['rutas', 'ordenes_trabajo', 'lecturas', 'medidores'],
         },
       },
       orderBy: { sequenceId: 'asc' },
@@ -772,7 +773,7 @@ export class PrismaOperatorRepository extends OperatorRepository {
     };
 
     if (tipoRuta != null) {
-      where.tipoRuta = tipoRuta as Prisma.RutasWhereInput['tipoRuta'];
+      where.tipoActividad = { codigo: tipoRuta };
     }
 
     const routes = await this.prisma.rutas.findMany({
@@ -871,7 +872,7 @@ export class PrismaOperatorRepository extends OperatorRepository {
           longitud: order.medidor.longitud,
           serie: order.medidor.serie,
           clienteNombre,
-          tipoActividad: order.tipoActividad,
+          tipoActividad: route.tipoActividad.codigo,
           estado: order.estado,
           direccionSuministro: order.contrato.direccionSuministro,
         },
@@ -980,8 +981,8 @@ export class PrismaOperatorRepository extends OperatorRepository {
         periodoId,
         deletedAt: null,
         estado: EstadoLectura.CON_NOVEDAD,
-        lecturaAnomalias: {
-          some: { estado: EstadoAnomalia.PENDIENTE, deletedAt: null },
+        novedadesOrdenTrabajo: {
+          some: { estado: EstadoNovedad.OPEN, deletedAt: null },
         },
         medidor: {
           historial: {
@@ -1009,10 +1010,10 @@ export class PrismaOperatorRepository extends OperatorRepository {
             modelo: true,
           },
         },
-        lecturaAnomalias: {
-          where: { estado: EstadoAnomalia.PENDIENTE, deletedAt: null },
+        novedadesOrdenTrabajo: {
+          where: { estado: EstadoNovedad.OPEN, deletedAt: null },
           select: {
-            anomaliaId: true,
+            novedadId: true,
             tipo: true,
             estado: true,
             observacion: true,

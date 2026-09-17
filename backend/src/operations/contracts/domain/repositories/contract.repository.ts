@@ -54,4 +54,11 @@ export abstract class ContractRepository {
   ): Promise<ContractEntity>;
 
   abstract finalizeActiveMeterLink(contratoId: bigint): Promise<ContractEntity>;
+
+  // ── Connection-request tariff costs (SC-275) ───────────────────────────
+  // Costs are sourced from `rubros` instead of being hardcoded in the use case.
+  abstract getConnectionCosts(categoriaTarifaId: number): Promise<{
+    costoGuia: number | null;
+    derechoInspeccion: number | null;
+  }>;
 }

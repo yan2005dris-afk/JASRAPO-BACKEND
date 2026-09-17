@@ -57,7 +57,7 @@ export interface ReadingWithContractDetail {
         contratoId: bigint;
         numeroGuia: string;
         direccionSuministro: string;
-        estado: string;
+        estadoServicio: string;
         comunidadId: number;
         sectorId: number | null;
         cliente: { nombres: string; apellidos: string };
@@ -188,8 +188,8 @@ export interface ReadingWithAnomalies {
     marca: string;
     modelo: string;
   } | null;
-  lecturaAnomalias: Array<{
-    anomaliaId: bigint;
+  novedadesOrdenTrabajo?: Array<{
+    novedadId: bigint;
     tipo: string;
     estado: string;
     observacion: string | null;

@@ -24,11 +24,13 @@ import { seedFacturacion } from './seeds/facturacion.seed';
 import { seedSriCatalogs } from './seeds/sri.seed';
 import { seedCatalogosSriInit } from './seeds/catalogosSriInit.seed';
 import { seedRoutes } from './seeds/routes.seed';
+import { seedTiposActividad } from './seeds/tipos-actividad.seed';
 import { seedAgreements } from './seeds/agreements.seed';
 import { seedAgreementsPrefacturas } from './seeds/agreements-prefacturas.seed';
 import { seedPagos } from './seeds/pagos.seed';
 import { syncSequences } from './seeds/sync-sequences';
 import { seedInstitutionalProfile } from './seeds/institutional-profile.seed';
+import { seedCollectionCutoffConfig } from './seeds/collectionCutoffConfig.seed';
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
@@ -86,6 +88,7 @@ async function main() {
 
   await seedInstitutionalProfile(prisma);
   console.log('✅ Perfil institucional y activos de marca creados.');
+  await seedCollectionCutoffConfig(prisma);
 
   // Menus
   const menus = await seedMenus(prisma);
@@ -144,6 +147,9 @@ async function main() {
 
   // === PREFACTURAS PARA AGREEMENTS ===
   await seedAgreementsPrefacturas(prisma);
+
+  // === CATÁLOGO DE ACTIVIDADES ===
+  await seedTiposActividad(prisma);
 
   // === RUTAS Y ÓRDENES DE TRABAJO ===
   await seedRoutes(prisma);

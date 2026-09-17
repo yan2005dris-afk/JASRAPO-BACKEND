@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { Prisma } from 'src/generated/prisma/client';
-import { EstadoContrato, EstadoMedidor } from 'src/shared/enums';
+import { EstadoMedidor, EstadoServicioContrato } from 'src/shared/enums';
 import {
   EntityNotFoundException,
   InvalidDomainOperationException,
@@ -16,6 +16,7 @@ import type {
   ContractFilters,
 } from '../../domain/types/contract.types';
 import { ContractMapper } from '../mappers/contract.mapper';
+import { ContractState } from '../../domain/contract-state';
 import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
 import {
   paginate,
@@ -39,6 +40,14 @@ export const contractDefaultInclude = {
         },
       },
     },
+  },
+  convenios: {
+    where: {
+      deletedAt: null,
+      estado: { in: ['ACTIVO', 'PENDIENTE_ABONO'] },
+    },
+    select: { convenioId: true },
+    take: 1,
   },
 } satisfies Prisma.ContratosInclude;
 
@@ -64,6 +73,36 @@ export class PrismaContractRepository implements ContractRepository {
       include: this.defaultInclude,
     });
     return ContractMapper.toDomain(record);
+  }
+
+  async getConnectionCosts(categoriaTarifaId: number): Promise<{
+    costoGuia: number | null;
+    derechoInspeccion: number | null;
+  }> {
+    const [guia, inspeccion] = await Promise.all([
+      this.prisma.rubros.findFirst({
+        where: {
+          categoriaTarifaId,
+          codigoSri: { startsWith: 'SERV-GUIA' },
+          activo: true,
+          deletedAt: null,
+        },
+        orderBy: { rubroId: 'asc' },
+      }),
+      this.prisma.rubros.findFirst({
+        where: {
+          codigoSri: 'SERV-INSP-01',
+          activo: true,
+          deletedAt: null,
+        },
+        orderBy: { rubroId: 'asc' },
+      }),
+    ]);
+
+    return {
+      costoGuia: guia ? Number(guia.precioUnitario) : null,
+      derechoInspeccion: inspeccion ? Number(inspeccion.precioUnitario) : null,
+    };
   }
 
   async paginateContratos(
@@ -92,9 +131,26 @@ export class PrismaContractRepository implements ContractRepository {
   }
 
   async create(data: CreateContractData): Promise<ContractEntity> {
+    const estadoServicio =
+      data.estadoServicio ?? EstadoServicioContrato.PENDIENTE_PAGO;
+    const estadoCobranza = ContractState.normalizeCollectionStatus(
+      data.estadoCobranza,
+      estadoServicio,
+    );
     try {
       const record = await this.prisma.contratos.create({
-        data: data,
+        data: {
+          clienteId: data.clienteId,
+          categoriaTarifaId: data.categoriaTarifaId,
+          numeroGuia: data.numeroGuia,
+          fechaInicio: data.fechaInicio,
+          direccionSuministro: data.direccionSuministro,
+          estadoServicio,
+          estadoCobranza,
+          creadoPor: data.creadoPor,
+          comunidadId: data.comunidadId,
+          sectorId: data.sectorId,
+        },
         include: this.defaultInclude,
       });
       return ContractMapper.toDomain(record)!;
@@ -190,6 +246,11 @@ export class PrismaContractRepository implements ContractRepository {
   async createContractWithMeterHistory(
     data: CreateContractWithMeterCommand,
   ): Promise<ContractEntity> {
+    const estadoCobranza = ContractState.normalizeCollectionStatus(
+      data.estadoCobranza,
+      data.estadoServicio,
+    );
+
     return this.prisma.$transaction(async (tx) => {
       await this.validateContractDependencies(tx, data);
 
@@ -200,7 +261,8 @@ export class PrismaContractRepository implements ContractRepository {
           numeroGuia: data.numeroGuia,
           direccionSuministro: data.direccionSuministro,
           comunidadId: data.comunidadId,
-          estado: data.estado as any,
+          estadoServicio: data.estadoServicio,
+          estadoCobranza,
           ...(data.sectorId !== null ? { sectorId: data.sectorId } : {}),
           ...(data.creadoPor ? { creadoPor: data.creadoPor } : {}),
         },
@@ -220,7 +282,7 @@ export class PrismaContractRepository implements ContractRepository {
         data: { estado: EstadoMedidor.PENDIENTE },
       });
 
-      if (contrato.estado === EstadoContrato.PENDIENTE_PAGO) {
+      if (contrato.estadoServicio === 'PENDIENTE_PAGO') {
         await tx.$executeRaw`SELECT generar_prefactura_instalacion(${contrato.contratoId}, ${data.creadoPor || 'SYSTEM'})`;
       }
 
@@ -395,8 +457,12 @@ export class PrismaContractRepository implements ContractRepository {
       });
     }
 
-    if (filters.estado) {
-      conditions.push({ estado: filters.estado as any });
+    if (filters.estadoServicio) {
+      conditions.push({ estadoServicio: filters.estadoServicio });
+    }
+
+    if (filters.estadoCobranza) {
+      conditions.push({ estadoCobranza: filters.estadoCobranza });
     }
 
     if (filters.hasDebt === true) {

@@ -46,6 +46,7 @@ describe('StorageService', () => {
         'sri-xmls',
         'test.xml',
         buffer,
+        { contentType: 'application/octet-stream', metadata: undefined },
       );
       expect(result.key).toBe('test.xml');
       expect(result.size).toBe(buffer.length);

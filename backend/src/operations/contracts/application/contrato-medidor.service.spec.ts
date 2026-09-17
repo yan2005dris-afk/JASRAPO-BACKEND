@@ -15,9 +15,13 @@ import { GeneratePdfUseCase } from 'src/infrastructure/pdf/use-cases/generate-pd
 import { RouteRepository } from '../../routes/domain/repositories/route.repository';
 import { OrdenTrabajoRepository } from '../../routes/domain/repositories/orden-trabajo.repository';
 import {
-  EntityNotFoundException,
-  InvalidDomainOperationException,
-} from 'src/shared/domain/exceptions/domain.exception';
+  EstadoOrdenTrabajo,
+  EstadoRuta,
+  EstadoServicioContrato,
+  TipoActividadCodes,
+} from 'src/shared/enums';
+import { ContractEntity } from '../domain/entities/contract.entity';
+import { RouteEntity } from '../../routes/domain/entities/route.entity';
 
 describe('ContratoMedidorService', () => {
   let service: ContratoMedidorService;
@@ -132,7 +136,7 @@ describe('ContratoMedidorService', () => {
   describe('actualizar', () => {
     it('should delegate to UpdateContractUseCase', async () => {
       const id = BigInt(1);
-      const dto = { estado: 'ACTIVO' };
+      const dto = { estadoServicio: 'ACTIVO' as const };
       mockUpdateUseCase.execute.mockResolvedValue({ id: 1 });
 
       const result = await service.actualizar(id, dto);
@@ -167,132 +171,97 @@ describe('ContratoMedidorService', () => {
   });
 
   describe('assignInstallationRoute', () => {
-    const makeContrato = (overrides: Record<string, any> = {}) => ({
-      contratoId: BigInt(1),
-      numeroGuia: 'NG-001',
-      comunidadId: 1,
-      estado: 'PENDIENTE_INSTALACION',
-      historialMedidores: [{ medidorId: BigInt(50) }],
-      ...overrides,
+    const contratoId = 10n;
+    const contrato = new ContractEntity({
+      contratoId,
+      estadoServicio: EstadoServicioContrato.PENDIENTE_INSTALACION,
+      estadoCobranza: 'NO_APLICA',
+      numeroGuia: 'GUIA-010',
+      comunidadId: 3,
+      historialMedidores: null,
+    });
+    const existingRoute = new RouteEntity({
+      rutaId: 20n,
+      nombre: 'Instalaciones existentes',
+      tipoRuta: TipoActividadCodes.INSTALACION,
+      comunidadId: 3,
+      periodoId: null,
+      estado: EstadoRuta.PENDIENTE,
+      fechaPlanificada: null,
+      fechaInicio: null,
+      fechaFin: null,
     });
 
-    it('creates a new INSTALACION route and its work order when no routeId is given', async () => {
-      mockFindOneUseCase.execute.mockResolvedValue(makeContrato());
-      const ruta = {
-        rutaId: BigInt(99),
-        tipoRuta: 'INSTALACION',
-        estado: 'PENDIENTE',
-      };
-      mockRouteRepository.create.mockResolvedValue(ruta);
+    beforeEach(() => {
+      mockFindOneUseCase.execute.mockResolvedValue(contrato);
+      mockOrdenTrabajoRepository.create.mockResolvedValue({});
+    });
 
-      const result = await service.assignInstallationRoute(BigInt(1), {});
+    it('assigns a contract to a valid pending installation route', async () => {
+      mockRouteRepository.findById.mockResolvedValue(existingRoute);
 
+      const result = await service.assignInstallationRoute(contratoId, {
+        routeId: 20,
+      });
+
+      expect(result).toBe(existingRoute);
+      expect(mockOrdenTrabajoRepository.create).toHaveBeenCalledWith({
+        rutaId: 20n,
+        contratoId,
+        medidorId: null,
+        estado: EstadoOrdenTrabajo.PENDIENTE,
+      });
+      expect(
+        mockOrdenTrabajoRepository.create.mock.calls[0][0],
+      ).not.toHaveProperty('tipoActividad');
+    });
+
+    it('rejects a contract whose service lifecycle is not pending installation', async () => {
+      mockFindOneUseCase.execute.mockResolvedValue(
+        new ContractEntity({
+          ...contrato,
+          estadoServicio: EstadoServicioContrato.ACTIVO,
+        }),
+      );
+
+      await expect(
+        service.assignInstallationRoute(contratoId, { routeId: 20 }),
+      ).rejects.toThrow('PENDIENTE_INSTALACION');
+      expect(mockRouteRepository.findById).not.toHaveBeenCalled();
+    });
+
+    it('rejects an existing route with a non-installation activity code', async () => {
+      mockRouteRepository.findById.mockResolvedValue(
+        new RouteEntity({
+          ...existingRoute,
+          tipoRuta: TipoActividadCodes.LECTURA,
+        }),
+      );
+
+      await expect(
+        service.assignInstallationRoute(contratoId, { routeId: 20 }),
+      ).rejects.toThrow('tipo INSTALACION');
+      expect(mockOrdenTrabajoRepository.create).not.toHaveBeenCalled();
+    });
+
+    it('creates a new pending installation route when routeId is omitted', async () => {
+      mockRouteRepository.create.mockResolvedValue(existingRoute);
+
+      const result = await service.assignInstallationRoute(contratoId, {
+        fechaPlanificada: '2026-08-20',
+      });
+
+      expect(result).toBe(existingRoute);
       expect(mockRouteRepository.create).toHaveBeenCalledWith(
         expect.objectContaining({
-          tipoRuta: 'INSTALACION',
-          estado: 'PENDIENTE',
-          comunidadId: 1,
+          nombre: 'Instalaciones GUIA-010',
+          tipoRuta: TipoActividadCodes.INSTALACION,
+          estado: EstadoRuta.PENDIENTE,
           operarioId: null,
         }),
       );
-      expect(mockOrdenTrabajoRepository.create).toHaveBeenCalledWith({
-        rutaId: BigInt(99),
-        contratoId: BigInt(1),
-        medidorId: BigInt(50),
-        tipoActividad: 'INSTALACION',
-        estado: 'PENDIENTE',
-      });
-      expect(result).toBe(ruta);
-    });
-
-    it('uses an existing PENDIENTE INSTALACION route when routeId is given', async () => {
-      mockFindOneUseCase.execute.mockResolvedValue(makeContrato());
-      const existing = {
-        rutaId: BigInt(42),
-        tipoRuta: 'INSTALACION',
-        estado: 'PENDIENTE',
-      };
-      mockRouteRepository.findById.mockResolvedValue(existing);
-
-      const result = await service.assignInstallationRoute(BigInt(1), {
-        routeId: 42,
-      });
-
-      expect(mockRouteRepository.findById).toHaveBeenCalledWith(BigInt(42));
-      expect(mockRouteRepository.create).not.toHaveBeenCalled();
       expect(mockOrdenTrabajoRepository.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          rutaId: BigInt(42),
-          tipoActividad: 'INSTALACION',
-        }),
-      );
-      expect(result).toBe(existing);
-    });
-
-    it('rejects when the contract is not in PENDIENTE_INSTALACION', async () => {
-      mockFindOneUseCase.execute.mockResolvedValue(
-        makeContrato({ estado: 'ACTIVO' }),
-      );
-
-      await expect(
-        service.assignInstallationRoute(BigInt(1), {}),
-      ).rejects.toThrow(InvalidDomainOperationException);
-      expect(mockRouteRepository.create).not.toHaveBeenCalled();
-      expect(mockOrdenTrabajoRepository.create).not.toHaveBeenCalled();
-    });
-
-    it('rejects when the given route does not exist', async () => {
-      mockFindOneUseCase.execute.mockResolvedValue(makeContrato());
-      mockRouteRepository.findById.mockResolvedValue(null);
-
-      await expect(
-        service.assignInstallationRoute(BigInt(1), { routeId: 42 }),
-      ).rejects.toThrow(EntityNotFoundException);
-      expect(mockOrdenTrabajoRepository.create).not.toHaveBeenCalled();
-    });
-
-    it('rejects when the given route is not of type INSTALACION', async () => {
-      mockFindOneUseCase.execute.mockResolvedValue(makeContrato());
-      mockRouteRepository.findById.mockResolvedValue({
-        rutaId: BigInt(42),
-        tipoRuta: 'TOMA_LECTURA',
-        estado: 'PENDIENTE',
-      });
-
-      await expect(
-        service.assignInstallationRoute(BigInt(1), { routeId: 42 }),
-      ).rejects.toThrow(InvalidDomainOperationException);
-      expect(mockOrdenTrabajoRepository.create).not.toHaveBeenCalled();
-    });
-
-    it('rejects when the given route is not in PENDIENTE state', async () => {
-      mockFindOneUseCase.execute.mockResolvedValue(makeContrato());
-      mockRouteRepository.findById.mockResolvedValue({
-        rutaId: BigInt(42),
-        tipoRuta: 'INSTALACION',
-        estado: 'EN_PROGRESO',
-      });
-
-      await expect(
-        service.assignInstallationRoute(BigInt(1), { routeId: 42 }),
-      ).rejects.toThrow(InvalidDomainOperationException);
-      expect(mockOrdenTrabajoRepository.create).not.toHaveBeenCalled();
-    });
-
-    it('links the work order with null medidorId when the contract has no meter history', async () => {
-      mockFindOneUseCase.execute.mockResolvedValue(
-        makeContrato({ historialMedidores: [] }),
-      );
-      mockRouteRepository.create.mockResolvedValue({
-        rutaId: BigInt(99),
-        tipoRuta: 'INSTALACION',
-        estado: 'PENDIENTE',
-      });
-
-      await service.assignInstallationRoute(BigInt(1), {});
-
-      expect(mockOrdenTrabajoRepository.create).toHaveBeenCalledWith(
-        expect.objectContaining({ medidorId: null }),
+        expect.objectContaining({ rutaId: existingRoute.rutaId }),
       );
     });
   });

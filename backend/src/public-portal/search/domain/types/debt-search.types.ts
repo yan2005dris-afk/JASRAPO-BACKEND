@@ -1,3 +1,5 @@
+import type { EstadoCobranzaContrato } from 'src/shared/enums';
+
 export type TipoBusquedaDeuda = 'identificacion' | 'numeroGuia';
 
 export interface IPrefacturaParaCalculo {
@@ -9,7 +11,8 @@ export interface IPrefacturaParaCalculo {
 export interface IContratoConDeudaRaw {
   contratoId: bigint;
   numeroGuia: string;
-  estado: string;
+  estadoServicio: string;
+  estadoCobranza: EstadoCobranzaContrato;
   cliente: {
     clienteId: bigint;
     identificacion: string | null;
@@ -22,7 +25,8 @@ export interface IContratoConDeudaRaw {
 export interface IContratoResumenRaw {
   contratoId: bigint;
   numeroGuia: string;
-  estado: string;
+  estadoServicio: string;
+  estadoCobranza: EstadoCobranzaContrato;
   prefacturasImpagadas: IPrefacturaParaCalculo[];
 }
 

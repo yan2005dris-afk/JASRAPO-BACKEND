@@ -1,6 +1,12 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SistemaConfigRepository } from './sistema-config.repository';
+import {
+  COBRANZA_DIA_CORTE_MENSUAL,
+  COBRANZA_MESES_PARA_CORTE,
+  COBRANZA_MESES_PARA_MORA,
+} from './sistema-config.keys';
+import { COLLECTION_CUTOFF_DEFAULTS } from './sistema-config.keys';
 
 /**
  * Default cache TTL when SISTEMA_CONFIG_CACHE_TTL_MS is not set.
@@ -101,6 +107,8 @@ export class SistemaConfigService {
     valor: string;
     descripcion?: string | null;
   }): Promise<any> {
+    this.validateCollectionCutoffValue(data.clave, data.valor);
+    await this.validateCollectionCutoffMonths(data.clave, data.valor);
     const created = await this.repository.create(data);
     CACHE.delete(data.clave);
     return created;
@@ -110,6 +118,10 @@ export class SistemaConfigService {
     clave: string,
     data: { valor?: string; descripcion?: string | null },
   ): Promise<any> {
+    if (data.valor !== undefined) {
+      this.validateCollectionCutoffValue(clave, data.valor);
+      await this.validateCollectionCutoffMonths(clave, data.valor);
+    }
     const updated = await this.repository.update(clave, data);
     CACHE.delete(clave);
     return updated;
@@ -127,5 +139,64 @@ export class SistemaConfigService {
    */
   get cacheSize(): number {
     return CACHE.size;
+  }
+
+  private validateCollectionCutoffValue(clave: string, valor: string): void {
+    const max =
+      clave === COBRANZA_DIA_CORTE_MENSUAL
+        ? 31
+        : clave === COBRANZA_MESES_PARA_MORA ||
+            clave === COBRANZA_MESES_PARA_CORTE
+          ? 120
+          : null;
+    if (max === null) return;
+    if (!/^\d+$/.test(valor.trim())) {
+      throw new BadRequestException(`${clave} debe ser un entero positivo`);
+    }
+    const numeric = Number(valor);
+    if (!Number.isSafeInteger(numeric) || numeric < 1 || numeric > max) {
+      throw new BadRequestException(`${clave} debe estar entre 1 y ${max}`);
+    }
+  }
+
+  private async validateCollectionCutoffMonths(
+    clave: string,
+    valor: string,
+  ): Promise<void> {
+    if (
+      clave !== COBRANZA_MESES_PARA_MORA &&
+      clave !== COBRANZA_MESES_PARA_CORTE
+    ) {
+      return;
+    }
+    const otherKey =
+      clave === COBRANZA_MESES_PARA_MORA
+        ? COBRANZA_MESES_PARA_CORTE
+        : COBRANZA_MESES_PARA_MORA;
+    const otherValue = await this.repository.findByClave(otherKey);
+    const current = this.parsePositiveIntegerForValidation(valor, clave);
+    const other = this.parsePositiveIntegerForValidation(
+      otherValue ?? String(COLLECTION_CUTOFF_DEFAULTS[otherKey]),
+      otherKey,
+    );
+    const mesesParaMora = clave === COBRANZA_MESES_PARA_MORA ? current : other;
+    const mesesParaCorte =
+      clave === COBRANZA_MESES_PARA_CORTE ? current : other;
+    if (mesesParaCorte < mesesParaMora) {
+      throw new BadRequestException(
+        `${COBRANZA_MESES_PARA_CORTE} debe ser mayor o igual que ${COBRANZA_MESES_PARA_MORA}`,
+      );
+    }
+  }
+
+  private parsePositiveIntegerForValidation(raw: string, key: string): number {
+    if (!/^\d+$/.test(raw.trim())) {
+      throw new BadRequestException(`${key} debe ser un entero positivo`);
+    }
+    const value = Number(raw);
+    if (!Number.isSafeInteger(value) || value < 1 || value > 120) {
+      throw new BadRequestException(`${key} debe estar entre 1 y 120`);
+    }
+    return value;
   }
 }

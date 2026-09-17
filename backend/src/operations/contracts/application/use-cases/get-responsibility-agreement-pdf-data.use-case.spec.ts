@@ -16,7 +16,7 @@ const makeContrato = (
     numeroGuia: 'NG-001',
     fechaInicio: new Date('2024-01-01'),
     direccionSuministro: 'Calle 1',
-    estado: 'ACTIVO',
+    estadoServicio: 'ACTIVO',
     creadoPor: null,
     comunidadId: 1,
     deletedAt: null,

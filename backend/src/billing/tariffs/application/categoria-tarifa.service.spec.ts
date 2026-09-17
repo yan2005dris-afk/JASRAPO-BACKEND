@@ -121,6 +121,23 @@ describe('CategoriaTarifaService', () => {
         1,
         10,
         'residencial',
+        undefined,
+      );
+    });
+
+    it('should forward the free-text search term', async () => {
+      mockFindAllUseCase.execute.mockResolvedValue({
+        data: [],
+        meta: { total: 0, page: 1, limit: 10 },
+      });
+
+      await service.getCategorias(1, 10, undefined, 'resid');
+
+      expect(mockFindAllUseCase.execute).toHaveBeenCalledWith(
+        1,
+        10,
+        undefined,
+        'resid',
       );
     });
   });

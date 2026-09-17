@@ -12,6 +12,7 @@ Este directorio contiene el registro formal de las decisiones arquitectónicas c
 | [ADR-002](./ADR-002-inmutabilidad-lecturas-fisicas-y-resolucion-anomalias.md) | Inmutabilidad de lecturas físicas en BD y resolución económica de anomalías | **Aceptado** | 2026-08-23 | PR #236 (SC-192) |
 | [ADR-003](./ADR-003-ordenes-trabajo-evidencia-y-lecturas.md) | Órdenes de trabajo, evidencia y lecturas operativas | **Aceptado** | 2026-08-28 | — |
 | [ADR-004](./ADR-004-anomalias-de-lectura-y-novedades-operativas.md) | Anomalías de lectura y novedades operativas | **Propuesto** | 2026-08-28 | — |
+| [ADR-005](./ADR-005-novedades-ordenes-trabajo-reemplazo-lectura-anomalia.md) | Novedades de órdenes de trabajo como reemplazo de `LecturaAnomalia` | **Aceptado** | 2026-09-01 | — |
 
 ---
 

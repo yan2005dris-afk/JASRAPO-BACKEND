@@ -1,0 +1,49 @@
+model NovedadOrdenTrabajo {
+  novedadId             BigInt                       @id @default(autoincrement()) @map("novedad_id")
+  ordenTrabajoId        BigInt                       @map("orden_trabajo_id")
+  lecturaId             BigInt?                      @map("lectura_id")
+  observacion           String?                      @map("observacion")
+  tipo                  TipoAnomalia                 @map("tipo")
+  estado                EstadoNovedad                @default(OPEN) @map("estado")
+  resolucionTipo        ResolucionEconomicaAnomalia? @map("resolucion_tipo")
+  consumoAjustado       Decimal?                     @map("consumo_ajustado") @db.Decimal(18, 2)
+  observacionResolucion String?                      @map("observacion_resolucion")
+  resueltoPorUsuarioId  Int?                         @map("resuelto_por_usuario_id")
+  resueltoEn            DateTime?                    @map("resuelto_en")
+  createdAt             DateTime                     @default(now()) @map("creado_en")
+  updatedAt             DateTime                     @updatedAt @map("actualizado_en")
+  deletedAt             DateTime?                    @map("borrado_en")
+  fotoUrl               String?                      @map("foto_url")
+  legacyAnomaliaId      BigInt?                      @unique @map("legacy_anomalia_id")
+
+  ordenTrabajo          OrdenesTrabajo               @relation(fields: [ordenTrabajoId], references: [ordenTrabajoId], onDelete: Restrict)
+  lectura               Lecturas?                    @relation(fields: [lecturaId], references: [lecturaId], onDelete: Restrict)
+  resueltoPor           Usuarios?                    @relation("NovedadResueltaPor", fields: [resueltoPorUsuarioId], references: [usuarioId], onDelete: Restrict)
+
+  @@index([ordenTrabajoId, estado])
+  @@index([ordenTrabajoId])
+  @@index([lecturaId])
+  @@map("novedades_ordenes_trabajo")
+}
+
+enum EstadoNovedad {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CANCELLED
+}
+
+enum TipoAnomalia {
+  FUGA
+  MEDIDOR_DAÑADO
+  LECTURA_ERRONEA
+  OTRO
+}
+
+enum ResolucionEconomicaAnomalia {
+  COBRO_REAL
+  PROMEDIO_HISTORICO
+  EXONERACION_PARCIAL
+  EXONERACION_TOTAL
+  AJUSTE_LECTURA
+}

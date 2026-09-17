@@ -20,6 +20,7 @@ export class LecturaEntity {
   periodoId: number;
   tieneAnomalia: boolean;
   estado: string;
+  routeEstado: string | null;
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Date | null;

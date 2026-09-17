@@ -261,10 +261,10 @@ describe('PrismaReadingRepository - soft delete select regression', () => {
       };
       const tx = {
         ordenesTrabajo: {
+          findFirst: jest.fn().mockResolvedValue(null),
           updateMany: jest.fn().mockResolvedValue({ count: 1 }),
         },
         lecturas: { update: jest.fn().mockResolvedValue(updated) },
-        lecturaAnomalia: { findFirst: jest.fn() },
       };
       const prisma = {
         $transaction: jest.fn(
@@ -288,6 +288,7 @@ describe('PrismaReadingRepository - soft delete select regression', () => {
     it('rejects photo evidence when no active linked work order exists', async () => {
       const tx = {
         ordenesTrabajo: {
+          findFirst: jest.fn().mockResolvedValue(null),
           updateMany: jest.fn().mockResolvedValue({ count: 0 }),
         },
         lecturas: { update: jest.fn() },

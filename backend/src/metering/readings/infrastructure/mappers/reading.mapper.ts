@@ -19,6 +19,9 @@ export class ReadingMapper {
         raw.ordenesTrabajo?.find((order: any) => order.evidenciaFotoUrl)
           ?.evidenciaFotoUrl ?? null,
       estado: raw.estado,
+      routeEstado:
+        raw.ordenesTrabajo?.find((order: any) => order.ruta)?.ruta?.estado ??
+        null,
       isValidada: raw.estado !== 'PENDIENTE',
       lecturaInicial: raw.lecturaInicial,
       periodoId: raw.periodoId,
@@ -31,7 +34,7 @@ export class ReadingMapper {
             contratoId: activeContrato.contratoId,
             numeroGuia: activeContrato.numeroGuia,
             direccionSuministro: activeContrato.direccionSuministro,
-            estado: activeContrato.estado,
+            estadoServicio: activeContrato.estadoServicio,
             sector: activeContrato.sector
               ? {
                   nombre: activeContrato.sector.nombre,
