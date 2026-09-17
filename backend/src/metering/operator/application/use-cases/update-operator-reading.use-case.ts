@@ -11,6 +11,11 @@ import { UpdateOperatorReadingDto } from '../../interfaces/dto/update-operator-r
 import { LecturaEntity } from 'src/metering/readings/domain/entities/lectura.entity';
 import { OperatorRepository } from '../../domain/repositories/operator.repository';
 
+export type EvidenceReplacementCleanup = (
+  oldKey: string,
+  newKey: string,
+) => Promise<void>;
+
 const OPERATOR_EDITABLE_ESTADOS: ReadonlySet<EstadoLectura> = new Set([
   EstadoLectura.PENDIENTE,
   EstadoLectura.RECHAZADA_VERIFICACION,
@@ -28,6 +33,7 @@ export class UpdateOperatorReadingUseCase {
     operarioId: number,
     updateDto: UpdateOperatorReadingDto,
     evidenciaFotoUrl?: string,
+    cleanupOldEvidence?: EvidenceReplacementCleanup,
   ): Promise<LecturaEntity> {
     // 1. Validar que la lectura existe y obtener datos de ruta
     const lectura = await this.operatorRepository.findReadingWithDetails(id);
@@ -74,7 +80,10 @@ export class UpdateOperatorReadingUseCase {
     }
 
     // 7. Delegar al UpdateReadingUseCase unificado con state machine
-    return this.updateReadingUseCase.execute(
+    const oldEvidenceKey = lectura.ordenesTrabajo?.find(
+      (order) => order.evidenciaFotoUrl,
+    )?.evidenciaFotoUrl;
+    const updated = await this.updateReadingUseCase.execute(
       id,
       {
         ...(updateDto as ActualizarLecturaDto),
@@ -82,5 +91,9 @@ export class UpdateOperatorReadingUseCase {
       },
       EstadoLectura.POR_REVISION,
     );
+    if (evidenciaFotoUrl && oldEvidenceKey && cleanupOldEvidence) {
+      await cleanupOldEvidence(oldEvidenceKey, evidenciaFotoUrl);
+    }
+    return updated;
   }
 }

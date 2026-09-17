@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { Prisma } from 'src/generated/prisma/client';
-import { EstadoRuta, TipoRuta } from 'src/shared/enums';
+import { EstadoRuta } from 'src/shared/enums';
 import {
   RouteRepository,
   UsuarioRef,
@@ -29,6 +29,7 @@ import type {
 import {
   EntityNotFoundException,
   EntityAlreadyExistsException,
+  InvalidDomainOperationException,
 } from 'src/shared/domain/exceptions/domain.exception';
 
 @Injectable()
@@ -40,6 +41,7 @@ export class PrismaRouteRepository implements RouteRepository {
     includeDeleted: boolean = false,
   ): Promise<RouteEntity | null> {
     const raw = await this.prisma.rutas.findFirst({
+      include: { tipoActividad: { select: { codigo: true } } },
       where: {
         rutaId,
         ...(includeDeleted ? {} : { deletedAt: null }),
@@ -64,13 +66,16 @@ export class PrismaRouteRepository implements RouteRepository {
       ...(filters.periodoId !== undefined
         ? { periodoId: filters.periodoId }
         : {}),
-      ...(filters.tipoRuta ? { tipoRuta: filters.tipoRuta as TipoRuta } : {}),
+      ...(filters.tipoRuta
+        ? { tipoActividad: { codigo: filters.tipoRuta } }
+        : {}),
     };
 
     const result = await paginate<any>(
       this.prisma.rutas,
       {
         where,
+        include: { tipoActividad: { select: { codigo: true } } },
         orderBy: { createdAt: 'desc' },
       },
       pagination,
@@ -84,18 +89,25 @@ export class PrismaRouteRepository implements RouteRepository {
 
   async create(data: CreateRouteData): Promise<RouteEntity> {
     try {
+      const tipoActividad = await this.prisma.tipoActividad.findUnique({
+        where: { codigo: data.tipoRuta },
+        select: { tipoActividadId: true },
+      });
+      if (!tipoActividad)
+        throw new EntityNotFoundException('Tipo de actividad', data.tipoRuta);
       const raw = await this.prisma.rutas.create({
         data: {
           nombre: data.nombre,
           descripcion: data.descripcion,
           operarioId: data.operarioId ?? null,
-          tipoRuta: data.tipoRuta as TipoRuta,
+          tipoActividadId: tipoActividad.tipoActividadId,
           comunidadId: data.comunidadId,
           sectorId: data.sectorId ?? null,
           periodoId: data.periodoId ?? null,
           fechaPlanificada: data.fechaPlanificada ?? null,
           estado: (data.estado ?? 'PENDIENTE') as EstadoRuta,
         },
+        include: { tipoActividad: { select: { codigo: true } } },
       });
       return RouteMapper.toEntity(raw);
     } catch (error) {
@@ -111,6 +123,14 @@ export class PrismaRouteRepository implements RouteRepository {
 
   async update(rutaId: bigint, data: UpdateRouteData): Promise<RouteEntity> {
     try {
+      const tipoActividad = data.tipoRuta
+        ? await this.prisma.tipoActividad.findUnique({
+            where: { codigo: data.tipoRuta },
+            select: { tipoActividadId: true },
+          })
+        : null;
+      if (data.tipoRuta && !tipoActividad)
+        throw new EntityNotFoundException('Tipo de actividad', data.tipoRuta);
       const updateData: Prisma.RutasUncheckedUpdateInput = {
         ...(data.nombre !== undefined ? { nombre: data.nombre } : {}),
         ...(data.descripcion !== undefined
@@ -120,7 +140,7 @@ export class PrismaRouteRepository implements RouteRepository {
           ? { operarioId: data.operarioId }
           : {}),
         ...(data.tipoRuta !== undefined
-          ? { tipoRuta: data.tipoRuta as TipoRuta }
+          ? { tipoActividadId: tipoActividad!.tipoActividadId }
           : {}),
         ...(data.comunidadId !== undefined
           ? { comunidadId: data.comunidadId }
@@ -141,6 +161,7 @@ export class PrismaRouteRepository implements RouteRepository {
       const raw = await this.prisma.rutas.update({
         where: { rutaId },
         data: updateData,
+        include: { tipoActividad: { select: { codigo: true } } },
       });
       return RouteMapper.toEntity(raw);
     } catch (error) {
@@ -154,11 +175,94 @@ export class PrismaRouteRepository implements RouteRepository {
     }
   }
 
+  async updateWithReadingKpis(
+    rutaId: bigint,
+    expectedEstado: string,
+    data: UpdateRouteData,
+  ): Promise<RouteEntity> {
+    return this.prisma.$transaction(
+      async (tx) => {
+        const route = await tx.rutas.findFirst({
+          where: {
+            rutaId,
+            estado: expectedEstado as EstadoRuta,
+            deletedAt: null,
+          },
+          include: { tipoActividad: { select: { codigo: true } } },
+        });
+        if (!route) {
+          throw new InvalidDomainOperationException(
+            'La ruta fue modificada por otro usuario. Intentalo de nuevo.',
+          );
+        }
+
+        let estado = data.estado;
+        if (
+          data.estado === 'COMPLETADA' &&
+          route.tipoActividad.codigo === 'LECTURA'
+        ) {
+          const estadoGroups = await tx.lecturas.groupBy({
+            by: ['estado'],
+            where: {
+              deletedAt: null,
+              ordenesTrabajo: {
+                some: {
+                  rutaId,
+                  ruta: { tipoActividad: { codigo: 'LECTURA' } },
+                  deletedAt: null,
+                },
+              },
+            },
+            _count: { _all: true },
+          });
+          const total = estadoGroups.reduce(
+            (sum, group) => sum + group._count._all,
+            0,
+          );
+          const aprobadas =
+            estadoGroups.find((group) => group.estado === 'APROBADA')?._count
+              ._all ?? 0;
+          if (total > aprobadas) estado = 'PARCIAL';
+        }
+
+        const raw = await tx.rutas.update({
+          where: { rutaId },
+          data: {
+            ...(data.nombre !== undefined && { nombre: data.nombre }),
+            ...(data.descripcion !== undefined && {
+              descripcion: data.descripcion,
+            }),
+            ...(data.operarioId !== undefined && {
+              operarioId: data.operarioId,
+            }),
+            ...(data.comunidadId !== undefined && {
+              comunidadId: data.comunidadId,
+            }),
+            ...(data.sectorId !== undefined && { sectorId: data.sectorId }),
+            ...(data.periodoId !== undefined && { periodoId: data.periodoId }),
+            ...(estado !== undefined && { estado: estado as EstadoRuta }),
+            ...(data.fechaPlanificada !== undefined && {
+              fechaPlanificada: data.fechaPlanificada,
+            }),
+            ...(data.fechaInicio !== undefined && {
+              fechaInicio: data.fechaInicio,
+            }),
+            ...(data.fechaFin !== undefined && { fechaFin: data.fechaFin }),
+          },
+          include: { tipoActividad: { select: { codigo: true } } },
+        });
+        return RouteMapper.toEntity(raw);
+      },
+      { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+    );
+  }
+
   async softDelete(rutaId: bigint): Promise<RouteEntity> {
     try {
       const raw = await this.prisma.rutas.update({
         where: { rutaId },
         data: { deletedAt: new Date() },
+        include: { tipoActividad: { select: { codigo: true } } },
       });
       return RouteMapper.toEntity(raw);
     } catch (error) {
@@ -241,7 +345,7 @@ export class PrismaRouteRepository implements RouteRepository {
       comunidadId,
       periodoId,
       deletedAt: null,
-      ...(tipoRuta ? { tipoRuta: tipoRuta as any } : {}),
+      ...(tipoRuta ? { tipoActividad: { codigo: tipoRuta } } : {}),
     };
 
     if (sectorId != null) {
@@ -262,7 +366,10 @@ export class PrismaRouteRepository implements RouteRepository {
       };
     }
 
-    const records = await this.prisma.rutas.findMany({ where });
+    const records = await this.prisma.rutas.findMany({
+      include: { tipoActividad: { select: { codigo: true } } },
+      where,
+    });
     return RouteMapper.toEntityList(records);
   }
 
@@ -424,7 +531,7 @@ export class PrismaRouteRepository implements RouteRepository {
       ordenesTrabajo: {
         some: {
           rutaId,
-          tipoActividad: 'LECTURA',
+          ruta: { tipoActividad: { codigo: 'LECTURA' } },
           deletedAt: null,
         },
       },
@@ -476,6 +583,43 @@ export class PrismaRouteRepository implements RouteRepository {
         conNovedad: countByEstado.get('CON_NOVEDAD') ?? 0,
         rechazadas: countByEstado.get('RECHAZADA_VERIFICACION') ?? 0,
       },
+    };
+  }
+
+  async getReadingKpisByRutaId(rutaId: bigint): Promise<LecturaKpis> {
+    const where: Prisma.LecturasWhereInput = {
+      deletedAt: null,
+      ordenesTrabajo: {
+        some: {
+          rutaId,
+          ruta: { tipoActividad: { codigo: 'LECTURA' } },
+          deletedAt: null,
+        },
+      },
+    };
+
+    const estadoGroups = await this.prisma.lecturas.groupBy({
+      by: ['estado'],
+      where,
+      _count: { _all: true },
+    });
+
+    const countByEstado = new Map<string, number>(
+      estadoGroups.map((g) => [g.estado, g._count._all]),
+    );
+
+    const total = estadoGroups.reduce((acc, g) => acc + g._count._all, 0);
+
+    return {
+      total,
+      aprobadas: countByEstado.get('APROBADA') ?? 0,
+      pendientes:
+        (countByEstado.get('PENDIENTE') ?? 0) +
+        (countByEstado.get('POR_REVISION') ?? 0) +
+        (countByEstado.get('ESTIMADA') ?? 0) +
+        (countByEstado.get('PLANILLADA') ?? 0),
+      conNovedad: countByEstado.get('CON_NOVEDAD') ?? 0,
+      rechazadas: countByEstado.get('RECHAZADA_VERIFICACION') ?? 0,
     };
   }
 }

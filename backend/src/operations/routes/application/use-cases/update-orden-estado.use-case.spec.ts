@@ -10,6 +10,7 @@ describe('UpdateOrdenEstadoUseCase', () => {
 
   const mockOrdenTrabajoRepository = {
     updateEstado: jest.fn(),
+    verifyOperatorWorkOrderOwnership: jest.fn(),
   };
 
   const sampleOrden = new OrdenTrabajoEntity({
@@ -49,7 +50,7 @@ describe('UpdateOrdenEstadoUseCase', () => {
   });
 
   it.each(['PENDIENTE', 'EN_PROGRESO', 'COMPLETADA', 'CANCELADA', 'FALLIDA'])(
-    'should accept valid estado %s and delegate to repository',
+    'should accept valid estado %s, verify ownership, and delegate to repository',
     async (estado) => {
       const updated = new OrdenTrabajoEntity({
         ...sampleOrden,
@@ -57,11 +58,18 @@ describe('UpdateOrdenEstadoUseCase', () => {
       });
       mockOrdenTrabajoRepository.updateEstado.mockResolvedValue(updated);
 
-      const result = await useCase.execute(1n, {
-        estado,
-        resultadoObservacion: 'ok',
-      });
+      const result = await useCase.execute(
+        1n,
+        {
+          estado,
+          resultadoObservacion: 'ok',
+        },
+        42,
+      );
 
+      expect(
+        mockOrdenTrabajoRepository.verifyOperatorWorkOrderOwnership,
+      ).toHaveBeenCalledWith(42, 1n);
       expect(mockOrdenTrabajoRepository.updateEstado).toHaveBeenCalledWith(1n, {
         estado,
         resultadoObservacion: 'ok',
@@ -72,11 +80,18 @@ describe('UpdateOrdenEstadoUseCase', () => {
 
   it('should throw InvalidDomainOperationException for invalid estado', async () => {
     await expect(
-      useCase.execute(1n, {
-        estado: 'BOGUS_STATE',
-      }),
+      useCase.execute(
+        1n,
+        {
+          estado: 'BOGUS_STATE',
+        },
+        42,
+      ),
     ).rejects.toThrow(InvalidDomainOperationException);
 
+    expect(
+      mockOrdenTrabajoRepository.verifyOperatorWorkOrderOwnership,
+    ).not.toHaveBeenCalled();
     expect(mockOrdenTrabajoRepository.updateEstado).not.toHaveBeenCalled();
   });
 
@@ -84,8 +99,8 @@ describe('UpdateOrdenEstadoUseCase', () => {
     const dbError = new Error('connection lost');
     mockOrdenTrabajoRepository.updateEstado.mockRejectedValue(dbError);
 
-    await expect(useCase.execute(1n, { estado: 'COMPLETADA' })).rejects.toBe(
-      dbError,
-    );
+    await expect(
+      useCase.execute(1n, { estado: 'COMPLETADA' }, 42),
+    ).rejects.toBe(dbError);
   });
 });

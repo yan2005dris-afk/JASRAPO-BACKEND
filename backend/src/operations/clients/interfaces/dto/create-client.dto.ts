@@ -5,11 +5,13 @@ import {
   ValidateIf,
   IsEmail,
   IsBoolean,
+  IsDateString,
   Min,
   Length,
   MaxLength,
 } from 'class-validator';
 import { IsNotEmptyString } from 'src/infrastructure/common/decorators/is-not-empty-string.decorator';
+import { IsPastDate } from 'src/infrastructure/common/decorators/is-past-date.decorator';
 
 /** IDs del catálogo `catalogo_tipos_identificacion` */
 const CATALOGO = {
@@ -79,10 +81,15 @@ export class CreateClientDto {
   @Length(9, 10)
   telefonoSecundario?: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({
+    description:
+      'Fecha de nacimiento (ISO). Se usa para calcular automáticamente el beneficio de tercera edad; no se persiste.',
+    example: '1955-04-20',
+  })
   @IsOptional()
-  @IsBoolean()
-  aplicaTerceraEdad?: boolean;
+  @IsDateString()
+  @IsPastDate({ message: 'La fecha de nacimiento debe estar en el pasado' })
+  fechaNacimiento?: string;
 
   @ApiPropertyOptional()
   @IsOptional()

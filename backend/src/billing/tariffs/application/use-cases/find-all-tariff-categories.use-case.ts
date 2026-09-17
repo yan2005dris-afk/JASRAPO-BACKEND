@@ -11,9 +11,10 @@ export class FindAllTariffCategoriesUseCase {
     page = 1,
     limit = 10,
     nombre?: string,
+    search?: string,
   ): Promise<PaginatedResult<TariffCategoryEntity>> {
     return this.tariffRepository.paginate(
-      { nombre, activo: true },
+      { nombre, search, activo: true },
       { page, limit },
     );
   }

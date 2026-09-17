@@ -29,7 +29,7 @@ describe('RoutesService', () => {
     rutaId: 1n,
     nombre: 'Ruta 1',
     operarioId: 1,
-    tipoRuta: 'TOMA_LECTURA',
+    tipoRuta: 'LECTURA',
     comunidadId: 1,
     periodoId: 1,
     estado: 'PENDIENTE',
@@ -91,7 +91,7 @@ describe('RoutesService', () => {
 
   it('getEligibleReadings should delegate to GetEligibleReadingsUseCase', async () => {
     const filterDto = {
-      tipoRuta: 'TOMA_LECTURA' as const,
+      tipoRuta: 'LECTURA' as const,
       comunidadId: 1,
       page: 1,
       limit: 10,
@@ -104,7 +104,7 @@ describe('RoutesService', () => {
     await service.getEligibleReadings(filterDto);
 
     expect(getEligibleReadingsUseCase.execute).toHaveBeenCalledWith({
-      tipoRuta: 'TOMA_LECTURA',
+      tipoRuta: 'LECTURA',
       comunidadId: 1,
       sectorId: undefined,
       search: undefined,
@@ -118,7 +118,7 @@ describe('RoutesService', () => {
     const dto = {
       nombre: 'Ruta 1',
       operarioId: 1,
-      tipoRuta: 'TOMA_LECTURA',
+      tipoRuta: 'LECTURA',
       comunidadId: 1,
       periodoId: 1,
     };

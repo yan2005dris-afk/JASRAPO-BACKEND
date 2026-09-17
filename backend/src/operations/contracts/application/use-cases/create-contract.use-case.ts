@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { EstadoContrato } from 'src/shared/enums';
+import { ContractState } from '../../domain/contract-state';
+import { EstadoServicioContrato } from 'src/shared/enums';
 import { ContractRepository } from '../../domain/repositories/contract.repository';
 import { CrearContratoMedidorDto } from '../../interfaces/dto/create-contrato-medidor.dto';
 import { ContractEntity } from '../../domain/entities/contract.entity';
@@ -9,6 +10,13 @@ export class CreateContractUseCase {
   constructor(private readonly contractRepository: ContractRepository) {}
 
   async execute(dto: CrearContratoMedidorDto): Promise<ContractEntity> {
+    const estadoServicio =
+      dto.estadoServicio ?? EstadoServicioContrato.PENDIENTE_PAGO;
+    const estadoCobranza = ContractState.normalizeCollectionStatus(
+      dto.estadoCobranza,
+      estadoServicio,
+    );
+
     return this.contractRepository.createContractWithMeterHistory({
       clienteId: BigInt(dto.clienteId),
       categoriaTarifaId: Number(dto.categoriaTarifaId),
@@ -17,7 +25,8 @@ export class CreateContractUseCase {
       sectorId: dto.sectorId ? Number(dto.sectorId) : null,
       numeroGuia: dto.numeroGuia,
       direccionSuministro: dto.direccionSuministro,
-      estado: (dto.estado || EstadoContrato.PENDIENTE_PAGO) as EstadoContrato,
+      estadoServicio,
+      estadoCobranza,
       creadoPor: dto.creadoPor,
       lecturaInicial: dto.lecturaInicial ?? 0,
     });

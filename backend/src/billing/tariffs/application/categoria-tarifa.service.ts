@@ -29,8 +29,9 @@ export class CategoriaTarifaService {
     page = 1,
     limit = 10,
     nombre?: string,
+    search?: string,
   ): Promise<PaginatedResult<TariffCategoryEntity>> {
-    return this.findAllUseCase.execute(page, limit, nombre);
+    return this.findAllUseCase.execute(page, limit, nombre, search);
   }
 
   async findOneCategoria(id: number): Promise<TariffCategoryEntity> {

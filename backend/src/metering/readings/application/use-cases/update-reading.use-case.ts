@@ -45,6 +45,14 @@ export class UpdateReadingUseCase {
       );
     }
 
+    const rutaEstado =
+      await this.readingRepository.findRouteStateByReadingId(id);
+    if (rutaEstado !== null && rutaEstado !== 'EN_PROGRESO') {
+      throw new InvalidDomainOperationException(
+        'No se pueden registrar lecturas en una ruta pendiente',
+      );
+    }
+
     // Build update payload — solo campos que el usuario envió
     const dataToUpdate = Object.fromEntries(
       Object.entries(updateDto).filter(([_, v]) => v !== undefined),

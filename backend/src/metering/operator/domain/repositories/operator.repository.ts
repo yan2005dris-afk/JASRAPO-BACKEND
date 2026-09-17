@@ -27,6 +27,7 @@ export interface ReadingWithDetails {
   estado: string;
   ordenesTrabajo?: Array<{
     rutaId: bigint;
+    evidenciaFotoUrl?: string | null;
     operarioId?: number;
     ruta?: {
       operarioId: number | null;

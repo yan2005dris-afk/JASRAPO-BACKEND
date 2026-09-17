@@ -54,7 +54,8 @@ export class PrismaBusquedaPublicaRepository implements BusquedaPublicaRepositor
       contratos: r.contratos.map((c) => ({
         contratoId: c.contratoId,
         numeroGuia: c.numeroGuia,
-        estado: c.estado,
+        estadoServicio: c.estadoServicio,
+        estadoCobranza: c.estadoCobranza,
         prefacturasImpagadas: c.prefacturas,
       })),
     }));
@@ -103,7 +104,8 @@ export class PrismaBusquedaPublicaRepository implements BusquedaPublicaRepositor
     return rows.map((r) => ({
       contratoId: r.contratoId,
       numeroGuia: r.numeroGuia,
-      estado: r.estado,
+      estadoServicio: r.estadoServicio,
+      estadoCobranza: r.estadoCobranza,
       cliente: r.cliente,
       prefacturasImpagadas: r.prefacturas,
     }));

@@ -10,7 +10,6 @@ describe('ContratoMedidorController', () => {
   let controller: ContratoMedidorController;
 
   const mockService = {
-    getContractStatesCatalog: jest.fn(),
     crearContrato: jest.fn(),
     buscarContratos: jest.fn(),
     buscarContrato: jest.fn(),
@@ -28,7 +27,8 @@ describe('ContratoMedidorController', () => {
     numeroGuia: 'G-001',
     fechaInicio: new Date('2026-01-01'),
     direccionSuministro: 'Av. 1',
-    estado: 'ACTIVO',
+    estadoServicio: 'ACTIVO',
+    estadoCobranza: 'AL_DIA',
     comunidadId: 1,
   });
 
@@ -53,27 +53,16 @@ describe('ContratoMedidorController', () => {
     expect(controller).toBeDefined();
   });
 
-  it('getContractStates should return state catalog', () => {
-    mockService.getContractStatesCatalog.mockReturnValue([
-      { value: 'ACTIVO', label: 'Activo' },
-    ]);
-
-    const result = controller.getContractStates();
-
-    expect(result).toHaveLength(1);
-    expect(result[0].value).toBe('ACTIVO');
-  });
-
   it('crear should return ContractResponseDto', async () => {
     mockService.crearContrato.mockResolvedValue(sampleContract);
 
     const result = await controller.crear({
       clienteId: '10',
-      categoriaTarifaId: 1,
+      categoriaTarifaId: '1',
       medidorId: '100',
       numeroGuia: 'G-001',
       direccionSuministro: 'Av. 1',
-      comunidadId: 1,
+      comunidadId: '1',
     });
 
     expect(result.contratoId).toBe(1n);
@@ -104,7 +93,7 @@ describe('ContratoMedidorController', () => {
     mockService.actualizar.mockResolvedValue(sampleContract);
 
     const result = await controller.actualizarContrato(1n, {
-      estado: 'ACTIVO',
+      estadoServicio: 'ACTIVO',
     });
 
     expect(result.contratoId).toBe(1n);

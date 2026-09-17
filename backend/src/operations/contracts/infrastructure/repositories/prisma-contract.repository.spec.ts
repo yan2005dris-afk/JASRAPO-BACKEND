@@ -52,7 +52,8 @@ describe('PrismaContractRepository', () => {
     numeroGuia: 'G-001',
     fechaInicio: new Date('2026-01-01'),
     direccionSuministro: 'Av. Principal',
-    estado: 'ACTIVO',
+    estadoServicio: 'ACTIVO',
+    estadoCobranza: 'AL_DIA',
     creadoPor: 'admin',
     comunidadId: 1,
     deletedAt: null,
@@ -119,7 +120,7 @@ describe('PrismaContractRepository', () => {
       prisma.contratos.count.mockResolvedValue(1);
 
       const result = await repository.paginateContratos(
-        { filters: { estado: 'ACTIVO' } },
+        { filters: { estadoServicio: 'ACTIVO' } },
         { skip: 0, take: 10 },
       );
 
@@ -139,7 +140,8 @@ describe('PrismaContractRepository', () => {
         numeroGuia: 'G-001',
         direccionSuministro: 'Av. 1',
         comunidadId: 1,
-        estado: 'ACTIVO',
+        estadoServicio: 'ACTIVO',
+        estadoCobranza: 'AL_DIA',
         fechaInicio: new Date('2026-01-01'),
       });
 
@@ -160,7 +162,8 @@ describe('PrismaContractRepository', () => {
           numeroGuia: 'G-001',
           direccionSuministro: 'Av. 1',
           comunidadId: 1,
-          estado: 'ACTIVO' as any,
+          estadoServicio: 'ACTIVO',
+          estadoCobranza: 'AL_DIA',
           fechaInicio: new Date('2026-01-01'),
         }),
       ).rejects.toThrow(EntityAlreadyExistsException);
@@ -171,14 +174,14 @@ describe('PrismaContractRepository', () => {
     it('should update and return entity', async () => {
       prisma.contratos.update.mockResolvedValue({
         ...rawContract,
-        estado: 'SUSPENDIDO',
+        estadoServicio: 'SUSPENDIDO',
       });
 
       const result = await repository.update(1n, {
-        estado: 'SUSPENDIDO',
+        estadoServicio: 'SUSPENDIDO',
       });
 
-      expect(result.estado).toBe('SUSPENDIDO');
+      expect(result.estadoServicio).toBe('SUSPENDIDO');
     });
 
     it('should throw EntityNotFoundException on P2025', async () => {
@@ -228,12 +231,14 @@ describe('PrismaContractRepository', () => {
         },
         sectores: { findUnique: jest.fn() },
         contratos: {
-          create: jest
-            .fn()
-            .mockResolvedValue({ ...rawContract, estado: 'PENDIENTE_PAGO' }),
-          findUnique: jest
-            .fn()
-            .mockResolvedValue({ ...rawContract, estado: 'PENDIENTE_PAGO' }),
+          create: jest.fn().mockResolvedValue({
+            ...rawContract,
+            estadoServicio: 'PENDIENTE_PAGO',
+          }),
+          findUnique: jest.fn().mockResolvedValue({
+            ...rawContract,
+            estadoServicio: 'PENDIENTE_PAGO',
+          }),
         },
         historialMedidores: { create: jest.fn() },
         $executeRaw: jest.fn().mockResolvedValue(1),
@@ -249,7 +254,8 @@ describe('PrismaContractRepository', () => {
         sectorId: null,
         numeroGuia: 'G-001',
         direccionSuministro: 'Av. 1',
-        estado: 'PENDIENTE_PAGO',
+        estadoServicio: 'PENDIENTE_PAGO',
+        estadoCobranza: 'AL_DIA',
         lecturaInicial: 0,
       });
 
@@ -292,7 +298,8 @@ describe('PrismaContractRepository', () => {
           sectorId: null,
           numeroGuia: 'G-001',
           direccionSuministro: 'Av. 1',
-          estado: 'PENDIENTE_PAGO' as any,
+          estadoServicio: 'PENDIENTE_PAGO' as any,
+          estadoCobranza: 'AL_DIA' as any,
           lecturaInicial: 0,
         }),
       ).rejects.toThrow(InvalidDomainOperationException);

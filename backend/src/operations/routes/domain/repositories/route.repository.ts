@@ -63,6 +63,12 @@ export abstract class RouteRepository {
 
   abstract update(rutaId: bigint, data: UpdateRouteData): Promise<RouteEntity>;
 
+  abstract updateWithReadingKpis(
+    rutaId: bigint,
+    expectedEstado: string,
+    data: UpdateRouteData,
+  ): Promise<RouteEntity>;
+
   abstract softDelete(rutaId: bigint): Promise<RouteEntity>;
 
   abstract findUsuario(
@@ -105,4 +111,6 @@ export abstract class RouteRepository {
     rutaId: bigint,
     pagination: PaginateOptions,
   ): Promise<PaginatedResult<ReadingForRouteEntity, LecturaKpis>>;
+
+  abstract getReadingKpisByRutaId(rutaId: bigint): Promise<LecturaKpis>;
 }

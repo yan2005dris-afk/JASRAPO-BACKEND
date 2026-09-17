@@ -12,6 +12,13 @@ export async function seedRoutes(prisma: PrismaClient) {
     return { rutasCreadas: 0, lecturasInicializadas: 0 };
   }
 
+  const tipoActividads = await prisma.tipoActividad.findMany({
+    select: { tipoActividadId: true, codigo: true },
+  });
+  const tipoActividadIdByCode = new Map(
+    tipoActividads.map((type) => [type.codigo, type.tipoActividadId]),
+  );
+
   const operadores = await prisma.usuarios.findMany({
     where: { rol: { nombre: 'operadores' } },
     select: { usuarioId: true },
@@ -40,7 +47,7 @@ export async function seedRoutes(prisma: PrismaClient) {
   });
 
   const contratos = await prisma.contratos.findMany({
-    where: { estado: 'ACTIVO', deletedAt: null },
+    where: { estadoServicio: 'ACTIVO', deletedAt: null },
     orderBy: [
       { comunidadId: 'asc' },
       { sectorId: 'asc' },
@@ -101,7 +108,7 @@ export async function seedRoutes(prisma: PrismaClient) {
 
     const existingRuta = await prisma.rutas.findFirst({
       where: {
-        tipoRuta: 'TOMA_LECTURA',
+        tipoActividad: { codigo: 'LECTURA' },
         comunidadId: zone.comunidadId,
         sectorId: zone.sectorId,
         periodoId: periodo.periodoId,
@@ -115,7 +122,7 @@ export async function seedRoutes(prisma: PrismaClient) {
       createdRuta = await prisma.rutas.create({
         data: {
           nombre: rutaNombre,
-          tipoRuta: 'TOMA_LECTURA',
+          tipoActividadId: tipoActividadIdByCode.get('LECTURA')!,
           operarioId,
           comunidadId: zone.comunidadId,
           sectorId: zone.sectorId,
@@ -173,7 +180,6 @@ export async function seedRoutes(prisma: PrismaClient) {
           where: {
             rutaId: createdRuta.rutaId,
             contratoId: contractHist.contratoId,
-            tipoActividad: 'LECTURA',
           },
         });
 
@@ -184,7 +190,6 @@ export async function seedRoutes(prisma: PrismaClient) {
               contratoId: contractHist.contratoId,
               medidorId,
               lecturaId: currentLecturaId,
-              tipoActividad: 'LECTURA',
               estado: 'PENDIENTE',
               ordenVisita: visitOrder++,
             },
@@ -196,7 +201,7 @@ export async function seedRoutes(prisma: PrismaClient) {
 
   // Sample work-order routes (INSTALACION, RECONEXION, INSPECCION)
   const allActiveContratos = await prisma.contratos.findMany({
-    where: { deletedAt: null },
+    where: { estadoServicio: 'ACTIVO', deletedAt: null },
     include: {
       historialMedidores: { where: { fechaHasta: null } },
       cliente: true,
@@ -238,7 +243,7 @@ export async function seedRoutes(prisma: PrismaClient) {
       const ruta = await prisma.rutas.create({
         data: {
           nombre: def.nombre,
-          tipoRuta: def.tipo,
+          tipoActividadId: tipoActividadIdByCode.get(def.tipo)!,
           operarioId: operadores[i % operadores.length].usuarioId,
           comunidadId: targetContrato.comunidadId,
           sectorId: targetContrato.sectorId,
@@ -257,7 +262,6 @@ export async function seedRoutes(prisma: PrismaClient) {
           rutaId: ruta.rutaId,
           contratoId: targetContrato.contratoId,
           medidorId: assignedMedidorId,
-          tipoActividad: def.tipo,
           estado: 'PENDIENTE',
           ordenVisita: 1,
           resultadoObservacion: null,

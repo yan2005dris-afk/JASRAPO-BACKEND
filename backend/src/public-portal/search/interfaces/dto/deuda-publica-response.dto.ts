@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { EstadoCobranzaContrato } from 'src/shared/enums';
 
 export class ClienteDeudaPublicaDto {
   @ApiProperty({ example: 'Juan Pablo Pérez' })
@@ -20,7 +21,13 @@ export class ContratoDeudaPublicaDto {
   numeroGuia!: string;
 
   @ApiProperty({ example: 'ACTIVO' })
-  estado!: string;
+  estadoServicio!: string;
+
+  @ApiProperty({
+    enum: EstadoCobranzaContrato,
+    example: EstadoCobranzaContrato.AL_DIA,
+  })
+  estadoCobranza?: EstadoCobranzaContrato;
 
   @ApiProperty({
     example: 150.0,

@@ -18,7 +18,6 @@ export interface CreateOrdenTrabajoData {
   rutaId: bigint;
   contratoId: bigint;
   medidorId?: bigint | null;
-  tipoActividad: string;
   estado?: string;
   ordenVisita?: number;
 }
