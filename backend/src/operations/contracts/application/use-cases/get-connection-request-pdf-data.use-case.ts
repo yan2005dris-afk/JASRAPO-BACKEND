@@ -58,12 +58,13 @@ export class GetConnectionRequestPdfDataUseCase {
     }
 
     const tipoNombre = contrato.categoriaTarifa?.nombre ?? 'Tipo 1';
-    const costoGuia = tipoNombre.includes('1')
-      ? 120
-      : tipoNombre.includes('2')
-        ? 150
-        : 200;
-    const derechoInspeccion = 3.0;
+    const categoriaTarifaId = Number(
+      contrato.categoriaTarifa?.categoriaTarifaId ?? contrato.categoriaTarifaId,
+    );
+    const costos =
+      await this.contractRepository.getConnectionCosts(categoriaTarifaId);
+    const costoGuia = costos.costoGuia ?? 0;
+    const derechoInspeccion = costos.derechoInspeccion ?? 0;
     const costoTotal = derechoInspeccion + costoGuia;
 
     return {
