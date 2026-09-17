@@ -334,4 +334,29 @@ describe('PrismaRouteRepository', () => {
       expect(result.data[0].guia).toBe('G-100');
     });
   });
+
+  describe('getReadingKpisByRutaId', () => {
+    it('filters readings through the LECTURA route relation', async () => {
+      prisma.lecturas.groupBy.mockResolvedValue([
+        { estado: 'APROBADA', _count: { _all: 2 } },
+      ]);
+
+      await repository.getReadingKpisByRutaId(7n);
+
+      expect(prisma.lecturas.groupBy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            deletedAt: null,
+            ordenesTrabajo: {
+              some: {
+                rutaId: 7n,
+                ruta: { tipoActividad: { codigo: 'LECTURA' } },
+                deletedAt: null,
+              },
+            },
+          },
+        }),
+      );
+    });
+  });
 });

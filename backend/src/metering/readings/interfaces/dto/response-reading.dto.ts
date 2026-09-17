@@ -47,6 +47,13 @@ export class ResponseReadingDto {
   @ApiProperty({ description: 'Estado de la lectura', example: 'PENDIENTE' })
   estado: string;
 
+  @ApiProperty({
+    description: 'Estado de la ruta asociada',
+    required: false,
+    nullable: true,
+  })
+  routeEstado?: string | null;
+
   @ApiProperty({ description: 'Contrato asociado', required: false })
   contrato?: {
     contratoId: string;
@@ -106,6 +113,7 @@ export class ResponseReadingDto {
       periodoId: reading.periodoId,
       tieneAnomalia: reading.tieneAnomalia,
       estado: reading.estado,
+      routeEstado: reading.routeEstado,
       contrato: activeContrato
         ? {
             contratoId: activeContrato.contratoId.toString(),

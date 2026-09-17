@@ -16,6 +16,8 @@ describe('UpdateRouteUseCase', () => {
     findPeriodo: jest.fn(),
     findOverlappingRoutes: jest.fn(),
     update: jest.fn(),
+    updateWithReadingKpis: jest.fn(),
+    getReadingKpisByRutaId: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -174,5 +176,71 @@ describe('UpdateRouteUseCase', () => {
     expect(mockRouteRepository.update).toHaveBeenCalledWith(1n, {
       fechaPlanificada: null,
     });
+  });
+
+  it('should keep COMPLETADA when all readings are approved', async () => {
+    const existing = new RouteEntity({
+      rutaId: 1n,
+      nombre: 'Route 1',
+      operarioId: 1,
+      tipoRuta: 'TOMA_LECTURA',
+      comunidadId: 1,
+      periodoId: 1,
+      estado: 'EN_PROGRESO',
+      fechaPlanificada: null,
+      fechaInicio: new Date(),
+      fechaFin: null,
+    });
+
+    mockRouteRepository.findById.mockResolvedValue(existing);
+    mockRouteRepository.getReadingKpisByRutaId.mockResolvedValue({
+      total: 3,
+      aprobadas: 3,
+      pendientes: 0,
+      conNovedad: 0,
+      rechazadas: 0,
+    });
+    mockRouteRepository.updateWithReadingKpis.mockResolvedValue(existing);
+
+    await useCase.execute(1n, { estado: 'COMPLETADA' } as any);
+
+    expect(mockRouteRepository.updateWithReadingKpis).toHaveBeenCalledWith(
+      1n,
+      'EN_PROGRESO',
+      expect.objectContaining({ estado: 'COMPLETADA' }),
+    );
+  });
+
+  it('should downgrade to PARCIAL when there are unapproved readings', async () => {
+    const existing = new RouteEntity({
+      rutaId: 1n,
+      nombre: 'Route 1',
+      operarioId: 1,
+      tipoRuta: 'TOMA_LECTURA',
+      comunidadId: 1,
+      periodoId: 1,
+      estado: 'EN_PROGRESO',
+      fechaPlanificada: null,
+      fechaInicio: new Date(),
+      fechaFin: null,
+    });
+
+    mockRouteRepository.findById.mockResolvedValue(existing);
+    mockRouteRepository.getReadingKpisByRutaId.mockResolvedValue({
+      total: 3,
+      aprobadas: 1,
+      pendientes: 2,
+      conNovedad: 0,
+      rechazadas: 0,
+    });
+    mockRouteRepository.updateWithReadingKpis.mockResolvedValue(existing);
+
+    await useCase.execute(1n, { estado: 'COMPLETADA' } as any);
+
+    expect(mockRouteRepository.updateWithReadingKpis).toHaveBeenCalledWith(
+      1n,
+      'EN_PROGRESO',
+      expect.objectContaining({ estado: 'COMPLETADA' }),
+    );
   });
 });

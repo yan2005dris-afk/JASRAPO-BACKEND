@@ -76,6 +76,8 @@ export class UpdateRouteUseCase {
       }
     }
 
+    const estadoFinal = updateDto.estado;
+
     const payload: UpdateRouteData = {
       ...(updateDto.nombre !== undefined && { nombre: updateDto.nombre }),
       ...(updateDto.descripcion !== undefined && {
@@ -84,7 +86,7 @@ export class UpdateRouteUseCase {
       ...(updateDto.operarioId !== undefined && {
         operarioId: updateDto.operarioId,
       }),
-      ...(updateDto.estado !== undefined && { estado: updateDto.estado }),
+      ...(updateDto.estado !== undefined && { estado: estadoFinal }),
       ...(updateDto.fechaPlanificada !== undefined && {
         fechaPlanificada: DateUtil.parseFrontendDate(
           updateDto.fechaPlanificada ?? null,
@@ -95,12 +97,17 @@ export class UpdateRouteUseCase {
       }),
     };
 
-    if (updateDto.estado === 'EN_PROGRESO' && !ruta.fechaInicio) {
+    if (estadoFinal === 'EN_PROGRESO' && !ruta.fechaInicio) {
       payload.fechaInicio = new Date();
-    } else if (updateDto.estado === 'COMPLETADA' && !ruta.fechaFin) {
+    } else if (
+      (estadoFinal === 'COMPLETADA' || estadoFinal === 'PARCIAL') &&
+      !ruta.fechaFin
+    ) {
       payload.fechaFin = new Date();
     }
 
-    return this.routeRepository.update(rutaId, payload);
+    return updateDto.estado !== undefined
+      ? this.routeRepository.updateWithReadingKpis(rutaId, ruta.estado, payload)
+      : this.routeRepository.update(rutaId, payload);
   }
 }
