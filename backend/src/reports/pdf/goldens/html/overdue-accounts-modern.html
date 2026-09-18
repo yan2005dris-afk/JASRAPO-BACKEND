@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recaudación y Morosidad - Moderno</title>
+    <style>
+      :root {
+        --primary-color: #0c9ea1;
+        --primary-color-light: #dbf7f8;
+        --text-main: #0e2728;
+        --text-muted: #597b7d;
+        --border-color: #cbdedf;
+        --estado-activo: #10b981;
+        --estado-inactivo: #ef4444;
+      }
+    </style>    <style>
+        :root {
+            --brand-main: var(--primary-color, #0c9ea1);
+            --brand-light: var(--primary-color-light, #dbf7f8);
+            --brand-dark: #0e2728;
+            --brand-accent: #0c9ea1;
+            --text-main: #0e2728;
+            --text-muted: #597b7d;
+            --text-light: var(--text-muted, #597b7d);
+            --text-lighter: #8da4a6;
+            --border-color: #cbdedf;
+        }
+
+        @page {
+            margin: 10mm;
+            size: A4 portrait;
+        }
+
+        body {
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 10px;
+            color: var(--text-main);
+            background-color: #ffffff;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        *, *:before, *:after {
+            box-sizing: inherit;
+        }
+
+        .container, .page-container {
+            width: 100%;
+            padding: 0 10px;
+        }
+
+        /* Modern Flex & Table Headers */
+        .header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            border-bottom: 3px solid var(--brand-main);
+            padding-bottom: 16px;
+            margin-bottom: 20px;
+        }
+
+        .header-table {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 2px solid var(--brand-main);
+            padding-bottom: 14px;
+            margin-bottom: 18px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .header-right {
+            text-align: right;
+        }
+
+        .logo-container {
+            width: 50px;
+            height: 50px;
+            flex-shrink: 0;
+        }
+
+        .logo-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .brand-title {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--brand-dark);
+            letter-spacing: -0.5px;
+        }
+
+        .brand-subtitle {
+            font-size: 10px;
+            color: var(--brand-accent);
+            font-weight: 600;
+        }
+
+        .report-title-main {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--brand-dark);
+        }
+
+        .report-meta-text {
+            font-size: 9px;
+            color: var(--text-muted);
+        }
+
+        .title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--brand-dark);
+            letter-spacing: -0.5px;
+            text-transform: uppercase;
+            margin: 0 0 4px 0;
+        }
+
+        .subtitle {
+            color: var(--brand-accent);
+            font-weight: 600;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 0 0 6px 0;
+        }
+
+        .date-info {
+            color: var(--text-light);
+            font-size: 10px;
+            margin: 0;
+        }
+
+        .date-info span {
+            font-weight: 600;
+            color: var(--brand-main);
+        }
+
+        .total-label-sm {
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            font-weight: 700;
+            margin: 0 0 2px 0;
+        }
+
+        .total-amount-lg {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--brand-dark);
+            margin: 0;
+        }
+
+        /* Modern Table Styles */
+        .modern-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+            font-size: 9px;
+        }
+
+        .modern-table th {
+            background-color: var(--brand-main);
+            color: #ffffff;
+            padding: 7px 8px;
+            text-align: left;
+            font-weight: 700;
+            font-size: 8.5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border: none;
+        }
+
+        .modern-table td {
+            padding: 6px 8px;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 9px;
+            color: var(--text-main);
+            vertical-align: middle;
+        }
+
+        .modern-table tr:nth-child(even) td {
+            background-color: #f8fafc;
+        }
+
+        .footer-note {
+            text-align: center;
+            font-size: 8.5px;
+            color: var(--text-lighter);
+            border-top: 1px solid #e2e8f0;
+            padding-top: 10px;
+        }
+    </style>
+    <style>
+        .header-right {
+            text-align: right;
+            border-left: 2px solid var(--brand-light);
+            padding-left: 24px;
+        }
+
+        .total-label-sm {
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-light);
+            font-weight: 700;
+            margin: 0 0 4px 0;
+        }
+
+        .total-amount-lg {
+            font-size: 26px;
+            font-weight: 700;
+            color: var(--danger, #c0392b);
+            margin: 0;
+        }
+
+        .metrics-box {
+            display: flex;
+            justify-content: space-between;
+            background-color: var(--brand-light);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+
+        .metric-col {
+            border-left: 1px solid #cbd5e1;
+            padding-left: 24px;
+        }
+
+        .metric-col:first-child {
+            border-left: none;
+            padding-left: 0;
+        }
+
+        .metric-col-right {
+            flex: 1;
+            text-align: right;
+        }
+
+        .metric-label {
+            font-size: 9px;
+            text-transform: uppercase;
+            font-weight: 700;
+            color: var(--brand-accent);
+            letter-spacing: 0.5px;
+            margin: 0 0 4px 0;
+        }
+
+        .metric-value {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--brand-dark);
+            margin: 0;
+        }
+
+        .table-container {
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 9px;
+        }
+
+        th {
+            background-color: var(--brand-main);
+            color: #ffffff;
+            padding: 10px 12px;
+            text-align: left;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        th.text-right { text-align: right; }
+        td.text-right { text-align: right; }
+        th.text-center { text-align: center; }
+        td.text-center { text-align: center; }
+
+        td {
+            padding: 9px 12px;
+            vertical-align: middle;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        tr:nth-child(even) td {
+            background-color: #f8fafc;
+        }
+
+        .col-guia { font-weight: 700; color: var(--brand-dark); }
+        .col-cliente { color: #1e293b; font-weight: 500; }
+        .col-muted { color: var(--text-light); }
+        .col-deuda { font-weight: 700; color: var(--danger, #c0392b); }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 9px;
+            border-radius: 999px;
+            font-weight: 700;
+            font-size: 8.5px;
+        }
+
+        .badge-warn { background: #fef3c7; color: #92660b; }
+        .badge-danger { background: #fde2e0; color: #c0392b; }
+
+        .empty-row td {
+            text-align: center;
+            color: var(--text-light);
+            padding: 24px 12px;
+        }
+
+        .footer-container {
+            margin-top: 30px;
+            display: flex;
+            justify-content: flex-end;
+            page-break-inside: avoid;
+        }
+
+        .footer-box {
+            background-color: var(--brand-main);
+            color: #ffffff;
+            border-radius: 6px;
+            padding: 16px 32px;
+            text-align: right;
+            min-width: 260px;
+        }
+
+        .footer-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            font-weight: 700;
+            color: var(--brand-light);
+            letter-spacing: 1px;
+            margin: 0 0 6px 0;
+            opacity: 0.9;
+        }
+
+        .footer-value {
+            font-size: 24px;
+            font-weight: 700;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <header class="header">
+        <div class="header-left">
+            <div class="logo-container">
+                <img src="data:image/jpeg;base64,PDF_LOGO_DATA&#x3D;&#x3D;" alt="Logo institucional">
+            </div>
+            <div>
+                <h1 class="title">Recaudación y Morosidad</h1>
+                <p class="subtitle">JUNTA ADMINISTRADORA DE AGUA POTABLE OLON</p>
+                <p class="date-info">
+                    Generado el: <span>20/5/2024</span>
+                    · Versión documental: <span>v1</span>
+                </p>
+            </div>
+        </div>
+        <div class="header-right">
+            <p class="total-label-sm">Total Morosidad</p>
+            <p class="total-amount-lg">$100.00</p>
+        </div>
+    </header>
+
+    <div class="metrics-box">
+        <div class="metric-col">
+            <p class="metric-label">Filtro</p>
+            <p class="metric-value">Todos los clientes</p>
+        </div>
+        <div class="metric-col">
+            <p class="metric-label">Cuentas en mora</p>
+            <p class="metric-value">2</p>
+        </div>
+        <div class="metric-col metric-col-right">
+            <p class="metric-label">Mayor deuda individual</p>
+            <p class="metric-value">$77.50</p>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 14%;">N° Guía</th>
+                    <th style="width: 26%;">Cliente</th>
+                    <th style="width: 13%;">Identificación</th>
+                    <th style="width: 16%;">Sector</th>
+                    <th class="text-center" style="width: 11%;">Meses Mora</th>
+                    <th class="text-center" style="width: 9%;">Últ. Emisión</th>
+                    <th class="text-right" style="width: 11%;">Deuda Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="col-guia">G-001</td>
+                    <td class="col-cliente">Ana Pérez</td>
+                    <td class="col-muted">0912345678</td>
+                    <td>Sector Norte</td>
+                    <td class="text-center">
+                        <span class="badge badge-danger">
+                            3 meses
+                        </span>
+                    </td>
+                    <td class="text-center col-muted">2024</td>
+                    <td class="text-right col-deuda">$77.50</td>
+                </tr>
+                <tr>
+                    <td class="col-guia">G-002</td>
+                    <td class="col-cliente">Comercial Olón</td>
+                    <td class="col-muted">0999999999001</td>
+                    <td>Sector Sur</td>
+                    <td class="text-center">
+                        <span class="badge badge-warn">
+                            1 mes
+                        </span>
+                    </td>
+                    <td class="text-center col-muted">2024</td>
+                    <td class="text-right col-deuda">$22.50</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="footer-container">
+        <div class="footer-box">
+            <p class="footer-label">Total General Morosidad</p>
+            <p class="footer-value">$100.00</p>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>

@@ -482,6 +482,7 @@ export class ReportsController {
       'overdue-accounts',
       {
         clienteId: body.clienteId,
+        contratoId: body.contratoId,
         sectorId: body.sectorId,
         fechaCorte: body.fechaCorte,
       },

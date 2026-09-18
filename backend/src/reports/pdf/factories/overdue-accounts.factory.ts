@@ -1,5 +1,4 @@
 import type { PdfDocumentType } from 'src/infrastructure/pdf/document-type.interface';
-import type { OfficialDocument } from 'src/institutional-profile/domain/institutional-profile.types';
 import type {
   OverdueAccountItem,
   OverdueAccountsReportDocument,
@@ -7,15 +6,13 @@ import type {
 
 export type OverdueAccountsStyle = 'legacy' | 'modern';
 
-type OverdueAccountsDocument = OfficialDocument<OverdueAccountsReportDocument>;
-
 interface OverdueAccountsPdfRow extends OverdueAccountItem {
   mesesLabel: string;
   severidadCritica: boolean;
 }
 
 export type OverdueAccountsPdfViewModel = Omit<
-  OverdueAccountsDocument,
+  OverdueAccountsReportDocument,
   'data'
 > & {
   titulo: string;
@@ -24,7 +21,7 @@ export type OverdueAccountsPdfViewModel = Omit<
 
 export function createOverdueAccountsPdfDocumentType(
   style: OverdueAccountsStyle,
-): PdfDocumentType<OverdueAccountsDocument, OverdueAccountsPdfViewModel> {
+): PdfDocumentType<OverdueAccountsReportDocument, OverdueAccountsPdfViewModel> {
   const isLegacy = style === 'legacy';
 
   return {

@@ -7,7 +7,6 @@ import {
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
 import { ReportEmailQueue } from '../report-email-queue.port';
-import type { ReportKey } from '../report-style.service';
 import {
   REPORT_EMAIL_STRATEGIES,
   type ReportEmailStrategyMap,
@@ -47,7 +46,7 @@ export class SendReportByEmailUseCase {
     params: SendReportByEmailParams,
   ): Promise<SendReportByEmailResult> {
     const { context } = params;
-    const reportType = context.reportType as ReportKey;
+    const reportType = context.reportType;
     const strategy = this.strategies[reportType];
     if (!strategy) {
       throw new NotFoundException(

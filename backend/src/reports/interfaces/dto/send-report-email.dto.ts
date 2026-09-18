@@ -1,5 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import {
+  IsDateString,
   IsEmail,
   IsOptional,
   IsString,
@@ -92,11 +93,11 @@ export class SendReportEmailDto {
 
   @ApiPropertyOptional({
     description:
-      'Fecha de corte del reporte de morosidad (mismo filtro que el endpoint GET).',
+      'Fecha de corte del reporte de morosidad (YYYY-MM-DD, mismo filtro que el endpoint GET).',
   })
   @IsOptional()
-  @IsString()
   @Transform(({ value }) => (value === '' ? undefined : value))
+  @IsDateString()
   fechaCorte?: string;
 
   @ApiPropertyOptional({
