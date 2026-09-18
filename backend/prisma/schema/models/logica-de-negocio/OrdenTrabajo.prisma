@@ -27,7 +27,6 @@ model OrdenesTrabajo {
   medidor              Medidores?           @relation(fields: [medidorId], references: [medidorId], onDelete: SetNull)
   lectura              Lecturas?            @relation(fields: [lecturaId], references: [lecturaId], onDelete: SetNull)
   reemplazosMedidor     ReemplazoMedidor[]
-  ejecucionOrdenTrabajo EjecucionesOrdenTrabajo?
   novedades             NovedadOrdenTrabajo[]
 
   @@index([rutaId])
