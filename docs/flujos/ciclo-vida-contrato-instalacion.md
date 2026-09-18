@@ -295,7 +295,7 @@ La orden creada tiene `tipoActividad` derivado de la ruta (`INSTALACION`) y esta
 
 - `PATCH /work-orders/:id/state` actualiza el estado administrativo de la orden. Al pasar a `COMPLETADA`, `FALLIDA` o `CANCELADA`, establece `completadoEn` si aún no existe; al reabrir a `PENDIENTE` o `EN_PROGRESO`, lo limpia.
 - `PATCH /operator/work-orders/:id` permite al operario actualizar una orden técnica, siempre que tenga medidor y la orden pertenezca al medidor/ruta autorizados. Para instalación puede enviar estado, observación, evidencia y datos operativos.
-- En el repositorio inspeccionado, estas operaciones persisten la orden y, en el flujo de operario, la ejecución asociada. No se encontró una llamada que actualice automáticamente `contratos.estadoServicio` al completar una orden de instalación.
+- En el repositorio inspeccionado, estas operaciones persisten la orden y, en el flujo de operario, su resultado genérico. No se encontró una llamada que actualice automáticamente `contratos.estadoServicio` al completar una orden de instalación.
 
 ## Diagrama de secuencia
 

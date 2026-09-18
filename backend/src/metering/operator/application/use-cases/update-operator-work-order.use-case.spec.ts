@@ -75,29 +75,11 @@ describe('UpdateOperatorWorkOrderUseCase', () => {
     expect(orders.updateOperatorWorkOrder).not.toHaveBeenCalled();
   });
 
-  it('rejects reconnection without seal confirmation', async () => {
-    orders.findById.mockResolvedValue(order(TipoActividadCodes.RECONEXION));
-    await expect(
-      useCase.execute(1n, 7, { confirmacionRetiroSello: false }, undefined),
-    ).rejects.toThrow('retiro del sello');
-  });
-
-  it('rejects partial inspection execution fields', async () => {
-    orders.findById.mockResolvedValue(order(TipoActividadCodes.INSPECCION));
-    await expect(
-      useCase.execute(1n, 7, { estadoSellos: 'INTEGRO' }, undefined),
-    ).rejects.toThrow('estado de sellos');
-    expect(orders.updateOperatorWorkOrder).not.toHaveBeenCalled();
-  });
-
-  it('maps dates and activity fields and delegates the exact data', async () => {
+  it('maps generic order fields and delegates the exact data', async () => {
     const dto = {
-      estado: 'COMPLETADA',
+      estado: 'COMPLETADA' as const,
       resultadoObservacion: 'ok',
       completadoEn: date.toISOString(),
-      estadoSellos: 'INTEGRO',
-      hayFugas: false,
-      confirmacionRetiroSello: true,
     };
     await useCase.execute(1n, 7, dto, 'rustfs/key');
     expect(orders.updateOperatorWorkOrder).toHaveBeenCalledWith(1n, {
@@ -105,9 +87,6 @@ describe('UpdateOperatorWorkOrderUseCase', () => {
       resultadoObservacion: 'ok',
       evidenciaFotoUrl: 'rustfs/key',
       completadoEn: date,
-      estadoSellos: 'INTEGRO',
-      hayFugas: false,
-      confirmacionRetiroSello: true,
     });
   });
 

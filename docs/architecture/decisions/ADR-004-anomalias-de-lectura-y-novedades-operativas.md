@@ -1,7 +1,7 @@
 # ADR-004: Anomalías de lectura y novedades operativas
 
-- **Estado:** Propuesto
-- **Fecha:** 2026-08-28
+- **Estado:** Aceptado
+- **Fecha:** 2026-09-17
 - **Autores / Decisores:** Equipo Arquitectura JASRAPO
 
 ---
@@ -26,12 +26,12 @@ La separación se aplica así:
 
 - `LecturaAnomalia` representa el hallazgo, su validación y su resolución económica.
 - La foto específica de la anomalía continúa siendo propiedad de `LecturaAnomalia`; no se confunde con la evidencia fotográfica normal de la orden.
-- `OrdenesTrabajo` representa la acción de campo: inspeccionar, corregir, reconectar u otra actividad ejecutable, con sus resultados en `EjecucionesOrdenTrabajo`.
+- `OrdenesTrabajo` representa la acción de campo: inspeccionar, corregir, reconectar u otra actividad ejecutable, con sus resultados genéricos en la propia orden.
 - No se duplican anomalías como novedades dentro de la orden. La orden debe referenciar el hallazgo original cuando se derive de él.
 - Solo se crea una orden derivada cuando la anomalía requiere seguimiento o una acción de campo. Una anomalía que solo necesita validación o ajuste contable permanece sin orden.
 - La resolución de la anomalía y el resultado de la orden son estados relacionados, pero no sustitutos: cada uno conserva su propia auditoría y autorización.
 
-Esta recomendación queda **propuesta hasta recibir confirmación explícita del negocio** sobre el ciclo de vida y las consecuencias contables de las anomalías. Hasta entonces no se elimina ni se reemplaza `LecturaAnomalia`.
+Esta decisión queda **aceptada**: las novedades permanecen separadas de la orden y no se reemplazan por campos específicos de actividad dentro de `OrdenesTrabajo`.
 
 ## Consecuencias
 
@@ -40,6 +40,6 @@ Esta recomendación queda **propuesta hasta recibir confirmación explícita del
 
 ## Verificación
 
-- **Estado de la decisión:** propuesta, pendiente de confirmación explícita del negocio.
+- **Estado de la decisión:** aceptada.
 - **Verificación técnica:** la separación es compatible con el ciclo de resolución existente y con la centralización de la ejecución definida en ADR-003.
-- **Pendiente:** confirmar con negocio los estados, responsables, reglas de derivación y efectos contables antes de marcar este ADR como aceptado.
+- **Pendiente:** confirmar con negocio únicamente los estados, responsables, reglas de derivación y efectos contables propios de las novedades.

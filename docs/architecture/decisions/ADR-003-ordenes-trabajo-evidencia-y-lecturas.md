@@ -1,7 +1,7 @@
 # ADR-003: Órdenes de trabajo, evidencia y lecturas operativas
 
 - **Estado:** Aceptado
-- **Fecha:** 2026-08-28
+- **Fecha:** 2026-09-17
 - **Autores / Decisores:** Equipo Arquitectura JASRAPO
 
 ---
@@ -16,7 +16,7 @@ Además, la instalación se estaba modelando como si el operador registrara un m
 
 1. **Mantener POST independientes para cada acción del operador:** Conserva endpoints legados, pero permite mutaciones fuera de una orden, duplica evidencia y no expresa quién es dueño de la transición.
 2. **Usar la lectura como contenedor de toda la ejecución:** Simplifica el formulario, pero mezcla medición con actividad de campo y hace que la foto de una ejecución parezca una propiedad de la lectura.
-3. **Centralizar la ejecución en la orden de trabajo:** La orden es el agregado operativo; sus actualizaciones del operador son parciales (`PATCH`), la evidencia pertenece a la ejecución y cada lectura operativa queda vinculada a ruta y orden.
+3. **Centralizar el resultado operativo en la orden de trabajo:** La orden es el agregado operativo; sus actualizaciones del operador son parciales (`PATCH`), la evidencia pertenece a la orden y cada lectura operativa queda vinculada a ruta y orden.
 
 ## Decisión Tomada
 
@@ -25,7 +25,8 @@ Se adopta la orden de trabajo como dueño de la ejecución operativa:
 - Las actualizaciones del operador sobre una orden de trabajo son **únicamente `PATCH`**. El operador solo puede modificar los campos y el estado permitidos para su orden; la autorización y la propiedad de la transición se validan en el backend.
 - La instalación registra la ejecución sobre el **medidor preexistente** asociado al expediente. No crea ni registra un medidor nuevo desde el flujo operativo legado.
 - Las fotos de evidencia de la orden se almacenan en **RustFS**. `OrdenesTrabajo.evidenciaFotoUrl` conserva únicamente la clave del objeto, nunca el binario ni una URL pública persistente.
-- `EjecucionesOrdenTrabajo` conserva los campos estructurados propios de la actividad ejecutada. Así, instalación, inspección, reconexión y lectura pueden tener resultados específicos sin sobrecargar `Lecturas` con datos de ejecución.
+- `OrdenesTrabajo` conserva únicamente datos genéricos de resultado: estado, observación, evidencia fotográfica y fecha de completado. No se crea ni se mantiene una entidad técnica separada para la ejecución.
+- Los campos específicos de sellos, fugas y retiro de sello no forman parte del contrato de la orden. Las novedades operativas se registran mediante su entidad separada.
 - `Lecturas` deja de ser propietaria de la foto normal de la operación. La foto ordinaria se adjunta a la orden; la foto de una anomalía de lectura permanece en `LecturaAnomalia` (véase ADR-004).
 - Toda lectura operativa debe estar vinculada a su **ruta y orden de trabajo**. No se permite la creación de lecturas operativas independientes.
 - La pantalla de lecturas es de **solo consulta para crear** una lectura: no ofrece creación autónoma, pero sí permite editar una lectura existente conforme a sus reglas de inmutabilidad y autorización.
@@ -44,8 +45,8 @@ Los registros sin una relación determinable no se eliminan silenciosamente: que
 
 ## Consecuencias
 
-- **Positivas:** responsabilidad clara, trazabilidad de campo, evidencia centralizada, lecturas con contexto operativo obligatorio y resultados estructurados por actividad.
-- **Trade-offs:** los clientes deben migrar de POST independientes a `PATCH`; la sincronización offline necesita manejar orden, evidencia y lectura como una operación relacionada; el *backfill* requiere conciliación de datos históricos.
+- **Positivas:** responsabilidad clara, trazabilidad de campo, evidencia centralizada, lecturas con contexto operativo obligatorio y un contrato genérico para cualquier actividad.
+- **Trade-offs:** los clientes deben migrar de POST independientes a `PATCH`; la sincronización offline necesita manejar orden, evidencia y lectura como una operación relacionada; se elimina la tabla técnica de ejecución porque no conserva histórico relevante.
 
 ## Verificación
 

@@ -333,28 +333,6 @@ export class PrismaOrdenTrabajoRepository implements OrdenTrabajoRepository {
           },
         });
 
-        const executionData = Object.fromEntries(
-          Object.entries({
-            estadoSellos: data.estadoSellos,
-            hayFugas: data.hayFugas,
-            confirmacionRetiroSello: data.confirmacionRetiroSello,
-          }).filter(([, value]) => value !== undefined),
-        );
-        if (Object.keys(executionData).length > 0) {
-          const executionModel = (
-            tx as unknown as {
-              ejecucionesOrdenTrabajo: {
-                upsert(args: unknown): Promise<unknown>;
-              };
-            }
-          ).ejecucionesOrdenTrabajo;
-          await executionModel.upsert({
-            where: { ordenTrabajoId },
-            create: { ordenTrabajoId, ...executionData },
-            update: executionData,
-          });
-        }
-
         return OrdenTrabajoMapper.toEntity(raw);
       });
     } catch (error) {
