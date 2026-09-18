@@ -262,7 +262,7 @@ export class OperatorController {
   @ApiOperation({
     summary: 'Actualizar orden de trabajo del operario',
     description:
-      'Actualiza una orden no relacionada con lecturas y sus datos de ejecución.',
+      'Actualiza una orden no relacionada con lecturas y conserva su estado, observación y evidencia.',
   })
   @ApiConsumes('multipart/form-data')
   @ApiParam({
@@ -272,16 +272,13 @@ export class OperatorController {
   })
   @ApiBody({
     description:
-      'Datos de ejecución. `foto` es opcional y se persiste como clave de objeto RustFS en evidenciaFotoUrl.',
+      'Datos de la orden. `foto` es opcional y se persiste como clave de objeto RustFS en evidenciaFotoUrl.',
     schema: {
       type: 'object',
       properties: {
         estado: { type: 'string' },
         resultadoObservacion: { type: 'string' },
         completadoEn: { type: 'string', format: 'date-time' },
-        estadoSellos: { type: 'string' },
-        hayFugas: { type: 'boolean' },
-        confirmacionRetiroSello: { type: 'boolean' },
         foto: { type: 'string', format: 'binary' },
       },
     },

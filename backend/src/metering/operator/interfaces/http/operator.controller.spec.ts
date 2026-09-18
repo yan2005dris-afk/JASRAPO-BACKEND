@@ -118,15 +118,6 @@ describe('OperatorController work-order update', () => {
     expect(useCase.execute).not.toHaveBeenCalled();
   });
 
-  it('rejects empty multipart estadoSellos values', async () => {
-    for (const estadoSellos of ['', '  ', '""', "''"]) {
-      const errors = await validate(
-        Object.assign(new UpdateOperatorWorkOrderDto(), { estadoSellos }),
-      );
-      expect(errors.map((error) => error.property)).toContain('estadoSellos');
-    }
-  });
-
   it('passes the returned RustFS key and converts response IDs', async () => {
     const response = await controller.updateOperatorWorkOrder(
       42n,

@@ -46,34 +46,11 @@ export class UpdateOperatorWorkOrderUseCase {
       order.medidorId,
     );
 
-    if (
-      order.tipoActividad === TipoActividadCodes.RECONEXION &&
-      dto.confirmacionRetiroSello === false
-    ) {
-      throw new InvalidDomainOperationException(
-        'La reconexión requiere confirmar el retiro del sello',
-      );
-    }
-
-    const hasSeal = dto.estadoSellos !== undefined;
-    const hasLeak = dto.hayFugas !== undefined;
-    if (
-      order.tipoActividad === TipoActividadCodes.INSPECCION &&
-      hasSeal !== hasLeak
-    ) {
-      throw new InvalidDomainOperationException(
-        'La inspección requiere informar el estado de sellos y si hay fugas',
-      );
-    }
-
     const data: UpdateOperatorWorkOrderData = {
       estado: dto.estado,
       resultadoObservacion: dto.resultadoObservacion,
       evidenciaFotoUrl,
       completadoEn: dto.completadoEn ? new Date(dto.completadoEn) : undefined,
-      estadoSellos: dto.estadoSellos,
-      hayFugas: dto.hayFugas,
-      confirmacionRetiroSello: dto.confirmacionRetiroSello,
     };
 
     const updated = await this.ordenTrabajoRepository.updateOperatorWorkOrder(

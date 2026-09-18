@@ -27,9 +27,6 @@ export interface UpdateOperatorWorkOrderData {
   resultadoObservacion?: string | null;
   evidenciaFotoUrl?: string | null;
   completadoEn?: Date | null;
-  estadoSellos?: string | null;
-  hayFugas?: boolean | null;
-  confirmacionRetiroSello?: boolean | null;
 }
 
 export interface FindOrdenesByRutaParams {
