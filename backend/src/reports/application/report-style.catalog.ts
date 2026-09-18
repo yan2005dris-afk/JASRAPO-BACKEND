@@ -29,6 +29,7 @@ export const REPORT_STYLE_CATALOG: Readonly<
   'connection-history': ['legacy', 'modern'],
   'account-statement': ['legacy', 'modern'],
   'clients-list': ['legacy', 'modern'],
+  'overdue-accounts': ['legacy', 'modern'],
   // Legal/contractual → canonical-only. Global `reporte.estilo` is ignored.
   'payment-agreement': ['unique'],
 };

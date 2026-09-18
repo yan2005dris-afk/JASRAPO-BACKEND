@@ -148,14 +148,31 @@ describe('ReportsController', () => {
     );
   });
 
-  it('devuelve la proyección tipada de morosidad', async () => {
-    await expect(
-      controller.overdueAccounts({}, actor, timeZone, locale),
-    ).resolves.toEqual({
-      data: [],
-      meta: { total: 0 },
-      kpis: {},
-    });
+  it('negocia JSON o PDF para el reporte de morosidad', async () => {
+    const overdueDocument = { data: [], meta: { total: 0 }, kpis: {} };
+
+    const jsonRes = response('application/json');
+    await controller.overdueAccounts({}, actor, timeZone, locale, jsonRes);
+    expect(overdue.generate).toHaveBeenCalledWith(
+      expect.objectContaining({ reportType: 'overdue-accounts' }),
+    );
+    expect(dispatcher.dispatch).not.toHaveBeenCalled();
+    expect(jsonRes.send).toHaveBeenCalledWith(JSON.stringify(overdueDocument));
+
+    const pdfRes = response('application/pdf');
+    await controller.overdueAccounts({}, actor, timeZone, locale, pdfRes);
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
+      'overdue-accounts',
+      overdueDocument,
+      expect.objectContaining({ signal: expect.any(AbortSignal) }),
+    );
+    expect(pdfRes.end).toHaveBeenCalledWith(Buffer.from('pdf'));
+  });
+
+  it('exige destinatario en el correo de morosidad', () => {
+    expect(() =>
+      controller.sendOverdueAccountsEmail({}, actor, timeZone, locale),
+    ).toThrow(BadRequestException);
   });
 
   it('valida el identificador antes de enviar un reporte por correo', () => {

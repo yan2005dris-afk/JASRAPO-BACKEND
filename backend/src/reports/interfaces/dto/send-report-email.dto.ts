@@ -84,6 +84,23 @@ export class SendReportEmailDto {
 
   @ApiPropertyOptional({
     description:
+      'ID del sector (BigInt como string). Filtro opcional para POST /reports/overdue-accounts/email.',
+  })
+  @IsOptional()
+  @IsNotEmptyString()
+  sectorId?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Fecha de corte del reporte de morosidad (mismo filtro que el endpoint GET).',
+  })
+  @IsOptional()
+  @IsString()
+  @Transform(({ value }) => (value === '' ? undefined : value))
+  fechaCorte?: string;
+
+  @ApiPropertyOptional({
+    description:
       'Override recipient email. Defaults to the email derived from the report spec. Required para POST /reports/clients/email (no recipient derivable).',
   })
   @IsOptional()
