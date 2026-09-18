@@ -37,6 +37,7 @@ function describeFiltros(
 export function projectOverdueAccountsReport(
   readModel: OverdueAccountsReportReadModel,
   filters: OverdueAccountsReportFilters = {},
+  timeZone?: string,
 ): ProjectedReport<OverdueAccountsReportDocument> {
   const accountsByContract = new Map<string, OverdueAccountAccumulator>();
 
@@ -74,7 +75,12 @@ export function projectOverdueAccountsReport(
     0,
   );
   const largestDebt = overdueAccounts[0]?.saldoPendienteNum ?? 0;
-  const fechaCorte = readModel.cutoffDate.toLocaleDateString('es-EC');
+  // Se formatea la fecha de corte en la zona horaria del contexto para que el
+  // día mostrado coincida con el instante realmente consultado.
+  const fechaCorte = readModel.cutoffDate.toLocaleDateString(
+    'es-EC',
+    timeZone ? { timeZone } : undefined,
+  );
 
   return {
     document: {
@@ -109,7 +115,11 @@ export class OverdueAccountsReportDefinition {
       this.institutionalProfiles.resolve(new Date()),
     ]);
     return attachInstitutionalProfile(
-      projectOverdueAccountsReport(readModel, context.filters),
+      projectOverdueAccountsReport(
+        readModel,
+        context.filters,
+        context.timeZone,
+      ),
       institutional,
     );
   }
