@@ -1,0 +1,353 @@
+\section{Lecturas}
+
+
+Captura, revisión y operación de lecturas de consumo.
+
+
+\begin{quote}
+\textbf{Ficha de dominio:} documenta consulta, revisión administrativa y captura de lecturas por operador, con sus anomalías, evidencias y estados confirmados.
+\end{quote}
+
+
+\subsection{Alcance y entradas HTTP}
+
+
+\begin{itemize}
+\item \textbf{Controladores:} \texttt{\detokenize{ReadingController}}, \texttt{\detokenize{OperatorController}}.
+\item \textbf{Servicio:} \texttt{\detokenize{ReadingService}}.
+\item \textbf{Casos:} \texttt{\detokenize{FindAllReadingsUseCase}}, \texttt{\detokenize{FindOneReadingUseCase}}, \texttt{\detokenize{UpdateReadingUseCase}}, \texttt{\detokenize{RemoveReadingUseCase}}, \texttt{\detokenize{GetOperatorReadingsUseCase}}, \texttt{\detokenize{GetOperatorReadingsWithAnomaliesUseCase}}, \texttt{\detokenize{UpdateOperatorReadingUseCase}}.
+\item El catálogo \texttt{\detokenize{GET /estados}} se construye desde el enum y no tiene servicio/caso dedicado.
+\end{itemize}
+
+\subsection{Comportamiento de negocio verificable}
+Las tablas relacionadas son \texttt{Lecturas}, \texttt{Contratos}, \texttt{Medidores}, \texttt{Periodos}, \texttt{Rutas}, \texttt{OrdenTrabajo} y \texttt{NovedadOrdenTrabajo}. El flujo confirmado es captura $\rightarrow$ revisión $\rightarrow$ aprobación/rechazo. No se encontró handler de pagos ni promoción automática a planilla.
+
+
+\begin{center}
+\small
+\begin{longtable}{|p{0.313\textwidth}|p{0.313\textwidth}|p{0.313\textwidth}|}
+\hline
+\textbf{Método y ruta} & \textbf{Caso/servicio ejecutado} & \textbf{Resultado} \\
+\hline
+\endfirsthead
+\hline
+\textbf{Método y ruta} & \textbf{Caso/servicio ejecutado} & \textbf{Resultado} \\
+\hline
+\endhead
+\texttt{\detokenize{GET /api/v1/readings}} & \texttt{\detokenize{findAll()}} → \texttt{\detokenize{FindAllReadingsUseCase}} & Página. \\
+\hline
+\texttt{\detokenize{GET /api/v1/readings/estados}} & \texttt{\detokenize{getEstados()}} → \texttt{\detokenize{buildStateCatalog()}} & Catálogo. \\
+\hline
+\texttt{\detokenize{GET /api/v1/readings/:id}} & \texttt{\detokenize{findOne()}} → \texttt{\detokenize{FindOneReadingUseCase}} & Lectura. \\
+\hline
+\texttt{\detokenize{PATCH /api/v1/readings/:id}} & \texttt{\detokenize{update()}} → \texttt{\detokenize{UpdateReadingUseCase}} & Lectura actualizada. \\
+\hline
+\texttt{\detokenize{DELETE /api/v1/readings/:id}} & \texttt{\detokenize{delete()}} → \texttt{\detokenize{RemoveReadingUseCase}}/repositorio & Soft delete. \\
+\hline
+\texttt{\detokenize{GET /api/v1/operator/readings}} & \texttt{\detokenize{GetOperatorReadingsUseCase}} & Lecturas propias. \\
+\hline
+\texttt{\detokenize{GET /api/v1/operator/readings/anomalies}} & \texttt{\detokenize{GetOperatorReadingsWithAnomaliesUseCase}} & Anomalías pendientes. \\
+\hline
+\texttt{\detokenize{PATCH /api/v1/operator/readings/:id}} & \texttt{\detokenize{UpdateOperatorReadingUseCase}} & Lectura/evidencia. \\
+\hline
+\end{longtable}
+\end{center}
+
+
+\subsection{Ejemplo JSON}
+
+
+\begin{lstlisting}
+{
+  "lecturaId": "101",
+  "fecha": "2026-08-19",
+  "lecturaAnterior": 500,
+  "lecturaActual": 530,
+  "consumoCalculado": 30,
+  "estado": "APROBADA"
+}
+\end{lstlisting}
+
+
+\begin{center}
+\small
+\begin{longtable}{|p{0.313\textwidth}|p{0.313\textwidth}|p{0.313\textwidth}|}
+\hline
+\textbf{Campo} & \textbf{Tipo} & \textbf{Regla/uso} \\
+\hline
+\endfirsthead
+\hline
+\textbf{Campo} & \textbf{Tipo} & \textbf{Regla/uso} \\
+\hline
+\endhead
+\texttt{\detokenize{lecturaId}} & string & \texttt{\detokenize{BigInt}} serializado. \\
+\hline
+\texttt{\detokenize{fecha}} & string & Fecha de lectura. \\
+\hline
+\texttt{\detokenize{lecturaAnterior}}, \texttt{\detokenize{lecturaActual}}, \texttt{\detokenize{consumoCalculado}} & number & Valores y diferencia de consumo. \\
+\hline
+\texttt{\detokenize{estado}} & enum & Revisión y resultado. \\
+\hline
+\texttt{\detokenize{evidenciaFotoUrl}} & string/null & Evidencia de la orden vinculada cuando aplica. \\
+\hline
+\end{longtable}
+\end{center}
+
+
+\subsection{Estados}
+
+
+\begin{center}
+\small
+\begin{longtable}{|p{0.470\textwidth}|p{0.470\textwidth}|}
+\hline
+\textbf{Estado} & \textbf{Significado} \\
+\hline
+\endfirsthead
+\hline
+\textbf{Estado} & \textbf{Significado} \\
+\hline
+\endhead
+\texttt{\detokenize{PENDIENTE}} & Capturada y aún no revisada. \\
+\hline
+\texttt{\detokenize{POR_REVISION}} & Requiere validación. \\
+\hline
+\texttt{\detokenize{APROBADA}} & Elegible para prefacturación. \\
+\hline
+\texttt{\detokenize{RECHAZADA_VERIFICACION}} & Rechazada. \\
+\hline
+\texttt{\detokenize{ESTIMADA}} & Valor estimado. \\
+\hline
+\texttt{\detokenize{PLANILLADA}} & Incorporada a planilla. \\
+\hline
+\texttt{\detokenize{CON_NOVEDAD}} & Tiene anomalía/novedad. \\
+\hline
+\end{longtable}
+\end{center}
+
+
+\subsection{Efectos y transacciones}
+
+
+La actualización administrativa persiste \texttt{\detokenize{Lecturas}} y protege el cambio con control de concurrencia. La operación del operador puede persistir lectura, novedad y evidencia en RustFS; si falla, elimina la foto recién subida. Consultas, resta de consumo y DTO son transformaciones puras. DELETE usa soft delete.
+
+
+\begin{center}
+\small
+\begin{longtable}{|p{0.470\textwidth}|p{0.470\textwidth}|}
+\hline
+\textbf{Tabla Prisma} & \textbf{Uso} \\
+\hline
+\endfirsthead
+\hline
+\textbf{Tabla Prisma} & \textbf{Uso} \\
+\hline
+\endhead
+\texttt{\detokenize{Lecturas}} & Valores, estado y soft delete. \\
+\hline
+\texttt{\detokenize{Contratos}}, \texttt{\detokenize{Medidores}}, \texttt{\detokenize{Periodos}} & Contexto de lectura. \\
+\hline
+\texttt{\detokenize{OrdenTrabajo}}, \texttt{\detokenize{NovedadOrdenTrabajo}} & Operación y anomalías. \\
+\hline
+\end{longtable}
+\end{center}
+
+
+\subsection{Gráfico de estados}
+
+
+\begin{lstlisting}
+stateDiagram-v2
+  PENDIENTE --> POR_REVISION
+  POR_REVISION --> APROBADA
+  POR_REVISION --> RECHAZADA_VERIFICACION
+\end{lstlisting}
+
+
+\subsection{Casos de uso}
+
+
+\subsubsection{Caso: Listar lecturas}
+
+
+\textbf{Descripción:} devuelve lecturas filtradas y paginadas.  
+
+\textbf{HTTP y ruta:} \texttt{\detokenize{GET /api/v1/readings}}.  
+
+\textbf{Permiso:} \texttt{\detokenize{lecturas:read}}.  
+
+\textbf{Cadena:} \texttt{\detokenize{ReadingController.findAll()}} → \texttt{\detokenize{ReadingService.findAll()}} → \texttt{\detokenize{FindAllReadingsUseCase.execute()}} → repositorio.  
+
+\textbf{Errores relevantes:} \texttt{\detokenize{400}}; \texttt{\detokenize{401}}; \texttt{\detokenize{403}}.  
+
+\textbf{Efectos:} ninguno; lectura y DTO puros.  
+
+\textbf{Prisma:} \texttt{\detokenize{Lecturas}}, \texttt{\detokenize{Contratos}}, \texttt{\detokenize{Medidores}}, \texttt{\detokenize{Periodos}}.  
+
+\textbf{Entrada:} sin body; query \texttt{\detokenize{page}}, \texttt{\detokenize{limit}}, \texttt{\detokenize{contratoId}}, \texttt{\detokenize{estado}}, \texttt{\detokenize{search}}.  
+
+\textbf{Salida:} \texttt{\detokenize{{ "data": [{ "lecturaId": "101", "estado": "PENDIENTE" }], "meta": {} }}}.
+
+
+\subsubsection{Caso: Consultar catálogo de estados}
+
+
+\textbf{Descripción:} entrega etiquetas e iconos de \texttt{\detokenize{EstadoLectura}}.  
+
+\textbf{HTTP y ruta:} \texttt{\detokenize{GET /api/v1/readings/estados}}.  
+
+\textbf{Permiso:} \texttt{\detokenize{lecturas:read}}.  
+
+\textbf{Cadena:} \texttt{\detokenize{ReadingController.getEstados()}} → \texttt{\detokenize{buildStateCatalog()}} (sin caso dedicado).  
+
+\textbf{Errores relevantes:} \texttt{\detokenize{401}}; \texttt{\detokenize{403}}.  
+
+\textbf{Efectos:} ninguno.  
+
+\textbf{Prisma:} ninguna tabla.  
+
+\textbf{Entrada:} sin body, path ni query.  
+
+\textbf{Salida:} \texttt{\detokenize{[{ "codigo": "APROBADA", "descripcion": "Aprobada", "icono": "bi-check-circle" }]}}.
+
+
+\subsubsection{Caso: Obtener lectura}
+
+
+\textbf{Descripción:} devuelve una lectura por ID.  
+
+\textbf{HTTP y ruta:} \texttt{\detokenize{GET /api/v1/readings/:id}}.  
+
+\textbf{Permiso:} \texttt{\detokenize{lecturas:read}}.  
+
+\textbf{Cadena:} \texttt{\detokenize{ReadingController.findOne()}} → \texttt{\detokenize{ReadingService.findOne()}} → \texttt{\detokenize{FindOneReadingUseCase.execute()}} → repositorio.  
+
+\textbf{Errores relevantes:} \texttt{\detokenize{400}}; \texttt{\detokenize{401}}; \texttt{\detokenize{403}}; \texttt{\detokenize{404}}.  
+
+\textbf{Efectos:} ninguno; DTO puro.  
+
+\textbf{Prisma:} \texttt{\detokenize{Lecturas}}, \texttt{\detokenize{Medidores}}, \texttt{\detokenize{Periodos}}, \texttt{\detokenize{Contratos}}.  
+
+\textbf{Entrada:} sin body; path \texttt{\detokenize{{ "id": "101" }}}.  
+
+\textbf{Salida:} el JSON del ejemplo principal.
+
+
+\subsubsection{Caso: Actualizar lectura administrativa}
+
+
+\textbf{Descripción:} actualiza campos no fotográficos y estado.  
+
+\textbf{HTTP y ruta:} \texttt{\detokenize{PATCH /api/v1/readings/:id}}.  
+
+\textbf{Permiso:} \texttt{\detokenize{lecturas:update}}.  
+
+\textbf{Cadena:} \texttt{\detokenize{ReadingController.actualizarLectura()}} → \texttt{\detokenize{ReadingService.update()}} → \texttt{\detokenize{UpdateReadingUseCase.execute()}} → repositorio.  
+
+\textbf{Errores relevantes:} \texttt{\detokenize{400}} body/transición/CAS; \texttt{\detokenize{401}}; \texttt{\detokenize{403}}; \texttt{\detokenize{404}}; \texttt{\detokenize{409}}.  
+
+\textbf{Efectos:} persiste lectura; cálculo y DTO puros.  
+
+\textbf{Prisma:} \texttt{\detokenize{Lecturas}}, \texttt{\detokenize{Medidores}}, \texttt{\detokenize{OrdenTrabajo}}, \texttt{\detokenize{NovedadOrdenTrabajo}}.  
+
+\textbf{Entrada:} path \texttt{\detokenize{{ "id": "101" }}}; body \texttt{\detokenize{{ "lecturaActual": 530, "estado": "POR_REVISION" }}}.  
+
+\textbf{Salida:} \texttt{\detokenize{{ "lecturaId": "101", "lecturaActual": 530, "consumoCalculado": 30, "estado": "POR_REVISION" }}}.
+
+
+\subsubsection{Caso: Eliminar lectura}
+
+
+\textbf{Descripción:} aplica eliminación lógica.  
+
+\textbf{HTTP y ruta:} \texttt{\detokenize{DELETE /api/v1/readings/:id}}.  
+
+\textbf{Permiso:} \texttt{\detokenize{lecturas:delete}}.  
+
+\textbf{Cadena:} \texttt{\detokenize{ReadingController.eliminarLectura()}} → \texttt{\detokenize{ReadingService.delete()}} → \texttt{\detokenize{RemoveReadingUseCase}}/repositorio.  
+
+\textbf{Errores relevantes:} \texttt{\detokenize{400}}; \texttt{\detokenize{401}}; \texttt{\detokenize{403}}; \texttt{\detokenize{404}}.  
+
+\textbf{Efectos:} establece \texttt{\detokenize{deletedAt}} en \texttt{\detokenize{Lecturas}}.  
+
+\textbf{Prisma:} \texttt{\detokenize{Lecturas}}.  
+
+\textbf{Entrada:} sin body; path \texttt{\detokenize{{ "id": "101" }}}.  
+
+\textbf{Salida:} \texttt{\detokenize{{ "message": "Lectura eliminada" }}}.
+
+
+\subsubsection{Caso: Listar lecturas del operador}
+
+
+\textbf{Descripción:} devuelve las lecturas del período activo asignadas al operador autenticado.  
+
+\textbf{HTTP y ruta:} \texttt{\detokenize{GET /api/v1/operator/readings}}.  
+
+\textbf{Permiso:} \texttt{\detokenize{lecturas:read}}.  
+
+\textbf{Cadena:} \texttt{\detokenize{OperatorController.getOperatorReadings()}} → \texttt{\detokenize{GetOperatorReadingsUseCase.execute()}} → repositorio y DTO.  
+
+\textbf{Errores relevantes:} \texttt{\detokenize{400}}; \texttt{\detokenize{401}}; \texttt{\detokenize{403}}; \texttt{\detokenize{404}} sin período activo.  
+
+\textbf{Efectos:} ninguno; consulta y DTO puros.  
+
+\textbf{Prisma:} \texttt{\detokenize{Lecturas}}, \texttt{\detokenize{Rutas}}, \texttt{\detokenize{OrdenTrabajo}}, \texttt{\detokenize{Periodos}}.  
+
+\textbf{Entrada:} sin body ni query; operador desde JWT.  
+
+\textbf{Salida:} lista JSON de \texttt{\detokenize{ResponseReadingDto}}.
+
+
+\subsubsection{Caso: Listar anomalías pendientes del operador}
+
+
+\textbf{Descripción:} devuelve las lecturas del operador que tienen anomalías pendientes de atención.  
+
+\textbf{HTTP y ruta:} \texttt{\detokenize{GET /api/v1/operator/readings/anomalies}}.  
+
+\textbf{Permiso:} \texttt{\detokenize{lecturas:read}}.  
+
+\textbf{Cadena:} \texttt{\detokenize{OperatorController.getOperatorReadingsWithAnomalies()}} → \texttt{\detokenize{GetOperatorReadingsWithAnomaliesUseCase.execute()}} → repositorios y DTO.  
+
+\textbf{Errores relevantes:} \texttt{\detokenize{400}}; \texttt{\detokenize{401}}; \texttt{\detokenize{403}}; \texttt{\detokenize{404}} sin período activo.  
+
+\textbf{Efectos:} ninguno; consulta y DTO puros.  
+
+\textbf{Prisma:} \texttt{\detokenize{Lecturas}}, \texttt{\detokenize{Rutas}}, \texttt{\detokenize{OrdenTrabajo}}, \texttt{\detokenize{NovedadOrdenTrabajo}}, \texttt{\detokenize{Periodos}}.  
+
+\textbf{Entrada:} sin body ni query; operador desde JWT.  
+
+\textbf{Salida:} lista JSON, por ejemplo \texttt{\detokenize{[ { "lecturaId": "101", "estado": "CON_NOVEDAD" } ]}}.
+
+
+\subsubsection{Caso: Actualizar lectura del operador}
+
+
+\textbf{Descripción:} captura valor, fecha, novedad y foto de campo.  
+
+\textbf{HTTP y ruta:} \texttt{\detokenize{PATCH /api/v1/operator/readings/:id}}.  
+
+\textbf{Permiso:} \texttt{\detokenize{lecturas:update}}.  
+
+\textbf{Cadena:} \texttt{\detokenize{OperatorController.updateOperatorReading()}} → \texttt{\detokenize{UpdateOperatorReadingUseCase.execute()}} → repositorios/RustFS.  
+
+\textbf{Errores relevantes:} \texttt{\detokenize{400}}; \texttt{\detokenize{401}}; \texttt{\detokenize{403}} fuera de ruta; \texttt{\detokenize{404}}; \texttt{\detokenize{409}}.  
+
+\textbf{Efectos:} persiste lectura/novedad y guarda \texttt{\detokenize{foto}} como \texttt{\detokenize{evidenciaFotoUrl}} de la orden; rollback si falla.  
+
+\textbf{Prisma:} \texttt{\detokenize{Lecturas}}, \texttt{\detokenize{NovedadOrdenTrabajo}}, \texttt{\detokenize{OrdenTrabajo}}.  
+
+\textbf{Entrada:} path \texttt{\detokenize{{ "id": "101" }}}; multipart campos DTO y archivo opcional \texttt{\detokenize{foto}}; sin body JSON.  
+
+\textbf{Salida:} \texttt{\detokenize{{ "lecturaId": "101", "estado": "POR_REVISION", "evidenciaFotoUrl": "ordenes/9/foto.jpg" }}}.
+
+
+\subsection{No documentado o pendiente de confirmar}
+
+
+\begin{itemize}
+\item Transiciones de \texttt{\detokenize{ESTIMADA}}, \texttt{\detokenize{PLANILLADA}} y \texttt{\detokenize{CON_NOVEDAD}}.
+\item Alta independiente \texttt{\detokenize{POST /readings}}.
+\item Promoción exacta de lectura aprobada a planilla.
+\end{itemize}

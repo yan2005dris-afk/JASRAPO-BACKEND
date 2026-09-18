@@ -1,0 +1,433 @@
+\section{Clientes}
+
+
+Subdominio de identidad y datos del titular. La API usa \texttt{\detokenize{/api/v1}} y autenticación Bearer.
+
+
+\begin{quote}
+\textbf{Ficha de dominio:} documenta el alta, consulta, actualización y baja lógica de clientes, además del catálogo de tipos de identificación. El alcance cubre las superficies HTTP confirmadas en \texttt{\detokenize{ClientController}}.
+\end{quote}
+
+
+\subsection{Alcance y entradas HTTP}
+
+
+\begin{itemize}
+\item \textbf{Controlador:} \texttt{\detokenize{ClientController}} (\texttt{\detokenize{backend/src/operations/clients/interfaces/http/client.controller.ts}}).
+\item \textbf{Servicio:} \texttt{\detokenize{ClientService}}.
+\item \textbf{Casos:} \texttt{\detokenize{CreateClientUseCase}}, \texttt{\detokenize{FindOneClientUseCase}}, \texttt{\detokenize{UpdateClientUseCase}}, \texttt{\detokenize{RemoveClientUseCase}}.
+\item \texttt{\detokenize{GET /identification-types}} no tiene caso de uso dedicado.
+\item \texttt{\detokenize{GET /clients}} tampoco tiene \texttt{\detokenize{FindAllClientUseCase}}: el servicio construye filtros y pagina directamente.
+\end{itemize}
+
+\subsection{Comportamiento de negocio verificable}
+Las tablas relacionadas son \texttt{Clientes} y \texttt{CatalogoTiposIdentificacion}. \texttt{Contratos} consume la identidad del titular, pero no se encontró un handler que propague cambios de cliente. El flujo confirmado es alta, actualización, baja lógica y consulta del catálogo. No se encontró una fórmula ni un handler de eventos propio.
+
+
+\begin{center}
+\small
+\begin{longtable}{|p{0.313\textwidth}|p{0.313\textwidth}|p{0.313\textwidth}|}
+\hline
+\textbf{Método y ruta} & \textbf{Caso/servicio ejecutado} & \textbf{Resultado} \\
+\hline
+\endfirsthead
+\hline
+\textbf{Método y ruta} & \textbf{Caso/servicio ejecutado} & \textbf{Resultado} \\
+\hline
+\endhead
+\texttt{\detokenize{GET /api/v1/clients/identification-types}} & \texttt{\detokenize{ClientService.findAllIdentificaciones()}} & Catálogo activo. \\
+\hline
+\texttt{\detokenize{POST /api/v1/clients}} & \texttt{\detokenize{ClientService.create()}} → \texttt{\detokenize{CreateClientUseCase.execute()}} & Cliente creado (\texttt{\detokenize{201}}). \\
+\hline
+\texttt{\detokenize{GET /api/v1/clients}} & \texttt{\detokenize{ClientService.findAll()}} → \texttt{\detokenize{buildClientFilters()}} → \texttt{\detokenize{ClientRepository.paginateClientes()}} & Página de clientes. \\
+\hline
+\texttt{\detokenize{GET /api/v1/clients/:id}} & \texttt{\detokenize{ClientService.findOne()}} → \texttt{\detokenize{FindOneClientUseCase.execute()}} & Cliente encontrado. \\
+\hline
+\texttt{\detokenize{PATCH /api/v1/clients/:id}} & \texttt{\detokenize{ClientService.update()}} → \texttt{\detokenize{UpdateClientUseCase.execute()}} & Cliente actualizado. \\
+\hline
+\texttt{\detokenize{DELETE /api/v1/clients/:id}} & \texttt{\detokenize{ClientService.delete()}} → \texttt{\detokenize{RemoveClientUseCase.execute()}} & Soft delete. \\
+\hline
+\end{longtable}
+\end{center}
+
+
+\subsection{Ejemplo JSON}
+
+
+\begin{lstlisting}
+{
+  "clienteId": "10",
+  "identificacion": "1712345678",
+  "nombres": "Juan",
+  "apellidos": "Pérez",
+  "razonSocial": null,
+  "email": "juan@example.com",
+  "telefono": "0991234567",
+  "direccionDomicilio": "Av. Principal 123",
+  "activo": true
+}
+\end{lstlisting}
+
+
+\begin{center}
+\small
+\begin{longtable}{|p{0.313\textwidth}|p{0.313\textwidth}|p{0.313\textwidth}|}
+\hline
+\textbf{Campo} & \textbf{Tipo} & \textbf{Regla/uso} \\
+\hline
+\endfirsthead
+\hline
+\textbf{Campo} & \textbf{Tipo} & \textbf{Regla/uso} \\
+\hline
+\endhead
+\texttt{\detokenize{clienteId}} & string & \texttt{\detokenize{BigInt}} serializado. \\
+\hline
+\texttt{\detokenize{tipoIdentificacionId}} & number & Referencia al catálogo. \\
+\hline
+\texttt{\detokenize{identificacion}} & string & Identificador del titular. \\
+\hline
+\texttt{\detokenize{nombres}}, \texttt{\detokenize{apellidos}} & string/null & Nombre personal. \\
+\hline
+\texttt{\detokenize{razonSocial}} & string/null & Nombre empresarial cuando aplica. \\
+\hline
+\texttt{\detokenize{email}}, \texttt{\detokenize{telefono}}, \texttt{\detokenize{direccionDomicilio}} & string/null & Datos de contacto y domicilio. \\
+\hline
+\texttt{\detokenize{activo}} & boolean & Disponibilidad lógica expuesta por el DTO. \\
+\hline
+\end{longtable}
+\end{center}
+
+
+\subsection{Estados}
+
+
+No existe enum vigente de estado de cliente. \texttt{\detokenize{activo=true}} indica habilitación; \texttt{\detokenize{deletedAt != null}} indica eliminación lógica y es interno.
+
+
+\subsection{Efectos y transacciones}
+
+
+Crear, actualizar y eliminar escriben \texttt{\detokenize{Clientes}} mediante sus casos de uso; eliminar usa soft delete. Las consultas, \texttt{\detokenize{buildClientFilters}} y \texttt{\detokenize{ClientResponseDto.fromEntity}} son transformaciones/serialización puras. No se confirmó una transacción adicional ni handler de eventos propio.
+
+
+\begin{center}
+\small
+\begin{longtable}{|p{0.470\textwidth}|p{0.470\textwidth}|}
+\hline
+\textbf{Tabla Prisma} & \textbf{Uso} \\
+\hline
+\endfirsthead
+\hline
+\textbf{Tabla Prisma} & \textbf{Uso} \\
+\hline
+\endhead
+\texttt{\detokenize{Clientes}} & Titular y soft delete. \\
+\hline
+\texttt{\detokenize{CatalogoTiposIdentificacion}} & Tipos activos y relación. \\
+\hline
+\end{longtable}
+\end{center}
+
+
+\subsection{Gráfico de estados}
+
+
+\begin{lstlisting}
+stateDiagram-v2
+  [*] --> Activo: crear
+  Activo --> Eliminado: DELETE (soft delete)
+\end{lstlisting}
+
+
+\subsection{Casos de uso}
+
+
+\subsubsection{Caso: Catálogo de tipos de identificación}
+
+
+\textbf{Descripción:} devuelve los tipos activos para formularios.
+
+
+\textbf{HTTP y ruta:} \texttt{\detokenize{GET /api/v1/clients/identification-types}}.
+
+
+\textbf{Permiso:} \texttt{\detokenize{clientes:read}}.
+
+
+\textbf{Cadena:} \texttt{\detokenize{ClientController.findAllIdentificaciones()}} → \texttt{\detokenize{ClientService.findAllIdentificaciones()}} → \texttt{\detokenize{ClientRepository.findActiveTipoIdentificaciones()}} (sin caso dedicado).
+
+
+\textbf{Errores relevantes:} \texttt{\detokenize{401}} no autenticado; \texttt{\detokenize{403}} sin permiso.
+
+
+\textbf{Efectos:} ninguno; consulta y mapeo puros.
+
+
+\textbf{Prisma:} \texttt{\detokenize{CatalogoTiposIdentificacion}}.
+
+
+\textbf{Entrada:} sin body, path ni query.
+
+
+\textbf{Salida:}
+
+
+\begin{lstlisting}
+[
+  {
+    "tipoIdentificacionId": 1,
+    "codigo": "CEDULA",
+    "descripcion": "Cédula"
+  }
+]
+\end{lstlisting}
+
+
+\subsubsection{Caso: Crear cliente}
+
+
+\textbf{Descripción:} registra un nuevo titular.
+
+
+\textbf{HTTP y ruta:} \texttt{\detokenize{POST /api/v1/clients}}.
+
+
+\textbf{Permiso:} \texttt{\detokenize{clientes:create}}.
+
+
+\textbf{Cadena:} \texttt{\detokenize{ClientController.create()}} → \texttt{\detokenize{ClientService.create()}} → \texttt{\detokenize{CreateClientUseCase.execute()}} → \texttt{\detokenize{ClientRepository}}.
+
+
+\textbf{Errores relevantes:} \texttt{\detokenize{400}} datos inválidos; \texttt{\detokenize{401}}; \texttt{\detokenize{403}}; conflictos de identificación.
+
+
+\textbf{Efectos:} alta en \texttt{\detokenize{Clientes}}; el DTO de salida es serialización pura.
+
+
+\textbf{Prisma:} \texttt{\detokenize{Clientes}}, \texttt{\detokenize{CatalogoTiposIdentificacion}}.
+
+
+\textbf{Entrada:}
+
+
+\begin{lstlisting}
+{
+  "tipoIdentificacionId": 1,
+  "identificacion": "1712345678",
+  "nombres": "Juan",
+  "apellidos": "Pérez",
+  "razonSocial": null,
+  "email": "juan@example.com"
+}
+\end{lstlisting}
+
+
+\textbf{Salida:}
+
+
+\begin{lstlisting}
+{
+  "clienteId": "10",
+  "identificacion": "1712345678",
+  "nombres": "Juan",
+  "apellidos": "Pérez",
+  "razonSocial": null,
+  "email": "juan@example.com",
+  "telefono": null,
+  "direccionDomicilio": null,
+  "activo": true
+}
+\end{lstlisting}
+
+
+\subsubsection{Caso: Listar clientes}
+
+
+\textbf{Descripción:} consulta clientes con filtros opcionales y paginación.
+
+
+\textbf{HTTP y ruta:} \texttt{\detokenize{GET /api/v1/clients}}.
+
+
+\textbf{Permiso:} \texttt{\detokenize{clientes:read}}.
+
+
+\textbf{Cadena:} \texttt{\detokenize{ClientController.findAll()}} → \texttt{\detokenize{ClientService.findAll()}} → \texttt{\detokenize{buildClientFilters()}} → \texttt{\detokenize{ClientRepository.paginateClientes()}}; no existe \texttt{\detokenize{FindAllClientUseCase}}.
+
+
+\textbf{Errores relevantes:} \texttt{\detokenize{400}} query inválida; \texttt{\detokenize{401}}; \texttt{\detokenize{403}}.
+
+
+\textbf{Efectos:} ninguno; consulta y DTO puros.
+
+
+\textbf{Prisma:} \texttt{\detokenize{Clientes}}, \texttt{\detokenize{CatalogoTiposIdentificacion}}.
+
+
+\textbf{Entrada:} sin body. Query: \texttt{\detokenize{page}}, \texttt{\detokenize{limit}}, \texttt{\detokenize{identificacion}}, \texttt{\detokenize{nombres}}, \texttt{\detokenize{apellidos}}, \texttt{\detokenize{nombreCompleto}}.
+
+
+\textbf{Salida:}
+
+
+\begin{lstlisting}
+{
+  "data": [
+    {
+      "clienteId": "10",
+      "identificacion": "1712345678",
+      "nombres": "Juan",
+      "apellidos": "Pérez",
+      "activo": true
+    }
+  ],
+  "meta": {
+    "page": 1,
+    "limit": 10,
+    "total": 1,
+    "totalPages": 1
+  }
+}
+\end{lstlisting}
+
+
+\subsubsection{Caso: Obtener cliente}
+
+
+\textbf{Descripción:} devuelve un cliente por identificador.
+
+
+\textbf{HTTP y ruta:} \texttt{\detokenize{GET /api/v1/clients/:id}}.
+
+
+\textbf{Permiso:} \texttt{\detokenize{clientes:read}}.
+
+
+\textbf{Cadena:} \texttt{\detokenize{ClientController.findOne()}} → \texttt{\detokenize{ClientService.findOne()}} → \texttt{\detokenize{FindOneClientUseCase.execute()}} → \texttt{\detokenize{ClientRepository}}.
+
+
+\textbf{Errores relevantes:} \texttt{\detokenize{400}} ID inválido; \texttt{\detokenize{401}}; \texttt{\detokenize{403}}; \texttt{\detokenize{404}} no encontrado.
+
+
+\textbf{Efectos:} ninguno; DTO puro.
+
+
+\textbf{Prisma:} \texttt{\detokenize{Clientes}}, \texttt{\detokenize{CatalogoTiposIdentificacion}}.
+
+
+\textbf{Entrada:} sin body. Path: \texttt{\detokenize{{ "id": "10" }}}.
+
+
+\textbf{Salida:}
+
+
+\begin{lstlisting}
+{
+  "clienteId": "10",
+  "identificacion": "1712345678",
+  "nombres": "Juan",
+  "apellidos": "Pérez",
+  "razonSocial": null,
+  "email": "juan@example.com",
+  "telefono": null,
+  "direccionDomicilio": null,
+  "activo": true
+}
+\end{lstlisting}
+
+
+\subsubsection{Caso: Actualizar cliente}
+
+
+\textbf{Descripción:} modifica parcialmente los datos permitidos del titular.
+
+
+\textbf{HTTP y ruta:} \texttt{\detokenize{PATCH /api/v1/clients/:id}}.
+
+
+\textbf{Permiso:} \texttt{\detokenize{clientes:update}}.
+
+
+\textbf{Cadena:} \texttt{\detokenize{ClientController.update()}} → \texttt{\detokenize{ClientService.update()}} → \texttt{\detokenize{UpdateClientUseCase.execute()}} → \texttt{\detokenize{ClientRepository}}.
+
+
+\textbf{Errores relevantes:} \texttt{\detokenize{400}} ID/body inválidos; \texttt{\detokenize{401}}; \texttt{\detokenize{403}}; \texttt{\detokenize{404}} no encontrado.
+
+
+\textbf{Efectos:} actualización de \texttt{\detokenize{Clientes}}; DTO puro.
+
+
+\textbf{Prisma:} \texttt{\detokenize{Clientes}}, \texttt{\detokenize{CatalogoTiposIdentificacion}}.
+
+
+\textbf{Entrada:} path \texttt{\detokenize{{ "id": "10" }}}; body:
+
+
+\begin{lstlisting}
+{
+  "telefono": "0990000000",
+  "email": "nuevo@example.com"
+}
+\end{lstlisting}
+
+
+\textbf{Salida:}
+
+
+\begin{lstlisting}
+{
+  "clienteId": "10",
+  "telefono": "0990000000",
+  "email": "nuevo@example.com",
+  "activo": true
+}
+\end{lstlisting}
+
+
+\subsubsection{Caso: Eliminar cliente}
+
+
+\textbf{Descripción:} marca el cliente como eliminado sin borrado físico.
+
+
+\textbf{HTTP y ruta:} \texttt{\detokenize{DELETE /api/v1/clients/:id}}.
+
+
+\textbf{Permiso:} \texttt{\detokenize{clientes:delete}}.
+
+
+\textbf{Cadena:} \texttt{\detokenize{ClientController.delete()}} → \texttt{\detokenize{ClientService.delete()}} → \texttt{\detokenize{RemoveClientUseCase.execute()}} → \texttt{\detokenize{ClientRepository}}.
+
+
+\textbf{Errores relevantes:} \texttt{\detokenize{400}} ID inválido; \texttt{\detokenize{401}}; \texttt{\detokenize{403}}; \texttt{\detokenize{404}} no encontrado.
+
+
+\textbf{Efectos:} soft delete en \texttt{\detokenize{Clientes}}; \texttt{\detokenize{deletedAt}} no se expone.
+
+
+\textbf{Prisma:} \texttt{\detokenize{Clientes}}.
+
+
+\textbf{Entrada:} sin body. Path: \texttt{\detokenize{{ "id": "10" }}}.
+
+
+\textbf{Salida:}
+
+
+\begin{lstlisting}
+{
+  "clienteId": "10",
+  "identificacion": "1712345678",
+  "activo": false
+}
+\end{lstlisting}
+
+
+\subsection{No documentado o pendiente de confirmar}
+
+
+\begin{itemize}
+\item Reactivación pública y transiciones automáticas de \texttt{\detokenize{activo}}.
+\item Handlers de eventos de clientes.
+\item Estados legacy distintos de \texttt{\detokenize{activo}}/\texttt{\detokenize{deletedAt}}.
+\end{itemize}

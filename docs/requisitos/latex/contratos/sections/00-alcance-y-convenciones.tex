@@ -1,0 +1,6 @@
+\section{Alcance y convenciones}
+
+La documentación distingue tres niveles: \textbf{Confirmada} (visible en código, Prisma, migración o handler registrado), \textbf{Inferida} (deducción que no prueba una escritura o transición) y \textbf{No encontrada} (la revisión no halló fórmula, handler, rollback, transición o integración). Las fórmulas sólo se presentan como vigentes cuando incluyen fuente, símbolo y línea aproximada. Los efectos directos son escrituras del caso de uso/repositorio; los indirectos provienen de handlers, eventos o funciones SQL.
+
+\subsection{Convenciones técnicas}
+La API usa el prefijo \texttt{/api/v1}; los \texttt{BigInt} se serializan como strings; \texttt{deletedAt} representa eliminación lógica; y ``transaccional'' sólo se usa cuando la transacción fue confirmada. La fuente primaria es el código implementado y el esquema Prisma.

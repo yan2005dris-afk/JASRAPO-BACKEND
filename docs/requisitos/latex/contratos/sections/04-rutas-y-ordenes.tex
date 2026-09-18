@@ -1,0 +1,568 @@
+\section{Rutas y órdenes de trabajo}
+
+
+Despacho de lecturas, instalaciones y operación de campo.
+
+
+\begin{quote}
+\textbf{Ficha de dominio:} documenta períodos, rutas, órdenes de trabajo y operaciones del usuario de campo, incluida la vinculación de lecturas y la evidencia externa.
+\end{quote}
+
+
+\subsection{Alcance y entradas HTTP}
+
+
+\begin{itemize}
+\item \textbf{Controladores:} \texttt{\detokenize{RoutesController}}, \texttt{\detokenize{OrdenesTrabajoController}}, \texttt{\detokenize{OperatorController}}.
+\item \textbf{Servicios:} \texttt{\detokenize{RoutesService}}, \texttt{\detokenize{OrdenesTrabajoService}}.
+\item \textbf{Casos:} \texttt{\detokenize{CreateRouteUseCase}}, \texttt{\detokenize{FindAllRoutesUseCase}}, \texttt{\detokenize{FindOneRouteUseCase}}, \texttt{\detokenize{UpdateRouteUseCase}}, \texttt{\detokenize{DeleteRouteUseCase}}, \texttt{\detokenize{ReassignRouteUseCase}}, \texttt{\detokenize{GetEligibleReadingsUseCase}}, \texttt{\detokenize{GetReadingsByRutaUseCase}}, \texttt{\detokenize{FindOrdenesByRutaUseCase}}, \texttt{\detokenize{ExportFieldSheetPdfUseCase}}, \texttt{\detokenize{UpdateOrdenEstadoUseCase}}, \texttt{\detokenize{LinkLecturaUseCase}}, \texttt{\detokenize{GetOperatorRoutesUseCase}}, \texttt{\detokenize{UpdateRouteStateUseCase}}, \texttt{\detokenize{UpdateOperatorWorkOrderUseCase}}.
+\item Los períodos se consultan directamente desde \texttt{\detokenize{RoutesService}}; no se confirmó caso dedicado para listar rutas administrativas ni para algunos cambios de órdenes.
+\end{itemize}
+
+\subsection{Comportamiento de negocio verificable}
+Las tablas relacionadas son \texttt{Rutas}, \texttt{OrdenTrabajo}, \texttt{EjecucionOrdenTrabajo}, \texttt{Lecturas}, \texttt{Periodos} y \texttt{NovedadOrdenTrabajo}. El flujo confirmado es período $\rightarrow$ ruta $\rightarrow$ orden $\rightarrow$ lectura/evidencia $\rightarrow$ cierre. No se encontró fórmula monetaria ni handler que promueva automáticamente un contrato a \texttt{ACTIVO}.
+
+
+\begin{center}
+\small
+\begin{longtable}{|p{0.313\textwidth}|p{0.313\textwidth}|p{0.313\textwidth}|}
+\hline
+\textbf{Método y ruta} & \textbf{Caso/servicio ejecutado} & \textbf{Resultado} \\
+\hline
+\endfirsthead
+\hline
+\textbf{Método y ruta} & \textbf{Caso/servicio ejecutado} & \textbf{Resultado} \\
+\hline
+\endhead
+\texttt{\detokenize{GET /api/v1/routes/periods}} & \texttt{\detokenize{RoutesService.getPeriodos()}} & Períodos. \\
+\hline
+\texttt{\detokenize{GET /api/v1/routes/eligible-readings}} & \texttt{\detokenize{getEligibleReadings()}} → \texttt{\detokenize{GetEligibleReadingsUseCase}} & Lecturas elegibles paginadas. \\
+\hline
+\texttt{\detokenize{GET /api/v1/routes/:rutaId/readings}} & \texttt{\detokenize{getReadingsByRuta()}} → \texttt{\detokenize{GetReadingsByRutaUseCase}} & Lecturas de ruta. \\
+\hline
+\texttt{\detokenize{POST /api/v1/routes}} & \texttt{\detokenize{create()}} → \texttt{\detokenize{CreateRouteUseCase}} & Ruta creada. \\
+\hline
+\texttt{\detokenize{GET /api/v1/routes}} / \texttt{\detokenize{:id}} & \texttt{\detokenize{findAll()}} / \texttt{\detokenize{findOne()}} → casos de consulta & Rutas. \\
+\hline
+\texttt{\detokenize{PATCH /api/v1/routes/:id}} & \texttt{\detokenize{update()}} → \texttt{\detokenize{UpdateRouteUseCase}} & Ruta actualizada. \\
+\hline
+\texttt{\detokenize{PATCH /api/v1/routes/:id/reassign}} & \texttt{\detokenize{ReassignRouteUseCase.execute()}} & Operario reasignado. \\
+\hline
+\texttt{\detokenize{DELETE /api/v1/routes/:id}} & \texttt{\detokenize{delete()}} → \texttt{\detokenize{DeleteRouteUseCase}} & Soft delete. \\
+\hline
+\texttt{\detokenize{GET /api/v1/routes/:id/pdf}} & \texttt{\detokenize{ExportFieldSheetPdfUseCase}} & PDF. \\
+\hline
+\texttt{\detokenize{GET /api/v1/routes/:id/work-orders}} & \texttt{\detokenize{FindOrdenesByRutaUseCase}} & Órdenes paginadas. \\
+\hline
+\texttt{\detokenize{PATCH /api/v1/work-orders/:id/state}} & \texttt{\detokenize{UpdateOrdenEstadoUseCase}} & Estado de orden. \\
+\hline
+\texttt{\detokenize{PATCH /api/v1/work-orders/:id/reading}} & \texttt{\detokenize{LinkLecturaUseCase}} & Lectura vinculada. \\
+\hline
+\texttt{\detokenize{GET/PATCH /api/v1/operator/routes...}} & \texttt{\detokenize{GetOperatorRoutesUseCase}} / \texttt{\detokenize{UpdateRouteStateUseCase}} & Vista y estado del operador. \\
+\hline
+\texttt{\detokenize{PATCH /api/v1/operator/work-orders/:id}} & \texttt{\detokenize{UpdateOperatorWorkOrderUseCase}} & Ejecución/evidencia. \\
+\hline
+\end{longtable}
+\end{center}
+
+
+\subsection{Ejemplo JSON}
+
+
+\begin{lstlisting}
+{
+  "rutaId": "42",
+  "nombre": "Lecturas agosto",
+  "tipoRuta": "LECTURA",
+  "estado": "PENDIENTE",
+  "ordenesTrabajo": []
+}
+\end{lstlisting}
+
+
+\begin{center}
+\small
+\begin{longtable}{|p{0.313\textwidth}|p{0.313\textwidth}|p{0.313\textwidth}|}
+\hline
+\textbf{Campo} & \textbf{Tipo} & \textbf{Regla/uso} \\
+\hline
+\endfirsthead
+\hline
+\textbf{Campo} & \textbf{Tipo} & \textbf{Regla/uso} \\
+\hline
+\endhead
+\texttt{\detokenize{rutaId}}, \texttt{\detokenize{ordenTrabajoId}}, \texttt{\detokenize{lecturaId}} & string & \texttt{\detokenize{BigInt}} serializado. \\
+\hline
+\texttt{\detokenize{tipoRuta}} & enum & Actividad de la ruta. \\
+\hline
+\texttt{\detokenize{estado}} & enum & Estado de ruta u orden según el DTO. \\
+\hline
+\texttt{\detokenize{operarioId}}, \texttt{\detokenize{periodoId}}, \texttt{\detokenize{comunidadId}} & number/null & Asignación y contexto. \\
+\hline
+\texttt{\detokenize{ordenesTrabajo}} & array & Órdenes asociadas. \\
+\hline
+\end{longtable}
+\end{center}
+
+
+\subsection{Estados}
+
+
+\begin{center}
+\small
+\begin{longtable}{|p{0.313\textwidth}|p{0.313\textwidth}|p{0.313\textwidth}|}
+\hline
+\textbf{Entidad} & \textbf{Estados confirmados} & \textbf{Significado} \\
+\hline
+\endfirsthead
+\hline
+\textbf{Entidad} & \textbf{Estados confirmados} & \textbf{Significado} \\
+\hline
+\endhead
+Ruta & \texttt{\detokenize{PENDIENTE}}, \texttt{\detokenize{EN_PROGRESO}}, \texttt{\detokenize{COMPLETADA}}, \texttt{\detokenize{PARCIAL}}, \texttt{\detokenize{CANCELADA}} & Pendiente, ejecutada, finalizada, incompleta o cancelada. \\
+\hline
+Orden & \texttt{\detokenize{PENDIENTE}}, \texttt{\detokenize{EN_PROGRESO}}, \texttt{\detokenize{COMPLETADA}}, \texttt{\detokenize{CANCELADA}}, \texttt{\detokenize{FALLIDA}} & Ciclo de trabajo. \\
+\hline
+\end{longtable}
+\end{center}
+
+
+\subsection{Efectos y transacciones}
+
+
+Crear/actualizar/eliminar rutas y órdenes escriben \texttt{\detokenize{Rutas}}, \texttt{\detokenize{OrdenTrabajo}} y, cuando corresponde, \texttt{\detokenize{EjecucionOrdenTrabajo}}. Vincular una lectura completa la orden y fija \texttt{\detokenize{completadoEn}}; cambiarla a pendiente/en progreso lo limpia. El operador puede almacenar evidencia en RustFS y su clave en la orden. Consultas, filtros, mapeadores y generación PDF son transformaciones puras; la subida de evidencia no lo es.
+
+
+\begin{center}
+\small
+\begin{longtable}{|p{0.470\textwidth}|p{0.470\textwidth}|}
+\hline
+\textbf{Tabla Prisma} & \textbf{Uso} \\
+\hline
+\endfirsthead
+\hline
+\textbf{Tabla Prisma} & \textbf{Uso} \\
+\hline
+\endhead
+\texttt{\detokenize{Rutas}} & Ruta, asignación, estado y soft delete. \\
+\hline
+\texttt{\detokenize{OrdenTrabajo}} & Trabajo y vínculo con lectura. \\
+\hline
+\texttt{\detokenize{EjecucionOrdenTrabajo}} & Resultado de ejecución. \\
+\hline
+\texttt{\detokenize{Lecturas}} & Lecturas elegibles/vinculadas. \\
+\hline
+\texttt{\detokenize{Periodos}} & Ciclo contable. \\
+\hline
+\texttt{\detokenize{NovedadOrdenTrabajo}} & Novedades de campo. \\
+\hline
+\end{longtable}
+\end{center}
+
+
+\subsection{Gráfico de estados}
+
+
+\begin{lstlisting}
+stateDiagram-v2
+  [*] --> PENDIENTE
+  PENDIENTE --> EN_PROGRESO
+  EN_PROGRESO --> COMPLETADA
+  EN_PROGRESO --> PARCIAL
+  EN_PROGRESO --> CANCELADA
+\end{lstlisting}
+
+
+\subsection{Casos de uso}
+
+
+\subsubsection{Caso: Consultar períodos}
+
+
+\textbf{Descripción:} lista períodos disponibles para filtros y asignación.  
+
+\textbf{HTTP y ruta:} \texttt{\detokenize{GET /api/v1/routes/periods}}.  
+
+\textbf{Permiso:} \texttt{\detokenize{routes:read}}.  
+
+\textbf{Cadena:} \texttt{\detokenize{RoutesController.getPeriods()}} → \texttt{\detokenize{RoutesService.getPeriodos()}} → repositorio.  
+
+\textbf{Errores relevantes:} \texttt{\detokenize{401}}; \texttt{\detokenize{403}}.  
+
+\textbf{Efectos:} ninguno.  
+
+\textbf{Prisma:} \texttt{\detokenize{Periodos}}.  
+
+\textbf{Entrada:} sin body ni parámetros.  
+
+\textbf{Salida:}
+
+
+\begin{lstlisting}
+[{"periodoId":12,"nombre":"2026-08","estado":"ACTIVO"}]
+\end{lstlisting}
+
+
+\subsubsection{Caso: Consultar lecturas elegibles}
+
+
+\textbf{Descripción:} devuelve lecturas disponibles para asignarlas a una ruta.  
+
+\textbf{HTTP y ruta:} \texttt{\detokenize{GET /api/v1/routes/eligible-readings}}.  
+
+\textbf{Permiso:} \texttt{\detokenize{routes:read}}.  
+
+\textbf{Cadena:} \texttt{\detokenize{RoutesController.getEligibleReadings()}} → \texttt{\detokenize{RoutesService.getEligibleReadings()}} → \texttt{\detokenize{GetEligibleReadingsUseCase.execute()}}.  
+
+\textbf{Errores relevantes:} \texttt{\detokenize{400}}; \texttt{\detokenize{401}}; \texttt{\detokenize{403}}.  
+
+\textbf{Efectos:} ninguno.  
+
+\textbf{Prisma:} \texttt{\detokenize{Lecturas}}, \texttt{\detokenize{Contratos}}, \texttt{\detokenize{Medidores}}, \texttt{\detokenize{Periodos}}, \texttt{\detokenize{OrdenTrabajo}}.  
+
+\textbf{Entrada:} sin body; query \texttt{\detokenize{page}}, \texttt{\detokenize{limit}} y filtros de \texttt{\detokenize{FilterReadingsDto}}.  
+
+\textbf{Salida:}
+
+
+\begin{lstlisting}
+{"data":[{"lecturaId":"101","estado":"PENDIENTE"}],"meta":{"page":1,"limit":10,"total":1,"totalPages":1},"kpis":{}}
+\end{lstlisting}
+
+
+\subsubsection{Caso: Consultar lecturas de ruta}
+
+
+\textbf{Descripción:} lista lecturas ya vinculadas a una ruta.  
+
+\textbf{HTTP y ruta:} \texttt{\detokenize{GET /api/v1/routes/:rutaId/readings}}.  
+
+\textbf{Permiso:} \texttt{\detokenize{routes:read}}.  
+
+\textbf{Cadena:} \texttt{\detokenize{RoutesController.getReadingsByRuta()}} → \texttt{\detokenize{RoutesService.getReadingsByRuta()}} → \texttt{\detokenize{GetReadingsByRutaUseCase.execute()}}.  
+
+\textbf{Errores relevantes:} \texttt{\detokenize{400}}; \texttt{\detokenize{401}}; \texttt{\detokenize{403}}; \texttt{\detokenize{404}}.  
+
+\textbf{Efectos:} ninguno.  
+
+\textbf{Prisma:} \texttt{\detokenize{Rutas}}, \texttt{\detokenize{OrdenTrabajo}}, \texttt{\detokenize{Lecturas}}.  
+
+\textbf{Entrada:} sin body; path \texttt{\detokenize{{ "rutaId": "42" }}}; query \texttt{\detokenize{page}}, \texttt{\detokenize{limit}}.  
+
+\textbf{Salida:}
+
+
+\begin{lstlisting}
+{"data":[{"lecturaId":"101","estado":"PENDIENTE"}],"meta":{"page":1,"limit":10,"total":1,"totalPages":1},"kpis":{}}
+\end{lstlisting}
+
+
+\subsubsection{Caso: Crear ruta}
+
+
+\textbf{Descripción:} crea una ruta de trabajo con su período y tipo.  
+
+\textbf{HTTP y ruta:} \texttt{\detokenize{POST /api/v1/routes}}.  
+
+\textbf{Permiso:} \texttt{\detokenize{routes:create}}.  
+
+\textbf{Cadena:} \texttt{\detokenize{RoutesController.create()}} → \texttt{\detokenize{RoutesService.create()}} → \texttt{\detokenize{CreateRouteUseCase.execute()}} → repositorio.  
+
+\textbf{Errores relevantes:} \texttt{\detokenize{400}}; \texttt{\detokenize{401}}; \texttt{\detokenize{403}}; \texttt{\detokenize{404}} período/guías.  
+
+\textbf{Efectos:} alta en \texttt{\detokenize{Rutas}} y asociaciones que determine el caso.  
+
+\textbf{Prisma:} \texttt{\detokenize{Rutas}}, \texttt{\detokenize{OrdenTrabajo}}, \texttt{\detokenize{Contratos}}, \texttt{\detokenize{Periodos}}.  
+
+\textbf{Entrada:} body \texttt{\detokenize{{ "nombre": "Lecturas agosto", "tipoRuta": "LECTURA", "periodoId": 12 }}}.  
+
+\textbf{Salida:}
+
+
+\begin{lstlisting}
+{"rutaId":"42","nombre":"Lecturas agosto","estado":"PENDIENTE","ordenesTrabajo":[]}
+\end{lstlisting}
+
+
+\subsubsection{Caso: Listar rutas}
+
+
+\textbf{Descripción:} devuelve rutas con paginación y filtros.  
+
+\textbf{HTTP y ruta:} \texttt{\detokenize{GET /api/v1/routes}}.  
+
+\textbf{Permiso:} \texttt{\detokenize{routes:read}}.  
+
+\textbf{Cadena:} \texttt{\detokenize{RoutesController.findAll()}} → \texttt{\detokenize{RoutesService.findAll()}} → repositorio.  
+
+\textbf{Errores relevantes:} \texttt{\detokenize{400}}; \texttt{\detokenize{401}}; \texttt{\detokenize{403}}.  
+
+\textbf{Efectos:} ninguno.  
+
+\textbf{Prisma:} \texttt{\detokenize{Rutas}} y relaciones.  
+
+\textbf{Entrada:} sin body; query \texttt{\detokenize{page}}, \texttt{\detokenize{limit}}, \texttt{\detokenize{estado}}, \texttt{\detokenize{operarioId}}, \texttt{\detokenize{comunidadId}}, \texttt{\detokenize{periodoId}}, \texttt{\detokenize{tipoRuta}}.  
+
+\textbf{Salida:}
+
+
+\begin{lstlisting}
+{"data":[{"rutaId":"42","estado":"PENDIENTE"}],"meta":{"page":1,"limit":10,"total":1,"totalPages":1}}
+\end{lstlisting}
+
+
+\subsubsection{Caso: Obtener ruta}
+
+
+\textbf{Descripción:} consulta una ruta por ID.  
+
+\textbf{HTTP y ruta:} \texttt{\detokenize{GET /api/v1/routes/:id}}.  
+
+\textbf{Permiso:} \texttt{\detokenize{routes:read}}.  
+
+\textbf{Cadena:} \texttt{\detokenize{RoutesController.findOne()}} → \texttt{\detokenize{RoutesService.findOne()}} → repositorio.  
+
+\textbf{Errores relevantes:} \texttt{\detokenize{400}}; \texttt{\detokenize{401}}; \texttt{\detokenize{403}}; \texttt{\detokenize{404}}.  
+
+\textbf{Efectos:} ninguno.  
+
+\textbf{Prisma:} \texttt{\detokenize{Rutas}}, \texttt{\detokenize{OrdenTrabajo}}, \texttt{\detokenize{Contratos}}, \texttt{\detokenize{Periodos}}.  
+
+\textbf{Entrada:} sin body; path \texttt{\detokenize{{ "id": "42" }}}.  
+
+\textbf{Salida:}
+
+
+\begin{lstlisting}
+{"rutaId":"42","estado":"PENDIENTE","ordenesTrabajo":[]}
+\end{lstlisting}
+
+
+\subsubsection{Caso: Actualizar ruta}
+
+
+\textbf{Descripción:} modifica los datos de una ruta existente.  
+
+\textbf{HTTP y ruta:} \texttt{\detokenize{PATCH /api/v1/routes/:id}}.  
+
+\textbf{Permiso:} \texttt{\detokenize{routes:update}}.  
+
+\textbf{Cadena:} \texttt{\detokenize{RoutesController.update()}} → \texttt{\detokenize{RoutesService.update()}} → \texttt{\detokenize{UpdateRouteUseCase.execute()}} → repositorio.  
+
+\textbf{Errores relevantes:} \texttt{\detokenize{400}}; \texttt{\detokenize{401}}; \texttt{\detokenize{403}}; \texttt{\detokenize{404}}.  
+
+\textbf{Efectos:} actualización de \texttt{\detokenize{Rutas}}; DTO puro.  
+
+\textbf{Prisma:} \texttt{\detokenize{Rutas}}.  
+
+\textbf{Entrada:} path \texttt{\detokenize{{ "id": "42" }}}; body \texttt{\detokenize{{ "nombre": "Ruta actualizada" }}}.  
+
+\textbf{Salida:} \texttt{\detokenize{{ "rutaId": "42", "nombre": "Ruta actualizada", "estado": "PENDIENTE" }}}.
+
+
+\subsubsection{Caso: Reasignar ruta}
+
+
+\textbf{Descripción:} asigna o desasigna la ruta a un operario.  
+
+\textbf{HTTP y ruta:} \texttt{\detokenize{PATCH /api/v1/routes/:id/reassign}}.  
+
+\textbf{Permiso:} \texttt{\detokenize{routes:update}}.  
+
+\textbf{Cadena:} \texttt{\detokenize{RoutesController.reassign()}} → \texttt{\detokenize{ReassignRouteUseCase.execute()}} → repositorio.  
+
+\textbf{Errores relevantes:} \texttt{\detokenize{400}}; \texttt{\detokenize{401}}; \texttt{\detokenize{403}}; \texttt{\detokenize{404}}; ruta ya asignada.  
+
+\textbf{Efectos:} cambia \texttt{\detokenize{Rutas.operarioId}}.  
+
+\textbf{Prisma:} \texttt{\detokenize{Rutas}}, \texttt{\detokenize{Usuarios/Operarios}}.  
+
+\textbf{Entrada:} path \texttt{\detokenize{{ "id": "42" }}}; body \texttt{\detokenize{{ "operarioId": "7" }}} o \texttt{\detokenize{null}}.  
+
+\textbf{Salida:} \texttt{\detokenize{{ "rutaId": "42", "operarioId": 7, "estado": "PENDIENTE" }}}.
+
+
+\subsubsection{Caso: Eliminar ruta}
+
+
+\textbf{Descripción:} elimina lógicamente la ruta.  
+
+\textbf{HTTP y ruta:} \texttt{\detokenize{DELETE /api/v1/routes/:id}}.  
+
+\textbf{Permiso:} \texttt{\detokenize{routes:delete}}.  
+
+\textbf{Cadena:} \texttt{\detokenize{RoutesController.delete()}} → \texttt{\detokenize{RoutesService.delete()}} → \texttt{\detokenize{DeleteRouteUseCase.execute()}} → repositorio.  
+
+\textbf{Errores relevantes:} \texttt{\detokenize{400}}; \texttt{\detokenize{401}}; \texttt{\detokenize{403}}; \texttt{\detokenize{404}}.  
+
+\textbf{Efectos:} soft delete y desasignación según el caso.  
+
+\textbf{Prisma:} \texttt{\detokenize{Rutas}}, \texttt{\detokenize{OrdenTrabajo}}, \texttt{\detokenize{Lecturas}}.  
+
+\textbf{Entrada:} sin body; path \texttt{\detokenize{{ "id": "42" }}}.  
+
+\textbf{Salida:} \texttt{\detokenize{{ "rutaId": "42", "estado": "CANCELADA" }}}.
+
+
+\subsubsection{Caso: Exportar hoja de campo}
+
+
+\textbf{Descripción:} genera la hoja oficial de órdenes y lecturas.  
+
+\textbf{HTTP y ruta:} \texttt{\detokenize{GET /api/v1/routes/:id/pdf}}.  
+
+\textbf{Permiso:} \texttt{\detokenize{routes:read}}.  
+
+\textbf{Cadena:} \texttt{\detokenize{RoutesController.exportPdf()}} → \texttt{\detokenize{RoutesService.exportPdf()}} → \texttt{\detokenize{ExportFieldSheetPdfUseCase}}/generador.  
+
+\textbf{Errores relevantes:} \texttt{\detokenize{400}}; \texttt{\detokenize{401}}; \texttt{\detokenize{403}}; \texttt{\detokenize{404}}.  
+
+\textbf{Efectos:} lectura y generación puras.  
+
+\textbf{Prisma:} \texttt{\detokenize{Rutas}}, \texttt{\detokenize{OrdenTrabajo}}, \texttt{\detokenize{Lecturas}}.  
+
+\textbf{Entrada:} sin body; path \texttt{\detokenize{{ "id": "42" }}}.  
+
+\textbf{Salida:} no es JSON: \texttt{\detokenize{application/pdf}}, \texttt{\detokenize{Content-Disposition: inline}}, \texttt{\detokenize{Content-Length}} y bytes PDF.
+
+
+\subsubsection{Caso: Consultar órdenes de una ruta}
+
+
+\textbf{Descripción:} lista órdenes asociadas, filtradas y paginadas.  
+
+\textbf{HTTP y ruta:} \texttt{\detokenize{GET /api/v1/routes/:id/work-orders}}.  
+
+\textbf{Permiso:} \texttt{\detokenize{routes:read}}.  
+
+\textbf{Cadena:} \texttt{\detokenize{RoutesController.findOrdenesByRuta()}} → \texttt{\detokenize{OrdenesTrabajoService.findByRuta()}} → \texttt{\detokenize{FindOrdenesByRutaUseCase.execute()}}.  
+
+\textbf{Errores relevantes:} \texttt{\detokenize{400}}; \texttt{\detokenize{401}}; \texttt{\detokenize{403}}; \texttt{\detokenize{404}}.  
+
+\textbf{Efectos:} ninguno.  
+
+\textbf{Prisma:} \texttt{\detokenize{OrdenTrabajo}}, \texttt{\detokenize{Rutas}}, \texttt{\detokenize{Lecturas}}.  
+
+\textbf{Entrada:} sin body; path \texttt{\detokenize{{ "id": "42" }}}; query \texttt{\detokenize{estado}}, \texttt{\detokenize{page}}, \texttt{\detokenize{limit}}.  
+
+\textbf{Salida:} \texttt{\detokenize{{ "data": [{ "ordenTrabajoId": "9", "estado": "PENDIENTE" }], "meta": {}, "kpis": {} }}}.
+
+
+\subsubsection{Caso: Actualizar estado de orden}
+
+
+\textbf{Descripción:} cambia estado, observación y fecha de finalización de una orden.  
+
+\textbf{HTTP y ruta:} \texttt{\detokenize{PATCH /api/v1/work-orders/:id/state}}.  
+
+\textbf{Permiso:} \texttt{\detokenize{routes:update}}.  
+
+\textbf{Cadena:} \texttt{\detokenize{OrdenesTrabajoController.updateEstado()}} → \texttt{\detokenize{OrdenesTrabajoService.updateEstado()}} → \texttt{\detokenize{UpdateOrdenEstadoUseCase.execute()}} → repositorio.  
+
+\textbf{Errores relevantes:} \texttt{\detokenize{400}}; \texttt{\detokenize{401}}; \texttt{\detokenize{403}}; \texttt{\detokenize{404}}; \texttt{\detokenize{409}}.  
+
+\textbf{Efectos:} persiste estado; completa o limpia \texttt{\detokenize{completadoEn}}.  
+
+\textbf{Prisma:} \texttt{\detokenize{OrdenTrabajo}}, \texttt{\detokenize{EjecucionOrdenTrabajo}}.  
+
+\textbf{Entrada:} path \texttt{\detokenize{{ "id": "9" }}}; body \texttt{\detokenize{{ "estado": "COMPLETADA", "resultadoObservacion": "Trabajo realizado" }}}.  
+
+\textbf{Salida:} \texttt{\detokenize{{ "ordenTrabajoId": "9", "estado": "COMPLETADA" }}}.
+
+
+\subsubsection{Caso: Vincular lectura a orden}
+
+
+\textbf{Descripción:} asocia una lectura y completa la orden.  
+
+\textbf{HTTP y ruta:} \texttt{\detokenize{PATCH /api/v1/work-orders/:id/reading}}.  
+
+\textbf{Permiso:} \texttt{\detokenize{routes:update}}.  
+
+\textbf{Cadena:} \texttt{\detokenize{OrdenesTrabajoController.linkLectura()}} → \texttt{\detokenize{OrdenesTrabajoService.linkLectura()}} → \texttt{\detokenize{LinkLecturaUseCase.execute()}} → repositorio.  
+
+\textbf{Errores relevantes:} \texttt{\detokenize{400}}; \texttt{\detokenize{401}}; \texttt{\detokenize{403}}; \texttt{\detokenize{404}}; \texttt{\detokenize{409}}.  
+
+\textbf{Efectos:} persiste vínculo y \texttt{\detokenize{completadoEn}}.  
+
+\textbf{Prisma:} \texttt{\detokenize{OrdenTrabajo}}, \texttt{\detokenize{Lecturas}}, \texttt{\detokenize{Rutas}}.  
+
+\textbf{Entrada:} path \texttt{\detokenize{{ "id": "9" }}}; body \texttt{\detokenize{{ "lecturaId": "101" }}}.  
+
+\textbf{Salida:} \texttt{\detokenize{{ "ordenTrabajoId": "9", "lecturaId": "101", "estado": "COMPLETADA" }}}.
+
+
+\subsubsection{Caso: Actualizar operación del operador}
+
+
+\textbf{Descripción:} registra ejecución y evidencia opcional de una orden.  
+
+\textbf{HTTP y ruta:} \texttt{\detokenize{PATCH /api/v1/operator/work-orders/:id}}.  
+
+\textbf{Permiso:} \texttt{\detokenize{routes:update}}.  
+
+\textbf{Cadena:} \texttt{\detokenize{OperatorController.updateOperatorWorkOrder()}} → \texttt{\detokenize{UpdateOperatorWorkOrderUseCase.execute()}} → repositorio/RustFS.  
+
+\textbf{Errores relevantes:} \texttt{\detokenize{400}}; \texttt{\detokenize{401}}; \texttt{\detokenize{403}}; \texttt{\detokenize{404}}; \texttt{\detokenize{409}}.  
+
+\textbf{Efectos:} persiste ejecución y \texttt{\detokenize{evidenciaFotoUrl}}; la subida y rollback de archivo son efectos reales.  
+
+\textbf{Prisma:} \texttt{\detokenize{OrdenTrabajo}}, \texttt{\detokenize{EjecucionOrdenTrabajo}}, \texttt{\detokenize{NovedadOrdenTrabajo}}.  
+
+\textbf{Entrada:} path \texttt{\detokenize{{ "id": "9" }}}; multipart: campos DTO y archivo opcional \texttt{\detokenize{foto}}; sin body JSON.  
+
+\textbf{Salida:} JSON \texttt{\detokenize{OrderWorkResponseDto}}, por ejemplo \texttt{\detokenize{{ "ordenTrabajoId": "9", "estado": "COMPLETADA", "evidenciaFotoUrl": "ordenes/9/foto.jpg" }}}.
+
+
+\subsubsection{Caso: Listar rutas del operador}
+
+
+\textbf{Descripción:} lista las rutas del período activo asignadas al operador autenticado.  
+
+\textbf{HTTP y ruta:} \texttt{\detokenize{GET /api/v1/operator/routes}}.  
+
+\textbf{Permiso:} \texttt{\detokenize{routes:read}}.  
+
+\textbf{Cadena:} \texttt{\detokenize{OperatorController.getOperatorRoutes()}} → \texttt{\detokenize{GetOperatorRoutesUseCase.execute()}} → repositorio.  
+
+\textbf{Errores relevantes:} \texttt{\detokenize{400}}; \texttt{\detokenize{401}}; \texttt{\detokenize{403}}; \texttt{\detokenize{404}} sin período activo.  
+
+\textbf{Efectos:} ninguno; consulta y DTO puros.  
+
+\textbf{Prisma:} \texttt{\detokenize{Rutas}}, \texttt{\detokenize{OrdenTrabajo}}, \texttt{\detokenize{Periodos}}.  
+
+\textbf{Entrada:} sin body; query opcional \texttt{\detokenize{tipoRuta}}; operador desde JWT.  
+
+\textbf{Salida:} lista JSON de \texttt{\detokenize{OperatorRouteResponseDto}}.
+
+
+\subsubsection{Caso: Actualizar estado de ruta del operador}
+
+
+\textbf{Descripción:} cambia el estado de una ruta que pertenece al operador autenticado.  
+
+\textbf{HTTP y ruta:} \texttt{\detokenize{PATCH /api/v1/operator/routes/:id/state}}.  
+
+\textbf{Permiso:} \texttt{\detokenize{routes:update}}.  
+
+\textbf{Cadena:} \texttt{\detokenize{OperatorController.updateRouteState()}} → \texttt{\detokenize{UpdateRouteStateUseCase.execute()}} → repositorio.  
+
+\textbf{Errores relevantes:} \texttt{\detokenize{400}}; \texttt{\detokenize{401}}; \texttt{\detokenize{403}} ruta ajena; \texttt{\detokenize{404}}; \texttt{\detokenize{409}} transición inválida.  
+
+\textbf{Efectos:} actualiza \texttt{\detokenize{Rutas}} y las marcas temporales derivadas del estado.  
+
+\textbf{Prisma:} \texttt{\detokenize{Rutas}}, \texttt{\detokenize{OrdenTrabajo}}, \texttt{\detokenize{Periodos}}.  
+
+\textbf{Entrada:} path \texttt{\detokenize{{ "id": "42" }}}; body \texttt{\detokenize{{ "estado": "EN_PROGRESO" }}}.  
+
+\textbf{Salida:} \texttt{\detokenize{{ "rutaId": "42", "estado": "EN_PROGRESO" }}}.
+
+
+\subsection{No documentado o pendiente de confirmar}
+
+
+\begin{itemize}
+\item Lista exhaustiva de transiciones de operador.
+\item Promoción automática del contrato a \texttt{\detokenize{ACTIVO}} al completar instalación.
+\item Endpoints legacy basados en \texttt{\detokenize{EstadoAsignacion}}.
+\end{itemize}

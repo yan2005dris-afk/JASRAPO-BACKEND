@@ -1,0 +1,448 @@
+\section{Medidores}
+
+
+Inventario, asignación, reemplazo y retiro operativo de medidores.
+
+
+\begin{quote}
+\textbf{Ficha de dominio:} documenta inventario, vínculo contractual, reemplazo, exportaciones, reporte de defectos y baja operativa del medidor.
+\end{quote}
+
+
+\subsection{Alcance y entradas HTTP}
+
+
+\begin{itemize}
+\item \textbf{Controladores:} \texttt{\detokenize{MeterController}}, \texttt{\detokenize{OperatorController}}.
+\item \textbf{Servicio:} \texttt{\detokenize{MeterService}}.
+\item \textbf{Casos:} \texttt{\detokenize{CreateMeterUseCase}}, \texttt{\detokenize{FindAllMetersUseCase}}, \texttt{\detokenize{FindOneMeterUseCase}}, \texttt{\detokenize{UpdateMeterUseCase}}, \texttt{\detokenize{RemoveMeterUseCase}}, \texttt{\detokenize{FindMeterHistoryUseCase}}, \texttt{\detokenize{FindReplacementUseCase}}, \texttt{\detokenize{ReplaceMeterUseCase}}, \texttt{\detokenize{ExportMetersUseCase}}, \texttt{\detokenize{ExportMetersPdfUseCase}}, \texttt{\detokenize{ReportDefectUseCase}}, \texttt{\detokenize{DecommissionMeterUseCase}}.
+\end{itemize}
+
+\subsection{Comportamiento de negocio verificable}
+Las tablas relacionadas son \texttt{Medidores}, \texttt{Contratos}, \texttt{HistorialMedidores}, \texttt{ReemplazoMedidor}, \texttt{Lecturas}, \texttt{OrdenTrabajo} y \texttt{NovedadOrdenTrabajo}. El reemplazo es transaccional y conserva trazabilidad. No se encontró fórmula tarifaria ni handler independiente que cambie contratos.
+
+
+\begin{center}
+\small
+\begin{longtable}{|p{0.313\textwidth}|p{0.313\textwidth}|p{0.313\textwidth}|}
+\hline
+\textbf{Método y ruta} & \textbf{Caso/servicio ejecutado} & \textbf{Resultado} \\
+\hline
+\endfirsthead
+\hline
+\textbf{Método y ruta} & \textbf{Caso/servicio ejecutado} & \textbf{Resultado} \\
+\hline
+\endhead
+\texttt{\detokenize{GET /api/v1/meters/status}} & \texttt{\detokenize{MeterService.findAllStates()}} & Catálogo. \\
+\hline
+\texttt{\detokenize{POST /api/v1/meters}} & \texttt{\detokenize{create()}} → \texttt{\detokenize{CreateMeterUseCase}} & Alta. \\
+\hline
+\texttt{\detokenize{GET /api/v1/meters}} / \texttt{\detokenize{:id}} & \texttt{\detokenize{findAll()}} / \texttt{\detokenize{findOne()}} → consultas & Inventario/detalle. \\
+\hline
+\texttt{\detokenize{PATCH /api/v1/meters/:id}} & \texttt{\detokenize{update()}} → \texttt{\detokenize{UpdateMeterUseCase}} & Actualización. \\
+\hline
+\texttt{\detokenize{DELETE /api/v1/meters/:id}} & \texttt{\detokenize{remove()}} → \texttt{\detokenize{RemoveMeterUseCase}} & Soft delete. \\
+\hline
+\texttt{\detokenize{GET /api/v1/meters/export/csv}} / \texttt{\detokenize{export/pdf}} & exportación CSV/PDF & Archivo. \\
+\hline
+\texttt{\detokenize{GET /api/v1/meters/:id/history}} & \texttt{\detokenize{FindMeterHistoryUseCase}} & Historial. \\
+\hline
+\texttt{\detokenize{GET /api/v1/meters/replacements/:id}} & \texttt{\detokenize{FindReplacementUseCase}} & Reemplazo. \\
+\hline
+\texttt{\detokenize{POST /api/v1/meters/replace}} & \texttt{\detokenize{ReplaceMeterUseCase}} & Reemplazo transaccional. \\
+\hline
+\texttt{\detokenize{POST /api/v1/meters/replacements/:id/approve}} & aprobación del servicio & Resolución aprobada. \\
+\hline
+\texttt{\detokenize{POST /api/v1/operator/:id/report-defect}} & \texttt{\detokenize{ReportDefectUseCase}} & \texttt{\detokenize{DANADO}}. \\
+\hline
+\texttt{\detokenize{POST /api/v1/operator/:id/decommission}} & \texttt{\detokenize{DecommissionMeterUseCase}} & \texttt{\detokenize{BAJA}}. \\
+\hline
+\end{longtable}
+\end{center}
+
+
+\subsection{Ejemplo JSON}
+
+
+\begin{lstlisting}
+{
+  "medidorId": "10",
+  "serie": "MED-12345",
+  "marca": "Elster",
+  "modelo": "V200",
+  "estado": "INSTALADO"
+}
+\end{lstlisting}
+
+
+\begin{center}
+\small
+\begin{longtable}{|p{0.313\textwidth}|p{0.313\textwidth}|p{0.313\textwidth}|}
+\hline
+\textbf{Campo} & \textbf{Tipo} & \textbf{Regla/uso} \\
+\hline
+\endfirsthead
+\hline
+\textbf{Campo} & \textbf{Tipo} & \textbf{Regla/uso} \\
+\hline
+\endhead
+\texttt{\detokenize{medidorId}} & string & \texttt{\detokenize{BigInt}} serializado. \\
+\hline
+\texttt{\detokenize{serie}} & string & Identificador único del inventario. \\
+\hline
+\texttt{\detokenize{marca}}, \texttt{\detokenize{modelo}} & string & Datos del equipo. \\
+\hline
+\texttt{\detokenize{estado}} & enum & Ciclo operativo. \\
+\hline
+\texttt{\detokenize{evidenciaFotoUrl}} & string/null & Evidencia de orden cuando corresponde. \\
+\hline
+\end{longtable}
+\end{center}
+
+
+\subsection{Estados}
+
+
+\begin{center}
+\small
+\begin{longtable}{|p{0.470\textwidth}|p{0.470\textwidth}|}
+\hline
+\textbf{Estado} & \textbf{Significado} \\
+\hline
+\endfirsthead
+\hline
+\textbf{Estado} & \textbf{Significado} \\
+\hline
+\endhead
+\texttt{\detokenize{BODEGA}} & Disponible. \\
+\hline
+\texttt{\detokenize{PENDIENTE}} & Reservado durante instalación. \\
+\hline
+\texttt{\detokenize{INSTALADO}} & En servicio. \\
+\hline
+\texttt{\detokenize{DANADO}} & Defecto reportado. \\
+\hline
+\texttt{\detokenize{BAJA}} & Retirado del inventario. \\
+\hline
+\end{longtable}
+\end{center}
+
+
+\subsection{Efectos y transacciones}
+
+
+Crear/actualizar/eliminar escriben \texttt{\detokenize{Medidores}}; eliminar usa soft delete. Reemplazar registra reemplazo, historial, lecturas y resolución económica en la transacción del caso. Reportar defecto y dar de baja cambian estado y pueden crear tarea/novedad. Exportaciones, consultas y DTO son puras; CSV/PDF no son respuestas JSON.
+
+
+\begin{center}
+\small
+\begin{longtable}{|p{0.470\textwidth}|p{0.470\textwidth}|}
+\hline
+\textbf{Tabla Prisma} & \textbf{Uso} \\
+\hline
+\endfirsthead
+\hline
+\textbf{Tabla Prisma} & \textbf{Uso} \\
+\hline
+\endhead
+\texttt{\detokenize{Medidores}} & Inventario, estado y soft delete. \\
+\hline
+\texttt{\detokenize{Contratos}}, \texttt{\detokenize{HistorialMedidores}} & Asignación y trazabilidad. \\
+\hline
+\texttt{\detokenize{ReemplazoMedidor}} & Ciclo de reemplazo. \\
+\hline
+\texttt{\detokenize{Lecturas}} & Lectura final/inicial. \\
+\hline
+\texttt{\detokenize{OrdenTrabajo}}, \texttt{\detokenize{NovedadOrdenTrabajo}} & Inspección y evidencia. \\
+\hline
+\end{longtable}
+\end{center}
+
+
+\subsection{Gráfico de estados}
+
+
+\begin{lstlisting}
+stateDiagram-v2
+  BODEGA --> PENDIENTE: vinculación
+  PENDIENTE --> INSTALADO: instalación
+  INSTALADO --> DANADO: reportar defecto
+  DANADO --> BAJA: dar de baja
+\end{lstlisting}
+
+
+\subsection{Casos de uso}
+
+
+\subsubsection{Caso: Crear medidor}
+
+
+\textbf{Descripción:} registra un equipo en inventario.  
+
+\textbf{HTTP y ruta:} \texttt{\detokenize{POST /api/v1/meters}}.  
+
+\textbf{Permiso:} \texttt{\detokenize{meters:create}}.  
+
+\textbf{Cadena:} \texttt{\detokenize{MeterController.create()}} → \texttt{\detokenize{MeterService.create()}} → \texttt{\detokenize{CreateMeterUseCase.execute()}} → repositorio.  
+
+\textbf{Errores relevantes:} \texttt{\detokenize{400}}; \texttt{\detokenize{401}}; \texttt{\detokenize{403}}; \texttt{\detokenize{409}} serie duplicada.  
+
+\textbf{Efectos:} alta en \texttt{\detokenize{Medidores}}.  
+
+\textbf{Prisma:} \texttt{\detokenize{Medidores}}.  
+
+\textbf{Entrada:} \texttt{\detokenize{{ "serie": "MED-12345", "marca": "Elster", "modelo": "V200" }}}.  
+
+\textbf{Salida:} \texttt{\detokenize{{ "medidorId": "10", "serie": "MED-12345", "estado": "BODEGA" }}}.
+
+
+\subsubsection{Caso: Listar medidores}
+
+
+\textbf{Descripción:} consulta el inventario paginado y filtrable.  
+
+\textbf{HTTP y ruta:} \texttt{\detokenize{GET /api/v1/meters}}.  
+
+\textbf{Permiso:} \texttt{\detokenize{meters:read}}.  
+
+\textbf{Cadena:} \texttt{\detokenize{MeterController.findAll()}} → \texttt{\detokenize{MeterService.findAll()}} → \texttt{\detokenize{FindAllMetersUseCase.execute()}} → repositorio.  
+
+\textbf{Errores relevantes:} \texttt{\detokenize{400}}; \texttt{\detokenize{401}}; \texttt{\detokenize{403}}.  
+
+\textbf{Efectos:} ninguno; consulta y DTO puros.  
+
+\textbf{Prisma:} \texttt{\detokenize{Medidores}}, relaciones contractuales.  
+
+\textbf{Entrada:} sin body; query \texttt{\detokenize{page}}, \texttt{\detokenize{limit}}, estado y búsqueda.  
+
+\textbf{Salida:} \texttt{\detokenize{{ "data": [{ "medidorId": "10", "estado": "INSTALADO" }], "meta": {} }}}.
+
+
+\subsubsection{Caso: Obtener medidor}
+
+
+\textbf{Descripción:} devuelve el detalle de un medidor por identificador.  
+
+\textbf{HTTP y ruta:} \texttt{\detokenize{GET /api/v1/meters/:id}}.  
+
+\textbf{Permiso:} \texttt{\detokenize{meters:read}}.  
+
+\textbf{Cadena:} \texttt{\detokenize{MeterController.findOne()}} → \texttt{\detokenize{MeterService.findOne()}} → \texttt{\detokenize{FindOneMeterUseCase.execute()}} → repositorio.  
+
+\textbf{Errores relevantes:} \texttt{\detokenize{400}}; \texttt{\detokenize{401}}; \texttt{\detokenize{403}}; \texttt{\detokenize{404}}.  
+
+\textbf{Efectos:} ninguno; DTO puro.  
+
+\textbf{Prisma:} \texttt{\detokenize{Medidores}}, relaciones contractuales.  
+
+\textbf{Entrada:} sin body; path \texttt{\detokenize{{ "id": "10" }}}.  
+
+\textbf{Salida:} objeto \texttt{\detokenize{MeterResponseDto}}, como el ejemplo principal.
+
+
+\subsubsection{Caso: Actualizar medidor}
+
+
+\textbf{Descripción:} modifica datos permitidos del inventario.  
+
+\textbf{HTTP y ruta:} \texttt{\detokenize{PATCH /api/v1/meters/:id}}.  
+
+\textbf{Permiso:} \texttt{\detokenize{meters:update}}.  
+
+\textbf{Cadena:} \texttt{\detokenize{MeterController.update()}} → \texttt{\detokenize{MeterService.update()}} → \texttt{\detokenize{UpdateMeterUseCase.execute()}} → repositorio.  
+
+\textbf{Errores relevantes:} \texttt{\detokenize{400}}; \texttt{\detokenize{401}}; \texttt{\detokenize{403}}; \texttt{\detokenize{404}}; \texttt{\detokenize{409}} serie duplicada.  
+
+\textbf{Efectos:} actualiza \texttt{\detokenize{Medidores}}; DTO puro.  
+
+\textbf{Prisma:} \texttt{\detokenize{Medidores}}.  
+
+\textbf{Entrada:} path \texttt{\detokenize{{ "id": "10" }}}; body \texttt{\detokenize{{ "marca": "Itron" }}}.  
+
+\textbf{Salida:} \texttt{\detokenize{{ "medidorId": "10", "marca": "Itron", "estado": "BODEGA" }}}.
+
+
+\subsubsection{Caso: Eliminar medidor}
+
+
+\textbf{Descripción:} marca el medidor como eliminado lógicamente.  
+
+\textbf{HTTP y ruta:} \texttt{\detokenize{DELETE /api/v1/meters/:id}}.  
+
+\textbf{Permiso:} \texttt{\detokenize{meters:delete}}.  
+
+\textbf{Cadena:} \texttt{\detokenize{MeterController.delete()}} → \texttt{\detokenize{MeterService.remove()}} → \texttt{\detokenize{RemoveMeterUseCase.execute()}} → repositorio.  
+
+\textbf{Errores relevantes:} \texttt{\detokenize{400}}; \texttt{\detokenize{401}}; \texttt{\detokenize{403}}; \texttt{\detokenize{404}}.  
+
+\textbf{Efectos:} establece \texttt{\detokenize{deletedAt}}.  
+
+\textbf{Prisma:} \texttt{\detokenize{Medidores}}.  
+
+\textbf{Entrada:} sin body; path \texttt{\detokenize{{ "id": "10" }}}.  
+
+\textbf{Salida:} \texttt{\detokenize{{ "message": "Medidor eliminado correctamente" }}}.
+
+
+\subsubsection{Caso: Reemplazar medidor}
+
+
+\textbf{Descripción:} cambia el equipo de un contrato y conserva trazabilidad de lecturas y resolución económica.  
+
+\textbf{HTTP y ruta:} \texttt{\detokenize{POST /api/v1/meters/replace}}.  
+
+\textbf{Permiso:} \texttt{\detokenize{meters:update}}.  
+
+\textbf{Cadena:} \texttt{\detokenize{MeterController.replace()}} → \texttt{\detokenize{MeterService.replaceMeter()}} → \texttt{\detokenize{ReplaceMeterUseCase.execute()}} → transacción/repositorios.  
+
+\textbf{Errores relevantes:} \texttt{\detokenize{400}}; \texttt{\detokenize{401}}; \texttt{\detokenize{403}}; \texttt{\detokenize{404}}; lectura inconsistente.  
+
+\textbf{Efectos:} reemplazo, historial y lecturas en transacción.  
+
+\textbf{Prisma:} \texttt{\detokenize{ReemplazoMedidor}}, \texttt{\detokenize{Medidores}}, \texttt{\detokenize{HistorialMedidores}}, \texttt{\detokenize{Lecturas}}, \texttt{\detokenize{Contratos}}.  
+
+\textbf{Entrada:} body \texttt{\detokenize{ReplaceMeterDto}} con contrato, medidores y lecturas final/inicial.  
+
+\textbf{Salida:} \texttt{\detokenize{{ "reemplazoMedidorId": "4", "medidorAnteriorId": "10", "medidorNuevoId": "11" }}}.
+
+
+\subsubsection{Caso: Obtener reemplazo de medidor}
+
+
+\textbf{Descripción:} consulta el detalle de un reemplazo registrado.  
+
+\textbf{HTTP y ruta:} \texttt{\detokenize{GET /api/v1/meters/replacements/:id}}.  
+
+\textbf{Permiso:} \texttt{\detokenize{meters:read}}.  
+
+\textbf{Cadena:} \texttt{\detokenize{MeterController.findReplacement()}} → \texttt{\detokenize{MeterService.findReplacement()}} → repositorio.  
+
+\textbf{Errores relevantes:} \texttt{\detokenize{400}}; \texttt{\detokenize{401}}; \texttt{\detokenize{403}}; \texttt{\detokenize{404}}.  
+
+\textbf{Efectos:} ninguno; consulta y DTO puros.  
+
+\textbf{Prisma:} \texttt{\detokenize{ReemplazoMedidor}}, \texttt{\detokenize{Medidores}}, \texttt{\detokenize{Contratos}}.  
+
+\textbf{Entrada:} sin body; path \texttt{\detokenize{{ "id": "4" }}}.  
+
+\textbf{Salida:} \texttt{\detokenize{{ "reemplazoMedidorId": "4", "medidorAnteriorId": "10", "medidorNuevoId": "11" }}}.
+
+
+\subsubsection{Caso: Aprobar reemplazo de medidor}
+
+
+\textbf{Descripción:} aprueba el tratamiento económico o técnico de un reemplazo pendiente.  
+
+\textbf{HTTP y ruta:} \texttt{\detokenize{POST /api/v1/meters/replacements/:id/approve}}.  
+
+\textbf{Permiso:} \texttt{\detokenize{meter-replacements:approve}}.  
+
+\textbf{Cadena:} \texttt{\detokenize{MeterController.approveReplacement()}} → \texttt{\detokenize{MeterService.approveReplacement()}} → caso/repositorio de aprobación.  
+
+\textbf{Errores relevantes:} \texttt{\detokenize{400}}; \texttt{\detokenize{401}}; \texttt{\detokenize{403}}; \texttt{\detokenize{404}}; conflicto de resolución.  
+
+\textbf{Efectos:} persiste la aprobación y su resolución.  
+
+\textbf{Prisma:} \texttt{\detokenize{ReemplazoMedidor}}, \texttt{\detokenize{Medidores}}, \texttt{\detokenize{Contratos}}, pagos/prefacturación si aplica.  
+
+\textbf{Entrada:} sin body; path \texttt{\detokenize{{ "id": "4" }}}.  
+
+\textbf{Salida:} \texttt{\detokenize{{ "reemplazoMedidorId": "4", "estado": "APROBADO" }}}.
+
+
+\subsubsection{Caso: Exportar inventario CSV}
+
+
+\textbf{Descripción:} descarga el inventario filtrado en formato CSV.  
+
+\textbf{HTTP y ruta:} \texttt{\detokenize{GET /api/v1/meters/export/csv}}.  
+
+\textbf{Permiso:} \texttt{\detokenize{meters:read}}.  
+
+\textbf{Cadena:} \texttt{\detokenize{MeterController.exportCsv()}} → \texttt{\detokenize{MeterService.exportCsv()}} → \texttt{\detokenize{ExportMetersUseCase.execute()}}.  
+
+\textbf{Errores relevantes:} \texttt{\detokenize{400}}; \texttt{\detokenize{401}}; \texttt{\detokenize{403}}; error de generación.  
+
+\textbf{Efectos:} sólo lectura y generación.  
+
+\textbf{Prisma:} \texttt{\detokenize{Medidores}} y relaciones seleccionadas.  
+
+\textbf{Entrada:} sin body; query \texttt{\detokenize{ExportMeterDto}}.  
+
+\textbf{Salida:} no es JSON: \texttt{\detokenize{Content-Type: text/csv; charset=utf-8}}, \texttt{\detokenize{Content-Disposition: attachment}} y contenido CSV.
+
+
+\subsubsection{Caso: Exportar inventario PDF}
+
+
+\textbf{Descripción:} genera un reporte PDF del inventario filtrado.  
+
+\textbf{HTTP y ruta:} \texttt{\detokenize{GET /api/v1/meters/export/pdf}}.  
+
+\textbf{Permiso:} \texttt{\detokenize{meters:read}}.  
+
+\textbf{Cadena:} \texttt{\detokenize{MeterController.exportPdf()}} → \texttt{\detokenize{MeterService.exportPdf()}} → \texttt{\detokenize{ExportMetersPdfUseCase.execute()}}.  
+
+\textbf{Errores relevantes:} \texttt{\detokenize{400}}; \texttt{\detokenize{401}}; \texttt{\detokenize{403}}; error de generación.  
+
+\textbf{Efectos:} sólo lectura y generación.  
+
+\textbf{Prisma:} \texttt{\detokenize{Medidores}} y relaciones seleccionadas.  
+
+\textbf{Entrada:} sin body; query \texttt{\detokenize{ExportMeterDto}}.  
+
+\textbf{Salida:} no es JSON: \texttt{\detokenize{application/pdf}}, \texttt{\detokenize{Content-Disposition: attachment}}, \texttt{\detokenize{Content-Length}} y bytes PDF.
+
+
+\subsubsection{Caso: Reportar defecto de medidor}
+
+
+\textbf{Descripción:} registra que un medidor presenta un defecto operativo.  
+
+\textbf{HTTP y ruta:} \texttt{\detokenize{POST /api/v1/operator/:id/report-defect}}.  
+
+\textbf{Permiso:} \texttt{\detokenize{meters:update}}.  
+
+\textbf{Cadena:} \texttt{\detokenize{OperatorController.reportDefect()}} → \texttt{\detokenize{ReportDefectUseCase.execute()}} → repositorio.  
+
+\textbf{Errores relevantes:} \texttt{\detokenize{400}} estado/ID; \texttt{\detokenize{401}}; \texttt{\detokenize{403}}; \texttt{\detokenize{404}}; \texttt{\detokenize{409}}.  
+
+\textbf{Efectos:} actualiza el estado a \texttt{\detokenize{DANADO}} y puede crear novedad/evidencia.  
+
+\textbf{Prisma:} \texttt{\detokenize{Medidores}}, \texttt{\detokenize{NovedadOrdenTrabajo}}, \texttt{\detokenize{OrdenTrabajo}}.  
+
+\textbf{Entrada:} path \texttt{\detokenize{{ "id": "10" }}}; body según el DTO de defecto.  
+
+\textbf{Salida:} \texttt{\detokenize{MeterResponseDto}}, por ejemplo \texttt{\detokenize{{ "medidorId": "10", "estado": "DANADO" }}}.
+
+
+\subsubsection{Caso: Dar de baja un medidor}
+
+
+\textbf{Descripción:} retira un medidor del inventario operativo.  
+
+\textbf{HTTP y ruta:} \texttt{\detokenize{POST /api/v1/operator/:id/decommission}}.  
+
+\textbf{Permiso:} \texttt{\detokenize{meters:delete}}.  
+
+\textbf{Cadena:} \texttt{\detokenize{OperatorController.decommissionMeter()}} → \texttt{\detokenize{DecommissionMeterUseCase.execute()}} → repositorio.  
+
+\textbf{Errores relevantes:} \texttt{\detokenize{400}} estado/ID; \texttt{\detokenize{401}}; \texttt{\detokenize{403}}; \texttt{\detokenize{404}}; \texttt{\detokenize{409}}.  
+
+\textbf{Efectos:} actualiza el estado a \texttt{\detokenize{BAJA}} y registra el motivo/historial.  
+
+\textbf{Prisma:} \texttt{\detokenize{Medidores}}, historial y auditoría relacionada.  
+
+\textbf{Entrada:} path \texttt{\detokenize{{ "id": "10" }}}; body \texttt{\detokenize{{ "motivoBaja": "Replacement" }}}.  
+
+\textbf{Salida:} \texttt{\detokenize{MeterResponseDto}}, por ejemplo \texttt{\detokenize{{ "medidorId": "10", "estado": "BAJA" }}}.
+
+
+\subsection{No documentado o pendiente de confirmar}
+
+
+\begin{itemize}
+\item Estados internos completos de resolución de reemplazo.
+\item Reversión/reactivación desde \texttt{\detokenize{BAJA}}.
+\item Campos exactos de DTO de defecto y baja.
+\end{itemize}
