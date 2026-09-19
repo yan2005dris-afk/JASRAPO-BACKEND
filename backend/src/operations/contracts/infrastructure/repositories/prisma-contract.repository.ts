@@ -49,6 +49,29 @@ export const contractDefaultInclude = {
     select: { convenioId: true },
     take: 1,
   },
+  // Orden de instalación activa (para exponer la asignación actual al front).
+  ordenesTrabajo: {
+    where: {
+      deletedAt: null,
+      estado: { notIn: ['CANCELADA', 'FALLIDA'] },
+      ruta: { tipoActividad: { codigo: 'INSTALACION' } },
+    },
+    orderBy: { createdAt: 'desc' },
+    take: 1,
+    select: {
+      ordenTrabajoId: true,
+      estado: true,
+      ruta: {
+        select: {
+          rutaId: true,
+          nombre: true,
+          estado: true,
+          fechaPlanificada: true,
+          operario: { select: { nombres: true, apellidos: true } },
+        },
+      },
+    },
+  },
 } satisfies Prisma.ContratosInclude;
 
 export type ContractRecord = Prisma.ContratosGetPayload<{

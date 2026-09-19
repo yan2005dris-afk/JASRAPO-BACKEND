@@ -41,6 +41,8 @@ describe('ContratoMedidorService', () => {
   };
   const mockOrdenTrabajoRepository = {
     create: jest.fn(),
+    findActiveInstallationByContratoId: jest.fn(),
+    reassignInstallationOrder: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -195,6 +197,10 @@ describe('ContratoMedidorService', () => {
     beforeEach(() => {
       mockFindOneUseCase.execute.mockResolvedValue(contrato);
       mockOrdenTrabajoRepository.create.mockResolvedValue({});
+      // Por defecto: el contrato no tiene una orden de instalación previa.
+      mockOrdenTrabajoRepository.findActiveInstallationByContratoId.mockResolvedValue(
+        null,
+      );
     });
 
     it('asigna el contrato y crea una orden de trabajo pendiente para una ruta válida', async () => {
@@ -290,6 +296,112 @@ describe('ContratoMedidorService', () => {
         service.assignInstallationRoute(contratoId, { routeId: 20 }),
       ).rejects.toThrow('estado PENDIENTE');
       expect(mockOrdenTrabajoRepository.create).not.toHaveBeenCalled();
+    });
+
+    it('reasigna la orden existente a otra ruta sin crear duplicados', async () => {
+      // Given: el contrato ya tiene una orden de instalación PENDIENTE en Ruta A.
+      mockOrdenTrabajoRepository.findActiveInstallationByContratoId.mockResolvedValue(
+        {
+          ordenTrabajoId: 77n,
+          rutaId: 20n,
+          estado: EstadoOrdenTrabajo.PENDIENTE,
+        },
+      );
+      const rutaDestino = new RouteEntity({
+        ...existingRoute,
+        rutaId: 30n,
+        nombre: 'Instalaciones destino',
+      });
+      // findById se usa para la ruta actual (bloqueo) y para la ruta destino.
+      mockRouteRepository.findById
+        .mockResolvedValueOnce(existingRoute)
+        .mockResolvedValueOnce(rutaDestino);
+      mockOrdenTrabajoRepository.reassignInstallationOrder.mockResolvedValue(
+        {},
+      );
+
+      // When: se reasigna el contrato a la Ruta B.
+      const result = await service.assignInstallationRoute(contratoId, {
+        routeId: 30,
+      });
+
+      // Then: se mueve la orden existente y NO se crea una nueva.
+      expect(result).toBe(rutaDestino);
+      expect(
+        mockOrdenTrabajoRepository.reassignInstallationOrder,
+      ).toHaveBeenCalledWith(77n, 30n);
+      expect(mockOrdenTrabajoRepository.create).not.toHaveBeenCalled();
+    });
+
+    it('bloquea la reasignación cuando la orden ya está EN_PROGRESO', async () => {
+      mockOrdenTrabajoRepository.findActiveInstallationByContratoId.mockResolvedValue(
+        {
+          ordenTrabajoId: 77n,
+          rutaId: 20n,
+          estado: EstadoOrdenTrabajo.EN_PROGRESO,
+        },
+      );
+
+      await expect(
+        service.assignInstallationRoute(contratoId, { routeId: 30 }),
+      ).rejects.toThrow('en progreso');
+      expect(
+        mockOrdenTrabajoRepository.reassignInstallationOrder,
+      ).not.toHaveBeenCalled();
+      expect(mockOrdenTrabajoRepository.create).not.toHaveBeenCalled();
+    });
+
+    it('bloquea la reasignación cuando la instalación ya fue COMPLETADA', async () => {
+      mockOrdenTrabajoRepository.findActiveInstallationByContratoId.mockResolvedValue(
+        {
+          ordenTrabajoId: 77n,
+          rutaId: 20n,
+          estado: EstadoOrdenTrabajo.COMPLETADA,
+        },
+      );
+
+      await expect(
+        service.assignInstallationRoute(contratoId, { routeId: 30 }),
+      ).rejects.toThrow('completada');
+      expect(mockOrdenTrabajoRepository.create).not.toHaveBeenCalled();
+      expect(
+        mockOrdenTrabajoRepository.reassignInstallationOrder,
+      ).not.toHaveBeenCalled();
+    });
+
+    it('bloquea la reasignación cuando la ruta de origen ya inició', async () => {
+      mockOrdenTrabajoRepository.findActiveInstallationByContratoId.mockResolvedValue(
+        {
+          ordenTrabajoId: 77n,
+          rutaId: 20n,
+          estado: EstadoOrdenTrabajo.PENDIENTE,
+        },
+      );
+      mockRouteRepository.findById.mockResolvedValue(
+        new RouteEntity({ ...existingRoute, estado: EstadoRuta.EN_PROGRESO }),
+      );
+
+      await expect(
+        service.assignInstallationRoute(contratoId, { routeId: 30 }),
+      ).rejects.toThrow('en progreso');
+      expect(
+        mockOrdenTrabajoRepository.reassignInstallationOrder,
+      ).not.toHaveBeenCalled();
+    });
+
+    it('trata una orden CANCELADA/FALLIDA como inexistente y crea una nueva', async () => {
+      // findActiveInstallationByContratoId excluye CANCELADA/FALLIDA => null.
+      mockOrdenTrabajoRepository.findActiveInstallationByContratoId.mockResolvedValue(
+        null,
+      );
+      mockRouteRepository.findById.mockResolvedValue(existingRoute);
+
+      await service.assignInstallationRoute(contratoId, { routeId: 20 });
+
+      expect(mockOrdenTrabajoRepository.create).toHaveBeenCalled();
+      expect(
+        mockOrdenTrabajoRepository.reassignInstallationOrder,
+      ).not.toHaveBeenCalled();
     });
   });
 });

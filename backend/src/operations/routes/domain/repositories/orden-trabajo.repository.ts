@@ -59,4 +59,23 @@ export abstract class OrdenTrabajoRepository {
    * Usado por el flujo "Asignar contrato a ruta de instalación" (SC-174).
    */
   abstract create(data: CreateOrdenTrabajoData): Promise<OrdenTrabajoEntity>;
+
+  /**
+   * Busca la orden de instalación ACTIVA (no CANCELADA ni FALLIDA) de un
+   * contrato. Se usa para evitar órdenes duplicadas al (re)asignar la ruta de
+   * instalación. Devuelve null si el contrato no tiene una orden vigente.
+   */
+  abstract findActiveInstallationByContratoId(
+    contratoId: bigint,
+  ): Promise<OrdenTrabajoEntity | null>;
+
+  /**
+   * Reasigna, de forma atómica, una orden de instalación existente a otra ruta.
+   * Si la ruta de origen queda sin órdenes y sin operario asignado, se cancela
+   * (era una ruta auto-generada huérfana). No crea órdenes nuevas.
+   */
+  abstract reassignInstallationOrder(
+    ordenTrabajoId: bigint,
+    toRutaId: bigint,
+  ): Promise<OrdenTrabajoEntity>;
 }

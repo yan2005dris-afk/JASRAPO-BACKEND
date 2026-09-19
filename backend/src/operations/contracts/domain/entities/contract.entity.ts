@@ -10,6 +10,16 @@ import type {
   EstadoServicioContrato,
 } from 'src/shared/enums';
 
+export interface ContractInstallationAssignmentRef {
+  rutaId: bigint;
+  nombreRuta: string;
+  estadoRuta: string;
+  ordenTrabajoId: bigint;
+  estadoOrdenTrabajo: string;
+  fechaPlanificada: Date | null;
+  operarioNombre: string | null;
+}
+
 export class ContractEntity {
   contratoId: bigint;
   clienteId: bigint;
@@ -29,6 +39,7 @@ export class ContractEntity {
   comunidad?: ContractCommunityRef | null;
   sector?: ContractSectorRef | null;
   historialMedidores?: ContractMeterHistoryRef[] | null;
+  asignacionInstalacion?: ContractInstallationAssignmentRef | null;
 
   deletedAt: Date | null;
   createdAt: Date;

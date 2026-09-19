@@ -85,13 +85,14 @@ export class ContratoMedidorService {
   // ── Asignar contrato a ruta de instalación (SC-174) ─────────────────────
 
   /**
-   * Asigna un contrato en estado PENDIENTE_INSTALACION a una ruta de
-   * instalacion. Si `dto.routeId` es null/undefined, crea una nueva ruta
-   * INSTALACION sin operario asignado. Si se pasa `dto.routeId`, valida
-   * que la ruta destino sea de tipo INSTALACION y este en PENDIENTE.
+   * Asigna (o reasigna) un contrato en estado PENDIENTE_INSTALACION a una ruta
+   * de instalación.
    *
-   * En ambos casos crea una orden_trabajo (INSTALACION) para el contrato
-   * y la vincula a la ruta (nueva o existente).
+   * - Si el contrato NO tiene una orden de instalación activa, crea la orden en
+   *   la ruta indicada (o en una ruta INSTALACION nueva sin operario).
+   * - Si YA tiene una orden PENDIENTE, la reasigna a la nueva ruta sin duplicar
+   *   registros; la ruta origen se limpia si queda huérfana.
+   * - Si la orden/ruta ya está EN_PROGRESO o COMPLETADA, la operación se bloquea.
    */
   async assignInstallationRoute(
     contratoId: bigint,
@@ -108,7 +109,37 @@ export class ContratoMedidorService {
       );
     }
 
-    // 2. Resolver la ruta (crear nueva o usar existente)
+    // 2. Verificar si ya existe una orden de instalación activa para evitar
+    //    duplicados. Según su estado se bloquea o se habilita la reasignación.
+    const ordenActiva =
+      await this.ordenTrabajoRepository.findActiveInstallationByContratoId(
+        contratoId,
+      );
+
+    if (ordenActiva) {
+      if (ordenActiva.estado === EstadoOrdenTrabajo.COMPLETADA) {
+        throw new InvalidDomainOperationException(
+          'La instalación ya ha sido completada.',
+        );
+      }
+      if (ordenActiva.estado === EstadoOrdenTrabajo.EN_PROGRESO) {
+        throw new InvalidDomainOperationException(
+          'La orden de instalación ya se encuentra en progreso y no puede ser reasignada.',
+        );
+      }
+
+      // Orden PENDIENTE: bloquear también si la ruta de origen ya inició.
+      const rutaActual = await this.routeRepository.findById(
+        ordenActiva.rutaId,
+      );
+      if (rutaActual && rutaActual.estado === EstadoRuta.EN_PROGRESO) {
+        throw new InvalidDomainOperationException(
+          'La orden de instalación ya se encuentra en progreso y no puede ser reasignada.',
+        );
+      }
+    }
+
+    // 3. Resolver la ruta destino (crear nueva o usar existente)
     let ruta: RouteEntity;
 
     if (dto.routeId !== undefined && dto.routeId !== null) {
@@ -144,13 +175,20 @@ export class ContratoMedidorService {
       });
     }
 
-    // 3. Crear la orden_trabajo vinculada al contrato
-    await this.ordenTrabajoRepository.create({
-      rutaId: ruta.rutaId,
-      contratoId,
-      medidorId: contrato.historialMedidores?.[0]?.medidorId ?? null,
-      estado: EstadoOrdenTrabajo.PENDIENTE,
-    });
+    // 4. Reasignar la orden existente o crear una nueva (primera asignación).
+    if (ordenActiva) {
+      await this.ordenTrabajoRepository.reassignInstallationOrder(
+        ordenActiva.ordenTrabajoId,
+        ruta.rutaId,
+      );
+    } else {
+      await this.ordenTrabajoRepository.create({
+        rutaId: ruta.rutaId,
+        contratoId,
+        medidorId: contrato.historialMedidores?.[0]?.medidorId ?? null,
+        estado: EstadoOrdenTrabajo.PENDIENTE,
+      });
+    }
 
     return ruta;
   }

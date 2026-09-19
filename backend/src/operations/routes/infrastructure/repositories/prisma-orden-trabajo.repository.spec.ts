@@ -257,3 +257,149 @@ describe('PrismaOrdenTrabajoRepository.create', () => {
     expect(result.tipoActividad).toBe('INSTALACION');
   });
 });
+
+describe('PrismaOrdenTrabajoRepository.findActiveInstallationByContratoId', () => {
+  const rawOrder = {
+    ordenTrabajoId: 7n,
+    rutaId: 20n,
+    contratoId: 3n,
+    medidorId: null,
+    estado: 'PENDIENTE',
+    ordenVisita: 0,
+    resultadoObservacion: null,
+    evidenciaFotoUrl: null,
+    completadoEn: null,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    deletedAt: null,
+    lecturaId: null,
+    ruta: { tipoActividad: { codigo: 'INSTALACION' } },
+  };
+
+  it('devuelve la orden de instalación activa filtrando canceladas/fallidas', async () => {
+    const findFirst = jest.fn().mockResolvedValue(rawOrder);
+    const prisma = { ordenesTrabajo: { findFirst } };
+
+    const result = await new PrismaOrdenTrabajoRepository(
+      prisma as any,
+    ).findActiveInstallationByContratoId(3n);
+
+    expect(result?.ordenTrabajoId).toBe(7n);
+    expect(findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          contratoId: 3n,
+          deletedAt: null,
+          estado: { notIn: ['CANCELADA', 'FALLIDA'] },
+          ruta: { tipoActividad: { codigo: 'INSTALACION' } },
+        }),
+      }),
+    );
+  });
+
+  it('devuelve null cuando el contrato no tiene una orden activa', async () => {
+    const prisma = {
+      ordenesTrabajo: { findFirst: jest.fn().mockResolvedValue(null) },
+    };
+
+    const result = await new PrismaOrdenTrabajoRepository(
+      prisma as any,
+    ).findActiveInstallationByContratoId(3n);
+
+    expect(result).toBeNull();
+  });
+});
+
+describe('PrismaOrdenTrabajoRepository.reassignInstallationOrder', () => {
+  const updatedRaw = {
+    ordenTrabajoId: 7n,
+    rutaId: 30n,
+    contratoId: 3n,
+    medidorId: null,
+    estado: 'PENDIENTE',
+    ordenVisita: 0,
+    resultadoObservacion: null,
+    evidenciaFotoUrl: null,
+    completadoEn: null,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    deletedAt: null,
+    lecturaId: null,
+    ruta: { tipoActividad: { codigo: 'INSTALACION' } },
+  };
+
+  const buildPrisma = (opts: {
+    remaining: number;
+    operarioId: number | null;
+  }) => {
+    const rutasUpdate = jest.fn().mockResolvedValue({});
+    const tx = {
+      ordenesTrabajo: {
+        findUnique: jest.fn().mockResolvedValue({ rutaId: 20n }),
+        update: jest.fn().mockResolvedValue(updatedRaw),
+        count: jest.fn().mockResolvedValue(opts.remaining),
+      },
+      rutas: {
+        findUnique: jest
+          .fn()
+          .mockResolvedValue({ operarioId: opts.operarioId }),
+        update: rutasUpdate,
+      },
+    };
+    const prisma = {
+      $transaction: jest.fn((cb: (v: typeof tx) => unknown) => cb(tx)),
+    };
+    return { prisma, tx, rutasUpdate };
+  };
+
+  it('mueve la orden a la nueva ruta y cancela la ruta origen huérfana', async () => {
+    const { prisma, tx, rutasUpdate } = buildPrisma({
+      remaining: 0,
+      operarioId: null,
+    });
+
+    const result = await new PrismaOrdenTrabajoRepository(
+      prisma as any,
+    ).reassignInstallationOrder(7n, 30n);
+
+    expect(result.rutaId).toBe(30n);
+    expect(tx.ordenesTrabajo.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { ordenTrabajoId: 7n },
+        data: { rutaId: 30n },
+      }),
+    );
+    expect(rutasUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { rutaId: 20n },
+        data: { estado: 'CANCELADA' },
+      }),
+    );
+  });
+
+  it('NO cancela la ruta origen si aún tiene órdenes', async () => {
+    const { prisma, rutasUpdate } = buildPrisma({
+      remaining: 2,
+      operarioId: null,
+    });
+
+    await new PrismaOrdenTrabajoRepository(
+      prisma as any,
+    ).reassignInstallationOrder(7n, 30n);
+
+    expect(rutasUpdate).not.toHaveBeenCalled();
+  });
+
+  it('NO cancela la ruta origen si tiene operario asignado', async () => {
+    const { prisma, rutasUpdate } = buildPrisma({
+      remaining: 0,
+      operarioId: 5,
+    });
+
+    await new PrismaOrdenTrabajoRepository(
+      prisma as any,
+    ).reassignInstallationOrder(7n, 30n);
+
+    expect(rutasUpdate).not.toHaveBeenCalled();
+  });
+});

@@ -85,7 +85,31 @@ export class ContractMapper {
                 : null,
           }))
         : null,
+      asignacionInstalacion: ContractMapper.mapInstallationAssignment(raw),
     });
+  }
+
+  private static mapInstallationAssignment(raw: ContractRecord) {
+    // Solo aplica mientras el contrato está pendiente de instalación.
+    if (raw.estadoServicio !== 'PENDIENTE_INSTALACION') return null;
+
+    const orden = raw.ordenesTrabajo?.[0];
+    if (!orden) return null;
+
+    const operario = orden.ruta.operario;
+    const operarioNombre = operario
+      ? `${operario.nombres ?? ''} ${operario.apellidos ?? ''}`.trim() || null
+      : null;
+
+    return {
+      rutaId: orden.ruta.rutaId,
+      nombreRuta: orden.ruta.nombre,
+      estadoRuta: orden.ruta.estado,
+      ordenTrabajoId: orden.ordenTrabajoId,
+      estadoOrdenTrabajo: orden.estado,
+      fechaPlanificada: orden.ruta.fechaPlanificada,
+      operarioNombre,
+    };
   }
 
   static toDomainList(rawList: ContractRecord[]): ContractEntity[] {
