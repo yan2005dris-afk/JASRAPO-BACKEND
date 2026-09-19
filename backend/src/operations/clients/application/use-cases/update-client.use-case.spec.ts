@@ -2,6 +2,8 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { UpdateClientUseCase } from './update-client.use-case';
 import { ClientRepository } from '../../domain/repositories/client.repository';
+import { TerceraEdadService } from '../services/tercera-edad.service';
+import { TerceraEdadUtil } from '../../domain/tercera-edad.util';
 import { TipoIdentificacionUtil } from 'src/shared/utils/tipo-identificacion.util';
 import {
   EntityAlreadyExistsException,
@@ -26,6 +28,12 @@ describe('UpdateClientUseCase', () => {
     paginateClientes: jest.fn(),
   };
 
+  const mockTerceraEdadService = {
+    aplica: jest.fn((fecha?: Date | string | null) =>
+      Promise.resolve(TerceraEdadUtil.aplica(fecha)),
+    ),
+  };
+
   const mockCliente = {
     clienteId: BigInt(1),
     identificacion: '0926715658',
@@ -46,6 +54,10 @@ describe('UpdateClientUseCase', () => {
         {
           provide: ClientRepository,
           useValue: mockClientRepository,
+        },
+        {
+          provide: TerceraEdadService,
+          useValue: mockTerceraEdadService,
         },
       ],
     }).compile();

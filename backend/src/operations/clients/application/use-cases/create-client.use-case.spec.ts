@@ -2,6 +2,8 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { CreateClientUseCase } from './create-client.use-case';
 import { ClientRepository } from '../../domain/repositories/client.repository';
+import { TerceraEdadService } from '../services/tercera-edad.service';
+import { TerceraEdadUtil } from '../../domain/tercera-edad.util';
 import {
   EntityAlreadyExistsException,
   InvalidDomainOperationException,
@@ -25,6 +27,14 @@ describe('CreateClientUseCase', () => {
     paginateClientes: jest.fn(),
   };
 
+  // Delega en la util real (umbral default 65) para conservar las aserciones
+  // basadas en la edad sin acoplarse a la lectura de sistema_config.
+  const mockTerceraEdadService = {
+    aplica: jest.fn((fecha?: Date | string | null) =>
+      Promise.resolve(TerceraEdadUtil.aplica(fecha)),
+    ),
+  };
+
   const baseDto = {
     tipoIdentificacionId: 1,
     identificacion: '0926715658',
@@ -40,6 +50,10 @@ describe('CreateClientUseCase', () => {
         {
           provide: ClientRepository,
           useValue: mockClientRepository,
+        },
+        {
+          provide: TerceraEdadService,
+          useValue: mockTerceraEdadService,
         },
       ],
     }).compile();

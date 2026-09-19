@@ -5,6 +5,7 @@ import { CreateClientUseCase } from './application/use-cases/create-client.use-c
 import { UpdateClientUseCase } from './application/use-cases/update-client.use-case';
 import { FindOneClientUseCase } from './application/use-cases/find-one-client.use-case';
 import { RemoveClientUseCase } from './application/use-cases/remove-client.use-case';
+import { TerceraEdadService } from './application/services/tercera-edad.service';
 import { ClientRepository } from './domain/repositories/client.repository';
 import { PrismaClientRepository } from './infrastructure/repositories/prisma-client.repository';
 
@@ -13,6 +14,7 @@ import { PrismaClientRepository } from './infrastructure/repositories/prisma-cli
   providers: [
     { provide: ClientRepository, useClass: PrismaClientRepository },
     ClientService,
+    TerceraEdadService,
     CreateClientUseCase,
     UpdateClientUseCase,
     FindOneClientUseCase,

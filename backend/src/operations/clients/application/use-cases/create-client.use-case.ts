@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ClientRepository } from '../../domain/repositories/client.repository';
 import { CreateClientDto } from '../../interfaces/dto/create-client.dto';
 import { TipoIdentificacionUtil } from 'src/shared/utils/tipo-identificacion.util';
-import { TerceraEdadUtil } from '../../domain/tercera-edad.util';
+import { TerceraEdadService } from '../services/tercera-edad.service';
 import type { CreateClientData } from '../../domain/types/client.types';
 import { InvalidDomainOperationException } from 'src/shared/domain/exceptions/domain.exception';
 import { EntityAlreadyExistsException } from 'src/shared/domain/exceptions/domain.exception';
@@ -13,7 +13,10 @@ const CONSUMIDOR_FINAL_TIPO_ID = 4;
 
 @Injectable()
 export class CreateClientUseCase {
-  constructor(private readonly clientRepository: ClientRepository) {}
+  constructor(
+    private readonly clientRepository: ClientRepository,
+    private readonly terceraEdadService: TerceraEdadService,
+  ) {}
 
   async execute(dto: CreateClientDto): Promise<ClientEntity> {
     // CONSUMIDOR_FINAL: the singleton invariant is enforced by the repository
@@ -58,7 +61,7 @@ export class CreateClientUseCase {
     const existente =
       await this.clientRepository.findByIdentificacion(identificacion);
 
-    const data = this.buildCreateData(dto, identificacion);
+    const data = await this.buildCreateData(dto, identificacion);
 
     if (existente) {
       if (existente.deletedAt !== null) {
@@ -120,10 +123,10 @@ export class CreateClientUseCase {
     }
   }
 
-  private buildCreateData(
+  private async buildCreateData(
     dto: CreateClientDto,
     identificacion: string,
-  ): CreateClientData {
+  ): Promise<CreateClientData> {
     return {
       identificacion,
       tipoIdentificacionId: dto.tipoIdentificacionId,
@@ -134,7 +137,9 @@ export class CreateClientUseCase {
       telefono: dto.telefono,
       telefonoSecundario: dto.telefonoSecundario,
       direccionDomicilio: dto.direccionDomicilio,
-      aplicaTerceraEdad: TerceraEdadUtil.aplica(dto.fechaNacimiento),
+      aplicaTerceraEdad: await this.terceraEdadService.aplica(
+        dto.fechaNacimiento,
+      ),
       aplicaDiscapacidad: dto.aplicaDiscapacidad ?? false,
     };
   }

@@ -19,10 +19,13 @@ export class TerceraEdadUtil {
     return edad;
   }
 
-  static aplica(fechaNacimiento?: Date | string | null): boolean {
+  static aplica(
+    fechaNacimiento?: Date | string | null,
+    edadMinima: number = TerceraEdadUtil.EDAD_MINIMA,
+  ): boolean {
     if (!fechaNacimiento) return false;
     const fecha = new Date(fechaNacimiento);
     if (Number.isNaN(fecha.getTime())) return false;
-    return this.calcularEdad(fecha) >= this.EDAD_MINIMA;
+    return this.calcularEdad(fecha) >= edadMinima;
   }
 }
