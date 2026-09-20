@@ -120,7 +120,7 @@ Cobranza & \texttt{\detokenize{NO_APLICA}}, \texttt{\detokenize{AL_DIA}}, \textt
 La creación valida relaciones y escribe directamente contrato, historial y medidor. La prefactura se obtiene indirectamente mediante \texttt{SELECT generar\_prefactura\_instalacion(...)} dentro de la transacción cuando \texttt{estadoServicio=PENDIENTE\_PAGO}; no se crea directamente desde Prisma.
 
 \subsubsection{Cadena POST y efectos}
-La cadena es \texttt{ContratoMedidorController.crear()} $\rightarrow$ \texttt{ContratoMedidorService.crearContrato()} $\rightarrow$ \texttt{CreateContractUseCase.execute()} $\rightarrow$ \texttt{PrismaContractRepository}. Fuentes: \texttt{backend/src/operations/contracts/application/use-cases/create-contract.use-case.ts} (aprox. líneas 30--190), \texttt{backend/src/operations/contracts/infrastructure/repositories/prisma-contract.repository.ts} (aprox. líneas 1--220) y \texttt{backend/src/operations/contracts/interfaces/dto/create-contrato-medidor.dto.ts} (aprox. líneas 1--140). Se validan DTO, cliente, categoría, disponibilidad del medidor y coherencia del estado inicial.
+La cadena es \texttt{ContratoMedidorController.crear()} $\rightarrow$ \texttt{ContratoMedidorService.crearContrato()} $\rightarrow$ \texttt{CreateContractUseCase.execute()} $\rightarrow$ \texttt{PrismaContractRepository}. Fuentes: \texttt{backend/src/operations/contracts/application/use-cases/create-contract.use-case.ts} (aprox. líneas 30-190), \texttt{backend/src/operations/contracts/infrastructure/repositories/prisma-contract.repository.ts} (aprox. líneas 1-220) y \texttt{backend/src/operations/contracts/interfaces/dto/create-contrato-medidor.dto.ts} (aprox. líneas 1-140). Se validan DTO, cliente, categoría, disponibilidad del medidor y coherencia del estado inicial.
 
 \begin{center}\small
 \begin{longtable}{|p{0.28\textwidth}|p{0.18\textwidth}|p{0.48\textwidth}|}
@@ -137,13 +137,13 @@ La cadena es \texttt{ContratoMedidorController.crear()} $\rightarrow$ \texttt{Co
 \hline
 \end{longtable}\end{center}
 
-La función está en \texttt{backend/prisma/migrations/20260822010000\_add\_codigo\_sistema\_rubro\_and\_update\_sp/migration.sql} (aprox. líneas 1--260). Selecciona el rubro por categoría y \texttt{codigo\_sistema\_rubro='INSTALACION'}. \texttt{codigo\_sri LIKE 'SERV-GUIA-\%'} es un criterio histórico/legacy, no vigente.
+La función está en \texttt{backend/prisma/migrations/20260822010000\_add\_codigo\_sistema\_rubro\_and\_update\_sp/migration.sql} (aprox. líneas 1-260). Selecciona el rubro por categoría y \texttt{codigo\_sistema\_rubro='INSTALACION'}. \texttt{codigo\_sri LIKE 'SERV-GUIA-\%'} es un criterio histórico/legacy, no vigente.
 
 \subsubsection{Fórmula de instalación}
 \[
-\text{subtotal}=\text{precioUnitario},\quad \text{iva}=\operatorname{ROUND}(\text{subtotal}\times\text{tasaImpuesto},2),\quad \text{total}=\text{subtotal}+\text{iva}.
+\text{subtotal}=\text{precioUnitarioGuiaRemision}\times\text{cantidad},\quad \text{iva}=\operatorname{ROUND}(\text{subtotal}\times\text{tasaImpuesto},2),\quad \text{total}=\text{subtotal}+\text{iva}.
 \]
-Fuente: bloque \texttt{generar\_prefactura\_instalacion} de la migración SQL, aprox. líneas 80--220.
+Fuente: bloque \texttt{generar\_prefactura\_instalacion} de la migración SQL, aprox. líneas 80-220. \texttt{cantidad} es la cantidad facturada en el detalle del rubro. Los nombres \texttt{precioUnitarioGuiaRemision} y \texttt{tasaImpuesto} son conceptuales; los nombres reales SQL pueden diferir en \texttt{Rubros} y en la tarifa de impuesto.
 
 
 \begin{center}
@@ -180,8 +180,21 @@ Fuente: bloque \texttt{generar\_prefactura\_instalacion} de la migración SQL, a
 stateDiagram-v2
   [*] --> PENDIENTE_PAGO
   PENDIENTE_PAGO --> PENDIENTE_INSTALACION: pago de instalación
+  PENDIENTE_INSTALACION --> ACTIVO: actualización explícita de estado
   ACTIVO --> SUSPENDIDO
   SUSPENDIDO --> RETIRADO
+  No se encontró reactivación desde RETIRADO.
+\end{lstlisting}
+
+\subsubsection{Estado de cobranza}
+\begin{lstlisting}
+stateDiagram-v2
+  [*] --> NO_APLICA
+  NO_APLICA --> AL_DIA: normalización para servicio operativo
+  NO_APLICA --> EN_MORA: proceso de corte, si corresponde
+  AL_DIA --> EN_MORA: proceso de corte
+  EN_MORA --> AL_DIA: proceso de corte
+  No se confirmó una transición automática hacia el servicio.
 \end{lstlisting}
 
 
@@ -209,7 +222,15 @@ stateDiagram-v2
 
 
 \begin{lstlisting}
-{"clienteId":"10","medidorId":"20","categoriaTarifaId":1,"numeroGuia":"G-0001","direccionSuministro":"Av. Amazonas 123","comunidadId":1}
+{
+  "clienteId": "10",
+  "medidorId": "20",
+  "categoriaTarifaId": 1,
+  "numeroGuia": "G-0001",
+  "direccionSuministro": "Av. Amazonas 123",
+  "comunidadId": 1,
+  "sectorId": null
+}
 \end{lstlisting}
 
 
@@ -217,7 +238,13 @@ stateDiagram-v2
 
 
 \begin{lstlisting}
-{"contratoId":"1","clienteId":"10","medidorId":"20","estadoServicio":"PENDIENTE_PAGO","estadoCobranza":"NO_APLICA"}
+{
+  "contratoId": "1",
+  "clienteId": "10",
+  "medidorId": "20",
+  "estadoServicio": "PENDIENTE_PAGO",
+  "estadoCobranza": "NO_APLICA"
+}
 \end{lstlisting}
 
 
@@ -431,13 +458,13 @@ stateDiagram-v2
 
 \begin{figure}[h]
 \centering
-\IfFileExists{images/02-contrato-prefactura.png}{\includegraphics[width=0.9\textwidth]{images/02-contrato-prefactura.png}}{\fbox{\parbox{0.82\textwidth}{\centering Fallback: contrato $\rightarrow$ función SQL $\rightarrow$ comprobante/prefactura. Agregar \texttt{images/02-contrato-prefactura.png} para reemplazarlo.}}}
+\IfFileExists{images/02-contrato-prefactura.svg}{\includegraphics[width=0.9\textwidth]{images/02-contrato-prefactura.svg}}{\fbox{\parbox{0.82\textwidth}{\centering Fallback: contrato $\rightarrow$ función SQL $\rightarrow$ comprobante/prefactura. Agregar \texttt{images/02-contrato-prefactura.svg} para reemplazarlo.}}}
 \caption{Contrato y prefactura de instalación.}
 \end{figure}
 
 
 \begin{itemize}
-\item No se encontró transición automática a \texttt{\detokenize{ACTIVO}}. \texttt{PagoValidadoHandler}, en \texttt{backend/src/billing/collections/payments/application/handlers/pago-validado.handler.ts} (aprox. líneas 1--220), confirma \texttt{PENDIENTE\_PAGO} $\rightarrow$ \texttt{PENDIENTE\_INSTALACION} y cobranza \texttt{NO\_APLICA}.
+\item No se encontró transición automática a \texttt{\detokenize{ACTIVO}}. \texttt{PagoValidadoHandler}, en \texttt{backend/src/billing/collections/payments/application/handlers/pago-validado.handler.ts} (aprox. líneas 1-220), confirma \texttt{PENDIENTE\_PAGO} $\rightarrow$ \texttt{PENDIENTE\_INSTALACION} y cobranza \texttt{NO\_APLICA}.
 \item Parámetros exactos de los DTO de finalización/asignación si cambian.
 \item Sincronización del campo legacy \texttt{\detokenize{estado}}.
 \end{itemize}

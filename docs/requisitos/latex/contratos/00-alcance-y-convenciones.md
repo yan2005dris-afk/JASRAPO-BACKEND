@@ -42,6 +42,12 @@ Cada caso de uso conserva, cuando está disponible, la siguiente ficha:
 - Las secciones “No documentado o pendiente de confirmar” son parte de la documentación: no deben reinterpretarse como comportamiento vigente.
 - Cuando conviven campos legacy y estados separados, se documentan por separado y se conserva la duda de sincronización.
 
+### Decisión funcional propuesta sobre novedades
+
+No se agregará un estado persistido `NOVEDAD` a `OrdenTrabajo`. La orden permanecerá en `EN_PROGRESO` mientras exista una novedad y la UI mostrará una alerta derivada de la relación de novedades activas. `OrdenTrabajo.estado` continúa representando la ejecución operativa; `NovedadOrdenTrabajo.estado`, el análisis de la anomalía; y `Lectura.estado`, la captura y validación del dato. `NOVEDAD` es un indicador derivado, no un valor de enum.
+
+Esta decisión está **pendiente de implementación**. Como regla propuesta, el backend debe impedir `COMPLETADA` si una novedad abierta afecta el resultado, sin depender sólo de la UI. También está pendiente definir el criterio que determina si una novedad es bloqueante (`afectaOrden`, tipo, resolución o regla equivalente).
+
 ## Niveles de evidencia
 
 Cada afirmación se etiqueta como **Confirmada**, **Inferida** o **No encontrada**. La evidencia confirmada proviene de código, esquema Prisma, migraciones o handlers registrados y se cita con ruta relativa y línea aproximada. La evidencia inferida se presenta como inferencia, nunca como garantía. Cuando no se halló una fórmula, handler, rollback, transición o integración, se escribe literalmente `No se encontró...`.

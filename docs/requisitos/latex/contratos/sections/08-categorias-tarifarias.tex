@@ -121,15 +121,11 @@ Crear escribe la categoría y puede generar rubros por defecto. Actualizar crea 
 \end{center}
 
 
-\subsection{Gráfico de estados}
+\subsection{Estados y transiciones no encontrados}
 
 
 \begin{lstlisting}
-stateDiagram-v2
-  [*] --> Vigente: crear activo
-  Vigente --> Versionada: PATCH
-  Vigente --> Eliminada: DELETE (soft delete)
-  Versionada --> Vigente: nueva vigencia
+No existe una máquina de estados confirmable ni un enum de estado. El código confirma los campos \texttt{activo}, las fechas de vigencia y \texttt{deletedAt}; también confirma que \texttt{PATCH} crea una nueva versión y que \texttt{DELETE} aplica desactivación/soft delete. No se dibujan flechas porque no existe una transición explícita verificable.
 \end{lstlisting}
 
 
@@ -149,7 +145,7 @@ stateDiagram-v2
 
 \textbf{Errores relevantes:} \texttt{\detokenize{400}}; \texttt{\detokenize{401}}; \texttt{\detokenize{403}}; conflicto de vigencia.  
 
-\textbf{Efectos:} alta en \texttt{\detokenize{CategoriaTarifa}}; puede crear \texttt{\detokenize{Rubros}}.  
+\textbf{Efectos:} alta en \texttt{\detokenize{CategoriaTarifa}} \textbf{+ creación automática de 2 Rubros default}: \texttt{\detokenize{codigoSri='001'}} (``Cargo fijo'', \texttt{\detokenize{tipoRubro=FIJO}}) y \texttt{\detokenize{codigoSri='002'}} (``Consumo de agua potable'', \texttt{\detokenize{tipoRubro=VARIABLE}}), ambos con \texttt{\detokenize{esAutomatico=true}}. Si el DTO no trae \texttt{\detokenize{tarifaImpuestoId}}, se toma la primera tarifa de impuesto activa.
 
 \textbf{Prisma:} \texttt{\detokenize{CategoriaTarifa}}, \texttt{\detokenize{Rubros}}.  
 
@@ -237,20 +233,29 @@ stateDiagram-v2
 
 \textbf{Errores relevantes:} \texttt{\detokenize{400}}; \texttt{\detokenize{401}}; \texttt{\detokenize{403}}; \texttt{\detokenize{404}}; uso incompatible.  
 
-\textbf{Efectos:} soft delete/desactivación.  
+\textbf{Efectos:} triple efecto simult\'aneo: \texttt{\detokenize{activo=false}}, \texttt{\detokenize{fechaVigenciaHasta=now}}, \texttt{\detokenize{deletedAt=now}} (no solo soft delete: tambi\'en cierra la vigencia).
 
 \textbf{Prisma:} \texttt{\detokenize{CategoriaTarifa}}.  
 
 \textbf{Entrada:} sin body; path \texttt{\detokenize{{ "id": 1 }}}.  
 
-\textbf{Salida:} \texttt{\detokenize{{ "categoriaTarifaId": 1, "activo": false, "fechaVigenciaHasta": "2026-09-16" }}}.
+\textbf{Salida:} \texttt{\detokenize{{ "categoriaTarifaId": 1, "activo": false, "fechaVigenciaHasta": "<fecha actual al momento de la baja (now())>" }}}.
 
+
+\subsection{Pendientes funcionales}
+
+Bloqueos confirmados como pendientes en el código revisado. Cuando se cierre cada uno, sacar de acá y mover a la sección correspondiente.
+
+\begin{itemize}
+\item \textbf{Propagación automática de cambios a contratos existentes.} \texttt{\detokenize{createNewVersion}} no toca la tabla \texttt{\detokenize{Contratos}}. La nueva versión queda disponible para futuros contratos, pero los vigentes siguen apuntando a la versión anterior. No hay mecanismo de migración.
+\item \textbf{Reglas de solapamiento entre versiones.} Aunque ``solapamiento'' figuraba en los errores relevantes del caso Actualizar, el código \textbf{no lo valida}. Si se quiere esa regla, hay que decidir el criterio (¿no se permite que dos versiones activas tengan fechas superpuestas?) y agregar la validación.
+\item \textbf{Duración mínima o reglas de vigencia.} No hay reglas explícitas sobre \texttt{\detokenize{fechaVigenciaDesde >= hoy}}, sobre solapamiento con otras versiones, ni sobre la duración mínima de una versión.
+\item \textbf{Estados legacy distintos de \texttt{\detokenize{activo}}, \texttt{\detokenize{deletedAt}} y fechas.} Confirmar contra seeds y migraciones si existe alguna columna o enum legacy.
+\end{itemize}
 
 \subsection{No documentado o pendiente de confirmar}
 
 
 \begin{itemize}
-\item Reglas exactas de solapamiento y fecha de corte.
-\item Estados legacy distintos de \texttt{\detokenize{activo}}, \texttt{\detokenize{deletedAt}} y fechas.
-\item Propagación automática de cambios a contratos existentes.
+\item Forma exacta del DTO \texttt{\detokenize{update-categoria-tarifa}} y de los campos opcionales que se propagan a la nueva versión. Confirmar contra el código actual.
 \end{itemize}

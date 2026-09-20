@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 700" font-family="DejaVu Sans, Verdana, Arial, sans-serif" role="img" aria-labelledby="rutaTitle rutaDesc">
+  <title id="rutaTitle">Flujo acordado de Ruta: aprobación de secretaría y cierre por órdenes</title>
+  <desc id="rutaDesc">La ruta nace PENDIENTE. Secretaría aprueba (EN_PROGRESO) o cancela (CANCELADA) con auditoría. Al cerrar, si todas las órdenes están COMPLETADA la ruta pasa a COMPLETADA; si alguna está bloqueada, FALLIDA o CANCELADA pasa a PARCIAL.</desc>
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#475569"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="1000" height="700" fill="#ffffff"/>
+  <text x="24" y="36" font-size="22" font-weight="bold" fill="#0f172a">Flujo acordado de Ruta — aprobación de secretaría y cierre por órdenes</text>
+  <text x="24" y="60" font-size="12" fill="#64748b">La orden estimada con autorización cuenta como COMPLETADA para la ruta. El conteo automático del cierre está pendiente de implementación.</text>
+
+  <rect x="24" y="80" width="952" height="250" fill="#f8fafc" stroke="#cbd5e1"/>
+  <text x="36" y="106" font-size="13" font-weight="bold" letter-spacing="1" fill="#475569">SECRETARÍA — APRUEBA O CANCELA LA RUTA</text>
+
+  <rect x="80" y="116" width="300" height="72" rx="4" fill="#fffbeb" stroke="#d97706" stroke-dasharray="7 4"/>
+  <text x="230" y="142" font-size="12" text-anchor="middle" fill="#451a03">Ruta creada en PENDIENTE</text>
+  <text x="230" y="160" font-size="12" text-anchor="middle" fill="#451a03">(proceso previo)</text>
+
+  <rect x="620" y="116" width="300" height="72" rx="4" fill="#fffbeb" stroke="#d97706" stroke-dasharray="7 4"/>
+  <text x="770" y="142" font-size="12" text-anchor="middle" fill="#451a03">Auditoría: la decisión registra</text>
+  <text x="770" y="160" font-size="12" text-anchor="middle" fill="#451a03">usuario de secretaría y fecha</text>
+
+  <rect x="400" y="120" width="200" height="64" rx="8" fill="#e2e8f0" stroke="#64748b" stroke-width="2"/>
+  <text x="500" y="159" font-size="15" font-weight="bold" text-anchor="middle" fill="#1e293b">PENDIENTE</text>
+
+  <polygon points="500,208 590,252 500,296 410,252" fill="#fef3c7" stroke="#b45309" stroke-width="2"/>
+  <text x="500" y="248" font-size="14" text-anchor="middle" fill="#451a03">¿Aprueba</text>
+  <text x="500" y="266" font-size="14" text-anchor="middle" fill="#451a03">la ruta?</text>
+  <text x="500" y="308" font-size="11" font-style="italic" text-anchor="middle" fill="#64748b">Actor: secretaría</text>
+
+  <rect x="80" y="220" width="180" height="64" rx="8" fill="#fee2e2" stroke="#b91c1c" stroke-width="2"/>
+  <text x="170" y="259" font-size="15" font-weight="bold" text-anchor="middle" fill="#7f1d1d">CANCELADA</text>
+
+  <rect x="740" y="220" width="180" height="64" rx="8" fill="#dbeafe" stroke="#1d4ed8" stroke-width="2"/>
+  <text x="830" y="259" font-size="15" font-weight="bold" text-anchor="middle" fill="#1e3a8a">EN_PROGRESO</text>
+
+  <rect x="24" y="344" width="952" height="300" fill="#ffffff" stroke="#cbd5e1"/>
+  <text x="36" y="370" font-size="13" font-weight="bold" letter-spacing="1" fill="#475569">CIERRE — VALIDA LAS ÓRDENES DE LA RUTA</text>
+
+  <polygon points="500,382 590,430 500,478 410,430" fill="#fef3c7" stroke="#b45309" stroke-width="2"/>
+  <text x="500" y="426" font-size="13" text-anchor="middle" fill="#451a03">¿Todas las órdenes</text>
+  <text x="500" y="443" font-size="13" text-anchor="middle" fill="#451a03">COMPLETADA?</text>
+  <text x="600" y="440" font-size="11" font-style="italic" fill="#64748b">Quien cierra</text>
+
+  <rect x="706" y="386" width="246" height="110" rx="4" fill="#fffbeb" stroke="#d97706" stroke-dasharray="7 4"/>
+  <text x="829" y="410" font-size="12" text-anchor="middle" fill="#451a03">Regla de cierre (política acordada):</text>
+  <text x="829" y="428" font-size="12" text-anchor="middle" fill="#451a03">COMPLETADA sólo si TODAS las</text>
+  <text x="829" y="446" font-size="12" text-anchor="middle" fill="#451a03">órdenes están COMPLETADA,</text>
+  <text x="829" y="464" font-size="12" text-anchor="middle" fill="#451a03">incluidas las estimadas.</text>
+
+  <rect x="48" y="420" width="220" height="110" rx="4" fill="#fffbeb" stroke="#d97706" stroke-dasharray="7 4"/>
+  <text x="158" y="448" font-size="12" text-anchor="middle" fill="#451a03">PARCIAL: alguna orden</text>
+  <text x="158" y="466" font-size="12" text-anchor="middle" fill="#451a03">bloqueada, FALLIDA</text>
+  <text x="158" y="484" font-size="12" text-anchor="middle" fill="#451a03">o CANCELADA.</text>
+
+  <rect x="620" y="520" width="180" height="60" rx="8" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+  <text x="710" y="556" font-size="15" font-weight="bold" text-anchor="middle" fill="#14532d">COMPLETADA</text>
+
+  <rect x="300" y="520" width="180" height="60" rx="8" fill="#fef3c7" stroke="#b45309" stroke-width="2"/>
+  <text x="390" y="556" font-size="15" font-weight="bold" text-anchor="middle" fill="#78350f">PARCIAL</text>
+
+  <g fill="none" stroke="#475569" stroke-width="2">
+    <path d="M500,184 L500,206" marker-end="url(#arr)"/>
+    <path d="M400,252 L262,252" marker-end="url(#arr)"/>
+    <path d="M600,252 L738,252" marker-end="url(#arr)"/>
+    <path d="M830,284 L830,340 L500,340 L500,380" marker-end="url(#arr)"/>
+    <path d="M500,478 L500,520 L618,520" marker-end="url(#arr)"/>
+    <path d="M400,430 L390,430 L390,518" marker-end="url(#arr)"/>
+  </g>
+  <g font-size="12" fill="#334155" style="paint-order:stroke;stroke:#ffffff;stroke-width:3px;">
+    <text x="331" y="243" text-anchor="middle">no</text>
+    <text x="669" y="243" text-anchor="middle">sí</text>
+    <text x="665" y="331" text-anchor="middle">al cerrar</text>
+    <text x="548" y="512" text-anchor="middle">sí</text>
+    <text x="382" y="478" text-anchor="end">no</text>
+  </g>
+
+  <text x="24" y="674" font-size="11" fill="#64748b">Rectángulo = estado · Rombo = decisión · Recuadro punteado = nota o política acordada pendiente de implementación</text>
+</svg>

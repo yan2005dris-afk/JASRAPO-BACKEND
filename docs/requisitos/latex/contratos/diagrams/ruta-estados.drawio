@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" version="30.2.4">
+  <diagram id="ruta-estados-1" name="Flujo acordado de Ruta">
+    <mxGraphModel dx="0" dy="0" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1000" pageHeight="700" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="title" value="Flujo acordado de Ruta — aprobación de secretaría y cierre por órdenes" style="text;html=1;fontSize=18;fontStyle=1;fontColor=#0f172a;" vertex="1" parent="1">
+          <mxGeometry x="24" y="14" width="952" height="28" as="geometry"/>
+        </mxCell>
+        <mxCell id="subtitle" value="La orden estimada con autorización cuenta como COMPLETADA para la ruta. El conteo automático del cierre está pendiente de implementación." style="text;html=1;fontSize=11;fontColor=#64748b;" vertex="1" parent="1">
+          <mxGeometry x="24" y="44" width="952" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="lane1" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#cbd5e1;" vertex="1" parent="1">
+          <mxGeometry x="24" y="80" width="952" height="250" as="geometry"/>
+        </mxCell>
+        <mxCell id="lane1h" value="SECRETARÍA — aprueba o cancela la ruta" style="text;html=1;fontSize=12;fontStyle=1;fontColor=#475569;" vertex="1" parent="1">
+          <mxGeometry x="36" y="88" width="500" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="n_prev" value="Ruta creada en PENDIENTE&lt;br&gt;(proceso previo)" style="shape=note;whiteSpace=wrap;html=1;fillColor=#fffbeb;strokeColor=#d97706;dashed=1;fontSize=11;fontColor=#451a03;" vertex="1" parent="1">
+          <mxGeometry x="80" y="116" width="300" height="72" as="geometry"/>
+        </mxCell>
+        <mxCell id="n_pend" value="PENDIENTE" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e2e8f0;strokeColor=#64748b;fontSize=14;fontStyle=1;fontColor=#1e293b;" vertex="1" parent="1">
+          <mxGeometry x="400" y="120" width="200" height="64" as="geometry"/>
+        </mxCell>
+        <mxCell id="n_audit" value="Auditoría: la decisión registra&lt;br&gt;usuario de secretaría y fecha" style="shape=note;whiteSpace=wrap;html=1;fillColor=#fffbeb;strokeColor=#d97706;dashed=1;fontSize=11;fontColor=#451a03;" vertex="1" parent="1">
+          <mxGeometry x="620" y="116" width="300" height="72" as="geometry"/>
+        </mxCell>
+        <mxCell id="d_aprueba" value="¿Aprueba&lt;br&gt;la ruta?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fef3c7;strokeColor=#b45309;fontSize=13;fontColor=#451a03;" vertex="1" parent="1">
+          <mxGeometry x="410" y="168" width="180" height="112" as="geometry"/>
+        </mxCell>
+        <mxCell id="t_actor1" value="Actor: secretaría" style="text;html=1;fontSize=11;fontStyle=2;fontColor=#64748b;" vertex="1" parent="1">
+          <mxGeometry x="410" y="290" width="180" height="18" as="geometry"/>
+        </mxCell>
+        <mxCell id="n_canc" value="CANCELADA" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fee2e2;strokeColor=#b91c1c;fontSize=14;fontStyle=1;fontColor=#7f1d1d;" vertex="1" parent="1">
+          <mxGeometry x="80" y="220" width="180" height="64" as="geometry"/>
+        </mxCell>
+        <mxCell id="n_prog" value="EN_PROGRESO" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dbeafe;strokeColor=#1d4ed8;fontSize=14;fontStyle=1;fontColor=#1e3a8a;" vertex="1" parent="1">
+          <mxGeometry x="740" y="220" width="180" height="64" as="geometry"/>
+        </mxCell>
+        <mxCell id="lane2" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#cbd5e1;" vertex="1" parent="1">
+          <mxGeometry x="24" y="344" width="952" height="300" as="geometry"/>
+        </mxCell>
+        <mxCell id="lane2h" value="CIERRE — valida las órdenes de la ruta" style="text;html=1;fontSize=12;fontStyle=1;fontColor=#475569;" vertex="1" parent="1">
+          <mxGeometry x="36" y="352" width="600" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="d_cierre" value="¿Todas las órdenes&lt;br&gt;COMPLETADA?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fef3c7;strokeColor=#b45309;fontSize=12;fontColor=#451a03;" vertex="1" parent="1">
+          <mxGeometry x="410" y="382" width="180" height="112" as="geometry"/>
+        </mxCell>
+        <mxCell id="t_actor2" value="Quien cierra" style="text;html=1;fontSize=11;fontStyle=2;fontColor=#64748b;" vertex="1" parent="1">
+          <mxGeometry x="600" y="424" width="100" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="n_cierre" value="Regla de cierre (política acordada):&lt;br&gt;COMPLETADA sólo si TODAS las&lt;br&gt;órdenes están COMPLETADA,&lt;br&gt;incluidas las estimadas." style="shape=note;whiteSpace=wrap;html=1;fillColor=#fffbeb;strokeColor=#d97706;dashed=1;fontSize=11;fontColor=#451a03;" vertex="1" parent="1">
+          <mxGeometry x="706" y="386" width="246" height="110" as="geometry"/>
+        </mxCell>
+        <mxCell id="n_parcial_n" value="PARCIAL: alguna orden&lt;br&gt;bloqueada, FALLIDA&lt;br&gt;o CANCELADA." style="shape=note;whiteSpace=wrap;html=1;fillColor=#fffbeb;strokeColor=#d97706;dashed=1;fontSize=11;fontColor=#451a03;" vertex="1" parent="1">
+          <mxGeometry x="48" y="420" width="220" height="110" as="geometry"/>
+        </mxCell>
+        <mxCell id="n_comp" value="COMPLETADA" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dcfce7;strokeColor=#15803d;fontSize=14;fontStyle=1;fontColor=#14532d;" vertex="1" parent="1">
+          <mxGeometry x="620" y="520" width="180" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="n_parc" value="PARCIAL" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fef3c7;strokeColor=#b45309;fontSize=14;fontStyle=1;fontColor=#78350f;" vertex="1" parent="1">
+          <mxGeometry x="300" y="520" width="180" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend" value="Rectángulo = estado  ·  Rombo = decisión  ·  Recuadro punteado = nota o política acordada pendiente de implementación" style="text;html=1;fontSize=11;fontColor=#64748b;" vertex="1" parent="1">
+          <mxGeometry x="24" y="656" width="952" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=2;endArrow=block;endFill=1;" edge="1" parent="1" source="n_pend" target="d_aprueba">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e2" value="no" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=2;endArrow=block;endFill=1;fontSize=11;fontColor=#334155;" edge="1" parent="1" source="d_aprueba" target="n_canc">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e3" value="sí" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=2;endArrow=block;endFill=1;fontSize=11;fontColor=#334155;" edge="1" parent="1" source="d_aprueba" target="n_prog">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e4" value="al cerrar" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=2;endArrow=block;endFill=1;fontSize=11;fontColor=#334155;" edge="1" parent="1" source="n_prog" target="d_cierre">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e5" value="sí" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=2;endArrow=block;endFill=1;fontSize=11;fontColor=#334155;" edge="1" parent="1" source="d_cierre" target="n_comp">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e6" value="no" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=2;endArrow=block;endFill=1;fontSize=11;fontColor=#334155;" edge="1" parent="1" source="d_cierre" target="n_parc">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -18,7 +18,7 @@ La cadena confirmada es contrato, prefactura de instalación, pago validado, ins
 
 \begin{figure}[h]
 \centering
-\IfFileExists{images/01-flujo-general.png}{\includegraphics[width=0.95\textwidth]{images/01-flujo-general.png}}{\fbox{\parbox{0.88\textwidth}{\centering Fallback: contrato $\rightarrow$ prefactura $\rightarrow$ pago validado $\rightarrow$ instalación $\rightarrow$ lecturas/consumo $\rightarrow$ convenios.\\[3pt]Agregar \texttt{images/01-flujo-general.png} para reemplazar este fallback.}}}
+\IfFileExists{images/01-flujo-general.svg}{\includegraphics[width=0.95\textwidth]{images/01-flujo-general.svg}}{\fbox{\parbox{0.88\textwidth}{\centering Fallback: contrato $\rightarrow$ prefactura $\rightarrow$ pago validado $\rightarrow$ instalación $\rightarrow$ lecturas/consumo $\rightarrow$ convenios.\\[3pt]Agregar \texttt{images/01-flujo-general.svg} para reemplazar este fallback.}}}
 \caption{Flujo general del dominio.}
 \end{figure}
 
@@ -32,7 +32,6 @@ Este documento consolida la documentación técnica de los ocho subdominios que 
 \input{sections/03-convenios-de-pago.tex}
 \input{sections/04-rutas-y-ordenes.tex}
 \input{sections/05-lecturas.tex}
-\input{sections/06-consumo.tex}
 \input{sections/07-medidores.tex}
 \input{sections/08-categorias-tarifarias.tex}
 

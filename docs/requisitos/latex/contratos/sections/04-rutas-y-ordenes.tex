@@ -5,7 +5,7 @@ Despacho de lecturas, instalaciones y operación de campo.
 
 
 \begin{quote}
-\textbf{Ficha de dominio:} documenta períodos, rutas, órdenes de trabajo y operaciones del usuario de campo, incluida la vinculación de lecturas y la evidencia externa.
+\textbf{Ficha de dominio:} documenta períodos, rutas, órdenes de trabajo y operaciones del personal de campo, incluida la vinculación de lecturas y la evidencia externa.
 \end{quote}
 
 
@@ -20,7 +20,7 @@ Despacho de lecturas, instalaciones y operación de campo.
 \end{itemize}
 
 \subsection{Comportamiento de negocio verificable}
-Las tablas relacionadas son \texttt{Rutas}, \texttt{OrdenTrabajo}, \texttt{EjecucionOrdenTrabajo}, \texttt{Lecturas}, \texttt{Periodos} y \texttt{NovedadOrdenTrabajo}. El flujo confirmado es período $\rightarrow$ ruta $\rightarrow$ orden $\rightarrow$ lectura/evidencia $\rightarrow$ cierre. No se encontró fórmula monetaria ni handler que promueva automáticamente un contrato a \texttt{ACTIVO}.
+Las tablas relacionadas son \texttt{Rutas}, \texttt{OrdenTrabajo}, \texttt{EjecucionOrdenTrabajo}, \texttt{Lecturas}, \texttt{Periodos} y \texttt{NovedadOrdenTrabajo}. El flujo confirmado es período $\rightarrow$ ruta $\rightarrow$ orden $\rightarrow$ lectura/evidencia $\rightarrow$ cierre. No se encontró fórmula monetaria que aplique a este módulo. La promoción automática del contrato a \texttt{ACTIVO} al completar orden de instalación \textbf{sí} está implementada --- ver \texttt{02-contratos.md}, sección ``Transiciones de estado del contrato''.
 
 
 \begin{center}
@@ -126,6 +126,112 @@ Orden & \texttt{\detokenize{PENDIENTE}}, \texttt{\detokenize{EN_PROGRESO}}, \tex
 \end{longtable}
 \end{center}
 
+\subsubsection{Máquina de estados de la Ruta}
+
+La máquina está implementada como una tabla de transiciones explícita en \texttt{backend/src/operations/routes/domain/route-state.ts}:
+
+\begin{center}
+\small
+\begin{longtable}{|p{0.30\textwidth}|p{0.65\textwidth}|}
+\hline
+\textbf{Desde} & \textbf{Hacia permitidas} \\
+\hline
+\endfirsthead
+\hline
+\textbf{Desde} & \textbf{Hacia permitidas} \\
+\hline
+\endhead
+\texttt{\detokenize{PENDIENTE}} & \texttt{\detokenize{EN_PROGRESO}}, \texttt{\detokenize{CANCELADA}} \\
+\hline
+\texttt{\detokenize{EN_PROGRESO}} & \texttt{\detokenize{COMPLETADA}}, \texttt{\detokenize{PARCIAL}}, \texttt{\detokenize{PENDIENTE}}, \texttt{\detokenize{CANCELADA}} \\
+\hline
+\texttt{\detokenize{COMPLETADA}} & \texttt{\detokenize{EN_PROGRESO}} (reabre para corrección de cierre) \\
+\hline
+\texttt{\detokenize{PARCIAL}} & \texttt{\detokenize{EN_PROGRESO}} (reabre para continuar trabajo) \\
+\hline
+\texttt{\detokenize{CANCELADA}} & \texttt{\detokenize{PENDIENTE}} (reabre para reactivación) \\
+\hline
+\end{longtable}
+\end{center}
+
+La función \texttt{canTransitionRouteState(from, to)} valida la transición; \texttt{UpdateRouteUseCase.execute()} rechaza con \texttt{InvalidDomainOperationException} si la transición no está permitida. \textbf{No existe máquina equivalente para OrdenTrabajo} --- sus transiciones las acepta todas \texttt{UpdateOrdenEstadoUseCase} mientras el estado pertenezca al enum.
+
+
+\subsection{Regla de novedades sin estado adicional de orden}
+
+\textbf{Decisión funcional propuesta — pendiente de implementación.} No se agregará un estado persistido \texttt{NOVEDAD} a \texttt{OrdenTrabajo}. Mientras exista una novedad, la orden permanece en \texttt{EN\_PROGRESO}; la interfaz muestra una alerta derivada al consultar la relación de novedades activas.
+
+\subsubsection{Flujo acordado de orden con novedad}
+
+\begin{figure}[h]
+\centering
+\IfFileExists{images/04-orden-lectura-flujo.png}{\includegraphics[width=0.95\textwidth]{images/04-orden-lectura-flujo.png}}{\fbox{\parbox{0.88\textwidth}{\centering Flujo acordado: PENDIENTE $\rightarrow$ EN\_PROGRESO $\rightarrow$ COMPLETADA; bloqueo por novedad con {\ttfamily tieneNovedadActiva}; salidas FALLIDA/CANCELADA; estimación autorizada por secretaría.\\[3pt]Agregar \texttt{images/04-orden-lectura-flujo.png} para reemplazar este fallback.}}}
+\caption{Flujo acordado de orden, lectura y novedad. Fuente editable: {\ttfamily diagrams/orden-lectura-novedad.drawio}.}
+\end{figure}
+
+Resumen textual del flujo:
+\begin{itemize}
+\item La orden inicia en \texttt{PENDIENTE}; el operador la pasa a \texttt{EN\_PROGRESO} al iniciar el trabajo.
+\item Sin novedad, la orden se completa (\texttt{COMPLETADA}).
+\item Con novedad en una orden que NO es de lectura, la orden queda en \texttt{EN\_PROGRESO} con \texttt{tieneNovedadActiva=true} hasta resolverla; si el caso es irrecuperable pasa a \texttt{FALLIDA}, y si se cancela pasa a \texttt{CANCELADA}.
+\item En una orden de \texttt{LECTURA} con medidor dañado, el operador crea una \texttt{NovedadOrdenTrabajo} en \texttt{OPEN}; la lectura queda en \texttt{CON\_NOVEDAD} y la orden permanece en \texttt{EN\_PROGRESO} bloqueada.
+\item Sólo secretaría puede autorizar la estimación con los últimos 3 meses (\textbf{política acordada, pendiente de implementación}): si autoriza, la lectura pasa a \texttt{ESTIMADA} y la orden a \texttt{COMPLETADA}, mientras la novedad sigue en \texttt{OPEN} para un reemplazo futuro; si no autoriza o no se puede estimar, la orden sigue bloqueada.
+\item La orden \texttt{COMPLETADA} no implica lectura \texttt{APROBADA}: la estimación genera \texttt{ESTIMADA}, no \texttt{APROBADA}.
+\item La orden completada por estimación autorizada cuenta como \texttt{COMPLETADA} para el cierre de la ruta.
+\end{itemize}
+
+\texttt{NOVEDAD} no es un valor del enum de \texttt{OrdenTrabajo}: es una condición derivada de la relación con \texttt{NovedadOrdenTrabajo} y de la existencia de novedades activas. No debe persistirse ni confundirse con \texttt{OrdenTrabajo.estado}.
+
+\subsubsection{Tres máquinas separadas}
+
+\begin{center}
+\small
+\begin{longtable}{|p{0.25\textwidth}|p{0.34\textwidth}|p{0.31\textwidth}|}
+\hline
+\textbf{Entidad} & \textbf{Máquina} & \textbf{Responsabilidad} \\
+\hline
+\endfirsthead
+\hline
+\textbf{Entidad} & \textbf{Máquina} & \textbf{Responsabilidad} \\
+\hline
+\endhead
+\texttt{OrdenTrabajo.estado} & Ejecución operativa: \texttt{PENDIENTE}, \texttt{EN\_PROGRESO}, \texttt{COMPLETADA}, \texttt{CANCELADA}, \texttt{FALLIDA}. & Etapa del trabajo de campo y cierre de la orden. \\
+\hline
+\texttt{NovedadOrdenTrabajo.estado} & Análisis de anomalía: \texttt{OPEN}, \texttt{IN\_PROGRESS}, \texttt{RESOLVED}, \texttt{CANCELLED}. & Atención, resolución o cancelación de la anomalía. \\
+\hline
+\texttt{Lectura.estado} & Captura y validación: \texttt{PENDIENTE}, \texttt{POR\_REVISION}, \texttt{APROBADA}, \texttt{RECHAZADA\_VERIFICACION}, \texttt{ESTIMADA}, \texttt{PLANILLADA}, \texttt{CON\_NOVEDAD}. & Ciclo de captura, revisión, aprobación, rechazo o tratamiento del dato. \\
+\hline
+\end{longtable}
+\end{center}
+
+Una novedad activa puede generar una alerta sobre la orden, pero no transforma su estado persistido en \texttt{NOVEDAD}; una lectura con \texttt{CON\_NOVEDAD} tampoco reemplaza el estado de la orden ni el estado de la novedad.
+
+\subsubsection{Ejemplo de respuesta derivada}
+
+\begin{lstlisting}
+{
+  "ordenTrabajoId": "9",
+  "estado": "EN_PROGRESO",
+  "tieneNovedadActiva": true,
+  "novedadesActivas": [
+    {
+      "novedadOrdenTrabajoId": "31",
+      "estado": "OPEN",
+      "tipo": "LECTURA_ERRONEA",
+      "observacion": "El visor no permite validar el consumo"
+    }
+  ]
+}
+\end{lstlisting}
+
+\subsubsection{Regla de backend y pendiente funcional}
+
+La UI no es la única barrera. Como regla de backend propuesta, una operación no debe permitir pasar la orden a \texttt{COMPLETADA} si existe una novedad abierta que afecte el resultado; la validación debe ejecutarse en el caso de uso o repositorio que completa la orden. Esta regla está pendiente de implementación.
+
+También está pendiente definir el campo o criterio que determina si una novedad es bloqueante: podría ser \texttt{afectaOrden}, el tipo de novedad, la resolución registrada o una regla equivalente. Hasta acordarlo, esta sección documenta una decisión funcional propuesta y no un comportamiento vigente.
+
+También están pendientes de implementación la autorización de la estimación sólo por secretaría con los últimos 3 meses y el conteo de órdenes para el cierre \texttt{COMPLETADA}/\texttt{PARCIAL} de la ruta.
+
 
 \subsection{Efectos y transacciones}
 
@@ -160,17 +266,72 @@ Crear/actualizar/eliminar rutas y órdenes escriben \texttt{\detokenize{Rutas}},
 \end{center}
 
 
-\subsection{Gráfico de estados}
+\subsection{Flujos acordados y máquinas de estado}
 
+\begin{figure}[h]
+\centering
+\IfFileExists{images/04-ruta-flujo.png}{\includegraphics[width=0.95\textwidth]{images/04-ruta-flujo.png}}{\fbox{\parbox{0.88\textwidth}{\centering Flujo acordado de la ruta: PENDIENTE $\rightarrow$ EN\_PROGRESO (aprueba secretaría) o CANCELADA; cierre COMPLETADA/PARCIAL según las órdenes.\\[3pt]Agregar \texttt{images/04-ruta-flujo.png} para reemplazar este fallback.}}}
+\caption{Flujo acordado de la ruta. Fuente editable: {\ttfamily diagrams/ruta-estados.drawio}.}
+\end{figure}
 
-\begin{lstlisting}
-stateDiagram-v2
-  [*] --> PENDIENTE
-  PENDIENTE --> EN_PROGRESO
-  EN_PROGRESO --> COMPLETADA
-  EN_PROGRESO --> PARCIAL
-  EN_PROGRESO --> CANCELADA
-\end{lstlisting}
+Resumen textual del flujo:
+\begin{itemize}
+\item La ruta nace en \texttt{PENDIENTE}.
+\item Secretaría decide con auditoría (usuario y fecha): si no la aprueba, la ruta pasa a \texttt{CANCELADA}; si la aprueba, pasa a \texttt{EN\_PROGRESO}.
+\item Al cerrar una ruta en \texttt{EN\_PROGRESO} se validan sus órdenes (\textbf{conteo pendiente de implementación}): si TODAS están \texttt{COMPLETADA} —incluidas las completadas por estimación autorizada—, la ruta pasa a \texttt{COMPLETADA}; si alguna sigue bloqueada, o está \texttt{FALLIDA} o \texttt{CANCELADA}, la ruta pasa a \texttt{PARCIAL}.
+\end{itemize}
+
+Alcance en código: \texttt{UpdateRouteStateUseCase} confirma las transiciones del operador. \texttt{COMPLETADA} y \texttt{CANCELADA} son terminales en ese caso de uso.
+
+\subsubsection{Estado de la orden}
+Alcance: transiciones \textbf{acordadas} (política); los estados del enum y las escrituras están confirmados, pero \texttt{UpdateOrdenEstadoUseCase} no define una tabla de transiciones en código.
+
+\begin{itemize}
+\item \texttt{PENDIENTE} $\rightarrow$ \texttt{EN\_PROGRESO}: el operador inicia el trabajo.
+\item \texttt{EN\_PROGRESO} $\rightarrow$ \texttt{COMPLETADA}: sin novedad activa, con la novedad resuelta, o con estimación autorizada por secretaría.
+\item \texttt{EN\_PROGRESO} $\rightarrow$ \texttt{FALLIDA}: el caso es irrecuperable.
+\item \texttt{EN\_PROGRESO} $\rightarrow$ \texttt{CANCELADA}: se cancela el trabajo.
+\item Con novedad activa sin resolver, la orden permanece en \texttt{EN\_PROGRESO} con \texttt{tieneNovedadActiva=true} (ver flujo acordado).
+\end{itemize}
+
+\subsubsection{Estado de las novedades de órdenes de trabajo}
+
+Sí existe una máquina de estados independiente para \texttt{NovedadOrdenTrabajo}. El modelo Prisma confirma \texttt{OPEN}, \texttt{IN	extunderscore PROGRESS}, \texttt{RESOLVED} y \texttt{CANCELLED}. La novedad se relaciona con una orden y opcionalmente con una lectura y el usuario que la resolvió.
+
+Alcance: \textbf{Confirmado} para los estados, el valor inicial \texttt{OPEN} y los datos de resolución. No se encontró un controlador o caso de uso dedicado que confirme las transiciones HTTP; las flechas de atención y resolución son un flujo esperado.
+
+La máquina, en texto:
+\begin{itemize}
+\item \texttt{OPEN} (valor inicial al crear la novedad) $\rightarrow$ \texttt{IN\_PROGRESS}: inicia la atención (flujo esperado).
+\item \texttt{IN\_PROGRESS} $\rightarrow$ \texttt{RESOLVED}: registra la resolución con usuario y fecha (flujo esperado).
+\item \texttt{OPEN} o \texttt{IN\_PROGRESS} $\rightarrow$ \texttt{CANCELLED}: se cancela (flujo esperado, sin reactivación confirmada).
+\end{itemize}
+
+La novedad de medidor dañado puede seguir en \texttt{OPEN} después de una estimación autorizada, para gestionar el reemplazo futuro del medidor.
+
+\begin{center}
+\small
+\begin{longtable}{|p{0.31\textwidth}|p{0.63\textwidth}|}
+\hline
+\textbf{Elemento} & \textbf{Valores o datos confirmados} \\
+\hline
+\endfirsthead
+\hline
+\textbf{Elemento} & \textbf{Valores o datos confirmados} \\
+\hline
+\endhead
+Estado & \texttt{OPEN}, \texttt{IN\textunderscore PROGRESS}, \texttt{RESOLVED}, \texttt{CANCELLED}. \\
+\hline
+Tipo de anomalía & \texttt{FUGA}, \texttt{MEDIDOR\textunderscore DAÑADO}, \texttt{LECTURA\textunderscore ERRONEA}, \texttt{OTRO}. \\
+\hline
+Resolución económica & \texttt{COBRO\textunderscore REAL}, \texttt{PROMEDIO\textunderscore HISTORICO}, \texttt{EXONERACION\textunderscore PARCIAL}, \texttt{EXONERACION\textunderscore TOTAL}, \texttt{AJUSTE\textunderscore LECTURA}. \\
+\hline
+Datos de resolución & \texttt{resolucionTipo}, \texttt{consumoAjustado}, \texttt{observacionResolucion}, \texttt{resueltoPorUsuarioId}, \texttt{resueltoEn}. \\
+\hline
+\end{longtable}
+\end{center}
+
+\texttt{resultadoObservacion} y \texttt{estado=FALLIDA} de \texttt{OrdenesTrabajo} no sustituyen a \texttt{NovedadOrdenTrabajo}: representan el resultado de la orden, mientras que la novedad conserva la anomalía y su resolución.
 
 
 \subsection{Casos de uso}
@@ -558,11 +719,23 @@ stateDiagram-v2
 \textbf{Salida:} \texttt{\detokenize{{ "rutaId": "42", "estado": "EN_PROGRESO" }}}.
 
 
+\subsection{Pendientes funcionales}
+
+Bloqueos confirmados como pendientes en el código revisado. Cuando se cierre cada uno, sacar de acá y mover a la sección correspondiente.
+
+\begin{itemize}
+\item \textbf{Bloqueo por novedad activa al transicionar la orden a \texttt{COMPLETADA}.} El helper \texttt{applyContractLifecycleTransition} solo valida estado origen del contrato, no valida \texttt{tieneNovedadActiva}. Falta decidir el criterio bloqueante (\texttt{afectaOrden}, tipo de novedad o resolución) e implementar la validación en \texttt{UpdateOrdenEstadoUseCase} o en el repositorio de órdenes.
+\item \textbf{Autorización exclusiva del rol \texttt{Secretaría} para la estimación con los últimos 3 meses.} Mismo punto pendiente en \texttt{05-lecturas.md}. Requiere endpoint nuevo o permiso específico (\texttt{estimates:approve} o equivalente). La política está acordada pero no está aplicada en código.
+\item \textbf{Conteo automático de órdenes para el cierre de la ruta} (\texttt{COMPLETADA} vs \texttt{PARCIAL}). Si TODAS las órdenes están \texttt{COMPLETADA} (incluidas completadas por estimación), la ruta pasa a \texttt{COMPLETADA}; si alguna está \texttt{FALLIDA} o \texttt{CANCELADA}, pasa a \texttt{PARCIAL}. Hoy \texttt{UpdateRouteUseCase} no implementa esa lógica; el estado final lo asigna manualmente quien cierre la ruta.
+\item \textbf{Endpoints HTTP para gestión manual de \texttt{NovedadOrdenTrabajo}.} Hoy la entidad solo tiene repositorio; la creación y actualización de novedades ocurre internamente desde otros flujos (captura de lecturas, reporte de defectos). Si el operador debe poder crear/actualizar/resolver novedades desde la UI, falta el controller + use cases correspondientes.
+\item \textbf{Auditoría de la decisión de secretaría al aprobar una ruta para \texttt{EN\_PROGRESO}} (usuario y fecha). El documento lo menciona en la sección de flujo acordado de la ruta pero no indica tabla ni columnas donde se persiste esa decisión.
+\item \textbf{Tipo de novedad \texttt{INSPECCION} sin efecto sobre ciclo de vida del contrato.} El helper \texttt{applyContractLifecycleTransition} solo reconoce los tipos \texttt{INSTALACION} y \texttt{RECONEXION}. Si una orden de inspección tiene contrato asociado, el efecto sobre el estado del contrato queda indefinido.
+\end{itemize}
+
 \subsection{No documentado o pendiente de confirmar}
 
 
 \begin{itemize}
 \item Lista exhaustiva de transiciones de operador.
-\item Promoción automática del contrato a \texttt{\detokenize{ACTIVO}} al completar instalación.
 \item Endpoints legacy basados en \texttt{\detokenize{EstadoAsignacion}}.
 \end{itemize}

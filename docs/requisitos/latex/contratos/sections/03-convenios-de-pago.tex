@@ -141,7 +141,7 @@ La tasa se normaliza como \texttt{tasaMensual=tasa/100}; el interés lineal es
 \text{interés}=(\text{deudaTotal}-\text{abonoInicial})\times\text{tasaMensual}\times\text{numeroCuotas},\quad
 \text{totalADistribuir}=\text{deudaTotal}-\text{abonoInicial}+\text{interés}.
 \]
-La cuota base es \texttt{TRUNC(totalADistribuir/numeroCuotas,2)} y la última absorbe el residuo. \texttt{CreateAgreementUseCase} (aprox. líneas 30--220) valida deuda, abono, cuotas, tasa y transiciones en transacción. El vencimiento es mensual desde la fecha base.
+La cuota base es \texttt{TRUNC(totalADistribuir/numeroCuotas,2)} y la última absorbe el residuo. \texttt{CreateAgreementUseCase} (aprox. líneas 30-220) valida deuda, abono, cuotas, tasa y transiciones en transacción. El vencimiento es mensual desde la fecha base.
 
 
 \begin{center}
@@ -167,16 +167,100 @@ La cuota base es \texttt{TRUNC(totalADistribuir/numeroCuotas,2)} y la última ab
 \end{center}
 
 
+\subsection{Transiciones de estado del convenio}
+
+\subsubsection{Cadena de transiciones confirmada}
+
+\begin{center}
+\small
+\begin{longtable}{|p{0.40\textwidth}|p{0.32\textwidth}|p{0.24\textwidth}|}
+\hline
+\textbf{De → A} & \textbf{Cuándo se ejecuta} & \textbf{Implementación} \\
+\hline
+\endfirsthead
+\hline
+\textbf{De → A} & \textbf{Cuándo se ejecuta} & \textbf{Implementación} \\
+\hline
+\endhead
+\textit{(creación)} $\rightarrow$ \texttt{\detokenize{PREPARADO}} & \texttt{\detokenize{POST /api/v1/agreements}} sin \texttt{\detokenize{abonoInicial}} & \texttt{\detokenize{CreateAgreementUseCase}} (transacción) \\
+\hline
+\textit{(creación)} $\rightarrow$ \texttt{\detokenize{PENDIENTE_ABONO}} & \texttt{\detokenize{POST /api/v1/agreements}} con \texttt{\detokenize{abonoInicial}} & mismo \\
+\hline
+\texttt{\detokenize{PREPARADO}} o \texttt{\detokenize{PENDIENTE_ABONO}} $\rightarrow$ \texttt{\detokenize{ACTIVO}} & \texttt{\detokenize{PATCH /api/v1/agreements/:id}} con estado \texttt{\detokenize{ACTIVO}} & \texttt{\detokenize{UpdateAgreementUseCase.execute}} \\
+\hline
+\texttt{\detokenize{PREPARADO}} o \texttt{\detokenize{PENDIENTE_ABONO}} $\rightarrow$ \texttt{\detokenize{PAGADO}} & \texttt{\detokenize{PATCH /api/v1/agreements/:id}} con estado \texttt{\detokenize{PAGADO}} & \texttt{\detokenize{agreementRepository.markAsPaid}} \\
+\hline
+\texttt{\detokenize{PREPARADO}} o \texttt{\detokenize{PENDIENTE_ABONO}} $\rightarrow$ \texttt{\detokenize{ANULADO}} & \texttt{\detokenize{DELETE /api/v1/agreements/:id}} & \texttt{\detokenize{UpdateAgreementUseCase.execute(ANULADO)}} \\
+\hline
+\texttt{\detokenize{ACTIVO}} $\rightarrow$ \texttt{\detokenize{PAGADO}} & mismo PATCH & mismo camino \\
+\hline
+\texttt{\detokenize{ACTIVO}} $\rightarrow$ \texttt{\detokenize{ANULADO}} & mismo DELETE & mismo camino \\
+\hline
+\texttt{\detokenize{PAGADO}} $\rightarrow$ \textit{cualquiera} & \textbf{bloqueado} & \texttt{throw BadRequestException} \\
+\hline
+\texttt{\detokenize{ANULADO}} $\rightarrow$ \textit{cualquiera} & \textbf{bloqueado} & \texttt{throw BadRequestException} \\
+\hline
+\end{longtable}
+\end{center}
+
+\subsubsection{Handlers de efectos derivados}
+
+Los pagos contra cuotas no cambian el estado del convenio directamente: disparan handlers que emiten comprobantes SRI.
+
+\begin{center}
+\small
+\begin{longtable}{|p{0.30\textwidth}|p{0.30\textwidth}|p{0.36\textwidth}|}
+\hline
+\textbf{Handler} & \textbf{Disparo} & \textbf{Efecto confirmado} \\
+\hline
+\endfirsthead
+\hline
+\textbf{Handler} & \textbf{Disparo} & \textbf{Efecto confirmado} \\
+\hline
+\endhead
+\texttt{\detokenize{PagoValidadoHandler}} & evento \texttt{\detokenize{pago.validado}} (outbox) & marca prefactura \texttt{\detokenize{PAGADA}} y promueve contrato a \texttt{\detokenize{PENDIENTE_INSTALACION}} \\
+\hline
+\texttt{\detokenize{CuotaPagadaHandler}} & evento \texttt{\detokenize{cuota.pagada}} (outbox) & \textbf{verifica} que todas las cuotas estén \texttt{\detokenize{PAGADA}} y entonces dispara emisión SRI del comprobante. \textbf{No marca la cuota como PAGADA.} \\
+\hline
+\texttt{\detokenize{PagoAnuladoHandler}} & evento \texttt{\detokenize{pago.anulado}} (outbox) & emite Nota de Crédito solo si el comprobante está \texttt{\detokenize{AUTORIZADO}} en SRI. Si está en otro estado, no emite. \\
+\hline
+\end{longtable}
+\end{center}
+
+\subsubsection{Restricciones operativas}
+
+\begin{itemize}
+\item \texttt{\detokenize{PAGADO}} y \texttt{\detokenize{ANULADO}} son \textbf{terminales}. Cualquier intento de transición desde ellos falla con \texttt{\detokenize{BadRequestException}} (\texttt{update-agreement.use-case.ts:36-39}).
+\item \texttt{\detokenize{PAGADO}} se asigna solo cuando todas las cuotas están \texttt{\detokenize{PAGADAS}} (\texttt{\detokenize{markAsPaid}} en el repositorio). El camino normal es que la última cuota llegue a saldo 0 por acumulación de pagos y dispare el handler; el PATCH explícito a \texttt{\detokenize{PAGADO}} es un atajo administrativo.
+\item Cuota \texttt{\detokenize{PAGADA}} se calcula por saldo, no por evento. La transición \texttt{\detokenize{cuota.estado: PENDIENTE → PAGADA}} ocurre en \texttt{\detokenize{apply-saldo-favor.use-case.ts:135-142}} cuando \texttt{\detokenize{saldoPendiente.equals(0)}}. Cada aplicación de saldo re-evalúa.
+\item Outbox pattern en pagos. \texttt{\detokenize{ValidatePaymentUseCase}} no ejecuta la transición directamente; persiste un evento en \texttt{\detokenize{eventos_pendientes}} que un dispatcher consume para invocar al handler.
+\end{itemize}
+
+
 \subsection{Gráfico de estados}
 
 
 \begin{lstlisting}
 stateDiagram-v2
-  [*] --> PREPARADO
-  PREPARADO --> PENDIENTE_ABONO
-  PENDIENTE_ABONO --> ACTIVO: abono validado
-  ACTIVO --> PAGADO: cuotas liquidadas
-  ACTIVO --> ANULADO
+  [*] --> PREPARADO: crear sin abono inicial
+  [*] --> PENDIENTE_ABONO: crear con abono inicial
+  PREPARADO --> ACTIVO: PATCH estado=ACTIVO
+  PENDIENTE_ABONO --> ACTIVO: PATCH estado=ACTIVO
+  PREPARADO --> PAGADO: PATCH estado=PAGADO
+  PENDIENTE_ABONO --> PAGADO: PATCH estado=PAGADO
+  ACTIVO --> PAGADO: PATCH estado=PAGADO
+  PREPARADO --> ANULADO: DELETE
+  PENDIENTE_ABONO --> ANULADO: DELETE
+  ACTIVO --> ANULADO: DELETE
+  No se encontraron transiciones salientes confirmadas desde PAGADO o ANULADO.
+\end{lstlisting}
+
+\subsubsection{Estado de la cuota}
+\begin{lstlisting}
+stateDiagram-v2
+  [*] --> PENDIENTE
+  PENDIENTE --> PAGADA: CuotaPagadaHandler
+  No se encontró una reactivación PAGADA --> PENDIENTE.
 \end{lstlisting}
 
 
@@ -407,13 +491,16 @@ stateDiagram-v2
 
 \begin{figure}[h]
 \centering
-\IfFileExists{images/03-convenio-pago.png}{\includegraphics[width=0.9\textwidth]{images/03-convenio-pago.png}}{\fbox{\parbox{0.82\textwidth}{\centering Fallback: deuda $\rightarrow$ convenio $\rightarrow$ cuotas $\rightarrow$ pago. Agregar \texttt{images/03-convenio-pago.png} para reemplazarlo.}}}
+\IfFileExists{images/03-convenio-pago.svg}{\includegraphics[width=0.9\textwidth]{images/03-convenio-pago.svg}}{\fbox{\parbox{0.82\textwidth}{\centering Fallback: deuda $\rightarrow$ convenio $\rightarrow$ cuotas $\rightarrow$ pago. Agregar \texttt{images/03-convenio-pago.svg} para reemplazarlo.}}}
 \caption{Convenio y pago.}
 \end{figure}
 
 
+\textbf{Pendiente de confirmar contra código actual:}
+
 \begin{itemize}
-\item No se encontró una política completa de mora ni una transición automática adicional fuera de los handlers documentados.
-\item El registro de handlers está en \texttt{backend/src/billing/collections/payments/payments.module.ts} (aprox. líneas 1--180).
-\item Umbral que convierte una cuota vencida en causal automática de corte.
+\item Forma exacta de los cuerpos de request/response para \texttt{\detokenize{POST /api/v1/agreements}}, \texttt{\detokenize{PATCH /api/v1/agreements/:id}} y \texttt{\detokenize{DELETE /api/v1/agreements/:id}}. Los DTOs pueden haber cambiado desde la última revisión.
+\item Forma exacta de \texttt{\detokenize{cuotaConvenioId}} en \texttt{\detokenize{apply-saldo-favor}} (parámetro que dispara la transición de cuota). Confirmar contra el DTO actual.
+\item Handler explícito para la transición \texttt{\detokenize{cuota.estado: PENDIENTE → VENCIDA}}. Hoy no se encontró un handler ni un job programado que marque cuotas vencidas; el documento decía ``Umbral que convierte una cuota vencida en causal automática de corte'' pero no hay implementación rastreable en el código revisado.
+\item Política completa de mora: el documento decía ``No se encontró una política completa de mora''. Sigue pendiente; el ciclo de cutoff (\texttt{collection-cutoff.service.ts}) opera a nivel de prefacturas, no de cuotas individuales.
 \end{itemize}

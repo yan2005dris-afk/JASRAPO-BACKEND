@@ -1,12 +1,26 @@
-\section{Lecturas}
+\section{Lecturas y consumo}
 
 
-Captura, revisión y operación de lecturas de consumo.
+Captura, revisión, cálculo de consumo, anomalías y evidencia de lecturas.
 
 
 \begin{quote}
-\textbf{Ficha de dominio:} documenta consulta, revisión administrativa y captura de lecturas por operador, con sus anomalías, evidencias y estados confirmados.
+\textbf{Ficha de dominio:} documenta consulta, captura por operador, revisión administrativa, cálculo de consumo, anomalías y evidencia vinculada a la orden. \texttt{Consumo} no es un dominio ni módulo HTTP independiente: se deriva de \texttt{Lectura} mediante sus mismos endpoints y casos de uso.
 \end{quote}
+
+
+\subsection{Separación entre orden y lectura}
+
+Para una orden de tipo \texttt{LECTURA}, el flujo confirmado separa la operación de campo de la validación del dato:
+
+\begin{enumerate}
+\item Ruta en \texttt{EN\_PROGRESO} $\rightarrow$ orden de lectura en \texttt{EN\_PROGRESO}.
+\item El operador registra el dato $\rightarrow$ orden \texttt{COMPLETADA}.
+\item La lectura queda en \texttt{PENDIENTE}/\texttt{POR\_REVISION} $\rightarrow$ \texttt{APROBADA} o \texttt{RECHAZADA\_VERIFICACION}.
+\item Con medidor dañado, el flujo sigue la estimación autorizada (ver sección de estimación y {\ttfamily images/04-orden-lectura-flujo.png}).
+\end{enumerate}
+
+La orden completada indica que terminó el trabajo de campo. La lectura \texttt{APROBADA} es la que puede alimentar la prefacturación; completar la orden no aprueba automáticamente el dato. \texttt{ESTIMADA} existe en el catálogo y su transición por estimación autorizada de secretaría es una política acordada pendiente de implementación (ver sección de estimación). Si existe una anomalía, \texttt{CON\_NOVEDAD} relaciona la lectura con \texttt{NovedadOrdenTrabajo}, pero no reemplaza el estado de la orden.
 
 
 \subsection{Alcance y entradas HTTP}
@@ -20,7 +34,7 @@ Captura, revisión y operación de lecturas de consumo.
 \end{itemize}
 
 \subsection{Comportamiento de negocio verificable}
-Las tablas relacionadas son \texttt{Lecturas}, \texttt{Contratos}, \texttt{Medidores}, \texttt{Periodos}, \texttt{Rutas}, \texttt{OrdenTrabajo} y \texttt{NovedadOrdenTrabajo}. El flujo confirmado es captura $\rightarrow$ revisión $\rightarrow$ aprobación/rechazo. No se encontró handler de pagos ni promoción automática a planilla.
+Las tablas relacionadas son \texttt{Lecturas}, \texttt{Contratos}, \texttt{Medidores}, \texttt{Periodos}, \texttt{Rutas}, \texttt{OrdenTrabajo} y \texttt{NovedadOrdenTrabajo}. El flujo confirmado es captura $\rightarrow$ revisión $\rightarrow$ aprobación/rechazo; el operador puede agregar anomalía y evidencia. La fórmula confirmada es \texttt{consumoCalculado = lecturaActual - lecturaAnterior}. Las lecturas \texttt{APROBADA} alimentan la prefacturación vía \texttt{generate-batch.use-case.ts:40}; lo que no está implementado es la promoción a \texttt{PLANILLADA}. No se encontró un handler propio de consumo.
 
 
 \begin{center}
@@ -54,8 +68,9 @@ Las tablas relacionadas son \texttt{Lecturas}, \texttt{Contratos}, \texttt{Medid
 \end{center}
 
 
-\subsection{Ejemplo JSON}
+\subsection{Ejemplo JSON de respuesta}
 
+El contrato actual de lectura expone \texttt{estado}, \texttt{routeEstado} y \texttt{tieneAnomalia}. La orden relacionada se muestra como contexto propuesto porque \texttt{ResponseReadingDto} no expone actualmente un campo de orden anidado.
 
 \begin{lstlisting}
 {
@@ -64,9 +79,19 @@ Las tablas relacionadas son \texttt{Lecturas}, \texttt{Contratos}, \texttt{Medid
   "lecturaAnterior": 500,
   "lecturaActual": 530,
   "consumoCalculado": 30,
-  "estado": "APROBADA"
+  "estado": "PENDIENTE",
+  "routeEstado": "EN_PROGRESO",
+  "tieneAnomalia": false,
+  "ordenRelacionada": {
+    "ordenTrabajoId": "9",
+    "estado": "COMPLETADA"
+  }
 }
 \end{lstlisting}
+
+\begin{quote}
+\textbf{Campo propuesto:} \texttt{ordenRelacionada} permite representar la relación y el estado de la orden en una respuesta combinada, pero no debe interpretarse como un campo disponible del \texttt{ResponseReadingDto} actual.
+\end{quote}
 
 
 \begin{center}
@@ -99,31 +124,86 @@ Las tablas relacionadas son \texttt{Lecturas}, \texttt{Contratos}, \texttt{Medid
 
 \begin{center}
 \small
-\begin{longtable}{|p{0.470\textwidth}|p{0.470\textwidth}|}
+\begin{longtable}{|p{0.300\textwidth}|p{0.350\textwidth}|p{0.270\textwidth}|}
 \hline
-\textbf{Estado} & \textbf{Significado} \\
+\textbf{Estado} & \textbf{Significado real} & \textbf{Transiciones confirmadas} \\
 \hline
 \endfirsthead
 \hline
-\textbf{Estado} & \textbf{Significado} \\
+\textbf{Estado} & \textbf{Significado real} & \textbf{Transiciones confirmadas} \\
 \hline
 \endhead
-\texttt{\detokenize{PENDIENTE}} & Capturada y aún no revisada. \\
+\texttt{\detokenize{PENDIENTE}} & Dato capturado pendiente de revisión. & \texttt{\detokenize{POR_REVISION}}, \texttt{\detokenize{APROBADA}} \\
 \hline
-\texttt{\detokenize{POR_REVISION}} & Requiere validación. \\
+\texttt{\detokenize{POR_REVISION}} & Dato que requiere validación administrativa. & \texttt{\detokenize{APROBADA}}, \texttt{\detokenize{RECHAZADA_VERIFICACION}}, \texttt{\detokenize{PENDIENTE}} \\
 \hline
-\texttt{\detokenize{APROBADA}} & Elegible para prefacturación. \\
+\texttt{\detokenize{APROBADA}} & Dato validado y elegible para prefacturación. & No se confirmó una transición saliente en esta máquina. \\
 \hline
-\texttt{\detokenize{RECHAZADA_VERIFICACION}} & Rechazada. \\
+\texttt{\detokenize{RECHAZADA_VERIFICACION}} & Dato rechazado durante la verificación. & \texttt{\detokenize{PENDIENTE}}, \texttt{\detokenize{POR_REVISION}} \\
 \hline
-\texttt{\detokenize{ESTIMADA}} & Valor estimado. \\
+\texttt{\detokenize{ESTIMADA}} & Valor estimado para la lectura. & Estado existente sin transición confirmada en la máquina actual. \\
 \hline
-\texttt{\detokenize{PLANILLADA}} & Incorporada a planilla. \\
+\texttt{\detokenize{PLANILLADA}} & Lectura incorporada a una planilla. & Estado existente sin transición confirmada en la máquina actual. \\
 \hline
-\texttt{\detokenize{CON_NOVEDAD}} & Tiene anomalía/novedad. \\
+\texttt{\detokenize{CON_NOVEDAD}} & Lectura relacionada con una anomalía/novedad. & Estado existente sin transición confirmada en la máquina actual. \\
 \hline
 \end{longtable}
 \end{center}
+
+Estas son transiciones de \texttt{Lectura}, no de \texttt{Ruta} ni de \texttt{OrdenTrabajo}.
+
+\subsubsection{M\'aquina de estados de la Lectura}
+
+La m\'aquina est\'a implementada como una tabla de transiciones expl\'icita en \texttt{backend/src/metering/readings/domain/reading-state.ts}:
+
+\begin{center}
+\small
+\begin{longtable}{|p{0.30\textwidth}|p{0.65\textwidth}|}
+\hline
+\textbf{Desde} & \textbf{Hacia permitidas} \\
+\hline
+\endfirsthead
+\hline
+\textbf{Desde} & \textbf{Hacia permitidas} \\
+\hline
+\endhead
+\texttt{\detokenize{PENDIENTE}} & \texttt{\detokenize{POR\_REVISION}}, \texttt{\detokenize{APROBADA}} \\
+\hline
+\texttt{\detokenize{POR\_REVISION}} & \texttt{\detokenize{APROBADA}}, \texttt{\detokenize{RECHAZADA\_VERIFICACION}}, \texttt{\detokenize{PENDIENTE}} \\
+\hline
+\texttt{\detokenize{RECHAZADA\_VERIFICACION}} & \texttt{\detokenize{PENDIENTE}}, \texttt{\detokenize{POR\_REVISION}} \\
+\hline
+\end{longtable}
+\end{center}
+
+La funci\'on \texttt{canTransitionReadingState(from, to)} valida la transici\'on; \texttt{UpdateReadingUseCase.execute()} (l\'ineas 62--79) la aplica con control de concurrencia CAS. Los estados \textbf{\texttt{APROBADA} y \texttt{RECHAZADA\_VERIFICACION} son terminales} (sin transiciones salientes en la tabla). Los estados \texttt{ESTIMADA}, \texttt{PLANILLADA} y \texttt{CON\_NOVEDAD} est\'an en el enum pero \textbf{no tienen transiciones definidas} en la tabla --- \texttt{CON\_NOVEDAD} se asigna desde \texttt{prisma-operator.repository.ts:602, 983} cuando el operador reporta una novedad.
+
+
+\subsection{Responsabilidades por estado}
+
+\begin{center}
+\small
+\begin{longtable}{|p{0.400\textwidth}|p{0.540\textwidth}|}
+\hline
+\textbf{Máquina} & \textbf{Responsabilidad} \\
+\hline
+\endfirsthead
+\hline
+\textbf{Máquina} & \textbf{Responsabilidad} \\
+\hline
+\endhead
+\texttt{Rutas.estado} & Representa el lote y la operación general. \\
+\hline
+\texttt{OrdenesTrabajo.estado} & Representa la ejecución de la tarea de campo. \\
+\hline
+\texttt{Lecturas.estado} & Representa la calidad y validación del dato capturado. \\
+\hline
+\texttt{NovedadOrdenTrabajo.estado} & Representa el análisis y resolución de la anomalía. \\
+\hline
+\end{longtable}
+\end{center}
+
+\texttt{NovedadOrdenTrabajo} tiene su propia máquina: \texttt{OPEN}, \texttt{IN\_PROGRESS}, \texttt{RESOLVED}, \texttt{CANCELLED}.
 
 
 \subsection{Efectos y transacciones}
@@ -153,15 +233,51 @@ La actualización administrativa persiste \texttt{\detokenize{Lecturas}} y prote
 \end{center}
 
 
-\subsection{Gráfico de estados}
+\subsection{Cálculo de consumo}
 
+El consumo es un cálculo derivado de \texttt{Lectura}, no una entidad, estado, controlador ni módulo HTTP independiente:
 
 \begin{lstlisting}
-stateDiagram-v2
-  PENDIENTE --> POR_REVISION
-  POR_REVISION --> APROBADA
-  POR_REVISION --> RECHAZADA_VERIFICACION
+consumoCalculado = lecturaActual - lecturaAnterior
 \end{lstlisting}
+
+La resta se evalúa al actualizar o proyectar la lectura. El resultado se persiste tal cual; un valor negativo \textbf{no} activa ninguna lógica automática (no existe el término \texttt{SALTO\_NEGATIVO} en el código). No introduce un estado nuevo en la máquina de \texttt{Lectura}. La resta y la proyección al DTO son puras: la persistencia corresponde a la actualización de \texttt{Lecturas} y a sus efectos explícitos sobre anomalías y evidencia.
+
+\textbf{Promoción a prefactura vs a \texttt{PLANILLADA}:} una lectura en estado \texttt{APROBADA} ya alimenta la prefacturación hoy (vía \texttt{generate-batch.use-case.ts:40}, que filtra lecturas \texttt{APROBADA} para incluirlas en el lote). Lo que \textbf{no} ocurre es una transición de la lectura a \texttt{PLANILLADA}: tras la prefacturación, la lectura sigue en \texttt{APROBADA}. El estado \texttt{PLANILLADA} figura en el enum y en el catálogo de iconos pero no se asigna desde ningún use case.
+
+
+\subsection{Estimación autorizada por secretaría}
+
+\textbf{Política acordada, pendiente de implementación.} Cubre la orden de \texttt{LECTURA} con medidor dañado.
+
+\begin{itemize}
+\item Sólo secretaría autoriza la estimación, calculada con los últimos 3 meses.
+\item Si autoriza: la lectura pasa a \texttt{ESTIMADA} y la orden a \texttt{COMPLETADA}; la novedad de medidor dañado sigue en \texttt{OPEN} para un reemplazo posterior.
+\item Si no autoriza o no se puede estimar: la orden sigue bloqueada en \texttt{EN\_PROGRESO} con \texttt{tieneNovedadActiva=true}.
+\item \texttt{ESTIMADA} no es \texttt{APROBADA}: sólo \texttt{APROBADA} puede alimentar la prefacturación. La orden \texttt{COMPLETADA} no implica lectura \texttt{APROBADA}.
+\item \texttt{CON\_NOVEDAD} vincula la lectura con la novedad; \texttt{POR\_REVISION} sigue siendo la validación administrativa del dato normal.
+\end{itemize}
+
+
+\subsection{Diagrama de flujo acordado}
+
+
+\begin{figure}[h]
+\centering
+\IfFileExists{images/04-orden-lectura-flujo.png}{\includegraphics[width=0.95\textwidth]{images/04-orden-lectura-flujo.png}}{\fbox{\parbox{0.88\textwidth}{\centering Flujo acordado de orden, lectura y novedad: bloqueo por novedad, salidas FALLIDA/CANCELADA y estimación autorizada por secretaría (ESTIMADA).\\[3pt]Agregar \texttt{images/04-orden-lectura-flujo.png} para reemplazar este fallback.}}}
+\caption{Flujo acordado de orden, lectura y novedad. Fuente editable: {\ttfamily diagrams/orden-lectura-novedad.drawio}.}
+\end{figure}
+
+Resumen textual: máquina de \texttt{Lectura} confirmada en código, más la política de estimación.
+
+\begin{itemize}
+\item \texttt{PENDIENTE} $\rightarrow$ \texttt{POR\_REVISION} (revisión) o \texttt{APROBADA} (aprobación directa permitida).
+\item \texttt{POR\_REVISION} $\rightarrow$ \texttt{APROBADA} (aprobación), \texttt{RECHAZADA\_VERIFICACION} (rechazo) o \texttt{PENDIENTE} (devolución).
+\item \texttt{RECHAZADA\_VERIFICACION} $\rightarrow$ \texttt{PENDIENTE} (nueva captura) o \texttt{POR\_REVISION} (nueva revisión).
+\item \texttt{CON\_NOVEDAD}: lectura con anomalía vinculada a \texttt{NovedadOrdenTrabajo}. La transición \textbf{hacia} \texttt{CON\_NOVEDAD} sí está implementada (\texttt{prisma-operator.repository.ts:602, 983}); lo que no existe es transición \textbf{desde} \texttt{CON\_NOVEDAD} (es terminal en la tabla actual).
+\item \texttt{ESTIMADA}: valor estimado; la transición por estimación autorizada de secretaría es política acordada pendiente de implementación.
+\item \texttt{PLANILLADA}: lectura incorporada a una planilla (sin transición confirmada en código).
+\end{itemize}
 
 
 \subsection{Casos de uso}
@@ -246,7 +362,7 @@ stateDiagram-v2
 
 \textbf{Errores relevantes:} \texttt{\detokenize{400}} body/transición/CAS; \texttt{\detokenize{401}}; \texttt{\detokenize{403}}; \texttt{\detokenize{404}}; \texttt{\detokenize{409}}.  
 
-\textbf{Efectos:} persiste lectura; cálculo y DTO puros.  
+\textbf{Efectos:} persiste lectura; calcula \texttt{consumoCalculado = lecturaActual - lecturaAnterior}; la resta y el DTO son puros. El valor negativo se persiste tal cual (no hay lógica de \texttt{SALTO\_NEGATIVO}). Sólo \texttt{APROBADA} puede alimentar prefacturación; la promoción a \texttt{PLANILLADA} no está implementada.  
 
 \textbf{Prisma:} \texttt{\detokenize{Lecturas}}, \texttt{\detokenize{Medidores}}, \texttt{\detokenize{OrdenTrabajo}}, \texttt{\detokenize{NovedadOrdenTrabajo}}.  
 
@@ -324,7 +440,7 @@ stateDiagram-v2
 \subsubsection{Caso: Actualizar lectura del operador}
 
 
-\textbf{Descripción:} captura valor, fecha, novedad y foto de campo.  
+\textbf{Descripción:} captura valor, fecha, anomalía y foto de campo. La captura puede incluir la anomalía y la foto, y persiste la evidencia vinculada a la orden de trabajo.  
 
 \textbf{HTTP y ruta:} \texttt{\detokenize{PATCH /api/v1/operator/readings/:id}}.  
 
@@ -334,7 +450,7 @@ stateDiagram-v2
 
 \textbf{Errores relevantes:} \texttt{\detokenize{400}}; \texttt{\detokenize{401}}; \texttt{\detokenize{403}} fuera de ruta; \texttt{\detokenize{404}}; \texttt{\detokenize{409}}.  
 
-\textbf{Efectos:} persiste lectura/novedad y guarda \texttt{\detokenize{foto}} como \texttt{\detokenize{evidenciaFotoUrl}} de la orden; rollback si falla.  
+\textbf{Efectos:} persiste lectura/novedad y guarda \texttt{\detokenize{foto}} como \texttt{\detokenize{evidenciaFotoUrl}} de la orden; rollback si falla. La captura no crea un módulo ni estado de \texttt{Consumo}.  
 
 \textbf{Prisma:} \texttt{\detokenize{Lecturas}}, \texttt{\detokenize{NovedadOrdenTrabajo}}, \texttt{\detokenize{OrdenTrabajo}}.  
 
@@ -343,11 +459,24 @@ stateDiagram-v2
 \textbf{Salida:} \texttt{\detokenize{{ "lecturaId": "101", "estado": "POR_REVISION", "evidenciaFotoUrl": "ordenes/9/foto.jpg" }}}.
 
 
+\subsection{Pendientes funcionales}
+
+Bloqueos confirmados como pendientes en el código revisado. Cuando se cierre cada uno, sacar de acá y mover a la sección correspondiente.
+
+\begin{itemize}
+\item \textbf{Detección de consumo negativo (\texttt{SALTO\_NEGATIVO}).} El doc dice que se ``identifica como \texttt{SALTO\_NEGATIVO}'' pero no existe lógica de detección. El valor se persiste como número negativo sin acción. Falta decidir si se rechaza la lectura, se marca para revisión o se documenta el comportamiento tal como es.
+\item \textbf{Transición \texttt{APROBADA} $\rightarrow$ \texttt{PLANILLADA}.} No hay use case que cambie el estado a \texttt{PLANILLADA}. Si se requiere planillar, hay que agregar el cambio en el flujo de cierre del lote (\texttt{generate-batch.use-case.ts} o un nuevo job).
+\item \textbf{Transición \texttt{CON\_NOVEDAD} $\rightarrow$ \texttt{PENDIENTE}/\texttt{POR\_REVISION}.} No existe en \texttt{reading-state.ts}. Si la UI debe permitir reabrir la lectura tras resolver la novedad, falta la transición y el use case correspondiente.
+\item \textbf{Transición \texttt{ESTIMADA} $\rightarrow$ \ldots{} por estimación autorizada de secretaría.} Mismo punto pendiente en \texttt{02-contratos.md}, \texttt{04-rutas-y-ordenes.md} y ahora también aquí. Requiere endpoint nuevo o permiso específico (\texttt{estimates:approve} o equivalente).
+\item \textbf{Autorización exclusiva del rol \texttt{Secretaría} para la estimación últimos 3 meses.} No existe endpoint ni permiso que limite la estimación a secretaría.
+\item \textbf{Creación automática de anomalías según la superficie de captura.} Hoy la anomalía la crea el operador manualmente al reportar un defecto. No hay lógica que cree anomalía cuando, por ejemplo, el \texttt{lecturaActual} está fuera de un rango esperado.
+\item \textbf{Redondeo, consumo mínimo/máximo y otros límites.} \texttt{Prisma.Decimal} mantiene precisión arbitraria; no hay redondeo explícito ni límites configurados. Definir si aplica redondeo a 2 decimales, consumo mínimo configurable por categoría tarifaria o alertas por consumo atípico.
+\end{itemize}
+
 \subsection{No documentado o pendiente de confirmar}
 
 
 \begin{itemize}
-\item Transiciones de \texttt{\detokenize{ESTIMADA}}, \texttt{\detokenize{PLANILLADA}} y \texttt{\detokenize{CON_NOVEDAD}}.
-\item Alta independiente \texttt{\detokenize{POST /readings}}.
-\item Promoción exacta de lectura aprobada a planilla.
+\item Alta independiente \texttt{\detokenize{POST /readings}} (no existe en código; las lecturas se crean en flujos de reemplazo/instalación de medidores).
+\item Validación exacta del cuerpo de \texttt{\detokenize{PATCH /api/v1/operator/readings/:id}} (multipart con archivo opcional \texttt{\detokenize{foto}}). Los DTOs pueden haber cambiado desde la última revisión.
 \end{itemize}
