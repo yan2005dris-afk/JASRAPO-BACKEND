@@ -167,7 +167,7 @@ No hay reactivación pública: el flujo \texttt{\detokenize{POST /clients}} reac
 \textbf{Nota cross-doc:} la nota en \texttt{\detokenize{../HISTORIAS-DE-USUARIO.md}}, escenario HU-01, marcaba esta validación como ``pendiente de implementación''. La implementación SÍ existe en \texttt{\detokenize{backend/src/shared/utils/tipo-identificacion.util.ts}}. Esa nota está desactualizada.
 \end{quote}
 
-\subsubsection{Singleton CONSUMIDOR\\_FINAL}
+\subsubsection{Singleton CONSUMIDOR FINAL}
 
 El tipo de identificación con \texttt{\detokenize{id=4}} (codigo SRI \texttt{\detokenize{07}}, \texttt{\detokenize{CONSUMIDOR\\_FINAL}}) tiene semántica especial: existe \textbf{a lo sumo un} registro activo de este tipo en toda la tabla.
 
@@ -510,7 +510,7 @@ Bloqueos confirmados como pendientes en el código revisado. Cuando se cierre ca
 \begin{itemize}
 \item \textbf{Forma exacta de \texttt{\detokenize{CreateClientDto}} y \texttt{\detokenize{UpdateClientDto}}} (campos opcionales vs obligatorios, validaciones anidadas como \texttt{\detokenize{@IsEmail}}, \texttt{\detokenize{@Matches}}). Confirmar contra el código actual; la lista de campos en este doc es funcional, no de validación.
 \item \textbf{Forma exacta del query string de \texttt{\detokenize{GET /api/v1/clients}}} (\texttt{\detokenize{page}}, \texttt{\detokenize{limit}}, \texttt{\detokenize{identificacion}}, \texttt{\detokenize{nombres}}, \texttt{\detokenize{apellidos}}, \texttt{\detokenize{nombreCompleto}}). Confirmar que el filtro \texttt{\detokenize{nombreCompleto}} sigue vigente en el repositorio (vista en \texttt{\detokenize{client-filters.mapper.ts}}).
-\item \textbf{Reactivación pública de clientes soft-deleted.} Existe \textbf{solo} para \texttt{\detokenize{CONSUMIDOR\\_FINAL}} y como efecto secundario al crear con la misma identificación. No hay endpoint público para reactivar un cliente regular; si se requiere, hay que decidir el criterio (\¿solo admin?) y agregar el endpoint.
+\item \textbf{Reactivación pública de clientes soft-deleted.} Existe \textbf{solo} para \texttt{\detokenize{CONSUMIDOR\\_FINAL}} y como efecto secundario al crear con la misma identificación. No hay endpoint público para reactivar un cliente regular; si se requiere, hay que decidir el criterio (?solo admin?) y agregar el endpoint.
 \end{itemize}
 
 \subsection{No documentado o pendiente de confirmar}

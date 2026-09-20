@@ -19,7 +19,7 @@ Inventario, asignación, reemplazo y retiro operativo de medidores.
 \end{itemize}
 
 \subsection{Comportamiento de negocio verificable}
-Las tablas relacionadas son \texttt{Medidores}, \texttt{Contratos}, \texttt{HistorialMedidores}, \texttt{ReemplazoMedidor}, \texttt{Lecturas}, \texttt{OrdenTrabajo} y \texttt{NovedadOrdenTrabajo}. El reemplazo es transaccional y conserva trazabilidad; los defectos/bajas cambian el estado del inventario. La transici\\'on del contrato asociado al completar una instalaci\\'on (\texttt{\detokenize{INSTALACION}}) o reconexi\\'on (\texttt{\detokenize{RECONEXION}}) \textbf{s\\'i} existe --- est\\'a implementada v\\'ia \texttt{\detokenize{applyContractLifecycleTransition}} (\texttt{backend/src/operations/routes/infrastructure/repositories/prisma-orden-trabajo.repository.ts:356-403}) y documentada en \texttt{02-contratos.md}, secci\\'on ``Transiciones de estado del contrato''.
+Las tablas relacionadas son \texttt{Medidores}, \texttt{Contratos}, \texttt{HistorialMedidores}, \texttt{ReemplazoMedidor}, \texttt{Lecturas}, \texttt{OrdenTrabajo} y \texttt{NovedadOrdenTrabajo}. El reemplazo es transaccional y conserva trazabilidad; los defectos/bajas cambian el estado del inventario. La transici\'on del contrato asociado al completar una instalaci\'on (\texttt{\detokenize{INSTALACION}}) o reconexi\'on (\texttt{\detokenize{RECONEXION}}) \textbf{s\'i} existe --- est\'a implementada v\'ia \texttt{\detokenize{applyContractLifecycleTransition}} (\texttt{backend/src/operations/routes/infrastructure/repositories/prisma-orden-trabajo.repository.ts:356-403}) y documentada en \texttt{02-contratos.md}, secci\'on ``Transiciones de estado del contrato''.
 
 
 \begin{center}
@@ -127,22 +127,22 @@ Las tablas relacionadas son \texttt{Medidores}, \texttt{Contratos}, \texttt{Hist
 \end{longtable}
 \end{center}
 
-\subsubsection{M\\'aquina de estados del Medidor}
+\subsubsection{M\'aquina de estados del Medidor}
 
-A diferencia de \texttt{Rutas} o \texttt{Lecturas}, los medidores \textbf{no tienen una tabla de transiciones formal} en un archivo único. Las transiciones v\\'alidas est\\'an codificadas en cada use case. Las reglas confirmadas son:
+A diferencia de \texttt{Rutas} o \texttt{Lecturas}, los medidores \textbf{no tienen una tabla de transiciones formal} en un archivo único. Las transiciones v\'alidas est\'an codificadas en cada use case. Las reglas confirmadas son:
 
 \begin{center}
 \small
 \begin{longtable}{|p{0.30\textwidth}|p{0.35\textwidth}|p{0.30\textwidth}|}
 \hline
-\textbf{Desde} & \textbf{Hacia permitidas} & \textbf{Validaci\\'on} \\
+\textbf{Desde} & \textbf{Hacia permitidas} & \textbf{Validaci\'on} \\
 \hline
 \endfirsthead
 \hline
-\textbf{Desde} & \textbf{Hacia permitidas} & \textbf{Validaci\\'on} \\
+\textbf{Desde} & \textbf{Hacia permitidas} & \textbf{Validaci\'on} \\
 \hline
 \endhead
-\texttt{\detokenize{[*]}} & \texttt{\detokenize{BODEGA}} & al crear (\texttt{CreateMeterUseCase.execute()} l\\'inea 23) \\
+\texttt{\detokenize{[*]}} & \texttt{\detokenize{BODEGA}} & al crear (\texttt{CreateMeterUseCase.execute()} l\'inea 23) \\
 \hline
 \texttt{\detokenize{BODEGA}} o \texttt{\detokenize{PENDIENTE}} & \texttt{\detokenize{INSTALADO}} & al instalar/reemplazar (\texttt{prisma-meter.repository.ts:replaceMeter}) \\
 \hline
@@ -150,14 +150,14 @@ A diferencia de \texttt{Rutas} o \texttt{Lecturas}, los medidores \textbf{no tie
 \hline
 \texttt{\detokenize{DANADO}} & \texttt{\detokenize{BAJA}} & solo desde \texttt{\detokenize{DANADO}} --- \texttt{DecommissionMeterUseCase:23-30} rechaza otros estados \\
 \hline
-\texttt{\detokenize{BAJA}} & \textit{(ninguna)} & \textbf{No hay reversi\\'on ni reactivaci\\'on.} Confirmado por b\\'usqueda exhaustiva. \\
+\texttt{\detokenize{BAJA}} & \textit{(ninguna)} & \textbf{No hay reversi\'on ni reactivaci\'on.} Confirmado por b\'usqueda exhaustiva. \\
 \hline
-\texttt{\detokenize{INSTALADO}} & \texttt{\detokenize{BAJA}} directo & \textbf{No existe.} Hay que pasar por \texttt{\detokenize{DANADO}} (v\\'ia reporte de defecto) antes. \\
+\texttt{\detokenize{INSTALADO}} & \texttt{\detokenize{BAJA}} directo & \textbf{No existe.} Hay que pasar por \texttt{\detokenize{DANADO}} (v\'ia reporte de defecto) antes. \\
 \hline
 \end{longtable}
 \end{center}
 
-El doc muestra el flujo como lineal; la realidad es que \texttt{INSTALADO} $\rightarrow$ \texttt{BAJA} directo est\\'a prohibido por el c\\'odigo. El diagrama mermaid debajo conserva el flujo lineal por simplicidad pero la tabla refleja las restricciones reales.
+El doc muestra el flujo como lineal; la realidad es que \texttt{INSTALADO} $\rightarrow$ \texttt{BAJA} directo est\'a prohibido por el c\'odigo. El diagrama mermaid debajo conserva el flujo lineal por simplicidad pero la tabla refleja las restricciones reales.
 
 \subsubsection{Estados internos de ReemplazoMedidor}
 
@@ -176,9 +176,9 @@ La entidad \texttt{\detokenize{ReemplazoMedidor}} tiene DOS enums de estado prop
 \textbf{Valor} & \textbf{Significado} \\
 \hline
 \endhead
-\texttt{\detokenize{PENDIENTE}} & Reemplazo registrado, a\\'un sin aplicar al consumo. \\
+\texttt{\detokenize{PENDIENTE}} & Reemplazo registrado, a\'un sin aplicar al consumo. \\
 \hline
-\texttt{\detokenize{APLICADA}} & Consumo aplicado seg\\'un el tratamiento definido. \\
+\texttt{\detokenize{APLICADA}} & Consumo aplicado seg\'un el tratamiento definido. \\
 \hline
 \texttt{\detokenize{ANULADA}} & Reemplazo anulado; no afecta al consumo. \\
 \hline
@@ -198,7 +198,7 @@ La entidad \texttt{\detokenize{ReemplazoMedidor}} tiene DOS enums de estado prop
 \textbf{Valor} & \textbf{Significado} \\
 \hline
 \endhead
-\texttt{\detokenize{PENDIENTE}} & Reemplazo con tratamiento excepcional esperando aprobaci\\'on. \\
+\texttt{\detokenize{PENDIENTE}} & Reemplazo con tratamiento excepcional esperando aprobaci\'on. \\
 \hline
 \texttt{\detokenize{APROBADA}} & Tratamiento autorizado por un usuario distinto del solicitante. \\
 \hline
@@ -207,7 +207,7 @@ La entidad \texttt{\detokenize{ReemplazoMedidor}} tiene DOS enums de estado prop
 \end{longtable}
 \end{center}
 
-El reemplazo \textbf{est\\'andar} (\texttt{\detokenize{TratamientoSaliente.COBRO\\_REAL}} + \texttt{\detokenize{TratamientoEntrante.FACTURAR\\_PERIODO\\_ACTUAL}}) se autoaprueba en el mismo flujo de \texttt{replace-meter.use-case.ts:150-152}. El \textbf{excepcional} queda \texttt{\detokenize{PENDIENTE}} hasta que otro usuario lo apruebe v\\'ia \texttt{\detokenize{POST /api/v1/meters/replacements/:id/approve}}.
+El reemplazo \textbf{est\'andar} (\texttt{\detokenize{TratamientoSaliente.COBRO\\_REAL}} + \texttt{\detokenize{TratamientoEntrante.FACTURAR\\_PERIODO\\_ACTUAL}}) se autoaprueba en el mismo flujo de \texttt{replace-meter.use-case.ts:150-152}. El \textbf{excepcional} queda \texttt{\detokenize{PENDIENTE}} hasta que otro usuario lo apruebe v\'ia \texttt{\detokenize{POST /api/v1/meters/replacements/:id/approve}}.
 
 
 \subsection{Efectos y transacciones}
@@ -426,7 +426,7 @@ stateDiagram-v2
 
 \textbf{Errores relevantes:} \texttt{\detokenize{400}}; \texttt{\detokenize{401}}; \texttt{\detokenize{403}}; \texttt{\detokenize{404}}; conflicto de resolución.  
 
-\textbf{Efectos:} en una transacción, valida identidad del aprobador (debe ser distinto del solicitante), confirma idempotencia si ya estaba aprobada, valida que esté en \texttt{\detokenize{PENDIENTE}}, promueve las lecturas vinculadas a \texttt{\detokenize{APROBADA}} con \texttt{\detokenize{fechaValidacion}}, y persiste \texttt{\detokenize{estadoAprobacion: APROBADA}}, \texttt{\detokenize{autorizadoPorUsuarioId}}, \texttt{\detokenize{autorizadoEn}}. Si la combinación de tratamientos es ``est\\'andar'' (no \texttt{\detokenize{requiereAprobacion}}), el reemplazo se autoaprueba al crearse; no es necesario llamar a este endpoint en ese caso.
+\textbf{Efectos:} en una transacción, valida identidad del aprobador (debe ser distinto del solicitante), confirma idempotencia si ya estaba aprobada, valida que esté en \texttt{\detokenize{PENDIENTE}}, promueve las lecturas vinculadas a \texttt{\detokenize{APROBADA}} con \texttt{\detokenize{fechaValidacion}}, y persiste \texttt{\detokenize{estadoAprobacion: APROBADA}}, \texttt{\detokenize{autorizadoPorUsuarioId}}, \texttt{\detokenize{autorizadoEn}}. Si la combinación de tratamientos es ``est\'andar'' (no \texttt{\detokenize{requiereAprobacion}}), el reemplazo se autoaprueba al crearse; no es necesario llamar a este endpoint en ese caso.
 
 \textbf{Prisma:} \texttt{\detokenize{ReemplazoMedidor}}, \texttt{\detokenize{Lecturas}} (vinculadas), \texttt{\detokenize{Medidores}}, \texttt{\detokenize{Contratos}}.  
 
@@ -525,18 +525,18 @@ stateDiagram-v2
 
 \subsection{Pendientes funcionales}
 
-Bloqueos confirmados como pendientes en el c\\'odigo revisado. Cuando se cierre cada uno, sacar de ac\\'a y mover a la secci\\'on correspondiente.
+Bloqueos confirmados como pendientes en el c\'odigo revisado. Cuando se cierre cada uno, sacar de ac\'a y mover a la secci\'on correspondiente.
 
 \begin{itemize}
-\item \textbf{Reversi\\'on/reactivaci\\'on desde \texttt{\detokenize{BAJA}}.} Sigue sin haber camino de vuelta. Confirmado por b\\'usqueda exhaustiva; no hay caso de uso ni endpoint que cambie \texttt{\detokenize{BAJA}} a otro estado. Si se requiere reactivaci\\'on, hay que agregar el flujo correspondiente.
-\item \textbf{Forma exacta de los DTOs \texttt{\detokenize{report-defect}} y \texttt{\detokenize{decommission}}.} El doc muestra solo un ejemplo parcial del body. Confirmar contra el c\\'odigo actual los campos obligatorios y opcionales.
-\item \textbf{Reglas de timeout y notificaci\\'on para reemplazos pendientes de aprobaci\\'on.} No se detect\\'o mecanismo de timeout ni notificaci\\'on autom\\'atica para reemplazos en \texttt{\detokenize{EstadoAprobacionReemplazo: PENDIENTE}}. Si el aprobador nunca act\\'ua, el reemplazo queda esperando indefinidamente.
-\item \textbf{Estados completos de \texttt{\detokenize{EstadoAsignacion}} (\texttt{\detokenize{NO\\_ASIGNADA}} $|$ \texttt{\detokenize{ASIGNADA}} $|$ \texttt{\detokenize{TOMADA}} $|$ \texttt{\detokenize{COMPLETADA}}) y su rol actual.} Marcado como legacy en \texttt{04-rutas-y-ordenes.md}. Sigue sin clarificaci\\'on sobre si aplica al flujo de medidores.
+\item \textbf{Reversi\'on/reactivaci\'on desde \texttt{\detokenize{BAJA}}.} Sigue sin haber camino de vuelta. Confirmado por b\'usqueda exhaustiva; no hay caso de uso ni endpoint que cambie \texttt{\detokenize{BAJA}} a otro estado. Si se requiere reactivaci\'on, hay que agregar el flujo correspondiente.
+\item \textbf{Forma exacta de los DTOs \texttt{\detokenize{report-defect}} y \texttt{\detokenize{decommission}}.} El doc muestra solo un ejemplo parcial del body. Confirmar contra el c\'odigo actual los campos obligatorios y opcionales.
+\item \textbf{Reglas de timeout y notificaci\'on para reemplazos pendientes de aprobaci\'on.} No se detect\'o mecanismo de timeout ni notificaci\'on autom\'atica para reemplazos en \texttt{\detokenize{EstadoAprobacionReemplazo: PENDIENTE}}. Si el aprobador nunca act\'ua, el reemplazo queda esperando indefinidamente.
+\item \textbf{Estados completos de \texttt{\detokenize{EstadoAsignacion}} (\texttt{\detokenize{NO\\_ASIGNADA}} $|$ \texttt{\detokenize{ASIGNADA}} $|$ \texttt{\detokenize{TOMADA}} $|$ \texttt{\detokenize{COMPLETADA}}) y su rol actual.} Marcado como legacy en \texttt{04-rutas-y-ordenes.md}. Sigue sin clarificaci\'on sobre si aplica al flujo de medidores.
 \end{itemize}
 
 \subsection{No documentado o pendiente de confirmar}
 
 
 \begin{itemize}
-\item Forma exacta de los DTOs \texttt{\detokenize{replace}} y \texttt{\detokenize{find-replacement}}. Confirmar contra el c\\'odigo actual.
+\item Forma exacta de los DTOs \texttt{\detokenize{replace}} y \texttt{\detokenize{find-replacement}}. Confirmar contra el c\'odigo actual.
 \end{itemize}
