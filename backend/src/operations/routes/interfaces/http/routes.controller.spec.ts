@@ -13,6 +13,7 @@ describe('RoutesController', () => {
   const mockRoutesService = {
     getEligibleReadings: jest.fn(),
     create: jest.fn(),
+    createAssignments: jest.fn(),
     findAll: jest.fn(),
     findOne: jest.fn(),
     update: jest.fn(),
@@ -107,6 +108,21 @@ describe('RoutesController', () => {
 
     expect(result.rutaId).toBe(1n);
     expect(result.nombre).toBe('Ruta 1');
+  });
+
+  it('createAssignments should return array of RouteResponseDto', async () => {
+    mockRoutesService.createAssignments.mockResolvedValue([sampleRoute]);
+
+    const result = await controller.createAssignments({
+      operarioId: 10,
+      comunidadId: 1,
+      periodoId: 1,
+      sectorIds: [2],
+    });
+
+    expect(result).toHaveLength(1);
+    expect(result[0].rutaId).toBe(1n);
+    expect(mockRoutesService.createAssignments).toHaveBeenCalled();
   });
 
   it('findAll should return paginated RouteResponseDto', async () => {

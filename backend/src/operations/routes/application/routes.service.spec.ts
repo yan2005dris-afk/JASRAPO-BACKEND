@@ -4,6 +4,7 @@ import { RoutesService } from './routes.service';
 import { GetEligibleReadingsUseCase } from './use-cases/get-eligible-readings.use-case';
 import { GetReadingsByRutaUseCase } from './use-cases/get-readings-by-ruta.use-case';
 import { CreateRouteUseCase } from './use-cases/create-route.use-case';
+import { CreateRouteAssignmentsUseCase } from './use-cases/create-route-assignments.use-case';
 import { FindAllRoutesUseCase } from './use-cases/find-all-routes.use-case';
 import { FindOneRouteUseCase } from './use-cases/find-one-route.use-case';
 import { UpdateRouteUseCase } from './use-cases/update-route.use-case';
@@ -17,6 +18,7 @@ describe('RoutesService', () => {
   let getEligibleReadingsUseCase: GetEligibleReadingsUseCase;
   let getReadingsByRutaUseCase: GetReadingsByRutaUseCase;
   let createRouteUseCase: CreateRouteUseCase;
+  let createRouteAssignmentsUseCase: CreateRouteAssignmentsUseCase;
   let findAllRoutesUseCase: FindAllRoutesUseCase;
   let findOneRouteUseCase: FindOneRouteUseCase;
   let updateRouteUseCase: UpdateRouteUseCase;
@@ -55,6 +57,10 @@ describe('RoutesService', () => {
           useValue: { execute: jest.fn() },
         },
         { provide: CreateRouteUseCase, useValue: { execute: jest.fn() } },
+        {
+          provide: CreateRouteAssignmentsUseCase,
+          useValue: { execute: jest.fn() },
+        },
         { provide: FindAllRoutesUseCase, useValue: { execute: jest.fn() } },
         { provide: FindOneRouteUseCase, useValue: { execute: jest.fn() } },
         { provide: UpdateRouteUseCase, useValue: { execute: jest.fn() } },
@@ -74,6 +80,9 @@ describe('RoutesService', () => {
       GetReadingsByRutaUseCase,
     );
     createRouteUseCase = module.get<CreateRouteUseCase>(CreateRouteUseCase);
+    createRouteAssignmentsUseCase = module.get<CreateRouteAssignmentsUseCase>(
+      CreateRouteAssignmentsUseCase,
+    );
     findAllRoutesUseCase =
       module.get<FindAllRoutesUseCase>(FindAllRoutesUseCase);
     findOneRouteUseCase = module.get<FindOneRouteUseCase>(FindOneRouteUseCase);
@@ -126,6 +135,23 @@ describe('RoutesService', () => {
 
     expect(createRouteUseCase.execute).toHaveBeenCalledWith(dto);
     expect(res).toEqual(sampleRoute);
+  });
+
+  it('createAssignments should delegate to CreateRouteAssignmentsUseCase', async () => {
+    (createRouteAssignmentsUseCase.execute as jest.Mock).mockResolvedValue([
+      sampleRoute,
+    ]);
+
+    const dto = {
+      operarioId: 1,
+      comunidadId: 1,
+      periodoId: 1,
+      sectorIds: [2],
+    };
+    const res = await service.createAssignments(dto as any);
+
+    expect(createRouteAssignmentsUseCase.execute).toHaveBeenCalledWith(dto);
+    expect(res).toEqual([sampleRoute]);
   });
 
   it('findAll should delegate to FindAllRoutesUseCase', async () => {
