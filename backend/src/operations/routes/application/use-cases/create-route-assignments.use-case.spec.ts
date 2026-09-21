@@ -202,8 +202,16 @@ describe('CreateRouteAssignmentsUseCase', () => {
       estado: 'ABIERTO',
     });
     mockRouteRepository.findSector
-      .mockResolvedValueOnce({ sectorId: 1, comunidadId: 1, nombre: 'Barrio Norte' })
-      .mockResolvedValueOnce({ sectorId: 2, comunidadId: 1, nombre: 'Barrio Sur' });
+      .mockResolvedValueOnce({
+        sectorId: 1,
+        comunidadId: 1,
+        nombre: 'Barrio Norte',
+      })
+      .mockResolvedValueOnce({
+        sectorId: 2,
+        comunidadId: 1,
+        nombre: 'Barrio Sur',
+      });
     mockRouteRepository.findOverlappingRoutes.mockResolvedValue([]);
 
     const route1 = new RouteEntity({
@@ -248,6 +256,8 @@ describe('CreateRouteAssignmentsUseCase', () => {
 
     expect(result).toHaveLength(2);
     expect(mockRouteRepository.create).toHaveBeenCalledTimes(2);
-    expect(mockRouteRepository.initializeMonthlyReadings).toHaveBeenCalledTimes(2);
+    expect(mockRouteRepository.initializeMonthlyReadings).toHaveBeenCalledTimes(
+      2,
+    );
   });
 });

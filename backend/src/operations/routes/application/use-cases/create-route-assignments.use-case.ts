@@ -1,8 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import {
-  RouteRepository,
-  type SectorRef,
-} from '../../domain/repositories/route.repository';
+import { RouteRepository } from '../../domain/repositories/route.repository';
 import { CreateRouteAssignmentsDto } from '../../interfaces/dto/create-route-assignments.dto';
 import { RouteEntity } from '../../domain/entities/route.entity';
 import type { CreateRouteData } from '../../domain/types/route.types';
@@ -50,17 +47,19 @@ export class CreateRouteAssignmentsUseCase {
       dto.fechaPlanificada ?? null,
     );
 
-    const rawSectorIds = dto.sectorIds ?? [];
-    const uniqueSectorIds = Array.from(new Set(rawSectorIds));
-
     const tipoRuta = dto.tipoRuta ?? TipoActividadCodes.LECTURA;
 
     // Caso 1: Si se especificaron contratos específicos (Cortes, Reconexiones, Inspecciones, etc.)
     if (dto.contratoIds && dto.contratoIds.length > 0) {
       const baseName = dto.nombreBase?.trim() || 'Ruta';
       const sectorId =
-        dto.sectorIds && dto.sectorIds.length === 1 ? dto.sectorIds[0] : undefined;
-      const routeName = `${baseName} - Comunidad ${dto.comunidadId}`.slice(0, 200);
+        dto.sectorIds && dto.sectorIds.length === 1
+          ? dto.sectorIds[0]
+          : undefined;
+      const routeName = `${baseName} - Comunidad ${dto.comunidadId}`.slice(
+        0,
+        200,
+      );
 
       const createData: CreateRouteData = {
         nombre: routeName,
@@ -116,7 +115,9 @@ export class CreateRouteAssignmentsUseCase {
       const createdRoutes: RouteEntity[] = [];
       for (const sector of validatedSectors) {
         const baseName = dto.nombreBase?.trim() || 'Ruta';
-        const sectorLabel = sector.nombre ? sector.nombre : `Sector ${sector.sectorId}`;
+        const sectorLabel = sector.nombre
+          ? sector.nombre
+          : `Sector ${sector.sectorId}`;
         const routeName = `${baseName} - ${sectorLabel}`.slice(0, 200);
 
         const createData: CreateRouteData = {
@@ -164,7 +165,10 @@ export class CreateRouteAssignmentsUseCase {
     }
 
     const baseName = dto.nombreBase?.trim() || 'Ruta';
-    const routeName = `${baseName} - Comunidad ${dto.comunidadId}`.slice(0, 200);
+    const routeName = `${baseName} - Comunidad ${dto.comunidadId}`.slice(
+      0,
+      200,
+    );
 
     const createData: CreateRouteData = {
       nombre: routeName,

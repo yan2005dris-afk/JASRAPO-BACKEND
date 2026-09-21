@@ -148,7 +148,7 @@ describe('RoutesService', () => {
       periodoId: 1,
       sectorIds: [2],
     };
-    const res = await service.createAssignments(dto as any);
+    const res = await service.createAssignments(dto);
 
     expect(createRouteAssignmentsUseCase.execute).toHaveBeenCalledWith(dto);
     expect(res).toEqual([sampleRoute]);
