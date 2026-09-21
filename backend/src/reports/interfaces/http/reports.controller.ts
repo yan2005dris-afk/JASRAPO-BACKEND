@@ -280,19 +280,24 @@ export class ReportsController {
   @Get('overdue-accounts')
   @RequiredPermission('reportes', 'read')
   @ApiOperation({
-    summary: 'Reporte de Recaudación y Morosidad',
+    summary: 'Reporte de Recaudación y Morosidad (estilo configurable)',
     description:
-      'Retorna el listado de cuentas con valores pendientes de pago y métricas de morosidad.',
+      'Genera un PDF con las cuentas en mora y las métricas de morosidad, o devuelve el mismo modelo proyectado en JSON según el header `Accept`. El estilo (legacy|modern) se resuelve desde sistema_config (`reporte.estilo`).',
   })
   @ApiResponse({
     status: 200,
-    description: 'Datos de morosidad en formato JSON',
+    description: 'PDF generado o JSON con el modelo proyectado según Accept',
+    content: {
+      'application/pdf': {},
+      'application/json': {},
+    },
   })
   async overdueAccounts(
     @Query() filters: OverdueAccountsFilterDto,
     @CurrentUser() actor: JwtPayload,
     @Headers('x-time-zone') timeZone: string | undefined,
     @Headers('accept-language') locale: string | undefined,
+    @Res() res: Response,
   ) {
     const context = this.createContext(
       'overdue-accounts',
@@ -301,13 +306,12 @@ export class ReportsController {
       timeZone,
       locale,
     );
-    try {
-      const { document } =
-        await this.overdueAccountsDefinition.generate(context);
-      return document;
-    } catch (error: unknown) {
-      throw new ReportRequestContextException(error, context);
-    }
+    return this.handleNegotiatedReport(
+      'overdue-accounts',
+      context,
+      this.overdueAccountsDefinition,
+      res,
+    );
   }
 
   // ─── Email send endpoints (report-endpoint-send-email) ───────────────────────
@@ -449,6 +453,39 @@ export class ReportsController {
     return this.executeEmailRequest(
       'clients-list',
       body.filtros ?? {},
+      body,
+      actor,
+      timeZone,
+      locale,
+    );
+  }
+
+  @Post('overdue-accounts/email')
+  @RequiredPermission('reportes', 'read')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Enviar Recaudación y Morosidad por email' })
+  @ApiBody({ type: SendReportEmailDto })
+  @ApiResponse({ status: 400, description: 'Falta destinatario' })
+  @ApiResponse({ status: 403, description: 'Sin permiso reportes:read' })
+  sendOverdueAccountsEmail(
+    @Body() body: SendReportEmailDto,
+    @CurrentUser() actor: JwtPayload,
+    @Headers('x-time-zone') timeZone: string | undefined,
+    @Headers('accept-language') locale: string | undefined,
+  ) {
+    if (!body.destinatario) {
+      throw new BadRequestException(
+        'destinatario es obligatorio para el reporte de recaudación y morosidad',
+      );
+    }
+    return this.executeEmailRequest(
+      'overdue-accounts',
+      {
+        clienteId: body.clienteId,
+        contratoId: body.contratoId,
+        sectorId: body.sectorId,
+        fechaCorte: body.fechaCorte,
+      },
       body,
       actor,
       timeZone,

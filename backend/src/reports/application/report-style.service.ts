@@ -19,7 +19,8 @@ export type ReportKey =
   | 'connection-history'
   | 'payment-agreement'
   | 'clients-list'
-  | 'account-statement';
+  | 'account-statement'
+  | 'overdue-accounts';
 
 /**
  * Estilo resuelto para cada reporte. Las familias con dos diseños usan los

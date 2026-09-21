@@ -9,6 +9,7 @@ import type { ReportStyle } from '../../application/report-style.service';
 import { createAccountStatementPdfDocumentType } from '../factories/account-statement.factory';
 import { createClientsListPdfDocumentType } from '../factories/clients-list.factory';
 import { createConnectionHistoryPdfDocumentType } from '../factories/connection-history.factory';
+import { createOverdueAccountsPdfDocumentType } from '../factories/overdue-accounts.factory';
 import { createPaymentsReportPdfDocumentType } from '../factories/payments-report.factory';
 import {
   LEGACY_CONNECTION_HISTORY_FIXTURE,
@@ -26,6 +27,7 @@ export interface ReportTemplateFixture {
 
 const institutionalFixture = {
   institucion: {
+    version: 'v1',
     nombreLegal: 'JUNTA ADMINISTRADORA DE AGUA POTABLE OLON',
     nombreComercial: 'JAAP OLON',
     siglas: 'JASRAPO',
@@ -172,6 +174,39 @@ const paymentAgreementDocument = projectPaymentAgreementReport(
   LEGACY_PAYMENT_AGREEMENT_FIXTURE,
 ).document;
 
+// Documento determinista (strings fijos, sin fechas por locale) para goldens estables.
+const overdueAccountsDocument = {
+  data: [
+    {
+      contratoId: '10',
+      numeroGuia: 'G-001',
+      clienteNombre: 'Ana Pérez',
+      identificacion: '0912345678',
+      sectorNombre: 'Sector Norte',
+      mesesVencidos: 3,
+      saldoPendiente: '77.50',
+      saldoPendienteNum: 77.5,
+      ultimaEmision: '2024',
+      medidorSerie: 'M-001',
+    },
+    {
+      contratoId: '11',
+      numeroGuia: 'G-002',
+      clienteNombre: 'Comercial Olón',
+      identificacion: '0999999999001',
+      sectorNombre: 'Sector Sur',
+      mesesVencidos: 1,
+      saldoPendiente: '22.50',
+      saldoPendienteNum: 22.5,
+      ultimaEmision: '2024',
+      medidorSerie: 'M-002',
+    },
+  ],
+  meta: { total: 2, fechaCorte: '20/5/2024' },
+  kpis: { totalMorosidad: '100.00', totalMorosos: 2, mayorDeuda: '77.50' },
+  filtros: { descripcion: 'Todos los clientes', fechaCorte: '20/5/2024' },
+};
+
 function createFixture<TInput, TOutput extends object>(
   family: string,
   style: ReportStyle,
@@ -244,5 +279,17 @@ export const REPORT_TEMPLATE_FIXTURES: readonly ReportTemplateFixture[] = [
     'unique',
     PaymentAgreementPdfDocumentType,
     paymentAgreementDocument,
+  ),
+  createFixture(
+    'overdue-accounts',
+    'legacy',
+    createOverdueAccountsPdfDocumentType('legacy'),
+    overdueAccountsDocument,
+  ),
+  createFixture(
+    'overdue-accounts',
+    'modern',
+    createOverdueAccountsPdfDocumentType('modern'),
+    overdueAccountsDocument,
   ),
 ];

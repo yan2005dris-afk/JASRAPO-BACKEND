@@ -86,6 +86,7 @@ describe('report email strategies', () => {
       build('payment-agreement') as never,
       build('account-statement') as never,
       build('clients-list') as never,
+      build('overdue-accounts') as never,
     );
 
     expect(Object.keys(strategies)).toEqual([
@@ -94,6 +95,7 @@ describe('report email strategies', () => {
       'payment-agreement',
       'account-statement',
       'clients-list',
+      'overdue-accounts',
     ]);
   });
 });
