@@ -53,10 +53,12 @@ export class CreateRouteAssignmentsUseCase {
     const rawSectorIds = dto.sectorIds ?? [];
     const uniqueSectorIds = Array.from(new Set(rawSectorIds));
 
-    // Si se especificaron sectores concretos
-    if (uniqueSectorIds.length > 0) {
-      const validatedSectors: SectorRef[] = [];
-      for (const sectorId of uniqueSectorIds) {
+    const tipoRuta = dto.tipoRuta ?? TipoActividadCodes.LECTURA;
+
+    // Si se especificaron sectores => Crear una ruta por cada sector
+    if (dto.sectorIds && dto.sectorIds.length > 0) {
+      const validatedSectors = [];
+      for (const sectorId of dto.sectorIds) {
         const sector = await this.routeRepository.findSector(sectorId);
         if (!sector) {
           throw new EntityNotFoundException('Sector', sectorId);
@@ -72,7 +74,7 @@ export class CreateRouteAssignmentsUseCase {
           dto.periodoId,
           sectorId,
           fechaPlanificada,
-          TipoActividadCodes.LECTURA,
+          tipoRuta,
         );
 
         if (overlapping.length > 0) {
@@ -86,14 +88,14 @@ export class CreateRouteAssignmentsUseCase {
 
       const createdRoutes: RouteEntity[] = [];
       for (const sector of validatedSectors) {
-        const baseName = dto.nombreBase?.trim() || 'Ruta Lectura';
+        const baseName = dto.nombreBase?.trim() || 'Ruta';
         const sectorLabel = sector.nombre ? sector.nombre : `Sector ${sector.sectorId}`;
         const routeName = `${baseName} - ${sectorLabel}`.slice(0, 200);
 
         const createData: CreateRouteData = {
           nombre: routeName,
           operarioId: dto.operarioId,
-          tipoRuta: TipoActividadCodes.LECTURA,
+          tipoRuta,
           comunidadId: dto.comunidadId,
           sectorId: sector.sectorId,
           periodoId: dto.periodoId,
@@ -103,7 +105,7 @@ export class CreateRouteAssignmentsUseCase {
 
         const route = await this.routeRepository.create(createData);
 
-        if (dto.fechaPlanificada) {
+        if (tipoRuta === TipoActividadCodes.LECTURA && dto.fechaPlanificada) {
           await this.routeRepository.initializeMonthlyReadings(
             dto.comunidadId,
             dto.periodoId,
@@ -125,7 +127,7 @@ export class CreateRouteAssignmentsUseCase {
       dto.periodoId,
       undefined,
       fechaPlanificada,
-      TipoActividadCodes.LECTURA,
+      tipoRuta,
     );
 
     if (overlapping.length > 0) {
@@ -134,13 +136,13 @@ export class CreateRouteAssignmentsUseCase {
       );
     }
 
-    const baseName = dto.nombreBase?.trim() || 'Ruta Lectura';
+    const baseName = dto.nombreBase?.trim() || 'Ruta';
     const routeName = `${baseName} - Comunidad ${dto.comunidadId}`.slice(0, 200);
 
     const createData: CreateRouteData = {
       nombre: routeName,
       operarioId: dto.operarioId,
-      tipoRuta: TipoActividadCodes.LECTURA,
+      tipoRuta,
       comunidadId: dto.comunidadId,
       sectorId: undefined,
       periodoId: dto.periodoId,
@@ -150,7 +152,7 @@ export class CreateRouteAssignmentsUseCase {
 
     const route = await this.routeRepository.create(createData);
 
-    if (dto.fechaPlanificada) {
+    if (tipoRuta === TipoActividadCodes.LECTURA && dto.fechaPlanificada) {
       await this.routeRepository.initializeMonthlyReadings(
         dto.comunidadId,
         dto.periodoId,

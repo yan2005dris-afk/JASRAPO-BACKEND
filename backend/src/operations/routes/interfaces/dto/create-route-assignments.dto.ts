@@ -1,6 +1,7 @@
 import {
   IsArray,
   IsDateString,
+  IsEnum,
   IsNotEmpty,
   IsNumber,
   IsOptional,
@@ -9,8 +10,18 @@ import {
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsNotEmptyString } from 'src/infrastructure/common/decorators/is-not-empty-string.decorator';
+import { TipoActividadCodes } from 'src/shared/enums';
 
 export class CreateRouteAssignmentsDto {
+  @ApiProperty({
+    description: 'Tipo de actividad para la ruta (opcional, default LECTURA)',
+    enum: TipoActividadCodes,
+    required: false,
+    example: TipoActividadCodes.LECTURA,
+  })
+  @IsOptional()
+  @IsEnum(TipoActividadCodes)
+  tipoRuta?: TipoActividadCodes;
   @ApiProperty({
     description: 'ID del periodo contable / operativo',
     example: 1,
