@@ -8,7 +8,9 @@ import {
   ComunidadRef,
   SectorRef,
   PeriodoRef,
+  TipoActividadRef,
   MedidorRef,
+  ContratoRef,
   EligibleReadingsCriteria,
 } from '../../domain/repositories/route.repository';
 import { RouteEntity } from '../../domain/entities/route.entity';
@@ -621,5 +623,81 @@ export class PrismaRouteRepository implements RouteRepository {
       conNovedad: countByEstado.get('CON_NOVEDAD') ?? 0,
       rechazadas: countByEstado.get('RECHAZADA_VERIFICACION') ?? 0,
     };
+  }
+
+  async createWorkOrdersForContracts(
+    rutaId: bigint,
+    contratoIds: number[],
+  ): Promise<void> {
+    if (!contratoIds || contratoIds.length === 0) return;
+
+    const contratos = await this.prisma.contratos.findMany({
+      where: {
+        contratoId: { in: contratoIds.map((id) => BigInt(id)) },
+        deletedAt: null,
+      },
+      include: {
+        historialMedidores: {
+          where: { fechaHasta: null },
+          select: { medidorId: true },
+          take: 1,
+        },
+      },
+      orderBy: { contratoId: 'asc' },
+    });
+
+    const ordenesData = contratos.map((c, index) => ({
+      rutaId,
+      contratoId: c.contratoId,
+      medidorId: c.historialMedidores[0]?.medidorId ?? null,
+      ordenVisita: index + 1,
+      estado: 'PENDIENTE' as const,
+    }));
+
+    if (ordenesData.length > 0) {
+      await this.prisma.ordenesTrabajo.createMany({
+        data: ordenesData,
+      });
+    }
+  }
+
+  async findContratosByIds(contratoIds: number[]): Promise<ContratoRef[]> {
+    if (!contratoIds || contratoIds.length === 0) return [];
+
+    const records = await this.prisma.contratos.findMany({
+      where: {
+        contratoId: { in: contratoIds.map((id) => BigInt(id)) },
+        deletedAt: null,
+      },
+      select: {
+        contratoId: true,
+        numeroGuia: true,
+        comunidadId: true,
+        sectorId: true,
+      },
+      orderBy: { contratoId: 'asc' },
+    });
+
+    return records.map((r) => ({
+      contratoId: Number(r.contratoId),
+      numeroGuia: r.numeroGuia,
+      comunidadId: r.comunidadId,
+      sectorId: r.sectorId,
+    }));
+  }
+
+  async findAllTiposActividad(): Promise<TipoActividadRef[]> {
+    const tipos = await this.prisma.tipoActividad.findMany({
+      where: { activo: true },
+      orderBy: { tipoActividadId: 'asc' },
+    });
+
+    return tipos.map((t) => ({
+      tipoActividadId: Number(t.tipoActividadId),
+      codigo: t.codigo,
+      nombre: t.nombre,
+      descripcion: t.descripcion,
+      activo: t.activo,
+    }));
   }
 }

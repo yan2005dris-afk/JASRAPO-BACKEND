@@ -4,6 +4,7 @@ import { RoutesService } from './routes.service';
 import { GetEligibleReadingsUseCase } from './use-cases/get-eligible-readings.use-case';
 import { GetReadingsByRutaUseCase } from './use-cases/get-readings-by-ruta.use-case';
 import { CreateRouteUseCase } from './use-cases/create-route.use-case';
+import { CreateRouteAssignmentsUseCase } from './use-cases/create-route-assignments.use-case';
 import { FindAllRoutesUseCase } from './use-cases/find-all-routes.use-case';
 import { FindOneRouteUseCase } from './use-cases/find-one-route.use-case';
 import { UpdateRouteUseCase } from './use-cases/update-route.use-case';
@@ -17,11 +18,13 @@ describe('RoutesService', () => {
   let getEligibleReadingsUseCase: GetEligibleReadingsUseCase;
   let getReadingsByRutaUseCase: GetReadingsByRutaUseCase;
   let createRouteUseCase: CreateRouteUseCase;
+  let createRouteAssignmentsUseCase: CreateRouteAssignmentsUseCase;
   let findAllRoutesUseCase: FindAllRoutesUseCase;
   let findOneRouteUseCase: FindOneRouteUseCase;
   let updateRouteUseCase: UpdateRouteUseCase;
   let deleteRouteUseCase: DeleteRouteUseCase;
   let exportFieldSheetPdfUseCase: ExportFieldSheetPdfUseCase;
+  let routeRepository: RouteRepository;
 
   const mockUseCase = { execute: jest.fn() };
 
@@ -44,7 +47,10 @@ describe('RoutesService', () => {
         RoutesService,
         {
           provide: RouteRepository,
-          useValue: { findAllPeriodos: jest.fn() },
+          useValue: {
+            findAllPeriodos: jest.fn(),
+            findAllTiposActividad: jest.fn(),
+          },
         },
         {
           provide: GetEligibleReadingsUseCase,
@@ -55,6 +61,10 @@ describe('RoutesService', () => {
           useValue: { execute: jest.fn() },
         },
         { provide: CreateRouteUseCase, useValue: { execute: jest.fn() } },
+        {
+          provide: CreateRouteAssignmentsUseCase,
+          useValue: { execute: jest.fn() },
+        },
         { provide: FindAllRoutesUseCase, useValue: { execute: jest.fn() } },
         { provide: FindOneRouteUseCase, useValue: { execute: jest.fn() } },
         { provide: UpdateRouteUseCase, useValue: { execute: jest.fn() } },
@@ -67,6 +77,7 @@ describe('RoutesService', () => {
     }).compile();
 
     service = module.get<RoutesService>(RoutesService);
+    routeRepository = module.get<RouteRepository>(RouteRepository);
     getEligibleReadingsUseCase = module.get<GetEligibleReadingsUseCase>(
       GetEligibleReadingsUseCase,
     );
@@ -74,6 +85,9 @@ describe('RoutesService', () => {
       GetReadingsByRutaUseCase,
     );
     createRouteUseCase = module.get<CreateRouteUseCase>(CreateRouteUseCase);
+    createRouteAssignmentsUseCase = module.get<CreateRouteAssignmentsUseCase>(
+      CreateRouteAssignmentsUseCase,
+    );
     findAllRoutesUseCase =
       module.get<FindAllRoutesUseCase>(FindAllRoutesUseCase);
     findOneRouteUseCase = module.get<FindOneRouteUseCase>(FindOneRouteUseCase);
@@ -128,6 +142,23 @@ describe('RoutesService', () => {
     expect(res).toEqual(sampleRoute);
   });
 
+  it('createAssignments should delegate to CreateRouteAssignmentsUseCase', async () => {
+    (createRouteAssignmentsUseCase.execute as jest.Mock).mockResolvedValue([
+      sampleRoute,
+    ]);
+
+    const dto = {
+      operarioId: 1,
+      comunidadId: 1,
+      periodoId: 1,
+      sectorIds: [2],
+    };
+    const res = await service.createAssignments(dto);
+
+    expect(createRouteAssignmentsUseCase.execute).toHaveBeenCalledWith(dto);
+    expect(res).toEqual([sampleRoute]);
+  });
+
   it('findAll should delegate to FindAllRoutesUseCase', async () => {
     (findAllRoutesUseCase.execute as jest.Mock).mockResolvedValue({
       data: [sampleRoute],
@@ -173,5 +204,36 @@ describe('RoutesService', () => {
 
     expect(deleteRouteUseCase.execute).toHaveBeenCalledWith(1n);
     expect(res).toEqual(sampleRoute);
+  });
+
+  it('getPeriodos should delegate to RouteRepository.findAllPeriodos', async () => {
+    const mockPeriodos = [{ periodoId: 1, nombre: '2026', estado: 'ABIERTO' }];
+    (routeRepository.findAllPeriodos as jest.Mock).mockResolvedValue(
+      mockPeriodos,
+    );
+
+    const res = await service.getPeriodos();
+
+    expect(routeRepository.findAllPeriodos).toHaveBeenCalled();
+    expect(res).toEqual(mockPeriodos);
+  });
+
+  it('getTiposActividad should delegate to RouteRepository.findAllTiposActividad', async () => {
+    const mockTipos = [
+      {
+        tipoActividadId: 1,
+        codigo: 'LECTURA',
+        nombre: 'Lectura',
+        activo: true,
+      },
+    ];
+    (routeRepository.findAllTiposActividad as jest.Mock).mockResolvedValue(
+      mockTipos,
+    );
+
+    const res = await service.getTiposActividad();
+
+    expect(routeRepository.findAllTiposActividad).toHaveBeenCalled();
+    expect(res).toEqual(mockTipos);
   });
 });

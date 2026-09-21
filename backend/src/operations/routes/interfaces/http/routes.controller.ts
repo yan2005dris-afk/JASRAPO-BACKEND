@@ -24,6 +24,7 @@ import { RoutesService } from '../../application/routes.service';
 import { OrdenesTrabajoService } from '../../application/ordenes-trabajo.service';
 import { ReassignRouteUseCase } from '../../application/use-cases/reassign-route.use-case';
 import { CreateRouteDto } from '../dto/create-route.dto';
+import { CreateRouteAssignmentsDto } from '../dto/create-route-assignments.dto';
 import { UpdateRouteDto } from '../dto/update-route.dto';
 import { ReassignRouteDto } from '../dto/reassign-route.dto';
 import { FilterReadingsDto } from '../dto/filter-readings.dto';
@@ -67,6 +68,20 @@ export class RoutesController {
   @Get('periods')
   async getPeriods() {
     return this.routesService.getPeriodos();
+  }
+
+  /**
+   * Obtener tipos de actividad disponibles
+   */
+  @ApiOperation({
+    summary: 'Obtener tipos de actividad',
+    description:
+      'Retorna la lista de tipos de actividad disponibles para rutas y órdenes de trabajo',
+  })
+  @RequiredPermission('routes', 'read')
+  @Get('activity-types')
+  async getActivityTypes() {
+    return this.routesService.getTiposActividad();
   }
 
   /**
@@ -135,6 +150,29 @@ export class RoutesController {
   async create(@Body() createDto: CreateRouteDto): Promise<RouteResponseDto> {
     const result = await this.routesService.create(createDto);
     return RouteResponseDto.fromEntity(result);
+  }
+
+  /**
+   * Crear asignaciones masivas de rutas por sector/comunidad
+   */
+  @ApiOperation({
+    summary: 'Crear asignaciones masivas de rutas',
+    description:
+      'Crea una o más rutas de lectura para un operario según sectores o toda la comunidad e inicializa sus órdenes de lectura.',
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Rutas asignadas exitosamente',
+    type: [RouteResponseDto],
+  })
+  @RequiredPermission('routes', 'create')
+  @Post('assignments')
+  async createAssignments(
+    @Body() createAssignmentsDto: CreateRouteAssignmentsDto,
+  ): Promise<RouteResponseDto[]> {
+    const result =
+      await this.routesService.createAssignments(createAssignmentsDto);
+    return RouteResponseDto.fromEntityList(result);
   }
 
   /**
