@@ -200,12 +200,6 @@ const LEVEL_2: MenuSeedEntry[] = [
     parentNombre: 'Reportes',
   },
   {
-    nombre: 'Convenio de Pago',
-    ruta: '/reportes/convenio-pago',
-    icono: 'handshake',
-    parentNombre: 'Reportes',
-  },
-  {
     nombre: 'Listado de Clientes',
     ruta: '/reportes/listado-clientes',
     icono: 'group',

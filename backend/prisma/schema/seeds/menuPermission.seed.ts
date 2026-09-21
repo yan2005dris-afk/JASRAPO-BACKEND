@@ -92,6 +92,15 @@ const PERMISSION_MAP: MenuPermissionMapping[] = [
     ],
   },
   {
+    menuNombre: 'Cuadro y Cierre de Caja',
+    permisos: [
+      { recurso: 'payments', accion: 'read' },
+      { recurso: 'payments', accion: 'create' },
+      { recurso: 'payments', accion: 'update' },
+      { recurso: 'payments', accion: 'delete' },
+    ],
+  },
+  {
     menuNombre: 'Prefacturas',
     permisos: [
       { recurso: 'pre-invoices', accion: 'read' },
@@ -226,10 +235,6 @@ const PERMISSION_MAP: MenuPermissionMapping[] = [
   },
   {
     menuNombre: 'Historial de Conexión',
-    permisos: [{ recurso: 'reportes', accion: 'read' }],
-  },
-  {
-    menuNombre: 'Convenio de Pago',
     permisos: [{ recurso: 'reportes', accion: 'read' }],
   },
   {
