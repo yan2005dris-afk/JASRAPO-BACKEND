@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1160 860" font-family="DejaVu Sans, Verdana, Arial, sans-serif" role="img" aria-labelledby="ordTitle ordDesc">
+  <title id="ordTitle">Flujo acordado de Orden, Lectura y Novedad: medidor dañado y estimación</title>
+  <desc id="ordDesc">La orden pasa de PENDIENTE a EN_PROGRESO. Sin novedad se completa. Con novedad no lectura queda bloqueada con tieneNovedadActiva hasta resolver, FALLIDA si es irrecuperable o CANCELADA si se cancela. Con medidor dañado se crea novedad OPEN, la lectura queda CON_NOVEDAD y sólo secretaría autoriza la estimación con los últimos 3 meses: autorizada genera lectura ESTIMADA y orden COMPLETADA con la novedad aún OPEN; si no, la orden sigue bloqueada.</desc>
+  <defs>
+    <marker id="arr2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#475569"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="1160" height="860" fill="#ffffff"/>
+  <text x="24" y="36" font-size="22" font-weight="bold" fill="#0f172a">Flujo acordado de Orden, Lectura y Novedad — medidor dañado y estimación</text>
+  <text x="24" y="60" font-size="12" fill="#64748b">Política acordada: la autorización de estimación por secretaría y el bloqueo por novedad están pendientes de implementación.</text>
+
+  <rect x="24" y="80" width="1112" height="300" fill="#f8fafc" stroke="#cbd5e1"/>
+  <text x="36" y="106" font-size="13" font-weight="bold" letter-spacing="1" fill="#475569">OPERADOR — TRABAJO DE CAMPO</text>
+
+  <rect x="60" y="140" width="172" height="60" rx="8" fill="#e2e8f0" stroke="#64748b" stroke-width="2"/>
+  <text x="146" y="164" font-size="14" font-weight="bold" text-anchor="middle" fill="#1e293b">Orden</text>
+  <text x="146" y="183" font-size="14" font-weight="bold" text-anchor="middle" fill="#1e293b">PENDIENTE</text>
+
+  <rect x="290" y="140" width="192" height="60" rx="8" fill="#dbeafe" stroke="#1d4ed8" stroke-width="2"/>
+  <text x="386" y="164" font-size="14" font-weight="bold" text-anchor="middle" fill="#1e3a8a">Orden</text>
+  <text x="386" y="183" font-size="14" font-weight="bold" text-anchor="middle" fill="#1e3a8a">EN_PROGRESO</text>
+
+  <polygon points="600,120 700,170 600,220 500,170" fill="#fef3c7" stroke="#b45309" stroke-width="2"/>
+  <text x="600" y="165" font-size="14" text-anchor="middle" fill="#451a03">¿Hay</text>
+  <text x="600" y="183" font-size="14" text-anchor="middle" fill="#451a03">novedad?</text>
+
+  <polygon points="600,262 700,312 600,362 500,312" fill="#fef3c7" stroke="#b45309" stroke-width="2"/>
+  <text x="600" y="307" font-size="13" text-anchor="middle" fill="#451a03">¿LECTURA +</text>
+  <text x="600" y="324" font-size="13" text-anchor="middle" fill="#451a03">medidor dañado?</text>
+
+  <rect x="180" y="282" width="242" height="70" rx="8" fill="#ffedd5" stroke="#c2410c" stroke-width="2"/>
+  <text x="301" y="304" font-size="12" font-weight="bold" text-anchor="middle" fill="#7c2d12">EN_PROGRESO bloqueada</text>
+  <text x="301" y="321" font-size="12" text-anchor="middle" fill="#7c2d12">tieneNovedadActiva = true</text>
+  <text x="301" y="338" font-size="12" text-anchor="middle" fill="#7c2d12">novedad NO lectura</text>
+
+  <rect x="24" y="394" width="1112" height="200" fill="#ffffff" stroke="#cbd5e1"/>
+  <text x="36" y="420" font-size="13" font-weight="bold" letter-spacing="1" fill="#475569">SECRETARÍA — AUTORIZA LA ESTIMACIÓN CON LOS ÚLTIMOS 3 MESES</text>
+
+  <rect x="360" y="428" width="240" height="120" rx="4" fill="#fffbeb" stroke="#d97706" stroke-dasharray="7 4"/>
+  <text x="480" y="452" font-size="12" text-anchor="middle" fill="#451a03">Sin daño en el medidor:</text>
+  <text x="480" y="470" font-size="12" text-anchor="middle" fill="#451a03">POR_REVISION → APROBADA o</text>
+  <text x="480" y="488" font-size="12" text-anchor="middle" fill="#451a03">RECHAZADA_VERIFICACION.</text>
+  <text x="480" y="506" font-size="12" text-anchor="middle" fill="#451a03">Sólo APROBADA alimenta</text>
+  <text x="480" y="524" font-size="12" text-anchor="middle" fill="#451a03">prefacturación. Ver 05.</text>
+
+  <rect x="700" y="398" width="280" height="80" rx="8" fill="#fee2e2" stroke="#b91c1c" stroke-width="2"/>
+  <text x="840" y="424" font-size="12" font-weight="bold" text-anchor="middle" fill="#7f1d1d">Novedad MEDIDOR_DAÑADO: OPEN</text>
+  <text x="840" y="443" font-size="12" text-anchor="middle" fill="#7f1d1d">Lectura CON_NOVEDAD · Orden</text>
+  <text x="840" y="460" font-size="12" text-anchor="middle" fill="#7f1d1d">EN_PROGRESO bloqueada</text>
+
+  <polygon points="840,490 950,540 840,590 730,540" fill="#fef3c7" stroke="#b45309" stroke-width="2"/>
+  <text x="840" y="530" font-size="12" text-anchor="middle" fill="#451a03">¿Secretaría autoriza</text>
+  <text x="840" y="546" font-size="12" text-anchor="middle" fill="#451a03">la estimación?</text>
+  <text x="840" y="562" font-size="12" text-anchor="middle" fill="#451a03">(últimos 3 meses)</text>
+
+  <rect x="24" y="608" width="1112" height="196" fill="#f8fafc" stroke="#cbd5e1"/>
+  <text x="36" y="634" font-size="13" font-weight="bold" letter-spacing="1" fill="#475569">SALIDAS — ESTADOS DE ORDEN, LECTURA Y NOVEDAD</text>
+
+  <rect x="80" y="640" width="200" height="60" rx="8" fill="#fee2e2" stroke="#b91c1c" stroke-width="2"/>
+  <text x="180" y="664" font-size="13" font-weight="bold" text-anchor="middle" fill="#7f1d1d">FALLIDA</text>
+  <text x="180" y="682" font-size="12" text-anchor="middle" fill="#7f1d1d">irrecuperable</text>
+
+  <rect x="80" y="720" width="200" height="60" rx="8" fill="#fee2e2" stroke="#b91c1c" stroke-width="2"/>
+  <text x="180" y="744" font-size="13" font-weight="bold" text-anchor="middle" fill="#7f1d1d">CANCELADA</text>
+  <text x="180" y="762" font-size="12" text-anchor="middle" fill="#7f1d1d">se cancela</text>
+
+  <rect x="400" y="690" width="220" height="60" rx="8" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+  <text x="510" y="714" font-size="13" font-weight="bold" text-anchor="middle" fill="#14532d">Orden COMPLETADA</text>
+  <text x="510" y="732" font-size="12" text-anchor="middle" fill="#14532d">sin novedad o resuelta</text>
+
+  <rect x="700" y="640" width="280" height="80" rx="8" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+  <text x="840" y="664" font-size="12" font-weight="bold" text-anchor="middle" fill="#14532d">Lectura ESTIMADA</text>
+  <text x="840" y="682" font-size="12" text-anchor="middle" fill="#14532d">Orden COMPLETADA (cuenta para la ruta)</text>
+  <text x="840" y="700" font-size="12" text-anchor="middle" fill="#14532d">Novedad sigue OPEN → reemplazo futuro</text>
+
+  <rect x="700" y="736" width="280" height="56" rx="8" fill="#ffedd5" stroke="#c2410c" stroke-width="2"/>
+  <text x="840" y="758" font-size="12" font-weight="bold" text-anchor="middle" fill="#7c2d12">Orden EN_PROGRESO bloqueada</text>
+  <text x="840" y="776" font-size="12" text-anchor="middle" fill="#7c2d12">sin autorización o no estimable</text>
+
+  <rect x="400" y="758" width="290" height="36" rx="4" fill="#fffbeb" stroke="#d97706" stroke-dasharray="7 4"/>
+  <text x="545" y="781" font-size="11" text-anchor="middle" fill="#451a03">Orden COMPLETADA ≠ Lectura APROBADA · ESTIMADA ≠ APROBADA</text>
+
+  <g fill="none" stroke="#475569" stroke-width="2">
+    <path d="M232,170 L288,170" marker-end="url(#arr2)"/>
+    <path d="M482,170 L498,170" marker-end="url(#arr2)"/>
+    <path d="M702,170 L780,170 L780,630 L500,630 L500,688" marker-end="url(#arr2)"/>
+    <path d="M600,222 L600,260" marker-end="url(#arr2)"/>
+    <path d="M500,312 L424,312" marker-end="url(#arr2)"/>
+    <path d="M600,364 L600,438 L698,438" marker-end="url(#arr2)"/>
+    <path d="M840,478 L840,488" marker-end="url(#arr2)"/>
+    <path d="M840,592 L840,638" marker-end="url(#arr2)"/>
+    <path d="M728,540 L620,540 L620,764 L698,764" marker-end="url(#arr2)"/>
+    <path d="M340,352 L340,720 L398,720" marker-end="url(#arr2)"/>
+    <path d="M240,352 L240,638" marker-end="url(#arr2)"/>
+    <path d="M180,317 L60,317 L60,750 L78,750" marker-end="url(#arr2)"/>
+  </g>
+  <g font-size="12" fill="#334155" style="paint-order:stroke;stroke:#ffffff;stroke-width:3px;">
+    <text x="260" y="161" text-anchor="middle">operador inicia</text>
+    <text x="741" y="161" text-anchor="middle">sin novedad</text>
+    <text x="608" y="243">con novedad</text>
+    <text x="461" y="303" text-anchor="middle">no: otra novedad</text>
+    <text x="608" y="404">sí</text>
+    <text x="848" y="484">pide estimación</text>
+    <text x="848" y="619">autoriza</text>
+    <text x="674" y="531" text-anchor="middle">no</text>
+    <text x="332" y="560" text-anchor="end">se resuelve</text>
+    <text x="248" y="600">irrecuperable</text>
+    <text x="68" y="560">se cancela</text>
+  </g>
+
+  <text x="24" y="836" font-size="11" fill="#64748b">Rectángulo = estado · Rombo = decisión · Recuadro punteado = nota o política acordada pendiente de implementación</text>
+</svg>

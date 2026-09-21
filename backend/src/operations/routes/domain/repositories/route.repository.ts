@@ -20,6 +20,7 @@ export interface UsuarioRef {
 
 export interface ComunidadRef {
   comunidadId: number;
+  nombre?: string;
 }
 
 export interface SectorRef {
@@ -34,9 +35,24 @@ export interface PeriodoRef {
   estado: string;
 }
 
+export interface TipoActividadRef {
+  tipoActividadId: number;
+  codigo: string;
+  nombre: string;
+  descripcion?: string | null;
+  activo: boolean;
+}
+
 export interface MedidorRef {
   medidorId: number;
   serie: string;
+}
+
+export interface ContratoRef {
+  contratoId: number;
+  numeroGuia: string;
+  comunidadId: number;
+  sectorId?: number | null;
 }
 
 export interface EligibleReadingsCriteria {
@@ -113,4 +129,13 @@ export abstract class RouteRepository {
   ): Promise<PaginatedResult<ReadingForRouteEntity, LecturaKpis>>;
 
   abstract getReadingKpisByRutaId(rutaId: bigint): Promise<LecturaKpis>;
+
+  abstract createWorkOrdersForContracts(
+    rutaId: bigint,
+    contratoIds: number[],
+  ): Promise<void>;
+
+  abstract findContratosByIds(contratoIds: number[]): Promise<ContratoRef[]>;
+
+  abstract findAllTiposActividad(): Promise<TipoActividadRef[]>;
 }

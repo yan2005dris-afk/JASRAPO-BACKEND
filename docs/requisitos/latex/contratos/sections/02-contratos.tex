@@ -1,0 +1,470 @@
+\section{Contratos}
+
+
+Vínculo entre cliente, medidor, tarifa y servicio.
+
+
+\begin{quote}
+\textbf{Ficha de dominio:} documenta el ciclo contractual, el vínculo con medidores, la asignación de rutas de instalación, la baja lógica y la generación de documentos PDF.
+\end{quote}
+
+
+\subsection{Alcance y entradas HTTP}
+
+
+\begin{itemize}
+\item \textbf{Controlador:} \texttt{\detokenize{ContratoMedidorController}}.
+\item \textbf{Servicio:} \texttt{\detokenize{ContratoMedidorService}}.
+\item \textbf{Casos:} \texttt{\detokenize{CreateContractUseCase}}, \texttt{\detokenize{FindAllContractsUseCase}}, \texttt{\detokenize{FindOneContractUseCase}}, \texttt{\detokenize{UpdateContractUseCase}}, \texttt{\detokenize{FinalizeMeterLinkUseCase}}, \texttt{\detokenize{RemoveContractUseCase}}.
+\item La asignación de ruta usa el servicio/repositorios; no se confirmó un caso de uso dedicado.
+\end{itemize}
+
+
+\begin{center}
+\small
+\begin{longtable}{|p{0.313\textwidth}|p{0.313\textwidth}|p{0.313\textwidth}|}
+\hline
+\textbf{Método y ruta} & \textbf{Caso/servicio ejecutado} & \textbf{Resultado} \\
+\hline
+\endfirsthead
+\hline
+\textbf{Método y ruta} & \textbf{Caso/servicio ejecutado} & \textbf{Resultado} \\
+\hline
+\endhead
+\texttt{\detokenize{POST /api/v1/contracts}} & \texttt{\detokenize{crearContrato()}} → \texttt{\detokenize{CreateContractUseCase.execute()}} & Contrato creado. \\
+\hline
+\texttt{\detokenize{GET /api/v1/contracts}} & \texttt{\detokenize{buscarContratos()}} → \texttt{\detokenize{FindAllContractsUseCase.execute()}} & Página. \\
+\hline
+\texttt{\detokenize{GET /api/v1/contracts/:id}} & \texttt{\detokenize{buscarContrato()}} → \texttt{\detokenize{FindOneContractUseCase.execute()}} & Detalle. \\
+\hline
+\texttt{\detokenize{PATCH /api/v1/contracts/:id}} & \texttt{\detokenize{actualizar()}} → \texttt{\detokenize{UpdateContractUseCase.execute()}} & Contrato actualizado. \\
+\hline
+\texttt{\detokenize{POST /api/v1/contracts/:id/finalize}} & \texttt{\detokenize{finalizarVinculo()}} → \texttt{\detokenize{FinalizeMeterLinkUseCase.execute()}} & Vínculo finalizado. \\
+\hline
+\texttt{\detokenize{POST /api/v1/contracts/:id/assign-installation-route}} & \texttt{\detokenize{assignInstallationRoute()}} → servicio/repositorios & Ruta y orden de instalación. \\
+\hline
+\texttt{\detokenize{DELETE /api/v1/contracts/:id}} & \texttt{\detokenize{eliminar()}} → \texttt{\detokenize{RemoveContractUseCase.execute()}} & Soft delete. \\
+\hline
+\texttt{\detokenize{GET /api/v1/contracts/:id/pdf/connection-request}} & \texttt{\detokenize{generateConnectionRequestPdf()}} & PDF. \\
+\hline
+\texttt{\detokenize{GET /api/v1/contracts/:id/pdf/responsibility-agreement}} & \texttt{\detokenize{generateResponsibilityAgreementPdf()}} & PDF. \\
+\hline
+\end{longtable}
+\end{center}
+
+
+\subsection{Ejemplo JSON}
+
+
+\begin{lstlisting}
+{
+  "contratoId": "1",
+  "clienteId": "10",
+  "medidorId": "20",
+  "estadoServicio": "PENDIENTE_PAGO",
+  "estadoCobranza": "NO_APLICA"
+}
+\end{lstlisting}
+
+
+\begin{center}
+\small
+\begin{longtable}{|p{0.313\textwidth}|p{0.313\textwidth}|p{0.313\textwidth}|}
+\hline
+\textbf{Campo} & \textbf{Tipo} & \textbf{Regla/uso} \\
+\hline
+\endfirsthead
+\hline
+\textbf{Campo} & \textbf{Tipo} & \textbf{Regla/uso} \\
+\hline
+\endhead
+\texttt{\detokenize{contratoId}}, \texttt{\detokenize{clienteId}}, \texttt{\detokenize{medidorId}} & string & \texttt{\detokenize{BigInt}} serializado. \\
+\hline
+\texttt{\detokenize{categoriaTarifaId}}, \texttt{\detokenize{comunidadId}}, \texttt{\detokenize{sectorId}} & number & Relaciones territoriales/tarifarias. \\
+\hline
+\texttt{\detokenize{numeroGuia}}, \texttt{\detokenize{direccionSuministro}} & string & Datos de instalación. \\
+\hline
+\texttt{\detokenize{estadoServicio}} & enum & Ciclo operativo del servicio. \\
+\hline
+\texttt{\detokenize{estadoCobranza}} & enum & Situación de cobro. \\
+\hline
+\end{longtable}
+\end{center}
+
+
+\subsection{Estados}
+
+
+\begin{center}
+\small
+\begin{longtable}{|p{0.313\textwidth}|p{0.313\textwidth}|p{0.313\textwidth}|}
+\hline
+\textbf{Dimensión} & \textbf{Valores confirmados} & \textbf{Significado} \\
+\hline
+\endfirsthead
+\hline
+\textbf{Dimensión} & \textbf{Valores confirmados} & \textbf{Significado} \\
+\hline
+\endhead
+Servicio & \texttt{\detokenize{PENDIENTE_PAGO}}, \texttt{\detokenize{PENDIENTE_INSTALACION}}, \texttt{\detokenize{ACTIVO}}, \texttt{\detokenize{SUSPENDIDO}}, \texttt{\detokenize{RETIRADO}} & Pago, instalación, operación, suspensión y retiro. \\
+\hline
+Cobranza & \texttt{\detokenize{NO_APLICA}}, \texttt{\detokenize{AL_DIA}}, \texttt{\detokenize{EN_MORA}} & Sin cobro, corriente o vencido. \\
+\hline
+\end{longtable}
+\end{center}
+
+
+\subsection{Efectos y transacciones}
+
+
+La creación valida relaciones y escribe directamente contrato, historial y medidor. La prefactura se obtiene indirectamente mediante \texttt{SELECT generar\_prefactura\_instalacion(...)} dentro de la transacción cuando \texttt{estadoServicio=PENDIENTE\_PAGO}; no se crea directamente desde Prisma.
+
+\subsubsection{Cadena POST y efectos}
+La cadena es \texttt{ContratoMedidorController.crear()} $\rightarrow$ \texttt{ContratoMedidorService.crearContrato()} $\rightarrow$ \texttt{CreateContractUseCase.execute()} $\rightarrow$ \texttt{PrismaContractRepository}. Fuentes: \texttt{backend/src/operations/contracts/application/use-cases/create-contract.use-case.ts} (aprox. líneas 30-190), \texttt{backend/src/operations/contracts/infrastructure/repositories/prisma-contract.repository.ts} (aprox. líneas 1-220) y \texttt{backend/src/operations/contracts/interfaces/dto/create-contrato-medidor.dto.ts} (aprox. líneas 1-140). Se validan DTO, cliente, categoría, disponibilidad del medidor y coherencia del estado inicial.
+
+\begin{center}\small
+\begin{longtable}{|p{0.28\textwidth}|p{0.18\textwidth}|p{0.48\textwidth}|}
+\hline
+\textbf{Superficie} & \textbf{Tipo} & \textbf{Efecto} \\
+\hline
+\texttt{contratos} & Directo & Inserta el vínculo con \texttt{PENDIENTE\_PAGO} y \texttt{NO\_APLICA}. \\
+\hline
+\texttt{historial\_medidores} & Directo & Registra el vínculo inicial. \\
+\hline
+\texttt{medidores} & Directo & Reserva/actualiza el estado. \\
+\hline
+\texttt{Comprobante}, \texttt{ComprobanteDetalle}, \texttt{Prefacturas}, \texttt{PrefacturaDetalle} & Indirecto & Los crea la función SQL dentro de la misma transacción. \\
+\hline
+\end{longtable}\end{center}
+
+La función está en \texttt{backend/prisma/migrations/20260822010000\_add\_codigo\_sistema\_rubro\_and\_update\_sp/migration.sql} (aprox. líneas 1-260). Selecciona el rubro por categoría y \texttt{codigo\_sistema\_rubro='INSTALACION'}. \texttt{codigo\_sri LIKE 'SERV-GUIA-\%'} es un criterio histórico/legacy, no vigente.
+
+\subsubsection{Fórmula de instalación}
+\[
+\text{subtotal}=\text{precioUnitarioGuiaRemision}\times\text{cantidad},\quad \text{iva}=\operatorname{ROUND}(\text{subtotal}\times\text{tasaImpuesto},2),\quad \text{total}=\text{subtotal}+\text{iva}.
+\]
+Fuente: bloque \texttt{generar\_prefactura\_instalacion} de la migración SQL, aprox. líneas 80-220. \texttt{cantidad} es la cantidad facturada en el detalle del rubro. Los nombres \texttt{precioUnitarioGuiaRemision} y \texttt{tasaImpuesto} son conceptuales; los nombres reales SQL pueden diferir en \texttt{Rubros} y en la tarifa de impuesto.
+
+
+\begin{center}
+\small
+\begin{longtable}{|p{0.470\textwidth}|p{0.470\textwidth}|}
+\hline
+\textbf{Tabla Prisma} & \textbf{Uso} \\
+\hline
+\endfirsthead
+\hline
+\textbf{Tabla Prisma} & \textbf{Uso} \\
+\hline
+\endhead
+\texttt{\detokenize{Contratos}} & Contrato, estados y soft delete. \\
+\hline
+\texttt{\detokenize{HistorialMedidores}} & Historial del vínculo. \\
+\hline
+\texttt{\detokenize{Medidores}} & Medidor asociado. \\
+\hline
+\texttt{\detokenize{CategoriaTarifa}}, \texttt{\detokenize{Clientes}} & Relaciones principales. \\
+\hline
+\texttt{\detokenize{Prefacturas}}, \texttt{\detokenize{PrefacturaDetalle}}, \texttt{\detokenize{Rubros}} & Cargo de instalación. \\
+\hline
+\texttt{\detokenize{Rutas}}, \texttt{\detokenize{OrdenTrabajo}} & Instalación asignada. \\
+\hline
+\end{longtable}
+\end{center}
+
+
+\subsection{Gráfico de estados}
+
+
+\begin{lstlisting}
+stateDiagram-v2
+  [*] --> PENDIENTE_PAGO
+  PENDIENTE_PAGO --> PENDIENTE_INSTALACION: pago de instalación
+  PENDIENTE_INSTALACION --> ACTIVO: actualización explícita de estado
+  ACTIVO --> SUSPENDIDO
+  SUSPENDIDO --> RETIRADO
+  No se encontró reactivación desde RETIRADO.
+\end{lstlisting}
+
+\subsubsection{Estado de cobranza}
+\begin{lstlisting}
+stateDiagram-v2
+  [*] --> NO_APLICA
+  NO_APLICA --> AL_DIA: normalización para servicio operativo
+  NO_APLICA --> EN_MORA: proceso de corte, si corresponde
+  AL_DIA --> EN_MORA: proceso de corte
+  EN_MORA --> AL_DIA: proceso de corte
+  No se confirmó una transición automática hacia el servicio.
+\end{lstlisting}
+
+
+\subsection{Casos de uso}
+
+
+\subsubsection{Caso: Crear contrato}
+
+
+\textbf{Descripción:} crea el contrato y prepara la instalación del medidor.  
+
+\textbf{HTTP y ruta:} \texttt{\detokenize{POST /api/v1/contracts}}.  
+
+\textbf{Permiso:} \texttt{\detokenize{contracts:create}}.  
+
+\textbf{Cadena:} \texttt{\detokenize{ContratoMedidorController.crear()}} → \texttt{\detokenize{ContratoMedidorService.crearContrato()}} → \texttt{\detokenize{CreateContractUseCase.execute()}} → repositorios.  
+
+\textbf{Errores relevantes:} \texttt{\detokenize{400}} datos/relaciones inválidas; \texttt{\detokenize{401}}; \texttt{\detokenize{403}}; \texttt{\detokenize{404}}; medidor no disponible.  
+
+\textbf{Efectos:} crea contrato, historial y prefactura en las operaciones confirmadas por el caso.  
+
+\textbf{Prisma:} \texttt{\detokenize{Contratos}}, \texttt{\detokenize{HistorialMedidores}}, \texttt{\detokenize{Medidores}}, \texttt{\detokenize{Prefacturas}}, \texttt{\detokenize{PrefacturaDetalle}}, \texttt{\detokenize{Rubros}}, \texttt{\detokenize{Clientes}}, \texttt{\detokenize{CategoriaTarifa}}.  
+
+\textbf{Entrada:}
+
+
+\begin{lstlisting}
+{
+  "clienteId": "10",
+  "medidorId": "20",
+  "categoriaTarifaId": 1,
+  "numeroGuia": "G-0001",
+  "direccionSuministro": "Av. Amazonas 123",
+  "comunidadId": 1,
+  "sectorId": null
+}
+\end{lstlisting}
+
+
+\textbf{Salida:}
+
+
+\begin{lstlisting}
+{
+  "contratoId": "1",
+  "clienteId": "10",
+  "medidorId": "20",
+  "estadoServicio": "PENDIENTE_PAGO",
+  "estadoCobranza": "NO_APLICA"
+}
+\end{lstlisting}
+
+
+\subsubsection{Caso: Listar contratos}
+
+
+\textbf{Descripción:} devuelve contratos filtrados y paginados.  
+
+\textbf{HTTP y ruta:} \texttt{\detokenize{GET /api/v1/contracts}}.  
+
+\textbf{Permiso:} \texttt{\detokenize{contracts:read}}.  
+
+\textbf{Cadena:} \texttt{\detokenize{ContratoMedidorController.buscarContratos()}} → \texttt{\detokenize{ContratoMedidorService.buscarContratos()}} → \texttt{\detokenize{FindAllContractsUseCase.execute()}} → repositorio.  
+
+\textbf{Errores relevantes:} \texttt{\detokenize{400}} query inválida; \texttt{\detokenize{401}}; \texttt{\detokenize{403}}.  
+
+\textbf{Efectos:} ninguno; consulta y DTO puros.  
+
+\textbf{Prisma:} \texttt{\detokenize{Contratos}}, \texttt{\detokenize{Clientes}}, \texttt{\detokenize{Medidores}}, \texttt{\detokenize{CategoriaTarifa}}.  
+
+\textbf{Entrada:} sin body; query del \texttt{\detokenize{FilterContractsDto}} (paginación y filtros definidos por el DTO).  
+
+\textbf{Salida:}
+
+
+\begin{lstlisting}
+{"data":[{"contratoId":"1","estadoServicio":"ACTIVO"}],"meta":{"page":1,"limit":10,"total":1,"totalPages":1}}
+\end{lstlisting}
+
+
+\subsubsection{Caso: Obtener contrato}
+
+
+\textbf{Descripción:} consulta el detalle de un contrato.  
+
+\textbf{HTTP y ruta:} \texttt{\detokenize{GET /api/v1/contracts/:id}}.  
+
+\textbf{Permiso:} \texttt{\detokenize{contracts:read}}.  
+
+\textbf{Cadena:} \texttt{\detokenize{ContratoMedidorController.buscarContrato()}} → \texttt{\detokenize{ContratoMedidorService.buscarContrato()}} → \texttt{\detokenize{FindOneContractUseCase.execute()}} → repositorio.  
+
+\textbf{Errores relevantes:} \texttt{\detokenize{400}}; \texttt{\detokenize{401}}; \texttt{\detokenize{403}}; \texttt{\detokenize{404}}.  
+
+\textbf{Efectos:} ninguno; mapeo puro.  
+
+\textbf{Prisma:} \texttt{\detokenize{Contratos}}, \texttt{\detokenize{Clientes}}, \texttt{\detokenize{Medidores}}, \texttt{\detokenize{CategoriaTarifa}}, \texttt{\detokenize{HistorialMedidores}}.  
+
+\textbf{Entrada:} sin body; path \texttt{\detokenize{{ "id": "1" }}}.  
+
+\textbf{Salida:}
+
+
+\begin{lstlisting}
+{"contratoId":"1","clienteId":"10","estadoServicio":"ACTIVO","estadoCobranza":"AL_DIA","historialMedidores":[]}
+\end{lstlisting}
+
+
+\subsubsection{Caso: Actualizar contrato}
+
+
+\textbf{Descripción:} actualiza estados, dirección, sector o reemplaza el medidor si se envía \texttt{\detokenize{medidorId}}.  
+
+\textbf{HTTP y ruta:} \texttt{\detokenize{PATCH /api/v1/contracts/:id}}.  
+
+\textbf{Permiso:} \texttt{\detokenize{contracts:update}}.  
+
+\textbf{Cadena:} \texttt{\detokenize{ContratoMedidorController.actualizarContrato()}} → \texttt{\detokenize{ContratoMedidorService.actualizar()}} → \texttt{\detokenize{UpdateContractUseCase.execute()}} → repositorio.  
+
+\textbf{Errores relevantes:} \texttt{\detokenize{400}}; \texttt{\detokenize{401}}; \texttt{\detokenize{403}}; \texttt{\detokenize{404}}; conflicto de estado/relación.  
+
+\textbf{Efectos:} actualización; el reemplazo indicado se ejecuta transaccionalmente según el caso.  
+
+\textbf{Prisma:} \texttt{\detokenize{Contratos}}, \texttt{\detokenize{Medidores}}, \texttt{\detokenize{HistorialMedidores}}.  
+
+\textbf{Entrada:} path \texttt{\detokenize{{ "id": "1" }}}; body \texttt{\detokenize{{ "direccionSuministro": "Calle Nueva 10" }}}.  
+
+\textbf{Salida:}
+
+
+\begin{lstlisting}
+{"contratoId":"1","direccionSuministro":"Calle Nueva 10","estadoServicio":"ACTIVO"}
+\end{lstlisting}
+
+
+\subsubsection{Caso: Finalizar vínculo de medidor}
+
+
+\textbf{Descripción:} finaliza el vínculo activo del contrato con su medidor.  
+
+\textbf{HTTP y ruta:} \texttt{\detokenize{POST /api/v1/contracts/:id/finalize}}.  
+
+\textbf{Permiso:} \texttt{\detokenize{contracts:update}}.  
+
+\textbf{Cadena:} \texttt{\detokenize{ContratoMedidorController.finalizarVinculo()}} → \texttt{\detokenize{ContratoMedidorService.finalizarVinculo()}} → \texttt{\detokenize{FinalizeMeterLinkUseCase.execute()}} → repositorio.  
+
+\textbf{Errores relevantes:} \texttt{\detokenize{400}}; \texttt{\detokenize{401}}; \texttt{\detokenize{403}}; \texttt{\detokenize{404}}.  
+
+\textbf{Efectos:} registra el cierre en el historial.  
+
+\textbf{Prisma:} \texttt{\detokenize{HistorialMedidores}}, \texttt{\detokenize{Contratos}}, \texttt{\detokenize{Medidores}}.  
+
+\textbf{Entrada:} sin body; path \texttt{\detokenize{{ "id": "1" }}}.  
+
+\textbf{Salida:}
+
+
+\begin{lstlisting}
+{"contratoId":"1","fechaFin":"2026-09-16"}
+\end{lstlisting}
+
+
+\subsubsection{Caso: Asignar ruta de instalación}
+
+
+\textbf{Descripción:} asigna un contrato pendiente de instalación a una ruta existente o crea una ruta de instalación y su orden.  
+
+\textbf{HTTP y ruta:} \texttt{\detokenize{POST /api/v1/contracts/:id/assign-installation-route}}.  
+
+\textbf{Permiso:} \texttt{\detokenize{contracts:update}}.  
+
+\textbf{Cadena:} \texttt{\detokenize{ContratoMedidorController.assignInstallationRoute()}} → \texttt{\detokenize{ContratoMedidorService.assignInstallationRoute()}} → repositorios de rutas/órdenes.  
+
+\textbf{Errores relevantes:} \texttt{\detokenize{400}}; \texttt{\detokenize{401}}; \texttt{\detokenize{403}}; \texttt{\detokenize{404}}; ruta destino inválida.  
+
+\textbf{Efectos:} crea/reutiliza \texttt{\detokenize{Rutas}} y crea \texttt{\detokenize{OrdenTrabajo}}; no se confirma atomicidad de ambas escrituras.  
+
+\textbf{Prisma:} \texttt{\detokenize{Rutas}}, \texttt{\detokenize{OrdenTrabajo}}, \texttt{\detokenize{Contratos}}, \texttt{\detokenize{Medidores}}.  
+
+\textbf{Entrada:} path \texttt{\detokenize{{ "id": "1" }}}; body \texttt{\detokenize{{ "routeId": "42" }}} o DTO sin \texttt{\detokenize{routeId}} según el código.  
+
+\textbf{Salida:}
+
+
+\begin{lstlisting}
+{"rutaId":"42","tipoRuta":"INSTALACION","ordenesTrabajo":[{"ordenTrabajoId":"9","estado":"PENDIENTE"}]}
+\end{lstlisting}
+
+
+\subsubsection{Caso: Eliminar contrato}
+
+
+\textbf{Descripción:} marca el contrato como eliminado lógicamente.  
+
+\textbf{HTTP y ruta:} \texttt{\detokenize{DELETE /api/v1/contracts/:id}}.  
+
+\textbf{Permiso:} \texttt{\detokenize{contracts:delete}}.  
+
+\textbf{Cadena:} \texttt{\detokenize{ContratoMedidorController.eliminarContrato()}} → \texttt{\detokenize{ContratoMedidorService.eliminar()}} → \texttt{\detokenize{RemoveContractUseCase.execute()}} → repositorio.  
+
+\textbf{Errores relevantes:} \texttt{\detokenize{400}}; \texttt{\detokenize{401}}; \texttt{\detokenize{403}}; \texttt{\detokenize{404}}.  
+
+\textbf{Efectos:} soft delete en \texttt{\detokenize{Contratos}}.  
+
+\textbf{Prisma:} \texttt{\detokenize{Contratos}}.  
+
+\textbf{Entrada:} sin body; path \texttt{\detokenize{{ "id": "1" }}}.  
+
+\textbf{Salida:}
+
+
+\begin{lstlisting}
+{"contratoId":"1","estadoServicio":"ACTIVO","estadoCobranza":"AL_DIA"}
+\end{lstlisting}
+
+
+\subsubsection{Caso: Generar PDF de solicitud de conexión}
+
+
+\textbf{Descripción:} genera la solicitud oficial de conexión.  
+
+\textbf{HTTP y ruta:} \texttt{\detokenize{GET /api/v1/contracts/:id/pdf/connection-request}}.  
+
+\textbf{Permiso:} \texttt{\detokenize{contracts:read}}.  
+
+\textbf{Cadena:} \texttt{\detokenize{ContratoMedidorController.connectionRequestPdf()}} → \texttt{\detokenize{ContratoMedidorService.generateConnectionRequestPdf()}} → \texttt{\detokenize{GetConnectionRequestPdfDataUseCase}} → generador.  
+
+\textbf{Errores relevantes:} \texttt{\detokenize{400}}; \texttt{\detokenize{401}}; \texttt{\detokenize{403}}; \texttt{\detokenize{404}}; aborto de solicitud.  
+
+\textbf{Efectos:} sólo lectura y proyección; serialización PDF pura.  
+
+\textbf{Prisma:} \texttt{\detokenize{Contratos}}, \texttt{\detokenize{Clientes}}, \texttt{\detokenize{Medidores}}, \texttt{\detokenize{CategoriaTarifa}}.  
+
+\textbf{Entrada:} sin body; path \texttt{\detokenize{{ "id": "1" }}}.  
+
+\textbf{Salida:} no es JSON: \texttt{\detokenize{Content-Type: application/pdf}}, \texttt{\detokenize{Content-Disposition: inline}} y \texttt{\detokenize{Content-Length}}, con bytes PDF.
+
+
+\subsubsection{Caso: Generar PDF de acuerdo de responsabilidad}
+
+
+\textbf{Descripción:} genera el acta de responsabilidad asociada al contrato.  
+
+\textbf{HTTP y ruta:} \texttt{\detokenize{GET /api/v1/contracts/:id/pdf/responsibility-agreement}}.  
+
+\textbf{Permiso:} \texttt{\detokenize{contracts:read}}.  
+
+\textbf{Cadena:} \texttt{\detokenize{ContratoMedidorController.responsibilityAgreementPdf()}} → \texttt{\detokenize{ContratoMedidorService.generateResponsibilityAgreementPdf()}} → \texttt{\detokenize{GetResponsibilityAgreementPdfDataUseCase}} → generador.  
+
+\textbf{Errores relevantes:} \texttt{\detokenize{400}}; \texttt{\detokenize{401}}; \texttt{\detokenize{403}}; \texttt{\detokenize{404}}; aborto de solicitud.  
+
+\textbf{Efectos:} no se confirma escritura de dominio; proyección y PDF puros.  
+
+\textbf{Prisma:} \texttt{\detokenize{Contratos}}, \texttt{\detokenize{Clientes}}, \texttt{\detokenize{Medidores}}, \texttt{\detokenize{HistorialMedidores}}.  
+
+\textbf{Entrada:} sin body; path \texttt{\detokenize{{ "id": "1" }}}.  
+
+\textbf{Salida:} no es JSON: \texttt{\detokenize{application/pdf}}, \texttt{\detokenize{Content-Disposition: inline}}, \texttt{\detokenize{Content-Length}} y bytes PDF.
+
+
+\subsection{No documentado o pendiente de confirmar}
+
+\begin{figure}[h]
+\centering
+\IfFileExists{images/02-contrato-prefactura.png}{\includegraphics[width=0.9\textwidth]{images/02-contrato-prefactura.png}}{\fbox{\parbox{0.82\textwidth}{\centering Fallback: contrato $\rightarrow$ función SQL $\rightarrow$ comprobante/prefactura. Agregar \texttt{images/02-contrato-prefactura.png} para reemplazarlo.}}}
+\caption{Contrato y prefactura de instalación.}
+\end{figure}
+
+
+\begin{itemize}
+\item No se encontró transición automática a \texttt{\detokenize{ACTIVO}}. \texttt{PagoValidadoHandler}, en \texttt{backend/src/billing/collections/payments/application/handlers/pago-validado.handler.ts} (aprox. líneas 1-220), confirma \texttt{PENDIENTE\_PAGO} $\rightarrow$ \texttt{PENDIENTE\_INSTALACION} y cobranza \texttt{NO\_APLICA}.
+\item Parámetros exactos de los DTO de finalización/asignación si cambian.
+\item Sincronización del campo legacy \texttt{\detokenize{estado}}.
+\end{itemize}

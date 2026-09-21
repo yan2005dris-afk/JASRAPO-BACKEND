@@ -1,0 +1,9 @@
+\section{Alcance y convenciones}
+
+La documentación distingue tres niveles: \textbf{Confirmada} (visible en código, Prisma, migración o handler registrado), \textbf{Inferida} (deducción que no prueba una escritura o transición) y \textbf{No encontrada} (la revisión no halló fórmula, handler, rollback, transición o integración). Las fórmulas sólo se presentan como vigentes cuando incluyen fuente, símbolo y línea aproximada. Los efectos directos son escrituras del caso de uso/repositorio; los indirectos provienen de handlers, eventos o funciones SQL.
+
+\subsection{Decisión funcional propuesta sobre novedades}
+No se agregará un estado persistido \texttt{NOVEDAD} a \texttt{OrdenTrabajo}. La orden permanecerá en \texttt{EN\_PROGRESO} mientras exista una novedad y la UI mostrará una alerta derivada de la relación de novedades activas. \texttt{OrdenTrabajo.estado} representa ejecución operativa; \texttt{NovedadOrdenTrabajo.estado}, análisis de anomalía; y \texttt{Lectura.estado}, captura y validación del dato. \texttt{NOVEDAD} es un indicador derivado, no un valor de enum. La decisión está \textbf{pendiente de implementación}; el backend deberá impedir \texttt{COMPLETADA} si una novedad abierta afecta el resultado, y queda pendiente definir el criterio de bloqueo (\texttt{afectaOrden}, tipo, resolución o regla equivalente).
+
+\subsection{Convenciones técnicas}
+La API usa el prefijo \texttt{/api/v1}; los \texttt{BigInt} se serializan como strings; \texttt{deletedAt} representa eliminación lógica; y ``transaccional'' sólo se usa cuando la transacción fue confirmada. La fuente primaria es el código implementado y el esquema Prisma.
