@@ -47,6 +47,13 @@ export interface MedidorRef {
   serie: string;
 }
 
+export interface ContratoRef {
+  contratoId: number;
+  numeroGuia: string;
+  comunidadId: number;
+  sectorId?: number | null;
+}
+
 export interface EligibleReadingsCriteria {
   tipoRuta: string;
   comunidadId: number;
@@ -126,6 +133,8 @@ export abstract class RouteRepository {
     rutaId: bigint,
     contratoIds: number[],
   ): Promise<void>;
+
+  abstract findContratosByIds(contratoIds: number[]): Promise<ContratoRef[]>;
 
   abstract findAllTiposActividad(): Promise<TipoActividadRef[]>;
 }

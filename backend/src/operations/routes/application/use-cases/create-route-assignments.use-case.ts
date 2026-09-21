@@ -59,10 +59,26 @@ export class CreateRouteAssignmentsUseCase {
         dto.sectorIds && dto.sectorIds.length === 1
           ? dto.sectorIds[0]
           : undefined;
-      const routeName = `${baseName} - Comunidad ${dto.comunidadId}`.slice(
-        0,
-        200,
+
+      const contratosRef = await this.routeRepository.findContratosByIds(
+        dto.contratoIds,
       );
+      let suffix = `Comunidad ${comunidad.nombre ?? dto.comunidadId}`;
+      if (contratosRef.length === 1) {
+        suffix = `Contrato ${contratosRef[0].numeroGuia || contratosRef[0].contratoId}`;
+      } else if (contratosRef.length > 1) {
+        const firstGuias = contratosRef
+          .slice(0, 2)
+          .map((c) => c.numeroGuia || c.contratoId)
+          .join(', ');
+        const extraCount = contratosRef.length - 2;
+        suffix =
+          extraCount > 0
+            ? `Contratos ${firstGuias} (+${extraCount})`
+            : `Contratos ${firstGuias}`;
+      }
+
+      const routeName = `${baseName} - ${suffix}`.slice(0, 200);
 
       const createData: CreateRouteData = {
         nombre: routeName,

@@ -19,6 +19,8 @@ describe('CreateRouteAssignmentsUseCase', () => {
     findOverlappingRoutes: jest.fn(),
     create: jest.fn(),
     initializeMonthlyReadings: jest.fn(),
+    findContratosByIds: jest.fn(),
+    createWorkOrdersForContracts: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -259,5 +261,58 @@ describe('CreateRouteAssignmentsUseCase', () => {
     expect(mockRouteRepository.initializeMonthlyReadings).toHaveBeenCalledTimes(
       2,
     );
+  });
+
+  it('should create route with contract guide numbers in name when contratoIds are provided', async () => {
+    mockRouteRepository.findUsuario.mockResolvedValue({
+      usuarioId: 1,
+      rol: { nombre: 'operadores' },
+    });
+    mockRouteRepository.findComunidad.mockResolvedValue({
+      comunidadId: 1,
+      nombre: 'Comuna Centro',
+    });
+    mockRouteRepository.findPeriodo.mockResolvedValue({
+      periodoId: 1,
+      estado: 'ABIERTO',
+    });
+    mockRouteRepository.findContratosByIds.mockResolvedValue([
+      { contratoId: 10, numeroGuia: 'CTR-001', comunidadId: 1 },
+      { contratoId: 20, numeroGuia: 'CTR-002', comunidadId: 1 },
+    ]);
+
+    const createdRoute = new RouteEntity({
+      rutaId: 50n,
+      nombre: 'Ruta Inspección - Contratos CTR-001, CTR-002',
+      operarioId: 1,
+      comunidadId: 1,
+      tipoRuta: 'INSPECCION',
+      periodoId: 1,
+      estado: 'PENDIENTE',
+      fechaPlanificada: null,
+      fechaInicio: null,
+      fechaFin: null,
+    });
+    mockRouteRepository.create.mockResolvedValue(createdRoute);
+
+    const result = await useCase.execute({
+      operarioId: 1,
+      comunidadId: 1,
+      periodoId: 1,
+      tipoRuta: 'INSPECCION',
+      contratoIds: [10, 20],
+      nombreBase: 'Ruta Inspección',
+    });
+
+    expect(result).toHaveLength(1);
+    expect(mockRouteRepository.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        nombre: 'Ruta Inspección - Contratos CTR-001, CTR-002',
+        tipoRuta: 'INSPECCION',
+      }),
+    );
+    expect(
+      mockRouteRepository.createWorkOrdersForContracts,
+    ).toHaveBeenCalledWith(50n, [10, 20]);
   });
 });

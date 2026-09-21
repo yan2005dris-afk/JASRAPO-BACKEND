@@ -660,6 +660,31 @@ export class PrismaRouteRepository implements RouteRepository {
     }
   }
 
+  async findContratosByIds(contratoIds: number[]): Promise<ContratoRef[]> {
+    if (!contratoIds || contratoIds.length === 0) return [];
+
+    const records = await this.prisma.contratos.findMany({
+      where: {
+        contratoId: { in: contratoIds.map((id) => BigInt(id)) },
+        deletedAt: null,
+      },
+      select: {
+        contratoId: true,
+        numeroGuia: true,
+        comunidadId: true,
+        sectorId: true,
+      },
+      orderBy: { contratoId: 'asc' },
+    });
+
+    return records.map((r) => ({
+      contratoId: Number(r.contratoId),
+      numeroGuia: r.numeroGuia,
+      comunidadId: r.comunidadId,
+      sectorId: r.sectorId,
+    }));
+  }
+
   async findAllTiposActividad(): Promise<TipoActividadRef[]> {
     const tipos = await this.prisma.tipoActividad.findMany({
       where: { activo: true },
