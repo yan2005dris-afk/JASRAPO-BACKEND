@@ -37,7 +37,7 @@ BEGIN
     JOIN medidores m ON m.medidor_id = hm.medidor_id
     WHERE c.comunidad_id = p_comunidad_id
       AND (p_sector_id IS NULL OR c.sector_id = p_sector_id)
-      AND c.estado = 'ACTIVO'
+      AND c.estado_servicio = 'ACTIVO'
       AND c.borrado_en IS NULL
       AND m.borrado_en IS NULL
     ORDER BY c.contrato_id ASC
