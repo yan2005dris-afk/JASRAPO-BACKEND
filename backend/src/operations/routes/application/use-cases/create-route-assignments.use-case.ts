@@ -1,5 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { RouteRepository } from '../../domain/repositories/route.repository';
+import {
+  RouteRepository,
+  type SectorRef,
+} from '../../domain/repositories/route.repository';
 import { CreateRouteAssignmentsDto } from '../../interfaces/dto/create-route-assignments.dto';
 import { RouteEntity } from '../../domain/entities/route.entity';
 import type { CreateRouteData } from '../../domain/types/route.types';
@@ -83,7 +86,7 @@ export class CreateRouteAssignmentsUseCase {
 
     // Caso 2: Si se especificaron sectores => Crear una ruta por cada sector (Lecturas masivas)
     if (dto.sectorIds && dto.sectorIds.length > 0) {
-      const validatedSectors = [];
+      const validatedSectors: SectorRef[] = [];
       for (const sectorId of dto.sectorIds) {
         const sector = await this.routeRepository.findSector(sectorId);
         if (!sector) {
