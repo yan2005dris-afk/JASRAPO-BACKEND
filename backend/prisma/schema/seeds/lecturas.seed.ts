@@ -1,3 +1,5 @@
+import { takeNextMeterCodeSeed } from './secuenciaMedidor.seed';
+
 export async function seedLecturas(prisma: any) {
     // Un periodo por año (regla de negocio: un periodo anual)
     const periodos = [
@@ -64,9 +66,12 @@ export async function seedLecturas(prisma: any) {
         const finalLat = baseLat + (offset % 0.003);
         const finalLng = baseLng + ((offset * 1.3) % 0.003);
 
+        const { codigo } = await takeNextMeterCodeSeed(prisma);
+
         const medidor = await prisma.medidores.create({
             data: {
                 medidorId: nextMedidorId,
+                codigo,
                 marca: 'Seed',
                 modelo: 'Dedicado',
                 serie: `SER-READ-${contrato.contratoId}`,
