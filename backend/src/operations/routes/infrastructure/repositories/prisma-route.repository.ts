@@ -8,6 +8,7 @@ import {
   ComunidadRef,
   SectorRef,
   PeriodoRef,
+  TipoActividadRef,
   MedidorRef,
   EligibleReadingsCriteria,
 } from '../../domain/repositories/route.repository';
@@ -657,5 +658,20 @@ export class PrismaRouteRepository implements RouteRepository {
         data: ordenesData,
       });
     }
+  }
+
+  async findAllTiposActividad(): Promise<TipoActividadRef[]> {
+    const tipos = await this.prisma.tipoActividad.findMany({
+      where: { activo: true },
+      orderBy: { tipoActividadId: 'asc' },
+    });
+
+    return tipos.map((t) => ({
+      tipoActividadId: Number(t.tipoActividadId),
+      codigo: t.codigo,
+      nombre: t.nombre,
+      descripcion: t.descripcion,
+      activo: t.activo,
+    }));
   }
 }

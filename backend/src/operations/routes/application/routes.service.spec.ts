@@ -24,6 +24,7 @@ describe('RoutesService', () => {
   let updateRouteUseCase: UpdateRouteUseCase;
   let deleteRouteUseCase: DeleteRouteUseCase;
   let exportFieldSheetPdfUseCase: ExportFieldSheetPdfUseCase;
+  let routeRepository: RouteRepository;
 
   const mockUseCase = { execute: jest.fn() };
 
@@ -46,7 +47,10 @@ describe('RoutesService', () => {
         RoutesService,
         {
           provide: RouteRepository,
-          useValue: { findAllPeriodos: jest.fn() },
+          useValue: {
+            findAllPeriodos: jest.fn(),
+            findAllTiposActividad: jest.fn(),
+          },
         },
         {
           provide: GetEligibleReadingsUseCase,
@@ -73,6 +77,7 @@ describe('RoutesService', () => {
     }).compile();
 
     service = module.get<RoutesService>(RoutesService);
+    routeRepository = module.get<RouteRepository>(RouteRepository);
     getEligibleReadingsUseCase = module.get<GetEligibleReadingsUseCase>(
       GetEligibleReadingsUseCase,
     );
@@ -199,5 +204,36 @@ describe('RoutesService', () => {
 
     expect(deleteRouteUseCase.execute).toHaveBeenCalledWith(1n);
     expect(res).toEqual(sampleRoute);
+  });
+
+  it('getPeriodos should delegate to RouteRepository.findAllPeriodos', async () => {
+    const mockPeriodos = [{ periodoId: 1, nombre: '2026', estado: 'ABIERTO' }];
+    (routeRepository.findAllPeriodos as jest.Mock).mockResolvedValue(
+      mockPeriodos,
+    );
+
+    const res = await service.getPeriodos();
+
+    expect(routeRepository.findAllPeriodos).toHaveBeenCalled();
+    expect(res).toEqual(mockPeriodos);
+  });
+
+  it('getTiposActividad should delegate to RouteRepository.findAllTiposActividad', async () => {
+    const mockTipos = [
+      {
+        tipoActividadId: 1,
+        codigo: 'LECTURA',
+        nombre: 'Lectura',
+        activo: true,
+      },
+    ];
+    (routeRepository.findAllTiposActividad as jest.Mock).mockResolvedValue(
+      mockTipos,
+    );
+
+    const res = await service.getTiposActividad();
+
+    expect(routeRepository.findAllTiposActividad).toHaveBeenCalled();
+    expect(res).toEqual(mockTipos);
   });
 });

@@ -11,6 +11,8 @@ describe('RoutesController', () => {
   let controller: RoutesController;
 
   const mockRoutesService = {
+    getPeriodos: jest.fn(),
+    getTiposActividad: jest.fn(),
     getEligibleReadings: jest.fn(),
     create: jest.fn(),
     createAssignments: jest.fn(),
@@ -172,5 +174,32 @@ describe('RoutesController', () => {
     const result = await controller.delete(1n);
 
     expect(result.rutaId).toBe(1n);
+  });
+
+  it('getPeriods should delegate to RoutesService.getPeriodos', async () => {
+    const mockPeriods = [{ periodoId: 1, nombre: '2026', estado: 'ABIERTO' }];
+    mockRoutesService.getPeriodos.mockResolvedValue(mockPeriods);
+
+    const result = await controller.getPeriods();
+
+    expect(mockRoutesService.getPeriodos).toHaveBeenCalled();
+    expect(result).toEqual(mockPeriods);
+  });
+
+  it('getActivityTypes should delegate to RoutesService.getTiposActividad', async () => {
+    const mockTipos = [
+      {
+        tipoActividadId: 1,
+        codigo: 'LECTURA',
+        nombre: 'Lectura',
+        activo: true,
+      },
+    ];
+    mockRoutesService.getTiposActividad.mockResolvedValue(mockTipos);
+
+    const result = await controller.getActivityTypes();
+
+    expect(mockRoutesService.getTiposActividad).toHaveBeenCalled();
+    expect(result).toEqual(mockTipos);
   });
 });
