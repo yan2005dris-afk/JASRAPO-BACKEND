@@ -63,6 +63,19 @@ export class CreateRouteAssignmentsDto {
   sectorIds?: number[];
 
   @ApiProperty({
+    description:
+      'IDs de contratos específicos a asignar a la ruta (para cortes, reconexiones, inspecciones, instalaciones).',
+    required: false,
+    example: [101, 102],
+    type: [Number],
+  })
+  @IsOptional()
+  @IsArray()
+  @IsNumber({}, { each: true })
+  @Type(() => Number)
+  contratoIds?: number[];
+
+  @ApiProperty({
     description: 'Fecha planificada para las rutas (formato YYYY-MM-DD)',
     required: false,
     example: '2026-05-15',

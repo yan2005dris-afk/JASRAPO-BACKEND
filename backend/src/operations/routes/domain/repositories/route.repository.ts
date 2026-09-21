@@ -113,4 +113,9 @@ export abstract class RouteRepository {
   ): Promise<PaginatedResult<ReadingForRouteEntity, LecturaKpis>>;
 
   abstract getReadingKpisByRutaId(rutaId: bigint): Promise<LecturaKpis>;
+
+  abstract createWorkOrdersForContracts(
+    rutaId: bigint,
+    contratoIds: number[],
+  ): Promise<void>;
 }

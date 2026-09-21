@@ -55,7 +55,34 @@ export class CreateRouteAssignmentsUseCase {
 
     const tipoRuta = dto.tipoRuta ?? TipoActividadCodes.LECTURA;
 
-    // Si se especificaron sectores => Crear una ruta por cada sector
+    // Caso 1: Si se especificaron contratos específicos (Cortes, Reconexiones, Inspecciones, etc.)
+    if (dto.contratoIds && dto.contratoIds.length > 0) {
+      const baseName = dto.nombreBase?.trim() || 'Ruta';
+      const sectorId =
+        dto.sectorIds && dto.sectorIds.length === 1 ? dto.sectorIds[0] : undefined;
+      const routeName = `${baseName} - Comunidad ${dto.comunidadId}`.slice(0, 200);
+
+      const createData: CreateRouteData = {
+        nombre: routeName,
+        operarioId: dto.operarioId,
+        tipoRuta,
+        comunidadId: dto.comunidadId,
+        sectorId,
+        periodoId: dto.periodoId,
+        fechaPlanificada,
+        estado: 'PENDIENTE',
+      };
+
+      const route = await this.routeRepository.create(createData);
+      await this.routeRepository.createWorkOrdersForContracts(
+        route.rutaId,
+        dto.contratoIds,
+      );
+
+      return [route];
+    }
+
+    // Caso 2: Si se especificaron sectores => Crear una ruta por cada sector (Lecturas masivas)
     if (dto.sectorIds && dto.sectorIds.length > 0) {
       const validatedSectors = [];
       for (const sectorId of dto.sectorIds) {
