@@ -10,6 +10,7 @@ import {
   PeriodoRef,
   TipoActividadRef,
   MedidorRef,
+  ContratoRef,
   EligibleReadingsCriteria,
 } from '../../domain/repositories/route.repository';
 import { RouteEntity } from '../../domain/entities/route.entity';

@@ -20,6 +20,7 @@ export interface UsuarioRef {
 
 export interface ComunidadRef {
   comunidadId: number;
+  nombre?: string;
 }
 
 export interface SectorRef {
