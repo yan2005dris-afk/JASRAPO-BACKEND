@@ -13,6 +13,7 @@ import { seedUSers } from './seeds/user.seed';
 import { seedComunidades } from './seeds/comunidades.seed';
 import { seedSectores } from './seeds/sectores.seed';
 import { seedCategoriaTarifa } from './seeds/categoriaTarifa.seed';
+import { seedSecuenciaMedidor } from './seeds/secuenciaMedidor.seed';
 import { seedMedidores } from './seeds/medidores.seed';
 import { seedClientes } from './seeds/clientes.seed';
 import { seedContratos } from './seeds/contratos.seed';
@@ -115,6 +116,10 @@ async function main() {
 
   await seedCategoriaTarifa(prisma);
   console.log('✅ Categorías de tarifa creadas.');
+
+  // Secuencia de Medidores
+  await seedSecuenciaMedidor(prisma);
+  console.log('✅ Secuencia de medidores inicializada.');
 
   // Medidores
   await seedMedidores(prisma);
