@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 360" width="720" height="360">
+  <defs>
+    <pattern id="diag" patternUnits="userSpaceOnUse" width="8" height="8">
+      <path d="M-2,2 l4,-4 M0,8 l8,-8 M6,10 l4,-4" stroke="#cbd5e1" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect width="100%" height="100%" fill="#f8fafc" stroke="#94a3b8" stroke-width="2" stroke-dasharray="8,4"/>
+  <rect width="100%" height="100%" fill="url(#diag)" opacity="0.5"/>
+  <text x="50%" y="35%" font-family="sans-serif" font-size="22" font-weight="bold" fill="#1e293b" text-anchor="middle">Contrato y prefactura de instalación</text>
+  <text x="50%" y="55%" font-family="sans-serif" font-size="13" fill="#475569" text-anchor="middle">Placeholder SVG · pendiente de generación definitiva</text>
+  <foreignObject x="6%" y="65%" width="88%" height="30%">
+    <div xmlns="http://www.w3.org/1999/xhtml" style="font-family:sans-serif;font-size:11px;color:#64748b;text-align:center;line-height:1.4;">POST /api/v1/contracts → CreateContractUseCase → SELECT generar_prefactura_instalacion(...) → Comprobante + Prefactura → PagoValidadoHandler</div>
+  </foreignObject>
+  <text x="50%" y="96%" font-family="monospace" font-size="10" fill="#94a3b8" text-anchor="middle">Fuente: latex/contratos/README.md</text>
+</svg>

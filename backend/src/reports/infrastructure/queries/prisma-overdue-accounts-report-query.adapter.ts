@@ -26,11 +26,19 @@ export class PrismaOverdueAccountsReportQueryAdapter extends OverdueAccountsRepo
         ...(filters.contratoId
           ? { contratoId: BigInt(filters.contratoId) }
           : {}),
-        ...(filters.clienteId
-          ? { contrato: { clienteId: BigInt(filters.clienteId) } }
-          : {}),
-        ...(filters.sectorId
-          ? { contrato: { sectorId: Number(filters.sectorId) } }
+        // clienteId y sectorId se combinan en un único predicado `contrato`
+        // para que ambos filtros se apliquen juntos (uno no reemplaza al otro).
+        ...(filters.clienteId || filters.sectorId
+          ? {
+              contrato: {
+                ...(filters.clienteId
+                  ? { clienteId: BigInt(filters.clienteId) }
+                  : {}),
+                ...(filters.sectorId
+                  ? { sectorId: Number(filters.sectorId) }
+                  : {}),
+              },
+            }
           : {}),
         periodoRel: { fechaFin: { lte: cutoffDate } },
       },

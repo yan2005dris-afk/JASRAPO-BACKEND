@@ -8,6 +8,10 @@ enum EstadoMedidor {
 
 model Medidores {
   medidorId        BigInt               @id @default(autoincrement()) @map("medidor_id")
+  /// Código institucional correlativo (p. ej. MED-000123). Lo asigna el sistema
+  /// desde SecuenciaMedidor; es opcional porque los medidores anteriores a la
+  /// secuencia se rellenaron por migración.
+  codigo           String?              @unique @map("codigo")
   marca            String               @map("marca")
   modelo           String               @map("modelo")
   serie            String               @unique @map("serie")

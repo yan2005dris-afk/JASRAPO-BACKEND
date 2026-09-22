@@ -16,8 +16,28 @@ interface OverdueAccountAccumulator extends OverdueAccountItem {
   invoiceCount: number;
 }
 
+function describeFiltros(
+  filters: OverdueAccountsReportFilters,
+  fechaCorte: string,
+): OverdueAccountsReportDocument['filtros'] {
+  let descripcion = 'Todos los clientes';
+  if (filters.contratoId) descripcion = 'Contrato específico';
+  else if (filters.clienteId) descripcion = 'Cliente específico';
+  else if (filters.sectorId) descripcion = 'Sector específico';
+
+  return {
+    descripcion,
+    fechaCorte,
+    clienteId: filters.clienteId,
+    contratoId: filters.contratoId,
+    sectorId: filters.sectorId,
+  };
+}
+
 export function projectOverdueAccountsReport(
   readModel: OverdueAccountsReportReadModel,
+  filters: OverdueAccountsReportFilters = {},
+  timeZone?: string,
 ): ProjectedReport<OverdueAccountsReportDocument> {
   const accountsByContract = new Map<string, OverdueAccountAccumulator>();
 
@@ -55,19 +75,26 @@ export function projectOverdueAccountsReport(
     0,
   );
   const largestDebt = overdueAccounts[0]?.saldoPendienteNum ?? 0;
+  // Se formatea la fecha de corte en la zona horaria del contexto para que el
+  // día mostrado coincida con el instante realmente consultado.
+  const fechaCorte = readModel.cutoffDate.toLocaleDateString(
+    'es-EC',
+    timeZone ? { timeZone } : undefined,
+  );
 
   return {
     document: {
       data: overdueAccounts,
       meta: {
         total: overdueAccounts.length,
-        fechaCorte: readModel.cutoffDate.toLocaleDateString('es-EC'),
+        fechaCorte,
       },
       kpis: {
         totalMorosidad: totalDebt.toFixed(2),
         totalMorosos: overdueAccounts.length,
         mayorDeuda: largestDebt.toFixed(2),
       },
+      filtros: describeFiltros(filters, fechaCorte),
     },
     recipientEmail: null,
   };
@@ -88,7 +115,11 @@ export class OverdueAccountsReportDefinition {
       this.institutionalProfiles.resolve(new Date()),
     ]);
     return attachInstitutionalProfile(
-      projectOverdueAccountsReport(readModel),
+      projectOverdueAccountsReport(
+        readModel,
+        context.filters,
+        context.timeZone,
+      ),
       institutional,
     );
   }

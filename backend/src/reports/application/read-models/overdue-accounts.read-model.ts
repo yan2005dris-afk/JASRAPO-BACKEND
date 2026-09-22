@@ -34,6 +34,14 @@ export interface OverdueAccountItem {
   medidorSerie: string;
 }
 
+export interface OverdueAccountsReportFiltrosSummary {
+  descripcion: string;
+  fechaCorte: string;
+  clienteId?: string;
+  contratoId?: string;
+  sectorId?: string;
+}
+
 export interface OverdueAccountsReportDocument {
   data: OverdueAccountItem[];
   meta: {
@@ -45,4 +53,5 @@ export interface OverdueAccountsReportDocument {
     totalMorosos: number;
     mayorDeuda: string;
   };
+  filtros: OverdueAccountsReportFiltrosSummary;
 }

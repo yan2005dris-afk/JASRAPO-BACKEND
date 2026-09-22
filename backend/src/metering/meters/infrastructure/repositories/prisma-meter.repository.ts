@@ -27,6 +27,7 @@ import { ReemplazoMedidorEntity } from '../../domain/entities/reemplazo-medidor.
 
 export const safeMeterSelect = {
   medidorId: true,
+  codigo: true,
   marca: true,
   modelo: true,
   serie: true,
@@ -40,6 +41,7 @@ export const safeMeterSelect = {
 
 export const safeMeterSelectWithDelete = {
   medidorId: true,
+  codigo: true,
   marca: true,
   modelo: true,
   serie: true,
@@ -187,17 +189,60 @@ export class PrismaMeterRepository implements MeterRepository {
     return { AND: conditions };
   }
 
+  /**
+   * Takes the next correlative code, locking the single counter row so two
+   * concurrent creations cannot read the same value. It runs inside the same
+   * transaction as the insert, so a failed creation rolls the counter back and
+   * the sequence is left without holes.
+   */
+  private async takeNextMeterCode(
+    tx: Prisma.TransactionClient,
+  ): Promise<string> {
+    const [config] = await tx.$queryRaw<
+      { secuencia_medidor_id: number; prefijo: string; longitud: number }[]
+    >`
+      SELECT "secuencia_medidor_id", "prefijo", "longitud"
+      FROM "secuencia_medidor"
+      ORDER BY "secuencia_medidor_id"
+      LIMIT 1
+      FOR UPDATE
+    `;
+
+    if (!config) {
+      throw new InvalidDomainOperationException(
+        'No existe la configuración de secuencia de medidores',
+      );
+    }
+
+    const updated = await tx.secuenciaMedidor.update({
+      where: { secuenciaMedidorId: config.secuencia_medidor_id },
+      data: { ultimoValor: { increment: 1 } },
+      select: { ultimoValor: true },
+    });
+
+    const correlativo = String(updated.ultimoValor).padStart(
+      config.longitud,
+      '0',
+    );
+    return `${config.prefijo}-${correlativo}`;
+  }
+
   async create(data: CreateMeterRepositoryData): Promise<MeterEntity> {
     try {
-      const record = await this.prisma.medidores.create({
-        data: {
-          marca: data.marca,
-          modelo: data.modelo,
-          serie: data.serie,
-          estado: data.estado,
-          latitud: data.latitud,
-          longitud: data.longitud,
-        },
+      const record = await this.prisma.$transaction(async (tx) => {
+        const codigo = await this.takeNextMeterCode(tx);
+
+        return tx.medidores.create({
+          data: {
+            codigo,
+            marca: data.marca,
+            modelo: data.modelo,
+            serie: data.serie,
+            estado: data.estado,
+            latitud: data.latitud,
+            longitud: data.longitud,
+          },
+        });
       });
       return MeterMapper.toDomain(record)!;
     } catch (error) {

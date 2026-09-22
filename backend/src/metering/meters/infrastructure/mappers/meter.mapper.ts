@@ -5,6 +5,7 @@ export class MeterMapper {
     if (!raw) return null;
     return new MeterEntity({
       medidorId: raw.medidorId,
+      codigo: raw.codigo ?? null,
       marca: raw.marca,
       modelo: raw.modelo,
       serie: raw.serie,

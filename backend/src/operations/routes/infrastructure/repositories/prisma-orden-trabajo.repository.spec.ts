@@ -19,7 +19,6 @@ describe('PrismaOrdenTrabajoRepository.updateOperatorWorkOrder', () => {
       lecturaId: null,
     };
     const update = jest.fn().mockResolvedValue(updated);
-    const upsert = jest.fn().mockResolvedValue({});
     const tx = {
       ordenesTrabajo: {
         findUnique: jest.fn().mockResolvedValue({
@@ -31,7 +30,6 @@ describe('PrismaOrdenTrabajoRepository.updateOperatorWorkOrder', () => {
         }),
         update,
       },
-      ejecucionesOrdenTrabajo: { upsert },
     };
     const prisma = {
       $transaction: jest.fn((callback: (value: typeof tx) => unknown) =>
@@ -45,9 +43,6 @@ describe('PrismaOrdenTrabajoRepository.updateOperatorWorkOrder', () => {
       estado: 'COMPLETADA',
       resultadoObservacion: 'ok',
       evidenciaFotoUrl: 'readings/evidence.jpg',
-      estadoSellos: 'INTEGRO',
-      hayFugas: false,
-      confirmacionRetiroSello: true,
     });
 
     expect(result.tipoActividad).toBe('INSPECCION');

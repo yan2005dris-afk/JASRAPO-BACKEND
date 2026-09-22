@@ -9,6 +9,13 @@ export class MeterResponseDto {
   })
   medidorId: string;
 
+  @ApiPropertyOptional({
+    description:
+      'Código institucional correlativo asignado por el sistema al registrar el medidor',
+    example: 'MED-000123',
+  })
+  codigo: string | null;
+
   @ApiProperty({
     description: 'Marca del medidor',
     example: 'Itron',
@@ -88,6 +95,7 @@ export class MeterResponseDto {
   static fromEntity(meter: MeterEntity): MeterResponseDto {
     return new MeterResponseDto({
       medidorId: String(meter.medidorId),
+      codigo: meter.codigo ?? null,
       marca: meter.marca,
       modelo: meter.modelo,
       serie: meter.serie,
@@ -109,6 +117,7 @@ export class MeterResponseDto {
  */
 export const MeterResponseExample = {
   medidorId: '1',
+  codigo: 'MED-000123',
   marca: 'Itron',
   modelo: 'CX1000',
   serie: 'SN-2024-001234',

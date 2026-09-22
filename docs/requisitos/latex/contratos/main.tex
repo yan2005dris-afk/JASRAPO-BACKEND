@@ -1,0 +1,43 @@
+\documentclass[11pt,a4paper]{article}
+
+\input{preamble.tex}
+
+\title{Documentación del dominio de contratos}
+\author{Jasrapo Backend}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+\clearpage
+
+\section*{Flujo transversal}
+\addcontentsline{toc}{section}{Flujo transversal}
+La cadena confirmada es contrato, prefactura de instalación, pago validado, instalación, lecturas/consumo, prefacturación mensual y convenios/pagos. La creación puede ejecutar \texttt{SELECT generar\_prefactura\_instalacion(...)}; \texttt{PagoValidadoHandler} lleva la instalación a \texttt{PENDIENTE\_INSTALACION}; no se encontró una transición automática a \texttt{ACTIVO}. La fórmula mensual completa no fue encontrada en la evidencia revisada.
+
+\begin{figure}[h]
+\centering
+\IfFileExists{images/01-flujo-general.png}{\includegraphics[width=0.95\textwidth]{images/01-flujo-general.png}}{\fbox{\parbox{0.88\textwidth}{\centering Fallback: contrato $\rightarrow$ prefactura $\rightarrow$ pago validado $\rightarrow$ instalación $\rightarrow$ lecturas/consumo $\rightarrow$ convenios.\\[3pt]Agregar \texttt{images/01-flujo-general.png} para reemplazar este fallback.}}}
+\caption{Flujo general del dominio.}
+\end{figure}
+
+\section*{Introducción}
+\addcontentsline{toc}{section}{Introducción}
+Este documento consolida la documentación técnica de los ocho subdominios que participan en el ciclo de contratos del backend. Describe sus superficies HTTP, casos de uso, estados, persistencia, efectos y aspectos aún pendientes de confirmar. Los diagramas Mermaid de la fuente Markdown se conservan como bloques de código monoespaciado para evitar dependencias de ejecución externas.
+
+\input{sections/00-alcance-y-convenciones.tex}
+\input{sections/01-clientes.tex}
+\input{sections/02-contratos.tex}
+\input{sections/03-convenios-de-pago.tex}
+\input{sections/04-rutas-y-ordenes.tex}
+\input{sections/05-lecturas.tex}
+\input{sections/07-medidores.tex}
+\input{sections/08-categorias-tarifarias.tex}
+
+\IfFileExists{references.bib}{%
+  \bibliographystyle{plain}%
+  \bibliography{references}%
+}{}
+
+\end{document}

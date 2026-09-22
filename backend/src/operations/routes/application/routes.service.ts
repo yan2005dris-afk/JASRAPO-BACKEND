@@ -7,6 +7,8 @@ import { ReadingForRouteEntity } from '../domain/entities/reading-for-route.enti
 import { GetEligibleReadingsUseCase } from './use-cases/get-eligible-readings.use-case';
 import { GetReadingsByRutaUseCase } from './use-cases/get-readings-by-ruta.use-case';
 import { CreateRouteUseCase } from './use-cases/create-route.use-case';
+import { CreateRouteAssignmentsUseCase } from './use-cases/create-route-assignments.use-case';
+import { CreateRouteAssignmentsDto } from '../interfaces/dto/create-route-assignments.dto';
 import { FindAllRoutesUseCase } from './use-cases/find-all-routes.use-case';
 import { FindOneRouteUseCase } from './use-cases/find-one-route.use-case';
 import { UpdateRouteUseCase } from './use-cases/update-route.use-case';
@@ -23,6 +25,7 @@ export class RoutesService {
     private readonly getEligibleReadingsUseCase: GetEligibleReadingsUseCase,
     private readonly getReadingsByRutaUseCase: GetReadingsByRutaUseCase,
     private readonly createRouteUseCase: CreateRouteUseCase,
+    private readonly createRouteAssignmentsUseCase: CreateRouteAssignmentsUseCase,
     private readonly findAllRoutesUseCase: FindAllRoutesUseCase,
     private readonly findOneRouteUseCase: FindOneRouteUseCase,
     private readonly updateRouteUseCase: UpdateRouteUseCase,
@@ -62,6 +65,12 @@ export class RoutesService {
     return this.createRouteUseCase.execute(createDto);
   }
 
+  async createAssignments(
+    dto: CreateRouteAssignmentsDto,
+  ): Promise<RouteEntity[]> {
+    return this.createRouteAssignmentsUseCase.execute(dto);
+  }
+
   async findAll(params: {
     pagination: { page?: number; limit?: number };
     where?: RouteFilters;
@@ -83,5 +92,9 @@ export class RoutesService {
 
   async getPeriodos() {
     return this.routeRepository.findAllPeriodos();
+  }
+
+  async getTiposActividad() {
+    return this.routeRepository.findAllTiposActividad();
   }
 }

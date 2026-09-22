@@ -1,0 +1,261 @@
+\section{Categorías de tarifa}
+
+
+Clasificación tarifaria, vigencias y rubros aplicables al contrato.
+
+
+\begin{quote}
+\textbf{Ficha de dominio:} documenta altas, consultas, versionado, desactivación y relaciones con rubros y contratos de las categorías tarifarias.
+\end{quote}
+
+
+\subsection{Alcance y entradas HTTP}
+
+
+\begin{itemize}
+\item \textbf{Controlador:} \texttt{\detokenize{CategoriaTarifaController}}.
+\item \textbf{Servicio:} \texttt{\detokenize{CategoriaTarifaService}}.
+\item \textbf{Casos:} \texttt{\detokenize{CreateTariffCategoryUseCase}}, \texttt{\detokenize{FindAllTariffCategoriesUseCase}}, \texttt{\detokenize{FindOneTariffCategoryUseCase}}, \texttt{\detokenize{UpdateTariffCategoryUseCase}}, \texttt{\detokenize{RemoveTariffCategoryUseCase}}.
+\end{itemize}
+
+\subsection{Comportamiento de negocio verificable}
+Las tablas relacionadas son \texttt{CategoriaTarifa}, \texttt{Rubros} y \texttt{Contratos}. En instalación, la selección vigente del rubro es por categoría y \texttt{codigoSistemaRubro=INSTALACION}. No se encontró fórmula completa de consumo mensual ni handler que propague automáticamente una nueva versión a contratos existentes.
+
+
+\begin{center}
+\small
+\begin{longtable}{|p{0.313\textwidth}|p{0.313\textwidth}|p{0.313\textwidth}|}
+\hline
+\textbf{Método y ruta} & \textbf{Caso/servicio ejecutado} & \textbf{Resultado} \\
+\hline
+\endfirsthead
+\hline
+\textbf{Método y ruta} & \textbf{Caso/servicio ejecutado} & \textbf{Resultado} \\
+\hline
+\endhead
+\texttt{\detokenize{POST /api/v1/tariff-categories}} & \texttt{\detokenize{createCategoria()}} → \texttt{\detokenize{CreateTariffCategoryUseCase.execute()}} & Categoría creada. \\
+\hline
+\texttt{\detokenize{GET /api/v1/tariff-categories}} & \texttt{\detokenize{getCategorias()}} → \texttt{\detokenize{FindAllTariffCategoriesUseCase.execute()}} & Página activa. \\
+\hline
+\texttt{\detokenize{GET /api/v1/tariff-categories/:id}} & \texttt{\detokenize{findOneCategoria()}} → \texttt{\detokenize{FindOneTariffCategoryUseCase.execute()}} & Detalle. \\
+\hline
+\texttt{\detokenize{PATCH /api/v1/tariff-categories/:id}} & \texttt{\detokenize{updateCategoria()}} → \texttt{\detokenize{UpdateTariffCategoryUseCase.execute()}} & Nueva versión. \\
+\hline
+\texttt{\detokenize{DELETE /api/v1/tariff-categories/:id}} & \texttt{\detokenize{deleteCategoria()}} → \texttt{\detokenize{RemoveTariffCategoryUseCase.execute()}} & Soft delete. \\
+\hline
+\end{longtable}
+\end{center}
+
+
+\subsection{Ejemplo JSON}
+
+
+\begin{lstlisting}
+{
+  "categoriaTarifaId": 1,
+  "nombre": "Residencial",
+  "descripcion": "Tarifa básica",
+  "consumoMinimoMensual": 10,
+  "fechaVigenciaDesde": "2026-01-01",
+  "fechaVigenciaHasta": null,
+  "activo": true
+}
+\end{lstlisting}
+
+
+\begin{center}
+\small
+\begin{longtable}{|p{0.313\textwidth}|p{0.313\textwidth}|p{0.313\textwidth}|}
+\hline
+\textbf{Campo} & \textbf{Tipo} & \textbf{Regla/uso} \\
+\hline
+\endfirsthead
+\hline
+\textbf{Campo} & \textbf{Tipo} & \textbf{Regla/uso} \\
+\hline
+\endhead
+\texttt{\detokenize{categoriaTarifaId}} & number & Identificador entero. \\
+\hline
+\texttt{\detokenize{nombre}}, \texttt{\detokenize{descripcion}} & string & Clasificación y explicación. \\
+\hline
+\texttt{\detokenize{consumoMinimoMensual}} & number & Mínimo configurado. \\
+\hline
+\texttt{\detokenize{fechaVigenciaDesde}}, \texttt{\detokenize{fechaVigenciaHasta}} & string/null & Intervalo de vigencia. \\
+\hline
+\texttt{\detokenize{activo}} & boolean & Disponibilidad lógica. \\
+\hline
+\end{longtable}
+\end{center}
+
+
+\subsection{Estados}
+
+
+No existe enum de estado. La disponibilidad se expresa con \texttt{\detokenize{activo}} y debe interpretarse junto con las fechas de vigencia. \texttt{\detokenize{deletedAt}} es interno.
+
+
+\subsection{Efectos y transacciones}
+
+
+Crear escribe la categoría y puede generar rubros por defecto. Actualizar crea una nueva versión tarifaria, con fechas y rubros según el caso. Eliminar aplica soft delete/desactivación. Lecturas, filtros y \texttt{\detokenize{TariffCategoryResponseDto.fromEntity}} son transformaciones puras.
+
+
+\begin{center}
+\small
+\begin{longtable}{|p{0.470\textwidth}|p{0.470\textwidth}|}
+\hline
+\textbf{Tabla Prisma} & \textbf{Uso} \\
+\hline
+\endfirsthead
+\hline
+\textbf{Tabla Prisma} & \textbf{Uso} \\
+\hline
+\endhead
+\texttt{\detokenize{CategoriaTarifa}} & Categorías, versiones y soft delete. \\
+\hline
+\texttt{\detokenize{Rubros}} & Cargos relacionados. \\
+\hline
+\texttt{\detokenize{Contratos}} & Referencias contractuales. \\
+\hline
+\end{longtable}
+\end{center}
+
+
+\subsection{Estados y transiciones no encontrados}
+
+
+\begin{lstlisting}
+No existe una máquina de estados confirmable ni un enum de estado. El código confirma los campos \texttt{activo}, las fechas de vigencia y \texttt{deletedAt}; también confirma que \texttt{PATCH} crea una nueva versión y que \texttt{DELETE} aplica desactivación/soft delete. No se dibujan flechas porque no existe una transición explícita verificable.
+\end{lstlisting}
+
+
+\subsection{Casos de uso}
+
+
+\subsubsection{Caso: Crear categoría de tarifa}
+
+
+\textbf{Descripción:} registra una categoría y sus rubros por defecto cuando corresponde.  
+
+\textbf{HTTP y ruta:} \texttt{\detokenize{POST /api/v1/tariff-categories}}.  
+
+\textbf{Permiso:} \texttt{\detokenize{tarifas:create}}.  
+
+\textbf{Cadena:} \texttt{\detokenize{CategoriaTarifaController.create()}} → \texttt{\detokenize{CategoriaTarifaService.createCategoria()}} → \texttt{\detokenize{CreateTariffCategoryUseCase.execute()}} → repositorio.  
+
+\textbf{Errores relevantes:} \texttt{\detokenize{400}}; \texttt{\detokenize{401}}; \texttt{\detokenize{403}}; conflicto de vigencia.  
+
+\textbf{Efectos:} alta en \texttt{\detokenize{CategoriaTarifa}} \textbf{+ creación automática de 2 Rubros default}: \texttt{\detokenize{codigoSri='001'}} (``Cargo fijo'', \texttt{\detokenize{tipoRubro=FIJO}}) y \texttt{\detokenize{codigoSri='002'}} (``Consumo de agua potable'', \texttt{\detokenize{tipoRubro=VARIABLE}}), ambos con \texttt{\detokenize{esAutomatico=true}}. Si el DTO no trae \texttt{\detokenize{tarifaImpuestoId}}, se toma la primera tarifa de impuesto activa.
+
+\textbf{Prisma:} \texttt{\detokenize{CategoriaTarifa}}, \texttt{\detokenize{Rubros}}.  
+
+\textbf{Entrada:} \texttt{\detokenize{{ "nombre": "Residencial", "descripcion": "Tarifa básica", "consumoMinimoMensual": 10, "fechaVigenciaDesde": "2026-01-01" }}}.  
+
+\textbf{Salida:} JSON del ejemplo principal.
+
+
+\subsubsection{Caso: Listar categorías}
+
+
+\textbf{Descripción:} devuelve categorías activas con filtros y paginación.  
+
+\textbf{HTTP y ruta:} \texttt{\detokenize{GET /api/v1/tariff-categories}}.  
+
+\textbf{Permiso:} \texttt{\detokenize{tarifas:read}}.  
+
+\textbf{Cadena:} \texttt{\detokenize{CategoriaTarifaController.findAll()}} → \texttt{\detokenize{CategoriaTarifaService.getCategorias()}} → \texttt{\detokenize{FindAllTariffCategoriesUseCase.execute()}} → repositorio.  
+
+\textbf{Errores relevantes:} \texttt{\detokenize{400}}; \texttt{\detokenize{401}}; \texttt{\detokenize{403}}.  
+
+\textbf{Efectos:} ninguno; consulta y DTO puros.  
+
+\textbf{Prisma:} \texttt{\detokenize{CategoriaTarifa}}.  
+
+\textbf{Entrada:} sin body; query \texttt{\detokenize{page}}, \texttt{\detokenize{limit}}, \texttt{\detokenize{nombre}}, \texttt{\detokenize{search}}.  
+
+\textbf{Salida:} \texttt{\detokenize{{ "data": [{ "categoriaTarifaId": 1, "nombre": "Residencial", "activo": true }], "meta": {} }}}.
+
+
+\subsubsection{Caso: Obtener categoría}
+
+
+\textbf{Descripción:} consulta una categoría por ID.  
+
+\textbf{HTTP y ruta:} \texttt{\detokenize{GET /api/v1/tariff-categories/:id}}.  
+
+\textbf{Permiso:} \texttt{\detokenize{tarifas:read}}.  
+
+\textbf{Cadena:} \texttt{\detokenize{CategoriaTarifaController.findOne()}} → \texttt{\detokenize{CategoriaTarifaService.findOneCategoria()}} → \texttt{\detokenize{FindOneTariffCategoryUseCase.execute()}} → repositorio.  
+
+\textbf{Errores relevantes:} \texttt{\detokenize{400}}; \texttt{\detokenize{401}}; \texttt{\detokenize{403}}; \texttt{\detokenize{404}}.  
+
+\textbf{Efectos:} ninguno; DTO puro.  
+
+\textbf{Prisma:} \texttt{\detokenize{CategoriaTarifa}}, \texttt{\detokenize{Rubros}}, \texttt{\detokenize{Contratos}} si se incluyen.  
+
+\textbf{Entrada:} sin body; path \texttt{\detokenize{{ "id": 1 }}}.  
+
+\textbf{Salida:} JSON del ejemplo principal.
+
+
+\subsubsection{Caso: Actualizar categoría}
+
+
+\textbf{Descripción:} crea una nueva versión en vez de mutar silenciosamente la vigencia anterior.  
+
+\textbf{HTTP y ruta:} \texttt{\detokenize{PATCH /api/v1/tariff-categories/:id}}.  
+
+\textbf{Permiso:} \texttt{\detokenize{tarifas:update}}.  
+
+\textbf{Cadena:} \texttt{\detokenize{CategoriaTarifaController.update()}} → \texttt{\detokenize{CategoriaTarifaService.updateCategoria()}} → \texttt{\detokenize{UpdateTariffCategoryUseCase.execute()}} → repositorio.  
+
+\textbf{Errores relevantes:} \texttt{\detokenize{400}} datos/vigencia; \texttt{\detokenize{401}}; \texttt{\detokenize{403}}; \texttt{\detokenize{404}}; solapamiento.  
+
+\textbf{Efectos:} persiste nueva versión y fechas; DTO puro.  
+
+\textbf{Prisma:} \texttt{\detokenize{CategoriaTarifa}}, \texttt{\detokenize{Rubros}}, referencias contractuales.  
+
+\textbf{Entrada:} path \texttt{\detokenize{{ "id": 1 }}}; body \texttt{\detokenize{{ "consumoMinimoMensual": 12, "fechaVigenciaDesde": "2026-10-01" }}}.  
+
+\textbf{Salida:} \texttt{\detokenize{{ "categoriaTarifaId": 2, "nombre": "Residencial", "consumoMinimoMensual": 12, "activo": true }}}.
+
+
+\subsubsection{Caso: Eliminar categoría}
+
+
+\textbf{Descripción:} desactiva y elimina lógicamente la categoría.  
+
+\textbf{HTTP y ruta:} \texttt{\detokenize{DELETE /api/v1/tariff-categories/:id}}.  
+
+\textbf{Permiso:} \texttt{\detokenize{tarifas:delete}}.  
+
+\textbf{Cadena:} \texttt{\detokenize{CategoriaTarifaController.remove()}} → \texttt{\detokenize{CategoriaTarifaService.deleteCategoria()}} → \texttt{\detokenize{RemoveTariffCategoryUseCase.execute()}} → repositorio.  
+
+\textbf{Errores relevantes:} \texttt{\detokenize{400}}; \texttt{\detokenize{401}}; \texttt{\detokenize{403}}; \texttt{\detokenize{404}}; uso incompatible.  
+
+\textbf{Efectos:} triple efecto simult\'aneo: \texttt{\detokenize{activo=false}}, \texttt{\detokenize{fechaVigenciaHasta=now}}, \texttt{\detokenize{deletedAt=now}} (no solo soft delete: tambi\'en cierra la vigencia).
+
+\textbf{Prisma:} \texttt{\detokenize{CategoriaTarifa}}.  
+
+\textbf{Entrada:} sin body; path \texttt{\detokenize{{ "id": 1 }}}.  
+
+\textbf{Salida:} \texttt{\detokenize{{ "categoriaTarifaId": 1, "activo": false, "fechaVigenciaHasta": "<fecha actual al momento de la baja (now())>" }}}.
+
+
+\subsection{Pendientes funcionales}
+
+Bloqueos confirmados como pendientes en el código revisado. Cuando se cierre cada uno, sacar de acá y mover a la sección correspondiente.
+
+\begin{itemize}
+\item \textbf{Propagación automática de cambios a contratos existentes.} \texttt{\detokenize{createNewVersion}} no toca la tabla \texttt{\detokenize{Contratos}}. La nueva versión queda disponible para futuros contratos, pero los vigentes siguen apuntando a la versión anterior. No hay mecanismo de migración.
+\item \textbf{Reglas de solapamiento entre versiones.} Aunque ``solapamiento'' figuraba en los errores relevantes del caso Actualizar, el código \textbf{no lo valida}. Si se quiere esa regla, hay que decidir el criterio (¿no se permite que dos versiones activas tengan fechas superpuestas?) y agregar la validación.
+\item \textbf{Duración mínima o reglas de vigencia.} No hay reglas explícitas sobre \texttt{\detokenize{fechaVigenciaDesde >= hoy}}, sobre solapamiento con otras versiones, ni sobre la duración mínima de una versión.
+\item \textbf{Estados legacy distintos de \texttt{\detokenize{activo}}, \texttt{\detokenize{deletedAt}} y fechas.} Confirmar contra seeds y migraciones si existe alguna columna o enum legacy.
+\end{itemize}
+
+\subsection{No documentado o pendiente de confirmar}
+
+
+\begin{itemize}
+\item Forma exacta del DTO \texttt{\detokenize{update-categoria-tarifa}} y de los campos opcionales que se propagan a la nueva versión. Confirmar contra el código actual.
+\end{itemize}

@@ -1,0 +1,521 @@
+\section{Clientes}
+
+
+Subdominio de identidad y datos del titular. La API usa \texttt{\detokenize{/api/v1}} y autenticación Bearer.
+
+
+\begin{quote}
+\textbf{Ficha de dominio:} documenta el alta, consulta, actualización y baja lógica de clientes, además del catálogo de tipos de identificación. El alcance cubre las superficies HTTP confirmadas en \texttt{\detokenize{ClientController}}.
+\end{quote}
+
+
+\subsection{Alcance y entradas HTTP}
+
+
+\begin{itemize}
+\item \textbf{Controlador:} \texttt{\detokenize{ClientController}} (\texttt{\detokenize{backend/src/operations/clients/interfaces/http/client.controller.ts}}).
+\item \textbf{Servicio:} \texttt{\detokenize{ClientService}}.
+\item \textbf{Casos:} \texttt{\detokenize{CreateClientUseCase}}, \texttt{\detokenize{FindOneClientUseCase}}, \texttt{\detokenize{UpdateClientUseCase}}, \texttt{\detokenize{RemoveClientUseCase}}.
+\item \texttt{\detokenize{GET /identification-types}} no tiene caso de uso dedicado.
+\item \texttt{\detokenize{GET /clients}} tampoco tiene \texttt{\detokenize{FindAllClientUseCase}}: el servicio construye filtros y pagina directamente.
+\end{itemize}
+
+\subsection{Comportamiento de negocio verificable}
+Las tablas relacionadas son \texttt{Clientes} y \texttt{CatalogoTiposIdentificacion}; \texttt{Contratos} consume la identidad del titular. La transición del contrato al completar una instalación (\texttt{detokenize{INSTALACION}}) o reconexión (\texttt{detokenize{RECONEXION}}) \textbf{sí} existe --- está implementada vía \texttt{detokenize{applyContractLifecycleTransition}} (\texttt{backend/src/operations/routes/infrastructure/repositories/prisma-orden-trabajo.repository.ts:356-403}) y documentada en \texttt{02-contratos.md}, sección ``Transiciones de estado del contrato''. El flujo del cliente es alta, actualización, baja lógica y consulta del catálogo; las validaciones de identificación (algoritmo verificador) son ejecutadas en \texttt{detokenize{CreateClientUseCase}} y \texttt{detokenize{UpdateClientUseCase}}.
+
+
+\begin{center}
+\small
+\begin{longtable}{|p{0.313\textwidth}|p{0.313\textwidth}|p{0.313\textwidth}|}
+\hline
+\textbf{Método y ruta} & \textbf{Caso/servicio ejecutado} & \textbf{Resultado} \\
+\hline
+\endfirsthead
+\hline
+\textbf{Método y ruta} & \textbf{Caso/servicio ejecutado} & \textbf{Resultado} \\
+\hline
+\endhead
+\texttt{\detokenize{GET /api/v1/clients/identification-types}} & \texttt{\detokenize{ClientService.findAllIdentificaciones()}} & Catálogo activo. \\
+\hline
+\texttt{\detokenize{POST /api/v1/clients}} & \texttt{\detokenize{ClientService.create()}} → \texttt{\detokenize{CreateClientUseCase.execute()}} & Cliente creado (\texttt{\detokenize{201}}). \\
+\hline
+\texttt{\detokenize{GET /api/v1/clients}} & \texttt{\detokenize{ClientService.findAll()}} → \texttt{\detokenize{buildClientFilters()}} → \texttt{\detokenize{ClientRepository.paginateClientes()}} & Página de clientes. \\
+\hline
+\texttt{\detokenize{GET /api/v1/clients/:id}} & \texttt{\detokenize{ClientService.findOne()}} → \texttt{\detokenize{FindOneClientUseCase.execute()}} & Cliente encontrado. \\
+\hline
+\texttt{\detokenize{PATCH /api/v1/clients/:id}} & \texttt{\detokenize{ClientService.update()}} → \texttt{\detokenize{UpdateClientUseCase.execute()}} & Cliente actualizado. \\
+\hline
+\texttt{\detokenize{DELETE /api/v1/clients/:id}} & \texttt{\detokenize{ClientService.delete()}} → \texttt{\detokenize{RemoveClientUseCase.execute()}} & Soft delete. \\
+\hline
+\end{longtable}
+\end{center}
+
+
+\subsection{Ejemplo JSON}
+
+
+\begin{lstlisting}
+{
+  "clienteId": "10",
+  "identificacion": "1712345678",
+  "nombres": "Juan",
+  "apellidos": "Pérez",
+  "razonSocial": null,
+  "email": "juan@example.com",
+  "telefono": "0991234567",
+  "direccionDomicilio": "Av. Principal 123",
+  "activo": true
+}
+\end{lstlisting}
+
+
+\begin{center}
+\small
+\begin{longtable}{|p{0.313\textwidth}|p{0.313\textwidth}|p{0.313\textwidth}|}
+\hline
+\textbf{Campo} & \textbf{Tipo} & \textbf{Regla/uso} \\
+\hline
+\endfirsthead
+\hline
+\textbf{Campo} & \textbf{Tipo} & \textbf{Regla/uso} \\
+\hline
+\endhead
+\texttt{\detokenize{clienteId}} & string & \texttt{\detokenize{BigInt}} serializado. \\
+\hline
+\texttt{\detokenize{tipoIdentificacionId}} & number & Referencia al catálogo. \\
+\hline
+\texttt{\detokenize{identificacion}} & string & Identificador del titular. \\
+\hline
+\texttt{\detokenize{nombres}}, \texttt{\detokenize{apellidos}} & string/null & Nombre personal. \\
+\hline
+\texttt{\detokenize{razonSocial}} & string/null & Nombre empresarial cuando aplica. \\
+\hline
+\texttt{\detokenize{email}}, \texttt{\detokenize{telefono}}, \texttt{\detokenize{direccionDomicilio}} & string/null & Datos de contacto y domicilio. \\
+\hline
+\texttt{\detokenize{activo}} & boolean & Disponibilidad lógica expuesta por el DTO. \\
+\hline
+\end{longtable}
+\end{center}
+
+
+\subsection{Estados}
+
+
+No existe enum vigente de estado del cliente. La disponibilidad se expresa con los siguientes campos:
+
+\begin{center}
+\small
+\begin{longtable}{|p{0.30\textwidth}|p{0.25\textwidth}|p{0.40\textwidth}|}
+\hline
+\textbf{Campo} & \textbf{Tipo} & \textbf{Significado} \\
+\hline
+\endfirsthead
+\hline
+\textbf{Campo} & \textbf{Tipo} & \textbf{Significado} \\
+\hline
+\endhead
+\texttt{\detokenize{activo}} & \texttt{\detokenize{boolean}} & Habilitación lógica expuesta por el DTO. Por defecto \texttt{\detokenize{true}}. \\
+\hline
+\texttt{\detokenize{deletedAt}} & \texttt{\detokenize{DateTime?}} & Soft delete; \textbf{interno} para el flujo de consulta, pero \textbf{SÍ se expone} en el DTO \texttt{\detokenize{ClientResponseDto}}. Un cliente puede tener \texttt{\detokenize{activo=true}} y \texttt{\detokenize{deletedAt != null}} simultáneamente. \\
+\hline
+\texttt{\detokenize{aplicaTerceraEdad}} & \texttt{\detokenize{boolean}} & Calculado en create/update según \texttt{\detokenize{TerceraEdadUtil.aplica(fechaNacimiento)}}. Por defecto \texttt{\detokenize{false}}. \\
+\hline
+\texttt{\detokenize{aplicaDiscapacidad}} & \texttt{\detokenize{boolean}} & Flag configurable desde el DTO. Por defecto \texttt{\detokenize{false}}. \\
+\hline
+\texttt{\detokenize{telefonoSecundario}} & \texttt{\detokenize{string?}} & Teléfono alternativo. Presente en el modelo y en el DTO. \\
+\hline
+\texttt{\detokenize{tipoIdentificacion}} & \texttt{\detokenize{CatalogoTiposIdentificacion}} & Relación al catálogo; el enum \texttt{\detokenize{TipoIdentificacion}} tiene 5 valores (\texttt{\detokenize{CEDULA}}, \texttt{\detokenize{RUC}}, \texttt{\detokenize{PASAPORTE}}, \texttt{\detokenize{CONSUMIDOR\\_FINAL}}, \texttt{\detokenize{IDENTIFICACION\\_EXTRANJERA}}). \\
+\hline
+\end{longtable}
+\end{center}
+
+No hay reactivación pública: el flujo \texttt{\detokenize{POST /clients}} reactiva un registro existente solo cuando el \texttt{\detokenize{tipoIdentificacionId=4}} (\texttt{\detokenize{CONSUMIDOR\\_FINAL}}) o cuando la \texttt{\detokenize{identificacion}} ya existía con \texttt{\detokenize{deletedAt != null}}.
+
+\subsubsection{Validación de identificación por algoritmo verificador}
+
+\texttt{\detokenize{CreateClientUseCase}} y \texttt{\detokenize{UpdateClientUseCase}} invocan \texttt{\detokenize{TipoIdentificacionUtil.validar(codigo, identificacion)}} antes de persistir. Las reglas por tipo son:
+
+\begin{center}
+\small
+\begin{longtable}{|p{0.30\textwidth}|p{0.35\textwidth}|p{0.30\textwidth}|}
+\hline
+\textbf{\texttt{\detokenize{codigo}} (SRI)} & \textbf{Tipo} & \textbf{Regla} \\
+\hline
+\endfirsthead
+\hline
+\textbf{\texttt{\detokenize{codigo}} (SRI)} & \textbf{Tipo} & \textbf{Regla} \\
+\hline
+\endhead
+\texttt{\detokenize{05}} & \texttt{\detokenize{CEDULA}} & 10 dígitos, algoritmo módulo 10. \\
+\hline
+\texttt{\detokenize{04}} (con terminación \texttt{\detokenize{001}}) & \texttt{\detokenize{RUC persona natural}} & Cédula + \texttt{\detokenize{001}}. \\
+\hline
+\texttt{\detokenize{04}} (con tercer dígito \texttt{\detokenize{9}}, terminación \texttt{\detokenize{001}}) & \texttt{\detokenize{RUC privado}} & Algoritmo módulo 11 con coeficientes \texttt{\detokenize{[4,3,2,7,6,5,4,3,2]}}. \\
+\hline
+\texttt{\detokenize{04}} (con tercer dígito \texttt{\detokenize{6}}, terminación \texttt{\detokenize{0001}}) & \texttt{\detokenize{RUC público}} & Algoritmo módulo 11 con coeficientes \texttt{\detokenize{[3,2,7,6,5,4,3,2]}}. \\
+\hline
+\texttt{\detokenize{08}} & \texttt{\detokenize{PASAPORTE}} & Sin validación de checksum (solo presencia). \\
+\hline
+\texttt{\detokenize{09}} & \texttt{\detokenize{IDENTIFICACION\\_EXTRANJERA}} & Sin validación de checksum. \\
+\hline
+\texttt{\detokenize{07}} & \texttt{\detokenize{CONSUMIDOR\\_FINAL}} & No requiere \texttt{\detokenize{identificacion}}; usa lógica de singleton con reactivación (ver más abajo). \\
+\hline
+\end{longtable}
+\end{center}
+
+\begin{quote}
+\textbf{Nota cross-doc:} la nota en \texttt{\detokenize{../HISTORIAS-DE-USUARIO.md}}, escenario HU-01, marcaba esta validación como ``pendiente de implementación''. La implementación SÍ existe en \texttt{\detokenize{backend/src/shared/utils/tipo-identificacion.util.ts}}. Esa nota está desactualizada.
+\end{quote}
+
+\subsubsection{Singleton CONSUMIDOR FINAL}
+
+El tipo de identificación con \texttt{\detokenize{id=4}} (codigo SRI \texttt{\detokenize{07}}, \texttt{\detokenize{CONSUMIDOR\\_FINAL}}) tiene semántica especial: existe \textbf{a lo sumo un} registro activo de este tipo en toda la tabla.
+
+\begin{itemize}
+\item \texttt{\detokenize{CreateClientUseCase}} detecta \texttt{\detokenize{tipoIdentificacionId === 4}} y llama a \texttt{\detokenize{clientRepository.reactivateOrCreateConsumidorFinal(...)}}.
+\item Si existe al menos un registro activo o soft-deleted, se reutiliza el más antiguo y se reactivan los datos del request (\texttt{\detokenize{email}}, \texttt{\detokenize{teléfono}}, \texttt{\detokenize{dirección}}).
+\item Si hay más de un registro, los extras se marcan con \texttt{\detokenize{deletedAt = now}} para mantener el invariante de singleton.
+\end{itemize}
+
+No requiere \texttt{\detokenize{identificacion}} ni \texttt{\detokenize{nombres/apellidos}}.
+
+
+\subsection{Efectos y transacciones}
+
+
+Crear, actualizar y eliminar escriben \texttt{\detokenize{Clientes}} mediante sus casos de uso; eliminar usa soft delete. Las consultas, \texttt{\detokenize{buildClientFilters}} y \texttt{\detokenize{ClientResponseDto.fromEntity}} son transformaciones/serialización puras. No se confirmó una transacción adicional ni handler de eventos propio.
+
+
+\begin{center}
+\small
+\begin{longtable}{|p{0.470\textwidth}|p{0.470\textwidth}|}
+\hline
+\textbf{Tabla Prisma} & \textbf{Uso} \\
+\hline
+\endfirsthead
+\hline
+\textbf{Tabla Prisma} & \textbf{Uso} \\
+\hline
+\endhead
+\texttt{\detokenize{Clientes}} & Titular y soft delete. \\
+\hline
+\texttt{\detokenize{CatalogoTiposIdentificacion}} & Tipos activos y relación. \\
+\hline
+\end{longtable}
+\end{center}
+
+
+\subsection{Gráfico de estados}
+
+
+\begin{lstlisting}
+stateDiagram-v2
+  [*] --> Activo: crear
+  Activo --> Eliminado: DELETE (soft delete)
+\end{lstlisting}
+
+
+\subsection{Casos de uso}
+
+
+\subsubsection{Caso: Catálogo de tipos de identificación}
+
+
+\textbf{Descripción:} devuelve los tipos activos para formularios.
+
+
+\textbf{HTTP y ruta:} \texttt{\detokenize{GET /api/v1/clients/identification-types}}.
+
+
+\textbf{Permiso:} \texttt{\detokenize{clientes:read}}.
+
+
+\textbf{Cadena:} \texttt{\detokenize{ClientController.findAllIdentificaciones()}} → \texttt{\detokenize{ClientService.findAllIdentificaciones()}} → \texttt{\detokenize{ClientRepository.findActiveTipoIdentificaciones()}} (sin caso dedicado).
+
+
+\textbf{Errores relevantes:} \texttt{\detokenize{401}} no autenticado; \texttt{\detokenize{403}} sin permiso.
+
+
+\textbf{Efectos:} ninguno; consulta y mapeo puros.
+
+
+\textbf{Prisma:} \texttt{\detokenize{CatalogoTiposIdentificacion}}.
+
+
+\textbf{Entrada:} sin body, path ni query.
+
+
+\textbf{Salida:}
+
+
+\begin{lstlisting}
+[
+  {
+    "tipoIdentificacionId": 1,
+    "codigo": "CEDULA",
+    "descripcion": "Cédula"
+  }
+]
+\end{lstlisting}
+
+
+\subsubsection{Caso: Crear cliente}
+
+
+\textbf{Descripción:} registra un nuevo titular.
+
+
+\textbf{HTTP y ruta:} \texttt{\detokenize{POST /api/v1/clients}}.
+
+
+\textbf{Permiso:} \texttt{\detokenize{clientes:create}}.
+
+
+\textbf{Cadena:} \texttt{\detokenize{ClientController.create()}} → \texttt{\detokenize{ClientService.create()}} → \texttt{\detokenize{CreateClientUseCase.execute()}} → \texttt{\detokenize{ClientRepository}}.
+
+
+\textbf{Errores relevantes:}
+\begin{itemize}
+\item \texttt{\detokenize{400}} datos inválidos (incluye validación del algoritmo verificador según el tipo).
+\item \texttt{\detokenize{401}}.
+\item \texttt{\detokenize{403}}.
+\item \textbf{Conflicto de identificación} (ya activa) --- \texttt{\detokenize{EntityAlreadyExistsException}}.
+\item \textbf{Identificación inválida} según el algoritmo --- \texttt{\detokenize{InvalidDomainOperationException}}.
+\item \textbf{Campos requeridos faltantes} según el tipo (\texttt{\detokenize{nombres}}/\texttt{\detokenize{apellidos}}/\texttt{\detokenize{direccionDomicilio}} para tipos genéricos; \texttt{\detokenize{razonSocial}} adicional para RUC).
+\end{itemize}
+
+\textbf{Efectos:}
+\begin{itemize}
+\item Alta en \texttt{\detokenize{Clientes}} \textbf{o reactivación} si la identificación existía soft-deleted.
+\item Cálculo automático de \texttt{\detokenize{aplicaTerceraEdad}} vía \texttt{\detokenize{TerceraEdadUtil.aplica(fechaNacimiento)}}.
+\item Normalización: emails a lowercase, nombres/apellidos/razonSocial a uppercase, identificación con \texttt{\detokenize{trim}}.
+\item El DTO de salida es serialización pura.
+\end{itemize}
+
+
+\textbf{Prisma:} \texttt{\detokenize{Clientes}}, \texttt{\detokenize{CatalogoTiposIdentificacion}}.
+
+
+\textbf{Entrada:}
+
+
+\begin{lstlisting}
+{
+  "tipoIdentificacionId": 1,
+  "identificacion": "1712345678",
+  "nombres": "Juan",
+  "apellidos": "Pérez",
+  "razonSocial": null,
+  "email": "juan@example.com"
+}
+\end{lstlisting}
+
+
+\textbf{Salida:}
+
+
+\begin{lstlisting}
+{
+  "clienteId": "10",
+  "identificacion": "1712345678",
+  "nombres": "Juan",
+  "apellidos": "Pérez",
+  "razonSocial": null,
+  "email": "juan@example.com",
+  "telefono": null,
+  "direccionDomicilio": null,
+  "activo": true
+}
+\end{lstlisting}
+
+
+\subsubsection{Caso: Listar clientes}
+
+
+\textbf{Descripción:} consulta clientes con filtros opcionales y paginación.
+
+
+\textbf{HTTP y ruta:} \texttt{\detokenize{GET /api/v1/clients}}.
+
+
+\textbf{Permiso:} \texttt{\detokenize{clientes:read}}.
+
+
+\textbf{Cadena:} \texttt{\detokenize{ClientController.findAll()}} → \texttt{\detokenize{ClientService.findAll()}} → \texttt{\detokenize{buildClientFilters()}} → \texttt{\detokenize{ClientRepository.paginateClientes()}}; no existe \texttt{\detokenize{FindAllClientUseCase}}.
+
+
+\textbf{Errores relevantes:} \texttt{\detokenize{400}} query inválida; \texttt{\detokenize{401}}; \texttt{\detokenize{403}}.
+
+
+\textbf{Efectos:} ninguno; consulta y DTO puros.
+
+
+\textbf{Prisma:} \texttt{\detokenize{Clientes}}, \texttt{\detokenize{CatalogoTiposIdentificacion}}.
+
+
+\textbf{Entrada:} sin body. Query: \texttt{\detokenize{page}}, \texttt{\detokenize{limit}}, \texttt{\detokenize{identificacion}}, \texttt{\detokenize{nombres}}, \texttt{\detokenize{apellidos}}, \texttt{\detokenize{nombreCompleto}}.
+
+
+\textbf{Salida:}
+
+
+\begin{lstlisting}
+{
+  "data": [
+    {
+      "clienteId": "10",
+      "identificacion": "1712345678",
+      "nombres": "Juan",
+      "apellidos": "Pérez",
+      "activo": true
+    }
+  ],
+  "meta": {
+    "page": 1,
+    "limit": 10,
+    "total": 1,
+    "totalPages": 1
+  }
+}
+\end{lstlisting}
+
+
+\subsubsection{Caso: Obtener cliente}
+
+
+\textbf{Descripción:} devuelve un cliente por identificador.
+
+
+\textbf{HTTP y ruta:} \texttt{\detokenize{GET /api/v1/clients/:id}}.
+
+
+\textbf{Permiso:} \texttt{\detokenize{clientes:read}}.
+
+
+\textbf{Cadena:} \texttt{\detokenize{ClientController.findOne()}} → \texttt{\detokenize{ClientService.findOne()}} → \texttt{\detokenize{FindOneClientUseCase.execute()}} → \texttt{\detokenize{ClientRepository}}.
+
+
+\textbf{Errores relevantes:} \texttt{\detokenize{400}} ID inválido; \texttt{\detokenize{401}}; \texttt{\detokenize{403}}; \texttt{\detokenize{404}} no encontrado.
+
+
+\textbf{Efectos:} ninguno; DTO puro.
+
+
+\textbf{Prisma:} \texttt{\detokenize{Clientes}}, \texttt{\detokenize{CatalogoTiposIdentificacion}}.
+
+
+\textbf{Entrada:} sin body. Path: \texttt{\detokenize{{ "id": "10" }}}.
+
+
+\textbf{Salida:}
+
+
+\begin{lstlisting}
+{
+  "clienteId": "10",
+  "identificacion": "1712345678",
+  "nombres": "Juan",
+  "apellidos": "Pérez",
+  "razonSocial": null,
+  "email": "juan@example.com",
+  "telefono": null,
+  "direccionDomicilio": null,
+  "activo": true
+}
+\end{lstlisting}
+
+
+\subsubsection{Caso: Actualizar cliente}
+
+
+\textbf{Descripción:} modifica parcialmente los datos permitidos del titular.
+
+
+\textbf{HTTP y ruta:} \texttt{\detokenize{PATCH /api/v1/clients/:id}}.
+
+
+\textbf{Permiso:} \texttt{\detokenize{clientes:update}}.
+
+
+\textbf{Cadena:} \texttt{\detokenize{ClientController.update()}} → \texttt{\detokenize{ClientService.update()}} → \texttt{\detokenize{UpdateClientUseCase.execute()}} → \texttt{\detokenize{ClientRepository}}.
+
+
+\textbf{Errores relevantes:} \texttt{\detokenize{400}} ID/body inválidos; \texttt{\detokenize{401}}; \texttt{\detokenize{403}}; \texttt{\detokenize{404}} no encontrado.
+
+
+\textbf{Efectos:} actualización de \texttt{\detokenize{Clientes}}; DTO puro.
+
+
+\textbf{Prisma:} \texttt{\detokenize{Clientes}}, \texttt{\detokenize{CatalogoTiposIdentificacion}}.
+
+
+\textbf{Entrada:} path \texttt{\detokenize{{ "id": "10" }}}; body:
+
+
+\begin{lstlisting}
+{
+  "telefono": "0990000000",
+  "email": "nuevo@example.com"
+}
+\end{lstlisting}
+
+
+\textbf{Salida:}
+
+
+\begin{lstlisting}
+{
+  "clienteId": "10",
+  "telefono": "0990000000",
+  "email": "nuevo@example.com",
+  "activo": true
+}
+\end{lstlisting}
+
+
+\subsubsection{Caso: Eliminar cliente}
+
+
+\textbf{Descripción:} marca el cliente como eliminado sin borrado físico.
+
+
+\textbf{HTTP y ruta:} \texttt{\detokenize{DELETE /api/v1/clients/:id}}.
+
+
+\textbf{Permiso:} \texttt{\detokenize{clientes:delete}}.
+
+
+\textbf{Cadena:} \texttt{\detokenize{ClientController.delete()}} → \texttt{\detokenize{ClientService.delete()}} → \texttt{\detokenize{RemoveClientUseCase.execute()}} → \texttt{\detokenize{ClientRepository}}.
+
+
+\textbf{Errores relevantes:} \texttt{\detokenize{400}} ID inválido; \texttt{\detokenize{401}}; \texttt{\detokenize{403}}; \texttt{\detokenize{404}} no encontrado.
+
+
+\textbf{Efectos:} soft delete en \texttt{\detokenize{Clientes}}; \textbf{solo} setea \texttt{\detokenize{deletedAt = now()}} (no toca \texttt{\detokenize{activo}}). Tras la operación, el cliente tiene \texttt{\detokenize{activo=true}} y \texttt{\detokenize{deletedAt != null}} simultáneamente.
+
+
+\textbf{Prisma:} \texttt{\detokenize{Clientes}}.
+
+
+\textbf{Entrada:} sin body. Path: \texttt{\detokenize{{ "id": "10" }}}.
+
+
+\textbf{Salida:} objeto \texttt{\detokenize{ClientResponseDto}} con los 13 campos del DTO, donde \texttt{\detokenize{deletedAt}} está poblado y \texttt{\detokenize{activo}} sigue \texttt{\detokenize{true}}.
+
+
+\subsection{Pendientes funcionales}
+
+Bloqueos confirmados como pendientes en el código revisado. Cuando se cierre cada uno, sacar de acá y mover a la sección correspondiente.
+
+\begin{itemize}
+\item \textbf{Forma exacta de \texttt{\detokenize{CreateClientDto}} y \texttt{\detokenize{UpdateClientDto}}} (campos opcionales vs obligatorios, validaciones anidadas como \texttt{\detokenize{@IsEmail}}, \texttt{\detokenize{@Matches}}). Confirmar contra el código actual; la lista de campos en este doc es funcional, no de validación.
+\item \textbf{Forma exacta del query string de \texttt{\detokenize{GET /api/v1/clients}}} (\texttt{\detokenize{page}}, \texttt{\detokenize{limit}}, \texttt{\detokenize{identificacion}}, \texttt{\detokenize{nombres}}, \texttt{\detokenize{apellidos}}, \texttt{\detokenize{nombreCompleto}}). Confirmar que el filtro \texttt{\detokenize{nombreCompleto}} sigue vigente en el repositorio (vista en \texttt{\detokenize{client-filters.mapper.ts}}).
+\item \textbf{Reactivación pública de clientes soft-deleted.} Existe \textbf{solo} para \texttt{\detokenize{CONSUMIDOR\\_FINAL}} y como efecto secundario al crear con la misma identificación. No hay endpoint público para reactivar un cliente regular; si se requiere, hay que decidir el criterio (?solo admin?) y agregar el endpoint.
+\end{itemize}
+
+\subsection{No documentado o pendiente de confirmar}
+
+\begin{itemize}
+\item Handlers de eventos de clientes. No hay event dispatcher que reaccione a cambios en \texttt{\detokenize{Clientes}}. Si se requiere propagar a \texttt{\detokenize{Contratos}} automáticamente (por ejemplo, cambio de dirección), hay que implementar el patrón outbox como en pagos.
+\item Estados legacy distintos de \texttt{\detokenize{activo}} y \texttt{\detokenize{deletedAt}}. Confirmar contra seeds y migraciones si existe alguna columna legacy.
+\end{itemize}

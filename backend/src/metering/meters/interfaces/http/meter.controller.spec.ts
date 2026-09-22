@@ -11,6 +11,7 @@ describe('MeterController', () => {
 
   const mockMeterEntity = {
     medidorId: BigInt(1),
+    codigo: 'MED-000001',
     serie: 'MED-001',
     modelo: 'DIGITAL_2000',
     marca: 'Itron',
@@ -27,6 +28,7 @@ describe('MeterController', () => {
 
   const expectedDto = {
     medidorId: '1',
+    codigo: 'MED-000001',
     serie: 'MED-001',
     modelo: 'DIGITAL_2000',
     marca: 'Itron',

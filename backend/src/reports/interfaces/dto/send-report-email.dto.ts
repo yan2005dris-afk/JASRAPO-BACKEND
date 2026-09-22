@@ -1,5 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import {
+  IsDateString,
   IsEmail,
   IsOptional,
   IsString,
@@ -81,6 +82,23 @@ export class SendReportEmailDto {
   @IsOptional()
   @IsNotEmptyString()
   convenioId?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'ID del sector (BigInt como string). Filtro opcional para POST /reports/overdue-accounts/email.',
+  })
+  @IsOptional()
+  @IsNotEmptyString()
+  sectorId?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Fecha de corte del reporte de morosidad (YYYY-MM-DD, mismo filtro que el endpoint GET).',
+  })
+  @IsOptional()
+  @Transform(({ value }) => (value === '' ? undefined : value))
+  @IsDateString()
+  fechaCorte?: string;
 
   @ApiPropertyOptional({
     description:

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <style>
+    :root {
+      --primary-color: #0c9ea1;
+      --primary-color-light: #dbf7f8;
+      --text-main: #0e2728;
+      --text-muted: #597b7d;
+      --border-color: #cbdedf;
+      --estado-activo: #10b981;
+      --estado-inactivo: #ef4444;
+    }
+  </style>    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recaudación y Morosidad</title>
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 12px;
+            color: #333;
+            background-color: #fff;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            margin: 0;
+        }
+
+        @page {
+            margin: 0;
+            size: A4 portrait;
+        }
+
+        .report-container {
+            background-color: #fff;
+            width: 100%;
+            padding: 40px;
+            box-sizing: border-box;
+        }
+
+        .header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .title { font-size: 14px; font-weight: normal; }
+
+        .subtitle {
+            text-align: center;
+            font-size: 14px;
+            font-weight: normal;
+            margin: 10px 0 4px;
+        }
+
+        .meta-line {
+            text-align: center;
+            font-size: 12px;
+            margin-bottom: 15px;
+        }
+
+        .meta-line span { margin: 0 14px; }
+
+        .report-type { text-align: right; font-size: 12px; margin-bottom: 5px; }
+
+        table { width: 100%; border-collapse: collapse; font-size: 12px; }
+
+        thead th {
+            border-top: 1px solid #000;
+            border-bottom: 1px solid #000;
+            padding: 4px 2px;
+            font-weight: normal;
+            text-align: left;
+        }
+
+        td { padding: 3px 2px; vertical-align: top; }
+
+        .text-right { text-align: right; }
+        .text-center { text-align: center; }
+
+        .total-row td {
+            border-top: 1px solid #000;
+            padding-top: 6px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="report-container">
+
+    <div class="header-row">
+        <div style="width: 100px;"></div>
+        <div class="title">JUNTA ADMINISTRADORA DE AGUA POTABLE OLON</div>
+        <div></div>
+    </div>
+
+    <div class="subtitle">REPORTE DE RECAUDACIÓN Y MOROSIDAD</div>
+
+    <div class="meta-line">
+        <span>Fecha de corte: 20/5/2024</span>
+        <span>Filtro: Todos los clientes</span>
+        <span>Cuentas en mora: 2</span>
+        <span>Mayor deuda: $77.50</span>
+    </div>
+
+    <div class="report-type">
+        DETALLADO · Versión v1
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>N° GUIA</th>
+                <th>CLIENTE</th>
+                <th>IDENTIFICACION</th>
+                <th>SECTOR</th>
+                <th class="text-center">MESES MORA</th>
+                <th class="text-center">ULT. EMISION</th>
+                <th class="text-right">DEUDA TOTAL</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>G-001</td>
+                <td>Ana Pérez</td>
+                <td>0912345678</td>
+                <td>Sector Norte</td>
+                <td class="text-center">3 meses</td>
+                <td class="text-center">2024</td>
+                <td class="text-right">$77.50</td>
+            </tr>
+            <tr>
+                <td>G-002</td>
+                <td>Comercial Olón</td>
+                <td>0999999999001</td>
+                <td>Sector Sur</td>
+                <td class="text-center">1 mes</td>
+                <td class="text-center">2024</td>
+                <td class="text-right">$22.50</td>
+            </tr>
+            <tr class="total-row">
+                <td colspan="6" class="text-right">TOTAL MOROSIDAD:</td>
+                <td class="text-right">$100.00</td>
+            </tr>
+        </tbody>
+    </table>
+
+</div>
+
+</body>
+</html>

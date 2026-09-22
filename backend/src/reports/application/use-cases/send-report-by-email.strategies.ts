@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { AccountStatementReportDefinition } from '../definitions/account-statement-report.definition';
 import { ClientsListReportDefinition } from '../definitions/clients-list-report.definition';
 import { ConnectionHistoryReportDefinition } from '../definitions/connection-history-report.definition';
+import { OverdueAccountsReportDefinition } from '../definitions/overdue-accounts-report.definition';
 import { PaymentAgreementReportDefinition } from '../definitions/payment-agreement-report.definition';
 import { PaymentsReportDefinition } from '../definitions/payments-report.definition';
 import type {
@@ -13,6 +14,7 @@ import type { PaymentAgreementReportFilters } from '../read-models/payment-agree
 import type { PaymentsReportFilters } from '../read-models/payments-report.read-model';
 import type { ConnectionHistoryReportFilters } from '../read-models/connection-history.read-model';
 import type { AccountStatementReportFilters } from '../read-models/account-statement.read-model';
+import type { OverdueAccountsReportFilters } from '../read-models/overdue-accounts.read-model';
 import type { ReportKey } from '../report-style.service';
 import type { ReportRequestContext } from '../models/report-request-context';
 
@@ -124,6 +126,24 @@ export class ClientsListReportEmailStrategy {
   }
 }
 
+@Injectable()
+export class OverdueAccountsReportEmailStrategy {
+  constructor(private readonly definition: OverdueAccountsReportDefinition) {}
+
+  build(): ReportEmailStrategy {
+    return {
+      reportType: 'overdue-accounts',
+      fetchReport: (context) => this.definition.generate(context),
+      // Reporte administrativo: no deriva destinatario, requiere override explícito.
+      recipientResolver: () => null,
+      subjectBuilder: (context) => {
+        const typedFilters = context.filters as OverdueAccountsReportFilters;
+        return `Recaudación y Morosidad${typedFilters.clienteId ? ` — Cliente #${typedFilters.clienteId}` : ''}`;
+      },
+    };
+  }
+}
+
 export type ReportEmailStrategyMap = Record<ReportKey, ReportEmailStrategy>;
 
 export const buildReportEmailStrategies = (
@@ -132,12 +152,14 @@ export const buildReportEmailStrategies = (
   paymentAgreement: PaymentAgreementReportEmailStrategy,
   accountStatement: AccountStatementReportEmailStrategy,
   clientsList: ClientsListReportEmailStrategy,
+  overdueAccounts: OverdueAccountsReportEmailStrategy,
 ): ReportEmailStrategyMap => ({
   'payments-report': payments.build(),
   'connection-history': connectionHistory.build(),
   'payment-agreement': paymentAgreement.build(),
   'account-statement': accountStatement.build(),
   'clients-list': clientsList.build(),
+  'overdue-accounts': overdueAccounts.build(),
 });
 
 export const REPORT_EMAIL_STRATEGIES_PROVIDER = {
@@ -149,5 +171,6 @@ export const REPORT_EMAIL_STRATEGIES_PROVIDER = {
     PaymentAgreementReportEmailStrategy,
     AccountStatementReportEmailStrategy,
     ClientsListReportEmailStrategy,
+    OverdueAccountsReportEmailStrategy,
   ],
 };

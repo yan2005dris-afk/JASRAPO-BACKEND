@@ -5,6 +5,7 @@ import { RoutesController } from './interfaces/http/routes.controller';
 import { GetEligibleReadingsUseCase } from './application/use-cases/get-eligible-readings.use-case';
 import { GetReadingsByRutaUseCase } from './application/use-cases/get-readings-by-ruta.use-case';
 import { CreateRouteUseCase } from './application/use-cases/create-route.use-case';
+import { CreateRouteAssignmentsUseCase } from './application/use-cases/create-route-assignments.use-case';
 import { FindAllRoutesUseCase } from './application/use-cases/find-all-routes.use-case';
 import { FindOneRouteUseCase } from './application/use-cases/find-one-route.use-case';
 import { UpdateRouteUseCase } from './application/use-cases/update-route.use-case';
@@ -23,6 +24,7 @@ import { FieldSheetPdfDocumentType } from './pdf/field-sheet.pdf-type';
     GetEligibleReadingsUseCase,
     GetReadingsByRutaUseCase,
     CreateRouteUseCase,
+    CreateRouteAssignmentsUseCase,
     FindAllRoutesUseCase,
     FindOneRouteUseCase,
     UpdateRouteUseCase,
@@ -36,6 +38,7 @@ import { FieldSheetPdfDocumentType } from './pdf/field-sheet.pdf-type';
     GetEligibleReadingsUseCase,
     GetReadingsByRutaUseCase,
     CreateRouteUseCase,
+    CreateRouteAssignmentsUseCase,
     FindAllRoutesUseCase,
     FindOneRouteUseCase,
     UpdateRouteUseCase,
