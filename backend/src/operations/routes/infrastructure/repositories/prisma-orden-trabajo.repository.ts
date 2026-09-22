@@ -329,6 +329,8 @@ export class PrismaOrdenTrabajoRepository implements OrdenTrabajoRepository {
             ...(data.evidenciaFotoUrl !== undefined
               ? { evidenciaFotoUrl: data.evidenciaFotoUrl }
               : {}),
+            ...(data.latitud !== undefined ? { latitud: data.latitud } : {}),
+            ...(data.longitud !== undefined ? { longitud: data.longitud } : {}),
             ...completionUpdate,
           },
         });

@@ -97,4 +97,29 @@ describe('UpdateOperatorWorkOrderUseCase', () => {
       expect.objectContaining({ estado: 'COMPLETADA' }),
     );
   });
+
+  it('maps operator GPS coordinates into the update data', async () => {
+    const dto = {
+      estado: 'COMPLETADA' as const,
+      latitud: -26.80828472,
+      longitud: -65.25268137,
+    };
+    await useCase.execute(1n, 7, dto, undefined);
+    expect(orders.updateOperatorWorkOrder).toHaveBeenCalledWith(1n, {
+      estado: 'COMPLETADA',
+      resultadoObservacion: undefined,
+      evidenciaFotoUrl: undefined,
+      completadoEn: undefined,
+      latitud: -26.80828472,
+      longitud: -65.25268137,
+    });
+  });
+
+  it('leaves GPS coordinates undefined when the DTO omits them', async () => {
+    await useCase.execute(1n, 7, { estado: 'COMPLETADA' }, undefined);
+    expect(orders.updateOperatorWorkOrder).toHaveBeenCalledWith(
+      1n,
+      expect.objectContaining({ latitud: undefined, longitud: undefined }),
+    );
+  });
 });

@@ -51,6 +51,8 @@ export class UpdateOperatorWorkOrderUseCase {
       resultadoObservacion: dto.resultadoObservacion,
       evidenciaFotoUrl,
       completadoEn: dto.completadoEn ? new Date(dto.completadoEn) : undefined,
+      latitud: dto.latitud,
+      longitud: dto.longitud,
     };
 
     const updated = await this.ordenTrabajoRepository.updateOperatorWorkOrder(
