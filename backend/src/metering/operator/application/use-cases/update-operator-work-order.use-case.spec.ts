@@ -50,10 +50,7 @@ describe('UpdateOperatorWorkOrderUseCase', () => {
     expect(orders.updateOperatorWorkOrder).not.toHaveBeenCalled();
   });
 
-  it.each([
-    [TipoActividadCodes.LECTURA, 10n, 'flujo de lecturas'],
-    [TipoActividadCodes.INSTALACION, null, 'medidor asignado'],
-  ])(
+  it.each([[TipoActividadCodes.INSTALACION, null, 'medidor asignado']])(
     'rejects invalid order prerequisites (%s)',
     async (type, meter, message) => {
       orders.findById.mockResolvedValue(order(type, meter));
@@ -63,6 +60,47 @@ describe('UpdateOperatorWorkOrderUseCase', () => {
       expect(orders.updateOperatorWorkOrder).not.toHaveBeenCalled();
     },
   );
+
+  it('rejects reading orders unless the update contains only complete GPS coordinates', async () => {
+    orders.findById.mockResolvedValue(order(TipoActividadCodes.LECTURA));
+
+    await expect(useCase.execute(1n, 7, {}, undefined)).rejects.toThrow(
+      'solo permiten registrar latitud y longitud',
+    );
+    await expect(
+      useCase.execute(
+        1n,
+        7,
+        { latitud: -26.80828472, longitud: -65.25268137, estado: 'COMPLETADA' },
+        undefined,
+      ),
+    ).rejects.toThrow('flujo de lecturas');
+    expect(orders.updateOperatorWorkOrder).not.toHaveBeenCalled();
+  });
+
+  it('persists GPS coordinates on the work order linked to a reading', async () => {
+    orders.findById.mockResolvedValue(order(TipoActividadCodes.LECTURA));
+    orders.updateOperatorWorkOrder.mockResolvedValue(
+      order(TipoActividadCodes.LECTURA),
+    );
+
+    await useCase.execute(
+      1n,
+      7,
+      { latitud: -26.80828472, longitud: -65.25268137 },
+      undefined,
+    );
+
+    expect(operators.verifyMeterOwnership).toHaveBeenCalledWith(7, 10n);
+    expect(orders.updateOperatorWorkOrder).toHaveBeenCalledWith(1n, {
+      estado: undefined,
+      resultadoObservacion: undefined,
+      evidenciaFotoUrl: undefined,
+      completadoEn: undefined,
+      latitud: -26.80828472,
+      longitud: -65.25268137,
+    });
+  });
 
   it('delegates ownership and stops when ownership is rejected', async () => {
     operators.verifyMeterOwnership.mockRejectedValue(

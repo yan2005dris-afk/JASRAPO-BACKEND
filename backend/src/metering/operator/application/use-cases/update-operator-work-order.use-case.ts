@@ -31,9 +31,18 @@ export class UpdateOperatorWorkOrderUseCase {
     }
 
     if (order.tipoActividad === TipoActividadCodes.LECTURA) {
-      throw new InvalidDomainOperationException(
-        'Las órdenes de lectura deben actualizarse mediante el flujo de lecturas',
-      );
+      const hasCompleteCoordinates =
+        dto.latitud !== undefined && dto.longitud !== undefined;
+      const modifiesReadingWorkflow =
+        dto.estado !== undefined ||
+        dto.resultadoObservacion !== undefined ||
+        dto.completadoEn !== undefined ||
+        evidenciaFotoUrl !== undefined;
+      if (!hasCompleteCoordinates || modifiesReadingWorkflow) {
+        throw new InvalidDomainOperationException(
+          'Las órdenes de lectura solo permiten registrar latitud y longitud; los datos de lectura deben actualizarse mediante el flujo de lecturas',
+        );
+      }
     }
     if (order.medidorId === null) {
       throw new InvalidDomainOperationException(
