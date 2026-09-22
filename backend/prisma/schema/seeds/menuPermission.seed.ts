@@ -83,6 +83,15 @@ const PERMISSION_MAP: MenuPermissionMapping[] = [
     ],
   },
   {
+    menuNombre: 'Reporte Novedades',
+    permisos: [
+      { recurso: 'work-order-novelties', accion: 'read' },
+      { recurso: 'work-order-novelties', accion: 'create' },
+      { recurso: 'work-order-novelties', accion: 'update' },
+      { recurso: 'work-order-novelties', accion: 'delete' },
+    ],
+  },
+  {
     menuNombre: 'Recaudación y Pagos',
     permisos: [
       { recurso: 'payments', accion: 'read' },
