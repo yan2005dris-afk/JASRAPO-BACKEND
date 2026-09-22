@@ -80,10 +80,6 @@ export abstract class OperatorRepository {
     comunidadId: number,
     sectorId: number | null,
   ): Promise<OperatorUser[]>;
-  abstract getMaxOrdenInZona(
-    comunidadId: number,
-    sectorId: number | null,
-  ): Promise<number>;
   abstract findMeterContractLocation(medidorId: bigint): Promise<{
     serie: string;
     comunidadId: number;

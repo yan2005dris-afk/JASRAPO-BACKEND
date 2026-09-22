@@ -151,9 +151,6 @@ export interface OperatorRoute {
   fechaPlanificada: Date | null;
   fechaInicio: Date | null;
   fechaFin: Date | null;
-  orden: number;
-  observacion: string | null;
-  fechaLimite: Date | null;
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Date | null;
