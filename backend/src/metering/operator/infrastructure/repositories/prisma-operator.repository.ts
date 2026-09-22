@@ -366,6 +366,7 @@ export class PrismaOperatorRepository extends OperatorRepository {
         take: limit + 1,
         include: {
           operario: { select: routeOperarioSelect },
+          tipoActividad: { select: { codigo: true } },
           ordenesTrabajo: false,
         },
       }),
@@ -373,6 +374,7 @@ export class PrismaOperatorRepository extends OperatorRepository {
     ]);
     const pageItems = items.slice(0, limit).map((route: any) => ({
       ...route,
+      tipoRuta: route.tipoActividad.codigo,
       ordenesTrabajo: [],
       paradas: [],
     })) as OperatorRoute[];
@@ -881,6 +883,7 @@ export class PrismaOperatorRepository extends OperatorRepository {
 
     return {
       ...route,
+      tipoRuta: route.tipoActividad.codigo,
       ordenesTrabajo,
       paradas,
     } as unknown as OperatorRoute;
