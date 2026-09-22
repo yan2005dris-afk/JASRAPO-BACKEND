@@ -41,6 +41,14 @@ export const SRI_EMISION_MODO = 'sri.emision.modo';
  */
 export const FRONTEND_URL = 'FRONTEND_URL';
 
+/**
+ * Umbral de edad (en años) para aplicar el beneficio de tercera edad.
+ * Consumido por `TerceraEdadService`, con fallback seguro a
+ * `TerceraEdadUtil.EDAD_MINIMA` (65) si la fila falta o el valor es inválido.
+ */
+export const CLIENTES_TERCERA_EDAD_EDAD_MINIMA =
+  'clientes.tercera-edad.edad-minima';
+
 /** Collection/cutoff policy keys stored in `sistema_config`. */
 export const COBRANZA_DIA_CORTE_MENSUAL = 'cobranza.dia_corte_mensual';
 export const COBRANZA_MESES_PARA_MORA = 'cobranza.meses_para_mora';

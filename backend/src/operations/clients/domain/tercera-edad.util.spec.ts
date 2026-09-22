@@ -49,5 +49,18 @@ describe('TerceraEdadUtil', () => {
         true,
       );
     });
+
+    it('usa el umbral recibido por parámetro en lugar del default', () => {
+      const anio = new Date().getFullYear() - 62;
+      // Con 62 años: no aplica con el default (65) pero sí con un umbral de 60.
+      expect(TerceraEdadUtil.aplica(`${anio}-01-01`)).toBe(false);
+      expect(TerceraEdadUtil.aplica(`${anio}-01-01`, 60)).toBe(true);
+    });
+
+    it('un umbral más alto excluye a quien calificaría con el default', () => {
+      const anio = new Date().getFullYear() - 66;
+      expect(TerceraEdadUtil.aplica(`${anio}-01-01`)).toBe(true);
+      expect(TerceraEdadUtil.aplica(`${anio}-01-01`, 70)).toBe(false);
+    });
   });
 });

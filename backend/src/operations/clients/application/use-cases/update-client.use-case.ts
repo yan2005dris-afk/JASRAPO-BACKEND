@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ClientRepository } from '../../domain/repositories/client.repository';
 import { UpdateClientDto } from '../../interfaces/dto/update-client.dto';
 import { TipoIdentificacionUtil } from 'src/shared/utils/tipo-identificacion.util';
-import { TerceraEdadUtil } from '../../domain/tercera-edad.util';
+import { TerceraEdadService } from '../services/tercera-edad.service';
 import { ClientEntity } from '../../domain/entities/client.entity';
 import {
   EntityAlreadyExistsException,
@@ -12,7 +12,10 @@ import {
 
 @Injectable()
 export class UpdateClientUseCase {
-  constructor(private readonly clientRepository: ClientRepository) {}
+  constructor(
+    private readonly clientRepository: ClientRepository,
+    private readonly terceraEdadService: TerceraEdadService,
+  ) {}
 
   async execute(id: bigint, dto: UpdateClientDto): Promise<ClientEntity> {
     const cliente = await this.clientRepository.findById(id);
@@ -65,6 +68,11 @@ export class UpdateClientUseCase {
       );
     }
 
+    const aplicaTerceraEdad =
+      dto.fechaNacimiento !== undefined && dto.fechaNacimiento !== ''
+        ? await this.terceraEdadService.aplica(dto.fechaNacimiento)
+        : cliente.aplicaTerceraEdad;
+
     return this.clientRepository.updateClient(id, {
       tipoIdentificacionId: tipoId,
       identificacion: identificacionFinal,
@@ -75,10 +83,7 @@ export class UpdateClientUseCase {
       telefono: dto.telefono ?? cliente.telefono,
       telefonoSecundario: dto.telefonoSecundario ?? cliente.telefonoSecundario,
       direccionDomicilio: dto.direccionDomicilio ?? cliente.direccionDomicilio,
-      aplicaTerceraEdad:
-        dto.fechaNacimiento !== undefined && dto.fechaNacimiento !== ''
-          ? TerceraEdadUtil.aplica(dto.fechaNacimiento)
-          : cliente.aplicaTerceraEdad,
+      aplicaTerceraEdad,
       aplicaDiscapacidad: dto.aplicaDiscapacidad ?? cliente.aplicaDiscapacidad,
     });
   }
