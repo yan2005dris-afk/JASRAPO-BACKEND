@@ -120,13 +120,19 @@ export class OperatorRouteResponseDto {
   @ApiProperty({ description: 'ID de la comunidad', example: 5 })
   comunidadId: number;
 
-  @ApiPropertyOptional({ description: 'Nombre de la comunidad', example: 'Olón' })
+  @ApiPropertyOptional({
+    description: 'Nombre de la comunidad',
+    example: 'Olón',
+  })
   comunidadNombre?: string;
 
   @ApiPropertyOptional({ description: 'ID del sector', example: 3 })
   sectorId?: number;
 
-  @ApiPropertyOptional({ description: 'Nombre del sector', example: 'Sector 1' })
+  @ApiPropertyOptional({
+    description: 'Nombre del sector',
+    example: 'Sector 1',
+  })
   sectorNombre?: string;
 
   @ApiPropertyOptional({ description: 'Fecha planificada' })
