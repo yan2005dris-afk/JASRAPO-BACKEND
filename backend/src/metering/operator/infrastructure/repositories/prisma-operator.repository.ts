@@ -49,6 +49,8 @@ const routeMedidorSelect = {
 const operatorRouteInclude = {
   tipoActividad: { select: { codigo: true } },
   operario: { select: routeOperarioSelect },
+  comunidad: { select: { nombre: true } },
+  sector: { select: { nombre: true } },
   ordenesTrabajo: {
     where: { deletedAt: null },
     orderBy: [{ ordenVisita: 'asc' }, { ordenTrabajoId: 'asc' }],
@@ -366,6 +368,8 @@ export class PrismaOperatorRepository extends OperatorRepository {
         take: limit + 1,
         include: {
           operario: { select: routeOperarioSelect },
+          comunidad: { select: { nombre: true } },
+          sector: { select: { nombre: true } },
           ordenesTrabajo: false,
         },
       }),
@@ -373,6 +377,8 @@ export class PrismaOperatorRepository extends OperatorRepository {
     ]);
     const pageItems = items.slice(0, limit).map((route: any) => ({
       ...route,
+      comunidadNombre: route.comunidad?.nombre ?? null,
+      sectorNombre: route.sector?.nombre ?? null,
       ordenesTrabajo: [],
       paradas: [],
     })) as OperatorRoute[];
@@ -881,6 +887,8 @@ export class PrismaOperatorRepository extends OperatorRepository {
 
     return {
       ...route,
+      comunidadNombre: route.comunidad?.nombre ?? null,
+      sectorNombre: route.sector?.nombre ?? null,
       ordenesTrabajo,
       paradas,
     } as unknown as OperatorRoute;
