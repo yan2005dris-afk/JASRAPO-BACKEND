@@ -48,6 +48,12 @@ const LEVEL_2: MenuSeedEntry[] = [
     parentNombre: 'Contratos',
   },
   {
+    nombre: 'Anomalías de Lectura',
+    ruta: '/Contratos/AnomaliasDeLectura',
+    icono: 'warning',
+    parentNombre: 'Contratos',
+  },
+  {
     nombre: 'Inventario de Medidores',
     ruta: '/Contratos/Medidores',
     icono: 'gas_meter',

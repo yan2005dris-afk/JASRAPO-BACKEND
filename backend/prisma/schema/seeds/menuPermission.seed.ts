@@ -56,6 +56,15 @@ const PERMISSION_MAP: MenuPermissionMapping[] = [
     ],
   },
   {
+    menuNombre: 'Anomalías de Lectura',
+    permisos: [
+      { recurso: 'reading-anomalies', accion: 'read' },
+      { recurso: 'reading-anomalies', accion: 'create' },
+      { recurso: 'reading-anomalies', accion: 'update' },
+      { recurso: 'reading-anomalies', accion: 'delete' },
+    ],
+  },
+  {
     menuNombre: 'Categoría Tarifa',
     permisos: [
       { recurso: 'tarifas', accion: 'read' },
@@ -80,6 +89,15 @@ const PERMISSION_MAP: MenuPermissionMapping[] = [
       { recurso: 'lecturas', accion: 'create' },
       { recurso: 'lecturas', accion: 'update' },
       { recurso: 'lecturas', accion: 'delete' },
+    ],
+  },
+  {
+    menuNombre: 'Reporte Novedades',
+    permisos: [
+      { recurso: 'work-order-novelties', accion: 'read' },
+      { recurso: 'work-order-novelties', accion: 'create' },
+      { recurso: 'work-order-novelties', accion: 'update' },
+      { recurso: 'work-order-novelties', accion: 'delete' },
     ],
   },
   {

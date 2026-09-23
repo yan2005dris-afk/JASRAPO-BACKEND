@@ -67,6 +67,8 @@ export async function seedPermissions(prisma: PrismaClient) {
     'rubros',
     'configuraciones',
     'empresa',
+    'work-order-novelties',
+    'reading-anomalies',
   ];
 
   const actions = ['read', 'create', 'update', 'delete'];
@@ -85,11 +87,6 @@ export async function seedPermissions(prisma: PrismaClient) {
     resource: 'meter-replacements',
     action: 'approve',
   });
-  permissionsToCreate.push(
-    { resource: 'work-order-novelties', action: 'read' },
-    { resource: 'work-order-novelties', action: 'create' },
-    { resource: 'work-order-novelties', action: 'update' },
-  );
 
   const savedPermissions: Permisos[] = [];
 
