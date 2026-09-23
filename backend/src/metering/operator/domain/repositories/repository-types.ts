@@ -145,7 +145,9 @@ export interface OperatorRoute {
   operarioId: number;
   tipoRuta: string;
   comunidadId: number;
+  comunidadNombre?: string | null;
   sectorId: number | null;
+  sectorNombre?: string | null;
   periodoId: number | null;
   estado: string;
   fechaPlanificada: Date | null;
