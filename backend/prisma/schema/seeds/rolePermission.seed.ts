@@ -31,6 +31,7 @@ export async function seedRolePermissions(
     'routes',
     'batches',
     'agreements',
+    'work-order-novelties',
   ];
   const secretaryPerms = permissions.filter((p) =>
     secretaryResources.includes(p.recurso),
@@ -70,6 +71,9 @@ export async function seedRolePermissions(
     'routes:read', // listar rutas asignadas
     'lecturas:read', // ver lecturas asignadas
     'lecturas:update', // modificar lectura (PENDIENTE → POR_REVISION)
+    'work-order-novelties:read',
+    'work-order-novelties:create',
+    'work-order-novelties:update',
   ]);
   const operadorPerms = permissions.filter((p) =>
     operadorPermissionKeys.has(`${p.recurso}:${p.accion}`),

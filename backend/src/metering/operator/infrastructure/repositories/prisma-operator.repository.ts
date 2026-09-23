@@ -778,7 +778,7 @@ export class PrismaOperatorRepository extends OperatorRepository {
 
     const routes = await this.prisma.rutas.findMany({
       where,
-      orderBy: [{ comunidadId: 'asc' }, { sectorId: 'asc' }, { orden: 'asc' }],
+      orderBy: [{ comunidadId: 'asc' }, { sectorId: 'asc' }, { rutaId: 'asc' }],
       include: operatorRouteInclude,
     });
 
@@ -798,7 +798,7 @@ export class PrismaOperatorRepository extends OperatorRepository {
       updateData.fechaInicio = data.fechaInicio;
     if (data.fechaFin !== undefined) updateData.fechaFin = data.fechaFin;
     if (data.observacion !== undefined)
-      updateData.observacion = data.observacion;
+      updateData.descripcion = data.observacion;
 
     const where: Prisma.RutasWhereUniqueInput = {
       rutaId,
@@ -904,24 +904,6 @@ export class PrismaOperatorRepository extends OperatorRepository {
     }
 
     return this.prisma.usuarios.findMany({ where });
-  }
-
-  async getMaxOrdenInZona(
-    comunidadId: number,
-    sectorId: number | null,
-  ): Promise<number> {
-    const where: any = { comunidadId, deletedAt: null };
-
-    if (sectorId !== null && sectorId !== undefined) {
-      where.sectorId = sectorId;
-    }
-
-    const result = await this.prisma.rutas.aggregate({
-      where,
-      _max: { orden: true },
-    });
-
-    return result._max.orden ?? 0;
   }
 
   async findMeterContractLocation(medidorId: bigint): Promise<{

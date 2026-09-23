@@ -11,9 +11,6 @@ model Rutas {
   fechaPlanificada    DateTime?          @map("fecha_planificada")
   fechaInicio         DateTime?          @map("fecha_inicio")
   fechaFin            DateTime?          @map("fecha_fin")
-  orden               Int                @default(0) @map("orden")
-  observacion         String?            @map("observacion")
-  fechaLimite         DateTime?          @map("fecha_limite")
   createdAt           DateTime           @default(now()) @map("creado_en")
   updatedAt           DateTime           @updatedAt @map("actualizado_en")
   deletedAt           DateTime?          @map("borrado_en")
@@ -32,7 +29,6 @@ model Rutas {
   @@index([estado])
   @@index([tipoActividadId])
   @@index([fechaPlanificada])
-  @@index([orden])
   @@map("rutas")
 }
 

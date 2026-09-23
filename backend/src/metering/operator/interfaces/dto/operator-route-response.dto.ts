@@ -114,15 +114,6 @@ export class OperatorRouteResponseDto {
   @ApiProperty({ description: 'Estado actual', example: 'PENDIENTE' })
   estado: string;
 
-  @ApiProperty({ description: 'Orden geográfico', example: 1 })
-  orden: number;
-
-  @ApiPropertyOptional({ description: 'Observación' })
-  observacion?: string;
-
-  @ApiPropertyOptional({ description: 'Fecha límite' })
-  fechaLimite?: string;
-
   @ApiProperty({ description: 'ID del operario asignado', example: 10 })
   operarioId: number;
 
@@ -175,9 +166,6 @@ export class OperatorRouteResponseDto {
       nombre: route.nombre,
       descripcion: route.descripcion ?? undefined,
       estado: route.estado,
-      orden: route.orden,
-      observacion: route.observacion ?? undefined,
-      fechaLimite: route.fechaLimite?.toISOString() ?? undefined,
       operarioId: route.operarioId,
       comunidadId: route.comunidadId,
       sectorId: route.sectorId ?? undefined,
