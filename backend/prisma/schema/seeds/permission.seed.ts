@@ -68,6 +68,7 @@ export async function seedPermissions(prisma: PrismaClient) {
     'configuraciones',
     'empresa',
     'work-order-novelties',
+    'reading-anomalies',
   ];
 
   const actions = ['read', 'create', 'update', 'delete'];
