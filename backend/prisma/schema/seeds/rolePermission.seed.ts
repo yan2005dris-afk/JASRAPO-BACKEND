@@ -32,6 +32,7 @@ export async function seedRolePermissions(
     'batches',
     'agreements',
     'work-order-novelties',
+    'reading-anomalies',
   ];
   const secretaryPerms = permissions.filter((p) =>
     secretaryResources.includes(p.recurso),
