@@ -116,6 +116,7 @@ export async function seedLecturas(prisma: any) {
                 await prisma.lecturas.create({
                     data: {
                         medidorId: medidor.medidorId,
+                        historialMedidorId: historial.historialId,
                         periodoId: pDb.periodoId,
                         fecha: fechaLectura,
                         lecturaAnterior,

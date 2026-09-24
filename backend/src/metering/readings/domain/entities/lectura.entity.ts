@@ -11,6 +11,7 @@ export class LecturaEntity {
   lecturaActual: number;
   consumoCalculado: number;
   medidorId: bigint;
+  historialMedidorId?: bigint | null;
   descripcionAnomalia: string | null;
   fechaValidacion: Date | null;
   /** Evidence projected from the linked work order. */

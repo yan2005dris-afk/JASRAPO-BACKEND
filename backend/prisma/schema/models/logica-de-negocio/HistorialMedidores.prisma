@@ -18,6 +18,7 @@ model HistorialMedidores {
   medidor              Medidores          @relation(fields: [medidorId], references: [medidorId])
   reemplazosSaliente   ReemplazoMedidor?  @relation("ReemplazoMedidorSaliente")
   reemplazosEntrante   ReemplazoMedidor?  @relation("ReemplazoMedidorEntrante")
+  lecturas             Lecturas[]         @relation("HistorialLecturas")
 
   @@index([medidorId])
   @@index([contratoId])
