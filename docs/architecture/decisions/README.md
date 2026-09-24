@@ -13,6 +13,8 @@ Este directorio contiene el registro formal de las decisiones arquitectónicas c
 | [ADR-003](./ADR-003-ordenes-trabajo-evidencia-y-lecturas.md) | Órdenes de trabajo, evidencia y lecturas operativas | **Aceptado** | 2026-08-28 | — |
 | [ADR-004](./ADR-004-anomalias-de-lectura-y-novedades-operativas.md) | Anomalías de lectura y novedades operativas | **Propuesto** | 2026-08-28 | — |
 | [ADR-005](./ADR-005-novedades-ordenes-trabajo-reemplazo-lectura-anomalia.md) | Novedades de órdenes de trabajo como reemplazo de `LecturaAnomalia` | **Aceptado** | 2026-09-01 | — |
+| [ADR-006](./ADR-006-contract-service-lifecycle-and-collection-status.md) | Ciclo de vida del contrato y estado de cobranza independiente | **Aceptado** | 2026-09-17 | — |
+| [ADR-007](./ADR-007-distribucion-pagos-entre-obligaciones.md) | Distribución de pagos entre múltiples obligaciones cobrables | **Aceptado** | 2026-09-24 | PR #324 (SC-301) |
 
 ---
 
