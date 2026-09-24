@@ -53,11 +53,14 @@ import type {
 import type { ReportKey } from '../../application/report-style.service';
 import { buildPdfFileName } from '../../../infrastructure/pdf/utils/pdf-format.utils';
 
+import { ExportStreamService } from '../../../infrastructure/export/services/export-stream.service';
+import { ReportExportAdapter } from '../../application/report-export.adapter';
+
 /**
  * Frontera HTTP de reportes.
  *
  * Cada endpoint obtiene un documento desde su definición tipada. Ese mismo
- * documento se entrega como JSON o se envía al dispatcher para generar el PDF.
+ * documento se entrega como JSON, CSV, XLSX en streaming, o se envía al dispatcher para generar el PDF.
  * Los permisos se declaran de forma explícita en cada operación.
  */
 
@@ -84,6 +87,7 @@ export class ReportsController {
     private readonly paymentAgreementDefinition: PaymentAgreementReportDefinition,
     private readonly contextFactory: ReportRequestContextFactory,
     private readonly dispatcher: ReportStyleDispatcher,
+    private readonly exportStreamService: ExportStreamService,
     private readonly sendReportByEmail: SendReportByEmailUseCase,
     private readonly logger: LoggerService,
   ) {}
@@ -555,7 +559,7 @@ export class ReportsController {
     }
   }
 
-  /** Negotiates the output adapter before any call to the PDF dispatcher. */
+  /** Negotiates the output adapter before any call to the PDF dispatcher or CSV/XLSX streaming. */
   private async handleNegotiatedReport<
     TFilters extends object,
     TDocument extends ReportDocument,
@@ -565,11 +569,41 @@ export class ReportsController {
     definition: ReportDefinition<TFilters, TDocument>,
     res: Response,
   ): Promise<void> {
-    const wantsPdf = this.acceptsOnlyPdf(res.req.headers.accept);
+    const format = this.resolveNegotiatedFormat(res);
 
     try {
       const { document } = await definition.generate(context);
-      if (!wantsPdf) {
+
+      if (format === 'csv' || format === 'xlsx') {
+        const exportData = ReportExportAdapter.extractExportData(
+          reportType,
+          document,
+        );
+        const exportResult = this.exportStreamService.createExportStream({
+          filename: buildPdfFileName(reportType).replace(/\.pdf$/i, ''),
+          format,
+          columns: exportData.columns,
+          dataSource: exportData.rows,
+          sheetName: exportData.sheetName,
+        });
+
+        res.set({
+          'Content-Type': exportResult.contentType,
+          'Content-Disposition': `attachment; filename="${exportResult.filename}"`,
+          'Transfer-Encoding': 'chunked',
+        });
+
+        res.on?.('close', () => {
+          if (!exportResult.stream.destroyed) {
+            exportResult.stream.destroy();
+          }
+        });
+
+        exportResult.stream.pipe(res);
+        return;
+      }
+
+      if (format === 'json') {
         const filename = buildPdfFileName(reportType).replace(
           /\.pdf$/i,
           '.json',
@@ -578,6 +612,7 @@ export class ReportsController {
         return;
       }
 
+      // Default to PDF
       await this.withPdfRequestAbort(res, async (signal) => {
         const { buffer, filename } = await this.dispatcher.dispatch(
           reportType,
@@ -589,6 +624,31 @@ export class ReportsController {
     } catch (error: unknown) {
       throw new ReportRequestContextException(error, context);
     }
+  }
+
+  private resolveNegotiatedFormat(res: Response): 'pdf' | 'csv' | 'xlsx' | 'json' {
+    const queryFormat = (res.req.query?.format as string | undefined)?.toLowerCase();
+    if (
+      queryFormat === 'csv' ||
+      queryFormat === 'xlsx' ||
+      queryFormat === 'pdf' ||
+      queryFormat === 'json'
+    ) {
+      return queryFormat;
+    }
+
+    const accept = (res.req.headers.accept ?? '').toLowerCase();
+    if (accept.includes('text/csv')) return 'csv';
+    if (
+      accept.includes('spreadsheetml') ||
+      accept.includes('application/vnd.openxmlformats')
+    ) {
+      return 'xlsx';
+    }
+    if (this.acceptsOnlyPdf(res.req.headers.accept)) return 'pdf';
+    if (accept.includes('application/json')) return 'json';
+
+    return 'json';
   }
 
   private acceptsOnlyPdf(accept?: string): boolean {
