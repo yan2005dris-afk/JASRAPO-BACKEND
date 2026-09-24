@@ -122,6 +122,22 @@ describe('PrismaMeterRepository - replaceMeter', () => {
 
     expect(result.consumoMedidoSaliente).toEqual(new Decimal(30));
     expect(result.consumoFacturableSaliente).toEqual(new Decimal(30));
+    expect(mockPrisma.lecturas.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          medidorId: BigInt(100),
+          historialMedidorId: BigInt(10),
+        }),
+      }),
+    );
+    expect(mockPrisma.lecturas.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          medidorId: BigInt(200),
+          historialMedidorId: BigInt(11),
+        }),
+      }),
+    );
     expect(mockPrisma.historialMedidores.update).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { historialId: BigInt(10) },
