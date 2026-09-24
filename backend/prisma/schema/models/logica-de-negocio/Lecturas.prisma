@@ -13,8 +13,10 @@ model Lecturas {
   updatedAt           DateTime           @updatedAt @map("actualizado_en")
 
   medidorId           BigInt             @map("medidor_id")
+  historialMedidorId  BigInt?            @map("historial_medidor_id")
   estado              EstadoLectura      @default(PENDIENTE) @map("estado")
   medidor             Medidores          @relation(fields: [medidorId], references: [medidorId], onDelete: Restrict)
+  historialMedidor    HistorialMedidores? @relation("HistorialLecturas", fields: [historialMedidorId], references: [historialId], onDelete: SetNull)
   periodoRel          Periodos           @relation(fields: [periodoId], references: [periodoId])
   ordenesTrabajo      OrdenesTrabajo[]
   novedadesOrdenTrabajo NovedadOrdenTrabajo[]
@@ -24,6 +26,7 @@ model Lecturas {
 
   @@index([periodoId])
   @@index([medidorId])
+  @@index([historialMedidorId])
   @@index([fecha])
   @@index([estado, periodoId])
   @@map("lecturas")

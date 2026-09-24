@@ -13,6 +13,7 @@ export class ReadingMapper {
       lecturaActual: Number(raw.lecturaActual),
       consumoCalculado: Number(raw.consumoCalculado),
       medidorId: raw.medidorId,
+      historialMedidorId: raw.historialMedidorId ?? null,
       descripcionAnomalia: raw.descripcionAnomalia,
       fechaValidacion: raw.fechaValidacion,
       evidenciaFotoUrl:
