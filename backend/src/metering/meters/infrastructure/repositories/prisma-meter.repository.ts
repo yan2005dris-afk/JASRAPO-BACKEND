@@ -605,6 +605,7 @@ export class PrismaMeterRepository implements MeterRepository {
             const lecturaFinalRecord = await tx.lecturas.create({
               data: {
                 medidorId: medidorSalienteId,
+                historialMedidorId: openHistorial.historialId,
                 periodoId: periodoOrigenId,
                 fecha: fechaReemplazo,
                 lecturaAnterior: new Prisma.Decimal(
@@ -668,6 +669,7 @@ export class PrismaMeterRepository implements MeterRepository {
             const lecturaInicialRecord = await tx.lecturas.create({
               data: {
                 medidorId: nuevoMedidorId,
+                historialMedidorId: nuevoHistorial.historialId,
                 periodoId: periodoOrigenId,
                 fecha: fechaReemplazo,
                 lecturaAnterior: new Prisma.Decimal(
