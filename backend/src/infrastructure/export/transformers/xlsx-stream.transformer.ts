@@ -33,7 +33,7 @@ export function createXlsxStream<T = any>(
   };
   headerRow.commit();
 
-  (async () => {
+  void (async () => {
     try {
       const iterable = Array.isArray(dataSource)
         ? dataSource
@@ -46,7 +46,7 @@ export function createXlsxStream<T = any>(
 
         const rowValues: Record<string, any> = {};
         for (const col of columns) {
-          let val = (item as any)?.[col.key];
+          let val = item?.[col.key];
           if (col.transform) {
             val = col.transform(val, item);
           }
@@ -62,7 +62,7 @@ export function createXlsxStream<T = any>(
         row.commit();
       }
 
-      await worksheet.commit();
+      worksheet.commit();
       await workbook.commit();
     } catch (err: any) {
       passThrough.destroy(err);

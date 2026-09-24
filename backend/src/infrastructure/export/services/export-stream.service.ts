@@ -9,7 +9,9 @@ import { createXlsxStream } from '../transformers/xlsx-stream.transformer';
 
 @Injectable()
 export class ExportStreamService {
-  createExportStream<T = any>(options: StreamExportOptions<T>): StreamExportResult {
+  createExportStream<T = any>(
+    options: StreamExportOptions<T>,
+  ): StreamExportResult {
     const format = options.format;
     const baseFilename = options.filename.replace(/\.(csv|xlsx)$/i, '');
 
@@ -50,6 +52,6 @@ export class ExportStreamService {
       };
     }
 
-    throw new Error(`Unsupported export format: ${format}`);
+    throw new Error(`Unsupported export format: ${String(format)}`);
   }
 }

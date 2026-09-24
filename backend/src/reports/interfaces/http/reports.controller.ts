@@ -626,8 +626,12 @@ export class ReportsController {
     }
   }
 
-  private resolveNegotiatedFormat(res: Response): 'pdf' | 'csv' | 'xlsx' | 'json' {
-    const queryFormat = (res.req.query?.format as string | undefined)?.toLowerCase();
+  private resolveNegotiatedFormat(
+    res: Response,
+  ): 'pdf' | 'csv' | 'xlsx' | 'json' {
+    const queryFormat = (
+      res.req.query?.format as string | undefined
+    )?.toLowerCase();
     if (
       queryFormat === 'csv' ||
       queryFormat === 'xlsx' ||

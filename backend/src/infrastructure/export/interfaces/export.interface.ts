@@ -6,7 +6,10 @@ export interface ColumnDefinition<T = any> {
   header: string;
   key: keyof T | string;
   width?: number;
-  transform?: (value: any, row: T) => string | number | boolean | Date | null | undefined;
+  transform?: (
+    value: any,
+    row: T,
+  ) => string | number | boolean | Date | null | undefined;
 }
 
 export interface StreamExportOptions<T = any> {

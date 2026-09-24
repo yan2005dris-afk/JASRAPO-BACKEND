@@ -25,7 +25,11 @@ export class CsvStreamTransformer<T = any> extends Transform {
     }
   }
 
-  _transform(chunk: T, _encoding: BufferEncoding, callback: TransformCallback): void {
+  _transform(
+    chunk: T,
+    _encoding: BufferEncoding,
+    callback: TransformCallback,
+  ): void {
     try {
       if (this.isFirstChunk) {
         this.isFirstChunk = false;
@@ -79,14 +83,21 @@ export class CsvStreamTransformer<T = any> extends Transform {
       return String(value);
     }
 
+    if (typeof value === 'string') {
+      return this.sanitizeAndEscapeCell(value);
+    }
+
     if (typeof value === 'object') {
-      if ('toFixed' in (value as any) && typeof (value as any).toFixed === 'function') {
+      if (
+        'toFixed' in (value as any) &&
+        typeof (value as any).toFixed === 'function'
+      ) {
         return (value as any).toString();
       }
       return this.sanitizeAndEscapeCell(JSON.stringify(value));
     }
 
-    return this.sanitizeAndEscapeCell(String(value));
+    return this.sanitizeAndEscapeCell(String(value as any));
   }
 
   private sanitizeAndEscapeCell(value: string): string {
