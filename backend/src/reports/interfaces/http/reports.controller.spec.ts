@@ -16,6 +16,7 @@ function response(accept = '') {
     set: jest.fn(),
     send: jest.fn(),
     end: jest.fn(),
+    on: jest.fn(),
     once: jest.fn(),
     removeListener: jest.fn(),
     writableEnded: false,
@@ -64,6 +65,13 @@ describe('ReportsController', () => {
   };
   const sendEmail = { execute: jest.fn().mockResolvedValue({ queued: true }) };
   const logger = { log: jest.fn() };
+  const exportStreamService = {
+    createExportStream: jest.fn().mockReturnValue({
+      stream: { pipe: jest.fn(), on: jest.fn() },
+      contentType: 'text/csv; charset=utf-8',
+      filename: 'report.csv',
+    }),
+  };
   const controller = new ReportsController(
     clients as never,
     payments as never,
@@ -73,11 +81,31 @@ describe('ReportsController', () => {
     agreement as never,
     contextFactory,
     dispatcher as never,
+    exportStreamService as never,
     sendEmail as never,
     logger as never,
   );
 
   beforeEach(() => jest.clearAllMocks());
+
+  it('streams CSV when format=csv is requested via query or header', async () => {
+    const res = response('text/csv');
+    (res.req as any).query = { format: 'csv' };
+
+    await controller.clientsListPdf({}, actor, timeZone, locale, res);
+
+    expect(clients.generate).toHaveBeenCalled();
+    expect(exportStreamService.createExportStream).toHaveBeenCalledWith(
+      expect.objectContaining({
+        format: 'csv',
+      }),
+    );
+    expect(res.set).toHaveBeenCalledWith(
+      expect.objectContaining({
+        'Content-Type': 'text/csv; charset=utf-8',
+      }),
+    );
+  });
 
   it('jsonAcceptDoesNotInvokePdfRenderer', async () => {
     const res = response('application/json');

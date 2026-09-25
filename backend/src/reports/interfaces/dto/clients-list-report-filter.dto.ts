@@ -2,8 +2,9 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsOptional, IsString } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { IsValidDateRange } from 'src/infrastructure/common/decorators/is-valid-date-range.decorator';
+import { BaseReportFilterDto } from './base-report-filter.dto';
 
-export class ClientsListReportFilterDto {
+export class ClientsListReportFilterDto extends BaseReportFilterDto {
   @ApiPropertyOptional({
     description: 'Filtrar por identificación (búsqueda parcial)',
   })
