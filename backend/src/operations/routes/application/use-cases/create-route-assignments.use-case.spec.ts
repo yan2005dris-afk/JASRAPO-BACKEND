@@ -315,4 +315,124 @@ describe('CreateRouteAssignmentsUseCase', () => {
       mockRouteRepository.createWorkOrdersForContracts,
     ).toHaveBeenCalledWith(50n, [10, 20]);
   });
+
+  it('should throw InvalidDomainOperationException when sector already has overlapping route in period', async () => {
+    mockRouteRepository.findUsuario.mockResolvedValue({
+      usuarioId: 1,
+      rol: { nombre: 'operadores' },
+    });
+    mockRouteRepository.findComunidad.mockResolvedValue({ comunidadId: 1 });
+    mockRouteRepository.findPeriodo.mockResolvedValue({
+      periodoId: 1,
+      estado: 'ABIERTO',
+    });
+    mockRouteRepository.findSector.mockResolvedValue({
+      sectorId: 1,
+      comunidadId: 1,
+      nombre: 'Sector A',
+    });
+    mockRouteRepository.findOverlappingRoutes.mockResolvedValue([
+      new RouteEntity({
+        rutaId: 99n,
+        nombre: 'Ruta Existente',
+        operarioId: 2,
+        comunidadId: 1,
+        sectorId: 1,
+        tipoRuta: 'LECTURA',
+        periodoId: 1,
+        estado: 'PENDIENTE',
+        fechaPlanificada: null,
+        fechaInicio: null,
+        fechaFin: null,
+      }),
+    ]);
+
+    await expect(
+      useCase.execute({
+        operarioId: 1,
+        comunidadId: 1,
+        periodoId: 1,
+        sectorIds: [1],
+      }),
+    ).rejects.toThrow(InvalidDomainOperationException);
+  });
+
+  it('should throw InvalidDomainOperationException when entire community has overlapping route in period', async () => {
+    mockRouteRepository.findUsuario.mockResolvedValue({
+      usuarioId: 1,
+      rol: { nombre: 'operadores' },
+    });
+    mockRouteRepository.findComunidad.mockResolvedValue({ comunidadId: 1 });
+    mockRouteRepository.findPeriodo.mockResolvedValue({
+      periodoId: 1,
+      estado: 'ABIERTO',
+    });
+    mockRouteRepository.findOverlappingRoutes.mockResolvedValue([
+      new RouteEntity({
+        rutaId: 99n,
+        nombre: 'Ruta Existente Comunidad',
+        operarioId: 2,
+        comunidadId: 1,
+        tipoRuta: 'LECTURA',
+        periodoId: 1,
+        estado: 'PENDIENTE',
+        fechaPlanificada: null,
+        fechaInicio: null,
+        fechaFin: null,
+      }),
+    ]);
+
+    await expect(
+      useCase.execute({
+        operarioId: 1,
+        comunidadId: 1,
+        periodoId: 1,
+      }),
+    ).rejects.toThrow(InvalidDomainOperationException);
+  });
+
+  it('should deduplicate sectorIds when passed duplicate entries in the array', async () => {
+    mockRouteRepository.findUsuario.mockResolvedValue({
+      usuarioId: 1,
+      rol: { nombre: 'operadores' },
+    });
+    mockRouteRepository.findComunidad.mockResolvedValue({ comunidadId: 1 });
+    mockRouteRepository.findPeriodo.mockResolvedValue({
+      periodoId: 1,
+      estado: 'ABIERTO',
+    });
+    mockRouteRepository.findSector.mockResolvedValue({
+      sectorId: 1,
+      comunidadId: 1,
+      nombre: 'Sector Único',
+    });
+    mockRouteRepository.findOverlappingRoutes.mockResolvedValue([]);
+    mockRouteRepository.create.mockResolvedValue(
+      new RouteEntity({
+        rutaId: 101n,
+        nombre: 'Ruta - Sector Único',
+        operarioId: 1,
+        comunidadId: 1,
+        sectorId: 1,
+        tipoRuta: 'LECTURA',
+        periodoId: 1,
+        estado: 'PENDIENTE',
+        fechaPlanificada: null,
+        fechaInicio: null,
+        fechaFin: null,
+      }),
+    );
+
+    const result = await useCase.execute({
+      operarioId: 1,
+      comunidadId: 1,
+      periodoId: 1,
+      sectorIds: [1, 1, 1], // Duplicates
+      fechaPlanificada: '2026-06-15',
+    });
+
+    expect(result).toHaveLength(1);
+    expect(mockRouteRepository.create).toHaveBeenCalledTimes(1);
+  });
 });
+

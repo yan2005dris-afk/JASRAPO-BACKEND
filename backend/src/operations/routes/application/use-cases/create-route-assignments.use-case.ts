@@ -102,8 +102,9 @@ export class CreateRouteAssignmentsUseCase {
 
     // Caso 2: Si se especificaron sectores => Crear una ruta por cada sector (Lecturas masivas)
     if (dto.sectorIds && dto.sectorIds.length > 0) {
+      const uniqueSectorIds = Array.from(new Set(dto.sectorIds));
       const validatedSectors: SectorRef[] = [];
-      for (const sectorId of dto.sectorIds) {
+      for (const sectorId of uniqueSectorIds) {
         const sector = await this.routeRepository.findSector(sectorId);
         if (!sector) {
           throw new EntityNotFoundException('Sector', sectorId);
