@@ -91,6 +91,9 @@ describe('PrismaOrdenTrabajoRepository contract lifecycle effects', () => {
           .mockResolvedValue({ estadoServicio: contractState }),
         update: contractUpdate,
       },
+      medidores: {
+        updateMany: jest.fn().mockResolvedValue({ count: 1 }),
+      },
     };
     return {
       prisma: {
@@ -120,6 +123,74 @@ describe('PrismaOrdenTrabajoRepository contract lifecycle effects', () => {
         estadoCobranza: 'AL_DIA',
       },
     });
+  });
+
+  it.each(['updateEstado', 'updateOperatorWorkOrder'] as const)(
+    'installs the reserved meter through %s',
+    async (method) => {
+      const { prisma, tx } = createPrisma(
+        order('INSTALACION'),
+        'PENDIENTE_INSTALACION',
+      );
+
+      await new PrismaOrdenTrabajoRepository(prisma as never)[method](1n, {
+        estado: 'COMPLETADA',
+      });
+
+      expect(tx.medidores.updateMany).toHaveBeenCalledWith({
+        where: {
+          medidorId: 4n,
+          estado: 'PENDIENTE',
+          deletedAt: null,
+          historial: {
+            some: { contratoId: 3n, fechaHasta: null, deletedAt: null },
+          },
+        },
+        data: { estado: 'INSTALADO', fechaInstalacion: expect.any(Date) },
+      });
+    },
+  );
+
+  it('rejects installation without an assigned meter', async () => {
+    const { prisma, tx, contractUpdate } = createPrisma(
+      { ...order('INSTALACION'), medidorId: null },
+      'PENDIENTE_INSTALACION',
+    );
+
+    await expect(
+      new PrismaOrdenTrabajoRepository(prisma as never).updateEstado(1n, {
+        estado: 'COMPLETADA',
+      }),
+    ).rejects.toThrow('medidor asignado');
+    expect(tx.medidores.updateMany).not.toHaveBeenCalled();
+    expect(contractUpdate).not.toHaveBeenCalled();
+    expect(tx.ordenesTrabajo.update).not.toHaveBeenCalled();
+  });
+
+  it('rejects a meter that is no longer reserved for the contract', async () => {
+    const { prisma, tx, contractUpdate } = createPrisma(
+      order('INSTALACION'),
+      'PENDIENTE_INSTALACION',
+    );
+    tx.medidores.updateMany.mockResolvedValue({ count: 0 });
+
+    await expect(
+      new PrismaOrdenTrabajoRepository(prisma as never).updateEstado(1n, {
+        estado: 'COMPLETADA',
+      }),
+    ).rejects.toThrow('pendiente y vinculado');
+    expect(contractUpdate).not.toHaveBeenCalled();
+    expect(tx.ordenesTrabajo.update).not.toHaveBeenCalled();
+  });
+
+  it('does not reinstall a meter when reconnecting service', async () => {
+    const { prisma, tx } = createPrisma(order('RECONEXION'), 'SUSPENDIDO');
+
+    await new PrismaOrdenTrabajoRepository(prisma as never).updateEstado(1n, {
+      estado: 'COMPLETADA',
+    });
+
+    expect(tx.medidores.updateMany).not.toHaveBeenCalled();
   });
 
   it('rejects an invalid contract source state before updating the order', async () => {
@@ -166,7 +237,7 @@ describe('PrismaOrdenTrabajoRepository contract lifecycle effects', () => {
   );
 
   it('does not change the contract when completing an already completed order', async () => {
-    const { prisma, contractUpdate } = createPrisma(
+    const { prisma, tx, contractUpdate } = createPrisma(
       order('INSTALACION', 'COMPLETADA'),
       'ACTIVO',
     );
@@ -177,6 +248,7 @@ describe('PrismaOrdenTrabajoRepository contract lifecycle effects', () => {
       }),
     ).resolves.toBeDefined();
     expect(contractUpdate).not.toHaveBeenCalled();
+    expect(tx.medidores.updateMany).not.toHaveBeenCalled();
   });
 
   it('rolls back the order update when the contract effect fails', async () => {

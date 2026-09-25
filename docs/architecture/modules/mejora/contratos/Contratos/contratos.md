@@ -50,6 +50,8 @@ Vínculo entre cliente, medidor, tarifa y servicio.
 
 ## Efectos y transacciones
 
+Al completar una orden de instalación, el contrato pasa de `PENDIENTE_INSTALACION` a `ACTIVO` / `AL_DIA` y su medidor de `PENDIENTE` a `INSTALADO`, con `fechaInstalacion` tomada del servidor. La orden debe identificar un medidor no eliminado y con vínculo vigente al mismo contrato. Las tres escrituras se realizan en la misma transacción: si falla cualquiera, se revierten todas. Repetir el cierre de una orden ya completada no cambia la fecha del medidor; una reconexión conserva la fecha de instalación original. Esta regla aplica tanto al cierre administrativo como al del operador.
+
 La creación valida relaciones y puede crear contrato, historial de medidor, prefactura y detalle. El reemplazo en `PATCH` y la finalización escriben vínculo/historial según el caso. La asignación crea o reutiliza una ruta y crea una orden; el código no confirma una transacción única para ambas escrituras. DELETE usa soft delete. Los DTO y la generación de PDF son transformaciones/serialización puras.
 
 | Tabla Prisma | Uso |

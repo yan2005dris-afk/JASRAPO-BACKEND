@@ -107,7 +107,6 @@ export class PagoValidadoHandler {
               deletedAt: null,
             },
             data: {
-              estado: 'PENDIENTE_INSTALACION',
               estadoServicio: EstadoServicioContrato.PENDIENTE_INSTALACION,
               estadoCobranza: EstadoCobranzaContrato.NO_APLICA,
             },

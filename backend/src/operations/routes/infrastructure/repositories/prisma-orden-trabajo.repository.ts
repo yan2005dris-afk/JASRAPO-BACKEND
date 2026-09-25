@@ -3,6 +3,7 @@ import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { Prisma } from 'src/generated/prisma/client';
 import {
   EstadoOrdenTrabajo,
+  EstadoMedidor,
   EstadoCobranzaContrato,
   EstadoPeriodo,
   EstadoRuta,
@@ -354,6 +355,7 @@ export class PrismaOrdenTrabajoRepository implements OrdenTrabajoRepository {
     current: {
       estado: string;
       contratoId: bigint;
+      medidorId: bigint | null;
       ruta: { tipoActividad: { codigo: string } };
     },
     targetState: string | undefined,
@@ -390,6 +392,39 @@ export class PrismaOrdenTrabajoRepository implements OrdenTrabajoRepository {
       throw new InvalidDomainOperationException(
         `El contrato debe estar en ${requiredSourceState} para completar una orden de ${current.ruta.tipoActividad.codigo}`,
       );
+    }
+
+    if (current.ruta.tipoActividad.codigo === TipoActividadCodes.INSTALACION) {
+      if (current.medidorId === null) {
+        throw new InvalidDomainOperationException(
+          'La orden de instalación debe tener un medidor asignado',
+        );
+      }
+
+      const installed = await tx.medidores.updateMany({
+        where: {
+          medidorId: current.medidorId,
+          estado: EstadoMedidor.PENDIENTE,
+          deletedAt: null,
+          historial: {
+            some: {
+              contratoId: current.contratoId,
+              fechaHasta: null,
+              deletedAt: null,
+            },
+          },
+        },
+        data: {
+          estado: EstadoMedidor.INSTALADO,
+          fechaInstalacion: new Date(),
+        },
+      });
+
+      if (installed.count !== 1) {
+        throw new InvalidDomainOperationException(
+          'El medidor debe estar pendiente y vinculado al contrato para completar la instalación',
+        );
+      }
     }
 
     await tx.contratos.update({

@@ -206,7 +206,6 @@ describe('PagoValidadoHandler (T-006, post-refactor RF-002)', () => {
         deletedAt: null,
       },
       data: {
-        estado: 'PENDIENTE_INSTALACION',
         estadoServicio: EstadoServicioContrato.PENDIENTE_INSTALACION,
         estadoCobranza: 'NO_APLICA',
       },
