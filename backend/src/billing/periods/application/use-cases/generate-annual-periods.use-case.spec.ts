@@ -125,8 +125,18 @@ describe('GenerateAnnualPeriodsUseCase', () => {
   it('should throw InvalidDomainOperationException when all 12 periods already exist', async () => {
     const all12 = Array.from({ length: 12 }, (_, i) => {
       const monthNames = [
-        'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-        'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
+        'Enero',
+        'Febrero',
+        'Marzo',
+        'Abril',
+        'Mayo',
+        'Junio',
+        'Julio',
+        'Agosto',
+        'Septiembre',
+        'Octubre',
+        'Noviembre',
+        'Diciembre',
       ];
       return new PeriodEntity({
         periodoId: i + 1,

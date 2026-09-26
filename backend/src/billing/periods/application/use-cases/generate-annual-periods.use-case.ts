@@ -79,9 +79,7 @@ export class GenerateAnnualPeriodsUseCase {
     // 4. Validate date overlap against existing periods
     for (const p of toCreate) {
       const fInicio =
-        p.fechaInicio instanceof Date
-          ? p.fechaInicio
-          : new Date(p.fechaInicio);
+        p.fechaInicio instanceof Date ? p.fechaInicio : new Date(p.fechaInicio);
       const fFin =
         p.fechaFin instanceof Date ? p.fechaFin : new Date(p.fechaFin);
 
