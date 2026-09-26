@@ -4,6 +4,8 @@ import type { PeriodEntity } from '../../domain/entities/period.entity';
 import { EstadoPeriodo } from 'src/generated/prisma/enums';
 import { GenerateAnnualPeriodsDto } from '../../interfaces/dto/generate-annual-periods.dto';
 import type { CreatePeriodData } from '../../domain/types/period.types';
+import { InvalidDomainOperationException } from 'src/shared/domain/exceptions/domain.exception';
+import { DateUtil } from 'src/shared/utils/date.util';
 
 const MONTH_NAMES = [
   'Enero',
@@ -63,16 +65,43 @@ export class GenerateAnnualPeriodsUseCase {
     const existingPeriods = await this.periodRepository.findByNames(allNames);
     const existingNames = new Set(existingPeriods.map((p) => p.nombre));
 
-    // 3. Filter missing periods and create them in an atomic batch
+    // 3. Filter missing periods
     const toCreate = periodDefinitions.filter(
       (p) => !existingNames.has(p.nombre),
     );
+
+    if (toCreate.length === 0) {
+      throw new InvalidDomainOperationException(
+        `Todos los períodos para el año ${year} ya se encuentran registrados en el sistema.`,
+      );
+    }
+
+    // 4. Validate date overlap against existing periods
+    for (const p of toCreate) {
+      const fInicio =
+        p.fechaInicio instanceof Date
+          ? p.fechaInicio
+          : new Date(p.fechaInicio);
+      const fFin =
+        p.fechaFin instanceof Date ? p.fechaFin : new Date(p.fechaFin);
+
+      const overlapping = await this.periodRepository.findOverlapping(
+        fInicio,
+        fFin,
+      );
+      if (overlapping && !existingNames.has(overlapping.nombre)) {
+        throw new InvalidDomainOperationException(
+          `El período "${p.nombre}" (${DateUtil.formatForFrontend(fInicio)} al ${DateUtil.formatForFrontend(fFin)}) se solapa con el período existente "${overlapping.nombre}" (${DateUtil.formatForFrontend(overlapping.fechaInicio)} al ${DateUtil.formatForFrontend(overlapping.fechaFin)})`,
+        );
+      }
+    }
+
+    // 5. Create missing periods in batch
     const newlyCreatedPeriods =
       await this.periodRepository.createBatch(toCreate);
 
-    // 4. Return all 12 periods ordered chronologically
-    const allPeriods = [...existingPeriods, ...newlyCreatedPeriods];
-    return allPeriods.sort(
+    // 6. Return newly created periods ordered chronologically
+    return newlyCreatedPeriods.sort(
       (a, b) => a.fechaInicio.getTime() - b.fechaInicio.getTime(),
     );
   }

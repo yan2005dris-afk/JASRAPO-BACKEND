@@ -4,6 +4,7 @@ import { GenerateAnnualPeriodsUseCase } from './generate-annual-periods.use-case
 import { PeriodRepository } from '../../domain/repositories/period.repository';
 import { PeriodEntity } from '../../domain/entities/period.entity';
 import { EstadoPeriodo } from 'src/generated/prisma/enums';
+import { InvalidDomainOperationException } from 'src/shared/domain/exceptions/domain.exception';
 
 describe('GenerateAnnualPeriodsUseCase', () => {
   let useCase: GenerateAnnualPeriodsUseCase;
@@ -11,6 +12,7 @@ describe('GenerateAnnualPeriodsUseCase', () => {
   const mockPeriodRepository = {
     findByName: jest.fn(),
     findByNames: jest.fn(),
+    findOverlapping: jest.fn(),
     create: jest.fn(),
     createBatch: jest.fn(),
   };
@@ -35,6 +37,7 @@ describe('GenerateAnnualPeriodsUseCase', () => {
 
   it('should generate 12 monthly periods for a year when none exist in a single batch', async () => {
     mockPeriodRepository.findByNames.mockResolvedValue([]);
+    mockPeriodRepository.findOverlapping.mockResolvedValue(null);
     mockPeriodRepository.createBatch.mockImplementation((items) =>
       Promise.resolve(
         items.map(
@@ -88,6 +91,7 @@ describe('GenerateAnnualPeriodsUseCase', () => {
     });
 
     mockPeriodRepository.findByNames.mockResolvedValue([existingEnero]);
+    mockPeriodRepository.findOverlapping.mockResolvedValue(null);
     mockPeriodRepository.createBatch.mockImplementation((items) =>
       Promise.resolve(
         items.map(
@@ -104,7 +108,7 @@ describe('GenerateAnnualPeriodsUseCase', () => {
 
     const result = await useCase.execute({ year: 2026 });
 
-    expect(result).toHaveLength(12);
+    expect(result).toHaveLength(11);
     expect(mockPeriodRepository.findByNames).toHaveBeenCalledTimes(1);
     expect(mockPeriodRepository.createBatch).toHaveBeenCalledTimes(1);
 
@@ -116,9 +120,52 @@ describe('GenerateAnnualPeriodsUseCase', () => {
     expect(createdCallArg.some((p: any) => p.nombre === 'Febrero 2026')).toBe(
       true,
     );
+  });
 
-    const eneroResult = result.find((p) => p.nombre === 'Enero 2026');
-    expect(eneroResult?.periodoId).toBe(10);
-    expect(eneroResult?.estado).toBe(EstadoPeriodo.ABIERTO);
+  it('should throw InvalidDomainOperationException when all 12 periods already exist', async () => {
+    const all12 = Array.from({ length: 12 }, (_, i) => {
+      const monthNames = [
+        'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+        'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
+      ];
+      return new PeriodEntity({
+        periodoId: i + 1,
+        nombre: `${monthNames[i]} 2026`,
+        fechaInicio: new Date(Date.UTC(2026, i, 1)),
+        fechaFin: new Date(Date.UTC(2026, i + 1, 0, 23, 59, 59, 999)),
+        fechaVencimiento: new Date(Date.UTC(2026, i + 1, 15, 23, 59, 59, 999)),
+        estado: EstadoPeriodo.CERRADO,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+    });
+
+    mockPeriodRepository.findByNames.mockResolvedValue(all12);
+
+    await expect(useCase.execute({ year: 2026 })).rejects.toThrow(
+      InvalidDomainOperationException,
+    );
+    expect(mockPeriodRepository.createBatch).not.toHaveBeenCalled();
+  });
+
+  it('should throw InvalidDomainOperationException if a period overlaps with an existing foreign period', async () => {
+    mockPeriodRepository.findByNames.mockResolvedValue([]);
+    mockPeriodRepository.findOverlapping.mockResolvedValueOnce(
+      new PeriodEntity({
+        periodoId: 99,
+        nombre: 'Periodo Especial Verano',
+        fechaInicio: new Date(Date.UTC(2026, 0, 10)),
+        fechaFin: new Date(Date.UTC(2026, 1, 10)),
+        fechaVencimiento: new Date(Date.UTC(2026, 1, 20)),
+        estado: EstadoPeriodo.ABIERTO,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }),
+    );
+
+    await expect(useCase.execute({ year: 2026 })).rejects.toThrow(
+      InvalidDomainOperationException,
+    );
+    expect(mockPeriodRepository.createBatch).not.toHaveBeenCalled();
   });
 });
