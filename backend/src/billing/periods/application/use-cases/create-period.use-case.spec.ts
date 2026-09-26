@@ -17,6 +17,7 @@ describe('CreatePeriodUseCase', () => {
     findAll: jest.fn(),
     findById: jest.fn(),
     findByName: jest.fn(),
+    findOverlapping: jest.fn(),
     update: jest.fn(),
     delete: jest.fn(),
     countRelations: jest.fn(),
@@ -53,6 +54,7 @@ describe('CreatePeriodUseCase', () => {
     };
 
     mockPeriodRepository.findByName.mockResolvedValue(null);
+    mockPeriodRepository.findOverlapping.mockResolvedValue(null);
     mockPeriodRepository.create.mockResolvedValue(
       new PeriodEntity({
         periodoId: 1,
@@ -72,6 +74,7 @@ describe('CreatePeriodUseCase', () => {
     expect(result.nombre).toBe('2026-01');
     expect(result.estado).toBe(EstadoPeriodo.ABIERTO);
     expect(mockPeriodRepository.findByName).toHaveBeenCalledWith('2026-01');
+    expect(mockPeriodRepository.findOverlapping).toHaveBeenCalled();
     expect(mockPeriodRepository.create).toHaveBeenCalled();
   });
 
@@ -92,6 +95,34 @@ describe('CreatePeriodUseCase', () => {
 
     await expect(useCase.execute(dto)).rejects.toThrow(
       EntityAlreadyExistsException,
+    );
+    expect(mockPeriodRepository.create).not.toHaveBeenCalled();
+  });
+
+  it('should throw InvalidDomainOperationException if date range overlaps with existing period', async () => {
+    const dto = {
+      nombre: 'Enero Especial',
+      fechaInicio: '2026-01-15',
+      fechaFin: '2026-02-15',
+      fechaVencimiento: '2026-03-01',
+    };
+
+    mockPeriodRepository.findByName.mockResolvedValue(null);
+    mockPeriodRepository.findOverlapping.mockResolvedValue(
+      new PeriodEntity({
+        periodoId: 2,
+        nombre: 'Enero 2026',
+        fechaInicio: new Date('2026-01-01'),
+        fechaFin: new Date('2026-01-31'),
+        fechaVencimiento: new Date('2026-02-15'),
+      }),
+    );
+
+    await expect(useCase.execute(dto)).rejects.toThrow(
+      InvalidDomainOperationException,
+    );
+    await expect(useCase.execute(dto)).rejects.toThrow(
+      /se solapa con el período existente "Enero 2026"/,
     );
     expect(mockPeriodRepository.create).not.toHaveBeenCalled();
   });

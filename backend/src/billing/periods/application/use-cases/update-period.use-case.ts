@@ -82,6 +82,17 @@ export class UpdatePeriodUseCase {
       );
     }
 
+    const overlapping = await this.periodRepository.findOverlapping(
+      effectiveFechaInicio,
+      effectiveFechaFin,
+      id,
+    );
+    if (overlapping) {
+      throw new InvalidDomainOperationException(
+        `El rango de fechas (${DateUtil.formatForFrontend(effectiveFechaInicio)} al ${DateUtil.formatForFrontend(effectiveFechaFin)}) se solapa con el período existente "${overlapping.nombre}" (${DateUtil.formatForFrontend(overlapping.fechaInicio)} al ${DateUtil.formatForFrontend(overlapping.fechaFin)})`,
+      );
+    }
+
     return this.periodRepository.update(id, {
       ...data,
       nombre: data.nombre !== undefined ? data.nombre.trim() : undefined,

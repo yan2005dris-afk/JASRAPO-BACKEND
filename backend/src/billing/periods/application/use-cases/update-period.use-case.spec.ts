@@ -16,6 +16,7 @@ describe('UpdatePeriodUseCase', () => {
   const mockPeriodRepository = {
     findById: jest.fn(),
     findByName: jest.fn(),
+    findOverlapping: jest.fn(),
     update: jest.fn(),
   };
 
@@ -50,6 +51,7 @@ describe('UpdatePeriodUseCase', () => {
 
   it('should update a period successfully', async () => {
     mockPeriodRepository.findById.mockResolvedValue(existingPeriod);
+    mockPeriodRepository.findOverlapping.mockResolvedValue(null);
     mockPeriodRepository.update.mockResolvedValue(
       new PeriodEntity({
         ...existingPeriod,
@@ -62,6 +64,11 @@ describe('UpdatePeriodUseCase', () => {
     });
 
     expect(result.estado).toBe(EstadoPeriodo.CERRADO);
+    expect(mockPeriodRepository.findOverlapping).toHaveBeenCalledWith(
+      existingPeriod.fechaInicio,
+      existingPeriod.fechaFin,
+      1,
+    );
     expect(mockPeriodRepository.update).toHaveBeenCalled();
   });
 
@@ -96,5 +103,29 @@ describe('UpdatePeriodUseCase', () => {
         fechaFin: '2026-01-31',
       }),
     ).rejects.toThrow(InvalidDomainOperationException);
+  });
+
+  it('should throw InvalidDomainOperationException if updated dates overlap with another period', async () => {
+    mockPeriodRepository.findById.mockResolvedValue(existingPeriod);
+    mockPeriodRepository.findOverlapping.mockResolvedValue(
+      new PeriodEntity({
+        periodoId: 2,
+        nombre: '2026-02',
+        fechaInicio: new Date('2026-02-01'),
+        fechaFin: new Date('2026-02-28'),
+        fechaVencimiento: new Date('2026-03-15'),
+      }),
+    );
+
+    await expect(
+      useCase.execute(1, {
+        fechaFin: '2026-02-10',
+      }),
+    ).rejects.toThrow(InvalidDomainOperationException);
+    await expect(
+      useCase.execute(1, {
+        fechaFin: '2026-02-10',
+      }),
+    ).rejects.toThrow(/se solapa con el período existente "2026-02"/);
   });
 });
