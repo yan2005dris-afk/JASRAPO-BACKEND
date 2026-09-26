@@ -33,6 +33,8 @@ export interface PeriodoRef {
   periodoId: number;
   nombre?: string;
   estado: string;
+  fechaInicio?: Date | null;
+  fechaFin?: Date | null;
 }
 
 export interface TipoActividadRef {

@@ -307,6 +307,8 @@ export class PrismaRouteRepository implements RouteRepository {
         periodoId: true,
         nombre: true,
         estado: true,
+        fechaInicio: true,
+        fechaFin: true,
       },
     });
   }
