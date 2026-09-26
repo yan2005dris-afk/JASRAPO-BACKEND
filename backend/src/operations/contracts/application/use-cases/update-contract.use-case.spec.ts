@@ -101,6 +101,62 @@ describe('UpdateContractUseCase', () => {
     ).rejects.toThrow(EntityNotFoundException);
   });
 
+  it('forwards coordinates when present', async () => {
+    const id = BigInt(1);
+    const updateDto = { latitud: -1.8021, longitud: -80.7554 };
+
+    mockContractRepository.findById.mockResolvedValue(
+      new ContractEntity({ contratoId: id, deletedAt: null }),
+    );
+    mockContractRepository.update.mockResolvedValue(
+      new ContractEntity({ contratoId: id }),
+    );
+
+    await useCase.execute(id, updateDto);
+
+    expect(mockContractRepository.update).toHaveBeenCalledWith(id, {
+      latitud: -1.8021,
+      longitud: -80.7554,
+    });
+  });
+
+  it('clears coordinates when both are explicitly null', async () => {
+    const id = BigInt(1);
+    const updateDto = { latitud: null, longitud: null };
+
+    mockContractRepository.findById.mockResolvedValue(
+      new ContractEntity({ contratoId: id, deletedAt: null }),
+    );
+    mockContractRepository.update.mockResolvedValue(
+      new ContractEntity({ contratoId: id }),
+    );
+
+    await useCase.execute(id, updateDto);
+
+    expect(mockContractRepository.update).toHaveBeenCalledWith(id, {
+      latitud: null,
+      longitud: null,
+    });
+  });
+
+  it('does not send coordinates to the repository when omitted', async () => {
+    const id = BigInt(1);
+    const updateDto = { direccionSuministro: 'Nueva Dir' };
+
+    mockContractRepository.findById.mockResolvedValue(
+      new ContractEntity({ contratoId: id, deletedAt: null }),
+    );
+    mockContractRepository.update.mockResolvedValue(
+      new ContractEntity({ contratoId: id }),
+    );
+
+    await useCase.execute(id, updateDto);
+
+    const sentData = mockContractRepository.update.mock.calls[0][1];
+    expect(sentData).not.toHaveProperty('latitud');
+    expect(sentData).not.toHaveProperty('longitud');
+  });
+
   it('should throw InvalidDomainOperationException when updateData is empty', async () => {
     const id = BigInt(1);
     const updateDto = {};

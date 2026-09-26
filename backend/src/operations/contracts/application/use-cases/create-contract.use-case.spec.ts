@@ -147,6 +147,34 @@ describe('CreateContractUseCase', () => {
     );
   });
 
+  it('forwards coordinates to the command when present', async () => {
+    const dto = {
+      clienteId: '10',
+      categoriaTarifaId: '3',
+      medidorId: '200',
+      numeroGuia: 'GUIA-COORDS',
+      direccionSuministro: 'Av. Principal 123',
+      comunidadId: '2',
+      latitud: -1.8021,
+      longitud: -80.7554,
+    };
+
+    mockContractRepository.createContractWithMeterHistory.mockResolvedValue({
+      contratoId: BigInt(1),
+    });
+
+    await useCase.execute(dto);
+
+    expect(
+      mockContractRepository.createContractWithMeterHistory,
+    ).toHaveBeenCalledWith(
+      expect.objectContaining({
+        latitud: -1.8021,
+        longitud: -80.7554,
+      }),
+    );
+  });
+
   it('should throw NotFoundException when cliente does not exist (S1.4)', async () => {
     const dto = {
       clienteId: '999',

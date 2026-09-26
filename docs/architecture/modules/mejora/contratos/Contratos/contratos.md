@@ -40,6 +40,7 @@ Vínculo entre cliente, medidor, tarifa y servicio.
 | `numeroGuia`, `direccionSuministro` | string | Datos de instalación. |
 | `estadoServicio` | enum | Ciclo operativo del servicio. |
 | `estadoCobranza` | enum | Situación de cobro. |
+| `latitud`, `longitud` | number \| null | Ubicación del predio (WGS84, `latitud` en [-90,90], `longitud` en [-180,180]). Opcionales: se envían ambas o ninguna. En `PATCH`, un valor `null` explícito limpia el par; si se omiten, se conserva el valor almacenado. |
 
 ## Estados
 
@@ -86,13 +87,15 @@ stateDiagram-v2
 **Entrada:**
 
 ```json
-{"clienteId":"10","medidorId":"20","categoriaTarifaId":1,"numeroGuia":"G-0001","direccionSuministro":"Av. Amazonas 123","comunidadId":1}
+{"clienteId":"10","medidorId":"20","categoriaTarifaId":1,"numeroGuia":"G-0001","direccionSuministro":"Av. Amazonas 123","comunidadId":1,"latitud":-1.7966,"longitud":-80.7568}
 ```
+
+`latitud`/`longitud` son opcionales; si se omiten, el contrato se crea con ambas en `NULL`.
 
 **Salida:**
 
 ```json
-{"contratoId":"1","clienteId":"10","medidorId":"20","estadoServicio":"PENDIENTE_PAGO","estadoCobranza":"NO_APLICA"}
+{"contratoId":"1","clienteId":"10","medidorId":"20","estadoServicio":"PENDIENTE_PAGO","estadoCobranza":"NO_APLICA","latitud":-1.7966,"longitud":-80.7568}
 ```
 
 ### Caso: Listar contratos
@@ -124,7 +127,7 @@ stateDiagram-v2
 **Salida:**
 
 ```json
-{"contratoId":"1","clienteId":"10","estadoServicio":"ACTIVO","estadoCobranza":"AL_DIA","historialMedidores":[]}
+{"contratoId":"1","clienteId":"10","estadoServicio":"ACTIVO","estadoCobranza":"AL_DIA","latitud":-1.7966,"longitud":-80.7568,"historialMedidores":[]}
 ```
 
 ### Caso: Actualizar contrato
@@ -136,11 +139,11 @@ stateDiagram-v2
 **Errores relevantes:** `400`; `401`; `403`; `404`; conflicto de estado/relación.  
 **Efectos:** actualización; el reemplazo indicado se ejecuta transaccionalmente según el caso.  
 **Prisma:** `Contratos`, `Medidores`, `HistorialMedidores`.  
-**Entrada:** path `{ "id": "1" }`; body `{ "direccionSuministro": "Calle Nueva 10" }`.  
+**Entrada:** path `{ "id": "1" }`; body `{ "direccionSuministro": "Calle Nueva 10" }`. Para fijar la ubicación: `{ "latitud": -1.7966, "longitud": -80.7568 }`; para limpiarla: `{ "latitud": null, "longitud": null }`. Enviar solo una de las dos coordenadas se rechaza con `400`.  
 **Salida:**
 
 ```json
-{"contratoId":"1","direccionSuministro":"Calle Nueva 10","estadoServicio":"ACTIVO"}
+{"contratoId":"1","direccionSuministro":"Calle Nueva 10","estadoServicio":"ACTIVO","latitud":null,"longitud":null}
 ```
 
 ### Caso: Finalizar vínculo de medidor
@@ -214,6 +217,27 @@ stateDiagram-v2
 **Prisma:** `Contratos`, `Clientes`, `Medidores`, `HistorialMedidores`.  
 **Entrada:** sin body; path `{ "id": "1" }`.  
 **Salida:** no es JSON: `application/pdf`, `Content-Disposition: inline`, `Content-Length` y bytes PDF.
+
+## Reversión manual SC-322
+
+La migración `20260925000000_move_coordinates_to_contratos` movió `latitud`/`longitud` de `medidores` a `contratos` (ver `docs/architecture/SQL_PRISMA_ALIGNMENT.md` para la restricción CHECK `contratos_coordenadas_chk`). Si se necesita revertir manualmente en un entorno donde ya se aplicó:
+
+```sql
+ALTER TABLE "medidores" ADD COLUMN "latitud" DECIMAL(10,8), ADD COLUMN "longitud" DECIMAL(11,8);
+
+UPDATE "medidores" m
+SET "latitud" = c."latitud", "longitud" = c."longitud"
+FROM "historial_medidores" h
+JOIN "contratos" c ON c."contrato_id" = h."contrato_id"
+WHERE h."medidor_id" = m."medidor_id" AND h."fecha_hasta" IS NULL AND h."borrado_en" IS NULL;
+
+ALTER TABLE "contratos" DROP CONSTRAINT IF EXISTS "contratos_coordenadas_chk",
+  DROP COLUMN "latitud", DROP COLUMN "longitud";
+
+DELETE FROM "_prisma_migrations" WHERE "migration_name" = '20260925000000_move_coordinates_to_contratos';
+```
+
+Luego desplegar el código anterior a esta migración. No es recuperable con este script: coordenadas ingresadas en contratos sin vínculo de medidor abierto, y coordenadas originales de medidores sin vínculo (bodega/retirados); esos casos requieren el respaldo previo al despliegue.
 
 ## No documentado o pendiente de confirmar
 

@@ -150,6 +150,8 @@ export class PrismaContractRepository implements ContractRepository {
           creadoPor: data.creadoPor,
           comunidadId: data.comunidadId,
           sectorId: data.sectorId,
+          latitud: data.latitud,
+          longitud: data.longitud,
         },
         include: this.defaultInclude,
       });
@@ -265,6 +267,8 @@ export class PrismaContractRepository implements ContractRepository {
           estadoCobranza,
           ...(data.sectorId !== null ? { sectorId: data.sectorId } : {}),
           ...(data.creadoPor ? { creadoPor: data.creadoPor } : {}),
+          latitud: data.latitud,
+          longitud: data.longitud,
         },
       });
 

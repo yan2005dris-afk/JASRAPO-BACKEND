@@ -180,6 +180,20 @@ export class ContractResponseDto {
   @ApiProperty({ example: 1, description: 'ID de la comunidad' })
   comunidadId: number;
 
+  @ApiPropertyOptional({
+    example: -1.7966,
+    nullable: true,
+    description: 'Latitud del predio (grados decimales, WGS84)',
+  })
+  latitud: number | null;
+
+  @ApiPropertyOptional({
+    example: -80.7568,
+    nullable: true,
+    description: 'Longitud del predio (grados decimales, WGS84)',
+  })
+  longitud: number | null;
+
   @ApiPropertyOptional({ type: ContractCategoriaTarifaDto, nullable: true })
   categoriaTarifa?: ContractCategoriaTarifaDto | null;
 
@@ -209,6 +223,8 @@ export class ContractResponseDto {
     dto.tieneConvenioActivo = entity.tieneConvenioActivo;
     dto.creadoPor = entity.creadoPor ?? null;
     dto.comunidadId = entity.comunidadId;
+    dto.latitud = entity.latitud ?? null;
+    dto.longitud = entity.longitud ?? null;
     dto.categoriaTarifa = entity.categoriaTarifa ?? null;
     dto.cliente = entity.cliente ?? null;
     dto.comunidad = entity.comunidad ?? null;

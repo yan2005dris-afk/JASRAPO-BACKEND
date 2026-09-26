@@ -29,6 +29,8 @@ export interface CreateContractData {
   creadoPor?: string | null;
   comunidadId: number;
   sectorId?: number | null;
+  latitud?: number | null;
+  longitud?: number | null;
 }
 
 export interface CreateContractWithMeterCommand {
@@ -43,6 +45,8 @@ export interface CreateContractWithMeterCommand {
   comunidadId: number;
   sectorId: number | null;
   lecturaInicial: number;
+  latitud?: number | null;
+  longitud?: number | null;
 }
 
 export type UpdateContractData = Partial<CreateContractData> & {
