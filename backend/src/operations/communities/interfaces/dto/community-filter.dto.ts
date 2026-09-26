@@ -25,6 +25,6 @@ export class CommunityFilterDto {
   @Type(() => Number)
   @IsInt()
   @Min(1)
-  @Max(1000)
+  @Max(100)
   limit?: number = 10;
 }
