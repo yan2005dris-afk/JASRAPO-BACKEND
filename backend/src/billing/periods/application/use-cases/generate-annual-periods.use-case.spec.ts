@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { GenerateAnnualPeriodsUseCase } from './generate-annual-periods.use-case';
 import { PeriodRepository } from '../../domain/repositories/period.repository';
 import { PeriodEntity } from '../../domain/entities/period.entity';
@@ -36,13 +37,14 @@ describe('GenerateAnnualPeriodsUseCase', () => {
     mockPeriodRepository.findByNames.mockResolvedValue([]);
     mockPeriodRepository.createBatch.mockImplementation((items) =>
       Promise.resolve(
-        items.map((data: any, idx: number) =>
-          new PeriodEntity({
-            periodoId: idx + 1,
-            ...data,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          }),
+        items.map(
+          (data: any, idx: number) =>
+            new PeriodEntity({
+              periodoId: idx + 1,
+              ...data,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            }),
         ),
       ),
     );
@@ -88,13 +90,14 @@ describe('GenerateAnnualPeriodsUseCase', () => {
     mockPeriodRepository.findByNames.mockResolvedValue([existingEnero]);
     mockPeriodRepository.createBatch.mockImplementation((items) =>
       Promise.resolve(
-        items.map((data: any, idx: number) =>
-          new PeriodEntity({
-            periodoId: idx + 2,
-            ...data,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          }),
+        items.map(
+          (data: any, idx: number) =>
+            new PeriodEntity({
+              periodoId: idx + 2,
+              ...data,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            }),
         ),
       ),
     );
