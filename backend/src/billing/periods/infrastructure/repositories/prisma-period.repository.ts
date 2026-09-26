@@ -94,6 +94,44 @@ export class PrismaPeriodRepository implements PeriodRepository {
     return PeriodMapper.toDomain(record);
   }
 
+  async findByNames(nombres: string[]): Promise<PeriodEntity[]> {
+    if (nombres.length === 0) return [];
+    const trimmed = nombres.map((n) => n.trim());
+    const records = await this.prisma.periodos.findMany({
+      where: { nombre: { in: trimmed } },
+    });
+    return records.map((r) => PeriodMapper.toDomain(r)!);
+  }
+
+  async createBatch(data: CreatePeriodData[]): Promise<PeriodEntity[]> {
+    if (data.length === 0) return [];
+    try {
+      return await this.prisma.$transaction(async (tx) => {
+        const results: PeriodEntity[] = [];
+        for (const item of data) {
+          const prismaInput = PeriodMapper.toPrismaCreateInput(item);
+          const record = await tx.periodos.create({
+            data: prismaInput,
+          });
+          results.push(PeriodMapper.toDomain(record)!);
+        }
+        return results;
+      });
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        throw new EntityAlreadyExistsException(
+          'Periodo',
+          'nombre',
+          'Conflicto de nombre único en lote',
+        );
+      }
+      throw error;
+    }
+  }
+
   async update(id: number, data: UpdatePeriodData): Promise<PeriodEntity> {
     try {
       const prismaInput = PeriodMapper.toPrismaUpdateInput(data);

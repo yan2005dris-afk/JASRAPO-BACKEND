@@ -42,7 +42,7 @@ export class GenerateAnnualPeriodsDto {
     description: 'Estado inicial de los períodos generados',
     enum: EstadoPeriodo,
     required: false,
-    default: EstadoPeriodo.PENDIENTE,
+    default: EstadoPeriodo.CERRADO,
   })
   @IsOptional()
   @IsEnum(EstadoPeriodo)
