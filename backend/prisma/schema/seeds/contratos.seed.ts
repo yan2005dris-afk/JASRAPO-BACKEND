@@ -2,7 +2,13 @@ import type { PrismaClient } from 'src/generated/prisma/client';
 
 export async function seedContratos(prisma: PrismaClient) {
   const contratos: any[] = [];
-  const sectoresOlon = [1, 2, 3, 4]; // IDs de sectores creados en sectores.seed
+  const sectoresPorComunidad: Record<number, number[]> = {
+    1: [1, 2, 3, 4],
+    2: [5, 6],
+    3: [7, 8],
+    4: [9, 10],
+    5: [11, 12],
+  };
   const comunidades = [1, 2, 3, 4, 5]; // Olon, Nuñez, La Entrada, San Jose, Curia
   const categorias = [1, 2, 3];
 
@@ -28,7 +34,7 @@ export async function seedContratos(prisma: PrismaClient) {
       contratoId: 3,
       clienteId: 3,
       comunidadId: 2,
-      sectorId: null,
+      sectorId: 5,
       categoriaTarifaId: 1,
       numeroGuia: 'GUIA-NUNEZ-001',
     },
@@ -61,11 +67,11 @@ export async function seedContratos(prisma: PrismaClient) {
     const comunidadId =
       comunidades[Math.floor(Math.random() * comunidades.length)];
 
-    // Si es Olon (1), asignar sector
-    let sectorId: number | null = null;
-    if (comunidadId === 1) {
-      sectorId = sectoresOlon[Math.floor(Math.random() * sectoresOlon.length)];
-    }
+    const sectoresDisponibles = sectoresPorComunidad[comunidadId] || [];
+    const sectorId =
+      sectoresDisponibles.length > 0
+        ? sectoresDisponibles[Math.floor(Math.random() * sectoresDisponibles.length)]
+        : null;
 
     const categoriaTarifaId =
       categorias[Math.floor(Math.random() * categorias.length)];
