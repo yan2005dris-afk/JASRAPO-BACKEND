@@ -14,6 +14,7 @@ import { CreatePeriodDto } from '../dto/create-period.dto';
 import { UpdatePeriodDto } from '../dto/update-period.dto';
 import { PeriodFilterDto } from '../dto/period-filter.dto';
 import { PeriodResponseDto } from '../dto/period-response.dto';
+import { GenerateAnnualPeriodsDto } from '../dto/generate-annual-periods.dto';
 import {
   ApiTags,
   ApiBearerAuth,
@@ -59,6 +60,31 @@ export class PeriodsController {
   ): Promise<PeriodResponseDto> {
     const result = await this.periodsService.create(createPeriodDto);
     return PeriodResponseDto.fromEntity(result);
+  }
+
+  @ApiOperation({
+    summary: 'Generar ejercicio anual completo',
+    description:
+      'Genera automáticamente los 12 períodos mensuales para el año especificado',
+  })
+  @ApiBody({
+    type: GenerateAnnualPeriodsDto,
+    description: 'Configuración del año',
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Períodos anuales generados exitosamente',
+    type: [PeriodResponseDto],
+  })
+  @ApiResponse({ status: 401, description: 'No autorizado' })
+  @ApiResponse({ status: 403, description: 'Sin permiso periodos:create' })
+  @RequiredPermission('periodos', 'create')
+  @Post('generate-year')
+  async generateAnnualPeriods(
+    @Body() dto: GenerateAnnualPeriodsDto,
+  ): Promise<PeriodResponseDto[]> {
+    const results = await this.periodsService.generateAnnualPeriods(dto);
+    return PeriodResponseDto.fromEntityList(results);
   }
 
   @ApiOperation({

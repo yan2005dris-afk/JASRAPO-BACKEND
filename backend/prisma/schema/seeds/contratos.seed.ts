@@ -48,6 +48,7 @@ export async function seedContratos(prisma: PrismaClient) {
         direccionSuministro: `Direccion contrato ${c.contratoId}`,
         estadoServicio: 'ACTIVO',
         estadoCobranza: 'AL_DIA',
+        fechaInicio: new Date('2026-01-05T00:00:00.000Z'),
       },
     });
     contratos.push(created);
@@ -80,6 +81,7 @@ export async function seedContratos(prisma: PrismaClient) {
         direccionSuministro: `Direccion contrato ${nextContratoId}`,
         estadoServicio: 'ACTIVO',
         estadoCobranza: 'AL_DIA',
+        fechaInicio: new Date('2026-01-15T00:00:00.000Z'),
       },
     });
     contratos.push(created);
