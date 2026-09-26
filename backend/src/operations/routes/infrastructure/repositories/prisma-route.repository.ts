@@ -631,34 +631,75 @@ export class PrismaRouteRepository implements RouteRepository {
   ): Promise<void> {
     if (!contratoIds || contratoIds.length === 0) return;
 
-    const contratos = await this.prisma.contratos.findMany({
-      where: {
-        contratoId: { in: contratoIds.map((id) => BigInt(id)) },
-        deletedAt: null,
-      },
-      include: {
-        historialMedidores: {
-          where: { fechaHasta: null },
-          select: { medidorId: true },
-          take: 1,
-        },
-      },
-      orderBy: { contratoId: 'asc' },
-    });
-
-    const ordenesData = contratos.map((c, index) => ({
-      rutaId,
-      contratoId: c.contratoId,
-      medidorId: c.historialMedidores[0]?.medidorId ?? null,
-      ordenVisita: index + 1,
-      estado: 'PENDIENTE' as const,
-    }));
-
-    if (ordenesData.length > 0) {
-      await this.prisma.ordenesTrabajo.createMany({
-        data: ordenesData,
+    await this.prisma.$transaction(async (tx) => {
+      const route = await tx.rutas.findUnique({
+        where: { rutaId },
+        include: { tipoActividad: true },
       });
-    }
+      if (!route || route.deletedAt)
+        throw new EntityNotFoundException('Ruta', rutaId);
+      const activity = route.tipoActividad.codigo;
+      const lifecycle = activity === 'INSPECCION' || activity === 'INSTALACION';
+      const ids = [...new Set(contratoIds)].sort((a, b) => a - b);
+      for (const [index, id] of ids.entries()) {
+        const contratoId = BigInt(id);
+        await tx.$queryRaw`SELECT contrato_id FROM contratos WHERE contrato_id = ${contratoId} FOR UPDATE`;
+        const contract = await tx.contratos.findUnique({
+          where: { contratoId },
+          include: {
+            historialMedidores: {
+              where: { fechaHasta: null, deletedAt: null },
+              take: 1,
+            },
+          },
+        });
+        if (!contract || contract.deletedAt)
+          throw new EntityNotFoundException('Contrato', contratoId);
+        if (lifecycle) {
+          const expected =
+            activity === 'INSPECCION'
+              ? 'PENDIENTE_INSPECCION'
+              : 'PENDIENTE_INSTALACION';
+          if (
+            contract.estadoServicio !== expected ||
+            route.estado !== 'PENDIENTE' ||
+            route.comunidadId !== contract.comunidadId
+          ) {
+            throw new InvalidDomainOperationException(
+              'El contrato y la ruta no permiten asignar esta actividad',
+            );
+          }
+          const existing = await tx.ordenesTrabajo.findFirst({
+            where: {
+              contratoId,
+              deletedAt: null,
+              estado: { notIn: ['CANCELADA', 'FALLIDA'] },
+              ruta: { deletedAt: null, tipoActividad: { codigo: activity } },
+            },
+          });
+          if (existing) {
+            if (existing.estado !== 'PENDIENTE')
+              throw new InvalidDomainOperationException(
+                'La orden ya fue iniciada',
+              );
+            await tx.ordenesTrabajo.update({
+              where: { ordenTrabajoId: existing.ordenTrabajoId },
+              data: { rutaId, ordenVisita: index + 1 },
+            });
+            continue;
+          }
+        }
+        await tx.ordenesTrabajo.create({
+          data: {
+            rutaId,
+            contratoId,
+            medidorId: contract.historialMedidores[0]?.medidorId ?? null,
+            ordenVisita: index + 1,
+            estado: 'PENDIENTE',
+          },
+        });
+      }
+    });
   }
 
   async findContratosByIds(contratoIds: number[]): Promise<ContratoRef[]> {

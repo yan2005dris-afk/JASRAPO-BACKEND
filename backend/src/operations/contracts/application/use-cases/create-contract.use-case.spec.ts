@@ -50,7 +50,7 @@ describe('CreateContractUseCase', () => {
 
     mockContractRepository.createContractWithMeterHistory.mockResolvedValue({
       contratoId: BigInt(1),
-      estadoServicio: 'PENDIENTE_PAGO',
+      estadoServicio: 'PENDIENTE_INSPECCION',
       estadoCobranza: 'NO_APLICA',
     });
 
@@ -66,14 +66,14 @@ describe('CreateContractUseCase', () => {
       sectorId: null,
       numeroGuia: 'GUIA-001',
       direccionSuministro: 'Av. Principal 123',
-      estadoServicio: 'PENDIENTE_PAGO',
+      estadoServicio: 'PENDIENTE_INSPECCION',
       estadoCobranza: 'NO_APLICA',
       creadoPor: undefined,
       lecturaInicial: 0,
     });
     expect(result).toEqual({
       contratoId: BigInt(1),
-      estadoServicio: 'PENDIENTE_PAGO',
+      estadoServicio: 'PENDIENTE_INSPECCION',
       estadoCobranza: 'NO_APLICA',
     });
   });
@@ -110,8 +110,8 @@ describe('CreateContractUseCase', () => {
       sectorId: 10,
       numeroGuia: 'GUIA-002',
       direccionSuministro: 'Calle Secundaria 456',
-      estadoServicio: 'ACTIVO',
-      estadoCobranza: 'AL_DIA',
+      estadoServicio: 'PENDIENTE_INSPECCION',
+      estadoCobranza: 'NO_APLICA',
       creadoPor: 'admin',
       lecturaInicial: 500,
     });
@@ -121,7 +121,7 @@ describe('CreateContractUseCase', () => {
     });
   });
 
-  it('uses explicit separated states without dual-writing a legacy state', async () => {
+  it('cannot bypass inspection through explicit creation states', async () => {
     const dto = {
       clienteId: '20',
       categoriaTarifaId: '5',
@@ -141,8 +141,8 @@ describe('CreateContractUseCase', () => {
       mockContractRepository.createContractWithMeterHistory,
     ).toHaveBeenCalledWith(
       expect.objectContaining({
-        estadoServicio: 'ACTIVO',
-        estadoCobranza: 'AL_DIA',
+        estadoServicio: 'PENDIENTE_INSPECCION',
+        estadoCobranza: 'NO_APLICA',
       }),
     );
   });

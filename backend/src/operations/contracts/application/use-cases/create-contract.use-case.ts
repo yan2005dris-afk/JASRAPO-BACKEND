@@ -10,8 +10,7 @@ export class CreateContractUseCase {
   constructor(private readonly contractRepository: ContractRepository) {}
 
   async execute(dto: CrearContratoMedidorDto): Promise<ContractEntity> {
-    const estadoServicio =
-      dto.estadoServicio ?? EstadoServicioContrato.PENDIENTE_PAGO;
+    const estadoServicio = EstadoServicioContrato.PENDIENTE_INSPECCION;
     const estadoCobranza = ContractState.normalizeCollectionStatus(
       dto.estadoCobranza,
       estadoServicio,

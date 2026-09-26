@@ -5,7 +5,6 @@ jest.mock('../../../../../infrastructure/audit/audit.service', () => ({
 import { PagoValidadoHandler } from './pago-validado.handler';
 import type { SRIEmissionDispatcherService } from '../../../../../sri/emision/application/services/sri-emission-dispatcher.service';
 import { PaymentDetailEntity } from '../../domain/entities/payment-detail.entity';
-import { EstadoServicioContrato } from 'src/shared/enums';
 
 const mockLogger = {
   log: jest.fn(),
@@ -25,6 +24,7 @@ describe('PagoValidadoHandler (T-006, post-refactor RF-002)', () => {
       findPaymentDetailsByPagoId: jest.fn(),
       findPaymentDetailsByComprobanteId: jest.fn(),
       findComprobanteById: jest.fn(),
+      settlePaidComprobante: jest.fn(),
     };
 
     sriDispatcher = {
@@ -85,6 +85,7 @@ describe('PagoValidadoHandler (T-006, post-refactor RF-002)', () => {
     await handler.procesarPagoValidado(BigInt(1));
 
     expect(sriDispatcher.tryEmit).not.toHaveBeenCalled();
+    expect(paymentRepository.settlePaidComprobante).not.toHaveBeenCalled();
   });
 
   it('should NOT delegate when comprobante is missing', async () => {
@@ -99,6 +100,7 @@ describe('PagoValidadoHandler (T-006, post-refactor RF-002)', () => {
     await handler.procesarPagoValidado(BigInt(1));
 
     expect(sriDispatcher.tryEmit).not.toHaveBeenCalled();
+    expect(paymentRepository.settlePaidComprobante).not.toHaveBeenCalled();
   });
 
   it('should handle multiple comprobantes across detalle_pago (W-6)', async () => {
@@ -131,6 +133,7 @@ describe('PagoValidadoHandler (T-006, post-refactor RF-002)', () => {
     await handler.procesarPagoValidado(BigInt(1));
 
     expect(sriDispatcher.tryEmit).not.toHaveBeenCalled();
+    expect(paymentRepository.settlePaidComprobante).not.toHaveBeenCalled();
   });
 
   it('should not include detalle_pago without comprobanteId', async () => {
@@ -153,105 +156,43 @@ describe('PagoValidadoHandler (T-006, post-refactor RF-002)', () => {
     expect(sriDispatcher.tryEmit).toHaveBeenCalledWith(BigInt(42));
   });
 
-  it('should transition contract to PENDIENTE_INSTALACION when prefactura has installation rubro', async () => {
-    const mockTx = {
-      prefacturas: {
-        findMany: jest.fn().mockResolvedValue([
-          {
-            prefacturaId: BigInt(10),
-            contratoId: BigInt(99),
-            prefacturaDetalle: [{ prefacturaDetalleId: BigInt(1) }],
-          },
-        ]),
-        updateMany: jest.fn().mockResolvedValue({ count: 1 }),
-      },
-      contratos: {
-        updateMany: jest.fn().mockResolvedValue({ count: 1 }),
-      },
-    };
-
-    paymentRepository.executeTransaction = jest
-      .fn()
-      .mockImplementation(async (cb) => {
-        return cb(mockTx);
-      });
-
+  it('settles before emission and handles decimal payments exactly', async () => {
     paymentRepository.findPaymentDetailsByPagoId.mockResolvedValue([
-      createDetallePago({ comprobanteId: BigInt(42), montoAbonado: 100 }),
+      createDetallePago(),
     ]);
     paymentRepository.findPaymentDetailsByComprobanteId.mockResolvedValue([
-      createDetallePago({ comprobanteId: BigInt(42), montoAbonado: 100 }),
+      createDetallePago({ montoAbonado: 0.1 }),
+      createDetallePago({ montoAbonado: 0.7 }),
     ]);
     paymentRepository.findComprobanteById.mockResolvedValue({
-      id: BigInt(42),
-      importeTotal: 100,
+      importeTotal: 0.8,
     });
-    sriDispatcher.tryEmit.mockResolvedValue('EMITTED');
-
-    await handler.procesarPagoValidado(BigInt(1));
-
-    expect(mockTx.prefacturas.updateMany).toHaveBeenCalledWith({
-      where: { comprobanteId: BigInt(42), deletedAt: null },
-      data: {
-        estado: 'PAGADA',
-        saldoActual: 0,
-        saldoVencido: 0,
-        abono: 100,
-      },
-    });
-    expect(mockTx.contratos.updateMany).toHaveBeenCalledWith({
-      where: {
-        contratoId: { in: [BigInt(99)] },
-        estadoServicio: EstadoServicioContrato.PENDIENTE_PAGO,
-        deletedAt: null,
-      },
-      data: {
-        estadoServicio: EstadoServicioContrato.PENDIENTE_INSTALACION,
-        estadoCobranza: 'NO_APLICA',
-      },
-    });
+    await handler.procesarPagoValidado(1n);
+    expect(paymentRepository.settlePaidComprobante).toHaveBeenCalledWith(
+      42n,
+      0.8,
+    );
+    expect(
+      paymentRepository.settlePaidComprobante.mock.invocationCallOrder[0],
+    ).toBeLessThan(sriDispatcher.tryEmit.mock.invocationCallOrder[0]);
   });
 
-  it('should be idempotent when called twice for the same payment/comprobante', async () => {
-    const mockTx = {
-      prefacturas: {
-        findMany: jest.fn().mockResolvedValue([
-          {
-            prefacturaId: BigInt(10),
-            contratoId: BigInt(99),
-            prefacturaDetalle: [{ prefacturaDetalleId: BigInt(1) }],
-          },
-        ]),
-        updateMany: jest.fn().mockResolvedValue({ count: 1 }),
-      },
-      contratos: {
-        updateMany: jest.fn().mockResolvedValue({ count: 1 }),
-      },
-    };
-
-    paymentRepository.executeTransaction = jest
-      .fn()
-      .mockImplementation(async (cb) => cb(mockTx));
-
+  it('does not emit if settling the installation fails', async () => {
     paymentRepository.findPaymentDetailsByPagoId.mockResolvedValue([
-      createDetallePago({ comprobanteId: BigInt(42), montoAbonado: 100 }),
+      createDetallePago(),
     ]);
     paymentRepository.findPaymentDetailsByComprobanteId.mockResolvedValue([
-      createDetallePago({ comprobanteId: BigInt(42), montoAbonado: 100 }),
+      createDetallePago(),
     ]);
     paymentRepository.findComprobanteById.mockResolvedValue({
-      id: BigInt(42),
       importeTotal: 100,
     });
-    sriDispatcher.tryEmit.mockResolvedValue('EMITTED');
-
-    // First call
-    await handler.procesarPagoValidado(BigInt(1));
-    // Second call (retry)
-    await handler.procesarPagoValidado(BigInt(1));
-
-    expect(sriDispatcher.tryEmit).toHaveBeenCalledTimes(2);
-    expect(mockTx.prefacturas.updateMany).toHaveBeenCalledTimes(2);
-    expect(mockTx.contratos.updateMany).toHaveBeenCalledTimes(2);
+    paymentRepository.settlePaidComprobante.mockRejectedValue(
+      new Error('Installation unavailable'),
+    );
+    await expect(handler.procesarPagoValidado(1n)).rejects.toThrow(
+      'Installation unavailable',
+    );
+    expect(sriDispatcher.tryEmit).not.toHaveBeenCalled();
   });
 });

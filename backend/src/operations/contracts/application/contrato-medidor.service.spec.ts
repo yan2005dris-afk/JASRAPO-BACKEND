@@ -14,15 +14,6 @@ import { GetResponsibilityAgreementPdfDataUseCase } from './use-cases/get-respon
 import { GeneratePdfUseCase } from 'src/infrastructure/pdf/use-cases/generate-pdf.use-case';
 import { RouteRepository } from '../../routes/domain/repositories/route.repository';
 import { OrdenTrabajoRepository } from '../../routes/domain/repositories/orden-trabajo.repository';
-import {
-  EstadoOrdenTrabajo,
-  EstadoRuta,
-  EstadoServicioContrato,
-  TipoActividadCodes,
-} from 'src/shared/enums';
-import { ContractEntity } from '../domain/entities/contract.entity';
-import { RouteEntity } from '../../routes/domain/entities/route.entity';
-
 describe('ContratoMedidorService', () => {
   let service: ContratoMedidorService;
 
@@ -41,6 +32,7 @@ describe('ContratoMedidorService', () => {
   };
   const mockOrdenTrabajoRepository = {
     create: jest.fn(),
+    assignInstallationRoute: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -170,126 +162,25 @@ describe('ContratoMedidorService', () => {
     });
   });
 
-  describe('Asignar un contrato a una ruta de instalación', () => {
-    const contratoId = 10n;
-    const contrato = new ContractEntity({
-      contratoId,
-      estadoServicio: EstadoServicioContrato.PENDIENTE_INSTALACION,
-      estadoCobranza: 'NO_APLICA',
-      numeroGuia: 'GUIA-010',
-      comunidadId: 3,
-      historialMedidores: null,
-    });
-    const existingRoute = new RouteEntity({
-      rutaId: 20n,
-      nombre: 'Instalaciones existentes',
-      tipoRuta: TipoActividadCodes.INSTALACION,
-      comunidadId: 3,
-      periodoId: null,
-      estado: EstadoRuta.PENDIENTE,
-      fechaPlanificada: null,
-      fechaInicio: null,
-      fechaFin: null,
-    });
-
-    beforeEach(() => {
-      mockFindOneUseCase.execute.mockResolvedValue(contrato);
-      mockOrdenTrabajoRepository.create.mockResolvedValue({});
-    });
-
-    it('asigna el contrato y crea una orden de trabajo pendiente para una ruta válida', async () => {
-      // Given: existe un contrato pendiente y una ruta de instalación pendiente.
-      mockRouteRepository.findById.mockResolvedValue(existingRoute);
-
-      // When: se asigna el contrato a la ruta.
-      const result = await service.assignInstallationRoute(contratoId, {
-        routeId: 20,
-      });
-
-      // Then: se conserva la ruta y la orden toma la actividad desde ella.
-      expect(result).toBe(existingRoute);
-      expect(mockOrdenTrabajoRepository.create).toHaveBeenCalledWith({
-        rutaId: 20n,
-        contratoId,
-        medidorId: null,
-        estado: EstadoOrdenTrabajo.PENDIENTE,
-      });
+  describe('assignInstallationRoute', () => {
+    it('returns the route of the existing installation order', async () => {
+      mockOrdenTrabajoRepository.assignInstallationRoute.mockResolvedValue(20n);
+      mockRouteRepository.findById.mockResolvedValue({ rutaId: 20n });
       expect(
-        mockOrdenTrabajoRepository.create.mock.calls[0][0],
-      ).not.toHaveProperty('tipoActividad');
-    });
-
-    it('rechaza un contrato cuyo ciclo de servicio no está pendiente de instalación', async () => {
-      // Given: el contrato ya no está pendiente de instalación.
-      mockFindOneUseCase.execute.mockResolvedValue(
-        new ContractEntity({
-          ...contrato,
-          estadoServicio: EstadoServicioContrato.ACTIVO,
-        }),
-      );
-
-      // When: se intenta asignar el contrato a una ruta.
-      // Then: la operación falla antes de consultar o modificar la ruta.
-      await expect(
-        service.assignInstallationRoute(contratoId, { routeId: 20 }),
-      ).rejects.toThrow('PENDIENTE_INSTALACION');
-      expect(mockRouteRepository.findById).not.toHaveBeenCalled();
-    });
-
-    it('rechaza una ruta existente cuya actividad no es instalación', async () => {
-      // Given: la ruta existente pertenece a otra actividad.
-      mockRouteRepository.findById.mockResolvedValue(
-        new RouteEntity({
-          ...existingRoute,
-          tipoRuta: TipoActividadCodes.LECTURA,
-        }),
-      );
-
-      // When / Then: la asignación es rechazada sin crear una orden.
-      await expect(
-        service.assignInstallationRoute(contratoId, { routeId: 20 }),
-      ).rejects.toThrow('tipo INSTALACION');
+        await service.assignInstallationRoute(1n, { routeId: 20 }),
+      ).toEqual({ rutaId: 20n });
+      expect(
+        mockOrdenTrabajoRepository.assignInstallationRoute,
+      ).toHaveBeenCalledWith(1n, 20n, undefined);
       expect(mockOrdenTrabajoRepository.create).not.toHaveBeenCalled();
     });
-
-    it('crea una nueva ruta pendiente cuando no se proporciona routeId', async () => {
-      // Given: el contrato está pendiente y no se selecciona una ruta existente.
-      mockRouteRepository.create.mockResolvedValue(existingRoute);
-
-      // When: se asigna el contrato indicando una fecha planificada.
-      const result = await service.assignInstallationRoute(contratoId, {
-        fechaPlanificada: '2026-08-20',
-      });
-
-      // Then: se crea una ruta de instalación sin operario y se genera su orden.
-      expect(result).toBe(existingRoute);
-      expect(mockRouteRepository.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          nombre: 'Instalaciones GUIA-010',
-          tipoRuta: TipoActividadCodes.INSTALACION,
-          estado: EstadoRuta.PENDIENTE,
-          operarioId: null,
-        }),
+    it('propagates invalid assignments', async () => {
+      mockOrdenTrabajoRepository.assignInstallationRoute.mockRejectedValue(
+        new Error('Invalid route'),
       );
-      expect(mockOrdenTrabajoRepository.create).toHaveBeenCalledWith(
-        expect.objectContaining({ rutaId: existingRoute.rutaId }),
-      );
-    });
-
-    it('rechaza una ruta de instalación que no está pendiente', async () => {
-      // Given: la ruta existente está en progreso.
-      mockRouteRepository.findById.mockResolvedValue(
-        new RouteEntity({
-          ...existingRoute,
-          estado: EstadoRuta.EN_PROGRESO,
-        }),
-      );
-
-      // When / Then: no se puede agregar el contrato ni crear una orden.
       await expect(
-        service.assignInstallationRoute(contratoId, { routeId: 20 }),
-      ).rejects.toThrow('estado PENDIENTE');
-      expect(mockOrdenTrabajoRepository.create).not.toHaveBeenCalled();
+        service.assignInstallationRoute(1n, { routeId: 20 }),
+      ).rejects.toThrow('Invalid route');
     });
   });
 });

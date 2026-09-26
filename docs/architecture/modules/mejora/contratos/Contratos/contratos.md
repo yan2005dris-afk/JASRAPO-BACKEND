@@ -28,7 +28,7 @@ Vínculo entre cliente, medidor, tarifa y servicio.
   "contratoId": "1",
   "clienteId": "10",
   "medidorId": "20",
-  "estadoServicio": "PENDIENTE_PAGO",
+  "estadoServicio": "PENDIENTE_INSPECCION",
   "estadoCobranza": "NO_APLICA"
 }
 ```
@@ -45,14 +45,18 @@ Vínculo entre cliente, medidor, tarifa y servicio.
 
 | Dimensión | Valores confirmados | Significado |
 |---|---|---|
-| Servicio | `PENDIENTE_PAGO`, `PENDIENTE_INSTALACION`, `ACTIVO`, `SUSPENDIDO`, `RETIRADO` | Pago, instalación, operación, suspensión y retiro. |
+| Servicio | `PENDIENTE_INSPECCION`, `RECHAZADO`, `PENDIENTE_PAGO`, `PENDIENTE_INSTALACION`, `ACTIVO`, `SUSPENDIDO`, `RETIRADO` | Pago, instalación, operación, suspensión y retiro. |
 | Cobranza | `NO_APLICA`, `AL_DIA`, `EN_MORA` | Sin cobro, corriente o vencido. |
 
 ## Efectos y transacciones
 
 Al completar una orden de instalación, el contrato pasa de `PENDIENTE_INSTALACION` a `ACTIVO` / `AL_DIA` y su medidor de `PENDIENTE` a `INSTALADO`, con `fechaInstalacion` tomada del servidor. La orden debe identificar un medidor no eliminado y con vínculo vigente al mismo contrato. Las tres escrituras se realizan en la misma transacción: si falla cualquiera, se revierten todas. Repetir el cierre de una orden ya completada no cambia la fecha del medidor; una reconexión conserva la fecha de instalación original. Esta regla aplica tanto al cierre administrativo como al del operador.
 
-La creación valida relaciones y puede crear contrato, historial de medidor, prefactura y detalle. El reemplazo en `PATCH` y la finalización escriben vínculo/historial según el caso. La asignación crea o reutiliza una ruta y crea una orden; el código no confirma una transacción única para ambas escrituras. DELETE usa soft delete. Los DTO y la generación de PDF son transformaciones/serialización puras.
+La creación guarda contrato, reserva del medidor, historial y orden de inspección en una sola transacción, sin deuda. La inspección COMPLETADA genera la prefactura de instalación y cambia el contrato a PENDIENTE_PAGO. CANCELADA lo deja RECHAZADO, cierra el historial y devuelve el medidor a BODEGA.
+
+El pago total pasa a PENDIENTE_INSTALACION y genera una sola orden de instalación. Las rutas automáticas quedan pendientes, sin operario, con el período abierto disponible. La asignación individual o por lotes reutiliza la orden existente. Los bloqueos de contrato y orden evitan efectos duplicados ante reintentos concurrentes.
+
+PATCH permite editar los datos contractuales, pero no adelantar las etapas de inspección, pago e instalación. DELETE usa soft delete. Los PDF son proyecciones de lectura.
 
 | Tabla Prisma | Uso |
 |---|---|
@@ -67,7 +71,9 @@ La creación valida relaciones y puede crear contrato, historial de medidor, pre
 
 ```mermaid
 stateDiagram-v2
-  [*] --> PENDIENTE_PAGO
+  [*] --> PENDIENTE_INSPECCION
+  PENDIENTE_INSPECCION --> PENDIENTE_PAGO: inspección aprobada
+  PENDIENTE_INSPECCION --> RECHAZADO: inspección cancelada
   PENDIENTE_PAGO --> PENDIENTE_INSTALACION: pago de instalación
   PENDIENTE_INSTALACION --> ACTIVO: confirmación operativa
   ACTIVO --> SUSPENDIDO
@@ -83,7 +89,7 @@ stateDiagram-v2
 **Permiso:** `contracts:create`.  
 **Cadena:** `ContratoMedidorController.crear()` → `ContratoMedidorService.crearContrato()` → `CreateContractUseCase.execute()` → repositorios.  
 **Errores relevantes:** `400` datos/relaciones inválidas; `401`; `403`; `404`; medidor no disponible.  
-**Efectos:** crea contrato, historial y prefactura en las operaciones confirmadas por el caso.  
+**Efectos:** crea contrato, historial y orden de inspección; reserva el medidor sin generar prefactura.
 **Prisma:** `Contratos`, `HistorialMedidores`, `Medidores`, `Prefacturas`, `PrefacturaDetalle`, `Rubros`, `Clientes`, `CategoriaTarifa`.  
 **Entrada:**
 
@@ -94,7 +100,7 @@ stateDiagram-v2
 **Salida:**
 
 ```json
-{"contratoId":"1","clienteId":"10","medidorId":"20","estadoServicio":"PENDIENTE_PAGO","estadoCobranza":"NO_APLICA"}
+{"contratoId":"1","clienteId":"10","medidorId":"20","estadoServicio":"PENDIENTE_INSPECCION","estadoCobranza":"NO_APLICA"}
 ```
 
 ### Caso: Listar contratos
@@ -168,7 +174,7 @@ stateDiagram-v2
 **Permiso:** `contracts:update`.  
 **Cadena:** `ContratoMedidorController.assignInstallationRoute()` → `ContratoMedidorService.assignInstallationRoute()` → repositorios de rutas/órdenes.  
 **Errores relevantes:** `400`; `401`; `403`; `404`; ruta destino inválida.  
-**Efectos:** crea/reutiliza `Rutas` y crea `OrdenTrabajo`; no se confirma atomicidad de ambas escrituras.  
+**Efectos:** reutiliza o reasigna la orden de instalación existente en una transacción.
 **Prisma:** `Rutas`, `OrdenTrabajo`, `Contratos`, `Medidores`.  
 **Entrada:** path `{ "id": "1" }`; body `{ "routeId": "42" }` o DTO sin `routeId` según el código.  
 **Salida:**
@@ -216,9 +222,3 @@ stateDiagram-v2
 **Prisma:** `Contratos`, `Clientes`, `Medidores`, `HistorialMedidores`.  
 **Entrada:** sin body; path `{ "id": "1" }`.  
 **Salida:** no es JSON: `application/pdf`, `Content-Disposition: inline`, `Content-Length` y bytes PDF.
-
-## No documentado o pendiente de confirmar
-
-- Transición automática a `ACTIVO` al completar instalación.
-- Parámetros exactos de los DTO de finalización/asignación si cambian.
-- Sincronización del campo legacy `estado`.

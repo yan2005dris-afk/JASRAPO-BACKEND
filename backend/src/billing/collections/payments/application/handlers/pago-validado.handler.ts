@@ -3,10 +3,7 @@ import { PaymentRepository } from '../../domain/repositories/payment.repository'
 import { SRIEmissionDispatcherService } from '../../../../../sri/emision/application/services/sri-emission-dispatcher.service';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
-import {
-  EstadoCobranzaContrato,
-  EstadoServicioContrato,
-} from 'src/shared/enums';
+import { Decimal } from 'decimal.js';
 
 @LogContext()
 @Injectable()
@@ -46,73 +43,23 @@ export class PagoValidadoHandler {
         );
 
       const totalAbonado = todosLosDetalles.reduce(
-        (acc, d) => acc + Number(d.montoAbonado),
-        0,
+        (acc, d) => acc.plus(String(d.montoAbonado)),
+        new Decimal(0),
       );
 
       const totalComprobante = Number(comprobante.importeTotal);
 
-      if (totalAbonado < totalComprobante) {
+      if (totalAbonado.lessThan(totalComprobante)) {
         this.logger.log(
-          `Comprobante ${comprobanteId}: pago parcial ($${totalAbonado}/$${totalComprobante}), saltando emisión`,
+          `Comprobante ${comprobanteId}: pago parcial ($${totalAbonado.toString()}/$${totalComprobante}), saltando emisión`,
         );
         continue;
       }
 
-      // Marcar prefactura vinculada como PAGADA y actualizar contratos de instalación (mes = 0)
-      await this.paymentRepository.executeTransaction?.(async (tx: any) => {
-        const prismaClient = tx ?? (this.paymentRepository as any).prisma;
-
-        const prefacturas = await prismaClient.prefacturas.findMany({
-          where: { comprobanteId, deletedAt: null },
-          select: {
-            prefacturaId: true,
-            contratoId: true,
-            prefacturaDetalle: {
-              where: {
-                deletedAt: null,
-                rubro: {
-                  codigoSistemaRubro: 'INSTALACION',
-                  deletedAt: null,
-                },
-              },
-              select: { prefacturaDetalleId: true },
-            },
-          },
-        });
-
-        await prismaClient.prefacturas.updateMany({
-          where: { comprobanteId, deletedAt: null },
-          data: {
-            estado: 'PAGADA',
-            saldoActual: 0,
-            saldoVencido: 0,
-            abono: totalAbonado,
-          },
-        });
-
-        const contratosInstalacionIds = prefacturas
-          .filter(
-            (p: any) =>
-              Array.isArray(p.prefacturaDetalle) &&
-              p.prefacturaDetalle.length > 0,
-          )
-          .map((p: any) => p.contratoId);
-
-        if (contratosInstalacionIds.length > 0) {
-          await prismaClient.contratos.updateMany({
-            where: {
-              contratoId: { in: contratosInstalacionIds },
-              estadoServicio: EstadoServicioContrato.PENDIENTE_PAGO,
-              deletedAt: null,
-            },
-            data: {
-              estadoServicio: EstadoServicioContrato.PENDIENTE_INSTALACION,
-              estadoCobranza: EstadoCobranzaContrato.NO_APLICA,
-            },
-          });
-        }
-      });
+      await this.paymentRepository.settlePaidComprobante(
+        comprobanteId,
+        totalAbonado.toNumber(),
+      );
 
       const outcome = await this.sriDispatcher.tryEmit(comprobanteId);
       this.logger.log(

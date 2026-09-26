@@ -116,4 +116,37 @@ describe('UpdateContractUseCase', () => {
       InvalidDomainOperationException,
     );
   });
+  it.each([
+    'PENDIENTE_INSPECCION',
+    'PENDIENTE_PAGO',
+    'PENDIENTE_INSTALACION',
+    'RECHAZADO',
+  ] as const)(
+    'cannot activate a contract in %s using a manual edit',
+    async (estadoServicio) => {
+      mockContractRepository.findById.mockResolvedValue(
+        new ContractEntity({ contratoId: 1n, estadoServicio }),
+      );
+      await expect(
+        useCase.execute(1n, { estadoServicio: 'ACTIVO' }),
+      ).rejects.toThrow(InvalidDomainOperationException);
+      expect(mockContractRepository.update).not.toHaveBeenCalled();
+    },
+  );
+  it('does not rewrite lifecycle states when editing contract details', async () => {
+    mockContractRepository.findById.mockResolvedValue(
+      new ContractEntity({
+        contratoId: 1n,
+        estadoServicio: 'PENDIENTE_INSPECCION',
+        estadoCobranza: 'NO_APLICA',
+      }),
+    );
+    await useCase.execute(1n, {
+      estadoServicio: 'PENDIENTE_INSPECCION',
+      direccionSuministro: 'New address',
+    });
+    expect(mockContractRepository.update).toHaveBeenCalledWith(1n, {
+      direccionSuministro: 'New address',
+    });
+  });
 });

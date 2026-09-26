@@ -5,7 +5,7 @@ describe('PrismaOrdenTrabajoRepository.updateOperatorWorkOrder', () => {
     const updated = {
       ordenTrabajoId: 1n,
       rutaId: 2n,
-      ruta: { tipoActividad: { codigo: 'INSPECCION' } },
+      ruta: { tipoActividad: { codigo: 'MANUAL' } },
       contratoId: 3n,
       medidorId: 4n,
       estado: 'COMPLETADA',
@@ -20,13 +20,14 @@ describe('PrismaOrdenTrabajoRepository.updateOperatorWorkOrder', () => {
     };
     const update = jest.fn().mockResolvedValue(updated);
     const tx = {
+      $queryRaw: jest.fn(),
       ordenesTrabajo: {
         findUnique: jest.fn().mockResolvedValue({
           ordenTrabajoId: 1n,
           contratoId: 3n,
           estado: 'PENDIENTE',
           completadoEn: null,
-          ruta: { tipoActividad: { codigo: 'INSPECCION' } },
+          ruta: { tipoActividad: { codigo: 'MANUAL' } },
         }),
         update,
       },
@@ -45,7 +46,7 @@ describe('PrismaOrdenTrabajoRepository.updateOperatorWorkOrder', () => {
       evidenciaFotoUrl: 'readings/evidence.jpg',
     });
 
-    expect(result.tipoActividad).toBe('INSPECCION');
+    expect(result.tipoActividad).toBe('MANUAL');
     expect(update).toHaveBeenCalledWith(
       expect.objectContaining({
         include: {
@@ -77,6 +78,7 @@ describe('PrismaOrdenTrabajoRepository contract lifecycle effects', () => {
   const createPrisma = (current: unknown, contractState = 'ACTIVO') => {
     const contractUpdate = jest.fn().mockResolvedValue({});
     const tx = {
+      $queryRaw: jest.fn(),
       ordenesTrabajo: {
         findUnique: jest.fn().mockResolvedValue(current),
         update: jest
@@ -220,7 +222,7 @@ describe('PrismaOrdenTrabajoRepository contract lifecycle effects', () => {
     },
   );
 
-  it.each(['LECTURA', 'INSPECCION', 'MANUAL'])(
+  it.each(['LECTURA', 'MANUAL'])(
     'does not change the contract for %s activity completion',
     async (activity) => {
       const { prisma, contractUpdate } = createPrisma(

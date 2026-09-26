@@ -11,7 +11,7 @@
 
 Use two persisted fields and remove `Contratos.estado` after the staged rollout:
 
-- `estadoServicio`: `PENDIENTE_PAGO -> PENDIENTE_INSTALACION -> ACTIVO -> SUSPENDIDO -> RETIRADO`.
+- `estadoServicio`: `PENDIENTE_INSPECCION -> PENDIENTE_PAGO -> PENDIENTE_INSTALACION -> ACTIVO -> SUSPENDIDO -> RETIRADO`. Una inspección no factible termina en `RECHAZADO`.
 - `estadoCobranza`: `NO_APLICA` while service activation is pending, `AL_DIA` for active service without current-service mora, or `EN_MORA` when the configured current-service threshold is reached.
 - `tieneConvenioActivo`: a derived read-model flag from active `Convenios`; it is
   metadata/protection and never a collection status.
@@ -21,6 +21,12 @@ Use two persisted fields and remove `Contratos.estado` after the staged rollout:
 The migration is additive and supplies defaults. The final cutover removes the legacy column and enum; contract DTOs, mappers, repositories, operator responses, and stored procedures use only the separated fields. Legacy API state input/output is not retained because the coordinated frontend no longer sends or reads it.
 
 ## Consequences
+
+### Actualización SC-321 (2026-09-25)
+
+La creación reserva un medidor de `BODEGA` a `PENDIENTE` y genera una orden de inspección en la misma transacción, sin prefactura. Al completar la inspección se genera el cobro de instalación; al cancelarla se rechaza el contrato, se cierra el vínculo y el medidor vuelve a bodega. `RECHAZADO` es terminal y conserva `NO_APLICA`.
+
+El pago completo genera una orden de instalación pendiente. Las órdenes automáticas se crean en rutas sin operario, con el período abierto si existe, y pueden asignarse después sin duplicar la orden. Los cierres y el pago bloquean el contrato para serializar reintentos. El formulario de edición no puede adelantar estas etapas. Las migraciones añaden los estados y cambian el valor predeterminado sin modificar contratos históricos.
 
 - New domain code can reason about service and collection independently.
 - The frontend deployment must follow the backend consumer-migration release and precede this final schema-removal migration.

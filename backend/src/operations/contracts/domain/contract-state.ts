@@ -7,6 +7,11 @@ const SERVICE_TRANSITIONS: Record<
   EstadoServicioContrato,
   readonly EstadoServicioContrato[]
 > = {
+  [EstadoServicioContrato.PENDIENTE_INSPECCION]: [
+    EstadoServicioContrato.PENDIENTE_PAGO,
+    EstadoServicioContrato.RECHAZADO,
+  ],
+  [EstadoServicioContrato.RECHAZADO]: [],
   [EstadoServicioContrato.PENDIENTE_PAGO]: [
     EstadoServicioContrato.PENDIENTE_INSTALACION,
   ],
@@ -36,7 +41,10 @@ export class ContractState {
   }
 
   static isTerminal(state: EstadoServicioContrato): boolean {
-    return state === EstadoServicioContrato.RETIRADO;
+    return (
+      state === EstadoServicioContrato.RETIRADO ||
+      state === EstadoServicioContrato.RECHAZADO
+    );
   }
 
   static normalizeCollectionStatus(
@@ -44,6 +52,8 @@ export class ContractState {
     estadoServicio: EstadoServicioContrato,
   ): EstadoCobranzaContrato {
     if (
+      estadoServicio === EstadoServicioContrato.PENDIENTE_INSPECCION ||
+      estadoServicio === EstadoServicioContrato.RECHAZADO ||
       estadoServicio === EstadoServicioContrato.PENDIENTE_PAGO ||
       estadoServicio === EstadoServicioContrato.PENDIENTE_INSTALACION
     ) {
