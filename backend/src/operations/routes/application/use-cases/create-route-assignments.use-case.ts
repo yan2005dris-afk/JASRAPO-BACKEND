@@ -46,9 +46,9 @@ export class CreateRouteAssignmentsUseCase {
       throw new InvalidDomainOperationException('El periodo no está abierto');
     }
 
-    const fechaPlanificada = DateUtil.parseFrontendDate(
-      dto.fechaPlanificada ?? null,
-    );
+    const fechaPlanificada = dto.fechaPlanificada
+      ? DateUtil.parseFrontendDate(dto.fechaPlanificada)
+      : (periodo.fechaInicio ?? null);
 
     const tipoRuta = dto.tipoRuta ?? TipoActividadCodes.LECTURA;
 
@@ -119,7 +119,6 @@ export class CreateRouteAssignmentsUseCase {
           dto.comunidadId,
           dto.periodoId,
           sectorId,
-          fechaPlanificada,
           tipoRuta,
         );
 
@@ -153,11 +152,15 @@ export class CreateRouteAssignmentsUseCase {
 
         const route = await this.routeRepository.create(createData);
 
-        if (tipoRuta === TipoActividadCodes.LECTURA && dto.fechaPlanificada) {
+        if (tipoRuta === TipoActividadCodes.LECTURA) {
+          const fechaLectura = dto.fechaPlanificada
+            ? DateUtil.parseFrontendDateStrict(dto.fechaPlanificada)
+            : (periodo.fechaInicio ? new Date(periodo.fechaInicio) : new Date());
+
           await this.routeRepository.initializeMonthlyReadings(
             dto.comunidadId,
             dto.periodoId,
-            DateUtil.parseFrontendDateStrict(dto.fechaPlanificada),
+            fechaLectura,
             sector.sectorId,
             route.rutaId,
           );
@@ -174,13 +177,12 @@ export class CreateRouteAssignmentsUseCase {
       dto.comunidadId,
       dto.periodoId,
       undefined,
-      fechaPlanificada,
       tipoRuta,
     );
 
     if (overlapping.length > 0) {
       throw new InvalidDomainOperationException(
-        'Ya existe una ruta planificada para esta comunidad en el mismo mes y período',
+        'Ya existe una ruta planificada para esta comunidad en este periodo',
       );
     }
 
@@ -203,11 +205,15 @@ export class CreateRouteAssignmentsUseCase {
 
     const route = await this.routeRepository.create(createData);
 
-    if (tipoRuta === TipoActividadCodes.LECTURA && dto.fechaPlanificada) {
+    if (tipoRuta === TipoActividadCodes.LECTURA) {
+      const fechaLectura = dto.fechaPlanificada
+        ? DateUtil.parseFrontendDateStrict(dto.fechaPlanificada)
+        : (periodo.fechaInicio ? new Date(periodo.fechaInicio) : new Date());
+
       await this.routeRepository.initializeMonthlyReadings(
         dto.comunidadId,
         dto.periodoId,
-        DateUtil.parseFrontendDateStrict(dto.fechaPlanificada),
+        fechaLectura,
         null,
         route.rutaId,
       );

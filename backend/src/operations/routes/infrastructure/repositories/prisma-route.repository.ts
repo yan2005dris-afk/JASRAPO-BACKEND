@@ -340,7 +340,6 @@ export class PrismaRouteRepository implements RouteRepository {
     comunidadId: number,
     periodoId: number,
     sectorId?: number,
-    fechaPlanificada?: Date | null,
     tipoRuta?: string,
   ): Promise<RouteEntity[]> {
     const where: Prisma.RutasWhereInput = {
@@ -352,20 +351,6 @@ export class PrismaRouteRepository implements RouteRepository {
 
     if (sectorId != null) {
       where.OR = [{ sectorId: null }, { sectorId }];
-    }
-
-    if (fechaPlanificada) {
-      const year = fechaPlanificada.getFullYear();
-      const month = fechaPlanificada.getMonth();
-      const startOfMonth = new Date(Date.UTC(year, month, 1, 0, 0, 0, 0));
-      const endOfMonth = new Date(
-        Date.UTC(year, month + 1, 0, 23, 59, 59, 999),
-      );
-
-      where.fechaPlanificada = {
-        gte: startOfMonth,
-        lte: endOfMonth,
-      };
     }
 
     const records = await this.prisma.rutas.findMany({

@@ -182,7 +182,6 @@ describe('CreateRouteUseCase', () => {
       1,
       1,
       undefined,
-      null,
       undefined,
     );
   });
@@ -229,7 +228,6 @@ describe('CreateRouteUseCase', () => {
       1,
       1,
       2,
-      null,
       undefined,
     );
   });
@@ -278,7 +276,6 @@ describe('CreateRouteUseCase', () => {
       1,
       1,
       3,
-      null,
       'LECTURA',
     );
     expect(mockRouteRepository.create).toHaveBeenCalledWith(

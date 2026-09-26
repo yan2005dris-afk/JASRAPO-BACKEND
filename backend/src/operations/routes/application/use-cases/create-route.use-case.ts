@@ -74,23 +74,18 @@ export class CreateRouteUseCase {
 
     const isWorkOrder = WORK_ORDER_TYPES.has(createDto.tipoRuta);
 
-    // Overlap check applies only to periodic community routes (validating the same month/year planificada)
+    // Overlap check applies only to periodic community routes (validating the same period)
     if (!isWorkOrder) {
-      const fechaPlan = DateUtil.parseFrontendDate(
-        createDto.fechaPlanificada ?? null,
-      );
-
       const overlapping = await this.routeRepository.findOverlappingRoutes(
         createDto.comunidadId,
         createDto.periodoId,
         createDto.sectorId,
-        fechaPlan,
         createDto.tipoRuta,
       );
 
       if (overlapping.length > 0) {
         throw new InvalidDomainOperationException(
-          'Ya existe una ruta planificada para esta comunidad en el mismo mes y período',
+          'Ya existe una ruta planificada para esta comunidad en este periodo',
         );
       }
     }

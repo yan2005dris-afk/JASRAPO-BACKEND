@@ -106,7 +106,6 @@ export abstract class RouteRepository {
     comunidadId: number,
     periodoId: number,
     sectorId?: number,
-    fechaPlanificada?: Date | null,
     tipoRuta?: string,
   ): Promise<RouteEntity[]>;
 
