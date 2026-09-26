@@ -307,4 +307,33 @@ describe('GetOperatorSyncManifestUseCase', () => {
       ConflictDomainException,
     );
   });
+
+  it('does not expose coordinates on manifest meter entries (moved to contracts)', async () => {
+    repository.findSyncMeters.mockResolvedValue({
+      items: [
+        {
+          medidorId: 55n,
+          codigo: 'MED-000055',
+          marca: 'Itron',
+          modelo: 'CX1000',
+          serie: 'MED-55',
+          estado: 'INSTALADO',
+          fechaInstalacion: new Date('2026-01-01T00:00:00Z'),
+          fechaBaja: null,
+          motivo: null,
+          createdAt: new Date('2026-01-01T00:00:00Z'),
+          updatedAt: new Date('2026-01-01T00:00:00Z'),
+          deletedAt: null,
+          historial: [],
+        },
+      ],
+      total: 1,
+      hasMore: false,
+      nextPosition: null,
+    });
+
+    const result = await useCase.execute(10);
+    expect(result.meters.items[0]).not.toHaveProperty('latitud');
+    expect(result.meters.items[0]).not.toHaveProperty('longitud');
+  });
 });

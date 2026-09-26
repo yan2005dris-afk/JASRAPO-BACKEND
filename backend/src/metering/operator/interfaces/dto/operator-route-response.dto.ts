@@ -82,8 +82,8 @@ export class OperatorRouteStopDto {
   @ApiProperty({ description: 'Longitud del punto', example: -80.7089 })
   longitud: number;
 
-  @ApiProperty({ description: 'Serie del medidor', example: 'MED-001' })
-  serie: string;
+  @ApiPropertyOptional({ description: 'Serie del medidor', example: 'MED-001' })
+  serie?: string;
 
   @ApiProperty({ description: 'Nombre completo del cliente' })
   clienteNombre: string;

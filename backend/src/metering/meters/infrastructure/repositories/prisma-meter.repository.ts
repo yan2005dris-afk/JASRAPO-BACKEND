@@ -35,8 +35,6 @@ export const safeMeterSelect = {
   fechaInstalacion: true,
   fechaBaja: true,
   motivo: true,
-  latitud: true,
-  longitud: true,
 } satisfies Prisma.MedidoresSelect;
 
 export const safeMeterSelectWithDelete = {
@@ -49,8 +47,6 @@ export const safeMeterSelectWithDelete = {
   fechaInstalacion: true,
   fechaBaja: true,
   motivo: true,
-  latitud: true,
-  longitud: true,
   deletedAt: true,
 } satisfies Prisma.MedidoresSelect;
 
@@ -239,8 +235,6 @@ export class PrismaMeterRepository implements MeterRepository {
             modelo: data.modelo,
             serie: data.serie,
             estado: data.estado,
-            latitud: data.latitud,
-            longitud: data.longitud,
           },
         });
       });
@@ -274,8 +268,6 @@ export class PrismaMeterRepository implements MeterRepository {
         }),
         ...(data.fechaBaja !== undefined && { fechaBaja: data.fechaBaja }),
         ...(data.motivo !== undefined && { motivo: data.motivo }),
-        ...(data.latitud !== undefined && { latitud: data.latitud }),
-        ...(data.longitud !== undefined && { longitud: data.longitud }),
         ...(data.deletedAt !== undefined && { deletedAt: data.deletedAt }),
       },
     });

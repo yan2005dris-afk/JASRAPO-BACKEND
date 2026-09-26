@@ -15,6 +15,14 @@ Prisma no soporta nativamente cláusulas `WHERE` en índices (`@@unique` parcial
 | `prefacturas` | `uk_prefacturas_consumo_mensual` | `WHERE borrado_en IS NULL AND tipo = 'CONSUMO_MENSUAL'` | Impide la doble facturación de consumo mensual para el mismo contrato y periodo. |
 | `rubros` | `uk_rubros_sistema_categoria` | `WHERE codigo_sistema_rubro IS NOT NULL AND borrado_en IS NULL` | Evita rubros del sistema duplicados dentro de la misma categoría tarifaria. |
 
+### Constraints CHECK
+
+Prisma no modela ni diferencia constraints `CHECK`; se gestionan mediante migraciones SQL declarativas y se documentan aquí para evitar drift silencioso:
+
+| Tabla | Constraint | Condición SQL | Propósito de Negocio |
+| :--- | :--- | :--- | :--- |
+| `contratos` | `contratos_coordenadas_chk` | `(latitud IS NULL AND longitud IS NULL) OR (latitud IS NOT NULL AND longitud IS NOT NULL AND latitud BETWEEN -90 AND 90 AND longitud BETWEEN -180 AND 180)` | Garantiza que las coordenadas del predio sean un par completo y válido, o estén ambas ausentes; ningún escritor (API, seeds, scripts SQL) puede dejar un par parcial o fuera de rango. |
+
 ---
 
 ## 2. Stored Procedures y Funciones SQL Críticas
@@ -32,6 +40,7 @@ Las siguientes funciones de base de datos fueron auditadas y alineadas con los e
    * Genera la prefactura de instalación con el rubro de derecho de conexión.
 4. **`public.operator_sync_capture_change()` (Triggers de sincronización offline):**
    * Captura eventos de mutación (`INSERT`, `UPDATE`, `DELETE`) sobre `rutas`, `ordenes_trabajo`, `lecturas`, `medidores` y `lectura_anomalia` para alimentar el registro de cambios hacia la PWA de operarios.
+   * `contratos` no tiene trigger de captura: las ediciones de `latitud`/`longitud` (o `direccionSuministro`, mismo precedente) no generan un registro de sincronización delta hacia la PWA de operarios (seguimiento pendiente). Desde la migración `20260925000000_move_coordinates_to_contratos`, los payloads de cambios de `medidores` ya no incluyen claves de coordenadas (columnas eliminadas de esa tabla).
 
 ---
 
