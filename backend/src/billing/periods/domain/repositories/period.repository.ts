@@ -22,6 +22,12 @@ export abstract class PeriodRepository {
 
   abstract findByNames(nombres: string[]): Promise<PeriodEntity[]>;
 
+  abstract findOverlapping(
+    fechaInicio: Date,
+    fechaFin: Date,
+    excludeId?: number,
+  ): Promise<PeriodEntity | null>;
+
   abstract createBatch(data: CreatePeriodData[]): Promise<PeriodEntity[]>;
 
   abstract update(id: number, data: UpdatePeriodData): Promise<PeriodEntity>;

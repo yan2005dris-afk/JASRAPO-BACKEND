@@ -103,6 +103,27 @@ export class PrismaPeriodRepository implements PeriodRepository {
     return records.map((r) => PeriodMapper.toDomain(r)!);
   }
 
+  async findOverlapping(
+    fechaInicio: Date,
+    fechaFin: Date,
+    excludeId?: number,
+  ): Promise<PeriodEntity | null> {
+    const where: Prisma.PeriodosWhereInput = {
+      AND: [
+        excludeId !== undefined ? { periodoId: { not: excludeId } } : {},
+        { fechaInicio: { lte: fechaFin } },
+        { fechaFin: { gte: fechaInicio } },
+      ],
+    };
+
+    const record = await this.prisma.periodos.findFirst({
+      where,
+      orderBy: { fechaInicio: 'asc' },
+    });
+
+    return PeriodMapper.toDomain(record);
+  }
+
   async createBatch(data: CreatePeriodData[]): Promise<PeriodEntity[]> {
     if (data.length === 0) return [];
     try {
