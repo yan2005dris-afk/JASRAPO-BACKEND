@@ -144,10 +144,11 @@ async function main() {
   await seedTiposActividad(prisma);
   console.log('✅ Catálogo de tipos de actividad creado.');
 
-  // NOTA: Datos transaccionales y de ciclo (períodos, lecturas, facturación, prefacturas, rutas, acuerdos)
+  await seedPeriodos(prisma);
+
+  // NOTA: Datos transaccionales y de ciclo (lecturas, facturación, prefacturas, rutas, acuerdos)
   // se omiten intencionalmente para permitir probar el flujo operativo desde cero en la UI.
   /*
-  await seedPeriodos(prisma);
   await seedLecturas(prisma);
   await seedFacturacion(prisma);
   await seedAgreementsPrefacturas(prisma);
