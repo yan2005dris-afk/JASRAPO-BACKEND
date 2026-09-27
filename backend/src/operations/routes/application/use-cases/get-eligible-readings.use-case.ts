@@ -17,19 +17,11 @@ export class GetEligibleReadingsUseCase {
     comunidadId: number;
     sectorId?: number;
     periodoId?: number;
-    fechaPlanificada?: string;
     search?: string;
     pagination: { page?: number; limit?: number };
   }): Promise<PaginatedResult<ReadingForRouteEntity>> {
-    const {
-      tipoRuta,
-      comunidadId,
-      sectorId,
-      periodoId,
-      fechaPlanificada,
-      search,
-      pagination,
-    } = params;
+    const { tipoRuta, comunidadId, sectorId, periodoId, search, pagination } =
+      params;
 
     const comunidad = await this.routeRepository.findComunidad(comunidadId);
     if (!comunidad) {
@@ -58,7 +50,6 @@ export class GetEligibleReadingsUseCase {
         comunidadId,
         sectorId,
         periodoId,
-        fechaPlanificada,
         search,
       },
       { page, limit, skip, take },

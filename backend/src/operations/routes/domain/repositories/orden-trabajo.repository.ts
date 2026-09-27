@@ -14,7 +14,6 @@ export abstract class OrdenTrabajoRepository {
   abstract assignInstallationRoute(
     contratoId: bigint,
     routeId?: bigint,
-    fechaPlanificada?: Date,
   ): Promise<bigint>;
 
   abstract findById(

@@ -59,6 +59,16 @@ export class CreatePeriodUseCase {
       throw new EntityAlreadyExistsException('Periodo', 'nombre', trimmedName);
     }
 
+    const overlapping = await this.periodRepository.findOverlapping(
+      fechaInicio,
+      fechaFin,
+    );
+    if (overlapping) {
+      throw new InvalidDomainOperationException(
+        `El rango de fechas (${DateUtil.formatForFrontend(fechaInicio)} al ${DateUtil.formatForFrontend(fechaFin)}) se solapa con el período existente "${overlapping.nombre}" (${DateUtil.formatForFrontend(overlapping.fechaInicio)} al ${DateUtil.formatForFrontend(overlapping.fechaFin)})`,
+      );
+    }
+
     return this.periodRepository.create({
       nombre: trimmedName,
       fechaInicio,

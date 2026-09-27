@@ -174,6 +174,7 @@ describe('ContratoMedidorService', () => {
       ).toHaveBeenCalledWith(1n, 20n, undefined);
       expect(mockOrdenTrabajoRepository.create).not.toHaveBeenCalled();
     });
+
     it('propagates invalid assignments', async () => {
       mockOrdenTrabajoRepository.assignInstallationRoute.mockRejectedValue(
         new Error('Invalid route'),

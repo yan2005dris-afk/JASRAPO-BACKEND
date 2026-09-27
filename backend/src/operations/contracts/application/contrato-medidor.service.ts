@@ -17,7 +17,6 @@ import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-
 import { RouteRepository } from '../../routes/domain/repositories/route.repository';
 import { OrdenTrabajoRepository } from '../../routes/domain/repositories/orden-trabajo.repository';
 import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
-import { DateUtil } from 'src/shared/utils/date.util';
 import type { AssignInstallationRouteDto } from '../interfaces/dto/assign-installation-route.dto';
 import { RouteEntity } from '../../routes/domain/entities/route.entity';
 
@@ -82,9 +81,6 @@ export class ContratoMedidorService {
     const rutaId = await this.ordenTrabajoRepository.assignInstallationRoute(
       contratoId,
       dto.routeId != null ? BigInt(dto.routeId) : undefined,
-      dto.fechaPlanificada
-        ? (DateUtil.parseFrontendDate(dto.fechaPlanificada) ?? undefined)
-        : undefined,
     );
     const route = await this.routeRepository.findById(rutaId);
     if (!route) throw new EntityNotFoundException('Ruta', rutaId);

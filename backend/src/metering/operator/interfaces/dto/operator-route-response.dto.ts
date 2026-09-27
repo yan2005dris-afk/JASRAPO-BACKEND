@@ -82,8 +82,8 @@ export class OperatorRouteStopDto {
   @ApiProperty({ description: 'Longitud del punto', example: -80.7089 })
   longitud: number;
 
-  @ApiProperty({ description: 'Serie del medidor', example: 'MED-001' })
-  serie: string;
+  @ApiPropertyOptional({ description: 'Serie del medidor', example: 'MED-001' })
+  serie?: string;
 
   @ApiProperty({ description: 'Nombre completo del cliente' })
   clienteNombre: string;
@@ -135,9 +135,6 @@ export class OperatorRouteResponseDto {
   })
   sectorNombre?: string;
 
-  @ApiPropertyOptional({ description: 'Fecha planificada' })
-  fechaPlanificada?: string;
-
   @ApiPropertyOptional({ description: 'Fecha de inicio' })
   fechaInicio?: string;
 
@@ -183,7 +180,6 @@ export class OperatorRouteResponseDto {
       comunidadNombre: route.comunidadNombre ?? undefined,
       sectorId: route.sectorId ?? undefined,
       sectorNombre: route.sectorNombre ?? undefined,
-      fechaPlanificada: route.fechaPlanificada?.toISOString() ?? undefined,
       fechaInicio: route.fechaInicio?.toISOString() ?? undefined,
       fechaFin: route.fechaFin?.toISOString() ?? undefined,
       medidor: mapMeter(route.medidor),

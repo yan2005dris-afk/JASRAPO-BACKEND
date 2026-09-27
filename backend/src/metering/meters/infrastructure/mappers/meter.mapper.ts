@@ -13,8 +13,6 @@ export class MeterMapper {
       fechaInstalacion: raw.fechaInstalacion,
       fechaBaja: raw.fechaBaja,
       motivo: raw.motivo,
-      latitud: raw.latitud ? Number(raw.latitud) : null,
-      longitud: raw.longitud ? Number(raw.longitud) : null,
       createdAt: raw.createdAt,
       updatedAt: raw.updatedAt,
       deletedAt: raw.deletedAt,

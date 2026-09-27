@@ -20,10 +20,6 @@ export class MeterEntity {
 
   motivo: string | null;
 
-  latitud: number | null;
-
-  longitud: number | null;
-
   createdAt: Date;
 
   updatedAt: Date;

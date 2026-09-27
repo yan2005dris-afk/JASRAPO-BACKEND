@@ -11,7 +11,6 @@ export interface RouteRaw {
   sectorId?: number | null;
   periodoId?: number | null;
   estado: string;
-  fechaPlanificada?: Date | string | null;
   fechaInicio?: Date | string | null;
   fechaFin?: Date | string | null;
   createdAt?: Date;
@@ -38,7 +37,6 @@ export class RouteMapper {
       comunidadId: route.comunidadId,
       sectorId: route.sectorId ?? null,
       periodoId: route.periodoId ?? null,
-      fechaPlanificada: formatDateField(route.fechaPlanificada),
       fechaInicio: formatDateField(route.fechaInicio),
       fechaFin: formatDateField(route.fechaFin),
       estado: route.estado,

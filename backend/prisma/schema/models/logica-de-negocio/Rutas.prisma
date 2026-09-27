@@ -8,7 +8,6 @@ model Rutas {
   sectorId            Int?               @map("sector_id")
   periodoId           Int?               @map("periodo_id")
   estado              EstadoRuta         @default(PENDIENTE) @map("estado")
-  fechaPlanificada    DateTime?          @map("fecha_planificada")
   fechaInicio         DateTime?          @map("fecha_inicio")
   fechaFin            DateTime?          @map("fecha_fin")
   createdAt           DateTime           @default(now()) @map("creado_en")
@@ -28,7 +27,6 @@ model Rutas {
   @@index([periodoId])
   @@index([estado])
   @@index([tipoActividadId])
-  @@index([fechaPlanificada])
   @@map("rutas")
 }
 

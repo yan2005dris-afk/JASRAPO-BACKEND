@@ -71,7 +71,6 @@ export class PrismaOrdenTrabajoRepository implements OrdenTrabajoRepository {
   async assignInstallationRoute(
     contratoId: bigint,
     routeId?: bigint,
-    fechaPlanificada?: Date,
   ): Promise<bigint> {
     return this.prisma.$transaction(async (tx) => {
       await tx.$queryRaw`SELECT contrato_id FROM contratos WHERE contrato_id = ${contratoId} FOR UPDATE`;
@@ -132,13 +131,7 @@ export class PrismaOrdenTrabajoRepository implements OrdenTrabajoRepository {
           data: { rutaId: routeId },
         });
       }
-      const rutaId = routeId ?? order.rutaId;
-      if (fechaPlanificada !== undefined)
-        await tx.rutas.update({
-          where: { rutaId },
-          data: { fechaPlanificada },
-        });
-      return rutaId;
+      return routeId ?? order.rutaId;
     });
   }
 

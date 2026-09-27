@@ -8,7 +8,6 @@ import {
   EntityNotFoundException,
   InvalidDomainOperationException,
 } from 'src/shared/domain/exceptions/domain.exception';
-import { DateUtil } from 'src/shared/utils/date.util';
 
 /** Route types that target a specific meter work order (not community-periodic). */
 const WORK_ORDER_TYPES = new Set<string>([
@@ -74,23 +73,18 @@ export class CreateRouteUseCase {
 
     const isWorkOrder = WORK_ORDER_TYPES.has(createDto.tipoRuta);
 
-    // Overlap check applies only to periodic community routes (validating the same month/year planificada)
+    // Overlap check applies only to periodic community routes (validating the same period)
     if (!isWorkOrder) {
-      const fechaPlan = DateUtil.parseFrontendDate(
-        createDto.fechaPlanificada ?? null,
-      );
-
       const overlapping = await this.routeRepository.findOverlappingRoutes(
         createDto.comunidadId,
         createDto.periodoId,
         createDto.sectorId,
-        fechaPlan,
         createDto.tipoRuta,
       );
 
       if (overlapping.length > 0) {
         throw new InvalidDomainOperationException(
-          'Ya existe una ruta planificada para esta comunidad en el mismo mes y período',
+          'Ya existe una ruta planificada para esta comunidad en este periodo',
         );
       }
     }
@@ -103,23 +97,20 @@ export class CreateRouteUseCase {
       comunidadId: createDto.comunidadId,
       sectorId: createDto.sectorId,
       periodoId: createDto.periodoId,
-      fechaPlanificada: DateUtil.parseFrontendDate(
-        createDto.fechaPlanificada ?? null,
-      ),
       estado: 'PENDIENTE',
     };
 
     const route = await this.routeRepository.create(createData);
 
-    // Si es LECTURA periódica, inicializar automáticamente las lecturas PENDIENTES para este mes
-    if (
-      createDto.tipoRuta === TipoActividadCodes.LECTURA &&
-      createDto.fechaPlanificada
-    ) {
+    // Si es LECTURA periódica, inicializar automáticamente las lecturas PENDIENTES para este periodo
+    if (createDto.tipoRuta === TipoActividadCodes.LECTURA) {
+      const fechaReferencia = periodo.fechaInicio
+        ? new Date(periodo.fechaInicio)
+        : new Date();
       await this.routeRepository.initializeMonthlyReadings(
         createDto.comunidadId,
         createDto.periodoId,
-        DateUtil.parseFrontendDateStrict(createDto.fechaPlanificada),
+        fechaReferencia,
         createDto.sectorId,
         route.rutaId,
       );

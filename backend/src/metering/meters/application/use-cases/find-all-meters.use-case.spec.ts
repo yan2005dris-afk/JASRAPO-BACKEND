@@ -16,8 +16,6 @@ describe('FindAllMetersUseCase', () => {
     fechaInstalacion: null,
     fechaBaja: null,
     motivo: null,
-    latitud: null,
-    longitud: null,
     deletedAt: null,
     createdAt: new Date(),
     updatedAt: new Date(),

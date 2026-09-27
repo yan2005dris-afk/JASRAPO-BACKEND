@@ -1,11 +1,5 @@
 import { PartialType } from '@nestjs/swagger';
-import {
-  IsDateString,
-  IsEnum,
-  IsNumber,
-  IsOptional,
-  IsString,
-} from 'class-validator';
+import { IsDateString, IsEnum, IsOptional, IsString } from 'class-validator';
 import { CreateMeterDto } from './create-meter.dto';
 import { EstadoMedidor } from 'src/shared/enums';
 
@@ -25,12 +19,4 @@ export class UpdateMeterDto extends PartialType(CreateMeterDto) {
   @IsOptional()
   @IsString()
   motivo?: string;
-
-  @IsOptional()
-  @IsNumber()
-  latitud?: number;
-
-  @IsOptional()
-  @IsNumber()
-  longitud?: number;
 }
