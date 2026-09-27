@@ -5,6 +5,10 @@ import {
   EstadoCobranzaContrato,
   EstadoServicioContrato,
 } from 'src/shared/enums';
+import {
+  IsContractLatitude,
+  IsContractLongitude,
+} from './contract-coordinates.decorator';
 
 export class ActualizarContratoMedidorDto {
   @ApiPropertyOptional({ enum: EstadoServicioContrato })
@@ -56,4 +60,10 @@ export class ActualizarContratoMedidorDto {
   @IsOptional()
   @IsNumberString()
   sectorId?: string;
+
+  @IsContractLatitude()
+  latitud?: number | null;
+
+  @IsContractLongitude()
+  longitud?: number | null;
 }

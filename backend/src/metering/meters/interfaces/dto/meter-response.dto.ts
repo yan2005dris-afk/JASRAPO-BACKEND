@@ -59,18 +59,6 @@ export class MeterResponseDto {
   motivo: string | null;
 
   @ApiPropertyOptional({
-    description: 'Latitud de ubicación',
-    example: -33.4489,
-  })
-  latitud: number | null;
-
-  @ApiPropertyOptional({
-    description: 'Longitud de ubicación',
-    example: -70.6693,
-  })
-  longitud: number | null;
-
-  @ApiPropertyOptional({
     description: 'ID de contrato activo',
     example: '123',
   })
@@ -103,8 +91,6 @@ export class MeterResponseDto {
       fechaInstalacion: DateUtil.formatForFrontend(meter.fechaInstalacion),
       fechaBaja: DateUtil.formatForFrontend(meter.fechaBaja),
       motivo: meter.motivo,
-      latitud: meter.latitud != null ? Number(meter.latitud) : null,
-      longitud: meter.longitud != null ? Number(meter.longitud) : null,
       contratoId: meter.contratoId?.toString() ?? null,
       clienteNombre: meter.clienteNombre ?? null,
       direccionSuministro: meter.direccionSuministro ?? null,
@@ -125,6 +111,4 @@ export const MeterResponseExample = {
   fechaInstalacion: '2024-01-15',
   fechaBaja: null,
   motivo: null,
-  latitud: -33.4489,
-  longitud: -70.6693,
 };

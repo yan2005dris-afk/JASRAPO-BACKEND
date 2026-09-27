@@ -13,6 +13,10 @@ import {
   EstadoCobranzaContrato,
   EstadoServicioContrato,
 } from 'src/shared/enums';
+import {
+  IsContractLatitude,
+  IsContractLongitude,
+} from './contract-coordinates.decorator';
 
 export class CrearContratoMedidorDto {
   @ApiProperty({ description: 'ID del cliente', example: '1' })
@@ -90,4 +94,10 @@ export class CrearContratoMedidorDto {
   @IsOptional()
   @IsString()
   creadoPor?: string;
+
+  @IsContractLatitude()
+  latitud?: number | null;
+
+  @IsContractLongitude()
+  longitud?: number | null;
 }

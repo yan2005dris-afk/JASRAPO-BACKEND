@@ -29,6 +29,8 @@ export class CreateContractUseCase {
       estadoCobranza,
       creadoPor: dto.creadoPor,
       lecturaInicial: dto.lecturaInicial ?? 0,
+      latitud: dto.latitud,
+      longitud: dto.longitud,
     });
   }
 }

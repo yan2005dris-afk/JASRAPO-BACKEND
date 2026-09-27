@@ -54,6 +54,8 @@ export class UpdateContractUseCase {
       fields.categoriaTarifaId = Number(dto.categoriaTarifaId);
     if (dto.comunidadId !== undefined)
       fields.comunidadId = Number(dto.comunidadId);
+    if (dto.latitud !== undefined) fields.latitud = dto.latitud;
+    if (dto.longitud !== undefined) fields.longitud = dto.longitud;
     return fields;
   }
 }

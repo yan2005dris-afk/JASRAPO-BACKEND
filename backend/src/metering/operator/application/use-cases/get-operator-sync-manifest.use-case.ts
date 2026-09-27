@@ -417,8 +417,6 @@ export class GetOperatorSyncManifestUseCase {
     return new MeterEntity({
       ...m,
       medidorId: BigInt(m.medidorId),
-      latitud: m.latitud == null ? null : Number(m.latitud),
-      longitud: m.longitud == null ? null : Number(m.longitud),
       contratoId: h?.contratoId ? BigInt(h.contratoId) : null,
       clienteNombre: h?.cliente
         ? `${h.cliente.nombres} ${h.cliente.apellidos}`.trim()

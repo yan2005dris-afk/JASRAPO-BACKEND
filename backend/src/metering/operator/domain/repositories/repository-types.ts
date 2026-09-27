@@ -82,8 +82,6 @@ export interface MeterWithContractDetail {
   fechaInstalacion: Date | null;
   fechaBaja: Date | null;
   motivo: string | null;
-  latitud: number | null;
-  longitud: number | null;
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Date | null;
@@ -102,7 +100,7 @@ export interface OperatorRouteStop {
   ordenTrabajoId: bigint;
   latitud: number;
   longitud: number;
-  serie: string;
+  serie?: string;
   clienteNombre: string;
   tipoActividad: string;
   estado: string;

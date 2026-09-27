@@ -76,8 +76,6 @@ export async function seedLecturas(prisma: any) {
                 modelo: 'Dedicado',
                 serie: `SER-READ-${contrato.contratoId}`,
                 fechaInstalacion: new Date('2024-01-01'),
-                latitud: finalLat,
-                longitud: finalLng,
                 estado: 'INSTALADO' as any,
                 createdAt: new Date(),
                 updatedAt: new Date(),
@@ -85,6 +83,11 @@ export async function seedLecturas(prisma: any) {
             },
         });
         nextMedidorId++;
+
+        await prisma.contratos.update({
+            where: { contratoId: contrato.contratoId },
+            data: { latitud: finalLat, longitud: finalLng },
+        });
 
         // Crear historial para el nuevo medidor dedicado
         const historial = await prisma.historialMedidores.create({

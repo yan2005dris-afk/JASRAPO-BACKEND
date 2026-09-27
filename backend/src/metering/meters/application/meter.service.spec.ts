@@ -34,8 +34,6 @@ describe('MeterService', () => {
     fechaInstalacion: null,
     fechaBaja: null,
     motivo: null,
-    latitud: null,
-    longitud: null,
     createdAt: new Date(),
     updatedAt: new Date(),
     deletedAt: null,
