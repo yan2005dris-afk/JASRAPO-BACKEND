@@ -897,7 +897,8 @@ export class PrismaOperatorRepository extends OperatorRepository {
           longitud,
           serie: order.medidor?.serie,
           clienteNombre,
-          tipoActividad: route.tipoActividad.codigo,
+          tipoActividad:
+            route.tipoActividad?.codigo ?? (route as any).tipoRuta ?? 'TOMA_LECTURA',
           estado: order.estado,
           direccionSuministro: order.contrato.direccionSuministro,
         },
@@ -906,6 +907,8 @@ export class PrismaOperatorRepository extends OperatorRepository {
 
     return {
       ...route,
+      tipoRuta:
+        route.tipoActividad?.codigo ?? (route as any).tipoRuta ?? 'TOMA_LECTURA',
       comunidadNombre: route.comunidad?.nombre ?? null,
       sectorNombre: route.sector?.nombre ?? null,
       ordenesTrabajo,
