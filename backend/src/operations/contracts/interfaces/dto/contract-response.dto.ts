@@ -6,6 +6,10 @@ import {
   type EstadoServicioContrato as EstadoServicioContratoType,
   EstadoCobranzaContrato,
   type EstadoCobranzaContrato as EstadoCobranzaContratoType,
+  EstadoRuta,
+  type EstadoRuta as EstadoRutaType,
+  EstadoOrdenTrabajo,
+  type EstadoOrdenTrabajo as EstadoOrdenTrabajoType,
 } from 'src/shared/enums';
 
 export class ContractCategoriaTarifaDto {
@@ -121,6 +125,32 @@ export class ContractHistorialMedidorDto {
   medidor: ContractMedidorDetalleDto;
 }
 
+export class ContractInstallationAssignmentDto {
+  @ApiProperty({ example: '20', description: 'ID de la ruta de instalación' })
+  rutaId: bigint;
+
+  @ApiProperty({ example: 'Instalaciones G-0001' })
+  nombreRuta: string;
+
+  @ApiProperty({ enum: EstadoRuta, example: EstadoRuta.PENDIENTE })
+  estadoRuta: EstadoRutaType;
+
+  @ApiProperty({ example: '77', description: 'ID de la orden de trabajo' })
+  ordenTrabajoId: bigint;
+
+  @ApiProperty({
+    enum: EstadoOrdenTrabajo,
+    example: EstadoOrdenTrabajo.PENDIENTE,
+  })
+  estadoOrdenTrabajo: EstadoOrdenTrabajoType;
+
+  @ApiPropertyOptional({ example: '2026-08-20', nullable: true })
+  fechaPlanificada: string | null;
+
+  @ApiPropertyOptional({ example: 'Juan Pérez', nullable: true })
+  operarioNombre: string | null;
+}
+
 export class ContractResponseDto {
   @ApiProperty({ example: '1', description: 'ID del contrato' })
   contratoId: bigint;
@@ -195,6 +225,14 @@ export class ContractResponseDto {
   @ApiPropertyOptional({ type: [ContractHistorialMedidorDto], nullable: true })
   historialMedidores?: ContractHistorialMedidorDto[] | null;
 
+  @ApiPropertyOptional({
+    type: ContractInstallationAssignmentDto,
+    nullable: true,
+    description:
+      'Ruta de instalación asignada actualmente (solo si el contrato está PENDIENTE_INSTALACION)',
+  })
+  asignacionInstalacion?: ContractInstallationAssignmentDto | null;
+
   static fromEntity(entity: ContractEntity): ContractResponseDto {
     const dto = new ContractResponseDto();
     dto.contratoId = entity.contratoId;
@@ -233,6 +271,20 @@ export class ContractResponseDto {
             : null,
           medidor: h.medidor,
         }))
+      : null;
+    dto.asignacionInstalacion = entity.asignacionInstalacion
+      ? {
+          rutaId: entity.asignacionInstalacion.rutaId,
+          nombreRuta: entity.asignacionInstalacion.nombreRuta,
+          estadoRuta: entity.asignacionInstalacion.estadoRuta as EstadoRutaType,
+          ordenTrabajoId: entity.asignacionInstalacion.ordenTrabajoId,
+          estadoOrdenTrabajo: entity.asignacionInstalacion
+            .estadoOrdenTrabajo as EstadoOrdenTrabajoType,
+          fechaPlanificada: DateUtil.formatForFrontend(
+            entity.asignacionInstalacion.fechaPlanificada,
+          ),
+          operarioNombre: entity.asignacionInstalacion.operarioNombre,
+        }
       : null;
     return dto;
   }

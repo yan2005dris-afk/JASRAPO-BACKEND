@@ -485,4 +485,74 @@ export class PrismaOrdenTrabajoRepository implements OrdenTrabajoRepository {
     });
     return OrdenTrabajoMapper.toEntity(raw);
   }
+
+  async findActiveInstallationByContratoId(
+    contratoId: bigint,
+  ): Promise<OrdenTrabajoEntity | null> {
+    const raw = await this.prisma.ordenesTrabajo.findFirst({
+      include: {
+        ruta: { include: { tipoActividad: { select: { codigo: true } } } },
+      },
+      where: {
+        contratoId,
+        deletedAt: null,
+        estado: {
+          notIn: [EstadoOrdenTrabajo.CANCELADA, EstadoOrdenTrabajo.FALLIDA],
+        },
+        ruta: { tipoActividad: { codigo: TipoActividadCodes.INSTALACION } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    return raw ? OrdenTrabajoMapper.toEntity(raw) : null;
+  }
+
+  async reassignInstallationOrder(
+    ordenTrabajoId: bigint,
+    toRutaId: bigint,
+  ): Promise<OrdenTrabajoEntity> {
+    return this.prisma.$transaction(async (tx) => {
+      const orden = await tx.ordenesTrabajo.findUnique({
+        where: { ordenTrabajoId },
+        select: { rutaId: true },
+      });
+
+      if (!orden) {
+        throw new EntityNotFoundException(
+          'OrdenTrabajo',
+          ordenTrabajoId.toString(),
+        );
+      }
+
+      const fromRutaId = orden.rutaId;
+
+      const updated = await tx.ordenesTrabajo.update({
+        where: { ordenTrabajoId },
+        data: { rutaId: toRutaId },
+        include: {
+          ruta: { include: { tipoActividad: { select: { codigo: true } } } },
+        },
+      });
+
+      // Si la ruta de origen quedó sin órdenes y sin operario, se cancela
+      // (era una ruta de instalación auto-generada que quedó huérfana).
+      if (fromRutaId !== toRutaId) {
+        const remaining = await tx.ordenesTrabajo.count({
+          where: { rutaId: fromRutaId, deletedAt: null },
+        });
+        const fromRuta = await tx.rutas.findUnique({
+          where: { rutaId: fromRutaId },
+          select: { operarioId: true },
+        });
+
+        if (remaining === 0 && fromRuta && fromRuta.operarioId === null) {
+          await tx.rutas.update({
+            where: { rutaId: fromRutaId },
+            data: { estado: EstadoRuta.CANCELADA },
+          });
+        }
+      }
+
+      return OrdenTrabajoMapper.toEntity(updated);
+    });
+  }
 }
