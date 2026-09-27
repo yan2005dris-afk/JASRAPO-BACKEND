@@ -15,3 +15,4 @@ export async function seedPeriodos(prisma: PrismaClient) {
   console.log(`✅ Período activo "${openPeriod.nombre}" creado.`);
   return [openPeriod];
 }
+
