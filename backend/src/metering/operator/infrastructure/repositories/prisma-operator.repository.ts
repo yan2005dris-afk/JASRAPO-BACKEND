@@ -850,13 +850,23 @@ export class PrismaOperatorRepository extends OperatorRepository {
       contrato: {
         latitud: Prisma.Decimal | null;
         longitud: Prisma.Decimal | null;
+        [key: string]: any;
       };
       medidor: { medidorId: bigint; serie: string } | null;
+      ruta?: {
+        tipoActividad?: { codigo: string };
+      };
     },
-  >(order: T) {
+  >(order: T, routeTipoActividad?: string) {
     const { latitud, longitud, ...contratoRest } = order.contrato;
+    const tipoActividad =
+      (order as any).tipoActividad ??
+      order.ruta?.tipoActividad?.codigo ??
+      routeTipoActividad ??
+      'TOMA_LECTURA';
     return {
       ...order,
+      tipoActividad,
       contrato: {
         ...contratoRest,
         latitud: toCoordinate(latitud),
@@ -874,8 +884,13 @@ export class PrismaOperatorRepository extends OperatorRepository {
   private toOperatorRoute(
     route: Prisma.RutasGetPayload<{ include: typeof operatorRouteInclude }>,
   ): OperatorRoute {
+    const routeTipoActividad =
+      route.tipoActividad?.codigo ??
+      (route as any).tipoRuta ??
+      'TOMA_LECTURA';
+
     const ordenesTrabajo = route.ordenesTrabajo.map((order) =>
-      this.toOperatorWorkOrder(order),
+      this.toOperatorWorkOrder(order, routeTipoActividad),
     );
 
     const paradas = route.ordenesTrabajo.flatMap((order) => {

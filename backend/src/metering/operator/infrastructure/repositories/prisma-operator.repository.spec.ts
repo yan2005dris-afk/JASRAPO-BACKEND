@@ -173,6 +173,7 @@ describe('PrismaOperatorRepository routes', () => {
         }),
       }),
     );
+    expect(routes[0].ordenesTrabajo[0].tipoActividad).toBe('LECTURA');
     expect(routes[0].ordenesTrabajo[0].medidor).toEqual({
       medidorId: 7n,
       serie: 'MED-001',
