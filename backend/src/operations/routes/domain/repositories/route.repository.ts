@@ -62,7 +62,6 @@ export interface EligibleReadingsCriteria {
   comunidadId: number;
   sectorId?: number;
   periodoId?: number;
-  fechaPlanificada?: Date | string;
   search?: string;
 }
 
@@ -114,7 +113,7 @@ export abstract class RouteRepository {
   abstract initializeMonthlyReadings(
     comunidadId: number,
     periodoId: number,
-    fechaPlanificada: Date,
+    fechaReferencia: Date,
     sectorId?: number | null,
     rutaId?: bigint | null,
   ): Promise<number>;

@@ -106,7 +106,6 @@ export class PrismaRouteRepository implements RouteRepository {
           comunidadId: data.comunidadId,
           sectorId: data.sectorId ?? null,
           periodoId: data.periodoId ?? null,
-          fechaPlanificada: data.fechaPlanificada ?? null,
           estado: (data.estado ?? 'PENDIENTE') as EstadoRuta,
         },
         include: { tipoActividad: { select: { codigo: true } } },
@@ -151,9 +150,6 @@ export class PrismaRouteRepository implements RouteRepository {
         ...(data.periodoId !== undefined ? { periodoId: data.periodoId } : {}),
         ...(data.estado !== undefined
           ? { estado: data.estado as EstadoRuta }
-          : {}),
-        ...(data.fechaPlanificada !== undefined
-          ? { fechaPlanificada: data.fechaPlanificada }
           : {}),
         ...(data.fechaInicio !== undefined
           ? { fechaInicio: data.fechaInicio }
@@ -243,9 +239,6 @@ export class PrismaRouteRepository implements RouteRepository {
             ...(data.sectorId !== undefined && { sectorId: data.sectorId }),
             ...(data.periodoId !== undefined && { periodoId: data.periodoId }),
             ...(estado !== undefined && { estado: estado as EstadoRuta }),
-            ...(data.fechaPlanificada !== undefined && {
-              fechaPlanificada: data.fechaPlanificada,
-            }),
             ...(data.fechaInicio !== undefined && {
               fechaInicio: data.fechaInicio,
             }),
@@ -365,7 +358,7 @@ export class PrismaRouteRepository implements RouteRepository {
   async initializeMonthlyReadings(
     comunidadId: number,
     periodoId: number,
-    fechaPlanificada: Date,
+    fechaReferencia: Date,
     sectorId?: number | null,
     rutaId?: bigint | null,
   ): Promise<number> {
@@ -373,7 +366,7 @@ export class PrismaRouteRepository implements RouteRepository {
       `SELECT public.inicializar_lecturas_ruta($1, $2, $3, $4, $5) as count`,
       comunidadId,
       periodoId,
-      fechaPlanificada,
+      fechaReferencia,
       sectorId ?? null,
       rutaId ?? null,
     );
@@ -385,7 +378,7 @@ export class PrismaRouteRepository implements RouteRepository {
     criteria: EligibleReadingsCriteria,
     pagination: PaginateOptions,
   ): Promise<PaginatedResult<ReadingForRouteEntity>> {
-    const { comunidadId, sectorId, periodoId, fechaPlanificada, search } =
+    const { comunidadId, sectorId, periodoId, search } =
       criteria;
     const where: Prisma.LecturasWhereInput = {
       deletedAt: null,
@@ -403,21 +396,6 @@ export class PrismaRouteRepository implements RouteRepository {
         },
       },
     };
-
-    if (fechaPlanificada) {
-      const planDate = new Date(fechaPlanificada);
-      const year = planDate.getUTCFullYear();
-      const month = planDate.getUTCMonth();
-      const startOfMonth = new Date(Date.UTC(year, month, 1, 0, 0, 0, 0));
-      const endOfMonth = new Date(
-        Date.UTC(year, month + 1, 0, 23, 59, 59, 999),
-      );
-
-      where.fecha = {
-        gte: startOfMonth,
-        lte: endOfMonth,
-      };
-    }
 
     const q = search?.trim();
     if (q) {

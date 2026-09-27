@@ -24,7 +24,6 @@ const completedReadingRoute = {
   sectorId: null,
   periodoId: 3,
   estado: 'COMPLETADA',
-  fechaPlanificada: '2026-08-17T00:00:00.000Z',
   fechaInicio: null,
   fechaFin: null,
 };

@@ -17,7 +17,6 @@ export class GetEligibleReadingsUseCase {
     comunidadId: number;
     sectorId?: number;
     periodoId?: number;
-    fechaPlanificada?: string;
     search?: string;
     pagination: { page?: number; limit?: number };
   }): Promise<PaginatedResult<ReadingForRouteEntity>> {
@@ -26,7 +25,6 @@ export class GetEligibleReadingsUseCase {
       comunidadId,
       sectorId,
       periodoId,
-      fechaPlanificada,
       search,
       pagination,
     } = params;
@@ -58,7 +56,6 @@ export class GetEligibleReadingsUseCase {
         comunidadId,
         sectorId,
         periodoId,
-        fechaPlanificada,
         search,
       },
       { page, limit, skip, take },

@@ -80,11 +80,6 @@ export class UpdateRouteUseCase {
         operarioId: updateDto.operarioId,
       }),
       ...(updateDto.estado !== undefined && { estado: estadoFinal }),
-      ...(updateDto.fechaPlanificada !== undefined && {
-        fechaPlanificada: DateUtil.parseFrontendDate(
-          updateDto.fechaPlanificada ?? null,
-        ),
-      }),
       ...(updateDto.periodoId !== undefined && {
         periodoId: updateDto.periodoId,
       }),

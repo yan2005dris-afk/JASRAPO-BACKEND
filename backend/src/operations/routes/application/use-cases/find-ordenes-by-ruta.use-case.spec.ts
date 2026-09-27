@@ -58,7 +58,6 @@ describe('FindOrdenesByRutaUseCase', () => {
     comunidadId: 1,
     periodoId: 1,
     estado: 'PENDIENTE',
-    fechaPlanificada: null,
     fechaInicio: null,
     fechaFin: null,
   };

@@ -46,9 +46,9 @@ export class CreateRouteAssignmentsUseCase {
       throw new InvalidDomainOperationException('El periodo no está abierto');
     }
 
-    const fechaPlanificada = dto.fechaPlanificada
-      ? DateUtil.parseFrontendDate(dto.fechaPlanificada)
-      : (periodo.fechaInicio ?? null);
+    const fechaLectura = periodo.fechaInicio
+      ? new Date(periodo.fechaInicio)
+      : new Date();
 
     const tipoRuta = dto.tipoRuta ?? TipoActividadCodes.LECTURA;
 
@@ -87,7 +87,6 @@ export class CreateRouteAssignmentsUseCase {
         comunidadId: dto.comunidadId,
         sectorId,
         periodoId: dto.periodoId,
-        fechaPlanificada,
         estado: 'PENDIENTE',
       };
 
@@ -146,17 +145,12 @@ export class CreateRouteAssignmentsUseCase {
           comunidadId: dto.comunidadId,
           sectorId: sector.sectorId,
           periodoId: dto.periodoId,
-          fechaPlanificada,
           estado: 'PENDIENTE',
         };
 
         const route = await this.routeRepository.create(createData);
 
         if (tipoRuta === TipoActividadCodes.LECTURA) {
-          const fechaLectura = dto.fechaPlanificada
-            ? DateUtil.parseFrontendDateStrict(dto.fechaPlanificada)
-            : (periodo.fechaInicio ? new Date(periodo.fechaInicio) : new Date());
-
           await this.routeRepository.initializeMonthlyReadings(
             dto.comunidadId,
             dto.periodoId,
@@ -199,17 +193,12 @@ export class CreateRouteAssignmentsUseCase {
       comunidadId: dto.comunidadId,
       sectorId: undefined,
       periodoId: dto.periodoId,
-      fechaPlanificada,
       estado: 'PENDIENTE',
     };
 
     const route = await this.routeRepository.create(createData);
 
     if (tipoRuta === TipoActividadCodes.LECTURA) {
-      const fechaLectura = dto.fechaPlanificada
-        ? DateUtil.parseFrontendDateStrict(dto.fechaPlanificada)
-        : (periodo.fechaInicio ? new Date(periodo.fechaInicio) : new Date());
-
       await this.routeRepository.initializeMonthlyReadings(
         dto.comunidadId,
         dto.periodoId,

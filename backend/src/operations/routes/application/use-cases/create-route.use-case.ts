@@ -98,23 +98,20 @@ export class CreateRouteUseCase {
       comunidadId: createDto.comunidadId,
       sectorId: createDto.sectorId,
       periodoId: createDto.periodoId,
-      fechaPlanificada: DateUtil.parseFrontendDate(
-        createDto.fechaPlanificada ?? null,
-      ),
       estado: 'PENDIENTE',
     };
 
     const route = await this.routeRepository.create(createData);
 
-    // Si es LECTURA periódica, inicializar automáticamente las lecturas PENDIENTES para este mes
-    if (
-      createDto.tipoRuta === TipoActividadCodes.LECTURA &&
-      createDto.fechaPlanificada
-    ) {
+    // Si es LECTURA periódica, inicializar automáticamente las lecturas PENDIENTES para este periodo
+    if (createDto.tipoRuta === TipoActividadCodes.LECTURA) {
+      const fechaReferencia = periodo.fechaInicio
+        ? new Date(periodo.fechaInicio)
+        : new Date();
       await this.routeRepository.initializeMonthlyReadings(
         createDto.comunidadId,
         createDto.periodoId,
-        DateUtil.parseFrontendDateStrict(createDto.fechaPlanificada),
+        fechaReferencia,
         createDto.sectorId,
         route.rutaId,
       );

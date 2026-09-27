@@ -47,13 +47,6 @@ export class RouteResponseDto {
   estado: string;
 
   @ApiPropertyOptional({
-    example: '2026-06-11T00:00:00.000Z',
-    nullable: true,
-    description: 'Fecha planificada',
-  })
-  fechaPlanificada: string | null;
-
-  @ApiPropertyOptional({
     example: null,
     nullable: true,
     description: 'Fecha de inicio',
@@ -78,7 +71,6 @@ export class RouteResponseDto {
     dto.sectorId = entity.sectorId ?? null;
     dto.periodoId = entity.periodoId ?? null;
     dto.estado = entity.estado;
-    dto.fechaPlanificada = entity.fechaPlanificada ?? null;
     dto.fechaInicio = entity.fechaInicio ?? null;
     dto.fechaFin = entity.fechaFin ?? null;
     return dto;

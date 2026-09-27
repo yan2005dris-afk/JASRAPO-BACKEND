@@ -253,7 +253,6 @@ export async function seedRoutes(prisma: PrismaClient) {
           // porque filtra por WHERE periodoId = periodoActivo.
           periodoId: periodo.periodoId,
           estado: def.estado,
-          fechaPlanificada: new Date(Date.UTC(2026, 7, 20, 9, 0, 0)),
         },
       });
 

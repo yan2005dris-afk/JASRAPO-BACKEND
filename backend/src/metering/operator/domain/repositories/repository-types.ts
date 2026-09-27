@@ -150,7 +150,6 @@ export interface OperatorRoute {
   sectorNombre?: string | null;
   periodoId: number | null;
   estado: string;
-  fechaPlanificada: Date | null;
   fechaInicio: Date | null;
   fechaFin: Date | null;
   createdAt: Date;

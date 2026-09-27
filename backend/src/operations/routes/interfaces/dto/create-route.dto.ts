@@ -77,13 +77,4 @@ export class CreateRouteDto {
   @IsNumber()
   @Type(() => Number)
   periodoId!: number;
-
-  @ApiProperty({
-    description: 'Fecha planificada para ejecutar la ruta',
-    required: false,
-    example: '2026-05-10',
-  })
-  @IsOptional()
-  @IsDateString()
-  fechaPlanificada?: string;
 }

@@ -144,7 +144,6 @@ describe('CreateRouteAssignmentsUseCase', () => {
       tipoRuta: 'LECTURA',
       periodoId: 1,
       estado: 'PENDIENTE',
-      fechaPlanificada: null,
       fechaInicio: null,
       fechaFin: null,
     });
@@ -154,7 +153,6 @@ describe('CreateRouteAssignmentsUseCase', () => {
       operarioId: 1,
       comunidadId: 1,
       periodoId: 1,
-      fechaPlanificada: '2026-06-15',
     });
 
     expect(result).toHaveLength(1);
@@ -225,7 +223,6 @@ describe('CreateRouteAssignmentsUseCase', () => {
       tipoRuta: 'LECTURA',
       periodoId: 1,
       estado: 'PENDIENTE',
-      fechaPlanificada: null,
       fechaInicio: null,
       fechaFin: null,
     });
@@ -238,7 +235,6 @@ describe('CreateRouteAssignmentsUseCase', () => {
       tipoRuta: 'LECTURA',
       periodoId: 1,
       estado: 'PENDIENTE',
-      fechaPlanificada: null,
       fechaInicio: null,
       fechaFin: null,
     });
@@ -252,7 +248,6 @@ describe('CreateRouteAssignmentsUseCase', () => {
       comunidadId: 1,
       periodoId: 1,
       sectorIds: [1, 2],
-      fechaPlanificada: '2026-06-15',
       nombreBase: 'Ruta Mensual',
     });
 
@@ -289,7 +284,6 @@ describe('CreateRouteAssignmentsUseCase', () => {
       tipoRuta: 'INSPECCION',
       periodoId: 1,
       estado: 'PENDIENTE',
-      fechaPlanificada: null,
       fechaInicio: null,
       fechaFin: null,
     });
@@ -341,7 +335,6 @@ describe('CreateRouteAssignmentsUseCase', () => {
         tipoRuta: 'LECTURA',
         periodoId: 1,
         estado: 'PENDIENTE',
-        fechaPlanificada: null,
         fechaInicio: null,
         fechaFin: null,
       }),
@@ -376,7 +369,6 @@ describe('CreateRouteAssignmentsUseCase', () => {
         tipoRuta: 'LECTURA',
         periodoId: 1,
         estado: 'PENDIENTE',
-        fechaPlanificada: null,
         fechaInicio: null,
         fechaFin: null,
       }),
@@ -417,7 +409,6 @@ describe('CreateRouteAssignmentsUseCase', () => {
         tipoRuta: 'LECTURA',
         periodoId: 1,
         estado: 'PENDIENTE',
-        fechaPlanificada: null,
         fechaInicio: null,
         fechaFin: null,
       }),
@@ -428,7 +419,6 @@ describe('CreateRouteAssignmentsUseCase', () => {
       comunidadId: 1,
       periodoId: 1,
       sectorIds: [1, 1, 1], // Duplicates
-      fechaPlanificada: '2026-06-15',
     });
 
     expect(result).toHaveLength(1);

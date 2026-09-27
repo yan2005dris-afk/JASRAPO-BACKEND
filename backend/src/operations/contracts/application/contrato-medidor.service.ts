@@ -138,9 +138,6 @@ export class ContratoMedidorService {
         sectorId: null,
         periodoId: null,
         estado: EstadoRuta.PENDIENTE,
-        fechaPlanificada: dto.fechaPlanificada
-          ? DateUtil.parseFrontendDate(dto.fechaPlanificada)
-          : null,
       });
     }
 
