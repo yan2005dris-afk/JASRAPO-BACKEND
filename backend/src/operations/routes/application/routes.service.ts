@@ -45,7 +45,6 @@ export class RoutesService {
       comunidadId: filterDto.comunidadId,
       sectorId: filterDto.sectorId,
       periodoId: filterDto.periodoId,
-      fechaPlanificada: filterDto.fechaPlanificada,
       search: filterDto.search,
       pagination: {
         page: filterDto.page,

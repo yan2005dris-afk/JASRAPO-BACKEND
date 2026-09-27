@@ -56,6 +56,7 @@ export async function seedRolePermissions(
     'discounts',
     'rubros',
     'clientes',
+    'periodos',
   ];
   const recaudacionPerms = permissions.filter((p) =>
     recaudacionResources.includes(p.recurso),

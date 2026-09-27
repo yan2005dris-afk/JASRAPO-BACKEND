@@ -162,6 +162,12 @@ const LEVEL_2: MenuSeedEntry[] = [
     parentNombre: 'Administración',
   },
   {
+    nombre: 'Períodos',
+    ruta: '/admin/periods',
+    icono: 'calendar_month',
+    parentNombre: 'Administración',
+  },
+  {
     nombre: 'Configuraciones',
     ruta: '/admin/config',
     icono: 'settings',

@@ -135,9 +135,6 @@ export class OperatorRouteResponseDto {
   })
   sectorNombre?: string;
 
-  @ApiPropertyOptional({ description: 'Fecha planificada' })
-  fechaPlanificada?: string;
-
   @ApiPropertyOptional({ description: 'Fecha de inicio' })
   fechaInicio?: string;
 
@@ -183,7 +180,6 @@ export class OperatorRouteResponseDto {
       comunidadNombre: route.comunidadNombre ?? undefined,
       sectorId: route.sectorId ?? undefined,
       sectorNombre: route.sectorNombre ?? undefined,
-      fechaPlanificada: route.fechaPlanificada?.toISOString() ?? undefined,
       fechaInicio: route.fechaInicio?.toISOString() ?? undefined,
       fechaFin: route.fechaFin?.toISOString() ?? undefined,
       medidor: mapMeter(route.medidor),

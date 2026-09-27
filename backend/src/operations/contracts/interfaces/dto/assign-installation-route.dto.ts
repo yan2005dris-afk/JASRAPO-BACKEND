@@ -1,4 +1,4 @@
-import { IsInt, IsOptional, IsDateString } from 'class-validator';
+import { IsInt, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 
@@ -13,14 +13,4 @@ export class AssignInstallationRouteDto {
   @IsInt()
   @Type(() => Number)
   routeId?: number;
-
-  @ApiProperty({
-    description:
-      'Fecha planificada de la ruta en formato YYYY-MM-DD. Solo aplica cuando se crea una nueva ruta (routeId omitido).',
-    required: false,
-    example: '2026-08-20',
-  })
-  @IsOptional()
-  @IsDateString()
-  fechaPlanificada?: string;
 }

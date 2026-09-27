@@ -13,7 +13,6 @@ describe('OperatorRouteResponseDto', () => {
       sectorId: null,
       periodoId: 20,
       estado: 'PENDIENTE',
-      fechaPlanificada: null,
       fechaInicio: null,
       fechaFin: null,
       createdAt: new Date(),

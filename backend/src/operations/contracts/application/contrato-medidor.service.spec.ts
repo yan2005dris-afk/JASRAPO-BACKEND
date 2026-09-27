@@ -187,7 +187,6 @@ describe('ContratoMedidorService', () => {
       comunidadId: 3,
       periodoId: null,
       estado: EstadoRuta.PENDIENTE,
-      fechaPlanificada: null,
       fechaInicio: null,
       fechaFin: null,
     });
@@ -256,10 +255,8 @@ describe('ContratoMedidorService', () => {
       // Given: el contrato está pendiente y no se selecciona una ruta existente.
       mockRouteRepository.create.mockResolvedValue(existingRoute);
 
-      // When: se asigna el contrato indicando una fecha planificada.
-      const result = await service.assignInstallationRoute(contratoId, {
-        fechaPlanificada: '2026-08-20',
-      });
+      // When: se asigna el contrato sin routeId.
+      const result = await service.assignInstallationRoute(contratoId, {});
 
       // Then: se crea una ruta de instalación sin operario y se genera su orden.
       expect(result).toBe(existingRoute);

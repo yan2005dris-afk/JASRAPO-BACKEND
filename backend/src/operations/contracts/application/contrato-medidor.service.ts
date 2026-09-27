@@ -26,7 +26,6 @@ import {
   EntityNotFoundException,
   InvalidDomainOperationException,
 } from 'src/shared/domain/exceptions/domain.exception';
-import { DateUtil } from 'src/shared/utils/date.util';
 import type { AssignInstallationRouteDto } from '../interfaces/dto/assign-installation-route.dto';
 import { RouteEntity } from '../../routes/domain/entities/route.entity';
 
@@ -138,9 +137,6 @@ export class ContratoMedidorService {
         sectorId: null,
         periodoId: null,
         estado: EstadoRuta.PENDIENTE,
-        fechaPlanificada: dto.fechaPlanificada
-          ? DateUtil.parseFrontendDate(dto.fechaPlanificada)
-          : null,
       });
     }
 

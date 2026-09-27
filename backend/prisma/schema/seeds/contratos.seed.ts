@@ -1,10 +1,69 @@
 import type { PrismaClient } from 'src/generated/prisma/client';
+import { takeNextMeterCodeSeed } from './secuenciaMedidor.seed';
 
 export async function seedContratos(prisma: PrismaClient) {
   const contratos: any[] = [];
   const sectoresOlon = [1, 2, 3, 4]; // IDs de sectores creados en sectores.seed
   const comunidades = [1, 2, 3, 4, 5]; // Olon, Nuñez, La Entrada, San Jose, Curia
   const categorias = [1, 2, 3];
+
+  const maxMedidor = await prisma.medidores.findFirst({
+    orderBy: { medidorId: 'desc' },
+  });
+  let nextMedidorId = Number(maxMedidor?.medidorId ?? 5) + 1;
+
+  // Helper para crear e instalar medidor
+  const instalarMedidorParaContrato = async (
+    contratoId: bigint,
+    comunidadId: number,
+    fechaInicio: Date,
+  ) => {
+    let lat = -1.7966 + (Math.random() - 0.5) * 0.008;
+    let lng = -80.7568 + (Math.random() - 0.5) * 0.008;
+    if (comunidadId === 2) {
+      lat = -1.7611 + (Math.random() - 0.5) * 0.005;
+      lng = -80.7678 + (Math.random() - 0.5) * 0.005;
+    } else if (comunidadId === 3) {
+      lat = -1.7456 + (Math.random() - 0.5) * 0.005;
+      lng = -80.7712 + (Math.random() - 0.5) * 0.005;
+    } else if (comunidadId === 4) {
+      lat = -1.8212 + (Math.random() - 0.5) * 0.005;
+      lng = -80.7412 + (Math.random() - 0.5) * 0.005;
+    } else if (comunidadId === 5) {
+      lat = -1.8089 + (Math.random() - 0.5) * 0.005;
+      lng = -80.749 + (Math.random() - 0.5) * 0.005;
+    }
+
+    const { codigo } = await takeNextMeterCodeSeed(prisma);
+    const marca = nextMedidorId % 2 === 0 ? 'Itron' : 'Sensus';
+    const modelo = nextMedidorId % 2 === 0 ? 'CEntra 500' : 'iPerl';
+
+    const medidor = await prisma.medidores.create({
+      data: {
+        medidorId: BigInt(nextMedidorId),
+        codigo,
+        marca,
+        modelo,
+        serie: `MED-${String(nextMedidorId).padStart(5, '0')}`,
+        estado: 'INSTALADO',
+        fechaInstalacion: fechaInicio,
+        latitud: lat,
+        longitud: lng,
+      },
+    });
+
+    await prisma.historialMedidores.create({
+      data: {
+        contratoId,
+        medidorId: medidor.medidorId,
+        fechaDesde: fechaInicio,
+        fechaHasta: null,
+        lecturaInicial: Math.floor(Math.random() * 25),
+      },
+    });
+
+    nextMedidorId++;
+  };
 
   // Contratos base para asegurar datos conocidos
   const contratosBase = [
@@ -35,6 +94,7 @@ export async function seedContratos(prisma: PrismaClient) {
   ];
 
   for (const c of contratosBase) {
+    const fechaInicio = new Date('2026-01-05T00:00:00.000Z');
     const created = await prisma.contratos.upsert({
       where: { contratoId: BigInt(c.contratoId) },
       update: {},
@@ -48,19 +108,24 @@ export async function seedContratos(prisma: PrismaClient) {
         direccionSuministro: `Direccion contrato ${c.contratoId}`,
         estadoServicio: 'ACTIVO',
         estadoCobranza: 'AL_DIA',
+        fechaInicio,
       },
     });
     contratos.push(created);
+
+    await instalarMedidorParaContrato(
+      created.contratoId,
+      c.comunidadId,
+      fechaInicio,
+    );
   }
 
   // Generar adicionales
   let nextContratoId = 4;
   for (let clienteId = 4; clienteId <= 50; clienteId++) {
-    // Seleccionar comunidad aleatoria
     const comunidadId =
       comunidades[Math.floor(Math.random() * comunidades.length)];
 
-    // Si es Olon (1), asignar sector
     let sectorId: number | null = null;
     if (comunidadId === 1) {
       sectorId = sectoresOlon[Math.floor(Math.random() * sectoresOlon.length)];
@@ -68,6 +133,7 @@ export async function seedContratos(prisma: PrismaClient) {
 
     const categoriaTarifaId =
       categorias[Math.floor(Math.random() * categorias.length)];
+    const fechaInicio = new Date('2026-01-15T00:00:00.000Z');
 
     const created = await prisma.contratos.create({
       data: {
@@ -80,11 +146,22 @@ export async function seedContratos(prisma: PrismaClient) {
         direccionSuministro: `Direccion contrato ${nextContratoId}`,
         estadoServicio: 'ACTIVO',
         estadoCobranza: 'AL_DIA',
+        fechaInicio,
       },
     });
     contratos.push(created);
+
+    await instalarMedidorParaContrato(
+      created.contratoId,
+      comunidadId,
+      fechaInicio,
+    );
+
     nextContratoId++;
   }
 
+  console.log(
+    `✅ ${contratos.length} contratos creados con medidores activos asignados en historial_medidores.`,
+  );
   return contratos;
 }
