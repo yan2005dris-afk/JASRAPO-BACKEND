@@ -47,6 +47,12 @@ export async function seedContratos(prisma: PrismaClient) {
         serie: `MED-${String(nextMedidorId).padStart(5, '0')}`,
         estado: 'INSTALADO',
         fechaInstalacion: fechaInicio,
+      },
+    });
+
+    await prisma.contratos.update({
+      where: { contratoId },
+      data: {
         latitud: lat,
         longitud: lng,
       },
