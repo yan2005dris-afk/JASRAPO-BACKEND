@@ -14,18 +14,9 @@ import { GetResponsibilityAgreementPdfDataUseCase } from './use-cases/get-respon
 import { GeneratePdfUseCase } from 'src/infrastructure/pdf/use-cases/generate-pdf.use-case';
 import { ContractEntity } from '../domain/entities/contract.entity';
 import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
-import {
-  EstadoOrdenTrabajo,
-  EstadoRuta,
-  EstadoServicioContrato,
-  TipoActividadCodes,
-} from 'src/shared/enums';
 import { RouteRepository } from '../../routes/domain/repositories/route.repository';
 import { OrdenTrabajoRepository } from '../../routes/domain/repositories/orden-trabajo.repository';
-import {
-  EntityNotFoundException,
-  InvalidDomainOperationException,
-} from 'src/shared/domain/exceptions/domain.exception';
+import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 import type { AssignInstallationRouteDto } from '../interfaces/dto/assign-installation-route.dto';
 import { RouteEntity } from '../../routes/domain/entities/route.entity';
 
@@ -83,75 +74,18 @@ export class ContratoMedidorService {
 
   // ── Asignar contrato a ruta de instalación (SC-174) ─────────────────────
 
-  /**
-   * Asigna un contrato en estado PENDIENTE_INSTALACION a una ruta de
-   * instalacion. Si `dto.routeId` es null/undefined, crea una nueva ruta
-   * INSTALACION sin operario asignado. Si se pasa `dto.routeId`, valida
-   * que la ruta destino sea de tipo INSTALACION y este en PENDIENTE.
-   *
-   * En ambos casos crea una orden_trabajo (INSTALACION) para el contrato
-   * y la vincula a la ruta (nueva o existente).
-   */
   async assignInstallationRoute(
     contratoId: bigint,
     dto: AssignInstallationRouteDto,
   ): Promise<RouteEntity> {
-    // 1. Buscar el contrato y validar estado
-    const contrato = await this.findOneUseCase.execute(contratoId);
-
-    if (
-      contrato.estadoServicio !== EstadoServicioContrato.PENDIENTE_INSTALACION
-    ) {
-      throw new InvalidDomainOperationException(
-        `El contrato debe estar en estado PENDIENTE_INSTALACION (actual: ${contrato.estadoServicio})`,
-      );
-    }
-
-    // 2. Resolver la ruta (crear nueva o usar existente)
-    let ruta: RouteEntity;
-
-    if (dto.routeId !== undefined && dto.routeId !== null) {
-      const existing = await this.routeRepository.findById(BigInt(dto.routeId));
-      if (!existing) {
-        throw new EntityNotFoundException('Ruta', dto.routeId.toString());
-      }
-      if (existing.tipoRuta !== TipoActividadCodes.INSTALACION) {
-        throw new InvalidDomainOperationException(
-          `La ruta debe ser de tipo INSTALACION (actual: ${existing.tipoRuta})`,
-        );
-      }
-      if (existing.estado !== EstadoRuta.PENDIENTE) {
-        throw new InvalidDomainOperationException(
-          `La ruta debe estar en estado PENDIENTE (actual: ${existing.estado})`,
-        );
-      }
-      ruta = existing;
-    } else {
-      // Crear nueva ruta INSTALACION sin operario
-      ruta = await this.routeRepository.create({
-        nombre: `Instalaciones ${contrato.numeroGuia ?? contratoId}`,
-        descripcion: null,
-        operarioId: null,
-        tipoRuta: TipoActividadCodes.INSTALACION,
-        comunidadId: Number(contrato.comunidadId),
-        sectorId: null,
-        periodoId: null,
-        estado: EstadoRuta.PENDIENTE,
-      });
-    }
-
-    // 3. Crear la orden_trabajo vinculada al contrato
-    await this.ordenTrabajoRepository.create({
-      rutaId: ruta.rutaId,
+    const rutaId = await this.ordenTrabajoRepository.assignInstallationRoute(
       contratoId,
-      medidorId: contrato.historialMedidores?.[0]?.medidorId ?? null,
-      estado: EstadoOrdenTrabajo.PENDIENTE,
-    });
-
-    return ruta;
+      dto.routeId != null ? BigInt(dto.routeId) : undefined,
+    );
+    const route = await this.routeRepository.findById(rutaId);
+    if (!route) throw new EntityNotFoundException('Ruta', rutaId);
+    return route;
   }
-
-  // ── PDF ──────────────────────────────────────────────────────────────────
 
   async generateConnectionRequestPdf(contratoId: bigint): Promise<Buffer> {
     const raw =

@@ -17,6 +17,7 @@ import type {
 } from '../../domain/types/contract.types';
 import { ContractMapper } from '../mappers/contract.mapper';
 import { ContractState } from '../../domain/contract-state';
+import { ensureContractWorkOrder } from '../contract-work-order';
 import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
 import {
   paginate,
@@ -248,13 +249,23 @@ export class PrismaContractRepository implements ContractRepository {
   async createContractWithMeterHistory(
     data: CreateContractWithMeterCommand,
   ): Promise<ContractEntity> {
-    const estadoCobranza = ContractState.normalizeCollectionStatus(
-      data.estadoCobranza,
-      data.estadoServicio,
-    );
-
     return this.prisma.$transaction(async (tx) => {
       await this.validateContractDependencies(tx, data);
+
+      const reserved = await tx.medidores.updateMany({
+        where: {
+          medidorId: data.medidorId,
+          estado: EstadoMedidor.BODEGA,
+          deletedAt: null,
+          historial: { none: { fechaHasta: null, deletedAt: null } },
+        },
+        data: { estado: EstadoMedidor.PENDIENTE, fechaInstalacion: null },
+      });
+      if (reserved.count !== 1) {
+        throw new InvalidDomainOperationException(
+          'El medidor ya no está disponible en bodega',
+        );
+      }
 
       const contrato = await tx.contratos.create({
         data: {
@@ -263,8 +274,8 @@ export class PrismaContractRepository implements ContractRepository {
           numeroGuia: data.numeroGuia,
           direccionSuministro: data.direccionSuministro,
           comunidadId: data.comunidadId,
-          estadoServicio: data.estadoServicio,
-          estadoCobranza,
+          estadoServicio: EstadoServicioContrato.PENDIENTE_INSPECCION,
+          estadoCobranza: 'NO_APLICA',
           ...(data.sectorId !== null ? { sectorId: data.sectorId } : {}),
           ...(data.creadoPor ? { creadoPor: data.creadoPor } : {}),
           latitud: data.latitud,
@@ -281,14 +292,7 @@ export class PrismaContractRepository implements ContractRepository {
         },
       });
 
-      await tx.medidores.update({
-        where: { medidorId: data.medidorId },
-        data: { estado: EstadoMedidor.PENDIENTE },
-      });
-
-      if (contrato.estadoServicio === 'PENDIENTE_PAGO') {
-        await tx.$executeRaw`SELECT generar_prefactura_instalacion(${contrato.contratoId}, ${data.creadoPor || 'SYSTEM'})`;
-      }
+      await ensureContractWorkOrder(tx, contrato, data.medidorId, 'INSPECCION');
 
       const createdRecord = await tx.contratos.findUnique({
         where: { contratoId: contrato.contratoId },

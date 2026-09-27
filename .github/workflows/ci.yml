@@ -73,6 +73,11 @@ jobs:
       - name: Run tests with coverage
         run: pnpm --filter backend run test:cov
 
+      - name: Verify installation lifecycle with PostgreSQL
+        env:
+          NODE_OPTIONS: --experimental-vm-modules
+        run: pnpm --filter backend exec jest --config test/jest-integration.json --runInBand --runTestsByPath src/operations/routes/infrastructure/repositories/installation-lifecycle.integration.spec.ts
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
