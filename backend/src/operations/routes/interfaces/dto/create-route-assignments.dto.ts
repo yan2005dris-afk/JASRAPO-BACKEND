@@ -1,6 +1,5 @@
 import {
   IsArray,
-  IsDateString,
   IsEnum,
   IsNotEmpty,
   IsNumber,
@@ -74,15 +73,6 @@ export class CreateRouteAssignmentsDto {
   @IsNumber({}, { each: true })
   @Type(() => Number)
   contratoIds?: number[];
-
-  @ApiProperty({
-    description: 'Fecha planificada para las rutas (formato YYYY-MM-DD)',
-    required: false,
-    example: '2026-05-15',
-  })
-  @IsOptional()
-  @IsDateString()
-  fechaPlanificada?: string;
 
   @ApiProperty({
     description: 'Nombre base para las rutas creadas (opcional)',

@@ -11,7 +11,6 @@ import {
   EntityNotFoundException,
   InvalidDomainOperationException,
 } from 'src/shared/domain/exceptions/domain.exception';
-import { DateUtil } from 'src/shared/utils/date.util';
 
 @Injectable()
 export class CreateRouteAssignmentsUseCase {
@@ -46,9 +45,9 @@ export class CreateRouteAssignmentsUseCase {
       throw new InvalidDomainOperationException('El periodo no está abierto');
     }
 
-    const fechaPlanificada = DateUtil.parseFrontendDate(
-      dto.fechaPlanificada ?? null,
-    );
+    const fechaLectura = periodo.fechaInicio
+      ? new Date(periodo.fechaInicio)
+      : new Date();
 
     const tipoRuta = dto.tipoRuta ?? TipoActividadCodes.LECTURA;
 
@@ -87,7 +86,6 @@ export class CreateRouteAssignmentsUseCase {
         comunidadId: dto.comunidadId,
         sectorId,
         periodoId: dto.periodoId,
-        fechaPlanificada,
         estado: 'PENDIENTE',
       };
 
@@ -102,8 +100,9 @@ export class CreateRouteAssignmentsUseCase {
 
     // Caso 2: Si se especificaron sectores => Crear una ruta por cada sector (Lecturas masivas)
     if (dto.sectorIds && dto.sectorIds.length > 0) {
+      const uniqueSectorIds = Array.from(new Set(dto.sectorIds));
       const validatedSectors: SectorRef[] = [];
-      for (const sectorId of dto.sectorIds) {
+      for (const sectorId of uniqueSectorIds) {
         const sector = await this.routeRepository.findSector(sectorId);
         if (!sector) {
           throw new EntityNotFoundException('Sector', sectorId);
@@ -118,7 +117,6 @@ export class CreateRouteAssignmentsUseCase {
           dto.comunidadId,
           dto.periodoId,
           sectorId,
-          fechaPlanificada,
           tipoRuta,
         );
 
@@ -146,17 +144,16 @@ export class CreateRouteAssignmentsUseCase {
           comunidadId: dto.comunidadId,
           sectorId: sector.sectorId,
           periodoId: dto.periodoId,
-          fechaPlanificada,
           estado: 'PENDIENTE',
         };
 
         const route = await this.routeRepository.create(createData);
 
-        if (tipoRuta === TipoActividadCodes.LECTURA && dto.fechaPlanificada) {
+        if (tipoRuta === TipoActividadCodes.LECTURA) {
           await this.routeRepository.initializeMonthlyReadings(
             dto.comunidadId,
             dto.periodoId,
-            DateUtil.parseFrontendDateStrict(dto.fechaPlanificada),
+            fechaLectura,
             sector.sectorId,
             route.rutaId,
           );
@@ -173,13 +170,12 @@ export class CreateRouteAssignmentsUseCase {
       dto.comunidadId,
       dto.periodoId,
       undefined,
-      fechaPlanificada,
       tipoRuta,
     );
 
     if (overlapping.length > 0) {
       throw new InvalidDomainOperationException(
-        'Ya existe una ruta planificada para esta comunidad en el mismo mes y período',
+        'Ya existe una ruta planificada para esta comunidad en este periodo',
       );
     }
 
@@ -196,17 +192,16 @@ export class CreateRouteAssignmentsUseCase {
       comunidadId: dto.comunidadId,
       sectorId: undefined,
       periodoId: dto.periodoId,
-      fechaPlanificada,
       estado: 'PENDIENTE',
     };
 
     const route = await this.routeRepository.create(createData);
 
-    if (tipoRuta === TipoActividadCodes.LECTURA && dto.fechaPlanificada) {
+    if (tipoRuta === TipoActividadCodes.LECTURA) {
       await this.routeRepository.initializeMonthlyReadings(
         dto.comunidadId,
         dto.periodoId,
-        DateUtil.parseFrontendDateStrict(dto.fechaPlanificada),
+        fechaLectura,
         null,
         route.rutaId,
       );

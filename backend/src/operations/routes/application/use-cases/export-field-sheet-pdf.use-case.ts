@@ -138,7 +138,6 @@ export class ExportFieldSheetPdfUseCase {
         tipoRuta: ruta.tipoActividad.codigo,
         descripcion: ruta.descripcion,
         estado: ruta.estado,
-        fechaPlanificada: ruta.fechaPlanificada,
         comunidadNombre: ruta.comunidad?.nombre,
         sectorNombre: ruta.sector?.nombre,
         operarioNombre,

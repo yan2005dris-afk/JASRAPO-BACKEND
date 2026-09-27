@@ -33,6 +33,8 @@ export interface PeriodoRef {
   periodoId: number;
   nombre?: string;
   estado: string;
+  fechaInicio?: Date | null;
+  fechaFin?: Date | null;
 }
 
 export interface TipoActividadRef {
@@ -60,7 +62,6 @@ export interface EligibleReadingsCriteria {
   comunidadId: number;
   sectorId?: number;
   periodoId?: number;
-  fechaPlanificada?: Date | string;
   search?: string;
 }
 
@@ -106,14 +107,13 @@ export abstract class RouteRepository {
     comunidadId: number,
     periodoId: number,
     sectorId?: number,
-    fechaPlanificada?: Date | null,
     tipoRuta?: string,
   ): Promise<RouteEntity[]>;
 
   abstract initializeMonthlyReadings(
     comunidadId: number,
     periodoId: number,
-    fechaPlanificada: Date,
+    fechaReferencia: Date,
     sectorId?: number | null,
     rutaId?: bigint | null,
   ): Promise<number>;
