@@ -11,6 +11,7 @@ import { createClientsListPdfDocumentType } from '../factories/clients-list.fact
 import { createConnectionHistoryPdfDocumentType } from '../factories/connection-history.factory';
 import { createOverdueAccountsPdfDocumentType } from '../factories/overdue-accounts.factory';
 import { createPaymentsReportPdfDocumentType } from '../factories/payments-report.factory';
+import { createZoneConsumptionPdfDocumentType } from '../factories/zone-consumption.factory';
 import {
   LEGACY_CONNECTION_HISTORY_FIXTURE,
   LEGACY_PAYMENT_AGREEMENT_FIXTURE,
@@ -207,6 +208,50 @@ const overdueAccountsDocument = {
   filtros: { descripcion: 'Todos los clientes', fechaCorte: '20/5/2024' },
 };
 
+// Documento determinista (strings fijos, sin fechas por locale) para goldens estables.
+const zoneConsumptionDocument = {
+  data: [
+    {
+      sectorId: '1',
+      sectorNombre: 'Sector Norte',
+      comunidadNombre: 'Olón Centro',
+      consumoTotal: '320.00',
+      consumoTotalNum: 320,
+      medidoresConLectura: 3,
+      consumoPromedio: '106.67',
+      estimadasCount: 1,
+      estimadasVolumen: '15.00',
+      medidoresSinLectura: 2,
+      porcentajeSistema: '64.0',
+    },
+    {
+      sectorId: '2',
+      sectorNombre: 'Sector Sur',
+      comunidadNombre: 'Olón Centro',
+      consumoTotal: '180.00',
+      consumoTotalNum: 180,
+      medidoresConLectura: 2,
+      consumoPromedio: '90.00',
+      estimadasCount: 0,
+      estimadasVolumen: '0.00',
+      medidoresSinLectura: 0,
+      porcentajeSistema: '36.0',
+    },
+  ],
+  meta: { total: 2, periodoNombre: 'ENERO 2024' },
+  kpis: {
+    consumoTotalSistema: '500.00',
+    totalZonas: 2,
+    zonaMayorConsumo: 'Sector Norte',
+    medidoresSinLectura: 2,
+  },
+  filtros: {
+    descripcion: 'Todas las zonas',
+    periodoNombre: 'ENERO 2024',
+    definicionesVersion: 'defs v0.1 (prototipo)',
+  },
+};
+
 function createFixture<TInput, TOutput extends object>(
   family: string,
   style: ReportStyle,
@@ -291,5 +336,17 @@ export const REPORT_TEMPLATE_FIXTURES: readonly ReportTemplateFixture[] = [
     'modern',
     createOverdueAccountsPdfDocumentType('modern'),
     overdueAccountsDocument,
+  ),
+  createFixture(
+    'zone-consumption',
+    'legacy',
+    createZoneConsumptionPdfDocumentType('legacy'),
+    zoneConsumptionDocument,
+  ),
+  createFixture(
+    'zone-consumption',
+    'modern',
+    createZoneConsumptionPdfDocumentType('modern'),
+    zoneConsumptionDocument,
   ),
 ];

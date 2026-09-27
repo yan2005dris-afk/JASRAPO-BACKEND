@@ -14,6 +14,7 @@ import {
   OverdueAccountsReportEmailStrategy,
   PaymentAgreementReportEmailStrategy,
   PaymentsReportEmailStrategy,
+  ZoneConsumptionReportEmailStrategy,
   REPORT_EMAIL_STRATEGIES_PROVIDER,
 } from './application/use-cases/send-report-by-email.strategies';
 
@@ -23,6 +24,7 @@ import { ConnectionHistoryReportDefinition } from './application/definitions/con
 import { AccountStatementReportDefinition } from './application/definitions/account-statement-report.definition';
 import { OverdueAccountsReportDefinition } from './application/definitions/overdue-accounts-report.definition';
 import { PaymentAgreementReportDefinition } from './application/definitions/payment-agreement-report.definition';
+import { ZoneConsumptionReportDefinition } from './application/definitions/zone-consumption-report.definition';
 import {
   AccountStatementReportQueryPort,
   ClientsListReportQueryPort,
@@ -30,6 +32,7 @@ import {
   OverdueAccountsReportQueryPort,
   PaymentAgreementReportQueryPort,
   PaymentsReportQueryPort,
+  ZoneConsumptionReportQueryPort,
 } from './application/ports/report-query.ports';
 import { ClientServiceClientsListReportQueryAdapter } from './infrastructure/queries/client-service-clients-list-report-query.adapter';
 import { PrismaPaymentsReportQueryAdapter } from './infrastructure/queries/prisma-payments-report-query.adapter';
@@ -37,6 +40,7 @@ import { PrismaConnectionHistoryReportQueryAdapter } from './infrastructure/quer
 import { PrismaAccountStatementReportQueryAdapter } from './infrastructure/queries/prisma-account-statement-report-query.adapter';
 import { PrismaOverdueAccountsReportQueryAdapter } from './infrastructure/queries/prisma-overdue-accounts-report-query.adapter';
 import { AgreementPaymentAgreementReportQueryAdapter } from './infrastructure/queries/agreement-payment-agreement-report-query.adapter';
+import { PrismaZoneConsumptionReportQueryAdapter } from './infrastructure/queries/prisma-zone-consumption-report-query.adapter';
 import { ReportEmailQueue } from './application/report-email-queue.port';
 import { ReportEmailJobService } from './infrastructure/report-email-job.service';
 import { ReportRequestContextFactory } from './application/report-request-context.factory';
@@ -58,6 +62,7 @@ import { ExportModule } from '../infrastructure/export/export.module';
     AccountStatementReportDefinition,
     OverdueAccountsReportDefinition,
     PaymentAgreementReportDefinition,
+    ZoneConsumptionReportDefinition,
     ReportRequestContextFactory,
     {
       provide: ClientsListReportQueryPort,
@@ -83,6 +88,10 @@ import { ExportModule } from '../infrastructure/export/export.module';
       provide: PaymentAgreementReportQueryPort,
       useClass: AgreementPaymentAgreementReportQueryAdapter,
     },
+    {
+      provide: ZoneConsumptionReportQueryPort,
+      useClass: PrismaZoneConsumptionReportQueryAdapter,
+    },
     ReportStyleService,
     ReportStyleDispatcher,
     PaymentsReportEmailStrategy,
@@ -91,6 +100,7 @@ import { ExportModule } from '../infrastructure/export/export.module';
     AccountStatementReportEmailStrategy,
     ClientsListReportEmailStrategy,
     OverdueAccountsReportEmailStrategy,
+    ZoneConsumptionReportEmailStrategy,
     REPORT_EMAIL_STRATEGIES_PROVIDER,
     ReportEmailJobService,
     { provide: ReportEmailQueue, useExisting: ReportEmailJobService },

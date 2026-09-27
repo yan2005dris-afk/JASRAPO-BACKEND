@@ -5,6 +5,7 @@ import { createClientsListPdfDocumentType } from './factories/clients-list.facto
 import { createConnectionHistoryPdfDocumentType } from './factories/connection-history.factory';
 import { createOverdueAccountsPdfDocumentType } from './factories/overdue-accounts.factory';
 import { createPaymentsReportPdfDocumentType } from './factories/payments-report.factory';
+import { createZoneConsumptionPdfDocumentType } from './factories/zone-consumption.factory';
 
 /** Official report document types registered by ReportsModule. */
 export const REPORT_PDF_DOCUMENT_TYPES: readonly PdfDocumentType<
@@ -22,4 +23,6 @@ export const REPORT_PDF_DOCUMENT_TYPES: readonly PdfDocumentType<
   createConnectionHistoryPdfDocumentType('modern'),
   createOverdueAccountsPdfDocumentType('legacy'),
   createOverdueAccountsPdfDocumentType('modern'),
+  createZoneConsumptionPdfDocumentType('legacy'),
+  createZoneConsumptionPdfDocumentType('modern'),
 ];

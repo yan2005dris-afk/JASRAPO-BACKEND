@@ -30,6 +30,9 @@ export const REPORT_STYLE_CATALOG: Readonly<
   'account-statement': ['legacy', 'modern'],
   'clients-list': ['legacy', 'modern'],
   'overdue-accounts': ['legacy', 'modern'],
+  // PDF-11 (prototipo): dos diseños paralelos como el resto de reportes
+  // administrativos, resueltos por `reporte.estilo`.
+  'zone-consumption': ['legacy', 'modern'],
   // Legal/contractual → canonical-only. Global `reporte.estilo` is ignored.
   'payment-agreement': ['unique'],
 };

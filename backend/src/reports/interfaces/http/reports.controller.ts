@@ -34,12 +34,14 @@ import { LoggerService } from 'src/infrastructure/observability/logger/logger.se
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
 import { observePdfRequestAbort } from 'src/infrastructure/pdf/pdf-request-abort.util';
 import { OverdueAccountsFilterDto } from '../dto/overdue-accounts-filter.dto';
+import { ZoneConsumptionFilterDto } from '../dto/zone-consumption-filter.dto';
 import { ClientsListReportDefinition } from '../../application/definitions/clients-list-report.definition';
 import { PaymentsReportDefinition } from '../../application/definitions/payments-report.definition';
 import { ConnectionHistoryReportDefinition } from '../../application/definitions/connection-history-report.definition';
 import { AccountStatementReportDefinition } from '../../application/definitions/account-statement-report.definition';
 import { PaymentAgreementReportDefinition } from '../../application/definitions/payment-agreement-report.definition';
 import { OverdueAccountsReportDefinition } from '../../application/definitions/overdue-accounts-report.definition';
+import { ZoneConsumptionReportDefinition } from '../../application/definitions/zone-consumption-report.definition';
 import { ReportRequestContextFactory } from '../../application/report-request-context.factory';
 import { ReportRequestContextException } from '../../application/report-request-context.exception';
 import type {
@@ -85,6 +87,7 @@ export class ReportsController {
     private readonly accountStatementDefinition: AccountStatementReportDefinition,
     private readonly overdueAccountsDefinition: OverdueAccountsReportDefinition,
     private readonly paymentAgreementDefinition: PaymentAgreementReportDefinition,
+    private readonly zoneConsumptionDefinition: ZoneConsumptionReportDefinition,
     private readonly contextFactory: ReportRequestContextFactory,
     private readonly dispatcher: ReportStyleDispatcher,
     private readonly exportStreamService: ExportStreamService,
@@ -318,6 +321,43 @@ export class ReportsController {
     );
   }
 
+  @Get('zone-consumption')
+  @RequiredPermission('reportes', 'read')
+  @ApiOperation({
+    summary: 'Reporte de Consumo por Zonas (PDF-11, prototipo)',
+    description:
+      'Genera el PDF oficial del consumo por zonas (sector, agrupado por comunidad) para un periodo de facturación, o devuelve el mismo modelo proyectado en JSON según el header `Accept`. Definiciones v0.1 en aprobación.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'PDF generado o JSON con el modelo proyectado según Accept',
+    content: {
+      'application/pdf': {},
+      'application/json': {},
+    },
+  })
+  async zoneConsumption(
+    @Query() filters: ZoneConsumptionFilterDto,
+    @CurrentUser() actor: JwtPayload,
+    @Headers('x-time-zone') timeZone: string | undefined,
+    @Headers('accept-language') locale: string | undefined,
+    @Res() res: Response,
+  ) {
+    const context = this.createContext(
+      'zone-consumption',
+      actor,
+      filters,
+      timeZone,
+      locale,
+    );
+    return this.handleNegotiatedReport(
+      'zone-consumption',
+      context,
+      this.zoneConsumptionDefinition,
+      res,
+    );
+  }
+
   // ─── Email send endpoints (report-endpoint-send-email) ───────────────────────
 
   @Post('payments-report/email')
@@ -489,6 +529,38 @@ export class ReportsController {
         contratoId: body.contratoId,
         sectorId: body.sectorId,
         fechaCorte: body.fechaCorte,
+      },
+      body,
+      actor,
+      timeZone,
+      locale,
+    );
+  }
+
+  @Post('zone-consumption/email')
+  @RequiredPermission('reportes', 'read')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Enviar Consumo por Zonas por email' })
+  @ApiBody({ type: SendReportEmailDto })
+  @ApiResponse({ status: 400, description: 'Falta destinatario' })
+  @ApiResponse({ status: 403, description: 'Sin permiso reportes:read' })
+  sendZoneConsumptionEmail(
+    @Body() body: SendReportEmailDto,
+    @CurrentUser() actor: JwtPayload,
+    @Headers('x-time-zone') timeZone: string | undefined,
+    @Headers('accept-language') locale: string | undefined,
+  ) {
+    if (!body.destinatario) {
+      throw new BadRequestException(
+        'destinatario es obligatorio para el reporte de consumo por zonas',
+      );
+    }
+    return this.executeEmailRequest(
+      'zone-consumption',
+      {
+        periodoId: body.periodoId,
+        comunidadId: body.comunidadId,
+        sectorId: body.sectorId,
       },
       body,
       actor,
