@@ -854,15 +854,18 @@ export class PrismaOperatorRepository extends OperatorRepository {
       medidor: { medidorId: bigint; serie: string } | null;
     },
   >(order: T) {
-    const { latitud, longitud, ...contrato } = order.contrato;
+    const { latitud, longitud, ...contratoRest } = order.contrato;
     return {
       ...order,
-      contrato,
+      contrato: {
+        ...contratoRest,
+        latitud: toCoordinate(latitud),
+        longitud: toCoordinate(longitud),
+      },
       medidor: order.medidor
         ? {
-            ...order.medidor,
-            latitud: toCoordinate(latitud),
-            longitud: toCoordinate(longitud),
+            medidorId: order.medidor.medidorId,
+            serie: order.medidor.serie,
           }
         : null,
     };

@@ -176,15 +176,15 @@ describe('PrismaOperatorRepository routes', () => {
     expect(routes[0].ordenesTrabajo[0].medidor).toEqual({
       medidorId: 7n,
       serie: 'MED-001',
-      latitud: -0.9,
-      longitud: -80.7,
     });
     expect(routes[0].ordenesTrabajo[0].contrato).toEqual({
       numeroGuia: 'GUIA-001',
       direccionSuministro: 'Calle 1',
+      latitud: -0.9,
+      longitud: -80.7,
       cliente: { nombres: 'Juan', apellidos: 'Pérez', razonSocial: null },
     });
-    expect(typeof routes[0].ordenesTrabajo[0].medidor!.latitud).toBe('number');
+    expect(typeof routes[0].ordenesTrabajo[0].contrato.latitud).toBe('number');
     expect(routes[0].paradas).toEqual([
       {
         ordenTrabajoId: 9n,
@@ -365,10 +365,12 @@ describe('PrismaOperatorRepository routes', () => {
       }),
     );
     const mappedMedidor = (page.items[0] as any).medidor;
-    expect(mappedMedidor.latitud).toBe(-1.1);
-    expect(mappedMedidor.longitud).toBe(-80.1);
-    expect(typeof mappedMedidor.latitud).toBe('number');
-    expect((page.items[0] as any).contrato).not.toHaveProperty('latitud');
+    expect(mappedMedidor).not.toHaveProperty('latitud');
+    expect(mappedMedidor).not.toHaveProperty('longitud');
+    const mappedContrato = (page.items[0] as any).contrato;
+    expect(mappedContrato.latitud).toBe(-1.1);
+    expect(mappedContrato.longitud).toBe(-80.1);
+    expect(typeof mappedContrato.latitud).toBe('number');
   });
 
   it('captures atomic snapshot version and watermark in getSyncSnapshotContext', async () => {
