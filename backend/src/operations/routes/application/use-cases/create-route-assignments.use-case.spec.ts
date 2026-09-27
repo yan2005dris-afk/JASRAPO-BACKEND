@@ -425,4 +425,3 @@ describe('CreateRouteAssignmentsUseCase', () => {
     expect(mockRouteRepository.create).toHaveBeenCalledTimes(1);
   });
 });
-

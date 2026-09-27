@@ -378,8 +378,7 @@ export class PrismaRouteRepository implements RouteRepository {
     criteria: EligibleReadingsCriteria,
     pagination: PaginateOptions,
   ): Promise<PaginatedResult<ReadingForRouteEntity>> {
-    const { comunidadId, sectorId, periodoId, search } =
-      criteria;
+    const { comunidadId, sectorId, periodoId, search } = criteria;
     const where: Prisma.LecturasWhereInput = {
       deletedAt: null,
       ...(periodoId ? { periodoId } : {}),

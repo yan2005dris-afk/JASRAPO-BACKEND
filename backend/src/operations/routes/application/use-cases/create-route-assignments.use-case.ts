@@ -11,7 +11,6 @@ import {
   EntityNotFoundException,
   InvalidDomainOperationException,
 } from 'src/shared/domain/exceptions/domain.exception';
-import { DateUtil } from 'src/shared/utils/date.util';
 
 @Injectable()
 export class CreateRouteAssignmentsUseCase {

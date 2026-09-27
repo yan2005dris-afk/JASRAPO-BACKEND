@@ -8,7 +8,6 @@ import {
   InvalidDomainOperationException,
 } from 'src/shared/domain/exceptions/domain.exception';
 import { canTransitionRouteState } from '../../domain/route-state';
-import { DateUtil } from 'src/shared/utils/date.util';
 
 @Injectable()
 export class UpdateRouteUseCase {
