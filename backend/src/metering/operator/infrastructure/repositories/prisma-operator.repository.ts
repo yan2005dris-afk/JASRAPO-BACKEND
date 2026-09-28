@@ -885,9 +885,7 @@ export class PrismaOperatorRepository extends OperatorRepository {
     route: Prisma.RutasGetPayload<{ include: typeof operatorRouteInclude }>,
   ): OperatorRoute {
     const routeTipoActividad =
-      route.tipoActividad?.codigo ??
-      (route as any).tipoRuta ??
-      'TOMA_LECTURA';
+      route.tipoActividad?.codigo ?? (route as any).tipoRuta ?? 'TOMA_LECTURA';
 
     const ordenesTrabajo = route.ordenesTrabajo.map((order) =>
       this.toOperatorWorkOrder(order, routeTipoActividad),
