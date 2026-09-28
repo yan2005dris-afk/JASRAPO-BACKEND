@@ -122,6 +122,8 @@ export interface OperatorWorkOrder {
   contrato: {
     numeroGuia: string;
     direccionSuministro: string;
+    latitud?: number | null;
+    longitud?: number | null;
     cliente: {
       nombres: string;
       apellidos: string;
@@ -131,8 +133,6 @@ export interface OperatorWorkOrder {
   medidor: {
     medidorId: bigint;
     serie: string;
-    latitud: number | null;
-    longitud: number | null;
   } | null;
 }
 
@@ -161,8 +161,6 @@ export interface OperatorRoute {
   medidor?: {
     medidorId: bigint;
     serie: string;
-    latitud: number | null;
-    longitud: number | null;
   } | null;
   ordenesTrabajo: OperatorWorkOrder[];
   paradas: OperatorRouteStop[];

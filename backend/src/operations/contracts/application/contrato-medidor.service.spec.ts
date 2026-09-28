@@ -171,7 +171,7 @@ describe('ContratoMedidorService', () => {
       ).toEqual({ rutaId: 20n });
       expect(
         mockOrdenTrabajoRepository.assignInstallationRoute,
-      ).toHaveBeenCalledWith(1n, 20n, undefined);
+      ).toHaveBeenCalledWith(1n, 20n);
       expect(mockOrdenTrabajoRepository.create).not.toHaveBeenCalled();
     });
 

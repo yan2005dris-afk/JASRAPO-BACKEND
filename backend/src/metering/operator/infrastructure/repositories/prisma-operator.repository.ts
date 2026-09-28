@@ -850,19 +850,32 @@ export class PrismaOperatorRepository extends OperatorRepository {
       contrato: {
         latitud: Prisma.Decimal | null;
         longitud: Prisma.Decimal | null;
+        [key: string]: any;
       };
       medidor: { medidorId: bigint; serie: string } | null;
+      ruta?: {
+        tipoActividad?: { codigo: string };
+      };
     },
-  >(order: T) {
-    const { latitud, longitud, ...contrato } = order.contrato;
+  >(order: T, routeTipoActividad?: string) {
+    const { latitud, longitud, ...contratoRest } = order.contrato;
+    const tipoActividad =
+      (order as any).tipoActividad ??
+      order.ruta?.tipoActividad?.codigo ??
+      routeTipoActividad ??
+      'TOMA_LECTURA';
     return {
       ...order,
-      contrato,
+      tipoActividad,
+      contrato: {
+        ...contratoRest,
+        latitud: toCoordinate(latitud),
+        longitud: toCoordinate(longitud),
+      },
       medidor: order.medidor
         ? {
-            ...order.medidor,
-            latitud: toCoordinate(latitud),
-            longitud: toCoordinate(longitud),
+            medidorId: order.medidor.medidorId,
+            serie: order.medidor.serie,
           }
         : null,
     };
@@ -871,8 +884,11 @@ export class PrismaOperatorRepository extends OperatorRepository {
   private toOperatorRoute(
     route: Prisma.RutasGetPayload<{ include: typeof operatorRouteInclude }>,
   ): OperatorRoute {
+    const routeTipoActividad =
+      route.tipoActividad?.codigo ?? (route as any).tipoRuta ?? 'TOMA_LECTURA';
+
     const ordenesTrabajo = route.ordenesTrabajo.map((order) =>
-      this.toOperatorWorkOrder(order),
+      this.toOperatorWorkOrder(order, routeTipoActividad),
     );
 
     const paradas = route.ordenesTrabajo.flatMap((order) => {
@@ -894,7 +910,10 @@ export class PrismaOperatorRepository extends OperatorRepository {
           longitud,
           serie: order.medidor?.serie,
           clienteNombre,
-          tipoActividad: route.tipoActividad.codigo,
+          tipoActividad:
+            route.tipoActividad?.codigo ??
+            (route as any).tipoRuta ??
+            'TOMA_LECTURA',
           estado: order.estado,
           direccionSuministro: order.contrato.direccionSuministro,
         },
@@ -903,6 +922,10 @@ export class PrismaOperatorRepository extends OperatorRepository {
 
     return {
       ...route,
+      tipoRuta:
+        route.tipoActividad?.codigo ??
+        (route as any).tipoRuta ??
+        'TOMA_LECTURA',
       comunidadNombre: route.comunidad?.nombre ?? null,
       sectorNombre: route.sector?.nombre ?? null,
       ordenesTrabajo,
