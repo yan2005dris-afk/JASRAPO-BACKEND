@@ -3,7 +3,9 @@ import { ContractRepository } from '../../domain/repositories/contract.repositor
 import { ActualizarContratoMedidorDto } from '../../interfaces/dto/update-contrato-medidor.dto';
 import { ContractEntity } from '../../domain/entities/contract.entity';
 import { ContractState } from '../../domain/contract-state';
+import { validateServiceAreaLocation } from '../../domain/policies/service-area.policy';
 import {
+  DomainValidationException,
   EntityNotFoundException,
   InvalidDomainOperationException,
 } from 'src/shared/domain/exceptions/domain.exception';
@@ -19,6 +21,23 @@ export class UpdateContractUseCase {
     const registro = await this.contractRepository.findById(id);
     if (!registro) {
       throw new EntityNotFoundException('Contrato', id.toString());
+    }
+
+    const coordinatesChanged =
+      updateDto.latitud !== registro.latitud ||
+      updateDto.longitud !== registro.longitud;
+    if (
+      updateDto.latitud != null &&
+      updateDto.longitud != null &&
+      coordinatesChanged
+    ) {
+      const locationError = validateServiceAreaLocation(
+        updateDto.latitud,
+        updateDto.longitud,
+      );
+      if (locationError) {
+        throw new DomainValidationException(locationError);
+      }
     }
 
     const updateData = this.extractFields(updateDto, registro);
