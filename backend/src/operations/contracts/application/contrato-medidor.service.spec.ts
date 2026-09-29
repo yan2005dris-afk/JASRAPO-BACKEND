@@ -11,6 +11,7 @@ import { RemoveContractUseCase } from './use-cases/remove-contract.use-case';
 import { FinalizeMeterLinkUseCase } from './use-cases/finalize-meter-link.use-case';
 import { GetConnectionRequestPdfDataUseCase } from './use-cases/get-connection-request-pdf-data.use-case';
 import { GetResponsibilityAgreementPdfDataUseCase } from './use-cases/get-responsibility-agreement-pdf-data.use-case';
+import { GetServiceAreaUseCase } from './use-cases/get-service-area.use-case';
 import { GeneratePdfUseCase } from 'src/infrastructure/pdf/use-cases/generate-pdf.use-case';
 import { RouteRepository } from '../../routes/domain/repositories/route.repository';
 import { OrdenTrabajoRepository } from '../../routes/domain/repositories/orden-trabajo.repository';
@@ -25,6 +26,7 @@ describe('ContratoMedidorService', () => {
   const mockFinalizeLinkUseCase = { execute: jest.fn() };
   const mockGetConnectionRequestPdfData = { execute: jest.fn() };
   const mockGetResponsibilityAgreementPdfData = { execute: jest.fn() };
+  const mockGetServiceAreaUseCase = { execute: jest.fn() };
   const mockGeneratePdf = { execute: jest.fn() };
   const mockRouteRepository = {
     create: jest.fn(),
@@ -55,6 +57,10 @@ describe('ContratoMedidorService', () => {
         {
           provide: GetResponsibilityAgreementPdfDataUseCase,
           useValue: mockGetResponsibilityAgreementPdfData,
+        },
+        {
+          provide: GetServiceAreaUseCase,
+          useValue: mockGetServiceAreaUseCase,
         },
         { provide: GeneratePdfUseCase, useValue: mockGeneratePdf },
         { provide: RouteRepository, useValue: mockRouteRepository },
@@ -159,6 +165,22 @@ describe('ContratoMedidorService', () => {
 
       expect(result).toEqual({ message: 'Deleted' });
       expect(mockRemoveUseCase.execute).toHaveBeenCalledWith(id);
+    });
+  });
+
+  describe('getServiceArea', () => {
+    it('should delegate to GetServiceAreaUseCase', () => {
+      const serviceArea = {
+        nombre: 'Parroquia Manglaralto',
+        fuente: 'OpenStreetMap (relation 278708), ODbL',
+        geometria: { type: 'Polygon', coordinates: [] },
+      };
+      mockGetServiceAreaUseCase.execute.mockReturnValue(serviceArea);
+
+      const result = service.getServiceArea();
+
+      expect(result).toEqual(serviceArea);
+      expect(mockGetServiceAreaUseCase.execute).toHaveBeenCalledWith();
     });
   });
 
