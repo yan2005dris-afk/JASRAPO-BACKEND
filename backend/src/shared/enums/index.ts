@@ -240,6 +240,8 @@ export type EstadoRuta = (typeof EstadoRuta)[keyof typeof EstadoRuta];
 // Fuente: models/logica-de-negocio/Rutas.prisma
 
 export const EstadoServicioContrato = {
+  PENDIENTE_INSPECCION: 'PENDIENTE_INSPECCION',
+  RECHAZADO: 'RECHAZADO',
   PENDIENTE_PAGO: 'PENDIENTE_PAGO',
   PENDIENTE_INSTALACION: 'PENDIENTE_INSTALACION',
   ACTIVO: 'ACTIVO',

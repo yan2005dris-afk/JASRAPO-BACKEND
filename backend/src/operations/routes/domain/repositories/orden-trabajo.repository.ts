@@ -11,6 +11,11 @@ import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
 import type { PaginateOptions } from 'src/infrastructure/common/utils/pagination.util';
 
 export abstract class OrdenTrabajoRepository {
+  abstract assignInstallationRoute(
+    contratoId: bigint,
+    routeId?: bigint,
+  ): Promise<bigint>;
+
   abstract findById(
     ordenTrabajoId: bigint,
     includeDeleted?: boolean,

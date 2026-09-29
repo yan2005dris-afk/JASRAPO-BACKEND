@@ -221,7 +221,7 @@ describe('PrismaContractRepository', () => {
             medidorId: 100n,
             estado: EstadoMedidor.BODEGA,
           }),
-          update: jest.fn(),
+          updateMany: jest.fn().mockResolvedValue({ count: 1 }),
         },
         categoriaTarifa: {
           findUnique: jest.fn().mockResolvedValue({ categoriaTarifaId: 1 }),
@@ -233,15 +233,26 @@ describe('PrismaContractRepository', () => {
         contratos: {
           create: jest.fn().mockResolvedValue({
             ...rawContract,
-            estadoServicio: 'PENDIENTE_PAGO',
+            estadoServicio: 'PENDIENTE_INSPECCION',
           }),
           findUnique: jest.fn().mockResolvedValue({
             ...rawContract,
-            estadoServicio: 'PENDIENTE_PAGO',
+            estadoServicio: 'PENDIENTE_INSPECCION',
           }),
         },
         historialMedidores: { create: jest.fn() },
-        $executeRaw: jest.fn().mockResolvedValue(1),
+        $executeRaw: jest.fn(),
+        ordenesTrabajo: {
+          findFirst: jest.fn().mockResolvedValue(null),
+          create: jest.fn(),
+        },
+        tipoActividad: {
+          findUnique: jest
+            .fn()
+            .mockResolvedValue({ activo: true, tipoActividadId: 1 }),
+        },
+        periodos: { findFirst: jest.fn().mockResolvedValue(null) },
+        rutas: { create: jest.fn().mockResolvedValue({ rutaId: 1n }) },
       };
 
       prisma.$transaction.mockImplementation((callback) => callback(txMock));
@@ -254,17 +265,97 @@ describe('PrismaContractRepository', () => {
         sectorId: null,
         numeroGuia: 'G-001',
         direccionSuministro: 'Av. 1',
-        estadoServicio: 'PENDIENTE_PAGO',
+        estadoServicio: 'PENDIENTE_INSPECCION',
         estadoCobranza: 'AL_DIA',
         lecturaInicial: 0,
       });
 
       expect(result.contratoId).toBe(1n);
-      expect(txMock.medidores.update).toHaveBeenCalledWith({
-        where: { medidorId: 100n },
-        data: { estado: EstadoMedidor.PENDIENTE },
+      expect(txMock.medidores.updateMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: { estado: EstadoMedidor.PENDIENTE, fechaInstalacion: null },
+        }),
+      );
+      expect(txMock.ordenesTrabajo.create).toHaveBeenCalledWith({
+        data: {
+          rutaId: 1n,
+          contratoId: 1n,
+          medidorId: 100n,
+          estado: 'PENDIENTE',
+        },
       });
-      expect(txMock.$executeRaw).toHaveBeenCalled();
+      expect(txMock.$executeRaw).not.toHaveBeenCalled();
+    });
+
+    it('includes coordinates in the contratos.create data literal', async () => {
+      const txMock = {
+        clientes: {
+          findUnique: jest.fn().mockResolvedValue({ clienteId: 10n }),
+        },
+        medidores: {
+          findUnique: jest.fn().mockResolvedValue({
+            medidorId: 100n,
+            estado: EstadoMedidor.BODEGA,
+          }),
+          updateMany: jest.fn().mockResolvedValue({ count: 1 }),
+        },
+        categoriaTarifa: {
+          findUnique: jest.fn().mockResolvedValue({ categoriaTarifaId: 1 }),
+        },
+        comunidades: {
+          findUnique: jest.fn().mockResolvedValue({ comunidadId: 1 }),
+        },
+        sectores: { findUnique: jest.fn() },
+        contratos: {
+          create: jest.fn().mockResolvedValue({
+            ...rawContract,
+            estadoServicio: 'PENDIENTE_INSPECCION',
+          }),
+          findUnique: jest.fn().mockResolvedValue({
+            ...rawContract,
+            estadoServicio: 'PENDIENTE_INSPECCION',
+          }),
+        },
+        historialMedidores: { create: jest.fn() },
+        $executeRaw: jest.fn(),
+        ordenesTrabajo: {
+          findFirst: jest.fn().mockResolvedValue(null),
+          create: jest.fn(),
+        },
+        tipoActividad: {
+          findUnique: jest
+            .fn()
+            .mockResolvedValue({ activo: true, tipoActividadId: 1 }),
+        },
+        periodos: { findFirst: jest.fn().mockResolvedValue(null) },
+        rutas: { create: jest.fn().mockResolvedValue({ rutaId: 1n }) },
+      };
+
+      prisma.$transaction.mockImplementation((callback) => callback(txMock));
+
+      await repository.createContractWithMeterHistory({
+        clienteId: 10n,
+        categoriaTarifaId: 1,
+        medidorId: 100n,
+        comunidadId: 1,
+        sectorId: null,
+        numeroGuia: 'G-001',
+        direccionSuministro: 'Av. 1',
+        estadoServicio: 'PENDIENTE_PAGO',
+        estadoCobranza: 'AL_DIA',
+        lecturaInicial: 0,
+        latitud: -1.8021,
+        longitud: -80.7554,
+      });
+
+      expect(txMock.contratos.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            latitud: -1.8021,
+            longitud: -80.7554,
+          }),
+        }),
+      );
     });
 
     it('should throw InvalidDomainOperationException if meter is not in BODEGA', async () => {
@@ -298,7 +389,7 @@ describe('PrismaContractRepository', () => {
           sectorId: null,
           numeroGuia: 'G-001',
           direccionSuministro: 'Av. 1',
-          estadoServicio: 'PENDIENTE_PAGO' as any,
+          estadoServicio: 'PENDIENTE_INSPECCION' as any,
           estadoCobranza: 'AL_DIA' as any,
           lecturaInicial: 0,
         }),

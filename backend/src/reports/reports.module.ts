@@ -41,12 +41,14 @@ import { ReportEmailQueue } from './application/report-email-queue.port';
 import { ReportEmailJobService } from './infrastructure/report-email-job.service';
 import { ReportRequestContextFactory } from './application/report-request-context.factory';
 import { InstitutionalProfileModule } from '../institutional-profile/institutional-profile.module';
+import { ExportModule } from '../infrastructure/export/export.module';
 
 @Module({
   imports: [
     ClientModule,
     forwardRef(() => AgreementsModule),
     InstitutionalProfileModule,
+    ExportModule,
   ],
   controllers: [ReportsController],
   providers: [

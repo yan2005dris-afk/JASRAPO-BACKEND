@@ -9,6 +9,7 @@ import { FindAllPeriodsUseCase } from './application/use-cases/find-all-periods.
 import { FindOnePeriodUseCase } from './application/use-cases/find-one-period.use-case';
 import { UpdatePeriodUseCase } from './application/use-cases/update-period.use-case';
 import { DeletePeriodUseCase } from './application/use-cases/delete-period.use-case';
+import { GenerateAnnualPeriodsUseCase } from './application/use-cases/generate-annual-periods.use-case';
 
 @Module({
   imports: [DatabaseModule],
@@ -17,6 +18,7 @@ import { DeletePeriodUseCase } from './application/use-cases/delete-period.use-c
     { provide: PeriodRepository, useClass: PrismaPeriodRepository },
     PeriodsService,
     CreatePeriodUseCase,
+    GenerateAnnualPeriodsUseCase,
     FindAllPeriodsUseCase,
     FindOnePeriodUseCase,
     UpdatePeriodUseCase,
@@ -27,6 +29,7 @@ import { DeletePeriodUseCase } from './application/use-cases/delete-period.use-c
     PeriodsService,
     FindOnePeriodUseCase,
     FindAllPeriodsUseCase,
+    GenerateAnnualPeriodsUseCase,
   ],
 })
 export class PeriodsModule {}

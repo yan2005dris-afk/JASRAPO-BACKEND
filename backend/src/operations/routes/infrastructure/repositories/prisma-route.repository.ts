@@ -106,7 +106,6 @@ export class PrismaRouteRepository implements RouteRepository {
           comunidadId: data.comunidadId,
           sectorId: data.sectorId ?? null,
           periodoId: data.periodoId ?? null,
-          fechaPlanificada: data.fechaPlanificada ?? null,
           estado: (data.estado ?? 'PENDIENTE') as EstadoRuta,
         },
         include: { tipoActividad: { select: { codigo: true } } },
@@ -151,9 +150,6 @@ export class PrismaRouteRepository implements RouteRepository {
         ...(data.periodoId !== undefined ? { periodoId: data.periodoId } : {}),
         ...(data.estado !== undefined
           ? { estado: data.estado as EstadoRuta }
-          : {}),
-        ...(data.fechaPlanificada !== undefined
-          ? { fechaPlanificada: data.fechaPlanificada }
           : {}),
         ...(data.fechaInicio !== undefined
           ? { fechaInicio: data.fechaInicio }
@@ -243,9 +239,6 @@ export class PrismaRouteRepository implements RouteRepository {
             ...(data.sectorId !== undefined && { sectorId: data.sectorId }),
             ...(data.periodoId !== undefined && { periodoId: data.periodoId }),
             ...(estado !== undefined && { estado: estado as EstadoRuta }),
-            ...(data.fechaPlanificada !== undefined && {
-              fechaPlanificada: data.fechaPlanificada,
-            }),
             ...(data.fechaInicio !== undefined && {
               fechaInicio: data.fechaInicio,
             }),
@@ -307,6 +300,8 @@ export class PrismaRouteRepository implements RouteRepository {
         periodoId: true,
         nombre: true,
         estado: true,
+        fechaInicio: true,
+        fechaFin: true,
       },
     });
   }
@@ -340,7 +335,6 @@ export class PrismaRouteRepository implements RouteRepository {
     comunidadId: number,
     periodoId: number,
     sectorId?: number,
-    fechaPlanificada?: Date | null,
     tipoRuta?: string,
   ): Promise<RouteEntity[]> {
     const where: Prisma.RutasWhereInput = {
@@ -354,20 +348,6 @@ export class PrismaRouteRepository implements RouteRepository {
       where.OR = [{ sectorId: null }, { sectorId }];
     }
 
-    if (fechaPlanificada) {
-      const year = fechaPlanificada.getFullYear();
-      const month = fechaPlanificada.getMonth();
-      const startOfMonth = new Date(Date.UTC(year, month, 1, 0, 0, 0, 0));
-      const endOfMonth = new Date(
-        Date.UTC(year, month + 1, 0, 23, 59, 59, 999),
-      );
-
-      where.fechaPlanificada = {
-        gte: startOfMonth,
-        lte: endOfMonth,
-      };
-    }
-
     const records = await this.prisma.rutas.findMany({
       include: { tipoActividad: { select: { codigo: true } } },
       where,
@@ -378,7 +358,7 @@ export class PrismaRouteRepository implements RouteRepository {
   async initializeMonthlyReadings(
     comunidadId: number,
     periodoId: number,
-    fechaPlanificada: Date,
+    fechaReferencia: Date,
     sectorId?: number | null,
     rutaId?: bigint | null,
   ): Promise<number> {
@@ -386,7 +366,7 @@ export class PrismaRouteRepository implements RouteRepository {
       `SELECT public.inicializar_lecturas_ruta($1, $2, $3, $4, $5) as count`,
       comunidadId,
       periodoId,
-      fechaPlanificada,
+      fechaReferencia,
       sectorId ?? null,
       rutaId ?? null,
     );
@@ -398,8 +378,7 @@ export class PrismaRouteRepository implements RouteRepository {
     criteria: EligibleReadingsCriteria,
     pagination: PaginateOptions,
   ): Promise<PaginatedResult<ReadingForRouteEntity>> {
-    const { comunidadId, sectorId, periodoId, fechaPlanificada, search } =
-      criteria;
+    const { comunidadId, sectorId, periodoId, search } = criteria;
     const where: Prisma.LecturasWhereInput = {
       deletedAt: null,
       ...(periodoId ? { periodoId } : {}),
@@ -416,21 +395,6 @@ export class PrismaRouteRepository implements RouteRepository {
         },
       },
     };
-
-    if (fechaPlanificada) {
-      const planDate = new Date(fechaPlanificada);
-      const year = planDate.getUTCFullYear();
-      const month = planDate.getUTCMonth();
-      const startOfMonth = new Date(Date.UTC(year, month, 1, 0, 0, 0, 0));
-      const endOfMonth = new Date(
-        Date.UTC(year, month + 1, 0, 23, 59, 59, 999),
-      );
-
-      where.fecha = {
-        gte: startOfMonth,
-        lte: endOfMonth,
-      };
-    }
 
     const q = search?.trim();
     if (q) {
@@ -631,34 +595,75 @@ export class PrismaRouteRepository implements RouteRepository {
   ): Promise<void> {
     if (!contratoIds || contratoIds.length === 0) return;
 
-    const contratos = await this.prisma.contratos.findMany({
-      where: {
-        contratoId: { in: contratoIds.map((id) => BigInt(id)) },
-        deletedAt: null,
-      },
-      include: {
-        historialMedidores: {
-          where: { fechaHasta: null },
-          select: { medidorId: true },
-          take: 1,
-        },
-      },
-      orderBy: { contratoId: 'asc' },
-    });
-
-    const ordenesData = contratos.map((c, index) => ({
-      rutaId,
-      contratoId: c.contratoId,
-      medidorId: c.historialMedidores[0]?.medidorId ?? null,
-      ordenVisita: index + 1,
-      estado: 'PENDIENTE' as const,
-    }));
-
-    if (ordenesData.length > 0) {
-      await this.prisma.ordenesTrabajo.createMany({
-        data: ordenesData,
+    await this.prisma.$transaction(async (tx) => {
+      const route = await tx.rutas.findUnique({
+        where: { rutaId },
+        include: { tipoActividad: true },
       });
-    }
+      if (!route || route.deletedAt)
+        throw new EntityNotFoundException('Ruta', rutaId);
+      const activity = route.tipoActividad.codigo;
+      const lifecycle = activity === 'INSPECCION' || activity === 'INSTALACION';
+      const ids = [...new Set(contratoIds)].sort((a, b) => a - b);
+      for (const [index, id] of ids.entries()) {
+        const contratoId = BigInt(id);
+        await tx.$queryRaw`SELECT contrato_id FROM contratos WHERE contrato_id = ${contratoId} FOR UPDATE`;
+        const contract = await tx.contratos.findUnique({
+          where: { contratoId },
+          include: {
+            historialMedidores: {
+              where: { fechaHasta: null, deletedAt: null },
+              take: 1,
+            },
+          },
+        });
+        if (!contract || contract.deletedAt)
+          throw new EntityNotFoundException('Contrato', contratoId);
+        if (lifecycle) {
+          const expected =
+            activity === 'INSPECCION'
+              ? 'PENDIENTE_INSPECCION'
+              : 'PENDIENTE_INSTALACION';
+          if (
+            contract.estadoServicio !== expected ||
+            route.estado !== 'PENDIENTE' ||
+            route.comunidadId !== contract.comunidadId
+          ) {
+            throw new InvalidDomainOperationException(
+              'El contrato y la ruta no permiten asignar esta actividad',
+            );
+          }
+          const existing = await tx.ordenesTrabajo.findFirst({
+            where: {
+              contratoId,
+              deletedAt: null,
+              estado: { notIn: ['CANCELADA', 'FALLIDA'] },
+              ruta: { deletedAt: null, tipoActividad: { codigo: activity } },
+            },
+          });
+          if (existing) {
+            if (existing.estado !== 'PENDIENTE')
+              throw new InvalidDomainOperationException(
+                'La orden ya fue iniciada',
+              );
+            await tx.ordenesTrabajo.update({
+              where: { ordenTrabajoId: existing.ordenTrabajoId },
+              data: { rutaId, ordenVisita: index + 1 },
+            });
+            continue;
+          }
+        }
+        await tx.ordenesTrabajo.create({
+          data: {
+            rutaId,
+            contratoId,
+            medidorId: contract.historialMedidores[0]?.medidorId ?? null,
+            ordenVisita: index + 1,
+            estado: 'PENDIENTE',
+          },
+        });
+      }
+    });
   }
 
   async findContratosByIds(contratoIds: number[]): Promise<ContratoRef[]> {

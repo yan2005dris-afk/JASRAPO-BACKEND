@@ -223,6 +223,15 @@ const PERMISSION_MAP: MenuPermissionMapping[] = [
     ],
   },
   {
+    menuNombre: 'Períodos',
+    permisos: [
+      { recurso: 'periodos', accion: 'read' },
+      { recurso: 'periodos', accion: 'create' },
+      { recurso: 'periodos', accion: 'update' },
+      { recurso: 'periodos', accion: 'delete' },
+    ],
+  },
+  {
     menuNombre: 'Configuraciones',
     permisos: [
       { recurso: 'configuraciones', accion: 'read' },

@@ -1,7 +1,8 @@
 import { IsOptional, IsString, IsDateString } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
+import { BaseReportFilterDto } from './base-report-filter.dto';
 
-export class OverdueAccountsFilterDto {
+export class OverdueAccountsFilterDto extends BaseReportFilterDto {
   @ApiPropertyOptional({
     description: 'Filtrar por ID de contrato específico',
     example: '12',

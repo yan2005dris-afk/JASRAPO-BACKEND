@@ -4,7 +4,6 @@ import { RouteEntity } from '../../domain/entities/route.entity';
 describe('RouteMapper', () => {
   describe('toEntity', () => {
     it('should map all fields from a raw route to RouteEntity', () => {
-      const fechaPlanificada = new Date('2025-06-01T10:00:00Z');
       const fechaInicio = new Date('2025-06-02T08:00:00Z');
       const fechaFin = new Date('2025-06-02T16:00:00Z');
 
@@ -18,7 +17,6 @@ describe('RouteMapper', () => {
         sectorId: 2,
         periodoId: 5,
         estado: 'PENDIENTE',
-        fechaPlanificada,
         fechaInicio,
         fechaFin,
       };
@@ -35,7 +33,6 @@ describe('RouteMapper', () => {
       expect(result.sectorId).toBe(2);
       expect(result.periodoId).toBe(5);
       expect(result.estado).toBe('PENDIENTE');
-      expect(result.fechaPlanificada).toBe('2025-06-01');
       expect(result.fechaInicio).toBe('2025-06-02');
       expect(result.fechaFin).toBe('2025-06-02');
     });
@@ -51,7 +48,6 @@ describe('RouteMapper', () => {
         sectorId: null,
         periodoId: null,
         estado: 'EN_CURSO',
-        fechaPlanificada: null,
         fechaInicio: null,
         fechaFin: null,
       };
@@ -61,7 +57,6 @@ describe('RouteMapper', () => {
       expect(result.descripcion).toBeNull();
       expect(result.sectorId).toBeNull();
       expect(result.periodoId).toBeNull();
-      expect(result.fechaPlanificada).toBeNull();
       expect(result.fechaInicio).toBeNull();
       expect(result.fechaFin).toBeNull();
     });

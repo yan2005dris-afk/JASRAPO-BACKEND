@@ -22,8 +22,6 @@ model Medidores {
   createdAt        DateTime             @default(now()) @map("creado_en")
   updatedAt        DateTime             @updatedAt @map("actualizado_en")
   deletedAt        DateTime?            @map("borrado_en")
-  latitud          Decimal?             @map("latitud") @db.Decimal(10, 8)
-  longitud         Decimal?             @map("longitud") @db.Decimal(11, 8)
   historial        HistorialMedidores[]
   lecturas         Lecturas[]
   ordenesTrabajo   OrdenesTrabajo[]

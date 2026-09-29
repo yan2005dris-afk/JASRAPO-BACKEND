@@ -205,7 +205,7 @@ export class ContratoMedidorController {
   @ApiOperation({
     summary: 'Asignar contrato a ruta de instalación',
     description:
-      'Asigna un contrato en estado PENDIENTE_INSTALACION a una ruta de instalacion. Si no se pasa routeId, crea una nueva ruta INSTALACION sin operario. Si se pasa routeId, valida que la ruta destino sea INSTALACION y este en PENDIENTE. En ambos casos crea la orden_trabajo correspondiente.',
+      'Asigna la orden de instalaci\u00f3n pendiente del contrato a una ruta INSTALACION. Sin routeId reutiliza su ruta actual. La operaci\u00f3n es transaccional y no duplica la orden',
   })
   @ApiResponse({
     status: 200,

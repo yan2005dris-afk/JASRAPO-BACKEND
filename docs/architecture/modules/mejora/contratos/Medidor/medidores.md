@@ -57,6 +57,8 @@ Inventario, asignación, reemplazo y retiro operativo de medidores.
 
 Crear/actualizar/eliminar escriben `Medidores`; eliminar usa soft delete. Reemplazar registra reemplazo, historial, lecturas y resolución económica en la transacción del caso. Reportar defecto y dar de baja cambian estado y pueden crear tarea/novedad. Exportaciones, consultas y DTO son puras; CSV/PDF no son respuestas JSON.
 
+Los medidores ya no almacenan coordenadas (`latitud`/`longitud`): esa ubicación describe el predio, no el equipo físico, y ahora vive en `Contratos` (ver `contratos.md`). `PATCH /api/v1/meters/:id` ya no acepta `latitud`/`longitud`: con `forbidNonWhitelisted: true` en el `ValidationPipe` global, enviarlos responde `400`.
+
 | Tabla Prisma | Uso |
 |---|---|
 | `Medidores` | Inventario, estado y soft delete. |

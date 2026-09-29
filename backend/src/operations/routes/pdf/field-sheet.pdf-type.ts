@@ -8,7 +8,6 @@ export interface FieldSheetData {
     tipoRuta: string;
     descripcion?: string | null;
     estado: string;
-    fechaPlanificada?: Date | string | null;
     comunidadNombre?: string;
     sectorNombre?: string;
     operarioNombre?: string;
@@ -51,10 +50,6 @@ export const FieldSheetPdfDocumentType: PdfDocumentType = {
     const data = raw as unknown as FieldSheetData;
     const ruta = data.ruta;
 
-    const fechaPlanificadaStr = ruta.fechaPlanificada
-      ? new Date(ruta.fechaPlanificada).toLocaleDateString('es-EC')
-      : 'Sin fecha planificada';
-
     return {
       reporte: {
         rutaId: ruta.rutaId.toString(),
@@ -67,7 +62,6 @@ export const FieldSheetPdfDocumentType: PdfDocumentType = {
         sector: ruta.sectorNombre || '',
         operario: ruta.operarioNombre || 'Sin operario asignado',
         periodo: ruta.periodoNombre || 'Período Activo',
-        fechaPlanificada: fechaPlanificadaStr,
         fechaEmision: currentDateLabel(),
         isLectura: data.isLectura,
         items: data.items,

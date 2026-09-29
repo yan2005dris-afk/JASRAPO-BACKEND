@@ -37,6 +37,26 @@ export class UpdateContractUseCase {
     current: ContractEntity,
   ): Record<string, any> {
     const fields: Record<string, any> = {};
+    if (
+      dto.estadoServicio !== undefined &&
+      dto.estadoServicio !== current.estadoServicio &&
+      ([
+        'PENDIENTE_INSPECCION',
+        'PENDIENTE_PAGO',
+        'PENDIENTE_INSTALACION',
+        'RECHAZADO',
+      ].includes(current.estadoServicio) ||
+        [
+          'PENDIENTE_INSPECCION',
+          'PENDIENTE_PAGO',
+          'PENDIENTE_INSTALACION',
+          'RECHAZADO',
+        ].includes(dto.estadoServicio))
+    ) {
+      throw new InvalidDomainOperationException(
+        'El estado del contrato se actualiza mediante la inspección, el pago y la instalación',
+      );
+    }
     if (dto.clienteId !== undefined) fields.clienteId = BigInt(dto.clienteId);
     if (dto.estadoServicio !== undefined || dto.estadoCobranza !== undefined) {
       const estadoServicio = dto.estadoServicio ?? current.estadoServicio;
@@ -44,8 +64,10 @@ export class UpdateContractUseCase {
         dto.estadoCobranza ?? current.estadoCobranza,
         estadoServicio,
       );
-      fields.estadoServicio = estadoServicio;
-      fields.estadoCobranza = estadoCobranza;
+      if (estadoServicio !== current.estadoServicio)
+        fields.estadoServicio = estadoServicio;
+      if (estadoCobranza !== current.estadoCobranza)
+        fields.estadoCobranza = estadoCobranza;
     }
     if (dto.direccionSuministro !== undefined)
       fields.direccionSuministro = dto.direccionSuministro;
@@ -54,6 +76,8 @@ export class UpdateContractUseCase {
       fields.categoriaTarifaId = Number(dto.categoriaTarifaId);
     if (dto.comunidadId !== undefined)
       fields.comunidadId = Number(dto.comunidadId);
+    if (dto.latitud !== undefined) fields.latitud = dto.latitud;
+    if (dto.longitud !== undefined) fields.longitud = dto.longitud;
     return fields;
   }
 }

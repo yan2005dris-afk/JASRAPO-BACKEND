@@ -101,6 +101,62 @@ describe('UpdateContractUseCase', () => {
     ).rejects.toThrow(EntityNotFoundException);
   });
 
+  it('forwards coordinates when present', async () => {
+    const id = BigInt(1);
+    const updateDto = { latitud: -1.8021, longitud: -80.7554 };
+
+    mockContractRepository.findById.mockResolvedValue(
+      new ContractEntity({ contratoId: id, deletedAt: null }),
+    );
+    mockContractRepository.update.mockResolvedValue(
+      new ContractEntity({ contratoId: id }),
+    );
+
+    await useCase.execute(id, updateDto);
+
+    expect(mockContractRepository.update).toHaveBeenCalledWith(id, {
+      latitud: -1.8021,
+      longitud: -80.7554,
+    });
+  });
+
+  it('clears coordinates when both are explicitly null', async () => {
+    const id = BigInt(1);
+    const updateDto = { latitud: null, longitud: null };
+
+    mockContractRepository.findById.mockResolvedValue(
+      new ContractEntity({ contratoId: id, deletedAt: null }),
+    );
+    mockContractRepository.update.mockResolvedValue(
+      new ContractEntity({ contratoId: id }),
+    );
+
+    await useCase.execute(id, updateDto);
+
+    expect(mockContractRepository.update).toHaveBeenCalledWith(id, {
+      latitud: null,
+      longitud: null,
+    });
+  });
+
+  it('does not send coordinates to the repository when omitted', async () => {
+    const id = BigInt(1);
+    const updateDto = { direccionSuministro: 'Nueva Dir' };
+
+    mockContractRepository.findById.mockResolvedValue(
+      new ContractEntity({ contratoId: id, deletedAt: null }),
+    );
+    mockContractRepository.update.mockResolvedValue(
+      new ContractEntity({ contratoId: id }),
+    );
+
+    await useCase.execute(id, updateDto);
+
+    const sentData = mockContractRepository.update.mock.calls[0][1];
+    expect(sentData).not.toHaveProperty('latitud');
+    expect(sentData).not.toHaveProperty('longitud');
+  });
+
   it('should throw InvalidDomainOperationException when updateData is empty', async () => {
     const id = BigInt(1);
     const updateDto = {};
@@ -115,5 +171,38 @@ describe('UpdateContractUseCase', () => {
     await expect(useCase.execute(id, updateDto)).rejects.toThrow(
       InvalidDomainOperationException,
     );
+  });
+  it.each([
+    'PENDIENTE_INSPECCION',
+    'PENDIENTE_PAGO',
+    'PENDIENTE_INSTALACION',
+    'RECHAZADO',
+  ] as const)(
+    'cannot activate a contract in %s using a manual edit',
+    async (estadoServicio) => {
+      mockContractRepository.findById.mockResolvedValue(
+        new ContractEntity({ contratoId: 1n, estadoServicio }),
+      );
+      await expect(
+        useCase.execute(1n, { estadoServicio: 'ACTIVO' }),
+      ).rejects.toThrow(InvalidDomainOperationException);
+      expect(mockContractRepository.update).not.toHaveBeenCalled();
+    },
+  );
+  it('does not rewrite lifecycle states when editing contract details', async () => {
+    mockContractRepository.findById.mockResolvedValue(
+      new ContractEntity({
+        contratoId: 1n,
+        estadoServicio: 'PENDIENTE_INSPECCION',
+        estadoCobranza: 'NO_APLICA',
+      }),
+    );
+    await useCase.execute(1n, {
+      estadoServicio: 'PENDIENTE_INSPECCION',
+      direccionSuministro: 'New address',
+    });
+    expect(mockContractRepository.update).toHaveBeenCalledWith(1n, {
+      direccionSuministro: 'New address',
+    });
   });
 });

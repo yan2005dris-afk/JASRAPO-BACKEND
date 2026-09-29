@@ -3,8 +3,9 @@ import { IsOptional, IsString, MaxLength, Matches } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 import { IsNotEmptyString } from 'src/infrastructure/common/decorators/is-not-empty-string.decorator';
 import { IsValidDateRange } from 'src/infrastructure/common/decorators/is-valid-date-range.decorator';
+import { BaseReportFilterDto } from './base-report-filter.dto';
 
-export class AccountStatementFilterDto {
+export class AccountStatementFilterDto extends BaseReportFilterDto {
   @ApiProperty({ description: 'ID del contrato (BigInt como string)' })
   @IsNotEmptyString()
   @MaxLength(50)

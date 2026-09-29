@@ -82,8 +82,6 @@ export interface MeterWithContractDetail {
   fechaInstalacion: Date | null;
   fechaBaja: Date | null;
   motivo: string | null;
-  latitud: number | null;
-  longitud: number | null;
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Date | null;
@@ -102,7 +100,7 @@ export interface OperatorRouteStop {
   ordenTrabajoId: bigint;
   latitud: number;
   longitud: number;
-  serie: string;
+  serie?: string;
   clienteNombre: string;
   tipoActividad: string;
   estado: string;
@@ -124,6 +122,8 @@ export interface OperatorWorkOrder {
   contrato: {
     numeroGuia: string;
     direccionSuministro: string;
+    latitud?: number | null;
+    longitud?: number | null;
     cliente: {
       nombres: string;
       apellidos: string;
@@ -133,8 +133,6 @@ export interface OperatorWorkOrder {
   medidor: {
     medidorId: bigint;
     serie: string;
-    latitud: number | null;
-    longitud: number | null;
   } | null;
 }
 
@@ -145,10 +143,11 @@ export interface OperatorRoute {
   operarioId: number;
   tipoRuta: string;
   comunidadId: number;
+  comunidadNombre?: string | null;
   sectorId: number | null;
+  sectorNombre?: string | null;
   periodoId: number | null;
   estado: string;
-  fechaPlanificada: Date | null;
   fechaInicio: Date | null;
   fechaFin: Date | null;
   createdAt: Date;
@@ -162,8 +161,6 @@ export interface OperatorRoute {
   medidor?: {
     medidorId: bigint;
     serie: string;
-    latitud: number | null;
-    longitud: number | null;
   } | null;
   ordenesTrabajo: OperatorWorkOrder[];
   paradas: OperatorRouteStop[];

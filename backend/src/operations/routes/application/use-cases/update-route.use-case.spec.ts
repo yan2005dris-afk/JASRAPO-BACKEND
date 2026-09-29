@@ -57,7 +57,6 @@ describe('UpdateRouteUseCase', () => {
         comunidadId: 1,
         periodoId: 1,
         estado: 'PENDIENTE',
-        fechaPlanificada: null,
         fechaInicio: null,
         fechaFin: null,
       }),
@@ -75,7 +74,6 @@ describe('UpdateRouteUseCase', () => {
         comunidadId: 1,
         periodoId: 2,
         estado: 'PENDIENTE',
-        fechaPlanificada: null,
         fechaInicio: null,
         fechaFin: null,
       }),
@@ -95,7 +93,6 @@ describe('UpdateRouteUseCase', () => {
       comunidadId: 1,
       periodoId: 1,
       estado: 'PENDIENTE',
-      fechaPlanificada: null,
       fechaInicio: null,
       fechaFin: null,
     });
@@ -130,7 +127,6 @@ describe('UpdateRouteUseCase', () => {
       comunidadId: 1,
       periodoId: 1,
       estado: 'PENDIENTE',
-      fechaPlanificada: null,
       fechaInicio: null,
       fechaFin: null,
     });
@@ -151,7 +147,7 @@ describe('UpdateRouteUseCase', () => {
     });
   });
 
-  it('should pass correct data when fechaPlanificada is set to null vs undefined', async () => {
+  it('should pass correct data when descripcion is set to null vs undefined', async () => {
     const existing = new RouteEntity({
       rutaId: 1n,
       nombre: 'Route 1',
@@ -160,7 +156,6 @@ describe('UpdateRouteUseCase', () => {
       comunidadId: 1,
       periodoId: 1,
       estado: 'PENDIENTE',
-      fechaPlanificada: '2026-01-01',
       fechaInicio: null,
       fechaFin: null,
     });
@@ -169,12 +164,12 @@ describe('UpdateRouteUseCase', () => {
     mockRouteRepository.update.mockResolvedValue(existing);
 
     await useCase.execute(1n, {
-      fechaPlanificada: null,
+      descripcion: null,
       nombre: undefined,
     } as any);
 
     expect(mockRouteRepository.update).toHaveBeenCalledWith(1n, {
-      fechaPlanificada: null,
+      descripcion: null,
     });
   });
 
@@ -187,7 +182,6 @@ describe('UpdateRouteUseCase', () => {
       comunidadId: 1,
       periodoId: 1,
       estado: 'EN_PROGRESO',
-      fechaPlanificada: null,
       fechaInicio: new Date(),
       fechaFin: null,
     });
@@ -220,7 +214,6 @@ describe('UpdateRouteUseCase', () => {
       comunidadId: 1,
       periodoId: 1,
       estado: 'EN_PROGRESO',
-      fechaPlanificada: null,
       fechaInicio: new Date(),
       fechaFin: null,
     });

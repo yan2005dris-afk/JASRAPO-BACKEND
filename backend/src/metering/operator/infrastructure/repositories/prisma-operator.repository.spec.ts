@@ -11,6 +11,10 @@ describe('PrismaOperatorRepository routes', () => {
       count: jest.fn(),
       update: jest.fn(),
     },
+    ordenesTrabajo: {
+      findMany: jest.fn(),
+      count: jest.fn(),
+    },
     operatorSyncChange: {
       findMany: jest.fn(),
       findFirst: jest.fn(),
@@ -124,7 +128,7 @@ describe('PrismaOperatorRepository routes', () => {
     );
   });
 
-  it('builds route stops exclusively from assigned work orders', async () => {
+  it('builds route stops from the work order contract, sourcing meter coordinates from it', async () => {
     prisma.rutas.findMany.mockResolvedValue([
       {
         rutaId: 1n,
@@ -140,12 +144,12 @@ describe('PrismaOperatorRepository routes', () => {
             medidor: {
               medidorId: 7n,
               serie: 'MED-001',
-              latitud: -0.9,
-              longitud: -80.7,
             },
             contrato: {
               numeroGuia: 'GUIA-001',
               direccionSuministro: 'Calle 1',
+              latitud: new Prisma.Decimal('-0.9'),
+              longitud: new Prisma.Decimal('-80.7'),
               cliente: {
                 nombres: 'Juan',
                 apellidos: 'Pérez',
@@ -169,6 +173,19 @@ describe('PrismaOperatorRepository routes', () => {
         }),
       }),
     );
+    expect(routes[0].ordenesTrabajo[0].tipoActividad).toBe('LECTURA');
+    expect(routes[0].ordenesTrabajo[0].medidor).toEqual({
+      medidorId: 7n,
+      serie: 'MED-001',
+    });
+    expect(routes[0].ordenesTrabajo[0].contrato).toEqual({
+      numeroGuia: 'GUIA-001',
+      direccionSuministro: 'Calle 1',
+      latitud: -0.9,
+      longitud: -80.7,
+      cliente: { nombres: 'Juan', apellidos: 'Pérez', razonSocial: null },
+    });
+    expect(typeof routes[0].ordenesTrabajo[0].contrato.latitud).toBe('number');
     expect(routes[0].paradas).toEqual([
       {
         ordenTrabajoId: 9n,
@@ -181,6 +198,87 @@ describe('PrismaOperatorRepository routes', () => {
         direccionSuministro: 'Calle 1',
       },
     ]);
+  });
+
+  it('produces a stop without a serie for a meterless order whose contract has coordinates', async () => {
+    prisma.rutas.findMany.mockResolvedValue([
+      {
+        rutaId: 1n,
+        tipoActividad: { codigo: 'INSTALACION' },
+        nombre: 'Ruta instalación',
+        medidor: null,
+        ordenesTrabajo: [
+          {
+            ordenTrabajoId: 11n,
+            rutaId: 1n,
+            tipoActividad: 'INSTALACION',
+            estado: 'PENDIENTE',
+            medidor: null,
+            contrato: {
+              numeroGuia: 'GUIA-002',
+              direccionSuministro: 'Calle 2',
+              latitud: new Prisma.Decimal('-1.5'),
+              longitud: new Prisma.Decimal('-80.5'),
+              cliente: {
+                nombres: 'Ana',
+                apellidos: 'Gómez',
+                razonSocial: null,
+              },
+            },
+          },
+        ],
+      },
+    ]);
+
+    const routes = await repository.findRoutesByOperator(10, 20);
+
+    expect(routes[0].paradas).toEqual([
+      {
+        ordenTrabajoId: 11n,
+        latitud: -1.5,
+        longitud: -80.5,
+        serie: undefined,
+        clienteNombre: 'Ana Gómez',
+        tipoActividad: 'INSTALACION',
+        estado: 'PENDIENTE',
+        direccionSuministro: 'Calle 2',
+      },
+    ]);
+  });
+
+  it('produces no stop when the order contract has no coordinates', async () => {
+    prisma.rutas.findMany.mockResolvedValue([
+      {
+        rutaId: 1n,
+        tipoActividad: { codigo: 'LECTURA' },
+        nombre: 'Ruta sin coordenadas',
+        medidor: null,
+        ordenesTrabajo: [
+          {
+            ordenTrabajoId: 12n,
+            rutaId: 1n,
+            tipoActividad: 'LECTURA',
+            estado: 'PENDIENTE',
+            medidor: { medidorId: 8n, serie: 'MED-002' },
+            contrato: {
+              numeroGuia: 'GUIA-003',
+              direccionSuministro: 'Calle 3',
+              latitud: null,
+              longitud: null,
+              cliente: {
+                nombres: 'Luis',
+                apellidos: 'Ruiz',
+                razonSocial: null,
+              },
+            },
+          },
+        ],
+      },
+    ]);
+
+    const routes = await repository.findRoutesByOperator(10, 20);
+
+    expect(routes[0].paradas).toEqual([]);
   });
 
   it('updates route state with optimistic locking', async () => {
@@ -219,6 +317,61 @@ describe('PrismaOperatorRepository routes', () => {
     await expect(
       repository.updateRouteState(1n, { estado: 'EN_PROGRESO' }, 'PENDIENTE'),
     ).rejects.toBeInstanceOf(ConflictDomainException);
+  });
+
+  it('selects contract coordinates (not meter coordinates) for the sync work orders manifest', async () => {
+    prisma.ordenesTrabajo.findMany.mockResolvedValue([
+      {
+        ordenTrabajoId: 30n,
+        rutaId: 1n,
+        updatedAt: new Date('2026-01-01T00:00:00Z'),
+        ruta: { tipoActividad: { codigo: 'LECTURA' } },
+        medidor: { medidorId: 7n, serie: 'MED-001' },
+        contrato: {
+          numeroGuia: 'GUIA-010',
+          direccionSuministro: 'Calle 10',
+          latitud: new Prisma.Decimal('-1.1'),
+          longitud: new Prisma.Decimal('-80.1'),
+          cliente: { nombres: 'Rosa', apellidos: 'Vera', razonSocial: null },
+        },
+      },
+    ]);
+    prisma.ordenesTrabajo.count.mockResolvedValue(1);
+
+    const page = await repository.findSyncWorkOrders(
+      10,
+      20,
+      [1n],
+      new Date('2026-01-02T00:00:00Z'),
+      null,
+      10,
+    );
+
+    expect(prisma.ordenesTrabajo.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        include: expect.objectContaining({
+          contrato: expect.objectContaining({
+            select: expect.objectContaining({
+              latitud: true,
+              longitud: true,
+            }),
+          }),
+          medidor: expect.objectContaining({
+            select: expect.not.objectContaining({
+              latitud: true,
+              longitud: true,
+            }),
+          }),
+        }),
+      }),
+    );
+    const mappedMedidor = (page.items[0] as any).medidor;
+    expect(mappedMedidor).not.toHaveProperty('latitud');
+    expect(mappedMedidor).not.toHaveProperty('longitud');
+    const mappedContrato = (page.items[0] as any).contrato;
+    expect(mappedContrato.latitud).toBe(-1.1);
+    expect(mappedContrato.longitud).toBe(-80.1);
+    expect(typeof mappedContrato.latitud).toBe('number');
   });
 
   it('captures atomic snapshot version and watermark in getSyncSnapshotContext', async () => {

@@ -23,6 +23,8 @@ export const safeReadingsSelect = {
   fechaValidacion: true,
   lecturaInicial: true,
   periodoId: true,
+  medidorId: true,
+  historialMedidorId: true,
   estado: true,
   deletedAt: true,
   medidor: {

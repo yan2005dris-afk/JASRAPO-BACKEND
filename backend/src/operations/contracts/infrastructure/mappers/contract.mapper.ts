@@ -17,6 +17,14 @@ export class ContractMapper {
       tieneConvenioActivo: (raw.convenios?.length ?? 0) > 0,
       creadoPor: raw.creadoPor,
       comunidadId: raw.comunidadId,
+      latitud:
+        raw.latitud !== null && raw.latitud !== undefined
+          ? Number(raw.latitud)
+          : null,
+      longitud:
+        raw.longitud !== null && raw.longitud !== undefined
+          ? Number(raw.longitud)
+          : null,
       deletedAt: raw.deletedAt,
       createdAt: raw.createdAt,
       updatedAt: raw.updatedAt,

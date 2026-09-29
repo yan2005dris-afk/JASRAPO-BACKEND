@@ -16,7 +16,6 @@ export interface CreateRouteData {
   sectorId?: number | null;
   periodoId?: number | null;
   estado: string;
-  fechaPlanificada?: Date | null;
   fechaInicio?: Date | null;
   fechaFin?: Date | null;
 }
@@ -30,7 +29,6 @@ export interface UpdateRouteData {
   sectorId?: number | null;
   periodoId?: number | null;
   estado?: string;
-  fechaPlanificada?: Date | null;
   fechaInicio?: Date | null;
   fechaFin?: Date | null;
 }

@@ -145,6 +145,11 @@ export abstract class PaymentRepository {
     tx: unknown,
   ): Promise<{ count: number }>;
 
+  abstract settlePaidComprobante(
+    comprobanteId: bigint,
+    totalAbonado: number,
+  ): Promise<void>;
+
   abstract executeTransaction<T>(
     callback: (tx: unknown) => Promise<T>,
   ): Promise<T>;
