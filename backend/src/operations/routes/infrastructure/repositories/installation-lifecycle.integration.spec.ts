@@ -594,4 +594,36 @@ describe('Installation lifecycle persistence', () => {
       });
     }
   });
+  it('persists representative, authenticated registrant and observations with the contract', async () => {
+    const command = await registration();
+    const actor = await prisma.usuarios.create({
+      data: { email: 'procedure@test.local', clave: 'not-used' },
+    });
+    const contract = await new PrismaContractRepository(
+      prisma,
+    ).createContractWithMeterHistory({
+      ...command,
+      registradoPorId: actor.usuarioId,
+      tramitadorEsTitular: false,
+      tramitadorNombre: ' Ana ',
+      tramitadorIdentificacion: 'ABC',
+      relacionTramitador: 'Familiar',
+      observacionesTramite: 'Observation',
+      otrasNovedades: 'Other',
+    });
+    const persisted = await new PrismaContractRepository(prisma).findById(
+      contract.contratoId,
+    );
+    expect(persisted).toMatchObject({
+      registradoPorId: actor.usuarioId,
+      tramitadorEsTitular: false,
+      tramitadorNombre: 'Ana',
+      observacionesTramite: 'Observation',
+      otrasNovedades: 'Other',
+    });
+    const before = await prisma.medidores.findUniqueOrThrow({
+      where: { medidorId: command.medidorId },
+    });
+    expect(before.estado).toBe('PENDIENTE');
+  });
 });

@@ -26,5 +26,7 @@ model Usuarios {
   invitacionesEnviadas   UsuarioInvitacion[]  @relation("invitadoPor")
   rol                    Roles?               @relation(fields: [rolId], references: [rolId])
 
+  contratosRegistrados Contratos[] @relation("ContratoRegistrador")
+
   @@map("usuarios")
 }

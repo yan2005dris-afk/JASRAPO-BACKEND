@@ -38,8 +38,11 @@ export class ContratoMedidorService {
 
   async crearContrato(
     createDto: CrearContratoMedidorDto,
+    actorUserId?: number,
   ): Promise<ContractEntity> {
-    return this.createContractUseCase.execute(createDto);
+    return actorUserId === undefined
+      ? this.createContractUseCase.execute(createDto)
+      : this.createContractUseCase.execute(createDto, actorUserId);
   }
 
   async buscarContratos(

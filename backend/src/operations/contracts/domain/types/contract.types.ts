@@ -1,3 +1,4 @@
+import type { ContractProcedureData } from '../contract-procedure';
 import type {
   EstadoCobranzaContrato,
   EstadoServicioContrato,
@@ -18,7 +19,8 @@ export interface ContractFilters {
   hasDebt?: boolean;
 }
 
-export interface CreateContractData {
+export interface CreateContractData extends ContractProcedureData {
+  registradoPorId?: number;
   clienteId: bigint;
   categoriaTarifaId: number;
   numeroGuia: string;
@@ -33,7 +35,8 @@ export interface CreateContractData {
   longitud?: number | null;
 }
 
-export interface CreateContractWithMeterCommand {
+export interface CreateContractWithMeterCommand extends ContractProcedureData {
+  registradoPorId?: number;
   clienteId: bigint;
   categoriaTarifaId: number;
   medidorId: bigint;

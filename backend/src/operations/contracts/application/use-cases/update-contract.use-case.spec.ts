@@ -205,4 +205,36 @@ describe('UpdateContractUseCase', () => {
       direccionSuministro: 'New address',
     });
   });
+  it('allows editing observations without losing representative identity', async () => {
+    mockContractRepository.findById.mockResolvedValue(
+      new ContractEntity({
+        contratoId: 1n,
+        tramitadorEsTitular: false,
+        tramitadorNombre: 'Ana',
+        tramitadorIdentificacion: 'ABC',
+        relacionTramitador: 'Familiar',
+        registradoPorId: 7,
+      }),
+    );
+    await useCase.execute(1n, { observacionesTramite: ' Updated ' });
+    expect(mockContractRepository.update).toHaveBeenCalledWith(
+      1n,
+      expect.objectContaining({
+        tramitadorNombre: 'Ana',
+        observacionesTramite: 'Updated',
+      }),
+    );
+    expect(mockContractRepository.update.mock.calls[0][1]).not.toHaveProperty(
+      'registradoPorId',
+    );
+  });
+  it('allows adding notes to historical contracts without inventing who performed the procedure', async () => {
+    mockContractRepository.findById.mockResolvedValue(
+      new ContractEntity({ contratoId: 1n, tramitadorEsTitular: null }),
+    );
+    await useCase.execute(1n, { observacionesTramite: ' Note ' });
+    expect(mockContractRepository.update).toHaveBeenCalledWith(1n, {
+      observacionesTramite: 'Note',
+    });
+  });
 });

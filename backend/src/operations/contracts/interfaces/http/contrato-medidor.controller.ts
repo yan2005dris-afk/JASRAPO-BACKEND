@@ -1,3 +1,4 @@
+import { AuthUserId } from 'src/infrastructure/common/decorators/auth-user-id.decorator';
 import {
   Controller,
   Get,
@@ -64,8 +65,12 @@ export class ContratoMedidorController {
   @Post()
   async crear(
     @Body() createDto: CrearContratoMedidorDto,
+    @AuthUserId() actorUserId: number,
   ): Promise<ContractResponseDto> {
-    const result = await this.contratoMedidorService.crearContrato(createDto);
+    const result = await this.contratoMedidorService.crearContrato(
+      createDto,
+      actorUserId,
+    );
     return ContractResponseDto.fromEntity(result);
   }
 

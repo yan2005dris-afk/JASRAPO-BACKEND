@@ -1,3 +1,4 @@
+import { normalizeContractProcedure } from '../../domain/contract-procedure';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { Prisma } from 'src/generated/prisma/client';
@@ -141,6 +142,10 @@ export class PrismaContractRepository implements ContractRepository {
     try {
       const record = await this.prisma.contratos.create({
         data: {
+          ...normalizeContractProcedure(data),
+          ...(data.registradoPorId !== undefined
+            ? { registradoPorId: data.registradoPorId }
+            : {}),
           clienteId: data.clienteId,
           categoriaTarifaId: data.categoriaTarifaId,
           numeroGuia: data.numeroGuia,
@@ -269,6 +274,10 @@ export class PrismaContractRepository implements ContractRepository {
 
       const contrato = await tx.contratos.create({
         data: {
+          ...normalizeContractProcedure(data),
+          ...(data.registradoPorId !== undefined
+            ? { registradoPorId: data.registradoPorId }
+            : {}),
           clienteId: data.clienteId,
           categoriaTarifaId: data.categoriaTarifaId,
           numeroGuia: data.numeroGuia,

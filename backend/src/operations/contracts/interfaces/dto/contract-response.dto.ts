@@ -122,6 +122,21 @@ export class ContractHistorialMedidorDto {
 }
 
 export class ContractResponseDto {
+  @ApiPropertyOptional({ type: Boolean, nullable: true })
+  tramitadorEsTitular: boolean | null;
+  @ApiPropertyOptional({ type: String, nullable: true })
+  tramitadorNombre: string | null;
+  @ApiPropertyOptional({ type: String, nullable: true })
+  tramitadorIdentificacion: string | null;
+  @ApiPropertyOptional({ type: String, nullable: true })
+  relacionTramitador: string | null;
+  @ApiPropertyOptional({ type: String, nullable: true })
+  observacionesTramite: string | null;
+  @ApiPropertyOptional({ type: String, nullable: true })
+  otrasNovedades: string | null;
+  @ApiPropertyOptional({ type: Number, nullable: true })
+  registradoPorId: number | null;
+
   @ApiProperty({ example: '1', description: 'ID del contrato' })
   contratoId: bigint;
 
@@ -219,6 +234,14 @@ export class ContractResponseDto {
     dto.fechaInicio = DateUtil.formatForFrontend(entity.fechaInicio) ?? '';
     dto.direccionSuministro = entity.direccionSuministro;
     dto.estadoServicio = entity.estadoServicio;
+    dto.tramitadorEsTitular = entity.tramitadorEsTitular ?? null;
+    dto.tramitadorNombre = entity.tramitadorNombre ?? null;
+    dto.tramitadorIdentificacion = entity.tramitadorIdentificacion ?? null;
+    dto.relacionTramitador = entity.relacionTramitador ?? null;
+    dto.observacionesTramite = entity.observacionesTramite ?? null;
+    dto.otrasNovedades = entity.otrasNovedades ?? null;
+    dto.registradoPorId = entity.registradoPorId ?? null;
+
     dto.estadoCobranza = entity.estadoCobranza;
     dto.tieneConvenioActivo = entity.tieneConvenioActivo;
     dto.creadoPor = entity.creadoPor ?? null;

@@ -16,6 +16,14 @@ export class ContractMapper {
       estadoCobranza: raw.estadoCobranza,
       tieneConvenioActivo: (raw.convenios?.length ?? 0) > 0,
       creadoPor: raw.creadoPor,
+      tramitadorEsTitular: raw.tramitadorEsTitular ?? null,
+      tramitadorNombre: raw.tramitadorNombre ?? null,
+      tramitadorIdentificacion: raw.tramitadorIdentificacion ?? null,
+      relacionTramitador: raw.relacionTramitador ?? null,
+      observacionesTramite: raw.observacionesTramite ?? null,
+      otrasNovedades: raw.otrasNovedades ?? null,
+      registradoPorId: raw.registradoPorId ?? null,
+
       comunidadId: raw.comunidadId,
       latitud:
         raw.latitud !== null && raw.latitud !== undefined
