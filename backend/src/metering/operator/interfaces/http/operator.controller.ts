@@ -140,6 +140,7 @@ export class OperatorController {
     description: 'Lista de tipos de actividad',
   })
   @ApiResponse(operatorErrorResponse(401, 'No autenticado'))
+  @RequiredPermission('routes', 'read')
   @Get('activity-types')
   async getActivityTypes() {
     return this.getOperatorActivityTypesUseCase.execute();
