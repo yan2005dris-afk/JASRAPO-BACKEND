@@ -15,6 +15,16 @@ export class CreateContractUseCase {
     dto: CrearContratoMedidorDto,
     userRole?: string,
   ): Promise<ContractEntity> {
+    if (dto.latitud != null && dto.longitud != null) {
+      const locationError = validateServiceAreaLocation(
+        dto.latitud,
+        dto.longitud,
+      );
+      if (locationError) {
+        throw new DomainValidationException(locationError);
+      }
+    }
+
     const estadoServicio = EstadoServicioContrato.PENDIENTE_INSPECCION;
     const estadoCobranza = ContractState.normalizeCollectionStatus(
       dto.estadoCobranza,
