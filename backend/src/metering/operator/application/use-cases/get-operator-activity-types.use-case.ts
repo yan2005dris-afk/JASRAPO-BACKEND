@@ -1,6 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
-import { ITipoActividad } from 'src/operations/routes/interfaces/dto/tipo-actividad.dto';
+export interface ITipoActividad {
+  tipoActividadId: number;
+  codigo: string;
+  nombre: string;
+  descripcion: string | null;
+  icono: string | null;
+  activo: boolean;
+}
 
 @Injectable()
 export class GetOperatorActivityTypesUseCase {
