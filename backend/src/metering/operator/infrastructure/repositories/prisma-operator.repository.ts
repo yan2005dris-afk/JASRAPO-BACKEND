@@ -924,6 +924,8 @@ export class PrismaOperatorRepository extends OperatorRepository {
       ...route,
       tipoRuta:
         route.tipoActividad?.codigo ?? (route as any).tipoRuta ?? 'LECTURA',
+      comunidadNombre: route.comunidad?.nombre ?? undefined,
+      sectorNombre: route.sector?.nombre ?? undefined,
       ordenesTrabajo,
       paradas,
     } as unknown as OperatorRoute;
