@@ -68,7 +68,10 @@ export class ContratoMedidorController {
     @Body() createDto: CrearContratoMedidorDto,
     @CurrentUser() user: JwtPayload,
   ): Promise<ContractResponseDto> {
-    const result = await this.contratoMedidorService.crearContrato(createDto, user.rol);
+    const result = await this.contratoMedidorService.crearContrato(
+      createDto,
+      user.rol,
+    );
     return ContractResponseDto.fromEntity(result);
   }
 

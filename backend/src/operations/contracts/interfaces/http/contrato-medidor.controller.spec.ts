@@ -56,14 +56,17 @@ describe('ContratoMedidorController', () => {
   it('crear should return ContractResponseDto', async () => {
     mockService.crearContrato.mockResolvedValue(sampleContract);
 
-    const result = await controller.crear({
-      clienteId: '10',
-      categoriaTarifaId: '1',
-      medidorId: '100',
-      numeroGuia: 'G-001',
-      direccionSuministro: 'Av. 1',
-      comunidadId: '1',
-    });
+    const result = await controller.crear(
+      {
+        clienteId: '10',
+        categoriaTarifaId: '1',
+        medidorId: '100',
+        numeroGuia: 'G-001',
+        direccionSuministro: 'Av. 1',
+        comunidadId: '1',
+      },
+      { rol: 'ADMIN' } as any,
+    );
 
     expect(result.contratoId).toBe(1n);
     expect(result.numeroGuia).toBe('G-001');

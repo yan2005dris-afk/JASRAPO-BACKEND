@@ -9,7 +9,10 @@ import { ContractEntity } from '../../domain/entities/contract.entity';
 export class CreateContractUseCase {
   constructor(private readonly contractRepository: ContractRepository) {}
 
-  async execute(dto: CrearContratoMedidorDto, userRole?: string): Promise<ContractEntity> {
+  async execute(
+    dto: CrearContratoMedidorDto,
+    userRole?: string,
+  ): Promise<ContractEntity> {
     const estadoServicio = EstadoServicioContrato.PENDIENTE_INSPECCION;
     const estadoCobranza = ContractState.normalizeCollectionStatus(
       dto.estadoCobranza,
@@ -17,8 +20,11 @@ export class CreateContractUseCase {
     );
 
     // Solo admin/superadmin puede definir lecturaInicial; para otros roles se fuerza a 0
-    const isAdmin = userRole?.toLowerCase() === 'admin' || userRole?.toLowerCase() === 'superadmin';
-    const lecturaInicial = isAdmin && dto.lecturaInicial !== undefined ? dto.lecturaInicial : 0;
+    const isAdmin =
+      userRole?.toLowerCase() === 'admin' ||
+      userRole?.toLowerCase() === 'superadmin';
+    const lecturaInicial =
+      isAdmin && dto.lecturaInicial !== undefined ? dto.lecturaInicial : 0;
 
     return this.contractRepository.createContractWithMeterHistory({
       clienteId: BigInt(dto.clienteId),

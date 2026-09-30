@@ -701,11 +701,11 @@ export class PrismaOperatorRepository extends OperatorRepository {
         ...(route.rutaId === undefined
           ? []
           : [
-            {
-              rutaId: route.rutaId,
-              entityType: { in: ['rutas', 'ordenes_trabajo'] },
-            },
-          ]),
+              {
+                rutaId: route.rutaId,
+                entityType: { in: ['rutas', 'ordenes_trabajo'] },
+              },
+            ]),
         {
           ...geography,
           periodoId,
@@ -876,9 +876,9 @@ export class PrismaOperatorRepository extends OperatorRepository {
       },
       medidor: order.medidor
         ? {
-          medidorId: order.medidor.medidorId,
-          serie: order.medidor.serie,
-        }
+            medidorId: order.medidor.medidorId,
+            serie: order.medidor.serie,
+          }
         : null,
     };
   }
@@ -913,9 +913,7 @@ export class PrismaOperatorRepository extends OperatorRepository {
           serie: order.medidor?.serie,
           clienteNombre,
           tipoActividad:
-            route.tipoActividad?.codigo ??
-            (route as any).tipoRuta ??
-            'LECTURA',
+            route.tipoActividad?.codigo ?? (route as any).tipoRuta ?? 'LECTURA',
           estado: order.estado,
           direccionSuministro: order.contrato.direccionSuministro,
         },
@@ -924,7 +922,8 @@ export class PrismaOperatorRepository extends OperatorRepository {
 
     return {
       ...route,
-      tipoRuta: route.tipoActividad?.codigo ?? (route as any).tipoRuta ?? 'LECTURA',
+      tipoRuta:
+        route.tipoActividad?.codigo ?? (route as any).tipoRuta ?? 'LECTURA',
       ordenesTrabajo,
       paradas,
     } as unknown as OperatorRoute;

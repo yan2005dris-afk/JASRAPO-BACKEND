@@ -1,4 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { GetOperatorActivityTypesUseCase } from './get-operator-activity-types.use-case';
 
@@ -43,9 +44,7 @@ describe('GetOperatorActivityTypesUseCase', () => {
       },
     ];
 
-    jest
-      .spyOn(prisma.tipoActividad, 'findMany')
-      .mockResolvedValue(mockTypes as any);
+    jest.spyOn(prisma.tipoActividad, 'findMany').mockResolvedValue(mockTypes);
 
     const result = await useCase.execute();
 

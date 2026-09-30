@@ -56,7 +56,9 @@ export class ReplaceMeterUseCase {
       }
 
       // Solo admin/superadmin puede definir lecturaInicialEntrante; para otros roles se fuerza a 0
-      const isAdmin = input.userRole?.toLowerCase() === 'admin' || input.userRole?.toLowerCase() === 'superadmin';
+      const isAdmin =
+        input.userRole?.toLowerCase() === 'admin' ||
+        input.userRole?.toLowerCase() === 'superadmin';
       const initialEntrante =
         isAdmin && input.lecturaInicialEntrante !== undefined
           ? new Decimal(input.lecturaInicialEntrante.toString())

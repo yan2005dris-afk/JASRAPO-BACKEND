@@ -331,7 +331,11 @@ export class MeterController {
     @Body() replaceDto: ReplaceMeterDto,
     @CurrentUser() user: JwtPayload,
   ): Promise<ReemplazoMedidorResponseDto> {
-    const result = await this.meterService.replaceMeter(replaceDto, user.sub, user.rol);
+    const result = await this.meterService.replaceMeter(
+      replaceDto,
+      user.sub,
+      user.rol,
+    );
     return ReemplazoMedidorResponseDto.fromEntity(result.reemplazo);
   }
 

@@ -70,10 +70,7 @@ describe('UpdateOperatorWorkOrderUseCase', () => {
       undefined,
     );
 
-    expect(orders.verifyOperatorWorkOrderOwnership).toHaveBeenCalledWith(
-      7,
-      1n,
-    );
+    expect(orders.verifyOperatorWorkOrderOwnership).toHaveBeenCalledWith(7, 1n);
     expect(operators.verifyMeterOwnership).not.toHaveBeenCalled();
     expect(orders.updateOperatorWorkOrder).toHaveBeenCalledWith(1n, {
       estado: undefined,
@@ -105,10 +102,7 @@ describe('UpdateOperatorWorkOrderUseCase', () => {
     ).rejects.toThrow(
       'no estás asignado como operario a esta orden de trabajo',
     );
-    expect(orders.verifyOperatorWorkOrderOwnership).toHaveBeenCalledWith(
-      7,
-      1n,
-    );
+    expect(orders.verifyOperatorWorkOrderOwnership).toHaveBeenCalledWith(7, 1n);
     expect(orders.updateOperatorWorkOrder).not.toHaveBeenCalled();
   });
 
@@ -120,9 +114,7 @@ describe('UpdateOperatorWorkOrderUseCase', () => {
     await useCase.execute(1n, 7, {}, undefined);
 
     expect(operators.verifyMeterOwnership).toHaveBeenCalledWith(7, 10n);
-    expect(
-      orders.verifyOperatorWorkOrderOwnership,
-    ).not.toHaveBeenCalled();
+    expect(orders.verifyOperatorWorkOrderOwnership).not.toHaveBeenCalled();
   });
 
   it('rejects reading orders unless the update contains only complete GPS coordinates', async () => {
