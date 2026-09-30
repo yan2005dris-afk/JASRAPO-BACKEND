@@ -18,6 +18,7 @@ import { buildPdfFileName } from 'src/infrastructure/pdf/utils/pdf-format.utils'
 import { FilterContractsDto } from '../dto/filter-contracts.dto';
 import { AssignInstallationRouteDto } from '../dto/assign-installation-route.dto';
 import { ContractResponseDto } from '../dto/contract-response.dto';
+import { ServiceAreaResponseDto } from '../dto/service-area-response.dto';
 import { RouteResponseDto } from '../../../routes/interfaces/dto/route-response.dto';
 import {
   ApiTags,
@@ -91,6 +92,25 @@ export class ContratoMedidorController {
       data: ContractResponseDto.fromEntityList(result.data),
       meta: result.meta,
     };
+  }
+
+  @ApiOperation({
+    summary: 'Obtener área de servicio',
+    description:
+      'Retorna el perímetro (GeoJSON Polygon) dentro del cual deben ubicarse las coordenadas de los contratos',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Área de servicio de la Junta',
+    type: ServiceAreaResponseDto,
+  })
+  @ApiResponse({ status: 401, description: 'No autorizado' })
+  @RequiredPermission('contracts', 'read')
+  @Get('service-area')
+  getServiceArea(): ServiceAreaResponseDto {
+    return ServiceAreaResponseDto.fromDomain(
+      this.contratoMedidorService.getServiceArea(),
+    );
   }
 
   @ApiOperation({

@@ -3,6 +3,7 @@ import { Test } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { CreateContractUseCase } from './create-contract.use-case';
 import { ContractRepository } from '../../domain/repositories/contract.repository';
+import { DomainValidationException } from 'src/shared/domain/exceptions/domain.exception';
 
 describe('CreateContractUseCase', () => {
   let useCase: CreateContractUseCase;
@@ -174,6 +175,54 @@ describe('CreateContractUseCase', () => {
         latitud: -1.8021,
         longitud: -80.7554,
       }),
+    );
+  });
+
+  it('rejects coordinates outside the service area without persisting', async () => {
+    const dto = {
+      clienteId: '10',
+      categoriaTarifaId: '3',
+      medidorId: '200',
+      numeroGuia: 'GUIA-OUTSIDE',
+      direccionSuministro: 'Av. Principal 123',
+      comunidadId: '2',
+      latitud: -1.8,
+      longitud: -80.8,
+    };
+
+    const result = useCase.execute(dto);
+
+    await expect(result).rejects.toBeInstanceOf(DomainValidationException);
+    await expect(result).rejects.toThrow(
+      'La ubicación seleccionada está fuera del área de servicio de la Junta (parroquia Manglaralto)',
+    );
+    expect(
+      mockContractRepository.createContractWithMeterHistory,
+    ).not.toHaveBeenCalled();
+  });
+
+  it('allows creating a contract with null coordinates', async () => {
+    const dto = {
+      clienteId: '10',
+      categoriaTarifaId: '3',
+      medidorId: '200',
+      numeroGuia: 'GUIA-NULL',
+      direccionSuministro: 'Av. Principal 123',
+      comunidadId: '2',
+      latitud: null,
+      longitud: null,
+    };
+
+    mockContractRepository.createContractWithMeterHistory.mockResolvedValue({
+      contratoId: BigInt(1),
+    });
+
+    await useCase.execute(dto);
+
+    expect(
+      mockContractRepository.createContractWithMeterHistory,
+    ).toHaveBeenCalledWith(
+      expect.objectContaining({ latitud: null, longitud: null }),
     );
   });
 

@@ -11,6 +11,7 @@ import { RemoveContractUseCase } from './use-cases/remove-contract.use-case';
 import { FinalizeMeterLinkUseCase } from './use-cases/finalize-meter-link.use-case';
 import { GetConnectionRequestPdfDataUseCase } from './use-cases/get-connection-request-pdf-data.use-case';
 import { GetResponsibilityAgreementPdfDataUseCase } from './use-cases/get-responsibility-agreement-pdf-data.use-case';
+import { GetServiceAreaUseCase } from './use-cases/get-service-area.use-case';
 import { GeneratePdfUseCase } from 'src/infrastructure/pdf/use-cases/generate-pdf.use-case';
 import { ContractEntity } from '../domain/entities/contract.entity';
 import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
@@ -19,6 +20,7 @@ import { OrdenTrabajoRepository } from '../../routes/domain/repositories/orden-t
 import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 import type { AssignInstallationRouteDto } from '../interfaces/dto/assign-installation-route.dto';
 import { RouteEntity } from '../../routes/domain/entities/route.entity';
+import type { IServiceArea } from '../domain/types/service-area.types';
 
 @Injectable()
 export class ContratoMedidorService {
@@ -31,6 +33,7 @@ export class ContratoMedidorService {
     private readonly finalizeLinkUseCase: FinalizeMeterLinkUseCase,
     private readonly getConnectionRequestPdfDataUseCase: GetConnectionRequestPdfDataUseCase,
     private readonly getResponsibilityAgreementPdfDataUseCase: GetResponsibilityAgreementPdfDataUseCase,
+    private readonly getServiceAreaUseCase: GetServiceAreaUseCase,
     private readonly generatePdf: GeneratePdfUseCase,
     private readonly routeRepository: RouteRepository,
     private readonly ordenTrabajoRepository: OrdenTrabajoRepository,
@@ -71,6 +74,10 @@ export class ContratoMedidorService {
 
   async eliminar(id: bigint): Promise<ContractEntity> {
     return this.removeUseCase.execute(id);
+  }
+
+  getServiceArea(): IServiceArea {
+    return this.getServiceAreaUseCase.execute();
   }
 
   // ── Asignar contrato a ruta de instalación (SC-174) ─────────────────────

@@ -10,6 +10,7 @@ import { RemoveContractUseCase } from './application/use-cases/remove-contract.u
 import { FinalizeMeterLinkUseCase } from './application/use-cases/finalize-meter-link.use-case';
 import { GetConnectionRequestPdfDataUseCase } from './application/use-cases/get-connection-request-pdf-data.use-case';
 import { GetResponsibilityAgreementPdfDataUseCase } from './application/use-cases/get-responsibility-agreement-pdf-data.use-case';
+import { GetServiceAreaUseCase } from './application/use-cases/get-service-area.use-case';
 import { ContractRepository } from './domain/repositories/contract.repository';
 import { PrismaContractRepository } from './infrastructure/repositories/prisma-contract.repository';
 import { ConnectionRequestPdfDocumentType } from './pdf/connection-request.pdf-type';
@@ -30,6 +31,7 @@ import { RepositoriesModule } from '../routes/repositories.module';
     FinalizeMeterLinkUseCase,
     GetConnectionRequestPdfDataUseCase,
     GetResponsibilityAgreementPdfDataUseCase,
+    GetServiceAreaUseCase,
   ],
   exports: [
     ContractRepository,
