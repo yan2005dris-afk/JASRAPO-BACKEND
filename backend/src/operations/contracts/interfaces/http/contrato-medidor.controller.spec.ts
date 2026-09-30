@@ -5,6 +5,7 @@ import { Test } from '@nestjs/testing';
 import { ContratoMedidorController } from './contrato-medidor.controller';
 import { ContratoMedidorService } from '../../application/contrato-medidor.service';
 import { ContractEntity } from '../../domain/entities/contract.entity';
+import { ServiceAreaResponseDto } from '../dto/service-area-response.dto';
 
 describe('ContratoMedidorController', () => {
   let controller: ContratoMedidorController;
@@ -18,6 +19,7 @@ describe('ContratoMedidorController', () => {
     eliminar: jest.fn(),
     generateConnectionRequestPdf: jest.fn(),
     generateResponsibilityAgreementPdf: jest.fn(),
+    getServiceArea: jest.fn(),
   };
 
   const sampleContract = new ContractEntity({
@@ -79,6 +81,49 @@ describe('ContratoMedidorController', () => {
 
     expect(result.data).toHaveLength(1);
     expect(result.data[0].contratoId).toBe(1n);
+  });
+
+  it('getServiceArea should return ServiceAreaResponseDto', () => {
+    mockService.getServiceArea.mockReturnValue({
+      nombre: 'Parroquia Manglaralto',
+      fuente: 'OpenStreetMap (relation 278708), ODbL',
+      geometria: {
+        type: 'Polygon',
+        coordinates: [
+          [
+            [-80.8, -1.7],
+            [-80.7, -1.7],
+            [-80.7, -1.8],
+            [-80.8, -1.7],
+          ],
+        ],
+      },
+    });
+
+    const result = controller.getServiceArea();
+
+    expect(result).toBeInstanceOf(ServiceAreaResponseDto);
+    expect(result.nombre).toBe('Parroquia Manglaralto');
+    expect(result.geometria.type).toBe('Polygon');
+    expect(result.geometria.coordinates[0]).toHaveLength(4);
+  });
+
+  it('declares service-area before the :id route so it is not captured as an id', () => {
+    const routes = Object.getOwnPropertyNames(
+      ContratoMedidorController.prototype,
+    )
+      .map((name) =>
+        Reflect.getMetadata(
+          'path',
+          ContratoMedidorController.prototype[
+            name as keyof ContratoMedidorController
+          ],
+        ),
+      )
+      .filter((path) => path !== undefined);
+
+    expect(routes.indexOf('service-area')).toBeGreaterThanOrEqual(0);
+    expect(routes.indexOf('service-area')).toBeLessThan(routes.indexOf(':id'));
   });
 
   it('buscarContrato should return ContractResponseDto', async () => {
