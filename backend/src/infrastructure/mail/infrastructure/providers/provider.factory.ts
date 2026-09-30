@@ -3,7 +3,6 @@ import { ConfigService } from '@nestjs/config';
 import { readFileSync } from 'fs';
 import Handlebars from 'handlebars';
 import * as nodemailer from 'nodemailer';
-import type SMTPTransport from 'nodemailer/lib/smtp-transport';
 import { join } from 'path';
 import { Readable } from 'stream';
 import { buildMailProviders } from './build-mail-providers';
@@ -121,9 +120,7 @@ export class MailProviderFactory {
     };
   }
 
-  private getTransporter(
-    provider: MailProviderConfig,
-  ): nodemailer.Transporter<SMTPTransport.SentMessageInfo> {
+  private getTransporter(provider: MailProviderConfig): nodemailer.Transporter {
     let transporter = this.transporters.get(provider.name);
     if (!transporter) {
       transporter = nodemailer.createTransport({

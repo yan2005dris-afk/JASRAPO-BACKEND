@@ -36,7 +36,7 @@ import type { MailDispatcher } from './domain/interfaces/mail-provider.interface
         },
         defaults: {
           from: `"${config.get('EMAIL_FROM_NAME', 'JASRAP-Olon')}" <${config.get('EMAIL_FROM', 'no-reply@jasrapo.com')}>`,
-        },
+        } as any,
         template: {
           dir: join(__dirname, 'templates'),
           adapter: new HandlebarsAdapter(),

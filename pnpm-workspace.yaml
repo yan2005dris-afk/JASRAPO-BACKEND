@@ -16,11 +16,12 @@ overrides:
   react-router: '>=7.18.2'
   valibot: '>=1.4.2'
   crypto-js: '^4.2.0'
-  undici: '^8.9.0'
+  undici: '>=8.10.2'
   '@opentelemetry/core': '^2.8.0'
   js-yaml: '>=4.3.2'
   liquidjs: '^10.27.1'
-  brace-expansion: '^2.1.4'
+  'minimatch@3>brace-expansion': '^1.1.11'
+  brace-expansion: '>=2.1.6'
   fast-uri: '^3.1.6'
   browserslist: '^4.28.7'
   nanoid: '^3.3.18'
@@ -29,7 +30,7 @@ overrides:
   sharp: '>=0.35.4'
   # --- security audit overrides (added 2026-07-22) ---
   multer: '^2.3.0'                              # GHSA-72gw-mp4g-v24j, GHSA-qfvm-cv95-jqjf, GHSA-535w-7cp7-47q4
-  nodemailer: '^9.1.1'                          # GHSA-p6gq-j5cr-w38f, GHSA-2x7j-588g-ccc2
+  nodemailer: '>=10.0.6'                         # GHSA-v53p-9fqp-m79j, GHSA-p6gq-j5cr-w38f, GHSA-2x7j-588g-ccc2
   axios: '^1.18.0'                              # GHSA-gcfj-64vw-6mp9
   '@opentelemetry/propagator-jaeger': '^2.9.0'  # GHSA-45rx-2jwx-cxfr
   linkify-it: '^5.0.2'                          # GHSA-v245-v573-v5vm
