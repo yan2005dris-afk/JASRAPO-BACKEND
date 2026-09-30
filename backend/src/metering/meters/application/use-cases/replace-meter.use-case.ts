@@ -35,6 +35,7 @@ export interface ReplaceMeterInput {
   autorizadoEn?: Date;
   fechaReemplazo?: Date;
   claveIdempotencia: string;
+  userRole?: string;
 }
 
 @LogContext()
@@ -54,16 +55,12 @@ export class ReplaceMeterUseCase {
         );
       }
 
+      // Solo admin/superadmin puede definir lecturaInicialEntrante; para otros roles se fuerza a 0
+      const isAdmin = input.userRole?.toLowerCase() === 'admin' || input.userRole?.toLowerCase() === 'superadmin';
       const initialEntrante =
-        input.lecturaInicialEntrante !== undefined
+        isAdmin && input.lecturaInicialEntrante !== undefined
           ? new Decimal(input.lecturaInicialEntrante.toString())
           : new Decimal(0);
-
-      if (initialEntrante.isNegative()) {
-        throw new InvalidDomainOperationException(
-          'La lectura inicial del nuevo medidor no puede ser negativa',
-        );
-      }
 
       this.validateConditionalFields(input);
 

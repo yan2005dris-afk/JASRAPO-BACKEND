@@ -63,6 +63,7 @@ export class MeterService {
   async replaceMeter(
     dto: ReplaceMeterDto,
     userId: number,
+    userRole?: string,
   ): Promise<ReplaceMeterResult> {
     return this.replaceMeterUseCase.execute({
       contratoId: BigInt(dto.contratoId),
@@ -89,6 +90,7 @@ export class MeterService {
       fechaReemplazo: dto.fechaReemplazo
         ? new Date(dto.fechaReemplazo)
         : undefined,
+      userRole,
     });
   }
 

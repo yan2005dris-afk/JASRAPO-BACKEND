@@ -701,11 +701,11 @@ export class PrismaOperatorRepository extends OperatorRepository {
         ...(route.rutaId === undefined
           ? []
           : [
-              {
-                rutaId: route.rutaId,
-                entityType: { in: ['rutas', 'ordenes_trabajo'] },
-              },
-            ]),
+            {
+              rutaId: route.rutaId,
+              entityType: { in: ['rutas', 'ordenes_trabajo'] },
+            },
+          ]),
         {
           ...geography,
           periodoId,
@@ -865,7 +865,7 @@ export class PrismaOperatorRepository extends OperatorRepository {
       (order as any).tipoActividad ??
       order.ruta?.tipoActividad?.codigo ??
       routeTipoActividad ??
-      'TOMA_LECTURA';
+      'LECTURA';
     return {
       ...order,
       tipoActividad,
@@ -876,9 +876,9 @@ export class PrismaOperatorRepository extends OperatorRepository {
       },
       medidor: order.medidor
         ? {
-            medidorId: order.medidor.medidorId,
-            serie: order.medidor.serie,
-          }
+          medidorId: order.medidor.medidorId,
+          serie: order.medidor.serie,
+        }
         : null,
     };
   }
@@ -887,7 +887,7 @@ export class PrismaOperatorRepository extends OperatorRepository {
     route: Prisma.RutasGetPayload<{ include: typeof operatorRouteInclude }>,
   ): OperatorRoute {
     const routeTipoActividad =
-      route.tipoActividad?.codigo ?? (route as any).tipoRuta ?? 'TOMA_LECTURA';
+      route.tipoActividad?.codigo ?? (route as any).tipoRuta ?? 'LECTURA';
 
     const ordenesTrabajo = route.ordenesTrabajo.map((order) =>
       this.toOperatorWorkOrder(order, routeTipoActividad),
@@ -915,7 +915,7 @@ export class PrismaOperatorRepository extends OperatorRepository {
           tipoActividad:
             route.tipoActividad?.codigo ??
             (route as any).tipoRuta ??
-            'TOMA_LECTURA',
+            'LECTURA',
           estado: order.estado,
           direccionSuministro: order.contrato.direccionSuministro,
         },
@@ -924,16 +924,7 @@ export class PrismaOperatorRepository extends OperatorRepository {
 
     return {
       ...route,
-<<<<<<< HEAD
-      tipoRuta: route.tipoActividad.codigo,
-=======
-      tipoRuta:
-        route.tipoActividad?.codigo ??
-        (route as any).tipoRuta ??
-        'TOMA_LECTURA',
-      comunidadNombre: route.comunidad?.nombre ?? null,
-      sectorNombre: route.sector?.nombre ?? null,
->>>>>>> 21e176adff9319a0a8f73fb8fbceced6f639e78f
+      tipoRuta: route.tipoActividad?.codigo ?? (route as any).tipoRuta ?? 'LECTURA',
       ordenesTrabajo,
       paradas,
     } as unknown as OperatorRoute;

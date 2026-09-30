@@ -32,6 +32,8 @@ import { RequiredPermission } from 'src/infrastructure/common/decorators/require
 import { ApiPaginatedResponse } from 'src/infrastructure/common/decorators/api-paginated-response.decorator';
 import { PaginationMetaDto } from 'src/infrastructure/common/dtos/pagination-meta.dto';
 import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
+import { CurrentUser } from 'src/identity/auth/interfaces/http/decorators/current-user.decorator';
+import type { JwtPayload } from 'src/identity/auth/application/types/jwt.types';
 
 @ApiTags('contracts')
 @ApiBearerAuth()
@@ -64,8 +66,9 @@ export class ContratoMedidorController {
   @Post()
   async crear(
     @Body() createDto: CrearContratoMedidorDto,
+    @CurrentUser() user: JwtPayload,
   ): Promise<ContractResponseDto> {
-    const result = await this.contratoMedidorService.crearContrato(createDto);
+    const result = await this.contratoMedidorService.crearContrato(createDto, user.rol);
     return ContractResponseDto.fromEntity(result);
   }
 

@@ -38,8 +38,9 @@ export class ContratoMedidorService {
 
   async crearContrato(
     createDto: CrearContratoMedidorDto,
+    userRole?: string,
   ): Promise<ContractEntity> {
-    return this.createContractUseCase.execute(createDto);
+    return this.createContractUseCase.execute(createDto, userRole);
   }
 
   async buscarContratos(

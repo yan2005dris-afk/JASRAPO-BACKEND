@@ -74,10 +74,12 @@ describe('PrismaOrdenTrabajoRepository.updateOperatorWorkOrder', () => {
       ruta: { tipoActividad: { codigo: 'INSTALACION' } },
     });
     const tx = {
+      $queryRaw: jest.fn(),
       ordenesTrabajo: {
         findUnique: jest.fn().mockResolvedValue({
           ordenTrabajoId: 1n,
           contratoId: 3n,
+          medidorId: 4n,
           estado: 'PENDIENTE',
           completadoEn: null,
           ruta: { tipoActividad: { codigo: 'INSTALACION' } },
@@ -89,6 +91,9 @@ describe('PrismaOrdenTrabajoRepository.updateOperatorWorkOrder', () => {
           .fn()
           .mockResolvedValue({ estadoServicio: 'PENDIENTE_INSTALACION' }),
         update: jest.fn().mockResolvedValue({}),
+      },
+      medidores: {
+        updateMany: jest.fn().mockResolvedValue({ count: 1 }),
       },
     };
     const prisma = {

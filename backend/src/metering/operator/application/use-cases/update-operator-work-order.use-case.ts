@@ -45,15 +45,19 @@ export class UpdateOperatorWorkOrderUseCase {
       }
     }
     if (order.medidorId === null) {
-      throw new InvalidDomainOperationException(
-        'La orden no tiene un medidor asignado',
+      // Sin medidor no hay ownership por medidor: se valida que el operario
+      // esté asignado a esta orden concreta (ruta abierta, periodo ABIERTO).
+      // GPS, observación, foto y completadoEn no requieren medidor.
+      await this.ordenTrabajoRepository.verifyOperatorWorkOrderOwnership(
+        operarioId,
+        id,
+      );
+    } else {
+      await this.operatorRepository.verifyMeterOwnership(
+        operarioId,
+        order.medidorId,
       );
     }
-
-    await this.operatorRepository.verifyMeterOwnership(
-      operarioId,
-      order.medidorId,
-    );
 
     const data: UpdateOperatorWorkOrderData = {
       estado: dto.estado,

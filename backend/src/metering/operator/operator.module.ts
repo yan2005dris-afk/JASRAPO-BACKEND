@@ -9,6 +9,7 @@ import { ReportDefectUseCase } from './application/use-cases/report-defect.use-c
 import { DecommissionMeterUseCase } from './application/use-cases/decommission-meter.use-case';
 import { GetOperatorReadingsWithAnomaliesUseCase } from './application/use-cases/get-operator-readings-with-anomalies.use-case';
 import { GetOperatorSyncManifestUseCase } from './application/use-cases/get-operator-sync-manifest.use-case';
+import { GetOperatorActivityTypesUseCase } from './application/use-cases/get-operator-activity-types.use-case';
 import { PrismaOperatorRepository } from './infrastructure/repositories/prisma-operator.repository';
 import { OperatorRepository } from './domain/repositories/operator.repository';
 import { MeterModule } from '../meters/meter.module';
@@ -29,6 +30,7 @@ import { OrdenTrabajoRepository } from 'src/operations/routes/domain/repositorie
     DecommissionMeterUseCase,
     GetOperatorReadingsWithAnomaliesUseCase,
     GetOperatorSyncManifestUseCase,
+    GetOperatorActivityTypesUseCase,
     {
       provide: OperatorRepository,
       useClass: PrismaOperatorRepository,

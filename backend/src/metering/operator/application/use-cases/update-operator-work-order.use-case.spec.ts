@@ -6,7 +6,11 @@ import {
 } from 'src/shared/domain/exceptions/domain.exception';
 
 describe('UpdateOperatorWorkOrderUseCase', () => {
-  const orders = { findById: jest.fn(), updateOperatorWorkOrder: jest.fn() };
+  const orders = {
+    findById: jest.fn(),
+    updateOperatorWorkOrder: jest.fn(),
+    verifyOperatorWorkOrderOwnership: jest.fn(),
+  };
   const operators = { verifyMeterOwnership: jest.fn() };
   let useCase: UpdateOperatorWorkOrderUseCase;
   const date = new Date('2026-08-26T12:00:00.000Z');
@@ -31,6 +35,7 @@ describe('UpdateOperatorWorkOrderUseCase', () => {
     jest.clearAllMocks();
     orders.findById.mockReset();
     orders.updateOperatorWorkOrder.mockReset();
+    orders.verifyOperatorWorkOrderOwnership.mockReset();
     operators.verifyMeterOwnership.mockReset();
     useCase = new UpdateOperatorWorkOrderUseCase(
       orders as any,
@@ -50,16 +55,75 @@ describe('UpdateOperatorWorkOrderUseCase', () => {
     expect(orders.updateOperatorWorkOrder).not.toHaveBeenCalled();
   });
 
-  it.each([[TipoActividadCodes.INSTALACION, null, 'medidor asignado']])(
-    'rejects invalid order prerequisites (%s)',
-    async (type, meter, message) => {
-      orders.findById.mockResolvedValue(order(type, meter));
-      await expect(useCase.execute(1n, 7, {}, undefined)).rejects.toThrow(
-        message,
-      );
-      expect(orders.updateOperatorWorkOrder).not.toHaveBeenCalled();
-    },
-  );
+  it('accepts a meterless order with a real GPS payload through order ownership', async () => {
+    orders.findById.mockResolvedValue(
+      order(TipoActividadCodes.INSTALACION, null),
+    );
+    orders.updateOperatorWorkOrder.mockResolvedValue(
+      order(TipoActividadCodes.INSTALACION, null),
+    );
+
+    await useCase.execute(
+      1n,
+      7,
+      { latitud: -26.80828472, longitud: -65.25268137 },
+      undefined,
+    );
+
+    expect(orders.verifyOperatorWorkOrderOwnership).toHaveBeenCalledWith(
+      7,
+      1n,
+    );
+    expect(operators.verifyMeterOwnership).not.toHaveBeenCalled();
+    expect(orders.updateOperatorWorkOrder).toHaveBeenCalledWith(1n, {
+      estado: undefined,
+      resultadoObservacion: undefined,
+      evidenciaFotoUrl: undefined,
+      completadoEn: undefined,
+      latitud: -26.80828472,
+      longitud: -65.25268137,
+    });
+  });
+
+  it('rejects a meterless order when the operator does not own the route', async () => {
+    orders.findById.mockResolvedValue(
+      order(TipoActividadCodes.INSTALACION, null),
+    );
+    orders.verifyOperatorWorkOrderOwnership.mockRejectedValue(
+      new InvalidDomainOperationException(
+        'No puedes iniciar esta operación porque no estás asignado como operario a esta orden de trabajo.',
+      ),
+    );
+
+    await expect(
+      useCase.execute(
+        1n,
+        7,
+        { latitud: -26.80828472, longitud: -65.25268137 },
+        undefined,
+      ),
+    ).rejects.toThrow(
+      'no estás asignado como operario a esta orden de trabajo',
+    );
+    expect(orders.verifyOperatorWorkOrderOwnership).toHaveBeenCalledWith(
+      7,
+      1n,
+    );
+    expect(orders.updateOperatorWorkOrder).not.toHaveBeenCalled();
+  });
+
+  it('routes a metered order through meter ownership only', async () => {
+    orders.findById.mockResolvedValue(
+      order(TipoActividadCodes.INSTALACION, 10n),
+    );
+
+    await useCase.execute(1n, 7, {}, undefined);
+
+    expect(operators.verifyMeterOwnership).toHaveBeenCalledWith(7, 10n);
+    expect(
+      orders.verifyOperatorWorkOrderOwnership,
+    ).not.toHaveBeenCalled();
+  });
 
   it('rejects reading orders unless the update contains only complete GPS coordinates', async () => {
     orders.findById.mockResolvedValue(order(TipoActividadCodes.LECTURA));
