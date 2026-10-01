@@ -27,6 +27,8 @@ export interface UpdateOperatorWorkOrderData {
   resultadoObservacion?: string | null;
   evidenciaFotoUrl?: string | null;
   completadoEn?: Date | null;
+  latitud?: number | null;
+  longitud?: number | null;
 }
 
 export interface FindOrdenesByRutaParams {

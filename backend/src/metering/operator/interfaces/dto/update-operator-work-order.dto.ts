@@ -1,5 +1,12 @@
 import { Transform } from 'class-transformer';
-import { IsDateString, IsEnum, IsOptional, IsString } from 'class-validator';
+import {
+  IsDateString,
+  IsEnum,
+  IsLatitude,
+  IsLongitude,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { EstadoOrdenTrabajo } from 'src/shared/enums';
 
@@ -23,4 +30,18 @@ export class UpdateOperatorWorkOrderDto {
   @Transform(emptyToUndefined)
   @IsDateString()
   completadoEn?: string;
+
+  @ApiPropertyOptional({
+    description: 'Latitud GPS del operador al registrar la tarea',
+  })
+  @IsOptional()
+  @IsLatitude()
+  latitud?: number;
+
+  @ApiPropertyOptional({
+    description: 'Longitud GPS del operador al registrar la tarea',
+  })
+  @IsOptional()
+  @IsLongitude()
+  longitud?: number;
 }

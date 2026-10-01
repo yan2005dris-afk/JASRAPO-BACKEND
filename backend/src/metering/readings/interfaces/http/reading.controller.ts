@@ -130,9 +130,13 @@ export class ReadingController {
     @Body(new NotEmptyBodyPipe(), new ParseActualizarLecturaPipe())
     updateLecturaDto: ActualizarLecturaDto,
   ): Promise<ResponseReadingDto> {
-    return ResponseReadingDto.fromEntity(
-      await this.readingService.update(id, updateLecturaDto),
-    )!;
+    const targetEstado = updateLecturaDto.estado
+      ? (updateLecturaDto.estado as EstadoLectura)
+      : undefined;
+    const updated = targetEstado
+      ? await this.readingService.update(id, updateLecturaDto, targetEstado)
+      : await this.readingService.update(id, updateLecturaDto);
+    return ResponseReadingDto.fromEntity(updated)!;
   }
 
   @ApiOperation({

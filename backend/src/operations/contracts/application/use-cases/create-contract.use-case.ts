@@ -11,7 +11,10 @@ import { DomainValidationException } from 'src/shared/domain/exceptions/domain.e
 export class CreateContractUseCase {
   constructor(private readonly contractRepository: ContractRepository) {}
 
-  async execute(dto: CrearContratoMedidorDto): Promise<ContractEntity> {
+  async execute(
+    dto: CrearContratoMedidorDto,
+    userRole?: string,
+  ): Promise<ContractEntity> {
     if (dto.latitud != null && dto.longitud != null) {
       const locationError = validateServiceAreaLocation(
         dto.latitud,
@@ -28,6 +31,13 @@ export class CreateContractUseCase {
       estadoServicio,
     );
 
+    // Solo admin/superadmin puede definir lecturaInicial; para otros roles se fuerza a 0
+    const isAdmin =
+      userRole?.toLowerCase() === 'admin' ||
+      userRole?.toLowerCase() === 'superadmin';
+    const lecturaInicial =
+      isAdmin && dto.lecturaInicial !== undefined ? dto.lecturaInicial : 0;
+
     return this.contractRepository.createContractWithMeterHistory({
       clienteId: BigInt(dto.clienteId),
       categoriaTarifaId: Number(dto.categoriaTarifaId),
@@ -39,7 +49,7 @@ export class CreateContractUseCase {
       estadoServicio,
       estadoCobranza,
       creadoPor: dto.creadoPor,
-      lecturaInicial: dto.lecturaInicial ?? 0,
+      lecturaInicial,
       latitud: dto.latitud,
       longitud: dto.longitud,
     });

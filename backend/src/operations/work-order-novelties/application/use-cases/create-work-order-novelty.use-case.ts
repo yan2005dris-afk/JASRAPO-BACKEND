@@ -14,7 +14,10 @@ import {
   StorageService,
   SRI_STORAGE_TYPES,
 } from 'src/infrastructure/storage/storage.service';
-import { uploadEvidence } from 'src/infrastructure/common/utils/evidence-upload.util';
+import {
+  rollbackEvidenceUpload,
+  uploadEvidence,
+} from 'src/infrastructure/common/utils/evidence-upload.util';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { TipoAnomalia } from 'src/shared/enums';
 
@@ -73,12 +76,25 @@ export class CreateWorkOrderNoveltyUseCase {
       );
     }
 
-    return this.repository.create({
-      ordenTrabajoId,
-      lecturaId,
-      observacion: dto.observacion ?? null,
-      tipo: dto.tipo,
-      fotoUrl,
-    });
+    try {
+      return await this.repository.create({
+        ordenTrabajoId,
+        lecturaId,
+        observacion: dto.observacion ?? null,
+        tipo: dto.tipo,
+        fotoUrl,
+      });
+    } catch (error) {
+      if (file && fotoUrl) {
+        await rollbackEvidenceUpload(
+          fotoUrl,
+          this.storageService,
+          SRI_STORAGE_TYPES.READING_NEWS,
+          this.logger,
+          'WORK-ORDER-NOVELTY',
+        );
+      }
+      throw error;
+    }
   }
 }

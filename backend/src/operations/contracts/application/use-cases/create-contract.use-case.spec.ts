@@ -99,7 +99,7 @@ describe('CreateContractUseCase', () => {
       sector: { sectorId: 10, codigo: 'SEC-A', nombre: 'Sector A' },
     });
 
-    const result = await useCase.execute(dto);
+    const result = await useCase.execute(dto, 'admin');
 
     expect(
       mockContractRepository.createContractWithMeterHistory,
@@ -115,6 +115,8 @@ describe('CreateContractUseCase', () => {
       estadoCobranza: 'NO_APLICA',
       creadoPor: 'admin',
       lecturaInicial: 500,
+      latitud: undefined,
+      longitud: undefined,
     });
     expect(result).toEqual({
       contratoId: BigInt(2),

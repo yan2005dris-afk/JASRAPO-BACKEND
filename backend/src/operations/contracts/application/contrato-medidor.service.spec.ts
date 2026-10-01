@@ -94,10 +94,13 @@ describe('ContratoMedidorService', () => {
       };
       mockCreateContractUseCase.execute.mockResolvedValue({ id: 1 });
 
-      const result = await service.crearContrato(dto);
+      const result = await service.crearContrato(dto, 'ADMIN');
 
       expect(result).toEqual({ id: 1 });
-      expect(mockCreateContractUseCase.execute).toHaveBeenCalledWith(dto);
+      expect(mockCreateContractUseCase.execute).toHaveBeenCalledWith(
+        dto,
+        'ADMIN',
+      );
     });
   });
 
