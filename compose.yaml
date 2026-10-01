@@ -89,8 +89,8 @@ services:
       NODE_EXTRA_CA_CERTS: /usr/local/share/ca-certificates/rustfs_cert.crt
       PORT: 3000
       PUPPETEER_EXECUTABLE_PATH: /usr/bin/chromium
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://tempo:4318
-      OTEL_METRICS_ENABLED: "true"
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://tempo:4318}
+      OTEL_METRICS_ENABLED: "${OTEL_METRICS_ENABLED:-false}"
     ports:
       - "3000:3000"
     volumes:
@@ -123,6 +123,8 @@ services:
 
   # ─── Prometheus Metrics ───────────────────────────────────────
   prometheus:
+    profiles:
+      - observability
     image: prom/prometheus:v2.55.1
     container_name: jasrapo-prometheus
     restart: unless-stopped
@@ -148,6 +150,8 @@ services:
 
   # ─── Tempo Traces ──────────────────────────────────────────────
   tempo:
+    profiles:
+      - observability
     image: grafana/tempo:2.5.0
     container_name: jasrapo-tempo
     restart: unless-stopped
@@ -175,6 +179,8 @@ services:
 
   # ─── Loki Logs ─────────────────────────────────────────────────
   loki:
+    profiles:
+      - observability
     image: grafana/loki:3.2.0
     container_name: jasrapo-loki
     restart: unless-stopped
@@ -202,6 +208,8 @@ services:
 
   # ─── Grafana Dashboards ────────────────────────────────────────
   grafana:
+    profiles:
+      - observability
     image: grafana/grafana:13.0.1
     container_name: jasrapo-grafana
     restart: unless-stopped
