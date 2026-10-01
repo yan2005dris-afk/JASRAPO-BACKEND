@@ -94,11 +94,15 @@ La observabilidad permite **monitorear, diagnosticar y debuggear** el sistema en
 # Ir a la raíz del proyecto
 cd JASRAPO-BACKEND
 
-# Levantar solo servicios de observabilidad
-docker compose up -d prometheus tempo loki grafana
-
-# O levantar todo el stack
+# Levantar solo el stack core (Postgres, RustFS, Backend sin observabilidad)
+podman compose up -d
+# O con Docker:
 docker compose up -d
+
+# Levantar con el stack completo de observabilidad (Prometheus, Tempo, Loki, Grafana)
+podman compose --profile observability up -d
+# O con Docker:
+docker compose --profile observability up -d
 ```
 
 #### 3. Verificar servicios
@@ -149,7 +153,7 @@ LOKI_ENDPOINT=http://loki:3100
 
 #### 2. Puertos a exponer
 
-En `docker-compose.yml`, modificar los puertos expuestos:
+En `compose.yaml`, modificar los puertos expuestos:
 
 ```yaml
 services:
