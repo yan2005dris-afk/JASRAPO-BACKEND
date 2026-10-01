@@ -16,6 +16,7 @@ export interface RouteData {
   rutaId?: bigint;
   comunidadId: number;
   sectorId: number | null;
+  estado?: string;
 }
 
 export interface ActivePeriod {
@@ -32,6 +33,7 @@ export interface ReadingWithDetails {
     ruta?: {
       operarioId: number | null;
       periodoId: number | null;
+      estado?: string | null;
     } | null;
   }>;
   medidor: {

@@ -11,7 +11,10 @@ describe('UpdateOperatorWorkOrderUseCase', () => {
     updateOperatorWorkOrder: jest.fn(),
     verifyOperatorWorkOrderOwnership: jest.fn(),
   };
-  const operators = { verifyMeterOwnership: jest.fn() };
+  const operators = {
+    verifyMeterOwnership: jest.fn(),
+    updateRouteState: jest.fn(),
+  };
   let useCase: UpdateOperatorWorkOrderUseCase;
   const date = new Date('2026-08-26T12:00:00.000Z');
   const order = (tipoActividad: string, medidorId: bigint | null = 10n) => ({
@@ -214,6 +217,20 @@ describe('UpdateOperatorWorkOrderUseCase', () => {
     expect(orders.updateOperatorWorkOrder).toHaveBeenCalledWith(
       1n,
       expect.objectContaining({ latitud: undefined, longitud: undefined }),
+    );
+  });
+
+  it('auto-transitions route to EN_PROGRESO when order has rutaId', async () => {
+    operators.updateRouteState.mockResolvedValue({});
+    await useCase.execute(1n, 7, { estado: 'COMPLETADA' }, undefined);
+
+    expect(operators.updateRouteState).toHaveBeenCalledWith(
+      2n,
+      expect.objectContaining({
+        estado: 'EN_PROGRESO',
+        fechaInicio: expect.any(Date),
+      }),
+      'PENDIENTE',
     );
   });
 });

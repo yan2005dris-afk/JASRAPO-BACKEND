@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { TipoActividadCodes } from 'src/shared/enums';
+import { EstadoRuta, TipoActividadCodes } from 'src/shared/enums';
 import {
   EntityNotFoundException,
   InvalidDomainOperationException,
@@ -57,6 +57,22 @@ export class UpdateOperatorWorkOrderUseCase {
         operarioId,
         order.medidorId,
       );
+    }
+
+    // Si la ruta asociada se encuentra en estado PENDIENTE, transicionarla a EN_PROGRESO
+    if (order.rutaId) {
+      try {
+        await this.operatorRepository.updateRouteState(
+          order.rutaId,
+          {
+            estado: EstadoRuta.EN_PROGRESO,
+            fechaInicio: new Date(),
+          },
+          EstadoRuta.PENDIENTE,
+        );
+      } catch {
+        // Ignorar si ya fue transicionada concurrentemente o no estaba en PENDIENTE
+      }
     }
 
     const data: UpdateOperatorWorkOrderData = {

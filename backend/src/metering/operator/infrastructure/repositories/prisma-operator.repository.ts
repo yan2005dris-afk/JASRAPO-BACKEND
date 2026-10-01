@@ -145,6 +145,7 @@ export class PrismaOperatorRepository extends OperatorRepository {
         rutaId: true,
         comunidadId: true,
         sectorId: true,
+        estado: true,
       },
     });
   }
@@ -297,6 +298,7 @@ export class PrismaOperatorRepository extends OperatorRepository {
               select: {
                 operarioId: true,
                 periodoId: true,
+                estado: true,
               },
             },
           },
