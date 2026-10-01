@@ -61,7 +61,10 @@ describe('UpdateOperatorReadingUseCase', () => {
       { rutaId: 10n, comunidadId: 1, sectorId: null, estado: 'PENDIENTE' },
     ]);
     operatorRepository.updateRouteState = jest.fn().mockResolvedValue({});
-    updateReadingUseCase.execute.mockResolvedValue({ lecturaId: 1n, estado: 'POR_REVISION' });
+    updateReadingUseCase.execute.mockResolvedValue({
+      lecturaId: 1n,
+      estado: 'POR_REVISION',
+    });
 
     const result = await useCase.execute(1n, 42, { lecturaActual: 150 });
 
