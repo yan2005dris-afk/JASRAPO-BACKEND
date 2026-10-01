@@ -65,6 +65,9 @@ export class PreInvoiceResponseDto {
   @ApiProperty({ description: 'Contract ID' })
   contratoId: number;
 
+  @ApiPropertyOptional({ description: 'Número de guía del contrato' })
+  numeroGuia?: string | null;
+
   @ApiPropertyOptional({ description: 'Batch ID' })
   loteId?: number | null;
 
@@ -144,6 +147,7 @@ export class PreInvoiceResponseDto {
     dto.prefacturaId = Number(entity.prefacturaId);
     dto.uuid = entity.uuid;
     dto.contratoId = Number(entity.contratoId);
+    dto.numeroGuia = entity.contrato?.numeroGuia ?? null;
     dto.loteId = entity.loteId ? Number(entity.loteId) : null;
     dto.periodoId = entity.periodoId;
     dto.mes = entity.mes ?? 1;

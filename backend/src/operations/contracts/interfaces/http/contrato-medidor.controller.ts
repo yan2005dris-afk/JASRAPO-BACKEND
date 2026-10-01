@@ -48,12 +48,12 @@ export class ContratoMedidorController {
   @ApiOperation({
     summary: 'Crear contrato',
     description:
-      'Crea un nuevo contrato con medidor en una transacción. Requiere clienteId, categoriaTarifaId, medidorId, numeroGuia, direccionSuministro, comunidadId obligatorios.',
+      'Crea un nuevo contrato con medidor en una transacción. La guía se genera automáticamente.',
   })
   @ApiBody({
     type: CrearContratoMedidorDto,
     description:
-      'Datos del contrato (clienteId, medidorId, categoriaTarifaId, numeroGuia, direccionSuministro, comunidadId obligatorios)',
+      'Datos del contrato (clienteId, medidorId, categoriaTarifaId, direccionSuministro y comunidadId)',
   })
   @ApiResponse({
     status: 201,

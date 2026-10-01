@@ -35,15 +35,6 @@ export class CrearContratoMedidorDto {
   medidorId: string;
 
   @ApiProperty({
-    description: 'Número de guía del contrato',
-    example: 'GU-2024-001',
-  })
-  @IsNotEmpty()
-  @IsString()
-  @IsNotEmptyString()
-  numeroGuia: string;
-
-  @ApiProperty({
     description: 'Dirección del suministro',
     example: 'Av. Principal 123',
   })

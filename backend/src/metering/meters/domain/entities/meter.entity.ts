@@ -3,7 +3,7 @@ import type { EstadoMedidor } from 'src/shared/enums';
 export class MeterEntity {
   medidorId: bigint;
 
-  /** Correlative institutional code assigned by the system (e.g. MED-000123). */
+  /** Legacy institutional code; new meters are identified by their physical serial. */
   codigo: string | null;
 
   marca: string;

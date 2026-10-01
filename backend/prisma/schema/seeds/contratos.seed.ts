@@ -1,5 +1,4 @@
 import type { PrismaClient } from 'src/generated/prisma/client';
-import { takeNextMeterCodeSeed } from './secuenciaMedidor.seed';
 
 export async function seedContratos(prisma: PrismaClient) {
   const contratos: any[] = [];
@@ -34,14 +33,12 @@ export async function seedContratos(prisma: PrismaClient) {
       lng = -80.749 + (Math.random() - 0.5) * 0.005;
     }
 
-    const { codigo } = await takeNextMeterCodeSeed(prisma);
     const marca = nextMedidorId % 2 === 0 ? 'Itron' : 'Sensus';
     const modelo = nextMedidorId % 2 === 0 ? 'CEntra 500' : 'iPerl';
 
     const medidor = await prisma.medidores.create({
       data: {
         medidorId: BigInt(nextMedidorId),
-        codigo,
         marca,
         modelo,
         serie: `MED-${String(nextMedidorId).padStart(5, '0')}`,
