@@ -1,4 +1,5 @@
 import type { PdfDocumentType } from 'src/infrastructure/pdf/document-type.interface';
+import { Decimal } from 'decimal.js';
 
 /**
  * Documento tipo Prefactura.
@@ -22,6 +23,11 @@ export const PreInvoicePdfDocumentType: PdfDocumentType = {
         subtotal: raw.subtotal,
         iva: raw.iva,
         descuentoTotal: raw.descuentoTotal,
+        subsidioLey: raw.subsidioLey ?? 0,
+        otrosDescuentos: new Decimal(raw.descuentoTotal ?? 0)
+          .minus(raw.subsidioLey ?? 0)
+          .toDecimalPlaces(2)
+          .toNumber(),
         totalPagar: raw.totalPagar,
         interesMora: raw.interesMora,
         deudaAnterior: raw.deudaAnterior,

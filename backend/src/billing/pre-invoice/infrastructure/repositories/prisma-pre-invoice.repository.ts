@@ -27,6 +27,12 @@ export class PrismaPreInvoiceRepository implements PreInvoiceRepository {
             codigoSistemaRubro: true,
           },
         },
+        descuentoDetalles: {
+          select: {
+            montoDescontado: true,
+            catalogo: { select: { tipoDescuento: true } },
+          },
+        },
       },
     },
     contrato: {

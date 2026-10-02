@@ -19,6 +19,7 @@ export class PreInvoiceEntity {
   subtotal: number;
   iva: number;
   descuentoTotal: number;
+  subsidioLey: number;
   totalPagar: number;
   deudaAnterior: number;
   saldoVencido: number;

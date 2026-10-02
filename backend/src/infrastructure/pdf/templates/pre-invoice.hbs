@@ -180,10 +180,16 @@
         <span>IVA:</span>
         <span>${{prefactura.iva}}</span>
       </div>
-      {{#if prefactura.descuentoTotal}}
+      {{#if prefactura.subsidioLey}}
+      <div class="totals-row">
+        <span>Subsidio Ley Tercera Edad / Discapacidad:</span>
+        <span style="color: #16a34a;">-${{prefactura.subsidioLey}}</span>
+      </div>
+      {{/if}}
+      {{#if prefactura.otrosDescuentos}}
       <div class="totals-row">
         <span>Descuento:</span>
-        <span style="color: #16a34a;">-${{prefactura.descuentoTotal}}</span>
+        <span style="color: #16a34a;">-${{prefactura.otrosDescuentos}}</span>
       </div>
       {{/if}}
       {{#if prefactura.interesMora}}
