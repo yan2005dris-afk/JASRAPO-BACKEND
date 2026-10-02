@@ -29,6 +29,8 @@ export class ClientEntity {
 
   aplicaDiscapacidad: boolean;
 
+  porcentajeDiscapacidad: number | null;
+
   aplicaTerceraEdad: boolean;
 
   tipoIdentificacion: TipoIdentificacionSnippet | null;

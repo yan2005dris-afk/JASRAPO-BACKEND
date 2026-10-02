@@ -221,5 +221,73 @@ describe('UpdateClientUseCase', () => {
         expect.objectContaining({ aplicaTerceraEdad: true }),
       );
     });
+
+    it('guarda el porcentaje del carné al marcar discapacidad', async () => {
+      mockClientRepository.updateClient.mockResolvedValue(mockCliente);
+
+      await useCase.execute(1n, {
+        aplicaDiscapacidad: true,
+        porcentajeDiscapacidad: 40,
+      });
+
+      expect(mockClientRepository.updateClient).toHaveBeenCalledWith(
+        1n,
+        expect.objectContaining({
+          aplicaDiscapacidad: true,
+          porcentajeDiscapacidad: 40,
+        }),
+      );
+    });
+
+    it('rechaza marcar discapacidad sin porcentaje del carné', async () => {
+      mockClientRepository.findById.mockResolvedValue({
+        ...mockCliente,
+        aplicaDiscapacidad: false,
+        porcentajeDiscapacidad: null,
+      });
+
+      await expect(
+        useCase.execute(1n, { aplicaDiscapacidad: true }),
+      ).rejects.toThrow(InvalidDomainOperationException);
+      expect(mockClientRepository.updateClient).not.toHaveBeenCalled();
+    });
+
+    it('limpia el porcentaje al desmarcar discapacidad', async () => {
+      mockClientRepository.findById.mockResolvedValue({
+        ...mockCliente,
+        aplicaDiscapacidad: true,
+        porcentajeDiscapacidad: 70,
+      });
+      mockClientRepository.updateClient.mockResolvedValue(mockCliente);
+
+      await useCase.execute(1n, { aplicaDiscapacidad: false });
+
+      expect(mockClientRepository.updateClient).toHaveBeenCalledWith(
+        1n,
+        expect.objectContaining({
+          aplicaDiscapacidad: false,
+          porcentajeDiscapacidad: null,
+        }),
+      );
+    });
+
+    it('no exige el porcentaje si la edición no toca discapacidad', async () => {
+      mockClientRepository.findById.mockResolvedValue({
+        ...mockCliente,
+        aplicaDiscapacidad: true,
+        porcentajeDiscapacidad: null,
+      });
+      mockClientRepository.updateClient.mockResolvedValue(mockCliente);
+
+      await useCase.execute(1n, { telefono: '0991234567' });
+
+      expect(mockClientRepository.updateClient).toHaveBeenCalledWith(
+        1n,
+        expect.objectContaining({
+          aplicaDiscapacidad: true,
+          porcentajeDiscapacidad: null,
+        }),
+      );
+    });
   });
 });

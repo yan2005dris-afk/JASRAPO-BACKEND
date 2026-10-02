@@ -72,6 +72,13 @@ export class ClientResponseDto {
   })
   aplicaDiscapacidad: boolean;
 
+  @ApiPropertyOptional({
+    example: 50,
+    nullable: true,
+    description: 'Porcentaje del carné de discapacidad',
+  })
+  porcentajeDiscapacidad: number | null;
+
   @ApiProperty({
     example: false,
     description: 'Si aplica tarifa de tercera edad',
@@ -121,6 +128,7 @@ export class ClientResponseDto {
       direccionDomicilio: entity.direccionDomicilio,
       activo: entity.activo,
       aplicaDiscapacidad: entity.aplicaDiscapacidad,
+      porcentajeDiscapacidad: entity.porcentajeDiscapacidad,
       aplicaTerceraEdad: entity.aplicaTerceraEdad,
       tipoIdentificacion: entity.tipoIdentificacion
         ? {

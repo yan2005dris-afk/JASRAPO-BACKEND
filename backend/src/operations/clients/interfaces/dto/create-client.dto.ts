@@ -7,6 +7,7 @@ import {
   IsBoolean,
   IsDateString,
   Min,
+  Max,
   Length,
   MaxLength,
 } from 'class-validator';
@@ -95,6 +96,19 @@ export class CreateClientDto {
   @IsOptional()
   @IsBoolean()
   aplicaDiscapacidad?: boolean;
+
+  @ApiPropertyOptional({
+    description:
+      'Porcentaje del carné de discapacidad. Obligatorio cuando aplicaDiscapacidad es true.',
+    example: 50,
+    minimum: 1,
+    maximum: 100,
+  })
+  @IsOptional()
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(1)
+  @Max(100)
+  porcentajeDiscapacidad?: number;
 
   @ApiProperty({
     description:

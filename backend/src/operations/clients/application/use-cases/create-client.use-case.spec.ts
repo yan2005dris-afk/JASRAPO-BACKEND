@@ -245,6 +245,53 @@ describe('CreateClientUseCase', () => {
         expect.objectContaining({ email: 'juan@example.com' }),
       );
     });
+
+    it('guarda el porcentaje del carné cuando aplica discapacidad', async () => {
+      mockClientRepository.findByIdentificacion.mockResolvedValue(null);
+      mockClientRepository.create.mockResolvedValue({
+        ...baseDto,
+        clienteId: BigInt(1),
+      });
+
+      await useCase.execute({
+        ...baseDto,
+        aplicaDiscapacidad: true,
+        porcentajeDiscapacidad: 70,
+      });
+
+      expect(mockClientRepository.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          aplicaDiscapacidad: true,
+          porcentajeDiscapacidad: 70,
+        }),
+      );
+    });
+
+    it('rechaza discapacidad sin porcentaje del carné', async () => {
+      mockClientRepository.findByIdentificacion.mockResolvedValue(null);
+
+      await expect(
+        useCase.execute({ ...baseDto, aplicaDiscapacidad: true }),
+      ).rejects.toThrow(InvalidDomainOperationException);
+      expect(mockClientRepository.create).not.toHaveBeenCalled();
+    });
+
+    it('no guarda porcentaje cuando no aplica discapacidad', async () => {
+      mockClientRepository.findByIdentificacion.mockResolvedValue(null);
+      mockClientRepository.create.mockResolvedValue({
+        ...baseDto,
+        clienteId: BigInt(1),
+      });
+
+      await useCase.execute({ ...baseDto, porcentajeDiscapacidad: 50 });
+
+      expect(mockClientRepository.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          aplicaDiscapacidad: false,
+          porcentajeDiscapacidad: null,
+        }),
+      );
+    });
   });
 
   describe('execute - CONSUMIDOR_FINAL (tipoIdentificacionId 4)', () => {

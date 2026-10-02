@@ -128,6 +128,7 @@ describe('PrismaClientRepository', () => {
         apellidos: 'PEREZ',
         aplicaTerceraEdad: false,
         aplicaDiscapacidad: false,
+        porcentajeDiscapacidad: null,
       });
 
       expect(prisma.clientes.create).toHaveBeenCalledWith(
@@ -156,6 +157,7 @@ describe('PrismaClientRepository', () => {
           apellidos: 'PEREZ',
           aplicaTerceraEdad: false,
           aplicaDiscapacidad: false,
+          porcentajeDiscapacidad: null,
         }),
       ).rejects.toThrow(EntityAlreadyExistsException);
     });
@@ -172,6 +174,7 @@ describe('PrismaClientRepository', () => {
           apellidos: 'PEREZ',
           aplicaTerceraEdad: false,
           aplicaDiscapacidad: false,
+          porcentajeDiscapacidad: null,
         }),
       ).rejects.toThrow('Connection refused');
     });

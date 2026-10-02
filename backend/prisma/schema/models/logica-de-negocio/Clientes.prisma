@@ -15,6 +15,7 @@ model Clientes {
   deletedAt          DateTime?           @map("borrado_en")
   activo             Boolean             @default(true) @map("activo")
   aplicaDiscapacidad Boolean             @default(false) @map("aplica_discapacidad")
+  porcentajeDiscapacidad Decimal?        @map("porcentaje_discapacidad") @db.Decimal(5, 2)
   aplicaTerceraEdad  Boolean             @default(false) @map("aplica_tercera_edad")
   contratos          Contratos[]
   pagos              Pagos[]
