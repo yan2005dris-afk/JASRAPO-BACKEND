@@ -126,7 +126,6 @@ export async function seedLecturas(prisma: any) {
                         lecturaActual,
                         consumoCalculado: consumo,
                         estado: "APROBADA",
-                        lecturaInicial: lecturaAnterior === 0,
                     },
                 });
 
