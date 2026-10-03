@@ -35,9 +35,6 @@ export class ResponseReadingDto {
   @ApiProperty({ description: 'Indica si está validada' })
   isValidada: boolean;
 
-  @ApiProperty({ description: 'Lectura inicial' })
-  lecturaInicial: boolean;
-
   @ApiProperty({ description: 'ID del período' })
   periodoId: number;
 
@@ -109,7 +106,6 @@ export class ResponseReadingDto {
       fechaValidacion: reading.fechaValidacion,
       evidenciaFotoUrl: reading.evidenciaFotoUrl,
       isValidada: reading.isValidada,
-      lecturaInicial: reading.lecturaInicial,
       periodoId: reading.periodoId,
       tieneAnomalia: reading.tieneAnomalia,
       estado: reading.estado,

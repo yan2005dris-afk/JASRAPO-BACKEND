@@ -3,7 +3,6 @@ import type { Decimal } from 'decimal.js';
 
 export interface ReadingSnapshot {
   lecturaAnterior: Decimal;
-  lecturaInicial: boolean;
 }
 export interface UpdateReadingRepositoryData {
   fecha?: Date;
@@ -14,7 +13,6 @@ export interface UpdateReadingRepositoryData {
   descripcionAnomalia?: string | null;
   fechaValidacion?: Date | null;
   estado?: string;
-  lecturaInicial?: boolean;
   periodoId?: number;
   deletedAt?: Date | null;
   /** RustFS object key stored on the linked work order. */
