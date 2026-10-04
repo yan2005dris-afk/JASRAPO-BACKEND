@@ -1,5 +1,4 @@
 import { PrismaClient, EstadoMedidor } from 'src/generated/prisma/client';
-import { takeNextMeterCodeSeed } from './secuenciaMedidor.seed';
 
 export async function seedMedidores(prisma: PrismaClient) {
   const now = new Date();
@@ -64,8 +63,6 @@ export async function seedMedidores(prisma: PrismaClient) {
   const createdMedidores: any[] = [];
 
   for (const m of medidoresBase) {
-    const { codigo } = await takeNextMeterCodeSeed(prisma);
-
     const record = await prisma.medidores.upsert({
       where: { medidorId: m.medidorId },
       update: {
@@ -73,17 +70,16 @@ export async function seedMedidores(prisma: PrismaClient) {
         modelo: m.modelo,
         serie: m.serie,
         estado: m.estado,
-        codigo,
+        codigo: null,
         updatedAt: now,
       },
-      create: {
-        ...m,
-        codigo,
-      },
+      create: m,
     });
     createdMedidores.push(record);
   }
 
-  console.log(`✅ ${createdMedidores.length} medidores creados con código secuencial.`);
+  console.log(
+    `✅ ${createdMedidores.length} medidores creados con su serie física.`,
+  );
   return createdMedidores;
 }

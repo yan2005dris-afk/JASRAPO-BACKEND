@@ -66,7 +66,6 @@ describe('Contract coordinates validation', () => {
       clienteId: '1',
       categoriaTarifaId: '2',
       medidorId: '100',
-      numeroGuia: 'GU-2026-001',
       direccionSuministro: 'Av. Principal 123',
       comunidadId: '1',
     };

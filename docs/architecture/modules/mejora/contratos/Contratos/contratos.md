@@ -37,7 +37,7 @@ Vínculo entre cliente, medidor, tarifa y servicio.
 |---|---|---|
 | `contratoId`, `clienteId`, `medidorId` | string | `BigInt` serializado. |
 | `categoriaTarifaId`, `comunidadId`, `sectorId` | number | Relaciones territoriales/tarifarias. |
-| `numeroGuia`, `direccionSuministro` | string | Datos de instalación. |
+| `numeroGuia`, `direccionSuministro` | string | Guía asignada por el sistema y dirección de instalación. |
 | `estadoServicio` | enum | Ciclo operativo del servicio. |
 | `estadoCobranza` | enum | Situación de cobro. |
 | `latitud`, `longitud` | number \| null | Ubicación del predio (WGS84, `latitud` en [-90,90], `longitud` en [-180,180]). Opcionales: se envían ambas o ninguna. En `PATCH`, un valor `null` explícito limpia el par; si se omiten, se conserva el valor almacenado. |
@@ -95,10 +95,10 @@ stateDiagram-v2
 **Entrada:**
 
 ```json
-{"clienteId":"10","medidorId":"20","categoriaTarifaId":1,"numeroGuia":"G-0001","direccionSuministro":"Av. Amazonas 123","comunidadId":1,"latitud":-1.7966,"longitud":-80.7568}
+{"clienteId":"10","medidorId":"20","categoriaTarifaId":1,"direccionSuministro":"Av. Amazonas 123","comunidadId":1,"latitud":-1.7966,"longitud":-80.7568}
 ```
 
-`latitud`/`longitud` son opcionales; si se omiten, el contrato se crea con ambas en `NULL`.
+El sistema genera `numeroGuia` usando el código de la comunidad, la serie física del medidor y el siguiente secuencial. El campo no se recibe ni se puede cambiar desde el formulario. `latitud`/`longitud` son opcionales; si se omiten, el contrato se crea con ambas en `NULL`.
 
 **Salida:**
 

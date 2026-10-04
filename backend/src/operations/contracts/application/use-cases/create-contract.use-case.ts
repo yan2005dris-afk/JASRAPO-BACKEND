@@ -44,7 +44,6 @@ export class CreateContractUseCase {
       medidorId: BigInt(dto.medidorId),
       comunidadId: Number(dto.comunidadId),
       sectorId: dto.sectorId ? Number(dto.sectorId) : null,
-      numeroGuia: dto.numeroGuia,
       direccionSuministro: dto.direccionSuministro,
       estadoServicio,
       estadoCobranza,

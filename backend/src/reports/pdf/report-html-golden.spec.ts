@@ -32,7 +32,11 @@ describe('report HTML goldens', () => {
       }
 
       expect(fs.existsSync(goldenPath)).toBe(true);
-      expect(actual).toBe(fs.readFileSync(goldenPath, 'utf8'));
+      const expected = fs.readFileSync(goldenPath, 'utf8');
+      const normalizeLineEndings = (value: string) =>
+        value.replace(/\r\n/g, '\n');
+
+      expect(normalizeLineEndings(actual)).toBe(normalizeLineEndings(expected));
     }
   });
 
