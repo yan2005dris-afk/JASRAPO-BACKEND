@@ -13,7 +13,7 @@ import { seedUSers } from './seeds/user.seed';
 import { seedComunidades } from './seeds/comunidades.seed';
 import { seedSectores } from './seeds/sectores.seed';
 import { seedCategoriaTarifa } from './seeds/categoriaTarifa.seed';
-import { seedSecuenciaMedidor } from './seeds/secuenciaMedidor.seed';
+import { seedSecuenciaContrato } from './seeds/secuenciaContrato.seed';
 import { seedMedidores } from './seeds/medidores.seed';
 import { seedClientes } from './seeds/clientes.seed';
 import { seedContratos } from './seeds/contratos.seed';
@@ -118,7 +118,7 @@ async function main() {
   console.log('✅ Categorías de tarifa creadas.');
 
   // Secuencia de Medidores
-  await seedSecuenciaMedidor(prisma);
+  await seedSecuenciaContrato(prisma);
   console.log('✅ Secuencia de medidores inicializada.');
 
   // Medidores
@@ -160,7 +160,9 @@ async function main() {
   // Esto asegura que los autoincrementales empiecen después de los IDs manuales del seed
   await syncSequences(prisma);
 
-  console.log('✅ Seed completado exitosamente (datos maestros limpios para pruebas operativas).');
+  console.log(
+    '✅ Seed completado exitosamente (datos maestros limpios para pruebas operativas).',
+  );
 }
 
 main()

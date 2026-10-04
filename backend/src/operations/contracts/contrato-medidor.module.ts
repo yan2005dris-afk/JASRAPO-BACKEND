@@ -13,6 +13,7 @@ import { GetResponsibilityAgreementPdfDataUseCase } from './application/use-case
 import { GetServiceAreaUseCase } from './application/use-cases/get-service-area.use-case';
 import { ContractRepository } from './domain/repositories/contract.repository';
 import { PrismaContractRepository } from './infrastructure/repositories/prisma-contract.repository';
+import { ContractGuideGeneratorService } from './infrastructure/services/contract-guide-generator.service';
 import { ConnectionRequestPdfDocumentType } from './pdf/connection-request.pdf-type';
 import { ResponsibilityAgreementPdfDocumentType } from './pdf/responsibility-agreement.pdf-type';
 import { RepositoriesModule } from '../routes/repositories.module';
@@ -22,6 +23,7 @@ import { RepositoriesModule } from '../routes/repositories.module';
   controllers: [ContratoMedidorController],
   providers: [
     { provide: ContractRepository, useClass: PrismaContractRepository },
+    ContractGuideGeneratorService,
     ContratoMedidorService,
     CreateContractUseCase,
     FindAllContractsUseCase,

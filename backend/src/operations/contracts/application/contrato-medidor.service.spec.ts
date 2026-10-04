@@ -88,7 +88,6 @@ describe('ContratoMedidorService', () => {
         clienteId: '10',
         categoriaTarifaId: '3',
         medidorId: '200',
-        numeroGuia: 'GUIA-001',
         direccionSuministro: 'Av. Principal 123',
         comunidadId: '2',
       };
