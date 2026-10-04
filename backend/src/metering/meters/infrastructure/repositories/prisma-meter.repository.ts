@@ -472,7 +472,6 @@ export class PrismaMeterRepository implements MeterRepository {
               AND hm.borrado_en IS NULL
               AND l.estado = 'APROBADA'::"EstadoLectura"
               AND l.borrado_en IS NULL
-              AND l.lectura_inicial = FALSE
               AND l.descripcion_anomalia IS NULL
               AND l.fecha < ${fechaReemplazo}
               AND (l.periodo_id < ${periodoOrigenId}
@@ -564,7 +563,6 @@ export class PrismaMeterRepository implements MeterRepository {
                 consumoCalculado: new Prisma.Decimal(
                   consumoMedidoSaliente.toString(),
                 ),
-                lecturaInicial: false,
                 estado: requiereAprobacion ? 'POR_REVISION' : 'APROBADA',
               },
             });
@@ -628,7 +626,6 @@ export class PrismaMeterRepository implements MeterRepository {
                   initialEntranteDec.toString(),
                 ),
                 consumoCalculado: new Prisma.Decimal('0'),
-                lecturaInicial: true,
                 estado: requiereAprobacion ? 'POR_REVISION' : 'APROBADA',
               },
             });

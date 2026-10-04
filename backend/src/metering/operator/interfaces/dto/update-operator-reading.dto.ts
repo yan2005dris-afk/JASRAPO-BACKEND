@@ -50,10 +50,4 @@ export class UpdateOperatorReadingDto {
   @IsString()
   @IsNotEmptyString()
   descripcionAnomalia?: string;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @Transform(multipartBoolean)
-  @IsBoolean()
-  lecturaInicial?: boolean;
 }

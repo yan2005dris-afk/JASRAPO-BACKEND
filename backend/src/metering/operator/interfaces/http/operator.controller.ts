@@ -225,7 +225,6 @@ export class OperatorController {
         lecturaActual: { type: 'number' },
         lecturaAnterior: { type: 'number' },
         fecha: { type: 'string' },
-        lecturaInicial: { type: 'boolean' },
         descripcionAnomalia: { type: 'string' },
         foto: { type: 'string', format: 'binary' },
       },

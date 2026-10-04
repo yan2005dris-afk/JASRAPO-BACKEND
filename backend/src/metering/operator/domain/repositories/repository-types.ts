@@ -44,7 +44,6 @@ export interface ReadingWithContractDetail {
   descripcionAnomalia: string | null;
   fechaValidacion: Date | null;
   evidenciaFotoUrl: string | null;
-  lecturaInicial: boolean;
   periodoId: number;
   estado: string;
   medidor: {
