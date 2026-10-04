@@ -11,8 +11,23 @@ export async function seedContratos(prisma: PrismaClient) {
   });
   let nextMedidorId = Number(maxMedidor?.medidorId ?? 5) + 1;
 
+  // Mapa de códigos de comunidad para formato de guía
+  const comunidadesCodigos: Record<number, string> = {
+    1: '001',
+    2: '002',
+    3: '003',
+    4: '004',
+    5: '005',
+  };
+
+  const secuencia = await prisma.secuenciaContrato.findFirst({
+    orderBy: { secuenciaContratoId: 'asc' },
+  });
+  const longitudSecuencia = secuencia?.longitud ?? 5;
+  let valorSecuencial = Number(secuencia?.ultimoValor ?? 0n);
+
   // Helper para crear e instalar medidor
-  const instalarMedidorParaContrato = async (
+  const crearEInstalarMedidor = async (
     contratoId: bigint,
     comunidadId: number,
     fechaInicio: Date,
@@ -35,13 +50,14 @@ export async function seedContratos(prisma: PrismaClient) {
 
     const marca = nextMedidorId % 2 === 0 ? 'Itron' : 'Sensus';
     const modelo = nextMedidorId % 2 === 0 ? 'CEntra 500' : 'iPerl';
+    const serie = `MED-${String(nextMedidorId).padStart(5, '0')}`;
 
     const medidor = await prisma.medidores.create({
       data: {
         medidorId: BigInt(nextMedidorId),
         marca,
         modelo,
-        serie: `MED-${String(nextMedidorId).padStart(5, '0')}`,
+        serie,
         estado: 'INSTALADO',
         fechaInstalacion: fechaInicio,
       },
@@ -66,6 +82,7 @@ export async function seedContratos(prisma: PrismaClient) {
     });
 
     nextMedidorId++;
+    return medidor;
   };
 
   // Contratos base para asegurar datos conocidos
@@ -76,7 +93,6 @@ export async function seedContratos(prisma: PrismaClient) {
       comunidadId: 1,
       sectorId: 1,
       categoriaTarifaId: 1,
-      numeroGuia: 'GUIA-OLON-001',
     },
     {
       contratoId: 2,
@@ -84,7 +100,6 @@ export async function seedContratos(prisma: PrismaClient) {
       comunidadId: 1,
       sectorId: 2,
       categoriaTarifaId: 1,
-      numeroGuia: 'GUIA-OLON-002',
     },
     {
       contratoId: 3,
@@ -92,22 +107,27 @@ export async function seedContratos(prisma: PrismaClient) {
       comunidadId: 2,
       sectorId: null,
       categoriaTarifaId: 1,
-      numeroGuia: 'GUIA-NUNEZ-001',
     },
   ];
 
   for (const c of contratosBase) {
     const fechaInicio = new Date('2026-01-05T00:00:00.000Z');
+    valorSecuencial++;
+    const codComunidad = comunidadesCodigos[c.comunidadId] || '001';
+    const serieMedidor = `MED-${String(nextMedidorId).padStart(5, '0')}`;
+    const seqStr = valorSecuencial.toString().padStart(longitudSecuencia, '0');
+    const numeroGuia = `${serieMedidor}-${codComunidad}-${seqStr}`;
+
     const created = await prisma.contratos.upsert({
       where: { contratoId: BigInt(c.contratoId) },
-      update: {},
+      update: { numeroGuia },
       create: {
         contratoId: BigInt(c.contratoId),
         clienteId: BigInt(c.clienteId),
         comunidadId: c.comunidadId,
         sectorId: c.sectorId,
         categoriaTarifaId: c.categoriaTarifaId,
-        numeroGuia: c.numeroGuia,
+        numeroGuia,
         direccionSuministro: `Direccion contrato ${c.contratoId}`,
         estadoServicio: 'ACTIVO',
         estadoCobranza: 'AL_DIA',
@@ -116,11 +136,7 @@ export async function seedContratos(prisma: PrismaClient) {
     });
     contratos.push(created);
 
-    await instalarMedidorParaContrato(
-      created.contratoId,
-      c.comunidadId,
-      fechaInicio,
-    );
+    await crearEInstalarMedidor(created.contratoId, c.comunidadId, fechaInicio);
   }
 
   // Generar adicionales
@@ -138,6 +154,12 @@ export async function seedContratos(prisma: PrismaClient) {
       categorias[Math.floor(Math.random() * categorias.length)];
     const fechaInicio = new Date('2026-01-15T00:00:00.000Z');
 
+    valorSecuencial++;
+    const codComunidad = comunidadesCodigos[comunidadId] || '001';
+    const serieMedidor = `MED-${String(nextMedidorId).padStart(5, '0')}`;
+    const seqStr = valorSecuencial.toString().padStart(longitudSecuencia, '0');
+    const numeroGuia = `${serieMedidor}-${codComunidad}-${seqStr}`;
+
     const created = await prisma.contratos.create({
       data: {
         contratoId: BigInt(nextContratoId),
@@ -145,7 +167,7 @@ export async function seedContratos(prisma: PrismaClient) {
         comunidadId: comunidadId,
         sectorId: sectorId,
         categoriaTarifaId: categoriaTarifaId,
-        numeroGuia: `GUIA-${comunidadId}-${nextContratoId.toString().padStart(4, '0')}`,
+        numeroGuia,
         direccionSuministro: `Direccion contrato ${nextContratoId}`,
         estadoServicio: 'ACTIVO',
         estadoCobranza: 'AL_DIA',
@@ -154,17 +176,20 @@ export async function seedContratos(prisma: PrismaClient) {
     });
     contratos.push(created);
 
-    await instalarMedidorParaContrato(
-      created.contratoId,
-      comunidadId,
-      fechaInicio,
-    );
+    await crearEInstalarMedidor(created.contratoId, comunidadId, fechaInicio);
 
     nextContratoId++;
   }
 
+  if (secuencia) {
+    await prisma.secuenciaContrato.update({
+      where: { secuenciaContratoId: secuencia.secuenciaContratoId },
+      data: { ultimoValor: BigInt(valorSecuencial) },
+    });
+  }
+
   console.log(
-    `✅ ${contratos.length} contratos creados con medidores activos asignados en historial_medidores.`,
+    `✅ ${contratos.length} contratos creados con guías secuenciales (${valorSecuencial}) y medidores activos asignados.`,
   );
   return contratos;
 }
