@@ -184,26 +184,26 @@
     <tr>
       <!-- Columna Izquierda: Datos del Emisor -->
       <td class="header-col-left">
-        {{#if emisor.logoUrl}}
+        {% if emisor.logoUrl %}
           <img src="{{emisor.logoUrl}}" alt="Logo del emisor" class="company-logo" />
-        {{/if}}
+        {% endif %}
         <div class="company-title">{{emisor.razonSocial}}</div>
-        {{#if emisor.nombreComercial}}
+        {% if emisor.nombreComercial %}
           <div class="company-sub"><strong>Nombre Comercial:</strong> {{emisor.nombreComercial}}</div>
-        {{/if}}
+        {% endif %}
         <div class="company-sub"><strong>Matriz:</strong> {{emisor.dirMatriz}}</div>
-        {{#if emisor.dirEstablecimiento}}
+        {% if emisor.dirEstablecimiento %}
           <div class="company-sub"><strong>Sucursal:</strong> {{emisor.dirEstablecimiento}}</div>
-        {{/if}}
-        {{#if emisor.contribuyenteEspecial}}
+        {% endif %}
+        {% if emisor.contribuyenteEspecial %}
           <div class="company-sub"><strong>Contribuyente Especial Nro:</strong> {{emisor.contribuyenteEspecial}}</div>
-        {{/if}}
+        {% endif %}
         <div class="company-sub">
-          <strong>Obligado a Llevar Contabilidad:</strong> {{#if emisor.obligadoContabilidad}}SÍ{{else}}NO{{/if}}
+          <strong>Obligado a Llevar Contabilidad:</strong> {% if emisor.obligadoContabilidad %}SÍ{% else %}NO{% endif %}
         </div>
-        {{#if emisor.regimenRimpe}}
+        {% if emisor.regimenRimpe %}
           <div class="company-sub"><strong>Régimen:</strong> {{emisor.regimenRimpe}}</div>
-        {{/if}}
+        {% endif %}
       </td>
 
       <!-- Columna Derecha: Recuadro Tributario SRI -->
@@ -258,16 +258,16 @@
       </tr>
     </thead>
     <tbody>
-      {{#each detalles}}
+      {% for detalle in detalles %}
         <tr>
-          <td>{{this.codigoPrincipal}}</td>
-          <td class="text-center">{{this.cantidad}}</td>
-          <td>{{this.descripcion}}</td>
-          <td class="text-right">${{this.precioUnitario}}</td>
-          <td class="text-right">${{this.descuento}}</td>
-          <td class="text-right">${{this.precioTotalSinImpuesto}}</td>
+          <td>{{ detalle.codigoPrincipal }}</td>
+          <td class="text-center">{{ detalle.cantidad }}</td>
+          <td>{{ detalle.descripcion }}</td>
+          <td class="text-right">${{ detalle.precioUnitario }}</td>
+          <td class="text-right">${{ detalle.descuento }}</td>
+          <td class="text-right">${{ detalle.precioTotalSinImpuesto }}</td>
         </tr>
-      {{/each}}
+      {% endfor %}
     </tbody>
   </table>
 
@@ -279,22 +279,22 @@
         <div class="sri-box-title" style="color: #0b3c5d; border-bottom: 1px solid #ccc; padding-bottom: 2px; margin-bottom: 6px;">
           INFORMACIÓN ADICIONAL
         </div>
-        {{#if infoAdicional}}
-          {{#each infoAdicional}}
-            <div class="company-sub"><strong>{{this.nombre}}:</strong> {{this.valor}}</div>
-          {{/each}}
-        {{else}}
+        {% if infoAdicional %}
+          {% for info in infoAdicional %}
+            <div class="company-sub"><strong>{{ info.nombre }}:</strong> {{ info.valor }}</div>
+          {% endfor %}
+        {% else %}
           <div class="company-sub text-muted">Servicio de Agua Potable y Alcantarillado</div>
-        {{/if}}
+        {% endif %}
 
-        {{#if pagos}}
+        {% if pagos %}
           <div class="sri-box-title" style="color: #0b3c5d; border-bottom: 1px solid #ccc; padding-bottom: 2px; margin-top: 10px; margin-bottom: 6px;">
             FORMAS DE PAGO
           </div>
-          {{#each pagos}}
-            <div class="company-sub"><strong>{{this.formaPago}}:</strong> ${{this.total}} (Plazo: {{this.plazo}} {{this.unidadTiempo}})</div>
-          {{/each}}
-        {{/if}}
+          {% for pago in pagos %}
+            <div class="company-sub"><strong>{{ pago.formaPago }}:</strong> ${{ pago.total }} (Plazo: {{ pago.plazo }} {{ pago.unidadTiempo }})</div>
+          {% endfor %}
+        {% endif %}
       </td>
 
       <!-- Desglose de Totales e Impuestos SRI -->

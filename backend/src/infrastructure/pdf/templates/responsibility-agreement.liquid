@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  {{> styles}}
+  {% render "styles" %}
   <meta charset="UTF-8">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -57,22 +57,22 @@
   </style>
 </head>
 <body>
-  {{#if institucion.branding.marcaAgua.url}}
+  {% if institucion.branding.marcaAgua.url %}
   <div class="watermark">
     <img src="{{institucion.branding.marcaAgua.url}}" alt="Marca de agua institucional">
   </div>
-  {{/if}}
+  {% endif %}
   <div class="container">
 
     <!-- Header -->
     <div class="header">
       <table>
         <tr>
-          {{#if institucion.branding.logo.url}}
+          {% if institucion.branding.logo.url %}
           <td class="header-logo">
             <img src="{{institucion.branding.logo.url}}" alt="Logo">
           </td>
-          {{/if}}
+          {% endif %}
           <td>
             <div class="company-name">{{institucion.siglas}}</div>
             <div class="company-sub">{{institucion.nombreLegal}}</div>
@@ -96,12 +96,12 @@
 
     <!-- Clauses -->
     <ol class="clause-list">
-      {{#each institucion.textosLegales.actaResponsabilidad.clausulas}}
+      {% for clausula in institucion.textosLegales.actaResponsabilidad.clausulas %}
         <li>
-          <span class="clause-num">{{math @index "+" 1}}.</span>
-          {{this}}
+          <span class="clause-num">{{ forloop.index }}.</span>
+          {{ clausula }}
         </li>
-      {{/each}}
+      {% endfor %}
     </ol>
 
     <div class="closing-text">

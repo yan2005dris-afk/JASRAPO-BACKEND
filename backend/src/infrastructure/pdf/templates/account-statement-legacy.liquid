@@ -2,7 +2,7 @@
 <html lang="es">
 
 <head>
-  {{> styles}}
+  {% render "styles" %}
   <meta charset="UTF-8">
   <style>
     * {
@@ -242,36 +242,36 @@
         </tr>
       </thead>
       <tbody>
-        {{#each reporte.years}}
+        {% for year in reporte.years %}
         <tr class="year-header">
-          <td colspan="14">AÑO {{this.nombre}}</td>
+          <td colspan="14">AÑO {{ year.nombre }}</td>
         </tr>
-        {{#each this.meses}}
-        <tr class="{{#if @even}}even{{/if}}">
-          <td>{{this.mes}}</td>
-          <td>{{this.lectActual}}</td>
-          <td>{{this.lectAnterior}}</td>
-          <td>{{this.consu}}</td>
-          <td>{{this.excede}}</td>
-          <td>$ {{this.cargoFijo}}</td>
-          <td>$ {{this.excedenteValor}}</td>
-          <td>$ {{this.total}}</td>
-          <td>$ {{this.intMora}}</td>
-          <td>$ {{this.tasaSeg}}</td>
-          <td>$ {{this.convenio}}</td>
-          <td>$ {{this.totalMes}}</td>
-          <td>$ {{this.pagos}}</td>
-          <td>$ {{this.saldo}}</td>
+        {% for mes in year.meses %}
+        <tr class="{% if forloop.index0 | isEven %}even{% endif %}">
+          <td>{{ mes.mes }}</td>
+          <td>{{ mes.lectActual }}</td>
+          <td>{{ mes.lectAnterior }}</td>
+          <td>{{ mes.consu }}</td>
+          <td>{{ mes.excede }}</td>
+          <td>$ {{ mes.cargoFijo }}</td>
+          <td>$ {{ mes.excedenteValor }}</td>
+          <td>$ {{ mes.total }}</td>
+          <td>$ {{ mes.intMora }}</td>
+          <td>$ {{ mes.tasaSeg }}</td>
+          <td>$ {{ mes.convenio }}</td>
+          <td>$ {{ mes.totalMes }}</td>
+          <td>$ {{ year.pagos }}</td>
+          <td>$ {{ year.saldo }}</td>
         </tr>
-        {{/each}}
+        {% endfor %}
         <tr class="subtotal-row">
-          <td colspan="5" style="text-align:right; padding-right:8px;">SUBTOTAL {{this.nombre}}:</td>
+          <td colspan="5" style="text-align:right; padding-right:8px;">SUBTOTAL {{ year.nombre }}:</td>
           <td colspan="6"></td>
-          <td>$ {{this.subtotalAnual}}</td>
-          <td>$ {{this.pagos}}</td>
-          <td>$ {{this.saldo}}</td>
+          <td>$ {{ year.subtotalAnual }}</td>
+          <td>$ {{ year.pagos }}</td>
+          <td>$ {{ year.saldo }}</td>
         </tr>
-        {{/each}}
+        {% endfor %}
         <tr class="deuda-row">
           <td colspan="13" style="text-align:right; padding-right:12px;">DEUDA TOTAL:</td>
           <td>$ {{reporte.deudaTotal}}</td>

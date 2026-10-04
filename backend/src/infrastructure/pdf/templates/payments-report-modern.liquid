@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reporte de Abonos - Moderno</title>
     <!-- Removed External Fonts -->
-    {{> styles}}
-    {{> modern-styles}}
+    {% render "styles" %}
+    {% render "modern-styles" %}
     <style>
         .header-right {
             text-align: right;
@@ -238,19 +238,19 @@
                 </tr>
             </thead>
             <tbody>
-                {{#each reporte.grupos}}
+                {% for grupo in reporte.grupos %}
                     
-                    {{#each this.filas}}
+                    {% for fila in grupo.filas %}
                     <tr>
-                        <td class="col-factura">{{#if @first}}{{../factura}}{{/if}}</td>
-                        <td class="col-fecha">{{#if @first}}{{../fecha}}{{/if}}</td>
-                        <td class="col-cliente">{{#if @first}}{{../clienteNombre}}{{/if}}</td>
-                        <td class="col-cuenta">{{#if @first}}{{../cuenta}}{{/if}}</td>
-                        <td class="col-medidor">{{#if @first}}{{../medidor}}{{/if}}</td>
-                        <td class="text-right col-emision">{{this.emision}}</td>
-                        <td class="text-right col-valor">${{this.valor}}</td>
+                        <td class="col-factura">{% if forloop.first %}{{ grupo.factura }}{% endif %}</td>
+                        <td class="col-fecha">{% if forloop.first %}{{ grupo.fecha }}{% endif %}</td>
+                        <td class="col-cliente">{% if forloop.first %}{{ grupo.clienteNombre }}{% endif %}</td>
+                        <td class="col-cuenta">{% if forloop.first %}{{ grupo.cuenta }}{% endif %}</td>
+                        <td class="col-medidor">{% if forloop.first %}{{ grupo.medidor }}{% endif %}</td>
+                        <td class="text-right col-emision">{{ fila.emision }}</td>
+                        <td class="text-right col-valor">${{ fila.valor }}</td>
                     </tr>
-                    {{/each}}
+                    {% endfor %}
                     
                     <tr class="subtotal-row">
                         <td colspan="5"></td>
@@ -258,10 +258,10 @@
                             <span class="subtotal-label">Subtotal</span>
                         </td>
                         <td class="text-right subtotal-value">
-                            ${{this.subtotal}}
+                            ${{ grupo.subtotal }}
                         </td>
                     </tr>
-                {{/each}}
+                {% endfor %}
             </tbody>
         </table>
     </div>
