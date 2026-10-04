@@ -1,5 +1,6 @@
 import * as fs from 'node:fs';
-import Handlebars from 'handlebars';
+import * as path from 'node:path';
+import { Liquid } from 'liquidjs';
 import { PdfService } from './pdf.service';
 import puppeteer from 'puppeteer';
 import { mockBrowser, mockPage } from '../../__mocks__/puppeteer';
@@ -14,25 +15,12 @@ jest.mock('node:fs');
 describe('PdfService', () => {
   let service: PdfService;
   const fsMock = fs as jest.Mocked<typeof fs>;
-  let compileSpy: jest.SpyInstance;
-  let registerPartialSpy: jest.SpyInstance;
+  let parseSpy: jest.SpyInstance;
 
-  const fakeHtmlContent = '<html>{{title}}</html>';
+  const fakeHtmlContent = '<html>{{ title }}</html>';
   const fakeStylesContent = '<style>:root {}</style>';
   const fakeModernStylesContent =
     '<style>:root { --primary: green; --brand-dark: #166534; }</style>';
-
-  beforeAll(() => {
-    // Spies wrap the real Handlebars methods — they pass through to the original
-    // but track call count and arguments.
-    compileSpy = jest.spyOn(Handlebars, 'compile');
-    registerPartialSpy = jest.spyOn(Handlebars, 'registerPartial');
-  });
-
-  afterAll(() => {
-    compileSpy.mockRestore();
-    registerPartialSpy.mockRestore();
-  });
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -43,20 +31,23 @@ describe('PdfService', () => {
     mockPage.close.mockResolvedValue(undefined);
     (puppeteer.launch as jest.Mock).mockResolvedValue(mockBrowser);
 
-    // Default fs mocks: styles.hbs, modern-styles.hbs, and template files exist
+    // Default fs mocks: .liquid template files exist
     (fsMock.existsSync as jest.Mock).mockReturnValue(true);
     (fsMock.readFileSync as jest.Mock).mockImplementation(
       (filePath: string | Buffer) => {
         const p = String(filePath);
-        if (p.endsWith('styles.hbs')) return fakeStylesContent;
-        if (p.endsWith('modern-styles.hbs')) return fakeModernStylesContent;
+        if (p.endsWith('styles.liquid')) return fakeStylesContent;
+        if (p.endsWith('modern-styles.liquid')) return fakeModernStylesContent;
         return fakeHtmlContent;
       },
     );
 
     service = new PdfService();
 
-    // Register a doc type so bootstrap has something to compile
+    // Spy on the Liquid engine's parse method after service is constructed
+    parseSpy = jest.spyOn(service['engine'], 'parse');
+
+    // Register a doc type so bootstrap has something to parse
     service.registerDocumentType({
       type: 'payments-report-modern',
       name: 'payments-report-modern',
@@ -82,7 +73,9 @@ describe('PdfService', () => {
 
     it('fails bootstrap when a registered template is missing', async () => {
       (fsMock.existsSync as jest.Mock).mockImplementation((filePath) =>
-        String(filePath).endsWith('payments-report-modern.hbs') ? false : true,
+        String(filePath).endsWith('payments-report-modern.liquid')
+          ? false
+          : true,
       );
 
       await expect(service.onApplicationBootstrap()).rejects.toThrow(
@@ -90,36 +83,34 @@ describe('PdfService', () => {
       );
     });
 
-    it('compiles templates for every registered pdf-type', async () => {
-      compileSpy.mockClear();
+    it('parses templates for every registered pdf-type during bootstrap', async () => {
+      parseSpy.mockClear();
 
       await service.onApplicationBootstrap();
 
-      // bootstrap compiles payments-report-modern
-      expect(compileSpy).toHaveBeenCalledWith(fakeHtmlContent);
+      // bootstrap parses payments-report-modern
+      expect(parseSpy).toHaveBeenCalledWith(fakeHtmlContent);
     });
 
-    it('populates the cache so render does not call compile again', async () => {
-      compileSpy.mockClear();
-
+    it('populates the cache so render does not call parse again', async () => {
       await service.onApplicationBootstrap();
+      parseSpy.mockClear();
+
       const buffer = await service.render('payments-report-modern', {
         title: 'Test',
       });
 
       expect(buffer).toBeInstanceOf(Buffer);
-      // compile was called during bootstrap — but NOT during render
-      expect(compileSpy).toHaveBeenCalledTimes(1); // bootstrap only
+      // parse was called during bootstrap — NOT during render (cache hit)
+      expect(parseSpy).not.toHaveBeenCalled();
     });
 
-    it('renders an uncached template by compiling on demand', async () => {
-      compileSpy.mockClear();
-
+    it('renders an uncached template by parsing on demand', async () => {
       await service.onApplicationBootstrap();
-      compileSpy.mockClear();
+      parseSpy.mockClear();
 
-      // Render an uncached template — should compile on demand
-      const unknownSrc = '<html>{{fallback}}</html>';
+      // Render an uncached template — should parse on demand
+      const unknownSrc = '<html>{{ fallback }}</html>';
       (fsMock.readFileSync as jest.Mock).mockReturnValueOnce(unknownSrc);
 
       const buffer = await service.render('unknown-template', {
@@ -127,8 +118,8 @@ describe('PdfService', () => {
       });
 
       expect(buffer).toBeInstanceOf(Buffer);
-      expect(compileSpy).toHaveBeenCalledTimes(1);
-      expect(compileSpy).toHaveBeenCalledWith(unknownSrc);
+      expect(parseSpy).toHaveBeenCalledTimes(1);
+      expect(parseSpy).toHaveBeenCalledWith(unknownSrc);
     });
 
     it('throws NotFoundException when template file does not exist', async () => {
@@ -141,22 +132,24 @@ describe('PdfService', () => {
   });
 
   // ---------------------------------------------------------------------------
-  // modern-styles partial registration (REQ-29)
+  // Liquid engine configuration (REQ-29)
   // ---------------------------------------------------------------------------
-  describe('modern-styles partial', () => {
-    it('registers the modern-styles partial alongside styles', async () => {
-      registerPartialSpy.mockClear();
+  describe('Liquid engine configuration', () => {
+    it('configures engine roots to include both templates and partials directories', () => {
+      const engineOptions = service['engine'].options;
+      const roots: string[] = Array.isArray(engineOptions.root)
+        ? engineOptions.root
+        : [engineOptions.root];
 
-      await service.onApplicationBootstrap();
+      const templatesDir = path.join(__dirname, 'templates');
+      const partialsDir = path.join(templatesDir, 'partials');
 
-      expect(registerPartialSpy).toHaveBeenCalledWith(
-        'styles',
-        expect.any(String),
-      );
-      expect(registerPartialSpy).toHaveBeenCalledWith(
-        'modern-styles',
-        expect.any(String),
-      );
+      expect(roots).toContain(templatesDir);
+      expect(roots).toContain(partialsDir);
+    });
+
+    it('engine is a Liquid instance', () => {
+      expect(service['engine']).toBeInstanceOf(Liquid);
     });
   });
 
@@ -165,9 +158,6 @@ describe('PdfService', () => {
   // ---------------------------------------------------------------------------
   describe('semaphore - Puppeteer concurrency', () => {
     beforeEach(async () => {
-      compileSpy.mockClear();
-      registerPartialSpy.mockClear();
-
       await service.onApplicationBootstrap();
     });
 

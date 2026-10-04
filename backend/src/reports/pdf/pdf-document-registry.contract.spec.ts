@@ -65,8 +65,8 @@ describe('official PDF document registry contract', () => {
     const templates = OFFICIAL_DOCUMENT_TYPES.map(({ template }) => template);
     const templateFiles = fs
       .readdirSync(TEMPLATES_ROOT, { withFileTypes: true })
-      .filter((entry) => entry.isFile() && entry.name.endsWith('.hbs'))
-      .map((entry) => path.basename(entry.name, '.hbs'))
+      .filter((entry) => entry.isFile() && entry.name.endsWith('.liquid'))
+      .map((entry) => path.basename(entry.name, '.liquid'))
       .filter((template) => !PARTIAL_TEMPLATES.has(template));
 
     expect(new Set(types).size).toBe(types.length);
@@ -76,7 +76,7 @@ describe('official PDF document registry contract', () => {
     const contentOwners = new Map<string, string>();
     for (const template of templates) {
       const source = fs
-        .readFileSync(path.join(TEMPLATES_ROOT, `${template}.hbs`), 'utf8')
+        .readFileSync(path.join(TEMPLATES_ROOT, `${template}.liquid`), 'utf8')
         .replace(/\s+/g, ' ')
         .trim();
       const digest = createHash('sha256').update(source).digest('hex');
