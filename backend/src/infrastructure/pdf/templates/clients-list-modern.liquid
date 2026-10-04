@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <title>Listado de Clientes - Moderno</title>
-  {{> styles}}
-  {{> modern-styles}}
+  {% render "styles" %}
+  {% render "modern-styles" %}
   <style>
     .client-badge {
       display: inline-block;
@@ -43,9 +43,9 @@
       <div class="header-right">
         <div class="total-label-sm">TOTAL CLIENTES</div>
         <div class="total-amount-lg">{{reporte.totalClientes}}</div>
-        {{#if reporte.filtrosAplicados}}
+        {% if reporte.filtrosAplicados %}
         <div class="report-meta-text" style="margin-top: 4px;">Filtros: {{reporte.filtrosAplicados}}</div>
-        {{/if}}
+        {% endif %}
       </div>
     </div>
 
@@ -64,22 +64,22 @@
         </tr>
       </thead>
       <tbody>
-        {{#each reporte.clientes}}
+        {% for cliente in reporte.clientes %}
         <tr>
-          <td style="color: var(--text-light); font-size: 8px;">{{math @index '+' 1}}</td>
-          <td class="client-code">{{this.identificacion}}</td>
-          <td style="font-size: 8.5px; color: var(--text-muted);">{{this.tipoId}}</td>
-          <td style="font-weight: 600; color: var(--brand-dark);">{{this.nombre}}</td>
-          <td style="font-size: 8.5px; color: var(--text-muted);">{{this.email}}</td>
-          <td style="font-size: 8.5px;">{{this.telefono}}</td>
-          <td style="font-size: 8.5px; color: var(--text-muted);">{{this.direccion}}</td>
+          <td style="color: var(--text-light); font-size: 8px;">{{ forloop.index }}</td>
+          <td class="client-code">{{ cliente.identificacion }}</td>
+          <td style="font-size: 8.5px; color: var(--text-muted);">{{ cliente.tipoId }}</td>
+          <td style="font-weight: 600; color: var(--brand-dark);">{{ cliente.nombre }}</td>
+          <td style="font-size: 8.5px; color: var(--text-muted);">{{ cliente.email }}</td>
+          <td style="font-size: 8.5px;">{{ cliente.telefono }}</td>
+          <td style="font-size: 8.5px; color: var(--text-muted);">{{ cliente.direccion }}</td>
           <td style="text-align: center;">
-            <span class="client-badge {{#if (eq this.activo 'Activo')}}badge-activo{{else}}badge-inactivo{{/if}}">
-              {{this.activo}}
+            <span class="client-badge {% if cliente.activo == 'Activo' %}badge-activo{% else %}badge-inactivo{% endif %}">
+              {{ cliente.activo }}
             </span>
           </td>
         </tr>
-        {{/each}}
+        {% endfor %}
       </tbody>
     </table>
 

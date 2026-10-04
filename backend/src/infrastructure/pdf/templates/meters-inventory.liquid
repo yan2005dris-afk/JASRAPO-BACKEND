@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <title>Inventario de Medidores</title>
-  {{> styles}}
-  {{> modern-styles}}
+  {% render "styles" %}
+  {% render "modern-styles" %}
   <style>
     .kpi-row {
       display: flex;
@@ -92,12 +92,12 @@
     </div>
 
     <div class="kpi-row">
-      {{#each reporte.kpis}}
+      {% for kpi in reporte.kpis %}
       <div class="kpi-card">
-        <p class="kpi-label">{{this.label}}</p>
-        <p class="kpi-value">{{this.value}}</p>
+        <p class="kpi-label">{{ kpi.label }}</p>
+        <p class="kpi-value">{{ medidor.value }}</p>
       </div>
-      {{/each}}
+      {% endfor %}
     </div>
 
     <table class="modern-table" style="margin-top: 16px;">
@@ -113,25 +113,25 @@
         </tr>
       </thead>
       <tbody>
-        {{#each reporte.medidores}}
+        {% for medidor in reporte.medidores %}
         <tr>
-          <td style="color: var(--text-light); font-size: 8px;">{{math @index '+' 1}}</td>
-          <td class="meter-serie">{{this.serie}}</td>
-          <td>{{this.marca}}</td>
-          <td style="font-size: 8.5px; color: var(--text-muted);">{{this.modelo}}</td>
+          <td style="color: var(--text-light); font-size: 8px;">{{ forloop.index }}</td>
+          <td class="meter-serie">{{ medidor.serie }}</td>
+          <td>{{ medidor.marca }}</td>
+          <td style="font-size: 8.5px; color: var(--text-muted);">{{ medidor.modelo }}</td>
           <td style="text-align: center;">
-            <span class="meter-badge {{#if (eq this.estado 'INSTALADO')}}badge-instalado{{/if}}{{#if (eq this.estado 'BODEGA')}}badge-bodega{{/if}}{{#if (eq this.estado 'DANADO')}}badge-danado{{/if}}">
-              {{this.estadoLabel}}
+            <span class="meter-badge {% if medidor.estado == 'INSTALADO' %}badge-instalado{% endif %}{% if medidor.estado == 'BODEGA' %}badge-bodega{% endif %}{% if medidor.estado == 'DANADO' %}badge-danado{% endif %}">
+              {{ medidor.estadoLabel }}
             </span>
           </td>
-          <td style="font-size: 8.5px;">{{this.contrato}}</td>
-          <td style="font-weight: 600; color: var(--brand-dark);">{{this.cliente}}</td>
+          <td style="font-size: 8.5px;">{{ medidor.contrato }}</td>
+          <td style="font-weight: 600; color: var(--brand-dark);">{{ medidor.cliente }}</td>
         </tr>
-        {{else}}
+        {% else %}
         <tr>
           <td colspan="7" class="empty-row">No se encontraron medidores con los filtros aplicados.</td>
         </tr>
-        {{/each}}
+        {% endfor %}
       </tbody>
     </table>
 

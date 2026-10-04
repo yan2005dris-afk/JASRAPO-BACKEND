@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  {{> styles}}
+  {% render "styles" %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Convenio de Pago - {{institucion.nombreComercial}}</title>
@@ -206,8 +206,8 @@
         <div class="header-text">
             <h1>{{institucion.nombreLegal}}</h1>
             <h2>"{{institucion.nombreComercial}}"</h2>
-            {{#if institucion.decretoNumero}}<p>Decreto No. {{institucion.decretoNumero}}{{#if institucion.registroOficialNumero}} Reg. Ofic. No. {{institucion.registroOficialNumero}}{{/if}}{{#if institucion.registroOficialFechaTexto}} {{institucion.registroOficialFechaTexto}}{{/if}}</p>{{/if}}
-            {{#if institucion.fechaFundacionTexto}}<p>FUNDADA EL {{institucion.fechaFundacionTexto}}</p>{{/if}}
+            {% if institucion.decretoNumero %}<p>Decreto No. {{institucion.decretoNumero}}{% if institucion.registroOficialNumero %} Reg. Ofic. No. {{institucion.registroOficialNumero}}{% endif %}{% if institucion.registroOficialFechaTexto %} {{institucion.registroOficialFechaTexto}}{% endif %}</p>{% endif %}
+            {% if institucion.fechaFundacionTexto %}<p>FUNDADA EL {{institucion.fechaFundacionTexto}}</p>{% endif %}
             <p>R.U.C. No.: {{institucion.ruc}}</p>
         </div>
 
@@ -247,7 +247,7 @@
     <div class="footer">
         <p>Dirección: {{institucion.direccion}}</p>
         <p>E-mail <a href="mailto:{{institucion.correo}}">{{institucion.correo}}</a></p>
-        <p>{{#each institucion.telefonos}}{{etiqueta}}: {{numero}}{{#unless @last}}; {{/unless}}{{/each}}</p>
+        <p>{% for tel in institucion.telefonos %}{{ tel.etiqueta }}: {{ tel.numero }}{% unless forloop.last %}; {% endunless %}{% endfor %}</p>
     </div>
 
 </div>

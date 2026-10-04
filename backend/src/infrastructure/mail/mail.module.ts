@@ -1,8 +1,6 @@
 import { Module, Global } from '@nestjs/common';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { ConfigService } from '@nestjs/config';
-import { HandlebarsAdapter } from '@nestjs-modules/mailer/adapters/handlebars.adapter';
-import { join } from 'path';
 import { NodemailerProvider } from './infrastructure/providers/nodemailer.provider';
 import { MailProviderFactory } from './infrastructure/providers/provider.factory';
 import { FailoverDispatcher } from './infrastructure/dispatchers/failover.dispatcher';
@@ -37,13 +35,6 @@ import type { MailDispatcher } from './domain/interfaces/mail-provider.interface
         defaults: {
           from: `"${config.get('EMAIL_FROM_NAME', 'JASRAP-Olon')}" <${config.get('EMAIL_FROM', 'no-reply@jasrapo.com')}>`,
         } as any,
-        template: {
-          dir: join(__dirname, 'templates'),
-          adapter: new HandlebarsAdapter(),
-          options: {
-            strict: true,
-          },
-        },
       }),
       inject: [ConfigService],
     }),

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  {{> styles}}
+  {% render "styles" %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Recaudación y Morosidad</title>
@@ -113,23 +113,23 @@
             </tr>
         </thead>
         <tbody>
-            {{#each data}}
+            {% for item in data %}
             <tr>
-                <td>{{this.numeroGuia}}</td>
-                <td>{{this.clienteNombre}}</td>
-                <td>{{this.identificacion}}</td>
-                <td>{{this.sectorNombre}}</td>
-                <td class="text-center">{{this.mesesLabel}}</td>
-                <td class="text-center">{{this.ultimaEmision}}</td>
-                <td class="text-right">${{this.saldoPendiente}}</td>
+                <td>{{ item.numeroGuia }}</td>
+                <td>{{ item.clienteNombre }}</td>
+                <td>{{ item.identificacion }}</td>
+                <td>{{ item.sectorNombre }}</td>
+                <td class="text-center">{{ item.mesesLabel }}</td>
+                <td class="text-center">{{ item.ultimaEmision }}</td>
+                <td class="text-right">${{ item.saldoPendiente }}</td>
             </tr>
-            {{else}}
+            {% else %}
             <tr>
                 <td colspan="7" class="text-center">
                     No se registraron cuentas en mora para el contexto seleccionado.
                 </td>
             </tr>
-            {{/each}}
+            {% endfor %}
             <tr class="total-row">
                 <td colspan="6" class="text-right">TOTAL MOROSIDAD:</td>
                 <td class="text-right">${{kpis.totalMorosidad}}</td>

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  {{> styles}}
+  {% render "styles" %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reporte de Abonos</title>
@@ -157,24 +157,24 @@
             </tr>
         </thead>
         <tbody>
-            {{#each reporte.grupos}}
-                {{#each this.filas}}
+            {% for grupo in reporte.grupos %}
+                {% for fila in grupo.filas %}
                 <tr>
-                    <td class="col-factura">{{#if @first}}{{../factura}}{{/if}}</td>
-                    <td class="col-fecha">{{#if @first}}{{../fecha}}{{/if}}</td>
-                    <td class="col-cliente">{{#if @first}}{{../clienteNombre}}{{/if}}</td>
-                    <td class="col-cuenta">{{#if @first}}{{../cuenta}}{{/if}}</td>
-                    <td class="col-medidor">{{#if @first}}{{../medidor}}{{/if}}</td>
-                    <td class="col-emision text-right">{{this.emision}}</td>
-                    <td class="col-valor text-right">{{this.valor}}</td>
+                    <td class="col-factura">{% if forloop.first %}{{ grupo.factura }}{% endif %}</td>
+                    <td class="col-fecha">{% if forloop.first %}{{ grupo.fecha }}{% endif %}</td>
+                    <td class="col-cliente">{% if forloop.first %}{{ grupo.clienteNombre }}{% endif %}</td>
+                    <td class="col-cuenta">{% if forloop.first %}{{ grupo.cuenta }}{% endif %}</td>
+                    <td class="col-medidor">{% if forloop.first %}{{ grupo.medidor }}{% endif %}</td>
+                    <td class="col-emision text-right">{{ fila.emision }}</td>
+                    <td class="col-valor text-right">{{ fila.valor }}</td>
                 </tr>
-                {{/each}}
+                {% endfor %}
                 <tr class="total-row">
                     <td colspan="4"></td>
-                    <td colspan="2" class="total-label border-top-total">TOTAL FACTURA: {{this.factura}} &gt;</td>
-                    <td class="total-value border-top-total">{{this.subtotal}}</td>
+                    <td colspan="2" class="total-label border-top-total">TOTAL FACTURA: {{ grupo.factura }} &gt;</td>
+                    <td class="total-value border-top-total">{{ grupo.subtotal }}</td>
                 </tr>
-            {{/each}}
+            {% endfor %}
         </tbody>
     </table>
 

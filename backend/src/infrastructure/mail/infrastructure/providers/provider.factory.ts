@@ -1,9 +1,6 @@
 import { Injectable, Logger, Optional, Inject } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { readFileSync } from 'fs';
-import Handlebars from 'handlebars';
 import * as nodemailer from 'nodemailer';
-import { join } from 'path';
 import { Readable } from 'stream';
 import { buildMailProviders } from './build-mail-providers';
 import type { MailProviderConfig } from '../../domain/config/mail-provider-config.interface';
@@ -14,6 +11,7 @@ import type {
 } from '../../domain/interfaces/mail-provider.interface';
 import { MailRateLimitService } from '../rate-limit/mail-rate-limit.service';
 import { StorageService } from '../../../storage/storage.service';
+import { MAIL_TEMPLATES } from '../templates/mail-templates';
 
 const S3_URL_REGEX = /^s3:\/\/([^/]+)\/(.+)$/;
 
@@ -22,10 +20,6 @@ export class MailProviderFactory {
   private readonly logger = new Logger(MailProviderFactory.name);
   private readonly providers: MailProviderConfig[];
   private readonly transporters = new Map<string, nodemailer.Transporter>();
-  private readonly templateCache = new Map<
-    string,
-    HandlebarsTemplateDelegate
-  >();
 
   constructor(
     private readonly configService: ConfigService,
@@ -258,19 +252,11 @@ export class MailProviderFactory {
     templateName: string,
     context: Record<string, unknown>,
   ): string {
-    let template = this.templateCache.get(templateName);
-    if (!template) {
-      const templatePath = join(
-        __dirname,
-        '..',
-        'templates',
-        `${templateName}.hbs`,
-      );
-      const source = readFileSync(templatePath, 'utf8');
-      template = Handlebars.compile(source);
-      this.templateCache.set(templateName, template);
+    const templateFn = MAIL_TEMPLATES[templateName];
+    if (!templateFn) {
+      throw new Error(`Plantilla de correo desconocida: ${templateName}`);
     }
-    return template(context);
+    return templateFn(context);
   }
 
   private formatRecipientsForLog(to: string | string[]): string {

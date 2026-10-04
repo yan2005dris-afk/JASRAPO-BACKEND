@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  {{> styles}}
+  {% render "styles" %}
   <meta charset="UTF-8">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -60,9 +60,9 @@
     <!-- Resumen -->
     <div class="summary">
       <span class="badge">Total de clientes: {{reporte.totalClientes}}</span>
-      {{#if reporte.filtrosAplicados}}
+      {% if reporte.filtrosAplicados %}
       <span style="margin-left:12px; font-size:10px; color:#666;">Filtros: {{reporte.filtrosAplicados}}</span>
-      {{/if}}
+      {% endif %}
     </div>
 
     <!-- Tabla de clientes -->
@@ -80,20 +80,20 @@
         </tr>
       </thead>
       <tbody>
-        {{#each reporte.clientes}}
-        <tr class="{{#if @even}}even{{/if}}">
-          <td>{{math @index '+' 1}}</td>
-          <td>{{this.identificacion}}</td>
-          <td>{{this.tipoId}}</td>
-          <td>{{this.nombre}}</td>
-          <td>{{this.email}}</td>
-          <td>{{this.telefono}}</td>
-          <td>{{this.direccion}}</td>
-          <td class="{{#if (eq this.activo 'Activo')}}estado-activo{{else}}estado-inactivo{{/if}}">
-            {{this.activo}}
+        {% for cliente in reporte.clientes %}
+        <tr class="{% if forloop.index0 | isEven %}even{% endif %}">
+          <td>{{ forloop.index }}</td>
+          <td>{{ cliente.identificacion }}</td>
+          <td>{{ cliente.tipoId }}</td>
+          <td>{{ cliente.nombre }}</td>
+          <td>{{ cliente.email }}</td>
+          <td>{{ cliente.telefono }}</td>
+          <td>{{ cliente.direccion }}</td>
+          <td class="{% if cliente.activo == 'Activo' %}estado-activo{% else %}estado-inactivo{% endif %}">
+            {{ cliente.activo }}
           </td>
         </tr>
-        {{/each}}
+        {% endfor %}
       </tbody>
     </table>
 

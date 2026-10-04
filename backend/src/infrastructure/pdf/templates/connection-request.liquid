@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  {{> styles}}
+  {% render "styles" %}
   <meta charset="UTF-8">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -63,7 +63,7 @@
           <td style="width:50%">
             <div class="company-name">{{institucion.siglas}}</div>
             <div class="company-sub">{{institucion.nombreLegal}}</div>
-            <div class="company-sub">RUC: {{institucion.ruc}}{{#if institucion.decretoNumero}} &nbsp;|&nbsp; Decreto Ejecutivo N° {{institucion.decretoNumero}}{{/if}}</div>
+            <div class="company-sub">RUC: {{institucion.ruc}}{% if institucion.decretoNumero %} &nbsp;|&nbsp; Decreto Ejecutivo N° {{institucion.decretoNumero}}{% endif %}</div>
           </td>
           <td class="center" style="width:20%">
             <div class="doc-number-circle">N°{{solicitud.numero}}</div>
@@ -99,11 +99,11 @@
         <tr>
           <td class="label">Nombre:</td>
           <td class="value" colspan="3">
-            {{#if solicitud.cliente.razonSocial}}
+            {% if solicitud.cliente.razonSocial %}
               {{solicitud.cliente.razonSocial}}
-            {{else}}
+            {% else %}
               {{solicitud.cliente.nombres}} {{solicitud.cliente.apellidos}}
-            {{/if}}
+            {% endif %}
           </td>
         </tr>
         <tr>
@@ -135,13 +135,13 @@
       <table class="form-table">
         <tr>
           <td style="width:33%">
-            <span class="checkbox">{{#if (eq solicitud.tarifa.tipo "Tipo 1")}}✓{{/if}}</span> Tipo 1
+            <span class="checkbox">{% if solicitud.tarifa.tipo == "Tipo 1" %}✓{% endif %}</span> Tipo 1
           </td>
           <td style="width:33%">
-            <span class="checkbox">{{#if (eq solicitud.tarifa.tipo "Tipo 2")}}✓{{/if}}</span> Tipo 2
+            <span class="checkbox">{% if solicitud.tarifa.tipo == "Tipo 2" %}✓{% endif %}</span> Tipo 2
           </td>
           <td style="width:34%">
-            <span class="checkbox">{{#if (eq solicitud.tarifa.tipo "Tipo 3")}}✓{{/if}}</span> Tipo 3
+            <span class="checkbox">{% if solicitud.tarifa.tipo == "Tipo 3" %}✓{% endif %}</span> Tipo 3
           </td>
         </tr>
       </table>
@@ -186,8 +186,8 @@
     <div class="section">
       <div class="section-title">FORMA DE PAGO</div>
       <div style="padding: 6px 8px;">
-        <span class="checkbox">{{#if (eq solicitud.formaPago "CONTADO")}}✓{{/if}}</span> A Contado &nbsp;&nbsp;&nbsp;
-        <span class="checkbox">{{#if (eq solicitud.formaPago "PLAZO")}}✓{{/if}}</span> A Plazo
+        <span class="checkbox">{% if solicitud.formaPago == "CONTADO" %}✓{% endif %}</span> A Contado &nbsp;&nbsp;&nbsp;
+        <span class="checkbox">{% if solicitud.formaPago == "PLAZO" %}✓{% endif %}</span> A Plazo
       </div>
     </div>
 
@@ -204,19 +204,19 @@
           </tr>
         </thead>
         <tbody>
-          <tr style="{{#if (eq solicitud.tarifa.tipo "Tipo 1")}}background:#e8f0fe;{{/if}}">
+          <tr style="{% if solicitud.tarifa.tipo == "Tipo 1" %}background:#e8f0fe;{% endif %}">
             <td>Tipo 1</td>
             <td>10 m³</td>
             <td>$4.00</td>
             <td>$0.40</td>
           </tr>
-          <tr style="{{#if (eq solicitud.tarifa.tipo "Tipo 2")}}background:#e8f0fe;{{/if}}">
+          <tr style="{% if solicitud.tarifa.tipo == "Tipo 2" %}background:#e8f0fe;{% endif %}">
             <td>Tipo 2</td>
             <td>10 m³</td>
             <td>$7.50</td>
             <td>$0.75</td>
           </tr>
-          <tr style="{{#if (eq solicitud.tarifa.tipo "Tipo 3")}}background:#e8f0fe;{{/if}}">
+          <tr style="{% if solicitud.tarifa.tipo == "Tipo 3" %}background:#e8f0fe;{% endif %}">
             <td>Tipo 3</td>
             <td>10 m³</td>
             <td>$15.00</td>
