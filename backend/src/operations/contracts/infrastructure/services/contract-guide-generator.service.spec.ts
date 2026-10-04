@@ -45,7 +45,7 @@ describe('ContractGuideGeneratorService', () => {
         comunidadId: 1,
         serieMedidor: 'ITR-984321',
       }),
-    ).resolves.toBe('OLO-N-ITR-984321-00001');
+    ).resolves.toBe('ITR-984321-OLO-N-00001');
 
     expect(tx.secuenciaContrato.update).toHaveBeenCalledWith({
       where: { secuenciaContratoId: 1 },
@@ -62,7 +62,7 @@ describe('ContractGuideGeneratorService', () => {
 
     await expect(
       service.generate(tx, { comunidadId: 1, serieMedidor: 'ITR-984321' }),
-    ).resolves.toBe('OLO-N-ITR-984321-00002');
+    ).resolves.toBe('ITR-984321-OLO-N-00002');
 
     expect(tx.secuenciaContrato.update).toHaveBeenCalledWith({
       where: { secuenciaContratoId: 1 },
@@ -88,7 +88,7 @@ describe('ContractGuideGeneratorService', () => {
 
     await expect(
       service.generate(tx, { comunidadId: 1, serieMedidor: 'EL-44021' }),
-    ).resolves.toBe('OLO-N-EL-44021-000100');
+    ).resolves.toBe('EL-44021-OLO-N-000100');
   });
 
   it('fails clearly when the sequence row is missing', async () => {

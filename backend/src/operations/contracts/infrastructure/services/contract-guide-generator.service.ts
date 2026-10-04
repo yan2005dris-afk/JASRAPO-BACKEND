@@ -53,7 +53,7 @@ export class ContractGuideGeneratorService {
 
     while (guideInUse) {
       const secuencial = nextValue.toString().padStart(counter.longitud, '0');
-      numeroGuia = `${codigoComunidad}-${serieMedidor}-${secuencial}`;
+      numeroGuia = `${serieMedidor}-${codigoComunidad}-${secuencial}`;
 
       const existing = await tx.contratos.findUnique({
         where: { numeroGuia },
