@@ -21,6 +21,7 @@ import { MailProviderFactory } from '../infrastructure/providers/provider.factor
 import { MailQueueService } from '../infrastructure/queue/mail-queue.service';
 import { SistemaConfigService } from '../../config/sistema-config.service';
 import { FRONTEND_URL } from '../../config/sistema-config.keys';
+import { MAIL_TEMPLATES } from '../infrastructure/templates/mail-templates';
 
 describe('MailService', () => {
   let service: MailService;
@@ -246,12 +247,10 @@ describe('MailService', () => {
       );
     });
 
-    it('references a generic-report.hbs template that resolves on disk', () => {
-      // The pg-boss worker's renderTemplate() uses readFileSync on
-      // `${templateName}.hbs`. PR 1 ships both the template name and the
-      // .hbs file together so the worker never crashes with ENOENT.
-      const templateDir = join(__dirname, '..', 'infrastructure', 'templates');
-      expect(existsSync(join(templateDir, 'generic-report.hbs'))).toBe(true);
+    it('references a generic-report template defined in MAIL_TEMPLATES', () => {
+      // The worker's renderTemplate() uses MAIL_TEMPLATES['generic-report'].
+      // Verify the template is properly registered in the typed templates module.
+      expect(typeof MAIL_TEMPLATES['generic-report']).toBe('function');
     });
   });
 
