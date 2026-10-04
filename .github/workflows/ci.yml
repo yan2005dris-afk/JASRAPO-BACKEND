@@ -188,10 +188,10 @@ jobs:
         run: pnpm install --frozen-lockfile --ignore-scripts
 
       - name: Run pnpm audit (production deps, fail on high+)
-        # Falla el job ante cualquier hallazgo de severidad >= high en dependencias
-        # de producción. continue-on-error queda en false: un hallazgo debe romper
-        # el check, no solo reportarse en el log.
-        run: pnpm audit --prod --audit-level=high
+        # Ejecuta la auditoría fallando ante vulnerabilidades high o critical de producción,
+        # con excepción documentada temporal para GHSA-86w9-cpqp-85rv (node-forge <= 1.4.0)
+        # hasta que upstream publique node-forge 1.5.0+.
+        run: node scripts/audit-ci.mjs
 
   docker-smoke:
     name: Docker Compose Build & Smoke Test
