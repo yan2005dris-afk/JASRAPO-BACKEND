@@ -43,6 +43,20 @@ and the dead `backend/.dockerignore` artifact.
       the postinstall is skipped and pnpm install succeeds. Verified locally: full
       `podman build -f backend/Dockerfile` succeeds (pnpm install + prisma generate +
       nest build + pnpm deploy + runner stage).
+- [x] Task 7 (iteration): Revert the builder base from `ghcr.io/pnpm/pnpm:12`
+      (debian-slim / glibc) back to `node:22-alpine` (alpine / musl). The CI smoke
+      test caught a cross-compile issue: `pnpm install` in the debian builder
+      generates glibc-linked binaries for `sharp` and other native modules, which
+      the alpine runtime can't load ('Could not load the sharp module using the
+      linuxmusl-x64 runtime'). The skill's H#2 ('pin Node via pnpm runtime') is
+      preserved by using corepack on the alpine base, and the cache mount (H#3),
+      HEALTHCHECK, and PUPPETEER_SKIP_DOWNLOAD are all retained. Lesson: the
+      builder must share libc with the runner, regardless of which base the skill
+      recommends. Verified locally: full `podman build -f backend/Dockerfile`
+      succeeds.
+- [x] Task 8: Add `--store-dir /pnpm/store` to both `pnpm install` and
+      `pnpm deploy` invocations so the install path matches the cache mount
+      target (Hard Rule #3 — store stays in the mount, not in a layer).
 
 ## Evidence (commit SHAs)
 - Task 1: 2172153e18752e3b848d62b6d52ff48903395659
@@ -52,6 +66,8 @@ and the dead `backend/.dockerignore` artifact.
 - Task 4: hadolint run on `backend/Dockerfile` and `external/open-api-facturacion-sri/Dockerfile`; no new errors or warnings.
 - Task 5: 85e387fd (drop corepack; verified locally with `podman build --target base`)
 - Task 6: e2ca7679 (PUPPETEER_SKIP_DOWNLOAD; verified locally with full backend build)
+- Task 7: a133a2f7 (revert to node:22-alpine to fix cross-compile with sharp)
+- Task 8: in commit 85e387fd (--store-dir on pnpm install; pnpm deploy --store-dir in a133a2f7)
 
 ## Verification
 - `hadolint backend/Dockerfile` → 0 errors, only accepted warnings.
