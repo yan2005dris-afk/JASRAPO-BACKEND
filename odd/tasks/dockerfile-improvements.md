@@ -26,15 +26,25 @@ and the dead `backend/.dockerignore` artifact.
       `--mount=type=cache,target=/root/.npm` cache mount, switch to `npm ci` (drop
       `--legacy-peer-deps` if a `package-lock.json` exists), and add a non-root `USER node`.
 - [x] Task 3: Delete dead artifact `backend/.dockerignore` (the build context is the repo
-      root, so this nested ignore is never read).
+      root, so this nested ignore is never read). **Superseded by Task 3b** (see iteration note).
+- [x] Task 3b (iteration): Restore `backend/.dockerignore` as a defensive per-service ignore
+      after the user flagged the removal. The file is harmless to keep.
 - [x] Task 4: Verify with `hadolint` (DLxxxx warnings reviewed), `git status` clean per
       task, and capture commit SHAs as evidence.
+- [x] Task 5 (iteration): Drop `corepack enable && corepack prepare pnpm@12.3.4 --activate`
+      from the backend Dockerfile. The `ghcr.io/pnpm/pnpm:12` base ships pnpm 12.x but does
+      NOT include corepack, npm, or node. The user's `pc up --build` failed with
+      `corepack: not found`. Replaced with `pnpm runtime set node 24 -g` (which is what
+      actually installs Node 24 in the pnpm runtime). Verified locally: pnpm 12.9.1 +
+      Node 24.21.0 in the base image.
 
 ## Evidence (commit SHAs)
 - Task 1: 2172153e18752e3b848d62b6d52ff48903395659
 - Task 2: fc82bf76f174a3a8bda5295a183784e577a2ff24
-- Task 3: edf5b0da9b1419fdbe8ecae0523f1213e61f1fb2
+- Task 3: edf5b0da9b1419fdbe8ecae0523f1213e61f1fb2 (superseded by 3b)
+- Task 3b: e5cecaf8 (restore)
 - Task 4: hadolint run on `backend/Dockerfile` and `external/open-api-facturacion-sri/Dockerfile`; no new errors or warnings.
+- Task 5: 85e387fd (drop corepack; verified locally with `podman build --target base`)
 
 ## Verification
 - `hadolint backend/Dockerfile` → 0 errors, only accepted warnings.
