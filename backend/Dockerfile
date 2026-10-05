@@ -2,10 +2,18 @@
 
 # ─── Stage: Base ──────────────────────────────────────────────────────────────
 # Hard Rule #2: pin Node via the pnpm runtime, not the base image.
-# The official `ghcr.io/pnpm/pnpm:12` base bundles pnpm 12.x; we activate the exact
-# `packageManager` version from package.json (pnpm@12.3.4) via corepack, then use
-# `pnpm runtime set node 24 -g` so the project owns the Node version.
-FROM ghcr.io/pnpm/pnpm:12 AS base
+#
+# We use `node:22-alpine` instead of `ghcr.io/pnpm/pnpm:12` (the skill's default)
+# because sharp and other native modules must be built against the SAME libc as
+# the runtime stage. The runner is also `node:22-alpine` (musl). pnpm:12 is
+# debian-slim (glibc), so any native module installed during `pnpm install` in
+# the builder would be glibc-built and fail to load in the alpine runtime
+# ("Could not load the 'sharp' module using the linuxmusl-x64 runtime").
+# Builder and runner must share the libc.
+FROM node:22-alpine AS base
+
+# Alpine packages: openssl for Prisma, libc6-compat for native modules.
+RUN apk add --no-cache openssl libc6-compat
 
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
@@ -22,21 +30,11 @@ ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 ENV SHELL=/bin/sh
 ENV ENV=/root/.profile
 
-# pnpm base is debian-slim; Prisma needs libssl at build time. ca-certificates for
-# HTTPS to the registry. Keep this in `base` (not `builder`) so other builder stages
-# inherit the deps without re-installing.
-RUN apt-get update \
- && apt-get install -y --no-install-recommends openssl ca-certificates \
- && rm -rf /var/lib/apt/lists/*
-
-# Pin Node 24 to the project. The pnpm:12 base ships pnpm 12.x (currently 12.9.1)
-# but NOT node, corepack, or npm — we can't `corepack prepare` here. We use pnpm's
-# own runtime to install Node 24 (Hard Rule #2: project owns the Node version).
-# The pnpm-lock.yaml is the source of truth for installed deps (Hard Rule #6), so
-# any pnpm 12.x with --frozen-lockfile produces the same tree.
-RUN pnpm runtime set node 24 -g \
- && pnpm --version \
- && node --version
+# corepack ships with Node 22+. Use it to pin pnpm to the workspace's declared
+# `packageManager` (pnpm@12.3.4) — the pnpm-lock.yaml then installs the right tree.
+RUN corepack enable \
+ && corepack prepare pnpm@12.3.4 --activate \
+ && pnpm --version
 
 WORKDIR /app
 
@@ -46,9 +44,10 @@ FROM base AS builder
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
 COPY backend/package.json ./backend/
 
-# Cache persistente del store de pnpm (BuildKit)
+# Cache mount for the pnpm store — never bake it into an image layer (Hard Rule #3).
+# --store-dir aligns the install path with the cache mount target.
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-    pnpm install --frozen-lockfile
+    pnpm install --frozen-lockfile --store-dir /pnpm/store
 
 # 1. Copiar esquema, config, scripts y código fuente
 COPY backend/prisma ./backend/prisma
@@ -62,7 +61,7 @@ RUN pnpm --filter backend run build
 
 # 3. Resolver dependencias de producción usando la caché del store
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-    pnpm deploy --filter=backend --prod /prod/backend
+    pnpm deploy --filter=backend --prod /prod/backend --store-dir /pnpm/store
 
 # ─── Stage: Runner (Producción) ───────────────────────────────────────────────
 FROM node:22-alpine AS runner
