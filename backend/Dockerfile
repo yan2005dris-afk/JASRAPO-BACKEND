@@ -11,7 +11,13 @@ ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 ENV PNPM_CONFIG_PACKAGE_IMPORT_METHOD=copy
 ENV PRISMA_SKIP_POSTINSTALL_GENERATE=true
-# Prevent Puppeteer from downloading Chrome in the builder stage (it runs postinstall)
+# Prevent Puppeteer from downloading Chrome in the builder stage. The runtime
+# stage uses the system Chromium (PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium),
+# so the bundled Chrome from puppeteer's postinstall is dead weight.
+# Puppeteer >=19 renamed the env var from PUPPETEER_SKIP_CHROMIUM_DOWNLOAD to
+# PUPPETEER_SKIP_DOWNLOAD. The lockfile pins puppeteer@25.1.0, so we need the new
+# name. We set both for forward/backward compatibility.
+ENV PUPPETEER_SKIP_DOWNLOAD=true
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 ENV SHELL=/bin/sh
 ENV ENV=/root/.profile
