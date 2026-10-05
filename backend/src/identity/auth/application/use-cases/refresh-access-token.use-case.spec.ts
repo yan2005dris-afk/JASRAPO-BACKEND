@@ -98,7 +98,12 @@ describe('RefreshAccessTokenUseCase', () => {
       sessionsService.getSession.mockResolvedValue(mockSession as any);
       (jwtService.verifyAsync as jest.Mock).mockResolvedValue(refreshPayload);
       (userRepository.findById as jest.Mock).mockResolvedValue({
+        usuarioId: 1,
         email: 'test@test.com',
+        nombres: 'Test',
+        apellidos: 'User',
+        avatar: null,
+        rol: { rolId: 2, nombre: 'Admin', deletedAt: null },
       });
       jwtService.signAsync.mockResolvedValue('new-token');
       jwtService.decode.mockReturnValue({ iat: 100, exp: 200 });
@@ -107,6 +112,14 @@ describe('RefreshAccessTokenUseCase', () => {
       const result = await useCase.execute('sid', 'rt', 'ip', 'ua', 1);
 
       expect(result).toEqual({
+        sub: 1,
+        sid: 'sid',
+        nombre: 'Test User',
+        avatar: null,
+        email: 'test@test.com',
+        rolId: 2,
+        nombreRol: 'Admin',
+        roles: [2],
         accessToken: 'new-token',
         refreshToken: 'new-token',
         accessTokenInfo: {

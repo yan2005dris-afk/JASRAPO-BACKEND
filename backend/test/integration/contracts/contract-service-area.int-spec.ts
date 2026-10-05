@@ -8,6 +8,7 @@ import {
 } from '@testcontainers/postgresql';
 import { PrismaService } from '../../../src/infrastructure/database/prisma.service';
 import { PrismaContractRepository } from '../../../src/operations/contracts/infrastructure/repositories/prisma-contract.repository';
+import { ContractGuideGeneratorService } from '../../../src/operations/contracts/infrastructure/services/contract-guide-generator.service';
 import { CreateContractUseCase } from '../../../src/operations/contracts/application/use-cases/create-contract.use-case';
 import { UpdateContractUseCase } from '../../../src/operations/contracts/application/use-cases/update-contract.use-case';
 import {
@@ -59,16 +60,15 @@ void describe(
       return meter.medidorId;
     }
 
-    async function buildCreateDto(
-      numeroGuia: string,
-      coordinates: { latitud: number; longitud: number },
-    ) {
+    async function buildCreateDto(coordinates: {
+      latitud: number;
+      longitud: number;
+    }) {
       return {
         clienteId: clienteId.toString(),
         categoriaTarifaId: categoriaTarifaId.toString(),
         medidorId: (await createMeterInStock()).toString(),
         comunidadId: comunidadId.toString(),
-        numeroGuia,
         direccionSuministro: 'Calle principal',
         ...coordinates,
       };
@@ -101,7 +101,10 @@ void describe(
         prismaService = createPrismaService(databaseUrl);
         await prismaService.$connect();
 
-        const repository = new PrismaContractRepository(prismaService);
+        const repository = new PrismaContractRepository(
+          prismaService,
+          new ContractGuideGeneratorService(),
+        );
         createContract = new CreateContractUseCase(repository);
         updateContract = new UpdateContractUseCase(repository);
 
@@ -141,9 +144,7 @@ void describe(
     });
 
     void it('persists a contract located in Olón with its exact coordinates', async () => {
-      const created = await createContract.execute(
-        await buildCreateDto('GUIA-OLON', OLON),
-      );
+      const created = await createContract.execute(await buildCreateDto(OLON));
 
       const row = await prismaService.contratos.findUnique({
         where: { contratoId: created.contratoId },
@@ -160,7 +161,7 @@ void describe(
       );
 
       const created = await createContract.execute(
-        await buildCreateDto('GUIA-BORDE', { latitud, longitud }),
+        await buildCreateDto({ latitud, longitud }),
       );
 
       const row = await prismaService.contratos.findUnique({
@@ -171,8 +172,28 @@ void describe(
       assert.equal(Number(row.longitud), longitud);
     });
 
+    void it('generates unique sequential guides for concurrent contract creation', async () => {
+      const payloads = await Promise.all([
+        buildCreateDto(OLON),
+        buildCreateDto(OLON),
+        buildCreateDto(OLON),
+      ]);
+
+      const created = await Promise.all(
+        payloads.map((payload) => createContract.execute(payload)),
+      );
+      const guides = created.map((contract) => contract.numeroGuia);
+      const values = guides
+        .map((guide) => Number(guide.split('-').at(-1)))
+        .sort((left, right) => left - right);
+
+      assert.equal(new Set(guides).size, 3);
+      assert.deepEqual(values, [values[0], values[0] + 1, values[0] + 2]);
+      assert.ok(guides.every((guide) => guide.startsWith('OLON-INT-AREA-')));
+    });
+
     void it('rejects a contract in the open sea without inserting it', async () => {
-      const dto = await buildCreateDto('GUIA-MAR', OPEN_SEA);
+      const dto = await buildCreateDto(OPEN_SEA);
 
       await assert.rejects(
         createContract.execute(dto),
@@ -187,9 +208,7 @@ void describe(
     });
 
     void it('rejects moving an existing contract outside the service area and keeps the stored location', async () => {
-      const created = await createContract.execute(
-        await buildCreateDto('GUIA-MOVER', OLON),
-      );
+      const created = await createContract.execute(await buildCreateDto(OLON));
 
       await assert.rejects(
         updateContract.execute(created.contratoId, OPEN_SEA),

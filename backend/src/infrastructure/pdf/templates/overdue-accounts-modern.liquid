@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Recaudación y Morosidad - Moderno</title>
-    {{> styles}}
-    {{> modern-styles}}
+    {% render "styles" %}
+    {% render "modern-styles" %}
     <style>
         .header-right {
             text-align: right;
@@ -215,25 +215,25 @@
                 </tr>
             </thead>
             <tbody>
-                {{#each data}}
+                {% for item in data %}
                 <tr>
-                    <td class="col-guia">{{this.numeroGuia}}</td>
-                    <td class="col-cliente">{{this.clienteNombre}}</td>
-                    <td class="col-muted">{{this.identificacion}}</td>
-                    <td>{{this.sectorNombre}}</td>
+                    <td class="col-guia">{{ item.numeroGuia }}</td>
+                    <td class="col-cliente">{{ item.clienteNombre }}</td>
+                    <td class="col-muted">{{ item.identificacion }}</td>
+                    <td>{{ item.sectorNombre }}</td>
                     <td class="text-center">
-                        <span class="badge {{#if this.severidadCritica}}badge-danger{{else}}badge-warn{{/if}}">
-                            {{this.mesesLabel}}
+                        <span class="badge {% if item.severidadCritica %}badge-danger{% else %}badge-warn{% endif %}">
+                            {{ item.mesesLabel }}
                         </span>
                     </td>
-                    <td class="text-center col-muted">{{this.ultimaEmision}}</td>
-                    <td class="text-right col-deuda">${{this.saldoPendiente}}</td>
+                    <td class="text-center col-muted">{{ item.ultimaEmision }}</td>
+                    <td class="text-right col-deuda">${{ item.saldoPendiente }}</td>
                 </tr>
-                {{else}}
+                {% else %}
                 <tr class="empty-row">
                     <td colspan="7">No se registraron cuentas en mora para el contexto seleccionado.</td>
                 </tr>
-                {{/each}}
+                {% endfor %}
             </tbody>
         </table>
     </div>

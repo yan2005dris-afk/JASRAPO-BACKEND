@@ -21,7 +21,6 @@ export const safeReadingsSelect = {
   consumoCalculado: true,
   descripcionAnomalia: true,
   fechaValidacion: true,
-  lecturaInicial: true,
   periodoId: true,
   medidorId: true,
   historialMedidorId: true,
@@ -157,13 +156,11 @@ export class PrismaReadingRepository implements ReadingRepository {
     if (lastApproved) {
       return {
         lecturaAnterior: new Decimal(lastApproved.lecturaActual.toString()),
-        lecturaInicial: false,
       };
     }
 
     return {
       lecturaAnterior: new Decimal(history.lecturaInicial.toString()),
-      lecturaInicial: true,
     };
   }
 
@@ -368,9 +365,6 @@ export class PrismaReadingRepository implements ReadingRepository {
             ...(data.estado !== undefined && {
               estado: data.estado as $Enums.EstadoLectura,
             }),
-            ...(data.lecturaInicial !== undefined && {
-              lecturaInicial: data.lecturaInicial,
-            }),
             ...(data.periodoId !== undefined && { periodoId: data.periodoId }),
             ...(data.deletedAt !== undefined && { deletedAt: data.deletedAt }),
           },
@@ -466,9 +460,6 @@ export class PrismaReadingRepository implements ReadingRepository {
             }),
             ...(data.estado !== undefined && {
               estado: data.estado as $Enums.EstadoLectura,
-            }),
-            ...(data.lecturaInicial !== undefined && {
-              lecturaInicial: data.lecturaInicial,
             }),
             ...(data.periodoId !== undefined && { periodoId: data.periodoId }),
             ...(data.deletedAt !== undefined && { deletedAt: data.deletedAt }),

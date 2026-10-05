@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import Handlebars from 'handlebars';
+import { Liquid, type Template } from 'liquidjs';
 import puppeteer, { type Browser, type Page } from 'puppeteer';
 import type { PdfDocumentType } from './document-type.interface';
 import { MetricsService } from '../observability/metrics/metrics.service';
@@ -53,15 +53,12 @@ export class PdfService
 {
   private readonly logger = new Logger(PdfService.name);
   private readonly templatesDir: string;
+  private readonly engine: Liquid;
   private readonly documentTypes = new Map<
     string,
     PdfDocumentType<never, object>
   >();
-  private readonly templateCache = new Map<
-    string,
-    HandlebarsTemplateDelegate
-  >();
-  private partialsRegistered = false;
+  private readonly templateCache = new Map<string, Template[]>();
 
   browser: Browser | null = null;
   private browserLaunchPromise: Promise<Browser> | null = null;
@@ -96,65 +93,54 @@ export class PdfService
     this.totalTimeoutMs = options.totalTimeoutMs;
     this.retryAfterSeconds = options.retryAfterSeconds;
     this.templatesDir = path.join(__dirname, 'templates');
-    this.registerHandlebarsHelpers();
+
+    const partialsDir = path.join(this.templatesDir, 'partials');
+    this.engine = new Liquid({
+      root: [this.templatesDir, partialsDir],
+      extname: '.liquid',
+      dynamicPartials: true,
+      strictFilters: false,
+      strictVariables: false,
+    });
+
+    this.registerLiquidFilters();
   }
 
-  private registerHandlebarsHelpers(): void {
-    Handlebars.registerHelper('math', (a: number, op: string, b: number) => {
+  private registerLiquidFilters(): void {
+    this.engine.registerFilter('math', (a: number, op: string, b: number) => {
       switch (op) {
         case '+':
-          return a + b;
+          return Number(a) + Number(b);
         case '-':
-          return a - b;
+          return Number(a) - Number(b);
         case '*':
-          return a * b;
+          return Number(a) * Number(b);
         case '/':
-          return a / b;
+          return Number(a) / Number(b);
         default:
           return a;
       }
     });
-    Handlebars.registerHelper('eq', (a: unknown, b: unknown) => a === b);
-    Handlebars.registerHelper('ne', (a: unknown, b: unknown) => a !== b);
-    Handlebars.registerHelper(
+    this.engine.registerFilter('eq', (a: unknown, b: unknown) => a === b);
+    this.engine.registerFilter('ne', (a: unknown, b: unknown) => a !== b);
+    this.engine.registerFilter(
       'gt',
       (a: unknown, b: unknown) => Number(a) > Number(b),
     );
-    Handlebars.registerHelper(
+    this.engine.registerFilter(
       'gte',
       (a: unknown, b: unknown) => Number(a) >= Number(b),
     );
-    Handlebars.registerHelper(
+    this.engine.registerFilter(
       'lt',
       (a: unknown, b: unknown) => Number(a) < Number(b),
     );
-    Handlebars.registerHelper(
+    this.engine.registerFilter(
       'lte',
       (a: unknown, b: unknown) => Number(a) <= Number(b),
     );
-  }
-
-  private registerPartials(): void {
-    if (this.partialsRegistered) return;
-
-    const stylesPath = path.join(this.templatesDir, 'styles.hbs');
-    if (fs.existsSync(stylesPath)) {
-      Handlebars.registerPartial('styles', fs.readFileSync(stylesPath, 'utf8'));
-    }
-
-    const modernStylesPath = path.join(
-      this.templatesDir,
-      'partials',
-      'modern-styles.hbs',
-    );
-    if (fs.existsSync(modernStylesPath)) {
-      Handlebars.registerPartial(
-        'modern-styles',
-        fs.readFileSync(modernStylesPath, 'utf8'),
-      );
-    }
-
-    this.partialsRegistered = true;
+    this.engine.registerFilter('isEven', (a: unknown) => Number(a) % 2 === 0);
+    this.engine.registerFilter('isOdd', (a: unknown) => Number(a) % 2 !== 0);
   }
 
   /** Concurrent recovery callers await this same launch operation. */
@@ -203,7 +189,6 @@ export class PdfService
   async onApplicationBootstrap(): Promise<void> {
     this.logger.log('Warming up Puppeteer browser...');
     await this.getBrowser();
-    this.registerPartials();
 
     const types = this.getAvailableTypes();
     this.logger.log(`Pre-compiling ${types.length} templates...`);
@@ -212,15 +197,15 @@ export class PdfService
       if (!docType) continue;
       const templatePath = path.join(
         this.templatesDir,
-        `${docType.template}.hbs`,
+        `${docType.template}.liquid`,
       );
       if (!fs.existsSync(templatePath)) {
         throw new NotFoundException(
-          `Registered template not found: ${docType.template}.hbs`,
+          `Registered template not found: ${docType.template}.liquid`,
         );
       }
       const source = fs.readFileSync(templatePath, 'utf8');
-      this.templateCache.set(docType.template, Handlebars.compile(source));
+      this.templateCache.set(docType.template, this.engine.parse(source));
     }
     this.logger.log(
       `Template cache populated with ${this.templateCache.size} entries.`,
@@ -254,7 +239,7 @@ export class PdfService
     options: PdfRenderOptions = {},
   ): Promise<Buffer> {
     const requestedAt = Date.now();
-    const html = this.renderHtml(templateName, data);
+    const html = await this.renderHtmlAsync(templateName, data);
     const documentType = options.documentType ?? templateName;
     return this.runWithSemaphore(
       (signal) => this.htmlToPdf(html, signal, documentType),
@@ -267,26 +252,52 @@ export class PdfService
     );
   }
 
-  /** Deterministic Handlebars output used by contract and golden tests. */
+  /** Deterministic Liquid output used by contract and golden tests. */
   renderHtml(templateName: string, data: object): string {
-    const templateFile = path.join(this.templatesDir, `${templateName}.hbs`);
+    const templateFile = path.join(this.templatesDir, `${templateName}.liquid`);
     if (!fs.existsSync(templateFile)) {
-      throw new NotFoundException(`Template not found: ${templateName}.hbs`);
+      throw new NotFoundException(`Template not found: ${templateName}.liquid`);
     }
-    this.registerPartials();
-    return this.renderTemplate(templateName, data);
+    return this.renderTemplateSync(templateName, data);
   }
 
-  private renderTemplate(templateName: string, data: object): string {
-    let template = this.templateCache.get(templateName);
-    if (!template) {
-      // Cold-start / dev-injected template: compile on demand and cache
-      const templateFile = path.join(this.templatesDir, `${templateName}.hbs`);
-      const source = fs.readFileSync(templateFile, 'utf8');
-      template = Handlebars.compile(source);
-      this.templateCache.set(templateName, template);
+  async renderHtmlAsync(templateName: string, data: object): Promise<string> {
+    const templateFile = path.join(this.templatesDir, `${templateName}.liquid`);
+    if (!fs.existsSync(templateFile)) {
+      throw new NotFoundException(`Template not found: ${templateName}.liquid`);
     }
-    return template(data);
+    return this.renderTemplateAsync(templateName, data);
+  }
+
+  private renderTemplateSync(templateName: string, data: object): string {
+    let parsed = this.templateCache.get(templateName);
+    if (!parsed) {
+      const templateFile = path.join(
+        this.templatesDir,
+        `${templateName}.liquid`,
+      );
+      const source = fs.readFileSync(templateFile, 'utf8');
+      parsed = this.engine.parse(source);
+      this.templateCache.set(templateName, parsed);
+    }
+    return this.engine.renderSync(parsed, data);
+  }
+
+  private async renderTemplateAsync(
+    templateName: string,
+    data: object,
+  ): Promise<string> {
+    let parsed = this.templateCache.get(templateName);
+    if (!parsed) {
+      const templateFile = path.join(
+        this.templatesDir,
+        `${templateName}.liquid`,
+      );
+      const source = fs.readFileSync(templateFile, 'utf8');
+      parsed = this.engine.parse(source);
+      this.templateCache.set(templateName, parsed);
+    }
+    return this.engine.render(parsed, data);
   }
 
   private async htmlToPdf(

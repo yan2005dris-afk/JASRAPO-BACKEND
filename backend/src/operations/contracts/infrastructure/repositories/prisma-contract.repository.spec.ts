@@ -2,6 +2,7 @@ import { PrismaContractRepository } from './prisma-contract.repository';
 import type { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { Prisma } from 'src/generated/prisma/client';
 import { EstadoMedidor } from 'src/shared/enums';
+import type { ContractGuideGeneratorService } from '../services/contract-guide-generator.service';
 import {
   EntityNotFoundException,
   EntityAlreadyExistsException,
@@ -10,6 +11,7 @@ import {
 
 describe('PrismaContractRepository', () => {
   let repository: PrismaContractRepository;
+  let contractGuideGenerator: { generate: jest.Mock };
   let prisma: {
     contratos: {
       findFirst: jest.Mock;
@@ -95,8 +97,12 @@ describe('PrismaContractRepository', () => {
       },
       $transaction: jest.fn(),
     };
+    contractGuideGenerator = {
+      generate: jest.fn().mockResolvedValue('001-SN001-00001'),
+    };
     repository = new PrismaContractRepository(
       prisma as unknown as PrismaService,
+      contractGuideGenerator as unknown as ContractGuideGeneratorService,
     );
   });
 
@@ -220,6 +226,7 @@ describe('PrismaContractRepository', () => {
           findUnique: jest.fn().mockResolvedValue({
             medidorId: 100n,
             estado: EstadoMedidor.BODEGA,
+            serie: 'SN-001',
           }),
           updateMany: jest.fn().mockResolvedValue({ count: 1 }),
         },
@@ -263,7 +270,6 @@ describe('PrismaContractRepository', () => {
         medidorId: 100n,
         comunidadId: 1,
         sectorId: null,
-        numeroGuia: 'G-001',
         direccionSuministro: 'Av. 1',
         estadoServicio: 'PENDIENTE_INSPECCION',
         estadoCobranza: 'AL_DIA',
@@ -271,6 +277,15 @@ describe('PrismaContractRepository', () => {
       });
 
       expect(result.contratoId).toBe(1n);
+      expect(contractGuideGenerator.generate).toHaveBeenCalledWith(txMock, {
+        comunidadId: 1,
+        serieMedidor: 'SN-001',
+      });
+      expect(txMock.contratos.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ numeroGuia: '001-SN001-00001' }),
+        }),
+      );
       expect(txMock.medidores.updateMany).toHaveBeenCalledWith(
         expect.objectContaining({
           data: { estado: EstadoMedidor.PENDIENTE, fechaInstalacion: null },
@@ -296,6 +311,7 @@ describe('PrismaContractRepository', () => {
           findUnique: jest.fn().mockResolvedValue({
             medidorId: 100n,
             estado: EstadoMedidor.BODEGA,
+            serie: 'SN-001',
           }),
           updateMany: jest.fn().mockResolvedValue({ count: 1 }),
         },
@@ -339,7 +355,6 @@ describe('PrismaContractRepository', () => {
         medidorId: 100n,
         comunidadId: 1,
         sectorId: null,
-        numeroGuia: 'G-001',
         direccionSuministro: 'Av. 1',
         estadoServicio: 'PENDIENTE_PAGO',
         estadoCobranza: 'AL_DIA',
@@ -387,7 +402,6 @@ describe('PrismaContractRepository', () => {
           medidorId: 100n,
           comunidadId: 1,
           sectorId: null,
-          numeroGuia: 'G-001',
           direccionSuministro: 'Av. 1',
           estadoServicio: 'PENDIENTE_INSPECCION' as any,
           estadoCobranza: 'AL_DIA' as any,

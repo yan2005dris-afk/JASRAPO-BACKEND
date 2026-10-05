@@ -1,6 +1,6 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import Handlebars from 'handlebars';
+import { Liquid } from 'liquidjs';
 import { PaymentAgreementPdfDocumentType } from 'src/billing/collections/agreements/pdf/payment-agreement.pdf-type';
 import { projectConnectionHistoryReport } from '../application/definitions/connection-history-report.definition';
 import { projectPaymentAgreementReport } from '../application/definitions/payment-agreement-report.definition';
@@ -18,6 +18,17 @@ const TEMPLATES_DIR = path.resolve(
   __dirname,
   '../../infrastructure/pdf/templates',
 );
+
+const liquidEngine = new Liquid({
+  root: [TEMPLATES_DIR, path.join(TEMPLATES_DIR, 'partials')],
+  extname: '.liquid',
+  dynamicPartials: true,
+  strictFilters: false,
+  strictVariables: false,
+});
+
+liquidEngine.registerFilter('isEven', (a: unknown) => Number(a) % 2 === 0);
+liquidEngine.registerFilter('isOdd', (a: unknown) => Number(a) % 2 !== 0);
 
 const institutionalFixture = {
   institucion: {
@@ -67,16 +78,12 @@ const institutionalFixture = {
 };
 
 function renderLegacyFixture(template: string, data: object): string {
-  const styles = fs.readFileSync(
-    path.join(TEMPLATES_DIR, 'styles.hbs'),
-    'utf8',
-  );
-  Handlebars.registerPartial('styles', styles);
   const source = fs.readFileSync(
-    path.join(TEMPLATES_DIR, `${template}.hbs`),
+    path.join(TEMPLATES_DIR, `${template}.liquid`),
     'utf8',
   );
-  return Handlebars.compile(source)(data);
+  const parsed = liquidEngine.parse(source);
+  return liquidEngine.renderSync(parsed, data);
 }
 
 describe('legacy PDF contractual fixtures', () => {

@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Historial de Conexión - Moderno Formal</title>
     <!-- Removed External Fonts -->
-    {{> styles}}
-    {{> modern-styles}}
+    {% render "styles" %}
+    {% render "modern-styles" %}
     <style>
         /* Client Info Box */
         .info-box {
@@ -245,19 +245,19 @@
                 </tr>
             </thead>
             <tbody>
-                {{#each reporte.filas}}
+                {% for fila in reporte.filas %}
                 <tr>
-                    <td class="col-emision">{{this.emision}}</td>
-                    <td class="col-lect">{{this.lectActual}}</td>
-                    <td class="col-lect">{{this.lectAnterior}}</td>
+                    <td class="col-emision">{{ fila.emision }}</td>
+                    <td class="col-lect">{{ fila.lectActual }}</td>
+                    <td class="col-lect">{{ fila.lectAnterior }}</td>
                     <td class="text-right col-consumo">
-                        {{this.consumo}} <span>m³</span>
+                        {{ fila.consumo }} <span>m³</span>
                     </td>
-                    <td class="text-right col-val">${{this.valEmision}}</td>
-                    <td class="text-right col-val">${{this.abonos}}</td>
-                    <td class="text-right col-saldo">${{this.saldo}}</td>
+                    <td class="text-right col-val">${{ fila.valEmision }}</td>
+                    <td class="text-right col-val">${{ fila.abonos }}</td>
+                    <td class="text-right col-saldo">${{ fila.saldo }}</td>
                 </tr>
-                {{/each}}
+                {% endfor %}
             </tbody>
         </table>
     </div>

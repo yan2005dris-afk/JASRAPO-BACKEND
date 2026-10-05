@@ -6,204 +6,206 @@
     <title>Historial de Conexión - Moderno Formal</title>
     <!-- Removed External Fonts -->
     <style>
-      :root {
-        --primary-color: #0c9ea1;
-        --primary-color-light: #dbf7f8;
+  :root {
+    --primary-color: #0c9ea1;
+    --primary-color-light: #dbf7f8;
+    --text-main: #0e2728;
+    --text-muted: #597b7d;
+    --border-color: #cbdedf;
+    --estado-activo: #10b981;
+    --estado-inactivo: #ef4444;
+  }
+</style>
+    <style>
+    :root {
+        --brand-main: var(--primary-color, #0c9ea1);
+        --brand-light: var(--primary-color-light, #dbf7f8);
+        --brand-dark: #0e2728;
+        --brand-accent: #0c9ea1;
         --text-main: #0e2728;
         --text-muted: #597b7d;
+        --text-light: var(--text-muted, #597b7d);
+        --text-lighter: #8da4a6;
         --border-color: #cbdedf;
-        --estado-activo: #10b981;
-        --estado-inactivo: #ef4444;
-      }
-    </style>    <style>
-        :root {
-            --brand-main: var(--primary-color, #0c9ea1);
-            --brand-light: var(--primary-color-light, #dbf7f8);
-            --brand-dark: #0e2728;
-            --brand-accent: #0c9ea1;
-            --text-main: #0e2728;
-            --text-muted: #597b7d;
-            --text-light: var(--text-muted, #597b7d);
-            --text-lighter: #8da4a6;
-            --border-color: #cbdedf;
-        }
+    }
 
-        @page {
-            margin: 10mm;
-            size: A4 portrait;
-        }
+    @page {
+        margin: 10mm;
+        size: A4 portrait;
+    }
 
-        body {
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
-            font-family: Arial, Helvetica, sans-serif;
-            font-size: 10px;
-            color: var(--text-main);
-            background-color: #ffffff;
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+    body {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 10px;
+        color: var(--text-main);
+        background-color: #ffffff;
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
 
-        *, *:before, *:after {
-            box-sizing: inherit;
-        }
+    *, *:before, *:after {
+        box-sizing: inherit;
+    }
 
-        .container, .page-container {
-            width: 100%;
-            padding: 0 10px;
-        }
+    .container, .page-container {
+        width: 100%;
+        padding: 0 10px;
+    }
 
-        /* Modern Flex & Table Headers */
-        .header {
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            border-bottom: 3px solid var(--brand-main);
-            padding-bottom: 16px;
-            margin-bottom: 20px;
-        }
+    /* Modern Flex & Table Headers */
+    .header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        border-bottom: 3px solid var(--brand-main);
+        padding-bottom: 16px;
+        margin-bottom: 20px;
+    }
 
-        .header-table {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            border-bottom: 2px solid var(--brand-main);
-            padding-bottom: 14px;
-            margin-bottom: 18px;
-        }
+    .header-table {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        border-bottom: 2px solid var(--brand-main);
+        padding-bottom: 14px;
+        margin-bottom: 18px;
+    }
 
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
+    .header-left {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
 
-        .header-right {
-            text-align: right;
-        }
+    .header-right {
+        text-align: right;
+    }
 
-        .logo-container {
-            width: 50px;
-            height: 50px;
-            flex-shrink: 0;
-        }
+    .logo-container {
+        width: 50px;
+        height: 50px;
+        flex-shrink: 0;
+    }
 
-        .logo-container img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-        }
+    .logo-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
 
-        .brand-title {
-            font-size: 18px;
-            font-weight: 800;
-            color: var(--brand-dark);
-            letter-spacing: -0.5px;
-        }
+    .brand-title {
+        font-size: 18px;
+        font-weight: 800;
+        color: var(--brand-dark);
+        letter-spacing: -0.5px;
+    }
 
-        .brand-subtitle {
-            font-size: 10px;
-            color: var(--brand-accent);
-            font-weight: 600;
-        }
+    .brand-subtitle {
+        font-size: 10px;
+        color: var(--brand-accent);
+        font-weight: 600;
+    }
 
-        .report-title-main {
-            font-size: 15px;
-            font-weight: 700;
-            color: var(--brand-dark);
-        }
+    .report-title-main {
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--brand-dark);
+    }
 
-        .report-meta-text {
-            font-size: 9px;
-            color: var(--text-muted);
-        }
+    .report-meta-text {
+        font-size: 9px;
+        color: var(--text-muted);
+    }
 
-        .title {
-            font-size: 20px;
-            font-weight: 700;
-            color: var(--brand-dark);
-            letter-spacing: -0.5px;
-            text-transform: uppercase;
-            margin: 0 0 4px 0;
-        }
+    .title {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--brand-dark);
+        letter-spacing: -0.5px;
+        text-transform: uppercase;
+        margin: 0 0 4px 0;
+    }
 
-        .subtitle {
-            color: var(--brand-accent);
-            font-weight: 600;
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin: 0 0 6px 0;
-        }
+    .subtitle {
+        color: var(--brand-accent);
+        font-weight: 600;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin: 0 0 6px 0;
+    }
 
-        .date-info {
-            color: var(--text-light);
-            font-size: 10px;
-            margin: 0;
-        }
+    .date-info {
+        color: var(--text-light);
+        font-size: 10px;
+        margin: 0;
+    }
 
-        .date-info span {
-            font-weight: 600;
-            color: var(--brand-main);
-        }
+    .date-info span {
+        font-weight: 600;
+        color: var(--brand-main);
+    }
 
-        .total-label-sm {
-            font-size: 9px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: var(--text-muted);
-            font-weight: 700;
-            margin: 0 0 2px 0;
-        }
+    .total-label-sm {
+        font-size: 9px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-muted);
+        font-weight: 700;
+        margin: 0 0 2px 0;
+    }
 
-        .total-amount-lg {
-            font-size: 22px;
-            font-weight: 800;
-            color: var(--brand-dark);
-            margin: 0;
-        }
+    .total-amount-lg {
+        font-size: 22px;
+        font-weight: 800;
+        color: var(--brand-dark);
+        margin: 0;
+    }
 
-        /* Modern Table Styles */
-        .modern-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 12px;
-            font-size: 9px;
-        }
+    /* Modern Table Styles */
+    .modern-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 12px;
+        font-size: 9px;
+    }
 
-        .modern-table th {
-            background-color: var(--brand-main);
-            color: #ffffff;
-            padding: 7px 8px;
-            text-align: left;
-            font-weight: 700;
-            font-size: 8.5px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            border: none;
-        }
+    .modern-table th {
+        background-color: var(--brand-main);
+        color: #ffffff;
+        padding: 7px 8px;
+        text-align: left;
+        font-weight: 700;
+        font-size: 8.5px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border: none;
+    }
 
-        .modern-table td {
-            padding: 6px 8px;
-            border-bottom: 1px solid #f1f5f9;
-            font-size: 9px;
-            color: var(--text-main);
-            vertical-align: middle;
-        }
+    .modern-table td {
+        padding: 6px 8px;
+        border-bottom: 1px solid #f1f5f9;
+        font-size: 9px;
+        color: var(--text-main);
+        vertical-align: middle;
+    }
 
-        .modern-table tr:nth-child(even) td {
-            background-color: #f8fafc;
-        }
+    .modern-table tr:nth-child(even) td {
+        background-color: #f8fafc;
+    }
 
-        .footer-note {
-            text-align: center;
-            font-size: 8.5px;
-            color: var(--text-lighter);
-            border-top: 1px solid #e2e8f0;
-            padding-top: 10px;
-        }
-    </style>
+    .footer-note {
+        text-align: center;
+        font-size: 8.5px;
+        color: var(--text-lighter);
+        border-top: 1px solid #e2e8f0;
+        padding-top: 10px;
+    }
+</style>
+
     <style>
         /* Client Info Box */
         .info-box {
@@ -388,7 +390,7 @@
     <header class="header">
         <div class="header-left">
             <div class="logo-container">
-                <img src="data:image/jpeg;base64,PDF_LOGO_DATA&#x3D;&#x3D;" alt="Logo institucional">
+                <img src="data:image/jpeg;base64,PDF_LOGO_DATA" alt="Logo institucional">
             </div>
             <div>
                 <h1 class="title">Historial de Conexión Detallado</h1>
@@ -442,6 +444,7 @@
                 </tr>
             </thead>
             <tbody>
+
                 <tr>
                     <td class="col-emision">ENERO 2024</td>
                     <td class="col-lect">10</td>
@@ -453,6 +456,7 @@
                     <td class="text-right col-val">$30.00</td>
                     <td class="text-right col-saldo">$20.00</td>
                 </tr>
+
                 <tr>
                     <td class="col-emision">FEBRERO 2024</td>
                     <td class="col-lect">15</td>
@@ -464,6 +468,7 @@
                     <td class="text-right col-val">$0.00</td>
                     <td class="text-right col-saldo">$10.00</td>
                 </tr>
+
             </tbody>
         </table>
     </div>

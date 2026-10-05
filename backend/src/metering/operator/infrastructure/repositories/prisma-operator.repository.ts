@@ -175,7 +175,6 @@ export class PrismaOperatorRepository extends OperatorRepository {
         consumoCalculado: true,
         descripcionAnomalia: true,
         fechaValidacion: true,
-        lecturaInicial: true,
         periodoId: true,
         estado: true,
         medidor: {
@@ -542,7 +541,6 @@ export class PrismaOperatorRepository extends OperatorRepository {
           consumoCalculado: true,
           descripcionAnomalia: true,
           fechaValidacion: true,
-          lecturaInicial: true,
           periodoId: true,
           estado: true,
           updatedAt: true,

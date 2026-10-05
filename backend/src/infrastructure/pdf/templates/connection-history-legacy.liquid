@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  {{> styles}}
+  {% render "styles" %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reporte Historial de Conexión</title>
@@ -159,17 +159,17 @@
             </tr>
         </thead>
         <tbody>
-            {{#each reporte.filas}}
+            {% for fila in reporte.filas %}
             <tr>
-                <td>{{this.emision}}</td>
-                <td>{{this.lectActual}}</td>
-                <td>{{this.lectAnterior}}</td>
-                <td class="text-right">{{this.consumo}}</td>
-                <td class="text-right">{{this.valEmision}}</td>
-                <td class="text-right">{{this.abonos}}</td>
-                <td class="text-right">{{this.saldo}}</td>
+                <td>{{ fila.emision }}</td>
+                <td>{{ fila.lectActual }}</td>
+                <td>{{ fila.lectAnterior }}</td>
+                <td class="text-right">{{ fila.consumo }}</td>
+                <td class="text-right">{{ fila.valEmision }}</td>
+                <td class="text-right">{{ fila.abonos }}</td>
+                <td class="text-right">{{ fila.saldo }}</td>
             </tr>
-            {{/each}}
+            {% endfor %}
             
             <tr class="footer-row">
                 <td colspan="2"></td>

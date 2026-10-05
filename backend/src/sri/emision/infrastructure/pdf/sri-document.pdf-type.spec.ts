@@ -1,16 +1,32 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import Handlebars from 'handlebars';
+import { Liquid } from 'liquidjs';
 import { SriDocumentPdfType } from './sri-document.pdf-type';
 
-const templatePath = path.resolve(
+const TEMPLATES_DIR = path.resolve(
   __dirname,
-  '../../../../infrastructure/pdf/templates/sri-document.hbs',
+  '../../../../infrastructure/pdf/templates',
 );
+
+const templatePath = path.join(TEMPLATES_DIR, 'sri-document.liquid');
+
+const liquidEngine = new Liquid({
+  root: [TEMPLATES_DIR, path.join(TEMPLATES_DIR, 'partials')],
+  extname: '.liquid',
+  dynamicPartials: true,
+  strictFilters: false,
+  strictVariables: false,
+});
+
+liquidEngine.registerFilter('isEven', (a: unknown) => Number(a) % 2 === 0);
+liquidEngine.registerFilter('isOdd', (a: unknown) => Number(a) % 2 !== 0);
 
 function renderSRI(raw: Record<string, unknown>): string {
   const source = fs.readFileSync(templatePath, 'utf8');
-  return Handlebars.compile(source)(SriDocumentPdfType.adaptData(raw));
+  return liquidEngine.renderSync(
+    liquidEngine.parse(source),
+    SriDocumentPdfType.adaptData(raw),
+  );
 }
 
 describe('SriDocumentPdfType', () => {

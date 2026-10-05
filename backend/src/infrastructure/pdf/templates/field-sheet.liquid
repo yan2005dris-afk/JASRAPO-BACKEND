@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <title>Hoja de Campo - {{reporte.rutaNombre}}</title>
-  {{> styles}}
-  {{> modern-styles}}
+  {% render "styles" %}
+  {% render "modern-styles" %}
   <style>
     .meta-grid {
       display: flex;
@@ -106,7 +106,7 @@
     <div class="meta-grid">
       <div class="meta-item">
         <p class="meta-label">Comunidad / Sector</p>
-        <p class="meta-val">{{reporte.comunidad}} {{#if reporte.sector}} - {{reporte.sector}}{{/if}}</p>
+        <p class="meta-val">{{reporte.comunidad}} {% if reporte.sector %} - {{reporte.sector}}{% endif %}</p>
       </div>
       <div class="meta-item">
         <p class="meta-label">Operario Asignado</p>
@@ -126,7 +126,7 @@
       </div>
     </div>
 
-    {{#if reporte.isLectura}}
+    {% if reporte.isLectura %}
     <!-- Tabla de Toma de Lecturas -->
     <table class="field-table modern-table" style="margin-top: 14px; width: 100%;">
       <thead>
@@ -142,25 +142,25 @@
         </tr>
       </thead>
       <tbody>
-        {{#each reporte.items}}
+        {% for item in reporte.items %}
         <tr>
-          <td class="text-center" style="color: var(--text-light); font-weight: bold;">{{math @index '+' 1}}</td>
-          <td style="font-weight: 600;">{{this.guia}}</td>
-          <td style="font-weight: 600; color: var(--brand-dark);">{{this.cliente}}</td>
-          <td style="color: #475569;">{{this.direccion}}</td>
-          <td style="font-family: monospace; font-weight: 700;">{{this.medidor}}</td>
-          <td class="text-center" style="font-weight: bold; background-color: #f1f5f9;">{{this.lecturaAnterior}}</td>
+          <td class="text-center" style="color: var(--text-light); font-weight: bold;">{{ forloop.index }}</td>
+          <td style="font-weight: 600;">{{ item.guia }}</td>
+          <td style="font-weight: 600; color: var(--brand-dark);">{{ item.cliente }}</td>
+          <td style="color: #475569;">{{ item.direccion }}</td>
+          <td style="font-family: monospace; font-weight: 700;">{{ item.medidor }}</td>
+          <td class="text-center" style="font-weight: bold; background-color: #f1f5f9;">{{ item.lecturaAnterior }}</td>
           <td class="text-center blank-cell"></td>
           <td class="blank-cell"></td>
         </tr>
-        {{else}}
+        {% else %}
         <tr>
           <td colspan="8" class="text-center" style="padding: 16px; color: var(--text-muted);">No hay lecturas asignadas a esta ruta.</td>
         </tr>
-        {{/each}}
+        {% endfor %}
       </tbody>
     </table>
-    {{else}}
+    {% else %}
     <!-- Tabla de Órdenes de Trabajo (Instalación, Corte, Reconexión, Mantenimiento) -->
     <table class="field-table modern-table" style="margin-top: 14px; width: 100%;">
       <thead>
@@ -176,25 +176,25 @@
         </tr>
       </thead>
       <tbody>
-        {{#each reporte.items}}
+        {% for item in reporte.items %}
         <tr>
-          <td class="text-center" style="color: var(--text-light); font-weight: bold;">{{this.ordenVisita}}</td>
-          <td style="font-weight: 600;">{{this.contrato}}</td>
-          <td style="font-weight: 600; color: var(--brand-dark);">{{this.cliente}}</td>
-          <td style="color: #475569;">{{this.direccion}}</td>
-          <td style="font-family: monospace; font-weight: 700;">{{this.medidor}}</td>
-          <td>{{this.tipoActividad}}</td>
-          <td class="text-center">{{this.estado}}</td>
+          <td class="text-center" style="color: var(--text-light); font-weight: bold;">{{ item.ordenVisita }}</td>
+          <td style="font-weight: 600;">{{ item.contrato }}</td>
+          <td style="font-weight: 600; color: var(--brand-dark);">{{ item.cliente }}</td>
+          <td style="color: #475569;">{{ item.direccion }}</td>
+          <td style="font-family: monospace; font-weight: 700;">{{ item.medidor }}</td>
+          <td>{{ item.tipoActividad }}</td>
+          <td class="text-center">{{ item.estado }}</td>
           <td class="blank-cell"></td>
         </tr>
-        {{else}}
+        {% else %}
         <tr>
           <td colspan="8" class="text-center" style="padding: 16px; color: var(--text-muted);">No hay órdenes de trabajo asignadas a esta ruta.</td>
         </tr>
-        {{/each}}
+        {% endfor %}
       </tbody>
     </table>
-    {{/if}}
+    {% endif %}
 
     <div class="summary-box">
       <div><strong>Total de registros en hoja:</strong> {{reporte.total}}</div>

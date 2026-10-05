@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <title>Prefactura - {{institucion.siglas}}</title>
-  {{> styles}}
-  {{> modern-styles}}
+  {% render "styles" %}
+  {% render "modern-styles" %}
   <style>
     .invoice-grid {
       display: grid;
@@ -157,16 +157,16 @@
         </tr>
       </thead>
       <tbody>
-        {{#each prefactura.detalles}}
+        {% for item in prefactura.detalles %}
         <tr>
-          <td style="font-weight: 600; color: var(--brand-dark);">{{this.descripcion}}</td>
-          <td style="text-align: center;">{{this.cantidad}}</td>
-          <td style="text-align: right;">${{this.precioUnitario}}</td>
-          <td style="text-align: right;">${{this.subtotal}}</td>
-          <td style="text-align: right;">${{this.iva}}</td>
-          <td style="text-align: right; font-weight: 700;">${{this.total}}</td>
+          <td style="font-weight: 600; color: var(--brand-dark);">{{ item.descripcion }}</td>
+          <td style="text-align: center;">{{ item.cantidad }}</td>
+          <td style="text-align: right;">${{ item.precioUnitario }}</td>
+          <td style="text-align: right;">${{ item.subtotal }}</td>
+          <td style="text-align: right;">${{ item.iva }}</td>
+          <td style="text-align: right; font-weight: 700;">${{ item.total }}</td>
         </tr>
-        {{/each}}
+        {% endfor %}
       </tbody>
     </table>
 
@@ -180,30 +180,30 @@
         <span>IVA:</span>
         <span>${{prefactura.iva}}</span>
       </div>
-      {{#if prefactura.subsidioLey}}
+      {% if prefactura.subsidioLey %}
       <div class="totals-row">
         <span>Subsidio Ley Tercera Edad / Discapacidad:</span>
         <span style="color: #16a34a;">-${{prefactura.subsidioLey}}</span>
       </div>
-      {{/if}}
-      {{#if prefactura.otrosDescuentos}}
+      {% endif %}
+      {% if prefactura.otrosDescuentos %}
       <div class="totals-row">
         <span>Descuento:</span>
         <span style="color: #16a34a;">-${{prefactura.otrosDescuentos}}</span>
       </div>
-      {{/if}}
-      {{#if prefactura.interesMora}}
+      {% endif %}
+      {% if prefactura.interesMora %}
       <div class="totals-row">
         <span>Interés por Mora:</span>
         <span style="color: #dc2626;">+${{prefactura.interesMora}}</span>
       </div>
-      {{/if}}
-      {{#if prefactura.deudaAnterior}}
+      {% endif %}
+      {% if prefactura.deudaAnterior %}
       <div class="totals-row">
         <span>Deuda Anterior:</span>
         <span style="color: #dc2626;">+${{prefactura.deudaAnterior}}</span>
       </div>
-      {{/if}}
+      {% endif %}
       <div class="totals-row grand-total">
         <span>TOTAL A PAGAR:</span>
         <span>${{prefactura.totalPagar}}</span>
