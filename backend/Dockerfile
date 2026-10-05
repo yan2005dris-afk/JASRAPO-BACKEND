@@ -23,11 +23,14 @@ RUN apt-get update \
  && apt-get install -y --no-install-recommends openssl ca-certificates \
  && rm -rf /var/lib/apt/lists/*
 
-# Pin pnpm to the workspace's declared `packageManager` (pnpm@12.3.4) and Node 24.
-RUN corepack enable \
- && corepack prepare pnpm@12.3.4 --activate \
- && pnpm runtime set node 24 -g \
- && pnpm --version
+# Pin Node 24 to the project. The pnpm:12 base ships pnpm 12.x (currently 12.9.1)
+# but NOT node, corepack, or npm — we can't `corepack prepare` here. We use pnpm's
+# own runtime to install Node 24 (Hard Rule #2: project owns the Node version).
+# The pnpm-lock.yaml is the source of truth for installed deps (Hard Rule #6), so
+# any pnpm 12.x with --frozen-lockfile produces the same tree.
+RUN pnpm runtime set node 24 -g \
+ && pnpm --version \
+ && node --version
 
 WORKDIR /app
 
