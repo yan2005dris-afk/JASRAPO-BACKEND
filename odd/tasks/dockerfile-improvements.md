@@ -37,6 +37,12 @@ and the dead `backend/.dockerignore` artifact.
       `corepack: not found`. Replaced with `pnpm runtime set node 24 -g` (which is what
       actually installs Node 24 in the pnpm runtime). Verified locally: pnpm 12.9.1 +
       Node 24.21.0 in the base image.
+- [x] Task 6 (iteration): Use `PUPPETEER_SKIP_DOWNLOAD=true` (the puppeteer 19+ name)
+      instead of the legacy `PUPPETEER_SKIP_CHROMIUM_DOWNLOAD`. The lockfile pins
+      `puppeteer@25.1.0` which silently ignores the old env var name. With the new name,
+      the postinstall is skipped and pnpm install succeeds. Verified locally: full
+      `podman build -f backend/Dockerfile` succeeds (pnpm install + prisma generate +
+      nest build + pnpm deploy + runner stage).
 
 ## Evidence (commit SHAs)
 - Task 1: 2172153e18752e3b848d62b6d52ff48903395659
@@ -45,6 +51,7 @@ and the dead `backend/.dockerignore` artifact.
 - Task 3b: e5cecaf8 (restore)
 - Task 4: hadolint run on `backend/Dockerfile` and `external/open-api-facturacion-sri/Dockerfile`; no new errors or warnings.
 - Task 5: 85e387fd (drop corepack; verified locally with `podman build --target base`)
+- Task 6: e2ca7679 (PUPPETEER_SKIP_DOWNLOAD; verified locally with full backend build)
 
 ## Verification
 - `hadolint backend/Dockerfile` → 0 errors, only accepted warnings.
