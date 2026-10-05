@@ -19,22 +19,22 @@ and the dead `backend/.dockerignore` artifact.
 - Conventional Commits, one work-unit per commit on a feature branch.
 
 ## Tasks
-- [ ] Task 1: Migrate `backend/Dockerfile` base from `node:22-alpine` to `ghcr.io/pnpm/pnpm:12`
+- [x] Task 1: Migrate `backend/Dockerfile` base from `node:22-alpine` to `ghcr.io/pnpm/pnpm:12`
       with `pnpm runtime set node 24 -g`, drop the curl-based pnpm installer, and add
       `HEALTHCHECK` in the runner stage.
-- [ ] Task 2: Refactor `external/open-api-facturacion-sri/Dockerfile` to add a
+- [x] Task 2: Refactor `external/open-api-facturacion-sri/Dockerfile` to add a
       `--mount=type=cache,target=/root/.npm` cache mount, switch to `npm ci` (drop
       `--legacy-peer-deps` if a `package-lock.json` exists), and add a non-root `USER node`.
-- [ ] Task 3: Delete dead artifact `backend/.dockerignore` (the build context is the repo
+- [x] Task 3: Delete dead artifact `backend/.dockerignore` (the build context is the repo
       root, so this nested ignore is never read).
-- [ ] Task 4: Verify with `hadolint` (DLxxxx warnings reviewed), `git status` clean per
+- [x] Task 4: Verify with `hadolint` (DLxxxx warnings reviewed), `git status` clean per
       task, and capture commit SHAs as evidence.
 
 ## Evidence (commit SHAs)
-- Task 1: TBD
-- Task 2: TBD
-- Task 3: TBD
-- Task 4: TBD
+- Task 1: 2172153e18752e3b848d62b6d52ff48903395659
+- Task 2: fc82bf76f174a3a8bda5295a183784e577a2ff24
+- Task 3: edf5b0da9b1419fdbe8ecae0523f1213e61f1fb2
+- Task 4: hadolint run on `backend/Dockerfile` and `external/open-api-facturacion-sri/Dockerfile`; no new errors or warnings.
 
 ## Verification
 - `hadolint backend/Dockerfile` → 0 errors, only accepted warnings.
@@ -48,3 +48,6 @@ and the dead `backend/.dockerignore` artifact.
   `JASRAPO-BACKEND-worktrees/pr261-mergefix`): they are detached from `develop` and the
   user owns their propagation.
 - Fixing the vendored `external/open-api-facturacion-sri/.git` antipattern.
+- Repairing the empty `dependencies`/`devDependencies` in
+  `external/open-api-facturacion-sri/package.json` (would prevent `nest build` from
+  succeeding today; flagged for follow-up).
