@@ -1,9 +1,11 @@
 # syntax=docker/dockerfile:1
 
 # ─── Stage: Base ──────────────────────────────────────────────────────────────
-FROM node:22-alpine AS base
-
-RUN apk add --no-cache openssl libc6-compat
+# Hard Rule #2: pin Node via the pnpm runtime, not the base image.
+# The official `ghcr.io/pnpm/pnpm:12` base bundles pnpm 12.x; we activate the exact
+# `packageManager` version from package.json (pnpm@12.3.4) via corepack, then use
+# `pnpm runtime set node 24 -g` so the project owns the Node version.
+FROM ghcr.io/pnpm/pnpm:12 AS base
 
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
@@ -13,11 +15,19 @@ ENV PRISMA_SKIP_POSTINSTALL_GENERATE=true
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 ENV SHELL=/bin/sh
 ENV ENV=/root/.profile
-RUN wget --no-verbose --output-document=- https://get.pnpm.io/install.sh \
-    | env PNPM_VERSION=12.3.4 sh - \
-    && . /root/.profile \
-    && ln -sf "$(command -v pnpm)" /usr/local/bin/pnpm \
-    && pnpm --version
+
+# pnpm base is debian-slim; Prisma needs libssl at build time. ca-certificates for
+# HTTPS to the registry. Keep this in `base` (not `builder`) so other builder stages
+# inherit the deps without re-installing.
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends openssl ca-certificates \
+ && rm -rf /var/lib/apt/lists/*
+
+# Pin pnpm to the workspace's declared `packageManager` (pnpm@12.3.4) and Node 24.
+RUN corepack enable \
+ && corepack prepare pnpm@12.3.4 --activate \
+ && pnpm runtime set node 24 -g \
+ && pnpm --version
 
 WORKDIR /app
 
@@ -76,5 +86,10 @@ WORKDIR /app/backend
 
 USER node
 EXPOSE 3000
+
+# Image-level healthcheck. compose.yaml may still override per-service with a richer
+# probe (e.g. cert-aware fetch). Hard Rule: every runner stage ships one.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
+    CMD wget -qO- http://127.0.0.1:3000/api/v1/health/pdf >/dev/null 2>&1 || exit 1
 
 CMD ["sh", "-c", "./node_modules/.bin/prisma migrate deploy && node dist/src/main.js"]
