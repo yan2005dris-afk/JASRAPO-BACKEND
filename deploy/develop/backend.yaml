@@ -55,7 +55,8 @@ spec:
             - name: STORAGE_SSL_VERIFY
               value: "false"
             - name: PUPPETEER_EXECUTABLE_PATH
-              value: /usr/bin/chromium
+              # ELF binary, not /usr/bin/chromium (wrapper script rejected by Puppeteer 25).
+              value: /usr/lib/chromium/chromium
           readinessProbe:
             httpGet:
               path: /api/v1/health/pdf

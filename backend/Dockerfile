@@ -28,8 +28,12 @@ ENV PNPM_CONFIG_PACKAGE_IMPORT_METHOD=copy
 ENV PRISMA_SKIP_POSTINSTALL_GENERATE=true
 # Puppeteer >=19 renamed PUPPETEER_SKIP_CHROMIUM_DOWNLOAD to PUPPETEER_SKIP_DOWNLOAD.
 # The lockfile pins puppeteer@25.1.0; we set both for forward/backward compat.
-# The runtime stage installs system Chromium (PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium)
-# so the bundled Chrome from puppeteer's postinstall is dead weight anyway.
+# The runtime stage installs system Chromium
+# (PUPPETEER_EXECUTABLE_PATH=/usr/lib/chromium/chromium) so the bundled Chrome
+# from puppeteer's postinstall is dead weight anyway. We point at the ELF
+# binary in /usr/lib, not /usr/bin/chromium — the latter is a Debian wrapper
+# shell script that Puppeteer 25 rejects with
+# "Browser was not found at the configured executable/path".
 ENV PUPPETEER_SKIP_DOWNLOAD=true
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 
@@ -99,7 +103,7 @@ RUN apt-get update \
  && rm -rf /var/lib/apt/lists/*
 
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/lib/chromium/chromium
 
 WORKDIR /app
 
@@ -122,9 +126,12 @@ RUN chown -R node:node /app
 USER node
 EXPOSE 3000
 
-# Image-level healthcheck. compose.yaml may still override per-service with
-# a richer probe (e.g. cert-aware fetch).
+# Image-level healthcheck. Parses the response body — the endpoint returns
+# HTTP 200 even when the Puppeteer browser failed to launch (body reports
+# `status: "unhealthy", browser.connected: false`), so a wget that only
+# checks HTTP status would let a wedged browser through. compose.yaml may
+# still override per-service with a richer probe (e.g. cert-aware fetch).
 HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
-    CMD wget -qO- http://127.0.0.1:3000/api/v1/health/pdf >/dev/null 2>&1 || exit 1
+    CMD node -e "fetch('http://127.0.0.1:3000/api/v1/health/pdf').then(r=>r.json()).then(j=>process.exit(j.status==='healthy'&&j.browser&&j.browser.connected===true?0:1)).catch(()=>process.exit(1))"
 
 CMD ["sh", "-c", "./node_modules/.bin/prisma migrate deploy && node dist/src/main.js"]

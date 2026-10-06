@@ -88,7 +88,10 @@ services:
       NODE_ENV: production
       NODE_EXTRA_CA_CERTS: /usr/local/share/ca-certificates/rustfs_cert.crt
       PORT: 3000
-      PUPPETEER_EXECUTABLE_PATH: /usr/bin/chromium
+      # Point at the ELF binary in /usr/lib, not /usr/bin/chromium (a wrapper
+      # shell script that Puppeteer 25 rejects with
+      # "Browser was not found at the configured executable/path").
+      PUPPETEER_EXECUTABLE_PATH: /usr/lib/chromium/chromium
       OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://tempo:4318}
       OTEL_METRICS_ENABLED: "${OTEL_METRICS_ENABLED:-false}"
     ports:
@@ -96,13 +99,20 @@ services:
     volumes:
       - ./certs/rustfs_cert.pem:/usr/local/share/ca-certificates/rustfs_cert.crt:ro
     healthcheck:
+      # Parse the response body — the /api/v1/health/pdf endpoint returns
+      # HTTP 200 even when the Puppeteer browser failed to launch, with a
+      # body like `{"status":"unhealthy","browser":{"connected":false}}`.
+      # An HTTP-only check (response.ok) lets a wedged browser through.
+      # See commit history: this gap let a wrong PUPPETEER_EXECUTABLE_PATH
+      # ship to staging undetected.
       test:
         - CMD
         - node
         - -e
         - >-
           fetch('http://127.0.0.1:3000/api/v1/health/pdf')
-          .then(response => process.exit(response.ok ? 0 : 1))
+          .then(r => r.json())
+          .then(j => process.exit(j.status === 'healthy' && j.browser && j.browser.connected === true ? 0 : 1))
           .catch(() => process.exit(1))
       interval: 10s
       timeout: 5s
