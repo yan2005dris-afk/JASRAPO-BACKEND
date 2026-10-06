@@ -126,9 +126,12 @@ RUN chown -R node:node /app
 USER node
 EXPOSE 3000
 
-# Image-level healthcheck. compose.yaml may still override per-service with
-# a richer probe (e.g. cert-aware fetch).
+# Image-level healthcheck. Parses the response body — the endpoint returns
+# HTTP 200 even when the Puppeteer browser failed to launch (body reports
+# `status: "unhealthy", browser.connected: false`), so a wget that only
+# checks HTTP status would let a wedged browser through. compose.yaml may
+# still override per-service with a richer probe (e.g. cert-aware fetch).
 HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
-    CMD wget -qO- http://127.0.0.1:3000/api/v1/health/pdf >/dev/null 2>&1 || exit 1
+    CMD node -e "fetch('http://127.0.0.1:3000/api/v1/health/pdf').then(r=>r.json()).then(j=>process.exit(j.status==='healthy'&&j.browser&&j.browser.connected===true?0:1)).catch(()=>process.exit(1))"
 
 CMD ["sh", "-c", "./node_modules/.bin/prisma migrate deploy && node dist/src/main.js"]

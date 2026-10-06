@@ -317,7 +317,19 @@ jobs:
           exit 1
 
       - name: Smoke Test Health Endpoint
-        run: curl --fail-with-body http://localhost:3000/api/v1/health/pdf
+        # Parse the body, not just the HTTP status. /api/v1/health/pdf returns
+        # 200 OK with `{"status":"unhealthy",...}` when the Puppeteer browser
+        # failed to launch — `curl --fail` only checks the status code, so a
+        # broken browser path used to slip through CI. See Dockerfile/compose
+        # comments for the same gap closed at the container healthcheck level.
+        run: |
+          set -euo pipefail
+          body="$(curl -fsS http://localhost:3000/api/v1/health/pdf)"
+          echo "Health probe body: $body"
+          if ! echo "$body" | jq -e '.status == "healthy" and .browser.connected == true' >/dev/null; then
+            echo "Health probe reports unhealthy state — failing smoke test." >&2
+            exit 1
+          fi
 
       - name: Inspect Backend Logs on Failure
         if: failure()
