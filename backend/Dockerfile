@@ -28,8 +28,12 @@ ENV PNPM_CONFIG_PACKAGE_IMPORT_METHOD=copy
 ENV PRISMA_SKIP_POSTINSTALL_GENERATE=true
 # Puppeteer >=19 renamed PUPPETEER_SKIP_CHROMIUM_DOWNLOAD to PUPPETEER_SKIP_DOWNLOAD.
 # The lockfile pins puppeteer@25.1.0; we set both for forward/backward compat.
-# The runtime stage installs system Chromium (PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium)
-# so the bundled Chrome from puppeteer's postinstall is dead weight anyway.
+# The runtime stage installs system Chromium
+# (PUPPETEER_EXECUTABLE_PATH=/usr/lib/chromium/chromium) so the bundled Chrome
+# from puppeteer's postinstall is dead weight anyway. We point at the ELF
+# binary in /usr/lib, not /usr/bin/chromium — the latter is a Debian wrapper
+# shell script that Puppeteer 25 rejects with
+# "Browser was not found at the configured executable/path".
 ENV PUPPETEER_SKIP_DOWNLOAD=true
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 
@@ -99,7 +103,7 @@ RUN apt-get update \
  && rm -rf /var/lib/apt/lists/*
 
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/lib/chromium/chromium
 
 WORKDIR /app
 
