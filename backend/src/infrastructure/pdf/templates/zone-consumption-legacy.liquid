@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  {{> styles}}
+  {% render "styles" %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Consumo por Zonas</title>
@@ -121,24 +121,24 @@
             </tr>
         </thead>
         <tbody>
-            {{#each data}}
+            {% for item in data %}
             <tr>
-                <td>{{this.sectorNombre}}</td>
-                <td>{{this.comunidadNombre}}</td>
-                <td class="text-right">{{this.consumoTotal}}</td>
-                <td class="text-center">{{this.medidoresConLectura}}</td>
-                <td class="text-right">{{this.consumoPromedio}}</td>
-                <td class="text-center">{{this.estimadasCount}}</td>
-                <td class="text-center">{{this.medidoresSinLectura}}</td>
-                <td class="text-right">{{this.porcentajeSistema}}%</td>
+                <td>{{ item.sectorNombre }}</td>
+                <td>{{ item.comunidadNombre }}</td>
+                <td class="text-right">{{ item.consumoTotal }}</td>
+                <td class="text-center">{{ item.medidoresConLectura }}</td>
+                <td class="text-right">{{ item.consumoPromedio }}</td>
+                <td class="text-center">{{ item.estimadasCount }}</td>
+                <td class="text-center">{{ item.medidoresSinLectura }}</td>
+                <td class="text-right">{{ item.porcentajeSistema }}%</td>
             </tr>
-            {{else}}
+            {% else %}
             <tr>
                 <td colspan="8" class="text-center">
                     No se registró consumo por zona para el periodo seleccionado.
                 </td>
             </tr>
-            {{/each}}
+            {% endfor %}
             <tr class="total-row">
                 <td colspan="2" class="text-right">CONSUMO TOTAL DEL SISTEMA:</td>
                 <td class="text-right">{{kpis.consumoTotalSistema}}</td>

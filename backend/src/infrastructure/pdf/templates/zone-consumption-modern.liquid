@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Consumo por Zonas - Moderno</title>
-    {{> styles}}
-    {{> modern-styles}}
+    {% render "styles" %}
+    {% render "modern-styles" %}
     <style>
         .header-right {
             text-align: right;
@@ -240,34 +240,34 @@
                 </tr>
             </thead>
             <tbody>
-                {{#each data}}
+                {% for item in data %}
                 <tr>
-                    <td class="col-zona">{{this.sectorNombre}}</td>
-                    <td class="col-muted">{{this.comunidadNombre}}</td>
-                    <td class="text-right col-consumo">{{this.consumoTotal}}</td>
-                    <td class="text-center">{{this.medidoresConLectura}}</td>
-                    <td class="text-right">{{this.consumoPromedio}}</td>
+                    <td class="col-zona">{{ item.sectorNombre }}</td>
+                    <td class="col-muted">{{ item.comunidadNombre }}</td>
+                    <td class="text-right col-consumo">{{ item.consumoTotal }}</td>
+                    <td class="text-center">{{ item.medidoresConLectura }}</td>
+                    <td class="text-right">{{ item.consumoPromedio }}</td>
                     <td class="text-center">
-                        {{#if this.tieneEstimadas}}
-                        <span class="badge badge-info">{{this.estimadasCount}} · {{this.estimadasVolumen}} m³</span>
-                        {{else}}
+                        {% if item.tieneEstimadas %}
+                        <span class="badge badge-info">{{ item.estimadasCount }} · {{ item.estimadasVolumen }} m³</span>
+                        {% else %}
                         <span class="badge-zero">—</span>
-                        {{/if}}
+                        {% endif %}
                     </td>
                     <td class="text-center">
-                        {{#if this.tieneFaltantes}}
-                        <span class="badge badge-warn">{{this.medidoresSinLectura}}</span>
-                        {{else}}
+                        {% if item.tieneFaltantes %}
+                        <span class="badge badge-warn">{{ item.medidoresSinLectura }}</span>
+                        {% else %}
                         <span class="badge-zero">0</span>
-                        {{/if}}
+                        {% endif %}
                     </td>
-                    <td class="text-right col-muted">{{this.porcentajeSistema}}%</td>
+                    <td class="text-right col-muted">{{ item.porcentajeSistema }}%</td>
                 </tr>
-                {{else}}
+                {% else %}
                 <tr class="empty-row">
                     <td colspan="8">No se registró consumo por zona para el periodo seleccionado.</td>
                 </tr>
-                {{/each}}
+                {% endfor %}
             </tbody>
         </table>
     </div>
