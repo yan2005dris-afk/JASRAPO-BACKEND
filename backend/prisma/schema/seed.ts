@@ -13,7 +13,7 @@ import { seedUSers } from './seeds/user.seed';
 import { seedComunidades } from './seeds/comunidades.seed';
 import { seedSectores } from './seeds/sectores.seed';
 import { seedCategoriaTarifa } from './seeds/categoriaTarifa.seed';
-import { seedSecuenciaMedidor } from './seeds/secuenciaMedidor.seed';
+import { seedSecuenciaContrato } from './seeds/secuenciaContrato.seed';
 import { seedMedidores } from './seeds/medidores.seed';
 import { seedClientes } from './seeds/clientes.seed';
 import { seedContratos } from './seeds/contratos.seed';
@@ -118,7 +118,7 @@ async function main() {
   console.log('✅ Categorías de tarifa creadas.');
 
   // Secuencia de Medidores
-  await seedSecuenciaMedidor(prisma);
+  await seedSecuenciaContrato(prisma);
   console.log('✅ Secuencia de medidores inicializada.');
 
   // Medidores
@@ -131,15 +131,7 @@ async function main() {
   await seedContratos(prisma);
   console.log('✅ Contratos creados.');
 
-  await seedPeriodos(prisma);
-  console.log('✅ Períodos creados.');
-
-  await seedLecturas(prisma);
-  console.log('✅ Lecturas creadas.');
-
-  // === DATOS PARA PROBAR SP DE FACTURACIÓN ===
-  console.log('📦 Creando datos de facturación...');
-
+  // === CATÁLOGOS BASE DE FACTURACIÓN Y OPERACIONES ===
   // Catálogo de Descuentos
   await seedCatalogoDescuento(prisma);
   console.log('✅ Catálogo de descuentos creado.');
@@ -148,28 +140,29 @@ async function main() {
   await seedRubros(prisma);
   console.log('✅ Rubros creados con asignación a categorías.');
 
-  // === FACTURACIÓN ===
-  await seedFacturacion(prisma);
-  console.log('✅ Datos de facturación creados.');
-
-  // === PREFACTURAS PARA AGREEMENTS ===
-  await seedAgreementsPrefacturas(prisma);
-
-  // === CATÁLOGO DE ACTIVIDADES ===
+  // Catálogo de Actividades
   await seedTiposActividad(prisma);
+  console.log('✅ Catálogo de tipos de actividad creado.');
 
-  // === RUTAS Y ÓRDENES DE TRABAJO ===
+  await seedPeriodos(prisma);
+
+  // NOTA: Datos transaccionales y de ciclo (lecturas, facturación, prefacturas, rutas, acuerdos)
+  // se omiten intencionalmente para permitir probar el flujo operativo desde cero en la UI.
+  /*
+  await seedLecturas(prisma);
+  await seedFacturacion(prisma);
+  await seedAgreementsPrefacturas(prisma);
   await seedRoutes(prisma);
-  console.log('✅ Rutas y órdenes de trabajo creadas correctamente.');
-
-  // === AGREEMENTS ===
   await seedAgreements(prisma);
+  */
 
   // === SINCRONIZACIÓN FINAL ===
   // Esto asegura que los autoincrementales empiecen después de los IDs manuales del seed
   await syncSequences(prisma);
 
-  console.log('✅ Seed completado exitosamente.');
+  console.log(
+    '✅ Seed completado exitosamente (datos maestros limpios para pruebas operativas).',
+  );
 }
 
 main()

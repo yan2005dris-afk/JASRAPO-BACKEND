@@ -1,12 +1,31 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import Handlebars from 'handlebars';
+import { Liquid } from 'liquidjs';
 import type { InstitutionalDocumentContext } from './domain/institutional-profile.types';
 
 const templatesRoot = path.resolve(
   __dirname,
   '../infrastructure/pdf/templates',
 );
+
+const liquidEngine = new Liquid({
+  root: [templatesRoot, path.join(templatesRoot, 'partials')],
+  extname: '.liquid',
+  dynamicPartials: true,
+  strictFilters: false,
+  strictVariables: false,
+});
+
+liquidEngine.registerFilter('isEven', (a: unknown) => Number(a) % 2 === 0);
+liquidEngine.registerFilter('isOdd', (a: unknown) => Number(a) % 2 !== 0);
+
+function renderTemplate(templateName: string, data: object): string {
+  const source = fs.readFileSync(
+    path.join(templatesRoot, `${templateName}.liquid`),
+    'utf8',
+  );
+  return liquidEngine.renderSync(liquidEngine.parse(source), data);
+}
 
 function institutionalContext(
   legalIntroduction = 'Texto legal configurable de prueba',
@@ -100,12 +119,7 @@ function institutionalContext(
 }
 
 function renderPaymentAgreement(context: InstitutionalDocumentContext) {
-  const source = fs.readFileSync(
-    path.join(templatesRoot, 'payment-agreement.hbs'),
-    'utf8',
-  );
-  Handlebars.registerPartial('styles', '');
-  return Handlebars.compile(source)({
+  return renderTemplate('payment-agreement', {
     ...context,
     convenio: {
       fechaActual: '24 de agosto de 2026',
@@ -135,7 +149,7 @@ describe('Institutional document templates', () => {
 
   it('legalTextChangesDoNotRequireTemplateChanges', () => {
     const originalSource = fs.readFileSync(
-      path.join(templatesRoot, 'payment-agreement.hbs'),
+      path.join(templatesRoot, 'payment-agreement.liquid'),
       'utf8',
     );
     const first = renderPaymentAgreement(
@@ -149,7 +163,7 @@ describe('Institutional document templates', () => {
     expect(second).toContain('Segunda versión legal');
     expect(
       fs.readFileSync(
-        path.join(templatesRoot, 'payment-agreement.hbs'),
+        path.join(templatesRoot, 'payment-agreement.liquid'),
         'utf8',
       ),
     ).toBe(originalSource);
@@ -158,7 +172,7 @@ describe('Institutional document templates', () => {
   it('ninguna plantilla conserva valores institucionales heredados', () => {
     const sources = fs
       .readdirSync(templatesRoot)
-      .filter((name) => name.endsWith('.hbs'))
+      .filter((name) => name.endsWith('.liquid'))
       .map((name) => fs.readFileSync(path.join(templatesRoot, name), 'utf8'))
       .join('\n');
 
@@ -168,17 +182,8 @@ describe('Institutional document templates', () => {
   });
 
   it('acta de responsabilidad renderiza branding institucional y textos legales dinámicos', () => {
-    const source = fs.readFileSync(
-      path.join(templatesRoot, 'responsibility-agreement.hbs'),
-      'utf8',
-    );
-    Handlebars.registerPartial('styles', '');
-    Handlebars.registerHelper(
-      'math',
-      (a: number, _op: string, b: number) => a + b,
-    );
     const context = institutionalContext();
-    const html = Handlebars.compile(source)({
+    const html = renderTemplate('responsibility-agreement', {
       ...context,
       acta: {
         clienteNombre: 'JUAN PEREZ',

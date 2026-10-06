@@ -7,12 +7,6 @@ export class OperatorMeterDto {
 
   @ApiProperty({ description: 'Serie del medidor', example: 'MED-001' })
   serie: string;
-
-  @ApiPropertyOptional({ description: 'Latitud', example: -0.9677 })
-  latitud?: number;
-
-  @ApiPropertyOptional({ description: 'Longitud', example: -80.7089 })
-  longitud?: number;
 }
 
 export class OperatorInfoDto {
@@ -35,6 +29,20 @@ export class OperatorWorkOrderContractDto {
 
   @ApiProperty({ description: 'Dirección del suministro' })
   direccion: string;
+
+  @ApiPropertyOptional({
+    description: 'Latitud del predio (WGS84)',
+    example: -0.9677,
+    nullable: true,
+  })
+  latitud?: number | null;
+
+  @ApiPropertyOptional({
+    description: 'Longitud del predio (WGS84)',
+    example: -80.7089,
+    nullable: true,
+  })
+  longitud?: number | null;
 }
 
 export class OperatorWorkOrderDto {
@@ -82,8 +90,8 @@ export class OperatorRouteStopDto {
   @ApiProperty({ description: 'Longitud del punto', example: -80.7089 })
   longitud: number;
 
-  @ApiProperty({ description: 'Serie del medidor', example: 'MED-001' })
-  serie: string;
+  @ApiPropertyOptional({ description: 'Serie del medidor', example: 'MED-001' })
+  serie?: string;
 
   @ApiProperty({ description: 'Nombre completo del cliente' })
   clienteNombre: string;
@@ -135,9 +143,6 @@ export class OperatorRouteResponseDto {
   })
   sectorNombre?: string;
 
-  @ApiPropertyOptional({ description: 'Fecha planificada' })
-  fechaPlanificada?: string;
-
   @ApiPropertyOptional({ description: 'Fecha de inicio' })
   fechaInicio?: string;
 
@@ -166,9 +171,6 @@ export class OperatorRouteResponseDto {
         ? {
             medidorId: meter.medidorId.toString(),
             serie: meter.serie,
-            latitud: meter.latitud == null ? undefined : Number(meter.latitud),
-            longitud:
-              meter.longitud == null ? undefined : Number(meter.longitud),
           }
         : null;
 
@@ -183,7 +185,6 @@ export class OperatorRouteResponseDto {
       comunidadNombre: route.comunidadNombre ?? undefined,
       sectorId: route.sectorId ?? undefined,
       sectorNombre: route.sectorNombre ?? undefined,
-      fechaPlanificada: route.fechaPlanificada?.toISOString() ?? undefined,
       fechaInicio: route.fechaInicio?.toISOString() ?? undefined,
       fechaFin: route.fechaFin?.toISOString() ?? undefined,
       medidor: mapMeter(route.medidor),
@@ -206,19 +207,19 @@ export class OperatorRouteResponseDto {
               customer.razonSocial?.trim() ||
               `${customer.nombres} ${customer.apellidos}`.trim(),
             direccion: order.contrato.direccionSuministro,
+            latitud:
+              order.contrato.latitud == null
+                ? null
+                : Number(order.contrato.latitud),
+            longitud:
+              order.contrato.longitud == null
+                ? null
+                : Number(order.contrato.longitud),
           },
           medidor: order.medidor
             ? {
                 medidorId: order.medidor.medidorId.toString(),
                 serie: order.medidor.serie,
-                latitud:
-                  order.medidor.latitud == null
-                    ? undefined
-                    : Number(order.medidor.latitud),
-                longitud:
-                  order.medidor.longitud == null
-                    ? undefined
-                    : Number(order.medidor.longitud),
               }
             : null,
         };

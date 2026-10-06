@@ -23,6 +23,8 @@ export class ContractEntity {
   tieneConvenioActivo: boolean;
   creadoPor: string | null;
   comunidadId: number;
+  latitud: number | null;
+  longitud: number | null;
 
   categoriaTarifa?: ContractTariffCategoryRef | null;
   cliente?: ContractClientRef | null;

@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  {% render "styles" %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Convenio de Pago - {{institucion.nombreComercial}}</title>
+    <style>
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            background-color: #ffffff;
+            margin: 0;
+            padding: 0;
+        }
+
+        @page {
+            margin: 0;
+            size: A4 portrait;
+        }
+
+        .document-container {
+            width: 100%;
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+            box-sizing: border-box;
+            padding: 20px 40px;
+        }
+
+        /* Marca de agua simulada en el fondo */
+        .watermark {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+            opacity: 0.25; /* Transparencia ajustada para que sea visible */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .watermark img {
+            width: 85%;
+            height: 85%;
+            object-fit: contain;
+        }
+
+        /* Cabecera */
+        .header {
+            position: relative;
+            background: linear-gradient(to bottom, #dbeff8, #c4e4f3);
+            margin: 20px;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #5aa5c9;
+            z-index: 1;
+        }
+
+        /* Logos simulados */
+        .logo-left, .logo-right {
+            width: 100px;
+            height: 100px;
+            background-color: #fff;
+            border: 2px solid #888;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 10px;
+            text-align: center;
+            color: #555;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        .logo-right-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .logo-right-text {
+            font-family: Arial, sans-serif;
+            font-size: 8px;
+            color: #2b7095;
+            margin-top: 5px;
+            text-align: center;
+        }
+
+        /* Texto de cabecera */
+        .header-text {
+            flex-grow: 1;
+            text-align: center;
+            padding: 0 10px;
+        }
+
+        .header-text h1 {
+            font-size: 18px;
+            margin: 0 0 5px 0;
+            color: #333;
+        }
+
+        .header-text h2 {
+            font-size: 26px;
+            margin: 0;
+            color: #c0392b;
+            font-weight: bold;
+            font-family: Georgia, serif;
+            letter-spacing: 2px;
+        }
+
+        .header-text p {
+            margin: 3px 0;
+            font-size: 12px;
+            color: #333;
+        }
+
+        /* Contenido Principal */
+        .content {
+            position: relative;
+            z-index: 1;
+            padding: 40px 60px;
+            line-height: 1.5;
+            color: #222;
+        }
+
+        .title {
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 20px;
+            margin-bottom: 40px;
+        }
+
+        .content p {
+            text-align: justify;
+            margin-bottom: 15px;
+            font-size: 15px;
+            text-indent: 50px; /* Sangría de primera línea */
+        }
+
+        .closing {
+            margin-top: 40px;
+            font-size: 15px;
+        }
+
+        /* Firmas */
+        .signatures-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 100px;
+            padding: 0 40px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .signature-block {
+            text-align: center;
+            width: 45%;
+        }
+
+        .signature-text {
+            font-size: 15px;
+            margin: 2px 0;
+        }
+
+        /* Footer */
+        .footer {
+            position: absolute;
+            bottom: 40px;
+            left: 60px;
+            right: 60px;
+            font-family: Arial, sans-serif;
+            font-size: 13px;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .footer p {
+            margin: 0;
+        }
+        
+        .footer a {
+            color: #5aa5c9;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+<div class="document-container">
+    
+    <div class="watermark">
+        <img src="{{institucion.branding.marcaAgua.url}}" alt="Marca de agua institucional">
+    </div>
+
+    <div class="header">
+        <div class="logo-left">
+            <img src="{{institucion.branding.logo.url}}" alt="Logo institucional" style="width:100%; height:100%; object-fit:contain;">
+        </div>
+        
+        <div class="header-text">
+            <h1>{{institucion.nombreLegal}}</h1>
+            <h2>"{{institucion.nombreComercial}}"</h2>
+            {% if institucion.decretoNumero %}<p>Decreto No. {{institucion.decretoNumero}}{% if institucion.registroOficialNumero %} Reg. Ofic. No. {{institucion.registroOficialNumero}}{% endif %}{% if institucion.registroOficialFechaTexto %} {{institucion.registroOficialFechaTexto}}{% endif %}</p>{% endif %}
+            {% if institucion.fechaFundacionTexto %}<p>FUNDADA EL {{institucion.fechaFundacionTexto}}</p>{% endif %}
+            <p>R.U.C. No.: {{institucion.ruc}}</p>
+        </div>
+
+
+    </div>
+
+    <div class="content">
+        <div class="title">CONVENIO DE PAGO</div>
+
+        <p>{{institucion.textosLegales.convenioPago.introduccionOficina}} {{convenio.fechaActual}} {{institucion.textosLegales.convenioPago.compromisoUsuario}} {{convenio.numeroGuia}} {{institucion.textosLegales.convenioPago.identificacionUsuario}} {{convenio.clienteNombre}} {{institucion.textosLegales.convenioPago.cuotasMensuales}} ${{convenio.cuotaMensual}} {{institucion.textosLegales.convenioPago.inicioConvenio}} {{convenio.periodoInicio}}. {{institucion.textosLegales.convenioPago.cumplimiento}}</p>
+
+        <p>{{institucion.textosLegales.convenioPago.pagoEfectivo}} {{convenio.mesPrimerPago}} {{institucion.textosLegales.convenioPago.pagosPosteriores}} ${{convenio.deudaTotal}}.</p>
+
+        <p>{{institucion.textosLegales.convenioPago.primeraCuota}} ${{convenio.primeraCuota}}.</p>
+
+        <div class="closing">
+            {{institucion.textosLegales.convenioPago.cierre}}
+        </div>
+    </div>
+
+    <div class="signatures-container">
+        <div class="signature-block">
+            <br><br><br>
+            <div class="signature-text">Sr(a). {{convenio.clienteNombre}}</div>
+            <div class="signature-text">C.I. {{convenio.clienteCI}}</div>
+            <div class="signature-text">USUARIO</div>
+        </div>
+
+        <div class="signature-block">
+            <br><br><br>
+            <div class="signature-text">{{institucion.representantePrincipal.nombres}}</div>
+            <div class="signature-text">C.I. {{institucion.representantePrincipal.identificacion}}</div>
+            <div class="signature-text">{{institucion.representantePrincipal.cargo}}</div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>Dirección: {{institucion.direccion}}</p>
+        <p>E-mail <a href="mailto:{{institucion.correo}}">{{institucion.correo}}</a></p>
+        <p>{% for tel in institucion.telefonos %}{{ tel.etiqueta }}: {{ tel.numero }}{% unless forloop.last %}; {% endunless %}{% endfor %}</p>
+    </div>
+
+</div>
+
+</body>
+</html>

@@ -97,7 +97,22 @@ export class RefreshAccessTokenUseCase {
       throw new UnauthorizedDomainException('Refresh token replay detected');
     }
 
+    const fullName =
+      user.nombres && user.apellidos
+        ? `${user.nombres} ${user.apellidos}`
+        : user.nombres || user.apellidos || null;
+
+    const isRoleActive = user.rol && user.rol.deletedAt === null;
+
     return {
+      sub: user.usuarioId,
+      sid: sesionId,
+      nombre: fullName,
+      avatar: user.avatar,
+      email: user.email,
+      rolId: isRoleActive && user.rol ? user.rol.rolId : null,
+      nombreRol: isRoleActive ? (user.rol?.nombre ?? null) : null,
+      roles: isRoleActive && user.rol ? [user.rol.rolId] : [],
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
       accessTokenInfo: this.buildTokenInfo(tokens.accessToken),

@@ -28,8 +28,6 @@ describe('DecommissionMeterUseCase', () => {
       fechaInstalacion: new Date(),
       fechaBaja: null,
       motivo: null,
-      latitud: null,
-      longitud: null,
       createdAt: new Date(),
       updatedAt: new Date(),
       deletedAt: null,

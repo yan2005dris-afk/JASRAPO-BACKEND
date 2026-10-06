@@ -3,6 +3,7 @@ import { Test } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { CreateContractUseCase } from './create-contract.use-case';
 import { ContractRepository } from '../../domain/repositories/contract.repository';
+import { DomainValidationException } from 'src/shared/domain/exceptions/domain.exception';
 
 describe('CreateContractUseCase', () => {
   let useCase: CreateContractUseCase;
@@ -43,14 +44,13 @@ describe('CreateContractUseCase', () => {
       clienteId: '10',
       categoriaTarifaId: '3',
       medidorId: '200',
-      numeroGuia: 'GUIA-001',
       direccionSuministro: 'Av. Principal 123',
       comunidadId: '2',
     };
 
     mockContractRepository.createContractWithMeterHistory.mockResolvedValue({
       contratoId: BigInt(1),
-      estadoServicio: 'PENDIENTE_PAGO',
+      estadoServicio: 'PENDIENTE_INSPECCION',
       estadoCobranza: 'NO_APLICA',
     });
 
@@ -64,16 +64,15 @@ describe('CreateContractUseCase', () => {
       medidorId: BigInt(200),
       comunidadId: 2,
       sectorId: null,
-      numeroGuia: 'GUIA-001',
       direccionSuministro: 'Av. Principal 123',
-      estadoServicio: 'PENDIENTE_PAGO',
+      estadoServicio: 'PENDIENTE_INSPECCION',
       estadoCobranza: 'NO_APLICA',
       creadoPor: undefined,
       lecturaInicial: 0,
     });
     expect(result).toEqual({
       contratoId: BigInt(1),
-      estadoServicio: 'PENDIENTE_PAGO',
+      estadoServicio: 'PENDIENTE_INSPECCION',
       estadoCobranza: 'NO_APLICA',
     });
   });
@@ -83,7 +82,6 @@ describe('CreateContractUseCase', () => {
       clienteId: '20',
       categoriaTarifaId: '5',
       medidorId: '300',
-      numeroGuia: 'GUIA-002',
       direccionSuministro: 'Calle Secundaria 456',
       comunidadId: '3',
       sectorId: '10',
@@ -98,7 +96,7 @@ describe('CreateContractUseCase', () => {
       sector: { sectorId: 10, codigo: 'SEC-A', nombre: 'Sector A' },
     });
 
-    const result = await useCase.execute(dto);
+    const result = await useCase.execute(dto, 'admin');
 
     expect(
       mockContractRepository.createContractWithMeterHistory,
@@ -108,12 +106,13 @@ describe('CreateContractUseCase', () => {
       medidorId: BigInt(300),
       comunidadId: 3,
       sectorId: 10,
-      numeroGuia: 'GUIA-002',
       direccionSuministro: 'Calle Secundaria 456',
-      estadoServicio: 'ACTIVO',
-      estadoCobranza: 'AL_DIA',
+      estadoServicio: 'PENDIENTE_INSPECCION',
+      estadoCobranza: 'NO_APLICA',
       creadoPor: 'admin',
       lecturaInicial: 500,
+      latitud: undefined,
+      longitud: undefined,
     });
     expect(result).toEqual({
       contratoId: BigInt(2),
@@ -121,12 +120,11 @@ describe('CreateContractUseCase', () => {
     });
   });
 
-  it('uses explicit separated states without dual-writing a legacy state', async () => {
+  it('cannot bypass inspection through explicit creation states', async () => {
     const dto = {
       clienteId: '20',
       categoriaTarifaId: '5',
       medidorId: '300',
-      numeroGuia: 'GUIA-EXPLICIT',
       direccionSuministro: 'Calle Secundaria 456',
       comunidadId: '3',
       estadoServicio: 'ACTIVO' as const,
@@ -141,9 +139,82 @@ describe('CreateContractUseCase', () => {
       mockContractRepository.createContractWithMeterHistory,
     ).toHaveBeenCalledWith(
       expect.objectContaining({
-        estadoServicio: 'ACTIVO',
-        estadoCobranza: 'AL_DIA',
+        estadoServicio: 'PENDIENTE_INSPECCION',
+        estadoCobranza: 'NO_APLICA',
       }),
+    );
+  });
+
+  it('forwards coordinates to the command when present', async () => {
+    const dto = {
+      clienteId: '10',
+      categoriaTarifaId: '3',
+      medidorId: '200',
+      direccionSuministro: 'Av. Principal 123',
+      comunidadId: '2',
+      latitud: -1.8021,
+      longitud: -80.7554,
+    };
+
+    mockContractRepository.createContractWithMeterHistory.mockResolvedValue({
+      contratoId: BigInt(1),
+    });
+
+    await useCase.execute(dto);
+
+    expect(
+      mockContractRepository.createContractWithMeterHistory,
+    ).toHaveBeenCalledWith(
+      expect.objectContaining({
+        latitud: -1.8021,
+        longitud: -80.7554,
+      }),
+    );
+  });
+
+  it('rejects coordinates outside the service area without persisting', async () => {
+    const dto = {
+      clienteId: '10',
+      categoriaTarifaId: '3',
+      medidorId: '200',
+      direccionSuministro: 'Av. Principal 123',
+      comunidadId: '2',
+      latitud: -1.8,
+      longitud: -80.8,
+    };
+
+    const result = useCase.execute(dto);
+
+    await expect(result).rejects.toBeInstanceOf(DomainValidationException);
+    await expect(result).rejects.toThrow(
+      'La ubicación seleccionada está fuera del área de servicio de la Junta (parroquia Manglaralto)',
+    );
+    expect(
+      mockContractRepository.createContractWithMeterHistory,
+    ).not.toHaveBeenCalled();
+  });
+
+  it('allows creating a contract with null coordinates', async () => {
+    const dto = {
+      clienteId: '10',
+      categoriaTarifaId: '3',
+      medidorId: '200',
+      direccionSuministro: 'Av. Principal 123',
+      comunidadId: '2',
+      latitud: null,
+      longitud: null,
+    };
+
+    mockContractRepository.createContractWithMeterHistory.mockResolvedValue({
+      contratoId: BigInt(1),
+    });
+
+    await useCase.execute(dto);
+
+    expect(
+      mockContractRepository.createContractWithMeterHistory,
+    ).toHaveBeenCalledWith(
+      expect.objectContaining({ latitud: null, longitud: null }),
     );
   });
 
@@ -152,7 +223,6 @@ describe('CreateContractUseCase', () => {
       clienteId: '999',
       categoriaTarifaId: '3',
       medidorId: '200',
-      numeroGuia: 'GUIA-003',
       direccionSuministro: 'Dir',
       comunidadId: '1',
     };
@@ -169,7 +239,6 @@ describe('CreateContractUseCase', () => {
       clienteId: '10',
       categoriaTarifaId: '3',
       medidorId: '999',
-      numeroGuia: 'GUIA-004',
       direccionSuministro: 'Dir',
       comunidadId: '1',
     };
@@ -186,7 +255,6 @@ describe('CreateContractUseCase', () => {
       clienteId: '10',
       categoriaTarifaId: '999',
       medidorId: '200',
-      numeroGuia: 'GUIA-005',
       direccionSuministro: 'Dir',
       comunidadId: '1',
     };
@@ -205,7 +273,6 @@ describe('CreateContractUseCase', () => {
       clienteId: '10',
       categoriaTarifaId: '3',
       medidorId: '200',
-      numeroGuia: 'GUIA-006',
       direccionSuministro: 'Dir',
       comunidadId: '999',
     };
@@ -224,7 +291,6 @@ describe('CreateContractUseCase', () => {
       clienteId: '10',
       categoriaTarifaId: '3',
       medidorId: '200',
-      numeroGuia: 'GUIA-007',
       direccionSuministro: 'Dir',
       comunidadId: '1',
       sectorId: '999',

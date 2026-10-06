@@ -4,6 +4,8 @@ import { FindAllPeriodsUseCase } from './use-cases/find-all-periods.use-case';
 import { FindOnePeriodUseCase } from './use-cases/find-one-period.use-case';
 import { UpdatePeriodUseCase } from './use-cases/update-period.use-case';
 import { DeletePeriodUseCase } from './use-cases/delete-period.use-case';
+import { GenerateAnnualPeriodsUseCase } from './use-cases/generate-annual-periods.use-case';
+import { GenerateAnnualPeriodsDto } from '../interfaces/dto/generate-annual-periods.dto';
 import type {
   CreatePeriodData,
   UpdatePeriodData,
@@ -21,10 +23,17 @@ export class PeriodsService {
     private readonly findOnePeriodUseCase: FindOnePeriodUseCase,
     private readonly updatePeriodUseCase: UpdatePeriodUseCase,
     private readonly deletePeriodUseCase: DeletePeriodUseCase,
+    private readonly generateAnnualPeriodsUseCase: GenerateAnnualPeriodsUseCase,
   ) {}
 
   async create(data: CreatePeriodData): Promise<PeriodEntity> {
     return this.createPeriodUseCase.execute(data);
+  }
+
+  async generateAnnualPeriods(
+    dto: GenerateAnnualPeriodsDto,
+  ): Promise<PeriodEntity[]> {
+    return this.generateAnnualPeriodsUseCase.execute(dto);
   }
 
   async findAll(

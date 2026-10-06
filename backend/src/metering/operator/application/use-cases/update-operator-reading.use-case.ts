@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { EstadoLectura } from 'src/shared/enums';
+import { EstadoLectura, EstadoRuta } from 'src/shared/enums';
 import {
   EntityNotFoundException,
   ForbiddenDomainException,
@@ -59,17 +59,37 @@ export class UpdateOperatorReadingUseCase {
     }
 
     // 4. Verificar si la lectura está asignada explícitamente a una orden de trabajo del operario
-    const hasWorkOrder = lectura.ordenesTrabajo?.some(
+    const matchingOrder = lectura.ordenesTrabajo?.find(
       (ot) =>
         ot.ruta?.operarioId === operarioId &&
         ot.ruta?.periodoId === activePeriod.periodoId &&
         rutas.some((ruta) => ruta.rutaId === ot.rutaId),
     );
 
-    if (!hasWorkOrder) {
+    if (!matchingOrder) {
       throw new ForbiddenDomainException(
         'Esta lectura no está asignada a una orden de trabajo de tu ruta activa',
       );
+    }
+
+    // 5. Si la ruta asociada se encuentra en estado PENDIENTE, transicionarla a EN_PROGRESO en el primer registro
+    const currentRuta = rutas.find((r) => r.rutaId === matchingOrder.rutaId);
+    if (
+      matchingOrder.ruta?.estado === EstadoRuta.PENDIENTE ||
+      currentRuta?.estado === EstadoRuta.PENDIENTE
+    ) {
+      try {
+        await this.operatorRepository.updateRouteState(
+          matchingOrder.rutaId,
+          {
+            estado: EstadoRuta.EN_PROGRESO,
+            fechaInicio: new Date(),
+          },
+          EstadoRuta.PENDIENTE,
+        );
+      } catch {
+        // Ignorar si ya fue transicionada concurrentemente
+      }
     }
 
     // 6. Validar que la lectura esté en un estado modificable por el operador

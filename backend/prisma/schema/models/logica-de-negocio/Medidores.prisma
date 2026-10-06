@@ -8,9 +8,8 @@ enum EstadoMedidor {
 
 model Medidores {
   medidorId        BigInt               @id @default(autoincrement()) @map("medidor_id")
-  /// Código institucional correlativo (p. ej. MED-000123). Lo asigna el sistema
-  /// desde SecuenciaMedidor; es opcional porque los medidores anteriores a la
-  /// secuencia se rellenaron por migración.
+  /// Código institucional legado; los medidores nuevos se identifican por su
+  /// serie física y dejan este campo sin valor.
   codigo           String?              @unique @map("codigo")
   marca            String               @map("marca")
   modelo           String               @map("modelo")
@@ -22,8 +21,6 @@ model Medidores {
   createdAt        DateTime             @default(now()) @map("creado_en")
   updatedAt        DateTime             @updatedAt @map("actualizado_en")
   deletedAt        DateTime?            @map("borrado_en")
-  latitud          Decimal?             @map("latitud") @db.Decimal(10, 8)
-  longitud         Decimal?             @map("longitud") @db.Decimal(11, 8)
   historial        HistorialMedidores[]
   lecturas         Lecturas[]
   ordenesTrabajo   OrdenesTrabajo[]

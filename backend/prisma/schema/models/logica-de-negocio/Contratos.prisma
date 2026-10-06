@@ -6,7 +6,9 @@ model Contratos {
   numeroGuia          String               @unique @map("numero_guia")
   fechaInicio         DateTime             @default(now()) @map("fecha_inicio")
   direccionSuministro String               @map("direccion_suministro")
-  estadoServicio      EstadoServicioContrato @default(PENDIENTE_PAGO) @map("estado_servicio")
+  latitud             Decimal?             @map("latitud") @db.Decimal(10, 8)
+  longitud            Decimal?             @map("longitud") @db.Decimal(11, 8)
+  estadoServicio      EstadoServicioContrato @default(PENDIENTE_INSPECCION) @map("estado_servicio")
   estadoCobranza      EstadoCobranzaContrato @default(NO_APLICA) @map("estado_cobranza")
   createdAt           DateTime             @default(now()) @map("creado_en")
   updatedAt           DateTime             @updatedAt @map("actualizado_en")
@@ -31,6 +33,8 @@ model Contratos {
 }
 
 enum EstadoServicioContrato {
+  PENDIENTE_INSPECCION
+  RECHAZADO
   PENDIENTE_PAGO
   PENDIENTE_INSTALACION
   ACTIVO

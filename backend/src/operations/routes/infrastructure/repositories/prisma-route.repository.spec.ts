@@ -49,7 +49,6 @@ describe('PrismaRouteRepository', () => {
     sectorId: null,
     periodoId: 1,
     estado: 'PENDIENTE',
-    fechaPlanificada: new Date('2026-01-01'),
     fechaInicio: null,
     fechaFin: null,
     createdAt: new Date('2026-01-01'),

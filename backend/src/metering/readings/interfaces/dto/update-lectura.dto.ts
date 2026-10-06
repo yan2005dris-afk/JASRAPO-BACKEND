@@ -14,7 +14,6 @@ export class ActualizarLecturaDto {
   @IsOptional() @IsNumber() consumoCalculado?: number;
   @IsOptional() medidorId?: string | number | bigint;
   @IsOptional() @IsString() @IsNotEmptyString() descripcionAnomalia?: string;
-  @IsOptional() @IsBoolean() lecturaInicial?: boolean;
   @IsOptional() @IsNumber() periodoId?: number;
   @IsOptional() @IsString() estado?: string;
   /** RustFS object key persisted on the linked work order evidence. */

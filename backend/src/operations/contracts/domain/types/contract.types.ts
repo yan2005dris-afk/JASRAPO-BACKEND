@@ -29,13 +29,14 @@ export interface CreateContractData {
   creadoPor?: string | null;
   comunidadId: number;
   sectorId?: number | null;
+  latitud?: number | null;
+  longitud?: number | null;
 }
 
 export interface CreateContractWithMeterCommand {
   clienteId: bigint;
   categoriaTarifaId: number;
   medidorId: bigint;
-  numeroGuia: string;
   direccionSuministro: string;
   estadoServicio: EstadoServicioContrato;
   estadoCobranza: EstadoCobranzaContrato;
@@ -43,9 +44,13 @@ export interface CreateContractWithMeterCommand {
   comunidadId: number;
   sectorId: number | null;
   lecturaInicial: number;
+  latitud?: number | null;
+  longitud?: number | null;
 }
 
-export type UpdateContractData = Partial<CreateContractData> & {
+export type UpdateContractData = Partial<
+  Omit<CreateContractData, 'numeroGuia'>
+> & {
   medidorId?: bigint;
   lecturaInicial?: number;
 };

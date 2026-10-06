@@ -18,6 +18,7 @@ import { buildPdfFileName } from 'src/infrastructure/pdf/utils/pdf-format.utils'
 import { FilterContractsDto } from '../dto/filter-contracts.dto';
 import { AssignInstallationRouteDto } from '../dto/assign-installation-route.dto';
 import { ContractResponseDto } from '../dto/contract-response.dto';
+import { ServiceAreaResponseDto } from '../dto/service-area-response.dto';
 import { RouteResponseDto } from '../../../routes/interfaces/dto/route-response.dto';
 import {
   ApiTags,
@@ -32,6 +33,8 @@ import { RequiredPermission } from 'src/infrastructure/common/decorators/require
 import { ApiPaginatedResponse } from 'src/infrastructure/common/decorators/api-paginated-response.decorator';
 import { PaginationMetaDto } from 'src/infrastructure/common/dtos/pagination-meta.dto';
 import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
+import { CurrentUser } from 'src/identity/auth/interfaces/http/decorators/current-user.decorator';
+import type { JwtPayload } from 'src/identity/auth/application/types/jwt.types';
 
 @ApiTags('contracts')
 @ApiBearerAuth()
@@ -45,12 +48,12 @@ export class ContratoMedidorController {
   @ApiOperation({
     summary: 'Crear contrato',
     description:
-      'Crea un nuevo contrato con medidor en una transacción. Requiere clienteId, categoriaTarifaId, medidorId, numeroGuia, direccionSuministro, comunidadId obligatorios.',
+      'Crea un nuevo contrato con medidor en una transacción. La guía se genera automáticamente.',
   })
   @ApiBody({
     type: CrearContratoMedidorDto,
     description:
-      'Datos del contrato (clienteId, medidorId, categoriaTarifaId, numeroGuia, direccionSuministro, comunidadId obligatorios)',
+      'Datos del contrato (clienteId, medidorId, categoriaTarifaId, direccionSuministro y comunidadId)',
   })
   @ApiResponse({
     status: 201,
@@ -64,8 +67,12 @@ export class ContratoMedidorController {
   @Post()
   async crear(
     @Body() createDto: CrearContratoMedidorDto,
+    @CurrentUser() user: JwtPayload,
   ): Promise<ContractResponseDto> {
-    const result = await this.contratoMedidorService.crearContrato(createDto);
+    const result = await this.contratoMedidorService.crearContrato(
+      createDto,
+      user.rol,
+    );
     return ContractResponseDto.fromEntity(result);
   }
 
@@ -85,6 +92,25 @@ export class ContratoMedidorController {
       data: ContractResponseDto.fromEntityList(result.data),
       meta: result.meta,
     };
+  }
+
+  @ApiOperation({
+    summary: 'Obtener área de servicio',
+    description:
+      'Retorna el perímetro (GeoJSON Polygon) dentro del cual deben ubicarse las coordenadas de los contratos',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Área de servicio de la Junta',
+    type: ServiceAreaResponseDto,
+  })
+  @ApiResponse({ status: 401, description: 'No autorizado' })
+  @RequiredPermission('contracts', 'read')
+  @Get('service-area')
+  getServiceArea(): ServiceAreaResponseDto {
+    return ServiceAreaResponseDto.fromDomain(
+      this.contratoMedidorService.getServiceArea(),
+    );
   }
 
   @ApiOperation({
@@ -205,7 +231,7 @@ export class ContratoMedidorController {
   @ApiOperation({
     summary: 'Asignar contrato a ruta de instalación',
     description:
-      'Asigna un contrato en estado PENDIENTE_INSTALACION a una ruta de instalacion. Si no se pasa routeId, crea una nueva ruta INSTALACION sin operario. Si se pasa routeId, valida que la ruta destino sea INSTALACION y este en PENDIENTE. En ambos casos crea la orden_trabajo correspondiente.',
+      'Asigna la orden de instalaci\u00f3n pendiente del contrato a una ruta INSTALACION. Sin routeId reutiliza su ruta actual. La operaci\u00f3n es transaccional y no duplica la orden',
   })
   @ApiResponse({
     status: 200,

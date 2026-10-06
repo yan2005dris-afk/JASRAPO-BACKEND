@@ -18,6 +18,7 @@ describe('CreateRouteUseCase', () => {
     findPeriodo: jest.fn(),
     findMedidor: jest.fn(),
     findOverlappingRoutes: jest.fn(),
+    initializeMonthlyReadings: jest.fn().mockResolvedValue(0),
     create: jest.fn(),
   };
 
@@ -164,7 +165,6 @@ describe('CreateRouteUseCase', () => {
         comunidadId: 1,
         periodoId: 1,
         estado: 'PENDIENTE',
-        fechaPlanificada: null,
         fechaInicio: null,
         fechaFin: null,
       }),
@@ -182,7 +182,6 @@ describe('CreateRouteUseCase', () => {
       1,
       1,
       undefined,
-      null,
       undefined,
     );
   });
@@ -210,7 +209,6 @@ describe('CreateRouteUseCase', () => {
         comunidadId: 1,
         periodoId: 1,
         estado: 'PENDIENTE',
-        fechaPlanificada: null,
         fechaInicio: null,
         fechaFin: null,
       }),
@@ -229,7 +227,6 @@ describe('CreateRouteUseCase', () => {
       1,
       1,
       2,
-      null,
       undefined,
     );
   });
@@ -259,7 +256,6 @@ describe('CreateRouteUseCase', () => {
       periodoId: 1,
       sectorId: 3,
       estado: 'PENDIENTE',
-      fechaPlanificada: null,
       fechaInicio: null,
       fechaFin: null,
     });
@@ -278,7 +274,6 @@ describe('CreateRouteUseCase', () => {
       1,
       1,
       3,
-      null,
       'LECTURA',
     );
     expect(mockRouteRepository.create).toHaveBeenCalledWith(
@@ -307,7 +302,6 @@ describe('CreateRouteUseCase', () => {
       tipoRuta: 'LECTURA',
       periodoId: 1,
       estado: 'PENDIENTE',
-      fechaPlanificada: null,
       fechaInicio: null,
       fechaFin: null,
     });
@@ -345,7 +339,6 @@ describe('CreateRouteUseCase', () => {
       tipoRuta: 'LECTURA',
       periodoId: 5,
       estado: 'PENDIENTE',
-      fechaPlanificada: null,
       fechaInicio: null,
       fechaFin: null,
     });
@@ -384,7 +377,6 @@ describe('CreateRouteUseCase', () => {
       tipoRuta: 'INSTALACION',
       periodoId: 1,
       estado: 'PENDIENTE',
-      fechaPlanificada: null,
       fechaInicio: null,
       fechaFin: null,
     });
@@ -423,7 +415,6 @@ describe('CreateRouteUseCase', () => {
       tipoRuta: 'INSPECCION',
       periodoId: 1,
       estado: 'PENDIENTE',
-      fechaPlanificada: null,
       fechaInicio: null,
       fechaFin: null,
     });
@@ -460,7 +451,6 @@ describe('CreateRouteUseCase', () => {
       tipoRuta: 'LECTURA',
       periodoId: 1,
       estado: 'PENDIENTE',
-      fechaPlanificada: null,
       fechaInicio: null,
       fechaFin: null,
     });

@@ -21,13 +21,18 @@ export async function seedRoutes(prisma: PrismaClient) {
 
   const operadores = await prisma.usuarios.findMany({
     where: { rol: { nombre: 'operadores' } },
-    select: { usuarioId: true },
+    orderBy: { usuarioId: 'asc' },
+    select: { usuarioId: true, email: true },
   });
 
   if (operadores.length === 0) {
     console.log('⚠️  No operators found — skipping routes seed.');
     return { rutasCreadas: 0, lecturasInicializadas: 0 };
   }
+
+  const pedroSanchez =
+    operadores.find((op) => op.email === 'operadores@jasrapo.com') ??
+    operadores[0];
 
   // Group active contracts by comunidad+sector to derive TOMA_LECTURA zones
   // Keep the development dataset ready for manual operator testing on every seed run.
@@ -131,6 +136,11 @@ export async function seedRoutes(prisma: PrismaClient) {
         },
       });
       rutasCount++;
+    } else {
+      await prisma.rutas.update({
+        where: { rutaId: createdRuta.rutaId },
+        data: { operarioId },
+      });
     }
 
     // Initialize readings and linked ordenesTrabajo per meter for the active period
@@ -162,7 +172,6 @@ export async function seedRoutes(prisma: PrismaClient) {
             lecturaActual: 0,
             consumoCalculado: 0,
             estado: 'PENDIENTE',
-            lecturaInicial: prevLectura == null,
           },
         });
         currentLecturaId = newLectura.lecturaId;
@@ -240,35 +249,59 @@ export async function seedRoutes(prisma: PrismaClient) {
       const assignedMedidorId =
         targetContrato.historialMedidores[0]?.medidorId ?? null;
 
-      const ruta = await prisma.rutas.create({
-        data: {
+      // Asignar al operario principal Pedro Sánchez para permitir probar todos los flujos
+      const operarioId = pedroSanchez.usuarioId;
+
+      const existingWorkRuta = await prisma.rutas.findFirst({
+        where: {
           nombre: def.nombre,
-          tipoActividadId: tipoActividadIdByCode.get(def.tipo)!,
-          operarioId: operadores[i % operadores.length].usuarioId,
-          comunidadId: targetContrato.comunidadId,
-          sectorId: targetContrato.sectorId,
-          // FIX: asignar al mismo período activo que las rutas TOMA_LECTURA.
-          // Sin esto, las rutas de INSTALACION/RECONEXION/INSPECCION quedan
-          // huérfanas (periodo_id NULL) y el backend las excluye del GET /operator/routes
-          // porque filtra por WHERE periodoId = periodoActivo.
           periodoId: periodo.periodoId,
-          estado: def.estado,
-          fechaPlanificada: new Date(Date.UTC(2026, 7, 20, 9, 0, 0)),
+          deletedAt: null,
+        },
+        select: { rutaId: true },
+      });
+
+      let ruta = existingWorkRuta;
+      if (!ruta) {
+        ruta = await prisma.rutas.create({
+          data: {
+            nombre: def.nombre,
+            tipoActividadId: tipoActividadIdByCode.get(def.tipo)!,
+            operarioId,
+            comunidadId: targetContrato.comunidadId,
+            sectorId: targetContrato.sectorId,
+            periodoId: periodo.periodoId,
+            estado: def.estado,
+          },
+        });
+        rutasCount++;
+      } else {
+        await prisma.rutas.update({
+          where: { rutaId: ruta.rutaId },
+          data: { operarioId },
+        });
+      }
+
+      const existingOT = await prisma.ordenesTrabajo.findFirst({
+        where: {
+          rutaId: ruta.rutaId,
+          contratoId: targetContrato.contratoId,
         },
       });
 
-      await prisma.ordenesTrabajo.create({
-        data: {
-          rutaId: ruta.rutaId,
-          contratoId: targetContrato.contratoId,
-          medidorId: assignedMedidorId,
-          estado: 'PENDIENTE',
-          ordenVisita: 1,
-          resultadoObservacion: null,
-          completadoEn: null,
-        },
-      });
-      rutasCount++;
+      if (!existingOT) {
+        await prisma.ordenesTrabajo.create({
+          data: {
+            rutaId: ruta.rutaId,
+            contratoId: targetContrato.contratoId,
+            medidorId: assignedMedidorId,
+            estado: 'PENDIENTE',
+            ordenVisita: 1,
+            resultadoObservacion: null,
+            completadoEn: null,
+          },
+        });
+      }
     }
   }
 

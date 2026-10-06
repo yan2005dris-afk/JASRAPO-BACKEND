@@ -42,9 +42,15 @@ const routeOperarioSelect = {
 const routeMedidorSelect = {
   medidorId: true,
   serie: true,
+} satisfies Prisma.MedidoresSelect;
+
+const contractCoordinatesSelect = {
   latitud: true,
   longitud: true,
-} satisfies Prisma.MedidoresSelect;
+} satisfies Prisma.ContratosSelect;
+
+const toCoordinate = (value: Prisma.Decimal | null): number | null =>
+  value == null ? null : Number(value);
 
 const operatorRouteInclude = {
   tipoActividad: { select: { codigo: true } },
@@ -59,6 +65,7 @@ const operatorRouteInclude = {
         select: {
           numeroGuia: true,
           direccionSuministro: true,
+          ...contractCoordinatesSelect,
           cliente: {
             select: {
               nombres: true,
@@ -138,6 +145,7 @@ export class PrismaOperatorRepository extends OperatorRepository {
         rutaId: true,
         comunidadId: true,
         sectorId: true,
+        estado: true,
       },
     });
   }
@@ -167,7 +175,6 @@ export class PrismaOperatorRepository extends OperatorRepository {
         consumoCalculado: true,
         descripcionAnomalia: true,
         fechaValidacion: true,
-        lecturaInicial: true,
         periodoId: true,
         estado: true,
         medidor: {
@@ -247,8 +254,6 @@ export class PrismaOperatorRepository extends OperatorRepository {
         fechaInstalacion: true,
         fechaBaja: true,
         motivo: true,
-        latitud: true,
-        longitud: true,
         createdAt: true,
         updatedAt: true,
         deletedAt: true,
@@ -274,7 +279,7 @@ export class PrismaOperatorRepository extends OperatorRepository {
         },
       },
     });
-    return result as unknown as MeterWithContractDetail[];
+    return result;
   }
 
   async findReadingWithDetails(id: bigint): Promise<ReadingWithDetails | null> {
@@ -292,6 +297,7 @@ export class PrismaOperatorRepository extends OperatorRepository {
               select: {
                 operarioId: true,
                 periodoId: true,
+                estado: true,
               },
             },
           },
@@ -368,6 +374,7 @@ export class PrismaOperatorRepository extends OperatorRepository {
         take: limit + 1,
         include: {
           operario: { select: routeOperarioSelect },
+          tipoActividad: { select: { codigo: true } },
           comunidad: { select: { nombre: true } },
           sector: { select: { nombre: true } },
           ordenesTrabajo: false,
@@ -377,6 +384,7 @@ export class PrismaOperatorRepository extends OperatorRepository {
     ]);
     const pageItems = items.slice(0, limit).map((route: any) => ({
       ...route,
+      tipoRuta: route.tipoActividad.codigo,
       comunidadNombre: route.comunidad?.nombre ?? null,
       sectorNombre: route.sector?.nombre ?? null,
       ordenesTrabajo: [],
@@ -417,6 +425,7 @@ export class PrismaOperatorRepository extends OperatorRepository {
             select: {
               numeroGuia: true,
               direccionSuministro: true,
+              ...contractCoordinatesSelect,
               cliente: {
                 select: { nombres: true, apellidos: true, razonSocial: true },
               },
@@ -430,9 +439,9 @@ export class PrismaOperatorRepository extends OperatorRepository {
     ]);
     return this.page(
       items.slice(0, limit).map((item) => ({
-        ...item,
+        ...this.toOperatorWorkOrder(item),
         tipoActividad: item.ruta.tipoActividad.codigo,
-      })) as OperatorWorkOrder[],
+      })),
       total,
       items.length > limit,
       'ordenTrabajoId',
@@ -471,8 +480,6 @@ export class PrismaOperatorRepository extends OperatorRepository {
           fechaInstalacion: true,
           fechaBaja: true,
           motivo: true,
-          latitud: true,
-          longitud: true,
           createdAt: true,
           updatedAt: true,
           deletedAt: true,
@@ -496,7 +503,7 @@ export class PrismaOperatorRepository extends OperatorRepository {
       this.prisma.medidores.count({ where }),
     ]);
     return this.page(
-      items.slice(0, limit) as MeterWithContractDetail[],
+      items.slice(0, limit),
       total,
       items.length > limit,
       'medidorId',
@@ -534,7 +541,6 @@ export class PrismaOperatorRepository extends OperatorRepository {
           consumoCalculado: true,
           descripcionAnomalia: true,
           fechaValidacion: true,
-          lecturaInicial: true,
           periodoId: true,
           estado: true,
           updatedAt: true,
@@ -841,28 +847,56 @@ export class PrismaOperatorRepository extends OperatorRepository {
     );
   }
 
+  private toOperatorWorkOrder<
+    T extends {
+      contrato: {
+        latitud: Prisma.Decimal | null;
+        longitud: Prisma.Decimal | null;
+        [key: string]: any;
+      };
+      medidor: { medidorId: bigint; serie: string } | null;
+      ruta?: {
+        tipoActividad?: { codigo: string };
+      };
+    },
+  >(order: T, routeTipoActividad?: string) {
+    const { latitud, longitud, ...contratoRest } = order.contrato;
+    const tipoActividad =
+      (order as any).tipoActividad ??
+      order.ruta?.tipoActividad?.codigo ??
+      routeTipoActividad ??
+      'LECTURA';
+    return {
+      ...order,
+      tipoActividad,
+      contrato: {
+        ...contratoRest,
+        latitud: toCoordinate(latitud),
+        longitud: toCoordinate(longitud),
+      },
+      medidor: order.medidor
+        ? {
+            medidorId: order.medidor.medidorId,
+            serie: order.medidor.serie,
+          }
+        : null,
+    };
+  }
+
   private toOperatorRoute(
     route: Prisma.RutasGetPayload<{ include: typeof operatorRouteInclude }>,
   ): OperatorRoute {
-    const ordenesTrabajo = route.ordenesTrabajo.map((order) => ({
-      ...order,
-      medidor: order.medidor
-        ? {
-            ...order.medidor,
-            latitud:
-              order.medidor.latitud == null
-                ? null
-                : Number(order.medidor.latitud),
-            longitud:
-              order.medidor.longitud == null
-                ? null
-                : Number(order.medidor.longitud),
-          }
-        : null,
-    }));
+    const routeTipoActividad =
+      route.tipoActividad?.codigo ?? (route as any).tipoRuta ?? 'LECTURA';
 
-    const paradas = ordenesTrabajo.flatMap((order) => {
-      if (order.medidor?.latitud == null || order.medidor.longitud == null) {
+    const ordenesTrabajo = route.ordenesTrabajo.map((order) =>
+      this.toOperatorWorkOrder(order, routeTipoActividad),
+    );
+
+    const paradas = route.ordenesTrabajo.flatMap((order) => {
+      const latitud = toCoordinate(order.contrato.latitud);
+      const longitud = toCoordinate(order.contrato.longitud);
+      if (latitud == null || longitud == null) {
         return [];
       }
 
@@ -874,11 +908,12 @@ export class PrismaOperatorRepository extends OperatorRepository {
       return [
         {
           ordenTrabajoId: order.ordenTrabajoId,
-          latitud: order.medidor.latitud,
-          longitud: order.medidor.longitud,
-          serie: order.medidor.serie,
+          latitud,
+          longitud,
+          serie: order.medidor?.serie,
           clienteNombre,
-          tipoActividad: route.tipoActividad.codigo,
+          tipoActividad:
+            route.tipoActividad?.codigo ?? (route as any).tipoRuta ?? 'LECTURA',
           estado: order.estado,
           direccionSuministro: order.contrato.direccionSuministro,
         },
@@ -887,8 +922,10 @@ export class PrismaOperatorRepository extends OperatorRepository {
 
     return {
       ...route,
-      comunidadNombre: route.comunidad?.nombre ?? null,
-      sectorNombre: route.sector?.nombre ?? null,
+      tipoRuta:
+        route.tipoActividad?.codigo ?? (route as any).tipoRuta ?? 'LECTURA',
+      comunidadNombre: route.comunidad?.nombre ?? undefined,
+      sectorNombre: route.sector?.nombre ?? undefined,
       ordenesTrabajo,
       paradas,
     } as unknown as OperatorRoute;

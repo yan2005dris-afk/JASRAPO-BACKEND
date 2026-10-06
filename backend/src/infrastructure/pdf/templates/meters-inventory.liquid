@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Inventario de Medidores</title>
+  {% render "styles" %}
+  {% render "modern-styles" %}
+  <style>
+    .kpi-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .kpi-card {
+      flex: 1;
+      border: 1px solid var(--border-color);
+      border-left: 3px solid var(--brand-main);
+      border-radius: 4px;
+      padding: 8px 10px;
+      background-color: var(--brand-light);
+    }
+    .kpi-label {
+      font-size: 8.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      font-weight: 700;
+      margin: 0;
+    }
+    .kpi-value {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--brand-dark);
+      margin: 2px 0 0 0;
+    }
+    .meter-badge {
+      display: inline-block;
+      padding: 3px 8px;
+      font-size: 8px;
+      font-weight: 700;
+      text-transform: uppercase;
+      border-radius: 4px;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+      background-color: #e2e8f0;
+      color: #475569;
+    }
+    .badge-instalado {
+      background-color: #dcfce7;
+      color: #15803d;
+    }
+    .badge-bodega {
+      background-color: #dbeafe;
+      color: #1d4ed8;
+    }
+    .badge-danado {
+      background-color: #fee2e2;
+      color: #b91c1c;
+    }
+    .meter-serie {
+      font-family: monospace;
+      font-weight: 700;
+      color: var(--brand-dark);
+    }
+    .empty-row {
+      text-align: center;
+      color: var(--text-muted);
+      font-style: italic;
+      padding: 16px 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="page-container">
+    <div class="header-table">
+      <div class="header-left">
+        <div class="logo-container">
+          <img src="{{institucion.branding.logo.url}}" alt="Logo institucional">
+        </div>
+        <div>
+          <div class="brand-title">{{institucion.siglas}}</div>
+          <div class="brand-subtitle">{{institucion.nombreLegal}}</div>
+          <div class="report-title-main" style="margin-top: 8px;">{{reporte.titulo}}</div>
+          <div class="report-meta-text">Fecha de emisión: {{reporte.fechaEmision}}</div>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="total-label-sm">Total medidores</div>
+        <div class="total-amount-lg">{{reporte.total}}</div>
+        <div class="report-meta-text" style="margin-top: 4px;">{{reporte.filtrosAplicados}}</div>
+      </div>
+    </div>
+
+    <div class="kpi-row">
+      {% for kpi in reporte.kpis %}
+      <div class="kpi-card">
+        <p class="kpi-label">{{ kpi.label }}</p>
+        <p class="kpi-value">{{ medidor.value }}</p>
+      </div>
+      {% endfor %}
+    </div>
+
+    <table class="modern-table" style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th style="width: 28px;">#</th>
+          <th style="width: 110px;">Serie</th>
+          <th style="width: 110px;">Marca</th>
+          <th style="width: 110px;">Modelo</th>
+          <th style="width: 92px; text-align: center;">Estado</th>
+          <th style="width: 70px;">Contrato</th>
+          <th>Cliente asignado</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for medidor in reporte.medidores %}
+        <tr>
+          <td style="color: var(--text-light); font-size: 8px;">{{ forloop.index }}</td>
+          <td class="meter-serie">{{ medidor.serie }}</td>
+          <td>{{ medidor.marca }}</td>
+          <td style="font-size: 8.5px; color: var(--text-muted);">{{ medidor.modelo }}</td>
+          <td style="text-align: center;">
+            <span class="meter-badge {% if medidor.estado == 'INSTALADO' %}badge-instalado{% endif %}{% if medidor.estado == 'BODEGA' %}badge-bodega{% endif %}{% if medidor.estado == 'DANADO' %}badge-danado{% endif %}">
+              {{ medidor.estadoLabel }}
+            </span>
+          </td>
+          <td style="font-size: 8.5px;">{{ medidor.contrato }}</td>
+          <td style="font-weight: 600; color: var(--brand-dark);">{{ medidor.cliente }}</td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="7" class="empty-row">No se encontraron medidores con los filtros aplicados.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <div class="footer-note" style="margin-top: 24px;">
+      Documento generado automáticamente por {{institucion.siglas}} Cloud Management System · {{reporte.fechaEmision}}
+    </div>
+  </div>
+</body>
+</html>

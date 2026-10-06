@@ -9,7 +9,6 @@ export class UpdateRouteDto extends PartialType(
     'nombre',
     'descripcion',
     'operarioId',
-    'fechaPlanificada',
     'periodoId',
   ] as const),
 ) {

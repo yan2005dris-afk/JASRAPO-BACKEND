@@ -17,6 +17,8 @@ import type {
 } from '../../domain/types/contract.types';
 import { ContractMapper } from '../mappers/contract.mapper';
 import { ContractState } from '../../domain/contract-state';
+import { ensureContractWorkOrder } from '../contract-work-order';
+import { ContractGuideGeneratorService } from '../services/contract-guide-generator.service';
 import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
 import {
   paginate,
@@ -59,7 +61,10 @@ export type ContractRecord = Prisma.ContratosGetPayload<{
 export class PrismaContractRepository implements ContractRepository {
   private readonly defaultInclude = contractDefaultInclude;
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly contractGuideGenerator: ContractGuideGeneratorService,
+  ) {}
 
   async findById(
     contratoId: bigint,
@@ -150,6 +155,8 @@ export class PrismaContractRepository implements ContractRepository {
           creadoPor: data.creadoPor,
           comunidadId: data.comunidadId,
           sectorId: data.sectorId,
+          latitud: data.latitud,
+          longitud: data.longitud,
         },
         include: this.defaultInclude,
       });
@@ -246,25 +253,42 @@ export class PrismaContractRepository implements ContractRepository {
   async createContractWithMeterHistory(
     data: CreateContractWithMeterCommand,
   ): Promise<ContractEntity> {
-    const estadoCobranza = ContractState.normalizeCollectionStatus(
-      data.estadoCobranza,
-      data.estadoServicio,
-    );
-
     return this.prisma.$transaction(async (tx) => {
-      await this.validateContractDependencies(tx, data);
+      const dependencies = await this.validateContractDependencies(tx, data);
+
+      const reserved = await tx.medidores.updateMany({
+        where: {
+          medidorId: data.medidorId,
+          estado: EstadoMedidor.BODEGA,
+          deletedAt: null,
+          historial: { none: { fechaHasta: null, deletedAt: null } },
+        },
+        data: { estado: EstadoMedidor.PENDIENTE, fechaInstalacion: null },
+      });
+      if (reserved.count !== 1) {
+        throw new InvalidDomainOperationException(
+          'El medidor ya no está disponible en bodega',
+        );
+      }
+
+      const numeroGuia = await this.contractGuideGenerator.generate(tx, {
+        comunidadId: data.comunidadId,
+        serieMedidor: dependencies.medidorSerie,
+      });
 
       const contrato = await tx.contratos.create({
         data: {
           clienteId: data.clienteId,
           categoriaTarifaId: data.categoriaTarifaId,
-          numeroGuia: data.numeroGuia,
+          numeroGuia,
           direccionSuministro: data.direccionSuministro,
           comunidadId: data.comunidadId,
-          estadoServicio: data.estadoServicio,
-          estadoCobranza,
+          estadoServicio: EstadoServicioContrato.PENDIENTE_INSPECCION,
+          estadoCobranza: 'NO_APLICA',
           ...(data.sectorId !== null ? { sectorId: data.sectorId } : {}),
           ...(data.creadoPor ? { creadoPor: data.creadoPor } : {}),
+          latitud: data.latitud,
+          longitud: data.longitud,
         },
       });
 
@@ -277,14 +301,7 @@ export class PrismaContractRepository implements ContractRepository {
         },
       });
 
-      await tx.medidores.update({
-        where: { medidorId: data.medidorId },
-        data: { estado: EstadoMedidor.PENDIENTE },
-      });
-
-      if (contrato.estadoServicio === 'PENDIENTE_PAGO') {
-        await tx.$executeRaw`SELECT generar_prefactura_instalacion(${contrato.contratoId}, ${data.creadoPor || 'SYSTEM'})`;
-      }
+      await ensureContractWorkOrder(tx, contrato, data.medidorId, 'INSPECCION');
 
       const createdRecord = await tx.contratos.findUnique({
         where: { contratoId: contrato.contratoId },
@@ -491,7 +508,7 @@ export class PrismaContractRepository implements ContractRepository {
   private async validateContractDependencies(
     tx: Prisma.TransactionClient,
     data: CreateContractWithMeterCommand,
-  ): Promise<void> {
+  ): Promise<{ medidorSerie: string }> {
     const [cliente, medidor, tarifa, comunidad, sector] = await Promise.all([
       tx.clientes.findUnique({ where: { clienteId: data.clienteId } }),
       tx.medidores.findUnique({ where: { medidorId: data.medidorId } }),
@@ -532,5 +549,7 @@ export class PrismaContractRepository implements ContractRepository {
     if (data.sectorId !== null && !sector) {
       throw new EntityNotFoundException('Sector', data.sectorId);
     }
+
+    return { medidorSerie: medidor.serie };
   }
 }

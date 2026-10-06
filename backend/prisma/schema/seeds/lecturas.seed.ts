@@ -1,5 +1,3 @@
-import { takeNextMeterCodeSeed } from './secuenciaMedidor.seed';
-
 export async function seedLecturas(prisma: any) {
     // Un periodo por año (regla de negocio: un periodo anual)
     const periodos = [
@@ -66,18 +64,13 @@ export async function seedLecturas(prisma: any) {
         const finalLat = baseLat + (offset % 0.003);
         const finalLng = baseLng + ((offset * 1.3) % 0.003);
 
-        const { codigo } = await takeNextMeterCodeSeed(prisma);
-
         const medidor = await prisma.medidores.create({
             data: {
                 medidorId: nextMedidorId,
-                codigo,
                 marca: 'Seed',
                 modelo: 'Dedicado',
                 serie: `SER-READ-${contrato.contratoId}`,
                 fechaInstalacion: new Date('2024-01-01'),
-                latitud: finalLat,
-                longitud: finalLng,
                 estado: 'INSTALADO' as any,
                 createdAt: new Date(),
                 updatedAt: new Date(),
@@ -85,6 +78,11 @@ export async function seedLecturas(prisma: any) {
             },
         });
         nextMedidorId++;
+
+        await prisma.contratos.update({
+            where: { contratoId: contrato.contratoId },
+            data: { latitud: finalLat, longitud: finalLng },
+        });
 
         // Crear historial para el nuevo medidor dedicado
         const historial = await prisma.historialMedidores.create({
@@ -123,7 +121,6 @@ export async function seedLecturas(prisma: any) {
                         lecturaActual,
                         consumoCalculado: consumo,
                         estado: "APROBADA",
-                        lecturaInicial: lecturaAnterior === 0,
                     },
                 });
 

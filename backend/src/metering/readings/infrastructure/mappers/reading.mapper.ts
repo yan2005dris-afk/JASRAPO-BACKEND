@@ -24,7 +24,6 @@ export class ReadingMapper {
         raw.ordenesTrabajo?.find((order: any) => order.ruta)?.ruta?.estado ??
         null,
       isValidada: raw.estado !== 'PENDIENTE',
-      lecturaInicial: raw.lecturaInicial,
       periodoId: raw.periodoId,
       tieneAnomalia: !!raw.descripcionAnomalia,
       createdAt: raw.createdAt,

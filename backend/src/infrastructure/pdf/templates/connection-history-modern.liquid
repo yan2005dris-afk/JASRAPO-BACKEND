@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Historial de Conexión - Moderno Formal</title>
+    <!-- Removed External Fonts -->
+    {% render "styles" %}
+    {% render "modern-styles" %}
+    <style>
+        /* Client Info Box */
+        .info-box {
+            background-color: var(--brand-light);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 24px;
+            display: flex;
+        }
+
+        .info-left {
+            flex: 1;
+            border-right: 1px solid #cbd5e1;
+            padding-right: 20px;
+        }
+
+        .info-right {
+            flex: 1;
+            padding-left: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .label {
+            font-size: 9px;
+            text-transform: uppercase;
+            font-weight: 700;
+            color: var(--brand-accent);
+            letter-spacing: 0.5px;
+            margin: 0 0 4px 0;
+        }
+
+        .client-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--brand-dark);
+            margin: 0 0 12px 0;
+        }
+
+        .info-grid {
+            display: flex;
+            gap: 20px;
+        }
+
+        .info-item {
+            flex: 1;
+        }
+
+        .info-item.border-left {
+            border-left: 1px solid #cbd5e1;
+            padding-left: 20px;
+        }
+
+        .value-mono {
+            font-family: monospace;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin: 0;
+        }
+
+        .value-text {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--brand-dark);
+            margin: 0;
+        }
+
+        /* Table */
+        .table-container {
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 24px;
+        }
+
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            font-size: 9px;
+        }
+
+        th {
+            background-color: var(--brand-main);
+            color: #ffffff;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        th.text-right { text-align: right; }
+        td.text-right { text-align: right; }
+
+        td {
+            padding: 10px 12px;
+            vertical-align: top;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        tr:nth-child(even) td {
+            background-color: rgba(246, 249, 252, 0.5); /* light brand with opacity */
+        }
+
+        .col-emision { font-weight: 700; color: var(--brand-dark); }
+        .col-lect { color: var(--text-light); }
+        .col-consumo { font-weight: 500; color: var(--text-main); }
+        .col-consumo span { font-size: 8px; color: var(--text-lighter); }
+        .col-val { color: var(--text-light); }
+        .col-saldo { font-weight: 700; color: var(--brand-dark); }
+
+        /* Totals Grid */
+        .totals-grid {
+            display: flex;
+            gap: 16px;
+            padding-top: 16px;
+            page-break-inside: avoid;
+        }
+
+        .total-box {
+            flex: 1;
+            background-color: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .total-box.primary {
+            background-color: var(--brand-main);
+            border-color: var(--brand-main);
+            color: #ffffff;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .total-box-label {
+            font-size: 9px;
+            text-transform: uppercase;
+            font-weight: 700;
+            color: var(--text-light);
+            letter-spacing: 0.5px;
+            margin: 0 0 6px 0;
+        }
+
+        .total-box.primary .total-box-label {
+            color: var(--brand-light);
+            opacity: 0.9;
+        }
+
+        .total-box-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin: 0;
+        }
+
+        .total-box.primary .total-box-value {
+            color: #ffffff;
+            font-size: 20px;
+        }
+
+        /* Pagination */
+        .pagination {
+            position: fixed;
+            bottom: 15px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 9px;
+            color: var(--text-lighter);
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    
+    <header class="header">
+        <div class="header-left">
+            <div class="logo-container">
+                <img src="{{institucion.branding.logo.url}}" alt="Logo institucional">
+            </div>
+            <div>
+                <h1 class="title">{{reporte.titulo}}</h1>
+                <p class="subtitle">{{institucion.nombreLegal}}</p>
+                <p class="date-info">Generado el: <span>{{reporte.fechaEmision}}</span></p>
+            </div>
+        </div>
+    </header>
+    
+    <div class="info-box">
+        <div class="info-left">
+            <p class="label">Cliente (Titular)</p>
+            <p class="client-name">{{reporte.clienteNombre}}</p>
+            <div class="info-grid">
+                <div class="info-item">
+                    <p class="label">Cuenta</p>
+                    <p class="value-mono">{{reporte.cuenta}}</p>
+                </div>
+                <div class="info-item border-left">
+                    <p class="label">Medidor</p>
+                    <p class="value-mono">{{reporte.medidor}}</p>
+                </div>
+            </div>
+        </div>
+        <div class="info-right">
+            <p class="label" style="margin-bottom: 12px;">Periodo Evaluado</p>
+            <div class="info-grid">
+                <div class="info-item">
+                    <p class="label">Desde</p>
+                    <p class="value-text">{{reporte.fechaDesde}}</p>
+                </div>
+                <div class="info-item border-left">
+                    <p class="label">Hasta</p>
+                    <p class="value-text">{{reporte.fechaHasta}}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 14%;">Emisión</th>
+                    <th style="width: 12%;">L. Actual</th>
+                    <th style="width: 12%;">L. Anterior</th>
+                    <th class="text-right" style="width: 12%;">Consumo</th>
+                    <th class="text-right" style="width: 16%;">Val. Emisión</th>
+                    <th class="text-right" style="width: 16%;">Abonos</th>
+                    <th class="text-right" style="width: 18%;">Saldo</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for fila in reporte.filas %}
+                <tr>
+                    <td class="col-emision">{{ fila.emision }}</td>
+                    <td class="col-lect">{{ fila.lectActual }}</td>
+                    <td class="col-lect">{{ fila.lectAnterior }}</td>
+                    <td class="text-right col-consumo">
+                        {{ fila.consumo }} <span>m³</span>
+                    </td>
+                    <td class="text-right col-val">${{ fila.valEmision }}</td>
+                    <td class="text-right col-val">${{ fila.abonos }}</td>
+                    <td class="text-right col-saldo">${{ fila.saldo }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="totals-grid">
+        <div class="total-box">
+            <p class="total-box-label">Total Facturado</p>
+            <p class="total-box-value">${{reporte.totalValEmision}}</p>
+        </div>
+        <div class="total-box">
+            <p class="total-box-label">Total Abonos</p>
+            <p class="total-box-value">${{reporte.totalAbonos}}</p>
+        </div>
+        <div class="total-box primary">
+            <p class="total-box-label">Saldo Pendiente Final</p>
+            <p class="total-box-value">${{reporte.saldoFinal}}</p>
+        </div>
+    </div>
+    
+
+
+</div>
+
+</body>
+</html>

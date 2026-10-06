@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  {% render "styles" %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reporte de Abonos</title>
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 12px;
+            color: #333;
+            background-color: #fff;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            margin: 0;
+        }
+
+        @page {
+            margin: 0;
+            size: A4 portrait;
+        }
+
+        .report-container {
+            background-color: #fff;
+            width: 100%;
+            padding: 40px;
+            box-sizing: border-box;
+        }
+
+        /* Cabecera del Reporte */
+        .header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .title {
+            font-size: 14px;
+            font-weight: normal;
+        }
+
+        .page-num {
+            font-size: 12px;
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 14px;
+            font-weight: normal;
+            margin: 10px 0;
+        }
+
+        .date-range {
+            text-align: center;
+            font-size: 12px;
+            margin-bottom: 15px;
+        }
+
+        .date-range span {
+            margin: 0 20px;
+        }
+
+        .report-type {
+            text-align: right;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+
+        /* Tabla de Datos */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        thead th {
+            border-top: 1px solid #000;
+            border-bottom: 1px solid #000;
+            padding: 4px 2px;
+            font-weight: normal;
+            text-align: left;
+        }
+
+        /* Alineaciones específicas de columnas */
+        th.col-factura, td.col-factura { width: 12%; }
+        th.col-fecha, td.col-fecha { width: 14%; }
+        th.col-cliente, td.col-cliente { width: 30%; }
+        th.col-cuenta, td.col-cuenta { width: 8%; }
+        th.col-medidor, td.col-medidor { width: 8%; }
+        th.col-emision, td.col-emision { width: 14%; text-align: right; }
+        th.col-valor, td.col-valor { width: 14%; text-align: right; }
+
+        td {
+            padding: 3px 2px;
+            vertical-align: top;
+        }
+
+        /* Fila de Totales */
+        .total-row td {
+            padding-bottom: 15px; /* Espacio extra después de cada total */
+        }
+
+        .total-label {
+            text-align: right;
+            padding-right: 10px;
+        }
+
+        .total-value {
+            text-align: right;
+        }
+
+        /* Línea superior para los totales */
+        .border-top-total {
+            border-top: 1px solid #ccc;
+            padding-top: 2px;
+        }
+
+        /* Clases auxiliares */
+        .text-right {
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+
+<div class="report-container">
+    
+    <div class="header-row">
+        <div style="width: 100px;"></div> <div class="title">{{institucion.nombreLegal}}</div>
+        <div></div>
+    </div>
+    
+    <div class="subtitle">{{reporte.titulo}}</div>
+    
+    <div class="date-range">
+        <span>Desde: {{reporte.fechaDesde}}</span>
+        <span>Hasta: {{reporte.fechaHasta}}</span>
+    </div>
+
+    <div class="report-type">
+        DETALLADO
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th class="col-factura">FACTURA</th>
+                <th class="col-fecha">FECHA</th>
+                <th class="col-cliente">CLIENTE</th>
+                <th class="col-cuenta">CUENTA</th>
+                <th class="col-medidor">MEDIDOR</th>
+                <th class="col-emision">EMISION</th>
+                <th class="col-valor">VALOR</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for grupo in reporte.grupos %}
+                {% for fila in grupo.filas %}
+                <tr>
+                    <td class="col-factura">{% if forloop.first %}{{ grupo.factura }}{% endif %}</td>
+                    <td class="col-fecha">{% if forloop.first %}{{ grupo.fecha }}{% endif %}</td>
+                    <td class="col-cliente">{% if forloop.first %}{{ grupo.clienteNombre }}{% endif %}</td>
+                    <td class="col-cuenta">{% if forloop.first %}{{ grupo.cuenta }}{% endif %}</td>
+                    <td class="col-medidor">{% if forloop.first %}{{ grupo.medidor }}{% endif %}</td>
+                    <td class="col-emision text-right">{{ fila.emision }}</td>
+                    <td class="col-valor text-right">{{ fila.valor }}</td>
+                </tr>
+                {% endfor %}
+                <tr class="total-row">
+                    <td colspan="4"></td>
+                    <td colspan="2" class="total-label border-top-total">TOTAL FACTURA: {{ grupo.factura }} &gt;</td>
+                    <td class="total-value border-top-total">{{ grupo.subtotal }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+</div>
+
+</body>
+</html>

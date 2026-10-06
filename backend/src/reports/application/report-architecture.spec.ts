@@ -154,7 +154,7 @@ describe('PDF-03 report architecture', () => {
       /template:\s*['"](?:clients-list|account-statement)['"]/,
     );
     expect(
-      fs.existsSync(path.join(TEMPLATES_ROOT, 'payment-agreement.hbs')),
+      fs.existsSync(path.join(TEMPLATES_ROOT, 'payment-agreement.liquid')),
     ).toBe(true);
   });
 });

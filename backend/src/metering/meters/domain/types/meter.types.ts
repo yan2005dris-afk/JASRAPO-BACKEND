@@ -21,8 +21,6 @@ export interface CreateMeterRepositoryData {
   modelo: string;
   serie: string;
   estado: MeterEntity['estado'];
-  latitud?: number | null;
-  longitud?: number | null;
 }
 
 export interface UpdateMeterRepositoryData {
@@ -33,8 +31,6 @@ export interface UpdateMeterRepositoryData {
   fechaInstalacion?: Date | null;
   fechaBaja?: Date | null;
   motivo?: string | null;
-  latitud?: number | null;
-  longitud?: number | null;
   deletedAt?: Date | null;
 }
 

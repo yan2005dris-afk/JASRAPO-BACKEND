@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Estado de Cuenta - Moderno</title>
+  {% render "styles" %}
+  {% render "modern-styles" %}
+  <style>
+    .account-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .info-card {
+      background-color: var(--brand-light);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 12px 16px;
+    }
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 4px;
+      font-size: 9px;
+    }
+    .info-row:last-child {
+      margin-bottom: 0;
+    }
+    .info-label {
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    .info-val {
+      color: var(--brand-dark);
+      font-weight: 700;
+    }
+    .year-title {
+      background-color: #f1f5f9;
+      color: var(--brand-dark);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 6px 10px;
+      border-left: 4px solid var(--brand-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .subtotal-modern {
+      background-color: #f8fafc;
+      font-weight: 700;
+      color: var(--brand-dark);
+      border-top: 1px solid #cbd5e1;
+    }
+    .total-debt-box {
+      background-color: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 6px;
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 16px;
+    }
+    .total-debt-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #991b1b;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .total-debt-val {
+      font-size: 18px;
+      font-weight: 800;
+      color: #dc2626;
+    }
+  </style>
+</head>
+<body>
+  <div class="page-container">
+    <!-- Header -->
+    <div class="header-table">
+      <div class="header-left">
+        <div class="brand-title">{{institucion.siglas}}</div>
+        <div class="brand-subtitle">{{institucion.nombreLegal}} · {{institucion.ubicacion.localidad}}</div>
+        <div class="report-title-main" style="margin-top: 8px;">Estado de Cuenta</div>
+        <div class="report-meta-text">Fecha de emisión: {{reporte.fechaEmision}}</div>
+      </div>
+      <div class="header-right">
+        <div class="total-label-sm">DEUDA CONSOLIDADA</div>
+        <div class="total-amount-lg" style="color: #dc2626;">$ {{reporte.deudaTotal}}</div>
+        <div class="report-meta-text" style="margin-top: 4px;">Cuenta N°: {{reporte.cuenta}}</div>
+      </div>
+    </div>
+
+    <!-- Account Details Cards -->
+    <div class="account-grid" style="margin-top: 16px;">
+      <div class="info-card">
+        <div class="info-row">
+          <span class="info-label">Cliente:</span>
+          <span class="info-val">{{reporte.clienteNombre}}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Identificación:</span>
+          <span class="info-val">{{reporte.clienteIdentificacion}}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Dirección:</span>
+          <span class="info-val">{{reporte.clienteDireccion}}</span>
+        </div>
+      </div>
+
+      <div class="info-card">
+        <div class="info-row">
+          <span class="info-label">Sector:</span>
+          <span class="info-val">{{reporte.sector}}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Medidor (serie):</span>
+          <span class="info-val">{{reporte.medidor}}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Tarifa / Factor:</span>
+          <span class="info-val">{{reporte.tarifaTipo}} ($ {{reporte.cargoFijo}} + ${{reporte.factor}}/m³)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Monthly Billing Table -->
+    <table class="modern-table">
+      <thead>
+        <tr>
+          <th>Período</th>
+          <th>L. Act</th>
+          <th>L. Ant</th>
+          <th>Cons</th>
+          <th>Excd</th>
+          <th>Fijo</th>
+          <th>Excd $</th>
+          <th>Subtotal</th>
+          <th>Mora</th>
+          <th>Seguridad</th>
+          <th>Convnio</th>
+          <th style="font-weight: 700;">Total Mes</th>
+          <th>Abonos</th>
+          <th style="font-weight: 700;">Saldo</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for year in reporte.years %}
+        <tr>
+          <td colspan="14" class="year-title">Año {{ year.nombre }}</td>
+        </tr>
+        {% for mes in year.meses %}
+        <tr>
+          <td style="font-weight: 600; color: var(--brand-dark);">{{ mes.mes }}</td>
+          <td>{{ mes.lectActual }}</td>
+          <td>{{ mes.lectAnterior }}</td>
+          <td>{{ mes.consu }}</td>
+          <td>{{ mes.excede }}</td>
+          <td>${{ mes.cargoFijo }}</td>
+          <td>${{ mes.excedenteValor }}</td>
+          <td>${{ mes.total }}</td>
+          <td>${{ mes.intMora }}</td>
+          <td>${{ mes.tasaSeg }}</td>
+          <td>${{ mes.convenio }}</td>
+          <td style="font-weight: 700; color: var(--brand-dark);">${{ mes.totalMes }}</td>
+          <td style="color: #16a34a; font-weight: 600;">${{ year.pagos }}</td>
+          <td style="font-weight: 700; color: {% if mes.saldo > 0 %}#dc2626{% else %}#16a34a{% endif %};">${{ year.saldo }}</td>
+        </tr>
+        {% endfor %}
+        <tr class="subtotal-modern">
+          <td colspan="5" style="text-align: right; padding-right: 8px;">Subtotal {{ year.nombre }}:</td>
+          <td colspan="6"></td>
+          <td style="font-weight: 700;">${{ year.subtotalAnual }}</td>
+          <td style="color: #16a34a; font-weight: 700;">${{ year.pagos }}</td>
+          <td style="font-weight: 700;">${{ year.saldo }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <!-- Total Debt Box -->
+    <div class="total-debt-box">
+      <div class="total-debt-label">Deuda Total Acumulada</div>
+      <div class="total-debt-val">$ {{reporte.deudaTotal}}</div>
+    </div>
+
+    <div class="footer-note" style="margin-top: 24px;">
+      Documento generado automáticamente por {{institucion.siglas}} Cloud Management System · {{reporte.fechaEmision}}
+    </div>
+  </div>
+</body>
+</html>

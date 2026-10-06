@@ -146,6 +146,13 @@ export class AuthController {
     res.json({
       message: 'Token refrescado correctamente',
       accessToken: tokens.accessToken,
+      sid: tokens.sid,
+      sub: tokens.sub,
+      email: tokens.email,
+      nombre: tokens.nombre,
+      rolId: tokens.rolId,
+      nombreRol: tokens.nombreRol,
+      avatar: tokens.avatar,
       createdAt: tokens.accessTokenInfo.iatDate,
       expiresAt: tokens.accessTokenInfo.expDate,
     });

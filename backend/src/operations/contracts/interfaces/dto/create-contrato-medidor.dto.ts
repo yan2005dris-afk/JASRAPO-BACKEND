@@ -13,6 +13,10 @@ import {
   EstadoCobranzaContrato,
   EstadoServicioContrato,
 } from 'src/shared/enums';
+import {
+  IsContractLatitude,
+  IsContractLongitude,
+} from './contract-coordinates.decorator';
 
 export class CrearContratoMedidorDto {
   @ApiProperty({ description: 'ID del cliente', example: '1' })
@@ -29,15 +33,6 @@ export class CrearContratoMedidorDto {
   @IsNotEmpty()
   @IsNumberString()
   medidorId: string;
-
-  @ApiProperty({
-    description: 'Número de guía del contrato',
-    example: 'GU-2024-001',
-  })
-  @IsNotEmpty()
-  @IsString()
-  @IsNotEmptyString()
-  numeroGuia: string;
 
   @ApiProperty({
     description: 'Dirección del suministro',
@@ -71,13 +66,20 @@ export class CrearContratoMedidorDto {
   @Min(0)
   lecturaInicial?: number;
 
-  @ApiPropertyOptional({ enum: EstadoServicioContrato })
+  @ApiPropertyOptional({
+    enum: EstadoServicioContrato,
+    description:
+      'El alta siempre inicia en PENDIENTE_INSPECCION; este campo no adelanta el flujo.',
+  })
   @IsOptional()
   @IsString()
   @IsIn(Object.values(EstadoServicioContrato))
   estadoServicio?: EstadoServicioContrato;
 
-  @ApiPropertyOptional({ enum: EstadoCobranzaContrato })
+  @ApiPropertyOptional({
+    enum: EstadoCobranzaContrato,
+    description: 'El alta siempre inicia con cobranza NO_APLICA.',
+  })
   @IsOptional()
   @IsString()
   @IsIn(Object.values(EstadoCobranzaContrato))
@@ -90,4 +92,10 @@ export class CrearContratoMedidorDto {
   @IsOptional()
   @IsString()
   creadoPor?: string;
+
+  @IsContractLatitude()
+  latitud?: number | null;
+
+  @IsContractLongitude()
+  longitud?: number | null;
 }

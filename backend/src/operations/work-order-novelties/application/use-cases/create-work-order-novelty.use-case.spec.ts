@@ -7,15 +7,19 @@ import { StorageService } from 'src/infrastructure/storage/storage.service';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { TipoAnomalia } from 'src/shared/enums';
 import { WorkOrderNoveltyEntity } from '../../domain/entities/work-order-novelty.entity';
+import * as evidenceUpload from 'src/infrastructure/common/utils/evidence-upload.util';
+import { SRI_STORAGE_TYPES } from 'src/infrastructure/storage/storage.service';
 
 describe('CreateWorkOrderNoveltyUseCase', () => {
   let useCase: CreateWorkOrderNoveltyUseCase;
   let repoMock: any;
   let prismaMock: any;
+  let storageMock: { upload: jest.Mock; delete: jest.Mock };
 
   beforeEach(async () => {
     repoMock = { create: jest.fn() };
     prismaMock = { ordenesTrabajo: { findUnique: jest.fn() } };
+    storageMock = { upload: jest.fn(), delete: jest.fn() };
     const module = await Test.createTestingModule({
       providers: [
         CreateWorkOrderNoveltyUseCase,
@@ -23,7 +27,7 @@ describe('CreateWorkOrderNoveltyUseCase', () => {
         { provide: PrismaService, useValue: prismaMock },
         {
           provide: StorageService,
-          useValue: { upload: jest.fn(), delete: jest.fn() },
+          useValue: storageMock,
         },
         {
           provide: LoggerService,
@@ -35,6 +39,8 @@ describe('CreateWorkOrderNoveltyUseCase', () => {
       CreateWorkOrderNoveltyUseCase,
     );
   });
+
+  afterEach(() => jest.restoreAllMocks());
 
   it('creates novelty with valid order and optional same-order reading context', async () => {
     prismaMock.ordenesTrabajo.findUnique.mockResolvedValue({
@@ -80,5 +86,27 @@ describe('CreateWorkOrderNoveltyUseCase', () => {
         tipo: TipoAnomalia.FUGA,
       }),
     ).rejects.toThrow(BadRequestException);
+  });
+
+  it('elimina la evidencia subida si falla la persistencia de la novedad', async () => {
+    prismaMock.ordenesTrabajo.findUnique.mockResolvedValue({
+      ordenTrabajoId: 10n,
+      lecturaId: null,
+    });
+    jest
+      .spyOn(evidenceUpload, 'uploadEvidence')
+      .mockResolvedValue('work-order-novelties/photo.webp');
+    const dbError = new Error('database unavailable');
+    repoMock.create.mockRejectedValue(dbError);
+    const file = { buffer: Buffer.from('photo') } as Express.Multer.File;
+
+    await expect(
+      useCase.execute({ ordenTrabajoId: '10', tipo: TipoAnomalia.FUGA }, file),
+    ).rejects.toBe(dbError);
+
+    expect(storageMock.delete).toHaveBeenCalledWith(
+      SRI_STORAGE_TYPES.READING_NEWS,
+      'work-order-novelties/photo.webp',
+    );
   });
 });

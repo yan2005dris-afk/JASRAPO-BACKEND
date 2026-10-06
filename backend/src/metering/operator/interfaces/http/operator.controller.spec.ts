@@ -49,6 +49,7 @@ describe('OperatorController work-order update', () => {
       undefined as any,
       storage as any,
       undefined as any,
+      undefined as any,
     );
     useCase.execute.mockResolvedValue(entity);
     routesUseCase.execute.mockResolvedValue([]);

@@ -1,3 +1,5 @@
+import { ensureContractWorkOrder } from 'src/operations/contracts/infrastructure/contract-work-order';
+import { InvalidDomainOperationException } from 'src/shared/domain/exceptions/domain.exception';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import {
@@ -513,6 +515,80 @@ export class PrismaPaymentRepository implements PaymentRepository {
       },
     });
     return { count: result.count };
+  }
+
+  async settlePaidComprobante(
+    comprobanteId: bigint,
+    totalAbonado: number,
+  ): Promise<void> {
+    await this.prisma.$transaction(async (tx) => {
+      const prefacturas = await tx.prefacturas.findMany({
+        where: { comprobanteId, deletedAt: null },
+        select: {
+          contratoId: true,
+          prefacturaDetalle: {
+            where: {
+              deletedAt: null,
+              rubro: { codigoSistemaRubro: 'INSTALACION', deletedAt: null },
+            },
+            select: { prefacturaDetalleId: true },
+          },
+        },
+      });
+      await tx.prefacturas.updateMany({
+        where: { comprobanteId, deletedAt: null },
+        data: {
+          estado: 'PAGADA',
+          saldoActual: 0,
+          saldoVencido: 0,
+          abono: totalAbonado,
+        },
+      });
+      const ids = [
+        ...new Set(
+          prefacturas
+            .filter((p) => p.prefacturaDetalle.length > 0)
+            .map((p) => p.contratoId),
+        ),
+      ].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+      for (const contratoId of ids) {
+        await tx.$queryRaw`SELECT contrato_id FROM contratos WHERE contrato_id = ${contratoId} FOR UPDATE`;
+        const contract = await tx.contratos.findUnique({
+          where: { contratoId },
+        });
+        if (
+          !contract ||
+          contract.deletedAt ||
+          contract.estadoServicio !== 'PENDIENTE_PAGO'
+        )
+          continue;
+        const link = await tx.historialMedidores.findFirst({
+          where: {
+            contratoId,
+            fechaHasta: null,
+            deletedAt: null,
+            medidor: { estado: 'PENDIENTE', deletedAt: null },
+          },
+        });
+        if (!link)
+          throw new InvalidDomainOperationException(
+            'La instalación requiere un medidor pendiente y vinculado al contrato',
+          );
+        await tx.contratos.update({
+          where: { contratoId },
+          data: {
+            estadoServicio: 'PENDIENTE_INSTALACION',
+            estadoCobranza: 'NO_APLICA',
+          },
+        });
+        await ensureContractWorkOrder(
+          tx,
+          contract,
+          link.medidorId,
+          'INSTALACION',
+        );
+      }
+    });
   }
 
   async executeTransaction<T>(

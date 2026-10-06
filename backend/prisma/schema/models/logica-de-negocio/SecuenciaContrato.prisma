@@ -1,0 +1,10 @@
+/// Contador migrado desde la antigua secuencia de códigos de medidores.
+model SecuenciaContrato {
+  secuenciaContratoId Int      @id @default(autoincrement()) @map("secuencia_contrato_id")
+  longitud            Int      @default(5)
+  ultimoValor         BigInt   @default(0) @map("ultimo_valor")
+  createdAt           DateTime @default(now()) @map("creado_en")
+  updatedAt           DateTime @updatedAt @map("actualizado_en")
+
+  @@map("secuencia_contrato")
+}

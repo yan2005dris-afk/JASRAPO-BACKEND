@@ -15,6 +15,7 @@ Este directorio contiene el registro formal de las decisiones arquitectónicas c
 | [ADR-005](./ADR-005-novedades-ordenes-trabajo-reemplazo-lectura-anomalia.md) | Novedades de órdenes de trabajo como reemplazo de `LecturaAnomalia` | **Aceptado** | 2026-09-01 | — |
 | [ADR-006](./ADR-006-contract-service-lifecycle-and-collection-status.md) | Ciclo de vida del contrato y estado de cobranza independiente | **Aceptado** | 2026-09-17 | — |
 | [ADR-007](./ADR-007-distribucion-pagos-entre-obligaciones.md) | Distribución de pagos entre múltiples obligaciones cobrables | **Aceptado** | 2026-09-24 | PR #324 (SC-301) |
+| [ADR-008](./ADR-008-billing-periods-temporal-boundaries-and-collection-policy-separation.md) | Períodos de facturación, límites temporales y separación de políticas de corte | **Aceptado** | 2026-09-26 | — |
 
 ---
 
