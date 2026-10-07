@@ -14,9 +14,14 @@ export class CreateContractUseCase {
 
   async execute(
     dto: CrearContratoMedidorDto,
-    actorUserId?: number,
+    actorUserIdOrRole?: number | string,
     userRole?: string,
   ): Promise<ContractEntity> {
+    const actorUserId =
+      typeof actorUserIdOrRole === 'number' ? actorUserIdOrRole : undefined;
+    const effectiveRole =
+      typeof actorUserIdOrRole === 'string' ? actorUserIdOrRole : userRole;
+
     if (dto.latitud != null && dto.longitud != null) {
       const locationError = validateServiceAreaLocation(
         dto.latitud,
@@ -35,8 +40,8 @@ export class CreateContractUseCase {
 
     // Solo admin/superadmin puede definir lecturaInicial; para otros roles se fuerza a 0
     const isAdmin =
-      userRole?.toLowerCase() === 'admin' ||
-      userRole?.toLowerCase() === 'superadmin';
+      effectiveRole?.toLowerCase() === 'admin' ||
+      effectiveRole?.toLowerCase() === 'superadmin';
     const lecturaInicial =
       isAdmin && dto.lecturaInicial !== undefined ? dto.lecturaInicial : 0;
 
