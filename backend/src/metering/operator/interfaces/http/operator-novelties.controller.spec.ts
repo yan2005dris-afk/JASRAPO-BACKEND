@@ -1,6 +1,6 @@
 import { BadRequestException } from '@nestjs/common';
 import { OperatorNoveltiesController } from './operator-novelties.controller';
-import { OperatorNoveltiesService } from '../../application/operator-novelties.service';
+import type { OperatorNoveltiesService } from '../../application/operator-novelties.service';
 import type { JwtPayload } from 'src/identity/auth/application/types/jwt.types';
 
 describe('OperatorNoveltiesController', () => {

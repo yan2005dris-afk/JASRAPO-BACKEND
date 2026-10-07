@@ -11,11 +11,16 @@ import { OperatorRepository } from '../../domain/repositories/operator.repositor
 import { UpdateOperatorWorkOrderDto } from '../../interfaces/dto/update-operator-work-order.dto';
 import type { EvidenceReplacementCleanup } from './update-operator-reading.use-case';
 
+import { UpdateReadingUseCase } from 'src/metering/readings/application/use-cases/update-reading.use-case';
+import { ActualizarLecturaDto } from 'src/metering/readings/interfaces/dto/update-lectura.dto';
+import { EstadoLectura, EstadoOrdenTrabajo } from 'src/shared/enums';
+
 @Injectable()
 export class UpdateOperatorWorkOrderUseCase {
   constructor(
     private readonly ordenTrabajoRepository: OrdenTrabajoRepository,
     private readonly operatorRepository: OperatorRepository,
+    private readonly updateReadingUseCase: UpdateReadingUseCase,
   ) {}
 
   async execute(
@@ -31,16 +36,19 @@ export class UpdateOperatorWorkOrderUseCase {
     }
 
     if (order.tipoActividad === TipoActividadCodes.LECTURA) {
-      const hasCompleteCoordinates =
-        dto.latitud !== undefined && dto.longitud !== undefined;
-      const modifiesReadingWorkflow =
-        dto.estado !== undefined ||
-        dto.resultadoObservacion !== undefined ||
-        dto.completadoEn !== undefined ||
-        evidenciaFotoUrl !== undefined;
-      if (!hasCompleteCoordinates || modifiesReadingWorkflow) {
+      const isSubmittingReading = dto.lecturaActual !== undefined;
+      const hasCoordinates =
+        dto.latitud !== undefined || dto.longitud !== undefined;
+
+      if (!isSubmittingReading && !hasCoordinates) {
         throw new InvalidDomainOperationException(
-          'Las órdenes de lectura solo permiten registrar latitud y longitud; los datos de lectura deben actualizarse mediante el flujo de lecturas',
+          'Las órdenes de lectura requieren registrar la lectura actual o coordenadas GPS',
+        );
+      }
+
+      if (isSubmittingReading && !order.lecturaId) {
+        throw new InvalidDomainOperationException(
+          'La orden de lectura no tiene una lectura asociada para registrar el valor',
         );
       }
     }
@@ -75,11 +83,44 @@ export class UpdateOperatorWorkOrderUseCase {
       }
     }
 
+    if (
+      order.tipoActividad === TipoActividadCodes.LECTURA &&
+      dto.lecturaActual !== undefined &&
+      order.lecturaId
+    ) {
+      const readingUpdateDto: ActualizarLecturaDto = {
+        lecturaActual: dto.lecturaActual,
+        lecturaAnterior: dto.lecturaAnterior,
+        descripcionAnomalia: dto.descripcionAnomalia,
+        fecha: dto.fechaLectura ?? dto.completadoEn ?? new Date().toISOString(),
+      };
+
+      await this.updateReadingUseCase.execute(
+        order.lecturaId,
+        readingUpdateDto,
+        dto.descripcionAnomalia
+          ? EstadoLectura.CON_NOVEDAD
+          : EstadoLectura.POR_REVISION,
+      );
+    }
+
+    const isCompletingReading =
+      order.tipoActividad === TipoActividadCodes.LECTURA &&
+      dto.lecturaActual !== undefined;
+
     const data: UpdateOperatorWorkOrderData = {
-      estado: dto.estado,
-      resultadoObservacion: dto.resultadoObservacion,
+      estado: isCompletingReading
+        ? (dto.estado ?? EstadoOrdenTrabajo.COMPLETADA)
+        : dto.estado,
+      resultadoObservacion: dto.resultadoObservacion ?? dto.descripcionAnomalia,
       evidenciaFotoUrl,
-      completadoEn: dto.completadoEn ? new Date(dto.completadoEn) : undefined,
+      completadoEn: isCompletingReading
+        ? dto.completadoEn
+          ? new Date(dto.completadoEn)
+          : new Date()
+        : dto.completadoEn
+          ? new Date(dto.completadoEn)
+          : undefined,
       latitud: dto.latitud,
       longitud: dto.longitud,
     };

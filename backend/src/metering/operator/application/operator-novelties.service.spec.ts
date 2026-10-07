@@ -1,7 +1,7 @@
 import { NotFoundException } from '@nestjs/common';
 import { OperatorNoveltiesService } from './operator-novelties.service';
-import { PrismaService } from 'src/infrastructure/database/prisma.service';
-import { WorkOrderNoveltyService } from 'src/operations/work-order-novelties/application/work-order-novelty.service';
+import type { PrismaService } from 'src/infrastructure/database/prisma.service';
+import type { WorkOrderNoveltyService } from 'src/operations/work-order-novelties/application/work-order-novelty.service';
 
 describe('OperatorNoveltiesService', () => {
   const row = {
