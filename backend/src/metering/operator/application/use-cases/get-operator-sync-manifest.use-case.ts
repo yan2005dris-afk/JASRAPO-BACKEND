@@ -419,7 +419,12 @@ export class GetOperatorSyncManifestUseCase {
       medidorId: BigInt(m.medidorId),
       contratoId: h?.contratoId ? BigInt(h.contratoId) : null,
       clienteNombre: h?.cliente
-        ? `${h.cliente.nombres} ${h.cliente.apellidos}`.trim()
+        ? h.cliente.razonSocial?.trim() ||
+          [h.cliente.nombres, h.cliente.apellidos]
+            .map((part: string) => part?.trim())
+            .filter(Boolean)
+            .join(' ') ||
+          null
         : null,
       direccionSuministro: h?.direccionSuministro ?? null,
     });

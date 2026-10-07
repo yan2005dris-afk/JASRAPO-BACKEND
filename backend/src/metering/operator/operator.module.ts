@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 import { OperatorController } from './interfaces/http/operator.controller';
+import { OperatorNoveltiesController } from './interfaces/http/operator-novelties.controller';
+import { OperatorNoveltiesService } from './application/operator-novelties.service';
 import { GetOperatorReadingsUseCase } from './application/use-cases/get-operator-readings.use-case';
 import { UpdateOperatorReadingUseCase } from './application/use-cases/update-operator-reading.use-case';
 import { UpdateOperatorWorkOrderUseCase } from './application/use-cases/update-operator-work-order.use-case';
@@ -16,10 +18,11 @@ import { MeterModule } from '../meters/meter.module';
 import { ReadingModule } from '../readings/reading.module';
 import { PrismaOrdenTrabajoRepository } from 'src/operations/routes/infrastructure/repositories/prisma-orden-trabajo.repository';
 import { OrdenTrabajoRepository } from 'src/operations/routes/domain/repositories/orden-trabajo.repository';
+import { WorkOrderNoveltiesModule } from 'src/operations/work-order-novelties/work-order-novelties.module';
 
 @Module({
-  imports: [MeterModule, ReadingModule],
-  controllers: [OperatorController],
+  imports: [MeterModule, ReadingModule, WorkOrderNoveltiesModule],
+  controllers: [OperatorController, OperatorNoveltiesController],
   providers: [
     GetOperatorReadingsUseCase,
     UpdateOperatorReadingUseCase,
@@ -31,6 +34,7 @@ import { OrdenTrabajoRepository } from 'src/operations/routes/domain/repositorie
     GetOperatorReadingsWithAnomaliesUseCase,
     GetOperatorSyncManifestUseCase,
     GetOperatorActivityTypesUseCase,
+    OperatorNoveltiesService,
     {
       provide: OperatorRepository,
       useClass: PrismaOperatorRepository,

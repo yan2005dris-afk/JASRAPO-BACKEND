@@ -90,7 +90,11 @@ export interface MeterWithContractDetail {
       comunidadId: number;
       sectorId: number | null;
       direccionSuministro: string;
-      cliente: { nombres: string; apellidos: string };
+      cliente: {
+        nombres: string;
+        apellidos: string;
+        razonSocial?: string | null;
+      };
     } | null;
   }>;
 }
