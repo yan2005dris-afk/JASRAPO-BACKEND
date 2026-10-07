@@ -21,7 +21,11 @@ describe('OperatorNoveltiesService', () => {
       contrato: {
         numeroGuia: 'GUIA-5-0006',
         direccionSuministro: 'Direccion contrato 6',
-        cliente: { nombres: 'Ignorado', apellidos: '', razonSocial: 'AGUA COMUNAL' },
+        cliente: {
+          nombres: 'Ignorado',
+          apellidos: '',
+          razonSocial: 'AGUA COMUNAL',
+        },
       },
     },
   };
@@ -68,12 +72,16 @@ describe('OperatorNoveltiesService', () => {
     await expect(service.findOne(9, 12n)).rejects.toThrow(NotFoundException);
     expect(prisma.novedadOrdenTrabajo.findFirst).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { deletedAt: null, ordenTrabajo: { ruta: { operarioId: 9 } }, novedadId: 12n },
+        where: {
+          deletedAt: null,
+          ordenTrabajo: { ruta: { operarioId: 9 } },
+          novedadId: 12n,
+        },
       }),
     );
-    await expect(service.update(9, 12n, { observacion: 'Cambio' })).rejects.toThrow(
-      NotFoundException,
-    );
+    await expect(
+      service.update(9, 12n, { observacion: 'Cambio' }),
+    ).rejects.toThrow(NotFoundException);
     expect(novelties.update).not.toHaveBeenCalled();
   });
 

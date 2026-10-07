@@ -23,6 +23,11 @@ describe('OperatorNoveltiesController', () => {
     await controller.findOne(user, 12n);
     await controller.update(user, 12n, { tipo: undefined }, undefined);
     expect(service.findOne).toHaveBeenCalledWith(9, 12n);
-    expect(service.update).toHaveBeenCalledWith(9, 12n, { tipo: undefined }, undefined);
+    expect(service.update).toHaveBeenCalledWith(
+      9,
+      12n,
+      { tipo: undefined },
+      undefined,
+    );
   });
 });
