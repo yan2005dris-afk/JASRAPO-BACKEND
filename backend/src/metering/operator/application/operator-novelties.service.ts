@@ -55,7 +55,8 @@ export class OperatorNoveltiesService {
       contratoId: String(order.contratoId),
       numeroGuia: order.contrato.numeroGuia,
       clienteNombre:
-        client.razonSocial || [client.nombres, client.apellidos].filter(Boolean).join(' '),
+        client.razonSocial ||
+        [client.nombres, client.apellidos].filter(Boolean).join(' '),
       direccionSuministro: order.contrato.direccionSuministro,
       comunidadId: ruta?.comunidadId ?? null,
       comunidadNombre: ruta?.comunidad?.nombre ?? null,
