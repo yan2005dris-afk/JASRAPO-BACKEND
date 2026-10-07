@@ -598,19 +598,18 @@ describe('Installation lifecycle persistence', () => {
     const actor = await prisma.usuarios.create({
       data: { email: 'procedure@test.local', clave: 'not-used' },
     });
-    const contract = await new PrismaContractRepository(
-      prisma,
-    ).createContractWithMeterHistory({
-      ...command,
-      registradoPorId: actor.usuarioId,
-      tramitadorEsTitular: false,
-      tramitadorNombre: ' Ana ',
-      tramitadorIdentificacion: 'ABC',
-      relacionTramitador: 'Familiar',
-      observacionesTramite: 'Observation',
-      otrasNovedades: 'Other',
-    });
-    const persisted = await new PrismaContractRepository(prisma).findById(
+    const contract =
+      await createContractRepository().createContractWithMeterHistory({
+        ...command,
+        registradoPorId: actor.usuarioId,
+        tramitadorEsTitular: false,
+        tramitadorNombre: ' Ana ',
+        tramitadorIdentificacion: 'ABC',
+        relacionTramitador: 'Familiar',
+        observacionesTramite: 'Observation',
+        otrasNovedades: 'Other',
+      });
+    const persisted = await createContractRepository().findById(
       contract.contratoId,
     );
     expect(persisted).toMatchObject({

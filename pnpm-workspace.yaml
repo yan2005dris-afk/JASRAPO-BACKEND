@@ -27,7 +27,7 @@ overrides:
   nanoid: '^3.3.18'
   postcss: '^8.5.18'
   mysql2: '^3.22.0'
-  sharp: '>=0.35.4'
+  sharp: '>=0.35.5'
   # --- security audit overrides (added 2026-07-22) ---
   multer: '>=2.4.0'                              # GHSA-72gw-mp4g-v24j, GHSA-qfvm-cv95-jqjf, GHSA-535w-7cp7-47q4, GHSA-3pph-fpjx-jg34 (DoS)
   nodemailer: '>=10.0.6'                         # GHSA-v53p-9fqp-m79j, GHSA-p6gq-j5cr-w38f, GHSA-2x7j-588g-ccc2
