@@ -153,7 +153,7 @@ describe('UpdateOperatorWorkOrderUseCase', () => {
     expect(orders.updateOperatorWorkOrder).not.toHaveBeenCalled();
   });
 
-  it('delegates reading update and completes the work order when lecturaActual is provided', async () => {
+  it('delegates reading update without forcing work order to COMPLETADA when lecturaActual is provided', async () => {
     orders.findById.mockResolvedValue(
       order(TipoActividadCodes.LECTURA, 10n, 55n),
     );
@@ -185,7 +185,7 @@ describe('UpdateOperatorWorkOrderUseCase', () => {
     expect(orders.updateOperatorWorkOrder).toHaveBeenCalledWith(
       1n,
       expect.objectContaining({
-        estado: 'COMPLETADA',
+        estado: undefined,
         latitud: -26.80828472,
         longitud: -65.25268137,
       }),

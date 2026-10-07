@@ -104,22 +104,18 @@ export class UpdateOperatorWorkOrderUseCase {
       );
     }
 
-    const isCompletingReading =
+    const isReadingSubmission =
       order.tipoActividad === TipoActividadCodes.LECTURA &&
       dto.lecturaActual !== undefined;
 
     const data: UpdateOperatorWorkOrderData = {
-      estado: isCompletingReading
-        ? (dto.estado ?? EstadoOrdenTrabajo.COMPLETADA)
-        : dto.estado,
+      estado: dto.estado,
       resultadoObservacion: dto.resultadoObservacion ?? dto.descripcionAnomalia,
       evidenciaFotoUrl,
-      completadoEn: isCompletingReading
-        ? dto.completadoEn
-          ? new Date(dto.completadoEn)
-          : new Date()
-        : dto.completadoEn
-          ? new Date(dto.completadoEn)
+      completadoEn: dto.completadoEn
+        ? new Date(dto.completadoEn)
+        : isReadingSubmission
+          ? new Date()
           : undefined,
       latitud: dto.latitud,
       longitud: dto.longitud,
