@@ -25,6 +25,14 @@ export class OperatorNoveltiesService {
             },
           },
         },
+        ruta: {
+          select: {
+            comunidadId: true,
+            sectorId: true,
+            comunidad: { select: { nombre: true } },
+            sector: { select: { nombre: true } },
+          },
+        },
       },
     },
   } as const;
@@ -37,6 +45,7 @@ export class OperatorNoveltiesService {
   private toResponse(row: any) {
     const order = row.ordenTrabajo;
     const client = order.contrato.cliente;
+    const ruta = order.ruta;
     return {
       novedadId: String(row.novedadId),
       ordenTrabajoId: String(row.ordenTrabajoId),
@@ -48,6 +57,10 @@ export class OperatorNoveltiesService {
       clienteNombre:
         client.razonSocial || [client.nombres, client.apellidos].filter(Boolean).join(' '),
       direccionSuministro: order.contrato.direccionSuministro,
+      comunidadId: ruta?.comunidadId ?? null,
+      comunidadNombre: ruta?.comunidad?.nombre ?? null,
+      sectorId: ruta?.sectorId ?? null,
+      sectorNombre: ruta?.sector?.nombre ?? null,
       tipo: row.tipo,
       observacion: row.observacion,
       estado: row.estado,
