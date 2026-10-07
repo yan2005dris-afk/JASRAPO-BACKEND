@@ -15,6 +15,10 @@ describe('PrismaOperatorRepository routes', () => {
       findMany: jest.fn(),
       count: jest.fn(),
     },
+    medidores: {
+      findMany: jest.fn(),
+      count: jest.fn(),
+    },
     operatorSyncChange: {
       findMany: jest.fn(),
       findFirst: jest.fn(),
@@ -33,6 +37,25 @@ describe('PrismaOperatorRepository routes', () => {
       ],
     }).compile();
     repository = module.get(PrismaOperatorRepository);
+  });
+
+  it('selects business names for online and offline meter lists', async () => {
+    prisma.medidores.findMany.mockResolvedValue([]);
+    prisma.medidores.count.mockResolvedValue(0);
+    const routes = [{ rutaId: 3n, comunidadId: 1, sectorId: null }];
+
+    await repository.findMetersByRoutes(routes);
+    await repository.findSyncMeters(routes, new Date('2026-01-01'), null, 10);
+
+    for (const [query] of prisma.medidores.findMany.mock.calls) {
+      const select =
+        query.select.historial.select.contrato.select.cliente.select;
+      expect(select).toMatchObject({
+        nombres: true,
+        apellidos: true,
+        razonSocial: true,
+      });
+    }
   });
 
   it('uses sequence > cursor and limit+1 semantics for scoped changes', async () => {

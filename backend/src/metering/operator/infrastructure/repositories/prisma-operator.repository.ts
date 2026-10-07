@@ -270,6 +270,7 @@ export class PrismaOperatorRepository extends OperatorRepository {
                   select: {
                     nombres: true,
                     apellidos: true,
+                    razonSocial: true,
                   },
                 },
               },
@@ -493,7 +494,13 @@ export class PrismaOperatorRepository extends OperatorRepository {
                   comunidadId: true,
                   sectorId: true,
                   direccionSuministro: true,
-                  cliente: { select: { nombres: true, apellidos: true } },
+                  cliente: {
+                    select: {
+                      nombres: true,
+                      apellidos: true,
+                      razonSocial: true,
+                    },
+                  },
                 },
               },
             },

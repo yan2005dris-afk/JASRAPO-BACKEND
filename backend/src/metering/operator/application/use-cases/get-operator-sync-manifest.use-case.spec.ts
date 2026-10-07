@@ -71,6 +71,46 @@ describe('GetOperatorSyncManifestUseCase', () => {
     expect(result.routes.nextCursor).toBeNull();
   });
 
+  it('uses the business name for meters in the offline snapshot', async () => {
+    repository.findSyncMeters.mockResolvedValue({
+      items: [
+        {
+          medidorId: 55n,
+          serie: 'MED-55',
+          marca: 'Marca',
+          modelo: 'Modelo',
+          estado: 'INSTALADO',
+          fechaInstalacion: null,
+          fechaBaja: null,
+          motivo: null,
+          historial: [
+            {
+              contrato: {
+                contratoId: 99n,
+                direccionSuministro: 'Calle 1',
+                cliente: {
+                  nombres: 'Nombre',
+                  apellidos: 'Personal',
+                  razonSocial: 'Empresa del Agua',
+                },
+              },
+            },
+          ],
+        },
+      ],
+      total: 1,
+      hasMore: false,
+      nextPosition: null,
+    });
+
+    const result = await useCase.execute(10);
+
+    expect(result.meters.items[0]).toMatchObject({
+      serie: 'MED-55',
+      clienteNombre: 'Empresa del Agua',
+    });
+  });
+
   it('serializes readings and work orders without BigInt leakage in snapshot mode', async () => {
     repository.findSyncReadings.mockResolvedValue({
       items: [
