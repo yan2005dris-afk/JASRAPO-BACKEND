@@ -1,3 +1,4 @@
+import { normalizeContractProcedure } from '../../domain/contract-procedure';
 import { Injectable } from '@nestjs/common';
 import { ContractRepository } from '../../domain/repositories/contract.repository';
 import { ActualizarContratoMedidorDto } from '../../interfaces/dto/update-contrato-medidor.dto';
@@ -97,6 +98,27 @@ export class UpdateContractUseCase {
       fields.comunidadId = Number(dto.comunidadId);
     if (dto.latitud !== undefined) fields.latitud = dto.latitud;
     if (dto.longitud !== undefined) fields.longitud = dto.longitud;
+    const procedureKeys = [
+      'tramitadorEsTitular',
+      'tramitadorNombre',
+      'tramitadorIdentificacion',
+      'relacionTramitador',
+      'observacionesTramite',
+      'otrasNovedades',
+    ] as const;
+    if (procedureKeys.some((key) => dto[key] !== undefined)) {
+      const changes = Object.fromEntries(
+        procedureKeys
+          .filter((key) => dto[key] !== undefined)
+          .map((key) => [key, dto[key]]),
+      );
+      const normalized = normalizeContractProcedure({
+        ...current,
+        tramitadorEsTitular: current.tramitadorEsTitular ?? undefined,
+        ...changes,
+      });
+      Object.assign(fields, normalized);
+    }
     return fields;
   }
 }

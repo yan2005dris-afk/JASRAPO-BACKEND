@@ -1,3 +1,4 @@
+import type { ContractProcedureData } from '../contract-procedure';
 import type {
   ContractTariffCategoryRef,
   ContractClientRef,
@@ -10,7 +11,14 @@ import type {
   EstadoServicioContrato,
 } from 'src/shared/enums';
 
-export class ContractEntity {
+export class ContractEntity implements ContractProcedureData {
+  tramitadorEsTitular?: boolean | null;
+  tramitadorNombre?: string | null;
+  tramitadorIdentificacion?: string | null;
+  relacionTramitador?: string | null;
+  observacionesTramite?: string | null;
+  otrasNovedades?: string | null;
+  registradoPorId?: number | null;
   contratoId: bigint;
   clienteId: bigint;
   sectorId: number | null;

@@ -302,4 +302,29 @@ describe('CreateContractUseCase', () => {
 
     await expect(useCase.execute(dto)).rejects.toThrow(NotFoundException);
   });
+  it('records the authenticated actor instead of trusting a client-supplied creator', async () => {
+    mockContractRepository.createContractWithMeterHistory.mockResolvedValue({});
+    await useCase.execute(
+      {
+        clienteId: '10',
+        categoriaTarifaId: '3',
+        medidorId: '200',
+        numeroGuia: 'G-actor',
+        direccionSuministro: 'Test',
+        comunidadId: '2',
+        creadoPor: 'spoofed',
+        tramitadorEsTitular: true,
+      },
+      7,
+    );
+    expect(
+      mockContractRepository.createContractWithMeterHistory,
+    ).toHaveBeenCalledWith(
+      expect.objectContaining({
+        registradoPorId: 7,
+        creadoPor: '7',
+        tramitadorEsTitular: true,
+      }),
+    );
+  });
 });
