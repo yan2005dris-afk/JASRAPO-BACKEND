@@ -21,6 +21,11 @@ import { ContractResponseDto } from '../dto/contract-response.dto';
 import { ServiceAreaResponseDto } from '../dto/service-area-response.dto';
 import { RouteResponseDto } from '../../../routes/interfaces/dto/route-response.dto';
 import {
+  EnumStateDto,
+  buildStateCatalog,
+} from 'src/shared/enums/state-catalog';
+import { EstadoServicioContrato } from 'src/shared/enums';
+import {
   ApiTags,
   ApiBearerAuth,
   ApiOperation,
@@ -113,6 +118,29 @@ export class ContratoMedidorController {
     return ServiceAreaResponseDto.fromDomain(
       this.contratoMedidorService.getServiceArea(),
     );
+  }
+
+  @ApiOperation({
+    summary: 'Catálogo de estados de servicio del contrato',
+    description: 'Retorna la lista de estados de contrato para filtrado y UI',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Catálogo de estados de contrato',
+    type: [EnumStateDto],
+  })
+  @RequiredPermission('contracts', 'read')
+  @Get('states')
+  getStates(): EnumStateDto[] {
+    return buildStateCatalog(EstadoServicioContrato, {
+      PENDIENTE_INSPECCION: 'Pendiente Inspección',
+      RECHAZADO: 'Rechazado',
+      PENDIENTE_PAGO: 'Pendiente Pago',
+      PENDIENTE_INSTALACION: 'Pendiente Instalación',
+      ACTIVO: 'Activo',
+      SUSPENDIDO: 'Suspendido',
+      RETIRADO: 'Retirado',
+    });
   }
 
   @ApiOperation({
