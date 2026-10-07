@@ -63,12 +63,18 @@ describe('ContratoMedidorController', () => {
         clienteId: '10',
         categoriaTarifaId: '1',
         medidorId: '100',
+        numeroGuia: 'G-001',
         direccionSuministro: 'Av. 1',
         comunidadId: '1',
       },
-      { rol: 'ADMIN' } as any,
+      { usersId: 7, rol: 'ADMIN' } as any,
     );
 
+    expect(mockService.crearContrato).toHaveBeenCalledWith(
+      expect.any(Object),
+      7,
+      'ADMIN',
+    );
     expect(result.contratoId).toBe(1n);
     expect(result.numeroGuia).toBe('G-001');
   });

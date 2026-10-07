@@ -1,3 +1,4 @@
+import { ContractProcedureDto } from './contract-procedure.dto';
 import {
   IsNotEmpty,
   IsNumberString,
@@ -18,7 +19,7 @@ import {
   IsContractLongitude,
 } from './contract-coordinates.decorator';
 
-export class CrearContratoMedidorDto {
+export class CrearContratoMedidorDto extends ContractProcedureDto {
   @ApiProperty({ description: 'ID del cliente', example: '1' })
   @IsNotEmpty()
   @IsNumberString()

@@ -245,3 +245,12 @@ DELETE FROM "_prisma_migrations" WHERE "migration_name" = '20260925000000_move_c
 ```
 
 Luego desplegar el código anterior a esta migración. No es recuperable con este script: coordenadas ingresadas en contratos sin vínculo de medidor abierto, y coordenadas originales de medidores sin vínculo (bodega/retirados); esos casos requieren el respaldo previo al despliegue.
+
+
+### Trazabilidad del trámite (SC-310)
+
+Al crear el contrato, `registradoPorId` identifica al usuario autenticado. El cliente HTTP no elige este usuario y la edición no lo modifica. Los contratos existentes conservan este dato vacío cuando no se conoce.
+
+`tramitadorEsTitular` distingue al titular de otra persona que realiza el trámite. Si es otra persona, se requieren `tramitadorNombre`, `tramitadorIdentificacion` y `relacionTramitador`. Si es el titular, se utiliza la relación con el cliente y se limpian los datos anteriores de otro tramitador.
+
+`observacionesTramite` y `otrasNovedades` guardan texto opcional de hasta 2000 caracteres. Estos campos se aceptan en creación y edición y se devuelven en consultas. Enviar `null` permite borrar una observación anterior.

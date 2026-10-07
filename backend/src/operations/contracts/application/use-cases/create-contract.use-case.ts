@@ -1,3 +1,4 @@
+import { normalizeContractProcedure } from '../../domain/contract-procedure';
 import { Injectable } from '@nestjs/common';
 import { ContractState } from '../../domain/contract-state';
 import { EstadoServicioContrato } from 'src/shared/enums';
@@ -13,8 +14,14 @@ export class CreateContractUseCase {
 
   async execute(
     dto: CrearContratoMedidorDto,
+    actorUserIdOrRole?: number | string,
     userRole?: string,
   ): Promise<ContractEntity> {
+    const actorUserId =
+      typeof actorUserIdOrRole === 'number' ? actorUserIdOrRole : undefined;
+    const effectiveRole =
+      typeof actorUserIdOrRole === 'string' ? actorUserIdOrRole : userRole;
+
     if (dto.latitud != null && dto.longitud != null) {
       const locationError = validateServiceAreaLocation(
         dto.latitud,
@@ -33,12 +40,14 @@ export class CreateContractUseCase {
 
     // Solo admin/superadmin puede definir lecturaInicial; para otros roles se fuerza a 0
     const isAdmin =
-      userRole?.toLowerCase() === 'admin' ||
-      userRole?.toLowerCase() === 'superadmin';
+      effectiveRole?.toLowerCase() === 'admin' ||
+      effectiveRole?.toLowerCase() === 'superadmin';
     const lecturaInicial =
       isAdmin && dto.lecturaInicial !== undefined ? dto.lecturaInicial : 0;
 
     return this.contractRepository.createContractWithMeterHistory({
+      ...normalizeContractProcedure(dto),
+      ...(actorUserId !== undefined ? { registradoPorId: actorUserId } : {}),
       clienteId: BigInt(dto.clienteId),
       categoriaTarifaId: Number(dto.categoriaTarifaId),
       medidorId: BigInt(dto.medidorId),
@@ -47,7 +56,8 @@ export class CreateContractUseCase {
       direccionSuministro: dto.direccionSuministro,
       estadoServicio,
       estadoCobranza,
-      creadoPor: dto.creadoPor,
+      creadoPor:
+        actorUserId !== undefined ? String(actorUserId) : dto.creadoPor,
       lecturaInicial,
       latitud: dto.latitud,
       longitud: dto.longitud,

@@ -1,3 +1,4 @@
+import { ContractProcedureDto } from './contract-procedure.dto';
 import { IsNumberString, IsOptional, IsString, IsIn } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsNotEmptyString } from 'src/infrastructure/common/decorators/is-not-empty-string.decorator';
@@ -10,7 +11,7 @@ import {
   IsContractLongitude,
 } from './contract-coordinates.decorator';
 
-export class ActualizarContratoMedidorDto {
+export class ActualizarContratoMedidorDto extends ContractProcedureDto {
   @ApiPropertyOptional({ enum: EstadoServicioContrato })
   @IsOptional()
   @IsString()
