@@ -15,7 +15,11 @@ describe('OperatorNoveltiesController', () => {
   it('paginates the authenticated operator novelties', async () => {
     service.list.mockResolvedValue({ data: [], total: 0 });
     await controller.list(user, '2', '20');
-    expect(service.list).toHaveBeenCalledWith(9, 2, 20);
+    expect(service.list).toHaveBeenCalledWith(9, 2, 20, {
+      lecturaId: undefined,
+      ordenTrabajoId: undefined,
+      estado: undefined,
+    });
     expect(() => controller.list(user, '0', '20')).toThrow(BadRequestException);
   });
 

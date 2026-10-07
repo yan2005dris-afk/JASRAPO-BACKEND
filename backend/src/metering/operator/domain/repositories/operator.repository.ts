@@ -87,10 +87,6 @@ export abstract class OperatorRepository {
     comunidadId: number;
     sectorId: number | null;
   } | null>;
-  abstract findReadingsWithPendingAnomalies(
-    operarioId: number,
-    periodoId: number,
-  ): Promise<ReadingWithAnomalies[]>;
 
   abstract findSyncRoutes(
     operarioId: number,

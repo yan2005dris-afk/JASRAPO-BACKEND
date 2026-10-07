@@ -71,8 +71,24 @@ export class OperatorNoveltiesService {
     };
   }
 
-  async list(operarioId: number, page = 1, limit = 100) {
-    const where = this.visibleTo(operarioId);
+  async list(
+    operarioId: number,
+    page = 1,
+    limit = 100,
+    filters?: {
+      lecturaId?: bigint;
+      ordenTrabajoId?: bigint;
+      estado?: string;
+    },
+  ) {
+    const where: any = {
+      ...this.visibleTo(operarioId),
+      ...(filters?.lecturaId ? { lecturaId: filters.lecturaId } : {}),
+      ...(filters?.ordenTrabajoId
+        ? { ordenTrabajoId: filters.ordenTrabajoId }
+        : {}),
+      ...(filters?.estado ? { estado: filters.estado } : {}),
+    };
     const [rows, total] = await Promise.all([
       this.prisma.novedadOrdenTrabajo.findMany({
         where,

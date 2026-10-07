@@ -6,7 +6,6 @@ import {
   Param,
   Body,
   Query,
-  Post,
   ParseEnumPipe,
   UseInterceptors,
   UploadedFile,
@@ -35,17 +34,11 @@ import { UpdateOperatorReadingDto } from '../dto/update-operator-reading.dto';
 import { OPERATOR_IMAGE_UPLOAD_OPTIONS } from './operator-image-upload.options';
 import { OrderWorkResponseDto } from 'src/operations/routes/interfaces/dto/orden-trabajo-response.dto';
 import { ResponseReadingDto } from 'src/metering/readings/interfaces/dto/response-reading.dto';
-import { MeterResponseDto } from 'src/metering/meters/interfaces/dto/meter-response.dto';
-import { DecommissionMeterDto } from '../dto/decommission-meter.dto';
 import { GetOperatorRoutesUseCase } from '../../application/use-cases/get-operator-routes.use-case';
 import { UpdateRouteStateUseCase } from '../../application/use-cases/update-route-state.use-case';
 import { UpdateRouteStateDto } from '../../interfaces/dto/update-route-state.dto';
 import { OperatorRouteResponseDto } from '../../interfaces/dto/operator-route-response.dto';
-import { OperatorReadingAnomalyResponseDto } from '../../interfaces/dto/operator-reading-anomaly-response.dto';
 import { TipoActividadCodes } from 'src/shared/enums';
-import { ReportDefectUseCase } from '../../application/use-cases/report-defect.use-case';
-import { DecommissionMeterUseCase } from '../../application/use-cases/decommission-meter.use-case';
-import { GetOperatorReadingsWithAnomaliesUseCase } from '../../application/use-cases/get-operator-readings-with-anomalies.use-case';
 import { StorageService } from 'src/infrastructure/storage/storage.service';
 import { GetOperatorSyncManifestUseCase } from '../../application/use-cases/get-operator-sync-manifest.use-case';
 import { GetOperatorActivityTypesUseCase } from '../../application/use-cases/get-operator-activity-types.use-case';
@@ -121,11 +114,8 @@ export class OperatorController {
     private readonly getOperatorReadingsUseCase: GetOperatorReadingsUseCase,
     private readonly updateOperatorReadingUseCase: UpdateOperatorReadingUseCase,
     private readonly updateOperatorWorkOrderUseCase: UpdateOperatorWorkOrderUseCase,
-    private readonly reportDefectUseCase: ReportDefectUseCase,
-    private readonly decommissionMeterUseCase: DecommissionMeterUseCase,
     private readonly getOperatorRoutesUseCase: GetOperatorRoutesUseCase,
     private readonly updateRouteStateUseCase: UpdateRouteStateUseCase,
-    private readonly getOperatorReadingsWithAnomaliesUseCase: GetOperatorReadingsWithAnomaliesUseCase,
     private readonly storageService: StorageService,
     private readonly getOperatorSyncManifestUseCase: GetOperatorSyncManifestUseCase,
     private readonly getOperatorActivityTypesUseCase: GetOperatorActivityTypesUseCase,
@@ -169,38 +159,6 @@ export class OperatorController {
   ): Promise<ResponseReadingDto[]> {
     const operarioId = this.getAuthenticatedOperatorId(user);
     return this.getOperatorReadingsUseCase.execute(operarioId);
-  }
-
-  /**
-   * List readings with pending anomalies for the operator
-   * GET /operator/readings/anomalies
-   */
-  @ApiOperation({
-    summary: 'Lecturas con anomalías pendientes',
-    description:
-      'Retorna las lecturas con estado CON_NOVEDAD que tienen anomalías en estado PENDIENTE, ' +
-      'pertenecientes a las rutas activas del operario en el período activo',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Lista de lecturas con anomalías pendientes',
-    type: [OperatorReadingAnomalyResponseDto],
-  })
-  @ApiResponse(
-    operatorErrorResponse(400, 'Identificador del operador inválido'),
-  )
-  @ApiResponse(operatorErrorResponse(401, 'No autenticado'))
-  @ApiResponse(operatorErrorResponse(403, 'Sin permiso lecturas:read'))
-  @ApiResponse(operatorErrorResponse(404, 'No hay período activo'))
-  @RequiredPermission('lecturas', 'read')
-  @Get('readings/anomalies')
-  async getReadingsWithAnomalies(
-    @CurrentUser() user: JwtPayload,
-  ): Promise<OperatorReadingAnomalyResponseDto[]> {
-    const operarioId = this.getAuthenticatedOperatorId(user);
-    const readings =
-      await this.getOperatorReadingsWithAnomaliesUseCase.execute(operarioId);
-    return readings.map((r) => OperatorReadingAnomalyResponseDto.fromEntity(r));
   }
 
   @ApiOperation({
@@ -341,99 +299,6 @@ export class OperatorController {
       }
       throw error;
     }
-  }
-
-  /**
-   * Reportar daño de un medidor y crear tarea de inspección
-   * POST /operator/:id/report-defect
-   */
-  @ApiOperation({
-    summary: 'Reportar daño',
-    description: 'Marca un medidor como dañado (INSTALADO → DAÑADO).',
-  })
-  @ApiParam({
-    name: 'id',
-    description: 'ID del medidor',
-    type: Number,
-    example: 1,
-    required: true,
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Daño reportado',
-    type: MeterResponseDto,
-  })
-  @ApiResponse(
-    operatorErrorResponse(
-      400,
-      'Identificador inválido o el medidor no está en estado INSTALADO',
-    ),
-  )
-  @ApiResponse(operatorErrorResponse(401, 'No autenticado'))
-  @ApiResponse(operatorErrorResponse(403, 'Medidor fuera de la ruta asignada'))
-  @ApiResponse(operatorErrorResponse(404, 'Medidor no encontrado'))
-  @ApiResponse(operatorErrorResponse(409, 'Conflicto de concurrencia'))
-  @RequiredPermission('meters', 'update')
-  @Post(':id/report-defect')
-  async reportDefect(
-    @Param('id', ParseBigIntPipe) id: bigint,
-    @CurrentUser() user: JwtPayload,
-  ): Promise<MeterResponseDto> {
-    return MeterResponseDto.fromEntity(
-      await this.reportDefectUseCase.execute(
-        id,
-        this.getAuthenticatedOperatorId(user),
-      ),
-    );
-  }
-
-  /**
-   * Dar de baja un medidor y crear tarea de inspección
-   * POST /operator/:id/decommission
-   */
-  @ApiOperation({
-    summary: 'Dar de baja',
-    description: 'Desactiva un medidor del sistema (DAÑADO → BAJA).',
-  })
-  @ApiParam({
-    name: 'id',
-    description: 'ID del medidor',
-    type: Number,
-    example: 1,
-  })
-  @ApiBody({
-    schema: { example: { motivoBaja: 'Replacement' } },
-    description: 'Motivo de la baja',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Medidor dado de baja',
-    type: MeterResponseDto,
-  })
-  @ApiResponse(
-    operatorErrorResponse(
-      400,
-      'Identificador inválido o el medidor no está en estado DANADO',
-    ),
-  )
-  @ApiResponse(operatorErrorResponse(401, 'No autenticado'))
-  @ApiResponse(operatorErrorResponse(403, 'Medidor fuera de la ruta asignada'))
-  @ApiResponse(operatorErrorResponse(404, 'Medidor no encontrado'))
-  @ApiResponse(operatorErrorResponse(409, 'Conflicto de concurrencia'))
-  @RequiredPermission('meters', 'delete')
-  @Post(':id/decommission')
-  async decommission(
-    @Param('id', ParseBigIntPipe) id: bigint,
-    @Body() dto: DecommissionMeterDto,
-    @CurrentUser() user: JwtPayload,
-  ): Promise<MeterResponseDto> {
-    return MeterResponseDto.fromEntity(
-      await this.decommissionMeterUseCase.execute(
-        id,
-        dto.motivoBaja,
-        this.getAuthenticatedOperatorId(user),
-      ),
-    );
   }
 
   @ApiOperation({ summary: 'Manifiesto paginado de sincronización offline' })

@@ -10,7 +10,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiConsumes, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from 'src/identity/auth/interfaces/http/decorators/current-user.decorator';
 import type { JwtPayload } from 'src/identity/auth/application/types/jwt.types';
 import { RequiredPermission } from 'src/infrastructure/common/decorators/require-permission.decorator';
@@ -20,7 +20,7 @@ import { MAX_UPLOAD_SIZE_BYTES } from 'src/infrastructure/config/app.constants';
 import { UpdateWorkOrderNoveltyDto } from 'src/operations/work-order-novelties/interfaces/dto/update-work-order-novelty.dto';
 import { OperatorNoveltiesService } from '../../application/operator-novelties.service';
 
-@ApiTags('operator-novelties')
+@ApiTags('operator')
 @ApiBearerAuth()
 @Controller('operator/novelties')
 export class OperatorNoveltiesController {
@@ -35,11 +35,19 @@ export class OperatorNoveltiesController {
   }
 
   @RequiredPermission('work-order-novelties', 'read')
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'lecturaId', required: false, type: String })
+  @ApiQuery({ name: 'ordenTrabajoId', required: false, type: String })
+  @ApiQuery({ name: 'estado', required: false, type: String })
   @Get()
   list(
     @CurrentUser() user: JwtPayload,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
+    @Query('lecturaId') lecturaId?: string,
+    @Query('ordenTrabajoId') ordenTrabajoId?: string,
+    @Query('estado') estado?: string,
   ) {
     const pageNumber = page === undefined ? 1 : Number(page);
     const limitNumber = limit === undefined ? 100 : Number(limit);
@@ -52,7 +60,11 @@ export class OperatorNoveltiesController {
     ) {
       throw new BadRequestException('Paginación inválida');
     }
-    return this.service.list(this.operatorId(user), pageNumber, limitNumber);
+    return this.service.list(this.operatorId(user), pageNumber, limitNumber, {
+      lecturaId: lecturaId ? BigInt(lecturaId) : undefined,
+      ordenTrabajoId: ordenTrabajoId ? BigInt(ordenTrabajoId) : undefined,
+      estado,
+    });
   }
 
   @RequiredPermission('work-order-novelties', 'read')
