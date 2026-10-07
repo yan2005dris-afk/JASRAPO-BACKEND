@@ -42,10 +42,7 @@ describe('OperatorController work-order update', () => {
       undefined as any,
       undefined as any,
       useCase as any,
-      undefined as any,
-      undefined as any,
       routesUseCase as any,
-      undefined as any,
       undefined as any,
       storage as any,
       undefined as any,
@@ -77,11 +74,9 @@ describe('OperatorController work-order update', () => {
       undefined as any,
       undefined as any,
       undefined as any,
-      undefined as any,
-      undefined as any,
-      undefined as any,
       storage as any,
       manifest as any,
+      undefined as any,
     );
     await wired.syncManifest({ sub: '17' } as any, 'opaque-cursor', '25');
     expect(manifest.execute).toHaveBeenCalledWith(17, 'opaque-cursor', 25);

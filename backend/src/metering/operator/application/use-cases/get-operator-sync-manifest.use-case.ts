@@ -17,7 +17,6 @@ import type {
   OperatorSyncChange,
 } from '../../domain/repositories/repository-types';
 import { OperatorRouteResponseDto } from '../../interfaces/dto/operator-route-response.dto';
-import { OperatorReadingAnomalyResponseDto } from '../../interfaces/dto/operator-reading-anomaly-response.dto';
 import { MeterResponseDto } from 'src/metering/meters/interfaces/dto/meter-response.dto';
 import {
   OperatorSyncManifestDto,
@@ -197,7 +196,7 @@ export class GetOperatorSyncManifestUseCase {
       ),
       readings: this.mapPage(readingPage, (item) => this.readingDto(item)),
       pendingAnomalies: this.mapPage(anomalyPage, (item) =>
-        OperatorReadingAnomalyResponseDto.fromEntity(item as any),
+        this.readingAnomalyDto(item),
       ),
     };
     const rawPages = {
@@ -463,6 +462,21 @@ export class GetOperatorSyncManifestUseCase {
         ? new Date(order.completadoEn).toISOString()
         : null,
       medidor: order.medidor ? this.sanitizeBigInt(order.medidor) : null,
+    };
+  }
+
+  private readingAnomalyDto(r: any): Record<string, unknown> {
+    return {
+      lecturaId: r.lecturaId?.toString() ?? null,
+      medidorId: r.medidor?.medidorId?.toString() ?? null,
+      medidorSerie: r.medidor?.serie ?? '',
+      fecha: r.fecha,
+      estado: r.estado,
+      anomalias: (r.novedadesOrdenTrabajo ?? []).map((a: any) => ({
+        tipo: a.tipo,
+        observacion: a.observacion,
+        estado: a.estado,
+      })),
     };
   }
 }

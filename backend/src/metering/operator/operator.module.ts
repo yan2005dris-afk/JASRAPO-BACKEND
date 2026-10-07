@@ -7,9 +7,6 @@ import { UpdateOperatorReadingUseCase } from './application/use-cases/update-ope
 import { UpdateOperatorWorkOrderUseCase } from './application/use-cases/update-operator-work-order.use-case';
 import { GetOperatorRoutesUseCase } from './application/use-cases/get-operator-routes.use-case';
 import { UpdateRouteStateUseCase } from './application/use-cases/update-route-state.use-case';
-import { ReportDefectUseCase } from './application/use-cases/report-defect.use-case';
-import { DecommissionMeterUseCase } from './application/use-cases/decommission-meter.use-case';
-import { GetOperatorReadingsWithAnomaliesUseCase } from './application/use-cases/get-operator-readings-with-anomalies.use-case';
 import { GetOperatorSyncManifestUseCase } from './application/use-cases/get-operator-sync-manifest.use-case';
 import { GetOperatorActivityTypesUseCase } from './application/use-cases/get-operator-activity-types.use-case';
 import { PrismaOperatorRepository } from './infrastructure/repositories/prisma-operator.repository';
@@ -29,9 +26,6 @@ import { WorkOrderNoveltiesModule } from 'src/operations/work-order-novelties/wo
     UpdateOperatorWorkOrderUseCase,
     GetOperatorRoutesUseCase,
     UpdateRouteStateUseCase,
-    ReportDefectUseCase,
-    DecommissionMeterUseCase,
-    GetOperatorReadingsWithAnomaliesUseCase,
     GetOperatorSyncManifestUseCase,
     GetOperatorActivityTypesUseCase,
     OperatorNoveltiesService,
