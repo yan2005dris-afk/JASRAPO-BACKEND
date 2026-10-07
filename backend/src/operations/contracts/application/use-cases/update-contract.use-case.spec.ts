@@ -4,6 +4,7 @@ import { UpdateContractUseCase } from './update-contract.use-case';
 import { ContractRepository } from '../../domain/repositories/contract.repository';
 import { ContractEntity } from '../../domain/entities/contract.entity';
 import {
+  DomainValidationException,
   EntityNotFoundException,
   InvalidDomainOperationException,
 } from 'src/shared/domain/exceptions/domain.exception';
@@ -117,6 +118,56 @@ describe('UpdateContractUseCase', () => {
     expect(mockContractRepository.update).toHaveBeenCalledWith(id, {
       latitud: -1.8021,
       longitud: -80.7554,
+    });
+  });
+
+  it('rejects new coordinates outside the service area without updating', async () => {
+    mockContractRepository.findById.mockResolvedValue(
+      new ContractEntity({
+        contratoId: BigInt(1),
+        deletedAt: null,
+        latitud: -1.7982,
+        longitud: -80.7582,
+      }),
+    );
+
+    const result = useCase.execute(BigInt(1), {
+      latitud: -1.8,
+      longitud: -80.8,
+    });
+
+    await expect(result).rejects.toBeInstanceOf(DomainValidationException);
+    await expect(result).rejects.toThrow(
+      'La ubicación seleccionada está fuera del área de servicio de la Junta (parroquia Manglaralto)',
+    );
+    expect(mockContractRepository.update).not.toHaveBeenCalled();
+  });
+
+  it('keeps unchanged legacy coordinates outside the service area when editing other fields', async () => {
+    const id = BigInt(1);
+
+    mockContractRepository.findById.mockResolvedValue(
+      new ContractEntity({
+        contratoId: id,
+        deletedAt: null,
+        latitud: -1.8,
+        longitud: -80.8,
+      }),
+    );
+    mockContractRepository.update.mockResolvedValue(
+      new ContractEntity({ contratoId: id }),
+    );
+
+    await useCase.execute(id, {
+      direccionSuministro: 'Nueva Dir',
+      latitud: -1.8,
+      longitud: -80.8,
+    });
+
+    expect(mockContractRepository.update).toHaveBeenCalledWith(id, {
+      direccionSuministro: 'Nueva Dir',
+      latitud: -1.8,
+      longitud: -80.8,
     });
   });
 

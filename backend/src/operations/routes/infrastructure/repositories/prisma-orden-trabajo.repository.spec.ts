@@ -55,6 +55,70 @@ describe('PrismaOrdenTrabajoRepository.updateOperatorWorkOrder', () => {
       }),
     );
   });
+
+  it('persists operator GPS coordinates and only forwards settable fields', async () => {
+    const update = jest.fn().mockResolvedValue({
+      ordenTrabajoId: 1n,
+      rutaId: 2n,
+      contratoId: 3n,
+      medidorId: 4n,
+      estado: 'COMPLETADA',
+      ordenVisita: 1,
+      resultadoObservacion: null,
+      evidenciaFotoUrl: null,
+      completadoEn: new Date(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      deletedAt: null,
+      lecturaId: null,
+      ruta: { tipoActividad: { codigo: 'INSTALACION' } },
+    });
+    const tx = {
+      $queryRaw: jest.fn(),
+      ordenesTrabajo: {
+        findUnique: jest.fn().mockResolvedValue({
+          ordenTrabajoId: 1n,
+          contratoId: 3n,
+          medidorId: 4n,
+          estado: 'PENDIENTE',
+          completadoEn: null,
+          ruta: { tipoActividad: { codigo: 'INSTALACION' } },
+        }),
+        update,
+      },
+      contratos: {
+        findUnique: jest
+          .fn()
+          .mockResolvedValue({ estadoServicio: 'PENDIENTE_INSTALACION' }),
+        update: jest.fn().mockResolvedValue({}),
+      },
+      medidores: {
+        updateMany: jest.fn().mockResolvedValue({ count: 1 }),
+      },
+    };
+    const prisma = {
+      $transaction: jest.fn((callback: (value: typeof tx) => unknown) =>
+        callback(tx),
+      ),
+    };
+
+    await new PrismaOrdenTrabajoRepository(
+      prisma as any,
+    ).updateOperatorWorkOrder(1n, {
+      estado: 'COMPLETADA',
+      latitud: -26.80828472,
+      longitud: -65.25268137,
+    });
+
+    expect(update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          latitud: -26.80828472,
+          longitud: -65.25268137,
+        }),
+      }),
+    );
+  });
 });
 
 describe('PrismaOrdenTrabajoRepository contract lifecycle effects', () => {

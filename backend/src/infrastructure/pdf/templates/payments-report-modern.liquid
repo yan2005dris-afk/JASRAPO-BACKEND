@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reporte de Abonos - Moderno</title>
+    <!-- Removed External Fonts -->
+    {% render "styles" %}
+    {% render "modern-styles" %}
+    <style>
+        .header-right {
+            text-align: right;
+            border-left: 2px solid var(--brand-light);
+            padding-left: 24px;
+        }
+
+        .total-label-sm {
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-light);
+            font-weight: 700;
+            margin: 0 0 4px 0;
+        }
+
+        .total-amount-lg {
+            font-size: 26px;
+            font-weight: 700;
+            color: var(--brand-dark);
+            margin: 0;
+        }
+
+        /* Metrics Box */
+        .metrics-box {
+            display: flex;
+            justify-content: space-between;
+            background-color: var(--brand-light);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+
+        .metric-col {
+            border-left: 1px solid #cbd5e1;
+            padding-left: 24px;
+        }
+
+        .metric-col:first-child {
+            border-left: none;
+            padding-left: 0;
+        }
+
+        .metric-col-right {
+            flex: 1;
+            text-align: right;
+        }
+
+        .metric-label {
+            font-size: 9px;
+            text-transform: uppercase;
+            font-weight: 700;
+            color: var(--brand-accent);
+            letter-spacing: 0.5px;
+            margin: 0 0 4px 0;
+        }
+
+        .metric-value {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--brand-dark);
+            margin: 0;
+        }
+
+        .metric-value span {
+            font-size: 10px;
+            font-weight: 500;
+            color: var(--text-light);
+        }
+
+        /* Table */
+        .table-container {
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            font-size: 9px;
+        }
+
+        th {
+            background-color: var(--brand-main);
+            color: #ffffff;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        th.text-right { text-align: right; }
+        td.text-right { text-align: right; }
+
+        td {
+            padding: 10px 12px;
+            vertical-align: top;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        tr:nth-child(even) td {
+            background-color: #f8fafc;
+        }
+
+        .col-factura { font-weight: 700; color: var(--brand-dark); }
+        .col-fecha { color: var(--text-light); }
+        .col-cliente { color: #1e293b; font-weight: 500; }
+        .col-cuenta { color: var(--text-light); }
+        .col-medidor { color: var(--text-light); }
+        .col-emision { color: var(--text-light); }
+        .col-valor { font-weight: 700; color: var(--brand-dark); }
+
+        /* Subtotal Row */
+        tr.subtotal-row td {
+            background-color: #f1f5f9;
+            padding: 8px 12px;
+            border-top: 1px solid #cbd5e1;
+            border-bottom: none;
+        }
+
+        .subtotal-label {
+            font-size: 9px;
+            font-weight: 700;
+            color: var(--brand-accent);
+            text-transform: uppercase;
+        }
+
+        .subtotal-value {
+            font-weight: 700;
+            color: var(--brand-dark);
+        }
+
+        /* Footer Box */
+        .footer-container {
+            margin-top: 30px;
+            display: flex;
+            justify-content: flex-end;
+            page-break-inside: avoid;
+        }
+
+        .footer-box {
+            background-color: var(--brand-main);
+            color: #ffffff;
+            border-radius: 6px;
+            padding: 16px 32px;
+            text-align: right;
+            min-width: 250px;
+        }
+
+        .footer-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            font-weight: 700;
+            color: var(--brand-light);
+            letter-spacing: 1px;
+            margin: 0 0 6px 0;
+            opacity: 0.9;
+        }
+
+        .footer-value {
+            font-size: 24px;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        /* Pagination */
+        .pagination {
+            position: fixed;
+            bottom: 15px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 9px;
+            color: var(--text-lighter);
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <header class="header">
+        <div class="header-left">
+            <div class="logo-container">
+                <img src="{{institucion.branding.logo.url}}" alt="Logo institucional">
+            </div>
+            <div>
+                <h1 class="title">{{reporte.titulo}}</h1>
+                <p class="subtitle">{{institucion.nombreLegal}}</p>
+                <p class="date-info">Generado el: <span>{{reporte.fechaEmision}}</span></p>
+            </div>
+        </div>
+        <div class="header-right">
+            <p class="total-label-sm">Recaudación Total</p>
+            <p class="total-amount-lg">${{reporte.totalGeneral}}</p>
+        </div>
+    </header>
+    
+    <div class="metrics-box">
+        <div class="metric-col">
+            <p class="metric-label">Periodo Desde</p>
+            <p class="metric-value">{{reporte.fechaDesde}}</p>
+        </div>
+        <div class="metric-col">
+            <p class="metric-label">Periodo Hasta</p>
+            <p class="metric-value">{{reporte.fechaHasta}}</p>
+        </div>
+        <div class="metric-col metric-col-right">
+            <p class="metric-label">Total Registros</p>
+            <p class="metric-value">{{reporte.totalRegistros}} <span>abonos</span></p>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 13%;">Factura</th>
+                    <th style="width: 12%;">Fecha</th>
+                    <th style="width: 28%;">Cliente</th>
+                    <th style="width: 10%;">Cuenta</th>
+                    <th style="width: 10%;">Medidor</th>
+                    <th class="text-right" style="width: 13%;">Emisión</th>
+                    <th class="text-right" style="width: 14%;">Valor</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for grupo in reporte.grupos %}
+                    
+                    {% for fila in grupo.filas %}
+                    <tr>
+                        <td class="col-factura">{% if forloop.first %}{{ grupo.factura }}{% endif %}</td>
+                        <td class="col-fecha">{% if forloop.first %}{{ grupo.fecha }}{% endif %}</td>
+                        <td class="col-cliente">{% if forloop.first %}{{ grupo.clienteNombre }}{% endif %}</td>
+                        <td class="col-cuenta">{% if forloop.first %}{{ grupo.cuenta }}{% endif %}</td>
+                        <td class="col-medidor">{% if forloop.first %}{{ grupo.medidor }}{% endif %}</td>
+                        <td class="text-right col-emision">{{ fila.emision }}</td>
+                        <td class="text-right col-valor">${{ fila.valor }}</td>
+                    </tr>
+                    {% endfor %}
+                    
+                    <tr class="subtotal-row">
+                        <td colspan="5"></td>
+                        <td class="text-right">
+                            <span class="subtotal-label">Subtotal</span>
+                        </td>
+                        <td class="text-right subtotal-value">
+                            ${{ grupo.subtotal }}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="footer-container">
+        <div class="footer-box">
+            <p class="footer-label">Total General Recaudado</p>
+            <p class="footer-value">${{reporte.totalGeneral}}</p>
+        </div>
+    </div>
+
+
+
+</div>
+
+</body>
+</html>

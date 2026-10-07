@@ -19,6 +19,7 @@ import type {
 import { ContractMapper } from '../mappers/contract.mapper';
 import { ContractState } from '../../domain/contract-state';
 import { ensureContractWorkOrder } from '../contract-work-order';
+import { ContractGuideGeneratorService } from '../services/contract-guide-generator.service';
 import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
 import {
   paginate,
@@ -61,7 +62,10 @@ export type ContractRecord = Prisma.ContratosGetPayload<{
 export class PrismaContractRepository implements ContractRepository {
   private readonly defaultInclude = contractDefaultInclude;
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly contractGuideGenerator: ContractGuideGeneratorService,
+  ) {}
 
   async findById(
     contratoId: bigint,
@@ -255,7 +259,7 @@ export class PrismaContractRepository implements ContractRepository {
     data: CreateContractWithMeterCommand,
   ): Promise<ContractEntity> {
     return this.prisma.$transaction(async (tx) => {
-      await this.validateContractDependencies(tx, data);
+      const dependencies = await this.validateContractDependencies(tx, data);
 
       const reserved = await tx.medidores.updateMany({
         where: {
@@ -272,6 +276,11 @@ export class PrismaContractRepository implements ContractRepository {
         );
       }
 
+      const numeroGuia = await this.contractGuideGenerator.generate(tx, {
+        comunidadId: data.comunidadId,
+        serieMedidor: dependencies.medidorSerie,
+      });
+
       const contrato = await tx.contratos.create({
         data: {
           ...normalizeContractProcedure(data),
@@ -280,7 +289,7 @@ export class PrismaContractRepository implements ContractRepository {
             : {}),
           clienteId: data.clienteId,
           categoriaTarifaId: data.categoriaTarifaId,
-          numeroGuia: data.numeroGuia,
+          numeroGuia,
           direccionSuministro: data.direccionSuministro,
           comunidadId: data.comunidadId,
           estadoServicio: EstadoServicioContrato.PENDIENTE_INSPECCION,
@@ -508,7 +517,7 @@ export class PrismaContractRepository implements ContractRepository {
   private async validateContractDependencies(
     tx: Prisma.TransactionClient,
     data: CreateContractWithMeterCommand,
-  ): Promise<void> {
+  ): Promise<{ medidorSerie: string }> {
     const [cliente, medidor, tarifa, comunidad, sector] = await Promise.all([
       tx.clientes.findUnique({ where: { clienteId: data.clienteId } }),
       tx.medidores.findUnique({ where: { medidorId: data.medidorId } }),
@@ -549,5 +558,7 @@ export class PrismaContractRepository implements ContractRepository {
     if (data.sectorId !== null && !sector) {
       throw new EntityNotFoundException('Sector', data.sectorId);
     }
+
+    return { medidorSerie: medidor.serie };
   }
 }

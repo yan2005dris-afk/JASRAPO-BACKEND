@@ -11,7 +11,7 @@ export class MeterResponseDto {
 
   @ApiPropertyOptional({
     description:
-      'Código institucional correlativo asignado por el sistema al registrar el medidor',
+      'Código institucional legado, puede ser nulo para medidores nuevos',
     example: 'MED-000123',
   })
   codigo: string | null;

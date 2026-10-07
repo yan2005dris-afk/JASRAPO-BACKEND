@@ -120,6 +120,7 @@ void describe('CreateMeterUseCase (integration)', { timeout: 180_000 }, () => {
     assert.ok(row);
     assert.equal(row.estado, EstadoMedidor.BODEGA);
     assert.equal(row.serie, serie);
+    assert.equal(row.codigo, null);
     assert.equal(row.marca, 'Itron');
     assert.equal(row.modelo, 'CX1000');
     assert.equal(await prismaService.medidores.count(), 1);

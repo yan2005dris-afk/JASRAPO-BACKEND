@@ -211,7 +211,6 @@ describe('PrismaReadingRepository - soft delete select regression', () => {
 
       expect(snapshot).toEqual({
         lecturaAnterior: new Decimal('120.50'),
-        lecturaInicial: false,
       });
     });
 
@@ -237,7 +236,6 @@ describe('PrismaReadingRepository - soft delete select regression', () => {
 
       expect(snapshot).toEqual({
         lecturaAnterior: new Decimal('15.00'),
-        lecturaInicial: true,
       });
     });
   });

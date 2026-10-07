@@ -51,7 +51,6 @@ export class GetOperatorReadingsUseCase {
         // Computed fields — not stored in DB
         isValidada: lectura.estado !== 'PENDIENTE',
         tieneAnomalia: !!lectura.descripcionAnomalia,
-        lecturaInicial: lectura.lecturaInicial,
         periodoId: lectura.periodoId,
         estado: lectura.estado,
         contrato: contrato

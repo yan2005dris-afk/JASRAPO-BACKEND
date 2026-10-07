@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Hoja de Campo - {{reporte.rutaNombre}}</title>
+  {% render "styles" %}
+  {% render "modern-styles" %}
+  <style>
+    .meta-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+      padding: 10px;
+      background-color: var(--brand-light);
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+    }
+    .meta-item {
+      flex: 1 1 30%;
+      min-width: 140px;
+    }
+    .meta-label {
+      font-size: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      font-weight: 700;
+      margin: 0;
+    }
+    .meta-val {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--brand-dark);
+      margin: 2px 0 0 0;
+    }
+    .field-table th {
+      background-color: var(--brand-main);
+      color: white;
+      font-size: 8.5px;
+      padding: 6px 4px;
+    }
+    .field-table td {
+      font-size: 8px;
+      padding: 6px 4px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .text-center {
+      text-align: center;
+    }
+    .blank-cell {
+      border: 1px dashed #cbd5e1;
+      height: 18px;
+      background-color: #fafafa;
+    }
+    .summary-box {
+      margin-top: 14px;
+      padding: 8px 12px;
+      background-color: #f8fafc;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 8.5px;
+    }
+    .signature-section {
+      margin-top: 40px;
+      display: flex;
+      justify-content: space-around;
+      page-break-inside: avoid;
+    }
+    .signature-line {
+      width: 200px;
+      border-top: 1px solid #475569;
+      text-align: center;
+      padding-top: 4px;
+      font-size: 8.5px;
+      font-weight: 600;
+      color: #334155;
+    }
+  </style>
+</head>
+<body>
+  <div class="page-container">
+    <div class="header-table">
+      <div class="header-left">
+        <div class="logo-container">
+          <img src="{{institucion.branding.logo.url}}" alt="Logo institucional">
+        </div>
+        <div>
+          <div class="brand-title">{{institucion.siglas}}</div>
+          <div class="brand-subtitle">{{institucion.nombreLegal}}</div>
+          <div class="report-title-main" style="margin-top: 6px;">HOJA DE CAMPO · {{reporte.tipoRutaLabel}}</div>
+          <div class="report-meta-text">Ruta: <strong>#{{reporte.rutaId}} - {{reporte.rutaNombre}}</strong></div>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="total-label-sm">Total Tareas</div>
+        <div class="total-amount-lg">{{reporte.total}}</div>
+        <div class="report-meta-text" style="margin-top: 4px;">Emisión: {{reporte.fechaEmision}}</div>
+      </div>
+    </div>
+
+    <!-- Metadata Grid -->
+    <div class="meta-grid">
+      <div class="meta-item">
+        <p class="meta-label">Comunidad / Sector</p>
+        <p class="meta-val">{{reporte.comunidad}} {% if reporte.sector %} - {{reporte.sector}}{% endif %}</p>
+      </div>
+      <div class="meta-item">
+        <p class="meta-label">Operario Asignado</p>
+        <p class="meta-val">{{reporte.operario}}</p>
+      </div>
+      <div class="meta-item">
+        <p class="meta-label">Período Contable</p>
+        <p class="meta-val">{{reporte.periodo}}</p>
+      </div>
+      <div class="meta-item">
+        <p class="meta-label">Estado de la Ruta</p>
+        <p class="meta-val">{{reporte.estado}}</p>
+      </div>
+      <div class="meta-item">
+        <p class="meta-label">Instrucciones</p>
+        <p class="meta-val">{{reporte.descripcion}}</p>
+      </div>
+    </div>
+
+    {% if reporte.isLectura %}
+    <!-- Tabla de Toma de Lecturas -->
+    <table class="field-table modern-table" style="margin-top: 14px; width: 100%;">
+      <thead>
+        <tr>
+          <th style="width: 25px;" class="text-center">#</th>
+          <th style="width: 55px;">N° Guía</th>
+          <th>Cliente</th>
+          <th>Dirección de Suministro</th>
+          <th style="width: 70px;">Medidor</th>
+          <th style="width: 50px;" class="text-center">Lect. Ant.</th>
+          <th style="width: 65px;" class="text-center">Lect. Actual</th>
+          <th style="width: 90px;">Firma / Novedad</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in reporte.items %}
+        <tr>
+          <td class="text-center" style="color: var(--text-light); font-weight: bold;">{{ forloop.index }}</td>
+          <td style="font-weight: 600;">{{ item.guia }}</td>
+          <td style="font-weight: 600; color: var(--brand-dark);">{{ item.cliente }}</td>
+          <td style="color: #475569;">{{ item.direccion }}</td>
+          <td style="font-family: monospace; font-weight: 700;">{{ item.medidor }}</td>
+          <td class="text-center" style="font-weight: bold; background-color: #f1f5f9;">{{ item.lecturaAnterior }}</td>
+          <td class="text-center blank-cell"></td>
+          <td class="blank-cell"></td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="8" class="text-center" style="padding: 16px; color: var(--text-muted);">No hay lecturas asignadas a esta ruta.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <!-- Tabla de Órdenes de Trabajo (Instalación, Corte, Reconexión, Mantenimiento) -->
+    <table class="field-table modern-table" style="margin-top: 14px; width: 100%;">
+      <thead>
+        <tr>
+          <th style="width: 25px;" class="text-center">#</th>
+          <th style="width: 65px;">N° Contrato</th>
+          <th>Cliente</th>
+          <th>Dirección</th>
+          <th style="width: 70px;">Medidor</th>
+          <th style="width: 85px;">Tipo Actividad</th>
+          <th style="width: 60px;" class="text-center">Estado</th>
+          <th style="width: 95px;">Firma / Obs.</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in reporte.items %}
+        <tr>
+          <td class="text-center" style="color: var(--text-light); font-weight: bold;">{{ item.ordenVisita }}</td>
+          <td style="font-weight: 600;">{{ item.contrato }}</td>
+          <td style="font-weight: 600; color: var(--brand-dark);">{{ item.cliente }}</td>
+          <td style="color: #475569;">{{ item.direccion }}</td>
+          <td style="font-family: monospace; font-weight: 700;">{{ item.medidor }}</td>
+          <td>{{ item.tipoActividad }}</td>
+          <td class="text-center">{{ item.estado }}</td>
+          <td class="blank-cell"></td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="8" class="text-center" style="padding: 16px; color: var(--text-muted);">No hay órdenes de trabajo asignadas a esta ruta.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% endif %}
+
+    <div class="summary-box">
+      <div><strong>Total de registros en hoja:</strong> {{reporte.total}}</div>
+      <div><strong>Resumen:</strong> Pendientes: {{reporte.pendientes}} · Completadas/Aprobadas: {{reporte.completadas}} · Novedades: {{reporte.conNovedad}}</div>
+    </div>
+
+    <div class="signature-section">
+      <div class="signature-line">
+        Firma del Operario Responsable<br>
+        <span style="font-size: 7.5px; font-weight: normal; color: #64748b;">{{reporte.operario}}</span>
+      </div>
+      <div class="signature-line">
+        Supervisor / Entrega de Hoja<br>
+        <span style="font-size: 7.5px; font-weight: normal; color: #64748b;">{{institucion.siglas}} Administración</span>
+      </div>
+    </div>
+
+    <div class="footer-note" style="margin-top: 30px;">
+      Documento oficial de campo generado por {{institucion.siglas}} Cloud Management System · {{reporte.fechaEmision}}
+    </div>
+  </div>
+</body>
+</html>

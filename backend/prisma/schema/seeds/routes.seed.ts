@@ -172,7 +172,6 @@ export async function seedRoutes(prisma: PrismaClient) {
             lecturaActual: 0,
             consumoCalculado: 0,
             estado: 'PENDIENTE',
-            lecturaInicial: prevLectura == null,
           },
         });
         currentLecturaId = newLectura.lecturaId;

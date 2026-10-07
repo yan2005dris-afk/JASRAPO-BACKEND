@@ -1,4 +1,3 @@
-import { AuthUserId } from 'src/infrastructure/common/decorators/auth-user-id.decorator';
 import {
   Controller,
   Get,
@@ -19,6 +18,7 @@ import { buildPdfFileName } from 'src/infrastructure/pdf/utils/pdf-format.utils'
 import { FilterContractsDto } from '../dto/filter-contracts.dto';
 import { AssignInstallationRouteDto } from '../dto/assign-installation-route.dto';
 import { ContractResponseDto } from '../dto/contract-response.dto';
+import { ServiceAreaResponseDto } from '../dto/service-area-response.dto';
 import { RouteResponseDto } from '../../../routes/interfaces/dto/route-response.dto';
 import {
   ApiTags,
@@ -33,6 +33,8 @@ import { RequiredPermission } from 'src/infrastructure/common/decorators/require
 import { ApiPaginatedResponse } from 'src/infrastructure/common/decorators/api-paginated-response.decorator';
 import { PaginationMetaDto } from 'src/infrastructure/common/dtos/pagination-meta.dto';
 import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
+import { CurrentUser } from 'src/identity/auth/interfaces/http/decorators/current-user.decorator';
+import type { JwtPayload } from 'src/identity/auth/application/types/jwt.types';
 
 @ApiTags('contracts')
 @ApiBearerAuth()
@@ -46,12 +48,12 @@ export class ContratoMedidorController {
   @ApiOperation({
     summary: 'Crear contrato',
     description:
-      'Crea un nuevo contrato con medidor en una transacción. Requiere clienteId, categoriaTarifaId, medidorId, numeroGuia, direccionSuministro, comunidadId obligatorios.',
+      'Crea un nuevo contrato con medidor en una transacción. La guía se genera automáticamente.',
   })
   @ApiBody({
     type: CrearContratoMedidorDto,
     description:
-      'Datos del contrato (clienteId, medidorId, categoriaTarifaId, numeroGuia, direccionSuministro, comunidadId obligatorios)',
+      'Datos del contrato (clienteId, medidorId, categoriaTarifaId, direccionSuministro y comunidadId)',
   })
   @ApiResponse({
     status: 201,
@@ -65,11 +67,13 @@ export class ContratoMedidorController {
   @Post()
   async crear(
     @Body() createDto: CrearContratoMedidorDto,
-    @AuthUserId() actorUserId: number,
+    @CurrentUser() user: JwtPayload,
   ): Promise<ContractResponseDto> {
+    const actorUserId = user?.usersId ?? user?.sub;
     const result = await this.contratoMedidorService.crearContrato(
       createDto,
       actorUserId,
+      user?.rol,
     );
     return ContractResponseDto.fromEntity(result);
   }
@@ -90,6 +94,25 @@ export class ContratoMedidorController {
       data: ContractResponseDto.fromEntityList(result.data),
       meta: result.meta,
     };
+  }
+
+  @ApiOperation({
+    summary: 'Obtener área de servicio',
+    description:
+      'Retorna el perímetro (GeoJSON Polygon) dentro del cual deben ubicarse las coordenadas de los contratos',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Área de servicio de la Junta',
+    type: ServiceAreaResponseDto,
+  })
+  @ApiResponse({ status: 401, description: 'No autorizado' })
+  @RequiredPermission('contracts', 'read')
+  @Get('service-area')
+  getServiceArea(): ServiceAreaResponseDto {
+    return ServiceAreaResponseDto.fromDomain(
+      this.contratoMedidorService.getServiceArea(),
+    );
   }
 
   @ApiOperation({

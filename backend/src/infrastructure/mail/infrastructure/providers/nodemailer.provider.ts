@@ -5,10 +5,11 @@ import {
   SendMailOptions,
   MailResult,
 } from '../../domain/interfaces/mail-provider.interface';
+import { MAIL_TEMPLATES } from '../templates/mail-templates';
 
 /**
  * Proveedor de correo basado en Nodemailer.
- * Soporta SMTP (Gmail, SES, Brevo) y plantillas Handlebars.
+ * Soporta SMTP (Gmail, SES, Brevo) y plantillas tipadas en TypeScript.
  */
 @Injectable()
 export class NodemailerProvider implements IMailProvider {
@@ -18,13 +19,16 @@ export class NodemailerProvider implements IMailProvider {
 
   async send(options: SendMailOptions): Promise<MailResult> {
     try {
+      let html = options.html;
+      if (options.template && MAIL_TEMPLATES[options.template]) {
+        html = MAIL_TEMPLATES[options.template](options.context ?? {});
+      }
+
       const info = await this.mailerService.sendMail({
         to: options.to,
         subject: options.subject,
-        template: options.template,
-        context: options.context,
         text: options.text,
-        html: options.html,
+        html,
         attachments: options.attachments?.map((att) => ({
           filename: att.filename,
           content: att.content,

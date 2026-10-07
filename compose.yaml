@@ -1,0 +1,266 @@
+# ============================================================
+# JASRAPO BACKEND - STACK COMPLETO (Sin Redis)
+# Incluye: PostgreSQL, RustFS, Backend + Observabilidad
+#
+# Puertos alternativos para observabilidad (evitar conflictos):
+# - Prometheus: 9091
+# - Tempo: 3201, 4319, 4320, 16687
+# - Loki: 3101
+# - Grafana: 3001
+# ============================================================
+
+services:
+  # ─── PostgreSQL Database ───────────────────────────────────────
+  postgres:
+    image: postgres:16.3-alpine
+    container_name: jasrapo-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-appuser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-apppass}
+      POSTGRES_DB: ${POSTGRES_DB:-appdb}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "${POSTGRES_HOST_PORT:-5433}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-appuser} -d postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - jasrapo-network
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1G
+
+  # ─── RustFS Storage (S3-compatible, Apache 2.0) ──────────────────
+  # The `:U` flag on the data volume remaps the mount UID/GID to match the
+  # rustfs process inside the container (uid 10001), so we no longer need a
+  # separate init-container to chown the volume on first boot.
+  rustfs:
+    image: rustfs/rustfs:latest
+    container_name: rustfs-server
+    restart: unless-stopped
+    environment:
+      RUSTFS_ACCESS_KEY: ${STORAGE_ACCESS_KEY:-rustfsadmin}
+      RUSTFS_SECRET_KEY: ${STORAGE_SECRET_KEY:-rustfsadmin}
+      RUSTFS_ADDRESS: ":9000"
+      RUSTFS_TLS_PATH: /opt/tls
+      RUSTFS_CONSOLE_ENABLE: "true"
+    volumes:
+      - rustfs_data:/data:U
+      - ./certs:/opt/tls:ro
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    healthcheck:
+      test:
+        - "CMD-SHELL"
+        - >-
+          curl -ks -o /dev/null -w "%{http_code}"
+          https://localhost:9000/
+          | grep -qE '200|403|404'
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    networks:
+      - jasrapo-network
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+
+  # ─── Backend API (NestJS) ───────────────────────────────────────
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: jasrapo-backend
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: "postgresql://${POSTGRES_USER:?}:${POSTGRES_PASSWORD:?}@${POSTGRES_HOST:-postgres}:5432/${POSTGRES_DB:?}"
+      STORAGE_ENDPOINT: rustfs
+      NODE_ENV: production
+      NODE_EXTRA_CA_CERTS: /usr/local/share/ca-certificates/rustfs_cert.crt
+      PORT: 3000
+      # Point at the ELF binary in /usr/lib, not /usr/bin/chromium (a wrapper
+      # shell script that Puppeteer 25 rejects with
+      # "Browser was not found at the configured executable/path").
+      PUPPETEER_EXECUTABLE_PATH: /usr/lib/chromium/chromium
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://tempo:4318}
+      OTEL_METRICS_ENABLED: "${OTEL_METRICS_ENABLED:-false}"
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./certs/rustfs_cert.pem:/usr/local/share/ca-certificates/rustfs_cert.crt:ro
+    healthcheck:
+      # Parse the response body — the /api/v1/health/pdf endpoint returns
+      # HTTP 200 even when the Puppeteer browser failed to launch, with a
+      # body like `{"status":"unhealthy","browser":{"connected":false}}`.
+      # An HTTP-only check (response.ok) lets a wedged browser through.
+      # See commit history: this gap let a wrong PUPPETEER_EXECUTABLE_PATH
+      # ship to staging undetected.
+      test:
+        - CMD
+        - node
+        - -e
+        - >-
+          fetch('http://127.0.0.1:3000/api/v1/health/pdf')
+          .then(r => r.json())
+          .then(j => process.exit(j.status === 'healthy' && j.browser && j.browser.connected === true ? 0 : 1))
+          .catch(() => process.exit(1))
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 60s
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rustfs:
+        condition: service_healthy
+    networks:
+      - jasrapo-network
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1G
+
+  # ─── Prometheus Metrics ───────────────────────────────────────
+  prometheus:
+    profiles:
+      - observability
+    image: prom/prometheus:v2.55.1
+    container_name: jasrapo-prometheus
+    restart: unless-stopped
+    ports:
+      - "9091:9090"
+    volumes:
+      - ./observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=15d"
+    networks:
+      - jasrapo-network
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          cpus: "0.25"
+          memory: 256M
+
+  # ─── Tempo Traces ──────────────────────────────────────────────
+  tempo:
+    profiles:
+      - observability
+    image: grafana/tempo:2.5.0
+    container_name: jasrapo-tempo
+    restart: unless-stopped
+    ports:
+      - "4319:4318" # OTLP HTTP
+      - "4320:4317" # OTLP gRPC
+      - "3201:3200" # Tempo HTTP API
+      - "16687:16686" # Jaeger UI
+    volumes:
+      - tempo_data:/var/tempo
+      - ./observability/tempo/tempo-dist.yaml:/etc/tempo/tempo-dist.yaml:ro
+    command: --config.file=/etc/tempo/tempo-dist.yaml
+    environment:
+      - TEMPO_SINK_OTLP_ENDPOINT=tempo:4318
+    networks:
+      - jasrapo-network
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          cpus: "0.25"
+          memory: 256M
+
+  # ─── Loki Logs ─────────────────────────────────────────────────
+  loki:
+    profiles:
+      - observability
+    image: grafana/loki:3.2.0
+    container_name: jasrapo-loki
+    restart: unless-stopped
+    ports:
+      - "3101:3100"
+    volumes:
+      - loki_data:/loki
+      - ./observability/loki/loki.yml:/etc/loki/local-config.yaml:ro
+    command: -config.file=/etc/loki/local-config.yaml
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3100/ready"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - jasrapo-network
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 256M
+        reservations:
+          cpus: "0.1"
+          memory: 128M
+
+  # ─── Grafana Dashboards ────────────────────────────────────────
+  grafana:
+    profiles:
+      - observability
+    image: grafana/grafana:13.0.1
+    container_name: jasrapo-grafana
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    depends_on:
+      - prometheus
+      - tempo
+      - loki
+    networks:
+      - jasrapo-network
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          cpus: "0.25"
+          memory: 256M
+
+networks:
+  jasrapo-network:
+    name: jasrapo-network
+    driver: bridge
+
+volumes:
+  postgres_data:
+  rustfs_data:
+  prometheus_data:
+  tempo_data:
+  loki_data:
+  grafana_data:

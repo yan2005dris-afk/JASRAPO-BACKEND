@@ -1,6 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
-import type SMTPTransport from 'nodemailer/lib/smtp-transport';
 import type { MailProviderConfig } from '../../domain/config/mail-provider-config.interface';
 import type {
   MailDispatcher,
@@ -106,9 +105,7 @@ export class RoundRobinDispatcher implements MailDispatcher {
     };
   }
 
-  private getTransporter(
-    provider: MailProviderConfig,
-  ): nodemailer.Transporter<SMTPTransport.SentMessageInfo> {
+  private getTransporter(provider: MailProviderConfig): nodemailer.Transporter {
     let transporter = this.transporters.get(provider.name);
     if (!transporter) {
       transporter = nodemailer.createTransport({

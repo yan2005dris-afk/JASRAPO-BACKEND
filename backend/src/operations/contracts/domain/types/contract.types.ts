@@ -40,7 +40,6 @@ export interface CreateContractWithMeterCommand extends ContractProcedureData {
   clienteId: bigint;
   categoriaTarifaId: number;
   medidorId: bigint;
-  numeroGuia: string;
   direccionSuministro: string;
   estadoServicio: EstadoServicioContrato;
   estadoCobranza: EstadoCobranzaContrato;
@@ -52,7 +51,9 @@ export interface CreateContractWithMeterCommand extends ContractProcedureData {
   longitud?: number | null;
 }
 
-export type UpdateContractData = Partial<CreateContractData> & {
+export type UpdateContractData = Partial<
+  Omit<CreateContractData, 'numeroGuia'>
+> & {
   medidorId?: bigint;
   lecturaInicial?: number;
 };

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { TipoActividadCodes } from 'src/shared/enums';
+import { EstadoRuta, TipoActividadCodes } from 'src/shared/enums';
 import {
   EntityNotFoundException,
   InvalidDomainOperationException,
@@ -31,26 +31,57 @@ export class UpdateOperatorWorkOrderUseCase {
     }
 
     if (order.tipoActividad === TipoActividadCodes.LECTURA) {
-      throw new InvalidDomainOperationException(
-        'Las órdenes de lectura deben actualizarse mediante el flujo de lecturas',
-      );
+      const hasCompleteCoordinates =
+        dto.latitud !== undefined && dto.longitud !== undefined;
+      const modifiesReadingWorkflow =
+        dto.estado !== undefined ||
+        dto.resultadoObservacion !== undefined ||
+        dto.completadoEn !== undefined ||
+        evidenciaFotoUrl !== undefined;
+      if (!hasCompleteCoordinates || modifiesReadingWorkflow) {
+        throw new InvalidDomainOperationException(
+          'Las órdenes de lectura solo permiten registrar latitud y longitud; los datos de lectura deben actualizarse mediante el flujo de lecturas',
+        );
+      }
     }
     if (order.medidorId === null) {
-      throw new InvalidDomainOperationException(
-        'La orden no tiene un medidor asignado',
+      // Sin medidor no hay ownership por medidor: se valida que el operario
+      // esté asignado a esta orden concreta (ruta abierta, periodo ABIERTO).
+      // GPS, observación, foto y completadoEn no requieren medidor.
+      await this.ordenTrabajoRepository.verifyOperatorWorkOrderOwnership(
+        operarioId,
+        id,
+      );
+    } else {
+      await this.operatorRepository.verifyMeterOwnership(
+        operarioId,
+        order.medidorId,
       );
     }
 
-    await this.operatorRepository.verifyMeterOwnership(
-      operarioId,
-      order.medidorId,
-    );
+    // Si la ruta asociada se encuentra en estado PENDIENTE, transicionarla a EN_PROGRESO
+    if (order.rutaId) {
+      try {
+        await this.operatorRepository.updateRouteState(
+          order.rutaId,
+          {
+            estado: EstadoRuta.EN_PROGRESO,
+            fechaInicio: new Date(),
+          },
+          EstadoRuta.PENDIENTE,
+        );
+      } catch {
+        // Ignorar si ya fue transicionada concurrentemente o no estaba en PENDIENTE
+      }
+    }
 
     const data: UpdateOperatorWorkOrderData = {
       estado: dto.estado,
       resultadoObservacion: dto.resultadoObservacion,
       evidenciaFotoUrl,
       completadoEn: dto.completadoEn ? new Date(dto.completadoEn) : undefined,
+      latitud: dto.latitud,
+      longitud: dto.longitud,
     };
 
     const updated = await this.ordenTrabajoRepository.updateOperatorWorkOrder(

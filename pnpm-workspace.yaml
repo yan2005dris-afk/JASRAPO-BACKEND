@@ -8,29 +8,31 @@ overrides:
   uuid: '^11.1.1'
   path-to-regexp: '^8.3.0'
   lodash: '^4.17.23'
-  handlebars: '^4.7.9'
   esbuild: '^0.28.1'
   '@hono/node-server': '>=1.19.15'
-  hono: '>=4.12.34'
+  hono: '>=4.13.7'
   body-parser: '>=2.3.0'
   react-router: '>=7.18.2'
   valibot: '>=1.4.2'
   crypto-js: '^4.2.0'
-  undici: '^8.9.0'
+  undici: '>=8.10.2'
   '@opentelemetry/core': '^2.8.0'
   js-yaml: '>=4.3.2'
-  liquidjs: '^10.27.1'
-  brace-expansion: '^2.1.4'
-  fast-uri: '^3.1.6'
+  liquidjs: '^10.30.0'
+  'minimatch@3>brace-expansion': '^1.1.11'
+  brace-expansion: '>=2.1.6'
+  fast-uri: '>=3.1.8'
+  qs: '>=6.16.0'                                  # GHSA-x5fp-wj9c-mxmx, GHSA-4mjr-xmp4-gh2g (transitive of express/body-parser)
   browserslist: '^4.28.7'
   nanoid: '^3.3.18'
   postcss: '^8.5.18'
   mysql2: '^3.22.0'
   sharp: '>=0.35.4'
   # --- security audit overrides (added 2026-07-22) ---
-  multer: '^2.3.0'                              # GHSA-72gw-mp4g-v24j, GHSA-qfvm-cv95-jqjf, GHSA-535w-7cp7-47q4
-  nodemailer: '^9.1.1'                          # GHSA-p6gq-j5cr-w38f, GHSA-2x7j-588g-ccc2
-  axios: '^1.18.0'                              # GHSA-gcfj-64vw-6mp9
+  multer: '>=2.4.0'                              # GHSA-72gw-mp4g-v24j, GHSA-qfvm-cv95-jqjf, GHSA-535w-7cp7-47q4, GHSA-3pph-fpjx-jg34 (DoS)
+  nodemailer: '>=10.0.6'                         # GHSA-v53p-9fqp-m79j, GHSA-p6gq-j5cr-w38f, GHSA-2x7j-588g-ccc2
+  axios: '>=1.20.0'                             # GHSA-m8m8-qj5v-23w3, GHSA-r4gj-5m52-g5wh
+  '@grpc/grpc-js': '>=1.14.5'                   # GHSA-m9gg-hp2v-232j
   '@opentelemetry/propagator-jaeger': '^2.9.0'  # GHSA-45rx-2jwx-cxfr
   linkify-it: '^5.0.2'                          # GHSA-v245-v573-v5vm
   svgo: '>=4.1.0'                               # GHSA-2p49-hgcm-8545, GHSA-w27v-7q3p-w38r
@@ -39,6 +41,9 @@ overrides:
   form-data: '^4.0.4'                           # GHSA-fjxv-7rqg-78g4 / GHSA-hmw2-7cc7-3qxx (unsafe random CRITICAL + CRLF)
   semver: '^7.6.4'                              # GHSA-c2qf-rxjj-qqgw (ReDoS, high)
   deepmerge-ts: '^8.0.0'                        # GHSA-ggr8-5vv4-36mx (Stack exhaustion, high)
+  # --- CI audit blockers surfaced after PR #349 (added 2026-10-06) ---
+  proxy-addr: '^2.0.8'                          # GHSA-jqcg-44mw-7w3h (CRITICAL; IP spoof via IPv4-mapped IPv6 trust subnet)
+  source-map-js: '^1.2.2'                       # GHSA-68fv-2mgg-jv7q (HIGH; event-loop DoS via indexed source-map section offsets)
 
 allowBuilds:
   '@nestjs/core': true

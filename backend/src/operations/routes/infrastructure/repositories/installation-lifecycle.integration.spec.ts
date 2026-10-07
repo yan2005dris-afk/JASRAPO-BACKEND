@@ -1,5 +1,6 @@
 import { Client } from 'pg';
 import { PrismaContractRepository } from 'src/operations/contracts/infrastructure/repositories/prisma-contract.repository';
+import { ContractGuideGeneratorService } from 'src/operations/contracts/infrastructure/services/contract-guide-generator.service';
 import { PrismaPaymentRepository } from 'src/billing/collections/payments/infrastructure/repositories/prisma-payment.repository';
 import { PrismaRouteRepository } from './prisma-route.repository';
 import type { CreateContractWithMeterCommand } from 'src/operations/contracts/domain/types/contract.types';
@@ -19,6 +20,13 @@ describe('Installation lifecycle persistence', () => {
   let prisma: PrismaService;
   let repository: PrismaOrdenTrabajoRepository;
   let sequence = 0;
+
+  function createContractRepository() {
+    return new PrismaContractRepository(
+      prisma,
+      new ContractGuideGeneratorService(),
+    );
+  }
 
   beforeAll(async () => {
     container = await new PostgreSqlContainer('postgres:16.3-alpine')
@@ -295,7 +303,6 @@ describe('Installation lifecycle persistence', () => {
       comunidadId: community.comunidadId,
       medidorId: meter.medidorId,
       sectorId: null,
-      numeroGuia: suffix,
       direccionSuministro: 'Test',
       estadoServicio: 'PENDIENTE_INSPECCION',
       estadoCobranza: 'NO_APLICA',
@@ -305,9 +312,8 @@ describe('Installation lifecycle persistence', () => {
 
   async function createRegistration() {
     const command = await registration();
-    const contract = await new PrismaContractRepository(
-      prisma,
-    ).createContractWithMeterHistory(command);
+    const contract =
+      await createContractRepository().createContractWithMeterHistory(command);
     const order = await prisma.ordenesTrabajo.findFirstOrThrow({
       where: { contratoId: contract.contratoId },
     });
@@ -458,12 +464,10 @@ describe('Installation lifecycle persistence', () => {
       await expect(
         repository[method](order.ordenTrabajoId, { estado: 'COMPLETADA' }),
       ).rejects.toThrow();
-      const next = await new PrismaContractRepository(
-        prisma,
-      ).createContractWithMeterHistory({
-        ...command,
-        numeroGuia: `${command.numeroGuia}-retry`,
-      });
+      const next =
+        await createContractRepository().createContractWithMeterHistory(
+          command,
+        );
       expect(next.estadoServicio).toBe('PENDIENTE_INSPECCION');
     },
   );
@@ -500,13 +504,10 @@ describe('Installation lifecycle persistence', () => {
 
   it('reserves a meter only once under concurrent registrations', async () => {
     const command = await registration();
-    const contracts = new PrismaContractRepository(prisma);
+    const contracts = createContractRepository();
     const results = await Promise.allSettled([
       contracts.createContractWithMeterHistory(command),
-      contracts.createContractWithMeterHistory({
-        ...command,
-        numeroGuia: `${command.numeroGuia}-other`,
-      }),
+      contracts.createContractWithMeterHistory(command),
     ]);
     expect(
       results.filter((result) => result.status === 'fulfilled'),
@@ -526,13 +527,11 @@ describe('Installation lifecycle persistence', () => {
     });
     try {
       await expect(
-        new PrismaContractRepository(prisma).createContractWithMeterHistory(
-          command,
-        ),
+        createContractRepository().createContractWithMeterHistory(command),
       ).rejects.toThrow();
       expect(
         await prisma.contratos.count({
-          where: { numeroGuia: command.numeroGuia },
+          where: { clienteId: command.clienteId },
         }),
       ).toBe(0);
       expect(

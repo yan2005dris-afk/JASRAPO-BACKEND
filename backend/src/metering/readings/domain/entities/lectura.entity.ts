@@ -17,7 +17,6 @@ export class LecturaEntity {
   /** Evidence projected from the linked work order. */
   evidenciaFotoUrl: string | null;
   isValidada: boolean;
-  lecturaInicial: boolean;
   periodoId: number;
   tieneAnomalia: boolean;
   estado: string;
