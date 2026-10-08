@@ -2,8 +2,6 @@ import { Module } from '@nestjs/common';
 import { OperatorController } from './interfaces/http/operator.controller';
 import { OperatorNoveltiesController } from './interfaces/http/operator-novelties.controller';
 import { OperatorNoveltiesService } from './application/operator-novelties.service';
-import { GetOperatorReadingsUseCase } from './application/use-cases/get-operator-readings.use-case';
-import { UpdateOperatorReadingUseCase } from './application/use-cases/update-operator-reading.use-case';
 import { UpdateOperatorWorkOrderUseCase } from './application/use-cases/update-operator-work-order.use-case';
 import { GetOperatorRoutesUseCase } from './application/use-cases/get-operator-routes.use-case';
 import { UpdateRouteStateUseCase } from './application/use-cases/update-route-state.use-case';
@@ -21,8 +19,6 @@ import { WorkOrderNoveltiesModule } from 'src/operations/work-order-novelties/wo
   imports: [MeterModule, ReadingModule, WorkOrderNoveltiesModule],
   controllers: [OperatorController, OperatorNoveltiesController],
   providers: [
-    GetOperatorReadingsUseCase,
-    UpdateOperatorReadingUseCase,
     UpdateOperatorWorkOrderUseCase,
     GetOperatorRoutesUseCase,
     UpdateRouteStateUseCase,

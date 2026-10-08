@@ -17,7 +17,6 @@ import {
   OperatorRepository,
   type ActivePeriod,
   type RouteData,
-  type ReadingWithDetails,
 } from '../../domain/repositories/operator.repository';
 import type {
   ReadingWithContractDetail,
@@ -150,85 +149,6 @@ export class PrismaOperatorRepository extends OperatorRepository {
     });
   }
 
-  async findReadingsByPeriodAndRoutes(
-    periodoId: number,
-    routes: RouteData[],
-  ): Promise<ReadingWithContractDetail[]> {
-    const result: any = await this.prisma.lecturas.findMany({
-      where: {
-        periodoId,
-        deletedAt: null,
-        medidor: {
-          historial: {
-            some: {
-              fechaHasta: null,
-              OR: this.toReadingRouteConditions(routes),
-            },
-          },
-        },
-      },
-      select: {
-        lecturaId: true,
-        fecha: true,
-        lecturaAnterior: true,
-        lecturaActual: true,
-        consumoCalculado: true,
-        descripcionAnomalia: true,
-        fechaValidacion: true,
-        periodoId: true,
-        estado: true,
-        medidor: {
-          select: {
-            medidorId: true,
-            serie: true,
-            marca: true,
-            modelo: true,
-            historial: {
-              where: { fechaHasta: null },
-              select: {
-                contrato: {
-                  select: {
-                    contratoId: true,
-                    numeroGuia: true,
-                    direccionSuministro: true,
-                    estadoServicio: true,
-                    comunidadId: true,
-                    sectorId: true,
-                    cliente: {
-                      select: {
-                        nombres: true,
-                        apellidos: true,
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-        periodoRel: {
-          select: {
-            periodoId: true,
-            nombre: true,
-            fechaInicio: true,
-            fechaFin: true,
-          },
-        },
-        ordenesTrabajo: {
-          where: { deletedAt: null },
-          select: { evidenciaFotoUrl: true },
-          orderBy: { updatedAt: 'desc' },
-        },
-      },
-    });
-    return result.map((reading) => ({
-      ...reading,
-      evidenciaFotoUrl:
-        reading.ordenesTrabajo?.find((order) => order.evidenciaFotoUrl)
-          ?.evidenciaFotoUrl ?? null,
-    }));
-  }
-
   async findMetersByRoutes(
     routes: RouteData[],
   ): Promise<MeterWithContractDetail[]> {
@@ -277,47 +197,6 @@ export class PrismaOperatorRepository extends OperatorRepository {
             },
           },
           take: 1,
-        },
-      },
-    });
-    return result;
-  }
-
-  async findReadingWithDetails(id: bigint): Promise<ReadingWithDetails | null> {
-    const result = await this.prisma.lecturas.findUnique({
-      where: { lecturaId: id, deletedAt: null },
-      select: {
-        lecturaId: true,
-        estado: true,
-        ordenesTrabajo: {
-          where: { deletedAt: null },
-          select: {
-            rutaId: true,
-            evidenciaFotoUrl: true,
-            ruta: {
-              select: {
-                operarioId: true,
-                periodoId: true,
-                estado: true,
-              },
-            },
-          },
-        },
-        medidor: {
-          select: {
-            historial: {
-              where: { fechaHasta: null },
-              select: {
-                contrato: {
-                  select: {
-                    contratoId: true,
-                    comunidadId: true,
-                    sectorId: true,
-                  },
-                },
-              },
-            },
-          },
         },
       },
     });
