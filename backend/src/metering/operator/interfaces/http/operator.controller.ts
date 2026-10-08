@@ -26,14 +26,10 @@ import { RequiredPermission } from 'src/infrastructure/common/decorators/require
 import { CurrentUser } from 'src/identity/auth/interfaces/http/decorators/current-user.decorator';
 import { ParseBigIntPipe } from 'src/infrastructure/common/pipes/parse-bigint.pipe';
 import type { JwtPayload } from 'src/identity/auth/application/types/jwt.types';
-import { GetOperatorReadingsUseCase } from '../../application/use-cases/get-operator-readings.use-case';
-import { UpdateOperatorReadingUseCase } from '../../application/use-cases/update-operator-reading.use-case';
 import { UpdateOperatorWorkOrderUseCase } from '../../application/use-cases/update-operator-work-order.use-case';
 import { UpdateOperatorWorkOrderDto } from '../dto/update-operator-work-order.dto';
-import { UpdateOperatorReadingDto } from '../dto/update-operator-reading.dto';
 import { OPERATOR_IMAGE_UPLOAD_OPTIONS } from './operator-image-upload.options';
 import { OrderWorkResponseDto } from 'src/operations/routes/interfaces/dto/orden-trabajo-response.dto';
-import { ResponseReadingDto } from 'src/metering/readings/interfaces/dto/response-reading.dto';
 import { GetOperatorRoutesUseCase } from '../../application/use-cases/get-operator-routes.use-case';
 import { UpdateRouteStateUseCase } from '../../application/use-cases/update-route-state.use-case';
 import { UpdateRouteStateDto } from '../../interfaces/dto/update-route-state.dto';
@@ -111,8 +107,6 @@ const operatorErrorResponse = (
 @Controller('operator')
 export class OperatorController {
   constructor(
-    private readonly getOperatorReadingsUseCase: GetOperatorReadingsUseCase,
-    private readonly updateOperatorReadingUseCase: UpdateOperatorReadingUseCase,
     private readonly updateOperatorWorkOrderUseCase: UpdateOperatorWorkOrderUseCase,
     private readonly getOperatorRoutesUseCase: GetOperatorRoutesUseCase,
     private readonly updateRouteStateUseCase: UpdateRouteStateUseCase,
@@ -134,103 +128,6 @@ export class OperatorController {
   @Get('activity-types')
   async getActivityTypes() {
     return this.getOperatorActivityTypesUseCase.execute();
-  }
-
-  @ApiOperation({
-    summary: 'Listar lecturas del operario',
-    description:
-      'Retorna las lecturas del período activo asignadas al operario autenticado según sus rutas',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Lista de lecturas del operario',
-    type: [ResponseReadingDto],
-  })
-  @ApiResponse(
-    operatorErrorResponse(400, 'Identificador del operador inválido'),
-  )
-  @ApiResponse(operatorErrorResponse(401, 'No autenticado'))
-  @ApiResponse(operatorErrorResponse(403, 'Sin permiso lecturas:read'))
-  @ApiResponse(operatorErrorResponse(404, 'No hay período activo'))
-  @RequiredPermission('lecturas', 'read')
-  @Get('readings')
-  async getOperatorReadings(
-    @CurrentUser() user: JwtPayload,
-  ): Promise<ResponseReadingDto[]> {
-    const operarioId = this.getAuthenticatedOperatorId(user);
-    return this.getOperatorReadingsUseCase.execute(operarioId);
-  }
-
-  @ApiOperation({
-    summary: 'Actualizar lectura del operario',
-    description:
-      'Permite al operario actualizar una lectura de su ruta. Acepta multipart/form-data: ' +
-      'Todos los campos del DTO como strings de formulario más un archivo opcional `foto`. La foto se guarda como evidenciaFotoUrl (clave de objeto RustFS) en la orden de trabajo vinculada.',
-  })
-  @ApiConsumes('multipart/form-data')
-  @ApiParam({
-    name: 'id',
-    description: 'ID de la lectura',
-    type: Number,
-    example: 1,
-  })
-  @ApiBody({
-    description:
-      'Datos de lectura + foto opcional (multipart/form-data). `foto` es evidencia de la orden de trabajo y se persiste como clave de objeto RustFS.',
-    schema: {
-      type: 'object',
-      properties: {
-        lecturaActual: { type: 'number' },
-        lecturaAnterior: { type: 'number' },
-        fecha: { type: 'string' },
-        descripcionAnomalia: { type: 'string' },
-        foto: { type: 'string', format: 'binary' },
-      },
-    },
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Lectura actualizada',
-    type: ResponseReadingDto,
-  })
-  @ApiResponse(operatorErrorResponse(400, 'Validación o estado no modificable'))
-  @ApiResponse(operatorErrorResponse(401, 'No autenticado'))
-  @ApiResponse(operatorErrorResponse(403, 'Lectura fuera de la ruta asignada'))
-  @ApiResponse(operatorErrorResponse(404, 'Lectura no encontrada'))
-  @ApiResponse(operatorErrorResponse(409, 'Conflicto de concurrencia'))
-  @RequiredPermission('lecturas', 'update')
-  @UseInterceptors(FileInterceptor('foto', OPERATOR_IMAGE_UPLOAD_OPTIONS))
-  @Patch('readings/:id')
-  async updateOperatorReading(
-    @Param('id', ParseBigIntPipe) id: bigint,
-    @CurrentUser() user: JwtPayload,
-    @Body() updateDto: UpdateOperatorReadingDto,
-    @UploadedFile() foto?: Express.Multer.File,
-  ): Promise<ResponseReadingDto> {
-    const operarioId = this.getAuthenticatedOperatorId(user);
-    let uploadedKey: string | undefined;
-    if (foto) {
-      uploadedKey = await uploadReadingPhoto(foto, this.storageService);
-    }
-
-    try {
-      const updated = await this.updateOperatorReadingUseCase.execute(
-        id,
-        operarioId,
-        updateDto,
-        uploadedKey,
-        uploadedKey
-          ? (oldKey: string, newKey: string) =>
-              deleteOldReadingPhoto(oldKey, newKey, this.storageService)
-          : undefined,
-      );
-      return ResponseReadingDto.fromEntity(updated)!;
-    } catch (error) {
-      if (uploadedKey) {
-        await rollbackReadingPhoto(uploadedKey, this.storageService);
-      }
-      throw error;
-    }
   }
 
   @ApiOperation({

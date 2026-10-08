@@ -1,9 +1,9 @@
 import type {
-  ReadingWithContractDetail,
   MeterWithContractDetail,
   OperatorRoute,
   OperatorWorkOrder,
   ReadingWithAnomalies,
+  ReadingWithContractDetail,
   RouteStateUpdate,
   OperatorUser,
   SyncCursorPosition,
@@ -23,30 +23,6 @@ export interface ActivePeriod {
   periodoId: number;
 }
 
-export interface ReadingWithDetails {
-  lecturaId: bigint;
-  estado: string;
-  ordenesTrabajo?: Array<{
-    rutaId: bigint;
-    evidenciaFotoUrl?: string | null;
-    operarioId?: number;
-    ruta?: {
-      operarioId: number | null;
-      periodoId: number | null;
-      estado?: string | null;
-    } | null;
-  }>;
-  medidor: {
-    historial: Array<{
-      contrato: {
-        contratoId: bigint;
-        comunidadId: number;
-        sectorId: number | null;
-      } | null;
-    }>;
-  } | null;
-}
-
 export abstract class OperatorRepository {
   abstract findActivePeriod(): Promise<ActivePeriod | null>;
   abstract verifyMeterOwnership(
@@ -57,16 +33,9 @@ export abstract class OperatorRepository {
     operarioId: number,
     periodoId: number,
   ): Promise<RouteData[]>;
-  abstract findReadingsByPeriodAndRoutes(
-    periodoId: number,
-    routes: RouteData[],
-  ): Promise<ReadingWithContractDetail[]>;
   abstract findMetersByRoutes(
     routes: RouteData[],
   ): Promise<MeterWithContractDetail[]>;
-  abstract findReadingWithDetails(
-    id: bigint,
-  ): Promise<ReadingWithDetails | null>;
 
   abstract findRoutesByOperator(
     operarioId: number,

@@ -9,11 +9,14 @@ import type { OrdenTrabajoEntity } from 'src/operations/routes/domain/entities/o
 import type { UpdateOperatorWorkOrderData } from 'src/operations/routes/domain/types/orden-trabajo.types';
 import { OperatorRepository } from '../../domain/repositories/operator.repository';
 import { UpdateOperatorWorkOrderDto } from '../../interfaces/dto/update-operator-work-order.dto';
-import type { EvidenceReplacementCleanup } from './update-operator-reading.use-case';
-
 import { UpdateReadingUseCase } from 'src/metering/readings/application/use-cases/update-reading.use-case';
 import { ActualizarLecturaDto } from 'src/metering/readings/interfaces/dto/update-lectura.dto';
-import { EstadoLectura, EstadoOrdenTrabajo } from 'src/shared/enums';
+import { EstadoLectura } from 'src/shared/enums';
+
+export type EvidenceReplacementCleanup = (
+  oldKey: string,
+  newKey: string,
+) => Promise<void>;
 
 @Injectable()
 export class UpdateOperatorWorkOrderUseCase {

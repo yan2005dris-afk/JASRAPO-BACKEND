@@ -39,8 +39,6 @@ describe('OperatorController work-order update', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     controller = new OperatorController(
-      undefined as any,
-      undefined as any,
       useCase as any,
       routesUseCase as any,
       undefined as any,
@@ -69,8 +67,6 @@ describe('OperatorController work-order update', () => {
       execute: jest.fn().mockResolvedValue({ complete: true }),
     };
     const wired = new OperatorController(
-      undefined as any,
-      undefined as any,
       undefined as any,
       undefined as any,
       undefined as any,
