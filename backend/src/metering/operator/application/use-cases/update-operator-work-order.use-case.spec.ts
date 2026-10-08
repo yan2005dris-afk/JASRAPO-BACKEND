@@ -15,9 +15,16 @@ describe('UpdateOperatorWorkOrderUseCase', () => {
     verifyMeterOwnership: jest.fn(),
     updateRouteState: jest.fn(),
   };
+  const readings = {
+    execute: jest.fn(),
+  };
   let useCase: UpdateOperatorWorkOrderUseCase;
   const date = new Date('2026-08-26T12:00:00.000Z');
-  const order = (tipoActividad: string, medidorId: bigint | null = 10n) => ({
+  const order = (
+    tipoActividad: string,
+    medidorId: bigint | null = 10n,
+    lecturaId: bigint | null = null,
+  ) => ({
     ordenTrabajoId: 1n,
     rutaId: 2n,
     contratoId: 3n,
@@ -31,7 +38,7 @@ describe('UpdateOperatorWorkOrderUseCase', () => {
     createdAt: date,
     updatedAt: date,
     deletedAt: null,
-    lecturaId: null,
+    lecturaId,
   });
 
   beforeEach(() => {
@@ -40,9 +47,11 @@ describe('UpdateOperatorWorkOrderUseCase', () => {
     orders.updateOperatorWorkOrder.mockReset();
     orders.verifyOperatorWorkOrderOwnership.mockReset();
     operators.verifyMeterOwnership.mockReset();
+    readings.execute.mockReset();
     useCase = new UpdateOperatorWorkOrderUseCase(
       orders as any,
       operators as any,
+      readings as any,
     );
     orders.findById.mockResolvedValue(order(TipoActividadCodes.INSTALACION));
     orders.updateOperatorWorkOrder.mockResolvedValue(
@@ -120,21 +129,96 @@ describe('UpdateOperatorWorkOrderUseCase', () => {
     expect(orders.verifyOperatorWorkOrderOwnership).not.toHaveBeenCalled();
   });
 
-  it('rejects reading orders unless the update contains only complete GPS coordinates', async () => {
+  it('rejects reading orders if neither reading value nor GPS coordinates are provided', async () => {
     orders.findById.mockResolvedValue(order(TipoActividadCodes.LECTURA));
 
     await expect(useCase.execute(1n, 7, {}, undefined)).rejects.toThrow(
-      'solo permiten registrar latitud y longitud',
+      'Las órdenes de lectura requieren registrar la lectura actual o coordenadas GPS',
     );
-    await expect(
-      useCase.execute(
-        1n,
-        7,
-        { latitud: -26.80828472, longitud: -65.25268137, estado: 'COMPLETADA' },
-        undefined,
-      ),
-    ).rejects.toThrow('flujo de lecturas');
     expect(orders.updateOperatorWorkOrder).not.toHaveBeenCalled();
+    expect(readings.execute).not.toHaveBeenCalled();
+  });
+
+  it('rejects reading submission if the work order has no linked lecturaId', async () => {
+    orders.findById.mockResolvedValue(
+      order(TipoActividadCodes.LECTURA, 10n, null),
+    );
+
+    await expect(
+      useCase.execute(1n, 7, { lecturaActual: 125 }, undefined),
+    ).rejects.toThrow(
+      'La orden de lectura no tiene una lectura asociada para registrar el valor',
+    );
+    expect(readings.execute).not.toHaveBeenCalled();
+    expect(orders.updateOperatorWorkOrder).not.toHaveBeenCalled();
+  });
+
+  it('delegates reading update without forcing work order to COMPLETADA when lecturaActual is provided', async () => {
+    orders.findById.mockResolvedValue(
+      order(TipoActividadCodes.LECTURA, 10n, 55n),
+    );
+    orders.updateOperatorWorkOrder.mockResolvedValue(
+      order(TipoActividadCodes.LECTURA, 10n, 55n),
+    );
+    readings.execute.mockResolvedValue({});
+
+    await useCase.execute(
+      1n,
+      7,
+      {
+        lecturaActual: 150,
+        lecturaAnterior: 120,
+        latitud: -26.80828472,
+        longitud: -65.25268137,
+      },
+      undefined,
+    );
+
+    expect(readings.execute).toHaveBeenCalledWith(
+      55n,
+      expect.objectContaining({
+        lecturaActual: 150,
+        lecturaAnterior: 120,
+      }),
+      'POR_REVISION',
+    );
+    expect(orders.updateOperatorWorkOrder).toHaveBeenCalledWith(
+      1n,
+      expect.objectContaining({
+        estado: undefined,
+        latitud: -26.80828472,
+        longitud: -65.25268137,
+      }),
+    );
+  });
+
+  it('delegates reading update with CON_NOVEDAD when anomaly is provided', async () => {
+    orders.findById.mockResolvedValue(
+      order(TipoActividadCodes.LECTURA, 10n, 55n),
+    );
+    orders.updateOperatorWorkOrder.mockResolvedValue(
+      order(TipoActividadCodes.LECTURA, 10n, 55n),
+    );
+    readings.execute.mockResolvedValue({});
+
+    await useCase.execute(
+      1n,
+      7,
+      {
+        lecturaActual: 150,
+        descripcionAnomalia: 'Medidor empañado',
+      },
+      undefined,
+    );
+
+    expect(readings.execute).toHaveBeenCalledWith(
+      55n,
+      expect.objectContaining({
+        lecturaActual: 150,
+        descripcionAnomalia: 'Medidor empañado',
+      }),
+      'CON_NOVEDAD',
+    );
   });
 
   it('persists GPS coordinates on the work order linked to a reading', async () => {

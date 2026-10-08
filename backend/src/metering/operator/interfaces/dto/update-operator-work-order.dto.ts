@@ -35,6 +35,9 @@ export class UpdateOperatorWorkOrderDto {
     description: 'Latitud GPS del operador al registrar la tarea',
   })
   @IsOptional()
+  @Transform(({ value }) =>
+    value === '' || value === undefined ? undefined : Number(value),
+  )
   @IsLatitude()
   latitud?: number;
 
@@ -42,6 +45,44 @@ export class UpdateOperatorWorkOrderDto {
     description: 'Longitud GPS del operador al registrar la tarea',
   })
   @IsOptional()
+  @Transform(({ value }) =>
+    value === '' || value === undefined ? undefined : Number(value),
+  )
   @IsLongitude()
   longitud?: number;
+
+  @ApiPropertyOptional({
+    description: 'Lectura actual del medidor (para órdenes de LECTURA)',
+  })
+  @IsOptional()
+  @Transform(({ value }) =>
+    value === '' || value === undefined ? undefined : Number(value),
+  )
+  lecturaActual?: number;
+
+  @ApiPropertyOptional({
+    description: 'Lectura anterior de referencia (para órdenes de LECTURA)',
+  })
+  @IsOptional()
+  @Transform(({ value }) =>
+    value === '' || value === undefined ? undefined : Number(value),
+  )
+  lecturaAnterior?: number;
+
+  @ApiPropertyOptional({
+    description: 'Descripción de anomalía detectada durante la lectura',
+  })
+  @IsOptional()
+  @Transform(emptyToUndefined)
+  @IsString()
+  descripcionAnomalia?: string;
+
+  @ApiPropertyOptional({
+    description: 'Fecha efectiva de la toma de lectura',
+    format: 'date-time',
+  })
+  @IsOptional()
+  @Transform(emptyToUndefined)
+  @IsDateString()
+  fechaLectura?: string;
 }
