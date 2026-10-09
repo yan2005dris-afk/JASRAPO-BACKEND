@@ -13,7 +13,7 @@ import type {
   UpdateRubroData,
   TarifaImpuestoInfo,
 } from '../domain/types/rubro.types';
-import type { RubroEntity } from '../domain/entities/rubro.entity';
+import type { RubroRow } from '../domain/types/rubro.types';
 import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
 
 @Injectable()
@@ -27,25 +27,25 @@ export class RubrosService {
     private readonly getTarifasImpuestoUseCase: GetTarifasImpuestoUseCase,
   ) {}
 
-  async create(data: CreateRubroData): Promise<RubroEntity> {
+  async create(data: CreateRubroData): Promise<RubroRow> {
     return this.createRubroUseCase.execute(data);
   }
 
   async findAll(
     params: FindAllRubrosParams,
-  ): Promise<PaginatedResult<RubroEntity>> {
+  ): Promise<PaginatedResult<RubroRow>> {
     return this.findAllRubrosUseCase.execute(params);
   }
 
-  async findOne(id: number): Promise<RubroEntity> {
+  async findOne(id: number): Promise<RubroRow> {
     return this.findOneRubroUseCase.execute(id);
   }
 
-  async update(id: number, data: UpdateRubroData): Promise<RubroEntity> {
+  async update(id: number, data: UpdateRubroData): Promise<RubroRow> {
     return this.updateRubroUseCase.execute(id, data);
   }
 
-  async remove(id: number): Promise<RubroEntity> {
+  async remove(id: number): Promise<RubroRow> {
     return this.deleteRubroUseCase.execute(id);
   }
 

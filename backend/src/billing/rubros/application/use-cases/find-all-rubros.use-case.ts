@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { RubroRepository } from '../../domain/repositories/rubro.repository';
-import type { RubroFilters } from '../../domain/types/rubro.types';
-import type { RubroEntity } from '../../domain/entities/rubro.entity';
+import type { RubroFilters, RubroRow } from '../../domain/types/rubro.types';
 import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
 
 export interface FindAllRubrosParams {
@@ -22,7 +21,7 @@ export class FindAllRubrosUseCase {
 
   async execute(
     params: FindAllRubrosParams,
-  ): Promise<PaginatedResult<RubroEntity>> {
+  ): Promise<PaginatedResult<RubroRow>> {
     const page = params.page && params.page > 0 ? params.page : 1;
     const limit = params.limit && params.limit > 0 ? params.limit : 10;
     const skip = (page - 1) * limit;
