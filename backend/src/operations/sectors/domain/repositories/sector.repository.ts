@@ -1,4 +1,4 @@
-import type { SectorRow } from '../../infrastructure/repositories/sector.include';
+import type { SectorRow } from '../types/sector.types';
 import type {
   CreateSectorData,
   UpdateSectorData,

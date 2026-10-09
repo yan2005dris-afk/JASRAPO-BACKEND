@@ -6,7 +6,7 @@ import { UpdateSectorUseCase } from './use-cases/update-sector.use-case';
 import { GetAllSectorsUseCase } from './use-cases/get-all-sectors.use-case';
 import { GetSectorUseCase } from './use-cases/get-sector.use-case';
 import { DeleteSectorUseCase } from './use-cases/delete-sector.use-case';
-import type { SectorRow } from '../infrastructure/repositories/sector.include';
+import type { SectorRow } from '../domain/types/sector.types';
 import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
 
 @Injectable()

@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import type { SectorRow } from '../../infrastructure/repositories/sector.include';
+import type { SectorRow } from '../../domain/types/sector.types';
 import type { ComunidadRef } from '../../domain/types/sector.types';
 
 export class ComunidadRefDto {
