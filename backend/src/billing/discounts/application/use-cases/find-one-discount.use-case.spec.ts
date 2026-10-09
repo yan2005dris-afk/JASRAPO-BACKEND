@@ -3,7 +3,7 @@ import { Test } from '@nestjs/testing';
 import { FindOneDiscountUseCase } from './find-one-discount.use-case';
 import { DiscountRepository } from '../../domain/repositories/discount.repository';
 import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
-import { DiscountEntity } from '../../domain/entities/discount.entity';
+import { discountRow } from '../../__test-utils__/discount-row.factory';
 
 describe('FindOneDiscountUseCase', () => {
   let useCase: FindOneDiscountUseCase;
@@ -32,19 +32,12 @@ describe('FindOneDiscountUseCase', () => {
   });
 
   it('should return discount if found', async () => {
-    const entity = new DiscountEntity({
+    const row = discountRow({
       id: 1,
       nombre: 'Tercera Edad',
-      tipoDescuento: 'TERCERA_EDAD',
-      valor: 50,
-      esPorcentaje: true,
-      rubroId: null,
-      activo: true,
-      aplicaAutomatico: false,
-      descripcion: null,
     });
 
-    mockDiscountRepository.findUniqueCatalogo.mockResolvedValue(entity);
+    mockDiscountRepository.findUniqueCatalogo.mockResolvedValue(row);
 
     const result = await useCase.execute(1);
 

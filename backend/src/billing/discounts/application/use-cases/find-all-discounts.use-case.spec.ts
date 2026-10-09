@@ -2,7 +2,7 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { FindAllDiscountsUseCase } from './find-all-discounts.use-case';
 import { DiscountRepository } from '../../domain/repositories/discount.repository';
-import { DiscountEntity } from '../../domain/entities/discount.entity';
+import { discountRow } from '../../__test-utils__/discount-row.factory';
 
 describe('FindAllDiscountsUseCase', () => {
   let useCase: FindAllDiscountsUseCase;
@@ -32,21 +32,9 @@ describe('FindAllDiscountsUseCase', () => {
   });
 
   it('should return paginated list of discounts', async () => {
-    const mockEntities = [
-      new DiscountEntity({
-        id: 1,
-        nombre: 'Tercera Edad',
-        tipoDescuento: 'TERCERA_EDAD',
-        valor: 50,
-        esPorcentaje: true,
-        rubroId: null,
-        activo: true,
-        aplicaAutomatico: false,
-        descripcion: null,
-      }),
-    ];
+    const mockRows = [discountRow({ id: 1, nombre: 'Tercera Edad' })];
 
-    mockDiscountRepository.findManyCatalogo.mockResolvedValue(mockEntities);
+    mockDiscountRepository.findManyCatalogo.mockResolvedValue(mockRows);
     mockDiscountRepository.countCatalogo.mockResolvedValue(1);
 
     const result = await useCase.execute({ page: 1, limit: 10 });

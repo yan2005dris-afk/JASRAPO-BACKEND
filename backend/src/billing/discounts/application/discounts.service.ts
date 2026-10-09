@@ -10,7 +10,7 @@ import { UpdateDiscountUseCase } from './use-cases/update-discount.use-case';
 import { RemoveDiscountUseCase } from './use-cases/remove-discount.use-case';
 import { ApplyDiscountToPreinvoiceUseCase } from './use-cases/apply-discount-to-preinvoice.use-case';
 import { GetDiscountRubrosUseCase } from './use-cases/get-discount-rubros.use-case';
-import type { DiscountEntity } from '../domain/entities/discount.entity';
+import type { DiscountRow } from '../domain/types/discount.types';
 import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
 
 @Injectable()
@@ -29,25 +29,25 @@ export class DiscountsService {
     return this.getRubrosUseCase.execute();
   }
 
-  async create(dto: CreateDiscountDto): Promise<DiscountEntity> {
+  async create(dto: CreateDiscountDto): Promise<DiscountRow> {
     return this.createUseCase.execute(dto);
   }
 
   async findAll(
     filter: DiscountFilterDto,
-  ): Promise<PaginatedResult<DiscountEntity>> {
+  ): Promise<PaginatedResult<DiscountRow>> {
     return this.findAllUseCase.execute(filter);
   }
 
-  async findOne(id: number): Promise<DiscountEntity> {
+  async findOne(id: number): Promise<DiscountRow> {
     return this.findOneUseCase.execute(id);
   }
 
-  async update(id: number, dto: UpdateDiscountDto): Promise<DiscountEntity> {
+  async update(id: number, dto: UpdateDiscountDto): Promise<DiscountRow> {
     return this.updateUseCase.execute(id, dto);
   }
 
-  async remove(id: number): Promise<DiscountEntity> {
+  async remove(id: number): Promise<DiscountRow> {
     return this.removeUseCase.execute(id);
   }
 

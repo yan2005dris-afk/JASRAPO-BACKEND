@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { DiscountRepository } from '../../domain/repositories/discount.repository';
 import type { DiscountFilterDto } from '../../interfaces/dto/discount-filter.dto';
-import type { DiscountEntity } from '../../domain/entities/discount.entity';
+import type { DiscountRow } from '../../domain/types/discount.types';
 import type { DiscountFilters } from '../../domain/types/discount.types';
 import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
 
@@ -11,7 +11,7 @@ export class FindAllDiscountsUseCase {
 
   async execute(
     filter: DiscountFilterDto,
-  ): Promise<PaginatedResult<DiscountEntity>> {
+  ): Promise<PaginatedResult<DiscountRow>> {
     const page = filter.page ?? 1;
     const limit = filter.limit ?? 20;
     const skip = (page - 1) * limit;

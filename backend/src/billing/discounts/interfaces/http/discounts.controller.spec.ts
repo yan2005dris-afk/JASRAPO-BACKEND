@@ -2,21 +2,14 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { DiscountsController } from './discounts.controller';
 import { DiscountsService } from '../../application/discounts.service';
-import { DiscountEntity } from '../../domain/entities/discount.entity';
+import { discountRow } from '../../__test-utils__/discount-row.factory';
 
 describe('DiscountsController', () => {
   let controller: DiscountsController;
 
-  const mockEntity = new DiscountEntity({
+  const mockRow = discountRow({
     id: 1,
     nombre: 'Tercera Edad',
-    tipoDescuento: 'TERCERA_EDAD',
-    valor: 50,
-    esPorcentaje: true,
-    rubroId: null,
-    activo: true,
-    aplicaAutomatico: false,
-    descripcion: null,
   });
 
   const mockDiscountsService = {
@@ -49,7 +42,7 @@ describe('DiscountsController', () => {
 
   describe('create', () => {
     it('should create and return DiscountResponseDto', async () => {
-      mockDiscountsService.create.mockResolvedValue(mockEntity);
+      mockDiscountsService.create.mockResolvedValue(mockRow);
 
       const result = await controller.create({
         nombre: 'Tercera Edad',
@@ -67,7 +60,7 @@ describe('DiscountsController', () => {
   describe('findAll', () => {
     it('should return paginated DiscountResponseDtos', async () => {
       mockDiscountsService.findAll.mockResolvedValue({
-        data: [mockEntity],
+        data: [mockRow],
         meta: { total: 1, page: 1, limit: 10 },
       });
 
@@ -80,7 +73,7 @@ describe('DiscountsController', () => {
 
   describe('findOne', () => {
     it('should return single DiscountResponseDto', async () => {
-      mockDiscountsService.findOne.mockResolvedValue(mockEntity);
+      mockDiscountsService.findOne.mockResolvedValue(mockRow);
 
       const result = await controller.findOne(1);
 
@@ -90,7 +83,7 @@ describe('DiscountsController', () => {
 
   describe('update', () => {
     it('should update and return DiscountResponseDto', async () => {
-      mockDiscountsService.update.mockResolvedValue(mockEntity);
+      mockDiscountsService.update.mockResolvedValue(mockRow);
 
       const result = await controller.update(1, { nombre: 'Updated' });
 
@@ -100,7 +93,7 @@ describe('DiscountsController', () => {
 
   describe('remove', () => {
     it('should remove and return DiscountResponseDto', async () => {
-      mockDiscountsService.remove.mockResolvedValue(mockEntity);
+      mockDiscountsService.remove.mockResolvedValue(mockRow);
 
       const result = await controller.remove(1);
 
