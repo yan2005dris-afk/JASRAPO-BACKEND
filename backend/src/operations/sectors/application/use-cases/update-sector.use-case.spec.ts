@@ -2,8 +2,8 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { UpdateSectorUseCase } from './update-sector.use-case';
 import { SectorRepository } from '../../domain/repositories/sector.repository';
-import { SectorEntity } from '../../domain/entities/sector.entity';
 import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
+import { sectorRow } from '../../__test-utils__/sector-row.factory';
 
 describe('UpdateSectorUseCase', () => {
   let useCase: UpdateSectorUseCase;
@@ -32,13 +32,16 @@ describe('UpdateSectorUseCase', () => {
 
   it('should update a sector successfully', async () => {
     const dto = { nombre: 'Sector Updated' };
-    const mockExistingSector = new SectorEntity(1, 'Old', 'SEC-001', 1);
-    const mockUpdatedSector = new SectorEntity(
-      1,
-      'Sector Updated',
-      'SEC-001',
-      1,
-    );
+    const mockExistingSector = sectorRow({
+      sectorId: 1,
+      nombre: 'Old',
+      codigo: 'SEC-001',
+    });
+    const mockUpdatedSector = sectorRow({
+      sectorId: 1,
+      nombre: 'Sector Updated',
+      codigo: 'SEC-001',
+    });
 
     mockSectorRepository.findById.mockResolvedValue(mockExistingSector);
     mockSectorRepository.update.mockResolvedValue(mockUpdatedSector);
@@ -59,7 +62,11 @@ describe('UpdateSectorUseCase', () => {
   });
 
   it('should throw EntityNotFoundException if updated comunidadId does not exist', async () => {
-    const mockExistingSector = new SectorEntity(1, 'Old', 'SEC-001', 1);
+    const mockExistingSector = sectorRow({
+      sectorId: 1,
+      nombre: 'Old',
+      codigo: 'SEC-001',
+    });
     mockSectorRepository.findById.mockResolvedValue(mockExistingSector);
     mockSectorRepository.findComunidadById.mockResolvedValue(null);
 

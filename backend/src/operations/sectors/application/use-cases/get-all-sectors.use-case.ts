@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { SectorRepository } from '../../domain/repositories/sector.repository';
 import { getPagination } from 'src/infrastructure/common/utils/pagination.util';
 import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
-import { SectorEntity } from '../../domain/entities/sector.entity';
+import type { SectorRow } from '../../infrastructure/repositories/sector.include';
 import type { SectorFilters } from '../../domain/types/sector.types';
 
 @Injectable()
@@ -13,7 +13,7 @@ export class GetAllSectorsUseCase {
     page = 1,
     limit = 10,
     filters?: SectorFilters,
-  ): Promise<PaginatedResult<SectorEntity>> {
+  ): Promise<PaginatedResult<SectorRow>> {
     const { skip, take, page: safePage } = getPagination(page, limit);
 
     const { data: sectores, total } = await this.sectorRepository.paginate(

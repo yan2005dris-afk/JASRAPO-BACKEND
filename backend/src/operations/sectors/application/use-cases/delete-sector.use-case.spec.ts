@@ -2,8 +2,8 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { DeleteSectorUseCase } from './delete-sector.use-case';
 import { SectorRepository } from '../../domain/repositories/sector.repository';
-import { SectorEntity } from '../../domain/entities/sector.entity';
 import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
+import { sectorRow } from '../../__test-utils__/sector-row.factory';
 
 describe('DeleteSectorUseCase', () => {
   let useCase: DeleteSectorUseCase;
@@ -30,15 +30,17 @@ describe('DeleteSectorUseCase', () => {
   });
 
   it('should delete a sector successfully when found', async () => {
-    const existing = new SectorEntity(1, 'Sector 1', 'SEC-001', 1);
-    const deleted = new SectorEntity(
-      1,
-      'Sector 1',
-      'SEC-001',
-      1,
-      null,
-      new Date(),
-    );
+    const existing = sectorRow({
+      sectorId: 1,
+      nombre: 'Sector 1',
+      codigo: 'SEC-001',
+    });
+    const deleted = sectorRow({
+      sectorId: 1,
+      nombre: 'Sector 1',
+      codigo: 'SEC-001',
+      deletedAt: new Date(),
+    });
     mockSectorRepository.findById.mockResolvedValue(existing);
     mockSectorRepository.softDelete.mockResolvedValue(deleted);
 
