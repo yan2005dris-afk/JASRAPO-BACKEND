@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { Prisma } from 'src/generated/prisma/client';
-import { RubroEntity } from '../../domain/entities/rubro.entity';
-import { RubroMapper } from '../mappers/rubro.mapper';
+import { Decimal } from 'decimal.js';
 import { RubroRepository } from '../../domain/repositories/rubro.repository';
+import { rubroInclude, type RubroRow } from './rubro.include';
 import type {
   CreateRubroData,
   UpdateRubroData,
@@ -20,16 +20,12 @@ import {
 export class PrismaRubroRepository implements RubroRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(data: CreateRubroData): Promise<RubroEntity> {
+  async create(data: CreateRubroData): Promise<RubroRow> {
     try {
-      const prismaInput = RubroMapper.toPrismaCreateInput(data);
-      const record = await this.prisma.rubros.create({
-        data: prismaInput,
-        include: {
-          tarifaImpuesto: true,
-        },
+      return await this.prisma.rubros.create({
+        data: this.toCreateInput(data),
+        include: rubroInclude,
       });
-      return RubroMapper.toDomain(record)!;
     } catch (error) {
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
@@ -45,69 +41,53 @@ export class PrismaRubroRepository implements RubroRepository {
     }
   }
 
-  async findAll(params: RubroFindManyParams): Promise<RubroEntity[]> {
-    const where = RubroMapper.toPrismaWhereInput(params.where);
-    const records = await this.prisma.rubros.findMany({
+  async findAll(params: RubroFindManyParams): Promise<RubroRow[]> {
+    const where = this.toWhereInput(params.where);
+    return this.prisma.rubros.findMany({
       where,
-      include: {
-        tarifaImpuesto: true,
-      },
+      include: rubroInclude,
       orderBy: params.orderBy ?? { rubroId: 'asc' },
       skip: params.skip,
       take: params.take,
     });
-    return RubroMapper.toDomainList(records);
   }
 
   async count(params: { where?: RubroFilters }): Promise<number> {
-    const where = RubroMapper.toPrismaWhereInput(params.where);
+    const where = this.toWhereInput(params.where);
     return this.prisma.rubros.count({ where });
   }
 
-  async findById(id: number): Promise<RubroEntity | null> {
-    const record = await this.prisma.rubros.findFirst({
+  async findById(id: number): Promise<RubroRow | null> {
+    return this.prisma.rubros.findFirst({
       where: { rubroId: id, deletedAt: null },
-      include: {
-        tarifaImpuesto: true,
-      },
+      include: rubroInclude,
     });
-    return RubroMapper.toDomain(record);
   }
 
   async findByCategoriaTarifaId(
     categoriaTarifaId: number,
-  ): Promise<RubroEntity[]> {
-    const records = await this.prisma.rubros.findMany({
+  ): Promise<RubroRow[]> {
+    return this.prisma.rubros.findMany({
       where: { categoriaTarifaId, deletedAt: null },
-      include: {
-        tarifaImpuesto: true,
-      },
+      include: rubroInclude,
       orderBy: { rubroId: 'asc' },
     });
-    return RubroMapper.toDomainList(records);
   }
 
-  async findByCodigoSri(codigoSri: string): Promise<RubroEntity | null> {
-    const record = await this.prisma.rubros.findFirst({
+  async findByCodigoSri(codigoSri: string): Promise<RubroRow | null> {
+    return this.prisma.rubros.findFirst({
       where: { codigoSri, deletedAt: null },
-      include: {
-        tarifaImpuesto: true,
-      },
+      include: rubroInclude,
     });
-    return RubroMapper.toDomain(record);
   }
 
-  async update(id: number, data: UpdateRubroData): Promise<RubroEntity> {
+  async update(id: number, data: UpdateRubroData): Promise<RubroRow> {
     try {
-      const prismaInput = RubroMapper.toPrismaUpdateInput(data);
-      const record = await this.prisma.rubros.update({
+      return await this.prisma.rubros.update({
         where: { rubroId: id },
-        data: prismaInput,
-        include: {
-          tarifaImpuesto: true,
-        },
+        data: this.toUpdateInput(data),
+        include: rubroInclude,
       });
-      return RubroMapper.toDomain(record)!;
     } catch (error) {
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
@@ -129,19 +109,16 @@ export class PrismaRubroRepository implements RubroRepository {
     }
   }
 
-  async delete(id: number): Promise<RubroEntity> {
+  async delete(id: number): Promise<RubroRow> {
     try {
-      const record = await this.prisma.rubros.update({
+      return await this.prisma.rubros.update({
         where: { rubroId: id },
         data: {
           deletedAt: new Date(),
           activo: false,
         },
-        include: {
-          tarifaImpuesto: true,
-        },
+        include: rubroInclude,
       });
-      return RubroMapper.toDomain(record)!;
     } catch (error) {
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
@@ -171,6 +148,104 @@ export class PrismaRubroRepository implements RubroRepository {
         id: 'asc',
       },
     });
-    return records.map((r) => RubroMapper.toTarifaImpuestoInfo(r));
+    return records.map((r) => this.toTarifaImpuestoInfo(r));
+  }
+
+  /**
+   * Helpers privados — antes vivian en `RubroMapper`. Se mantienen
+   * como helpers privados del repo porque (a) son detalles de
+   * adaptacion Prisma (Decimal <-> Prisma.Decimal, trim, defaults,
+   * casts de enums) y (b) eliminan la ceremonia de un mapper 1:1 sin
+   * perder capacidad.
+   */
+
+  private toCreateInput(
+    data: CreateRubroData,
+  ): Prisma.RubrosUncheckedCreateInput {
+    const base: Prisma.RubrosUncheckedCreateInput = {
+      codigoSri: data.codigoSri?.trim() ? data.codigoSri.trim() : null,
+      nombre: data.nombre.trim(),
+      descripcion: data.descripcion.trim(),
+      precioUnitario: new Decimal(data.precioUnitario),
+      tipoRubro: data.tipoRubro,
+      tarifaImpuestoId: data.tarifaImpuestoId,
+      activo: data.activo ?? true,
+      esAutomatico: data.esAutomatico ?? false,
+    };
+    if (data.categoriaTarifaId !== undefined) {
+      return {
+        ...base,
+        categoriaTarifaId: data.categoriaTarifaId,
+      };
+    }
+    return base;
+  }
+
+  private toUpdateInput(
+    data: UpdateRubroData,
+  ): Prisma.RubrosUncheckedUpdateInput {
+    return {
+      ...(data.codigoSri !== undefined
+        ? { codigoSri: data.codigoSri?.trim() ? data.codigoSri.trim() : null }
+        : {}),
+      ...(data.nombre !== undefined ? { nombre: data.nombre.trim() } : {}),
+      ...(data.descripcion !== undefined
+        ? { descripcion: data.descripcion.trim() }
+        : {}),
+      ...(data.precioUnitario !== undefined
+        ? { precioUnitario: new Decimal(data.precioUnitario) }
+        : {}),
+      ...(data.tipoRubro !== undefined ? { tipoRubro: data.tipoRubro } : {}),
+      ...(data.tarifaImpuestoId !== undefined
+        ? { tarifaImpuestoId: data.tarifaImpuestoId }
+        : {}),
+      ...(data.categoriaTarifaId !== undefined
+        ? { categoriaTarifaId: data.categoriaTarifaId }
+        : {}),
+      ...(data.activo !== undefined ? { activo: data.activo } : {}),
+      ...(data.esAutomatico !== undefined
+        ? { esAutomatico: data.esAutomatico }
+        : {}),
+      ...(data.deletedAt !== undefined ? { deletedAt: data.deletedAt } : {}),
+    };
+  }
+
+  private toWhereInput(where?: RubroFilters): Prisma.RubrosWhereInput {
+    const base: Prisma.RubrosWhereInput = { deletedAt: null };
+    if (!where) return base;
+
+    return {
+      ...base,
+      ...(where.nombre
+        ? { nombre: { contains: where.nombre.trim(), mode: 'insensitive' } }
+        : {}),
+      ...(where.tipoRubro ? { tipoRubro: where.tipoRubro } : {}),
+      ...(where.tarifaImpuestoId !== undefined
+        ? { tarifaImpuestoId: where.tarifaImpuestoId }
+        : {}),
+      ...((where as any).categoriaTarifaId !== undefined
+        ? { categoriaTarifaId: (where as any).categoriaTarifaId }
+        : {}),
+      ...(where.activo !== undefined ? { activo: where.activo } : {}),
+      ...(where.esAutomatico !== undefined
+        ? { esAutomatico: where.esAutomatico }
+        : {}),
+    };
+  }
+
+  private toTarifaImpuestoInfo(
+    raw: Prisma.CatalogoTarifasImpuestoGetPayload<{}>,
+  ): TarifaImpuestoInfo {
+    return {
+      id: raw.id,
+      impuestoId: raw.impuestoId,
+      codigoPorcentaje: raw.codigoPorcentaje,
+      descripcion: raw.descripcion,
+      porcentaje:
+        raw.porcentaje instanceof Decimal
+          ? raw.porcentaje.toNumber()
+          : Number(raw.porcentaje),
+      activo: raw.activo,
+    };
   }
 }

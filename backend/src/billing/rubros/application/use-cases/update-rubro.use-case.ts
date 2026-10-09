@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { RubroRepository } from '../../domain/repositories/rubro.repository';
-import type { UpdateRubroData } from '../../domain/types/rubro.types';
-import type { RubroEntity } from '../../domain/entities/rubro.entity';
+import type { UpdateRubroData, RubroRow } from '../../domain/types/rubro.types';
 import {
   EntityNotFoundException,
   EntityAlreadyExistsException,
@@ -11,37 +10,27 @@ import {
 export class UpdateRubroUseCase {
   constructor(private readonly rubroRepository: RubroRepository) {}
 
-  async execute(id: number, data: UpdateRubroData): Promise<RubroEntity> {
+  async execute(id: number, data: UpdateRubroData): Promise<RubroRow> {
     const existing = await this.rubroRepository.findById(id);
     if (!existing) {
       throw new EntityNotFoundException('Rubro', id);
     }
-
-    if (data.codigoSri?.trim()) {
-      const codeOwner = await this.rubroRepository.findByCodigoSri(
-        data.codigoSri.trim(),
+    if (
+      data.codigoSri !== undefined &&
+      data.codigoSri !== null &&
+      data.codigoSri !== existing.codigoSri
+    ) {
+      const existingWithCode = await this.rubroRepository.findByCodigoSri(
+        data.codigoSri,
       );
-      if (codeOwner && codeOwner.rubroId !== id) {
+      if (existingWithCode && existingWithCode.rubroId !== id) {
         throw new EntityAlreadyExistsException(
           'Rubro',
-          'código SRI',
+          'codigoSri',
           data.codigoSri,
         );
       }
     }
-
-    return this.rubroRepository.update(id, {
-      ...data,
-      ...(data.codigoSri !== undefined
-        ? { codigoSri: data.codigoSri?.trim() || null }
-        : {}),
-      ...(data.nombre !== undefined ? { nombre: data.nombre.trim() } : {}),
-      ...(data.descripcion !== undefined
-        ? { descripcion: data.descripcion.trim() }
-        : {}),
-      ...(data.precioUnitario !== undefined
-        ? { precioUnitario: Number(data.precioUnitario) }
-        : {}),
-    });
+    return this.rubroRepository.update(id, data);
   }
 }

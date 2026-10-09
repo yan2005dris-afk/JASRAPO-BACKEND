@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { RubroRepository } from '../../domain/repositories/rubro.repository';
-import type { RubroEntity } from '../../domain/entities/rubro.entity';
+import type { RubroRow } from '../../domain/types/rubro.types';
 import {
   EntityNotFoundException,
   InvalidDomainOperationException,
@@ -10,7 +10,7 @@ import {
 export class DeleteRubroUseCase {
   constructor(private readonly rubroRepository: RubroRepository) {}
 
-  async execute(id: number): Promise<RubroEntity> {
+  async execute(id: number): Promise<RubroRow> {
     const existing = await this.rubroRepository.findById(id);
     if (!existing) {
       throw new EntityNotFoundException('Rubro', id);

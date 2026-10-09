@@ -1,5 +1,9 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import type { TarifaImpuestoInfo } from '../../domain/types/rubro.types';
+import { Decimal } from 'decimal.js';
+import type {
+  TarifaImpuestoInfo,
+  RubroRow,
+} from '../../domain/types/rubro.types';
 
 export class TarifaImpuestoResponseDto implements TarifaImpuestoInfo {
   @ApiProperty({ description: 'ID de la tarifa de impuesto', example: 1 })
@@ -111,24 +115,39 @@ export class RubroResponseDto {
   })
   deletedAt!: Date | null;
 
-  static fromEntity(entity: any): RubroResponseDto {
+  static fromRow(row: RubroRow): RubroResponseDto {
     const dto = new RubroResponseDto();
-    dto.rubroId = entity.rubroId;
-    dto.codigoSri = entity.codigoSri;
-    dto.nombre = entity.nombre;
-    dto.descripcion = entity.descripcion;
-    dto.precioUnitario = Number(entity.precioUnitario);
-    dto.tipoRubro = entity.tipoRubro;
-    dto.codigoSistemaRubro = entity.codigoSistemaRubro ?? null;
-    dto.tarifaImpuestoId = entity.tarifaImpuestoId;
-    if (entity.tarifaImpuesto) {
-      dto.tarifaImpuesto = entity.tarifaImpuesto;
+    dto.rubroId = row.rubroId;
+    dto.codigoSri = row.codigoSri;
+    dto.nombre = row.nombre;
+    dto.descripcion = row.descripcion;
+    dto.precioUnitario =
+      row.precioUnitario instanceof Decimal
+        ? row.precioUnitario.toNumber()
+        : Number(row.precioUnitario);
+    dto.tipoRubro = row.tipoRubro;
+    dto.codigoSistemaRubro = row.codigoSistemaRubro ?? null;
+    dto.tarifaImpuestoId = row.tarifaImpuestoId;
+    if (row.tarifaImpuesto) {
+      dto.tarifaImpuesto = {
+        id: row.tarifaImpuesto.id,
+        codigoPorcentaje: row.tarifaImpuesto.codigoPorcentaje,
+        porcentaje:
+          row.tarifaImpuesto.porcentaje instanceof Decimal
+            ? row.tarifaImpuesto.porcentaje.toNumber()
+            : Number(row.tarifaImpuesto.porcentaje),
+        descripcion: row.tarifaImpuesto.descripcion,
+      };
     }
-    dto.activo = entity.activo;
-    dto.esAutomatico = entity.esAutomatico;
-    dto.createdAt = entity.createdAt;
-    dto.updatedAt = entity.updatedAt;
-    dto.deletedAt = entity.deletedAt;
+    dto.activo = row.activo;
+    dto.esAutomatico = row.esAutomatico;
+    dto.createdAt = row.createdAt;
+    dto.updatedAt = row.updatedAt;
+    dto.deletedAt = row.deletedAt;
     return dto;
+  }
+
+  static fromRowList(rows: RubroRow[]): RubroResponseDto[] {
+    return rows.map((r) => RubroResponseDto.fromRow(r));
   }
 }

@@ -1,13 +1,12 @@
 import { Injectable, ConflictException } from '@nestjs/common';
 import { RubroRepository } from '../../domain/repositories/rubro.repository';
-import type { CreateRubroData } from '../../domain/types/rubro.types';
-import type { RubroEntity } from '../../domain/entities/rubro.entity';
+import type { CreateRubroData, RubroRow } from '../../domain/types/rubro.types';
 
 @Injectable()
 export class CreateRubroUseCase {
   constructor(private readonly rubroRepository: RubroRepository) {}
 
-  async execute(data: CreateRubroData): Promise<RubroEntity> {
+  async execute(data: CreateRubroData): Promise<RubroRow> {
     if (data.codigoSri?.trim()) {
       const existing = await this.rubroRepository.findByCodigoSri(
         data.codigoSri.trim(),

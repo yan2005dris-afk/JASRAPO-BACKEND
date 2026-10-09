@@ -61,7 +61,8 @@ export class RubrosController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async create(@Body() dto: CreateRubroDto): Promise<RubroResponseDto> {
-    return this.rubrosService.create(dto);
+    const row = await this.rubrosService.create(dto);
+    return RubroResponseDto.fromRow(row);
   }
 
   @ApiOperation({ summary: 'Listar rubros con paginación y filtros' })
@@ -74,7 +75,7 @@ export class RubrosController {
   async findAll(
     @Query() filterDto: RubroFilterDto,
   ): Promise<PaginatedResult<RubroResponseDto>> {
-    return this.rubrosService.findAll({
+    const result = await this.rubrosService.findAll({
       page: filterDto.page,
       limit: filterDto.limit,
       nombre: filterDto.nombre,
@@ -89,6 +90,10 @@ export class RubrosController {
           ? filterDto.esAutomatico
           : undefined,
     });
+    return {
+      data: RubroResponseDto.fromRowList(result.data),
+      meta: result.meta,
+    };
   }
 
   @ApiOperation({ summary: 'Obtener un rubro por ID' })
@@ -109,7 +114,10 @@ export class RubrosController {
   async findOne(
     @Param('id', ParseIntPipe) id: number,
   ): Promise<RubroResponseDto> {
-    return this.rubrosService.findOne(id);
+    // findOne use case lanza EntityNotFoundException si no existe,
+    // asi que el row siempre viene no-null.
+    const row = await this.rubrosService.findOne(id);
+    return RubroResponseDto.fromRow(row);
   }
 
   @ApiOperation({ summary: 'Actualizar un rubro por ID' })
@@ -132,7 +140,8 @@ export class RubrosController {
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateRubroDto,
   ): Promise<RubroResponseDto> {
-    return this.rubrosService.update(id, dto);
+    const row = await this.rubrosService.update(id, dto);
+    return RubroResponseDto.fromRow(row);
   }
 
   @ApiOperation({ summary: 'Eliminar un rubro (soft delete)' })
@@ -157,6 +166,7 @@ export class RubrosController {
   async remove(
     @Param('id', ParseIntPipe) id: number,
   ): Promise<RubroResponseDto> {
-    return this.rubrosService.remove(id);
+    const row = await this.rubrosService.remove(id);
+    return RubroResponseDto.fromRow(row);
   }
 }
