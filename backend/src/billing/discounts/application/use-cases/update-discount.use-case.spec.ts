@@ -3,7 +3,7 @@ import { Test } from '@nestjs/testing';
 import { UpdateDiscountUseCase } from './update-discount.use-case';
 import { DiscountRepository } from '../../domain/repositories/discount.repository';
 import { FindOneDiscountUseCase } from './find-one-discount.use-case';
-import { DiscountEntity } from '../../domain/entities/discount.entity';
+import { discountRow } from '../../__test-utils__/discount-row.factory';
 
 describe('UpdateDiscountUseCase', () => {
   let useCase: UpdateDiscountUseCase;
@@ -37,20 +37,13 @@ describe('UpdateDiscountUseCase', () => {
   });
 
   it('should update discount when found', async () => {
-    const existing = new DiscountEntity({
+    const existing = discountRow({
       id: 1,
       nombre: 'Tercera Edad',
-      tipoDescuento: 'TERCERA_EDAD',
-      valor: 50,
-      esPorcentaje: true,
-      rubroId: null,
-      activo: true,
-      aplicaAutomatico: false,
-      descripcion: null,
     });
 
-    const updated = new DiscountEntity({
-      ...existing,
+    const updated = discountRow({
+      id: 1,
       nombre: 'Tercera Edad 2',
     });
 

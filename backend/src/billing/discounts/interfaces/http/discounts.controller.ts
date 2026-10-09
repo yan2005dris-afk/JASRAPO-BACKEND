@@ -62,7 +62,7 @@ export class DiscountsController {
   })
   async create(@Body() dto: CreateDiscountDto): Promise<DiscountResponseDto> {
     const entity = await this.discountsService.create(dto);
-    return DiscountResponseDto.fromEntity(entity);
+    return DiscountResponseDto.fromRow(entity);
   }
 
   @Get()
@@ -79,7 +79,7 @@ export class DiscountsController {
   ): Promise<PaginatedResult<DiscountResponseDto>> {
     const result = await this.discountsService.findAll(filter);
     return {
-      data: DiscountResponseDto.fromEntityList(result.data),
+      data: DiscountResponseDto.fromRowList(result.data),
       meta: result.meta,
     };
   }
@@ -99,7 +99,7 @@ export class DiscountsController {
     @Param('id', ParseIntPipe) id: number,
   ): Promise<DiscountResponseDto> {
     const entity = await this.discountsService.findOne(id);
-    return DiscountResponseDto.fromEntity(entity);
+    return DiscountResponseDto.fromRow(entity);
   }
 
   @Patch(':id')
@@ -123,7 +123,7 @@ export class DiscountsController {
       );
     }
     const entity = await this.discountsService.update(id, dto);
-    return DiscountResponseDto.fromEntity(entity);
+    return DiscountResponseDto.fromRow(entity);
   }
 
   @Delete(':id')
@@ -142,7 +142,7 @@ export class DiscountsController {
     @Param('id', ParseIntPipe) id: number,
   ): Promise<DiscountResponseDto> {
     const entity = await this.discountsService.remove(id);
-    return DiscountResponseDto.fromEntity(entity);
+    return DiscountResponseDto.fromRow(entity);
   }
 
   @Post('apply-to-preinvoice/:prefacturaId')

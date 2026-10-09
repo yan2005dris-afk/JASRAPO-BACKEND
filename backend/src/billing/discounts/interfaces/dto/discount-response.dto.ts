@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import type { DiscountEntity } from '../../domain/entities/discount.entity';
+import { Decimal } from 'decimal.js';
+import type { DiscountRow } from '../../domain/types/discount.types';
 
 export class DiscountResponseDto {
   @ApiProperty({ example: 1, description: 'ID único del descuento' })
@@ -42,7 +43,7 @@ export class DiscountResponseDto {
     rubroId: number;
     nombre: string;
     tipoRubro: string;
-    precioUnitario: any;
+    precioUnitario: number;
   } | null;
 
   @ApiProperty({
@@ -57,22 +58,33 @@ export class DiscountResponseDto {
   })
   aplicaAutomatico: boolean;
 
-  static fromEntity(entity: DiscountEntity): DiscountResponseDto {
+  static fromRow(row: DiscountRow): DiscountResponseDto {
     const dto = new DiscountResponseDto();
-    dto.id = entity.id;
-    dto.nombre = entity.nombre;
-    dto.descripcion = entity.descripcion ?? null;
-    dto.tipoDescuento = entity.tipoDescuento;
-    dto.valor = Number(entity.valor);
-    dto.esPorcentaje = entity.esPorcentaje;
-    dto.rubroId = entity.rubroId ?? null;
-    dto.rubro = entity.rubro ?? null;
-    dto.activo = entity.activo;
-    dto.aplicaAutomatico = entity.aplicaAutomatico;
+    dto.id = row.id;
+    dto.nombre = row.nombre;
+    dto.descripcion = row.descripcion ?? null;
+    dto.tipoDescuento = row.tipoDescuento;
+    dto.valor =
+      row.valor instanceof Decimal ? row.valor.toNumber() : Number(row.valor);
+    dto.esPorcentaje = row.esPorcentaje;
+    dto.rubroId = row.rubroId ?? null;
+    dto.rubro = row.rubro
+      ? {
+          rubroId: row.rubro.rubroId,
+          nombre: row.rubro.nombre,
+          tipoRubro: row.rubro.tipoRubro,
+          precioUnitario:
+            row.rubro.precioUnitario instanceof Decimal
+              ? row.rubro.precioUnitario.toNumber()
+              : Number(row.rubro.precioUnitario),
+        }
+      : null;
+    dto.activo = row.activo;
+    dto.aplicaAutomatico = row.aplicaAutomatico;
     return dto;
   }
 
-  static fromEntityList(entities: DiscountEntity[]): DiscountResponseDto[] {
-    return entities.map((e) => DiscountResponseDto.fromEntity(e));
+  static fromRowList(rows: DiscountRow[]): DiscountResponseDto[] {
+    return rows.map((r) => DiscountResponseDto.fromRow(r));
   }
 }

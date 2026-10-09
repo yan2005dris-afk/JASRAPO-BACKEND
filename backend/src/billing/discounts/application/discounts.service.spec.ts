@@ -8,21 +8,14 @@ import { UpdateDiscountUseCase } from './use-cases/update-discount.use-case';
 import { RemoveDiscountUseCase } from './use-cases/remove-discount.use-case';
 import { ApplyDiscountToPreinvoiceUseCase } from './use-cases/apply-discount-to-preinvoice.use-case';
 import { GetDiscountRubrosUseCase } from './use-cases/get-discount-rubros.use-case';
-import { DiscountEntity } from '../domain/entities/discount.entity';
+import { discountRow } from '../__test-utils__/discount-row.factory';
 
 describe('DiscountsService', () => {
   let service: DiscountsService;
 
-  const mockEntity = new DiscountEntity({
+  const mockRow = discountRow({
     id: 1,
     nombre: 'Tercera Edad',
-    tipoDescuento: 'TERCERA_EDAD',
-    valor: 50,
-    esPorcentaje: true,
-    rubroId: null,
-    activo: true,
-    aplicaAutomatico: false,
-    descripcion: null,
   });
 
   const mockCreate = { execute: jest.fn() };
@@ -59,7 +52,7 @@ describe('DiscountsService', () => {
   });
 
   it('should delegate create to CreateDiscountUseCase', async () => {
-    mockCreate.execute.mockResolvedValue(mockEntity);
+    mockCreate.execute.mockResolvedValue(mockRow);
 
     const result = await service.create({
       nombre: 'Tercera Edad',
@@ -74,7 +67,7 @@ describe('DiscountsService', () => {
 
   it('should delegate findAll to FindAllDiscountsUseCase', async () => {
     mockFindAll.execute.mockResolvedValue({
-      data: [mockEntity],
+      data: [mockRow],
       meta: { total: 1, page: 1, limit: 10 },
     });
 
@@ -85,7 +78,7 @@ describe('DiscountsService', () => {
   });
 
   it('should delegate findOne to FindOneDiscountUseCase', async () => {
-    mockFindOne.execute.mockResolvedValue(mockEntity);
+    mockFindOne.execute.mockResolvedValue(mockRow);
 
     const result = await service.findOne(1);
 
@@ -94,7 +87,7 @@ describe('DiscountsService', () => {
   });
 
   it('should delegate update to UpdateDiscountUseCase', async () => {
-    mockUpdate.execute.mockResolvedValue(mockEntity);
+    mockUpdate.execute.mockResolvedValue(mockRow);
 
     const result = await service.update(1, { nombre: 'Updated' });
 
@@ -103,7 +96,7 @@ describe('DiscountsService', () => {
   });
 
   it('should delegate remove to RemoveDiscountUseCase', async () => {
-    mockRemove.execute.mockResolvedValue(mockEntity);
+    mockRemove.execute.mockResolvedValue(mockRow);
 
     const result = await service.remove(1);
 

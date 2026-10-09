@@ -2,7 +2,7 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { CreateDiscountUseCase } from './create-discount.use-case';
 import { DiscountRepository } from '../../domain/repositories/discount.repository';
-import { DiscountEntity } from '../../domain/entities/discount.entity';
+import { discountRow } from '../../__test-utils__/discount-row.factory';
 
 describe('CreateDiscountUseCase', () => {
   let useCase: CreateDiscountUseCase;
@@ -39,15 +39,12 @@ describe('CreateDiscountUseCase', () => {
       rubroId: 1,
     };
 
-    const mockEntity = new DiscountEntity({
+    const mockRow = discountRow({
       id: 1,
       ...dto,
-      activo: true,
-      aplicaAutomatico: false,
-      descripcion: null,
     });
 
-    mockDiscountRepository.createCatalogo.mockResolvedValue(mockEntity);
+    mockDiscountRepository.createCatalogo.mockResolvedValue(mockRow);
 
     const result = await useCase.execute(dto as any);
 

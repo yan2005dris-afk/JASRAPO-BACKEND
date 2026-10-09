@@ -67,7 +67,7 @@ describe('PrismaDiscountRepository', () => {
       });
 
       expect(result.id).toBe(1);
-      expect(result.valor).toBe(50);
+      expect(Number(result.valor)).toBe(50);
     });
 
     it('should throw EntityAlreadyExistsException on P2002', async () => {

@@ -13,9 +13,7 @@ import type { DiscountRow } from '../infrastructure/repositories/discount.includ
  *   const row = discountRow({ id: 7, nombre: 'Descuento test' });
  *   prisma.catalogoDescuento.findUnique.mockResolvedValue(row);
  */
-export function discountRow(
-  overrides: Partial<DiscountRow> = {},
-): DiscountRow {
+export function discountRow(overrides: Partial<DiscountRow> = {}): DiscountRow {
   const base: DiscountRow = {
     id: 1,
     nombre: 'Descuento Test',
