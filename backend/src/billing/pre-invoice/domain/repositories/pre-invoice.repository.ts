@@ -1,4 +1,4 @@
-import type { PreInvoiceEntity } from '../entities/pre-invoice.entity';
+import type { PreInvoiceRow } from '../types/pre-invoice.types';
 import type {
   PreInvoiceFilters,
   UpdatePreInvoiceStateData,
@@ -10,9 +10,9 @@ export abstract class PreInvoiceRepository {
   abstract paginate(
     filters: PreInvoiceFilters,
     pagination: PaginateOptions,
-  ): Promise<PaginatedResult<PreInvoiceEntity>>;
+  ): Promise<PaginatedResult<PreInvoiceRow>>;
 
-  abstract findById(id: number | bigint): Promise<PreInvoiceEntity | null>;
+  abstract findById(id: number | bigint): Promise<PreInvoiceRow | null>;
 
   /** Finds pre-invoice IDs for a given batch/lote */
   abstract findIdsByLoteId(loteId: bigint): Promise<{ prefacturaId: bigint }[]>;

@@ -2,27 +2,28 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { FindOnePreInvoiceUseCase } from './find-one-pre-invoice.use-case';
 import { PreInvoiceRepository } from '../../domain/repositories/pre-invoice.repository';
-import { PreInvoiceEntity } from '../../domain/entities/pre-invoice.entity';
 import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
+import { preInvoiceRow } from '../../__test-utils__/pre-invoice-row.factory';
+import { Prisma } from 'src/generated/prisma/client';
 
 describe('FindOnePreInvoiceUseCase', () => {
   let useCase: FindOnePreInvoiceUseCase;
 
-  const mockPreInvoice = new PreInvoiceEntity({
-    prefacturaId: BigInt(1),
+  const mockPreInvoice = preInvoiceRow({
+    prefacturaId: 1n,
     uuid: 'uuid-1',
-    contratoId: BigInt(1),
+    contratoId: 1n,
     periodoId: 1,
     puntoEmisionId: 1,
-    subtotal: 10,
-    iva: 1.2,
-    descuentoTotal: 0,
-    totalPagar: 11.2,
-    deudaAnterior: 0,
-    saldoVencido: 0,
-    abono: 0,
-    saldoActual: 11.2,
-    mesesAtrasado: 0,
+    subtotal: new Prisma.Decimal(10),
+    iva: new Prisma.Decimal(1.2),
+    descuentoTotal: new Prisma.Decimal(0),
+    totalPagar: new Prisma.Decimal(11.2),
+    deudaAnterior: new Prisma.Decimal(0),
+    saldoVencido: new Prisma.Decimal(0),
+    abono: new Prisma.Decimal(0),
+    saldoActual: new Prisma.Decimal(11.2),
+    meses_atrasado: 0,
     estado: 'GENERADA',
     createdAt: new Date(),
     updatedAt: new Date(),

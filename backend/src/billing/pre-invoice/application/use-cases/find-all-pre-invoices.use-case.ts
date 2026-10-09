@@ -1,8 +1,10 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { PreInvoiceRepository } from '../../domain/repositories/pre-invoice.repository';
 import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
-import type { PreInvoiceEntity } from '../../domain/entities/pre-invoice.entity';
-import type { PreInvoiceFilters } from '../../domain/types/pre-invoice.types';
+import type {
+  PreInvoiceRow,
+  PreInvoiceFilters,
+} from '../../domain/types/pre-invoice.types';
 
 @Injectable()
 export class FindAllPreInvoicesUseCase {
@@ -12,7 +14,7 @@ export class FindAllPreInvoicesUseCase {
     page: number = 1,
     limit: number = 10,
     filters?: PreInvoiceFilters,
-  ): Promise<PaginatedResult<PreInvoiceEntity>> {
+  ): Promise<PaginatedResult<PreInvoiceRow>> {
     if (filters?.contratoId && !/^\d+$/.test(filters.contratoId)) {
       throw new BadRequestException('contratoId must be a numeric value');
     }

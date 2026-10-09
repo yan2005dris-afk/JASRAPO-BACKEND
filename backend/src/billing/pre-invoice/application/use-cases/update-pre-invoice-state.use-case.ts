@@ -7,7 +7,7 @@ import {
   EntityNotFoundException,
   InvalidDomainOperationException,
 } from 'src/shared/domain/exceptions/domain.exception';
-import type { PreInvoiceEntity } from '../../domain/entities/pre-invoice.entity';
+import type { PreInvoiceRow } from '../../domain/types/pre-invoice.types';
 
 @Injectable()
 export class UpdatePreInvoiceStateUseCase {
@@ -22,7 +22,7 @@ export class UpdatePreInvoiceStateUseCase {
     accion: string;
     userId?: string;
     motivoRechazo?: string;
-  }): Promise<PreInvoiceEntity> {
+  }): Promise<PreInvoiceRow> {
     const { id, accion, userId, motivoRechazo } = params;
 
     const preInvoice = await this.preInvoiceRepository.findById(id);
@@ -81,20 +81,22 @@ export class UpdatePreInvoiceStateUseCase {
       // Populate comprobante_detalles from prefactura detalles
       if (
         comprobante.id &&
-        preInvoice.detalles &&
-        preInvoice.detalles.length > 0
+        preInvoice.prefacturaDetalle &&
+        preInvoice.prefacturaDetalle.length > 0
       ) {
         const comprobanteId = comprobante.id;
-        const detallesToCreate = preInvoice.detalles.map((d, index) => ({
-          comprobante_id: comprobanteId,
-          codigo_principal: String(d.rubroId || index + 1),
-          descripcion: d.descripcion || d.rubroNombre || 'Rubro',
-          cantidad: Number(d.cantidad) || 1,
-          precio_unitario: Number(d.precioUnitario) || 0,
-          descuento: Number(d.descuento) || 0,
-          precio_total_sin_impuesto: Number(d.subtotal) || 0,
-          orden: index + 1,
-        }));
+        const detallesToCreate = preInvoice.prefacturaDetalle.map(
+          (d, index) => ({
+            comprobante_id: comprobanteId,
+            codigo_principal: String(d.rubroId || index + 1),
+            descripcion: d.descripcion || d.rubro?.nombre || 'Rubro',
+            cantidad: Number(d.cantidad) || 1,
+            precio_unitario: Number(d.precioUnitario) || 0,
+            descuento: Number(d.descuento) || 0,
+            precio_total_sin_impuesto: Number(d.subtotal) || 0,
+            orden: index + 1,
+          }),
+        );
         await this.comprobanteRepository.createDetalles(detallesToCreate);
       }
 

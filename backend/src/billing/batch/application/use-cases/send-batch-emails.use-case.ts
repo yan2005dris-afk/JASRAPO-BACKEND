@@ -94,7 +94,7 @@ export class SendBatchEmailsUseCase {
           clientes.push({
             email,
             nombre: nombre || 'Cliente',
-            monto: preInvoice.totalPagar,
+            monto: Number(preInvoice.totalPagar),
             pdf,
             periodo,
           });

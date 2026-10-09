@@ -4,19 +4,20 @@ import { UpdatePreInvoiceStateUseCase } from './update-pre-invoice-state.use-cas
 import { PreInvoiceRepository } from '../../domain/repositories/pre-invoice.repository';
 import { ComprobanteRepository } from '../../../../sri/emision/domain/repositories/comprobante.repository';
 import { ComprobanteEstado } from '../../../../sri/emision/domain/constants/comprobante-estado.enum';
-import { PreInvoiceEntity } from '../../domain/entities/pre-invoice.entity';
 import {
   EntityNotFoundException,
   InvalidDomainOperationException,
 } from 'src/shared/domain/exceptions/domain.exception';
+import { preInvoiceRow } from '../../__test-utils__/pre-invoice-row.factory';
+import { Prisma } from 'src/generated/prisma/client';
 
 describe('UpdatePreInvoiceStateUseCase — comprobante BORRADOR (T-004)', () => {
   let useCase: UpdatePreInvoiceStateUseCase;
   let preInvoiceRepository: jest.Mocked<PreInvoiceRepository>;
   let comprobanteRepository: jest.Mocked<ComprobanteRepository>;
 
-  const mockPreInvoice = new PreInvoiceEntity({
-    prefacturaId: BigInt(1),
+  const mockPreInvoice = preInvoiceRow({
+    prefacturaId: 1n,
     uuid: 'uuid-1',
     estado: 'GENERADA',
     contrato: {
@@ -25,22 +26,24 @@ describe('UpdatePreInvoiceStateUseCase — comprobante BORRADOR (T-004)', () => 
         identificacion: '1234567890',
         nombres: 'Test',
         apellidos: 'Client',
-        clienteId: BigInt(1),
+        clienteId: 1n,
+        direccionDomicilio: null,
+        email: null,
       },
-      contratoId: BigInt(1),
+      contratoId: 1n,
     },
-    contratoId: BigInt(1),
+    contratoId: 1n,
     periodoId: 1,
     puntoEmisionId: 1,
-    subtotal: 100,
-    iva: 12,
-    descuentoTotal: 0,
-    totalPagar: 112,
-    deudaAnterior: 0,
-    saldoVencido: 0,
-    abono: 0,
-    saldoActual: 112,
-    mesesAtrasado: 0,
+    subtotal: new Prisma.Decimal(100),
+    iva: new Prisma.Decimal(12),
+    descuentoTotal: new Prisma.Decimal(0),
+    totalPagar: new Prisma.Decimal(112),
+    deudaAnterior: new Prisma.Decimal(0),
+    saldoVencido: new Prisma.Decimal(0),
+    abono: new Prisma.Decimal(0),
+    saldoActual: new Prisma.Decimal(112),
+    meses_atrasado: 0,
     clienteDireccion: 'Test Address',
     clienteEmail: 'test@test.com',
     clienteIdentificacion: '1234567890',
@@ -110,7 +113,7 @@ describe('UpdatePreInvoiceStateUseCase — comprobante BORRADOR (T-004)', () => 
 
   it('should create a BORRADOR comprobante when prefactura is approved', async () => {
     preInvoiceRepository.findById.mockResolvedValue(
-      new PreInvoiceEntity({
+      preInvoiceRow({
         ...mockPreInvoice,
         estado: 'EN_REVISION',
       }),
@@ -136,13 +139,13 @@ describe('UpdatePreInvoiceStateUseCase — comprobante BORRADOR (T-004)', () => 
 
     preInvoiceRepository.findById
       .mockResolvedValueOnce(
-        new PreInvoiceEntity({
+        preInvoiceRow({
           ...mockPreInvoice,
           estado: 'EN_REVISION',
         }),
       )
       .mockResolvedValueOnce(
-        new PreInvoiceEntity({
+        preInvoiceRow({
           ...mockPreInvoice,
           estado: 'APROBADA',
           comprobanteId: BigInt(99),
@@ -170,7 +173,7 @@ describe('UpdatePreInvoiceStateUseCase — comprobante BORRADOR (T-004)', () => 
 
   it('should throw InvalidDomainOperationException on invalid transition', async () => {
     preInvoiceRepository.findById.mockResolvedValue(
-      new PreInvoiceEntity({
+      preInvoiceRow({
         ...mockPreInvoice,
         estado: 'GENERADA',
       }),
@@ -183,7 +186,7 @@ describe('UpdatePreInvoiceStateUseCase — comprobante BORRADOR (T-004)', () => 
 
   it('should throw InvalidDomainOperationException if rejection reason is missing on RECHAZADA', async () => {
     preInvoiceRepository.findById.mockResolvedValue(
-      new PreInvoiceEntity({
+      preInvoiceRow({
         ...mockPreInvoice,
         estado: 'EN_REVISION',
       }),

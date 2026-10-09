@@ -5,7 +5,7 @@ import { EnumStateDto } from 'src/shared/enums/state-catalog';
 import { FindAllPreInvoicesUseCase } from './use-cases/find-all-pre-invoices.use-case';
 import { FindOnePreInvoiceUseCase } from './use-cases/find-one-pre-invoice.use-case';
 import { UpdatePreInvoiceStateUseCase } from './use-cases/update-pre-invoice-state.use-case';
-import type { PreInvoiceEntity } from '../domain/entities/pre-invoice.entity';
+import type { PreInvoiceRow } from '../domain/types/pre-invoice.types';
 import type { PreInvoiceFilters } from '../domain/types/pre-invoice.types';
 
 @Injectable()
@@ -20,11 +20,11 @@ export class PreInvoiceService {
     page: number = 1,
     limit: number = 10,
     filters?: PreInvoiceFilters,
-  ): Promise<PaginatedResult<PreInvoiceEntity>> {
+  ): Promise<PaginatedResult<PreInvoiceRow>> {
     return this.findAllUseCase.execute(page, limit, filters);
   }
 
-  async findOne(id: number): Promise<PreInvoiceEntity> {
+  async findOne(id: number): Promise<PreInvoiceRow> {
     return this.findOneUseCase.execute(id);
   }
 
@@ -33,7 +33,7 @@ export class PreInvoiceService {
     accion: string,
     userId?: string,
     motivoRechazo?: string,
-  ): Promise<PreInvoiceEntity> {
+  ): Promise<PreInvoiceRow> {
     return this.updateStateUseCase.execute({
       id,
       accion,
