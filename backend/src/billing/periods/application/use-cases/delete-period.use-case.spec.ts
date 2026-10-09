@@ -2,8 +2,7 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { DeletePeriodUseCase } from './delete-period.use-case';
 import { PeriodRepository } from '../../domain/repositories/period.repository';
-import { PeriodEntity } from '../../domain/entities/period.entity';
-import { EstadoPeriodo } from 'src/generated/prisma/enums';
+import { periodRow } from '../../__test-utils__/period-row.factory';
 import {
   EntityNotFoundException,
   InvalidDomainOperationException,
@@ -18,15 +17,9 @@ describe('DeletePeriodUseCase', () => {
     delete: jest.fn(),
   };
 
-  const existingPeriod = new PeriodEntity({
+  const existingPeriod = periodRow({
     periodoId: 1,
     nombre: '2026-01',
-    fechaInicio: new Date('2026-01-01'),
-    fechaFin: new Date('2026-01-31'),
-    fechaVencimiento: new Date('2026-02-15'),
-    estado: EstadoPeriodo.ABIERTO,
-    createdAt: new Date(),
-    updatedAt: new Date(),
   });
 
   beforeEach(async () => {

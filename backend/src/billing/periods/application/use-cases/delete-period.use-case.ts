@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PeriodRepository } from '../../domain/repositories/period.repository';
-import type { PeriodEntity } from '../../domain/entities/period.entity';
+import type { PeriodRow } from '../../domain/types/period.types';
 import {
   EntityNotFoundException,
   InvalidDomainOperationException,
@@ -10,7 +10,7 @@ import {
 export class DeletePeriodUseCase {
   constructor(private readonly periodRepository: PeriodRepository) {}
 
-  async execute(id: number): Promise<PeriodEntity> {
+  async execute(id: number): Promise<PeriodRow> {
     const existing = await this.periodRepository.findById(id);
     if (!existing) {
       throw new EntityNotFoundException('Periodo', id);

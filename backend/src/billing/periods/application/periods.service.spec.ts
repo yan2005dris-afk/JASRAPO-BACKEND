@@ -7,8 +7,7 @@ import { FindOnePeriodUseCase } from './use-cases/find-one-period.use-case';
 import { UpdatePeriodUseCase } from './use-cases/update-period.use-case';
 import { DeletePeriodUseCase } from './use-cases/delete-period.use-case';
 import { GenerateAnnualPeriodsUseCase } from './use-cases/generate-annual-periods.use-case';
-import { PeriodEntity } from '../domain/entities/period.entity';
-import { EstadoPeriodo } from 'src/generated/prisma/enums';
+import { periodRow } from '../__test-utils__/period-row.factory';
 
 describe('PeriodsService', () => {
   let service: PeriodsService;
@@ -20,15 +19,9 @@ describe('PeriodsService', () => {
   const mockDeletePeriodUseCase = { execute: jest.fn() };
   const mockGenerateAnnualPeriodsUseCase = { execute: jest.fn() };
 
-  const samplePeriod = new PeriodEntity({
+  const samplePeriod = periodRow({
     periodoId: 1,
     nombre: '2026-01',
-    fechaInicio: new Date('2026-01-01'),
-    fechaFin: new Date('2026-01-31'),
-    fechaVencimiento: new Date('2026-02-15'),
-    estado: EstadoPeriodo.ABIERTO,
-    createdAt: new Date(),
-    updatedAt: new Date(),
   });
 
   beforeEach(async () => {

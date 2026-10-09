@@ -2,7 +2,7 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { PeriodsController } from './periods.controller';
 import { PeriodsService } from '../../application/periods.service';
-import { PeriodEntity } from '../../domain/entities/period.entity';
+import { periodRow } from '../../__test-utils__/period-row.factory';
 import { EstadoPeriodo } from 'src/generated/prisma/enums';
 import { CreatePeriodUseCase } from '../../application/use-cases/create-period.use-case';
 import { FindAllPeriodsUseCase } from '../../application/use-cases/find-all-periods.use-case';
@@ -23,15 +23,13 @@ describe('PeriodsController', () => {
     delete: jest.fn(),
   };
 
-  const samplePeriod = new PeriodEntity({
+  const samplePeriod = periodRow({
     periodoId: 1,
     nombre: '2026-01',
     fechaInicio: new Date('2026-01-01'),
     fechaFin: new Date('2026-01-31'),
     fechaVencimiento: new Date('2026-02-15'),
     estado: EstadoPeriodo.ABIERTO,
-    createdAt: new Date(),
-    updatedAt: new Date(),
   });
 
   beforeEach(async () => {
@@ -99,7 +97,7 @@ describe('PeriodsController', () => {
 
   it('should update a period', async () => {
     mockPeriodsService.update.mockResolvedValue(
-      new PeriodEntity({
+      periodRow({
         ...samplePeriod,
         estado: EstadoPeriodo.CERRADO,
       }),

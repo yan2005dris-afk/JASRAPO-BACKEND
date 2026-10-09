@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PeriodRepository } from '../../domain/repositories/period.repository';
-import type { PeriodFilters } from '../../domain/types/period.types';
-import type { PeriodEntity } from '../../domain/entities/period.entity';
+import type { PeriodFilters, PeriodRow } from '../../domain/types/period.types';
 import type { PaginateOptions } from 'src/infrastructure/common/utils/pagination.util';
 import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
 
@@ -12,7 +11,7 @@ export class FindAllPeriodsUseCase {
   async execute(
     filters?: PeriodFilters,
     pagination?: PaginateOptions,
-  ): Promise<PaginatedResult<PeriodEntity>> {
+  ): Promise<PaginatedResult<PeriodRow>> {
     return this.periodRepository.findAll(filters, pagination);
   }
 }

@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { PeriodRepository } from '../../domain/repositories/period.repository';
-import type { CreatePeriodData } from '../../domain/types/period.types';
-import type { PeriodEntity } from '../../domain/entities/period.entity';
+import type {
+  CreatePeriodData,
+  PeriodRow,
+} from '../../domain/types/period.types';
 import { EstadoPeriodo } from 'src/generated/prisma/enums';
 import {
   EntityAlreadyExistsException,
@@ -13,7 +15,7 @@ import { DateUtil } from 'src/shared/utils/date.util';
 export class CreatePeriodUseCase {
   constructor(private readonly periodRepository: PeriodRepository) {}
 
-  async execute(data: CreatePeriodData): Promise<PeriodEntity> {
+  async execute(data: CreatePeriodData): Promise<PeriodRow> {
     const trimmedName = data.nombre?.trim();
     if (!trimmedName) {
       throw new InvalidDomainOperationException(

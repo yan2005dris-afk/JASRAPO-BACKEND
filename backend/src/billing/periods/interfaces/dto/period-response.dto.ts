@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { EstadoPeriodo } from 'src/generated/prisma/enums';
-import type { PeriodEntity } from '../../domain/entities/period.entity';
+import type { PeriodRow } from '../../domain/types/period.types';
 import { DateUtil } from 'src/shared/utils/date.util';
 
 export class PeriodResponseDto {
@@ -44,26 +44,26 @@ export class PeriodResponseDto {
   @ApiProperty({ description: 'Fecha de última actualización' })
   updatedAt: Date;
 
-  static fromEntity(entity: PeriodEntity): PeriodResponseDto {
+  static fromRow(row: PeriodRow): PeriodResponseDto {
     const dto = new PeriodResponseDto();
-    dto.periodoId = entity.periodoId;
-    dto.nombre = entity.nombre;
+    dto.periodoId = row.periodoId;
+    dto.nombre = row.nombre;
     dto.fechaInicio =
-      DateUtil.formatForFrontend(entity.fechaInicio) ??
-      entity.fechaInicio.toISOString().split('T')[0];
+      DateUtil.formatForFrontend(row.fechaInicio) ??
+      row.fechaInicio.toISOString().split('T')[0];
     dto.fechaFin =
-      DateUtil.formatForFrontend(entity.fechaFin) ??
-      entity.fechaFin.toISOString().split('T')[0];
+      DateUtil.formatForFrontend(row.fechaFin) ??
+      row.fechaFin.toISOString().split('T')[0];
     dto.fechaVencimiento =
-      DateUtil.formatForFrontend(entity.fechaVencimiento) ??
-      entity.fechaVencimiento.toISOString().split('T')[0];
-    dto.estado = entity.estado;
-    dto.createdAt = entity.createdAt;
-    dto.updatedAt = entity.updatedAt;
+      DateUtil.formatForFrontend(row.fechaVencimiento) ??
+      row.fechaVencimiento.toISOString().split('T')[0];
+    dto.estado = row.estado;
+    dto.createdAt = row.createdAt;
+    dto.updatedAt = row.updatedAt;
     return dto;
   }
 
-  static fromEntityList(entities: PeriodEntity[]): PeriodResponseDto[] {
-    return entities.map((entity) => PeriodResponseDto.fromEntity(entity));
+  static fromRowList(rows: PeriodRow[]): PeriodResponseDto[] {
+    return rows.map((row) => PeriodResponseDto.fromRow(row));
   }
 }

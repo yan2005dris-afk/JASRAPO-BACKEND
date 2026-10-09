@@ -2,9 +2,11 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { GenerateAnnualPeriodsUseCase } from './generate-annual-periods.use-case';
 import { PeriodRepository } from '../../domain/repositories/period.repository';
-import { PeriodEntity } from '../../domain/entities/period.entity';
+import { periodRow } from '../../__test-utils__/period-row.factory';
 import { EstadoPeriodo } from 'src/generated/prisma/enums';
 import { InvalidDomainOperationException } from 'src/shared/domain/exceptions/domain.exception';
+import type { CreatePeriodData } from '../../domain/types/period.types';
+import type { PeriodRow } from '../../domain/types/period.types';
 
 describe('GenerateAnnualPeriodsUseCase', () => {
   let useCase: GenerateAnnualPeriodsUseCase;
@@ -40,14 +42,8 @@ describe('GenerateAnnualPeriodsUseCase', () => {
     mockPeriodRepository.findOverlapping.mockResolvedValue(null);
     mockPeriodRepository.createBatch.mockImplementation((items) =>
       Promise.resolve(
-        items.map(
-          (data: any, idx: number) =>
-            new PeriodEntity({
-              periodoId: idx + 1,
-              ...data,
-              createdAt: new Date(),
-              updatedAt: new Date(),
-            }),
+        (items as CreatePeriodData[]).map((data, idx: number) =>
+          periodRow({ periodoId: idx + 1, ...data }),
         ),
       ),
     );
@@ -79,29 +75,21 @@ describe('GenerateAnnualPeriodsUseCase', () => {
   });
 
   it('should skip creating already existing periods in that year and only batch insert missing ones', async () => {
-    const existingEnero = new PeriodEntity({
+    const existingEnero: PeriodRow = periodRow({
       periodoId: 10,
       nombre: 'Enero 2026',
       fechaInicio: new Date(Date.UTC(2026, 0, 1)),
       fechaFin: new Date(Date.UTC(2026, 1, 0, 23, 59, 59, 999)),
       fechaVencimiento: new Date(Date.UTC(2026, 1, 15, 23, 59, 59, 999)),
       estado: EstadoPeriodo.ABIERTO,
-      createdAt: new Date(),
-      updatedAt: new Date(),
     });
 
     mockPeriodRepository.findByNames.mockResolvedValue([existingEnero]);
     mockPeriodRepository.findOverlapping.mockResolvedValue(null);
     mockPeriodRepository.createBatch.mockImplementation((items) =>
       Promise.resolve(
-        items.map(
-          (data: any, idx: number) =>
-            new PeriodEntity({
-              periodoId: idx + 2,
-              ...data,
-              createdAt: new Date(),
-              updatedAt: new Date(),
-            }),
+        (items as CreatePeriodData[]).map((data, idx: number) =>
+          periodRow({ periodoId: idx + 2, ...data }),
         ),
       ),
     );
@@ -123,32 +111,30 @@ describe('GenerateAnnualPeriodsUseCase', () => {
   });
 
   it('should throw InvalidDomainOperationException when all 12 periods already exist', async () => {
-    const all12 = Array.from({ length: 12 }, (_, i) => {
-      const monthNames = [
-        'Enero',
-        'Febrero',
-        'Marzo',
-        'Abril',
-        'Mayo',
-        'Junio',
-        'Julio',
-        'Agosto',
-        'Septiembre',
-        'Octubre',
-        'Noviembre',
-        'Diciembre',
-      ];
-      return new PeriodEntity({
+    const monthNames = [
+      'Enero',
+      'Febrero',
+      'Marzo',
+      'Abril',
+      'Mayo',
+      'Junio',
+      'Julio',
+      'Agosto',
+      'Septiembre',
+      'Octubre',
+      'Noviembre',
+      'Diciembre',
+    ];
+    const all12: PeriodRow[] = Array.from({ length: 12 }, (_, i) =>
+      periodRow({
         periodoId: i + 1,
         nombre: `${monthNames[i]} 2026`,
         fechaInicio: new Date(Date.UTC(2026, i, 1)),
         fechaFin: new Date(Date.UTC(2026, i + 1, 0, 23, 59, 59, 999)),
         fechaVencimiento: new Date(Date.UTC(2026, i + 1, 15, 23, 59, 59, 999)),
         estado: EstadoPeriodo.CERRADO,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
-    });
+      }),
+    );
 
     mockPeriodRepository.findByNames.mockResolvedValue(all12);
 
@@ -161,15 +147,13 @@ describe('GenerateAnnualPeriodsUseCase', () => {
   it('should throw InvalidDomainOperationException if a period overlaps with an existing foreign period', async () => {
     mockPeriodRepository.findByNames.mockResolvedValue([]);
     mockPeriodRepository.findOverlapping.mockResolvedValueOnce(
-      new PeriodEntity({
+      periodRow({
         periodoId: 99,
         nombre: 'Periodo Especial Verano',
         fechaInicio: new Date(Date.UTC(2026, 0, 10)),
         fechaFin: new Date(Date.UTC(2026, 1, 10)),
         fechaVencimiento: new Date(Date.UTC(2026, 1, 20)),
         estado: EstadoPeriodo.ABIERTO,
-        createdAt: new Date(),
-        updatedAt: new Date(),
       }),
     );
 

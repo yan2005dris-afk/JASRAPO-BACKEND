@@ -10,8 +10,8 @@ import type {
   CreatePeriodData,
   UpdatePeriodData,
   PeriodFilters,
+  PeriodRow,
 } from '../domain/types/period.types';
-import type { PeriodEntity } from '../domain/entities/period.entity';
 import type { PaginateOptions } from 'src/infrastructure/common/utils/pagination.util';
 import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
 
@@ -26,32 +26,32 @@ export class PeriodsService {
     private readonly generateAnnualPeriodsUseCase: GenerateAnnualPeriodsUseCase,
   ) {}
 
-  async create(data: CreatePeriodData): Promise<PeriodEntity> {
+  async create(data: CreatePeriodData): Promise<PeriodRow> {
     return this.createPeriodUseCase.execute(data);
   }
 
   async generateAnnualPeriods(
     dto: GenerateAnnualPeriodsDto,
-  ): Promise<PeriodEntity[]> {
+  ): Promise<PeriodRow[]> {
     return this.generateAnnualPeriodsUseCase.execute(dto);
   }
 
   async findAll(
     filters?: PeriodFilters,
     pagination?: PaginateOptions,
-  ): Promise<PaginatedResult<PeriodEntity>> {
+  ): Promise<PaginatedResult<PeriodRow>> {
     return this.findAllPeriodsUseCase.execute(filters, pagination);
   }
 
-  async findOne(id: number): Promise<PeriodEntity> {
+  async findOne(id: number): Promise<PeriodRow> {
     return this.findOnePeriodUseCase.execute(id);
   }
 
-  async update(id: number, data: UpdatePeriodData): Promise<PeriodEntity> {
+  async update(id: number, data: UpdatePeriodData): Promise<PeriodRow> {
     return this.updatePeriodUseCase.execute(id, data);
   }
 
-  async delete(id: number): Promise<PeriodEntity> {
+  async delete(id: number): Promise<PeriodRow> {
     return this.deletePeriodUseCase.execute(id);
   }
 }

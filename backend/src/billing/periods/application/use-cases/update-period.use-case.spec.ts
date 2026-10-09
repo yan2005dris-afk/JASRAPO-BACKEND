@@ -2,7 +2,7 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { UpdatePeriodUseCase } from './update-period.use-case';
 import { PeriodRepository } from '../../domain/repositories/period.repository';
-import { PeriodEntity } from '../../domain/entities/period.entity';
+import { periodRow } from '../../__test-utils__/period-row.factory';
 import { EstadoPeriodo } from 'src/generated/prisma/enums';
 import {
   EntityAlreadyExistsException,
@@ -20,15 +20,13 @@ describe('UpdatePeriodUseCase', () => {
     update: jest.fn(),
   };
 
-  const existingPeriod = new PeriodEntity({
+  const existingPeriod = periodRow({
     periodoId: 1,
     nombre: '2026-01',
     fechaInicio: new Date('2026-01-01'),
     fechaFin: new Date('2026-01-31'),
     fechaVencimiento: new Date('2026-02-15'),
     estado: EstadoPeriodo.ABIERTO,
-    createdAt: new Date(),
-    updatedAt: new Date(),
   });
 
   beforeEach(async () => {
@@ -53,7 +51,7 @@ describe('UpdatePeriodUseCase', () => {
     mockPeriodRepository.findById.mockResolvedValue(existingPeriod);
     mockPeriodRepository.findOverlapping.mockResolvedValue(null);
     mockPeriodRepository.update.mockResolvedValue(
-      new PeriodEntity({
+      periodRow({
         ...existingPeriod,
         estado: EstadoPeriodo.CERRADO,
       }),
@@ -83,10 +81,7 @@ describe('UpdatePeriodUseCase', () => {
   it('should throw EntityAlreadyExistsException if updated name belongs to another period', async () => {
     mockPeriodRepository.findById.mockResolvedValue(existingPeriod);
     mockPeriodRepository.findByName.mockResolvedValue(
-      new PeriodEntity({
-        periodoId: 2,
-        nombre: '2026-02',
-      }),
+      periodRow({ periodoId: 2, nombre: '2026-02' }),
     );
 
     await expect(useCase.execute(1, { nombre: '2026-02' })).rejects.toThrow(
@@ -108,7 +103,7 @@ describe('UpdatePeriodUseCase', () => {
   it('should throw InvalidDomainOperationException if updated dates overlap with another period', async () => {
     mockPeriodRepository.findById.mockResolvedValue(existingPeriod);
     mockPeriodRepository.findOverlapping.mockResolvedValue(
-      new PeriodEntity({
+      periodRow({
         periodoId: 2,
         nombre: '2026-02',
         fechaInicio: new Date('2026-02-01'),

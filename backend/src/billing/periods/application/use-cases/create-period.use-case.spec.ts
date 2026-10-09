@@ -2,7 +2,7 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { CreatePeriodUseCase } from './create-period.use-case';
 import { PeriodRepository } from '../../domain/repositories/period.repository';
-import { PeriodEntity } from '../../domain/entities/period.entity';
+import { periodRow } from '../../__test-utils__/period-row.factory';
 import { EstadoPeriodo } from 'src/generated/prisma/enums';
 import {
   EntityAlreadyExistsException,
@@ -56,15 +56,13 @@ describe('CreatePeriodUseCase', () => {
     mockPeriodRepository.findByName.mockResolvedValue(null);
     mockPeriodRepository.findOverlapping.mockResolvedValue(null);
     mockPeriodRepository.create.mockResolvedValue(
-      new PeriodEntity({
+      periodRow({
         periodoId: 1,
         nombre: '2026-01',
         fechaInicio: new Date('2026-01-01'),
         fechaFin: new Date('2026-01-31'),
         fechaVencimiento: new Date('2026-02-15'),
         estado: EstadoPeriodo.ABIERTO,
-        createdAt: new Date(),
-        updatedAt: new Date(),
       }),
     );
 
@@ -87,10 +85,7 @@ describe('CreatePeriodUseCase', () => {
     };
 
     mockPeriodRepository.findByName.mockResolvedValue(
-      new PeriodEntity({
-        periodoId: 1,
-        nombre: '2026-01',
-      }),
+      periodRow({ periodoId: 1, nombre: '2026-01' }),
     );
 
     await expect(useCase.execute(dto)).rejects.toThrow(
@@ -109,7 +104,7 @@ describe('CreatePeriodUseCase', () => {
 
     mockPeriodRepository.findByName.mockResolvedValue(null);
     mockPeriodRepository.findOverlapping.mockResolvedValue(
-      new PeriodEntity({
+      periodRow({
         periodoId: 2,
         nombre: 'Enero 2026',
         fechaInicio: new Date('2026-01-01'),
