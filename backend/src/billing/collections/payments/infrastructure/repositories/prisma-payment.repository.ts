@@ -2,6 +2,7 @@ import { ensureContractWorkOrder } from 'src/operations/contracts/infrastructure
 import { InvalidDomainOperationException } from 'src/shared/domain/exceptions/domain.exception';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
+import { TransactionContext } from 'src/shared/domain/types/transaction';
 import {
   Prisma,
   EstadoPago,
@@ -81,11 +82,16 @@ export class PrismaPaymentRepository implements PaymentRepository {
     },
   };
 
-  private getClient(tx?: unknown): Prisma.TransactionClient | PrismaService {
-    return (tx as Prisma.TransactionClient) ?? this.prisma;
+  private getClient(
+    tx?: TransactionContext,
+  ): TransactionContext | PrismaService {
+    return tx ?? this.prisma;
   }
 
-  async findById(id: bigint, tx?: unknown): Promise<PaymentEntity | null> {
+  async findById(
+    id: bigint,
+    tx?: TransactionContext,
+  ): Promise<PaymentEntity | null> {
     const client = this.getClient(tx);
     const record = await client.pagos.findFirst({
       where: { pagoId: id, deletedAt: null },
@@ -225,7 +231,7 @@ export class PrismaPaymentRepository implements PaymentRepository {
 
   async findComprobanteById(
     comprobanteId: bigint,
-    tx?: unknown,
+    tx?: TransactionContext,
   ): Promise<ComprobanteInfo | null> {
     const client = this.getClient(tx);
     const record = await client.comprobantes.findFirst({
@@ -239,7 +245,10 @@ export class PrismaPaymentRepository implements PaymentRepository {
     };
   }
 
-  async lockComprobante(comprobanteId: bigint, tx: unknown): Promise<void> {
+  async lockComprobante(
+    comprobanteId: bigint,
+    tx: TransactionContext,
+  ): Promise<void> {
     const client = this.getClient(tx);
     await client.$queryRaw`
       SELECT id FROM "comprobantes"
@@ -250,7 +259,7 @@ export class PrismaPaymentRepository implements PaymentRepository {
 
   async findComprobanteAppliedSum(
     comprobanteId: bigint,
-    tx?: unknown,
+    tx?: TransactionContext,
   ): Promise<number> {
     const client = this.getClient(tx);
     const records = await client.detallePago.findMany({
@@ -274,7 +283,7 @@ export class PrismaPaymentRepository implements PaymentRepository {
 
   async findCuotaConvenioById(
     cuotaId: bigint,
-    tx?: unknown,
+    tx?: TransactionContext,
   ): Promise<CuotaConvenioPaymentInfo | null> {
     const client = this.getClient(tx);
     const record = await client.cuotaConvenio.findFirst({
@@ -301,7 +310,7 @@ export class PrismaPaymentRepository implements PaymentRepository {
 
   async findSaldoFavorById(
     saldoFavorId: bigint,
-    tx?: unknown,
+    tx?: TransactionContext,
   ): Promise<SaldoFavorEntity | null> {
     const client = this.getClient(tx);
     const record = await client.saldoFavorCliente.findFirst({
@@ -312,7 +321,7 @@ export class PrismaPaymentRepository implements PaymentRepository {
 
   async createPagoRecord(
     data: CreatePagoRecordData,
-    tx: unknown,
+    tx: TransactionContext,
   ): Promise<{ pagoId: bigint }> {
     const client = this.getClient(tx);
     const record = await client.pagos.create({
@@ -337,7 +346,7 @@ export class PrismaPaymentRepository implements PaymentRepository {
 
   async createDetallesPago(
     detalles: CreateDetallePagoData[],
-    tx: unknown,
+    tx: TransactionContext,
   ): Promise<void> {
     const client = this.getClient(tx);
     await client.detallePago.createMany({
@@ -356,7 +365,7 @@ export class PrismaPaymentRepository implements PaymentRepository {
 
   async createSaldoFavorRecord(
     data: CreateSaldoFavorData,
-    tx: unknown,
+    tx: TransactionContext,
   ): Promise<void> {
     const client = this.getClient(tx);
     await client.saldoFavorCliente.create({
@@ -380,7 +389,7 @@ export class PrismaPaymentRepository implements PaymentRepository {
       pagoCompleto: boolean;
       fechaPago: Date | null;
     },
-    tx: unknown,
+    tx: TransactionContext,
   ): Promise<{ count: number }> {
     const client = this.getClient(tx);
     const result = await client.cuotaConvenio.updateMany({
@@ -408,7 +417,7 @@ export class PrismaPaymentRepository implements PaymentRepository {
       pagoCompleto: boolean;
       fechaPago?: Date | null;
     },
-    tx: unknown,
+    tx: TransactionContext,
   ): Promise<void> {
     const client = this.getClient(tx);
     await client.cuotaConvenio.update({
@@ -430,7 +439,7 @@ export class PrismaPaymentRepository implements PaymentRepository {
       montoSaldo?: number;
       deletedAt?: Date;
     },
-    tx: unknown,
+    tx: TransactionContext,
   ): Promise<void> {
     const client = this.getClient(tx);
     await client.saldoFavorCliente.update({
@@ -448,7 +457,7 @@ export class PrismaPaymentRepository implements PaymentRepository {
   async updateManySaldoFavorByPagoId(
     pagoId: bigint,
     data: { disponibleParaAplicar: boolean; deletedAt: Date },
-    tx: unknown,
+    tx: TransactionContext,
   ): Promise<void> {
     const client = this.getClient(tx);
     await client.saldoFavorCliente.updateMany({
@@ -463,7 +472,7 @@ export class PrismaPaymentRepository implements PaymentRepository {
   async updateManyDetallePagoByPagoId(
     pagoId: bigint,
     data: { deletedAt: Date },
-    tx: unknown,
+    tx: TransactionContext,
   ): Promise<void> {
     const client = this.getClient(tx);
     await client.detallePago.updateMany({
@@ -476,7 +485,7 @@ export class PrismaPaymentRepository implements PaymentRepository {
     pagoId: bigint,
     estadoPago: string,
     observaciones?: string,
-    tx?: unknown,
+    tx?: TransactionContext,
   ): Promise<void> {
     const client = this.getClient(tx);
     await client.pagos.update({
@@ -497,7 +506,7 @@ export class PrismaPaymentRepository implements PaymentRepository {
       fechaAnulacion: Date;
       deletedAt: Date;
     },
-    tx: unknown,
+    tx: TransactionContext,
   ): Promise<{ count: number }> {
     const client = this.getClient(tx);
     const result = await client.pagos.updateMany({
@@ -592,7 +601,7 @@ export class PrismaPaymentRepository implements PaymentRepository {
   }
 
   async executeTransaction<T>(
-    callback: (tx: unknown) => Promise<T>,
+    callback: (tx: TransactionContext) => Promise<T>,
   ): Promise<T> {
     return this.prisma.$transaction(async (tx) => {
       return callback(tx);

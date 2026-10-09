@@ -11,9 +11,13 @@ import type {
 } from '../types/payment.types';
 import type { PaginateOptions } from 'src/infrastructure/common/utils/pagination.util';
 import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
+import type { TransactionContext } from 'src/shared/domain/types/transaction';
 
 export abstract class PaymentRepository {
-  abstract findById(id: bigint, tx?: unknown): Promise<PaymentEntity | null>;
+  abstract findById(
+    id: bigint,
+    tx?: TransactionContext,
+  ): Promise<PaymentEntity | null>;
 
   abstract paginate(
     pagination: PaginateOptions,
@@ -44,19 +48,22 @@ export abstract class PaymentRepository {
 
   abstract findComprobanteById(
     comprobanteId: bigint,
-    tx?: unknown,
+    tx?: TransactionContext,
   ): Promise<ComprobanteInfo | null>;
 
-  abstract lockComprobante(comprobanteId: bigint, tx: unknown): Promise<void>;
+  abstract lockComprobante(
+    comprobanteId: bigint,
+    tx: TransactionContext,
+  ): Promise<void>;
 
   abstract findComprobanteAppliedSum(
     comprobanteId: bigint,
-    tx?: unknown,
+    tx?: TransactionContext,
   ): Promise<number>;
 
   abstract findCuotaConvenioById(
     cuotaId: bigint,
-    tx?: unknown,
+    tx?: TransactionContext,
   ): Promise<CuotaConvenioPaymentInfo | null>;
 
   abstract findSaldoFavorById(
@@ -66,17 +73,17 @@ export abstract class PaymentRepository {
 
   abstract createPagoRecord(
     data: CreatePagoRecordData,
-    tx: unknown,
+    tx: TransactionContext,
   ): Promise<{ pagoId: bigint }>;
 
   abstract createDetallesPago(
     detalles: CreateDetallePagoData[],
-    tx: unknown,
+    tx: TransactionContext,
   ): Promise<void>;
 
   abstract createSaldoFavorRecord(
     data: CreateSaldoFavorData,
-    tx: unknown,
+    tx: TransactionContext,
   ): Promise<void>;
 
   abstract updateCuotaConvenioPayment(
@@ -89,7 +96,7 @@ export abstract class PaymentRepository {
       pagoCompleto: boolean;
       fechaPago: Date | null;
     },
-    tx: unknown,
+    tx: TransactionContext,
   ): Promise<{ count: number }>;
 
   abstract updateCuotaConvenioRevert(
@@ -101,7 +108,7 @@ export abstract class PaymentRepository {
       pagoCompleto: boolean;
       fechaPago?: Date | null;
     },
-    tx: unknown,
+    tx: TransactionContext,
   ): Promise<void>;
 
   abstract updateSaldoFavorRecord(
@@ -111,26 +118,26 @@ export abstract class PaymentRepository {
       montoSaldo?: number;
       deletedAt?: Date;
     },
-    tx: unknown,
+    tx: TransactionContext,
   ): Promise<void>;
 
   abstract updateManySaldoFavorByPagoId(
     pagoId: bigint,
     data: { disponibleParaAplicar: boolean; deletedAt: Date },
-    tx: unknown,
+    tx: TransactionContext,
   ): Promise<void>;
 
   abstract updateManyDetallePagoByPagoId(
     pagoId: bigint,
     data: { deletedAt: Date },
-    tx: unknown,
+    tx: TransactionContext,
   ): Promise<void>;
 
   abstract updatePagoState(
     pagoId: bigint,
     estadoPago: string,
     observaciones?: string,
-    tx?: unknown,
+    tx?: TransactionContext,
   ): Promise<void>;
 
   abstract annulPagoTransaction(
@@ -142,7 +149,7 @@ export abstract class PaymentRepository {
       fechaAnulacion: Date;
       deletedAt: Date;
     },
-    tx: unknown,
+    tx: TransactionContext,
   ): Promise<{ count: number }>;
 
   abstract settlePaidComprobante(
@@ -151,6 +158,6 @@ export abstract class PaymentRepository {
   ): Promise<void>;
 
   abstract executeTransaction<T>(
-    callback: (tx: unknown) => Promise<T>,
+    callback: (tx: TransactionContext) => Promise<T>,
   ): Promise<T>;
 }

@@ -13,6 +13,7 @@ import { CreatePaymentDto } from '../../interfaces/dto/create-payment.dto';
 import { PaymentRepository } from '../../domain/repositories/payment.repository';
 import { EventosPendientesRepository } from 'src/shared/outbox/domain/repositories/eventos-pendientes.repository';
 import type { PaymentEntity } from '../../domain/entities/payment.entity';
+import type { TransactionContext } from 'src/shared/domain/types/transaction';
 
 @Injectable()
 export class CreatePaymentUseCase {
@@ -154,7 +155,7 @@ export class CreatePaymentUseCase {
     }
   }
 
-  private async validateDetails(dto: CreatePaymentDto, tx: unknown) {
+  private async validateDetails(dto: CreatePaymentDto, tx: TransactionContext) {
     const comprobanteAcumulado = new Map<string, Decimal>();
 
     for (const detalle of dto.detalle) {
@@ -237,7 +238,7 @@ export class CreatePaymentUseCase {
   }
 
   private async applyInstallmentPayment(
-    tx: unknown,
+    tx: TransactionContext,
     cuotaConvenioId: string,
     montoAbonado: number,
     pagoId?: bigint,
