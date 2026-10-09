@@ -4,7 +4,7 @@ import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { AgreementRepository } from '../../domain/repositories/agreement.repository';
 import { CreateAgreementUseCase } from './create-agreement.use-case';
 import { GetDebtSummaryUseCase } from './get-debt-summary.use-case';
-import { AgreementEntity } from '../../domain/entities/agreement.entity';
+import { agreementRow } from '../../__test-utils__/agreement-row.factory';
 
 describe('CreateAgreementUseCase', () => {
   let useCase: CreateAgreementUseCase;
@@ -49,19 +49,12 @@ describe('CreateAgreementUseCase', () => {
   });
 
   it('should create agreement and generate installments', async () => {
-    const createdConvenio = new AgreementEntity({
+    const createdConvenio = agreementRow({
       convenioId: 50n,
       contratoId: 1n,
       numeroCuotas: 3,
-      abonoInicial: 10,
-      deudaTotal: 100,
-      mesesMoraActual: 2,
       estado: 'PENDIENTE_ABONO',
-      fechaPrimerPago: new Date('2026-06-01'),
-      fechaProximoPago: new Date('2026-06-01'),
-      montoPagadoActual: 0,
       motivo: 'Solicitud del cliente',
-      createdAt: new Date(),
     });
 
     mockAgreementRepository.contractExists.mockResolvedValue(true);
@@ -108,7 +101,7 @@ describe('CreateAgreementUseCase', () => {
     });
     mockAgreementRepository.findActiveInterestRate.mockResolvedValue(null);
     mockAgreementRepository.create.mockResolvedValue(
-      new AgreementEntity({ convenioId: 51n, estado: 'PREPARADO' }),
+      agreementRow({ convenioId: 51n, estado: 'PREPARADO' }),
     );
 
     await useCase.execute({
@@ -137,7 +130,7 @@ describe('CreateAgreementUseCase', () => {
   it('should throw BadRequestException when contrato already has active agreement', async () => {
     mockAgreementRepository.contractExists.mockResolvedValue(true);
     mockAgreementRepository.findActiveByContractId.mockResolvedValue(
-      new AgreementEntity({ convenioId: 9n, estado: 'ACTIVO' }),
+      agreementRow({ convenioId: 9n, estado: 'ACTIVO' }),
     );
 
     await expect(useCase.execute(dto)).rejects.toThrow(BadRequestException);

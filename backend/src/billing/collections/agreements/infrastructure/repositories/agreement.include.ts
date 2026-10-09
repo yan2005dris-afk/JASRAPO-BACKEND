@@ -14,6 +14,20 @@ export const agreementInclude = {
     where: { deletedAt: null },
     orderBy: { numeroCuota: 'asc' as const },
   },
+  contrato: {
+    select: {
+      numeroGuia: true,
+      cliente: {
+        select: {
+          nombres: true,
+          apellidos: true,
+          razonSocial: true,
+          identificacion: true,
+          email: true,
+        },
+      },
+    },
+  },
 } as const satisfies Prisma.ConveniosInclude;
 
 /**

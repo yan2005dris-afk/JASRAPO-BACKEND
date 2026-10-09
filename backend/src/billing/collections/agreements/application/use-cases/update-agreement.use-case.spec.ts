@@ -3,7 +3,7 @@ import { Test } from '@nestjs/testing';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { AgreementRepository } from '../../domain/repositories/agreement.repository';
 import { UpdateAgreementUseCase } from './update-agreement.use-case';
-import { AgreementEntity } from '../../domain/entities/agreement.entity';
+import { agreementRow } from '../../__test-utils__/agreement-row.factory';
 
 describe('UpdateAgreementUseCase', () => {
   let useCase: UpdateAgreementUseCase;
@@ -14,10 +14,9 @@ describe('UpdateAgreementUseCase', () => {
     updateState: jest.fn(),
   };
 
-  const baseConvenio = new AgreementEntity({
+  const baseConvenio = agreementRow({
     convenioId: 1n,
     estado: 'PENDIENTE_ABONO',
-    deudaTotal: 100,
   });
 
   beforeEach(async () => {
@@ -43,10 +42,9 @@ describe('UpdateAgreementUseCase', () => {
     it('should delegate markAsPaid to repository', async () => {
       mockAgreementRepository.findById.mockResolvedValue(baseConvenio);
       mockAgreementRepository.markAsPaid.mockResolvedValue(
-        new AgreementEntity({
+        agreementRow({
           convenioId: 1n,
           estado: 'PAGADO',
-          montoPagadoActual: 100,
         }),
       );
 
@@ -61,7 +59,7 @@ describe('UpdateAgreementUseCase', () => {
     it('should soft delete the convenio', async () => {
       mockAgreementRepository.findById.mockResolvedValue(baseConvenio);
       mockAgreementRepository.updateState.mockResolvedValue(
-        new AgreementEntity({
+        agreementRow({
           convenioId: 1n,
           estado: 'ANULADO',
           deletedAt: new Date(),
@@ -85,7 +83,7 @@ describe('UpdateAgreementUseCase', () => {
     it('should activate convenio and set approval date', async () => {
       mockAgreementRepository.findById.mockResolvedValue(baseConvenio);
       mockAgreementRepository.updateState.mockResolvedValue(
-        new AgreementEntity({
+        agreementRow({
           convenioId: 1n,
           estado: 'ACTIVO',
           fechaAprobacion: new Date(),
@@ -124,7 +122,7 @@ describe('UpdateAgreementUseCase', () => {
 
     it('should throw BadRequestException when convenio is already PAGADO', async () => {
       mockAgreementRepository.findById.mockResolvedValue(
-        new AgreementEntity({
+        agreementRow({
           ...baseConvenio,
           estado: 'PAGADO',
         }),
@@ -137,7 +135,7 @@ describe('UpdateAgreementUseCase', () => {
 
     it('should throw BadRequestException when convenio is already ANULADO', async () => {
       mockAgreementRepository.findById.mockResolvedValue(
-        new AgreementEntity({
+        agreementRow({
           ...baseConvenio,
           estado: 'ANULADO',
         }),

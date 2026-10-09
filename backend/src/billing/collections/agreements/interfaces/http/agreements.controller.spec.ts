@@ -4,43 +4,24 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { AgreementsController } from './agreements.controller';
 import { AgreementsService } from '../../application/agreements.service';
-import { AgreementEntity } from '../../domain/entities/agreement.entity';
-import { InstallmentEntity } from '../../domain/entities/installment.entity';
+import { agreementRow } from '../../__test-utils__/agreement-row.factory';
+import { cuotaRow } from '../../__test-utils__/cuota-row.factory';
 
 describe('AgreementsController', () => {
   let controller: AgreementsController;
   let service: jest.Mocked<AgreementsService>;
 
-  const mockAgreement = new AgreementEntity({
+  const mockAgreement = agreementRow({
     convenioId: 1n,
     contratoId: 10n,
     numeroCuotas: 2,
-    abonoInicial: 5,
-    deudaTotal: 100,
-    mesesMoraActual: 1,
     estado: 'PREPARADO',
-    fechaAprobacion: null,
-    fechaPrimerPago: new Date('2026-06-01T00:00:00.000Z'),
-    fechaProximoPago: new Date('2026-06-01T00:00:00.000Z'),
-    montoPagadoActual: 0,
-    motivo: null,
-    createdAt: new Date('2026-05-01T00:00:00.000Z'),
   });
 
-  const mockInstallment = new InstallmentEntity({
+  const mockInstallment = cuotaRow({
     cuotaConvenioId: 1n,
     convenioId: 1n,
     numeroCuota: 1,
-    valorCuota: 50,
-    fechaVencimiento: new Date('2026-06-01T00:00:00.000Z'),
-    estado: 'PENDIENTE',
-    fechaPago: null,
-    montoPagado: 0,
-    saldoPendiente: 50,
-    diasRetraso: 0,
-    interesMoraAplicado: 0,
-    pagoCompleto: false,
-    fechaPagoAnticipado: null,
   });
 
   const mockAgreementsService = {
@@ -147,7 +128,7 @@ describe('AgreementsController', () => {
 
   it('should cancel agreement', async () => {
     service.cancel.mockResolvedValue(
-      new AgreementEntity({ ...mockAgreement, estado: 'ANULADO' }),
+      agreementRow({ ...mockAgreement, estado: 'ANULADO' }),
     );
 
     const result = await controller.cancel(1n);
@@ -159,7 +140,7 @@ describe('AgreementsController', () => {
   it('should update agreement state', async () => {
     const dto = { estado: 'PAGADO' };
     service.update.mockResolvedValue(
-      new AgreementEntity({ ...mockAgreement, estado: 'PAGADO' }),
+      agreementRow({ ...mockAgreement, estado: 'PAGADO' }),
     );
 
     const result = await controller.update(1n, dto);

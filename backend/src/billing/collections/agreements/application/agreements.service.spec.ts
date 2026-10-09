@@ -11,8 +11,8 @@ import { GetPaymentAgreementPdfDataUseCase } from './use-cases/get-payment-agree
 import { GeneratePdfUseCase } from 'src/infrastructure/pdf/use-cases/generate-pdf.use-case';
 import { ReportStyleDispatcher } from 'src/reports/application/report-style.dispatcher';
 import { AgreementsService } from './agreements.service';
-import { AgreementEntity } from '../domain/entities/agreement.entity';
-import { InstallmentEntity } from '../domain/entities/installment.entity';
+import { agreementRow } from '../__test-utils__/agreement-row.factory';
+import { cuotaRow } from '../__test-utils__/cuota-row.factory';
 import { InstitutionalProfileResolver } from 'src/institutional-profile/application/institutional-profile.resolver';
 
 describe('AgreementsService', () => {
@@ -42,37 +42,17 @@ describe('AgreementsService', () => {
     attach: jest.fn((document, context) => ({ ...document, ...context })),
   };
 
-  const convenioRecord = new AgreementEntity({
+  const convenioRecord = agreementRow({
     convenioId: 1n,
     contratoId: 10n,
     numeroCuotas: 2,
-    abonoInicial: 5,
-    deudaTotal: 100,
-    mesesMoraActual: 1,
     estado: 'PREPARADO',
-    fechaAprobacion: null,
-    fechaPrimerPago: new Date('2026-06-01T00:00:00.000Z'),
-    fechaProximoPago: new Date('2026-06-01T00:00:00.000Z'),
-    montoPagadoActual: 0,
-    motivo: null,
-    createdAt: new Date('2026-05-01T00:00:00.000Z'),
-    cuotas: [],
   });
 
-  const cuotaRecord = new InstallmentEntity({
+  const cuotaRecord = cuotaRow({
     cuotaConvenioId: 1n,
     convenioId: 1n,
     numeroCuota: 1,
-    valorCuota: 50,
-    fechaVencimiento: new Date('2026-06-01T00:00:00.000Z'),
-    estado: 'PENDIENTE',
-    fechaPago: null,
-    montoPagado: 0,
-    saldoPendiente: 50,
-    diasRetraso: 0,
-    interesMoraAplicado: 0,
-    pagoCompleto: false,
-    fechaPagoAnticipado: null,
   });
 
   beforeEach(async () => {
@@ -208,7 +188,7 @@ describe('AgreementsService', () => {
   });
 
   it('should update agreement estado through use case', async () => {
-    const updatedRecord = new AgreementEntity({
+    const updatedRecord = agreementRow({
       ...convenioRecord,
       estado: 'PAGADO',
     });
@@ -222,7 +202,7 @@ describe('AgreementsService', () => {
 
   it('should cancel agreement with ANULADO status', async () => {
     mockUpdateUseCase.execute.mockResolvedValue(
-      new AgreementEntity({
+      agreementRow({
         ...convenioRecord,
         estado: 'ANULADO',
       }),

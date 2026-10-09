@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { AgreementRepository } from '../../domain/repositories/agreement.repository';
-import type { AgreementEntity } from '../../domain/entities/agreement.entity';
+import type { AgreementRow } from '../../domain/types/agreement.types';
 
 @Injectable()
 export class UpdateAgreementUseCase {
@@ -13,7 +13,7 @@ export class UpdateAgreementUseCase {
   async execute(
     convenioId: bigint,
     nuevoEstado: string,
-  ): Promise<AgreementEntity> {
+  ): Promise<AgreementRow> {
     // ── 1. Validar que el convenio existe y no está borrado ──────────────────
     const convenio = await this.agreementRepository.findById(convenioId);
 

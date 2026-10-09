@@ -2,9 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { Prisma, EstadoConvenio } from 'src/generated/prisma/client';
 import { AgreementRepository } from '../../domain/repositories/agreement.repository';
-import { AgreementEntity } from '../../domain/entities/agreement.entity';
-import { InstallmentEntity } from '../../domain/entities/installment.entity';
-import { AgreementMapper } from '../mappers/agreement.mapper';
+import { agreementInclude, type AgreementRow } from './agreement.include';
 import type {
   AgreementFilters,
   CreateAgreementData,
@@ -37,33 +35,24 @@ function parseIdSearchTerm(search: string): bigint | null {
 export class PrismaAgreementRepository implements AgreementRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  private readonly defaultInclude = {
-    cuotaConvenio: {
-      where: { deletedAt: null },
-      orderBy: { numeroCuota: 'asc' as const },
-    },
-  };
-
-  async findById(id: bigint): Promise<AgreementEntity | null> {
-    const record = await this.prisma.convenios.findFirst({
+  async findById(id: bigint): Promise<AgreementRow | null> {
+    return this.prisma.convenios.findFirst({
       where: { convenioId: id, deletedAt: null },
-      include: this.defaultInclude,
+      include: agreementInclude,
     });
-    return AgreementMapper.toDomain(record);
   }
 
   async findActiveByContractId(
     contratoId: bigint,
-  ): Promise<AgreementEntity | null> {
-    const record = await this.prisma.convenios.findFirst({
+  ): Promise<AgreementRow | null> {
+    return this.prisma.convenios.findFirst({
       where: {
         contratoId,
         deletedAt: null,
         estado: { in: [EstadoConvenio.ACTIVO, EstadoConvenio.PENDIENTE_ABONO] },
       },
-      include: this.defaultInclude,
+      include: agreementInclude,
     });
-    return AgreementMapper.toDomain(record);
   }
 
   /**
@@ -108,7 +97,7 @@ export class PrismaAgreementRepository implements AgreementRepository {
   async paginate(
     pagination: PaginateOptions,
     filters?: AgreementFilters,
-  ): Promise<PaginatedResult<AgreementEntity>> {
+  ): Promise<PaginatedResult<AgreementRow>> {
     const where: Prisma.ConveniosWhereInput = {
       deletedAt: null,
       ...(filters?.contratoId
@@ -124,12 +113,12 @@ export class PrismaAgreementRepository implements AgreementRepository {
         : {}),
     };
 
-    const paginated = await paginate<any>(
+    const paginated = await paginate<AgreementRow>(
       this.prisma.convenios,
       {
         where,
         include: {
-          ...this.defaultInclude,
+          ...agreementInclude,
           contrato: {
             select: {
               numeroGuia: true,
@@ -150,26 +139,22 @@ export class PrismaAgreementRepository implements AgreementRepository {
       pagination,
     );
 
-    return {
-      data: AgreementMapper.toDomainList(paginated.data),
-      meta: paginated.meta,
-    };
+    return paginated;
   }
 
   async findInstallmentsByAgreementId(
     convenioId: bigint,
-  ): Promise<InstallmentEntity[]> {
-    const records = await this.prisma.cuotaConvenio.findMany({
+  ): Promise<AgreementRow['cuotaConvenio']> {
+    return this.prisma.cuotaConvenio.findMany({
       where: { convenioId, deletedAt: null },
       orderBy: { numeroCuota: 'asc' },
     });
-    return AgreementMapper.toDomainInstallmentList(records);
   }
 
   async create(
     data: CreateAgreementData,
     cuotas: CreateInstallmentData[],
-  ): Promise<AgreementEntity> {
+  ): Promise<AgreementRow> {
     const record = await this.prisma.$transaction(async (tx) => {
       const nuevoConvenio = await tx.convenios.create({
         data: {
@@ -205,20 +190,20 @@ export class PrismaAgreementRepository implements AgreementRepository {
 
       return tx.convenios.findUnique({
         where: { convenioId: nuevoConvenio.convenioId },
-        include: this.defaultInclude,
+        include: agreementInclude,
       });
     });
 
-    return AgreementMapper.toDomain(record)!;
+    return record!;
   }
 
   async updateState(
     id: bigint,
     estado: string,
     data?: { fechaAprobacion?: Date; deletedAt?: Date },
-  ): Promise<AgreementEntity> {
+  ): Promise<AgreementRow> {
     try {
-      const record = await this.prisma.convenios.update({
+      return await this.prisma.convenios.update({
         where: { convenioId: id },
         data: {
           estado: estado as EstadoConvenio,
@@ -227,9 +212,8 @@ export class PrismaAgreementRepository implements AgreementRepository {
           }),
           ...(data?.deletedAt !== undefined && { deletedAt: data.deletedAt }),
         },
-        include: this.defaultInclude,
+        include: agreementInclude,
       });
-      return AgreementMapper.toDomain(record)!;
     } catch (error) {
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
@@ -241,10 +225,10 @@ export class PrismaAgreementRepository implements AgreementRepository {
     }
   }
 
-  async markAsPaid(id: bigint): Promise<AgreementEntity> {
+  async markAsPaid(id: bigint): Promise<AgreementRow> {
     const hoy = new Date();
 
-    const record = await this.prisma.$transaction(async (tx) => {
+    return this.prisma.$transaction(async (tx) => {
       const convenio = await tx.convenios.findUnique({
         where: { convenioId: id },
       });
@@ -279,11 +263,9 @@ export class PrismaAgreementRepository implements AgreementRepository {
           fechaProximoPago: null,
           montoPagadoActual: convenio.deudaTotal,
         },
-        include: this.defaultInclude,
+        include: agreementInclude,
       });
     });
-
-    return AgreementMapper.toDomain(record)!;
   }
 
   async contractExists(contratoId: bigint): Promise<boolean> {

@@ -33,6 +33,16 @@ export function agreementRow(
     updatedAt: new Date('2026-01-01T00:00:00.000Z'),
     deletedAt: null,
     cuotaConvenio: [],
+    contrato: {
+      numeroGuia: 'GUIA-100',
+      cliente: {
+        nombres: 'María',
+        apellidos: 'Pérez',
+        razonSocial: null,
+        identificacion: '1105123456',
+        email: 'maria@ejemplo.com',
+      },
+    },
   };
 
   return { ...base, ...overrides };

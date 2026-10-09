@@ -98,7 +98,7 @@ describe('PrismaAgreementRepository', () => {
 
       expect(result).not.toBeNull();
       expect(result?.convenioId).toBe(1n);
-      expect(result?.deudaTotal).toBe(100);
+      expect(Number(result?.deudaTotal)).toBe(100);
     });
 
     it('should return null when not found', async () => {
@@ -197,7 +197,7 @@ describe('PrismaAgreementRepository', () => {
 
       expect(result).toHaveLength(1);
       expect(result[0].cuotaConvenioId).toBe(1n);
-      expect(result[0].valorCuota).toBe(50);
+      expect(Number(result[0].valorCuota)).toBe(50);
     });
   });
 
