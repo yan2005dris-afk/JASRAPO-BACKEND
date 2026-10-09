@@ -1,6 +1,6 @@
 import type { PaginateOptions } from 'src/infrastructure/common/utils/pagination.util';
 import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
-import type { ClientEntity } from '../entities/client.entity';
+import type { ClientRow } from '../../infrastructure/repositories/client.include';
 import type {
   CreateClientData,
   UpdateClientData,
@@ -10,20 +10,17 @@ import type {
 } from '../types/client.types';
 
 export abstract class ClientRepository {
-  abstract findById(id: bigint): Promise<ClientEntity | null>;
+  abstract findById(id: bigint): Promise<ClientRow | null>;
 
   abstract findByIdentificacion(
     identificacion: string,
-  ): Promise<ClientEntity | null>;
+  ): Promise<ClientRow | null>;
 
-  abstract create(data: CreateClientData): Promise<ClientEntity>;
+  abstract create(data: CreateClientData): Promise<ClientRow>;
 
-  abstract updateClient(
-    id: bigint,
-    data: UpdateClientData,
-  ): Promise<ClientEntity>;
+  abstract updateClient(id: bigint, data: UpdateClientData): Promise<ClientRow>;
 
-  abstract softDelete(id: bigint): Promise<ClientEntity>;
+  abstract softDelete(id: bigint): Promise<ClientRow>;
 
   abstract findTipoIdentificacionById(
     id: number,
@@ -38,7 +35,7 @@ export abstract class ClientRepository {
    */
   abstract reactivateOrCreateConsumidorFinal(
     data: ConsumidorFinalData,
-  ): Promise<ClientEntity>;
+  ): Promise<ClientRow>;
 
   abstract paginateClientes(
     args: {
@@ -46,5 +43,5 @@ export abstract class ClientRepository {
       orderBy?: Record<string, any>;
     },
     pagination: PaginateOptions,
-  ): Promise<PaginatedResult<ClientEntity>>;
+  ): Promise<PaginatedResult<ClientRow>>;
 }

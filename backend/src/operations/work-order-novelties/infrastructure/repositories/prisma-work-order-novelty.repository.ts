@@ -6,37 +6,14 @@ import {
   type UpdateWorkOrderNoveltyData,
   type WorkOrderNoveltyFilters,
 } from '../../domain/repositories/work-order-novelty.repository';
-import { WorkOrderNoveltyEntity } from '../../domain/entities/work-order-novelty.entity';
+import type { WorkOrderNoveltyRow } from './work-order-novelty.include';
 
 @Injectable()
 export class PrismaWorkOrderNoveltyRepository implements WorkOrderNoveltyRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  private toDomain(row: any): WorkOrderNoveltyEntity {
-    return new WorkOrderNoveltyEntity({
-      novedadId: row.novedadId,
-      ordenTrabajoId: row.ordenTrabajoId,
-      lecturaId: row.lecturaId,
-      observacion: row.observacion,
-      tipo: row.tipo,
-      estado: row.estado,
-      resolucionTipo: row.resolucionTipo,
-      consumoAjustado: row.consumoAjustado ? Number(row.consumoAjustado) : null,
-      observacionResolucion: row.observacionResolucion,
-      resueltoPorUsuarioId: row.resueltoPorUsuarioId,
-      resueltoEn: row.resueltoEn,
-      createdAt: row.createdAt,
-      updatedAt: row.updatedAt,
-      deletedAt: row.deletedAt,
-      fotoUrl: row.fotoUrl,
-      legacyAnomaliaId: row.legacyAnomaliaId,
-    });
-  }
-
-  async create(
-    data: CreateWorkOrderNoveltyData,
-  ): Promise<WorkOrderNoveltyEntity> {
-    const created = await this.prisma.novedadOrdenTrabajo.create({
+  async create(data: CreateWorkOrderNoveltyData): Promise<WorkOrderNoveltyRow> {
+    return this.prisma.novedadOrdenTrabajo.create({
       data: {
         ordenTrabajoId: data.ordenTrabajoId,
         lecturaId: data.lecturaId ?? null,
@@ -45,21 +22,19 @@ export class PrismaWorkOrderNoveltyRepository implements WorkOrderNoveltyReposit
         fotoUrl: data.fotoUrl ?? null,
       },
     });
-    return this.toDomain(created);
   }
 
-  async findById(id: bigint): Promise<WorkOrderNoveltyEntity | null> {
-    const row = await this.prisma.novedadOrdenTrabajo.findUnique({
+  async findById(id: bigint): Promise<WorkOrderNoveltyRow | null> {
+    return this.prisma.novedadOrdenTrabajo.findUnique({
       where: { novedadId: id },
     });
-    return row ? this.toDomain(row) : null;
   }
 
   async update(
     id: bigint,
     data: UpdateWorkOrderNoveltyData,
-  ): Promise<WorkOrderNoveltyEntity> {
-    const updated = await this.prisma.novedadOrdenTrabajo.update({
+  ): Promise<WorkOrderNoveltyRow> {
+    return this.prisma.novedadOrdenTrabajo.update({
       where: { novedadId: id },
       data: {
         ...(data.observacion !== undefined && {
@@ -83,18 +58,13 @@ export class PrismaWorkOrderNoveltyRepository implements WorkOrderNoveltyReposit
         ...(data.resueltoEn !== undefined && { resueltoEn: data.resueltoEn }),
       },
     });
-    return this.toDomain(updated);
   }
 
-  async softDelete(
-    id: bigint,
-    deletedAt: Date,
-  ): Promise<WorkOrderNoveltyEntity> {
-    const updated = await this.prisma.novedadOrdenTrabajo.update({
+  async softDelete(id: bigint, deletedAt: Date): Promise<WorkOrderNoveltyRow> {
+    return this.prisma.novedadOrdenTrabajo.update({
       where: { novedadId: id },
       data: { deletedAt },
     });
-    return this.toDomain(updated);
   }
 
   async clearEvidenceReference(
@@ -109,7 +79,7 @@ export class PrismaWorkOrderNoveltyRepository implements WorkOrderNoveltyReposit
 
   async findMany(
     filters: WorkOrderNoveltyFilters,
-  ): Promise<{ data: WorkOrderNoveltyEntity[]; total: number }> {
+  ): Promise<{ data: WorkOrderNoveltyRow[]; total: number }> {
     const page = filters.page ?? 1;
     const limit = filters.limit ?? 20;
     const skip = (page - 1) * limit;
@@ -131,7 +101,7 @@ export class PrismaWorkOrderNoveltyRepository implements WorkOrderNoveltyReposit
     ]);
 
     return {
-      data: rows.map((r) => this.toDomain(r)),
+      data: rows,
       total,
     };
   }

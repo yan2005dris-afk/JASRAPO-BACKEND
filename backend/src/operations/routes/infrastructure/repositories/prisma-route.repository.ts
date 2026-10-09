@@ -13,10 +13,12 @@ import {
   ContratoRef,
   EligibleReadingsCriteria,
 } from '../../domain/repositories/route.repository';
-import { RouteEntity } from '../../domain/entities/route.entity';
-import { ReadingForRouteEntity } from '../../domain/entities/reading-for-route.entity';
-import { RouteMapper } from '../mappers/route.mapper';
-import { ReadingForRouteMapper } from '../mappers/reading-for-route.mapper';
+import {
+  routeInclude,
+  type RouteRow,
+  type ReadingForRouteRow,
+  readingForRouteInclude,
+} from './route.include';
 import {
   paginate,
   PaginateOptions,
@@ -41,21 +43,20 @@ export class PrismaRouteRepository implements RouteRepository {
   async findById(
     rutaId: bigint,
     includeDeleted: boolean = false,
-  ): Promise<RouteEntity | null> {
-    const raw = await this.prisma.rutas.findFirst({
-      include: { tipoActividad: { select: { codigo: true } } },
+  ): Promise<RouteRow | null> {
+    return this.prisma.rutas.findFirst({
+      include: routeInclude,
       where: {
         rutaId,
         ...(includeDeleted ? {} : { deletedAt: null }),
       },
     });
-    return raw ? RouteMapper.toEntity(raw) : null;
   }
 
   async paginateRutas(
     filters: RouteFilters,
     pagination: PaginateOptions,
-  ): Promise<PaginatedResult<RouteEntity>> {
+  ): Promise<PaginatedResult<RouteRow>> {
     const where: Prisma.RutasWhereInput = {
       deletedAt: null,
       ...(filters.estado ? { estado: filters.estado as EstadoRuta } : {}),
@@ -73,23 +74,23 @@ export class PrismaRouteRepository implements RouteRepository {
         : {}),
     };
 
-    const result = await paginate<any>(
+    const result = await paginate<RouteRow>(
       this.prisma.rutas,
       {
         where,
-        include: { tipoActividad: { select: { codigo: true } } },
+        include: routeInclude,
         orderBy: { createdAt: 'desc' },
       },
       pagination,
     );
 
     return {
-      data: RouteMapper.toEntityList(result.data),
+      data: result.data,
       meta: result.meta,
     };
   }
 
-  async create(data: CreateRouteData): Promise<RouteEntity> {
+  async create(data: CreateRouteData): Promise<RouteRow> {
     try {
       const tipoActividad = await this.prisma.tipoActividad.findUnique({
         where: { codigo: data.tipoRuta },
@@ -97,7 +98,7 @@ export class PrismaRouteRepository implements RouteRepository {
       });
       if (!tipoActividad)
         throw new EntityNotFoundException('Tipo de actividad', data.tipoRuta);
-      const raw = await this.prisma.rutas.create({
+      return await this.prisma.rutas.create({
         data: {
           nombre: data.nombre,
           descripcion: data.descripcion,
@@ -108,9 +109,8 @@ export class PrismaRouteRepository implements RouteRepository {
           periodoId: data.periodoId ?? null,
           estado: (data.estado ?? 'PENDIENTE') as EstadoRuta,
         },
-        include: { tipoActividad: { select: { codigo: true } } },
+        include: routeInclude,
       });
-      return RouteMapper.toEntity(raw);
     } catch (error) {
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
@@ -122,7 +122,7 @@ export class PrismaRouteRepository implements RouteRepository {
     }
   }
 
-  async update(rutaId: bigint, data: UpdateRouteData): Promise<RouteEntity> {
+  async update(rutaId: bigint, data: UpdateRouteData): Promise<RouteRow> {
     try {
       const tipoActividad = data.tipoRuta
         ? await this.prisma.tipoActividad.findUnique({
@@ -156,12 +156,11 @@ export class PrismaRouteRepository implements RouteRepository {
           : {}),
         ...(data.fechaFin !== undefined ? { fechaFin: data.fechaFin } : {}),
       };
-      const raw = await this.prisma.rutas.update({
+      return await this.prisma.rutas.update({
         where: { rutaId },
         data: updateData,
-        include: { tipoActividad: { select: { codigo: true } } },
+        include: routeInclude,
       });
-      return RouteMapper.toEntity(raw);
     } catch (error) {
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
@@ -177,7 +176,7 @@ export class PrismaRouteRepository implements RouteRepository {
     rutaId: bigint,
     expectedEstado: string,
     data: UpdateRouteData,
-  ): Promise<RouteEntity> {
+  ): Promise<RouteRow> {
     return this.prisma.$transaction(
       async (tx) => {
         const route = await tx.rutas.findFirst({
@@ -186,7 +185,7 @@ export class PrismaRouteRepository implements RouteRepository {
             estado: expectedEstado as EstadoRuta,
             deletedAt: null,
           },
-          include: { tipoActividad: { select: { codigo: true } } },
+          include: routeInclude,
         });
         if (!route) {
           throw new InvalidDomainOperationException(
@@ -223,7 +222,7 @@ export class PrismaRouteRepository implements RouteRepository {
           if (total > aprobadas) estado = 'PARCIAL';
         }
 
-        const raw = await tx.rutas.update({
+        return await tx.rutas.update({
           where: { rutaId },
           data: {
             ...(data.nombre !== undefined && { nombre: data.nombre }),
@@ -244,22 +243,20 @@ export class PrismaRouteRepository implements RouteRepository {
             }),
             ...(data.fechaFin !== undefined && { fechaFin: data.fechaFin }),
           },
-          include: { tipoActividad: { select: { codigo: true } } },
+          include: routeInclude,
         });
-        return RouteMapper.toEntity(raw);
       },
       { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
     );
   }
 
-  async softDelete(rutaId: bigint): Promise<RouteEntity> {
+  async softDelete(rutaId: bigint): Promise<RouteRow> {
     try {
-      const raw = await this.prisma.rutas.update({
+      return await this.prisma.rutas.update({
         where: { rutaId },
         data: { deletedAt: new Date() },
-        include: { tipoActividad: { select: { codigo: true } } },
+        include: routeInclude,
       });
-      return RouteMapper.toEntity(raw);
     } catch (error) {
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
@@ -336,7 +333,7 @@ export class PrismaRouteRepository implements RouteRepository {
     periodoId: number,
     sectorId?: number,
     tipoRuta?: string,
-  ): Promise<RouteEntity[]> {
+  ): Promise<RouteRow[]> {
     const where: Prisma.RutasWhereInput = {
       comunidadId,
       periodoId,
@@ -348,11 +345,10 @@ export class PrismaRouteRepository implements RouteRepository {
       where.OR = [{ sectorId: null }, { sectorId }];
     }
 
-    const records = await this.prisma.rutas.findMany({
-      include: { tipoActividad: { select: { codigo: true } } },
+    return await this.prisma.rutas.findMany({
+      include: routeInclude,
       where,
     });
-    return RouteMapper.toEntityList(records);
   }
 
   async initializeMonthlyReadings(
@@ -377,7 +373,7 @@ export class PrismaRouteRepository implements RouteRepository {
   async paginateLecturas(
     criteria: EligibleReadingsCriteria,
     pagination: PaginateOptions,
-  ): Promise<PaginatedResult<ReadingForRouteEntity>> {
+  ): Promise<PaginatedResult<ReadingForRouteRow>> {
     const { comunidadId, sectorId, periodoId, search } = criteria;
     const where: Prisma.LecturasWhereInput = {
       deletedAt: null,
@@ -437,22 +433,11 @@ export class PrismaRouteRepository implements RouteRepository {
     }
 
     const [result, estadoGroups] = await Promise.all([
-      paginate<any>(
+      paginate<ReadingForRouteRow>(
         this.prisma.lecturas,
         {
           where,
-          include: {
-            medidor: {
-              include: {
-                historial: {
-                  where: { fechaHasta: null },
-                  include: {
-                    contrato: { include: { cliente: true, sector: true } },
-                  },
-                },
-              },
-            },
-          } satisfies Prisma.LecturasInclude,
+          include: readingForRouteInclude,
           orderBy: [{ medidor: { historial: { _count: 'desc' } } }],
         },
         pagination,
@@ -469,7 +454,7 @@ export class PrismaRouteRepository implements RouteRepository {
     );
 
     return {
-      data: ReadingForRouteMapper.toEntityList(result.data),
+      data: result.data,
       meta: result.meta,
       kpis: {
         total: result.meta.total,
@@ -486,7 +471,7 @@ export class PrismaRouteRepository implements RouteRepository {
   async paginateLecturasByRutaId(
     rutaId: bigint,
     pagination: PaginateOptions,
-  ): Promise<PaginatedResult<ReadingForRouteEntity, LecturaKpis>> {
+  ): Promise<PaginatedResult<ReadingForRouteRow, LecturaKpis>> {
     // Filtramos lecturas a través de la relación reversa con ordenes_trabajo,
     // no al revés. Esto garantiza:
     //   (a) que la lectura realmente existe (FK consistente),
@@ -504,22 +489,11 @@ export class PrismaRouteRepository implements RouteRepository {
     };
 
     const [result, estadoGroups] = await Promise.all([
-      paginate<any>(
+      paginate<ReadingForRouteRow>(
         this.prisma.lecturas,
         {
           where,
-          include: {
-            medidor: {
-              include: {
-                historial: {
-                  where: { fechaHasta: null },
-                  include: {
-                    contrato: { include: { cliente: true, sector: true } },
-                  },
-                },
-              },
-            },
-          } satisfies Prisma.LecturasInclude,
+          include: readingForRouteInclude,
           orderBy: { fecha: 'desc' },
         },
         pagination,
@@ -536,7 +510,7 @@ export class PrismaRouteRepository implements RouteRepository {
     );
 
     return {
-      data: ReadingForRouteMapper.toEntityList(result.data),
+      data: result.data,
       meta: result.meta,
       kpis: {
         total: result.meta.total,

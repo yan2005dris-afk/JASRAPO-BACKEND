@@ -1,16 +1,14 @@
 import { OrderWorkResponseDto } from './orden-trabajo-response.dto';
-import { OrdenTrabajoEntity } from '../../domain/entities/orden-trabajo.entity';
+import { ordenTrabajoRow } from '../../__test-utils__/route-row.factory';
 
 describe('OrderWorkResponseDto', () => {
   it('serializes bigint identifiers as API-safe strings', () => {
     const dto = OrderWorkResponseDto.fromRow(
-      new OrdenTrabajoEntity({
+      ordenTrabajoRow({
         ordenTrabajoId: 42n,
         rutaId: 8n,
         contratoId: 9n,
         medidorId: null,
-        tipoActividad: 'INSTALACION',
-        estado: 'COMPLETADA',
         ordenVisita: 1,
         resultadoObservacion: null,
         evidenciaFotoUrl: null,
@@ -19,10 +17,6 @@ describe('OrderWorkResponseDto', () => {
         updatedAt: new Date(),
         deletedAt: null,
         lecturaId: 13n,
-        contratoNumeroContrato: 'GUIA-001',
-        contratoClienteNombre: 'Juan Pérez',
-        contratoDireccion: 'Calle 1',
-        medidorNumeroSerie: null,
       }),
     );
 

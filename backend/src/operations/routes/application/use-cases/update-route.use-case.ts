@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { RouteRepository } from '../../domain/repositories/route.repository';
 import { UpdateRouteDto } from '../../interfaces/dto/update-route.dto';
-import { RouteEntity } from '../../domain/entities/route.entity';
+import type { RouteRow } from '../../infrastructure/repositories/route.include';
 import type { UpdateRouteData } from '../../domain/types/route.types';
 import {
   EntityNotFoundException,
@@ -13,10 +13,7 @@ import { canTransitionRouteState } from '../../domain/route-state';
 export class UpdateRouteUseCase {
   constructor(private readonly routeRepository: RouteRepository) {}
 
-  async execute(
-    rutaId: bigint,
-    updateDto: UpdateRouteDto,
-  ): Promise<RouteEntity> {
+  async execute(rutaId: bigint, updateDto: UpdateRouteDto): Promise<RouteRow> {
     const ruta = await this.routeRepository.findById(rutaId);
 
     if (!ruta) {
@@ -58,7 +55,7 @@ export class UpdateRouteUseCase {
         ruta.comunidadId,
         updateDto.periodoId,
         ruta.sectorId ?? undefined,
-        ruta.tipoRuta,
+        ruta.tipoActividad.codigo,
       );
 
       if (overlapping.some((r) => r.rutaId !== rutaId)) {

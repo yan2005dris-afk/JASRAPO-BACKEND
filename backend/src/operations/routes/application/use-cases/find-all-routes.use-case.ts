@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { RouteRepository } from '../../domain/repositories/route.repository';
-import { RouteEntity } from '../../domain/entities/route.entity';
+import type { RouteRow } from '../../infrastructure/repositories/route.include';
 import type { RouteFilters } from '../../domain/types/route.types';
 import { getPagination } from 'src/infrastructure/common/utils/pagination.util';
 import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
@@ -12,7 +12,7 @@ export class FindAllRoutesUseCase {
   async execute(params: {
     pagination: { page?: number; limit?: number };
     where?: RouteFilters;
-  }): Promise<PaginatedResult<RouteEntity>> {
+  }): Promise<PaginatedResult<RouteRow>> {
     const { pagination, where } = params;
     const { skip, take, page } = getPagination(
       pagination.page ?? 1,

@@ -2,7 +2,8 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { LinkLecturaUseCase } from './link-lectura.use-case';
 import { OrdenTrabajoRepository } from '../../domain/repositories/orden-trabajo.repository';
-import { OrdenTrabajoEntity } from '../../domain/entities/orden-trabajo.entity';
+import type { OrdenTrabajoRow } from '../../infrastructure/repositories/route.include';
+import { ordenTrabajoRow } from '../../__test-utils__/route-row.factory';
 
 describe('LinkLecturaUseCase', () => {
   let useCase: LinkLecturaUseCase;
@@ -12,13 +13,11 @@ describe('LinkLecturaUseCase', () => {
     verifyOperatorWorkOrderOwnership: jest.fn(),
   };
 
-  const sampleOrden = new OrdenTrabajoEntity({
+  const sampleOrden: OrdenTrabajoRow = ordenTrabajoRow({
     ordenTrabajoId: 1n,
     rutaId: 10n,
     contratoId: 100n,
     medidorId: 200n,
-    tipoActividad: 'LECTURA',
-    estado: 'EN_PROGRESO',
     ordenVisita: 1,
     resultadoObservacion: null,
     evidenciaFotoUrl: null,
@@ -29,10 +28,10 @@ describe('LinkLecturaUseCase', () => {
     lecturaId: null,
   });
 
-  const sampleOrdenAfterLink = new OrdenTrabajoEntity({
+  const sampleOrdenAfterLink: OrdenTrabajoRow = {
     ...sampleOrden,
     lecturaId: 999n,
-  });
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({

@@ -1,7 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { WorkOrderNoveltyController } from './work-order-novelty.controller';
 import { WorkOrderNoveltyService } from '../../application/work-order-novelty.service';
-import { WorkOrderNoveltyEntity } from '../../domain/entities/work-order-novelty.entity';
+import { workOrderNoveltyRow } from '../../__test-utils__/work-order-novelty-row.factory';
 import { EstadoNovedad, TipoAnomalia } from 'src/shared/enums';
 
 describe('WorkOrderNoveltyController', () => {
@@ -26,7 +26,7 @@ describe('WorkOrderNoveltyController', () => {
   });
 
   it('creates novelty and serializes IDs as strings', async () => {
-    const entity = new WorkOrderNoveltyEntity({
+    const entity = workOrderNoveltyRow({
       novedadId: 100n,
       ordenTrabajoId: 200n,
       tipo: TipoAnomalia.FUGA,
@@ -44,7 +44,7 @@ describe('WorkOrderNoveltyController', () => {
   });
 
   it('lists novelties with pagination and filter', async () => {
-    const entity = new WorkOrderNoveltyEntity({
+    const entity = workOrderNoveltyRow({
       novedadId: 101n,
       ordenTrabajoId: 201n,
       tipo: TipoAnomalia.OTRO,
@@ -65,7 +65,7 @@ describe('WorkOrderNoveltyController', () => {
   });
 
   it('finds and updates novelty', async () => {
-    const entity = new WorkOrderNoveltyEntity({
+    const entity = workOrderNoveltyRow({
       novedadId: 102n,
       ordenTrabajoId: 202n,
       estado: EstadoNovedad.RESOLVED,

@@ -5,7 +5,7 @@ import {
   InvalidDomainOperationException,
 } from 'src/shared/domain/exceptions/domain.exception';
 import { OrdenTrabajoRepository } from 'src/operations/routes/domain/repositories/orden-trabajo.repository';
-import type { OrdenTrabajoEntity } from 'src/operations/routes/domain/entities/orden-trabajo.entity';
+import type { OrdenTrabajoRow } from 'src/operations/routes/infrastructure/repositories/route.include';
 import type { UpdateOperatorWorkOrderData } from 'src/operations/routes/domain/types/orden-trabajo.types';
 import { OperatorRepository } from '../../domain/repositories/operator.repository';
 import { UpdateOperatorWorkOrderDto } from '../../interfaces/dto/update-operator-work-order.dto';
@@ -32,13 +32,13 @@ export class UpdateOperatorWorkOrderUseCase {
     dto: UpdateOperatorWorkOrderDto,
     evidenciaFotoUrl?: string,
     cleanupOldEvidence?: EvidenceReplacementCleanup,
-  ): Promise<OrdenTrabajoEntity> {
+  ): Promise<OrdenTrabajoRow> {
     const order = await this.ordenTrabajoRepository.findById(id);
     if (!order) {
       throw new EntityNotFoundException('Orden de Trabajo', id.toString());
     }
 
-    if (order.tipoActividad === TipoActividadCodes.LECTURA) {
+    if (order.ruta.tipoActividad.codigo === TipoActividadCodes.LECTURA) {
       const isSubmittingReading = dto.lecturaActual !== undefined;
       const hasCoordinates =
         dto.latitud !== undefined || dto.longitud !== undefined;
@@ -87,7 +87,7 @@ export class UpdateOperatorWorkOrderUseCase {
     }
 
     if (
-      order.tipoActividad === TipoActividadCodes.LECTURA &&
+      order.ruta.tipoActividad.codigo === TipoActividadCodes.LECTURA &&
       dto.lecturaActual !== undefined &&
       order.lecturaId
     ) {
@@ -108,7 +108,7 @@ export class UpdateOperatorWorkOrderUseCase {
     }
 
     const isReadingSubmission =
-      order.tipoActividad === TipoActividadCodes.LECTURA &&
+      order.ruta.tipoActividad.codigo === TipoActividadCodes.LECTURA &&
       dto.lecturaActual !== undefined;
 
     const data: UpdateOperatorWorkOrderData = {

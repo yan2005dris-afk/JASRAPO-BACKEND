@@ -27,9 +27,11 @@ describe('UpdateOperatorWorkOrderUseCase', () => {
   ) => ({
     ordenTrabajoId: 1n,
     rutaId: 2n,
+    ruta: {
+      tipoActividad: { codigo: tipoActividad },
+    },
     contratoId: 3n,
     medidorId,
-    tipoActividad,
     estado: 'PENDIENTE',
     ordenVisita: 1,
     resultadoObservacion: null,

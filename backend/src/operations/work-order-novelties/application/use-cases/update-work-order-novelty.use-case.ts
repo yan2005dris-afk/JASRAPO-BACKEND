@@ -3,7 +3,7 @@ import {
   WORK_ORDER_NOVELTY_REPOSITORY,
   type WorkOrderNoveltyRepository,
 } from '../../domain/repositories/work-order-novelty.repository';
-import { WorkOrderNoveltyEntity } from '../../domain/entities/work-order-novelty.entity';
+import type { WorkOrderNoveltyRow } from '../../infrastructure/repositories/work-order-novelty.include';
 import { NoveltyLifecyclePolicy } from '../../domain/policies/novelty-lifecycle.policy';
 import {
   StorageService,
@@ -44,7 +44,7 @@ export class UpdateWorkOrderNoveltyUseCase {
     dto: UpdateWorkOrderNoveltyInput,
     file?: Express.Multer.File,
     actorUserId?: number,
-  ): Promise<WorkOrderNoveltyEntity> {
+  ): Promise<WorkOrderNoveltyRow> {
     const existing = await this.findUseCase.execute(id);
 
     if (

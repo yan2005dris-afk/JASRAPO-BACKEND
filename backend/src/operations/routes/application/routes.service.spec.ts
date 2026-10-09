@@ -11,7 +11,7 @@ import { UpdateRouteUseCase } from './use-cases/update-route.use-case';
 import { DeleteRouteUseCase } from './use-cases/delete-route.use-case';
 import { ExportFieldSheetPdfUseCase } from './use-cases/export-field-sheet-pdf.use-case';
 import { RouteRepository } from '../domain/repositories/route.repository';
-import { RouteEntity } from '../domain/entities/route.entity';
+import { routeRow } from '../__test-utils__/route-row.factory';
 
 describe('RoutesService', () => {
   let service: RoutesService;
@@ -28,16 +28,16 @@ describe('RoutesService', () => {
 
   const mockUseCase = { execute: jest.fn() };
 
-  const sampleRoute = new RouteEntity({
+  const sampleRoute = routeRow({
     rutaId: 1n,
     nombre: 'Ruta 1',
     operarioId: 1,
-    tipoRuta: 'LECTURA',
     comunidadId: 1,
     periodoId: 1,
     estado: 'PENDIENTE',
     fechaInicio: null,
     fechaFin: null,
+    tipoActividad: { codigo: 'LECTURA' },
   });
 
   beforeEach(async () => {

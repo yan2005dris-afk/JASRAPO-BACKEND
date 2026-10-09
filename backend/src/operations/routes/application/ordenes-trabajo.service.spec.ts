@@ -5,7 +5,7 @@ import { FindOrdenesByRutaUseCase } from './use-cases/find-ordenes-by-ruta.use-c
 import { UpdateOrdenEstadoUseCase } from './use-cases/update-orden-estado.use-case';
 import { LinkLecturaUseCase } from './use-cases/link-lectura.use-case';
 import { OrdenTrabajoRepository } from '../domain/repositories/orden-trabajo.repository';
-import { OrdenTrabajoEntity } from '../domain/entities/orden-trabajo.entity';
+import { ordenTrabajoRow } from '../__test-utils__/route-row.factory';
 import type {
   PaginatedResult,
   PaginationMeta,
@@ -28,12 +28,11 @@ describe('OrdenesTrabajoService', () => {
     siguiente: total > page * limit ? page + 1 : null,
   });
 
-  const sampleOrden = new OrdenTrabajoEntity({
+  const sampleOrden = ordenTrabajoRow({
     ordenTrabajoId: 1n,
     rutaId: 10n,
     contratoId: 100n,
     medidorId: 200n,
-    tipoActividad: 'INSTALACION',
     estado: 'PENDIENTE',
     ordenVisita: 1,
     resultadoObservacion: null,
@@ -43,6 +42,11 @@ describe('OrdenesTrabajoService', () => {
     updatedAt: new Date(),
     deletedAt: null,
     lecturaId: null,
+    ruta: {
+      tipoActividad: {
+        codigo: 'INSTALACION',
+      },
+    },
   });
 
   beforeEach(async () => {
@@ -67,7 +71,7 @@ describe('OrdenesTrabajoService', () => {
   describe('findByRuta', () => {
     it('should delegate to FindOrdenesByRutaUseCase with the same params', async () => {
       const pagination: PaginateOptions = { page: 1, limit: 10 };
-      const paginated: PaginatedResult<OrdenTrabajoEntity> = {
+      const paginated: PaginatedResult<any> = {
         data: [sampleOrden],
         meta: makeMeta(1),
       };
@@ -90,7 +94,7 @@ describe('OrdenesTrabajoService', () => {
 
   describe('updateEstado', () => {
     it('should delegate to UpdateOrdenEstadoUseCase with the same args', async () => {
-      const updatedOrden = new OrdenTrabajoEntity({
+      const updatedOrden = ordenTrabajoRow({
         ...sampleOrden,
         estado: 'COMPLETADA',
       });
@@ -119,7 +123,7 @@ describe('OrdenesTrabajoService', () => {
 
   describe('linkLectura', () => {
     it('should delegate to LinkLecturaUseCase with the same args', async () => {
-      const linked = new OrdenTrabajoEntity({
+      const linked = ordenTrabajoRow({
         ...sampleOrden,
         lecturaId: 999n,
       });

@@ -4,8 +4,10 @@ import { RoutesController } from './routes.controller';
 import { RoutesService } from '../../application/routes.service';
 import { OrdenesTrabajoService } from '../../application/ordenes-trabajo.service';
 import { ReassignRouteUseCase } from '../../application/use-cases/reassign-route.use-case';
-import { RouteEntity } from '../../domain/entities/route.entity';
-import { ReadingForRouteEntity } from '../../domain/entities/reading-for-route.entity';
+import {
+  routeRow,
+  readingForRouteRow,
+} from '../../__test-utils__/route-row.factory';
 
 describe('RoutesController', () => {
   let controller: RoutesController;
@@ -32,25 +34,33 @@ describe('RoutesController', () => {
     linkLectura: jest.fn(),
   };
 
-  const sampleRoute = new RouteEntity({
+  const sampleRoute = routeRow({
     rutaId: 1n,
     nombre: 'Ruta 1',
     operarioId: 10,
-    tipoRuta: 'LECTURA',
+    tipoRutaId: 1,
     comunidadId: 1,
     periodoId: 1,
-    estado: 'PENDIENTE',
+    estadoId: 1,
     fechaInicio: null,
     fechaFin: null,
   });
 
-  const sampleReading = new ReadingForRouteEntity({
+  const sampleReading = readingForRouteRow({
     lecturaId: 100n,
-    guia: 'G-001',
-    clienteNombre: 'Juan Perez',
-    direccion: 'Av. 1',
-    sector: 'Sector 1',
-    estadoContrato: 'ACTIVO',
+    ordenLectura: 1,
+    contrato: {
+      numeroContrato: 'G-001',
+      cliente: {
+        nombres: 'Juan',
+        apellidos: 'Perez',
+      },
+      direccion: 'Av. 1',
+      sector: 'Sector 1',
+      estado: {
+        nombre: 'ACTIVO',
+      },
+    },
   });
 
   beforeEach(async () => {

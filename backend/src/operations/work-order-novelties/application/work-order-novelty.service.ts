@@ -7,7 +7,7 @@ import { SoftDeleteWorkOrderNoveltyUseCase } from './use-cases/soft-delete-work-
 import type { CreateWorkOrderNoveltyInput } from './use-cases/create-work-order-novelty.use-case';
 import type { UpdateWorkOrderNoveltyInput } from './use-cases/update-work-order-novelty.use-case';
 import type { WorkOrderNoveltyFilters } from '../domain/repositories/work-order-novelty.repository';
-import type { WorkOrderNoveltyEntity } from '../domain/entities/work-order-novelty.entity';
+import type { WorkOrderNoveltyRow } from '../infrastructure/repositories/work-order-novelty.include';
 
 export type { CreateWorkOrderNoveltyInput, UpdateWorkOrderNoveltyInput };
 
@@ -30,11 +30,11 @@ export class WorkOrderNoveltyService {
   create(
     dto: CreateWorkOrderNoveltyInput,
     file?: Express.Multer.File,
-  ): Promise<WorkOrderNoveltyEntity> {
+  ): Promise<WorkOrderNoveltyRow> {
     return this.createUseCase.execute(dto, file);
   }
 
-  findById(id: bigint): Promise<WorkOrderNoveltyEntity> {
+  findById(id: bigint): Promise<WorkOrderNoveltyRow> {
     return this.findUseCase.execute(id);
   }
 
@@ -47,14 +47,11 @@ export class WorkOrderNoveltyService {
     dto: UpdateWorkOrderNoveltyInput,
     file?: Express.Multer.File,
     actorUserId?: number,
-  ): Promise<WorkOrderNoveltyEntity> {
+  ): Promise<WorkOrderNoveltyRow> {
     return this.updateUseCase.execute(id, dto, file, actorUserId);
   }
 
-  softDelete(
-    id: bigint,
-    actorUserId?: number,
-  ): Promise<WorkOrderNoveltyEntity> {
+  softDelete(id: bigint, actorUserId?: number): Promise<WorkOrderNoveltyRow> {
     return this.softDeleteUseCase.execute(id, actorUserId);
   }
 }

@@ -1,6 +1,17 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import type { RouteEntity } from '../../domain/entities/route.entity';
-import type { ReadingForRouteEntity } from '../../domain/entities/reading-for-route.entity';
+import type {
+  RouteRow,
+  ReadingForRouteRow,
+} from '../../infrastructure/repositories/route.include';
+import { DateUtil } from 'src/shared/utils/date.util';
+
+function formatDateField(
+  value: Date | string | null | undefined,
+): string | null {
+  if (!value) return null;
+  if (typeof value === 'string') return value;
+  return DateUtil.formatForFrontend(value);
+}
 
 export class RouteResponseDto {
   @ApiProperty({ example: '1', description: 'ID único de la ruta' })
@@ -60,23 +71,23 @@ export class RouteResponseDto {
   })
   fechaFin: string | null;
 
-  static fromRow(entity: RouteEntity): RouteResponseDto {
+  static fromRow(entity: RouteRow): RouteResponseDto {
     const dto = new RouteResponseDto();
     dto.rutaId = entity.rutaId;
     dto.nombre = entity.nombre;
     dto.descripcion = entity.descripcion ?? null;
     dto.operarioId = entity.operarioId;
-    dto.tipoRuta = entity.tipoRuta;
+    dto.tipoRuta = entity.tipoActividad.codigo;
     dto.comunidadId = entity.comunidadId;
     dto.sectorId = entity.sectorId ?? null;
     dto.periodoId = entity.periodoId ?? null;
     dto.estado = entity.estado;
-    dto.fechaInicio = entity.fechaInicio ?? null;
-    dto.fechaFin = entity.fechaFin ?? null;
+    dto.fechaInicio = formatDateField(entity.fechaInicio);
+    dto.fechaFin = formatDateField(entity.fechaFin);
     return dto;
   }
 
-  static fromRowList(entities: RouteEntity[]): RouteResponseDto[] {
+  static fromRowList(entities: RouteRow[]): RouteResponseDto[] {
     return entities.map((e) => RouteResponseDto.fromRow(e));
   }
 }
@@ -125,24 +136,54 @@ export class ReadingForRouteResponseDto {
   })
   estadoLectura?: string;
 
-  static fromRow(entity: ReadingForRouteEntity): ReadingForRouteResponseDto {
+  static fromRow(lectura: ReadingForRouteRow): ReadingForRouteResponseDto {
+    const activeHistory = lectura.medidor?.historial?.find(
+      (h) => h.fechaHasta === null,
+    );
+    const contrato = activeHistory?.contrato;
+    const cliente = contrato?.cliente;
+
+    const clienteNombre = cliente
+      ? [cliente.nombres, cliente.apellidos].filter(Boolean).join(' ').trim()
+      : 'Sin cliente';
+
+    const hasActualReading =
+      lectura.lecturaActual !== null &&
+      lectura.lecturaActual !== undefined &&
+      Number(lectura.lecturaActual) > 0;
+
+    const isPending = lectura.estado === 'PENDIENTE' && !hasActualReading;
+
+    const rawActual =
+      lectura.lecturaActual !== undefined && lectura.lecturaActual !== null
+        ? Number(lectura.lecturaActual)
+        : 0;
+    const rawAnterior =
+      lectura.lecturaAnterior !== undefined && lectura.lecturaAnterior !== null
+        ? Number(lectura.lecturaAnterior)
+        : 0;
+    const rawConsumo = isPending ? 0 : Math.max(0, rawActual - rawAnterior);
+
     const dto = new ReadingForRouteResponseDto();
-    dto.lecturaId = entity.lecturaId;
-    dto.guia = entity.guia;
-    dto.clienteNombre = entity.clienteNombre;
-    dto.direccion = entity.direccion;
-    dto.sector = entity.sector;
-    dto.estadoContrato = entity.estadoContrato;
-    dto.medidorSerie = entity.medidorSerie;
-    dto.lecturaAnterior = entity.lecturaAnterior;
-    dto.lecturaActual = entity.lecturaActual;
-    dto.consumoCalculado = entity.consumoCalculado;
-    dto.estadoLectura = entity.estadoLectura;
+    dto.lecturaId = lectura.lecturaId;
+    dto.guia = contrato?.numeroGuia ?? 'Sin guía';
+    dto.clienteNombre = clienteNombre;
+    dto.direccion = contrato?.direccionSuministro ?? 'Sin dirección';
+    dto.sector = contrato?.sector?.nombre ?? 'Sin sector';
+    dto.estadoContrato =
+      (contrato as any)?.estadoServicio ??
+      (contrato as any)?.estado ??
+      'DESCONOCIDO';
+    dto.medidorSerie = lectura.medidor?.serie ?? undefined;
+    dto.lecturaAnterior = rawAnterior;
+    dto.lecturaActual = isPending ? (null as any) : rawActual;
+    dto.consumoCalculado = rawConsumo;
+    dto.estadoLectura = lectura.estado ?? undefined;
     return dto;
   }
 
   static fromRowList(
-    entities: ReadingForRouteEntity[],
+    entities: ReadingForRouteRow[],
   ): ReadingForRouteResponseDto[] {
     return entities.map((e) => ReadingForRouteResponseDto.fromRow(e));
   }

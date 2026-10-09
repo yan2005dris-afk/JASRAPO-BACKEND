@@ -132,7 +132,7 @@ describe('PrismaRouteRepository', () => {
       );
 
       expect(result.meta.total).toBe(1);
-      expect(result.data[0].tipoRuta).toBe('LECTURA');
+      expect(result.data[0].tipoActividad.codigo).toBe('LECTURA');
       expect(prisma.rutas.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           include: { tipoActividad: { select: { codigo: true } } },
@@ -156,7 +156,7 @@ describe('PrismaRouteRepository', () => {
       });
 
       expect(result.rutaId).toBe(1n);
-      expect(result.tipoRuta).toBe('LECTURA');
+      expect(result.tipoActividad.codigo).toBe('LECTURA');
     });
 
     it('should throw EntityAlreadyExistsException on P2002 error', async () => {
@@ -331,7 +331,9 @@ describe('PrismaRouteRepository', () => {
       expect(result.meta.total).toBe(1);
       expect(result.data).toHaveLength(1);
       expect(result.data[0].lecturaId).toBe(10n);
-      expect(result.data[0].guia).toBe('G-100');
+      expect(result.data[0].medidor.historial[0].contrato.numeroGuia).toBe(
+        'G-100',
+      );
     });
   });
 

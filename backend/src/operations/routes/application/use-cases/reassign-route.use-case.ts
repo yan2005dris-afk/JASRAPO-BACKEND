@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { RouteRepository } from '../../domain/repositories/route.repository';
-import { RouteEntity } from '../../domain/entities/route.entity';
+import type { RouteRow } from '../../infrastructure/repositories/route.include';
 import {
   EntityNotFoundException,
   InvalidDomainOperationException,
@@ -13,7 +13,7 @@ export class ReassignRouteUseCase {
   async execute(
     rutaId: bigint,
     nuevoOperarioId: number | null,
-  ): Promise<RouteEntity> {
+  ): Promise<RouteRow> {
     // 1. Verify route exists
     const route = await this.routeRepository.findById(rutaId);
 

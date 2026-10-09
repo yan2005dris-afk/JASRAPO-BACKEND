@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { RouteRepository } from '../../domain/repositories/route.repository';
-import { RouteEntity } from '../../domain/entities/route.entity';
+import type { RouteRow } from '../../infrastructure/repositories/route.include';
 import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 
 @Injectable()
 export class FindOneRouteUseCase {
   constructor(private readonly routeRepository: RouteRepository) {}
 
-  async execute(rutaId: bigint): Promise<RouteEntity> {
+  async execute(rutaId: bigint): Promise<RouteRow> {
     const ruta = await this.routeRepository.findById(rutaId);
 
     if (!ruta) {

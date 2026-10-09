@@ -1,4 +1,4 @@
-import type { WorkOrderNoveltyEntity } from '../../domain/entities/work-order-novelty.entity';
+import type { WorkOrderNoveltyRow } from '../../infrastructure/repositories/work-order-novelty.include';
 import type {
   TipoAnomalia,
   EstadoNovedad,
@@ -21,22 +21,24 @@ export class ResponseWorkOrderNoveltyDto {
   updatedAt: Date;
   fotoUrl: string | null;
 
-  static fromRow(entity: WorkOrderNoveltyEntity): ResponseWorkOrderNoveltyDto {
+  static fromRow(row: WorkOrderNoveltyRow): ResponseWorkOrderNoveltyDto {
     const dto = new ResponseWorkOrderNoveltyDto();
-    dto.novedadId = entity.novedadId.toString();
-    dto.ordenTrabajoId = entity.ordenTrabajoId.toString();
-    dto.lecturaId = entity.lecturaId ? entity.lecturaId.toString() : null;
-    dto.observacion = entity.observacion;
-    dto.tipo = entity.tipo;
-    dto.estado = entity.estado;
-    dto.resolucionTipo = entity.resolucionTipo;
-    dto.consumoAjustado = entity.consumoAjustado;
-    dto.observacionResolucion = entity.observacionResolucion;
-    dto.resueltoPorUsuarioId = entity.resueltoPorUsuarioId;
-    dto.resueltoEn = entity.resueltoEn;
-    dto.createdAt = entity.createdAt;
-    dto.updatedAt = entity.updatedAt;
-    dto.fotoUrl = entity.fotoUrl;
+    dto.novedadId = row.novedadId.toString();
+    dto.ordenTrabajoId = row.ordenTrabajoId.toString();
+    dto.lecturaId = row.lecturaId ? row.lecturaId.toString() : null;
+    dto.observacion = row.observacion;
+    dto.tipo = row.tipo;
+    dto.estado = row.estado;
+    dto.resolucionTipo = row.resolucionTipo;
+    dto.consumoAjustado = row.consumoAjustado
+      ? Number(row.consumoAjustado)
+      : null;
+    dto.observacionResolucion = row.observacionResolucion;
+    dto.resueltoPorUsuarioId = row.resueltoPorUsuarioId;
+    dto.resueltoEn = row.resueltoEn;
+    dto.createdAt = row.createdAt;
+    dto.updatedAt = row.updatedAt;
+    dto.fotoUrl = row.fotoUrl;
     return dto;
   }
 }

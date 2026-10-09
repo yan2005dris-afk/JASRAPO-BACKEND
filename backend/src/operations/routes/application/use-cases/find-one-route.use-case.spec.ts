@@ -2,7 +2,7 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { FindOneRouteUseCase } from './find-one-route.use-case';
 import { RouteRepository } from '../../domain/repositories/route.repository';
-import { RouteEntity } from '../../domain/entities/route.entity';
+import { routeRow } from '../../__test-utils__/route-row.factory';
 import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 
 describe('FindOneRouteUseCase', () => {
@@ -37,16 +37,16 @@ describe('FindOneRouteUseCase', () => {
   });
 
   it('should return RouteEntity if route is found', async () => {
-    const expected = new RouteEntity({
+    const expected = routeRow({
       rutaId: 1n,
       nombre: 'Route 1',
       operarioId: 1,
-      tipoRuta: 'LECTURA',
       comunidadId: 1,
       periodoId: 1,
       estado: 'PENDIENTE',
       fechaInicio: null,
       fechaFin: null,
+      tipoActividad: { codigo: 'LECTURA' },
     });
     mockRouteRepository.findById.mockResolvedValue(expected);
 

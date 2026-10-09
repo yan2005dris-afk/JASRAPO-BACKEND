@@ -6,7 +6,7 @@ import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { StorageService } from 'src/infrastructure/storage/storage.service';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { TipoAnomalia } from 'src/shared/enums';
-import { WorkOrderNoveltyEntity } from '../../domain/entities/work-order-novelty.entity';
+import { workOrderNoveltyRow } from '../../__test-utils__/work-order-novelty-row.factory';
 import * as evidenceUpload from 'src/infrastructure/common/utils/evidence-upload.util';
 import { SRI_STORAGE_TYPES } from 'src/infrastructure/storage/storage.service';
 
@@ -47,7 +47,7 @@ describe('CreateWorkOrderNoveltyUseCase', () => {
       ordenTrabajoId: 10n,
       lecturaId: 50n,
     });
-    const expected = new WorkOrderNoveltyEntity({
+    const expected = workOrderNoveltyRow({
       novedadId: 1n,
       ordenTrabajoId: 10n,
       lecturaId: 50n,

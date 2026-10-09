@@ -1,4 +1,4 @@
-import type { WorkOrderNoveltyEntity } from '../entities/work-order-novelty.entity';
+import type { WorkOrderNoveltyRow } from '../../infrastructure/repositories/work-order-novelty.include';
 import type {
   EstadoNovedad,
   TipoAnomalia,
@@ -38,13 +38,13 @@ export const WORK_ORDER_NOVELTY_REPOSITORY = Symbol(
 );
 
 export interface WorkOrderNoveltyRepository {
-  create(data: CreateWorkOrderNoveltyData): Promise<WorkOrderNoveltyEntity>;
-  findById(id: bigint): Promise<WorkOrderNoveltyEntity | null>;
+  create(data: CreateWorkOrderNoveltyData): Promise<WorkOrderNoveltyRow>;
+  findById(id: bigint): Promise<WorkOrderNoveltyRow | null>;
   update(
     id: bigint,
     data: UpdateWorkOrderNoveltyData,
-  ): Promise<WorkOrderNoveltyEntity>;
-  softDelete(id: bigint, deletedAt: Date): Promise<WorkOrderNoveltyEntity>;
+  ): Promise<WorkOrderNoveltyRow>;
+  softDelete(id: bigint, deletedAt: Date): Promise<WorkOrderNoveltyRow>;
   /**
    * Clears the expected `fotoUrl` after its evidence has been deleted from
    * storage. The URL condition prevents stale cleanup jobs from clearing a
@@ -53,5 +53,5 @@ export interface WorkOrderNoveltyRepository {
   clearEvidenceReference(id: bigint, expectedFotoUrl: string): Promise<void>;
   findMany(
     filters: WorkOrderNoveltyFilters,
-  ): Promise<{ data: WorkOrderNoveltyEntity[]; total: number }>;
+  ): Promise<{ data: WorkOrderNoveltyRow[]; total: number }>;
 }

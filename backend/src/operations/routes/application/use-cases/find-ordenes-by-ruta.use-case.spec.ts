@@ -3,7 +3,8 @@ import { Test } from '@nestjs/testing';
 import { FindOrdenesByRutaUseCase } from './find-ordenes-by-ruta.use-case';
 import { OrdenTrabajoRepository } from '../../domain/repositories/orden-trabajo.repository';
 import { RouteRepository } from '../../domain/repositories/route.repository';
-import { OrdenTrabajoEntity } from '../../domain/entities/orden-trabajo.entity';
+import type { OrdenTrabajoRow } from '../../infrastructure/repositories/route.include';
+import { ordenTrabajoRow } from '../../__test-utils__/route-row.factory';
 import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 import type {
   PaginatedResult,
@@ -33,13 +34,11 @@ describe('FindOrdenesByRutaUseCase', () => {
     siguiente: total > page * limit ? page + 1 : null,
   });
 
-  const sampleOrden = new OrdenTrabajoEntity({
+  const sampleOrden = ordenTrabajoRow({
     ordenTrabajoId: 1n,
     rutaId: 10n,
     contratoId: 100n,
     medidorId: 200n,
-    tipoActividad: 'INSTALACION',
-    estado: 'PENDIENTE',
     ordenVisita: 1,
     resultadoObservacion: null,
     evidenciaFotoUrl: null,
@@ -97,7 +96,7 @@ describe('FindOrdenesByRutaUseCase', () => {
 
   it('should call repository with correct filters when estado is provided', async () => {
     mockRouteRepository.findById.mockResolvedValue(sampleRuta);
-    const paginatedResult: PaginatedResult<OrdenTrabajoEntity> = {
+    const paginatedResult: PaginatedResult<OrdenTrabajoRow> = {
       data: [sampleOrden],
       meta: makeMeta(1),
     };

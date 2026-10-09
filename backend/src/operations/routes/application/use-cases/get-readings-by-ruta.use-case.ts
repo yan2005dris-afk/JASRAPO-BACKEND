@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { RouteRepository } from '../../domain/repositories/route.repository';
-import { ReadingForRouteEntity } from '../../domain/entities/reading-for-route.entity';
+import type { ReadingForRouteRow } from '../../infrastructure/repositories/route.include';
 import { getPagination } from 'src/infrastructure/common/utils/pagination.util';
 import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
 import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
@@ -12,7 +12,7 @@ export class GetReadingsByRutaUseCase {
   async execute(params: {
     rutaId: bigint;
     pagination: { page?: number; limit?: number };
-  }): Promise<PaginatedResult<ReadingForRouteEntity>> {
+  }): Promise<PaginatedResult<ReadingForRouteRow>> {
     const { rutaId, pagination } = params;
 
     const ruta = await this.routeRepository.findById(rutaId);

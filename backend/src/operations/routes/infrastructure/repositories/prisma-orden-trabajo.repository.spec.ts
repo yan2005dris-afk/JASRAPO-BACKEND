@@ -1,4 +1,5 @@
 import { PrismaOrdenTrabajoRepository } from './prisma-orden-trabajo.repository';
+import { ordenTrabajoInclude } from './route.include';
 
 describe('PrismaOrdenTrabajoRepository.updateOperatorWorkOrder', () => {
   it('persists evidence and derives the effective activity from the route catalog', async () => {
@@ -46,12 +47,10 @@ describe('PrismaOrdenTrabajoRepository.updateOperatorWorkOrder', () => {
       evidenciaFotoUrl: 'readings/evidence.jpg',
     });
 
-    expect(result.tipoActividad).toBe('MANUAL');
+    expect(result.ruta.tipoActividad.codigo).toBe('MANUAL');
     expect(update).toHaveBeenCalledWith(
       expect.objectContaining({
-        include: {
-          ruta: { include: { tipoActividad: { select: { codigo: true } } } },
-        },
+        include: ordenTrabajoInclude,
       }),
     );
   });
@@ -387,6 +386,6 @@ describe('PrismaOrdenTrabajoRepository.create', () => {
       }),
     );
     expect(create.mock.calls[0][0].data).not.toHaveProperty('tipoActividad');
-    expect(result.tipoActividad).toBe('INSTALACION');
+    expect(result.ruta.tipoActividad.codigo).toBe('INSTALACION');
   });
 });

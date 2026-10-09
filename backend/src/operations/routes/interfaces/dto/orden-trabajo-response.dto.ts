@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import type { OrdenTrabajoEntity } from '../../domain/entities/orden-trabajo.entity';
+import type { OrdenTrabajoRow } from '../../infrastructure/repositories/route.include';
 import { DateUtil } from 'src/shared/utils/date.util';
 
 export class OrdenTrabajoContratoDto {
@@ -84,11 +84,11 @@ export class OrderWorkResponseDto {
   })
   medidor?: OrdenTrabajoMedidorDto | null;
 
-  static fromRow(entity: OrdenTrabajoEntity): OrderWorkResponseDto {
+  static fromRow(entity: OrdenTrabajoRow): OrderWorkResponseDto {
     const dto = new OrderWorkResponseDto();
     dto.ordenTrabajoId = entity.ordenTrabajoId.toString();
     dto.rutaId = entity.rutaId.toString();
-    dto.tipoActividad = entity.tipoActividad;
+    dto.tipoActividad = entity.ruta.tipoActividad.codigo;
     dto.estado = entity.estado;
     dto.ordenVisita = entity.ordenVisita;
     dto.resultadoObservacion = entity.resultadoObservacion;
@@ -100,22 +100,22 @@ export class OrderWorkResponseDto {
       : null;
     dto.lecturaId = entity.lecturaId?.toString() ?? null;
 
-    dto.contrato = entity.contratoNumeroContrato
+    dto.contrato = entity.contrato
       ? {
-          numeroContrato: entity.contratoNumeroContrato,
-          clienteNombre: entity.contratoClienteNombre ?? '',
-          direccion: entity.contratoDireccion ?? '',
+          numeroContrato: entity.contrato.numeroGuia,
+          clienteNombre: entity.contrato.cliente
+            ? `${entity.contrato.cliente.nombres} ${entity.contrato.cliente.apellidos}`.trim()
+            : '',
+          direccion: entity.contrato.direccionSuministro ?? '',
         }
       : null;
 
-    dto.medidor = entity.medidorNumeroSerie
-      ? { numeroSerie: entity.medidorNumeroSerie }
-      : null;
+    dto.medidor = entity.medidor ? { numeroSerie: entity.medidor.serie } : null;
 
     return dto;
   }
 
-  static fromRowList(entities: OrdenTrabajoEntity[]): OrderWorkResponseDto[] {
+  static fromRowList(entities: OrdenTrabajoRow[]): OrderWorkResponseDto[] {
     return entities.map((e) => OrderWorkResponseDto.fromRow(e));
   }
 }

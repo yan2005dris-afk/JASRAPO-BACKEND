@@ -4,7 +4,7 @@ import {
   type SectorRef,
 } from '../../domain/repositories/route.repository';
 import { CreateRouteAssignmentsDto } from '../../interfaces/dto/create-route-assignments.dto';
-import { RouteEntity } from '../../domain/entities/route.entity';
+import type { RouteRow } from '../../infrastructure/repositories/route.include';
 import type { CreateRouteData } from '../../domain/types/route.types';
 import { TipoActividadCodes } from 'src/shared/enums';
 import {
@@ -16,7 +16,7 @@ import {
 export class CreateRouteAssignmentsUseCase {
   constructor(private readonly routeRepository: RouteRepository) {}
 
-  async execute(dto: CreateRouteAssignmentsDto): Promise<RouteEntity[]> {
+  async execute(dto: CreateRouteAssignmentsDto): Promise<RouteRow[]> {
     const operario = await this.routeRepository.findUsuario(dto.operarioId, {
       includeRole: true,
     });
@@ -129,7 +129,7 @@ export class CreateRouteAssignmentsUseCase {
         validatedSectors.push(sector);
       }
 
-      const createdRoutes: RouteEntity[] = [];
+      const createdRoutes: RouteRow[] = [];
       for (const sector of validatedSectors) {
         const baseName = dto.nombreBase?.trim() || 'Ruta';
         const sectorLabel = sector.nombre

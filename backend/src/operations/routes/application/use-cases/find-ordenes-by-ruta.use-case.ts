@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { OrdenTrabajoRepository } from '../../domain/repositories/orden-trabajo.repository';
-import { OrdenTrabajoEntity } from '../../domain/entities/orden-trabajo.entity';
+import type { OrdenTrabajoRow } from '../../infrastructure/repositories/route.include';
 import { RouteRepository } from '../../domain/repositories/route.repository';
 import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
@@ -22,7 +22,7 @@ export class FindOrdenesByRutaUseCase {
 
   async execute(
     params: FindOrdenesByRutaParams,
-  ): Promise<PaginatedResult<OrdenTrabajoEntity>> {
+  ): Promise<PaginatedResult<OrdenTrabajoRow>> {
     // Validate route exists
     const route = await this.routeRepository.findById(params.rutaId);
     if (!route) {

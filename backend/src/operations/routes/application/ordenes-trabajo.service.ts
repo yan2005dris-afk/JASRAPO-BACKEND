@@ -3,7 +3,7 @@ import { FindOrdenesByRutaUseCase } from './use-cases/find-ordenes-by-ruta.use-c
 import { UpdateOrdenEstadoUseCase } from './use-cases/update-orden-estado.use-case';
 import { LinkLecturaUseCase } from './use-cases/link-lectura.use-case';
 import { OrdenTrabajoRepository } from '../domain/repositories/orden-trabajo.repository';
-import { OrdenTrabajoEntity } from '../domain/entities/orden-trabajo.entity';
+import type { OrdenTrabajoRow } from '../infrastructure/repositories/route.include';
 import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
 import type {
   OrdenTrabajoFilters,
@@ -25,7 +25,7 @@ export class OrdenesTrabajoService {
     rutaId: bigint;
     filters?: Partial<OrdenTrabajoFilters>;
     pagination: PaginateOptions;
-  }): Promise<PaginatedResult<OrdenTrabajoEntity>> {
+  }): Promise<PaginatedResult<OrdenTrabajoRow>> {
     return this.findOrdenesByRutaUseCase.execute(params);
   }
 
@@ -33,7 +33,7 @@ export class OrdenesTrabajoService {
     ordenTrabajoId: bigint,
     data: UpdateOrdenEstadoData,
     operarioId: number,
-  ): Promise<OrdenTrabajoEntity> {
+  ): Promise<OrdenTrabajoRow> {
     return this.updateOrdenEstadoUseCase.execute(
       ordenTrabajoId,
       data,
@@ -45,7 +45,7 @@ export class OrdenesTrabajoService {
     ordenTrabajoId: bigint,
     data: LinkLecturaData,
     operarioId: number,
-  ): Promise<OrdenTrabajoEntity> {
+  ): Promise<OrdenTrabajoRow> {
     return this.linkLecturaUseCase.execute(ordenTrabajoId, data, operarioId);
   }
 }

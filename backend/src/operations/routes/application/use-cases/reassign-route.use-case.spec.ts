@@ -2,7 +2,7 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { ReassignRouteUseCase } from './reassign-route.use-case';
 import { RouteRepository } from '../../domain/repositories/route.repository';
-import { RouteEntity } from '../../domain/entities/route.entity';
+import { routeRow } from '../../__test-utils__/route-row.factory';
 import {
   EntityNotFoundException,
   InvalidDomainOperationException,
@@ -49,7 +49,7 @@ describe('ReassignRouteUseCase', () => {
 
   it('should throw EntityNotFoundException if target operator does not exist', async () => {
     mockRouteRepository.findById.mockResolvedValue(
-      new RouteEntity({
+      routeRow({
         rutaId: 1n,
         operarioId: 5,
         nombre: 'Test Route',
@@ -74,7 +74,7 @@ describe('ReassignRouteUseCase', () => {
 
   it('should throw InvalidDomainOperationException if target user is not an operator', async () => {
     mockRouteRepository.findById.mockResolvedValue(
-      new RouteEntity({
+      routeRow({
         rutaId: 1n,
         operarioId: 5,
         nombre: 'Test Route',
@@ -98,7 +98,7 @@ describe('ReassignRouteUseCase', () => {
 
   it('should throw InvalidDomainOperationException when reassigning to the same operator', async () => {
     mockRouteRepository.findById.mockResolvedValue(
-      new RouteEntity({
+      routeRow({
         rutaId: 1n,
         operarioId: 10,
         nombre: 'Test Route',
@@ -121,7 +121,7 @@ describe('ReassignRouteUseCase', () => {
   });
 
   it('should reassign route to a different operator successfully', async () => {
-    const existingRoute = new RouteEntity({
+    const existingRoute = routeRow({
       rutaId: 1n,
       operarioId: 5,
       nombre: 'Test Route',
@@ -133,7 +133,7 @@ describe('ReassignRouteUseCase', () => {
       fechaFin: null,
     });
 
-    const updatedRoute = new RouteEntity({
+    const updatedRoute = routeRow({
       ...existingRoute,
       operarioId: 10,
     });

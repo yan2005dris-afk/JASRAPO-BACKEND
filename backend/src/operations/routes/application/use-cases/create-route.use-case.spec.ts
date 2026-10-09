@@ -2,7 +2,7 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { CreateRouteUseCase } from './create-route.use-case';
 import { RouteRepository } from '../../domain/repositories/route.repository';
-import { RouteEntity } from '../../domain/entities/route.entity';
+import { routeRow } from '../../__test-utils__/route-row.factory';
 import {
   EntityNotFoundException,
   InvalidDomainOperationException,
@@ -157,7 +157,7 @@ describe('CreateRouteUseCase', () => {
       estado: 'ABIERTO',
     });
     mockRouteRepository.findOverlappingRoutes.mockResolvedValue([
-      new RouteEntity({
+      routeRow({
         rutaId: 1n,
         nombre: 'Overlapping',
         operarioId: 1,
@@ -201,7 +201,7 @@ describe('CreateRouteUseCase', () => {
       comunidadId: 1,
     });
     mockRouteRepository.findOverlappingRoutes.mockResolvedValue([
-      new RouteEntity({
+      routeRow({
         rutaId: 1n,
         nombre: 'Overlapping',
         operarioId: 1,
@@ -247,7 +247,7 @@ describe('CreateRouteUseCase', () => {
     });
     mockRouteRepository.findOverlappingRoutes.mockResolvedValue([]);
 
-    const mockCreatedRoute = new RouteEntity({
+    const mockCreatedRoute = routeRow({
       rutaId: 400n,
       nombre: 'Different Sector Route',
       operarioId: 1,
@@ -294,7 +294,7 @@ describe('CreateRouteUseCase', () => {
     });
     mockRouteRepository.findOverlappingRoutes.mockResolvedValue([]);
 
-    const mockCreatedRoute = new RouteEntity({
+    const mockCreatedRoute = routeRow({
       rutaId: 200n,
       nombre: 'Route With Periodo',
       operarioId: 1,
@@ -331,7 +331,7 @@ describe('CreateRouteUseCase', () => {
     });
     mockRouteRepository.findOverlappingRoutes.mockResolvedValue([]);
 
-    const mockCreatedRoute = new RouteEntity({
+    const mockCreatedRoute = routeRow({
       rutaId: 300n,
       nombre: 'Periodo Test',
       operarioId: 1,
@@ -369,7 +369,7 @@ describe('CreateRouteUseCase', () => {
       estado: 'ABIERTO',
     });
 
-    const mockCreatedRoute = new RouteEntity({
+    const mockCreatedRoute = routeRow({
       rutaId: 500n,
       nombre: 'Instalación Olón',
       operarioId: 1,
@@ -407,7 +407,7 @@ describe('CreateRouteUseCase', () => {
       estado: 'ABIERTO',
     });
 
-    const mockCreatedRoute = new RouteEntity({
+    const mockCreatedRoute = routeRow({
       rutaId: 501n,
       nombre: 'Inspección Comunidad 1',
       operarioId: 1,
@@ -443,7 +443,7 @@ describe('CreateRouteUseCase', () => {
     });
     mockRouteRepository.findOverlappingRoutes.mockResolvedValue([]);
 
-    const mockCreatedRoute = new RouteEntity({
+    const mockCreatedRoute = routeRow({
       rutaId: 100n,
       nombre: 'Test Route',
       operarioId: 1,

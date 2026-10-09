@@ -19,7 +19,7 @@ const completedReadingRoute = {
   nombre: 'Agosto',
   descripcion: null,
   operarioId: 1,
-  tipoRuta: 'LECTURA',
+  tipoActividad: { codigo: 'LECTURA' },
   comunidadId: 1,
   sectorId: null,
   periodoId: 3,
@@ -97,7 +97,7 @@ describe('GenerateBatchUseCase', () => {
   it('should reject a route that is not TOMA_LECTURA', async () => {
     mockRouteRepository.findById.mockResolvedValue({
       ...completedReadingRoute,
-      tipoRuta: 'INSTALACION',
+      tipoActividad: { codigo: 'INSTALACION' },
     });
 
     await expect(

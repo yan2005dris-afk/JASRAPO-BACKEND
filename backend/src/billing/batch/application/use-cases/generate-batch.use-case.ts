@@ -31,7 +31,7 @@ export class GenerateBatchUseCase {
       );
     }
 
-    if (ruta.tipoRuta !== 'LECTURA') {
+    if (ruta.tipoActividad.codigo !== 'LECTURA') {
       throw new InvalidDomainOperationException(
         'Solo se pueden generar lotes de prefacturas desde rutas de tipo LECTURA.',
       );

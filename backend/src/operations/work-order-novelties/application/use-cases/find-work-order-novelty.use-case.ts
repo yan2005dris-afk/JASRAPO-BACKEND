@@ -3,7 +3,7 @@ import {
   WORK_ORDER_NOVELTY_REPOSITORY,
   type WorkOrderNoveltyRepository,
 } from '../../domain/repositories/work-order-novelty.repository';
-import { WorkOrderNoveltyEntity } from '../../domain/entities/work-order-novelty.entity';
+import type { WorkOrderNoveltyRow } from '../../infrastructure/repositories/work-order-novelty.include';
 
 @Injectable()
 export class FindWorkOrderNoveltyUseCase {
@@ -12,7 +12,7 @@ export class FindWorkOrderNoveltyUseCase {
     private readonly repository: WorkOrderNoveltyRepository,
   ) {}
 
-  async execute(id: bigint): Promise<WorkOrderNoveltyEntity> {
+  async execute(id: bigint): Promise<WorkOrderNoveltyRow> {
     const novelty = await this.repository.findById(id);
     if (!novelty) {
       throw new NotFoundException(`Novedad con ID ${id} no encontrada`);

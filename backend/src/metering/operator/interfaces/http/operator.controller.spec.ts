@@ -22,9 +22,11 @@ describe('OperatorController work-order update', () => {
   const entity = {
     ordenTrabajoId: 42n,
     rutaId: 8n,
+    ruta: {
+      tipoActividad: { codigo: 'INSTALACION' },
+    },
     contratoId: 9n,
     medidorId: 3n,
-    tipoActividad: 'INSTALACION',
     estado: 'COMPLETADA',
     ordenVisita: 1,
     resultadoObservacion: 'done',
