@@ -1,6 +1,6 @@
 import { TariffCategoryEntity } from '../../domain/entities/tariff-category.entity';
-import { RubroMapper } from '../../../rubros/infrastructure/mappers/rubro.mapper';
 import type { CategoriaTarifa, Rubros } from 'src/generated/prisma/client';
+import type { EmbeddedRubro } from '../../domain/types/tariff.types';
 
 export type TariffCategoryPrismaRaw = Pick<
   CategoriaTarifa,
@@ -23,13 +23,12 @@ export class TariffCategoryMapper {
     raw: TariffCategoryPrismaRaw | null | undefined,
   ): TariffCategoryEntity | null {
     if (!raw) return null;
-    const rubros = Array.isArray(raw.rubros)
-      ? RubroMapper.toDomainList(
-          raw.rubros.map((r) => ({
-            ...r,
-            tarifaImpuesto: null,
-          })),
-        )
+    // El `select` del repo (safeTariffCategoriesSelect) no incluye relations
+    // de Rubro (tarifaImpuesto), por lo que `raw.rubros` tiene solo los
+    // campos planos del modelo Rubros. EmbeddedRubro los describe
+    // exactamente asi (Prisma.RubrosGetPayload<{}> = sin hidratar relations).
+    const rubros: EmbeddedRubro[] | undefined = Array.isArray(raw.rubros)
+      ? raw.rubros
       : undefined;
     return new TariffCategoryEntity({
       categoriaTarifaId: raw.categoriaTarifaId,
