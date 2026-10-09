@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { TarjetaCredito } from 'src/generated/prisma/enums';
+import { TarjetaCredito } from 'src/shared/enums';
 
 export class CardBrandResponseDto {
   @ApiProperty({ enum: TarjetaCredito, example: 'VISA' })

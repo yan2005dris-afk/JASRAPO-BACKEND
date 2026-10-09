@@ -1,6 +1,6 @@
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { EstadoPago } from 'src/generated/prisma/enums';
+import { EstadoPago } from 'src/shared/enums';
 import { PaymentsService } from './payments.service';
 import { CreatePaymentUseCase } from './use-cases/create-payment.use-case';
 import { CreateCobroPuntualUseCase } from './use-cases/create-cobro-puntual.use-case';

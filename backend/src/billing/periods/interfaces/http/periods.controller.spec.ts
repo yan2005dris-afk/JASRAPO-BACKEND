@@ -3,7 +3,7 @@ import { Test } from '@nestjs/testing';
 import { PeriodsController } from './periods.controller';
 import { PeriodsService } from '../../application/periods.service';
 import { periodRow } from '../../__test-utils__/period-row.factory';
-import { EstadoPeriodo } from 'src/generated/prisma/enums';
+import { EstadoPeriodo } from 'src/shared/enums';
 import { CreatePeriodUseCase } from '../../application/use-cases/create-period.use-case';
 import { FindAllPeriodsUseCase } from '../../application/use-cases/find-all-periods.use-case';
 import { FindOnePeriodUseCase } from '../../application/use-cases/find-one-period.use-case';

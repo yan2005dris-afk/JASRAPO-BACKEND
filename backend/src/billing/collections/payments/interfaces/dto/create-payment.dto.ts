@@ -17,11 +17,7 @@ import {
   ValidateIf,
   ValidateNested,
 } from 'class-validator';
-import {
-  Banco,
-  TarjetaCredito,
-  TipoDetallePago,
-} from 'src/generated/prisma/enums';
+import { Banco, TarjetaCredito, TipoDetallePago } from 'src/shared/enums';
 
 export class CreateDetallePagoDto {
   @ApiPropertyOptional({ example: '1', description: 'ID del comprobante' })

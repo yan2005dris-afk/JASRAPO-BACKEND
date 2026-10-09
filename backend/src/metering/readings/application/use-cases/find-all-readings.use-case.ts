@@ -4,7 +4,7 @@ import {
   ReadingRepository,
 } from '../../domain/repositories/reading.repository';
 import { getPagination } from 'src/infrastructure/common/utils/pagination.util';
-import { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
+import { PaginatedResult } from 'src/shared/domain/types/pagination.types';
 import { LecturaEntity } from '../../domain/entities/lectura.entity';
 
 @Injectable()

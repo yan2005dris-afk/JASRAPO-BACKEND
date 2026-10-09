@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PermissionRepository } from '../../domain/repositories/permission.repository';
-import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
+import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
 import type { PermissionRow } from '../../domain/types/permission.types';
 import { getPagination } from 'src/infrastructure/common/utils/pagination.util';
 

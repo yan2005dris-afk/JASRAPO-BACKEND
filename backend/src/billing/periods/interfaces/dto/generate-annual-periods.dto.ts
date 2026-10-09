@@ -1,7 +1,7 @@
 import { IsEnum, IsInt, IsOptional, Max, Min } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { EstadoPeriodo } from 'src/generated/prisma/enums';
+import { EstadoPeriodo } from 'src/shared/enums';
 
 export class GenerateAnnualPeriodsDto {
   @ApiProperty({

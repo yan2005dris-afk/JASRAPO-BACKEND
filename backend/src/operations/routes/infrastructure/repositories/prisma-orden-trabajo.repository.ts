@@ -17,7 +17,7 @@ import {
   paginate,
   PaginateOptions,
 } from 'src/infrastructure/common/utils/pagination.util';
-import { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
+import { PaginatedResult } from 'src/shared/domain/types/pagination.types';
 import type {
   OrdenTrabajoFilters,
   OrdenTrabajoKpis,

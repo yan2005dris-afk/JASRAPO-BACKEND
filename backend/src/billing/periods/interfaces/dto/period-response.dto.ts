@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { EstadoPeriodo } from 'src/generated/prisma/enums';
+import { EstadoPeriodo } from 'src/shared/enums';
 import type { PeriodRow } from '../../domain/types/period.types';
 import { DateUtil } from 'src/shared/utils/date.util';
 

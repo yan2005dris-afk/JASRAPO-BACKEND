@@ -4,11 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Decimal } from 'decimal.js';
-import {
-  EstadoPago,
-  TipoDetallePago,
-  TipoOrigenAbono,
-} from 'src/generated/prisma/enums';
+import { EstadoPago, TipoDetallePago, TipoOrigenAbono } from 'src/shared/enums';
 import { CreatePaymentDto } from '../../interfaces/dto/create-payment.dto';
 import { PaymentRepository } from '../../domain/repositories/payment.repository';
 import { EventosPendientesRepository } from 'src/shared/outbox/domain/repositories/eventos-pendientes.repository';

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { Prisma } from 'src/generated/prisma/client';
-import { EstadoPeriodo } from 'src/generated/prisma/enums';
+import { EstadoPeriodo } from 'src/shared/enums';
 import { PeriodRepository } from '../../domain/repositories/period.repository';
 import { periodInclude, type PeriodRow } from './period.include';
 import type {

@@ -4,7 +4,7 @@ import type {
   PeriodRow,
   CreatePeriodData,
 } from '../../domain/types/period.types';
-import { EstadoPeriodo } from 'src/generated/prisma/enums';
+import { EstadoPeriodo } from 'src/shared/enums';
 import { GenerateAnnualPeriodsDto } from '../../interfaces/dto/generate-annual-periods.dto';
 import { InvalidDomainOperationException } from 'src/shared/domain/exceptions/domain.exception';
 import { DateUtil } from 'src/shared/utils/date.util';

@@ -6,7 +6,7 @@ import {
   IsString,
   Matches,
 } from 'class-validator';
-import { EstadoPeriodo } from 'src/generated/prisma/enums';
+import { EstadoPeriodo } from 'src/shared/enums';
 
 export class CreatePeriodDto {
   @ApiProperty({

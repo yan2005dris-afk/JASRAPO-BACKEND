@@ -4,7 +4,7 @@ import type {
   CreatePeriodData,
   PeriodRow,
 } from '../../domain/types/period.types';
-import { EstadoPeriodo } from 'src/generated/prisma/enums';
+import { EstadoPeriodo } from 'src/shared/enums';
 import {
   EntityAlreadyExistsException,
   InvalidDomainOperationException,

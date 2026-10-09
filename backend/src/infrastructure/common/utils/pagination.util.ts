@@ -1,4 +1,4 @@
-import type { PaginatedResult } from '../types/paginated-result.type';
+import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
 
 export interface PaginationParams {
   skip: number;

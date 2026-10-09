@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Banco, EstadoPago, TarjetaCredito } from 'src/generated/prisma/enums';
+import { Banco, EstadoPago, TarjetaCredito } from 'src/shared/enums';
 import { PaymentDetailResponseDto } from './payment-detail-response.dto';
 import { SaldoFavorResponseDto } from './saldo-favor-response.dto';
 import type { PaymentRow } from '../../domain/types/payment.types';

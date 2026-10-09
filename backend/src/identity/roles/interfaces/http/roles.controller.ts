@@ -27,7 +27,7 @@ import {
 } from '@nestjs/swagger';
 import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
 import { ApiPaginatedResponse } from 'src/infrastructure/common/decorators/api-paginated-response.decorator';
-import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
+import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
 
 @ApiTags('roles')
 @ApiBearerAuth()

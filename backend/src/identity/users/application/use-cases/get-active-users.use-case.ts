@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { UserRepository } from '../../domain/repositories/user.repository';
 import { UserRow } from '../../domain/types/user.types';
 import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
-import { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
+import { PaginatedResult } from 'src/shared/domain/types/pagination.types';
 
 @Injectable()
 export class GetActiveUsersUseCase {

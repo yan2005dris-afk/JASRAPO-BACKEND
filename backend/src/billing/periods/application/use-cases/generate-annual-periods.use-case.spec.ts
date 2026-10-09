@@ -3,7 +3,7 @@ import { Test } from '@nestjs/testing';
 import { GenerateAnnualPeriodsUseCase } from './generate-annual-periods.use-case';
 import { PeriodRepository } from '../../domain/repositories/period.repository';
 import { periodRow } from '../../__test-utils__/period-row.factory';
-import { EstadoPeriodo } from 'src/generated/prisma/enums';
+import { EstadoPeriodo } from 'src/shared/enums';
 import { InvalidDomainOperationException } from 'src/shared/domain/exceptions/domain.exception';
 import type { CreatePeriodData } from '../../domain/types/period.types';
 import type { PeriodRow } from '../../domain/types/period.types';
