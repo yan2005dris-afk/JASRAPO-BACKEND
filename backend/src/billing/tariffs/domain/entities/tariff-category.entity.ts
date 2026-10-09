@@ -1,4 +1,4 @@
-import type { RubroEntity } from '../../../rubros/domain/entities/rubro.entity';
+import type { EmbeddedRubro } from '../types/tariff.types';
 
 export class TariffCategoryEntity {
   categoriaTarifaId: number;
@@ -11,7 +11,7 @@ export class TariffCategoryEntity {
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Date | null;
-  rubros?: RubroEntity[];
+  rubros?: EmbeddedRubro[];
 
   constructor(partial: Partial<TariffCategoryEntity>) {
     Object.assign(this, partial);
