@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PermissionRepository } from '../../domain/repositories/permission.repository';
 import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
-import type { PermissionEntity } from '../../domain/repositories/permission.repository';
+import type { PermissionRow } from '../../domain/types/permission.types';
 import { getPagination } from 'src/infrastructure/common/utils/pagination.util';
 
 @Injectable()
@@ -11,7 +11,7 @@ export class FindAllPermissionsUseCase {
   async execute(
     page: number = 1,
     limit: number = 10,
-  ): Promise<PaginatedResult<PermissionEntity>> {
+  ): Promise<PaginatedResult<PermissionRow>> {
     const { skip, take } = getPagination(page, limit);
 
     const [data, total] = await Promise.all([

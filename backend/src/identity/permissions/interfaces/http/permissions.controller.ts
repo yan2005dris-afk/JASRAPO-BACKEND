@@ -66,7 +66,7 @@ export class PermissionsController {
   ): Promise<PermissionResponseDto> {
     const permission =
       await this.permissionsService.create(createPermissionDto);
-    return PermissionResponseDto.fromEntity(permission);
+    return PermissionResponseDto.fromRow(permission);
   }
 
   /**
@@ -94,7 +94,7 @@ export class PermissionsController {
     );
     return {
       data: result.data.map((permission) =>
-        PermissionResponseDto.fromEntity(permission),
+        PermissionResponseDto.fromRow(permission),
       ),
       meta: result.meta,
     };
@@ -131,7 +131,7 @@ export class PermissionsController {
     @Param('id', ParseIntPipe) id: number,
   ): Promise<PermissionResponseDto> {
     const permission = await this.permissionsService.findOne(id);
-    return PermissionResponseDto.fromEntity(permission);
+    return PermissionResponseDto.fromRow(permission);
   }
 
   /**
@@ -174,7 +174,7 @@ export class PermissionsController {
       id,
       updatePermissionDto,
     );
-    return PermissionResponseDto.fromEntity(permission);
+    return PermissionResponseDto.fromRow(permission);
   }
 
   /**
