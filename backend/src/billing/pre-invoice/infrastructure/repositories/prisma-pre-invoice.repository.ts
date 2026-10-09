@@ -2,8 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { Prisma, EstadoPrefactura } from 'src/generated/prisma/client';
 import { PreInvoiceRepository } from '../../domain/repositories/pre-invoice.repository';
-import { PreInvoiceEntity } from '../../domain/entities/pre-invoice.entity';
-import { PreInvoiceMapper } from '../mappers/pre-invoice.mapper';
+import { preInvoiceInclude, type PreInvoiceRow } from './pre-invoice.include';
 import type {
   PreInvoiceFilters,
   UpdatePreInvoiceStateData,
@@ -18,68 +17,10 @@ import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
 export class PrismaPreInvoiceRepository implements PreInvoiceRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  private readonly defaultInclude = {
-    prefacturaDetalle: {
-      include: {
-        rubro: {
-          select: {
-            nombre: true,
-            codigoSistemaRubro: true,
-          },
-        },
-      },
-    },
-    contrato: {
-      select: {
-        contratoId: true,
-        numeroGuia: true,
-        cliente: {
-          select: {
-            clienteId: true,
-            nombres: true,
-            apellidos: true,
-            identificacion: true,
-            direccionDomicilio: true,
-            email: true,
-          },
-        },
-      },
-    },
-    lote: {
-      select: {
-        loteId: true,
-        estado: true,
-        comunidad: { select: { nombre: true } },
-      },
-    },
-    periodoRel: {
-      select: { nombre: true, fechaInicio: true, fechaFin: true },
-    },
-    puntoEmision: {
-      select: {
-        id: true,
-        codigo: true,
-        establecimiento: {
-          select: {
-            id: true,
-            codigo: true,
-            emisor: {
-              select: {
-                id: true,
-                ruc: true,
-                razonSocial: true,
-              },
-            },
-          },
-        },
-      },
-    },
-  };
-
   async paginate(
     filters: PreInvoiceFilters,
     pagination: PaginateOptions,
-  ): Promise<PaginatedResult<PreInvoiceEntity>> {
+  ): Promise<PaginatedResult<PreInvoiceRow>> {
     const where: Prisma.PrefacturasWhereInput = {
       deletedAt: null,
       ...(filters.loteId ? { loteId: BigInt(filters.loteId) } : {}),
@@ -108,20 +49,15 @@ export class PrismaPreInvoiceRepository implements PreInvoiceRepository {
         : {}),
     };
 
-    const paginated = await paginate<any>(
+    return paginate<PreInvoiceRow>(
       this.prisma.prefacturas,
       {
         where,
-        include: this.defaultInclude,
+        include: preInvoiceInclude,
         orderBy: { createdAt: 'desc' },
       },
       pagination,
     );
-
-    return {
-      data: PreInvoiceMapper.toDomainList(paginated.data),
-      meta: paginated.meta,
-    };
   }
 
   async findIdsByLoteId(loteId: bigint): Promise<{ prefacturaId: bigint }[]> {
@@ -152,12 +88,11 @@ export class PrismaPreInvoiceRepository implements PreInvoiceRepository {
     return date;
   }
 
-  async findById(id: number | bigint): Promise<PreInvoiceEntity | null> {
-    const record = await this.prisma.prefacturas.findUnique({
+  async findById(id: number | bigint): Promise<PreInvoiceRow | null> {
+    return this.prisma.prefacturas.findUnique({
       where: { prefacturaId: BigInt(id) },
-      include: this.defaultInclude,
+      include: preInvoiceInclude,
     });
-    return PreInvoiceMapper.toDomain(record);
   }
 
   async updateState(

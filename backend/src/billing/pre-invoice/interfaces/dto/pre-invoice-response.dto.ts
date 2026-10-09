@@ -1,6 +1,8 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import type { PreInvoiceEntity } from '../../domain/entities/pre-invoice.entity';
-import type { PreInvoiceDetailEntity } from '../../domain/entities/pre-invoice-detail.entity';
+import type {
+  PreInvoiceRow,
+  PreInvoiceDetailRow,
+} from '../../domain/types/pre-invoice.types';
 
 export class PreInvoiceDetailResponseDto {
   @ApiProperty({ description: 'Detail ID' })
@@ -37,9 +39,9 @@ export class PreInvoiceDetailResponseDto {
   @ApiPropertyOptional({ description: 'Discount' })
   descuento?: number;
 
-  static fromRow(detail: PreInvoiceDetailEntity): PreInvoiceDetailResponseDto {
+  static fromRow(detail: PreInvoiceDetailRow): PreInvoiceDetailResponseDto {
     const dto = new PreInvoiceDetailResponseDto();
-    dto.prefacturaDetalleId = detail.prefacturaDetalleId;
+    dto.prefacturaDetalleId = Number(detail.prefacturaDetalleId);
     dto.descripcion = detail.descripcion;
     dto.cantidad = Number(detail.cantidad);
     dto.precioUnitario = Number(detail.precioUnitario);
@@ -47,7 +49,7 @@ export class PreInvoiceDetailResponseDto {
     dto.iva = Number(detail.iva);
     dto.total = Number(detail.total);
     dto.codigoImpuestoSri = detail.codigoImpuestoSri ?? null;
-    dto.codigoSistemaRubro = detail.codigoSistemaRubro ?? null;
+    dto.codigoSistemaRubro = detail.rubro?.codigoSistemaRubro ?? null;
     dto.descuento = Number(detail.descuento);
     return dto;
   }
@@ -140,7 +142,7 @@ export class PreInvoiceResponseDto {
   @ApiPropertyOptional({ description: 'Comprobante ID' })
   comprobanteId?: string | null;
 
-  static fromRow(entity: PreInvoiceEntity): PreInvoiceResponseDto {
+  static fromRow(entity: PreInvoiceRow): PreInvoiceResponseDto {
     const dto = new PreInvoiceResponseDto();
     dto.prefacturaId = Number(entity.prefacturaId);
     dto.uuid = entity.uuid;
@@ -171,11 +173,13 @@ export class PreInvoiceResponseDto {
       : null;
     dto.createdAt = entity.createdAt;
     dto.updatedAt = entity.updatedAt;
-    dto.detalles = entity.detalles?.map(PreInvoiceDetailResponseDto.fromRow);
+    dto.detalles = entity.prefacturaDetalle?.map(
+      PreInvoiceDetailResponseDto.fromRow,
+    );
     return dto;
   }
 
-  static fromRowList(entities: PreInvoiceEntity[]): PreInvoiceResponseDto[] {
+  static fromRowList(entities: PreInvoiceRow[]): PreInvoiceResponseDto[] {
     return entities.map(PreInvoiceResponseDto.fromRow);
   }
 }

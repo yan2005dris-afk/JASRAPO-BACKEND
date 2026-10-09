@@ -18,7 +18,8 @@ import { PreInvoiceController } from './pre-invoice.controller';
 import { PreInvoiceService } from '../../application/pre-invoice.service';
 import { GeneratePreInvoicePdfUseCase } from '../../application/use-cases/generate-pre-invoice-pdf.use-case';
 import { SendPreInvoiceByEmailUseCase } from '../../application/use-cases/send-pre-invoice-by-email.use-case';
-import { PreInvoiceEntity } from '../../domain/entities/pre-invoice.entity';
+import { preInvoiceRow } from '../../__test-utils__/pre-invoice-row.factory';
+import { Prisma } from 'src/generated/prisma/client';
 
 const mockRes = () => {
   const res: any = {};
@@ -30,20 +31,20 @@ const mockRes = () => {
 describe('PreInvoiceController', () => {
   let controller: PreInvoiceController;
 
-  const mockPreInvoice = new PreInvoiceEntity({
-    prefacturaId: BigInt(1),
+  const mockPreInvoice = preInvoiceRow({
+    prefacturaId: 1n,
     uuid: 'uuid-1',
-    contratoId: BigInt(1),
+    contratoId: 1n,
     periodoId: 1,
-    subtotal: 150,
-    iva: 17.25,
-    descuentoTotal: 0,
-    totalPagar: 150,
-    deudaAnterior: 0,
-    saldoVencido: 0,
-    abono: 0,
-    saldoActual: 150,
-    mesesAtrasado: 0,
+    subtotal: new Prisma.Decimal(150),
+    iva: new Prisma.Decimal(17.25),
+    descuentoTotal: new Prisma.Decimal(0),
+    totalPagar: new Prisma.Decimal(150),
+    deudaAnterior: new Prisma.Decimal(0),
+    saldoVencido: new Prisma.Decimal(0),
+    abono: new Prisma.Decimal(0),
+    saldoActual: new Prisma.Decimal(150),
+    meses_atrasado: 0,
     estado: 'GENERADA',
     createdAt: new Date('2026-01-01T00:00:00.000Z'),
     updatedAt: new Date('2026-01-01T00:00:00.000Z'),
@@ -178,7 +179,7 @@ describe('PreInvoiceController', () => {
   describe('updateState', () => {
     it('should delegate to service with correct args and return ResponseDto', async () => {
       mockPreInvoiceService.updateState.mockResolvedValue(
-        new PreInvoiceEntity({ ...mockPreInvoice, estado: 'APROBADA' }),
+        preInvoiceRow({ ...mockPreInvoice, estado: 'APROBADA' }),
       );
       const dto = { action: 'APROBAR', motivoRechazo: undefined };
       const user = { email: 'reviewer@test.com' };
