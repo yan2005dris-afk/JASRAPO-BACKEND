@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { UserService } from '../../../users/application/user.service';
 import { MenuResponseDto } from '../../interfaces/dto/response-menu.dto';
-import { MenuRecord } from '../../domain/types/menu.types';
+import { MenuRow } from '../../domain/types/menu.types';
 import { MenuRepository } from '../../domain/repositories/menu.repository';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
@@ -34,10 +34,10 @@ export class GetMyMenusUseCase {
       await this.menuRepository.findActiveMenusByPermissions(filtrosPermisos);
 
     // 2. Recorrer recurrentemente para incluir a los padres en caso de que falten
-    const menuMap = new Map<number, MenuRecord>();
+    const menuMap = new Map<number, MenuRow>();
     directMenus.forEach((m) => menuMap.set(m.menuId, m));
 
-    let currentMenus: MenuRecord[] = directMenus;
+    let currentMenus: MenuRow[] = directMenus;
     while (currentMenus.length > 0) {
       const missingParentIds = [
         ...new Set(
@@ -60,7 +60,7 @@ export class GetMyMenusUseCase {
     }
 
     // Ordenar y construir árbol
-    const finalMenus: MenuRecord[] = Array.from(menuMap.values()).sort(
+    const finalMenus: MenuRow[] = Array.from(menuMap.values()).sort(
       (a, b) => a.menuId - b.menuId,
     );
 
@@ -70,7 +70,7 @@ export class GetMyMenusUseCase {
     return fullTree;
   }
 
-  private buildMenuTree(menuList: MenuRecord[]): MenuResponseDto[] {
+  private buildMenuTree(menuList: MenuRow[]): MenuResponseDto[] {
     const menuMap = new Map<number, MenuResponseDto>();
     const tree: MenuResponseDto[] = [];
 

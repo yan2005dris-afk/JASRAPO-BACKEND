@@ -1,9 +1,9 @@
-import type { MenuEntity } from '../entities/menu.entity';
+import type { MenuRow } from '../types/menu.types';
 
 export abstract class MenuRepository {
   abstract findActiveMenusByPermissions(
     permissions: { recurso: string; accion: string }[],
-  ): Promise<MenuEntity[]>;
+  ): Promise<MenuRow[]>;
 
-  abstract findActiveMenusByIds(menuIds: number[]): Promise<MenuEntity[]>;
+  abstract findActiveMenusByIds(menuIds: number[]): Promise<MenuRow[]>;
 }
