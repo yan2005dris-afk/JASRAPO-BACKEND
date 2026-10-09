@@ -66,7 +66,7 @@ export class RolesController {
     @Body() createRoleDto: CreateRoleDto,
   ): Promise<RoleResponseDto> {
     const role = await this.rolesService.create(createRoleDto);
-    return RoleResponseDto.fromEntity(role);
+    return RoleResponseDto.fromRow(role);
   }
 
   /**
@@ -94,7 +94,7 @@ export class RolesController {
       paginationDto.limit,
     );
     return {
-      data: result.data.map((role) => RoleResponseDto.fromEntity(role)),
+      data: result.data.map((role) => RoleResponseDto.fromRow(role)),
       meta: result.meta,
     };
   }
@@ -131,7 +131,7 @@ export class RolesController {
     @Param('id', ParseIntPipe) id: number,
   ): Promise<RoleDetailResponseDto> {
     const role = await this.rolesService.findOne(id);
-    return RoleDetailResponseDto.fromEntity(role);
+    return RoleDetailResponseDto.fromRow(role);
   }
 
   /**
@@ -173,6 +173,6 @@ export class RolesController {
     @Body() updateRoleDto: UpdateRoleDto,
   ): Promise<RoleDetailResponseDto> {
     const role = await this.rolesService.update(id, updateRoleDto);
-    return RoleDetailResponseDto.fromEntity(role);
+    return RoleDetailResponseDto.fromRow(role);
   }
 }

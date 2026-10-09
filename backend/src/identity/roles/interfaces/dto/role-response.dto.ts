@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import type { RoleEntity } from '../../domain/entities/role.entity';
+import type { RoleRow, RolPermisoRow } from '../../domain/types/role.types';
 
 export class RolePermissionDetailResponseDto {
   @ApiProperty({
@@ -40,7 +40,7 @@ export class RoleResponseDto {
   })
   nombre: string;
 
-  static fromEntity(role: RoleEntity): RoleResponseDto {
+  static fromRow(role: RoleRow): RoleResponseDto {
     const dto = new RoleResponseDto();
     dto.rolId = role.rolId;
     dto.nombre = role.nombre;
@@ -55,11 +55,11 @@ export class RoleDetailResponseDto extends RoleResponseDto {
   })
   permisos: RolePermissionDetailResponseDto[];
 
-  static fromEntity(role: RoleEntity): RoleDetailResponseDto {
+  static fromRow(role: RoleRow): RoleDetailResponseDto {
     const dto = new RoleDetailResponseDto();
     dto.rolId = role.rolId;
     dto.nombre = role.nombre;
-    dto.permisos = (role.rolPermisos || []).map((rp) => ({
+    dto.permisos = (role.rolPermisos || []).map((rp: RolPermisoRow) => ({
       rolPermisoId: rp.rolPermisoId,
       permisoId: rp.permisoId,
       nombre: rp.permiso?.nombre || '',

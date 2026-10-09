@@ -14,6 +14,20 @@ export interface UserAvatar {
   key?: string;
 }
 
+/**
+ * Sub-shape de Role que expone el repo de users.
+ *
+ * Es un subset del row completo de Prisma (no incluye `rolPermisos`
+ * ni otros campos no seleccionados por el `userWithRolesSelect`).
+ * Se define localmente para evitar acoplar el BC users a todos los
+ * campos de `RoleRow`.
+ */
+export interface EmbeddedRole {
+  rolId: number;
+  nombre: string;
+  deletedAt: Date | null;
+}
+
 export interface UserAvatarInput {
   key: string;
 }

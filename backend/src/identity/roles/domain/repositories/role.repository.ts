@@ -1,42 +1,32 @@
-import type { RoleEntity } from '../entities/role.entity';
-import type {
-  RolePermission,
-  CreateRoleRepositoryData,
-  UpdateRoleRepositoryData,
-} from '../types/role.types';
-
-export type {
-  RolePermission,
-  CreateRoleRepositoryData,
-  UpdateRoleRepositoryData,
-};
+import type { RoleRow, RolPermisoRow } from '../types/role.types';
+import type { UpdateRoleRepositoryData } from '../types/role.types';
 
 export abstract class RoleRepository {
-  abstract findUnique(rolId: number): Promise<RoleEntity | null>;
-  abstract findByName(nombre: string): Promise<RoleEntity | null>;
+  abstract findUnique(rolId: number): Promise<RoleRow | null>;
+  abstract findByName(nombre: string): Promise<RoleRow | null>;
   abstract findFirstAssignment(
     rolId: number,
     permisoId: number,
-  ): Promise<RolePermission | null>;
+  ): Promise<RolPermisoRow | null>;
   abstract findPermission(permisoId: number): Promise<{
     permisoId: number;
     nombre: string;
     deletedAt: Date | null;
   } | null>;
-  abstract findAll(skip?: number, take?: number): Promise<RoleEntity[]>;
+  abstract findAll(skip?: number, take?: number): Promise<RoleRow[]>;
   abstract count(params?: { where?: Record<string, any> }): Promise<number>;
-  abstract create(nombre: string): Promise<RoleEntity>;
+  abstract create(nombre: string): Promise<RoleRow>;
   abstract update(
     rolId: number,
     data: UpdateRoleRepositoryData,
-  ): Promise<RoleEntity>;
+  ): Promise<RoleRow>;
   abstract assignPermission(
     rolId: number,
     permisoId: number,
-  ): Promise<RolePermission>;
+  ): Promise<RolPermisoRow>;
   abstract updateAssignment(
     rolPermisoId: number,
     data: { deletedAt?: Date | null },
-  ): Promise<RolePermission>;
+  ): Promise<RolPermisoRow>;
   abstract syncSequence(): Promise<void>;
 }

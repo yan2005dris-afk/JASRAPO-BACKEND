@@ -1,4 +1,4 @@
-import type { RoleEntity } from '../../../roles/domain/entities/role.entity';
+import type { EmbeddedRole } from '../types/user.types';
 import type {
   UserAvatar,
   UserDirectPermission,
@@ -12,7 +12,7 @@ export class UserEntity {
   apellidos: string | null;
   telefono: string | null;
   avatar: UserAvatar | null;
-  rol: RoleEntity | null;
+  rol: EmbeddedRole | null;
   deletedAt: Date | null;
   permisosDirectos: UserDirectPermission[];
   permisosRol: UserRolePermission[];
