@@ -1,7 +1,6 @@
 import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { MeterEntity } from 'src/metering/meters/domain/entities/meter.entity';
 import {
   EntityNotFoundException,
   ConflictDomainException,
@@ -192,7 +191,7 @@ export class GetOperatorSyncManifestUseCase {
       ),
       workOrders: this.mapPage(orderPage, (item) => this.workOrderDto(item)),
       meters: this.mapPage(meterPage, (item) =>
-        MeterResponseDto.fromRow(this.toMeterEntity(item)),
+        MeterResponseDto.fromRow(item as any),
       ),
       readings: this.mapPage(readingPage, (item) => this.readingDto(item)),
       pendingAnomalies: this.mapPage(anomalyPage, (item) =>
@@ -409,24 +408,6 @@ export class GetOperatorSyncManifestUseCase {
       return sanitized;
     }
     return value;
-  }
-
-  private toMeterEntity(m: any): MeterEntity {
-    const h = m.historial?.[0]?.contrato;
-    return new MeterEntity({
-      ...m,
-      medidorId: BigInt(m.medidorId),
-      contratoId: h?.contratoId ? BigInt(h.contratoId) : null,
-      clienteNombre: h?.cliente
-        ? h.cliente.razonSocial?.trim() ||
-          [h.cliente.nombres, h.cliente.apellidos]
-            .map((part: string) => part?.trim())
-            .filter(Boolean)
-            .join(' ') ||
-          null
-        : null,
-      direccionSuministro: h?.direccionSuministro ?? null,
-    });
   }
 
   private readingDto(r: any): Record<string, unknown> {

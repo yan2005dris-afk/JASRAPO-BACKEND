@@ -1,6 +1,8 @@
-import type { MeterEntity } from '../entities/meter.entity';
-import type { MeterHistoryEntity } from '../entities/meter-history.entity';
-import type { ReemplazoMedidorEntity } from '../entities/reemplazo-medidor.entity';
+import type {
+  MeterRow,
+  MeterHistoryRow,
+  ReemplazoMedidorRow,
+} from '../../infrastructure/repositories/meter.include';
 import type {
   MeterFilters,
   CreateMeterRepositoryData,
@@ -27,29 +29,27 @@ export abstract class MeterRepository {
   abstract findUnique(where: {
     medidorId?: bigint;
     serie?: string;
-  }): Promise<MeterEntity | null>;
+  }): Promise<MeterRow | null>;
 
   abstract findMany(params: {
     where?: MeterFilters;
     take?: number;
     skip?: number;
-  }): Promise<MeterEntity[]>;
+  }): Promise<MeterRow[]>;
 
   abstract count(where?: MeterFilters): Promise<number>;
 
   abstract groupByEstado(
     where?: MeterFilters,
-  ): Promise<
-    Array<{ estado: MeterEntity['estado']; _count: { _all: number } }>
-  >;
+  ): Promise<Array<{ estado: MeterRow['estado']; _count: { _all: number } }>>;
 
-  abstract create(data: CreateMeterRepositoryData): Promise<MeterEntity>;
+  abstract create(data: CreateMeterRepositoryData): Promise<MeterRow>;
 
   abstract update(
     where: { medidorId: bigint },
     data: UpdateMeterRepositoryData,
     tx?: TransactionContext,
-  ): Promise<MeterEntity>;
+  ): Promise<MeterRow>;
 
   abstract createHistory(
     data: CreateMeterHistoryRepositoryData,
@@ -74,9 +74,9 @@ export abstract class MeterRepository {
     params: ApproveMeterReplacementRepositoryData,
   ): Promise<ReplaceMeterResult>;
 
-  abstract findHistoryByMeter(medidorId: bigint): Promise<MeterHistoryEntity[]>;
+  abstract findHistoryByMeter(medidorId: bigint): Promise<MeterHistoryRow[]>;
 
   abstract findReplacementById(
     reemplazoId: bigint,
-  ): Promise<ReemplazoMedidorEntity | null>;
+  ): Promise<ReemplazoMedidorRow | null>;
 }

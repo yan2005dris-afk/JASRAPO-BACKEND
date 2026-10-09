@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { MeterRepository } from '../../domain/repositories/meter.repository';
-import { MeterEntity } from '../../domain/entities/meter.entity';
+import type { MeterRow } from '../../infrastructure/repositories/meter.include';
 import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 
 @Injectable()
 export class FindOneMeterUseCase {
   constructor(private readonly meterRepository: MeterRepository) {}
 
-  async execute(id: bigint): Promise<MeterEntity> {
+  async execute(id: bigint): Promise<MeterRow> {
     const medidor = await this.meterRepository.findUnique({
       medidorId: id,
     });

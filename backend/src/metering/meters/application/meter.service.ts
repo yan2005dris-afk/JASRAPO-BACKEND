@@ -13,9 +13,11 @@ import { ExportMetersPdfUseCase } from './use-cases/export-meters-pdf.use-case';
 import { ReplaceMeterUseCase } from './use-cases/replace-meter.use-case';
 import { FindMeterHistoryUseCase } from './use-cases/find-meter-history.use-case';
 import { FindReplacementUseCase } from './use-cases/find-replacement.use-case';
-import { MeterEntity } from '../domain/entities/meter.entity';
-import { MeterHistoryEntity } from '../domain/entities/meter-history.entity';
-import { ReemplazoMedidorEntity } from '../domain/entities/reemplazo-medidor.entity';
+import type {
+  MeterRow,
+  MeterHistoryRow,
+  ReemplazoMedidorRow,
+} from '../infrastructure/repositories/meter.include';
 import { METER_STATUS_LIST } from 'src/infrastructure/config/app.constants';
 import { PaginatedMeterResponse } from '../interfaces/types/paginated-meter-response.type';
 import { ExportMeterDto } from '../interfaces/dto/export-meter.dto';
@@ -40,7 +42,7 @@ export class MeterService {
     private readonly findReplacementUseCase: FindReplacementUseCase,
   ) {}
 
-  async create(createDto: CreateMeterDto): Promise<MeterEntity> {
+  async create(createDto: CreateMeterDto): Promise<MeterRow> {
     return this.createUseCase.execute(createDto);
   }
 
@@ -48,11 +50,11 @@ export class MeterService {
     return this.findAllUseCase.execute(filters);
   }
 
-  async findOne(id: bigint): Promise<MeterEntity> {
+  async findOne(id: bigint): Promise<MeterRow> {
     return this.findOneUseCase.execute(id);
   }
 
-  async update(id: bigint, updateDto: UpdateMeterDto): Promise<MeterEntity> {
+  async update(id: bigint, updateDto: UpdateMeterDto): Promise<MeterRow> {
     return this.updateUseCase.execute(id, updateDto);
   }
 
@@ -101,11 +103,11 @@ export class MeterService {
     return this.replaceMeterUseCase.approve(reemplazoId, userId);
   }
 
-  async getHistory(medidorId: bigint): Promise<MeterHistoryEntity[]> {
+  async getHistory(medidorId: bigint): Promise<MeterHistoryRow[]> {
     return this.findMeterHistoryUseCase.execute(medidorId);
   }
 
-  async findReplacement(reemplazoId: bigint): Promise<ReemplazoMedidorEntity> {
+  async findReplacement(reemplazoId: bigint): Promise<ReemplazoMedidorRow> {
     return this.findReplacementUseCase.execute(reemplazoId);
   }
 
@@ -117,14 +119,26 @@ export class MeterService {
     const meters = await this.exportMetersUseCase.execute(filters);
     const rows = [
       ['Serie', 'Marca', 'Modelo', 'Estado', 'Contrato', 'Cliente'],
-      ...meters.map((meter) => [
-        meter.serie,
-        meter.marca,
-        meter.modelo,
-        meter.estado,
-        meter.contratoId?.toString() ?? '',
-        meter.clienteNombre ?? '',
-      ]),
+      ...meters.map((meter) => {
+        const activeLink = meter.historial?.[0];
+        const cliente = activeLink?.contrato?.cliente;
+        const clienteNombre = cliente
+          ? cliente.razonSocial?.trim() ||
+            [cliente.nombres, cliente.apellidos]
+              .map((part) => part?.trim())
+              .filter(Boolean)
+              .join(' ') ||
+            ''
+          : '';
+        return [
+          meter.serie,
+          meter.marca,
+          meter.modelo,
+          meter.estado,
+          activeLink?.contratoId?.toString() ?? '',
+          clienteNombre,
+        ];
+      }),
     ];
     // Sin el BOM, Excel abre el CSV en ANSI y rompe las tildes y la ñ.
     return Readable.from(

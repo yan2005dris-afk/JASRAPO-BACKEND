@@ -420,10 +420,12 @@ describe('PrismaMeterRepository - create', () => {
       medidores: {
         create: jest.fn().mockImplementation(({ data }) => ({
           medidorId: BigInt(1),
+          codigo: null,
           ...data,
           createdAt: new Date(),
           updatedAt: new Date(),
           deletedAt: null,
+          historial: [],
         })),
       },
     };

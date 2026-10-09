@@ -12,18 +12,18 @@ import {
   ApproveMeterReplacementRepositoryData,
   MeterFilters,
 } from '../../domain/repositories/meter.repository';
-import { MeterEntity } from '../../domain/entities/meter.entity';
+import type {
+  MeterRow,
+  MeterHistoryRow,
+  ReemplazoMedidorRow,
+} from './meter.include';
+import { meterInclude, meterHistoryInclude } from './meter.include';
 import {
   EntityAlreadyExistsException,
   EntityNotFoundException,
   InvalidDomainOperationException,
 } from 'src/shared/domain/exceptions/domain.exception';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
-import { MeterMapper } from '../mappers/meter.mapper';
-import { ReemplazoMedidorMapper } from '../mappers/reemplazo-medidor.mapper';
-import { MeterHistoryMapper } from '../mappers/meter-history.mapper';
-import { MeterHistoryEntity } from '../../domain/entities/meter-history.entity';
-import { ReemplazoMedidorEntity } from '../../domain/entities/reemplazo-medidor.entity';
 
 export const safeMeterSelect = {
   medidorId: true,
@@ -60,58 +60,30 @@ export class PrismaMeterRepository implements MeterRepository {
   async findUnique(where: {
     medidorId?: bigint;
     serie?: string;
-  }): Promise<MeterEntity | null> {
-    const record = await this.prisma.medidores.findUnique({
+  }): Promise<MeterRow | null> {
+    return this.prisma.medidores.findUnique({
       where: {
         ...(where.medidorId !== undefined && { medidorId: where.medidorId }),
         ...(where.serie !== undefined && { serie: where.serie }),
       } as Prisma.MedidoresWhereUniqueInput,
-      include: {
-        historial: {
-          where: { fechaHasta: null },
-          orderBy: { fechaDesde: 'desc' },
-          take: 1,
-          include: {
-            contrato: {
-              include: {
-                cliente: true,
-              },
-            },
-          },
-        },
-      },
+      include: meterInclude,
     });
-    return MeterMapper.toDomain(record);
   }
 
   async findMany(params: {
     where?: MeterFilters;
     take?: number;
     skip?: number;
-  }): Promise<MeterEntity[]> {
+  }): Promise<MeterRow[]> {
     const where = this.buildMeterWhere(params.where);
 
-    const records = await this.prisma.medidores.findMany({
+    return this.prisma.medidores.findMany({
       where,
       take: params.take,
       skip: params.skip,
       orderBy: { createdAt: 'desc' },
-      include: {
-        historial: {
-          where: { fechaHasta: null },
-          orderBy: { fechaDesde: 'desc' },
-          take: 1,
-          include: {
-            contrato: {
-              include: {
-                cliente: true,
-              },
-            },
-          },
-        },
-      },
+      include: meterInclude,
     });
-    return MeterMapper.toDomainList(records);
   }
 
   async count(where?: MeterFilters): Promise<number> {
@@ -121,9 +93,7 @@ export class PrismaMeterRepository implements MeterRepository {
 
   async groupByEstado(
     where?: MeterFilters,
-  ): Promise<
-    Array<{ estado: MeterEntity['estado']; _count: { _all: number } }>
-  > {
+  ): Promise<Array<{ estado: MeterRow['estado']; _count: { _all: number } }>> {
     const whereClause = this.buildMeterWhere(where);
     const groups = await this.prisma.medidores.groupBy({
       by: ['estado'],
@@ -185,17 +155,17 @@ export class PrismaMeterRepository implements MeterRepository {
     return { AND: conditions };
   }
 
-  async create(data: CreateMeterRepositoryData): Promise<MeterEntity> {
+  async create(data: CreateMeterRepositoryData): Promise<MeterRow> {
     try {
-      const record = await this.prisma.medidores.create({
+      return await this.prisma.medidores.create({
         data: {
           marca: data.marca,
           modelo: data.modelo,
           serie: data.serie,
           estado: data.estado,
         },
+        include: meterInclude,
       });
-      return MeterMapper.toDomain(record)!;
     } catch (error) {
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
@@ -211,9 +181,9 @@ export class PrismaMeterRepository implements MeterRepository {
     where: { medidorId: bigint },
     data: UpdateMeterRepositoryData,
     tx?: Prisma.TransactionClient,
-  ): Promise<MeterEntity> {
+  ): Promise<MeterRow> {
     const client = tx || this.prisma;
-    const record = await client.medidores.update({
+    return client.medidores.update({
       where: { medidorId: where.medidorId },
       data: {
         ...(data.marca !== undefined && { marca: data.marca }),
@@ -227,8 +197,8 @@ export class PrismaMeterRepository implements MeterRepository {
         ...(data.motivo !== undefined && { motivo: data.motivo }),
         ...(data.deletedAt !== undefined && { deletedAt: data.deletedAt }),
       },
+      include: meterInclude,
     });
-    return MeterMapper.toDomain(record)!;
   }
 
   async createHistory(
@@ -806,34 +776,27 @@ export class PrismaMeterRepository implements MeterRepository {
     );
   }
 
-  async findHistoryByMeter(medidorId: bigint): Promise<MeterHistoryEntity[]> {
-    const rows = await this.prisma.historialMedidores.findMany({
+  async findHistoryByMeter(medidorId: bigint): Promise<MeterHistoryRow[]> {
+    return this.prisma.historialMedidores.findMany({
       where: { medidorId, deletedAt: null },
       orderBy: { fechaDesde: 'desc' },
-      include: {
-        medidor: true,
-        contrato: { include: { cliente: true } },
-        reemplazosSaliente: { select: { reemplazoId: true } },
-        reemplazosEntrante: { select: { reemplazoId: true } },
-      },
+      include: meterHistoryInclude,
     });
-    return MeterHistoryMapper.toDomainList(rows);
   }
 
   async findReplacementById(
     reemplazoId: bigint,
-  ): Promise<ReemplazoMedidorEntity | null> {
-    const record = await this.prisma.reemplazoMedidor.findFirst({
+  ): Promise<ReemplazoMedidorRow | null> {
+    return this.prisma.reemplazoMedidor.findFirst({
       where: { reemplazoId, deletedAt: null },
     });
-    return ReemplazoMedidorMapper.toDomain(record);
   }
 
   private toReplaceMeterResult(
     replacement: Prisma.ReemplazoMedidorGetPayload<object>,
   ): ReplaceMeterResult {
     return {
-      reemplazo: ReemplazoMedidorMapper.toDomain(replacement)!,
+      reemplazo: replacement,
       historialSalienteId: replacement.historialSalienteId,
       historialEntranteId: replacement.historialEntranteId,
       consumoMedidoSaliente: new Decimal(

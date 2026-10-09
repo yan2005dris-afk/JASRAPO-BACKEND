@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { MeterRepository } from '../../domain/repositories/meter.repository';
 import { CreateMeterDto } from '../../interfaces/dto/create-meter.dto';
-import { MeterEntity } from '../../domain/entities/meter.entity';
+import type { MeterRow } from '../../infrastructure/repositories/meter.include';
 import { EstadoMedidor } from 'src/shared/enums';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
@@ -14,7 +14,7 @@ export class CreateMeterUseCase {
     private readonly logger: LoggerService,
   ) {}
 
-  async execute(createDto: CreateMeterDto): Promise<MeterEntity> {
+  async execute(createDto: CreateMeterDto): Promise<MeterRow> {
     try {
       return await this.meterRepository.create({
         marca: createDto.marca,

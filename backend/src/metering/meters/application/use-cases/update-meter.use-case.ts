@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { MeterRepository } from '../../domain/repositories/meter.repository';
 import { FindOneMeterUseCase } from './find-one-meter.use-case';
 import { UpdateMeterDto } from '../../interfaces/dto/update-meter.dto';
-import { MeterEntity } from '../../domain/entities/meter.entity';
+import type { MeterRow } from '../../infrastructure/repositories/meter.include';
 import { DateUtil } from 'src/shared/utils/date.util';
 
 @Injectable()
@@ -12,7 +12,7 @@ export class UpdateMeterUseCase {
     private readonly findOneUseCase: FindOneMeterUseCase,
   ) {}
 
-  async execute(id: bigint, updateDto: UpdateMeterDto): Promise<MeterEntity> {
+  async execute(id: bigint, updateDto: UpdateMeterDto): Promise<MeterRow> {
     await this.findOneUseCase.execute(id);
 
     const dataToUpdate = {

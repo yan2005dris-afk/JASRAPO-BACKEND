@@ -6,7 +6,7 @@ import {
   TratamientoEntrante,
   EstadoResolucionConsumo,
 } from 'src/shared/enums';
-import type { ReemplazoMedidorEntity } from '../../domain/entities/reemplazo-medidor.entity';
+import type { ReemplazoMedidorRow } from '../../infrastructure/repositories/meter.include';
 
 export class ReemplazoMedidorResponseDto {
   @ApiProperty({ example: '1' })
@@ -109,7 +109,7 @@ export class ReemplazoMedidorResponseDto {
     Object.assign(this, partial);
   }
 
-  static fromRow(r: ReemplazoMedidorEntity): ReemplazoMedidorResponseDto {
+  static fromRow(r: ReemplazoMedidorRow): ReemplazoMedidorResponseDto {
     return new ReemplazoMedidorResponseDto({
       reemplazoId: r.reemplazoId.toString(),
       contratoId: r.contratoId.toString(),
