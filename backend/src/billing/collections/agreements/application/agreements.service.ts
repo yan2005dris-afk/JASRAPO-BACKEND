@@ -9,8 +9,10 @@ import {
   buildStateCatalog,
 } from 'src/shared/enums/state-catalog';
 import { AgreementRepository } from '../domain/repositories/agreement.repository';
-import type { AgreementEntity } from '../domain/entities/agreement.entity';
-import type { InstallmentEntity } from '../domain/entities/installment.entity';
+import type {
+  AgreementRow,
+  CuotaConvenioRow,
+} from '../domain/types/agreement.types';
 import { CreateAgreementUseCase } from './use-cases/create-agreement.use-case';
 import { FindOneAgreementUseCase } from './use-cases/find-one-agreement.use-case';
 import { GetDebtSummaryUseCase } from './use-cases/get-debt-summary.use-case';
@@ -60,7 +62,7 @@ export class AgreementsService {
 
   // ── CRUD ─────────────────────────────────────────────────────────────────
 
-  async create(dto: CreateAgreementDto): Promise<AgreementEntity> {
+  async create(dto: CreateAgreementDto): Promise<AgreementRow> {
     return this.createUseCase.execute(dto);
   }
 
@@ -69,7 +71,7 @@ export class AgreementsService {
     contratoId?: string;
     estado?: string;
     search?: string;
-  }): Promise<PaginatedResult<AgreementEntity>> {
+  }): Promise<PaginatedResult<AgreementRow>> {
     return this.agreementRepository.paginate(params.pagination, {
       contratoId: params.contratoId,
       estado: params.estado,
@@ -77,22 +79,22 @@ export class AgreementsService {
     });
   }
 
-  async findOne(id: bigint): Promise<AgreementEntity> {
+  async findOne(id: bigint): Promise<AgreementRow> {
     return this.findOneUseCase.execute(id);
   }
 
-  async findInstallments(convenioId: string): Promise<InstallmentEntity[]> {
+  async findInstallments(convenioId: string): Promise<CuotaConvenioRow[]> {
     await this.findOneUseCase.execute(BigInt(convenioId));
     return this.agreementRepository.findInstallmentsByAgreementId(
       BigInt(convenioId),
     );
   }
 
-  async update(id: bigint, dto: { estado: string }): Promise<AgreementEntity> {
+  async update(id: bigint, dto: { estado: string }): Promise<AgreementRow> {
     return this.updateUseCase.execute(id, dto.estado);
   }
 
-  async cancel(id: bigint): Promise<AgreementEntity> {
+  async cancel(id: bigint): Promise<AgreementRow> {
     return this.update(id, { estado: 'ANULADO' });
   }
 

@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import type { InstallmentEntity } from '../../domain/entities/installment.entity';
+import { Decimal } from 'decimal.js';
+import type { CuotaConvenioRow } from '../../domain/types/agreement.types';
 import { DateUtil } from 'src/shared/utils/date.util';
 
 export class InstallmentResponseDto {
@@ -69,22 +70,34 @@ export class InstallmentResponseDto {
   })
   fechaPagoAnticipado: string | null;
 
-  static fromEntity(cuota: InstallmentEntity): InstallmentResponseDto {
+  static fromRow(cuota: CuotaConvenioRow): InstallmentResponseDto {
     const dto = new InstallmentResponseDto();
     dto.cuotaConvenioId = String(cuota.cuotaConvenioId);
     dto.convenioId = String(cuota.convenioId);
     dto.numeroCuota = cuota.numeroCuota;
-    dto.valorCuota = Number(cuota.valorCuota);
+    dto.valorCuota =
+      cuota.valorCuota instanceof Decimal
+        ? cuota.valorCuota.toNumber()
+        : Number(cuota.valorCuota);
     dto.fechaVencimiento = DateUtil.formatForFrontend(cuota.fechaVencimiento)!;
     dto.estado = {
       codigo: cuota.estado,
       nombre: cuota.estado,
     };
     dto.fechaPago = DateUtil.formatForFrontend(cuota.fechaPago);
-    dto.montoPagado = Number(cuota.montoPagado);
-    dto.saldoPendiente = Number(cuota.saldoPendiente);
+    dto.montoPagado =
+      cuota.montoPagado instanceof Decimal
+        ? cuota.montoPagado.toNumber()
+        : Number(cuota.montoPagado);
+    dto.saldoPendiente =
+      cuota.saldoPendiente instanceof Decimal
+        ? cuota.saldoPendiente.toNumber()
+        : Number(cuota.saldoPendiente);
     dto.diasRetraso = cuota.diasRetraso;
-    dto.interesMoraAplicado = Number(cuota.interesMoraAplicado);
+    dto.interesMoraAplicado =
+      cuota.interesMoraAplicado instanceof Decimal
+        ? cuota.interesMoraAplicado.toNumber()
+        : Number(cuota.interesMoraAplicado);
     dto.pagoCompleto = cuota.pagoCompleto;
     dto.fechaPagoAnticipado = DateUtil.formatForFrontend(
       cuota.fechaPagoAnticipado,
@@ -92,7 +105,7 @@ export class InstallmentResponseDto {
     return dto;
   }
 
-  static fromEntityList(cuotas: InstallmentEntity[]): InstallmentResponseDto[] {
-    return cuotas.map(InstallmentResponseDto.fromEntity);
+  static fromRowList(cuotas: CuotaConvenioRow[]): InstallmentResponseDto[] {
+    return cuotas.map(InstallmentResponseDto.fromRow);
   }
 }

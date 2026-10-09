@@ -10,7 +10,7 @@ import { CreateAgreementDto } from '../../interfaces/dto/create-agreement.dto';
 import { GetDebtSummaryUseCase } from './get-debt-summary.use-case';
 import { AgreementRepository } from '../../domain/repositories/agreement.repository';
 import type { CreateInstallmentData } from '../../domain/types/agreement.types';
-import type { AgreementEntity } from '../../domain/entities/agreement.entity';
+import type { AgreementRow } from '../../domain/types/agreement.types';
 
 @Injectable()
 export class CreateAgreementUseCase {
@@ -19,7 +19,7 @@ export class CreateAgreementUseCase {
     private readonly getDebtSummaryUseCase: GetDebtSummaryUseCase,
   ) {}
 
-  async execute(dto: CreateAgreementDto): Promise<AgreementEntity> {
+  async execute(dto: CreateAgreementDto): Promise<AgreementRow> {
     const contratoId = BigInt(dto.contratoId);
 
     // ── 1. Verificar que el contrato existe ──────────────────────────────────

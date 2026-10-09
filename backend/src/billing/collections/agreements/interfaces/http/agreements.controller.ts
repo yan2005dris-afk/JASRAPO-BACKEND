@@ -126,7 +126,7 @@ export class AgreementsController {
   @Post()
   async create(@Body() dto: CreateAgreementDto): Promise<AgreementResponseDto> {
     const entity = await this.agreementsService.create(dto);
-    return AgreementResponseDto.fromEntity(entity);
+    return AgreementResponseDto.fromRow(entity);
   }
 
   /**
@@ -156,7 +156,7 @@ export class AgreementsController {
     @Body() dto: UpdateAgreementDto,
   ): Promise<AgreementResponseDto> {
     const entity = await this.agreementsService.update(id, dto);
-    return AgreementResponseDto.fromEntity(entity);
+    return AgreementResponseDto.fromRow(entity);
   }
 
   /**
@@ -182,7 +182,7 @@ export class AgreementsController {
     });
 
     return {
-      data: AgreementResponseDto.fromEntityList(result.data),
+      data: AgreementResponseDto.fromRowList(result.data),
       meta: result.meta,
     };
   }
@@ -213,7 +213,7 @@ export class AgreementsController {
     @Param('id', ParseBigIntPipe) id: bigint,
   ): Promise<AgreementResponseDto> {
     const entity = await this.agreementsService.findOne(id);
-    return AgreementResponseDto.fromEntity(entity);
+    return AgreementResponseDto.fromRow(entity);
   }
 
   /**
@@ -242,7 +242,7 @@ export class AgreementsController {
     @Param('id') id: string,
   ): Promise<InstallmentResponseDto[]> {
     const cuotas = await this.agreementsService.findInstallments(id);
-    return InstallmentResponseDto.fromEntityList(cuotas);
+    return InstallmentResponseDto.fromRowList(cuotas);
   }
 
   /**
@@ -271,7 +271,7 @@ export class AgreementsController {
     @Param('id', ParseBigIntPipe) id: bigint,
   ): Promise<AgreementResponseDto> {
     const entity = await this.agreementsService.cancel(id);
-    return AgreementResponseDto.fromEntity(entity);
+    return AgreementResponseDto.fromRow(entity);
   }
 
   /**

@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { InstallmentResponseDto } from './installment-response.dto';
-import type { AgreementEntity } from '../../domain/entities/agreement.entity';
+import type { AgreementRow } from '../../domain/types/agreement.types';
 import { DateUtil } from 'src/shared/utils/date.util';
 
 export class AgreementResponseDto {
@@ -100,7 +100,7 @@ export class AgreementResponseDto {
   })
   clienteEmail?: string | null;
 
-  static fromEntity(convenio: AgreementEntity): AgreementResponseDto {
+  static fromRow(convenio: AgreementRow): AgreementResponseDto {
     const dto = new AgreementResponseDto();
     dto.convenioId = String(convenio.convenioId);
     dto.contratoId = String(convenio.contratoId);
@@ -120,8 +120,8 @@ export class AgreementResponseDto {
     dto.montoPagadoActual = Number(convenio.montoPagadoActual);
     dto.motivo = convenio.motivo ?? null;
     dto.fechaCreacion = DateUtil.formatForFrontend(convenio.createdAt)!;
-    dto.cuotas = convenio.cuotas
-      ? InstallmentResponseDto.fromEntityList(convenio.cuotas)
+    dto.cuotas = convenio.cuotaConvenio
+      ? InstallmentResponseDto.fromRowList(convenio.cuotaConvenio)
       : undefined;
     if (convenio.contrato) {
       dto.numeroGuia = convenio.contrato.numeroGuia;
@@ -137,7 +137,7 @@ export class AgreementResponseDto {
     return dto;
   }
 
-  static fromEntityList(entities: AgreementEntity[]): AgreementResponseDto[] {
-    return entities.map(AgreementResponseDto.fromEntity);
+  static fromRowList(rows: AgreementRow[]): AgreementResponseDto[] {
+    return rows.map(AgreementResponseDto.fromRow);
   }
 }

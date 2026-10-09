@@ -1,5 +1,4 @@
-import type { AgreementEntity } from '../entities/agreement.entity';
-import type { InstallmentEntity } from '../entities/installment.entity';
+import type { AgreementRow, CuotaConvenioRow } from '../types/agreement.types';
 import type {
   AgreementFilters,
   CreateAgreementData,
@@ -11,33 +10,33 @@ import type { PaginateOptions } from 'src/infrastructure/common/utils/pagination
 import type { PaginatedResult } from 'src/shared/domain/types/pagination.types';
 
 export abstract class AgreementRepository {
-  abstract findById(id: bigint): Promise<AgreementEntity | null>;
+  abstract findById(id: bigint): Promise<AgreementRow | null>;
 
   abstract findActiveByContractId(
     contratoId: bigint,
-  ): Promise<AgreementEntity | null>;
+  ): Promise<AgreementRow | null>;
 
   abstract paginate(
     pagination: PaginateOptions,
     filters?: AgreementFilters,
-  ): Promise<PaginatedResult<AgreementEntity>>;
+  ): Promise<PaginatedResult<AgreementRow>>;
 
   abstract findInstallmentsByAgreementId(
     convenioId: bigint,
-  ): Promise<InstallmentEntity[]>;
+  ): Promise<CuotaConvenioRow[]>;
 
   abstract create(
     data: CreateAgreementData,
     cuotas: CreateInstallmentData[],
-  ): Promise<AgreementEntity>;
+  ): Promise<AgreementRow>;
 
   abstract updateState(
     id: bigint,
     estado: string,
     data?: { fechaAprobacion?: Date; deletedAt?: Date },
-  ): Promise<AgreementEntity>;
+  ): Promise<AgreementRow>;
 
-  abstract markAsPaid(id: bigint): Promise<AgreementEntity>;
+  abstract markAsPaid(id: bigint): Promise<AgreementRow>;
 
   abstract contractExists(contratoId: bigint): Promise<boolean>;
 
