@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { randomInt } from 'crypto';
-import { ClaveAccesoData } from '../../domain/interfaces';
-import { Ambiente, TipoEmision } from '../../domain/constants';
+import type { ClaveAccesoData } from '../../domain/interfaces/sri-response.interface';
+import { Ambiente, TipoEmision } from '../../domain/constants/sri.enums';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
 

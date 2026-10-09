@@ -4,11 +4,11 @@ import {
   EntityAlreadyExistsException,
   InvalidDomainOperationException,
 } from '../../../shared/domain/exceptions/domain.exception';
-import {
+import type {
   CreateEmisorDto,
   UpdateEmisorDto,
   EmisorResponseDto,
-} from '../interfaces/dto';
+} from '../interfaces/dto/emisor.dto';
 import * as forge from 'node-forge';
 import { EncryptionService } from '../../../infrastructure/encryption/encryption.service';
 import { EmisorRepository } from '../domain/repositories/emisor.repository';

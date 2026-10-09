@@ -16,16 +16,23 @@ import { EmisorRepository } from '../../../emisores/domain/repositories/emisor.r
 import { SecuencialRepository } from '../../domain/repositories/secuencial.repository';
 import { XmlStorageService } from '../../infrastructure/storage/xml-storage.service';
 import { SriBaseService } from '../../infrastructure/xml/sri-base.service';
-import { CreateFacturaDto, FacturaResponseDto } from '../../interfaces/dto';
-import {
+import type {
+  CreateFacturaDto,
+  FacturaResponseDto,
+} from '../../interfaces/dto/factura.dto';
+import type {
   Factura,
   InfoTributaria,
   InfoFactura,
   DetalleFactura,
   TotalImpuesto,
-  SriOperationResult,
-} from '../../domain/interfaces';
-import { TipoComprobante, Ambiente, TipoEmision } from '../../domain/constants';
+} from '../../domain/interfaces/comprobante.interface';
+import type { SriOperationResult } from '../../domain/interfaces/sri-response.interface';
+import {
+  TipoComprobante,
+  Ambiente,
+  TipoEmision,
+} from '../../domain/constants/sri.enums';
 import { ComprobanteEstado } from '../../domain/constants/comprobante-estado.enum';
 import { ComprobanteRecord } from '../../../domain/interfaces/repository.interface';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';

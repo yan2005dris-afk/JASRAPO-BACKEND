@@ -4,8 +4,11 @@ import { ComprobanteRepository } from '../../domain/repositories/comprobante.rep
 import { EntityNotFoundException } from '../../../../shared/domain/exceptions/domain.exception';
 import { SriService } from './sri.service';
 import { EmitirFacturaUseCase } from '../use-cases/emitir-factura.use-case';
-import { CreateFacturaDto } from '../../interfaces/dto';
-import { TipoIdentificacion, FormaPago } from '../../domain/constants';
+import { CreateFacturaDto } from '../../interfaces/dto/factura.dto';
+import {
+  TipoIdentificacion,
+  FormaPago,
+} from '../../domain/constants/sri.enums';
 import { format } from 'date-fns';
 import { ComprobanteRecord } from '../../../domain/interfaces/repository.interface';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';

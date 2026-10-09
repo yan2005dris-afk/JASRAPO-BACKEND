@@ -12,18 +12,24 @@ import { ComprobanteRepository } from '../../domain/repositories/comprobante.rep
 import { SriSoapClient } from '../../infrastructure/soap/sri-soap.client';
 import { XmlBuilderService } from '../../infrastructure/xml/xml-builder.service';
 import { XmlStorageService } from '../../infrastructure/storage/xml-storage.service';
-import {
+import type {
   CreateFacturaDto,
   FacturaResponseDto,
+} from '../../interfaces/dto/factura.dto';
+import type {
   CreateNotaCreditoDto,
   NotaCreditoResponseDto,
+} from '../../interfaces/dto/nota-credito.dto';
+import type {
   CreateNotaDebitoDto,
   NotaDebitoResponseDto,
+} from '../../interfaces/dto/nota-debito.dto';
+import type {
   CreateRetencionDto,
   RetencionResponseDto,
-  EmisionEncoladaResponseDto,
-} from '../../interfaces/dto';
-import { TIPO_COMPROBANTE_DESCRIPCIONES } from '../../domain/constants';
+} from '../../interfaces/dto/retencion.dto';
+import type { EmisionEncoladaResponseDto } from '../../interfaces/dto/emision-encolada.dto';
+import { TIPO_COMPROBANTE_DESCRIPCIONES } from '../../domain/constants/sri.enums';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
 

@@ -4,7 +4,7 @@ import type {
   DetalleFactura,
   TotalImpuesto,
   CampoAdicional,
-} from '../interfaces';
+} from '../interfaces/comprobante.interface';
 
 export class FacturaEntity {
   id?: string;

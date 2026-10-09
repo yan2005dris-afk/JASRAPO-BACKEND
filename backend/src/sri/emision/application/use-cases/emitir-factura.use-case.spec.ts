@@ -12,8 +12,8 @@ import { EmisorRepository } from '../../../emisores/domain/repositories/emisor.r
 import { SecuencialRepository } from '../../domain/repositories/secuencial.repository';
 import { XmlStorageService } from '../../infrastructure/storage/xml-storage.service';
 import { SriBaseService } from '../../infrastructure/xml/sri-base.service';
-import type { SriOperationResult } from '../../domain/interfaces';
-import type { CreateFacturaDto } from '../../interfaces/dto';
+import type { SriOperationResult } from '../../domain/interfaces/sri-response.interface';
+import type { CreateFacturaDto } from '../../interfaces/dto/factura.dto';
 import { ComprobanteEstado } from '../../domain/constants/comprobante-estado.enum';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 const mockLogger = {

@@ -37,20 +37,22 @@ import { RequiredPermission } from '../../../../infrastructure/common/decorators
 import { ConfigService } from '@nestjs/config';
 import { extractRucFromClaveAcceso } from '../../infrastructure/xml/clave-acceso.utils';
 import { MAX_UPLOAD_SIZE_BYTES } from '../../../../infrastructure/config/app.constants';
+import { CreateFacturaDto, FacturaResponseDto } from '../dto/factura.dto';
 import {
-  CreateFacturaDto,
-  FacturaResponseDto,
   CreateNotaCreditoDto,
   NotaCreditoResponseDto,
+} from '../dto/nota-credito.dto';
+import {
   CreateNotaDebitoDto,
   NotaDebitoResponseDto,
-  CreateRetencionDto,
-  RetencionResponseDto,
-  EmisionEncoladaResponseDto,
+} from '../dto/nota-debito.dto';
+import { CreateRetencionDto, RetencionResponseDto } from '../dto/retencion.dto';
+import { EmisionEncoladaResponseDto } from '../dto/emision-encolada.dto';
+import {
   QueryComprobantesDto,
   PaginatedComprobantesDto,
   ComprobanteDetalladoDto,
-} from '../dto';
+} from '../dto/query-comprobantes.dto';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
 

@@ -15,7 +15,7 @@ import {
   PagoDto,
   CampoAdicionalDto,
 } from './common.dto';
-import { Ambiente, TipoEmision } from '../../domain/constants';
+import { Ambiente, TipoEmision } from '../../domain/constants/sri.enums';
 
 export class CreateFacturaDto {
   @ApiPropertyOptional({

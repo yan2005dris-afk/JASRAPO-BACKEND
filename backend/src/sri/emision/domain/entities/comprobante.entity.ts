@@ -1,5 +1,9 @@
 import { ComprobanteEstado } from '../constants/comprobante-estado.enum';
-import type { TipoComprobante, Ambiente, TipoEmision } from '../constants';
+import type {
+  TipoComprobante,
+  Ambiente,
+  TipoEmision,
+} from '../constants/sri.enums';
 
 export class ComprobanteEntity {
   id: bigint;

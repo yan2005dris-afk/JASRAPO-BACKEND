@@ -18,7 +18,7 @@ import {
   WebhookSecretResponseDto,
   WebhookLogResponseDto,
   WebhookEvent,
-} from '../interfaces/dto';
+} from '../interfaces/dto/webhook.dto';
 import {
   WEBHOOK_DISPATCH_JOB,
   WebhookJobData,

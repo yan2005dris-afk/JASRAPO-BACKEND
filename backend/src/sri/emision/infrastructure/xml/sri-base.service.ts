@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { IdentificacionValidatorService } from './identificacion-validator.service';
 import { CatalogoValidatorService } from './catalogo-validator.service';
-import { Ambiente } from '../../domain/constants';
+import { Ambiente } from '../../domain/constants/sri.enums';
 import { InvalidDomainOperationException } from '../../../../shared/domain/exceptions/domain.exception';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { LogContext } from 'src/shared/decorators/log-context.decorator';

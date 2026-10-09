@@ -14,15 +14,22 @@ import { EmisorRepository } from '../../../emisores/domain/repositories/emisor.r
 import { SecuencialRepository } from '../../domain/repositories/secuencial.repository';
 import { XmlStorageService } from '../../infrastructure/storage/xml-storage.service';
 import { SriBaseService } from '../../infrastructure/xml/sri-base.service';
-import { CreateRetencionDto, RetencionResponseDto } from '../../interfaces/dto';
-import {
+import type {
+  CreateRetencionDto,
+  RetencionResponseDto,
+} from '../../interfaces/dto/retencion.dto';
+import type {
   InfoTributaria,
   Retencion,
   InfoRetencion,
   ImpuestoRetenido,
-  SriOperationResult,
-} from '../../domain/interfaces';
-import { TipoComprobante, Ambiente, TipoEmision } from '../../domain/constants';
+} from '../../domain/interfaces/comprobante.interface';
+import type { SriOperationResult } from '../../domain/interfaces/sri-response.interface';
+import {
+  TipoComprobante,
+  Ambiente,
+  TipoEmision,
+} from '../../domain/constants/sri.enums';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
 

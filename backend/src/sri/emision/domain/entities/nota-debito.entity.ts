@@ -4,7 +4,7 @@ import type {
   MotivoNotaDebito,
   TotalImpuesto,
   CampoAdicional,
-} from '../interfaces';
+} from '../interfaces/comprobante.interface';
 
 export class NotaDebitoEntity {
   id?: string;

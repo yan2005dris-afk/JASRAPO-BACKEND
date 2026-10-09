@@ -1,5 +1,5 @@
 import { BadRequestException } from '@nestjs/common';
-import { EstadoPago } from '../../domain/enums';
+import { EstadoPago } from '../../domain/enums/estado-pago.enum';
 import { ValidatePaymentUseCase } from './validate-payment.use-case';
 import { PaymentRow } from '../../domain/types/payment.types';
 import {
