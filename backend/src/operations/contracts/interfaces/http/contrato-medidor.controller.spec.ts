@@ -4,7 +4,7 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { ContratoMedidorController } from './contrato-medidor.controller';
 import { ContratoMedidorService } from '../../application/contrato-medidor.service';
-import { ContractEntity } from '../../domain/entities/contract.entity';
+import { contractRow } from '../../__test-utils__/contract-row.factory';
 import { ServiceAreaResponseDto } from '../dto/service-area-response.dto';
 
 describe('ContratoMedidorController', () => {
@@ -22,7 +22,7 @@ describe('ContratoMedidorController', () => {
     getServiceArea: jest.fn(),
   };
 
-  const sampleContract = new ContractEntity({
+  const sampleContract = contractRow({
     contratoId: 1n,
     clienteId: 10n,
     categoriaTarifaId: 1,

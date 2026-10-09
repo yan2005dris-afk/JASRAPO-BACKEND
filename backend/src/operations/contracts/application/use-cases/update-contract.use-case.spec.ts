@@ -2,7 +2,7 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { UpdateContractUseCase } from './update-contract.use-case';
 import { ContractRepository } from '../../domain/repositories/contract.repository';
-import { ContractEntity } from '../../domain/entities/contract.entity';
+import { contractRow } from '../../__test-utils__/contract-row.factory';
 import {
   DomainValidationException,
   EntityNotFoundException,
@@ -41,10 +41,10 @@ describe('UpdateContractUseCase', () => {
     const updateDto = { estadoServicio: 'ACTIVO' as const };
 
     mockContractRepository.findById.mockResolvedValue(
-      new ContractEntity({ contratoId: id, deletedAt: null }),
+      contractRow({ contratoId: id, deletedAt: null }),
     );
     mockContractRepository.update.mockResolvedValue(
-      new ContractEntity({
+      contractRow({
         contratoId: id,
         estadoServicio: 'ACTIVO',
       }),
@@ -68,13 +68,13 @@ describe('UpdateContractUseCase', () => {
     };
 
     mockContractRepository.findById.mockResolvedValue(
-      new ContractEntity({
+      contractRow({
         contratoId: id,
         deletedAt: null,
       }),
     );
     mockContractRepository.update.mockResolvedValue(
-      new ContractEntity({
+      contractRow({
         contratoId: id,
         estadoServicio: 'ACTIVO',
         direccionSuministro: 'Nueva Dir',
@@ -107,10 +107,10 @@ describe('UpdateContractUseCase', () => {
     const updateDto = { latitud: -1.8021, longitud: -80.7554 };
 
     mockContractRepository.findById.mockResolvedValue(
-      new ContractEntity({ contratoId: id, deletedAt: null }),
+      contractRow({ contratoId: id, deletedAt: null }),
     );
     mockContractRepository.update.mockResolvedValue(
-      new ContractEntity({ contratoId: id }),
+      contractRow({ contratoId: id }),
     );
 
     await useCase.execute(id, updateDto);
@@ -123,7 +123,7 @@ describe('UpdateContractUseCase', () => {
 
   it('rejects new coordinates outside the service area without updating', async () => {
     mockContractRepository.findById.mockResolvedValue(
-      new ContractEntity({
+      contractRow({
         contratoId: BigInt(1),
         deletedAt: null,
         latitud: -1.7982,
@@ -147,7 +147,7 @@ describe('UpdateContractUseCase', () => {
     const id = BigInt(1);
 
     mockContractRepository.findById.mockResolvedValue(
-      new ContractEntity({
+      contractRow({
         contratoId: id,
         deletedAt: null,
         latitud: -1.8,
@@ -155,7 +155,7 @@ describe('UpdateContractUseCase', () => {
       }),
     );
     mockContractRepository.update.mockResolvedValue(
-      new ContractEntity({ contratoId: id }),
+      contractRow({ contratoId: id }),
     );
 
     await useCase.execute(id, {
@@ -176,10 +176,10 @@ describe('UpdateContractUseCase', () => {
     const updateDto = { latitud: null, longitud: null };
 
     mockContractRepository.findById.mockResolvedValue(
-      new ContractEntity({ contratoId: id, deletedAt: null }),
+      contractRow({ contratoId: id, deletedAt: null }),
     );
     mockContractRepository.update.mockResolvedValue(
-      new ContractEntity({ contratoId: id }),
+      contractRow({ contratoId: id }),
     );
 
     await useCase.execute(id, updateDto);
@@ -195,10 +195,10 @@ describe('UpdateContractUseCase', () => {
     const updateDto = { direccionSuministro: 'Nueva Dir' };
 
     mockContractRepository.findById.mockResolvedValue(
-      new ContractEntity({ contratoId: id, deletedAt: null }),
+      contractRow({ contratoId: id, deletedAt: null }),
     );
     mockContractRepository.update.mockResolvedValue(
-      new ContractEntity({ contratoId: id }),
+      contractRow({ contratoId: id }),
     );
 
     await useCase.execute(id, updateDto);
@@ -213,7 +213,7 @@ describe('UpdateContractUseCase', () => {
     const updateDto = {};
 
     mockContractRepository.findById.mockResolvedValue(
-      new ContractEntity({
+      contractRow({
         contratoId: id,
         deletedAt: null,
       }),
@@ -232,7 +232,7 @@ describe('UpdateContractUseCase', () => {
     'cannot activate a contract in %s using a manual edit',
     async (estadoServicio) => {
       mockContractRepository.findById.mockResolvedValue(
-        new ContractEntity({ contratoId: 1n, estadoServicio }),
+        contractRow({ contratoId: 1n, estadoServicio }),
       );
       await expect(
         useCase.execute(1n, { estadoServicio: 'ACTIVO' }),
@@ -242,7 +242,7 @@ describe('UpdateContractUseCase', () => {
   );
   it('does not rewrite lifecycle states when editing contract details', async () => {
     mockContractRepository.findById.mockResolvedValue(
-      new ContractEntity({
+      contractRow({
         contratoId: 1n,
         estadoServicio: 'PENDIENTE_INSPECCION',
         estadoCobranza: 'NO_APLICA',
@@ -258,7 +258,7 @@ describe('UpdateContractUseCase', () => {
   });
   it('allows editing observations without losing representative identity', async () => {
     mockContractRepository.findById.mockResolvedValue(
-      new ContractEntity({
+      contractRow({
         contratoId: 1n,
         tramitadorEsTitular: false,
         tramitadorNombre: 'Ana',
@@ -281,7 +281,7 @@ describe('UpdateContractUseCase', () => {
   });
   it('allows adding notes to historical contracts without inventing who performed the procedure', async () => {
     mockContractRepository.findById.mockResolvedValue(
-      new ContractEntity({ contratoId: 1n, tramitadorEsTitular: null }),
+      contractRow({ contratoId: 1n, tramitadorEsTitular: null }),
     );
     await useCase.execute(1n, { observacionesTramite: ' Note ' });
     expect(mockContractRepository.update).toHaveBeenCalledWith(1n, {

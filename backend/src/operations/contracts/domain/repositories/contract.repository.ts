@@ -1,4 +1,4 @@
-import type { ContractEntity } from '../entities/contract.entity';
+import type { ContractRow } from '../../infrastructure/repositories/contract.include';
 import type {
   CreateContractData,
   CreateContractWithMeterCommand,
@@ -12,7 +12,7 @@ export abstract class ContractRepository {
   abstract findById(
     contratoId: bigint,
     includeDeleted?: boolean,
-  ): Promise<ContractEntity | null>;
+  ): Promise<ContractRow | null>;
 
   abstract paginateContratos(
     args: {
@@ -20,19 +20,18 @@ export abstract class ContractRepository {
       orderBy?: { [key: string]: 'asc' | 'desc' };
     },
     pagination: PaginateOptions,
-  ): Promise<PaginatedResult<ContractEntity>>;
-
+  ): Promise<PaginatedResult<ContractRow>>;
   abstract findMany(params: {
     skip?: number;
     take?: number;
     where?: Partial<ContractFilters>;
     orderBy?: { [key: string]: 'asc' | 'desc' };
-  }): Promise<ContractEntity[]>;
+  }): Promise<ContractRow[]>;
 
   abstract findUnique(where: {
     contratoId?: bigint;
     numeroGuia?: string;
-  }): Promise<ContractEntity | null>;
+  }): Promise<ContractRow | null>;
 
   abstract count(params?: {
     where?: Partial<ContractFilters>;
@@ -41,19 +40,19 @@ export abstract class ContractRepository {
   abstract update(
     contratoId: bigint,
     data: UpdateContractData,
-  ): Promise<ContractEntity>;
+  ): Promise<ContractRow>;
 
-  abstract create(data: CreateContractData): Promise<ContractEntity>;
+  abstract create(data: CreateContractData): Promise<ContractRow>;
 
-  abstract softDelete(contratoId: bigint): Promise<ContractEntity>;
+  abstract softDelete(contratoId: bigint): Promise<ContractRow>;
 
   // ── Domain-level transactional operations ──────────────────────────────
 
   abstract createContractWithMeterHistory(
     data: CreateContractWithMeterCommand,
-  ): Promise<ContractEntity>;
+  ): Promise<ContractRow>;
 
-  abstract finalizeActiveMeterLink(contratoId: bigint): Promise<ContractEntity>;
+  abstract finalizeActiveMeterLink(contratoId: bigint): Promise<ContractRow>;
 
   // ── Connection-request tariff costs (SC-275) ───────────────────────────
   // Costs are sourced from `rubros` instead of being hardcoded in the use case.

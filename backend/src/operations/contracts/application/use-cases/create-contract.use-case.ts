@@ -4,7 +4,7 @@ import { ContractState } from '../../domain/contract-state';
 import { EstadoServicioContrato } from 'src/shared/enums';
 import { ContractRepository } from '../../domain/repositories/contract.repository';
 import { CrearContratoMedidorDto } from '../../interfaces/dto/create-contrato-medidor.dto';
-import { ContractEntity } from '../../domain/entities/contract.entity';
+import type { ContractRow } from '../../infrastructure/repositories/contract.include';
 import { validateServiceAreaLocation } from '../../domain/policies/service-area.policy';
 import { DomainValidationException } from 'src/shared/domain/exceptions/domain.exception';
 
@@ -16,7 +16,7 @@ export class CreateContractUseCase {
     dto: CrearContratoMedidorDto,
     actorUserIdOrRole?: number | string,
     userRole?: string,
-  ): Promise<ContractEntity> {
+  ): Promise<ContractRow> {
     const actorUserId =
       typeof actorUserIdOrRole === 'number' ? actorUserIdOrRole : undefined;
     const effectiveRole =

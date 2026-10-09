@@ -2,7 +2,7 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { FinalizeMeterLinkUseCase } from './finalize-meter-link.use-case';
 import { ContractRepository } from '../../domain/repositories/contract.repository';
-import { ContractEntity } from '../../domain/entities/contract.entity';
+import { contractRow } from '../../__test-utils__/contract-row.factory';
 import {
   EntityNotFoundException,
   InvalidDomainOperationException,
@@ -37,7 +37,7 @@ describe('FinalizeMeterLinkUseCase', () => {
 
   it('should finalize active link by contratoId', async () => {
     const contratoId = BigInt(1);
-    const mockContract = new ContractEntity({
+    const mockContract = contractRow({
       contratoId,
       estadoServicio: 'ACTIVO',
     });
@@ -58,7 +58,7 @@ describe('FinalizeMeterLinkUseCase', () => {
 
   it('should throw InvalidDomainOperationException when no active link exists', async () => {
     const contratoId = BigInt(1);
-    const mockContract = new ContractEntity({
+    const mockContract = contractRow({
       contratoId,
     });
 

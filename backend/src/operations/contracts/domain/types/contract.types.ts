@@ -3,6 +3,9 @@ import type {
   EstadoCobranzaContrato,
   EstadoServicioContrato,
 } from 'src/shared/enums';
+import type { ContractRow } from '../../infrastructure/repositories/contract.include';
+
+export type { ContractRow };
 
 export interface ContractFilters {
   contratoId?: bigint;

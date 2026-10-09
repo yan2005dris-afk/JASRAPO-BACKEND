@@ -13,7 +13,7 @@ import { GetConnectionRequestPdfDataUseCase } from './use-cases/get-connection-r
 import { GetResponsibilityAgreementPdfDataUseCase } from './use-cases/get-responsibility-agreement-pdf-data.use-case';
 import { GetServiceAreaUseCase } from './use-cases/get-service-area.use-case';
 import { GeneratePdfUseCase } from 'src/infrastructure/pdf/use-cases/generate-pdf.use-case';
-import { ContractEntity } from '../domain/entities/contract.entity';
+import type { ContractRow } from '../infrastructure/repositories/contract.include';
 import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
 import { RouteRepository } from '../../routes/domain/repositories/route.repository';
 import { OrdenTrabajoRepository } from '../../routes/domain/repositories/orden-trabajo.repository';
@@ -43,13 +43,13 @@ export class ContratoMedidorService {
     createDto: CrearContratoMedidorDto,
     actorUserId?: number,
     userRole?: string,
-  ): Promise<ContractEntity> {
+  ): Promise<ContractRow> {
     return this.createContractUseCase.execute(createDto, actorUserId, userRole);
   }
 
   async buscarContratos(
     filters?: FilterContractsDto,
-  ): Promise<PaginatedResult<ContractEntity>> {
+  ): Promise<PaginatedResult<ContractRow>> {
     const contractFilters = filters ? buildContractFilters(filters) : undefined;
     return this.findAllUseCase.execute(
       filters?.page,
@@ -58,22 +58,22 @@ export class ContratoMedidorService {
     );
   }
 
-  async buscarContrato(id: bigint): Promise<ContractEntity> {
+  async buscarContrato(id: bigint): Promise<ContractRow> {
     return this.findOneUseCase.execute(id);
   }
 
   async actualizar(
     id: bigint,
     updateDto: ActualizarContratoMedidorDto,
-  ): Promise<ContractEntity> {
+  ): Promise<ContractRow> {
     return this.updateUseCase.execute(id, updateDto);
   }
 
-  async finalizarVinculo(id: bigint): Promise<ContractEntity> {
+  async finalizarVinculo(id: bigint): Promise<ContractRow> {
     return this.finalizeLinkUseCase.execute(id);
   }
 
-  async eliminar(id: bigint): Promise<ContractEntity> {
+  async eliminar(id: bigint): Promise<ContractRow> {
     return this.removeUseCase.execute(id);
   }
 

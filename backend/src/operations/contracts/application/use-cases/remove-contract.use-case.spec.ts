@@ -2,7 +2,7 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { RemoveContractUseCase } from './remove-contract.use-case';
 import { ContractRepository } from '../../domain/repositories/contract.repository';
-import { ContractEntity } from '../../domain/entities/contract.entity';
+import { contractRow } from '../../__test-utils__/contract-row.factory';
 import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 
 describe('RemoveContractUseCase', () => {
@@ -34,8 +34,8 @@ describe('RemoveContractUseCase', () => {
 
   it('should soft delete a contract if it exists', async () => {
     const id = BigInt(1);
-    const existing = new ContractEntity({ contratoId: id, deletedAt: null });
-    const deleted = new ContractEntity({
+    const existing = contractRow({ contratoId: id, deletedAt: null });
+    const deleted = contractRow({
       contratoId: id,
       deletedAt: new Date(),
     });
