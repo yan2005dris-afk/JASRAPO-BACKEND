@@ -1,7 +1,5 @@
 import { Module, Global } from '@nestjs/common';
-import { MailerModule } from '@nestjs-modules/mailer';
 import { ConfigService } from '@nestjs/config';
-import { NodemailerProvider } from './infrastructure/providers/nodemailer.provider';
 import { MailProviderFactory } from './infrastructure/providers/provider.factory';
 import { FailoverDispatcher } from './infrastructure/dispatchers/failover.dispatcher';
 import { RoundRobinDispatcher } from './infrastructure/dispatchers/round-robin.dispatcher';
@@ -19,29 +17,9 @@ import type { MailDispatcher } from './domain/interfaces/mail-provider.interface
  */
 @Global()
 @Module({
-  imports: [
-    JobsModule,
-    MailerModule.forRootAsync({
-      useFactory: (config: ConfigService) => ({
-        transport: {
-          host: config.get('BREVO_SMTP_HOST', 'smtp-relay.brevo.com'),
-          port: parseInt(config.get('BREVO_SMTP_PORT', '587'), 10),
-          secure: false,
-          auth: {
-            user: config.get('BREVO_SMTP_USER'),
-            pass: config.get('BREVO_SMTP_PASS'),
-          },
-        },
-        defaults: {
-          from: `"${config.get('EMAIL_FROM_NAME', 'JASRAP-Olon')}" <${config.get('EMAIL_FROM', 'no-reply@jasrapo.com')}>`,
-        } as any,
-      }),
-      inject: [ConfigService],
-    }),
-  ],
+  imports: [JobsModule],
   controllers: [MailMetricsController],
   providers: [
-    NodemailerProvider,
     MailRateLimitService,
     FailoverDispatcher,
     RoundRobinDispatcher,
