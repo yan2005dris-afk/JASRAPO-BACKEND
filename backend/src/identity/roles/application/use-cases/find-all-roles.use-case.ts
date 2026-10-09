@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { RoleRepository } from '../../domain/repositories/role.repository';
-import { RoleEntity } from '../../domain/entities/role.entity';
+import type { RoleRow } from '../../domain/types/role.types';
 import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
 import { getPagination } from 'src/infrastructure/common/utils/pagination.util';
 
@@ -11,7 +11,7 @@ export class FindAllRolesUseCase {
   async execute(
     page: number = 1,
     limit: number = 10,
-  ): Promise<PaginatedResult<RoleEntity>> {
+  ): Promise<PaginatedResult<RoleRow>> {
     const { skip, take } = getPagination(page, limit);
 
     const [data, total] = await Promise.all([
