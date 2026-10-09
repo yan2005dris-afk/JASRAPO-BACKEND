@@ -3,7 +3,7 @@ import { OrdenTrabajoEntity } from '../../domain/entities/orden-trabajo.entity';
 
 describe('OrderWorkResponseDto', () => {
   it('serializes bigint identifiers as API-safe strings', () => {
-    const dto = OrderWorkResponseDto.fromEntity(
+    const dto = OrderWorkResponseDto.fromRow(
       new OrdenTrabajoEntity({
         ordenTrabajoId: 42n,
         rutaId: 8n,

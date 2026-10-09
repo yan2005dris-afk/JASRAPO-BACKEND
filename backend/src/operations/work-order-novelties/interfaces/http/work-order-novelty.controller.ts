@@ -51,7 +51,7 @@ export class WorkOrderNoveltyController {
     @UploadedFile() file?: Express.Multer.File,
   ): Promise<ResponseWorkOrderNoveltyDto> {
     const created = await this.service.create(dto, file);
-    return ResponseWorkOrderNoveltyDto.fromEntity(created);
+    return ResponseWorkOrderNoveltyDto.fromRow(created);
   }
 
   @ApiOperation({ summary: 'Listar novedades de órdenes de trabajo' })
@@ -73,7 +73,7 @@ export class WorkOrderNoveltyController {
     });
 
     return {
-      data: result.data.map((e) => ResponseWorkOrderNoveltyDto.fromEntity(e)),
+      data: result.data.map((e) => ResponseWorkOrderNoveltyDto.fromRow(e)),
       total: result.total,
     };
   }
@@ -85,7 +85,7 @@ export class WorkOrderNoveltyController {
     @Param('id', ParseBigIntPipe) id: bigint,
   ): Promise<ResponseWorkOrderNoveltyDto> {
     const item = await this.service.findById(id);
-    return ResponseWorkOrderNoveltyDto.fromEntity(item);
+    return ResponseWorkOrderNoveltyDto.fromRow(item);
   }
 
   @ApiOperation({ summary: 'Actualizar o transicionar estado de novedad' })
@@ -105,7 +105,7 @@ export class WorkOrderNoveltyController {
     @UploadedFile() file?: Express.Multer.File,
   ): Promise<ResponseWorkOrderNoveltyDto> {
     const updated = await this.service.update(id, dto, file, actorUserId);
-    return ResponseWorkOrderNoveltyDto.fromEntity(updated);
+    return ResponseWorkOrderNoveltyDto.fromRow(updated);
   }
 
   @ApiOperation({

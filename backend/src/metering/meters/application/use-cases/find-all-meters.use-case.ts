@@ -29,7 +29,7 @@ export class FindAllMetersUseCase {
     const totalPages = Math.ceil(total / take);
 
     return {
-      data: meters.map((m) => MeterResponseDto.fromEntity(m)),
+      data: meters.map((m) => MeterResponseDto.fromRow(m)),
       meta: {
         total,
         page: safePage,

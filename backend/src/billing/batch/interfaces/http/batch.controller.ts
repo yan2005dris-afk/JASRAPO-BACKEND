@@ -80,7 +80,7 @@ export class BatchController {
     );
 
     return {
-      data: BatchResponseDto.fromEntityList(result.data),
+      data: BatchResponseDto.fromRowList(result.data),
       meta: result.meta,
     };
   }
@@ -98,7 +98,7 @@ export class BatchController {
     @Param('id', ParseIntPipe) id: number,
   ): Promise<BatchResponseDto> {
     const entity = await this.batchService.findOne(id);
-    return BatchResponseDto.fromEntity(entity);
+    return BatchResponseDto.fromRow(entity);
   }
 
   @Post(':id/send-email')

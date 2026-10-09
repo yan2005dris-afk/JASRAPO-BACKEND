@@ -165,7 +165,7 @@ export class OperatorRouteResponseDto {
     Object.assign(this, partial);
   }
 
-  static fromEntity(route: OperatorRoute): OperatorRouteResponseDto {
+  static fromRow(route: OperatorRoute): OperatorRouteResponseDto {
     const mapMeter = (meter: OperatorRoute['medidor']) =>
       meter
         ? {

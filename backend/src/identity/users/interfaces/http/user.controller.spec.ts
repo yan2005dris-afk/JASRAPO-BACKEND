@@ -68,7 +68,7 @@ describe('UserController', () => {
         undefined,
         1,
       );
-      expect(result).toEqual(UserResponseDto.fromEntity(mockUser as any));
+      expect(result).toEqual(UserResponseDto.fromRow(mockUser as any));
     });
   });
 
@@ -103,7 +103,7 @@ describe('UserController', () => {
       const result = await controller.findOne(userId);
 
       expect(userService.user).toHaveBeenCalledWith({ usuarioId: userId });
-      expect(result).toEqual(UserDetailResponseDto.fromEntity(mockUser as any));
+      expect(result).toEqual(UserDetailResponseDto.fromRow(mockUser as any));
     });
   });
 
@@ -125,7 +125,7 @@ describe('UserController', () => {
 
       expect(userService.findMe).toHaveBeenCalledWith(usersId);
       expect(result).toEqual(
-        UserProfileResponseDto.fromEntity(mockProfile as any),
+        UserProfileResponseDto.fromRow(mockProfile as any),
       );
     });
   });
@@ -160,7 +160,7 @@ describe('UserController', () => {
         undefined,
       );
       expect(result).toEqual(
-        UserDetailResponseDto.fromEntity(mockUpdatedUser as any),
+        UserDetailResponseDto.fromRow(mockUpdatedUser as any),
       );
     });
   });

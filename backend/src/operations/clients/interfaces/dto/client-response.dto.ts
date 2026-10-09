@@ -108,7 +108,7 @@ export class ClientResponseDto {
     Object.assign(this, partial);
   }
 
-  static fromEntity(entity: ClientEntity): ClientResponseDto {
+  static fromRow(entity: ClientEntity): ClientResponseDto {
     return new ClientResponseDto({
       clienteId: entity.clienteId,
       identificacion: entity.identificacion,

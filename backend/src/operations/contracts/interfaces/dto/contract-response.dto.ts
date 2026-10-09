@@ -224,7 +224,7 @@ export class ContractResponseDto {
   @ApiPropertyOptional({ type: [ContractHistorialMedidorDto], nullable: true })
   historialMedidores?: ContractHistorialMedidorDto[] | null;
 
-  static fromEntity(entity: ContractEntity): ContractResponseDto {
+  static fromRow(entity: ContractEntity): ContractResponseDto {
     const dto = new ContractResponseDto();
     dto.contratoId = entity.contratoId;
     dto.clienteId = entity.clienteId;
@@ -276,7 +276,7 @@ export class ContractResponseDto {
     return dto;
   }
 
-  static fromEntityList(entities: ContractEntity[]): ContractResponseDto[] {
-    return entities.map((e) => ContractResponseDto.fromEntity(e));
+  static fromRowList(entities: ContractEntity[]): ContractResponseDto[] {
+    return entities.map((e) => ContractResponseDto.fromRow(e));
   }
 }

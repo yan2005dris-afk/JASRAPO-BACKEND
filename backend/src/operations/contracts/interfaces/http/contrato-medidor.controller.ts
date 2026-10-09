@@ -80,7 +80,7 @@ export class ContratoMedidorController {
       actorUserId,
       user?.rol,
     );
-    return ContractResponseDto.fromEntity(result);
+    return ContractResponseDto.fromRow(result);
   }
 
   @ApiOperation({
@@ -96,7 +96,7 @@ export class ContratoMedidorController {
   ): Promise<PaginatedResult<ContractResponseDto>> {
     const result = await this.contratoMedidorService.buscarContratos(filters);
     return {
-      data: ContractResponseDto.fromEntityList(result.data),
+      data: ContractResponseDto.fromRowList(result.data),
       meta: result.meta,
     };
   }
@@ -166,7 +166,7 @@ export class ContratoMedidorController {
     @Param('id', ParseBigIntPipe) id: bigint,
   ): Promise<ContractResponseDto> {
     const result = await this.contratoMedidorService.buscarContrato(id);
-    return ContractResponseDto.fromEntity(result);
+    return ContractResponseDto.fromRow(result);
   }
 
   @ApiOperation({
@@ -201,7 +201,7 @@ export class ContratoMedidorController {
     @Body() updateDto: ActualizarContratoMedidorDto,
   ): Promise<ContractResponseDto> {
     const result = await this.contratoMedidorService.actualizar(id, updateDto);
-    return ContractResponseDto.fromEntity(result);
+    return ContractResponseDto.fromRow(result);
   }
 
   @ApiOperation({
@@ -228,7 +228,7 @@ export class ContratoMedidorController {
     @Param('id', ParseBigIntPipe) id: bigint,
   ): Promise<ContractResponseDto> {
     const result = await this.contratoMedidorService.finalizarVinculo(id);
-    return ContractResponseDto.fromEntity(result);
+    return ContractResponseDto.fromRow(result);
   }
 
   @ApiOperation({
@@ -255,7 +255,7 @@ export class ContratoMedidorController {
     @Param('id', ParseBigIntPipe) id: bigint,
   ): Promise<ContractResponseDto> {
     const result = await this.contratoMedidorService.eliminar(id);
-    return ContractResponseDto.fromEntity(result);
+    return ContractResponseDto.fromRow(result);
   }
 
   @ApiOperation({
@@ -283,7 +283,7 @@ export class ContratoMedidorController {
       id,
       dto,
     );
-    return RouteResponseDto.fromEntity(route);
+    return RouteResponseDto.fromRow(route);
   }
 
   /**

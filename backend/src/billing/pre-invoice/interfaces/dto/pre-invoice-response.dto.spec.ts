@@ -13,7 +13,7 @@ describe('PreInvoiceResponseDto', () => {
       },
     });
 
-    expect(PreInvoiceResponseDto.fromEntity(entity)).toMatchObject({
+    expect(PreInvoiceResponseDto.fromRow(entity)).toMatchObject({
       contratoId: 2,
       numeroGuia: 'OLON-SN84920-00124',
     });

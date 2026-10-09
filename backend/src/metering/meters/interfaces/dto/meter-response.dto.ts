@@ -80,7 +80,7 @@ export class MeterResponseDto {
     Object.assign(this, partial);
   }
 
-  static fromEntity(meter: MeterEntity): MeterResponseDto {
+  static fromRow(meter: MeterEntity): MeterResponseDto {
     return new MeterResponseDto({
       medidorId: String(meter.medidorId),
       codigo: meter.codigo ?? null,

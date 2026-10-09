@@ -55,7 +55,7 @@ describe('OperatorRouteResponseDto', () => {
       ],
     } satisfies OperatorRoute;
 
-    const dto = OperatorRouteResponseDto.fromEntity(route);
+    const dto = OperatorRouteResponseDto.fromRow(route);
 
     expect(dto.rutaId).toBe('1');
     expect(dto.ordenesTrabajo[0].ordenTrabajoId).toBe('9');

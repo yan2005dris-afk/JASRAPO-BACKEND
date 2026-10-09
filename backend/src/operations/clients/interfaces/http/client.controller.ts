@@ -81,7 +81,7 @@ export class ClientController {
   async create(
     @Body() createClientDto: CreateClientDto,
   ): Promise<ClientResponseDto> {
-    return ClientResponseDto.fromEntity(
+    return ClientResponseDto.fromRow(
       await this.clientService.create(createClientDto),
     );
   }
@@ -102,7 +102,7 @@ export class ClientController {
   ): Promise<PaginatedResult<ClientResponseDto>> {
     const result = await this.clientService.findAll(filters);
     return {
-      data: result.data.map((x) => ClientResponseDto.fromEntity(x)),
+      data: result.data.map((x) => ClientResponseDto.fromRow(x)),
       meta: result.meta,
     };
   }
@@ -135,7 +135,7 @@ export class ClientController {
   ): Promise<ClientResponseDto> {
     return this.clientService
       .findOne(id)
-      .then((entity) => ClientResponseDto.fromEntity(entity));
+      .then((entity) => ClientResponseDto.fromRow(entity));
   }
 
   /**
@@ -169,7 +169,7 @@ export class ClientController {
   ): Promise<ClientResponseDto> {
     return this.clientService
       .update(id, updateClientDto)
-      .then((entity) => ClientResponseDto.fromEntity(entity));
+      .then((entity) => ClientResponseDto.fromRow(entity));
   }
 
   /**
@@ -194,6 +194,6 @@ export class ClientController {
   delete(@Param('id', ParseBigIntPipe) id: bigint): Promise<ClientResponseDto> {
     return this.clientService
       .delete(id)
-      .then((entity) => ClientResponseDto.fromEntity(entity));
+      .then((entity) => ClientResponseDto.fromRow(entity));
   }
 }

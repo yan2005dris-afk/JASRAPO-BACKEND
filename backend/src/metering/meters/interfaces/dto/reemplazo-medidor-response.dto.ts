@@ -109,7 +109,7 @@ export class ReemplazoMedidorResponseDto {
     Object.assign(this, partial);
   }
 
-  static fromEntity(r: ReemplazoMedidorEntity): ReemplazoMedidorResponseDto {
+  static fromRow(r: ReemplazoMedidorEntity): ReemplazoMedidorResponseDto {
     return new ReemplazoMedidorResponseDto({
       reemplazoId: r.reemplazoId.toString(),
       contratoId: r.contratoId.toString(),

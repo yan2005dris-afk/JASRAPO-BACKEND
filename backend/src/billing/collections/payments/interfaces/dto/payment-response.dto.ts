@@ -91,7 +91,7 @@ export class PaymentResponseDto {
     direccionDomicilio: string | null;
   };
 
-  static fromEntity(entity: PaymentEntity): PaymentResponseDto {
+  static fromRow(entity: PaymentEntity): PaymentResponseDto {
     const dto = new PaymentResponseDto();
     dto.pagoId = String(entity.pagoId);
     dto.clienteId = String(entity.clienteId);
@@ -112,10 +112,10 @@ export class PaymentResponseDto {
     dto.fechaCreacion = DateUtil.formatForFrontend(entity.createdAt)!;
     dto.fechaActualizacion = DateUtil.formatForFrontend(entity.updatedAt);
     dto.detallePago = entity.detallePago
-      ? PaymentDetailResponseDto.fromEntityList(entity.detallePago)
+      ? PaymentDetailResponseDto.fromRowList(entity.detallePago)
       : undefined;
     dto.saldosFavor = entity.saldosFavor
-      ? SaldoFavorResponseDto.fromEntityList(entity.saldosFavor)
+      ? SaldoFavorResponseDto.fromRowList(entity.saldosFavor)
       : undefined;
     dto.cliente = entity.cliente
       ? {
@@ -132,7 +132,7 @@ export class PaymentResponseDto {
     return dto;
   }
 
-  static fromEntityList(entities: PaymentEntity[]): PaymentResponseDto[] {
-    return entities.map(PaymentResponseDto.fromEntity);
+  static fromRowList(entities: PaymentEntity[]): PaymentResponseDto[] {
+    return entities.map(PaymentResponseDto.fromRow);
   }
 }

@@ -84,7 +84,7 @@ export class OrderWorkResponseDto {
   })
   medidor?: OrdenTrabajoMedidorDto | null;
 
-  static fromEntity(entity: OrdenTrabajoEntity): OrderWorkResponseDto {
+  static fromRow(entity: OrdenTrabajoEntity): OrderWorkResponseDto {
     const dto = new OrderWorkResponseDto();
     dto.ordenTrabajoId = entity.ordenTrabajoId.toString();
     dto.rutaId = entity.rutaId.toString();
@@ -115,9 +115,7 @@ export class OrderWorkResponseDto {
     return dto;
   }
 
-  static fromEntityList(
-    entities: OrdenTrabajoEntity[],
-  ): OrderWorkResponseDto[] {
-    return entities.map((e) => OrderWorkResponseDto.fromEntity(e));
+  static fromRowList(entities: OrdenTrabajoEntity[]): OrderWorkResponseDto[] {
+    return entities.map((e) => OrderWorkResponseDto.fromRow(e));
   }
 }

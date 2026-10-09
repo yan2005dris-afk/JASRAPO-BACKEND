@@ -37,9 +37,7 @@ export class PreInvoiceDetailResponseDto {
   @ApiPropertyOptional({ description: 'Discount' })
   descuento?: number;
 
-  static fromEntity(
-    detail: PreInvoiceDetailEntity,
-  ): PreInvoiceDetailResponseDto {
+  static fromRow(detail: PreInvoiceDetailEntity): PreInvoiceDetailResponseDto {
     const dto = new PreInvoiceDetailResponseDto();
     dto.prefacturaDetalleId = detail.prefacturaDetalleId;
     dto.descripcion = detail.descripcion;
@@ -142,7 +140,7 @@ export class PreInvoiceResponseDto {
   @ApiPropertyOptional({ description: 'Comprobante ID' })
   comprobanteId?: string | null;
 
-  static fromEntity(entity: PreInvoiceEntity): PreInvoiceResponseDto {
+  static fromRow(entity: PreInvoiceEntity): PreInvoiceResponseDto {
     const dto = new PreInvoiceResponseDto();
     dto.prefacturaId = Number(entity.prefacturaId);
     dto.uuid = entity.uuid;
@@ -173,11 +171,11 @@ export class PreInvoiceResponseDto {
       : null;
     dto.createdAt = entity.createdAt;
     dto.updatedAt = entity.updatedAt;
-    dto.detalles = entity.detalles?.map(PreInvoiceDetailResponseDto.fromEntity);
+    dto.detalles = entity.detalles?.map(PreInvoiceDetailResponseDto.fromRow);
     return dto;
   }
 
-  static fromEntityList(entities: PreInvoiceEntity[]): PreInvoiceResponseDto[] {
-    return entities.map(PreInvoiceResponseDto.fromEntity);
+  static fromRowList(entities: PreInvoiceEntity[]): PreInvoiceResponseDto[] {
+    return entities.map(PreInvoiceResponseDto.fromRow);
   }
 }
