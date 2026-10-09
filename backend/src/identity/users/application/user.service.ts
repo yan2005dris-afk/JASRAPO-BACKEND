@@ -16,8 +16,9 @@ import {
   PendingInvitation,
 } from './use-cases/get-pending-invitations.use-case';
 import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
-import { UserEntity } from '../domain/entities/user.entity';
-import {
+import type {
+  UserRow,
+  UserDetailData,
   UserAvatar,
   EffectivePermissionsResponse,
 } from '../domain/types/user.types';
@@ -49,11 +50,11 @@ export class UserService {
   async user(criteria: {
     usuarioId?: number;
     email?: string;
-  }): Promise<UserEntity | null> {
+  }): Promise<UserDetailData | null> {
     return this.getUserDetailUseCase.execute(criteria);
   }
 
-  async findMe(usersId: number): Promise<UserEntity> {
+  async findMe(usersId: number): Promise<UserRow> {
     return this.getUserProfileUseCase.execute(usersId);
   }
 
@@ -61,7 +62,7 @@ export class UserService {
     dto: CreateUserDto,
     file?: Express.Multer.File,
     adminUserId?: number,
-  ): Promise<UserEntity> {
+  ): Promise<UserRow> {
     const user = await this.createUserUseCase.execute(dto, file);
 
     // Disparar creación de invitación después de crear el usuario
@@ -90,9 +91,7 @@ export class UserService {
     return user;
   }
 
-  async users(
-    paginationDto: PaginationDto,
-  ): Promise<PaginatedResult<UserEntity>> {
+  async users(paginationDto: PaginationDto): Promise<PaginatedResult<UserRow>> {
     return this.getActiveUsersUseCase.execute(paginationDto);
   }
 
@@ -100,7 +99,7 @@ export class UserService {
     usuarioId: number,
     updateData: UpdateUserDto,
     file?: Express.Multer.File,
-  ): Promise<UserEntity | null> {
+  ): Promise<UserDetailData | null> {
     return this.updateUserUseCase.execute(usuarioId, updateData, file);
   }
 
@@ -111,7 +110,7 @@ export class UserService {
     return this.updateUserAvatarUseCase.execute(usuarioId, file);
   }
 
-  async softDeleteUser(usuarioId: number): Promise<UserEntity> {
+  async softDeleteUser(usuarioId: number): Promise<UserRow> {
     return this.softDeleteUserUseCase.execute(usuarioId);
   }
 

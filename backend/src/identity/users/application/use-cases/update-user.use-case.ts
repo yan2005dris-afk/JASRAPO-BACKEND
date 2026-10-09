@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { UserRepository } from '../../domain/repositories/user.repository';
 import { RoleRepository } from '../../../roles/domain/repositories/role.repository';
-import { UserEntity } from '../../domain/entities/user.entity';
+import type {
+  UpdateUserRepositoryData,
+  UserDetailData,
+} from '../../domain/types/user.types';
 import { UpdateUserDto } from '../../interfaces/dto/update-user.dto';
 import { UpdateUserPermissionsUseCase } from './update-user-permissions.use-case';
 import { GetUserDetailUseCase } from './get-user-detail.use-case';
@@ -17,7 +20,6 @@ import {
   EntityNotFoundException,
   InvalidDomainOperationException,
 } from 'src/shared/domain/exceptions/domain.exception';
-import type { UpdateUserRepositoryData } from '../../domain/types/user.types';
 
 @Injectable()
 export class UpdateUserUseCase {
@@ -33,7 +35,7 @@ export class UpdateUserUseCase {
     usuarioId: number,
     updateData: UpdateUserDto,
     file?: Express.Multer.File,
-  ): Promise<UserEntity | null> {
+  ): Promise<UserDetailData | null> {
     const existingUser = await this.userRepository.findById(usuarioId);
     if (!existingUser) {
       throw new EntityNotFoundException('Usuario', usuarioId);

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { UserRepository } from '../../domain/repositories/user.repository';
-import { UserEntity } from '../../domain/entities/user.entity';
+import { UserRow } from '../../domain/types/user.types';
 import { PaginationDto } from 'src/infrastructure/common/dtos/pagination.dto';
 import { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
 
@@ -10,7 +10,7 @@ export class GetActiveUsersUseCase {
 
   async execute(
     paginationDto: PaginationDto,
-  ): Promise<PaginatedResult<UserEntity>> {
+  ): Promise<PaginatedResult<UserRow>> {
     return this.userRepository.findManyActive(paginationDto);
   }
 }

@@ -14,7 +14,6 @@ import { ResendInvitationUseCase } from './application/use-cases/resend-invitati
 import { GetPendingInvitationsUseCase } from './application/use-cases/get-pending-invitations.use-case';
 import { UserRepository } from './domain/repositories/user.repository';
 import { PrismaUserRepository } from './infrastructure/repositories/prisma-user.repository';
-import { UserMapper } from './infrastructure/mappers/user.mapper';
 import { RolesModule } from '../roles/roles.module';
 import { AuthModule } from '../auth/auth.module';
 
@@ -34,7 +33,6 @@ import { AuthModule } from '../auth/auth.module';
     UpdateUserPermissionsUseCase,
     ResendInvitationUseCase,
     GetPendingInvitationsUseCase,
-    UserMapper,
     {
       provide: UserRepository,
       useClass: PrismaUserRepository,
@@ -52,7 +50,6 @@ import { AuthModule } from '../auth/auth.module';
     GetEffectivePermissionsUseCase,
     UpdateUserPermissionsUseCase,
     UserRepository,
-    UserMapper,
   ],
 })
 export class UserModule {}

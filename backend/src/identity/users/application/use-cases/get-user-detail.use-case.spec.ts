@@ -2,7 +2,7 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { GetUserDetailUseCase } from './get-user-detail.use-case';
 import { UserRepository } from '../../domain/repositories/user.repository';
-import { UserEntity } from '../../domain/entities/user.entity';
+import { userRow } from '../../__test-utils__/user-row.factory';
 
 describe('GetUserDetailUseCase', () => {
   let useCase: GetUserDetailUseCase;
@@ -30,7 +30,7 @@ describe('GetUserDetailUseCase', () => {
   });
 
   it('should return the user with direct and role permissions when found by usuarioId', async () => {
-    const user = new UserEntity({
+    const user = userRow({
       usuarioId: 1,
       email: 'user@example.com',
       nombres: 'Juan',
@@ -89,7 +89,7 @@ describe('GetUserDetailUseCase', () => {
   });
 
   it('should look up by email when email criteria is provided', async () => {
-    const user = new UserEntity({
+    const user = userRow({
       usuarioId: 1,
       email: 'user@example.com',
       deletedAt: null,
@@ -115,7 +115,7 @@ describe('GetUserDetailUseCase', () => {
   });
 
   it('should not load role permissions when the role is soft-deleted', async () => {
-    const user = new UserEntity({
+    const user = userRow({
       usuarioId: 1,
       email: 'user@example.com',
       deletedAt: null,

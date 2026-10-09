@@ -1,9 +1,14 @@
-import type { UserEntity } from '../entities/user.entity';
+import type {
+  UserRow,
+  UserWithPasswordAndLockoutRow,
+} from '../../infrastructure/repositories/user.include';
 import type {
   PaginationParams,
   PaginationMeta,
   PaginatedResult,
 } from 'src/shared/domain/types/pagination.types';
+
+export type { UserRow, UserWithPasswordAndLockoutRow };
 
 export type DomainPaginationParams = PaginationParams;
 export type DomainPaginationMeta = PaginationMeta;
@@ -14,14 +19,6 @@ export interface UserAvatar {
   key?: string;
 }
 
-/**
- * Sub-shape de Role que expone el repo de users.
- *
- * Es un subset del row completo de Prisma (no incluye `rolPermisos`
- * ni otros campos no seleccionados por el `userWithRolesSelect`).
- * Se define localmente para evitar acoplar el BC users a todos los
- * campos de `RoleRow`.
- */
 export interface EmbeddedRole {
   rolId: number;
   nombre: string;
@@ -63,7 +60,7 @@ export interface UserFilters {
 
 export interface CreateUserRepositoryData {
   email: string;
-  clave: string | null; // null para usuarios nuevos pendientes de aceptar invitación
+  clave: string | null;
   nombres: string;
   apellidos: string;
   telefono: string;
@@ -82,12 +79,12 @@ export interface UpdateUserRepositoryData {
   deletedAt?: Date | null;
 }
 
-export type UserWithPasswordAndLockout = UserEntity & {
-  clave: string | null; // null si el usuario no aceptó invitación aún
-  intentosFallidos: number;
-  ultimoIntentoFallidoEn: Date | null;
-  bloqueadoHasta: Date | null;
-};
+export type UserWithPasswordAndLockout = UserWithPasswordAndLockoutRow;
+
+export interface UserDetailData extends UserRow {
+  permisosDirectos: UserDirectPermission[];
+  permisosRol: UserRolePermission[];
+}
 
 export interface FailedLoginAttemptOptions {
   windowMs: number;

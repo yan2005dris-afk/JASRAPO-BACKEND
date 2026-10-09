@@ -39,7 +39,7 @@ export class UpdateUserAvatarUseCase {
       await deleteOldAvatar(oldAvatarKey, newAvatarKey, this.storageService);
 
       const updatedUser = await this.userRepository.findById(usuarioId);
-      return updatedUser?.avatar as UserAvatar;
+      return updatedUser?.avatar as unknown as UserAvatar;
     } catch (error) {
       if (newAvatarKey) {
         await rollbackAvatarUpload(newAvatarKey, this.storageService);

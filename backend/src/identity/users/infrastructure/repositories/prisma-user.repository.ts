@@ -16,40 +16,16 @@ import {
 } from '../../domain/repositories/user.repository';
 import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 import { paginate } from 'src/infrastructure/common/utils/pagination.util';
-import { UserEntity } from '../../domain/entities/user.entity';
-import { UserMapper } from '../mappers/user.mapper';
-
-export const userWithRolesSelect = {
-  usuarioId: true,
-  email: true,
-  nombres: true,
-  apellidos: true,
-  telefono: true,
-  avatar: true,
-  deletedAt: true,
-  rol: {
-    select: {
-      rolId: true,
-      nombre: true,
-      deletedAt: true,
-    },
-  },
-} satisfies Prisma.UsuariosSelect;
-
-export const userWithPasswordAndLockoutSelect = {
-  ...userWithRolesSelect,
-  clave: true,
-  intentosFallidos: true,
-  ultimoIntentoFallidoEn: true,
-  bloqueadoHasta: true,
-} satisfies Prisma.UsuariosSelect;
+import {
+  userWithRolesSelect,
+  userWithPasswordAndLockoutSelect,
+  type UserRow,
+  type UserWithPasswordAndLockoutRow,
+} from './user.include';
 
 @Injectable()
 export class PrismaUserRepository implements UserRepository {
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly userMapper: UserMapper,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   private mapFiltroFecha(filter?: FiltroFecha | null) {
     if (filter === undefined) return undefined;
@@ -61,34 +37,33 @@ export class PrismaUserRepository implements UserRepository {
     };
   }
 
-  async findById(usuarioId: number): Promise<UserEntity | null> {
-    const user = await this.prisma.usuarios.findUnique({
+  async findById(usuarioId: number): Promise<UserRow | null> {
+    return this.prisma.usuarios.findUnique({
       where: { usuarioId },
       select: userWithRolesSelect,
     });
-    return await this.userMapper.toEntity(user);
   }
 
-  async findByEmail(email: string): Promise<UserEntity | null> {
-    const user = await this.prisma.usuarios.findUnique({
+  async findByEmail(email: string): Promise<UserRow | null> {
+    return this.prisma.usuarios.findUnique({
       where: { email },
       select: userWithRolesSelect,
     });
-    return await this.userMapper.toEntity(user);
   }
 
-  async findByEmailWithPassword(email: string) {
-    const user = await this.prisma.usuarios.findUnique({
+  async findByEmailWithPassword(
+    email: string,
+  ): Promise<UserWithPasswordAndLockoutRow | null> {
+    return this.prisma.usuarios.findUnique({
       where: { email },
       select: userWithPasswordAndLockoutSelect,
     });
-    return await this.userMapper.toWithPasswordAndLockout(user);
   }
 
   async findManyActive(
     pagination: DomainPaginationParams,
-  ): Promise<DomainPaginatedResult<UserEntity>> {
-    const result = await paginate(
+  ): Promise<DomainPaginatedResult<UserRow>> {
+    return paginate(
       this.prisma.usuarios,
       {
         select: userWithRolesSelect,
@@ -100,28 +75,19 @@ export class PrismaUserRepository implements UserRepository {
         limit: pagination.limit,
       },
     );
-
-    const data = await Promise.all(
-      result.data.map((user) => this.userMapper.toEntity(user)),
-    );
-
-    return {
-      data: data.filter((u): u is UserEntity => u !== null),
-      meta: result.meta,
-    };
   }
 
   async findMany(
     filters: UserFilters,
     pagination: DomainPaginationParams,
-  ): Promise<DomainPaginatedResult<UserEntity>> {
+  ): Promise<DomainPaginatedResult<UserRow>> {
     const where: Prisma.UsuariosWhereInput = {
       ...(filters.email && { email: filters.email }),
       ...(filters.deletedAt !== undefined && {
         deletedAt: this.mapFiltroFecha(filters.deletedAt),
       }),
     };
-    const result = await paginate(
+    return paginate(
       this.prisma.usuarios,
       {
         select: userWithRolesSelect,
@@ -133,40 +99,26 @@ export class PrismaUserRepository implements UserRepository {
         limit: pagination.limit,
       },
     );
-
-    const data = await Promise.all(
-      result.data.map((user) => this.userMapper.toEntity(user)),
-    );
-
-    return {
-      data: data.filter((u): u is UserEntity => u !== null),
-      meta: result.meta,
-    };
   }
 
-  async create(data: CreateUserRepositoryData): Promise<UserEntity> {
+  async create(data: CreateUserRepositoryData): Promise<UserRow> {
     const { rolId, ...userData } = data;
     const createData: Prisma.UsuariosCreateInput = {
       ...userData,
       avatar: userData.avatar as unknown as Prisma.InputJsonValue,
       rol: { connect: { rolId } },
     };
-    const user = await this.prisma.usuarios.create({
+    return this.prisma.usuarios.create({
       data: createData,
       select: userWithRolesSelect,
     });
-    const mapped = await this.userMapper.toEntity(user);
-    if (!mapped) {
-      throw new EntityNotFoundException('Usuario', user.usuarioId);
-    }
-    return mapped;
   }
 
   async update(
     usuarioId: number,
     data: UpdateUserRepositoryData,
     tx?: Prisma.TransactionClient,
-  ): Promise<UserEntity> {
+  ): Promise<UserRow> {
     const client = tx || this.prisma;
     const { rolId, ...userData } = data;
     const updateData: Prisma.UsuariosUpdateInput = {
@@ -178,16 +130,11 @@ export class PrismaUserRepository implements UserRepository {
       rol: rolId ? { connect: { rolId } } : undefined,
     };
     try {
-      const user = await client.usuarios.update({
+      return await client.usuarios.update({
         where: { usuarioId },
         data: updateData,
         select: userWithRolesSelect,
       });
-      const mapped = await this.userMapper.toEntity(user);
-      if (!mapped) {
-        throw new EntityNotFoundException('Usuario', usuarioId);
-      }
-      return mapped;
     } catch (error) {
       if (this.isRecordNotFound(error)) {
         throw new EntityNotFoundException('Usuario', usuarioId);
@@ -229,7 +176,13 @@ export class PrismaUserRepository implements UserRepository {
         deletedAt: null,
         permiso: { deletedAt: null },
       },
-      include: { permiso: { select: { recurso: true, accion: true } } },
+      orderBy: [
+        { permiso: { recurso: 'asc' } },
+        { permiso: { accion: 'asc' } },
+      ],
+      include: {
+        permiso: { select: { recurso: true, accion: true } },
+      },
     });
     return raw.map((item) => ({
       recurso: item.permiso?.recurso || '',
