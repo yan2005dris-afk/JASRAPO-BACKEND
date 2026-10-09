@@ -8,6 +8,7 @@ import { EstadoPago, TipoDetallePago } from '../../domain/enums';
 import { PaymentRepository } from '../../domain/repositories/payment.repository';
 import { EventosPendientesRepository } from 'src/shared/outbox/domain/repositories/eventos-pendientes.repository';
 import type { PaymentEntity } from '../../domain/entities/payment.entity';
+import type { TransactionContext } from 'src/shared/domain/types/transaction';
 
 @Injectable()
 export class AnnulPaymentUseCase {
@@ -110,7 +111,7 @@ export class AnnulPaymentUseCase {
   }
 
   private async revertInstallment(
-    tx: unknown,
+    tx: TransactionContext,
     cuotaConvenioId: bigint,
     montoAbonado: any,
   ) {
