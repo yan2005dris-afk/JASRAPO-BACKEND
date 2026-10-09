@@ -2,7 +2,7 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { DeleteCommunityUseCase } from './delete-community.use-case';
 import { CommunityRepository } from '../../domain/repositories/community.repository';
-import { CommunityEntity } from '../../domain/entities/community.entity';
+import { communityRow } from '../../__test-utils__/community-row.factory';
 import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 
 describe('DeleteCommunityUseCase', () => {
@@ -27,13 +27,12 @@ describe('DeleteCommunityUseCase', () => {
 
   it('should soft delete a community when found', async () => {
     const id = 1;
-    const existing = new CommunityEntity({
+    const existing = communityRow({
       comunidadId: id,
       nombre: 'Comunidad 1',
       codigo: 'C1',
-      deletedAt: null,
     });
-    const deleted = new CommunityEntity({
+    const deleted = communityRow({
       comunidadId: id,
       nombre: 'Comunidad 1',
       codigo: 'C1',

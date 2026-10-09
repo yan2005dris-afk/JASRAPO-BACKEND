@@ -2,7 +2,7 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { FindAllCommunitiesUseCase } from './find-all-communities.use-case';
 import { CommunityRepository } from '../../domain/repositories/community.repository';
-import { CommunityEntity } from '../../domain/entities/community.entity';
+import { communityRow } from '../../__test-utils__/community-row.factory';
 
 describe('FindAllCommunitiesUseCase', () => {
   let useCase: FindAllCommunitiesUseCase;
@@ -28,16 +28,8 @@ describe('FindAllCommunitiesUseCase', () => {
 
   it('should return paginated results with default page and limit', async () => {
     const mockData = [
-      new CommunityEntity({
-        comunidadId: 1,
-        nombre: 'Comunidad A',
-        codigo: 'CA-001',
-      }),
-      new CommunityEntity({
-        comunidadId: 2,
-        nombre: 'Comunidad B',
-        codigo: 'CB-002',
-      }),
+      communityRow({ comunidadId: 1, nombre: 'Comunidad A', codigo: 'CA-001' }),
+      communityRow({ comunidadId: 2, nombre: 'Comunidad B', codigo: 'CB-002' }),
     ];
     mockRepository.paginate.mockResolvedValue({
       data: mockData,

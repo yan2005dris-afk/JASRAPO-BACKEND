@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { CommunityRepository } from '../../domain/repositories/community.repository';
-import { CommunityEntity } from '../../domain/entities/community.entity';
+import type { CommunityRow } from '../../domain/types/community.types';
 import type { PaginatedResult } from 'src/infrastructure/common/types/paginated-result.type';
 import { getPagination } from 'src/infrastructure/common/utils/pagination.util';
 import type { CommunityFilterDto } from '../../interfaces/dto/community-filter.dto';
@@ -13,7 +13,7 @@ export class FindAllCommunitiesUseCase {
     page: number = 1,
     limit: number = 10,
     filters?: CommunityFilterDto,
-  ): Promise<PaginatedResult<CommunityEntity>> {
+  ): Promise<PaginatedResult<CommunityRow>> {
     const { skip, take } = getPagination(page, limit);
 
     const { data, total } = await this.communityRepository.paginate(

@@ -2,7 +2,7 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { UpdateCommunityUseCase } from './update-community.use-case';
 import { CommunityRepository } from '../../domain/repositories/community.repository';
-import { CommunityEntity } from '../../domain/entities/community.entity';
+import { communityRow } from '../../__test-utils__/community-row.factory';
 import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 
 describe('UpdateCommunityUseCase', () => {
@@ -28,17 +28,15 @@ describe('UpdateCommunityUseCase', () => {
   it('should update a community when found', async () => {
     const id = 1;
     const dto = { nombre: 'Comunidad Updated' };
-    const existing = new CommunityEntity({
+    const existing = communityRow({
       comunidadId: id,
       nombre: 'Old Name',
       codigo: 'C1',
-      deletedAt: null,
     });
-    const updated = new CommunityEntity({
+    const updated = communityRow({
       comunidadId: id,
       nombre: 'Comunidad Updated',
       codigo: 'C1',
-      deletedAt: null,
     });
 
     mockCommunityRepository.findById.mockResolvedValue(existing);

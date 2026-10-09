@@ -2,7 +2,7 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { FindOneCommunityUseCase } from './find-one-community.use-case';
 import { CommunityRepository } from '../../domain/repositories/community.repository';
-import { CommunityEntity } from '../../domain/entities/community.entity';
+import { communityRow } from '../../__test-utils__/community-row.factory';
 import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 
 describe('FindOneCommunityUseCase', () => {
@@ -25,7 +25,7 @@ describe('FindOneCommunityUseCase', () => {
   });
 
   it('should return community entity when found', async () => {
-    const entity = new CommunityEntity({
+    const entity = communityRow({
       comunidadId: 1,
       nombre: 'Comunidad 1',
       codigo: 'C1',

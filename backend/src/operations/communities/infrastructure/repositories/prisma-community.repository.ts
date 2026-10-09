@@ -2,8 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { Prisma } from 'src/generated/prisma/client';
 import { CommunityRepository } from '../../domain/repositories/community.repository';
-import { CommunityEntity } from '../../domain/entities/community.entity';
-import { CommunityMapper } from '../mappers/community.mapper';
+import { communityInclude, type CommunityRow } from './community.include';
 import type {
   CreateCommunityData,
   UpdateCommunityData,
@@ -16,58 +15,45 @@ import {
 
 @Injectable()
 export class PrismaCommunityRepository implements CommunityRepository {
-  private readonly defaultInclude = {
-    sector: {
-      select: {
-        sectorId: true,
-        nombre: true,
-        codigo: true,
-      },
-    },
-  } satisfies Prisma.ComunidadesInclude;
-
   constructor(private readonly prisma: PrismaService) {}
 
   async findById(
     id: number,
     includeDeleted: boolean = false,
-  ): Promise<CommunityEntity | null> {
-    const record = await this.prisma.comunidades.findFirst({
+  ): Promise<CommunityRow | null> {
+    return this.prisma.comunidades.findFirst({
       where: {
         comunidadId: id,
         ...(includeDeleted ? {} : { deletedAt: null }),
       },
-      include: this.defaultInclude,
+      include: communityInclude,
     });
-    return CommunityMapper.toDomain(record);
   }
 
-  async findByCodigo(codigo: string): Promise<CommunityEntity | null> {
-    const record = await this.prisma.comunidades.findUnique({
+  async findByCodigo(codigo: string): Promise<CommunityRow | null> {
+    return this.prisma.comunidades.findUnique({
       where: { codigo },
-      include: this.defaultInclude,
+      include: communityInclude,
     });
-    return CommunityMapper.toDomain(record);
   }
 
   async findActiveByNameOrCode(
     nombre: string,
     codigo: string,
-  ): Promise<CommunityEntity | null> {
-    const record = await this.prisma.comunidades.findFirst({
+  ): Promise<CommunityRow | null> {
+    return this.prisma.comunidades.findFirst({
       where: {
         deletedAt: null,
         OR: [{ nombre: { equals: nombre, mode: 'insensitive' } }, { codigo }],
       },
-      include: this.defaultInclude,
+      include: communityInclude,
     });
-    return CommunityMapper.toDomain(record);
   }
 
   async paginate(
     filters: CommunityFilters,
     pagination: { skip: number; take: number },
-  ): Promise<{ data: CommunityEntity[]; total: number }> {
+  ): Promise<{ data: CommunityRow[]; total: number }> {
     const where: Prisma.ComunidadesWhereInput = { deletedAt: null };
     if (filters.nombre) {
       where.nombre = { contains: filters.nombre, mode: 'insensitive' };
@@ -76,38 +62,26 @@ export class PrismaCommunityRepository implements CommunityRepository {
       where.codigo = { contains: filters.codigo, mode: 'insensitive' };
     }
 
-    const [records, total] = await Promise.all([
+    const [data, total] = await Promise.all([
       this.prisma.comunidades.findMany({
         where,
         skip: pagination.skip,
         take: pagination.take,
         orderBy: { nombre: 'asc' },
-        include: this.defaultInclude,
+        include: communityInclude,
       }),
       this.prisma.comunidades.count({ where }),
     ]);
 
-    return {
-      data: CommunityMapper.toDomainList(records),
-      total,
-    };
+    return { data, total };
   }
 
-  async create(data: CreateCommunityData): Promise<CommunityEntity> {
+  async create(data: CreateCommunityData): Promise<CommunityRow> {
     try {
-      const record = await this.prisma.comunidades.create({
-        data: {
-          nombre: data.nombre,
-          codigo: data.codigo,
-          porcentajeTasaSeguridad:
-            data.porcentajeTasaSeguridad !== undefined &&
-            data.porcentajeTasaSeguridad !== null
-              ? new Prisma.Decimal(data.porcentajeTasaSeguridad)
-              : new Prisma.Decimal(0),
-        },
-        include: this.defaultInclude,
+      return await this.prisma.comunidades.create({
+        data: this.toCreateInput(data),
+        include: communityInclude,
       });
-      return CommunityMapper.toDomain(record)!;
     } catch (error) {
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
@@ -119,28 +93,13 @@ export class PrismaCommunityRepository implements CommunityRepository {
     }
   }
 
-  async update(
-    id: number,
-    data: UpdateCommunityData,
-  ): Promise<CommunityEntity> {
+  async update(id: number, data: UpdateCommunityData): Promise<CommunityRow> {
     try {
-      const record = await this.prisma.comunidades.update({
+      return await this.prisma.comunidades.update({
         where: { comunidadId: id },
-        data: {
-          ...(data.nombre !== undefined ? { nombre: data.nombre } : {}),
-          ...(data.codigo !== undefined ? { codigo: data.codigo } : {}),
-          ...(data.porcentajeTasaSeguridad !== undefined &&
-          data.porcentajeTasaSeguridad !== null
-            ? {
-                porcentajeTasaSeguridad: new Prisma.Decimal(
-                  data.porcentajeTasaSeguridad,
-                ),
-              }
-            : {}),
-        },
-        include: this.defaultInclude,
+        data: this.toUpdateInput(data),
+        include: communityInclude,
       });
-      return CommunityMapper.toDomain(record)!;
     } catch (error) {
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
@@ -164,34 +123,34 @@ export class PrismaCommunityRepository implements CommunityRepository {
   async reactivate(
     id: number,
     data: Partial<CreateCommunityData>,
-  ): Promise<CommunityEntity> {
-    const record = await this.prisma.comunidades.update({
+  ): Promise<CommunityRow> {
+    const updateData: Prisma.ComunidadesUncheckedUpdateInput = {
+      deletedAt: null,
+    };
+    if (data.nombre !== undefined) updateData.nombre = data.nombre;
+    if (
+      data.porcentajeTasaSeguridad !== undefined &&
+      data.porcentajeTasaSeguridad !== null
+    ) {
+      updateData.porcentajeTasaSeguridad = new Prisma.Decimal(
+        data.porcentajeTasaSeguridad,
+      );
+    }
+
+    return this.prisma.comunidades.update({
       where: { comunidadId: id },
-      data: {
-        ...(data.nombre !== undefined ? { nombre: data.nombre } : {}),
-        ...(data.porcentajeTasaSeguridad !== undefined &&
-        data.porcentajeTasaSeguridad !== null
-          ? {
-              porcentajeTasaSeguridad: new Prisma.Decimal(
-                data.porcentajeTasaSeguridad,
-              ),
-            }
-          : {}),
-        deletedAt: null,
-      },
-      include: this.defaultInclude,
+      data: updateData,
+      include: communityInclude,
     });
-    return CommunityMapper.toDomain(record)!;
   }
 
-  async softDelete(id: number): Promise<CommunityEntity> {
+  async softDelete(id: number): Promise<CommunityRow> {
     try {
-      const record = await this.prisma.comunidades.update({
+      return await this.prisma.comunidades.update({
         where: { comunidadId: id },
         data: { deletedAt: new Date() },
-        include: this.defaultInclude,
+        include: communityInclude,
       });
-      return CommunityMapper.toDomain(record)!;
     } catch (error) {
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
@@ -201,5 +160,43 @@ export class PrismaCommunityRepository implements CommunityRepository {
       }
       throw error;
     }
+  }
+
+  /**
+   * Helpers privados — antes vivian en `CommunityMapper`. Se mantienen
+   * como helpers privados del repo porque (a) son detalles de
+   * adaptacion Prisma (coercion Decimal -> number, defaults) y
+   * (b) eliminan la ceremonia de un mapper 1:1 sin perder capacidad.
+   */
+
+  private toCreateInput(
+    data: CreateCommunityData,
+  ): Prisma.ComunidadesUncheckedCreateInput {
+    return {
+      nombre: data.nombre,
+      codigo: data.codigo,
+      porcentajeTasaSeguridad:
+        data.porcentajeTasaSeguridad !== undefined &&
+        data.porcentajeTasaSeguridad !== null
+          ? new Prisma.Decimal(data.porcentajeTasaSeguridad)
+          : new Prisma.Decimal(0),
+    };
+  }
+
+  private toUpdateInput(
+    data: UpdateCommunityData,
+  ): Prisma.ComunidadesUncheckedUpdateInput {
+    const input: Prisma.ComunidadesUncheckedUpdateInput = {};
+    if (data.nombre !== undefined) input.nombre = data.nombre;
+    if (data.codigo !== undefined) input.codigo = data.codigo;
+    if (
+      data.porcentajeTasaSeguridad !== undefined &&
+      data.porcentajeTasaSeguridad !== null
+    ) {
+      input.porcentajeTasaSeguridad = new Prisma.Decimal(
+        data.porcentajeTasaSeguridad,
+      );
+    }
+    return input;
   }
 }
