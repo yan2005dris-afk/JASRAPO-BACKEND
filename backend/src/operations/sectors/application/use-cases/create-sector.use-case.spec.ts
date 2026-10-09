@@ -2,8 +2,8 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { CreateSectorUseCase } from './create-sector.use-case';
 import { SectorRepository } from '../../domain/repositories/sector.repository';
-import { SectorEntity } from '../../domain/entities/sector.entity';
 import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
+import { sectorRow } from '../../__test-utils__/sector-row.factory';
 
 describe('CreateSectorUseCase', () => {
   let useCase: CreateSectorUseCase;
@@ -36,7 +36,12 @@ describe('CreateSectorUseCase', () => {
 
   it('should create a sector successfully when comunidad exists', async () => {
     const dto = { nombre: 'Sector A', codigo: 'SEC-001', comunidadId: 1 };
-    const expected = new SectorEntity(1, 'Sector A', 'SEC-001', 1);
+    const expected = sectorRow({
+      sectorId: 1,
+      nombre: 'Sector A',
+      codigo: 'SEC-001',
+      comunidadId: 1,
+    });
 
     mockSectorRepository.findComunidadById.mockResolvedValue({
       comunidadId: 1,

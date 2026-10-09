@@ -54,7 +54,7 @@ export class SectorController {
     @Body() createSectorDto: CreateSectorDto,
   ): Promise<SectorResponseDto> {
     const result = await this.sectorService.crearSector(createSectorDto);
-    return SectorResponseDto.fromEntity(result);
+    return SectorResponseDto.fromRow(result);
   }
 
   @ApiOperation({
@@ -73,7 +73,7 @@ export class SectorController {
       paginationDto.limit,
     );
     return {
-      data: SectorResponseDto.fromEntityList(result.data),
+      data: SectorResponseDto.fromRowList(result.data),
       meta: result.meta,
     };
   }
@@ -101,7 +101,7 @@ export class SectorController {
     @Param('id', ParseIntPipe) id: number,
   ): Promise<SectorResponseDto> {
     const result = await this.sectorService.findOne(id);
-    return SectorResponseDto.fromEntity(result);
+    return SectorResponseDto.fromRow(result);
   }
 
   @ApiOperation({
@@ -134,7 +134,7 @@ export class SectorController {
       id,
       updateSectorDto,
     );
-    return SectorResponseDto.fromEntity(result);
+    return SectorResponseDto.fromRow(result);
   }
 
   @ApiOperation({
@@ -161,6 +161,6 @@ export class SectorController {
     @Param('id', ParseIntPipe) id: number,
   ): Promise<SectorResponseDto> {
     const result = await this.sectorService.eliminarSector(id);
-    return SectorResponseDto.fromEntity(result);
+    return SectorResponseDto.fromRow(result);
   }
 }

@@ -2,7 +2,7 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { GetAllSectorsUseCase } from './get-all-sectors.use-case';
 import { SectorRepository } from '../../domain/repositories/sector.repository';
-import { SectorEntity } from '../../domain/entities/sector.entity';
+import { sectorRow } from '../../__test-utils__/sector-row.factory';
 
 describe('GetAllSectorsUseCase', () => {
   let useCase: GetAllSectorsUseCase;
@@ -29,8 +29,8 @@ describe('GetAllSectorsUseCase', () => {
 
   it('should return paginated sectors', async () => {
     const mockSectors = [
-      new SectorEntity(1, 'Sector 1', 'SEC-001', 1),
-      new SectorEntity(2, 'Sector 2', 'SEC-002', 1),
+      sectorRow({ sectorId: 1, nombre: 'Sector 1', codigo: 'SEC-001' }),
+      sectorRow({ sectorId: 2, nombre: 'Sector 2', codigo: 'SEC-002' }),
     ];
     mockSectorRepository.paginate.mockResolvedValue({
       data: mockSectors,

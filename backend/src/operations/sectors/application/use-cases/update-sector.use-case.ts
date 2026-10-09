@@ -1,14 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { SectorRepository } from '../../domain/repositories/sector.repository';
 import { UpdateSectorDto } from '../../interfaces/dto/update-sector.dto';
-import { SectorEntity } from '../../domain/entities/sector.entity';
+import type { SectorRow } from '../../domain/types/sector.types';
 import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 
 @Injectable()
 export class UpdateSectorUseCase {
   constructor(private readonly sectorRepository: SectorRepository) {}
 
-  async execute(id: number, dto: UpdateSectorDto): Promise<SectorEntity> {
+  async execute(id: number, dto: UpdateSectorDto): Promise<SectorRow> {
     const sector = await this.sectorRepository.findById(id);
 
     if (!sector) {

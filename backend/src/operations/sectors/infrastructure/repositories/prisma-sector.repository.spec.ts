@@ -1,6 +1,8 @@
 import { PrismaSectorRepository } from './prisma-sector.repository';
 import type { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { Prisma } from 'src/generated/prisma/client';
+import { sectorInclude } from './sector.include';
+import { sectorRow } from '../../__test-utils__/sector-row.factory';
 import {
   EntityNotFoundException,
   EntityAlreadyExistsException,
@@ -22,20 +24,12 @@ describe('PrismaSectorRepository', () => {
     };
   };
 
-  const rawSector = {
+  const rawSector = sectorRow({
     sectorId: 1,
     nombre: 'Sector 1',
     codigo: 'SEC-001',
     comunidadId: 1,
-    comunidades: {
-      comunidadId: 1,
-      codigo: 'COM-001',
-      nombre: 'Comunidad 1',
-    },
-    createdAt: new Date('2026-01-01'),
-    updatedAt: new Date('2026-01-01'),
-    deletedAt: null,
-  };
+  });
 
   beforeEach(() => {
     prisma = {
@@ -63,7 +57,7 @@ describe('PrismaSectorRepository', () => {
       expect(result?.sectorId).toBe(1);
       expect(prisma.sectores.findFirst).toHaveBeenCalledWith({
         where: { sectorId: 1, deletedAt: null },
-        include: { comunidades: true },
+        include: sectorInclude,
       });
     });
 
@@ -78,7 +72,7 @@ describe('PrismaSectorRepository', () => {
       expect(result?.deletedAt).toBeInstanceOf(Date);
       expect(prisma.sectores.findFirst).toHaveBeenCalledWith({
         where: { sectorId: 1 },
-        include: { comunidades: true },
+        include: sectorInclude,
       });
     });
   });
@@ -92,7 +86,7 @@ describe('PrismaSectorRepository', () => {
       expect(result?.codigo).toBe('SEC-001');
       expect(prisma.sectores.findUnique).toHaveBeenCalledWith({
         where: { codigo: 'SEC-001' },
-        include: { comunidades: true },
+        include: sectorInclude,
       });
     });
   });
@@ -124,7 +118,7 @@ describe('PrismaSectorRepository', () => {
   });
 
   describe('paginate', () => {
-    it('should return mapped entities and count', async () => {
+    it('should return rows and count', async () => {
       prisma.sectores.findMany.mockResolvedValue([rawSector]);
       prisma.sectores.count.mockResolvedValue(1);
 
@@ -140,7 +134,7 @@ describe('PrismaSectorRepository', () => {
   });
 
   describe('create', () => {
-    it('should create and return domain entity', async () => {
+    it('should create and return row', async () => {
       prisma.sectores.create.mockResolvedValue(rawSector);
 
       const result = await repository.create({
@@ -173,7 +167,7 @@ describe('PrismaSectorRepository', () => {
   });
 
   describe('update', () => {
-    it('should update and return updated entity', async () => {
+    it('should update and return updated row', async () => {
       prisma.sectores.update.mockResolvedValue({
         ...rawSector,
         nombre: 'Sector Modificado',

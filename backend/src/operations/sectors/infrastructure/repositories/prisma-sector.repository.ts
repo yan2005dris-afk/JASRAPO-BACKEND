@@ -2,16 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
 import { Prisma } from 'src/generated/prisma/client';
 import { SectorRepository } from '../../domain/repositories/sector.repository';
-import {
-  SectorEntity,
-  ComunidadRef,
-} from '../../domain/entities/sector.entity';
+import { sectorInclude, type SectorRow } from './sector.include';
 import type {
   CreateSectorData,
   UpdateSectorData,
   SectorFilters,
+  ComunidadRef,
 } from '../../domain/types/sector.types';
-import { SectorMapper } from '../mappers/sector.mapper';
 import {
   EntityNotFoundException,
   EntityAlreadyExistsException,
@@ -24,23 +21,21 @@ export class PrismaSectorRepository implements SectorRepository {
   async findById(
     id: number,
     includeDeleted: boolean = false,
-  ): Promise<SectorEntity | null> {
-    const raw = await this.prisma.sectores.findFirst({
+  ): Promise<SectorRow | null> {
+    return this.prisma.sectores.findFirst({
       where: {
         sectorId: id,
         ...(includeDeleted ? {} : { deletedAt: null }),
       },
-      include: { comunidades: true },
+      include: sectorInclude,
     });
-    return raw ? SectorMapper.toDomain(raw) : null;
   }
 
-  async findByCodigo(codigo: string): Promise<SectorEntity | null> {
-    const raw = await this.prisma.sectores.findUnique({
+  async findByCodigo(codigo: string): Promise<SectorRow | null> {
+    return this.prisma.sectores.findUnique({
       where: { codigo },
-      include: { comunidades: true },
+      include: sectorInclude,
     });
-    return raw ? SectorMapper.toDomain(raw) : null;
   }
 
   async findComunidadById(comunidadId: number): Promise<ComunidadRef | null> {
@@ -58,7 +53,7 @@ export class PrismaSectorRepository implements SectorRepository {
   async paginate(
     filters: SectorFilters,
     pagination: { skip: number; take: number },
-  ): Promise<{ data: SectorEntity[]; total: number }> {
+  ): Promise<{ data: SectorRow[]; total: number }> {
     const where: Prisma.SectoresWhereInput = {
       deletedAt: null,
       ...(filters.comunidadId !== undefined
@@ -66,30 +61,26 @@ export class PrismaSectorRepository implements SectorRepository {
         : {}),
     };
 
-    const [raws, total] = await Promise.all([
+    const [data, total] = await Promise.all([
       this.prisma.sectores.findMany({
         where,
         skip: pagination.skip,
         take: pagination.take,
         orderBy: { sectorId: 'asc' },
-        include: { comunidades: true },
+        include: sectorInclude,
       }),
       this.prisma.sectores.count({ where }),
     ]);
 
-    return {
-      data: SectorMapper.toDomainList(raws),
-      total,
-    };
+    return { data, total };
   }
 
-  async create(data: CreateSectorData): Promise<SectorEntity> {
+  async create(data: CreateSectorData): Promise<SectorRow> {
     try {
-      const raw = await this.prisma.sectores.create({
+      return await this.prisma.sectores.create({
         data,
-        include: { comunidades: true },
+        include: sectorInclude,
       });
-      return SectorMapper.toDomain(raw);
     } catch (error) {
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
@@ -101,14 +92,13 @@ export class PrismaSectorRepository implements SectorRepository {
     }
   }
 
-  async update(id: number, data: UpdateSectorData): Promise<SectorEntity> {
+  async update(id: number, data: UpdateSectorData): Promise<SectorRow> {
     try {
-      const raw = await this.prisma.sectores.update({
+      return await this.prisma.sectores.update({
         where: { sectorId: id },
         data,
-        include: { comunidades: true },
+        include: sectorInclude,
       });
-      return SectorMapper.toDomain(raw);
     } catch (error) {
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
@@ -126,14 +116,13 @@ export class PrismaSectorRepository implements SectorRepository {
     }
   }
 
-  async softDelete(id: number): Promise<SectorEntity> {
+  async softDelete(id: number): Promise<SectorRow> {
     try {
-      const raw = await this.prisma.sectores.update({
+      return await this.prisma.sectores.update({
         where: { sectorId: id },
         data: { deletedAt: new Date() },
-        include: { comunidades: true },
+        include: sectorInclude,
       });
-      return SectorMapper.toDomain(raw);
     } catch (error) {
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&

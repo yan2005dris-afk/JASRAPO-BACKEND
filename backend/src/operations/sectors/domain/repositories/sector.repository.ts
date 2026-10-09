@@ -1,28 +1,23 @@
-import type { SectorEntity, ComunidadRef } from '../entities/sector.entity';
+import type { SectorRow } from '../types/sector.types';
 import type {
   CreateSectorData,
   UpdateSectorData,
   SectorFilters,
+  ComunidadRef,
 } from '../types/sector.types';
 
 export abstract class SectorRepository {
   abstract findById(
     id: number,
     includeDeleted?: boolean,
-  ): Promise<SectorEntity | null>;
-
-  abstract findByCodigo(codigo: string): Promise<SectorEntity | null>;
-
+  ): Promise<SectorRow | null>;
+  abstract findByCodigo(codigo: string): Promise<SectorRow | null>;
   abstract findComunidadById(comunidadId: number): Promise<ComunidadRef | null>;
-
   abstract paginate(
     filters: SectorFilters,
     pagination: { skip: number; take: number },
-  ): Promise<{ data: SectorEntity[]; total: number }>;
-
-  abstract create(data: CreateSectorData): Promise<SectorEntity>;
-
-  abstract update(id: number, data: UpdateSectorData): Promise<SectorEntity>;
-
-  abstract softDelete(id: number): Promise<SectorEntity>;
+  ): Promise<{ data: SectorRow[]; total: number }>;
+  abstract create(data: CreateSectorData): Promise<SectorRow>;
+  abstract update(id: number, data: UpdateSectorData): Promise<SectorRow>;
+  abstract softDelete(id: number): Promise<SectorRow>;
 }

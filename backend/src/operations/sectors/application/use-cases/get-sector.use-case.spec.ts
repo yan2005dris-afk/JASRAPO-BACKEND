@@ -2,8 +2,8 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { GetSectorUseCase } from './get-sector.use-case';
 import { SectorRepository } from '../../domain/repositories/sector.repository';
-import { SectorEntity } from '../../domain/entities/sector.entity';
 import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
+import { sectorRow } from '../../__test-utils__/sector-row.factory';
 
 describe('GetSectorUseCase', () => {
   let useCase: GetSectorUseCase;
@@ -29,7 +29,12 @@ describe('GetSectorUseCase', () => {
   });
 
   it('should return a sector if it exists', async () => {
-    const mockSector = new SectorEntity(1, 'Sector 1', 'SEC-001', 1);
+    const mockSector = sectorRow({
+      sectorId: 1,
+      nombre: 'Sector 1',
+      codigo: 'SEC-001',
+      comunidadId: 1,
+    });
     mockSectorRepository.findById.mockResolvedValue(mockSector);
 
     const result = await useCase.execute(1);

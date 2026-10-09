@@ -1,8 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import type {
-  SectorEntity,
-  ComunidadRef,
-} from '../../domain/entities/sector.entity';
+import type { SectorRow } from '../../domain/types/sector.types';
+import type { ComunidadRef } from '../../domain/types/sector.types';
 
 export class ComunidadRefDto {
   @ApiProperty({ example: 1, description: 'ID de la comunidad' })
@@ -58,20 +56,20 @@ export class SectorResponseDto {
   })
   updatedAt: Date;
 
-  static fromEntity(entity: SectorEntity): SectorResponseDto {
+  static fromRow(row: SectorRow): SectorResponseDto {
     const dto = new SectorResponseDto();
-    dto.sectorId = entity.sectorId;
-    dto.nombre = entity.nombre;
-    dto.codigo = entity.codigo;
-    dto.comunidadId = entity.comunidadId;
-    dto.comunidades = entity.comunidades ?? null;
-    dto.deletedAt = entity.deletedAt;
-    dto.createdAt = entity.createdAt;
-    dto.updatedAt = entity.updatedAt;
+    dto.sectorId = row.sectorId;
+    dto.nombre = row.nombre;
+    dto.codigo = row.codigo;
+    dto.comunidadId = row.comunidadId;
+    dto.comunidades = row.comunidades ?? null;
+    dto.deletedAt = row.deletedAt;
+    dto.createdAt = row.createdAt;
+    dto.updatedAt = row.updatedAt;
     return dto;
   }
 
-  static fromEntityList(entities: SectorEntity[]): SectorResponseDto[] {
-    return entities.map((e) => SectorResponseDto.fromEntity(e));
+  static fromRowList(rows: SectorRow[]): SectorResponseDto[] {
+    return rows.map((r) => SectorResponseDto.fromRow(r));
   }
 }

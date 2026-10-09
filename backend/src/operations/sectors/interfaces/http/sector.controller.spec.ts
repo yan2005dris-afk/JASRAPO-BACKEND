@@ -2,7 +2,7 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { SectorController } from './sector.controller';
 import { SectorService } from '../../application/sector.service';
-import { SectorEntity } from '../../domain/entities/sector.entity';
+import { sectorRow } from '../../__test-utils__/sector-row.factory';
 
 describe('SectorController', () => {
   let controller: SectorController;
@@ -15,16 +15,12 @@ describe('SectorController', () => {
     eliminarSector: jest.fn(),
   };
 
-  const sampleEntity = new SectorEntity(
-    1,
-    'Sector Centro',
-    'SEC-001',
-    1,
-    { comunidadId: 1, codigo: 'COM-001', nombre: 'Comunidad 1' },
-    null,
-    new Date('2026-01-01'),
-    new Date('2026-01-01'),
-  );
+  const sampleRow = sectorRow({
+    sectorId: 1,
+    nombre: 'Sector Centro',
+    codigo: 'SEC-001',
+    comunidadId: 1,
+  });
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -41,7 +37,7 @@ describe('SectorController', () => {
   });
 
   it('create should return SectorResponseDto', async () => {
-    mockSectorService.crearSector.mockResolvedValue(sampleEntity);
+    mockSectorService.crearSector.mockResolvedValue(sampleRow);
 
     const result = await controller.create({
       nombre: 'Sector Centro',
@@ -57,7 +53,7 @@ describe('SectorController', () => {
 
   it('findAll should return paginated SectorResponseDto list', async () => {
     mockSectorService.findAll.mockResolvedValue({
-      data: [sampleEntity],
+      data: [sampleRow],
       meta: {
         total: 1,
         page: 1,
@@ -78,7 +74,7 @@ describe('SectorController', () => {
   });
 
   it('findOne should return SectorResponseDto', async () => {
-    mockSectorService.findOne.mockResolvedValue(sampleEntity);
+    mockSectorService.findOne.mockResolvedValue(sampleRow);
 
     const result = await controller.findOne(1);
 
@@ -87,7 +83,7 @@ describe('SectorController', () => {
   });
 
   it('update should return updated SectorResponseDto', async () => {
-    mockSectorService.actualizarSector.mockResolvedValue(sampleEntity);
+    mockSectorService.actualizarSector.mockResolvedValue(sampleRow);
 
     const result = await controller.update(1, { nombre: 'Nuevo Nombre' });
 
@@ -98,7 +94,7 @@ describe('SectorController', () => {
   });
 
   it('remove should return deleted SectorResponseDto', async () => {
-    mockSectorService.eliminarSector.mockResolvedValue(sampleEntity);
+    mockSectorService.eliminarSector.mockResolvedValue(sampleRow);
 
     const result = await controller.remove(1);
 
