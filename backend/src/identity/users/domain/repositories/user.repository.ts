@@ -1,5 +1,5 @@
-import type { UserEntity } from '../entities/user.entity';
 import type {
+  UserRow,
   FiltroFecha,
   UserFilters,
   CreateUserRepositoryData,
@@ -30,9 +30,9 @@ export type {
 export type { TransactionContext };
 
 export abstract class UserRepository {
-  abstract findById(usuarioId: number): Promise<UserEntity | null>;
+  abstract findById(usuarioId: number): Promise<UserRow | null>;
 
-  abstract findByEmail(email: string): Promise<UserEntity | null>;
+  abstract findByEmail(email: string): Promise<UserRow | null>;
 
   abstract findByEmailWithPassword(
     email: string,
@@ -40,20 +40,20 @@ export abstract class UserRepository {
 
   abstract findManyActive(
     pagination: DomainPaginationParams,
-  ): Promise<DomainPaginatedResult<UserEntity>>;
+  ): Promise<DomainPaginatedResult<UserRow>>;
 
   abstract findMany(
     filters: UserFilters,
     pagination: DomainPaginationParams,
-  ): Promise<DomainPaginatedResult<UserEntity>>;
+  ): Promise<DomainPaginatedResult<UserRow>>;
 
-  abstract create(data: CreateUserRepositoryData): Promise<UserEntity>;
+  abstract create(data: CreateUserRepositoryData): Promise<UserRow>;
 
   abstract update(
     usuarioId: number,
     data: UpdateUserRepositoryData,
     tx?: TransactionContext,
-  ): Promise<UserEntity>;
+  ): Promise<UserRow>;
 
   abstract findDirectPermissions(
     usuarioId: number,

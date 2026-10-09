@@ -2,7 +2,7 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { GetUserProfileUseCase } from './get-user-profile.use-case';
 import { UserRepository } from '../../domain/repositories/user.repository';
-import { UserEntity } from '../../domain/entities/user.entity';
+import { userRow } from '../../__test-utils__/user-row.factory';
 import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 
 describe('GetUserProfileUseCase', () => {
@@ -28,7 +28,7 @@ describe('GetUserProfileUseCase', () => {
   });
 
   it('should return the user when found', async () => {
-    const user = new UserEntity({
+    const user = userRow({
       usuarioId: 1,
       email: 'user@example.com',
       nombres: 'Juan',

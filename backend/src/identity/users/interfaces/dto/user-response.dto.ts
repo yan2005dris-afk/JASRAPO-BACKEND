@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional, OmitType } from '@nestjs/swagger';
-import type { UserEntity } from '../../domain/entities/user.entity';
+import type { UserRow, UserDetailData } from '../../domain/types/user.types';
+import { resolveUserAvatar } from '../../infrastructure/repositories/user.include';
 
 export class RoleResponseDto {
   @ApiProperty({ example: 1, description: 'ID único del rol' })
@@ -85,16 +86,17 @@ export class UserResponseDto {
   })
   rol: RoleResponseDto | null;
 
-  static fromRow(user: UserEntity): UserResponseDto {
+  static fromRow(user: UserRow): UserResponseDto {
+    const fullName = [user.nombres, user.apellidos].filter(Boolean).join(' ');
+    const avatar = resolveUserAvatar(user.avatar, fullName);
+
     const dto = new UserResponseDto();
     dto.usuarioId = user.usuarioId;
     dto.email = user.email;
     dto.nombres = user.nombres;
     dto.apellidos = user.apellidos;
     dto.telefono = user.telefono;
-    dto.avatar = user.avatar
-      ? { url: user.avatar.url, key: user.avatar.key }
-      : null;
+    dto.avatar = avatar ? { url: avatar.url, key: avatar.key } : null;
     dto.rol = user.rol
       ? { rolId: user.rol.rolId, nombre: user.rol.nombre }
       : null;
@@ -113,15 +115,17 @@ export class UserProfileResponseDto extends OmitType(UserResponseDto, [
   })
   nombre: string | null;
 
-  static fromRow(user: UserEntity): UserProfileResponseDto {
+  static fromRow(user: UserRow): UserProfileResponseDto {
+    const fullName =
+      [user.nombres, user.apellidos].filter(Boolean).join(' ') || null;
+    const avatar = resolveUserAvatar(user.avatar, fullName);
+
     const dto = new UserProfileResponseDto();
     dto.usuarioId = user.usuarioId;
     dto.email = user.email;
-    dto.nombre = user.nombre;
+    dto.nombre = fullName;
     dto.telefono = user.telefono;
-    dto.avatar = user.avatar
-      ? { url: user.avatar.url, key: user.avatar.key }
-      : null;
+    dto.avatar = avatar ? { url: avatar.url, key: avatar.key } : null;
     dto.rol = user.rol
       ? { rolId: user.rol.rolId, nombre: user.rol.nombre }
       : null;
@@ -142,19 +146,10 @@ export class UserDetailResponseDto extends UserResponseDto {
   })
   permisosRol: AuthPermissionResponseDto[];
 
-  static fromRow(user: UserEntity): UserDetailResponseDto {
+  static fromRow(user: UserDetailData): UserDetailResponseDto {
+    const base = UserResponseDto.fromRow(user);
     const dto = new UserDetailResponseDto();
-    dto.usuarioId = user.usuarioId;
-    dto.email = user.email;
-    dto.nombres = user.nombres;
-    dto.apellidos = user.apellidos;
-    dto.telefono = user.telefono;
-    dto.avatar = user.avatar
-      ? { url: user.avatar.url, key: user.avatar.key }
-      : null;
-    dto.rol = user.rol
-      ? { rolId: user.rol.rolId, nombre: user.rol.nombre }
-      : null;
+    Object.assign(dto, base);
     dto.permisosDirectos = user.permisosDirectos;
     dto.permisosRol = user.permisosRol;
     return dto;

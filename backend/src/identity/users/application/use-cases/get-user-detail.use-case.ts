@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { UserRepository } from '../../domain/repositories/user.repository';
-import { UserEntity } from '../../domain/entities/user.entity';
+import type { UserDetailData } from '../../domain/types/user.types';
 
 @Injectable()
 export class GetUserDetailUseCase {
@@ -9,7 +9,7 @@ export class GetUserDetailUseCase {
   async execute(criteria: {
     usuarioId?: number;
     email?: string;
-  }): Promise<UserEntity | null> {
+  }): Promise<UserDetailData | null> {
     const user = criteria.usuarioId
       ? await this.userRepository.findById(criteria.usuarioId)
       : criteria.email
@@ -25,7 +25,7 @@ export class GetUserDetailUseCase {
         : Promise.resolve([]),
     ]);
 
-    user.permisosDirectos = directPermissionRows.map((a) => ({
+    const permisosDirectos = directPermissionRows.map((a) => ({
       usuarioPermisoId: a.usuarioPermisoId,
       permisoId: a.permisoId,
       recurso: a.recurso,
@@ -33,11 +33,15 @@ export class GetUserDetailUseCase {
       permitido: a.permitido,
     }));
 
-    user.permisosRol = rolePermissionRows.map((rp) => ({
+    const permisosRol = rolePermissionRows.map((rp) => ({
       recurso: rp.recurso,
       accion: rp.accion,
     }));
 
-    return user;
+    return {
+      ...user,
+      permisosDirectos,
+      permisosRol,
+    };
   }
 }

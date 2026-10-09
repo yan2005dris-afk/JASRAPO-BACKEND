@@ -4,7 +4,7 @@ import { ValidationUtil } from 'src/infrastructure/common/utils/validation.util'
 import { PhoneUtil } from 'src/infrastructure/common/utils/phone.util';
 import { UserRepository } from '../../domain/repositories/user.repository';
 import { RoleRepository } from '../../../roles/domain/repositories/role.repository';
-import { UserEntity } from '../../domain/entities/user.entity';
+import { UserRow } from '../../domain/types/user.types';
 import { StorageService } from 'src/infrastructure/storage/storage.service';
 import { uploadAvatar, rollbackAvatarUpload } from '../avatar-upload.helper';
 import {
@@ -23,7 +23,7 @@ export class CreateUserUseCase {
   async execute(
     createUsersDto: CreateUserDto,
     file?: Express.Multer.File,
-  ): Promise<UserEntity> {
+  ): Promise<UserRow> {
     ValidationUtil.requireNonEmpty(createUsersDto.email, 'email');
     ValidationUtil.requireNonEmpty(createUsersDto.nombres, 'nombres');
     ValidationUtil.requireNonEmpty(createUsersDto.apellidos, 'apellidos');

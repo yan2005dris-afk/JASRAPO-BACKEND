@@ -3,14 +3,11 @@ import { Prisma } from 'src/generated/prisma/client';
 import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 import { PrismaUserRepository } from './prisma-user.repository';
 import { PrismaService } from 'src/infrastructure/database/prisma.service';
-import { UserMapper } from '../mappers/user.mapper';
-import { UserEntity } from '../../domain/entities/user.entity';
 
 describe('PrismaUserRepository', () => {
   let repository: PrismaUserRepository;
   let prisma: any;
   let tx: any;
-  let userMapper: any;
 
   const rawUser = {
     usuarioId: 1,
@@ -58,13 +55,6 @@ describe('PrismaUserRepository', () => {
     ),
   };
 
-  const mockUserMapper = {
-    toEntity: jest.fn(),
-    toWithPasswordAndLockout: jest.fn(),
-  };
-
-  const mockEntity = new UserEntity({ ...rawUser, permisosDirectos: [] });
-
   beforeEach(async () => {
     jest.clearAllMocks();
     tx = mockTx;
@@ -73,19 +63,16 @@ describe('PrismaUserRepository', () => {
       providers: [
         PrismaUserRepository,
         { provide: PrismaService, useValue: mockPrisma },
-        { provide: UserMapper, useValue: mockUserMapper },
       ],
     }).compile();
 
     repository = module.get(PrismaUserRepository);
     prisma = mockPrisma;
-    userMapper = mockUserMapper;
   });
 
   describe('create', () => {
     it('should create a user connecting the role and map the result', async () => {
       prisma.usuarios.create.mockResolvedValue(rawUser);
-      userMapper.toEntity.mockResolvedValue(mockEntity);
 
       const result = await repository.create({
         email: 'user@example.com',
@@ -104,12 +91,11 @@ describe('PrismaUserRepository', () => {
           }),
         }),
       );
-      expect(result).toBe(mockEntity);
+      expect(result).toBe(rawUser);
     });
 
     it('should include the avatar key as JSON when provided', async () => {
       prisma.usuarios.create.mockResolvedValue(rawUser);
-      userMapper.toEntity.mockResolvedValue(mockEntity);
 
       await repository.create({
         email: 'user@example.com',
@@ -129,28 +115,11 @@ describe('PrismaUserRepository', () => {
         }),
       );
     });
-
-    it('should throw EntityNotFoundException when the mapper returns null', async () => {
-      prisma.usuarios.create.mockResolvedValue(rawUser);
-      userMapper.toEntity.mockResolvedValue(null);
-
-      await expect(
-        repository.create({
-          email: 'user@example.com',
-          clave: 'hashed',
-          nombres: 'Juan',
-          apellidos: 'Perez',
-          telefono: '0991234567',
-          rolId: 1,
-        }),
-      ).rejects.toThrow(EntityNotFoundException);
-    });
   });
 
   describe('update', () => {
-    it('should update the user and map the result', async () => {
+    it('should update the user and return the result', async () => {
       prisma.usuarios.update.mockResolvedValue({ ...rawUser, nombres: 'Ana' });
-      userMapper.toEntity.mockResolvedValue(mockEntity);
 
       const result = await repository.update(1, { nombres: 'Ana' });
 
@@ -160,16 +129,7 @@ describe('PrismaUserRepository', () => {
           data: expect.objectContaining({ nombres: 'Ana' }),
         }),
       );
-      expect(result).toBe(mockEntity);
-    });
-
-    it('should throw EntityNotFoundException when the mapper returns null', async () => {
-      prisma.usuarios.update.mockResolvedValue(rawUser);
-      userMapper.toEntity.mockResolvedValue(null);
-
-      await expect(repository.update(999, { nombres: 'Ana' })).rejects.toThrow(
-        EntityNotFoundException,
-      );
+      expect(result).toEqual({ ...rawUser, nombres: 'Ana' });
     });
 
     it('should translate Prisma P2025 to EntityNotFoundException', async () => {
@@ -417,35 +377,19 @@ describe('PrismaUserRepository', () => {
   });
 
   describe('findManyActive', () => {
-    it('should paginate active users and map each row', async () => {
+    it('should paginate active users and return rows', async () => {
       prisma.usuarios.count.mockResolvedValue(1);
       prisma.usuarios.findMany.mockResolvedValue([rawUser]);
-      userMapper.toEntity.mockResolvedValue(mockEntity);
 
       const result = await repository.findManyActive({ page: 1, limit: 10 });
 
       expect(prisma.usuarios.count).toHaveBeenCalledWith({
         where: { deletedAt: null },
       });
-      expect(result.data).toEqual([mockEntity]);
+      expect(result.data).toEqual([rawUser]);
       expect(result.meta).toEqual(
         expect.objectContaining({ total: 1, page: 1, limit: 10 }),
       );
-    });
-
-    it('should filter out null mappings', async () => {
-      prisma.usuarios.count.mockResolvedValue(2);
-      prisma.usuarios.findMany.mockResolvedValue([
-        rawUser,
-        { ...rawUser, usuarioId: 2 },
-      ]);
-      userMapper.toEntity
-        .mockResolvedValueOnce(mockEntity)
-        .mockResolvedValueOnce(null);
-
-      const result = await repository.findManyActive({ page: 1, limit: 10 });
-
-      expect(result.data).toEqual([mockEntity]);
     });
   });
 });
