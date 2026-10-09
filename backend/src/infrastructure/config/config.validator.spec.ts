@@ -9,7 +9,7 @@ import {
 } from './config.validator';
 
 describe('config.validator', () => {
-  const STRONG_HEX_SECRET = randomBytes(32).toString('hex');
+  const STRONG_HEX_SECRET = randomBytes(64).toString('hex');
 
   describe('shannonEntropy', () => {
     it('returns 0 for an empty string', () => {
@@ -105,12 +105,12 @@ describe('config.validator', () => {
 
     it('accepts a 64-character random hex secret', () => {
       expect(() =>
-        assertJwtSecret(randomBytes(32).toString('hex'), 'TEST_SECRET'),
+        assertJwtSecret(randomBytes(64).toString('hex'), 'TEST_SECRET'),
       ).not.toThrow();
     });
 
     it('accepts a random base64 secret of >= 32 bytes', () => {
-      const b64 = randomBytes(32).toString('base64');
+      const b64 = randomBytes(64).toString('base64');
       expect(() => assertJwtSecret(b64, 'TEST_SECRET')).not.toThrow();
     });
 
@@ -143,9 +143,9 @@ describe('config.validator', () => {
     });
 
     it('passes when every required secret is a strong random value', () => {
-      process.env.JWT_ACCESS_SECRET = randomBytes(32).toString('hex');
-      process.env.JWT_REFRESH_SECRET = randomBytes(32).toString('hex');
-      process.env.ENCRYPTION_KEY = randomBytes(32).toString('hex');
+      process.env.JWT_ACCESS_SECRET = randomBytes(64).toString('hex');
+      process.env.JWT_REFRESH_SECRET = randomBytes(64).toString('hex');
+      process.env.ENCRYPTION_KEY = randomBytes(64).toString('hex');
 
       expect(() => assertAllSecrets()).not.toThrow();
     });
@@ -175,9 +175,9 @@ describe('config.validator', () => {
     });
 
     it('throws a single InsecureSecretError wrapped in aggregate when only one secret fails', () => {
-      process.env.JWT_ACCESS_SECRET = randomBytes(32).toString('hex');
+      process.env.JWT_ACCESS_SECRET = randomBytes(64).toString('hex');
       process.env.JWT_REFRESH_SECRET = 'super_secret';
-      process.env.ENCRYPTION_KEY = randomBytes(32).toString('hex');
+      process.env.ENCRYPTION_KEY = randomBytes(64).toString('hex');
 
       let captured: unknown;
       try {
