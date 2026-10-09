@@ -4,13 +4,13 @@ import { GetSessionUseCase } from './use-cases/get-session.use-case';
 import { UpdateSessionUseCase } from './use-cases/update-session.use-case';
 import { RevokeSessionUseCase } from './use-cases/revoke-session.use-case';
 import { ListSessionsByUserUseCase } from './use-cases/list-sessions-by-user.use-case';
-import {
+import { SessionRepository } from '../domain/repositories/session.repository';
+import type { SessionRow } from '../domain/types/session.types';
+import type {
   CreateSessionRepositoryData,
-  RotateSessionRepositoryData,
-  SessionEntity,
-  SessionRepository,
   UpdateSessionRepositoryData,
-} from '../domain/repositories/session.repository';
+  RotateSessionRepositoryData,
+} from '../domain/types/session.types';
 
 @Injectable()
 export class SessionsService {
@@ -23,27 +23,25 @@ export class SessionsService {
     private readonly listByUserUseCase: ListSessionsByUserUseCase,
   ) {}
 
-  async createSession(
-    data: CreateSessionRepositoryData,
-  ): Promise<SessionEntity> {
+  async createSession(data: CreateSessionRepositoryData): Promise<SessionRow> {
     return this.createUseCase.execute(data);
   }
 
   async getSession(
     usuarioId: number,
     sesionId: string,
-  ): Promise<SessionEntity | null> {
+  ): Promise<SessionRow | null> {
     return this.getUseCase.execute(usuarioId, sesionId);
   }
 
-  async getSessionById(sesionId: string): Promise<SessionEntity | null> {
+  async getSessionById(sesionId: string): Promise<SessionRow | null> {
     return this.sessionRepository.findById(sesionId);
   }
 
   async updateSession(
     sesionId: string,
     data: UpdateSessionRepositoryData,
-  ): Promise<SessionEntity> {
+  ): Promise<SessionRow> {
     return this.updateUseCase.execute(sesionId, data);
   }
 
@@ -54,7 +52,7 @@ export class SessionsService {
     return this.sessionRepository.rotate(sesionId, data);
   }
 
-  async revokeSession(sesionId: string): Promise<SessionEntity> {
+  async revokeSession(sesionId: string): Promise<SessionRow> {
     return this.revokeUseCase.execute(sesionId);
   }
 
@@ -62,7 +60,7 @@ export class SessionsService {
     return this.sessionRepository.revokeAllByUser(usuarioId);
   }
 
-  async listSessionsByUser(usuarioId: number): Promise<SessionEntity[]> {
+  async listSessionsByUser(usuarioId: number): Promise<SessionRow[]> {
     return this.listByUserUseCase.execute(usuarioId);
   }
 }

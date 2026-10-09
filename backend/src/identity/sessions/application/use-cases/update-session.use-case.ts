@@ -1,8 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import {
-  SessionRepository,
-  UpdateSessionRepositoryData,
-} from '../../domain/repositories/session.repository';
+import { SessionRepository } from '../../domain/repositories/session.repository';
+import type { UpdateSessionRepositoryData } from '../../domain/types/session.types';
 
 @Injectable()
 export class UpdateSessionUseCase {
