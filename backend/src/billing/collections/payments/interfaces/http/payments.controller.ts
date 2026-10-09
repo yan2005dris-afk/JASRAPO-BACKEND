@@ -70,7 +70,7 @@ export class PaymentsController {
     @CurrentUser() user: JwtPayload,
   ): Promise<PaymentResponseDto> {
     const entity = await this.paymentsService.create(dto, this.getActor(user));
-    return PaymentResponseDto.fromEntity(entity);
+    return PaymentResponseDto.fromRow(entity);
   }
 
   @ApiOperation({
@@ -124,7 +124,7 @@ export class PaymentsController {
       dto,
       this.getActor(user),
     );
-    return PaymentResponseDto.fromEntity(entity);
+    return PaymentResponseDto.fromRow(entity);
   }
 
   @ApiOperation({
@@ -140,7 +140,7 @@ export class PaymentsController {
   ): Promise<PaginatedResult<PaymentResponseDto>> {
     const result = await this.paymentsService.findAll(query);
     return {
-      data: PaymentResponseDto.fromEntityList(result.data),
+      data: PaymentResponseDto.fromRowList(result.data),
       meta: result.meta,
     };
   }
@@ -203,7 +203,7 @@ export class PaymentsController {
   ): Promise<SaldoFavorResponseDto[]> {
     const saldos =
       await this.paymentsService.findSaldoFavorByCliente(clienteId);
-    return SaldoFavorResponseDto.fromEntityList(saldos);
+    return SaldoFavorResponseDto.fromRowList(saldos);
   }
 
   @ApiOperation({
@@ -222,7 +222,7 @@ export class PaymentsController {
       dto,
       this.getActor(user),
     );
-    return PaymentResponseDto.fromEntity(entity);
+    return PaymentResponseDto.fromRow(entity);
   }
 
   @ApiOperation({
@@ -237,7 +237,7 @@ export class PaymentsController {
     @Param('id', ParseBigIntPipe) id: bigint,
   ): Promise<PaymentResponseDto> {
     const entity = await this.paymentsService.findOne(id);
-    return PaymentResponseDto.fromEntity(entity);
+    return PaymentResponseDto.fromRow(entity);
   }
 
   @ApiOperation({
@@ -259,7 +259,7 @@ export class PaymentsController {
       dto,
       this.getActor(user),
     );
-    return PaymentResponseDto.fromEntity(entity);
+    return PaymentResponseDto.fromRow(entity);
   }
 
   @ApiOperation({
@@ -280,7 +280,7 @@ export class PaymentsController {
       motivoAnulacion: dto.motivoAnulacion,
       anuladoPor: this.getActor(user),
     });
-    return PaymentResponseDto.fromEntity(entity);
+    return PaymentResponseDto.fromRow(entity);
   }
 
   private getActor(user?: JwtPayload): string {

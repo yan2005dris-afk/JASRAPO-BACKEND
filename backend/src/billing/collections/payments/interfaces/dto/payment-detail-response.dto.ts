@@ -84,7 +84,7 @@ export class PaymentDetailResponseDto {
   @ApiPropertyOptional({ type: PaymentDetailComprobanteDto })
   comprobante?: PaymentDetailComprobanteDto;
 
-  static fromEntity(entity: PaymentDetailEntity): PaymentDetailResponseDto {
+  static fromRow(entity: PaymentDetailEntity): PaymentDetailResponseDto {
     const dto = new PaymentDetailResponseDto();
     dto.detallePagoId = String(entity.detallePagoId);
     dto.pagoId = String(entity.pagoId);
@@ -121,9 +121,9 @@ export class PaymentDetailResponseDto {
     return dto;
   }
 
-  static fromEntityList(
+  static fromRowList(
     entities: PaymentDetailEntity[],
   ): PaymentDetailResponseDto[] {
-    return entities.map(PaymentDetailResponseDto.fromEntity);
+    return entities.map(PaymentDetailResponseDto.fromRow);
   }
 }

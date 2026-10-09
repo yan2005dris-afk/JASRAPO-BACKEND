@@ -195,7 +195,7 @@ export class OperatorController {
               deleteOldReadingPhoto(oldKey, newKey, this.storageService)
           : undefined,
       );
-      return OrderWorkResponseDto.fromEntity(entity);
+      return OrderWorkResponseDto.fromRow(entity);
     } catch (error) {
       if (uploadedKey) {
         await rollbackReadingPhoto(uploadedKey, this.storageService);
@@ -271,7 +271,7 @@ export class OperatorController {
       operarioId,
       tipoRuta,
     );
-    return routes.map((route) => OperatorRouteResponseDto.fromEntity(route));
+    return routes.map((route) => OperatorRouteResponseDto.fromRow(route));
   }
 
   /**
@@ -313,7 +313,7 @@ export class OperatorController {
       operarioId,
       dto,
     );
-    return OperatorRouteResponseDto.fromEntity(updated);
+    return OperatorRouteResponseDto.fromRow(updated);
   }
 
   private getAuthenticatedOperatorId(user: JwtPayload): number {

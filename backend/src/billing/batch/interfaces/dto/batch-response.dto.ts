@@ -107,7 +107,7 @@ export class BatchResponseDto {
   })
   prefacturas?: PreInvoiceResponseDto[];
 
-  static fromEntity(entity: BatchEntity): BatchResponseDto {
+  static fromRow(entity: BatchEntity): BatchResponseDto {
     const dto = new BatchResponseDto();
     dto.loteId = Number(entity.loteId);
     dto.comunidadId = entity.comunidadId;
@@ -142,12 +142,12 @@ export class BatchResponseDto {
         }
       : null;
     dto.prefacturas = entity.prefacturas
-      ? PreInvoiceResponseDto.fromEntityList(entity.prefacturas)
+      ? PreInvoiceResponseDto.fromRowList(entity.prefacturas)
       : undefined;
     return dto;
   }
 
-  static fromEntityList(entities: BatchEntity[]): BatchResponseDto[] {
-    return entities.map(BatchResponseDto.fromEntity);
+  static fromRowList(entities: BatchEntity[]): BatchResponseDto[] {
+    return entities.map(BatchResponseDto.fromRow);
   }
 }

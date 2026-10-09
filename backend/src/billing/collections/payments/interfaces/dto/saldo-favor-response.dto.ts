@@ -29,7 +29,7 @@ export class SaldoFavorResponseDto {
   @ApiProperty({ example: '2026-06-18', description: 'Fecha de creación' })
   fechaCreacion: string;
 
-  static fromEntity(entity: SaldoFavorEntity): SaldoFavorResponseDto {
+  static fromRow(entity: SaldoFavorEntity): SaldoFavorResponseDto {
     const dto = new SaldoFavorResponseDto();
     dto.saldoFavorId = String(entity.saldoFavorId);
     dto.clienteId = String(entity.clienteId);
@@ -41,7 +41,7 @@ export class SaldoFavorResponseDto {
     return dto;
   }
 
-  static fromEntityList(entities: SaldoFavorEntity[]): SaldoFavorResponseDto[] {
-    return entities.map(SaldoFavorResponseDto.fromEntity);
+  static fromRowList(entities: SaldoFavorEntity[]): SaldoFavorResponseDto[] {
+    return entities.map(SaldoFavorResponseDto.fromRow);
   }
 }

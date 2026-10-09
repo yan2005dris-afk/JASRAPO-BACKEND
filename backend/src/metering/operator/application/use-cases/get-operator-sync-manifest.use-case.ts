@@ -188,11 +188,11 @@ export class GetOperatorSyncManifestUseCase {
       ]);
     const pages: Record<Collection, OperatorSyncPage<unknown>> = {
       routes: this.mapPage(routePage, (item) =>
-        OperatorRouteResponseDto.fromEntity(item as any),
+        OperatorRouteResponseDto.fromRow(item as any),
       ),
       workOrders: this.mapPage(orderPage, (item) => this.workOrderDto(item)),
       meters: this.mapPage(meterPage, (item) =>
-        MeterResponseDto.fromEntity(this.toMeterEntity(item)),
+        MeterResponseDto.fromRow(this.toMeterEntity(item)),
       ),
       readings: this.mapPage(readingPage, (item) => this.readingDto(item)),
       pendingAnomalies: this.mapPage(anomalyPage, (item) =>

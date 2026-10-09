@@ -80,7 +80,7 @@ export class UserController {
   @Get('me')
   async findMe(@AuthUserId() usersId: number): Promise<UserProfileResponseDto> {
     const user = await this.userService.findMe(usersId);
-    return UserProfileResponseDto.fromEntity(user);
+    return UserProfileResponseDto.fromRow(user);
   }
 
   /**
@@ -115,7 +115,7 @@ export class UserController {
     if (!result) {
       throw new NotFoundException('Usuario no encontrado');
     }
-    return UserDetailResponseDto.fromEntity(result);
+    return UserDetailResponseDto.fromRow(result);
   }
 
   /**
@@ -154,7 +154,7 @@ export class UserController {
       file,
       adminUserId,
     );
-    return UserResponseDto.fromEntity(user);
+    return UserResponseDto.fromRow(user);
   }
 
   /**
@@ -170,7 +170,7 @@ export class UserController {
   ): Promise<PaginatedResult<UserResponseDto>> {
     const result = await this.userService.users(paginationDto);
     return {
-      data: result.data.map((user) => UserResponseDto.fromEntity(user)),
+      data: result.data.map((user) => UserResponseDto.fromRow(user)),
       meta: result.meta,
     };
   }
@@ -196,7 +196,7 @@ export class UserController {
     if (!user) {
       throw new NotFoundException('Usuario no encontrado');
     }
-    return UserDetailResponseDto.fromEntity(user);
+    return UserDetailResponseDto.fromRow(user);
   }
 
   /**
@@ -244,7 +244,7 @@ export class UserController {
     if (!result) {
       throw new NotFoundException('Usuario no encontrado');
     }
-    return UserDetailResponseDto.fromEntity(result);
+    return UserDetailResponseDto.fromRow(result);
   }
 
   /**

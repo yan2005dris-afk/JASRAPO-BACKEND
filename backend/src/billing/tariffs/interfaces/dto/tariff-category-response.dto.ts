@@ -54,7 +54,7 @@ export class TariffCategoryResponseDto {
   })
   rubros?: RubroSummaryDto[];
 
-  static fromEntity(entity: TariffCategoryEntity): TariffCategoryResponseDto {
+  static fromRow(entity: TariffCategoryEntity): TariffCategoryResponseDto {
     const dto = new TariffCategoryResponseDto();
     dto.categoriaTarifaId = entity.categoriaTarifaId;
     dto.nombre = entity.nombre;
@@ -73,9 +73,9 @@ export class TariffCategoryResponseDto {
     return dto;
   }
 
-  static fromEntityList(
+  static fromRowList(
     entities: TariffCategoryEntity[],
   ): TariffCategoryResponseDto[] {
-    return entities.map((e) => TariffCategoryResponseDto.fromEntity(e));
+    return entities.map((e) => TariffCategoryResponseDto.fromRow(e));
   }
 }

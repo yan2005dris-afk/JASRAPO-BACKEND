@@ -94,7 +94,7 @@ export class PreInvoiceController {
     );
 
     return {
-      data: PreInvoiceResponseDto.fromEntityList(result.data),
+      data: PreInvoiceResponseDto.fromRowList(result.data),
       meta: result.meta,
     };
   }
@@ -126,7 +126,7 @@ export class PreInvoiceController {
     @Param('id', ParseIntPipe) id: number,
   ): Promise<PreInvoiceResponseDto> {
     const entity = await this.preInvoiceService.findOne(id);
-    return PreInvoiceResponseDto.fromEntity(entity);
+    return PreInvoiceResponseDto.fromRow(entity);
   }
 
   /**
@@ -221,6 +221,6 @@ export class PreInvoiceController {
       user?.email ?? (user?.sub ? user.sub.toString() : undefined),
       dto.motivoRechazo,
     );
-    return PreInvoiceResponseDto.fromEntity(entity);
+    return PreInvoiceResponseDto.fromRow(entity);
   }
 }

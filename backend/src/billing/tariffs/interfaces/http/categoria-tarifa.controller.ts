@@ -42,7 +42,7 @@ export class CategoriaTarifaController {
     @Body() dto: CreateCategoriaTarifaDto,
   ): Promise<TariffCategoryResponseDto> {
     const entity = await this.service.createCategoria(dto);
-    return TariffCategoryResponseDto.fromEntity(entity);
+    return TariffCategoryResponseDto.fromRow(entity);
   }
 
   @ApiOperation({
@@ -64,7 +64,7 @@ export class CategoriaTarifaController {
       filterDto.search,
     );
     return {
-      data: TariffCategoryResponseDto.fromEntityList(result.data),
+      data: TariffCategoryResponseDto.fromRowList(result.data),
       meta: result.meta,
     };
   }
@@ -88,7 +88,7 @@ export class CategoriaTarifaController {
     @Param('id', ParseIntPipe) id: number,
   ): Promise<TariffCategoryResponseDto> {
     const entity = await this.service.findOneCategoria(id);
-    return TariffCategoryResponseDto.fromEntity(entity);
+    return TariffCategoryResponseDto.fromRow(entity);
   }
 
   @ApiOperation({ summary: 'Actualizar categoría (crea nueva versión)' })
@@ -104,7 +104,7 @@ export class CategoriaTarifaController {
     @Body() dto: UpdateCategoriaTarifaDto,
   ): Promise<TariffCategoryResponseDto> {
     const entity = await this.service.updateCategoria(id, dto);
-    return TariffCategoryResponseDto.fromEntity(entity);
+    return TariffCategoryResponseDto.fromRow(entity);
   }
 
   @ApiOperation({ summary: 'Eliminar categoría (soft delete)' })
@@ -119,6 +119,6 @@ export class CategoriaTarifaController {
     @Param('id', ParseIntPipe) id: number,
   ): Promise<TariffCategoryResponseDto> {
     const entity = await this.service.deleteCategoria(id);
-    return TariffCategoryResponseDto.fromEntity(entity);
+    return TariffCategoryResponseDto.fromRow(entity);
   }
 }

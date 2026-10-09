@@ -21,9 +21,7 @@ export class ResponseWorkOrderNoveltyDto {
   updatedAt: Date;
   fotoUrl: string | null;
 
-  static fromEntity(
-    entity: WorkOrderNoveltyEntity,
-  ): ResponseWorkOrderNoveltyDto {
+  static fromRow(entity: WorkOrderNoveltyEntity): ResponseWorkOrderNoveltyDto {
     const dto = new ResponseWorkOrderNoveltyDto();
     dto.novedadId = entity.novedadId.toString();
     dto.ordenTrabajoId = entity.ordenTrabajoId.toString();

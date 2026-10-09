@@ -100,7 +100,7 @@ export class RoutesController {
   ): Promise<PaginatedResult<ReadingForRouteResponseDto>> {
     const result = await this.routesService.getEligibleReadings(filterDto);
     return {
-      data: ReadingForRouteResponseDto.fromEntityList(result.data),
+      data: ReadingForRouteResponseDto.fromRowList(result.data),
       meta: result.meta,
       kpis: result.kpis,
     };
@@ -127,7 +127,7 @@ export class RoutesController {
       limit: paginationDto.limit,
     });
     return {
-      data: ReadingForRouteResponseDto.fromEntityList(result.data),
+      data: ReadingForRouteResponseDto.fromRowList(result.data),
       meta: result.meta,
       kpis: result.kpis,
     };
@@ -149,7 +149,7 @@ export class RoutesController {
   @Post()
   async create(@Body() createDto: CreateRouteDto): Promise<RouteResponseDto> {
     const result = await this.routesService.create(createDto);
-    return RouteResponseDto.fromEntity(result);
+    return RouteResponseDto.fromRow(result);
   }
 
   /**
@@ -172,7 +172,7 @@ export class RoutesController {
   ): Promise<RouteResponseDto[]> {
     const result =
       await this.routesService.createAssignments(createAssignmentsDto);
-    return RouteResponseDto.fromEntityList(result);
+    return RouteResponseDto.fromRowList(result);
   }
 
   /**
@@ -203,7 +203,7 @@ export class RoutesController {
       where,
     });
     return {
-      data: RouteResponseDto.fromEntityList(result.data),
+      data: RouteResponseDto.fromRowList(result.data),
       meta: result.meta,
     };
   }
@@ -233,7 +233,7 @@ export class RoutesController {
     @Param('id', ParseBigIntPipe) id: bigint,
   ): Promise<RouteResponseDto> {
     const result = await this.routesService.findOne(id);
-    return RouteResponseDto.fromEntity(result);
+    return RouteResponseDto.fromRow(result);
   }
 
   /**
@@ -309,7 +309,7 @@ export class RoutesController {
       },
     });
     return {
-      data: OrderWorkResponseDto.fromEntityList(result.data),
+      data: OrderWorkResponseDto.fromRowList(result.data),
       meta: result.meta,
       kpis: result.kpis,
     };
@@ -340,7 +340,7 @@ export class RoutesController {
     @Body() updateDto: UpdateRouteDto,
   ): Promise<RouteResponseDto> {
     const result = await this.routesService.update(id, updateDto);
-    return RouteResponseDto.fromEntity(result);
+    return RouteResponseDto.fromRow(result);
   }
 
   /**
@@ -376,7 +376,7 @@ export class RoutesController {
       id,
       dto.operarioId ?? null,
     );
-    return RouteResponseDto.fromEntity(result);
+    return RouteResponseDto.fromRow(result);
   }
 
   /**
@@ -403,6 +403,6 @@ export class RoutesController {
     @Param('id', ParseBigIntPipe) id: bigint,
   ): Promise<RouteResponseDto> {
     const result = await this.routesService.delete(id);
-    return RouteResponseDto.fromEntity(result);
+    return RouteResponseDto.fromRow(result);
   }
 }

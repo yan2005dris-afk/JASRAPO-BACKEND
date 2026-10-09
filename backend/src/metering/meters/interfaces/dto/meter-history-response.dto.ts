@@ -58,7 +58,7 @@ export class MeterHistoryResponseDto {
     Object.assign(this, partial);
   }
 
-  static fromEntity(e: MeterHistoryEntity): MeterHistoryResponseDto {
+  static fromRow(e: MeterHistoryEntity): MeterHistoryResponseDto {
     return new MeterHistoryResponseDto({
       historialId: e.historialId.toString(),
       medidorId: e.medidorId.toString(),

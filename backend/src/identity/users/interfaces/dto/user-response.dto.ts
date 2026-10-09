@@ -85,7 +85,7 @@ export class UserResponseDto {
   })
   rol: RoleResponseDto | null;
 
-  static fromEntity(user: UserEntity): UserResponseDto {
+  static fromRow(user: UserEntity): UserResponseDto {
     const dto = new UserResponseDto();
     dto.usuarioId = user.usuarioId;
     dto.email = user.email;
@@ -113,7 +113,7 @@ export class UserProfileResponseDto extends OmitType(UserResponseDto, [
   })
   nombre: string | null;
 
-  static fromEntity(user: UserEntity): UserProfileResponseDto {
+  static fromRow(user: UserEntity): UserProfileResponseDto {
     const dto = new UserProfileResponseDto();
     dto.usuarioId = user.usuarioId;
     dto.email = user.email;
@@ -142,7 +142,7 @@ export class UserDetailResponseDto extends UserResponseDto {
   })
   permisosRol: AuthPermissionResponseDto[];
 
-  static fromEntity(user: UserEntity): UserDetailResponseDto {
+  static fromRow(user: UserEntity): UserDetailResponseDto {
     const dto = new UserDetailResponseDto();
     dto.usuarioId = user.usuarioId;
     dto.email = user.email;

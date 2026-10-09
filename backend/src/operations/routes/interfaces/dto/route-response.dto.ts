@@ -60,7 +60,7 @@ export class RouteResponseDto {
   })
   fechaFin: string | null;
 
-  static fromEntity(entity: RouteEntity): RouteResponseDto {
+  static fromRow(entity: RouteEntity): RouteResponseDto {
     const dto = new RouteResponseDto();
     dto.rutaId = entity.rutaId;
     dto.nombre = entity.nombre;
@@ -76,8 +76,8 @@ export class RouteResponseDto {
     return dto;
   }
 
-  static fromEntityList(entities: RouteEntity[]): RouteResponseDto[] {
-    return entities.map((e) => RouteResponseDto.fromEntity(e));
+  static fromRowList(entities: RouteEntity[]): RouteResponseDto[] {
+    return entities.map((e) => RouteResponseDto.fromRow(e));
   }
 }
 
@@ -125,7 +125,7 @@ export class ReadingForRouteResponseDto {
   })
   estadoLectura?: string;
 
-  static fromEntity(entity: ReadingForRouteEntity): ReadingForRouteResponseDto {
+  static fromRow(entity: ReadingForRouteEntity): ReadingForRouteResponseDto {
     const dto = new ReadingForRouteResponseDto();
     dto.lecturaId = entity.lecturaId;
     dto.guia = entity.guia;
@@ -141,9 +141,9 @@ export class ReadingForRouteResponseDto {
     return dto;
   }
 
-  static fromEntityList(
+  static fromRowList(
     entities: ReadingForRouteEntity[],
   ): ReadingForRouteResponseDto[] {
-    return entities.map((e) => ReadingForRouteResponseDto.fromEntity(e));
+    return entities.map((e) => ReadingForRouteResponseDto.fromRow(e));
   }
 }

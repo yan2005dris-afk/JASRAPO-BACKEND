@@ -89,7 +89,7 @@ export class ResponseReadingDto {
     Object.assign(this, partial);
   }
 
-  static fromEntity(
+  static fromRow(
     reading: LecturaEntity | null | undefined,
   ): ResponseReadingDto | null {
     if (!reading) return null;

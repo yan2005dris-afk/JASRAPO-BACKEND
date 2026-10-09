@@ -59,7 +59,7 @@ export class OrdenesTrabajoController {
       },
       Number(user.sub),
     );
-    return OrderWorkResponseDto.fromEntity(result);
+    return OrderWorkResponseDto.fromRow(result);
   }
 
   /**
@@ -95,6 +95,6 @@ export class OrdenesTrabajoController {
       { lecturaId: lecturaIdBigInt },
       Number(user.sub),
     );
-    return OrderWorkResponseDto.fromEntity(result);
+    return OrderWorkResponseDto.fromRow(result);
   }
 }

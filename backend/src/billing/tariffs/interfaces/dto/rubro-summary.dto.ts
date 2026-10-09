@@ -77,7 +77,7 @@ export class RubroSummaryDto {
   /**
    * Proyecta el shape interno de Rubro (que es Prisma.RubrosGetPayload<{}>
    * sin la relation `tarifaImpuesto`) al DTO publico. La forma es
-   * identica a RubroResponseDto.fromEntity; este sub-DTO existe solo
+   * identica a RubroResponseDto.fromRow; este sub-DTO existe solo
    * para desacoplar la dependencia de tariffs a rubros.
    */
   static fromEmbedded(row: EmbeddedRubro): RubroSummaryDto {

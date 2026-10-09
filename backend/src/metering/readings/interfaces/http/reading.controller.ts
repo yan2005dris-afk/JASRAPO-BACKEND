@@ -66,7 +66,7 @@ export class ReadingController {
       filters,
     );
     return {
-      data: result.data.map((x) => ResponseReadingDto.fromEntity(x)!),
+      data: result.data.map((x) => ResponseReadingDto.fromRow(x)!),
       meta: result.meta,
     };
   }
@@ -111,9 +111,7 @@ export class ReadingController {
   async findOne(
     @Param('id', ParseBigIntPipe) id: bigint,
   ): Promise<ResponseReadingDto> {
-    return ResponseReadingDto.fromEntity(
-      await this.readingService.findOne(id),
-    )!;
+    return ResponseReadingDto.fromRow(await this.readingService.findOne(id))!;
   }
 
   @ApiOperation({
@@ -136,7 +134,7 @@ export class ReadingController {
     const updated = targetEstado
       ? await this.readingService.update(id, updateLecturaDto, targetEstado)
       : await this.readingService.update(id, updateLecturaDto);
-    return ResponseReadingDto.fromEntity(updated)!;
+    return ResponseReadingDto.fromRow(updated)!;
   }
 
   @ApiOperation({

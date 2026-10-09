@@ -20,7 +20,7 @@ describe('ContractResponseDto', () => {
       historialMedidores: null,
     });
 
-    const response = ContractResponseDto.fromEntity(entity);
+    const response = ContractResponseDto.fromRow(entity);
 
     expect(response).toMatchObject({
       estadoServicio: EstadoServicioContrato.ACTIVO,
@@ -49,7 +49,7 @@ describe('ContractResponseDto', () => {
       historialMedidores: null,
     });
 
-    const response = ContractResponseDto.fromEntity(entity);
+    const response = ContractResponseDto.fromRow(entity);
 
     expect(response.latitud).toBe(-1.8021);
     expect(response.longitud).toBe(-80.7554);
@@ -74,7 +74,7 @@ describe('ContractResponseDto', () => {
       historialMedidores: null,
     });
 
-    const response = ContractResponseDto.fromEntity(entity);
+    const response = ContractResponseDto.fromRow(entity);
 
     expect(response.latitud).toBeNull();
     expect(response.longitud).toBeNull();

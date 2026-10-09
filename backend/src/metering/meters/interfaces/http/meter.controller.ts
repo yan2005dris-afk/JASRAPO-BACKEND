@@ -83,7 +83,7 @@ export class MeterController {
   @Post()
   async create(@Body() createDto: CreateMeterDto): Promise<MeterResponseDto> {
     const meter = await this.meterService.create(createDto);
-    return MeterResponseDto.fromEntity(meter);
+    return MeterResponseDto.fromRow(meter);
   }
 
   /**
@@ -186,7 +186,7 @@ export class MeterController {
     @Param('id', ParseBigIntPipe) id: bigint,
   ): Promise<MeterHistoryResponseDto[]> {
     const history = await this.meterService.getHistory(id);
-    return history.map((item) => MeterHistoryResponseDto.fromEntity(item));
+    return history.map((item) => MeterHistoryResponseDto.fromRow(item));
   }
 
   @ApiOperation({
@@ -212,7 +212,7 @@ export class MeterController {
     @Param('id', ParseBigIntPipe) id: bigint,
   ): Promise<ReemplazoMedidorResponseDto> {
     const reemplazo = await this.meterService.findReplacement(id);
-    return ReemplazoMedidorResponseDto.fromEntity(reemplazo);
+    return ReemplazoMedidorResponseDto.fromRow(reemplazo);
   }
 
   /**
@@ -242,7 +242,7 @@ export class MeterController {
     @Param('id', ParseBigIntPipe) id: bigint,
   ): Promise<MeterResponseDto> {
     const meter = await this.meterService.findOne(id);
-    return MeterResponseDto.fromEntity(meter);
+    return MeterResponseDto.fromRow(meter);
   }
 
   /**
@@ -276,7 +276,7 @@ export class MeterController {
     @Body() updateDto: UpdateMeterDto,
   ): Promise<MeterResponseDto> {
     const meter = await this.meterService.update(id, updateDto);
-    return MeterResponseDto.fromEntity(meter);
+    return MeterResponseDto.fromRow(meter);
   }
 
   /**
@@ -336,7 +336,7 @@ export class MeterController {
       user.sub,
       user.rol,
     );
-    return ReemplazoMedidorResponseDto.fromEntity(result.reemplazo);
+    return ReemplazoMedidorResponseDto.fromRow(result.reemplazo);
   }
 
   @ApiOperation({ summary: 'Aprobar tratamiento económico excepcional' })
@@ -348,7 +348,7 @@ export class MeterController {
     @CurrentUser() user: JwtPayload,
   ): Promise<ReemplazoMedidorResponseDto> {
     const result = await this.meterService.approveReplacement(id, user.sub);
-    return ReemplazoMedidorResponseDto.fromEntity(result.reemplazo);
+    return ReemplazoMedidorResponseDto.fromRow(result.reemplazo);
   }
 }
 
