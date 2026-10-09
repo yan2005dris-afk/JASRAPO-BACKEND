@@ -13,7 +13,10 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { TipoIdentificacion, FormaPago } from '../../domain/constants';
+import {
+  TipoIdentificacion,
+  FormaPago,
+} from '../../domain/constants/sri.enums';
 import { IsNotEmptyString } from 'src/infrastructure/common/decorators/is-not-empty-string.decorator';
 
 export class EmisorDto {

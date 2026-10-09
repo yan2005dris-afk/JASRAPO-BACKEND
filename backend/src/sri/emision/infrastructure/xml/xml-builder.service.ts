@@ -1,6 +1,6 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import * as xml2js from 'xml2js';
-import {
+import type {
   Factura,
   InfoTributaria,
   InfoFactura,
@@ -14,13 +14,13 @@ import {
   Retencion,
   InfoRetencion,
   ImpuestoRetenido,
-} from '../../domain/interfaces';
+} from '../../domain/interfaces/comprobante.interface';
 import {
   FACTURA_VERSION,
   NOTA_CREDITO_VERSION,
   NOTA_DEBITO_VERSION,
   RETENCION_VERSION,
-} from '../../domain/constants';
+} from '../../domain/constants/sri-endpoints.constant';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
 

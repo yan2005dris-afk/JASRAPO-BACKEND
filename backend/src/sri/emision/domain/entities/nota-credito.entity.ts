@@ -3,7 +3,7 @@ import type {
   InfoNotaCredito,
   DetalleNotaCredito,
   CampoAdicional,
-} from '../interfaces';
+} from '../interfaces/comprobante.interface';
 
 export class NotaCreditoEntity {
   id?: string;

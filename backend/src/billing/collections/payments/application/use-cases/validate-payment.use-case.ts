@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { EstadoPago } from '../../domain/enums';
+import { EstadoPago } from '../../domain/enums/estado-pago.enum';
 import { UpdatePaymentStateDto } from '../../interfaces/dto/update-payment-state.dto';
 import { PaymentRepository } from '../../domain/repositories/payment.repository';
 import { EventosPendientesRepository } from 'src/shared/outbox/domain/repositories/eventos-pendientes.repository';

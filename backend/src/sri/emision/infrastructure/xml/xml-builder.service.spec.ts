@@ -5,15 +5,19 @@ import {
   FACTURA_VERSION,
   NOTA_CREDITO_VERSION,
   RETENCION_VERSION,
-} from '../../domain/constants';
-import { Ambiente, TipoEmision, TipoComprobante } from '../../domain/constants';
+} from '../../domain/constants/sri-endpoints.constant';
+import {
+  Ambiente,
+  TipoEmision,
+  TipoComprobante,
+} from '../../domain/constants/sri.enums';
 import type {
   Factura,
   InfoTributaria,
   NotaCredito,
   Retencion,
   ImpuestoRetenido,
-} from '../../domain/interfaces';
+} from '../../domain/interfaces/comprobante.interface';
 import type { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 
 const mockLogger = {

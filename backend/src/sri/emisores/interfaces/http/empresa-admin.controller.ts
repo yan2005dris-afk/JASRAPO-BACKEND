@@ -25,7 +25,7 @@ import {
   CreatePuntoEmisionDto,
   UpdateEmisorDto,
   UploadCertificadoDto,
-} from '../dto';
+} from '../dto/emisor.dto';
 
 @ApiTags('Administración / Empresa, Establecimientos y Cajas')
 @ApiBearerAuth('JWT')

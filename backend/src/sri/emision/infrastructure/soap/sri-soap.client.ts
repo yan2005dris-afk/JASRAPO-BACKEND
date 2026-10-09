@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SriSoapFactoryService } from './sri-soap-factory.service';
-import {
+import type {
   SriRecepcionResponse,
   SriAutorizacionResponse,
   SriOperationResult,
   SriMensaje,
-} from '../../domain/interfaces';
+} from '../../domain/interfaces/sri-response.interface';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
 

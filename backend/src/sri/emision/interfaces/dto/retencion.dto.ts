@@ -14,7 +14,7 @@ import {
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { EmisorDto, CampoAdicionalDto } from './common.dto';
-import { Ambiente, TipoEmision } from '../../domain/constants';
+import { Ambiente, TipoEmision } from '../../domain/constants/sri.enums';
 import { IsNotEmptyString } from 'src/infrastructure/common/decorators/is-not-empty-string.decorator';
 
 /**

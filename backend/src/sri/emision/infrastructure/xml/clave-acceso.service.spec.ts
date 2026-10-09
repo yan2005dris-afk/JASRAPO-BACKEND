@@ -1,6 +1,6 @@
 import { ClaveAccesoService } from './clave-acceso.service';
-import { Ambiente, TipoEmision } from '../../domain/constants';
-import type { ClaveAccesoData } from '../../domain/interfaces';
+import { Ambiente, TipoEmision } from '../../domain/constants/sri.enums';
+import type { ClaveAccesoData } from '../../domain/interfaces/sri-response.interface';
 import type { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 
 const mockLogger = {

@@ -3,7 +3,7 @@ import type {
   InfoRetencion,
   ImpuestoRetenido,
   CampoAdicional,
-} from '../interfaces';
+} from '../interfaces/comprobante.interface';
 
 export class RetencionEntity {
   id?: string;

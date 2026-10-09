@@ -1,4 +1,7 @@
-import type { Ambiente, TipoEmision } from '../../../emision/domain/constants';
+import type {
+  Ambiente,
+  TipoEmision,
+} from '../../../emision/domain/constants/sri.enums';
 
 export class EmisorEntity {
   id: number;

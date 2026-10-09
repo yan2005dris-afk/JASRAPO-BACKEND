@@ -1,4 +1,8 @@
-import type { TipoComprobante, Ambiente, TipoEmision } from '../constants';
+import type {
+  TipoComprobante,
+  Ambiente,
+  TipoEmision,
+} from '../constants/sri.enums';
 
 /**
  * Respuesta del servicio de recepción de comprobantes del SRI

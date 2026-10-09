@@ -4,7 +4,7 @@ import type {
   TipoEmision,
   TipoIdentificacion,
   FormaPago,
-} from '../constants';
+} from '../constants/sri.enums';
 
 /**
  * Información tributaria común a todos los comprobantes

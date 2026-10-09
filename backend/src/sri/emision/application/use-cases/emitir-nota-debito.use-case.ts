@@ -15,19 +15,23 @@ import { SecuencialRepository } from '../../domain/repositories/secuencial.repos
 import { XmlStorageService } from '../../infrastructure/storage/xml-storage.service';
 import { SriBaseService } from '../../infrastructure/xml/sri-base.service';
 import { CatalogoValidatorService } from '../../infrastructure/xml/catalogo-validator.service';
-import {
+import type {
   CreateNotaDebitoDto,
   NotaDebitoResponseDto,
-} from '../../interfaces/dto';
-import {
+} from '../../interfaces/dto/nota-debito.dto';
+import type {
   InfoTributaria,
   NotaDebito,
   InfoNotaDebito,
   MotivoNotaDebito,
   TotalImpuesto,
-  SriOperationResult,
-} from '../../domain/interfaces';
-import { TipoComprobante, Ambiente, TipoEmision } from '../../domain/constants';
+} from '../../domain/interfaces/comprobante.interface';
+import type { SriOperationResult } from '../../domain/interfaces/sri-response.interface';
+import {
+  TipoComprobante,
+  Ambiente,
+  TipoEmision,
+} from '../../domain/constants/sri.enums';
 import { LoggerService } from 'src/infrastructure/observability/logger/logger.service';
 import { LogContext } from 'src/shared/decorators/log-context.decorator';
 
