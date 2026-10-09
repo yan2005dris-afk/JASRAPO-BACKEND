@@ -1,10 +1,11 @@
 import { EstadoServicioContrato } from 'src/shared/enums';
-import { ContractEntity } from '../../domain/entities/contract.entity';
+import { contractRow } from '../../__test-utils__/contract-row.factory';
 import { ContractResponseDto } from './contract-response.dto';
+import { Decimal } from 'decimal.js';
 
 describe('ContractResponseDto', () => {
   it('exposes separated states and omits the legacy state', () => {
-    const entity = new ContractEntity({
+    const row = contractRow({
       contratoId: 1n,
       clienteId: 10n,
       sectorId: null,
@@ -14,13 +15,13 @@ describe('ContractResponseDto', () => {
       direccionSuministro: 'Av. Amazonas 123',
       estadoServicio: EstadoServicioContrato.ACTIVO,
       estadoCobranza: 'AL_DIA',
-      tieneConvenioActivo: true,
+      convenios: [{ convenioId: 12n }] as never,
       creadoPor: null,
       comunidadId: 1,
       historialMedidores: null,
     });
 
-    const response = ContractResponseDto.fromRow(entity);
+    const response = ContractResponseDto.fromRow(row);
 
     expect(response).toMatchObject({
       estadoServicio: EstadoServicioContrato.ACTIVO,
@@ -31,7 +32,7 @@ describe('ContractResponseDto', () => {
   });
 
   it('maps stored coordinates from the entity', () => {
-    const entity = new ContractEntity({
+    const row = contractRow({
       contratoId: 1n,
       clienteId: 10n,
       sectorId: null,
@@ -41,22 +42,22 @@ describe('ContractResponseDto', () => {
       direccionSuministro: 'Av. Amazonas 123',
       estadoServicio: EstadoServicioContrato.ACTIVO,
       estadoCobranza: 'AL_DIA',
-      tieneConvenioActivo: false,
+      convenios: [],
       creadoPor: null,
       comunidadId: 1,
-      latitud: -1.8021,
-      longitud: -80.7554,
+      latitud: new Decimal('-1.8021'),
+      longitud: new Decimal('-80.7554'),
       historialMedidores: null,
     });
 
-    const response = ContractResponseDto.fromRow(entity);
+    const response = ContractResponseDto.fromRow(row);
 
     expect(response.latitud).toBe(-1.8021);
     expect(response.longitud).toBe(-80.7554);
   });
 
   it('defaults coordinates to null when the entity has none', () => {
-    const entity = new ContractEntity({
+    const row = contractRow({
       contratoId: 1n,
       clienteId: 10n,
       sectorId: null,
@@ -66,7 +67,7 @@ describe('ContractResponseDto', () => {
       direccionSuministro: 'Av. Amazonas 123',
       estadoServicio: EstadoServicioContrato.ACTIVO,
       estadoCobranza: 'AL_DIA',
-      tieneConvenioActivo: false,
+      convenios: [],
       creadoPor: null,
       comunidadId: 1,
       latitud: null,
@@ -74,7 +75,7 @@ describe('ContractResponseDto', () => {
       historialMedidores: null,
     });
 
-    const response = ContractResponseDto.fromRow(entity);
+    const response = ContractResponseDto.fromRow(row);
 
     expect(response.latitud).toBeNull();
     expect(response.longitud).toBeNull();

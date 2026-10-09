@@ -2,7 +2,7 @@ import { normalizeContractProcedure } from '../../domain/contract-procedure';
 import { Injectable } from '@nestjs/common';
 import { ContractRepository } from '../../domain/repositories/contract.repository';
 import { ActualizarContratoMedidorDto } from '../../interfaces/dto/update-contrato-medidor.dto';
-import { ContractEntity } from '../../domain/entities/contract.entity';
+import type { ContractRow } from '../../infrastructure/repositories/contract.include';
 import { ContractState } from '../../domain/contract-state';
 import { validateServiceAreaLocation } from '../../domain/policies/service-area.policy';
 import {
@@ -18,15 +18,22 @@ export class UpdateContractUseCase {
   async execute(
     id: bigint,
     updateDto: ActualizarContratoMedidorDto,
-  ): Promise<ContractEntity> {
+  ): Promise<ContractRow> {
     const registro = await this.contractRepository.findById(id);
     if (!registro) {
       throw new EntityNotFoundException('Contrato', id.toString());
     }
 
+    const regLat =
+      registro.latitud !== null && registro.latitud !== undefined
+        ? Number(registro.latitud)
+        : null;
+    const regLng =
+      registro.longitud !== null && registro.longitud !== undefined
+        ? Number(registro.longitud)
+        : null;
     const coordinatesChanged =
-      updateDto.latitud !== registro.latitud ||
-      updateDto.longitud !== registro.longitud;
+      updateDto.latitud !== regLat || updateDto.longitud !== regLng;
     if (
       updateDto.latitud != null &&
       updateDto.longitud != null &&
@@ -54,7 +61,7 @@ export class UpdateContractUseCase {
 
   private extractFields(
     dto: ActualizarContratoMedidorDto,
-    current: ContractEntity,
+    current: ContractRow,
   ): Record<string, any> {
     const fields: Record<string, any> = {};
     if (

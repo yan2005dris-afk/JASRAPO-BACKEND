@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import type { ContractEntity } from '../../domain/entities/contract.entity';
+import type { ContractRow } from '../../infrastructure/repositories/contract.include';
 import { DateUtil } from 'src/shared/utils/date.util';
 import {
   EstadoServicioContrato,
@@ -224,7 +224,7 @@ export class ContractResponseDto {
   @ApiPropertyOptional({ type: [ContractHistorialMedidorDto], nullable: true })
   historialMedidores?: ContractHistorialMedidorDto[] | null;
 
-  static fromRow(entity: ContractEntity): ContractResponseDto {
+  static fromRow(entity: ContractRow): ContractResponseDto {
     const dto = new ContractResponseDto();
     dto.contratoId = entity.contratoId;
     dto.clienteId = entity.clienteId;
@@ -243,40 +243,89 @@ export class ContractResponseDto {
     dto.registradoPorId = entity.registradoPorId ?? null;
 
     dto.estadoCobranza = entity.estadoCobranza;
-    dto.tieneConvenioActivo = entity.tieneConvenioActivo;
+    dto.tieneConvenioActivo = (entity.convenios?.length ?? 0) > 0;
     dto.creadoPor = entity.creadoPor ?? null;
     dto.comunidadId = entity.comunidadId;
-    dto.latitud = entity.latitud ?? null;
-    dto.longitud = entity.longitud ?? null;
-    dto.categoriaTarifa = entity.categoriaTarifa ?? null;
-    dto.cliente = entity.cliente ?? null;
-    dto.comunidad = entity.comunidad ?? null;
-    dto.sector = entity.sector ?? null;
+    dto.latitud =
+      entity.latitud !== null && entity.latitud !== undefined
+        ? Number(entity.latitud)
+        : null;
+    dto.longitud =
+      entity.longitud !== null && entity.longitud !== undefined
+        ? Number(entity.longitud)
+        : null;
+    dto.categoriaTarifa = entity.categoriaTarifa
+      ? {
+          categoriaTarifaId: entity.categoriaTarifa.categoriaTarifaId,
+          nombre: entity.categoriaTarifa.nombre,
+          descripcion: entity.categoriaTarifa.descripcion,
+        }
+      : null;
+    dto.cliente = entity.cliente
+      ? {
+          clienteId: entity.cliente.clienteId,
+          identificacion: entity.cliente.identificacion,
+          nombres: entity.cliente.nombres,
+          apellidos: entity.cliente.apellidos,
+          razonSocial: entity.cliente.razonSocial,
+          email: entity.cliente.email,
+          telefono: entity.cliente.telefono,
+          direccionDomicilio: entity.cliente.direccionDomicilio,
+        }
+      : null;
+    dto.comunidad = entity.comunidad
+      ? {
+          comunidadId: entity.comunidad.comunidadId,
+          codigo: entity.comunidad.codigo,
+          nombre: entity.comunidad.nombre,
+        }
+      : null;
+    dto.sector = entity.sector
+      ? {
+          sectorId: entity.sector.sectorId,
+          codigo: entity.sector.codigo,
+          nombre: entity.sector.nombre,
+        }
+      : null;
     dto.historialMedidores = entity.historialMedidores
-      ? entity.historialMedidores.map((h) => ({
-          historialId: h.historialId,
-          medidorId: h.medidorId,
-          fechaDesde: DateUtil.formatForFrontend(h.fechaDesde) ?? '',
-          fechaHasta: DateUtil.formatForFrontend(h.fechaHasta),
-          lecturaInicial: h.lecturaInicial,
-          lecturaFinal: h.lecturaFinal,
-          ultimaLecturaAprobada: h.ultimaLecturaAprobada
-            ? {
-                lecturaId: h.ultimaLecturaAprobada.lecturaId,
-                fecha:
-                  DateUtil.formatForFrontend(h.ultimaLecturaAprobada.fecha) ??
-                  '',
-                lecturaActual: h.ultimaLecturaAprobada.lecturaActual,
-                lecturaAnterior: h.ultimaLecturaAprobada.lecturaAnterior,
-              }
-            : null,
-          medidor: h.medidor,
-        }))
+      ? entity.historialMedidores.map((h) => {
+          const ultimaLectura =
+            h.fechaHasta === null &&
+            h.medidor.lecturas?.[0] &&
+            h.medidor.lecturas[0].fecha >= h.fechaDesde
+              ? h.medidor.lecturas[0]
+              : null;
+          return {
+            historialId: h.historialId,
+            medidorId: h.medidorId,
+            fechaDesde: DateUtil.formatForFrontend(h.fechaDesde) ?? '',
+            fechaHasta: DateUtil.formatForFrontend(h.fechaHasta),
+            lecturaInicial: Number(h.lecturaInicial),
+            lecturaFinal:
+              h.lecturaFinal !== null && h.lecturaFinal !== undefined
+                ? Number(h.lecturaFinal)
+                : null,
+            ultimaLecturaAprobada: ultimaLectura
+              ? {
+                  lecturaId: ultimaLectura.lecturaId,
+                  fecha: DateUtil.formatForFrontend(ultimaLectura.fecha) ?? '',
+                  lecturaActual: Number(ultimaLectura.lecturaActual),
+                  lecturaAnterior: Number(ultimaLectura.lecturaAnterior),
+                }
+              : null,
+            medidor: {
+              medidorId: h.medidor.medidorId,
+              serie: h.medidor.serie,
+              marca: h.medidor.marca,
+              modelo: h.medidor.modelo,
+            },
+          };
+        })
       : null;
     return dto;
   }
 
-  static fromRowList(entities: ContractEntity[]): ContractResponseDto[] {
+  static fromRowList(entities: ContractRow[]): ContractResponseDto[] {
     return entities.map((e) => ContractResponseDto.fromRow(e));
   }
 }

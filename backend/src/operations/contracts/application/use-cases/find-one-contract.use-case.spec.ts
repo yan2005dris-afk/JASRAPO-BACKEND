@@ -2,7 +2,7 @@ import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
 import { FindOneContractUseCase } from './find-one-contract.use-case';
 import { ContractRepository } from '../../domain/repositories/contract.repository';
-import { ContractEntity } from '../../domain/entities/contract.entity';
+import { contractRow } from '../../__test-utils__/contract-row.factory';
 import { EntityNotFoundException } from 'src/shared/domain/exceptions/domain.exception';
 
 describe('FindOneContractUseCase', () => {
@@ -33,7 +33,7 @@ describe('FindOneContractUseCase', () => {
 
   it('should return a contract if it exists', async () => {
     const id = BigInt(1);
-    const mockContract = new ContractEntity({
+    const mockContract = contractRow({
       contratoId: id,
       deletedAt: null,
     });

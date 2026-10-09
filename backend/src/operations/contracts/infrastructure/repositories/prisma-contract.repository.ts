@@ -9,14 +9,12 @@ import {
   EntityAlreadyExistsException,
 } from 'src/shared/domain/exceptions/domain.exception';
 import { ContractRepository } from '../../domain/repositories/contract.repository';
-import { ContractEntity } from '../../domain/entities/contract.entity';
 import type {
   CreateContractData,
   CreateContractWithMeterCommand,
   UpdateContractData,
   ContractFilters,
 } from '../../domain/types/contract.types';
-import { ContractMapper } from '../mappers/contract.mapper';
 import { ContractState } from '../../domain/contract-state';
 import { ensureContractWorkOrder } from '../contract-work-order';
 import { ContractGuideGeneratorService } from '../services/contract-guide-generator.service';
@@ -25,38 +23,10 @@ import {
   paginate,
   PaginateOptions,
 } from 'src/infrastructure/common/utils/pagination.util';
+import { contractInclude, type ContractRow } from './contract.include';
 
-export const contractDefaultInclude = {
-  categoriaTarifa: true,
-  cliente: true,
-  comunidad: true,
-  sector: true,
-  historialMedidores: {
-    include: {
-      medidor: {
-        include: {
-          lecturas: {
-            where: { estado: 'APROBADA', deletedAt: null },
-            orderBy: [{ fecha: 'desc' }, { lecturaId: 'desc' }],
-            take: 1,
-          },
-        },
-      },
-    },
-  },
-  convenios: {
-    where: {
-      deletedAt: null,
-      estado: { in: ['ACTIVO', 'PENDIENTE_ABONO'] },
-    },
-    select: { convenioId: true },
-    take: 1,
-  },
-} satisfies Prisma.ContratosInclude;
-
-export type ContractRecord = Prisma.ContratosGetPayload<{
-  include: typeof contractDefaultInclude;
-}>;
+export const contractDefaultInclude = contractInclude;
+export type ContractRecord = ContractRow;
 
 @Injectable()
 export class PrismaContractRepository implements ContractRepository {
@@ -70,7 +40,7 @@ export class PrismaContractRepository implements ContractRepository {
   async findById(
     contratoId: bigint,
     includeDeleted: boolean = false,
-  ): Promise<ContractEntity | null> {
+  ): Promise<ContractRow | null> {
     const record = await this.prisma.contratos.findFirst({
       where: {
         contratoId,
@@ -78,7 +48,7 @@ export class PrismaContractRepository implements ContractRepository {
       },
       include: this.defaultInclude,
     });
-    return ContractMapper.toDomain(record);
+    return record;
   }
 
   async getConnectionCosts(categoriaTarifaId: number): Promise<{
@@ -117,10 +87,10 @@ export class PrismaContractRepository implements ContractRepository {
       orderBy?: { [key: string]: 'asc' | 'desc' };
     },
     pagination: PaginateOptions,
-  ): Promise<PaginatedResult<ContractEntity>> {
+  ): Promise<PaginatedResult<ContractRow>> {
     const where = this.buildContractWhere(args.filters);
 
-    const result = await paginate<any>(
+    return paginate<ContractRow>(
       this.prisma.contratos,
       {
         where,
@@ -129,14 +99,9 @@ export class PrismaContractRepository implements ContractRepository {
       },
       pagination,
     );
-
-    return {
-      data: ContractMapper.toDomainList(result.data),
-      meta: result.meta,
-    };
   }
 
-  async create(data: CreateContractData): Promise<ContractEntity> {
+  async create(data: CreateContractData): Promise<ContractRow> {
     const estadoServicio =
       data.estadoServicio ?? EstadoServicioContrato.PENDIENTE_PAGO;
     const estadoCobranza = ContractState.normalizeCollectionStatus(
@@ -144,7 +109,7 @@ export class PrismaContractRepository implements ContractRepository {
       estadoServicio,
     );
     try {
-      const record = await this.prisma.contratos.create({
+      return await this.prisma.contratos.create({
         data: {
           ...normalizeContractProcedure(data),
           ...(data.registradoPorId !== undefined
@@ -165,7 +130,6 @@ export class PrismaContractRepository implements ContractRepository {
         },
         include: this.defaultInclude,
       });
-      return ContractMapper.toDomain(record)!;
     } catch (error) {
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
@@ -182,27 +146,25 @@ export class PrismaContractRepository implements ContractRepository {
     take?: number;
     where?: Partial<ContractFilters>;
     orderBy?: { [key: string]: 'asc' | 'desc' };
-  }): Promise<ContractEntity[]> {
+  }): Promise<ContractRow[]> {
     const where = this.buildContractWhere(params.where);
-    const records = await this.prisma.contratos.findMany({
+    return this.prisma.contratos.findMany({
       skip: params.skip,
       take: params.take,
       where,
       orderBy: params.orderBy as Prisma.ContratosOrderByWithRelationInput,
       include: this.defaultInclude,
     });
-    return ContractMapper.toDomainList(records);
   }
 
   async findUnique(where: {
     contratoId?: bigint;
     numeroGuia?: string;
-  }): Promise<ContractEntity | null> {
-    const record = await this.prisma.contratos.findUnique({
+  }): Promise<ContractRow | null> {
+    return this.prisma.contratos.findUnique({
       where: where as Prisma.ContratosWhereUniqueInput,
       include: this.defaultInclude,
     });
-    return ContractMapper.toDomain(record);
   }
 
   async count(params?: { where?: Partial<ContractFilters> }): Promise<number> {
@@ -215,14 +177,13 @@ export class PrismaContractRepository implements ContractRepository {
   async update(
     contratoId: bigint,
     data: UpdateContractData,
-  ): Promise<ContractEntity> {
+  ): Promise<ContractRow> {
     try {
-      const record = await this.prisma.contratos.update({
+      return await this.prisma.contratos.update({
         where: { contratoId },
         data: data,
         include: this.defaultInclude,
       });
-      return ContractMapper.toDomain(record)!;
     } catch (error) {
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
@@ -234,14 +195,13 @@ export class PrismaContractRepository implements ContractRepository {
     }
   }
 
-  async softDelete(contratoId: bigint): Promise<ContractEntity> {
+  async softDelete(contratoId: bigint): Promise<ContractRow> {
     try {
-      const record = await this.prisma.contratos.update({
+      return await this.prisma.contratos.update({
         where: { contratoId },
         data: { deletedAt: new Date() },
         include: this.defaultInclude,
       });
-      return ContractMapper.toDomain(record)!;
     } catch (error) {
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
@@ -257,7 +217,7 @@ export class PrismaContractRepository implements ContractRepository {
 
   async createContractWithMeterHistory(
     data: CreateContractWithMeterCommand,
-  ): Promise<ContractEntity> {
+  ): Promise<ContractRow> {
     return this.prisma.$transaction(async (tx) => {
       const dependencies = await this.validateContractDependencies(tx, data);
 
@@ -316,11 +276,11 @@ export class PrismaContractRepository implements ContractRepository {
         where: { contratoId: contrato.contratoId },
         include: this.defaultInclude,
       });
-      return ContractMapper.toDomain(createdRecord)!;
+      return createdRecord!;
     });
   }
 
-  async finalizeActiveMeterLink(contratoId: bigint): Promise<ContractEntity> {
+  async finalizeActiveMeterLink(contratoId: bigint): Promise<ContractRow> {
     return this.prisma.$transaction(async (tx) => {
       const activeLink = await tx.historialMedidores.findFirst({
         where: { contratoId, fechaHasta: null },
@@ -357,7 +317,7 @@ export class PrismaContractRepository implements ContractRepository {
         where: { contratoId },
         include: this.defaultInclude,
       });
-      return ContractMapper.toDomain(finalizedRecord)!;
+      return finalizedRecord!;
     });
   }
 

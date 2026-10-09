@@ -3,12 +3,11 @@ import { Test } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { GetConnectionRequestPdfDataUseCase } from './get-connection-request-pdf-data.use-case';
 import { ContractRepository } from '../../domain/repositories/contract.repository';
-import { ContractEntity } from '../../domain/entities/contract.entity';
+import { contractRow } from '../../__test-utils__/contract-row.factory';
+import type { ContractRow } from '../../infrastructure/repositories/contract.include';
 
-const makeContrato = (
-  overrides: Partial<ContractEntity> = {},
-): ContractEntity =>
-  new ContractEntity({
+const makeContrato = (overrides: Partial<ContractRow> = {}): ContractRow =>
+  contractRow({
     contratoId: BigInt(1),
     clienteId: BigInt(10),
     sectorId: null,
